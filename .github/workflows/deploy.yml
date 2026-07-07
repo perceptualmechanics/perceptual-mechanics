@@ -35,6 +35,6 @@ jobs:
       - name: Deploy via rsync
         run: |
           rsync -rlgoDzvc --delete \
-            -e "ssh -i ~/.ssh/deploy_key -o IdentitiesOnly=yes -o StrictHostKeyChecking=no" \
+            -e "ssh -i ~/.ssh/deploy_key -o IdentitiesOnly=yes -o IdentityAgent=none -o StrictHostKeyChecking=no" \
             dist/ \
             copper_prism@pdx1-shared-a1-46.dreamhost.com:/home/copper_prism/perceptualmechanics.com
