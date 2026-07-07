@@ -1,7 +1,7 @@
 import { createSphere }    from './scenes/sphere.js';
 import { createButterfly } from './scenes/butterfly.js';
-import { createNebula }    from './scenes/nebula.js';
-import { createEgg }       from './scenes/egg.js';
+// import { createNebula }    from './scenes/nebula.js';
+// import { createEgg }       from './scenes/egg.js';
 
 // ─── Scene registry ──────────────────────────────────────────────────────────
 const SCENES = {
@@ -9,10 +9,10 @@ const SCENES = {
                ariaLabel: 'The Sphere — interactive geodesic sphere with text fragments.' },
   butterfly: { create: createButterfly, label: 'Chaos Butterfly in Phase Space, 2026.',
                ariaLabel: 'Chaos Butterfly in Phase Space, 2026 — Lorenz attractor. Drag to orbit, scroll to zoom.' },
-  nebula:    { create: createNebula,    label: 'Nebula — The Gaze.',
-               ariaLabel: 'Nebula — a constellation interface.' },
-  egg:       { create: createEgg,       label: 'The Egg — Worldline.',
-               ariaLabel: 'The Egg — your geographic worldline through spacetime.' },
+  // nebula:    { create: createNebula,    label: 'Nebula — The Gaze.',
+  //              ariaLabel: 'Nebula — a constellation interface.' },
+  // egg:       { create: createEgg,       label: 'The Egg — Worldline.',
+  //              ariaLabel: 'The Egg — your geographic worldline through spacetime.' },
 };
 
 let activeScene  = null;
