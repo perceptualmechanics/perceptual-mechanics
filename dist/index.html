@@ -1,31 +1,51 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-        <link rel="preconnect" href="https://fonts.googleapis.com">   
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link href="https://fonts.googleapis.com/css2?family=Electrolize&display=swap" rel="stylesheet">
-        <title>sphere test</title>
-      <script type="module" crossorigin src="/assets/index-CSUZh2Cr.js"></script>
-      <link rel="stylesheet" crossorigin href="/assets/index-B_T5gbJO.css">
-    </head>
-    <body>
-        <div id="container">
-            <nav id="sphere">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="author" content="Scott Jason Cohen"/>
+  <meta name="description" content="perceptual mechanics"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Electrolize&display=swap" rel="stylesheet">
+  <title>perceptual mechanics</title>
+  <meta name="theme-color" content="#000000"/>
+  <script type="module" crossorigin src="/assets/index-dAsv9s33.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index-BEVSHR3Q.css">
+</head>
+<body>
 
-            </nav>
-            <main id="panel">
-                <button id="panel-close">✕</button>
-                <div id="panel-title">Fragment</div>
-                <div id="panel-content"></div>
-                <div id="facet-id"></div>
-            </main>
-        </div>
-        <ul id="ui">
-            <li>scroll to zoom</li>
-            <li>click a facet to read</li>
-            <li>perceptual mechanics</li>
-        </ul>
-    </body>
+  <!-- Nav icons commented out until more projects exist -->
+  <!--
+  <nav id="pm-nav">
+    <div id="nav-title">perceptual mechanics</div>
+    <div id="nav-icons">
+      <button class="nav-icon" data-scene="sphere" title="The Sphere">...</button>
+      <button class="nav-icon" data-scene="butterfly" title="Chaos Butterfly in Phase Space, 2026">...</button>
+    </div>
+  </nav>
+  -->
+
+  <!-- Site title — bottom center -->
+  <div id="site-title">perceptual mechanics</div>
+
+  <!-- Landing -->
+  <main id="landing">
+    <div id="scene-previews">
+      <div class="preview-wrapper" data-scene="sphere">
+        <div class="preview-container" id="preview-sphere"></div>
+      </div>
+      <div class="preview-wrapper" data-scene="butterfly">
+        <div class="preview-container" id="preview-butterfly"></div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Full screen experience overlay -->
+  <div id="experience-overlay">
+    <div id="experience-container"></div>
+    <button id="experience-close">✕</button>
+  </div>
+
+</body>
 </html>
