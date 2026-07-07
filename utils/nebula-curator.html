@@ -26,9 +26,54 @@
       font-weight: 400;
     }
 
+    .setup-box {
+      background: rgba(255,220,120,0.05);
+      border: 1px solid rgba(255,220,120,0.2);
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .setup-box h2 {
+      font-size: 0.65rem;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: rgba(255,220,120,0.6);
+      margin-bottom: 1rem;
+      font-weight: 400;
+    }
+
+    .setup-box p {
+      font-size: 0.78rem;
+      color: rgba(255,255,255,0.45);
+      line-height: 1.7;
+      margin-bottom: 0.75rem;
+    }
+
+    .setup-box code {
+      font-family: monospace;
+      font-size: 0.75rem;
+      background: rgba(255,255,255,0.08);
+      padding: 0.1rem 0.35rem;
+      border-radius: 3px;
+      color: rgba(180,210,255,0.8);
+    }
+
+    .setup-box a {
+      color: rgba(180,210,255,0.7);
+      text-decoration: none;
+    }
+    .setup-box a:hover { color: rgba(180,210,255,1); }
+
+    .key-row {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 1rem;
+    }
+
     .input-row { display: flex; gap: 0.5rem; margin-bottom: 0.75rem; }
 
-    input[type="url"] {
+    input[type="url"], input[type="password"], input[type="text"] {
       flex: 1;
       background: rgba(255,255,255,0.04);
       border: 1px solid rgba(180,210,255,0.2);
@@ -39,7 +84,8 @@
       font-family: inherit;
       outline: none;
     }
-    input[type="url"]:focus { border-color: rgba(180,210,255,0.4); }
+    input:focus { border-color: rgba(180,210,255,0.4); }
+    input:disabled { opacity: 0.4; }
 
     button {
       background: rgba(180,210,255,0.08);
@@ -52,6 +98,7 @@
       letter-spacing: 0.1em;
       font-family: inherit;
       transition: background 0.15s;
+      white-space: nowrap;
     }
     button:hover { background: rgba(180,210,255,0.15); }
     button:disabled { opacity: 0.4; cursor: wait; }
@@ -69,6 +116,13 @@
       color: rgba(255,255,255,0.4);
     }
 
+    .btn-save {
+      background: rgba(100,255,150,0.08);
+      border-color: rgba(100,255,150,0.2);
+      color: rgba(100,255,150,0.8);
+    }
+    .btn-save:hover { background: rgba(100,255,150,0.15); }
+
     #status {
       font-size: 0.72rem;
       color: rgba(180,210,255,0.6);
@@ -78,6 +132,7 @@
       line-height: 1.6;
       min-height: 1.2rem;
     }
+    #status.error { color: rgba(255,120,120,0.7); }
 
     .actions { display: flex; gap: 0.5rem; margin-bottom: 2rem; flex-wrap: wrap; }
 
@@ -170,15 +225,64 @@
       letter-spacing: 0.1em;
       line-height: 2;
     }
+
+    .divider {
+      border: none;
+      border-top: 1px solid rgba(255,255,255,0.06);
+      margin: 2rem 0;
+    }
+
+    .key-status {
+      font-size: 0.65rem;
+      letter-spacing: 0.1em;
+      margin-top: 0.5rem;
+      color: rgba(255,255,255,0.25);
+    }
+    .key-status.ok { color: rgba(100,255,150,0.6); }
   </style>
 </head>
 <body>
 
   <h1>nebula · star curator</h1>
 
+  <!-- ── Setup instructions ───────────────────────────────────────────── -->
+  <div class="setup-box" id="setup-box">
+    <h2>⚙ setup — read this once</h2>
+    <p>
+      This tool uses the Anthropic API to analyze URLs and assign them to constellations.
+      You need an API key to use it. Get one at
+      <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a>
+      → API Keys → Create Key. It starts with <code>sk-ant-...</code>
+    </p>
+    <p>
+      Your key is stored only in this browser's <code>localStorage</code> — it never
+      leaves your machine except to call the Anthropic API directly. It is <strong>not</strong>
+      sent to perceptualmechanics.com or anywhere else.
+    </p>
+    <p>
+      This page is password-protected so only you can access it. Still, don't share
+      the URL with your key visible in DevTools to anyone.
+    </p>
+    <p>
+      <strong>To use:</strong> paste your API key below, click Save. Then paste YouTube
+      (or any) URLs one at a time. Claude will name each star and assign it to a
+      constellation. When you have enough stars, hit "rebuild constellations" to let
+      Claude remap everything thematically. When you're happy, hit "copy as JS" and
+      paste the output into <code>src/scenes/nebula.js</code>.
+    </p>
+    <div class="key-row">
+      <input type="password" id="key-input" placeholder="sk-ant-..." autocomplete="off" />
+      <button class="btn-save" id="key-save-btn">save key</button>
+    </div>
+    <div class="key-status" id="key-status"></div>
+  </div>
+
+  <hr class="divider"/>
+
+  <!-- ── URL input ────────────────────────────────────────────────────── -->
   <div class="input-row">
-    <input type="url" id="url-input" placeholder="paste a URL…" />
-    <button id="add-btn">add star</button>
+    <input type="url" id="url-input" placeholder="paste a URL…" disabled />
+    <button id="add-btn" disabled>add star</button>
   </div>
 
   <div id="status"></div>
@@ -186,46 +290,92 @@
   <div class="actions" id="actions" style="display:none">
     <button class="btn-gold" id="remap-btn">✦ rebuild constellations</button>
     <button class="btn-muted" id="copy-btn">copy as JS</button>
+    <button class="btn-muted" id="clear-btn">clear all</button>
   </div>
 
   <div class="star-count" id="star-count"></div>
   <div id="star-list"></div>
-  <div class="empty" id="empty">the nebula is empty<br>paste a URL to add the first star</div>
+  <div class="empty" id="empty">add your api key above, then paste a url to add the first star</div>
 
   <script type="module">
-    const STORAGE_KEY = 'nebula-stars';
+    const STORAGE_KEY  = 'nebula-stars';
+    const API_KEY_STORE = 'nebula-api-key';
     const API_URL = 'https://api.anthropic.com/v1/messages';
 
     let stars = [];
-    try { stars = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); } catch {}
+    let apiKey = '';
 
-    const urlInput  = document.getElementById('url-input');
-    const addBtn    = document.getElementById('add-btn');
-    const statusEl  = document.getElementById('status');
-    const actionsEl = document.getElementById('actions');
-    const countEl   = document.getElementById('star-count');
-    const listEl    = document.getElementById('star-list');
-    const emptyEl   = document.getElementById('empty');
-    const remapBtn  = document.getElementById('remap-btn');
-    const copyBtn   = document.getElementById('copy-btn');
+    try { stars = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); } catch {}
+    try { apiKey = localStorage.getItem(API_KEY_STORE) || ''; } catch {}
+
+    const urlInput   = document.getElementById('url-input');
+    const addBtn     = document.getElementById('add-btn');
+    const statusEl   = document.getElementById('status');
+    const actionsEl  = document.getElementById('actions');
+    const countEl    = document.getElementById('star-count');
+    const listEl     = document.getElementById('star-list');
+    const emptyEl    = document.getElementById('empty');
+    const remapBtn   = document.getElementById('remap-btn');
+    const copyBtn    = document.getElementById('copy-btn');
+    const clearBtn   = document.getElementById('clear-btn');
+    const keyInput   = document.getElementById('key-input');
+    const keySaveBtn = document.getElementById('key-save-btn');
+    const keyStatus  = document.getElementById('key-status');
+
+    function setStatus(msg, isError = false) {
+      statusEl.textContent = msg;
+      statusEl.className = isError ? 'error' : '';
+    }
+
+    function setKeyUI() {
+      if (apiKey) {
+        keyStatus.textContent = '✓ key saved — ' + apiKey.slice(0, 12) + '...';
+        keyStatus.className = 'key-status ok';
+        urlInput.disabled = false;
+        addBtn.disabled = false;
+        emptyEl.textContent = 'the nebula is empty\npaste a URL to add the first star';
+      } else {
+        keyStatus.textContent = 'no key saved';
+        keyStatus.className = 'key-status';
+        urlInput.disabled = true;
+        addBtn.disabled = true;
+      }
+    }
+
+    keySaveBtn.addEventListener('click', () => {
+      const val = keyInput.value.trim();
+      if (!val.startsWith('sk-ant-')) {
+        keyStatus.textContent = 'that doesn\'t look right — should start with sk-ant-';
+        keyStatus.className = 'key-status error';
+        return;
+      }
+      apiKey = val;
+      localStorage.setItem(API_KEY_STORE, apiKey);
+      keyInput.value = '';
+      setKeyUI();
+    });
 
     function save() {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(stars));
       render();
     }
 
-    function setStatus(msg) { statusEl.textContent = msg; }
-
     async function callClaude(prompt, maxTokens = 400) {
       const res = await fetch(API_URL, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': apiKey,
+          'anthropic-version': '2023-06-01',
+          'anthropic-dangerous-direct-browser-access': 'true',
+        },
         body: JSON.stringify({
           model: 'claude-sonnet-4-6',
           max_tokens: maxTokens,
           messages: [{ role: 'user', content: prompt }],
         }),
       });
+      if (!res.ok) throw new Error(`API error ${res.status}`);
       const data = await res.json();
       return data.content?.map(b => b.text || '').join('') || '';
     }
@@ -271,13 +421,11 @@ Respond ONLY with valid JSON, no markdown:
         urlInput.value = '';
         setStatus(`✦ Added to: ${meta.constellation}`);
         setTimeout(() => setStatus(''), 3000);
-      } catch {
-        setStatus('Error — star added without metadata.');
-        stars.push({ id: Date.now().toString(), url, title: url, description: '', constellation: 'Uncategorized', color: 'cool', added: new Date().toISOString() });
-        save();
-        urlInput.value = '';
+      } catch (err) {
+        setStatus(`Error: ${err.message}. Check your API key.`, true);
       }
       addBtn.disabled = false;
+      urlInput.focus();
     }
 
     async function rebuildConstellations() {
@@ -308,16 +456,25 @@ Respond ONLY with valid JSON:
           const conns = result.connections?.map(c => `${c.stars.join(' ↔ ')}: ${c.reason}`).join('\n') || '';
           setStatus(`Constellations remapped.${ conns ? '\n\nConnections:\n' + conns : ''}`);
         }
-      } catch { setStatus('Error remapping.'); }
+      } catch (err) {
+        setStatus(`Error: ${err.message}`, true);
+      }
       remapBtn.disabled = false;
     }
 
     function exportJS() {
-      const js = `// nebula-stars.js — generated by Nebula Curator\nexport const stars = ${JSON.stringify(stars, null, 2)};\n`;
+      const js = `// nebula-stars.js — generated by Nebula Curator\n// paste this into src/scenes/nebula.js\nexport const stars = ${JSON.stringify(stars, null, 2)};\n`;
       navigator.clipboard.writeText(js).then(() => {
         copyBtn.textContent = 'copied ✓';
         setTimeout(() => { copyBtn.textContent = 'copy as JS'; }, 2000);
       });
+    }
+
+    function clearAll() {
+      if (!confirm('Clear all stars? This cannot be undone.')) return;
+      stars = [];
+      save();
+      setStatus('');
     }
 
     function removeStar(id) {
@@ -333,7 +490,7 @@ Respond ONLY with valid JSON:
       }, {});
 
       emptyEl.style.display = stars.length === 0 ? 'block' : 'none';
-      actionsEl.style.display = stars.length >= 3 ? 'flex' : 'none';
+      actionsEl.style.display = stars.length >= 1 ? 'flex' : 'none';
       countEl.textContent = stars.length > 0
         ? `${stars.length} star${stars.length !== 1 ? 's' : ''} · ${Object.keys(groups).length} constellation${Object.keys(groups).length !== 1 ? 's' : ''}`
         : '';
@@ -366,7 +523,9 @@ Respond ONLY with valid JSON:
     urlInput.addEventListener('keydown', e => { if (e.key === 'Enter') addStar(); });
     remapBtn.addEventListener('click', rebuildConstellations);
     copyBtn.addEventListener('click', exportJS);
+    clearBtn.addEventListener('click', clearAll);
 
+    setKeyUI();
     render();
   </script>
 
