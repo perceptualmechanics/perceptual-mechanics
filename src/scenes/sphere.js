@@ -26,6 +26,7 @@ export function createSphere(container, { preview = false } = {}) {
     labelRenderer.domElement.style.top = '0';
     labelRenderer.domElement.style.left = '0';
     labelRenderer.domElement.style.pointerEvents = 'none';
+    labelRenderer.domElement.style.zIndex = '1';
     container.appendChild(labelRenderer.domElement);
   }
 
@@ -195,7 +196,7 @@ export function createSphere(container, { preview = false } = {}) {
         background:#7ad;border-left:1px solid #348;
         padding:3rem 2.5rem;transform:translateX(100%);
         transition:transform .5s cubic-bezier(.16,1,.3,1);
-        overflow-y:scroll;backdrop-filter:blur(12px);z-index:10;scrollbar-color:#348 #7ad;scrollbar-width:thin;
+        overflow-y:scroll;z-index:10;scrollbar-color:#348 #7ad;scrollbar-width:thin;
         font-family:'Electrolize',sans-serif;
       }
       @media(max-width:700px){
