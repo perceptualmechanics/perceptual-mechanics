@@ -198,6 +198,11 @@ export function createSphere(container, { preview = false } = {}) {
         overflow-y:scroll;backdrop-filter:blur(12px);z-index:10;scrollbar-color:#348 #7ad;scrollbar-width:thin;
         font-family:'Electrolize',sans-serif;
       }
+      @media(max-width:700px){
+        #sphere-panel{width:85%;padding:4rem 1.5rem 2rem;}
+        #sphere-panel-title{font-size:1.1rem;letter-spacing:.15em;}
+        #sphere-panel-content{font-size:0.9rem;line-height:1.7;}
+      }
       #sphere-panel.open{transform:translateX(0);}
       #sphere-panel-title{font-size:1.65rem;letter-spacing:.25em;text-transform:uppercase;color:rgba(255,255,255,.8);margin-bottom:1.5rem;}
       #sphere-panel-content{color:rgba(255,255,255,.8);font-size:1rem;line-height:1.8;}
@@ -286,7 +291,11 @@ export function createSphere(container, { preview = false } = {}) {
       container.style.cursor = hoveredFace !== -1 ? 'pointer' : 'default';
     });
 
+    let touchMoved = false;
+    container.addEventListener('touchmove', () => { touchMoved = true; }, { passive: true });
+    container.addEventListener('touchstart', () => { touchMoved = false; }, { passive: true });
     container.addEventListener('click', e => {
+      if (touchMoved) { touchMoved = false; return; }
       if (panel.classList.contains('open') && !panel.contains(e.target)) {
         panel.classList.remove('open');
         if (selectedFace !== -1) { restoreFaceColor(selectedFace); selectedFace = -1; }
