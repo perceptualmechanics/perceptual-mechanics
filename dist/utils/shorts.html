@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>perceptual mechanics · shorts</title>
+  <meta name="theme-color" content="#000000"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Electrolize&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      width: 100%; height: 100%;
+      background: #000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      font-family: 'Electrolize', monospace;
+    }
+
+    #shorts-frame {
+      position: relative;
+      /* 9:16 — sized by JS to fit viewport */
+      background: #000;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+
+    #shorts-frame canvas {
+      position: absolute;
+      inset: 0;
+      width: 100% !important;
+      height: 100% !important;
+    }
+
+    /* Scene title overlay — shown when ?title param present */
+    #shorts-title {
+      position: absolute;
+      bottom: 2.5rem;
+      left: 50%;
+      transform: translateX(-50%);
+      color: rgba(255,255,255,0.85);
+      font-size: clamp(0.7rem, 3vw, 1.1rem);
+      letter-spacing: 0.35em;
+      text-transform: uppercase;
+      pointer-events: none;
+      text-align: center;
+      white-space: nowrap;
+      z-index: 10;
+      font-family: 'Times New Roman', serif;
+      display: none;
+    }
+    #shorts-title.visible { display: block; }
+
+    /* Watermark — always present, very subtle */
+    #shorts-watermark {
+      position: absolute;
+      bottom: 0.8rem;
+      right: 1rem;
+      color: rgba(255,255,255,0.15);
+      font-size: 0.5rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    /* Loading state */
+    #shorts-loading {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: rgba(255,255,255,0.2);
+      font-size: 0.65rem;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      z-index: 5;
+    }
+
+    /* Error state */
+    #shorts-error {
+      color: rgba(255,100,100,0.6);
+      font-size: 0.75rem;
+      letter-spacing: 0.1em;
+      text-align: center;
+      padding: 2rem;
+      display: none;
+    }
+  </style>
+  <script type="module" crossorigin src="/assets/shorts-Bnsulljn.js"></script>
+  <link rel="modulepreload" crossorigin href="/assets/modulepreload-polyfill-B5Qt9EMX.js">
+  <link rel="modulepreload" crossorigin href="/assets/butterfly-ClpQyfKa.js">
+</head>
+<body>
+
+  <div id="shorts-frame">
+    <div id="shorts-loading">loading…</div>
+    <p id="shorts-title" aria-hidden="true"></p>
+    <p id="shorts-watermark" aria-hidden="true">perceptual mechanics</p>
+  </div>
+
+  <div id="shorts-error">
+    unknown scene.<br>
+    try <code>?scene=butterfly</code> or <code>?scene=sphere</code>
+  </div>
+
+
+</body>
+</html>
