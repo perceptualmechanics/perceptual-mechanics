@@ -38,9 +38,13 @@ function findCenter(scale) {
   };
 }
 
-export function createButterfly(container, { preview = false } = {}) {
-  const w = container.clientWidth  || window.innerWidth;
-  const h = container.clientHeight || window.innerHeight;
+export function createButterfly(container, { preview = false, shorts = false, rotSpeed = 1 } = {}) {
+  // Shorts mode: 9:16 vertical crop for YouTube Shorts
+  const isShorts = shorts || (!preview && new URLSearchParams(window.location.search).has('shorts'));
+  const w = isShorts ? Math.min(container.clientWidth || window.innerWidth, 450)
+                     : container.clientWidth  || window.innerWidth;
+  const h = isShorts ? Math.round(w * (16/9))
+                     : container.clientHeight || window.innerHeight;
   const SCALE     = preview ? 0.7 : 1.6;
   const MAX_PTS   = preview ? 3000 : 10000;
   const GLOW_PTS  = preview ? 0    : 300;   // trailing glow tail length
@@ -51,7 +55,7 @@ export function createButterfly(container, { preview = false } = {}) {
   scene.fog = new THREE.FogExp2(0x000000, preview ? 0.012 : 0.006);
 
   const camera = new THREE.PerspectiveCamera(45, w/h, 0.1, 500);
-  camera.position.set(preview ? 5 : 40, preview ? 15 : 35, preview ? 65 : 130);
+  camera.position.set(preview ? 5 : 40, preview ? 15 : (isShorts ? 30 : 35), preview ? 65 : (isShorts ? 100 : 130));
   camera.lookAt(preview ? 0 : 0, preview ? 5 : 0, 0);
 
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
@@ -59,9 +63,16 @@ export function createButterfly(container, { preview = false } = {}) {
   renderer.setSize(w, h);
   renderer.setClearColor(0x000000, 0);
   renderer.domElement.setAttribute('aria-hidden', 'true');
-  renderer.domElement.style.width  = '100%';
-  renderer.domElement.style.height = '100%';
-  renderer.domElement.style.display = 'block';
+  if (isShorts) {
+    renderer.domElement.style.width  = w + 'px';
+    renderer.domElement.style.height = h + 'px';
+    renderer.domElement.style.display = 'block';
+    renderer.domElement.style.margin = '0 auto';
+  } else {
+    renderer.domElement.style.width  = '100%';
+    renderer.domElement.style.height = '100%';
+    renderer.domElement.style.display = 'block';
+  }
   container.appendChild(renderer.domElement);
 
   const center = findCenter(SCALE);
@@ -207,6 +218,8 @@ export function createButterfly(container, { preview = false } = {}) {
   };
   const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   let isDragging=false, prevMouse={x:0,y:0}, autoJitter=!prefersReducedMotion;
+  let autoRotate = !preview && !prefersReducedMotion; // slow camera orbit
+  const ROTATE_SPEED = (isShorts ? 0.0015 : 0.0008) * rotSpeed; // shorts rotates faster for drama
 
   function updateCamera() {
     camera.position.x = spherical.radius * Math.sin(spherical.phi) * Math.sin(spherical.theta);
@@ -266,7 +279,13 @@ export function createButterfly(container, { preview = false } = {}) {
       root.rotation.x=rotX;root.rotation.y=rotY;root.rotation.z=rotZ;
     }
 
-    if (!preview) updateCamera();
+    // Slow camera orbit — sweep theta when not dragging
+    if (autoRotate && !isDragging) {
+      spherical.theta += ROTATE_SPEED;
+      updateCamera();
+    } else if (!preview) {
+      updateCamera();
+    }
 
     // Advance Lorenz trails
     for (const trail of trails) {
