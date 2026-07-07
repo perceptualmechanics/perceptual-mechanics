@@ -25,13 +25,16 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: Deploy to DreamHost
-        uses: easingthemes/ssh-deploy@main
-        with:
-          SSH_PRIVATE_KEY: ${{ secrets.DREAMHOST_SSH_KEY }}
-          ARGS: "-rlgoDzvc --delete"
-          SOURCE: "dist/"
-          REMOTE_HOST: pdx1-shared-a1-46.dreamhost.com
-          REMOTE_USER: copper_prism
-          TARGET: /home/copper_prism/perceptualmechanics.com
-          SSH_CMD_ARGS: "-o StrictHostKeyChecking=no -o IdentitiesOnly=yes"
+      - name: Set up SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.DREAMHOST_SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H pdx1-shared-a1-46.dreamhost.com >> ~/.ssh/known_hosts
+
+      - name: Deploy via rsync
+        run: |
+          rsync -rlgoDzvc --delete \
+            -e "ssh -i ~/.ssh/deploy_key -o IdentitiesOnly=yes -o StrictHostKeyChecking=no" \
+            dist/ \
+            copper_prism@pdx1-shared-a1-46.dreamhost.com:/home/copper_prism/perceptualmechanics.com
