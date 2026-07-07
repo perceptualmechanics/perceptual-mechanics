@@ -1,5 +1,19 @@
 # perceptual mechanics — notes & punch list
 
+## nebula curator workflow
+The curator tool runs **locally only** due to browser CORS restrictions on direct Anthropic API calls.
+
+1. `npm run dev` in the project root
+2. Open `http://localhost:5173/utils/nebula-curator.html`
+3. Enter your Anthropic API key (from console.anthropic.com) — saves to localStorage
+4. Paste URLs one at a time — Claude names each star and assigns a constellation
+5. When you have enough stars, hit "rebuild constellations" for a full thematic remap
+6. Hit "copy as JS" and paste the output into `src/scenes/nebula.js`
+7. Commit and push — GitHub Actions deploys automatically
+
+The live page at perceptualmechanics.com/utils/nebula-curator.html is password-protected
+but non-functional for API calls. Use localhost instead.
+
 ## next up
 - [ ] butterfly auto-rotate / camera sweep for YouTube Shorts (9:16 vertical)
 - [ ] nebula: integrate curator tool output into nebula.js
