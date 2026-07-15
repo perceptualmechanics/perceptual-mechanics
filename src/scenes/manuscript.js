@@ -103,7 +103,6 @@ const INTENSITIES = [
   { patch: 'flying',         para: 6,  phrase: 'Tied down shackled chained to the ground wrapped in iron and thrown in a river', mode: 'tight' },
   { patch: 'death',          para: 11, phrase: 'Sometimes, you must be ready to lose everything before you grasp what you need.', mode: 'wide' },
   { patch: 'selfmutilation', para: 9,  phrase: 'my entire body torn apart by horses', mode: 'tight' },
-  { patch: 'identity',       para: 20, phrase: 'Gary was simple; Gary was precise.', mode: 'wide' },
   { patch: 'holography',     para: 29, phrase: 'he has no idea where on Earth he is', mode: 'wide' },
   { patch: 'projection',     para: 18, phrase: 'the earth fissuring and swallowing me whole', mode: 'tight' },
   { patch: 'projection',     para: 38, phrase: 'swirling upwards and out, like smoke over hills refracting the endless yellow light', mode: 'wide' },

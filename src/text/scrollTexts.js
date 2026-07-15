@@ -86,7 +86,6 @@ export const identityTheft = [
   `"Get the fuck out of here! " He charged me, took three steps and started to swing.  I raised my hands to protect myself, caught hold of his arm, and pulled--`,
   `Something detached.  It all happened in a blur.  The next thing I knew, I was staring at my right hand, which clutched what looked like Gary's. . . skin?  I heard a thump, and saw that. . . something had fallen on the bed.  It looked like an artist's manikin: humanoid, yet grey and nondescript.  It looked of average height and proportion.  The surface was perfectly smooth and matte.  Its chest was rising slowly and steadily, even though there was no mouth to speak of.`,
   `I looked back on the skin I held in my hand and saw it was more than a skin; it was, for all intents and purposes, Gary.  I held everything that he was.  Taking a deep breath, I slipped the skin over myself and felt myself shrink, widen, feel more aggressive, less conflicted.  Memories swarmed me, my vision seemed to shift.  I coughed and it was Gary's cough.  I took a step and felt how Gary would stand.  I placed the manikin that used to be Gary in the closet, closed the door, and left the townhouse.  After all, I was late meeting my buddies.`,
-  `Gary was simple; Gary was precise.  Gary had a very small routine that he stuck to:`,
 ];
 
 export const holography = [
