@@ -72,9 +72,45 @@ html, body {
   text-decoration: none;
   transition: color 0.2s;
   cursor: pointer;
+  text-shadow: 0 1px 5px rgba(0,0,0,0.75); /* keeps it legible over light scenes too */
 }
 #site-title:hover { color: rgba(255,255,255,0.7); }
 #site-title:focus { outline: 1px solid rgba(255,255,255,0.4); outline-offset: 4px; }
+
+/* Light translucent smoke curling up on hover */
+#site-title::before,
+#site-title::after {
+  content: '';
+  position: absolute;
+  bottom: 90%; left: 50%;
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0) 70%);
+  opacity: 0;
+  pointer-events: none;
+  filter: blur(2px);
+}
+#site-title::before { transform: translate(-14px, 0) scale(0.6); }
+#site-title::after { transform: translate(8px, 0) scale(0.4); }
+#site-title:hover::before {
+  animation: pm-smoke-a 2.6s ease-out infinite;
+}
+#site-title:hover::after {
+  animation: pm-smoke-b 2.6s ease-out 0.9s infinite;
+}
+@keyframes pm-smoke-a {
+  0%   { opacity: 0; transform: translate(-14px, 0) scale(0.5); }
+  15%  { opacity: 0.5; }
+  100% { opacity: 0; transform: translate(-22px, -32px) scale(1.8); filter: blur(5px); }
+}
+@keyframes pm-smoke-b {
+  0%   { opacity: 0; transform: translate(8px, 0) scale(0.35); }
+  15%  { opacity: 0.4; }
+  100% { opacity: 0; transform: translate(16px, -26px) scale(1.5); filter: blur(4px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  #site-title::before, #site-title::after { display: none; }
+}
 
 /* ─── Landing ───────────────────────────────────────────────────────────────── */
 #landing {

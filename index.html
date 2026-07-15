@@ -7,7 +7,7 @@
   <meta name="description" content="Perceptual Mechanics — a digital art project by Scott Jason Cohen. Interactive visualizations of chaos, language, and phase space."/>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Electrolize&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Electrolize&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=IM+Fell+English:ital@0;1&family=Cinzel:wght@400;600&family=Patrick+Hand&display=swap" rel="stylesheet">
   <title>perceptual mechanics</title>
   <meta name="theme-color" content="#000000"/>
   <link rel="stylesheet" href="./styles/main.css">
@@ -38,7 +38,40 @@
       </svg>
     </button>
 
-    <!-- Nebula and Egg nav icons: coming soon -->
+    <!-- Nebula: deactivated for now, being reworked — see src/scenes/nebula.js
+    <button class="nav-icon" data-scene="nebula" aria-label="Nebula" title="Nebula — The Gaze">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="5" cy="6" r="0.9" fill="currentColor" stroke="none"/>
+        <circle cx="12" cy="4" r="0.7" fill="currentColor" stroke="none"/>
+        <circle cx="18" cy="8" r="1" fill="currentColor" stroke="none"/>
+        <circle cx="9" cy="13" r="0.8" fill="currentColor" stroke="none"/>
+        <circle cx="16" cy="16" r="0.9" fill="currentColor" stroke="none"/>
+        <circle cx="6" cy="19" r="0.7" fill="currentColor" stroke="none"/>
+        <path d="M5 6 L12 4 L18 8 L9 13 L16 16 M9 13 L6 19"/>
+      </svg>
+    </button>
+    -->
+
+    <!-- Manuscript: illuminated capital -->
+    <button class="nav-icon" data-scene="manuscript" aria-label="Manuscript" title="the scroll">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 5.2 C10 3.6 6 3.1 3 4.1 V18 C6 17 10 17.5 12 19 C14 17.5 18 17 21 18 V4.1 C18 3.1 14 3.6 12 5.2 Z"/>
+        <path d="M12 5.2 V19"/>
+        <path d="M5.5 7.6 H9.3 M5.5 10.6 H9.3 M14.7 7.6 H18.5 M14.7 10.6 H18.5"/>
+      </svg>
+    </button>
+
+    <!-- Theater: film camera -->
+    <button class="nav-icon" data-scene="theater" aria-label="The Theater" title="The Theater — Now Playing">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="7" width="12" height="10" rx="1"/>
+        <path d="M15 10.2 L21 7.5 V16.5 L15 13.8"/>
+        <circle cx="7.2" cy="5.6" r="1.5"/>
+        <circle cx="12" cy="4.6" r="1.1"/>
+      </svg>
+    </button>
+
+    <!-- Egg nav icon: coming soon -->
 
   </nav>
 
@@ -63,13 +96,30 @@
         </div>
       </div>
 
-      <!-- Nebula + Egg previews: uncomment when scenes are ready
+      <!-- Nebula preview: deactivated for now, being reworked
       <div class="preview-wrapper" data-scene="nebula" role="listitem">
         <div class="preview-container" id="preview-nebula"
              role="button" tabindex="0"
-             aria-label="Nebula — The Gaze. A constellation interface. Press Enter to expand.">
+             aria-label="Nebula — The Gaze. Constellations of Scott's old web writing. Press Enter to expand.">
         </div>
       </div>
+      -->
+
+      <div class="preview-wrapper" data-scene="manuscript" role="listitem">
+        <div class="preview-container" id="preview-manuscript"
+             role="button" tabindex="0"
+             aria-label="A scroll of found writing — carved fragments, 2000 to 2012. Press Enter to expand.">
+        </div>
+      </div>
+
+      <div class="preview-wrapper" data-scene="theater" role="listitem">
+        <div class="preview-container" id="preview-theater"
+             role="button" tabindex="0"
+             aria-label="The Theater — scenes from Truth and Beauty and Paul Revere, performed by ASCII actors. Press Enter to expand.">
+        </div>
+      </div>
+
+      <!-- Egg preview: uncomment when scene is ready
       <div class="preview-wrapper" data-scene="egg" role="listitem">
         <div class="preview-container" id="preview-egg"
              role="button" tabindex="0"

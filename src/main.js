@@ -1,16 +1,22 @@
-import { createSphere }    from './scenes/sphere.js';
-import { createButterfly } from './scenes/butterfly.js';
-// import { createNebula }    from './scenes/nebula.js';
+import { createSphere }     from './scenes/sphere.js';
+import { createButterfly }  from './scenes/butterfly.js';
+import { createManuscript } from './scenes/manuscript.js';
+import { createTheater } from './scenes/theater.js';
+// import { createNebula }    from './scenes/nebula.js'; // deactivated for now, being reworked
 // import { createEgg }       from './scenes/egg.js';
 
 // ─── Scene registry ──────────────────────────────────────────────────────────
 const SCENES = {
-  sphere:    { create: createSphere,    label: 'The Sphere — full screen experience. Press Escape to return.',
-               ariaLabel: 'The Sphere — interactive geodesic sphere with text fragments.' },
-  butterfly: { create: createButterfly, label: 'Chaos Butterfly in Phase Space, 2026.',
-               ariaLabel: 'Chaos Butterfly in Phase Space, 2026 — Lorenz attractor. Drag to orbit, scroll to zoom.' },
+  sphere:      { create: createSphere,     label: 'The Sphere — full screen experience. Press Escape to return.',
+                 ariaLabel: 'The Sphere — interactive geodesic sphere with text fragments.' },
+  butterfly:   { create: createButterfly,  label: 'Chaos Butterfly in Phase Space, 2026.',
+                 ariaLabel: 'Chaos Butterfly in Phase Space, 2026 — Lorenz attractor. Drag to orbit, scroll to zoom.' },
+  manuscript:  { create: createManuscript, label: 'Selected Works — An Illuminated Manuscript.',
+                 ariaLabel: 'Selected Works — an illuminated manuscript of Scott’s best writing, 2000 to 2012. Scroll to read.' },
+  theater:     { create: createTheater,    label: 'The Theater — Now Playing.',
+                 ariaLabel: 'The Theater — scenes from Truth and Beauty and Paul Revere, performed by ASCII actors. A different program each visit; click or use the controls to advance.' },
   // nebula:    { create: createNebula,    label: 'Nebula — The Gaze.',
-  //              ariaLabel: 'Nebula — a constellation interface.' },
+  //              ariaLabel: 'Nebula — constellations of Scott’s old web writing, 2000 to 2012. Drag to orbit, click a star.' },
   // egg:       { create: createEgg,       label: 'The Egg — Worldline.',
   //              ariaLabel: 'The Egg — your geographic worldline through spacetime.' },
 };
@@ -169,10 +175,12 @@ document.querySelectorAll('.preview-wrapper').forEach(w => {
 // ─── Init previews ────────────────────────────────────────────────────────────
 function initPreviews() {
   const map = {
-    sphere:    document.getElementById('preview-sphere'),
-    butterfly: document.getElementById('preview-butterfly'),
-    nebula:    document.getElementById('preview-nebula'),
-    egg:       document.getElementById('preview-egg'),
+    sphere:     document.getElementById('preview-sphere'),
+    butterfly:  document.getElementById('preview-butterfly'),
+    manuscript: document.getElementById('preview-manuscript'),
+    theater:    document.getElementById('preview-theater'),
+    nebula:     document.getElementById('preview-nebula'),
+    egg:        document.getElementById('preview-egg'),
   };
   for (const [name, el] of Object.entries(map)) {
     if (el) previews[name] = SCENES[name].create(el, { preview: true });

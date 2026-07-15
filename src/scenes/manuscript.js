@@ -1,0 +1,626 @@
+// ─── The Scroll ────────────────────────────────────────────────────────────
+// Pre-Christian. No illumination in the Kells sense — no gold leaf, no
+// jewel-bright interlace, no titles. This is meant to read as something
+// found, not published: a hide-and-bark scroll a bard kept adding to across
+// twelve years (2000–2012), patch lashed to patch as new material came in,
+// the oldest hide darkest and most soot-stained, the newest still pale.
+// The only mark on it besides the words themselves is a single ochre hare,
+// blown-pigment cave-painting style, at the very top — and the Ogham letter
+// Sail (ᏸ, fourth of the Aicme Beithe: four strokes off a stemline).
+//
+// Seven pieces, chronological, full texts, no titles/sources/dates/glosses:
+//   Iron Gods · Flying · Thoughts Of Death Abounds  (Spoonfed / FORCEFED, c. 2000)
+//   Thalia · Wingspan                                (Kinetic Muse, mid-2000s)
+//   Holography · Projection                          (2009–2012)
+//
+// Two honest notes on what's NOT here:
+//  — Holography is excerpted, not full. The real chapter runs to roughly
+//    10,500 words; what's here is one complete, self-contained movement —
+//    Jeremy Constantilios's flight into and landing in Los Angeles — ending
+//    at a natural scene break. Everything else on this scroll is the
+//    complete original text.
+//  — Truth and Beauty didn't make the cut. Its screenplay-dialogue format
+//    (CELLIST: / BRIAN: —) sat wrong against straight prose once titles and
+//    scene-framing were gone; it's still on the site, in The Theater.
+//
+// A handful of phrases are still live links — words that genuinely echo
+// across pieces (the winged visitor in Flying and Wingspan; "a story about
+// failure" answering Thalia's "the story you tell yourself"; Jeremy
+// Constantilios himself, walking out of Projection and straight into
+// Holography). No new text was written to make these connections — they're
+// all already there in his own words.
+//
+// No longer CSS-only by design constraint — this pass leans on a few hidden
+// inline SVG filters (feTurbulence/feDisplacementMap for grain and wobble)
+// alongside the CSS, in service of one goal: this should read as a beaten,
+// handled object, not a rendered one. Every patch is clipped to its own
+// randomized, ragged, disjointed perimeter — not just a torn top and
+// bottom, the whole hide-shape is uneven. Ink stains and worn patches are
+// scattered per instance. Every line of body text carries its own small
+// random tilt, drift, and size, like it was actually written by a hand and
+// not set by a machine. The mood being chased is a bard scribbling fast by
+// the last of the candlelight, not a ransom note: emphasis pulls the
+// tracking wide and lets it glow like it caught the light, or crowds the
+// words together and jostles them off their baseline like the hand
+// couldn't keep up. The background behind the scroll is now that same
+// candlelight — an unsteady, flickering glow over a dark worktable, not a
+// flat vignette. No canvas, no WebGL, no raster images — still all
+// vector/filter math, generated fresh in the browser, just with more tools
+// in the box.
+
+import { ironGods, flying, death, thalia, wingspan, holography, projection } from '../text/scrollTexts.js';
+
+const PATCHES = [
+  { key: 'iron',       id: 'patch-iron',       body: ironGods,    tone: 0 },
+  { key: 'flying',     id: 'patch-flying',     body: flying,      tone: 1 },
+  { key: 'death',      id: 'patch-death',      body: death,       tone: 1 },
+  { key: 'thalia',     id: 'patch-thalia',     body: thalia,      tone: 2 },
+  { key: 'wingspan',   id: 'patch-wingspan',   body: wingspan,    tone: 2 },
+  { key: 'holography', id: 'patch-holography', body: holography,  tone: 3 },
+  { key: 'projection', id: 'patch-projection', body: projection,  tone: 4 },
+];
+
+const MOTIF_CYCLE = ['spiral', 'chevron', 'cupring', 'dots'];
+
+// Phrases already present in the raw text that get wired as live cross-links.
+const LINKS = [
+  { patch: 'flying',     para: 2,  phrase: 'he has wings',                                    target: 'patch-wingspan' },
+  { patch: 'wingspan',   para: 0,  phrase: 'his six wings unfolding',                          target: 'patch-flying' },
+  { patch: 'thalia',     para: 0,  phrase: 'I am the story you tell yourself at night to keep the wolves at bay.', target: 'patch-projection' },
+  { patch: 'projection', para: 4,  phrase: 'This is a story about failure, and a broken heart, and hell.',         target: 'patch-thalia' },
+  { patch: 'projection', para: 37, phrase: 'Jeremy Constantilios',                             target: 'patch-holography' },
+  { patch: 'holography', para: 0,  phrase: 'Jeremy Constantilios',                             target: 'patch-projection' },
+];
+
+// Rubric ink — color only, no link. Sparingly applied, echoing across pieces.
+const RUBRICS = [
+  { patch: 'iron',       para: 0,  phrase: 'absolute lie' },
+  { patch: 'flying',     para: 8,  phrase: "I'm flying. Finally." },
+  { patch: 'death',      para: 2,  phrase: 'Thoughts of death abound' },
+  { patch: 'thalia',     para: 7,  phrase: 'I am the tale you tell to transform the world' },
+  { patch: 'wingspan',   para: 0,  phrase: 'great god of guardian angels' },
+  { patch: 'holography', para: 15, phrase: 'pilgrimage to Hell' },
+  { patch: 'projection', para: 2,  phrase: 'pilgrimage to Hell' },
+  { patch: 'projection', para: 7,  phrase: 'Los Angeles is an otherworld' },
+];
+
+// Intense passages — letter-spacing distortion only, no color, no link.
+// 'wide' pulls the tracking apart for the declarative/ominous lines;
+// 'tight' crushes it for the breathless/visceral ones. Every phrase below
+// is verbatim, already present in the source text at that paragraph.
+const INTENSITIES = [
+  { patch: 'iron',       para: 10, phrase: 'the men with the cold smiles and the iron eyes smile with satisfaction, and they turn off the stars.', mode: 'wide' },
+  { patch: 'flying',     para: 6,  phrase: 'Tied down shackled chained to the ground wrapped in iron and thrown in a river', mode: 'tight' },
+  { patch: 'death',      para: 11, phrase: 'Sometimes, you must be ready to lose everything before you grasp what you need.', mode: 'wide' },
+  { patch: 'thalia',     para: 5,  phrase: 'I am the lie you tell yourselves to keep you sane.', mode: 'wide' },
+  { patch: 'wingspan',   para: 0,  phrase: "Femme fatales and dimestore cowboys have running gun battles through the threads.", mode: 'tight' },
+  { patch: 'holography', para: 29, phrase: 'he has no idea where on Earth he is', mode: 'wide' },
+  { patch: 'projection', para: 18, phrase: 'the earth fissuring and swallowing me whole', mode: 'tight' },
+  { patch: 'projection', para: 39, phrase: 'swirling upwards and out, like smoke over hills refracting the endless yellow light', mode: 'wide' },
+];
+
+function escapeHtml(s) {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function renderParagraph(patchKey, index, text) {
+  let html = escapeHtml(text);
+  const link = LINKS.find(l => l.patch === patchKey && l.para === index);
+  if (link) {
+    const esc = escapeHtml(link.phrase);
+    html = html.replace(esc, `<a class="ms-link" data-target="${link.target}" role="link" tabindex="0">${esc}</a>`);
+  }
+  const rubric = RUBRICS.find(r => r.patch === patchKey && r.para === index);
+  if (rubric) {
+    const esc = escapeHtml(rubric.phrase);
+    html = html.replace(esc, `<span class="ms-rubric">${esc}</span>`);
+  }
+  const intense = INTENSITIES.find(x => x.patch === patchKey && x.para === index);
+  if (intense) {
+    const esc = escapeHtml(intense.phrase);
+    const inner = intense.mode === 'tight' ? franticWords(esc) : esc;
+    html = html.replace(esc, `<span class="ms-intense ms-intense--${intense.mode}">${inner}</span>`);
+  }
+  return html;
+}
+
+// A word at a time, each jostled slightly off its baseline and tilted its
+// own small amount — a hand that's writing faster than it can properly
+// form the letters, not a typeface doing a "menacing" trick.
+function franticWords(escapedPhrase) {
+  return escapedPhrase.split(' ').map(word => {
+    const rot = (Math.random() * 7 - 3.5).toFixed(1);
+    const dy = (Math.random() * 6 - 3).toFixed(1);
+    return `<span class="ms-word" style="transform: rotate(${rot}deg) translateY(${dy}px);">${word}</span>`;
+  }).join(' ');
+}
+
+// ─── Randomized wear: a fresh ragged perimeter, a fresh scatter of stains,
+// every load. Walks the box clockwise — top, right, bottom, left — biting
+// a small random amount inward at each step, so the whole hide-shape is
+// disjointed rather than just the top and bottom edges. The bite stays
+// well inside the patch's own padding, so text is never actually clipped.
+function patchClipPath() {
+  const bite = () => (Math.random() * 12).toFixed(1);
+  const steps = 7;
+  const pts = [];
+  for (let i = 0; i <= steps; i++) pts.push(`${((i / steps) * 100).toFixed(1)}% ${bite()}px`);
+  for (let i = 1; i <= steps; i++) pts.push(`calc(100% - ${bite()}px) ${((i / steps) * 100).toFixed(1)}%`);
+  for (let i = steps - 1; i >= 0; i--) pts.push(`${((i / steps) * 100).toFixed(1)}% calc(100% - ${bite()}px)`);
+  for (let i = steps - 1; i >= 1; i--) pts.push(`${bite()}px ${((i / steps) * 100).toFixed(1)}%`);
+  return `polygon(${pts.join(', ')})`;
+}
+
+function agingFilter(tone) {
+  const j = () => Math.random() - 0.5;
+  const contrast = 1 + tone * 0.03 + j() * 0.07;
+  const brightness = 1 - tone * 0.018 + j() * 0.05;
+  const sepia = Math.max(0, 0.06 + tone * 0.03 + j() * 0.05);
+  const saturate = 1 - tone * 0.025 + j() * 0.06;
+  // drop-shadow (unlike box-shadow) follows the clipped ragged silhouette,
+  // so the torn edge reads as a physical, lifted piece of hide.
+  return `contrast(${contrast.toFixed(2)}) brightness(${brightness.toFixed(2)}) sepia(${sepia.toFixed(2)}) saturate(${saturate.toFixed(2)}) drop-shadow(0 3px 4px rgba(0,0,0,0.4))`;
+}
+
+const STAIN_BLENDS = ['multiply', 'multiply', 'multiply', 'soft-light'];
+function buildStain() {
+  const el = document.createElement('div');
+  el.className = 'ms-stain';
+  el.setAttribute('aria-hidden', 'true');
+  const w = 9 + Math.random() * 24;
+  const h = w * (0.55 + Math.random() * 0.7);
+  const left = Math.random() * (100 - w);
+  const top = 4 + Math.random() * 78;
+  const rot = (Math.random() * 50 - 25).toFixed(1);
+  const blend = STAIN_BLENDS[Math.floor(Math.random() * STAIN_BLENDS.length)];
+  const opacity = (0.1 + Math.random() * 0.24).toFixed(2);
+  const dark = blend === 'multiply';
+  const blur = (0.6 + Math.random() * 2.2).toFixed(1);
+  el.style.cssText = `left:${left.toFixed(1)}%; top:${top.toFixed(1)}%; width:${w.toFixed(1)}%; height:${(h / w * 100).toFixed(1)}%;` +
+    `transform: rotate(${rot}deg); mix-blend-mode: ${blend}; opacity: ${opacity}; filter: blur(${blur}px);` +
+    `background: radial-gradient(circle, ${dark ? 'rgba(18,12,5,0.95)' : 'rgba(255,246,224,0.65)'} 0%, transparent 70%);`;
+  return el;
+}
+
+function buildStyles() {
+  if (document.getElementById('manuscript-styles')) return;
+  const style = document.createElement('style');
+  style.id = 'manuscript-styles';
+  style.textContent = `
+    .ms-root {
+      width: 100%; height: 100%;
+      background: linear-gradient(165deg, #14100b 0%, #1d1912 50%, #110d08 100%);
+      color: #e9ddc2;
+      font-family: 'IM Fell English', Georgia, serif;
+      overflow: hidden;
+      position: relative;
+    }
+    /* an unsteady candle somewhere off to the side, not a flat vignette.
+       negative z-index so it always sits behind the (non-positioned) scroll
+       content, rather than fighting default stacking order. */
+    .ms-root::before {
+      content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+      background:
+        radial-gradient(circle at 24% 18%, rgba(255,214,150,0.85), rgba(255,196,120,0.4) 18%, transparent 42%),
+        radial-gradient(circle at 78% 66%, rgba(255,180,100,0.4), transparent 50%),
+        radial-gradient(ellipse at 18% 8%, rgba(0,0,0,0.45), transparent 48%),
+        radial-gradient(ellipse at 84% 88%, rgba(0,0,0,0.6), transparent 55%),
+        repeating-linear-gradient(38deg, rgba(0,0,0,0.045) 0 1px, transparent 1px 6px);
+      animation: ms-candlelight 4.2s ease-in-out infinite;
+    }
+    @keyframes ms-candlelight {
+      0%, 100%  { opacity: 1; }
+      15%       { opacity: 0.62; }
+      30%       { opacity: 1; }
+      46%       { opacity: 0.7; }
+      58%       { opacity: 0.95; }
+      74%       { opacity: 0.6; }
+      88%       { opacity: 0.9; }
+    }
+    .ms-scroll {
+      width: 100%; height: 100%;
+      overflow-y: auto; overflow-x: hidden;
+      padding: 3.2rem 1.4rem 6rem;
+      scrollbar-color: rgba(140,105,55,0.4) transparent;
+      scrollbar-width: thin;
+    }
+    .ms-scroll:focus { outline: none; }
+
+    /* dust and scratches on the glass, over everything, static through scroll */
+    .ms-grain {
+      position: absolute; inset: 0; z-index: 5; pointer-events: none;
+      filter: url(#ms-grain);
+      mix-blend-mode: multiply;
+      opacity: 0.13;
+    }
+
+    /* ── Opening mark: a single blown-pigment hare, cave-painting style ── */
+    .ms-hare-panel {
+      max-width: 220px; margin: 0 auto 2.6rem; aspect-ratio: 1.5 / 1;
+      position: relative;
+    }
+    .ms-hare-panel .ms-cavehare {
+      position: absolute; inset: 0;
+    }
+    .ms-cavehare::before {
+      /* rough ochre body/haunch blot */
+      content: ''; position: absolute; left: 18%; bottom: 10%; width: 58%; height: 46%;
+      background: radial-gradient(circle at 32% 30%, #b06a2e 0%, #8a4f20 55%, #6e3d17 80%, transparent 100%);
+      border-radius: 62% 38% 55% 45% / 50% 60% 40% 50%;
+      filter: url(#ms-rough-strong);
+      opacity: 0.88;
+      transform: rotate(-4deg);
+    }
+    .ms-cavehare::after {
+      /* haunch/leg + ear smear, single irregular stroke */
+      content: ''; position: absolute; left: 46%; top: 6%; width: 30%; height: 52%;
+      background: linear-gradient(200deg, #a8632b, #7a4620 70%, transparent 100%);
+      clip-path: polygon(10% 100%, 0% 40%, 30% 0%, 70% 8%, 60% 55%, 100% 90%, 55% 100%);
+      filter: url(#ms-rough-strong);
+      opacity: 0.85;
+      transform: rotate(6deg);
+    }
+    .ms-cavehare-legs {
+      position: absolute; left: 22%; bottom: 2%; width: 46%; height: 18%;
+      background: linear-gradient(90deg, transparent 0%, #6e3d17 20%, transparent 30%, transparent 60%, #6e3d17 78%, transparent 100%);
+      opacity: 0.75;
+      filter: url(#ms-rough);
+    }
+    .ms-cavehare-spatter {
+      position: absolute; inset: -8%;
+      background-image:
+        radial-gradient(circle, rgba(139,79,32,0.5) 1.5px, transparent 1.6px),
+        radial-gradient(circle, rgba(139,79,32,0.35) 1px, transparent 1.1px);
+      background-size: 13px 13px, 7px 7px;
+      background-position: 0 0, 4px 6px;
+      -webkit-mask-image: radial-gradient(ellipse at 45% 55%, black 0%, black 35%, transparent 72%);
+              mask-image: radial-gradient(ellipse at 45% 55%, black 0%, black 35%, transparent 72%);
+      opacity: 0.6;
+    }
+
+    /* ── Primordial marginal motifs — spiral, chevron, cup-and-ring, dots ── */
+    .ms-motif { display: block; width: 100%; height: 100%; opacity: 0.85; filter: url(#ms-rough); }
+    .ms-motif-spiral {
+      background: conic-gradient(from 90deg, transparent 0deg, #a8702f 40deg, transparent 90deg,
+        #a8702f 170deg, transparent 220deg, #a8702f 300deg, transparent 360deg);
+      border-radius: 50%;
+      -webkit-mask: radial-gradient(circle, transparent 18%, black 24%, black 42%, transparent 48%);
+              mask: radial-gradient(circle, transparent 18%, black 24%, black 42%, transparent 48%);
+    }
+    .ms-motif-chevron {
+      background-image: repeating-linear-gradient(45deg, transparent 0 6px, #a8702f 6px 9px, transparent 9px 15px),
+                         repeating-linear-gradient(-45deg, transparent 0 6px, #8a3b22 6px 9px, transparent 9px 15px);
+      -webkit-mask: radial-gradient(circle, black 40%, transparent 72%);
+              mask: radial-gradient(circle, black 40%, transparent 72%);
+    }
+    .ms-motif-cupring {
+      background: radial-gradient(circle, transparent 8%, #a8702f 10% 14%, transparent 16% 30%, #8a3b22 32% 36%, transparent 38%);
+      border-radius: 50%;
+    }
+    .ms-motif-dots {
+      background-image: radial-gradient(#a8702f 22%, transparent 24%);
+      background-size: 30% 30%;
+      background-position: 15% 15%, 65% 15%, 15% 65%, 65% 65%;
+    }
+
+    /* ── Seam: where one patch of hide was lashed to the next ── */
+    .ms-seam {
+      max-width: 820px; margin: 0 auto; height: 44px; position: relative;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .ms-seam::before {
+      content: ''; position: absolute; left: 4%; right: 4%; top: 50%; height: 2px;
+      background: repeating-linear-gradient(90deg, #5c4426 0 10px, transparent 10px 14px);
+      opacity: 0.55; transform: translateY(-50%);
+      filter: url(#ms-rough);
+    }
+    .ms-seam::after {
+      content: ''; position: absolute; left: 4%; right: 4%; top: 50%; height: 10px;
+      background-image: repeating-linear-gradient(90deg, transparent 0 12px, rgba(60,44,24,0.5) 12px 13px, transparent 13px 24px);
+      transform: translateY(-50%) rotate(-1deg);
+      filter: url(#ms-rough);
+    }
+    .ms-seam-motif { width: 26px; height: 26px; position: relative; z-index: 1;
+      background: radial-gradient(circle, rgba(28,23,18,0.9) 55%, transparent 72%); border-radius: 50%; }
+
+    /* ── Patch: one section of hide, one uninterrupted stretch of text ──
+       clip-path (set per instance in JS, --patch-clip below) cuts the whole
+       perimeter into a ragged, disjointed hide-shape — not just top/bottom. */
+    .ms-patch {
+      max-width: 820px; margin: 0 auto; padding: 2.2rem 1.9rem;
+      position: relative; scroll-margin-top: 2rem;
+      transition: box-shadow 0.4s ease;
+      clip-path: var(--patch-clip, none);
+    }
+    .ms-patch.ms-flash { box-shadow: 0 0 0 2px rgba(184,122,50,0.55) inset; }
+
+    .ms-patch-tone-0 { background: linear-gradient(160deg, #241d14 0%, #2c2417 55%, #221b12 100%); }
+    .ms-patch-tone-1 { background: linear-gradient(160deg, #2e2517 0%, #382c1a 55%, #2a2115 100%); }
+    .ms-patch-tone-2 { background: linear-gradient(160deg, #3c2f1b 0%, #47381f 55%, #382b18 100%); }
+    .ms-patch-tone-3 { background: linear-gradient(160deg, #4c3c20 0%, #584722 55%, #453620 100%); }
+    .ms-patch-tone-4 { background: linear-gradient(160deg, #5d4a26 0%, #6a5628 55%, #55441f 100%); }
+
+    /* ink stains and worn patches, scattered per instance, behind the text */
+    .ms-stain { position: absolute; pointer-events: none; border-radius: 50%; z-index: 0; }
+
+    .ms-patch-text { position: relative; z-index: 1; }
+    .ms-patch-text { --ms-base-size: 1.2rem; }
+    .ms-patch-text p {
+      font-family: 'IM Fell English', Georgia, serif;
+      font-size: var(--ms-base-size); line-height: 1.85; margin: 0 0 1.15rem;
+      color: #e9ddc2;
+      text-shadow: 1px 1px 0 rgba(255,240,210,0.1), -1px -1px 1px rgba(0,0,0,0.55);
+      letter-spacing: 0.01em;
+    }
+    .ms-patch-text p:last-child { margin-bottom: 0; }
+
+    /* incised versal opening each patch — Cinzel, sparingly, as an inscriptional accent */
+    .ms-patch-text p:first-of-type::first-letter {
+      font-family: 'Cinzel', 'IM Fell English', serif;
+      font-weight: 600;
+      font-size: 3.4rem; line-height: 0.72;
+      float: left; margin: 0.05em 0.12em 0 0;
+      color: #c17a3d;
+      text-shadow: 1.5px 1.5px 0 rgba(0,0,0,0.65), -1px -1px 0 rgba(255,220,170,0.15);
+    }
+
+    .ms-rubric {
+      color: #c17a3d;
+      text-shadow: 1px 1px 0 rgba(255,220,170,0.12), -1px -1px 1px rgba(0,0,0,0.6);
+    }
+
+    /* intense passages: the hand pressing harder, not a color change.
+       'wide' — deliberate, weighty, the pen slowing down; a faint candlelit
+       glow on the tracking rather than a static effect.
+       'tight' — the hand writing faster than it can properly form letters;
+       words crowd together and jostle off the baseline, not a "sinister
+       whisper" italic. */
+    .ms-intense--wide {
+      letter-spacing: 0.2em; word-spacing: 0.12em;
+      animation: ms-candle-text 3.6s ease-in-out infinite;
+    }
+    @keyframes ms-candle-text {
+      0%, 100% { text-shadow: 1px 1px 0 rgba(255,240,210,0.1), -1px -1px 1px rgba(0,0,0,0.55); }
+      50%      { text-shadow: 0 0 7px rgba(255,210,140,0.28), 1px 1px 0 rgba(255,240,210,0.12), -1px -1px 1px rgba(0,0,0,0.5); }
+    }
+    .ms-intense--tight {
+      letter-spacing: -0.01em;
+      text-shadow: 0 0 3px rgba(233,221,194,0.28), 1px 1px 0 rgba(0,0,0,0.5), -1px -1px 1px rgba(0,0,0,0.3);
+    }
+    .ms-intense--tight .ms-word { display: inline-block; }
+
+    .ms-link {
+      color: inherit; text-decoration: none; cursor: pointer;
+      border-bottom: 1px dashed rgba(193,122,61,0.65);
+      padding: 0 0.08em; transition: color 0.2s, border-color 0.2s, text-shadow 0.2s;
+    }
+    .ms-link:hover, .ms-link:focus {
+      color: #d99a51;
+      border-bottom-color: #d99a51;
+      text-shadow: 0 0 8px rgba(217,154,81,0.5);
+    }
+
+    /* ── Preview: dark, cracked stone medallion, Ogham Sail carved into it ── */
+    .ms-preview {
+      width: 100%; height: 100%; position: relative;
+      display: flex; align-items: center; justify-content: center;
+      background: radial-gradient(ellipse at center, #2a2318 0%, #1a1510 100%);
+    }
+    .ms-preview .ms-grain { opacity: 0.22; }
+    .ms-preview-medallion {
+      width: 62%; height: 62%; position: relative;
+      border-radius: 58% 42% 53% 47% / 45% 55% 42% 58%; /* worn stone, not a coin */
+      background:
+        radial-gradient(circle at 30% 25%, rgba(255,255,255,0.05), transparent 40%),
+        radial-gradient(circle at 68% 75%, rgba(0,0,0,0.38), transparent 55%),
+        radial-gradient(circle, #4a3c24 0%, #241d14 78%);
+      box-shadow: 0 0 0 1px rgba(0,0,0,0.5), 0 0 22px rgba(193,122,61,0.18);
+      display: flex; align-items: center; justify-content: center;
+      animation: ms-ember 4.2s steps(7) infinite;
+      filter: url(#ms-rough-strong) contrast(1.1) sepia(0.15);
+    }
+    @keyframes ms-ember {
+      0%, 100% { box-shadow: 0 0 0 1px rgba(0,0,0,0.5), 0 0 14px rgba(193,122,61,0.12); }
+      35%      { box-shadow: 0 0 0 1px rgba(0,0,0,0.5), 0 0 26px rgba(217,154,81,0.3); }
+      60%      { box-shadow: 0 0 0 1px rgba(0,0,0,0.5), 0 0 18px rgba(193,122,61,0.18); }
+    }
+    .ms-crack {
+      position: absolute; z-index: 2; pointer-events: none;
+      background: linear-gradient(180deg, transparent, rgba(0,0,0,0.75) 20%, rgba(0,0,0,0.5) 65%, transparent 100%);
+      filter: url(#ms-rough-strong);
+    }
+    .ms-crack-main { left: 12%; top: 4%; width: 2px; height: 62%; transform: rotate(21deg); }
+    .ms-crack-branch { left: 40%; top: 38%; width: 1.5px; height: 26%; transform: rotate(-32deg); opacity: 0.7; }
+
+    /* ── Ogham letter Sail: stemline + four strokes off one side ── */
+    .ms-ogham { position: relative; width: 46%; height: 66%; z-index: 1; }
+    .ogham-stem, .ogham-stroke {
+      position: absolute;
+      background: linear-gradient(180deg, #d9b276, #a8702f 60%, #7a4f1f);
+      box-shadow: 1px 1px 0 rgba(0,0,0,0.5), -1px -1px 0 rgba(255,224,180,0.12);
+      border-radius: 1px;
+    }
+    .ogham-stem { left: 8%; top: 0; bottom: 0; width: 11%; }
+    .ogham-stroke { left: 8%; width: 76%; height: 9%; }
+    .ogham-stroke.s1 { top: 6%; }
+    .ogham-stroke.s2 { top: 30%; }
+    .ogham-stroke.s3 { top: 54%; }
+    .ogham-stroke.s4 { top: 78%; }
+
+    @media (prefers-reduced-motion: reduce) {
+      .ms-preview-medallion { animation: none; }
+      .ms-patch-text p { transform: none !important; }
+      .ms-root::before { animation: none; opacity: 1; }
+      .ms-intense--wide { animation: none; }
+    }
+
+    @media (max-width: 600px) {
+      .ms-patch { padding: 1.7rem 1.1rem; }
+      .ms-patch-text { --ms-base-size: 1.05rem; }
+      .ms-patch-text p:first-of-type::first-letter { font-size: 2.6rem; }
+      .ms-hare-panel { max-width: 160px; }
+    }
+  `;
+  document.head.appendChild(style);
+}
+
+// Hidden SVG filter defs — feTurbulence/feDisplacementMap for grain and
+// hand-wobble, referenced from CSS via filter: url(#id). Inserted once,
+// globally, same singleton pattern as buildStyles().
+function buildSvgDefs() {
+  if (document.getElementById('ms-svg-defs')) return;
+  const wrap = document.createElement('div');
+  wrap.id = 'ms-svg-defs';
+  wrap.style.cssText = 'position:absolute; width:0; height:0; overflow:hidden;';
+  wrap.innerHTML = `
+    <svg width="0" height="0" aria-hidden="true" focusable="false">
+      <defs>
+        <filter id="ms-grain" x="-5%" y="-5%" width="110%" height="110%">
+          <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" seed="4" stitchTiles="stitch" result="n"/>
+          <feColorMatrix in="n" type="matrix"
+            values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.85 0" result="a"/>
+          <feComposite in="a" in2="SourceGraphic" operator="over"/>
+        </filter>
+        <filter id="ms-rough" x="-25%" y="-25%" width="150%" height="150%">
+          <feTurbulence type="fractalNoise" baseFrequency="0.02 0.06" numOctaves="2" seed="7" result="t"/>
+          <feDisplacementMap in="SourceGraphic" in2="t" scale="6" xChannelSelector="R" yChannelSelector="G"/>
+        </filter>
+        <filter id="ms-rough-strong" x="-35%" y="-35%" width="170%" height="170%">
+          <feTurbulence type="fractalNoise" baseFrequency="0.02 0.09" numOctaves="3" seed="3" result="t2"/>
+          <feDisplacementMap in="SourceGraphic" in2="t2" scale="15" xChannelSelector="R" yChannelSelector="G"/>
+        </filter>
+      </defs>
+    </svg>
+  `;
+  document.body.appendChild(wrap);
+}
+
+function oghamSail() {
+  return `<div class="ms-ogham" aria-hidden="true">
+    <span class="ogham-stem"></span>
+    <span class="ogham-stroke s1"></span>
+    <span class="ogham-stroke s2"></span>
+    <span class="ogham-stroke s3"></span>
+    <span class="ogham-stroke s4"></span>
+  </div>`;
+}
+
+function caveHare() {
+  return `<div class="ms-hare-panel" aria-hidden="true">
+    <div class="ms-cavehare">
+      <span class="ms-cavehare-spatter"></span>
+      <span class="ms-cavehare-legs"></span>
+    </div>
+  </div>`;
+}
+
+export function createManuscript(container, { preview = false } = {}) {
+  buildStyles();
+  buildSvgDefs();
+
+  if (preview) {
+    const root = document.createElement('div');
+    root.className = 'ms-preview';
+    root.setAttribute('aria-hidden', 'true');
+    const grain = document.createElement('div');
+    grain.className = 'ms-grain';
+    const medallion = document.createElement('div');
+    medallion.className = 'ms-preview-medallion';
+    const crackMain = document.createElement('div');
+    crackMain.className = 'ms-crack ms-crack-main';
+    const crackBranch = document.createElement('div');
+    crackBranch.className = 'ms-crack ms-crack-branch';
+    medallion.appendChild(crackMain);
+    medallion.appendChild(crackBranch);
+    medallion.insertAdjacentHTML('beforeend', oghamSail());
+    root.appendChild(medallion);
+    root.appendChild(grain);
+    container.appendChild(root);
+    return { dispose() { root.remove(); } };
+  }
+
+  const root = document.createElement('div');
+  root.className = 'ms-root';
+
+  const scroll = document.createElement('div');
+  scroll.className = 'ms-scroll';
+  scroll.setAttribute('tabindex', '-1');
+  scroll.setAttribute('role', 'region');
+  scroll.setAttribute('aria-label', 'A scroll of found writing, carved fragments, 2000 to 2012');
+
+  scroll.insertAdjacentHTML('beforeend', caveHare());
+
+  PATCHES.forEach((patch, i) => {
+    const article = document.createElement('article');
+    article.className = `ms-patch ms-patch-tone-${patch.tone}`;
+    article.id = patch.id;
+    article.style.setProperty('--patch-clip', patchClipPath());
+    article.style.filter = agingFilter(patch.tone);
+
+    const stainCount = 2 + Math.floor(Math.random() * 2);
+    for (let s = 0; s < stainCount; s++) {
+      article.appendChild(buildStain());
+    }
+
+    const textWrap = document.createElement('div');
+    textWrap.className = 'ms-patch-text';
+    textWrap.innerHTML = patch.body.map((p, idx) => {
+      const rot = (Math.random() * 1.6 - 0.8).toFixed(2);
+      const dx = (Math.random() * 6 - 3).toFixed(1);
+      // Sometimes slightly larger, sometimes the tracking runs a little
+      // longer/looser — a hand doesn't set every line at one fixed size.
+      const scale = (0.94 + Math.random() * 0.17).toFixed(3);
+      const track = (0.01 + Math.random() * 0.035).toFixed(3);
+      const style = `transform: rotate(${rot}deg) translateX(${dx}px); ` +
+        `font-size: calc(var(--ms-base-size, 1.2rem) * ${scale}); letter-spacing: ${track}em;`;
+      return `<p style="${style}">${renderParagraph(patch.key, idx, p)}</p>`;
+    }).join('');
+    article.appendChild(textWrap);
+    scroll.appendChild(article);
+
+    if (i < PATCHES.length - 1) {
+      const seam = document.createElement('div');
+      seam.className = 'ms-seam';
+      seam.setAttribute('aria-hidden', 'true');
+      const motifType = MOTIF_CYCLE[i % MOTIF_CYCLE.length];
+      seam.innerHTML = `<span class="ms-seam-motif"><span class="ms-motif ms-motif-${motifType}"></span></span>`;
+      scroll.appendChild(seam);
+    }
+  });
+
+  root.appendChild(scroll);
+  const grain = document.createElement('div');
+  grain.className = 'ms-grain';
+  root.appendChild(grain);
+
+  container.appendChild(root);
+  container.style.position = 'relative';
+  container.style.overflow = 'hidden';
+
+  function onLinkClick(e) {
+    const link = e.target.closest('.ms-link');
+    if (!link) return;
+    e.preventDefault();
+    const targetEl = scroll.querySelector(`#${link.dataset.target}`);
+    if (!targetEl) return;
+    targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    targetEl.classList.add('ms-flash');
+    setTimeout(() => targetEl.classList.remove('ms-flash'), 1400);
+  }
+  scroll.addEventListener('click', onLinkClick);
+  scroll.addEventListener('keydown', e => {
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    if (!e.target.closest('.ms-link')) return;
+    e.preventDefault();
+    onLinkClick(e);
+  });
+
+  setTimeout(() => scroll.focus(), 100);
+
+  return {
+    dispose() {
+      scroll.removeEventListener('click', onLinkClick);
+      root.remove();
+    }
+  };
+}
