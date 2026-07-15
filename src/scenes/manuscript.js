@@ -4,9 +4,9 @@
 // found, not published: a hide-and-bark scroll a bard kept adding to across
 // twelve years (2000–2012), patch lashed to patch as new material came in,
 // the oldest hide darkest and most soot-stained, the newest still pale.
-// The only mark on it besides the words themselves is a single ochre hare,
-// blown-pigment cave-painting style, at the very top — and the Ogham letter
-// Sail (ᏸ, fourth of the Aicme Beithe: four strokes off a stemline).
+// The only mark on it besides the words themselves is the Ogham letter Sail
+// (ᏸ, fourth of the Aicme Beithe: four strokes off a stemline), carved once
+// at the very top — the same glyph the preview medallion carries.
 //
 // Seven pieces, chronological, full texts, no titles/sources/dates/glosses:
 //   Iron Gods · Flying · Thoughts Of Death Abounds       (Spoonfed / FORCEFED, c. 2000)
@@ -277,48 +277,18 @@ function buildStyles() {
       opacity: 0.13;
     }
 
-    /* ── Opening mark: a single blown-pigment hare, cave-painting style ── */
-    .ms-hare-panel {
-      max-width: 220px; margin: 0 auto 2.6rem; aspect-ratio: 1.5 / 1;
-      position: relative;
+    /* ── Opening mark: the Ogham letter Sail, carved once at the top of the
+       scroll — the same glyph the preview medallion carries, here bare on
+       the hide itself rather than cut into stone. Reuses .ms-ogham's own
+       stem/stroke markup; this override just gives it room to be the sole
+       mark on the page instead of one small carving inside a medallion. ── */
+    .ms-ogham-panel {
+      max-width: 100px; margin: 0 auto 2.6rem; aspect-ratio: 0.6 / 1;
+      display: flex; align-items: center; justify-content: center;
     }
-    .ms-hare-panel .ms-cavehare {
-      position: absolute; inset: 0;
-    }
-    .ms-cavehare::before {
-      /* rough ochre body/haunch blot */
-      content: ''; position: absolute; left: 18%; bottom: 10%; width: 58%; height: 46%;
-      background: radial-gradient(circle at 32% 30%, #b06a2e 0%, #8a4f20 55%, #6e3d17 80%, transparent 100%);
-      border-radius: 62% 38% 55% 45% / 50% 60% 40% 50%;
-      filter: url(#ms-rough-strong);
-      opacity: 0.88;
-      transform: rotate(-4deg);
-    }
-    .ms-cavehare::after {
-      /* haunch/leg + ear smear, single irregular stroke */
-      content: ''; position: absolute; left: 46%; top: 6%; width: 30%; height: 52%;
-      background: linear-gradient(200deg, #a8632b, #7a4620 70%, transparent 100%);
-      clip-path: polygon(10% 100%, 0% 40%, 30% 0%, 70% 8%, 60% 55%, 100% 90%, 55% 100%);
-      filter: url(#ms-rough-strong);
-      opacity: 0.85;
-      transform: rotate(6deg);
-    }
-    .ms-cavehare-legs {
-      position: absolute; left: 22%; bottom: 2%; width: 46%; height: 18%;
-      background: linear-gradient(90deg, transparent 0%, #6e3d17 20%, transparent 30%, transparent 60%, #6e3d17 78%, transparent 100%);
-      opacity: 0.75;
-      filter: url(#ms-rough);
-    }
-    .ms-cavehare-spatter {
-      position: absolute; inset: -8%;
-      background-image:
-        radial-gradient(circle, rgba(139,79,32,0.5) 1.5px, transparent 1.6px),
-        radial-gradient(circle, rgba(139,79,32,0.35) 1px, transparent 1.1px);
-      background-size: 13px 13px, 7px 7px;
-      background-position: 0 0, 4px 6px;
-      -webkit-mask-image: radial-gradient(ellipse at 45% 55%, black 0%, black 35%, transparent 72%);
-              mask-image: radial-gradient(ellipse at 45% 55%, black 0%, black 35%, transparent 72%);
-      opacity: 0.6;
+    .ms-ogham-panel .ms-ogham {
+      width: 82%; height: 92%;
+      filter: url(#ms-rough) drop-shadow(0 2px 3px rgba(0,0,0,0.5));
     }
 
     /* ── Primordial marginal motifs — spiral, chevron, cup-and-ring, dots ── */
@@ -605,7 +575,7 @@ function buildStyles() {
       .ms-patch { padding: 1.7rem 1.1rem; }
       .ms-patch-text { --ms-base-size: 1.05rem; }
       .ms-patch-text > p:first-of-type::first-letter { font-size: 2.6rem; }
-      .ms-hare-panel { max-width: 160px; }
+      .ms-ogham-panel { max-width: 76px; }
       .ms-script { padding: 1.7rem 1.1rem 1.5rem 1.5rem; }
       .ms-script-page { font-size: 0.85rem; }
       .ms-script-dialogue { max-width: 88%; }
@@ -655,13 +625,8 @@ function oghamSail() {
   </div>`;
 }
 
-function caveHare() {
-  return `<div class="ms-hare-panel" aria-hidden="true">
-    <div class="ms-cavehare">
-      <span class="ms-cavehare-spatter"></span>
-      <span class="ms-cavehare-legs"></span>
-    </div>
-  </div>`;
+function oghamPanel() {
+  return `<div class="ms-ogham-panel" aria-hidden="true">${oghamSail()}</div>`;
 }
 
 export function createManuscript(container, { preview = false } = {}) {
@@ -698,7 +663,7 @@ export function createManuscript(container, { preview = false } = {}) {
   scroll.setAttribute('role', 'region');
   scroll.setAttribute('aria-label', 'A scroll of found writing, carved fragments, 2000 to 2012');
 
-  scroll.insertAdjacentHTML('beforeend', caveHare());
+  scroll.insertAdjacentHTML('beforeend', oghamPanel());
 
   PATCHES.forEach((patch, i) => {
     const article = document.createElement('article');
