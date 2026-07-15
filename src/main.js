@@ -31,17 +31,22 @@ const landing      = document.getElementById('landing');
 const siteTitle    = document.getElementById('site-title');
 
 // ─── Butterfly overlay extras (label + hint) ──────────────────────────────────
+// Both are position:fixed on document.body, outside #experience-overlay, so
+// their z-index must clear #experience-overlay's own (300, styles/main.css)
+// or they render behind its background/canvas once the fade-in finishes —
+// visible only during the ~0.6s opacity transition, then gone. Must stay
+// under #site-title (400) and #pm-nav (500) so those still win.
 const butterflyStyle = document.createElement('style');
 butterflyStyle.textContent = `
   #butterfly-exp-label {
     position: fixed;
-    bottom: 2rem; left: 50%; transform: translateX(-50%);
+    bottom: 2.5rem; left: 50%; transform: translateX(-50%);
     color: rgba(255,255,255,0.85);
     font-size: clamp(0.85rem, 2.5vw, 1.6rem);
     letter-spacing: clamp(0.1em, 1vw, 0.4em);
     text-transform: uppercase;
     pointer-events: none; text-align: center;
-    white-space: nowrap; z-index: 202;
+    white-space: nowrap; z-index: 310;
     font-family: 'Times New Roman', serif;
   }
   @media (max-width: 600px) {
@@ -56,7 +61,7 @@ butterflyStyle.textContent = `
     color: rgba(255,255,255,0.3);
     font-size: 0.55rem; letter-spacing: 0.2em;
     text-transform: uppercase; pointer-events: none;
-    text-align: right; z-index: 202; line-height: 1.8;
+    text-align: right; z-index: 310; line-height: 1.8;
     font-family: 'Times New Roman', serif;
   }
   @media (prefers-reduced-motion: reduce) {
