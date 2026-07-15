@@ -131,6 +131,12 @@ function returnToGallery() {
     activeScene = null;
     setActiveIcon(null);
     landing.style.display = '';
+    // The preview canvases (sphere, butterfly) sat behind a hidden landing
+    // grid — their own resize listeners were correctly ignoring 0-size
+    // reads while hidden, but haven't re-measured since. Nudge them now
+    // that they're visible again, in case the window changed size while
+    // an experience was open.
+    window.dispatchEvent(new Event('resize'));
     // Return focus to the preview that was clicked
     document.querySelector('.preview-container:focus-within')?.focus();
   }, 600);

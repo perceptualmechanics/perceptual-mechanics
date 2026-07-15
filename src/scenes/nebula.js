@@ -586,6 +586,11 @@ export function createNebula(container, { preview = false } = {}) {
   animate();
 
   function onResize() {
+    // A hidden ancestor (e.g. the landing grid behind an active full-screen
+    // scene) makes clientWidth/Height read 0 — don't fall through to
+    // window.innerWidth/Height in that case, or a small preview container
+    // would get resized to fill the whole viewport once it's shown again.
+    if (!container.clientWidth || !container.clientHeight) return;
     const nw = container.clientWidth || window.innerWidth;
     const nh = container.clientHeight || window.innerHeight;
     camera.aspect = nw / nh;

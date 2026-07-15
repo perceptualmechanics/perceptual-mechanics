@@ -387,6 +387,21 @@ function buildStyles() {
     /* ink stains and worn patches, scattered per instance, behind the text */
     .ms-stain { position: absolute; pointer-events: none; border-radius: 50%; z-index: 0; }
 
+    /* The ambient candlelight (.ms-root::before) sits behind every patch, so
+       on its own it only ever shows in the gaps between them — never while
+       actually reading one. This is the same light, painted again on top of
+       the parchment itself: a soft warm wash that pulses on the same rhythm,
+       screen-blended so it only ever adds light and never dims the text.
+       Each patch runs on its own negative delay so the whole scroll doesn't
+       flicker in unison — one candle, many patches catching it differently. */
+    .ms-patch::after {
+      content: ''; position: absolute; inset: 0; z-index: 2; pointer-events: none;
+      background: radial-gradient(ellipse at 26% 14%, rgba(255,205,140,0.22), transparent 58%);
+      mix-blend-mode: screen;
+      animation: ms-candlelight 4.2s ease-in-out infinite;
+      animation-delay: var(--glow-delay, 0s);
+    }
+
     .ms-patch-text { position: relative; z-index: 1; }
     .ms-patch-text { --ms-base-size: 1.2rem; }
     .ms-patch-text > p {
@@ -583,6 +598,7 @@ function buildStyles() {
       .ms-patch-text > p { transform: none !important; }
       .ms-script { transform: rotate(var(--script-rot, 0deg)) !important; animation: none !important; }
       .ms-root::before { animation: none; opacity: 1; }
+      .ms-patch::after { animation: none; }
       .ms-intense--wide { animation: none; }
     }
 
@@ -690,6 +706,7 @@ export function createManuscript(container, { preview = false } = {}) {
     article.className = `ms-patch ms-patch-tone-${patch.tone}`;
     article.id = patch.id;
     article.style.setProperty('--patch-clip', patchClipPath());
+    article.style.setProperty('--glow-delay', `${(Math.random() * -4.2).toFixed(2)}s`);
     article.style.filter = agingFilter(patch.tone);
 
     const stainCount = 2 + Math.floor(Math.random() * 2);

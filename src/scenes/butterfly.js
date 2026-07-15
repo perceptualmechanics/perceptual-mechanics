@@ -251,6 +251,11 @@ export function createButterfly(container, { preview = false, shorts = false, ro
   // ─── Resize ─────────────────────────────────────────────────────────────────
   function resize() {
     const w=container.clientWidth,h=container.clientHeight;
+    // Container is hidden (e.g. the landing grid sits behind an active
+    // full-screen scene) — clientWidth/Height report 0 in that state.
+    // Bail out rather than zeroing the renderer; a real resize event will
+    // fire again once the container is visible and correctly sized.
+    if (!w || !h) return;
     camera.aspect=w/h;camera.updateProjectionMatrix();renderer.setSize(w,h);
   }
   window.addEventListener('resize',resize);
