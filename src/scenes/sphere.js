@@ -199,6 +199,17 @@ export function createSphere(container, { preview = false } = {}) {
         overflow-y:scroll;z-index:10;scrollbar-color:#348 #7ad;scrollbar-width:thin;
         font-family:'Electrolize',sans-serif;
       }
+      /* Enters from whichever side of the screen was actually clicked —
+         .from-left is toggled in JS right before opening. no-transition
+         is applied for one frame while the side flips, so the flip itself
+         (an instant layout change, not something transform can animate)
+         happens while the panel is still off-screen, not visibly. */
+      #sphere-panel.from-left {
+        left:0; right:auto;
+        border-left:none; border-right:1px solid #348;
+        transform:translateX(-100%);
+      }
+      #sphere-panel.no-transition{transition:none!important;}
       @media(max-width:700px){
         #sphere-panel{width:85%;padding:4rem 1.5rem 2rem;}
         #sphere-panel-title{font-size:1.1rem;letter-spacing:.15em;}
@@ -310,6 +321,21 @@ export function createSphere(container, { preview = false } = {}) {
       panelTitle.textContent  = fragments[fi].title;
       panelContent.innerHTML  = fragments[fi].text;
       facetIdEl.textContent   = `Facet ${selectedFace} · Fragment ${fi + 1} of ${fragments.length}`;
+
+      // Enter from whichever side of the screen was actually clicked. The
+      // panel is guaranteed closed here (the block above already returns
+      // early for an open-panel click), so flipping the anchor is invisible —
+      // no-transition forces that instant flip to land before the slide-in
+      // transition re-enables and .open starts animating it into view.
+      const rect = container.getBoundingClientRect();
+      const clickedLeft = (e.clientX - rect.left) < rect.width / 2;
+      if (panel.classList.contains('from-left') !== clickedLeft) {
+        panel.classList.add('no-transition');
+        panel.classList.toggle('from-left', clickedLeft);
+        void panel.offsetWidth; // force reflow before re-enabling the transition
+        panel.classList.remove('no-transition');
+      }
+
       panel.classList.add('open');
       // Move focus to panel for screen readers
       setTimeout(() => panelTitle.focus(), 50);
