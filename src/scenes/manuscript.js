@@ -9,9 +9,10 @@
 // Sail (ᏸ, fourth of the Aicme Beithe: four strokes off a stemline).
 //
 // Seven pieces, chronological, full texts, no titles/sources/dates/glosses:
-//   Iron Gods · Flying · Thoughts Of Death Abounds  (Spoonfed / FORCEFED, c. 2000)
-//   Thalia · Wingspan                                (Kinetic Muse, mid-2000s)
-//   Holography · Projection                          (2009–2012)
+//   Iron Gods · Flying · Thoughts Of Death Abounds       (Spoonfed / FORCEFED, c. 2000)
+//   The Impossible Bliss of Self-Mutilation               (2002)
+//   Identity Theft                                        (2009)
+//   Holography · Projection                               (2009–2012)
 //
 // Two honest notes on what's NOT here:
 //  — Holography is excerpted, not full. The real chapter runs to roughly
@@ -22,13 +23,25 @@
 //  — Truth and Beauty didn't make the cut. Its screenplay-dialogue format
 //    (CELLIST: / BRIAN: —) sat wrong against straight prose once titles and
 //    scene-framing were gone; it's still on the site, in The Theater.
+//  — Projection's one embedded scene (Scott and Ali on the patio) is the
+//    exception to "straight prose": it was always a scene the narrator was
+//    recounting, so it's broken out of the running paragraph and set in
+//    real Hollywood script format — slug line, action, character, dialogue —
+//    the one deliberate island of screenplay formatting left on the scroll.
+//    Not a word of it changed; only the line breaks are new.
 //
 // A handful of phrases are still live links — words that genuinely echo
-// across pieces (the winged visitor in Flying and Wingspan; "a story about
-// failure" answering Thalia's "the story you tell yourself"; Jeremy
-// Constantilios himself, walking out of Projection and straight into
+// across pieces (Self-Mutilation's refusal to be "afraid to lose everything"
+// answering Thoughts Of Death Abounds' own closing line about the same;
+// Jeremy Constantilios himself, walking out of Projection and straight into
 // Holography). No new text was written to make these connections — they're
 // all already there in his own words.
+//
+// Content note: The Impossible Bliss of Self-Mutilation and Identity Theft
+// are both considerably darker and more graphic than what was here before —
+// body horror played for pitch-black comedy and social commentary, not a
+// tonal match for the neighboring pieces so much as a deliberate contrast.
+// Full, unedited text; nothing softened.
 //
 // No longer CSS-only by design constraint — this pass leans on a few hidden
 // inline SVG filters (feTurbulence/feDisplacementMap for grain and wobble)
@@ -48,40 +61,37 @@
 // vector/filter math, generated fresh in the browser, just with more tools
 // in the box.
 
-import { ironGods, flying, death, thalia, wingspan, holography, projection } from '../text/scrollTexts.js';
+import { ironGods, flying, death, selfMutilation, identityTheft, holography, projection, projectionScript } from '../text/scrollTexts.js';
 
 const PATCHES = [
-  { key: 'iron',       id: 'patch-iron',       body: ironGods,    tone: 0 },
-  { key: 'flying',     id: 'patch-flying',     body: flying,      tone: 1 },
-  { key: 'death',      id: 'patch-death',      body: death,       tone: 1 },
-  { key: 'thalia',     id: 'patch-thalia',     body: thalia,      tone: 2 },
-  { key: 'wingspan',   id: 'patch-wingspan',   body: wingspan,    tone: 2 },
-  { key: 'holography', id: 'patch-holography', body: holography,  tone: 3 },
-  { key: 'projection', id: 'patch-projection', body: projection,  tone: 4 },
+  { key: 'iron',           id: 'patch-iron',           body: ironGods,        tone: 0 },
+  { key: 'flying',         id: 'patch-flying',         body: flying,          tone: 1 },
+  { key: 'death',          id: 'patch-death',          body: death,           tone: 1 },
+  { key: 'selfmutilation', id: 'patch-selfmutilation', body: selfMutilation,  tone: 2 },
+  { key: 'identity',       id: 'patch-identity',       body: identityTheft,   tone: 2 },
+  { key: 'holography',     id: 'patch-holography',     body: holography,      tone: 3 },
+  { key: 'projection',     id: 'patch-projection',     body: projection,      tone: 4 },
 ];
 
 const MOTIF_CYCLE = ['spiral', 'chevron', 'cupring', 'dots'];
 
 // Phrases already present in the raw text that get wired as live cross-links.
 const LINKS = [
-  { patch: 'flying',     para: 2,  phrase: 'he has wings',                                    target: 'patch-wingspan' },
-  { patch: 'wingspan',   para: 0,  phrase: 'his six wings unfolding',                          target: 'patch-flying' },
-  { patch: 'thalia',     para: 0,  phrase: 'I am the story you tell yourself at night to keep the wolves at bay.', target: 'patch-projection' },
-  { patch: 'projection', para: 4,  phrase: 'This is a story about failure, and a broken heart, and hell.',         target: 'patch-thalia' },
-  { patch: 'projection', para: 37, phrase: 'Jeremy Constantilios',                             target: 'patch-holography' },
-  { patch: 'holography', para: 0,  phrase: 'Jeremy Constantilios',                             target: 'patch-projection' },
+  { patch: 'selfmutilation', para: 0,  phrase: "You can’t be afraid to lose everything.", target: 'patch-death' },
+  { patch: 'projection',     para: 36, phrase: 'Jeremy Constantilios',                    target: 'patch-holography' },
+  { patch: 'holography',     para: 0,  phrase: 'Jeremy Constantilios',                    target: 'patch-projection' },
 ];
 
 // Rubric ink — color only, no link. Sparingly applied, echoing across pieces.
 const RUBRICS = [
-  { patch: 'iron',       para: 0,  phrase: 'absolute lie' },
-  { patch: 'flying',     para: 8,  phrase: "I'm flying. Finally." },
-  { patch: 'death',      para: 2,  phrase: 'Thoughts of death abound' },
-  { patch: 'thalia',     para: 7,  phrase: 'I am the tale you tell to transform the world' },
-  { patch: 'wingspan',   para: 0,  phrase: 'great god of guardian angels' },
-  { patch: 'holography', para: 15, phrase: 'pilgrimage to Hell' },
-  { patch: 'projection', para: 2,  phrase: 'pilgrimage to Hell' },
-  { patch: 'projection', para: 7,  phrase: 'Los Angeles is an otherworld' },
+  { patch: 'iron',           para: 0,  phrase: 'absolute lie' },
+  { patch: 'flying',         para: 8,  phrase: "I'm flying. Finally." },
+  { patch: 'death',          para: 2,  phrase: 'Thoughts of death abound' },
+  { patch: 'selfmutilation', para: 16, phrase: 'Fuck them.' },
+  { patch: 'identity',       para: 18, phrase: 'Something detached.' },
+  { patch: 'holography',     para: 15, phrase: 'pilgrimage to Hell' },
+  { patch: 'projection',     para: 2,  phrase: 'pilgrimage to Hell' },
+  { patch: 'projection',     para: 7,  phrase: 'Los Angeles is an otherworld' },
 ];
 
 // Intense passages — letter-spacing distortion only, no color, no link.
@@ -89,18 +99,52 @@ const RUBRICS = [
 // 'tight' crushes it for the breathless/visceral ones. Every phrase below
 // is verbatim, already present in the source text at that paragraph.
 const INTENSITIES = [
-  { patch: 'iron',       para: 10, phrase: 'the men with the cold smiles and the iron eyes smile with satisfaction, and they turn off the stars.', mode: 'wide' },
-  { patch: 'flying',     para: 6,  phrase: 'Tied down shackled chained to the ground wrapped in iron and thrown in a river', mode: 'tight' },
-  { patch: 'death',      para: 11, phrase: 'Sometimes, you must be ready to lose everything before you grasp what you need.', mode: 'wide' },
-  { patch: 'thalia',     para: 5,  phrase: 'I am the lie you tell yourselves to keep you sane.', mode: 'wide' },
-  { patch: 'wingspan',   para: 0,  phrase: "Femme fatales and dimestore cowboys have running gun battles through the threads.", mode: 'tight' },
-  { patch: 'holography', para: 29, phrase: 'he has no idea where on Earth he is', mode: 'wide' },
-  { patch: 'projection', para: 18, phrase: 'the earth fissuring and swallowing me whole', mode: 'tight' },
-  { patch: 'projection', para: 39, phrase: 'swirling upwards and out, like smoke over hills refracting the endless yellow light', mode: 'wide' },
+  { patch: 'iron',           para: 10, phrase: 'the men with the cold smiles and the iron eyes smile with satisfaction, and they turn off the stars.', mode: 'wide' },
+  { patch: 'flying',         para: 6,  phrase: 'Tied down shackled chained to the ground wrapped in iron and thrown in a river', mode: 'tight' },
+  { patch: 'death',          para: 11, phrase: 'Sometimes, you must be ready to lose everything before you grasp what you need.', mode: 'wide' },
+  { patch: 'selfmutilation', para: 9,  phrase: 'my entire body torn apart by horses', mode: 'tight' },
+  { patch: 'identity',       para: 20, phrase: 'Gary was simple; Gary was precise.', mode: 'wide' },
+  { patch: 'holography',     para: 29, phrase: 'he has no idea where on Earth he is', mode: 'wide' },
+  { patch: 'projection',     para: 18, phrase: 'the earth fissuring and swallowing me whole', mode: 'tight' },
+  { patch: 'projection',     para: 38, phrase: 'swirling upwards and out, like smoke over hills refracting the endless yellow light', mode: 'wide' },
+];
+
+// A verbatim scene, pulled out of its home paragraph and set in real
+// screenplay format — rendered after the given paragraph index (post-split,
+// i.e. the index the scene's *lead-in* paragraph has once it's isolated
+// from the script content that used to trail it).
+const SCRIPT_INSERTS = [
+  { patch: 'projection', afterIndex: 23, script: projectionScript },
 ];
 
 function escapeHtml(s) {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function renderScriptBlock(elements) {
+  const rot = (Math.random() * 3 - 1.5).toFixed(2);
+  const delay = (Math.random() * -15).toFixed(2); // negative delay: starts mid-cycle, not synced
+  const body = elements.map(el => {
+    if (el.type === 'slug') {
+      return `<p class="ms-script-slug">${escapeHtml(el.text)}</p>`;
+    }
+    if (el.type === 'action') {
+      return `<p class="ms-script-action">${escapeHtml(el.text)}</p>`;
+    }
+    // dialogue
+    const paren = el.parenthetical
+      ? `<p class="ms-script-paren">${escapeHtml(el.parenthetical)}</p>`
+      : '';
+    return `<div class="ms-script-dialogue">` +
+      `<p class="ms-script-character">${escapeHtml(el.character)}</p>` +
+      paren +
+      `<p class="ms-script-line">${escapeHtml(el.text)}</p>` +
+      `</div>`;
+  }).join('');
+  return `<div class="ms-script" style="--script-rot: ${rot}deg; --script-delay: ${delay}s;">` +
+    `<span class="ms-script-pin" aria-hidden="true"></span>` +
+    `<div class="ms-script-page">${body}</div>` +
+    `</div>`;
 }
 
 function renderParagraph(patchKey, index, text) {
@@ -345,17 +389,17 @@ function buildStyles() {
 
     .ms-patch-text { position: relative; z-index: 1; }
     .ms-patch-text { --ms-base-size: 1.2rem; }
-    .ms-patch-text p {
+    .ms-patch-text > p {
       font-family: 'IM Fell English', Georgia, serif;
       font-size: var(--ms-base-size); line-height: 1.85; margin: 0 0 1.15rem;
       color: #e9ddc2;
       text-shadow: 1px 1px 0 rgba(255,240,210,0.1), -1px -1px 1px rgba(0,0,0,0.55);
       letter-spacing: 0.01em;
     }
-    .ms-patch-text p:last-child { margin-bottom: 0; }
+    .ms-patch-text > p:last-child { margin-bottom: 0; }
 
     /* incised versal opening each patch — Cinzel, sparingly, as an inscriptional accent */
-    .ms-patch-text p:first-of-type::first-letter {
+    .ms-patch-text > p:first-of-type::first-letter {
       font-family: 'Cinzel', 'IM Fell English', serif;
       font-weight: 600;
       font-size: 3.4rem; line-height: 0.72;
@@ -399,6 +443,93 @@ function buildStyles() {
       border-bottom-color: #d99a51;
       text-shadow: 0 0 8px rgba(217,154,81,0.5);
     }
+
+    /* ── A pinned-in script page: the one scene the narrator recounts is set
+       in real Hollywood format on a typed sheet tucked into the hide, clean-
+       edged on purpose — a deliberate contrast against the ragged parchment
+       around it, a different object entirely. Paper leans slightly toward
+       washi-white rather than aged manila, with a faint fiber grain and a
+       whisper of dye-bleed under the pin — a quiet nod to a tanzaku strip
+       tied at the top, not a costume change. Pinned only at that top point,
+       so every so often a draft catches it and it rustles, tugging back to
+       rest — the rest of the scroll stays still. ── */
+    .ms-script {
+      position: relative; z-index: 1;
+      max-width: 540px; margin: 1.9rem auto 2.3rem;
+      background: linear-gradient(178deg, #f2ead4 0%, #e6d9b8 55%, #dccca4 100%);
+      box-shadow: 0 6px 16px rgba(0,0,0,0.5), 0 1px 0 rgba(255,255,255,0.2) inset;
+      padding: 2.1rem 1.6rem 1.9rem 2.1rem;
+      transform: rotate(var(--script-rot, 0deg));
+      transform-origin: 50% 0%;
+      animation: ms-script-flutter 15s ease-in-out infinite;
+      animation-delay: var(--script-delay, 0s);
+    }
+    @keyframes ms-script-flutter {
+      0%, 4%, 15%, 27%, 40%, 55%, 100% { transform: rotate(var(--script-rot, 0deg)); }
+      6%  { transform: rotate(calc(var(--script-rot, 0deg) + 0.6deg)) skewX(0.22deg); }
+      9%  { transform: rotate(calc(var(--script-rot, 0deg) - 0.32deg)) skewX(-0.18deg); }
+      12% { transform: rotate(calc(var(--script-rot, 0deg) + 0.18deg)); }
+      42% { transform: rotate(calc(var(--script-rot, 0deg) - 0.68deg)) skewX(-0.26deg); }
+      46% { transform: rotate(calc(var(--script-rot, 0deg) + 0.36deg)) skewX(0.18deg); }
+      50% { transform: rotate(var(--script-rot, 0deg)); }
+    }
+    .ms-script-pin {
+      position: absolute; top: -9px; left: 50%; transform: translateX(-50%);
+      width: 13px; height: 13px; border-radius: 50%;
+      background: radial-gradient(circle at 35% 30%, #a24a3a, #6b2a1f 70%, #4a1c14);
+      box-shadow: 0 2px 3px rgba(0,0,0,0.55), 0 0 0 1px rgba(0,0,0,0.3);
+      z-index: 2;
+    }
+    /* a short cord trailing from the pin, like a tanzaku's tying thread */
+    .ms-script-pin::after {
+      content: ''; position: absolute; top: 11px; left: 50%; transform: translateX(-50%);
+      width: 1.5px; height: 16px;
+      background: linear-gradient(180deg, rgba(140,50,40,0.75), rgba(140,50,40,0.15));
+    }
+    /* faint dye-bleed under the pin, and a whisper of vertical fiber grain
+       across the whole sheet — both subtle enough to read as paper, not
+       pattern. Anchored to the outer box (not the padded inner content) so
+       they still line up correctly at the tighter mobile padding below. */
+    .ms-script::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; z-index: 0;
+      height: 5px; pointer-events: none;
+      background: linear-gradient(90deg,
+        transparent, rgba(150,55,45,0.16) 18%, rgba(70,85,120,0.13) 50%,
+        rgba(150,55,45,0.16) 82%, transparent);
+    }
+    .ms-script::after {
+      content: ''; position: absolute; inset: 0; z-index: 0;
+      pointer-events: none;
+      background: repeating-linear-gradient(90deg,
+        transparent 0 3px, rgba(120,90,50,0.05) 3px 4px);
+      mix-blend-mode: multiply;
+    }
+    .ms-script-page {
+      font-family: 'Courier Prime', 'Courier New', Courier, monospace;
+      color: #2b2314;
+      font-size: 0.92rem; line-height: 1.65;
+      position: relative;
+      z-index: 1;
+    }
+    .ms-script-slug {
+      font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.04em; margin: 0 0 0.9rem;
+    }
+    .ms-script-action {
+      margin: 0 0 0.9rem;
+    }
+    .ms-script-dialogue {
+      max-width: 68%; margin: 0 auto 0.9rem;
+    }
+    .ms-script-character {
+      text-align: center; text-transform: uppercase; font-weight: 700;
+      letter-spacing: 0.03em; margin: 0 0 0.15rem;
+    }
+    .ms-script-paren {
+      text-align: center; font-style: italic; font-size: 0.85em;
+      opacity: 0.82; margin: 0 0 0.15rem;
+    }
+    .ms-script-line { margin: 0; }
 
     /* ── Preview: dark, cracked stone medallion, Ogham Sail carved into it ── */
     .ms-preview {
@@ -449,7 +580,8 @@ function buildStyles() {
 
     @media (prefers-reduced-motion: reduce) {
       .ms-preview-medallion { animation: none; }
-      .ms-patch-text p { transform: none !important; }
+      .ms-patch-text > p { transform: none !important; }
+      .ms-script { transform: rotate(var(--script-rot, 0deg)) !important; animation: none !important; }
       .ms-root::before { animation: none; opacity: 1; }
       .ms-intense--wide { animation: none; }
     }
@@ -457,8 +589,11 @@ function buildStyles() {
     @media (max-width: 600px) {
       .ms-patch { padding: 1.7rem 1.1rem; }
       .ms-patch-text { --ms-base-size: 1.05rem; }
-      .ms-patch-text p:first-of-type::first-letter { font-size: 2.6rem; }
+      .ms-patch-text > p:first-of-type::first-letter { font-size: 2.6rem; }
       .ms-hare-panel { max-width: 160px; }
+      .ms-script { padding: 1.7rem 1.1rem 1.5rem 1.5rem; }
+      .ms-script-page { font-size: 0.85rem; }
+      .ms-script-dialogue { max-width: 88%; }
     }
   `;
   document.head.appendChild(style);
@@ -573,7 +708,10 @@ export function createManuscript(container, { preview = false } = {}) {
       const track = (0.01 + Math.random() * 0.035).toFixed(3);
       const style = `transform: rotate(${rot}deg) translateX(${dx}px); ` +
         `font-size: calc(var(--ms-base-size, 1.2rem) * ${scale}); letter-spacing: ${track}em;`;
-      return `<p style="${style}">${renderParagraph(patch.key, idx, p)}</p>`;
+      let out = `<p style="${style}">${renderParagraph(patch.key, idx, p)}</p>`;
+      const insert = SCRIPT_INSERTS.find(s => s.patch === patch.key && s.afterIndex === idx);
+      if (insert) out += renderScriptBlock(insert.script);
+      return out;
     }).join('');
     article.appendChild(textWrap);
     scroll.appendChild(article);
