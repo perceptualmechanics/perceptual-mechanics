@@ -3,6 +3,20 @@
 // reading paragraphs. Holography is the one deliberate exception: a complete,
 // self-contained opening movement excerpted from a much longer chapter (see
 // manuscript.js header comment for why).
+//
+// fireVigil and fireCalamity are also excerpts, not the full source document:
+// Fire.doc (Nov 2003) opens with a word-association litany ("Fire. Burn.
+// Sun. Light...") that's reserved for the elements/fire livestream project
+// instead, then runs directly into these two embedded fictional scenes —
+// a dialogue between a dying man and Debbie about death and religion, and a
+// party scene (a roommate's physics/Matrix rant giving way to Edward and
+// Maria's flirtation, a wildfire visible in the middle distance) — which are
+// reproduced here in full, unedited, exactly as they run in the source.
+//
+// crocodilePhotograph is undated but later than everything else on the scroll
+// (PlayStation, Call of Duty, "man cave" as an unremarked-on term) — a
+// complete, self-contained dark-comedy short story, recovered from a modern
+// Pages/IWA file via protobuf text-run extraction. Full text, nothing cut.
 
 export const flying = [
   `One time, I was on a plane by myself. I was leaving everything I knew, everyone I loved, everywhere I had been, to try and stake my claim. To get my career, my passion, and my life going. I looked out the scratchy Plexiglass window. I saw the sea of clouds below me. I saw the horizon, infinite and daring. I looked down at the green and brown earth. And a wave of vertigo overcame me. I grabbed the armrests tightly, squeezing my eyes shut, trying to make the world stop spinning...no good.`,
@@ -192,4 +206,111 @@ export const projectionScript = [
   { type: 'dialogue', character: 'ALI', text: 'But it seemed so implausible!' },
   { type: 'dialogue', character: 'SADLER', text: "I'm just sayin'." },
   { type: 'action', text: 'SADLER ambles away.' },
+];
+
+export const fireVigil = [
+  `“There’s something about death that’s very awkward.”`,
+  `“What on earth do you mean?”`,
+  `“Well, think about it – you have this body, this magnificent construct, and suddenly it just stops.  And you’re left with this fairly useless corpse.  Think of what would happen if we didn’t pay an entire class of people to mop up the streets.  Think of dead people piled up on the sidewalk.”`,
+  `“The original idea was that there wouldn’t be any sidewalks, that the body would fall upon the ground, decompose, offer a bounty for vultures and insects, and then return to nature.  It’s no more awkward than a deer rotting in the forest.  But now, you have this idea that – that the body should be preserved, that we have to save this thing, which is really an old idea, that it’s Egyptian, that the body is important after the soul leaves, that –“`,
+  `“So you’re arguing for a soul?”`,
+  `“Wait, let’s not get sidetracked.  You brought up the awkwardness of death.”`,
+  `”And you brought up the idea of a soul.  Which ties very neatly in with death, since we all generally agree that’s when the soul leaves, if one believes in it.”`,
+  `“Well, I – yeah, but, see, a soul, that can mean anything, animating energy, electrical processes, that –“`,
+  `“But it doesn’t mean anything.  It means a very specific thing, that you survive after the body dies.  That’s a religious concept.”`,
+  `“Not necessarily.  It doesn’t have to be religious.  It could be – something, I don’t know, it’s not religious.”`,
+  `“The idea of a soul isn’t religious.”`,
+  `“No.  I mean, what, you have Hermetic philosophy, you have all kinds of things, I mean – well, what the hell is religion, anyway?  When does a belief become religious?”`,
+  `“When it talks beyond what can be proven.”`,
+  `”Oh, come on, that’s a lame definition.”`,
+  `“No it’s not.  You can’t prove it, therefore it’s religious.  It’s faith.  You’re basing something on faith.”`,
+  `”No, no, no, that’s born out of a relatively recent phenomenon, the idea that – “ direct eyes, direct angles – “science proves everything.  I mean, back in Biblical times it didn’t have to do with what could be proved.  It becomes a religion, I think, any idea does, when it becomes an institution, when it stops supplying answers – I mean, you’re talking about observation and coming up with things, reasons why these things happen, and that’s just a natural inquisitiveness we all have – but religion becomes religion when it stops supplying answers and becomes a set of dictates and laws and a way to behave rather than an inquiry into why things are they way they are.  Right?  Do you follow me?”`,
+  `“I don’t really agree, but okay, I follow you.”`,
+  `”Wait, don’t be so contemporary about this.  Think back, think of the first time someone looked at a fire or up at the sky or just wondered aloud, ‘How did all this happen?  How does it work?  Where do I come from?’”`,
+  `“You tell me not to be contemporary about it, but I can’t help it, because religion is so useless nowadays that anyone who still clings to it is an idiot.  Basically.  I mean, who’s going to believe in a big old guy in the sky who throws people into Hell?  Morons.  People who don’t want answers.  Why do people die?  They die because their body stops working, or turns against them, or they get hit by a car and the body is injured beyond the point to repair itself, or they just – they just die.  It’s chemistry and biology, it’s not some big mystery.  But you want people to have some sort of big reason why they live and die, and there isn’t.  God didn’t put us here, the Devil isn’t waiting for us –“`,
+  `“See, this is one of my pet peeves.  Every time some atheist gets uppity, they bring up Christianity, like it’s the only religion out there, like it’s the only possible solution.  There are plenty of other religions that –“`,
+  `“Suck just as much?”`,
+  `“Wow, way to be an asshole.”`,
+  `”Well, come on!  First off, I know a thing or two about religions, but the fact that I was able to say ‘God’ and ‘Devil’ and the first thing that came to mind was Christianity makes it obvious that these aren’t real complex systems!  You got God on one side, the Devil on the other, and that’s it!  That’s the whole shebang.  But, like, Muslims are just as deluded as anyone else –“`,
+  `“Islam, my friend, despite our current political situation” – and here the sarcasm was tight around her voice – “happens to be a beautiful and complex religion.  During the Dark Ages?  When all of Europe was pretty much a wasteland?  The Islamic regions of the world were involved in science and alchemy and the arts and it was beautiful –“`,
+  `“But look at it now.  Where is it?  What do we have?  The only reason anyone pays attention to Islam now is that that’s where the oil is.  Is there anything useful that Islam is doing today?  No!”`,
+  `An angry pause as she sits there, stewing, trying not to hit him.  Finally: “There’s still a place for religion.  For something greater than us.  For the mysteries.  There’s still this drive we have to –“`,
+  `“What mysteries?”`,
+  `A stumbling pause.  “You know, the grand mysteries, the questions of why we’re here, what is here –“`,
+  `“We only ask those questions because we have too much time on our hands.  There are no mysteries, and anyone who thinks so is fooling themselves.  There’s no motive, or purpose, or anything like that.  We’re just monkeys with too much cleverness.  We’re born, we live, we die.  That’s that.”`,
+  `She stares at him with frank disbelief.  “What happened to you?”`,
+  `”What do you mean?”`,
+  `“What do I mean?  Where is all this coming from?  When did you become a nihilist?”`,
+  `”I have a credo.”`,
+  `“Shut the fuck up.  I don’t like this.  This isn’t like you.  What’s going on?”`,
+  `“Nothing!  What?  Nothing’s going on.  Don’t worry about it.  Relax.”`,
+  `“Don’t worry about what?  What am I not worrying about?”`,
+  `”Debbie, I didn’t mean that there was anything to worry about, okay?  Jesus.  Stop reading into shit.”`,
+  `“Well, if you’re going to say stupid things, then I’m going to wonder what the hell’s wrong with you.”`,
+  `The steady pain suddenly flared, a Roman candle reaching for the back of his eyes.  “Oh, Jesus, fuck you,” he managed to get out, trying to cover the wrenching of his innards.  He stood up, feeling the outpouring of sweat on his face.  In a flash of lucidity, he prayed she wouldn’t notice.  “Stop being so goddamn condescending for once and admit you don’t know everything.”  He turned toward the bathroom hoping that she saw anger and not instinctual panic.  He pushed the door open, flew into the stall and got the lid up just before his stomach emptied out.  It was a series of awful moments before he felt able to open his eyes.  The toilet was filled with pure bile, streaks of red barely visible amongst the porridge of yellow.  No food at all, no half-digested fragments, and it took him a second to remember he hadn’t eaten anything.  He felt the cool air of the A/C brush against his face, and he realized he was drenched in sweat.  He hated his body.  He hated that it couldn’t just die now, that it was this process, this time-consuming process that frayed him.  His nerves were traitors, endlessly reporting pain, nausea, decay.  He wanted none of it.  Where was the euphoria of the diagnosis?  Where was the certainty of the end?  This was not part of the deal.  He was promised death and it was not coming fast enough for him.  His mind turned quite calmly to other ways.  His former dealer, Carter, surely he would have something to keep him sane – no, not sanity, something to OD on.  Heroin, maybe, black tar heroin, didn’t matter what kind, just a nice big healthy dose of it, no, Carter would get suspicious, his tastes had been candy-flipping and asking for a nice big bag of opiates would make him squirrely, get his antennae twitching, not that Carter would care but fuck, what a cliché too, smack OD, no darling, we will not have any of that, no bloody bathtubs, no sleeping pills, no we are going out in style, darling, they will remember this one, what about buildings?  bridges?  No, still too cliché, they would have to take all the good ones from him, wouldn’t they?  Fuck, darling, fuck.`,
+  `Standing up was a victory.  He could feel waterfalls headed towards his shoes.  A deep breath.  The sound of the faucet being turned off, and then footfalls as a shortish Mexican avoided his gaze and succinctly left the john.  He hadn’t closed the door of the stall.  Looking back, down at the bowl, the flotsam within looked alien.  He flushed, destroying all the evidence.  Walking to the sink, grabbing a paper towl, soaking it in cold water, wiping the sweat from his face.  He drank some, washed the awful taste from his mouth, spit it out.  Looking in the mirror, seeing the sinking eyes, the yellowish tint that he was trying to ignore but couldn’t, the awfulness of what he saw before him.  The door opened, his gaze dropped, he quickly finished it up, collected himself, and strode back out to find the table deserted except for her half-eaten meal still on the tray.`,
+];
+
+export const fireCalamity = [
+  `You see, it starts like this.  What we are talking about is the release of energy.  All things have energy, yes?  All things are energy, if you want to split Einsteinian hairs about it, but all things have a temperature, correct?  We’ll take basic physics now and work our way to general relativity soon enough.  Something’s hot, something’s cold, something like that.  Everything has an innate temperature.`,
+  `So what you’re seeing around you is a world with a pretty narrow temperature range.  By and large, the ambient temperature of our biosphere kinda wiggles between -20 and 120 degrees Fahrenheit, depending on exposure to solar radiation and environmental conditions, that sort of thing, right?  That’s a pretty small area to think of.  And yet the variance!  Hell, you can tell the difference between 60 degrees and 70 degrees, right?  It’s quite easy.`,
+  `But here’s the thing: everything radiates energy.  I mean, you know you have a temperature, you’re radiating in the infrared spectrum, just below visible light.  That’s right, you are a radioactive body.  A slight difference in wavelength and you’d be glowing in visible light.  And really, your entire body is a reactor.  You’re a cooled reactor, designed to break apart fuel into glucose and amino acids in order to produce energy to sustain yourself.  You’ve got fission happening every second of your life.  Granted, you’re not breaking apart uranium, but you’re an energy processing machine.`,
+  `Now.  It’s the use you make this energy have that’s what’s important.  See what I mean?  Like, okay, your body contains a certain amount of energy.  No, fuck The Matrix, you’re not a battery for shitty robots.  What a waste of time that was, right?  I mean, let’s let Keanu figure that one out later, but humans as a power source when you have access to nuclear fission?  And since it was in the future, can we also assume the secrets of nuclear fusion have been discovered?  So yes, let’s harvest humans and their puny electrical and heat output and ignore the fact that we can build portable reactors inside of every sentient being.  Well thought out there, Wachowski brothers.  Okay, I’ve digressed.  Where was I?  Yes, the body produces a certain amount of energy.  Now you can use that energy for certain things, and this is what we mean by squandering energy.  No, you know, this Matrix thing is tweaking my cheese here.  I mean, seriously!  Evil robots want to use our body energy for themselves, so they plug 10 billion people into a manufactured reality?  I mean, let’s talk about the computers that have to house this thing, right?  My fucking laptop gets hot after an hour of use – what kinda processors are they using that just don’t fucking melt the instant they’re turned on?  Do you realize the amount of computations you gotta use to process a VR simulations that can compensate for every known phenomenon that occurs on Earth?  No, listen, I know it’s a metaphor and it’s all some sort of Gnostic bullshit about a world of lies and shit, but it’s a shitty metaphor, all right?  And then when it comes time to literalize it, right – I mean, it’s all well and good as a comic-book type of thing and it’s “ooh, spooky, the world isn’t real” and then Keanu does a bunch of karate and it’s all fine, but then you throw this thing out there, this throwaway metaphor about bad robots, and then the time comes where you gotta address that.  You, the emotionally stunted directors, have to sit down and come up with a movie about evil robots and a huge computer program that doesn’t plain suck ass.  So what do you do?  You make some bullshit about Priscilla Queen of the Desert being able to clone himself and you have some sex in caves – and that bullshit, that right there, that’s straight ripped off from Dune, the rite of joining, right?  Not that the entire movie isn’t a ripoff of something or other, and if I were Grant Morrison my boot would be so far up their asses he’d kick out their teeth – and then you have some bullshit about trucks and guns and I don’t know what.  Okay, the point is that you have this energy, this isn’t – hold on –`,
+  `He drinks some water.`,
+  `Okay, I’m cool now.  No, see, you have this energy about you, right?  This isn’t some New Age bullshit, either, I mean, yeah, you have energy spillover that takes the form of an aura, and yeah, you got charkas, most people call ‘em glands, but whatever.  You have energy.  You do.  And the first two decades all that energy’s about growing and creating more you cells and making you as large as you possibly can so of course you’re not thinking too much, you’re just fucking growing and absorbing and getting all this shit going and it’s only once the work of the body’s complete that you can actually take this energy and focus it on other things, right?  So here you are, with all this potential energy, and the sad thing is most people don’t realize it.  They got their own thing going on, they’re too wrapped up in whatever, they never realize they can take this energy and throw it anywhere.  And that’s what they’re telling you, on TV and in the media, that’s what they’re telling you: where to put your energy, and if you aim yourself somewhere that They don’t approve, They’ll fuck you, man.  Like, say you wanna take that potential of yours and apply it towards discovering a renewable source of energy for cars, completely clean, free energy, like Tesla, right?  Say you wanna do that?  Well, first they’ll inquire, ever so nicely, about what you’re intending to do with this little invention of yours.  And of course you’ll be honest and tell them what it is, and they’ll offer to buy it from you.  Now, if you take their money – if you think that you’ve scored and you’re all set, I mean, there have been long, sleepless nights, months, years working on your little free energy device – so if you take their money, they take your device and throw it in a vault and never look at it again.  Gone.  Never see the light of day.  There are documented cases of shit like this happening – water engines and shit like that.  Okay, but let’s assume that you refuse, and you say, “No, sir” – because they’re always guys, or at least they think like them – “No, sir, I will not take your money,” then they fuck you.  They stop at nothing.  Because people can’t have their energy for themselves.  They gotta be told how to use it.  Because what they want is for people to worry about the shit that won’t advance us farther, into the future, where we’ll be free.  And that’s the truth.`,
+  `He checks his water.`,
+  `Shoot, I’m out of water.  You’ll pardon me, right?`,
+  `He gets up and heads towards the kitchen.  Edward and Maria exhale.`,
+  `Edward: I apologize for that.  He gets going about that quite often, actually, it’s a bit of a tirade of his.  Especially his Matrix stuff.`,
+  `She smiles, politely and eminently unreadable.`,
+  `Maria: Whose roommate is he again?`,
+  `Edward: Oh, Sung’s, over there.`,
+  `He catches her eye, stumbles, self-consciously looking at the ground.  She tilts her head, studying him, waiting him out.  After long seconds of looking elsewhere, he manages to think of something safe to say.`,
+  `Edward: Lovely night out tonight.  Apart from the smoke, I mean.`,
+  `Maria: I don’t know, I like the smoke.  It’s better than smog, at any rate.  Smoke has character.`,
+  `She inhales, taking the time to let the air touch every capillary.  It’s another thing that makes Edward stare at her, something so outside and his experience, this creature, this magnificent woman in front of him, her eyes catching the light from the tiki torches – why on Earth did they light torches?  Isn’t it hot enough?  And the fire’s only about 20 miles away, isn’t it?  Is open flame a wise idea –`,
+  `Maria cradles her hands, finding support on his shoulder.  He turns to her just as she blows on his neck, and she delights as he squirms.`,
+  `Maria: Hey.`,
+  `Edward: Hello.`,
+  `She has a devilish grin.`,
+  `Edward: You’re being cheeky.`,
+  `Her eyebrows raise and her grin gets bigger.  He finally manages to forget the other people.`,
+  `Maria: Let’s go.`,
+  `Maria pulls Edward by the hand and leads him around the house.`,
+];
+
+export const crocodilePhotograph = [
+  `When I saw the photograph of the woman in a bathtub with a crocodile hanging in Nancy's hallway, I knew I had to have it.  The woman was wearing a 1920s-style bathing cap and the crocodile was only up to its snout, and the photograph was done up as an old daguerreotype on a silver plate.  I couldn't fathom why someone would create it.`,
+  `Nancy crowed triumphantly.  "Oh, that thing, we found it in this random gallery on South Street in Philly when we lived there -- god, when was that, five years ago?"`,
+  `"Four years," answered Derek.  I resented Derek for having married above his grade.  Nancy was clearly slumming.  Derek was the sort of dude who let his neck hair get out of control.`,
+  `"Only four years? Anyway, these little University of the Arts kids had started their own gallery and I saw this and just adored it."  Nancy had a pixie haircut and impossibly small breasts.  The hell was she doing with Derek?  "It was only two hundred dollars."`,
+  `"Playing the art market," joked Derek as he poured malbec into Crate and Barrel wide-mouth glasses.  What a tool.  Dinner that night was some sort of vegan lentil garbage that I crammed down with a look to Jennifer that she owed me for this.  Jennifer rolled her eyes at me and gossiped with Nancy about other Wellesley alums, who was having a baby, who was moving back to the area, who was having a baby and thus moving back to the area.`,
+  `"Pats are looking good this year, don't you think?" Derek was being cordial.`,
+  `"I don't follow American football," I replied.`,
+  `The dinner party dragged on way too late.  By the time we got home, I was openly complaining about the quality of our social lives and Jennifer was refusing sex because the tannins were giving her a headache.  I played some Call of Duty and jerked off.  Jennifer was snoring as I piled into bed, kicking the dog down to the floor.`,
+  `A week or so later, Nancy asked Jennifer if we could housesit for them while they went to a cousin's wedding.  "In Utah, no less, a destination wedding, honestly, who has a destination wedding in Utah?"  Jennifer swiftly volunteered me to check in on their twin Siamese cats, Lacan and Derrida.  I sensed an opportunity.  I bounded over to their Somerville loft, let myself in, emptied two cans of nasty-smelling cat food onto plates ("loaf in gravy," they called it), grabbed the crocodile photograph off the wall, returned home and hung the picture in my man cave next to the framed Pulp Fiction poster.`,
+  `I was busy sending rockets into multiplayer asses when Jennifer finally noticed the photograph two days later.  "What the fuck is that doing here?"`,
+  `"It's mine now," I mumbled into my PlayStation mic.  "Payment plan."`,
+  `She looked at me like I was crazy.  "You stole their fucking photograph!  The fuck is wrong with you?"`,
+  `I didn't turn.  "They want it, they can have it back when they come get it.  It's mine now."`,
+  `She tried to take it off the wall, but I quickly stood up in between.  "This is the man cave, remember?  And what are the rules of the man cave?  The ones you made me adopt?  This is the -- what was it?  This is the only place in the house where I can have my things and you can't say anything about it."`,
+  `"I was talking about your movie posters, not about stolen artwork."`,
+  `"Mine now.  You're intruding on my man cave."`,
+  `She had an uncertain look in her eye as she backed away.  "You're giving that back."`,
+  `I didn't, though.  I was also surprised that Jennifer didn't say anything about it afterwards.  The next day, I figured out why.  Derek, freshly backed from Utah, was at the door.`,
+  `"James, I'm not sure why you took the photograph but it's very uncool.  I'm here to pick it up."`,
+  `"Sorry, bro, but it's Nancy's to pick up."`,
+  `"I'm here for Nancy, so cough it up."`,
+  `"'Fraid I can't, chum.  Besides, I've grown attached to it."`,
+  `"Dude, hand me back the photograph or I call the cops."`,
+  `"The cops?  Really?  We're going to involve them in this?  Tell you what, you bring Nancy by and we'll talk this out."`,
+  `"What does Nancy have to do with this?"`,
+  `"I will return it to her and no other."  Slam.`,
+  `Two hours later, Nancy, Derek, and Cambridge's finest showed up.  The officer seemed as bemused as I was by all this.  Nancy stood there, arms crossed, waiting expectantly.`,
+  `Fuck it, I thought.  I handed back the photograph.  Nancy scowled as she turned away, Derek sneering at me as the cop was glad to be done with this.`,
+  `"Hey Nancy."`,
+  `She turned.`,
+  `"I bet your pussy tastes like grapefruit."`,
+  `I only had a second to enjoy the shocked look on her face before Derek flattened me.  Of course, assaulting someone in their own home in front of a cop is not the smartest idea, and yes, I was going to press charges, officer.  Nancy started screaming about pressing charges for theft, and Jennifer was throwing me out on the sidewalk, and I checked into a room at the Charles Hotel with nothing but a cell phone at 47%.`,
+  `It was worth it.`,
 ];

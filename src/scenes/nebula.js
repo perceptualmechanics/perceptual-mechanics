@@ -188,6 +188,76 @@ const LINE_PATHS = {
 // Cloud palette pulled from the same site archive — every hue here is real.
 const CLOUD_HUES = [0x0099ff, 0xffff00, 0x333366, 0x6666ff, 0xc9e9f6, 0x006666, 0x660066, 0x006600];
 
+// ─── The Orrery of Los Feliz ────────────────────────────────────────────────
+// A found short-short: investigators track a mysterious 30-foot orrery — a
+// moving model of the solar system, a working radio telescope at its peak —
+// to a warehouse in Los Feliz. Full, unedited, undated. It sits in the scene
+// as its own small object (not a "constellation" of a real site, just a
+// piece of found fiction that happens to be about exactly this kind of
+// thing) — click it the same way you'd click any star.
+const ORRERY = {
+  name: 'The Orrery of Los Feliz',
+  era: 'found · undated',
+  recreate: () => '',
+  note: `We were tipped off by a news item coupled with the creditors’ lawsuits against Peter Hight, our synchronicity sensitives finding a common link between the two. The news item said that the FCC was investigating a pirate radio station somewhere in the Los Feliz area. It was buried in the local section of the Times. The creditors were a foundry, a warehouse and a sculpture studio, trying to get paid for some very large pieces they had made. We tracked the warehouse down and with a little persuasion convinced the landlord to let us in.
+
+Inside was an orrery – a moving sculpture, a representation of the solar system. It was about 30 feet high, the peak poking out of the warehouse skylights. A gargantuan thing, but it moved without a sound. All nine planets and their moons, the asteroid belt, and a few other unidentified cosmic objects were represented. Great bronze balls swirled around the center spike of steel and wood, painted a most royal purple. The pinnacle was in fact a miniature radio telescope, pointed straight up, and it was still on, receiving information from the heavens. What is most interesting about the orrery – apart from it having been built in the first place – is that the orbits of the planets are precisely and mathematically laid out with an error tolerance approaching perfection.
+
+Our investigation into Peter Hight is pending, but from all appearances he appears to be an unlikely candidate to construct such a thing. A dropout of community college.`,
+};
+
+const ORRERY_CENTER = [0, -4.6, -3.2];
+
+function buildOrrery(preview) {
+  const group = new THREE.Group();
+  group.position.set(...ORRERY_CENTER);
+
+  // The center spike — bronze/purple, per the text.
+  const sunGeo = new THREE.SphereGeometry(preview ? 0.16 : 0.2, 16, 16);
+  const sunMat = new THREE.MeshBasicMaterial({ color: 0x8855aa, transparent: true, opacity: 0.95 });
+  const sun = new THREE.Mesh(sunGeo, sunMat);
+  group.add(sun);
+
+  // A thin spike above it, standing in for the radio telescope.
+  const spikeGeo = new THREE.ConeGeometry(preview ? 0.04 : 0.05, preview ? 0.5 : 0.65, 8);
+  const spikeMat = new THREE.MeshBasicMaterial({ color: 0xccaadd, transparent: true, opacity: 0.6 });
+  const spike = new THREE.Mesh(spikeGeo, spikeMat);
+  spike.position.y = (preview ? 0.16 : 0.2) + (preview ? 0.25 : 0.32);
+  group.add(spike);
+
+  const ringMat = new THREE.MeshBasicMaterial({
+    color: 0xaa7733, transparent: true, opacity: 0.3, side: THREE.DoubleSide,
+  });
+  const orbits = [];
+  const orbitCount = preview ? 2 : 3;
+  for (let i = 0; i < orbitCount; i++) {
+    const radius = (preview ? 0.4 : 0.5) + i * (preview ? 0.28 : 0.36);
+    const tilt = (i * 0.35) + (Math.random() - 0.5) * 0.2;
+
+    const ringGeo = new THREE.TorusGeometry(radius, preview ? 0.006 : 0.008, 8, 48);
+    const ring = new THREE.Mesh(ringGeo, ringMat);
+    ring.rotation.x = Math.PI / 2 + tilt;
+    group.add(ring);
+
+    // A pivot per orbiting body, tilted to match its ring, so rotating the
+    // pivot each frame carries the body around the rim — a real orbit, not
+    // a decorative spin.
+    const pivot = new THREE.Object3D();
+    pivot.rotation.x = tilt;
+    group.add(pivot);
+
+    const bodyGeo = new THREE.SphereGeometry(preview ? 0.03 : 0.04, 10, 10);
+    const bodyMat = new THREE.MeshBasicMaterial({ color: [0xddccaa, 0xccbbdd, 0xaaccdd][i % 3] });
+    const body = new THREE.Mesh(bodyGeo, bodyMat);
+    body.position.x = radius;
+    pivot.add(body);
+
+    orbits.push({ pivot, speed: 0.15 + Math.random() * 0.12, direction: i % 2 === 0 ? 1 : -1 });
+  }
+
+  return { group, hitTarget: sun, glowMat: sunMat, orbits };
+}
+
 export function createNebula(container, { preview = false } = {}) {
   const w = container.clientWidth  || window.innerWidth;
   const h = container.clientHeight || window.innerHeight;
@@ -343,6 +413,20 @@ export function createNebula(container, { preview = false } = {}) {
       root.add(lines);
       lineObjects.push(lines);
     }
+  });
+
+  // ─── The Orrery — a piece of found fiction, not a real-site constellation ──
+  const orrery = buildOrrery(preview);
+  root.add(orrery.group);
+  const orreryHalo = new THREE.Sprite(new THREE.SpriteMaterial({
+    map: makeHaloTexture(0x8855aa), color: 0x8855aa, transparent: true, opacity: 0.6,
+    blending: THREE.AdditiveBlending, depthWrite: false,
+  }));
+  orreryHalo.scale.set(preview ? 0.9 : 1.3, preview ? 0.9 : 1.3, 1);
+  orrery.hitTarget.add(orreryHalo);
+  starMeshes.push({
+    mesh: orrery.hitTarget, glowMat: orrery.glowMat, haloMat: orreryHalo.material,
+    constellation: ORRERY,
   });
 
   // ─── Panel + window-chrome styling ───────────────────────────────────────
@@ -571,6 +655,10 @@ export function createNebula(container, { preview = false } = {}) {
     });
     cloudGroup.rotation.y = t * 0.02;
 
+    orrery.orbits.forEach(o => {
+      o.pivot.rotation.y += o.speed * o.direction * 0.01;
+    });
+
     if (autoRotate && !isDragging) {
       root.rotation.y += preview ? 0.0009 : 0.0006;
     }
@@ -611,6 +699,10 @@ export function createNebula(container, { preview = false } = {}) {
       lineObjects.forEach(l => { l.geometry.dispose(); l.material.dispose(); });
       starMeshes.forEach(s => { s.glowMat.dispose(); s.haloMat.dispose(); });
       clouds.forEach(c => { c.sprite.material.map?.dispose(); c.sprite.material.dispose(); });
+      orrery.group.traverse(obj => {
+        if (obj.geometry) obj.geometry.dispose();
+        if (obj.material) obj.material.dispose();
+      });
       if (panel) panel.remove();
       if (hint) hint.remove();
       if (caption) caption.remove();

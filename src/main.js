@@ -4,6 +4,7 @@ import { createManuscript } from './scenes/manuscript.js';
 import { createTheater } from './scenes/theater.js';
 // import { createNebula }    from './scenes/nebula.js'; // deactivated for now, being reworked
 // import { createEgg }       from './scenes/egg.js';
+import { initGoldenHare }   from './components/goldenHare.js';
 
 // ─── Scene registry ──────────────────────────────────────────────────────────
 const SCENES = {
@@ -12,7 +13,7 @@ const SCENES = {
   butterfly:   { create: createButterfly,  label: 'Chaos Butterfly in Phase Space, 2026.',
                  ariaLabel: 'Chaos Butterfly in Phase Space, 2026 — Lorenz attractor. Drag to orbit, scroll to zoom.' },
   manuscript:  { create: createManuscript, label: 'Selected Works — An Illuminated Manuscript.',
-                 ariaLabel: 'Selected Works — an illuminated manuscript of Scott’s best writing, 2000 to 2012. Scroll to read.' },
+                 ariaLabel: 'Selected Works — an illuminated manuscript of Scott’s best writing, 2000 to the 2010s. Scroll to read.' },
   theater:     { create: createTheater,    label: 'The Theater — Now Playing.',
                  ariaLabel: 'The Theater — scenes from Truth and Beauty and Paul Revere, performed by ASCII actors. A different program each visit; click or use the controls to advance.' },
   // nebula:    { create: createNebula,    label: 'Nebula — The Gaze.',
@@ -199,3 +200,9 @@ function initPreviews() {
 }
 
 initPreviews();
+
+// ─── The Golden Hare ──────────────────────────────────────────────────────────
+// Lives outside the scene registry entirely — it's not one of the
+// experiences above, it wanders across whatever's on screen, landing grid
+// or open scene alike. See components/goldenHare.js for the why.
+initGoldenHare();

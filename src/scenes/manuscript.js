@@ -2,19 +2,21 @@
 // Pre-Christian. No illumination in the Kells sense — no gold leaf, no
 // jewel-bright interlace, no titles. This is meant to read as something
 // found, not published: a hide-and-bark scroll a bard kept adding to across
-// twelve years (2000–2012), patch lashed to patch as new material came in,
-// the oldest hide darkest and most soot-stained, the newest still pale.
+// twenty-plus years (2000–2010s), patch lashed to patch as new material came
+// in, the oldest hide darkest and most soot-stained, the newest still pale.
 // The only mark on it besides the words themselves is the Ogham letter Sail
 // (ᏸ, fourth of the Aicme Beithe: four strokes off a stemline), carved once
 // at the very top — the same glyph the preview medallion carries.
 //
-// Seven pieces, chronological, full texts, no titles/sources/dates/glosses:
+// Ten pieces, chronological, full texts, no titles/sources/dates/glosses:
 //   Iron Gods · Flying · Thoughts Of Death Abounds       (Spoonfed / FORCEFED, c. 2000)
 //   The Impossible Bliss of Self-Mutilation               (2002)
+//   The Vigil · The Calamity (both ex Fire.doc)           (Nov 2003)
 //   Identity Theft                                        (2009)
 //   Holography · Projection                               (2009–2012)
+//   The Crocodile Photograph                              (undated, later — newest hide)
 //
-// Two honest notes on what's NOT here:
+// Three honest notes on what's NOT here:
 //  — Holography is excerpted, not full. The real chapter runs to roughly
 //    10,500 words; what's here is one complete, self-contained movement —
 //    Jeremy Constantilios's flight into and landing in Los Angeles — ending
@@ -29,6 +31,10 @@
 //    real Hollywood script format — slug line, action, character, dialogue —
 //    the one deliberate island of screenplay formatting left on the scroll.
 //    Not a word of it changed; only the line breaks are new.
+//  — The Vigil and The Calamity are also excerpts of a sort: Fire.doc opens
+//    with a word-association litany kept aside for the elements/fire
+//    livestream project, then runs straight into these two embedded scenes.
+//    Both are reproduced here complete and unedited from that point on.
 //
 // A handful of phrases are still live links — words that genuinely echo
 // across pieces (Self-Mutilation's refusal to be "afraid to lose everything"
@@ -37,11 +43,11 @@
 // Holography). No new text was written to make these connections — they're
 // all already there in his own words.
 //
-// Content note: The Impossible Bliss of Self-Mutilation and Identity Theft
-// are both considerably darker and more graphic than what was here before —
-// body horror played for pitch-black comedy and social commentary, not a
-// tonal match for the neighboring pieces so much as a deliberate contrast.
-// Full, unedited text; nothing softened.
+// Content note: The Impossible Bliss of Self-Mutilation, Identity Theft, and
+// The Vigil are all considerably darker and more graphic than what was here
+// before — body horror, a body-swap turn, and a dying man's bathroom-floor
+// bitterness, not a tonal match for the neighboring pieces so much as a
+// deliberate contrast. Full, unedited text; nothing softened.
 //
 // No longer CSS-only by design constraint — this pass leans on a few hidden
 // inline SVG filters (feTurbulence/feDisplacementMap for grain and wobble)
@@ -61,17 +67,20 @@
 // vector/filter math, generated fresh in the browser, just with more tools
 // in the box.
 
-import { ironGods, flying, death, selfMutilation, identityTheft, holography, projection, projectionScript } from '../text/scrollTexts.js';
+import { ironGods, flying, death, selfMutilation, fireVigil, fireCalamity, identityTheft, holography, projection, projectionScript, crocodilePhotograph } from '../text/scrollTexts.js';
 import { toOgham } from '../text/ogham.js';
 
 const PATCHES = [
-  { key: 'iron',           id: 'patch-iron',           body: ironGods,        tone: 0 },
-  { key: 'flying',         id: 'patch-flying',         body: flying,          tone: 1 },
-  { key: 'death',          id: 'patch-death',          body: death,           tone: 1 },
-  { key: 'selfmutilation', id: 'patch-selfmutilation', body: selfMutilation,  tone: 2 },
-  { key: 'identity',       id: 'patch-identity',       body: identityTheft,   tone: 2 },
-  { key: 'holography',     id: 'patch-holography',     body: holography,      tone: 3 },
-  { key: 'projection',     id: 'patch-projection',     body: projection,      tone: 4 },
+  { key: 'iron',           id: 'patch-iron',           body: ironGods,           tone: 0 },
+  { key: 'flying',         id: 'patch-flying',         body: flying,             tone: 1 },
+  { key: 'death',          id: 'patch-death',          body: death,              tone: 1 },
+  { key: 'selfmutilation', id: 'patch-selfmutilation', body: selfMutilation,     tone: 2 },
+  { key: 'firevigil',      id: 'patch-firevigil',      body: fireVigil,          tone: 2 },
+  { key: 'firecalamity',   id: 'patch-firecalamity',   body: fireCalamity,       tone: 2 },
+  { key: 'identity',       id: 'patch-identity',       body: identityTheft,      tone: 2 },
+  { key: 'holography',     id: 'patch-holography',     body: holography,        tone: 3 },
+  { key: 'projection',     id: 'patch-projection',     body: projection,        tone: 4 },
+  { key: 'crocodile',      id: 'patch-crocodile',      body: crocodilePhotograph, tone: 5 },
 ];
 
 const MOTIF_CYCLE = ['spiral', 'chevron', 'cupring', 'dots'];
@@ -124,7 +133,8 @@ const SCRIPT_INSERTS = [
 // and read better with their second sentence carried along too.
 const OGHAM_LINES = {
   iron: 1, flying: 2, death: 1, selfmutilation: 2,
-  identity: 1, holography: 1, projection: 2,
+  firevigil: 1, firecalamity: 1, identity: 1, holography: 1, projection: 2,
+  crocodile: 1,
 };
 
 function firstSentences(text, count) {
@@ -368,6 +378,7 @@ function buildStyles() {
     .ms-patch-tone-2 { background: linear-gradient(160deg, #3c2f1b 0%, #47381f 55%, #382b18 100%); }
     .ms-patch-tone-3 { background: linear-gradient(160deg, #4c3c20 0%, #584722 55%, #453620 100%); }
     .ms-patch-tone-4 { background: linear-gradient(160deg, #5d4a26 0%, #6a5628 55%, #55441f 100%); }
+    .ms-patch-tone-5 { background: linear-gradient(160deg, #6b582e 0%, #7a6530 55%, #64521f 100%); }
 
     /* ink stains and worn patches, scattered per instance, behind the text */
     .ms-stain { position: absolute; pointer-events: none; border-radius: 50%; z-index: 0; }
@@ -705,7 +716,7 @@ export function createManuscript(container, { preview = false } = {}) {
   scroll.className = 'ms-scroll';
   scroll.setAttribute('tabindex', '-1');
   scroll.setAttribute('role', 'region');
-  scroll.setAttribute('aria-label', 'A scroll of found writing, carved fragments, 2000 to 2012');
+  scroll.setAttribute('aria-label', 'A scroll of found writing, carved fragments, 2000 to the 2010s');
 
   scroll.insertAdjacentHTML('beforeend', oghamPanel());
 
