@@ -162,6 +162,41 @@ confirm with Scott whether the curator-tool/astronomy-image concept is officiall
 real-site-constellations concept before editing further, since right now both a stale plan and a
 newer implementation exist side by side in this file.
 
+## second deep dive: rest of archives/ + all Game/ folders (2026-07-16)
+
+Broadened well past the Writing archive: the two Scrivener projects at the Documents root, `The New.scriv`,
+and the big "Previously" folders (an old Windows profile backup that turns out to be the *source* of the
+Writing archive, plus raw Spoonfed/Kinetic Muse site exports) — full write-up in
+`source-material/second-deep-dive-archives.md`. Also did all of `Game/` (Scion, Exalted, WoD, D&D, Trinity
+Continuum), custom/homebrew content only, official rulebooks excluded — full write-up in
+`source-material/second-deep-dive-game-folders.md`.
+
+Headline finds:
+- **"A Manual of Perceptual Mechanics.scriv" and "The Secret World.scriv" are not empty** (an earlier survey
+  had this wrong) — Manual holds 7 real documents including a 193K-word "The Hottest of Messes" (same raw
+  material as "The L.A. Project") and a complete short story, "Interlude: Portable Hells."
+- **Origin of "Solistrato" found**: `Purpose.doc`, a manifesto ending "Song of Fire and Light... Solistrato.
+  The layer of life closest to the sun." That coined name then turns up independently as an old radio-
+  station/site name, a Spoonfed subsection, *and* a D&D 5e character (`solistrato_57789333.pdf`) — one word,
+  three media, twenty-plus years.
+- **New strong gem candidate**: "Pygmalion," a complete essay about an online catfishing episode, direct
+  thematic sibling to the scroll's existing Identity Theft/Projection pieces. Not yet wired in — flagging for
+  a future pass.
+- **"Butterfly Wings"** — an old-format screenplay fragment (blocked writer, a butterfly, a hurricane tracked
+  by researchers) that may be the literal prose ancestor of the live Chaos Butterfly/Lorenz-attractor scene.
+- **A full homebrew Scion campaign** ("Boston Scion," 2012–2014: 15 session recaps, ~50 characters, an
+  invented "Yankee Pantheon" with new American gods — The King, The Zealot, Oppenheimer, Bull Market) —
+  surveyed but not fully read, flagged as worth its own future pass given the scale.
+- Recurring threads corroborated across new media: the fire self-identification (now also a Scion knack,
+  "I Am a Fire"), the adoption theme (now also baked into two separate Scion character origins), and the
+  Muses (a "Muse (Urania)" Scion birthright).
+- **Update (2026-07-16):** Pygmalion is now wired into the scroll (`src/text/scrollTexts.js` +
+  `src/scenes/manuscript.js`) — slotted chronologically into the c. 2000 cluster alongside Iron Gods/
+  Flying/Thoughts Of Death Abounds (it's internally dated to May 2000, despite being the newest addition).
+  Scroll is now eleven pieces. `npx vite build` passes clean. Everything else from this pass (Boston Scion,
+  "Butterfly Wings," the D&D/Trinity Continuum custom characters, etc.) is still just staged in the two
+  source-material files, not yet used.
+
 ## infrastructure done, needs real content
 - `src/scenes/nebula.js` — placeholder star field
 - `src/scenes/egg.js` — placeholder green sphere

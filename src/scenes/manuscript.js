@@ -8,15 +8,24 @@
 // (ᏸ, fourth of the Aicme Beithe: four strokes off a stemline), carved once
 // at the very top — the same glyph the preview medallion carries.
 //
-// Ten pieces, chronological, full texts, no titles/sources/dates/glosses:
-//   Iron Gods · Flying · Thoughts Of Death Abounds       (Spoonfed / FORCEFED, c. 2000)
+// Eleven pieces, chronological, full texts, no titles/sources/dates/glosses:
+//   Iron Gods · Flying · Thoughts Of Death Abounds · Pygmalion   (c. 2000)
 //   The Impossible Bliss of Self-Mutilation               (2002)
 //   The Vigil · The Calamity (both ex Fire.doc)           (Nov 2003)
 //   Identity Theft                                        (2009)
 //   Holography · Projection                               (2009–2012)
 //   The Crocodile Photograph                              (undated, later — newest hide)
 //
-// Three honest notes on what's NOT here:
+// Pygmalion is the newest addition (2026-07-16, second archive deep dive) but
+// the oldest-dated piece on the scroll — internally dated to May 2000, same
+// cluster as Iron Gods/Flying/Thoughts Of Death Abounds, so it's slotted in
+// there rather than tacked on at the end. A found-out catfishing essay
+// (a woman calling herself "Jane" turns out to be a years-long impersonation
+// of her own friend), it's already in conversation with Identity Theft and
+// Projection — same subject, a self built out of someone else's material —
+// just twenty years earlier than either of them.
+//
+// Four honest notes on what's NOT here:
 //  — Holography is excerpted, not full. The real chapter runs to roughly
 //    10,500 words; what's here is one complete, self-contained movement —
 //    Jeremy Constantilios's flight into and landing in Los Angeles — ending
@@ -67,13 +76,14 @@
 // vector/filter math, generated fresh in the browser, just with more tools
 // in the box.
 
-import { ironGods, flying, death, selfMutilation, fireVigil, fireCalamity, identityTheft, holography, projection, projectionScript, crocodilePhotograph } from '../text/scrollTexts.js';
+import { ironGods, flying, death, pygmalion, selfMutilation, fireVigil, fireCalamity, identityTheft, holography, projection, projectionScript, crocodilePhotograph } from '../text/scrollTexts.js';
 import { toOgham } from '../text/ogham.js';
 
 const PATCHES = [
   { key: 'iron',           id: 'patch-iron',           body: ironGods,           tone: 0 },
   { key: 'flying',         id: 'patch-flying',         body: flying,             tone: 1 },
   { key: 'death',          id: 'patch-death',          body: death,              tone: 1 },
+  { key: 'pygmalion',      id: 'patch-pygmalion',      body: pygmalion,          tone: 1 },
   { key: 'selfmutilation', id: 'patch-selfmutilation', body: selfMutilation,     tone: 2 },
   { key: 'firevigil',      id: 'patch-firevigil',      body: fireVigil,          tone: 2 },
   { key: 'firecalamity',   id: 'patch-firecalamity',   body: fireCalamity,       tone: 2 },
@@ -132,7 +142,7 @@ const SCRIPT_INSERTS = [
 // on one complete, substantial sentence; a couple open short ("A symphony.")
 // and read better with their second sentence carried along too.
 const OGHAM_LINES = {
-  iron: 1, flying: 2, death: 1, selfmutilation: 2,
+  iron: 1, flying: 2, death: 1, pygmalion: 1, selfmutilation: 2,
   firevigil: 1, firecalamity: 1, identity: 1, holography: 1, projection: 2,
   crocodile: 1,
 };

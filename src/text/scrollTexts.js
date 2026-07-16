@@ -17,6 +17,14 @@
 // (PlayStation, Call of Duty, "man cave" as an unremarked-on term) — a
 // complete, self-contained dark-comedy short story, recovered from a modern
 // Pages/IWA file via protobuf text-run extraction. Full text, nothing cut.
+//
+// pygmalion is a complete personal essay, internally dated to the events of
+// May 2000 (an early online personal ad, a woman calling herself "Jane" who
+// turns out to have spent eight years impersonating her own friend Melissa —
+// borrowed hobbies, borrowed biography, a fabricated Southern accent). Found
+// in the second archive deep-dive (2026-07-16), recovered from an old
+// Windows profile backup ("possible forcefed.txt", a draft later polished
+// into "Pygmalion.doc" — the title used here). Full text, unedited.
 
 export const flying = [
   `One time, I was on a plane by myself. I was leaving everything I knew, everyone I loved, everywhere I had been, to try and stake my claim. To get my career, my passion, and my life going. I looked out the scratchy Plexiglass window. I saw the sea of clouds below me. I saw the horizon, infinite and daring. I looked down at the green and brown earth. And a wave of vertigo overcame me. I grabbed the armrests tightly, squeezing my eyes shut, trying to make the world stop spinning...no good.`,
@@ -313,4 +321,55 @@ export const crocodilePhotograph = [
   `"I bet your pussy tastes like grapefruit."`,
   `I only had a second to enjoy the shocked look on her face before Derek flattened me.  Of course, assaulting someone in their own home in front of a cop is not the smartest idea, and yes, I was going to press charges, officer.  Nancy started screaming about pressing charges for theft, and Jennifer was throwing me out on the sidewalk, and I checked into a room at the Charles Hotel with nothing but a cell phone at 47%.`,
   `It was worth it.`,
+];
+
+export const pygmalion = [
+  `There is something about the Internet that turns me into an utter fucking moron.`,
+  `No, wait, it's more complex than that.  I'm a trusting soul by nature, and having been online in one form or another since I was 15 has cultivated a certain deliberate naiveté within myself.  I go online inherently trusting that there will be no bullshit, that everyone here has the same degree of openness and honesty that I do.  Although I don't trumpet the private details of my life for all to see, I have been known to open up to people I've met online.  Why not?  After all, what's the worst that could happen?`,
+  `This is about a girl, and we will call her Jane because that's what her ad said her name was.`,
+  `Ah, yes, the online personal ad.  A combination biography, F.A.Q., come-on and plea for attention.  Like a personal home page, except (c)overtly looking for sex.`,
+  `I had put the ad up in May of 2000.  This is when my ex-girlfriend/roommate and I had finally called it quits, and suddenly a circuit flipped and my libido kicked into overdrive and the only thing I could think of was pairbonding with another human female as quickly as possible.  This urge was sated after a number of encounters, some successful, some not.  I became acquainted the three-hour date, and suddenly it became a model of what my romantic life was.  However, after several months of meeting total strangers on the Internet and having sex with them or not, I decided that this was not what I wanted from my life, pleasant as afterglow could be.  No, casual sex was all well and good, but after a while it became obvious that I was ready yet again for LUV, that LUV would solve all my problems, that I was back on my feet, having worked all that lust out of my system and ready to head back into the Real World, a wiser, more mature man.`,
+  `So why was I back at the site?  Well, an impending move threw into stark relief the fact that my destination offered me only a few friends and acquaintances, so what could it hurt to meet new people?  I quickly threw together an ad saying I was looking for anyone, really, who seemed cool and who wanted to meet a Boston transplant.  Looking at my old ad, however, prompted those nagging habits, and soon I was idly scanning available women in the Boston area.`,
+  `Which is, of course, when I saw Jane's ad.`,
+  `Red hair.  That's always a good start.  The lovely facial features didn't detract, either.  The last good book she read was Modern Man in Search of His Soul by Jung.  Outstanding.  Her favorite sex scene was from Eyes Wide Shut – where Tom is into Nicole, and Nicole is into watching Tom be so into Nicole.  Brava.  Oh, what the hell.`,
+  `What the hell.`,
+  `A week passed and this totally left my mind until she replied, saying that she had been kayaking for four days and sorry she didn't get back to me and how are you, Scott?  And I am fine, and tell me about your kayaking, oh and that's interesting, and you paint and play piano, do you?  And you love jazz, and you grew up in the South, but your family now lives in California, and say, you wouldn't happen to have an instant messenger account, would you?`,
+  `The IM window.  There is a certain dread to the IM window, coupled with intangible possibility.  It is a square, waiting to be filled.  It's better than email, because it's closer to simulating actual conversation, but it is not ideal.  However.  It is safe, anonymous, and if they piss you off or scare you, there is always the blocking option.  So.`,
+  `She is at work, I am unemployed.  We are both talking.  And never in my life have I experienced instant chemistry, let alone over a fucking IM.  But there it is, from nowhere, boom, and as stupid as it is, it cannot be ignored.  Certainly not, as it just builds and builds and reactions are occurring and bonds are being formed and the next thing I know she's excusing herself, because she has a meeting at 6 and she needs to go to the bathroom beforehand and –`,
+  `There is a certain something about a woman telling you she's going to masturbate at work that tends to short-circuit the higher brain functions.`,
+  `Of course phone numbers are exchanged.  And of course I call her later.  And of course I am so ready to forget the lessons learned from before because this is hot, this is the sizzle, this is that amoral, will-to-power feeling that justifies itself, this is not just lust but mad lust and that is its own excuse.`,
+  `And then she spills that the meeting she so recently attended, all flushed and glowing, regarded her flying out to San Francisco the next day after work, and she would not return to Boston for at least a week.`,
+  `Now, normally I am a sensible man.  Normally, I would be content to say Aw shucks and I guess we'll meet when you get back and let's take this time to get to know one another.  But this is hot.  This is amazing.  She is sexy and beautiful and smart and artistic and she's read Jung and she jilled off at work after talking to me and well, goddamnit, now we're both aching and it must happen.  Right.  Now.`,
+  `I must admit, I was surprised that she actually considered inviting a total stranger over to her house simply for the purpose of sex – no date, no dinner, no so what do you like?  But it was that hot, and the perfect minx that she was, she was struggling with the issue.  Of course she would, because all that lust and libido must be balanced out with an ethical and value system that would recognize that what we were considering was absolute lunacy.`,
+  `"Please," I said.  I didn't beg, I didn't plead.  I didn't have to.  I didn't have to con her or lie to her.  I didn't have to cajole or flatter.  I just asked, and even the asking was wonderful.`,
+  `She said no.`,
+  `I accepted her no, after asking three more times.`,
+  `So we made do with the materials at hand, and swore that we would have to meet up as soon as she got back, and isn't this crazy?`,
+  `Yes.  Yes it is.`,
+  `And there's something about having not met a person and being totally captivated by them that suspends judgments.  Because, after all, you keep telling yourself, you've never met this person, so there's nothing really there, and you almost believe it.  And yet.  And yet.  And yet there's that thing.  And you have your doubts, of course, but then a few well-placed words make those evaporate into thin air.  So for the next four days, through phone calls and Yahoo! Messenger, this bond, this crazy bond develops, and holy shit, she's just sweet and lovely and nice, she is smart and gorgeous, she is a network security engineer but she paints, she is going to be so good to throw on the bed and maybe I should meet her at the airport and maybe she'll visit me in New York and this might be that proverbial One that just lands in your lap out of fucking nowhere and –`,
+  `And then this is when things go from crazy to utterly fucking insane.`,
+  `She mentions this friend she has that's really cool blah blah blah.  I wasn't paying attention, really, because the sweet Southern lilt of her voice was just hypnotizing.  Maybe she'll compose a song for me.  My friend is just really cool, and you should get to know her.  I wonder what her lips will taste like.  I'll give her your email address.  Whatever you say, my dear.`,
+  `And lo and behold, there's an email that Sunday from Jane's friend and how do you do Jane told me to write you yadda yadda yadda whatfuckingever.`,
+  `"I got this weird email out of the blue.  From someone you told to write me?"`,
+  `"Oh yeah!  Melissa!  She wrote you?"`,
+  `"Yeah.  Seems bitter.  Whatever."`,
+  `And there is more babble, and then six words that no person ever wants to hear:`,
+  `"I have a confession to make."`,
+  `Oh?`,
+  `"You're going to be mad at me."`,
+  `Huh.  Um.  What is your confession, Jane?  And after a deep breath, the first crack:`,
+  `"I don't play the piano and I don't paint and I'm not a natural redhead."`,
+  `Well.`,
+  `She's never read Jung.  Her friend has.  She never saw Eyes Wide Shut.  Her friend did.  Seems like her friend has done quite a lot.  And Jane's done a lot of copying.  For eight years.  To the point where she went to a speech therapist to change her natural California accent to a Southern accent.  Because she didn't grow up in the South, but her friend did.`,
+  `Well.`,
+  `And she idealizes her friend and considers her perfect and the epitome of what an intelligent, artistic, interesting woman is – because Jane is many things, but apparently not those three things – and yet is insanely jealous of said friend because she is something that Jane will never be.`,
+  `Well.`,
+  `And all those lines, all those thoughts that I thought were hers, were ripped straight from her friend's website.  Irony is so bleak when it happens to you.`,
+  `It takes about a day for the full implications to sink in.  It takes me that long to fully understand that I fell for a mask, a mirage, a role that Jane had been playing for eight years, a lie that she finally got caught in.`,
+  `Was it love?  I don't know.  It was something.  There was that thing, this insane bond formed with a total stranger who seemed to reflect every ideal quality I could want in a lover, and suddenly that thing was gone.  She was gone, this strange Jane-Melissa fusion, and left in stone were plain Jane and her object of iconoclast desire.`,
+  `To this day, I have no idea what the truth really is.  After a revelation like that, truth and trust are the first things discarded.  Melissa and I attempted to talk, to make sense of it, but there was too much suspicion and hurt in the air for anything good to come of it, and now everyone has lost, leaving me with broken bits of a hollow statue strewn throughout emails and phone conversations.`,
+  `There are two modes of sensing, I believe: projection and observation.  Observation is the taking in of stimuli and recognizing the uniqueness of that thing as a separate object in the world.  Projection is your imagination attaching meaning to another object based on your sensory input.`,
+  `The Internet excels at projection.  We cast our nets out here, we make our wishes, we build our realms.  We're not really here, but our presence is felt.  It is an illusory state, this feeling that we're here and that we can tell who these other people are, but there's a divorce from fact.  There's no way of really telling anything about anyone else.  We look at those words coming across the screen and we create a person, and we trust that it's accurate.`,
+  `I think the next time I go all stupid for someone, or even just get turned on by them, I think it'll be because of the smell of their hair, or the way their eyes catch the light, or that contented laugh they make.  I think I'll listen to their words, rather than read them.  I think I will fall for a real person, not a fabricated one.  I think I will take time and relax and be patient and see if this person really is someone I want to interact with in any serious way.`,
+  `And the instant messengers will stay off for a while, I think.  I think that will do just fine.`,
 ];
