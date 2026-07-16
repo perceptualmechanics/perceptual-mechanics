@@ -1,5 +1,26 @@
 # perceptual mechanics — notes & punch list
 
+## project map (as of 2026-07-16)
+
+Three active projects have been cross-pollinated from the same rounds of archive-mining, so it's
+worth being explicit about which is which:
+
+- **perceptualmechanics** (this repo) — the live site + code. What lands here: finished scenes,
+  scroll patches, wired-in content. Deploys to perceptualmechanics.com via manual `dist/` upload
+  (see "deployment" below) — anything that shouldn't be public has no business in this repo.
+- **A Manual of Perceptual Mechanics.scriv** (`/Users/scottcohen/Documents/A Manual of Perceptual
+  Mechanics.scriv`) — a separate Scrivener writing project. Surveyed this session (holds "The
+  Hottest of Messes," 193K words of raw material, and a complete short story, "Interlude: Portable
+  Hells") but not edited.
+- **The Secret World.scriv** (`/Users/scottcohen/Documents/The Secret World.scriv`) — a separate
+  Scrivener writing project. Gained a new Research/Factions/"The Yankee Pantheon" document this
+  session — see the Boston Scion entry further down.
+
+Raw research/staging notes from archive deep-dives (the deep-dive write-ups, gem excerpts, campaign
+reports) live outside all three of these, in `../perceptualmechanics-source-material/` — a sibling
+directory to this repo, not tracked in git. See "housekeeping" near the bottom for why and when that
+moved.
+
 ## nebula curator workflow
 The curator tool runs **locally only** due to browser CORS restrictions on direct Anthropic API calls.
 
@@ -106,7 +127,7 @@ but non-functional for API calls. Use localhost instead.
 
 Did a complete pass on the entire `archives/Writing archive/` folder (228 files, ~1.84M words,
 ~2000–2025) — not just the elements-project text hunt. Full write-up saved to
-`source-material/archive-deep-dive.md`; three more standalone gems staged in `source-material/`
+`../perceptualmechanics-source-material/archive-deep-dive.md`; three more standalone gems staged
 alongside the fire excerpt (`gem-crocodile-photograph.md`, `gem-golden-hare-and-orrery.md`).
 
 Highlights: the name "perceptual mechanics" isn't new — it traces back to a line in `km.txt`
@@ -167,9 +188,9 @@ newer implementation exist side by side in this file.
 Broadened well past the Writing archive: the two Scrivener projects at the Documents root, `The New.scriv`,
 and the big "Previously" folders (an old Windows profile backup that turns out to be the *source* of the
 Writing archive, plus raw Spoonfed/Kinetic Muse site exports) — full write-up in
-`source-material/second-deep-dive-archives.md`. Also did all of `Game/` (Scion, Exalted, WoD, D&D, Trinity
-Continuum), custom/homebrew content only, official rulebooks excluded — full write-up in
-`source-material/second-deep-dive-game-folders.md`.
+`../perceptualmechanics-source-material/second-deep-dive-archives.md`. Also did all of `Game/` (Scion,
+Exalted, WoD, D&D, Trinity Continuum), custom/homebrew content only, official rulebooks excluded — full
+write-up in `../perceptualmechanics-source-material/second-deep-dive-game-folders.md`.
 
 Headline finds:
 - **"A Manual of Perceptual Mechanics.scriv" and "The Secret World.scriv" are not empty** (an earlier survey
@@ -193,9 +214,56 @@ Headline finds:
 - **Update (2026-07-16):** Pygmalion is now wired into the scroll (`src/text/scrollTexts.js` +
   `src/scenes/manuscript.js`) — slotted chronologically into the c. 2000 cluster alongside Iron Gods/
   Flying/Thoughts Of Death Abounds (it's internally dated to May 2000, despite being the newest addition).
-  Scroll is now eleven pieces. `npx vite build` passes clean. Everything else from this pass (Boston Scion,
-  "Butterfly Wings," the D&D/Trinity Continuum custom characters, etc.) is still just staged in the two
-  source-material files, not yet used.
+  Scroll is now eleven pieces. `npx vite build` passes clean. Everything else from this pass ("Butterfly
+  Wings," the D&D/Trinity Continuum custom characters, etc.) is still just staged in the source-material
+  files, not yet used.
+- **Update (2026-07-16), full Boston Scion read:** did the complete read Scott asked for — all 14 surviving
+  session recaps (Sept 2012–March 2014) plus ~50 character pages. Full write-up in
+  `../perceptualmechanics-source-material/boston-scion-campaign-report.md`: a season-long myth-arc (Zeus visits Boston, Percy is
+  tried by the Aesir in Norway, King Midas turns out to be an avatar of Greed laundering souls through
+  Native American casino money, the finale stages a titan named Magog waking under Copley Plaza at the
+  Boston Marathon — worth knowing that's staged at the real bombing's site/anniversary before this goes
+  anywhere public), the invented Yankee Pantheon in full context, and a ~15-person recurring cast with real
+  comic voice. Percy's in-character saga-boast at the end of Recap 12 is genuinely one of the best single
+  things found this whole deep dive.
+  **Resolved (2026-07-16):** the Marathon-bombing finale was, in Scott's own words, "a misguided way to try
+  and deal with the bombing" — dropped entirely, not reproduced or referenced anywhere further. The rest
+  (just Scott's own inventions as GM, not other players' characters) is now folded directly into
+  `The Secret World.scriv` as canon: a new Research/Factions/"The Yankee Pantheon" document — the invented
+  American gods (Uncle Sam, Columbia, Johnny Appleseed, Br'er Rabbit, The King, The Zealot, Oppenheimer, Bull
+  Market), reworked out of Scion game terms into straight mythographic prose, plus short related entries on
+  The Grasp (rival faction) and the Sword of Atli (relic). Not a perceptualmechanics change — noting it here
+  only because this NOTES.md is where the whole Boston Scion thread has lived across sessions.
+
+## Google Drive search for a lost Scion NPC spreadsheet (2026-07-16, closed)
+
+Scott remembered having notes from the Boston Scion campaign in Google Docs; connected the Drive
+connector and searched. Found: a generic chargen cheatsheet (his own), and — a genuine surprise —
+"Scion Game Notes," GM notes for a previously-unknown *second*, 2020, Philadelphia-based Scion 2nd
+Ed campaign (different cast, different pantheon-adjacent themes). Not yet read in full; flagged for
+a future pass if wanted. Also found: several of Mara's in-character journals, and a shared campaign
+timeline spreadsheet ("Copy of TimelineJS Template") with pantheon-expansion content of her own
+invention (Rosie the Riveter, ~20 new Scions, an "Exceptional Americans" cover story) — Scott
+declined to fold any of that into Secret World, since it's Mara's work, not his. What he'd actually
+hoped to find — a personal spreadsheet listing every Scion NPC he created as GM — did not turn up
+after searching by name variants ("Sorensen"/"Sorenson"/"soren"), by other roster terms (Freyr,
+Uncle Sam, Yankee Pantheon, NPC), and by browsing every spreadsheet he owns or has access to.
+Confirmed with Scott: it's gone. Closed, not worth further searching unless a new lead turns up.
+
+## housekeeping (2026-07-16)
+
+`source-material/` (all the deep-dive write-ups, gem excerpts, and the Boston Scion campaign report)
+moved out of this repo entirely, to `../perceptualmechanics-source-material/` — a sibling directory,
+not tracked in git. Reasoning: it's working notes about *other* Scott projects (Secret World, the
+Manual) and personal archive material, not site content, and had no business being in a public repo
+or anywhere near what gets deployed. Added `source-material/` to `.gitignore` as a safeguard against
+it landing back in by accident. Committed locally (`Move source-material/ out of the repo`) but not
+yet pushed — **this repo is public on GitHub**, and the four files that were already tracked
+(`archive-deep-dive.md`, `fire-excerpt-more-rambling.md`, `gem-crocodile-photograph.md`,
+`gem-golden-hare-and-orrery.md`) are already live in its history from an earlier commit. Pushing the
+new commit stops them showing at the tip of `main` going forward, but doesn't erase them from
+history — that needs an explicit history rewrite (force-push), which hasn't been done and shouldn't
+happen without Scott deciding that's worth it.
 
 ## infrastructure done, needs real content
 - `src/scenes/nebula.js` — placeholder star field
