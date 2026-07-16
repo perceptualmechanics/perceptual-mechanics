@@ -3,3 +3,7 @@ dist/
 v1/dist 2/
 .DS_Store
 *.log
+
+# research/source material lives outside the repo now (../perceptualmechanics-source-material/)
+# — ignored here as a safeguard in case anything gets dropped back in by mistake
+source-material/
