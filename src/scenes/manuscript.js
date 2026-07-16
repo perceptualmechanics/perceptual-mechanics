@@ -62,6 +62,7 @@
 // in the box.
 
 import { ironGods, flying, death, selfMutilation, identityTheft, holography, projection, projectionScript } from '../text/scrollTexts.js';
+import { toOgham } from '../text/ogham.js';
 
 const PATCHES = [
   { key: 'iron',           id: 'patch-iron',           body: ironGods,        tone: 0 },
@@ -115,6 +116,21 @@ const INTENSITIES = [
 const SCRIPT_INSERTS = [
   { patch: 'projection', afterIndex: 23, script: projectionScript },
 ];
+
+// How many opening sentences of each patch's first paragraph get set as an
+// Ogham line in the margin — computed from the real paragraph text itself
+// (not retyped), so it can never drift out of sync with it. Most pieces open
+// on one complete, substantial sentence; a couple open short ("A symphony.")
+// and read better with their second sentence carried along too.
+const OGHAM_LINES = {
+  iron: 1, flying: 2, death: 1, selfmutilation: 2,
+  identity: 1, holography: 1, projection: 2,
+};
+
+function firstSentences(text, count) {
+  const matches = text.match(/[^.!?]*[.!?]+/g) || [text];
+  return matches.slice(0, count).join(' ').trim();
+}
 
 function escapeHtml(s) {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -392,6 +408,30 @@ function buildStyles() {
       text-shadow: 1.5px 1.5px 0 rgba(0,0,0,0.65), -1px -1px 0 rgba(255,220,170,0.15);
     }
 
+    /* Ogham marginalia: the opening line of each piece, transliterated,
+       standing in the left margin like a real illuminated manuscript's
+       marginal note — the prose wraps around it, same as the drop-cap
+       above. Deliberately the calm one: no per-instance rotate/scale
+       jitter, steady letter-spacing, a cooler and quieter tone than the
+       warm frenzy of the ink beside it. A thin stemline on its left edge
+       nods to how Ogham actually reads — notches keyed off a straight
+       edge, not floating free the way Latin letters do. */
+    .ms-ogham-line {
+      float: left;
+      width: 118px;
+      margin: 0.1rem 1.2rem 0.6rem 0;
+      padding-left: 0.6rem;
+      border-left: 1px solid rgba(184,196,214,0.35);
+      font-family: 'Noto Sans Ogham', sans-serif;
+      font-size: 1.3rem;
+      line-height: 1.75;
+      letter-spacing: 0.03em;
+      color: rgba(184, 196, 214, 0.72);
+      text-shadow: none;
+      word-break: break-word;
+      user-select: none;
+    }
+
     .ms-rubric {
       color: #c17a3d;
       text-shadow: 1px 1px 0 rgba(255,220,170,0.12), -1px -1px 1px rgba(0,0,0,0.6);
@@ -576,6 +616,10 @@ function buildStyles() {
       .ms-patch-text { --ms-base-size: 1.05rem; }
       .ms-patch-text > p:first-of-type::first-letter { font-size: 2.6rem; }
       .ms-ogham-panel { max-width: 76px; }
+      .ms-ogham-line {
+        float: none; display: block; width: auto;
+        margin: 0 0 0.9rem; padding-left: 0.5rem; font-size: 1.1rem;
+      }
       .ms-script { padding: 1.7rem 1.1rem 1.5rem 1.5rem; }
       .ms-script-page { font-size: 0.85rem; }
       .ms-script-dialogue { max-width: 88%; }
@@ -678,9 +722,12 @@ export function createManuscript(container, { preview = false } = {}) {
       article.appendChild(buildStain());
     }
 
+    const openingLine = firstSentences(patch.body[0], OGHAM_LINES[patch.key] || 1);
+    const oghamHtml = `<span class="ms-ogham-line" aria-hidden="true">${toOgham(openingLine)}</span>`;
+
     const textWrap = document.createElement('div');
     textWrap.className = 'ms-patch-text';
-    textWrap.innerHTML = patch.body.map((p, idx) => {
+    textWrap.innerHTML = oghamHtml + patch.body.map((p, idx) => {
       const rot = (Math.random() * 1.6 - 0.8).toFixed(2);
       const dx = (Math.random() * 6 - 3).toFixed(1);
       // Sometimes slightly larger, sometimes the tracking runs a little
