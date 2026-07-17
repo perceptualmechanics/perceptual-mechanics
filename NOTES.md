@@ -6,6 +6,21 @@ projects (The Secret World, A Manual of Perceptual Mechanics) moved into their o
 files, which are now the source of truth for that material going forward. See "project map"
 below for where things live.
 
+## 1.0.8 (2026-07-17, same day)
+
+Scott caught it exactly right: "it's an atom now, not a solar system." The
+old orrery nav icon was three ellipses at 58°/122° rotations around a shared
+center with an electron-style dot on one ring — the classic atom glyph
+(Rutherford model), not an orrery. Redrawn as three concentric ellipses at
+the *same* tilt (planets sharing one orbital plane, viewed at an angle,
+same as the scene's own posed rings), a filled sun at center, three small
+planet dots at different radii and angles, and a mast line up top matching
+the actual scene's ceiling suspension. Only place this icon exists — the
+landing-page preview tile for orrery renders the live WebGL scene itself,
+not a static icon, so nothing else needed touching.
+
+Version bumped to 1.0.8 in package.json.
+
 ## 1.0.7 (2026-07-17, same day)
 
 Scott saw 1.0.6's room and sent back four words: "the room needs more
