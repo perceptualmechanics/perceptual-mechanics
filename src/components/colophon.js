@@ -274,7 +274,7 @@ function buildPanel() {
     <section>
       <h3>Feedback</h3>
       <p>Found a bug, or just want to say something about one of these?</p>
-      <a id="colophon-feedback-link" href="mailto:scottjasoncohen@gmail.com?subject=perceptualmechanics.com">scottjasoncohen@gmail.com</a>
+      <a id="colophon-feedback-link" href="mailto:perceptualmechanics@gmail.com?subject=perceptualmechanics.com">perceptualmechanics@gmail.com</a>
     </section>
   `;
   return panel;

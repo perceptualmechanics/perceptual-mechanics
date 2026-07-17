@@ -6,6 +6,14 @@ projects (The Secret World, A Manual of Perceptual Mechanics) moved into their o
 files, which are now the source of truth for that material going forward. See "project map"
 below for where things live.
 
+## 1.0.10 (2026-07-17, same day)
+
+Swapped the feedback-link address in the colophon panel from Scott's
+personal email to a dedicated perceptualmechanics@gmail.com. Only place
+the old address appeared anywhere in the live source.
+
+Version bumped to 1.0.10 in package.json.
+
 ## 1.0.9 (2026-07-17, same day)
 
 Scott: on mobile, the preview tiles are left-aligned, not centered. Real
