@@ -235,6 +235,27 @@ Headline finds:
   The Grasp (rival faction) and the Sword of Atli (relic). Not a perceptualmechanics change — noting it here
   only because this NOTES.md is where the whole Boston Scion thread has lived across sessions.
 
+## You've Got a Friend in Satan — Scott's first play, wired into the theater (2026-07-16)
+
+Scott uploaded a two-part scanned PDF of his first play ("YOU'VE GOT A FRIEND IN SATAN," Final Draft,
+Oct 7 1996 — a comedy about a burnt-out demon named Horace sent to buy four college kids' souls, with a
+notary-stamp-technicality twist ending). OCR'd via tesseract (43 pages, typed not handwritten, high
+accuracy — spot-checked the title page, cast page, and closing page directly against the source images,
+all word-for-word matches). Two things came out of it:
+
+1. **A full, verbatim Word document** — `You've Got a Friend in Satan.docx` in the Documents root.
+   Formatted as a proper stage play (centered bold character cues, italicized stage directions,
+   original cast list and playwright's note). Note: there's no way to author a native `.pages` file
+   directly — `.docx` is the practical stand-in, since Pages opens and converts it natively.
+2. **Eight scenes added to `src/scenes/theater.js`**, alongside Truth and Beauty and Paul Revere — a
+   curated selection (not the whole play): the Art/Horace "hot enough for ya" routine, Horace's "Diving
+   in Hamburg" monologue, the Never Have I Ever/Spam runner, the sales pitch through Todd's seduction,
+   Art's arrival as backup, Katie's "I will not break" speech, the notary-stamp twist, and the closing
+   reveal that the whole assignment was a setup. New characters (Horace, Art, Satan, Voice of Satan,
+   Katie, Todd, Aaron, Traci, The Woman) added to the shared `CHARACTERS` map. Verified with a headless
+   DOM mock driving 2000 forced clicks through the full shuffled timeline (every scene, every beat) with
+   no errors, plus a clean `vite build`.
+
 ## Google Drive search for a lost Scion NPC spreadsheet (2026-07-16, closed)
 
 Scott remembered having notes from the Boston Scion campaign in Google Docs; connected the Drive
