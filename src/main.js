@@ -220,6 +220,27 @@ initPreviews();
 // mechanic was redundant. See NOTES.md, "1.0.1" entry, for what replaced it.)
 initColophon();
 
-// Status-bar easter egg (nav icons, preview tiles, the title link) lives
-// entirely in index.html as inline onmouseover/onmouseout — the actual
-// 1999 way to do it, no separate module needed. See index.html.
+// ─── Status-bar easter egg ──────────────────────────────────────────────────
+// The onmouseover/onmouseout wiring itself lives in index.html, inline,
+// the actual 1999 way to do it — window.status='...' on hover, ''  on
+// mouseout. That part does nothing visible anymore (every modern browser
+// has ignored script writes to window.status since ~2014), which is fine;
+// it's the actually-correct period technique, left in as-is, correct and
+// inert in the page source.
+//
+// pmGlimpse is the part that's actually visible today, Scott's own
+// refinement: a 1-in-100 chance per hover that the browser tab's own
+// title flickers to that element's status word for a moment before
+// reverting on its own — not tied to how long the mouse stays put, so it
+// reads as something that happened to you, not a hover state you're
+// controlling. Deliberately rare enough that most visitors never see it
+// once. Exposed on window rather than kept module-private because inline
+// onmouseover="" attributes execute in global scope, not this module's.
+const PM_ORIGINAL_TITLE = document.title;
+let pmGlimpseTimer = null;
+window.pmGlimpse = function (text) {
+  if (Math.random() >= 0.01) return;
+  document.title = text;
+  clearTimeout(pmGlimpseTimer);
+  pmGlimpseTimer = setTimeout(() => { document.title = PM_ORIGINAL_TITLE; }, 1500);
+};

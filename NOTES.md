@@ -6,6 +6,23 @@ projects (The Secret World, A Manual of Perceptual Mechanics) moved into their o
 files, which are now the source of truth for that material going forward. See "project map"
 below for where things live.
 
+## 1.0.3 (2026-07-17, same day)
+
+One refinement to the status-bar easter egg, Scott's own idea: instead of a
+reliable hover effect, each of the fifteen `onmouseover` handlers now also
+calls a new `pmGlimpse()` (in `main.js`, exposed on `window` since inline
+`onmouseover=""` attributes run in global scope, not a module's) that rolls
+a 1-in-100 chance and, on a hit, flickers the browser tab's own title to
+that element's status word for about a second and a half before reverting
+on its own — not tied to how long the mouse stays put, so it reads as
+something that happened to you rather than a hover state you triggered.
+Deliberately rare enough that most visitors will never see it once. The
+`window.status` line stays exactly as it was in 1.0.2 (inert everywhere,
+kept anyway as the correct period technique); this is layered on top of it,
+not a replacement.
+
+Version bumped to 1.0.3 in package.json.
+
 ## 1.0.2 (2026-07-17, same day)
 
 One easter egg, entirely Scott's idea: a throwback to his own web origins,
