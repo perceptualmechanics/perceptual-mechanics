@@ -1151,6 +1151,24 @@ export function createOrrery(container, { preview = false } = {}) {
         position: fixed; color: rgba(255,255,255,0.3);
         text-transform: uppercase; pointer-events: none; text-align: center;
         z-index: 310; font-family: 'Times New Roman', serif;
+        transition: opacity 0.3s ease;
+      }
+      /* #orrery-title shares the same z-index:310/body-level trick, for
+         the same reason. That z-index is exactly what breaks once the
+         info panel opens: #orrery-panel is nested inside #experience-
+         overlay (z-index:300) and only reaches z-index:10 within that
+         stacking context, so no z-index panel could have would ever let
+         it paint above a document.body sibling at 310 — that's how
+         stacking contexts work, not a value to out-escalate. Scott's
+         screenshot showed exactly that: the ambient title and hint
+         printing straight through the open panel, doubling "THE ORRERY
+         OF LOS FELIZ" with the panel's own heading. Simplest real fix:
+         once the panel's open, the ambient labels are redundant anyway
+         (the panel has its own title and era line) — fade them out
+         instead of fighting the stacking order. See openPanel() and its
+         three close sites below. */
+      #orrery-title.panel-open, #orrery-hint.panel-open, #orrery-caption.panel-open {
+        opacity: 0;
       }
       #orrery-hint {
         top: 4.5rem; right: 1.2rem; font-size: 0.55rem; letter-spacing: 0.2em;
@@ -1226,6 +1244,7 @@ export function createOrrery(container, { preview = false } = {}) {
         position: fixed; top: 4.4rem; left: 50%; transform: translateX(-50%);
         text-align: center; pointer-events: none; z-index: 310;
         font-family: 'Times New Roman', serif; color: rgba(238,225,205,0.82);
+        transition: opacity 0.3s ease;
       }
       #orrery-title-main {
         display: block; font-size: clamp(1rem, 3vw, 1.7rem);
@@ -1291,6 +1310,7 @@ export function createOrrery(container, { preview = false } = {}) {
     panel.querySelector('#orrery-panel-close').addEventListener('click', e => {
       e.stopPropagation();
       panel.classList.remove('open');
+      hideAmbient(false);
       setEmphasis(false);
     });
 
@@ -1317,8 +1337,21 @@ export function createOrrery(container, { preview = false } = {}) {
     orrery.hitTarget.scale.setScalar(on ? 1.4 : 1.0);
   }
 
+  // The ambient title/hint/caption are fixed to document.body at
+  // z-index:310, specifically so they clear #experience-overlay's own
+  // z-index:300 (see the CSS comments above). #orrery-panel lives inside
+  // that overlay and can never out-rank a body-level sibling no matter its
+  // own z-index — so once the panel's open, fade the ambient labels out
+  // instead; they're redundant once the panel has its own title showing.
+  function hideAmbient(hidden) {
+    title.classList.toggle('panel-open', hidden);
+    hint.classList.toggle('panel-open', hidden);
+    caption.classList.toggle('panel-open', hidden);
+  }
+
   function openPanel() {
     panel.classList.add('open');
+    hideAmbient(true);
     setTimeout(() => panelTitle.focus(), 50);
   }
 
@@ -1421,6 +1454,7 @@ export function createOrrery(container, { preview = false } = {}) {
       if (touchMoved) { touchMoved = false; return; }
       if (panel.classList.contains('open') && !panel.contains(e.target)) {
         panel.classList.remove('open');
+        hideAmbient(false);
         selected = false;
         setEmphasis(hovered);
         return;
@@ -1514,6 +1548,7 @@ export function createOrrery(container, { preview = false } = {}) {
   const escapeClose = !preview ? bindEscapeClose(() => {
     if (panel && panel.classList.contains('open')) {
       panel.classList.remove('open');
+      hideAmbient(false);
       selected = false;
       setEmphasis(hovered);
     }

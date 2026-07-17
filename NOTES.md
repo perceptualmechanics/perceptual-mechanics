@@ -6,6 +6,34 @@ projects (The Secret World, A Manual of Perceptual Mechanics) moved into their o
 files, which are now the source of truth for that material going forward. See "project map"
 below for where things live.
 
+## 1.0.12 (2026-07-17, same day)
+
+One more from Scott's mobile screenshots: opening the orrery's read-more
+panel doubled its own title — the panel's own "✦ THE ORRERY OF LOS FELIZ"
+heading printing right through the scene's ambient title and hint text,
+which were still fully visible underneath/on top of it.
+
+Root cause wasn't really a z-index number to raise — it's how stacking
+contexts actually nest. `#orrery-title` and `#orrery-hint` are fixed to
+`document.body` at z-index:310, specifically so they clear
+`#experience-overlay`'s own z-index:300 (each has a comment explaining
+that, from when they were first built). `#orrery-panel` lives *inside*
+that overlay, so no z-index it's given — it was 10 — can ever paint above
+a document.body sibling at 310. That's not a bug in the number, it's what
+stacking contexts do: everything inside #experience-overlay renders
+together as one unit at its z-index, regardless of values assigned deeper
+in the tree.
+
+Rather than restructure where the panel lives in the DOM, faded the
+ambient title/hint/caption out whenever the panel's open — they're
+redundant once the panel has its own title and era line showing anyway.
+Added a `hideAmbient()` helper and wired it into `openPanel()` and all
+three places the panel closes (the close button, clicking outside it, and
+Escape) — three separate close paths that would have been easy to miss
+one of if this were done inline at each site instead.
+
+Version bumped to 1.0.12 in package.json.
+
 ## 1.0.11 (2026-07-17, same day)
 
 Scott's screenshot of orrery on a 402px-wide phone (Firefox's responsive
