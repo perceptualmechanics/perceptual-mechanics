@@ -942,7 +942,9 @@ export function createOrrery(container, { preview = false } = {}) {
         background-size: 100% 100%, 160px 160px;
       }
       #orrery-title {
-        position: fixed; top: 2.2rem; left: 50%; transform: translateX(-50%);
+        /* #pm-nav (site.css) is a fixed, 3.5rem-tall, z-index:500 bar —
+           sit clear below it, not underneath it. */
+        position: fixed; top: 4.4rem; left: 50%; transform: translateX(-50%);
         text-align: center; pointer-events: none; z-index: 202;
         font-family: 'Times New Roman', serif; color: rgba(238,225,205,0.82);
       }
@@ -958,7 +960,7 @@ export function createOrrery(container, { preview = false } = {}) {
         text-transform: none;
       }
       @media (max-width: 600px) {
-        #orrery-title { top: 1.2rem; width: 90vw; }
+        #orrery-title { top: 3.9rem; width: 90vw; }
         #orrery-title-sub { padding: 0 3vw; }
       }
     `;
