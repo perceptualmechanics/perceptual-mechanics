@@ -1,6 +1,7 @@
 node_modules/
 dist/
 dist.stale-*/
+_stale_build_dirs_safe_to_delete/
 v1/dist 2/
 .DS_Store
 *.log
