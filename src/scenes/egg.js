@@ -412,7 +412,12 @@ export function createEgg(container, { preview = false } = {}) {
   scene.add(root);
 
   scene.add(new THREE.AmbientLight(0x224422, 1.1));
-  const key = new THREE.DirectionalLight(0x88ffaa, 1.8);
+  // Scott: even after pulling the emissive tint off the Earth material,
+  // this key light (was intensity 1.8) combined with the low shininess
+  // below was blowing out into a big soft green blob on the globe's lit
+  // side — read as "glowing," same problem in a different spot. Toned
+  // down here; the highlight itself is also tightened below.
+  const key = new THREE.DirectionalLight(0x88ffaa, 1.1);
   key.position.set(3, 4, 5);
   scene.add(key);
   const rim = new THREE.DirectionalLight(0x44ff88, 0.5);
@@ -442,12 +447,15 @@ export function createEgg(container, { preview = false } = {}) {
   // Scott: the glow should be the aurorae's job, not the whole globe's —
   // dropped the uniform green emissive tint that was self-lighting the
   // entire sphere regardless of latitude. Earth is lit by the key/rim
-  // lights below now, same as any other body in the scene; specular
-  // highlight kept for the photoreal wet-look sheen.
+  // lights below now, same as any other body in the scene. Specular
+  // highlight kept for the photoreal wet-look sheen, but tightened way up
+  // (shininess 40 -> 140) and dimmed (specular color darkened) — at the
+  // old values it bloomed into a big soft glowing patch on the lit side,
+  // which read as another whole-globe glow by a different route.
   const mat = new THREE.MeshPhongMaterial({
     map: earthTex,
-    specular: 0x44ff88,
-    shininess: 40,
+    specular: 0x1a4d33,
+    shininess: 140,
   });
   const earth = new THREE.Mesh(geo, mat);
   root.add(earth);
