@@ -893,6 +893,115 @@ function buildWarehouse(preview, floorY, ceilingY, rafterY) {
     wheelGroup.position.set(-wallDist + 0.16, floorY + 0.5, 0.6);
     group.add(wheelGroup);
 
+    // ─── More clutter, 2026-07-17 (Scott: "the room needs more clutter")
+    // — the first pass left one corner furnished and the rest of the room
+    // empty floor. Filling out a second corner and the space between,
+    // reusing the existing texture/material helpers so nothing new gets
+    // pulled into the bundle. ───────────────────────────────────────────
+
+    // A second stack of crates, opposite corner from the first, different
+    // sizes and offsets so the two piles don't read as copy-pasted.
+    const boxSizes2 = [[0.5, 0.45, 0.5], [0.38, 0.3, 0.42], [0.3, 0.28, 0.3], [0.44, 0.22, 0.36]];
+    let stackY2 = floorY;
+    boxSizes2.forEach((size, i) => {
+      const box = new THREE.Mesh(new THREE.BoxGeometry(...size), cardboardMat);
+      stackY2 += size[1] / 2;
+      box.position.set(wallDist - 1.4 - i * 0.08, stackY2, -wallDist + 1.1 + i * 0.1);
+      box.rotation.y = (Math.random() - 0.5) * 0.7;
+      stackY2 += size[1] / 2;
+      group.add(box);
+    });
+
+    // A couple of oil drums, grouped near the back wall.
+    const drumMat = new THREE.MeshStandardMaterial({ color: 0x3a2a1a, roughness: 0.75, metalness: 0.4 });
+    [[1.6, -wallDist + 0.45, 0.2], [2.05, -wallDist + 0.4, 0.6]].forEach(([x, z, rotOffset]) => {
+      const drum = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.28, 0.72, 14), drumMat);
+      drum.position.set(x, floorY + 0.36, z);
+      drum.rotation.y = rotOffset;
+      group.add(drum);
+    });
+
+    // A ladder leaning against the back wall, off-center from everything
+    // else.
+    const ladderMat = new THREE.MeshStandardMaterial({ color: 0x6b5a3c, roughness: 0.8, metalness: 0.1 });
+    const ladderGroup = new THREE.Group();
+    const railLen = 2.2;
+    [-0.18, 0.18].forEach(dx => {
+      const rail = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, railLen, 6), ladderMat);
+      rail.position.set(dx, 0, 0);
+      ladderGroup.add(rail);
+    });
+    for (let i = 0; i < 6; i++) {
+      const rung = new THREE.Mesh(new THREE.CylinderGeometry(0.014, 0.014, 0.36, 6), ladderMat);
+      rung.rotation.z = Math.PI / 2;
+      rung.position.set(0, -railLen / 2 + 0.2 + i * 0.34, 0);
+      ladderGroup.add(rung);
+    }
+    ladderGroup.rotation.x = -0.22;
+    ladderGroup.position.set(-3.4, floorY + railLen * 0.46, -wallDist + 0.5);
+    group.add(ladderGroup);
+
+    // Loose lumber, stacked at a slight angle near the second crate pile.
+    const plankMat = new THREE.MeshStandardMaterial({ color: 0x4a3c28, roughness: 0.9, metalness: 0 });
+    for (let i = 0; i < 4; i++) {
+      const plank = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.05, 0.14), plankMat);
+      plank.position.set(wallDist - 0.5, floorY + 0.08 + i * 0.05, -wallDist + 2.6);
+      plank.rotation.z = 0.05 + i * 0.01;
+      plank.rotation.y = 0.15;
+      group.add(plank);
+    }
+
+    // Coiled cable on the floor near the workbench — loose torus segments
+    // rather than one perfect ring, so it reads as slack coil.
+    const cableMat = new THREE.MeshStandardMaterial({ color: 0x161616, roughness: 0.7, metalness: 0.1 });
+    for (let i = 0; i < 3; i++) {
+      const loop = new THREE.Mesh(new THREE.TorusGeometry(0.22 - i * 0.03, 0.018, 6, 16), cableMat);
+      loop.rotation.x = Math.PI / 2;
+      loop.position.set(-wallDist + 1.0, floorY + 0.02 + i * 0.015, -0.4);
+      group.add(loop);
+    }
+
+    // A stool at the workbench, pushed slightly out as though someone
+    // just stood up.
+    const stoolMat = new THREE.MeshStandardMaterial({ color: 0x2c2c2c, roughness: 0.7, metalness: 0.3 });
+    const stoolSeat = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.16, 0.03, 12), stoolMat);
+    stoolSeat.position.set(-wallDist + 0.9, floorY + 0.42, -1.3);
+    group.add(stoolSeat);
+    for (let i = 0; i < 3; i++) {
+      const legAngle = (i / 3) * Math.PI * 2;
+      const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.42, 6), stoolMat);
+      leg.position.set(
+        -wallDist + 0.9 + Math.cos(legAngle) * 0.13,
+        floorY + 0.21,
+        -1.3 + Math.sin(legAngle) * 0.13
+      );
+      leg.rotation.x = Math.sin(legAngle) * 0.08;
+      leg.rotation.z = Math.cos(legAngle) * 0.08;
+      group.add(leg);
+    }
+
+    // A couple of loose flyers that missed the wall, curled on the floor —
+    // reusing the same poster-texture generator with two more band names.
+    [[1.1, -wallDist + 0.9, 0.3, 'Fugazi'], [1.6, -wallDist + 1.4, -0.2, 'Pavement']].forEach(([x, z, rot, band]) => {
+      const fallenMat = new THREE.MeshStandardMaterial({
+        map: makePosterTexture(band, 'Live — Doors 9pm'),
+        roughness: 0.9, metalness: 0, side: THREE.DoubleSide,
+      });
+      const fallen = new THREE.Mesh(new THREE.PlaneGeometry(0.5, 0.7), fallenMat);
+      fallen.rotation.x = -Math.PI / 2;
+      fallen.rotation.z = rot;
+      fallen.position.set(x, floorY + 0.01, z);
+      group.add(fallen);
+    });
+
+    // A couple of idle chains hanging from the truss, well clear of the
+    // orrery's own suspension near the center — leftover rigging a working
+    // space just accumulates and never takes down.
+    const chainMat = new THREE.MeshStandardMaterial({ color: 0x201d18, roughness: 0.6, metalness: 0.7 });
+    [[-2.6, 0.6], [2.4, -0.4]].forEach(([x, z]) => {
+      addStrut(group, new THREE.Vector3(x, rafterY - 0.03, z), new THREE.Vector3(x, floorY + 1.4, z), 0.008, chainMat);
+    });
+
     bulbPosition = new THREE.Vector3(-wallDist + 0.6, benchHeight + 0.9, -1.5);
     const cordMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.8 });
     addStrut(group, new THREE.Vector3(bulbPosition.x, rafterY - 0.05, bulbPosition.z), bulbPosition, 0.006, cordMat);

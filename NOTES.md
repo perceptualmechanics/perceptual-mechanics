@@ -6,6 +6,32 @@ projects (The Secret World, A Manual of Perceptual Mechanics) moved into their o
 files, which are now the source of truth for that material going forward. See "project map"
 below for where things live.
 
+## 1.0.7 (2026-07-17, same day)
+
+Scott saw 1.0.6's room and sent back four words: "the room needs more
+clutter." Fair — the first clutter pass only really furnished one corner
+(pegboard, tire, boxes, workbench), and the rest of the warehouse floor was
+just bare concrete. Added a second wave, all in the same `!preview` block
+in `buildWarehouse()`, reusing the existing texture/material helpers rather
+than pulling in anything new:
+
+- A second crate stack, opposite corner from the first, different sizes so
+  the two piles don't read as duplicates of each other.
+- Two oil drums grouped near the back wall.
+- A ladder leaning against the back wall, off to the side of everything
+  else.
+- Loose lumber stacked at a slight angle near the second crate pile.
+- A coiled cable on the floor near the workbench — three loose torus
+  segments rather than one clean ring, so it reads as slack coil.
+- A stool at the workbench, pushed out slightly.
+- Two fallen flyers on the floor (reusing the poster-texture generator with
+  two new band names) that missed the wall.
+- Two idle chains hanging from the roof truss, clear of the orrery's own
+  suspension rigging — the kind of leftover cordage a working space just
+  accumulates.
+
+Version bumped to 1.0.7 in package.json.
+
 ## 1.0.6 (2026-07-17, same day)
 
 Full reset of the orrery "aesthetic" request from 1.0.5. Scott's screenshot
