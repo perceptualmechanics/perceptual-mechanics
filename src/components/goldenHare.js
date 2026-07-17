@@ -17,7 +17,12 @@
 //    (Scott's own): one spiral-tipped ear, an arched bounding pose, and all
 //    four body markings from the source ink (crescent moon, two Venus
 //    circles, sun/bullseye) — the sun mark lines up with "carrying the sun
-//    in its belly." It no longer just glides in a straight line; it scampers
+//    in its belly." Refined a third time against an Adobe Illustrator trace
+//    of the tattoo photo itself — that trace is a full-color photographic
+//    auto-trace (thousands of paths, no separable ink layer) so it isn't used
+//    directly, but it made a sharp reference for correcting the snout,
+//    ear-spiral, and haunch silhouette to sit closer to the real ink. It no
+//    longer just glides in a straight line; it scampers
 //    — a few quick dashes with real pauses between them (a hare that's
 //    stopped to listen, ears up, before the next dash), wandering in X/Y/Z
 //    rather than one smooth diagonal.
@@ -45,39 +50,43 @@
 const HARE_TEXT = 'A Golden Hare ran across the sky, carrying the sun in its belly, where it would be safe. The hare ran up the ladder to the sky.';
 
 const HARE_SVG = `
-<svg viewBox="-4 -10 128 74" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+<svg viewBox="-18 -27 140 90" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
   <g fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
-    <!-- ears: one long with a spiraled tip, one short tucked behind -->
-    <path d="M86 18 Q78 6 76 -1 Q75 -6 79 -6 Q83 -5 81 0 Q79 4 75 2"/>
-    <path d="M81 16 Q76 6 68 3"/>
-    <!-- head flows straight out of the back line, blunt open snout -->
-    <path d="M90 20 Q98 21 100 27 Q101 32 96 34"/>
-    <path d="M96 34 Q92 34 89 30"/>
-    <!-- back, arching from head down through the haunch/leg-root -->
-    <path d="M90 20 Q75 8 60 10 Q45 12 32 18 Q22 22 20 28 Q19 31 21 33"/>
-    <!-- tail: a small simple hook, deliberately plainer than the ear spiral -->
-    <path d="M22 24 Q17 21 19 17"/>
-    <!-- belly -->
-    <path d="M21 33 Q38 41 55 41 Q72 41 86 36"/>
-    <!-- rear legs, extended back for push-off -->
-    <path d="M27 29 Q13 37 8 47 Q6 52 11 54"/>
-    <path d="M33 31 Q19 39 12 49"/>
-    <!-- front legs, tucked/reaching down -->
-    <path d="M84 36 Q80 46 78 55"/>
-    <path d="M91 35 Q92 46 89 57"/>
+    <!-- head: closed pointed snout, traced from the tattoo's actual profile -->
+    <path d="M120 20 C 116 12 108 6 98 4 C 90 2 82 3 76 5 C 80 8 88 9 94 12 C 101 16 108 20 113 25 C 117 29 120 27 120 20 Z"/>
+    <!-- long ear: sweeps back off the crown, closed spiral curl at the tip -->
+    <path d="M90 6 C 92 -6 91 -16 85 -22 C 82 -25 77 -23 77 -19 C 77 -16 80 -14 82 -16"/>
+    <!-- short ear: tucked in front of the long one -->
+    <path d="M80 6 C 78 -2 77 -9 80 -14 C 81 -16 84 -15 83 -12"/>
+    <!-- back: crown down through the long arch to the haunch -->
+    <path d="M94 12 C 78 2 55 -2 34 0 C 16 2 2 8 -6 20"/>
+    <!-- chest, snout to front leg root -->
+    <path d="M113 25 C 106 30 98 32 90 31"/>
+    <!-- haunch -->
+    <path d="M-6 20 C -11 27 -11 34 -6 39 C -1 43 6 42 9 36"/>
+    <!-- tail: small hook -->
+    <path d="M-6 39 C -13 40 -16 36 -13 31"/>
+    <!-- front leg, leading: reaching down, mid-leap -->
+    <path d="M91 31 C 92 39 91 47 87 54 C 85 58 83 60 80 61"/>
+    <!-- front leg, trailing: bent under the chest -->
+    <path d="M85 30 C 80 33 77 37 76 42"/>
+    <!-- rear leg, push-off: extended back -->
+    <path d="M8 37 C 14 41 20 44 26 48 C 30 51 32 54 32 58"/>
+    <!-- rear leg, tucked -->
+    <path d="M0 35 C 1 41 -1 46 -5 50"/>
   </g>
-  <circle cx="93" cy="26" r="1.8" fill="#7dd3ff" stroke="none"/>
-  <g fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" opacity="0.7">
+  <circle cx="109" cy="17" r="1.7" fill="#7dd3ff" stroke="none"/>
+  <g fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" opacity="0.7">
     <!-- sun / bullseye, near the shoulder -->
-    <circle cx="73" cy="10" r="5"/>
-    <circle cx="73" cy="10" r="1.3" fill="currentColor" stroke="none"/>
+    <circle cx="82" cy="4" r="4.4"/>
+    <circle cx="82" cy="4" r="1.4" fill="currentColor" stroke="none"/>
     <!-- two Venus circles, mid-back -->
-    <circle cx="57" cy="11.5" r="3.4"/>
-    <path d="M57 14.9 L57 20 M53.7 17.5 L60.3 17.5"/>
-    <circle cx="44" cy="14.5" r="3.6"/>
-    <path d="M44 18.1 L44 23 M40.8 20.6 L47.2 20.6"/>
+    <circle cx="65" cy="2" r="3.2"/>
+    <path d="M65 5.2 L65 10 M61.8 7.6 L68.2 7.6"/>
+    <circle cx="53" cy="2" r="3.2"/>
+    <path d="M53 5.2 L53 10 M49.8 7.6 L56.2 7.6"/>
     <!-- crescent moon, near the haunch -->
-    <path d="M32 16 A5.2 5.2 0 1 0 32 26.4 A3.8 3.8 0 1 1 32 16 Z"/>
+    <path d="M26 4 C 21 2 16 4 15 9 C 14 13 17 16 21 15"/>
   </g>
 </svg>`;
 
