@@ -226,18 +226,27 @@ function buildOrrery(preview, suspendTopY, rafterY) {
   const mastMat = paintedMastMaterial(preview);
   const bronzeMat = bronzeMaterial();
 
+  // Size pass, 2026-07-17 — Scott asked for the orrery itself substantially
+  // bigger without growing the warehouse around it. HW thickens the mast
+  // and hardware; SR widens the orbit rings (capped just inside the side
+  // walls — wallDist is 6.5/5 in buildWarehouse); SS grows the planet
+  // bodies themselves, no wall constraint so closer to the full ask.
+  // Mast height and every vertical anchor (baseY, suspendTopY, rafterY,
+  // riserTopY) are untouched — the room stays exactly the size it was.
+  const HW = 1.4, SR = 1.45, SS = 2.2;
+
   // ─── The mast — steel and wood, painted royal purple, hanging from the
   // suspension collar at the top rather than rooted in a floor: a core
   // shaft plus riveted collar flanges with diagonal cross-braces. ────────
   const mastHeight = preview ? 3.2 : 4.4;
   const baseY = suspendTopY - mastHeight;
-  const coreGeo = new THREE.CylinderGeometry(preview ? 0.05 : 0.06, preview ? 0.09 : 0.11, mastHeight, 8);
+  const coreGeo = new THREE.CylinderGeometry((preview ? 0.05 : 0.06) * HW, (preview ? 0.09 : 0.11) * HW, mastHeight, 8);
   const core = new THREE.Mesh(coreGeo, mastMat);
   core.position.y = baseY + mastHeight / 2;
   group.add(core);
 
   const collarCount = preview ? 3 : 5;
-  const collarGeo = new THREE.TorusGeometry(preview ? 0.1 : 0.13, 0.012, 5, 6);
+  const collarGeo = new THREE.TorusGeometry((preview ? 0.1 : 0.13) * HW, 0.012 * HW, 5, 6);
   let prevCollarY = null;
   for (let i = 0; i < collarCount; i++) {
     const y = baseY + (i / (collarCount - 1)) * mastHeight;
@@ -246,7 +255,7 @@ function buildOrrery(preview, suspendTopY, rafterY) {
     collar.position.y = y;
     group.add(collar);
     if (!preview && prevCollarY !== null) {
-      const braceGeo = new THREE.CylinderGeometry(0.008, 0.008, Math.hypot(mastHeight / (collarCount - 1), 0.1) * 1.3, 5);
+      const braceGeo = new THREE.CylinderGeometry(0.008 * HW, 0.008 * HW, Math.hypot(mastHeight / (collarCount - 1), 0.1) * 1.3, 5);
       [0, Math.PI].forEach(rot => {
         const brace = new THREE.Mesh(braceGeo, steelMat);
         brace.position.y = (y + prevCollarY) / 2;
@@ -262,43 +271,44 @@ function buildOrrery(preview, suspendTopY, rafterY) {
   // points near the roof trusses. What actually holds the thing up. ───────
   const anchorSpread = preview ? 0.75 : 1.0;
   [[1, 0], [-1, 0], [0, 1], [0, -1]].forEach(([dx, dz]) => {
-    const from = new THREE.Vector3(dx * (preview ? 0.11 : 0.14), suspendTopY, dz * (preview ? 0.11 : 0.14));
+    const from = new THREE.Vector3(dx * (preview ? 0.11 : 0.14) * HW, suspendTopY, dz * (preview ? 0.11 : 0.14) * HW);
     const to = new THREE.Vector3(dx * anchorSpread, rafterY, dz * anchorSpread);
-    addStrut(group, from, to, preview ? 0.012 : 0.015, steelMat);
+    addStrut(group, from, to, (preview ? 0.012 : 0.015) * HW, steelMat);
   });
 
   // A bolted control box near the bottom of the mast — the actual
   // click/hover target, with one small amber indicator lamp lit, the kind
   // of after-the-fact gauge box a scrap-built machine would have bolted on.
-  const hubGeo = new THREE.BoxGeometry(preview ? 0.22 : 0.28, preview ? 0.16 : 0.2, preview ? 0.16 : 0.2);
+  const hubHalf = (preview ? 0.16 : 0.2) * HW;
+  const hubGeo = new THREE.BoxGeometry((preview ? 0.22 : 0.28) * HW, (preview ? 0.16 : 0.2) * HW, (preview ? 0.16 : 0.2) * HW);
   const hubMat = new THREE.MeshStandardMaterial({ color: 0x2c2620, roughness: 0.7, metalness: 0.4 });
   const hub = new THREE.Mesh(hubGeo, hubMat);
-  hub.position.set(preview ? 0.16 : 0.2, baseY + 0.3, 0);
+  hub.position.set(hubHalf, baseY + 0.3, 0);
   group.add(hub);
-  const lampGeo = new THREE.SphereGeometry(preview ? 0.035 : 0.045, 8, 8);
+  const lampGeo = new THREE.SphereGeometry((preview ? 0.035 : 0.045) * HW, 8, 8);
   const lampMat = new THREE.MeshStandardMaterial({ color: 0xffaa33, emissive: 0xffaa33, emissiveIntensity: 1, roughness: 0.4 });
   const lamp = new THREE.Mesh(lampGeo, lampMat);
-  lamp.position.set(0, (preview ? 0.16 : 0.2) * 0.6, (preview ? 0.16 : 0.2) * 0.6);
+  lamp.position.set(0, hubHalf * 0.6, hubHalf * 0.6);
   hub.add(lamp);
 
   // ─── The radio telescope — "still on, receiving information from the
   // heavens." A riser from the suspension collar continues the mast upward,
   // through the roof, to a rough sheet-metal dish and a pulsing signal bulb.
   const riserTopY = suspendTopY + (preview ? 0.7 : 0.95);
-  addStrut(group, new THREE.Vector3(0, suspendTopY, 0), new THREE.Vector3(0, riserTopY, 0), preview ? 0.03 : 0.04, mastMat);
+  addStrut(group, new THREE.Vector3(0, suspendTopY, 0), new THREE.Vector3(0, riserTopY, 0), (preview ? 0.03 : 0.04) * HW, mastMat);
   const dishGroup = new THREE.Group();
   dishGroup.position.y = riserTopY;
-  const dishGeo = new THREE.ConeGeometry(preview ? 0.2 : 0.26, preview ? 0.16 : 0.22, 8, 1, true);
+  const dishGeo = new THREE.ConeGeometry((preview ? 0.2 : 0.26) * HW, (preview ? 0.16 : 0.22) * HW, 8, 1, true);
   const dish = new THREE.Mesh(dishGeo, steelMat);
   dish.rotation.x = Math.PI;
   dishGroup.add(dish);
-  const antennaGeo = new THREE.CylinderGeometry(0.008, 0.008, preview ? 0.16 : 0.22, 5);
+  const antennaGeo = new THREE.CylinderGeometry(0.008 * HW, 0.008 * HW, (preview ? 0.16 : 0.22) * HW, 5);
   const antenna = new THREE.Mesh(antennaGeo, steelMat);
-  antenna.position.y = preview ? 0.14 : 0.18;
+  antenna.position.y = (preview ? 0.14 : 0.18) * HW;
   dishGroup.add(antenna);
   const signalMat = new THREE.MeshStandardMaterial({ color: 0xffe8bb, emissive: 0xffcc77, emissiveIntensity: 1, transparent: true, opacity: 0.8 });
-  const signal = new THREE.Mesh(new THREE.SphereGeometry(preview ? 0.03 : 0.04, 8, 8), signalMat);
-  signal.position.y = preview ? 0.24 : 0.32;
+  const signal = new THREE.Mesh(new THREE.SphereGeometry((preview ? 0.03 : 0.04) * HW, 8, 8), signalMat);
+  signal.position.y = (preview ? 0.24 : 0.32) * HW;
   dishGroup.add(signal);
   group.add(dishGroup);
 
@@ -311,8 +321,8 @@ function buildOrrery(preview, suspendTopY, rafterY) {
   const auMin = Math.min(...sqrtAU), auMax = Math.max(...sqrtAU);
   const sqrtDia = planets.map(p => Math.sqrt(p.relDiameter));
   const diaMin = Math.min(...sqrtDia), diaMax = Math.max(...sqrtDia);
-  const innerR = preview ? 0.55 : 0.6, outerR = preview ? 2.1 : 3.7;
-  const minSize = preview ? 0.018 : 0.024, maxSize = preview ? 0.065 : 0.09;
+  const innerR = (preview ? 0.55 : 0.6) * SR, outerR = (preview ? 2.1 : 3.7) * SR;
+  const minSize = (preview ? 0.018 : 0.024) * SS, maxSize = (preview ? 0.065 : 0.09) * SS;
 
   const orbits = [];
   const TILT_BASE = 0.52;
@@ -327,18 +337,18 @@ function buildOrrery(preview, suspendTopY, rafterY) {
     const tilt = TILT_BASE + (Math.random() - 0.5) * TILT_JITTER;
     const yOffset = ringYBase + i * (preview ? 0.06 : 0.05);
 
-    const ringGeo = new THREE.TorusGeometry(radius, preview ? 0.008 : 0.01, 6, 20);
+    const ringGeo = new THREE.TorusGeometry(radius, (preview ? 0.008 : 0.01) * HW, 6, 20);
     const ring = new THREE.Mesh(ringGeo, steelMat);
     ring.rotation.x = Math.PI / 2 + tilt;
     ring.position.y = yOffset;
     group.add(ring);
-    addBolts(ring, preview ? 0.012 : 0.015, 16, radius);
+    addBolts(ring, (preview ? 0.012 : 0.015) * HW, 16, radius);
 
     // Two struts per ring, bracing it back to the mast.
     [0, Math.PI].forEach(angle => {
       const from = new THREE.Vector3(0, yOffset, 0);
       const to = new THREE.Vector3(Math.cos(angle) * radius * 0.94, yOffset, Math.sin(angle) * radius * 0.94);
-      addStrut(group, from, to, preview ? 0.007 : 0.009, steelMat);
+      addStrut(group, from, to, (preview ? 0.007 : 0.009) * HW, steelMat);
     });
 
     const pivot = new THREE.Object3D();
@@ -359,10 +369,10 @@ function buildOrrery(preview, suspendTopY, rafterY) {
     bodyGroup.add(body);
 
     // A short mounting arm — the ball rides a bracket on the ring.
-    const armGeo = new THREE.CylinderGeometry(0.006, 0.006, preview ? 0.03 : 0.04, 5);
+    const armGeo = new THREE.CylinderGeometry(0.006 * HW, 0.006 * HW, (preview ? 0.03 : 0.04) * HW, 5);
     const arm = new THREE.Mesh(armGeo, steelMat);
     arm.rotation.z = Math.PI / 2;
-    arm.position.x = -(preview ? 0.015 : 0.02);
+    arm.position.x = -(preview ? 0.015 : 0.02) * HW;
     bodyGroup.add(arm);
 
     if (planet.ring) {
@@ -378,10 +388,10 @@ function buildOrrery(preview, suspendTopY, rafterY) {
     const moons = planet.moons.map((moon, mi) => {
       const moonPivot = new THREE.Object3D();
       bodyGroup.add(moonPivot);
-      const moonSize = Math.max(0.006, size * moon.relSize * (preview ? 0.8 : 1));
+      const moonSize = Math.max(0.006 * HW, size * moon.relSize * (preview ? 0.8 : 1));
       const moonGeo = new THREE.SphereGeometry(moonSize, 8, 8);
       const moonMesh = new THREE.Mesh(moonGeo, bronzeMat);
-      moonMesh.position.x = size * 1.8 + mi * (size * 0.9 + 0.012);
+      moonMesh.position.x = size * 1.8 + mi * (size * 0.9 + 0.012 * HW);
       moonPivot.add(moonMesh);
       return { pivot: moonPivot, speed: 0.6 + Math.random() * 0.4 + mi * 0.1 };
     });
@@ -411,7 +421,7 @@ function buildOrrery(preview, suspendTopY, rafterY) {
       const a = Math.random() * Math.PI * 2;
       const r = beltRadius + (Math.random() - 0.5) * beltSpread;
       const chunk = new THREE.Mesh(debrisGeo, debrisMat);
-      const s = (preview ? 0.01 : 0.014) + Math.random() * (preview ? 0.01 : 0.013);
+      const s = ((preview ? 0.01 : 0.014) + Math.random() * (preview ? 0.01 : 0.013)) * HW;
       chunk.scale.setScalar(s);
       chunk.position.set(Math.cos(a) * r, (Math.random() - 0.5) * 0.06, Math.sin(a) * r);
       chunk.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI);
@@ -420,7 +430,7 @@ function buildOrrery(preview, suspendTopY, rafterY) {
     [0, Math.PI / 2].forEach(angle => {
       const from = new THREE.Vector3(0, beltY, 0);
       const to = new THREE.Vector3(Math.cos(angle) * beltRadius * 0.96, beltY, Math.sin(angle) * beltRadius * 0.96);
-      addStrut(group, from, to, preview ? 0.006 : 0.008, steelMat);
+      addStrut(group, from, to, (preview ? 0.006 : 0.008) * HW, steelMat);
     });
   }
 
@@ -429,11 +439,11 @@ function buildOrrery(preview, suspendTopY, rafterY) {
   const unknowns = [];
   const lastRadius = radii[radii.length - 1];
   const lastY = ringYBase + (planets.length - 1) * (preview ? 0.06 : 0.05);
-  const unknownGeos = [new THREE.IcosahedronGeometry(preview ? 0.05 : 0.07, 0), new THREE.OctahedronGeometry(preview ? 0.045 : 0.06, 0)];
+  const unknownGeos = [new THREE.IcosahedronGeometry((preview ? 0.05 : 0.07) * HW, 0), new THREE.OctahedronGeometry((preview ? 0.045 : 0.06) * HW, 0)];
   const unknownMat = new THREE.MeshStandardMaterial({ color: 0x5a4d3a, roughness: 0.7, metalness: 0.5 });
   const unknownCount = preview ? 1 : 2;
   for (let i = 0; i < unknownCount; i++) {
-    const radius = lastRadius + (preview ? 0.25 : 0.34) + i * (preview ? 0.18 : 0.24);
+    const radius = lastRadius + ((preview ? 0.25 : 0.34) + i * (preview ? 0.18 : 0.24)) * SR;
     const y = lastY + (i + 1) * (preview ? 0.05 : 0.06);
     const angle = i * (Math.PI * 0.7);
     const pivot = new THREE.Object3D();
@@ -444,7 +454,7 @@ function buildOrrery(preview, suspendTopY, rafterY) {
     pivot.add(mesh);
     const from = new THREE.Vector3(0, y, 0);
     const to = new THREE.Vector3(Math.cos(angle) * radius * 0.9, y, Math.sin(angle) * radius * 0.9);
-    addStrut(group, from, to, preview ? 0.006 : 0.008, steelMat);
+    addStrut(group, from, to, (preview ? 0.006 : 0.008) * HW, steelMat);
     unknowns.push({ pivot, mesh, speed: 0.05 + Math.random() * 0.03, direction: 1, spin: 0.3 + Math.random() * 0.4 });
   }
 
@@ -788,7 +798,9 @@ export function createOrrery(container, { preview = false } = {}) {
 
   const scene    = new THREE.Scene();
   const camera   = new THREE.PerspectiveCamera(54, w / h, 0.1, 500);
-  camera.position.set(preview ? 1.7 : 2.4, preview ? 0.3 : 0.35, preview ? 9.5 : 12);
+  // Camera pulled back ~1.4x from its old default to keep the now-larger
+  // orrery framed on load (see HW/SR/SS in buildOrrery).
+  camera.position.set(preview ? 2.4 : 3.35, preview ? 0.42 : 0.49, preview ? 13.3 : 16.8);
   camera.lookAt(0, preview ? -0.3 : -0.4, 0);
 
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
@@ -797,6 +809,13 @@ export function createOrrery(container, { preview = false } = {}) {
   renderer.setClearColor(0x030303, 1);
   renderer.domElement.setAttribute('aria-hidden', 'true');
   container.appendChild(renderer.domElement);
+
+  // Fog matched to the clear color so distant geometry (far walls, the
+  // asteroid belt seen edge-on, the dish overhead) softens into haze
+  // rather than cutting out sharply — the soft render-distance falloff of
+  // early-90s CD-ROM adventure games (Myst, Return to Zork, The 7th
+  // Guest), not a modern crisp render.
+  scene.fog = new THREE.Fog(0x030303, preview ? 5 : 7, preview ? 15 : 23);
 
   // ─── Lighting — a dim industrial ambience, a cool wash falling through
   // the skylight, a warm accent low down near the machine itself. ────────
@@ -853,24 +872,28 @@ export function createOrrery(container, { preview = false } = {}) {
     style.textContent = `
       #orrery-panel {
         position: absolute; top: 0; right: 0; width: 38%; height: 100%;
-        background: #0a0908; border-left: 1px solid rgba(220,200,180,0.15);
+        background:
+          radial-gradient(ellipse at 30% 0%, rgba(60,48,32,0.25), transparent 60%),
+          #0d0a07;
+        border-left: 1px solid rgba(220,200,180,0.15);
         padding: 3rem 2rem; transform: translateX(100%);
         transition: transform .5s cubic-bezier(.16,1,.3,1);
         overflow-y: scroll; z-index: 10;
         scrollbar-color: rgba(220,200,180,0.3) #0a0908; scrollbar-width: thin;
-        font-family: 'Electrolize', sans-serif;
+        font-family: 'Times New Roman', serif;
       }
       #orrery-panel.open { transform: translateX(0); }
       #orrery-panel-title {
-        font-size: 0.65rem; letter-spacing: 0.3em; text-transform: uppercase;
-        color: rgba(255,255,255,0.5); margin-bottom: 0.4rem;
+        font-size: 0.95rem; letter-spacing: 0.24em; text-transform: uppercase;
+        color: rgba(238,225,205,0.75); margin-bottom: 0.5rem;
       }
       #orrery-panel-era {
-        font-size: 0.7rem; letter-spacing: 0.05em; color: rgba(255,255,255,0.3);
-        margin-bottom: 1.6rem; font-style: italic;
+        font-size: 0.75rem; letter-spacing: 0.05em; color: rgba(225,215,195,0.35);
+        margin-bottom: 1.4rem; font-style: italic;
+        border-bottom: 1px solid rgba(220,200,180,0.15); padding-bottom: 1.4rem;
       }
       #orrery-panel-note {
-        font-size: 0.92rem; line-height: 1.85; color: rgba(225,218,205,0.68);
+        font-size: 0.98rem; line-height: 1.85; color: rgba(225,218,205,0.7);
         white-space: pre-line;
       }
       #orrery-panel-close {
@@ -901,14 +924,70 @@ export function createOrrery(container, { preview = false } = {}) {
       @media (max-width: 600px) {
         #orrery-caption { white-space: normal; width: 88vw; font-size: 0.7rem; }
       }
+
+      /* ─── Early-90s CD-ROM adventure atmosphere (Myst / Return to Zork /
+         The 7th Guest) — a soft vignette plus a grain+scanline overlay
+         sitting over the render, and a title card in the same spirit as
+         the game's own opening screens. ────────────────────────────────── */
+      #orrery-vignette {
+        position: absolute; inset: 0; pointer-events: none; z-index: 5;
+        background: radial-gradient(ellipse at center, rgba(0,0,0,0) 42%, rgba(3,2,1,0.6) 100%);
+      }
+      #orrery-grain {
+        position: absolute; inset: 0; pointer-events: none; z-index: 6;
+        opacity: 0.5; mix-blend-mode: overlay;
+        background-image:
+          repeating-linear-gradient(0deg, rgba(255,255,255,0.03) 0px, rgba(255,255,255,0.03) 1px, transparent 1px, transparent 3px),
+          url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)' opacity='0.55'/></svg>");
+        background-size: 100% 100%, 160px 160px;
+      }
+      #orrery-title {
+        position: fixed; top: 2.2rem; left: 50%; transform: translateX(-50%);
+        text-align: center; pointer-events: none; z-index: 202;
+        font-family: 'Times New Roman', serif; color: rgba(238,225,205,0.82);
+      }
+      #orrery-title-main {
+        display: block; font-size: clamp(1rem, 3vw, 1.7rem);
+        letter-spacing: 0.32em; text-transform: uppercase;
+        text-shadow: 0 0 18px rgba(0,0,0,0.85), 0 1px 0 rgba(0,0,0,0.6);
+      }
+      #orrery-title-sub {
+        display: block; margin-top: 0.55rem;
+        font-size: clamp(0.62rem, 1.3vw, 0.8rem); font-style: italic;
+        letter-spacing: 0.03em; color: rgba(225,215,195,0.5);
+        text-transform: none;
+      }
+      @media (max-width: 600px) {
+        #orrery-title { top: 1.2rem; width: 90vw; }
+        #orrery-title-sub { padding: 0 3vw; }
+      }
     `;
     document.head.appendChild(style);
   }
 
   // ─── Panel (full only) ────────────────────────────────────────────────────
   let panel = null, panelTitle = null, panelEra = null, panelNote = null;
-  let hint = null, caption = null;
+  let hint = null, caption = null, vignette = null, grain = null, title = null;
   if (!preview) {
+    vignette = document.createElement('div');
+    vignette.id = 'orrery-vignette';
+    vignette.setAttribute('aria-hidden', 'true');
+    container.appendChild(vignette);
+
+    grain = document.createElement('div');
+    grain.id = 'orrery-grain';
+    grain.setAttribute('aria-hidden', 'true');
+    container.appendChild(grain);
+
+    title = document.createElement('div');
+    title.id = 'orrery-title';
+    title.innerHTML = `
+      <span id="orrery-title-main">${ORRERY.name}</span>
+      <span id="orrery-title-sub">About thirty feet high, the peak poking out of the warehouse skylights.</span>
+    `;
+    title.setAttribute('aria-hidden', 'true');
+    document.body.appendChild(title);
+
     panel = document.createElement('aside');
     panel.id = 'orrery-panel';
     panel.setAttribute('role', 'dialog');
@@ -1012,7 +1091,7 @@ export function createOrrery(container, { preview = false } = {}) {
   });
   container.addEventListener('wheel', e => {
     if (panel && panel.contains(e.target)) return;
-    camera.position.z = Math.max(1.4, Math.min(28, camera.position.z + e.deltaY * 0.01));
+    camera.position.z = Math.max(1.4, Math.min(38, camera.position.z + e.deltaY * 0.01));
   });
 
   // ─── Animate ──────────────────────────────────────────────────────────────
@@ -1076,6 +1155,9 @@ export function createOrrery(container, { preview = false } = {}) {
       if (panel) panel.remove();
       if (hint) hint.remove();
       if (caption) caption.remove();
+      if (vignette) vignette.remove();
+      if (grain) grain.remove();
+      if (title) title.remove();
       renderer.domElement.remove();
     }
   };

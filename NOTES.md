@@ -230,6 +230,26 @@ At Scott's request, all three are gone except the orrery, which is promoted to i
   each pass's own center so coverage thins unevenly toward the edges, the way an actual rattle can
   lays down color), a couple of gravity-drip streaks, and a scatter of dark grit on top. Same
   scrap-metal-someone-actually-painted logic as the mast's chipped royal purple.
+- **Sixth pass, 2026-07-17** — the spray-paint texture wasn't actually reading: the rust-primer
+  base dominated over the sparse, low-alpha color dabs, so on a small sphere it averaged out to a
+  dark muddy blob instead of the print's colors (Scott: "is that supposed to be the sun down there?
+  i don't think these are coming through" — the amber dot he'd spotted was the control box's
+  indicator lamp, not a sun; there's no separate sun object in this design, just the painted mast).
+  Fixed with a solid color base coat under the speckle/mottling passes, plus a subtle emissive tint
+  per planet so they hold up under the scene's dim lighting. Then, at Scott's request: the orrery
+  itself (not the warehouse around it) got substantially bigger — orbit-ring radii, planet sizes,
+  and mast/hardware thickness all scaled up (`HW`/`SR`/`SS` constants in `buildOrrery`), with mast
+  height and every vertical room anchor left untouched so the warehouse itself stayed the same
+  size; ring radius growth is capped just inside the side walls (planet size and hardware got the
+  fuller increase, unconstrained by the room). Camera pulled back to keep the bigger machine framed
+  by default, zoom-out range widened to match. Also leaned the whole scene harder into an early-90s
+  CD-ROM adventure game feel (Myst, Return to Zork, The 7th Guest) — added THREE.Fog matched to the
+  clear color for that soft render-distance haze, a vignette + grain/scanline CSS overlay over the
+  canvas, and restyled the read-more panel away from the sci-fi "Electrolize" font toward a serif
+  journal-page look. Added a persistent title card (`The Orrery of Los Feliz`, plus a subtitle
+  quoting the found text: "About thirty feet high, the peak poking out of the warehouse
+  skylights"), same idea as butterfly's on-screen label. This piece is also going into The Secret
+  World as a found object.
 
 ## You've Got a Friend in Satan — scenes wired into the theater (2026-07-16)
 
