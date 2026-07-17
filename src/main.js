@@ -5,7 +5,13 @@ import { createTheater } from './scenes/theater.js';
 import { createEgg }       from './scenes/egg.js';
 import { createLeaf }      from './scenes/leaf.js';
 import { createOrrery }    from './scenes/orrery.js';
-import { createCycle }     from './scenes/cycle.js';
+// import { createCycle } from './scenes/cycle.js'; // shelved again (2026-07-17) —
+// Scott: "interesting, but let me mull this over a bit more. For now, comment it
+// out." The rebuilt gem/Ein Soph version is fully wired and verified-by-build
+// (see NOTES.md, 1.0.14) — this is a deliberate pause for reflection, not a
+// rejection. Re-enable by uncommenting this import, the SCENES entry below, and
+// the initPreviews() map entry, plus the nav icon + preview tile in index.html
+// (same three spots commented out there).
 import { initColophon }    from './components/colophon.js';
 
 // ─── Scene registry ──────────────────────────────────────────────────────────
@@ -24,8 +30,8 @@ const SCENES = {
                  ariaLabel: 'Leaf — a raindrop’s fall from a leaf, told through physics, with the found text arriving in phase with the fall.' },
   orrery:      { create: createOrrery,     label: 'The Orrery of Los Feliz.',
                  ariaLabel: 'The Orrery of Los Feliz — a found story, told through a 30-foot orrery: nine planets, their moons, an asteroid belt. Drag to orbit, click the orrery to read.' },
-  cycle:       { create: createCycle,      label: 'The Cycle — Four facets, one light, one stone.',
-                 ariaLabel: 'The Cycle — a four-faceted gem lit from within by Ein Soph, held in a rough stone cradle. Drag to orbit, click a facet to read.' },
+  // cycle: { create: createCycle, label: 'The Cycle — Four facets, one light, one stone.',
+  //          ariaLabel: 'The Cycle — a four-faceted gem lit from within by Ein Soph, held in a rough stone cradle. Drag to orbit, click a facet to read.' },
 };
 
 let activeScene  = null;
@@ -200,7 +206,7 @@ function initPreviews() {
     egg:        document.getElementById('preview-egg'),
     leaf:       document.getElementById('preview-leaf'),
     orrery:     document.getElementById('preview-orrery'),
-    cycle:      document.getElementById('preview-cycle'),
+    // cycle:   document.getElementById('preview-cycle'),
   };
   for (const [name, el] of Object.entries(map)) {
     if (el) previews[name] = SCENES[name].create(el, { preview: true });

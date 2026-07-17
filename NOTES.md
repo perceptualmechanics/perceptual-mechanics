@@ -6,6 +6,25 @@ projects (The Secret World, A Manual of Perceptual Mechanics) moved into their o
 files, which are now the source of truth for that material going forward. See "project map"
 below for where things live.
 
+## 1.0.15 (2026-07-17, same day)
+
+Cycle's shelved again, same day it came back. Scott, after seeing the 1.0.14
+summary: "interesting, but let me mull this over a bit more. For now, comment
+it out." Not a rejection of the gem/Ein Soph direction, just a pause — same
+pattern as the original cycle shelving back before 1.0 (see the "Comment out
+cycle scene" entry in the punch-list history).
+
+Commented out, not deleted: the `import`/registry entry/`initPreviews()` map
+entry in main.js, and the nav-icon button + preview-tile block in index.html,
+each left in place inside a comment with a short "re-enable together" note
+pointing at the other spots. `src/scenes/cycle.js` itself is untouched — the
+rebuilt scene is still there, fully build-verified, just not wired to
+anything reachable from the landing page. Also reverted the mobile
+nav-icon touch target from 1.0.14's 38px back to the 44px guideline default
+(styles/main.css) — that shrink only existed to fit cycle's 8th icon at the
+480px breakpoint, and with cycle unwired the count is back to seven, which
+already fit fine at 44px per the original 1.0.11 fix.
+
 ## 1.0.14 (2026-07-17, same day)
 
 Cycle is back — fully rebuilt, not patched. The old version (five classical
