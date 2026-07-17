@@ -90,6 +90,34 @@ import { bindOrbitDrag, bindWheelZoom, bindGuardedResize, prefersReducedMotion, 
 //     outstretched in love" — was part of this scene through 1.0.17,
 //     grounding the rough stone cradle. Retired along with the cradle in
 //     the pass described above; the text is still in git history.)
+//
+// Fourth pass, same day, after Scott asked whether the refraction was
+// actually being computed (it is — THREE.MeshPhysicalMaterial's
+// `transmission` is a real per-frame GPU technique, not a faked texture):
+//
+//   "Okay, so let's focus the spotlight into a tighter beam. Make the gem
+//    multifaceted, like a princess-cut diamond. Behind the gem, I feel
+//    like we should do something with the chakras and the tree of life...
+//    i'd love to see the refracted light getting all the way through the
+//    bottom facets of the gem if possible."
+//
+// Three changes: the spot's angle and penumbra are both pulled in tight
+// (a narrow, defined shaft instead of a broad wash), and the gem itself is
+// rebuilt as a multi-band, princess-cut-inspired cut — a pointed crown,
+// a full girdle, and a tapering pavilion, four columns of facets going
+// around, 24 facets total instead of 8 — still cleanly divided into the
+// same four colored/clickable sides. And a stationary backdrop plane now
+// sits behind the gem: the Kabbalistic Tree of Life (this scene's own
+// framework already, just never drawn) and the seven chakras, overlaid on
+// one shared vertical axis, since both systems run top-to-bottom along a
+// spine/middle-pillar in their own traditions. It's built generously tall
+// — well above the crown and well below the culet — and given real
+// content and color, specifically so there's something for the gem's
+// transmission material to actually refract all the way through every
+// facet, pavilion included, not just tinted darkness. The backdrop is a
+// sibling of the gem in `scene`, not a child of the rotating `root` group
+// — a backdrop doesn't spin with the sculpture in front of it, and a flat
+// plane that did rotate would vanish edge-on twice per revolution.
 
 const FACETS = {
   gabriel: {
@@ -269,48 +297,206 @@ Me from head to toe.`,
 
 const FACET_ORDER = ['gabriel', 'emmanuel', 'raphael', 'michael'];
 
-// The gem: a single four-sided bipyramid — the classic kite/diamond cut-gem
-// silhouette, the same shape this scene's own nav icon and preview tile
-// already draw. Built by hand, vertex by vertex, rather than reused from
-// THREE.OctahedronGeometry, because each of the four vertical sides (a top
-// wedge plus a matching bottom wedge, sharing one equatorial edge) needs
-// its own material — Gabriel, Emmanuel, Raphael, Michael, going around
-// once — and a stock geometry has no per-side grouping to hang that on.
-// Non-indexed on purpose: each triangle gets its own three vertex entries,
-// so computeVertexNormals() lands on a clean flat facet normal per
-// triangle with no extra bookkeeping, which is exactly the faceted (not
-// smoothed) look a cut gem needs.
+// ─── Backdrop texture — the Tree of Life and the seven chakras, overlaid
+// on one shared vertical axis. Canvas-drawn, not an image asset, same
+// rule as every other texture on this site. Per Scott: "Behind the gem,
+// I feel like we should do something with the chakras and the tree of
+// life." The two systems already share a structure worth leaning into —
+// both run top to bottom along a single central spine (the Tree's own
+// "Middle Pillar" — Kether, Da'at, Tiphareth, Yesod, Malkuth — is exactly
+// the same axis a chakra column runs down) — so they're drawn overlaid on
+// that one axis rather than as two separate, competing diagrams.
 //
-// "Make the gem translucent," per Scott: transmission is pushed hard here
-// (0.9), with a tight, near-zero-roughness clearcoat shell and an
-// attenuation color/distance tuned to each facet's own hue, so the four
-// colors read as colored glass with real depth to look into, not flat
-// colored plastic.
-function buildFacetedGem(radius) {
-  const top = new THREE.Vector3(0, radius, 0);
-  const bottom = new THREE.Vector3(0, -radius, 0);
-  const equator = FACET_ORDER.map((_, k) => {
-    const a = (k / FACET_ORDER.length) * Math.PI * 2;
-    return new THREE.Vector3(Math.cos(a) * radius, 0, Math.sin(a) * radius);
+// The Tree of Life here is the standard ten sephirot plus Da'at (the
+// "hidden," non-sephirah eleventh point, traditionally drawn fainter or
+// dotted — kept that way here, unconnected to the 22 paths), joined by
+// the traditional 22 paths. Sephirot aren't individually labeled — this
+// is a backdrop glimpsed through refracted glass, not a reference
+// diagram — but the structure itself is the real, standard one, not
+// invented for this scene.
+function makeTreeOfLifeChakraTexture() {
+  const w = 768, h = 1200;
+  const canvas = document.createElement('canvas');
+  canvas.width = w; canvas.height = h;
+  const ctx = canvas.getContext('2d');
+
+  // Soft dark vignette, fading to fully transparent — no hard rectangle
+  // edge once this is mapped onto a plane in the scene.
+  const vignette = ctx.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, h * 0.62);
+  vignette.addColorStop(0, 'rgba(30,20,44,0.85)');
+  vignette.addColorStop(0.7, 'rgba(14,9,22,0.5)');
+  vignette.addColorStop(1, 'rgba(5,3,8,0)');
+  ctx.fillStyle = vignette;
+  ctx.fillRect(0, 0, w, h);
+
+  // The seven chakras — drawn first, as a soft glow underneath the Tree's
+  // more precise geometry, evenly spaced down the same central axis the
+  // Tree's Middle Pillar runs along. Root to crown, bottom to top.
+  const midX = w * 0.5;
+  const chakraColors = [
+    '210,70,70',    // Muladhara, root — red
+    '230,140,70',   // Svadhisthana, sacral — orange
+    '225,205,90',   // Manipura, solar plexus — yellow
+    '90,190,120',   // Anahata, heart — green
+    '80,140,230',   // Vishuddha, throat — blue
+    '110,90,220',   // Ajna, third eye — indigo
+    '168,120,255',  // Sahasrara, crown — violet
+  ];
+  const chakraTopY = h * 0.108, chakraBotY = h * 0.75;
+  chakraColors.forEach((color, i) => {
+    // i=0 (root) at the bottom, working up to crown at the top.
+    const frac = 1 - i / (chakraColors.length - 1);
+    const y = chakraTopY + frac * (chakraBotY - chakraTopY);
+    const r = 50;
+    const grad = ctx.createRadialGradient(midX, y, 0, midX, y, r);
+    grad.addColorStop(0, `rgba(${color},0.55)`);
+    grad.addColorStop(1, `rgba(${color},0)`);
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(midX, y, r, 0, Math.PI * 2);
+    ctx.fill();
   });
 
-  const positions = [];
-  FACET_ORDER.forEach((_, k) => {
-    const eA = equator[k];
-    const eB = equator[(k + 1) % FACET_ORDER.length];
-    // Top wedge — (top, eB, eA) winds outward (verified by hand: for k=0
-    // this cross-products out to the positive octant, away from center).
-    positions.push(top.x, top.y, top.z, eB.x, eB.y, eB.z, eA.x, eA.y, eA.z);
-    // Bottom wedge — (bottom, eA, eB) winds outward the same way.
-    positions.push(bottom.x, bottom.y, bottom.z, eA.x, eA.y, eA.z, eB.x, eB.y, eB.z);
+  // The Tree of Life — ten sephirot plus Da'at, joined by the standard 22
+  // paths (the 22 Hebrew letters / tarot Major Arcana, traditionally).
+  const leftX = w * 0.333, rightX = w * 0.667;
+  const S = {
+    kether:    { x: midX,   y: h * 0.092 },
+    chokmah:   { x: rightX, y: h * 0.192 },
+    binah:     { x: leftX,  y: h * 0.192 },
+    daat:      { x: midX,   y: h * 0.258 },
+    chesed:    { x: rightX, y: h * 0.342 },
+    geburah:   { x: leftX,  y: h * 0.342 },
+    tiphareth: { x: midX,   y: h * 0.442 },
+    netzach:   { x: rightX, y: h * 0.542 },
+    hod:       { x: leftX,  y: h * 0.542 },
+    yesod:     { x: midX,   y: h * 0.633 },
+    malkuth:   { x: midX,   y: h * 0.767 },
+  };
+  const paths = [
+    ['kether', 'chokmah'], ['kether', 'binah'], ['kether', 'tiphareth'],
+    ['chokmah', 'binah'], ['chokmah', 'tiphareth'], ['chokmah', 'chesed'],
+    ['binah', 'tiphareth'], ['binah', 'geburah'],
+    ['chesed', 'geburah'], ['chesed', 'tiphareth'], ['chesed', 'netzach'],
+    ['geburah', 'tiphareth'], ['geburah', 'hod'],
+    ['tiphareth', 'netzach'], ['tiphareth', 'yesod'], ['tiphareth', 'hod'],
+    ['netzach', 'hod'], ['netzach', 'yesod'], ['netzach', 'malkuth'],
+    ['hod', 'yesod'], ['hod', 'malkuth'],
+    ['yesod', 'malkuth'],
+  ]; // the 22 traditional paths
+
+  ctx.strokeStyle = 'rgba(225,220,240,0.3)';
+  ctx.lineWidth = 1.4;
+  paths.forEach(([a, b]) => {
+    ctx.beginPath();
+    ctx.moveTo(S[a].x, S[a].y);
+    ctx.lineTo(S[b].x, S[b].y);
+    ctx.stroke();
   });
+
+  // Da'at — the "hidden" non-sephirah: a faint dotted ring, no fill, no
+  // paths of its own, per how it's traditionally drawn.
+  ctx.save();
+  ctx.setLineDash([2, 4]);
+  ctx.strokeStyle = 'rgba(225,220,240,0.25)';
+  ctx.beginPath();
+  ctx.arc(S.daat.x, S.daat.y, 14, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.restore();
+
+  Object.entries(S).forEach(([key, p]) => {
+    if (key === 'daat') return;
+    const r = 22;
+    const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, r);
+    grad.addColorStop(0, 'rgba(255,250,235,0.95)');
+    grad.addColorStop(0.6, 'rgba(240,225,190,0.55)');
+    grad.addColorStop(1, 'rgba(240,225,190,0)');
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
+    ctx.fill();
+  });
+
+  return new THREE.CanvasTexture(canvas);
+}
+
+// The gem: a princess-cut-inspired multi-faceted stone — a pointed crown,
+// a full girdle, and a tapering pavilion, four columns of facets going
+// around (still one column per element: Gabriel, Emmanuel, Raphael,
+// Michael). A plain bipyramid (the original cut, one wedge per side, top
+// and bottom) reads as a simple kite shape; a real princess cut has many
+// small facets catching light at different angles, which is what "make
+// the gem multifaceted" asked for. Built by hand, vertex by vertex, same
+// reason as before: stock geometries have no per-side grouping to hang
+// four different materials on. Non-indexed on purpose, same reason as
+// before too — a clean flat facet normal per triangle, no shared-vertex
+// smoothing, which is exactly the faceted look a cut gem needs.
+//
+// The vertical profile, top to bottom: a crown tip, a narrow crown ring,
+// the girdle (full radius, where the four colors' facets meet edge to
+// edge), a narrower pavilion ring, and a culet tip. Four bands between
+// those five profile points, each split into the four columns — a crown
+// wedge, two ring-to-girdle facets, two girdle-to-pavilion facets, and a
+// pavilion wedge, six triangles per column, 24 facets total (up from 8).
+//
+// Every band's winding was worked out by hand for outward-facing normals
+// before writing this (see the cross-product checks in NOTES.md, 1.0.20)
+// — both wedge cases (a single apex point above or below a four-point
+// ring) and both ring-to-ring cases (widening or narrowing going down)
+// turned out to reduce to just two winding rules, reused across all four
+// bands rather than four separate ad-hoc ones.
+//
+// `triangleColumn` is a parallel lookup — triangleColumn[faceIndex] is
+// which of the four columns that triangle belongs to — built alongside
+// the position buffer so the raycaster's hit-testing (see createLens
+// below) doesn't need to assume a fixed triangle-count-per-column; it
+// just reads the array.
+//
+// "Make the gem translucent," per Scott (from the previous pass):
+// transmission is still pushed hard here (0.9), with a tight, near-zero-
+// roughness clearcoat shell and an attenuation color/distance tuned to
+// each facet's own hue, so the four colors read as colored glass with
+// real depth to look into, not flat colored plastic.
+function buildFacetedGem(radius) {
+  const cols = FACET_ORDER.length;
+  const angleOf = k => (k / cols) * Math.PI * 2;
+  const ringAt = (y, r) => Array.from({ length: cols }, (_, k) =>
+    new THREE.Vector3(Math.cos(angleOf(k)) * r, y, Math.sin(angleOf(k)) * r));
+
+  const crownTip  = new THREE.Vector3(0, radius, 0);
+  const crownRing = ringAt(radius * 0.55, radius * 0.34);
+  const girdle    = ringAt(0, radius);
+  const pavRing   = ringAt(radius * -0.5, radius * 0.38);
+  const culet     = new THREE.Vector3(0, -radius, 0);
+
+  const positions = [];
+  const triangleColumn = [];
+  function tri(a, b, c, col) {
+    positions.push(a.x, a.y, a.z, b.x, b.y, b.z, c.x, c.y, c.z);
+    triangleColumn.push(col);
+  }
+
+  for (let k = 0; k < cols; k++) {
+    const kn = (k + 1) % cols;
+    // Crown wedge — apex above the ring: (apex, ring[kn], ring[k]).
+    tri(crownTip, crownRing[kn], crownRing[k], k);
+    // Crown ring down to girdle — ring-to-ring, widening: (top[k], bot[kn],
+    // bot[k]) then (top[k], top[kn], bot[kn]).
+    tri(crownRing[k], girdle[kn], girdle[k], k);
+    tri(crownRing[k], crownRing[kn], girdle[kn], k);
+    // Girdle down to pavilion ring — same ring-to-ring rule, narrowing.
+    tri(girdle[k], pavRing[kn], pavRing[k], k);
+    tri(girdle[k], girdle[kn], pavRing[kn], k);
+    // Pavilion wedge — apex below the ring: (apex, ring[k], ring[kn]).
+    tri(culet, pavRing[k], pavRing[kn], k);
+  }
 
   const geo = new THREE.BufferGeometry();
   geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(positions), 3));
   geo.computeVertexNormals();
-  // Two triangles (6 vertices) per side, sides in FACET_ORDER order —
-  // matches the faceIndex-to-facet lookup in the click/hover handlers below.
-  FACET_ORDER.forEach((_, k) => geo.addGroup(k * 6, 6, k));
+  // Six triangles (18 vertices) per column, columns in FACET_ORDER order,
+  // contiguous in the buffer — matches the geometry groups below.
+  for (let k = 0; k < cols; k++) geo.addGroup(k * 18, 18, k);
 
   const materials = FACET_ORDER.map(key => {
     const c = FACETS[key].color;
@@ -330,7 +516,9 @@ function buildFacetedGem(radius) {
     });
   });
 
-  return new THREE.Mesh(geo, materials);
+  const mesh = new THREE.Mesh(geo, materials);
+  mesh.userData.triangleColumn = triangleColumn;
+  return mesh;
 }
 
 let stylesInjected = false;
@@ -497,7 +685,11 @@ export function createLens(container, { preview = false } = {}) {
   lightFixture.position.copy(fixturePos);
   root.add(lightFixture);
 
-  const spot = new THREE.SpotLight(0xfff6dd, preview ? 3.2 : 5.5, lightDistance * 2.5, Math.PI * 0.15, 0.55, 1.1);
+  // "Focus the spotlight into a tighter beam," per Scott: angle pulled in
+  // from 0.15π (~27°) to 0.07π (~12.6°), penumbra tightened from 0.55 to
+  // 0.3 for a more defined edge — a narrow, deliberate shaft rather than a
+  // broad wash of light.
+  const spot = new THREE.SpotLight(0xfff6dd, preview ? 3.2 : 5.5, lightDistance * 2.5, Math.PI * 0.07, 0.3, 1.1);
   spot.position.copy(fixturePos);
   const spotTarget = new THREE.Object3D();
   root.add(spotTarget);
@@ -507,9 +699,10 @@ export function createLens(container, { preview = false } = {}) {
   const glowSprites = [];
   let beamMesh = null;
   if (!preview) {
-    // Beam: a hollow cone, apex at the fixture, opening toward the gem.
+    // Beam: a hollow cone, apex at the fixture, opening toward the gem —
+    // narrowed to match the tighter spotlight angle above (was 0.9).
     const beamHeight = lightDistance * 0.92;
-    const beamGeo = new THREE.ConeGeometry(gemRadius * 0.9, beamHeight, 24, 1, true);
+    const beamGeo = new THREE.ConeGeometry(gemRadius * 0.4, beamHeight, 24, 1, true);
     beamGeo.translate(0, -beamHeight / 2, 0); // shift so the apex sits at local origin
     const beamMat = new THREE.MeshBasicMaterial({
       color: 0xfff6dd, transparent: true, opacity: 0.1, blending: THREE.AdditiveBlending,
@@ -560,6 +753,30 @@ export function createLens(container, { preview = false } = {}) {
   const moteMat = new THREE.PointsMaterial({ color: 0xd8ccff, size: 0.012, transparent: true, opacity: 0.35, sizeAttenuation: true });
   const motes = new THREE.Points(moteGeo, moteMat);
   scene.add(motes);
+
+  // ─── Backdrop — the Tree of Life and the seven chakras (see
+  // makeTreeOfLifeChakraTexture above). A sibling of the gem in `scene`,
+  // not a child of the rotating `root` group: a real backdrop doesn't
+  // spin with the sculpture in front of it, and a flat plane that did
+  // rotate would vanish edge-on twice per revolution. Skipped in preview
+  // — eight simultaneous WebGL previews on the landing page is enough
+  // load without a texture-mapped plane in each. Sized and positioned
+  // generously above and below the gem, and exempted from fog, so there's
+  // real, vivid content for the gem's transmission material to refract
+  // all the way through every facet, pavilion included — not just tinted
+  // darkness like before.
+  let backdrop = null;
+  if (!preview) {
+    const backdropTex = makeTreeOfLifeChakraTexture();
+    const backdropMat = new THREE.MeshBasicMaterial({
+      map: backdropTex, transparent: true, depthWrite: false, fog: false,
+    });
+    const backdropH = gemRadius * 9;
+    const backdropW = backdropH * (768 / 1200);
+    backdrop = new THREE.Mesh(new THREE.PlaneGeometry(backdropW, backdropH), backdropMat);
+    backdrop.position.set(0, 0, -gemRadius * 3.4);
+    scene.add(backdrop);
+  }
 
   if (preview) {
     const wrap = document.createElement('div');
@@ -722,9 +939,12 @@ export function createLens(container, { preview = false } = {}) {
     const hits = raycaster.intersectObjects(pickables);
     const hit = hits.length ? hits[0] : null;
     const hitObject = hit ? hit.object : null;
-    // Two triangles per side, laid out in FACET_ORDER order (see
-    // buildFacetedGem) — faceIndex/2, floored, is the side's index.
-    const sideIdx = hitObject === gem ? Math.floor(hit.faceIndex / 2) : null;
+    // gem.userData.triangleColumn[faceIndex] is which of the four columns
+    // that triangle belongs to (see buildFacetedGem) — a lookup rather
+    // than a fixed divisor, since the princess-cut gem has a different
+    // triangle count per band, not a uniform two-per-side like the
+    // original bipyramid.
+    const sideIdx = hitObject === gem ? gem.userData.triangleColumn[hit.faceIndex] : null;
     if (hitObject !== hoveredObject || sideIdx !== hoveredSide) {
       hoveredObject = hitObject;
       hoveredSide = sideIdx;
@@ -821,6 +1041,7 @@ export function createLens(container, { preview = false } = {}) {
       lightFixture.geometry.dispose(); lightFixture.material.dispose();
       beamMesh?.geometry.dispose(); beamMesh?.material.dispose();
       glowSprites.forEach(g => { g.sprite.material.map?.dispose(); g.sprite.material.dispose(); });
+      backdrop?.geometry.dispose(); backdrop?.material.map?.dispose(); backdrop?.material.dispose();
       moteGeo.dispose(); moteMat.dispose();
       title.remove();
       hint.remove();

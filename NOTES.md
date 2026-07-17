@@ -6,6 +6,65 @@ projects (The Secret World, A Manual of Perceptual Mechanics) moved into their o
 files, which are now the source of truth for that material going forward. See "project map"
 below for where things live.
 
+## 1.0.20 (2026-07-17, same day)
+
+Right after answering Scott's question about whether the refraction was
+actually computed (it is — `MeshPhysicalMaterial.transmission` is a real
+per-frame GPU technique, not a faked texture), he came back with a three-
+part request: "Okay, so let's focus the spotlight into a tighter beam.
+Make the gem multifaceted, like a princess-cut diamond. Behind the gem, I
+feel like we should do something with the chakras and the tree of life...
+i'd love to see the refracted light getting all the way through the
+bottom facets of the gem if possible." All three, plus the thing they add
+up to.
+
+**Tighter beam.** The spot's `angle` went from 0.15π (~27°) to 0.07π
+(~12.6°), `penumbra` from 0.55 to 0.3, and the visible beam cone's radius
+from 0.9×gemRadius down to 0.4× — a narrow, defined shaft instead of a
+broad wash.
+
+**Princess-cut gem.** `buildFacetedGem` is rebuilt from a single top-to-
+bottom wedge per side (8 facets total) into a five-tier profile — crown
+tip, crown ring, girdle, pavilion ring, culet — four columns going around,
+six triangles per column, 24 facets total. Before writing it, I worked out
+the outward-normal winding by hand for both triangle shapes that show up
+(a single apex point above or below a four-point ring; two four-point
+rings of different radii stacked, whichever direction they flare) and
+confirmed both reduce to the same two winding rules regardless of which
+band they're used in — then double-checked that by actually running the
+real geometry through Three.js's `computeVertexNormals()` in a throwaway
+Node script and confirming all 24 face normals point away from the
+central axis, not just trusting the cross-product algebra by eye. Since
+the triangle count per color is no longer a fixed two, the click/hover
+code no longer assumes `faceIndex / 2` — `buildFacetedGem` now builds a
+`triangleColumn` lookup array alongside the position buffer, and the
+raycaster reads `gem.userData.triangleColumn[faceIndex]` directly.
+
+**Chakras and the Tree of Life.** A new stationary backdrop plane, textured
+by a canvas-drawn diagram: the ten sephirot of the Kabbalistic Tree of
+Life (plus Da'at, the traditional "hidden" eleventh point, drawn fainter/
+dotted per convention) joined by the standard 22 paths, with the seven
+chakras drawn as a soft glow along the same central vertical axis the
+Tree's own Middle Pillar (Kether–Da'at–Tiphareth–Yesod–Malkuth) already
+runs down — Ein Soph and Malkuth/Shekinah were already this scene's
+framework, so this leans on structure that was already there rather than
+importing something unrelated. It's a sibling of the gem in `scene`, not
+a child of the rotating `root` group, on purpose: a backdrop doesn't spin
+with the sculpture in front of it, and a flat plane that did rotate would
+vanish edge-on twice a revolution. Built generously tall (well above the
+crown, well below the culet) and exempted from the scene's fog
+(`material.fog = false`), specifically so the gem's transmission material
+has real, vivid content to refract all the way through every facet —
+including the pavilion ones at the bottom, which is exactly what Scott
+asked to see and which the stone cradle's removal in 1.0.19 already
+cleared the way for.
+
+Verified: syntax check, a real build (24 modules, clean, ~2.5KB larger for
+the new texture-drawing code), and the standalone Node/Three.js winding
+check described above. Still can't render WebGL in this sandbox, so the
+actual facet count, beam tightness, and backdrop legibility through the
+glass are all worth Scott's own eyes.
+
 ## 1.0.19 (2026-07-17, same day)
 
 Two more simplifications to Lens, requested right after Scott got to see
