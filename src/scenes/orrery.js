@@ -36,16 +36,21 @@ Our investigation into Peter Hight is pending, but from all appearances he appea
 // spacing; `relDiameter` (Earth = 1) drives body size. Both are compressed
 // with a square root before being mapped to screen units — used at real
 // scale, Mercury and Pluto can't share a small scene at all.
+// Colors match a print Scott owns — a minimalist "The Solar System" poster,
+// flat bold color per planet against dark slate green. Applied here as a
+// spray-paint job over the scrap-metal bodies (see makeSprayPaintTexture)
+// rather than the poster's own clean flat fills — junk-metal orrery, not a
+// print.
 const PLANET_DATA = [
-  { name: 'Mercury', color: 0x9c8d7a, au: 0.39, relDiameter: 0.38, moons: [] },
-  { name: 'Venus',   color: 0xd9c48a, au: 0.72, relDiameter: 0.95, moons: [] },
-  { name: 'Earth',   color: 0x4a7a8c, au: 1.00, relDiameter: 1.00, moons: [{ relSize: 0.27 }] },
-  { name: 'Mars',    color: 0xaa5c3f, au: 1.52, relDiameter: 0.53, moons: [{ relSize: 0.06 }, { relSize: 0.04 }] },
-  { name: 'Jupiter', color: 0xc9a06a, au: 5.20, relDiameter: 11.2, moons: [{ relSize: 0.09 }, { relSize: 0.08 }, { relSize: 0.13 }, { relSize: 0.12 }] },
-  { name: 'Saturn',  color: 0xd8c48a, au: 9.54, relDiameter: 9.45, moons: [{ relSize: 0.12 }], ring: true },
-  { name: 'Uranus',  color: 0x8fc4c9, au: 19.2, relDiameter: 4.0,  moons: [{ relSize: 0.03 }] },
-  { name: 'Neptune', color: 0x4a6fd4, au: 30.1, relDiameter: 3.88, moons: [{ relSize: 0.03 }] },
-  { name: 'Pluto',   color: 0xbfae9c, au: 39.5, relDiameter: 0.18, moons: [{ relSize: 0.5 }] },
+  { name: 'Mercury', color: 0xe0447a, au: 0.39, relDiameter: 0.38, moons: [] },
+  { name: 'Venus',   color: 0x9974c9, au: 0.72, relDiameter: 0.95, moons: [] },
+  { name: 'Earth',   color: 0x35c4d4, au: 1.00, relDiameter: 1.00, moons: [{ relSize: 0.27 }] },
+  { name: 'Mars',    color: 0xe35440, au: 1.52, relDiameter: 0.53, moons: [{ relSize: 0.06 }, { relSize: 0.04 }] },
+  { name: 'Jupiter', color: 0xf0821f, au: 5.20, relDiameter: 11.2, moons: [{ relSize: 0.09 }, { relSize: 0.08 }, { relSize: 0.13 }, { relSize: 0.12 }] },
+  { name: 'Saturn',  color: 0xf0c020, au: 9.54, relDiameter: 9.45, moons: [{ relSize: 0.12 }], ring: true },
+  { name: 'Uranus',  color: 0xa8cc32, au: 19.2, relDiameter: 4.0,  moons: [{ relSize: 0.03 }] },
+  { name: 'Neptune', color: 0xa8a284, au: 30.1, relDiameter: 3.88, moons: [{ relSize: 0.03 }] },
+  { name: 'Pluto',   color: 0xd9d0ba, au: 39.5, relDiameter: 0.18, moons: [{ relSize: 0.5 }] },
 ];
 
 // ─── Weathered-metal textures — canvas, not image assets, same rule as
@@ -110,6 +115,67 @@ function paintedMastMaterial(preview) {
 function bronzeMaterial() {
   const tex = makeMetalTexture({ base: '#8a6438', rust: '#5a4022', highlight: '#d9ab6c' });
   return new THREE.MeshStandardMaterial({ map: tex, roughness: 0.4, metalness: 0.85 });
+}
+
+// A rattle-can paint job over a rust primer — not a clean flat fill, built
+// from hundreds of tiny semi-transparent dabs so coverage is uneven (denser
+// center, thinner and speckled toward the edge, same way a real spray can
+// lays down color), plus a couple of gravity-drip streaks and a scatter of
+// fine dark grit on top. Used for the planets — the print Scott's palette
+// comes from uses flat vector fills; this is the same colors, but as if
+// someone actually painted scrap-metal balls with them.
+function makeSprayPaintTexture(hex) {
+  const c = document.createElement('canvas');
+  c.width = 128; c.height = 128;
+  const cx = c.getContext('2d');
+  const col = new THREE.Color(hex);
+  const rgb = `${Math.round(col.r * 255)},${Math.round(col.g * 255)},${Math.round(col.b * 255)}`;
+
+  // Rust primer showing through incomplete coverage.
+  cx.fillStyle = '#332a22';
+  cx.fillRect(0, 0, 128, 128);
+
+  // Layered dabs, weighted toward the center of each "spray pass" so
+  // coverage thins out toward the edges rather than being a flat disc.
+  const passes = 5;
+  for (let p = 0; p < passes; p++) {
+    const cx0 = 30 + Math.random() * 68, cy0 = 30 + Math.random() * 68;
+    const passRadius = 45 + Math.random() * 30;
+    for (let i = 0; i < 220; i++) {
+      const a = Math.random() * Math.PI * 2;
+      const r = Math.pow(Math.random(), 1.6) * passRadius;
+      const x = cx0 + Math.cos(a) * r, y = cy0 + Math.sin(a) * r;
+      const alpha = (1 - r / passRadius) * (0.1 + Math.random() * 0.16);
+      cx.fillStyle = `rgba(${rgb},${Math.max(0, alpha)})`;
+      cx.beginPath();
+      cx.arc(x, y, 0.6 + Math.random() * 1.8, 0, Math.PI * 2);
+      cx.fill();
+    }
+  }
+
+  // A couple of gravity drips.
+  cx.strokeStyle = `rgba(${rgb},0.5)`;
+  for (let i = 0; i < 3; i++) {
+    const x = 20 + Math.random() * 88;
+    const y0 = 20 + Math.random() * 50;
+    const len = 15 + Math.random() * 35;
+    cx.lineWidth = 0.8 + Math.random() * 1.2;
+    cx.beginPath();
+    cx.moveTo(x, y0);
+    cx.lineTo(x + (Math.random() - 0.5) * 4, y0 + len);
+    cx.stroke();
+  }
+
+  // Fine grit, dark speckle on top.
+  cx.globalAlpha = 0.35;
+  for (let i = 0; i < 90; i++) {
+    cx.fillStyle = Math.random() > 0.5 ? '#000000' : '#1a1a1a';
+    cx.fillRect(Math.random() * 128, Math.random() * 128, 1, 1);
+  }
+  cx.globalAlpha = 1;
+
+  const tex = new THREE.CanvasTexture(c);
+  return tex;
 }
 
 const BOLT_TONE = 0x18140f;
@@ -269,8 +335,8 @@ function buildOrrery(preview, suspendTopY, rafterY) {
     const bodyGroup = new THREE.Group();
     bodyGroup.position.x = radius;
     pivot.add(bodyGroup);
-    const bodyGeo = new THREE.SphereGeometry(size, 14, 14);
-    const bodyMat = new THREE.MeshStandardMaterial({ color: planet.color, roughness: 0.55, metalness: 0.3 });
+    const bodyGeo = new THREE.SphereGeometry(size, 16, 16);
+    const bodyMat = new THREE.MeshStandardMaterial({ map: makeSprayPaintTexture(planet.color), roughness: 0.68, metalness: 0.1 });
     const body = new THREE.Mesh(bodyGeo, bodyMat);
     bodyGroup.add(body);
 

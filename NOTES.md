@@ -219,6 +219,17 @@ At Scott's request, all three are gone except the orrery, which is promoted to i
   `initGoldenHare()` import and call in `main.js` are commented out, same treatment as egg/leaf/
   cycle's brief deactivation earlier this session — the file itself (`src/components/
   goldenHare.js`) is untouched and ready to switch back on if wanted later.
+- **Fifth pass, same day** — the planet colors now match a real print Scott owns (a minimalist
+  "The Solar System" poster, flat bold color per planet against dark slate green): Mercury pink,
+  Venus purple, Earth cyan, Mars red-orange, Jupiter orange, Saturn gold, Uranus chartreuse,
+  Neptune khaki, Pluto a muted pale cream (the print draws Pluto as an undifferentiated dot among
+  the other Kuiper Belt objects, not a distinctly-colored planet, so it stayed muted here too).
+  Not applied as the print's own clean flat vector fills, though — each planet gets its own
+  canvas-generated spray-paint texture instead (`makeSprayPaintTexture`): a dark rust primer base,
+  several layered "spray pass" dabs (hundreds of tiny semi-transparent dots per pass, denser toward
+  each pass's own center so coverage thins unevenly toward the edges, the way an actual rattle can
+  lays down color), a couple of gravity-drip streaks, and a scatter of dark grit on top. Same
+  scrap-metal-someone-actually-painted logic as the mast's chipped royal purple.
 
 ## You've Got a Friend in Satan — scenes wired into the theater (2026-07-16)
 
