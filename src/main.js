@@ -219,3 +219,7 @@ initPreviews();
 // the mark itself is a hare now, so a second, separate wandering hare
 // mechanic was redundant. See NOTES.md, "1.0.1" entry, for what replaced it.)
 initColophon();
+
+// Status-bar easter egg (nav icons, preview tiles, the title link) lives
+// entirely in index.html as inline onmouseover/onmouseout — the actual
+// 1999 way to do it, no separate module needed. See index.html.

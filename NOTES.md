@@ -6,6 +6,33 @@ projects (The Secret World, A Manual of Perceptual Mechanics) moved into their o
 files, which are now the source of truth for that material going forward. See "project map"
 below for where things live.
 
+## 1.0.2 (2026-07-17, same day)
+
+One easter egg, entirely Scott's idea: a throwback to his own web origins,
+Netscape 3's status bar, where hovering a link swapped the address bar's URL
+out for a short, loaded bit of status text instead — never a description,
+always more like a mood or a private joke. Wired onto every nav icon, every
+landing-page preview tile, and the "perceptual mechanics" title link itself,
+each carrying its own one- or two-word status text:
+
+sphere → "zen archery" · butterfly → "complexity" · scroll → "savagery" ·
+theater → "light entertainment" · egg → "lantern" · leaf → "stillness" ·
+orrery → "will" · perceptual mechanics → "secrets"
+
+Done the actual 1999 way: plain inline `onmouseover="window.status='...';
+return true;"` / `onmouseout="window.status=''; return true;"` on each of
+the fifteen elements in index.html, nothing else — no new module, no
+fake status-bar UI standing in for it. (First pass overbuilt this: a whole
+`statusBar.js` component with a fixed beveled-chrome strip pinned to the
+bottom of the viewport, since real browsers stopped honoring script writes
+to `window.status` around 2014. Scott's call, correctly: that's not what he
+asked for. This is exactly the old snippet, doing exactly what it always
+did — nothing visible in a modern browser, all of it still sitting there
+correct and inert in the page source, which is its own kind of easter egg.
+The retired component is in `_stale_build_dirs_safe_to_delete/`.)
+
+Version bumped to 1.0.2 in package.json.
+
 ## 1.0.1 (2026-07-17, same day)
 
 Three follow-ups from Scott right after the 1.0 tag:
