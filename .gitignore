@@ -1,5 +1,6 @@
 node_modules/
 dist/
+dist.stale-*/
 v1/dist 2/
 .DS_Store
 *.log
