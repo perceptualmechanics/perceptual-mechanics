@@ -6,6 +6,20 @@ projects (The Secret World, A Manual of Perceptual Mechanics) moved into their o
 files, which are now the source of truth for that material going forward. See "project map"
 below for where things live.
 
+## 1.0.4 (2026-07-17, same day)
+
+Bug fix from a screenshot Scott sent: on a short-enough browser window, the
+"perceptual mechanics" title text rendered right across the leaf preview
+tile. Root cause — `#landing` had `padding-top: 3.5rem` to clear the fixed
+nav bar, but no matching `padding-bottom`, so on a window short enough that
+the two-row preview grid didn't have slack to spare, the flex-centered
+content could sit flush against, or under, the fixed `#site-title` (bottom-
+center) and `#colophon-mark` (bottom-right). Whichever tile lands at dead
+center of the wrapped grid's second row — leaf, at the width in the
+screenshot, since the seven tiles wrap 4-then-3 — took the title text right
+across it. Added `padding-bottom: 4.5rem` to `#landing`, mirroring the
+existing top clearance, sized to clear both fixed elements' full footprint.
+
 ## 1.0.3 (2026-07-17, same day)
 
 One refinement to the status-bar easter egg, Scott's own idea: instead of a

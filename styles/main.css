@@ -149,7 +149,16 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding-top: 3.5rem; /* clear nav */
+  padding-top: 3.5rem;    /* clear nav (#pm-nav's own height) */
+  /* Same idea at the bottom: on any window short enough that the two-row
+     preview grid doesn't fully fit with room to spare, flex centering
+     alone let the second row's tiles sit flush against — or under — the
+     fixed #site-title (bottom:1.2rem, centered) and #colophon-mark
+     (bottom:1.5rem, 48px tall, right-aligned). Whichever tile lands at
+     dead center of that row (leaf, at typical desktop widths, since the
+     7 tiles wrap 4-then-3) took the title text right across it. 4.5rem
+     clears both fixed elements' full footprint with room to spare. */
+  padding-bottom: 4.5rem;
   /* html/body are overflow:hidden site-wide (the full-screen scene
      experience needs that), so #landing owns its own scroll context.
      On narrow viewports the preview grid stacks into a column taller
