@@ -1,3 +1,23 @@
+/* ─── z-index scale ─────────────────────────────────────────────────────────── */
+/* The site's stacking order, in one place, so the next scene added doesn't
+   quietly reopen a bug that's already bitten three scenes (orrery, egg,
+   leaf): any element appended straight to document.body — a scene's own
+   title/hint/caption, not something inside #experience-container — sits in
+   the SAME stacking context as #experience-overlay. If that element's
+   z-index is below the overlay's, it's only visible during the overlay's
+   0.6s fade-in transition, then gets permanently covered once the overlay
+   reaches full opacity. The fix is always the same: give it z-index ≥ 310.
+     9999  .skip-link            (focus-only, must beat everything)
+      500  #pm-nav
+      400  #site-title
+      310  body-level scene overlays (title/hint/caption elements a scene
+           appends to document.body — MUST be ≥310, see above)
+      300  #experience-overlay
+   Anything else (in-container panels, vignettes, grain overlays, etc.) is
+   scoped inside its own scene's #experience-container and uses small
+   single/double-digit z-indices relative to THAT container's own stacking
+   context — those never need to clear 300, only each other. */
+
 /* ─── Reset & base ──────────────────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -40,6 +60,11 @@ html, body {
   border: none;
   cursor: pointer;
   padding: 0.5rem;
+  /* Padding alone (0.5rem + 22px icon) was ~38px — below the ~44px
+     touch-target guideline. min-width/height pads the tap area out
+     without changing the icon's visual size or the nav's layout. */
+  min-width: 44px;
+  min-height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -119,6 +144,14 @@ html, body {
   align-items: center;
   justify-content: center;
   padding-top: 3.5rem; /* clear nav */
+  /* html/body are overflow:hidden site-wide (the full-screen scene
+     experience needs that), so #landing owns its own scroll context.
+     On narrow viewports the preview grid stacks into a column taller
+     than the viewport (see the max-width:480px rule below) — without
+     this, everything past the first couple of tiles was simply
+     unreachable, no scrollbar, no way to get to it. */
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 #scene-previews {
@@ -229,7 +262,14 @@ html, body {
   .preview-container { width: 240px; height: 240px; }
 }
 @media (max-width: 480px) {
-  #scene-previews { gap: 1.5rem; flex-direction: column; }
+  #scene-previews { gap: 1.5rem; flex-direction: column; padding: 1rem 1rem 3rem; }
   .preview-container { width: 200px; height: 200px; }
   #pm-nav { gap: 1.5rem; }
+  /* Seven 200px tiles in a column (~1500px) is always taller than a
+     phone viewport. justify-content:center (inherited from #landing)
+     would otherwise center that overflow and require scrolling both
+     up and down from a mid-list starting position — flex-start plus
+     the #landing scroll context above means the natural "start at the
+     top, scroll down" gesture reaches every tile. */
+  #landing { align-items: flex-start; justify-content: flex-start; }
 }
