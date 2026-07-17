@@ -6,6 +6,90 @@ projects (The Secret World, A Manual of Perceptual Mechanics) moved into their o
 files, which are now the source of truth for that material going forward. See "project map"
 below for where things live.
 
+## 1.0.14 (2026-07-17, same day)
+
+Cycle is back — fully rebuilt, not patched. The old version (five classical
+elements, each a real YouTube livestream) is gone from git history entirely,
+not just retired: the whole livestream concept is replaced.
+
+Scott's prompt, mid-conversation, completely unprompted by anything before
+it: "while I was on egg, I clicked, and triggered one of the orrery
+posters!" led into "this is why we test, do you need to test for other
+leaks" — and once that was cleared, Scott pivoted straight to "we *will*
+be creating Geocities Mode at some point," then, genuinely out of nowhere:
+"actually! I wanted to completely rework cycle. instead of youtube vids,
+let's lay a foundation based on the angelic hierarchy laid out in the
+Changing Light at Sandover." Four archangels, an element and a color each
+(corrected once mid-message: Raphael to green, "Nature" to "all four," not
+a fifth color of her own) — Michael/Light-Air/yellow, Gabriel/Fire-Death/
+red, Raphael/Earth/green, Emmanuel/Water/blue, the Queen Mother holding all
+four. A quick tangent about whether aluminum oxide has a yellow gem (it
+does — yellow sapphire, corundum colored by iron instead of ruby's
+chromium) turned into the actual design: four gemstone facets, and Nature
+not as a fifth facet but as the gem's own setting.
+
+Scott's full schema, once he'd worked it out: "The gem with four faces is
+the crystal focusing the laser light of EIN SOPH. Nature is the cut of the
+overall gem. MALKUTH/SHEKINAH. Each elemental facet is cut with other
+polytheistic gods that would loosely fit in with that particular element.
+and then you incorporate my writing." Ein Soph (Kabbalah: the infinite,
+the divine before any attribute) is the light at the center of the scene.
+Malkuth/Shekinah (the tenth sephirah — the physical world; also the
+indwelling presence of the divine within it) isn't a fifth facet
+competing with the other four's colors — she's the cut and setting that
+holds them, built here as the rough, unpolished stone the four polished
+gems are still embedded in.
+
+Content, per his instruction that his own writing carries the actual
+substance while other pantheons' gods are "loosely fit" context, not text:
+
+- Gabriel (Fire/Death, ruby) — Fire.doc's word-association litany (2003),
+  reserved for exactly this since the scroll was built. Other faces: Agni
+  (Vedic), Surtr (Norse), Sekhmet (Egyptian).
+- Michael (Light/Air, yellow sapphire) — Purpose.doc, complete (748
+  words): a manifesto ending "Song of Fire and Light... Solistrato" — also
+  the origin document for "Solistrato," a name recurring across Scott's
+  work for two decades. Other faces: Ra (Egyptian), Amaterasu (Japanese),
+  Vayu (Vedic).
+- Raphael (Earth, emerald) and Emmanuel (Water, sapphire) — one real find
+  while digging back through the archive for this: an unpublished 13-
+  section, three-movement poem called "thirty-six," discovered to be the
+  source of "Moon Song" (already live in the egg scene, verbatim, as its
+  ninth section — Scott had genuinely forgotten this). Section 8 is a
+  five-person ritual scene invoking each element in turn; split at its own
+  natural pause rather than cut arbitrarily — Raphael gets the setup and
+  earth invocation, Emmanuel gets water, air, and the fire/light climax
+  that closes it, each with a cross-link to the other's half. Raphael's
+  other faces: Demeter (Greek), Jörð (Norse), Tlaltecuhtli (Aztec).
+  Emmanuel's: Poseidon (Greek), Susanoo (Japanese), Sobek (Egyptian).
+- Malkuth/Shekinah (Nature) — the same poem's final section, closing on an
+  explicit, angry Mother Nature: "there's quite a storm brewing out
+  there... she's angry, we no longer come to her with arms outstretched in
+  love." No other-pantheon list of her own — per Scott's framing, she's
+  the vessel, not a peer facet.
+
+The other-pantheon spread (Vedic, Norse, Egyptian, Greek, Japanese, Aztec)
+deliberately echoes the palette already established in the unwired Boston
+Scion campaign material, rather than inventing a new one — same house
+style, just applied here instead of a tabletop pantheon.
+
+Built as a real Three.js scene (the old version was DOM/iframe, since
+video embeds don't belong rendered — this one does): four octahedron gems
+in transmissive MeshPhysicalMaterial, arranged culet-in around a shared
+bright core (Ein Soph — a small emissive sphere, a point light, and
+layered additive glow sprites faking bloom, since this project has no
+post-processing pipeline), all rising out of a displaced, matte-stone
+partial-sphere cradle (Malkuth). Same panel/drag-orbit/dispose/reduced-
+motion conventions as every other full scene, via sceneKit.js. Nav icon
+redrawn as a quartered kite/diamond outline with a center dot for the
+light — the old pentagon (five element dots) no longer fits a four-facet-
+plus-setting structure. Re-added the status-bar easter egg word
+('refraction') and re-enabled the mobile nav-icon-count math in main.css,
+which needed retuning now that the icon count is back up to eight (see
+below).
+
+Version bumped to 1.0.14 in package.json.
+
 ## 1.0.13 (2026-07-17, same day)
 
 Scott: "while I was on egg, I clicked, and triggered one of the orrery

@@ -279,16 +279,22 @@ html, body {
 @media (max-width: 480px) {
   #scene-previews { gap: 1.5rem; flex-direction: column; padding: 1rem 1rem 3rem; }
   .preview-container { width: 200px; height: 200px; }
-  /* Seven icons at their 44px min-width touch target plus this gap must
-     fit inside the viewport — #pm-nav has no wrap or scroll, so anything
-     wider than the viewport just clips off both edges evenly (justify-
-     content:center), which is exactly what showed up in Scott's screenshot
-     of a 402px-wide phone: the leftmost and rightmost icons cut off. At
-     1.5rem the seven-icon row needs 308px (icons) + 144px (6 gaps) = 452px
-     — wider than every common phone (iPhone SE 375px up through Pro Max
-     430px). At 0.5rem it needs 308 + 48 = 356px, comfortably under all of
-     them, with the icons' own 44px touch target untouched. */
+  /* Icons at their 44px min-width touch target plus this gap must fit
+     inside the viewport — #pm-nav has no wrap or scroll, so anything wider
+     than the viewport just clips off both edges evenly (justify-
+     content:center); see the leaf/orrery mobile-fix history in NOTES.md
+     for the screenshot that first caught this at seven icons. Cycle's
+     return (2026-07-17) brings the count to eight, which the previous
+     0.5rem-gap-only fix doesn't clear on its own: 8 × 44px = 352px, plus
+     7 gaps at 0.5rem (8px) = 56px, totals 408px — still wider than an
+     iPhone SE (375px) and barely over a 402px viewport. Dropping the
+     touch target itself to 38px at this breakpoint (352px → 304px) gets
+     the eight-icon total to 304 + 56 = 360px, comfortably under every
+     common phone width. 38px is below the usual 44px guideline but still
+     a reasonable icon-only nav tap target, and only applies at this one
+     narrow breakpoint. */
   #pm-nav { gap: 0.5rem; }
+  .nav-icon { min-width: 38px; min-height: 38px; }
   /* Seven 200px tiles in a column (~1500px) is always taller than a
      phone viewport. align-items:center (inherited from #landing, and the
      cross-axis property since #landing's flex-direction stays row) would

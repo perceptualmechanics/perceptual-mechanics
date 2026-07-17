@@ -5,7 +5,7 @@ import { createTheater } from './scenes/theater.js';
 import { createEgg }       from './scenes/egg.js';
 import { createLeaf }      from './scenes/leaf.js';
 import { createOrrery }    from './scenes/orrery.js';
-// import { createCycle }     from './scenes/cycle.js'; // shelved for now — rethinking the elemental approach further, see NOTES.md
+import { createCycle }     from './scenes/cycle.js';
 import { initColophon }    from './components/colophon.js';
 
 // ─── Scene registry ──────────────────────────────────────────────────────────
@@ -24,9 +24,8 @@ const SCENES = {
                  ariaLabel: 'Leaf — a raindrop’s fall from a leaf, told through physics, with the found text arriving in phase with the fall.' },
   orrery:      { create: createOrrery,     label: 'The Orrery of Los Feliz.',
                  ariaLabel: 'The Orrery of Los Feliz — a found story, told through a 30-foot orrery: nine planets, their moons, an asteroid belt. Drag to orbit, click the orrery to read.' },
-  // cycle: shelved for now, see the import comment above and NOTES.md.
-  // cycle:    { create: createCycle,      label: 'Cycle — Earth, Water, Air, Fire, Wood.',
-  //            ariaLabel: 'Cycle — five real, currently-live streams, one per classical element. Choose an element below the screen.' },
+  cycle:       { create: createCycle,      label: 'The Cycle — Four facets, one light, one stone.',
+                 ariaLabel: 'The Cycle — a four-faceted gem lit from within by Ein Soph, held in a rough stone cradle. Drag to orbit, click a facet to read.' },
 };
 
 let activeScene  = null;
@@ -201,9 +200,7 @@ function initPreviews() {
     egg:        document.getElementById('preview-egg'),
     leaf:       document.getElementById('preview-leaf'),
     orrery:     document.getElementById('preview-orrery'),
-    // cycle: shelved, see the registry comment above — preview-cycle no
-    // longer exists in index.html, so this would resolve to null anyway.
-    // cycle:   document.getElementById('preview-cycle'),
+    cycle:      document.getElementById('preview-cycle'),
   };
   for (const [name, el] of Object.entries(map)) {
     if (el) previews[name] = SCENES[name].create(el, { preview: true });
