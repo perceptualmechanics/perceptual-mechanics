@@ -250,6 +250,75 @@ At Scott's request, all three are gone except the orrery, which is promoted to i
   quoting the found text: "About thirty feet high, the peak poking out of the warehouse
   skylights"), same idea as butterfly's on-screen label. This piece is also going into The Secret
   World as a found object.
+- **Seventh pass, 2026-07-17** — more feedback after seeing it running: recentered the orrery in
+  the room and removed the auto-rotate entirely (it never let the scene settle into a composed,
+  centered view - always caught mid-spin, which read as "not centered"; now it holds still until
+  dragged), brightened the hemisphere/directional/point lights a step, and widened the fog's far
+  distance well past the camera-to-orrery range (it had been cutting into the enlarged orrery and
+  washing the preview tile almost to black). Also found and fixed the actual cause of "the title
+  appears for a second then disappears": `#orrery-title`/`hint`/`caption` are appended to
+  `document.body`, outside `#experience-overlay` (styles/main.css: fixed, z-index:300, fades to
+  fully opaque over 0.6s) - at z-index:202 they were only visible during that fade-in, then
+  covered once the overlay settled. This exact issue was already documented in main.js's own
+  comments for butterfly's equivalent body-level label/hint (z-index:310 there, for the same
+  reason) - orrery's just hadn't gotten the same treatment. Bumped all three to 310.
+
+## Safari filter flicker + a punch list: egg, leaf, cycle (2026-07-17, same day)
+
+Scott, mid-punch-list, also flagged the scroll/manuscript preview tile "oscillating between two
+states" in Safari specifically. `.ms-preview-medallion` (src/scenes/manuscript.js) combines a CSS
+box-shadow keyframe animation with a referenced SVG filter (`url(#ms-rough-strong)`) on the same
+element - a known WebKit bug where the animated element periodically drops and re-resolves the
+filter, reading as a flip between two states rather than a smooth loop. Fixed by forcing a stable
+compositing layer (`translateZ(0)` + `will-change`) on the medallion and its child cracks.
+
+Then a four-item punch list, left to work through solo:
+
+- **Egg** (src/scenes/egg.js) — Scott questioned the aurorae: "should the aurorae column up like
+  that?" They didn't, or rather, they shouldn't have: the old design stood sprite columns straight
+  up off each pole, which reads as spikes, not what the aurora actually looks like from orbit (a
+  ragged glowing band - the "auroral oval" - hugging the curve of the planet at high latitude).
+  Rebuilt as a perturbed, jittered torus at each pole instead, with a few much-shorter shimmer
+  sprites layered on as texture rather than the shape itself. Earth's surface texture was rebuilt
+  at double resolution with ragged/noisy coastlines and terrain shading instead of clean ellipses,
+  and got a separate, independently-rotating semi-transparent cloud shell (the single biggest lever
+  for "photorealistic" over "textured ball") - the green emissive tint and atmosphere glow shell
+  are untouched, so the "green egg" mood holds. Satellites now each carry one of Scott's poems
+  (src/text/poems.js, cycling through all 12) and are clickable, same raycast-to-panel mechanism as
+  the geodesic sphere's facet-to-fragment links in sphere.js; added a small per-satellite beacon
+  and a generous invisible hit-sphere since the actual bodies are tiny. Also fixed egg-hint/
+  egg-caption's z-index (202 -> 310) - same #experience-overlay collision bug as orrery's, latent
+  here too since egg uses the same body-level-overlay pattern.
+- **Leaf** (src/scenes/leaf.js) — two asks: have the text scroll down with the drop, and lean the
+  whole thing hard into wabi-sabi. Replaced the old discrete fade-between-captions with one
+  continuously-scrolling text column: all eight stages sit stacked in normal document flow inside a
+  small masked viewport, and the scroll offset is driven directly by the same `frac` that drives
+  the drop's own fall - holding each stage centered for its first 60%, then easing down to the
+  next, so the text physically falls with the drop rather than cross-fading on its own clock.
+  Wabi-sabi pass: the leaf silhouette is deliberately asymmetric now (uneven lobes, one small torn
+  notch) with a canvas-mottled surface (uneven color patches, a browned weathering spot, a couple
+  of insect-mark spots, fine grain) instead of one flat color fill; composition is off-center and
+  very slightly tilted at rest; a subtle grain overlay sits over the whole render. Same z-index fix
+  applied to leaf-caption/leaf-hint.
+- **Cycle** (src/scenes/cycle.js) — four of the five live streams were dead. Root cause on
+  inspection: three of the five (water/fire/wood) were pinned to one specific YouTube video ID
+  each, and a "24/7 live" broadcast still periodically ends and restarts under a brand new ID even
+  though the channel itself doesn't change - a hardcoded ID is only ever temporarily correct, so
+  this was always going to recur. Earth and Air were already using the self-updating pattern
+  (`embed/live_stream?channel=<id>`, which always redirects to whatever that channel currently has
+  live) and it's possible one or both broke anyway if the channel stopped streaming to YouTube
+  specifically (GlobalQuake, for instance, also streams to Twitch). Converted every element that
+  has a real 24/7-streaming channel to that self-updating pattern; where a pinned ID was the only
+  option, kept the best-researched current one but swapped out backups that were literally raw
+  YouTube search-results URLs (not real fallbacks) for concrete, durable, non-YouTube destinations
+  (USGS's own real-time earthquake map, Windy's live radar, VolcanoDiscovery's Stromboli page,
+  explore.org's full live-cams index). Also made the primary-source link a visible button instead
+  of a footnote, since no embed of this kind can ever be fully failure-proof against the source's
+  own churn. Honest caveat: this sandbox had no working browser tool this session (Claude in Chrome
+  wasn't connected, and no headless browser could be gotten running either — missing system
+  libraries, no root access, and the package mirrors needed to install them aren't reachable from
+  here), so none of this was confirmed live in an actual browser; it's all web-search research.
+  Worth a spot-check.
 
 ## You've Got a Friend in Satan — scenes wired into the theater (2026-07-16)
 

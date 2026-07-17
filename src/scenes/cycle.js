@@ -22,7 +22,36 @@
 // choices) — YouTube gives no reliable cross-origin signal for that from
 // inside an iframe, so rather than fake a "stream down" detector, each
 // element carries a real backup link the visitor can open by hand.
-
+//
+// Reworked 2026-07-17 — Scott: four of the five embeds had gone dark.
+// Root cause, on inspection: three of the five (water/fire/wood) were
+// pinned to one specific YouTube video ID each. That's the wrong pattern
+// for something meant to be permanently live — a "24/7 live" broadcast on
+// YouTube still periodically ends and restarts under a brand new video
+// ID (the channel doesn't change, the ID does), so a hardcoded ID is
+// only ever temporarily correct and this was always going to recur.
+// Earth and Air were already using the self-updating pattern
+// (embed/live_stream?channel=<channel ID>, which always redirects to
+// whatever that channel currently has live, no ID to go stale) and it's
+// possible one or both still broke anyway if the channel itself stopped
+// streaming or moved platforms (GlobalQuake, for one, also streams to
+// Twitch and isn't necessarily live on YouTube at every moment).
+//
+// This pass: every element that has a real, verifiable 24/7-streaming
+// YouTube channel now uses the self-updating channel pattern instead of
+// a pinned ID, which removes the "stale video ID" failure mode for good.
+// Where that wasn't available, kept a specific ID but swapped weak
+// backups (a couple were literally raw YouTube search-results URLs,
+// which aren't a real fallback) for concrete, durable, non-YouTube
+// destinations that don't share YouTube's own outage/ID-churn risk.
+// Also made the primary-source link a visible button (see .cyc-primary
+// below) rather than a footnote, since no embed of this kind can ever be
+// fully failure-proof against the source's own churn — the visitor
+// should always have an obvious, immediate way to the real thing.
+//
+// Caveat, in the interest of honesty: this sandbox has no working
+// browser tool this session, so these were researched via web search,
+// not confirmed live in a browser one by one. Worth a quick spot-check.
 const ELEMENTS = [
   {
     key: 'earth',
@@ -30,8 +59,8 @@ const ELEMENTS = [
     note: 'GlobalQuake — live seismic plot, auto-detects earthquakes worldwide as they happen.',
     embed: 'https://www.youtube.com/embed/live_stream?channel=UCZmcd4cQ2H_ELWAuUdOMgRQ&autoplay=0',
     primaryUrl: 'https://www.youtube.com/@GlobalQuake/live',
-    backupLabel: 'Force Thirteen Earthquakes',
-    backupUrl: 'https://www.youtube.com/channel/UC84LQh_S7n3Hxt6K-bSKdUQ',
+    backupLabel: 'USGS real-time earthquake map',
+    backupUrl: 'https://earthquake.usgs.gov/earthquakes/map/',
     color: '#7a6a4f',
     icon: `<circle cx="12" cy="12" r="9"/><ellipse cx="12" cy="12" rx="9" ry="4"/><line x1="12" y1="3" x2="12" y2="21"/><path d="M3 9h18M3 15h18"/>`,
   },
@@ -41,8 +70,8 @@ const ELEMENTS = [
     note: 'The Smith River, Jedediah Smith Redwoods State Park — old-growth forest, no development in frame.',
     embed: 'https://www.youtube.com/embed/WUqQdNAUC1c?autoplay=0',
     primaryUrl: 'https://www.explore.org/livecams/zen-den/live-redwood-cam-1',
-    backupLabel: 'Brooks Falls (Katmai NP)',
-    backupUrl: 'https://explore.org/livecams/three-bears/brown-bear-salmon-cam-brooks-falls',
+    backupLabel: 'All of Explore.org’s live cams',
+    backupUrl: 'https://explore.org/livecams',
     color: '#3d6fa5',
     icon: `<path d="M2 9c2 -2 4 -2 6 0s4 2 6 0 4 -2 6 0"/><path d="M2 15c2 -2 4 -2 6 0s4 2 6 0 4 -2 6 0"/>`,
   },
@@ -52,8 +81,8 @@ const ELEMENTS = [
     note: "YallBot — Ryan Hall, Y'all's 24/7 AI weather broadcast, radar and storm analysis.",
     embed: 'https://www.youtube.com/embed/live_stream?channel=UCJHAT3Uvv-g3I8H3GhHWV7w&autoplay=0',
     primaryUrl: 'https://ryanhallyall.com/yallbot',
-    backupLabel: 'Live Storm Chasers',
-    backupUrl: 'https://www.youtube.com/results?search_query=live+storm+chasers',
+    backupLabel: 'Windy — live weather radar',
+    backupUrl: 'https://www.windy.com/',
     color: '#4f7a8c',
     icon: `<path d="M3 8h11a3 3 0 1 0 -3 -3"/><path d="M3 12h15a3 3 0 1 1 -3 3"/><path d="M3 16h9a3 3 0 1 1 -3 3"/>`,
   },
@@ -63,8 +92,8 @@ const ELEMENTS = [
     note: 'USGS Kilauea, Cam A — thermal-capable, covers no-glow nights.',
     embed: 'https://www.youtube.com/embed/iws3rh5vLAQ?autoplay=0',
     primaryUrl: 'https://www.usgs.gov/volcanoes/kilauea/multimedia/webcams',
-    backupLabel: 'Stromboli Volcano Live',
-    backupUrl: 'https://www.youtube.com/results?search_query=stromboli+volcano+live+webcam',
+    backupLabel: 'VolcanoDiscovery — Stromboli webcams',
+    backupUrl: 'https://www.volcanodiscovery.com/stromboli-webcams.html',
     color: '#b8341f',
     icon: `<path d="M12 2c1 3 -3 4 -3 8a3 3 0 0 0 6 0c0 -1 -1 -2 -1 -3c1 1 2 3 2 5a4 4 0 0 1 -8 0c0 -5 4 -6 4 -10z"/>`,
   },
@@ -74,7 +103,7 @@ const ELEMENTS = [
     note: 'Chattahoochee National Forest — real-time, no music, North Georgia mountains.',
     embed: 'https://www.youtube.com/embed/mFB6KZnjhy0?autoplay=0',
     primaryUrl: 'https://www.youtube.com/watch?v=mFB6KZnjhy0',
-    backupLabel: 'Panama Fruit Feeder Cam',
+    backupLabel: 'Explore.org’s live cams',
     backupUrl: 'https://explore.org/livecams',
     color: '#1f7a4d',
     icon: `<path d="M12 3v18"/><path d="M12 7 L7 11 M12 7 L17 11 M12 12 L8 16 M12 12 L16 16"/>`,
@@ -172,9 +201,25 @@ function injectStyles() {
       line-height: 1.6;
       color: rgba(255,255,255,0.55);
     }
-    .cyc-info .cyc-note { color: rgba(255,255,255,0.7); margin-bottom: 0.3rem; }
+    .cyc-info .cyc-note { color: rgba(255,255,255,0.7); margin-bottom: 0.6rem; }
     .cyc-info a { color: rgba(255,220,170,0.75); }
     .cyc-info a:hover { color: rgba(255,220,170,1); }
+    /* A visible, always-present way to the real source — no embed of this
+       kind (iframe pointed at someone else's stream) can be fully
+       failure-proof against the source's own churn, so this shouldn't be
+       a footnote the visitor has to hunt for. */
+    .cyc-primary {
+      display: inline-flex; align-items: center; gap: 0.4rem;
+      padding: 0.5rem 1.1rem; margin-bottom: 0.5rem;
+      border: 1px solid var(--c, rgba(255,220,170,0.5));
+      border-radius: 999px;
+      color: var(--c, #ffdca8) !important;
+      font-size: 0.72rem; letter-spacing: 0.06em; text-transform: uppercase;
+      text-decoration: none;
+      transition: background 0.2s;
+    }
+    .cyc-primary:hover { background: color-mix(in srgb, var(--c, #fff) 16%, transparent); }
+    .cyc-backup { display: block; font-size: 0.72rem; }
 
     .cyc-ring {
       display: flex; gap: 0.8rem; flex-wrap: wrap; justify-content: center;
@@ -324,9 +369,10 @@ export function createCycle(container, { preview = false } = {}) {
     iframe.src = el.embed;
     iframe.title = `${el.label} — ${el.note}`;
     noteEl.textContent = el.note;
-    linksEl.innerHTML = `<a href="${el.primaryUrl}" target="_blank" rel="noopener noreferrer">primary source ↗</a>` +
-      ` &nbsp;·&nbsp; stream down? ` +
-      `<a href="${el.backupUrl}" target="_blank" rel="noopener noreferrer">${el.backupLabel} ↗</a>`;
+    info.style.setProperty('--c', el.color);
+    linksEl.innerHTML = `<a class="cyc-primary" href="${el.primaryUrl}" target="_blank" rel="noopener noreferrer">watch at the source ↗</a>` +
+      `<span class="cyc-backup">stream look stopped? ` +
+      `<a href="${el.backupUrl}" target="_blank" rel="noopener noreferrer">${el.backupLabel} ↗</a></span>`;
 
     if (key === 'fire') startLitany();
     else stopLitany();
