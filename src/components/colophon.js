@@ -243,7 +243,7 @@ function buildPanel() {
     <section>
       <h2 id="colophon-title" tabindex="-1">Colophon</h2>
       <div class="colophon-sub">perceptual mechanics</div>
-      <p>A personal site by Scott Jason Cohen — nine small experiences built
+      <p>A personal site by Scott Jason Cohen — seven small experiences built
       around found and written text, each its own self-contained piece of
       code, none of it built from image assets: everything on screen is
       drawn live, in the browser, from geometry and canvas-generated
@@ -252,6 +252,10 @@ function buildPanel() {
       <p>The leaping hare used as this site's colophon — carrying the moon,
       Venus, Mercury, a sun, and a star cut straight through its body —
       is drawn by <a href="https://abbywilliams.studio/" target="_blank" rel="noopener noreferrer">Abby Williams</a>.</p>
+      <h3>Elsewhere</h3>
+      <p>More perceptual mechanics on
+      <a href="https://www.youtube.com/channel/UCzALlcscmGHgXJVyN6lMInw" target="_blank" rel="noopener noreferrer">YouTube</a>
+      and <a href="https://www.patreon.com/cw/perceptualmechanics" target="_blank" rel="noopener noreferrer">Patreon</a>.</p>
     </section>
 
     <section>
