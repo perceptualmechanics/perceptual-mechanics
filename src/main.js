@@ -5,8 +5,9 @@ import { createTheater } from './scenes/theater.js';
 import { createEgg }       from './scenes/egg.js';
 import { createLeaf }      from './scenes/leaf.js';
 import { createOrrery }    from './scenes/orrery.js';
-import { createCycle }     from './scenes/cycle.js';
+// import { createCycle }     from './scenes/cycle.js'; // shelved for now — rethinking the elemental approach further, see NOTES.md
 // import { initGoldenHare }  from './components/goldenHare.js'; // shelved for now, see NOTES.md
+import { initColophon }    from './components/colophon.js';
 
 // ─── Scene registry ──────────────────────────────────────────────────────────
 const SCENES = {
@@ -24,8 +25,9 @@ const SCENES = {
                  ariaLabel: 'Leaf — a raindrop’s fall from a leaf, told through physics, with the found text arriving in phase with the fall.' },
   orrery:      { create: createOrrery,     label: 'The Orrery of Los Feliz.',
                  ariaLabel: 'The Orrery of Los Feliz — a found story, told through a 30-foot orrery: nine planets, their moons, an asteroid belt. Drag to orbit, click the orrery to read.' },
-  cycle:       { create: createCycle,      label: 'Cycle — Earth, Water, Air, Fire, Wood.',
-                 ariaLabel: 'Cycle — five real, currently-live streams, one per classical element. Choose an element below the screen.' },
+  // cycle: shelved for now, see the import comment above and NOTES.md.
+  // cycle:    { create: createCycle,      label: 'Cycle — Earth, Water, Air, Fire, Wood.',
+  //            ariaLabel: 'Cycle — five real, currently-live streams, one per classical element. Choose an element below the screen.' },
 };
 
 let activeScene  = null;
@@ -200,7 +202,9 @@ function initPreviews() {
     egg:        document.getElementById('preview-egg'),
     leaf:       document.getElementById('preview-leaf'),
     orrery:     document.getElementById('preview-orrery'),
-    cycle:      document.getElementById('preview-cycle'),
+    // cycle: shelved, see the registry comment above — preview-cycle no
+    // longer exists in index.html, so this would resolve to null anyway.
+    // cycle:   document.getElementById('preview-cycle'),
   };
   for (const [name, el] of Object.entries(map)) {
     if (el) previews[name] = SCENES[name].create(el, { preview: true });
@@ -208,6 +212,11 @@ function initPreviews() {
 }
 
 initPreviews();
+
+// ─── Colophon ─────────────────────────────────────────────────────────────────
+// Persistent mark, bottom-right of the landing page. See components/
+// colophon.js for why it needs no visibility logic of its own here.
+initColophon();
 
 // ─── The Golden Hare ──────────────────────────────────────────────────────────
 // Shelved for now at Scott's request ("not working for me") — see NOTES.md.

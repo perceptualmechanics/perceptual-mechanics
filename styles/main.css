@@ -8,11 +8,17 @@
    0.6s fade-in transition, then gets permanently covered once the overlay
    reaches full opacity. The fix is always the same: give it z-index ≥ 310.
      9999  .skip-link            (focus-only, must beat everything)
+     9000  #colophon-backdrop / #colophon-panel (a true modal dialog, not
+           scoped to any one scene — sits above the nav on purpose)
       500  #pm-nav
       400  #site-title
       310  body-level scene overlays (title/hint/caption elements a scene
            appends to document.body — MUST be ≥310, see above)
       300  #experience-overlay
+       60  #colophon-mark        (the hare button, fixed within #landing —
+           #landing is display:none while a scene is open, per main.js, so
+           this needs no visibility logic of its own; z-index only has to
+           clear the plain in-flow preview grid, not the overlay)
    Anything else (in-container panels, vignettes, grain overlays, etc.) is
    scoped inside its own scene's #experience-container and uses small
    single/double-digit z-indices relative to THAT container's own stacking

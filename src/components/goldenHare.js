@@ -49,7 +49,12 @@
 
 const HARE_TEXT = 'A Golden Hare ran across the sky, carrying the sun in its belly, where it would be safe. The hare ran up the ladder to the sky.';
 
-const HARE_SVG = `
+// Exported for src/components/colophon.js — this single-hare linework is a
+// stand-in for the colophon mark until the real artwork (a hand-inked hare
+// carrying the same astrology motifs — moon, two Venus circles, sun, a
+// star — by Abby Williams, https://abbywilliams.studio/) is available as a
+// file. See colophon.js and NOTES.md for the swap-in note.
+export const HARE_SVG = `
 <svg viewBox="-18 -27 140 90" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
   <g fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
     <!-- head: closed pointed snout, traced from the tattoo's actual profile -->

@@ -488,7 +488,7 @@ export function createEgg(container, { preview = false } = {}) {
         font-family: 'Times New Roman', serif;
       }
       #egg-caption {
-        bottom: 2rem; left: 50%; transform: translateX(-50%);
+        bottom: 2.5rem; left: 50%; transform: translateX(-50%);
         font-size: clamp(0.7rem, 1.6vw, 0.95rem); letter-spacing: 0.06em;
         font-style: italic; white-space: nowrap;
         color: rgba(150,255,190,0.55);
@@ -513,12 +513,12 @@ export function createEgg(container, { preview = false } = {}) {
       #egg-panel.open { transform: translateX(0); }
       #egg-panel-title {
         font-size: 0.95rem; letter-spacing: 0.2em; text-transform: uppercase;
-        color: rgba(190,255,210,0.8); margin-bottom: 0.4rem;
-      }
-      #egg-panel-source {
-        font-size: 0.72rem; letter-spacing: 0.05em; color: rgba(190,255,210,0.32);
-        margin-bottom: 1.6rem; font-style: italic;
-        border-bottom: 1px solid rgba(160,255,200,0.15); padding-bottom: 1.4rem;
+        color: rgba(190,255,210,0.8);
+        /* No more separate #egg-panel-source line below this (moved to the
+           colophon's bibliography) — the border/padding it used to carry
+           now sits directly under the title instead. */
+        border-bottom: 1px solid rgba(160,255,200,0.15);
+        padding-bottom: 1.4rem; margin-bottom: 1.6rem;
       }
       #egg-panel-content { color: rgba(210,235,220,0.75); font-size: 0.98rem; line-height: 1.85; }
       #egg-panel-content p { margin: 0 0 1.4rem; }
@@ -537,7 +537,10 @@ export function createEgg(container, { preview = false } = {}) {
   if (!preview) {
     caption = document.createElement('p');
     caption.id = 'egg-caption';
-    caption.textContent = 'the field bends, the sky burns green, small metal things keep their orbits';
+    // Epigraph, uncredited in-scene by design — full attribution (Richard
+    // Kenney, "The Invention of the Zero") now lives in the colophon's
+    // bibliography instead, same as every poem's source line below.
+    caption.textContent = 'sing, orbiter';
     caption.setAttribute('aria-hidden', 'true');
     document.body.appendChild(caption);
 
@@ -555,7 +558,6 @@ export function createEgg(container, { preview = false } = {}) {
     panel.innerHTML = `
       <button id="egg-panel-close" aria-label="Close panel">✕</button>
       <div id="egg-panel-title" tabindex="-1"></div>
-      <div id="egg-panel-source"></div>
       <div id="egg-panel-content"></div>
     `;
     container.style.position = 'relative';
@@ -563,7 +565,6 @@ export function createEgg(container, { preview = false } = {}) {
     container.appendChild(panel);
     panelTitle   = panel.querySelector('#egg-panel-title');
     panelContent = panel.querySelector('#egg-panel-content');
-    const panelSource = panel.querySelector('#egg-panel-source');
 
     panel.addEventListener('click', e => e.stopPropagation());
     panel.querySelector('#egg-panel-close').addEventListener('click', e => {
@@ -571,8 +572,6 @@ export function createEgg(container, { preview = false } = {}) {
       panel.classList.remove('open');
       selectedSat = null;
     });
-
-    panel._setSource = panelSource;
   }
 
   // ─── Satellite hover/click → poem panel, same raycast pattern as the
@@ -588,7 +587,6 @@ export function createEgg(container, { preview = false } = {}) {
     const poem = poems[sat.poemIndex];
     if (!panel || !poem) return;
     panelTitle.textContent = poem.title;
-    panel._setSource.textContent = poem.source || '';
     panelContent.innerHTML = poem.stanzas
       .map(st => `<p>${escapeHtml(st).replace(/\n/g, '<br>')}</p>`)
       .join('');
