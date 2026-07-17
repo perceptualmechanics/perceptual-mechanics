@@ -305,7 +305,7 @@ function buildOrrery(preview, suspendTopY, rafterY) {
     orbits.push({
       pivot, moons,
       speed: 0.16 - i * (0.16 / planets.length) * 0.7 + Math.random() * 0.012,
-      direction: i % 2 === 0 ? 1 : -1,
+      direction: 1, // real planets all orbit the same way — no alternating
     });
   });
 
@@ -361,7 +361,7 @@ function buildOrrery(preview, suspendTopY, rafterY) {
     const from = new THREE.Vector3(0, y, 0);
     const to = new THREE.Vector3(Math.cos(angle) * radius * 0.9, y, Math.sin(angle) * radius * 0.9);
     addStrut(group, from, to, preview ? 0.006 : 0.008, steelMat);
-    unknowns.push({ pivot, mesh, speed: 0.05 + Math.random() * 0.03, direction: i % 2 === 0 ? 1 : -1, spin: 0.3 + Math.random() * 0.4 });
+    unknowns.push({ pivot, mesh, speed: 0.05 + Math.random() * 0.03, direction: 1, spin: 0.3 + Math.random() * 0.4 });
   }
 
   return { group, hitTarget: hub, lampMat, orbits, unknowns, signal, signalMat, baseY, mastHeight };
@@ -409,6 +409,76 @@ function makeCorrugatedTexture() {
   const tex = new THREE.CanvasTexture(c);
   tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
   tex.repeat.set(10, 4);
+  return tex;
+}
+
+function makeCardboardTexture() {
+  const c = document.createElement('canvas');
+  c.width = 96; c.height = 96;
+  const cx = c.getContext('2d');
+  cx.fillStyle = '#a9884f';
+  cx.fillRect(0, 0, 96, 96);
+  cx.globalAlpha = 0.25;
+  for (let i = 0; i < 10; i++) {
+    cx.fillStyle = Math.random() > 0.5 ? '#8a6f3f' : '#c2a366';
+    cx.fillRect(Math.random() * 96, Math.random() * 96, 20 + Math.random() * 30, 3 + Math.random() * 6);
+  }
+  cx.globalAlpha = 0.5;
+  cx.fillStyle = '#d9c99a';
+  cx.fillRect(0, 40, 96, 10);
+  cx.globalAlpha = 1;
+  const tex = new THREE.CanvasTexture(c);
+  return tex;
+}
+
+// A pegboard with a few tool silhouettes — a wrench, a hammer, a saw —
+// hung the way anyone's garage wall actually looks.
+function makePegboardTexture() {
+  const c = document.createElement('canvas');
+  c.width = 200; c.height = 260;
+  const cx = c.getContext('2d');
+  cx.fillStyle = '#8a7856';
+  cx.fillRect(0, 0, 200, 260);
+  cx.fillStyle = '#5f5138';
+  for (let y = 12; y < 260; y += 16) {
+    for (let x = 12; x < 200; x += 16) {
+      cx.beginPath();
+      cx.arc(x, y, 1.6, 0, Math.PI * 2);
+      cx.fill();
+    }
+  }
+  cx.strokeStyle = '#1c1a16';
+  cx.fillStyle = '#232019';
+
+  // Wrench.
+  cx.save();
+  cx.translate(50, 70);
+  cx.rotate(-0.4);
+  cx.lineWidth = 6;
+  cx.beginPath(); cx.moveTo(-30, 0); cx.lineTo(30, 0); cx.stroke();
+  cx.beginPath(); cx.arc(-32, 0, 9, 0.6, Math.PI * 2 - 0.6); cx.stroke();
+  cx.beginPath(); cx.arc(32, 0, 7, 0, Math.PI * 2); cx.fill();
+  cx.restore();
+
+  // Hammer.
+  cx.save();
+  cx.translate(140, 90);
+  cx.rotate(0.3);
+  cx.fillRect(-4, -10, 8, 55);
+  cx.fillRect(-20, -22, 40, 16);
+  cx.restore();
+
+  // Hand saw.
+  cx.save();
+  cx.translate(90, 175);
+  cx.rotate(-0.15);
+  cx.beginPath();
+  cx.moveTo(-45, 10); cx.lineTo(35, -20); cx.lineTo(35, 4); cx.lineTo(-45, 22); cx.closePath();
+  cx.fill();
+  cx.fillRect(30, -24, 22, 30);
+  cx.restore();
+
+  const tex = new THREE.CanvasTexture(c);
   return tex;
 }
 
@@ -544,27 +614,88 @@ function buildWarehouse(preview, floorY, ceilingY, rafterY) {
   sideWall.position.set(-wallDist, (ceilingY + floorY) / 2, 0);
   group.add(sideWall);
 
-  // ─── A few taped-up show flyers, dating the room to the early '90s. ─────
+  let bulbPosition = null;
+
+  // ─── A ramshackle garage's worth of clutter, plus a few taped-up early-
+  // '90s show flyers spaced the way a real wall of flyers actually looks —
+  // overlapping, crooked, different sizes, added over time, not evenly
+  // gridded. Skipped in preview for performance. ──────────────────────────
   if (!preview) {
-    const posterY = floorY + wallHeight * 0.34;
+    const baseY = floorY + wallHeight * 0.34;
     const posters = [
-      { band: 'Nirvana', sub: 'Live — All Ages', x: -1.7, rot: -0.06 },
-      { band: 'R.E.M.', sub: 'Live — Doors 8pm', x: 0.1, rot: 0.04 },
-      { band: 'For Squirrels', sub: 'Live — This Fri.', x: 1.85, rot: -0.03 },
+      { band: 'Nirvana', sub: 'Live — All Ages', x: -2.3, y: baseY + 0.18, rot: -0.09, scale: 1.08, z: -wallDist + 0.03 },
+      { band: 'R.E.M.', sub: 'Live — Doors 8pm', x: -0.55, y: baseY - 0.32, rot: 0.05, scale: 0.86, z: -wallDist + 0.025 },
+      { band: 'Beastie Boys', sub: 'Live — 18+', x: 0.35, y: baseY + 0.4, rot: -0.05, scale: 1.0, z: -wallDist + 0.035 },
+      { band: 'For Squirrels', sub: 'Live — This Fri.', x: 1.9, y: baseY - 0.1, rot: 0.09, scale: 0.78, z: -wallDist + 0.02 },
     ];
     posters.forEach(p => {
       const posterMat = new THREE.MeshStandardMaterial({
         map: makePosterTexture(p.band, p.sub), roughness: 0.85, metalness: 0,
         emissive: 0x0c0a08, emissiveIntensity: 0.5,
       });
-      const poster = new THREE.Mesh(new THREE.PlaneGeometry(0.95, 1.33), posterMat);
-      poster.position.set(p.x, posterY, -wallDist + 0.02);
+      const poster = new THREE.Mesh(new THREE.PlaneGeometry(0.95 * p.scale, 1.33 * p.scale), posterMat);
+      poster.position.set(p.x, p.y, p.z);
       poster.rotation.z = p.rot;
       group.add(poster);
     });
+
+    // Pegboard with tools, on the side wall.
+    const pegboardMat = new THREE.MeshStandardMaterial({ map: makePegboardTexture(), roughness: 0.9, metalness: 0 });
+    const pegboard = new THREE.Mesh(new THREE.PlaneGeometry(1.5, 1.9), pegboardMat);
+    pegboard.rotation.y = Math.PI / 2;
+    pegboard.position.set(-wallDist + 0.03, floorY + wallHeight * 0.5, 2.6);
+    group.add(pegboard);
+
+    // A stack of cardboard boxes, in the back corner.
+    const cardboardMat = new THREE.MeshStandardMaterial({ map: makeCardboardTexture(), roughness: 0.95, metalness: 0 });
+    const boxSizes = [[0.55, 0.4, 0.45], [0.42, 0.35, 0.4], [0.48, 0.3, 0.3]];
+    let stackY = floorY;
+    boxSizes.forEach((size, i) => {
+      const box = new THREE.Mesh(new THREE.BoxGeometry(...size), cardboardMat);
+      stackY += size[1] / 2;
+      box.position.set(-wallDist + 1.2 + i * 0.05, stackY, -wallDist + 0.9 - i * 0.08);
+      box.rotation.y = (Math.random() - 0.5) * 0.5;
+      stackY += size[1] / 2;
+      group.add(box);
+    });
+
+    // An old tire, leaning against the back wall.
+    const tireMat = new THREE.MeshStandardMaterial({ color: 0x18161a, roughness: 0.85, metalness: 0.1 });
+    const tire = new THREE.Mesh(new THREE.TorusGeometry(0.32, 0.11, 10, 20), tireMat);
+    tire.rotation.x = Math.PI / 2 + 0.28;
+    tire.position.set(2.9, floorY + 0.34, -wallDist + 0.35);
+    group.add(tire);
+
+    // A workbench along the side wall, a little clutter on top, and a bare
+    // bulb hanging over it on a cord from the roof truss.
+    const woodMat = new THREE.MeshStandardMaterial({ color: 0x5a4530, roughness: 0.85, metalness: 0 });
+    const benchHeight = floorY + 0.55;
+    const bench = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.05, 1.6), woodMat);
+    bench.position.set(-wallDist + 0.4, benchHeight, -1.5);
+    group.add(bench);
+    [[-0.6, -2.1], [-0.6, -0.9], [0.6, -2.1], [0.6, -0.9]].forEach(([dx, dz]) => {
+      const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, benchHeight - floorY, 6), woodMat);
+      leg.position.set(-wallDist + 0.4 + dx * 0.15, floorY + (benchHeight - floorY) / 2, dz + 0.6);
+      group.add(leg);
+    });
+    const clutterMat = new THREE.MeshStandardMaterial({ color: 0x3a3a3a, roughness: 0.7, metalness: 0.3 });
+    [[-0.05, -1.7, 0.12], [0.08, -1.3, 0.09]].forEach(([dx, dz, s]) => {
+      const clutter = new THREE.Mesh(new THREE.BoxGeometry(s, s * 0.8, s), clutterMat);
+      clutter.position.set(-wallDist + 0.4 + dx, benchHeight + 0.025 + s * 0.4, dz);
+      clutter.rotation.y = Math.random();
+      group.add(clutter);
+    });
+
+    bulbPosition = new THREE.Vector3(-wallDist + 0.6, benchHeight + 0.9, -1.5);
+    const cordMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.8 });
+    addStrut(group, new THREE.Vector3(bulbPosition.x, rafterY - 0.05, bulbPosition.z), bulbPosition, 0.006, cordMat);
+    const bulbMat = new THREE.MeshStandardMaterial({ color: 0xffe8b0, emissive: 0xffcc77, emissiveIntensity: 1.6, roughness: 0.4 });
+    const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.045, 10, 10), bulbMat);
+    bulb.position.copy(bulbPosition);
+    group.add(bulb);
   }
 
-  return { group };
+  return { group, bulbPosition };
 }
 
 export function createOrrery(container, { preview = false } = {}) {
@@ -589,9 +720,6 @@ export function createOrrery(container, { preview = false } = {}) {
   const skyLight = new THREE.DirectionalLight(0xcfe0ff, 0.9);
   skyLight.position.set(0.4, 6, 0.3);
   scene.add(skyLight);
-  const workLight = new THREE.PointLight(0xffaa55, 0.6, preview ? 6 : 9);
-  workLight.position.set(1.2, -0.6, 1.4);
-  scene.add(workLight);
 
   // ─── Warehouse vertical layout — decided here, then handed down: the
   // ceiling and roof truss height are fixed first, and the orrery hangs
@@ -603,6 +731,14 @@ export function createOrrery(container, { preview = false } = {}) {
   const orrery = buildOrrery(preview, suspendTopY, rafterY);
   const floorY = orrery.baseY - (preview ? 0.9 : 1.3);
   const warehouse = buildWarehouse(preview, floorY, ceilingY, rafterY);
+
+  // The work light lives at the hanging bulb prop if the garage clutter
+  // pass built one (full mode only); otherwise a plain accent near the
+  // machine, same as before.
+  const workLight = new THREE.PointLight(0xffaa55, 0.6, preview ? 6 : 9);
+  if (warehouse.bulbPosition) workLight.position.copy(warehouse.bulbPosition);
+  else workLight.position.set(1.2, -0.6, 1.4);
+  scene.add(workLight);
 
   // Sparse sky beyond the skylight — only really visible through the hole
   // and at the frame edges, not an all-encompassing backdrop.
@@ -792,7 +928,7 @@ export function createOrrery(container, { preview = false } = {}) {
   });
   container.addEventListener('wheel', e => {
     if (panel && panel.contains(e.target)) return;
-    camera.position.z = Math.max(8, Math.min(28, camera.position.z + e.deltaY * 0.01));
+    camera.position.z = Math.max(1.4, Math.min(28, camera.position.z + e.deltaY * 0.01));
   });
 
   // ─── Animate ──────────────────────────────────────────────────────────────

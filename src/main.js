@@ -6,7 +6,7 @@ import { createEgg }       from './scenes/egg.js';
 import { createLeaf }      from './scenes/leaf.js';
 import { createOrrery }    from './scenes/orrery.js';
 import { createCycle }     from './scenes/cycle.js';
-import { initGoldenHare }   from './components/goldenHare.js';
+// import { initGoldenHare }  from './components/goldenHare.js'; // shelved for now, see NOTES.md
 
 // ─── Scene registry ──────────────────────────────────────────────────────────
 const SCENES = {
@@ -210,7 +210,8 @@ function initPreviews() {
 initPreviews();
 
 // ─── The Golden Hare ──────────────────────────────────────────────────────────
+// Shelved for now at Scott's request ("not working for me") — see NOTES.md.
 // Lives outside the scene registry entirely — it's not one of the
 // experiences above, it wanders across whatever's on screen, landing grid
 // or open scene alike. See components/goldenHare.js for the why.
-initGoldenHare();
+// initGoldenHare();

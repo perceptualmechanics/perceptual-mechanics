@@ -203,6 +203,22 @@ At Scott's request, all three are gone except the orrery, which is promoted to i
   reproduced), dating the room itself rather than just the machine. Walls were also pulled in
   closer than the floor/ceiling extent (a separate `wallDist` from the floor/ceiling `span`) so the
   flyers actually read at a legible size instead of being lost on a distant wall.
+- **Fourth pass, same day** — a round of notes after seeing it running: fixed all orbits (planets
+  and the outer "unidentified" objects) to spin the same direction — they'd been alternating
+  even/odd by index, which reads as a bug since real planets all orbit the same way; widened the
+  zoom-in clamp (was capped at a distance of 8, now 1.4) so individual planets and moons can
+  actually be approached up close, not just the cluster as a whole; and filled the warehouse out
+  into a proper ramshackle garage rather than a bare room — a pegboard with tool silhouettes
+  (wrench, hammer, saw) on the side wall, a stack of cardboard boxes in the back corner, an old
+  tire leaning against the back wall, a workbench with a little clutter on top and a bare bulb
+  hanging over it on a cord from the roof truss (the scene's existing warm point light now lives at
+  that bulb instead of an arbitrary point in space). Added a fourth flyer, Beastie Boys, and
+  respaced all four organically — different heights, rotations, and sizes, slightly overlapping,
+  the way a real flyer wall accumulates over time rather than a neat row.
+- **The Golden Hare, shelved (2026-07-17)** — at Scott's request ("not working for me"). The
+  `initGoldenHare()` import and call in `main.js` are commented out, same treatment as egg/leaf/
+  cycle's brief deactivation earlier this session — the file itself (`src/components/
+  goldenHare.js`) is untouched and ready to switch back on if wanted later.
 
 ## You've Got a Friend in Satan — scenes wired into the theater (2026-07-16)
 
