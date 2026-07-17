@@ -5,13 +5,7 @@ import { createTheater } from './scenes/theater.js';
 import { createEgg }       from './scenes/egg.js';
 import { createLeaf }      from './scenes/leaf.js';
 import { createOrrery }    from './scenes/orrery.js';
-// import { createLens } from './scenes/lens.js'; // file renamed from cycle.js
-// (2026-07-17, Scott: "do a full rename -- change cycle to lens") but still
-// shelved from the same day, pending Scott's decision — the rebuilt gem/Ein
-// Soph scene is fully wired and verified-by-build (see NOTES.md, 1.0.14/15/16)
-// under its new name. Re-enable by uncommenting this import, the SCENES entry
-// below, and the initPreviews() map entry, plus the nav icon + preview tile
-// in index.html (same three spots commented out there).
+import { createLens }      from './scenes/lens.js';
 import { initColophon }    from './components/colophon.js';
 
 // ─── Scene registry ──────────────────────────────────────────────────────────
@@ -30,8 +24,8 @@ const SCENES = {
                  ariaLabel: 'Leaf — a raindrop’s fall from a leaf, told through physics, with the found text arriving in phase with the fall.' },
   orrery:      { create: createOrrery,     label: 'The Orrery of Los Feliz.',
                  ariaLabel: 'The Orrery of Los Feliz — a found story, told through a 30-foot orrery: nine planets, their moons, an asteroid belt. Drag to orbit, click the orrery to read.' },
-  // lens: { create: createLens, label: 'The Lens — Four facets, one light, one stone.',
-  //         ariaLabel: 'The Lens — a four-faceted gem lit from within by Ein Soph, held in a rough stone cradle. Drag to orbit, click a facet to read.' },
+  lens:        { create: createLens,       label: 'The Lens — Four facets, one light, one stone.',
+                 ariaLabel: 'The Lens — a single translucent cut gem with four colored sides, lit by a spotlight named Prologue, set in a rough stone cradle. Drag to orbit, click a facet, the light, or the stone to read.' },
 };
 
 let activeScene  = null;
@@ -206,7 +200,7 @@ function initPreviews() {
     egg:        document.getElementById('preview-egg'),
     leaf:       document.getElementById('preview-leaf'),
     orrery:     document.getElementById('preview-orrery'),
-    // lens:    document.getElementById('preview-lens'),
+    lens:       document.getElementById('preview-lens'),
   };
   for (const [name, el] of Object.entries(map)) {
     if (el) previews[name] = SCENES[name].create(el, { preview: true });

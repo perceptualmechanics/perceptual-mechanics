@@ -279,21 +279,21 @@ html, body {
 @media (max-width: 480px) {
   #scene-previews { gap: 1.5rem; flex-direction: column; padding: 1rem 1rem 3rem; }
   .preview-container { width: 200px; height: 200px; }
-  /* Icons at their 44px min-width touch target plus this gap must fit
-     inside the viewport — #pm-nav has no wrap or scroll, so anything wider
-     than the viewport just clips off both edges evenly (justify-
-     content:center); see the leaf/orrery mobile-fix history in NOTES.md
-     for the screenshot that first caught this at seven icons. The scene
-     now called Lens (cycle.js, renamed 2026-07-17) briefly returned that
-     same day bringing the count to eight, which needed the touch target
-     dropped to 38px at this breakpoint to fit — but it's shelved again
-     pending Scott's decision, so the count is back to seven and the 44px
-     guideline-compliant target (base rule, no override needed here) fits
-     fine: 7 × 44px = 308px, plus 6 gaps at 0.5rem (8px) = 48px, totals
-     356px, comfortably under every common phone width. If Lens comes
-     back, revisit — see git history around 1.0.14 for the 38px version
-     of this rule. */
+  /* Icons at their touch-target width plus this gap must fit inside the
+     viewport — #pm-nav has no wrap or scroll, so anything wider than the
+     viewport just clips off both edges evenly (justify-content:center);
+     see the leaf/orrery mobile-fix history in NOTES.md for the screenshot
+     that first caught this at seven icons. Lens is back (un-shelved
+     2026-07-17, Scott: "well now you have to uncomment it so I can see it
+     :D"), bringing the count to eight: 8 × 44px = 352px, plus 7 gaps at
+     0.5rem (8px) = 56px, totals 408px — wider than an iPhone SE (375px)
+     and barely over a 402px viewport. Dropping the touch target to 38px
+     at this breakpoint (352px → 304px) gets the eight-icon total to
+     304 + 56 = 360px, comfortably under every common phone width. 38px is
+     below the usual 44px guideline but still a reasonable icon-only nav
+     tap target, and only applies at this one narrow breakpoint. */
   #pm-nav { gap: 0.5rem; }
+  .nav-icon { min-width: 38px; min-height: 38px; }
   /* Seven 200px tiles in a column (~1500px) is always taller than a
      phone viewport. align-items:center (inherited from #landing, and the
      cross-axis property since #landing's flex-direction stays row) would

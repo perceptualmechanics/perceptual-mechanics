@@ -6,6 +6,32 @@ projects (The Secret World, A Manual of Perceptual Mechanics) moved into their o
 files, which are now the source of truth for that material going forward. See "project map"
 below for where things live.
 
+## 1.0.18 (2026-07-17, same day)
+
+Lens is live. Scott, on the 1.0.17 report: "well now you have to uncomment
+it so I can see it :D" — fair. Uncommented the import/registry entry/
+initPreviews map entry in main.js and the nav-icon button + preview-tile
+block in index.html — the same three spots that got commented out in
+1.0.15 and stayed that way through the cycle→lens rename (1.0.16) and the
+single-gem/Prologue-spotlight redo (1.0.17). `src/scenes/lens.js` itself
+is untouched by this entry — nothing about the scene changed, only whether
+anything on the site can reach it.
+
+Also restored the mobile nav-icon touch target math from 1.0.15's
+reversion: Lens returning brings the icon count back to eight, which
+doesn't fit at the 44px guideline default (8 × 44px + 7 × 0.5rem gaps =
+408px, over an iPhone SE's 375px) — dropped back to 38px at the 480px
+breakpoint, same fix as 1.0.14, undone in 1.0.15, now needed again.
+
+Verified with a real build this time, not a temporary wire-then-revert:
+24 modules transformed, clean, both the nav icon and preview tile present
+exactly once in the built HTML. Same caveat as every visual change this
+session — no headless browser in this sandbox, so the actual gem shape,
+facet colors, spotlight beam angle, and click targets still need Scott's
+own eyes on a real dev server. This is the first time the redone version
+(one gem, four sides, "Prologue" spotlight) will actually be visible to
+check.
+
 ## 1.0.17 (2026-07-17, same day)
 
 Lens redone — one gem, not four, and the light finally has a name. Scott,
