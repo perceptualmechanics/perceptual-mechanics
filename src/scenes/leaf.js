@@ -239,40 +239,45 @@ export function createLeaf(container, { preview = false } = {}) {
     cx.fillStyle = grad;
     cx.fillRect(0, 0, 512, 512);
 
-    // Paper mottling/grain — same uneven, hand-made treatment as the
-    // leaf's own texture, not a flat digital fill.
-    for (let i = 0; i < 260; i++) {
+    // Scott: "somewhat plainer" — was a dense, busy lattice (58px bars,
+    // repeated 3x3, 260 mottling marks). Pulled way back: wider, calmer
+    // spacing, fewer/fainter marks, tiled 2x2 instead of 3x3 so the grid
+    // itself reads slower. Still hand-built (bars stay irregular), just
+    // quieter.
+    for (let i = 0; i < 90; i++) {
       const x = Math.random() * 512, y = Math.random() * 512;
-      const r = 8 + Math.random() * 30;
-      cx.fillStyle = Math.random() > 0.5 ? 'rgba(255,240,210,0.035)' : 'rgba(0,0,0,0.06)';
+      const r = 10 + Math.random() * 26;
+      cx.fillStyle = Math.random() > 0.5 ? 'rgba(255,240,210,0.02)' : 'rgba(0,0,0,0.035)';
       cx.beginPath();
       cx.ellipse(x, y, r, r * 0.7, Math.random() * Math.PI, 0, Math.PI * 2);
       cx.fill();
     }
 
     // Kumiko lattice — dark wood bars, irregularly spaced (hand-built,
-    // not a manufactured perfectly even grid).
-    cx.strokeStyle = '#0d0a07';
-    cx.lineWidth = 6;
-    cx.globalAlpha = 0.85;
-    for (let x = 18; x < 512; x += 58 + (Math.random() - 0.5) * 10) {
+    // not a manufactured perfectly even grid), but wide and light-handed.
+    cx.strokeStyle = '#14100c';
+    cx.lineWidth = 4;
+    cx.globalAlpha = 0.5;
+    for (let x = 30; x < 512; x += 128 + (Math.random() - 0.5) * 14) {
       cx.beginPath(); cx.moveTo(x, 0); cx.lineTo(x, 512); cx.stroke();
     }
-    for (let y = 24; y < 512; y += 74 + (Math.random() - 0.5) * 12) {
+    for (let y = 40; y < 512; y += 160 + (Math.random() - 0.5) * 16) {
       cx.beginPath(); cx.moveTo(0, y); cx.lineTo(512, y); cx.stroke();
     }
     cx.globalAlpha = 1;
 
-    // A soft warm glow, as if faint light sits behind one pane.
+    // A soft warm glow, as if faint light sits behind one pane — kept
+    // subtle rather than removed, it's what keeps the wall from reading
+    // flat/dead.
     const glow = cx.createRadialGradient(150, 130, 10, 150, 130, 260);
-    glow.addColorStop(0, 'rgba(255,205,140,0.15)');
+    glow.addColorStop(0, 'rgba(255,205,140,0.1)');
     glow.addColorStop(1, 'rgba(255,205,140,0)');
     cx.fillStyle = glow;
     cx.fillRect(0, 0, 512, 512);
 
     const tex = new THREE.CanvasTexture(c);
     tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
-    tex.repeat.set(3 * aspect, 3);
+    tex.repeat.set(2 * aspect, 2);
     return tex;
   }
   const wallTex = makeWallTexture();
@@ -349,8 +354,9 @@ export function createLeaf(container, { preview = false } = {}) {
          actually reads as a box, not just loose floating text. */
       #leaf-caption {
         position: fixed;
-        left: 2rem; bottom: 3rem;
-        width: min(30vw, 22rem); height: min(56vh, 26rem);
+        /* Scott: raise it — was bottom: 3rem, sitting too low. */
+        left: 2rem; bottom: 7.5rem;
+        width: min(30vw, 22rem); height: min(50vh, 24rem);
         overflow-y: auto; -webkit-overflow-scrolling: touch;
         pointer-events: all; z-index: 310;
         background: rgba(10,12,9,0.32);
@@ -367,9 +373,10 @@ export function createLeaf(container, { preview = false } = {}) {
         color: rgba(196, 214, 196, 0.75);
         font-family: 'Times New Roman', serif;
         font-style: italic;
-        font-size: clamp(0.78rem, 1.5vw, 0.94rem);
+        /* Scott: enlarge — was clamp(0.78rem, 1.5vw, 0.94rem). */
+        font-size: clamp(1.02rem, 2vw, 1.28rem);
         letter-spacing: 0.01em;
-        line-height: 1.7;
+        line-height: 1.65;
         text-shadow: 0 1px 3px rgba(0,0,0,0.6);
         margin: 0 0 1.8rem;
       }

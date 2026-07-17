@@ -18,9 +18,11 @@ import { bindOrbitDrag, bindGuardedResize, prefersReducedMotion, bindEscapeClose
 
 const EARTH_RADIUS = 1;
 
-// Rebuilt 2026-07-17 for more photorealism — Scott: keep the green glow
-// (the emissive tint and atmosphere shell in createEgg do that job), but
-// the surface itself should read as an actual planet, not hand-placed
+// Rebuilt 2026-07-17 for more photorealism. (2026-07-17, later same day —
+// Scott: the green glow should live in the aurorae only, not the whole
+// globe; the emissive tint and atmosphere shell mentioned below were
+// removed from createEgg for that reason.) The surface itself should
+// read as an actual planet, not hand-placed
 // blobs. Higher resolution, ragged/noisy coastlines instead of clean
 // ellipses (built by jittering a polygon's radius per point, then
 // scattering smaller satellite islands off the largest ones), subtler
@@ -437,10 +439,13 @@ export function createEgg(container, { preview = false } = {}) {
   // ─── Earth ────────────────────────────────────────────────────────────────
   const earthTex = makeEarthTexture();
   const geo = new THREE.SphereGeometry(EARTH_RADIUS, preview ? 32 : 64, preview ? 32 : 64);
+  // Scott: the glow should be the aurorae's job, not the whole globe's —
+  // dropped the uniform green emissive tint that was self-lighting the
+  // entire sphere regardless of latitude. Earth is lit by the key/rim
+  // lights below now, same as any other body in the scene; specular
+  // highlight kept for the photoreal wet-look sheen.
   const mat = new THREE.MeshPhongMaterial({
     map: earthTex,
-    emissive: 0x0a3318,
-    emissiveIntensity: 0.35,
     specular: 0x44ff88,
     shininess: 40,
   });
@@ -458,12 +463,9 @@ export function createEgg(container, { preview = false } = {}) {
   const clouds = new THREE.Mesh(cloudGeo, cloudMat);
   root.add(clouds);
 
-  // Atmospheric glow shell
-  const glowGeo = new THREE.SphereGeometry(EARTH_RADIUS * 1.05, 32, 32);
-  const glowMat = new THREE.MeshBasicMaterial({
-    color: 0x22ff66, transparent: true, opacity: 0.07, side: THREE.BackSide,
-  });
-  root.add(new THREE.Mesh(glowGeo, glowMat));
+  // Scott: also dropped the uniform green atmosphere-glow shell that used
+  // to sit around the whole planet — same reasoning as the emissive tint
+  // above, the aurorae are the only thing that should read as "glowing."
 
   // ─── Magnetic field + aurorae + satellites ─────────────────────────────────
   const field = buildFieldLines(preview);
@@ -659,8 +661,6 @@ export function createEgg(container, { preview = false } = {}) {
       }
     }
 
-    glowMat.opacity = 0.05 + Math.sin(t * 1.2) * 0.025;
-
     field.lines.forEach((l, i) => {
       field.mat.opacity = (preview ? 0.3 : 0.38) + Math.sin(t * 0.6 + i) * 0.05;
     });
@@ -703,7 +703,6 @@ export function createEgg(container, { preview = false } = {}) {
       renderer.dispose();
       geo.dispose(); mat.dispose(); earthTex.dispose();
       cloudGeo.dispose(); cloudMat.dispose(); cloudTex.dispose();
-      glowGeo.dispose(); glowMat.dispose();
       starGeo.dispose(); starMat.dispose();
       field.lines.forEach(l => l.geo.dispose());
       field.mat.dispose();
