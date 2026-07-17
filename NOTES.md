@@ -378,6 +378,65 @@ correctly as-is); code-splitting the `orrery` bundle (Vite's build warns it's >5
 that's a real observation but a performance/tooling concern, not a quality/a11y bug, and out of
 scope for this pass).
 
+## Colophon, shelved cycle, cranked orrery atmosphere (2026-07-17, same day)
+
+Follow-up punch list from Scott, after seeing the audit work:
+
+- **Cycle** shelved for now (same treatment as goldenHare.js — commented out
+  in main.js's registry/imports and index.html's nav icon + preview tile,
+  code kept intact) while the elemental approach gets rethought further, per
+  the 4/5-dead-streams issue from the punch-list before this.
+
+- **New colophon**: `src/components/colophon.js`, a persistent mark fixed
+  bottom-right of the landing page (appended inside `#landing`, not
+  document.body — main.js already sets `#landing` to `display:none` while
+  any scene is open, so it hides for free with no extra visibility logic).
+  Clicking it opens a single dialog with three sections: credits (the site,
+  and the mark itself), a bibliography (every literary source used across
+  the scenes — the Orrery's found story, the Egg's thirteen poems and its
+  Kenney epigraph, Leaf's Cartography.doc piece, the manuscript's essays,
+  the Theater's three plays, the Sphere's fragments, the Golden Hare's found
+  line — centralized in one place instead of scattered per-scene), and a
+  feedback mailto link. This is also where egg.js's former per-poem
+  "source" line (which doc each poem came from) and the inline citation on
+  its "sing, orbiter" epigraph moved to — both pulled out of egg.js itself
+  per Scott's request.
+  - **Icon is a placeholder.** The real mark is a hand-inked hare by Abby
+    Williams (https://abbywilliams.studio/) — moon, two Venus circles, sun,
+    and a star, the same four symbols cut straight through the body as
+    negative-space holes — which Scott provided as a PNG in chat. That image
+    never reached this sandbox's filesystem (checked uploads/ and did a
+    full recent-file sweep — nothing arrived), so `colophon.js` currently
+    reuses `goldenHare.js`'s existing single-hare linework (now exported as
+    `HARE_SVG`) as a stand-in. **Still needed**: Scott to save the PNG into
+    the project (or anywhere in the connected folder) so it can be swapped
+    in — the button's `innerHTML` is marked in the code where to do it. This
+    would also be the first actual image asset on the site (a deliberate,
+    one-off exception to the "canvas textures only" rule — crediting
+    someone else's real artwork means using the real artwork).
+
+- **Orrery atmosphere cranked up** ("that wonderful barely-compressed video
+  vibe"): `#orrery-grain` opacity 0.5 → 0.85, harder scanlines, a second
+  coarser turbulence layer standing in for MPEG-style macroblocking, and a
+  `steps()` background-position drift so the noise snaps between two
+  offsets each frame rather than sitting static — reads as frame-to-frame
+  video noise. New `#orrery-chroma` layer adds a subtle red/cyan color
+  fringe at the frame edges (radial-gradient masks + `mix-blend-mode:
+  screen`) for cheap-lens/compression chromatic aberration. Both respect
+  `prefers-reduced-motion`.
+
+- **Orrery skylight poke-through made legible**: the riser height (mast
+  segment from the suspension collar up through the roof to the dish/
+  antenna/signal bulb) was clearing the ceiling by as little as 0.05-0.1
+  units before — technically matching the text ("about 30 feet high, the
+  peak poking out of the warehouse skylights") but not legibly so at that
+  margin. Increased to clear by ~0.7-0.95 units instead, verified
+  numerically with a small script since this sandbox can't render and look
+  at it directly (no browser tool available all session — see the audit
+  section above and the cycle punch-list before it for why). Worth Scott's
+  own visual check, same caveat as everything else built blind this
+  session.
+
 ## You've Got a Friend in Satan — scenes wired into the theater (2026-07-16)
 
 Scott's first play (a 1996 scanned script) got a full verbatim Word-doc transcription
