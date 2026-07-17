@@ -198,13 +198,25 @@ function makeCloudTexture() {
 // other. Approximated with the standard dipole field-line shape
 // r = L * sin^2(theta), swept around the polar axis at a handful of
 // longitudes, same idea as real field-line diagrams.
+//
+// 2026-07-17 — Scott asked for a subtle flux effect. Turns out one already
+// half-existed: the animate loop below was looping over field.lines and
+// writing `field.mat.opacity = ...` with a per-line phase offset each time
+// — except every line shared that one material instance, so each
+// iteration just overwrote the same property, and only the last line's
+// phase ever actually took effect. All nine lines were reading one
+// flattened value, not really pulsing independently. Fixed by giving each
+// line its own material (same pattern the aurorae bands/shimmers already
+// use — see buildAurorae below, each with its own `phase`), so the flux
+// is now genuinely per-line: each brightens and dims on its own phase and
+// speed, closer to how a real magnetosphere's field lines actually
+// fluctuate somewhat independently as solar wind pressure and
+// reconnection events ripple through, not in lockstep.
 function buildFieldLines(preview) {
   const group = new THREE.Group();
   const lineCount = preview ? 5 : 9;
-  const mat = new THREE.LineBasicMaterial({
-    color: 0x66ccff, transparent: true, opacity: preview ? 0.3 : 0.38,
-    blending: THREE.AdditiveBlending, depthWrite: false,
-  });
+  const baseColor = new THREE.Color(0x66ccff);
+  const baseOpacity = preview ? 0.3 : 0.38;
   const lines = [];
 
   for (let i = 0; i < lineCount; i++) {
@@ -223,11 +235,23 @@ function buildFieldLines(preview) {
     }
     if (pts.length < 2) continue;
     const geo = new THREE.BufferGeometry().setFromPoints(pts);
+    const mat = new THREE.LineBasicMaterial({
+      color: baseColor.clone(), transparent: true, opacity: baseOpacity,
+      blending: THREE.AdditiveBlending, depthWrite: false,
+    });
     const line = new THREE.Line(geo, mat);
     group.add(line);
-    lines.push({ line, geo, lon });
+    lines.push({
+      line, geo, mat, lon,
+      phase: Math.random() * Math.PI * 2,
+      speed: 0.4 + Math.random() * 0.5,
+      // A few lines flare a little brighter/whiter at their peak than
+      // others — reads as scattered lines catching a moment of flux, not
+      // one uniform shape breathing in and out.
+      flareStrength: 0.5 + Math.random() * 0.9,
+    });
   }
-  return { group, mat, lines };
+  return { group, lines, baseOpacity, baseColor };
 }
 
 // ─── Aurora curtains ────────────────────────────────────────────────────────
@@ -783,8 +807,18 @@ export function createEgg(container, { preview = false } = {}) {
       }
     }
 
-    field.lines.forEach((l, i) => {
-      field.mat.opacity = (preview ? 0.3 : 0.38) + Math.sin(t * 0.6 + i) * 0.05;
+    field.lines.forEach(l => {
+      l.phase += 0.012 * l.speed;
+      const wave = Math.sin(l.phase); // -1..1, own pace per line
+      l.mat.opacity = Math.max(0.05, field.baseOpacity + wave * 0.07 * l.flareStrength);
+      // A faint lift toward white at each line's own peak, like it's
+      // momentarily energized rather than just fading in and out.
+      const flare = Math.max(0, wave) * 0.3 * l.flareStrength;
+      l.mat.color.setRGB(
+        field.baseColor.r + flare * 0.55,
+        field.baseColor.g + flare * 0.18,
+        field.baseColor.b
+      );
     });
 
     aurorae.bands.forEach(b => {
@@ -826,8 +860,7 @@ export function createEgg(container, { preview = false } = {}) {
       geo.dispose(); mat.dispose(); earthTex.dispose();
       cloudGeo.dispose(); cloudMat.dispose(); cloudTex.dispose();
       starGeo.dispose(); starMat.dispose();
-      field.lines.forEach(l => l.geo.dispose());
-      field.mat.dispose();
+      field.lines.forEach(l => { l.geo.dispose(); l.mat.dispose(); });
       aurorae.bands.forEach(b => { b.mesh.geometry.dispose(); b.mat.dispose(); });
       aurorae.shimmers.forEach(s => s.mat.dispose());
       aurorae.bandTex.dispose();

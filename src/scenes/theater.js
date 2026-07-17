@@ -1169,7 +1169,15 @@ function buildStyles() {
       .tab-curtain { font-size: 0.42rem; margin-bottom: 0.15rem; }
       .tab-screen-frame { padding: 6px; margin: 0.2rem 0 0.4rem; }
       .tab-screen { aspect-ratio: 4 / 3; min-height: 240px; padding-bottom: 42px; }
-      .tab-slug { font-size: 0.56rem; padding: 0.5rem 0.35rem 0.15rem; letter-spacing: 0.04em; }
+      /* Design pass, 2026-07-17 (Scott: mobile readability check) — .tab-slug
+         and .tab-caption were both being set here to a smaller font-size
+         than their OWN desktop clamp() floor (0.62rem/0.66rem respectively)
+         — backwards, since mobile is exactly where shrinking further hurts
+         most. .tab-caption in particular is the italic per-beat description
+         line, the thing most likely to actually be read start to finish, so
+         it gets the larger bump of the two. Neither shrinks below its
+         desktop floor anymore. */
+      .tab-slug { font-size: 0.68rem; padding: 0.5rem 0.35rem 0.15rem; letter-spacing: 0.04em; }
       .tab-stage {
         flex-wrap: wrap; row-gap: 0.5rem; column-gap: 0.4rem;
         padding: 0 0.3rem 0.4rem; align-content: flex-end;
@@ -1178,7 +1186,7 @@ function buildStyles() {
       .tab-actor .sf-name { font-size: 0.58em; }
       .tab-actor .sf-tag { font-size: 0.5em; }
       .tab-bubble { max-width: 88vw; font-size: 0.54rem; }
-      .tab-caption { font-size: 0.6rem; padding: 0.2rem 0.4rem 0.5rem; min-height: 1.2em; }
+      .tab-caption { font-size: 0.74rem; line-height: 1.35; padding: 0.2rem 0.4rem 0.5rem; min-height: 1.2em; }
       .tab-house { height: 24px; bottom: 4px; gap: 9px; }
       .tab-house-section { gap: 1.5px; }
       .tab-seat { width: 10px; height: 12px; }
@@ -1188,6 +1196,13 @@ function buildStyles() {
       .tab-card h1 { font-size: 1.5rem; }
       .tab-card pre.tab-ascii-title { font-size: 0.42rem; }
       .tab-card p { font-size: 0.8rem; }
+      /* The interstitial's own italic sub-line (.tab-inter-sub) had no
+         mobile override at all — just the desktop clamp() floor (0.62rem)
+         at opacity:0.6 on a near-black background. Same category of
+         problem as .tab-caption above, same fix: a firmer floor and a
+         touch more opacity so it holds up on a phone screen, not just a
+         desktop monitor at a comfortable distance. */
+      .tab-inter-sub { font-size: 0.78rem; line-height: 1.4; opacity: 0.75; }
     }
     @media (max-width: 480px) and (orientation: portrait) {
       /* portrait phones have height to spare — let the screen breathe a bit */

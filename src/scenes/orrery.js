@@ -994,39 +994,66 @@ export function createOrrery(container, { preview = false } = {}) {
         #orrery-caption { white-space: normal; width: 88vw; font-size: 0.7rem; }
       }
 
-      /* ─── Early-90s CD-ROM adventure atmosphere (Myst / Return to Zork /
-         The 7th Guest) — a soft vignette plus a grain+scanline overlay
-         sitting over the render, and a title card in the same spirit as
-         the game's own opening screens. ────────────────────────────────── */
+      /* ─── Very early compressed video (Scott, 2026-07-17: reworked from
+         a "CD-ROM adventure game grain" read toward an actual low-bitrate
+         mid-90s digital-video read — visible macroblocks, posterized/
+         banded color, chroma smear, irregular judder rather than a
+         steady flicker) — a soft vignette plus this overlay sitting over
+         the render, and a title card in the same spirit. ─────────────── */
       #orrery-vignette {
         position: absolute; inset: 0; pointer-events: none; z-index: 5;
         background: radial-gradient(ellipse at center, rgba(0,0,0,0) 42%, rgba(3,2,1,0.6) 100%);
       }
       #orrery-grain {
-        /* Cranked up hard (Scott: "that wonderful barely-compressed video
-           vibe") — three stacked layers instead of one: fine feTurbulence
-           grain (as before, just louder), a second coarser/blockier
-           turbulence pass standing in for MPEG-style macroblocking, and
-           harder scanlines. background-position-drift via steps() below
-           snaps between two noise offsets rather than panning smoothly —
-           reads as frame-to-frame video noise, not a moving texture. */
+        /* Five stacked layers. The macroblock grid is the one thing pure
+           turbulence noise can never fake on its own — block-based
+           compression leaves actual straight seams, not organic blobs —
+           so it's drawn explicitly as CSS grid lines rather than implied
+           by coarser noise. The banding layer is a hard-STEPPED gradient
+           (real color stops, no smooth interpolation) standing in for
+           8-bit quantization: the visible "shelves" a codec leaves across
+           a gradient or a dark scene. The "posterized" noise layer uses
+           feComponentTransfer type="discrete" — genuine quantization of
+           the turbulence's alpha into a handful of bands, not just a
+           coarser blur — for per-block luma variance. Fine noise
+           underneath is the base video-noise floor, same idea as before,
+           just no longer carrying the whole effect on its own. */
         position: absolute; inset: 0; pointer-events: none; z-index: 6;
         opacity: 0.85; mix-blend-mode: overlay;
         background-image:
-          repeating-linear-gradient(0deg, rgba(255,255,255,0.07) 0px, rgba(255,255,255,0.07) 1px, transparent 1px, transparent 3px),
-          url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)' opacity='0.75'/></svg>"),
-          url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='64' height='64'><filter id='b'><feTurbulence type='fractalNoise' baseFrequency='0.12' numOctaves='1' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/><feComponentTransfer><feFuncA type='linear' slope='2.2' intercept='-0.5'/></feComponentTransfer></filter><rect width='100%25' height='100%25' filter='url(%23b)' opacity='0.4'/></svg>");
-        background-size: 100% 100%, 160px 160px, 24px 24px;
-        animation: orrery-grain-drift 0.6s steps(2) infinite;
+          repeating-linear-gradient(0deg, rgba(255,255,255,0.09) 0px, rgba(255,255,255,0.09) 1px, transparent 1px, transparent 8px),
+          repeating-linear-gradient(90deg, rgba(255,255,255,0.07) 0px, rgba(255,255,255,0.07) 1px, transparent 1px, transparent 8px),
+          repeating-linear-gradient(115deg,
+            rgba(0,0,0,0) 0px, rgba(0,0,0,0) 18px,
+            rgba(255,255,255,0.45) 18px, rgba(255,255,255,0.45) 19px,
+            rgba(0,0,0,0) 19px, rgba(0,0,0,0) 37px,
+            rgba(0,0,0,0.35) 37px, rgba(0,0,0,0.35) 38px),
+          url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='96' height='96'><filter id='q'><feTurbulence type='fractalNoise' baseFrequency='0.09' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/><feComponentTransfer><feFuncA type='discrete' tableValues='0 0.15 0.35 0.55 0.8'/></feComponentTransfer></filter><rect width='100%25' height='100%25' filter='url(%23q)'/></svg>"),
+          url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)' opacity='0.55'/></svg>");
+        background-size: 100% 100%, 100% 100%, 100% 100%, 120px 120px, 160px 160px;
+        animation: orrery-grain-drift 2.6s linear infinite;
       }
+      /* Grid and banding stay locked in place (real compression seams
+         don't wander) — only the two noise layers drift, and unevenly:
+         near-duplicate keyframes a fraction of a percent apart hold each
+         position for a variable stretch before snapping to the next,
+         rather than the old perfectly metronomic 2-step pulse. Reads as
+         a stream stuttering on uneven packet timing, not a breathing
+         texture. */
       @keyframes orrery-grain-drift {
-        0%, 100% { background-position: 0 0, 0 0, 0 0; }
-        50%      { background-position: 0 0, 2px -1px, -1px 2px; }
+        0%, 6%      { background-position: 0 0, 0 0, 0 0, 0 0, 0 0; }
+        6.5%, 22%   { background-position: 0 0, 0 0, 0 0, 3px -2px, -2px 1px; }
+        22.5%, 30%  { background-position: 0 0, 0 0, 0 0, -1px 3px, 2px -1px; }
+        30.5%, 61%  { background-position: 0 0, 0 0, 0 0, 2px 1px, -3px 2px; }
+        61.5%, 68%  { background-position: 0 0, 0 0, 0 0, -2px -3px, 1px 3px; }
+        68.5%, 100% { background-position: 0 0, 0 0, 0 0, 1px 2px, -1px -2px; }
       }
-      /* Cheap-lens-and-compression color fringe, concentrated at the frame
-         edges (same radial falloff idea as the vignette, different job) —
-         mix-blend-mode:screen so it brightens the fringe rather than
-         muddying the render underneath. */
+      /* Chroma smear — early codecs store color at a fraction of luma's
+         resolution, so color bleeds/lags past its own edges rather than
+         staying crisp. Two tinted layers offset in opposite directions
+         (mix-blend-mode:screen, so they only ever brighten, never muddy
+         the render), concentrated toward the frame edges where that
+         softness reads most in real compressed video. */
       #orrery-chroma {
         position: absolute; inset: 0; pointer-events: none; z-index: 7;
         mix-blend-mode: screen;
@@ -1035,12 +1062,12 @@ export function createOrrery(container, { preview = false } = {}) {
         content: ''; position: absolute; inset: -2px;
       }
       #orrery-chroma::before {
-        background: radial-gradient(ellipse at center, transparent 52%, rgba(255,40,60,0.16) 100%);
-        transform: translateX(-2px);
+        background: radial-gradient(ellipse at center, transparent 48%, rgba(255,40,60,0.14) 100%);
+        transform: translateX(-3px);
       }
       #orrery-chroma::after {
-        background: radial-gradient(ellipse at center, transparent 52%, rgba(40,220,255,0.16) 100%);
-        transform: translateX(2px);
+        background: radial-gradient(ellipse at center, transparent 48%, rgba(40,220,255,0.14) 100%);
+        transform: translateX(3px);
       }
       @media (prefers-reduced-motion: reduce) {
         #orrery-grain { animation: none; }

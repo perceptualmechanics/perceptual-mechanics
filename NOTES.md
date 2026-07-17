@@ -6,6 +6,44 @@ projects (The Secret World, A Manual of Perceptual Mechanics) moved into their o
 files, which are now the source of truth for that material going forward. See "project map"
 below for where things live.
 
+## 1.0.5 (2026-07-17, same day)
+
+Three small requests from Scott, one per scene:
+
+- **Egg: a subtle flux effect on the magnetic field lines.** Turned out one
+  had half-existed already and just didn't work — the animate loop looped
+  over `field.lines` writing a per-line phase offset into `field.mat.opacity`
+  each iteration, but every line shared that one material instance, so each
+  write just overwrote the last; only the final line's phase ever actually
+  took effect, flattened across all nine lines. Fixed by giving each line
+  its own material (same pattern the aurorae bands/shimmers already use),
+  each running its own phase/speed/flare-strength, with a faint lift toward
+  white at each line's own peak. Genuinely per-line now, closer to how a
+  real magnetosphere's field lines fluctuate somewhat independently rather
+  than breathing in lockstep.
+- **Orrery: reworked the grain toward compressed video rather than film
+  grain.** The old `#orrery-grain`/`#orrery-chroma` overlay leaned on
+  feTurbulence noise and a scanline pattern — closer to a CD-ROM game's
+  grain than to actual codec artifacts. Rebuilt as five stacked layers: an
+  explicit macroblock grid (real straight seams — the one thing turbulence
+  noise can never fake), a hard-stepped banding gradient standing in for
+  8-bit color quantization, a feComponentTransfer `type="discrete"`-
+  posterized noise layer for per-block luma variance (genuine quantization,
+  not just coarser blur), and the original fine-noise floor underneath.
+  The drift animation now snaps unevenly (near-duplicate keyframes holding
+  variable durations) instead of a steady 2-step pulse — reads as a
+  low-bitrate stream stuttering on uneven packet timing, not a breathing
+  texture. Chroma smear kept, softened slightly.
+- **Theater: mobile text readability.** Two real bugs, both the same
+  shape: `.tab-slug` and `.tab-caption` (the italic per-beat description
+  line) both had `@media (max-width: 480px)` overrides that shrank their
+  font-size *below* their own desktop `clamp()` floor — backwards, since
+  mobile is exactly where that hurts most. `.tab-caption` in particular is
+  the thing most likely to actually get read start to finish, so it got the
+  bigger bump. `.tab-inter-sub` (the interstitial's own italic sub-line, on
+  a near-black background at opacity 0.6) had no mobile override at all;
+  gave it one, with a firmer size floor and a bit more opacity.
+
 ## 1.0.4 (2026-07-17, same day)
 
 Bug fix from a screenshot Scott sent: on a short-enough browser window, the
