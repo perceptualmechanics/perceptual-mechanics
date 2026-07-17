@@ -186,6 +186,23 @@ At Scott's request, all three are gone except the orrery, which is promoted to i
   purple sphere.
 - **Scene order** — orrery moved to sit right after leaf, before cycle, at Scott's request. Full
   order is now: sphere, butterfly, manuscript, theater, egg, leaf, orrery, cycle.
+- **Third pass, same day** — three more changes, all at Scott's request: the mechanism now hangs
+  from the roof rather than standing on the floor (a crossed pair of steel roof trusses near the
+  skylight, four chains fanning down from the trusses to a suspension collar partway up the mast,
+  with a riser continuing on up through the truss height and the skylight hole to the dish — the
+  mast's lower end, control box included, now hangs in open air with real clearance above the
+  floor, nothing touching the ground); the nine bodies are the actual planets in the actual solar
+  system rather than generic tinted spheres — real order, orbital spacing and body size both
+  compressed with a square root of the real values so Mercury and Pluto can share a small scene,
+  real notable moons (Earth's Moon, Mars's Phobos and Deimos, four Galilean moons on Jupiter,
+  Titan, Triton, Charon), Saturn actually has rings, and the asteroid belt sits in its real spot
+  between Mars and Jupiter instead of stuck out past everything (the "few other unidentified
+  cosmic objects" from the text now read naturally as the odd stuff further out, past Pluto); and
+  the back wall carries three taped-up early-90s show flyers — Nirvana, R.E.M., For Squirrels —
+  canvas-generated xerox-flyer textures (band name as plain text only, no logos or artwork
+  reproduced), dating the room itself rather than just the machine. Walls were also pulled in
+  closer than the floor/ceiling extent (a separate `wallDist` from the floor/ceiling `span`) so the
+  flyers actually read at a legible size instead of being lost on a distant wall.
 
 ## You've Got a Friend in Satan — scenes wired into the theater (2026-07-16)
 
