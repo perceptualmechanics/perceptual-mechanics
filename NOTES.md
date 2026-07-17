@@ -50,13 +50,15 @@ but non-functional for API calls. Use localhost instead.
 ## pending decisions
 - nebula star data — use curator tool to populate, then drop into nebula.js
 
-**Resolved (2026-07-16): the elements/"cycle" scene is built** — see "egg / leaf / cycle — wired
-into the site" below for what actually shipped. Roster + research trail kept here since `cycle.js`
-references it directly:
+## elements/cycle roster (reference — resolved 2026-07-16)
 
-- elements/"cycle" scene — five-element live-stream piece (earth/water/air/fire/wood), embedded via
-  the YouTube iframe API. Each stream carries a manual backup link rather than an automated
-  "offline" detector — see the "egg / leaf / cycle" entry below for why. Roster as of 2026-07-16:
+The elements/"cycle" scene this fed into is built (currently deactivated — see "egg / leaf /
+cycle" below). Kept as its own section, not folded into history, since `cycle.js` references this
+roster and research trail directly and may need it updated if a stream goes down for good.
+
+- five-element live-stream piece (earth/water/air/fire/wood), embedded via the YouTube iframe API.
+  Each stream carries a manual backup link rather than an automated "offline" detector — see the
+  "egg / leaf / cycle" entry below for why. Roster as of 2026-07-16:
 
   | Element | Primary | Uptime | Backup(s) |
   |---|---|---|---|
@@ -78,7 +80,7 @@ references it directly:
   - Water/Air/Earth/Wood → `Cartography.doc`'s "In The End It Falls Slowly Through The Aether": a
     single raindrop falling off a leaf, told through real physics (surface tension, friction,
     oxygen/nitrogen, root, sun) — touches water, air, earth, and wood in one continuous piece.
-    This is the source text for the new "leaf" scene (see "gems wired into the site").
+    This is the source text for the "leaf" scene (see "egg / leaf / cycle" below).
 
 ## full archive deep-dive (2026-07-16)
 
@@ -105,10 +107,10 @@ into the site" below.
 - **The Orrery of Los Feliz** is now a real object in `nebula.js` — a small clickable orrery (bronze
   center sphere, tilted orbit rings, three actually-orbiting bodies) sitting apart from the
   real-site constellations, opening the same info panel with the full found text. Note: `nebula.js`
-  and `egg.js` are still commented out in `main.js` ("deactivated for now, being reworked") — this
-  was true before this session too. Also worth flagging: `nebula.js` itself is way ahead of what
-  the old "pending decisions" text used to describe (Webb-style clouds and hand-drawn constellation
-  lines are already built, just built around real-site history instead of a curator-tool/astronomy
+  is still commented out in `main.js` ("deactivated for now, being reworked") — this was true
+  before this session too. Also worth flagging: `nebula.js` itself is way ahead of what the old
+  "pending decisions" text used to describe (Webb-style clouds and hand-drawn constellation lines
+  are already built, just built around real-site history instead of a curator-tool/astronomy
   concept) — that's now reflected above.
 - **The Golden Hare** is a new top-level interstitial (`src/components/goldenHare.js`, wired into
   `main.js` via `initGoldenHare()`), not part of any single scene. Rare (roughly once every 1–3
@@ -139,17 +141,17 @@ tile in `index.html`) whenever they're wanted live.
   tilted orbits (same pivot-rotation trick as the Orrery in `nebula.js`). Drag to orbit, same
   manual-drag pattern as `nebula.js`.
 - **`leaf.js`** — new scene, built around "In The End It Falls Slowly Through The Aether" in full
-  (Cartography.doc — see "pending decisions" above). A single quiet vignette, not an explorable
+  (Cartography.doc — see "elements/cycle roster" above). A single quiet vignette, not an explorable
   space: an orthographic-camera Three.js scene, a leaf shape holding a droplet through a slow
   34-second loop — surface-tension hold, freefall (with a few "escaped molecule" motes peeling off
   mid-fall), impact/splash, reform — with the text arriving caption-by-caption in the same order
   it was written, timed to the phase of the fall it describes.
-- **`cycle.js`** — new scene, the five-element live-stream piece from "pending decisions" above,
-  actually built: real YouTube iframe embeds (not WebGL — DOM/iframe is the honest choice for
-  actual documentary footage, same reasoning as `theater.js`), one button per element, a manual
+- **`cycle.js`** — new scene, the five-element live-stream piece from "elements/cycle roster"
+  above, actually built: real YouTube iframe embeds (not WebGL — DOM/iframe is the honest choice
+  for actual documentary footage, same reasoning as `theater.js`), one button per element, a manual
   backup link per stream since YouTube gives no reliable cross-origin "stream is down" signal from
   inside an iframe. Fire.doc's word-association litany (the piece explicitly reserved for this
-  since it was first found — see "pending decisions" above) plays over the fire stream only, one
+  since it was first found — see "elements/cycle roster" above) plays over the fire stream only, one
   phrase fading in at a time. Confirmed live YouTube channel/video IDs for all five streams via
   direct lookup (GlobalQuake channel `UCZmcd4cQ2H_ELWAuUdOMgRQ`, YallBot/Ryan Hall Y'all channel
   `UCJHAT3Uvv-g3I8H3GhHWV7w`, Kilauea Cam A `iws3rh5vLAQ`, the Explore.org Smith River cam
