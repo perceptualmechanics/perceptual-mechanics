@@ -6,6 +6,32 @@ projects (The Secret World, A Manual of Perceptual Mechanics) moved into their o
 files, which are now the source of truth for that material going forward. See "project map"
 below for where things live.
 
+## 1.0.21 (2026-07-17, same day)
+
+Lens shelved again. Scott sent a screenshot of 1.0.20 live — the Tree of
+Life and chakras were clearly rendering, the beam read as a real cone —
+but the gem was crowding the frame edges (its tip nearly touching the
+title text, the culet crowding the caption) and the princess-cut facet
+steps weren't bulging out past the girdle enough to read as a cut rather
+than a smooth kite with some shading variation. I flagged both honestly
+and asked whether he wanted them fixed now or if it was just a check-in.
+His answer: "you know, let's just shelve this for the moment and look at
+it tomorrow with fresh eyes" — and then, after confirming there was
+nothing to push (7 versions, 1.0.14 through 1.0.20, sitting locally, never
+pushed to GitHub, since this sandbox has no push credentials): "ok, can
+you just comment out the lens then?"
+
+Same three spots as every previous shelving (1.0.15/1.0.19's un-shelving
+in reverse): the import/registry entry/initPreviews map entry in main.js,
+and the nav-icon button + preview-tile block in index.html. Also reverted
+the mobile nav-icon touch target in styles/main.css back to the 44px
+guideline default — Lens out means the icon count drops back to seven,
+which fits fine without the 38px override. src/scenes/lens.js itself is
+untouched; the gem-framing and facet-bulge issues from the screenshot are
+still there, unaddressed, waiting for "tomorrow."
+
+Verified with a real build: 23 modules (Lens excluded), clean.
+
 ## 1.0.20 (2026-07-17, same day)
 
 Right after answering Scott's question about whether the refraction was
