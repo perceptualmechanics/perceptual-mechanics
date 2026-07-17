@@ -798,10 +798,14 @@ export function createOrrery(container, { preview = false } = {}) {
 
   const scene    = new THREE.Scene();
   const camera   = new THREE.PerspectiveCamera(54, w / h, 0.1, 500);
-  // Camera pulled back ~1.4x from its old default to keep the now-larger
-  // orrery framed on load (see HW/SR/SS in buildOrrery).
-  camera.position.set(preview ? 2.4 : 3.35, preview ? 0.42 : 0.49, preview ? 13.3 : 16.8);
-  camera.lookAt(0, preview ? -0.3 : -0.4, 0);
+  // Camera pulled back to keep the larger orrery framed on load, and
+  // brought closer to head-on (less side offset, lookAt raised toward the
+  // rings' actual vertical center) so the machine sits centered in the
+  // room by default rather than off to one side — this only really
+  // matters now that there's no auto-rotate drifting it through other
+  // angles on its own (see the drag-to-orbit section below).
+  camera.position.set(preview ? 1.1 : 1.5, preview ? 0.3 : 0.35, preview ? 13.3 : 16.8);
+  camera.lookAt(0, preview ? -0.15 : -0.2, 0);
 
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
   renderer.setPixelRatio(window.devicePixelRatio);
@@ -810,19 +814,24 @@ export function createOrrery(container, { preview = false } = {}) {
   renderer.domElement.setAttribute('aria-hidden', 'true');
   container.appendChild(renderer.domElement);
 
-  // Fog matched to the clear color so distant geometry (far walls, the
-  // asteroid belt seen edge-on, the dish overhead) softens into haze
-  // rather than cutting out sharply — the soft render-distance falloff of
-  // early-90s CD-ROM adventure games (Myst, Return to Zork, The 7th
-  // Guest), not a modern crisp render.
-  scene.fog = new THREE.Fog(0x030303, preview ? 5 : 7, preview ? 15 : 23);
+  // Fog matched to the clear color so only genuinely distant geometry
+  // (far wall corners, stars beyond the skylight) softens into haze — the
+  // soft render-distance falloff of early-90s CD-ROM adventure games
+  // (Myst, Return to Zork, The 7th Guest), not a modern crisp render.
+  // Far distance kept well beyond the camera-to-orrery range (camera now
+  // sits at z 13.3/16.8) so the machine itself never fogs out — it had
+  // been eating into the enlarged orrery and washing out the preview tile
+  // almost entirely.
+  scene.fog = new THREE.Fog(0x030303, preview ? 9 : 12, preview ? 30 : 42);
 
-  // ─── Lighting — a dim industrial ambience, a cool wash falling through
-  // the skylight, a warm accent low down near the machine itself. ────────
-  scene.add(new THREE.HemisphereLight(0x556677, 0x0a0806, 0.55));
-  const skyLight = new THREE.DirectionalLight(0xcfe0ff, 0.9);
+  // ─── Lighting — dim industrial ambience, brightened a step (Scott: it
+  // was starting too dark), a cool wash falling through the skylight, a
+  // warm accent low down near the machine itself. ────────────────────────
+  scene.add(new THREE.HemisphereLight(0x64778a, 0x14100c, 0.8));
+  const skyLight = new THREE.DirectionalLight(0xcfe0ff, 1.15);
   skyLight.position.set(0.4, 6, 0.3);
   scene.add(skyLight);
+  scene.add(new THREE.AmbientLight(0x554a3c, 0.35));
 
   // ─── Warehouse vertical layout — decided here, then handed down: the
   // ceiling and roof truss height are fixed first, and the orrery hangs
@@ -838,7 +847,7 @@ export function createOrrery(container, { preview = false } = {}) {
   // The work light lives at the hanging bulb prop if the garage clutter
   // pass built one (full mode only); otherwise a plain accent near the
   // machine, same as before.
-  const workLight = new THREE.PointLight(0xffaa55, 0.6, preview ? 6 : 9);
+  const workLight = new THREE.PointLight(0xffaa55, 0.9, preview ? 9 : 13);
   if (warehouse.bulbPosition) workLight.position.copy(warehouse.bulbPosition);
   else workLight.position.set(1.2, -0.6, 1.4);
   scene.add(workLight);
@@ -907,9 +916,14 @@ export function createOrrery(container, { preview = false } = {}) {
         #orrery-panel { width: 88%; padding: 4rem 1.3rem 2rem; }
       }
       #orrery-hint, #orrery-caption {
+        /* z-index must clear #experience-overlay (styles/main.css: fixed,
+           z-index:300) — these are appended to document.body, outside the
+           overlay, same as butterfly's own label/hint in main.js. Below
+           300 they're only visible during the overlay's ~0.6s fade-in,
+           then gone once it's fully opaque. */
         position: fixed; color: rgba(255,255,255,0.3);
         text-transform: uppercase; pointer-events: none; text-align: center;
-        z-index: 202; font-family: 'Times New Roman', serif;
+        z-index: 310; font-family: 'Times New Roman', serif;
       }
       #orrery-hint {
         top: 4.5rem; right: 1.2rem; font-size: 0.55rem; letter-spacing: 0.2em;
@@ -943,9 +957,15 @@ export function createOrrery(container, { preview = false } = {}) {
       }
       #orrery-title {
         /* #pm-nav (site.css) is a fixed, 3.5rem-tall, z-index:500 bar —
-           sit clear below it, not underneath it. */
+           sit clear below it. #experience-overlay (also site.css) is
+           z-index:300 and fades to fully opaque over 0.6s - this is
+           appended to document.body outside that overlay, so it needs to
+           clear 300 too, or it only shows during the fade-in and then
+           gets covered once the overlay settles (this was the "appears
+           for a second then disappears" bug). 310 matches butterfly's
+           own body-level label/hint in main.js, same issue there. */
         position: fixed; top: 4.4rem; left: 50%; transform: translateX(-50%);
-        text-align: center; pointer-events: none; z-index: 202;
+        text-align: center; pointer-events: none; z-index: 310;
         font-family: 'Times New Roman', serif; color: rgba(238,225,205,0.82);
       }
       #orrery-title-main {
@@ -1077,15 +1097,14 @@ export function createOrrery(container, { preview = false } = {}) {
   }
 
   // ─── Drag to orbit ────────────────────────────────────────────────────────
-  let isDragging = false, prevMouse = { x: 0, y: 0 }, autoRotate = true;
+  // No auto-rotate (Scott, 2026-07-17: it never settled into a composed,
+  // centered view — always caught mid-spin) — it holds still until dragged.
+  let isDragging = false, prevMouse = { x: 0, y: 0 };
   container.addEventListener('mousedown', e => {
-    isDragging = true; autoRotate = false;
+    isDragging = true;
     prevMouse = { x: e.clientX, y: e.clientY };
   });
-  window.addEventListener('mouseup', () => {
-    isDragging = false;
-    setTimeout(() => { autoRotate = true; }, 2500);
-  });
+  window.addEventListener('mouseup', () => { isDragging = false; });
   window.addEventListener('mousemove', e => {
     if (!isDragging) return;
     root.rotation.y += (e.clientX - prevMouse.x) * 0.004;
@@ -1114,10 +1133,6 @@ export function createOrrery(container, { preview = false } = {}) {
 
     // The radio telescope's received-signal pulse.
     orrery.signalMat.emissiveIntensity = 0.6 + Math.abs(Math.sin(t * 4)) * 1.2;
-
-    if (autoRotate && !isDragging) {
-      root.rotation.y += preview ? 0.0009 : 0.0006;
-    }
 
     if (!hovered && !selected) {
       orrery.hitTarget.scale.setScalar(1.0 + Math.sin(t * 8) * 0.03);
