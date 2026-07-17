@@ -19,20 +19,21 @@
 // panel; that's been pulled out in favor of listing it all here, once,
 // alongside every other scene's literary sourcing. See NOTES.md.
 //
-// Icon: placeholder. HARE_SVG (imported from goldenHare.js, exported there
-// for this reuse) is the site's existing hand-drawn single-hare linework —
-// serviceable stand-in, but not the actual mark. The real one is a hand-
-// inked hare carrying the same four astrology marks (moon, two Venus
-// circles, sun) plus a star, cut through with the Venus/moon/sun/star
-// glyphs as literal negative-space holes in the body — a piece by Abby
-// Williams (https://abbywilliams.studio/). Swap the button's innerHTML
-// (marked below) for an <img> once that file is available as an asset —
-// this is a deliberate, one-off exception to the site's usual "canvas
-// textures only, no image assets" rule, since crediting someone else's
-// actual artwork means using the actual artwork, not redrawing it.
+// Icon: the real mark. public/hare-colophon.png — a hand-inked hare
+// carrying a sun, two Venus circles, a crescent moon, and a star, each cut
+// straight through the body as literal negative-space holes — is a piece
+// by Abby Williams (https://abbywilliams.studio/), supplied by Scott and
+// cropped tight to its own bounding box (the original export had a lot of
+// transparent canvas margin around it, which would've left the glyph
+// tiny and off-center inside the small round button). This is a
+// deliberate, one-off exception to the site's usual "canvas textures
+// only, no image assets" rule — crediting someone else's actual artwork
+// means using the actual artwork, not redrawing it. The original,
+// uncropped export and the paper scan it was drawn from both live in
+// ../perceptualmechanics-source-material/ (untracked), not in public/,
+// so nothing unused ships to production.
 
 import { bindEscapeClose } from '../utils/sceneKit.js';
-import { HARE_SVG } from './goldenHare.js';
 
 const BIBLIOGRAPHY = [
   {
@@ -94,11 +95,10 @@ function injectStyles() {
       display: flex; align-items: center; justify-content: center;
       background: rgba(10,8,6,0.35); border: 1px solid rgba(220,190,140,0.25);
       border-radius: 50%; cursor: pointer; z-index: 60;
-      color: rgba(230,205,160,0.7);
       transition: opacity 0.25s, transform 0.2s, background 0.2s;
-      opacity: 0.55;
+      opacity: 0.6;
     }
-    #colophon-mark svg { width: 62%; height: 62%; display: block; }
+    #colophon-mark img { width: 78%; height: auto; display: block; }
     #colophon-mark:hover, #colophon-mark:focus-visible {
       opacity: 1; transform: scale(1.08); background: rgba(10,8,6,0.55);
     }
@@ -236,9 +236,12 @@ export function initColophon() {
 
   const mark = document.createElement('button');
   mark.id = 'colophon-mark';
-  mark.innerHTML = HARE_SVG;
   mark.setAttribute('aria-label', 'Colophon, bibliography, and feedback');
   mark.setAttribute('aria-haspopup', 'dialog');
+  const markImg = document.createElement('img');
+  markImg.src = '/hare-colophon.png';
+  markImg.alt = ''; // decorative — the button's own aria-label already says what this opens
+  mark.appendChild(markImg);
   landing.appendChild(mark);
 
   const backdrop = document.createElement('div');
