@@ -361,8 +361,9 @@ function buildSatellites(preview) {
     const beacon = new THREE.Mesh(new THREE.SphereGeometry(0.012, 8, 8), beaconMat);
     body.add(beacon);
     // Invisible, generous hit target — the visible parts are too small to
-    // reliably click/hover on their own.
-    const hit = new THREE.Mesh(new THREE.SphereGeometry(0.09, 8, 8), hitMat);
+    // reliably click/hover on their own. Scott: still too hard to land on
+    // — bumped up further (0.09 -> 0.16).
+    const hit = new THREE.Mesh(new THREE.SphereGeometry(0.16, 8, 8), hitMat);
     body.add(hit);
     body.position.x = radius;
     pivot.add(body);
@@ -379,7 +380,8 @@ function buildSatellites(preview) {
 
     sats.push({
       pivot, body, hit, beacon, beaconMat,
-      speed: (0.25 + Math.random() * 0.35) * (Math.random() < 0.5 ? 1 : -1),
+      // Scott: slow these down — was (0.25 + rand*0.35), now less than half that.
+      speed: (0.09 + Math.random() * 0.14) * (Math.random() < 0.5 ? 1 : -1),
       ringMat,
       poemIndex: i % poems.length,
     });

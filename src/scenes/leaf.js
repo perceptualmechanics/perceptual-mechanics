@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { prefersReducedMotion } from '../utils/sceneKit.js';
 
 // ─── Leaf: In The End It Falls Slowly Through The Aether ──────────────────────
 // A found piece (Cartography.doc, archive/Writing archive, author: Scott
@@ -54,16 +55,7 @@ const TEXT_STAGES = [
   },
 ];
 
-const CYCLE_SECONDS = 34; // one full fall-to-reform loop
-
-function stageAt(frac) {
-  let acc = 0;
-  for (let i = 0; i < TEXT_STAGES.length; i++) {
-    acc += TEXT_STAGES[i].w;
-    if (frac <= acc) return { index: i, stage: TEXT_STAGES[i], acc };
-  }
-  return { index: TEXT_STAGES.length - 1, stage: TEXT_STAGES[TEXT_STAGES.length - 1], acc };
-}
+const CYCLE_SECONDS = 34; // preview tiles only now — see createLeaf's preview branch
 
 // Eased fall position, 0 (leaf tip) to 1 (ground), across the fall window
 // (roughly frac 0.14 to 0.9 — see PHASE constants in the animate loop).
@@ -226,26 +218,69 @@ export function createLeaf(container, { preview = false } = {}) {
 
   const root = new THREE.Group();
   scene.add(root);
+  const reduceMotion = prefersReducedMotion();
 
-  // ─── Backdrop: soft vertical gradient, dark teal to black ─────────────────
-  function makeSkyTexture() {
+  // ─── Backdrop: a Japanese wall — dark kumiko lattice over washi paper,
+  // in place of the old open-sky gradient (Scott's request; this piece was
+  // already leaning wabi-sabi, and a shoji wall is a much more specific,
+  // grounded object than an undifferentiated night sky). Kept dark and
+  // warm rather than a bright daylight paper tone, so the quiet, nocturnal
+  // mood of the piece carries over — a single soft glow stands in for
+  // light behind one pane, echoing the drop's own small warmth. ─────────
+  function makeWallTexture() {
     const c = document.createElement('canvas');
-    c.width = 4; c.height = 256;
+    c.width = 512; c.height = 512;
     const cx = c.getContext('2d');
-    const grad = cx.createLinearGradient(0, 0, 0, 256);
-    grad.addColorStop(0,   '#040d0a');
-    grad.addColorStop(0.6, '#020604');
-    grad.addColorStop(1,   '#000000');
+
+    const grad = cx.createLinearGradient(0, 0, 0, 512);
+    grad.addColorStop(0,    '#2a2420');
+    grad.addColorStop(0.55, '#211c18');
+    grad.addColorStop(1,    '#141110');
     cx.fillStyle = grad;
-    cx.fillRect(0, 0, 4, 256);
-    return new THREE.CanvasTexture(c);
+    cx.fillRect(0, 0, 512, 512);
+
+    // Paper mottling/grain — same uneven, hand-made treatment as the
+    // leaf's own texture, not a flat digital fill.
+    for (let i = 0; i < 260; i++) {
+      const x = Math.random() * 512, y = Math.random() * 512;
+      const r = 8 + Math.random() * 30;
+      cx.fillStyle = Math.random() > 0.5 ? 'rgba(255,240,210,0.035)' : 'rgba(0,0,0,0.06)';
+      cx.beginPath();
+      cx.ellipse(x, y, r, r * 0.7, Math.random() * Math.PI, 0, Math.PI * 2);
+      cx.fill();
+    }
+
+    // Kumiko lattice — dark wood bars, irregularly spaced (hand-built,
+    // not a manufactured perfectly even grid).
+    cx.strokeStyle = '#0d0a07';
+    cx.lineWidth = 6;
+    cx.globalAlpha = 0.85;
+    for (let x = 18; x < 512; x += 58 + (Math.random() - 0.5) * 10) {
+      cx.beginPath(); cx.moveTo(x, 0); cx.lineTo(x, 512); cx.stroke();
+    }
+    for (let y = 24; y < 512; y += 74 + (Math.random() - 0.5) * 12) {
+      cx.beginPath(); cx.moveTo(0, y); cx.lineTo(512, y); cx.stroke();
+    }
+    cx.globalAlpha = 1;
+
+    // A soft warm glow, as if faint light sits behind one pane.
+    const glow = cx.createRadialGradient(150, 130, 10, 150, 130, 260);
+    glow.addColorStop(0, 'rgba(255,205,140,0.15)');
+    glow.addColorStop(1, 'rgba(255,205,140,0)');
+    cx.fillStyle = glow;
+    cx.fillRect(0, 0, 512, 512);
+
+    const tex = new THREE.CanvasTexture(c);
+    tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+    tex.repeat.set(3 * aspect, 3);
+    return tex;
   }
-  const skyTex = makeSkyTexture();
-  const skyGeo = new THREE.PlaneGeometry(viewH * aspect * 2.4, viewH * 2.4);
-  const skyMat = new THREE.MeshBasicMaterial({ map: skyTex, depthWrite: false });
-  const sky = new THREE.Mesh(skyGeo, skyMat);
-  sky.position.z = -2;
-  root.add(sky);
+  const wallTex = makeWallTexture();
+  const wallGeo = new THREE.PlaneGeometry(viewH * aspect * 2.4, viewH * 2.4);
+  const wallMat = new THREE.MeshBasicMaterial({ map: wallTex, depthWrite: false });
+  const wall = new THREE.Mesh(wallGeo, wallMat);
+  wall.position.z = -2;
+  root.add(wall);
 
   // ─── Ground: a faint horizontal glow near the bottom ──────────────────────
   const groundY = -2.3;
@@ -263,7 +298,10 @@ export function createLeaf(container, { preview = false } = {}) {
   const leafScale = preview ? 0.85 : 1.15;
   const leaf = buildLeaf();
   leaf.group.scale.setScalar(leafScale);
-  leaf.group.position.set(-0.22, 0.9, 0);
+  // Shifted right (was -0.22) to leave the left side of the frame clear for
+  // the caption's new scroll box (see below) — the two were fighting for
+  // the same space when the caption sat bottom-center.
+  leaf.group.position.set(0.18, 0.9, 0);
   leaf.group.rotation.z = -0.045;
   root.add(leaf.group);
   const tipY = leaf.group.position.y + (-1.4) * leafScale;
@@ -303,30 +341,39 @@ export function createLeaf(container, { preview = false } = {}) {
       /* z-index must clear #experience-overlay (styles/main.css: fixed,
          z-index:300) — appended to document.body, outside that overlay,
          same fix already applied in orrery.js/egg.js. */
+      /* A real, user-scrollable box now — bottom-left rather than bottom-
+         center, so it clears the leaf (moved right to make room for it).
+         Scrolling THIS is what drives the drop's fall (see updateFracFromScroll
+         in the animate loop below) — the old version had it backwards,
+         the drop's own timer drove the text. Border/background so it
+         actually reads as a box, not just loose floating text. */
       #leaf-caption {
         position: fixed;
-        bottom: 3rem; left: 50%; transform: translateX(-50%);
-        width: min(78vw, 42rem); height: 6.6rem;
-        overflow: hidden; pointer-events: none; z-index: 310;
-        -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 22%, black 78%, transparent 100%);
-                mask-image: linear-gradient(to bottom, transparent 0%, black 22%, black 78%, transparent 100%);
+        left: 2rem; bottom: 3rem;
+        width: min(30vw, 22rem); height: min(56vh, 26rem);
+        overflow-y: auto; -webkit-overflow-scrolling: touch;
+        pointer-events: all; z-index: 310;
+        background: rgba(10,12,9,0.32);
+        border: 1px solid rgba(196,214,196,0.18);
+        border-radius: 3px;
+        padding: 1.4rem 1.2rem;
+        scrollbar-color: rgba(196,214,196,0.35) transparent;
+        scrollbar-width: thin;
+        -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 8%, black 92%, transparent 100%);
+                mask-image: linear-gradient(to bottom, transparent 0%, black 8%, black 92%, transparent 100%);
       }
-      #leaf-caption-track {
-        position: absolute; top: 0; left: 0; width: 100%;
-        transition: transform 0.4s linear;
-      }
-      #leaf-caption-track p {
-        text-align: center;
-        color: rgba(196, 214, 196, 0.7);
+      #leaf-caption p {
+        text-align: left;
+        color: rgba(196, 214, 196, 0.75);
         font-family: 'Times New Roman', serif;
         font-style: italic;
-        font-size: clamp(0.78rem, 1.6vw, 0.98rem);
+        font-size: clamp(0.78rem, 1.5vw, 0.94rem);
         letter-spacing: 0.01em;
         line-height: 1.7;
         text-shadow: 0 1px 3px rgba(0,0,0,0.6);
-        margin: 0 0 2.2rem;
-        padding: 0 0.5rem;
+        margin: 0 0 1.8rem;
       }
+      #leaf-caption p:last-child { margin-bottom: 0; }
       #leaf-hint {
         position: fixed; top: 4.5rem; right: 1.2rem;
         color: rgba(255,255,255,0.3);
@@ -335,12 +382,12 @@ export function createLeaf(container, { preview = false } = {}) {
         text-align: right; z-index: 310; line-height: 1.8;
         font-family: 'Times New Roman', serif;
       }
-      @media (max-width: 600px) {
-        #leaf-caption { width: 88vw; height: 7.6rem; }
-        #leaf-caption-track p { font-size: 0.78rem; }
-      }
-      @media (prefers-reduced-motion: reduce) {
-        #leaf-caption-track { transition: none; }
+      @media (max-width: 800px) {
+        /* Not enough width to keep the box on the left and the leaf clear
+           of it too — drop back to the old bottom-center placement below
+           this breakpoint rather than overlapping the two. */
+        #leaf-caption { left: 50%; bottom: 1.6rem; transform: translateX(-50%); width: 88vw; height: 34vh; }
+        #leaf-caption p { text-align: center; font-size: 0.78rem; }
       }
       /* A little grain over the whole render — a handled, weathered
          object rather than a clean digital gradient, same wabi-sabi
@@ -354,7 +401,14 @@ export function createLeaf(container, { preview = false } = {}) {
     `;
     document.head.appendChild(style);
   }
-  let captionTrack = null, stageEls = [], stageCenters = [];
+  // Scroll-driven frac: the box below IS the control now, not a readout —
+  // scrolling through the text sets targetScrollFrac (0 at the top, 1 at
+  // the bottom), which the animate loop eases toward each frame and uses
+  // as the drop's own `frac`. Reading the piece top to bottom is what
+  // makes the drop fall; scrolling back up rewinds it. Preview tiles have
+  // no box (no room, no interaction), so they keep the old self-playing
+  // loop further down.
+  let targetScrollFrac = 0;
   let grain = null;
   if (!preview) {
     container.style.position = 'relative';
@@ -366,60 +420,33 @@ export function createLeaf(container, { preview = false } = {}) {
 
     caption = document.createElement('div');
     caption.id = 'leaf-caption';
-    caption.setAttribute('aria-hidden', 'true');
-    captionTrack = document.createElement('div');
-    captionTrack.id = 'leaf-caption-track';
+    caption.setAttribute('role', 'region');
+    caption.setAttribute('aria-label', "In The End It Falls Slowly Through The Aether — scroll to read");
     // The whole piece, stacked in reading order, in normal document flow —
-    // real layout heights, so nothing clips regardless of how a stage's
-    // text happens to wrap at a given screen width. It scrolls down
-    // through this continuously, in step with the drop's own fall (both
-    // driven by the same `frac`), rather than fading between discrete
-    // blocks — the text falls with it.
+    // real layout, real native scrolling. No JS-driven transform anymore;
+    // the browser's own scroll position is the single source of truth for
+    // both "what's readable right now" and "how far the drop has fallen."
     TEXT_STAGES.forEach(stage => {
       const p = document.createElement('p');
       p.textContent = stage.text;
-      captionTrack.appendChild(p);
-      stageEls.push(p);
+      caption.appendChild(p);
     });
-    caption.appendChild(captionTrack);
     document.body.appendChild(caption);
 
     hint = document.createElement('p');
     hint.id = 'leaf-hint';
-    hint.innerHTML = 'in the end it falls slowly through the aether';
+    hint.innerHTML = 'scroll to read &nbsp;·&nbsp; the drop follows';
     hint.setAttribute('aria-hidden', 'true');
     document.body.appendChild(hint);
 
-    // Measure each stage paragraph's vertical center once laid out, and
-    // whenever the window resizes (text reflows at a new width).
-    const measure = () => {
-      stageCenters = stageEls.map(p => p.offsetTop + p.offsetHeight / 2);
+    const updateTargetFromScroll = () => {
+      const range = caption.scrollHeight - caption.clientHeight;
+      targetScrollFrac = range > 0 ? Math.min(1, Math.max(0, caption.scrollTop / range)) : 0;
     };
-    requestAnimationFrame(measure);
-    window.addEventListener('resize', measure);
-    caption._measure = measure;
-  }
-
-  // Cumulative weight boundaries (0..1), same split TEXT_STAGES.w already
-  // drives for stageAt() — the scroll position at a given `frac` is a
-  // straight interpolation between the current and next stage's measured
-  // center, weighted by how far through the current stage frac has gotten.
-  const stageStarts = [];
-  { let acc = 0; TEXT_STAGES.forEach(s => { stageStarts.push(acc); acc += s.w; }); }
-
-  const SCROLL_HOLD = 0.6; // hold each stage centered for its first 60%, then ease down to the next
-  function updateCaption(frac) {
-    if (!caption || !captionTrack || !stageCenters.length) return;
-    const { index } = stageAt(frac);
-    const start = stageStarts[index];
-    const w = TEXT_STAGES[index].w;
-    const localT = Math.min(1, Math.max(0, (frac - start) / w));
-    const scrollT = localT < SCROLL_HOLD ? 0 : (localT - SCROLL_HOLD) / (1 - SCROLL_HOLD);
-    const centerNow = stageCenters[index];
-    const centerNext = stageCenters[Math.min(index + 1, stageCenters.length - 1)];
-    const center = centerNow + (centerNext - centerNow) * easeInQuad(scrollT);
-    const viewportHalf = caption.clientHeight / 2;
-    captionTrack.style.transform = `translateY(${viewportHalf - center}px)`;
+    caption.addEventListener('scroll', updateTargetFromScroll, { passive: true });
+    // Re-measure on resize too — scrollHeight changes when the text rewraps.
+    window.addEventListener('resize', updateTargetFromScroll);
+    caption._updateTargetFromScroll = updateTargetFromScroll;
   }
 
   // ─── Fall phases (fractions of the loop, 0..1) ─────────────────────────
@@ -430,20 +457,41 @@ export function createLeaf(container, { preview = false } = {}) {
   }
   resetMotes();
 
+  // Escape/splash used to be one-shot flags that only ever reset at the
+  // very start of an autonomous, always-forward loop. Scroll can go
+  // backward too now, so both re-arm with a small hysteresis margin
+  // instead: fire once when frac crosses up past the threshold, re-arm
+  // once it drops back below (threshold - margin), so scrolling back up
+  // and then down again re-triggers the burst rather than firing once
+  // per scene and never again.
+  const ESCAPE_FIRE = PHASE.fallStart + 0.28 * (PHASE.fallEnd - PHASE.fallStart);
+  const REARM_MARGIN = 0.012;
+
   // ─── Animate ─────────────────────────────────────────────────────────
-  let animId, tSec = 0;
+  let animId, tSec = 0, currentFrac = 0;
   let escapeTriggered = false, splashTriggered = false;
   function animate() {
     animId = requestAnimationFrame(animate);
     const dt = 1 / 60;
     tSec += dt;
-    const frac = (tSec % CYCLE_SECONDS) / CYCLE_SECONDS;
 
-    if (frac < PHASE.holdEnd - 0.001) {
-      escapeTriggered = false;
-      splashTriggered = false;
+    let frac;
+    if (preview) {
+      frac = (tSec % CYCLE_SECONDS) / CYCLE_SECONDS;
+    } else {
+      // Eased follow rather than an instant snap to scroll position — still
+      // reads as directly scroll-driven (this converges in a couple of
+      // frames), just without a per-tick jitter on rapid wheel/trackpad
+      // deltas.
+      currentFrac += (targetScrollFrac - currentFrac) * 0.18;
+      frac = currentFrac;
+    }
+
+    if (frac < PHASE.holdEnd - 0.001 && frac < REARM_MARGIN) {
       resetMotes();
     }
+    if (frac < ESCAPE_FIRE - REARM_MARGIN) escapeTriggered = false;
+    if (frac < PHASE.fallEnd - REARM_MARGIN) splashTriggered = false;
 
     // Surface-tension hold: the drop sits at the leaf tip, trembling.
     if (frac < PHASE.holdEnd) {
@@ -515,10 +563,11 @@ export function createLeaf(container, { preview = false } = {}) {
       if (m.life > maxLife) { m.active = false; m.mat.opacity = 0; }
     });
 
-    updateCaption(frac);
-
     // A very slow ambient drift on the whole scene — alive, not static.
-    root.position.x = Math.sin(tSec * 0.05) * 0.02;
+    // This part IS autonomous decorative motion (unlike the drop's fall,
+    // which is scroll-driven i.e. visitor-initiated), so it respects
+    // prefers-reduced-motion.
+    if (!reduceMotion) root.position.x = Math.sin(tSec * 0.05) * 0.02;
 
     renderer.render(scene, camera);
   }
@@ -545,7 +594,7 @@ export function createLeaf(container, { preview = false } = {}) {
       window.removeEventListener('resize', onResize);
       window.removeEventListener('orientationchange', onResize);
       renderer.dispose();
-      skyGeo.dispose(); skyMat.dispose(); skyTex.dispose();
+      wallGeo.dispose(); wallMat.dispose(); wallTex.dispose();
       groundGeo.dispose(); groundMat.dispose();
       leaf.geo.dispose(); leaf.mat.dispose(); leaf.tex.dispose();
       leaf.veinGeo.dispose(); leaf.veinMat.dispose();
@@ -553,7 +602,9 @@ export function createLeaf(container, { preview = false } = {}) {
       dropTex.dispose(); dropMat.dispose();
       moteTex.dispose();
       motes.forEach(m => m.mat.dispose());
-      if (caption && caption._measure) window.removeEventListener('resize', caption._measure);
+      if (caption && caption._updateTargetFromScroll) {
+        window.removeEventListener('resize', caption._updateTargetFromScroll);
+      }
       if (caption) caption.remove();
       if (hint) hint.remove();
       if (grain) grain.remove();
