@@ -130,31 +130,44 @@ function makeSprayPaintTexture(hex) {
   const cx = c.getContext('2d');
   const col = new THREE.Color(hex);
   const rgb = `${Math.round(col.r * 255)},${Math.round(col.g * 255)},${Math.round(col.b * 255)}`;
+  const light = `${Math.min(255, Math.round(col.r * 255 + 60))},${Math.min(255, Math.round(col.g * 255 + 60))},${Math.min(255, Math.round(col.b * 255 + 60))}`;
 
-  // Rust primer showing through incomplete coverage.
+  // Rust primer showing through at the very edges only — the base coat
+  // below covers most of the ball, this just gives the rim something to
+  // peek through.
   cx.fillStyle = '#332a22';
   cx.fillRect(0, 0, 128, 128);
 
+  // Solid-ish base coat first, so the planet's actual color reads clearly
+  // even from a distance — then the speckle passes on top add the
+  // hand-sprayed unevenness without erasing the color itself.
+  cx.fillStyle = `rgba(${rgb},0.92)`;
+  cx.fillRect(0, 0, 128, 128);
+
   // Layered dabs, weighted toward the center of each "spray pass" so
-  // coverage thins out toward the edges rather than being a flat disc.
-  const passes = 5;
+  // coverage builds up unevenly — some lighter (thinner-coat) patches,
+  // some darker/primer patches — rather than a flat, uniform fill.
+  const passes = 6;
   for (let p = 0; p < passes; p++) {
-    const cx0 = 30 + Math.random() * 68, cy0 = 30 + Math.random() * 68;
-    const passRadius = 45 + Math.random() * 30;
-    for (let i = 0; i < 220; i++) {
+    const cx0 = 20 + Math.random() * 88, cy0 = 20 + Math.random() * 88;
+    const passRadius = 40 + Math.random() * 45;
+    const lighten = Math.random() > 0.45;
+    for (let i = 0; i < 260; i++) {
       const a = Math.random() * Math.PI * 2;
-      const r = Math.pow(Math.random(), 1.6) * passRadius;
+      const r = Math.pow(Math.random(), 1.4) * passRadius;
       const x = cx0 + Math.cos(a) * r, y = cy0 + Math.sin(a) * r;
-      const alpha = (1 - r / passRadius) * (0.1 + Math.random() * 0.16);
-      cx.fillStyle = `rgba(${rgb},${Math.max(0, alpha)})`;
+      const alpha = (1 - r / passRadius) * (0.22 + Math.random() * 0.3);
+      cx.fillStyle = lighten
+        ? `rgba(${light},${Math.max(0, alpha) * 0.8})`
+        : `rgba(${rgb},${Math.max(0, alpha)})`;
       cx.beginPath();
-      cx.arc(x, y, 0.6 + Math.random() * 1.8, 0, Math.PI * 2);
+      cx.arc(x, y, 0.8 + Math.random() * 2.2, 0, Math.PI * 2);
       cx.fill();
     }
   }
 
   // A couple of gravity drips.
-  cx.strokeStyle = `rgba(${rgb},0.5)`;
+  cx.strokeStyle = `rgba(${rgb},0.6)`;
   for (let i = 0; i < 3; i++) {
     const x = 20 + Math.random() * 88;
     const y0 = 20 + Math.random() * 50;
@@ -166,9 +179,10 @@ function makeSprayPaintTexture(hex) {
     cx.stroke();
   }
 
-  // Fine grit, dark speckle on top.
-  cx.globalAlpha = 0.35;
-  for (let i = 0; i < 90; i++) {
+  // Fine grit, dark speckle on top — kept light so it reads as texture,
+  // not as a haze that dulls the color back down.
+  cx.globalAlpha = 0.18;
+  for (let i = 0; i < 70; i++) {
     cx.fillStyle = Math.random() > 0.5 ? '#000000' : '#1a1a1a';
     cx.fillRect(Math.random() * 128, Math.random() * 128, 1, 1);
   }
@@ -336,7 +350,11 @@ function buildOrrery(preview, suspendTopY, rafterY) {
     bodyGroup.position.x = radius;
     pivot.add(bodyGroup);
     const bodyGeo = new THREE.SphereGeometry(size, 16, 16);
-    const bodyMat = new THREE.MeshStandardMaterial({ map: makeSprayPaintTexture(planet.color), roughness: 0.68, metalness: 0.1 });
+    const bodyMat = new THREE.MeshStandardMaterial({
+      map: makeSprayPaintTexture(planet.color),
+      emissive: planet.color, emissiveIntensity: 0.22,
+      roughness: 0.68, metalness: 0.1,
+    });
     const body = new THREE.Mesh(bodyGeo, bodyMat);
     bodyGroup.add(body);
 
