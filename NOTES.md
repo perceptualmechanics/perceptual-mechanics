@@ -6,6 +6,24 @@ projects (The Secret World, A Manual of Perceptual Mechanics) moved into their o
 files, which are now the source of truth for that material going forward. See "project map"
 below for where things live.
 
+## 1.0.9 (2026-07-17, same day)
+
+Scott: on mobile, the preview tiles are left-aligned, not centered. Real
+bug, in the max-width:480px rule for `#landing`. That rule's `align-items:
+flex-start` was correct and intentional — `#landing`'s flex-direction stays
+`row` at every breakpoint, so `align-items` is the *vertical* (cross-axis)
+property, and the fix was about starting the scroll at the top instead of
+vertically centering the seven-tile column that's always taller than a
+phone viewport. But the same rule also set `justify-content: flex-start` —
+for a row container, `justify-content` is the *horizontal* (main-axis)
+property, unrelated to the vertical-scroll problem it was written to solve.
+That's what pinned the whole tile column to the left edge instead of
+centering it. Removed the `justify-content` override; `#landing` falls
+back to its base `justify-content: center`, so the column now centers
+horizontally while still starting scroll at the top vertically.
+
+Version bumped to 1.0.9 in package.json.
+
 ## 1.0.8 (2026-07-17, same day)
 
 Scott caught it exactly right: "it's an atom now, not a solar system." The

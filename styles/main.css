@@ -281,10 +281,15 @@ html, body {
   .preview-container { width: 200px; height: 200px; }
   #pm-nav { gap: 1.5rem; }
   /* Seven 200px tiles in a column (~1500px) is always taller than a
-     phone viewport. justify-content:center (inherited from #landing)
-     would otherwise center that overflow and require scrolling both
-     up and down from a mid-list starting position — flex-start plus
-     the #landing scroll context above means the natural "start at the
-     top, scroll down" gesture reaches every tile. */
-  #landing { align-items: flex-start; justify-content: flex-start; }
+     phone viewport. align-items:center (inherited from #landing, and the
+     cross-axis property since #landing's flex-direction stays row) would
+     otherwise vertically center that overflow and require scrolling both
+     up and down from a mid-list starting position — align-items:flex-start
+     plus the #landing scroll context above means the natural "start at
+     the top, scroll down" gesture reaches every tile. justify-content
+     stays center — it's the main-axis (horizontal) property for a row
+     container, unrelated to the vertical-start fix, and overriding it to
+     flex-start had the side effect of left-aligning the whole tile column
+     instead of centering it. */
+  #landing { align-items: flex-start; }
 }
