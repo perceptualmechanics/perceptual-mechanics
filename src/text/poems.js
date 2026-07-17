@@ -38,8 +38,9 @@
 //   it into Assembled Verse at all, hasn't been typed up here. Worth
 //   doing later if that rougher material ever wants its own place.
 //
-// Update (2026-07-17, cycle.js rebuild): part of that "worth doing
-// later" happened sooner than expected. Rebuilding the Cycle scene
+// Update (2026-07-17, lens.js rebuild — this scene was called cycle.js when
+// this note was first written; renamed the same day): part of that "worth
+// doing later" happened sooner than expected. Rebuilding the Lens scene
 // around an elemental/angelic structure sent a fresh search back
 // through the archive, and it landed on thirty-six.doc again — this
 // time for the untyped rough material. Part 8 (a five-figure ritual
@@ -47,7 +48,7 @@
 // (earth half) and Emmanuel (water half); part 13's closing movement
 // grounds Nature/Malkuth. So thirty-six.doc now has five of its
 // thirteen parts live across the site — 1/3/4 as Lament above, 9 as
-// Moon Song, 11 as Raise a Glass, and 8/13 in the Cycle scene — with
+// Moon Song, 11 as Raise a Glass, and 8/13 in the Lens scene — with
 // six (2, 5, 6, 7, 10, 12) still unplaced.
 //
 // "DNA" (from Nucleus.doc / Nucleus.rtf) is a third, separate source —

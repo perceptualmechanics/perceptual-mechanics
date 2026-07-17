@@ -109,7 +109,7 @@ export function bindGuardedResize(container, onResize) {
 // ─── Reduced motion ─────────────────────────────────────────────────────────
 // A couple of the heaviest-animated WebGL scenes (orrery, egg) had no
 // reduced-motion accommodation at all, while their CSS-driven siblings
-// (leaf, manuscript, cycle) did. Since a `prefers-reduced-motion` CSS media
+// (leaf, manuscript, lens) did. Since a `prefers-reduced-motion` CSS media
 // query can't reach into a requestAnimationFrame loop, scenes that spin/
 // orbit continuously need to check this directly and skip their own
 // autonomous motion (drag-to-orbit stays available either way — that's

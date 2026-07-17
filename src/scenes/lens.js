@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { bindOrbitDrag, bindWheelZoom, bindGuardedResize, prefersReducedMotion, bindEscapeClose } from '../utils/sceneKit.js';
 
-// ─── Cycle: the four-faceted gem ───────────────────────────────────────────
+// ─── Lens: the four-faceted gem ───────────────────────────────────────────
 // Full rebuild, 2026-07-17, replacing the old five-element YouTube-livestream
 // version entirely (see git history — the old ELEMENTS/FIRE_LITANY roster and
 // its dead-stream problems are gone, not fixed). Scott's schema, verbatim:
@@ -340,15 +340,15 @@ function buildRockCradle(radius) {
 
 let stylesInjected = false;
 function injectStyles() {
-  if (stylesInjected || document.getElementById('cycle-styles')) { stylesInjected = true; return; }
+  if (stylesInjected || document.getElementById('lens-styles')) { stylesInjected = true; return; }
   stylesInjected = true;
   const style = document.createElement('style');
-  style.id = 'cycle-styles';
+  style.id = 'lens-styles';
   style.textContent = `
     .cyc-preview { width: 100%; height: 100%; }
     .cyc-preview canvas { width: 100% !important; height: 100% !important; display: block; }
 
-    #cycle-title, #cycle-hint, #cycle-caption {
+    #lens-title, #lens-hint, #lens-caption {
       /* Same z-index-escaping trick as every other full scene's own body-
          level title/hint — see orrery.js for the fullest explanation. Must
          clear #pm-nav (z-index 500, fixed) and #experience-overlay
@@ -357,41 +357,41 @@ function injectStyles() {
       text-align: center; pointer-events: none; z-index: 310;
       font-family: 'Times New Roman', serif;
     }
-    #cycle-title {
+    #lens-title {
       top: 4.4rem; left: 50%; transform: translateX(-50%);
       text-shadow: 0 0 18px rgba(0,0,0,0.85), 0 1px 0 rgba(0,0,0,0.6);
     }
-    #cycle-title-main {
+    #lens-title-main {
       display: block; font-size: clamp(1rem, 3vw, 1.7rem);
       letter-spacing: 0.32em; text-transform: uppercase;
     }
-    #cycle-title-sub {
+    #lens-title-sub {
       display: block; margin-top: 0.55rem; font-size: clamp(0.62rem, 1.3vw, 0.8rem);
       font-style: italic; color: rgba(225,225,235,0.5);
     }
-    #cycle-hint {
+    #lens-hint {
       top: 4.5rem; right: 1.2rem; font-size: 0.55rem; letter-spacing: 0.2em;
       line-height: 1.8; text-align: right; text-transform: uppercase;
       color: rgba(255,255,255,0.3);
     }
-    #cycle-caption {
+    #lens-caption {
       bottom: 2.5rem; left: 50%; transform: translateX(-50%);
       font-size: clamp(0.7rem, 1.6vw, 0.95rem); letter-spacing: 0.08em;
       white-space: nowrap; font-style: italic; color: rgba(255,255,255,0.4);
     }
     @media (max-width: 600px) {
-      #cycle-title { top: 3.9rem; width: 90vw; }
-      #cycle-caption { white-space: normal; width: 88vw; font-size: 0.7rem; }
+      #lens-title { top: 3.9rem; width: 90vw; }
+      #lens-caption { white-space: normal; width: 88vw; font-size: 0.7rem; }
     }
     @media (max-width: 600px) {
-      #cycle-hint {
+      #lens-hint {
         top: 7.6rem; right: 6vw; left: 6vw;
         font-size: 0.5rem; letter-spacing: 0.14em; line-height: 1.6; text-align: center;
       }
     }
-    #cycle-title.panel-open, #cycle-hint.panel-open, #cycle-caption.panel-open { opacity: 0; transition: opacity 0.3s ease; }
+    #lens-title.panel-open, #lens-hint.panel-open, #lens-caption.panel-open { opacity: 0; transition: opacity 0.3s ease; }
 
-    #cycle-panel {
+    #lens-panel {
       position: absolute; top: 0; right: 0; width: 38%; height: 100%;
       background: radial-gradient(ellipse at 30% 0%, rgba(40,36,60,0.25), transparent 60%), #0a0910;
       border-left: 1px solid rgba(200,190,220,0.15);
@@ -401,54 +401,54 @@ function injectStyles() {
       scrollbar-color: rgba(200,190,220,0.3) #0a0910; scrollbar-width: thin;
       font-family: 'Times New Roman', serif;
     }
-    #cycle-panel.open { transform: translateX(0); }
-    #cycle-panel-eyebrow {
+    #lens-panel.open { transform: translateX(0); }
+    #lens-panel-eyebrow {
       font-size: 0.7rem; letter-spacing: 0.2em; text-transform: uppercase;
       color: var(--fc, rgba(220,210,240,0.6)); margin-bottom: 0.3rem;
     }
-    #cycle-panel-title {
+    #lens-panel-title {
       font-size: 1.15rem; letter-spacing: 0.22em; text-transform: uppercase;
       color: rgba(230,225,245,0.85); margin-bottom: 0.9rem;
     }
-    #cycle-panel-faces {
+    #lens-panel-faces {
       list-style: none; margin: 0 0 1.4rem; padding: 0;
       border-bottom: 1px solid rgba(200,190,220,0.15); padding-bottom: 1.2rem;
       font-size: 0.82rem; color: rgba(220,215,235,0.6); line-height: 1.7;
     }
-    #cycle-panel-faces li { margin-bottom: 0.3rem; }
-    #cycle-panel-faces b { color: rgba(230,225,245,0.85); font-weight: normal; font-style: italic; }
-    #cycle-panel-source {
+    #lens-panel-faces li { margin-bottom: 0.3rem; }
+    #lens-panel-faces b { color: rgba(230,225,245,0.85); font-weight: normal; font-style: italic; }
+    #lens-panel-source {
       font-size: 0.72rem; letter-spacing: 0.03em; color: rgba(220,215,235,0.4);
       margin-bottom: 1.4rem; font-style: italic; line-height: 1.6;
     }
-    #cycle-panel-body {
+    #lens-panel-body {
       font-size: 0.96rem; line-height: 1.85; color: rgba(228,225,238,0.72);
       white-space: pre-line;
     }
-    #cycle-panel-body p { margin: 0 0 1.1rem; }
-    #cycle-panel-crosslink {
+    #lens-panel-body p { margin: 0 0 1.1rem; }
+    #lens-panel-crosslink {
       display: inline-block; margin-top: 1rem; font-size: 0.78rem; font-style: italic;
       color: var(--fc, rgba(220,190,255,0.7)); cursor: pointer; text-decoration: underline;
       text-underline-offset: 3px;
     }
-    #cycle-panel-crosslink:hover { color: rgba(255,255,255,0.9); }
-    #cycle-panel-close {
+    #lens-panel-crosslink:hover { color: rgba(255,255,255,0.9); }
+    #lens-panel-close {
       position: absolute; top: 1.5rem; right: 1.5rem; background: none;
       border: none; color: rgba(255,255,255,0.4); font-size: 1.2rem;
       cursor: pointer; padding: .5rem; z-index: 2;
     }
-    #cycle-panel-close:hover { color: rgba(255,255,255,0.9); }
+    #lens-panel-close:hover { color: rgba(255,255,255,0.9); }
     @media (max-width: 700px) {
-      #cycle-panel { width: 88%; padding: 4rem 1.3rem 2rem; }
+      #lens-panel { width: 88%; padding: 4rem 1.3rem 2rem; }
     }
     @media (prefers-reduced-motion: reduce) {
-      #cycle-panel { transition: none; }
+      #lens-panel { transition: none; }
     }
   `;
   document.head.appendChild(style);
 }
 
-export function createCycle(container, { preview = false } = {}) {
+export function createLens(container, { preview = false } = {}) {
   injectStyles();
 
   const w = container.clientWidth || window.innerWidth;
@@ -591,46 +591,46 @@ export function createCycle(container, { preview = false } = {}) {
   // ─── Title, hint, caption — body-level, matching orrery/egg/butterfly's
   // own fixed labels. ──────────────────────────────────────────────────────
   const title = document.createElement('div');
-  title.id = 'cycle-title';
+  title.id = 'lens-title';
   title.innerHTML = `
-    <span id="cycle-title-main">The Cycle</span>
-    <span id="cycle-title-sub">Four facets, one light, one stone.</span>
+    <span id="lens-title-main">The Lens</span>
+    <span id="lens-title-sub">Four facets, one light, one stone.</span>
   `;
   title.setAttribute('aria-hidden', 'true');
   document.body.appendChild(title);
 
   const hint = document.createElement('p');
-  hint.id = 'cycle-hint';
+  hint.id = 'lens-hint';
   hint.innerHTML = 'drag to orbit &nbsp;·&nbsp; click a facet to read &nbsp;·&nbsp; click the stone for Malkuth';
   hint.setAttribute('aria-hidden', 'true');
   document.body.appendChild(hint);
 
   const caption = document.createElement('p');
-  caption.id = 'cycle-caption';
+  caption.id = 'lens-caption';
   caption.textContent = 'Ein Soph, unattributed, still at the center';
   caption.setAttribute('aria-hidden', 'true');
   document.body.appendChild(caption);
 
   // ─── Panel ──────────────────────────────────────────────────────────────
   const panel = document.createElement('aside');
-  panel.id = 'cycle-panel';
+  panel.id = 'lens-panel';
   panel.setAttribute('role', 'dialog');
   panel.setAttribute('aria-modal', 'false');
-  panel.setAttribute('aria-labelledby', 'cycle-panel-title');
+  panel.setAttribute('aria-labelledby', 'lens-panel-title');
   panel.innerHTML = `
-    <button id="cycle-panel-close" aria-label="Close panel">✕</button>
-    <div id="cycle-panel-eyebrow"></div>
-    <div id="cycle-panel-title" tabindex="-1"></div>
-    <ul id="cycle-panel-faces"></ul>
-    <div id="cycle-panel-source"></div>
-    <div id="cycle-panel-body"></div>
+    <button id="lens-panel-close" aria-label="Close panel">✕</button>
+    <div id="lens-panel-eyebrow"></div>
+    <div id="lens-panel-title" tabindex="-1"></div>
+    <ul id="lens-panel-faces"></ul>
+    <div id="lens-panel-source"></div>
+    <div id="lens-panel-body"></div>
   `;
   container.appendChild(panel);
-  const panelEyebrow = panel.querySelector('#cycle-panel-eyebrow');
-  const panelTitle   = panel.querySelector('#cycle-panel-title');
-  const panelFaces   = panel.querySelector('#cycle-panel-faces');
-  const panelSource  = panel.querySelector('#cycle-panel-source');
-  const panelBody    = panel.querySelector('#cycle-panel-body');
+  const panelEyebrow = panel.querySelector('#lens-panel-eyebrow');
+  const panelTitle   = panel.querySelector('#lens-panel-title');
+  const panelFaces   = panel.querySelector('#lens-panel-faces');
+  const panelSource  = panel.querySelector('#lens-panel-source');
+  const panelBody    = panel.querySelector('#lens-panel-body');
 
   function hideAmbient(hidden) {
     title.classList.toggle('panel-open', hidden);
@@ -652,8 +652,8 @@ export function createCycle(container, { preview = false } = {}) {
     ).join('');
     panelSource.textContent = `${f.source} — ${f.sourceNote}`;
     panelBody.innerHTML = renderWriting(f.writing) +
-      (f.crossLink ? `<span id="cycle-panel-crosslink" data-target="${f.crossLink}">Continues in ${FACETS[f.crossLink].archangel}'s facet →</span>` : '');
-    const cross = panelBody.querySelector('#cycle-panel-crosslink');
+      (f.crossLink ? `<span id="lens-panel-crosslink" data-target="${f.crossLink}">Continues in ${FACETS[f.crossLink].archangel}'s facet →</span>` : '');
+    const cross = panelBody.querySelector('#lens-panel-crosslink');
     if (cross) cross.addEventListener('click', () => openFacetPanel(cross.dataset.target));
     panel.classList.add('open');
     hideAmbient(true);
@@ -680,7 +680,7 @@ export function createCycle(container, { preview = false } = {}) {
   }
 
   panel.addEventListener('click', e => e.stopPropagation());
-  panel.querySelector('#cycle-panel-close').addEventListener('click', e => {
+  panel.querySelector('#lens-panel-close').addEventListener('click', e => {
     e.stopPropagation();
     closePanel();
   });

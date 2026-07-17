@@ -6,6 +6,40 @@ projects (The Secret World, A Manual of Perceptual Mechanics) moved into their o
 files, which are now the source of truth for that material going forward. See "project map"
 below for where things live.
 
+## 1.0.16 (2026-07-17, same day)
+
+A full rename, cycle → lens. Scott, right after the 1.0.15 shelving report:
+"danke. actually, do a full rename -- change cycle to lens." Not a content
+change — the scene stays exactly as shelved in 1.0.15, still commented out
+of main.js and index.html, still fully built and verified. Only the name
+changes, everywhere it refers to the scene itself.
+
+`src/scenes/cycle.js` → `src/scenes/lens.js`: every identifier tied to the
+scene renamed (`createCycle` → `createLens`, `#cycle-title`/`-hint`/
+`-caption`/`-panel`/`-panel-*` → `#lens-*`, `.cyc-preview` → `.lens-preview`,
+the visible title text "The Cycle" → "The Lens"). Checked every one of the
+51 case-insensitive hits in the file by hand before touching anything —
+all 51 turned out to be identifiers or headings, none inside the actual
+poem/prose content (FACETS paragraphs), so the whole file was safe to
+rename in one pass. "Lens" also just fits the concept better than "Cycle"
+ever did: a lens is exactly what focuses and refracts light through facets
+toward a point — which is the whole visual idea (Ein Soph's light through
+the four gem faces) — so this isn't just a rename for its own sake.
+
+Updated the commented-out wiring to match: main.js's import/registry/
+initPreviews entries, index.html's nav-icon and preview-tile blocks
+(`data-scene="lens"`, `#preview-lens`, "The Lens"), the mobile nav-icon
+math comment in styles/main.css, sceneKit.js's reduced-motion scene list,
+and poems.js's header note about where thirty-six.doc's parts 8/13 live.
+
+Deliberately left alone: every generic, unrelated use of the word "cycle"
+already in the codebase — `CYCLE_SECONDS` in leaf.js (an animation-loop
+duration), `MOTIF_CYCLE` in manuscript.js (a rotation of decorative motifs),
+"bicycle" in theater.js, and every mention of thirty-six.doc as a "13-part
+cycle" in poems.js and the scene file's own writing content. None of those
+have anything to do with the scene that used to be called Cycle, so
+none of them changed.
+
 ## 1.0.15 (2026-07-17, same day)
 
 Cycle's shelved again, same day it came back. Scott, after seeing the 1.0.14

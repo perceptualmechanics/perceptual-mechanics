@@ -283,15 +283,16 @@ html, body {
      inside the viewport — #pm-nav has no wrap or scroll, so anything wider
      than the viewport just clips off both edges evenly (justify-
      content:center); see the leaf/orrery mobile-fix history in NOTES.md
-     for the screenshot that first caught this at seven icons. Cycle
-     briefly returned (2026-07-17) bringing the count to eight, which
-     needed the touch target dropped to 38px at this breakpoint to fit —
-     but cycle is shelved again the same day pending Scott's decision, so
-     the count is back to seven and the 44px guideline-compliant target
-     (base rule, no override needed here) fits fine: 7 × 44px = 308px,
-     plus 6 gaps at 0.5rem (8px) = 48px, totals 356px, comfortably under
-     every common phone width. If cycle comes back, revisit — see git
-     history around 1.0.14 for the 38px version of this rule. */
+     for the screenshot that first caught this at seven icons. The scene
+     now called Lens (cycle.js, renamed 2026-07-17) briefly returned that
+     same day bringing the count to eight, which needed the touch target
+     dropped to 38px at this breakpoint to fit — but it's shelved again
+     pending Scott's decision, so the count is back to seven and the 44px
+     guideline-compliant target (base rule, no override needed here) fits
+     fine: 7 × 44px = 308px, plus 6 gaps at 0.5rem (8px) = 48px, totals
+     356px, comfortably under every common phone width. If Lens comes
+     back, revisit — see git history around 1.0.14 for the 38px version
+     of this rule. */
   #pm-nav { gap: 0.5rem; }
   /* Seven 200px tiles in a column (~1500px) is always taller than a
      phone viewport. align-items:center (inherited from #landing, and the

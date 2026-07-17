@@ -59,7 +59,7 @@
       </svg>
     </button>
 
-    <!-- Egg, Leaf, Cycle -->
+    <!-- Egg, Leaf -->
     <button class="nav-icon" data-scene="egg" aria-label="The Egg" title="The Egg — Aurorae, Magnetic Field, Satellites" onmouseover="window.status='lantern'; pmGlimpse('lantern'); return true;" onmouseout="window.status=''; return true;">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
         <circle cx="12" cy="12" r="6"/>
@@ -93,16 +93,16 @@
       </svg>
     </button>
 
-    <!-- Cycle: rebuilt 2026-07-17 around a four-faceted gem (Gabriel/Fire,
-         Emmanuel/Water, Raphael/Earth, Michael/Light-Air) lit from its
-         center by Ein Soph — a kite/diamond outline quartered by a cross
-         through the middle, with a filled dot at the center for the light.
-         Shelved again the same day — Scott: "interesting, but let me mull
-         this over a bit more. For now, comment it out." Not a rejection,
-         just a pause; the scene itself is untouched and build-verified
-         (NOTES.md, 1.0.14). Re-enable alongside src/main.js and the
-         preview-cycle block below.
-    <button class="nav-icon" data-scene="cycle" aria-label="The Cycle" title="The Cycle — Four facets, one light, one stone." onmouseover="window.status='refraction'; pmGlimpse('refraction'); return true;" onmouseout="window.status=''; return true;">
+    <!-- Lens (renamed from Cycle, 2026-07-17): a four-faceted gem
+         (Gabriel/Fire, Emmanuel/Water, Raphael/Earth, Michael/Light-Air)
+         lit from its center by Ein Soph — a kite/diamond outline quartered
+         by a cross through the middle, with a filled dot at the center for
+         the light. Still shelved pending Scott's decision — Scott: "danke.
+         actually, do a full rename -- change cycle to lens" (the scene
+         itself, wiring included, stays commented out; only the name
+         changes, everywhere). Re-enable alongside src/main.js and the
+         preview-lens block below.
+    <button class="nav-icon" data-scene="lens" aria-label="The Lens" title="The Lens — Four facets, one light, one stone." onmouseover="window.status='refraction'; pmGlimpse('refraction'); return true;" onmouseout="window.status=''; return true;">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
         <path d="M12 2 L20 12 L12 22 L4 12 Z"/>
         <line x1="12" y1="2" x2="12" y2="22"/>
@@ -183,13 +183,13 @@
         </div>
       </div>
 
-      <!-- Cycle preview: shelved alongside the nav icon above (2026-07-17)
-           while Scott mulls it over. Re-enable together. -->
+      <!-- Lens preview (renamed from Cycle, 2026-07-17): shelved alongside
+           the nav icon above while Scott mulls it over. Re-enable together. -->
       <!--
-      <div class="preview-wrapper" data-scene="cycle" role="listitem">
-        <div class="preview-container" id="preview-cycle"
-             role="button" tabindex="0" title="The Cycle — Four facets, one light, one stone."
-             aria-label="The Cycle — a four-faceted gem lit from within by Ein Soph, held in a rough stone cradle. Press Enter to expand."
+      <div class="preview-wrapper" data-scene="lens" role="listitem">
+        <div class="preview-container" id="preview-lens"
+             role="button" tabindex="0" title="The Lens — Four facets, one light, one stone."
+             aria-label="The Lens — a four-faceted gem lit from within by Ein Soph, held in a rough stone cradle. Press Enter to expand."
              onmouseover="window.status='refraction'; pmGlimpse('refraction'); return true;" onmouseout="window.status=''; return true;">
         </div>
       </div>
