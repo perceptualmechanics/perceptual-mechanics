@@ -320,6 +320,64 @@ Then a four-item punch list, left to work through solo:
   here), so none of this was confirmed live in an actual browser; it's all web-search research.
   Worth a spot-check.
 
+## Full codebase audit: quality, modularity, mobile, a11y (2026-07-17, same day)
+
+Scott's ask, solo, while he stepped out: a full code review across the whole site, focused on code
+quality, modularity/reusability, mobile, and accessibility. Sandbox note stands from the punch-list
+above — no working browser tool this session (Chrome extension not connected, headless Chromium
+can't launch — missing `libXdamage.so.1`, no root, package mirrors unreachable) — so everything
+below is verified via `node --check` + `vite build` (syntax/bundling) and careful reading, not
+visual/interactive testing. Flagged for Scott's own spot-check where it matters.
+
+**New: `src/utils/sceneKit.js`.** Five small helpers factored out of drag-to-orbit, wheel-zoom,
+guarded-resize, prefers-reduced-motion, and escape-to-close code that had drifted slightly out of
+sync across orrery.js/egg.js/sphere.js/butterfly.js. Each returns a `dispose()` matching every
+scene's existing teardown convention. Adopted so far in orrery.js, egg.js, and sphere.js.
+
+**Real bugs this surfaced and fixed, not just refactoring:**
+- **orrery.js and sphere.js had no touch support for drag-to-orbit at all** — mouse-only, despite
+  sphere.js already having touch listeners (only used for tap-vs-drag detection on facet clicks,
+  never wired to rotation). Rotating either scene silently didn't work on phones/tablets. Fixed via
+  `bindOrbitDrag`, which unifies mouse and touch under one implementation.
+- **orrery.js and egg.js had zero `prefers-reduced-motion` accommodation** for their continuous
+  WebGL animation loops (orbital rotation, Earth/cloud spin, field-line precession, satellite
+  orbits), unlike their CSS-driven sibling scenes (leaf, manuscript, cycle) which already respect
+  it. Now gated behind `reduceMotion` in both files — drag-to-orbit itself stays available either
+  way, since that's motion the visitor asks for, not motion imposed on them. Left ungated: small
+  opacity/brightness pulsing (orrery's radio-telescope signal, egg's aurora shimmer and glow
+  breathing) — that's not the continuous positional motion the media query is for.
+- **None of the three read-more panels (orrery, egg, sphere) supported Escape to close** — only the
+  close button or a click outside worked. All three now close on Escape via `bindEscapeClose`,
+  matching standard modal-dialog expectation.
+- **Mobile landing-page overflow**: `html, body { overflow: hidden }` (needed site-wide for the
+  full-screen scene experience) combined with the 7-tile preview grid stacking into a column
+  (~1500px) on narrow viewports, centered via `#landing`'s `justify-content: center` — there was no
+  scrollbar and most tiles were simply unreachable below a certain viewport height. `#landing` now
+  owns its own `overflow-y: auto` scroll context, and switches to `flex-start` alignment under
+  480px so the natural "start at top, scroll down" gesture reaches every tile.
+- **Nav icon touch targets** were ~38px effective (22px svg + 0.5rem padding), under the ~44px
+  guideline. Added `min-width`/`min-height: 44px` to `.nav-icon` — pads the hit area without
+  changing anything visually.
+- **No z-index scale documented anywhere.** The `#experience-overlay` collision bug (any
+  body-level element under z-index 300 is only visible during the overlay's 0.6s fade-in, then
+  permanently covered — see the punch-list section above) had already independently bitten orrery,
+  egg, and leaf, each fixed the same way once found. Added a comment block at the top of
+  `styles/main.css` documenting the 9999/500/400/310/300 scale so the next scene added doesn't
+  rediscover it the hard way.
+
+**Assessed as already solid, no changes made:** theater.js (strong existing a11y — live region,
+comprehensive aria-labels, its own reduced-motion handling), cycle.js (button-based UI, no
+drag/orbit/resize logic to consolidate), butterfly.js (already has correct mouse+touch drag support
+— not migrated onto sceneKit.js since it isn't broken, though its on-screen label/hint is still
+split across main.js/main.css rather than being self-contained in butterfly.js like every other
+scene's pattern; worth revisiting if butterfly.js gets touched again for something else).
+`goldenHare.js` intentionally not reviewed (currently disabled feature).
+
+**Not done, lower priority:** migrating butterfly.js onto sceneKit.js purely for consistency (works
+correctly as-is); code-splitting the `orrery` bundle (Vite's build warns it's >500kB minified —
+that's a real observation but a performance/tooling concern, not a quality/a11y bug, and out of
+scope for this pass).
+
 ## You've Got a Friend in Satan — scenes wired into the theater (2026-07-16)
 
 Scott's first play (a 1996 scanned script) got a full verbatim Word-doc transcription
