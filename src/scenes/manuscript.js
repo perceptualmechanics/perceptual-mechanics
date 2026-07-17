@@ -594,6 +594,15 @@ function buildStyles() {
       display: flex; align-items: center; justify-content: center;
       animation: ms-ember 4.2s steps(7) infinite;
       filter: url(#ms-rough-strong) contrast(1.1) sepia(0.15);
+      /* Safari/WebKit has a long-standing bug where an animated element
+         (the box-shadow keyframes above) that also carries a referenced
+         SVG filter (url(#ms-rough-strong)) periodically drops and
+         re-resolves the filter, which reads as the element flipping
+         between two visibly different states rather than a smooth loop.
+         Forcing its own compositing layer keeps the filter stable. */
+      -webkit-transform: translateZ(0);
+      transform: translateZ(0);
+      will-change: filter, box-shadow;
     }
     @keyframes ms-ember {
       0%, 100% { box-shadow: 0 0 0 1px rgba(0,0,0,0.5), 0 0 14px rgba(193,122,61,0.12); }
@@ -604,6 +613,10 @@ function buildStyles() {
       position: absolute; z-index: 2; pointer-events: none;
       background: linear-gradient(180deg, transparent, rgba(0,0,0,0.75) 20%, rgba(0,0,0,0.5) 65%, transparent 100%);
       filter: url(#ms-rough-strong);
+      /* Same Safari filter-stability fix as .ms-preview-medallion, its
+         animated parent - see comment there. */
+      -webkit-transform: translateZ(0);
+      transform: translateZ(0);
     }
     .ms-crack-main { left: 12%; top: 4%; width: 2px; height: 62%; transform: rotate(21deg); }
     .ms-crack-branch { left: 40%; top: 38%; width: 1.5px; height: 26%; transform: rotate(-32deg); opacity: 0.7; }
