@@ -295,7 +295,14 @@ function buildOrrery(preview, suspendTopY, rafterY) {
   // ─── The radio telescope — "still on, receiving information from the
   // heavens." A riser from the suspension collar continues the mast upward,
   // through the roof, to a rough sheet-metal dish and a pulsing signal bulb.
-  const riserTopY = suspendTopY + (preview ? 0.7 : 0.95);
+  // Riser height tuned so this whole assembly clears the ceiling by a wide,
+  // unmistakable margin (was clearing it by as little as 0.05-0.1 units
+  // before — technically "poking out," but not legibly so): the found
+  // story's own text says it plainly ("about 30 feet high, the peak poking
+  // out of the warehouse skylights"), so the peak should read as clearly
+  // above the roofline, surrounded by the sky/star field beyond it, not
+  // just barely grazing the hole.
+  const riserTopY = suspendTopY + (preview ? 1.0 : 1.35);
   addStrut(group, new THREE.Vector3(0, suspendTopY, 0), new THREE.Vector3(0, riserTopY, 0), (preview ? 0.03 : 0.04) * HW, mastMat);
   const dishGroup = new THREE.Group();
   dishGroup.position.y = riserTopY;
@@ -931,7 +938,7 @@ export function createOrrery(container, { preview = false } = {}) {
         line-height: 1.8; text-align: right;
       }
       #orrery-caption {
-        bottom: 2rem; left: 50%; transform: translateX(-50%);
+        bottom: 2.5rem; left: 50%; transform: translateX(-50%);
         font-size: clamp(0.7rem, 1.6vw, 0.95rem); letter-spacing: 0.08em;
         white-space: nowrap; font-style: italic; text-transform: none;
         color: rgba(255,255,255,0.4);
@@ -949,12 +956,47 @@ export function createOrrery(container, { preview = false } = {}) {
         background: radial-gradient(ellipse at center, rgba(0,0,0,0) 42%, rgba(3,2,1,0.6) 100%);
       }
       #orrery-grain {
+        /* Cranked up hard (Scott: "that wonderful barely-compressed video
+           vibe") — three stacked layers instead of one: fine feTurbulence
+           grain (as before, just louder), a second coarser/blockier
+           turbulence pass standing in for MPEG-style macroblocking, and
+           harder scanlines. background-position-drift via steps() below
+           snaps between two noise offsets rather than panning smoothly —
+           reads as frame-to-frame video noise, not a moving texture. */
         position: absolute; inset: 0; pointer-events: none; z-index: 6;
-        opacity: 0.5; mix-blend-mode: overlay;
+        opacity: 0.85; mix-blend-mode: overlay;
         background-image:
-          repeating-linear-gradient(0deg, rgba(255,255,255,0.03) 0px, rgba(255,255,255,0.03) 1px, transparent 1px, transparent 3px),
-          url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)' opacity='0.55'/></svg>");
-        background-size: 100% 100%, 160px 160px;
+          repeating-linear-gradient(0deg, rgba(255,255,255,0.07) 0px, rgba(255,255,255,0.07) 1px, transparent 1px, transparent 3px),
+          url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)' opacity='0.75'/></svg>"),
+          url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='64' height='64'><filter id='b'><feTurbulence type='fractalNoise' baseFrequency='0.12' numOctaves='1' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/><feComponentTransfer><feFuncA type='linear' slope='2.2' intercept='-0.5'/></feComponentTransfer></filter><rect width='100%25' height='100%25' filter='url(%23b)' opacity='0.4'/></svg>");
+        background-size: 100% 100%, 160px 160px, 24px 24px;
+        animation: orrery-grain-drift 0.6s steps(2) infinite;
+      }
+      @keyframes orrery-grain-drift {
+        0%, 100% { background-position: 0 0, 0 0, 0 0; }
+        50%      { background-position: 0 0, 2px -1px, -1px 2px; }
+      }
+      /* Cheap-lens-and-compression color fringe, concentrated at the frame
+         edges (same radial falloff idea as the vignette, different job) —
+         mix-blend-mode:screen so it brightens the fringe rather than
+         muddying the render underneath. */
+      #orrery-chroma {
+        position: absolute; inset: 0; pointer-events: none; z-index: 7;
+        mix-blend-mode: screen;
+      }
+      #orrery-chroma::before, #orrery-chroma::after {
+        content: ''; position: absolute; inset: -2px;
+      }
+      #orrery-chroma::before {
+        background: radial-gradient(ellipse at center, transparent 52%, rgba(255,40,60,0.16) 100%);
+        transform: translateX(-2px);
+      }
+      #orrery-chroma::after {
+        background: radial-gradient(ellipse at center, transparent 52%, rgba(40,220,255,0.16) 100%);
+        transform: translateX(2px);
+      }
+      @media (prefers-reduced-motion: reduce) {
+        #orrery-grain { animation: none; }
       }
       #orrery-title {
         /* #pm-nav (site.css) is a fixed, 3.5rem-tall, z-index:500 bar —
@@ -990,7 +1032,7 @@ export function createOrrery(container, { preview = false } = {}) {
 
   // ─── Panel (full only) ────────────────────────────────────────────────────
   let panel = null, panelTitle = null, panelEra = null, panelNote = null;
-  let hint = null, caption = null, vignette = null, grain = null, title = null;
+  let hint = null, caption = null, vignette = null, grain = null, chroma = null, title = null;
   if (!preview) {
     vignette = document.createElement('div');
     vignette.id = 'orrery-vignette';
@@ -1001,6 +1043,11 @@ export function createOrrery(container, { preview = false } = {}) {
     grain.id = 'orrery-grain';
     grain.setAttribute('aria-hidden', 'true');
     container.appendChild(grain);
+
+    chroma = document.createElement('div');
+    chroma.id = 'orrery-chroma';
+    chroma.setAttribute('aria-hidden', 'true');
+    container.appendChild(chroma);
 
     title = document.createElement('div');
     title.id = 'orrery-title';
@@ -1185,6 +1232,7 @@ export function createOrrery(container, { preview = false } = {}) {
       if (caption) caption.remove();
       if (vignette) vignette.remove();
       if (grain) grain.remove();
+      if (chroma) chroma.remove();
       if (title) title.remove();
       renderer.domElement.remove();
     }
