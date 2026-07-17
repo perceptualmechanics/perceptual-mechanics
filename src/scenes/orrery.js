@@ -1419,8 +1419,20 @@ export function createOrrery(container, { preview = false } = {}) {
 
   let hoveredPoster = null;
 
+  // Named so dispose() can remove them — container is the shared
+  // #experience-container element every scene reuses (main.js only clears
+  // its innerHTML between scenes, it never replaces the node itself), so
+  // any listener bound directly to it and never removed keeps firing
+  // after the scene it belongs to is gone. That's exactly what Scott hit:
+  // clicking on the egg scene played an orrery poster's audio riff,
+  // because this click handler — bound here, on that same shared
+  // container — was still attached and its closure still had a hovered
+  // poster reference from before the switch.
+  let onContainerMouseMove, onContainerTouchMove, onContainerTouchStart, onContainerClick;
+  let touchMoved = false;
+
   if (!preview) {
-    container.addEventListener('mousemove', e => {
+    onContainerMouseMove = e => {
       const rect = container.getBoundingClientRect();
       mouse.x =  ((e.clientX - rect.left) / rect.width)  * 2 - 1;
       mouse.y = -((e.clientY - rect.top)  / rect.height) * 2 + 1;
@@ -1445,12 +1457,14 @@ export function createOrrery(container, { preview = false } = {}) {
       }
 
       container.style.cursor = (hovered || hoveredPoster) ? 'pointer' : 'default';
-    });
+    };
+    container.addEventListener('mousemove', onContainerMouseMove);
 
-    let touchMoved = false;
-    container.addEventListener('touchmove', () => { touchMoved = true; }, { passive: true });
-    container.addEventListener('touchstart', () => { touchMoved = false; }, { passive: true });
-    container.addEventListener('click', e => {
+    onContainerTouchMove = () => { touchMoved = true; };
+    container.addEventListener('touchmove', onContainerTouchMove, { passive: true });
+    onContainerTouchStart = () => { touchMoved = false; };
+    container.addEventListener('touchstart', onContainerTouchStart, { passive: true });
+    onContainerClick = e => {
       if (touchMoved) { touchMoved = false; return; }
       if (panel.classList.contains('open') && !panel.contains(e.target)) {
         panel.classList.remove('open');
@@ -1464,7 +1478,8 @@ export function createOrrery(container, { preview = false } = {}) {
       selected = true;
       setEmphasis(true);
       openPanel();
-    });
+    };
+    container.addEventListener('click', onContainerClick);
   }
 
   // ─── Drag to orbit (mouse + touch) ──────────────────────────────────────
@@ -1561,6 +1576,12 @@ export function createOrrery(container, { preview = false } = {}) {
       wheelZoom.dispose();
       resize.dispose();
       escapeClose?.dispose();
+      if (!preview) {
+        container.removeEventListener('mousemove', onContainerMouseMove);
+        container.removeEventListener('touchmove', onContainerTouchMove);
+        container.removeEventListener('touchstart', onContainerTouchStart);
+        container.removeEventListener('click', onContainerClick);
+      }
       if (audioCtx) { audioCtx.close(); audioCtx = null; }
       renderer.dispose();
       starGeo.dispose();

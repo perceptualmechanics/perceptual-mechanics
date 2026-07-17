@@ -684,6 +684,12 @@ export function createEgg(container, { preview = false } = {}) {
   const raycaster = new THREE.Raycaster();
   const mouse = new THREE.Vector2();
   let hoveredSat = null, selectedSat = null;
+  // Named so dispose() can remove them — container is the shared
+  // #experience-container element every scene reuses (main.js only clears
+  // its innerHTML between scenes, never replaces the node), so a listener
+  // bound directly to it and never removed keeps firing after this scene
+  // is gone, reading stale closures against a disposed scene.
+  let onContainerMouseMove = null, onContainerClick = null;
 
   function escapeHtml(s) {
     return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -746,7 +752,7 @@ export function createEgg(container, { preview = false } = {}) {
   }
 
   if (!preview) {
-    container.addEventListener('mousemove', e => {
+    onContainerMouseMove = e => {
       const rect = container.getBoundingClientRect();
       mouse.x =  ((e.clientX - rect.left) / rect.width)  * 2 - 1;
       mouse.y = -((e.clientY - rect.top)  / rect.height) * 2 + 1;
@@ -759,8 +765,9 @@ export function createEgg(container, { preview = false } = {}) {
         if (hoveredSat) hoveredSat.beaconMat.color.setHex(0xffffff);
       }
       container.style.cursor = hoveredSat ? 'pointer' : 'default';
-    });
-    container.addEventListener('click', e => {
+    };
+    container.addEventListener('mousemove', onContainerMouseMove);
+    onContainerClick = e => {
       if (panel.classList.contains('open') && !panel.contains(e.target)) {
         panel.classList.remove('open');
         selectedSat = null;
@@ -769,7 +776,8 @@ export function createEgg(container, { preview = false } = {}) {
       if (!hoveredSat) return;
       selectedSat = hoveredSat;
       openPoem(selectedSat);
-    });
+    };
+    container.addEventListener('click', onContainerClick);
   }
 
   // ─── Drag to orbit (mouse + touch, via sceneKit) ────────────────────────
@@ -856,6 +864,8 @@ export function createEgg(container, { preview = false } = {}) {
       orbitDrag.dispose();
       resize.dispose();
       escapeClose?.dispose();
+      if (onContainerMouseMove) container.removeEventListener('mousemove', onContainerMouseMove);
+      if (onContainerClick) container.removeEventListener('click', onContainerClick);
       renderer.dispose();
       geo.dispose(); mat.dispose(); earthTex.dispose();
       cloudGeo.dispose(); cloudMat.dispose(); cloudTex.dispose();

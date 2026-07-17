@@ -6,6 +6,36 @@ projects (The Secret World, A Manual of Perceptual Mechanics) moved into their o
 files, which are now the source of truth for that material going forward. See "project map"
 below for where things live.
 
+## 1.0.13 (2026-07-17, same day)
+
+Scott: "while I was on egg, I clicked, and triggered one of the orrery
+posters!" A real, and fairly serious, bug — not just an orrery problem.
+
+`main.js` reuses one `#experience-container` element for every scene;
+switching scenes only clears its `innerHTML`, it never replaces the node
+itself. Four scenes — sphere, butterfly, egg, orrery — bind their
+mousemove/click/touchmove/touchstart interaction handlers straight onto
+that shared container (butterfly binds several straight onto `window`,
+which is even less scoped), and none of their `dispose()` methods ever
+removed them. So every scene's listeners just kept running forever after
+you left it — reading stale closures, raycasting against geometry that
+had already been disposed — and any click or mousemove anywhere in the
+experience, on any later scene, could still trigger something from a scene
+you'd already closed. That's exactly Scott's bug: orrery's own click
+handler was still attached from an earlier visit, its `hoveredPoster`
+closure variable still held a poster from before, and clicking on egg
+fired it.
+
+Fixed all four: converted each scene's inline listener functions to named
+variables and added the matching `removeEventListener` calls to
+`dispose()`. Left `manuscript.js`, `theater.js`, `cycle.js`, and `leaf.js`
+alone — their click handlers are bound to elements the scene itself
+creates as children of the container (the scroll, the screen, the
+controls), which get destroyed along with everything else when
+`innerHTML` is cleared, so those were never actually leaking.
+
+Version bumped to 1.0.13 in package.json.
+
 ## 1.0.12 (2026-07-17, same day)
 
 One more from Scott's mobile screenshots: opening the orrery's read-more

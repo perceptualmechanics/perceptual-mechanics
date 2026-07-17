@@ -179,6 +179,13 @@ export function createSphere(container, { preview = false } = {}) {
   // Panel (full only)
   let panel = null, panelContent = null, panelTitle = null, facetIdEl = null, hint = null;
   let wheelZoom = null, escapeClose = null;
+  // Named so dispose() can remove them — container is the shared
+  // #experience-container element every scene reuses (main.js only clears
+  // its innerHTML between scenes, never replaces the node), so a listener
+  // bound directly to it and never removed keeps firing after this scene
+  // is gone, reading stale closures against a disposed scene.
+  let onContainerMouseMove = null, onContainerTouchMove = null,
+      onContainerTouchStart = null, onContainerClick = null;
   if (!preview) {
     // Design pass, 2026-07-17: every other scene shows a small instructional
     // hint (drag/click) — sphere never got one, which left it the one scene
@@ -332,7 +339,7 @@ export function createSphere(container, { preview = false } = {}) {
       navigateToFragment(link);
     });
 
-    container.addEventListener('mousemove', e => {
+    onContainerMouseMove = e => {
       const rect = container.getBoundingClientRect();
       mouse.x =  ((e.clientX - rect.left) / rect.width)  * 2 - 1;
       mouse.y = -((e.clientY - rect.top)  / rect.height) * 2 + 1;
@@ -345,12 +352,15 @@ export function createSphere(container, { preview = false } = {}) {
         if (hoveredFace !== -1 && hoveredFace !== selectedFace) setFaceColor(hoveredFace, hoverColor);
       }
       container.style.cursor = hoveredFace !== -1 ? 'pointer' : 'default';
-    });
+    };
+    container.addEventListener('mousemove', onContainerMouseMove);
 
     let touchMoved = false;
-    container.addEventListener('touchmove', () => { touchMoved = true; }, { passive: true });
-    container.addEventListener('touchstart', () => { touchMoved = false; }, { passive: true });
-    container.addEventListener('click', e => {
+    onContainerTouchMove = () => { touchMoved = true; };
+    container.addEventListener('touchmove', onContainerTouchMove, { passive: true });
+    onContainerTouchStart = () => { touchMoved = false; };
+    container.addEventListener('touchstart', onContainerTouchStart, { passive: true });
+    onContainerClick = e => {
       if (touchMoved) { touchMoved = false; return; }
       if (panel.classList.contains('open') && !panel.contains(e.target)) {
         panel.classList.remove('open');
@@ -393,7 +403,8 @@ export function createSphere(container, { preview = false } = {}) {
         link.setAttribute('tabindex', '0');
         link.setAttribute('aria-label', `Navigate to fragment: ${link.dataset.target}`);
       });
-    });
+    };
+    container.addEventListener('click', onContainerClick);
 
     wheelZoom = bindWheelZoom(container, {
       isBlocked: e => panel && panel.contains(e.target),
@@ -515,6 +526,10 @@ export function createSphere(container, { preview = false } = {}) {
       orbitDrag.dispose();
       wheelZoom?.dispose();
       escapeClose?.dispose();
+      if (onContainerMouseMove) container.removeEventListener('mousemove', onContainerMouseMove);
+      if (onContainerTouchMove) container.removeEventListener('touchmove', onContainerTouchMove);
+      if (onContainerTouchStart) container.removeEventListener('touchstart', onContainerTouchStart);
+      if (onContainerClick) container.removeEventListener('click', onContainerClick);
       resize.dispose();
       renderer.dispose();
       if (labelRenderer) labelRenderer.domElement.remove();

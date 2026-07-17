@@ -228,24 +228,41 @@ export function createButterfly(container, { preview = false, shorts = false, ro
     camera.lookAt(0,0,0);
   }
 
+  // Named so dispose() can remove them. Several of these are bound to
+  // `window`, not `container` — meaning they never had any per-scene scope
+  // to begin with, and previously ran forever after leaving butterfly,
+  // stacking a fresh duplicate set each time the scene was revisited. The
+  // container-bound ones are just as stale afterward: container is the
+  // shared #experience-container element every scene reuses (main.js only
+  // clears its innerHTML between scenes, never replaces the node itself).
+  let onMouseDown = null, onMouseUp = null, onMouseMove = null, onWheel = null,
+      onTouchStart = null, onTouchEnd = null, onTouchMove = null;
+
   if (!preview) {
-    container.addEventListener('mousedown', e=>{isDragging=true;autoJitter=false;prevMouse={x:e.clientX,y:e.clientY};});
-    window.addEventListener('mouseup',()=>{isDragging=false;setTimeout(()=>{autoJitter=true;},3000);});
-    window.addEventListener('mousemove',e=>{
+    onMouseDown = e=>{isDragging=true;autoJitter=false;prevMouse={x:e.clientX,y:e.clientY};};
+    container.addEventListener('mousedown', onMouseDown);
+    onMouseUp = ()=>{isDragging=false;setTimeout(()=>{autoJitter=true;},3000);};
+    window.addEventListener('mouseup', onMouseUp);
+    onMouseMove = e=>{
       if(!isDragging)return;
       spherical.theta-=(e.clientX-prevMouse.x)*0.005;
       spherical.phi=Math.max(.1,Math.min(Math.PI-.1,spherical.phi+(e.clientY-prevMouse.y)*0.005));
       prevMouse={x:e.clientX,y:e.clientY};
-    });
-    container.addEventListener('wheel',e=>{spherical.radius=Math.max(40,Math.min(220,spherical.radius+e.deltaY*0.08));});
-    container.addEventListener('touchstart',e=>{isDragging=true;autoJitter=false;prevMouse={x:e.touches[0].clientX,y:e.touches[0].clientY};},{passive:true});
-    window.addEventListener('touchend',()=>{isDragging=false;setTimeout(()=>{autoJitter=true;},3000);});
-    window.addEventListener('touchmove',e=>{
+    };
+    window.addEventListener('mousemove', onMouseMove);
+    onWheel = e=>{spherical.radius=Math.max(40,Math.min(220,spherical.radius+e.deltaY*0.08));};
+    container.addEventListener('wheel', onWheel);
+    onTouchStart = e=>{isDragging=true;autoJitter=false;prevMouse={x:e.touches[0].clientX,y:e.touches[0].clientY};};
+    container.addEventListener('touchstart', onTouchStart, {passive:true});
+    onTouchEnd = ()=>{isDragging=false;setTimeout(()=>{autoJitter=true;},3000);};
+    window.addEventListener('touchend', onTouchEnd);
+    onTouchMove = e=>{
       if(!isDragging)return;
       spherical.theta-=(e.touches[0].clientX-prevMouse.x)*0.005;
       spherical.phi=Math.max(.1,Math.min(Math.PI-.1,spherical.phi+(e.touches[0].clientY-prevMouse.y)*0.005));
       prevMouse={x:e.touches[0].clientX,y:e.touches[0].clientY};
-    },{passive:true});
+    };
+    window.addEventListener('touchmove', onTouchMove, {passive:true});
   }
 
   // ─── Resize ─────────────────────────────────────────────────────────────────
@@ -390,6 +407,13 @@ export function createButterfly(container, { preview = false, shorts = false, ro
     dispose() {
       cancelAnimationFrame(animId);
       window.removeEventListener('resize', resize);
+      if (onMouseDown) container.removeEventListener('mousedown', onMouseDown);
+      if (onMouseUp) window.removeEventListener('mouseup', onMouseUp);
+      if (onMouseMove) window.removeEventListener('mousemove', onMouseMove);
+      if (onWheel) container.removeEventListener('wheel', onWheel);
+      if (onTouchStart) container.removeEventListener('touchstart', onTouchStart);
+      if (onTouchEnd) window.removeEventListener('touchend', onTouchEnd);
+      if (onTouchMove) window.removeEventListener('touchmove', onTouchMove);
       renderer.dispose();
       renderer.domElement.remove();
     }
