@@ -6,6 +6,61 @@ projects (The Secret World, A Manual of Perceptual Mechanics) moved into their o
 files, which are now the source of truth for that material going forward. See "project map"
 below for where things live.
 
+## 1.0.17 (2026-07-17, same day)
+
+Lens redone — one gem, not four, and the light finally has a name. Scott,
+right after the rename landed: "Yes. but redo it. the laser light comes
+from 'Maestro, if you please'. It hits one cut gem, with four different
+colored sides. make the gem translucent." Still shelved, same as 1.0.15/16
+— none of this is wired into main.js or index.html yet — but the scene
+itself changed structurally, not just cosmetically.
+
+Two changes:
+
+1. One gem instead of four. Built by hand as a bipyramid (`buildFacetedGem`)
+   — the same kite/diamond silhouette this scene's own nav icon already
+   draws — six vertices, eight triangular facets, non-indexed so each
+   triangle gets a clean flat normal. The four vertical sides (a top wedge
+   plus a matching bottom wedge each) carry the four colors as a
+   `THREE.Mesh` material array over `geometry.groups`, one group per side,
+   in `FACET_ORDER`. Click/hover detection reads `intersection.faceIndex`
+   from the raycaster and floors it by 2 to recover which side got hit —
+   two triangles per side, laid out in order, so `faceIndex / 2` maps
+   straight back to a facet key. "Make the gem translucent," per Scott:
+   `transmission` pushed to 0.9 with near-zero roughness and an
+   attenuation color/distance tuned per facet, so the four colors read as
+   colored glass with real depth, not colored plastic.
+
+2. The light source found its name. What was a generic internal glow
+   standing in for "Ein Soph" is now staged as a literal spotlight rig —
+   a small fixture mesh, a real `THREE.SpotLight`, and (full scene only) a
+   translucent additive cone faking a visible beam, all aimed at the gem
+   from outside rather than glowing from within it. The fixture is
+   clickable and opens a panel for "Prologue" — the shortest complete poem
+   in Scott Jason Cohen's Assembled Verse.doc, four lines Scott pointed to
+   directly: "Maestro, if you please: / A single spotlight, / Illuminating
+   / Me from head to toe." It reads as a stage direction more than a
+   description — cueing a light on before anything else in the poem
+   happens — which is exactly the relationship the actual spotlight rig
+   has to the gem. Ein Soph is still the concept the light stands for;
+   Prologue is the concrete text and image grounding it, the same
+   relationship every elemental facet already has between its archangel
+   label and its own writing.
+
+Also fixed in passing: the `.cyc-preview` CSS class from the original
+cycle.js was missed during 1.0.16's rename (it doesn't contain the
+substring "cycle," so the sed pass never touched it) — now `.lens-preview`,
+matching everything else.
+
+Couldn't verify this one live — no headless browser in this sandbox, and
+this time the geometry itself is new (a hand-built, non-indexed, grouped
+BufferGeometry with a material array), not just a rename, so it's worth
+Scott's own eyes on the actual gem shape, the beam's angle, and the facet
+click targets before anything gets un-shelved. Temporarily wired it into a
+scratch copy of main.js to confirm the module bundles cleanly (24 modules,
+no import/resolution errors) before reverting main.js back to its shelved
+state — that only proves it parses and links, not that it looks right.
+
 ## 1.0.16 (2026-07-17, same day)
 
 A full rename, cycle → lens. Scott, right after the 1.0.15 shelving report:

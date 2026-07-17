@@ -1,10 +1,11 @@
 import * as THREE from 'three';
 import { bindOrbitDrag, bindWheelZoom, bindGuardedResize, prefersReducedMotion, bindEscapeClose } from '../utils/sceneKit.js';
 
-// ─── Lens: the four-faceted gem ───────────────────────────────────────────
-// Full rebuild, 2026-07-17, replacing the old five-element YouTube-livestream
-// version entirely (see git history — the old ELEMENTS/FIRE_LITANY roster and
-// its dead-stream problems are gone, not fixed). Scott's schema, verbatim:
+// ─── Lens: one cut gem, four colored sides ─────────────────────────────────
+// First full rebuild, 2026-07-17, replacing the old five-element YouTube-
+// livestream version entirely (see git history — the old ELEMENTS/
+// FIRE_LITANY roster and its dead-stream problems are gone, not fixed).
+// Scott's schema, verbatim, for that first pass:
 //
 //   "The gem with four faces is the crystal focusing the laser light of
 //    EIN SOPH. Nature is the cut of the overall gem. MALKUTH/SHEKINAH. Each
@@ -12,18 +13,43 @@ import { bindOrbitDrag, bindWheelZoom, bindGuardedResize, prefersReducedMotion, 
 //    fit in with that particular element. and then you incorporate my
 //    writing."
 //
-// Ein Soph (Kabbalah: the infinite, the divine before/beyond any attribute)
-// is the light at the center. It's focused, not created, by the crystal —
-// four archangel/element facets around a shared point: Gabriel (Fire/Death,
-// ruby), Emmanuel (Water, sapphire), Raphael (Earth, emerald), Michael
-// (Light/Air, yellow sapphire). Malkuth/Shekinah — the tenth sephirah, the
-// physical world, the indwelling feminine presence of the divine — isn't a
-// fifth facet standing next to the other four; per Scott's own framing she's
-// the CUT of the whole gem, the vessel/setting that holds and shapes the
-// light rather than one more color competing with the others. Built here as
-// the rough, unpolished stone the four polished facets are still embedded
-// in and rising out of — nature as what contains revelation, not one more
-// piece of it.
+// That first pass built four separate gem meshes arranged in a ring around
+// a small internal glow standing in for Ein Soph. Scott's redo, same day,
+// after seeing the rename to Lens land:
+//
+//   "Yes. but redo it. the laser light comes from 'Maestro, if you please'.
+//    It hits one cut gem, with four different colored sides. make the gem
+//    translucent."
+//
+// Two changes, both structural, not cosmetic:
+//   1. One gem, not four. A single four-sided cut stone (a bipyramid — the
+//      kite/diamond silhouette this scene's own nav icon already uses),
+//      built by hand so each of its four vertical sides can carry its own
+//      color and material, rather than four independent stones standing
+//      near each other.
+//   2. The light is no longer generic "Ein Soph, glowing at the center." It
+//      now has a name and a source: "Prologue," the shortest complete poem
+//      in Scott Jason Cohen's Assembled Verse.doc — four lines that are
+//      really a stage direction ("Maestro, if you please: / A single
+//      spotlight, / Illuminating / Me from head to toe.") cueing a light on
+//      before anything else in the poem happens. Staged here literally: an
+//      external spotlight rig, not an internal glow, aimed at the gem from
+//      outside — the same relationship a stage light has to whatever it's
+//      picking out of the dark.
+//
+// Ein Soph (Kabbalah: the infinite, the divine before or beyond any
+// attribute) is still the concept the light stands for; Prologue is the
+// concrete, in-scene image and text Scott already had on hand for it — the
+// same relationship every elemental facet has between its archangel/element
+// label and its actual grounding writing below.
+//
+// Malkuth/Shekinah — the tenth sephirah, the physical world, the indwelling
+// feminine presence of the divine — still isn't a fifth facet standing next
+// to the other four; per Scott's own framing she's the CUT of the whole
+// gem, the vessel/setting that holds and shapes the light rather than one
+// more color competing with the others. Built here as the rough, unpolished
+// stone the gem still rises out of — nature as what contains revelation,
+// not one more piece of it. Unchanged by this redo.
 //
 // Each facet also carries 2-3 "other faces" — other pantheons' gods who fit
 // that element loosely, per Scott's instruction — named and given one plain
@@ -53,6 +79,9 @@ import { bindOrbitDrag, bindWheelZoom, bindGuardedResize, prefersReducedMotion, 
 //     closes on an explicit, angry Mother Nature: "there's quite a storm
 //     brewing out there... she's angry, we no longer come to her with arms
 //     outstretched in love." Full text, unedited.
+//   Ein Soph / the light (Prologue) — "Scott Jason Cohen's Assembled
+//     Verse.doc," the same curated collection eleven of poems.js's other
+//     entries come from. Four lines, in full.
 
 const FACETS = {
   gabriel: {
@@ -213,7 +242,7 @@ Surely fae were about.`,
 const NATURE = {
   name: 'Malkuth · Shekinah',
   subtitle: 'The cut of the gem',
-  note: `Malkuth, the tenth sephirah — the physical world, the kingdom, the only sephirah with no light of its own, only what the nine above it pass down. Shekinah, its companion name in the same tradition: the divine presence as it actually dwells inside the world, not above it. Neither is a fifth facet standing next to Gabriel, Emmanuel, Raphael, and Michael — she's the shape that holds them: the rough, unpolished stone the four polished facets are still embedded in, still growing out of.`,
+  note: `Malkuth, the tenth sephirah — the physical world, the kingdom, the only sephirah with no light of its own, only what the nine above it pass down. Shekinah, its companion name in the same tradition: the divine presence as it actually dwells inside the world, not above it. Neither is a fifth facet standing next to Gabriel, Emmanuel, Raphael, and Michael — she's the shape that holds them: the rough, unpolished stone the gem is still embedded in, still growing out of.`,
   source: '"thirty-six," section 13 (closing)',
   sourceNote: `The final section of the same 13-part poem Raphael and Emmanuel are drawn from. Full text, unedited.`,
   writing: [
@@ -246,11 +275,31 @@ She just can't keep her fucking mouth shut.`,
   ],
 };
 
+// The light itself, staged as a single spotlight rather than an internal
+// glow — see the file header for why. "Prologue" is the shortest complete
+// poem in Scott Jason Cohen's Assembled Verse.doc: four lines, a stage
+// direction more than a description, cueing a beam of light on before
+// anything else in the poem happens. That's exactly the relationship this
+// scene's actual spotlight rig has to the gem.
+const LIGHT = {
+  name: 'Ein Soph',
+  subtitle: 'The laser light — focused, not created',
+  note: `Ein Soph — Kabbalah's name for the infinite, the divine before or beyond any attribute, without shape or color of its own until something focuses it. What's staged here is the concrete, theatrical image Scott's own writing already had on hand for exactly that: a single beam, picking one thing out of the dark.`,
+  source: '"Prologue" (Scott Jason Cohen\'s Assembled Verse.doc)',
+  sourceNote: `The shortest complete poem in the collection — four lines, a single stage direction, in full.`,
+  writing: [
+    `Maestro, if you please:
+A single spotlight,
+Illuminating
+Me from head to toe.`,
+  ],
+};
+
 const FACET_ORDER = ['gabriel', 'emmanuel', 'raphael', 'michael'];
 
 // ─── Rough-stone texture — canvas, not an image asset, same rule as every
 // other texture on this site. Malkuth/Shekinah's own material: dark,
-// matte, mineral, nothing polished about it — the opposite of the gems
+// matte, mineral, nothing polished about it — the opposite of the gem
 // it holds.
 function makeStoneTexture() {
   const size = 512;
@@ -288,36 +337,73 @@ function makeStoneTexture() {
   return tex;
 }
 
-// One gem: an octahedron (the classic faceted-crystal silhouette) in a
-// transmissive physical material. `pointOut` is the direction (already
-// normalized) the gem's culet points, away from the shared Ein Soph center —
-// each gem sits with its point toward the light and its broad end toward
-// the visitor, the way a real four-stone setting converges on one mount.
-function buildGem(facet, pointOut, radius) {
-  const geo = new THREE.OctahedronGeometry(radius, 0);
-  const mat = new THREE.MeshPhysicalMaterial({
-    color: facet.color,
-    metalness: 0,
-    roughness: 0.08,
-    transmission: 0.72,
-    thickness: radius * 1.6,
-    ior: 1.77,
-    clearcoat: 1,
-    clearcoatRoughness: 0.05,
-    emissive: facet.color,
-    emissiveIntensity: 0.12,
+// The gem: a single four-sided bipyramid — the classic kite/diamond cut-gem
+// silhouette, the same shape this scene's own nav icon and preview tile
+// already draw. Built by hand, vertex by vertex, rather than reused from
+// THREE.OctahedronGeometry, because each of the four vertical sides (a top
+// wedge plus a matching bottom wedge, sharing one equatorial edge) needs
+// its own material — Gabriel, Emmanuel, Raphael, Michael, going around
+// once — and a stock geometry has no per-side grouping to hang that on.
+// Non-indexed on purpose: each triangle gets its own three vertex entries,
+// so computeVertexNormals() lands on a clean flat facet normal per
+// triangle with no extra bookkeeping, which is exactly the faceted (not
+// smoothed) look a cut gem needs.
+//
+// "Make the gem translucent," per Scott: transmission is pushed hard here
+// (0.9), with a tight, near-zero-roughness clearcoat shell and an
+// attenuation color/distance tuned to each facet's own hue, so the four
+// colors read as colored glass with real depth to look into, not flat
+// colored plastic.
+function buildFacetedGem(radius) {
+  const top = new THREE.Vector3(0, radius, 0);
+  const bottom = new THREE.Vector3(0, -radius, 0);
+  const equator = FACET_ORDER.map((_, k) => {
+    const a = (k / FACET_ORDER.length) * Math.PI * 2;
+    return new THREE.Vector3(Math.cos(a) * radius, 0, Math.sin(a) * radius);
   });
-  const mesh = new THREE.Mesh(geo, mat);
-  mesh.position.copy(pointOut).multiplyScalar(radius * 1.05);
-  mesh.lookAt(0, 0, 0);
-  mesh.rotateX(Math.PI / 2); // octahedron's own point is +Y; align it toward center
-  mesh.userData.facetKey = facet.key;
-  return mesh;
+
+  const positions = [];
+  FACET_ORDER.forEach((_, k) => {
+    const eA = equator[k];
+    const eB = equator[(k + 1) % FACET_ORDER.length];
+    // Top wedge — (top, eB, eA) winds outward (verified by hand: for k=0
+    // this cross-products out to the positive octant, away from center).
+    positions.push(top.x, top.y, top.z, eB.x, eB.y, eB.z, eA.x, eA.y, eA.z);
+    // Bottom wedge — (bottom, eA, eB) winds outward the same way.
+    positions.push(bottom.x, bottom.y, bottom.z, eA.x, eA.y, eA.z, eB.x, eB.y, eB.z);
+  });
+
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(positions), 3));
+  geo.computeVertexNormals();
+  // Two triangles (6 vertices) per side, sides in FACET_ORDER order —
+  // matches the faceIndex-to-facet lookup in the click/hover handlers below.
+  FACET_ORDER.forEach((_, k) => geo.addGroup(k * 6, 6, k));
+
+  const materials = FACET_ORDER.map(key => {
+    const c = FACETS[key].color;
+    return new THREE.MeshPhysicalMaterial({
+      color: c,
+      metalness: 0,
+      roughness: 0.04,
+      transmission: 0.9,
+      thickness: radius * 1.8,
+      ior: 1.9,
+      clearcoat: 1,
+      clearcoatRoughness: 0.04,
+      attenuationColor: new THREE.Color(c),
+      attenuationDistance: radius * 1.4,
+      emissive: c,
+      emissiveIntensity: 0.1,
+    });
+  });
+
+  return new THREE.Mesh(geo, materials);
 }
 
 function buildRockCradle(radius) {
   // A bowl (restricted phi/theta range), not a full sphere — Malkuth as an
-  // open setting the gems rise out of, not a closed shell around them.
+  // open setting the gem rises out of, not a closed shell around it.
   const geo = new THREE.SphereGeometry(radius, 48, 32, 0, Math.PI * 2, Math.PI * 0.15, Math.PI * 0.62);
   const pos = geo.attributes.position;
   const v = new THREE.Vector3();
@@ -345,8 +431,8 @@ function injectStyles() {
   const style = document.createElement('style');
   style.id = 'lens-styles';
   style.textContent = `
-    .cyc-preview { width: 100%; height: 100%; }
-    .cyc-preview canvas { width: 100% !important; height: 100% !important; display: block; }
+    .lens-preview { width: 100%; height: 100%; }
+    .lens-preview canvas { width: 100% !important; height: 100% !important; display: block; }
 
     #lens-title, #lens-hint, #lens-caption {
       /* Same z-index-escaping trick as every other full scene's own body-
@@ -468,68 +554,90 @@ export function createLens(container, { preview = false } = {}) {
 
   scene.fog = new THREE.Fog(0x050308, preview ? 3 : 4, preview ? 9 : 13);
 
-  // ─── Lighting — dim and violet-leaning, so the gems' own transmitted
-  // color and Ein Soph's white core do almost all the work. ─────────────
+  // ─── Ambient lighting — dim and violet-leaning fill, so the gem's own
+  // transmitted color and the spotlight rig below do almost all the work.
   scene.add(new THREE.HemisphereLight(0x554466, 0x0a0710, 0.5));
-  const keyLight = new THREE.DirectionalLight(0xd8ccff, 0.5);
+  const keyLight = new THREE.DirectionalLight(0xd8ccff, 0.35);
   keyLight.position.set(1.5, 2.5, 2);
   scene.add(keyLight);
 
   const root = new THREE.Group();
   scene.add(root);
 
-  // ─── The four gems, arranged in a ring, culets converging on the shared
-  // center where Ein Soph's light sits. ───────────────────────────────────
-  const gemRadius = preview ? 0.5 : 0.62;
-  const gemMeshes = [];
-  FACET_ORDER.forEach((key, i) => {
-    const angle = (i / FACET_ORDER.length) * Math.PI * 2;
-    const dir = new THREE.Vector3(Math.cos(angle), 0.18, Math.sin(angle)).normalize();
-    const mesh = buildGem(FACETS[key], dir, gemRadius);
-    root.add(mesh);
-    gemMeshes.push(mesh);
-  });
+  // ─── The gem — one stone, four colored translucent sides. ─────────────
+  const gemRadius = preview ? 0.68 : 0.85;
+  const gem = buildFacetedGem(gemRadius);
+  root.add(gem);
 
-  // ─── Ein Soph — a bright core plus a couple of soft additive halos
-  // standing in for real bloom, same trick as the bulb in orrery.js and
-  // the aurorae shimmer in egg.js: this project has no post-processing
-  // pipeline, so glow gets faked with layered transparent sprites instead
-  // of reached for with an extra dependency. ──────────────────────────────
-  const coreMat = new THREE.MeshBasicMaterial({ color: 0xfffdf5 });
-  const core = new THREE.Mesh(new THREE.SphereGeometry(gemRadius * 0.16, 16, 16), coreMat);
-  root.add(core);
-  const einSophLight = new THREE.PointLight(0xfff6dd, preview ? 1.6 : 2.4, preview ? 4 : 6);
-  root.add(einSophLight);
+  // ─── Ein Soph, staged as "Prologue" — a spotlight fixture (the clickable
+  // stand-in for both the poem and "the Maestro" cueing it), a real
+  // THREE.SpotLight doing the actual illumination, and — full scene only —
+  // a translucent additive cone faking a visible beam. No post-processing
+  // pipeline exists on this site, so the beam and the fixture's glow are
+  // faked with layered transparent geometry, same rule as the bulb in
+  // orrery.js and the aurorae shimmer in egg.js. ──────────────────────────
+  const lightDistance = gemRadius * 3.6;
+  const lightDir = new THREE.Vector3(-1.05, 1.65, 0.85).normalize();
+  const fixturePos = lightDir.clone().multiplyScalar(lightDistance);
+
+  const fixtureMat = new THREE.MeshBasicMaterial({ color: 0xfffdf0 });
+  const lightFixture = new THREE.Mesh(new THREE.SphereGeometry(gemRadius * 0.13, 16, 16), fixtureMat);
+  lightFixture.position.copy(fixturePos);
+  root.add(lightFixture);
+
+  const spot = new THREE.SpotLight(0xfff6dd, preview ? 3.2 : 5.5, lightDistance * 2.5, Math.PI * 0.15, 0.55, 1.1);
+  spot.position.copy(fixturePos);
+  const spotTarget = new THREE.Object3D();
+  root.add(spotTarget);
+  spot.target = spotTarget;
+  root.add(spot);
 
   const glowSprites = [];
+  let beamMesh = null;
   if (!preview) {
-    [0.5, 1.0, 1.7].forEach((scale, i) => {
+    // Beam: a hollow cone, apex at the fixture, opening toward the gem.
+    const beamHeight = lightDistance * 0.92;
+    const beamGeo = new THREE.ConeGeometry(gemRadius * 0.9, beamHeight, 24, 1, true);
+    beamGeo.translate(0, -beamHeight / 2, 0); // shift so the apex sits at local origin
+    const beamMat = new THREE.MeshBasicMaterial({
+      color: 0xfff6dd, transparent: true, opacity: 0.1, blending: THREE.AdditiveBlending,
+      side: THREE.DoubleSide, depthWrite: false,
+    });
+    beamMesh = new THREE.Mesh(beamGeo, beamMat);
+    beamMesh.position.copy(fixturePos);
+    const coneAxis = new THREE.Vector3(0, -1, 0); // the cone opens along its local -Y
+    const towardGem = new THREE.Vector3(0, 0, 0).sub(fixturePos).normalize();
+    beamMesh.quaternion.setFromUnitVectors(coneAxis, towardGem);
+    root.add(beamMesh);
+
+    // Small additive halo around the fixture itself, same layered-sprite
+    // bloom trick used everywhere else on this site.
+    [0.4, 0.8].forEach((scale, i) => {
       const glowCanvas = document.createElement('canvas');
       glowCanvas.width = glowCanvas.height = 128;
       const gctx = glowCanvas.getContext('2d');
       const grad = gctx.createRadialGradient(64, 64, 0, 64, 64, 64);
-      grad.addColorStop(0, 'rgba(255,253,245,0.9)');
+      grad.addColorStop(0, 'rgba(255,253,245,0.85)');
       grad.addColorStop(1, 'rgba(255,253,245,0)');
       gctx.fillStyle = grad;
       gctx.fillRect(0, 0, 128, 128);
       const tex = new THREE.CanvasTexture(glowCanvas);
-      const mat = new THREE.SpriteMaterial({ map: tex, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: 0.5 - i * 0.12 });
+      const mat = new THREE.SpriteMaterial({ map: tex, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: 0.5 - i * 0.15 });
       const sprite = new THREE.Sprite(mat);
-      const s = gemRadius * (0.6 + scale);
+      const s = gemRadius * (0.5 + scale);
       sprite.scale.set(s, s, 1);
+      sprite.position.copy(fixturePos);
       root.add(sprite);
       glowSprites.push({ sprite, phase: Math.random() * Math.PI * 2, speed: 0.5 + Math.random() * 0.4 });
     });
   }
 
-  // ─── Malkuth/Shekinah — the rough stone cradle the gems rise out of. ───
+  // ─── Malkuth/Shekinah — the rough stone cradle the gem rises out of. ───
   const cradle = buildRockCradle(gemRadius * (preview ? 2.1 : 2.4));
   cradle.position.y = -gemRadius * 1.5;
-  cradle.userData.isNature = true;
   root.add(cradle);
 
-  // Sparse dust motes, drifting slowly — the only ambient motion besides
-  // Ein Soph's own pulse, and gated with everything else below.
+  // Sparse dust motes, drifting slowly.
   const moteCount = preview ? 30 : 90;
   const motePositions = new Float32Array(moteCount * 3);
   for (let i = 0; i < moteCount; i++) {
@@ -548,7 +656,7 @@ export function createLens(container, { preview = false } = {}) {
 
   if (preview) {
     const wrap = document.createElement('div');
-    wrap.className = 'cyc-preview';
+    wrap.className = 'lens-preview';
     wrap.setAttribute('aria-hidden', 'true');
     wrap.appendChild(renderer.domElement);
     container.appendChild(wrap);
@@ -560,8 +668,7 @@ export function createLens(container, { preview = false } = {}) {
       animId = requestAnimationFrame(animatePreview);
       t += 0.006;
       if (!reduceMotionPreview) root.rotation.y = t * 0.3;
-      core.material.color.setScalar(1);
-      einSophLight.intensity = 1.4 + Math.abs(Math.sin(t * 3)) * 0.4;
+      spot.intensity = 3.2 * (0.85 + Math.abs(Math.sin(t * 3)) * 0.3);
       renderer.render(scene, camera);
     }
     animatePreview();
@@ -575,9 +682,9 @@ export function createLens(container, { preview = false } = {}) {
         cancelAnimationFrame(animId);
         resize.dispose();
         renderer.dispose();
-        gemMeshes.forEach(m => { m.geometry.dispose(); m.material.dispose(); });
+        gem.geometry.dispose(); gem.material.forEach(m => m.dispose());
         cradle.geometry.dispose(); cradle.material.map?.dispose(); cradle.material.dispose();
-        core.geometry.dispose(); core.material.dispose();
+        lightFixture.geometry.dispose(); lightFixture.material.dispose();
         moteGeo.dispose(); moteMat.dispose();
         wrap.remove();
       },
@@ -601,13 +708,13 @@ export function createLens(container, { preview = false } = {}) {
 
   const hint = document.createElement('p');
   hint.id = 'lens-hint';
-  hint.innerHTML = 'drag to orbit &nbsp;·&nbsp; click a facet to read &nbsp;·&nbsp; click the stone for Malkuth';
+  hint.innerHTML = 'drag to orbit &nbsp;·&nbsp; click a facet, the light, or the stone to read';
   hint.setAttribute('aria-hidden', 'true');
   document.body.appendChild(hint);
 
   const caption = document.createElement('p');
   caption.id = 'lens-caption';
-  caption.textContent = 'Ein Soph, unattributed, still at the center';
+  caption.textContent = 'Ein Soph — "a single spotlight," unnamed';
   caption.setAttribute('aria-hidden', 'true');
   document.body.appendChild(caption);
 
@@ -672,11 +779,23 @@ export function createLens(container, { preview = false } = {}) {
     setTimeout(() => panelTitle.focus(), 50);
   }
 
+  function openLightPanel() {
+    panel.style.setProperty('--fc', 'rgba(255,246,221,0.85)');
+    panelEyebrow.textContent = LIGHT.subtitle;
+    panelTitle.textContent = LIGHT.name.toUpperCase();
+    panelFaces.innerHTML = `<li>${LIGHT.note}</li>`;
+    panelSource.textContent = `${LIGHT.source} — ${LIGHT.sourceNote}`;
+    panelBody.innerHTML = renderWriting(LIGHT.writing);
+    panel.classList.add('open');
+    hideAmbient(true);
+    setTimeout(() => panelTitle.focus(), 50);
+  }
+
   function closePanel() {
     panel.classList.remove('open');
     hideAmbient(false);
     selected = false;
-    setEmphasis(hovered);
+    setEmphasis(hoveredObject === gem ? hoveredSide : null);
   }
 
   panel.addEventListener('click', e => e.stopPropagation());
@@ -688,26 +807,36 @@ export function createLens(container, { preview = false } = {}) {
   // ─── Interaction ─────────────────────────────────────────────────────────
   const raycaster = new THREE.Raycaster();
   const mouse = new THREE.Vector2();
-  let hovered = null, selected = false;
+  let hoveredObject = null, hoveredSide = null, selected = false;
 
-  function setEmphasis(hit) {
-    gemMeshes.forEach(m => {
-      m.material.emissiveIntensity = (hit && m === hit) ? 0.5 : 0.12;
+  // Bumps just the hovered/selected side's own material — the gem's
+  // material is an array (one per side, from buildFacetedGem's groups),
+  // so each side dims or brightens independently.
+  function setEmphasis(sideIndex) {
+    gem.material.forEach((m, idx) => {
+      m.emissiveIntensity = (sideIndex !== null && idx === sideIndex) ? 0.5 : 0.1;
     });
   }
+
+  const pickables = [gem, cradle, lightFixture];
 
   const onContainerMouseMove = e => {
     const rect = container.getBoundingClientRect();
     mouse.x =  ((e.clientX - rect.left) / rect.width)  * 2 - 1;
     mouse.y = -((e.clientY - rect.top)  / rect.height) * 2 + 1;
     raycaster.setFromCamera(mouse, camera);
-    const hits = raycaster.intersectObjects([...gemMeshes, cradle]);
-    const hit = hits.length ? hits[0].object : null;
-    if (hit !== hovered) {
-      hovered = hit;
-      if (!selected) setEmphasis(gemMeshes.includes(hovered) ? hovered : null);
+    const hits = raycaster.intersectObjects(pickables);
+    const hit = hits.length ? hits[0] : null;
+    const hitObject = hit ? hit.object : null;
+    // Two triangles per side, laid out in FACET_ORDER order (see
+    // buildFacetedGem) — faceIndex/2, floored, is the side's index.
+    const sideIdx = hitObject === gem ? Math.floor(hit.faceIndex / 2) : null;
+    if (hitObject !== hoveredObject || sideIdx !== hoveredSide) {
+      hoveredObject = hitObject;
+      hoveredSide = sideIdx;
+      if (!selected) setEmphasis(hoveredObject === gem ? hoveredSide : null);
     }
-    container.style.cursor = hovered ? 'pointer' : 'default';
+    container.style.cursor = hoveredObject ? 'pointer' : 'default';
   };
   container.addEventListener('mousemove', onContainerMouseMove);
 
@@ -722,13 +851,15 @@ export function createLens(container, { preview = false } = {}) {
       closePanel();
       return;
     }
-    if (!hovered) return;
+    if (!hoveredObject) return;
     selected = true;
-    if (gemMeshes.includes(hovered)) {
-      setEmphasis(hovered);
-      openFacetPanel(hovered.userData.facetKey);
-    } else if (hovered.userData.isNature) {
+    if (hoveredObject === gem) {
+      setEmphasis(hoveredSide);
+      openFacetPanel(FACET_ORDER[hoveredSide]);
+    } else if (hoveredObject === cradle) {
       openNaturePanel();
+    } else if (hoveredObject === lightFixture) {
+      openLightPanel();
     }
   };
   container.addEventListener('click', onContainerClick);
@@ -764,11 +895,11 @@ export function createLens(container, { preview = false } = {}) {
     }
 
     if (!reduceMotion) {
-      // Ein Soph pulses gently; a slow, steady heartbeat, not a strobe.
+      // The spotlight pulses gently; a slow, steady heartbeat, not a strobe.
       const pulse = 0.85 + Math.sin(t * 1.6) * 0.15;
-      einSophLight.intensity = 2.0 * pulse;
+      spot.intensity = 5.5 * pulse;
       glowSprites.forEach(g => {
-        const s = gemRadius * (0.9 + Math.sin(t * g.speed + g.phase) * 0.12);
+        const s = gemRadius * (0.45 + Math.sin(t * g.speed + g.phase) * 0.08);
         g.sprite.scale.set(s, s, 1);
       });
       motes.rotation.y += 0.0006;
@@ -794,9 +925,10 @@ export function createLens(container, { preview = false } = {}) {
       container.removeEventListener('touchstart', onContainerTouchStart);
       container.removeEventListener('click', onContainerClick);
       renderer.dispose();
-      gemMeshes.forEach(m => { m.geometry.dispose(); m.material.dispose(); });
+      gem.geometry.dispose(); gem.material.forEach(m => m.dispose());
       cradle.geometry.dispose(); cradle.material.map?.dispose(); cradle.material.dispose();
-      core.geometry.dispose(); core.material.dispose();
+      lightFixture.geometry.dispose(); lightFixture.material.dispose();
+      beamMesh?.geometry.dispose(); beamMesh?.material.dispose();
       glowSprites.forEach(g => { g.sprite.material.map?.dispose(); g.sprite.material.dispose(); });
       moteGeo.dispose(); moteMat.dispose();
       title.remove();
