@@ -20,8 +20,9 @@
 // alongside every other scene's literary sourcing. See NOTES.md.
 //
 // Icon: the real mark. public/hare-colophon.png — a hand-inked hare
-// carrying a sun, two Venus circles, a crescent moon, and a star, each cut
-// straight through the body as literal negative-space holes — is a piece
+// carrying a sun, the Venus and Mercury symbols, a crescent moon, and a
+// star, each cut straight through the body as literal negative-space
+// holes — is a piece
 // by Abby Williams (https://abbywilliams.studio/), supplied by Scott and
 // cropped tight to its own bounding box (the original export had a lot of
 // transparent canvas margin around it, which would've left the glyph
@@ -98,7 +99,43 @@ function injectStyles() {
       transition: opacity 0.25s, transform 0.2s, background 0.2s;
       opacity: 0.6;
     }
-    #colophon-mark img { width: 78%; height: auto; display: block; }
+    #colophon-mark img {
+      width: 78%; height: auto; display: block; position: relative;
+      /* Burnished-gold read: warm the ink's browns toward true gold and
+         add a soft gold halo, rather than leaving it at flat scan colors. */
+      filter: sepia(0.4) saturate(2) brightness(1.1) contrast(1.05)
+              drop-shadow(0 0 4px rgba(255,195,90,0.55));
+    }
+    /* The actual "gleam" — a bright highlight sweeping across the hare on
+       a slow cycle, masked to the hare's own silhouette (same PNG, reused
+       as an alpha mask) so the shine only crosses the metal, not the
+       transparent gaps between the scrollwork. mix-blend-mode:screen
+       lays the highlight on top of the already-gold-filtered image
+       underneath rather than replacing it. */
+    #colophon-mark::after {
+      content: '';
+      position: absolute; inset: 0;
+      -webkit-mask-image: url('/hare-colophon.png');
+      mask-image: url('/hare-colophon.png');
+      -webkit-mask-size: 78% auto; mask-size: 78% auto;
+      -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat;
+      -webkit-mask-position: center; mask-position: center;
+      background: linear-gradient(115deg,
+        transparent 25%, rgba(255,244,210,0.95) 47%,
+        rgba(255,215,130,1) 50%, rgba(255,244,210,0.95) 53%, transparent 75%);
+      background-size: 300% 300%;
+      background-position: 0% 50%;
+      mix-blend-mode: screen;
+      opacity: 0;
+      pointer-events: none;
+      animation: colophon-gleam 5s ease-in-out infinite;
+    }
+    @keyframes colophon-gleam {
+      0%, 75%  { opacity: 0;   background-position: 0% 50%; }
+      82%      { opacity: 0.9; }
+      92%      { opacity: 0.9; background-position: 100% 50%; }
+      100%     { opacity: 0;   background-position: 100% 50%; }
+    }
     #colophon-mark:hover, #colophon-mark:focus-visible {
       opacity: 1; transform: scale(1.08); background: rgba(10,8,6,0.55);
     }
@@ -180,6 +217,10 @@ function injectStyles() {
       #colophon-mark { transition: none; }
       #colophon-mark:hover { transform: none; }
       #colophon-backdrop, #colophon-panel { transition: none; }
+      /* Gold filter on the img itself stays (that's color, not motion) —
+         only the sweeping gleam animation is autonomous motion, so only
+         that gets switched off. */
+      #colophon-mark::after { animation: none; opacity: 0; }
     }
   `;
   document.head.appendChild(style);
@@ -209,7 +250,7 @@ function buildPanel() {
       texture. Built with Three.js and vanilla JavaScript.</p>
       <h3>The mark</h3>
       <p>The leaping hare used as this site's colophon — carrying the moon,
-      two Venus circles, a sun, and a star cut straight through its body —
+      Venus, Mercury, a sun, and a star cut straight through its body —
       is drawn by <a href="https://abbywilliams.studio/" target="_blank" rel="noopener noreferrer">Abby Williams</a>.</p>
     </section>
 
