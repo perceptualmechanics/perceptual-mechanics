@@ -2,10 +2,10 @@ import { createSphere }     from './scenes/sphere.js';
 import { createButterfly }  from './scenes/butterfly.js';
 import { createManuscript } from './scenes/manuscript.js';
 import { createTheater } from './scenes/theater.js';
-// import { createEgg }       from './scenes/egg.js';   // deactivated for now, see NOTES.md
-// import { createLeaf }      from './scenes/leaf.js';  // deactivated for now, see NOTES.md
-// import { createCycle }     from './scenes/cycle.js'; // deactivated for now, see NOTES.md
-// import { createNebula }    from './scenes/nebula.js'; // deactivated for now, being reworked
+import { createEgg }       from './scenes/egg.js';
+import { createLeaf }      from './scenes/leaf.js';
+import { createCycle }     from './scenes/cycle.js';
+import { createNebula }    from './scenes/nebula.js';
 import { initGoldenHare }   from './components/goldenHare.js';
 
 // ─── Scene registry ──────────────────────────────────────────────────────────
@@ -18,14 +18,14 @@ const SCENES = {
                  ariaLabel: 'Selected Works — an illuminated manuscript of Scott’s best writing, 2000 to the 2010s. Scroll to read.' },
   theater:     { create: createTheater,    label: 'The Theater — Now Playing.',
                  ariaLabel: 'The Theater — scenes from Truth and Beauty and Paul Revere, performed by ASCII actors. A different program each visit; click or use the controls to advance.' },
-  // egg:       { create: createEgg,       label: 'The Egg — Aurorae, Magnetic Field, Satellites.',
-  //              ariaLabel: 'The Egg — Earth’s magnetic field, the aurorae it produces, and satellites in orbit. Drag to orbit.' },
-  // leaf:      { create: createLeaf,      label: 'Leaf — In The End It Falls Slowly Through The Aether.',
-  //              ariaLabel: 'Leaf — a raindrop’s fall from a leaf, told through physics, with the found text arriving in phase with the fall.' },
-  // cycle:     { create: createCycle,     label: 'Cycle — Earth, Water, Air, Fire, Wood.',
-  //              ariaLabel: 'Cycle — five real, currently-live streams, one per classical element. Choose an element below the screen.' },
-  // nebula:    { create: createNebula,    label: 'Nebula — The Gaze.',
-  //              ariaLabel: 'Nebula — constellations of Scott’s old web writing, 2000 to 2012. Drag to orbit, click a star.' },
+  egg:         { create: createEgg,        label: 'The Egg — Aurorae, Magnetic Field, Satellites.',
+                 ariaLabel: 'The Egg — Earth’s magnetic field, the aurorae it produces, and satellites in orbit. Drag to orbit.' },
+  leaf:        { create: createLeaf,       label: 'Leaf — In The End It Falls Slowly Through The Aether.',
+                 ariaLabel: 'Leaf — a raindrop’s fall from a leaf, told through physics, with the found text arriving in phase with the fall.' },
+  cycle:       { create: createCycle,      label: 'Cycle — Earth, Water, Air, Fire, Wood.',
+                 ariaLabel: 'Cycle — five real, currently-live streams, one per classical element. Choose an element below the screen.' },
+  nebula:      { create: createNebula,     label: 'Nebula — The Gaze.',
+                 ariaLabel: 'Nebula — constellations of Scott’s old web writing, 2000 to 2012. Drag to orbit, click a star.' },
 };
 
 let activeScene  = null;
@@ -198,8 +198,9 @@ function initPreviews() {
     manuscript: document.getElementById('preview-manuscript'),
     theater:    document.getElementById('preview-theater'),
     nebula:     document.getElementById('preview-nebula'),
-    // egg, leaf, cycle deactivated for now, see NOTES.md — no preview-*
-    // elements in the DOM for them currently, so nothing to look up here.
+    egg:        document.getElementById('preview-egg'),
+    leaf:       document.getElementById('preview-leaf'),
+    cycle:      document.getElementById('preview-cycle'),
   };
   for (const [name, el] of Object.entries(map)) {
     if (el) previews[name] = SCENES[name].create(el, { preview: true });
