@@ -100,6 +100,18 @@ const LINKS = [
   { patch: 'selfmutilation', para: 0,  phrase: "You can’t be afraid to lose everything.", target: 'patch-death' },
   { patch: 'projection',     para: 36, phrase: 'Jeremy Constantilios',                    target: 'patch-holography' },
   { patch: 'holography',     para: 0,  phrase: 'Jeremy Constantilios',                    target: 'patch-projection' },
+  // 'Pilgrimage to Hell' used to be rubric-ink only, decorative — but it's
+  // the exact same joke, verbatim, in both pieces (Jeremy's own version of
+  // it in Holography, the narrator's in Projection), so it's promoted to a
+  // real link each way rather than just colored.
+  { patch: 'holography',     para: 15, phrase: 'pilgrimage to Hell',                      target: 'patch-projection' },
+  { patch: 'projection',     para: 2,  phrase: 'pilgrimage to Hell',                      target: 'patch-holography' },
+  // Pygmalion (2000) is the oldest-dated piece on the scroll, nine years
+  // before Projection was written — but it already names, in so many words,
+  // the exact mechanism Projection spends its whole length dramatizing:
+  // falling for a self-built image of someone rather than the person
+  // herself. The word is right there in Pygmalion's own text.
+  { patch: 'pygmalion',      para: 44, phrase: 'projection',                              target: 'patch-projection' },
 ];
 
 // Rubric ink — color only, no link. Sparingly applied, echoing across pieces.
@@ -109,8 +121,6 @@ const RUBRICS = [
   { patch: 'death',          para: 2,  phrase: 'Thoughts of death abound' },
   { patch: 'selfmutilation', para: 16, phrase: 'Fuck them.' },
   { patch: 'identity',       para: 18, phrase: 'Something detached.' },
-  { patch: 'holography',     para: 15, phrase: 'pilgrimage to Hell' },
-  { patch: 'projection',     para: 2,  phrase: 'pilgrimage to Hell' },
   { patch: 'projection',     para: 7,  phrase: 'Los Angeles is an otherworld' },
 ];
 

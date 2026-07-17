@@ -2,6 +2,31 @@ import * as THREE from 'three';
 import { poems } from '../text/poems.js';
 import { bindOrbitDrag, bindGuardedResize, prefersReducedMotion, bindEscapeClose } from '../utils/sceneKit.js';
 
+// ─── Poem cross-links, 2026-07-17 ──────────────────────────────────────────
+// Same mechanism, and the same rule, as the geodesic sphere's facet-to-
+// fragment links in sphere.js and the scroll's LINKS in manuscript.js: only
+// phrases already sitting in the raw text get wired up, nothing added to
+// make a connection exist. Keyed by poem title + stanza index (0-based,
+// matching poem.stanzas) rather than an id, since poems.js entries don't
+// carry one. A few of these pairs turned out to already share a source —
+// Moon Song and Raise a Glass are parts 9 and 11 of the same unpublished
+// cycle, thirty-six.doc (see poems.js's header comment) — which is
+// presumably why the vocabulary echoes at all; the DNA/Apocrypha and
+// DNA/Haiku pairs, by contrast, are two completely unrelated source
+// documents landing on the same word independently.
+const POEM_LINKS = [
+  { title: 'Lament for the Future Never Realized', stanza: 1,  phrase: 'stones',      target: 'Moon Song' },
+  { title: 'Moon Song',                             stanza: 3,  phrase: 'stones',      target: 'Lament for the Future Never Realized' },
+  { title: 'The Lovers',                            stanza: 0,  phrase: 'mirrors',     target: 'Lament for the Future Never Realized' },
+  { title: 'Lament for the Future Never Realized', stanza: 3,  phrase: 'Mirrors',     target: 'The Lovers' },
+  { title: 'Moon Song',                             stanza: 10, phrase: 'latticework', target: 'Raise a Glass' },
+  { title: 'Raise a Glass',                         stanza: 1,  phrase: 'latticework', target: 'Moon Song' },
+  { title: 'DNA',                                   stanza: 0,  phrase: 'Coalescing',  target: 'Apocrypha' },
+  { title: 'Apocrypha',                             stanza: 0,  phrase: 'Coalescing',  target: 'DNA' },
+  { title: 'DNA',                                   stanza: 0,  phrase: 'Reveal',      target: 'Haiku' },
+  { title: 'Haiku',                                 stanza: 4,  phrase: 'revealed',    target: 'DNA' },
+];
+
 // ─── The Egg: Aurorae, Magnetic Field, Satellites ─────────────────────────────
 // The glowing green egg — Earth tinted green, always was. Retired the old
 // "worldline" concept (Google Maps satellite tiles + a personal geographic
@@ -335,8 +360,8 @@ function buildSatellites(preview) {
   // load, forever; nothing past index `count-1` was ever reachable. A
   // random per-load offset means a different consecutive slice of the
   // pool each visit instead — fits the site's own found-by-chance logic
-  // (the golden hare, the colophon's hidden bibliography) better than
-  // forcing the satellite count to track the poem count 1:1 anyway.
+  // (the colophon's own hidden mark and bibliography) better than forcing
+  // the satellite count to track the poem count 1:1 anyway.
   const poemOffset = Math.floor(Math.random() * poems.length);
   const bodyMat = new THREE.MeshBasicMaterial({ color: 0xe8e4d8 });
   const panelMat = new THREE.MeshBasicMaterial({
@@ -543,6 +568,26 @@ export function createEgg(container, { preview = false } = {}) {
       }
       #egg-panel-content { color: rgba(210,235,220,0.75); font-size: 0.98rem; line-height: 1.85; }
       #egg-panel-content p { margin: 0 0 1.4rem; }
+      /* Poem cross-links, 2026-07-17 — same mechanism as sphere.js's
+         fragment-links (see its own panelStyle comment) and manuscript.js's
+         ms-link, tuned to egg's own green/white palette instead of sphere's
+         blue. A phrase glimmers faintly on its own, on a long slow loop, so
+         it reads as something ambient in the text rather than a UI
+         affordance shouting for attention; hover/focus stops the glimmer
+         and lights it up gold to invite the click. */
+      @keyframes poem-glimmer {
+        0%, 85%, 100% { color: inherit; text-shadow: none; }
+        92% { color: rgba(200,255,220,.35); text-shadow: 0 0 6px rgba(200,255,220,.15); }
+      }
+      .poem-link {
+        color: inherit; text-decoration: none; border-bottom: none; cursor: default;
+        transition: color .2s; animation: poem-glimmer 12s ease-in-out infinite;
+      }
+      .poem-link:hover, .poem-link:focus {
+        color: rgba(255,230,150,.95); cursor: pointer; animation: none;
+        text-shadow: 0 0 12px rgba(255,230,150,.3);
+      }
+      @media (prefers-reduced-motion: reduce) { .poem-link { animation: none; } }
       #egg-panel-close {
         position: absolute; top: 1.5rem; right: 1.5rem; background: none;
         border: none; color: rgba(255,255,255,0.4); font-size: 1.2rem;
@@ -593,6 +638,21 @@ export function createEgg(container, { preview = false } = {}) {
       panel.classList.remove('open');
       selectedSat = null;
     });
+
+    panelContent.addEventListener('click', e => {
+      const link = e.target.closest('.poem-link');
+      if (!link) return;
+      e.stopPropagation();
+      navigateToPoem(link);
+    });
+    panelContent.addEventListener('keydown', e => {
+      if (e.key !== 'Enter' && e.key !== ' ') return;
+      const link = e.target.closest('.poem-link');
+      if (!link) return;
+      e.preventDefault();
+      e.stopPropagation();
+      navigateToPoem(link);
+    });
   }
 
   // ─── Satellite hover/click → poem panel, same raycast pattern as the
@@ -604,16 +664,61 @@ export function createEgg(container, { preview = false } = {}) {
   function escapeHtml(s) {
     return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   }
+  // A stanza can carry more than one live link (DNA's single stanza has
+  // two), so this walks every POEM_LINKS entry for that stanza rather than
+  // stopping at the first match the way manuscript.js's per-paragraph
+  // LINKS/RUBRICS/INTENSITIES lookups do — those never needed more than one
+  // hit per paragraph, this does.
+  function renderStanza(title, index, text) {
+    let html = escapeHtml(text);
+    POEM_LINKS.filter(l => l.title === title && l.stanza === index).forEach(link => {
+      const esc = escapeHtml(link.phrase);
+      html = html.replace(esc, `<a class="poem-link" data-target="${escapeHtml(link.target)}" role="link" tabindex="0">${esc}</a>`);
+    });
+    return html.replace(/\n/g, '<br>');
+  }
+  function renderPoemInto(poem) {
+    panelTitle.textContent = poem.title;
+    panelContent.innerHTML = poem.stanzas
+      .map((st, i) => `<p>${renderStanza(poem.title, i, st)}</p>`)
+      .join('');
+    panelContent.scrollTop = 0;
+    // Stagger glimmer delays + a11y attributes, same treatment as sphere's
+    // fragment-links on open/navigate.
+    panelContent.querySelectorAll('.poem-link').forEach(link => {
+      const delay = (Math.random() * 12).toFixed(1);
+      const duration = (9 + Math.random() * 7).toFixed(1);
+      link.style.animationDelay = `-${delay}s`;
+      link.style.animationDuration = `${duration}s`;
+      link.setAttribute('role', 'button');
+      link.setAttribute('tabindex', '0');
+      link.setAttribute('aria-label', `Follow the echo to: ${link.dataset.target}`);
+    });
+  }
   function openPoem(sat) {
     const poem = poems[sat.poemIndex];
     if (!panel || !poem) return;
-    panelTitle.textContent = poem.title;
-    panelContent.innerHTML = poem.stanzas
-      .map(st => `<p>${escapeHtml(st).replace(/\n/g, '<br>')}</p>`)
-      .join('');
-    panelContent.scrollTop = 0;
+    renderPoemInto(poem);
     panel.classList.add('open');
     setTimeout(() => panelTitle.focus(), 50);
+  }
+  // Poem link navigation — follow the threads (click + keyboard), same
+  // fade-out/swap-content/fade-in beat as sphere's navigateToFragment.
+  // Deliberately doesn't touch selectedSat/the satellite the panel was
+  // opened from — sphere's own navigateToFragment leaves the clicked
+  // facet's highlight alone too, same precedent.
+  function navigateToPoem(link) {
+    const targetIdx = poems.findIndex(p => p.title === link.dataset.target);
+    if (targetIdx === -1) return;
+    panelContent.style.transition = 'opacity .18s';
+    panelTitle.style.transition = 'opacity .18s';
+    panelContent.style.opacity = '0';
+    panelTitle.style.opacity = '0';
+    setTimeout(() => {
+      renderPoemInto(poems[targetIdx]);
+      panelContent.style.opacity = '1';
+      panelTitle.style.opacity = '1';
+    }, 180);
   }
 
   if (!preview) {

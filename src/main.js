@@ -6,7 +6,6 @@ import { createEgg }       from './scenes/egg.js';
 import { createLeaf }      from './scenes/leaf.js';
 import { createOrrery }    from './scenes/orrery.js';
 // import { createCycle }     from './scenes/cycle.js'; // shelved for now — rethinking the elemental approach further, see NOTES.md
-// import { initGoldenHare }  from './components/goldenHare.js'; // shelved for now, see NOTES.md
 import { initColophon }    from './components/colophon.js';
 
 // ─── Scene registry ──────────────────────────────────────────────────────────
@@ -216,11 +215,7 @@ initPreviews();
 // ─── Colophon ─────────────────────────────────────────────────────────────────
 // Persistent mark, bottom-right of the landing page. See components/
 // colophon.js for why it needs no visibility logic of its own here.
+// (The wandering golden-hare component that used to live here is retired —
+// the mark itself is a hare now, so a second, separate wandering hare
+// mechanic was redundant. See NOTES.md, "1.0.1" entry, for what replaced it.)
 initColophon();
-
-// ─── The Golden Hare ──────────────────────────────────────────────────────────
-// Shelved for now at Scott's request ("not working for me") — see NOTES.md.
-// Lives outside the scene registry entirely — it's not one of the
-// experiences above, it wanders across whatever's on screen, landing grid
-// or open scene alike. See components/goldenHare.js for the why.
-// initGoldenHare();

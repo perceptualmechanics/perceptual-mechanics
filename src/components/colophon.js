@@ -3,8 +3,11 @@
 // single dialog covering three things a site like this should say somewhere
 // but that don't belong inside any one scene: who made it, where the text in
 // it actually came from, and how to get in touch. Lives outside the scene
-// registry entirely, same reasoning as goldenHare.js, but as a fixed mark
-// rather than a wandering one.
+// registry entirely, same as the wandering-hare component this replaced
+// (`components/goldenHare.js`, retired 2026-07-17 — once the colophon's own
+// mark became an actual hare, a second, separate wandering-hare easter egg
+// was redundant; see NOTES.md's "1.0.1" entry). This one's fixed in place
+// rather than wandering.
 //
 // Scoped to the landing page on purpose, not fixed to document.body: it's
 // appended inside #landing, which main.js already sets to display:none
@@ -74,13 +77,14 @@ const BIBLIOGRAPHY = [
       'Interconnected prose fragments, Scott Cohen.',
     ],
   },
-  {
-    scene: 'Elsewhere on the site',
-    entries: [
-      'The wandering Golden Hare’s line — "A Golden Hare ran across the sky, carrying the sun in its belly, where it would be safe. The hare ran up the ladder to the sky." — found, one sentence, complete as-is.',
-    ],
-  },
 ];
+// The Golden Hare's found line — "A Golden Hare ran across the sky, carrying
+// the sun in its belly, where it would be safe. The hare ran up the ladder
+// to the sky." — used to have its own "Elsewhere on the site" entry here,
+// crediting the wandering-hare component that used to carry it. That
+// component's retired now (see the file header comment), so the line moved
+// into the credits section itself instead, right next to the mark it's
+// named after — see buildPanel()'s "The mark" section below.
 
 let styleInjected = false;
 function injectStyles() {
@@ -251,7 +255,10 @@ function buildPanel() {
       <h3>The mark</h3>
       <p>The leaping hare used as this site's colophon — carrying the moon,
       Venus, Mercury, a sun, and a star cut straight through its body —
-      is drawn by <a href="https://abbywilliams.studio/" target="_blank" rel="noopener noreferrer">Abby Williams</a>.</p>
+      is drawn by <a href="https://abbywilliams.studio/" target="_blank" rel="noopener noreferrer">Abby Williams</a>.
+      It's also a found line of Scott's own, the reason a hare is the mark
+      at all: "A Golden Hare ran across the sky, carrying the sun in its
+      belly, where it would be safe. The hare ran up the ladder to the sky."</p>
       <h3>Elsewhere</h3>
       <p>More perceptual mechanics on
       <a href="https://www.youtube.com/channel/UCzALlcscmGHgXJVyN6lMInw" target="_blank" rel="noopener noreferrer">YouTube</a>

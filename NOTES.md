@@ -6,6 +6,61 @@ projects (The Secret World, A Manual of Perceptual Mechanics) moved into their o
 files, which are now the source of truth for that material going forward. See "project map"
 below for where things live.
 
+## 1.0.1 (2026-07-17, same day)
+
+Three follow-ups from Scott right after the 1.0 tag:
+
+- **Real cross-links added to the scroll and to the egg's poems.** Scott asked how hard it
+  would be to extend the geodesic sphere's fragment-link trick (click a phrase inside one
+  fragment, jump to another) to the rest of the site's writing. The honest answer: it already
+  exists in two places (sphere's own facet-to-fragment links, and manuscript's near-identical
+  LINKS array — click a phrase in one patch of hide, scroll-and-flash to another), extending it
+  to a scene that doesn't have it yet is real work, and true cross-scene linking (a phrase in Leaf
+  jumping into a poem in the Egg) would need new scene-transition plumbing that doesn't exist
+  anywhere on the site today. Scott's call: skip the cross-scene work for now, just do more of the
+  in-scene kind, in both places that could use it. The scroll (`manuscript.js`) got three new
+  entries in its existing LINKS array — a re-read of the full source text turned up one exact
+  phrase ("pilgrimage to Hell") that was already sitting there decoratively as rubric-ink color
+  with no link, promoted to a real bidirectional link between Holography and Projection, plus one
+  new find: Pygmalion (2000, the oldest-dated piece on the scroll) uses the actual word
+  "projection" in a passage about mistaking a fabricated persona for a real person — nine years
+  before Projection (the piece) was written about exactly that. The Egg's 14 poems (`poems.js`)
+  never had this mechanism at all; built it fresh in `egg.js`, same panel-swap-plus-glimmer idea
+  as sphere's but re-themed to the Egg's own green/white palette instead of sphere's blue, with a
+  `POEM_LINKS` array (keyed by poem title + stanza index, since poems.js entries don't carry an
+  id) doing the same job as manuscript's LINKS. A close read of all 14 poems turned up five real,
+  non-forced echoes — "stones" (Lament ↔ Moon Song), "mirrors"/"Mirrors" (The Lovers ↔ Lament),
+  "latticework" (Moon Song ↔ Raise a Glass — unsurprising, since those two turn out to be parts 9
+  and 11 of the same unpublished source cycle, thirty-six.doc), and "Coalescing" plus
+  "Reveal"/"revealed" (DNA reaching out to both Apocrypha and Haiku, two completely unrelated
+  source documents that happen to land on the same words). Same rule as everywhere else on this
+  site: no new text was written to manufacture a connection — every linked phrase was already
+  sitting in the poem, verbatim, and every target/phrase pair was checked programmatically against
+  the actual source arrays before going in, not just eyeballed.
+
+- **Golden hare, fully retired.** Since the colophon's own mark is now a real hare (Abby
+  Williams's artwork), the older wandering-hare easter egg (`components/goldenHare.js`, already
+  shelved/commented-out since earlier the same day) was redundant — a site doesn't need two
+  separate "spot the hare" mechanics. `goldenHare.js` is retired the same way `nebula.js` was:
+  moved out of `src/components/` entirely into `_stale_build_dirs_safe_to_delete/` (this sandbox
+  can rename files but not delete them, so it's untracked and out of the build, not literally gone
+  from disk). All references cleaned up: the commented-out import/call in `main.js`, the stray
+  comparison in `index.html`'s cycle-shelving comment, and the mention in `egg.js`'s satellite-
+  offset comment. The hare's one-sentence found myth line ("A Golden Hare ran across the sky...")
+  didn't get deleted along with the mechanic that used to carry it — it moved into the colophon's
+  own credits section, right next to the Abby Williams artwork credit, since the mark itself is
+  now the reason that line matters. Its old standalone "Elsewhere on the site" bibliography
+  category is gone along with it.
+- **Nav-icon tooltips made consistent.** Two outliers fixed: manuscript's `title` attribute was
+  `"the scroll"` — lowercase, and not even the name used anywhere else for that scene (`SCENES`
+  registry calls it "Selected Works — An Illuminated Manuscript", same as its own aria-label
+  wording) — now matches that. Sphere's was just `"The Sphere"`, no subtitle, the only one of the
+  seven with no descriptor while the other six all pair a name with one; gave it "Interconnected
+  Text Fragments" (reusing the exact phrase already sitting in the colophon's own Sphere
+  bibliography entry, not inventing new copy). Applied to both the nav icon and its matching
+  landing-page preview tile, which mirror each other's `title` text on purpose (see the design-pass
+  entry above for why the preview tiles got tooltips at all).
+
 ## 1.0 (2026-07-17)
 
 Tagged `v1.0.0`, `package.json` bumped to match. End-to-end QA pass beforehand, everything verified
