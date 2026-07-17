@@ -6,6 +6,34 @@ projects (The Secret World, A Manual of Perceptual Mechanics) moved into their o
 files, which are now the source of truth for that material going forward. See "project map"
 below for where things live.
 
+## 1.0.11 (2026-07-17, same day)
+
+Scott's screenshot of orrery on a 402px-wide phone (Firefox's responsive
+design mode, iPhone 17 profile) caught two real mobile bugs at once, both
+in things that never had a narrow-phone case actually tested against them:
+
+- **Nav bar icons clipped at both edges.** `#pm-nav` is a single-row flex
+  container with no wrap and no scroll, so anything wider than the
+  viewport just clips evenly off both sides (`justify-content: center`).
+  Seven icons at their 44px touch-target width plus the existing
+  `max-width:480px` gap of 1.5rem need 452px total — wider than every
+  common phone from an iPhone SE (375px) up through a Pro Max (430px).
+  Dropped the gap to 0.5rem at that breakpoint (356px total), comfortably
+  under all of them, without touching the icons' own 44px touch target.
+- **Orrery's hint text overlapping its own title.** `#orrery-hint` (top-
+  right corner, one long string, no width constraint) and `#orrery-title`
+  (centered, 90vw wide on mobile) never collided on desktop, where the
+  title sits narrow and centered far from the hint's corner. On mobile
+  both wrap — the title's subtitle line into two lines, the hint's long
+  string into its own two or three — and neither one's layout accounts for
+  the other, so they print on top of each other ("click a flyer to tune
+  in" running straight across "the warehouse skylights." in the
+  screenshot). Moved the hint below the title block on mobile instead of
+  trying to squeeze both into the same top corner, and centered it
+  full-width the same way the caption at the bottom already does.
+
+Version bumped to 1.0.11 in package.json.
+
 ## 1.0.10 (2026-07-17, same day)
 
 Swapped the feedback-link address in the colophon panel from Scott's

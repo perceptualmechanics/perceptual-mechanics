@@ -1165,6 +1165,24 @@ export function createOrrery(container, { preview = false } = {}) {
       @media (max-width: 600px) {
         #orrery-caption { white-space: normal; width: 88vw; font-size: 0.7rem; }
       }
+      @media (max-width: 600px) {
+        /* #orrery-hint (top:4.5rem, right-anchored, no width) and
+           #orrery-title (below, 90vw wide once centered on mobile) never
+           collided on desktop, where the title sits narrow and centered
+           far from the hint's top-right corner. On mobile the title's
+           subtitle line wraps to two lines and the hint's own long string
+           wraps too, with nothing constraining either one's width or
+           clearing space for the other — they land on top of each other
+           (Scott's screenshot: "click a flyer to tune in" printed straight
+           across "the warehouse skylights."). Dropped it below the title
+           block instead of trying to out-shrink it into the same corner,
+           and centered it full-width like the caption already does. */
+        #orrery-hint {
+          top: 7.6rem; right: 6vw; left: 6vw;
+          font-size: 0.5rem; letter-spacing: 0.14em; line-height: 1.6;
+          text-align: center;
+        }
+      }
 
       /* ─── Micro-Myst (Scott, 2026-07-17: "don't import the Myst
          aesthetic, it's still the early '90s, but it should feel like the
