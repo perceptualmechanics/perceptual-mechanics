@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { poems } from '../text/poems.js';
+import { bindOrbitDrag, bindGuardedResize, prefersReducedMotion, bindEscapeClose } from '../utils/sceneKit.js';
 
 // ─── The Egg: Aurorae, Magnetic Field, Satellites ─────────────────────────────
 // The glowing green egg — Earth tinted green, always was. Retired the old
@@ -623,36 +624,22 @@ export function createEgg(container, { preview = false } = {}) {
     });
   }
 
-  // ─── Drag to orbit (same manual pattern as orrery.js) ───────────────────
-  let isDragging = false, prevMouse = { x: 0, y: 0 }, autoRotate = true;
-  container.addEventListener('mousedown', e => {
-    isDragging = true; autoRotate = false;
-    prevMouse = { x: e.clientX, y: e.clientY };
-  });
-  window.addEventListener('mouseup', () => {
-    isDragging = false;
-    setTimeout(() => { autoRotate = true; }, 2500);
-  });
-  window.addEventListener('mousemove', e => {
-    if (!isDragging) return;
-    root.rotation.y += (e.clientX - prevMouse.x) * 0.004;
-    root.rotation.x += (e.clientY - prevMouse.y) * 0.004;
-    prevMouse = { x: e.clientX, y: e.clientY };
-  });
-  container.addEventListener(
-    'touchmove',
-    e => {
-      if (e.touches.length !== 1) return;
-      const t = e.touches[0];
-      if (prevMouse.touching) {
-        root.rotation.y += (t.clientX - prevMouse.x) * 0.004;
-        root.rotation.x += (t.clientY - prevMouse.y) * 0.004;
-      }
-      prevMouse = { x: t.clientX, y: t.clientY, touching: true };
+  // ─── Drag to orbit (mouse + touch, via sceneKit) ────────────────────────
+  let autoRotate = true;
+  const orbitDrag = bindOrbitDrag(container, {
+    onDragStart: () => { autoRotate = false; },
+    onDrag: (dx, dy) => {
+      root.rotation.y += dx;
+      root.rotation.x += dy;
     },
-    { passive: true }
-  );
-  container.addEventListener('touchend', () => { prevMouse.touching = false; }, { passive: true });
+    onDragEnd: () => { setTimeout(() => { autoRotate = true; }, 2500); },
+  });
+
+  // Reduced motion: gates the autonomous rotation below (Earth spin, cloud
+  // drift, field-line precession, satellite orbits, egg auto-rotate).
+  // Drag-to-orbit stays available regardless — that's motion the visitor
+  // asks for, not motion imposed on them.
+  const reduceMotion = prefersReducedMotion();
 
   // ─── Animate ──────────────────────────────────────────────────────────────
   let animId, t = 0;
@@ -660,14 +647,23 @@ export function createEgg(container, { preview = false } = {}) {
     animId = requestAnimationFrame(animate);
     t += 0.01;
 
-    earth.rotation.y = t * (preview ? 0.06 : 0.03);
-    clouds.rotation.y = t * (preview ? 0.06 : 0.03) * 1.35;
+    if (!reduceMotion) {
+      earth.rotation.y = t * (preview ? 0.06 : 0.03);
+      clouds.rotation.y = t * (preview ? 0.06 : 0.03) * 1.35;
+      field.group.rotation.y = t * 0.015;
+      satellites.sats.forEach(s => {
+        s.pivot.rotation.y += s.speed * 0.01;
+      });
+      if (autoRotate && !orbitDrag.isDragging) {
+        root.rotation.y += preview ? 0.0015 : 0.0009;
+      }
+    }
+
     glowMat.opacity = 0.05 + Math.sin(t * 1.2) * 0.025;
 
     field.lines.forEach((l, i) => {
       field.mat.opacity = (preview ? 0.3 : 0.38) + Math.sin(t * 0.6 + i) * 0.05;
     });
-    field.group.rotation.y = t * 0.015;
 
     aurorae.bands.forEach(b => {
       b.phase += 0.012;
@@ -678,38 +674,32 @@ export function createEgg(container, { preview = false } = {}) {
       s.mat.opacity = Math.max(0, s.baseOpacity + Math.sin(s.phase) * 0.2);
     });
 
-    satellites.sats.forEach(s => {
-      s.pivot.rotation.y += s.speed * 0.01;
-    });
-
-    if (autoRotate && !isDragging) {
-      root.rotation.y += preview ? 0.0015 : 0.0009;
-    }
-
     renderer.render(scene, camera);
   }
   animate();
 
-  function onResize() {
-    // A hidden ancestor (e.g. the landing grid behind an active full-screen
-    // scene) makes clientWidth/Height read 0 — don't fall through to
-    // window.innerWidth/Height in that case, or a small preview container
-    // would get resized to fill the whole viewport once it's shown again.
-    if (!container.clientWidth || !container.clientHeight) return;
-    const nw = container.clientWidth || window.innerWidth;
-    const nh = container.clientHeight || window.innerHeight;
-    camera.aspect = nw / nh;
+  const resize = bindGuardedResize(container, (w, h) => {
+    camera.aspect = w / h;
     camera.updateProjectionMatrix();
-    renderer.setSize(nw, nh);
-  }
-  window.addEventListener('resize', onResize);
-  window.addEventListener('orientationchange', () => setTimeout(onResize, 100));
+    renderer.setSize(w, h);
+  });
+
+  // Escape closes the poem panel from anywhere, matching standard
+  // modal-dialog expectation (previously only the close button or a
+  // click outside the panel would do it).
+  const escapeClose = !preview ? bindEscapeClose(() => {
+    if (panel && panel.classList.contains('open')) {
+      panel.classList.remove('open');
+      selectedSat = null;
+    }
+  }) : null;
 
   return {
     dispose() {
       cancelAnimationFrame(animId);
-      window.removeEventListener('resize', onResize);
-      window.removeEventListener('orientationchange', onResize);
+      orbitDrag.dispose();
+      resize.dispose();
+      escapeClose?.dispose();
       renderer.dispose();
       geo.dispose(); mat.dispose(); earthTex.dispose();
       cloudGeo.dispose(); cloudMat.dispose(); cloudTex.dispose();
