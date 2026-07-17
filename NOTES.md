@@ -6,6 +6,36 @@ projects (The Secret World, A Manual of Perceptual Mechanics) moved into their o
 files, which are now the source of truth for that material going forward. See "project map"
 below for where things live.
 
+## 1.0 (2026-07-17)
+
+Tagged `v1.0.0`, `package.json` bumped to match. End-to-end QA pass beforehand, everything verified
+via `node --check`, a full clean `vite build`, and careful reading (this sandbox still has no
+working browser tool this session — see the audit and cycle punch-list entries below for why —
+so nothing here is a substitute for Scott's own click-through, just the strongest static/structural
+check available):
+
+- **Syntax**: all 17 source `.js` files pass `node --check`, zero errors.
+- **Build**: clean production build, zero errors, the one warning is the long-standing >500kB
+  `orrery` chunk-size notice (a bundling/performance note, not a bug — see the audit entry below).
+  Confirmed the build output has no trace of retired code (`nebula`, `nebula-curator`) anywhere in
+  the bundled JS.
+- **Scene registry**: every live scene (sphere, butterfly, manuscript, theater, egg, leaf, orrery)
+  has a matching `SCENES` entry, nav icon, preview tile, and preview-container mapping, all four in
+  sync. Shelved scenes (`cycle`, the golden hare) confirmed fully commented out at every one of
+  those points with zero live dangling references.
+- **Internal links**: manuscript.js's cross-link targets, sphere.js's fragment-to-fragment links,
+  and the colophon's bibliography were all checked against their actual source data programmatically
+  — all resolve. The Egg bibliography entry's poem count (fourteen) matches `poems.js` exactly, name
+  for name.
+- **z-index / a11y**: every element a scene appends straight to `document.body` (title/hint/caption)
+  sits at z-index 310 per the scale documented at the top of `styles/main.css` — no regressions.
+  All four dialog-style panels (sphere, egg, orrery, colophon) close on Escape, each via its own
+  `bindEscapeClose()` call with a matching `dispose()` in the owning scene's own teardown (colophon
+  is a page-level singleton with no unmount, so it correctly never disposes its own listener). Every
+  scene has both `prefers-reduced-motion` handling and aria labeling in place.
+- **Housekeeping**: zero `console.log`/`debugger`/`TODO`/`FIXME`/stray `alert()` in `src/`, zero
+  unused named imports (checked programmatically, not just by eye).
+
 ## project map (as of 2026-07-16)
 
 - **perceptualmechanics** (this repo) — the live site + code. What lands here: finished scenes,
