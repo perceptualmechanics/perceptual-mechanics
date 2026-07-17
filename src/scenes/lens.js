@@ -43,13 +43,20 @@ import { bindOrbitDrag, bindWheelZoom, bindGuardedResize, prefersReducedMotion, 
 // same relationship every elemental facet has between its archangel/element
 // label and its actual grounding writing below.
 //
-// Malkuth/Shekinah — the tenth sephirah, the physical world, the indwelling
-// feminine presence of the divine — still isn't a fifth facet standing next
-// to the other four; per Scott's own framing she's the CUT of the whole
-// gem, the vessel/setting that holds and shapes the light rather than one
-// more color competing with the others. Built here as the rough, unpolished
-// stone the gem still rises out of — nature as what contains revelation,
-// not one more piece of it. Unchanged by this redo.
+// Third pass, same day, right after Lens went live:
+//
+//   "make the spotlight completely vertical. lose the stone or whatever is
+//    holding the gem."
+//
+// Two more simplifications: the spotlight fixture now sits directly above
+// the gem on the vertical axis, beam pointing straight down, rather than
+// the earlier angled stage-light placement. And the rough stone cradle —
+// built for Malkuth/Shekinah, per the original schema's "Nature is the cut
+// of the overall gem" — is gone; the gem floats free under the light now,
+// nothing visibly holding it up. Malkuth/Shekinah's writing (thirty-six,
+// section 13) isn't deleted from the archive, just no longer surfaced
+// anywhere on the site as a result — see git history around 1.0.14-1.0.18
+// if it wants a home again later.
 //
 // Each facet also carries 2-3 "other faces" — other pantheons' gods who fit
 // that element loosely, per Scott's instruction — named and given one plain
@@ -75,13 +82,14 @@ import { bindOrbitDrag, bindWheelZoom, bindGuardedResize, prefersReducedMotion, 
 //     own natural pause, not cut arbitrarily — Raphael gets the setup and
 //     the earth invocation, Emmanuel gets the water, air, and the fire/light
 //     climax that closes the scene. Full text, unedited, both halves.
-//   Malkuth/Shekinah (Nature) — the same poem's final section (13), which
-//     closes on an explicit, angry Mother Nature: "there's quite a storm
-//     brewing out there... she's angry, we no longer come to her with arms
-//     outstretched in love." Full text, unedited.
 //   Ein Soph / the light (Prologue) — "Scott Jason Cohen's Assembled
 //     Verse.doc," the same curated collection eleven of poems.js's other
 //     entries come from. Four lines, in full.
+//   (Malkuth/Shekinah — thirty-six, section 13, "there's quite a storm
+//     brewing out there... she's angry, we no longer come to her with arms
+//     outstretched in love" — was part of this scene through 1.0.17,
+//     grounding the rough stone cradle. Retired along with the cradle in
+//     the pass described above; the text is still in git history.)
 
 const FACETS = {
   gabriel: {
@@ -239,42 +247,6 @@ Surely fae were about.`,
   },
 };
 
-const NATURE = {
-  name: 'Malkuth · Shekinah',
-  subtitle: 'The cut of the gem',
-  note: `Malkuth, the tenth sephirah — the physical world, the kingdom, the only sephirah with no light of its own, only what the nine above it pass down. Shekinah, its companion name in the same tradition: the divine presence as it actually dwells inside the world, not above it. Neither is a fifth facet standing next to Gabriel, Emmanuel, Raphael, and Michael — she's the shape that holds them: the rough, unpolished stone the gem is still embedded in, still growing out of.`,
-  source: '"thirty-six," section 13 (closing)',
-  sourceNote: `The final section of the same 13-part poem Raphael and Emmanuel are drawn from. Full text, unedited.`,
-  writing: [
-    `Everyone is tired, did you notice that?  No one
-Has enough energy anymore.  Even with our
-Low-fat lifestyle and body obsessions that drive
-Us into the gym, no one seems to have that
-"Oomph" unless it's to sell Volkswagens.  There
-Are too many distractions, there are too many
-Predators that are catching our reflexive eye,
-There's too much to keep track of, and it's
-Wearing our minds down, exhausting our
-Imaginations.  We have bulimic souls, and
-Their linings are burning away under gluttony.`,
-    `But if I starve to spite my face,
-Then surely we'll have lost the race.`,
-    `I may be tired, but Mother Nature certainly
-Isn't – there's quite a storm brewing out there.
-And every day disasters pile up – earthquake,
-Hurricane, and volcano raging against the
-Dying of the light.  The more we settle into our
-Static narcosis, the more Nature waves her hands
-And tries to get our attention.  More and more
-She goes unheard, like wealthy yupsters ignoring
-Their crazy mom.  She's angry, we no longer come
-To her with arms outstretched in love, but
-Taking what we want and wondering why
-She just can't keep her fucking mouth shut.`,
-    `What we need is a miracle.`,
-  ],
-};
-
 // The light itself, staged as a single spotlight rather than an internal
 // glow — see the file header for why. "Prologue" is the shortest complete
 // poem in Scott Jason Cohen's Assembled Verse.doc: four lines, a stage
@@ -296,46 +268,6 @@ Me from head to toe.`,
 };
 
 const FACET_ORDER = ['gabriel', 'emmanuel', 'raphael', 'michael'];
-
-// ─── Rough-stone texture — canvas, not an image asset, same rule as every
-// other texture on this site. Malkuth/Shekinah's own material: dark,
-// matte, mineral, nothing polished about it — the opposite of the gem
-// it holds.
-function makeStoneTexture() {
-  const size = 512;
-  const canvas = document.createElement('canvas');
-  canvas.width = canvas.height = size;
-  const ctx = canvas.getContext('2d');
-  ctx.fillStyle = '#1a1612';
-  ctx.fillRect(0, 0, size, size);
-  for (let i = 0; i < 2200; i++) {
-    const x = Math.random() * size, y = Math.random() * size;
-    const r = Math.random() * 2.4 + 0.3;
-    const shade = Math.random() * 40 - 20;
-    const base = 26 + shade;
-    ctx.fillStyle = `rgba(${base + 12},${base + 8},${base},${0.3 + Math.random() * 0.4})`;
-    ctx.beginPath();
-    ctx.arc(x, y, r, 0, Math.PI * 2);
-    ctx.fill();
-  }
-  // A few darker veins/cracks.
-  ctx.strokeStyle = 'rgba(8,6,4,0.5)';
-  for (let i = 0; i < 14; i++) {
-    ctx.lineWidth = 0.6 + Math.random() * 1.4;
-    ctx.beginPath();
-    let x = Math.random() * size, y = Math.random() * size;
-    ctx.moveTo(x, y);
-    for (let s = 0; s < 6; s++) {
-      x += (Math.random() - 0.5) * 90;
-      y += (Math.random() - 0.5) * 90;
-      ctx.lineTo(x, y);
-    }
-    ctx.stroke();
-  }
-  const tex = new THREE.CanvasTexture(canvas);
-  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
-  return tex;
-}
 
 // The gem: a single four-sided bipyramid — the classic kite/diamond cut-gem
 // silhouette, the same shape this scene's own nav icon and preview tile
@@ -399,29 +331,6 @@ function buildFacetedGem(radius) {
   });
 
   return new THREE.Mesh(geo, materials);
-}
-
-function buildRockCradle(radius) {
-  // A bowl (restricted phi/theta range), not a full sphere — Malkuth as an
-  // open setting the gem rises out of, not a closed shell around it.
-  const geo = new THREE.SphereGeometry(radius, 48, 32, 0, Math.PI * 2, Math.PI * 0.15, Math.PI * 0.62);
-  const pos = geo.attributes.position;
-  const v = new THREE.Vector3();
-  for (let i = 0; i < pos.count; i++) {
-    v.fromBufferAttribute(pos, i);
-    const n = v.clone().normalize();
-    const bump = (Math.sin(v.x * 3.1) + Math.sin(v.y * 2.7 + 1.3) + Math.sin(v.z * 3.6 + 2.1)) * 0.045
-      + (Math.random() - 0.5) * 0.03;
-    v.addScaledVector(n, bump * radius);
-    pos.setXYZ(i, v.x, v.y, v.z);
-  }
-  geo.computeVertexNormals();
-  const mat = new THREE.MeshStandardMaterial({
-    map: makeStoneTexture(), roughness: 0.95, metalness: 0.05, side: THREE.DoubleSide,
-  });
-  const mesh = new THREE.Mesh(geo, mat);
-  mesh.rotation.x = Math.PI; // open side faces up/toward camera by default
-  return mesh;
 }
 
 let stylesInjected = false;
@@ -576,8 +485,11 @@ export function createLens(container, { preview = false } = {}) {
   // pipeline exists on this site, so the beam and the fixture's glow are
   // faked with layered transparent geometry, same rule as the bulb in
   // orrery.js and the aurorae shimmer in egg.js. ──────────────────────────
+  // Completely vertical, per Scott — the fixture sits directly above the
+  // gem on the Y axis, so the beam falls straight down onto it rather than
+  // arriving at an angle.
   const lightDistance = gemRadius * 3.6;
-  const lightDir = new THREE.Vector3(-1.05, 1.65, 0.85).normalize();
+  const lightDir = new THREE.Vector3(0, 1, 0);
   const fixturePos = lightDir.clone().multiplyScalar(lightDistance);
 
   const fixtureMat = new THREE.MeshBasicMaterial({ color: 0xfffdf0 });
@@ -632,11 +544,6 @@ export function createLens(container, { preview = false } = {}) {
     });
   }
 
-  // ─── Malkuth/Shekinah — the rough stone cradle the gem rises out of. ───
-  const cradle = buildRockCradle(gemRadius * (preview ? 2.1 : 2.4));
-  cradle.position.y = -gemRadius * 1.5;
-  root.add(cradle);
-
   // Sparse dust motes, drifting slowly.
   const moteCount = preview ? 30 : 90;
   const motePositions = new Float32Array(moteCount * 3);
@@ -683,7 +590,6 @@ export function createLens(container, { preview = false } = {}) {
         resize.dispose();
         renderer.dispose();
         gem.geometry.dispose(); gem.material.forEach(m => m.dispose());
-        cradle.geometry.dispose(); cradle.material.map?.dispose(); cradle.material.dispose();
         lightFixture.geometry.dispose(); lightFixture.material.dispose();
         moteGeo.dispose(); moteMat.dispose();
         wrap.remove();
@@ -701,14 +607,14 @@ export function createLens(container, { preview = false } = {}) {
   title.id = 'lens-title';
   title.innerHTML = `
     <span id="lens-title-main">The Lens</span>
-    <span id="lens-title-sub">Four facets, one light, one stone.</span>
+    <span id="lens-title-sub">Four facets, one light.</span>
   `;
   title.setAttribute('aria-hidden', 'true');
   document.body.appendChild(title);
 
   const hint = document.createElement('p');
   hint.id = 'lens-hint';
-  hint.innerHTML = 'drag to orbit &nbsp;·&nbsp; click a facet, the light, or the stone to read';
+  hint.innerHTML = 'drag to orbit &nbsp;·&nbsp; click a facet or the light to read';
   hint.setAttribute('aria-hidden', 'true');
   document.body.appendChild(hint);
 
@@ -767,18 +673,6 @@ export function createLens(container, { preview = false } = {}) {
     setTimeout(() => panelTitle.focus(), 50);
   }
 
-  function openNaturePanel() {
-    panel.style.setProperty('--fc', 'rgba(210,205,225,0.8)');
-    panelEyebrow.textContent = NATURE.subtitle;
-    panelTitle.textContent = NATURE.name.toUpperCase();
-    panelFaces.innerHTML = `<li>${NATURE.note}</li>`;
-    panelSource.textContent = `${NATURE.source} — ${NATURE.sourceNote}`;
-    panelBody.innerHTML = renderWriting(NATURE.writing);
-    panel.classList.add('open');
-    hideAmbient(true);
-    setTimeout(() => panelTitle.focus(), 50);
-  }
-
   function openLightPanel() {
     panel.style.setProperty('--fc', 'rgba(255,246,221,0.85)');
     panelEyebrow.textContent = LIGHT.subtitle;
@@ -818,7 +712,7 @@ export function createLens(container, { preview = false } = {}) {
     });
   }
 
-  const pickables = [gem, cradle, lightFixture];
+  const pickables = [gem, lightFixture];
 
   const onContainerMouseMove = e => {
     const rect = container.getBoundingClientRect();
@@ -856,8 +750,6 @@ export function createLens(container, { preview = false } = {}) {
     if (hoveredObject === gem) {
       setEmphasis(hoveredSide);
       openFacetPanel(FACET_ORDER[hoveredSide]);
-    } else if (hoveredObject === cradle) {
-      openNaturePanel();
     } else if (hoveredObject === lightFixture) {
       openLightPanel();
     }
@@ -926,7 +818,6 @@ export function createLens(container, { preview = false } = {}) {
       container.removeEventListener('click', onContainerClick);
       renderer.dispose();
       gem.geometry.dispose(); gem.material.forEach(m => m.dispose());
-      cradle.geometry.dispose(); cradle.material.map?.dispose(); cradle.material.dispose();
       lightFixture.geometry.dispose(); lightFixture.material.dispose();
       beamMesh?.geometry.dispose(); beamMesh?.material.dispose();
       glowSprites.forEach(g => { g.sprite.material.map?.dispose(); g.sprite.material.dispose(); });

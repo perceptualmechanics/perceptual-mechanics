@@ -24,8 +24,8 @@ const SCENES = {
                  ariaLabel: 'Leaf — a raindrop’s fall from a leaf, told through physics, with the found text arriving in phase with the fall.' },
   orrery:      { create: createOrrery,     label: 'The Orrery of Los Feliz.',
                  ariaLabel: 'The Orrery of Los Feliz — a found story, told through a 30-foot orrery: nine planets, their moons, an asteroid belt. Drag to orbit, click the orrery to read.' },
-  lens:        { create: createLens,       label: 'The Lens — Four facets, one light, one stone.',
-                 ariaLabel: 'The Lens — a single translucent cut gem with four colored sides, lit by a spotlight named Prologue, set in a rough stone cradle. Drag to orbit, click a facet, the light, or the stone to read.' },
+  lens:        { create: createLens,       label: 'The Lens — Four facets, one light.',
+                 ariaLabel: 'The Lens — a single translucent cut gem with four colored sides, floating free, lit from directly above by a vertical spotlight named Prologue. Drag to orbit, click a facet or the light to read.' },
 };
 
 let activeScene  = null;

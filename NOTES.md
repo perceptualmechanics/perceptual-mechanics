@@ -6,6 +6,33 @@ projects (The Secret World, A Manual of Perceptual Mechanics) moved into their o
 files, which are now the source of truth for that material going forward. See "project map"
 below for where things live.
 
+## 1.0.19 (2026-07-17, same day)
+
+Two more simplifications to Lens, requested right after Scott got to see
+it live for the first time: "make the spotlight completely vertical. lose
+the stone or whatever is holding the gem."
+
+The spotlight fixture, `THREE.SpotLight`, and beam cone all moved from an
+angled position (`(-1.05, 1.65, 0.85)` normalized) to directly overhead
+(`(0, 1, 0)`) — the beam now falls straight down onto the gem instead of
+arriving at a stage-light angle. The quaternion math that orients the
+beam cone toward the gem didn't need to change at all; it was already
+computed generically from the fixture's position each time, so pointing
+that position straight up just works.
+
+The rough stone cradle is gone entirely: `buildRockCradle()`,
+`makeStoneTexture()`, the `NATURE` data object (Malkuth/Shekinah, grounded
+in thirty-six's section 13), `openNaturePanel()`, and every hover/click/
+dispose reference to the cradle mesh. The gem now floats free in the
+frame, nothing visibly holding it up. Section 13's text isn't deleted —
+just no longer surfaced anywhere on the site; it's sitting in git history
+(1.0.14 through 1.0.18) if it wants a home again later, maybe elsewhere.
+
+Updated title/hint copy ("Four facets, one light" instead of "...one
+light, one stone"; hint drops "or the stone to read") and the aria-labels
+in both main.js and index.html to match. Verified with a real build: 24
+modules, clean, main bundle a few KB smaller with the cradle code gone.
+
 ## 1.0.18 (2026-07-17, same day)
 
 Lens is live. Scott, on the 1.0.17 report: "well now you have to uncomment
