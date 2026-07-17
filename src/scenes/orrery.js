@@ -643,6 +643,47 @@ function makePosterTexture(band, sub) {
   return tex;
 }
 
+// ─── Poster audio ───────────────────────────────────────────────────────────
+// Scott asked for "MIDI versions of some of the artists' songs on the
+// posters," played back like a staticy radio. Actual transcriptions of real
+// Nirvana/R.E.M./Beastie Boys/For Squirrels recordings — even rendered as
+// MIDI — would still be reproducing those bands' copyrighted compositions,
+// so that's not something to build here. What's below instead: short,
+// original note sequences only evocative of each poster's genre/era (a
+// grunge-ish power-chord vamp, a jangly arpeggio, a syncopated bassline, an
+// alt-rock progression), synthesized live with oscillators and run through
+// a bandpass filter plus a hiss layer so it reads as "caught on a cheap
+// radio." It also happens to fit the found story better than a real
+// recording would — that story is *about* a pirate radio investigation, so
+// clicking a flyer to "tune in" a ghost signal is the same idea, just
+// interactive. Playback only ever starts from a click (never autoplay),
+// which also keeps it inside browser autoplay-gesture rules.
+const POSTER_RIFFS = {
+  'Nirvana': { wave: 'square', notes: [
+    [110, 0.22], [110, 0.22], [130.8, 0.22], [110, 0.22],
+    [98, 0.22], [98, 0.22], [110, 0.22], [87.3, 0.42],
+  ]},
+  'R.E.M.': { wave: 'triangle', notes: [
+    [196, 0.16], [247, 0.16], [294, 0.16], [247, 0.16],
+    [220, 0.16], [262, 0.16], [330, 0.16], [294, 0.34],
+  ]},
+  'Beastie Boys': { wave: 'sawtooth', notes: [
+    [82, 0.14], [82, 0.1], [110, 0.12], [82, 0.14],
+    [73, 0.1], [98, 0.12], [82, 0.14], [65, 0.3],
+  ]},
+  'For Squirrels': { wave: 'triangle', notes: [
+    [164, 0.2], [196, 0.2], [220, 0.2], [196, 0.2],
+    [174, 0.2], [196, 0.2], [220, 0.2], [246, 0.4],
+  ]},
+};
+
+function makeStaticBuffer(ctx, seconds) {
+  const buffer = ctx.createBuffer(1, Math.ceil(ctx.sampleRate * seconds), ctx.sampleRate);
+  const data = buffer.getChannelData(0);
+  for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
+  return buffer;
+}
+
 function buildWarehouse(preview, floorY, ceilingY, rafterY) {
   const group = new THREE.Group();
   const span = preview ? 14 : 20;
@@ -722,6 +763,7 @@ function buildWarehouse(preview, floorY, ceilingY, rafterY) {
   // '90s show flyers spaced the way a real wall of flyers actually looks —
   // overlapping, crooked, different sizes, added over time, not evenly
   // gridded. Skipped in preview for performance. ──────────────────────────
+  const posterMeshes = [];
   if (!preview) {
     const baseY = floorY + wallHeight * 0.34;
     const posters = [
@@ -739,6 +781,11 @@ function buildWarehouse(preview, floorY, ceilingY, rafterY) {
       poster.position.set(p.x, p.y, p.z);
       poster.rotation.z = p.rot;
       group.add(poster);
+      // Tracked so the scene can raycast these separately from the hub —
+      // clicking one "tunes in" a few bars of static-laden radio (see
+      // playPosterRiff in createOrrery). Fits the found story's own
+      // premise (a pirate radio investigation) better than a silent wall.
+      posterMeshes.push({ mesh: poster, band: p.band, baseEmissive: 0.5 });
     });
 
     // Pegboard with tools, on the side wall.
@@ -797,7 +844,7 @@ function buildWarehouse(preview, floorY, ceilingY, rafterY) {
     group.add(bulb);
   }
 
-  return { group, bulbPosition };
+  return { group, bulbPosition, posters: posterMeshes };
 }
 
 export function createOrrery(container, { preview = false } = {}) {
@@ -1085,7 +1132,7 @@ export function createOrrery(container, { preview = false } = {}) {
 
     hint = document.createElement('p');
     hint.id = 'orrery-hint';
-    hint.innerHTML = 'drag to orbit &nbsp;·&nbsp; click the control box';
+    hint.innerHTML = 'drag to orbit &nbsp;·&nbsp; click the control box &nbsp;·&nbsp; click a flyer to tune in';
     hint.setAttribute('aria-hidden', 'true');
     document.body.appendChild(hint);
 
@@ -1111,6 +1158,70 @@ export function createOrrery(container, { preview = false } = {}) {
     setTimeout(() => panelTitle.focus(), 50);
   }
 
+  // ─── Poster audio ─────────────────────────────────────────────────────
+  // Lazily created on first click, per instance, so preview + full-scene
+  // audio contexts never fight each other and dispose() has a clean
+  // context of its own to close. See POSTER_RIFFS/makeStaticBuffer above
+  // for what this plays and why it's original material, not a real track.
+  let audioCtx = null;
+  function getAudioCtx() {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    return audioCtx;
+  }
+
+  function playPosterRiff(band) {
+    const riff = POSTER_RIFFS[band];
+    if (!riff) return;
+    const ctx = getAudioCtx();
+    const now = ctx.currentTime;
+    const totalDur = riff.notes.reduce((s, [, d]) => s + d, 0) + 0.6;
+
+    // "Tuning in": a quick swell up, a hold, then a fade — rather than a
+    // hard on/off — so it reads as catching a signal, not a sound effect.
+    const master = ctx.createGain();
+    master.gain.setValueAtTime(0, now);
+    master.gain.linearRampToValueAtTime(0.5, now + 0.15);
+    master.gain.setValueAtTime(0.5, now + Math.max(0.15, totalDur - 0.45));
+    master.gain.linearRampToValueAtTime(0, now + totalDur);
+    master.connect(ctx.destination);
+
+    // Bandpass stands in for a cheap speaker's narrow frequency response —
+    // everything (notes and static both) gets routed through this.
+    const bandpass = ctx.createBiquadFilter();
+    bandpass.type = 'bandpass';
+    bandpass.frequency.value = 1400;
+    bandpass.Q.value = 0.7;
+    bandpass.connect(master);
+
+    // Static/hiss bed underneath the notes.
+    const staticSrc = ctx.createBufferSource();
+    staticSrc.buffer = makeStaticBuffer(ctx, totalDur);
+    const staticGain = ctx.createGain();
+    staticGain.gain.value = 0.07;
+    staticSrc.connect(staticGain).connect(bandpass);
+    staticSrc.start(now);
+    staticSrc.stop(now + totalDur);
+
+    // The original, genre-evocative note sequence itself.
+    let t = now + 0.15;
+    riff.notes.forEach(([freq, dur]) => {
+      const osc = ctx.createOscillator();
+      osc.type = riff.wave;
+      osc.frequency.value = freq;
+      const noteGain = ctx.createGain();
+      noteGain.gain.setValueAtTime(0.9, t);
+      noteGain.gain.setValueAtTime(0.9, t + dur * 0.7);
+      noteGain.gain.linearRampToValueAtTime(0, t + dur);
+      osc.connect(noteGain).connect(bandpass);
+      osc.start(t);
+      osc.stop(t + dur);
+      t += dur;
+    });
+  }
+
+  let hoveredPoster = null;
+
   if (!preview) {
     container.addEventListener('mousemove', e => {
       const rect = container.getBoundingClientRect();
@@ -1123,7 +1234,20 @@ export function createOrrery(container, { preview = false } = {}) {
         hovered = newHover;
         if (!selected) setEmphasis(hovered);
       }
-      container.style.cursor = hovered ? 'pointer' : 'default';
+
+      if (warehouse.posters.length) {
+        const posterHits = raycaster.intersectObjects(warehouse.posters.map(p => p.mesh));
+        const newPosterHover = posterHits.length
+          ? warehouse.posters.find(p => p.mesh === posterHits[0].object)
+          : null;
+        if (newPosterHover !== hoveredPoster) {
+          if (hoveredPoster) hoveredPoster.mesh.material.emissiveIntensity = hoveredPoster.baseEmissive;
+          hoveredPoster = newPosterHover;
+          if (hoveredPoster) hoveredPoster.mesh.material.emissiveIntensity = hoveredPoster.baseEmissive * 2.4;
+        }
+      }
+
+      container.style.cursor = (hovered || hoveredPoster) ? 'pointer' : 'default';
     });
 
     let touchMoved = false;
@@ -1137,6 +1261,7 @@ export function createOrrery(container, { preview = false } = {}) {
         setEmphasis(hovered);
         return;
       }
+      if (hoveredPoster) { playPosterRiff(hoveredPoster.band); return; }
       if (!hovered) return;
       selected = true;
       setEmphasis(true);
@@ -1216,6 +1341,7 @@ export function createOrrery(container, { preview = false } = {}) {
       wheelZoom.dispose();
       resize.dispose();
       escapeClose?.dispose();
+      if (audioCtx) { audioCtx.close(); audioCtx = null; }
       renderer.dispose();
       starGeo.dispose();
       starMat.dispose();
