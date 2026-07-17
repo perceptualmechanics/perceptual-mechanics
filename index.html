@@ -38,19 +38,6 @@
       </svg>
     </button>
 
-    <!-- Nebula -->
-    <button class="nav-icon" data-scene="nebula" aria-label="Nebula" title="Nebula — The Gaze">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="5" cy="6" r="0.9" fill="currentColor" stroke="none"/>
-        <circle cx="12" cy="4" r="0.7" fill="currentColor" stroke="none"/>
-        <circle cx="18" cy="8" r="1" fill="currentColor" stroke="none"/>
-        <circle cx="9" cy="13" r="0.8" fill="currentColor" stroke="none"/>
-        <circle cx="16" cy="16" r="0.9" fill="currentColor" stroke="none"/>
-        <circle cx="6" cy="19" r="0.7" fill="currentColor" stroke="none"/>
-        <path d="M5 6 L12 4 L18 8 L9 13 L16 16 M9 13 L6 19"/>
-      </svg>
-    </button>
-
     <!-- Manuscript: Ogham letter Sail, four strokes off a stemline -->
     <button class="nav-icon" data-scene="manuscript" aria-label="Manuscript" title="the scroll">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
@@ -89,6 +76,18 @@
       </svg>
     </button>
 
+    <!-- Orrery: tilted orbit rings around a spiked hub -->
+    <button class="nav-icon" data-scene="orrery" aria-label="Orrery" title="The Orrery of Los Feliz">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="1.2" fill="currentColor" stroke="none"/>
+        <line x1="12" y1="12" x2="12" y2="3.5"/>
+        <ellipse cx="12" cy="12" rx="9" ry="3.1"/>
+        <ellipse cx="12" cy="12" rx="9" ry="3.1" transform="rotate(58 12 12)"/>
+        <ellipse cx="12" cy="12" rx="9" ry="3.1" transform="rotate(122 12 12)"/>
+        <circle cx="20.4" cy="12" r="0.9" fill="currentColor" stroke="none"/>
+      </svg>
+    </button>
+
     <button class="nav-icon" data-scene="cycle" aria-label="Cycle" title="Cycle — Earth, Water, Air, Fire, Wood">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
         <circle cx="12" cy="4.5" r="1.3" fill="currentColor" stroke="none"/>
@@ -123,13 +122,6 @@
         </div>
       </div>
 
-      <div class="preview-wrapper" data-scene="nebula" role="listitem">
-        <div class="preview-container" id="preview-nebula"
-             role="button" tabindex="0"
-             aria-label="Nebula — The Gaze. Constellations of Scott's old web writing. Press Enter to expand.">
-        </div>
-      </div>
-
       <div class="preview-wrapper" data-scene="manuscript" role="listitem">
         <div class="preview-container" id="preview-manuscript"
              role="button" tabindex="0"
@@ -155,6 +147,13 @@
         <div class="preview-container" id="preview-leaf"
              role="button" tabindex="0"
              aria-label="Leaf — a raindrop's fall from a leaf, told through physics, found text arriving in phase with the fall. Press Enter to expand.">
+        </div>
+      </div>
+
+      <div class="preview-wrapper" data-scene="orrery" role="listitem">
+        <div class="preview-container" id="preview-orrery"
+             role="button" tabindex="0"
+             aria-label="The Orrery of Los Feliz — a found story, told through a 30-foot orrery. Press Enter to expand.">
         </div>
       </div>
 

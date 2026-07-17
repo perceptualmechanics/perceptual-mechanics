@@ -4,8 +4,8 @@ import { createManuscript } from './scenes/manuscript.js';
 import { createTheater } from './scenes/theater.js';
 import { createEgg }       from './scenes/egg.js';
 import { createLeaf }      from './scenes/leaf.js';
+import { createOrrery }    from './scenes/orrery.js';
 import { createCycle }     from './scenes/cycle.js';
-import { createNebula }    from './scenes/nebula.js';
 import { initGoldenHare }   from './components/goldenHare.js';
 
 // ─── Scene registry ──────────────────────────────────────────────────────────
@@ -22,10 +22,10 @@ const SCENES = {
                  ariaLabel: 'The Egg — Earth’s magnetic field, the aurorae it produces, and satellites in orbit. Drag to orbit.' },
   leaf:        { create: createLeaf,       label: 'Leaf — In The End It Falls Slowly Through The Aether.',
                  ariaLabel: 'Leaf — a raindrop’s fall from a leaf, told through physics, with the found text arriving in phase with the fall.' },
+  orrery:      { create: createOrrery,     label: 'The Orrery of Los Feliz.',
+                 ariaLabel: 'The Orrery of Los Feliz — a found story, told through a 30-foot orrery: nine planets, their moons, an asteroid belt. Drag to orbit, click the orrery to read.' },
   cycle:       { create: createCycle,      label: 'Cycle — Earth, Water, Air, Fire, Wood.',
                  ariaLabel: 'Cycle — five real, currently-live streams, one per classical element. Choose an element below the screen.' },
-  nebula:      { create: createNebula,     label: 'Nebula — The Gaze.',
-                 ariaLabel: 'Nebula — constellations of Scott’s old web writing, 2000 to 2012. Drag to orbit, click a star.' },
 };
 
 let activeScene  = null;
@@ -197,9 +197,9 @@ function initPreviews() {
     butterfly:  document.getElementById('preview-butterfly'),
     manuscript: document.getElementById('preview-manuscript'),
     theater:    document.getElementById('preview-theater'),
-    nebula:     document.getElementById('preview-nebula'),
     egg:        document.getElementById('preview-egg'),
     leaf:       document.getElementById('preview-leaf'),
+    orrery:     document.getElementById('preview-orrery'),
     cycle:      document.getElementById('preview-cycle'),
   };
   for (const [name, el] of Object.entries(map)) {

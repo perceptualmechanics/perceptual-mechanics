@@ -7,7 +7,6 @@ export default defineConfig({
       input: {
         main:   resolve(__dirname, 'index.html'),
         shorts: resolve(__dirname, 'utils/shorts.html'),
-        nebula: resolve(__dirname, 'utils/nebula-curator.html'),
       },
     },
   },

@@ -4,7 +4,7 @@
 // sentence, complete as-is (archives/Writing archive/Golden Hare.pages).
 //
 // An interstitial, not a scene: it doesn't belong to any single experience
-// (sphere, butterfly, manuscript, theater, nebula, egg) the way everything
+// (sphere, butterfly, manuscript, theater, egg, leaf, orrery, cycle) the way everything
 // else in src/scenes/ does. It lives at the top level, initialized once from
 // main.js, and wanders across whatever is currently on screen. Rare by
 // design: it should read as a found thing you might miss, not a mascot on a

@@ -159,7 +159,7 @@ function buildAurorae(preview) {
 }
 
 // ─── Satellites ─────────────────────────────────────────────────────────────
-// Same tilted-pivot orbit trick as the Orrery in nebula.js: rotate the pivot,
+// Same tilted-pivot orbit trick as the orrery in orrery.js: rotate the pivot,
 // the body (attached at a fixed radius on the pivot) sweeps a real orbit.
 function buildSatellites(preview) {
   const group = new THREE.Group();
@@ -330,7 +330,7 @@ export function createEgg(container, { preview = false } = {}) {
     document.body.appendChild(hint);
   }
 
-  // ─── Drag to orbit (same manual pattern as nebula.js) ───────────────────
+  // ─── Drag to orbit (same manual pattern as orrery.js) ───────────────────
   let isDragging = false, prevMouse = { x: 0, y: 0 }, autoRotate = true;
   container.addEventListener('mousedown', e => {
     isDragging = true; autoRotate = false;

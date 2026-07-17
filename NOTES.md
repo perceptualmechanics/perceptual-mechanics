@@ -26,33 +26,13 @@ reports) live outside all three of these, in `../perceptualmechanics-source-mate
 directory to this repo, not tracked in git. See "housekeeping" near the bottom for why and when that
 moved.
 
-## nebula curator workflow
-The curator tool runs **locally only** due to browser CORS restrictions on direct Anthropic API calls.
-
-1. `npm run dev` in the project root
-2. Open `http://localhost:5173/utils/nebula-curator.html`
-3. Enter your Anthropic API key (from console.anthropic.com) — saves to localStorage
-4. Paste URLs one at a time — Claude names each star and assigns a constellation
-5. When you have enough stars, hit "rebuild constellations" for a full thematic remap
-6. Hit "copy as JS" and paste the output into `src/scenes/nebula.js`
-7. Commit and push — GitHub Actions deploys automatically
-
-The live page at perceptualmechanics.com/utils/nebula-curator.html is password-protected
-but non-functional for API calls. Use localhost instead.
-
 ## next up
 - [ ] butterfly auto-rotate / camera sweep for YouTube Shorts (9:16 vertical)
-- [ ] nebula: integrate curator tool output into nebula.js
-- [ ] nebula: Webb/Hubble background image (bring a favorite)
-- [ ] nebula: drawn constellation connections (hand-curated, not algorithmic)
 - [ ] notebook review — new piece ideas
-
-## pending decisions
-- nebula star data — use curator tool to populate, then drop into nebula.js
 
 ## elements/cycle roster (reference — resolved 2026-07-16)
 
-The elements/"cycle" scene this fed into is built and live (see "egg / leaf / cycle / nebula —
+The elements/"cycle" scene this fed into is built and live (see "egg / leaf / orrery / cycle —
 activated" below). Kept as its own section, not folded into history, since `cycle.js` references
 this roster and research trail directly and may need it updated if a stream goes down for good.
 
@@ -92,8 +72,8 @@ truth for the archive-research history going forward.
 
 What actually landed on the site from that pass: "The Crocodile Photograph" (dark-comedy short
 story), "The Golden Hare" (one-sentence myth fragment, now the wandering interstitial), "The
-Orrery of Los Feliz" (noir sci-fi vignette, now a clickable object in nebula.js) — see "gems wired
-into the site" below.
+Orrery of Los Feliz" (noir sci-fi vignette; landed as a clickable object in nebula.js on 07-16,
+later promoted to its own scene, `orrery.js`, on 07-17) — see "gems wired into the site" below.
 
 ## gems wired into the site (2026-07-16, same session)
 
@@ -104,14 +84,10 @@ into the site" below.
   not seven; Fire.doc's opening litany was deliberately left out of these two (still reserved for
   the elements/fire livestream project). Added a `tone-5` CSS tier for Crocodile Photograph since
   it's newer than everything previously on the scroll. `npx vite build` passes clean.
-- **The Orrery of Los Feliz** is now a real object in `nebula.js` — a small clickable orrery (bronze
-  center sphere, tilted orbit rings, three actually-orbiting bodies) sitting apart from the
-  real-site constellations, opening the same info panel with the full found text. `nebula.js` is
-  now active in `main.js` (see "egg / leaf / cycle / nebula — activated" below). Also worth
-  flagging: `nebula.js` itself is way ahead of what the old "pending decisions" text used to
-  describe (Webb-style clouds and hand-drawn constellation lines are already built, just built
-  around real-site history instead of a curator-tool/astronomy concept) — that's now reflected
-  above.
+- **The Orrery of Los Feliz** was, as of this entry, a real object in `nebula.js` — a small
+  clickable orrery (bronze center sphere, tilted orbit rings, three actually-orbiting bodies)
+  sitting apart from the real-site constellations, opening the same info panel with the full found
+  text. Superseded the next day — see "nebula retired, orrery promoted" below for what it became.
 - **The Golden Hare** is a new top-level interstitial (`src/components/goldenHare.js`, wired into
   `main.js` via `initGoldenHare()`), not part of any single scene. Rare (roughly once every 1–3
   minutes), wanders across whatever's on screen — landing grid or an open experience, doesn't
@@ -124,22 +100,23 @@ into the site" below.
   slotted chronologically into the c. 2000 cluster. Scroll is now eleven pieces. Source essay's
   full context lives in A Manual of Perceptual Mechanics.scriv now, not here.
 
-## egg / leaf / cycle / nebula — activated (2026-07-17)
+## egg / leaf / orrery / cycle — activated (2026-07-17)
 
 Three pieces of new infrastructure (egg, leaf, cycle) were built 2026-07-16, `npx vite build`
 verified, then deactivated the same day at Scott's request. `nebula.js` had been sitting
 deactivated even longer ("being reworked"). All four were switched back on 2026-07-17: imports,
-`SCENES` entries, nav icons, and preview tiles un-commented in `main.js` and `index.html`. Site
-now has eight scenes live: sphere, butterfly, nebula, manuscript, theater, egg, leaf, cycle.
-`npx vite build` verified clean after re-activation.
+`SCENES` entries, nav icons, and preview tiles un-commented in `main.js` and `index.html`.
+`nebula.js` was retired and replaced with `orrery.js` later the same day — see "nebula retired,
+orrery promoted" below. Site now has eight scenes live: sphere, butterfly, manuscript, theater,
+egg, leaf, orrery, cycle. `npx vite build` verified clean after re-activation.
 
 - **`egg.js`** — fully rebuilt. Retired the old "worldline" concept (Google Maps satellite tiles +
   a personal geographic path) in favor of a self-contained WebGL scene: Earth (a canvas-drawn
-  texture, no network image fetch, same approach as nebula.js's cloud/halo textures), a dipole
+  texture, no network image fetch, same approach as `orrery.js`'s halo textures), a dipole
   magnetic field traced as glowing arced lines, aurora curtains at both poles (gradient sprites,
   green fading to violet, swaying and flickering), and a scatter of small satellites on real
-  tilted orbits (same pivot-rotation trick as the Orrery in `nebula.js`). Drag to orbit, same
-  manual-drag pattern as `nebula.js`.
+  tilted orbits (same pivot-rotation trick as the orrery in `orrery.js`). Drag to orbit, same
+  manual-drag pattern as `orrery.js`.
 - **`leaf.js`** — new scene, built around "In The End It Falls Slowly Through The Aether" in full
   (Cartography.doc — see "elements/cycle roster" above). A single quiet vignette, not an explorable
   space: an orthographic-camera Three.js scene, a leaf shape holding a droplet through a slow
@@ -157,6 +134,38 @@ now has eight scenes live: sphere, butterfly, nebula, manuscript, theater, egg, 
   `UCJHAT3Uvv-g3I8H3GhHWV7w`, Kilauea Cam A `iws3rh5vLAQ`, the Explore.org Smith River cam
   `WUqQdNAUC1c`, Chattahoochee National Forest cam `mFB6KZnjhy0`) rather than guessing — worth a
   periodic check since livestream video IDs do occasionally change when a stream restarts.
+
+## nebula retired, orrery promoted (2026-07-17)
+
+`nebula.js` bundled three separate things: hand-built constellations recreating Scott's old
+personal sites (Spoonfed and its variants, the butterfly effect, Solistrato — real content, real
+palettes pulled from the actual old CSS/HTML), the small clickable Orrery of Los Feliz object
+sitting apart from those constellations, and `utils/nebula-curator.html`, a side tool for pasting
+URLs ("mostly YouTube videos, but anything goes" per its own copy) and having Claude sort them
+into star constellations via the Anthropic API — built but never actually used; every star in
+`nebula.js` was hand-authored, none came from the curator tool.
+
+At Scott's request, all three are gone except the orrery, which is promoted to its own scene:
+- **`src/scenes/nebula.js`** and **`utils/nebula-curator.html`** — both retired (moved out of the
+  repo entirely; this sandbox can rename files but not delete them, so they're not literally gone
+  from disk, just untracked and out of the build — see "housekeeping" for the general pattern).
+  The `nebula` entry in `vite.config.js`'s build inputs was removed along with the tool.
+- **`src/scenes/orrery.js`** — new file, the found text (same full, unedited "Orrery of Los Feliz"
+  short-short) rebuilt as its own complete scene rather than one small object in a larger one: a
+  30-foot orrery matching the text's own description — nine planets on independent tilted orbits
+  (four with their own moons), an asteroid belt (a scatter ring, not a solid line), two irregular
+  tumbling "unidentified cosmic objects" further out, the center spike (steel and wood, painted
+  royal purple) topped with a radio telescope dish that pulses as if still receiving a signal, a
+  faint warehouse-rafter suggestion up high (the peak poking through the skylights), and a deep
+  star field behind all of it. Drag to orbit, click the orrery to open the panel with the full
+  found text — same interaction language as the old nebula stars. Renamed throughout: `main.js`
+  (import, `SCENES` entry, `initPreviews` map), `index.html` (nav icon — redesigned as tilted orbit
+  rings around a spiked hub, rather than the old six-star constellation glyph — and preview tile),
+  `utils/shorts.html` (which also imported `createNebula` directly for its own scene list).
+  Cross-references in `egg.js`'s header comments (which describe sharing the halo-texture and
+  drag-to-orbit technique) updated to point at `orrery.js`.
+- **Scene order** — orrery moved to sit right after leaf, before cycle, at Scott's request. Full
+  order is now: sphere, butterfly, manuscript, theater, egg, leaf, orrery, cycle.
 
 ## You've Got a Friend in Satan — scenes wired into the theater (2026-07-16)
 
@@ -188,14 +197,13 @@ happen without Scott deciding that's worth it.
 ## solid / deployed
 - sphere with hypertext fragments + silk glimmer links
 - chaos butterfly in phase space, 2026
-- nebula — real-site constellations + the Orrery of Los Feliz, 2026 (activated 2026-07-17)
 - egg — Earth's magnetic field, aurorae, orbiting satellites, 2026 (activated 2026-07-17)
 - leaf — "In The End It Falls Slowly Through The Aether," 2026 (activated 2026-07-17)
+- orrery — the Orrery of Los Feliz, rebuilt as its own scene, 2026-07-17
 - cycle — five live streams, one per classical element, 2026 (activated 2026-07-17)
 - eight-panel landing with persistent nav bar
 - ESC to close scenes
 - full a11y pass (skip link, ARIA roles, keyboard nav, reduced motion)
-- nebula curator tool (separate artifact — paste URLs, Claude names stars + constellations)
 - colophon: "created in collaboration with claude"
 
 ## deployment
