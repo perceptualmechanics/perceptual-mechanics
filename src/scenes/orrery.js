@@ -6,17 +6,23 @@ import * as THREE from 'three';
 // radio telescope at its peak — to a warehouse in Los Feliz.
 //
 // This used to be one small clickable object tucked inside a larger scene
-// called "Nebula," which was mostly constellations recreating Scott's old
-// personal sites (Spoonfed and its variants, the butterfly effect,
-// Solistrato) — real content, but a different story than this one. That
-// scene also carried a never-used, never-populated side tool
-// (utils/nebula-curator.html) for pasting URLs and having Claude sort them
-// into star constellations — abandoned before it ever produced a single
-// star that made it into the site. Both are gone now. This scene is the
-// orrery alone, promoted from a detail to the whole piece: bigger, built
-// out with real detail (nine bodies and their moons, an asteroid belt, a
-// few unidentified cosmic objects, same as the text describes), the found
-// text delivered the same way — click it, read it.
+// called "Nebula" (see NOTES.md, "nebula retired, orrery promoted"). It's
+// since been promoted to its own scene, and rebuilt twice: first as a
+// bigger version of the same free-floating, glowing sci-fi object, then —
+// at Scott's direction — grounded in the source material instead. The text
+// says a foundry, a warehouse, and a sculpture studio were owed money for
+// "some very large pieces"; the builder, Peter Hight, is called "an
+// unlikely candidate to construct such a thing." That reads like someone's
+// scrap-metal, backyard-engineered obsession, closer to Survival Research
+// Labs than to a planetarium model — junk steel, welded joints, bolted
+// flanges, bronze balls riding on tracks braced back to a central mast, all
+// of it standing on a warehouse floor with its peak actually poking through
+// a hole in the roof, same as the text says. The one line that made the
+// tighter, more regular orbit geometry an easy call: "the orbits of the
+// planets are precisely and mathematically laid out with an error
+// tolerance approaching perfection" — however scrap the construction, the
+// motion itself is exact, so the rings here are close to coplanar, not a
+// tangle of independently-tilted ellipses.
 
 const ORRERY = {
   name: 'The Orrery of Los Feliz',
@@ -28,139 +34,374 @@ Inside was an orrery – a moving sculpture, a representation of the solar syste
 Our investigation into Peter Hight is pending, but from all appearances he appears to be an unlikely candidate to construct such a thing. A dropout of community college.`,
 };
 
-// Bronze/purple/steel palette, matching the text: "Great bronze balls,"
-// "the center spike of steel and wood, painted a most royal purple."
-const BODY_TONES = [0xddb178, 0xc99a5e, 0xe3c496, 0xb9885a, 0xceab7e, 0xa87a4e, 0xd6ae82, 0xbf9868, 0xe8caa0];
-const MOON_TONE  = 0xeee0cc;
-const ASTEROID_TONE = 0x7a6a55;
-const UNKNOWN_TONES = [0x8855aa, 0x6a4d8a];
+// ─── Weathered-metal textures — canvas, not image assets, same rule as
+// every other texture on this site. Base steel/rust, an optional pass of
+// chipped royal-purple paint (the mast only — "painted a most royal
+// purple"), and a bronze variant for the planets ("great bronze balls").
+function makeMetalTexture({ base, rust, highlight, paint }) {
+  const c = document.createElement('canvas');
+  c.width = 128; c.height = 128;
+  const cx = c.getContext('2d');
+  cx.fillStyle = base;
+  cx.fillRect(0, 0, 128, 128);
+
+  cx.globalAlpha = 0.18;
+  cx.strokeStyle = highlight;
+  for (let i = 0; i < 14; i++) {
+    cx.lineWidth = 0.6 + Math.random() * 1.6;
+    const x = Math.random() * 128;
+    cx.beginPath();
+    cx.moveTo(x, 0);
+    cx.lineTo(x + (Math.random() - 0.5) * 18, 128);
+    cx.stroke();
+  }
+
+  cx.globalAlpha = 0.4;
+  cx.fillStyle = rust;
+  for (let i = 0; i < 16; i++) {
+    const bx = Math.random() * 128, by = Math.random() * 128, br = 3 + Math.random() * 9;
+    cx.beginPath();
+    cx.arc(bx, by, br, 0, Math.PI * 2);
+    cx.fill();
+  }
+
+  if (paint) {
+    cx.globalAlpha = 0.75;
+    cx.fillStyle = paint;
+    for (let i = 0; i < 9; i++) {
+      const bx = Math.random() * 128, by = Math.random() * 128;
+      const bw = 6 + Math.random() * 22, bh = 4 + Math.random() * 12;
+      cx.beginPath();
+      cx.ellipse(bx, by, bw, bh, Math.random() * Math.PI, 0, Math.PI * 2);
+      cx.fill();
+    }
+  }
+
+  cx.globalAlpha = 1;
+  const tex = new THREE.CanvasTexture(c);
+  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+  return tex;
+}
+
+function steelMaterial(preview, repeat = 2) {
+  const tex = makeMetalTexture({ base: '#39322b', rust: '#241e18', highlight: '#6d5c48' });
+  tex.repeat.set(repeat, repeat);
+  return new THREE.MeshStandardMaterial({ map: preview ? null : tex, color: preview ? 0x39322b : 0xffffff, roughness: 0.75, metalness: 0.55 });
+}
+function paintedMastMaterial(preview) {
+  const tex = makeMetalTexture({ base: '#39322b', rust: '#241e18', highlight: '#6d5c48', paint: '#5b3a72' });
+  tex.repeat.set(1, 3);
+  return new THREE.MeshStandardMaterial({ map: preview ? null : tex, color: preview ? 0x4d3a5c : 0xffffff, roughness: 0.7, metalness: 0.5 });
+}
+function bronzeMaterial() {
+  const tex = makeMetalTexture({ base: '#8a6438', rust: '#5a4022', highlight: '#d9ab6c' });
+  return new THREE.MeshStandardMaterial({ map: tex, roughness: 0.4, metalness: 0.85 });
+}
+
+const BOLT_TONE = 0x18140f;
+
+function addBolts(parent, radius, count, ringGeoRadius) {
+  const boltGeo = new THREE.SphereGeometry(radius, 6, 6);
+  const boltMat = new THREE.MeshStandardMaterial({ color: BOLT_TONE, roughness: 0.6, metalness: 0.6 });
+  for (let i = 0; i < count; i++) {
+    const a = (i / count) * Math.PI * 2;
+    const bolt = new THREE.Mesh(boltGeo, boltMat);
+    bolt.position.set(Math.cos(a) * ringGeoRadius, Math.sin(a) * ringGeoRadius, 0);
+    parent.add(bolt);
+  }
+  return { boltGeo, boltMat };
+}
+
+// A welded brace from a point on the mast out to a point on a ring —
+// what keeps every ring reading as bolted to the same structure instead
+// of floating independently.
+function addStrut(parent, fromY, toRadius, toY, angle, mat) {
+  const from = new THREE.Vector3(0, fromY, 0);
+  const to = new THREE.Vector3(Math.cos(angle) * toRadius, toY, Math.sin(angle) * toRadius);
+  const mid = from.clone().add(to).multiplyScalar(0.5);
+  const dist = from.distanceTo(to);
+  const geo = new THREE.CylinderGeometry(dist * 0.012, dist * 0.012, dist, 6);
+  const strut = new THREE.Mesh(geo, mat);
+  strut.position.copy(mid);
+  strut.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), to.clone().sub(from).normalize());
+  parent.add(strut);
+  return strut;
+}
 
 function buildOrrery(preview) {
   const group = new THREE.Group();
+  const steelMat = steelMaterial(preview);
+  const mastMat = paintedMastMaterial(preview);
+  const bronzeMat = bronzeMaterial();
 
-  // ─── The spike — steel and wood, painted royal purple ────────────────────
-  const spikeHeight = preview ? 3.4 : 4.6;
-  const spikeGeo = new THREE.CylinderGeometry(preview ? 0.05 : 0.06, preview ? 0.08 : 0.1, spikeHeight, 10);
-  const spikeMat = new THREE.MeshBasicMaterial({ color: 0x5c3d7a, transparent: true, opacity: 0.85 });
-  const spike = new THREE.Mesh(spikeGeo, spikeMat);
-  spike.position.y = spikeHeight / 2 - (preview ? 1.0 : 1.4);
-  group.add(spike);
+  // ─── The mast — steel and wood, painted royal purple, built as a welded
+  // lattice tower rather than a smooth pole: a core shaft plus a handful of
+  // riveted collar flanges with diagonal cross-braces between them. ───────
+  const mastHeight = preview ? 3.2 : 4.4;
+  const baseY = preview ? -1.1 : -1.5;
+  const coreGeo = new THREE.CylinderGeometry(preview ? 0.05 : 0.06, preview ? 0.09 : 0.11, mastHeight, 8);
+  const core = new THREE.Mesh(coreGeo, mastMat);
+  core.position.y = baseY + mastHeight / 2;
+  group.add(core);
 
-  // A hub at the base of the spike — the actual clickable/hover target.
-  const hubGeo = new THREE.SphereGeometry(preview ? 0.16 : 0.2, 16, 16);
-  const hubMat = new THREE.MeshBasicMaterial({ color: 0x8855aa, transparent: true, opacity: 0.95 });
+  const collarCount = preview ? 3 : 5;
+  const collarGeo = new THREE.TorusGeometry(preview ? 0.1 : 0.13, 0.012, 5, 6);
+  let prevCollarY = null;
+  for (let i = 0; i < collarCount; i++) {
+    const y = baseY + (i / (collarCount - 1)) * mastHeight;
+    const collar = new THREE.Mesh(collarGeo, steelMat);
+    collar.rotation.x = Math.PI / 2;
+    collar.position.y = y;
+    group.add(collar);
+    if (!preview && prevCollarY !== null) {
+      const braceGeo = new THREE.CylinderGeometry(0.008, 0.008, Math.hypot(mastHeight / (collarCount - 1), 0.1) * 1.3, 5);
+      [0, Math.PI].forEach(rot => {
+        const brace = new THREE.Mesh(braceGeo, steelMat);
+        brace.position.y = (y + prevCollarY) / 2;
+        brace.rotation.z = 0.55;
+        brace.rotation.y = rot;
+        group.add(brace);
+      });
+    }
+    prevCollarY = y;
+  }
+
+  // A bolted control box near the base — the actual click/hover target,
+  // with one small amber indicator lamp lit, the kind of after-the-fact
+  // gauge box a scrap-built machine like this would have bolted on.
+  const hubGeo = new THREE.BoxGeometry(preview ? 0.22 : 0.28, preview ? 0.16 : 0.2, preview ? 0.16 : 0.2);
+  const hubMat = new THREE.MeshStandardMaterial({ color: 0x2c2620, roughness: 0.7, metalness: 0.4 });
   const hub = new THREE.Mesh(hubGeo, hubMat);
-  hub.position.y = spike.position.y - spikeHeight / 2;
+  hub.position.set(preview ? 0.16 : 0.2, baseY + 0.3, 0);
   group.add(hub);
+  const lampGeo = new THREE.SphereGeometry(preview ? 0.035 : 0.045, 8, 8);
+  const lampMat = new THREE.MeshStandardMaterial({ color: 0xffaa33, emissive: 0xffaa33, emissiveIntensity: 1, roughness: 0.4 });
+  const lamp = new THREE.Mesh(lampGeo, lampMat);
+  lamp.position.set(0, (preview ? 0.16 : 0.2) * 0.6, (preview ? 0.16 : 0.2) * 0.6);
+  hub.add(lamp);
 
   // ─── The radio telescope — "still on, receiving information from the
-  // heavens." A small dish at the peak, pulsing with a faint received signal.
+  // heavens." A rough sheet-metal dish, a thin antenna rod, a pulsing bulb
+  // standing in for the received signal. ───────────────────────────────────
   const dishGroup = new THREE.Group();
-  dishGroup.position.y = spike.position.y + spikeHeight / 2;
-  const dishGeo = new THREE.ConeGeometry(preview ? 0.18 : 0.24, preview ? 0.22 : 0.3, 16, 1, true);
-  const dishMat = new THREE.MeshBasicMaterial({
-    color: 0xccaadd, transparent: true, opacity: 0.55, side: THREE.DoubleSide,
-  });
-  const dish = new THREE.Mesh(dishGeo, dishMat);
+  dishGroup.position.y = baseY + mastHeight;
+  const dishGeo = new THREE.ConeGeometry(preview ? 0.2 : 0.26, preview ? 0.16 : 0.22, 8, 1, true);
+  const dish = new THREE.Mesh(dishGeo, steelMat);
   dish.rotation.x = Math.PI;
   dishGroup.add(dish);
-  const signalMat = new THREE.MeshBasicMaterial({ color: 0xffe8bb, transparent: true, opacity: 0.7 });
-  const signal = new THREE.Mesh(new THREE.SphereGeometry(preview ? 0.04 : 0.05, 8, 8), signalMat);
-  signal.position.y = preview ? 0.16 : 0.22;
+  const antennaGeo = new THREE.CylinderGeometry(0.008, 0.008, preview ? 0.16 : 0.22, 5);
+  const antenna = new THREE.Mesh(antennaGeo, steelMat);
+  antenna.position.y = preview ? 0.14 : 0.18;
+  dishGroup.add(antenna);
+  const signalMat = new THREE.MeshStandardMaterial({ color: 0xffe8bb, emissive: 0xffcc77, emissiveIntensity: 1, transparent: true, opacity: 0.8 });
+  const signal = new THREE.Mesh(new THREE.SphereGeometry(preview ? 0.03 : 0.04, 8, 8), signalMat);
+  signal.position.y = preview ? 0.24 : 0.32;
   dishGroup.add(signal);
   group.add(dishGroup);
 
-  // ─── Nine planets and their moons, real independent orbits ──────────────
+  // ─── Nine planets and their moons — close to coplanar, precisely spaced,
+  // each ring braced back to the mast so it reads as one welded machine. ──
   const orbits = [];
   const bodyCount = preview ? 5 : 9;
   const moonIndices = new Set(preview ? [1, 3] : [1, 3, 5, 7]);
+  const TILT_BASE = 0.52;
+  const TILT_JITTER = 0.03;
+  const ringYBase = baseY + mastHeight * 0.32;
 
   for (let i = 0; i < bodyCount; i++) {
-    const radius = (preview ? 0.5 : 0.65) + i * (preview ? 0.32 : 0.42);
-    const tilt = (i * 0.28) + (Math.random() - 0.5) * 0.18;
-    const yOffset = hub.position.y + Math.sin(i * 0.7) * (preview ? 0.15 : 0.25);
+    const radius = (preview ? 0.55 : 0.68) + i * (preview ? 0.3 : 0.4);
+    const tilt = TILT_BASE + (Math.random() - 0.5) * TILT_JITTER;
+    const yOffset = ringYBase + i * (preview ? 0.06 : 0.05);
 
-    const ringMat = new THREE.MeshBasicMaterial({
-      color: 0xaa7733, transparent: true, opacity: 0.22, side: THREE.DoubleSide,
-    });
-    const ringGeo = new THREE.TorusGeometry(radius, preview ? 0.005 : 0.006, 8, 64);
-    const ring = new THREE.Mesh(ringGeo, ringMat);
+    const ringGeo = new THREE.TorusGeometry(radius, preview ? 0.008 : 0.01, 6, 16);
+    const ring = new THREE.Mesh(ringGeo, steelMat);
     ring.rotation.x = Math.PI / 2 + tilt;
     ring.position.y = yOffset;
     group.add(ring);
+    addBolts(ring, preview ? 0.012 : 0.015, 16, radius);
+
+    // Two struts per ring, bracing it back to the mast — visible welded
+    // supports, not an independently floating hoop.
+    [0, Math.PI].forEach(angle => addStrut(group, yOffset, radius * 0.94, yOffset, angle, steelMat));
 
     const pivot = new THREE.Object3D();
     pivot.rotation.x = tilt;
     pivot.position.y = yOffset;
     group.add(pivot);
 
-    const bodyGeo = new THREE.SphereGeometry((preview ? 0.028 : 0.038) + (i % 3) * 0.008, 12, 12);
-    const bodyMat = new THREE.MeshBasicMaterial({ color: BODY_TONES[i % BODY_TONES.length] });
-    const body = new THREE.Mesh(bodyGeo, bodyMat);
+    const bodyGeo = new THREE.SphereGeometry((preview ? 0.032 : 0.042) + (i % 3) * 0.007, 12, 12);
+    const body = new THREE.Mesh(bodyGeo, bronzeMat);
     body.position.x = radius;
     pivot.add(body);
+    // A short mounting arm — the ball rides a bracket on the ring, not
+    // floats free above it.
+    const armGeo = new THREE.CylinderGeometry(0.006, 0.006, preview ? 0.03 : 0.04, 5);
+    const arm = new THREE.Mesh(armGeo, steelMat);
+    arm.rotation.z = Math.PI / 2;
+    arm.position.x = radius - (preview ? 0.015 : 0.02);
+    pivot.add(arm);
 
-    const orbit = { pivot, speed: 0.22 - i * 0.016 + Math.random() * 0.03, direction: i % 2 === 0 ? 1 : -1, moon: null };
+    const orbit = { pivot, speed: 0.16 - i * 0.011 + Math.random() * 0.015, direction: i % 2 === 0 ? 1 : -1, moon: null };
 
-    // A moon on a handful of bodies — its own small orbit around the planet.
     if (moonIndices.has(i)) {
       const moonPivot = new THREE.Object3D();
       body.add(moonPivot);
-      const moonGeo = new THREE.SphereGeometry(preview ? 0.009 : 0.012, 8, 8);
-      const moonMat = new THREE.MeshBasicMaterial({ color: MOON_TONE });
-      const moon = new THREE.Mesh(moonGeo, moonMat);
-      moon.position.x = preview ? 0.06 : 0.08;
+      const moonGeo = new THREE.SphereGeometry(preview ? 0.01 : 0.013, 8, 8);
+      const moon = new THREE.Mesh(moonGeo, bronzeMat);
+      moon.position.x = preview ? 0.065 : 0.085;
       moonPivot.add(moon);
-      orbit.moon = { pivot: moonPivot, speed: 0.8 + Math.random() * 0.4 };
+      orbit.moon = { pivot: moonPivot, speed: 0.7 + Math.random() * 0.3 };
     }
 
     orbits.push(orbit);
   }
 
-  // ─── The asteroid belt — a scatter ring, not a solid line ────────────────
-  const beltRadius = (preview ? 0.5 : 0.65) + bodyCount * (preview ? 0.32 : 0.42) + (preview ? 0.22 : 0.3);
-  const beltPivot = new THREE.Object3D();
-  beltPivot.position.y = hub.position.y;
-  group.add(beltPivot);
-  const beltCount = preview ? 40 : 90;
-  const beltPositions = new Float32Array(beltCount * 3);
+  const lastRadius = (preview ? 0.55 : 0.68) + (bodyCount - 1) * (preview ? 0.3 : 0.4);
+  const lastY = ringYBase + (bodyCount - 1) * (preview ? 0.06 : 0.05);
+
+  // ─── The asteroid belt — scrap and debris, not a glowing line: small
+  // angular chunks scattered in a band just past the last planet ring. ────
+  const beltRadius = lastRadius + (preview ? 0.24 : 0.32);
+  const beltY = lastY + (preview ? 0.05 : 0.06);
+  const beltGroup = new THREE.Group();
+  beltGroup.position.y = beltY;
+  group.add(beltGroup);
+  const debrisMat = new THREE.MeshStandardMaterial({ color: 0x554433, roughness: 0.85, metalness: 0.3 });
+  const debrisGeo = new THREE.IcosahedronGeometry(1, 0);
+  const beltCount = preview ? 14 : 30;
   for (let i = 0; i < beltCount; i++) {
     const a = Math.random() * Math.PI * 2;
     const r = beltRadius + (Math.random() - 0.5) * (preview ? 0.1 : 0.14);
-    beltPositions[i * 3]     = Math.cos(a) * r;
-    beltPositions[i * 3 + 1] = (Math.random() - 0.5) * 0.08;
-    beltPositions[i * 3 + 2] = Math.sin(a) * r;
+    const chunk = new THREE.Mesh(debrisGeo, debrisMat);
+    const s = (preview ? 0.012 : 0.016) + Math.random() * (preview ? 0.01 : 0.014);
+    chunk.scale.setScalar(s);
+    chunk.position.set(Math.cos(a) * r, (Math.random() - 0.5) * 0.05, Math.sin(a) * r);
+    chunk.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI);
+    beltGroup.add(chunk);
   }
-  const beltGeo = new THREE.BufferGeometry();
-  beltGeo.setAttribute('position', new THREE.BufferAttribute(beltPositions, 3));
-  const beltMat = new THREE.PointsMaterial({
-    color: ASTEROID_TONE, size: preview ? 0.02 : 0.026, transparent: true, opacity: 0.75,
-  });
-  const belt = new THREE.Points(beltGeo, beltMat);
-  beltPivot.add(belt);
+  [0, Math.PI / 2].forEach(angle => addStrut(group, lastY, beltRadius * 0.96, beltY, angle, steelMat));
 
-  // ─── "A few other unidentified cosmic objects" — irregular polyhedra,
-  // tumbling on their own wide, oddly-tilted orbits, further out than
-  // everything else.
+  // ─── "A few other unidentified cosmic objects" — welded on cantilevered
+  // booms just past the belt, close enough to read as part of the same
+  // machine, each one tumbling on its own slow spin. ──────────────────────
   const unknowns = [];
-  const unknownGeos = [new THREE.IcosahedronGeometry(preview ? 0.045 : 0.06, 0), new THREE.OctahedronGeometry(preview ? 0.04 : 0.055, 0)];
+  const unknownGeos = [new THREE.IcosahedronGeometry(preview ? 0.05 : 0.07, 0), new THREE.OctahedronGeometry(preview ? 0.045 : 0.06, 0)];
+  const unknownMat = new THREE.MeshStandardMaterial({ color: 0x5a4d3a, roughness: 0.7, metalness: 0.5 });
   const unknownCount = preview ? 1 : 2;
   for (let i = 0; i < unknownCount; i++) {
-    const radius = beltRadius + (preview ? 0.35 : 0.5) + i * (preview ? 0.3 : 0.4);
-    const tilt = 0.5 + i * 0.4 + (Math.random() - 0.5) * 0.3;
+    const radius = beltRadius + (preview ? 0.22 : 0.3) + i * (preview ? 0.16 : 0.22);
+    const y = beltY + (i + 1) * (preview ? 0.05 : 0.06);
+    const angle = i * (Math.PI * 0.7);
     const pivot = new THREE.Object3D();
-    pivot.rotation.x = tilt;
-    pivot.rotation.z = i * 0.5;
-    pivot.position.y = hub.position.y;
+    pivot.position.y = y;
     group.add(pivot);
-    const mat = new THREE.MeshBasicMaterial({ color: UNKNOWN_TONES[i % UNKNOWN_TONES.length], transparent: true, opacity: 0.8 });
-    const mesh = new THREE.Mesh(unknownGeos[i % unknownGeos.length], mat);
-    mesh.position.x = radius;
+    const mesh = new THREE.Mesh(unknownGeos[i % unknownGeos.length], unknownMat);
+    mesh.position.set(Math.cos(angle) * radius, 0, Math.sin(angle) * radius);
     pivot.add(mesh);
-    unknowns.push({ pivot, mesh, speed: 0.08 + Math.random() * 0.05, direction: i % 2 === 0 ? 1 : -1, spin: 0.3 + Math.random() * 0.4 });
+    addStrut(group, y, radius * 0.9, y, angle, steelMat);
+    unknowns.push({ pivot, mesh, speed: 0.05 + Math.random() * 0.03, direction: i % 2 === 0 ? 1 : -1, spin: 0.3 + Math.random() * 0.4 });
   }
 
-  return { group, hitTarget: hub, glowMat: hubMat, orbits, unknowns, signal, signalMat };
+  return { group, hitTarget: hub, hubMat, lampMat, orbits, unknowns, signal, signalMat, baseY, mastHeight };
+}
+
+// ─── The warehouse — floor, a ceiling with a skylight cut into it, a
+// couple of corrugated walls, and a shaft of light falling through the
+// hole the orrery's peak actually pokes through. ─────────────────────────
+function makeConcreteTexture() {
+  const c = document.createElement('canvas');
+  c.width = 128; c.height = 128;
+  const cx = c.getContext('2d');
+  cx.fillStyle = '#232321';
+  cx.fillRect(0, 0, 128, 128);
+  cx.globalAlpha = 0.3;
+  for (let i = 0; i < 20; i++) {
+    cx.fillStyle = Math.random() > 0.5 ? '#1a1a18' : '#2c2c29';
+    const bx = Math.random() * 128, by = Math.random() * 128, br = 6 + Math.random() * 20;
+    cx.beginPath();
+    cx.arc(bx, by, br, 0, Math.PI * 2);
+    cx.fill();
+  }
+  cx.globalAlpha = 1;
+  const tex = new THREE.CanvasTexture(c);
+  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+  tex.repeat.set(6, 6);
+  return tex;
+}
+
+function makeCorrugatedTexture() {
+  const c = document.createElement('canvas');
+  c.width = 32; c.height = 32;
+  const cx = c.getContext('2d');
+  cx.fillStyle = '#17150f';
+  cx.fillRect(0, 0, 32, 32);
+  cx.strokeStyle = '#2c2820';
+  cx.lineWidth = 2;
+  for (let x = 0; x < 32; x += 5) {
+    cx.beginPath();
+    cx.moveTo(x, 0);
+    cx.lineTo(x, 32);
+    cx.stroke();
+  }
+  const tex = new THREE.CanvasTexture(c);
+  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+  tex.repeat.set(10, 4);
+  return tex;
+}
+
+function buildWarehouse(preview, floorY, ceilingY) {
+  const group = new THREE.Group();
+  const span = preview ? 14 : 20;
+
+  const floorMat = new THREE.MeshStandardMaterial({ map: makeConcreteTexture(), roughness: 0.95, metalness: 0.05 });
+  const floor = new THREE.Mesh(new THREE.PlaneGeometry(span * 2, span * 2), floorMat);
+  floor.rotation.x = -Math.PI / 2;
+  floor.position.y = floorY;
+  group.add(floor);
+
+  // Ceiling with a rectangular skylight hole, sized to what the mast
+  // actually pokes through.
+  const holeW = preview ? 0.7 : 0.9, holeH = preview ? 0.7 : 0.9;
+  const shape = new THREE.Shape();
+  shape.moveTo(-span, -span);
+  shape.lineTo(span, -span);
+  shape.lineTo(span, span);
+  shape.lineTo(-span, span);
+  shape.lineTo(-span, -span);
+  const hole = new THREE.Path();
+  hole.moveTo(-holeW, -holeH);
+  hole.lineTo(holeW, -holeH);
+  hole.lineTo(holeW, holeH);
+  hole.lineTo(-holeW, holeH);
+  hole.lineTo(-holeW, -holeH);
+  shape.holes.push(hole);
+  const ceilingMat = new THREE.MeshStandardMaterial({ color: 0x121110, roughness: 0.9, metalness: 0.1, side: THREE.DoubleSide });
+  const ceiling = new THREE.Mesh(new THREE.ShapeGeometry(shape), ceilingMat);
+  ceiling.rotation.x = Math.PI / 2;
+  ceiling.position.y = ceilingY;
+  group.add(ceiling);
+
+  // A soft shaft of light falling through the hole.
+  const beamGeo = new THREE.CylinderGeometry(holeW * 0.4, holeW * 2.2, ceilingY - floorY, 16, 1, true);
+  const beamMat = new THREE.MeshBasicMaterial({
+    color: 0xcfe0ff, transparent: true, opacity: 0.05, side: THREE.DoubleSide, depthWrite: false,
+  });
+  const beam = new THREE.Mesh(beamGeo, beamMat);
+  beam.position.y = (ceilingY + floorY) / 2;
+  group.add(beam);
+
+  // A couple of dark corrugated walls, back and to one side — just enough
+  // to frame the space without boxing the camera in.
+  const wallMat = new THREE.MeshStandardMaterial({ map: makeCorrugatedTexture(), roughness: 0.9, metalness: 0.2 });
+  const backWall = new THREE.Mesh(new THREE.PlaneGeometry(span * 2, ceilingY - floorY), wallMat);
+  backWall.position.set(0, (ceilingY + floorY) / 2, -span);
+  group.add(backWall);
+  const sideWall = new THREE.Mesh(new THREE.PlaneGeometry(span * 2, ceilingY - floorY), wallMat);
+  sideWall.rotation.y = Math.PI / 2;
+  sideWall.position.set(-span, (ceilingY + floorY) / 2, 0);
+  group.add(sideWall);
+
+  return { group, floorMat, ceilingMat, beamMat, wallMat };
 }
 
 export function createOrrery(container, { preview = false } = {}) {
@@ -168,72 +409,53 @@ export function createOrrery(container, { preview = false } = {}) {
   const h = container.clientHeight || window.innerHeight;
 
   const scene    = new THREE.Scene();
-  const camera   = new THREE.PerspectiveCamera(55, w / h, 0.1, 500);
-  camera.position.set(0, preview ? 0.6 : 1.0, preview ? 9 : 11);
-  camera.lookAt(0, 0, 0);
+  const camera   = new THREE.PerspectiveCamera(52, w / h, 0.1, 500);
+  camera.position.set(preview ? 1.6 : 2.2, preview ? 0.4 : 0.5, preview ? 8.5 : 10.5);
+  camera.lookAt(0, preview ? -0.2 : -0.3, 0);
 
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
   renderer.setPixelRatio(window.devicePixelRatio);
   renderer.setSize(w, h);
-  renderer.setClearColor(0x000000, 1);
+  renderer.setClearColor(0x030303, 1);
   renderer.domElement.setAttribute('aria-hidden', 'true');
   container.appendChild(renderer.domElement);
 
-  // ─── Ambient deep field — the sky above the skylights the peak pokes
-  // through, and what the telescope is listening to. ───────────────────────
-  const starCount = preview ? 300 : 900;
+  // ─── Lighting — a dim industrial ambience, a cool wash falling through
+  // the skylight, a warm accent low down near the machine itself. ────────
+  scene.add(new THREE.HemisphereLight(0x556677, 0x0a0806, 0.55));
+  const skyLight = new THREE.DirectionalLight(0xcfe0ff, 0.9);
+  skyLight.position.set(0.4, 6, 0.3);
+  scene.add(skyLight);
+  const workLight = new THREE.PointLight(0xffaa55, 0.6, preview ? 6 : 9);
+  workLight.position.set(1.2, -0.6, 1.4);
+  scene.add(workLight);
+
+  const orrery = buildOrrery(preview);
+  const floorY = orrery.baseY - 0.05;
+  const ceilingY = orrery.baseY + orrery.mastHeight + (preview ? 0.35 : 0.5);
+  const warehouse = buildWarehouse(preview, floorY, ceilingY);
+
+  // Sparse sky beyond the skylight — only really visible through the hole
+  // and at the frame edges, not an all-encompassing backdrop.
+  const starCount = preview ? 140 : 320;
   const positions = new Float32Array(starCount * 3);
   for (let i = 0; i < starCount; i++) {
-    positions[i * 3]     = (Math.random() - 0.5) * (preview ? 22 : 36);
-    positions[i * 3 + 1] = (Math.random() - 0.5) * (preview ? 22 : 36);
-    positions[i * 3 + 2] = (Math.random() - 0.5) * (preview ? 10 : 16) - 6;
+    positions[i * 3]     = (Math.random() - 0.5) * (preview ? 18 : 28);
+    positions[i * 3 + 1] = ceilingY + Math.random() * (preview ? 4 : 6);
+    positions[i * 3 + 2] = (Math.random() - 0.5) * (preview ? 18 : 28);
   }
   const starGeo = new THREE.BufferGeometry();
   starGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
   const starMat = new THREE.PointsMaterial({
-    color: 0xddeeff, size: preview ? 0.025 : 0.04, transparent: true, opacity: 0.35, sizeAttenuation: true,
+    color: 0xddeeff, size: preview ? 0.03 : 0.045, transparent: true, opacity: 0.55, sizeAttenuation: true,
   });
   const starField = new THREE.Points(starGeo, starMat);
   scene.add(starField);
 
-  // A faint warehouse-rafter suggestion, up high, just enough grounding —
-  // "the peak poking out of the warehouse skylights."
-  const rafterMat = new THREE.LineBasicMaterial({ color: 0x332818, transparent: true, opacity: 0.3 });
-  const rafterGroup = new THREE.Group();
-  [-3, 3].forEach(x => {
-    const pts = [new THREE.Vector3(x, preview ? 5.5 : 7.2, -4), new THREE.Vector3(x, preview ? 5.5 : 7.2, 4)];
-    const geo = new THREE.BufferGeometry().setFromPoints(pts);
-    rafterGroup.add(new THREE.Line(geo, rafterMat));
-  });
-  scene.add(rafterGroup);
-
   const root = new THREE.Group();
   scene.add(root);
-
-  const orrery = buildOrrery(preview);
   root.add(orrery.group);
-
-  function makeHaloTexture(hexColor) {
-    const c = document.createElement('canvas');
-    c.width = 64; c.height = 64;
-    const cx = c.getContext('2d');
-    const col = new THREE.Color(hexColor);
-    const rgb = `${Math.round(col.r*255)},${Math.round(col.g*255)},${Math.round(col.b*255)}`;
-    const grad = cx.createRadialGradient(32, 32, 0, 32, 32, 32);
-    grad.addColorStop(0, `rgba(${rgb},0.9)`);
-    grad.addColorStop(0.4, `rgba(${rgb},0.35)`);
-    grad.addColorStop(1, `rgba(${rgb},0)`);
-    cx.fillStyle = grad;
-    cx.fillRect(0, 0, 64, 64);
-    return new THREE.CanvasTexture(c);
-  }
-  const haloMat = new THREE.SpriteMaterial({
-    map: makeHaloTexture(0x8855aa), color: 0x8855aa, transparent: true, opacity: 0.6,
-    blending: THREE.AdditiveBlending, depthWrite: false,
-  });
-  const halo = new THREE.Sprite(haloMat);
-  halo.scale.set(preview ? 1.1 : 1.6, preview ? 1.1 : 1.6, 1);
-  orrery.hitTarget.add(halo);
+  root.add(warehouse.group);
 
   // ─── Panel + window-chrome styling ───────────────────────────────────────
   if (!preview && !document.getElementById('orrery-styles')) {
@@ -242,11 +464,11 @@ export function createOrrery(container, { preview = false } = {}) {
     style.textContent = `
       #orrery-panel {
         position: absolute; top: 0; right: 0; width: 38%; height: 100%;
-        background: #07060a; border-left: 1px solid rgba(200,200,220,0.2);
+        background: #0a0908; border-left: 1px solid rgba(220,200,180,0.15);
         padding: 3rem 2rem; transform: translateX(100%);
         transition: transform .5s cubic-bezier(.16,1,.3,1);
         overflow-y: scroll; z-index: 10;
-        scrollbar-color: rgba(200,200,220,0.3) #07060a; scrollbar-width: thin;
+        scrollbar-color: rgba(220,200,180,0.3) #0a0908; scrollbar-width: thin;
         font-family: 'Electrolize', sans-serif;
       }
       #orrery-panel.open { transform: translateX(0); }
@@ -259,7 +481,7 @@ export function createOrrery(container, { preview = false } = {}) {
         margin-bottom: 1.6rem; font-style: italic;
       }
       #orrery-panel-note {
-        font-size: 0.92rem; line-height: 1.85; color: rgba(220,225,240,0.68);
+        font-size: 0.92rem; line-height: 1.85; color: rgba(225,218,205,0.68);
         white-space: pre-line;
       }
       #orrery-panel-close {
@@ -325,7 +547,7 @@ export function createOrrery(container, { preview = false } = {}) {
 
     hint = document.createElement('p');
     hint.id = 'orrery-hint';
-    hint.innerHTML = 'drag to orbit &nbsp;·&nbsp; click the orrery';
+    hint.innerHTML = 'drag to orbit &nbsp;·&nbsp; click the control box';
     hint.setAttribute('aria-hidden', 'true');
     document.body.appendChild(hint);
 
@@ -342,8 +564,8 @@ export function createOrrery(container, { preview = false } = {}) {
   let hovered = false, selected = false;
 
   function setEmphasis(on) {
-    orrery.glowMat.opacity = on ? 1.0 : 0.95;
-    orrery.hitTarget.scale.setScalar(on ? 1.5 : 1.0);
+    orrery.lampMat.emissiveIntensity = on ? 2.2 : 1;
+    orrery.hitTarget.scale.setScalar(on ? 1.4 : 1.0);
   }
 
   function openPanel() {
@@ -397,12 +619,11 @@ export function createOrrery(container, { preview = false } = {}) {
   window.addEventListener('mousemove', e => {
     if (!isDragging) return;
     root.rotation.y += (e.clientX - prevMouse.x) * 0.004;
-    root.rotation.x = Math.max(-0.6, Math.min(0.6, root.rotation.x + (e.clientY - prevMouse.y) * 0.003));
     prevMouse = { x: e.clientX, y: e.clientY };
   });
   container.addEventListener('wheel', e => {
     if (panel && panel.contains(e.target)) return;
-    camera.position.z = Math.max(6, Math.min(24, camera.position.z + e.deltaY * 0.01));
+    camera.position.z = Math.max(7, Math.min(24, camera.position.z + e.deltaY * 0.01));
   });
 
   // ─── Animate ──────────────────────────────────────────────────────────────
@@ -410,8 +631,6 @@ export function createOrrery(container, { preview = false } = {}) {
   function animate() {
     animId = requestAnimationFrame(animate);
     t += 0.001;
-
-    starField.rotation.y = Math.sin(t * 0.3) * 0.04;
 
     orrery.orbits.forEach(o => {
       o.pivot.rotation.y += o.speed * o.direction * 0.01;
@@ -424,14 +643,14 @@ export function createOrrery(container, { preview = false } = {}) {
     });
 
     // The radio telescope's received-signal pulse.
-    orrery.signalMat.opacity = 0.35 + Math.abs(Math.sin(t * 4)) * 0.5;
+    orrery.signalMat.emissiveIntensity = 0.6 + Math.abs(Math.sin(t * 4)) * 1.2;
 
     if (autoRotate && !isDragging) {
-      root.rotation.y += preview ? 0.0011 : 0.0007;
+      root.rotation.y += preview ? 0.0009 : 0.0006;
     }
 
     if (!hovered && !selected) {
-      orrery.hitTarget.scale.setScalar(0.9 + Math.sin(t * 12) * 0.06);
+      orrery.hitTarget.scale.setScalar(1.0 + Math.sin(t * 8) * 0.03);
     }
 
     renderer.render(scene, camera);
@@ -457,12 +676,13 @@ export function createOrrery(container, { preview = false } = {}) {
       renderer.dispose();
       starGeo.dispose();
       starMat.dispose();
-      rafterGroup.children.forEach(l => l.geometry.dispose());
-      rafterMat.dispose();
-      haloMat.dispose();
+      warehouse.group.traverse(obj => {
+        if (obj.geometry) obj.geometry.dispose();
+        if (obj.material) { obj.material.map?.dispose(); obj.material.dispose(); }
+      });
       orrery.group.traverse(obj => {
         if (obj.geometry) obj.geometry.dispose();
-        if (obj.material) obj.material.dispose();
+        if (obj.material) { obj.material.map?.dispose(); obj.material.dispose(); }
       });
       if (panel) panel.remove();
       if (hint) hint.remove();

@@ -164,6 +164,26 @@ At Scott's request, all three are gone except the orrery, which is promoted to i
   `utils/shorts.html` (which also imported `createNebula` directly for its own scene list).
   Cross-references in `egg.js`'s header comments (which describe sharing the halo-texture and
   drag-to-orbit technique) updated to point at `orrery.js`.
+- **Second pass, same day** — Scott's first look at the built scene called out two problems: the
+  orbit rings (independently randomized tilts) read as a tangled scribble rather than a legible
+  model, and the whole thing felt like a free-floating sci-fi object rather than something built
+  by a person out of junk metal in a real warehouse. Rebuilt again: orbit tilts now share one base
+  angle with only a few degrees of jitter (the found text's own line — "the orbits of the planets
+  are precisely and mathematically laid out with an error tolerance approaching perfection" —
+  justified making them close to coplanar, not tangled), and the whole sculpture is grounded in an
+  actual warehouse — a concrete floor, a ceiling with a rectangular skylight hole the mast's peak
+  actually pokes through, a soft light shaft falling through that hole, two corrugated-metal walls,
+  and real `THREE.Light`s (hemisphere + a cool skylight directional + a warm point light) instead
+  of unlit flat-color materials. The orrery itself is now built to read as welded scrap, Survival
+  Research Labs-style, rather than a smooth glowing prop: a lattice mast (core shaft + riveted
+  collar flanges + diagonal cross-braces) instead of a plain cylinder, canvas-generated weathered
+  steel/rust textures (with a chipped-royal-purple-paint pass on the mast specifically, per "painted
+  a most royal purple"), low-segment faceted rings with visible bolt studs, every ring and the
+  outer "unidentified cosmic objects" braced back to the mast with welded struts so nothing reads
+  as independently floating, bronze (not glowing) planets on short mounting arms, and the asteroid
+  belt rebuilt as scattered angular debris chunks instead of glowing points. The click target is now
+  a bolted control box with one lit amber indicator lamp, low on the mast, rather than a glowing
+  purple sphere.
 - **Scene order** — orrery moved to sit right after leaf, before cycle, at Scott's request. Full
   order is now: sphere, butterfly, manuscript, theater, egg, leaf, orrery, cycle.
 
