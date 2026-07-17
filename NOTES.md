@@ -122,10 +122,14 @@ into the site" below.
   slotted chronologically into the c. 2000 cluster. Scroll is now eleven pieces. Source essay's
   full context lives in A Manual of Perceptual Mechanics.scriv now, not here.
 
-## egg / leaf / cycle — wired into the site (2026-07-16)
+## egg / leaf / cycle — built, currently deactivated (2026-07-16)
 
-Three pieces of new infrastructure, all live in `main.js` and the landing grid now (nav icons +
-preview tiles), all `npx vite build` verified:
+Three pieces of new infrastructure, built and `npx vite build` verified, then **deactivated** the
+same day at Scott's request — same treatment as `nebula.js`: imports, `SCENES` entries, nav icons,
+and preview tiles are all commented out in `main.js` and `index.html`, not deleted. The files
+themselves are untouched and ready to switch back on (uncomment the four spots in `main.js` — the
+import, the `SCENES` entry, and the `initPreviews` map skip note — plus the nav icon and preview
+tile in `index.html`) whenever they're wanted live.
 
 - **`egg.js`** — fully rebuilt. Retired the old "worldline" concept (Google Maps satellite tiles +
   a personal geographic path) in favor of a self-contained WebGL scene: Earth (a canvas-drawn
@@ -185,14 +189,15 @@ happen without Scott deciding that's worth it.
 ## infrastructure done, needs real content
 - `src/scenes/nebula.js` — built (real-site constellations + Orrery), just not yet re-activated in `main.js`
 
+## built, currently deactivated (commented out, not deleted — see "egg / leaf / cycle" above)
+- `src/scenes/egg.js` — Earth's magnetic field, aurorae, orbiting satellites, 2026
+- `src/scenes/leaf.js` — "In The End It Falls Slowly Through The Aether," 2026
+- `src/scenes/cycle.js` — five live streams, one per classical element, 2026
+
 ## solid / deployed
 - sphere with hypertext fragments + silk glimmer links
 - chaos butterfly in phase space, 2026
-- the egg: Earth's magnetic field, aurorae, orbiting satellites, 2026
-- leaf: "In The End It Falls Slowly Through The Aether," 2026
-- cycle: five live streams, one per classical element, 2026
-- four-panel landing with persistent nav bar (seven panels now: sphere, butterfly, manuscript,
-  theater, egg, leaf, cycle)
+- four-panel landing with persistent nav bar
 - ESC to close scenes
 - full a11y pass (skip link, ARIA roles, keyboard nav, reduced motion)
 - nebula curator tool (separate artifact — paste URLs, Claude names stars + constellations)
