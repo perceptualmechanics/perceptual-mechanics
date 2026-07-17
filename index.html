@@ -114,51 +114,57 @@
   <main id="landing">
     <div id="scene-previews" role="list" aria-label="Interactive art pieces">
 
+      <!-- Design pass, 2026-07-17: added a `title` to every tile, matching
+           its nav-icon counterpart's own title text — the icons already had
+           a native hover tooltip, the preview circles never did, so mousing
+           over a silent WebGL loop gave a sighted visitor no idea what it
+           was before clicking. Doesn't touch layout or visuals, screen
+           readers already had the fuller aria-label. -->
       <div class="preview-wrapper" data-scene="sphere" role="listitem">
         <div class="preview-container" id="preview-sphere"
-             role="button" tabindex="0"
+             role="button" tabindex="0" title="The Sphere"
              aria-label="The Sphere — an interactive geodesic sphere with text fragments. Press Enter to expand.">
         </div>
       </div>
 
       <div class="preview-wrapper" data-scene="butterfly" role="listitem">
         <div class="preview-container" id="preview-butterfly"
-             role="button" tabindex="0"
+             role="button" tabindex="0" title="Chaos Butterfly in Phase Space, 2026"
              aria-label="Chaos Butterfly in Phase Space, 2026 — a Lorenz attractor visualization. Press Enter to expand.">
         </div>
       </div>
 
       <div class="preview-wrapper" data-scene="manuscript" role="listitem">
         <div class="preview-container" id="preview-manuscript"
-             role="button" tabindex="0"
+             role="button" tabindex="0" title="the scroll"
              aria-label="A scroll of found writing — carved fragments, 2000 to 2012. Press Enter to expand.">
         </div>
       </div>
 
       <div class="preview-wrapper" data-scene="theater" role="listitem">
         <div class="preview-container" id="preview-theater"
-             role="button" tabindex="0"
+             role="button" tabindex="0" title="The Theater — Now Playing"
              aria-label="The Theater — scenes from Truth and Beauty and Paul Revere, performed by ASCII actors. Press Enter to expand.">
         </div>
       </div>
 
       <div class="preview-wrapper" data-scene="egg" role="listitem">
         <div class="preview-container" id="preview-egg"
-             role="button" tabindex="0"
+             role="button" tabindex="0" title="The Egg — Aurorae, Magnetic Field, Satellites"
              aria-label="The Egg — Earth's magnetic field, the aurorae it produces, and satellites in orbit. Press Enter to expand.">
         </div>
       </div>
 
       <div class="preview-wrapper" data-scene="leaf" role="listitem">
         <div class="preview-container" id="preview-leaf"
-             role="button" tabindex="0"
+             role="button" tabindex="0" title="Leaf — In The End It Falls Slowly Through The Aether"
              aria-label="Leaf — a raindrop's fall from a leaf, told through physics, found text arriving in phase with the fall. Press Enter to expand.">
         </div>
       </div>
 
       <div class="preview-wrapper" data-scene="orrery" role="listitem">
         <div class="preview-container" id="preview-orrery"
-             role="button" tabindex="0"
+             role="button" tabindex="0" title="The Orrery of Los Feliz"
              aria-label="The Orrery of Los Feliz — a found story, told through a 30-foot orrery. Press Enter to expand.">
         </div>
       </div>

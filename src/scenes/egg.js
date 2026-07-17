@@ -329,6 +329,15 @@ function buildSatellites(preview) {
   const group = new THREE.Group();
   const count = preview ? 4 : 8;
   const sats = [];
+  // Design pass, 2026-07-17: with poems.length (now 14, after folding the
+  // opening-fragment poems into poems.js) bigger than `count`, a plain
+  // `i % poems.length` always equals `i` — the same first 8 poems, every
+  // load, forever; nothing past index `count-1` was ever reachable. A
+  // random per-load offset means a different consecutive slice of the
+  // pool each visit instead — fits the site's own found-by-chance logic
+  // (the golden hare, the colophon's hidden bibliography) better than
+  // forcing the satellite count to track the poem count 1:1 anyway.
+  const poemOffset = Math.floor(Math.random() * poems.length);
   const bodyMat = new THREE.MeshBasicMaterial({ color: 0xe8e4d8 });
   const panelMat = new THREE.MeshBasicMaterial({
     color: 0x3f6fb0, transparent: true, opacity: 0.9, side: THREE.DoubleSide,
@@ -385,7 +394,7 @@ function buildSatellites(preview) {
       // Scott: slow these down — was (0.25 + rand*0.35), now less than half that.
       speed: (0.09 + Math.random() * 0.14) * (Math.random() < 0.5 ? 1 : -1),
       ringMat,
-      poemIndex: i % poems.length,
+      poemIndex: (i + poemOffset) % poems.length,
     });
   }
 

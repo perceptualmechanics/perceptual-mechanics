@@ -31,15 +31,12 @@
 //   manuscript for three of the Assembled Verse poems: "Lament for the
 //   Future Never Realized" pulls parts 1, 3, and 4 from here (dropping
 //   part 2 and lightly retitling), "Moon Song" is part 9 verbatim, and
-//   "Raise a Glass" is part 11 with a few small word changes. Both
-//   versions are kept: `lamentForTheFutureNeverRealized` as Scott's own
-//   later, polished excerpt (his editorial choice, worth respecting as
-//   its own thing), and `thirtySix` as the full, earlier, rougher cycle —
-//   which includes eight parts (2, 5, 6, 7, 8, 10, 12, 13) that never
-//   made it into Assembled Verse at all. If "Lament" and "Moon Song" and
-//   "Raise a Glass" are the only parts of this that have been read before,
-//   there's a whole second cycle's worth of material below that hasn't
-//   been.
+//   "Raise a Glass" is part 11 with a few small word changes. Only that
+//   later, polished excerpt (`Lament for the Future Never Realized`
+//   below) is transcribed in this file — the full earlier cycle,
+//   including the eight parts (2, 5, 6, 7, 8, 10, 12, 13) that never made
+//   it into Assembled Verse at all, hasn't been typed up here. Worth
+//   doing later if that rougher material ever wants its own place.
 //
 // "DNA" (from Nucleus.doc / Nucleus.rtf) is a third, separate source —
 // short, finished, explicitly dated: "© 2007 Scott Jason Cohen" sits right
@@ -158,7 +155,7 @@ opens his eyes.`,
   {
     title: 'Lament for the Future Never Realized',
     source: `Scott Jason Cohen's Assembled Verse.doc`,
-    note: `Scott's own later excerpt of "thirty-six" (see \`thirtySix\` below) — parts 1, 3, and 4 of that cycle, retitled and lightly polished, part 2 dropped entirely.`,
+    note: `Scott's own later excerpt of "thirty-six.doc" (a longer, unedited 13-part source cycle, not itself included in this file) — parts 1, 3, and 4 of that cycle, retitled and lightly polished, part 2 dropped entirely.`,
     stanzas: [
       `I.`,
       `On a hill,

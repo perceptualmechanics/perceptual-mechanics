@@ -47,7 +47,7 @@ const BIBLIOGRAPHY = [
     scene: 'The Egg',
     entries: [
       '"sing, orbiter" — Richard Kenney, "The Invention of the Zero" (epigraph).',
-      'Thirteen poems by Scott Jason Cohen, one per satellite: "Courtesans of the Old World," "Springtime in the Garden," "Prologue," "Raise a Glass," "Obvious," "Lament for the Future Never Realized," "Moon Song," "Last Words on the Sea Witch," "After Auden," "The Lovers," and "Haiku," all from Scott Jason Cohen’s Assembled Verse.doc; "DNA," from Nucleus.doc (© 2007 Scott Jason Cohen); and "thirty-six," the full unedited cycle "Lament," "Moon Song," and "Raise a Glass" were themselves drawn from (thirty-six.doc).',
+      'Fourteen poems by Scott Jason Cohen — eight shown, one per satellite, a different slice of the full set each visit: "Courtesans of the Old World," "Springtime in the Garden," "Prologue," "Raise a Glass," "Lament for the Future Never Realized," "Moon Song," "After Auden," "The Lovers," and "Haiku," all from Scott Jason Cohen’s Assembled Verse.doc; "DNA," from Nucleus.doc (© 2007 Scott Jason Cohen); and four verse openings that each run on into prose after a few lines — "Apocrypha," "The way her hips sway is unique," "here comes no sun today," and "(Underneath scams and heart attacks," — each its own separate source file.',
     ],
   },
   {
