@@ -49,10 +49,14 @@ but non-functional for API calls. Use localhost instead.
 
 ## pending decisions
 - nebula star data — use curator tool to populate, then drop into nebula.js
-- elements/"cycle" scene — five-element live-stream piece (earth/water/air/fire/wood), embed via
-  YouTube iframe API (`embed/VIDEO_ID` or `embed/live_stream?channel=CHANNEL_ID`, auto-switches to
-  whatever's currently live). Needs an "offline" fallback state per stream — several of these
-  are seasonal, not always-on. Roster as of 2026-07-16:
+
+**Resolved (2026-07-16): the elements/"cycle" scene is built** — see "egg / leaf / cycle — wired
+into the site" below for what actually shipped. Roster + research trail kept here since `cycle.js`
+references it directly:
+
+- elements/"cycle" scene — five-element live-stream piece (earth/water/air/fire/wood), embedded via
+  the YouTube iframe API. Each stream carries a manual backup link rather than an automated
+  "offline" detector — see the "egg / leaf / cycle" entry below for why. Roster as of 2026-07-16:
 
   | Element | Primary | Uptime | Backup(s) |
   |---|---|---|---|
@@ -118,10 +122,38 @@ into the site" below.
   slotted chronologically into the c. 2000 cluster. Scroll is now eleven pieces. Source essay's
   full context lives in A Manual of Perceptual Mechanics.scriv now, not here.
 
-## nebula.js reality check (flagged, not yet resolved)
+## egg / leaf / cycle — wired into the site (2026-07-16)
 
-`nebula.js` and `egg.js` are still commented out in `main.js` ("deactivated for now, being
-reworked"). Worth a proper activation pass once both are ready for real traffic.
+Three pieces of new infrastructure, all live in `main.js` and the landing grid now (nav icons +
+preview tiles), all `npx vite build` verified:
+
+- **`egg.js`** — fully rebuilt. Retired the old "worldline" concept (Google Maps satellite tiles +
+  a personal geographic path) in favor of a self-contained WebGL scene: Earth (a canvas-drawn
+  texture, no network image fetch, same approach as nebula.js's cloud/halo textures), a dipole
+  magnetic field traced as glowing arced lines, aurora curtains at both poles (gradient sprites,
+  green fading to violet, swaying and flickering), and a scatter of small satellites on real
+  tilted orbits (same pivot-rotation trick as the Orrery in `nebula.js`). Drag to orbit, same
+  manual-drag pattern as `nebula.js`.
+- **`leaf.js`** — new scene, built around "In The End It Falls Slowly Through The Aether" in full
+  (Cartography.doc — see "pending decisions" above). A single quiet vignette, not an explorable
+  space: an orthographic-camera Three.js scene, a leaf shape holding a droplet through a slow
+  34-second loop — surface-tension hold, freefall (with a few "escaped molecule" motes peeling off
+  mid-fall), impact/splash, reform — with the text arriving caption-by-caption in the same order
+  it was written, timed to the phase of the fall it describes.
+- **`cycle.js`** — new scene, the five-element live-stream piece from "pending decisions" above,
+  actually built: real YouTube iframe embeds (not WebGL — DOM/iframe is the honest choice for
+  actual documentary footage, same reasoning as `theater.js`), one button per element, a manual
+  backup link per stream since YouTube gives no reliable cross-origin "stream is down" signal from
+  inside an iframe. Fire.doc's word-association litany (the piece explicitly reserved for this
+  since it was first found — see "pending decisions" above) plays over the fire stream only, one
+  phrase fading in at a time. Confirmed live YouTube channel/video IDs for all five streams via
+  direct lookup (GlobalQuake channel `UCZmcd4cQ2H_ELWAuUdOMgRQ`, YallBot/Ryan Hall Y'all channel
+  `UCJHAT3Uvv-g3I8H3GhHWV7w`, Kilauea Cam A `iws3rh5vLAQ`, the Explore.org Smith River cam
+  `WUqQdNAUC1c`, Chattahoochee National Forest cam `mFB6KZnjhy0`) rather than guessing — worth a
+  periodic check since livestream video IDs do occasionally change when a stream restarts.
+
+`nebula.js` is still commented out in `main.js` ("deactivated for now, being reworked") — that
+one's untouched this pass, still worth a proper activation pass on its own.
 
 ## You've Got a Friend in Satan — scenes wired into the theater (2026-07-16)
 
@@ -152,17 +184,15 @@ happen without Scott deciding that's worth it.
 
 ## infrastructure done, needs real content
 - `src/scenes/nebula.js` — built (real-site constellations + Orrery), just not yet re-activated in `main.js`
-- `src/scenes/egg.js` — placeholder green sphere; slated to become an Earth view with aurorae,
-  magnetic field lines, and orbiting satellites (in progress, 2026-07-16)
-- `src/scenes/leaf.js` — new, not yet built; source text is Cartography.doc's "In The End It Falls
-  Slowly Through The Aether" (see "pending decisions" above)
-- `src/scenes/cycle.js` — new, not yet built; the five-element livestream piece (see "pending
-  decisions" above for the full roster)
 
 ## solid / deployed
 - sphere with hypertext fragments + silk glimmer links
 - chaos butterfly in phase space, 2026
-- four-panel landing with persistent nav bar
+- the egg: Earth's magnetic field, aurorae, orbiting satellites, 2026
+- leaf: "In The End It Falls Slowly Through The Aether," 2026
+- cycle: five live streams, one per classical element, 2026
+- four-panel landing with persistent nav bar (seven panels now: sphere, butterfly, manuscript,
+  theater, egg, leaf, cycle)
 - ESC to close scenes
 - full a11y pass (skip link, ARIA roles, keyboard nav, reduced motion)
 - nebula curator tool (separate artifact — paste URLs, Claude names stars + constellations)
