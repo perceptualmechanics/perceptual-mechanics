@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { bindOrbitDrag, bindWheelZoom, bindGuardedResize, prefersReducedMotion, bindEscapeClose } from '../utils/sceneKit.js';
 
 // ─── The Orrery of Los Feliz ───────────────────────────────────────────────
 // A found short-short, full and unedited, undated. Investigators track a
@@ -1096,24 +1097,24 @@ export function createOrrery(container, { preview = false } = {}) {
     });
   }
 
-  // ─── Drag to orbit ────────────────────────────────────────────────────────
+  // ─── Drag to orbit (mouse + touch) ──────────────────────────────────────
   // No auto-rotate (Scott, 2026-07-17: it never settled into a composed,
   // centered view — always caught mid-spin) — it holds still until dragged.
-  let isDragging = false, prevMouse = { x: 0, y: 0 };
-  container.addEventListener('mousedown', e => {
-    isDragging = true;
-    prevMouse = { x: e.clientX, y: e.clientY };
+  const orbitDrag = bindOrbitDrag(container, {
+    onDrag: dx => { root.rotation.y += dx; },
   });
-  window.addEventListener('mouseup', () => { isDragging = false; });
-  window.addEventListener('mousemove', e => {
-    if (!isDragging) return;
-    root.rotation.y += (e.clientX - prevMouse.x) * 0.004;
-    prevMouse = { x: e.clientX, y: e.clientY };
+  const wheelZoom = bindWheelZoom(container, {
+    isBlocked: e => panel && panel.contains(e.target),
+    onZoom: deltaY => {
+      camera.position.z = Math.max(1.4, Math.min(38, camera.position.z + deltaY * 0.01));
+    },
   });
-  container.addEventListener('wheel', e => {
-    if (panel && panel.contains(e.target)) return;
-    camera.position.z = Math.max(1.4, Math.min(38, camera.position.z + e.deltaY * 0.01));
-  });
+
+  // Reduced motion: the continuous orbital rotation below is exactly the
+  // kind of autonomous, never-stopping motion prefers-reduced-motion is
+  // for — drag-to-orbit stays available regardless, since that's motion
+  // the visitor asks for, not motion imposed on them.
+  const reduceMotion = prefersReducedMotion();
 
   // ─── Animate ──────────────────────────────────────────────────────────────
   let animId, t = 0;
@@ -1121,15 +1122,17 @@ export function createOrrery(container, { preview = false } = {}) {
     animId = requestAnimationFrame(animate);
     t += 0.001;
 
-    orrery.orbits.forEach(o => {
-      o.pivot.rotation.y += o.speed * o.direction * 0.01;
-      o.moons.forEach(m => { m.pivot.rotation.y += m.speed * 0.02; });
-    });
-    orrery.unknowns.forEach(u => {
-      u.pivot.rotation.y += u.speed * u.direction * 0.01;
-      u.mesh.rotation.x += u.spin * 0.01;
-      u.mesh.rotation.y += u.spin * 0.007;
-    });
+    if (!reduceMotion) {
+      orrery.orbits.forEach(o => {
+        o.pivot.rotation.y += o.speed * o.direction * 0.01;
+        o.moons.forEach(m => { m.pivot.rotation.y += m.speed * 0.02; });
+      });
+      orrery.unknowns.forEach(u => {
+        u.pivot.rotation.y += u.speed * u.direction * 0.01;
+        u.mesh.rotation.x += u.spin * 0.01;
+        u.mesh.rotation.y += u.spin * 0.007;
+      });
+    }
 
     // The radio telescope's received-signal pulse.
     orrery.signalMat.emissiveIntensity = 0.6 + Math.abs(Math.sin(t * 4)) * 1.2;
@@ -1142,22 +1145,30 @@ export function createOrrery(container, { preview = false } = {}) {
   }
   animate();
 
-  function onResize() {
-    if (!container.clientWidth || !container.clientHeight) return;
-    const nw = container.clientWidth || window.innerWidth;
-    const nh = container.clientHeight || window.innerHeight;
-    camera.aspect = nw / nh;
+  const resize = bindGuardedResize(container, (w, h) => {
+    camera.aspect = w / h;
     camera.updateProjectionMatrix();
-    renderer.setSize(nw, nh);
-  }
-  window.addEventListener('resize', onResize);
-  window.addEventListener('orientationchange', () => setTimeout(onResize, 100));
+    renderer.setSize(w, h);
+  });
+
+  // Escape closes the read-more panel from anywhere, matching standard
+  // modal-dialog expectation (previously only the close button or a
+  // click outside the panel would do it).
+  const escapeClose = !preview ? bindEscapeClose(() => {
+    if (panel && panel.classList.contains('open')) {
+      panel.classList.remove('open');
+      selected = false;
+      setEmphasis(hovered);
+    }
+  }) : null;
 
   return {
     dispose() {
       cancelAnimationFrame(animId);
-      window.removeEventListener('resize', onResize);
-      window.removeEventListener('orientationchange', onResize);
+      orbitDrag.dispose();
+      wheelZoom.dispose();
+      resize.dispose();
+      escapeClose?.dispose();
       renderer.dispose();
       starGeo.dispose();
       starMat.dispose();
