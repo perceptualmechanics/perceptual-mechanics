@@ -835,6 +835,64 @@ function buildWarehouse(preview, floorY, ceilingY, rafterY) {
       group.add(clutter);
     });
 
+    // ─── A few inert mechanical details, 2026-07-17 (Scott: "micro-Myst"
+    // — objects you'd poke at without being told what they do). None of
+    // these are wired to anything; they're not meant to be understood,
+    // just found, the way a real workshop accumulates fittings whose
+    // original purpose outlived whoever installed them. ──────────────────
+    const detailMat = new THREE.MeshStandardMaterial({ color: 0x2e2a24, roughness: 0.65, metalness: 0.55 });
+    const detailAccentMat = new THREE.MeshStandardMaterial({ color: 0x8a2a1f, roughness: 0.45, metalness: 0.3 });
+
+    // A wall-mounted gauge above the pegboard, needle frozen at whatever
+    // it was last reading — a different angle every time the scene loads.
+    const gaugeFaceMat = new THREE.MeshStandardMaterial({ color: 0xc9bfa0, roughness: 0.6, metalness: 0.1 });
+    const gaugeGroup = new THREE.Group();
+    const gaugeHousing = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.09, 0.025, 16), detailMat);
+    gaugeHousing.rotation.z = Math.PI / 2;
+    gaugeGroup.add(gaugeHousing);
+    const gaugeFace = new THREE.Mesh(new THREE.CylinderGeometry(0.075, 0.075, 0.008, 16), gaugeFaceMat);
+    gaugeFace.rotation.z = Math.PI / 2;
+    gaugeFace.position.x = 0.015;
+    gaugeGroup.add(gaugeFace);
+    const needle = new THREE.Mesh(new THREE.BoxGeometry(0.012, 0.058, 0.004), detailAccentMat);
+    needle.position.set(0.02, 0.02, 0);
+    needle.rotation.z = 0.6 + Math.random() * 1.4;
+    gaugeGroup.add(needle);
+    gaugeGroup.position.set(-wallDist + 0.045, floorY + wallHeight * 0.5 + 0.75, 2.2);
+    group.add(gaugeGroup);
+
+    // An idle toggle lever bolted to the front edge of the workbench,
+    // thrown to some mid-position and going nowhere.
+    const leverBase = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.03, 0.05), detailMat);
+    leverBase.position.set(-wallDist + 0.4 + 0.14, benchHeight + 0.04, -2.0);
+    group.add(leverBase);
+    const leverArm = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.008, 0.12, 6), detailMat);
+    leverArm.position.set(0, 0.06, 0);
+    leverArm.rotation.z = -0.35;
+    leverBase.add(leverArm);
+    const leverKnob = new THREE.Mesh(new THREE.SphereGeometry(0.016, 8, 8), detailAccentMat);
+    leverKnob.position.y = 0.12;
+    leverArm.add(leverKnob);
+
+    // A valve wheel on a pipe stub, low on the same wall, half-forgotten
+    // — sitting at whatever angle it was last turned to.
+    const pipeStub = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.16, 8), detailMat);
+    pipeStub.rotation.z = Math.PI / 2;
+    pipeStub.position.set(-wallDist + 0.08, floorY + 0.5, 0.6);
+    group.add(pipeStub);
+    const wheelGroup = new THREE.Group();
+    const wheelRim = new THREE.Mesh(new THREE.TorusGeometry(0.07, 0.009, 6, 16), detailMat);
+    wheelGroup.add(wheelRim);
+    for (let i = 0; i < 4; i++) {
+      const spoke = new THREE.Mesh(new THREE.CylinderGeometry(0.004, 0.004, 0.14, 5), detailMat);
+      spoke.rotation.z = (i / 4) * Math.PI;
+      wheelGroup.add(spoke);
+    }
+    wheelGroup.rotation.y = Math.PI / 2;
+    wheelGroup.rotation.z = Math.random() * Math.PI * 2;
+    wheelGroup.position.set(-wallDist + 0.16, floorY + 0.5, 0.6);
+    group.add(wheelGroup);
+
     bulbPosition = new THREE.Vector3(-wallDist + 0.6, benchHeight + 0.9, -1.5);
     const cordMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.8 });
     addStrut(group, new THREE.Vector3(bulbPosition.x, rafterY - 0.05, bulbPosition.z), bulbPosition, 0.006, cordMat);
@@ -865,19 +923,24 @@ export function createOrrery(container, { preview = false } = {}) {
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
   renderer.setPixelRatio(window.devicePixelRatio);
   renderer.setSize(w, h);
-  renderer.setClearColor(0x030303, 1);
+  // A touch of warmth over pure black (0x030303 before) — the fog is doing
+  // real atmospheric-haze work now that the compressed-video overlay isn't
+  // around to fake it, so it reads closer to a lamp-lit room's own dim
+  // ambient color than a void.
+  renderer.setClearColor(0x0a0704, 1);
   renderer.domElement.setAttribute('aria-hidden', 'true');
   container.appendChild(renderer.domElement);
 
   // Fog matched to the clear color so only genuinely distant geometry
   // (far wall corners, stars beyond the skylight) softens into haze — the
-  // soft render-distance falloff of early-90s CD-ROM adventure games
-  // (Myst, Return to Zork, The 7th Guest), not a modern crisp render.
+  // soft render-distance falloff of early-90s pre-rendered CG adventure
+  // games (Myst, Return to Zork, The 7th Guest) doing the work honestly,
+  // in the render itself, rather than an overlay standing in for it.
   // Far distance kept well beyond the camera-to-orrery range (camera now
   // sits at z 13.3/16.8) so the machine itself never fogs out — it had
   // been eating into the enlarged orrery and washing out the preview tile
   // almost entirely.
-  scene.fog = new THREE.Fog(0x030303, preview ? 9 : 12, preview ? 30 : 42);
+  scene.fog = new THREE.Fog(0x0a0704, preview ? 9 : 12, preview ? 30 : 42);
 
   // ─── Lighting — dim industrial ambience, brightened a step (Scott: it
   // was starting too dark), a cool wash falling through the skylight, a
@@ -994,83 +1057,35 @@ export function createOrrery(container, { preview = false } = {}) {
         #orrery-caption { white-space: normal; width: 88vw; font-size: 0.7rem; }
       }
 
-      /* ─── Very early compressed video (Scott, 2026-07-17: reworked from
-         a "CD-ROM adventure game grain" read toward an actual low-bitrate
-         mid-90s digital-video read — visible macroblocks, posterized/
-         banded color, chroma smear, irregular judder rather than a
-         steady flicker) — a soft vignette plus this overlay sitting over
-         the render, and a title card in the same spirit. ─────────────── */
+      /* ─── Micro-Myst (Scott, 2026-07-17: "don't import the Myst
+         aesthetic, it's still the early '90s, but it should feel like the
+         Myst developers were working on this for a different game" —
+         a full reset from the compressed-video pass that was here before.
+         That pass leaned on a "you're watching lossy video" metaphor:
+         macroblocks, hard-stepped color banding, chroma smear. All of it
+         is gone. What's left is a soft vignette and a single faint grain
+         pass — the texture belongs to the RENDER now (warm ray-traced-era
+         lighting, real Three.js fog doing the atmospheric-haze work — see
+         the fog color note near createOrrery — and the camera-drag lag
+         near the bottom of this file, standing in for those slightly
+         labored pre-rendered transition movies), not to a screen sitting
+         between the visitor and the room. ─────────────────────────────── */
       #orrery-vignette {
         position: absolute; inset: 0; pointer-events: none; z-index: 5;
-        background: radial-gradient(ellipse at center, rgba(0,0,0,0) 42%, rgba(3,2,1,0.6) 100%);
+        background: radial-gradient(ellipse at center, rgba(0,0,0,0) 42%, rgba(10,7,4,0.6) 100%);
       }
       #orrery-grain {
-        /* Five stacked layers. The macroblock grid is the one thing pure
-           turbulence noise can never fake on its own — block-based
-           compression leaves actual straight seams, not organic blobs —
-           so it's drawn explicitly as CSS grid lines rather than implied
-           by coarser noise. The banding layer is a hard-STEPPED gradient
-           (real color stops, no smooth interpolation) standing in for
-           8-bit quantization: the visible "shelves" a codec leaves across
-           a gradient or a dark scene. The "posterized" noise layer uses
-           feComponentTransfer type="discrete" — genuine quantization of
-           the turbulence's alpha into a handful of bands, not just a
-           coarser blur — for per-block luma variance. Fine noise
-           underneath is the base video-noise floor, same idea as before,
-           just no longer carrying the whole effect on its own. */
+        /* One layer, same fine feTurbulence noise the compressed-video
+           pass also used underneath everything else — kept on its own
+           now, quieter (opacity roughly a third of what it was), because
+           a period CRT/CD-ROM render always carried a little noise even
+           at rest. Static, no drift animation — this isn't standing in
+           for a moving video signal anymore, just the render's own grain. */
         position: absolute; inset: 0; pointer-events: none; z-index: 6;
-        opacity: 0.85; mix-blend-mode: overlay;
+        opacity: 0.3; mix-blend-mode: overlay;
         background-image:
-          repeating-linear-gradient(0deg, rgba(255,255,255,0.09) 0px, rgba(255,255,255,0.09) 1px, transparent 1px, transparent 8px),
-          repeating-linear-gradient(90deg, rgba(255,255,255,0.07) 0px, rgba(255,255,255,0.07) 1px, transparent 1px, transparent 8px),
-          repeating-linear-gradient(115deg,
-            rgba(0,0,0,0) 0px, rgba(0,0,0,0) 18px,
-            rgba(255,255,255,0.45) 18px, rgba(255,255,255,0.45) 19px,
-            rgba(0,0,0,0) 19px, rgba(0,0,0,0) 37px,
-            rgba(0,0,0,0.35) 37px, rgba(0,0,0,0.35) 38px),
-          url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='96' height='96'><filter id='q'><feTurbulence type='fractalNoise' baseFrequency='0.09' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/><feComponentTransfer><feFuncA type='discrete' tableValues='0 0.15 0.35 0.55 0.8'/></feComponentTransfer></filter><rect width='100%25' height='100%25' filter='url(%23q)'/></svg>"),
           url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)' opacity='0.55'/></svg>");
-        background-size: 100% 100%, 100% 100%, 100% 100%, 120px 120px, 160px 160px;
-        animation: orrery-grain-drift 2.6s linear infinite;
-      }
-      /* Grid and banding stay locked in place (real compression seams
-         don't wander) — only the two noise layers drift, and unevenly:
-         near-duplicate keyframes a fraction of a percent apart hold each
-         position for a variable stretch before snapping to the next,
-         rather than the old perfectly metronomic 2-step pulse. Reads as
-         a stream stuttering on uneven packet timing, not a breathing
-         texture. */
-      @keyframes orrery-grain-drift {
-        0%, 6%      { background-position: 0 0, 0 0, 0 0, 0 0, 0 0; }
-        6.5%, 22%   { background-position: 0 0, 0 0, 0 0, 3px -2px, -2px 1px; }
-        22.5%, 30%  { background-position: 0 0, 0 0, 0 0, -1px 3px, 2px -1px; }
-        30.5%, 61%  { background-position: 0 0, 0 0, 0 0, 2px 1px, -3px 2px; }
-        61.5%, 68%  { background-position: 0 0, 0 0, 0 0, -2px -3px, 1px 3px; }
-        68.5%, 100% { background-position: 0 0, 0 0, 0 0, 1px 2px, -1px -2px; }
-      }
-      /* Chroma smear — early codecs store color at a fraction of luma's
-         resolution, so color bleeds/lags past its own edges rather than
-         staying crisp. Two tinted layers offset in opposite directions
-         (mix-blend-mode:screen, so they only ever brighten, never muddy
-         the render), concentrated toward the frame edges where that
-         softness reads most in real compressed video. */
-      #orrery-chroma {
-        position: absolute; inset: 0; pointer-events: none; z-index: 7;
-        mix-blend-mode: screen;
-      }
-      #orrery-chroma::before, #orrery-chroma::after {
-        content: ''; position: absolute; inset: -2px;
-      }
-      #orrery-chroma::before {
-        background: radial-gradient(ellipse at center, transparent 48%, rgba(255,40,60,0.14) 100%);
-        transform: translateX(-3px);
-      }
-      #orrery-chroma::after {
-        background: radial-gradient(ellipse at center, transparent 48%, rgba(40,220,255,0.14) 100%);
-        transform: translateX(3px);
-      }
-      @media (prefers-reduced-motion: reduce) {
-        #orrery-grain { animation: none; }
+        background-size: 160px 160px;
       }
       #orrery-title {
         /* #pm-nav (site.css) is a fixed, 3.5rem-tall, z-index:500 bar —
@@ -1106,7 +1121,7 @@ export function createOrrery(container, { preview = false } = {}) {
 
   // ─── Panel (full only) ────────────────────────────────────────────────────
   let panel = null, panelTitle = null, panelEra = null, panelNote = null;
-  let hint = null, caption = null, vignette = null, grain = null, chroma = null, title = null;
+  let hint = null, caption = null, vignette = null, grain = null, title = null;
   if (!preview) {
     vignette = document.createElement('div');
     vignette.id = 'orrery-vignette';
@@ -1117,11 +1132,6 @@ export function createOrrery(container, { preview = false } = {}) {
     grain.id = 'orrery-grain';
     grain.setAttribute('aria-hidden', 'true');
     container.appendChild(grain);
-
-    chroma = document.createElement('div');
-    chroma.id = 'orrery-chroma';
-    chroma.setAttribute('aria-hidden', 'true');
-    container.appendChild(chroma);
 
     title = document.createElement('div');
     title.id = 'orrery-title';
@@ -1299,8 +1309,19 @@ export function createOrrery(container, { preview = false } = {}) {
   // ─── Drag to orbit (mouse + touch) ──────────────────────────────────────
   // No auto-rotate (Scott, 2026-07-17: it never settled into a composed,
   // centered view — always caught mid-spin) — it holds still until dragged.
+  //
+  // Micro-Myst pass, same day: drag no longer moves the view directly.
+  // It nudges a target angle, and the animate loop below eases root's
+  // actual rotation toward that target every frame — the room keeps
+  // gliding for a beat after you let go, catching up to where you asked
+  // it to go rather than snapping there. Standing in for the thing that
+  // most makes Myst's disconnected-node navigation feel the way it does:
+  // movement was never a live camera responding 1:1, it was a short
+  // pre-rendered transition clip playing back at its own pace. Skipped
+  // under prefers-reduced-motion — see the animate loop.
+  let targetRotationY = root.rotation.y;
   const orbitDrag = bindOrbitDrag(container, {
-    onDrag: dx => { root.rotation.y += dx; },
+    onDrag: dx => { targetRotationY += dx; },
   });
   const wheelZoom = bindWheelZoom(container, {
     isBlocked: e => panel && panel.contains(e.target),
@@ -1320,6 +1341,16 @@ export function createOrrery(container, { preview = false } = {}) {
   function animate() {
     animId = requestAnimationFrame(animate);
     t += 0.001;
+
+    // Ease the room's rotation toward wherever the last drag left the
+    // target, rather than jumping straight there — see the orbitDrag
+    // setup above. Reduced-motion visitors get direct 1:1 tracking
+    // instead (no lingering post-drag motion they didn't ask for).
+    if (reduceMotion) {
+      root.rotation.y = targetRotationY;
+    } else {
+      root.rotation.y += (targetRotationY - root.rotation.y) * 0.07;
+    }
 
     if (!reduceMotion) {
       orrery.orbits.forEach(o => {
@@ -1385,7 +1416,6 @@ export function createOrrery(container, { preview = false } = {}) {
       if (caption) caption.remove();
       if (vignette) vignette.remove();
       if (grain) grain.remove();
-      if (chroma) chroma.remove();
       if (title) title.remove();
       renderer.domElement.remove();
     }

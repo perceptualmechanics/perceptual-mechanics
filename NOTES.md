@@ -6,6 +6,47 @@ projects (The Secret World, A Manual of Perceptual Mechanics) moved into their o
 files, which are now the source of truth for that material going forward. See "project map"
 below for where things live.
 
+## 1.0.6 (2026-07-17, same day)
+
+Full reset of the orrery "aesthetic" request from 1.0.5. Scott's screenshot
+of the compressed-video overlay got one word back — "Hmm." — and rather than
+tune opacity on the five-layer macroblock/banding/posterized-noise stack, he
+asked to start over: "What I really want is to make this a mini-MYST level
+:D a micro-MYST... don't import the MYST aesthetic, it's still the early
+'90s, but it should feel like the MYST developers were working on this for a
+different game." A different metaphor entirely — not a video-signal overlay
+sitting on top of the render, but the render itself reading like mid-90s
+pre-rendered CG: labored camera moves and diegetic objects whose purpose
+isn't explained.
+
+Three changes, confirmed with Scott first:
+
+- **Camera drag now has lag.** Drag used to write straight into
+  `root.rotation.y`; now it accumulates into a separate target and the
+  actual rotation eases toward it each frame (`* 0.07`), so the camera
+  glides to a stop instead of tracking the pointer 1:1 — that "the game is
+  still catching up to you" feel. Gated behind `prefersReducedMotion()`:
+  reduced-motion visitors get the old direct assignment, no floaty catch-up.
+  The drag itself stays instant and fully responsive either way — only the
+  settle is eased.
+- **Compressed-video overlay is gone.** Pulled the macroblock grid, the
+  hard-stepped banding gradient, the posterized-noise layer, the chroma
+  smear, and the uneven-judder drift animation — the whole 1.0.5 stack.
+  What's left is one quiet static grain layer (the original fine feTurbulence
+  noise, `opacity: 0.3`, no animation) — a trace, not a texture you notice.
+  Warmed the scene to match: clear color and fog both moved from `0x030303`
+  to `0x0a0704`, and the vignette's dark stop shifted to match — less "dead
+  black CRT," more "warm dark room," which is closer to what a mystery
+  warehouse should feel like lit.
+- **Three new mystery props**, all inert — nothing to click, nothing that
+  does anything, just objects that look like they should: a wall gauge with
+  a needle frozen at a random angle, an idle toggle lever on the workbench,
+  a valve wheel on a stub of pipe. All added inside `buildWarehouse()`, all
+  plain children of the scene's existing group so the current dispose
+  traversal covers them for free.
+
+Version bumped to 1.0.6 in package.json.
+
 ## 1.0.5 (2026-07-17, same day)
 
 Three small requests from Scott, one per scene:
