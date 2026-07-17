@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { CSS2DRenderer, CSS2DObject } from 'three/examples/jsm/renderers/CSS2DRenderer.js';
 import { fragments } from '../text/fragments.js';
+import { bindOrbitDrag, bindWheelZoom, bindGuardedResize, prefersReducedMotion, bindEscapeClose } from '../utils/sceneKit.js';
 
 export function createSphere(container, { preview = false } = {}) {
   const w = container.clientWidth  || window.innerWidth;
@@ -177,6 +178,7 @@ export function createSphere(container, { preview = false } = {}) {
 
   // Panel (full only)
   let panel = null, panelContent = null, panelTitle = null, facetIdEl = null;
+  let wheelZoom = null, escapeClose = null;
   if (!preview) {
     panel = document.createElement('aside');
     panel.id = 'sphere-panel';
@@ -351,44 +353,51 @@ export function createSphere(container, { preview = false } = {}) {
       });
     });
 
-    container.addEventListener('wheel', e => {
-      if (panel && panel.contains(e.target)) return;
-      camera.position.z = Math.max(1.8, Math.min(6, camera.position.z + e.deltaY * 0.005));
+    wheelZoom = bindWheelZoom(container, {
+      isBlocked: e => panel && panel.contains(e.target),
+      onZoom: deltaY => {
+        camera.position.z = Math.max(1.8, Math.min(6, camera.position.z + deltaY * 0.005));
+      },
+    });
+
+    // Escape closes the fragment panel from anywhere, matching standard
+    // modal-dialog expectation (previously only the close button or a
+    // click outside the panel would do it).
+    escapeClose = bindEscapeClose(() => {
+      if (panel.classList.contains('open')) {
+        panel.classList.remove('open');
+        if (selectedFace !== -1) { restoreFaceColor(selectedFace); selectedFace = -1; }
+      }
     });
   }
 
-  // ─── Drag to rotate ───────────────────────────────────────────────────────
-  let isDragging = false, prevMouse = { x: 0, y: 0 }, autoRotate = true;
-  container.addEventListener('mousedown', e => {
-    isDragging = true; autoRotate = false;
-    prevMouse = { x: e.clientX, y: e.clientY };
-  });
-  window.addEventListener('mouseup', () => {
-    isDragging = false;
-    setTimeout(() => { autoRotate = true; }, 2000);
-  });
-  window.addEventListener('mousemove', e => {
-    if (!isDragging) return;
-    sphere.rotation.y += (e.clientX - prevMouse.x) * 0.005;
-    sphere.rotation.x += (e.clientY - prevMouse.y) * 0.005;
-    wire.rotation.copy(sphere.rotation);
-    prevMouse = { x: e.clientX, y: e.clientY };
+  // ─── Drag to rotate (mouse + touch, via sceneKit) ──────────────────────────
+  // Previously mouse-only despite touch listeners already existing above for
+  // tap-vs-drag detection — rotating the sphere silently didn't work on
+  // phones/tablets. bindOrbitDrag unifies both input paths.
+  let autoRotate = true;
+  const orbitDrag = bindOrbitDrag(container, {
+    onDragStart: () => { autoRotate = false; },
+    onDrag: (dx, dy) => {
+      sphere.rotation.y += dx;
+      sphere.rotation.x += dy;
+      wire.rotation.copy(sphere.rotation);
+    },
+    onDragEnd: () => { setTimeout(() => { autoRotate = true; }, 2000); },
   });
 
+  // Reduced motion: gates the sphere's autonomous auto-rotate. Drag-to-
+  // rotate stays available regardless — that's visitor-initiated motion,
+  // not motion imposed on them.
+  const reduceMotion = prefersReducedMotion();
+
   // ─── Resize ───────────────────────────────────────────────────────────────
-  function resize() {
-    const w = container.clientWidth, h = container.clientHeight;
-    // Container is hidden (e.g. the landing grid sits behind an active
-    // full-screen scene) — clientWidth/Height report 0 in that state.
-    // Bail out rather than zeroing the renderer; a real resize event will
-    // fire again once the container is visible and correctly sized.
-    if (!w || !h) return;
+  const resize = bindGuardedResize(container, (w, h) => {
     camera.aspect = w / h;
     camera.updateProjectionMatrix();
     renderer.setSize(w, h);
     if (labelRenderer) labelRenderer.setSize(w, h);
-  }
-  window.addEventListener('resize', resize);
+  });
 
   // ─── Animate ──────────────────────────────────────────────────────────────
   const cameraDir = new THREE.Vector3();
@@ -411,7 +420,7 @@ export function createSphere(container, { preview = false } = {}) {
     animId = requestAnimationFrame(animate);
     lightAngle += 0.003;
 
-    if (autoRotate) {
+    if (autoRotate && !reduceMotion) {
       sphere.rotation.y += 0.0015;
       sphere.rotation.x += 0.0003;
       wire.rotation.copy(sphere.rotation);
@@ -461,7 +470,10 @@ export function createSphere(container, { preview = false } = {}) {
   return {
     dispose() {
       cancelAnimationFrame(animId);
-      window.removeEventListener('resize', resize);
+      orbitDrag.dispose();
+      wheelZoom?.dispose();
+      escapeClose?.dispose();
+      resize.dispose();
       renderer.dispose();
       if (labelRenderer) labelRenderer.domElement.remove();
       if (panel) panel.remove();
