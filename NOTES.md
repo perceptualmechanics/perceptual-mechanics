@@ -6,6 +6,32 @@ projects (The Secret World, A Manual of Perceptual Mechanics) moved into their o
 files, which are now the source of truth for that material going forward. See "project map"
 below for where things live.
 
+## 1.0.25 (2026-07-19, same day)
+
+Scott spotted a real bug in the demo screenshot the moment it loaded:
+Clytemnestra and Agamemnon's speech bubbles overlapping into unreadable
+mush. Root cause was in bardjs's own `DomRenderer.onLine` — it only
+cleared the *speaking* actor's own previous bubble before drawing a new
+one, not bubbles left behind by whoever spoke earlier in the same scene,
+so they piled up and overlapped since nothing else ever removed them.
+theater.js's `TheaterRenderer` already had this right (a stage-wide
+`clearBubbles()`); ported that same pattern into `DomRenderer`, wired it
+into `onChorus` too, and filled in a small real gap while in there — the
+reference renderer never actually implemented `onIntermission`, so
+demo pages went visually silent for ~4 seconds at every gap between
+plays. Now it shows "— intermission —".
+
+Also, per Scott: "we'll absolutely need to build functionality so people
+can choose the scenes. It can be an optional feature, but I know people
+would want that." Added a scene picker to the demo — checkboxes for all
+eight plays, select all/none, and an apply-and-restart button. No new
+engine API required for this: `compileScript` already takes any array of
+scenes, including a single one (which correctly drops the intermission
+event entirely, since that already defaults off below two scenes).
+Verified the filtering itself against the real compiler/Player before
+touching the DOM — a 3-scene subset and a 1-scene subset both compiled
+and played clean, then a full `vite build` came back clean.
+
 ## 1.0.24 (2026-07-19, same day)
 
 bard.js's first real test drive. Scott: "create a dummy page so I can test
