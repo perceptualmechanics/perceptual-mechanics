@@ -6,6 +6,30 @@ projects (The Secret World, A Manual of Perceptual Mechanics) moved into their o
 files, which are now the source of truth for that material going forward. See "project map"
 below for where things live.
 
+## 1.0.26 (2026-07-19, same day)
+
+Scott: "randomize the plays, and can we have a dropdown menu instead of
+checkboxes?" Two small changes to the demo, one of which turned into a
+small addition to bard.js itself.
+
+The reel now reshuffles on every load, restart, and apply — the exact
+same idea theater.js already applies to its own three plays. Rather than
+give the demo its own private copy of that shuffle, pulled it into
+bard.js as a real export: packages/bardjs/src/shuffle.js, a plain
+Fisher–Yates, re-exported from the package root. "What order do these
+scenes play in" is generic enough that any bard.js consumer running more
+than one scene in a sitting will want it, not just this demo.
+
+The checkbox list is gone, replaced with a native multi-select dropdown
+(`<select multiple size="8">`) — click one play, cmd/ctrl-click (or
+shift-click) for more. Select-all/select-none still work against it, and
+"apply" was renamed "shuffle & apply" since it now reshuffles the chosen
+subset every time rather than just replaying it in fixed order.
+
+Verified shuffle doesn't mutate its input and actually produces different
+orderings (checked over 20 trials before trusting it), then a clean
+vite build.
+
 ## 1.0.25 (2026-07-19, same day)
 
 Scott spotted a real bug in the demo screenshot the moment it loaded:
