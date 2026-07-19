@@ -6,6 +6,36 @@ projects (The Secret World, A Manual of Perceptual Mechanics) moved into their o
 files, which are now the source of truth for that material going forward. See "project map"
 below for where things live.
 
+## 1.0.27 (2026-07-19, same day)
+
+"Let's break this out even further." Scott: "The default stage will be a
+black box space that takes up the entire window. Make everything a bit
+bigger to accommodate. Then, we will create ASCII layers over this core
+setup -- Athenian amphitheater, the Globe, French theater, movie
+theater, that sort of thing."
+
+Two real changes, split by where they belong. The bigger-everything part
+went into bardjs's own DomRenderer — this is the reference renderer,
+meant to work whether it's embedded in a small box or filling an entire
+viewport, so its mask/bubble/name/caption sizes are clamp()'d to scale
+with the space instead of fixed at rem values sized for a 640px demo box.
+
+The venue art did not go into bardjs. Its own README already draws this
+line: "everything about how a specific production looks... is staging,
+not the amphitheater itself, and deliberately lives in the consuming
+site instead of here." So packages/bardjs/demo/venues.js is new,
+demo-only: four ASCII backdrops (Athenian Amphitheater, the Globe,
+French/Molière-era theater, a movie theater) plus a bare-stage default —
+picking one changes nothing about how the engine runs a scene, it's
+paint laid over the black box, not plumbing under it. The demo's own
+layout changed to match: the stage is now a fixed, full-viewport black
+box by default, with the title/controls/pickers floating as overlays on
+top rather than boxing the stage in.
+
+Verified venue data (every populated venue actually has top/bottom art
+and an accent color, the bare-stage default is genuinely empty) before
+touching layout, then a clean vite build.
+
 ## 1.0.26 (2026-07-19, same day)
 
 Scott: "randomize the plays, and can we have a dropdown menu instead of
