@@ -6,6 +6,42 @@ projects (The Secret World, A Manual of Perceptual Mechanics) moved into their o
 files, which are now the source of truth for that material going forward. See "project map"
 below for where things live.
 
+## 1.0.29 (2026-07-19, same day)
+
+Scott's next screenshot ("oh i can tell this is gonna be fun") showed
+progress: actors were finally visible after 1.0.28's fix, but Pangloss
+and Candide were overlapping the venue banner, and the Candide chorus
+line was sprawling edge to edge, reading like a much bigger font than
+anything around it.
+
+Root cause of the overlap wasn't a new positioning bug — it was the
+picker panel simply being too tall. An always-open 8-row scene select
+plus a venue select plus the footer easily runs 400-500px, and on a
+typical laptop-height viewport that, combined with the header, leaves
+#stage-frame's padded content area barely any room. Flexbox doesn't
+shrink content below its natural size, so the actor row + caption
+overflowed *upward*, past the reserved top padding, straight into the
+venue-top banner. Fixed by making the picker/venue/footer section a
+collapsible #options-panel, hidden by default behind a new options
+button in the controls row — collapsed, overlay-bottom is just the
+compact playback row, so the stage gets its room back. Opening it is a
+deliberate, temporary trade of stage space for choosing a play, not
+something eating the black box by default. Toggling re-runs the same
+syncLayout() from 1.0.28 so the stage padding adjusts either way.
+
+The "giant" chorus line wasn't actually a wrong font size — clamp() was
+capping it correctly. .bard-caption just had no max-width, so at a full
+viewport a long sentence stretched across nearly the entire screen
+instead of sitting in a readable column, which reads as "huge" next to
+the header's own width-constrained text right above it. Gave it the
+same treatment as the header's .sub paragraph: a sensible max-width with
+auto margins, in DomRenderer itself (any consumer at a wide viewport
+would hit the same problem, not just this demo).
+
+Verified with a jsdom check that the options panel is genuinely hidden
+by default, toggles correctly, and that the injected .bard-caption rule
+now carries a max-width — then a clean vite build.
+
 ## 1.0.28 (2026-07-19, same day)
 
 A real bug in 1.0.27, caught immediately from Scott's own screenshot: at
