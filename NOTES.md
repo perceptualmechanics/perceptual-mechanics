@@ -6,6 +6,53 @@ projects (The Secret World, A Manual of Perceptual Mechanics) moved into their o
 files, which are now the source of truth for that material going forward. See "project map"
 below for where things live.
 
+## 1.0.28 (2026-07-19, same day)
+
+A real bug in 1.0.27, caught immediately from Scott's own screenshot: at
+3/71 the stage looked empty — no actor, no bubble, no chorus caption
+anywhere on screen, just the venue banner bleeding through the title.
+Not a rough edge, an actual regression.
+
+Root cause: DomRenderer's `.bard-stage` still hardcoded `height: 100%`
+from the "make everything bigger" pass. That was harmless when
+`#stage-frame` was a small, auto-sized box (percentage heights against
+an auto-height parent just resolve to auto) — but 1.0.27 made
+`#stage-frame` a real, fixed-size, full-viewport box, so `height: 100%`
+suddenly meant something: `.bard-stage` claimed the *entire* viewport,
+leaving `.bard-caption` nowhere to render (pushed below the fold, and
+`overflow: hidden` on body clipped it outright), and pushed the actors —
+bottom-aligned via `align-items: flex-end` — to the literal bottom edge
+of the screen, directly behind the opaque controls/picker panel.
+Removed the hardcoded height entirely; `.bard-stage` sizes to its own
+content now, same as it always did before this renderer had to also work
+at full-viewport scale.
+
+That alone isn't enough, though — something still has to push the actor
+row + caption down to the *bottom* of the usable black box rather than
+letting them float at the top. Restored the exact pattern the original
+small boxed demo used for this: `#stage-frame` is a column flex
+container with `justify-content: flex-end`, so its children (the actor
+row, then the caption) stack naturally and the whole group settles at
+the bottom.
+
+The venue-banner/title overlap was a second, related bug: venue art was
+pinned at a fixed `top: 0.75rem`, with no actual knowledge of how tall
+the title overlay really was. Replaced the fixed offsets with a
+`syncLayout()` in main.js that measures the overlays' real rendered
+height and uses it to both pad `#stage-frame` and reposition the venue
+frames — on load, after a layout tick, and on resize — so nothing can
+overlap the title or the controls regardless of viewport width or how
+many lines the header text wraps to.
+
+Verified with a jsdom smoke test driving the real demo end to end
+(mount, build both pickers, play, advance, switch venues, dispatch a
+resize) — confirmed structurally that `.bard-stage`'s injected rule no
+longer contains `height: 100%`, that `#stage-frame` children stack in
+the right order, and that actors are actually present on stage after
+advancing — then a clean vite build. The actual pixel-perfect visual
+result still can't be verified without a real browser, same caveat as
+always; asked Scott to confirm on his end.
+
 ## 1.0.27 (2026-07-19, same day)
 
 "Let's break this out even further." Scott: "The default stage will be a
