@@ -6,6 +6,37 @@ projects (The Secret World, A Manual of Perceptual Mechanics) moved into their o
 files, which are now the source of truth for that material going forward. See "project map"
 below for where things live.
 
+## 1.0.22 (2026-07-19)
+
+Scott, the next morning: "I think I broke something in the code, could
+you check?" He'd hand-edited main.js and index.html himself overnight —
+simplifying every nav icon, site-title, and preview tile's onmouseover
+down to a plain `pmGlimpse('key')` call (dropping the old parallel
+`window.status='...'` writes entirely, not just leaving them inert), and
+restructuring pmGlimpse's internal word list from a flat object into an
+array of `{ key, text }` pairs. That second part broke it: the lookup at
+the bottom, `document.title = truth[text]`, still assumed `truth` was
+keyed by name, but an array indexed by a string like `'sphere'` just
+comes back `undefined` — so the 1-in-100 tab-title flicker was showing
+the literal word "undefined" instead of "zen archery," "complexity," and
+so on. The whole point of the easter egg was silently defeated. Fixed by
+turning the list back into a plain object, `PM_GLIMPSE_WORDS`, keyed
+directly by the same strings every onmouseover="" already passes in, plus
+a guard so an unrecognized key fails silently instead of ever showing
+"undefined" again.
+
+"Yeah, may as well do a full cleanup, it's 6:36am on a Sunday morning,
+the perfect time for code cleanup." Swept for other staleness while in
+there: the nav's own header comment still said "all four scenes" (it's
+seven, and has been since well before this weekend); and both the
+Theater's main.js registry entry and its index.html preview tile still
+described the reel as "scenes from Truth and Beauty and Paul Revere,"
+missing "You've Got a Friend in Satan" entirely even though that play's
+scenes have been live in the actual reel since it was added — a stale
+aria-label, not a stale comment, so worth catching. All three fixed.
+
+Verified with a real build: 23 modules, clean.
+
 ## 1.0.21 (2026-07-17, same day)
 
 Lens shelved again. Scott sent a screenshot of 1.0.20 live — the Tree of

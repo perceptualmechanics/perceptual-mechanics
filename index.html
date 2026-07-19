@@ -16,11 +16,11 @@
 
   <a href="#landing" class="skip-link">Skip to main content</a>
 
-  <!-- Persistent nav bar — all four scenes -->
+  <!-- Persistent nav bar — all seven scenes -->
   <nav id="pm-nav" aria-label="Perceptual Mechanics navigation">
 
     <!-- Sphere: geodesic / icosahedron outline -->
-    <button class="nav-icon" data-scene="sphere" aria-label="Sphere" title="The Sphere — Interconnected Text Fragments" onmouseover="window.status='zen archery'; pmGlimpse('zen archery'); return true;" onmouseout="window.status=''; return true;">
+    <button class="nav-icon" data-scene="sphere" aria-label="Sphere" title="The Sphere — Interconnected Text Fragments" onmouseover="pmGlimpse('sphere')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
         <circle cx="12" cy="12" r="9"/>
         <ellipse cx="12" cy="12" rx="9" ry="4"/>
@@ -30,7 +30,7 @@
     </button>
 
     <!-- Butterfly: Lorenz / figure-8 attractor shape -->
-    <button class="nav-icon" data-scene="butterfly" aria-label="Butterfly" title="Chaos Butterfly in Phase Space, 2026" onmouseover="window.status='complexity'; pmGlimpse('complexity'); return true;" onmouseout="window.status=''; return true;">
+    <button class="nav-icon" data-scene="butterfly" aria-label="Butterfly" title="Chaos Butterfly in Phase Space, 2026" onmouseover="pmGlimpse('butterfly')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
         <path d="M12 12 C8 6, 2 6, 3 12 C4 18, 10 17, 12 12"/>
         <path d="M12 12 C16 6, 22 6, 21 12 C20 18, 14 17, 12 12"/>
@@ -39,7 +39,7 @@
     </button>
 
     <!-- Manuscript: Ogham letter Sail, four strokes off a stemline -->
-    <button class="nav-icon" data-scene="manuscript" aria-label="Manuscript" title="Selected Works — An Illuminated Manuscript" onmouseover="window.status='savagery'; pmGlimpse('savagery'); return true;" onmouseout="window.status=''; return true;">
+    <button class="nav-icon" data-scene="manuscript" aria-label="Manuscript" title="Selected Works — An Illuminated Manuscript" onmouseover="pmGlimpse('scroll')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
         <line x1="6" y1="2.5" x2="6" y2="21.5"/>
         <line x1="6" y1="5.5" x2="19" y2="5.5"/>
@@ -50,7 +50,7 @@
     </button>
 
     <!-- Theater: film camera -->
-    <button class="nav-icon" data-scene="theater" aria-label="The Theater" title="The Theater — Now Playing" onmouseover="window.status='light entertainment'; pmGlimpse('light entertainment'); return true;" onmouseout="window.status=''; return true;">
+    <button class="nav-icon" data-scene="theater" aria-label="The Theater" title="The Theater — Now Playing" onmouseover="pmGlimpse('theater')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
         <rect x="3" y="7" width="12" height="10" rx="1"/>
         <path d="M15 10.2 L21 7.5 V16.5 L15 13.8"/>
@@ -60,7 +60,7 @@
     </button>
 
     <!-- Egg, Leaf -->
-    <button class="nav-icon" data-scene="egg" aria-label="The Egg" title="The Egg — Aurorae, Magnetic Field, Satellites" onmouseover="window.status='lantern'; pmGlimpse('lantern'); return true;" onmouseout="window.status=''; return true;">
+    <button class="nav-icon" data-scene="egg" aria-label="The Egg" title="The Egg — Aurorae, Magnetic Field, Satellites" onmouseover="pmGlimpse('egg')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
         <circle cx="12" cy="12" r="6"/>
         <path d="M12 3 C18 6 18 18 12 21"/>
@@ -69,7 +69,7 @@
       </svg>
     </button>
 
-    <button class="nav-icon" data-scene="leaf" aria-label="Leaf" title="Leaf — In The End It Falls Slowly Through The Aether" onmouseover="window.status='stillness'; pmGlimpse('stillness'); return true;" onmouseout="window.status=''; return true;">
+    <button class="nav-icon" data-scene="leaf" aria-label="Leaf" title="Leaf — In The End It Falls Slowly Through The Aether" onmouseover="pmGlimpse('leaf')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
         <path d="M12 3c5 2 7 6 5 11-1.5 3.7-4 5.5-5 7-1-1.5-3.5-3.3-5-7-2-5 0-9 5-11z"/>
         <path d="M12 4v15"/>
@@ -80,7 +80,7 @@
          three shells rotated around a shared center, which reads as an
          atom (electron orbits), not an orrery (planets in one plane).
          Scott, 2026-07-17: "it's an atom now, not a solar system." -->
-    <button class="nav-icon" data-scene="orrery" aria-label="Orrery" title="The Orrery of Los Feliz" onmouseover="window.status='will'; pmGlimpse('will'); return true;" onmouseout="window.status=''; return true;">
+    <button class="nav-icon" data-scene="orrery" aria-label="Orrery" title="The Orrery of Los Feliz" onmouseover="pmGlimpse('orrery')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
         <line x1="12" y1="12" x2="12" y2="2.5"/>
         <ellipse cx="12" cy="13" rx="9.5" ry="3.4"/>
@@ -92,29 +92,10 @@
         <circle cx="14.9" cy="11.1" r="0.5" fill="currentColor" stroke="none"/>
       </svg>
     </button>
-
-    <!-- Lens: shelved again (2026-07-17) after a work-in-progress round —
-         tighter beam, princess-cut multi-facet gem, Tree of Life/chakra
-         backdrop (see NOTES.md, 1.0.20) — and a screenshot showing the gem
-         crowding the frame and the facets reading too subtly. Scott:
-         "let's just shelve this for the moment and look at it tomorrow
-         with fresh eyes," then: "ok, can you just comment out the lens
-         then?" Not a rejection, a pause; scene untouched, build-verified.
-         Re-enable alongside src/main.js and the preview-lens block below.
-    <button class="nav-icon" data-scene="lens" aria-label="The Lens" title="The Lens — Four facets, one light." onmouseover="window.status='refraction'; pmGlimpse('refraction'); return true;" onmouseout="window.status=''; return true;">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M12 2 L20 12 L12 22 L4 12 Z"/>
-        <line x1="12" y1="2" x2="12" y2="22"/>
-        <line x1="4" y1="12" x2="20" y2="12"/>
-        <circle cx="12" cy="12" r="1.3" fill="currentColor" stroke="none"/>
-      </svg>
-    </button>
-    -->
-
   </nav>
 
   <!-- Site title — bottom center, links back to gallery -->
-  <a href="#" id="site-title" role="button" aria-label="Return to gallery" onmouseover="window.status='secrets'; pmGlimpse('secrets'); return true;" onmouseout="window.status=''; return true;">perceptual mechanics</a>
+  <a href="#" id="site-title" role="button" aria-label="Return to gallery" onmouseover="pmGlimpse('title')">perceptual mechanics</a>
 
   <!-- Landing -->
   <main id="landing">
@@ -130,7 +111,7 @@
         <div class="preview-container" id="preview-sphere"
              role="button" tabindex="0" title="The Sphere — Interconnected Text Fragments"
              aria-label="The Sphere — an interactive geodesic sphere with text fragments. Press Enter to expand."
-             onmouseover="window.status='zen archery'; pmGlimpse('zen archery'); return true;" onmouseout="window.status=''; return true;">
+             onmouseover="pmGlimpse('sphere')">
         </div>
       </div>
 
@@ -138,7 +119,7 @@
         <div class="preview-container" id="preview-butterfly"
              role="button" tabindex="0" title="Chaos Butterfly in Phase Space, 2026"
              aria-label="Chaos Butterfly in Phase Space, 2026 — a Lorenz attractor visualization. Press Enter to expand."
-             onmouseover="window.status='complexity'; pmGlimpse('complexity'); return true;" onmouseout="window.status=''; return true;">
+             onmouseover="pmGlimpse('butterfly')">
         </div>
       </div>
 
@@ -146,15 +127,15 @@
         <div class="preview-container" id="preview-manuscript"
              role="button" tabindex="0" title="Selected Works — An Illuminated Manuscript"
              aria-label="A scroll of found writing — carved fragments, 2000 to 2012. Press Enter to expand."
-             onmouseover="window.status='savagery'; pmGlimpse('savagery'); return true;" onmouseout="window.status=''; return true;">
+             onmouseover="pmGlimpse('scroll')">
         </div>
       </div>
 
       <div class="preview-wrapper" data-scene="theater" role="listitem">
         <div class="preview-container" id="preview-theater"
              role="button" tabindex="0" title="The Theater — Now Playing"
-             aria-label="The Theater — scenes from Truth and Beauty and Paul Revere, performed by ASCII actors. Press Enter to expand."
-             onmouseover="window.status='light entertainment'; pmGlimpse('light entertainment'); return true;" onmouseout="window.status=''; return true;">
+             aria-label="The Theater — scenes from Truth and Beauty, Paul Revere, and You've Got a Friend in Satan, performed by ASCII actors. Press Enter to expand."
+             onmouseover="pmGlimpse('theater')">
         </div>
       </div>
 
@@ -162,7 +143,7 @@
         <div class="preview-container" id="preview-egg"
              role="button" tabindex="0" title="The Egg — Aurorae, Magnetic Field, Satellites"
              aria-label="The Egg — Earth's magnetic field, the aurorae it produces, and satellites in orbit. Press Enter to expand."
-             onmouseover="window.status='lantern'; pmGlimpse('lantern'); return true;" onmouseout="window.status=''; return true;">
+             onmouseover="pmGlimpse('egg')">
         </div>
       </div>
 
@@ -170,7 +151,7 @@
         <div class="preview-container" id="preview-leaf"
              role="button" tabindex="0" title="Leaf — In The End It Falls Slowly Through The Aether"
              aria-label="Leaf — a raindrop's fall from a leaf, told through physics, found text arriving in phase with the fall. Press Enter to expand."
-             onmouseover="window.status='stillness'; pmGlimpse('stillness'); return true;" onmouseout="window.status=''; return true;">
+             onmouseover="pmGlimpse('leaf')">
         </div>
       </div>
 
@@ -178,21 +159,9 @@
         <div class="preview-container" id="preview-orrery"
              role="button" tabindex="0" title="The Orrery of Los Feliz"
              aria-label="The Orrery of Los Feliz — a found story, told through a 30-foot orrery. Press Enter to expand."
-             onmouseover="window.status='will'; pmGlimpse('will'); return true;" onmouseout="window.status=''; return true;">
+             onmouseover="pmGlimpse('orrery')">
         </div>
       </div>
-
-      <!-- Lens preview: shelved alongside the nav icon above. Re-enable together. -->
-      <!--
-      <div class="preview-wrapper" data-scene="lens" role="listitem">
-        <div class="preview-container" id="preview-lens"
-             role="button" tabindex="0" title="The Lens — Four facets, one light."
-             aria-label="The Lens — a single translucent cut gem with four colored sides, floating free, lit from directly above by a vertical spotlight named Prologue. Press Enter to expand."
-             onmouseover="window.status='refraction'; pmGlimpse('refraction'); return true;" onmouseout="window.status=''; return true;">
-        </div>
-      </div>
-      -->
-
     </div>
   </main>
 

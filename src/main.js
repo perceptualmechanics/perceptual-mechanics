@@ -25,7 +25,7 @@ const SCENES = {
   manuscript:  { create: createManuscript, label: 'Selected Works — An Illuminated Manuscript.',
                  ariaLabel: 'Selected Works — an illuminated manuscript of Scott’s best writing, 2000 to the 2010s. Scroll to read.' },
   theater:     { create: createTheater,    label: 'The Theater — Now Playing.',
-                 ariaLabel: 'The Theater — scenes from Truth and Beauty and Paul Revere, performed by ASCII actors. A different program each visit; click or use the controls to advance.' },
+                 ariaLabel: 'The Theater — scenes from Truth and Beauty, Paul Revere, and You’ve Got a Friend in Satan, performed by ASCII actors. A different program each visit; click or use the controls to advance.' },
   egg:         { create: createEgg,        label: 'The Egg — Aurorae, Magnetic Field, Satellites.',
                  ariaLabel: 'The Egg — Earth’s magnetic field, the aurorae it produces, and satellites in orbit. Drag to orbit.' },
   leaf:        { create: createLeaf,       label: 'Leaf — In The End It Falls Slowly Through The Aether.',
@@ -226,26 +226,40 @@ initPreviews();
 initColophon();
 
 // ─── Status-bar easter egg ──────────────────────────────────────────────────
-// The onmouseover/onmouseout wiring itself lives in index.html, inline,
-// the actual 1999 way to do it — window.status='...' on hover, ''  on
-// mouseout. That part does nothing visible anymore (every modern browser
-// has ignored script writes to window.status since ~2014), which is fine;
-// it's the actually-correct period technique, left in as-is, correct and
-// inert in the page source.
+// pmGlimpse: a 1-in-100 chance per hover that the browser tab's own title
+// flickers to that element's word for a moment before reverting on its
+// own — not tied to how long the mouse stays put, so it reads as
+// something that happened to you, not a hover state you're controlling.
+// Deliberately rare enough that most visitors never see it once. Exposed
+// on window rather than kept module-private because inline onmouseover=""
+// attributes (index.html's nav icons, site-title, preview tiles) execute
+// in global scope, not this module's.
 //
-// pmGlimpse is the part that's actually visible today, Scott's own
-// refinement: a 1-in-100 chance per hover that the browser tab's own
-// title flickers to that element's status word for a moment before
-// reverting on its own — not tied to how long the mouse stays put, so it
-// reads as something that happened to you, not a hover state you're
-// controlling. Deliberately rare enough that most visitors never see it
-// once. Exposed on window rather than kept module-private because inline
-// onmouseover="" attributes execute in global scope, not this module's.
+// PM_GLIMPSE_WORDS is a plain object, keyed by the same string every
+// onmouseover="pmGlimpse('sphere')" etc. passes in — a array of
+// { key, text } pairs briefly lived here instead (2026-07-18ish) and broke
+// this silently: truth['sphere'] on an array doesn't find the element
+// whose .key is 'sphere', it just comes back undefined, so the tab title
+// was flickering to the literal string "undefined" instead of the actual
+// word. Keep this a plain object so the bracket lookup below is a real
+// key lookup, not an array index.
 const PM_ORIGINAL_TITLE = document.title;
+const PM_GLIMPSE_WORDS = {
+  sphere: 'zen archery',
+  butterfly: 'complexity',
+  scroll: 'savagery',
+  theater: 'light entertainment',
+  egg: 'lantern',
+  leaf: 'stillness',
+  orrery: 'will',
+  title: 'secrets',
+};
 let pmGlimpseTimer = null;
-window.pmGlimpse = function (text) {
+window.pmGlimpse = function (key) {
   if (Math.random() >= 0.01) return;
-  document.title = text;
+  const word = PM_GLIMPSE_WORDS[key];
+  if (!word) return; // unknown key — fail silently, never show "undefined"
+  document.title = word;
   clearTimeout(pmGlimpseTimer);
-  pmGlimpseTimer = setTimeout(() => { document.title = PM_ORIGINAL_TITLE; }, 1500);
+  pmGlimpseTimer = setTimeout(() => { document.title = PM_ORIGINAL_TITLE; }, 1100);
 };
