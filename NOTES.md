@@ -6,6 +6,32 @@ projects (The Secret World, A Manual of Perceptual Mechanics) moved into their o
 files, which are now the source of truth for that material going forward. See "project map"
 below for where things live.
 
+## 1.0.24 (2026-07-19, same day)
+
+bard.js's first real test drive. Scott: "create a dummy page so I can test
+this locally" and asked for demo/dummy text pulled from The Oresteia,
+Medea, Lysistrata, As You Like It, Macbeth, Candide, The Misanthrope, and
+The Importance of Being Earnest — eight plays, eight scenes, one shared
+cast map, one DomRenderer instance, run entirely through the real engine
+(compileScript + Player), nothing bespoke.
+
+Lives at packages/bardjs/demo — index.html, main.js, scenes.js — kept
+inside the package itself since it's a demo of bard.js, not a
+perceptualmechanics scene. Wired into vite.config.js as a third
+multi-page entry (`bardDemo`) alongside main and utils/shorts.html, so
+`npm run dev` serves it at /packages/bardjs/demo/ like any other page on
+the site. Verified the whole timeline compiles and plays end-to-end
+before ever loading a browser: a Node script ran the real
+`compileScript`/`Player` against all eight scenes with a mock renderer —
+71 timeline events, zero missing cast entries, walked cleanly from start
+to the final Wilde line with no thrown errors — then a full `vite build`
+came back clean (only the pre-existing >500kB orrery chunk warning).
+
+The Greek/Voltaire/Molière scenes are original condensed adaptations, not
+translated text, since translation copyright is its own murky thing; the
+Shakespeare and Wilde scenes use lightly-trimmed lines from the actual
+English originals, which have been public domain for a very long time.
+
 ## 1.0.23 (2026-07-19, same day)
 
 bard.js v0.1. Scott: "so i'm thinking bard.js is an ampitheater. The very
