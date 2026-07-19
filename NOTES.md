@@ -6,6 +6,60 @@ projects (The Secret World, A Manual of Perceptual Mechanics) moved into their o
 files, which are now the source of truth for that material going forward. See "project map"
 below for where things live.
 
+## 1.0.23 (2026-07-19, same day)
+
+bard.js v0.1. Scott: "so i'm thinking bard.js is an ampitheater. The very
+bare bones of human drama. we can add modern amenities such as camera
+angles and modern theatrical staging later on, but it should start at
+greek theater. that's the root." So the root vocabulary is deliberately
+small — chorus (narration), enter, exit, line (dialogue), and intermission
+(the gap between one performed piece and the next in a sitting, which is
+itself an old idea — a festival of plays back to back). No camera, no
+blocking coordinates, no lighting design: there is no camera in an
+amphitheater, the audience has one fixed seat, and those are explicitly
+left for a later "modern amenities" layer to add on top of this one.
+
+Lives at packages/bardjs — its own package.json, its own README, zero
+perceptualmechanics-specific code, wired in via an npm workspace so
+`import { Player } from 'bardjs'` just resolves. `Player` walks a compiled
+timeline (play/pause/next/prev/goTo/restart) and calls whichever methods
+a renderer defines; it doesn't know or care how anything is drawn.
+`compile.js` turns scenes into that timeline — including
+`compileLegacyScene`/`compileLegacyScript`, written purely so
+theater.js's three already-produced plays (Truth and Beauty, Paul Revere,
+You've Got a Friend in Satan) could move onto the new engine without
+hand-transcribing a single line of dialogue. `renderers/dom` is the
+reference renderer (ASCII masks, cowsay bubbles, a caption line) for
+anyone starting a project from scratch on this.
+
+theater.js itself now runs on bard.js: its own bespoke state machine
+(setupScene/showBeat/goTo/restart/scheduleAutoplay, ~180 lines) is gone,
+replaced by a `TheaterRenderer` class that reuses the exact same `.tab-*`
+DOM structure and CSS the site already had — no visual or CSS changes,
+only what drives the visuals changed. Verified two ways before touching
+anything live: first, a structural check ran the real compileLegacyScript
+output against every one of theater.js's 773 resulting events for all 16
+scenes (615 spoken lines, 24 of them legitimately off-stage "voice" lines)
+and found zero characters speaking while both absent and not marked
+voice — the compiler is faithful to the actual, already-written plays.
+Second, a jsdom smoke test drove the real, live createTheater() through
+its actual controls — 800 "next" clicks (only 773 needed), prev, play/
+pause toggling, reaching the real end card, and restarting/reshuffling —
+with zero thrown errors. That second test caught two genuine bugs before
+they shipped: Player.play() didn't handle starting from a fresh,
+never-advanced state (fixed in bard.js itself, not papered over here),
+and — a latent bug that turned out to predate bard.js entirely, in the
+*original* goTo() — clicking "next" repeatedly after already reaching the
+end could stack up duplicate end cards, since nothing guarded against
+re-entry. Fixed that one too while in there.
+
+Not built yet, in order: richer event types (blocking, camera, sound)
+once a renderer exists that can use them; a text-based authoring layer on
+top of the same event model, ideally Fountain-compatible rather than
+inventing new syntax; and a second renderer (Three.js, a real camera) as
+the actual test of whether "renderer-agnostic" is true or just a claim
+with one implementation behind it.
+
 ## 1.0.22 (2026-07-19)
 
 Scott, the next morning: "I think I broke something in the code, could

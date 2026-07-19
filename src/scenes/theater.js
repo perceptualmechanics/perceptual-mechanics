@@ -25,6 +25,12 @@
 // curtain glyphs and CSS for the parts (the audience silhouette overlaying
 // the bottom of the screen, MST3K-style, the marquee-bulb frame) where
 // actual pixels are more honest than trying to fake them in text.
+//
+// As of 1.0.23, what happens and when is driven by bard.js (packages/
+// bardjs) instead of a bespoke state machine — see the "bard.js wiring"
+// comment further down for what changed and what didn't.
+
+import { Player, compileLegacyScript } from 'bardjs';
 
 const CHARACTERS = {
   // Truth and Beauty
@@ -71,7 +77,11 @@ const POSES = {
 };
 
 // ─── The reel ──────────────────────────────────────────────────────────────
-const SCENES = [
+// Exported (in addition to being used privately below) so bard.js's legacy
+// compiler can be verified against the real, already-written content — see
+// packages/bardjs's compileLegacyScript. Not otherwise used outside this
+// file yet.
+export const SCENES = [
   {
     slug: 'INT. MERCURY BAR. NIGHT.',
     order: ['brian', 'paul'],
@@ -1318,13 +1328,108 @@ const INTERSTITIALS = [
   { eyebrow: 'A gentle reminder', main: 'NO FLASH PHOTOGRAPHY', sub: 'the screen is doing its best' },
 ];
 
-function buildTimeline(order) {
-  const timeline = [];
-  order.forEach((scene, sceneIdx) => {
-    if (sceneIdx > 0) timeline.push({ interstitial: true });
-    scene.beats.forEach(beat => timeline.push({ sceneIdx, beat }));
-  });
-  return timeline;
+// ─── bard.js wiring ──────────────────────────────────────────────────────
+// The reel now runs on bard.js's Player (packages/bardjs) instead of a
+// bespoke state machine — compileLegacyScript converts these SCENES
+// (unchanged, written years before bard.js existed) into the engine's
+// chorus/enter/exit/line vocabulary, verified beat-for-beat against all
+// 773 resulting events (see NOTES.md, 1.0.23) before this ever touched the
+// live renderer. TheaterRenderer below reuses the exact same DOM structure
+// and `.tab-*` classes buildStyles() already defines — nothing about the
+// visuals, CSS, or hand-tuned mobile breakpoints changed, only what drives
+// them. Actor figures, cowsay bubbles, and captions are all still drawn by
+// this file; bard.js only owns "what happens next and when."
+class TheaterRenderer {
+  constructor({ stage, captionEl, slugEl, interstitialEl, srLive }) {
+    this.stage = stage;
+    this.captionEl = captionEl;
+    this.slugEl = slugEl;
+    this.interstitialEl = interstitialEl;
+    this.srLive = srLive;
+    this.actors = {};
+  }
+
+  ensureActor(key) {
+    if (this.actors[key]) return this.actors[key];
+    const el = buildActorEl(key);
+    this.stage.appendChild(el);
+    this.actors[key] = el;
+    requestAnimationFrame(() => el.classList.add('on'));
+    return el;
+  }
+
+  clearActors() {
+    Object.values(this.actors).forEach(a => a.remove());
+    this.actors = {};
+  }
+
+  clearBubbles() {
+    this.stage.querySelectorAll('.tab-bubble').forEach(b => b.remove());
+    Object.values(this.actors).forEach(a => a.classList.remove('talking'));
+    this.captionEl.classList.remove('on');
+  }
+
+  onSceneChange(scene) {
+    this.clearActors();
+    this.slugEl.textContent = '[ ' + scene.slug + ' ]';
+    this.interstitialEl.classList.remove('on');
+  }
+
+  onEnter(keys) {
+    keys.forEach(k => this.ensureActor(k));
+  }
+
+  onExit(keys) {
+    keys.forEach(k => { this.actors[k]?.remove(); delete this.actors[k]; });
+  }
+
+  onChorus(text) {
+    this.clearBubbles();
+    this.captionEl.textContent = text;
+    this.captionEl.classList.add('on');
+    this.srLive.textContent = text;
+  }
+
+  onLine(key, text, { mask, voice, silent } = {}) {
+    this.clearBubbles();
+    const ch = CHARACTERS[key];
+    const el = this.actors[key]; // absent for a true offstage voice — nothing to attach a figure to
+    if (el) {
+      el.querySelector('pre.sf').textContent = (POSES[mask] || POSES.idle).join('\n');
+    }
+
+    const speakerLine = `${ch.name}${voice ? ' (voice)' : ''}: ${text}`;
+    this.srLive.textContent = speakerLine;
+    if (silent) return; // wordless reaction beat — direction is still announced above, no bubble
+
+    if (el) {
+      el.classList.add('talking');
+      setTimeout(() => el?.classList.remove('talking'), 900);
+    }
+    const bubbleWidth = (typeof window !== 'undefined' && window.innerWidth < 480) ? 24 : 40;
+    const bubble = document.createElement('div');
+    bubble.className = 'tab-bubble';
+    bubble.innerHTML = `<span class="bubble-name">${ch.name}${voice ? ' (voice)' : ''}</span>${escapeHtml(asciiBubble(text, false, bubbleWidth))}`;
+    (el || this.stage).appendChild(bubble);
+    requestAnimationFrame(() => bubble.classList.add('on'));
+  }
+
+  onIntermission() {
+    this.clearBubbles();
+    this.captionEl.textContent = '';
+    const card = INTERSTITIALS[Math.floor(Math.random() * INTERSTITIALS.length)];
+    this.interstitialEl.innerHTML = `
+      <div class="tab-inter-eyebrow">${escapeHtml(card.eyebrow)}</div>
+      <div class="tab-inter-main">${escapeHtml(card.main)}</div>
+      ${card.sub ? `<div class="tab-inter-sub">${escapeHtml(card.sub)}</div>` : ''}
+    `;
+    this.interstitialEl.classList.add('on');
+    this.srLive.textContent = [card.eyebrow, card.main, card.sub].filter(Boolean).join('. ');
+  }
+
+  dispose() {
+    this.clearActors();
+  }
 }
 
 export function createTheater(container, { preview = false } = {}) {
@@ -1412,149 +1517,28 @@ export function createTheater(container, { preview = false } = {}) {
   container.style.position = 'relative';
   container.style.overflow = 'hidden';
 
-  let playOrder = shuffle(SCENES);
-  let timeline = buildTimeline(playOrder);
-  const actors = {};
-  let curSceneIdx = -1;
-  let idx = -1;
-  let playing = false;
-  let timer = null;
+  const renderer = new TheaterRenderer({ stage, captionEl, slugEl, interstitialEl, srLive });
   let endCard = null;
 
-  function clearActors() {
-    Object.values(actors).forEach(a => a.remove());
-    for (const k in actors) delete actors[k];
-  }
-
-  function ensureActor(key) {
-    if (actors[key]) return actors[key];
-    const el = buildActorEl(key);
-    stage.appendChild(el);
-    actors[key] = el;
-    requestAnimationFrame(() => el.classList.add('on'));
-    return el;
-  }
-
-  function setupScene(sceneIdx) {
-    if (sceneIdx === curSceneIdx) return;
-    curSceneIdx = sceneIdx;
-    clearActors();
-    const scene = playOrder[sceneIdx];
-    slugEl.textContent = '[ ' + scene.slug + ' ]';
-    scene.order.forEach(key => ensureActor(key));
-  }
-
-  function clearBubbles() {
-    stage.querySelectorAll('.tab-bubble').forEach(b => b.remove());
-    Object.values(actors).forEach(a => a.classList.remove('talking'));
-    captionEl.classList.remove('on');
-  }
-
-  function applyVisibility(showOnly) {
-    if (!showOnly) return;
-    Object.keys(actors).forEach(k => actors[k].classList.toggle('on', showOnly.includes(k)));
-    showOnly.forEach(k => { if (!actors[k]) ensureActor(k); else actors[k].classList.add('on'); });
-  }
-
-  function showInterstitialCard() {
-    clearBubbles();
-    captionEl.textContent = '';
-    const card = INTERSTITIALS[Math.floor(Math.random() * INTERSTITIALS.length)];
-    interstitialEl.innerHTML = `
-      <div class="tab-inter-eyebrow">${escapeHtml(card.eyebrow)}</div>
-      <div class="tab-inter-main">${escapeHtml(card.main)}</div>
-      ${card.sub ? `<div class="tab-inter-sub">${escapeHtml(card.sub)}</div>` : ''}
-    `;
-    interstitialEl.classList.add('on');
-    srLive.textContent = [card.eyebrow, card.main, card.sub].filter(Boolean).join('. ');
-  }
-
-  function showBeat(entry) {
-    if (entry.interstitial) {
-      showInterstitialCard();
-      return;
-    }
-    interstitialEl.classList.remove('on');
-
-    const { sceneIdx, beat } = entry;
-    const sceneChanged = sceneIdx !== curSceneIdx;
-    setupScene(sceneIdx);
-    clearBubbles();
-
-    if (beat.c && !actors[beat.c]) ensureActor(beat.c);
-    if (beat.showOnly) applyVisibility(beat.showOnly);
-
-    let announce = sceneChanged ? `Scene: ${playOrder[sceneIdx].slug}. ` : '';
-
-    if (beat.a) {
-      captionEl.textContent = beat.a;
-      captionEl.classList.add('on');
-      announce += beat.a;
-    }
-
-    if (beat.c) {
-      const ch = CHARACTERS[beat.c];
-      const el = actors[beat.c];
-      if (el) {
-        const pre = el.querySelector('pre.sf');
-        pre.textContent = (POSES[beat.g] || POSES.idle).join('\n');
-      }
-      const speakerLine = `${ch.name}${beat.voice ? ' (voice)' : ''}: ${beat.t}`;
-      if (!beat.silent) {
-        if (el) {
-          el.classList.add('talking');
-          setTimeout(() => el?.classList.remove('talking'), 900);
-        }
-        // Narrower cowsay box on small phones so the fixed-width ASCII
-        // bubble never forces horizontal scrolling.
-        const bubbleWidth = (typeof window !== 'undefined' && window.innerWidth < 480) ? 24 : 40;
-        const bubble = document.createElement('div');
-        bubble.className = 'tab-bubble';
-        bubble.innerHTML = `<span class="bubble-name">${ch.name}${beat.voice ? ' (voice)' : ''}</span>${escapeHtml(asciiBubble(beat.t, false, bubbleWidth))}`;
-        // Anchored to the speaking actor's own element (position: relative),
-        // so the bubble is always centered directly above them.
-        (el || stage).appendChild(bubble);
-        requestAnimationFrame(() => bubble.classList.add('on'));
-        announce += speakerLine;
-      } else {
-        // Silent reaction beats (e.g. a wordless smile) still carry meaning —
-        // read the stage direction even though no bubble is shown.
-        announce += speakerLine;
-      }
-    }
-
-    srLive.textContent = announce.trim();
-  }
-
   function updateProgress() {
-    controls.querySelector('.tab-progress').textContent = idx < 0 ? 'start' : `${idx + 1} / ${timeline.length}`;
+    controls.querySelector('.tab-progress').textContent =
+      player.index < 0 ? 'start' : `${player.index + 1} / ${player.length}`;
   }
 
   function setPlayLabel() {
     const btn = controls.querySelector('[data-act="play"]');
-    btn.textContent = playing ? '|| pause' : '> play';
-    btn.setAttribute('aria-label', playing ? 'Pause' : 'Play');
-  }
-
-  function scheduleAutoplay() {
-    clearTimeout(timer);
-    if (!playing) return;
-    if (idx >= timeline.length - 1) { playing = false; setPlayLabel(); return; }
-    const entry = timeline[idx];
-    let dur;
-    if (entry?.interstitial) {
-      dur = 4400; // a proper beat to read the bumper slide before the next scene starts
-    } else {
-      const beat = entry?.beat;
-      const text = beat?.t || beat?.a || '';
-      // Paced for human reading speed, not AI reading speed.
-      dur = Math.min(10000, Math.max(1900, text.length * 55));
-    }
-    timer = setTimeout(() => goTo(idx + 1), dur);
+    btn.textContent = player.playing ? '|| pause' : '> play';
+    btn.setAttribute('aria-label', player.playing ? 'Pause' : 'Play');
   }
 
   function showEndCard() {
-    if (idx !== timeline.length - 1) return;
+    // Pre-existing latent bug fixed here in passing: the old goTo() scheduled
+    // another setTimeout(showEndCard, 2000) on every call once already at
+    // the last index, so repeatedly clicking past the end (unlikely in
+    // practice, but possible) could stack up duplicate end cards, and a
+    // click on an older one would restart() while a newer one silently
+    // stayed put. Guard against re-entry instead.
+    if (!player.isAtEnd || endCard) return;
     endCard = document.createElement('div');
     endCard.className = 'tab-card';
     endCard.setAttribute('role', 'button');
@@ -1570,65 +1554,45 @@ export function createTheater(container, { preview = false } = {}) {
       if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); restart(); }
     });
     screen.appendChild(endCard);
-    playing = false;
     setPlayLabel();
     srLive.textContent = 'The end. Press Enter to reshuffle the reel and start tonight’s next showing.';
     setTimeout(() => endCard?.focus(), 50);
   }
 
-  function goTo(newIdx) {
-    clearTimeout(timer);
-    if (newIdx < 0) newIdx = 0;
-    if (newIdx >= timeline.length) newIdx = timeline.length - 1;
-    idx = newIdx;
-    endCard?.remove();
-    showBeat(timeline[idx]);
-    if (idx === timeline.length - 1) setTimeout(showEndCard, 2000);
-    updateProgress();
-    scheduleAutoplay();
-  }
+  const player = new Player(compileLegacyScript(shuffle(SCENES)), renderer, {
+    onAdvance: () => { endCard?.remove(); endCard = null; updateProgress(); setPlayLabel(); },
+    onEnd: () => setTimeout(showEndCard, 2000),
+  });
 
   // Reshuffle the reel and start again — a different program each showing.
   function restart() {
     endCard?.remove();
-    curSceneIdx = -1;
-    clearActors();
-    playOrder = shuffle(SCENES);
-    timeline = buildTimeline(playOrder);
-    idx = -1;
-    playing = true;
-    setPlayLabel();
-    goTo(0);
+    endCard = null;
+    player.restart(compileLegacyScript(shuffle(SCENES)));
   }
 
   controls.addEventListener('click', e => {
     const btn = e.target.closest('.tab-btn');
     if (!btn) return;
     const act = btn.dataset.act;
-    if (act === 'prev') goTo(Math.max(0, idx - 1));
-    else if (act === 'next') goTo(Math.min(timeline.length - 1, idx + 1));
-    else if (act === 'play') {
-      playing = !playing;
-      setPlayLabel();
-      if (playing) scheduleAutoplay();
-      else clearTimeout(timer);
-    }
+    if (act === 'prev') player.prev();
+    else if (act === 'next') player.next();
+    else if (act === 'play') { player.toggle(); setPlayLabel(); }
   });
 
   screen.addEventListener('click', e => {
     if (e.target.closest('.tab-btn') || e.target.closest('.tab-card')) return;
-    if (idx < timeline.length - 1) goTo(idx + 1);
+    if (!player.isAtEnd) player.next();
   });
 
   // Start immediately, mid-program — no title card, as if you'd just found your seat.
-  playing = true;
+  player.play();
   setPlayLabel();
-  goTo(0);
   setTimeout(() => screen.focus(), 100);
 
   return {
     dispose() {
-      clearTimeout(timer);
+      player.dispose();
       root.remove();
     }
   };
