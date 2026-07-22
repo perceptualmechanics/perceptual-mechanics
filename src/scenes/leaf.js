@@ -220,18 +220,22 @@ export function createLeaf(container, { preview = false } = {}) {
   scene.add(root);
   const reduceMotion = prefersReducedMotion();
 
-  // ─── Backdrop: a Boca Raton balcony at dusk ────────────────────────────
+  // ─── Backdrop: a Boca Raton balcony, daytime ────────────────────────────
   // Scott: "let's go there" — Japandi (Japanese x Scandinavian design:
   // natural materials, warm neutrals, restraint, clean lines), and "that's
   // the actual vibe of my apartment." Replaces the earlier shoji-wall
   // backdrop with the actual place this quiet moment is happening: a leaf
-  // on a balcony plant, dusk sky behind it. Kept the same discipline as
-  // the wall version — muted, desaturated color (a real Florida dusk
-  // gradient pulled back from postcard-saturated), one warm glow accent,
-  // and a precise, evenly-spaced railing in place of the old kumiko
-  // lattice's deliberate hand-built irregularity: a manufactured balcony
-  // rail SHOULD read as uniform, unlike a hand-built shoji screen, so the
-  // one visual habit that flips here is intentional.
+  // on a balcony plant. Scott then sent reference photos of the real
+  // apartment — bright neutral daylight (not the dusk I'd first guessed),
+  // gray-beige walls, warm wood floor, and a plain black metal railing
+  // (not a wood baluster rail) — so this pass shifts the sky from dusk
+  // plum to a hazy daytime gray-blue/cream, and swaps the railing to black
+  // metal, while keeping the same underlying discipline: muted, desaturated
+  // color rather than postcard-saturated, one soft glow accent, and a
+  // precise, evenly-spaced rail in place of the old kumiko lattice's
+  // deliberate hand-built irregularity — a manufactured rail SHOULD read as
+  // uniform, unlike a hand-built shoji screen, so that one visual habit
+  // still flips here, just in black metal instead of wood now.
   //
   // Built at the same aspect ratio as the plane it's mapped onto (rather
   // than a square tile repeated with THREE.RepeatWrapping, the old
@@ -245,29 +249,36 @@ export function createLeaf(container, { preview = false } = {}) {
     c.width = cw; c.height = ch;
     const cx = c.getContext('2d');
 
-    // Dusk sky — deep dusty plum up top, through a muted rose, to a warm
-    // desaturated gold at the horizon. Real Florida dusk color, pulled
-    // back from postcard saturation to keep the Japandi restraint.
+    // Daytime sky — soft pale blue up top, through a hazy gray-green, to
+    // a warm neutral cream at the horizon, matching the reference photos'
+    // bright-but-muted Florida daylight rather than a postcard-blue sky.
     const sky = cx.createLinearGradient(0, 0, 0, ch);
-    sky.addColorStop(0,    '#2b2636');
-    sky.addColorStop(0.45, '#4a3a45');
-    sky.addColorStop(0.75, '#8a6a5c');
-    sky.addColorStop(1,    '#c99a72');
+    sky.addColorStop(0,    '#9fb7c8');
+    sky.addColorStop(0.45, '#c3cdc4');
+    sky.addColorStop(0.78, '#e2d8c4');
+    sky.addColorStop(1,    '#d9c8ab');
     cx.fillStyle = sky;
     cx.fillRect(0, 0, cw, ch);
 
-    // A few faint stars in the upper dark band.
-    for (let i = 0; i < 26; i++) {
-      const x = Math.random() * cw, y = Math.random() * ch * 0.4;
-      cx.fillStyle = `rgba(255,250,240,${0.15 + Math.random() * 0.2})`;
-      cx.fillRect(x, y, 1.4, 1.4);
+    // A few soft, low-contrast clouds — daytime haze, not night stars.
+    for (let i = 0; i < 5; i++) {
+      const x = Math.random() * cw, y = ch * (0.06 + Math.random() * 0.28);
+      const r = 40 + Math.random() * 70;
+      const grad = cx.createRadialGradient(x, y, 0, x, y, r);
+      grad.addColorStop(0, 'rgba(255,255,255,0.28)');
+      grad.addColorStop(1, 'rgba(255,255,255,0)');
+      cx.fillStyle = grad;
+      cx.beginPath();
+      cx.ellipse(x, y, r, r * 0.4, 0, 0, Math.PI * 2);
+      cx.fill();
     }
 
     // A distant, low-contrast skyline — a couple of condo silhouettes,
-    // kept simple/geometric rather than illustrated, dusk haze softening
-    // the edge between them and the sky.
+    // kept simple/geometric rather than illustrated, daylight haze
+    // softening the edge between them and the sky (lighter neutral gray
+    // now, not a near-black dusk silhouette).
     const horizonY = ch * 0.62;
-    cx.fillStyle = 'rgba(40,32,36,0.55)';
+    cx.fillStyle = 'rgba(120,120,118,0.4)';
     [[0.08, 0.16, 0.42], [0.22, 0.1, 0.3], [0.72, 0.2, 0.5], [0.86, 0.13, 0.36]].forEach(([fx, fh, fw]) => {
       const bw = cw * fw * 0.14;
       const bh = ch * fh;
@@ -275,9 +286,11 @@ export function createLeaf(container, { preview = false } = {}) {
     });
 
     // Two simple palm silhouettes — minimal, a trunk and a small cluster
-    // of frond strokes, not a detailed illustration.
+    // of frond strokes, not a detailed illustration. Muted olive-green
+    // now rather than near-black, since these read against bright daylight
+    // rather than a dusk sky.
     function palm(px, py, scale) {
-      cx.strokeStyle = 'rgba(30,24,26,0.6)';
+      cx.strokeStyle = 'rgba(70,82,58,0.6)';
       cx.lineWidth = 3 * scale;
       cx.beginPath();
       cx.moveTo(px, py);
@@ -298,23 +311,26 @@ export function createLeaf(container, { preview = false } = {}) {
     palm(cw * 0.12, horizonY + 4, cw / 900);
     palm(cw * 0.9, horizonY + 8, cw / 900 * 0.85);
 
-    // The balcony rail — precise, evenly-spaced verticals (a manufactured
-    // object, unlike the old hand-built lattice) plus a top/bottom rail,
-    // spanning the bottom band of the frame.
+    // The balcony rail — black metal now (Scott's reference photos show a
+    // plain black metal rail, not wood balusters), precise evenly-spaced
+    // verticals plus a top/bottom rail, spanning the bottom band of the
+    // frame. Thinner bars than the old wood-baluster version — real metal
+    // rail pickets read as slim lines, not thick posts.
     const railTop = ch * 0.78;
     const railBottom = ch * 0.98;
-    cx.fillStyle = 'rgba(18,16,15,0.7)';
-    cx.fillRect(0, railTop, cw, 4);
-    cx.fillRect(0, railBottom - 3, cw, 3);
+    cx.fillStyle = 'rgba(22,22,24,0.88)';
+    cx.fillRect(0, railTop, cw, 3);
+    cx.fillRect(0, railBottom - 2, cw, 2.5);
     const baluster = cw / 34;
     for (let x = baluster / 2; x < cw; x += baluster) {
-      cx.fillRect(x - 1.5, railTop, 3, railBottom - railTop);
+      cx.fillRect(x - 1, railTop, 2, railBottom - railTop);
     }
 
     // A single plant silhouette in one corner — the Japandi habit of one
     // sculptural, unfussy plant rather than clutter — standing in for the
-    // one this leaf and drop actually belong to.
-    cx.fillStyle = 'rgba(20,18,16,0.75)';
+    // one this leaf and drop actually belong to. Kept dark against the
+    // bright sky (a backlit plant reads as a silhouette even in daylight).
+    cx.fillStyle = 'rgba(35,32,28,0.7)';
     const potX = cw * 0.16, potY = railBottom;
     cx.fillRect(potX - 22, potY - 26, 44, 26);
     for (let i = 0; i < 6; i++) {
@@ -328,12 +344,12 @@ export function createLeaf(container, { preview = false } = {}) {
       cx.stroke();
     }
 
-    // A single warm glow — a porch light, standing in for the old
-    // "light behind one pane" accent — kept, not removed, for the same
-    // reason: it's what keeps the backdrop from reading flat.
-    const glow = cx.createRadialGradient(cw * 0.78, railTop - 10, 4, cw * 0.78, railTop - 10, cw * 0.22);
-    glow.addColorStop(0, 'rgba(255,205,140,0.16)');
-    glow.addColorStop(1, 'rgba(255,205,140,0)');
+    // A single soft glow — daytime sun haze in one upper corner now,
+    // standing in for the old porch-light accent — kept, not removed, for
+    // the same reason: it's what keeps the backdrop from reading flat.
+    const glow = cx.createRadialGradient(cw * 0.82, ch * 0.14, 4, cw * 0.82, ch * 0.14, cw * 0.3);
+    glow.addColorStop(0, 'rgba(255,250,230,0.22)');
+    glow.addColorStop(1, 'rgba(255,250,230,0)');
     cx.fillStyle = glow;
     cx.fillRect(0, 0, cw, ch);
 
@@ -349,12 +365,15 @@ export function createLeaf(container, { preview = false } = {}) {
   root.add(wall);
 
   // ─── Ground: a faint horizontal glow near the bottom ──────────────────────
-  // Warm terracotta/stone tone now (was a mossy forest-floor green) — the
-  // drop lands in a planter on the balcony, not on a forest floor.
+  // Warm neutral taupe now (was a mossy forest-floor green, then a deeper
+  // terracotta) — nudged lighter/cooler to sit with the daytime rework and
+  // the warm wood-floor tone in Scott's reference photos, rather than a
+  // saturated clay color. The drop lands in a planter on the balcony, not
+  // on a forest floor.
   const groundY = -2.3;
   const groundGeo = new THREE.PlaneGeometry(viewH * aspect * 2.2, 0.5);
   const groundMat = new THREE.MeshBasicMaterial({
-    color: 0x6b4a3a, transparent: true, opacity: 0.35, depthWrite: false,
+    color: 0x8a7059, transparent: true, opacity: 0.35, depthWrite: false,
   });
   const ground = new THREE.Mesh(groundGeo, groundMat);
   ground.position.set(0, groundY - 0.15, -1);

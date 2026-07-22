@@ -6,6 +6,38 @@ projects (The Secret World, A Manual of Perceptual Mechanics) moved into their o
 files, which are now the source of truth for that material going forward. See "project map"
 below for where things live.
 
+## 1.0.31 (2026-07-22)
+
+Scott loaded 1.0.30 locally, confirmed it rendered clean, then sent
+reference photos of his actual apartment "so you get a sense of my
+style" — the whole reason the balcony backdrop existed in the first
+place was to match that apartment's Japandi vibe, so this was worth
+taking seriously rather than treating as a nice-to-have. Two real deltas
+between what I'd built and the photos: his place reads bright daylight
+(gray-beige walls, warm wood floor, daytime light), not the dusk mood I'd
+guessed at, and his actual railing is plain black metal, not wood
+balusters. Asked which to fix; Scott: "Match it — daytime, black rail."
+
+Reworked makeBalconyTexture() in leaf.js: sky gradient swapped from a
+dusk plum-to-gold gradient to a hazy daytime pale-blue-to-cream one,
+stars replaced with a few soft translucent clouds, the condo-silhouette
+skyline lightened from a near-black dusk tone to a lighter neutral gray
+(daylight haze reads lighter-on-light, not dark-on-dark), palm silhouettes
+shifted from near-black to a muted olive-green, and the rail itself
+recolored to black metal with thinner pickets than the old wood-baluster
+version. The old warm porch-light glow — a nighttime accent — became a
+softer daytime sun-glow in an upper corner instead. Ground tone nudged
+from a deeper terracotta to a lighter warm taupe to sit with the
+daylight rework and the actual wood-floor color in the photos. Same
+underlying discipline throughout: muted/desaturated rather than
+postcard-saturated, one soft glow accent, a precise manufactured rail
+rather than the old hand-built lattice's deliberate irregularity.
+
+Sanity-checked the new backdrop with the same PIL-based approximation
+used for the first balcony version — not pixel-identical to the real
+canvas/WebGL output, just a rough compositional check, same caveat as
+before. Real verification is Scott's own eyes in the browser.
+
 ## 1.0.30 (2026-07-21)
 
 Back to perceptualmechanics itself after a bard.js stretch. Scott: "I want
