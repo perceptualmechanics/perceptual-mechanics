@@ -6,6 +6,28 @@ projects (The Secret World, A Manual of Perceptual Mechanics) moved into their o
 files, which are now the source of truth for that material going forward. See "project map"
 below for where things live.
 
+## 1.0.40 (2026-07-22)
+
+Scott sent a mobile screenshot (Firefox responsive design mode, iPhone-
+sized viewport) with no other comment — but it caught a real bug: on
+narrow/phone-width viewports, the leaf caption's mobile layout (bottom:
+1.6rem) sits close enough to the fixed #site-title (bottom:1.2rem plus its
+own ~2rem pill) that the two visibly collide — the caption's last line
+("and those few floating adjust themselves...") was rendering right under
+the "PERCEPTUAL MECHANICS" title pill in the screenshot. Same class of bug
+main.css's #landing rule already solved once (documented there): a fixed,
+always-present footprint (title + colophon-mark) needs real clearance, not
+just a small nudge. Reused that same value — bottom: 4.5rem instead of
+1.6rem — rather than guessing a new one, and trimmed height from 34vh to
+30vh so the box doesn't creep too far up the screen to compensate.
+
+Everything else in the screenshot looked like the 1.0.39 depth-of-field
+system working as designed: mid-to-late in the fall, the buildings were
+sharp (their own in-focus moment is at frac≈0.83, close to where the text
+shown — "the drop explodes on the ground" — sits), and the rail/foreground
+were visibly hazier, consistent with focus having swept away from them by
+then.
+
 ## 1.0.39 (2026-07-22)
 
 Scott, on 1.0.38: "that's a good look! fill in the background greenery more.

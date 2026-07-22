@@ -712,7 +712,16 @@ export function createLeaf(container, { preview = false } = {}) {
            thirds text column both — same conflict as before 1.0.30, same
            fix: drop to a small centered box at the bottom below this
            breakpoint rather than overlapping the two. */
-        #leaf-caption { left: 50%; top: auto; bottom: 1.6rem; transform: translateX(-50%); width: 88vw; height: 34vh; }
+        /* bottom was 1.6rem — nowhere near enough to clear the fixed
+           #site-title (bottom:1.2rem, plus its own ~2rem-tall pill), so
+           the caption's last line and the title ran right into each other
+           on a phone-width viewport (visible in Scott's mobile screenshot:
+           "PERCEPTUAL MECHANICS" sitting on top of the final paragraph).
+           main.css's #landing rule already documents the fix for this
+           exact fixed-footprint problem — 4.5rem clears title AND
+           #colophon-mark with room to spare — so reusing that same value
+           here rather than a new one-off guess. */
+        #leaf-caption { left: 50%; top: auto; bottom: 4.5rem; transform: translateX(-50%); width: 88vw; height: 30vh; }
         #leaf-caption p { text-align: center; font-size: 1rem; }
       }
       /* A little grain over the whole render — a handled, weathered
