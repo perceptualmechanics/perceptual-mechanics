@@ -31,7 +31,7 @@ const SCENES = {
   leaf:        { create: createLeaf,       label: 'Leaf — In The End It Falls Slowly Through The Aether.',
                  ariaLabel: 'Leaf — a raindrop’s fall from a leaf, told through physics, with the found text arriving in phase with the fall.' },
   orrery:      { create: createOrrery,     label: 'The Orrery of Los Feliz.',
-                 ariaLabel: 'The Orrery of Los Feliz — a found story, told through a 30-foot orrery: nine planets, their moons, an asteroid belt. Drag to orbit, click the orrery to read.' },
+                 ariaLabel: 'The Orrery of Los Feliz — a found story, told through a 30-foot orrery: nine planets, their moons, an asteroid belt, in a warehouse you can walk around. Use the arrow keys or WASD to walk, click to look around, click the orrery to read.' },
   // lens: { create: createLens, label: 'The Lens — Four facets, one light.',
   //         ariaLabel: 'The Lens — a single translucent cut gem with four colored sides, floating free, lit from directly above by a vertical spotlight named Prologue. Drag to orbit, click a facet or the light to read.' },
 };

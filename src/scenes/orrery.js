@@ -195,6 +195,22 @@ function makeSprayPaintTexture(hex) {
 
 const BOLT_TONE = 0x18140f;
 
+// ─── First-person walkthrough tuning, 2026-07-22 (Scott: "have first-
+// person camera movement in orrery, like someone's wandering around with
+// arrow keys... mouse-look and collision... feel like a Myst level"). ────
+const PLAYER_RADIUS = 0.3;
+const EYE_HEIGHT = 1.7;          // above floorY — happens to land almost
+                                 // exactly at the control hub's own height
+                                 // (see hub.position in buildOrrery) and
+                                 // below the suspended rings, both by
+                                 // design rather than coincidence: it's
+                                 // the height a visitor would actually
+                                 // look the machine in the eye at.
+const WALK_SPEED = 2.6;         // units/sec, full speed
+const MOVE_ACCEL = 14;          // how briskly velocity eases to target
+const LOOK_SENS_MOUSE = 0.0022; // pointer-lock's raw, unscaled movementX/Y
+const PITCH_LIMIT = 1.3;        // ~74°, keeps the view from flipping over
+
 function addBolts(parent, radius, count, ringGeoRadius) {
   const boltGeo = new THREE.SphereGeometry(radius, 6, 6);
   const boltMat = new THREE.MeshStandardMaterial({ color: BOLT_TONE, roughness: 0.6, metalness: 0.6 });
@@ -466,7 +482,13 @@ function buildOrrery(preview, suspendTopY, rafterY) {
     unknowns.push({ pivot, mesh, speed: 0.05 + Math.random() * 0.03, direction: 1, spin: 0.3 + Math.random() * 0.4 });
   }
 
-  return { group, hitTarget: hub, lampMat, orbits, unknowns, signal, signalMat, baseY, mastHeight };
+  // A single generous circle covers the mast trunk and the control hub
+  // bolted to its side — the rings/struts/suspension chains all sit well
+  // above eye height (see EYE_HEIGHT's comment), so nothing else down here
+  // needs its own collider.
+  const colliders = [{ x: 0, z: 0, r: 0.6 }];
+
+  return { group, hitTarget: hub, lampMat, orbits, unknowns, signal, signalMat, baseY, mastHeight, colliders };
 }
 
 // ─── The warehouse — floor, a ceiling with a skylight cut into it, roof
@@ -757,6 +779,30 @@ function buildWarehouse(preview, floorY, ceilingY, rafterY) {
   sideWall.position.set(-wallDist, (ceilingY + floorY) / 2, 0);
   group.add(sideWall);
 
+  // Closing the box, 2026-07-22 (first-person pass) — these two walls used
+  // to be the only ones, because the camera never actually approached the
+  // open sides (a fixed, distant establishing shot). Now that a visitor
+  // can walk around inside the room, the other two sides need real walls
+  // too, or "wandering around" would let you walk straight out into the
+  // starfield beyond. Same texture, undecorated — the flyers/pegboard/
+  // clutter stay on the original two walls; these just keep the room a
+  // room. Normals face inward (rotation chosen the same way the two walls
+  // above already do: pointing back toward the room's center).
+  const frontWall = new THREE.Mesh(new THREE.PlaneGeometry(span * 2, wallHeight), wallMat);
+  frontWall.rotation.y = Math.PI;
+  frontWall.position.set(0, (ceilingY + floorY) / 2, wallDist);
+  group.add(frontWall);
+  const farSideWall = new THREE.Mesh(new THREE.PlaneGeometry(span * 2, wallHeight), wallMat);
+  farSideWall.rotation.y = -Math.PI / 2;
+  farSideWall.position.set(wallDist, (ceilingY + floorY) / 2, 0);
+  group.add(farSideWall);
+
+  // Floor-level colliders for the first-person walkthrough (full mode
+  // only — preview never walks around, so this stays empty there). Circle
+  // approximations, not exact hitboxes: enough to keep a visitor from
+  // walking through the set without needing real per-mesh collision.
+  const colliders = [];
+
   let bulbPosition = null;
 
   // ─── A ramshackle garage's worth of clutter, plus a few taped-up early-
@@ -807,6 +853,7 @@ function buildWarehouse(preview, floorY, ceilingY, rafterY) {
       stackY += size[1] / 2;
       group.add(box);
     });
+    colliders.push({ x: -wallDist + 1.22, z: -wallDist + 0.85, r: 0.45 });
 
     // An old tire, leaning against the back wall.
     const tireMat = new THREE.MeshStandardMaterial({ color: 0x18161a, roughness: 0.85, metalness: 0.1 });
@@ -814,6 +861,7 @@ function buildWarehouse(preview, floorY, ceilingY, rafterY) {
     tire.rotation.x = Math.PI / 2 + 0.28;
     tire.position.set(2.9, floorY + 0.34, -wallDist + 0.35);
     group.add(tire);
+    colliders.push({ x: 2.9, z: -wallDist + 0.35, r: 0.42 });
 
     // A workbench along the side wall, a little clutter on top, and a bare
     // bulb hanging over it on a cord from the roof truss.
@@ -827,6 +875,7 @@ function buildWarehouse(preview, floorY, ceilingY, rafterY) {
       leg.position.set(-wallDist + 0.4 + dx * 0.15, floorY + (benchHeight - floorY) / 2, dz + 0.6);
       group.add(leg);
     });
+    colliders.push({ x: -wallDist + 0.4, z: -1.5, r: 0.9 });
     const clutterMat = new THREE.MeshStandardMaterial({ color: 0x3a3a3a, roughness: 0.7, metalness: 0.3 });
     [[-0.05, -1.7, 0.12], [0.08, -1.3, 0.09]].forEach(([dx, dz, s]) => {
       const clutter = new THREE.Mesh(new THREE.BoxGeometry(s, s * 0.8, s), clutterMat);
@@ -911,6 +960,7 @@ function buildWarehouse(preview, floorY, ceilingY, rafterY) {
       stackY2 += size[1] / 2;
       group.add(box);
     });
+    colliders.push({ x: wallDist - 1.4, z: -wallDist + 1.1, r: 0.5 });
 
     // A couple of oil drums, grouped near the back wall.
     const drumMat = new THREE.MeshStandardMaterial({ color: 0x3a2a1a, roughness: 0.75, metalness: 0.4 });
@@ -919,6 +969,7 @@ function buildWarehouse(preview, floorY, ceilingY, rafterY) {
       drum.position.set(x, floorY + 0.36, z);
       drum.rotation.y = rotOffset;
       group.add(drum);
+      colliders.push({ x, z, r: 0.35 });
     });
 
     // A ladder leaning against the back wall, off-center from everything
@@ -940,6 +991,7 @@ function buildWarehouse(preview, floorY, ceilingY, rafterY) {
     ladderGroup.rotation.x = -0.22;
     ladderGroup.position.set(-3.4, floorY + railLen * 0.46, -wallDist + 0.5);
     group.add(ladderGroup);
+    colliders.push({ x: -3.4, z: -wallDist + 0.5, r: 0.3 });
 
     // Loose lumber, stacked at a slight angle near the second crate pile.
     const plankMat = new THREE.MeshStandardMaterial({ color: 0x4a3c28, roughness: 0.9, metalness: 0 });
@@ -967,6 +1019,7 @@ function buildWarehouse(preview, floorY, ceilingY, rafterY) {
     const stoolSeat = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.16, 0.03, 12), stoolMat);
     stoolSeat.position.set(-wallDist + 0.9, floorY + 0.42, -1.3);
     group.add(stoolSeat);
+    colliders.push({ x: -wallDist + 0.9, z: -1.3, r: 0.3 });
     for (let i = 0; i < 3; i++) {
       const legAngle = (i / 3) * Math.PI * 2;
       const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.42, 6), stoolMat);
@@ -1011,7 +1064,249 @@ function buildWarehouse(preview, floorY, ceilingY, rafterY) {
     group.add(bulb);
   }
 
-  return { group, bulbPosition, posters: posterMeshes };
+  return { group, bulbPosition, posters: posterMeshes, colliders, wallDist };
+}
+
+// ─── First-person rig ──────────────────────────────────────────────────────
+// Scott: "have first-person camera movement in orrery, like someone's
+// wandering around with arrow keys... with mouse-look and collision...
+// feel like a Myst level." Full scene only — the preview tile keeps its
+// old drag-orbits-the-room illusion (see createOrrery's interaction
+// section), since a thumbnail-sized tile isn't somewhere anyone's going to
+// walk around. Here, the room stays fixed in world space and the camera
+// actually moves through it.
+//
+// Mouse-look has two input paths feeding the same yaw/pitch state:
+// pointer-lock (desktop, click once to engage — raw movementX/Y) and
+// plain drag (mouse-down-and-drag, or touch — works without a lock,
+// everywhere pointer lock doesn't, e.g. mobile). Both use the same sign
+// convention — drag/move right turns the view right — standard "mouse-
+// look," matching three.js's own PointerLockControls. This deliberately
+// does NOT match the sitewide drag-to-orbit convention used elsewhere
+// (sphere/egg/butterfly/the orrery preview tile, where dragging right
+// rotates the OBJECT rather than the view): those scenes are rotating a
+// thing you're looking at from outside; this one is you, inside the room,
+// turning your head. Different enough mechanics that matching the old
+// convention would be a coincidence, not a consistency win — the two
+// look/drag paths within this one first-person rig matching each other
+// matters more than either one matching a different kind of scene.
+function createFirstPersonRig({ container, camera, renderer, colliders, wallLimit, eyeY, startPos, startYaw, isBlocked }) {
+  let yaw = startYaw, pitch = 0;
+  camera.rotation.order = 'YXZ';
+  camera.position.set(startPos.x, eyeY, startPos.z);
+  camera.rotation.set(pitch, yaw, 0);
+
+  const pos = new THREE.Vector2(startPos.x, startPos.z);
+  const velocity = new THREE.Vector2();
+  const forward3 = new THREE.Vector3();
+  const moveDir = new THREE.Vector2();
+  const canvasEl = renderer.domElement;
+
+  // Held-key / held-button state — keyboard and the on-screen touch d-pad
+  // (mobile, no keyboard to hold WASD/arrows on) both just flip these same
+  // four flags, so the movement math below never has to know which input
+  // it came from.
+  const move = { forward: false, back: false, left: false, right: false };
+
+  let locked = false;
+  let everEngaged = false;
+  const canLock = typeof canvasEl.requestPointerLock === 'function';
+
+  // ─── Crosshair ──────────────────────────────────────────────────────────
+  // Once the pointer's locked there's no visible OS cursor to hover things
+  // with — and even before locking, drag-to-look already decouples the
+  // literal cursor position from where the camera's actually pointed. So
+  // the scene always raycasts from screen-center now (see animate() in
+  // createOrrery), locked or not; this dot is what that point actually is,
+  // and the OS cursor itself is hidden the whole time in full mode (see
+  // container.style.cursor in createOrrery).
+  const crosshair = document.createElement('div');
+  crosshair.id = 'orrery-crosshair';
+  crosshair.setAttribute('aria-hidden', 'true');
+  container.appendChild(crosshair);
+
+  // ─── "click to look around" prompt — pointer lock can only ever be
+  // requested from a real user gesture, never automatically, so this
+  // stays up until the first click (or just fades out on touch, where
+  // there's no lock to request — drag-to-look already works there without
+  // it).
+  const prompt = document.createElement('button');
+  prompt.type = 'button';
+  prompt.id = 'orrery-lock-prompt';
+  prompt.textContent = canLock ? 'click to look around' : 'drag to look around';
+  container.appendChild(prompt);
+  let promptFadeTimer = null;
+  if (!canLock) {
+    prompt.style.pointerEvents = 'none';
+    promptFadeTimer = setTimeout(() => prompt.classList.add('hidden'), 2400);
+  }
+
+  // ─── On-screen walk buttons — coarse-pointer (touch) devices only;
+  // there's no keyboard there to hold WASD/arrows on. ───────────────────
+  let padEl = null;
+  const isCoarse = typeof window.matchMedia === 'function' && window.matchMedia('(pointer: coarse)').matches;
+  if (isCoarse) {
+    padEl = document.createElement('div');
+    padEl.id = 'orrery-walkpad';
+    padEl.setAttribute('aria-hidden', 'true');
+    padEl.innerHTML = `
+      <button type="button" class="wp-btn wp-fwd" aria-label="Walk forward">&#9650;</button>
+      <button type="button" class="wp-btn wp-left" aria-label="Strafe left">&#9664;</button>
+      <button type="button" class="wp-btn wp-back" aria-label="Walk backward">&#9660;</button>
+      <button type="button" class="wp-btn wp-right" aria-label="Strafe right">&#9654;</button>
+    `;
+    container.appendChild(padEl);
+    const bind = (cls, key) => {
+      const el = padEl.querySelector(cls);
+      const on = e => { e.preventDefault(); move[key] = true; };
+      const off = () => { move[key] = false; };
+      el.addEventListener('pointerdown', on);
+      el.addEventListener('pointerup', off);
+      el.addEventListener('pointerleave', off);
+      el.addEventListener('pointercancel', off);
+    };
+    bind('.wp-fwd', 'forward');
+    bind('.wp-back', 'back');
+    bind('.wp-left', 'left');
+    bind('.wp-right', 'right');
+  }
+
+  // ─── Keyboard ───────────────────────────────────────────────────────────
+  const KEY_MAP = {
+    KeyW: 'forward', ArrowUp: 'forward',
+    KeyS: 'back',    ArrowDown: 'back',
+    KeyA: 'left',    ArrowLeft: 'left',
+    KeyD: 'right',   ArrowRight: 'right',
+  };
+  const onKeyDown = e => {
+    const flag = KEY_MAP[e.code];
+    if (!flag) return;
+    move[flag] = true;
+    e.preventDefault(); // arrows shouldn't also scroll the page underneath
+  };
+  const onKeyUp = e => {
+    const flag = KEY_MAP[e.code];
+    if (flag) move[flag] = false;
+  };
+  window.addEventListener('keydown', onKeyDown);
+  window.addEventListener('keyup', onKeyUp);
+  // If focus leaves the window mid-stride (alt-tab, devtools) a key can
+  // get stuck "down" forever, since its keyup never reaches here — drop
+  // all movement the moment the window blurs.
+  const onBlur = () => { move.forward = move.back = move.left = move.right = false; };
+  window.addEventListener('blur', onBlur);
+
+  // ─── Mouse-look ─────────────────────────────────────────────────────────
+  const onPointerLockChange = () => {
+    locked = document.pointerLockElement === canvasEl;
+    prompt.classList.toggle('hidden', locked);
+  };
+  document.addEventListener('pointerlockchange', onPointerLockChange);
+
+  const onMouseMoveLocked = e => {
+    if (!locked) return;
+    yaw   -= e.movementX * LOOK_SENS_MOUSE;
+    pitch -= e.movementY * LOOK_SENS_MOUSE;
+    pitch = Math.max(-PITCH_LIMIT, Math.min(PITCH_LIMIT, pitch));
+  };
+  document.addEventListener('mousemove', onMouseMoveLocked);
+
+  const orbitDrag = bindOrbitDrag(container, {
+    onDrag: (dx, dy) => {
+      if (locked) return; // pointer-lock's own mousemove above already owns this
+      // Same sign as the pointer-lock path above: dx is positive for a
+      // rightward drag (bindOrbitDrag's own convention), so this matches
+      // "drag/move right, view turns right" in both input paths.
+      yaw -= dx;
+      pitch -= dy;
+      pitch = Math.max(-PITCH_LIMIT, Math.min(PITCH_LIMIT, pitch));
+    },
+  });
+
+  // First click/tap engages pointer lock (desktop) instead of acting on
+  // whatever's under the crosshair — returns true when it consumed the
+  // event that way, so the scene's own click handler can bail out early
+  // rather than also opening a panel the visitor didn't mean to open.
+  function tryEngage(e) {
+    if (isBlocked?.(e)) return false;
+    if (!canLock || locked || everEngaged) return false;
+    everEngaged = true;
+    prompt.classList.add('hidden');
+    canvasEl.requestPointerLock();
+    return true;
+  }
+  const onPromptClick = e => { tryEngage(e); };
+  prompt.addEventListener('click', onPromptClick);
+
+  // ─── Movement + collision ───────────────────────────────────────────────
+  // Circle-vs-circle push-out against every collider, plus a hard clamp to
+  // the four walls — enough fidelity for "don't walk through the set,"
+  // not a full physics engine. Two passes so overlapping colliders (e.g.
+  // a corner where two crate piles are close) both get to push.
+  function resolveCollisions(x, z) {
+    for (let pass = 0; pass < 2; pass++) {
+      for (const c of colliders) {
+        const dx = x - c.x, dz = z - c.z;
+        const dist = Math.hypot(dx, dz);
+        const minDist = c.r + PLAYER_RADIUS;
+        if (dist > 0 && dist < minDist) {
+          const push = (minDist - dist) / dist;
+          x += dx * push;
+          z += dz * push;
+        }
+      }
+    }
+    x = Math.max(-wallLimit, Math.min(wallLimit, x));
+    z = Math.max(-wallLimit, Math.min(wallLimit, z));
+    return { x, z };
+  }
+
+  function update(dt) {
+    camera.rotation.set(pitch, yaw, 0);
+
+    // Forward/right in the horizontal plane only — looking up or down
+    // shouldn't change walking speed or fly you into the floor/ceiling.
+    camera.getWorldDirection(forward3);
+    forward3.y = 0;
+    if (forward3.lengthSq() < 1e-6) forward3.set(0, 0, -1); else forward3.normalize();
+    const rightX = -forward3.z, rightZ = forward3.x;
+
+    moveDir.set(0, 0);
+    if (move.forward) { moveDir.x += forward3.x; moveDir.y += forward3.z; }
+    if (move.back)    { moveDir.x -= forward3.x; moveDir.y -= forward3.z; }
+    if (move.right)   { moveDir.x += rightX;      moveDir.y += rightZ; }
+    if (move.left)    { moveDir.x -= rightX;      moveDir.y -= rightZ; }
+    if (moveDir.lengthSq() > 1e-6) moveDir.normalize();
+
+    const targetVel = moveDir.multiplyScalar(WALK_SPEED);
+    const ease = 1 - Math.exp(-MOVE_ACCEL * dt);
+    velocity.lerp(targetVel, ease);
+
+    const next = resolveCollisions(pos.x + velocity.x * dt, pos.y + velocity.y * dt);
+    pos.set(next.x, next.z);
+    camera.position.set(pos.x, eyeY, pos.y);
+  }
+
+  return {
+    update,
+    tryEngage,
+    crosshairEl: crosshair,
+    get locked() { return locked; },
+    dispose() {
+      window.removeEventListener('keydown', onKeyDown);
+      window.removeEventListener('keyup', onKeyUp);
+      window.removeEventListener('blur', onBlur);
+      document.removeEventListener('pointerlockchange', onPointerLockChange);
+      document.removeEventListener('mousemove', onMouseMoveLocked);
+      orbitDrag.dispose();
+      prompt.removeEventListener('click', onPromptClick);
+      if (promptFadeTimer) clearTimeout(promptFadeTimer);
+      if (document.pointerLockElement === canvasEl) document.exitPointerLock();
+      crosshair.remove();
+      prompt.remove();
+      padEl?.remove();
+    },
+  };
 }
 
 export function createOrrery(container, { preview = false } = {}) {
@@ -1020,14 +1315,16 @@ export function createOrrery(container, { preview = false } = {}) {
 
   const scene    = new THREE.Scene();
   const camera   = new THREE.PerspectiveCamera(54, w / h, 0.1, 500);
-  // Camera pulled back to keep the larger orrery framed on load, and
-  // brought closer to head-on (less side offset, lookAt raised toward the
-  // rings' actual vertical center) so the machine sits centered in the
-  // room by default rather than off to one side — this only really
-  // matters now that there's no auto-rotate drifting it through other
-  // angles on its own (see the drag-to-orbit section below).
-  camera.position.set(preview ? 1.1 : 1.5, preview ? 0.3 : 0.35, preview ? 13.3 : 16.8);
-  camera.lookAt(0, preview ? -0.15 : -0.2, 0);
+  // Preview tile: same fixed, pulled-back establishing shot as before —
+  // it never got the first-person treatment (see the interaction section
+  // below), so this framing is untouched. Full scene: the camera's actual
+  // starting transform is set by createFirstPersonRig() further down,
+  // since it now lives inside the walkable room rather than at a distant
+  // vantage point outside it.
+  if (preview) {
+    camera.position.set(1.1, 0.3, 13.3);
+    camera.lookAt(0, -0.15, 0);
+  }
 
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
   renderer.setPixelRatio(window.devicePixelRatio);
@@ -1267,6 +1564,41 @@ export function createOrrery(container, { preview = false } = {}) {
         #orrery-title { top: 3.9rem; width: 90vw; }
         #orrery-title-sub { padding: 0 3vw; }
       }
+
+      /* ─── First-person rig, 2026-07-22 ──────────────────────────────── */
+      #orrery-crosshair {
+        position: absolute; top: 50%; left: 50%; width: 6px; height: 6px;
+        margin: -3px 0 0 -3px; border-radius: 50%;
+        background: rgba(255,255,255,0.35); pointer-events: none; z-index: 4;
+        transition: transform 0.15s ease, background 0.15s ease;
+      }
+      #orrery-crosshair.active {
+        background: rgba(255,214,150,0.9); transform: scale(1.8);
+      }
+      #orrery-lock-prompt {
+        position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+        z-index: 7; background: rgba(10,7,4,0.55); color: rgba(238,225,205,0.85);
+        border: 1px solid rgba(220,200,180,0.3); border-radius: 2rem;
+        padding: 0.7rem 1.6rem; font-family: 'Times New Roman', serif;
+        font-size: 0.85rem; letter-spacing: 0.08em; cursor: pointer;
+        transition: opacity 0.4s ease;
+      }
+      #orrery-lock-prompt.hidden { opacity: 0; pointer-events: none; }
+      #orrery-walkpad {
+        position: absolute; left: 1.2rem; bottom: 1.6rem; z-index: 7;
+        width: 8.6rem; height: 6rem; display: grid;
+        grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(2, 1fr);
+        gap: 0.35rem;
+      }
+      .wp-btn {
+        background: rgba(20,16,12,0.45); border: 1px solid rgba(220,200,180,0.25);
+        border-radius: 0.5rem; color: rgba(238,225,205,0.75); font-size: 1.1rem;
+        touch-action: none; line-height: 1;
+      }
+      .wp-fwd   { grid-row: 1; grid-column: 2; }
+      .wp-left  { grid-row: 2; grid-column: 1; }
+      .wp-back  { grid-row: 2; grid-column: 2; }
+      .wp-right { grid-row: 2; grid-column: 3; }
     `;
     document.head.appendChild(style);
   }
@@ -1307,6 +1639,11 @@ export function createOrrery(container, { preview = false } = {}) {
     `;
     container.style.position = 'relative';
     container.style.overflow = 'hidden';
+    // First-person pass: the OS cursor is hidden the whole time in full
+    // mode — hover/click targeting always raycasts from screen-center now
+    // (see createFirstPersonRig's crosshair), so a wandering system arrow
+    // would just be a visual mismatch with what's actually being aimed at.
+    container.style.cursor = 'none';
     container.appendChild(panel);
     panelTitle = panel.querySelector('#orrery-panel-title');
     panelEra   = panel.querySelector('#orrery-panel-era');
@@ -1322,7 +1659,7 @@ export function createOrrery(container, { preview = false } = {}) {
 
     hint = document.createElement('p');
     hint.id = 'orrery-hint';
-    hint.innerHTML = 'drag to orbit &nbsp;·&nbsp; click the control box &nbsp;·&nbsp; click a flyer to tune in';
+    hint.innerHTML = 'walk with WASD/arrows &nbsp;·&nbsp; click to look around &nbsp;·&nbsp; click the control box or a flyer';
     hint.setAttribute('aria-hidden', 'true');
     document.body.appendChild(hint);
 
@@ -1334,9 +1671,12 @@ export function createOrrery(container, { preview = false } = {}) {
   }
 
   // ─── Interaction ─────────────────────────────────────────────────────────
+  // Hover/click targeting always raycasts from screen-center now (the
+  // first-person crosshair), not literal mouse position — see animate()
+  // below and createFirstPersonRig's own comment for why.
   const raycaster = new THREE.Raycaster();
-  const mouse = new THREE.Vector2();
   let hovered = false, selected = false;
+  let fp = null;
 
   function setEmphasis(on) {
     orrery.lampMat.emissiveIntensity = on ? 2.2 : 1;
@@ -1434,44 +1774,22 @@ export function createOrrery(container, { preview = false } = {}) {
   // because this click handler — bound here, on that same shared
   // container — was still attached and its closure still had a hovered
   // poster reference from before the switch.
-  let onContainerMouseMove, onContainerTouchMove, onContainerTouchStart, onContainerClick;
+  let onContainerTouchMove, onContainerTouchStart, onContainerClick;
   let touchMoved = false;
 
   if (!preview) {
-    onContainerMouseMove = e => {
-      const rect = container.getBoundingClientRect();
-      mouse.x =  ((e.clientX - rect.left) / rect.width)  * 2 - 1;
-      mouse.y = -((e.clientY - rect.top)  / rect.height) * 2 + 1;
-      raycaster.setFromCamera(mouse, camera);
-      const hits = raycaster.intersectObject(orrery.hitTarget);
-      const newHover = hits.length > 0;
-      if (newHover !== hovered) {
-        hovered = newHover;
-        if (!selected) setEmphasis(hovered);
-      }
-
-      if (warehouse.posters.length) {
-        const posterHits = raycaster.intersectObjects(warehouse.posters.map(p => p.mesh));
-        const newPosterHover = posterHits.length
-          ? warehouse.posters.find(p => p.mesh === posterHits[0].object)
-          : null;
-        if (newPosterHover !== hoveredPoster) {
-          if (hoveredPoster) hoveredPoster.mesh.material.emissiveIntensity = hoveredPoster.baseEmissive;
-          hoveredPoster = newPosterHover;
-          if (hoveredPoster) hoveredPoster.mesh.material.emissiveIntensity = hoveredPoster.baseEmissive * 2.4;
-        }
-      }
-
-      container.style.cursor = (hovered || hoveredPoster) ? 'pointer' : 'default';
-    };
-    container.addEventListener('mousemove', onContainerMouseMove);
-
+    // Tap-vs-drag distinction still matters in first-person mode — a
+    // touch-drag to look around shouldn't also register as a click on
+    // whatever the crosshair happened to end up over.
     onContainerTouchMove = () => { touchMoved = true; };
     container.addEventListener('touchmove', onContainerTouchMove, { passive: true });
     onContainerTouchStart = () => { touchMoved = false; };
     container.addEventListener('touchstart', onContainerTouchStart, { passive: true });
     onContainerClick = e => {
       if (touchMoved) { touchMoved = false; return; }
+      // First click/tap just engages mouse-look (desktop pointer lock);
+      // it doesn't also act on whatever's under the crosshair.
+      if (fp.tryEngage(e)) return;
       if (panel.classList.contains('open') && !panel.contains(e.target)) {
         panel.classList.remove('open');
         hideAmbient(false);
@@ -1488,50 +1806,85 @@ export function createOrrery(container, { preview = false } = {}) {
     container.addEventListener('click', onContainerClick);
   }
 
-  // ─── Drag to orbit (mouse + touch) ──────────────────────────────────────
-  // No auto-rotate (Scott, 2026-07-17: it never settled into a composed,
-  // centered view — always caught mid-spin) — it holds still until dragged.
-  //
-  // Micro-Myst pass, same day: drag no longer moves the view directly.
-  // It nudges a target angle, and the animate loop below eases root's
-  // actual rotation toward that target every frame — the room keeps
-  // gliding for a beat after you let go, catching up to where you asked
-  // it to go rather than snapping there. Standing in for the thing that
-  // most makes Myst's disconnected-node navigation feel the way it does:
-  // movement was never a live camera responding 1:1, it was a short
-  // pre-rendered transition clip playing back at its own pace. Skipped
-  // under prefers-reduced-motion — see the animate loop.
-  let targetRotationY = root.rotation.y;
-  const orbitDrag = bindOrbitDrag(container, {
-    onDrag: dx => { targetRotationY += dx; },
-  });
-  const wheelZoom = bindWheelZoom(container, {
-    isBlocked: e => panel && panel.contains(e.target),
-    onZoom: deltaY => {
-      camera.position.z = Math.max(1.4, Math.min(38, camera.position.z + deltaY * 0.01));
-    },
-  });
-
-  // Reduced motion: the continuous orbital rotation below is exactly the
-  // kind of autonomous, never-stopping motion prefers-reduced-motion is
-  // for — drag-to-orbit stays available regardless, since that's motion
-  // the visitor asks for, not motion imposed on them.
+  // ─── Camera control ──────────────────────────────────────────────────────
+  // Reduced motion: the continuous orbital rotation below (planets/
+  // unknowns) is exactly the kind of autonomous, never-stopping motion
+  // prefers-reduced-motion is for — walking/mouse-look/drag-to-orbit all
+  // stay available regardless, since that's motion the visitor asks for,
+  // not motion imposed on them.
   const reduceMotion = prefersReducedMotion();
 
+  let orbitDrag = null, wheelZoom = null, targetRotationY = root.rotation.y;
+
+  if (preview) {
+    // Preview tile: unchanged from before this pass — drag nudges a
+    // target angle, animate() eases root's rotation toward it, no camera
+    // movement at all. See the first-person rig above for what full mode
+    // does instead.
+    orbitDrag = bindOrbitDrag(container, {
+      onDrag: dx => { targetRotationY += dx; },
+    });
+    wheelZoom = bindWheelZoom(container, {
+      onZoom: deltaY => {
+        camera.position.z = Math.max(1.4, Math.min(38, camera.position.z + deltaY * 0.01));
+      },
+    });
+  } else {
+    const allColliders = [...warehouse.colliders, ...orrery.colliders];
+    fp = createFirstPersonRig({
+      container, camera, renderer,
+      colliders: allColliders,
+      wallLimit: warehouse.wallDist - PLAYER_RADIUS,
+      eyeY: floorY + EYE_HEIGHT,
+      // Starting just inside the (new) front wall, already facing the
+      // machine — yaw 0 is the camera's default forward (-Z), which from
+      // this spot looks straight at the mast without any rotation needed.
+      startPos: new THREE.Vector3(0.8, 0, warehouse.wallDist - 1.2),
+      startYaw: 0,
+      isBlocked: e => panel && panel.contains(e.target),
+    });
+  }
+
   // ─── Animate ──────────────────────────────────────────────────────────────
-  let animId, t = 0;
+  let animId, t = 0, lastFrame = performance.now();
   function animate() {
     animId = requestAnimationFrame(animate);
     t += 0.001;
+    const now = performance.now();
+    const dt = Math.min(0.05, (now - lastFrame) / 1000); // clamp: tab-away shouldn't teleport the walk
+    lastFrame = now;
 
-    // Ease the room's rotation toward wherever the last drag left the
-    // target, rather than jumping straight there — see the orbitDrag
-    // setup above. Reduced-motion visitors get direct 1:1 tracking
-    // instead (no lingering post-drag motion they didn't ask for).
-    if (reduceMotion) {
-      root.rotation.y = targetRotationY;
+    if (preview) {
+      // Ease the tile's rotation toward wherever the last drag left the
+      // target, rather than jumping straight there. Reduced-motion
+      // visitors get direct 1:1 tracking instead (no lingering post-drag
+      // motion they didn't ask for).
+      root.rotation.y = reduceMotion ? targetRotationY : root.rotation.y + (targetRotationY - root.rotation.y) * 0.07;
     } else {
-      root.rotation.y += (targetRotationY - root.rotation.y) * 0.07;
+      fp.update(dt);
+
+      // Hover/click targeting — always from screen-center (the crosshair),
+      // every frame, regardless of whether the pointer is locked or the
+      // visitor has ever touched the mouse at all. See createFirstPersonRig.
+      raycaster.setFromCamera({ x: 0, y: 0 }, camera);
+      const hits = raycaster.intersectObject(orrery.hitTarget);
+      const newHover = hits.length > 0;
+      if (newHover !== hovered) {
+        hovered = newHover;
+        if (!selected) setEmphasis(hovered);
+      }
+      if (warehouse.posters.length) {
+        const posterHits = raycaster.intersectObjects(warehouse.posters.map(p => p.mesh));
+        const newPosterHover = posterHits.length
+          ? warehouse.posters.find(p => p.mesh === posterHits[0].object)
+          : null;
+        if (newPosterHover !== hoveredPoster) {
+          if (hoveredPoster) hoveredPoster.mesh.material.emissiveIntensity = hoveredPoster.baseEmissive;
+          hoveredPoster = newPosterHover;
+          if (hoveredPoster) hoveredPoster.mesh.material.emissiveIntensity = hoveredPoster.baseEmissive * 2.4;
+        }
+      }
+      fp.crosshairEl.classList.toggle('active', hovered || !!hoveredPoster);
     }
 
     if (!reduceMotion) {
@@ -1579,12 +1932,12 @@ export function createOrrery(container, { preview = false } = {}) {
   return {
     dispose() {
       cancelAnimationFrame(animId);
-      orbitDrag.dispose();
-      wheelZoom.dispose();
+      orbitDrag?.dispose();
+      wheelZoom?.dispose();
+      fp?.dispose();
       resize.dispose();
       escapeClose?.dispose();
       if (!preview) {
-        container.removeEventListener('mousemove', onContainerMouseMove);
         container.removeEventListener('touchmove', onContainerTouchMove);
         container.removeEventListener('touchstart', onContainerTouchStart);
         container.removeEventListener('click', onContainerClick);

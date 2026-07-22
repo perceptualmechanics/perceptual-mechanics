@@ -6,6 +6,62 @@ projects (The Secret World, A Manual of Perceptual Mechanics) moved into their o
 files, which are now the source of truth for that material going forward. See "project map"
 below for where things live.
 
+## 1.0.47 (2026-07-22)
+
+Scott: "have first-person camera movement in orrery, like someone's
+wandering around with arrow keys" → "yes, with mouse-look and collision.
+Like I said, I want this to feel like a Myst level." Full-scene orrery
+only (the landing-page preview tile is unchanged — a thumbnail isn't
+somewhere anyone's walking around). Replaces the old "drag rotates the
+room around a parked camera" illusion with an actual first-person rig:
+
+**Movement.** WASD or arrow keys walk, camera-relative, at a fixed eye
+height (1.7 units above the floor — not coincidentally almost exactly the
+control hub's own height, so walking up to it means looking it in the eye
+rather than up or down at it). Acceleration/damping on the walk velocity
+rather than instant start/stop, so it doesn't feel like sliding on ice or
+snapping to a stop.
+
+**Mouse-look.** Click once to engage pointer lock (standard desktop
+"mouse-look," raw mouse movement, no button held down) — or just drag,
+which works everywhere pointer lock doesn't (touch, or before you've
+clicked to engage). Both input paths share one convention (drag/move
+right turns the view right), deliberately NOT the same convention the
+site's other drag-to-orbit scenes use (those rotate an object you're
+looking at from outside; this is you, inside the room, turning your
+head — different enough mechanics that matching would've been a
+coincidence, not a real consistency win).
+
+**Collision.** Circle-vs-circle push-out against the mast/control hub and
+the room's floor clutter (crate stacks, the workbench, the tire, the oil
+drums, the ladder), plus a hard clamp to the walls. The warehouse used to
+have only two walls — back and one side — because the camera never
+approached the open sides (a fixed, distant establishing shot). Added the
+other two so the room is an actual enclosed box now; walking to the edges
+doesn't spill out into the starfield beyond.
+
+**Aiming.** Once you can turn your head independent of the literal mouse
+cursor, "where the OS cursor is pointing" stops meaning anything — so
+hover/click targeting for the control hub and the show flyers now always
+raycasts from screen-center, every frame, and the OS cursor is hidden in
+favor of a small crosshair dot that brightens when it's over something
+clickable.
+
+**Mobile.** No keyboard to hold WASD on, so coarse-pointer devices get a
+small on-screen four-button walk pad (forward/back/strafe); drag-to-look
+already covers looking around without needing pointer lock, which most
+mobile browsers don't support anyway.
+
+Verified: a standalone script re-deriving the forward/right vector math
+(confirmed against three.js's own camera convention) and exercising the
+collision resolver (mast push-out, wall clamp, overlapping colliders,
+clear-space pass-through) — all passed. `node --check` on the touched
+files, a clean `vite build` (only the pre-existing orrery >500kB chunk
+warning), and a grep sweep for stale references. Caught and fixed one real
+bug along the way: the collision resolver returns `{x, z}` but the first
+draft of the call site read `next.y` — would have silently frozen the
+camera's Z position the moment you touched a wall or the mast.
+
 ## 1.0.46 (2026-07-22)
 
 Scott: "oh yeah, make sure all the markup is semantic as heck." Follow-on
