@@ -220,67 +220,128 @@ export function createLeaf(container, { preview = false } = {}) {
   scene.add(root);
   const reduceMotion = prefersReducedMotion();
 
-  // ─── Backdrop: a Japanese wall — dark kumiko lattice over washi paper,
-  // in place of the old open-sky gradient (Scott's request; this piece was
-  // already leaning wabi-sabi, and a shoji wall is a much more specific,
-  // grounded object than an undifferentiated night sky). Kept dark and
-  // warm rather than a bright daylight paper tone, so the quiet, nocturnal
-  // mood of the piece carries over — a single soft glow stands in for
-  // light behind one pane, echoing the drop's own small warmth. ─────────
-  function makeWallTexture() {
+  // ─── Backdrop: a Boca Raton balcony at dusk ────────────────────────────
+  // Scott: "let's go there" — Japandi (Japanese x Scandinavian design:
+  // natural materials, warm neutrals, restraint, clean lines), and "that's
+  // the actual vibe of my apartment." Replaces the earlier shoji-wall
+  // backdrop with the actual place this quiet moment is happening: a leaf
+  // on a balcony plant, dusk sky behind it. Kept the same discipline as
+  // the wall version — muted, desaturated color (a real Florida dusk
+  // gradient pulled back from postcard-saturated), one warm glow accent,
+  // and a precise, evenly-spaced railing in place of the old kumiko
+  // lattice's deliberate hand-built irregularity: a manufactured balcony
+  // rail SHOULD read as uniform, unlike a hand-built shoji screen, so the
+  // one visual habit that flips here is intentional.
+  //
+  // Built at the same aspect ratio as the plane it's mapped onto (rather
+  // than a square tile repeated with THREE.RepeatWrapping, the old
+  // approach) so the horizon and railing don't stretch or distort at
+  // portrait viewport ratios on mobile — this is a single, non-repeating
+  // image now, clamped to its edges.
+  function makeBalconyTexture() {
+    const cw = Math.round(Math.max(600, Math.min(1400, 900 * Math.max(aspect, 0.5))));
+    const ch = Math.round(cw / Math.max(aspect, 0.5));
     const c = document.createElement('canvas');
-    c.width = 512; c.height = 512;
+    c.width = cw; c.height = ch;
     const cx = c.getContext('2d');
 
-    const grad = cx.createLinearGradient(0, 0, 0, 512);
-    grad.addColorStop(0,    '#2a2420');
-    grad.addColorStop(0.55, '#211c18');
-    grad.addColorStop(1,    '#141110');
-    cx.fillStyle = grad;
-    cx.fillRect(0, 0, 512, 512);
+    // Dusk sky — deep dusty plum up top, through a muted rose, to a warm
+    // desaturated gold at the horizon. Real Florida dusk color, pulled
+    // back from postcard saturation to keep the Japandi restraint.
+    const sky = cx.createLinearGradient(0, 0, 0, ch);
+    sky.addColorStop(0,    '#2b2636');
+    sky.addColorStop(0.45, '#4a3a45');
+    sky.addColorStop(0.75, '#8a6a5c');
+    sky.addColorStop(1,    '#c99a72');
+    cx.fillStyle = sky;
+    cx.fillRect(0, 0, cw, ch);
 
-    // Scott: "somewhat plainer" — was a dense, busy lattice (58px bars,
-    // repeated 3x3, 260 mottling marks). Pulled way back: wider, calmer
-    // spacing, fewer/fainter marks, tiled 2x2 instead of 3x3 so the grid
-    // itself reads slower. Still hand-built (bars stay irregular), just
-    // quieter.
-    for (let i = 0; i < 90; i++) {
-      const x = Math.random() * 512, y = Math.random() * 512;
-      const r = 10 + Math.random() * 26;
-      cx.fillStyle = Math.random() > 0.5 ? 'rgba(255,240,210,0.02)' : 'rgba(0,0,0,0.035)';
+    // A few faint stars in the upper dark band.
+    for (let i = 0; i < 26; i++) {
+      const x = Math.random() * cw, y = Math.random() * ch * 0.4;
+      cx.fillStyle = `rgba(255,250,240,${0.15 + Math.random() * 0.2})`;
+      cx.fillRect(x, y, 1.4, 1.4);
+    }
+
+    // A distant, low-contrast skyline — a couple of condo silhouettes,
+    // kept simple/geometric rather than illustrated, dusk haze softening
+    // the edge between them and the sky.
+    const horizonY = ch * 0.62;
+    cx.fillStyle = 'rgba(40,32,36,0.55)';
+    [[0.08, 0.16, 0.42], [0.22, 0.1, 0.3], [0.72, 0.2, 0.5], [0.86, 0.13, 0.36]].forEach(([fx, fh, fw]) => {
+      const bw = cw * fw * 0.14;
+      const bh = ch * fh;
+      cx.fillRect(cw * fx, horizonY - bh, bw, bh);
+    });
+
+    // Two simple palm silhouettes — minimal, a trunk and a small cluster
+    // of frond strokes, not a detailed illustration.
+    function palm(px, py, scale) {
+      cx.strokeStyle = 'rgba(30,24,26,0.6)';
+      cx.lineWidth = 3 * scale;
       cx.beginPath();
-      cx.ellipse(x, y, r, r * 0.7, Math.random() * Math.PI, 0, Math.PI * 2);
-      cx.fill();
+      cx.moveTo(px, py);
+      cx.quadraticCurveTo(px - 6 * scale, py - 30 * scale, px - 2 * scale, py - 58 * scale);
+      cx.stroke();
+      const crownX = px - 2 * scale, crownY = py - 58 * scale;
+      for (let i = 0; i < 5; i++) {
+        const a = (-0.9 + i * 0.45) * Math.PI;
+        cx.beginPath();
+        cx.moveTo(crownX, crownY);
+        cx.quadraticCurveTo(
+          crownX + Math.cos(a) * 16 * scale, crownY + Math.sin(a) * 10 * scale,
+          crownX + Math.cos(a) * 30 * scale, crownY + Math.sin(a) * 16 * scale + 8 * scale
+        );
+        cx.stroke();
+      }
+    }
+    palm(cw * 0.12, horizonY + 4, cw / 900);
+    palm(cw * 0.9, horizonY + 8, cw / 900 * 0.85);
+
+    // The balcony rail — precise, evenly-spaced verticals (a manufactured
+    // object, unlike the old hand-built lattice) plus a top/bottom rail,
+    // spanning the bottom band of the frame.
+    const railTop = ch * 0.78;
+    const railBottom = ch * 0.98;
+    cx.fillStyle = 'rgba(18,16,15,0.7)';
+    cx.fillRect(0, railTop, cw, 4);
+    cx.fillRect(0, railBottom - 3, cw, 3);
+    const baluster = cw / 34;
+    for (let x = baluster / 2; x < cw; x += baluster) {
+      cx.fillRect(x - 1.5, railTop, 3, railBottom - railTop);
     }
 
-    // Kumiko lattice — dark wood bars, irregularly spaced (hand-built,
-    // not a manufactured perfectly even grid), but wide and light-handed.
-    cx.strokeStyle = '#14100c';
-    cx.lineWidth = 4;
-    cx.globalAlpha = 0.5;
-    for (let x = 30; x < 512; x += 128 + (Math.random() - 0.5) * 14) {
-      cx.beginPath(); cx.moveTo(x, 0); cx.lineTo(x, 512); cx.stroke();
+    // A single plant silhouette in one corner — the Japandi habit of one
+    // sculptural, unfussy plant rather than clutter — standing in for the
+    // one this leaf and drop actually belong to.
+    cx.fillStyle = 'rgba(20,18,16,0.75)';
+    const potX = cw * 0.16, potY = railBottom;
+    cx.fillRect(potX - 22, potY - 26, 44, 26);
+    for (let i = 0; i < 6; i++) {
+      const a = (-1.35 + i * 0.22) * Math.PI * 0.5 - 0.4;
+      cx.beginPath();
+      cx.moveTo(potX, potY - 24);
+      cx.quadraticCurveTo(
+        potX + Math.cos(a) * 30, potY - 24 + Math.sin(a) * 50,
+        potX + Math.cos(a) * 40, potY - 24 + Math.sin(a) * 70
+      );
+      cx.stroke();
     }
-    for (let y = 40; y < 512; y += 160 + (Math.random() - 0.5) * 16) {
-      cx.beginPath(); cx.moveTo(0, y); cx.lineTo(512, y); cx.stroke();
-    }
-    cx.globalAlpha = 1;
 
-    // A soft warm glow, as if faint light sits behind one pane — kept
-    // subtle rather than removed, it's what keeps the wall from reading
-    // flat/dead.
-    const glow = cx.createRadialGradient(150, 130, 10, 150, 130, 260);
-    glow.addColorStop(0, 'rgba(255,205,140,0.1)');
+    // A single warm glow — a porch light, standing in for the old
+    // "light behind one pane" accent — kept, not removed, for the same
+    // reason: it's what keeps the backdrop from reading flat.
+    const glow = cx.createRadialGradient(cw * 0.78, railTop - 10, 4, cw * 0.78, railTop - 10, cw * 0.22);
+    glow.addColorStop(0, 'rgba(255,205,140,0.16)');
     glow.addColorStop(1, 'rgba(255,205,140,0)');
     cx.fillStyle = glow;
-    cx.fillRect(0, 0, 512, 512);
+    cx.fillRect(0, 0, cw, ch);
 
     const tex = new THREE.CanvasTexture(c);
-    tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
-    tex.repeat.set(2 * aspect, 2);
+    tex.wrapS = tex.wrapT = THREE.ClampToEdgeWrapping;
     return tex;
   }
-  const wallTex = makeWallTexture();
+  const wallTex = makeBalconyTexture();
   const wallGeo = new THREE.PlaneGeometry(viewH * aspect * 2.4, viewH * 2.4);
   const wallMat = new THREE.MeshBasicMaterial({ map: wallTex, depthWrite: false });
   const wall = new THREE.Mesh(wallGeo, wallMat);
@@ -288,10 +349,12 @@ export function createLeaf(container, { preview = false } = {}) {
   root.add(wall);
 
   // ─── Ground: a faint horizontal glow near the bottom ──────────────────────
+  // Warm terracotta/stone tone now (was a mossy forest-floor green) — the
+  // drop lands in a planter on the balcony, not on a forest floor.
   const groundY = -2.3;
   const groundGeo = new THREE.PlaneGeometry(viewH * aspect * 2.2, 0.5);
   const groundMat = new THREE.MeshBasicMaterial({
-    color: 0x1a3a2a, transparent: true, opacity: 0.35, depthWrite: false,
+    color: 0x6b4a3a, transparent: true, opacity: 0.35, depthWrite: false,
   });
   const ground = new THREE.Mesh(groundGeo, groundMat);
   ground.position.set(0, groundY - 0.15, -1);
@@ -371,12 +434,15 @@ export function createLeaf(container, { preview = false } = {}) {
       #leaf-caption p {
         text-align: left;
         color: rgba(196, 214, 196, 0.75);
-        font-family: 'Times New Roman', serif;
-        font-style: italic;
-        /* Scott: enlarge — was clamp(0.78rem, 1.5vw, 0.94rem). */
+        /* Scott: away from serif/italic entirely, toward Japandi — Zen
+           Maru Gothic is a real Japanese rounded-sans type family, fluid
+           without being a caricature "brush font," and its soft rounded
+           forms read as much Scandinavian-minimalist as Japanese. */
+        font-family: 'Zen Maru Gothic', 'Hiragino Maru Gothic ProN', sans-serif;
+        font-weight: 400;
         font-size: clamp(1.02rem, 2vw, 1.28rem);
         letter-spacing: 0.01em;
-        line-height: 1.65;
+        line-height: 1.7;
         text-shadow: 0 1px 3px rgba(0,0,0,0.6);
         margin: 0 0 1.8rem;
       }
@@ -387,7 +453,7 @@ export function createLeaf(container, { preview = false } = {}) {
         font-size: 0.55rem; letter-spacing: 0.2em;
         text-transform: uppercase; pointer-events: none;
         text-align: right; z-index: 310; line-height: 1.8;
-        font-family: 'Times New Roman', serif;
+        font-family: 'Zen Maru Gothic', sans-serif;
       }
       @media (max-width: 800px) {
         /* Not enough width to keep the box on the left and the leaf clear
@@ -475,22 +541,44 @@ export function createLeaf(container, { preview = false } = {}) {
   const REARM_MARGIN = 0.012;
 
   // ─── Animate ─────────────────────────────────────────────────────────
-  let animId, tSec = 0, currentFrac = 0;
+  // Real elapsed time now, not an assumed fixed 1/60s step — a fixed-step
+  // assumption is silently wrong on a 120Hz ProMotion phone, a throttled
+  // background tab, or just an inconsistent frame, and "particularly on
+  // mobile" was Scott's own stated concern.
+  let animId, tSec = 0, currentFrac = 0, fallVelocity = 0;
   let escapeTriggered = false, splashTriggered = false;
+  let lastFrameTime = performance.now();
+  // Critically-damped-ish spring in place of the old fixed-rate exponential
+  // follow (currentFrac += (target - currentFrac) * 0.18, every frame,
+  // regardless of how far off target actually was). A spring's restoring
+  // acceleration is proportional to displacement — a fast flick jumps
+  // targetScrollFrac far ahead in one tick, which the spring resolves with
+  // real velocity and a touch of overshoot, while a slow scroll barely
+  // displaces it at all. That's the organic scroll-to-acceleration
+  // coupling Scott asked for, without needing to hand-track scroll
+  // velocity separately: the spring already responds to how big the jump
+  // was, which is exactly a function of how fast the input was.
+  const SPRING_STIFFNESS = 130;
+  const SPRING_DAMPING = 2 * Math.sqrt(SPRING_STIFFNESS) * 0.92; // just under critical — a little organic settle, not a bounce
   function animate() {
     animId = requestAnimationFrame(animate);
-    const dt = 1 / 60;
+    const now = performance.now();
+    // Clamp the step so a backgrounded/throttled tab doesn't return with
+    // one huge dt and fling the drop across the whole fall in one frame.
+    const dt = Math.min(0.1, (now - lastFrameTime) / 1000);
+    lastFrameTime = now;
     tSec += dt;
 
     let frac;
     if (preview) {
       frac = (tSec % CYCLE_SECONDS) / CYCLE_SECONDS;
     } else {
-      // Eased follow rather than an instant snap to scroll position — still
-      // reads as directly scroll-driven (this converges in a couple of
-      // frames), just without a per-tick jitter on rapid wheel/trackpad
-      // deltas.
-      currentFrac += (targetScrollFrac - currentFrac) * 0.18;
+      const accel = (targetScrollFrac - currentFrac) * SPRING_STIFFNESS - fallVelocity * SPRING_DAMPING;
+      fallVelocity += accel * dt;
+      currentFrac += fallVelocity * dt;
+      // Stop dead at the ends rather than vibrating against a hard clamp.
+      if (currentFrac < 0 && fallVelocity < 0) { currentFrac = 0; fallVelocity = 0; }
+      if (currentFrac > 1 && fallVelocity > 0) { currentFrac = 1; fallVelocity = 0; }
       frac = currentFrac;
     }
 

@@ -6,6 +6,68 @@ projects (The Secret World, A Manual of Perceptual Mechanics) moved into their o
 files, which are now the source of truth for that material going forward. See "project map"
 below for where things live.
 
+## 1.0.30 (2026-07-21)
+
+Back to perceptualmechanics itself after a bard.js stretch. Scott: "I want
+to create as organic a relationship between the scroll and the
+acceleration as possible, particularly on mobile," and separately wasn't
+happy with the caption's serif italic — "not that I want to go full
+cultural appropriation here, but I would like something that's a bit
+more fluid without necessarily being in italics."
+
+Checked web haptics first, since Scott asked directly: no reliable
+cross-platform vibration API exists — Chrome/Android has
+`navigator.vibrate()`, but Safari has never implemented it on iOS, and
+the "workarounds" floating around exploit undocumented native-input side
+effects that could break the moment Apple patches them. Not something to
+build a portfolio piece around.
+
+So the real fix was physics, not haptics. The old scroll-to-fall coupling
+in leaf.js assumed a fixed 1/60s frame step and smoothed toward the
+scroll position with a flat exponential factor (`currentFrac +=
+(target - currentFrac) * 0.18`) every frame regardless of how far off
+target actually was — wrong on a 120Hz phone, a throttled tab, or a fast
+flick. Replaced both: `animate()` now uses real elapsed time
+(`performance.now()` deltas, clamped so a backgrounded tab doesn't fling
+the drop across the whole fall in one frame), and the follow itself is a
+critically-damped-ish spring (stiffness 130, damping just under
+critical) instead of a fixed-rate lerp. A spring's restoring acceleration
+is proportional to displacement, so a fast flick — which jumps
+targetScrollFrac far ahead in one tick — resolves with real velocity and
+a touch of organic overshoot, while a slow scroll barely displaces it at
+all. That's the scroll-to-acceleration coupling Scott asked for, without
+needing to separately hand-track scroll velocity. Verified the spring
+settles to target from both a small and a large displacement, that a
+bigger jump genuinely produces a bigger peak velocity, and that it still
+converges under a deliberately janky variable-dt sequence, all before
+touching the visual code.
+
+Font: dropped serif/italic entirely for Zen Maru Gothic — a real
+Japanese rounded-sans type family, added to index.html's Google Fonts
+link. Fluid without being a caricature "brush font," and its rounded
+forms read as much Scandinavian-minimalist as Japanese, which mattered
+once the next part landed.
+
+Scott, asked to name the vibe of his own apartment: Japandi (Japanese x
+Scandinavian design — natural materials, warm neutrals, restraint). Used
+that to replace the Japanese-shoji-wall backdrop with an actual Boca
+Raton balcony at dusk — a muted, desaturated Florida dusk gradient (not
+postcard-saturated), a simple distant condo-silhouette skyline, two
+minimal palm silhouettes, one Japandi-habit sculptural plant in a
+corner, and a precise, evenly-spaced balcony rail in place of the old
+kumiko lattice's deliberate hand-built irregularity — a manufactured
+rail should read as uniform, unlike a hand-built shoji screen, so that's
+the one habit that intentionally flips. Rebuilt as a single texture
+sized to the actual viewport aspect ratio rather than a repeating tiled
+pattern, so the horizon and railing don't distort at portrait mobile
+ratios the way a `RepeatWrapping` tile would. Ground glow recolored from
+mossy forest green to warm terracotta, since the drop now lands in a
+balcony planter, not a forest floor. Rendered a rough PIL approximation
+of the new backdrop composition to sanity-check colors/layout before
+ever loading a real browser (this sandbox has no headless browser
+available for true WebGL verification) — same honest caveat as always:
+the real render still needs Scott's own eyes.
+
 ## 1.0.29 (2026-07-19, same day)
 
 Scott's next screenshot ("oh i can tell this is gonna be fun") showed
