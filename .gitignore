@@ -9,3 +9,10 @@ v1/dist 2/
 # research/source material lives outside the repo now (../perceptualmechanics-source-material/)
 # — ignored here as a safeguard in case anything gets dropped back in by mistake
 source-material/
+
+# Scott's own apartment reference photos (2026-07-22) — real photos of his
+# home, ~90MB, dropped in here as design reference for the leaf scene's
+# backdrop. This repo is public on GitHub, so these shouldn't get
+# committed/pushed — same reasoning as source-material/ above, just for
+# personal photos instead of writing archives.
+assets/

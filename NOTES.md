@@ -6,6 +6,31 @@ projects (The Secret World, A Manual of Perceptual Mechanics) moved into their o
 files, which are now the source of truth for that material going forward. See "project map"
 below for where things live.
 
+## 1.0.36 (2026-07-22)
+
+Scott: "there's a CSS bug on preview page: the standalone images are square,
+but on hover, there's a circle mask being applied to them for a split
+second." Real bug, unrelated to leaf specifically — every landing-page
+preview tile (`.preview-container` in main.css) is affected. Root cause:
+each tile's WebGL canvas gets its own GPU compositing layer, but the
+container itself only became one on `:hover` (via the `transform: scale`
+there). Without a layer of its own at rest, the browser doesn't reliably
+honor the `border-radius`/`overflow:hidden` clip against a composited
+child — square at rest, briefly circular only when the hover transform
+forces a repaint. Fixed with `contain: paint`, which tells the browser
+directly that nothing may paint outside the box, independent of layer
+promotion — holds the clip at rest, not just mid-hover.
+
+Also: Scott created `assets/` in this repo and dropped all thirteen
+apartment reference photos into it as real files — the inline-paste
+limitation flagged since 1.0.32 is now moot for this material specifically,
+since these are real files on disk. Confirmed IMG_1198.jpeg is the exact
+balcony reference (matches the confirmed view from 1.0.34 — rail,
+buildings, palms, sky) among the batch. Not yet wired into leaf.js — asked
+Scott whether he wants the real photo swapped in now that it's actually
+usable, since "improved-procedural" was chosen specifically because the
+photo wasn't reachable at the time, not as a settled preference.
+
 ## 1.0.35 (2026-07-22)
 
 Scott confirmed 1.0.34's balcony fix against a real photo of his actual

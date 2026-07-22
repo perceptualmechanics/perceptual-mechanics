@@ -201,6 +201,17 @@ html, body {
   overflow: hidden;
   position: relative;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
+  /* Scott: "the standalone images are square, but on hover, there's a
+     circle mask being applied to them for a split second." Root cause —
+     each tile's WebGL canvas gets its own GPU compositing layer, but this
+     container itself only became one on :hover (via the transform below).
+     Without a layer of its own at rest, the browser doesn't reliably
+     honor border-radius/overflow clipping against a composited child, so
+     the tile renders square until the hover transform briefly forces a
+     layer/repaint. `contain: paint` tells the browser directly that
+     nothing may paint outside this box, independent of layering, so the
+     circular clip holds at rest, not just mid-hover. */
+  contain: paint;
 }
 .preview-container:hover {
   transform: scale(1.04);
