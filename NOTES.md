@@ -6,6 +6,53 @@ projects (The Secret World, A Manual of Perceptual Mechanics) moved into their o
 files, which are now the source of truth for that material going forward. See "project map"
 below for where things live.
 
+## 1.0.38 (2026-07-22)
+
+Scott, immediately after seeing 1.0.37 (two screenshots — the preview tile
+still square, and the full scene with the real photo blurring): "first,
+preview bug still isn't fixed. but second, oy, okay. Don't use the photo.
+What I want you to do is use the photo as a visual reference for the depth
+of field I want you to create. So create several planes, from the sky to
+the parking carage to the trees and so forth, and do the blurring that way,
+rather than with the actual photo."
+
+Two fixes:
+
+1. **Preview clip bug, take two.** 1.0.36's `contain: paint` fix held up in
+   some browsers but Scott's screenshot was Firefox, and it clearly didn't
+   hold there — the leaf tile was still square at rest. Added `clip-path:
+   circle(50%)` to `.preview-container`, which is real per-pixel clipping
+   the browser has to honor regardless of GPU layering, unlike `contain`/
+   `overflow`. Kept `contain: paint` too, harmless either way.
+
+2. **Real photo → procedural depth planes.** Pulled `public/leaf-balcony.jpg`
+   entirely (deleted — no longer referenced anywhere) and rebuilt the whole
+   backdrop as six hand-drawn canvas layers modeled on `assets/IMG_1198.jpeg`'s
+   actual composition: sky (with its one big cumulus, dead center, like the
+   real photo), a distant "parking carage" (Scott's own word for it) peeking
+   up between two buildings, the twin white apartment blocks flanking the
+   courtyard, a palm-lined parking lot, a foreground shrub in the lower
+   corners, and the black balcony rail closest to camera. Real depth of
+   field this time, not a shader: every layer but sky gets baked twice at
+   build time (sharp + a canvas 2D `filter: blur()` pass over the finished
+   drawing) and animate() cross-fades each pair's opacity by how close that
+   layer's own fixed z is to a "focus depth" that sweeps linearly from the
+   rail (z=-2) to the garage (z=-6.8) over the full scroll-driven fall —
+   tied to `frac`, the same value already driving the drop, matching "as
+   they scroll, different parts of the background will be in focus."
+
+   Dropped the custom `ShaderMaterial`/GLSL from 1.0.37 completely — no
+   shader anywhere in this version. That's a real reliability upgrade, not
+   just a style change: canvas 2D's blur filter is a plain, broadly-
+   supported API, and an opacity crossfade between two textures I can bake
+   and inspect ahead of time is something I actually verified the math of
+   (`leaf-dof-check.mjs` — confirms bounds, confirms each layer gets its own
+   true-sharp moment in the right order, near to far). The one directorial
+   call I made without asking: which direction the sweep runs (near-to-far
+   over the fall, arriving sharp on the garage right at impact) — reversing
+   it is a one-line swap of `FOCUS_NEAR`/`FOCUS_FAR` if that reads backwards
+   once Scott sees it move.
+
 ## 1.0.37 (2026-07-22)
 
 Scott, after confirming the real balcony photo matched ("Can you see this?" — yes,

@@ -202,16 +202,18 @@ html, body {
   position: relative;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
   /* Scott: "the standalone images are square, but on hover, there's a
-     circle mask being applied to them for a split second." Root cause —
-     each tile's WebGL canvas gets its own GPU compositing layer, but this
-     container itself only became one on :hover (via the transform below).
-     Without a layer of its own at rest, the browser doesn't reliably
-     honor border-radius/overflow clipping against a composited child, so
-     the tile renders square until the hover transform briefly forces a
-     layer/repaint. `contain: paint` tells the browser directly that
-     nothing may paint outside this box, independent of layering, so the
-     circular clip holds at rest, not just mid-hover. */
+     circle mask being applied to them for a split second." First attempt
+     (1.0.36) was `contain: paint` alone, reasoning that a WebGL canvas
+     child gets its own GPU layer while this container only became one on
+     :hover. That held up in some engines but not all — Scott's follow-up
+     screenshot (Firefox) showed the leaf tile still square at rest, so
+     `contain: paint` clearly isn't a hard guarantee everywhere. `clip-path`
+     is: unlike overflow/contain, which are about paint layering and can
+     get bypassed by a composited child depending on engine/GPU, clip-path
+     is real per-pixel clipping the browser has to honor regardless of
+     layers. Kept contain: paint too — cheap, harmless, still correct. */
   contain: paint;
+  clip-path: circle(50%);
 }
 .preview-container:hover {
   transform: scale(1.04);
