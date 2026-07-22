@@ -6,6 +6,70 @@ projects (The Secret World, A Manual of Perceptual Mechanics) moved into their o
 files, which are now the source of truth for that material going forward. See "project map"
 below for where things live.
 
+## 1.0.49 (2026-07-22)
+
+Scott: "for that picture of the bookshelf in the assets folder, can you
+scan that and see if you can identify all the media there? :D" — then,
+after a first pass and some corrections along the way ("The bloe
+moon-stamped box is Kim Krans' Alchemy deck, which is right next to her
+Wild Unknown tarot deck. No DMT, the Dpirit Molecule" — a misread pink
+spine that turned out to be a stylized Frank Herbert "Dune," not "DMT: The
+Spirit Molecule"; "well next to. It goes Dune, Complete Stories, Ulysses,
+1q84" — a shelf-order correction): "oh darn, you're using the wrong
+picture. my bad. Use IMG_1202 as the source for this project. add a new
+scene to perceptualmechanics, library. Build out infrastructure as usual."
+
+Two pieces of work here. First, re-cataloging: the earlier pass had been
+built from IMG_1192.jpeg, a wide, geometrically distorted panorama —
+Scott's real source photo was IMG_1202.jpeg, a clean, straight-on,
+5712x4284 shot of the same shelf. Re-read every cubby directly from the
+correct photo (high-resolution PIL crops per cubby, read at readable
+scale) rather than trying to salvage the panorama-based guesses — this
+surfaced a good number of titles that were simply illegible in the
+distorted version (the full Criterion/Blu-ray spine-number runs, Gödel
+Escher Bach, In Praise of Shadows, Borges's Collected Fictions, and more),
+and confirmed Scott's shelf-order correction exactly (Dune, Complete
+Stories, Ulysses, 1Q84, in that order). The corrected 107-item catalog now
+lives in `src/text/library.js` — a real, tracked source file, not
+`assets/`, since `assets/` is gitignored (Scott's own reference photos,
+kept out of the public repo) and this needed to survive as part of the
+actual site.
+
+Second, the new scene: `src/scenes/library.js`. All 107 books, films, and
+divination decks, laid out as a real 4x2 Kallax-style cube shelf matching
+the photo's own layout (`row`/`col`/`pos` in the catalog preserve the
+shelf's real left-to-right order in each cubby) — a floating 3D object
+you drag to orbit and scroll to zoom, closer to the sphere/egg model than
+the orrery's walk-around warehouse, since a shelf reads fine as something
+held up to the light rather than a room to stand inside.
+
+No real spine art or cover photography anywhere, same rule as every other
+scene's procedural textures (the orrery's poster/audio system is the
+clearest precedent — real titles, nothing lifted from an actual
+copyrighted image): each spine is a canvas-drawn flat color field plus the
+title/creator as text, from a small curated palette, not a photo or a
+scraped cover. Item thickness isn't measured from the photo — each cubby's
+available width gets distributed across however many items landed there
+(6 on the low end, 25 on the high end) proportional to a per-title
+deterministic hash-based weight, so the shelf looks reasonably organic
+without needing per-spine pixel measurements, and two divination boxes
+(Kim Krans' Wild Unknown Tarot and Alchemy) get a heavier weight class and
+their own small dark starry palette so they read as distinct objects, the
+way they do on the real shelf. Click a spine to open a read panel with its
+real title, creator, and type (book/DVD/Blu-ray/divination deck) — same
+role="dialog" panel pattern as every other scene, focus-managed, closeable
+by button, outside click, or Escape.
+
+Wired into the site the same way every other scene has been: nav icon +
+preview tile in `index.html`, `SCENES`/`initPreviews()` entries in
+`main.js`, `sceneKit.js` helpers (drag-to-orbit, wheel zoom, guarded
+resize, reduced-motion, escape-to-close) rather than reimplementing any of
+that. Verified: `node --check` on both new files, a standalone Node script
+confirming the per-cubby width-distribution math sums exactly to each
+cubby's available width for all 107 items with no overflow or negative
+widths, and a clean `vite build` (same pre-existing orrery >500kB chunk
+warning as always).
+
 ## 1.0.48 (2026-07-22)
 
 Scott, after trying the first-person pass: "I think I could pass through
