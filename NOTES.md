@@ -6,6 +6,27 @@ projects (The Secret World, A Manual of Perceptual Mechanics) moved into their o
 files, which are now the source of truth for that material going forward. See "project map"
 below for where things live.
 
+## 1.0.35 (2026-07-22)
+
+Scott confirmed 1.0.34's balcony fix against a real photo of his actual
+view — matched. Also sent that one photo alone rather than in a batch,
+guessing the earlier "reference file" attempts got dropped from sending
+several at once — checked uploads/ again after this message anyway;
+still nothing landed on disk, so that theory doesn't hold either. The
+constraint stands regardless of batch size: inline-pasted chat images
+render for both of us to look at, but only real file attachments leave
+something on disk I can read.
+
+Separately: "change the font to Coda." Swapped both #leaf-caption p and
+#leaf-hint from Zen Maru Gothic to Coda in leaf.js, added Coda:wght@400;800
+to index.html's font link, and dropped Zen Maru Gothic from that link
+entirely since nothing else on the site was using it. Worth flagging: Coda
+is a heavy display face by design (Google's own description calls it an
+"impact heavy display font"), built for headlines, not 8 full paragraphs
+of body text the way Zen Maru Gothic was being used here — used Coda's
+Regular (400) weight rather than Heavy (800) to keep it as readable as a
+fairly blocky face gets. Scott's call once he sees it actually scroll.
+
 ## 1.0.34 (2026-07-22)
 
 Scott loaded 1.0.33 and sent a screenshot: bare sky, no rail, no skyline,

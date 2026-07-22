@@ -510,7 +510,14 @@ export function createLeaf(container, { preview = false } = {}) {
            the new bright daytime backdrop because of it; would've
            vanished against the old dark dusk/wall versions. */
         color: rgba(18, 16, 12, 0.92);
-        font-family: 'Zen Maru Gothic', 'Hiragino Maru Gothic ProN', sans-serif;
+        /* Scott: swap to Coda. Worth flagging — Coda is a heavy display
+           face (Google's own description: "impact heavy display font"),
+           built for headlines, not long paragraphs — different job than
+           Zen Maru Gothic was doing here. Using its Regular (400) weight
+           rather than Heavy (800) to keep it as readable as a fairly
+           blocky face gets across 8 full paragraphs; his call if this
+           reads as too heavy once he sees it move. */
+        font-family: 'Coda', sans-serif;
         font-weight: 400;
         /* Enlarged well past the old corner-box version — the text IS
            most of the composition now, not a small accent beside it. */
@@ -533,7 +540,7 @@ export function createLeaf(container, { preview = false } = {}) {
         font-size: 0.55rem; letter-spacing: 0.2em;
         text-transform: uppercase; pointer-events: none;
         text-align: right; z-index: 310; line-height: 1.8;
-        font-family: 'Zen Maru Gothic', sans-serif;
+        font-family: 'Coda', sans-serif;
       }
       @media (max-width: 800px) {
         /* Not enough width for a right-third leaf column and a left-two-
