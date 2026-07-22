@@ -119,6 +119,62 @@ export function prefersReducedMotion() {
     && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches === true;
 }
 
+// ─── Preview-tile circular clip (Firefox WebGL workaround) ─────────────────
+// Four straight CSS-only attempts at clipping a preview tile's WebGL canvas
+// to a circle failed in Firefox: `contain: paint` on `.preview-container`,
+// `clip-path: circle(50%)` on the same, `border-radius: 50%` on the canvas
+// element itself, and finally an opaque `::after` ring painted on top of the
+// canvas — all defeated. Scott confirmed it's specifically the two heaviest
+// scenes (orrery, leaf), not every WebGL preview tile — sphere/butterfly/egg
+// clip fine in the same browser with the exact same CSS. That's the real
+// signal: Firefox is promoting only the demanding canvases to a GPU
+// compositing layer that sits outside the page's normal paint/z-order
+// entirely, unreachable by any CSS clip/overflow/z-index mechanism, no
+// matter which element in the chain owns the property.
+//
+// The one technique that can't be defeated by that: don't display the
+// WebGL canvas at all. Let the scene keep rendering into it exactly as
+// before (off-DOM, never appended), then copy its finished pixels every
+// frame onto a plain 2D `<canvas>` that IS in the DOM. `ctx.clip()` there
+// is software rasterization, not GPU layer compositing — every browser
+// honors it unconditionally, because there's no accelerated layer left to
+// bypass it with.
+//
+// Opt-in per scene (call this only from a `preview` branch) rather than a
+// blanket site-wide change: the five scenes that already clip fine don't
+// need the extra per-frame copy, and confining this to the two scenes that
+// actually have the bug keeps the blast radius of any mistake small.
+export function mountClippedPreviewCanvas(container, renderer) {
+  const display = document.createElement('canvas');
+  display.setAttribute('aria-hidden', 'true');
+  display.style.width = '100%';
+  display.style.height = '100%';
+  display.style.display = 'block';
+  container.appendChild(display);
+  const ctx = display.getContext('2d');
+
+  return {
+    // Call once per frame, right after renderer.render(...) — copies
+    // whatever's currently in the (off-DOM) WebGL canvas onto the visible
+    // one, clipped to the tile's circle.
+    blit() {
+      const src = renderer.domElement;
+      const w = src.width, h = src.height;
+      if (!w || !h) return;
+      if (display.width !== w) display.width = w;
+      if (display.height !== h) display.height = h;
+      ctx.save();
+      ctx.clearRect(0, 0, w, h);
+      ctx.beginPath();
+      ctx.ellipse(w / 2, h / 2, w / 2, h / 2, 0, 0, Math.PI * 2);
+      ctx.clip();
+      ctx.drawImage(src, 0, 0, w, h);
+      ctx.restore();
+    },
+    dispose() { display.remove(); },
+  };
+}
+
 // ─── Escape-to-close ────────────────────────────────────────────────────────
 // Standard modal-dialog expectation that none of the site's three read-more
 // panels (sphere, orrery, egg) had — closing only worked via the explicit

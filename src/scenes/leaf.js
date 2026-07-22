@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { prefersReducedMotion } from '../utils/sceneKit.js';
+import { prefersReducedMotion, mountClippedPreviewCanvas } from '../utils/sceneKit.js';
 
 // ─── Leaf: In The End It Falls Slowly Through The Aether ──────────────────────
 // A found piece (Cartography.doc, archive/Writing archive, author: Scott
@@ -480,7 +480,12 @@ export function createLeaf(container, { preview = false } = {}) {
   renderer.setSize(w, h);
   renderer.setClearColor(0x000000, 1);
   renderer.domElement.setAttribute('aria-hidden', 'true');
-  container.appendChild(renderer.domElement);
+  // Preview tiles: never append the WebGL canvas itself — see
+  // mountClippedPreviewCanvas's own comment in sceneKit.js. Full scene
+  // (right-third layout, no circular tile) is unaffected, so it keeps the
+  // plain direct append it always had.
+  const clippedPreview = preview ? mountClippedPreviewCanvas(container, renderer) : null;
+  if (!preview) container.appendChild(renderer.domElement);
 
   const root = new THREE.Group();
   scene.add(root);
@@ -948,6 +953,7 @@ export function createLeaf(container, { preview = false } = {}) {
     }
 
     renderer.render(scene, camera);
+    clippedPreview?.blit();
   }
   animate();
 
@@ -973,6 +979,7 @@ export function createLeaf(container, { preview = false } = {}) {
       window.removeEventListener('resize', onResize);
       window.removeEventListener('orientationchange', onResize);
       renderer.dispose();
+      clippedPreview?.dispose();
       backdropGeo.dispose();
       skyMat.dispose(); skyTex.dispose();
       depthLayers.forEach(l => {

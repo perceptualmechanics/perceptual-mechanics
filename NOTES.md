@@ -6,6 +6,43 @@ projects (The Secret World, A Manual of Perceptual Mechanics) moved into their o
 files, which are now the source of truth for that material going forward. See "project map"
 below for where things live.
 
+## 1.0.42 (2026-07-22)
+
+Scott, after a hard refresh and a rebuilt dev server didn't fix 1.0.41:
+"just rebuilt dev server and opened a fresh tab and it's still there." Then,
+critically: "but keep in mind this is also happening on orrery."
+
+That second sentence reframed the whole investigation. Every attempt from
+1.0.36 through 1.0.41 assumed this was "Firefox can't clip a WebGL canvas,"
+full stop — but Scott's own screenshots showed sphere/butterfly/egg's
+preview tiles clipping just fine in that same browser the whole time. Only
+the two heaviest, most complex WebGL scenes (leaf, now confirmed orrery
+too) actually have the bug. That's a real signal: Firefox is promoting
+specifically the demanding canvases to a GPU compositing layer that sits
+outside the page's normal paint/z-order entirely — every technique tried
+so far (contain:paint, clip-path, border-radius on the canvas, an opaque
+::after overlay) tried to clip or cover that canvas from the outside, and
+all of them were operating in the normal paint/z-order that this layer
+apparently doesn't participate in.
+
+The fix that can't be defeated by that: stop displaying the WebGL canvas
+at all. Added `mountClippedPreviewCanvas()` to sceneKit.js — the scene
+renders into its WebGL canvas exactly as before, but that canvas is never
+appended to the DOM; instead a plain 2D `<canvas>` goes in its place, and
+every animate() frame, `blit()` copies the WebGL canvas's finished pixels
+onto it via `ctx.drawImage()`, clipped to a circle with `ctx.clip()`.
+That's software rasterization, not GPU layer compositing, so there's no
+accelerated layer left for Firefox to route around it with. Wired into
+leaf.js and orrery.js's preview branches only (full-scene rendering is
+untouched in both, and the other five scenes — which don't have the bug —
+are untouched too, to keep the blast radius of any mistake small).
+
+Genuinely can't verify this renders correctly without a browser — no
+canvas/WebGL implementation in this sandbox — but the logic is small and
+symmetric (append 2D canvas instead of WebGL canvas, copy+clip once a
+frame, tear down on dispose), and confirmed via grep that both scenes wire
+mount/blit/dispose identically.
+
 ## 1.0.41 (2026-07-22)
 
 Scott: "excellent. but that Firefox preview image bug is still there."

@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { bindOrbitDrag, bindWheelZoom, bindGuardedResize, prefersReducedMotion, bindEscapeClose } from '../utils/sceneKit.js';
+import { bindOrbitDrag, bindWheelZoom, bindGuardedResize, prefersReducedMotion, bindEscapeClose, mountClippedPreviewCanvas } from '../utils/sceneKit.js';
 
 // ─── The Orrery of Los Feliz ───────────────────────────────────────────────
 // A found short-short, full and unedited, undated. Investigators track a
@@ -1038,7 +1038,13 @@ export function createOrrery(container, { preview = false } = {}) {
   // ambient color than a void.
   renderer.setClearColor(0x0a0704, 1);
   renderer.domElement.setAttribute('aria-hidden', 'true');
-  container.appendChild(renderer.domElement);
+  // Preview tiles: never append the WebGL canvas itself — see
+  // mountClippedPreviewCanvas's own comment in sceneKit.js (Scott
+  // confirmed this scene has the same Firefox square-tile bug as leaf).
+  // Full scene is unaffected (no circular tile there), so it keeps the
+  // plain direct append it always had.
+  const clippedPreview = preview ? mountClippedPreviewCanvas(container, renderer) : null;
+  if (!preview) container.appendChild(renderer.domElement);
 
   // Fog matched to the clear color so only genuinely distant geometry
   // (far wall corners, stars beyond the skylight) softens into haze — the
@@ -1548,6 +1554,7 @@ export function createOrrery(container, { preview = false } = {}) {
     }
 
     renderer.render(scene, camera);
+    clippedPreview?.blit();
   }
   animate();
 
@@ -1584,6 +1591,7 @@ export function createOrrery(container, { preview = false } = {}) {
       }
       if (audioCtx) { audioCtx.close(); audioCtx = null; }
       renderer.dispose();
+      clippedPreview?.dispose();
       starGeo.dispose();
       starMat.dispose();
       warehouse.group.traverse(obj => {
