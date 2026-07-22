@@ -6,6 +6,31 @@ projects (The Secret World, A Manual of Perceptual Mechanics) moved into their o
 files, which are now the source of truth for that material going forward. See "project map"
 below for where things live.
 
+## 1.0.41 (2026-07-22)
+
+Scott: "excellent. but that Firefox preview image bug is still there."
+
+Three straight attempts at CLIPPING the leaf preview tile's WebGL canvas
+all failed in Firefox (Safari fine every time): `contain: paint` on the
+container (1.0.36), `clip-path: circle(50%)` on the container (1.0.38),
+`border-radius: 50%` directly on the canvas (1.0.39). Each tried a
+different element and a different CSS clipping mechanism, and all three
+failed identically — which is itself the tell: this was never an
+ancestor-vs-child layering problem, Firefox's WebGL canvas just doesn't
+participate in CSS box-clipping at all, on any element, through any
+mechanism.
+
+So: stopped trying to clip it. Added `.preview-container::after` — a
+plain absolutely-positioned div with a `radial-gradient(circle
+closest-side, transparent 100%, #000 100%)` background, painted on top of
+the canvas. This covers the square canvas's corners with opaque black
+(matching the page's own #000 background exactly, so it's invisible as a
+"covering") rather than clipping the canvas's content — ordinary 2D
+background compositing on a normal div, nothing WebGL-related for Firefox
+to opt out of. Confirmed the gradient rule survives the production build
+unchanged. Kept the three earlier properties too, still technically
+correct for whichever engine actually does clip WebGL canvases properly.
+
 ## 1.0.40 (2026-07-22)
 
 Scott sent a mobile screenshot (Firefox responsive design mode, iPhone-

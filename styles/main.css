@@ -202,23 +202,39 @@ html, body {
   position: relative;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
   /* Scott: "the standalone images are square, but on hover, there's a
-     circle mask being applied to them for a split second." First attempt
-     (1.0.36) was `contain: paint` alone, reasoning that a WebGL canvas
-     child gets its own GPU layer while this container only became one on
-     :hover. Second attempt (1.0.38) added `clip-path: circle(50%)`, since
-     clip-path is real per-pixel clipping rather than a paint-layering rule
-     — but Scott confirmed the tile is STILL square in Firefox with that in
-     place (Safari's fine). So this specifically is a Firefox WebGL-canvas
-     quirk: a canvas that's been promoted to its own compositor layer can
-     apparently ignore an ancestor's clip-path/overflow entirely there,
-     regardless of which clipping mechanism the ancestor uses. Every fix
-     tried so far has clipped the WRONG element (the container, a canvas
-     ancestor) — see the canvas rule below for the one that clips the
-     canvas itself instead, which is what actually holds in Firefox. Kept
-     all three ancestor-level properties anyway: cheap, harmless, and each
-     is the "correct" fix for some engine even if Firefox needs more. */
+     circle mask being applied to them for a split second." Three attempts
+     at CLIPPING the canvas all failed in Firefox specifically (Safari's
+     fine every time): `contain: paint` on the container (1.0.36),
+     `clip-path: circle(50%)` on the container (1.0.38), and `border-
+     radius: 50%` on the canvas element itself (1.0.39) — Scott confirmed
+     the tile is STILL square after all three. That's a strong signal this
+     isn't an ancestor-vs-child layering problem at all (each attempt tried
+     a different element/mechanism and every one failed the same way) — it
+     reads like Firefox's WebGL canvas simply doesn't participate in CSS
+     box-clipping (border-radius/clip-path/overflow), full stop, regardless
+     of which element in the chain owns the property. So: stop trying to
+     clip the canvas. `.preview-container::after` below paints an opaque
+     black ring on TOP of the canvas instead — ordinary 2D background
+     compositing on a plain div, nothing WebGL-related for Firefox to
+     opt out of. Kept all three prior properties anyway: harmless, and
+     each is still the technically "correct" fix for some other engine. */
   contain: paint;
   clip-path: circle(50%);
+}
+/* The actual fix: don't clip the canvas, cover its corners. A plain
+   painted overlay is immune to whatever Firefox-WebGL-compositing quirk
+   defeated three different clip mechanisms above, because it isn't
+   clipping anything — it's just a normal div background sitting in front
+   of the canvas. `closest-side` sizes the transparent center exactly to
+   the inscribed circle of this always-square container, so the hard edge
+   lands exactly where border-radius:50% would have cut it. */
+.preview-container::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background: radial-gradient(circle closest-side, transparent 100%, #000 100%);
 }
 .preview-container:hover {
   transform: scale(1.04);
@@ -231,13 +247,6 @@ html, body {
 .preview-container canvas {
   width: 100% !important;
   height: 100% !important;
-  /* The actual Firefox fix: clip the canvas's OWN box, not an ancestor's.
-     Every previous attempt (contain, clip-path, both above) clips the
-     .preview-container div and relies on Firefox honoring that against a
-     GPU-layer-promoted WebGL canvas child — which it apparently doesn't,
-     reliably. border-radius on the canvas element itself doesn't have
-     that problem: it's the browser clipping an element against its own
-     stated shape, not reasoning about a parent/child layer relationship. */
   border-radius: 50%;
 }
 
