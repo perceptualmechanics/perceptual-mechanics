@@ -6,6 +6,55 @@ projects (The Secret World, A Manual of Perceptual Mechanics) moved into their o
 files, which are now the source of truth for that material going forward. See "project map"
 below for where things live.
 
+## 1.0.32 (2026-07-22)
+
+Two things Scott caught right after 1.0.31 shipped: "the PERCEPTUAL MECHANICS
+title was totally getting lost against the palette on leaf. And on the
+preview image, the leaf is square now, not round."
+
+Title contrast: `#site-title` relied on a blurred `text-shadow` alone to
+stay legible "over light scenes too" — fine everywhere else, since every
+other scene sits on a mostly dark backdrop, but leaf's new daytime sky is
+pale cream right near the horizon, exactly where the title sits (bottom:
+1.2rem). A blurred shadow doesn't buy much contrast against a light,
+fairly uniform background. Added a solid low-opacity dark scrim (pill-
+shaped background + padding) behind the text instead of leaning on the
+shadow alone — brightness-agnostic, so it'll hold up against any future
+light scene too, not just this one.
+
+Square-looking leaf preview: the balcony backdrop's rail, skyline, and
+palms are all hard, straight-edged, full-width detail — fine at full
+scene size, but shrunk into a 320px circular preview tile, those
+rectilinear lines were apparently competing hard enough with the leaf's
+own round silhouette that the leaf read as square rather than round.
+Preview tiles exist to foreground one subject, not the full environment,
+so `makeBalconyTexture()` now skips the skyline/palm/rail/plant detail
+entirely when `preview` is true, keeping just the soft sky gradient and
+glow behind the leaf. Couldn't see either fix live (no browser in this
+sandbox, same limitation as every visual change this session) — both are
+reasoned from the code and CSS, not confirmed by eye. Scott's turn to
+check.
+
+Also: Scott sent porch-view reference photos and asked, half-joking,
+whether the skyline/palms could just be his actual photo instead of
+procedurally-drawn canvas art. Genuinely blocked on that for now — images
+pasted inline in chat don't land anywhere on disk I can read; only real
+file attachments do. Asked Scott to attach (not paste) the photo so I can
+actually use it.
+
+## parking lot — not yet actioned
+
+- **Real bookshelf as content source?** (flagged 2026-07-22) Scott sent a photo of his actual
+  bookshelf (poetry/classics — Beowulf, Chaucer, Milton, Whitman, the Bhagavad Gita, Sophocles,
+  Blake, Marcus Aurelius, Plato, Borges, Gödel Escher Bach, the Iliad/Odyssey/Aeneid, Ulysses,
+  Murakami, Finnegans Wake; an occult/esoterica shelf — Tarot, Astrology, Witchcraft, Sacred Sites,
+  Japanese Woodblock Prints; plus Beastie Boys' book, the RSC Shakespeare Complete Works, Paul
+  McCartney's Lyrics, Art of Atari, The French Laundry Cookbook, Expanding Universe) alongside the
+  apartment reference photos, saying he "might want to do something with that." No request yet —
+  just noted here so it isn't lost. Candidate hook: `manuscript.js` (the scroll) already pulls from
+  Scott's own writing archive; his actual physical library could be a second, parallel source for
+  that scene, or its own thing entirely.
+
 ## 1.0.31 (2026-07-22)
 
 Scott loaded 1.0.30 locally, confirmed it rendered clean, then sent

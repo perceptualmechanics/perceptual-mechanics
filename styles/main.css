@@ -96,14 +96,23 @@ html, body {
   font-size: 0.7rem;
   letter-spacing: 0.3em;
   text-transform: uppercase;
-  color: rgba(255,255,255,0.25);
+  color: rgba(255,255,255,0.5);
   pointer-events: all;
   z-index: 400;
   white-space: nowrap;
   text-decoration: none;
-  transition: color 0.2s;
+  transition: color 0.2s, background 0.2s;
   cursor: pointer;
-  text-shadow: 0 1px 5px rgba(0,0,0,0.75); /* keeps it legible over light scenes too */
+  text-shadow: 0 1px 5px rgba(0,0,0,0.75);
+  /* A blurred text-shadow alone assumed every scene sat on a dark-ish
+     backdrop — true everywhere except leaf's new bright daytime sky,
+     where the title nearly vanished into the pale cream near the horizon
+     (Scott: "totally getting lost against the palette"). A solid low
+     scrim behind the text is scene-brightness-agnostic — it'll hold up
+     against any future light scene too, not just this one. */
+  background: rgba(0,0,0,0.4);
+  padding: 0.4rem 1rem;
+  border-radius: 999px;
 }
 #site-title:hover { color: rgba(255,255,255,0.7); }
 #site-title:focus { outline: 1px solid rgba(255,255,255,0.4); outline-offset: 4px; }

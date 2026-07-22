@@ -273,75 +273,91 @@ export function createLeaf(container, { preview = false } = {}) {
       cx.fill();
     }
 
-    // A distant, low-contrast skyline — a couple of condo silhouettes,
-    // kept simple/geometric rather than illustrated, daylight haze
-    // softening the edge between them and the sky (lighter neutral gray
-    // now, not a near-black dusk silhouette).
+    // Skyline, palms, rail, and the corner plant are all straight-edged,
+    // full-width geometric detail (the rail bar alone spans the entire
+    // canvas). At full scene size that detail reads fine, but shrunk into
+    // a 320px circular preview tile, Scott flagged that those hard
+    // rectilinear lines were competing with the leaf's own round silhouette
+    // hard enough that the leaf itself started reading as square rather
+    // than round. Preview tiles are meant to foreground the one subject
+    // (the leaf/drop), not the full environment, so skip all of this
+    // detail there and keep only the soft sky + glow behind it — same
+    // reasoning egg.js and orrery.js already use for their own preview
+    // simplification.
     const horizonY = ch * 0.62;
-    cx.fillStyle = 'rgba(120,120,118,0.4)';
-    [[0.08, 0.16, 0.42], [0.22, 0.1, 0.3], [0.72, 0.2, 0.5], [0.86, 0.13, 0.36]].forEach(([fx, fh, fw]) => {
-      const bw = cw * fw * 0.14;
-      const bh = ch * fh;
-      cx.fillRect(cw * fx, horizonY - bh, bw, bh);
-    });
+    if (!preview) {
+      // A distant, low-contrast skyline — a couple of condo silhouettes,
+      // kept simple/geometric rather than illustrated, daylight haze
+      // softening the edge between them and the sky (lighter neutral gray
+      // now, not a near-black dusk silhouette).
+      cx.fillStyle = 'rgba(120,120,118,0.4)';
+      [[0.08, 0.16, 0.42], [0.22, 0.1, 0.3], [0.72, 0.2, 0.5], [0.86, 0.13, 0.36]].forEach(([fx, fh, fw]) => {
+        const bw = cw * fw * 0.14;
+        const bh = ch * fh;
+        cx.fillRect(cw * fx, horizonY - bh, bw, bh);
+      });
 
-    // Two simple palm silhouettes — minimal, a trunk and a small cluster
-    // of frond strokes, not a detailed illustration. Muted olive-green
-    // now rather than near-black, since these read against bright daylight
-    // rather than a dusk sky.
-    function palm(px, py, scale) {
-      cx.strokeStyle = 'rgba(70,82,58,0.6)';
-      cx.lineWidth = 3 * scale;
-      cx.beginPath();
-      cx.moveTo(px, py);
-      cx.quadraticCurveTo(px - 6 * scale, py - 30 * scale, px - 2 * scale, py - 58 * scale);
-      cx.stroke();
-      const crownX = px - 2 * scale, crownY = py - 58 * scale;
-      for (let i = 0; i < 5; i++) {
-        const a = (-0.9 + i * 0.45) * Math.PI;
+      // Two simple palm silhouettes — minimal, a trunk and a small cluster
+      // of frond strokes, not a detailed illustration. Muted olive-green
+      // now rather than near-black, since these read against bright daylight
+      // rather than a dusk sky.
+      const palm = (px, py, scale) => {
+        cx.strokeStyle = 'rgba(70,82,58,0.6)';
+        cx.lineWidth = 3 * scale;
         cx.beginPath();
-        cx.moveTo(crownX, crownY);
-        cx.quadraticCurveTo(
-          crownX + Math.cos(a) * 16 * scale, crownY + Math.sin(a) * 10 * scale,
-          crownX + Math.cos(a) * 30 * scale, crownY + Math.sin(a) * 16 * scale + 8 * scale
-        );
+        cx.moveTo(px, py);
+        cx.quadraticCurveTo(px - 6 * scale, py - 30 * scale, px - 2 * scale, py - 58 * scale);
         cx.stroke();
-      }
+        const crownX = px - 2 * scale, crownY = py - 58 * scale;
+        for (let i = 0; i < 5; i++) {
+          const a = (-0.9 + i * 0.45) * Math.PI;
+          cx.beginPath();
+          cx.moveTo(crownX, crownY);
+          cx.quadraticCurveTo(
+            crownX + Math.cos(a) * 16 * scale, crownY + Math.sin(a) * 10 * scale,
+            crownX + Math.cos(a) * 30 * scale, crownY + Math.sin(a) * 16 * scale + 8 * scale
+          );
+          cx.stroke();
+        }
+      };
+      palm(cw * 0.12, horizonY + 4, cw / 900);
+      palm(cw * 0.9, horizonY + 8, cw / 900 * 0.85);
     }
-    palm(cw * 0.12, horizonY + 4, cw / 900);
-    palm(cw * 0.9, horizonY + 8, cw / 900 * 0.85);
 
     // The balcony rail — black metal now (Scott's reference photos show a
     // plain black metal rail, not wood balusters), precise evenly-spaced
     // verticals plus a top/bottom rail, spanning the bottom band of the
     // frame. Thinner bars than the old wood-baluster version — real metal
-    // rail pickets read as slim lines, not thick posts.
+    // rail pickets read as slim lines, not thick posts. Full detail only
+    // in the real scene — see the preview note above.
     const railTop = ch * 0.78;
     const railBottom = ch * 0.98;
-    cx.fillStyle = 'rgba(22,22,24,0.88)';
-    cx.fillRect(0, railTop, cw, 3);
-    cx.fillRect(0, railBottom - 2, cw, 2.5);
-    const baluster = cw / 34;
-    for (let x = baluster / 2; x < cw; x += baluster) {
-      cx.fillRect(x - 1, railTop, 2, railBottom - railTop);
-    }
+    if (!preview) {
+      cx.fillStyle = 'rgba(22,22,24,0.88)';
+      cx.fillRect(0, railTop, cw, 3);
+      cx.fillRect(0, railBottom - 2, cw, 2.5);
+      const baluster = cw / 34;
+      for (let x = baluster / 2; x < cw; x += baluster) {
+        cx.fillRect(x - 1, railTop, 2, railBottom - railTop);
+      }
 
-    // A single plant silhouette in one corner — the Japandi habit of one
-    // sculptural, unfussy plant rather than clutter — standing in for the
-    // one this leaf and drop actually belong to. Kept dark against the
-    // bright sky (a backlit plant reads as a silhouette even in daylight).
-    cx.fillStyle = 'rgba(35,32,28,0.7)';
-    const potX = cw * 0.16, potY = railBottom;
-    cx.fillRect(potX - 22, potY - 26, 44, 26);
-    for (let i = 0; i < 6; i++) {
-      const a = (-1.35 + i * 0.22) * Math.PI * 0.5 - 0.4;
-      cx.beginPath();
-      cx.moveTo(potX, potY - 24);
-      cx.quadraticCurveTo(
-        potX + Math.cos(a) * 30, potY - 24 + Math.sin(a) * 50,
-        potX + Math.cos(a) * 40, potY - 24 + Math.sin(a) * 70
-      );
-      cx.stroke();
+      // A single plant silhouette in one corner — the Japandi habit of one
+      // sculptural, unfussy plant rather than clutter — standing in for the
+      // one this leaf and drop actually belong to. Kept dark against the
+      // bright sky (a backlit plant reads as a silhouette even in daylight).
+      cx.fillStyle = 'rgba(35,32,28,0.7)';
+      const potX = cw * 0.16, potY = railBottom;
+      cx.fillRect(potX - 22, potY - 26, 44, 26);
+      for (let i = 0; i < 6; i++) {
+        const a = (-1.35 + i * 0.22) * Math.PI * 0.5 - 0.4;
+        cx.beginPath();
+        cx.moveTo(potX, potY - 24);
+        cx.quadraticCurveTo(
+          potX + Math.cos(a) * 30, potY - 24 + Math.sin(a) * 50,
+          potX + Math.cos(a) * 40, potY - 24 + Math.sin(a) * 70
+        );
+        cx.stroke();
+      }
     }
 
     // A single soft glow — daytime sun haze in one upper corner now,
