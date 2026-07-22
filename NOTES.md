@@ -6,6 +6,41 @@ projects (The Secret World, A Manual of Perceptual Mechanics) moved into their o
 files, which are now the source of truth for that material going forward. See "project map"
 below for where things live.
 
+## 1.0.39 (2026-07-22)
+
+Scott, on 1.0.38: "that's a good look! fill in the background greenery more.
+also, yeah, confirmed the bug's still there on Firefox, but Safari looks as
+it should."
+
+Two fixes:
+
+1. **Firefox preview-tile clip, third attempt.** 1.0.36 tried `contain:
+   paint`, 1.0.38 added `clip-path: circle(50%)` on top — both clip the
+   `.preview-container` div, and Scott confirmed the leaf tile is still
+   square in Firefox with both in place (Safari's fine either way). Every
+   attempt so far clipped the wrong element: a WebGL canvas that's been
+   promoted to its own GPU compositor layer can apparently ignore an
+   ancestor's clip-path/overflow entirely in Firefox, no matter which CSS
+   clipping mechanism the ancestor uses. Fixed by putting `border-radius:
+   50%` directly on `.preview-container canvas` instead — clipping the
+   canvas against its own shape rather than reasoning about a parent/child
+   layer relationship. Kept all three ancestor-level properties too; each
+   was still the "correct" fix for some engine, Firefox just needed one
+   more.
+
+2. **Denser greenery.** `drawPalmsLot` gets a soft tree-canopy hedge along
+   the horizon (22 overlapping soft blobs, standing in for the near-
+   continuous tree line backing Scott's real courtyard) plus more palms
+   (5 → 11) and more round shrubs (2 → 6) along the pavement edge.
+   `drawForegroundFoliage` gets bigger, more numerous base clusters (6 → 10)
+   plus a second pass of ~26 smaller blobs breaking up the big clusters'
+   edges so they read as leafy rather than a few flat green circles.
+   Verified with a smoke test (`leaf-greenery-smoke.mjs`) that mocks just
+   enough of CanvasRenderingContext2D to run both draw functions headless
+   and confirm no NaN coordinates or wild out-of-bounds draws — can't see
+   the actual pixels without a browser, but the draw calls themselves are
+   sound.
+
 ## 1.0.38 (2026-07-22)
 
 Scott, immediately after seeing 1.0.37 (two screenshots — the preview tile

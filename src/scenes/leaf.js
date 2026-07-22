@@ -326,6 +326,24 @@ function drawPalmsLot(cx, cw, ch, horizonY, lotBottom) {
   cx.fillStyle = lot;
   cx.fillRect(0, horizonY, cw, lotBottom - horizonY);
 
+  // A soft tree-canopy hedge along the horizon, behind the palms/shrubs —
+  // Scott: "fill in the background greenery more." The real photo has a
+  // near-continuous line of trees backing the whole courtyard, not just a
+  // few isolated palms against bare pavement; this reads as that canopy
+  // without drawing every individual tree.
+  const canopyY = horizonY + (lotBottom - horizonY) * 0.12;
+  for (let i = 0; i < 22; i++) {
+    const x = (cw / 22) * (i + 0.5) + (Math.random() - 0.5) * (cw / 22);
+    const r = cw * (0.02 + Math.random() * 0.014);
+    const grad = cx.createRadialGradient(x, canopyY, 0, x, canopyY, r);
+    grad.addColorStop(0, 'rgba(52,74,44,0.55)');
+    grad.addColorStop(1, 'rgba(52,74,44,0)');
+    cx.fillStyle = grad;
+    cx.beginPath();
+    cx.ellipse(x, canopyY, r, r * 0.8, 0, 0, Math.PI * 2);
+    cx.fill();
+  }
+
   const palm = (px, py, scale) => {
     cx.strokeStyle = 'rgba(58,72,48,0.75)';
     cx.lineWidth = 3 * scale;
@@ -345,23 +363,34 @@ function drawPalmsLot(cx, cw, ch, horizonY, lotBottom) {
       cx.stroke();
     }
   };
-  [[0.08, 1], [0.24, 0.7], [0.63, 0.65], [0.78, 0.9], [0.93, 0.75]].forEach(([fx, scale]) => {
+  // More palms, closer together, varied scale — the real photo's row runs
+  // almost the full width of the courtyard, not five isolated trees.
+  [
+    [0.05, 1], [0.14, 0.75], [0.24, 0.85], [0.34, 0.6],
+    [0.5, 0.55], [0.63, 0.65], [0.72, 0.8], [0.78, 0.9],
+    [0.86, 0.7], [0.93, 0.95], [0.98, 0.65],
+  ].forEach(([fx, scale]) => {
     palm(cw * fx, horizonY + (lotBottom - horizonY) * 0.3, (cw / 900) * scale);
   });
 
-  [[0.42, 0.55], [0.55, 0.4]].forEach(([fx, scale]) => {
-    const x = cw * fx, y = lotBottom - 4, r = cw * 0.02 * scale;
-    cx.fillStyle = 'rgba(64,86,52,0.6)';
-    cx.beginPath();
-    cx.ellipse(x, y, r, r * 0.75, 0, 0, Math.PI * 2);
-    cx.fill();
-  });
+  // More round ornamental shrubs along the pavement edge, not just two.
+  [[0.15, 0.5], [0.3, 0.6], [0.42, 0.55], [0.55, 0.4], [0.68, 0.5], [0.88, 0.45]]
+    .forEach(([fx, scale]) => {
+      const x = cw * fx, y = lotBottom - 4, r = cw * 0.022 * scale;
+      cx.fillStyle = 'rgba(64,86,52,0.6)';
+      cx.beginPath();
+      cx.ellipse(x, y, r, r * 0.75, 0, 0, Math.PI * 2);
+      cx.fill();
+    });
 }
 
 // The near foreground shrub — soft, rounded, silhouette-style leaf
-// clusters like the magnolia growing up through Scott's own rail, kept
-// mostly to the lower corners so the drop's own fall path down the
-// center stays clear.
+// clusters like the magnolia growing up through Scott's own rail. Scott:
+// "fill in the background greenery more" — denser and taller than the
+// first pass, still concentrated toward the corners/lower edge (the drop
+// itself falls in the right-third column, not dead center, so this isn't
+// trying to stay clear of a center line — just keeping a believable gap
+// near the top-middle where the sky/buildings should still read through).
 function drawForegroundFoliage(cx, cw, ch, foliageTop) {
   const blob = (x, y, r) => {
     const grad = cx.createRadialGradient(x, y, r * 0.1, x, y, r);
@@ -372,13 +401,27 @@ function drawForegroundFoliage(cx, cw, ch, foliageTop) {
     cx.ellipse(x, y, r, r * 0.85, 0, 0, Math.PI * 2);
     cx.fill();
   };
+  // Big base clusters, corner-anchored but reaching higher and wider than
+  // before.
   const clusters = [
-    [0.08, 1.0, 0.16], [0.18, 0.92, 0.13], [0.03, 0.8, 0.1],
-    [0.92, 1.0, 0.16], [0.82, 0.9, 0.13], [0.97, 0.78, 0.1],
+    [0.06, 1.0, 0.2], [0.16, 0.9, 0.16], [0.26, 0.82, 0.12], [0.02, 0.78, 0.11],
+    [0.94, 1.0, 0.2], [0.84, 0.9, 0.16], [0.74, 0.84, 0.12], [0.98, 0.76, 0.11],
+    [0.4, 0.98, 0.1], [0.6, 0.98, 0.1],
   ];
   clusters.forEach(([fx, fy, fr]) => {
     blob(cw * fx, foliageTop + (ch - foliageTop) * fy, cw * fr);
   });
+
+  // A second pass of smaller blobs breaks up the big clusters' smooth
+  // outer edges into something leafier/more textured, rather than reading
+  // as a few flat green circles.
+  for (let i = 0; i < 26; i++) {
+    const side = i % 2 === 0 ? 0.14 : 0.86;
+    const fx = side + (Math.random() - 0.5) * 0.3;
+    const fy = 0.78 + Math.random() * 0.24;
+    const fr = 0.03 + Math.random() * 0.05;
+    blob(cw * Math.min(1, Math.max(0, fx)), foliageTop + (ch - foliageTop) * Math.min(1, fy), cw * fr);
+  }
 }
 
 // Black metal balcony rail, closest layer to camera — same bar pattern
