@@ -101,6 +101,12 @@
 
   <!-- Landing -->
   <main id="landing">
+    <!-- a11y audit, 2026-07-22: the page had zero headings anywhere —
+         screen-reader users navigating by heading had nothing to land on.
+         Visually hidden (.sr-only, styles/main.css) rather than a visible
+         h1, since a second on-screen title would duplicate #site-title
+         and clash with the deliberately minimal landing design. -->
+    <h1 class="sr-only">Perceptual Mechanics — an interactive art gallery by Scott Jason Cohen</h1>
     <div id="scene-previews" role="list" aria-label="Interactive art pieces">
 
       <!-- Design pass, 2026-07-17: added a `title` to every tile, matching

@@ -6,6 +6,68 @@ projects (The Secret World, A Manual of Perceptual Mechanics) moved into their o
 files, which are now the source of truth for that material going forward. See "project map"
 below for where things live.
 
+## 1.0.45 (2026-07-22)
+
+Scott: "very nice! do a sitewide code clean and a11y audit and we'll be
+done." Full pass across every scene, main.js, colophon.js, main.css, and
+index.html. Repo-wide sweeps first (no console.log/debugger/TODO leftovers,
+no unused imports, no duplicate DOM ids, every JS file still parses) came
+back clean — the real findings were structural, not litter:
+
+**Real bug: focus never actually returned to the preview tile that opened
+a scene.** `returnToGallery()` tried `document.querySelector('.preview-
+container:focus-within')` to find "the tile that was clicked" — but by
+that point in the flow, focus had already moved into `expContainer` when
+the scene launched, and clearing `expContainer.innerHTML` moments earlier
+had just bumped focus to `<body>`. That selector could structurally never
+match; the fallback silently did nothing every single time. Fixed by
+tracking the actual trigger element (nav icon or preview tile) directly in
+a `lastTrigger` variable and calling `.focus()` on it, rather than trying
+to rediscover it after the fact.
+
+**Real bug: leaf.js leaked a stale `orientationchange` listener on every
+open/close.** `window.addEventListener('orientationchange', () =>
+setTimeout(onResize, 100))` registered an inline arrow function, but
+`dispose()` called `removeEventListener('orientationchange', onResize)` —
+a different function reference than the one actually added, so the
+listener (holding the whole scene's closure: camera, renderer, container)
+was never actually removed. Same class of bug already fixed sitewide once
+before (see the "cross-scene stale event listener leak" entry, much
+earlier this session) — leaf.js evidently reintroduced its own instance
+across this session's many rewrites. Fixed by moving leaf.js's resize
+handling onto `bindGuardedResize` (sceneKit.js), same as egg/orrery/sphere
+already use, which owns real references and cleans them up correctly.
+
+**Real a11y gap: the colophon panel undersold what it actually is.** It
+was `role="document"` with no `aria-modal` or `aria-labelledby` at all —
+every in-scene read-more panel (sphere/orrery/egg/lens) uses
+`role="dialog"` + `aria-labelledby`, deliberately `aria-modal="false"`
+since they coexist with a still-interactive scene behind them. The
+colophon is different: it's the one truly modal dialog on the site (full
+backdrop, nothing else reachable). Brought it in line with the site's own
+established pattern — `role="dialog"`, `aria-labelledby="colophon-title"`,
+and `aria-modal="true"` (since, unlike the others, that's actually true
+here) — and added a real focus trap (Tab/Shift+Tab now cycle within the
+panel instead of escaping into the hidden page behind it), since nothing
+else on the site needed one before this was the first genuine modal.
+
+**Real a11y gap: zero headings anywhere on the page.** Screen-reader users
+navigating by heading had nothing to land on. Added a visually-hidden
+(`.sr-only`, new utility class) `<h1>` at the top of `#landing` — hidden
+sighted-side since a visible one would duplicate `#site-title` and clash
+with the intentionally chrome-free design, but present for assistive tech.
+
+Everything else checked out already solid: every WebGL scene's autonomous
+motion respects `prefers-reduced-motion` (either via sceneKit's
+`prefersReducedMotion()` in the render loop, or a CSS media query for the
+two DOM/CSS-driven scenes, manuscript and theater); no unused imports
+anywhere; butterfly.js's resize listener uses a real named reference (no
+leak, just not on the shared helper — left alone, not broken); the
+preview-tile CSS properties from the whole Firefox saga (contain:paint,
+clip-path, canvas border-radius, the ::after overlay) are all still doing
+real work for the five scenes that don't use `mountClippedPreviewCanvas`
+(sphere/butterfly/manuscript/theater/egg), so none of that got touched.
+
 ## 1.0.44 (2026-07-22)
 
 Scott sent a screenshot and asked: "how do we feel about readability?"

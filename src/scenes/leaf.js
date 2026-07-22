@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { prefersReducedMotion, mountClippedPreviewCanvas } from '../utils/sceneKit.js';
+import { prefersReducedMotion, mountClippedPreviewCanvas, bindGuardedResize } from '../utils/sceneKit.js';
 
 // ─── Leaf: In The End It Falls Slowly Through The Aether ──────────────────────
 // A found piece (Cartography.doc, archive/Writing archive, author: Scott
@@ -588,8 +588,9 @@ export function createLeaf(container, { preview = false } = {}) {
   // desktop vs. a portrait phone) — Scott, 1.0.33: "the leaf fills the
   // right 1/3 of the window, and the text fills the other 2/3." Preview
   // tiles are untouched — small, off-center, unrelated to this request.
-  // Recomputed on resize (see onResize below), since "the right third" is
-  // relative to whatever the viewport's aspect ratio happens to be right now.
+  // Recomputed on resize (see the bindGuardedResize call below), since
+  // "the right third" is relative to whatever the viewport's aspect ratio
+  // happens to be right now.
   // Vertical anchor stays fixed regardless of aspect ratio (matches the
   // pre-1.0.33 default) — only x (column center) and scale vary with the
   // viewport. Scale is capped at 1.7: letting it grow further on very
@@ -976,10 +977,17 @@ export function createLeaf(container, { preview = false } = {}) {
   }
   animate();
 
-  function onResize() {
-    if (!container.clientWidth || !container.clientHeight) return;
-    const nw = container.clientWidth || window.innerWidth;
-    const nh = container.clientHeight || window.innerHeight;
+  // Was two raw window.addEventListener('resize'/'orientationchange', ...)
+  // calls, with the same 0-size-container guard bindGuardedResize already
+  // centralizes — and a real bug: the orientationchange listener was an
+  // inline arrow function, so dispose()'s
+  // `removeEventListener('orientationchange', onResize)` was removing a
+  // DIFFERENT function reference than the one actually added, silently
+  // leaking a stale listener (holding this whole scene's closure — camera,
+  // renderer, container) every single time this scene was opened and
+  // closed. bindGuardedResize's own dispose() keeps the real references,
+  // so this can't happen.
+  const resize = bindGuardedResize(container, (nw, nh) => {
     const na = nw / nh;
     camera.left = -viewH * na;
     camera.right = viewH * na;
@@ -988,15 +996,12 @@ export function createLeaf(container, { preview = false } = {}) {
     camera.updateProjectionMatrix();
     renderer.setSize(nw, nh);
     layoutLeaf();
-  }
-  window.addEventListener('resize', onResize);
-  window.addEventListener('orientationchange', () => setTimeout(onResize, 100));
+  });
 
   return {
     dispose() {
       cancelAnimationFrame(animId);
-      window.removeEventListener('resize', onResize);
-      window.removeEventListener('orientationchange', onResize);
+      resize.dispose();
       renderer.dispose();
       clippedPreview?.dispose();
       backdropGeo.dispose();

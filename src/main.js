@@ -38,6 +38,7 @@ const SCENES = {
 
 let activeScene  = null;
 let fullInstance = null;
+let lastTrigger  = null; // whichever nav icon / preview tile launched the active scene
 const previews   = {};
 
 const overlay      = document.getElementById('experience-overlay');
@@ -93,8 +94,12 @@ function setActiveIcon(sceneName) {
 }
 
 // ─── Expand a scene ───────────────────────────────────────────────────────────
-function expandScene(sceneName) {
+// `triggerEl`: whichever control launched this (a nav icon or a preview
+// tile) — stashed so returnToGallery() can send focus back to the actual
+// thing the visitor activated, not guess at it after the fact.
+function expandScene(sceneName, triggerEl = null) {
   if (activeScene === sceneName) return;
+  lastTrigger = triggerEl;
 
   // Tear down previous full instance
   if (fullInstance) {
@@ -157,8 +162,16 @@ function returnToGallery() {
     // that they're visible again, in case the window changed size while
     // an experience was open.
     window.dispatchEvent(new Event('resize'));
-    // Return focus to the preview that was clicked
-    document.querySelector('.preview-container:focus-within')?.focus();
+    // Return focus to whichever control launched this scene. Used to
+    // query `.preview-container:focus-within` here, which can never
+    // actually match by this point: focus already moved into
+    // expContainer the moment the scene launched (see expandScene below),
+    // and clearing expContainer's innerHTML just above moves focus to
+    // <body> once its focused descendant is removed from the DOM — so
+    // the query always silently found nothing. Tracking the real trigger
+    // element directly (both nav icons and preview tiles stay in the DOM
+    // the whole time, just hidden) is the only thing that actually works.
+    lastTrigger?.focus();
   }, 600);
 }
 
@@ -169,7 +182,7 @@ document.querySelectorAll('.nav-icon').forEach(btn => {
     if (activeScene === scene) {
       returnToGallery(); // clicking active icon returns to gallery
     } else {
-      expandScene(scene);
+      expandScene(scene, btn);
     }
   });
 });
@@ -191,7 +204,7 @@ document.addEventListener('keydown', e => {
 // ─── Preview container clicks + keyboard ─────────────────────────────────────
 document.querySelectorAll('.preview-wrapper').forEach(w => {
   const container = w.querySelector('.preview-container');
-  const launch = () => expandScene(w.dataset.scene);
+  const launch = () => expandScene(w.dataset.scene, container);
   w.addEventListener('click', launch);
   container.addEventListener('keydown', e => {
     if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); launch(); }

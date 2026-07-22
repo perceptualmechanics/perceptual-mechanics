@@ -35,6 +35,25 @@ html, body {
   overflow: hidden;
 }
 
+/* ─── Screen-reader-only utility ────────────────────────────────────────────── */
+/* Standard clip-based visually-hidden pattern — content is present and
+   announced by assistive tech, but takes no visual space and doesn't
+   affect this site's deliberately chrome-free look. Added for #landing's
+   h1 (a11y audit, 2026-07-22): the page had zero headings anywhere,
+   which is a real gap for screen-reader users navigating by heading —
+   but a visible "Perceptual Mechanics" h1 would duplicate the bottom-
+   center site-title link and clash with the intentionally minimal
+   landing design, so it's sighted-invisible instead. */
+.sr-only {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 /* ─── Skip link ─────────────────────────────────────────────────────────────── */
 .skip-link {
   position: fixed; top: -100%; left: 1rem;

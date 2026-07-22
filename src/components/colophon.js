@@ -240,7 +240,18 @@ function buildBibliographyHTML() {
 function buildPanel() {
   const panel = document.createElement('div');
   panel.id = 'colophon-panel';
-  panel.setAttribute('role', 'document');
+  // The in-scene read-more panels (sphere.js/orrery.js/egg.js/lens.js) all
+  // use role="dialog" + aria-modal="false" + aria-labelledby pointing at
+  // their own title — deliberately non-modal, since they sit alongside a
+  // still-interactive 3D scene and nav behind them. This one's different:
+  // it's the site's one genuinely modal dialog (full backdrop, nothing
+  // else on the page is meant to be reachable while it's open), so it
+  // gets the same role/aria-labelledby pattern but aria-modal="true" —
+  // was role="document" with no aria-modal/aria-labelledby at all, which
+  // undersold what this actually is to a screen reader.
+  panel.setAttribute('role', 'dialog');
+  panel.setAttribute('aria-modal', 'true');
+  panel.setAttribute('aria-labelledby', 'colophon-title');
   panel.innerHTML = `
     <button id="colophon-close" aria-label="Close colophon">✕</button>
 
@@ -305,12 +316,39 @@ export function initColophon() {
   const title = panel.querySelector('#colophon-title');
   const closeBtn = panel.querySelector('#colophon-close');
 
+  // aria-modal="true" tells assistive tech everything outside is inert —
+  // that's only true if Tab actually can't reach outside either. Nothing
+  // else on the site enforces this (the in-scene panels are deliberately
+  // aria-modal="false" and don't need it; #experience-overlay's own nav
+  // is intentionally still reachable, a different tradeoff — see main.js).
+  // This one really is a full-backdrop, nothing-else-reachable dialog, so
+  // it's the one place a real trap belongs: Tab/Shift+Tab cycle between
+  // the panel's own first and last focusable elements instead of escaping
+  // into the hidden page behind the backdrop.
+  function focusableEls() {
+    return Array.from(panel.querySelectorAll('button, a[href], [tabindex]'))
+      .filter(el => el.tabIndex !== -1 || el === title);
+  }
+  function onKeydown(e) {
+    if (e.key !== 'Tab') return;
+    const els = focusableEls();
+    if (!els.length) return;
+    const first = els[0], last = els[els.length - 1];
+    if (e.shiftKey && document.activeElement === first) {
+      e.preventDefault(); last.focus();
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault(); first.focus();
+    }
+  }
+
   function open() {
     backdrop.classList.add('open');
     setTimeout(() => title.focus(), 50);
+    backdrop.addEventListener('keydown', onKeydown);
   }
   function close() {
     backdrop.classList.remove('open');
+    backdrop.removeEventListener('keydown', onKeydown);
     mark.focus();
   }
 
