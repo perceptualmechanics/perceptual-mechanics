@@ -6,6 +6,37 @@ projects (The Secret World, A Manual of Perceptual Mechanics) moved into their o
 files, which are now the source of truth for that material going forward. See "project map"
 below for where things live.
 
+## 1.0.34 (2026-07-22)
+
+Scott loaded 1.0.33 and sent a screenshot: bare sky, no rail, no skyline,
+no palms — just the leaf and text floating over a flat pale gradient.
+"Can you see this?" (I can't, still no browser here — but I could see
+exactly what was missing from the screenshot itself.)
+
+Root cause: horizonY/railTop/railBottom/the palm x-fractions are all
+absolute fractions of the canvas (e.g. horizonY = ch*0.62), which only
+land where intended if the plane-to-camera size ratio matches what they
+were tuned against — the original single-plane backdrop's 2.4x, which
+puts about 83% of the canvas inside the visible frame, centered. 1.0.33
+oversized the plane geometry itself (1.8x/1.3x extra) so the new
+parallax shift would never reveal a bare edge — but that oversizing
+shrank the visible fraction down toward 46-64%, pushing the rail
+(drawn at 78-98% down the canvas) and almost all of the skyline/palm
+content outside the visible window entirely. Exactly the flat, empty
+result in the screenshot.
+
+Fixed by reverting the plane geometry to the exact original 2.4x (no
+margin) — same visible fraction as every prior version Scott has already
+seen work — and instead deriving the parallax offsets themselves from
+however much real edge that plane size leaves at the current aspect
+ratio (a new PARALLAX_MARGIN constant, ~20% of camera half-width), capped
+well under 100% of it. Verified with two standalone scripts before
+shipping this time: one confirming the visible fraction is back to
+exactly 0.833 at nine aspect ratios, one confirming every parallax
+offset stays safely inside the real margin at each of them — the same
+class of math mistake 1.0.33 already made once, checked more carefully
+this time specifically because of it.
+
 ## 1.0.33 (2026-07-22)
 
 Scott sent apartment reference photos again and clarified the earlier "vector

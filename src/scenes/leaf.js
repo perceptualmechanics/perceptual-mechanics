@@ -348,8 +348,25 @@ export function createLeaf(container, { preview = false } = {}) {
   const ch = Math.round(cw / Math.max(aspect, 0.5));
   const horizonY = ch * 0.62;
   const railTop = ch * 0.78, railBottom = ch * 0.98;
-  const PLANE_W = viewH * aspect * 2.4 * 1.8; // oversized so the scroll-parallax
-  const PLANE_H = viewH * 2.4 * 1.3;          // shift below never reveals a bare edge.
+  // Same 2.4x plane size the old single-plane backdrop always used —
+  // NOT oversized. horizonY/railTop/railBottom/the palm fx fractions
+  // above are all calibrated against exactly this plane-to-camera ratio
+  // (it puts about 83% of the canvas inside the visible frame, centered).
+  // An earlier version of this pass oversized the plane so the parallax
+  // shift below would never reveal a bare edge, which quietly shrank that
+  // visible fraction enough to push the rail and the entire skyline/palm
+  // layer almost completely out of frame — Scott's screenshot showed nothing
+  // but bare sky. Fixed here by leaving the plane alone and keeping the
+  // parallax throw itself small enough to stay inside the small margin
+  // this plane size actually has (see PARALLAX_MARGIN below), rather than
+  // making the plane bigger.
+  const PLANE_W = viewH * aspect * 2.4;
+  const PLANE_H = viewH * 2.4;
+  // Half the gap between this plane's edge and the camera's own edge —
+  // the most any layer can shift sideways before its texture's edge
+  // becomes visible. Scales with aspect, so it shrinks safely on narrow
+  // mobile viewports rather than needing a fixed guess.
+  const PARALLAX_MARGIN = viewH * aspect * 0.2;
 
   const backdrop = new THREE.Group();
   scene.add(backdrop);
@@ -734,10 +751,14 @@ export function createLeaf(container, { preview = false } = {}) {
     // cue, driven by reading progress rather than a mouse/tilt input —
     // Scott specifically asked to tie it to scroll, since that works
     // identically on mobile and desktop, unlike a mouse-parallax effect.
+    // Offsets are fractions of PARALLAX_MARGIN (not fixed constants), so
+    // the shift always stays inside however much edge this plane actually
+    // has to give at the current aspect ratio, instead of a fixed guess
+    // that's safe on desktop but overshoots on a narrow phone.
     if (!preview && farLayer) {
-      skyLayer.position.x = frac * 0.15;
-      farLayer.position.x = frac * 0.55;
-      nearLayer.position.x = frac * 1.05;
+      skyLayer.position.x = frac * PARALLAX_MARGIN * 0.12;
+      farLayer.position.x = frac * PARALLAX_MARGIN * 0.45;
+      nearLayer.position.x = frac * PARALLAX_MARGIN * 0.8;
     }
 
     renderer.render(scene, camera);
