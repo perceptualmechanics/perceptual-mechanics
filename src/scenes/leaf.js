@@ -703,11 +703,21 @@ export function createLeaf(container, { preview = false } = {}) {
         font-size: clamp(1.6rem, 3.2vw, 2.6rem);
         letter-spacing: 0.005em;
         line-height: 1.5;
-        /* A soft light halo in place of the old dark drop-shadow — keeps
-           the text legible on the rare paragraph that sits over the
-           skyline/palm layer, without reintroducing a boxed background
-           behind it (Scott asked specifically to lose that). */
-        text-shadow: 0 1px 18px rgba(255,255,255,0.65), 0 1px 2px rgba(255,255,255,0.4);
+        /* A soft light halo, plus (1.0.44) a soft DARK halo underneath it
+           too. The light halo alone worked fine while the caption box
+           mostly sat over the bright sky/buildings, but 1.0.43 stretched
+           it the full window height, so paragraphs now scroll across
+           every part of the backdrop — including the dark rail/foliage
+           band near the bottom, where black text + a white halo both
+           read as the same dark smear. A dark halo underneath does for
+           light backgrounds what the white one does for dark ones — same
+           "no boxed background" approach Scott asked for, just covering
+           both directions of contrast instead of one. */
+        text-shadow:
+          0 1px 18px rgba(255,255,255,0.65),
+          0 1px 2px rgba(255,255,255,0.4),
+          0 0 10px rgba(0,0,0,0.4),
+          0 0 3px rgba(0,0,0,0.5);
         margin: 0 0 2.2rem;
       }
       #leaf-caption p:last-child { margin-bottom: 0; }

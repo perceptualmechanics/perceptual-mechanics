@@ -6,6 +6,28 @@ projects (The Secret World, A Manual of Perceptual Mechanics) moved into their o
 files, which are now the source of truth for that material going forward. See "project map"
 below for where things live.
 
+## 1.0.44 (2026-07-22)
+
+Scott sent a screenshot and asked: "how do we feel about readability?"
+
+Mostly good, but one real problem, visible in that exact screenshot: since
+1.0.43 stretched the caption to the full window height, paragraphs now
+scroll across every part of the backdrop, not just the bright sky/
+buildings near the top. The bottom of that screenshot's visible box
+crosses into the dark rail/foliage band, and the black text there — held
+up until now by only a soft WHITE halo — reads as a dark smear against a
+backdrop that's also dark. The white halo was calibrated for a box that
+used to mostly sit over bright content; it does nothing for the opposite
+case.
+
+Added a second, dark halo underneath the existing light one
+(`text-shadow`, four layers total now) — same "no boxed background"
+approach Scott asked for back in 1.0.33, just covering contrast in both
+directions instead of one. Can't confirm the actual visual result without
+a browser, but the mechanism is sound: a light halo helps black text read
+against dark backdrops, a dark halo helps it read against light ones, and
+now both are present everywhere instead of only the first.
+
 ## 1.0.43 (2026-07-22)
 
 Scott, after confirming the preview-tile fix worked: "last thing on leaf:
