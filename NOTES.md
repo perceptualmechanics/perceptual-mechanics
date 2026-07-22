@@ -6,6 +6,40 @@ projects (The Secret World, A Manual of Perceptual Mechanics) moved into their o
 files, which are now the source of truth for that material going forward. See "project map"
 below for where things live.
 
+## 1.0.48 (2026-07-22)
+
+Scott, after trying the first-person pass: "I think I could pass through
+the planet rings, but I think I'm kind of okay with that... my only issue
+with the rings having collision is that the room is kind of snug at the
+moment, so if we did that, we'd have to space it out slightly more." →
+"yeah, let's try the second option" (widen + add collision).
+
+Widened the warehouse (full scene only — 6.5 → 8.5 half-width) and gave
+the planet rings real collision. Each ring is a torus tilted about the X
+axis, so most of it sits well overhead — only the low side of the bigger
+outer rings ever dips down near eye height at all, at two points mirrored
+across the center line. Solved the tilted-torus parametric equation for
+exactly where each ring crosses eye height (θ where
+`y(θ) = yOffset − R·sin(θ)·sin(tilt)` equals eye level) rather than
+approximating the whole ring as a barrier, which would've blocked
+passage under rings that are nowhere near the visitor at all — most of
+each ring's circumference stays entirely overhead and should stay
+walkable. Rings that never reach eye height at all (the smaller inner
+ones) correctly get no collider.
+
+The warehouse's clutter (crates, workbench, tire, drums, ladder, etc.) is
+already positioned relative to the wall distance rather than fixed
+coordinates, so it moved out with the walls automatically — no manual
+re-placement needed.
+
+Verified: extended the standalone math-check script with a brute-force
+theta scan (200,000 steps around each test ring) that independently finds
+where the mesh's own world-space Y crosses eye height, and confirmed it
+lands on the same points the analytic solution produces — plus a case
+confirming a ring that never reaches eye height correctly gets no
+collider. `node --check` and a clean `vite build` (same pre-existing
+orrery >500kB chunk warning as always).
+
 ## 1.0.47 (2026-07-22)
 
 Scott: "have first-person camera movement in orrery, like someone's

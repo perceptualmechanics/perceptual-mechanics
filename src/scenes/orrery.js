@@ -353,6 +353,11 @@ function buildOrrery(preview, suspendTopY, rafterY) {
   const TILT_JITTER = 0.03;
   const ringYBase = baseY + mastHeight * 0.3;
   const radii = [];
+  // Real radius/yOffset/tilt per ring, for createOrrery to work out where
+  // (if anywhere) each ring's tilted low edge actually dips down to the
+  // walkthrough's eye height — see the collision comment near the bottom
+  // of createOrrery for the geometry.
+  const ringInfo = [];
 
   planets.forEach((planet, i) => {
     const radius = lerp(innerR, outerR, (sqrtAU[i] - auMin) / (auMax - auMin));
@@ -360,6 +365,7 @@ function buildOrrery(preview, suspendTopY, rafterY) {
     const size = lerp(minSize, maxSize, (sqrtDia[i] - diaMin) / (diaMax - diaMin));
     const tilt = TILT_BASE + (Math.random() - 0.5) * TILT_JITTER;
     const yOffset = ringYBase + i * (preview ? 0.06 : 0.05);
+    ringInfo.push({ radius, yOffset, tilt });
 
     const ringGeo = new THREE.TorusGeometry(radius, (preview ? 0.008 : 0.01) * HW, 6, 20);
     const ring = new THREE.Mesh(ringGeo, steelMat);
@@ -488,7 +494,7 @@ function buildOrrery(preview, suspendTopY, rafterY) {
   // needs its own collider.
   const colliders = [{ x: 0, z: 0, r: 0.6 }];
 
-  return { group, hitTarget: hub, lampMat, orbits, unknowns, signal, signalMat, baseY, mastHeight, colliders };
+  return { group, hitTarget: hub, lampMat, orbits, unknowns, signal, signalMat, baseY, mastHeight, colliders, ringInfo };
 }
 
 // ─── The warehouse — floor, a ceiling with a skylight cut into it, roof
@@ -709,7 +715,13 @@ function makeStaticBuffer(ctx, seconds) {
 function buildWarehouse(preview, floorY, ceilingY, rafterY) {
   const group = new THREE.Group();
   const span = preview ? 14 : 20;
-  const wallDist = preview ? 5 : 6.5;
+  // Full mode widened 6.5 → 8.5, 2026-07-22 (Scott: after adding real
+  // collision on the planet rings' tilted low edge, the old room was too
+  // snug — the outermost rings' physical radius (~5.4) left less than a
+  // meter of walking corridor before the wall, and that's before a ring
+  // collider even entered the picture. Preview tile untouched (never
+  // walkable, was already comfortably clear at its own smaller scale).
+  const wallDist = preview ? 5 : 8.5;
 
   const floorMat = new THREE.MeshStandardMaterial({ map: makeConcreteTexture(), roughness: 0.95, metalness: 0.05 });
   const floor = new THREE.Mesh(new THREE.PlaneGeometry(span * 2, span * 2), floorMat);
@@ -1830,7 +1842,35 @@ export function createOrrery(container, { preview = false } = {}) {
       },
     });
   } else {
-    const allColliders = [...warehouse.colliders, ...orrery.colliders];
+    // ─── Ring-dip colliders, 2026-07-22 (Scott: "I could pass through
+    // the planet rings... let's [widen the room and] fix that"). ────────
+    // Each ring is a torus tilted by `tilt` about the X axis (see the
+    // ring.rotation.x = π/2 + tilt in buildOrrery). Most of a tilted ring
+    // stays well overhead — only the low side of the biggest rings ever
+    // dips down near eye height at all, at two points (mirrored across
+    // x=0). Solving the tilted-torus parametric equation
+    // (x,y,z) = (R cosθ, yOffset − R sinθ sin(tilt), R sinθ cos(tilt))
+    // for the θ where y = eyeY gives exactly those two points — everyone
+    // else on the ring is either above or below that height and never
+    // actually blocks a walking visitor at eye level.
+    const eyeYAbs = floorY + EYE_HEIGHT;
+    const ringDipColliders = [];
+    orrery.ringInfo.forEach(({ radius, yOffset, tilt }) => {
+      const sinTilt = Math.sin(tilt);
+      if (Math.abs(sinTilt) < 1e-6) return;
+      const sinTheta = (yOffset - eyeYAbs) / (radius * sinTilt);
+      if (sinTheta < -1 || sinTheta > 1) return; // this ring never reaches eye height
+      const cosTheta = Math.sqrt(Math.max(0, 1 - sinTheta * sinTheta));
+      const zDip = radius * sinTheta * Math.cos(tilt);
+      const xDip = radius * cosTheta;
+      // A small collider at each mirrored dip point — sized a bit past
+      // the ring's own thin tube radius, enough to actually register as
+      // "something's there" without becoming its own obstacle course.
+      ringDipColliders.push({ x: xDip, z: zDip, r: 0.22 });
+      ringDipColliders.push({ x: -xDip, z: zDip, r: 0.22 });
+    });
+
+    const allColliders = [...warehouse.colliders, ...orrery.colliders, ...ringDipColliders];
     fp = createFirstPersonRig({
       container, camera, renderer,
       colliders: allColliders,
