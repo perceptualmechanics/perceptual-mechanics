@@ -207,7 +207,7 @@ export function createSphere(container, { preview = false } = {}) {
     panel.setAttribute('aria-modal', 'false');
     panel.setAttribute('aria-labelledby', 'sphere-panel-title');
     panel.innerHTML = `
-      <button id="sphere-panel-close" aria-label="Close fragment panel">✕</button>
+      <button type="button" id="sphere-panel-close" aria-label="Close fragment panel">✕</button>
       <div id="sphere-panel-title" tabindex="-1">Fragment</div>
       <div id="sphere-panel-content"></div>
       <div id="sphere-facet-id"></div>

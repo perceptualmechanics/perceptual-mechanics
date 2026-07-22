@@ -253,7 +253,7 @@ function buildPanel() {
   panel.setAttribute('aria-modal', 'true');
   panel.setAttribute('aria-labelledby', 'colophon-title');
   panel.innerHTML = `
-    <button id="colophon-close" aria-label="Close colophon">✕</button>
+    <button type="button" id="colophon-close" aria-label="Close colophon">✕</button>
 
     <section>
       <h2 id="colophon-title" tabindex="-1">Colophon</h2>
@@ -298,6 +298,7 @@ export function initColophon() {
   injectStyles();
 
   const mark = document.createElement('button');
+  mark.type = 'button';
   mark.id = 'colophon-mark';
   mark.setAttribute('aria-label', 'Colophon, bibliography, and feedback');
   mark.setAttribute('aria-haspopup', 'dialog');

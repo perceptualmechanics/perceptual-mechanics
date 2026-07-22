@@ -1300,7 +1300,7 @@ export function createOrrery(container, { preview = false } = {}) {
     panel.setAttribute('aria-modal', 'false');
     panel.setAttribute('aria-labelledby', 'orrery-panel-title');
     panel.innerHTML = `
-      <button id="orrery-panel-close" aria-label="Close panel">✕</button>
+      <button type="button" id="orrery-panel-close" aria-label="Close panel">✕</button>
       <div id="orrery-panel-title" tabindex="-1">✦ ${ORRERY.name}</div>
       <div id="orrery-panel-era">${ORRERY.era}</div>
       <div id="orrery-panel-note">${ORRERY.note}</div>

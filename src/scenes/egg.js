@@ -646,7 +646,7 @@ export function createEgg(container, { preview = false } = {}) {
     panel.setAttribute('aria-modal', 'false');
     panel.setAttribute('aria-labelledby', 'egg-panel-title');
     panel.innerHTML = `
-      <button id="egg-panel-close" aria-label="Close panel">✕</button>
+      <button type="button" id="egg-panel-close" aria-label="Close panel">✕</button>
       <div id="egg-panel-title" tabindex="-1"></div>
       <div id="egg-panel-content"></div>
     `;

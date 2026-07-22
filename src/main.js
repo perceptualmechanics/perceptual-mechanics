@@ -188,27 +188,27 @@ document.querySelectorAll('.nav-icon').forEach(btn => {
 });
 
 // ─── Site title → gallery ─────────────────────────────────────────────────────
-siteTitle.addEventListener('click', e => {
-  e.preventDefault();
-  returnToGallery();
-});
-siteTitle.addEventListener('keydown', e => {
-  if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); returnToGallery(); }
-});
+// Semantic pass, 2026-07-22: #site-title is a real <button> now (index.html),
+// not an <a href="#" role="button"> — no href to preventDefault(), and
+// Enter/Space activation comes free with the element, so the manual
+// keydown listener this used to need is gone too.
+siteTitle.addEventListener('click', returnToGallery);
 
 // ─── Keyboard: Escape → gallery ───────────────────────────────────────────────
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape' && activeScene) returnToGallery();
 });
 
-// ─── Preview container clicks + keyboard ─────────────────────────────────────
+// ─── Preview container clicks ─────────────────────────────────────────────────
+// Semantic pass, 2026-07-22: .preview-container is a real <button> now
+// (index.html), not a <div role="button" tabindex="0">, so it gets
+// Enter/Space activation for free — the manual keydown listener this used
+// to need is gone; a single click listener on the button itself covers
+// mouse, touch, and keyboard activation alike (native buttons dispatch a
+// real click event for all three).
 document.querySelectorAll('.preview-wrapper').forEach(w => {
   const container = w.querySelector('.preview-container');
-  const launch = () => expandScene(w.dataset.scene, container);
-  w.addEventListener('click', launch);
-  container.addEventListener('keydown', e => {
-    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); launch(); }
-  });
+  container.addEventListener('click', () => expandScene(w.dataset.scene, container));
 });
 
 // ─── Init previews ────────────────────────────────────────────────────────────

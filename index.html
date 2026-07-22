@@ -22,7 +22,7 @@
   <nav id="pm-nav" aria-label="Perceptual Mechanics navigation">
 
     <!-- Sphere: geodesic / icosahedron outline -->
-    <button class="nav-icon" data-scene="sphere" aria-label="Sphere" title="The Sphere — Interconnected Text Fragments" onmouseover="pmGlimpse('sphere')">
+    <button type="button" class="nav-icon" data-scene="sphere" aria-label="Sphere" title="The Sphere — Interconnected Text Fragments" onmouseover="pmGlimpse('sphere')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
         <circle cx="12" cy="12" r="9"/>
         <ellipse cx="12" cy="12" rx="9" ry="4"/>
@@ -32,7 +32,7 @@
     </button>
 
     <!-- Butterfly: Lorenz / figure-8 attractor shape -->
-    <button class="nav-icon" data-scene="butterfly" aria-label="Butterfly" title="Chaos Butterfly in Phase Space, 2026" onmouseover="pmGlimpse('butterfly')">
+    <button type="button" class="nav-icon" data-scene="butterfly" aria-label="Butterfly" title="Chaos Butterfly in Phase Space, 2026" onmouseover="pmGlimpse('butterfly')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
         <path d="M12 12 C8 6, 2 6, 3 12 C4 18, 10 17, 12 12"/>
         <path d="M12 12 C16 6, 22 6, 21 12 C20 18, 14 17, 12 12"/>
@@ -41,7 +41,7 @@
     </button>
 
     <!-- Manuscript: Ogham letter Sail, four strokes off a stemline -->
-    <button class="nav-icon" data-scene="manuscript" aria-label="Manuscript" title="Selected Works — An Illuminated Manuscript" onmouseover="pmGlimpse('scroll')">
+    <button type="button" class="nav-icon" data-scene="manuscript" aria-label="Manuscript" title="Selected Works — An Illuminated Manuscript" onmouseover="pmGlimpse('scroll')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
         <line x1="6" y1="2.5" x2="6" y2="21.5"/>
         <line x1="6" y1="5.5" x2="19" y2="5.5"/>
@@ -52,7 +52,7 @@
     </button>
 
     <!-- Theater: film camera -->
-    <button class="nav-icon" data-scene="theater" aria-label="The Theater" title="The Theater — Now Playing" onmouseover="pmGlimpse('theater')">
+    <button type="button" class="nav-icon" data-scene="theater" aria-label="The Theater" title="The Theater — Now Playing" onmouseover="pmGlimpse('theater')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
         <rect x="3" y="7" width="12" height="10" rx="1"/>
         <path d="M15 10.2 L21 7.5 V16.5 L15 13.8"/>
@@ -62,7 +62,7 @@
     </button>
 
     <!-- Egg, Leaf -->
-    <button class="nav-icon" data-scene="egg" aria-label="The Egg" title="The Egg — Aurorae, Magnetic Field, Satellites" onmouseover="pmGlimpse('egg')">
+    <button type="button" class="nav-icon" data-scene="egg" aria-label="The Egg" title="The Egg — Aurorae, Magnetic Field, Satellites" onmouseover="pmGlimpse('egg')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
         <circle cx="12" cy="12" r="6"/>
         <path d="M12 3 C18 6 18 18 12 21"/>
@@ -71,7 +71,7 @@
       </svg>
     </button>
 
-    <button class="nav-icon" data-scene="leaf" aria-label="Leaf" title="Leaf — In The End It Falls Slowly Through The Aether" onmouseover="pmGlimpse('leaf')">
+    <button type="button" class="nav-icon" data-scene="leaf" aria-label="Leaf" title="Leaf — In The End It Falls Slowly Through The Aether" onmouseover="pmGlimpse('leaf')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
         <path d="M12 3c5 2 7 6 5 11-1.5 3.7-4 5.5-5 7-1-1.5-3.5-3.3-5-7-2-5 0-9 5-11z"/>
         <path d="M12 4v15"/>
@@ -82,7 +82,7 @@
          three shells rotated around a shared center, which reads as an
          atom (electron orbits), not an orrery (planets in one plane).
          Scott, 2026-07-17: "it's an atom now, not a solar system." -->
-    <button class="nav-icon" data-scene="orrery" aria-label="Orrery" title="The Orrery of Los Feliz" onmouseover="pmGlimpse('orrery')">
+    <button type="button" class="nav-icon" data-scene="orrery" aria-label="Orrery" title="The Orrery of Los Feliz" onmouseover="pmGlimpse('orrery')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
         <line x1="12" y1="12" x2="12" y2="2.5"/>
         <ellipse cx="12" cy="13" rx="9.5" ry="3.4"/>
@@ -96,8 +96,12 @@
     </button>
   </nav>
 
-  <!-- Site title — bottom center, links back to gallery -->
-  <a href="#" id="site-title" role="button" aria-label="Return to gallery" onmouseover="pmGlimpse('title')">perceptual mechanics</a>
+  <!-- Site title — bottom center, links back to gallery. Semantic pass,
+       2026-07-22: was <a href="#" role="button"> — it never actually
+       navigated anywhere (main.js's click handler always preventDefault()s
+       and calls returnToGallery() itself), so a real <button> is what
+       this always semantically was. -->
+  <button type="button" id="site-title" aria-label="Return to gallery" onmouseover="pmGlimpse('title')">perceptual mechanics</button>
 
   <!-- Landing -->
   <main id="landing">
@@ -107,7 +111,16 @@
          h1, since a second on-screen title would duplicate #site-title
          and clash with the deliberately minimal landing design. -->
     <h1 class="sr-only">Perceptual Mechanics — an interactive art gallery by Scott Jason Cohen</h1>
-    <div id="scene-previews" role="list" aria-label="Interactive art pieces">
+    <!-- Semantic pass, 2026-07-22: was <div role="list">/<div role="listitem">
+         /<div role="button" tabindex="0"> with a manual keydown handler for
+         Enter/Space in main.js. Real <ul>/<li>/<button> need none of that
+         ARIA stand-in machinery — a <button> gets Enter/Space activation
+         built in, so main.js's keydown listener was removed along with it
+         (see main.js's own comment at the click handler). "Press Enter to
+         expand" stays in each aria-label; still accurate, keyboard users
+         still need to know it's actionable, just via native semantics now
+         instead of an ARIA role announcing it. -->
+    <ul id="scene-previews" aria-label="Interactive art pieces">
 
       <!-- Design pass, 2026-07-17: added a `title` to every tile, matching
            its nav-icon counterpart's own title text — the icons already had
@@ -115,62 +128,62 @@
            over a silent WebGL loop gave a sighted visitor no idea what it
            was before clicking. Doesn't touch layout or visuals, screen
            readers already had the fuller aria-label. -->
-      <div class="preview-wrapper" data-scene="sphere" role="listitem">
-        <div class="preview-container" id="preview-sphere"
-             role="button" tabindex="0" title="The Sphere — Interconnected Text Fragments"
+      <li class="preview-wrapper" data-scene="sphere">
+        <button type="button" class="preview-container" id="preview-sphere"
+             title="The Sphere — Interconnected Text Fragments"
              aria-label="The Sphere — an interactive geodesic sphere with text fragments. Press Enter to expand."
              onmouseover="pmGlimpse('sphere')">
-        </div>
-      </div>
+        </button>
+      </li>
 
-      <div class="preview-wrapper" data-scene="butterfly" role="listitem">
-        <div class="preview-container" id="preview-butterfly"
-             role="button" tabindex="0" title="Chaos Butterfly in Phase Space, 2026"
+      <li class="preview-wrapper" data-scene="butterfly">
+        <button type="button" class="preview-container" id="preview-butterfly"
+             title="Chaos Butterfly in Phase Space, 2026"
              aria-label="Chaos Butterfly in Phase Space, 2026 — a Lorenz attractor visualization. Press Enter to expand."
              onmouseover="pmGlimpse('butterfly')">
-        </div>
-      </div>
+        </button>
+      </li>
 
-      <div class="preview-wrapper" data-scene="manuscript" role="listitem">
-        <div class="preview-container" id="preview-manuscript"
-             role="button" tabindex="0" title="Selected Works — An Illuminated Manuscript"
+      <li class="preview-wrapper" data-scene="manuscript">
+        <button type="button" class="preview-container" id="preview-manuscript"
+             title="Selected Works — An Illuminated Manuscript"
              aria-label="A scroll of found writing — carved fragments, 2000 to 2012. Press Enter to expand."
              onmouseover="pmGlimpse('scroll')">
-        </div>
-      </div>
+        </button>
+      </li>
 
-      <div class="preview-wrapper" data-scene="theater" role="listitem">
-        <div class="preview-container" id="preview-theater"
-             role="button" tabindex="0" title="The Theater — Now Playing"
+      <li class="preview-wrapper" data-scene="theater">
+        <button type="button" class="preview-container" id="preview-theater"
+             title="The Theater — Now Playing"
              aria-label="The Theater — scenes from Truth and Beauty, Paul Revere, and You've Got a Friend in Satan, performed by ASCII actors. Press Enter to expand."
              onmouseover="pmGlimpse('theater')">
-        </div>
-      </div>
+        </button>
+      </li>
 
-      <div class="preview-wrapper" data-scene="egg" role="listitem">
-        <div class="preview-container" id="preview-egg"
-             role="button" tabindex="0" title="The Egg — Aurorae, Magnetic Field, Satellites"
+      <li class="preview-wrapper" data-scene="egg">
+        <button type="button" class="preview-container" id="preview-egg"
+             title="The Egg — Aurorae, Magnetic Field, Satellites"
              aria-label="The Egg — Earth's magnetic field, the aurorae it produces, and satellites in orbit. Press Enter to expand."
              onmouseover="pmGlimpse('egg')">
-        </div>
-      </div>
+        </button>
+      </li>
 
-      <div class="preview-wrapper" data-scene="leaf" role="listitem">
-        <div class="preview-container" id="preview-leaf"
-             role="button" tabindex="0" title="Leaf — In The End It Falls Slowly Through The Aether"
+      <li class="preview-wrapper" data-scene="leaf">
+        <button type="button" class="preview-container" id="preview-leaf"
+             title="Leaf — In The End It Falls Slowly Through The Aether"
              aria-label="Leaf — a raindrop's fall from a leaf, told through physics, found text arriving in phase with the fall. Press Enter to expand."
              onmouseover="pmGlimpse('leaf')">
-        </div>
-      </div>
+        </button>
+      </li>
 
-      <div class="preview-wrapper" data-scene="orrery" role="listitem">
-        <div class="preview-container" id="preview-orrery"
-             role="button" tabindex="0" title="The Orrery of Los Feliz"
+      <li class="preview-wrapper" data-scene="orrery">
+        <button type="button" class="preview-container" id="preview-orrery"
+             title="The Orrery of Los Feliz"
              aria-label="The Orrery of Los Feliz — a found story, told through a 30-foot orrery. Press Enter to expand."
              onmouseover="pmGlimpse('orrery')">
-        </div>
-      </div>
-    </div>
+        </button>
+      </li>
+    </ul>
   </main>
 
   <!-- Full screen experience overlay — no close button; nav is the navigation -->

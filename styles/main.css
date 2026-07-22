@@ -108,6 +108,15 @@ html, body {
 
 /* ─── Site title ────────────────────────────────────────────────────────────── */
 #site-title {
+  /* Semantic pass, 2026-07-22: was <a href="#" role="button">. It never
+     navigated anywhere (the click handler always preventDefault()'d and
+     called returnToGallery() itself) — a real <button> is what it always
+     semantically was, so main.js/index.html switched it to one, and this
+     rule picks up the two resets a real button element needs that an
+     anchor never did: no default border, and inherit the page's own font
+     rather than the browser's default UI font. */
+  border: none;
+  font-family: inherit;
   position: fixed;
   bottom: 1.2rem;
   left: 50%;
@@ -198,6 +207,12 @@ html, body {
 }
 
 #scene-previews {
+  /* Semantic pass, 2026-07-22: was a plain <div role="list">. A real <ul>
+     needs its own default list chrome reset (marker + the browser's
+     default margin/indent) — padding was already explicit here, covering
+     the default padding-inline-start these rules would otherwise add. */
+  list-style: none;
+  margin: 0;
   display: flex;
   gap: 3rem;
   align-items: center;
@@ -207,12 +222,24 @@ html, body {
 }
 
 .preview-wrapper {
+  /* Was <div role="listitem">, now a real <li> — li has no default
+     margin/padding of its own to reset (only the parent list does). */
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .preview-container {
+  /* Was <div role="button" tabindex="0"> with a manual keydown handler
+     for Enter/Space in main.js. A real <button> gets that keyboard
+     activation for free and needs none of ARIA's stand-in machinery —
+     these three properties are the button-chrome reset a native <button>
+     needs that the old div never did (no default border/background, and
+     inherit the page's font rather than the browser's UI font). */
+  background: none;
+  border: none;
+  font: inherit;
+  display: block;
   width: 320px;
   height: 320px;
   cursor: pointer;

@@ -6,6 +6,43 @@ projects (The Secret World, A Manual of Perceptual Mechanics) moved into their o
 files, which are now the source of truth for that material going forward. See "project map"
 below for where things live.
 
+## 1.0.46 (2026-07-22)
+
+Scott: "oh yeah, make sure all the markup is semantic as heck." Follow-on
+to the 1.0.45 a11y audit — converts every ARIA-role-simulated element into
+its real native equivalent, and adds `type="button"` sitewide so no
+`<button>` is left defaulting to `type="submit"`.
+
+**`#scene-previews`: div-soup → real list.** Was `<div role="list">` /
+`<div role="listitem">` / `<div role="button" tabindex="0">` with a manual
+keydown handler reimplementing Enter/Space activation. Now a real
+`<ul id="scene-previews">` of `<li class="preview-wrapper">`, each wrapping
+a real `<button type="button" class="preview-container">`. Native buttons
+get Enter/Space activation for free, so the manual keydown handler in
+main.js is gone — click listener only.
+
+**`#site-title`: anchor-as-button → real button.** Was
+`<a href="#" role="button">`, which never actually navigated anywhere and
+needed `e.preventDefault()` plus its own keydown handler. Now
+`<button type="button" id="site-title">`, same simplification in main.js.
+
+**`type="button"` added everywhere:** all 7 `.nav-icon` buttons, the 7
+`.preview-container` buttons, `#site-title`, the colophon close/mark
+buttons, and every scene's panel-close button (sphere/orrery/egg/lens) —
+none of these sit in a `<form>`, but leaving the default `type="submit"` on
+a bare button is a bug waiting to happen the moment one ever does.
+
+**CSS:** `#scene-previews` gets `list-style: none; margin: 0;`.
+`.preview-container` and `#site-title` get button-chrome resets
+(`background: none; border: none; font: inherit;`) so the native elements
+look exactly as they did before. No tag-qualified selectors existed
+anywhere in main.css, so nothing broke from the element-tag changes.
+
+Verified: `node --check` on all six touched JS files, clean
+`vite build` (only the pre-existing orrery >500kB chunk warning), and a
+grep sweep confirming no stale `role="list"`, `role="listitem"`, or
+`tabindex="0"` remain anywhere in index.html.
+
 ## 1.0.45 (2026-07-22)
 
 Scott: "very nice! do a sitewide code clean and a11y audit and we'll be

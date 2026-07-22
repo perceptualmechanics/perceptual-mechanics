@@ -848,7 +848,7 @@ export function createLens(container, { preview = false } = {}) {
   panel.setAttribute('aria-modal', 'false');
   panel.setAttribute('aria-labelledby', 'lens-panel-title');
   panel.innerHTML = `
-    <button id="lens-panel-close" aria-label="Close panel">✕</button>
+    <button type="button" id="lens-panel-close" aria-label="Close panel">✕</button>
     <div id="lens-panel-eyebrow"></div>
     <div id="lens-panel-title" tabindex="-1"></div>
     <ul id="lens-panel-faces"></ul>
