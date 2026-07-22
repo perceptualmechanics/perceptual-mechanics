@@ -197,6 +197,123 @@ function buildLeaf() {
   return { group, geo, mat, tex, veinGeo, veinMat, sideVeins };
 }
 
+// ─── Backdrop layers: a Boca Raton balcony, daytime ────────────────────────
+// Split into three independent draw functions (sky, far, near) rather than
+// one flat canvas — 1.0.33, Scott: "create a 3d space with different planes
+// and parallax." Each becomes its own CanvasTexture on its own plane at a
+// different depth inside createLeaf(); these functions only draw pixels,
+// they don't know about THREE or depth at all.
+function drawSky(cx, cw, ch) {
+  // Daytime sky — soft pale blue up top, through a hazy gray-green, to a
+  // warm neutral cream at the horizon, matching the reference photos'
+  // bright-but-muted Florida daylight rather than a postcard-blue sky.
+  const sky = cx.createLinearGradient(0, 0, 0, ch);
+  sky.addColorStop(0,    '#9fb7c8');
+  sky.addColorStop(0.45, '#c3cdc4');
+  sky.addColorStop(0.78, '#e2d8c4');
+  sky.addColorStop(1,    '#d9c8ab');
+  cx.fillStyle = sky;
+  cx.fillRect(0, 0, cw, ch);
+
+  // A few soft, low-contrast clouds — daytime haze, not night stars.
+  for (let i = 0; i < 5; i++) {
+    const x = Math.random() * cw, y = ch * (0.06 + Math.random() * 0.28);
+    const r = 40 + Math.random() * 70;
+    const grad = cx.createRadialGradient(x, y, 0, x, y, r);
+    grad.addColorStop(0, 'rgba(255,255,255,0.28)');
+    grad.addColorStop(1, 'rgba(255,255,255,0)');
+    cx.fillStyle = grad;
+    cx.beginPath();
+    cx.ellipse(x, y, r, r * 0.4, 0, 0, Math.PI * 2);
+    cx.fill();
+  }
+
+  // A single soft glow — daytime sun haze in one upper corner, standing in
+  // for the old porch-light accent — kept, since it's what keeps the sky
+  // from reading flat.
+  const glow = cx.createRadialGradient(cw * 0.82, ch * 0.14, 4, cw * 0.82, ch * 0.14, cw * 0.3);
+  glow.addColorStop(0, 'rgba(255,250,230,0.22)');
+  glow.addColorStop(1, 'rgba(255,250,230,0)');
+  cx.fillStyle = glow;
+  cx.fillRect(0, 0, cw, ch);
+}
+
+// Distant condo silhouettes + two palms — transparent canvas (only these
+// shapes are opaque), so the sky layer behind shows through everywhere
+// else. Full scene only — preview tiles skip this whole layer (see
+// createLeaf): at 320px thumbnail scale this hard, full-width geometric
+// detail was competing with the leaf's own round silhouette hard enough
+// that the leaf itself started reading as square rather than round.
+function drawFar(cx, cw, ch, horizonY) {
+  cx.fillStyle = 'rgba(120,120,118,0.4)';
+  [[0.08, 0.16, 0.42], [0.22, 0.1, 0.3], [0.72, 0.2, 0.5], [0.86, 0.13, 0.36]].forEach(([fx, fh, fw]) => {
+    const bw = cw * fw * 0.14;
+    const bh = ch * fh;
+    cx.fillRect(cw * fx, horizonY - bh, bw, bh);
+  });
+
+  const palm = (px, py, scale) => {
+    cx.strokeStyle = 'rgba(70,82,58,0.6)';
+    cx.lineWidth = 3 * scale;
+    cx.beginPath();
+    cx.moveTo(px, py);
+    cx.quadraticCurveTo(px - 6 * scale, py - 30 * scale, px - 2 * scale, py - 58 * scale);
+    cx.stroke();
+    const crownX = px - 2 * scale, crownY = py - 58 * scale;
+    for (let i = 0; i < 5; i++) {
+      const a = (-0.9 + i * 0.45) * Math.PI;
+      cx.beginPath();
+      cx.moveTo(crownX, crownY);
+      cx.quadraticCurveTo(
+        crownX + Math.cos(a) * 16 * scale, crownY + Math.sin(a) * 10 * scale,
+        crownX + Math.cos(a) * 30 * scale, crownY + Math.sin(a) * 16 * scale + 8 * scale
+      );
+      cx.stroke();
+    }
+  };
+  palm(cw * 0.12, horizonY + 4, cw / 900);
+  palm(cw * 0.9, horizonY + 8, cw / 900 * 0.85);
+}
+
+// Black metal balcony rail + one corner plant silhouette — transparent
+// canvas, same reasoning as drawFar. Full scene only.
+function drawNear(cx, cw, ch, railTop, railBottom) {
+  cx.fillStyle = 'rgba(22,22,24,0.88)';
+  cx.fillRect(0, railTop, cw, 3);
+  cx.fillRect(0, railBottom - 2, cw, 2.5);
+  const baluster = cw / 34;
+  for (let x = baluster / 2; x < cw; x += baluster) {
+    cx.fillRect(x - 1, railTop, 2, railBottom - railTop);
+  }
+
+  // A single plant silhouette in one corner — the Japandi habit of one
+  // sculptural, unfussy plant rather than clutter — standing in for the
+  // one this leaf and drop actually belong to. Kept dark against the
+  // bright sky (a backlit plant reads as a silhouette even in daylight).
+  cx.fillStyle = 'rgba(35,32,28,0.7)';
+  const potX = cw * 0.16, potY = railBottom;
+  cx.fillRect(potX - 22, potY - 26, 44, 26);
+  for (let i = 0; i < 6; i++) {
+    const a = (-1.35 + i * 0.22) * Math.PI * 0.5 - 0.4;
+    cx.beginPath();
+    cx.moveTo(potX, potY - 24);
+    cx.quadraticCurveTo(
+      potX + Math.cos(a) * 30, potY - 24 + Math.sin(a) * 50,
+      potX + Math.cos(a) * 40, potY - 24 + Math.sin(a) * 70
+    );
+    cx.stroke();
+  }
+}
+
+function makeLayerTexture(cw, ch, drawFn) {
+  const c = document.createElement('canvas');
+  c.width = cw; c.height = ch;
+  drawFn(c.getContext('2d'));
+  const tex = new THREE.CanvasTexture(c);
+  tex.wrapS = tex.wrapT = THREE.ClampToEdgeWrapping;
+  return tex;
+}
+
 export function createLeaf(container, { preview = false } = {}) {
   const w = container.clientWidth  || window.innerWidth;
   const h = container.clientHeight || window.innerHeight;
@@ -220,172 +337,51 @@ export function createLeaf(container, { preview = false } = {}) {
   scene.add(root);
   const reduceMotion = prefersReducedMotion();
 
-  // ─── Backdrop: a Boca Raton balcony, daytime ────────────────────────────
-  // Scott: "let's go there" — Japandi (Japanese x Scandinavian design:
-  // natural materials, warm neutrals, restraint, clean lines), and "that's
-  // the actual vibe of my apartment." Replaces the earlier shoji-wall
-  // backdrop with the actual place this quiet moment is happening: a leaf
-  // on a balcony plant. Scott then sent reference photos of the real
-  // apartment — bright neutral daylight (not the dusk I'd first guessed),
-  // gray-beige walls, warm wood floor, and a plain black metal railing
-  // (not a wood baluster rail) — so this pass shifts the sky from dusk
-  // plum to a hazy daytime gray-blue/cream, and swaps the railing to black
-  // metal, while keeping the same underlying discipline: muted, desaturated
-  // color rather than postcard-saturated, one soft glow accent, and a
-  // precise, evenly-spaced rail in place of the old kumiko lattice's
-  // deliberate hand-built irregularity — a manufactured rail SHOULD read as
-  // uniform, unlike a hand-built shoji screen, so that one visual habit
-  // still flips here, just in black metal instead of wood now.
-  //
-  // Built at the same aspect ratio as the plane it's mapped onto (rather
-  // than a square tile repeated with THREE.RepeatWrapping, the old
-  // approach) so the horizon and railing don't stretch or distort at
-  // portrait viewport ratios on mobile — this is a single, non-repeating
-  // image now, clamped to its edges.
-  function makeBalconyTexture() {
-    const cw = Math.round(Math.max(600, Math.min(1400, 900 * Math.max(aspect, 0.5))));
-    const ch = Math.round(cw / Math.max(aspect, 0.5));
-    const c = document.createElement('canvas');
-    c.width = cw; c.height = ch;
-    const cx = c.getContext('2d');
+  // ─── Backdrop ───────────────────────────────────────────────────────────
+  // Preview tiles: one plane, sky/clouds/glow only (see drawFar/drawNear's
+  // own comments for why the rest is skipped there). Full scene: three
+  // planes at increasing depth — sky furthest, skyline+palms mid, rail+
+  // plant nearest — each on its own CanvasTexture so they can move
+  // independently. Built at the plane's own aspect ratio (not a repeated
+  // square tile) so nothing stretches at portrait viewport ratios.
+  const cw = Math.round(Math.max(600, Math.min(1400, 900 * Math.max(aspect, 0.5))));
+  const ch = Math.round(cw / Math.max(aspect, 0.5));
+  const horizonY = ch * 0.62;
+  const railTop = ch * 0.78, railBottom = ch * 0.98;
+  const PLANE_W = viewH * aspect * 2.4 * 1.8; // oversized so the scroll-parallax
+  const PLANE_H = viewH * 2.4 * 1.3;          // shift below never reveals a bare edge.
 
-    // Daytime sky — soft pale blue up top, through a hazy gray-green, to
-    // a warm neutral cream at the horizon, matching the reference photos'
-    // bright-but-muted Florida daylight rather than a postcard-blue sky.
-    const sky = cx.createLinearGradient(0, 0, 0, ch);
-    sky.addColorStop(0,    '#9fb7c8');
-    sky.addColorStop(0.45, '#c3cdc4');
-    sky.addColorStop(0.78, '#e2d8c4');
-    sky.addColorStop(1,    '#d9c8ab');
-    cx.fillStyle = sky;
-    cx.fillRect(0, 0, cw, ch);
+  const backdrop = new THREE.Group();
+  scene.add(backdrop);
+  const backdropParts = []; // { geo, mat, tex } — for dispose()
 
-    // A few soft, low-contrast clouds — daytime haze, not night stars.
-    for (let i = 0; i < 5; i++) {
-      const x = Math.random() * cw, y = ch * (0.06 + Math.random() * 0.28);
-      const r = 40 + Math.random() * 70;
-      const grad = cx.createRadialGradient(x, y, 0, x, y, r);
-      grad.addColorStop(0, 'rgba(255,255,255,0.28)');
-      grad.addColorStop(1, 'rgba(255,255,255,0)');
-      cx.fillStyle = grad;
-      cx.beginPath();
-      cx.ellipse(x, y, r, r * 0.4, 0, 0, Math.PI * 2);
-      cx.fill();
-    }
-
-    // Skyline, palms, rail, and the corner plant are all straight-edged,
-    // full-width geometric detail (the rail bar alone spans the entire
-    // canvas). At full scene size that detail reads fine, but shrunk into
-    // a 320px circular preview tile, Scott flagged that those hard
-    // rectilinear lines were competing with the leaf's own round silhouette
-    // hard enough that the leaf itself started reading as square rather
-    // than round. Preview tiles are meant to foreground the one subject
-    // (the leaf/drop), not the full environment, so skip all of this
-    // detail there and keep only the soft sky + glow behind it — same
-    // reasoning egg.js and orrery.js already use for their own preview
-    // simplification.
-    const horizonY = ch * 0.62;
-    if (!preview) {
-      // A distant, low-contrast skyline — a couple of condo silhouettes,
-      // kept simple/geometric rather than illustrated, daylight haze
-      // softening the edge between them and the sky (lighter neutral gray
-      // now, not a near-black dusk silhouette).
-      cx.fillStyle = 'rgba(120,120,118,0.4)';
-      [[0.08, 0.16, 0.42], [0.22, 0.1, 0.3], [0.72, 0.2, 0.5], [0.86, 0.13, 0.36]].forEach(([fx, fh, fw]) => {
-        const bw = cw * fw * 0.14;
-        const bh = ch * fh;
-        cx.fillRect(cw * fx, horizonY - bh, bw, bh);
-      });
-
-      // Two simple palm silhouettes — minimal, a trunk and a small cluster
-      // of frond strokes, not a detailed illustration. Muted olive-green
-      // now rather than near-black, since these read against bright daylight
-      // rather than a dusk sky.
-      const palm = (px, py, scale) => {
-        cx.strokeStyle = 'rgba(70,82,58,0.6)';
-        cx.lineWidth = 3 * scale;
-        cx.beginPath();
-        cx.moveTo(px, py);
-        cx.quadraticCurveTo(px - 6 * scale, py - 30 * scale, px - 2 * scale, py - 58 * scale);
-        cx.stroke();
-        const crownX = px - 2 * scale, crownY = py - 58 * scale;
-        for (let i = 0; i < 5; i++) {
-          const a = (-0.9 + i * 0.45) * Math.PI;
-          cx.beginPath();
-          cx.moveTo(crownX, crownY);
-          cx.quadraticCurveTo(
-            crownX + Math.cos(a) * 16 * scale, crownY + Math.sin(a) * 10 * scale,
-            crownX + Math.cos(a) * 30 * scale, crownY + Math.sin(a) * 16 * scale + 8 * scale
-          );
-          cx.stroke();
-        }
-      };
-      palm(cw * 0.12, horizonY + 4, cw / 900);
-      palm(cw * 0.9, horizonY + 8, cw / 900 * 0.85);
-    }
-
-    // The balcony rail — black metal now (Scott's reference photos show a
-    // plain black metal rail, not wood balusters), precise evenly-spaced
-    // verticals plus a top/bottom rail, spanning the bottom band of the
-    // frame. Thinner bars than the old wood-baluster version — real metal
-    // rail pickets read as slim lines, not thick posts. Full detail only
-    // in the real scene — see the preview note above.
-    const railTop = ch * 0.78;
-    const railBottom = ch * 0.98;
-    if (!preview) {
-      cx.fillStyle = 'rgba(22,22,24,0.88)';
-      cx.fillRect(0, railTop, cw, 3);
-      cx.fillRect(0, railBottom - 2, cw, 2.5);
-      const baluster = cw / 34;
-      for (let x = baluster / 2; x < cw; x += baluster) {
-        cx.fillRect(x - 1, railTop, 2, railBottom - railTop);
-      }
-
-      // A single plant silhouette in one corner — the Japandi habit of one
-      // sculptural, unfussy plant rather than clutter — standing in for the
-      // one this leaf and drop actually belong to. Kept dark against the
-      // bright sky (a backlit plant reads as a silhouette even in daylight).
-      cx.fillStyle = 'rgba(35,32,28,0.7)';
-      const potX = cw * 0.16, potY = railBottom;
-      cx.fillRect(potX - 22, potY - 26, 44, 26);
-      for (let i = 0; i < 6; i++) {
-        const a = (-1.35 + i * 0.22) * Math.PI * 0.5 - 0.4;
-        cx.beginPath();
-        cx.moveTo(potX, potY - 24);
-        cx.quadraticCurveTo(
-          potX + Math.cos(a) * 30, potY - 24 + Math.sin(a) * 50,
-          potX + Math.cos(a) * 40, potY - 24 + Math.sin(a) * 70
-        );
-        cx.stroke();
-      }
-    }
-
-    // A single soft glow — daytime sun haze in one upper corner now,
-    // standing in for the old porch-light accent — kept, not removed, for
-    // the same reason: it's what keeps the backdrop from reading flat.
-    const glow = cx.createRadialGradient(cw * 0.82, ch * 0.14, 4, cw * 0.82, ch * 0.14, cw * 0.3);
-    glow.addColorStop(0, 'rgba(255,250,230,0.22)');
-    glow.addColorStop(1, 'rgba(255,250,230,0)');
-    cx.fillStyle = glow;
-    cx.fillRect(0, 0, cw, ch);
-
-    const tex = new THREE.CanvasTexture(c);
-    tex.wrapS = tex.wrapT = THREE.ClampToEdgeWrapping;
-    return tex;
+  function addLayer(drawFn, z, opaque) {
+    const tex = makeLayerTexture(cw, ch, drawFn);
+    const geo = new THREE.PlaneGeometry(PLANE_W, PLANE_H);
+    const mat = new THREE.MeshBasicMaterial({ map: tex, transparent: !opaque, depthWrite: false });
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.position.z = z;
+    backdrop.add(mesh);
+    backdropParts.push({ geo, mat, tex });
+    return mesh;
   }
-  const wallTex = makeBalconyTexture();
-  const wallGeo = new THREE.PlaneGeometry(viewH * aspect * 2.4, viewH * 2.4);
-  const wallMat = new THREE.MeshBasicMaterial({ map: wallTex, depthWrite: false });
-  const wall = new THREE.Mesh(wallGeo, wallMat);
-  wall.position.z = -2;
-  root.add(wall);
+
+  let farLayer = null, nearLayer = null;
+  const skyLayer = preview
+    ? addLayer(cx => drawSky(cx, cw, ch), -2, true)
+    : addLayer(cx => drawSky(cx, cw, ch), -6, true);
+  if (!preview) {
+    farLayer = addLayer(cx => drawFar(cx, cw, ch, horizonY), -4, false);
+    nearLayer = addLayer(cx => drawNear(cx, cw, ch, railTop, railBottom), -1.5, false);
+  }
 
   // ─── Ground: a faint horizontal glow near the bottom ──────────────────────
-  // Warm neutral taupe now (was a mossy forest-floor green, then a deeper
-  // terracotta) — nudged lighter/cooler to sit with the daytime rework and
-  // the warm wood-floor tone in Scott's reference photos, rather than a
-  // saturated clay color. The drop lands in a planter on the balcony, not
-  // on a forest floor.
+  // Warm neutral taupe (was a mossy forest-floor green, then a deeper
+  // terracotta) — matches the daytime rework and the warm wood-floor tone
+  // in Scott's reference photos rather than a saturated clay color. The
+  // drop lands in a planter on the balcony, not on a forest floor. Part of
+  // `root`, not `backdrop` — it stays locked to the leaf/drop rather than
+  // parallax-shifting with the environment behind it.
   const groundY = -2.3;
   const groundGeo = new THREE.PlaneGeometry(viewH * aspect * 2.2, 0.5);
   const groundMat = new THREE.MeshBasicMaterial({
@@ -396,19 +392,46 @@ export function createLeaf(container, { preview = false } = {}) {
   root.add(ground);
 
   // ─── Leaf ───────────────────────────────────────────────────────────────
-  // Off-center and very slightly tilted at rest — wabi-sabi composition,
-  // nothing perfectly centered or perfectly upright.
-  const leafScale = preview ? 0.85 : 1.15;
   const leaf = buildLeaf();
-  leaf.group.scale.setScalar(leafScale);
-  // Shifted right (was -0.22) to leave the left side of the frame clear for
-  // the caption's new scroll box (see below) — the two were fighting for
-  // the same space when the caption sat bottom-center.
-  leaf.group.position.set(0.18, 0.9, 0);
-  leaf.group.rotation.z = -0.045;
   root.add(leaf.group);
-  const tipY = leaf.group.position.y + (-1.4) * leafScale;
-  const tipX = leaf.group.position.x;
+  let tipX, tipY;
+
+  // Full scene: the leaf fills the right third of the window, sized to its
+  // column so it holds up across very different aspect ratios (ultrawide
+  // desktop vs. a portrait phone) — Scott, 1.0.33: "the leaf fills the
+  // right 1/3 of the window, and the text fills the other 2/3." Preview
+  // tiles are untouched — small, off-center, unrelated to this request.
+  // Recomputed on resize (see onResize below), since "the right third" is
+  // relative to whatever the viewport's aspect ratio happens to be right now.
+  // Vertical anchor stays fixed regardless of aspect ratio (matches the
+  // pre-1.0.33 default) — only x (column center) and scale vary with the
+  // viewport. Scale is capped at 1.7: letting it grow further on very
+  // wide/ultrawide windows was verified (see leaf-layout-check3.mjs,
+  // outputs scratch dir) to shrink the fall distance toward zero, since a
+  // bigger leaf at a fixed vertical position pushes its tip down toward
+  // groundY. 1.7 keeps a real, visible fall across every aspect ratio
+  // tested from portrait phones to ultrawide desktop.
+  const LEAF_Y = 0.9;
+  function layoutLeaf() {
+    if (preview) {
+      leaf.group.scale.setScalar(0.85);
+      leaf.group.position.set(0.18, 0.9, 0);
+    } else {
+      const na = camera.right / viewH; // current aspect, camera already up to date
+      const colW = (2 * viewH * na) / 3; // width of the right third, in world units
+      // Fit the leaf to about half its column's width, not edge-to-edge —
+      // reads as placed, not crammed. 1.33 is the leaf shape's own
+      // unscaled width (see buildLeaf's bezier path).
+      const scale = Math.max(0.4, Math.min(1.7, (colW * 0.5) / 1.33));
+      const colCenter = viewH * na - colW / 2;
+      leaf.group.scale.setScalar(scale);
+      leaf.group.position.set(colCenter, LEAF_Y, 0);
+    }
+    tipY = leaf.group.position.y + (-1.4) * leaf.group.scale.x;
+    tipX = leaf.group.position.x;
+  }
+  layoutLeaf();
+  leaf.group.rotation.z = -0.045;
 
   // ─── Droplet ────────────────────────────────────────────────────────────
   const dropTex = makeDropletTexture();
@@ -444,58 +467,64 @@ export function createLeaf(container, { preview = false } = {}) {
       /* z-index must clear #experience-overlay (styles/main.css: fixed,
          z-index:300) — appended to document.body, outside that overlay,
          same fix already applied in orrery.js/egg.js. */
-      /* A real, user-scrollable box now — bottom-left rather than bottom-
-         center, so it clears the leaf (moved right to make room for it).
-         Scrolling THIS is what drives the drop's fall (see updateFracFromScroll
-         in the animate loop below) — the old version had it backwards,
-         the drop's own timer drove the text. Border/background so it
-         actually reads as a box, not just loose floating text. */
+      /* Scott, 1.0.33: "the leaf fills the right 1/3 of the window, and
+         the text fills the other 2/3 ... lose caption background, change
+         caption text color to black and enlarge to fill its space, as if
+         its plane was within the perspective layout of the 3d space."
+         Still the same real, user-scrollable element driving the fall
+         (see updateTargetFromScroll below) — just restyled: no box,
+         border, or background chip, large black text, most of the left
+         two-thirds of the screen instead of a small bottom-left corner.
+         Positioned to clear #pm-nav (3.5rem, z-index 500) at top. */
       #leaf-caption {
         position: fixed;
-        /* Scott: raise it — was bottom: 3rem, sitting too low. */
-        left: 2rem; bottom: 7.5rem;
-        width: min(30vw, 22rem); height: min(50vh, 24rem);
+        left: 4vw; top: 4.5rem;
+        width: min(62vw, 60rem); height: min(74vh, 44rem);
         overflow-y: auto; -webkit-overflow-scrolling: touch;
         pointer-events: all; z-index: 310;
-        background: rgba(10,12,9,0.32);
-        border: 1px solid rgba(196,214,196,0.18);
-        border-radius: 3px;
-        padding: 1.4rem 1.2rem;
-        scrollbar-color: rgba(196,214,196,0.35) transparent;
+        scrollbar-color: rgba(20,20,16,0.35) transparent;
         scrollbar-width: thin;
-        -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 8%, black 92%, transparent 100%);
-                mask-image: linear-gradient(to bottom, transparent 0%, black 8%, black 92%, transparent 100%);
+        -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 6%, black 94%, transparent 100%);
+                mask-image: linear-gradient(to bottom, transparent 0%, black 6%, black 94%, transparent 100%);
       }
       #leaf-caption p {
         text-align: left;
-        color: rgba(196, 214, 196, 0.75);
-        /* Scott: away from serif/italic entirely, toward Japandi — Zen
-           Maru Gothic is a real Japanese rounded-sans type family, fluid
-           without being a caricature "brush font," and its soft rounded
-           forms read as much Scandinavian-minimalist as Japanese. */
+        /* Black now (was a pale translucent green) — only legible against
+           the new bright daytime backdrop because of it; would've
+           vanished against the old dark dusk/wall versions. */
+        color: rgba(18, 16, 12, 0.92);
         font-family: 'Zen Maru Gothic', 'Hiragino Maru Gothic ProN', sans-serif;
         font-weight: 400;
-        font-size: clamp(1.02rem, 2vw, 1.28rem);
-        letter-spacing: 0.01em;
-        line-height: 1.7;
-        text-shadow: 0 1px 3px rgba(0,0,0,0.6);
-        margin: 0 0 1.8rem;
+        /* Enlarged well past the old corner-box version — the text IS
+           most of the composition now, not a small accent beside it. */
+        font-size: clamp(1.6rem, 3.2vw, 2.6rem);
+        letter-spacing: 0.005em;
+        line-height: 1.5;
+        /* A soft light halo in place of the old dark drop-shadow — keeps
+           the text legible on the rare paragraph that sits over the
+           skyline/palm layer, without reintroducing a boxed background
+           behind it (Scott asked specifically to lose that). */
+        text-shadow: 0 1px 18px rgba(255,255,255,0.65), 0 1px 2px rgba(255,255,255,0.4);
+        margin: 0 0 2.2rem;
       }
       #leaf-caption p:last-child { margin-bottom: 0; }
       #leaf-hint {
         position: fixed; top: 4.5rem; right: 1.2rem;
-        color: rgba(255,255,255,0.3);
+        /* Dark now, not white — same backdrop-brightness flip as the
+           caption text above. */
+        color: rgba(40,36,30,0.4);
         font-size: 0.55rem; letter-spacing: 0.2em;
         text-transform: uppercase; pointer-events: none;
         text-align: right; z-index: 310; line-height: 1.8;
         font-family: 'Zen Maru Gothic', sans-serif;
       }
       @media (max-width: 800px) {
-        /* Not enough width to keep the box on the left and the leaf clear
-           of it too — drop back to the old bottom-center placement below
-           this breakpoint rather than overlapping the two. */
-        #leaf-caption { left: 50%; bottom: 1.6rem; transform: translateX(-50%); width: 88vw; height: 34vh; }
-        #leaf-caption p { text-align: center; font-size: 0.78rem; }
+        /* Not enough width for a right-third leaf column and a left-two-
+           thirds text column both — same conflict as before 1.0.30, same
+           fix: drop to a small centered box at the bottom below this
+           breakpoint rather than overlapping the two. */
+        #leaf-caption { left: 50%; top: auto; bottom: 1.6rem; transform: translateX(-50%); width: 88vw; height: 34vh; }
+        #leaf-caption p { text-align: center; font-size: 1rem; }
       }
       /* A little grain over the whole render — a handled, weathered
          object rather than a clean digital gradient, same wabi-sabi
@@ -693,11 +722,23 @@ export function createLeaf(container, { preview = false } = {}) {
       if (m.life > maxLife) { m.active = false; m.mat.opacity = 0; }
     });
 
-    // A very slow ambient drift on the whole scene — alive, not static.
-    // This part IS autonomous decorative motion (unlike the drop's fall,
-    // which is scroll-driven i.e. visitor-initiated), so it respects
-    // prefers-reduced-motion.
+    // A very slow ambient drift on the foreground (leaf/drop/ground) —
+    // alive, not static. This part IS autonomous decorative motion
+    // (unlike the drop's fall, which is scroll-driven i.e. visitor-
+    // initiated), so it respects prefers-reduced-motion.
     if (!reduceMotion) root.position.x = Math.sin(tSec * 0.05) * 0.02;
+
+    // Parallax: the same scroll-driven frac already moving the drop also
+    // nudges the backdrop layers sideways at different rates — nearest
+    // (rail/plant) shifts the most, sky barely at all. The classic depth
+    // cue, driven by reading progress rather than a mouse/tilt input —
+    // Scott specifically asked to tie it to scroll, since that works
+    // identically on mobile and desktop, unlike a mouse-parallax effect.
+    if (!preview && farLayer) {
+      skyLayer.position.x = frac * 0.15;
+      farLayer.position.x = frac * 0.55;
+      nearLayer.position.x = frac * 1.05;
+    }
 
     renderer.render(scene, camera);
   }
@@ -714,6 +755,7 @@ export function createLeaf(container, { preview = false } = {}) {
     camera.bottom = -viewH;
     camera.updateProjectionMatrix();
     renderer.setSize(nw, nh);
+    layoutLeaf();
   }
   window.addEventListener('resize', onResize);
   window.addEventListener('orientationchange', () => setTimeout(onResize, 100));
@@ -724,7 +766,7 @@ export function createLeaf(container, { preview = false } = {}) {
       window.removeEventListener('resize', onResize);
       window.removeEventListener('orientationchange', onResize);
       renderer.dispose();
-      wallGeo.dispose(); wallMat.dispose(); wallTex.dispose();
+      backdropParts.forEach(p => { p.geo.dispose(); p.mat.dispose(); p.tex.dispose(); });
       groundGeo.dispose(); groundMat.dispose();
       leaf.geo.dispose(); leaf.mat.dispose(); leaf.tex.dispose();
       leaf.veinGeo.dispose(); leaf.veinMat.dispose();

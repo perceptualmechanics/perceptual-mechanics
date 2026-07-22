@@ -6,6 +6,59 @@ projects (The Secret World, A Manual of Perceptual Mechanics) moved into their o
 files, which are now the source of truth for that material going forward. See "project map"
 below for where things live.
 
+## 1.0.33 (2026-07-22)
+
+Scott sent apartment reference photos again and clarified the earlier "vector
+graphics are awful" complaint was specifically about leaf's skyline/palms —
+half-joking that AI was supposed to be "destroying graphic design" by now.
+Genuinely blocked on using his actual photo (inline-pasted chat images still
+don't land on disk here — confirmed again, nothing new in uploads/), so when
+asked to pick a direction he went with "improved-procedural," then pushed the
+whole scene further: "create a 3d space with different planes and parallax
+... change the layout so that the leaf fills the right 1/3 of the window,
+and the text fills the other 2/3, lose caption background, change caption
+text color to black and enlarge to fill its space ... let's get a bit wild."
+Confirmed one open design question first — what should drive the parallax —
+and he picked tying it to scroll (the same signal already driving the drop's
+fall) over mouse/tilt, since it behaves identically on mobile and desktop.
+
+Backdrop rebuilt as three separate canvas-texture planes instead of one flat
+image: sky+clouds+glow (drawSky), skyline+palms (drawFar), rail+plant
+(drawNear), at z = -6/-4/-1.5 respectively. Each frame, all three get nudged
+sideways by the scroll-driven `frac` at different rates — sky barely moves
+(0.15), skyline/palms more (0.55), the rail/plant nearest layer the most
+(1.05) — the classic parallax depth cue, driven by reading progress instead
+of a cursor. Preview tiles keep the single sky-only plane from 1.0.32
+untouched (no parallax there — not scrolling, no reason to move it).
+
+Layout: the leaf now sits in a column sized to the right third of the
+window, computed from the camera's live aspect ratio (recomputed on
+resize) rather than a fixed position — verified across nine aspect ratios
+from a portrait phone (0.4) to an ultrawide desktop (2.4) with a standalone
+script before touching the real code, since an early version of the column-
+fit math shrank the fall distance toward zero on very wide windows (a bigger
+leaf at a fixed vertical position pushes its tip down toward the ground) —
+caught that with the same script, then capped the fit scale at 1.7 and kept
+the leaf's vertical anchor fixed to fix it. Caption moved to the left two-
+thirds: background/border gone entirely, text now black (only viable because
+of 1.0.31's daytime backdrop — would've vanished against the old dark dusk
+version), and font-size roughly doubled. A soft white text-shadow halo
+replaces the old dark drop-shadow, for the rare paragraph that sits over the
+skyline layer, without reintroducing a boxed background. Below 800px width,
+same fallback as before 1.0.30: centered bottom box, since there isn't room
+for a right-third leaf column and a left-two-thirds text column both on a
+phone screen.
+
+Also separately oversized the backdrop planes' margin (1.5x → 1.8x width)
+after the same verification script caught the new parallax motion revealing
+a bare texture edge at very narrow aspect ratios that the old static single
+plane never needed to worry about.
+
+None of this is browser-confirmed — same standing limitation all session,
+no headless browser in this sandbox. Verified via node --check, the two
+standalone math scripts above, and a clean vite build. Scott's turn to load
+it and see how the "wild" version actually feels.
+
 ## 1.0.32 (2026-07-22)
 
 Two things Scott caught right after 1.0.31 shipped: "the PERCEPTUAL MECHANICS
