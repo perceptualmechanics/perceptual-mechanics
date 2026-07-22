@@ -6,6 +6,48 @@ projects (The Secret World, A Manual of Perceptual Mechanics) moved into their o
 files, which are now the source of truth for that material going forward. See "project map"
 below for where things live.
 
+## 1.0.37 (2026-07-22)
+
+Scott, after confirming the real balcony photo matched ("Can you see this?" — yes,
+via `assets/IMG_1198.jpeg`): "Ok so here's the kind of magic I want you to do. So
+yes, IMG_1998 will be source of truth for this. but let's get wacky. instead of
+horizontal parallax, let's do blur/focus along the z-axis. so as they scroll,
+different parts of the background will be in focus while the drop's falling.
+What do you think?"
+
+Two changes, both to leaf.js's backdrop:
+
+1. **Real photo, not procedural.** Resized `assets/IMG_1198.jpeg` (5712×4284,
+   the exact balcony shot Scott confirmed) down to `public/leaf-balcony.jpg`
+   (1800×1350, quality 82, ~625KB) and load it as the backdrop texture. Ripped
+   out the whole three-layer procedural canvas system (`drawSky`/`drawFar`/
+   `drawNear`/`makeLayerTexture`/`addLayer`) — it's gone, replaced by a single
+   plane. A `coverCropUV()` helper crops the 4:3 photo to whatever aspect the
+   window is, same idea as CSS `background-size: cover`.
+
+2. **Rack focus instead of horizontal parallax.** Rather than the old
+   scroll-driven side-to-side layer shift, the backdrop now runs a custom
+   `THREE.ShaderMaterial` (single vertex/fragment pair, `FOCUS_VERTEX_SHADER`/
+   `FOCUS_FRAGMENT_SHADER`) that blurs each pixel based on its vertical
+   distance from a "focus band." That band's position (`uFocusY`) is updated
+   every frame directly from the falling drop's own real-time y-position — so
+   as the drop falls, focus literally travels down the photo with it, sharp
+   near the drop and blurred everywhere else. Went with a hand-rolled 8-tap
+   ring blur rather than reaching for `THREE.EffectComposer`/`BokehPass` (real
+   depth-of-field post-processing): this codebase has no post-processing
+   pipeline anywhere else, and one shader is something I can actually verify
+   blind, whereas a multi-pass pipeline mostly isn't. Preview-mode tiles skip
+   the shader entirely (plain `MeshBasicMaterial`, no blur cost) since they're
+   static 320px thumbnails.
+
+   Note on verification: this is the least-verifiable thing I've shipped this
+   session. I checked the JS wiring (uniforms, texture loading, `ShaderMaterial`
+   construction) and re-implemented the blur-distance math standalone in Node
+   to confirm it's monotonic and bounded correctly — both passed. But GLSL
+   source isn't compiled or type-checked by Vite/Node here, so actual shader
+   syntax correctness and what it looks like rendering in a real WebGL context
+   are unconfirmed until Scott loads the page.
+
 ## 1.0.36 (2026-07-22)
 
 Scott: "there's a CSS bug on preview page: the standalone images are square,

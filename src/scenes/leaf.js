@@ -197,121 +197,91 @@ function buildLeaf() {
   return { group, geo, mat, tex, veinGeo, veinMat, sideVeins };
 }
 
-// ─── Backdrop layers: a Boca Raton balcony, daytime ────────────────────────
-// Split into three independent draw functions (sky, far, near) rather than
-// one flat canvas — 1.0.33, Scott: "create a 3d space with different planes
-// and parallax." Each becomes its own CanvasTexture on its own plane at a
-// different depth inside createLeaf(); these functions only draw pixels,
-// they don't know about THREE or depth at all.
-function drawSky(cx, cw, ch) {
-  // Daytime sky — soft pale blue up top, through a hazy gray-green, to a
-  // warm neutral cream at the horizon, matching the reference photos'
-  // bright-but-muted Florida daylight rather than a postcard-blue sky.
-  const sky = cx.createLinearGradient(0, 0, 0, ch);
-  sky.addColorStop(0,    '#9fb7c8');
-  sky.addColorStop(0.45, '#c3cdc4');
-  sky.addColorStop(0.78, '#e2d8c4');
-  sky.addColorStop(1,    '#d9c8ab');
-  cx.fillStyle = sky;
-  cx.fillRect(0, 0, cw, ch);
-
-  // A few soft, low-contrast clouds — daytime haze, not night stars.
-  for (let i = 0; i < 5; i++) {
-    const x = Math.random() * cw, y = ch * (0.06 + Math.random() * 0.28);
-    const r = 40 + Math.random() * 70;
-    const grad = cx.createRadialGradient(x, y, 0, x, y, r);
-    grad.addColorStop(0, 'rgba(255,255,255,0.28)');
-    grad.addColorStop(1, 'rgba(255,255,255,0)');
-    cx.fillStyle = grad;
-    cx.beginPath();
-    cx.ellipse(x, y, r, r * 0.4, 0, 0, Math.PI * 2);
-    cx.fill();
+// ─── Backdrop: the real balcony photo, rack-focus shader ───────────────────
+// 1.0.37 — Scott sent his own reference photos as real files (assets/,
+// gitignored — see NOTES.md) and confirmed IMG_1198.jpeg is the exact
+// view. Replaced the procedural sky/skyline/palm/rail drawing entirely
+// with that actual photo (resized to public/leaf-balcony.jpg, ~625KB).
+// Then, instead of the horizontal parallax from 1.0.33: "instead of
+// horizontal parallax, let's do blur/focus along the z-axis. so as they
+// scroll, different parts of the background will be in focus while the
+// drop's falling." Implemented as a single custom fragment shader on one
+// plane (not three layers, not a real multi-pass depth-of-field — there's
+// no post-processing pipeline anywhere in this codebase, and one hand-
+// rolled shader is far more verifiable, blind, than wiring up
+// EffectComposer/BokehPass would be): every pixel's blur radius grows
+// with its vertical distance from a "focus band" that tracks the drop's
+// own falling position, and each blurred pixel is a ring of sampled taps
+// around itself, not a real optical lens simulation.
+const FOCUS_VERTEX_SHADER = `
+  varying vec2 vUv;
+  varying float vWorldY;
+  void main() {
+    vUv = uv;
+    // This mesh is never scaled or rotated and sits at y=0, so the raw
+    // local vertex position IS its world-space Y — passed straight
+    // through rather than normalized, so it can compare directly against
+    // uFocusY (also a raw world-space Y — see animate()) without a second
+    // place that has to agree on what "normalized" means.
+    vWorldY = position.y;
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
   }
+`;
 
-  // A single soft glow — daytime sun haze in one upper corner, standing in
-  // for the old porch-light accent — kept, since it's what keeps the sky
-  // from reading flat.
-  const glow = cx.createRadialGradient(cw * 0.82, ch * 0.14, 4, cw * 0.82, ch * 0.14, cw * 0.3);
-  glow.addColorStop(0, 'rgba(255,250,230,0.22)');
-  glow.addColorStop(1, 'rgba(255,250,230,0)');
-  cx.fillStyle = glow;
-  cx.fillRect(0, 0, cw, ch);
-}
+// uFocusY: the drop's current world-space Y (see animate()) — the sharp
+// band always sits right around wherever the drop actually is on screen,
+// blurring out everything above and below it as it falls.
+// uRepeat/uOffset: a "background-size: cover" UV crop, computed once the
+// real photo's own pixel dimensions are known — the photo's 4:3 aspect
+// essentially never matches the viewport's, so this crops rather than
+// stretching.
+// PLANE_HALF_H (baked in below, not a uniform): half this plane's own
+// height, a true constant since PLANE_H only depends on the fixed viewH,
+// never on aspect — used to normalize world-space distance into a 0..1
+// range before scaling by uMaxBlur.
+const FOCUS_FRAGMENT_SHADER = `
+  uniform sampler2D uMap;
+  uniform vec2 uRepeat;
+  uniform vec2 uOffset;
+  uniform float uFocusY;
+  uniform float uFocusWidth;
+  uniform float uMaxBlur;
+  varying vec2 vUv;
+  varying float vWorldY;
 
-// Distant condo silhouettes + two palms — transparent canvas (only these
-// shapes are opaque), so the sky layer behind shows through everywhere
-// else. Full scene only — preview tiles skip this whole layer (see
-// createLeaf): at 320px thumbnail scale this hard, full-width geometric
-// detail was competing with the leaf's own round silhouette hard enough
-// that the leaf itself started reading as square rather than round.
-function drawFar(cx, cw, ch, horizonY) {
-  cx.fillStyle = 'rgba(120,120,118,0.4)';
-  [[0.08, 0.16, 0.42], [0.22, 0.1, 0.3], [0.72, 0.2, 0.5], [0.86, 0.13, 0.36]].forEach(([fx, fh, fw]) => {
-    const bw = cw * fw * 0.14;
-    const bh = ch * fh;
-    cx.fillRect(cw * fx, horizonY - bh, bw, bh);
-  });
-
-  const palm = (px, py, scale) => {
-    cx.strokeStyle = 'rgba(70,82,58,0.6)';
-    cx.lineWidth = 3 * scale;
-    cx.beginPath();
-    cx.moveTo(px, py);
-    cx.quadraticCurveTo(px - 6 * scale, py - 30 * scale, px - 2 * scale, py - 58 * scale);
-    cx.stroke();
-    const crownX = px - 2 * scale, crownY = py - 58 * scale;
-    for (let i = 0; i < 5; i++) {
-      const a = (-0.9 + i * 0.45) * Math.PI;
-      cx.beginPath();
-      cx.moveTo(crownX, crownY);
-      cx.quadraticCurveTo(
-        crownX + Math.cos(a) * 16 * scale, crownY + Math.sin(a) * 10 * scale,
-        crownX + Math.cos(a) * 30 * scale, crownY + Math.sin(a) * 16 * scale + 8 * scale
-      );
-      cx.stroke();
+  void main() {
+    vec2 uv = vUv * uRepeat + uOffset;
+    float dist = abs(vWorldY - uFocusY);
+    float distNorm = clamp((dist - uFocusWidth) / (PLANE_HALF_H - uFocusWidth), 0.0, 1.0);
+    float blur = distNorm * uMaxBlur;
+    if (blur < 0.0006) {
+      gl_FragColor = texture2D(uMap, uv);
+      return;
     }
-  };
-  palm(cw * 0.12, horizonY + 4, cw / 900);
-  palm(cw * 0.9, horizonY + 8, cw / 900 * 0.85);
-}
-
-// Black metal balcony rail + one corner plant silhouette — transparent
-// canvas, same reasoning as drawFar. Full scene only.
-function drawNear(cx, cw, ch, railTop, railBottom) {
-  cx.fillStyle = 'rgba(22,22,24,0.88)';
-  cx.fillRect(0, railTop, cw, 3);
-  cx.fillRect(0, railBottom - 2, cw, 2.5);
-  const baluster = cw / 34;
-  for (let x = baluster / 2; x < cw; x += baluster) {
-    cx.fillRect(x - 1, railTop, 2, railBottom - railTop);
+    vec4 sum = texture2D(uMap, uv);
+    float total = 1.0;
+    const int TAPS = 8;
+    for (int i = 0; i < TAPS; i++) {
+      float a = (float(i) / float(TAPS)) * 6.28318;
+      vec2 o = vec2(cos(a), sin(a)) * blur;
+      sum += texture2D(uMap, uv + o);
+      total += 1.0;
+    }
+    gl_FragColor = sum / total;
   }
+`.replace('PLANE_HALF_H', String(3.2 * 2.4 / 2)); // viewH * 2.4 / 2 — see PLANE_H in createLeaf()
 
-  // A single plant silhouette in one corner — the Japandi habit of one
-  // sculptural, unfussy plant rather than clutter — standing in for the
-  // one this leaf and drop actually belong to. Kept dark against the
-  // bright sky (a backlit plant reads as a silhouette even in daylight).
-  cx.fillStyle = 'rgba(35,32,28,0.7)';
-  const potX = cw * 0.16, potY = railBottom;
-  cx.fillRect(potX - 22, potY - 26, 44, 26);
-  for (let i = 0; i < 6; i++) {
-    const a = (-1.35 + i * 0.22) * Math.PI * 0.5 - 0.4;
-    cx.beginPath();
-    cx.moveTo(potX, potY - 24);
-    cx.quadraticCurveTo(
-      potX + Math.cos(a) * 30, potY - 24 + Math.sin(a) * 50,
-      potX + Math.cos(a) * 40, potY - 24 + Math.sin(a) * 70
-    );
-    cx.stroke();
+// Standard "cover" crop math (same idea as CSS background-size: cover):
+// if the photo is relatively wider than the target frame, crop its left/
+// right edges; if relatively narrower/taller, crop top/bottom. Returns
+// the repeat/offset pair the shader above expects.
+function coverCropUV(photoAspect, frameAspect) {
+  if (photoAspect > frameAspect) {
+    const repeatX = frameAspect / photoAspect;
+    return { repeat: [repeatX, 1], offset: [(1 - repeatX) / 2, 0] };
   }
-}
-
-function makeLayerTexture(cw, ch, drawFn) {
-  const c = document.createElement('canvas');
-  c.width = cw; c.height = ch;
-  drawFn(c.getContext('2d'));
-  const tex = new THREE.CanvasTexture(c);
-  tex.wrapS = tex.wrapT = THREE.ClampToEdgeWrapping;
-  return tex;
+  const repeatY = photoAspect / frameAspect;
+  return { repeat: [1, repeatY], offset: [0, (1 - repeatY) / 2] };
 }
 
 export function createLeaf(container, { preview = false } = {}) {
@@ -337,60 +307,58 @@ export function createLeaf(container, { preview = false } = {}) {
   scene.add(root);
   const reduceMotion = prefersReducedMotion();
 
-  // ─── Backdrop ───────────────────────────────────────────────────────────
-  // Preview tiles: one plane, sky/clouds/glow only (see drawFar/drawNear's
-  // own comments for why the rest is skipped there). Full scene: three
-  // planes at increasing depth — sky furthest, skyline+palms mid, rail+
-  // plant nearest — each on its own CanvasTexture so they can move
-  // independently. Built at the plane's own aspect ratio (not a repeated
-  // square tile) so nothing stretches at portrait viewport ratios.
-  const cw = Math.round(Math.max(600, Math.min(1400, 900 * Math.max(aspect, 0.5))));
-  const ch = Math.round(cw / Math.max(aspect, 0.5));
-  const horizonY = ch * 0.62;
-  const railTop = ch * 0.78, railBottom = ch * 0.98;
-  // Same 2.4x plane size the old single-plane backdrop always used —
-  // NOT oversized. horizonY/railTop/railBottom/the palm fx fractions
-  // above are all calibrated against exactly this plane-to-camera ratio
-  // (it puts about 83% of the canvas inside the visible frame, centered).
-  // An earlier version of this pass oversized the plane so the parallax
-  // shift below would never reveal a bare edge, which quietly shrank that
-  // visible fraction enough to push the rail and the entire skyline/palm
-  // layer almost completely out of frame — Scott's screenshot showed nothing
-  // but bare sky. Fixed here by leaving the plane alone and keeping the
-  // parallax throw itself small enough to stay inside the small margin
-  // this plane size actually has (see PARALLAX_MARGIN below), rather than
-  // making the plane bigger.
+  // ─── Backdrop: the real photo ───────────────────────────────────────────
+  // Same 2.4x plane size every backdrop version this scene has ever used —
+  // an orthographic camera means a plane this size covers the same
+  // fraction of the screen regardless of its z, so putting the photo
+  // further back (z=-3) than the old wall (z=-2) costs nothing.
   const PLANE_W = viewH * aspect * 2.4;
   const PLANE_H = viewH * 2.4;
-  // Half the gap between this plane's edge and the camera's own edge —
-  // the most any layer can shift sideways before its texture's edge
-  // becomes visible. Scales with aspect, so it shrinks safely on narrow
-  // mobile viewports rather than needing a fixed guess.
-  const PARALLAX_MARGIN = viewH * aspect * 0.2;
+  const photoAspect = 1800 / 1350; // public/leaf-balcony.jpg's actual pixel dimensions
 
-  const backdrop = new THREE.Group();
+  const textureLoader = new THREE.TextureLoader();
+  const balconyTex = textureLoader.load('/leaf-balcony.jpg', tex => {
+    tex.colorSpace = THREE.SRGBColorSpace;
+  });
+  balconyTex.wrapS = balconyTex.wrapT = THREE.ClampToEdgeWrapping;
+  const { repeat, offset } = coverCropUV(photoAspect, aspect);
+
+  const backdropGeo = new THREE.PlaneGeometry(PLANE_W, PLANE_H);
+  let backdropMat, focusUniforms = null;
+
+  if (preview) {
+    // Preview tiles don't scroll, so "focus" has nothing to track — plain
+    // photo, cover-cropped, no shader. Same simplification instinct as
+    // 1.0.32's sky-only preview plane, just with the real photo now.
+    balconyTex.repeat.set(repeat[0], repeat[1]);
+    balconyTex.offset.set(offset[0], offset[1]);
+    backdropMat = new THREE.MeshBasicMaterial({ map: balconyTex, depthWrite: false });
+  } else {
+    // Full scene: the rack-focus shader. Scott: "instead of horizontal
+    // parallax, let's do blur/focus along the z-axis. so as they scroll,
+    // different parts of the background will be in focus while the
+    // drop's falling." uFocusY gets updated every frame in animate() to
+    // track the drop's own current screen position — the sharp band is
+    // always wherever the drop currently is, blurring out everything
+    // above and below it.
+    focusUniforms = {
+      uMap: { value: balconyTex },
+      uRepeat: { value: new THREE.Vector2(repeat[0], repeat[1]) },
+      uOffset: { value: new THREE.Vector2(offset[0], offset[1]) },
+      uFocusY: { value: 0 }, // world-space Y, overwritten every frame in animate()
+      uFocusWidth: { value: 0.35 }, // world units — half-width of the sharp band
+      uMaxBlur: { value: 0.018 }, // max blur radius, in UV units
+    };
+    backdropMat = new THREE.ShaderMaterial({
+      uniforms: focusUniforms,
+      vertexShader: FOCUS_VERTEX_SHADER,
+      fragmentShader: FOCUS_FRAGMENT_SHADER,
+      depthWrite: false,
+    });
+  }
+  const backdrop = new THREE.Mesh(backdropGeo, backdropMat);
+  backdrop.position.z = -3;
   scene.add(backdrop);
-  const backdropParts = []; // { geo, mat, tex } — for dispose()
-
-  function addLayer(drawFn, z, opaque) {
-    const tex = makeLayerTexture(cw, ch, drawFn);
-    const geo = new THREE.PlaneGeometry(PLANE_W, PLANE_H);
-    const mat = new THREE.MeshBasicMaterial({ map: tex, transparent: !opaque, depthWrite: false });
-    const mesh = new THREE.Mesh(geo, mat);
-    mesh.position.z = z;
-    backdrop.add(mesh);
-    backdropParts.push({ geo, mat, tex });
-    return mesh;
-  }
-
-  let farLayer = null, nearLayer = null;
-  const skyLayer = preview
-    ? addLayer(cx => drawSky(cx, cw, ch), -2, true)
-    : addLayer(cx => drawSky(cx, cw, ch), -6, true);
-  if (!preview) {
-    farLayer = addLayer(cx => drawFar(cx, cw, ch, horizonY), -4, false);
-    nearLayer = addLayer(cx => drawNear(cx, cw, ch, railTop, railBottom), -1.5, false);
-  }
 
   // ─── Ground: a faint horizontal glow near the bottom ──────────────────────
   // Warm neutral taupe (was a mossy forest-floor green, then a deeper
@@ -752,20 +720,17 @@ export function createLeaf(container, { preview = false } = {}) {
     // initiated), so it respects prefers-reduced-motion.
     if (!reduceMotion) root.position.x = Math.sin(tSec * 0.05) * 0.02;
 
-    // Parallax: the same scroll-driven frac already moving the drop also
-    // nudges the backdrop layers sideways at different rates — nearest
-    // (rail/plant) shifts the most, sky barely at all. The classic depth
-    // cue, driven by reading progress rather than a mouse/tilt input —
-    // Scott specifically asked to tie it to scroll, since that works
-    // identically on mobile and desktop, unlike a mouse-parallax effect.
-    // Offsets are fractions of PARALLAX_MARGIN (not fixed constants), so
-    // the shift always stays inside however much edge this plane actually
-    // has to give at the current aspect ratio, instead of a fixed guess
-    // that's safe on desktop but overshoots on a narrow phone.
-    if (!preview && farLayer) {
-      skyLayer.position.x = frac * PARALLAX_MARGIN * 0.12;
-      farLayer.position.x = frac * PARALLAX_MARGIN * 0.45;
-      nearLayer.position.x = frac * PARALLAX_MARGIN * 0.8;
+    // Rack focus: the sharp band in the backdrop photo tracks the drop's
+    // own current screen position (set above, every branch of the phase
+    // if/else already moved drop.position this frame) rather than a
+    // generic scroll fraction — "different parts of the background will
+    // be in focus while the drop's falling" reads most literally as the
+    // focus following the drop itself, not just a fixed top-to-bottom
+    // sweep. Raw world-space Y, same units the shader's vWorldY varying
+    // already uses — no normalization to keep in sync between here and
+    // the shader.
+    if (focusUniforms) {
+      focusUniforms.uFocusY.value = drop.position.y;
     }
 
     renderer.render(scene, camera);
@@ -794,7 +759,7 @@ export function createLeaf(container, { preview = false } = {}) {
       window.removeEventListener('resize', onResize);
       window.removeEventListener('orientationchange', onResize);
       renderer.dispose();
-      backdropParts.forEach(p => { p.geo.dispose(); p.mat.dispose(); p.tex.dispose(); });
+      backdropGeo.dispose(); backdropMat.dispose(); balconyTex.dispose();
       groundGeo.dispose(); groundMat.dispose();
       leaf.geo.dispose(); leaf.mat.dispose(); leaf.tex.dispose();
       leaf.veinGeo.dispose(); leaf.veinMat.dispose();
