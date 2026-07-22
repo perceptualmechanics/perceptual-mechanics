@@ -665,8 +665,17 @@ export function createLeaf(container, { preview = false } = {}) {
          Positioned to clear #pm-nav (3.5rem, z-index 500) at top. */
       #leaf-caption {
         position: fixed;
-        left: 4vw; top: 4.5rem;
-        width: min(62vw, 60rem); height: min(74vh, 44rem);
+        left: 4vw;
+        /* Scott: "have the text extend the full height of the window."
+           Was top: 4.5rem + height: min(74vh, 44rem) — height now comes
+           from top+bottom instead of an explicit value, so the box
+           stretches to fill everything between the nav (top: 4.5rem
+           clears it) and the bottom-fixed chrome (bottom: 4.5rem clears
+           #site-title + #colophon-mark, the same clearance value
+           #landing and leaf's own mobile caption already use for that
+           exact footprint). */
+        top: 4.5rem; bottom: 4.5rem;
+        width: min(62vw, 60rem);
         overflow-y: auto; -webkit-overflow-scrolling: touch;
         pointer-events: all; z-index: 310;
         scrollbar-color: rgba(20,20,16,0.35) transparent;

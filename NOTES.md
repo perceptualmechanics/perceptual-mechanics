@@ -6,6 +6,22 @@ projects (The Secret World, A Manual of Perceptual Mechanics) moved into their o
 files, which are now the source of truth for that material going forward. See "project map"
 below for where things live.
 
+## 1.0.43 (2026-07-22)
+
+Scott, after confirming the preview-tile fix worked: "last thing on leaf:
+have the text extend the full height of the window."
+
+Desktop `#leaf-caption` was capped at `height: min(74vh, 44rem)` under a
+fixed `top: 4.5rem`. Switched to `top: 4.5rem; bottom: 4.5rem;` with no
+explicit height — a positioned element with both top and bottom set
+stretches to fill the space between them, so the box now runs the full
+window height minus the same clearance this codebase already uses twice
+elsewhere for the fixed nav/title/colophon-mark footprint, rather than an
+arbitrary vh/rem cap. Scoped to the desktop rule only — left the mobile
+media query (bottom-centered box, fixed 1.0.40 last version) alone, since
+"full height" doesn't really apply to that much smaller, differently-
+composed layout.
+
 ## 1.0.42 (2026-07-22)
 
 Scott, after a hard refresh and a rebuilt dev server didn't fix 1.0.41:
