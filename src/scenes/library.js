@@ -322,6 +322,16 @@ export function createLibrary(container, { preview = false } = {}) {
         font-family: 'Times New Roman', serif;
       }
       #library-panel.open { transform: translateX(0); }
+      /* Enters from whichever side of the screen was actually clicked --
+         same convention as sphere.js. .from-left is toggled in JS right
+         before opening; .no-transition suppresses the flip's own
+         transition for one frame so it happens while the panel is still
+         off-screen, not visibly. */
+      #library-panel.from-left {
+        left: 0; right: auto;
+        border-left: none; border-right: 1px solid rgba(230,215,180,0.15);
+      }
+      #library-panel.no-transition { transition: none !important; }
       #library-panel-kind {
         font-size: 0.65rem; letter-spacing: 0.25em; text-transform: uppercase;
         color: rgba(230,215,180,0.5); margin-bottom: 0.6rem;
@@ -343,6 +353,23 @@ export function createLibrary(container, { preview = false } = {}) {
         color: rgba(220,190,140,0.6); font-size: 0.8rem; font-style: italic;
         line-height: 1.6; margin-top: 0.9rem;
       }
+      #library-panel-excerpt {
+        margin-top: 1.4rem; padding: 1.1rem 1.3rem;
+        border-left: 2px solid rgba(230,215,180,0.25);
+        background: rgba(230,215,180,0.04);
+        color: rgba(235,228,210,0.85); font-size: 0.95rem;
+        font-style: italic; line-height: 1.75;
+      }
+      #library-panel-excerpt:empty { display: none; }
+      #library-panel-watch {
+        display: inline-block; margin-top: 1.2rem;
+        color: rgba(190,215,255,0.75); font-size: 0.8rem;
+        letter-spacing: 0.04em; text-decoration: none;
+        border-bottom: 1px solid rgba(190,215,255,0.3);
+        padding-bottom: 0.15rem;
+      }
+      #library-panel-watch:hover { color: rgba(215,230,255,0.95); border-bottom-color: rgba(215,230,255,0.6); }
+      #library-panel-watch:empty { display: none; }
       #library-panel-close {
         position: absolute; top: 1.5rem; right: 1.5rem; background: none;
         border: none; color: rgba(255,255,255,0.4); font-size: 1.2rem;
@@ -380,6 +407,8 @@ export function createLibrary(container, { preview = false } = {}) {
       <div id="library-panel-creator"></div>
       <div id="library-panel-details"></div>
       <p id="library-panel-note"></p>
+      <blockquote id="library-panel-excerpt"></blockquote>
+      <a id="library-panel-watch" href="#" target="_blank" rel="noopener noreferrer"></a>
     `;
     container.style.position = 'relative';
     container.style.overflow = 'hidden';
@@ -440,14 +469,44 @@ export function createLibrary(container, { preview = false } = {}) {
       // item). See src/text/library.js's header for how these were sourced.
       const detailsEl = panel.querySelector('#library-panel-details');
       const noteEl = panel.querySelector('#library-panel-note');
+      const excerptEl = panel.querySelector('#library-panel-excerpt');
+      const watchEl = panel.querySelector('#library-panel-watch');
       const lines = [];
       if (it.publisher) lines.push(`${it.publisher}${it.publish_year ? `, ${it.publish_year}` : ''}`);
       if (it.pages) lines.push(`${it.pages} pages`);
       if (it.isbn13) lines.push(`ISBN ${it.isbn13}`);
       if (it.release_year) lines.push(`${it.release_year}${it.country ? ` · ${it.country}` : ''}`);
       if (it.runtime_min) lines.push(`${it.runtime_min} min`);
+      if (it.writer) lines.push(`written by ${it.writer}`);
+      if (it.producer) lines.push(`produced by ${it.producer}`);
       detailsEl.innerHTML = lines.map(l => `<p>${l}</p>`).join('');
       noteEl.textContent = it.note || '';
+
+      // Book excerpt (a short, fair-use-scale quotation) or film pivotal-
+      // scene link — whichever the item actually carries. See
+      // src/text/library.js's header for the sourcing/copyright discipline
+      // behind these fields.
+      excerptEl.textContent = it.excerpt ? `“${it.excerpt}”` : '';
+      if (it.youtube) {
+        watchEl.href = it.youtube;
+        watchEl.textContent = it.scene ? `watch: ${it.scene} ↗` : 'watch on YouTube ↗';
+      } else {
+        watchEl.removeAttribute('href');
+        watchEl.textContent = '';
+      }
+
+      // Open from whichever side of the screen was actually clicked --
+      // ported from sphere.js. Panel is guaranteed closed here (the block
+      // above already returns early for an open-panel click), so flipping
+      // the anchor is invisible to the user.
+      const rect = container.getBoundingClientRect();
+      const clickedLeft = (e.clientX - rect.left) < rect.width / 2;
+      if (panel.classList.contains('from-left') !== clickedLeft) {
+        panel.classList.add('no-transition');
+        panel.classList.toggle('from-left', clickedLeft);
+        void panel.offsetWidth; // force reflow before re-enabling the transition
+        panel.classList.remove('no-transition');
+      }
 
       panel.classList.add('open');
       setTimeout(() => panelTitle.focus(), 50);
@@ -456,14 +515,14 @@ export function createLibrary(container, { preview = false } = {}) {
   }
 
   // ─── Drag to orbit + wheel zoom ─────────────────────────────────────────
-  let autoRotate = true;
+  // Auto-rotate stopped per Scott, 2026-07-22: "let's stop the auto-rotate
+  // for the moment." Shelf now only turns under drag.
+  let autoRotate = false;
   const orbitDrag = bindOrbitDrag(container, {
-    onDragStart: () => { autoRotate = false; },
     onDrag: (dx, dy) => {
       root.rotation.y += dx;
       root.rotation.x = Math.max(-0.4, Math.min(0.4, root.rotation.x + dy));
     },
-    onDragEnd: () => { setTimeout(() => { autoRotate = true; }, 2500); },
   });
 
   const minDist = preview ? 6.5 : 4.2;

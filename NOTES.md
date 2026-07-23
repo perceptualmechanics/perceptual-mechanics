@@ -6,6 +6,50 @@ projects (The Secret World, A Manual of Perceptual Mechanics) moved into their o
 files, which are now the source of truth for that material going forward. See "project map"
 below for where things live.
 
+## 1.0.51 (2026-07-22)
+
+Scott: "nice! ok, so let's stop the auto-rotate for the moment. I'll go
+through and correct things in a bit, I want to get the technical info
+ready. add writer and producer credits to all the films. NOW: for the
+books, get an excerpt for as many as you can. for the films, get
+YouTube links to one pivotal scene. That's the content we'll put in
+the panel. Also, use the sphere convention where where you click
+affects what side the panel opens from."
+
+Five changes, all to the library scene:
+
+- Auto-rotate stopped (library.js's `animate()` no longer advances
+  `root.rotation.y` on its own) — the shelf now only turns under drag,
+  as requested "for the moment."
+- The read panel now opens from whichever side of the screen was
+  actually clicked, ported directly from sphere.js's `.from-left` /
+  `.no-transition` convention (a one-frame no-transition flip while the
+  panel is still off-screen, so the anchor swap is invisible).
+- Writer + producer credits researched and added for all 44 films.
+- A short excerpt added for 24 of the 63 books/decks — mostly opening
+  lines, matched to the specific translation on the shelf where the
+  translation matters (Heaney's Beowulf, Fagles' Iliad/Odyssey/Aeneid,
+  Mandelbaum's Dante, etc.). Deliberately skipped for the art/photo/
+  reference volumes (the Taschen books, Book of Symbols, Art of Atari,
+  the French Laundry cookbooks), the tarot/alchemy decks, and — on
+  purpose — McCartney's *The Lyrics*, since quoting song lyrics is a
+  firmer copyright line than a novel's opening sentence.
+- A YouTube link + short description added for one pivotal/iconic
+  scene per film (all 44), preferring official studio/Movieclips-style
+  uploads where one existed.
+
+The panel now surfaces all of this: writer/producer lines folded into
+the existing details block, a blockquoted excerpt for books, and a
+"watch: <scene> ↗" link for films.
+
+Merged into `src/text/library.js` (canonical) and refreshed
+`assets/bookshelf_catalog.json` (gitignored reference mirror).
+
+Verified: `node --check` on the data file and the scene, a script
+confirming all 44 films carry writer/producer/youtube and no duplicate
+ids, and a clean `vite build` (same pre-existing orrery >500kB chunk
+warning as always).
+
 ## 1.0.50 (2026-07-22)
 
 Scott: "can you get ISBNs for these and then start assembling as much data
