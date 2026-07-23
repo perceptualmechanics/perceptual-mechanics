@@ -6,6 +6,30 @@ projects (The Secret World, A Manual of Perceptual Mechanics) moved into their o
 files, which are now the source of truth for that material going forward. See "project map"
 below for where things live.
 
+## 1.1.5 (2026-07-23)
+
+Real deploy bug, found by checking the live site after Scott's "push
+confirmed": perceptualmechanics.com was still serving an unrelated,
+stale robots.txt (wp-admin/wp-includes disallows -- not ours) and
+404s on sitemap.xml/the IndexNow key file, well after the 1.1.1-1.1.4
+commits were pushed. Scott then pasted the actual failing Action log.
+
+- **Root cause**: `.github/workflows/deploy.yml`'s "Set up SSH key"
+  step ends with a bare `ssh-keyscan ... >> ~/.ssh/known_hosts`, no
+  `|| true`, and the step runs under `bash -e` -- so any transient
+  ssh-keyscan hiccup (DNS blip, momentary unreachability) kills the
+  whole job before the rsync deploy step ever runs. Every downstream
+  step (the SSH connection test, and the rsync deploy itself) already
+  passes `-o StrictHostKeyChecking=no`, which means the known_hosts
+  entry ssh-keyscan populates was never actually load-bearing --
+  fixed by appending `|| true`, matching the guard the SSH-test step
+  already had.
+
+Verified: YAML re-parses cleanly. Actual deploy success can only be
+confirmed by the next push triggering a green Action run and the live
+robots.txt/sitemap.xml/social-card.png/IndexNow key matching what's
+in this repo.
+
 ## 1.1.4 (2026-07-23)
 
 Scott: "ooh yeah, do the structured data, and leave the title tag

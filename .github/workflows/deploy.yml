@@ -30,7 +30,15 @@ jobs:
           mkdir -p ~/.ssh
           echo "${{ secrets.DREAMHOST_SSH_KEY }}" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
-          ssh-keyscan -H pdx1-shared-a1-46.dreamhost.com >> ~/.ssh/known_hosts
+          # ssh-keyscan can fail on a transient DNS/connectivity blip, and
+          # this step runs under `bash -e`, so that alone was enough to
+          # kill the whole deploy before rsync ever ran (2026-07-23 --
+          # traced from a live site that kept serving stale content after
+          # a push). Every downstream step already sets
+          # StrictHostKeyChecking=no, so known_hosts here was never
+          # load-bearing -- safe to make this non-fatal, same as the SSH
+          # connection test below already is.
+          ssh-keyscan -H pdx1-shared-a1-46.dreamhost.com >> ~/.ssh/known_hosts || true
 
       - name: Test SSH connection
         run: |
