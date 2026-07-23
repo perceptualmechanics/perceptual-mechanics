@@ -82,6 +82,7 @@ export function createButterfly(container, { preview = false, shorts = false, ro
   let gridLines = [];
   let gridVertexRestPositions = []; // [{ x,y,z }] — home positions
   let gridVertexBuffers = [];       // Float32Array refs for live update
+  const gridMats = []; // so dispose() can free these — see dispose() below
 
   if (!preview) {
     const ext = 80, dep = 80, step = 10;
@@ -96,6 +97,7 @@ export function createButterfly(container, { preview = false, shorts = false, ro
     const depthMat = new THREE.LineBasicMaterial({
       color: 0xb8cce0, transparent: true, opacity: 0.09, depthWrite: false,
     });
+    gridMats.push(majorMat, minorMat, depthMat);
 
     function makeGridLine(x1,y1,z1, x2,y2,z2, mat, segments=1) {
       const pts = [];
@@ -150,7 +152,7 @@ export function createButterfly(container, { preview = false, shorts = false, ro
     const line = new THREE.Line(geo, mat);
     line.position.set(-center.x, -center.y, -center.z);
     root.add(line);
-    return { state: { ...traj }, color: traj.color, posArray, colArray, geo, count: 0, head: 0 };
+    return { state: { ...traj }, color: traj.color, posArray, colArray, geo, mat, count: 0, head: 0 };
   });
 
   // ─── Glow trails (additive, short) ──────────────────────────────────────────
@@ -168,7 +170,7 @@ export function createButterfly(container, { preview = false, shorts = false, ro
     const line = new THREE.Line(geo, mat);
     line.position.set(-center.x, -center.y, -center.z);
     root.add(line);
-    return { color: traj.color, posArray, colArray, geo, count: 0, head: 0 };
+    return { color: traj.color, posArray, colArray, geo, mat, count: 0, head: 0 };
   }) : [];
 
   // ─── Math sprites ─────────────────────────────────────────────────────────
@@ -414,6 +416,21 @@ export function createButterfly(container, { preview = false, shorts = false, ro
       if (onTouchStart) container.removeEventListener('touchstart', onTouchStart);
       if (onTouchEnd) window.removeEventListener('touchend', onTouchEnd);
       if (onTouchMove) window.removeEventListener('touchmove', onTouchMove);
+      // THREE.js resource cleanup — previously missing entirely (only the
+      // renderer itself was disposed), leaking the spacetime grid's line
+      // geometries/materials, both trail sets' geometries/materials, and
+      // (full scene only) 220 math-symbol sprites' materials/textures on
+      // every visit to this scene. Textures/materials are shared across
+      // many sprites, so disposing the same one more than once here is
+      // harmless — THREE.js no-ops a repeat dispose() call.
+      gridLines.forEach(g => g.geo.dispose());
+      gridMats.forEach(m => m.dispose());
+      trails.forEach(tr => { tr.geo.dispose(); tr.mat.dispose(); });
+      glowTrails.forEach(tr => { tr.geo.dispose(); tr.mat.dispose(); });
+      spriteData.forEach(d => {
+        d.sprite.material.map?.dispose();
+        d.sprite.material.dispose();
+      });
       renderer.dispose();
       renderer.domElement.remove();
     }

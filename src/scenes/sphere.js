@@ -18,6 +18,11 @@ export function createSphere(container, { preview = false } = {}) {
   renderer.domElement.setAttribute('aria-hidden', 'true'); // visual only
   container.appendChild(renderer.domElement);
 
+  // Programmatically focusable so closing the panel (✕, outside click, or
+  // Escape) has somewhere real to send focus back to, rather than leaving
+  // it on a now-hidden close button or nowhere at all.
+  if (!preview) container.tabIndex = -1;
+
   // CSS2D only for full experience
   let labelRenderer = null;
   if (!preview) {
@@ -292,6 +297,7 @@ export function createSphere(container, { preview = false } = {}) {
       e.stopPropagation();
       panel.classList.remove('open');
       if (selectedFace !== -1) { restoreFaceColor(selectedFace); selectedFace = -1; }
+      container.focus();
     });
 
     // Fragment link navigation — follow the threads (click + keyboard)
@@ -362,9 +368,18 @@ export function createSphere(container, { preview = false } = {}) {
     container.addEventListener('touchstart', onContainerTouchStart, { passive: true });
     onContainerClick = e => {
       if (touchMoved) { touchMoved = false; return; }
-      if (panel.classList.contains('open') && !panel.contains(e.target)) {
+      // Was `panel.classList.contains('open') && !panel.contains(e.target)`
+      // — closed the panel on ANY canvas click while open, even one that
+      // landed squarely on a different facet (hoveredFace is tracked live
+      // by mousemove above regardless of panel state, so it's already
+      // known here). Fixed 2026-07-23 as part of the same fix shipped for
+      // library.js's identical bug: only close on an actual empty-space
+      // click; a click that hit a facet swaps the panel's content in
+      // place instead.
+      if (panel.classList.contains('open') && hoveredFace === -1) {
         panel.classList.remove('open');
         if (selectedFace !== -1) { restoreFaceColor(selectedFace); selectedFace = -1; }
+        container.focus();
         return;
       }
       if (hoveredFace === -1) return;
@@ -376,18 +391,20 @@ export function createSphere(container, { preview = false } = {}) {
       panelContent.innerHTML  = fragments[fi].text;
       facetIdEl.textContent   = `Facet ${selectedFace} · Fragment ${fi + 1} of ${fragments.length}`;
 
-      // Enter from whichever side of the screen was actually clicked. The
-      // panel is guaranteed closed here (the block above already returns
-      // early for an open-panel click), so flipping the anchor is invisible —
-      // no-transition forces that instant flip to land before the slide-in
-      // transition re-enables and .open starts animating it into view.
-      const rect = container.getBoundingClientRect();
-      const clickedLeft = (e.clientX - rect.left) < rect.width / 2;
-      if (panel.classList.contains('from-left') !== clickedLeft) {
-        panel.classList.add('no-transition');
-        panel.classList.toggle('from-left', clickedLeft);
-        void panel.offsetWidth; // force reflow before re-enabling the transition
-        panel.classList.remove('no-transition');
+      // Enter from whichever side of the screen was actually clicked —
+      // only when the panel wasn't already open; a direct facet-to-facet
+      // switch keeps whichever side it's already anchored to rather than
+      // jumping. no-transition forces the flip to land before the
+      // slide-in transition re-enables and .open starts animating it in.
+      if (!panel.classList.contains('open')) {
+        const rect = container.getBoundingClientRect();
+        const clickedLeft = (e.clientX - rect.left) < rect.width / 2;
+        if (panel.classList.contains('from-left') !== clickedLeft) {
+          panel.classList.add('no-transition');
+          panel.classList.toggle('from-left', clickedLeft);
+          void panel.offsetWidth; // force reflow before re-enabling the transition
+          panel.classList.remove('no-transition');
+        }
       }
 
       panel.classList.add('open');
@@ -420,6 +437,7 @@ export function createSphere(container, { preview = false } = {}) {
       if (panel.classList.contains('open')) {
         panel.classList.remove('open');
         if (selectedFace !== -1) { restoreFaceColor(selectedFace); selectedFace = -1; }
+        container.focus();
       }
     });
   }

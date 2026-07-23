@@ -207,7 +207,7 @@ const LIBRARY_LINKS = [
   { id: 137, field: 'note', phrase: 'Everything Is Under Control',     target: 120 },
   // Two design monographs, shelved as reference for each other.
   { id: 124, field: 'note', phrase: 'Alexander McQueen',               target: 141 },
-  { id: 141, field: 'note', phrase: 'Swip Stolk',                      target: 124 },
+  { id: 141, field: 'note', phrase: 'Tord Boontje',                    target: 124 },
   // The Godfather and Wiseguy, two very different tones about the same
   // underworld.
   { id: 142, field: 'note', phrase: 'Wiseguy',                         target: 140 },
@@ -755,7 +755,6 @@ function buildItems(preview) {
       const mesh = new THREE.Mesh(geo, mats);
       mesh.position.set(x, y, z);
       mesh.userData.item = it;
-      mesh.userData.baseEmissive = 0;
       group.add(mesh);
       meshes.push(mesh);
 
@@ -816,6 +815,10 @@ export function createLibrary(container, { preview = false } = {}) {
 
   // ─── Caption + hint + panel (full only) ─────────────────────────────────
   let caption = null, hint = null, panel = null, panelTitle = null, panelCreator = null, panelBodyEl = null;
+  // Programmatically focusable so closing the panel (✕, outside click, or
+  // Escape) has somewhere real to send focus back to, rather than leaving
+  // it on a now-hidden close button or nowhere at all.
+  if (!preview) container.tabIndex = -1;
   if (!preview && !document.getElementById('library-styles')) {
     const style = document.createElement('style');
     style.id = 'library-styles';
@@ -998,6 +1001,7 @@ export function createLibrary(container, { preview = false } = {}) {
       panel.classList.remove('open');
       panel.querySelector('#library-panel-video').innerHTML = '';
       selected = null;
+      container.focus();
     });
 
     // Cross-link navigation — follow the threads (click + keyboard), same
@@ -1179,6 +1183,7 @@ export function createLibrary(container, { preview = false } = {}) {
         panel.classList.remove('open');
         panel.querySelector('#library-panel-video').innerHTML = '';
         selected = null;
+        container.focus();
         return;
       }
       if (!hovered) return;
@@ -1207,8 +1212,10 @@ export function createLibrary(container, { preview = false } = {}) {
 
   // ─── Drag to orbit + wheel zoom ─────────────────────────────────────────
   // Auto-rotate stopped per Scott, 2026-07-22: "let's stop the auto-rotate
-  // for the moment." Shelf now only turns under drag.
-  let autoRotate = false;
+  // for the moment." Shelf now only turns under drag. (The old `autoRotate`
+  // flag was hardcoded false and never toggled anywhere, so it was
+  // removed rather than kept as permanently-dead code — if it needs to
+  // come back, reintroduce the flag and check it in animate() below.)
   const orbitDrag = bindOrbitDrag(container, {
     onDrag: (dx, dy) => {
       root.rotation.y += dx;
@@ -1236,9 +1243,6 @@ export function createLibrary(container, { preview = false } = {}) {
   let babelT = 0;
   function animate() {
     animId = requestAnimationFrame(animate);
-    if (!reduceMotion && autoRotate && !orbitDrag.isDragging) {
-      root.rotation.y += preview ? 0.0018 : 0.0008;
-    }
     // Library of Babel shimmer — Scott, 2026-07-23: "let's make them a bit
     // dynamic, maybe the shimmer effect?" Same per-object phase/speed
     // pulse convention as egg.js's field-line flux and aurora shimmers,
@@ -1262,6 +1266,7 @@ export function createLibrary(container, { preview = false } = {}) {
       panel.classList.remove('open');
       panel.querySelector('#library-panel-video').innerHTML = '';
       selected = null;
+      container.focus();
     }
   }) : null;
 

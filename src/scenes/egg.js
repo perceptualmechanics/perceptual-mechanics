@@ -466,6 +466,11 @@ export function createEgg(container, { preview = false } = {}) {
   renderer.domElement.setAttribute('aria-hidden', 'true');
   container.appendChild(renderer.domElement);
 
+  // Programmatically focusable so closing the panel (✕, outside click, or
+  // Escape) has somewhere real to send focus back to, rather than leaving
+  // it on a now-hidden close button or nowhere at all.
+  if (!preview) container.tabIndex = -1;
+
   const root = new THREE.Group();
   scene.add(root);
 
@@ -661,6 +666,7 @@ export function createEgg(container, { preview = false } = {}) {
       e.stopPropagation();
       panel.classList.remove('open');
       selectedSat = null;
+      container.focus();
     });
 
     panelContent.addEventListener('click', e => {
@@ -768,9 +774,16 @@ export function createEgg(container, { preview = false } = {}) {
     };
     container.addEventListener('mousemove', onContainerMouseMove);
     onContainerClick = e => {
-      if (panel.classList.contains('open') && !panel.contains(e.target)) {
+      // Was `panel.classList.contains('open') && !panel.contains(e.target)`
+      // — closed the panel on any canvas click while open, even one that
+      // hit a different satellite (hoveredSat is tracked live by mousemove
+      // above regardless of panel state). Fixed 2026-07-23, same root
+      // cause as library.js's identical bug: only close on an actual
+      // empty-space click.
+      if (panel.classList.contains('open') && !hoveredSat) {
         panel.classList.remove('open');
         selectedSat = null;
+        container.focus();
         return;
       }
       if (!hoveredSat) return;
@@ -855,6 +868,7 @@ export function createEgg(container, { preview = false } = {}) {
     if (panel && panel.classList.contains('open')) {
       panel.classList.remove('open');
       selectedSat = null;
+      container.focus();
     }
   }) : null;
 

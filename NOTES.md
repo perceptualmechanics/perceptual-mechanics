@@ -6,6 +6,86 @@ projects (The Secret World, A Manual of Perceptual Mechanics) moved into their o
 files, which are now the source of truth for that material going forward. See "project map"
 below for where things live.
 
+## 1.1.0 (2026-07-23)
+
+Milestone. Scott: "I think one of the newer books got the wrong ISBN,
+the one you have listed as 'Swip Stolk'. Correct for the real ISBN,
+978 0 8478 2929 3. Then do a full site code quality check, semantics
+and a11y, any design passes that need to be done, and let's call this
+1.1" — closes out the whole 1.0.61–1.0.67 Library of Babel /
+panel-bug / spine-pizzazz run plus a fresh sitewide audit.
+
+- **Book identity fix (catalog item 124).** The ISBN search that
+  originally cataloged this item came back with the wrong book
+  entirely — not a wrong ISBN attached to the right book, but the
+  wrong book, full stop. ISBN 9780847829293 is *Tord Boontje*
+  (Rizzoli, 2007, ed. Martina Margetts), a monograph on the Dutch-born
+  designer's lace-cut lighting and product work (the Garland shade
+  chief among it) — not "Swip Stolk." Rewrote the entry's title,
+  creator, publisher, year, page count, and note, and fixed the
+  cross-reference to it inside item 141's note (Alexander McQueen:
+  Savage Beauty) plus a `LIBRARY_LINKS` entry that had been keyed to
+  the literal string "Swip Stolk" and would otherwise have silently
+  failed link-integrity checking.
+- **Full-site code quality / semantics / a11y audit**, run via a
+  dedicated review pass across every scene, then worked through
+  item by item:
+  - **Real memory leak fixed** in butterfly.js: trail and glow-trail
+    objects were disposing their `geo` but never their `mat` on
+    scene teardown, and the phase-space grid's three line materials
+    (major/minor/depth) weren't tracked or disposed at all. Both
+    fixed; `dispose()` now cleans up every geometry, material, and
+    listener it created.
+  - **The panel-swap bug** (fixed for library.js in 1.0.66) turned
+    out to be the exact same dead-logic pattern, verbatim, in
+    sphere.js, egg.js, lens.js, and orrery.js — any scene whose
+    click handler checked `panel.contains(e.target)` on a panel that
+    already calls `stopPropagation()` on its own clicks. Fixed all
+    four with the file-appropriate variant: sphere/egg/lens already
+    track hover state live while the panel is open, so those just
+    needed to gate on "did this click actually hit something new"
+    before closing; orrery.js's architecture is different (a single
+    static info panel plus separate audio-only poster hits), so its
+    fix instead makes sure a poster click still plays its riff
+    regardless of whether the info panel happens to be open.
+  - **Focus never returned anywhere on panel close.** Every scene
+    with a click-to-open detail panel (library, sphere, egg, lens,
+    orrery) now makes its container programmatically focusable
+    (`tabIndex = -1`) and sends focus back to it from all three close
+    paths — the ✕ button, an empty-space click, and Escape — instead
+    of leaving focus stranded on a now-hidden close button or
+    nowhere at all.
+  - **Semantic markup**: theater.js's end-card was a
+    `div[role="button"][tabindex="0"]` with a hand-rolled Enter/Space
+    keydown handler — replaced with a real `<button>`, which gets
+    that behavior natively, and dropped the now-redundant keydown
+    listener.
+  - **Naming pass surfaced a real bug**: manuscript.js's keydown
+    listener was anonymous, which meant `dispose()`'s
+    `removeEventListener('keydown', ...)` call — if it had ever been
+    written — could never have matched it anyway; turns out dispose
+    wasn't even trying. Named the handler and added the missing
+    `removeEventListener` alongside the existing click-listener
+    cleanup.
+  - **Deferred, noted rather than built**: keyboard-reachable 3D
+    click targets (every scene's actual interactive objects — book
+    spines, facets, satellites, the gem — are only reachable by
+    mouse/touch hit-testing; a real fix means either building a
+    parallel focus-order DOM proxy per scene or a from-scratch
+    input-agnostic hit-test layer, both sizable). Also deferred:
+    migrating butterfly.js onto sceneKit.js's shared
+    orbit/zoom/resize/reduced-motion helpers (a nit flagged once
+    before, still low-risk/low-value enough to skip). Both are real
+    gaps, not overlooked ones — noted here rather than rushed into
+    this round.
+
+Verified: node --check on every touched file, a clean
+`npx vite build` (only the pre-existing orrery >500kB chunk-size
+warning), and a standalone link-integrity check confirming 147
+catalog items, zero duplicate ids, zero broken `LIBRARY_LINKS`
+phrase-matches, and item 124 now correctly showing Tord Boontje /
+Martina Margetts (ed.) / 9780847829293.
+
 ## 1.0.67 (2026-07-23)
 
 Scott: "ok looks good. last thing I'm seeing is that the books

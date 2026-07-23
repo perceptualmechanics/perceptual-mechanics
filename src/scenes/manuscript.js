@@ -818,18 +818,20 @@ export function createManuscript(container, { preview = false } = {}) {
     setTimeout(() => targetEl.classList.remove('ms-flash'), 1400);
   }
   scroll.addEventListener('click', onLinkClick);
-  scroll.addEventListener('keydown', e => {
+  function onLinkKeydown(e) {
     if (e.key !== 'Enter' && e.key !== ' ') return;
     if (!e.target.closest('.ms-link')) return;
     e.preventDefault();
     onLinkClick(e);
-  });
+  }
+  scroll.addEventListener('keydown', onLinkKeydown);
 
   setTimeout(() => scroll.focus(), 100);
 
   return {
     dispose() {
       scroll.removeEventListener('click', onLinkClick);
+      scroll.removeEventListener('keydown', onLinkKeydown);
       root.remove();
     }
   };

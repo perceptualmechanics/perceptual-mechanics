@@ -1355,6 +1355,11 @@ export function createOrrery(container, { preview = false } = {}) {
   const clippedPreview = preview ? mountClippedPreviewCanvas(container, renderer) : null;
   if (!preview) container.appendChild(renderer.domElement);
 
+  // Programmatically focusable so closing the panel (✕, outside click, or
+  // Escape) has somewhere real to send focus back to, rather than leaving
+  // it on a now-hidden close button or nowhere at all.
+  if (!preview) container.tabIndex = -1;
+
   // Fog matched to the clear color so only genuinely distant geometry
   // (far wall corners, stars beyond the skylight) softens into haze — the
   // soft render-distance falloff of early-90s pre-rendered CG adventure
@@ -1667,6 +1672,7 @@ export function createOrrery(container, { preview = false } = {}) {
       panel.classList.remove('open');
       hideAmbient(false);
       setEmphasis(false);
+      container.focus();
     });
 
     hint = document.createElement('p');
@@ -1802,11 +1808,25 @@ export function createOrrery(container, { preview = false } = {}) {
       // First click/tap just engages mouse-look (desktop pointer lock);
       // it doesn't also act on whatever's under the crosshair.
       if (fp.tryEngage(e)) return;
-      if (panel.classList.contains('open') && !panel.contains(e.target)) {
-        panel.classList.remove('open');
-        hideAmbient(false);
-        selected = false;
-        setEmphasis(hovered);
+      if (panel.classList.contains('open')) {
+        // Was: any canvas click while the info panel was open closed it
+        // outright — including a click on a poster, which meant the
+        // first click after opening the panel silently ate the poster's
+        // audio riff (it took a second click, after the panel finished
+        // closing, to actually hear anything). hovered/hoveredPoster are
+        // both updated every frame from the crosshair regardless of
+        // panel state (see the animate() loop), so they're already
+        // current here. Fixed 2026-07-23, same root cause as library.js's
+        // identical bug: only close on an actual empty-space click, and
+        // let a poster hit still play, panel open or not.
+        if (hoveredPoster) { playPosterRiff(hoveredPoster.band); return; }
+        if (!panel.contains(e.target)) {
+          panel.classList.remove('open');
+          hideAmbient(false);
+          selected = false;
+          setEmphasis(hovered);
+          container.focus();
+        }
         return;
       }
       if (hoveredPoster) { playPosterRiff(hoveredPoster.band); return; }
@@ -1966,6 +1986,7 @@ export function createOrrery(container, { preview = false } = {}) {
       hideAmbient(false);
       selected = false;
       setEmphasis(hovered);
+      container.focus();
     }
   }) : null;
 

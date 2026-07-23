@@ -818,6 +818,11 @@ export function createLens(container, { preview = false } = {}) {
   container.style.position = 'relative';
   container.style.overflow = 'hidden';
 
+  // Programmatically focusable so closing the panel (✕, outside click, or
+  // Escape) has somewhere real to send focus back to, rather than leaving
+  // it on a now-hidden close button or nowhere at all.
+  container.tabIndex = -1;
+
   // ─── Title, hint, caption — body-level, matching orrery/egg/butterfly's
   // own fixed labels. ──────────────────────────────────────────────────────
   const title = document.createElement('div');
@@ -907,6 +912,7 @@ export function createLens(container, { preview = false } = {}) {
     hideAmbient(false);
     selected = false;
     setEmphasis(hoveredObject === gem ? hoveredSide : null);
+    container.focus();
   }
 
   panel.addEventListener('click', e => e.stopPropagation());
@@ -961,7 +967,13 @@ export function createLens(container, { preview = false } = {}) {
   container.addEventListener('touchstart', onContainerTouchStart, { passive: true });
   const onContainerClick = e => {
     if (touchMoved) { touchMoved = false; return; }
-    if (panel.classList.contains('open') && !panel.contains(e.target)) {
+    // Was `panel.classList.contains('open') && !panel.contains(e.target)`
+    // — closed the panel on any canvas click while open, even one that
+    // hit a different facet or the light fixture (hoveredObject is
+    // tracked live by mousemove above regardless of panel state). Fixed
+    // 2026-07-23, same root cause as library.js's identical bug: only
+    // close on an actual empty-space click.
+    if (panel.classList.contains('open') && !hoveredObject) {
       closePanel();
       return;
     }

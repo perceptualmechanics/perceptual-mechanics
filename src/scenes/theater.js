@@ -1111,7 +1111,7 @@ function buildStyles() {
       position: absolute; inset: 0; display: flex; flex-direction: column;
       align-items: center; justify-content: center; text-align: center;
       background: #ddd6c2; z-index: 5; cursor: pointer; padding: 1rem;
-      color: #221c14;
+      color: #221c14; border: none; width: 100%; font: inherit;
     }
     .tab-card h1 {
       font-family: 'Courier New', monospace; font-weight: bold;
@@ -1539,20 +1539,19 @@ export function createTheater(container, { preview = false } = {}) {
     // click on an older one would restart() while a newer one silently
     // stayed put. Guard against re-entry instead.
     if (!player.isAtEnd || endCard) return;
-    endCard = document.createElement('div');
+    endCard = document.createElement('button');
+    endCard.type = 'button';
     endCard.className = 'tab-card';
-    endCard.setAttribute('role', 'button');
-    endCard.setAttribute('tabindex', '0');
     endCard.setAttribute('aria-label', 'The end. Press Enter to reshuffle the reel and start tonight’s next showing.');
     endCard.innerHTML = `
       <pre class="tab-ascii-title" aria-hidden="true">-------------------------\n     F A D E   T O   B L A C K\n-------------------------</pre>
       <h1>THE END</h1>
       <p class="tab-tap">click for tonight’s next showing</p>
     `;
+    // Native <button> already fires 'click' for both Enter and Space, so
+    // no manual keydown handler is needed (that was only required back
+    // when this was a div[role=button]).
     endCard.addEventListener('click', restart);
-    endCard.addEventListener('keydown', e => {
-      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); restart(); }
-    });
     screen.appendChild(endCard);
     setPlayLabel();
     srLive.textContent = 'The end. Press Enter to reshuffle the reel and start tonight’s next showing.';
