@@ -6,6 +6,21 @@ projects (The Secret World, A Manual of Perceptual Mechanics) moved into their o
 files, which are now the source of truth for that material going forward. See "project map"
 below for where things live.
 
+## 1.0.54 (2026-07-22)
+
+Scott: "all right, comment library out for the time being and we'll
+pick it up tomorrow."
+
+- **Shelved the library scene** — same pattern used for the lens scene
+  (1.0.21): commented out its import, `SCENES` entry, and preview-map
+  entry in `main.js`, and its nav icon + preview tile in `index.html`,
+  with a comment at each spot explaining how to bring it back. The
+  scene file, data, and everything shipped in 1.0.51–1.0.53 stay
+  in the repo untouched — nothing deleted, just unlinked from the
+  landing page and nav. Confirmed via the build output that the scene
+  now tree-shakes out of the bundle entirely (main chunk dropped from
+  ~307kB to ~255kB).
+
 ## 1.0.53 (2026-07-22)
 
 Scott: "ok the movies go princess bride, three colours, the Dekalog, Do

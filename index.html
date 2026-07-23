@@ -95,8 +95,15 @@
       </svg>
     </button>
 
-    <!-- Library: a 4x2 cube-shelf grid, spines as short verticals -->
-    <button type="button" class="nav-icon" data-scene="library" aria-label="Library" title="The Library — once removed" onmouseover="pmGlimpse('library')">
+    <!-- Library: a 4x2 cube-shelf grid, spines as short verticals.
+         Shelved for the moment (2026-07-22) — Scott: "all right, comment
+         library out for the time being and we'll pick it up tomorrow,"
+         after a round correcting a catalog misID and re-sourcing YouTube
+         picks (see NOTES.md, 1.0.53/1.0.54). Re-enable by uncommenting
+         this icon, the preview tile below, and the three spots in
+         main.js (same pattern main.js already uses for the shelved
+         lens scene). -->
+    <!-- <button type="button" class="nav-icon" data-scene="library" aria-label="Library" title="The Library — once removed" onmouseover="pmGlimpse('library')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
         <rect x="2.5" y="3" width="19" height="18" rx="0.6"/>
         <line x1="12" y1="3" x2="12" y2="21"/>
@@ -111,7 +118,7 @@
         <line x1="16" y1="15.6" x2="16" y2="18.5"/>
         <line x1="18.2" y1="15.2" x2="18.2" y2="18.5"/>
       </svg>
-    </button>
+    </button> -->
   </nav>
 
   <!-- Site title — bottom center, links back to gallery. Semantic pass,
@@ -202,13 +209,15 @@
         </button>
       </li>
 
-      <li class="preview-wrapper" data-scene="library">
+      <!-- Library preview tile: shelved along with the nav icon above,
+           2026-07-22 (see NOTES.md, 1.0.54). -->
+      <!-- <li class="preview-wrapper" data-scene="library">
         <button type="button" class="preview-container" id="preview-library"
              title="The Library — once removed"
              aria-label="The Library — a real bookshelf, 107 books, films, and divination decks, rebuilt as a shelf you can turn in space. Press Enter to expand."
              onmouseover="pmGlimpse('library')">
         </button>
-      </li>
+      </li> -->
     </ul>
   </main>
 

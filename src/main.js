@@ -5,7 +5,14 @@ import { createTheater } from './scenes/theater.js';
 import { createEgg }       from './scenes/egg.js';
 import { createLeaf }      from './scenes/leaf.js';
 import { createOrrery }    from './scenes/orrery.js';
-import { createLibrary }   from './scenes/library.js';
+// import { createLibrary } from './scenes/library.js'; // shelved for the
+// moment (2026-07-22) — Scott: "all right, comment library out for the
+// time being and we'll pick it up tomorrow," after a round correcting a
+// catalog misID (Danger: Diabolik → Dazed and Confused) and re-sourcing
+// several YouTube picks toward the Movieclips channel (see NOTES.md,
+// 1.0.53). Re-enable by uncommenting this import, the SCENES entry below,
+// and the initPreviews() map entry, plus the nav icon + preview tile in
+// index.html (same three spots commented out there).
 // import { createLens } from './scenes/lens.js'; // shelved again (2026-07-17,
 // Scott: "ok, can you just comment out the lens then?" — after a work-in-
 // progress round: tighter beam, princess-cut multi-facet gem, Tree of
@@ -33,8 +40,8 @@ const SCENES = {
                  ariaLabel: 'Leaf — a raindrop’s fall from a leaf, told through physics, with the found text arriving in phase with the fall.' },
   orrery:      { create: createOrrery,     label: 'The Orrery of Los Feliz.',
                  ariaLabel: 'The Orrery of Los Feliz — a found story, told through a 30-foot orrery: nine planets, their moons, an asteroid belt, in a warehouse you can walk around. Use the arrow keys or WASD to walk, click to look around, click the orrery to read.' },
-  library:     { create: createLibrary,    label: 'The Library — once removed.',
-                 ariaLabel: 'The Library — a real bookshelf, 107 books, films, and divination decks, rebuilt as a shelf you can turn in space. Drag to orbit, scroll to zoom, click a spine to read what it is.' },
+  // library: { create: createLibrary, label: 'The Library — once removed.',
+  //            ariaLabel: 'The Library — a real bookshelf, 107 books, films, and divination decks, rebuilt as a shelf you can turn in space. Drag to orbit, scroll to zoom, click a spine to read what it is.' },
   // lens: { create: createLens, label: 'The Lens — Four facets, one light.',
   //         ariaLabel: 'The Lens — a single translucent cut gem with four colored sides, floating free, lit from directly above by a vertical spotlight named Prologue. Drag to orbit, click a facet or the light to read.' },
 };
@@ -224,7 +231,7 @@ function initPreviews() {
     egg:        document.getElementById('preview-egg'),
     leaf:       document.getElementById('preview-leaf'),
     orrery:     document.getElementById('preview-orrery'),
-    library:    document.getElementById('preview-library'),
+    // library: document.getElementById('preview-library'),
     // lens:    document.getElementById('preview-lens'),
   };
   for (const [name, el] of Object.entries(map)) {
