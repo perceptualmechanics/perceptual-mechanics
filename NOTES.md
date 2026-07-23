@@ -6,6 +6,53 @@ projects (The Secret World, A Manual of Perceptual Mechanics) moved into their o
 files, which are now the source of truth for that material going forward. See "project map"
 below for where things live.
 
+## 1.0.56 (2026-07-23)
+
+Scott pasted 13 ISBN-13s and said: "Incorporate these books into the
+bookshelf and then redo both analyses and the internal links for
+library."
+
+- **13 new items added to the catalog** (ids 108–120, one photo's worth
+  of shelf now 120 items total), sourced from ISBN alone via Open
+  Library's single-ISBN endpoint (its batch endpoint kept failing —
+  "URL exceeds maximum length" on 13 ISBNs at once, empty responses on
+  smaller batches) plus one WebSearch fallback for an ISBN that came
+  back empty even singly (turned out to be Kushner's *Angels in
+  America* — also, not incidentally, the exact source of *The L.A.
+  Project*'s own epigraph). Row/col/pos randomized across the
+  book-only cubbies per Scott's "I don't care about exact placement."
+  New titles: *The Changing Light at Sandover* (Merrill), *The Beatles
+  Anthology*, *VALIS* (Dick), *Pale Fire* and *Lolita* (Nabokov),
+  *Angels in America* (Kushner), *The Book of the SubGenius* and
+  *Revelation X*, *Mage: the Ascension* core rulebook plus Scott's own
+  two professional sourcebook credits (*Blood Treachery*, *The Spirit
+  Ways*), and Robert Anton Wilson's *Prometheus Rising* and *Everything
+  Is Under Control*.
+- **library_resonances.md and archive_against_library.md both redone**
+  to fold the new books into the existing analysis rather than just
+  appending a list: VALIS joins the Symposium/Hedwig "other half"
+  thread as a third, more literal telling; Nabokov's two novels get
+  their own section arguing about who's really narrating; the two
+  SubGenius books get a new section, and turn out to be the likely
+  literal source of Scott's own "Slack" — flagged as a source, not just
+  an echo; Prometheus Rising joins the 2001/Solaris/Tree of Life
+  triangle as a fourth voice; *Blood Treachery* on the shelf, credited
+  to Scott and Steven DiPesa, matches an unproduced spec screenplay in
+  his own archive with the same title and the same collaborator — the
+  clean, documented version of the "one name, several bodies" pattern
+  the essay was already tracking, not just another example of it.
+- **LIBRARY_LINKS grown from 31 to 56** — 25 new directional links
+  across 12 threads wired into the new books' (curated) note text and
+  back into the items they reference, using the same phrase-must-
+  exist-verbatim rule as the first round.
+- Fixed one authoring slip caught on review: the Sandover item's note
+  originally referenced its own title inside its own text; corrected.
+
+Verified: node --check on both changed files, a script confirming all
+56 linked phrases exist verbatim in their source fields with no
+duplicate ids and every target resolving, clean vite build (35
+modules, same pre-existing orrery >500kB warning as every prior round).
+
 ## 1.0.55 (2026-07-23)
 
 Scott: "you're good at this!" — after a deep-dive relational analysis of

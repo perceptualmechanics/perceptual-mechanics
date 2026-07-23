@@ -119,6 +119,43 @@ const LIBRARY_LINKS = [
   { id: 81, field: 'note', phrase: 'the Aeneid',                         target: 82 },
   { id: 80, field: 'note', phrase: 'the Aeneid',                         target: 82 },
   { id: 91, field: 'note', phrase: 'the Aeneid',                         target: 82 },
+
+  // Added 2026-07-23, alongside the 13 new ISBN-sourced books: same rule,
+  // phrases already sitting in the (newly curated) note text.
+  // Merrill's Sandover <-> the occult-reference cluster.
+  { id: 108, field: 'note', phrase: 'Alchemy & Mysticism',                target: 6 },
+  { id: 6,   field: 'note', phrase: 'The Changing Light at Sandover',     target: 108 },
+  // The Beatles telling their own story two ways.
+  { id: 109, field: 'note', phrase: 'The Lyrics',                        target: 103 },
+  { id: 103, field: 'note', phrase: 'The Beatles Anthology',              target: 109 },
+  // VALIS's literal split-self <-> the Symposium/Hedwig "other half" thread.
+  { id: 110, field: 'note', phrase: 'the Symposium',                     target: 13 },
+  { id: 110, field: 'note', phrase: 'Hedwig',                            target: 40 },
+  { id: 13,  field: 'note', phrase: 'VALIS',                             target: 110 },
+  { id: 40,  field: 'note', phrase: 'VALIS',                             target: 110 },
+  // Nabokov's two novels here.
+  { id: 111, field: 'note', phrase: 'Lolita',                            target: 115 },
+  { id: 115, field: 'note', phrase: 'Pale Fire',                         target: 111 },
+  // The two volumes of SubGenius scripture.
+  { id: 113, field: 'note', phrase: 'Revelation X',                      target: 114 },
+  { id: 114, field: 'note', phrase: 'The Book of the SubGenius',         target: 113 },
+  // Scott's own two professional Mage sourcebooks, and the core rulebook
+  // both were written for.
+  { id: 116, field: 'note', phrase: 'Blood Treachery',                   target: 117 },
+  { id: 116, field: 'note', phrase: 'The Spirit Ways',                   target: 118 },
+  { id: 117, field: 'note', phrase: 'Mage: The Ascension',               target: 116 },
+  { id: 118, field: 'note', phrase: 'Mage: The Ascension',               target: 116 },
+  { id: 118, field: 'note', phrase: 'Blood Treachery',                   target: 117 },
+  // Prometheus Rising joins the physics-vs-feeling triangle.
+  { id: 119, field: 'note', phrase: '2001: A Space Odyssey',             target: 63 },
+  { id: 119, field: 'note', phrase: 'Solaris',                           target: 53 },
+  { id: 119, field: 'note', phrase: 'The Tree of Life',                  target: 33 },
+  { id: 33,  field: 'note', phrase: 'Prometheus Rising',                 target: 119 },
+  // Everything Is Under Control joins the chance/pattern/paranoia cluster.
+  { id: 120, field: 'note', phrase: 'Gravity’s Rainbow',                 target: 78 },
+  { id: 120, field: 'note', phrase: 'Borges’s Collected Fictions',       target: 79 },
+  { id: 78,  field: 'note', phrase: 'Everything Is Under Control',       target: 120 },
+  { id: 79,  field: 'note', phrase: 'Everything Is Under Control',       target: 120 },
 ];
 
 function escapeHtml(s) {
