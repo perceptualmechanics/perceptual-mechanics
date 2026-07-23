@@ -496,9 +496,15 @@ function buildBabelBackdrop() {
   });
 
   if (strandPairs.length) {
-    const strandGeo = new THREE.BoxGeometry(1, 0.02, 0.02);
+    // Thickness/opacity deliberately close to the hex edges', not fainter —
+    // a first pass at 0.02 thickness / 0.16 opacity repeated the exact
+    // "too thin to actually render" mistake the very first backdrop
+    // attempt made with 1px LineLoop hexagons (v1.0.61): Scott couldn't
+    // tell if the strands were showing at all, because they mostly
+    // weren't, on a rod this thin over multi-unit lengths.
+    const strandGeo = new THREE.BoxGeometry(1, 0.038, 0.038);
     const strandMat = new THREE.MeshBasicMaterial({
-      color: 0x6f86b4, transparent: true, opacity: 0.16, depthWrite: false, fog: true,
+      color: 0x7f96c2, transparent: true, opacity: 0.24, depthWrite: false, fog: true,
     });
     const strandMesh = new THREE.InstancedMesh(strandGeo, strandMat, strandPairs.length);
     disposables.push(strandGeo, strandMat);

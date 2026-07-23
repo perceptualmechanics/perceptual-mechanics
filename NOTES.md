@@ -6,6 +6,20 @@ projects (The Secret World, A Manual of Perceptual Mechanics) moved into their o
 files, which are now the source of truth for that material going forward. See "project map"
 below for where things live.
 
+## 1.0.65 (2026-07-23)
+
+Scott, after loading 1.0.64: "getting there, but I'm not sure the
+strands are showing?"
+
+- **Fixed under-rendered strands.** The connecting rods were built at
+  0.02 thickness / 0.16 opacity — a repeat of the exact "too thin to
+  actually render" mistake the very first Babel backdrop attempt made
+  with 1px LineLoop hexagons (v1.0.61). Bumped to 0.038 thickness /
+  0.24 opacity, roughly matching the hex edges' own visible weight
+  rather than sitting well below it.
+
+Verified: node --check, clean vite build.
+
 ## 1.0.64 (2026-07-23)
 
 Scott: "let's detach the hexagons so they don't form a honeycomb
