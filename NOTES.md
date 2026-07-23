@@ -6,6 +6,27 @@ projects (The Secret World, A Manual of Perceptual Mechanics) moved into their o
 files, which are now the source of truth for that material going forward. See "project map"
 below for where things live.
 
+## 1.1.2 (2026-07-23)
+
+Scott: "for the social card, use the hare."
+
+- **`public/social-card.png`**, a 1200×630 `og:image`/`twitter:image`:
+  the colophon's leaping hare mark (`public/hare-colophon.png`,
+  cropped to its real content bounds), given the same "burnished
+  gold" treatment `colophon.js` already applies to it on-site —
+  sepia/saturate/brightness/contrast plus a soft gold glow — on the
+  site's own pure-black background, with the site title set the way
+  `#site-title` renders it (uppercase, wide letter-spacing, dim
+  white), so the card reads as the same object as the rest of the
+  site rather than a one-off banner. Wired into index.html's
+  `og:image`/`twitter:image` meta (added in 1.1.1 without an image);
+  upgraded `twitter:card` from `summary` to `summary_large_image`
+  now that there's an image worth showing large.
+
+Verified: clean vite build, confirmed social-card.png lands at the
+site root in the built output and the new og:image/twitter:image tags
+render with the right dimensions.
+
 ## 1.1.1 (2026-07-23)
 
 Two small follow-ups. Scott: "actually, something I was wondering, how
