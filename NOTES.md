@@ -6,6 +6,27 @@ projects (The Secret World, A Manual of Perceptual Mechanics) moved into their o
 files, which are now the source of truth for that material going forward. See "project map"
 below for where things live.
 
+## 1.0.63 (2026-07-23)
+
+Scott, after seeing the 1.0.62 backdrop swing off to one side under a
+drag: "oh no no no, so what I'm saying is that if you can arrange the
+hexagons as a fainter lattice of hexagons, with this bookshelf being
+the only one that's real."
+
+- **Rebuilt the backdrop as an actual honeycomb lattice**, not a stack
+  of concentric rings sharing one center on-axis behind the shelf (the
+  "tunnel" read from 1.0.61/1.0.62, which is also why it swung
+  dramatically to one side under even a small drag — a corridor with
+  one shared center is very sensitive to viewing angle; a field tiling
+  the whole background isn't). Two depth layers of true hexagonal
+  tiling (`buildHexLatticeLayer()`, offset-coordinate honeycomb math),
+  built as `InstancedMesh` since a real tiling is hundreds of edges.
+  The shelf's own back panel naturally occludes whichever lattice cell
+  sits directly behind it — which is the point: one real cell in an
+  otherwise infinite field of faint ghost outlines.
+
+Verified: node --check, clean vite build.
+
 ## 1.0.62 (2026-07-23)
 
 Scott, after loading v1.0.61: "hmm, i don't think i'm seeing it?" — the

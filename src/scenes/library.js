@@ -368,57 +368,98 @@ function buildFrame() {
 // .md) for the perceptual screen between ordinary reality and what lies
 // past it, so this is deliberately NOT fully renderable.
 //
-// First pass used 1px LineLoop hexagons, which turned out invisible in
-// practice — thin WebGL lines at low opacity against pure black render as
-// a handful of stray anti-aliased fragments, not a legible shape. Rebuilt
-// as thin box-edge hexagons (same technique as buildFrame()'s dividers)
-// so each ring has real, consistent on-screen thickness regardless of
-// display/antialiasing, with unlit MeshBasicMaterial (no key-light falloff
-// — it reads as its own dim, independent glow rather than a lit object)
-// and enough base brightness that "faint" doesn't mean "actually invisible."
-function buildHexRing(r, mat, disposables) {
-  const group = new THREE.Group();
-  const side = r; // regular hexagon: edge length equals circumradius
+// Second pass (v1.0.61) built a single stack of concentric rings sharing
+// one center on-axis behind the shelf — a "tunnel," not a lattice. Scott,
+// after seeing it swing off to one side under a slight drag: "so what I'm
+// saying is that if you can arrange the hexagons as a fainter lattice of
+// hexagons, with this bookshelf being the only one that's real." So:
+// this is now a honeycomb field — a proper hexagonal tiling, tessellating
+// the whole background in both x and y, the way Borges' Library actually
+// is (identical connected hexagonal galleries extending in every
+// direction, not a single receding corridor). The shelf's own back panel
+// naturally occludes whichever lattice cell sits directly behind it —
+// which is exactly the point: every other cell in the field is a faint
+// ghost outline, and this one alone got to be real.
+//
+// Each hexagon is 6 thin box edges (buildFrame()'s technique — box edges
+// read reliably at low opacity, where 1px LineLoop hexagons did not, per
+// the first pass's failure). Built as an InstancedMesh per depth layer
+// since a real tiling means hundreds of edges, not a dozen.
+function hexEdgeTransforms(r) {
   const apothem = r * Math.cos(Math.PI / 6);
+  const out = [];
   for (let k = 0; k < 6; k++) {
     const thetaMid = Math.PI / 6 + (k + 0.5) * (Math.PI / 3);
-    const geo = new THREE.BoxGeometry(side, 0.05, 0.05);
-    disposables.push(geo);
-    const mesh = new THREE.Mesh(geo, mat);
-    mesh.position.set(apothem * Math.cos(thetaMid), apothem * Math.sin(thetaMid), 0);
-    mesh.rotation.z = thetaMid + Math.PI / 2;
-    group.add(mesh);
+    out.push({
+      x: apothem * Math.cos(thetaMid),
+      y: apothem * Math.sin(thetaMid),
+      rotZ: thetaMid + Math.PI / 2,
+      length: r, // regular hexagon: edge length equals circumradius
+    });
   }
-  return group;
+  return out;
+}
+
+function buildHexLatticeLayer({ r, cols, rows, z, color, opacity, seed }) {
+  const dx = r * Math.sqrt(3);
+  const dy = r * 1.5;
+  const cells = [];
+  for (let row = -rows; row <= rows; row++) {
+    const rowOffset = (row % 2 !== 0) ? dx / 2 : 0;
+    for (let col = -cols; col <= cols; col++) {
+      cells.push({ cx: col * dx + rowOffset, cy: row * dy });
+    }
+  }
+
+  const geo = new THREE.BoxGeometry(1, 0.045, 0.045); // unit length, scaled per-edge
+  const mat = new THREE.MeshBasicMaterial({
+    color, transparent: true, opacity, depthWrite: false, fog: true,
+  });
+  const mesh = new THREE.InstancedMesh(geo, mat, cells.length * 6);
+
+  const dummy = new THREE.Object3D();
+  let idx = 0;
+  cells.forEach((cell, ci) => {
+    // Deterministic per-cell jitter (same hash convention as the rest of
+    // the scene) so the field reads as real, slightly irregular
+    // architecture rather than a printed wallpaper pattern.
+    const cellR = r * (0.92 + hash01(`${seed}-r-${ci}`, 'r') * 0.16);
+    const cellZ = z + (hash01(`${seed}-z-${ci}`, 'z') - 0.5) * 0.9;
+    hexEdgeTransforms(cellR).forEach(e => {
+      dummy.position.set(cell.cx + e.x, cell.cy + e.y, cellZ);
+      dummy.rotation.set(0, 0, e.rotZ);
+      dummy.scale.set(e.length, 1, 1);
+      dummy.updateMatrix();
+      mesh.setMatrixAt(idx, dummy.matrix);
+      idx++;
+    });
+  });
+  mesh.instanceMatrix.needsUpdate = true;
+
+  return { mesh, disposables: [geo, mat] };
 }
 
 function buildBabelBackdrop() {
   const group = new THREE.Group();
   const disposables = [];
-  const ringCount = 9;
-  const baseR = 4.2;
 
-  for (let i = 0; i < ringCount; i++) {
-    const r = baseR + i * 0.3;
-    const mat = new THREE.MeshBasicMaterial({
-      color: 0x92a9d8,
-      transparent: true,
-      opacity: Math.max(0.1, 0.62 - i * 0.055),
-      depthWrite: false,
-      fog: true,
-    });
-    disposables.push(mat);
-    const ring = buildHexRing(r, mat, disposables);
-    // Deterministic per-ring jitter (same hash convention as the rest of
-    // the scene) so the corridor of hexagons isn't a perfectly mechanical
-    // tunnel — irregular enough to feel like a glimpse of real, endless
-    // architecture rather than a repeating prop.
-    ring.position.x = (hash01(`babel-x-${i}`, 'jx') - 0.5) * 0.7;
-    ring.position.y = (hash01(`babel-y-${i}`, 'jy') - 0.5) * 0.7;
-    ring.position.z = -3.4 - i * 2.9;
-    ring.rotation.z = (hash01(`babel-rot-${i}`, 'jr') - 0.5) * 0.4;
-    group.add(ring);
-  }
+  // Near layer: smaller cells, closer behind the shelf, a touch brighter.
+  const near = buildHexLatticeLayer({
+    r: 1.7, cols: 6, rows: 5, z: -5,
+    color: 0x92a9d8, opacity: 0.22, seed: 'babel-near',
+  });
+  group.add(near.mesh);
+  disposables.push(...near.disposables);
+
+  // Far layer: bigger cells further back, dimmer still — a second plane
+  // of the same honeycomb, gesturing at the field continuing in depth
+  // as well as across, without building out a full receding tunnel.
+  const far = buildHexLatticeLayer({
+    r: 2.3, cols: 5, rows: 4, z: -11,
+    color: 0x7f96c2, opacity: 0.12, seed: 'babel-far',
+  });
+  group.add(far.mesh);
+  disposables.push(...far.disposables);
 
   return { group, disposables };
 }
