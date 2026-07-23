@@ -6,6 +6,48 @@ projects (The Secret World, A Manual of Perceptual Mechanics) moved into their o
 files, which are now the source of truth for that material going forward. See "project map"
 below for where things live.
 
+## 1.0.59 (2026-07-23)
+
+Scott: search my writing for any mentions of "the Surround" (Sandover's
+Ephraim calls his afterlife "THE SURROUND OF THE LIVING"), relate it to
+Mage's Umbra and Changeling's chimerical reality, and take another pass
+at both essays with it folded in.
+
+Searched the raw archive (strings/zcat/unzip across .doc/.rtf/.txt/
+.docx/.pages, not just the already-converted deep-dive material) and
+found real, decades-old precedent: *Storyline.doc* (2003, a pitch for a
+project called "The Veil") defines "the Surround" directly — "the
+spirit world, an energy/information environment... kept apart from us
+by the Veil" — and states the cosmology outright: "First, there is the
+world. Governed by the laws of physics. Then there is the Veil. Then
+there is the Surround." "A bard of butterflies" (undated, already a
+known muse/myth source document) repeats it as incantation ("the
+Surround the Surround the Surround"), self-titles its author "ETERNAL
+WORD-SCULPTOR OF THE SURROUND," and places it on an explicit ladder
+next to Plato's Forms. *km.txt* (2005) shows it in casual later use.
+*Millennium.doc* confirms Scott's own Mage fiction uses "the Umbra"
+directly; a 1998 *vhsmail.txt* LARP character sheet confirms his own
+Changeling: The Dreaming character had a flaw built around
+"chimerical" intrusions. Flagged rather than asserted: could not
+confirm "the Surround" as an actual VALIS/Exegesis term via web
+search, so that specific claim was left out of both documents and
+raised directly with Scott instead.
+
+- **library.js**: added a verified excerpt to id108 (Sandover) — "IT IS
+  THE SURROUND OF THE LIVING" — and a note line connecting it to
+  Scott's own 2003-onward use of the same term.
+- **library_resonances.md**: Sandover section now quotes Ephraim's line
+  directly and notes the three-way convergence (Sandover, Mage's Umbra,
+  Changeling's chimerical) on the same threshold-concept.
+- **archive_against_library.md**: new section, "The Surround, named
+  before the shelf could name it," laying out the 2003-2005 archive
+  evidence in full; "What the search was actually for" updated so
+  Sandover/Harpur read as *confirming* a word Scott already had, not
+  introducing him to the idea.
+
+Verified: node --check, link-integrity script (122 items, 0 dup ids,
+66/66 links valid), clean vite build, catalog mirror regenerated.
+
 ## 1.0.58 (2026-07-23)
 
 A long freeform conversation with Scott, kicked off by "fold this all into
