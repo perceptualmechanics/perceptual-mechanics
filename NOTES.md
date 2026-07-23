@@ -6,6 +6,50 @@ projects (The Secret World, A Manual of Perceptual Mechanics) moved into their o
 files, which are now the source of truth for that material going forward. See "project map"
 below for where things live.
 
+## 1.0.52 (2026-07-22)
+
+Scott, from a screenshot of the panel: "Ok, for the videos, embed the
+video rather than linking it. Let's put the excerpt above the actual
+info about the book, don't blockquote it, make excerpts longer. for
+the art books, if there are any publicly available images we can use,
+then perfect. also, when I click outside the panel, it moves to the
+middle??"
+
+- **Fixed the outside-click bug.** `.from-left` (the panel's
+  left-anchored state) never set its own closed-state transform, so it
+  inherited the base rule's `translateX(100%)` — which, applied to a
+  panel now positioned at `left:0`, slides it to sit in the middle of
+  the screen instead of off-screen. Added `transform: translateX(-100%)`
+  to `.from-left` and a `.from-left.open` compound rule (higher
+  specificity than either class alone) so the open state still wins
+  correctly regardless of declaration order.
+- **Videos now embed** (a `youtube-nocookie.com/embed/...` iframe, 16:9,
+  above the details block) instead of just linking out. Playback is
+  cleared on every close path (close button, outside click, Escape) so
+  nothing keeps playing in the background.
+- **Excerpt moved above the bibliographic details**, and un-blockquoted
+  — plain italic text instead of the bordered box.
+- **Cover images** added via Open Library's covers API, keyed off the
+  ISBN already on file, with `onerror` hiding it gracefully if no cover
+  exists there. This is the "real image" for the art/photo/reference
+  books that don't have a natural textual excerpt (Taschen volumes,
+  Book of Symbols, Art of Atari, etc.) — a deliberate, narrow exception
+  to the site's "no real cover art" rule, scoped to identification-style
+  thumbnails from a public covers database rather than reproducing any
+  interior artwork.
+- **Lengthened 11 of the 24 excerpts** from a single opening line to a
+  fuller passage (a few sentences to a short paragraph), leaning more
+  generous on public-domain originals (Paradise Lost, Portrait of the
+  Artist, Leaves of Grass, Blake, Ulysses — all pre-1929 in the US) and
+  staying modest on actively in-copyright translations/texts
+  (Beowulf/Heaney, Gilgamesh/George, Tao Te Ching/Lau, Tlön/Hurley,
+  Finnegans Wake). A handful were left as-is where no additional
+  verified text was found, or where the existing line was already a
+  reasonable length.
+
+Verified: `node --check` on the data file and the scene, and a clean
+`vite build`.
+
 ## 1.0.51 (2026-07-22)
 
 Scott: "nice! ok, so let's stop the auto-rotate for the moment. I'll go

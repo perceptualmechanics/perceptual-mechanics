@@ -59,6 +59,18 @@ function hash01(str, salt) {
   return (hash(str + salt) % 10000) / 10000;
 }
 
+// Pulls the video id out of a youtube.com/watch?v=... URL so the panel can
+// embed it (youtube-nocookie.com/embed/ID) instead of just linking out.
+function youtubeEmbedSrc(url) {
+  try {
+    const u = new URL(url);
+    const id = u.searchParams.get('v');
+    return id ? `https://www.youtube-nocookie.com/embed/${id}` : null;
+  } catch {
+    return null;
+  }
+}
+
 function wrapSpineText(text, maxChars) {
   const words = text.split(' ');
   const lines = [];
@@ -326,11 +338,20 @@ export function createLibrary(container, { preview = false } = {}) {
          same convention as sphere.js. .from-left is toggled in JS right
          before opening; .no-transition suppresses the flip's own
          transition for one frame so it happens while the panel is still
-         off-screen, not visibly. */
+         off-screen, not visibly. The closed-state transform has to flip
+         too (-100% instead of 100%) once the panel is left-anchored,
+         otherwise a from-left panel closes by sliding to translateX(100%)
+         of ITS OWN width while positioned at left:0 -- which lands it
+         sitting in the middle of the screen instead of off-screen. The
+         .from-left.open compound rule (higher specificity than either
+         single-class rule) guarantees the open state still wins when
+         both classes are present, regardless of declaration order. */
       #library-panel.from-left {
         left: 0; right: auto;
         border-left: none; border-right: 1px solid rgba(230,215,180,0.15);
+        transform: translateX(-100%);
       }
+      #library-panel.from-left.open { transform: translateX(0); }
       #library-panel.no-transition { transition: none !important; }
       #library-panel-kind {
         font-size: 0.65rem; letter-spacing: 0.25em; text-transform: uppercase;
@@ -354,22 +375,32 @@ export function createLibrary(container, { preview = false } = {}) {
         line-height: 1.6; margin-top: 0.9rem;
       }
       #library-panel-excerpt {
-        margin-top: 1.4rem; padding: 1.1rem 1.3rem;
-        border-left: 2px solid rgba(230,215,180,0.25);
-        background: rgba(230,215,180,0.04);
-        color: rgba(235,228,210,0.85); font-size: 0.95rem;
-        font-style: italic; line-height: 1.75;
+        margin: 0 0 1.4rem;
+        color: rgba(235,228,210,0.88); font-size: 0.98rem;
+        font-style: italic; line-height: 1.8;
       }
-      #library-panel-excerpt:empty { display: none; }
-      #library-panel-watch {
-        display: inline-block; margin-top: 1.2rem;
-        color: rgba(190,215,255,0.75); font-size: 0.8rem;
-        letter-spacing: 0.04em; text-decoration: none;
-        border-bottom: 1px solid rgba(190,215,255,0.3);
-        padding-bottom: 0.15rem;
+      #library-panel-excerpt:empty { display: none; margin: 0; }
+      #library-panel-cover {
+        display: block; max-width: 42%; height: auto;
+        float: left; margin: 0 1.1rem 0.6rem 0;
+        border: 1px solid rgba(230,215,180,0.15);
       }
-      #library-panel-watch:hover { color: rgba(215,230,255,0.95); border-bottom-color: rgba(215,230,255,0.6); }
-      #library-panel-watch:empty { display: none; }
+      #library-panel-cover[hidden] { display: none; }
+      #library-panel-video {
+        margin: 0 0 1.4rem; position: relative;
+        width: 100%; aspect-ratio: 16 / 9;
+      }
+      #library-panel-video:empty { display: none; margin: 0; }
+      #library-panel-video iframe {
+        position: absolute; inset: 0; width: 100%; height: 100%;
+        border: 1px solid rgba(230,215,180,0.15);
+      }
+      #library-panel-scene {
+        display: block; margin: 0.6rem 0 1.4rem;
+        color: rgba(220,210,195,0.6); font-size: 0.8rem;
+        font-style: italic; clear: both;
+      }
+      #library-panel-scene:empty { display: none; margin: 0; }
       #library-panel-close {
         position: absolute; top: 1.5rem; right: 1.5rem; background: none;
         border: none; color: rgba(255,255,255,0.4); font-size: 1.2rem;
@@ -405,10 +436,12 @@ export function createLibrary(container, { preview = false } = {}) {
       <div id="library-panel-kind"></div>
       <div id="library-panel-title" tabindex="-1"></div>
       <div id="library-panel-creator"></div>
+      <div id="library-panel-video"></div>
+      <p id="library-panel-scene"></p>
+      <img id="library-panel-cover" hidden alt="" />
+      <p id="library-panel-excerpt"></p>
       <div id="library-panel-details"></div>
       <p id="library-panel-note"></p>
-      <blockquote id="library-panel-excerpt"></blockquote>
-      <a id="library-panel-watch" href="#" target="_blank" rel="noopener noreferrer"></a>
     `;
     container.style.position = 'relative';
     container.style.overflow = 'hidden';
@@ -420,6 +453,7 @@ export function createLibrary(container, { preview = false } = {}) {
     panel.querySelector('#library-panel-close').addEventListener('click', e => {
       e.stopPropagation();
       panel.classList.remove('open');
+      panel.querySelector('#library-panel-video').innerHTML = '';
       selected = null;
     });
   }
@@ -451,6 +485,7 @@ export function createLibrary(container, { preview = false } = {}) {
     onContainerClick = e => {
       if (panel.classList.contains('open') && !panel.contains(e.target)) {
         panel.classList.remove('open');
+        panel.querySelector('#library-panel-video').innerHTML = '';
         selected = null;
         return;
       }
@@ -470,7 +505,9 @@ export function createLibrary(container, { preview = false } = {}) {
       const detailsEl = panel.querySelector('#library-panel-details');
       const noteEl = panel.querySelector('#library-panel-note');
       const excerptEl = panel.querySelector('#library-panel-excerpt');
-      const watchEl = panel.querySelector('#library-panel-watch');
+      const coverEl = panel.querySelector('#library-panel-cover');
+      const videoEl = panel.querySelector('#library-panel-video');
+      const sceneEl = panel.querySelector('#library-panel-scene');
       const lines = [];
       if (it.publisher) lines.push(`${it.publisher}${it.publish_year ? `, ${it.publish_year}` : ''}`);
       if (it.pages) lines.push(`${it.pages} pages`);
@@ -482,17 +519,41 @@ export function createLibrary(container, { preview = false } = {}) {
       detailsEl.innerHTML = lines.map(l => `<p>${l}</p>`).join('');
       noteEl.textContent = it.note || '';
 
-      // Book excerpt (a short, fair-use-scale quotation) or film pivotal-
-      // scene link — whichever the item actually carries. See
-      // src/text/library.js's header for the sourcing/copyright discipline
-      // behind these fields.
-      excerptEl.textContent = it.excerpt ? `“${it.excerpt}”` : '';
+      // Content area, above the bibliographic details: a film gets its
+      // pivotal scene embedded (not just linked), a book gets its excerpt
+      // (plain text, not a blockquote, sits above the details block per
+      // Scott's request) plus a cover thumbnail when a cover image is
+      // publicly available via Open Library's covers API (keyed off the
+      // ISBN we already looked up) -- this is the "real image" allowance
+      // for the art/photo/reference books that don't have a natural
+      // textual excerpt. See src/text/library.js's header for the
+      // sourcing/copyright discipline behind these fields.
+      videoEl.innerHTML = '';
+      sceneEl.textContent = '';
       if (it.youtube) {
-        watchEl.href = it.youtube;
-        watchEl.textContent = it.scene ? `watch: ${it.scene} ↗` : 'watch on YouTube ↗';
+        const embedSrc = youtubeEmbedSrc(it.youtube);
+        if (embedSrc) {
+          const iframe = document.createElement('iframe');
+          iframe.src = embedSrc;
+          iframe.title = it.scene ? `${it.title} — ${it.scene}` : it.title;
+          iframe.allow = 'accelerometer; encrypted-media; gyroscope; picture-in-picture';
+          iframe.allowFullscreen = true;
+          iframe.loading = 'lazy';
+          videoEl.appendChild(iframe);
+        }
+        sceneEl.textContent = it.scene ? `pivotal scene: ${it.scene}` : '';
+      }
+
+      excerptEl.textContent = it.excerpt ? `“${it.excerpt}”` : '';
+
+      if (it.isbn13) {
+        coverEl.hidden = false;
+        coverEl.onerror = () => { coverEl.hidden = true; };
+        coverEl.src = `https://covers.openlibrary.org/b/isbn/${it.isbn13}-L.jpg`;
+        coverEl.alt = `Cover of ${it.title}`;
       } else {
-        watchEl.removeAttribute('href');
-        watchEl.textContent = '';
+        coverEl.hidden = true;
+        coverEl.removeAttribute('src');
       }
 
       // Open from whichever side of the screen was actually clicked --
@@ -557,6 +618,7 @@ export function createLibrary(container, { preview = false } = {}) {
   const escapeClose = !preview ? bindEscapeClose(() => {
     if (panel && panel.classList.contains('open')) {
       panel.classList.remove('open');
+      panel.querySelector('#library-panel-video').innerHTML = '';
       selected = null;
     }
   }) : null;
