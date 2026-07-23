@@ -369,23 +369,27 @@ function buildFrame() {
 // past it, so this is deliberately NOT fully renderable.
 //
 // Second pass (v1.0.61) built a single stack of concentric rings sharing
-// one center on-axis behind the shelf — a "tunnel," not a lattice. Scott,
-// after seeing it swing off to one side under a slight drag: "so what I'm
-// saying is that if you can arrange the hexagons as a fainter lattice of
-// hexagons, with this bookshelf being the only one that's real." So:
-// this is now a honeycomb field — a proper hexagonal tiling, tessellating
-// the whole background in both x and y, the way Borges' Library actually
-// is (identical connected hexagonal galleries extending in every
-// direction, not a single receding corridor). The shelf's own back panel
-// naturally occludes whichever lattice cell sits directly behind it —
-// which is exactly the point: every other cell in the field is a faint
-// ghost outline, and this one alone got to be real.
+// one center on-axis behind the shelf — a "tunnel," not a lattice, which
+// is also why it swung dramatically to one side under a slight drag.
+// Third pass (v1.0.63) fixed that by tiling a proper edge-sharing
+// honeycomb across two flat planes behind the shelf.
 //
-// Each hexagon is 6 thin box edges (buildFrame()'s technique — box edges
-// read reliably at low opacity, where 1px LineLoop hexagons did not, per
-// the first pass's failure). Built as an InstancedMesh per depth layer
-// since a real tiling means hundreds of edges, not a dozen.
-function hexEdgeTransforms(r) {
+// Fourth pass, Scott: "let's detach the hexagons so they don't form a
+// honeycomb pattern, just hexagons attached by strands, and let's make
+// the Library of Babel 3d around it... think of it like what you did
+// with the butterfly's phase space" — i.e. butterfly.js's volumetric
+// spider-silk grid, which fills a real 3D cube around the Lorenz
+// attractor rather than sitting behind it as a flat backdrop. So: no
+// more shared edges, no more flat planes. Independent hexagon "gallery"
+// nodes are scattered through a cube surrounding the shelf on every
+// side, each tumbled to its own random 3D orientation, linked to its
+// nearest neighbors by thin strand-rods (Borges' galleries connect to
+// each other, not tile seamlessly into one surface). A keep-out column
+// matching the shelf's own x/y footprint (through every z) keeps any
+// node or strand from ever drawing across the shelf's own books —
+// "the bookshelf looks normal" still holds, now from every angle, not
+// just head-on.
+function hexEdgeLocalTransforms(r) {
   const apothem = r * Math.cos(Math.PI / 6);
   const out = [];
   for (let k = 0; k < 6; k++) {
@@ -400,66 +404,122 @@ function hexEdgeTransforms(r) {
   return out;
 }
 
-function buildHexLatticeLayer({ r, cols, rows, z, color, opacity, seed }) {
-  const dx = r * Math.sqrt(3);
-  const dy = r * 1.5;
-  const cells = [];
-  for (let row = -rows; row <= rows; row++) {
-    const rowOffset = (row % 2 !== 0) ? dx / 2 : 0;
-    for (let col = -cols; col <= cols; col++) {
-      cells.push({ cx: col * dx + rowOffset, cy: row * dy });
-    }
-  }
-
-  const geo = new THREE.BoxGeometry(1, 0.045, 0.045); // unit length, scaled per-edge
-  const mat = new THREE.MeshBasicMaterial({
-    color, transparent: true, opacity, depthWrite: false, fog: true,
-  });
-  const mesh = new THREE.InstancedMesh(geo, mat, cells.length * 6);
-
-  const dummy = new THREE.Object3D();
-  let idx = 0;
-  cells.forEach((cell, ci) => {
-    // Deterministic per-cell jitter (same hash convention as the rest of
-    // the scene) so the field reads as real, slightly irregular
-    // architecture rather than a printed wallpaper pattern.
-    const cellR = r * (0.92 + hash01(`${seed}-r-${ci}`, 'r') * 0.16);
-    const cellZ = z + (hash01(`${seed}-z-${ci}`, 'z') - 0.5) * 0.9;
-    hexEdgeTransforms(cellR).forEach(e => {
-      dummy.position.set(cell.cx + e.x, cell.cy + e.y, cellZ);
-      dummy.rotation.set(0, 0, e.rotZ);
-      dummy.scale.set(e.length, 1, 1);
-      dummy.updateMatrix();
-      mesh.setMatrixAt(idx, dummy.matrix);
-      idx++;
-    });
-  });
-  mesh.instanceMatrix.needsUpdate = true;
-
-  return { mesh, disposables: [geo, mat] };
-}
-
 function buildBabelBackdrop() {
   const group = new THREE.Group();
   const disposables = [];
 
-  // Near layer: smaller cells, closer behind the shelf, a touch brighter.
-  const near = buildHexLatticeLayer({
-    r: 1.7, cols: 6, rows: 5, z: -5,
-    color: 0x92a9d8, opacity: 0.22, seed: 'babel-near',
-  });
-  group.add(near.mesh);
-  disposables.push(...near.disposables);
+  // ── Node field: jittered 3D grid, thinned and tumbled, so it reads as
+  // scattered galleries rather than a mechanical lattice.
+  const nodes = [];
+  const extent = 9;
+  const step = 3.4;
+  const keepOutX = TOTAL_W / 2 + 0.7;
+  const keepOutY = TOTAL_H / 2 + 0.7;
+  let ni = 0;
+  for (let gx = -extent; gx <= extent; gx += step) {
+    for (let gy = -extent; gy <= extent; gy += step) {
+      for (let gz = -extent; gz <= extent; gz += step) {
+        ni++;
+        // Keep-out column matches the shelf's own width/height at every
+        // depth, not just around its physical thickness — so nothing
+        // ever renders in front of or behind the shelf's own silhouette.
+        if (Math.abs(gx) < keepOutX && Math.abs(gy) < keepOutY) continue;
+        if (hash01(`babel-skip-${ni}`, 'k') > 0.42) continue; // thin the field
+        const jit = step * 0.75;
+        nodes.push({
+          pos: new THREE.Vector3(
+            gx + (hash01(`babel-jx-${ni}`, 'x') - 0.5) * jit,
+            gy + (hash01(`babel-jy-${ni}`, 'y') - 0.5) * jit,
+            gz + (hash01(`babel-jz-${ni}`, 'z') - 0.5) * jit,
+          ),
+          rx: (hash01(`babel-rx-${ni}`, 'a') - 0.5) * Math.PI,
+          ry: (hash01(`babel-ry-${ni}`, 'b') - 0.5) * Math.PI,
+          rz: (hash01(`babel-rz-${ni}`, 'c') - 0.5) * Math.PI,
+          r: 0.5 + hash01(`babel-r-${ni}`, 'd') * 0.4,
+        });
+      }
+    }
+  }
 
-  // Far layer: bigger cells further back, dimmer still — a second plane
-  // of the same honeycomb, gesturing at the field continuing in depth
-  // as well as across, without building out a full receding tunnel.
-  const far = buildHexLatticeLayer({
-    r: 2.3, cols: 5, rows: 4, z: -11,
-    color: 0x7f96c2, opacity: 0.12, seed: 'babel-far',
+  // ── Hexagon edges: one InstancedMesh for every node's outline, each
+  // tumbled to its own orientation (node transform composed with each
+  // edge's local placement in the hex's own plane).
+  const edgeGeo = new THREE.BoxGeometry(1, 0.045, 0.045);
+  const edgeMat = new THREE.MeshBasicMaterial({
+    color: 0x92a9d8, transparent: true, opacity: 0.26, depthWrite: false, fog: true,
   });
-  group.add(far.mesh);
-  disposables.push(...far.disposables);
+  const edgeMesh = new THREE.InstancedMesh(edgeGeo, edgeMat, nodes.length * 6);
+  disposables.push(edgeGeo, edgeMat);
+
+  const dummy = new THREE.Object3D();
+  const local = new THREE.Object3D();
+  let ei = 0;
+  nodes.forEach(node => {
+    dummy.position.copy(node.pos);
+    dummy.rotation.set(node.rx, node.ry, node.rz);
+    dummy.scale.set(1, 1, 1);
+    dummy.updateMatrix();
+    const nodeMatrix = dummy.matrix.clone();
+    hexEdgeLocalTransforms(node.r).forEach(e => {
+      local.position.set(e.x, e.y, 0);
+      local.rotation.set(0, 0, e.rotZ);
+      local.scale.set(e.length, 1, 1);
+      local.updateMatrix();
+      edgeMesh.setMatrixAt(ei, nodeMatrix.clone().multiply(local.matrix));
+      ei++;
+    });
+  });
+  edgeMesh.instanceMatrix.needsUpdate = true;
+  group.add(edgeMesh);
+
+  // ── Strands: connect each node to its nearest neighbors so the field
+  // reads as a network, not scattered confetti. Computed once at build
+  // time — O(n^2) over ~100 nodes is trivial.
+  const strandPairs = [];
+  const seen = new Set();
+  const maxStrandLen = 6.2;
+  nodes.forEach((node, i) => {
+    const dists = nodes
+      .map((other, j) => (i === j ? null : { j, d: node.pos.distanceTo(other.pos) }))
+      .filter(Boolean)
+      .sort((a, b) => a.d - b.d);
+    let linked = 0;
+    for (const { j, d } of dists) {
+      if (linked >= 2 || d > maxStrandLen) break;
+      const key = i < j ? `${i}-${j}` : `${j}-${i}`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        strandPairs.push([i, j]);
+      }
+      linked++;
+    }
+  });
+
+  if (strandPairs.length) {
+    const strandGeo = new THREE.BoxGeometry(1, 0.02, 0.02);
+    const strandMat = new THREE.MeshBasicMaterial({
+      color: 0x6f86b4, transparent: true, opacity: 0.16, depthWrite: false, fog: true,
+    });
+    const strandMesh = new THREE.InstancedMesh(strandGeo, strandMat, strandPairs.length);
+    disposables.push(strandGeo, strandMat);
+
+    strandPairs.forEach(([i, j], si) => {
+      const a = nodes[i].pos, b = nodes[j].pos;
+      const mid = new THREE.Vector3().addVectors(a, b).multiplyScalar(0.5);
+      const dir = new THREE.Vector3().subVectors(b, a);
+      const len = dir.length();
+      const quat = new THREE.Quaternion().setFromUnitVectors(
+        new THREE.Vector3(1, 0, 0), dir.clone().normalize(),
+      );
+      dummy.position.copy(mid);
+      dummy.quaternion.copy(quat);
+      dummy.scale.set(len, 1, 1);
+      dummy.updateMatrix();
+      strandMesh.setMatrixAt(si, dummy.matrix);
+    });
+    strandMesh.instanceMatrix.needsUpdate = true;
+    group.add(strandMesh);
+  }
 
   return { group, disposables };
 }

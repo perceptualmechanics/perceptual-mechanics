@@ -6,6 +6,37 @@ projects (The Secret World, A Manual of Perceptual Mechanics) moved into their o
 files, which are now the source of truth for that material going forward. See "project map"
 below for where things live.
 
+## 1.0.64 (2026-07-23)
+
+Scott: "let's detach the hexagons so they don't form a honeycomb
+pattern, just hexagons attached by strands, and let's make the Library
+of Babel 3d around it... think of it like what you did with the
+butterfly's phase space" — i.e. butterfly.js's volumetric spider-silk
+grid, which fills a real 3D cube around the Lorenz attractor rather
+than sitting behind it as a flat backdrop.
+
+- **Rebuilt the backdrop a third time**, replacing the two flat
+  honeycomb planes from 1.0.63 with a scattered field of independent
+  hexagon "gallery" nodes filling a cube around the shelf on every
+  side — no shared edges, each hexagon tumbled to its own random 3D
+  orientation. Nodes are linked to their nearest 1-2 neighbors by thin
+  strand-rods, so the field reads as a network of connected galleries
+  rather than either a tiled surface or scattered confetti.
+- A keep-out column matching the shelf's own width/height (through
+  every depth, not just its physical thickness) keeps any node or
+  strand from ever drawing across the shelf's own books, from any
+  angle — not just head-on, which is what the flat-plane version
+  couldn't guarantee once rotated.
+- Built as two `InstancedMesh`es (edges, strands) since a real 3D
+  field is hundreds of pieces; node/strand generation is deterministic
+  (same hash convention as the rest of the scene) and computed once at
+  build time.
+
+Verified: node --check, clean vite build, a standalone Node simulation
+of the node/strand generation math (75 nodes, 450 hex edges, 87
+strands off a 216-candidate 3D grid) confirming non-trivial, non-empty
+output before shipping.
+
 ## 1.0.63 (2026-07-23)
 
 Scott, after seeing the 1.0.62 backdrop swing off to one side under a
