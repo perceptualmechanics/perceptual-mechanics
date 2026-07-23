@@ -1075,7 +1075,12 @@ export function createLibrary(container, { preview = false } = {}) {
     if (it.writer) lines.push(`written by ${it.writer}`);
     if (it.producer) lines.push(`produced by ${it.producer}`);
     detailsEl.innerHTML = lines.map(l => `<p>${l}</p>`).join('');
-    noteEl.innerHTML = it.note ? renderLinkedField(it.id, 'note', it.note) : '';
+    // Note text disabled for now (Scott, 2026-07-23: "I'm not sure I want
+    // it there yet") -- commented out rather than deleted so it's a
+    // one-line revert. Underlying `note` data and the cross-links that
+    // live inside it (LIBRARY_LINKS, field: 'note') are untouched.
+    // noteEl.innerHTML = it.note ? renderLinkedField(it.id, 'note', it.note) : '';
+    noteEl.innerHTML = '';
 
     // Content area, above the bibliographic details: a film gets its
     // pivotal scene embedded (not just linked), a book gets its excerpt
