@@ -6,6 +6,24 @@ projects (The Secret World, A Manual of Perceptual Mechanics) moved into their o
 files, which are now the source of truth for that material going forward. See "project map"
 below for where things live.
 
+## 1.0.62 (2026-07-23)
+
+Scott, after loading v1.0.61: "hmm, i don't think i'm seeing it?" — the
+Library of Babel backdrop was there but effectively invisible.
+
+- **Rebuilt the Babel backdrop's rendering technique.** The 1px
+  `LineLoop` hexagons from 1.0.61 rendered as barely-there fragments —
+  thin WebGL lines at low opacity against a pure-black background
+  mostly vanish into anti-aliasing rather than reading as a shape.
+  Replaced with hexagon rings built from thin box edges (the same
+  technique `buildFrame()` already uses for the shelf's own dividers),
+  unlit `MeshBasicMaterial`, and meaningfully higher opacity — so
+  "faintly seen through the Veil" means dim, not actually invisible.
+  Same fog/position/jitter logic as before, same guarantee that the
+  foreground shelf itself never fogs.
+
+Verified: node --check, clean vite build.
+
 ## 1.0.61 (2026-07-23)
 
 Scott: "let's turn the bookcase vertical," then, treating the shelf as a

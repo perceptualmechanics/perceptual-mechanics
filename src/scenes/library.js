@@ -367,43 +367,57 @@ function buildFrame() {
 // Veil is Scott's own term (documented at length in archive_against_library
 // .md) for the perceptual screen between ordinary reality and what lies
 // past it, so this is deliberately NOT fully renderable.
-function hexPoints(r) {
-  const pts = [];
-  for (let i = 0; i <= 6; i++) {
-    const a = (Math.PI / 3) * i + Math.PI / 6;
-    pts.push(new THREE.Vector3(r * Math.cos(a), r * Math.sin(a), 0));
+//
+// First pass used 1px LineLoop hexagons, which turned out invisible in
+// practice — thin WebGL lines at low opacity against pure black render as
+// a handful of stray anti-aliased fragments, not a legible shape. Rebuilt
+// as thin box-edge hexagons (same technique as buildFrame()'s dividers)
+// so each ring has real, consistent on-screen thickness regardless of
+// display/antialiasing, with unlit MeshBasicMaterial (no key-light falloff
+// — it reads as its own dim, independent glow rather than a lit object)
+// and enough base brightness that "faint" doesn't mean "actually invisible."
+function buildHexRing(r, mat, disposables) {
+  const group = new THREE.Group();
+  const side = r; // regular hexagon: edge length equals circumradius
+  const apothem = r * Math.cos(Math.PI / 6);
+  for (let k = 0; k < 6; k++) {
+    const thetaMid = Math.PI / 6 + (k + 0.5) * (Math.PI / 3);
+    const geo = new THREE.BoxGeometry(side, 0.05, 0.05);
+    disposables.push(geo);
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.position.set(apothem * Math.cos(thetaMid), apothem * Math.sin(thetaMid), 0);
+    mesh.rotation.z = thetaMid + Math.PI / 2;
+    group.add(mesh);
   }
-  return pts;
+  return group;
 }
 
 function buildBabelBackdrop() {
   const group = new THREE.Group();
   const disposables = [];
-  const ringCount = 12;
-  const baseR = 4.4;
+  const ringCount = 9;
+  const baseR = 4.2;
 
   for (let i = 0; i < ringCount; i++) {
-    const r = baseR + i * 0.22;
-    const geo = new THREE.BufferGeometry().setFromPoints(hexPoints(r));
-    disposables.push(geo);
-    const mat = new THREE.LineBasicMaterial({
-      color: 0x4a5c78,
+    const r = baseR + i * 0.3;
+    const mat = new THREE.MeshBasicMaterial({
+      color: 0x92a9d8,
       transparent: true,
-      opacity: Math.max(0.05, 0.34 - i * 0.024),
-      blending: THREE.AdditiveBlending,
+      opacity: Math.max(0.1, 0.62 - i * 0.055),
       depthWrite: false,
+      fog: true,
     });
     disposables.push(mat);
-    const loop = new THREE.LineLoop(geo, mat);
+    const ring = buildHexRing(r, mat, disposables);
     // Deterministic per-ring jitter (same hash convention as the rest of
     // the scene) so the corridor of hexagons isn't a perfectly mechanical
     // tunnel — irregular enough to feel like a glimpse of real, endless
     // architecture rather than a repeating prop.
-    loop.position.x = (hash01(`babel-x-${i}`, 'jx') - 0.5) * 0.6;
-    loop.position.y = (hash01(`babel-y-${i}`, 'jy') - 0.5) * 0.6;
-    loop.position.z = -3.2 - i * 2.7;
-    loop.rotation.z = (hash01(`babel-rot-${i}`, 'jr') - 0.5) * 0.4;
-    group.add(loop);
+    ring.position.x = (hash01(`babel-x-${i}`, 'jx') - 0.5) * 0.7;
+    ring.position.y = (hash01(`babel-y-${i}`, 'jy') - 0.5) * 0.7;
+    ring.position.z = -3.4 - i * 2.9;
+    ring.rotation.z = (hash01(`babel-rot-${i}`, 'jr') - 0.5) * 0.4;
+    group.add(ring);
   }
 
   return { group, disposables };
