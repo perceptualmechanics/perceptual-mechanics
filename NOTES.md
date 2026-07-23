@@ -6,6 +6,23 @@ projects (The Secret World, A Manual of Perceptual Mechanics) moved into their o
 files, which are now the source of truth for that material going forward. See "project map"
 below for where things live.
 
+## 1.1.7 (2026-07-23)
+
+Scott: "never mind, make it the letters PM like from the title" --
+swapping out 1.1.6's hare-silhouette favicon.
+
+- Regenerated favicon.ico/favicon-16x16.png/favicon-32x32.png/
+  apple-touch-icon.png as a plain "PM" monogram, white on black,
+  echoing #site-title's own look rather than the colophon mark.
+  Poppins Bold (closest already-available geometric sans to
+  Electrolize, same substitution reasoning as the social card).
+  Checked at actual render size: crisp at 32px and 180px; softens at
+  16px the way any two-letter glyph does at that resolution -- same
+  real-world tradeoff most text-based favicons accept, so shipped as
+  is rather than over-engineering a fix for the one legacy size.
+
+Verified: clean vite build, all four files land at the site root.
+
 ## 1.1.6 (2026-07-23)
 
 Scott: "ok but what about a favicon :D" -- the site never had one, so
