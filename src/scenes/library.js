@@ -1176,6 +1176,37 @@ export function createLibrary(container, { preview = false } = {}) {
           hovered.scale.set(1.04, 1.02, 1.15);
           selected = newSel;
           const it = selected.userData.item;
+
+          // Scott, 2026-07-23: "if a left panel is open and then I click on
+          // the right-hand side, the new content will appear in the open
+          // left panel, rather than closing the left and opening the
+          // right." The in-place content fade below never re-checked which
+          // side the new click actually landed on, so it just kept
+          // whichever anchor the panel already had. If the click is on the
+          // panel's current side, that fade is still right (no need to
+          // move anything) -- only cross to a real close/reopen when the
+          // side actually changes, so the panel visibly relocates the way
+          // it does on a fresh open, instead of an instant same-frame
+          // teleport (which flipping `from-left` while `open` would cause,
+          // since the panel is fully on-screen at that point, unlike the
+          // closed-panel case this trick was originally written for).
+          const clickedLeft = (e.clientX - rect.left) < rect.width / 2;
+          if (panel.classList.contains('from-left') !== clickedLeft) {
+            panel.classList.remove('open');
+            setTimeout(() => {
+              panel.classList.add('no-transition');
+              panel.classList.toggle('from-left', clickedLeft);
+              void panel.offsetWidth; // force reflow before re-enabling the transition
+              panel.classList.remove('no-transition');
+              populatePanel(it);
+              panel.scrollTop = 0;
+              panelBodyEl.style.opacity = '1'; // guard against a same-side fade-out still in flight
+              panel.classList.add('open');
+              setTimeout(() => panelTitle.focus(), 50);
+            }, 500); // matches #library-panel's own close transition (transform .5s)
+            return;
+          }
+
           panelBodyEl.style.transition = 'opacity .18s';
           panelBodyEl.style.opacity = '0';
           setTimeout(() => {

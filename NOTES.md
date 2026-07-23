@@ -6,6 +6,37 @@ projects (The Secret World, A Manual of Perceptual Mechanics) moved into their o
 files, which are now the source of truth for that material going forward. See "project map"
 below for where things live.
 
+## 1.1.9 (2026-07-23)
+
+Scott: "one thing I've noticed on library is that the panels are
+inconsistent. if a left panel is open and then I click on the
+right-hand side, the new content will appear in the open left panel,
+rather than closing the left and opening the right."
+
+- **Root cause**: the click-position side convention (from sphere.js,
+  ported to library.js when the panel-swap bug was fixed in 1.0.66)
+  only ever recomputes which side the panel opens from when the panel
+  was closed. The 1.0.66 in-place content-swap path (panel already
+  open, click hit a different spine) never re-checked the click's
+  side at all -- it just kept whatever anchor the panel already had,
+  so new content could end up sitting on the opposite side of the
+  screen from where you actually clicked. Confirmed sphere.js has the
+  identical guard (`if (!panel.classList.contains('open'))`) around
+  its own side-flip, so this pattern was written once and copied
+  as-is rather than actually being wrong-for-library specifically --
+  scoping this fix to library.js per what Scott flagged.
+- **Fix**: the in-place swap now checks whether the new click's side
+  matches the panel's current anchor. Same side: unchanged, still the
+  quick opacity fade. Different side: closes the panel first, flips
+  the anchor while it's off-screen (same trick the closed-panel path
+  already uses), then reopens with the new content -- an honest
+  close-then-reopen on the correct side, timed to the panel's own
+  500ms close transition, rather than an instant same-frame teleport
+  (which just toggling the anchor class while the panel is fully
+  on-screen would otherwise cause).
+
+Verified: node --check, clean vite build.
+
 ## 1.1.8 (2026-07-23)
 
 Scott: "just noticed a theater bug: on some of the interstitials,
