@@ -6,6 +6,52 @@ projects (The Secret World, A Manual of Perceptual Mechanics) moved into their o
 files, which are now the source of truth for that material going forward. See "project map"
 below for where things live.
 
+## 1.0.55 (2026-07-23)
+
+Scott: "you're good at this!" — after a deep-dive relational analysis of
+the whole 107-item catalog (books, films, decks) turned up genuine
+cross-title resonances (see library_resonances.md, delivered separately).
+Then: "given this analysis, curate the excerpts to create hyperlinks
+between them a la my other writings in the site."
+
+- **Re-enabled the library scene** (shelved the day before in 1.0.54) —
+  it doesn't make sense to ship clickable cross-links into a scene
+  that's commented out of the nav.
+- **Ported the site's fragment-link convention** (sphere.js's
+  fragment-link, egg.js's poem-link, manuscript.js's LINKS) to the
+  library: a `LIBRARY_LINKS` array in library.js keyed by item id +
+  field name (note/scene/excerpt/excerpt_from), each entry a phrase
+  already sitting in that field's text, wrapped at render time into a
+  clickable jump to another item's panel. Same rule those three
+  precedents already follow: only phrases actually in the text get
+  wired up, and following a link fades the panel content out/in
+  (sphere/egg's exact beat) without touching whatever spine the panel
+  was originally opened from.
+- **13 threads, 31 directional links**, curated into 19 items' note/
+  excerpt fields in src/text/library.js: a coin toss linking No Country
+  for Old Men and Rosencrantz & Guildenstern Are Dead; Hedwig and the
+  Angry Inch's "Origin of Love" linked to a new excerpt on The
+  Symposium (Aristophanes' actual speech, Jowett's 1871 public-domain
+  translation); the Kubrick/Tarkovsky/Malick triangle (2001, Solaris,
+  The Tree of Life); Kurosawa's honor code tested across Seven Samurai,
+  Throne of Blood, Dreams, and Jarmusch's Ghost Dog; Joyce's arc
+  (Portrait, Ulysses, Finnegans Wake) plus Gödel, Escher, Bach's
+  "strange loop"; the wabi-sabi pair (In Praise of Shadows, Tokyo
+  Story); Lispector's Água Viva and Murakami's 1Q84; and the Fagles/
+  Mandelbaum epic relay (the Aeneid linking to the Iliad, the Odyssey,
+  and Dante's Divine Comedy).
+- Added a small `#library-panel-excerpt-from` caption under the
+  excerpt — `excerpt_from` existed on a few items already (Theban
+  Plays, Borges, 1Q84) but was never actually rendered in the panel
+  until now.
+- Left every other excerpt untouched, per the earlier note that
+  Scott's curating those himself.
+
+Verified: node --check on the data file and scene, a script confirming
+all 31 linked phrases actually exist verbatim in their source fields
+and every target id resolves, clean vite build (35 modules, same as
+before the library scene was ever shelved).
+
 ## 1.0.54 (2026-07-22)
 
 Scott: "all right, comment library out for the time being and we'll

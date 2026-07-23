@@ -59,6 +59,90 @@ function hash01(str, salt) {
   return (hash(str + salt) % 10000) / 10000;
 }
 
+// ─── Cross-links, 2026-07-23 ────────────────────────────────────────────────
+// Same mechanism, and the same rule, as sphere.js's fragment-links, egg.js's
+// poem-links, and manuscript.js's LINKS: only phrases already sitting in the
+// catalog text get wired up as jumps to another item's panel. Scott: "given
+// this analysis, curate the excerpts to create hyperlinks between them a la
+// my other writings in the site" — "this analysis" being a close read of the
+// whole 107-item catalog for real resonances (see library_resonances.md),
+// which is also where the curated note/excerpt additions in
+// src/text/library.js supporting these phrases came from. Keyed by item id
+// + field name (note/scene/excerpt/excerpt_from), since — unlike poems.js's
+// stanza-indexed text — library items don't share a single "the text" field.
+const LIBRARY_LINKS = [
+  // A coin decides everything, twice: Chigurh's coin toss and Stoppard's,
+  // played completely straight in one and as metaphysical comedy in the
+  // other.
+  { id: 49, field: 'scene',   phrase: 'coin toss',                        target: 72 },
+  { id: 72, field: 'excerpt', phrase: 'A coin spins in the air',          target: 49 },
+  // "The Origin of Love" is a direct staging of Aristophanes' speech from
+  // the Symposium, sitting a few cubbies away.
+  { id: 40, field: 'scene',        phrase: 'Origin of Love',              target: 13 },
+  { id: 13, field: 'excerpt_from', phrase: 'Hedwig and the Angry Inch',   target: 40 },
+  // Kubrick's stargate, argued over by the two directors who built on it:
+  // Tarkovsky's Solaris as a rebuttal, Malick's Tree of Life borrowing
+  // Kubrick's own effects supervisor.
+  { id: 63, field: 'note', phrase: 'The Tree of Life',        target: 33 },
+  { id: 63, field: 'note', phrase: 'Solaris',                 target: 53 },
+  { id: 53, field: 'note', phrase: '2001: A Space Odyssey',   target: 63 },
+  { id: 53, field: 'note', phrase: 'The Tree of Life',        target: 33 },
+  { id: 33, field: 'note', phrase: '2001: A Space Odyssey',   target: 63 },
+  { id: 33, field: 'note', phrase: 'Solaris',                 target: 53 },
+  // Kurosawa's one idea about honor and code, tested across four decades
+  // and, in Jarmusch's case, two cultures.
+  { id: 31, field: 'note', phrase: 'Throne of Blood',                     target: 41 },
+  { id: 31, field: 'note', phrase: 'Dreams',                              target: 44 },
+  { id: 31, field: 'note', phrase: 'Ghost Dog: The Way of the Samurai',   target: 54 },
+  { id: 41, field: 'note', phrase: 'Seven Samurai',                      target: 31 },
+  { id: 44, field: 'note', phrase: 'Seven Samurai',                      target: 31 },
+  { id: 54, field: 'note', phrase: 'Seven Samurai',                      target: 31 },
+  // Joyce dismantling, book by book, his own faith that a story has a
+  // beginning and an end — and Hofstadter's "strange loop" describing the
+  // same shape from mathematics instead of prose.
+  { id: 11, field: 'note', phrase: 'Ulysses',                             target: 85 },
+  { id: 85, field: 'note', phrase: 'A Portrait of the Artist as a Young Man', target: 11 },
+  { id: 85, field: 'note', phrase: 'Finnegans Wake',                      target: 89 },
+  { id: 89, field: 'note', phrase: 'Gödel, Escher, Bach',                 target: 73 },
+  { id: 73, field: 'note', phrase: 'Finnegans Wake',                      target: 89 },
+  // wabi-sabi as essay, then as plot.
+  { id: 51, field: 'note', phrase: 'In Praise of Shadows',                target: 75 },
+  { id: 75, field: 'note', phrase: 'Tokyo Story',                         target: 51 },
+  // Interior consciousness dissolving plot, in two very different languages.
+  { id: 3,  field: 'note', phrase: '1Q84',                                target: 86 },
+  { id: 86, field: 'note', phrase: 'Água Viva',                           target: 3 },
+  // The epic relay: Homer to Virgil to Dante, each poet picking up the
+  // previous one's hand.
+  { id: 82, field: 'note', phrase: 'the Odyssey',                         target: 81 },
+  { id: 82, field: 'note', phrase: 'the Iliad',                           target: 80 },
+  { id: 82, field: 'note', phrase: 'The Divine Comedy',                   target: 91 },
+  { id: 81, field: 'note', phrase: 'the Aeneid',                         target: 82 },
+  { id: 80, field: 'note', phrase: 'the Aeneid',                         target: 82 },
+  { id: 91, field: 'note', phrase: 'the Aeneid',                         target: 82 },
+];
+
+function escapeHtml(s) {
+  const div = document.createElement('div');
+  div.textContent = s;
+  return div.innerHTML;
+}
+
+// Wraps any LIBRARY_LINKS phrases that belong to this item+field in a
+// clickable <a class="library-link" data-target="id">, same beat as
+// sphere.js's fragment-links: escape the raw text first, then replace the
+// (already-escaped) phrase so nothing else in the string can be
+// reinterpreted as markup.
+function renderLinkedField(itemId, field, text) {
+  let html = escapeHtml(text);
+  LIBRARY_LINKS
+    .filter(l => l.id === itemId && l.field === field)
+    .forEach(link => {
+      const esc = escapeHtml(link.phrase);
+      html = html.replace(esc, `<a class="library-link" data-target="${link.target}" role="link" tabindex="0">${esc}</a>`);
+    });
+  return html;
+}
+
 // Pulls the video id out of a youtube.com/watch?v=... URL so the panel can
 // embed it (youtube-nocookie.com/embed/ID) instead of just linking out.
 function youtubeEmbedSrc(url) {
@@ -300,7 +384,7 @@ export function createLibrary(container, { preview = false } = {}) {
   root.add(items.group);
 
   // ─── Caption + hint + panel (full only) ─────────────────────────────────
-  let caption = null, hint = null, panel = null, panelTitle = null, panelBody = null;
+  let caption = null, hint = null, panel = null, panelTitle = null, panelCreator = null, panelBodyEl = null;
   if (!preview && !document.getElementById('library-styles')) {
     const style = document.createElement('style');
     style.id = 'library-styles';
@@ -407,6 +491,30 @@ export function createLibrary(container, { preview = false } = {}) {
         cursor: pointer; padding: .5rem; z-index: 2;
       }
       #library-panel-close:hover { color: rgba(255,255,255,0.9); }
+      #library-panel-excerpt-from {
+        margin: -1rem 0 1.4rem; color: rgba(220,210,195,0.5);
+        font-size: 0.78rem; font-style: italic; line-height: 1.6;
+      }
+      #library-panel-excerpt-from:empty { display: none; margin: 0; }
+      /* Cross-links, same mechanism as sphere.js's fragment-link and egg.js's
+         poem-link: a phrase glimmers faintly on its own slow loop so a link
+         reads as "alive" even before it's noticed, tuned to library's own
+         warm parchment/gold palette instead of sphere's blue or egg's green. */
+      @keyframes library-glimmer {
+        0%, 85%, 100% { color: inherit; text-shadow: none; }
+        92% { color: rgba(225,175,90,.6); text-shadow: 0 0 6px rgba(225,175,90,.2); }
+      }
+      .library-link {
+        color: inherit; text-decoration: none;
+        border-bottom: 1px dotted rgba(225,175,90,.35);
+        cursor: pointer; transition: color .2s;
+        animation: library-glimmer 12s ease-in-out infinite;
+      }
+      .library-link:hover, .library-link:focus {
+        color: rgba(230,180,95,.95); text-shadow: 0 0 10px rgba(230,180,95,.3);
+        animation: none; outline: none;
+      }
+      @media (prefers-reduced-motion: reduce) { .library-link { animation: none; } }
       @media (max-width: 700px) {
         #library-panel { width: 88%; padding: 4rem 1.3rem 2rem; }
       }
@@ -433,21 +541,25 @@ export function createLibrary(container, { preview = false } = {}) {
     panel.setAttribute('aria-labelledby', 'library-panel-title');
     panel.innerHTML = `
       <button type="button" id="library-panel-close" aria-label="Close panel">✕</button>
-      <div id="library-panel-kind"></div>
-      <div id="library-panel-title" tabindex="-1"></div>
-      <div id="library-panel-creator"></div>
-      <div id="library-panel-video"></div>
-      <p id="library-panel-scene"></p>
-      <img id="library-panel-cover" hidden alt="" />
-      <p id="library-panel-excerpt"></p>
-      <div id="library-panel-details"></div>
-      <p id="library-panel-note"></p>
+      <div id="library-panel-body">
+        <div id="library-panel-kind"></div>
+        <div id="library-panel-title" tabindex="-1"></div>
+        <div id="library-panel-creator"></div>
+        <div id="library-panel-video"></div>
+        <p id="library-panel-scene"></p>
+        <img id="library-panel-cover" hidden alt="" />
+        <p id="library-panel-excerpt"></p>
+        <p id="library-panel-excerpt-from"></p>
+        <div id="library-panel-details"></div>
+        <p id="library-panel-note"></p>
+      </div>
     `;
     container.style.position = 'relative';
     container.style.overflow = 'hidden';
     container.appendChild(panel);
     panelTitle = panel.querySelector('#library-panel-title');
-    panelBody = panel.querySelector('#library-panel-creator');
+    panelCreator = panel.querySelector('#library-panel-creator');
+    panelBodyEl = panel.querySelector('#library-panel-body');
 
     panel.addEventListener('click', e => e.stopPropagation());
     panel.querySelector('#library-panel-close').addEventListener('click', e => {
@@ -456,6 +568,40 @@ export function createLibrary(container, { preview = false } = {}) {
       panel.querySelector('#library-panel-video').innerHTML = '';
       selected = null;
     });
+
+    // Cross-link navigation — follow the threads (click + keyboard), same
+    // fade-out/swap-content/fade-in beat as sphere.js's navigateToFragment
+    // and egg.js's navigateToPoem. Deliberately doesn't touch `selected`/the
+    // spine the panel was originally opened from, same precedent those two
+    // set — following a link swaps panel content, nothing in the 3D scene.
+    // populatePanel (defined below, hoisted) re-stripes every .library-link
+    // it renders, so no separate stagger step is needed here.
+    function navigateToItem(targetId) {
+      const target = libraryItems.find(i => i.id === targetId);
+      if (!target) return;
+      panelBodyEl.style.transition = 'opacity .18s';
+      panelBodyEl.style.opacity = '0';
+      setTimeout(() => {
+        populatePanel(target);
+        panel.scrollTop = 0;
+        panelBodyEl.style.opacity = '1';
+        setTimeout(() => panelTitle.focus(), 50);
+      }, 180);
+    }
+    panelBodyEl.addEventListener('click', e => {
+      const link = e.target.closest('.library-link');
+      if (!link) return;
+      e.stopPropagation();
+      navigateToItem(Number(link.dataset.target));
+    });
+    panelBodyEl.addEventListener('keydown', e => {
+      if (e.key !== 'Enter' && e.key !== ' ') return;
+      const link = e.target.closest('.library-link');
+      if (!link) return;
+      e.preventDefault();
+      e.stopPropagation();
+      navigateToItem(Number(link.dataset.target));
+    });
   }
 
   // ─── Hover/click raycast, screen-space mouse (matches egg/sphere) ───────
@@ -463,6 +609,88 @@ export function createLibrary(container, { preview = false } = {}) {
   const mouse = new THREE.Vector2();
   let hovered = null, selected = null;
   let onContainerMouseMove = null, onContainerClick = null;
+
+  // Fills the (already-open, or about-to-open) panel with one item's
+  // content. Pulled out into its own function so both a direct spine click
+  // and following a cross-link (navigateToItem, above) can populate the
+  // same panel without duplicating this logic.
+  function populatePanel(it) {
+    panel.querySelector('#library-panel-kind').textContent =
+      ({ book: 'Book', dvd: 'DVD', bluray: 'Blu-ray', divination_box: 'Divination deck' })[it.type] || it.type;
+    panelTitle.textContent = it.title;
+    panelCreator.textContent = it.creator || '';
+
+    // Bibliographic/filmographic detail lines — only the fields a given
+    // item actually has (books carry isbn13/publisher/pages, films carry
+    // release_year/runtime/country; not every field applies to every
+    // item). See src/text/library.js's header for how these were sourced.
+    const detailsEl = panel.querySelector('#library-panel-details');
+    const noteEl = panel.querySelector('#library-panel-note');
+    const excerptEl = panel.querySelector('#library-panel-excerpt');
+    const excerptFromEl = panel.querySelector('#library-panel-excerpt-from');
+    const coverEl = panel.querySelector('#library-panel-cover');
+    const videoEl = panel.querySelector('#library-panel-video');
+    const sceneEl = panel.querySelector('#library-panel-scene');
+    const lines = [];
+    if (it.publisher) lines.push(`${it.publisher}${it.publish_year ? `, ${it.publish_year}` : ''}`);
+    if (it.pages) lines.push(`${it.pages} pages`);
+    if (it.isbn13) lines.push(`ISBN ${it.isbn13}`);
+    if (it.release_year) lines.push(`${it.release_year}${it.country ? ` · ${it.country}` : ''}`);
+    if (it.runtime_min) lines.push(`${it.runtime_min} min`);
+    if (it.writer) lines.push(`written by ${it.writer}`);
+    if (it.producer) lines.push(`produced by ${it.producer}`);
+    detailsEl.innerHTML = lines.map(l => `<p>${l}</p>`).join('');
+    noteEl.innerHTML = it.note ? renderLinkedField(it.id, 'note', it.note) : '';
+
+    // Content area, above the bibliographic details: a film gets its
+    // pivotal scene embedded (not just linked), a book gets its excerpt
+    // (plain text, not a blockquote, sits above the details block per
+    // Scott's request) plus a cover thumbnail when a cover image is
+    // publicly available via Open Library's covers API (keyed off the
+    // ISBN we already looked up) -- this is the "real image" allowance
+    // for the art/photo/reference books that don't have a natural
+    // textual excerpt. See src/text/library.js's header for the
+    // sourcing/copyright discipline behind these fields. Cross-links
+    // (2026-07-23) live inline in note/scene/excerpt/excerpt_from text,
+    // rendered via renderLinkedField -- see LIBRARY_LINKS above.
+    videoEl.innerHTML = '';
+    sceneEl.innerHTML = '';
+    if (it.youtube) {
+      const embedSrc = youtubeEmbedSrc(it.youtube);
+      if (embedSrc) {
+        const iframe = document.createElement('iframe');
+        iframe.src = embedSrc;
+        iframe.title = it.scene ? `${it.title} — ${it.scene}` : it.title;
+        iframe.allow = 'accelerometer; encrypted-media; gyroscope; picture-in-picture';
+        iframe.allowFullscreen = true;
+        iframe.loading = 'lazy';
+        videoEl.appendChild(iframe);
+      }
+      sceneEl.innerHTML = it.scene ? `pivotal scene: ${renderLinkedField(it.id, 'scene', it.scene)}` : '';
+    }
+
+    excerptEl.innerHTML = it.excerpt ? `“${renderLinkedField(it.id, 'excerpt', it.excerpt)}”` : '';
+    excerptFromEl.innerHTML = it.excerpt_from ? `— ${renderLinkedField(it.id, 'excerpt_from', it.excerpt_from)}` : '';
+
+    if (it.isbn13) {
+      coverEl.hidden = false;
+      coverEl.onerror = () => { coverEl.hidden = true; };
+      coverEl.src = `https://covers.openlibrary.org/b/isbn/${it.isbn13}-L.jpg`;
+      coverEl.alt = `Cover of ${it.title}`;
+    } else {
+      coverEl.hidden = true;
+      coverEl.removeAttribute('src');
+    }
+
+    panel.querySelectorAll('.library-link').forEach(link => {
+      const delay = (Math.random() * 12).toFixed(1);
+      const duration = (9 + Math.random() * 7).toFixed(1);
+      link.style.animationDelay = `-${delay}s`;
+      link.style.animationDuration = `${duration}s`;
+      const targetItem = libraryItems.find(i => i.id === Number(link.dataset.target));
+      link.setAttribute('aria-label', `Go to: ${targetItem ? targetItem.title : 'related item'}`);
+    });
+  }
 
   if (!preview) {
     onContainerMouseMove = e => {
@@ -491,70 +719,8 @@ export function createLibrary(container, { preview = false } = {}) {
       }
       if (!hovered) return;
       selected = hovered;
-      // openItem closes over panel/panelTitle/panelBody defined above.
       const it = selected.userData.item;
-      panel.querySelector('#library-panel-kind').textContent =
-        ({ book: 'Book', dvd: 'DVD', bluray: 'Blu-ray', divination_box: 'Divination deck' })[it.type] || it.type;
-      panelTitle.textContent = it.title;
-      panelBody.textContent = it.creator || '';
-
-      // Bibliographic/filmographic detail lines — only the fields a given
-      // item actually has (books carry isbn13/publisher/pages, films carry
-      // release_year/runtime/country; not every field applies to every
-      // item). See src/text/library.js's header for how these were sourced.
-      const detailsEl = panel.querySelector('#library-panel-details');
-      const noteEl = panel.querySelector('#library-panel-note');
-      const excerptEl = panel.querySelector('#library-panel-excerpt');
-      const coverEl = panel.querySelector('#library-panel-cover');
-      const videoEl = panel.querySelector('#library-panel-video');
-      const sceneEl = panel.querySelector('#library-panel-scene');
-      const lines = [];
-      if (it.publisher) lines.push(`${it.publisher}${it.publish_year ? `, ${it.publish_year}` : ''}`);
-      if (it.pages) lines.push(`${it.pages} pages`);
-      if (it.isbn13) lines.push(`ISBN ${it.isbn13}`);
-      if (it.release_year) lines.push(`${it.release_year}${it.country ? ` · ${it.country}` : ''}`);
-      if (it.runtime_min) lines.push(`${it.runtime_min} min`);
-      if (it.writer) lines.push(`written by ${it.writer}`);
-      if (it.producer) lines.push(`produced by ${it.producer}`);
-      detailsEl.innerHTML = lines.map(l => `<p>${l}</p>`).join('');
-      noteEl.textContent = it.note || '';
-
-      // Content area, above the bibliographic details: a film gets its
-      // pivotal scene embedded (not just linked), a book gets its excerpt
-      // (plain text, not a blockquote, sits above the details block per
-      // Scott's request) plus a cover thumbnail when a cover image is
-      // publicly available via Open Library's covers API (keyed off the
-      // ISBN we already looked up) -- this is the "real image" allowance
-      // for the art/photo/reference books that don't have a natural
-      // textual excerpt. See src/text/library.js's header for the
-      // sourcing/copyright discipline behind these fields.
-      videoEl.innerHTML = '';
-      sceneEl.textContent = '';
-      if (it.youtube) {
-        const embedSrc = youtubeEmbedSrc(it.youtube);
-        if (embedSrc) {
-          const iframe = document.createElement('iframe');
-          iframe.src = embedSrc;
-          iframe.title = it.scene ? `${it.title} — ${it.scene}` : it.title;
-          iframe.allow = 'accelerometer; encrypted-media; gyroscope; picture-in-picture';
-          iframe.allowFullscreen = true;
-          iframe.loading = 'lazy';
-          videoEl.appendChild(iframe);
-        }
-        sceneEl.textContent = it.scene ? `pivotal scene: ${it.scene}` : '';
-      }
-
-      excerptEl.textContent = it.excerpt ? `“${it.excerpt}”` : '';
-
-      if (it.isbn13) {
-        coverEl.hidden = false;
-        coverEl.onerror = () => { coverEl.hidden = true; };
-        coverEl.src = `https://covers.openlibrary.org/b/isbn/${it.isbn13}-L.jpg`;
-        coverEl.alt = `Cover of ${it.title}`;
-      } else {
-        coverEl.hidden = true;
-        coverEl.removeAttribute('src');
-      }
+      populatePanel(it);
 
       // Open from whichever side of the screen was actually clicked --
       // ported from sphere.js. Panel is guaranteed closed here (the block
