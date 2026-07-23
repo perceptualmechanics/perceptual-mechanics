@@ -6,6 +6,25 @@ projects (The Secret World, A Manual of Perceptual Mechanics) moved into their o
 files, which are now the source of truth for that material going forward. See "project map"
 below for where things live.
 
+## 1.1.6 (2026-07-23)
+
+Scott: "ok but what about a favicon :D" -- the site never had one, so
+browsers were silently 404ing on /favicon.ico this whole time.
+
+- **Favicon set**, derived from the same hare-colophon.png mark used
+  everywhere else: the intricate cut-through original (moon, star,
+  Venus/Mercury symbols cut straight through the linework) doesn't
+  read at 16-32px, so this is a simplified, solid gold silhouette on
+  black instead -- alpha-thresholded, morphologically closed to fuse
+  the fine cutouts into one bold leaping-hare shape, confirmed
+  legible at both 16x16 and 32x32 by rendering and eyeballing each
+  size directly. `public/favicon.ico` (16/32/48 multi-size),
+  `favicon-16x16.png`, `favicon-32x32.png`, and
+  `apple-touch-icon.png` (180x180), wired into index.html's `<head>`.
+
+Verified: clean vite build, all four files land at the built site
+root, link tags reference them correctly.
+
 ## 1.1.5 (2026-07-23)
 
 Real deploy bug, found by checking the live site after Scott's "push
