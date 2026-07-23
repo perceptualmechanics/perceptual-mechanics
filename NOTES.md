@@ -6,6 +6,35 @@ projects (The Secret World, A Manual of Perceptual Mechanics) moved into their o
 files, which are now the source of truth for that material going forward. See "project map"
 below for where things live.
 
+## 1.1.11 (2026-07-23)
+
+Quick clean/semantic/a11y check requested after the shorts.html build
+break, then Scott: "one thing you will learn about me is that I hate
+vestigial code :D AXE IT" — re: butterfly.js's now-orphaned shorts
+mode flagged in that check.
+
+- **Sweep results** (nothing else needed fixing): node --check clean
+  across all 26 JS files, clean production build, every asset path
+  referenced anywhere in index.html/src resolves to a real file in
+  public/, main.js's 8-scene registry matches index.html's nav icons
+  exactly in both directions, no stray `div[role="button"]` left
+  anywhere (only comments referencing the pattern historically), every
+  image has correct alt text, all icon-only controls carry
+  aria-label, and the focus-return-on-close fix from the 1.1.0 audit
+  is still intact across all five panel scenes after this session's
+  edits.
+- **Removed butterfly.js's shorts/vertical-crop mode** entirely: the
+  `shorts` param, the `isShorts` derived flag (and its `?shorts` URL
+  fallback), the 450px/16:9 sizing branch, the shorts-specific camera
+  distance, the renderer-sizing if/else it drove, and `rotSpeed`
+  (confirmed nothing anywhere in src/ ever passed it — it only ever
+  existed for utils/shorts.html to tune per-clip rotation speed).
+  ROTATE_SPEED is now the plain constant it always resolved to outside
+  shorts mode.
+
+Verified: node --check, clean vite build, confirmed zero remaining
+references to shorts/isShorts/rotSpeed anywhere in the file.
+
 ## 1.1.10 (2026-07-23)
 
 Scott deleted utils/shorts.html directly, then asked: "for some
