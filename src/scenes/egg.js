@@ -563,7 +563,7 @@ export function createEgg(container, { preview = false } = {}) {
         font-family: 'Times New Roman', serif;
       }
       #egg-caption {
-        bottom: 2.5rem; left: 50%; transform: translateX(-50%);
+        bottom: 3rem; left: 50%; transform: translateX(-50%);
         font-size: clamp(0.7rem, 1.6vw, 0.95rem); letter-spacing: 0.06em;
         font-style: italic; white-space: nowrap;
         color: rgba(150,255,190,0.55);

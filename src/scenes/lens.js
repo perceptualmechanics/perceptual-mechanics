@@ -558,7 +558,7 @@ function injectStyles() {
       color: rgba(255,255,255,0.3);
     }
     #lens-caption {
-      bottom: 2.5rem; left: 50%; transform: translateX(-50%);
+      bottom: 3rem; left: 50%; transform: translateX(-50%);
       font-size: clamp(0.7rem, 1.6vw, 0.95rem); letter-spacing: 0.08em;
       white-space: nowrap; font-style: italic; color: rgba(255,255,255,0.4);
     }

@@ -66,7 +66,7 @@ const butterflyStyle = document.createElement('style');
 butterflyStyle.textContent = `
   #butterfly-exp-label {
     position: fixed;
-    bottom: 2.5rem; left: 50%; transform: translateX(-50%);
+    bottom: 3rem; left: 50%; transform: translateX(-50%);
     color: rgba(255,255,255,0.85);
     font-size: clamp(0.85rem, 2.5vw, 1.6rem);
     letter-spacing: clamp(0.1em, 1vw, 0.4em);
