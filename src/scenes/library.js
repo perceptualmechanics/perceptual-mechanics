@@ -333,6 +333,16 @@ export function createLibrary(container, { preview = false } = {}) {
         padding-bottom: 1.4rem; margin-bottom: 1.4rem;
       }
       #library-panel-creator { color: rgba(230,220,200,0.7); font-size: 0.95rem; font-style: italic; }
+      #library-panel-details {
+        margin-top: 1.4rem; padding-top: 1.2rem;
+        border-top: 1px solid rgba(230,215,180,0.1);
+        color: rgba(220,210,195,0.72); font-size: 0.85rem; line-height: 1.9;
+      }
+      #library-panel-details p { margin: 0 0 0.3rem; }
+      #library-panel-note {
+        color: rgba(220,190,140,0.6); font-size: 0.8rem; font-style: italic;
+        line-height: 1.6; margin-top: 0.9rem;
+      }
       #library-panel-close {
         position: absolute; top: 1.5rem; right: 1.5rem; background: none;
         border: none; color: rgba(255,255,255,0.4); font-size: 1.2rem;
@@ -368,6 +378,8 @@ export function createLibrary(container, { preview = false } = {}) {
       <div id="library-panel-kind"></div>
       <div id="library-panel-title" tabindex="-1"></div>
       <div id="library-panel-creator"></div>
+      <div id="library-panel-details"></div>
+      <p id="library-panel-note"></p>
     `;
     container.style.position = 'relative';
     container.style.overflow = 'hidden';
@@ -421,6 +433,22 @@ export function createLibrary(container, { preview = false } = {}) {
         ({ book: 'Book', dvd: 'DVD', bluray: 'Blu-ray', divination_box: 'Divination deck' })[it.type] || it.type;
       panelTitle.textContent = it.title;
       panelBody.textContent = it.creator || '';
+
+      // Bibliographic/filmographic detail lines — only the fields a given
+      // item actually has (books carry isbn13/publisher/pages, films carry
+      // release_year/runtime/country; not every field applies to every
+      // item). See src/text/library.js's header for how these were sourced.
+      const detailsEl = panel.querySelector('#library-panel-details');
+      const noteEl = panel.querySelector('#library-panel-note');
+      const lines = [];
+      if (it.publisher) lines.push(`${it.publisher}${it.publish_year ? `, ${it.publish_year}` : ''}`);
+      if (it.pages) lines.push(`${it.pages} pages`);
+      if (it.isbn13) lines.push(`ISBN ${it.isbn13}`);
+      if (it.release_year) lines.push(`${it.release_year}${it.country ? ` · ${it.country}` : ''}`);
+      if (it.runtime_min) lines.push(`${it.runtime_min} min`);
+      detailsEl.innerHTML = lines.map(l => `<p>${l}</p>`).join('');
+      noteEl.textContent = it.note || '';
+
       panel.classList.add('open');
       setTimeout(() => panelTitle.focus(), 50);
     };

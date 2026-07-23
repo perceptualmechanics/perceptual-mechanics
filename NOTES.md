@@ -6,6 +6,40 @@ projects (The Secret World, A Manual of Perceptual Mechanics) moved into their o
 files, which are now the source of truth for that material going forward. See "project map"
 below for where things live.
 
+## 1.0.50 (2026-07-22)
+
+Scott: "can you get ISBNs for these and then start assembling as much data
+on each one as you can and update the JSON file? and that Beowulf, that's
+the Seamus Heaney version. Also, some of these are wrong, but I can go
+through them once you're done."
+
+Fixed Beowulf's creator field to "trans. Seamus Heaney" (id 1). Then
+looked up every one of the other 106 items individually — mostly via
+Open Library/publisher/bookseller listings for the 63 books and
+divination decks (ISBN-13, publisher, first-publish year, page count,
+translator/editor where relevant), and via film-reference sources for
+the 44 DVDs/Blu-rays (release year, runtime, country — ISBN doesn't
+apply to films, so those keep their Criterion spine numbers as the
+identifier instead). Where a title has more than one active edition and
+the spine photo alone couldn't disambiguate which one Scott actually
+owns (several of the Penguin Classics translations, a couple of the
+Taschen reissues, the Dune cover edition), recorded a `note` field
+saying so explicitly rather than guessing an ISBN and presenting it as
+certain — Scott's already flagged that some entries need correcting, so
+better to mark the genuinely ambiguous ones up front.
+
+Merged all of this into `src/text/library.js` (the git-tracked source
+the scene actually reads) and refreshed the `assets/bookshelf_catalog.json`
+reference copy to match — assets/ is gitignored, so the JSON there is a
+convenience mirror, not the canonical data. The library scene's read
+panel (src/scenes/library.js) now shows this: a details block
+(publisher/year, pages, ISBN, or release year/runtime/country as
+applicable) plus the note line when one exists, under the existing
+title/creator.
+
+Verified: `node --check` on both data files and the scene, and a clean
+`vite build` (same pre-existing orrery >500kB chunk warning as always).
+
 ## 1.0.49 (2026-07-22)
 
 Scott: "for that picture of the bookshelf in the assets folder, can you
