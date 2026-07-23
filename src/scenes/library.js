@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { libraryItems } from '../text/library.js';
+import { cdRackItems } from '../text/cdRack.js';
 import {
   bindOrbitDrag, bindWheelZoom, bindGuardedResize, prefersReducedMotion, bindEscapeClose,
 } from '../utils/sceneKit.js';
@@ -41,6 +42,36 @@ const ROWS = 4;
 const TOTAL_W = COLS * CUBBY_W + (COLS + 1) * FRAME_T;
 const TOTAL_H = ROWS * CUBBY_H + (ROWS + 1) * FRAME_T;
 
+// ─── CDs ────────────────────────────────────────────────────────────────────
+// Scott, 2026-07-23: "i have the notion of adding a CD rack to the bookshelf
+// :D" — invented wholesale, not catalogued off a real photo like the shelf
+// (he doesn't own any of these anymore). Built up album-by-album across a
+// long back-and-forth: 114 albums, 55 artists, hand-dictated rather than
+// filler (src/text/cdRack.js carries the full provenance note).
+//
+// Two earlier passes tried building this as its own object: first sharing
+// the shelf's camera and rotation pivot (broke down because anything off to
+// the side of a shared pivot swings through a much bigger arc than the
+// centered object, and was out of frame entirely on mobile), then as a
+// second object with its own rotation group and a "Shelf / CD Rack" switch
+// to pick which was active (which worked, but per Scott: "we're
+// overthinking this. just put the CDs in the bookcase with the books and
+// movies. the switch is a bit too much architecture.").
+//
+// So: no separate object, no separate camera, no switch. The CDs are just
+// more items in the same cubbies as the books and films — placeCdsInCubbies()
+// distributes them across the shelf's existing 8 cubbies, appended after
+// whatever books/films are already there, and buildItems() (below) renders
+// and sizes them like any other item, just thinner and shorter, with their
+// own texture (makeCdSpineTexture). They ride the exact same root group,
+// camera, drag/zoom, and raycast as every other spine on the shelf — nothing
+// about the shelf itself changed to make room for them.
+//
+// Interaction is still lighter than the books, though: no click-to-panel —
+// a click/tap surfaces a small tooltip with the artist, album, and Apple
+// Music/Spotify search-links, nothing else (see the `cd-tooltip` DOM element
+// and its branch in onContainerClick, below).
+
 // Muted, curated palette — deliberately not a rainbow of random hues, so
 // the shelf reads as "someone's actual bookshelf" rather than a bar chart.
 const PALETTE = [
@@ -52,6 +83,10 @@ const PALETTE = [
 // they read as distinct objects on the real shelf (Kim Krans' two boxes),
 // not just thicker books.
 const BOX_PALETTE = ['#141428', '#1c1830', '#101018'];
+
+// Shared between the #cd-tooltip CSS (max-width) and positionCdTooltip's
+// edge-clamping math below, so the two can't quietly drift out of sync.
+const CD_TOOLTIP_MAX_W = 230;
 
 // Cheap deterministic string hash (djb2) — used so a given title always
 // gets the same simulated thickness/color/height on every visit, rather
@@ -277,11 +312,25 @@ function wrapSpineText(text, maxChars) {
 // spine reads as a rounded object catching light, not a flat card), 1-2
 // embossed horizontal bands above/below the title (old-hardcover binding
 // cords), contrast-aware ink color (light spines get dark ink, dark
-// spines keep the cream), and font alternation. Fine per-pixel grain was
-// tried and dropped — at the on-screen size a spine actually renders at,
-// it mostly vanishes into texture minification, the same "too subtle to
-// register" mistake made (and fixed) twice already on the Babel backdrop;
-// broad tonal moves like these read at any distance.
+// spines keep the cream), and font alternation (since replaced — see
+// SPINE_FONT below). Fine per-pixel grain was tried and dropped — at the
+// on-screen size a spine actually renders at, it mostly vanishes into
+// texture minification, the same "too subtle to register" mistake made
+// (and fixed) twice already on the Babel backdrop; broad tonal moves like
+// these read at any distance.
+//
+// Scott, 2026-07-23: "change the title font on the media items to a more
+// readable, thinner sans-serif font." The serif alternation (Georgia /
+// Times New Roman for books, Helvetica Neue / Georgia for CDs) is gone —
+// one system sans stack, lighter weight, used for every spine and the CD
+// jewel cases alike. Kept to system fonts rather than adding a Google
+// webfont: nothing else in the codebase's canvas-drawn textures (orrery's
+// posters, butterfly's caption) loads a custom font for canvas text
+// either, and doing so here would risk a FOUT-in-a-texture bug — the
+// canvas snapshots synchronously, so if the webfont hasn't finished
+// loading yet the fallback gets baked in permanently instead of swapping
+// in later like real DOM text would.
+const SPINE_FONT = '-apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif';
 function relLuminance(hex) {
   const col = new THREE.Color(hex);
   return 0.2126 * col.r + 0.7152 * col.g + 0.0722 * col.b;
@@ -375,7 +424,6 @@ function makeSpineTexture(baseColor, title, creator, isBox) {
   const lum = relLuminance(baseColor);
   const inkTitle = lum > 0.55 ? 'rgba(32,26,20,0.88)' : 'rgba(240,236,224,0.92)';
   const inkCreator = lum > 0.55 ? 'rgba(32,26,20,0.6)' : 'rgba(240,236,224,0.62)';
-  const font = hash01(title, 'font') > 0.5 ? 'Georgia, serif' : '"Times New Roman", serif';
 
   cx.save();
   cx.translate(c.width / 2, c.height / 2);
@@ -383,13 +431,13 @@ function makeSpineTexture(baseColor, title, creator, isBox) {
   cx.textAlign = 'center';
   cx.textBaseline = 'middle';
   cx.fillStyle = inkTitle;
-  cx.font = `600 34px ${font}`;
+  cx.font = `400 34px ${SPINE_FONT}`;
   const lines = wrapSpineText(title, 26).slice(0, 3);
   const lineH = 40;
   const startY = -((lines.length - 1) * lineH) / 2 - (creator ? 14 : 0);
   lines.forEach((line, i) => cx.fillText(line, 0, startY + i * lineH));
   if (creator) {
-    cx.font = `italic 22px ${font}`;
+    cx.font = `italic 300 22px ${SPINE_FONT}`;
     cx.fillStyle = inkCreator;
     cx.fillText(creator.split(' · ')[0].split(' (')[0], 0, startY + lines.length * lineH + 6);
   }
@@ -401,6 +449,123 @@ function makeSpineTexture(baseColor, title, creator, isBox) {
 
 function cubbyLeft(col) { return -TOTAL_W / 2 + FRAME_T + (col - 1) * (CUBBY_W + FRAME_T); }
 function cubbyTop(row) { return TOTAL_H / 2 - FRAME_T - (row - 1) * (CUBBY_H + FRAME_T); }
+
+// Canvas-drawn CD spine — same "no real cover art" rule as makeSpineTexture,
+// simplified for a jewel-case spine rather than a book: album title (larger,
+// vertical) over a smaller artist line, on a glossier flat color field. No
+// dye-wash/embossed-band/dot-constellation treatment the books get — the
+// spine is thin enough on screen that that detail would just be noise; a
+// simple top-lit gradient plus contrast-aware ink is enough for it to read
+// as "a CD," not "a thin book."
+function makeCdSpineTexture(baseColor, artist, album) {
+  const c = document.createElement('canvas');
+  c.width = 72; c.height = 640;
+  const cx = c.getContext('2d');
+  cx.fillStyle = baseColor;
+  cx.fillRect(0, 0, c.width, c.height);
+
+  const vgrad = cx.createLinearGradient(0, 0, 0, c.height);
+  vgrad.addColorStop(0, 'rgba(255,255,255,0.3)');
+  vgrad.addColorStop(0.5, 'rgba(255,255,255,0)');
+  vgrad.addColorStop(1, 'rgba(0,0,0,0.32)');
+  cx.fillStyle = vgrad;
+  cx.fillRect(0, 0, c.width, c.height);
+
+  const lum = relLuminance(baseColor);
+  const ink = lum > 0.55 ? 'rgba(26,22,18,0.88)' : 'rgba(238,234,222,0.92)';
+  const inkSub = lum > 0.55 ? 'rgba(26,22,18,0.58)' : 'rgba(238,234,222,0.62)';
+
+  cx.save();
+  cx.translate(c.width / 2, c.height / 2);
+  cx.rotate(-Math.PI / 2);
+  cx.textAlign = 'center';
+  cx.textBaseline = 'middle';
+  cx.font = `400 30px ${SPINE_FONT}`;
+  cx.fillStyle = ink;
+  const albumLines = wrapSpineText(album, 24).slice(0, 2);
+  const lineH = 34;
+  const startY = -((albumLines.length - 1) * lineH) / 2 - 12;
+  albumLines.forEach((line, i) => cx.fillText(line, 0, startY + i * lineH));
+  cx.font = `italic 300 19px ${SPINE_FONT}`;
+  cx.fillStyle = inkSub;
+  cx.fillText(artist, 0, startY + albumLines.length * lineH + 10);
+  cx.restore();
+
+  return new THREE.CanvasTexture(c);
+}
+
+// Distributes the 114 CDs across the same 8 cubbies the books/films already
+// live in (row-major reading order), in catalog order so the genre lanes
+// cdRack.js was built in mostly stay together within a cubby. Scott, after
+// seeing them render as one tidy block at the end of each cubby: "mix up the
+// order slightly so it looks like a slightly disorganized bookshelf" — so
+// rather than appending (pos = existing max + 1, 2, 3...), each CD is
+// slotted in among the existing books instead of after all of them.
+//
+// It turns out library.js's pos numbers aren't a dense 0..N sequence —
+// several cubbies have an early cluster (0-10) and a late cluster (100+),
+// a gap left over from whenever those items were appended in a separate
+// batch. Scattering CDs by raw pos value filled that dead numeric gap with
+// a solid run of 8-10 CDs in a row — a block again, just relocated to the
+// middle. Fixed by working in *rank* space instead of raw pos: each CD
+// gets a fractional rank relative to the sorted existing books, which
+// rankToPos() below maps onto the real book pos values by interpolation
+// — so CDs land proportionally to where books actually are, not where
+// empty pos numbers happen to be.
+//
+// First pass at the rank itself gave each CD its own even-width band
+// (rank = j*bandW + jitter) so every one landed guaranteed-scattered —
+// but evenly-spaced-plus-jitter reads as its own pattern (near-perfect
+// book/CD/book/CD alternation), which Scott flagged as "a different kind
+// of pattern" rather than mess. Switched to a plain random rank per CD
+// (hash01 over the full range, no forced spacing) — real disorder has
+// clumps and gaps, not a rhythm.
+// Returns items already shaped like a libraryItems entry (type/title/creator/
+// row/col/pos) so buildItems can treat them identically — the CD-specific
+// artist/album fields ride along too, for the tooltip.
+function rankToPos(sortedPos, rank) {
+  const n = sortedPos.length;
+  if (n === 0) return rank;
+  const idx = Math.floor(rank);
+  const frac = rank - idx;
+  if (idx >= n - 1) return sortedPos[n - 1] + frac + (idx - (n - 1));
+  return sortedPos[idx] + frac * (sortedPos[idx + 1] - sortedPos[idx]);
+}
+
+function placeCdsInCubbies() {
+  const byKey = new Map();
+  libraryItems.forEach(it => {
+    const key = `${it.row}-${it.col}`;
+    if (!byKey.has(key)) byKey.set(key, []);
+    byKey.get(key).push(it.pos);
+  });
+  byKey.forEach(arr => arr.sort((a, b) => a - b));
+
+  const cubbies = [];
+  for (let row = 1; row <= COLS; row++) {
+    for (let col = 1; col <= ROWS; col++) cubbies.push({ row, col });
+  }
+
+  const perCubby = Math.ceil(cdRackItems.length / cubbies.length);
+  const placed = [];
+  cubbies.forEach(({ row, col }, i) => {
+    const key = `${row}-${col}`;
+    const sortedPos = byKey.get(key) || [];
+    const cds = cdRackItems.slice(i * perCubby, (i + 1) * perCubby);
+    // Plain random rank per CD (own hash, full range, no forced spacing),
+    // then mapped to an actual pos via rankToPos so it follows real book
+    // density instead of raw pos numbers.
+    cds.forEach(cd => {
+      const rank = hash01(`${cd.artist}|${cd.album}`, 'shelfmix') * (sortedPos.length + 1.5);
+      const pos = rankToPos(sortedPos, rank);
+      placed.push({
+        id: `cd-${cd.id}`, type: 'cd', title: cd.album, creator: cd.artist,
+        artist: cd.artist, album: cd.album, row, col, pos,
+      });
+    });
+  });
+  return placed;
+}
 
 // ─── Shelf frame ────────────────────────────────────────────────────────────
 function buildFrame() {
@@ -666,9 +831,10 @@ function buildItems(preview) {
 
   // Group items by cubby so widths can be distributed to exactly fill
   // each cubby's available width regardless of how many items landed
-  // there (6 on the low end, 25 on the high end, on the real shelf).
+  // there (6 on the low end, 25 on the high end, on the real shelf —
+  // now with the 114 CDs from placeCdsInCubbies() appended on top).
   const byCubby = new Map();
-  libraryItems.forEach(it => {
+  [...libraryItems, ...placeCdsInCubbies()].forEach(it => {
     const key = `${it.row}-${it.col}`;
     if (!byCubby.has(key)) byCubby.set(key, []);
     byCubby.get(key).push(it);
@@ -690,8 +856,11 @@ function buildItems(preview) {
 
     const weights = items.map(it => {
       const isBox = it.type === 'divination_box';
-      const base = isBox ? 2.2 : 1.0;
-      const jitter = isBox ? hash01(it.title, 'w') * 0.6 : hash01(it.title, 'w') * 0.6;
+      const isCd = it.type === 'cd';
+      // CDs are thin jewel cases, not much wider than their own gloss —
+      // about half a book's width on the shelf.
+      const base = isBox ? 2.2 : isCd ? 0.5 : 1.0;
+      const jitter = hash01(it.title, 'w') * 0.6;
       return base + jitter;
     });
     const totalWeight = weights.reduce((a, b) => a + b, 0);
@@ -700,18 +869,21 @@ function buildItems(preview) {
     items.forEach((it, i) => {
       const isBox = it.type === 'divination_box';
       const isDisc = it.type === 'dvd' || it.type === 'bluray';
+      const isCd = it.type === 'cd';
       const w = (weights[i] / totalWeight) * availW;
 
       const heightFactor = isBox
         ? 0.36 + hash01(it.title, 'h') * 0.1
         : isDisc
         ? 0.76 + hash01(it.title, 'h') * 0.08
+        : isCd
+        ? 0.5 + hash01(it.title, 'h') * 0.1
         : 0.8 + hash01(it.title, 'h') * 0.18;
       const h = CUBBY_H * heightFactor;
 
       const depth = isBox
         ? 0.32 + hash01(it.title, 'd') * 0.1
-        : isDisc
+        : isDisc || isCd
         ? 0.12 + hash01(it.title, 'd') * 0.04
         : 0.68 + hash01(it.title, 'd') * 0.16;
 
@@ -731,7 +903,9 @@ function buildItems(preview) {
         disposables.push(flat);
         mats = flat;
       } else {
-        const tex = makeSpineTexture(color, it.title, it.creator, isBox);
+        const tex = isCd
+          ? makeCdSpineTexture(color, it.creator, it.title)
+          : makeSpineTexture(color, it.title, it.creator, isBox);
         // Finish variety — most spines are a matte cloth/paper binding,
         // a minority (~1 in 5) a glossier trade-paperback laminate, so
         // the shelf doesn't read as one uniform plastic material.
@@ -810,6 +984,9 @@ export function createLibrary(container, { preview = false } = {}) {
   const frame = buildFrame();
   root.add(frame.group);
 
+  // Books, films, divination decks, and now CDs — buildItems() places the
+  // CDs among them via placeCdsInCubbies() (see the CDs header comment
+  // above), all one shelf, one group, one everything below.
   const items = buildItems(preview);
   root.add(items.group);
 
@@ -952,6 +1129,37 @@ export function createLibrary(container, { preview = false } = {}) {
       @media (max-width: 700px) {
         #library-panel { width: 88%; padding: 4rem 1.3rem 2rem; }
       }
+      /* CD rack tooltip — deliberately much lighter than the book panel:
+         no kind/details/note/cross-links, just artist, album, and the two
+         search-links. Click/tap only (Scott, 2026-07-23: "forget the hover
+         tooltip, change to onclick") — one click shows it, pinned open
+         until the next click anywhere — see showCdTooltip/hideCdTooltip
+         and onContainerClick below. */
+      #cd-tooltip {
+        position: fixed; z-index: 320; pointer-events: auto;
+        background: #0a0806; border: 1px solid rgba(230,215,180,0.25);
+        padding: 0.7rem 0.95rem; max-width: ${CD_TOOLTIP_MAX_W}px;
+        font-family: 'Times New Roman', serif;
+        color: rgba(235,228,210,0.92); font-size: 0.82rem; line-height: 1.5;
+        box-shadow: 0 6px 22px rgba(0,0,0,0.45);
+      }
+      #cd-tooltip[hidden] { display: none; }
+      #cd-tooltip .cd-tooltip-album {
+        display: block; margin-bottom: 0.15rem; font-style: italic;
+        color: rgba(245,238,222,0.95);
+      }
+      #cd-tooltip .cd-tooltip-artist {
+        display: block; margin-bottom: 0.55rem;
+        color: rgba(220,210,195,0.72); font-size: 0.78rem;
+      }
+      #cd-tooltip .cd-tooltip-links { display: flex; gap: 0.8rem; }
+      #cd-tooltip .cd-tooltip-links a {
+        color: rgba(230,180,95,0.9); text-decoration: none;
+        font-size: 0.72rem; letter-spacing: 0.05em; text-transform: uppercase;
+        border-bottom: 1px dotted rgba(230,180,95,0.4);
+      }
+      #cd-tooltip .cd-tooltip-links a:hover,
+      #cd-tooltip .cd-tooltip-links a:focus { color: rgba(240,195,110,1); outline: none; }
     `;
     document.head.appendChild(style);
   }
@@ -964,7 +1172,7 @@ export function createLibrary(container, { preview = false } = {}) {
 
     hint = document.createElement('p');
     hint.id = 'library-hint';
-    hint.innerHTML = 'drag to orbit &nbsp;·&nbsp; scroll to zoom &nbsp;·&nbsp; click a spine to read';
+    hint.innerHTML = 'drag to orbit &nbsp;·&nbsp; scroll to zoom &nbsp;·&nbsp; click a spine to read &nbsp;·&nbsp; click a CD for links';
     hint.setAttribute('aria-hidden', 'true');
     document.body.appendChild(hint);
 
@@ -998,9 +1206,7 @@ export function createLibrary(container, { preview = false } = {}) {
     panel.addEventListener('click', e => e.stopPropagation());
     panel.querySelector('#library-panel-close').addEventListener('click', e => {
       e.stopPropagation();
-      panel.classList.remove('open');
-      panel.querySelector('#library-panel-video').innerHTML = '';
-      selected = null;
+      closePanel();
       container.focus();
     });
 
@@ -1039,11 +1245,79 @@ export function createLibrary(container, { preview = false } = {}) {
     });
   }
 
+  // ─── CD rack tooltip ─────────────────────────────────────────────────────
+  let cdTooltip = null;
+  if (!preview) {
+    cdTooltip = document.createElement('div');
+    cdTooltip.id = 'cd-tooltip';
+    // role="status" (a passive live region) was wrong here — this holds
+    // real actionable links, not an announcement, so it gets a dialog role
+    // plus a per-album aria-label (set in showCdTooltip) instead.
+    cdTooltip.setAttribute('role', 'dialog');
+    cdTooltip.hidden = true;
+    document.body.appendChild(cdTooltip);
+  }
+
+  function cdSearchUrls(cd) {
+    const q = `${cd.artist} ${cd.album}`;
+    return {
+      apple: `https://music.apple.com/search?term=${encodeURIComponent(q)}`,
+      spotify: `https://open.spotify.com/search/${encodeURIComponent(q)}`,
+    };
+  }
+
+  // Clamped near the cursor, flipping to the other side of the pointer
+  // rather than running off the edge of the screen — same beat as the
+  // book panel's from-left/from-right flip, at tooltip scale.
+  function positionCdTooltip(clientX, clientY) {
+    if (!cdTooltip) return;
+    const pad = 16;
+    const rectW = CD_TOOLTIP_MAX_W, rectH = 96; // rectH is a rough estimate — no fixed-height CSS to match
+    let left = clientX + pad;
+    let top = clientY + pad;
+    if (left + rectW > window.innerWidth) left = clientX - rectW - pad;
+    if (top + rectH > window.innerHeight) top = clientY - rectH - pad;
+    cdTooltip.style.left = `${Math.max(8, left)}px`;
+    cdTooltip.style.top = `${Math.max(8, top)}px`;
+  }
+
+  function showCdTooltip(cd, clientX, clientY) {
+    if (!cdTooltip) return;
+    cdTooltip.setAttribute('aria-label', `${cd.album} by ${cd.artist} — search links`);
+    const { apple, spotify } = cdSearchUrls(cd);
+    cdTooltip.innerHTML = `
+      <span class="cd-tooltip-album">${escapeHtml(cd.album)}</span>
+      <span class="cd-tooltip-artist">${escapeHtml(cd.artist)}</span>
+      <span class="cd-tooltip-links">
+        <a href="${apple}" target="_blank" rel="noopener noreferrer">Apple Music</a>
+        <a href="${spotify}" target="_blank" rel="noopener noreferrer">Spotify</a>
+      </span>`;
+    cdTooltip.hidden = false;
+    positionCdTooltip(clientX, clientY);
+  }
+
+  function hideCdTooltip() {
+    if (cdTooltip) cdTooltip.hidden = true;
+    pinnedCd = null;
+  }
+
+  // Shared by all four ways the book panel can close (✕ button, outside
+  // click, Escape, and a CD click landing while it's open) — previously
+  // each site repeated the same three statements. Focus management stays
+  // with each caller, since not every close should move focus (the
+  // in-place item swap, for one, deliberately doesn't call this at all).
+  function closePanel() {
+    if (!panel) return;
+    panel.classList.remove('open');
+    panel.querySelector('#library-panel-video').innerHTML = '';
+    selected = null;
+  }
+
   // ─── Hover/click raycast, screen-space mouse (matches egg/sphere) ───────
   const raycaster = new THREE.Raycaster();
   const mouse = new THREE.Vector2();
-  let hovered = null, selected = null;
-  let onContainerMouseMove = null, onContainerClick = null;
+  let hovered = null, selected = null, pinnedCd = null;
+  let onContainerMouseMove = null, onContainerClick = null, onContainerMouseLeave = null;
 
   // Fills the (already-open, or about-to-open) panel with one item's
   // content. Pulled out into its own function so both a direct spine click
@@ -1150,7 +1424,44 @@ export function createLibrary(container, { preview = false } = {}) {
     };
     container.addEventListener('mousemove', onContainerMouseMove);
 
+    onContainerMouseLeave = () => {
+      if (hovered) { hovered.scale.set(1, 1, 1); hovered = null; }
+      if (!pinnedCd) hideCdTooltip();
+      container.style.cursor = 'default';
+    };
+    container.addEventListener('mouseleave', onContainerMouseLeave);
+
     onContainerClick = e => {
+      // Reset any pinned CD tooltip on every click; the CD branch below
+      // re-pins it if the click actually landed on a CD.
+      hideCdTooltip();
+
+      const rect = container.getBoundingClientRect();
+      mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+      mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+      raycaster.setFromCamera(mouse, camera);
+      const hits = raycaster.intersectObjects(items.meshes);
+      const hitMesh = hits.length ? hits[0].object : null;
+      const it = hitMesh ? hitMesh.userData.item : null;
+
+      if (hitMesh && hovered !== hitMesh) {
+        if (hovered) hovered.scale.set(1, 1, 1);
+        hovered = hitMesh;
+        hovered.scale.set(1.04, 1.02, 1.15);
+      }
+
+      // CDs never open the book panel — same shelf, same raycast, but a
+      // click/tap on one just pins the tooltip (artist, album, search
+      // links) open until the next click anywhere. See the CDs header
+      // comment above for why this stayed a separate, lighter interaction
+      // even after CDs moved into the same cubbies as the books.
+      if (it && it.type === 'cd') {
+        if (panel.classList.contains('open')) closePanel();
+        pinnedCd = it;
+        showCdTooltip(it, e.clientX, e.clientY);
+        return;
+      }
+
       if (panel.classList.contains('open')) {
         // Any click that reaches here is on the canvas, not the panel —
         // panel's own listener (above) already stopPropagation()s clicks
@@ -1162,20 +1473,11 @@ export function createLibrary(container, { preview = false } = {}) {
         // replaced" — that was this: click #1 closed the panel (old
         // content visible through the close transition), and only a
         // second click actually opened the new item. Raycast the click
-        // directly and, if it hit a spine, swap the panel's content in
-        // place (same fade beat as navigateToItem) instead of closing.
-        const rect = container.getBoundingClientRect();
-        mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
-        mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
-        raycaster.setFromCamera(mouse, camera);
-        const hits = raycaster.intersectObjects(items.meshes);
-        if (hits.length) {
-          const newSel = hits[0].object;
-          if (hovered && hovered !== newSel) hovered.scale.set(1, 1, 1);
-          hovered = newSel;
-          hovered.scale.set(1.04, 1.02, 1.15);
-          selected = newSel;
-          const it = selected.userData.item;
+        // directly (already done above) and, if it hit a spine, swap the
+        // panel's content in place (same fade beat as navigateToItem)
+        // instead of closing.
+        if (hitMesh) {
+          selected = hitMesh;
 
           // Scott, 2026-07-23: "if a left panel is open and then I click on
           // the right-hand side, the new content will appear in the open
@@ -1216,22 +1518,19 @@ export function createLibrary(container, { preview = false } = {}) {
           }, 180);
           return;
         }
-        panel.classList.remove('open');
-        panel.querySelector('#library-panel-video').innerHTML = '';
-        selected = null;
+        closePanel();
         container.focus();
         return;
       }
-      if (!hovered) return;
-      selected = hovered;
-      const it = selected.userData.item;
+
+      if (!hitMesh) return;
+      selected = hitMesh;
       populatePanel(it);
 
       // Open from whichever side of the screen was actually clicked --
       // ported from sphere.js. Panel is guaranteed closed here (the block
       // above already returns early for an open-panel click), so flipping
       // the anchor is invisible to the user.
-      const rect = container.getBoundingClientRect();
       const clickedLeft = (e.clientX - rect.left) < rect.width / 2;
       if (panel.classList.contains('from-left') !== clickedLeft) {
         panel.classList.add('no-transition');
@@ -1298,10 +1597,12 @@ export function createLibrary(container, { preview = false } = {}) {
   });
 
   const escapeClose = !preview ? bindEscapeClose(() => {
+    // The pinned CD tooltip had no keyboard dismissal at all — Escape only
+    // ever checked the book panel, so a tooltip left pinned open (it stays
+    // up until the next click anywhere) was invisible to keyboard-only use.
+    if (pinnedCd) hideCdTooltip();
     if (panel && panel.classList.contains('open')) {
-      panel.classList.remove('open');
-      panel.querySelector('#library-panel-video').innerHTML = '';
-      selected = null;
+      closePanel();
       container.focus();
     }
   }) : null;
@@ -1315,6 +1616,7 @@ export function createLibrary(container, { preview = false } = {}) {
       escapeClose?.dispose();
       if (onContainerMouseMove) container.removeEventListener('mousemove', onContainerMouseMove);
       if (onContainerClick) container.removeEventListener('click', onContainerClick);
+      if (onContainerMouseLeave) container.removeEventListener('mouseleave', onContainerMouseLeave);
       renderer.dispose();
       frame.geos.forEach(g => g.dispose());
       frame.mat.dispose();
@@ -1323,6 +1625,7 @@ export function createLibrary(container, { preview = false } = {}) {
       if (caption) caption.remove();
       if (hint) hint.remove();
       if (panel) panel.remove();
+      if (cdTooltip) cdTooltip.remove();
       renderer.domElement.remove();
     },
   };
