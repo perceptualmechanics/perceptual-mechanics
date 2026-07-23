@@ -6,6 +6,37 @@ projects (The Secret World, A Manual of Perceptual Mechanics) moved into their o
 files, which are now the source of truth for that material going forward. See "project map"
 below for where things live.
 
+## 1.0.61 (2026-07-23)
+
+Scott: "let's turn the bookcase vertical," then, treating the shelf as a
+real-world extrusion of Borges' Library of Babel, "the Library of Babel
+is faintly seen through the Veil, the bookshelf looks normal."
+
+- **Shelf turned vertical**: the 4-wide/2-tall Kallax grid is now
+  2-wide/4-tall — a pure 90-degree transpose (`COLS`/`ROWS` swapped,
+  and which field feeds `cubbyLeft()` vs `cubbyTop()` in `buildItems()`
+  swapped) done entirely in scene code. No item's stored `row`/`col`
+  in `library.js` was touched — the real photo's left-to-right shelf
+  order is preserved, just rotated 90 degrees on screen.
+- **Camera reframed** for the taller shape: `baseDist` raised from
+  8.5/7.2 to 14/12 (preview/main), wheel-zoom `maxDist` raised from
+  11/11.5 to 17/17.
+- **Library of Babel backdrop**: a new `buildBabelBackdrop()` adds a
+  receding stack of 12 hexagonal gallery outlines (Borges' library is
+  built of identical connected hexagons) positioned well behind the
+  shelf's back panel, parented under the same `root` group so it turns
+  with the shelf under drag. `scene.fog` (same clear-color-matched
+  convention as `orrery.js`) is tuned so it only ever dims the
+  backdrop — near/far set past the zoom range's `maxDist` so the shelf
+  itself never fogs. Per-ring position/rotation jitter uses the
+  scene's existing deterministic hash, so the recession reads as
+  irregular architecture, not a mechanical tunnel. The foreground
+  shelf's own materials, lighting, and click/panel behavior are
+  unchanged.
+
+Verified: node --check on library.js, clean `vite build` (only the
+pre-existing orrery >500kB chunk warning).
+
 ## 1.0.60 (2026-07-23)
 
 Scott clarified he's equating VALIS's territory with "the Surround" as

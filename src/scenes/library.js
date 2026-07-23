@@ -30,8 +30,14 @@ const CUBBY_W = 2.4;
 const CUBBY_H = 1.7;
 const CUBBY_D = 1.0;
 const FRAME_T = 0.09;
-const COLS = 4;
-const ROWS = 2;
+// Scott, 2026-07-23: "let's turn the bookcase vertical." Was a 4x2
+// landscape grid (4 wide, 2 tall); now 2x4 portrait (2 wide, 4 tall) — a
+// pure 90-degree transpose of the same cubbies. Every item's stored
+// row/col in library.js is untouched (still "left-to-right shelf order"
+// off the real photo); only which axis COLS/ROWS walks, and which field
+// feeds cubbyLeft() vs cubbyTop() in buildItems(), swapped.
+const COLS = 2;
+const ROWS = 4;
 const TOTAL_W = COLS * CUBBY_W + (COLS + 1) * FRAME_T;
 const TOTAL_H = ROWS * CUBBY_H + (ROWS + 1) * FRAME_T;
 
@@ -344,6 +350,65 @@ function buildFrame() {
   return { group, mat, geos };
 }
 
+// ─── Library of Babel backdrop ──────────────────────────────────────────────
+// Scott, 2026-07-23: "what if we treated this bookshelf as a real-world
+// extrusion of Borges' Library of Babel? Faintly seen through the Veil in
+// the background" — then, clarifying: "the Library of Babel is faintly
+// seen through the Veil, the bookshelf looks normal." So: the shelf's own
+// materials/lighting are untouched: this is a second, separate layer, a
+// receding stack of hexagonal gallery outlines (Borges' library is built
+// of identical connected hexagonal rooms, unbroken and — as far as anyone
+// inside it can tell — infinite) placed well behind the shelf's back
+// panel. scene.fog (matched to the clear color, same trick as orrery.js)
+// is what makes it read as "faintly seen through the Veil" rather than
+// crisply rendered architecture: the nearest hexagons are just barely
+// legible, and the fog swallows the rest into black before the eye can
+// resolve how far the recession actually goes — which is the point; the
+// Veil is Scott's own term (documented at length in archive_against_library
+// .md) for the perceptual screen between ordinary reality and what lies
+// past it, so this is deliberately NOT fully renderable.
+function hexPoints(r) {
+  const pts = [];
+  for (let i = 0; i <= 6; i++) {
+    const a = (Math.PI / 3) * i + Math.PI / 6;
+    pts.push(new THREE.Vector3(r * Math.cos(a), r * Math.sin(a), 0));
+  }
+  return pts;
+}
+
+function buildBabelBackdrop() {
+  const group = new THREE.Group();
+  const disposables = [];
+  const ringCount = 12;
+  const baseR = 4.4;
+
+  for (let i = 0; i < ringCount; i++) {
+    const r = baseR + i * 0.22;
+    const geo = new THREE.BufferGeometry().setFromPoints(hexPoints(r));
+    disposables.push(geo);
+    const mat = new THREE.LineBasicMaterial({
+      color: 0x4a5c78,
+      transparent: true,
+      opacity: Math.max(0.05, 0.34 - i * 0.024),
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    });
+    disposables.push(mat);
+    const loop = new THREE.LineLoop(geo, mat);
+    // Deterministic per-ring jitter (same hash convention as the rest of
+    // the scene) so the corridor of hexagons isn't a perfectly mechanical
+    // tunnel — irregular enough to feel like a glimpse of real, endless
+    // architecture rather than a repeating prop.
+    loop.position.x = (hash01(`babel-x-${i}`, 'jx') - 0.5) * 0.6;
+    loop.position.y = (hash01(`babel-y-${i}`, 'jy') - 0.5) * 0.6;
+    loop.position.z = -3.2 - i * 2.7;
+    loop.rotation.z = (hash01(`babel-rot-${i}`, 'jr') - 0.5) * 0.4;
+    group.add(loop);
+  }
+
+  return { group, disposables };
+}
+
 // ─── Items (books/dvds/blurays/boxes) ──────────────────────────────────────
 function buildItems(preview) {
   const group = new THREE.Group();
@@ -367,8 +432,11 @@ function buildItems(preview) {
   byCubby.forEach(items => {
     items.sort((a, b) => a.pos - b.pos);
     const { row, col } = items[0];
-    const left = cubbyLeft(col);
-    const top = cubbyTop(row);
+    // Transposed for the vertical shelf: old row (1-2) now walks the new
+    // 2-wide axis, old col (1-4) now walks the new 4-tall axis — a clean
+    // 90-degree rotation of the same cubbies, item row/col values untouched.
+    const left = cubbyLeft(row);
+    const top = cubbyTop(col);
     const availW = CUBBY_W - padX * 2 - gap * (items.length - 1);
 
     const weights = items.map(it => {
@@ -444,9 +512,16 @@ export function createLibrary(container, { preview = false } = {}) {
 
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(42, w / h, 0.1, 100);
-  const baseDist = preview ? 8.5 : 7.2;
+  // Pulled back from the old 8.5/7.2 landscape framing — the vertical
+  // shelf's TOTAL_H is now the tall side (~7.25 vs the old ~3.67), so the
+  // camera needs more room to keep it in frame.
+  const baseDist = preview ? 14 : 12;
   camera.position.set(0, 0.15, baseDist);
   camera.lookAt(0, 0, 0);
+  // Fog matched to the clear color, same convention as orrery.js — kept
+  // well past maxDist so the shelf itself never fogs at any zoom level;
+  // it only ever dims the Library of Babel backdrop receding behind it.
+  scene.fog = new THREE.Fog(0x000000, 18, 56);
 
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
   renderer.setPixelRatio(window.devicePixelRatio);
@@ -465,6 +540,13 @@ export function createLibrary(container, { preview = false } = {}) {
   const rim = new THREE.DirectionalLight(0x8fa8ff, 0.4);
   rim.position.set(-5, -2, -4);
   scene.add(rim);
+
+  // Library of Babel first, so it's fully behind the frame/items in the
+  // group's draw order as well as in depth — added under root, not scene,
+  // so it turns together with the shelf under drag rather than sitting
+  // fixed like a skybox.
+  const babel = buildBabelBackdrop();
+  root.add(babel.group);
 
   const frame = buildFrame();
   root.add(frame.group);
@@ -842,7 +924,10 @@ export function createLibrary(container, { preview = false } = {}) {
   });
 
   const minDist = preview ? 6.5 : 4.2;
-  const maxDist = preview ? 11 : 11.5;
+  // Raised from 11/11.5 so the taller vertical shelf can still be zoomed
+  // out to fit, and so there's room to drift toward the Babel backdrop
+  // before the fog (near=18) swallows it.
+  const maxDist = preview ? 17 : 17;
   const wheelZoom = bindWheelZoom(container, {
     isBlocked: () => !preview && panel?.classList.contains('open'),
     onZoom: deltaY => {
@@ -891,6 +976,7 @@ export function createLibrary(container, { preview = false } = {}) {
       frame.geos.forEach(g => g.dispose());
       frame.mat.dispose();
       items.disposables.forEach(d => d.dispose());
+      babel.disposables.forEach(d => d.dispose());
       if (caption) caption.remove();
       if (hint) hint.remove();
       if (panel) panel.remove();
