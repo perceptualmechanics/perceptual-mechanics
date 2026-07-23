@@ -409,10 +409,12 @@ function buildBabelBackdrop() {
   const disposables = [];
 
   // ── Node field: jittered 3D grid, thinned and tumbled, so it reads as
-  // scattered galleries rather than a mechanical lattice.
+  // scattered galleries rather than a mechanical lattice. Density raised
+  // from the first detached-field pass (v1.0.64, ~75 nodes/87 strands)
+  // per Scott: "moar hexes and strands."
   const nodes = [];
-  const extent = 9;
-  const step = 3.4;
+  const extent = 9.5;
+  const step = 2.9;
   const keepOutX = TOTAL_W / 2 + 0.7;
   const keepOutY = TOTAL_H / 2 + 0.7;
   let ni = 0;
@@ -424,7 +426,7 @@ function buildBabelBackdrop() {
         // depth, not just around its physical thickness — so nothing
         // ever renders in front of or behind the shelf's own silhouette.
         if (Math.abs(gx) < keepOutX && Math.abs(gy) < keepOutY) continue;
-        if (hash01(`babel-skip-${ni}`, 'k') > 0.42) continue; // thin the field
+        if (hash01(`babel-skip-${ni}`, 'k') > 0.58) continue; // thin the field
         const jit = step * 0.75;
         nodes.push({
           pos: new THREE.Vector3(
@@ -436,6 +438,10 @@ function buildBabelBackdrop() {
           ry: (hash01(`babel-ry-${ni}`, 'b') - 0.5) * Math.PI,
           rz: (hash01(`babel-rz-${ni}`, 'c') - 0.5) * Math.PI,
           r: 0.5 + hash01(`babel-r-${ni}`, 'd') * 0.4,
+          // Shimmer, per node — same idea as egg.js's per-line flux phase/
+          // speed pairs, so the whole field doesn't pulse in lockstep.
+          phase: hash01(`babel-ph-${ni}`, 'p') * Math.PI * 2,
+          speed: 0.25 + hash01(`babel-sp-${ni}`, 's') * 0.35,
         });
       }
     }
@@ -443,16 +449,20 @@ function buildBabelBackdrop() {
 
   // ── Hexagon edges: one InstancedMesh for every node's outline, each
   // tumbled to its own orientation (node transform composed with each
-  // edge's local placement in the hex's own plane).
+  // edge's local placement in the hex's own plane). All 6 edges of a
+  // given hex share that node's shimmer phase, so a hexagon brightens
+  // and dims as one gallery, not six flickering pieces.
+  const edgeColor = new THREE.Color(0x92a9d8);
   const edgeGeo = new THREE.BoxGeometry(1, 0.045, 0.045);
   const edgeMat = new THREE.MeshBasicMaterial({
-    color: 0x92a9d8, transparent: true, opacity: 0.26, depthWrite: false, fog: true,
+    color: edgeColor, transparent: true, opacity: 0.26, depthWrite: false, fog: true,
   });
   const edgeMesh = new THREE.InstancedMesh(edgeGeo, edgeMat, nodes.length * 6);
   disposables.push(edgeGeo, edgeMat);
 
   const dummy = new THREE.Object3D();
   const local = new THREE.Object3D();
+  const tmpColor = new THREE.Color();
   let ei = 0;
   nodes.forEach(node => {
     dummy.position.copy(node.pos);
@@ -460,24 +470,27 @@ function buildBabelBackdrop() {
     dummy.scale.set(1, 1, 1);
     dummy.updateMatrix();
     const nodeMatrix = dummy.matrix.clone();
+    node.edgeStart = ei;
     hexEdgeLocalTransforms(node.r).forEach(e => {
       local.position.set(e.x, e.y, 0);
       local.rotation.set(0, 0, e.rotZ);
       local.scale.set(e.length, 1, 1);
       local.updateMatrix();
       edgeMesh.setMatrixAt(ei, nodeMatrix.clone().multiply(local.matrix));
+      edgeMesh.setColorAt(ei, edgeColor);
       ei++;
     });
   });
   edgeMesh.instanceMatrix.needsUpdate = true;
+  edgeMesh.instanceColor.needsUpdate = true;
   group.add(edgeMesh);
 
   // ── Strands: connect each node to its nearest neighbors so the field
   // reads as a network, not scattered confetti. Computed once at build
-  // time — O(n^2) over ~100 nodes is trivial.
+  // time — O(n^2) over a couple hundred nodes is still trivial.
   const strandPairs = [];
   const seen = new Set();
-  const maxStrandLen = 6.2;
+  const maxStrandLen = 6.0;
   nodes.forEach((node, i) => {
     const dists = nodes
       .map((other, j) => (i === j ? null : { j, d: node.pos.distanceTo(other.pos) }))
@@ -495,6 +508,9 @@ function buildBabelBackdrop() {
     }
   });
 
+  let strandMesh = null;
+  const strandColor = new THREE.Color(0x7f96c2);
+  const strandPhases = [];
   if (strandPairs.length) {
     // Thickness/opacity deliberately close to the hex edges', not fainter —
     // a first pass at 0.02 thickness / 0.16 opacity repeated the exact
@@ -504,9 +520,9 @@ function buildBabelBackdrop() {
     // weren't, on a rod this thin over multi-unit lengths.
     const strandGeo = new THREE.BoxGeometry(1, 0.038, 0.038);
     const strandMat = new THREE.MeshBasicMaterial({
-      color: 0x7f96c2, transparent: true, opacity: 0.24, depthWrite: false, fog: true,
+      color: strandColor, transparent: true, opacity: 0.24, depthWrite: false, fog: true,
     });
-    const strandMesh = new THREE.InstancedMesh(strandGeo, strandMat, strandPairs.length);
+    strandMesh = new THREE.InstancedMesh(strandGeo, strandMat, strandPairs.length);
     disposables.push(strandGeo, strandMat);
 
     strandPairs.forEach(([i, j], si) => {
@@ -522,12 +538,42 @@ function buildBabelBackdrop() {
       dummy.scale.set(len, 1, 1);
       dummy.updateMatrix();
       strandMesh.setMatrixAt(si, dummy.matrix);
+      strandMesh.setColorAt(si, strandColor);
+      strandPhases.push({
+        phase: hash01(`babel-strand-ph-${si}`, 'p') * Math.PI * 2,
+        speed: 0.2 + hash01(`babel-strand-sp-${si}`, 's') * 0.3,
+      });
     });
     strandMesh.instanceMatrix.needsUpdate = true;
+    strandMesh.instanceColor.needsUpdate = true;
     group.add(strandMesh);
   }
 
-  return { group, disposables };
+  // Shimmer: rather than per-instance materials (impractical at this
+  // instance count), fake per-instance opacity by darkening each
+  // instance's own color toward black — since the backdrop always sits
+  // against the scene's pure-black clear color, dimming color reads
+  // identically to dimming opacity, at a fraction of the cost. Skipped
+  // entirely under prefers-reduced-motion by the caller.
+  function update(t) {
+    nodes.forEach(node => {
+      const b = 0.55 + Math.sin(t * node.speed + node.phase) * 0.45;
+      tmpColor.copy(edgeColor).multiplyScalar(Math.max(0.12, b));
+      for (let k = 0; k < 6; k++) edgeMesh.setColorAt(node.edgeStart + k, tmpColor);
+    });
+    edgeMesh.instanceColor.needsUpdate = true;
+
+    if (strandMesh) {
+      strandPhases.forEach((sp, si) => {
+        const b = 0.55 + Math.sin(t * sp.speed + sp.phase) * 0.45;
+        tmpColor.copy(strandColor).multiplyScalar(Math.max(0.12, b));
+        strandMesh.setColorAt(si, tmpColor);
+      });
+      strandMesh.instanceColor.needsUpdate = true;
+    }
+  }
+
+  return { group, disposables, update };
 }
 
 // ─── Items (books/dvds/blurays/boxes) ──────────────────────────────────────
@@ -1003,7 +1049,40 @@ export function createLibrary(container, { preview = false } = {}) {
     container.addEventListener('mousemove', onContainerMouseMove);
 
     onContainerClick = e => {
-      if (panel.classList.contains('open') && !panel.contains(e.target)) {
+      if (panel.classList.contains('open')) {
+        // Any click that reaches here is on the canvas, not the panel —
+        // panel's own listener (above) already stopPropagation()s clicks
+        // inside it, so `!panel.contains(e.target)` was never actually
+        // doing anything: this branch always fired and just closed the
+        // panel, even when the click landed on a different spine. Scott,
+        // 2026-07-23: "when the panel's open and I click on a new item,
+        // the old item still remains for a few seconds before it gets
+        // replaced" — that was this: click #1 closed the panel (old
+        // content visible through the close transition), and only a
+        // second click actually opened the new item. Raycast the click
+        // directly and, if it hit a spine, swap the panel's content in
+        // place (same fade beat as navigateToItem) instead of closing.
+        const rect = container.getBoundingClientRect();
+        mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+        mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+        raycaster.setFromCamera(mouse, camera);
+        const hits = raycaster.intersectObjects(items.meshes);
+        if (hits.length) {
+          const newSel = hits[0].object;
+          if (hovered && hovered !== newSel) hovered.scale.set(1, 1, 1);
+          hovered = newSel;
+          hovered.scale.set(1.04, 1.02, 1.15);
+          selected = newSel;
+          const it = selected.userData.item;
+          panelBodyEl.style.transition = 'opacity .18s';
+          panelBodyEl.style.opacity = '0';
+          setTimeout(() => {
+            populatePanel(it);
+            panel.scrollTop = 0;
+            panelBodyEl.style.opacity = '1';
+          }, 180);
+          return;
+        }
         panel.classList.remove('open');
         panel.querySelector('#library-panel-video').innerHTML = '';
         selected = null;
@@ -1061,10 +1140,19 @@ export function createLibrary(container, { preview = false } = {}) {
   const reduceMotion = prefersReducedMotion();
 
   let animId;
+  let babelT = 0;
   function animate() {
     animId = requestAnimationFrame(animate);
     if (!reduceMotion && autoRotate && !orbitDrag.isDragging) {
       root.rotation.y += preview ? 0.0018 : 0.0008;
+    }
+    // Library of Babel shimmer — Scott, 2026-07-23: "let's make them a bit
+    // dynamic, maybe the shimmer effect?" Same per-object phase/speed
+    // pulse convention as egg.js's field-line flux and aurora shimmers,
+    // adapted to InstancedMesh (see buildBabelBackdrop's update()).
+    if (!reduceMotion) {
+      babelT += 0.016;
+      babel.update(babelT);
     }
     renderer.render(scene, camera);
   }

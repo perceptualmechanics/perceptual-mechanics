@@ -6,6 +6,43 @@ projects (The Secret World, A Manual of Perceptual Mechanics) moved into their o
 files, which are now the source of truth for that material going forward. See "project map"
 below for where things live.
 
+## 1.0.66 (2026-07-23)
+
+Two fixes in one round. Scott: "Cool! Now let's fill this out even
+more. Moar hexes and strands. Let's make them a bit dynamic, maybe the
+shimmer effect?" — plus, separately: "also, I'm noticing that when the
+panel's open and I click on a new item, the old item still remains for
+a few seconds before it gets replaced."
+
+- **Panel bug, actually fixed at the root.** The click handler's
+  `panel.classList.contains('open') && !panel.contains(e.target)`
+  check was dead logic — the panel's own click listener already calls
+  `stopPropagation()` on everything inside it, so any click that
+  reached the container-level handler while the panel was open could
+  only ever be a click on the canvas, never inside the panel. That
+  branch always just closed the panel, even when the click landed
+  squarely on a different spine — so clicking a new item while reading
+  closed the panel first (old content visible through the close
+  transition) and required a *second* click to actually open the new
+  one, which read as "the old item still remains for a few seconds."
+  Fixed: the click is now raycast directly against the shelf, and if
+  it hit a spine, the panel's content swaps in place (same fade beat
+  as the cross-link navigation already uses) instead of closing.
+- **Library of Babel backdrop, denser and shimmering.** Node count
+  raised from ~75 to ~214 (edges 450 → 1,284; strands 87 → 306) via a
+  tighter grid step and a higher keep-probability. Each hexagon (and
+  each strand) now pulses gently in brightness on its own phase/speed,
+  same per-object convention as egg.js's field-line flux and aurora
+  shimmer — adapted to work with `InstancedMesh`, which has no
+  per-instance opacity, by animating each instance's own color
+  intensity instead (identical visual result against the scene's
+  pure-black background, at a fraction of the per-instance-material
+  cost). Skipped entirely under `prefers-reduced-motion`, consistent
+  with the rest of the site.
+
+Verified: node --check, clean vite build, a standalone Node
+simulation confirming the new node/strand counts (214/1,284/306).
+
 ## 1.0.65 (2026-07-23)
 
 Scott, after loading 1.0.64: "getting there, but I'm not sure the
