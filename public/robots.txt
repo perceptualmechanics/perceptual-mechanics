@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /utils/
+Disallow: /packages/
+
+Sitemap: https://perceptualmechanics.com/sitemap.xml

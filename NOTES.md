@@ -6,6 +6,39 @@ projects (The Secret World, A Manual of Perceptual Mechanics) moved into their o
 files, which are now the source of truth for that material going forward. See "project map"
 below for where things live.
 
+## 1.1.1 (2026-07-23)
+
+Two small follow-ups. Scott: "actually, something I was wondering, how
+do I make sure this site gets indexed properly?" — plus, separately:
+"fine, can we comment out all the library-panel-note text? I'm not
+sure I want it there yet."
+
+- **Library panel note text disabled.** `populatePanel()`'s
+  `noteEl.innerHTML = ...` line is commented out (not deleted) —
+  one-line revert whenever it's wanted back. The underlying `note`
+  field and the `LIBRARY_LINKS` cross-links that live inside it are
+  untouched in the data; this is a display-layer toggle only. Side
+  effect worth flagging: most of the cross-link constellation between
+  catalog items lives inline inside `note` text, so hiding it also
+  hides those visible hyperlinks for any link keyed to `field: 'note'`
+  — the handful keyed to `scene`/`excerpt`/`excerpt_from` (the
+  coin-toss/Hedwig pair) are unaffected.
+- **Basic SEO scaffolding**, since none existed: `public/robots.txt`
+  (allows everything except the `/utils/` and `/packages/` demo/
+  utility pages, points at the sitemap) and `public/sitemap.xml` (one
+  entry — this is a single-page app with no client-side routing, so
+  there's only one real URL to list). Added a canonical link tag plus
+  Open Graph and Twitter Card meta tags to index.html's `<head>`,
+  reusing the existing description copy. No social-preview image yet
+  (`og:image`) — nothing in the repo is sized/compressed for that
+  purpose; worth a small follow-up if Scott wants one. Submitting the
+  sitemap to Google Search Console and requesting indexing is a manual
+  step on Scott's end (requires him to verify domain ownership there).
+
+Verified: clean vite build, confirmed `robots.txt`/`sitemap.xml` land
+at the built site root and `/utils/`, `/packages/` deploy paths match
+what `robots.txt` disallows.
+
 ## 1.1.0 (2026-07-23)
 
 Milestone. Scott: "I think one of the newer books got the wrong ISBN,
