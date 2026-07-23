@@ -16,3 +16,9 @@ source-material/
 # committed/pushed — same reasoning as source-material/ above, just for
 # personal photos instead of writing archives.
 assets/
+
+# Scott's own personal files (a PDF, journal transcription, screenshots,
+# etc.) dropped at the repo root — not part of the site, never committed,
+# same reasoning as assets/ and source-material/ above. Ignored explicitly
+# so it stops showing up as an untracked directory in every git status.
+artifacts/

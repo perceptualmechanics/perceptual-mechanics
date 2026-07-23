@@ -6,6 +6,32 @@ projects (The Secret World, A Manual of Perceptual Mechanics) moved into their o
 files, which are now the source of truth for that material going forward. See "project map"
 below for where things live.
 
+## 1.1.10 (2026-07-23)
+
+Scott deleted utils/shorts.html directly, then asked: "for some
+reason, the artifacts folder is still showing up as an untracked
+directory in Git."
+
+- **Real build break, found while checking on the artifacts/
+  question**: deleting shorts.html left vite.config.js still pointing
+  at it as a rollup entry (`shorts: resolve(__dirname,
+  'utils/shorts.html')`) -- every `npm run build` was failing outright
+  with "Could not resolve entry module" until this was caught. Removed
+  the dead entry (confirmed nothing else references shorts.html --
+  index.html and every src/ file were clean; the `shorts` param
+  butterfly.js takes is a generic vertical-crop option it exposes on
+  its own, not something wired specifically to the now-gone page) and
+  removed the now-empty utils/ directory.
+- **artifacts/ added to .gitignore**, same reasoning already applied
+  to source-material/ and assets/ -- Scott's own personal files that
+  were never meant to be part of the repo, just never actually
+  ignored, so they kept surfacing as an untracked directory in every
+  status check.
+
+Verified: clean vite build (confirmed it was broken beforehand, by
+running it before touching vite.config.js), git status no longer
+lists artifacts/.
+
 ## 1.1.9 (2026-07-23)
 
 Scott: "one thing I've noticed on library is that the panels are
