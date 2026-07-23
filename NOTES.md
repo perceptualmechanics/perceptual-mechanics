@@ -6,6 +6,28 @@ projects (The Secret World, A Manual of Perceptual Mechanics) moved into their o
 files, which are now the source of truth for that material going forward. See "project map"
 below for where things live.
 
+## 1.1.3 (2026-07-23)
+
+Scott: "oh shoot, then bingify me" (re: "LOL BING" from the 1.1.1
+sitemap conversation).
+
+- **IndexNow key file**: `public/56f9e77fc06a30c10479e74cf0229602.txt`
+  (contents = the key itself), the verification file the IndexNow
+  protocol expects at the site root. IndexNow is the one piece of
+  this that doesn't require signing up for anything — Bing, Yandex,
+  and a few others share a single push API: once the key file is
+  live, pinging `api.indexnow.org` with a URL tells them to recrawl
+  it immediately, no dashboard, no account. robots.txt/sitemap.xml
+  (from 1.1.1) already work for Bing's regular crawler the same as
+  Google's; this just adds the instant-notify path on top.
+- Bing Webmaster Tools proper (their equivalent of Search Console —
+  manual sitemap submission, "request indexing," ownership
+  verification) still requires Scott to sign in and verify the
+  domain himself; that account step can't be done from here.
+
+Verified: clean vite build, key file lands at the built site root
+with the exact key as its contents.
+
 ## 1.1.2 (2026-07-23)
 
 Scott: "for the social card, use the hare."
