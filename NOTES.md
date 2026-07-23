@@ -6,6 +6,54 @@ projects (The Secret World, A Manual of Perceptual Mechanics) moved into their o
 files, which are now the source of truth for that material going forward. See "project map"
 below for where things live.
 
+## 1.0.60 (2026-07-23)
+
+Scott clarified he's equating VALIS's territory with "the Surround" as
+his own reading, not a claim about Dick's actual text — noted as such
+in both essays rather than left as an unresolved flag. Then pasted 25
+more ISBNs ("More books:") and asked for another pass.
+
+- **25 more items added** (ids 123–147, catalog now 147 items): Hesse's
+  *The Glass Bead Game*; a Swip Stolk design monograph; Merrill's
+  *Collected Poems*; Huxley's *Brave New World* and *The Doors of
+  Perception and Heaven and Hell*; Gibson's *Neuromancer* (whose
+  "global consensus-hallucination" Matrix predates the Wachowskis by a
+  decade — the word Scott's own 2003 cosmology explicitly declined to
+  reuse); McKenna's *Food of the Gods*; Warren Ellis's *Planetary
+  Omnibus*; Narby's *The Cosmic Serpent*; Lewis Hyde's *Trickster Makes
+  This World*; *The Kybalion*; Bourdain's *Kitchen Confidential*;
+  Kenney's *The Invention of the Zero*; a stage adaptation of *The 39
+  Steps*; Shoemaker's *The Squared Circle*; a Tolkien boxed set;
+  *Holy Blood, Holy Grail*; Pileggi's *Wiseguy*; an Alexander McQueen
+  monograph; *The Godfather*; King's *The Shining*; a personal-finance
+  book; Anne Carson's *Decreation*; a Kupperman comics collection; and
+  *Nobilis* (French edition) — a tabletop RPG where players anchor
+  cosmic Powers into human bodies, the clearest game-genre cousin yet
+  to the Surround/Umbra/chimerical cluster.
+- **19 new LIBRARY_LINKS** (66 → 85) threading the strongest new
+  connections into existing clusters — the psychedelic-perception
+  trio (Huxley/McKenna/Narby) into Harpur; Planetary into the
+  chance/pattern/paranoia cluster; the Kybalion and Holy Blood, Holy
+  Grail into the occult-reference cluster; Kitchen Confidential into
+  the built-persona cluster; the Squared Circle's kayfabe into the
+  belief-as-technology cluster; Decreation into the split-self
+  cluster; two design monographs and two crime books paired with each
+  other.
+- **library_resonances.md**: four new sections (the membrane's
+  genre-name lineage extended through Neuromancer/Nobilis/Trickster;
+  the psychedelic-perception cluster; kayfabe joining SubGenius/
+  Everything Is Under Control; Decreation as a third telling of the
+  split self); closing sections and method note updated.
+- **archive_against_library.md**: the VALIS/Surround flag rewritten
+  to reflect Scott's own framing rather than left as unresolved;
+  Neuromancer, Nobilis, and the psychedelic trio folded into "The
+  Surround" section; a new paragraph on Hyde's Trickster naming the
+  actual mythological job description for the whole liminality
+  argument.
+
+Verified: node --check, link-integrity script (147 items, 0 dup ids,
+85/85 links valid), clean vite build, catalog mirror regenerated.
+
 ## 1.0.59 (2026-07-23)
 
 Scott: search my writing for any mentions of "the Surround" (Sandover's

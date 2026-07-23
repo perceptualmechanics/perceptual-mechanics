@@ -173,6 +173,41 @@ const LIBRARY_LINKS = [
   { id: 122, field: 'note', phrase: 'Solaris',                          target: 53 },
   { id: 122, field: 'note', phrase: 'The Tree of Life',                 target: 33 },
   { id: 33,  field: 'note', phrase: 'Stories of Your Life and Others',  target: 122 },
+
+  // Added 2026-07-23, a second batch of 25 ISBNs pasted in directly.
+  // Merrill's Collected Poems <-> Sandover, the rest of the same career.
+  { id: 125, field: 'note', phrase: 'The Changing Light at Sandover',   target: 108 },
+  // Huxley's "Mind at Large" and Narby's shamanic DNA-vision both point
+  // back to Harpur's third category.
+  { id: 128, field: 'note', phrase: 'Daimonic Reality',                target: 121 },
+  { id: 131, field: 'note', phrase: 'Daimonic Reality',                target: 121 },
+  // Food of the Gods joins the Wilson/McKenna psychedelic-consciousness
+  // lineage.
+  { id: 129, field: 'note', phrase: 'Prometheus Rising',               target: 119 },
+  { id: 129, field: 'note', phrase: 'Everything Is Under Control',     target: 120 },
+  // Planetary joins the chance/pattern/paranoia cluster.
+  { id: 130, field: 'note', phrase: 'Gravity’s Rainbow',               target: 78 },
+  { id: 130, field: 'note', phrase: 'Borges’s Collected Fictions',     target: 79 },
+  { id: 130, field: 'note', phrase: 'Everything Is Under Control',     target: 120 },
+  // The Kybalion and Holy Blood, Holy Grail both join the
+  // channeled-or-invented occult-reference cluster.
+  { id: 133, field: 'note', phrase: 'Alchemy & Mysticism',             target: 6 },
+  { id: 139, field: 'note', phrase: 'Alchemy & Mysticism',             target: 6 },
+  // Kitchen Confidential joins the built-persona cluster.
+  { id: 134, field: 'note', phrase: 'Wooderson',                       target: 32 },
+  { id: 134, field: 'note', phrase: 'Hedwig',                          target: 40 },
+  // The Squared Circle's kayfabe joins the belief-as-technology cluster.
+  { id: 137, field: 'note', phrase: 'The Book of the SubGenius',       target: 113 },
+  { id: 137, field: 'note', phrase: 'Everything Is Under Control',     target: 120 },
+  // Two design monographs, shelved as reference for each other.
+  { id: 124, field: 'note', phrase: 'Alexander McQueen',               target: 141 },
+  { id: 141, field: 'note', phrase: 'Swip Stolk',                      target: 124 },
+  // The Godfather and Wiseguy, two very different tones about the same
+  // underworld.
+  { id: 142, field: 'note', phrase: 'Wiseguy',                         target: 140 },
+  // Decreation joins the split/divided-self cluster a third way.
+  { id: 145, field: 'note', phrase: 'Hedwig',                          target: 40 },
+  { id: 145, field: 'note', phrase: 'VALIS',                           target: 110 },
 ];
 
 function escapeHtml(s) {
