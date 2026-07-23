@@ -6,6 +6,37 @@ projects (The Secret World, A Manual of Perceptual Mechanics) moved into their o
 files, which are now the source of truth for that material going forward. See "project map"
 below for where things live.
 
+## 1.1.8 (2026-07-23)
+
+Scott: "just noticed a theater bug: on some of the interstitials,
+the next button isn't working."
+
+- **Root cause**: bardjs' `compileScript` tags an `intermission` event
+  with the *upcoming* scene's `sceneIndex`, not the outgoing scene's
+  — by design, so `Player` announces the new scene at the right
+  moment. `TheaterRenderer.onSceneChange` was the only place that
+  cleared the interstitial card's `.on` class, and it only fires when
+  `sceneIndex` changes. That transition happens once, when landing ON
+  the interstitial; the new scene's first real event shares that same
+  `sceneIndex`, so `onSceneChange` never fires again on the way out.
+  Clicking "next" was actually advancing the player the whole time —
+  actors entering, lines playing — all of it invisible behind a card
+  that never got dismissed, which is exactly why it looked like the
+  button had stopped working rather than like a stuck screen. Only
+  the outgoing renderer had this bug; bardjs' own Player/compile
+  logic is fine (confirmed the bard.js demo's DomRenderer has no
+  equivalent overlay to get stuck), so this is a theater.js-only fix,
+  not a bardjs package change.
+- **Fix**: `onEnter`/`onExit`/`onChorus`/`onLine` all now clear the
+  interstitial themselves, rather than relying on a scene-boundary
+  signal that may not exist between the card and whatever comes
+  after it.
+
+Verified: node --check, clean vite build. Traced the exact
+timeline sequence by hand against compileScript's sceneIndex tagging
+to confirm the fix covers every real event type that can follow an
+intermission, not just the common case.
+
 ## 1.1.7 (2026-07-23)
 
 Scott: "never mind, make it the letters PM like from the title" --

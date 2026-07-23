@@ -1376,14 +1376,27 @@ class TheaterRenderer {
   }
 
   onEnter(keys) {
+    // Fixes a real bug (Scott, 2026-07-23: "on some of the interstitials,
+    // the next button isn't working"): compileScript tags the intermission
+    // event with the *upcoming* scene's sceneIndex, not the outgoing one,
+    // so Player only fires onSceneChange (the only other place that clears
+    // '.on' here) once -- when landing ON the interstitial, not when
+    // leaving it. The new scene's first real event shares that same
+    // sceneIndex, so nothing dismissed the card; the whole scene played
+    // out silently behind it while "next" looked dead. Every real stage
+    // event now clears the card itself instead of relying on a scene
+    // boundary that may not exist between it and the interstitial.
+    this.interstitialEl.classList.remove('on');
     keys.forEach(k => this.ensureActor(k));
   }
 
   onExit(keys) {
+    this.interstitialEl.classList.remove('on');
     keys.forEach(k => { this.actors[k]?.remove(); delete this.actors[k]; });
   }
 
   onChorus(text) {
+    this.interstitialEl.classList.remove('on');
     this.clearBubbles();
     this.captionEl.textContent = text;
     this.captionEl.classList.add('on');
@@ -1391,6 +1404,7 @@ class TheaterRenderer {
   }
 
   onLine(key, text, { mask, voice, silent } = {}) {
+    this.interstitialEl.classList.remove('on');
     this.clearBubbles();
     const ch = CHARACTERS[key];
     const el = this.actors[key]; // absent for a true offstage voice — nothing to attach a figure to
