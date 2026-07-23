@@ -156,6 +156,23 @@ const LIBRARY_LINKS = [
   { id: 120, field: 'note', phrase: 'Borges’s Collected Fictions',       target: 79 },
   { id: 78,  field: 'note', phrase: 'Everything Is Under Control',       target: 120 },
   { id: 79,  field: 'note', phrase: 'Everything Is Under Control',       target: 120 },
+
+  // Added 2026-07-23, named one at a time mid-conversation rather than
+  // from a shelf photo or an ISBN batch.
+  // Harpur's third-category argument, threaded through the channeled-
+  // material / split-self / pattern-finding clusters already on the shelf.
+  { id: 121, field: 'note', phrase: 'The Changing Light at Sandover',    target: 108 },
+  { id: 121, field: 'note', phrase: 'the Symposium',                    target: 13 },
+  { id: 121, field: 'note', phrase: 'Everything Is Under Control',      target: 120 },
+  { id: 108, field: 'note', phrase: 'Daimonic Reality',                 target: 121 },
+  { id: 13,  field: 'note', phrase: 'Daimonic Reality',                 target: 121 },
+  { id: 120, field: 'note', phrase: 'Daimonic Reality',                 target: 121 },
+  // Chiang's "Understand" joins the physics-vs-feeling triangle as a
+  // fourth telling, this time as plot rather than argument.
+  { id: 122, field: 'note', phrase: '2001: A Space Odyssey',            target: 63 },
+  { id: 122, field: 'note', phrase: 'Solaris',                          target: 53 },
+  { id: 122, field: 'note', phrase: 'The Tree of Life',                 target: 33 },
+  { id: 33,  field: 'note', phrase: 'Stories of Your Life and Others',  target: 122 },
 ];
 
 function escapeHtml(s) {

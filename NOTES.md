@@ -6,6 +6,43 @@ projects (The Secret World, A Manual of Perceptual Mechanics) moved into their o
 files, which are now the source of truth for that material going forward. See "project map"
 below for where things live.
 
+## 1.0.58 (2026-07-23)
+
+A long freeform conversation with Scott, kicked off by "fold this all into
+an adopted kid's search for identity," traveled through Sandover's ending,
+Harpur's daimonic reality, quantum field theory vs. wave-particle duality,
+D&D/White Wolf class mechanics, a Destiny 2 confession, and a Ted Chiang
+story, and closed on: "my whole life has been that liminality." Scott:
+"don't just add the books to the shelf and redo everything, incorporate
+this conversation (and others, if you have any on record that could be
+germane) into both your analyses." (Checked: no other on-record session
+had germane content.)
+
+- **2 more books added** (ids 121–122, catalog now 122 items), named one
+  at a time mid-conversation rather than off a photo or an ISBN batch:
+  Patrick Harpur's *Daimonic Reality* (the third-category argument — real
+  without being physical — that gives Sandover's board and the SubGenius's
+  "Bob" an actual philosophical name) and Ted Chiang's *Stories of Your
+  Life and Others* (whose "Understand" restages Physics vs. Ecstatics as
+  a plot about a superintelligence undone by an axis it never secured).
+- **10 new LIBRARY_LINKS** (56 → 66) threading both books into the
+  existing occult-material and physics-vs-feeling clusters.
+- **library_resonances.md**: new section on Harpur resolving the
+  real-vs-invented question underneath Sandover/SubGenius/Everything Is
+  Under Control; Chiang added as a fifth voice in the Kubrick/Tarkovsky/
+  Malick/Wilson thread; closing sections updated.
+- **archive_against_library.md**: new closing section, "What the search
+  was actually for," naming the adoption/identity-search root directly
+  and reframing the muse/Larra, reused-names, fire, and Void material as
+  one condition rather than separate items; folds in the RPG/Destiny
+  class-declaration critique, Chiang, Sandover's "they choose," Harpur,
+  and the observation that the conversation producing all this was
+  itself a Platonic dialogue. Closes on Scott's own line rather than
+  mine.
+
+Verified: node --check, link-integrity script (122 items, 0 dup ids,
+66/66 links valid), clean vite build, catalog mirror regenerated.
+
 ## 1.0.57 (2026-07-23)
 
 Scott, on the "one name, several bodies" Blood Treachery claim in
