@@ -267,6 +267,26 @@ function wrapSpineText(text, maxChars) {
 // line beneath it, on a flat color field. Deliberately plain: this is meant
 // to read as "a book on a shelf" from across the room, not as a legible
 // cover design up close (the click-to-read panel carries the real text).
+//
+// Scott, 2026-07-23, after the vertical shelf/Babel work: "the books
+// themselves are very plain! What could we do to give them a bit more
+// pizzazz?" Added, without touching the "no real cover art" rule: a
+// per-item tint wash (so two books sharing one of the ~12 palette colors
+// don't render as pixel-identical swatches — different dye lots, same
+// cloth), a top-lit vertical gradient and a soft left/right vignette (the
+// spine reads as a rounded object catching light, not a flat card), 1-2
+// embossed horizontal bands above/below the title (old-hardcover binding
+// cords), contrast-aware ink color (light spines get dark ink, dark
+// spines keep the cream), and font alternation. Fine per-pixel grain was
+// tried and dropped — at the on-screen size a spine actually renders at,
+// it mostly vanishes into texture minification, the same "too subtle to
+// register" mistake made (and fixed) twice already on the Babel backdrop;
+// broad tonal moves like these read at any distance.
+function relLuminance(hex) {
+  const col = new THREE.Color(hex);
+  return 0.2126 * col.r + 0.7152 * col.g + 0.0722 * col.b;
+}
+
 function makeSpineTexture(baseColor, title, creator, isBox) {
   const c = document.createElement('canvas');
   c.width = 112; c.height = 800;
@@ -274,41 +294,103 @@ function makeSpineTexture(baseColor, title, creator, isBox) {
   cx.fillStyle = baseColor;
   cx.fillRect(0, 0, c.width, c.height);
 
+  // Per-item tint wash — same base swatch, different dye lot each time.
+  const tr = Math.floor(hash01(title, 'tr') * 255);
+  const tg = Math.floor(hash01(title, 'tg') * 255);
+  const tb = Math.floor(hash01(title, 'tb') * 255);
+  cx.fillStyle = `rgba(${tr},${tg},${tb},0.07)`;
+  cx.fillRect(0, 0, c.width, c.height);
+
+  // Top-lit vertical gradient — light catching the spine from above,
+  // rather than a flat, evenly-lit swatch.
+  const vgrad = cx.createLinearGradient(0, 0, 0, c.height);
+  vgrad.addColorStop(0, 'rgba(255,255,255,0.18)');
+  vgrad.addColorStop(0.45, 'rgba(255,255,255,0)');
+  vgrad.addColorStop(1, 'rgba(0,0,0,0.24)');
+  cx.fillStyle = vgrad;
+  cx.fillRect(0, 0, c.width, c.height);
+
+  // Left/right vignette — the spine's slight roundedness, not a flat card.
+  const hgrad = cx.createLinearGradient(0, 0, c.width, 0);
+  hgrad.addColorStop(0, 'rgba(0,0,0,0.3)');
+  hgrad.addColorStop(0.14, 'rgba(0,0,0,0)');
+  hgrad.addColorStop(0.86, 'rgba(0,0,0,0)');
+  hgrad.addColorStop(1, 'rgba(0,0,0,0.3)');
+  cx.fillStyle = hgrad;
+  cx.fillRect(0, 0, c.width, c.height);
+
   if (isBox) {
     // A scattering of small dots standing in for the starry/celestial
     // boxes on the real shelf (Kim Krans' Tarot/Alchemy decks) — an
-    // abstraction, not a reproduction of the real box art.
-    cx.fillStyle = 'rgba(255,255,255,0.5)';
+    // abstraction, not a reproduction of the real box art. A few thin
+    // constellation lines between nearby dots read as a considered
+    // pattern rather than scattered confetti.
     const dotCount = 22;
+    const pts = [];
     for (let i = 0; i < dotCount; i++) {
-      const x = hash01(title, `dotx${i}`) * c.width;
-      const y = hash01(title, `doty${i}`) * c.height;
-      const r = 0.6 + hash01(title, `dotr${i}`) * 1.3;
-      cx.beginPath();
-      cx.arc(x, y, r, 0, Math.PI * 2);
-      cx.fill();
+      pts.push({
+        x: hash01(title, `dotx${i}`) * c.width,
+        y: hash01(title, `doty${i}`) * c.height,
+        r: 0.6 + hash01(title, `dotr${i}`) * 1.3,
+      });
     }
+    cx.strokeStyle = 'rgba(255,255,255,0.16)';
+    cx.lineWidth = 0.8;
+    for (let i = 0; i < 4; i++) {
+      const a = pts[Math.floor(hash01(title, `la${i}`) * pts.length)];
+      const b = pts[Math.floor(hash01(title, `lb${i}`) * pts.length)];
+      if (a === b) continue;
+      cx.beginPath();
+      cx.moveTo(a.x, a.y);
+      cx.lineTo(b.x, b.y);
+      cx.stroke();
+    }
+    cx.fillStyle = 'rgba(255,255,255,0.5)';
+    pts.forEach(p => {
+      cx.beginPath();
+      cx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      cx.fill();
+    });
   } else {
     // A thin top/bottom rule, like foil-stamped spine caps.
     cx.fillStyle = 'rgba(255,255,255,0.18)';
     cx.fillRect(0, 10, c.width, 3);
     cx.fillRect(0, c.height - 13, c.width, 3);
+
+    // 1-2 embossed bands above and/or below the title block — the raised
+    // binding cords on an old hardcover, kept clear of the text itself.
+    const bandSpots = [0.1 + hash01(title, 'b0') * 0.12, 0.8 + hash01(title, 'b1') * 0.12];
+    bandSpots.forEach((frac, i) => {
+      if (i === 1 && hash01(title, 'bskip') > 0.7) return; // not every spine gets both
+      const by = c.height * frac;
+      cx.fillStyle = 'rgba(0,0,0,0.22)';
+      cx.fillRect(0, by, c.width, 3);
+      cx.fillStyle = 'rgba(255,255,255,0.12)';
+      cx.fillRect(0, by + 3, c.width, 1);
+    });
   }
+
+  // Contrast-aware ink: the palette runs from near-black to pale tan, so
+  // one fixed cream text color read poorly against the lightest spines.
+  const lum = relLuminance(baseColor);
+  const inkTitle = lum > 0.55 ? 'rgba(32,26,20,0.88)' : 'rgba(240,236,224,0.92)';
+  const inkCreator = lum > 0.55 ? 'rgba(32,26,20,0.6)' : 'rgba(240,236,224,0.62)';
+  const font = hash01(title, 'font') > 0.5 ? 'Georgia, serif' : '"Times New Roman", serif';
 
   cx.save();
   cx.translate(c.width / 2, c.height / 2);
   cx.rotate(-Math.PI / 2);
   cx.textAlign = 'center';
   cx.textBaseline = 'middle';
-  cx.fillStyle = 'rgba(240,236,224,0.92)';
-  cx.font = '600 34px "Times New Roman", serif';
+  cx.fillStyle = inkTitle;
+  cx.font = `600 34px ${font}`;
   const lines = wrapSpineText(title, 26).slice(0, 3);
   const lineH = 40;
   const startY = -((lines.length - 1) * lineH) / 2 - (creator ? 14 : 0);
   lines.forEach((line, i) => cx.fillText(line, 0, startY + i * lineH));
   if (creator) {
-    cx.font = 'italic 22px "Times New Roman", serif';
-    cx.fillStyle = 'rgba(240,236,224,0.62)';
+    cx.font = `italic 22px ${font}`;
+    cx.fillStyle = inkCreator;
     cx.fillText(creator.split(' · ')[0].split(' (')[0], 0, startY + lines.length * lineH + 6);
   }
   cx.restore();
@@ -650,11 +732,22 @@ function buildItems(preview) {
         mats = flat;
       } else {
         const tex = makeSpineTexture(color, it.title, it.creator, isBox);
-        const front = new THREE.MeshStandardMaterial({ map: tex, roughness: 0.75 });
-        const side = new THREE.MeshStandardMaterial({ color, roughness: 0.85 });
+        // Finish variety — most spines are a matte cloth/paper binding,
+        // a minority (~1 in 5) a glossier trade-paperback laminate, so
+        // the shelf doesn't read as one uniform plastic material.
+        const isGlossy = hash01(it.title, 'gloss') > 0.8;
+        const rough = isGlossy ? 0.35 + hash01(it.title, 'r2') * 0.15 : 0.72 + hash01(it.title, 'r2') * 0.18;
+        const metal = isGlossy ? 0.05 : 0;
+        // Side/back faces shaded darker than the front — the same base
+        // color otherwise made every face of the box read as one flat
+        // plane rather than a real 3D object catching light unevenly.
+        const sideColor = new THREE.Color(color).multiplyScalar(0.82);
+        const backColor = new THREE.Color(color).multiplyScalar(0.7);
+        const front = new THREE.MeshStandardMaterial({ map: tex, roughness: rough, metalness: metal });
+        const side = new THREE.MeshStandardMaterial({ color: sideColor, roughness: rough });
         const pageColor = it.type === 'book' ? '#e9e3d2' : color;
         const pages = new THREE.MeshStandardMaterial({ color: pageColor, roughness: 0.9 });
-        const back = new THREE.MeshStandardMaterial({ color, roughness: 0.85 });
+        const back = new THREE.MeshStandardMaterial({ color: backColor, roughness: rough });
         disposables.push(tex, front, side, pages, back);
         mats = [side, side, pages, pages, front, back];
       }

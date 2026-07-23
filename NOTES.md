@@ -6,6 +6,38 @@ projects (The Secret World, A Manual of Perceptual Mechanics) moved into their o
 files, which are now the source of truth for that material going forward. See "project map"
 below for where things live.
 
+## 1.0.67 (2026-07-23)
+
+Scott: "ok looks good. last thing I'm seeing is that the books
+themselves are very plain! What could we do to give them a bit more
+pizzazz?"
+
+- **Spine textures**, without touching the "no real cover art" rule:
+  a per-item tint wash (so two books sharing one of the ~12 palette
+  colors don't render as pixel-identical swatches — different dye
+  lots, same cloth), a top-lit vertical gradient and soft left/right
+  vignette (the spine reads as a rounded object catching light, not a
+  flat card), 1-2 embossed horizontal binding-cord bands above/below
+  the title, contrast-aware ink (the near-black-to-pale-tan palette
+  meant one fixed cream text color read poorly against the lightest
+  spines — now switches to dark ink above a luminance threshold), and
+  alternating serif fonts. Divination boxes additionally get a few
+  faint constellation lines between their existing scattered dots.
+  Fine per-pixel grain was tried and dropped — at the size a spine
+  actually renders on screen, it mostly vanishes into texture
+  minification, the same "too subtle to register" mistake already
+  made (and fixed) twice on the Babel backdrop; broad tonal moves read
+  at any distance, fine grain doesn't.
+- **Materials**: side/back faces now shaded darker than the front
+  (previously identical flat color on every face, reading as one flat
+  plane rather than a 3D object catching light unevenly); ~1 in 5
+  items get a glossier trade-paperback finish (lower roughness, slight
+  metalness) against the matte-cloth majority.
+
+Verified: node --check, clean vite build, a standalone check
+confirming the palette's luminance-vs-ink-color logic actually flips
+for the one pale swatch that needs it and stays put for the rest.
+
 ## 1.0.66 (2026-07-23)
 
 Two fixes in one round. Scott: "Cool! Now let's fill this out even
