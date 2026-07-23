@@ -6,6 +6,30 @@ projects (The Secret World, A Manual of Perceptual Mechanics) moved into their o
 files, which are now the source of truth for that material going forward. See "project map"
 below for where things live.
 
+## 1.0.57 (2026-07-23)
+
+Scott, on the "one name, several bodies" Blood Treachery claim in
+1.0.56: "the 'screenplay' you see is the draft of Blood Treachery that
+Steve and I co-wrote." Corrects a factual error — the archive's
+screenplay-formatted item isn't a separate spec script that happens to
+share a title and collaborator with the shipped sourcebook, it's an
+earlier draft of the same book.
+
+- **src/text/library.js**: reworded id108 (Sandover) and id117 (Blood
+  Treachery) notes to drop the "unproduced spec screenplay" framing.
+- **library_resonances.md**: removed the "stranger echo" paragraph
+  built on the false premise, and dropped the now-inaccurate item from
+  the closing "what the shelf keeps asking" list.
+- **archive_against_library.md**: rewrote the Blood Treachery portion
+  of "One name, several bodies" — added a correction note, dropped
+  the false "spec script vs. published book" framing, kept the true
+  parts (Solistrato, Ben, Andrew Hawking, the Kurosawa/Joyce
+  comparison).
+- Regenerated assets/bookshelf_catalog.json mirror.
+
+Verified: node --check, link-integrity script (120 items, 0 duplicate
+ids, 56/56 links valid), clean vite build.
+
 ## 1.0.56 (2026-07-23)
 
 Scott pasted 13 ISBN-13s and said: "Incorporate these books into the
