@@ -6,6 +6,28 @@ projects (The Secret World, A Manual of Perceptual Mechanics) moved into their o
 files, which are now the source of truth for that material going forward. See "project map"
 below for where things live.
 
+## 1.1.4 (2026-07-23)
+
+Scott: "ooh yeah, do the structured data, and leave the title tag
+alone." Also clarified the robots.txt/sitemap.xml/social-card work
+from 1.1.1-1.1.3 hasn't been pushed yet -- what he'd pushed earlier
+was unrelated.
+
+- **JSON-LD structured data** added to index.html: a `WebSite` block
+  (name, url, description, author/creator as a `Person`) plus a
+  `keywords` array. `keywords` is schema.org's actual, still-live
+  equivalent of the old `<meta name="keywords">` tag -- unlike that
+  one (ignored by Google since 2009, unweighted by Bing), this
+  property genuinely feeds crawler topic understanding. Terms were
+  pulled straight from the site's seven live scenes (sphere,
+  butterfly, manuscript, theater, egg, leaf, orrery) rather than
+  reached for, so it's an accurate topic fingerprint, not keyword
+  stuffing. Title tag left untouched per Scott's call -- the
+  minimalist "perceptual mechanics" branding stays as-is.
+
+Verified: clean vite build, JSON-LD block parses as valid JSON with
+the expected keys.
+
 ## 1.1.3 (2026-07-23)
 
 Scott: "oh shoot, then bingify me" (re: "LOL BING" from the 1.1.1
