@@ -6,6 +6,40 @@ projects (The Secret World, A Manual of Perceptual Mechanics) moved into their o
 files, which are now the source of truth for that material going forward. See "project map"
 below for where things live.
 
+## 1.0.53 (2026-07-22)
+
+Scott: "ok the movies go princess bride, three colours, the Dekalog, Do
+the Right Thing, Seven Samurai, Dazed and Confused, The Tree of Life,
+Hard Days Night, Citizen Kane, silence of the lambs, dr strangelove,and
+I think you have the rest. also, we'll have to manually curate the
+excerpts, but we'll see. i'm seeing a lot of 'video unavailable', so
+i'd say look for movieclips first and foremost"
+
+- **Corrected a spine misidentification.** Item 32 was catalogued as
+  *Danger: Diabolik* (Mario Bava) — it's actually *Dazed and Confused*
+  (Richard Linklater, Criterion 336). Replaced the full record (title,
+  creator, year, runtime, country, writer, producer, scene, YouTube
+  link) rather than just the title.
+- **Re-sourced YouTube picks toward the Movieclips channel**, which is
+  far more reliably embeddable than the reuploads/fan edits used in the
+  first pass. Swapped in confirmed Movieclips (or, where Movieclips had
+  no clip, an official studio-channel upload) for: Citizen Kane,
+  Silence of the Lambs, Hedwig and the Angry Inch, Barton Fink,
+  GoodFellas, and 2001: A Space Odyssey (whose scene caption also
+  changed from "open the pod bay doors" to HAL's actual refusal line,
+  matching the new clip). Do the Right Thing and Dr. Strangelove were
+  already on confirmed Movieclips uploads and didn't need changing.
+  Left the foreign/arthouse titles (Dekalog, Seven Samurai, Throne of
+  Blood, Tokyo Story, 8½, Solaris, F for Fake, etc.) on their existing
+  picks — Movieclips generally has no coverage of those, so there was
+  nothing better to swap in; some "video unavailable" reports may
+  persist there.
+- **Left excerpts untouched** per Scott's note that he'll curate those
+  himself going forward.
+
+Verified: node --check on the data file and scene, a sanity script
+(item/duplicate-id/missing-field checks), clean vite build.
+
 ## 1.0.52 (2026-07-22)
 
 Scott, from a screenshot of the panel: "Ok, for the videos, embed the
