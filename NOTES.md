@@ -6,6 +6,40 @@ projects (The Secret World, A Manual of Perceptual Mechanics) moved into their o
 files, which are now the source of truth for that material going forward. See "project map"
 below for where things live.
 
+## 1.1.15 (2026-07-24)
+
+Scott, from another full-zoom screenshot after 1.1.14 shipped: "MOAR. Also,
+remove the director names from the films." Two fixes:
+
+- **MOAR font variety.** 1.1.14's font-*family* pools (Georgia vs Times vs
+  Palatino — all serif; -apple-system vs Verdana vs Trebuchet — all sans)
+  read as near-identical at rendered spine scale, so the shelf still felt
+  monotone. Replaced the plain font-string arrays with a "treatment" object
+  model: `treatment(font, opts)` bundles font-family + `weight` + `italic`
+  + `upper` (uppercase) + `tracking` (letter-spacing) into one unit.
+  `BOOK_TREATMENTS` (10 treatments spanning thin italic serif to
+  black/tracked-caps sans), `DISC_TREATMENTS` (5, always bold/uppercase —
+  movie packaging convention), `CD_TREATMENTS` (5, thin sans through
+  bold/tracked caps), `BOX_TREATMENT` (1 fixed, italic small-caps serif).
+  `pickTreatment(pool, seed)` hash-selects per item (same determinism
+  convention as color/height/finish); `setTitleFont(cx, t, size)` builds
+  the canvas font string and sets `cx.letterSpacing` where supported
+  (progressive enhancement — safe no-op in older Safari); `titleCase(text,
+  t)` applies the uppercase flag. Mixing weight/case/tracking on top of
+  family produces dramatically more distinct spines than family swaps
+  alone, even where the underlying fonts are visually similar.
+- **Removed director-name byline from films.** Real disc spines and case
+  fronts essentially never carry a director credit — that's a book/liner-
+  notes convention, not a Blu-ray/DVD one, and it was the one clearly
+  synthetic-looking detail once everything else got a real-media pass.
+  `makeDiscSpineTexture` no longer takes a `creator` param or draws a
+  subtitle line at all; `buildItems()`'s call site updated to match; the
+  panel's `panelCreator.textContent` now blanks itself for `dvd`/`bluray`
+  types specifically, leaving the byline intact for books, CDs, and the
+  divination boxes.
+
+Verified: `node --check` clean, clean `npx vite build`.
+
 ## 1.1.14 (2026-07-24)
 
 Second round on the same "visual sameness" complaint, after the disc/CD

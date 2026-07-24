@@ -360,41 +360,69 @@ function wrapSpineText(text, maxChars) {
 // risk a FOUT-in-a-texture bug — the canvas snapshots synchronously, so if
 // the webfont hasn't finished loading yet the fallback gets baked in
 // permanently instead of swapping in later like real DOM text would. So
-// the variety comes entirely from curated *system* font stacks, picked
-// per-item (via hash01, so a given spine always lands on the same face
-// across reloads) from a pool tuned per material: books get the widest
-// spread (serif, sans, condensed, even a monospace outlier — different
-// publishers, different decades of house style), Blu-rays lean bold/
-// condensed (movie packaging), CDs stay closer to clean and thin (the
-// original readability ask) but pick among a few close relatives rather
-// than one single face, and the two divination boxes share one fixed
-// serif suited to old esoteric-text design (only two of them — variety
-// isn't the point there, distinctness from books/discs/CDs is).
-const BOOK_FONTS = [
-  'Georgia, "Times New Roman", Times, serif',
-  '"Times New Roman", Times, Georgia, serif',
-  '-apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif',
-  'Verdana, Geneva, sans-serif',
-  '"Trebuchet MS", Helvetica, sans-serif',
-  '"Courier New", Courier, monospace',
-  'Palatino, "Palatino Linotype", Georgia, serif',
-  '"Arial Narrow", Arial, sans-serif',
+// the variety comes entirely from curated *system* font stacks.
+//
+// First pass (still 2026-07-24) just swapped which font-family string got
+// used per item — but at the size a spine actually renders at, "Georgia"
+// vs "Times New Roman" vs "Palatino" all read as "a serif," and
+// "-apple-system" vs "Verdana" vs "Trebuchet MS" all read as "a sans."
+// Scott, looking at a full-zoom screenshot: "MOAR." Right diagnosis: family
+// alone wasn't doing the work — real shelves get their variety mostly from
+// weight and case (a bold all-caps thriller next to a thin italic literary
+// title next to a wide-tracked academic serif), not from subtly different
+// serif geometries. So each pool below is now a set of *treatments*
+// (family + weight + italic + upper/title-case + letter-tracking) rather
+// than just a font-family list, picked per-item (via hash01, so a given
+// spine always lands on the same face across reloads) from a pool tuned
+// per material: books get the widest spread — serif, sans, a monospace
+// outlier, thin to black weight, plain and tracked-caps — the way
+// different publishers' and decades' house styles actually clash on a
+// real shelf; Blu-rays lean bold/condensed/all-caps (movie poster
+// packaging); CDs stay closer to clean (the original readability ask)
+// but range from thin to a punchier tracked-caps treatment for the
+// louder genres; the two divination boxes share one fixed tracked-caps
+// serif treatment suited to old esoteric-text/grimoire design.
+function treatment(font, opts = {}) {
+  return { font, weight: 400, italic: false, upper: false, tracking: 0, ...opts };
+}
+const BOOK_TREATMENTS = [
+  treatment('Georgia, "Times New Roman", Times, serif'),
+  treatment('"Times New Roman", Times, Georgia, serif', { italic: true }),
+  treatment('-apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif', { weight: 300 }),
+  treatment('Verdana, Geneva, sans-serif', { weight: 700, upper: true, tracking: 1.5 }),
+  treatment('"Trebuchet MS", Helvetica, sans-serif', { italic: true }),
+  treatment('"Courier New", Courier, monospace', { upper: true, tracking: 1 }),
+  treatment('Palatino, "Palatino Linotype", Georgia, serif', { italic: true }),
+  treatment('"Arial Narrow", Arial, sans-serif', { weight: 700, upper: true }),
+  treatment('"Arial Black", Arial, sans-serif', { weight: 900, upper: true, tracking: 0.5 }),
+  treatment('Georgia, serif', { weight: 700, upper: true, tracking: 2 }),
 ];
-const BOX_FONT = 'Palatino, "Palatino Linotype", Georgia, serif';
-const DISC_FONTS = [
-  '"Arial Narrow", Arial, sans-serif',
-  'Arial, Helvetica, sans-serif',
-  '"Trebuchet MS", Helvetica, sans-serif',
-  'Georgia, "Times New Roman", Times, serif',
+const BOX_TREATMENT = treatment('Palatino, "Palatino Linotype", Georgia, serif', { italic: true, upper: true, tracking: 2 });
+const DISC_TREATMENTS = [
+  treatment('"Arial Narrow", Arial, sans-serif', { weight: 900, upper: true, tracking: 1 }),
+  treatment('Arial, Helvetica, sans-serif', { weight: 700, upper: true, tracking: 0.5 }),
+  treatment('"Trebuchet MS", Helvetica, sans-serif', { weight: 700, upper: true }),
+  treatment('Georgia, "Times New Roman", Times, serif', { weight: 700, upper: true, tracking: 1.5 }),
+  treatment('"Arial Black", Arial, sans-serif', { weight: 900, upper: true, tracking: 1 }),
 ];
-const CD_FONTS = [
-  '-apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif',
-  'Verdana, Geneva, sans-serif',
-  '"Trebuchet MS", Helvetica, sans-serif',
+const CD_TREATMENTS = [
+  treatment('-apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif', { weight: 300 }),
+  treatment('Verdana, Geneva, sans-serif'),
+  treatment('"Trebuchet MS", Helvetica, sans-serif', { weight: 700, upper: true, tracking: 1 }),
+  treatment('"Arial Narrow", Arial, sans-serif', { weight: 700, upper: true }),
+  treatment('Georgia, "Times New Roman", Times, serif', { italic: true }),
 ];
-function pickFont(fonts, seed) {
-  const idx = Math.floor(hash01(seed, 'font') * fonts.length);
-  return fonts[Math.min(idx, fonts.length - 1)];
+function pickTreatment(pool, seed) {
+  const idx = Math.floor(hash01(seed, 'font') * pool.length);
+  return pool[Math.min(idx, pool.length - 1)];
+}
+// Applies a treatment to the given size; caller still owns save/restore.
+function setTitleFont(cx, t, size) {
+  cx.font = `${t.italic ? 'italic ' : ''}${t.weight} ${size}px ${t.font}`;
+  if ('letterSpacing' in cx) cx.letterSpacing = `${t.tracking}px`;
+}
+function titleCase(text, t) {
+  return t.upper ? text.toUpperCase() : text;
 }
 function relLuminance(hex) {
   const col = new THREE.Color(hex);
@@ -490,7 +518,7 @@ function makeSpineTexture(baseColor, title, creator, isBox) {
   const inkTitle = lum > 0.55 ? 'rgba(32,26,20,0.88)' : 'rgba(240,236,224,0.92)';
   const inkCreator = lum > 0.55 ? 'rgba(32,26,20,0.6)' : 'rgba(240,236,224,0.62)';
 
-  const font = isBox ? BOX_FONT : pickFont(BOOK_FONTS, title);
+  const t = isBox ? BOX_TREATMENT : pickTreatment(BOOK_TREATMENTS, title);
 
   cx.save();
   cx.translate(c.width / 2, c.height / 2);
@@ -498,13 +526,14 @@ function makeSpineTexture(baseColor, title, creator, isBox) {
   cx.textAlign = 'center';
   cx.textBaseline = 'middle';
   cx.fillStyle = inkTitle;
-  cx.font = `400 34px ${font}`;
+  setTitleFont(cx, t, 34);
   const lines = wrapSpineText(title, 26).slice(0, 3);
   const lineH = 40;
   const startY = -((lines.length - 1) * lineH) / 2 - (creator ? 14 : 0);
-  lines.forEach((line, i) => cx.fillText(line, 0, startY + i * lineH));
+  lines.forEach((line, i) => cx.fillText(titleCase(line, t), 0, startY + i * lineH));
   if (creator) {
-    cx.font = `italic 300 22px ${font}`;
+    cx.font = `italic 300 22px ${t.font}`;
+    if ('letterSpacing' in cx) cx.letterSpacing = '0px';
     cx.fillStyle = inkCreator;
     cx.fillText(creator.split(' · ')[0].split(' (')[0], 0, startY + lines.length * lineH + 6);
   }
@@ -527,7 +556,16 @@ function cubbyTop(row) { return TOTAL_H / 2 - FRAME_T - (row - 1) * (CUBBY_H + F
 // single thin accent bar (hue varies per title — never a specific studio's
 // real branding), echoing the small colored spine labels real disc sets
 // sometimes carry.
-function makeDiscSpineTexture(baseColor, title, creator) {
+//
+// No director byline: Scott, 2026-07-24, same conversation as the "MOAR"
+// font-variety request — "remove the director names from the films."
+// Fair correction: real disc spines essentially never carry a director
+// credit (that's back-of-case/booklet information), unlike a book spine
+// where the author's name is the whole point. The panel still shows
+// writer/producer in its detail lines when the catalog has them; this was
+// the one redundant, unrealistic byline sitting where a director's name
+// never actually appears.
+function makeDiscSpineTexture(baseColor, title) {
   const c = document.createElement('canvas');
   c.width = 80; c.height = 720;
   const cx = c.getContext('2d');
@@ -557,10 +595,7 @@ function makeDiscSpineTexture(baseColor, title, creator) {
 
   const lum = relLuminance(baseColor);
   const ink = lum > 0.55 ? 'rgba(26,22,18,0.9)' : 'rgba(238,234,222,0.92)';
-  const inkSub = lum > 0.55 ? 'rgba(26,22,18,0.58)' : 'rgba(238,234,222,0.58)';
-  // Bold rather than the books' regular weight — movie packaging leans
-  // bold/condensed far more than book spines do.
-  const font = pickFont(DISC_FONTS, title);
+  const t = pickTreatment(DISC_TREATMENTS, title);
 
   cx.save();
   cx.translate(c.width / 2, c.height / 2);
@@ -568,16 +603,11 @@ function makeDiscSpineTexture(baseColor, title, creator) {
   cx.textAlign = 'center';
   cx.textBaseline = 'middle';
   cx.fillStyle = ink;
-  cx.font = `700 32px ${font}`;
+  setTitleFont(cx, t, 32);
   const lines = wrapSpineText(title, 24).slice(0, 3);
   const lineH = 38;
-  const startY = -((lines.length - 1) * lineH) / 2 - (creator ? 13 : 0);
-  lines.forEach((line, i) => cx.fillText(line, 0, startY + i * lineH));
-  if (creator) {
-    cx.font = `italic 400 20px ${font}`;
-    cx.fillStyle = inkSub;
-    cx.fillText(creator.split(' · ')[0].split(' (')[0], 0, startY + lines.length * lineH + 6);
-  }
+  const startY = -((lines.length - 1) * lineH) / 2;
+  lines.forEach((line, i) => cx.fillText(titleCase(line, t), 0, startY + i * lineH));
   cx.restore();
 
   return new THREE.CanvasTexture(c);
@@ -625,20 +655,21 @@ function makeCdSpineTexture(baseColor, artist, album) {
   const lum = relLuminance(baseColor);
   const ink = lum > 0.55 ? 'rgba(26,22,18,0.88)' : 'rgba(238,234,222,0.92)';
   const inkSub = lum > 0.55 ? 'rgba(26,22,18,0.58)' : 'rgba(238,234,222,0.62)';
-  const font = pickFont(CD_FONTS, album);
+  const t = pickTreatment(CD_TREATMENTS, album);
 
   cx.save();
   cx.translate(c.width / 2, c.height / 2);
   cx.rotate(-Math.PI / 2);
   cx.textAlign = 'center';
   cx.textBaseline = 'middle';
-  cx.font = `400 30px ${font}`;
+  setTitleFont(cx, t, 30);
   cx.fillStyle = ink;
   const albumLines = wrapSpineText(album, 24).slice(0, 2);
   const lineH = 34;
   const startY = -((albumLines.length - 1) * lineH) / 2 - 12;
-  albumLines.forEach((line, i) => cx.fillText(line, 0, startY + i * lineH));
-  cx.font = `italic 300 19px ${font}`;
+  albumLines.forEach((line, i) => cx.fillText(titleCase(line, t), 0, startY + i * lineH));
+  cx.font = `italic 300 19px ${t.font}`;
+  if ('letterSpacing' in cx) cx.letterSpacing = '0px';
   cx.fillStyle = inkSub;
   cx.fillText(artist, 0, startY + albumLines.length * lineH + 10);
   cx.restore();
@@ -1045,7 +1076,7 @@ function buildItems(preview) {
         const tex = isCd
           ? makeCdSpineTexture(color, it.creator, it.title)
           : isDisc
-          ? makeDiscSpineTexture(color, it.title, it.creator)
+          ? makeDiscSpineTexture(color, it.title)
           : makeSpineTexture(color, it.title, it.creator, isBox);
         // Finish variety — most book spines are a matte cloth/paper
         // binding, a minority (~1 in 5) a glossier trade-paperback
@@ -1391,7 +1422,10 @@ export function createLibrary(container, { preview = false } = {}) {
     panel.querySelector('#library-panel-kind').textContent =
       ({ book: 'Book', dvd: 'DVD', bluray: 'Blu-ray', divination_box: 'Divination deck', cd: 'Album' })[it.type] || it.type;
     panelTitle.textContent = it.title;
-    panelCreator.textContent = it.creator || '';
+    // No director byline for films: Scott, 2026-07-24, "remove the director names from the films" —
+    // real disc packaging doesn't carry a director credit on the spine or the case front, so the
+    // panel shouldn't manufacture one either. Books/CDs/boxes keep their creator line.
+    panelCreator.textContent = (it.type === 'dvd' || it.type === 'bluray') ? '' : (it.creator || '');
 
     // Bibliographic/filmographic detail lines — only the fields a given
     // item actually has (books carry isbn13/publisher/pages, films carry
