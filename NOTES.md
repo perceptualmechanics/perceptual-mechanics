@@ -6,6 +6,34 @@ projects (The Secret World, A Manual of Perceptual Mechanics) moved into their o
 files, which are now the source of truth for that material going forward. See "project map"
 below for where things live.
 
+## 1.1.12 (2026-07-24)
+
+Two follow-ups from Scott after the spoiler-fix session: films should fall
+back to their official trailer when no non-spoiler scene clip exists on
+YouTube (now a documented standing rule — see src/text/library.js header),
+and the CD rack's interaction model got fully reworked. Scott: "let's redo
+the CD info. Lose the tooltip, open a panel, and — shocker!! — put either
+a music video or a live performance that's available on YouTube. And I
+don't think we need the Apple Music/Spotify links any more."
+
+- Removed the click-to-pin `#cd-tooltip` entirely (positioning logic,
+  Apple Music/Spotify search-link generation, all of it)
+- CDs now route through the same `#library-panel` open/swap/close code
+  path books and films already use — no new architecture, just two small
+  hooks: a `cd` entry in the panel's kind-label map and a caption label
+  swap ("video" vs. "pivotal scene")
+- Researched and added a real `video` (short description) + `youtube`
+  (verified URL) pair for all 114 albums in cdRack.js — official music
+  video where one exists, otherwise a genuine live performance or
+  well-attested archival recording; no search-link fallback anymore
+- Extracted `closePanel()` as a shared helper (was duplicated 4x across
+  the close button, click-away, and Escape handlers)
+
+Verified: `node --check` clean on both changed files, a diagnostic script
+confirming zero duplicate IDs and zero missing/malformed YouTube URLs
+across all 114 CD entries, clean `npx vite build`, and a grep sweep
+confirming no leftover references to the removed tooltip/search-link code.
+
 ## 1.1.11 (2026-07-23)
 
 Quick clean/semantic/a11y check requested after the shorts.html build

@@ -67,10 +67,19 @@ const TOTAL_H = ROWS * CUBBY_H + (ROWS + 1) * FRAME_T;
 // camera, drag/zoom, and raycast as every other spine on the shelf — nothing
 // about the shelf itself changed to make room for them.
 //
-// Interaction is still lighter than the books, though: no click-to-panel —
-// a click/tap surfaces a small tooltip with the artist, album, and Apple
-// Music/Spotify search-links, nothing else (see the `cd-tooltip` DOM element
-// and its branch in onContainerClick, below).
+// Interaction, 2026-07-24 (Scott: "let's redo the CD info. Lose the
+// tooltip, open a panel, and put either a music video or a live
+// performance that's available on YouTube. I don't think we need the
+// Apple Music/Spotify links any more."): the separate click-to-pin
+// tooltip is gone. A CD click now falls straight through to the exact
+// same #library-panel every book and film already uses — populatePanel()
+// (below) needed no CD-specific branch at all, since it already embedded
+// whatever `youtube`/`scene` a film carried; CDs just carry the same two
+// fields now, pointing at a music video or live performance instead of a
+// film scene (see cdRack.js for where those live, and its header for the
+// research/sourcing note). No search-links, no artist/album-only tooltip
+// markup to maintain — the kind label just reads "Album" instead of
+// "Book"/"Blu-ray".
 
 // Muted, curated palette — deliberately not a rainbow of random hues, so
 // the shelf reads as "someone's actual bookshelf" rather than a bar chart.
@@ -83,10 +92,6 @@ const PALETTE = [
 // they read as distinct objects on the real shelf (Kim Krans' two boxes),
 // not just thicker books.
 const BOX_PALETTE = ['#141428', '#1c1830', '#101018'];
-
-// Shared between the #cd-tooltip CSS (max-width) and positionCdTooltip's
-// edge-clamping math below, so the two can't quietly drift out of sync.
-const CD_TOOLTIP_MAX_W = 230;
 
 // Cheap deterministic string hash (djb2) — used so a given title always
 // gets the same simulated thickness/color/height on every visit, rather
@@ -496,50 +501,29 @@ function makeCdSpineTexture(baseColor, artist, album) {
 
 // Distributes the 114 CDs across the same 8 cubbies the books/films already
 // live in (row-major reading order), in catalog order so the genre lanes
-// cdRack.js was built in mostly stay together within a cubby. Scott, after
-// seeing them render as one tidy block at the end of each cubby: "mix up the
-// order slightly so it looks like a slightly disorganized bookshelf" — so
-// rather than appending (pos = existing max + 1, 2, 3...), each CD is
-// slotted in among the existing books instead of after all of them.
+// cdRack.js was built in mostly stay together within a cubby, appended
+// after whatever's already there (pos = existing max + 1, 2, 3...).
 //
-// It turns out library.js's pos numbers aren't a dense 0..N sequence —
-// several cubbies have an early cluster (0-10) and a late cluster (100+),
-// a gap left over from whenever those items were appended in a separate
-// batch. Scattering CDs by raw pos value filled that dead numeric gap with
-// a solid run of 8-10 CDs in a row — a block again, just relocated to the
-// middle. Fixed by working in *rank* space instead of raw pos: each CD
-// gets a fractional rank relative to the sorted existing books, which
-// rankToPos() below maps onto the real book pos values by interpolation
-// — so CDs land proportionally to where books actually are, not where
-// empty pos numbers happen to be.
-//
-// First pass at the rank itself gave each CD its own even-width band
-// (rank = j*bandW + jitter) so every one landed guaranteed-scattered —
-// but evenly-spaced-plus-jitter reads as its own pattern (near-perfect
-// book/CD/book/CD alternation), which Scott flagged as "a different kind
-// of pattern" rather than mess. Switched to a plain random rank per CD
-// (hash01 over the full range, no forced spacing) — real disorder has
-// clumps and gaps, not a rhythm.
+// This briefly scattered CDs among the books for a "slightly disorganized
+// bookshelf" look (Scott, 2026-07-23 — tried raw-pos scatter, then
+// rank-space scatter with stratified bands, then plain random rank; see
+// git history for that whole detour), then Scott asked to undo it:
+// "group the books together and the Blurays/CDs together." So CDs are
+// back to a plain sequential append per cubby, and buildItems() below
+// also now pulls the shelf's existing Blu-rays out of their photographed,
+// interspersed positions into that same trailing block, via a
+// group-before-pos sort instead of a straight pos sort.
 // Returns items already shaped like a libraryItems entry (type/title/creator/
-// row/col/pos) so buildItems can treat them identically — the CD-specific
-// artist/album fields ride along too, for the tooltip.
-function rankToPos(sortedPos, rank) {
-  const n = sortedPos.length;
-  if (n === 0) return rank;
-  const idx = Math.floor(rank);
-  const frac = rank - idx;
-  if (idx >= n - 1) return sortedPos[n - 1] + frac + (idx - (n - 1));
-  return sortedPos[idx] + frac * (sortedPos[idx + 1] - sortedPos[idx]);
-}
-
+// row/col/pos/scene/youtube) so buildItems and the shared panel machinery
+// (populatePanel, in createLibrary below) can treat them identically to a
+// book or film — `scene`/`youtube` here point at a music video or live
+// performance instead of a film scene, but it's the same two fields.
 function placeCdsInCubbies() {
-  const byKey = new Map();
+  const maxPos = new Map();
   libraryItems.forEach(it => {
     const key = `${it.row}-${it.col}`;
-    if (!byKey.has(key)) byKey.set(key, []);
-    byKey.get(key).push(it.pos);
+    maxPos.set(key, Math.max(maxPos.get(key) || 0, it.pos));
   });
-  byKey.forEach(arr => arr.sort((a, b) => a - b));
 
   const cubbies = [];
   for (let row = 1; row <= COLS; row++) {
@@ -550,21 +534,29 @@ function placeCdsInCubbies() {
   const placed = [];
   cubbies.forEach(({ row, col }, i) => {
     const key = `${row}-${col}`;
-    const sortedPos = byKey.get(key) || [];
-    const cds = cdRackItems.slice(i * perCubby, (i + 1) * perCubby);
-    // Plain random rank per CD (own hash, full range, no forced spacing),
-    // then mapped to an actual pos via rankToPos so it follows real book
-    // density instead of raw pos numbers.
-    cds.forEach(cd => {
-      const rank = hash01(`${cd.artist}|${cd.album}`, 'shelfmix') * (sortedPos.length + 1.5);
-      const pos = rankToPos(sortedPos, rank);
+    let pos = maxPos.get(key) || 0;
+    cdRackItems.slice(i * perCubby, (i + 1) * perCubby).forEach(cd => {
+      pos += 1;
       placed.push({
         id: `cd-${cd.id}`, type: 'cd', title: cd.album, creator: cd.artist,
         artist: cd.artist, album: cd.album, row, col, pos,
+        scene: cd.video, youtube: cd.youtube,
       });
     });
   });
   return placed;
+}
+
+// Books (plus the two divination boxes, which are book-shaped objects on
+// the shelf) are "the books"; Blu-rays and CDs are "the media." Scott,
+// 2026-07-24: "group the books together and the Blurays/CDs together."
+// Sorting by group before pos (see buildItems below) pulls the Blu-rays
+// out of their photographed, interspersed shelf order and puts the CDs
+// (already trailing per-cubby via placeCdsInCubbies above) alongside them,
+// into one contiguous block per cubby — each group keeps its own internal
+// order, only the two groups themselves stop interleaving.
+function shelfGroup(type) {
+  return type === 'bluray' || type === 'cd' ? 1 : 0;
 }
 
 // ─── Shelf frame ────────────────────────────────────────────────────────────
@@ -845,7 +837,7 @@ function buildItems(preview) {
   const floorGap = 0.025;
 
   byCubby.forEach(items => {
-    items.sort((a, b) => a.pos - b.pos);
+    items.sort((a, b) => shelfGroup(a.type) - shelfGroup(b.type) || a.pos - b.pos);
     const { row, col } = items[0];
     // Transposed for the vertical shelf: old row (1-2) now walks the new
     // 2-wide axis, old col (1-4) now walks the new 4-tall axis — a clean
@@ -1129,37 +1121,6 @@ export function createLibrary(container, { preview = false } = {}) {
       @media (max-width: 700px) {
         #library-panel { width: 88%; padding: 4rem 1.3rem 2rem; }
       }
-      /* CD rack tooltip — deliberately much lighter than the book panel:
-         no kind/details/note/cross-links, just artist, album, and the two
-         search-links. Click/tap only (Scott, 2026-07-23: "forget the hover
-         tooltip, change to onclick") — one click shows it, pinned open
-         until the next click anywhere — see showCdTooltip/hideCdTooltip
-         and onContainerClick below. */
-      #cd-tooltip {
-        position: fixed; z-index: 320; pointer-events: auto;
-        background: #0a0806; border: 1px solid rgba(230,215,180,0.25);
-        padding: 0.7rem 0.95rem; max-width: ${CD_TOOLTIP_MAX_W}px;
-        font-family: 'Times New Roman', serif;
-        color: rgba(235,228,210,0.92); font-size: 0.82rem; line-height: 1.5;
-        box-shadow: 0 6px 22px rgba(0,0,0,0.45);
-      }
-      #cd-tooltip[hidden] { display: none; }
-      #cd-tooltip .cd-tooltip-album {
-        display: block; margin-bottom: 0.15rem; font-style: italic;
-        color: rgba(245,238,222,0.95);
-      }
-      #cd-tooltip .cd-tooltip-artist {
-        display: block; margin-bottom: 0.55rem;
-        color: rgba(220,210,195,0.72); font-size: 0.78rem;
-      }
-      #cd-tooltip .cd-tooltip-links { display: flex; gap: 0.8rem; }
-      #cd-tooltip .cd-tooltip-links a {
-        color: rgba(230,180,95,0.9); text-decoration: none;
-        font-size: 0.72rem; letter-spacing: 0.05em; text-transform: uppercase;
-        border-bottom: 1px dotted rgba(230,180,95,0.4);
-      }
-      #cd-tooltip .cd-tooltip-links a:hover,
-      #cd-tooltip .cd-tooltip-links a:focus { color: rgba(240,195,110,1); outline: none; }
     `;
     document.head.appendChild(style);
   }
@@ -1172,7 +1133,7 @@ export function createLibrary(container, { preview = false } = {}) {
 
     hint = document.createElement('p');
     hint.id = 'library-hint';
-    hint.innerHTML = 'drag to orbit &nbsp;·&nbsp; scroll to zoom &nbsp;·&nbsp; click a spine to read &nbsp;·&nbsp; click a CD for links';
+    hint.innerHTML = 'drag to orbit &nbsp;·&nbsp; scroll to zoom &nbsp;·&nbsp; click a spine to read &nbsp;·&nbsp; click a CD to watch';
     hint.setAttribute('aria-hidden', 'true');
     document.body.appendChild(hint);
 
@@ -1245,67 +1206,11 @@ export function createLibrary(container, { preview = false } = {}) {
     });
   }
 
-  // ─── CD rack tooltip ─────────────────────────────────────────────────────
-  let cdTooltip = null;
-  if (!preview) {
-    cdTooltip = document.createElement('div');
-    cdTooltip.id = 'cd-tooltip';
-    // role="status" (a passive live region) was wrong here — this holds
-    // real actionable links, not an announcement, so it gets a dialog role
-    // plus a per-album aria-label (set in showCdTooltip) instead.
-    cdTooltip.setAttribute('role', 'dialog');
-    cdTooltip.hidden = true;
-    document.body.appendChild(cdTooltip);
-  }
-
-  function cdSearchUrls(cd) {
-    const q = `${cd.artist} ${cd.album}`;
-    return {
-      apple: `https://music.apple.com/search?term=${encodeURIComponent(q)}`,
-      spotify: `https://open.spotify.com/search/${encodeURIComponent(q)}`,
-    };
-  }
-
-  // Clamped near the cursor, flipping to the other side of the pointer
-  // rather than running off the edge of the screen — same beat as the
-  // book panel's from-left/from-right flip, at tooltip scale.
-  function positionCdTooltip(clientX, clientY) {
-    if (!cdTooltip) return;
-    const pad = 16;
-    const rectW = CD_TOOLTIP_MAX_W, rectH = 96; // rectH is a rough estimate — no fixed-height CSS to match
-    let left = clientX + pad;
-    let top = clientY + pad;
-    if (left + rectW > window.innerWidth) left = clientX - rectW - pad;
-    if (top + rectH > window.innerHeight) top = clientY - rectH - pad;
-    cdTooltip.style.left = `${Math.max(8, left)}px`;
-    cdTooltip.style.top = `${Math.max(8, top)}px`;
-  }
-
-  function showCdTooltip(cd, clientX, clientY) {
-    if (!cdTooltip) return;
-    cdTooltip.setAttribute('aria-label', `${cd.album} by ${cd.artist} — search links`);
-    const { apple, spotify } = cdSearchUrls(cd);
-    cdTooltip.innerHTML = `
-      <span class="cd-tooltip-album">${escapeHtml(cd.album)}</span>
-      <span class="cd-tooltip-artist">${escapeHtml(cd.artist)}</span>
-      <span class="cd-tooltip-links">
-        <a href="${apple}" target="_blank" rel="noopener noreferrer">Apple Music</a>
-        <a href="${spotify}" target="_blank" rel="noopener noreferrer">Spotify</a>
-      </span>`;
-    cdTooltip.hidden = false;
-    positionCdTooltip(clientX, clientY);
-  }
-
-  function hideCdTooltip() {
-    if (cdTooltip) cdTooltip.hidden = true;
-    pinnedCd = null;
-  }
-
-  // Shared by all four ways the book panel can close (✕ button, outside
-  // click, Escape, and a CD click landing while it's open) — previously
-  // each site repeated the same three statements. Focus management stays
-  // with each caller, since not every close should move focus (the
-  // in-place item swap, for one, deliberately doesn't call this at all).
+  // Shared by all three ways the panel can close (✕ button, outside click,
+  // Escape) — previously each site repeated the same three statements.
+  // Focus management stays with each caller, since not every close should
+  // move focus (the in-place item swap, for one, deliberately doesn't call
+  // this at all).
   function closePanel() {
     if (!panel) return;
     panel.classList.remove('open');
@@ -1316,7 +1221,7 @@ export function createLibrary(container, { preview = false } = {}) {
   // ─── Hover/click raycast, screen-space mouse (matches egg/sphere) ───────
   const raycaster = new THREE.Raycaster();
   const mouse = new THREE.Vector2();
-  let hovered = null, selected = null, pinnedCd = null;
+  let hovered = null, selected = null;
   let onContainerMouseMove = null, onContainerClick = null, onContainerMouseLeave = null;
 
   // Fills the (already-open, or about-to-open) panel with one item's
@@ -1325,7 +1230,7 @@ export function createLibrary(container, { preview = false } = {}) {
   // same panel without duplicating this logic.
   function populatePanel(it) {
     panel.querySelector('#library-panel-kind').textContent =
-      ({ book: 'Book', dvd: 'DVD', bluray: 'Blu-ray', divination_box: 'Divination deck' })[it.type] || it.type;
+      ({ book: 'Book', dvd: 'DVD', bluray: 'Blu-ray', divination_box: 'Divination deck', cd: 'Album' })[it.type] || it.type;
     panelTitle.textContent = it.title;
     panelCreator.textContent = it.creator || '';
 
@@ -1357,7 +1262,9 @@ export function createLibrary(container, { preview = false } = {}) {
     noteEl.innerHTML = '';
 
     // Content area, above the bibliographic details: a film gets its
-    // pivotal scene embedded (not just linked), a book gets its excerpt
+    // pivotal scene embedded (not just linked), a CD gets a music video or
+    // live performance the same way (2026-07-24: CDs moved onto this same
+    // panel — see the CDs header comment above), a book gets its excerpt
     // (plain text, not a blockquote, sits above the details block per
     // Scott's request) plus a cover thumbnail when a cover image is
     // publicly available via Open Library's covers API (keyed off the
@@ -1380,7 +1287,8 @@ export function createLibrary(container, { preview = false } = {}) {
         iframe.loading = 'lazy';
         videoEl.appendChild(iframe);
       }
-      sceneEl.innerHTML = it.scene ? `pivotal scene: ${renderLinkedField(it.id, 'scene', it.scene)}` : '';
+      const captionLabel = it.type === 'cd' ? 'video' : 'pivotal scene';
+      sceneEl.innerHTML = it.scene ? `${captionLabel}: ${renderLinkedField(it.id, 'scene', it.scene)}` : '';
     }
 
     excerptEl.innerHTML = it.excerpt ? `“${renderLinkedField(it.id, 'excerpt', it.excerpt)}”` : '';
@@ -1426,16 +1334,11 @@ export function createLibrary(container, { preview = false } = {}) {
 
     onContainerMouseLeave = () => {
       if (hovered) { hovered.scale.set(1, 1, 1); hovered = null; }
-      if (!pinnedCd) hideCdTooltip();
       container.style.cursor = 'default';
     };
     container.addEventListener('mouseleave', onContainerMouseLeave);
 
     onContainerClick = e => {
-      // Reset any pinned CD tooltip on every click; the CD branch below
-      // re-pins it if the click actually landed on a CD.
-      hideCdTooltip();
-
       const rect = container.getBoundingClientRect();
       mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
       mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
@@ -1448,18 +1351,6 @@ export function createLibrary(container, { preview = false } = {}) {
         if (hovered) hovered.scale.set(1, 1, 1);
         hovered = hitMesh;
         hovered.scale.set(1.04, 1.02, 1.15);
-      }
-
-      // CDs never open the book panel — same shelf, same raycast, but a
-      // click/tap on one just pins the tooltip (artist, album, search
-      // links) open until the next click anywhere. See the CDs header
-      // comment above for why this stayed a separate, lighter interaction
-      // even after CDs moved into the same cubbies as the books.
-      if (it && it.type === 'cd') {
-        if (panel.classList.contains('open')) closePanel();
-        pinnedCd = it;
-        showCdTooltip(it, e.clientX, e.clientY);
-        return;
       }
 
       if (panel.classList.contains('open')) {
@@ -1597,10 +1488,6 @@ export function createLibrary(container, { preview = false } = {}) {
   });
 
   const escapeClose = !preview ? bindEscapeClose(() => {
-    // The pinned CD tooltip had no keyboard dismissal at all — Escape only
-    // ever checked the book panel, so a tooltip left pinned open (it stays
-    // up until the next click anywhere) was invisible to keyboard-only use.
-    if (pinnedCd) hideCdTooltip();
     if (panel && panel.classList.contains('open')) {
       closePanel();
       container.focus();
@@ -1625,7 +1512,6 @@ export function createLibrary(container, { preview = false } = {}) {
       if (caption) caption.remove();
       if (hint) hint.remove();
       if (panel) panel.remove();
-      if (cdTooltip) cdTooltip.remove();
       renderer.domElement.remove();
     },
   };
