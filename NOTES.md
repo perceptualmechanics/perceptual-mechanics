@@ -6,6 +6,34 @@ projects (The Secret World, A Manual of Perceptual Mechanics) moved into their o
 files, which are now the source of truth for that material going forward. See "project map"
 below for where things live.
 
+## 1.1.13 (2026-07-24)
+
+Scott, from a screenshot of the live shelf: "can we make the blurays and
+the CDs a bit more visually distinct from one another? there's a lot of
+visual sameness happening." Root cause: DVDs/Blu-rays were being drawn
+through makeSpineTexture() — the exact same book-texture function, foil
+caps and embossed bands and all — pulling from the same 12-color book
+PALETTE, and CDs' own thinner texture was *also* drawing from that book
+PALETTE. So a cubby's "media block" was really just a thinner smear of
+the same colors as its books, not a visually distinct material.
+
+- New `DISC_PALETTE` (narrow near-black range) and `CD_PALETTE` (pale
+  jewel-case-card tones) — each type now has its own restricted palette
+  instead of sharing the books' 12-color PALETTE
+- New `makeDiscSpineTexture()` for DVDs/Blu-rays: skips the dye-wash/
+  embossed-band treatment entirely, adds a tight hard-plastic specular
+  streak and a single per-title accent-color bar instead — reads as a
+  uniform block of glossy disc cases, the way a real disc shelf does,
+  rather than more book spines in darker colors
+  `makeCdSpineTexture()` gets a thin prismatic sliver near one edge —
+  the reflective disc itself just visible through the jewel-case spine
+- Finish/material pass: discs and CDs no longer roll into the books'
+  ~1-in-5 "glossy trade paperback" dice roll — they're always glossy,
+  with their own roughness/metalness bands (discs shinier and more
+  metallic than CDs, both well above any book)
+
+Verified: `node --check` clean, clean `npx vite build`.
+
 ## 1.1.12 (2026-07-24)
 
 Two follow-ups from Scott after the spoiler-fix session: films should fall

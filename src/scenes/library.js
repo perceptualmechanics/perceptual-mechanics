@@ -93,6 +93,23 @@ const PALETTE = [
 // not just thicker books.
 const BOX_PALETTE = ['#141428', '#1c1830', '#101018'];
 
+// Scott, 2026-07-24 (screenshot of the shelf): "can we make the blurays and
+// the CDs a bit more visually distinct from one another? there's a lot of
+// visual sameness happening." Root cause: DVDs/Blu-rays were drawn through
+// the exact same makeSpineTexture() as books (foil caps, embossed bands,
+// the same 12-color PALETTE) — only their box dimensions differed — and
+// CDs, while already on their own thinner texture, drew from that same
+// PALETTE too, so a cubby's "media block" was just a thinner smear of the
+// same colors as its books. Fixed by giving discs and CDs their own
+// narrow, near-monochrome palettes plus their own texture treatment (see
+// makeDiscSpineTexture/makeCdSpineTexture below), so each material reads
+// as a distinct physical object: matte varied-color cloth binding for
+// books, uniform glossy near-black plastic cases for the Blu-rays (real
+// disc shelves are famously almost all one color, unlike a bookshelf),
+// pale jewel-case paper for the CDs.
+const DISC_PALETTE = ['#0d0f16', '#10141f', '#141013', '#0c1119'];
+const CD_PALETTE = ['#e8e3d4', '#dcd6c6', '#cfc9b8', '#e2ddd0'];
+
 // Cheap deterministic string hash (djb2) — used so a given title always
 // gets the same simulated thickness/color/height on every visit, rather
 // than reshuffling the shelf each reload.
@@ -455,13 +472,81 @@ function makeSpineTexture(baseColor, title, creator, isBox) {
 function cubbyLeft(col) { return -TOTAL_W / 2 + FRAME_T + (col - 1) * (CUBBY_W + FRAME_T); }
 function cubbyTop(row) { return TOTAL_H / 2 - FRAME_T - (row - 1) * (CUBBY_H + FRAME_T); }
 
+// Canvas-drawn Blu-ray/DVD spine — deliberately near-featureless next to a
+// book. A real disc shelf reads as a uniform block of dark glossy plastic,
+// not a rainbow of cloth bindings, so this skips the dye-wash/embossed-
+// band/foil-cap treatment makeSpineTexture gives books entirely, and draws
+// from DISC_PALETTE's narrow near-black range instead of the book PALETTE.
+// A tight, bright specular streak stands in for the hard-plastic shine a
+// spine of book cloth never has; the only per-item color variety is a
+// single thin accent bar (hue varies per title — never a specific studio's
+// real branding), echoing the small colored spine labels real disc sets
+// sometimes carry.
+function makeDiscSpineTexture(baseColor, title, creator) {
+  const c = document.createElement('canvas');
+  c.width = 80; c.height = 720;
+  const cx = c.getContext('2d');
+  cx.fillStyle = baseColor;
+  cx.fillRect(0, 0, c.width, c.height);
+
+  const streakX = c.width * (0.25 + hash01(title, 'streak') * 0.35);
+  const sgrad = cx.createLinearGradient(streakX - 14, 0, streakX + 14, 0);
+  sgrad.addColorStop(0, 'rgba(255,255,255,0)');
+  sgrad.addColorStop(0.5, 'rgba(255,255,255,0.24)');
+  sgrad.addColorStop(1, 'rgba(255,255,255,0)');
+  cx.fillStyle = sgrad;
+  cx.fillRect(0, 0, c.width, c.height);
+
+  const vgrad = cx.createLinearGradient(0, 0, 0, c.height);
+  vgrad.addColorStop(0, 'rgba(255,255,255,0.1)');
+  vgrad.addColorStop(0.5, 'rgba(255,255,255,0)');
+  vgrad.addColorStop(1, 'rgba(0,0,0,0.3)');
+  cx.fillStyle = vgrad;
+  cx.fillRect(0, 0, c.width, c.height);
+
+  // A single thin accent bar, low on the spine — the only per-item hue
+  // variety a disc case gets.
+  const hue = Math.floor(hash01(title, 'accent') * 360);
+  cx.fillStyle = `hsla(${hue}, 45%, 48%, 0.55)`;
+  cx.fillRect(0, c.height - 34, c.width, 4);
+
+  const lum = relLuminance(baseColor);
+  const ink = lum > 0.55 ? 'rgba(26,22,18,0.9)' : 'rgba(238,234,222,0.92)';
+  const inkSub = lum > 0.55 ? 'rgba(26,22,18,0.58)' : 'rgba(238,234,222,0.58)';
+
+  cx.save();
+  cx.translate(c.width / 2, c.height / 2);
+  cx.rotate(-Math.PI / 2);
+  cx.textAlign = 'center';
+  cx.textBaseline = 'middle';
+  cx.fillStyle = ink;
+  cx.font = `400 32px ${SPINE_FONT}`;
+  const lines = wrapSpineText(title, 24).slice(0, 3);
+  const lineH = 38;
+  const startY = -((lines.length - 1) * lineH) / 2 - (creator ? 13 : 0);
+  lines.forEach((line, i) => cx.fillText(line, 0, startY + i * lineH));
+  if (creator) {
+    cx.font = `italic 300 20px ${SPINE_FONT}`;
+    cx.fillStyle = inkSub;
+    cx.fillText(creator.split(' · ')[0].split(' (')[0], 0, startY + lines.length * lineH + 6);
+  }
+  cx.restore();
+
+  return new THREE.CanvasTexture(c);
+}
+
 // Canvas-drawn CD spine — same "no real cover art" rule as makeSpineTexture,
 // simplified for a jewel-case spine rather than a book: album title (larger,
 // vertical) over a smaller artist line, on a glossier flat color field. No
 // dye-wash/embossed-band/dot-constellation treatment the books get — the
 // spine is thin enough on screen that that detail would just be noise; a
 // simple top-lit gradient plus contrast-aware ink is enough for it to read
-// as "a CD," not "a thin book."
+// as "a CD," not "a thin book." Draws from the pale CD_PALETTE (the paper
+// tray-card visible through a jewel case's clear plastic spine) rather than
+// the book PALETTE, plus a thin prismatic sliver near one edge — the
+// reflective disc itself, just visible through the spine — since a flat
+// pale card alone read too much like a thin, blank book (Scott, 2026-07-24:
+// "make the blurays and the CDs a bit more visually distinct").
 function makeCdSpineTexture(baseColor, artist, album) {
   const c = document.createElement('canvas');
   c.width = 72; c.height = 640;
@@ -475,6 +560,19 @@ function makeCdSpineTexture(baseColor, artist, album) {
   vgrad.addColorStop(1, 'rgba(0,0,0,0.32)');
   cx.fillStyle = vgrad;
   cx.fillRect(0, 0, c.width, c.height);
+
+  // A thin prismatic sliver near one edge — the reflective edge of the CD
+  // itself, just visible through the jewel case spine. Never a full "shiny
+  // disc" render, just enough to read as "there's a mirrored disc in
+  // here," distinguishing a CD from a plain pale slip of card.
+  const prism = cx.createLinearGradient(0, 0, 0, c.height);
+  prism.addColorStop(0, 'rgba(255,130,180,0.4)');
+  prism.addColorStop(0.25, 'rgba(255,220,120,0.34)');
+  prism.addColorStop(0.5, 'rgba(140,255,200,0.34)');
+  prism.addColorStop(0.75, 'rgba(140,180,255,0.36)');
+  prism.addColorStop(1, 'rgba(200,140,255,0.34)');
+  cx.fillStyle = prism;
+  cx.fillRect(5, 0, 5, c.height);
 
   const lum = relLuminance(baseColor);
   const ink = lum > 0.55 ? 'rgba(26,22,18,0.88)' : 'rgba(238,234,222,0.92)';
@@ -879,7 +977,7 @@ function buildItems(preview) {
         ? 0.12 + hash01(it.title, 'd') * 0.04
         : 0.68 + hash01(it.title, 'd') * 0.16;
 
-      const palette = isBox ? BOX_PALETTE : PALETTE;
+      const palette = isBox ? BOX_PALETTE : isDisc ? DISC_PALETTE : isCd ? CD_PALETTE : PALETTE;
       const color = palette[hash(it.title) % palette.length];
 
       const x = cursorX + w / 2;
@@ -897,13 +995,25 @@ function buildItems(preview) {
       } else {
         const tex = isCd
           ? makeCdSpineTexture(color, it.creator, it.title)
+          : isDisc
+          ? makeDiscSpineTexture(color, it.title, it.creator)
           : makeSpineTexture(color, it.title, it.creator, isBox);
-        // Finish variety — most spines are a matte cloth/paper binding,
-        // a minority (~1 in 5) a glossier trade-paperback laminate, so
-        // the shelf doesn't read as one uniform plastic material.
-        const isGlossy = hash01(it.title, 'gloss') > 0.8;
-        const rough = isGlossy ? 0.35 + hash01(it.title, 'r2') * 0.15 : 0.72 + hash01(it.title, 'r2') * 0.18;
-        const metal = isGlossy ? 0.05 : 0;
+        // Finish variety — most book spines are a matte cloth/paper
+        // binding, a minority (~1 in 5) a glossier trade-paperback
+        // laminate, so the shelf doesn't read as one uniform plastic
+        // material. Discs and CDs skip the roulette entirely: real disc
+        // cases and jewel cases are hard glossy plastic every time, which
+        // is itself part of what makes them read as a different material
+        // from the books (Scott, 2026-07-24 — the "visual sameness" fix).
+        const isGlossy = isDisc || isCd || hash01(it.title, 'gloss') > 0.8;
+        const rough = isDisc
+          ? 0.22 + hash01(it.title, 'r2') * 0.1
+          : isCd
+          ? 0.3 + hash01(it.title, 'r2') * 0.12
+          : isGlossy
+          ? 0.35 + hash01(it.title, 'r2') * 0.15
+          : 0.72 + hash01(it.title, 'r2') * 0.18;
+        const metal = isDisc ? 0.18 : isCd ? 0.1 : isGlossy ? 0.05 : 0;
         // Side/back faces shaded darker than the front — the same base
         // color otherwise made every face of the box read as one flat
         // plane rather than a real 3D object catching light unevenly.
