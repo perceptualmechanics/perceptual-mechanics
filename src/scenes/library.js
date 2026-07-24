@@ -1626,16 +1626,41 @@ export function createLibrary(container, { preview = false } = {}) {
     container.addEventListener('click', onContainerClick);
   }
 
-  // ─── Drag to orbit + wheel zoom ─────────────────────────────────────────
+  // ─── Drag to orbit/pan + wheel zoom ──────────────────────────────────────
   // Auto-rotate stopped per Scott, 2026-07-22: "let's stop the auto-rotate
   // for the moment." Shelf now only turns under drag. (The old `autoRotate`
   // flag was hardcoded false and never toggled anywhere, so it was
   // removed rather than kept as permanently-dead code — if it needs to
   // come back, reintroduce the flag and check it in animate() below.)
+  //
+  // Vertical drag used to tilt the whole shelf object (root.rotation.x,
+  // clamped to +-0.4 rad / ~23 deg) — Scott, 2026-07-24, full-zoom
+  // screenshot: "there's still no real way to zoom in and see the top and
+  // bottom shelves." Correct diagnosis: at min zoom the topmost row's
+  // center sits roughly 33 deg off dead-center, past that old clamp, so it
+  // was structurally out of reach no matter how far you dragged. Swapped
+  // the vertical axis from an object tilt to a camera pan: the camera and
+  // its look target now translate up/down together along the shelf's
+  // height (an "elevator," not a tilt), the same `dy` sign convention
+  // orrery.js's mouse-look already uses (drag up -> look up). `panLimit`
+  // is sized off TOTAL_H/CUBBY_H so the top and bottom row's center is
+  // always reachable, with a little headroom past it. Horizontal drag is
+  // unchanged — still spins the shelf object itself.
+  const baseCamLift = 0.15; // small permanent downward-look bias, kept from the original framing
+  let camDist = camera.position.length();
+  let panY = 0;
+  const panLimit = TOTAL_H / 2 - CUBBY_H / 2 + 0.3;
+  const vertPanScale = panLimit / 0.4; // preserves the old drag-distance-to-clamp feel at the new range
+  function updateCamera() {
+    camera.position.set(0, panY + baseCamLift, camDist);
+    camera.lookAt(0, panY, 0);
+  }
+
   const orbitDrag = bindOrbitDrag(container, {
     onDrag: (dx, dy) => {
       root.rotation.y += dx;
-      root.rotation.x = Math.max(-0.4, Math.min(0.4, root.rotation.x + dy));
+      panY = Math.max(-panLimit, Math.min(panLimit, panY - dy * vertPanScale));
+      updateCamera();
     },
   });
 
@@ -1647,9 +1672,8 @@ export function createLibrary(container, { preview = false } = {}) {
   const wheelZoom = bindWheelZoom(container, {
     isBlocked: () => !preview && panel?.classList.contains('open'),
     onZoom: deltaY => {
-      const dist = camera.position.length();
-      const next = Math.max(minDist, Math.min(maxDist, dist + deltaY * 0.004));
-      camera.position.setLength(next);
+      camDist = Math.max(minDist, Math.min(maxDist, camDist + deltaY * 0.004));
+      updateCamera();
     },
   });
 

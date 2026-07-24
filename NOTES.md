@@ -6,6 +6,28 @@ projects (The Secret World, A Manual of Perceptual Mechanics) moved into their o
 files, which are now the source of truth for that material going forward. See "project map"
 below for where things live.
 
+## 1.1.17 (2026-07-24)
+
+Scott: "there's still no real way to zoom in and see the top and bottom
+shelves. what can we do about that?" Root cause: vertical drag tilted the
+whole shelf *object* (`root.rotation.x`, clamped to +-0.4 rad / ~23 deg).
+At full zoom-in (minDist 4.2), the topmost row's center sits about 33 deg
+off dead-center — past that clamp, so it was structurally unreachable no
+matter how far you dragged.
+
+Swapped the vertical axis from an object tilt to a camera pan: the camera
+and its look target now translate up/down together along the shelf's
+height (an "elevator," not a tilt) — same `dy`-sign convention orrery.js's
+own mouse-look already uses (drag up -> look up). `panLimit` is sized off
+`TOTAL_H`/`CUBBY_H` (~3.08 units) so the top and bottom row's center is
+always reachable with headroom past it; confirmed by hand that at max
+pan + closest zoom the visible frustum (~1.46 to ~4.69) fully contains the
+top row's span (~1.84 to ~3.54). Horizontal drag is unchanged — still
+spins the shelf object itself.
+
+Verified: `node --check` clean, clean `npx vite build`, hand-checked the
+frustum-vs-row-span math in isolation.
+
 ## 1.1.16 (2026-07-24)
 
 Two corrections to 1.1.15, both from Scott:
