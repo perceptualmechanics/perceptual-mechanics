@@ -522,7 +522,7 @@ function makeSpineTexture(baseColor, title, creator, isBox) {
 
   cx.save();
   cx.translate(c.width / 2, c.height / 2);
-  cx.rotate(-Math.PI / 2);
+  cx.rotate(Math.PI / 2);
   cx.textAlign = 'center';
   cx.textBaseline = 'middle';
   cx.fillStyle = inkTitle;
@@ -599,7 +599,7 @@ function makeDiscSpineTexture(baseColor, title) {
 
   cx.save();
   cx.translate(c.width / 2, c.height / 2);
-  cx.rotate(-Math.PI / 2);
+  cx.rotate(Math.PI / 2);
   cx.textAlign = 'center';
   cx.textBaseline = 'middle';
   cx.fillStyle = ink;
@@ -659,7 +659,7 @@ function makeCdSpineTexture(baseColor, artist, album) {
 
   cx.save();
   cx.translate(c.width / 2, c.height / 2);
-  cx.rotate(-Math.PI / 2);
+  cx.rotate(Math.PI / 2);
   cx.textAlign = 'center';
   cx.textBaseline = 'middle';
   setTitleFont(cx, t, 30);
@@ -1422,10 +1422,7 @@ export function createLibrary(container, { preview = false } = {}) {
     panel.querySelector('#library-panel-kind').textContent =
       ({ book: 'Book', dvd: 'DVD', bluray: 'Blu-ray', divination_box: 'Divination deck', cd: 'Album' })[it.type] || it.type;
     panelTitle.textContent = it.title;
-    // No director byline for films: Scott, 2026-07-24, "remove the director names from the films" —
-    // real disc packaging doesn't carry a director credit on the spine or the case front, so the
-    // panel shouldn't manufacture one either. Books/CDs/boxes keep their creator line.
-    panelCreator.textContent = (it.type === 'dvd' || it.type === 'bluray') ? '' : (it.creator || '');
+    panelCreator.textContent = it.creator || '';
 
     // Bibliographic/filmographic detail lines — only the fields a given
     // item actually has (books carry isbn13/publisher/pages, films carry

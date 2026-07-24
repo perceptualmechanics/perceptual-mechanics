@@ -6,6 +6,24 @@ projects (The Secret World, A Manual of Perceptual Mechanics) moved into their o
 files, which are now the source of truth for that material going forward. See "project map"
 below for where things live.
 
+## 1.1.16 (2026-07-24)
+
+Two corrections to 1.1.15, both from Scott:
+
+- **Panel byline restored.** "I only wanted you to remove the director title
+  from the spine, not the panel. My bad, should have been more specific."
+  1.1.15 had also blanked `panelCreator.textContent` for dvd/bluray types —
+  reverted that; the panel goes back to always showing `it.creator` (spine
+  still has no director subtitle, per the original ask).
+- **Spine text was rotated backwards.** "we need to rotate all the titles
+  180 degrees, because you have them going the wrong way and I only just
+  realized it." All three spine-texture functions (`makeSpineTexture`,
+  `makeDiscSpineTexture`, `makeCdSpineTexture`) rotated the canvas
+  `-Math.PI / 2` before drawing title text; flipped to `Math.PI / 2` in all
+  three so every spine/case/CD title now reads the opposite direction.
+
+Verified: `node --check` clean, clean `npx vite build`.
+
 ## 1.1.15 (2026-07-24)
 
 Scott, from another full-zoom screenshot after 1.1.14 shipped: "MOAR. Also,
