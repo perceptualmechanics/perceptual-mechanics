@@ -696,7 +696,14 @@ function makeCdSpineTexture(baseColor, artist, album) {
 // (populatePanel, in createLibrary below) can treat them identically to a
 // book or film — `scene`/`youtube` here point at a music video or live
 // performance instead of a film scene, but it's the same two fields.
-function placeCdsInCubbies() {
+// Accepts the (already per-visit-shuffled, see reshuffleWithinType above)
+// CD list rather than always reading module-level cdRackItems directly, so
+// which album lands in which cubby/slot also changes on every page load —
+// the maxPos scan below still reads the fixed libraryItems row/col/pos,
+// which is fine: reshuffleWithinType only permutes *content* among a
+// cubby's existing slots, so the set of pos values already used in each
+// cubby is unchanged regardless of that day's shuffle.
+function placeCdsInCubbies(cdItems = cdRackItems) {
   const maxPos = new Map();
   libraryItems.forEach(it => {
     const key = `${it.row}-${it.col}`;
@@ -708,12 +715,12 @@ function placeCdsInCubbies() {
     for (let col = 1; col <= ROWS; col++) cubbies.push({ row, col });
   }
 
-  const perCubby = Math.ceil(cdRackItems.length / cubbies.length);
+  const perCubby = Math.ceil(cdItems.length / cubbies.length);
   const placed = [];
   cubbies.forEach(({ row, col }, i) => {
     const key = `${row}-${col}`;
     let pos = maxPos.get(key) || 0;
-    cdRackItems.slice(i * perCubby, (i + 1) * perCubby).forEach(cd => {
+    cdItems.slice(i * perCubby, (i + 1) * perCubby).forEach(cd => {
       pos += 1;
       placed.push({
         id: `cd-${cd.id}`, type: 'cd', title: cd.album, creator: cd.artist,
@@ -736,6 +743,47 @@ function placeCdsInCubbies() {
 function shelfGroup(type) {
   return type === 'bluray' || type === 'cd' ? 1 : 0;
 }
+
+// ─── Per-visit reshuffle ────────────────────────────────────────────────────
+// Scott, 2026-07-24: "randomize the order of each of the media types (books,
+// movies, music) so that they're not always in the same place when someone
+// visits." Every catalog entry's row/col/pos still preserves the real
+// shelf's photographed layout (src/text/library.js's own header comment) —
+// that's still the source of truth for which slots exist and how many each
+// cubby holds — but which item's content lands in which slot is now
+// re-shuffled fresh on every page load, independently per type (books,
+// films, and music each only shuffle among their own slots, so a book can
+// never land in a former CD's spot or vice versa). This deliberately uses
+// real per-load randomness (Math.random), not the deterministic hash01 used
+// everywhere else in this file — hash01 exists so a given item looks the
+// same across reloads once you've found it; this does the opposite, on
+// purpose, so the shelf itself feels different each visit.
+function shuffled(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+// Permutes item *content* among the row/col/pos slots already held by the
+// items matching `isType`, leaving every other item (and every slot's
+// row/col/pos itself) untouched. Two independent calls (books, then films)
+// keep the two pools from ever crossing into each other's slots.
+function reshuffleWithinType(items, isType) {
+  const slotIdx = [];
+  items.forEach((it, i) => { if (isType(it)) slotIdx.push(i); });
+  const slots = slotIdx.map(i => ({ row: items[i].row, col: items[i].col, pos: items[i].pos }));
+  const content = shuffled(slotIdx.map(i => items[i]));
+  const out = items.slice();
+  slotIdx.forEach((i, k) => {
+    out[i] = { ...content[k], ...slots[k] };
+  });
+  return out;
+}
+const isBookType = it => it.type === 'book' || it.type === 'divination_box';
+const isFilmType = it => it.type === 'dvd' || it.type === 'bluray';
 
 // ─── Shelf frame ────────────────────────────────────────────────────────────
 function buildFrame() {
@@ -999,12 +1047,20 @@ function buildItems(preview) {
   const meshes = [];
   const disposables = [];
 
+  // Per-visit reshuffle (see reshuffleWithinType above): books and films
+  // each get their content re-permuted among their own existing slots, and
+  // the CD list is shuffled before it's distributed into cubbies — all
+  // fresh Math.random() per page load, so the shelf reads differently each
+  // visit instead of always matching the photographed layout exactly.
+  const shuffledLibrary = reshuffleWithinType(reshuffleWithinType(libraryItems, isBookType), isFilmType);
+  const shuffledCds = shuffled(cdRackItems);
+
   // Group items by cubby so widths can be distributed to exactly fill
   // each cubby's available width regardless of how many items landed
   // there (6 on the low end, 25 on the high end, on the real shelf —
   // now with the 114 CDs from placeCdsInCubbies() appended on top).
   const byCubby = new Map();
-  [...libraryItems, ...placeCdsInCubbies()].forEach(it => {
+  [...shuffledLibrary, ...placeCdsInCubbies(shuffledCds)].forEach(it => {
     const key = `${it.row}-${it.col}`;
     if (!byCubby.has(key)) byCubby.set(key, []);
     byCubby.get(key).push(it);

@@ -6,6 +6,34 @@ projects (The Secret World, A Manual of Perceptual Mechanics) moved into their o
 files, which are now the source of truth for that material going forward. See "project map"
 below for where things live.
 
+## 1.1.18 (2026-07-24)
+
+Scott: "you know what you could do? randomize the order of each of the
+media types (books, movies, music) so that they're not always in the same
+place when someone visits." Asked how dramatic the reshuffle should feel —
+picked full reshuffle across the whole shelf over reordering only within
+each cubby.
+
+Every catalog entry's row/col/pos still preserves the real photographed
+shelf layout (src/text/library.js's own header comment — that hasn't
+changed), but which item's *content* lands in which slot is now
+re-shuffled fresh on every page load: `reshuffleWithinType()` permutes
+book content among book slots and film content among film slots
+independently (so a book can never land in a former film's spot or vice
+versa), and the CD list is shuffled before `placeCdsInCubbies()`
+distributes it, so music scrambles across the whole shelf too. This is
+deliberately real per-load randomness (`Math.random()`), not the
+deterministic `hash01` used everywhere else in this file for color/font/
+finish — that determinism is what makes a given item look the same across
+reloads once you've found it; this does the opposite, on purpose.
+
+Verified: `node --check` clean, clean `npx vite build`, plus a standalone
+Node check against the real catalog data confirming (a) the exact same
+id set and the exact same multiset of row/col/pos slots survive the
+shuffle, (b) no book/film/CD ever crosses into another type's slot, (c)
+five repeated shuffles produced different orderings, and (d) all 114 CDs
+still land with no duplicates after the CD-list shuffle.
+
 ## 1.1.17 (2026-07-24)
 
 Scott: "there's still no real way to zoom in and see the top and bottom
