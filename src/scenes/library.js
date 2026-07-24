@@ -334,25 +334,68 @@ function wrapSpineText(text, maxChars) {
 // spine reads as a rounded object catching light, not a flat card), 1-2
 // embossed horizontal bands above/below the title (old-hardcover binding
 // cords), contrast-aware ink color (light spines get dark ink, dark
-// spines keep the cream), and font alternation (since replaced — see
-// SPINE_FONT below). Fine per-pixel grain was tried and dropped — at the
+// spines keep the cream), and font alternation (collapsed to one font,
+// then restored with real per-item variety — see BOOK_FONTS etc. below).
+// Fine per-pixel grain was tried and dropped — at the
 // on-screen size a spine actually renders at, it mostly vanishes into
 // texture minification, the same "too subtle to register" mistake made
 // (and fixed) twice already on the Babel backdrop; broad tonal moves like
 // these read at any distance.
 //
 // Scott, 2026-07-23: "change the title font on the media items to a more
-// readable, thinner sans-serif font." The serif alternation (Georgia /
-// Times New Roman for books, Helvetica Neue / Georgia for CDs) is gone —
-// one system sans stack, lighter weight, used for every spine and the CD
-// jewel cases alike. Kept to system fonts rather than adding a Google
-// webfont: nothing else in the codebase's canvas-drawn textures (orrery's
-// posters, butterfly's caption) loads a custom font for canvas text
-// either, and doing so here would risk a FOUT-in-a-texture bug — the
-// canvas snapshots synchronously, so if the webfont hasn't finished
-// loading yet the fallback gets baked in permanently instead of swapping
-// in later like real DOM text would.
-const SPINE_FONT = '-apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif';
+// readable, thinner sans-serif font." Collapsed the earlier serif
+// alternation (Georgia/Times for books, Helvetica Neue/Georgia for CDs)
+// down to one system sans stack for every spine. Then, 2026-07-24, after
+// seeing the shelf at full zoom: "the font's the same on everything, which
+// is the complete opposite of real life (except for the Penguin Classics
+// lulz). We need more visual variety to make it look like a real media
+// collection." Right call — a real shelf is a mess of different
+// publishers'/studios'/labels' house type, and one uniform font across
+// 250-odd spines was quietly working against the "someone's actual
+// collection" read as much as the shared color palette had been.
+//
+// Restores real per-item variety, still with no webfont: nothing else in
+// the codebase's canvas-drawn textures (orrery's posters, butterfly's
+// caption) loads a custom font for canvas text, and doing so here would
+// risk a FOUT-in-a-texture bug — the canvas snapshots synchronously, so if
+// the webfont hasn't finished loading yet the fallback gets baked in
+// permanently instead of swapping in later like real DOM text would. So
+// the variety comes entirely from curated *system* font stacks, picked
+// per-item (via hash01, so a given spine always lands on the same face
+// across reloads) from a pool tuned per material: books get the widest
+// spread (serif, sans, condensed, even a monospace outlier — different
+// publishers, different decades of house style), Blu-rays lean bold/
+// condensed (movie packaging), CDs stay closer to clean and thin (the
+// original readability ask) but pick among a few close relatives rather
+// than one single face, and the two divination boxes share one fixed
+// serif suited to old esoteric-text design (only two of them — variety
+// isn't the point there, distinctness from books/discs/CDs is).
+const BOOK_FONTS = [
+  'Georgia, "Times New Roman", Times, serif',
+  '"Times New Roman", Times, Georgia, serif',
+  '-apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif',
+  'Verdana, Geneva, sans-serif',
+  '"Trebuchet MS", Helvetica, sans-serif',
+  '"Courier New", Courier, monospace',
+  'Palatino, "Palatino Linotype", Georgia, serif',
+  '"Arial Narrow", Arial, sans-serif',
+];
+const BOX_FONT = 'Palatino, "Palatino Linotype", Georgia, serif';
+const DISC_FONTS = [
+  '"Arial Narrow", Arial, sans-serif',
+  'Arial, Helvetica, sans-serif',
+  '"Trebuchet MS", Helvetica, sans-serif',
+  'Georgia, "Times New Roman", Times, serif',
+];
+const CD_FONTS = [
+  '-apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif',
+  'Verdana, Geneva, sans-serif',
+  '"Trebuchet MS", Helvetica, sans-serif',
+];
+function pickFont(fonts, seed) {
+  const idx = Math.floor(hash01(seed, 'font') * fonts.length);
+  return fonts[Math.min(idx, fonts.length - 1)];
+}
 function relLuminance(hex) {
   const col = new THREE.Color(hex);
   return 0.2126 * col.r + 0.7152 * col.g + 0.0722 * col.b;
@@ -447,19 +490,21 @@ function makeSpineTexture(baseColor, title, creator, isBox) {
   const inkTitle = lum > 0.55 ? 'rgba(32,26,20,0.88)' : 'rgba(240,236,224,0.92)';
   const inkCreator = lum > 0.55 ? 'rgba(32,26,20,0.6)' : 'rgba(240,236,224,0.62)';
 
+  const font = isBox ? BOX_FONT : pickFont(BOOK_FONTS, title);
+
   cx.save();
   cx.translate(c.width / 2, c.height / 2);
   cx.rotate(-Math.PI / 2);
   cx.textAlign = 'center';
   cx.textBaseline = 'middle';
   cx.fillStyle = inkTitle;
-  cx.font = `400 34px ${SPINE_FONT}`;
+  cx.font = `400 34px ${font}`;
   const lines = wrapSpineText(title, 26).slice(0, 3);
   const lineH = 40;
   const startY = -((lines.length - 1) * lineH) / 2 - (creator ? 14 : 0);
   lines.forEach((line, i) => cx.fillText(line, 0, startY + i * lineH));
   if (creator) {
-    cx.font = `italic 300 22px ${SPINE_FONT}`;
+    cx.font = `italic 300 22px ${font}`;
     cx.fillStyle = inkCreator;
     cx.fillText(creator.split(' · ')[0].split(' (')[0], 0, startY + lines.length * lineH + 6);
   }
@@ -513,6 +558,9 @@ function makeDiscSpineTexture(baseColor, title, creator) {
   const lum = relLuminance(baseColor);
   const ink = lum > 0.55 ? 'rgba(26,22,18,0.9)' : 'rgba(238,234,222,0.92)';
   const inkSub = lum > 0.55 ? 'rgba(26,22,18,0.58)' : 'rgba(238,234,222,0.58)';
+  // Bold rather than the books' regular weight — movie packaging leans
+  // bold/condensed far more than book spines do.
+  const font = pickFont(DISC_FONTS, title);
 
   cx.save();
   cx.translate(c.width / 2, c.height / 2);
@@ -520,13 +568,13 @@ function makeDiscSpineTexture(baseColor, title, creator) {
   cx.textAlign = 'center';
   cx.textBaseline = 'middle';
   cx.fillStyle = ink;
-  cx.font = `400 32px ${SPINE_FONT}`;
+  cx.font = `700 32px ${font}`;
   const lines = wrapSpineText(title, 24).slice(0, 3);
   const lineH = 38;
   const startY = -((lines.length - 1) * lineH) / 2 - (creator ? 13 : 0);
   lines.forEach((line, i) => cx.fillText(line, 0, startY + i * lineH));
   if (creator) {
-    cx.font = `italic 300 20px ${SPINE_FONT}`;
+    cx.font = `italic 400 20px ${font}`;
     cx.fillStyle = inkSub;
     cx.fillText(creator.split(' · ')[0].split(' (')[0], 0, startY + lines.length * lineH + 6);
   }
@@ -577,19 +625,20 @@ function makeCdSpineTexture(baseColor, artist, album) {
   const lum = relLuminance(baseColor);
   const ink = lum > 0.55 ? 'rgba(26,22,18,0.88)' : 'rgba(238,234,222,0.92)';
   const inkSub = lum > 0.55 ? 'rgba(26,22,18,0.58)' : 'rgba(238,234,222,0.62)';
+  const font = pickFont(CD_FONTS, album);
 
   cx.save();
   cx.translate(c.width / 2, c.height / 2);
   cx.rotate(-Math.PI / 2);
   cx.textAlign = 'center';
   cx.textBaseline = 'middle';
-  cx.font = `400 30px ${SPINE_FONT}`;
+  cx.font = `400 30px ${font}`;
   cx.fillStyle = ink;
   const albumLines = wrapSpineText(album, 24).slice(0, 2);
   const lineH = 34;
   const startY = -((albumLines.length - 1) * lineH) / 2 - 12;
   albumLines.forEach((line, i) => cx.fillText(line, 0, startY + i * lineH));
-  cx.font = `italic 300 19px ${SPINE_FONT}`;
+  cx.font = `italic 300 19px ${font}`;
   cx.fillStyle = inkSub;
   cx.fillText(artist, 0, startY + albumLines.length * lineH + 10);
   cx.restore();

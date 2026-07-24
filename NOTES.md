@@ -6,6 +6,35 @@ projects (The Secret World, A Manual of Perceptual Mechanics) moved into their o
 files, which are now the source of truth for that material going forward. See "project map"
 below for where things live.
 
+## 1.1.14 (2026-07-24)
+
+Second round on the same "visual sameness" complaint, after the disc/CD
+material fix — Scott, looking at a full-zoom screenshot: "the font's the
+same on everything, which is the complete opposite of real life (except
+for the Penguin Classics lulz). We need more visual variety." Correct
+call: one uniform sans stack across ~250 spines (books, Blu-rays, and CDs
+alike) was quietly working against the "someone's actual shelf" read as
+much as the shared color palette had been.
+
+- Replaced the single `SPINE_FONT` with four curated system-font pools —
+  `BOOK_FONTS` (8 stacks: serif, sans, condensed, even a monospace
+  outlier), `DISC_FONTS` (4 stacks, always bold — movie packaging leans
+  bold/condensed far more than book spines do), `CD_FONTS` (3 close, clean
+  sans relatives — keeps the original "readable, thin" ask for CDs but
+  stops 114 albums looking like one repeated object), and `BOX_FONT` (one
+  fixed serif for the two divination decks)
+- `pickFont(fonts, seed)` — hash-selects per item so a given spine lands
+  on the same face every reload, same determinism convention as the
+  color/height/finish hashing already in place
+- Still no webfont: this was already a hard constraint (FOUT-in-a-canvas-
+  texture risk, documented on the old SPINE_FONT comment, now moved to the
+  new font-pool comment) — all the added variety comes from system font
+  stacks only
+
+Verified: `node --check` clean, clean `npx vite build`, sampled the hash
+distribution across 10 book titles in isolation to confirm no clustering
+onto one or two fonts.
+
 ## 1.1.13 (2026-07-24)
 
 Scott, from a screenshot of the live shelf: "can we make the blurays and
