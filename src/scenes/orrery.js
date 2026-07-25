@@ -1503,18 +1503,30 @@ export function createOrrery(container, { preview = false } = {}) {
       @media (max-width: 600px) {
         #orrery-caption { white-space: normal; width: 88vw; font-size: 0.7rem; }
       }
+      /* #orrery-hint (top:4.5rem, right-anchored, no width) and
+         #orrery-title (centered, shrink-wrapped to its own widest line)
+         collide far more often than the old mobile-only fix assumed.
+         Confirmed live on perceptualmechanics.com at 1512px — a fully
+         open, non-maximized but perfectly ordinary desktop window, nowhere
+         near a phone: "THE ORRERY OF LOS FELIZ" alone, at this font size
+         and letter-spacing, is wide enough that its centered block's right
+         edge (measured: x≈1030) lands past the hint's left edge
+         (measured: x≈939), printing straight through "walk with
+         wasd/arrows." The subtitle line only makes a bad case worse; the
+         title's main line by itself is already enough. A single pixel
+         breakpoint can't cover every combination of font metrics and
+         window width that produces that, so this is measured instead of
+         guessed: checkTitleHintCollision(), below, reads both elements'
+         actual rendered rects and toggles this same class whenever they
+         overlap, on load and on every resize. The max-width:600px query
+         stays too, as a floor that still applies even if JS is
+         unavailable or hasn't run yet. */
+      #orrery-hint.stacked {
+        top: 7.6rem; right: 6vw; left: 6vw;
+        font-size: 0.5rem; letter-spacing: 0.14em; line-height: 1.6;
+        text-align: center;
+      }
       @media (max-width: 600px) {
-        /* #orrery-hint (top:4.5rem, right-anchored, no width) and
-           #orrery-title (below, 90vw wide once centered on mobile) never
-           collided on desktop, where the title sits narrow and centered
-           far from the hint's top-right corner. On mobile the title's
-           subtitle line wraps to two lines and the hint's own long string
-           wraps too, with nothing constraining either one's width or
-           clearing space for the other — they land on top of each other
-           (Scott's screenshot: "click a flyer to tune in" printed straight
-           across "the warehouse skylights."). Dropped it below the title
-           block instead of trying to out-shrink it into the same corner,
-           and centered it full-width like the caption already does. */
         #orrery-hint {
           top: 7.6rem; right: 6vw; left: 6vw;
           font-size: 0.5rem; letter-spacing: 0.14em; line-height: 1.6;
@@ -1623,6 +1635,7 @@ export function createOrrery(container, { preview = false } = {}) {
   // ─── Panel (full only) ────────────────────────────────────────────────────
   let panel = null, panelTitle = null, panelEra = null, panelNote = null;
   let hint = null, caption = null, vignette = null, grain = null, title = null;
+  let checkTitleHintCollision = null;
   if (!preview) {
     vignette = document.createElement('div');
     vignette.id = 'orrery-vignette';
@@ -1686,6 +1699,20 @@ export function createOrrery(container, { preview = false } = {}) {
     caption.textContent = 'still on, receiving information from the heavens';
     caption.setAttribute('aria-hidden', 'true');
     document.body.appendChild(caption);
+
+    // See the #orrery-hint.stacked comment above: measure the actual
+    // rendered rects instead of guessing a pixel breakpoint. rAF-deferred
+    // so it reads layout after the browser has actually placed both
+    // elements (their width depends on font load / letter-spacing, not
+    // just the numbers in this file), and re-checked on every resize.
+    checkTitleHintCollision = () => {
+      if (!title || !hint) return;
+      const t = title.getBoundingClientRect();
+      const h = hint.getBoundingClientRect();
+      const overlaps = t.right > h.left && t.left < h.right && t.bottom > h.top && t.top < h.bottom;
+      hint.classList.toggle('stacked', overlaps);
+    };
+    requestAnimationFrame(checkTitleHintCollision);
   }
 
   // ─── Interaction ─────────────────────────────────────────────────────────
@@ -1975,6 +2002,7 @@ export function createOrrery(container, { preview = false } = {}) {
     camera.aspect = w / h;
     camera.updateProjectionMatrix();
     renderer.setSize(w, h);
+    checkTitleHintCollision?.();
   });
 
   // Escape closes the read-more panel from anywhere, matching standard
