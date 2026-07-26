@@ -1121,7 +1121,6 @@ function createFirstPersonRig({ container, camera, renderer, colliders, wallLimi
   const move = { forward: false, back: false, left: false, right: false };
 
   let locked = false;
-  let hasEngagedOnce = false;
   const canLock = typeof canvasEl.requestPointerLock === 'function';
 
   // ─── Crosshair ──────────────────────────────────────────────────────────
@@ -1211,12 +1210,18 @@ function createFirstPersonRig({ container, camera, renderer, colliders, wallLimi
   // ─── Mouse-look ─────────────────────────────────────────────────────────
   const onPointerLockChange = () => {
     locked = document.pointerLockElement === canvasEl;
-    // Once the "click to look around" coaching text has done its job
-    // (first successful engage), never bring it back — only hide it from
-    // here on, even across later unlocks. Before that first engage, still
-    // toggle normally so it's visible whenever unlocked.
-    if (locked || hasEngagedOnce) prompt.classList.add('hidden');
-    else prompt.classList.remove('hidden');
+    // Simple toggle, on purpose: 1.2.1 briefly hid this for good after the
+    // first engage, reasoning that a dead prompt (clicking it did nothing,
+    // back when tryEngage was a true one-shot) was worse than none. But
+    // tryEngage now genuinely re-engages on any click while unlocked (see
+    // below), so a visible "click to look around" is a real, working
+    // invitation again every time you're unlocked — including right after
+    // closing the read-more panel (releaseLock(), below), which is exactly
+    // when a visitor most needs the reminder that clicking gets them back
+    // into look-around mode. Scott, 2026-07-26: "once you close the panel,
+    // the click to look around button doesn't return... that would throw
+    // people off."
+    prompt.classList.toggle('hidden', locked);
   };
   document.addEventListener('pointerlockchange', onPointerLockChange);
 
@@ -1251,7 +1256,6 @@ function createFirstPersonRig({ container, camera, renderer, colliders, wallLimi
   function tryEngage(e) {
     if (isBlocked?.(e)) return false;
     if (!canLock || locked) return false;
-    hasEngagedOnce = true;
     prompt.classList.add('hidden');
     canvasEl.requestPointerLock();
     return true;

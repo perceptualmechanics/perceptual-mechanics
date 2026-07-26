@@ -6,6 +6,26 @@ projects (The Secret World, A Manual of Perceptual Mechanics) moved into their o
 files, which are now the source of truth for that material going forward. See "project map"
 below for where things live.
 
+## 1.2.2 (2026-07-26)
+
+Follow-up to 1.2.1's pointer-lock fix, from Scott after trying it live:
+"once you close the panel, the 'click to look around' button doesn't
+return, and I think that would throw people off a bit." Correct — 1.2.1
+made `tryEngage()` genuinely able to re-engage pointer lock on any click
+while unlocked, but left the *prompt's own visibility* permanently hidden
+after the first engage (`hasEngagedOnce`), reasoning at the time that a
+prompt reappearing with no working click behind it (the old one-shot
+`everEngaged` gate) was worse than no prompt. That reasoning doesn't hold
+anymore — 1.2.1 fixed the click itself, so the prompt reappearing is now a
+real, working invitation again, not a dead one. Reverted `onPointerLockChange`
+to a plain `locked` toggle (show whenever unlocked, hide whenever locked)
+and dropped `hasEngagedOnce` entirely — it had no other reader. The prompt
+now correctly reappears the moment `releaseLock()` (openPanel) or a plain
+Escape drops pointer lock, including right after closing the read-more
+panel, which is exactly when a visitor needs the reminder.
+
+Verified: `node --check`, clean `npx vite build`.
+
 ## 1.2.1 (2026-07-26)
 
 Two fixes from a live-site screenshot, both in the orrery.
