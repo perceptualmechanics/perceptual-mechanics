@@ -6,6 +6,48 @@ projects (The Secret World, A Manual of Perceptual Mechanics) moved into their o
 files, which are now the source of truth for that material going forward. See "project map"
 below for where things live.
 
+## 1.2.1 (2026-07-26)
+
+Two fixes from a live-site screenshot, both in the orrery.
+
+**Title/hint text crowding.** `checkTitleHintCollision()` (added for the
+1.1.x "title prints straight through the hint" bug) already measures real
+overlap and stacks the hint under the title when it detects one, but its
+`.stacked` CSS placed the hint at a fixed `top:7.6rem` — guessed against a
+title block that's always exactly two short lines. At some widths the
+subtitle wraps to two lines itself, pushing its real bottom edge past that
+fixed offset and crowding the hint right up against it — three lines of
+text stacked with almost no gap, per Scott's screenshot. Same "measured,
+not guessed" fix as the original bug: once stacked, the hint's `top` is now
+set in JS to the title's own measured `getBoundingClientRect().bottom` plus
+a fixed gap, so it tracks however many lines the title block actually
+rendered as, at any width or font metrics, instead of assuming two.
+
+**Pointer lock ate the panel's close button.** Scott: "if I'm in
+looking-around mode and I open the panel, there's a weird event happening
+where I can't click back into the window to close it." Root cause: the
+Pointer Lock API routes every mouse event exclusively to whichever element
+holds the lock (the canvas) — a sibling DOM element, like the read-more
+panel's own close button or the new keyboard jump list (1.2.0), never
+receives a real click while locked, no matter where the invisible OS
+cursor conceptually is. `openPanel()` now calls the first-person rig's new
+`releaseLock()` and restores the real OS cursor (CSS-hidden the rest of
+the time for crosshair-based aiming) the moment the panel opens; closing
+it (any of the three ways) re-hides the cursor. Getting back into
+look-around mode afterward needed its own fix: `tryEngage()` used to be a
+true one-shot (an `everEngaged` flag blocked it forever after the first
+click, which — turns out — meant that even a *plain* Escape-triggered
+unlock, panel or no panel, could never be re-engaged by clicking either,
+despite the "click to look around" prompt visually reappearing and
+inviting exactly that; a pre-existing dead end this touched in passing).
+Replaced with `hasEngagedOnce`, which now only gates whether the coaching
+prompt *text* ever shows again — `tryEngage` itself succeeds on any click
+while unlocked, so the click that follows closing the panel (or a bare
+Escape) resumes look-around instead of being read as a fresh "select
+whatever's under the crosshair" click.
+
+Verified: `node --check`, clean `npx vite build`.
+
 ## 1.2.0 (2026-07-26)
 
 A cleanup/refactor pass, not a feature or content change — code review by
@@ -2958,23 +3000,28 @@ check available):
 - **Housekeeping**: zero `console.log`/`debugger`/`TODO`/`FIXME`/stray `alert()` in `src/`, zero
   unused named imports (checked programmatically, not just by eye).
 
-## project map (as of 2026-07-16)
+## project map (as of 2026-07-26)
 
 - **perceptualmechanics** (this repo) — the live site + code. What lands here: finished scenes,
   scroll patches, wired-in content. Deploys to perceptualmechanics.com via manual `dist/` upload
   (see "deployment" below) — anything that shouldn't be public has no business in this repo.
-- **A Manual of Perceptual Mechanics.scriv** (`/Users/scottcohen/Documents/A Manual of Perceptual
-  Mechanics.scriv`) — a separate Scrivener writing project. Now the source of truth for that
-  project, including a Research/"Archive Research Notes" document holding the general
-  personal-writing-archive research history (previously duplicated here in NOTES.md).
-- **The Secret World.scriv** (`/Users/scottcohen/Documents/The Secret World.scriv`) — a separate
-  Scrivener writing project (the game/mythology-verse — Boston Scion, the Yankee Pantheon). Now
-  the source of truth for that project, including a Research/"Boston Scion — Campaign Notes &
-  Archive Search" document holding the campaign read and lost-spreadsheet-search history
-  (previously duplicated here in NOTES.md).
+- **Holography.scriv** (`/Users/scottcohen/Documents/Holography.scriv`) — the single Scrivener
+  writing project, source of truth for both books. Reorganized 2026-07-26: "A Manual of Perceptual
+  Mechanics.scriv" and "The Secret World.scriv" (the two separate projects this map used to point
+  to) were consolidated into Holography.scriv, which now holds The Manual of Perceptual Mechanics
+  and The Secret World as sibling folders, plus Staging, Source Notebooks, and Offshoots. **As of
+  today, Holography.scriv is closed to new raw intake** — see its own "Convergence Rule (2026-07-26)"
+  note at the top of the Draft folder. Existing material can still move between tiers or get
+  corrected; nothing new gets pasted in.
+- **seeds.md** (this repo, project root) — new home for material that used to go straight into the
+  two Scrivener projects above. New cosmology fragments, Chat-session output, fresh trance-writing —
+  anything not yet part of either book — gets logged here with a date and source instead. Not wired
+  into the site's own systems (Nebula Curator, panels, etc.); it's a holding pen, not a feature. If
+  something here later turns out to clearly belong in Holography, that's a deliberate, named move
+  made at that point, not an automatic feed.
 
 Raw research/staging notes from archive deep-dives (the deep-dive write-ups, gem excerpts, campaign
-reports) live outside all three of these, in `../perceptualmechanics-source-material/` — a sibling
+reports) live outside all of these, in `../perceptualmechanics-source-material/` — a sibling
 directory to this repo, not tracked in git. See "housekeeping" near the bottom for why and when that
 moved.
 

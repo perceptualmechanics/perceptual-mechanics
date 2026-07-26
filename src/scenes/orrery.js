@@ -1121,7 +1121,7 @@ function createFirstPersonRig({ container, camera, renderer, colliders, wallLimi
   const move = { forward: false, back: false, left: false, right: false };
 
   let locked = false;
-  let everEngaged = false;
+  let hasEngagedOnce = false;
   const canLock = typeof canvasEl.requestPointerLock === 'function';
 
   // ─── Crosshair ──────────────────────────────────────────────────────────
@@ -1211,7 +1211,12 @@ function createFirstPersonRig({ container, camera, renderer, colliders, wallLimi
   // ─── Mouse-look ─────────────────────────────────────────────────────────
   const onPointerLockChange = () => {
     locked = document.pointerLockElement === canvasEl;
-    prompt.classList.toggle('hidden', locked);
+    // Once the "click to look around" coaching text has done its job
+    // (first successful engage), never bring it back — only hide it from
+    // here on, even across later unlocks. Before that first engage, still
+    // toggle normally so it's visible whenever unlocked.
+    if (locked || hasEngagedOnce) prompt.classList.add('hidden');
+    else prompt.classList.remove('hidden');
   };
   document.addEventListener('pointerlockchange', onPointerLockChange);
 
@@ -1235,20 +1240,38 @@ function createFirstPersonRig({ container, camera, renderer, colliders, wallLimi
     },
   });
 
-  // First click/tap engages pointer lock (desktop) instead of acting on
-  // whatever's under the crosshair — returns true when it consumed the
-  // event that way, so the scene's own click handler can bail out early
-  // rather than also opening a panel the visitor didn't mean to open.
+  // Click/tap engages pointer lock (desktop) instead of acting on whatever's
+  // under the crosshair — returns true when it consumed the event that way,
+  // so the scene's own click handler can bail out early rather than also
+  // opening a panel the visitor didn't mean to open. Not just a first-click
+  // gate: any click while unlocked re-engages, which matters once
+  // releaseLock() (below) has been used — the click that follows closing
+  // the read-more panel should resume look-around, not be treated as a
+  // fresh "select whatever's under the crosshair" click.
   function tryEngage(e) {
     if (isBlocked?.(e)) return false;
-    if (!canLock || locked || everEngaged) return false;
-    everEngaged = true;
+    if (!canLock || locked) return false;
+    hasEngagedOnce = true;
     prompt.classList.add('hidden');
     canvasEl.requestPointerLock();
     return true;
   }
   const onPromptClick = e => { tryEngage(e); };
   prompt.addEventListener('click', onPromptClick);
+
+  // Pointer lock routes every mouse event exclusively to the element that
+  // holds it (the canvas) — a sibling DOM element, like the read-more
+  // panel's own close button or the keyboard jump list, never receives a
+  // real click while locked, no matter where the invisible OS cursor
+  // conceptually is. Scott, 2026-07-26, live-site report: "if I'm in
+  // looking-around mode and I open the panel, there's a weird event
+  // happening where I can't click back into the window to close it" — this
+  // is why. createOrrery calls this from openPanel() so the panel becomes
+  // clickable the moment it opens; tryEngage (above) re-engages on the
+  // click that follows closing it.
+  function releaseLock() {
+    if (document.pointerLockElement === canvasEl) document.exitPointerLock();
+  }
 
   // ─── Movement + collision ───────────────────────────────────────────────
   // Circle-vs-circle push-out against every collider, plus a hard clamp to
@@ -1302,6 +1325,7 @@ function createFirstPersonRig({ container, camera, renderer, colliders, wallLimi
   return {
     update,
     tryEngage,
+    releaseLock,
     crosshairEl: crosshair,
     get locked() { return locked; },
     dispose() {
@@ -1686,7 +1710,16 @@ export function createOrrery(container, { preview = false } = {}) {
     // still be resting on the control box the instant the panel closes.
     panelCloser = createPanelCloser(panel, container, {
       closeBtn: panel.querySelector('#orrery-panel-close'),
-      onClose: () => { hideAmbient(false); selected = false; setEmphasis(hovered); },
+      onClose: () => {
+        hideAmbient(false);
+        selected = false;
+        setEmphasis(hovered);
+        // Undo openPanel()'s cursor reveal — back to crosshair-only aiming
+        // once the panel's gone. Pointer lock itself isn't re-requested
+        // here (browsers only grant it from a direct user gesture); the
+        // next real click on the canvas re-engages it via fp.tryEngage.
+        container.style.cursor = 'none';
+      },
     });
 
     // Keyboard access, 2026-07-26: the control box and the flyers are
@@ -1729,6 +1762,18 @@ export function createOrrery(container, { preview = false } = {}) {
       const h = hint.getBoundingClientRect();
       const overlaps = t.right > h.left && t.left < h.right && t.bottom > h.top && t.top < h.bottom;
       hint.classList.toggle('stacked', overlaps);
+      // Measured, not guessed (see the block comment above this function):
+      // .stacked's own top:7.6rem in CSS assumed the title block is always
+      // exactly two short lines. At some widths the subtitle wraps to two
+      // lines itself, pushing its real bottom edge past that fixed offset
+      // and crowding the hint right up against it (Scott, 2026-07-26
+      // screenshot: three lines of text stacked with almost no gap).
+      // Once stacked, position the hint a fixed gap below the title's own
+      // *measured* bottom instead, so it tracks however many lines the
+      // title block actually rendered as, at any width or font metrics.
+      // Cleared on the non-stacked path so the default CSS top:4.5rem
+      // (title and hint side by side, not stacked) applies again.
+      hint.style.top = overlaps ? `${t.bottom + 16}px` : '';
     };
     requestAnimationFrame(checkTitleHintCollision);
   }
@@ -1761,6 +1806,16 @@ export function createOrrery(container, { preview = false } = {}) {
   function openPanel() {
     panel.classList.add('open');
     hideAmbient(true);
+    // Release pointer lock so the panel's own buttons (close, jump list)
+    // become clickable — see releaseLock()'s own comment in
+    // createFirstPersonRig for why they otherwise can't be. fp.tryEngage
+    // (already wired into every click path) re-engages on whatever click
+    // follows the panel closing. The OS cursor is CSS-hidden the rest of
+    // the time (crosshair-based aiming, see container.style.cursor='none'
+    // at scene setup) — restore it too, or the panel would be clickable
+    // but the visitor still couldn't see where to click.
+    fp?.releaseLock();
+    container.style.cursor = '';
     setTimeout(() => panelTitle.focus(), 50);
   }
 
