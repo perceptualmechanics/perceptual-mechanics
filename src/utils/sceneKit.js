@@ -185,3 +185,88 @@ export function bindEscapeClose(onEscape) {
   document.addEventListener('keydown', handler);
   return { dispose() { document.removeEventListener('keydown', handler); } };
 }
+
+// ─── Read-more panel: shared close mechanics ───────────────────────────────
+// Every scene with a slide-in info panel (sphere's fragments, egg's poems,
+// orrery's placards, library's spines, lens's facets) builds its own panel
+// markup and CSS — colors, gradient tint, which side it slides in from — on
+// purpose, tuned to that scene's own palette, so that part stays put in each
+// scene file. What's genuinely identical across all five is how the panel
+// CLOSES: remove the `.open` class, run whatever scene-specific cleanup
+// closing implies (deselect a highlighted facet/satellite/spine, restore its
+// color), and return focus to `container` — the same three steps whether the
+// close was triggered by the close button, Escape, or a click outside the
+// panel. This owns exactly that: the close-button and Escape wiring, the
+// panel-internal click guard (so clicking inside the panel doesn't fall
+// through to the canvas's own click-to-select handler underneath it), and a
+// `close()` the scene calls itself from its own outside-click/hover-loss
+// logic — one close path, three triggers, instead of the same three-line
+// body copy-pasted at each trigger site.
+export function createPanelCloser(panel, container, { closeBtn, onClose } = {}) {
+  function close() {
+    if (!panel || !panel.classList.contains('open')) return;
+    panel.classList.remove('open');
+    onClose?.();
+    container.focus();
+  }
+
+  const onPanelClick = e => e.stopPropagation();
+  panel.addEventListener('click', onPanelClick);
+  const onCloseBtnClick = e => { e.stopPropagation(); close(); };
+  closeBtn?.addEventListener('click', onCloseBtnClick);
+  const escape = bindEscapeClose(close);
+
+  return {
+    close,
+    dispose() {
+      panel.removeEventListener('click', onPanelClick);
+      closeBtn?.removeEventListener('click', onCloseBtnClick);
+      escape.dispose();
+    },
+  };
+}
+
+// ─── Keyboard jump list ─────────────────────────────────────────────────────
+// sphere, egg, orrery, and library all raycast their interactive 3D objects
+// (facets, satellites, posters, spines) — real, readable content a mouse or
+// touch visitor reaches by hovering and clicking, but that a keyboard-only
+// visitor previously had no way to reach at all: nothing simulates "point
+// at a facet" from a keyboard. This builds the accessible way in — a real
+// list of real `<button>`s, one per selectable item, that call the exact
+// same select-and-open function the mouse click already does (each scene
+// passes that in as `onSelect`; this owns none of the panel/selection logic
+// itself, only the list). `.pm-jumplist` (styles/main.css) hides it using
+// the same idiom as the skip-link already at the top of the page: invisible
+// until a button in it actually has focus, so it doesn't clutter the
+// deliberately chrome-free canvas for mouse/touch visitors, and every
+// button occupies the same on-screen slot so Tabbing through reveals one
+// label at a time rather than a wall of text.
+export function createJumpList(container, { label, items, getLabel, onSelect }) {
+  const list = document.createElement('ul');
+  list.className = 'pm-jumplist';
+  list.setAttribute('aria-label', label);
+  items.forEach((item, i) => {
+    const li = document.createElement('li');
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.textContent = getLabel(item, i);
+    btn.addEventListener('click', () => onSelect(item, i));
+    li.appendChild(btn);
+    list.appendChild(li);
+  });
+  container.appendChild(list);
+  return { dispose() { list.remove(); } };
+}
+
+// ─── HTML escaping ──────────────────────────────────────────────────────────
+// Every scene that injects found text (poems, notes, spine titles) into a
+// read-more panel's innerHTML needs this, and four of them (egg, manuscript,
+// theater, library) had each grown their own identical copy. Round-trips the
+// string through a detached element's textContent/innerHTML rather than a
+// hand-rolled regex, so it escapes quotes too — matters wherever the escaped
+// string lands inside an HTML attribute, not just element content.
+export function escapeHtml(s) {
+  const div = document.createElement('div');
+  div.textContent = s;
+  return div.innerHTML;
+}

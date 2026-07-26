@@ -6,6 +6,66 @@ projects (The Secret World, A Manual of Perceptual Mechanics) moved into their o
 files, which are now the source of truth for that material going forward. See "project map"
 below for where things live.
 
+## 1.2.0 (2026-07-26)
+
+A cleanup/refactor pass, not a feature or content change — code review by
+Claude (Cowork), Scott: "do a code clean/cruft removal, hoist up and
+refactor as needed, focus on semantic/a11y concerns, make sure codebase
+conforms to modern best practices... aiming for conciseness, reusability,
+and great architecture." Landed in two rounds.
+
+**Round 1 — de-duplication.** An audit of every scene, sceneKit.js, the
+text/* data modules, and the bardjs package found the tracked source
+already in unusually good shape (no `var`, no `==`, prior semantic-HTML/
+a11y passes already done on index.html/main.js/main.css) — the real
+findings were small, real duplications:
+- `escapeHtml` was reimplemented in egg.js, manuscript.js, library.js, and
+  theater.js — hoisted into sceneKit.js, all four now import it.
+- theater.js kept its own `shuffle()` despite already depending on bardjs,
+  which exports one — swapped to the import.
+- `wrapText`/`asciiBubble` (cowsay-bubble formatting) were duplicated
+  between bardjs's DomRenderer and theater.js's own custom renderer —
+  extracted into a new `packages/bardjs/src/text.js`, exported from the
+  package, both consumers import it now.
+
+**Round 2 — the read-more panel, and keyboard access.** Sphere, egg,
+orrery, and library (and lens, shelved) each build their own info-panel
+markup/CSS by design (colors, gradient, which side it slides in from —
+genuinely scene-specific, tuned to each scene's palette) but had copy-
+pasted the panel's close *mechanics* — close button, Escape, outside-click,
+returning focus to the container — three-plus times each. `createPanelCloser()`
+(sceneKit.js) now owns exactly that; each scene passes its own cleanup
+callback. Doing this surfaced a real bug in orrery: its close-button path
+never reset `selected`/re-synced emphasis the way its Escape/outside-click
+paths already did, so closing via the ✕ could leave the control box stuck
+"selected." Unifying the three paths onto one `close()` fixed it as a
+side effect, not a separate change.
+
+Also closed a real a11y gap the audit flagged: sphere's facets, egg's
+satellites, orrery's control box + wall flyers, and library's spines were
+all raycast-only — no keyboard equivalent existed for "point at a facet,"
+so a keyboard-only visitor could orbit/walk every scene but never actually
+open a single panel. `createJumpList()` (sceneKit.js) builds a real list of
+focusable `<button>`s — one per fragment/satellite/story-or-flyer/catalog
+item — that call the exact same select-and-open function the mouse click
+already does. Visually hidden until focused, same idiom as the site's own
+skip-link (every button in a list shares one on-screen slot, so Tabbing
+through reveals one label at a time rather than a wall of text). Library's
+list covers the entire ~107-item catalog — genuinely browsable without a
+mouse now, not just technically reachable.
+
+Considered and deliberately skipped: hoisting the panel's open-side
+slide-in logic, or a shared raycast-hover helper, or moving anything into
+bardjs itself — bardjs stays dependency-free of any one site's UI
+conventions on purpose, and nothing outside theater.js consumes it yet, so
+building generic panel/list tooling into the package now would be
+generalizing for a use case that doesn't exist. `lens.js` (shelved, unused)
+wasn't touched — same treatment would apply if it's ever re-enabled.
+
+Verified throughout: `node --check` on every touched file, clean
+`npx vite build` (34 modules) after each round, and a full diff review of
+all four scene changes before commit.
+
 ## 1.1.18 (2026-07-24)
 
 Scott: "you know what you could do? randomize the order of each of the

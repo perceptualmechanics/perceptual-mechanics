@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { bindOrbitDrag, bindWheelZoom, bindGuardedResize, prefersReducedMotion, bindEscapeClose, mountClippedPreviewCanvas } from '../utils/sceneKit.js';
+import { bindOrbitDrag, bindWheelZoom, bindGuardedResize, prefersReducedMotion, createPanelCloser, createJumpList, mountClippedPreviewCanvas } from '../utils/sceneKit.js';
 
 // ─── The Orrery of Los Feliz ───────────────────────────────────────────────
 // A found short-short, full and unedited, undated. Investigators track a
@@ -1633,7 +1633,7 @@ export function createOrrery(container, { preview = false } = {}) {
   }
 
   // ─── Panel (full only) ────────────────────────────────────────────────────
-  let panel = null, panelTitle = null, panelEra = null, panelNote = null;
+  let panel = null, panelTitle = null, panelEra = null, panelNote = null, panelCloser = null, jumpList = null;
   let hint = null, caption = null, vignette = null, grain = null, title = null;
   let checkTitleHintCollision = null;
   if (!preview) {
@@ -1679,13 +1679,31 @@ export function createOrrery(container, { preview = false } = {}) {
     panelEra   = panel.querySelector('#orrery-panel-era');
     panelNote  = panel.querySelector('#orrery-panel-note');
 
-    panel.addEventListener('click', e => e.stopPropagation());
-    panel.querySelector('#orrery-panel-close').addEventListener('click', e => {
-      e.stopPropagation();
-      panel.classList.remove('open');
-      hideAmbient(false);
-      setEmphasis(false);
-      container.focus();
+    // Close callback shared by the close button, Escape, and an outside
+    // click (via createPanelCloser/panelCloser.close() below): resets
+    // `selected` and re-syncs emphasis to whatever's actually hovered right
+    // now, not just unconditionally off — matters because the crosshair can
+    // still be resting on the control box the instant the panel closes.
+    panelCloser = createPanelCloser(panel, container, {
+      closeBtn: panel.querySelector('#orrery-panel-close'),
+      onClose: () => { hideAmbient(false); selected = false; setEmphasis(hovered); },
+    });
+
+    // Keyboard access, 2026-07-26: the control box and the flyers are
+    // otherwise raycast-only, aimed via the first-person crosshair — no
+    // keyboard equivalent existed for "look at the control box" or "look at
+    // a flyer." One button for the found story, one per flyer (each plays
+    // its own riff directly, same as playPosterRiff(band) below the click
+    // handler already does), so a keyboard-only visitor can read and listen
+    // without ever having to aim.
+    jumpList = createJumpList(container, {
+      label: 'Read the found story, or tune in a flyer on the wall',
+      items: [{ kind: 'panel' }, ...warehouse.posters.map(p => ({ kind: 'poster', band: p.band }))],
+      getLabel: item => item.kind === 'panel' ? 'Read the found story (control box)' : `Tune in: ${item.band} flyer`,
+      onSelect: item => {
+        if (item.kind === 'panel') { selected = true; setEmphasis(true); openPanel(); }
+        else playPosterRiff(item.band);
+      },
     });
 
     hint = document.createElement('p');
@@ -1847,13 +1865,7 @@ export function createOrrery(container, { preview = false } = {}) {
         // identical bug: only close on an actual empty-space click, and
         // let a poster hit still play, panel open or not.
         if (hoveredPoster) { playPosterRiff(hoveredPoster.band); return; }
-        if (!panel.contains(e.target)) {
-          panel.classList.remove('open');
-          hideAmbient(false);
-          selected = false;
-          setEmphasis(hovered);
-          container.focus();
-        }
+        if (!panel.contains(e.target)) panelCloser.close();
         return;
       }
       if (hoveredPoster) { playPosterRiff(hoveredPoster.band); return; }
@@ -2005,19 +2017,6 @@ export function createOrrery(container, { preview = false } = {}) {
     checkTitleHintCollision?.();
   });
 
-  // Escape closes the read-more panel from anywhere, matching standard
-  // modal-dialog expectation (previously only the close button or a
-  // click outside the panel would do it).
-  const escapeClose = !preview ? bindEscapeClose(() => {
-    if (panel && panel.classList.contains('open')) {
-      panel.classList.remove('open');
-      hideAmbient(false);
-      selected = false;
-      setEmphasis(hovered);
-      container.focus();
-    }
-  }) : null;
-
   return {
     dispose() {
       cancelAnimationFrame(animId);
@@ -2025,7 +2024,8 @@ export function createOrrery(container, { preview = false } = {}) {
       wheelZoom?.dispose();
       fp?.dispose();
       resize.dispose();
-      escapeClose?.dispose();
+      panelCloser?.dispose();
+      jumpList?.dispose();
       if (!preview) {
         container.removeEventListener('touchmove', onContainerTouchMove);
         container.removeEventListener('touchstart', onContainerTouchStart);

@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { libraryItems } from '../text/library.js';
 import { cdRackItems } from '../text/cdRack.js';
 import {
-  bindOrbitDrag, bindWheelZoom, bindGuardedResize, prefersReducedMotion, bindEscapeClose,
+  bindOrbitDrag, bindWheelZoom, bindGuardedResize, prefersReducedMotion, createPanelCloser, createJumpList, escapeHtml,
 } from '../utils/sceneKit.js';
 
 // ─── The Library ────────────────────────────────────────────────────────────
@@ -272,12 +272,6 @@ const LIBRARY_LINKS = [
   { id: 145, field: 'note', phrase: 'Hedwig',                          target: 40 },
   { id: 145, field: 'note', phrase: 'VALIS',                           target: 110 },
 ];
-
-function escapeHtml(s) {
-  const div = document.createElement('div');
-  div.textContent = s;
-  return div.innerHTML;
-}
 
 // Wraps any LIBRARY_LINKS phrases that belong to this item+field in a
 // clickable <a class="library-link" data-target="id">, same beat as
@@ -1229,7 +1223,7 @@ export function createLibrary(container, { preview = false } = {}) {
   root.add(items.group);
 
   // ─── Caption + hint + panel (full only) ─────────────────────────────────
-  let caption = null, hint = null, panel = null, panelTitle = null, panelCreator = null, panelBodyEl = null;
+  let caption = null, hint = null, panel = null, panelTitle = null, panelCreator = null, panelBodyEl = null, panelCloser = null, jumpList = null;
   // Programmatically focusable so closing the panel (✕, outside click, or
   // Escape) has somewhere real to send focus back to, rather than leaving
   // it on a now-hidden close button or nowhere at all.
@@ -1410,11 +1404,9 @@ export function createLibrary(container, { preview = false } = {}) {
     panelCreator = panel.querySelector('#library-panel-creator');
     panelBodyEl = panel.querySelector('#library-panel-body');
 
-    panel.addEventListener('click', e => e.stopPropagation());
-    panel.querySelector('#library-panel-close').addEventListener('click', e => {
-      e.stopPropagation();
-      closePanel();
-      container.focus();
+    panelCloser = createPanelCloser(panel, container, {
+      closeBtn: panel.querySelector('#library-panel-close'),
+      onClose: closePanel,
     });
 
     // Cross-link navigation — follow the threads (click + keyboard), same
@@ -1452,14 +1444,14 @@ export function createLibrary(container, { preview = false } = {}) {
     });
   }
 
-  // Shared by all three ways the panel can close (✕ button, outside click,
-  // Escape) — previously each site repeated the same three statements.
-  // Focus management stays with each caller, since not every close should
-  // move focus (the in-place item swap, for one, deliberately doesn't call
-  // this at all).
+  // The scene-specific half of a close: panelCloser (sceneKit.js) handles
+  // the .open toggle, Escape, the outside-click trigger, and returning
+  // focus to `container` — this only does what's specific to the library
+  // (clear the video embed, deselect the spine). Doesn't touch focus itself,
+  // since not every close should move it (the in-place item swap, for one,
+  // deliberately doesn't call this at all).
   function closePanel() {
     if (!panel) return;
-    panel.classList.remove('open');
     panel.querySelector('#library-panel-video').innerHTML = '';
     selected = null;
   }
@@ -1560,6 +1552,25 @@ export function createLibrary(container, { preview = false } = {}) {
     });
   }
 
+  // Populate the panel with one item and open it fresh — shared by the
+  // spine click handler's own "nothing open yet" branch and the keyboard
+  // jump list below, neither of which needs the click handler's other
+  // branch (swapping content in an already-open panel without closing it
+  // first, tuned for a mouse clicking rapidly across adjacent spines).
+  function openItem(mesh, { fromLeft } = {}) {
+    selected = mesh;
+    populatePanel(mesh.userData.item);
+    if (!panel.classList.contains('open') && fromLeft !== undefined
+        && panel.classList.contains('from-left') !== fromLeft) {
+      panel.classList.add('no-transition');
+      panel.classList.toggle('from-left', fromLeft);
+      void panel.offsetWidth; // force reflow before re-enabling the transition
+      panel.classList.remove('no-transition');
+    }
+    panel.classList.add('open');
+    setTimeout(() => panelTitle.focus(), 50);
+  }
+
   if (!preview) {
     onContainerMouseMove = e => {
       if (panel.classList.contains('open')) return;
@@ -1655,31 +1666,34 @@ export function createLibrary(container, { preview = false } = {}) {
           }, 180);
           return;
         }
-        closePanel();
-        container.focus();
+        panelCloser.close();
         return;
       }
 
       if (!hitMesh) return;
-      selected = hitMesh;
-      populatePanel(it);
-
-      // Open from whichever side of the screen was actually clicked --
-      // ported from sphere.js. Panel is guaranteed closed here (the block
-      // above already returns early for an open-panel click), so flipping
-      // the anchor is invisible to the user.
-      const clickedLeft = (e.clientX - rect.left) < rect.width / 2;
-      if (panel.classList.contains('from-left') !== clickedLeft) {
-        panel.classList.add('no-transition');
-        panel.classList.toggle('from-left', clickedLeft);
-        void panel.offsetWidth; // force reflow before re-enabling the transition
-        panel.classList.remove('no-transition');
-      }
-
-      panel.classList.add('open');
-      setTimeout(() => panelTitle.focus(), 50);
+      // Panel is guaranteed closed here (the block above already returns
+      // early for an open-panel click), so flipping the anchor side is
+      // invisible to the user.
+      openItem(hitMesh, { fromLeft: (e.clientX - rect.left) < rect.width / 2 });
     };
     container.addEventListener('click', onContainerClick);
+
+    // Keyboard access, 2026-07-26: spines are otherwise raycast-only — no
+    // keyboard equivalent existed for "point at a spine." One button per
+    // item — the entire catalog, same as clicking any spine directly —
+    // closing first (harmless no-op if nothing's open) rather than
+    // reproducing the click path's in-place-swap animation, which was
+    // tuned for a mouse rapidly clicking across adjacent spines, not a
+    // single deliberate keyboard pick.
+    jumpList = createJumpList(container, {
+      label: 'Browse the shelf: books, films, and albums',
+      items: items.meshes,
+      getLabel: mesh => {
+        const it = mesh.userData.item;
+        return it.creator ? `${it.title} — ${it.creator}` : it.title;
+      },
+      onSelect: mesh => { closePanel(); openItem(mesh, { fromLeft: false }); },
+    });
   }
 
   // ─── Drag to orbit/pan + wheel zoom ──────────────────────────────────────
@@ -1757,20 +1771,14 @@ export function createLibrary(container, { preview = false } = {}) {
     renderer.setSize(nw, nh);
   });
 
-  const escapeClose = !preview ? bindEscapeClose(() => {
-    if (panel && panel.classList.contains('open')) {
-      closePanel();
-      container.focus();
-    }
-  }) : null;
-
   return {
     dispose() {
       cancelAnimationFrame(animId);
       orbitDrag.dispose();
       wheelZoom.dispose();
       resize.dispose();
-      escapeClose?.dispose();
+      panelCloser?.dispose();
+      jumpList?.dispose();
       if (onContainerMouseMove) container.removeEventListener('mousemove', onContainerMouseMove);
       if (onContainerClick) container.removeEventListener('click', onContainerClick);
       if (onContainerMouseLeave) container.removeEventListener('mouseleave', onContainerMouseLeave);

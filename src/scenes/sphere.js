@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { CSS2DRenderer, CSS2DObject } from 'three/examples/jsm/renderers/CSS2DRenderer.js';
 import { fragments } from '../text/fragments.js';
-import { bindOrbitDrag, bindWheelZoom, bindGuardedResize, prefersReducedMotion, bindEscapeClose } from '../utils/sceneKit.js';
+import { bindOrbitDrag, bindWheelZoom, bindGuardedResize, prefersReducedMotion, createPanelCloser, createJumpList } from '../utils/sceneKit.js';
 
 export function createSphere(container, { preview = false } = {}) {
   const w = container.clientWidth  || window.innerWidth;
@@ -183,7 +183,7 @@ export function createSphere(container, { preview = false } = {}) {
 
   // Panel (full only)
   let panel = null, panelContent = null, panelTitle = null, facetIdEl = null, hint = null;
-  let wheelZoom = null, escapeClose = null;
+  let wheelZoom = null, panelCloser = null, jumpList = null;
   // Named so dispose() can remove them — container is the shared
   // #experience-container element every scene reuses (main.js only clears
   // its innerHTML between scenes, never replaces the node), so a listener
@@ -292,12 +292,9 @@ export function createSphere(container, { preview = false } = {}) {
     panelContent = panel.querySelector('#sphere-panel-content');
     facetIdEl    = panel.querySelector('#sphere-facet-id');
 
-    panel.addEventListener('click', e => e.stopPropagation());
-    panel.querySelector('#sphere-panel-close').addEventListener('click', e => {
-      e.stopPropagation();
-      panel.classList.remove('open');
-      if (selectedFace !== -1) { restoreFaceColor(selectedFace); selectedFace = -1; }
-      container.focus();
+    panelCloser = createPanelCloser(panel, container, {
+      closeBtn: panel.querySelector('#sphere-panel-close'),
+      onClose: () => { if (selectedFace !== -1) { restoreFaceColor(selectedFace); selectedFace = -1; } },
     });
 
     // Fragment link navigation — follow the threads (click + keyboard)
@@ -328,6 +325,57 @@ export function createSphere(container, { preview = false } = {}) {
         });
       }, 180);
     }
+
+    // Populate the panel with fragment `fi` and open it — shared by the
+    // facet click handler below and the keyboard jump list (createJumpList,
+    // sceneKit.js), which has no click position of its own to derive a
+    // slide-in side from, hence `fromLeft` being optional. Only flips the
+    // anchor side when the panel wasn't already open, same precedent as the
+    // click path this was extracted from — a facet-to-facet swap (or a
+    // second jump-list pick) keeps whichever side the panel already
+    // anchored to rather than jumping.
+    function openFragment(fi, { facetLabel, fromLeft } = {}) {
+      panelTitle.textContent = fragments[fi].title;
+      panelContent.innerHTML = fragments[fi].text;
+      facetIdEl.textContent  = facetLabel ?? `Fragment ${fi + 1} of ${fragments.length}`;
+
+      if (!panel.classList.contains('open') && fromLeft !== undefined
+          && panel.classList.contains('from-left') !== fromLeft) {
+        panel.classList.add('no-transition');
+        panel.classList.toggle('from-left', fromLeft);
+        void panel.offsetWidth; // force reflow before re-enabling the transition
+        panel.classList.remove('no-transition');
+      }
+
+      panel.classList.add('open');
+      // Move focus to panel for screen readers
+      setTimeout(() => panelTitle.focus(), 50);
+      // Stagger glimmer delays + a11y on first open
+      panelContent.querySelectorAll('.fragment-link').forEach(link => {
+        const delay = (Math.random() * 12).toFixed(1);
+        const duration = (9 + Math.random() * 7).toFixed(1);
+        link.style.animationDelay = `-${delay}s`;
+        link.style.animationDuration = `${duration}s`;
+        link.setAttribute('role', 'button');
+        link.setAttribute('tabindex', '0');
+        link.setAttribute('aria-label', `Navigate to fragment: ${link.dataset.target}`);
+      });
+    }
+
+    // Keyboard access, 2026-07-26: facets are otherwise raycast-only — no
+    // keyboard equivalent existed for "point at a facet." One button per
+    // fragment (not per facet — several facets can map to the same
+    // fragment via the `% fragments.length` below, so a facet isn't a
+    // meaningful unit for a visitor who can't see the geometry). Doesn't
+    // attempt to also highlight a facet in the 3D view; that's a decorative
+    // affordance for the mouse/touch path, not essential to reading the
+    // fragment.
+    jumpList = createJumpList(container, {
+      label: 'Read a fragment from the sphere',
+      items: fragments,
+      getLabel: f => f.title,
+      onSelect: (f, fi) => openFragment(fi, { fromLeft: false }),
+    });
 
     panelContent.addEventListener('click', e => {
       const link = e.target.closest('.fragment-link');
@@ -377,9 +425,7 @@ export function createSphere(container, { preview = false } = {}) {
       // click; a click that hit a facet swaps the panel's content in
       // place instead.
       if (panel.classList.contains('open') && hoveredFace === -1) {
-        panel.classList.remove('open');
-        if (selectedFace !== -1) { restoreFaceColor(selectedFace); selectedFace = -1; }
-        container.focus();
+        panelCloser.close();
         return;
       }
       if (hoveredFace === -1) return;
@@ -387,38 +433,10 @@ export function createSphere(container, { preview = false } = {}) {
       selectedFace = hoveredFace;
       setFaceColor(selectedFace, selectedColor);
       const fi = selectedFace % fragments.length;
-      panelTitle.textContent  = fragments[fi].title;
-      panelContent.innerHTML  = fragments[fi].text;
-      facetIdEl.textContent   = `Facet ${selectedFace} · Fragment ${fi + 1} of ${fragments.length}`;
-
-      // Enter from whichever side of the screen was actually clicked —
-      // only when the panel wasn't already open; a direct facet-to-facet
-      // switch keeps whichever side it's already anchored to rather than
-      // jumping. no-transition forces the flip to land before the
-      // slide-in transition re-enables and .open starts animating it in.
-      if (!panel.classList.contains('open')) {
-        const rect = container.getBoundingClientRect();
-        const clickedLeft = (e.clientX - rect.left) < rect.width / 2;
-        if (panel.classList.contains('from-left') !== clickedLeft) {
-          panel.classList.add('no-transition');
-          panel.classList.toggle('from-left', clickedLeft);
-          void panel.offsetWidth; // force reflow before re-enabling the transition
-          panel.classList.remove('no-transition');
-        }
-      }
-
-      panel.classList.add('open');
-      // Move focus to panel for screen readers
-      setTimeout(() => panelTitle.focus(), 50);
-      // Stagger glimmer delays + a11y on first open
-      panelContent.querySelectorAll('.fragment-link').forEach(link => {
-        const delay = (Math.random() * 12).toFixed(1);
-        const duration = (9 + Math.random() * 7).toFixed(1);
-        link.style.animationDelay = `-${delay}s`;
-        link.style.animationDuration = `${duration}s`;
-        link.setAttribute('role', 'button');
-        link.setAttribute('tabindex', '0');
-        link.setAttribute('aria-label', `Navigate to fragment: ${link.dataset.target}`);
+      const rect = container.getBoundingClientRect();
+      openFragment(fi, {
+        facetLabel: `Facet ${selectedFace} · Fragment ${fi + 1} of ${fragments.length}`,
+        fromLeft: (e.clientX - rect.left) < rect.width / 2,
       });
     };
     container.addEventListener('click', onContainerClick);
@@ -430,16 +448,6 @@ export function createSphere(container, { preview = false } = {}) {
       },
     });
 
-    // Escape closes the fragment panel from anywhere, matching standard
-    // modal-dialog expectation (previously only the close button or a
-    // click outside the panel would do it).
-    escapeClose = bindEscapeClose(() => {
-      if (panel.classList.contains('open')) {
-        panel.classList.remove('open');
-        if (selectedFace !== -1) { restoreFaceColor(selectedFace); selectedFace = -1; }
-        container.focus();
-      }
-    });
   }
 
   // ─── Drag to rotate (mouse + touch, via sceneKit) ──────────────────────────
@@ -543,7 +551,8 @@ export function createSphere(container, { preview = false } = {}) {
       cancelAnimationFrame(animId);
       orbitDrag.dispose();
       wheelZoom?.dispose();
-      escapeClose?.dispose();
+      panelCloser?.dispose();
+      jumpList?.dispose();
       if (onContainerMouseMove) container.removeEventListener('mousemove', onContainerMouseMove);
       if (onContainerTouchMove) container.removeEventListener('touchmove', onContainerTouchMove);
       if (onContainerTouchStart) container.removeEventListener('touchstart', onContainerTouchStart);

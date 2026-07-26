@@ -30,7 +30,8 @@
 // bardjs) instead of a bespoke state machine — see the "bard.js wiring"
 // comment further down for what changed and what didn't.
 
-import { Player, compileLegacyScript } from 'bardjs';
+import { Player, compileLegacyScript, shuffle, asciiBubble } from 'bardjs';
+import { escapeHtml } from '../utils/sceneKit.js';
 
 const CHARACTERS = {
   // Truth and Beauty
@@ -916,48 +917,6 @@ export const SCENES = [
     ],
   },
 ];
-
-function escapeHtml(s) {
-  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-}
-
-function shuffle(arr) {
-  const a = arr.slice();
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
-  }
-  return a;
-}
-
-// ─── cowsay-style ASCII speech bubble ──────────────────────────────────────
-function wrapText(text, width) {
-  const words = text.split(/\s+/);
-  const lines = [];
-  let cur = '';
-  words.forEach(w => {
-    const test = cur ? cur + ' ' + w : w;
-    if (test.length > width && cur) {
-      lines.push(cur);
-      cur = w;
-    } else {
-      cur = test;
-    }
-  });
-  if (cur) lines.push(cur);
-  return lines;
-}
-
-function asciiBubble(text, voice, width = 40) {
-  const lines = wrapText(text, width);
-  const maxLen = Math.max(...lines.map(l => l.length), voice ? 9 : 0);
-  const top = ' ' + '_'.repeat(maxLen + 2);
-  const bottom = ' ' + '-'.repeat(maxLen + 2);
-  const rows = [];
-  if (voice) rows.push(`| ${'(voice)'.padEnd(maxLen)} |`);
-  lines.forEach(l => rows.push(`| ${l.padEnd(maxLen)} |`));
-  return [top, ...rows, bottom].join('\n');
-}
 
 function buildStyles() {
   if (document.getElementById('tab-styles')) return;

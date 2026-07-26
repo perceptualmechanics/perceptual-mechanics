@@ -78,6 +78,7 @@
 
 import { ironGods, flying, death, pygmalion, selfMutilation, fireVigil, fireCalamity, identityTheft, holography, projection, projectionScript, crocodilePhotograph } from '../text/scrollTexts.js';
 import { toOgham } from '../text/ogham.js';
+import { escapeHtml } from '../utils/sceneKit.js';
 
 const PATCHES = [
   { key: 'iron',           id: 'patch-iron',           body: ironGods,           tone: 0 },
@@ -160,10 +161,6 @@ const OGHAM_LINES = {
 function firstSentences(text, count) {
   const matches = text.match(/[^.!?]*[.!?]+/g) || [text];
   return matches.slice(0, count).join(' ').trim();
-}
-
-function escapeHtml(s) {
-  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
 function renderScriptBlock(elements) {

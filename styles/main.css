@@ -346,6 +346,41 @@ html, body {
   }
 }
 
+/* ─── Keyboard jump lists ───────────────────────────────────────────────────── */
+/* Built by sceneKit.js's createJumpList() for sphere/egg/orrery/library — an
+   accessible way to reach each scene's raycast-only 3D objects (facets,
+   satellites, posters, spines) without a mouse. Same visually-hidden-until-
+   focused idiom as .skip-link above: every button in a list shares this one
+   fixed slot, so Tabbing through reveals one label at a time instead of a
+   wall of text sitting permanently on screen. z-index 320 for the same
+   reason hint/caption elements need >=310 (see the z-index scale comment at
+   the top of this file) — these buttons are position:fixed, which escapes
+   #experience-container's own stacking context straight to the page root,
+   same as any other position:fixed element appended inside a scene. */
+.pm-jumplist {
+  position: fixed;
+  top: 0; left: 0;
+  z-index: 320;
+  list-style: none;
+  margin: 0; padding: 0;
+}
+.pm-jumplist button {
+  position: fixed;
+  top: -100%; left: 1rem;
+  background: #fff; color: #000;
+  font: inherit; font-size: 0.85rem;
+  border: none; padding: .6rem 1rem;
+  max-width: min(80vw, 26rem);
+  text-align: left;
+  border-radius: 0 0 4px 4px;
+  cursor: pointer;
+}
+.pm-jumplist button:focus {
+  top: 3.5rem; /* clear #pm-nav, same landmark #site-title's own CSS clears */
+  outline: 2px solid #000;
+  outline-offset: -2px;
+}
+
 /* ─── Focus styles ──────────────────────────────────────────────────────────── */
 #experience-close:focus {
   outline: 2px solid rgba(255,255,255,0.6);

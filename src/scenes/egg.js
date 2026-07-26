@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { poems } from '../text/poems.js';
-import { bindOrbitDrag, bindGuardedResize, prefersReducedMotion, bindEscapeClose } from '../utils/sceneKit.js';
+import { bindOrbitDrag, bindGuardedResize, prefersReducedMotion, createPanelCloser, createJumpList, escapeHtml } from '../utils/sceneKit.js';
 
 // ─── Poem cross-links, 2026-07-17 ──────────────────────────────────────────
 // Same mechanism, and the same rule, as the geodesic sphere's facet-to-
@@ -549,7 +549,7 @@ export function createEgg(container, { preview = false } = {}) {
   root.add(satellites.group);
 
   // ─── Caption + hint + poem panel (full only) ────────────────────────────
-  let caption = null, hint = null, panel = null, panelTitle = null, panelContent = null;
+  let caption = null, hint = null, panel = null, panelTitle = null, panelContent = null, panelCloser = null, jumpList = null;
   if (!preview && !document.getElementById('egg-styles')) {
     const style = document.createElement('style');
     style.id = 'egg-styles';
@@ -661,12 +661,9 @@ export function createEgg(container, { preview = false } = {}) {
     panelTitle   = panel.querySelector('#egg-panel-title');
     panelContent = panel.querySelector('#egg-panel-content');
 
-    panel.addEventListener('click', e => e.stopPropagation());
-    panel.querySelector('#egg-panel-close').addEventListener('click', e => {
-      e.stopPropagation();
-      panel.classList.remove('open');
-      selectedSat = null;
-      container.focus();
+    panelCloser = createPanelCloser(panel, container, {
+      closeBtn: panel.querySelector('#egg-panel-close'),
+      onClose: () => { selectedSat = null; },
     });
 
     panelContent.addEventListener('click', e => {
@@ -683,6 +680,18 @@ export function createEgg(container, { preview = false } = {}) {
       e.stopPropagation();
       navigateToPoem(link);
     });
+
+    // Keyboard access, 2026-07-26: satellites are otherwise raycast-only —
+    // no keyboard equivalent existed for "point at a satellite" — so a
+    // keyboard-only visitor could orbit the egg but never actually read a
+    // poem. One button per satellite, calling the exact same
+    // selectedSat-then-openPoem() beat the mouse click below already does.
+    jumpList = createJumpList(container, {
+      label: 'Read a poem from one of the satellites',
+      items: satellites.sats,
+      getLabel: sat => poems[sat.poemIndex].title,
+      onSelect: sat => { selectedSat = sat; openPoem(sat); },
+    });
   }
 
   // ─── Satellite hover/click → poem panel, same raycast pattern as the
@@ -697,9 +706,6 @@ export function createEgg(container, { preview = false } = {}) {
   // is gone, reading stale closures against a disposed scene.
   let onContainerMouseMove = null, onContainerClick = null;
 
-  function escapeHtml(s) {
-    return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-  }
   // A stanza can carry more than one live link (DNA's single stanza has
   // two), so this walks every POEM_LINKS entry for that stanza rather than
   // stopping at the first match the way manuscript.js's per-paragraph
@@ -781,9 +787,7 @@ export function createEgg(container, { preview = false } = {}) {
       // cause as library.js's identical bug: only close on an actual
       // empty-space click.
       if (panel.classList.contains('open') && !hoveredSat) {
-        panel.classList.remove('open');
-        selectedSat = null;
-        container.focus();
+        panelCloser.close();
         return;
       }
       if (!hoveredSat) return;
@@ -861,23 +865,12 @@ export function createEgg(container, { preview = false } = {}) {
     renderer.setSize(w, h);
   });
 
-  // Escape closes the poem panel from anywhere, matching standard
-  // modal-dialog expectation (previously only the close button or a
-  // click outside the panel would do it).
-  const escapeClose = !preview ? bindEscapeClose(() => {
-    if (panel && panel.classList.contains('open')) {
-      panel.classList.remove('open');
-      selectedSat = null;
-      container.focus();
-    }
-  }) : null;
-
   return {
     dispose() {
       cancelAnimationFrame(animId);
       orbitDrag.dispose();
       resize.dispose();
-      escapeClose?.dispose();
+      panelCloser?.dispose();
       if (onContainerMouseMove) container.removeEventListener('mousemove', onContainerMouseMove);
       if (onContainerClick) container.removeEventListener('click', onContainerClick);
       renderer.dispose();
@@ -902,6 +895,7 @@ export function createEgg(container, { preview = false } = {}) {
       if (caption) caption.remove();
       if (hint) hint.remove();
       if (panel) panel.remove();
+      jumpList?.dispose();
       renderer.domElement.remove();
     }
   };
