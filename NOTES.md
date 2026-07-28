@@ -6,6 +6,34 @@ projects (The Secret World, A Manual of Perceptual Mechanics) moved into their o
 files, which are now the source of truth for that material going forward. See "project map"
 below for where things live.
 
+## 1.2.3 (2026-07-28)
+
+Scott shared a Google Search Console "Page indexing" screenshot: 4 pages
+under "Alternate page with proper canonical tag." Not a broken-site bug —
+index.html's own `<link rel="canonical" href="https://perceptualmechanics.com/">`
+was already doing its job, keeping duplicates out of the index — but
+nothing server-side ever enforced that URL. Checked directly: `http://`,
+`https://www.`, and `/index.html` all served the exact same page with no
+redirect (that's the 4, combining both non-canonical host variants with
+both schemes). Relying on the canonical tag alone means any link pointing
+at a non-canonical variant never consolidates its SEO weight onto the real
+URL, and Google keeps re-crawling duplicates instead of following a
+redirect once.
+
+Added `public/.htaccess` (passthrough via Vite's publicDir, confirmed it
+lands in `dist/` unchanged and rsync doesn't special-case dotfiles) with
+two mod_rewrite rules for DreamHost's Apache: http-or-www → the canonical
+https+apex URL in a single hop (both conditions combined into one
+RewriteCond/RewriteRule pair, so `http://www...` doesn't round-trip
+through two redirects), and `/index.html` → `/` (gated on `%{THE_REQUEST}`
+specifically, not the rewritten path, so it can't loop against anything
+internal). Scoped to the document root — doesn't touch
+`/packages/bardjs/demo/index.html`, a different path the bare
+`^index\.html$` pattern doesn't match.
+
+Verified: clean `npx vite build`, confirmed `.htaccess` present verbatim
+in the build output.
+
 ## 1.2.2 (2026-07-26)
 
 Follow-up to 1.2.1's pointer-lock fix, from Scott after trying it live:

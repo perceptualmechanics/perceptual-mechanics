@@ -1,0 +1,24 @@
+# Canonical-host enforcement, 2026-07-28. The site's own <link rel="canonical">
+# (index.html) has always pointed at https://perceptualmechanics.com/, but
+# nothing server-side ever enforced it — http://, https://www., and
+# /index.html all served the exact same page with no redirect. Google Search
+# Console's own "Page indexing" report flagged the result: four URLs bucketed
+# under "Alternate page with proper canonical tag" (Scott, 2026-07-28
+# screenshot). Not a broken-site bug -- the canonical tag was already doing
+# its job, keeping duplicates out of the index -- but relying on it alone
+# means any links pointing at a non-canonical variant never consolidate
+# their SEO weight onto the real URL, and Google keeps re-crawling
+# duplicates instead of just following a redirect once. Real 301s fix both.
+#
+# Combines the https + apex-domain checks into one rule so http://www...
+# takes a single hop straight to the canonical URL, not two.
+RewriteEngine On
+
+RewriteCond %{HTTPS} off [OR]
+RewriteCond %{HTTP_HOST} ^www\.perceptualmechanics\.com$ [NC]
+RewriteRule ^(.*)$ https://perceptualmechanics.com/$1 [L,R=301]
+
+# /index.html -> / (THE_REQUEST, not the rewritten path, so this can't loop
+# against Vite's own module-script reference to /src/main.js etc.)
+RewriteCond %{THE_REQUEST} \s/+index\.html[?\s]
+RewriteRule ^index\.html$ / [L,R=301]
