@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { bindOrbitDrag, bindWheelZoom, bindGuardedResize, prefersReducedMotion, createPanelCloser, createJumpList, mountClippedPreviewCanvas } from '../utils/sceneKit.js';
+import { bindOrbitDrag, bindWheelZoom, bindGuardedResize, prefersReducedMotion, createPanelCloser, createJumpList, mountClippedPreviewCanvas, bindTapVsDrag } from '../utils/sceneKit.js';
 
 // ─── The Orrery of Los Feliz ───────────────────────────────────────────────
 // A found short-short, full and unedited, undated. Investigators track a
@@ -1896,19 +1896,16 @@ export function createOrrery(container, { preview = false } = {}) {
   // because this click handler — bound here, on that same shared
   // container — was still attached and its closure still had a hovered
   // poster reference from before the switch.
-  let onContainerTouchMove, onContainerTouchStart, onContainerClick;
-  let touchMoved = false;
+  let onContainerClick;
+  let touchGuard;
 
   if (!preview) {
     // Tap-vs-drag distinction still matters in first-person mode — a
     // touch-drag to look around shouldn't also register as a click on
     // whatever the crosshair happened to end up over.
-    onContainerTouchMove = () => { touchMoved = true; };
-    container.addEventListener('touchmove', onContainerTouchMove, { passive: true });
-    onContainerTouchStart = () => { touchMoved = false; };
-    container.addEventListener('touchstart', onContainerTouchStart, { passive: true });
+    touchGuard = bindTapVsDrag(container);
     onContainerClick = e => {
-      if (touchMoved) { touchMoved = false; return; }
+      if (touchGuard.consume()) return;
       // First click/tap just engages mouse-look (desktop pointer lock);
       // it doesn't also act on whatever's under the crosshair.
       if (fp.tryEngage(e)) return;
@@ -2086,8 +2083,7 @@ export function createOrrery(container, { preview = false } = {}) {
       panelCloser?.dispose();
       jumpList?.dispose();
       if (!preview) {
-        container.removeEventListener('touchmove', onContainerTouchMove);
-        container.removeEventListener('touchstart', onContainerTouchStart);
+        touchGuard?.dispose();
         container.removeEventListener('click', onContainerClick);
       }
       if (audioCtx) { audioCtx.close(); audioCtx = null; }

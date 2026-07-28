@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { CSS2DRenderer, CSS2DObject } from 'three/examples/jsm/renderers/CSS2DRenderer.js';
 import { fragments } from '../text/fragments.js';
-import { bindOrbitDrag, bindWheelZoom, bindGuardedResize, prefersReducedMotion, createPanelCloser, createJumpList } from '../utils/sceneKit.js';
+import { bindOrbitDrag, bindWheelZoom, bindGuardedResize, prefersReducedMotion, createPanelCloser, createJumpList, bindTapVsDrag } from '../utils/sceneKit.js';
 
 export function createSphere(container, { preview = false } = {}) {
   const w = container.clientWidth  || window.innerWidth;
@@ -189,8 +189,7 @@ export function createSphere(container, { preview = false } = {}) {
   // its innerHTML between scenes, never replaces the node), so a listener
   // bound directly to it and never removed keeps firing after this scene
   // is gone, reading stale closures against a disposed scene.
-  let onContainerMouseMove = null, onContainerTouchMove = null,
-      onContainerTouchStart = null, onContainerClick = null;
+  let onContainerMouseMove = null, onContainerClick = null, touchGuard = null;
   if (!preview) {
     // Design pass, 2026-07-17: every other scene shows a small instructional
     // hint (drag/click) — sphere never got one, which left it the one scene
@@ -409,13 +408,9 @@ export function createSphere(container, { preview = false } = {}) {
     };
     container.addEventListener('mousemove', onContainerMouseMove);
 
-    let touchMoved = false;
-    onContainerTouchMove = () => { touchMoved = true; };
-    container.addEventListener('touchmove', onContainerTouchMove, { passive: true });
-    onContainerTouchStart = () => { touchMoved = false; };
-    container.addEventListener('touchstart', onContainerTouchStart, { passive: true });
+    touchGuard = bindTapVsDrag(container);
     onContainerClick = e => {
-      if (touchMoved) { touchMoved = false; return; }
+      if (touchGuard.consume()) return;
       // Was `panel.classList.contains('open') && !panel.contains(e.target)`
       // — closed the panel on ANY canvas click while open, even one that
       // landed squarely on a different facet (hoveredFace is tracked live
@@ -553,9 +548,8 @@ export function createSphere(container, { preview = false } = {}) {
       wheelZoom?.dispose();
       panelCloser?.dispose();
       jumpList?.dispose();
+      touchGuard?.dispose();
       if (onContainerMouseMove) container.removeEventListener('mousemove', onContainerMouseMove);
-      if (onContainerTouchMove) container.removeEventListener('touchmove', onContainerTouchMove);
-      if (onContainerTouchStart) container.removeEventListener('touchstart', onContainerTouchStart);
       if (onContainerClick) container.removeEventListener('click', onContainerClick);
       resize.dispose();
       renderer.dispose();

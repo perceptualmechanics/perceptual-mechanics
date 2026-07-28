@@ -175,6 +175,31 @@ export function mountClippedPreviewCanvas(container, renderer) {
   };
 }
 
+// ─── Tap-vs-drag guard ──────────────────────────────────────────────────────
+// A touch-drag to orbit the camera also fires a trailing `click` once the
+// finger lifts — without this, that click gets read the same as a genuine
+// tap and opens whatever's under it, so dragging the sphere/orrery on a
+// phone kept accidentally opening panels. Duplicated identically in
+// sphere.js, orrery.js, and lens.js before this; those scenes' own click
+// handlers now start with `if (touchGuard.consume()) return;` instead.
+export function bindTapVsDrag(container) {
+  let moved = false;
+  const onTouchStart = () => { moved = false; };
+  const onTouchMove = () => { moved = true; };
+  container.addEventListener('touchstart', onTouchStart, { passive: true });
+  container.addEventListener('touchmove', onTouchMove, { passive: true });
+  return {
+    // Reads and clears in one step, same as the inline `if (touchMoved) {
+    // touchMoved = false; ... }` this replaces — a click handler calls this
+    // once per click, right up front.
+    consume() { const m = moved; moved = false; return m; },
+    dispose() {
+      container.removeEventListener('touchstart', onTouchStart);
+      container.removeEventListener('touchmove', onTouchMove);
+    },
+  };
+}
+
 // ─── Escape-to-close ────────────────────────────────────────────────────────
 // Standard modal-dialog expectation that none of the site's three read-more
 // panels (sphere, orrery, egg) had — closing only worked via the explicit

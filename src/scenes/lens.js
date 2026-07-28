@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { bindOrbitDrag, bindWheelZoom, bindGuardedResize, prefersReducedMotion, bindEscapeClose } from '../utils/sceneKit.js';
+import { bindOrbitDrag, bindWheelZoom, bindGuardedResize, prefersReducedMotion, bindEscapeClose, bindTapVsDrag } from '../utils/sceneKit.js';
 
 // ─── Lens: one cut gem, four colored sides ─────────────────────────────────
 // First full rebuild, 2026-07-17, replacing the old five-element YouTube-
@@ -566,6 +566,21 @@ function injectStyles() {
       #lens-title { top: 3.9rem; width: 90vw; }
       #lens-caption { white-space: normal; width: 88vw; font-size: 0.7rem; }
     }
+    /* #lens-hint.stacked: same fix as orrery.js's own title/hint collision
+       — ported here 2026-07-28 (lens was never actually re-enabled, so this
+       had gone unfixed since orrery's 1.1.19; picked up in an "iterate on
+       everything" pass, cheap to keep in sync while the pattern's already
+       fresh). A single max-width:600px breakpoint can't cover every font-
+       metrics/window-width combination that puts the title's own bounding
+       box in the hint's way — checkTitleHintCollision() below measures the
+       real rects instead and toggles this class (and pins the hint's top
+       to the title's own measured bottom + a gap, not a guessed constant)
+       whenever they'd actually overlap, at any width. The max-width query
+       stays too, as a floor for when JS hasn't run yet. */
+    #lens-hint.stacked {
+      top: 7.6rem; right: 6vw; left: 6vw;
+      font-size: 0.5rem; letter-spacing: 0.14em; line-height: 1.6; text-align: center;
+    }
     @media (max-width: 600px) {
       #lens-hint {
         top: 7.6rem; right: 6vw; left: 6vw;
@@ -846,6 +861,17 @@ export function createLens(container, { preview = false } = {}) {
   caption.setAttribute('aria-hidden', 'true');
   document.body.appendChild(caption);
 
+  // Measured, not guessed — see the #lens-hint.stacked CSS comment above
+  // and orrery.js's own checkTitleHintCollision for the fuller history.
+  function checkTitleHintCollision() {
+    const t = title.getBoundingClientRect();
+    const h = hint.getBoundingClientRect();
+    const overlaps = t.right > h.left && t.left < h.right && t.bottom > h.top && t.top < h.bottom;
+    hint.classList.toggle('stacked', overlaps);
+    hint.style.top = overlaps ? `${t.bottom + 16}px` : '';
+  }
+  requestAnimationFrame(checkTitleHintCollision);
+
   // ─── Panel ──────────────────────────────────────────────────────────────
   const panel = document.createElement('aside');
   panel.id = 'lens-panel';
@@ -960,13 +986,9 @@ export function createLens(container, { preview = false } = {}) {
   };
   container.addEventListener('mousemove', onContainerMouseMove);
 
-  let touchMoved = false;
-  const onContainerTouchMove = () => { touchMoved = true; };
-  container.addEventListener('touchmove', onContainerTouchMove, { passive: true });
-  const onContainerTouchStart = () => { touchMoved = false; };
-  container.addEventListener('touchstart', onContainerTouchStart, { passive: true });
+  const touchGuard = bindTapVsDrag(container);
   const onContainerClick = e => {
-    if (touchMoved) { touchMoved = false; return; }
+    if (touchGuard.consume()) return;
     // Was `panel.classList.contains('open') && !panel.contains(e.target)`
     // — closed the panel on any canvas click while open, even one that
     // hit a different facet or the light fixture (hoveredObject is
@@ -1035,6 +1057,7 @@ export function createLens(container, { preview = false } = {}) {
 
   const resize = bindGuardedResize(container, (nw, nh) => {
     camera.aspect = nw / nh; camera.updateProjectionMatrix(); renderer.setSize(nw, nh);
+    checkTitleHintCollision();
   });
 
   return {
@@ -1044,9 +1067,8 @@ export function createLens(container, { preview = false } = {}) {
       wheelZoom.dispose();
       resize.dispose();
       escapeClose.dispose();
+      touchGuard.dispose();
       container.removeEventListener('mousemove', onContainerMouseMove);
-      container.removeEventListener('touchmove', onContainerTouchMove);
-      container.removeEventListener('touchstart', onContainerTouchStart);
       container.removeEventListener('click', onContainerClick);
       renderer.dispose();
       gem.geometry.dispose(); gem.material.forEach(m => m.dispose());

@@ -6,6 +6,61 @@ projects (The Secret World, A Manual of Perceptual Mechanics) moved into their o
 files, which are now the source of truth for that material going forward. See "project map"
 below for where things live.
 
+## 1.2.4 (2026-07-28)
+
+Scott: "why not go through it all and just see if there's anything to
+improve or iterate on" — a full sweep, not tied to a specific bug report.
+
+**Dependency audit.** `npm audit` flagged one high-severity postcss
+advisory; `npm audit fix` resolved it (postcss 8.5.16→8.5.24, nanoid
+3.3.15→3.3.16, plus optional rollup/esbuild platform binaries). No
+breaking changes, no manual intervention needed.
+
+**Deferred hoist, done.** `bindTapVsDrag(container)` added to sceneKit —
+the touch-move-vs-tap distinction sphere.js and orrery.js were each
+tracking by hand (a `moved` flag set on touchmove, checked before treating
+a touchend as a click) is now one shared helper both scenes call. Same
+shape as this session's earlier `createPanelCloser`/`createJumpList`
+hoists.
+
+**lens.js missed the orrery's title/hint fix.** lens.js is shelved (not
+imported by main.js, no live route to it) but still gets maintained
+alongside the other scenes. Auditing it against 1.2.1's orrery fix turned
+up the same bug in its older, pre-fix form — a fixed-offset `.stacked`
+CSS rule instead of a measured one. Ported the same fix: `checkTitleHintCollision()`
+now sets the hint's `top` from the title's real `getBoundingClientRect().bottom`
+rather than a guessed constant.
+
+**Bundle splitting.** All eight scenes render as live previews on the
+landing page at once, so none of them can be code-split behind a dynamic
+`import()` — every scene ships on first load regardless. three.js itself,
+though, barely changes between deploys while the scene code changes on
+almost every one. Added `manualChunks: { three: ['three'] }` to
+`vite.config.js` so a returning visitor's cached copy of three.js survives
+a deploy that only touched app code. Main chunk dropped from ~1056KB to
+~495KB; the new `three-*.js` chunk (~560KB) is otherwise unchanged and
+correctly excluded from the bardjs demo entry, which doesn't use three.js.
+Doesn't reduce first-visit bytes, only improves repeat-visit/repeat-deploy
+caching.
+
+**Fresh a11y pass.** No unescaped-HTML/XSS gaps (everything user-authored
+or dynamic already routes through `escapeHtml`). `prefers-reduced-motion`
+coverage confirmed across all eight scenes — either via the JS
+`prefersReducedMotion()` helper (scenes with rAF-driven camera motion) or
+scoped CSS `@media` blocks (manuscript.js, theater.js), both already in
+place before this pass. Panel-opening code across sphere/egg/orrery/library
+all move focus to the panel's own title on open, so no ARIA-live-region
+gap — a screen reader announces the new panel content via the focus
+change itself, the same pattern theater.js's dedicated live region serves
+a different purpose for (in-progress narration during playback, not a
+one-time open event). `outline: none` appears twice (manuscript.js's
+`.ms-scroll`, on a `tabindex="-1"` container never reachable by Tab;
+library.js's `.library-link:focus`, paired with a color/glow change that
+serves as the visible indicator) — both deliberate, neither left bare.
+Skip link and `lang="en"` already present in index.html.
+
+Verified: `node --check` on all touched files, clean `npx vite build`.
+
 ## 1.2.3 (2026-07-28)
 
 Scott shared a Google Search Console "Page indexing" screenshot: 4 pages
