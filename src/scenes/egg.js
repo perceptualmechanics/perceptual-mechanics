@@ -51,8 +51,23 @@ const EARTH_RADIUS = 1;
 // "toward the sun," roughly matching the key light's own +X lean a little
 // further down, so the compressed/lit side and the visually sunward side
 // agree.
-const COMPRESS_DAY = 0.42; // dayside lines pulled this fraction closer to the planet
-const TAIL_STRETCH  = 0.95; // nightside lines stretched up to this fraction further out
+// Design pass, 2026-07-29, second round — Scott, after the first pass
+// shipped and was live: the shape still reads round. It genuinely isn't
+// (verified live via Chrome: the day side hugs the planet tight, the tail
+// stretches out and off-frame, ~3.3x asymmetry) — but the auto-rotate
+// (both root's own slow spin and field.group's separate precession,
+// further down) constantly changes which angle the shape is seen from,
+// and a magnetosphere viewed nearly end-on along its own day-tail axis
+// legitimately looks close to round, the same way any elongated 3D shape
+// does from the "wrong" angle. Between that rotational drift and 14
+// satellite orbit rings (also perfectly round, and now more numerous
+// than the field lines themselves) competing for attention, the
+// asymmetry was too easy to miss rather than actually absent. Pushed
+// both constants up so the shape reads clearly across a wider range of
+// angles, not just the one this was originally tuned and verified
+// against.
+const COMPRESS_DAY = 0.5;  // dayside lines pulled this fraction closer to the planet
+const TAIL_STRETCH  = 1.4; // nightside lines stretched up to this fraction further out
 
 // Rebuilt 2026-07-17 for more photorealism. (2026-07-17, later same day —
 // Scott: the green glow should live in the aurorae only, not the whole
@@ -227,7 +242,12 @@ function buildFieldLines(preview) {
   const group = new THREE.Group();
   const lineCount = preview ? 6 : 12;
   const baseColor = new THREE.Color(0x66ccff);
-  const baseOpacity = preview ? 0.3 : 0.38;
+  // Bumped (0.38 -> 0.5, full scene) so the field lines carry enough
+  // visual weight to read as the shape against 14 satellite orbit rings
+  // now sharing the scene — those are plain circles by nature (satellites
+  // don't compress/stretch with the field), and outnumbering the field
+  // lines was part of why the asymmetry was easy to miss.
+  const baseOpacity = preview ? 0.3 : 0.5;
   const lines = [];
 
   for (let i = 0; i < lineCount; i++) {
@@ -560,8 +580,14 @@ function buildSatellites(preview) {
     // satellite population's paths wouldn't all read with equal
     // prominence; some fainter, some a little more distinct, reads as
     // messier/richer rather than a uniform stack of identical rings.
+    // Pulled down again (0.07-0.18 -> 0.045-0.11), second design pass —
+    // these are perfectly circular by nature (satellites don't compress
+    // or stretch with the field the way field lines do), and with 14 of
+    // them now sharing the scene with only 12 field lines, they were
+    // competing with — and diluting — the one shape actually telling the
+    // magnetosphere story.
     const ringMat = new THREE.MeshBasicMaterial({
-      color: 0xffe08a, transparent: true, opacity: 0.07 + Math.random() * 0.11,
+      color: 0xffe08a, transparent: true, opacity: 0.045 + Math.random() * 0.065,
     });
     const ring = new THREE.Mesh(ringGeo, ringMat);
     ring.rotation.x = Math.PI / 2;
@@ -962,12 +988,18 @@ export function createEgg(container, { preview = false } = {}) {
     if (!reduceMotion) {
       earth.rotation.y = t * (preview ? 0.06 : 0.03);
       clouds.rotation.y = t * (preview ? 0.06 : 0.03) * 1.35;
-      field.group.rotation.y = t * 0.015;
+      // Slowed (0.015 -> 0.008) — this precession and root's own
+      // auto-rotate below both turn the day/tail axis away from whatever
+      // angle currently reads clearly as asymmetric; slower drift gives a
+      // visitor more time in a readable orientation before it wanders.
+      field.group.rotation.y = t * 0.008;
       satellites.sats.forEach(s => {
         s.pivot.rotation.y += s.speed * 0.01;
       });
       if (autoRotate && !orbitDrag.isDragging) {
-        root.rotation.y += preview ? 0.0015 : 0.0009;
+        // Full scene slowed (0.0009 -> 0.0005), same reasoning as
+        // field.group's own precession above.
+        root.rotation.y += preview ? 0.0015 : 0.0005;
       }
     }
 

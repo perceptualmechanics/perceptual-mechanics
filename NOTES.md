@@ -6,6 +6,54 @@ projects (The Secret World, A Manual of Perceptual Mechanics) moved into their o
 files, which are now the source of truth for that material going forward. See "project map"
 below for where things live.
 
+## 1.3.3 (2026-07-29)
+
+Two renames plus a return to the still-open shape issue from the original
+design brief.
+
+**Renames.** Egg → Orbiter (Scott's own recommendation, over Magnetosphere
+and Field): promotes text already live in the piece (the in-scene "sing,
+orbiter" caption, the Kenney epigraph) rather than introducing new
+vocabulary, and it doesn't promise a shape the way "Egg" did before the
+shape itself was fixed. Updated the nav icon's aria-label/title, the
+landing preview tile's title/aria-label (kept in sync with the nav icon
+per the existing "added a title to every tile, matching its nav-icon
+counterpart's" convention), main.js's SCENES.egg label/ariaLabel (unused
+dead fields, but updated for consistency while touched), and the
+colophon bibliography's section heading. In-scene caption and every
+internal identifier (scene key, file name, CSS ids) left alone — this was
+scoped to the visible label only. Manuscript → Scroll: nav icon
+aria-label only, since the description text (both the nav tooltip and the
+preview tile's aria-label, "a scroll of found writing...") already used
+the right word — Scott's own point, no other content to change.
+
+**The field shape, still round.** Scott: the compressed/tail asymmetry
+"didn't make it into the last round." It did ship (1.3.0-1.3.2, code
+confirmed still intact, nothing regressed) and I'd verified it live via
+Chrome — but three things were likely burying the read: root's own
+auto-rotate and field.group's separate precession constantly turn the
+day-tail axis away from whatever angle currently shows the asymmetry
+clearly (a magnetosphere viewed end-on along its own axis legitimately
+looks close to round, the same as any elongated 3D shape from the wrong
+angle); 14 satellite orbit rings (added in the same pass, all perfectly
+circular by nature) now outnumber the 12 field lines and compete for
+attention; and the deformation constants themselves, while real, left
+some margin for a partial-angle view to read as fairly round. Pushed all
+three: COMPRESS_DAY 0.42→0.5 and TAIL_STRETCH 0.95→1.4 (asymmetry ratio
+~3.3x→~4.2x, no new inside-planet risk, safety clamp still holds),
+root/field.group rotation both slowed roughly 40-45%, field line base
+opacity bumped 0.38→0.5, satellite ring opacity pulled down further
+(0.07-0.18→0.045-0.11) so they read as a secondary layer rather than
+competing with the one shape actually telling the story.
+
+Built blind again on the shape/rotation/opacity changes specifically — no
+way to preview a slower rotation's actual felt pace, or the new
+opacity balance against real satellite orbits, without a live deploy.
+Renames verified directly in the built dist/index.html output.
+
+Verified: node --check on all four touched files, clean vite build,
+dist/index.html grepped to confirm the renamed aria-labels landed.
+
 ## 1.3.2 (2026-07-29)
 
 1.3.1 didn't fix it — checked live again after Scott's push, same white
