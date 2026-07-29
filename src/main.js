@@ -51,6 +51,45 @@ let fullInstance = null;
 let lastTrigger  = null; // whichever nav icon / preview tile launched the active scene
 const previews   = {};
 
+// ─── Hash deep links ─────────────────────────────────────────────────────────
+// Until 2026-07-29 the site had no routing of any kind: all eight scenes
+// lived behind a click on one URL, so no scene could be linked to,
+// bookmarked, shared, or reached from outside the page at all. The static
+// text pages under /text/ need exactly that — a real way to send a reader
+// from the writing into the piece it belongs to — so a scene needs a name
+// in the URL. A full History API router would be overkill here (one page,
+// eight client-rendered scenes, no server-side routes on a static host);
+// a hash names a scene, costs nothing to serve, and can't 404.
+//
+// `syncingHash` guards the round trip: assigning location.hash fires
+// hashchange, which would otherwise re-enter expandScene/returnToGallery
+// for the very transition that just set it.
+let syncingHash = false;
+
+function navIconFor(sceneName) {
+  return document.querySelector(`.nav-icon[data-scene="${sceneName}"]`);
+}
+
+function sceneFromHash() {
+  const key = decodeURIComponent(location.hash.replace(/^#/, ''));
+  // hasOwn, not `key in SCENES` — `in` walks the prototype chain, so
+  // /#toString would otherwise resolve to a "scene" and throw on .create.
+  return Object.hasOwn(SCENES, key) ? key : null;
+}
+
+function setHash(sceneName) {
+  syncingHash = true;
+  if (sceneName) {
+    location.hash = sceneName;
+  } else if (location.hash) {
+    // replaceState rather than clearing the hash directly: assigning
+    // location.hash = '' leaves a bare trailing '#' in the URL and pushes
+    // a dead history entry that a Back press lands on with nothing to show.
+    history.replaceState(null, '', location.pathname + location.search);
+  }
+  syncingHash = false;
+}
+
 const overlay      = document.getElementById('experience-overlay');
 const expContainer = document.getElementById('experience-container');
 const landing      = document.getElementById('landing');
@@ -124,6 +163,7 @@ function expandScene(sceneName, triggerEl = null) {
 
   activeScene = sceneName;
   setActiveIcon(sceneName);
+  setHash(sceneName);
 
   landing.style.display = 'none';
   overlay.classList.add('active');
@@ -158,6 +198,7 @@ function returnToGallery() {
 
   overlay.classList.remove('active', 'butterfly-bg');
   overlay.setAttribute('aria-hidden', 'true');
+  setHash(null);
   document.getElementById('butterfly-exp-label')?.remove();
   document.getElementById('butterfly-hint')?.remove();
 
@@ -240,6 +281,22 @@ function initPreviews() {
 }
 
 initPreviews();
+
+// ─── Open whatever the URL names ─────────────────────────────────────────────
+// Runs after initPreviews() so the landing grid behind the overlay is fully
+// built either way — returning to the gallery from a deep link then finds a
+// real page underneath, not an empty one. The nav icon is passed as the
+// trigger so returnToGallery()'s focus restore still has somewhere sensible
+// to send focus, same as a click would.
+const initialScene = sceneFromHash();
+if (initialScene) expandScene(initialScene, navIconFor(initialScene));
+
+window.addEventListener('hashchange', () => {
+  if (syncingHash) return; // our own write, not a real navigation
+  const scene = sceneFromHash();
+  if (scene) expandScene(scene, navIconFor(scene));
+  else returnToGallery();
+});
 
 // ─── Colophon ─────────────────────────────────────────────────────────────────
 // Persistent mark, bottom-right of the landing page. See components/

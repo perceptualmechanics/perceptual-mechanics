@@ -22,3 +22,14 @@ RewriteRule ^(.*)$ https://perceptualmechanics.com/$1 [L,R=301]
 # against Vite's own module-script reference to /src/main.js etc.)
 RewriteCond %{THE_REQUEST} \s/+index\.html[?\s]
 RewriteRule ^index\.html$ / [L,R=301]
+
+# Same intent, for the static text pages added 2026-07-29: each one is served
+# as <dir>/index.html, so /text/scroll/index.html and /text/scroll/ are the
+# same page at two URLs — exactly the duplicate the rule above exists to
+# collapse. Deliberately kept as its own rule scoped to ^text/ rather than
+# generalizing the proven root rule to match any directory: a mistake in an
+# untestable Apache regex that only touches /text/ costs a few new pages,
+# whereas the same mistake in the root rule could loop the homepage itself.
+# %1 is the captured sub-path ('scroll/', or empty for /text/index.html).
+RewriteCond %{THE_REQUEST} \s/+text/(([^\s?]*/)?)index\.html[?\s]
+RewriteRule ^text/(.*/)?index\.html$ /text/%1 [L,R=301]

@@ -76,23 +76,28 @@
 // vector/filter math, generated fresh in the browser, just with more tools
 // in the box.
 
-import { ironGods, flying, death, pygmalion, selfMutilation, fireVigil, fireCalamity, identityTheft, holography, projection, projectionScript, crocodilePhotograph } from '../text/scrollTexts.js';
+import { scrollPieces } from '../text/scrollPieces.js';
 import { toOgham } from '../text/ogham.js';
 import { escapeHtml } from '../utils/sceneKit.js';
 
-const PATCHES = [
-  { key: 'iron',           id: 'patch-iron',           body: ironGods,           tone: 0 },
-  { key: 'flying',         id: 'patch-flying',         body: flying,             tone: 1 },
-  { key: 'death',          id: 'patch-death',          body: death,              tone: 1 },
-  { key: 'pygmalion',      id: 'patch-pygmalion',      body: pygmalion,          tone: 1 },
-  { key: 'selfmutilation', id: 'patch-selfmutilation', body: selfMutilation,     tone: 2 },
-  { key: 'firevigil',      id: 'patch-firevigil',      body: fireVigil,          tone: 2 },
-  { key: 'firecalamity',   id: 'patch-firecalamity',   body: fireCalamity,       tone: 2 },
-  { key: 'identity',       id: 'patch-identity',       body: identityTheft,      tone: 2 },
-  { key: 'holography',     id: 'patch-holography',     body: holography,        tone: 3 },
-  { key: 'projection',     id: 'patch-projection',     body: projection,        tone: 4 },
-  { key: 'crocodile',      id: 'patch-crocodile',      body: crocodilePhotograph, tone: 5 },
-];
+// Hide darkness per patch — oldest hide darkest and most soot-stained, newest
+// still pale. Presentation, so it stays here rather than in src/text/, keyed
+// off the piece's own key. The ordering and the text itself now come from
+// scrollPieces.js, which the prerender step for /text/scroll/ also reads —
+// one list, so the scroll and the published page can't fall out of order or
+// out of sync with each other.
+const TONES = {
+  iron: 0, flying: 1, death: 1, pygmalion: 1,
+  selfmutilation: 2, firevigil: 2, firecalamity: 2, identity: 2,
+  holography: 3, projection: 4, crocodile: 5,
+};
+
+const PATCHES = scrollPieces.map(p => ({
+  key: p.key,
+  id: `patch-${p.key}`,
+  body: p.body,
+  tone: TONES[p.key] ?? 0,
+}));
 
 const MOTIF_CYCLE = ['spiral', 'chevron', 'cupring', 'dots'];
 
@@ -143,9 +148,11 @@ const INTENSITIES = [
 // screenplay format — rendered after the given paragraph index (post-split,
 // i.e. the index the scene's *lead-in* paragraph has once it's isolated
 // from the script content that used to trail it).
-const SCRIPT_INSERTS = [
-  { patch: 'projection', afterIndex: 23, script: projectionScript },
-];
+// Derived from scrollPieces.js rather than restated here, so the scroll and
+// the published /text/scroll/ page insert the scene at the same place.
+const SCRIPT_INSERTS = scrollPieces
+  .filter(p => p.script)
+  .map(p => ({ patch: p.key, afterIndex: p.script.after, script: p.script.lines }));
 
 // How many opening sentences of each patch's first paragraph get set as an
 // Ogham line in the margin — computed from the real paragraph text itself

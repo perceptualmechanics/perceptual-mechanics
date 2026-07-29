@@ -221,6 +221,45 @@ html, body {
   padding: 1rem;
 }
 
+/* ─── "Read the writing on its own" ────────────────────────────────────────
+   Added 2026-07-29 alongside the static /text/ pages. Fixed rather than
+   in-flow on purpose: #landing is a centering flex row whose only child is
+   the preview grid, and adding a second flex item would sit beside the grid
+   rather than under it (making it a column would also invert what the 480px
+   `align-items: flex-start` rule below means, which exists for a documented
+   reason). Bottom-left is the one corner still free — #site-title owns
+   bottom-center, #colophon-mark bottom-right. It stays a child of #landing so
+   the existing `landing.style.display = 'none'` in expandScene() hides it
+   with everything else when a scene opens, no separate visibility logic.
+   Deliberately quiet: the experiences are the work, this is the side door. */
+#landing-textlink {
+  position: fixed;
+  bottom: 1.35rem;
+  left: 1.4rem;
+  margin: 0;
+  z-index: 310;
+}
+#landing-textlink a {
+  font-family: 'Times New Roman', serif;
+  font-size: 0.62rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.32);
+  text-decoration: none;
+  transition: color 0.4s ease;
+}
+#landing-textlink a:hover,
+#landing-textlink a:focus {
+  color: rgba(255, 255, 255, 0.72);
+}
+@media (max-width: 600px) {
+  /* #site-title is centered at bottom:1.2rem; on a narrow phone its text
+     block reaches far enough left to collide with this. Lift it clear
+     rather than hiding it — mobile-first indexing means a link hidden on
+     small screens is a link that counts for less. */
+  #landing-textlink { bottom: 3.4rem; }
+}
+
 .preview-wrapper {
   /* Was <div role="listitem">, now a real <li> — li has no default
      margin/padding of its own to reset (only the parent list does). */

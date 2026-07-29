@@ -1,7 +1,33 @@
 import { resolve } from 'path';
 import { defineConfig } from 'vite';
+import { prerender } from './scripts/prerender.js';
+
+// ─── Static text pages ──────────────────────────────────────────────────────
+// Runs as a build plugin rather than as a second `npm run build` step on
+// purpose: verification around here is almost always a bare `npx vite build`
+// (see NOTES.md, most entries), and a script-chain would quietly skip the
+// prerender exactly when it's being checked. closeBundle fires after the
+// public/ passthrough copy, so the generated sitemap.xml lands last and wins.
+function prerenderTextPages() {
+  let outDir = resolve(__dirname, 'dist');
+  return {
+    name: 'pm-prerender-text',
+    apply: 'build',
+    // Take the real, resolved outDir rather than assuming 'dist' — a build
+    // run with --outDir elsewhere should still get its text pages, and
+    // hardcoding the default would silently write them into the wrong place.
+    configResolved(config) {
+      outDir = resolve(config.root, config.build.outDir);
+    },
+    closeBundle() {
+      const n = prerender(outDir);
+      console.log(`\n  ✓ prerendered ${n} text pages + sitemap.xml`);
+    },
+  };
+}
 
 export default defineConfig({
+  plugins: [prerenderTextPages()],
   build: {
     rollupOptions: {
       input: {

@@ -266,6 +266,16 @@
         </button>
       </li>
     </ul>
+
+    <!-- The writing, plainly. Added 2026-07-29: every piece above builds its
+         text client-side and only after a click, so none of it had ever been
+         reachable by search or linkable from outside the page. /text/ is the
+         same writing as real static pages, generated at build time from the
+         same modules the scenes import (see scripts/prerender.js). Kept
+         deliberately quiet down here — the experiences are the work; this is
+         the way in for someone who arrived looking for a line they
+         remembered. -->
+    <p id="landing-textlink"><a href="/text/">Read the writing on its own</a></p>
   </main>
 
   <!-- Full screen experience overlay — no close button; nav is the navigation -->

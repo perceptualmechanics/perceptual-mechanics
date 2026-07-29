@@ -6,6 +6,184 @@ projects (The Secret World, A Manual of Perceptual Mechanics) moved into their o
 files, which are now the source of truth for that material going forward. See "project map"
 below for where things live.
 
+## Standing notes — build tooling, generated output, SEO
+
+Rules that earned their place by being learned the hard way. They apply to any
+future build-step or search-visibility work, not just the entry that produced
+them. Read these before adding anything that runs at build time.
+
+- **Hook the command people actually run, not the one the docs say to run.**
+  Verification around here is almost always a bare `npx vite build`, not
+  `npm run build`. Anything that must happen on every build belongs in a vite
+  plugin, not chained into the npm script — otherwise it silently no-ops during
+  exactly the step meant to catch problems, and the build "passes" while
+  producing incomplete output. This is why `scripts/prerender.js` runs from a
+  `closeBundle` hook (1.7.0). Corollary: read the resolved `outDir` from config
+  rather than hardcoding `dist`, or a `--outDir` build writes to the wrong place.
+- **Derived artifacts get generated, never hand-maintained.** `sitemap.xml` sat
+  stale at one URL for months because it was a file someone had to remember to
+  edit. If a file's correct contents are a function of something else in the
+  repo, generate it from that thing. The same goes for anything that has to
+  agree with a list of scenes, pages, or routes.
+- **Published copies import; they never copy.** Content lives in `src/text/`
+  with no rendering attached, and anything that republishes it — a page, a feed,
+  an export — imports the same module the scene does. Two copies of the same
+  paragraph will drift, and the drift is invisible until someone notices the
+  site and the archive disagree. When moving content to make this true, deep-
+  compare the moved constants against `HEAD` and confirm lossless before
+  shipping.
+- **Client-rendered content is invisible content.** Anything built inside a
+  click handler is unreachable to crawlers, which run JavaScript but don't
+  click. Any new scene that carries real writing needs a `/text/` page in the
+  same pass, or it ships unfindable — and the whole point of 1.7.0 was that this
+  had quietly been true of everything for as long as the site existed.
+- **Report a measurement with its method.** Word counts, ratios, and "N checks
+  passed" are all method-dependent, and quoting a number from an earlier run
+  after changing the method produces a real error (caught in 1.7.0: 40,267 vs
+  39,930, same build, different counter). State the ruler alongside the number.
+- **Keep two different kinds of unverified separate.** "Not verified live" means
+  no browser route existed. "Not independently verifiable" means it was checked
+  by a script whose output only ever existed in-session, so the person reading
+  the note can't confirm it without the same artifacts. Both deserve saying;
+  conflating them makes the second one sound stronger than it is. Give the
+  reader a concrete spot-check they can run themselves.
+- **Scope untestable server config narrowly.** Apache rewrite rules can't be
+  tested from here. When extending them, add a new rule scoped to the new path
+  rather than generalizing a proven one — a bad regex confined to `/text/` costs
+  a few pages, the same mistake in the root rule can loop the homepage (1.7.0,
+  following 1.2.3).
+
+## Watching (no action needed yet)
+
+- **Scene file size.** orrery.js (~2,320 lines) and library.js (~1,800) are now
+  the two largest scene files by a wide margin. theater.js came off this list
+  in 1.7.0 — moving its script content to src/text/theaterScript.js took it
+  from ~1,580 lines to ~710, which is the same split this note suggested and a
+  fair illustration of how cheap it is when the extracted part is self-contained.
+  Not a current problem — each is genuinely self-contained scene-specific
+  complexity (procedural textures, a first-person rig, generative content
+  variety), not copy-paste bloat; sceneKit.js already owns the cross-scene
+  duplication that would otherwise cause this. Flagging so it doesn't sneak up
+  unnoticed if any of the three needs another big feature pass. If it ever is
+  worth trimming, orrery.js's texture generators and first-person rig are the
+  two most self-contained chunks to split out first.
+
+## 1.7.0 (2026-07-29)
+
+**The writing is indexable now.** It never was. Scott asked whether any of the
+written content was reaching search engines, and the answer was none of it: every
+scene builds its text client-side, and only inside `expandScene()` — i.e. only
+after a click on a nav icon or preview tile. Crawlers execute JavaScript but
+don't click, so what Google ever saw of this site was the meta description, the
+JSON-LD block, and eight button labels: **159 words.** The poems, the scroll, the
+fragments, the scripts, the found pieces — none of it existed in the DOM at the
+moment a crawler captured the page. There was also no routing of any kind, so
+even in principle there was nowhere to deep-link to: one URL, one sitemap entry.
+Someone searching a line they remembered could not have found it here.
+
+Now: **39,930 words** across eight static pages under `/text/`, generated at
+build time and served as real markup that needs no JavaScript to read.
+
+(That figure and the 159 both use one stated method — drop `<script>`/`<style>`
+blocks, strip tags, split on whitespace, count tokens containing a letter. Worth
+stating because it isn't method-independent: an earlier draft of this entry said
+40,267, which was the same build measured with a counter that also split HTML
+entities into extra tokens. Same pages, different ruler. Per-page: scroll 19,178
+· theater 8,117 · library 5,373 · fragments 4,425 · poems 1,841 · leaf 440 ·
+orrery 331 · index 225.)
+
+**Approach** (Scott's call on both): real per-scene pages rather than hidden
+text on the homepage, and full text with experience-first framing rather than
+excerpts. Every page leads with a link into the scene the writing belongs to and
+says plainly that the piece is the real way to encounter it — the page is the
+archive, the scene is the work.
+
+- `scripts/prerender.js` builds `/text/` (index), `/text/scroll/`,
+  `/text/poems/`, `/text/fragments/`, `/text/theater/`, `/text/leaf/`,
+  `/text/orrery/`, `/text/library/`. Per-page `<title>`, meta description,
+  canonical, OG/Twitter cards, and schema.org `CreativeWork`/`CollectionPage`
+  JSON-LD with `hasPart` naming every individual piece.
+- Runs as a vite plugin (`closeBundle`), not a second npm script, on purpose:
+  verification around here is almost always a bare `npx vite build`, and a
+  script-chain would quietly skip the prerender exactly when it's being checked.
+  Takes the resolved `outDir` rather than assuming `dist`.
+- `sitemap.xml` is now generated from the same page list instead of maintained
+  by hand — the old one listed a single URL and would have gone stale the moment
+  a page was added. `public/sitemap.xml` deleted.
+
+**One source of truth, enforced by construction.** The point of failure for a
+thing like this is the published copy drifting from what the site shows, so the
+pages don't get a copy: the text that lived inside scene files moved into
+`src/text/`, and the scene and the prerender now import the same module.
+`theaterScript.js` (cast + the 16-scene reel), `leafText.js`, `orreryStory.js`,
+and `scrollPieces.js` (the eleven pieces in order, with `body` plus the `title`
+and `date` the scroll deliberately doesn't show). scroll.js derives `PATCHES` and
+`SCRIPT_INSERTS` from that list; hide tone stays in the scene, where it belongs.
+Verified lossless: every moved constant deep-compared byte-identical against
+`HEAD` before shipping.
+
+**Titles for the scroll, and why that isn't a betrayal of it.** The scroll shows
+its eleven pieces bare — no titles, dates, or glosses — and that's deliberate and
+documented. But a page with no headings is unusable with a screen reader and
+illegible as a search result, and the archive is not the scroll. The titles used
+are the real ones, already recorded in scroll.js's own header since the scene was
+built and traceable to the source documents (Fire.doc, Pygmalion.doc, and so on);
+nothing was invented. The scene renders `body` only, exactly as before.
+
+**Third-party text, deliberately withheld.** The library catalog's `excerpt`
+field holds opening passages from published books in copyrighted translations —
+Heaney's *Beowulf*, the Penguin Classics editions. Those stay inside the scene,
+shown one at a time to a reader who went looking; a crawlable page is a different
+act, since it publishes, caches, and attributes that text on this domain. The
+`/text/library/` page carries the bibliographic facts and Scott's own resonance
+notes — the genuinely original writing there — and no quoted passages. Confirmed
+absent from the built page and still present in the app bundle.
+
+**Deep links.** `main.js` gained minimal hash routing (`/#scroll` etc.) — the
+site had none at all, so no scene could be linked, bookmarked or shared. Guarded
+against the assign-fires-hashchange round trip; `Object.hasOwn` rather than `in`
+so `/#toString` can't resolve to a "scene" and throw; `replaceState` on close so
+a dead `#` entry doesn't end up in history; the nav icon is passed as the trigger
+so focus restore still works on a hash-driven open.
+
+**Linked, not orphaned.** A quiet "read the writing on its own" link bottom-left
+on the landing page (fixed-position — `#landing` is a centering flex row whose
+only child is the preview grid, and a second flex item would sit beside it; the
+480px `align-items: flex-start` rule means the column alternative isn't free),
+plus a line in the colophon's bibliography section. Orphaned pages that exist
+only in a sitemap rank worse and read as scaffolding.
+
+**Also:** `.htaccess` got a `/text/…/index.html → /text/…/` 301, the same
+duplicate-collapsing intent as 1.2.3's root rule, kept as its own rule scoped to
+`^text/` rather than generalizing the proven root one — a mistake in an
+untestable Apache regex that only touches /text/ costs a few new pages, the same
+mistake in the root rule could loop the homepage.
+
+Verified: `node --check` across every JS file including the new ones, clean vite
+build, all 8 pages checked programmatically for valid JSON-LD, unique canonicals,
+exactly one `<h1>`, no heading-level skips, balanced containers, and 53 in-page
+anchors all resolving (the sphere's fragment cross-links survive as real
+hypertext on the page). Every text color measured against the page ground: two
+came in under WCAG AA at 4.41:1 and were raised to 4.79:1, same call as the
+orrery era line in 1.6.0. Content preservation deep-compared against HEAD.
+
+Not verified live: no browser route from this sandbox, so the landing link's
+real placement, the hash routing in an actual browser, and the Apache redirect
+all want Scott's own look once this deploys. Search Console will take days to
+weeks to reflect any of it — the thing to watch is coverage going from 1 URL to 9.
+
+Not independently verifiable by Scott, either — flagged as its own category
+(his point, 2026-07-29, and a fair one): the word counts and the structural
+checks above (unique canonicals, one `<h1>` per page, no heading skips, 53
+resolving in-page anchors) were all measured programmatically against build
+output that only existed inside the session. Machine-checking them was the right
+way to check them, but "I ran a script and it passed" is not something the person
+reading this can confirm without the same artifacts in front of them. Spot-check
+against the live site once deployed: view-source on `/text/scroll/` should show
+the prose as plain markup, and the eleven `<h2>` titles should be there with
+JavaScript disabled. The word-count discrepancy above was caught by exactly this
+kind of second look, which is the argument for taking the category seriously.
+
 ## 1.6.1 (2026-07-29)
 
 Follow-up to 1.6.0's rename pass: Scott asked to go further and rename

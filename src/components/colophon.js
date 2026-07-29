@@ -279,6 +279,10 @@ function buildPanel() {
     <section>
       <h3>Bibliography</h3>
       <p class="colophon-sub" style="margin-bottom:1rem;">Where the text in each piece actually comes from.</p>
+      <p style="margin-bottom:1.4rem;">Every piece of writing on this site is
+      also collected as <a href="/text/">plain reading pages</a> — the same
+      words, set down without the machinery, so they can be linked to and
+      found.</p>
       <dl id="colophon-bib">${buildBibliographyHTML()}</dl>
     </section>
 
