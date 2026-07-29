@@ -381,9 +381,14 @@ function buildAurorae(preview) {
     // clean circle.
     const radialSegs = preview ? 48 : 72;
     const tubeSegs = 10;
-    // Thickened (0.1/0.12 -> 0.14/0.18) so the curtain reads as the
-    // scene's focal point at this camera distance, not a thin ring.
-    const tubeR = EARTH_RADIUS * (preview ? 0.14 : 0.18);
+    // Thickened (0.1/0.12 -> 0.13/0.16) so the curtain reads as the
+    // scene's focal point at this camera distance, not a thin ring —
+    // pulled back slightly from an initial 0.14/0.18 after seeing it live:
+    // additive blending stacks the torus's own overlapping cross-section
+    // layers near the pole, and that combined with the opacity bump below
+    // was blowing the band out to solid white rather than reading as a
+    // green-to-violet gradient.
+    const tubeR = EARTH_RADIUS * (preview ? 0.13 : 0.16);
     const bandGeo = new THREE.TorusGeometry(ringR, tubeR, tubeSegs, radialSegs);
     const posAttr = bandGeo.attributes.position;
     // Perturb per main-ring vertex (grouped by radial step) so the whole
@@ -403,7 +408,9 @@ function buildAurorae(preview) {
     bandGeo.computeVertexNormals();
 
     const bandMat = new THREE.MeshBasicMaterial({
-      map: bandTex, transparent: true, opacity: 0.82 + Math.random() * 0.15,
+      // Pulled back from an initial 0.82-0.97 (see tubeR comment above) —
+      // same overexposure reasoning, seen live rather than guessed.
+      map: bandTex, transparent: true, opacity: 0.66 + Math.random() * 0.14,
       blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide,
     });
     const band = new THREE.Mesh(bandGeo, bandMat);
@@ -422,7 +429,9 @@ function buildAurorae(preview) {
       const lon = (i / shimmerCount) * Math.PI * 2 + Math.random() * 0.3;
       const tex = i % 2 === 0 ? shimmerTexGreen : shimmerTexViolet;
       const mat = new THREE.SpriteMaterial({
-        map: tex, transparent: true, opacity: 0.48 + Math.random() * 0.3,
+        // Also pulled back a touch (was 0.48-0.78) — same overexposure
+        // reasoning as the band's own opacity above.
+        map: tex, transparent: true, opacity: 0.4 + Math.random() * 0.24,
         blending: THREE.AdditiveBlending, depthWrite: false,
       });
       const sprite = new THREE.Sprite(mat);

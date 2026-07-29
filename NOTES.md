@@ -6,6 +6,23 @@ projects (The Secret World, A Manual of Perceptual Mechanics) moved into their o
 files, which are now the source of truth for that material going forward. See "project map"
 below for where things live.
 
+## 1.3.1 (2026-07-29)
+
+Live-checked 1.3.0 via real Chrome (available this session, unlike the
+rest of this year's work) — first real look at any of the "built blind"
+geometry from this pass. Field-line shape, satellite spread, DOF haze, and
+the droplet growth/sync all confirmed working as intended straight off
+the numerical verification. One real miss: the aurora bands were blown
+out to near-solid white at both poles — additive blending stacks the
+torus's own overlapping cross-section layers near the pole, and the
+opacity bump from 1.3.0 (0.6-0.75 → 0.82-0.97) pushed that stack past
+white, which also defeats the actual point (a saturated color read needs
+the color to survive, not clip). Pulled the band opacity, shimmer
+opacity, and tube thickness back partway — still visibly richer than
+before 1.3.0, just short of the point where it clips.
+
+Verified: node --check, clean vite build.
+
 ## 1.3.0 (2026-07-29)
 
 Design pass on Egg and Leaf, from Scott's own brief: both read visually
