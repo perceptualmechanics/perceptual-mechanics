@@ -53,6 +53,15 @@ them. Read these before adding anything that runs at build time.
   self-busting, but `index.html` itself is cached at the edge, so a
   freshly-deployed page can look unchanged for a while. Don't diagnose a
   deploy from an uncache-busted request.
+- **A filter that matches nothing looks exactly like a category that's empty.**
+  1.7.1 verified the library page by checking that the bad thing was absent, and
+  the bad thing was absent — but nobody checked that everything present was
+  accounted for. A `type === 'box'` filter against data that says
+  `divination_box` dropped two entries silently for a day while the page's own
+  description advertised them. Any code that routes records into buckets should
+  assert that the buckets sum to the input, and fail the build if they don't.
+  Absence-checks and completeness-checks are different checks; the first one
+  passing tells you nothing about the second.
 - **Report a measurement with its method.** Word counts, ratios, and "N checks
   passed" are all method-dependent, and quoting a number from an earlier run
   after changing the method produces a real error (caught in 1.7.0: 40,267 vs
@@ -83,6 +92,39 @@ them. Read these before adding anything that runs at build time.
   unnoticed if any of the three needs another big feature pass. If it ever is
   worth trimming, orrery.js's texture generators and first-person rig are the
   two most self-contained chunks to split out first.
+
+## 1.7.2 (2026-07-29)
+
+Verified 1.7.1 live. The notes fix landed clean — no editorial TODOs anywhere on
+`/text/library/`, catalogue intact. But removing them stopped padding the lines,
+and two bugs that had been there since 1.7.0 became visible.
+
+**Both decks were missing from the page entirely.** The section filter matched
+`type === 'box'`; the data says `divination_box`. So The Wild Unknown Tarot and
+its companion had never rendered — while the page's own lede and description
+went on advertising divination decks. A filter matching nothing is
+indistinguishable, on the page, from a category that happens to be empty, which
+is why a day of looking at it didn't catch it. The section filters now assert
+that they cover every item in the catalogue and throw at build time if they
+don't, naming the unrouted type.
+
+**Five entries ended on a dangling em-dash.** Gilgamesh, the Bhagavad Gita,
+Buddhist Scriptures, the Homeric Hymns and the Maya Deren collection have no
+`creator` — anonymous or compiled works. The dash is part of the title-creator
+join, so it's now only emitted when there's something on the other side of it.
+It was there in 1.7.0 too, hidden behind the note text that used to follow.
+
+**Counts are derived now, not typed.** The description said "107 books", which
+is the shelf's own older figure and doesn't match this catalogue. It reads off
+the data instead: 101 books, 44 films, 114 albums, 2 divination decks. 261
+entries on the page, which is what the sections sum to.
+
+Standing note added: absence-checks and completeness-checks are different
+checks, and 1.7.1 only ran the first kind.
+
+Verified: clean build, all 8 pages pass structure/anchor/leak checks, 261
+entries present, both decks now rendering, no dangling dashes, no editorial
+notes, no third-party excerpts.
 
 ## 1.7.1 (2026-07-29)
 

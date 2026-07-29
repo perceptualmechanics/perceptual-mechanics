@@ -385,11 +385,25 @@ function buildLibrary() {
   //
   // What's left is the plain bibliographic fact of the shelf, which is
   // exactly what the piece itself shows.
+  // Type strings must match src/text/library.js exactly. 'divination_box' was
+  // written here as 'box' in 1.7.0, which silently dropped both decks from the
+  // page for a day while the lede went on advertising them — a filter that
+  // matches nothing looks identical to a category that's empty. Asserted below
+  // rather than trusted: every item must land in exactly one section.
   const byType = [
     ['Books', libraryItems.filter(i => i.type === 'book')],
     ['Films', libraryItems.filter(i => i.type === 'dvd' || i.type === 'bluray')],
-    ['Divination decks', libraryItems.filter(i => i.type === 'box')],
+    ['Divination decks', libraryItems.filter(i => i.type === 'divination_box')],
   ];
+
+  const placed = byType.reduce((n, [, items]) => n + items.length, 0);
+  if (placed !== libraryItems.length) {
+    throw new Error(
+      `prerender: library section filters cover ${placed} of ${libraryItems.length} items — ` +
+      `unrouted types: ${[...new Set(libraryItems.map(i => i.type))]
+        .filter(t => !['book', 'dvd', 'bluray', 'divination_box'].includes(t)).join(', ')}`
+    );
+  }
 
   const sections = byType.filter(([, items]) => items.length).map(([label, items]) => `
 <h2>${esc(label)}</h2>
@@ -397,8 +411,13 @@ function buildLibrary() {
 ${items.map(i => {
     const ed = [i.publisher, i.publish_year, i.translator ? `trans. ${i.translator}` : null]
       .filter(Boolean).join(' · ');
+    // Five entries have no creator at all — anonymous or compiled works
+    // (Gilgamesh, the Bhagavad Gita, Buddhist Scriptures, the Homeric Hymns,
+    // the Maya Deren collection). The em-dash is part of the title-creator
+    // join, so it only belongs here when there's something on the other side
+    // of it; otherwise the line ends on a dangling dash.
     return `  <li>
-    <span class="t">${esc(i.title)}</span> — <span class="c">${esc(i.creator)}</span>
+    <span class="t">${esc(i.title)}</span>${i.creator ? ` — <span class="c">${esc(i.creator)}</span>` : ''}
     ${ed ? `<span class="e">${esc(ed)}</span>` : ''}
   </li>`;
   }).join('\n')}
@@ -416,7 +435,13 @@ ${cdRackItems.map(c => `  <li>
   return {
     slugPath: 'library',
     title: 'The Library',
-    description: 'A real bookshelf, catalogued — 107 books, films, music and divination decks.',
+    // Counts derived, not typed: the site's older copy says "107 books", which
+    // is the shelf's own long-standing figure and doesn't match this catalogue
+    // (101 books, 44 films, 2 decks, 114 albums). Rather than restate a number
+    // that can go stale or contradict the data, let the data say it.
+    description: `A real bookshelf, catalogued — ${libraryItems.filter(i => i.type === 'book').length} books, `
+      + `${libraryItems.filter(i => i.type === 'dvd' || i.type === 'bluray').length} films, `
+      + `${cdRackItems.length} albums and ${libraryItems.filter(i => i.type === 'divination_box').length} divination decks.`,
     sceneKey: 'library', sceneName: 'the Library',
     lede: `<p><strong>The Library</strong> is a real shelf, photographed and rebuilt as an object you can turn in space and pull a spine from.</p>
 <p>This is its catalogue. The passages quoted from the books themselves aren’t reproduced here — they belong to their authors and translators, and stay inside the piece.</p>`,
