@@ -142,6 +142,20 @@ something sitting between Google and the origin rather than at the files. The
 next diagnostic in that case is Search Console's URL Inspection → Test live URL,
 which reports Googlebot's own fetch rather than ours.
 
+**robots.txt substitution, narrowed.** Two things ruled out, Scott confirmed
+directly: the domain's nameservers are DreamHost's own (no Cloudflare or similar
+in front), and the file in DreamHost's own File Manager reads correctly —
+`Allow: /`, the real Disallow lines, the Sitemap directive. So it isn't DNS,
+isn't the deployed file, and isn't rsync landing in the wrong place (sitemap.xml,
+.htaccess's redirects, and every /text/ page all serve current and correct from
+the same deploy). What's left is something DreamHost-side, keyed specifically to
+the path /robots.txt, substituting a stock hardened file (the wp-admin/
+wp-includes disallows read as generic security-feature boilerplate, not
+anything this codebase ever had). Next steps handed to Scott: delete and
+re-upload the file (rules out an mtime/hash-keyed cache cheaply), check for a
+CDN/cache toggle on the domain in the panel, and if neither moves it, escalate
+to DreamHost support with this exact diagnostic trail.
+
 ## 1.7.1 (2026-07-29)
 
 Post-deploy verification of 1.7.0 against the live site, plus the one real bug
