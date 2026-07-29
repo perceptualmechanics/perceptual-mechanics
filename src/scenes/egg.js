@@ -27,468 +27,200 @@ const POEM_LINKS = [
   { title: 'Haiku',                                 stanza: 4,  phrase: 'revealed',    target: 'DNA' },
 ];
 
-// ─── The Egg: Aurorae, Magnetic Field, Satellites ─────────────────────────────
-// The glowing green egg — Earth tinted green, always was. Retired the old
-// "worldline" concept (Google Maps satellite tiles + a personal geographic
-// path — Boston/LA/Boca/Michigan) in favor of something that actually holds
-// together as a self-contained WebGL scene, same as every other experience
-// on the site: Earth itself, seen the way you don't normally get to —
-// its magnetic field traced in glowing lines, the aurora it produces where
-// that field lets solar particles in at the poles, and a scatter of small
-// satellites actually orbiting it, each on its own tilted, independent path.
+// ─── Orbiter: p-orbital, Satellites ────────────────────────────────────────
+// Design pass, 2026-07-29 — full conceptual pivot, replacing the piece that
+// used to live here. The old version was Earth (tinted green) with its
+// magnetic field traced in glowing lines and an aurora at the poles; before
+// that, an even older "worldline" concept (Google Maps satellite tiles + a
+// personal geographic path). Scott's note on the magnetosphere version,
+// after two rounds of trying to make its day/tail asymmetry read clearly:
+// drop the concept entirely rather than keep tuning it.
 //
-// No textures fetched over the network — the "planet" surface, like every
-// other texture on this site, is a canvas gradient drawn at load time, not
-// an image asset.
+// What's here now: a hydrogen atom's p-orbital — the actual shape an
+// electron's wavefunction takes in that state, rendered as a fuzzy
+// probability cloud rather than a solid mesh. A p-orbital is two lobes on
+// opposite sides of a center, split by a flat nodal plane where the
+// electron's presence-probability is exactly zero — a dumbbell silhouette,
+// recognizable without a label, and genuinely different from a sphere in a
+// way the old magnetosphere shape never quite managed to be from every
+// angle. The two lobes reuse this file's own existing geometry: what used
+// to be the aurora bands at the poles (see buildOrbitalCloud, formerly
+// buildAurorae) are now the two lobes, and the green/violet color split
+// that used to be "arbitrary polar aurora colors" now stands for
+// wavefunction phase — the two lobes of a real p-orbital carry opposite
+// sign, and that's genuinely what the color difference is showing.
+//
+// The satellites (buildSatellites, below) are untouched — same clean,
+// deterministic, tilted elliptical orbits as before. What changed is what
+// they mean: precise classical paths swept through and around a cloud that
+// has no precise path at all, the same word ("orbit") doing two completely
+// different kinds of work at two different scales in the same frame. Kept
+// deliberately crisp against the cloud's own deliberate fuzziness — that
+// contrast is the point, not something to soften.
+//
+// No textures fetched over the network — every texture on this site,
+// including the small nucleus below, is a canvas gradient drawn at load
+// time, not an image asset.
 
-const EARTH_RADIUS = 1;
+const NUCLEUS_RADIUS = 0.16;
 
-// Design pass, 2026-07-29 — Scott: "the field should not be round." A real
-// magnetosphere is compressed on the sun-facing side (solar wind pressure)
-// and dragged into a long tail on the night side — that asymmetry is where
-// the "egg" in the name actually comes from. COMPRESS_DAY/TAIL_STRETCH
-// drive that deformation in buildFieldLines below; +X is treated as
-// "toward the sun," roughly matching the key light's own +X lean a little
-// further down, so the compressed/lit side and the visually sunward side
-// agree.
-// Design pass, 2026-07-29, second round — Scott, after the first pass
-// shipped and was live: the shape still reads round. It genuinely isn't
-// (verified live via Chrome: the day side hugs the planet tight, the tail
-// stretches out and off-frame, ~3.3x asymmetry) — but the auto-rotate
-// (both root's own slow spin and field.group's separate precession,
-// further down) constantly changes which angle the shape is seen from,
-// and a magnetosphere viewed nearly end-on along its own day-tail axis
-// legitimately looks close to round, the same way any elongated 3D shape
-// does from the "wrong" angle. Between that rotational drift and 14
-// satellite orbit rings (also perfectly round, and now more numerous
-// than the field lines themselves) competing for attention, the
-// asymmetry was too easy to miss rather than actually absent. Pushed
-// both constants up so the shape reads clearly across a wider range of
-// angles, not just the one this was originally tuned and verified
-// against.
-const COMPRESS_DAY = 0.5;  // dayside lines pulled this fraction closer to the planet
-const TAIL_STRETCH  = 1.4; // nightside lines stretched up to this fraction further out
-
-// Rebuilt 2026-07-17 for more photorealism. (2026-07-17, later same day —
-// Scott: the green glow should live in the aurorae only, not the whole
-// globe; the emissive tint and atmosphere shell mentioned below were
-// removed from createEgg for that reason.) The surface itself should
-// read as an actual planet, not hand-placed
-// blobs. Higher resolution, ragged/noisy coastlines instead of clean
-// ellipses (built by jittering a polygon's radius per point, then
-// scattering smaller satellite islands off the largest ones), subtler
-// depth-graded ocean with current-like banding, and terrain shading
-// inside the landmasses (lighter highland patches, darker lowland ones)
-// instead of a single flat green.
-function raggedBlobPath(cx, cxCenter, cyCenter, rx, ry, points = 14) {
-  cx.beginPath();
-  for (let i = 0; i <= points; i++) {
-    const a = (i / points) * Math.PI * 2;
-    const jitter = 0.72 + Math.random() * 0.56;
-    const x = cxCenter + Math.cos(a) * rx * jitter;
-    const y = cyCenter + Math.sin(a) * ry * jitter;
-    if (i === 0) cx.moveTo(x, y); else cx.lineTo(x, y);
-  }
-  cx.closePath();
-}
-
-function makeEarthTexture() {
+// ─── Nucleus ────────────────────────────────────────────────────────────────
+// The old Earth surface/cloud-shell texture generators (photoreal continents,
+// separate rotating cloud layer) are gone — a hydrogen atom's nucleus is a
+// single proton, not a textured planet. Replaced with one small, simple,
+// bright canvas texture: a hot, mottled plasma-like core rather than a flat
+// sphere, just enough surface interest to read as an energetic point rather
+// than an inert ball, small enough that the p-orbital cloud around it is
+// unmistakably the visual subject.
+function makeNucleusTexture() {
   const c = document.createElement('canvas');
-  c.width = 1024; c.height = 512;
+  c.width = 256; c.height = 256;
   const cx = c.getContext('2d');
-  const W = 1024, H = 512;
-
-  // Ocean base — vertical gradient, darker at the poles, plus a few
-  // broad current-like bands for depth variation instead of one flat tone.
-  const grad = cx.createLinearGradient(0, 0, 0, H);
-  grad.addColorStop(0,    '#081f2c');
-  grad.addColorStop(0.15, '#0d3548');
-  grad.addColorStop(0.5,  '#125264');
-  grad.addColorStop(0.85, '#0d3548');
-  grad.addColorStop(1,    '#081f2c');
-  cx.fillStyle = grad;
-  cx.fillRect(0, 0, W, H);
-
-  cx.globalAlpha = 0.5;
-  for (let i = 0; i < 10; i++) {
-    const y = Math.random() * H;
-    const bandGrad = cx.createLinearGradient(0, y - 18, 0, y + 18);
-    bandGrad.addColorStop(0, 'rgba(30,90,110,0)');
-    bandGrad.addColorStop(0.5, 'rgba(40,110,130,0.5)');
-    bandGrad.addColorStop(1, 'rgba(30,90,110,0)');
-    cx.fillStyle = bandGrad;
-    cx.fillRect(0, y - 18, W, 36);
-  }
-  cx.globalAlpha = 1;
-
-  // Landmasses — ragged silhouettes (not clean ellipses), each with a
-  // couple of smaller satellite islands trailing off it, and simple
-  // terrain shading inside (a highland pass, a lowland pass) so they
-  // don't read as a single flat green shape.
-  const continents = [
-    [160, 190, 92, 58], [240, 260, 58, 42], [460, 140, 130, 56],
-    [520, 280, 78, 68], [680, 120, 110, 48], [740, 240, 68, 78],
-    [840, 360, 92, 44], [80, 340, 72, 40], [360, 380, 100, 36],
-    [900, 150, 44, 60],
-  ];
-  continents.forEach(([bx, by, bw, bh]) => {
-    raggedBlobPath(cx, bx, by, bw, bh, 16);
-    const g = cx.createRadialGradient(bx - bw * 0.2, by - bh * 0.25, bw * 0.1, bx, by, bw * 1.1);
-    g.addColorStop(0,   'rgba(96,122,66,0.92)');
-    g.addColorStop(0.6, 'rgba(70,98,54,0.9)');
-    g.addColorStop(1,   'rgba(52,78,46,0.88)');
-    cx.fillStyle = g;
-    cx.fill();
-
-    // A couple of small satellite islands off the coast.
-    const islandCount = 2 + Math.floor(Math.random() * 3);
-    for (let i = 0; i < islandCount; i++) {
-      const a = Math.random() * Math.PI * 2;
-      const dist = (bw + bh) * 0.42;
-      const ix = bx + Math.cos(a) * dist;
-      const iy = by + Math.sin(a) * dist * 0.6;
-      raggedBlobPath(cx, ix, iy, 6 + Math.random() * 10, 4 + Math.random() * 7, 8);
-      cx.fillStyle = 'rgba(66, 92, 52, 0.8)';
-      cx.fill();
-    }
-
-    // Terrain shading patches within the landmass — lighter (highland/
-    // arid) and darker (forested/lowland) blotches, clipped to the shape.
-    cx.save();
-    raggedBlobPath(cx, bx, by, bw, bh, 16);
-    cx.clip();
-    for (let i = 0; i < 5; i++) {
-      const px = bx + (Math.random() - 0.5) * bw * 1.6;
-      const py = by + (Math.random() - 0.5) * bh * 1.6;
-      const pr = 12 + Math.random() * 22;
-      const light = Math.random() > 0.5;
-      cx.fillStyle = light ? 'rgba(150,140,90,0.18)' : 'rgba(30,50,26,0.22)';
-      cx.beginPath();
-      cx.ellipse(px, py, pr, pr * 0.6, Math.random() * Math.PI, 0, Math.PI * 2);
-      cx.fill();
-    }
-    cx.restore();
-  });
-
-  // Ice caps, softened at the edge rather than a hard band.
-  const iceN = cx.createLinearGradient(0, 0, 0, 30);
-  iceN.addColorStop(0, 'rgba(225,238,242,0.75)');
-  iceN.addColorStop(1, 'rgba(225,238,242,0)');
-  cx.fillStyle = iceN;
-  cx.fillRect(0, 0, W, 30);
-  const iceS = cx.createLinearGradient(0, H - 30, 0, H);
-  iceS.addColorStop(0, 'rgba(225,238,242,0)');
-  iceS.addColorStop(1, 'rgba(225,238,242,0.75)');
-  cx.fillStyle = iceS;
-  cx.fillRect(0, H - 30, W, 30);
-
-  const tex = new THREE.CanvasTexture(c);
-  tex.wrapS = THREE.RepeatWrapping;
-  return tex;
-}
-
-// A separate, mostly-transparent cloud layer sphere sitting just outside
-// the surface — real Earth renders always separate clouds from terrain;
-// having them as their own slightly-larger, independently-rotating shell
-// (rather than baked into the surface texture) is most of what actually
-// reads as "photorealistic" rather than "textured ball."
-function makeCloudTexture() {
-  const c = document.createElement('canvas');
-  c.width = 1024; c.height = 512;
-  const cx = c.getContext('2d');
-  cx.clearRect(0, 0, 1024, 512);
-  const puffCount = 260;
-  for (let i = 0; i < puffCount; i++) {
-    const x = Math.random() * 1024;
-    // Weight toward mid-latitudes/bands, thinner at the poles, like real
-    // cloud cover, with a bit of clustering into loose streaks.
-    const bandY = 90 + Math.random() * 332;
-    const y = bandY + (Math.random() - 0.5) * 40;
-    const r = 8 + Math.random() * 26;
-    const alpha = 0.06 + Math.random() * 0.16;
-    const g = cx.createRadialGradient(x, y, 0, x, y, r);
-    g.addColorStop(0, `rgba(255,255,255,${alpha})`);
-    g.addColorStop(1, 'rgba(255,255,255,0)');
-    cx.fillStyle = g;
+  const g = cx.createRadialGradient(128, 128, 0, 128, 128, 128);
+  g.addColorStop(0,    '#fff8e8');
+  g.addColorStop(0.35, '#ffe9b8');
+  g.addColorStop(0.7,  '#e8a860');
+  g.addColorStop(1,    '#7a4520');
+  cx.fillStyle = g;
+  cx.fillRect(0, 0, 256, 256);
+  // A handful of soft mottled patches so the core reads as roiling plasma
+  // rather than a flat gradient ball.
+  for (let i = 0; i < 18; i++) {
+    const x = Math.random() * 256, y = Math.random() * 256;
+    const r = 14 + Math.random() * 34;
+    const patch = cx.createRadialGradient(x, y, 0, x, y, r);
+    const bright = Math.random() > 0.5;
+    patch.addColorStop(0, bright ? 'rgba(255,250,230,0.35)' : 'rgba(120,50,20,0.3)');
+    patch.addColorStop(1, 'rgba(0,0,0,0)');
+    cx.fillStyle = patch;
     cx.beginPath();
-    cx.ellipse(x, y, r, r * 0.55, Math.random() * Math.PI, 0, Math.PI * 2);
+    cx.arc(x, y, r, 0, Math.PI * 2);
     cx.fill();
   }
   const tex = new THREE.CanvasTexture(c);
-  tex.wrapS = THREE.RepeatWrapping;
   return tex;
 }
 
-// ─── Magnetic field lines ──────────────────────────────────────────────────
-// A dipole field: lines leave one pole, arc out and around, return at the
-// other. Approximated with the standard dipole field-line shape
-// r = L * sin^2(theta), swept around the polar axis at a handful of
-// longitudes, same idea as real field-line diagrams.
-//
-// 2026-07-17 — Scott asked for a subtle flux effect. Turns out one already
-// half-existed: the animate loop below was looping over field.lines and
-// writing `field.mat.opacity = ...` with a per-line phase offset each time
-// — except every line shared that one material instance, so each
-// iteration just overwrote the same property, and only the last line's
-// phase ever actually took effect. All nine lines were reading one
-// flattened value, not really pulsing independently. Fixed by giving each
-// line its own material (same pattern the aurorae bands/shimmers already
-// use — see buildAurorae below, each with its own `phase`), so the flux
-// is now genuinely per-line: each brightens and dims on its own phase and
-// speed, closer to how a real magnetosphere's field lines actually
-// fluctuate somewhat independently as solar wind pressure and
-// reconnection events ripple through, not in lockstep.
-function buildFieldLines(preview) {
-  const group = new THREE.Group();
-  const lineCount = preview ? 6 : 12;
-  const baseColor = new THREE.Color(0x66ccff);
-  // Bumped (0.38 -> 0.5, full scene) so the field lines carry enough
-  // visual weight to read as the shape against 14 satellite orbit rings
-  // now sharing the scene — those are plain circles by nature (satellites
-  // don't compress/stretch with the field), and outnumbering the field
-  // lines was part of why the asymmetry was easy to miss.
-  const baseOpacity = preview ? 0.3 : 0.5;
-  const lines = [];
-
-  for (let i = 0; i < lineCount; i++) {
-    // Shell size (the nested-loop distance the old "bigger loops further
-    // out" comment described) is shuffled away from longitude's own sweep
-    // order via a step coprime with lineCount, rather than tracking `i`
-    // directly — now that every longitude also gets its own day/tail size
-    // multiplier below, a shell size that climbed in lockstep with lon
-    // would make the loop that lands back near lon=0 after a full sweep
-    // always the single biggest base shell, an index-order artifact with
-    // nothing to do with the sun/tail shape it'd be muddying.
-    const shellSlot = (i * 7) % lineCount;
-    const L = 1.5 + (shellSlot / lineCount) * 1.4;
-    // Full circle of longitudes now (was 0.6 of one, deliberately partial
-    // so the cage-like symmetry of a full ring wouldn't show) — every line
-    // varies so much in size by its own longitude now that the day-to-
-    // tail gradient itself is what keeps this from reading as a cage; a
-    // partial sweep would just leave a gap in the shape's own story.
-    const lon = (i / lineCount) * Math.PI * 2;
-    const dayFactor = Math.cos(lon); // +1 dead sunward, 0 flank, -1 dead tailward
-    const pts = [];
-    const steps = 56;
-    for (let s = 0; s <= steps; s++) {
-      const theta = (s / steps) * Math.PI; // 0..pi, pole to pole
-      const sinT = Math.sin(theta);
-      const r = L * sinT * sinT;
-      if (r < EARTH_RADIUS * 0.98) continue; // stay outside the planet
-      const y = r * Math.cos(theta);
-      const xz = r * Math.sin(theta);
-      let x = xz * Math.cos(lon);
-      let z = xz * Math.sin(lon);
-      let py = y;
-      // Push/pull along the sun-Earth axis only, and only the point's own
-      // x — the flanks (dayFactor near 0) barely move since x is already
-      // small there, so the deformation fades out naturally toward the
-      // sides instead of needing its own separate falloff term. Points
-      // right at the clipping boundary (r just above EARTH_RADIUS) are
-      // additionally tapered toward zero compression via rTaper — pulling
-      // a point that's already barely outside the planet's own surface
-      // inward by a flat 42% would shove it back inside the globe, a real
-      // bug caught by a throwaway numerical check (min radius 0.87 against
-      // EARTH_RADIUS 1) before this taper was added. The stretch direction
-      // has no equivalent risk (it only pushes points further out), so it
-      // doesn't need the same taper.
-      if (dayFactor > 0) {
-        const rTaper = Math.min(1, Math.max(0, (r - EARTH_RADIUS * 1.05) / L));
-        x *= 1 - COMPRESS_DAY * dayFactor * rTaper;
-      } else if (dayFactor < 0) {
-        const tailAmt = -dayFactor;
-        x *= 1 + TAIL_STRETCH * tailAmt;
-        py *= 1 - 0.12 * tailAmt; // the tail flattens a little as it stretches, reads less like a loop
-      }
-      // Safety net: whatever the taper above should already guarantee,
-      // never let a point actually render closer to the origin than the
-      // planet's own surface.
-      const finalR = Math.hypot(x, py, z);
-      if (finalR < EARTH_RADIUS * 1.02) {
-        const pushOut = (EARTH_RADIUS * 1.02) / (finalR || 1);
-        x *= pushOut; py *= pushOut; z *= pushOut;
-      }
-      pts.push(new THREE.Vector3(x, py, z));
-    }
-    if (pts.length < 2) continue;
-    const geo = new THREE.BufferGeometry().setFromPoints(pts);
-    const mat = new THREE.LineBasicMaterial({
-      color: baseColor.clone(), transparent: true, opacity: baseOpacity,
-      blending: THREE.AdditiveBlending, depthWrite: false,
-    });
-    const line = new THREE.Line(geo, mat);
-    group.add(line);
-    lines.push({
-      line, geo, mat, lon,
-      phase: Math.random() * Math.PI * 2,
-      speed: 0.4 + Math.random() * 0.5,
-      // A few lines flare a little brighter/whiter at their peak than
-      // others — reads as scattered lines catching a moment of flux, not
-      // one uniform shape breathing in and out.
-      flareStrength: 0.5 + Math.random() * 0.9,
-    });
-  }
-  return { group, lines, baseOpacity, baseColor };
-}
-
-// ─── Aurora curtains ────────────────────────────────────────────────────────
+// ─── p-orbital probability cloud ───────────────────────────────────────────
 // Rebuilt 2026-07-17 — Scott, seeing it running, questioned the original
-// design: sprites standing straight up off the pole like a crown of spikes.
-// That's not what the aurora actually looks like from this vantage. Seen
-// from orbit (which is where this camera sits), it's the "auroral oval" —
-// a ragged glowing BAND hugging the curve of the planet at high latitude,
-// not rays radiating outward. Rebuilt as a distorted, ragged ring (a
-// perturbed torus, jittered so it reads as irregular rather than a clean
-// donut) sitting close to the surface at each pole, with a green-to-violet
-// gradient across its width standing in for the curtain's own vertical
-// structure. A handful of short shimmer sprites are layered on top for
-// texture/rays, but they're subordinate now — accents on the band, not
-// the shape itself.
-function makeAuroraBandTexture() {
+// design: a torus-shaped "aurora band" hugging the surface at each pole.
+// Replaced 2026-07-29 with a genuinely fuzzy particle-density cloud — no
+// solid mesh, no hard edge anywhere. The green/violet colors and the two
+// pole positions are the only things carried over from that old version
+// (see the file-header comment above); everything about how the shape
+// itself is generated is new.
+//
+// Each lobe is a swarm of small additive points sampled, not placed by
+// hand, from a simple artistic stand-in for a real 2p-orbital's
+// probability density: `t`, the fraction of the way out along the lobe's
+// own axis, is drawn as the *average of two independent random numbers* —
+// a triangular distribution that is exactly zero at t=0 (the nodal plane,
+// right at the nucleus, where a real p-orbital's density is genuinely
+// zero) and zero again at t=1 (the lobe's own outer fringe), peaking at
+// t=0.5. That one distribution does double duty: it's used directly for
+// how far out a particle sits, and it drives a parabola (also zero at
+// both ends) for how wide the lobe is allowed to be at that same point —
+// together they produce a teardrop with density falling off gradually in
+// every direction and no boundary surface anywhere, satisfying the brief's
+// "no hard edge" requirement by construction rather than by tuning opacity
+// after the fact.
+function makePOrbitalDotTexture() {
   const c = document.createElement('canvas');
-  c.width = 8; c.height = 128;
+  c.width = 32; c.height = 32;
   const cx = c.getContext('2d');
-  const grad = cx.createLinearGradient(0, 0, 0, 128);
-  // Design pass, 2026-07-29 — Scott: the aurorae are meant to be this
-  // piece's visual payoff, but read as a minor detail next to Sphere's own
-  // saturation. Every stop's alpha pushed up, and the violet edge bumped
-  // toward neon magenta rather than a muted lavender — closer to how a
-  // real auroral substorm oversaturates a long-exposure photo.
-  grad.addColorStop(0,    'rgba(50,255,140,0)');
-  grad.addColorStop(0.18, 'rgba(60,255,150,0.8)');
-  grad.addColorStop(0.46, 'rgba(120,255,195,0.64)');
-  grad.addColorStop(0.74, 'rgba(185,105,255,0.52)');
-  grad.addColorStop(1,    'rgba(185,105,255,0)');
-  cx.fillStyle = grad;
-  cx.fillRect(0, 0, 8, 128);
-  const tex = new THREE.CanvasTexture(c);
-  return tex;
-}
-
-// Parameterized by color, 2026-07-29 — was one fixed green tint for every
-// shimmer sprite; now called twice (buildAurorae below) for a green thread
-// and a violet thread, so the curtain's sparkle carries both of the band's
-// own colors instead of just the one.
-function makeShimmerTexture(rgb) {
-  const c = document.createElement('canvas');
-  c.width = 16; c.height = 64;
-  const cx = c.getContext('2d');
-  const grad = cx.createLinearGradient(0, 64, 0, 0);
-  grad.addColorStop(0,    `rgba(${rgb},0)`);
-  grad.addColorStop(0.3,  `rgba(${rgb},0.55)`);
-  grad.addColorStop(1,    `rgba(${rgb},0)`);
-  cx.fillStyle = grad;
-  cx.fillRect(0, 0, 16, 64);
+  const g = cx.createRadialGradient(16, 16, 0, 16, 16, 16);
+  g.addColorStop(0,    'rgba(255,255,255,1)');
+  g.addColorStop(0.4,  'rgba(255,255,255,0.5)');
+  g.addColorStop(1,    'rgba(255,255,255,0)');
+  cx.fillStyle = g;
+  cx.fillRect(0, 0, 32, 32);
   return new THREE.CanvasTexture(c);
 }
 
-function buildAurorae(preview) {
-  const group = new THREE.Group();
-  const bandTex = makeAuroraBandTexture();
-  const shimmerTexGreen = makeShimmerTexture('120,255,180');
-  const shimmerTexViolet = makeShimmerTexture('195,140,255');
-  const bands = [];
-  const shimmers = [];
+function buildOrbitalCloud(preview) {
+  const count = preview ? 900 : 2800;
+  const LOBE_LENGTH = 1.15; // sits comfortably inside the satellites' own orbit radii (1.35+)
+  const GIRTH_MAX = 0.5;
 
-  [1, -1].forEach(hemisphere => {
-    const polarAngle = 0.34 + Math.random() * 0.05; // how far from the pole, radians
-    const ringR = Math.sin(polarAngle) * (EARTH_RADIUS * 1.015);
-    const y = hemisphere * Math.cos(polarAngle) * (EARTH_RADIUS * 1.015);
+  const positions = new Float32Array(count * 3);
+  const colors = new Float32Array(count * 3);
+  // Undisturbed envelope position for each particle — animate() adds a
+  // small per-particle sinusoidal drift on top of this each frame rather
+  // than mutating it directly, so the underlying teardrop shape never
+  // erodes or random-walks away from what was actually sampled.
+  const base = new Float32Array(count * 3);
+  const drift = [];
 
-    // The band itself — a torus standing in for the curtain, jittered
-    // around its main ring so the oval reads as ragged/irregular rather
-    // than a machined donut, the way the real auroral oval is never a
-    // clean circle.
-    const radialSegs = preview ? 48 : 72;
-    const tubeSegs = 10;
-    // Thickened (0.1/0.12 -> 0.13/0.16) so the curtain reads as the
-    // scene's focal point at this camera distance, not a thin ring —
-    // pulled back slightly from an initial 0.14/0.18 after seeing it live:
-    // additive blending stacks the torus's own overlapping cross-section
-    // layers near the pole, and that combined with the opacity bump below
-    // was blowing the band out to solid white rather than reading as a
-    // green-to-violet gradient.
-    const tubeR = EARTH_RADIUS * (preview ? 0.13 : 0.16);
-    const bandGeo = new THREE.TorusGeometry(ringR, tubeR, tubeSegs, radialSegs);
-    const posAttr = bandGeo.attributes.position;
-    // Perturb per main-ring vertex (grouped by radial step) so the whole
-    // tube cross-section at that step shifts together, keeping the tube's
-    // own shape intact while the ring's path gets ragged.
-    const rawJitter = [];
-    for (let i = 0; i <= radialSegs; i++) rawJitter.push((Math.random() - 0.5) * ringR * 0.22);
-    // Design pass, 2026-07-29 — the real cause of 1.3.1's white blowout,
-    // seen live: independent per-step random jitter at 72 radial segments
-    // zigzags sharply enough between neighbors to fold the tube's own
-    // cross-section over itself at a grazing viewing angle (exactly the
-    // angle the aurora sits at relative to the default camera), and
-    // additive blending stacks every one of those folded-over layers.
-    // 1.3.1 only pulled back opacity, which can't fix a geometric
-    // overlap. Smoothing the jitter (simple wrapped 3-tap average) keeps
-    // the same "ragged, not a machined donut" character at the scale that
-    // actually reads, while removing the step-to-step zigzag that was
-    // folding the geometry.
-    const jitter = rawJitter.map((v, i) => {
-      const prev = rawJitter[(i - 1 + rawJitter.length) % rawJitter.length];
-      const next = rawJitter[(i + 1) % rawJitter.length];
-      return (prev + v * 2 + next) / 4;
+  // Same two hues the old aurora band carried (see makeShimmerTexture's
+  // retired '120,255,180' / '195,140,255' pair) — now standing for
+  // wavefunction phase rather than an arbitrary color choice: the
+  // teal-green lobe is the orbital's +phase lobe, the violet lobe is -phase.
+  const colorPos = new THREE.Color(0x78ffb4);
+  const colorNeg = new THREE.Color(0xc978ff);
+
+  for (let i = 0; i < count; i++) {
+    const lobeSign = i < count / 2 ? 1 : -1;
+    const t = (Math.random() + Math.random()) / 2; // triangular 0..1, peak at 0.5
+    const axial = lobeSign * t * LOBE_LENGTH;
+    const girth = GIRTH_MAX * 4 * t * (1 - t); // parabola, zero at t=0 and t=1
+    const phi = Math.random() * Math.PI * 2;
+    const perpFrac = Math.random() * Math.random(); // skewed toward the lobe's own core axis
+    const perpR = girth * perpFrac;
+    const x = perpR * Math.cos(phi);
+    const z = perpR * Math.sin(phi);
+
+    base[i * 3] = x; base[i * 3 + 1] = axial; base[i * 3 + 2] = z;
+    positions[i * 3] = x; positions[i * 3 + 1] = axial; positions[i * 3 + 2] = z;
+
+    // Brightness weighted by the same density term, so particles near
+    // each lobe's own middle read hotter than the ones trailing off
+    // toward the node or the outer fringe — on top of what sheer overlap
+    // density under additive blending already does for free.
+    const dens = 0.45 + 0.55 * (4 * t * (1 - t));
+    const col = lobeSign > 0 ? colorPos : colorNeg;
+    colors[i * 3] = col.r * dens; colors[i * 3 + 1] = col.g * dens; colors[i * 3 + 2] = col.b * dens;
+
+    // Slow drift/shimmer per particle, not a static point cloud: a fixed
+    // random direction (normalized) each particle nudges along, at its
+    // own phase and speed, so the swarm reads as gently alive rather than
+    // frozen — closer to butterfly.js's per-particle damped-velocity
+    // drift in spirit, though the underlying math here is simpler since
+    // there's no physical simulation to run, just an oscillation.
+    let dx = Math.random() * 2 - 1, dy = Math.random() * 2 - 1, dz = Math.random() * 2 - 1;
+    const dl = Math.hypot(dx, dy, dz) || 1;
+    dx /= dl; dy /= dl; dz /= dl;
+    drift.push({
+      dx, dy, dz,
+      phase: Math.random() * Math.PI * 2,
+      speed: 0.3 + Math.random() * 0.5,
+      amp: 0.015 + Math.random() * 0.02,
     });
-    for (let i = 0; i < posAttr.count; i++) {
-      const ringStep = Math.floor((i / posAttr.count) * (radialSegs + 1)) % (radialSegs + 1);
-      const j = jitter[ringStep] || 0;
-      const x = posAttr.getX(i), z = posAttr.getZ(i);
-      const len = Math.hypot(x, z) || 1;
-      posAttr.setX(i, x + (x / len) * j);
-      posAttr.setZ(i, z + (z / len) * j);
-    }
-    posAttr.needsUpdate = true;
-    bandGeo.computeVertexNormals();
+  }
 
-    const bandMat = new THREE.MeshBasicMaterial({
-      // 1.3.1 only pulled opacity back (0.82-0.97 -> 0.66-0.8), which
-      // didn't fix the white blowout seen live — the smoothed jitter
-      // above addresses the actual cause, so opacity is restored toward
-      // genuinely richer than the pre-1.3.0 original (0.6-0.75) again.
-      map: bandTex, transparent: true, opacity: 0.75 + Math.random() * 0.15,
-      // FrontSide, not DoubleSide — a torus tube viewed from outside (the
-      // camera never sits inside the aurora) always has its near surface
-      // facing the camera; DoubleSide was additively rendering the far
-      // (back) wall of the same tube on top of the near wall too, roughly
-      // doubling the stack independent of the fold-over issue above.
-      blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.FrontSide,
-    });
-    const band = new THREE.Mesh(bandGeo, bandMat);
-    band.rotation.x = Math.PI / 2;
-    band.position.y = y;
-    group.add(band);
-    bands.push({ mesh: band, mat: bandMat, baseOpacity: bandMat.opacity, phase: Math.random() * Math.PI * 2 });
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
 
-    // Shimmer rays along the band for texture — an accent on top of the
-    // shape, not the shape itself. More of them now (5/9 -> 7/13) and
-    // alternating between the green and violet threads above, rather than
-    // one uniform tint, so the curtain's own sparkle carries both of the
-    // band's colors.
-    const shimmerCount = preview ? 7 : 13;
-    for (let i = 0; i < shimmerCount; i++) {
-      const lon = (i / shimmerCount) * Math.PI * 2 + Math.random() * 0.3;
-      const tex = i % 2 === 0 ? shimmerTexGreen : shimmerTexViolet;
-      const mat = new THREE.SpriteMaterial({
-        // Also pulled back a touch (was 0.48-0.78) — same overexposure
-        // reasoning as the band's own opacity above.
-        map: tex, transparent: true, opacity: 0.4 + Math.random() * 0.24,
-        blending: THREE.AdditiveBlending, depthWrite: false,
-      });
-      const sprite = new THREE.Sprite(mat);
-      const h = 0.11 + Math.random() * 0.14;
-      sprite.scale.set(0.11, h, 1);
-      sprite.position.set(
-        ringR * Math.cos(lon), y + hemisphere * h * 0.35, ringR * Math.sin(lon)
-      );
-      group.add(sprite);
-      shimmers.push({ sprite, mat, phase: Math.random() * Math.PI * 2, baseOpacity: mat.opacity });
-    }
+  const dotTex = makePOrbitalDotTexture();
+  const mat = new THREE.PointsMaterial({
+    size: preview ? 0.05 : 0.045,
+    map: dotTex,
+    vertexColors: true,
+    transparent: true,
+    opacity: 0.85,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+    sizeAttenuation: true,
   });
+  const points = new THREE.Points(geo, mat);
 
-  return { group, bands, shimmers, bandTex, shimmerTexGreen, shimmerTexViolet };
+  const group = new THREE.Group();
+  group.add(points);
+
+  return {
+    group, points, geo, mat, dotTex, base, drift, count,
+    baseOpacity: mat.opacity, phase: Math.random() * Math.PI * 2,
+  };
 }
 
 // ─── Satellites ─────────────────────────────────────────────────────────────
@@ -581,11 +313,12 @@ function buildSatellites(preview) {
     // prominence; some fainter, some a little more distinct, reads as
     // messier/richer rather than a uniform stack of identical rings.
     // Pulled down again (0.07-0.18 -> 0.045-0.11), second design pass —
-    // these are perfectly circular by nature (satellites don't compress
-    // or stretch with the field the way field lines do), and with 14 of
-    // them now sharing the scene with only 12 field lines, they were
-    // competing with — and diluting — the one shape actually telling the
-    // magnetosphere story.
+    // these are perfectly circular by nature, and were competing with —
+    // and diluting — the one shape actually telling this scene's story.
+    // (Written when that story was a magnetosphere with field lines to
+    // compete against; the reasoning about not diluting the shape still
+    // holds now that the shape is a p-orbital cloud instead — see the
+    // 2026-07-29 pivot note at the top of this file.)
     const ringMat = new THREE.MeshBasicMaterial({
       color: 0xffe08a, transparent: true, opacity: 0.045 + Math.random() * 0.065,
     });
@@ -630,11 +363,6 @@ export function createEgg(container, { preview = false } = {}) {
   scene.add(root);
 
   scene.add(new THREE.AmbientLight(0x224422, 1.1));
-  // Scott: even after pulling the emissive tint off the Earth material,
-  // this key light (was intensity 1.8) combined with the low shininess
-  // below was blowing out into a big soft green blob on the globe's lit
-  // side — read as "glowing," same problem in a different spot. Toned
-  // down here; the highlight itself is also tightened below.
   const key = new THREE.DirectionalLight(0x88ffaa, 1.1);
   key.position.set(3, 4, 5);
   scene.add(key);
@@ -659,45 +387,24 @@ export function createEgg(container, { preview = false } = {}) {
   const starField = new THREE.Points(starGeo, starMat);
   scene.add(starField);
 
-  // ─── Earth ────────────────────────────────────────────────────────────────
-  const earthTex = makeEarthTexture();
-  const geo = new THREE.SphereGeometry(EARTH_RADIUS, preview ? 32 : 64, preview ? 32 : 64);
-  // Scott: the glow should be the aurorae's job, not the whole globe's —
-  // dropped the uniform green emissive tint that was self-lighting the
-  // entire sphere regardless of latitude. Earth is lit by the key/rim
-  // lights below now, same as any other body in the scene. Specular
-  // highlight kept for the photoreal wet-look sheen, but tightened way up
-  // (shininess 40 -> 140) and dimmed (specular color darkened) — at the
-  // old values it bloomed into a big soft glowing patch on the lit side,
-  // which read as another whole-globe glow by a different route.
-  const mat = new THREE.MeshPhongMaterial({
-    map: earthTex,
-    specular: 0x1a4d33,
-    shininess: 140,
+  // ─── Nucleus ────────────────────────────────────────────────────────────
+  // A single small, bright, plasma-textured core standing in for the
+  // proton at the center of a hydrogen atom — no continents, no cloud
+  // shell, nothing planet-like. Kept deliberately small so the p-orbital
+  // cloud around it (below) is unmistakably the thing the scene is about.
+  const nucleusTex = makeNucleusTexture();
+  const geo = new THREE.SphereGeometry(NUCLEUS_RADIUS, preview ? 24 : 40, preview ? 24 : 40);
+  const mat = new THREE.MeshStandardMaterial({
+    map: nucleusTex,
+    emissive: 0xffb060,
+    emissiveIntensity: 0.55,
+    roughness: 0.6,
   });
   const earth = new THREE.Mesh(geo, mat);
   root.add(earth);
 
-  // A separate, mostly-transparent cloud shell, rotating a little faster
-  // than the surface for parallax — the single biggest lever for reading
-  // as an actual rendered planet rather than a textured ball.
-  const cloudTex = makeCloudTexture();
-  const cloudGeo = new THREE.SphereGeometry(EARTH_RADIUS * 1.012, preview ? 32 : 48, preview ? 32 : 48);
-  const cloudMat = new THREE.MeshBasicMaterial({
-    map: cloudTex, transparent: true, opacity: 0.55, depthWrite: false,
-  });
-  const clouds = new THREE.Mesh(cloudGeo, cloudMat);
-  root.add(clouds);
-
-  // Scott: also dropped the uniform green atmosphere-glow shell that used
-  // to sit around the whole planet — same reasoning as the emissive tint
-  // above, the aurorae are the only thing that should read as "glowing."
-
-  // ─── Magnetic field + aurorae + satellites ─────────────────────────────────
-  const field = buildFieldLines(preview);
-  root.add(field.group);
-
-  const aurorae = buildAurorae(preview);
+  // ─── p-orbital cloud + satellites ───────────────────────────────────────
+  const aurorae = buildOrbitalCloud(preview);
   root.add(aurorae.group);
 
   const satellites = buildSatellites(preview);
@@ -973,11 +680,13 @@ export function createEgg(container, { preview = false } = {}) {
     onDragEnd: () => { setTimeout(() => { autoRotate = true; }, 2500); },
   });
 
-  // Reduced motion: gates the autonomous rotation below (Earth spin, cloud
-  // drift, field-line precession, satellite orbits, egg auto-rotate).
-  // Drag-to-orbit stays available regardless — that's motion the visitor
-  // asks for, not motion imposed on them.
+  // Reduced motion: gates the autonomous rotation below (nucleus spin,
+  // orbital-cloud precession + particle drift, satellite orbits, egg
+  // auto-rotate). Drag-to-orbit stays available regardless — that's
+  // motion the visitor asks for, not motion imposed on them.
   const reduceMotion = prefersReducedMotion();
+
+  const cloudPosAttr = aurorae.geo.attributes.position;
 
   // ─── Animate ──────────────────────────────────────────────────────────────
   let animId, t = 0;
@@ -987,44 +696,36 @@ export function createEgg(container, { preview = false } = {}) {
 
     if (!reduceMotion) {
       earth.rotation.y = t * (preview ? 0.06 : 0.03);
-      clouds.rotation.y = t * (preview ? 0.06 : 0.03) * 1.35;
-      // Slowed (0.015 -> 0.008) — this precession and root's own
-      // auto-rotate below both turn the day/tail axis away from whatever
-      // angle currently reads clearly as asymmetric; slower drift gives a
-      // visitor more time in a readable orientation before it wanders.
-      field.group.rotation.y = t * 0.008;
+      // Slow precession of the whole p-orbital cloud, distinct from the
+      // nucleus's own spin and the satellites' independent orbits — keeps
+      // the dumbbell shape from ever settling into one static silhouette.
+      aurorae.group.rotation.y = t * 0.008;
       satellites.sats.forEach(s => {
         s.pivot.rotation.y += s.speed * 0.01;
       });
       if (autoRotate && !orbitDrag.isDragging) {
-        // Full scene slowed (0.0009 -> 0.0005), same reasoning as
-        // field.group's own precession above.
         root.rotation.y += preview ? 0.0015 : 0.0005;
       }
+
+      // Per-particle drift/shimmer — each point nudges along its own fixed
+      // direction on its own sine wave, so the cloud reads as gently alive
+      // rather than a static point cloud, per the brief's explicit ask.
+      for (let i = 0; i < aurorae.count; i++) {
+        const d = aurorae.drift[i];
+        const s = Math.sin(t * d.speed + d.phase) * d.amp;
+        const i3 = i * 3;
+        cloudPosAttr.array[i3]     = aurorae.base[i3]     + d.dx * s;
+        cloudPosAttr.array[i3 + 1] = aurorae.base[i3 + 1] + d.dy * s;
+        cloudPosAttr.array[i3 + 2] = aurorae.base[i3 + 2] + d.dz * s;
+      }
+      cloudPosAttr.needsUpdate = true;
     }
 
-    field.lines.forEach(l => {
-      l.phase += 0.012 * l.speed;
-      const wave = Math.sin(l.phase); // -1..1, own pace per line
-      l.mat.opacity = Math.max(0.05, field.baseOpacity + wave * 0.07 * l.flareStrength);
-      // A faint lift toward white at each line's own peak, like it's
-      // momentarily energized rather than just fading in and out.
-      const flare = Math.max(0, wave) * 0.3 * l.flareStrength;
-      l.mat.color.setRGB(
-        field.baseColor.r + flare * 0.55,
-        field.baseColor.g + flare * 0.18,
-        field.baseColor.b
-      );
-    });
-
-    aurorae.bands.forEach(b => {
-      b.phase += 0.012;
-      b.mat.opacity = Math.max(0, b.baseOpacity + Math.sin(b.phase) * 0.16);
-    });
-    aurorae.shimmers.forEach(s => {
-      s.phase += 0.025;
-      s.mat.opacity = Math.max(0, s.baseOpacity + Math.sin(s.phase) * 0.28);
-    });
+    // A slow overall shimmer on top of the per-particle drift — the whole
+    // cloud's brightness breathes gently, same beat the old aurora bands
+    // used to pulse on.
+    aurorae.phase += 0.012;
+    aurorae.mat.opacity = Math.max(0.5, aurorae.baseOpacity + Math.sin(aurorae.phase) * 0.15);
 
     renderer.render(scene, camera);
   }
@@ -1045,15 +746,9 @@ export function createEgg(container, { preview = false } = {}) {
       if (onContainerMouseMove) container.removeEventListener('mousemove', onContainerMouseMove);
       if (onContainerClick) container.removeEventListener('click', onContainerClick);
       renderer.dispose();
-      geo.dispose(); mat.dispose(); earthTex.dispose();
-      cloudGeo.dispose(); cloudMat.dispose(); cloudTex.dispose();
+      geo.dispose(); mat.dispose(); nucleusTex.dispose();
       starGeo.dispose(); starMat.dispose();
-      field.lines.forEach(l => { l.geo.dispose(); l.mat.dispose(); });
-      aurorae.bands.forEach(b => { b.mesh.geometry.dispose(); b.mat.dispose(); });
-      aurorae.shimmers.forEach(s => s.mat.dispose());
-      aurorae.bandTex.dispose();
-      aurorae.shimmerTexGreen.dispose();
-      aurorae.shimmerTexViolet.dispose();
+      aurorae.geo.dispose(); aurorae.mat.dispose(); aurorae.dotTex.dispose();
       satellites.sats.forEach(s => {
         s.ringMat.dispose();
         s.hit.geometry.dispose();

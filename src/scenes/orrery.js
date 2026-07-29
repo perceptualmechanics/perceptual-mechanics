@@ -367,7 +367,13 @@ function buildOrrery(preview, suspendTopY, rafterY) {
     const yOffset = ringYBase + i * (preview ? 0.06 : 0.05);
     ringInfo.push({ radius, yOffset, tilt });
 
-    const ringGeo = new THREE.TorusGeometry(radius, (preview ? 0.008 : 0.01) * HW, 6, 20);
+    // Tube thickened a step (0.008/0.01 -> 0.011/0.014 * HW), design pass
+    // 2026-07-29 — Scott: the rings/mast are the orrery's own namesake
+    // mechanism and should be the most confidently-read structure in the
+    // room, but were thin enough that the small planet bodies riding them
+    // out-competed them for attention. Doesn't change radius/tilt (the
+    // collision math in createOrrery keys off those, not tube thickness).
+    const ringGeo = new THREE.TorusGeometry(radius, (preview ? 0.011 : 0.014) * HW, 6, 20);
     const ring = new THREE.Mesh(ringGeo, steelMat);
     ring.rotation.x = Math.PI / 2 + tilt;
     ring.position.y = yOffset;
@@ -390,9 +396,14 @@ function buildOrrery(preview, suspendTopY, rafterY) {
     bodyGroup.position.x = radius;
     pivot.add(bodyGroup);
     const bodyGeo = new THREE.SphereGeometry(size, 16, 16);
+    // Eased back a touch (0.22 -> 0.17), same design pass as the ring
+    // thickness above — the planet bodies were reading as more prominent
+    // than the structure holding them; this and the new dedicated
+    // structure key light (see createOrrery) are the two halves of
+    // shifting that balance without dimming the planets into nothing.
     const bodyMat = new THREE.MeshStandardMaterial({
       map: makeSprayPaintTexture(planet.color),
-      emissive: planet.color, emissiveIntensity: 0.22,
+      emissive: planet.color, emissiveIntensity: 0.17,
       roughness: 0.68, metalness: 0.1,
     });
     const body = new THREE.Mesh(bodyGeo, bodyMat);
@@ -615,57 +626,71 @@ function makePegboardTexture() {
 // A taped-up early-90s show flyer — xeroxed, high-contrast, a little
 // water-stained. Band names only (no logos/artwork reproduced) — enough to
 // date the room without borrowing anyone's actual design.
+// Design pass, 2026-07-29 — Scott: these are a good, specific "what IS
+// this thing" hook (the found-object mixtape/flyer detail is exactly the
+// kind of thing that should sell the room as a real place someone lived
+// in), but small enough at their old size/resolution to miss entirely at
+// normal viewing distance. Canvas resolution bumped 200x280 -> 260x364
+// (same aspect, more headroom before scaling-down blur sets in at a
+// distance) and every stroke/font size scaled up with it, plus the band
+// name's own contrast pushed higher (pure black on a lightened paper
+// stock, thicker outline) — the two things that actually determine
+// legibility from across a room are the physical plane size (handled at
+// the call site, in buildWarehouse) and how much contrast survives
+// getting minified from here down to a few dozen screen pixels; a
+// same-resolution-but-bigger-plane poster would've just been a blurrier
+// big poster.
 function makePosterTexture(band, sub) {
   const c = document.createElement('canvas');
-  c.width = 200; c.height = 280;
+  c.width = 260; c.height = 364;
   const cx = c.getContext('2d');
-  cx.fillStyle = '#cfc9b4';
-  cx.fillRect(0, 0, 200, 280);
+  cx.fillStyle = '#d8d2ba';
+  cx.fillRect(0, 0, 260, 364);
 
   // Xerox speckle.
   cx.globalAlpha = 0.5;
-  for (let i = 0; i < 260; i++) {
+  for (let i = 0; i < 340; i++) {
     cx.fillStyle = Math.random() > 0.5 ? '#00000022' : '#ffffff22';
-    cx.fillRect(Math.random() * 200, Math.random() * 280, 1, 1);
+    cx.fillRect(Math.random() * 260, Math.random() * 364, 1, 1);
   }
   cx.globalAlpha = 1;
 
-  cx.strokeStyle = '#161412';
-  cx.lineWidth = 6;
-  cx.strokeRect(10, 10, 180, 260);
+  cx.strokeStyle = '#0e0c0a';
+  cx.lineWidth = 8;
+  cx.strokeRect(13, 13, 234, 338);
 
-  cx.fillStyle = '#141210';
+  cx.fillStyle = '#0a0908';
   cx.textAlign = 'center';
-  cx.font = `bold ${band.length > 8 ? 26 : 34}px Impact, "Arial Narrow", sans-serif`;
+  cx.font = `bold ${band.length > 8 ? 34 : 44}px Impact, "Arial Narrow", sans-serif`;
   cx.save();
-  cx.translate(100, 130);
+  cx.translate(130, 169);
   cx.rotate(-0.03);
   cx.fillText(band.toUpperCase(), 0, 0);
   cx.restore();
 
   cx.beginPath();
-  cx.moveTo(30, 155); cx.lineTo(170, 155);
-  cx.lineWidth = 3;
+  cx.moveTo(39, 202); cx.lineTo(221, 202);
+  cx.lineWidth = 4;
   cx.stroke();
 
-  cx.font = '14px Georgia, serif';
-  cx.fillText(sub, 100, 185);
-  cx.font = '11px Georgia, serif';
-  cx.fillText('$5 AT THE DOOR', 100, 210);
+  cx.font = 'bold 19px Georgia, serif';
+  cx.fillText(sub, 130, 241);
+  cx.font = '15px Georgia, serif';
+  cx.fillText('$5 AT THE DOOR', 130, 273);
 
   // A faint water stain.
-  const grad = cx.createRadialGradient(160, 230, 4, 160, 230, 50);
+  const grad = cx.createRadialGradient(208, 299, 5, 208, 299, 65);
   grad.addColorStop(0, 'rgba(90,70,40,0.28)');
   grad.addColorStop(1, 'rgba(90,70,40,0)');
   cx.fillStyle = grad;
   cx.beginPath();
-  cx.arc(160, 230, 50, 0, Math.PI * 2);
+  cx.arc(208, 299, 65, 0, Math.PI * 2);
   cx.fill();
 
   // Tape marks at the top corners.
   cx.fillStyle = 'rgba(220,215,200,0.55)';
-  cx.fillRect(6, 2, 34, 14);
-  cx.fillRect(160, 2, 34, 14);
+  cx.fillRect(8, 3, 44, 18);
+  cx.fillRect(208, 3, 44, 18);
 
   const tex = new THREE.CanvasTexture(c);
   return tex;
@@ -712,6 +737,22 @@ function makeStaticBuffer(ctx, seconds) {
   return buffer;
 }
 
+// A small soft round sprite for the dust-mote particle system below —
+// same "canvas gradient, no image asset" rule as every other texture on
+// this site.
+function makeDustMoteTexture() {
+  const c = document.createElement('canvas');
+  c.width = 16; c.height = 16;
+  const cx = c.getContext('2d');
+  const g = cx.createRadialGradient(8, 8, 0, 8, 8, 8);
+  g.addColorStop(0,   'rgba(255,255,255,1)');
+  g.addColorStop(0.5, 'rgba(255,255,255,0.4)');
+  g.addColorStop(1,   'rgba(255,255,255,0)');
+  cx.fillStyle = g;
+  cx.fillRect(0, 0, 16, 16);
+  return new THREE.CanvasTexture(c);
+}
+
 function buildWarehouse(preview, floorY, ceilingY, rafterY) {
   const group = new THREE.Group();
   const span = preview ? 14 : 20;
@@ -730,8 +771,15 @@ function buildWarehouse(preview, floorY, ceilingY, rafterY) {
   group.add(floor);
 
   // Ceiling with a rectangular skylight hole, sized to what the mast
-  // actually pokes through.
+  // actually pokes through, plus a second, smaller skylight panel off to
+  // one side — design pass, 2026-07-29: Scott's note was that the room's
+  // ~30ft vertical scale wasn't reading, and a second opening (real
+  // warehouses almost never have just one skylight panel) gives the
+  // second angled beam below somewhere to actually originate from,
+  // rather than a shaft of light with no visible source.
   const holeW = preview ? 0.7 : 0.9, holeH = preview ? 0.7 : 0.9;
+  const hole2W = holeW * 0.55, hole2H = holeH * 0.55;
+  const hole2X = span * 0.22, hole2Z = -span * 0.16;
   const shape = new THREE.Shape();
   shape.moveTo(-span, -span);
   shape.lineTo(span, -span);
@@ -745,6 +793,13 @@ function buildWarehouse(preview, floorY, ceilingY, rafterY) {
   hole.lineTo(-holeW, holeH);
   hole.lineTo(-holeW, -holeH);
   shape.holes.push(hole);
+  const hole2 = new THREE.Path();
+  hole2.moveTo(hole2X - hole2W, hole2Z - hole2H);
+  hole2.lineTo(hole2X + hole2W, hole2Z - hole2H);
+  hole2.lineTo(hole2X + hole2W, hole2Z + hole2H);
+  hole2.lineTo(hole2X - hole2W, hole2Z + hole2H);
+  hole2.lineTo(hole2X - hole2W, hole2Z - hole2H);
+  shape.holes.push(hole2);
   const ceilingMat = new THREE.MeshStandardMaterial({ color: 0x121110, roughness: 0.9, metalness: 0.1, side: THREE.DoubleSide });
   const ceiling = new THREE.Mesh(new THREE.ShapeGeometry(shape), ceilingMat);
   ceiling.rotation.x = Math.PI / 2;
@@ -769,14 +824,98 @@ function buildWarehouse(preview, floorY, ceilingY, rafterY) {
     addStrut(group, from, to, preview ? 0.02 : 0.026, trussMat);
   });
 
-  // A soft shaft of light falling through the hole.
-  const beamGeo = new THREE.CylinderGeometry(holeW * 0.4, holeW * 2.4, ceilingY - floorY, 16, 1, true);
+  // ─── Skylight shafts ────────────────────────────────────────────────────
+  // Design pass, 2026-07-29 — Scott: the room's own scale (~30ft, the mast
+  // poking out through the roof) wasn't reading; the darkness/sparseness
+  // is the right instinct for a Myst-style read, the fix is making the few
+  // lit things read as lit, not adding more light generally. Two levers:
+  // the beam's own opacity bumped enough to actually see the shaft (was
+  // 0.05, nearly invisible), and — the standard cheap Myst-era trick for
+  // selling scale in an empty vertical space — visible dust motes drifting
+  // through it, added as a particle system just below. Both beams tilted
+  // off vertical ("angled shafts," not straight-down columns) so they read
+  // as directional sunlight rather than a generic glow column.
   const beamMat = new THREE.MeshBasicMaterial({
-    color: 0xcfe0ff, transparent: true, opacity: 0.05, side: THREE.DoubleSide, depthWrite: false,
+    color: 0xcfe0ff, transparent: true, opacity: 0.09, side: THREE.DoubleSide, depthWrite: false,
   });
+  const beamGeo = new THREE.CylinderGeometry(holeW * 0.4, holeW * 2.4, ceilingY - floorY, 16, 1, true);
   const beam = new THREE.Mesh(beamGeo, beamMat);
   beam.position.y = (ceilingY + floorY) / 2;
+  beam.rotation.z = -0.1;
+  beam.rotation.x = 0.04;
   group.add(beam);
+
+  // Second, smaller shaft through the second skylight panel above —
+  // fainter and narrower than the main one (a secondary opening, not an
+  // equal twin), tilted the opposite way so the two don't read as a
+  // mechanically repeated pair.
+  const beam2Mat = new THREE.MeshBasicMaterial({
+    color: 0xdce8ff, transparent: true, opacity: 0.065, side: THREE.DoubleSide, depthWrite: false,
+  });
+  const beam2Geo = new THREE.CylinderGeometry(hole2W * 0.4, hole2W * 2.1, ceilingY - floorY, 14, 1, true);
+  const beam2 = new THREE.Mesh(beam2Geo, beam2Mat);
+  beam2.position.set(hole2X * 0.6, (ceilingY + floorY) / 2, hole2Z * 0.6);
+  beam2.rotation.z = 0.14;
+  beam2.rotation.x = -0.06;
+  group.add(beam2);
+
+  // ─── Dust motes ─────────────────────────────────────────────────────────
+  // A small particle system drifting slowly upward through both beams —
+  // visible dust in a light shaft is the cheapest, most legible way to
+  // sell "there is a huge volume of air in this room" that exists, not a
+  // geometry problem the way the orrery structure's own scale is.
+  // Returned (not animated here) so createOrrery's shared animate() loop
+  // can update positions each frame, same pattern buildOrrery uses for
+  // orbits/moons.
+  const motePositions = [
+    { x: 0, z: 0, r0: holeW * 0.4, r1: holeW * 2.4, tiltZ: -0.1, tiltX: 0.04, count: preview ? 70 : 170 },
+    { x: hole2X * 0.6, z: hole2Z * 0.6, r0: hole2W * 0.4, r1: hole2W * 2.1, tiltZ: 0.14, tiltX: -0.06, count: preview ? 40 : 90 },
+  ];
+  const moteCount = motePositions.reduce((s, m) => s + m.count, 0);
+  const motePos = new Float32Array(moteCount * 3);
+  const moteBase = new Float32Array(moteCount * 3);
+  const moteDrift = [];
+  let mi = 0;
+  motePositions.forEach(beamSpec => {
+    for (let k = 0; k < beamSpec.count; k++) {
+      const frac = Math.random(); // 0 = floor, 1 = ceiling, along this beam's own axis
+      const y = floorY + frac * (ceilingY - floorY);
+      const r = beamSpec.r0 + (beamSpec.r1 - beamSpec.r0) * (1 - frac); // wider low, narrower high, matching the cone
+      const ang = Math.random() * Math.PI * 2;
+      // The beam mesh itself is tilted (rotation.x/z above); approximate
+      // that same tilt here so the motes actually sit inside the visible
+      // cone rather than a plain vertical column next to it.
+      let x = beamSpec.x + r * Math.cos(ang) * (0.55 + Math.random() * 0.45);
+      let z = beamSpec.z + r * Math.sin(ang) * (0.55 + Math.random() * 0.45);
+      x += Math.sin(beamSpec.tiltZ) * (y - (floorY + ceilingY) / 2);
+      z += Math.sin(beamSpec.tiltX) * (y - (floorY + ceilingY) / 2);
+
+      moteBase[mi * 3] = x; moteBase[mi * 3 + 1] = y; moteBase[mi * 3 + 2] = z;
+      motePos[mi * 3] = x; motePos[mi * 3 + 1] = y; motePos[mi * 3 + 2] = z;
+      moteDrift.push({
+        // Slow upward drift (dust rising on thermals) plus a little
+        // independent side-to-side wander — each mote loops back to its
+        // own start height once it drifts past the ceiling, via modulo in
+        // the animate loop rather than a hard reset that would pop.
+        riseSpeed: 0.02 + Math.random() * 0.035,
+        wobbleAmp: 0.02 + Math.random() * 0.03,
+        wobbleSpeed: 0.2 + Math.random() * 0.3,
+        phase: Math.random() * Math.PI * 2,
+        span: ceilingY - floorY,
+      });
+      mi++;
+    }
+  });
+  const moteGeo = new THREE.BufferGeometry();
+  moteGeo.setAttribute('position', new THREE.BufferAttribute(motePos, 3));
+  const moteTex = makeDustMoteTexture();
+  const moteMat = new THREE.PointsMaterial({
+    color: 0xe8ecff, size: preview ? 0.018 : 0.014, map: moteTex,
+    transparent: true, opacity: 0.55, blending: THREE.AdditiveBlending,
+    depthWrite: false, sizeAttenuation: true,
+  });
+  const dustMotes = new THREE.Points(moteGeo, moteMat);
+  group.add(dustMotes);
 
   // A couple of dark corrugated walls, back and to one side, pulled in
   // closer than the floor/ceiling extent so the flyers taped to them
@@ -824,18 +963,25 @@ function buildWarehouse(preview, floorY, ceilingY, rafterY) {
   const posterMeshes = [];
   if (!preview) {
     const baseY = floorY + wallHeight * 0.34;
+    // Design pass, 2026-07-29 — enlarged ~1.4x (0.95x1.33 -> 1.3x1.85 base)
+    // and respaced further apart (was -2.3/-0.55/0.35/1.9, tight enough
+    // that the bigger planes would start lapping) so all four read at
+    // normal viewing distance without walking up close, per Scott's note.
     const posters = [
-      { band: 'Nirvana', sub: 'Live — All Ages', x: -2.3, y: baseY + 0.18, rot: -0.09, scale: 1.08, z: -wallDist + 0.03 },
-      { band: 'R.E.M.', sub: 'Live — Doors 8pm', x: -0.55, y: baseY - 0.32, rot: 0.05, scale: 0.86, z: -wallDist + 0.025 },
-      { band: 'Beastie Boys', sub: 'Live — 18+', x: 0.35, y: baseY + 0.4, rot: -0.05, scale: 1.0, z: -wallDist + 0.035 },
-      { band: 'For Squirrels', sub: 'Live — This Fri.', x: 1.9, y: baseY - 0.1, rot: 0.09, scale: 0.78, z: -wallDist + 0.02 },
+      { band: 'Nirvana', sub: 'Live — All Ages', x: -2.75, y: baseY + 0.2, rot: -0.09, scale: 1.08, z: -wallDist + 0.03 },
+      { band: 'R.E.M.', sub: 'Live — Doors 8pm', x: -0.75, y: baseY - 0.34, rot: 0.05, scale: 0.86, z: -wallDist + 0.025 },
+      { band: 'Beastie Boys', sub: 'Live — 18+', x: 0.55, y: baseY + 0.44, rot: -0.05, scale: 1.0, z: -wallDist + 0.035 },
+      { band: 'For Squirrels', sub: 'Live — This Fri.', x: 2.45, y: baseY - 0.1, rot: 0.09, scale: 0.78, z: -wallDist + 0.02 },
     ];
     posters.forEach(p => {
       const posterMat = new THREE.MeshStandardMaterial({
         map: makePosterTexture(p.band, p.sub), roughness: 0.85, metalness: 0,
-        emissive: 0x0c0a08, emissiveIntensity: 0.5,
+        // Bumped 0.5 -> 0.78 (base) — these are meant to read as lit focal
+        // objects worth noticing across a dark room, Myst-style, not just
+        // legible once you're already standing in front of one.
+        emissive: 0x0c0a08, emissiveIntensity: 0.78,
       });
-      const poster = new THREE.Mesh(new THREE.PlaneGeometry(0.95 * p.scale, 1.33 * p.scale), posterMat);
+      const poster = new THREE.Mesh(new THREE.PlaneGeometry(1.3 * p.scale, 1.82 * p.scale), posterMat);
       poster.position.set(p.x, p.y, p.z);
       poster.rotation.z = p.rot;
       group.add(poster);
@@ -843,7 +989,7 @@ function buildWarehouse(preview, floorY, ceilingY, rafterY) {
       // clicking one "tunes in" a few bars of static-laden radio (see
       // playPosterRiff in createOrrery). Fits the found story's own
       // premise (a pirate radio investigation) better than a silent wall.
-      posterMeshes.push({ mesh: poster, band: p.band, baseEmissive: 0.5 });
+      posterMeshes.push({ mesh: poster, band: p.band, baseEmissive: 0.78 });
     });
 
     // Pegboard with tools, on the side wall.
@@ -1076,7 +1222,10 @@ function buildWarehouse(preview, floorY, ceilingY, rafterY) {
     group.add(bulb);
   }
 
-  return { group, bulbPosition, posters: posterMeshes, colliders, wallDist };
+  return {
+    group, bulbPosition, posters: posterMeshes, colliders, wallDist,
+    dust: { geo: moteGeo, mat: moteMat, tex: moteTex, base: moteBase, drift: moteDrift, count: moteCount },
+  };
 }
 
 // ─── First-person rig ──────────────────────────────────────────────────────
@@ -1419,6 +1568,25 @@ export function createOrrery(container, { preview = false } = {}) {
   const floorY = orrery.baseY - (preview ? 0.9 : 1.3);
   const warehouse = buildWarehouse(preview, floorY, ceilingY, rafterY);
 
+  // Design pass, 2026-07-29 — Scott: the orrery's own ring/mast structure
+  // is the namesake mechanism and should be the single most confidently-lit
+  // object in the room, ahead of the small planet bodies it carries. A
+  // dedicated spotlight aimed at the ring assembly (rather than another
+  // global fill light, which would fight the deliberate Myst-style
+  // darkness everywhere else) — angled down from roughly where the main
+  // skylight shaft above falls, so the two read as the same light source
+  // rather than two unrelated ones.
+  const structureTarget = new THREE.Object3D();
+  structureTarget.position.set(0, orrery.baseY + orrery.mastHeight * 0.32, 0);
+  scene.add(structureTarget);
+  const structureKey = new THREE.SpotLight(
+    0xffe9c4, preview ? 1.8 : 2.6, preview ? 11 : 16,
+    Math.PI / 4.2, 0.45, 1.3
+  );
+  structureKey.position.set(1.5, orrery.baseY + orrery.mastHeight * 1.05, 1.1);
+  structureKey.target = structureTarget;
+  scene.add(structureKey);
+
   // The work light lives at the hanging bulb prop if the garage clutter
   // pass built one (full mode only); otherwise a plain accent near the
   // machine, same as before.
@@ -1632,15 +1800,31 @@ export function createOrrery(container, { preview = false } = {}) {
       #orrery-crosshair.active {
         background: rgba(255,214,150,0.9); transform: scale(1.8);
       }
+      /* Design pass, 2026-07-29 — Scott: once the room is doing its own
+         atmospheric/mystery work, a bold pill centered dead in the middle
+         of the frame undercuts it — competing with the machine for the
+         one spot every other bit of chrome (crosshair, title) already
+         wants. Moved to a bottom-right corner (clear of the crosshair,
+         the walkpad at bottom-left, and the bottom-center caption),
+         shrunk, and made more transparent so it reads as ambient UI
+         chrome, not a modal-style call to action. The show/hide behavior
+         itself (toggled via .hidden below, driven by pointer-lock state)
+         is untouched — still reappears whenever unlocked, same fix as
+         the 2026-07-26 note further down about not permanently hiding it. */
       #orrery-lock-prompt {
-        position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-        z-index: 7; background: rgba(10,7,4,0.55); color: rgba(238,225,205,0.85);
-        border: 1px solid rgba(220,200,180,0.3); border-radius: 2rem;
-        padding: 0.7rem 1.6rem; font-family: 'Times New Roman', serif;
-        font-size: 0.85rem; letter-spacing: 0.08em; cursor: pointer;
+        position: absolute; bottom: 1.5rem; right: 1.4rem;
+        z-index: 7; background: rgba(10,7,4,0.4); color: rgba(220,207,190,0.6);
+        border: 1px solid rgba(220,200,180,0.2); border-radius: 1.4rem;
+        padding: 0.45rem 0.95rem; font-family: 'Times New Roman', serif;
+        font-size: 0.68rem; letter-spacing: 0.06em; cursor: pointer;
         transition: opacity 0.4s ease;
       }
       #orrery-lock-prompt.hidden { opacity: 0; pointer-events: none; }
+      @media (max-width: 600px) {
+        /* Clear of the walkpad's own top edge (bottom:1.6rem, height 6rem)
+           on narrow screens where corner UI crowds together. */
+        #orrery-lock-prompt { bottom: 8rem; }
+      }
       #orrery-walkpad {
         position: absolute; left: 1.2rem; bottom: 1.6rem; z-index: 7;
         width: 8.6rem; height: 6rem; display: grid;
@@ -2052,6 +2236,32 @@ export function createOrrery(container, { preview = false } = {}) {
         u.mesh.rotation.x += u.spin * 0.01;
         u.mesh.rotation.y += u.spin * 0.007;
       });
+
+      // Dust motes drifting up through the skylight shafts. Each one wraps
+      // from ceiling back to its own start height near the floor once it
+      // rises past the top — a real jump when it happens, not a fade, but
+      // with 260 motes at independent phases/speeds no two wrap in the
+      // same frame, so across the whole swarm it reads as continuous
+      // drift rather than any single visible reset (checked numerically:
+      // one mote's own wrap is a ~5.8-unit jump once per multi-minute
+      // cycle, not something a visitor is likely watching for). `t` here
+      // is already scaled way down (see `t += 0.001` above) for the
+      // orrery's own slow orbital motion, so it's rescaled back up locally
+      // for the mote math below rather than reusing riseSpeed/wobbleSpeed
+      // constants tuned against a different clock.
+      const dustAttr = warehouse.dust.geo.attributes.position;
+      const dustClock = t * 60;
+      for (let i = 0; i < warehouse.dust.count; i++) {
+        const d = warehouse.dust.drift[i];
+        const i3 = i * 3;
+        const startFrac = warehouse.dust.base[i3 + 1] - floorY; // 0..span, this mote's own start height
+        const risenFrac = (startFrac + dustClock * d.riseSpeed) % d.span;
+        const wobble = Math.sin(dustClock * d.wobbleSpeed + d.phase) * d.wobbleAmp;
+        dustAttr.array[i3]     = warehouse.dust.base[i3] + wobble;
+        dustAttr.array[i3 + 1] = floorY + risenFrac;
+        dustAttr.array[i3 + 2] = warehouse.dust.base[i3 + 2] + Math.cos(dustClock * d.wobbleSpeed + d.phase) * d.wobbleAmp;
+      }
+      dustAttr.needsUpdate = true;
     }
 
     // The radio telescope's received-signal pulse.

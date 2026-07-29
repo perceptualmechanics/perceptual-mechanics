@@ -6,6 +6,81 @@ projects (The Secret World, A Manual of Perceptual Mechanics) moved into their o
 files, which are now the source of truth for that material going forward. See "project map"
 below for where things live.
 
+## 1.4.0 (2026-07-29)
+
+Full-site design pass, second round: a conceptual pivot on Orbiter and a
+composition/lighting pass on Orrery, both superseding the still-open items
+from 1.3.3's own punch list. Butterfly, Scroll, Theater, and Library were
+all reviewed and confirmed already working as intended — no changes.
+
+**Orbiter: dropped the magnetosphere entirely, rebuilt as a hydrogen
+atom's p-orbital.** Two rounds of tuning the day/tail asymmetry (1.3.0
+through 1.3.3) still wasn't landing — rather than a third pass, the whole
+concept changed. A p-orbital's actual shape (two lobes split by a flat
+nodal plane where density is exactly zero) is a genuinely different
+silhouette from a sphere, recognizable without a label. `buildFieldLines`
+and the Earth surface/cloud-shell textures are gone; the old aurora torus
+bands (`buildAurorae`) are replaced by `buildOrbitalCloud`, a `THREE.Points`
+particle-density cloud — each particle's position along its own lobe axis
+is sampled as the average of two random draws (a triangular distribution,
+zero at the node, zero at the outer fringe, peaking mid-lobe), with a
+matching parabola driving how wide the lobe is at that same point. No hard
+edge anywhere, by construction. Verified numerically (no NaNs, correct
+bounds, density histogram peaking at the lobe's own middle) before
+shipping. The old teal/violet aurora colors carry over unchanged, now
+standing for wavefunction phase rather than an arbitrary polar tint. The
+Earth sphere shrank to a small glowing "nucleus" (a simple plasma-texture
+core, no continents). Satellites and the click-a-satellite-to-read-a-poem
+interaction are completely untouched, per the brief — their clean orbits
+against the cloud's own fuzziness is the point of the piece now, not
+something to soften.
+
+**Orrery: fixed the composition, not the darkness.** The Myst-style
+near-empty atmospheric void was always the right call; the problem was
+that the few lit focal objects were too small/faint for the darkness to
+read as composed rather than unfinished. Added a second, smaller skylight
+opening plus two angled light shafts (bumped the existing beam's opacity
+0.05→0.09, tilted both off vertical) and a ~260-particle dust-mote system
+drifting through them, to sell the room's own ~30ft vertical scale — the
+standard cheap trick for making an empty volume of air read as one.
+Added a dedicated spotlight aimed at the ring/mast assembly so the
+orrery's own namesake structure reads as the most confidently-lit object
+in the room, thickened the ring tube radius a step, and eased the planet
+bodies' emissive intensity back slightly (0.22→0.17) to shift the balance
+without dimming them into nothing. The four wall poster/flyers (Nirvana,
+R.E.M., Beastie Boys, For Squirrels) got a genuine size bump (~1.4x),
+higher-resolution/higher-contrast canvas textures, and brighter emissive,
+so they're legible at normal viewing distance rather than only up close.
+The "click to look around" prompt moved from a centered modal-style pill
+to a small, more transparent, corner-anchored element — same show/hide-
+on-lock-state behavior as before, just not competing with the machine for
+the center of the frame anymore.
+
+**Leaf and the colophon's "seven small experiences," re-checked, no
+changes needed.** Scott's report was that the 1.3.0 DOF-haze/droplet-
+growth fixes "don't appear implemented yet" — verified live via Chrome
+instead of assuming either the code or the report was right: the droplet
+visibly grows from a faint dot through the hold phase, and the rack-focus
+sweep visibly shifts sharp focus from the rail (foreground) to the
+buildings (background) across the scroll, exactly as coded. Both are
+genuinely live; the effect may just be gradual enough to under-register
+while attention is on the text. No code changes made without a clearer
+read on what's actually not landing. The colophon's "seven small
+experiences" turns out to already be correct, not a stale count: it's
+specifically "experiences built around found and written text," and
+Butterfly (pure Lorenz-attractor math, no text, no bibliography entry) is
+the one of the site's eight scenes deliberately not included in that
+figure — Sphere, Scroll, Theater, Orbiter, Leaf, Orrery, and Library make
+seven.
+
+Verified: node --check on both touched scene files, clean vite build,
+numerical sanity checks on the p-orbital particle distribution and the
+dust-mote sampling/wrap math (no NaNs, correct bounds, no runaway values).
+Live-Chrome-verified Leaf's existing DOF/droplet behavior against the
+current production site. Orbiter and Orrery's own changes can't be
+verified live the same way until this ships — sandboxed dev server, no
+route from here to a real browser.
+
 ## 1.3.3 (2026-07-29)
 
 Two renames plus a return to the still-open shape issue from the original
