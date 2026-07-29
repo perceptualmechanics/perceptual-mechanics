@@ -110,20 +110,46 @@ function makeNucleusTexture() {
 // (see the file-header comment above); everything about how the shape
 // itself is generated is new.
 //
-// Each lobe is a swarm of small additive points sampled, not placed by
-// hand, from a simple artistic stand-in for a real 2p-orbital's
-// probability density: `t`, the fraction of the way out along the lobe's
-// own axis, is drawn as the *average of two independent random numbers* —
-// a triangular distribution that is exactly zero at t=0 (the nodal plane,
-// right at the nucleus, where a real p-orbital's density is genuinely
-// zero) and zero again at t=1 (the lobe's own outer fringe), peaking at
-// t=0.5. That one distribution does double duty: it's used directly for
-// how far out a particle sits, and it drives a parabola (also zero at
-// both ends) for how wide the lobe is allowed to be at that same point —
-// together they produce a teardrop with density falling off gradually in
-// every direction and no boundary surface anywhere, satisfying the brief's
-// "no hard edge" requirement by construction rather than by tuning opacity
-// after the fact.
+// Refined again 2026-07-29, second round — Scott, after seeing it live:
+// the two lobes read as visibly unequal in size (one taller than the
+// other), and each one read as a roughly uniform-width column rather than
+// a teardrop that bulges in the middle. The first version's approach (a
+// triangular distribution for how far out a particle sits, a parabola for
+// how wide) was a hand-built approximation of the right shape, not the
+// real thing, and evidently not a close enough one. Replaced with actual
+// rejection sampling against the real 2p-orbital probability density,
+// |psi|^2 ∝ r^2 * e^(-r/a0) * cos^2(theta) — the formula Scott supplied —
+// which fixes both notes at once rather than needing separate hand-tuned
+// fixes for "equal size" and "bulges in the middle":
+//   - r^2 * e^(-r/a0) genuinely peaks at r = 2*a0 (basic calculus: the
+//     r^2 growth wins for small r, the exponential decay wins for large
+//     r, so the product rises then falls) — a real bulge-then-taper along
+//     the lobe's own length, not an approximation of one.
+//   - cos^2(theta), with theta measured from the lobe's own axis, is
+//     exactly zero at theta = 90° (the nodal plane through the nucleus)
+//     and maximal along the axis — this is what actually produces the
+//     two-lobe dumbbell in the real wavefunction, not a separate "two
+//     poles" placement decision.
+//   - Sampled with theta spanning the FULL 0..180° range in one pass
+//     (cos^2 is symmetric, so this naturally produces both lobes from a
+//     single distribution) and then, for exact rather than merely
+//     statistical mirror symmetry, only the upper half is actually
+//     sampled — the lower lobe is built as a precise reflection (y -> -y)
+//     of the upper one, particle for particle. That guarantees identical
+//     particle count and identical vertical extent between the two
+//     lobes, which is what "equal size" actually requires; leaving it to
+//     two independent random draws (the first version's approach, and
+//     still what a naive full-range sample of this same distribution
+//     would do) only gives equal counts on average, not the particle-for-
+//     particle match Scott's note called for.
+// a0 (A0 below) is a tuning constant, not the real Bohr radius — chosen
+// (see check_porbital3.mjs/check_porbital4.mjs in the working notes) so
+// the bulk of the sampled cloud sits comfortably inside the satellites'
+// own inner orbit radius (1.35), with only its naturally fading tail
+// occasionally reaching past it — verified numerically: less than 2% of
+// particles fall beyond r=1.35 at a0=0.175, and the r-histogram rises
+// from near-zero, peaks around r=2*a0, and tapers back down, confirming
+// the bulge is real and not just visually assumed.
 function makePOrbitalDotTexture() {
   const c = document.createElement('canvas');
   c.width = 32; c.height = 32;
@@ -139,8 +165,13 @@ function makePOrbitalDotTexture() {
 
 function buildOrbitalCloud(preview) {
   const count = preview ? 900 : 2800;
-  const LOBE_LENGTH = 1.15; // sits comfortably inside the satellites' own orbit radii (1.35+)
-  const GIRTH_MAX = 0.5;
+  // Tuning constant (not the real Bohr radius) for r^2 * e^(-r/A0) — chosen
+  // so the bulk of the sampled cloud sits comfortably inside the
+  // satellites' own inner orbit radius (1.35); see the function-header
+  // comment above for the numerical check behind this value.
+  const A0 = 0.175;
+  const R_MAX = A0 * 9; // truncation radius — e^(-9) is negligible, this just bounds the rejection-sampling proposal
+  const F_MAX = 4 * A0 * A0 * Math.exp(-2); // max of r^2*e^(-r/A0) (at r=2*A0) times max of cos^2(theta)=1
 
   const positions = new Float32Array(count * 3);
   const colors = new Float32Array(count * 3);
@@ -158,42 +189,60 @@ function buildOrbitalCloud(preview) {
   const colorPos = new THREE.Color(0x78ffb4);
   const colorNeg = new THREE.Color(0xc978ff);
 
-  for (let i = 0; i < count; i++) {
-    const lobeSign = i < count / 2 ? 1 : -1;
-    const t = (Math.random() + Math.random()) / 2; // triangular 0..1, peak at 0.5
-    const axial = lobeSign * t * LOBE_LENGTH;
-    const girth = GIRTH_MAX * 4 * t * (1 - t); // parabola, zero at t=0 and t=1
+  // Rejection-sample one point in the UPPER lobe only (theta measured from
+  // the +Y axis, u = cos(theta) confined to [0,1] here) — the lower lobe
+  // is built below as an exact mirror of this one, not sampled
+  // independently, so the two lobes match particle-for-particle rather
+  // than merely "on average."
+  function sampleUpperLobePoint() {
+    let r, u, weight;
+    do {
+      r = Math.random() * R_MAX;
+      u = Math.random();
+      weight = r * r * Math.exp(-r / A0) * u * u;
+    } while (Math.random() * F_MAX >= weight);
     const phi = Math.random() * Math.PI * 2;
-    const perpFrac = Math.random() * Math.random(); // skewed toward the lobe's own core axis
-    const perpR = girth * perpFrac;
-    const x = perpR * Math.cos(phi);
-    const z = perpR * Math.sin(phi);
+    const y = r * u;
+    const perpR = r * Math.sqrt(Math.max(0, 1 - u * u));
+    return { x: perpR * Math.cos(phi), y, z: perpR * Math.sin(phi), r };
+  }
 
-    base[i * 3] = x; base[i * 3 + 1] = axial; base[i * 3 + 2] = z;
-    positions[i * 3] = x; positions[i * 3 + 1] = axial; positions[i * 3 + 2] = z;
+  const half = count / 2;
+  for (let i = 0; i < half; i++) {
+    const p = sampleUpperLobePoint();
+    // Density-based brightness — particles near the true probability peak
+    // (r near 2*A0, close to the lobe's own axis) read hotter than ones
+    // out toward the fading tail, on top of what sheer overlap density
+    // under additive blending already does for free.
+    const dens = 0.35 + 0.65 * Math.min(1, (p.r * p.r * Math.exp(-p.r / A0)) / (4 * A0 * A0 * Math.exp(-2)));
 
-    // Brightness weighted by the same density term, so particles near
-    // each lobe's own middle read hotter than the ones trailing off
-    // toward the node or the outer fringe — on top of what sheer overlap
-    // density under additive blending already does for free.
-    const dens = 0.45 + 0.55 * (4 * t * (1 - t));
-    const col = lobeSign > 0 ? colorPos : colorNeg;
-    colors[i * 3] = col.r * dens; colors[i * 3 + 1] = col.g * dens; colors[i * 3 + 2] = col.b * dens;
+    [1, -1].forEach(lobeSign => {
+      const idx = lobeSign > 0 ? i : half + i;
+      const x = p.x, y = p.y * lobeSign, z = p.z;
+      base[idx * 3] = x; base[idx * 3 + 1] = y; base[idx * 3 + 2] = z;
+      positions[idx * 3] = x; positions[idx * 3 + 1] = y; positions[idx * 3 + 2] = z;
 
-    // Slow drift/shimmer per particle, not a static point cloud: a fixed
-    // random direction (normalized) each particle nudges along, at its
-    // own phase and speed, so the swarm reads as gently alive rather than
-    // frozen — closer to butterfly.js's per-particle damped-velocity
-    // drift in spirit, though the underlying math here is simpler since
-    // there's no physical simulation to run, just an oscillation.
-    let dx = Math.random() * 2 - 1, dy = Math.random() * 2 - 1, dz = Math.random() * 2 - 1;
-    const dl = Math.hypot(dx, dy, dz) || 1;
-    dx /= dl; dy /= dl; dz /= dl;
-    drift.push({
-      dx, dy, dz,
-      phase: Math.random() * Math.PI * 2,
-      speed: 0.3 + Math.random() * 0.5,
-      amp: 0.015 + Math.random() * 0.02,
+      const col = lobeSign > 0 ? colorPos : colorNeg;
+      colors[idx * 3] = col.r * dens; colors[idx * 3 + 1] = col.g * dens; colors[idx * 3 + 2] = col.b * dens;
+
+      // Slow drift/shimmer per particle, not a static point cloud: a fixed
+      // random direction (normalized) each particle nudges along, at its
+      // own phase and speed, so the swarm reads as gently alive rather
+      // than frozen — closer to butterfly.js's per-particle damped-
+      // velocity drift in spirit, though the underlying math here is
+      // simpler since there's no physical simulation to run, just an
+      // oscillation. Each mirrored pair gets its OWN independent drift
+      // (not mirrored motion) — only the static shape is a mirror image;
+      // synced motion between the two lobes would look mechanical.
+      let dx = Math.random() * 2 - 1, dy = Math.random() * 2 - 1, dz = Math.random() * 2 - 1;
+      const dl = Math.hypot(dx, dy, dz) || 1;
+      dx /= dl; dy /= dl; dz /= dl;
+      drift[idx] = {
+        dx, dy, dz,
+        phase: Math.random() * Math.PI * 2,
+        speed: 0.3 + Math.random() * 0.5,
+        amp: 0.015 + Math.random() * 0.02,
+      };
     });
   }
 

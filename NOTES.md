@@ -6,6 +6,53 @@ projects (The Secret World, A Manual of Perceptual Mechanics) moved into their o
 files, which are now the source of truth for that material going forward. See "project map"
 below for where things live.
 
+## 1.4.1 (2026-07-29)
+
+Follow-up refinement on 1.4.0's Orbiter pivot, plus a live-motion check on
+Leaf. Orrery explicitly untouched this round — Scott flagged it as close
+to done and asked not to "improve" it again without a real new note.
+
+**Orbiter: the two lobes now match exactly, and each one is a real
+teardrop, not an approximation of one.** Live feedback on 1.4.0: the top
+lobe read visibly bigger than the bottom one, and each lobe read as a
+roughly uniform-width column rather than bulging in the middle. The
+previous version's sampling (a triangular distribution for how far out a
+particle sits, a parabola for how wide) was a hand-built approximation of
+the right shape; replaced it with actual rejection sampling against the
+real 2p-orbital probability density Scott supplied — |psi|^2 ∝ r^2 ·
+e^(-r/a0) · cos^2(theta). r^2 · e^(-r/a0) genuinely peaks at r=2·a0 (real
+calculus, not a hand-tuned parabola), giving a genuine bulge-then-taper.
+For the "exactly equal size" note specifically: rather than sampling both
+lobes independently from the same symmetric distribution (which only
+gives equal counts *on average*), only the upper lobe is actually
+sampled — the lower lobe is built as an exact y-mirror of it,
+particle-for-particle, guaranteeing identical count and identical
+vertical extent by construction rather than by chance. Each mirrored pair
+still gets its own independent drift/shimmer animation, so the motion
+doesn't look robotically synced even though the static shape is a true
+mirror. a0 tuned to 0.175 so the bulk of the cloud sits inside the
+satellites' own inner orbit radius (1.35) — verified numerically
+(check_egg_final.mjs, working notes): 0 NaNs, exact particle-for-particle
+mirror confirmed, r-histogram genuinely rises-peaks-falls (not monotonic
+or column-shaped), only ~1.3% of particles exceed r=1.35.
+
+**Leaf: verified in actual motion, not stills, per Scott's specific
+ask.** Scrolled the live production scene via Claude in Chrome (not just
+comparing two static screenshots, which Scott correctly pointed out isn't
+the same as watching it happen) and watched the full sequence play:
+droplet visibly swelling during the hold phase, falling and stretching
+through freefall, escaping motes triggering mid-fall, splash burst at
+impact, reform at the loop's end — and the background sharpness
+genuinely shifting from the rail/foreground being crisp early on to the
+buildings/palms sharpening later, exactly matching the rack-focus code.
+Both notes from the original brief are confirmed actually working in
+motion, live. No code changes made here — nothing to fix.
+
+Verified: node --check, clean vite build, numerical sanity check on the
+new rejection-sampling lobe generator (mirror exactness, bulge shape, no
+NaNs, bounds). Orbiter's own visual result still can't be confirmed live
+until this ships.
+
 ## 1.4.0 (2026-07-29)
 
 Full-site design pass, second round: a conceptual pivot on Orbiter and a
