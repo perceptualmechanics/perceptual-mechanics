@@ -6,6 +6,75 @@ projects (The Secret World, A Manual of Perceptual Mechanics) moved into their o
 files, which are now the source of truth for that material going forward. See "project map"
 below for where things live.
 
+## 1.3.0 (2026-07-29)
+
+Design pass on Egg and Leaf, from Scott's own brief: both read visually
+thinner than Sphere/Butterfly, and the real gap wasn't density, it was
+that neither scene's geometry dramatized the physics it's named for yet.
+Fix the shape first, density second. Built blind — no browser tool
+available in this sandbox all session — so every geometry change below is
+numerically verified (throwaway scripts, not committed) rather than
+visually confirmed. Worth Scott's own look at the live site once this
+deploys, same caveat as everything else built blind this year.
+
+**Egg.** The magnetosphere didn't look like an egg because the field
+lines were symmetric dipole loops regardless of longitude — the
+compressed-dayside/stretched-tail asymmetry that's the whole reason for
+the name was missing. `buildFieldLines` now deforms each line along the
+sun-Earth axis (+X) by its own longitude: dayside lines pull in toward the
+planet (tapered near the surface so compression can't push a point inside
+the globe — caught a real bug this way, a day-side point landing at
+radius 0.87 against EARTH_RADIUS 1, before the taper), nightside lines
+stretch out into a long thin tail, flattening slightly as they go so they
+read as a streak rather than a bigger loop. Verified numerically: zero
+points inside the planet, tail-to-day asymmetry ratio ~3.2x, no NaNs.
+Longitude coverage went from 0.6 of a circle to the full circle (the size
+gradient across the whole sweep is what keeps it reading as a shape now,
+not a cage) and line count 9→12, shell size decorrelated from sweep order
+so the day/tail gradient doesn't fight an unrelated index-order artifact.
+
+Aurorae: every gradient stop and opacity range pushed up, tube thickness
+0.12→0.18, shimmer sprites split into two color threads (green + violet,
+was one uniform green tint) so the curtain's own sparkle carries both of
+the band's colors. Satellites: count went from a fixed 8 to `poems.length`
+(14) in the full scene — the existing per-load offset trick becomes a
+full bijection this way, every poem reachable every visit instead of
+whichever 8-poem slice happened to land. Orbital planes were reading
+roughly coplanar; replaced Euler-angle composition (which doesn't sample
+orientation space uniformly) with a genuinely random unit-vector orbit
+normal per satellite, verified with an octant-bucket check on 20k samples
+— evenly spread, no degenerate zero-vectors. Caption/hint: the epigraph
+("sing, orbiter") was already there but sized/colored like ambient chrome
+rather than a title — brought up to Butterfly's own label weight (same
+clamp floor/ceiling, comparable opacity), and the hint now says "click a
+satellite to read a poem" instead of just "click a satellite."
+
+**Leaf.** Background depth-of-field layers already crossfade sharp/blur
+via a moving rack focus, but that's the only depth cue — every layer sat
+at the same baseline contrast regardless of actual distance. Added a flat
+atmospheric-haze wash baked into each layer's own texture (garage
+farthest → heaviest haze, rail nearest → none), independent of and
+stacking with the existing rack-focus crossfade. The droplet: "static
+white dot at the tip" was a real bug, not a design gap — the hold-phase
+grow formula scaled by the raw overall scroll fraction (capped at ~0.14)
+instead of that normalized against the hold phase's own length, so the
+visible growth was a few percent instead of the swell the coalescing
+paragraph describes. Fixed, and separately, the phase boundaries
+(hold/fall/splash/reform) were hand-guessed constants from early in this
+scene's history — a `w` field on each TEXT_STAGES entry looked like it
+should've driven them but was dead, never read anywhere. Both fixed
+together: `updatePhaseFractions()` measures each stage boundary's real
+scroll position (paragraph offsetTop, same formula the scroll-frac
+tracking already used) so the droplet now visibly grows across the actual
+coalescing paragraph and releases at the real boundary where the next one
+begins, with minimum-gap clamps so a short/wide viewport can't collapse
+the splash phase to zero width. Removed the dead `w` field. Leaf texture
+and sky gradient nudged warmer/richer per Scott's ask — zenith blue kept
+(still "real Florida midday blue" per the existing comment), only the
+horizon stop and cloud tint warmed.
+
+Verified: `node --check` on both files, clean `npx vite build`.
+
 ## 1.2.4 (2026-07-28)
 
 Scott: "why not go through it all and just see if there's anything to

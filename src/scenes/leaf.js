@@ -13,44 +13,44 @@ import { prefersReducedMotion, mountClippedPreviewCanvas, bindGuardedResize } fr
 // explorable space — a leaf, a drop, a slow loop, the text arriving in the
 // same order it was written, timed to the phase of the fall it describes.
 
+// Each stage's real on-screen scroll extent (and so the fall-phase
+// boundaries derived from it in computePhaseFractions, further down) comes
+// from its own rendered paragraph height at runtime, not a hand-tuned
+// weight here — a `w` field used to sit on each of these, presumably meant
+// to drive that boundary math at some earlier point in this scene's
+// history, but nothing ever actually read it once the fall switched over
+// to being driven by real native scroll position; removed as dead weight,
+// literally.
 const TEXT_STAGES = [
   {
     // Gathering, surface tension holding — matches the leaf-tip pause.
-    w: 0.14,
     text: "As the droplets descend down the texture of the leaf, coalescing at the downward point, anticipating the end of their stable lives, joining a hundred million molecules for the freefall drop, poised on the brink before the gravity of the situation overwhelms the surface tension, for that brief instant every Mickey Mouse molecule knowing what is to come, feeling the onward surge as the weight increases, ever steadier, until there's no more time and —",
   },
   {
     // The drop releases, leaf recoils.
-    w: 0.12,
     text: "the pull downward begins, the drop falls from the leaf, which recoils upwards in release, and it is angels in a ball as they're pulled ever downward, freefall, guts flying, screaming, and everyone wants to fly apart but that surface tension pulls them in, forcing them to stick together, and together they fall, bound by forces outside their control —",
   },
   {
     // Friction — a few molecules escape (the drifting particles).
-    w: 0.12,
     text: "the friction as water flies by air frees a few of them, free oxygen and nitrogen creating heat simply by virtue of being there, a wrecking ball knocking aside everything in its path, forcing aside the free and creating more havoc than before —",
   },
   {
-    w: 0.12,
     text: "the drop surges like a lava lamp, suspended in aether, the invisible currents of reaction and action dancing intertwined as forces push and pull and shake and steady and everything prepares for the inevitable end —",
   },
   {
     // Ground rushing up.
-    w: 0.12,
     text: "it looms ahead of them, the only assurance they have, the ground rushing up, the knowledge of disaster, the circumstance of knowing the end ahead, every movement useless against the surface tension —",
   },
   {
     // The escaped few, watching.
-    w: 0.1,
     text: "and yet those few pulled away from the burning rim of the sphere, those few whose weight is that of the air, those few who lucked into friction, they hang there, suspended, and gaze at the others still in the grasp of the greedy giant as they fall until —",
   },
   {
     // Impact / splash.
-    w: 0.14,
     text: "the drop explodes on the ground, shattering the form, everything gone everywhere, vaporized, splashing its life away, a mushroom cloud of water, the sad remains absorbed by root or burnt by sun to climb upwards and start the whole sorry process downward —",
   },
   {
     // The free ones, adjusting to new forces — the loop's quiet close.
-    w: 0.14,
     text: "and those few floating adjust themselves to wind and water and follow forces other than the ones they've known.",
   },
 ];
@@ -97,10 +97,15 @@ function makeLeafTexture() {
   const c = document.createElement('canvas');
   c.width = 256; c.height = 256;
   const cx = c.getContext('2d');
+  // Design pass, 2026-07-29 — Scott: leaf color read cooler/flatter than
+  // Sphere/Butterfly. Doesn't need to match them, just needs to feel
+  // intentional — richer, slightly more saturated green at each of the
+  // same three tonal stops, not a hue change or a brighter overall value
+  // (still a real, weathered leaf, not a cartoon one).
   const grad = cx.createLinearGradient(0, 0, 0, 256);
-  grad.addColorStop(0,   '#3c5a3a');
-  grad.addColorStop(0.5, '#2f4a30');
-  grad.addColorStop(1,   '#243d26');
+  grad.addColorStop(0,   '#4a7248');
+  grad.addColorStop(0.5, '#3a5c38');
+  grad.addColorStop(1,   '#2c4a2a');
   cx.fillStyle = grad;
   cx.fillRect(0, 0, 256, 256);
 
@@ -224,13 +229,43 @@ function buildLeaf() {
 // replaces, which had visible artifacts in Scott's screenshot and which
 // GLSL-syntax correctness could never actually be confirmed for in this
 // sandbox anyway.
+// Design pass, 2026-07-29 — Scott: the background elements read "too
+// uniform in opacity and size," everything sitting at roughly the same
+// faint level rather than nearer things being distinct and farther things
+// softer. The scene already has a real, moving rack-focus system (the
+// sharp/blur crossfade in animate() below), but that only ever affects ONE
+// layer at a time — the layer currently in focus. It says nothing about a
+// baseline difference between, say, the garage (always the single
+// farthest thing in the scene) and the rail (always the nearest): both
+// were baked at full contrast/color regardless of focus. This bakes a
+// permanent, distance-proportional haze into each layer's own texture
+// (both the sharp AND blurred bake, since it's applied before the blur
+// pass copies the canvas) — real atmospheric perspective, the same cheap
+// depth cue actual air-and-dust haze gives distant objects in a real
+// photo. Cheap because it's just a flat wash, and it stacks with the
+// existing rack-focus crossfade rather than fighting it: a far layer even
+// at its OWN moment of "in focus" still reads hazier than the rail ever
+// does out of focus, which is exactly the near-distinct/far-soft cue that
+// was missing.
+function applyHaze(cx, cw, ch, amount) {
+  if (amount <= 0) return;
+  cx.fillStyle = `rgba(200,220,235,${(0.4 * amount).toFixed(3)})`;
+  cx.fillRect(0, 0, cw, ch);
+}
+
 function drawSky(cx, cw, ch) {
   // Real Florida midday blue, matching Scott's actual photo, not the
   // hazier gray-cream gradient the pre-1.0.30 dusk/wall versions used.
+  // Design pass, 2026-07-29 — Scott: warmer light in the gradient. Kept
+  // the zenith blue (still "real Florida midday blue," per the note
+  // above) and warmed only the horizon stop, from a cool pale blue-white
+  // toward a warm sun-haze gold-white — more atmosphere scattering warm
+  // light near the horizon is itself realistic, not a departure from the
+  // reference photo's midday framing, just a truer read of it.
   const sky = cx.createLinearGradient(0, 0, 0, ch);
   sky.addColorStop(0,    '#5f9bd6');
-  sky.addColorStop(0.55, '#9cc4e2');
-  sky.addColorStop(1,    '#d8e8ee');
+  sky.addColorStop(0.55, '#a0c6da');
+  sky.addColorStop(1,    '#ecdfbd');
   cx.fillStyle = sky;
   cx.fillRect(0, 0, cw, ch);
 
@@ -242,8 +277,10 @@ function drawSky(cx, cw, ch) {
     for (let i = 0; i < 4; i++) {
       const ox = (i - 1.5) * r * 0.55, oy = Math.sin(i) * r * 0.15;
       const grad = cx.createRadialGradient(x + ox, y + oy, 0, x + ox, y + oy, r * 0.7);
-      grad.addColorStop(0, 'rgba(255,255,255,0.85)');
-      grad.addColorStop(1, 'rgba(255,255,255,0)');
+      // A touch of warmth (was pure white) — sunlit rather than sterile,
+      // matching the horizon's own warmer stop above.
+      grad.addColorStop(0, 'rgba(255,250,235,0.85)');
+      grad.addColorStop(1, 'rgba(255,250,235,0)');
       cx.fillStyle = grad;
       cx.beginPath();
       cx.ellipse(x + ox, y + oy, r * 0.7, r * 0.42, 0, 0, Math.PI * 2);
@@ -548,10 +585,13 @@ export function createLeaf(container, { preview = false } = {}) {
   // "the leaf is square now, not round"), and a static thumbnail has no
   // scroll progress to rack focus against anyway.
   if (!preview) {
-    addDepthLayer(cx => drawGarage(cx, cw, ch, horizonY), -6.8, cw * 0.02);
-    addDepthLayer(cx => drawBuildings(cx, cw, ch, horizonY), -6, cw * 0.012);
-    addDepthLayer(cx => drawPalmsLot(cx, cw, ch, horizonY, lotBottom), -4.2, cw * 0.014);
-    addDepthLayer(cx => drawForegroundFoliage(cx, cw, ch, foliageTop), -2.8, cw * 0.016);
+    // Haze amount climbs with actual distance (garage farthest -> rail
+    // nearest, 0 = no haze at all) — a permanent depth cue independent of
+    // whichever layer the moving rack focus currently favors.
+    addDepthLayer(cx => { drawGarage(cx, cw, ch, horizonY); applyHaze(cx, cw, ch, 0.6); }, -6.8, cw * 0.02);
+    addDepthLayer(cx => { drawBuildings(cx, cw, ch, horizonY); applyHaze(cx, cw, ch, 0.42); }, -6, cw * 0.012);
+    addDepthLayer(cx => { drawPalmsLot(cx, cw, ch, horizonY, lotBottom); applyHaze(cx, cw, ch, 0.22); }, -4.2, cw * 0.014);
+    addDepthLayer(cx => { drawForegroundFoliage(cx, cw, ch, foliageTop); applyHaze(cx, cw, ch, 0.06); }, -2.8, cw * 0.016);
     addDepthLayer(cx => drawRail(cx, cw, ch, railTop, railBottom), -2, cw * 0.009);
   }
 
@@ -770,6 +810,16 @@ export function createLeaf(container, { preview = false } = {}) {
   // loop further down.
   let targetScrollFrac = 0;
   let grain = null;
+
+  // ─── Fall phases (fractions of the loop, 0..1) ──────────────────────────
+  // Declared before the caption/updatePhaseFractions setup below, which
+  // closes over and mutates this object once real per-paragraph scroll
+  // positions are measurable. Defaults here only matter for preview tiles
+  // (no real caption box to measure against) — full-scene values get
+  // overwritten with the actual measurement immediately once the caption
+  // exists.
+  const PHASE = { holdEnd: 0.14, fallStart: 0.14, fallEnd: 0.86, splashEnd: 0.94 };
+
   if (!preview) {
     container.style.position = 'relative';
     container.style.overflow = 'hidden';
@@ -786,10 +836,11 @@ export function createLeaf(container, { preview = false } = {}) {
     // real layout, real native scrolling. No JS-driven transform anymore;
     // the browser's own scroll position is the single source of truth for
     // both "what's readable right now" and "how far the drop has fallen."
-    TEXT_STAGES.forEach(stage => {
+    const stageEls = TEXT_STAGES.map(stage => {
       const p = document.createElement('p');
       p.textContent = stage.text;
       caption.appendChild(p);
+      return p;
     });
     document.body.appendChild(caption);
 
@@ -807,10 +858,40 @@ export function createLeaf(container, { preview = false } = {}) {
     // Re-measure on resize too — scrollHeight changes when the text rewraps.
     window.addEventListener('resize', updateTargetFromScroll);
     caption._updateTargetFromScroll = updateTargetFromScroll;
-  }
 
-  // ─── Fall phases (fractions of the loop, 0..1) ─────────────────────────
-  const PHASE = { holdEnd: 0.14, fallStart: 0.14, fallEnd: 0.86, splashEnd: 0.94 };
+    // Measures each stage boundary's real scroll fraction (same formula as
+    // updateTargetFromScroll above — a paragraph's offsetTop stands in for
+    // the scrollTop at which it reaches the top of the box) and writes
+    // them into PHASE below, so "the drop grows toward release" and
+    // "falls at the moment the text says it does" are synced to the
+    // actual rendered text instead of hand-guessed fractions that drift
+    // out of step whenever a paragraph's real height doesn't match its
+    // old assumed share of the whole. Re-run on resize alongside
+    // updateTargetFromScroll, for the same rewrap reason.
+    const updatePhaseFractions = () => {
+      const range = caption.scrollHeight - caption.clientHeight;
+      if (range <= 0) return; // degenerate (huge viewport, short text) — keep PHASE's defaults
+      const fracAt = el => Math.min(1, Math.max(0, el.offsetTop / range));
+      // Minimum gaps enforced between each boundary — on a very short/wide
+      // viewport, `range` can be small enough that later stages' offsets
+      // clamp together near 1 (the box shows most of the text at once,
+      // little scrolling needed to reach the bottom), which would collapse
+      // the splash phase to zero width and pop straight from freefall to
+      // reform with no impact frame. The real measurement still drives
+      // this in the normal case; the gaps just keep each phase from
+      // vanishing entirely in that edge case.
+      const holdEnd = Math.min(0.4, Math.max(0.05, fracAt(stageEls[1])));
+      const fallEnd = Math.max(holdEnd + 0.25, Math.min(0.96, fracAt(stageEls[6])));
+      const splashEnd = Math.max(fallEnd + 0.03, Math.min(0.99, fracAt(stageEls[7])));
+      PHASE.holdEnd = holdEnd;
+      PHASE.fallStart = holdEnd; // stage 0 (coalescing) ends, stage 1 (release) begins
+      PHASE.fallEnd = fallEnd;   // stage 6 (impact) begins
+      PHASE.splashEnd = splashEnd; // stage 7 (reform) begins
+    };
+    updatePhaseFractions();
+    window.addEventListener('resize', updatePhaseFractions);
+    caption._updatePhaseFractions = updatePhaseFractions;
+  }
 
   function resetMotes() {
     motes.forEach(m => { m.active = false; m.mat.opacity = 0; });
@@ -877,10 +958,22 @@ export function createLeaf(container, { preview = false } = {}) {
 
     // Surface-tension hold: the drop sits at the leaf tip, trembling.
     if (frac < PHASE.holdEnd) {
-      const tremble = Math.sin(tSec * 14) * 0.01 * (frac / PHASE.holdEnd);
+      // Design pass, 2026-07-29 — Scott: "there's a static white dot at
+      // the tip." There was: this scaled by the raw `frac` (0..PHASE.
+      // holdEnd, i.e. topping out around 0.1-0.15) instead of that
+      // normalized against holdEnd itself, so the droplet's growth across
+      // the entire hold phase was a few percent, not the visible build
+      // the coalescing paragraph above it describes. holdT now runs the
+      // full 0..1 across the hold phase; growS eases in (slow start, fast
+      // swell) to match "coalescing... until there's no more time and —",
+      // and its end value (0.22, 0.28) matches freefall's own starting
+      // scale exactly, so there's no pop at the hold-to-fall handoff.
+      const holdT = Math.min(1, frac / PHASE.holdEnd);
+      const growS = holdT * holdT;
+      const tremble = Math.sin(tSec * 14) * 0.01 * holdT;
       drop.position.set(tipX + tremble, tipY - 0.06, 0.05);
-      drop.scale.set(0.16 + frac * 0.35, 0.2 + frac * 0.4, 1);
-      dropMat.opacity = 1;
+      drop.scale.set(0.04 + growS * 0.18, 0.05 + growS * 0.23, 1);
+      dropMat.opacity = 0.35 + holdT * 0.65;
       leaf.group.rotation.z = -0.045;
     } else if (frac < PHASE.fallEnd) {
       // Freefall, easing in (accelerating).
@@ -1019,6 +1112,9 @@ export function createLeaf(container, { preview = false } = {}) {
       motes.forEach(m => m.mat.dispose());
       if (caption && caption._updateTargetFromScroll) {
         window.removeEventListener('resize', caption._updateTargetFromScroll);
+      }
+      if (caption && caption._updatePhaseFractions) {
+        window.removeEventListener('resize', caption._updatePhaseFractions);
       }
       if (caption) caption.remove();
       if (hint) hint.remove();

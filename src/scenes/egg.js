@@ -43,6 +43,17 @@ const POEM_LINKS = [
 
 const EARTH_RADIUS = 1;
 
+// Design pass, 2026-07-29 — Scott: "the field should not be round." A real
+// magnetosphere is compressed on the sun-facing side (solar wind pressure)
+// and dragged into a long tail on the night side — that asymmetry is where
+// the "egg" in the name actually comes from. COMPRESS_DAY/TAIL_STRETCH
+// drive that deformation in buildFieldLines below; +X is treated as
+// "toward the sun," roughly matching the key light's own +X lean a little
+// further down, so the compressed/lit side and the visually sunward side
+// agree.
+const COMPRESS_DAY = 0.42; // dayside lines pulled this fraction closer to the planet
+const TAIL_STRETCH  = 0.95; // nightside lines stretched up to this fraction further out
+
 // Rebuilt 2026-07-17 for more photorealism. (2026-07-17, later same day —
 // Scott: the green glow should live in the aurorae only, not the whole
 // globe; the emissive tint and atmosphere shell mentioned below were
@@ -214,16 +225,31 @@ function makeCloudTexture() {
 // reconnection events ripple through, not in lockstep.
 function buildFieldLines(preview) {
   const group = new THREE.Group();
-  const lineCount = preview ? 5 : 9;
+  const lineCount = preview ? 6 : 12;
   const baseColor = new THREE.Color(0x66ccff);
   const baseOpacity = preview ? 0.3 : 0.38;
   const lines = [];
 
   for (let i = 0; i < lineCount; i++) {
-    const L = 1.5 + (i / lineCount) * 1.6; // shell size — bigger loops further out
-    const lon = (i / lineCount) * Math.PI * 2 * 0.6; // spread around, not full ring (reads as field lines, not a cage)
+    // Shell size (the nested-loop distance the old "bigger loops further
+    // out" comment described) is shuffled away from longitude's own sweep
+    // order via a step coprime with lineCount, rather than tracking `i`
+    // directly — now that every longitude also gets its own day/tail size
+    // multiplier below, a shell size that climbed in lockstep with lon
+    // would make the loop that lands back near lon=0 after a full sweep
+    // always the single biggest base shell, an index-order artifact with
+    // nothing to do with the sun/tail shape it'd be muddying.
+    const shellSlot = (i * 7) % lineCount;
+    const L = 1.5 + (shellSlot / lineCount) * 1.4;
+    // Full circle of longitudes now (was 0.6 of one, deliberately partial
+    // so the cage-like symmetry of a full ring wouldn't show) — every line
+    // varies so much in size by its own longitude now that the day-to-
+    // tail gradient itself is what keeps this from reading as a cage; a
+    // partial sweep would just leave a gap in the shape's own story.
+    const lon = (i / lineCount) * Math.PI * 2;
+    const dayFactor = Math.cos(lon); // +1 dead sunward, 0 flank, -1 dead tailward
     const pts = [];
-    const steps = 48;
+    const steps = 56;
     for (let s = 0; s <= steps; s++) {
       const theta = (s / steps) * Math.PI; // 0..pi, pole to pole
       const sinT = Math.sin(theta);
@@ -231,7 +257,38 @@ function buildFieldLines(preview) {
       if (r < EARTH_RADIUS * 0.98) continue; // stay outside the planet
       const y = r * Math.cos(theta);
       const xz = r * Math.sin(theta);
-      pts.push(new THREE.Vector3(xz * Math.cos(lon), y, xz * Math.sin(lon)));
+      let x = xz * Math.cos(lon);
+      let z = xz * Math.sin(lon);
+      let py = y;
+      // Push/pull along the sun-Earth axis only, and only the point's own
+      // x — the flanks (dayFactor near 0) barely move since x is already
+      // small there, so the deformation fades out naturally toward the
+      // sides instead of needing its own separate falloff term. Points
+      // right at the clipping boundary (r just above EARTH_RADIUS) are
+      // additionally tapered toward zero compression via rTaper — pulling
+      // a point that's already barely outside the planet's own surface
+      // inward by a flat 42% would shove it back inside the globe, a real
+      // bug caught by a throwaway numerical check (min radius 0.87 against
+      // EARTH_RADIUS 1) before this taper was added. The stretch direction
+      // has no equivalent risk (it only pushes points further out), so it
+      // doesn't need the same taper.
+      if (dayFactor > 0) {
+        const rTaper = Math.min(1, Math.max(0, (r - EARTH_RADIUS * 1.05) / L));
+        x *= 1 - COMPRESS_DAY * dayFactor * rTaper;
+      } else if (dayFactor < 0) {
+        const tailAmt = -dayFactor;
+        x *= 1 + TAIL_STRETCH * tailAmt;
+        py *= 1 - 0.12 * tailAmt; // the tail flattens a little as it stretches, reads less like a loop
+      }
+      // Safety net: whatever the taper above should already guarantee,
+      // never let a point actually render closer to the origin than the
+      // planet's own surface.
+      const finalR = Math.hypot(x, py, z);
+      if (finalR < EARTH_RADIUS * 1.02) {
+        const pushOut = (EARTH_RADIUS * 1.02) / (finalR || 1);
+        x *= pushOut; py *= pushOut; z *= pushOut;
+      }
+      pts.push(new THREE.Vector3(x, py, z));
     }
     if (pts.length < 2) continue;
     const geo = new THREE.BufferGeometry().setFromPoints(pts);
@@ -272,25 +329,34 @@ function makeAuroraBandTexture() {
   c.width = 8; c.height = 128;
   const cx = c.getContext('2d');
   const grad = cx.createLinearGradient(0, 0, 0, 128);
-  grad.addColorStop(0,    'rgba(60,255,150,0)');
-  grad.addColorStop(0.22, 'rgba(60,255,150,0.55)');
-  grad.addColorStop(0.5,  'rgba(110,255,190,0.42)');
-  grad.addColorStop(0.78, 'rgba(150,120,255,0.32)');
-  grad.addColorStop(1,    'rgba(150,120,255,0)');
+  // Design pass, 2026-07-29 — Scott: the aurorae are meant to be this
+  // piece's visual payoff, but read as a minor detail next to Sphere's own
+  // saturation. Every stop's alpha pushed up, and the violet edge bumped
+  // toward neon magenta rather than a muted lavender — closer to how a
+  // real auroral substorm oversaturates a long-exposure photo.
+  grad.addColorStop(0,    'rgba(50,255,140,0)');
+  grad.addColorStop(0.18, 'rgba(60,255,150,0.8)');
+  grad.addColorStop(0.46, 'rgba(120,255,195,0.64)');
+  grad.addColorStop(0.74, 'rgba(185,105,255,0.52)');
+  grad.addColorStop(1,    'rgba(185,105,255,0)');
   cx.fillStyle = grad;
   cx.fillRect(0, 0, 8, 128);
   const tex = new THREE.CanvasTexture(c);
   return tex;
 }
 
-function makeShimmerTexture() {
+// Parameterized by color, 2026-07-29 — was one fixed green tint for every
+// shimmer sprite; now called twice (buildAurorae below) for a green thread
+// and a violet thread, so the curtain's sparkle carries both of the band's
+// own colors instead of just the one.
+function makeShimmerTexture(rgb) {
   const c = document.createElement('canvas');
   c.width = 16; c.height = 64;
   const cx = c.getContext('2d');
   const grad = cx.createLinearGradient(0, 64, 0, 0);
-  grad.addColorStop(0,    'rgba(90,255,170,0)');
-  grad.addColorStop(0.3,  'rgba(90,255,170,0.4)');
-  grad.addColorStop(1,    'rgba(150,255,190,0)');
+  grad.addColorStop(0,    `rgba(${rgb},0)`);
+  grad.addColorStop(0.3,  `rgba(${rgb},0.55)`);
+  grad.addColorStop(1,    `rgba(${rgb},0)`);
   cx.fillStyle = grad;
   cx.fillRect(0, 0, 16, 64);
   return new THREE.CanvasTexture(c);
@@ -299,7 +365,8 @@ function makeShimmerTexture() {
 function buildAurorae(preview) {
   const group = new THREE.Group();
   const bandTex = makeAuroraBandTexture();
-  const shimmerTex = makeShimmerTexture();
+  const shimmerTexGreen = makeShimmerTexture('120,255,180');
+  const shimmerTexViolet = makeShimmerTexture('195,140,255');
   const bands = [];
   const shimmers = [];
 
@@ -314,7 +381,9 @@ function buildAurorae(preview) {
     // clean circle.
     const radialSegs = preview ? 48 : 72;
     const tubeSegs = 10;
-    const tubeR = EARTH_RADIUS * (preview ? 0.1 : 0.12);
+    // Thickened (0.1/0.12 -> 0.14/0.18) so the curtain reads as the
+    // scene's focal point at this camera distance, not a thin ring.
+    const tubeR = EARTH_RADIUS * (preview ? 0.14 : 0.18);
     const bandGeo = new THREE.TorusGeometry(ringR, tubeR, tubeSegs, radialSegs);
     const posAttr = bandGeo.attributes.position;
     // Perturb per main-ring vertex (grouped by radial step) so the whole
@@ -334,7 +403,7 @@ function buildAurorae(preview) {
     bandGeo.computeVertexNormals();
 
     const bandMat = new THREE.MeshBasicMaterial({
-      map: bandTex, transparent: true, opacity: 0.6 + Math.random() * 0.15,
+      map: bandTex, transparent: true, opacity: 0.82 + Math.random() * 0.15,
       blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide,
     });
     const band = new THREE.Mesh(bandGeo, bandMat);
@@ -343,18 +412,22 @@ function buildAurorae(preview) {
     group.add(band);
     bands.push({ mesh: band, mat: bandMat, baseOpacity: bandMat.opacity, phase: Math.random() * Math.PI * 2 });
 
-    // A few short shimmer rays along the band for texture — much shorter
-    // and sparser than the old design, an accent rather than the shape.
-    const shimmerCount = preview ? 5 : 9;
+    // Shimmer rays along the band for texture — an accent on top of the
+    // shape, not the shape itself. More of them now (5/9 -> 7/13) and
+    // alternating between the green and violet threads above, rather than
+    // one uniform tint, so the curtain's own sparkle carries both of the
+    // band's colors.
+    const shimmerCount = preview ? 7 : 13;
     for (let i = 0; i < shimmerCount; i++) {
       const lon = (i / shimmerCount) * Math.PI * 2 + Math.random() * 0.3;
+      const tex = i % 2 === 0 ? shimmerTexGreen : shimmerTexViolet;
       const mat = new THREE.SpriteMaterial({
-        map: shimmerTex, transparent: true, opacity: 0.35 + Math.random() * 0.25,
+        map: tex, transparent: true, opacity: 0.48 + Math.random() * 0.3,
         blending: THREE.AdditiveBlending, depthWrite: false,
       });
       const sprite = new THREE.Sprite(mat);
-      const h = 0.1 + Math.random() * 0.12;
-      sprite.scale.set(0.1, h, 1);
+      const h = 0.11 + Math.random() * 0.14;
+      sprite.scale.set(0.11, h, 1);
       sprite.position.set(
         ringR * Math.cos(lon), y + hemisphere * h * 0.35, ringR * Math.sin(lon)
       );
@@ -363,7 +436,7 @@ function buildAurorae(preview) {
     }
   });
 
-  return { group, bands, shimmers, bandTex, shimmerTex };
+  return { group, bands, shimmers, bandTex, shimmerTexGreen, shimmerTexViolet };
 }
 
 // ─── Satellites ─────────────────────────────────────────────────────────────
@@ -376,16 +449,26 @@ function buildAurorae(preview) {
 // body is tiny) make them findable/clickable at this scale.
 function buildSatellites(preview) {
   const group = new THREE.Group();
-  const count = preview ? 4 : 8;
+  // Design pass, 2026-07-29 — Scott: satellite/orbit density felt thin
+  // next to Butterfly's particle count, and the fourteen poems weren't
+  // otherwise surfaced anywhere in-scene. Bumping the full count to
+  // poems.length turns the offset trick below into a full bijection —
+  // every poem gets exactly one satellite, every load, rather than only
+  // whichever 8-poem slice happened to land — so density and "the poems
+  // live here" are the same fix. Preview stays modest; it's a 320px tile
+  // with no click-through anyway.
+  const count = preview ? 6 : poems.length;
   const sats = [];
   // Design pass, 2026-07-17: with poems.length (now 14, after folding the
-  // opening-fragment poems into poems.js) bigger than `count`, a plain
-  // `i % poems.length` always equals `i` — the same first 8 poems, every
-  // load, forever; nothing past index `count-1` was ever reachable. A
-  // random per-load offset means a different consecutive slice of the
-  // pool each visit instead — fits the site's own found-by-chance logic
-  // (the colophon's own hidden mark and bibliography) better than forcing
-  // the satellite count to track the poem count 1:1 anyway.
+  // opening-fragment poems into poems.js) bigger than the old fixed
+  // `count` of 8, a plain `i % poems.length` always equals `i` — the same
+  // first 8 poems, every load, forever; nothing past index `count-1` was
+  // ever reachable. A random per-load offset means a different
+  // consecutive slice of the pool each visit instead (or, now that count
+  // equals poems.length in the full scene, a different rotation of the
+  // same full set) — fits the site's own found-by-chance logic (the
+  // colophon's own hidden mark and bibliography) better than a fixed 1:1
+  // index mapping would.
   const poemOffset = Math.floor(Math.random() * poems.length);
   const bodyMat = new THREE.MeshBasicMaterial({ color: 0xe8e4d8 });
   const panelMat = new THREE.MeshBasicMaterial({
@@ -398,13 +481,23 @@ function buildSatellites(preview) {
 
   for (let i = 0; i < count; i++) {
     const radius = 1.35 + Math.random() * 0.85;
-    const incl = Math.random() * Math.PI;      // orbital inclination
-    const spin = (Math.random() - 0.5) * 0.4;  // ascending-node-ish extra tilt
 
     const pivot = new THREE.Object3D();
-    pivot.rotation.x = incl;
-    pivot.rotation.z = spin;
-    pivot.rotation.y = Math.random() * Math.PI * 2;
+    // Design pass, 2026-07-29 — Scott: orbits read as roughly coplanar.
+    // The old Euler-angle composition (rotation.x = inclination,
+    // rotation.z = a small ascending-node wobble, rotation.y = random)
+    // doesn't sample orientation space uniformly, and with only 8
+    // satellites the bias showed. Building the pivot's orientation from a
+    // genuinely random point on the unit sphere — used as the orbit's own
+    // normal — gives real variety instead: every satellite's orbital
+    // plane tilts independently, the way a real population (launched at
+    // different times, into different mission-specific inclinations)
+    // actually would, rather than clustering near a shared tilt.
+    const normal = new THREE.Vector3(
+      Math.random() * 2 - 1, Math.random() * 2 - 1, Math.random() * 2 - 1
+    ).normalize();
+    pivot.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), normal);
+    pivot.rotateZ(Math.random() * Math.PI * 2); // free ascending-node spin around that normal
     group.add(pivot);
 
     const body = new THREE.Group();
@@ -431,8 +524,12 @@ function buildSatellites(preview) {
     // Faint orbit ring, so the path is visible even when the satellite itself
     // is a single small point.
     const ringGeo = new THREE.TorusGeometry(radius, 0.002, 6, 64);
+    // Opacity varied per ring now (was a flat 0.12 for all) — a real
+    // satellite population's paths wouldn't all read with equal
+    // prominence; some fainter, some a little more distinct, reads as
+    // messier/richer rather than a uniform stack of identical rings.
     const ringMat = new THREE.MeshBasicMaterial({
-      color: 0xffe08a, transparent: true, opacity: 0.12,
+      color: 0xffe08a, transparent: true, opacity: 0.07 + Math.random() * 0.11,
     });
     const ring = new THREE.Mesh(ringGeo, ringMat);
     ring.rotation.x = Math.PI / 2;
@@ -564,9 +661,19 @@ export function createEgg(container, { preview = false } = {}) {
       }
       #egg-caption {
         bottom: 3rem; left: 50%; transform: translateX(-50%);
-        font-size: clamp(0.7rem, 1.6vw, 0.95rem); letter-spacing: 0.06em;
+        /* Design pass, 2026-07-29 — Scott: nothing in the scene signalled
+           there was text content here at all, unlike Butterfly's own
+           title/date label (#butterfly-exp-label in main.js: clamp
+           .85-1.6rem, opacity .85). This carried the epigraph
+           ("sing, orbiter," Richard Kenney) the whole time but at a size
+           and opacity that read as ambient chrome, not a title. Brought
+           up to comparable weight — same clamp floor/ceiling as
+           Butterfly's label, same rough opacity — while keeping the
+           italic/green identity that's egg's own, not Butterfly's. */
+        font-size: clamp(0.85rem, 2.3vw, 1.5rem); letter-spacing: 0.08em;
         font-style: italic; white-space: nowrap;
-        color: rgba(150,255,190,0.55);
+        color: rgba(165,255,205,0.8);
+        text-shadow: 0 0 16px rgba(120,255,180,0.35);
       }
       #egg-hint {
         top: 4.5rem; right: 1.2rem; font-size: 0.55rem; letter-spacing: 0.2em;
@@ -641,7 +748,7 @@ export function createEgg(container, { preview = false } = {}) {
 
     hint = document.createElement('p');
     hint.id = 'egg-hint';
-    hint.innerHTML = 'drag to orbit &nbsp;·&nbsp; click a satellite';
+    hint.innerHTML = 'drag to orbit &nbsp;·&nbsp; click a satellite to read a poem';
     hint.setAttribute('aria-hidden', 'true');
     document.body.appendChild(hint);
 
@@ -848,11 +955,11 @@ export function createEgg(container, { preview = false } = {}) {
 
     aurorae.bands.forEach(b => {
       b.phase += 0.012;
-      b.mat.opacity = Math.max(0, b.baseOpacity + Math.sin(b.phase) * 0.12);
+      b.mat.opacity = Math.max(0, b.baseOpacity + Math.sin(b.phase) * 0.16);
     });
     aurorae.shimmers.forEach(s => {
       s.phase += 0.025;
-      s.mat.opacity = Math.max(0, s.baseOpacity + Math.sin(s.phase) * 0.2);
+      s.mat.opacity = Math.max(0, s.baseOpacity + Math.sin(s.phase) * 0.28);
     });
 
     renderer.render(scene, camera);
@@ -881,7 +988,8 @@ export function createEgg(container, { preview = false } = {}) {
       aurorae.bands.forEach(b => { b.mesh.geometry.dispose(); b.mat.dispose(); });
       aurorae.shimmers.forEach(s => s.mat.dispose());
       aurorae.bandTex.dispose();
-      aurorae.shimmerTex.dispose();
+      aurorae.shimmerTexGreen.dispose();
+      aurorae.shimmerTexViolet.dispose();
       satellites.sats.forEach(s => {
         s.ringMat.dispose();
         s.hit.geometry.dispose();
