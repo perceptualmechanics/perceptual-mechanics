@@ -35,7 +35,7 @@
        equivalent of the old <meta name="keywords"> tag -- that one's been
        ignored by Google since 2009 (Bing doesn't weight it either), but
        this property genuinely feeds crawlers' topic understanding. Terms
-       below are pulled straight from the site's own seven scenes rather
+       below are pulled straight from the site's own eight scenes rather
        than reached-for. -->
   <script type="application/ld+json">
   {
@@ -50,7 +50,7 @@
       "interactive art", "generative art", "creative coding",
       "WebGL art", "Three.js", "browser-based art",
       "chaos theory", "Lorenz attractor", "phase space visualization",
-      "hypertext fiction", "digital poetry", "illuminated manuscript",
+      "hypertext fiction", "digital poetry", "illuminated scroll",
       "orrery", "solar system model", "interactive fiction",
       "ASCII theater", "quantum orbital visualization", "digital library"
     ]
@@ -70,7 +70,7 @@
 
   <a href="#landing" class="skip-link">Skip to main content</a>
 
-  <!-- Persistent nav bar — all seven scenes -->
+  <!-- Persistent nav bar — all eight scenes -->
   <nav id="pm-nav" aria-label="Perceptual Mechanics navigation">
 
     <!-- Sphere: geodesic / icosahedron outline -->
@@ -92,8 +92,8 @@
       </svg>
     </button>
 
-    <!-- Manuscript: Ogham letter Sail, four strokes off a stemline -->
-    <button type="button" class="nav-icon" data-scene="manuscript" aria-label="Scroll" title="Selected Works — An Illuminated Manuscript" onmouseover="pmGlimpse('scroll')">
+    <!-- Scroll: Ogham letter Sail, four strokes off a stemline -->
+    <button type="button" class="nav-icon" data-scene="scroll" aria-label="Scroll" title="Selected Works — A Scroll of Found Writing" onmouseover="pmGlimpse('scroll')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
         <line x1="6" y1="2.5" x2="6" y2="21.5"/>
         <line x1="6" y1="5.5" x2="19" y2="5.5"/>
@@ -113,8 +113,8 @@
       </svg>
     </button>
 
-    <!-- Egg, Leaf -->
-    <button type="button" class="nav-icon" data-scene="egg" aria-label="Orbiter" title="Orbiter — A p-Orbital, Satellites" onmouseover="pmGlimpse('egg')">
+    <!-- Orbiter, Leaf -->
+    <button type="button" class="nav-icon" data-scene="orbiter" aria-label="Orbiter" title="Orbiter — A p-Orbital, Satellites" onmouseover="pmGlimpse('orbiter')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
         <circle cx="12" cy="12" r="6"/>
         <path d="M12 3 C18 6 18 18 12 21"/>
@@ -218,9 +218,9 @@
         </button>
       </li>
 
-      <li class="preview-wrapper" data-scene="manuscript">
-        <button type="button" class="preview-container" id="preview-manuscript"
-             title="Selected Works — An Illuminated Manuscript"
+      <li class="preview-wrapper" data-scene="scroll">
+        <button type="button" class="preview-container" id="preview-scroll"
+             title="Selected Works — A Scroll of Found Writing"
              aria-label="A scroll of found writing — carved fragments, 2000 to 2012. Press Enter to expand."
              onmouseover="pmGlimpse('scroll')">
         </button>
@@ -234,11 +234,11 @@
         </button>
       </li>
 
-      <li class="preview-wrapper" data-scene="egg">
-        <button type="button" class="preview-container" id="preview-egg"
+      <li class="preview-wrapper" data-scene="orbiter">
+        <button type="button" class="preview-container" id="preview-orbiter"
              title="Orbiter — A p-Orbital, Satellites"
              aria-label="Orbiter — a hydrogen atom's p-orbital rendered as a fuzzy probability cloud, with satellites in orbit around it. Press Enter to expand."
-             onmouseover="pmGlimpse('egg')">
+             onmouseover="pmGlimpse('orbiter')">
         </button>
       </li>
 

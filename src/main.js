@@ -1,8 +1,8 @@
 import { createSphere }     from './scenes/sphere.js';
 import { createButterfly }  from './scenes/butterfly.js';
-import { createManuscript } from './scenes/manuscript.js';
+import { createScroll }    from './scenes/scroll.js';
 import { createTheater } from './scenes/theater.js';
-import { createEgg }       from './scenes/egg.js';
+import { createOrbiter }   from './scenes/orbiter.js';
 import { createLeaf }      from './scenes/leaf.js';
 import { createOrrery }    from './scenes/orrery.js';
 import { createLibrary }   from './scenes/library.js';
@@ -30,11 +30,11 @@ const SCENES = {
                  ariaLabel: 'The Sphere — interactive geodesic sphere with text fragments.' },
   butterfly:   { create: createButterfly,  label: 'Chaos Butterfly in Phase Space, 2026.',
                  ariaLabel: 'Chaos Butterfly in Phase Space, 2026 — Lorenz attractor. Drag to orbit, scroll to zoom.' },
-  manuscript:  { create: createManuscript, label: 'Selected Works — An Illuminated Manuscript.',
-                 ariaLabel: 'Selected Works — an illuminated manuscript of Scott’s best writing, 2000 to the 2010s. Scroll to read.' },
+  scroll:      { create: createScroll,     label: 'Selected Works — A Scroll of Found Writing.',
+                 ariaLabel: 'Selected Works — a scroll of found writing, carved fragments, 2000 to the 2010s. Scroll to read.' },
   theater:     { create: createTheater,    label: 'The Theater — Now Playing.',
                  ariaLabel: 'The Theater — scenes from Truth and Beauty, Paul Revere, and You’ve Got a Friend in Satan, performed by ASCII actors. A different program each visit; click or use the controls to advance.' },
-  egg:         { create: createEgg,        label: 'Orbiter — A p-Orbital, Satellites.',
+  orbiter:     { create: createOrbiter,    label: 'Orbiter — A p-Orbital, Satellites.',
                  ariaLabel: 'Orbiter — a hydrogen atom’s p-orbital rendered as a fuzzy probability cloud, with satellites in clean elliptical orbits around it. Drag to orbit.' },
   leaf:        { create: createLeaf,       label: 'Leaf — In The End It Falls Slowly Through The Aether.',
                  ariaLabel: 'Leaf — a raindrop’s fall from a leaf, told through physics, with the found text arriving in phase with the fall.' },
@@ -226,9 +226,9 @@ function initPreviews() {
   const map = {
     sphere:     document.getElementById('preview-sphere'),
     butterfly:  document.getElementById('preview-butterfly'),
-    manuscript: document.getElementById('preview-manuscript'),
+    scroll:     document.getElementById('preview-scroll'),
     theater:    document.getElementById('preview-theater'),
-    egg:        document.getElementById('preview-egg'),
+    orbiter:    document.getElementById('preview-orbiter'),
     leaf:       document.getElementById('preview-leaf'),
     orrery:     document.getElementById('preview-orrery'),
     library:    document.getElementById('preview-library'),
@@ -273,7 +273,7 @@ const PM_GLIMPSE_WORDS = {
   butterfly: 'complexity',
   scroll: 'savagery',
   theater: 'light entertainment',
-  egg: 'lantern',
+  orbiter: 'lantern',
   leaf: 'stillness',
   orrery: 'will',
   library: 'catalogued',

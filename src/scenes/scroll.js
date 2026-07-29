@@ -269,9 +269,9 @@ function buildStain() {
 }
 
 function buildStyles() {
-  if (document.getElementById('manuscript-styles')) return;
+  if (document.getElementById('scroll-styles')) return;
   const style = document.createElement('style');
-  style.id = 'manuscript-styles';
+  style.id = 'scroll-styles';
   style.textContent = `
     .ms-root {
       width: 100%; height: 100%;
@@ -714,7 +714,7 @@ function oghamPanel() {
   return `<div class="ms-ogham-panel" aria-hidden="true">${oghamSail()}</div>`;
 }
 
-export function createManuscript(container, { preview = false } = {}) {
+export function createScroll(container, { preview = false } = {}) {
   buildStyles();
   buildSvgDefs();
 

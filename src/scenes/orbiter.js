@@ -4,7 +4,7 @@ import { bindOrbitDrag, bindGuardedResize, prefersReducedMotion, createPanelClos
 
 // ─── Poem cross-links, 2026-07-17 ──────────────────────────────────────────
 // Same mechanism, and the same rule, as the geodesic sphere's facet-to-
-// fragment links in sphere.js and the scroll's LINKS in manuscript.js: only
+// fragment links in sphere.js and the scroll's LINKS in scroll.js: only
 // phrases already sitting in the raw text get wired up, nothing added to
 // make a connection exist. Keyed by poem title + stanza index (0-based,
 // matching poem.stanzas) rather than an id, since poems.js entries don't
@@ -460,9 +460,12 @@ function buildSatellites(preview) {
     color: 0x3f6fb0, transparent: true, opacity: 0.9, side: THREE.DoubleSide,
   });
   const hitMat = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false });
-  const trailMat = new THREE.LineBasicMaterial({
-    color: 0xffe08a, transparent: true, opacity: 0.22, blending: THREE.AdditiveBlending, depthWrite: false,
-  });
+  // Identical for every satellite, so built once here rather than per-loop
+  // like bodyMat/panelMat already are — was previously re-created inside
+  // the loop below (harmless but wasteful: up to 14 redundant BufferGeometry
+  // allocations per scene load).
+  const coreGeo = new THREE.BoxGeometry(0.026, 0.026, 0.026);
+  const panelGeo = new THREE.PlaneGeometry(0.09, 0.026);
 
   for (let i = 0; i < count; i++) {
     const radius = 1.35 + Math.random() * 0.85;
@@ -486,9 +489,7 @@ function buildSatellites(preview) {
     group.add(pivot);
 
     const body = new THREE.Group();
-    const coreGeo = new THREE.BoxGeometry(0.026, 0.026, 0.026);
     body.add(new THREE.Mesh(coreGeo, bodyMat));
-    const panelGeo = new THREE.PlaneGeometry(0.09, 0.026);
     const p1 = new THREE.Mesh(panelGeo, panelMat); p1.position.x =  0.06;
     const p2 = new THREE.Mesh(panelGeo, panelMat); p2.position.x = -0.06;
     body.add(p1, p2);
@@ -531,15 +532,15 @@ function buildSatellites(preview) {
       pivot, body, hit, beacon, beaconMat,
       // Scott: slow these down — was (0.25 + rand*0.35), now less than half that.
       speed: (0.09 + Math.random() * 0.14) * (Math.random() < 0.5 ? 1 : -1),
-      ringMat,
+      ringMat, ringGeo,
       poemIndex: (i + poemOffset) % poems.length,
     });
   }
 
-  return { group, sats, bodyMat, panelMat, hitMat, trailMat };
+  return { group, sats, bodyMat, panelMat, hitMat, coreGeo, panelGeo };
 }
 
-export function createEgg(container, { preview = false } = {}) {
+export function createOrbiter(container, { preview = false } = {}) {
   const w = container.clientWidth  || window.innerWidth;
   const h = container.clientHeight || window.innerHeight;
 
@@ -633,19 +634,19 @@ export function createEgg(container, { preview = false } = {}) {
 
   // ─── Caption + hint + poem panel (full only) ────────────────────────────
   let caption = null, hint = null, panel = null, panelTitle = null, panelContent = null, panelCloser = null, jumpList = null;
-  if (!preview && !document.getElementById('egg-styles')) {
+  if (!preview && !document.getElementById('orbiter-styles')) {
     const style = document.createElement('style');
-    style.id = 'egg-styles';
+    style.id = 'orbiter-styles';
     style.textContent = `
       /* z-index must clear #experience-overlay (styles/main.css: fixed,
          z-index:300) — appended to document.body, outside that overlay,
          same reasoning as orrery.js's hint/caption/title fix. */
-      #egg-caption, #egg-hint {
+      #orbiter-caption, #orbiter-hint {
         position: fixed; color: rgba(255,255,255,0.35);
         pointer-events: none; text-align: center; z-index: 310;
         font-family: 'Times New Roman', serif;
       }
-      #egg-caption {
+      #orbiter-caption {
         bottom: 3rem; left: 50%; transform: translateX(-50%);
         /* Design pass, 2026-07-29 — Scott: nothing in the scene signalled
            there was text content here at all, unlike Butterfly's own
@@ -655,21 +656,21 @@ export function createEgg(container, { preview = false } = {}) {
            and opacity that read as ambient chrome, not a title. Brought
            up to comparable weight — same clamp floor/ceiling as
            Butterfly's label, same rough opacity — while keeping the
-           italic/green identity that's egg's own, not Butterfly's. */
+           italic/green identity that's orbiter's own, not Butterfly's. */
         font-size: clamp(0.85rem, 2.3vw, 1.5rem); letter-spacing: 0.08em;
         font-style: italic; white-space: nowrap;
         color: rgba(165,255,205,0.8);
         text-shadow: 0 0 16px rgba(120,255,180,0.35);
       }
-      #egg-hint {
+      #orbiter-hint {
         top: 4.5rem; right: 1.2rem; font-size: 0.55rem; letter-spacing: 0.2em;
         text-transform: uppercase; line-height: 1.8; text-align: right;
         color: rgba(255,255,255,0.3);
       }
       @media (max-width: 600px) {
-        #egg-caption { white-space: normal; width: 88vw; font-size: 0.7rem; }
+        #orbiter-caption { white-space: normal; width: 88vw; font-size: 0.7rem; }
       }
-      #egg-panel {
+      #orbiter-panel {
         position: absolute; top: 0; right: 0; width: 38%; height: 100%;
         background: #060a07; border-left: 1px solid rgba(160,255,200,0.15);
         padding: 3rem 2rem; transform: translateX(100%);
@@ -678,21 +679,21 @@ export function createEgg(container, { preview = false } = {}) {
         scrollbar-color: rgba(160,255,200,0.3) #060a07; scrollbar-width: thin;
         font-family: 'Times New Roman', serif;
       }
-      #egg-panel.open { transform: translateX(0); }
-      #egg-panel-title {
+      #orbiter-panel.open { transform: translateX(0); }
+      #orbiter-panel-title {
         font-size: 0.95rem; letter-spacing: 0.2em; text-transform: uppercase;
         color: rgba(190,255,210,0.8);
-        /* No more separate #egg-panel-source line below this (moved to the
+        /* No more separate #orbiter-panel-source line below this (moved to the
            colophon's bibliography) — the border/padding it used to carry
            now sits directly under the title instead. */
         border-bottom: 1px solid rgba(160,255,200,0.15);
         padding-bottom: 1.4rem; margin-bottom: 1.6rem;
       }
-      #egg-panel-content { color: rgba(210,235,220,0.75); font-size: 0.98rem; line-height: 1.85; }
-      #egg-panel-content p { margin: 0 0 1.4rem; }
+      #orbiter-panel-content { color: rgba(210,235,220,0.75); font-size: 0.98rem; line-height: 1.85; }
+      #orbiter-panel-content p { margin: 0 0 1.4rem; }
       /* Poem cross-links, 2026-07-17 — same mechanism as sphere.js's
-         fragment-links (see its own panelStyle comment) and manuscript.js's
-         ms-link, tuned to egg's own green/white palette instead of sphere's
+         fragment-links (see its own panelStyle comment) and scroll.js's
+         ms-link, tuned to orbiter's own green/white palette instead of sphere's
          blue. A phrase glimmers faintly on its own, on a long slow loop, so
          it reads as something ambient in the text rather than a UI
          affordance shouting for attention; hover/focus stops the glimmer
@@ -710,21 +711,21 @@ export function createEgg(container, { preview = false } = {}) {
         text-shadow: 0 0 12px rgba(255,230,150,.3);
       }
       @media (prefers-reduced-motion: reduce) { .poem-link { animation: none; } }
-      #egg-panel-close {
+      #orbiter-panel-close {
         position: absolute; top: 1.5rem; right: 1.5rem; background: none;
         border: none; color: rgba(255,255,255,0.4); font-size: 1.2rem;
         cursor: pointer; padding: .5rem; z-index: 2;
       }
-      #egg-panel-close:hover { color: rgba(255,255,255,0.9); }
+      #orbiter-panel-close:hover { color: rgba(255,255,255,0.9); }
       @media (max-width: 700px) {
-        #egg-panel { width: 88%; padding: 4rem 1.3rem 2rem; }
+        #orbiter-panel { width: 88%; padding: 4rem 1.3rem 2rem; }
       }
     `;
     document.head.appendChild(style);
   }
   if (!preview) {
     caption = document.createElement('p');
-    caption.id = 'egg-caption';
+    caption.id = 'orbiter-caption';
     // Epigraph, uncredited in-scene by design — full attribution (Richard
     // Kenney, "The Invention of the Zero") now lives in the colophon's
     // bibliography instead, same as every poem's source line below.
@@ -733,29 +734,29 @@ export function createEgg(container, { preview = false } = {}) {
     document.body.appendChild(caption);
 
     hint = document.createElement('p');
-    hint.id = 'egg-hint';
+    hint.id = 'orbiter-hint';
     hint.innerHTML = 'drag to orbit &nbsp;·&nbsp; click a satellite to read a poem &nbsp;·&nbsp; click the nucleus to look inside';
     hint.setAttribute('aria-hidden', 'true');
     document.body.appendChild(hint);
 
     panel = document.createElement('aside');
-    panel.id = 'egg-panel';
+    panel.id = 'orbiter-panel';
     panel.setAttribute('role', 'dialog');
     panel.setAttribute('aria-modal', 'false');
-    panel.setAttribute('aria-labelledby', 'egg-panel-title');
+    panel.setAttribute('aria-labelledby', 'orbiter-panel-title');
     panel.innerHTML = `
-      <button type="button" id="egg-panel-close" aria-label="Close panel">✕</button>
-      <div id="egg-panel-title" tabindex="-1"></div>
-      <div id="egg-panel-content"></div>
+      <button type="button" id="orbiter-panel-close" aria-label="Close panel">✕</button>
+      <div id="orbiter-panel-title" tabindex="-1"></div>
+      <div id="orbiter-panel-content"></div>
     `;
     container.style.position = 'relative';
     container.style.overflow = 'hidden';
     container.appendChild(panel);
-    panelTitle   = panel.querySelector('#egg-panel-title');
-    panelContent = panel.querySelector('#egg-panel-content');
+    panelTitle   = panel.querySelector('#orbiter-panel-title');
+    panelContent = panel.querySelector('#orbiter-panel-content');
 
     panelCloser = createPanelCloser(panel, container, {
-      closeBtn: panel.querySelector('#egg-panel-close'),
+      closeBtn: panel.querySelector('#orbiter-panel-close'),
       onClose: () => { selectedSat = null; },
     });
 
@@ -776,7 +777,7 @@ export function createEgg(container, { preview = false } = {}) {
 
     // Keyboard access, 2026-07-26: satellites are otherwise raycast-only —
     // no keyboard equivalent existed for "point at a satellite" — so a
-    // keyboard-only visitor could orbit the egg but never actually read a
+    // keyboard-only visitor could orbit the scene but never actually read a
     // poem. One button per satellite, calling the exact same
     // selectedSat-then-openPoem() beat the mouse click below already does.
     // 2026-07-29: the nucleus is now a second raycast-only interaction, so
@@ -808,7 +809,7 @@ export function createEgg(container, { preview = false } = {}) {
 
   // A stanza can carry more than one live link (DNA's single stanza has
   // two), so this walks every POEM_LINKS entry for that stanza rather than
-  // stopping at the first match the way manuscript.js's per-paragraph
+  // stopping at the first match the way scroll.js's per-paragraph
   // LINKS/RUBRICS/INTENSITIES lookups do — those never needed more than one
   // hit per paragraph, this does.
   function renderStanza(title, index, text) {
@@ -941,7 +942,7 @@ export function createEgg(container, { preview = false } = {}) {
   });
 
   // Reduced motion: gates the autonomous rotation below (nucleus spin,
-  // orbital-cloud precession + particle drift, satellite orbits, egg
+  // orbital-cloud precession + particle drift, satellite orbits, orbiter
   // auto-rotate). Drag-to-orbit stays available regardless — that's
   // motion the visitor asks for, not motion imposed on them.
   const reduceMotion = prefersReducedMotion();
@@ -1065,6 +1066,7 @@ export function createEgg(container, { preview = false } = {}) {
       aurorae.geo.dispose(); aurorae.mat.dispose(); aurorae.dotTex.dispose();
       satellites.sats.forEach(s => {
         s.ringMat.dispose();
+        s.ringGeo.dispose();
         s.hit.geometry.dispose();
         s.beacon.geometry.dispose();
         s.beaconMat.dispose();
@@ -1072,7 +1074,8 @@ export function createEgg(container, { preview = false } = {}) {
       satellites.bodyMat.dispose();
       satellites.panelMat.dispose();
       satellites.hitMat.dispose();
-      satellites.trailMat.dispose();
+      satellites.coreGeo.dispose();
+      satellites.panelGeo.dispose();
       if (caption) caption.remove();
       if (hint) hint.remove();
       if (panel) panel.remove();

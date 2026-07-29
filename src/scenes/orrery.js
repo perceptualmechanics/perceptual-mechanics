@@ -1244,7 +1244,7 @@ function buildWarehouse(preview, floorY, ceilingY, rafterY) {
 // convention — drag/move right turns the view right — standard "mouse-
 // look," matching three.js's own PointerLockControls. This deliberately
 // does NOT match the sitewide drag-to-orbit convention used elsewhere
-// (sphere/egg/butterfly/the orrery preview tile, where dragging right
+// (sphere/orbiter/butterfly/the orrery preview tile, where dragging right
 // rotates the OBJECT rather than the view): those scenes are rotating a
 // thing you're looking at from outside; this one is you, inside the room,
 // turning your head. Different enough mechanics that matching the old
@@ -1640,7 +1640,13 @@ export function createOrrery(container, { preview = false } = {}) {
         color: rgba(238,225,205,0.75); margin-bottom: 0.5rem;
       }
       #orrery-panel-era {
-        font-size: 0.75rem; letter-spacing: 0.05em; color: rgba(225,215,195,0.35);
+        /* Was 0.35 — real content (a date/era line), not a decorative
+           aria-hidden hint, and at 0.35 against this panel's near-black
+           background it landed around 2.6:1, well under WCAG AA's 4.5:1 for
+           normal text. Raised just enough to clear AA while staying the
+           quietest line in the panel (below panel-note's 0.7 and
+           panel-title's 0.75), so the intended hierarchy holds. */
+        font-size: 0.75rem; letter-spacing: 0.05em; color: rgba(225,215,195,0.55);
         margin-bottom: 1.4rem; font-style: italic;
         border-bottom: 1px solid rgba(220,200,180,0.15); padding-bottom: 1.4rem;
       }
@@ -2076,7 +2082,7 @@ export function createOrrery(container, { preview = false } = {}) {
   // its innerHTML between scenes, it never replaces the node itself), so
   // any listener bound directly to it and never removed keeps firing
   // after the scene it belongs to is gone. That's exactly what Scott hit:
-  // clicking on the egg scene played an orrery poster's audio riff,
+  // clicking on the orbiter scene played an orrery poster's audio riff,
   // because this click handler — bound here, on that same shared
   // container — was still attached and its closure still had a hovered
   // poster reference from before the switch.

@@ -17,7 +17,7 @@
 // scale comment at the top of styles/main.css).
 //
 // The bibliography below centralizes source information that used to live
-// scattered per-scene — most directly, egg.js used to show a per-poem
+// scattered per-scene — most directly, orbiter.js used to show a per-poem
 // "source" line (which doc each poem came from) inside its own reading
 // panel; that's been pulled out in favor of listing it all here, once,
 // alongside every other scene's literary sourcing. See NOTES.md.
@@ -60,7 +60,7 @@ const BIBLIOGRAPHY = [
     ],
   },
   {
-    scene: 'Selected Works (the illuminated manuscript)',
+    scene: 'Selected Works (the scroll)',
     entries: [
       'Essays and short fiction, Scott Cohen, 2000s–2010s.',
     ],
@@ -240,7 +240,7 @@ function buildBibliographyHTML() {
 function buildPanel() {
   const panel = document.createElement('div');
   panel.id = 'colophon-panel';
-  // The in-scene read-more panels (sphere.js/orrery.js/egg.js/lens.js) all
+  // The in-scene read-more panels (sphere.js/orrery.js/orbiter.js/lens.js) all
   // use role="dialog" + aria-modal="false" + aria-labelledby pointing at
   // their own title — deliberately non-modal, since they sit alongside a
   // still-interactive 3D scene and nav behind them. This one's different:
@@ -258,7 +258,7 @@ function buildPanel() {
     <section>
       <h2 id="colophon-title" tabindex="-1">Colophon</h2>
       <div class="colophon-sub">perceptual mechanics</div>
-      <p>A personal site by Scott Jason Cohen — seven small experiences built
+      <p>A personal site by Scott Jason Cohen — eight small experiences built
       around found and written text, each its own self-contained piece of
       code, none of it built from image assets: everything on screen is
       drawn live, in the browser, from geometry and canvas-generated
@@ -287,6 +287,8 @@ function buildPanel() {
       <p>Found a bug, or just want to say something about one of these?</p>
       <a id="colophon-feedback-link" href="mailto:perceptualmechanics@gmail.com?subject=perceptualmechanics.com">perceptualmechanics@gmail.com</a>
     </section>
+
+    <p class="colophon-sub" style="margin-top:2rem;">© 2026 Scott Jason Cohen. All rights reserved.</p>
   `;
   return panel;
 }

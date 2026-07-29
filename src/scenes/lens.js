@@ -76,7 +76,7 @@ import { bindOrbitDrag, bindWheelZoom, bindGuardedResize, prefersReducedMotion, 
 //     across Scott's work for two decades.
 //   Raphael (Earth) and Emmanuel (Water) — one real find: `thirty-six`, an
 //     unpublished 13-section, three-movement poem, discovered to be the
-//     source of "Moon Song" (already live in the egg scene — its ninth
+//     source of "Moon Song" (already live in the orbiter scene — its ninth
 //     section, verbatim). Section 8 is a five-person ritual scene invoking
 //     each element in turn; split here into its two halves along the poem's
 //     own natural pause, not cut arbitrarily — Raphael gets the setup and
@@ -166,7 +166,7 @@ const FACETS = {
       { name: 'Sobek', tradition: 'Egyptian', epithet: 'the Nile’s crocodile-god, water as danger and harvest both' },
     ],
     source: '"thirty-six," section 8 (second half)',
-    sourceNote: `From an unpublished 13-section poem — the same document "Moon Song" (already live in the egg scene) was pulled from, section 9. Section 8 is a five-person ritual invoking each element in turn; this is its second half, picking up right where Raphael's excerpt ends. Full text, unedited.`,
+    sourceNote: `From an unpublished 13-section poem — the same document "Moon Song" (already live in the orbiter scene) was pulled from, section 9. Section 8 is a five-person ritual invoking each element in turn; this is its second half, picking up right where Raphael's excerpt ends. Full text, unedited.`,
     writing: [
       `Angela took her loving cup,
 And water flew, drenching
@@ -201,7 +201,7 @@ They never found us.`,
       { name: 'Tlaltecuhtli', tradition: 'Aztec', epithet: 'the earth, devourer and giver in one body' },
     ],
     source: '"thirty-six," section 8 (first half)',
-    sourceNote: `From an unpublished 13-section poem — the same document "Moon Song" (already live in the egg scene) was pulled from, section 9. Section 8 is a five-person ritual invoking each element in turn — Mercurius, Josiah, Angela, the narrator, and someone called Phoenix, "cloaked in white." This is its first half, ending where Emmanuel's excerpt picks up. Full text, unedited.`,
+    sourceNote: `From an unpublished 13-section poem — the same document "Moon Song" (already live in the orbiter scene) was pulled from, section 9. Section 8 is a five-person ritual invoking each element in turn — Mercurius, Josiah, Angela, the narrator, and someone called Phoenix, "cloaked in white." This is its first half, ending where Emmanuel's excerpt picks up. Full text, unedited.`,
     writing: [
       `We
 Who shall ever be named
@@ -687,7 +687,7 @@ export function createLens(container, { preview = false } = {}) {
   // a translucent additive cone faking a visible beam. No post-processing
   // pipeline exists on this site, so the beam and the fixture's glow are
   // faked with layered transparent geometry, same rule as the bulb in
-  // orrery.js and the aurorae shimmer in egg.js. ──────────────────────────
+  // orrery.js and the aurorae shimmer in orbiter.js. ──────────────────────────
   // Completely vertical, per Scott — the fixture sits directly above the
   // gem on the Y axis, so the beam falls straight down onto it rather than
   // arriving at an angle.
@@ -838,7 +838,7 @@ export function createLens(container, { preview = false } = {}) {
   // it on a now-hidden close button or nowhere at all.
   container.tabIndex = -1;
 
-  // ─── Title, hint, caption — body-level, matching orrery/egg/butterfly's
+  // ─── Title, hint, caption — body-level, matching orrery/orbiter/butterfly's
   // own fixed labels. ──────────────────────────────────────────────────────
   const title = document.createElement('div');
   title.id = 'lens-title';

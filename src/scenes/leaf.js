@@ -694,7 +694,7 @@ export function createLeaf(container, { preview = false } = {}) {
     style.textContent = `
       /* z-index must clear #experience-overlay (styles/main.css: fixed,
          z-index:300) — appended to document.body, outside that overlay,
-         same fix already applied in orrery.js/egg.js. */
+         same fix already applied in orrery.js/orbiter.js. */
       /* Scott, 1.0.33: "the leaf fills the right 1/3 of the window, and
          the text fills the other 2/3 ... lose caption background, change
          caption text color to black and enlarge to fill its space, as if

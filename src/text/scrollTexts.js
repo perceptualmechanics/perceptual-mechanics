@@ -2,7 +2,7 @@
 // Full, unedited texts (Scott's own writing, 2000-2012), chunked into natural
 // reading paragraphs. Holography is the one deliberate exception: a complete,
 // self-contained opening movement excerpted from a much longer chapter (see
-// manuscript.js header comment for why).
+// scroll.js header comment for why).
 //
 // fireVigil and fireCalamity are also excerpts, not the full source document:
 // Fire.doc (Nov 2003) opens with a word-association litany ("Fire. Burn.

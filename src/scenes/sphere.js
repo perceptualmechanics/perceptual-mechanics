@@ -193,7 +193,7 @@ export function createSphere(container, { preview = false } = {}) {
   if (!preview) {
     // Design pass, 2026-07-17: every other scene shows a small instructional
     // hint (drag/click) — sphere never got one, which left it the one scene
-    // a first-time visitor has to guess at. Same treatment as egg/leaf/
+    // a first-time visitor has to guess at. Same treatment as orbiter/leaf/
     // orrery's hint text: fixed top-right, z-index 310 (must clear
     // #experience-overlay — see styles/main.css's z-index-scale comment),
     // Times New Roman regardless of the scene's own body font, since hints
@@ -220,7 +220,7 @@ export function createSphere(container, { preview = false } = {}) {
     panelStyle.textContent = `
       /* Design pass, 2026-07-17: this panel was the one outlier on the whole
          site — a flat, opaque, fully-saturated cyan slab (#7ad) with a solid
-         navy border, sitting next to egg/orrery/leaf's dark, translucent,
+         navy border, sitting next to orbiter/orrery/leaf's dark, translucent,
          moody panels (near-black background, a faint radial tint keyed to
          the scene's own palette, thin low-alpha colored border). Brought in
          line with that language: same near-black-plus-tint recipe, blue kept
@@ -552,6 +552,10 @@ export function createSphere(container, { preview = false } = {}) {
       if (onContainerMouseMove) container.removeEventListener('mousemove', onContainerMouseMove);
       if (onContainerClick) container.removeEventListener('click', onContainerClick);
       resize.dispose();
+      geo.dispose();
+      mat.dispose();
+      wire.geometry.dispose();
+      wire.material.dispose();
       renderer.dispose();
       if (labelRenderer) labelRenderer.domElement.remove();
       if (panel) panel.remove();

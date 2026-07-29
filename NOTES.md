@@ -6,6 +6,57 @@ projects (The Secret World, A Manual of Perceptual Mechanics) moved into their o
 files, which are now the source of truth for that material going forward. See "project map"
 below for where things live.
 
+## 1.6.0 (2026-07-29)
+
+Codebase cleanup pass, no visible-feature changes except two small ones
+called out below.
+
+**Renames.** The last two internal scene names still using their old
+working titles are gone: `egg.js` → `orbiter.js` (`createEgg` →
+`createOrbiter`, all `egg-*` CSS ids → `orbiter-*`), and `manuscript.js` →
+`scroll.js` (`createManuscript` → `createScroll`, `manuscript-styles` →
+`scroll-styles`). Every importer, the `SCENES` registry keys in main.js,
+the `initPreviews()` map, `PM_GLIMPSE_WORDS`, and every stray cross-file
+comment referencing the old filenames (sceneKit.js, orrery.js, sphere.js,
+library.js, leaf.js, lens.js, colophon.js, scrollTexts.js, main.css) got
+updated to match. Two of those comments (library.js) referenced a
+"field-line flux" mechanism that no longer exists post the p-orbital
+pivot — reworded to reference the actual current per-particle drift
+pattern instead of just swapping the filename. Left untouched on purpose:
+literal poem/prose text containing "egg" or "manuscript" (an eggplant, an
+egg in a poem, a real source manuscript description), unrelated substring
+matches ("arpeggio," "gregg," "Pileggi," "Eggers"), the "easter egg" idiom,
+and scroll.js's `ms-*` CSS class prefix (an abbreviation of "manuscript,"
+not the literal word — left as-is, flagging it here in case a deeper
+rename is ever wanted).
+
+**Colophon.** Added a quiet copyright line — "© 2026 Scott Jason Cohen.
+All rights reserved." — as the last line in the panel, styled at the same
+weight as the "perceptual mechanics" subtitle under the title. Also
+corrected the "seven small experiences" line to "eight" (stale since
+Library came back live 2026-07-23).
+
+**Code quality / a11y fixes found in a full-codebase audit:**
+- Mobile nav bar: 8 icons at their 44px touch-target min-width plus gaps
+  now overflows sub-410px phones; dropped to 38px under the existing
+  480px breakpoint (documented threshold, just never triggered until
+  Library's return made the count permanently eight).
+- `sphere.js`'s `dispose()` was the one scene never disposing its own
+  core geometry/material (icosahedron mesh + wireframe overlay) — fixed.
+- `orbiter.js`: per-satellite `coreGeo`/`panelGeo` were being rebuilt
+  identically inside the satellite loop instead of shared like the
+  materials already are; each satellite's orbit-ring geometry was never
+  disposed on teardown; and a `trailMat` was being created, returned, and
+  disposed without ever being attached to any mesh — removed.
+- `theater.js`: the 2s post-program `setTimeout` before showing the end
+  card wasn't cancelled on `dispose()` — closing the scene inside that
+  window let it fire against detached DOM afterward. Now tracked and
+  cleared.
+- `orrery.js`: the read-more panel's era/date line was real content at
+  roughly 2.6:1 contrast against its background, under WCAG AA's 4.5:1.
+  Raised just enough to clear AA while staying the quietest line in the
+  panel.
+
 ## 1.5.0 (2026-07-29)
 
 New feature, not a fix: the nucleus in Orbiter is now clickable, matching

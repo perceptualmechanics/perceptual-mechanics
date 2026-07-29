@@ -16,7 +16,7 @@ import {
 // A 4x2 Kallax-style cube shelf, same physical layout as the real one
 // (row/col/pos in library.js preserve left-to-right shelf order), rebuilt
 // as a floating 3D object rather than a room you walk through — closer to
-// the sphere/egg model (drag to orbit, click something small to read about
+// the sphere/orbiter model (drag to orbit, click something small to read about
 // it) than the orrery's walk-around warehouse, since a shelf reads fine as
 // an object held up to the light rather than a space to stand inside.
 //
@@ -123,8 +123,8 @@ function hash01(str, salt) {
 }
 
 // ─── Cross-links, 2026-07-23 ────────────────────────────────────────────────
-// Same mechanism, and the same rule, as sphere.js's fragment-links, egg.js's
-// poem-links, and manuscript.js's LINKS: only phrases already sitting in the
+// Same mechanism, and the same rule, as sphere.js's fragment-links, orbiter.js's
+// poem-links, and scroll.js's LINKS: only phrases already sitting in the
 // catalog text get wired up as jumps to another item's panel. Scott: "given
 // this analysis, curate the excerpts to create hyperlinks between them a la
 // my other writings in the site" — "this analysis" being a close read of the
@@ -897,8 +897,8 @@ function buildBabelBackdrop() {
           ry: (hash01(`babel-ry-${ni}`, 'b') - 0.5) * Math.PI,
           rz: (hash01(`babel-rz-${ni}`, 'c') - 0.5) * Math.PI,
           r: 0.5 + hash01(`babel-r-${ni}`, 'd') * 0.4,
-          // Shimmer, per node — same idea as egg.js's per-line flux phase/
-          // speed pairs, so the whole field doesn't pulse in lockstep.
+          // Shimmer, per node — same idea as orbiter.js's per-particle drift
+          // phase/speed pairs, so the whole field doesn't pulse in lockstep.
           phase: hash01(`babel-ph-${ni}`, 'p') * Math.PI * 2,
           speed: 0.25 + hash01(`babel-sp-${ni}`, 's') * 0.35,
         });
@@ -1339,10 +1339,10 @@ export function createLibrary(container, { preview = false } = {}) {
         font-size: 0.78rem; font-style: italic; line-height: 1.6;
       }
       #library-panel-excerpt-from:empty { display: none; margin: 0; }
-      /* Cross-links, same mechanism as sphere.js's fragment-link and egg.js's
+      /* Cross-links, same mechanism as sphere.js's fragment-link and orbiter.js's
          poem-link: a phrase glimmers faintly on its own slow loop so a link
          reads as "alive" even before it's noticed, tuned to library's own
-         warm parchment/gold palette instead of sphere's blue or egg's green. */
+         warm parchment/gold palette instead of sphere's blue or orbiter's green. */
       @keyframes library-glimmer {
         0%, 85%, 100% { color: inherit; text-shadow: none; }
         92% { color: rgba(225,175,90,.6); text-shadow: 0 0 6px rgba(225,175,90,.2); }
@@ -1411,7 +1411,7 @@ export function createLibrary(container, { preview = false } = {}) {
 
     // Cross-link navigation — follow the threads (click + keyboard), same
     // fade-out/swap-content/fade-in beat as sphere.js's navigateToFragment
-    // and egg.js's navigateToPoem. Deliberately doesn't touch `selected`/the
+    // and orbiter.js's navigateToPoem. Deliberately doesn't touch `selected`/the
     // spine the panel was originally opened from, same precedent those two
     // set — following a link swaps panel content, nothing in the 3D scene.
     // populatePanel (defined below, hoisted) re-stripes every .library-link
@@ -1456,7 +1456,7 @@ export function createLibrary(container, { preview = false } = {}) {
     selected = null;
   }
 
-  // ─── Hover/click raycast, screen-space mouse (matches egg/sphere) ───────
+  // ─── Hover/click raycast, screen-space mouse (matches orbiter/sphere) ───────
   const raycaster = new THREE.Raycaster();
   const mouse = new THREE.Vector2();
   let hovered = null, selected = null;
@@ -1755,7 +1755,7 @@ export function createLibrary(container, { preview = false } = {}) {
     animId = requestAnimationFrame(animate);
     // Library of Babel shimmer — Scott, 2026-07-23: "let's make them a bit
     // dynamic, maybe the shimmer effect?" Same per-object phase/speed
-    // pulse convention as egg.js's field-line flux and aurora shimmers,
+    // pulse convention as orbiter.js's per-particle drift and aurora shimmers,
     // adapted to InstancedMesh (see buildBabelBackdrop's update()).
     if (!reduceMotion) {
       babelT += 0.016;

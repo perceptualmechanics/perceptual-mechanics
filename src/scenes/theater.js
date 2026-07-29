@@ -1531,9 +1531,14 @@ export function createTheater(container, { preview = false } = {}) {
     setTimeout(() => endCard?.focus(), 50);
   }
 
+  // Tracked so dispose() can cancel it — without this, closing the scene
+  // within the 2s window still fires showEndCard() afterward against a
+  // detached `screen`/`endCard`, same class of bug the Player class itself
+  // already guards against internally (see its own dispose()).
+  let endCardTimer = null;
   const player = new Player(compileLegacyScript(shuffle(SCENES)), renderer, {
     onAdvance: () => { endCard?.remove(); endCard = null; updateProgress(); setPlayLabel(); },
-    onEnd: () => setTimeout(showEndCard, 2000),
+    onEnd: () => { endCardTimer = setTimeout(showEndCard, 2000); },
   });
 
   // Reshuffle the reel and start again — a different program each showing.
@@ -1564,6 +1569,7 @@ export function createTheater(container, { preview = false } = {}) {
 
   return {
     dispose() {
+      clearTimeout(endCardTimer);
       player.dispose();
       root.remove();
     }

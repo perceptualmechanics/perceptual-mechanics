@@ -4,7 +4,7 @@
 // four drag-to-orbit scenes (sphere.js, orrery.js) never actually had touch
 // support for the rotation itself (only for telling a tap from a drag), so
 // "drag to orbit" silently didn't work on phones/tablets in those two scenes
-// even though the other two (egg.js, butterfly.js) had it fine. Centralizing
+// even though the other two (orbiter.js, butterfly.js) had it fine. Centralizing
 // this means that class of gap can't reopen the next time a scene is added.
 //
 // Every helper here returns a `dispose()` (or is itself idempotent to call
@@ -107,9 +107,9 @@ export function bindGuardedResize(container, onResize) {
 }
 
 // ─── Reduced motion ─────────────────────────────────────────────────────────
-// A couple of the heaviest-animated WebGL scenes (orrery, egg) had no
+// A couple of the heaviest-animated WebGL scenes (orrery, orbiter) had no
 // reduced-motion accommodation at all, while their CSS-driven siblings
-// (leaf, manuscript, lens) did. Since a `prefers-reduced-motion` CSS media
+// (leaf, scroll, lens) did. Since a `prefers-reduced-motion` CSS media
 // query can't reach into a requestAnimationFrame loop, scenes that spin/
 // orbit continuously need to check this directly and skip their own
 // autonomous motion (drag-to-orbit stays available either way — that's
@@ -125,7 +125,7 @@ export function prefersReducedMotion() {
 // `clip-path: circle(50%)` on the same, `border-radius: 50%` on the canvas
 // element itself, and finally an opaque `::after` ring painted on top of the
 // canvas — all defeated. Scott confirmed it's specifically the two heaviest
-// scenes (orrery, leaf), not every WebGL preview tile — sphere/butterfly/egg
+// scenes (orrery, leaf), not every WebGL preview tile — sphere/butterfly/orbiter
 // clip fine in the same browser with the exact same CSS. That's the real
 // signal: Firefox is promoting only the demanding canvases to a GPU
 // compositing layer that sits outside the page's normal paint/z-order
@@ -202,7 +202,7 @@ export function bindTapVsDrag(container) {
 
 // ─── Escape-to-close ────────────────────────────────────────────────────────
 // Standard modal-dialog expectation that none of the site's three read-more
-// panels (sphere, orrery, egg) had — closing only worked via the explicit
+// panels (sphere, orrery, orbiter) had — closing only worked via the explicit
 // close button or a click outside. Attaches at the document level so it
 // fires regardless of what currently has focus inside the panel.
 export function bindEscapeClose(onEscape) {
@@ -212,7 +212,7 @@ export function bindEscapeClose(onEscape) {
 }
 
 // ─── Read-more panel: shared close mechanics ───────────────────────────────
-// Every scene with a slide-in info panel (sphere's fragments, egg's poems,
+// Every scene with a slide-in info panel (sphere's fragments, orbiter's poems,
 // orrery's placards, library's spines, lens's facets) builds its own panel
 // markup and CSS — colors, gradient tint, which side it slides in from — on
 // purpose, tuned to that scene's own palette, so that part stays put in each
@@ -252,7 +252,7 @@ export function createPanelCloser(panel, container, { closeBtn, onClose } = {}) 
 }
 
 // ─── Keyboard jump list ─────────────────────────────────────────────────────
-// sphere, egg, orrery, and library all raycast their interactive 3D objects
+// sphere, orbiter, orrery, and library all raycast their interactive 3D objects
 // (facets, satellites, posters, spines) — real, readable content a mouse or
 // touch visitor reaches by hovering and clicking, but that a keyboard-only
 // visitor previously had no way to reach at all: nothing simulates "point
@@ -285,7 +285,7 @@ export function createJumpList(container, { label, items, getLabel, onSelect }) 
 
 // ─── HTML escaping ──────────────────────────────────────────────────────────
 // Every scene that injects found text (poems, notes, spine titles) into a
-// read-more panel's innerHTML needs this, and four of them (egg, manuscript,
+// read-more panel's innerHTML needs this, and four of them (orbiter, scroll,
 // theater, library) had each grown their own identical copy. Round-trips the
 // string through a detached element's textContent/innerHTML rather than a
 // hand-rolled regex, so it escapes quotes too — matters wherever the escaped
