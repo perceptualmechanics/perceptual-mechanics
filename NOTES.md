@@ -6,6 +6,52 @@ projects (The Secret World, A Manual of Perceptual Mechanics) moved into their o
 files, which are now the source of truth for that material going forward. See "project map"
 below for where things live.
 
+## 1.5.0 (2026-07-29)
+
+New feature, not a fix: the nucleus in Orbiter is now clickable, matching
+the interaction language already established elsewhere in the piece
+(click a satellite to read a poem) and on the site generally (click a
+facet, click a spine). Default view is unchanged — a plain sphere, no
+internal detail rendered or built until someone actually clicks it (no
+perf cost from unrendered complexity). Hover brightens it and switches the
+cursor, same idiom the orrery's own poster hover already uses.
+
+On click, it resolves into internal structure: a small tetrahedral
+cluster of four nucleons (two protons, two neutrons — a helium-4-shaped
+cluster, not literally a hydrogen nucleus; see the scale note below), each
+its own soft, isotropic particle cloud with no hard edge, same underlying
+logic as the p-orbital lobes just without their angular/lobed structure.
+Each nucleon has three valence quarks (correct baryon count — uud for a
+proton, udd for a neutron) connected by a continuously pulsing shimmer
+rather than a static wireframe triangle.
+
+Explicitly NOT rendered as gluons visible through a membrane — that was
+the original ask, and it's not physically accurate. Color confinement
+means individual quarks/gluons are never observable in isolation at any
+achievable energy; there's no boundary a shimmer could be "peeking
+through" because there's no surface there at all, just an ongoing
+color-charge exchange between bound quarks with no point where it stops
+and something solid begins. So: no membrane anywhere, just the restless
+exchange itself — quarks jitter continuously (never resolving into a
+fixed position) and the connecting shimmer pulses on its own independent
+phase per line, per nucleon.
+
+Scale: a genuine compromise on top of one already in this scene (the
+visible nucleus is already vastly oversized relative to the electron
+cloud around it) — this adds nucleon/quark detail on top of that same
+compromise, deliberately not trying to make the relative sizes "make
+sense." A reward for clicking, not another zoom level of the same model.
+
+Keyboard access: added as one more button in the existing satellite jump
+list ("look inside the nucleus"), not a new mechanism — the nucleus is a
+second raycast-only interaction in this scene, same reason the satellites
+already needed one.
+
+Verified: node --check, clean vite build, numerical sanity check on the
+nucleon particle sampling (no NaNs, radius bounded and center-biased) and
+the tetrahedral nucleon-center placement (confirmed a true regular
+tetrahedron — all six pairwise center-to-center distances equal).
+
 ## 1.4.1 (2026-07-29)
 
 Follow-up refinement on 1.4.0's Orbiter pivot, plus a live-motion check on

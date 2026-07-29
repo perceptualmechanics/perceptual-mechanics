@@ -272,6 +272,158 @@ function buildOrbitalCloud(preview) {
   };
 }
 
+// ─── Nucleus internal detail (click to reveal) ─────────────────────────────
+// Added 2026-07-29 — the nucleus was previously a plain accent sphere with
+// no interaction. Click it (same affordance as a satellite: cursor
+// changes, it brightens on hover) and it resolves into internal structure
+// instead of staying an inert dot; click again to collapse it back.
+// Built lazily, on first click only — nothing here costs anything while
+// the nucleus sits collapsed.
+//
+// Color confinement, and why there's no membrane here: individual quarks
+// and gluons are never observable in isolation at any achievable energy —
+// there is no boundary a shimmer could plausibly be "peeking through,"
+// because there's no surface there at all. What's actually happening
+// inside a proton or neutron is a constant, ongoing exchange of color
+// charge between its three bound (valence) quarks, with no point where
+// that exchange stops and something solid begins. So: no membrane, no
+// boundary anywhere. Each nucleon (proton or neutron) is rendered as its
+// own small, soft particle cloud — same "no hard edge" logic already
+// used for the p-orbital lobes above, just isotropic rather than lobed,
+// since a nucleon has no directional structure the way an orbital does —
+// with three brighter points inside standing for its three valence
+// quarks (uud for a proton, udd for a neutron — the count and the
+// confinement behavior are what matters here, not distinguishing flavor
+// visually), connected by a continuously pulsing shimmer rather than a
+// static wireframe triangle, so the exchange reads as restless and
+// ongoing rather than a solved, finished shape.
+//
+// Genuine scale compromise, on top of one already in this scene: the
+// visible nucleus is already vastly oversized relative to the electron
+// cloud around it (a true-to-scale atom would render it as a single
+// invisible point). This adds nucleon/quark-level detail on top of that
+// existing compromise — deliberately not an attempt to make the relative
+// sizes here "make sense." It's a reward for clicking, not another real
+// zoom level of the same model.
+function makeNucleonDotTexture(rgb) {
+  const c = document.createElement('canvas');
+  c.width = 24; c.height = 24;
+  const cx = c.getContext('2d');
+  const g = cx.createRadialGradient(12, 12, 0, 12, 12, 12);
+  g.addColorStop(0,   `rgba(${rgb},1)`);
+  g.addColorStop(0.5, `rgba(${rgb},0.4)`);
+  g.addColorStop(1,   `rgba(${rgb},0)`);
+  cx.fillStyle = g;
+  cx.fillRect(0, 0, 24, 24);
+  return new THREE.CanvasTexture(c);
+}
+
+function buildNucleusDetail(preview) {
+  const group = new THREE.Group();
+
+  // Four nucleons in a small tetrahedral cluster — two protons, two
+  // neutrons (a helium-4-shaped cluster, not a literal hydrogen nucleus;
+  // see the scale-compromise note above) — the smallest arrangement that
+  // actually reads as "a cluster" rather than just "a pair." Offsets are a
+  // regular tetrahedron's own vertex directions, scaled to sit just
+  // outside the old plain sphere's radius.
+  const NUCLEON_R = NUCLEUS_RADIUS * 0.62;
+  const SPREAD = NUCLEUS_RADIUS * 0.5;
+  const offsets = [
+    new THREE.Vector3(1, 1, 1), new THREE.Vector3(1, -1, -1),
+    new THREE.Vector3(-1, 1, -1), new THREE.Vector3(-1, -1, 1),
+  ].map(v => v.normalize().multiplyScalar(SPREAD));
+  const kinds = ['proton', 'neutron', 'proton', 'neutron'];
+  const PROTON_RGB = '255,140,120';
+  const NEUTRON_RGB = '150,180,255';
+  const particleCount = preview ? 40 : 70;
+
+  const nucleons = [];
+
+  offsets.forEach((offset, ni) => {
+    const rgb = kinds[ni] === 'proton' ? PROTON_RGB : NEUTRON_RGB;
+
+    // The nucleon's own soft cloud — isotropic radial falloff (no angular
+    // dependence needed the way the p-orbital's cos^2(theta) term
+    // required; a nucleon has no comparable directional structure to get
+    // right). Cube-rooting a min-of-two-uniforms draw biases samples
+    // toward the center while keeping a continuous, no-hard-edge falloff
+    // toward the surface — same spirit as the orbital cloud's own
+    // density-by-construction approach, just isotropic instead of lobed.
+    const positions = new Float32Array(particleCount * 3);
+    for (let i = 0; i < particleCount; i++) {
+      const rad = NUCLEON_R * Math.cbrt(Math.min(Math.random(), Math.random()));
+      const theta = Math.acos(2 * Math.random() - 1);
+      const phi = Math.random() * Math.PI * 2;
+      positions[i * 3]     = offset.x + rad * Math.sin(theta) * Math.cos(phi);
+      positions[i * 3 + 1] = offset.y + rad * Math.cos(theta);
+      positions[i * 3 + 2] = offset.z + rad * Math.sin(theta) * Math.sin(phi);
+    }
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    const dotTex = makeNucleonDotTexture(rgb);
+    const mat = new THREE.PointsMaterial({
+      size: preview ? 0.02 : 0.016, map: dotTex, color: new THREE.Color(`rgb(${rgb})`),
+      transparent: true, opacity: 0, blending: THREE.AdditiveBlending,
+      depthWrite: false, sizeAttenuation: true,
+    });
+    const points = new THREE.Points(geo, mat);
+    group.add(points);
+
+    // Three valence quarks, in their own small triangle inside the
+    // nucleon's cloud — jittered continuously in animate() rather than
+    // sitting rigid, since "restless" is the whole point.
+    const quarkR = NUCLEON_R * 0.4;
+    const quarkAngles = [0, (Math.PI * 2) / 3, (Math.PI * 4) / 3];
+    const quarks = quarkAngles.map(a => {
+      const qGeo = new THREE.SphereGeometry(NUCLEON_R * 0.14, 6, 6);
+      const qMat = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0 });
+      const mesh = new THREE.Mesh(qGeo, qMat);
+      const base = new THREE.Vector3(
+        offset.x + Math.cos(a) * quarkR,
+        offset.y + Math.sin(a) * quarkR * 0.6,
+        offset.z + Math.sin(a * 1.3) * quarkR * 0.6
+      );
+      mesh.position.copy(base);
+      group.add(mesh);
+      // Same fixed-direction/own-phase drift pattern as the orbital
+      // cloud's own particles above — a quark never actually sits still,
+      // "restless" is the point, not a static wireframe vertex.
+      let jx = Math.random() * 2 - 1, jy = Math.random() * 2 - 1, jz = Math.random() * 2 - 1;
+      const jl = Math.hypot(jx, jy, jz) || 1;
+      jx /= jl; jy /= jl; jz /= jl;
+      return {
+        mesh, geo: qGeo, mat: qMat, base,
+        jitterDir: new THREE.Vector3(jx, jy, jz),
+        jitterAmp: NUCLEON_R * 0.22,
+        jitterPhase: Math.random() * Math.PI * 2,
+        jitterSpeed: 0.8 + Math.random() * 0.6,
+      };
+    });
+
+    // Gluon-exchange shimmer — three thin additive lines, one per pair of
+    // this nucleon's own quarks, each pulsing on its own independent phase
+    // so the exchange reads as continuous and ongoing rather than a
+    // static wireframe triangle. No membrane, no boundary rendered — just
+    // the exchange itself, same reasoning as the header comment above.
+    const shimmerPairs = [[0, 1], [1, 2], [2, 0]];
+    const shimmerLines = shimmerPairs.map(([a, b]) => {
+      const lineGeo = new THREE.BufferGeometry().setFromPoints([quarks[a].base, quarks[b].base]);
+      const lineMat = new THREE.LineBasicMaterial({
+        color: 0xffffff, transparent: true, opacity: 0,
+        blending: THREE.AdditiveBlending, depthWrite: false,
+      });
+      const line = new THREE.Line(lineGeo, lineMat);
+      group.add(line);
+      return { line, geo: lineGeo, mat: lineMat, a, b, phase: Math.random() * Math.PI * 2, speed: 1.1 + Math.random() * 0.9 };
+    });
+
+    nucleons.push({ offset, geo, mat, dotTex, points, quarks, shimmerLines });
+  });
+
+  return { group, nucleons };
+}
+
 // ─── Satellites ─────────────────────────────────────────────────────────────
 // Same tilted-pivot orbit trick as the orrery in orrery.js: rotate the pivot,
 // the body (attached at a fixed radius on the pivot) sweeps a real orbit.
@@ -443,14 +595,34 @@ export function createEgg(container, { preview = false } = {}) {
   // cloud around it (below) is unmistakably the thing the scene is about.
   const nucleusTex = makeNucleusTexture();
   const geo = new THREE.SphereGeometry(NUCLEUS_RADIUS, preview ? 24 : 40, preview ? 24 : 40);
+  // Design pass, 2026-07-29 — transparent:true added (opacity itself
+  // stays 1 until someone actually clicks) so this can fade out in favor
+  // of the internal detail below without needing a material swap.
+  const NUCLEUS_BASE_EMISSIVE = 0.55;
   const mat = new THREE.MeshStandardMaterial({
     map: nucleusTex,
     emissive: 0xffb060,
-    emissiveIntensity: 0.55,
+    emissiveIntensity: NUCLEUS_BASE_EMISSIVE,
     roughness: 0.6,
+    transparent: true,
   });
   const earth = new THREE.Mesh(geo, mat);
   root.add(earth);
+
+  // Invisible, generous hit target for the nucleus — same "the visible
+  // body is small, the click target isn't" pattern the satellites already
+  // use just below, not a new interaction language. Full scene only
+  // (preview never has click-through).
+  const nucleusHitMat = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false });
+  const nucleusHit = new THREE.Mesh(new THREE.SphereGeometry(NUCLEUS_RADIUS * 1.7, 12, 12), nucleusHitMat);
+  root.add(nucleusHit);
+
+  // Nucleus internal detail — built lazily on first click by
+  // toggleNucleusDetail() further down, not here; see buildNucleusDetail's
+  // own header comment for why.
+  let nucleusDetail = null;
+  let nucleusRevealed = false;
+  let nucleusRevealT = 0; // 0 = fully collapsed (plain sphere), 1 = fully revealed (internal detail), eased in animate()
 
   // ─── p-orbital cloud + satellites ───────────────────────────────────────
   const aurorae = buildOrbitalCloud(preview);
@@ -562,7 +734,7 @@ export function createEgg(container, { preview = false } = {}) {
 
     hint = document.createElement('p');
     hint.id = 'egg-hint';
-    hint.innerHTML = 'drag to orbit &nbsp;·&nbsp; click a satellite to read a poem';
+    hint.innerHTML = 'drag to orbit &nbsp;·&nbsp; click a satellite to read a poem &nbsp;·&nbsp; click the nucleus to look inside';
     hint.setAttribute('aria-hidden', 'true');
     document.body.appendChild(hint);
 
@@ -607,11 +779,18 @@ export function createEgg(container, { preview = false } = {}) {
     // keyboard-only visitor could orbit the egg but never actually read a
     // poem. One button per satellite, calling the exact same
     // selectedSat-then-openPoem() beat the mouse click below already does.
+    // 2026-07-29: the nucleus is now a second raycast-only interaction, so
+    // it gets a button in this exact same list rather than a separate
+    // mechanism — one more <li> in the same jump list, not new UI chrome.
+    const NUCLEUS_JUMP_ITEM = {};
     jumpList = createJumpList(container, {
-      label: 'Read a poem from one of the satellites',
-      items: satellites.sats,
-      getLabel: sat => poems[sat.poemIndex].title,
-      onSelect: sat => { selectedSat = sat; openPoem(sat); },
+      label: 'Read a poem from one of the satellites, or look inside the nucleus',
+      items: [...satellites.sats, NUCLEUS_JUMP_ITEM],
+      getLabel: item => item === NUCLEUS_JUMP_ITEM ? 'Look inside the nucleus' : poems[item.poemIndex].title,
+      onSelect: item => {
+        if (item === NUCLEUS_JUMP_ITEM) { toggleNucleusDetail(); return; }
+        selectedSat = item; openPoem(item);
+      },
     });
   }
 
@@ -619,7 +798,7 @@ export function createEgg(container, { preview = false } = {}) {
   // orrery's control box and sphere's facets. ───────────────────────────
   const raycaster = new THREE.Raycaster();
   const mouse = new THREE.Vector2();
-  let hoveredSat = null, selectedSat = null;
+  let hoveredSat = null, selectedSat = null, hoveredNucleus = false;
   // Named so dispose() can remove them — container is the shared
   // #experience-container element every scene reuses (main.js only clears
   // its innerHTML between scenes, never replaces the node), so a listener
@@ -684,20 +863,48 @@ export function createEgg(container, { preview = false } = {}) {
     }, 180);
   }
 
+  // Toggles the nucleus between its plain collapsed sphere and its
+  // internal proton/neutron/quark detail — see buildNucleusDetail's own
+  // header comment for what that detail actually is. Lazily builds the
+  // detail group on the first call only; every call after that just
+  // flips nucleusRevealed, and animate() eases nucleusRevealT toward
+  // whichever state that's currently set to.
+  function toggleNucleusDetail() {
+    if (!nucleusDetail) {
+      nucleusDetail = buildNucleusDetail(preview);
+      root.add(nucleusDetail.group);
+    }
+    nucleusRevealed = !nucleusRevealed;
+  }
+
   if (!preview) {
     onContainerMouseMove = e => {
       const rect = container.getBoundingClientRect();
       mouse.x =  ((e.clientX - rect.left) / rect.width)  * 2 - 1;
       mouse.y = -((e.clientY - rect.top)  / rect.height) * 2 + 1;
       raycaster.setFromCamera(mouse, camera);
-      const hits = raycaster.intersectObjects(satellites.sats.map(s => s.hit));
-      const hitSat = hits.length ? satellites.sats.find(s => s.hit === hits[0].object) : null;
+      // One combined raycast against satellites' hit spheres and the
+      // nucleus's own hit sphere — intersectObjects already returns hits
+      // sorted nearest-first, so whichever of the two is actually closer
+      // to the camera wins if they ever overlapped (they don't in
+      // practice: the nucleus sits at the very center, satellites orbit
+      // no closer than radius 1.35).
+      const hits = raycaster.intersectObjects([...satellites.sats.map(s => s.hit), nucleusHit]);
+      const hit = hits[0]?.object;
+      const hitSat = hit ? satellites.sats.find(s => s.hit === hit) : null;
+      const hitNucleus = hit === nucleusHit;
       if (hitSat !== hoveredSat) {
         if (hoveredSat) hoveredSat.beaconMat.color.setHex(0x9fffc8);
         hoveredSat = hitSat;
         if (hoveredSat) hoveredSat.beaconMat.color.setHex(0xffffff);
       }
-      container.style.cursor = hoveredSat ? 'pointer' : 'default';
+      if (hitNucleus !== hoveredNucleus) {
+        hoveredNucleus = hitNucleus;
+        // Brightens on hover — same idiom the orrery's own poster hover
+        // already uses (emissiveIntensity bump), not a new one.
+        mat.emissiveIntensity = hoveredNucleus ? NUCLEUS_BASE_EMISSIVE * 1.8 : NUCLEUS_BASE_EMISSIVE;
+      }
+      container.style.cursor = (hoveredSat || hoveredNucleus) ? 'pointer' : 'default';
     };
     container.addEventListener('mousemove', onContainerMouseMove);
     onContainerClick = e => {
@@ -706,11 +913,15 @@ export function createEgg(container, { preview = false } = {}) {
       // hit a different satellite (hoveredSat is tracked live by mousemove
       // above regardless of panel state). Fixed 2026-07-23, same root
       // cause as library.js's identical bug: only close on an actual
-      // empty-space click.
-      if (panel.classList.contains('open') && !hoveredSat) {
+      // empty-space click. hoveredNucleus gets the same treatment now it's
+      // a second real click target — clicking the nucleus while the poem
+      // panel happens to be open should toggle the nucleus, not also (or
+      // instead) close the panel.
+      if (panel.classList.contains('open') && !hoveredSat && !hoveredNucleus) {
         panelCloser.close();
         return;
       }
+      if (hoveredNucleus) { toggleNucleusDetail(); return; }
       if (!hoveredSat) return;
       selectedSat = hoveredSat;
       openPoem(selectedSat);
@@ -776,6 +987,52 @@ export function createEgg(container, { preview = false } = {}) {
     aurorae.phase += 0.012;
     aurorae.mat.opacity = Math.max(0.5, aurorae.baseOpacity + Math.sin(aurorae.phase) * 0.15);
 
+    // ─── Nucleus reveal/collapse ────────────────────────────────────────
+    // The fade itself is a direct response to a click (toggleNucleusDetail
+    // above flips nucleusRevealed; this eases toward whichever state that
+    // now is) — same as the poem panel's own slide transition, so it runs
+    // regardless of reduced motion. Only the continuous quark jitter/
+    // shimmer pulse further down is autonomous decorative motion, gated
+    // the same way the orbital cloud's own drift is above.
+    nucleusRevealT += ((nucleusRevealed ? 1 : 0) - nucleusRevealT) * 0.08;
+    mat.opacity = 1 - nucleusRevealT;
+    earth.visible = nucleusRevealT < 0.995;
+    if (nucleusDetail) {
+      nucleusDetail.group.visible = nucleusRevealT > 0.005;
+      if (nucleusDetail.group.visible) {
+        nucleusDetail.nucleons.forEach(n => {
+          n.mat.opacity = 0.75 * nucleusRevealT;
+          n.quarks.forEach(q => {
+            q.mat.opacity = nucleusRevealT;
+            if (!reduceMotion) {
+              q.jitterPhase += 0.02 * q.jitterSpeed;
+              const s = Math.sin(q.jitterPhase) * q.jitterAmp;
+              q.mesh.position.set(
+                q.base.x + q.jitterDir.x * s,
+                q.base.y + q.jitterDir.y * s,
+                q.base.z + q.jitterDir.z * s
+              );
+            }
+          });
+          n.shimmerLines.forEach(l => {
+            if (!reduceMotion) l.phase += 0.03 * l.speed;
+            // Ongoing exchange, not a fixed glow — oscillates between a
+            // dim and a bright state on its own independent phase, same
+            // "never resolving into something more solid" the header
+            // comment on buildNucleusDetail calls for.
+            const pulse = 0.3 + 0.55 * (0.5 + 0.5 * Math.sin(l.phase));
+            l.mat.opacity = pulse * nucleusRevealT;
+            // Endpoints follow the (possibly jittering) quarks each frame.
+            const qa = n.quarks[l.a], qb = n.quarks[l.b];
+            const posAttr = l.geo.attributes.position;
+            posAttr.setXYZ(0, qa.mesh.position.x, qa.mesh.position.y, qa.mesh.position.z);
+            posAttr.setXYZ(1, qb.mesh.position.x, qb.mesh.position.y, qb.mesh.position.z);
+            posAttr.needsUpdate = true;
+          });
+        });
+      }
+    }
+
     renderer.render(scene, camera);
   }
   animate();
@@ -796,6 +1053,14 @@ export function createEgg(container, { preview = false } = {}) {
       if (onContainerClick) container.removeEventListener('click', onContainerClick);
       renderer.dispose();
       geo.dispose(); mat.dispose(); nucleusTex.dispose();
+      nucleusHit.geometry.dispose(); nucleusHitMat.dispose();
+      if (nucleusDetail) {
+        nucleusDetail.nucleons.forEach(n => {
+          n.geo.dispose(); n.mat.dispose(); n.dotTex.dispose();
+          n.quarks.forEach(q => { q.geo.dispose(); q.mat.dispose(); });
+          n.shimmerLines.forEach(l => { l.geo.dispose(); l.mat.dispose(); });
+        });
+      }
       starGeo.dispose(); starMat.dispose();
       aurorae.geo.dispose(); aurorae.mat.dispose(); aurorae.dotTex.dispose();
       satellites.sats.forEach(s => {
