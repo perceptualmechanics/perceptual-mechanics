@@ -168,24 +168,24 @@ function renderScriptBlock(elements) {
   const delay = (Math.random() * -15).toFixed(2); // negative delay: starts mid-cycle, not synced
   const body = elements.map(el => {
     if (el.type === 'slug') {
-      return `<p class="ms-script-slug">${escapeHtml(el.text)}</p>`;
+      return `<p class="scroll-script-slug">${escapeHtml(el.text)}</p>`;
     }
     if (el.type === 'action') {
-      return `<p class="ms-script-action">${escapeHtml(el.text)}</p>`;
+      return `<p class="scroll-script-action">${escapeHtml(el.text)}</p>`;
     }
     // dialogue
     const paren = el.parenthetical
-      ? `<p class="ms-script-paren">${escapeHtml(el.parenthetical)}</p>`
+      ? `<p class="scroll-script-paren">${escapeHtml(el.parenthetical)}</p>`
       : '';
-    return `<div class="ms-script-dialogue">` +
-      `<p class="ms-script-character">${escapeHtml(el.character)}</p>` +
+    return `<div class="scroll-script-dialogue">` +
+      `<p class="scroll-script-character">${escapeHtml(el.character)}</p>` +
       paren +
-      `<p class="ms-script-line">${escapeHtml(el.text)}</p>` +
+      `<p class="scroll-script-line">${escapeHtml(el.text)}</p>` +
       `</div>`;
   }).join('');
-  return `<div class="ms-script" style="--script-rot: ${rot}deg; --script-delay: ${delay}s;">` +
-    `<span class="ms-script-pin" aria-hidden="true"></span>` +
-    `<div class="ms-script-page">${body}</div>` +
+  return `<div class="scroll-script" style="--script-rot: ${rot}deg; --script-delay: ${delay}s;">` +
+    `<span class="scroll-script-pin" aria-hidden="true"></span>` +
+    `<div class="scroll-script-page">${body}</div>` +
     `</div>`;
 }
 
@@ -194,18 +194,18 @@ function renderParagraph(patchKey, index, text) {
   const link = LINKS.find(l => l.patch === patchKey && l.para === index);
   if (link) {
     const esc = escapeHtml(link.phrase);
-    html = html.replace(esc, `<a class="ms-link" data-target="${link.target}" role="link" tabindex="0">${esc}</a>`);
+    html = html.replace(esc, `<a class="scroll-link" data-target="${link.target}" role="link" tabindex="0">${esc}</a>`);
   }
   const rubric = RUBRICS.find(r => r.patch === patchKey && r.para === index);
   if (rubric) {
     const esc = escapeHtml(rubric.phrase);
-    html = html.replace(esc, `<span class="ms-rubric">${esc}</span>`);
+    html = html.replace(esc, `<span class="scroll-rubric">${esc}</span>`);
   }
   const intense = INTENSITIES.find(x => x.patch === patchKey && x.para === index);
   if (intense) {
     const esc = escapeHtml(intense.phrase);
     const inner = intense.mode === 'tight' ? franticWords(esc) : esc;
-    html = html.replace(esc, `<span class="ms-intense ms-intense--${intense.mode}">${inner}</span>`);
+    html = html.replace(esc, `<span class="scroll-intense scroll-intense--${intense.mode}">${inner}</span>`);
   }
   return html;
 }
@@ -217,7 +217,7 @@ function franticWords(escapedPhrase) {
   return escapedPhrase.split(' ').map(word => {
     const rot = (Math.random() * 7 - 3.5).toFixed(1);
     const dy = (Math.random() * 6 - 3).toFixed(1);
-    return `<span class="ms-word" style="transform: rotate(${rot}deg) translateY(${dy}px);">${word}</span>`;
+    return `<span class="scroll-word" style="transform: rotate(${rot}deg) translateY(${dy}px);">${word}</span>`;
   }).join(' ');
 }
 
@@ -251,7 +251,7 @@ function agingFilter(tone) {
 const STAIN_BLENDS = ['multiply', 'multiply', 'multiply', 'soft-light'];
 function buildStain() {
   const el = document.createElement('div');
-  el.className = 'ms-stain';
+  el.className = 'scroll-stain';
   el.setAttribute('aria-hidden', 'true');
   const w = 9 + Math.random() * 24;
   const h = w * (0.55 + Math.random() * 0.7);
@@ -273,7 +273,7 @@ function buildStyles() {
   const style = document.createElement('style');
   style.id = 'scroll-styles';
   style.textContent = `
-    .ms-root {
+    .scroll-root {
       width: 100%; height: 100%;
       background: linear-gradient(165deg, #14100b 0%, #1d1912 50%, #110d08 100%);
       color: #e9ddc2;
@@ -284,7 +284,7 @@ function buildStyles() {
     /* an unsteady candle somewhere off to the side, not a flat vignette.
        negative z-index so it always sits behind the (non-positioned) scroll
        content, rather than fighting default stacking order. */
-    .ms-root::before {
+    .scroll-root::before {
       content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none;
       background:
         radial-gradient(circle at 24% 18%, rgba(255,214,150,0.85), rgba(255,196,120,0.4) 18%, transparent 42%),
@@ -292,9 +292,9 @@ function buildStyles() {
         radial-gradient(ellipse at 18% 8%, rgba(0,0,0,0.45), transparent 48%),
         radial-gradient(ellipse at 84% 88%, rgba(0,0,0,0.6), transparent 55%),
         repeating-linear-gradient(38deg, rgba(0,0,0,0.045) 0 1px, transparent 1px 6px);
-      animation: ms-candlelight 4.2s ease-in-out infinite;
+      animation: scroll-candlelight 4.2s ease-in-out infinite;
     }
-    @keyframes ms-candlelight {
+    @keyframes scroll-candlelight {
       0%, 100%  { opacity: 1; }
       15%       { opacity: 0.62; }
       30%       { opacity: 1; }
@@ -303,131 +303,131 @@ function buildStyles() {
       74%       { opacity: 0.6; }
       88%       { opacity: 0.9; }
     }
-    .ms-scroll {
+    .scroll-viewport {
       width: 100%; height: 100%;
       overflow-y: auto; overflow-x: hidden;
       padding: 3.2rem 1.4rem 6rem;
       scrollbar-color: rgba(140,105,55,0.4) transparent;
       scrollbar-width: thin;
     }
-    .ms-scroll:focus { outline: none; }
+    .scroll-viewport:focus { outline: none; }
 
     /* dust and scratches on the glass, over everything, static through scroll */
-    .ms-grain {
+    .scroll-grain {
       position: absolute; inset: 0; z-index: 5; pointer-events: none;
-      filter: url(#ms-grain);
+      filter: url(#scroll-grain);
       mix-blend-mode: multiply;
       opacity: 0.13;
     }
 
     /* ── Opening mark: the Ogham letter Sail, carved once at the top of the
        scroll — the same glyph the preview medallion carries, here bare on
-       the hide itself rather than cut into stone. Reuses .ms-ogham's own
+       the hide itself rather than cut into stone. Reuses .scroll-ogham's own
        stem/stroke markup; this override just gives it room to be the sole
        mark on the page instead of one small carving inside a medallion. ── */
-    .ms-ogham-panel {
+    .scroll-ogham-panel {
       max-width: 100px; margin: 0 auto 2.6rem; aspect-ratio: 0.6 / 1;
       display: flex; align-items: center; justify-content: center;
     }
-    .ms-ogham-panel .ms-ogham {
+    .scroll-ogham-panel .scroll-ogham {
       width: 82%; height: 92%;
-      filter: url(#ms-rough) drop-shadow(0 2px 3px rgba(0,0,0,0.5));
+      filter: url(#scroll-rough) drop-shadow(0 2px 3px rgba(0,0,0,0.5));
     }
 
     /* ── Primordial marginal motifs — spiral, chevron, cup-and-ring, dots ── */
-    .ms-motif { display: block; width: 100%; height: 100%; opacity: 0.85; filter: url(#ms-rough); }
-    .ms-motif-spiral {
+    .scroll-motif { display: block; width: 100%; height: 100%; opacity: 0.85; filter: url(#scroll-rough); }
+    .scroll-motif-spiral {
       background: conic-gradient(from 90deg, transparent 0deg, #a8702f 40deg, transparent 90deg,
         #a8702f 170deg, transparent 220deg, #a8702f 300deg, transparent 360deg);
       border-radius: 50%;
       -webkit-mask: radial-gradient(circle, transparent 18%, black 24%, black 42%, transparent 48%);
               mask: radial-gradient(circle, transparent 18%, black 24%, black 42%, transparent 48%);
     }
-    .ms-motif-chevron {
+    .scroll-motif-chevron {
       background-image: repeating-linear-gradient(45deg, transparent 0 6px, #a8702f 6px 9px, transparent 9px 15px),
                          repeating-linear-gradient(-45deg, transparent 0 6px, #8a3b22 6px 9px, transparent 9px 15px);
       -webkit-mask: radial-gradient(circle, black 40%, transparent 72%);
               mask: radial-gradient(circle, black 40%, transparent 72%);
     }
-    .ms-motif-cupring {
+    .scroll-motif-cupring {
       background: radial-gradient(circle, transparent 8%, #a8702f 10% 14%, transparent 16% 30%, #8a3b22 32% 36%, transparent 38%);
       border-radius: 50%;
     }
-    .ms-motif-dots {
+    .scroll-motif-dots {
       background-image: radial-gradient(#a8702f 22%, transparent 24%);
       background-size: 30% 30%;
       background-position: 15% 15%, 65% 15%, 15% 65%, 65% 65%;
     }
 
     /* ── Seam: where one patch of hide was lashed to the next ── */
-    .ms-seam {
+    .scroll-seam {
       max-width: 820px; margin: 0 auto; height: 44px; position: relative;
       display: flex; align-items: center; justify-content: center;
     }
-    .ms-seam::before {
+    .scroll-seam::before {
       content: ''; position: absolute; left: 4%; right: 4%; top: 50%; height: 2px;
       background: repeating-linear-gradient(90deg, #5c4426 0 10px, transparent 10px 14px);
       opacity: 0.55; transform: translateY(-50%);
-      filter: url(#ms-rough);
+      filter: url(#scroll-rough);
     }
-    .ms-seam::after {
+    .scroll-seam::after {
       content: ''; position: absolute; left: 4%; right: 4%; top: 50%; height: 10px;
       background-image: repeating-linear-gradient(90deg, transparent 0 12px, rgba(60,44,24,0.5) 12px 13px, transparent 13px 24px);
       transform: translateY(-50%) rotate(-1deg);
-      filter: url(#ms-rough);
+      filter: url(#scroll-rough);
     }
-    .ms-seam-motif { width: 26px; height: 26px; position: relative; z-index: 1;
+    .scroll-seam-motif { width: 26px; height: 26px; position: relative; z-index: 1;
       background: radial-gradient(circle, rgba(28,23,18,0.9) 55%, transparent 72%); border-radius: 50%; }
 
     /* ── Patch: one section of hide, one uninterrupted stretch of text ──
        clip-path (set per instance in JS, --patch-clip below) cuts the whole
        perimeter into a ragged, disjointed hide-shape — not just top/bottom. */
-    .ms-patch {
+    .scroll-patch {
       max-width: 820px; margin: 0 auto; padding: 2.2rem 1.9rem;
       position: relative; scroll-margin-top: 2rem;
       transition: box-shadow 0.4s ease;
       clip-path: var(--patch-clip, none);
     }
-    .ms-patch.ms-flash { box-shadow: 0 0 0 2px rgba(184,122,50,0.55) inset; }
+    .scroll-patch.scroll-flash { box-shadow: 0 0 0 2px rgba(184,122,50,0.55) inset; }
 
-    .ms-patch-tone-0 { background: linear-gradient(160deg, #241d14 0%, #2c2417 55%, #221b12 100%); }
-    .ms-patch-tone-1 { background: linear-gradient(160deg, #2e2517 0%, #382c1a 55%, #2a2115 100%); }
-    .ms-patch-tone-2 { background: linear-gradient(160deg, #3c2f1b 0%, #47381f 55%, #382b18 100%); }
-    .ms-patch-tone-3 { background: linear-gradient(160deg, #4c3c20 0%, #584722 55%, #453620 100%); }
-    .ms-patch-tone-4 { background: linear-gradient(160deg, #5d4a26 0%, #6a5628 55%, #55441f 100%); }
-    .ms-patch-tone-5 { background: linear-gradient(160deg, #6b582e 0%, #7a6530 55%, #64521f 100%); }
+    .scroll-patch-tone-0 { background: linear-gradient(160deg, #241d14 0%, #2c2417 55%, #221b12 100%); }
+    .scroll-patch-tone-1 { background: linear-gradient(160deg, #2e2517 0%, #382c1a 55%, #2a2115 100%); }
+    .scroll-patch-tone-2 { background: linear-gradient(160deg, #3c2f1b 0%, #47381f 55%, #382b18 100%); }
+    .scroll-patch-tone-3 { background: linear-gradient(160deg, #4c3c20 0%, #584722 55%, #453620 100%); }
+    .scroll-patch-tone-4 { background: linear-gradient(160deg, #5d4a26 0%, #6a5628 55%, #55441f 100%); }
+    .scroll-patch-tone-5 { background: linear-gradient(160deg, #6b582e 0%, #7a6530 55%, #64521f 100%); }
 
     /* ink stains and worn patches, scattered per instance, behind the text */
-    .ms-stain { position: absolute; pointer-events: none; border-radius: 50%; z-index: 0; }
+    .scroll-stain { position: absolute; pointer-events: none; border-radius: 50%; z-index: 0; }
 
-    /* The ambient candlelight (.ms-root::before) sits behind every patch, so
+    /* The ambient candlelight (.scroll-root::before) sits behind every patch, so
        on its own it only ever shows in the gaps between them — never while
        actually reading one. This is the same light, painted again on top of
        the parchment itself: a soft warm wash that pulses on the same rhythm,
        screen-blended so it only ever adds light and never dims the text.
        Each patch runs on its own negative delay so the whole scroll doesn't
        flicker in unison — one candle, many patches catching it differently. */
-    .ms-patch::after {
+    .scroll-patch::after {
       content: ''; position: absolute; inset: 0; z-index: 2; pointer-events: none;
       background: radial-gradient(ellipse at 26% 14%, rgba(255,205,140,0.22), transparent 58%);
       mix-blend-mode: screen;
-      animation: ms-candlelight 4.2s ease-in-out infinite;
+      animation: scroll-candlelight 4.2s ease-in-out infinite;
       animation-delay: var(--glow-delay, 0s);
     }
 
-    .ms-patch-text { position: relative; z-index: 1; }
-    .ms-patch-text { --ms-base-size: 1.2rem; }
-    .ms-patch-text > p {
+    .scroll-patch-text { position: relative; z-index: 1; }
+    .scroll-patch-text { --scroll-base-size: 1.2rem; }
+    .scroll-patch-text > p {
       font-family: 'IM Fell English', Georgia, serif;
-      font-size: var(--ms-base-size); line-height: 1.85; margin: 0 0 1.15rem;
+      font-size: var(--scroll-base-size); line-height: 1.85; margin: 0 0 1.15rem;
       color: #e9ddc2;
       text-shadow: 1px 1px 0 rgba(255,240,210,0.1), -1px -1px 1px rgba(0,0,0,0.55);
       letter-spacing: 0.01em;
     }
-    .ms-patch-text > p:last-child { margin-bottom: 0; }
+    .scroll-patch-text > p:last-child { margin-bottom: 0; }
 
     /* incised versal opening each patch — Cinzel, sparingly, as an inscriptional accent */
-    .ms-patch-text > p:first-of-type::first-letter {
+    .scroll-patch-text > p:first-of-type::first-letter {
       font-family: 'Cinzel', 'IM Fell English', serif;
       font-weight: 600;
       font-size: 3.4rem; line-height: 0.72;
@@ -444,7 +444,7 @@ function buildStyles() {
        warm frenzy of the ink beside it. A thin stemline on its left edge
        nods to how Ogham actually reads — notches keyed off a straight
        edge, not floating free the way Latin letters do. */
-    .ms-ogham-line {
+    .scroll-ogham-line {
       float: left;
       width: 118px;
       margin: 0.1rem 1.2rem 0.6rem 0;
@@ -460,7 +460,7 @@ function buildStyles() {
       user-select: none;
     }
 
-    .ms-rubric {
+    .scroll-rubric {
       color: #c17a3d;
       text-shadow: 1px 1px 0 rgba(255,220,170,0.12), -1px -1px 1px rgba(0,0,0,0.6);
     }
@@ -471,26 +471,26 @@ function buildStyles() {
        'tight' — the hand writing faster than it can properly form letters;
        words crowd together and jostle off the baseline, not a "sinister
        whisper" italic. */
-    .ms-intense--wide {
+    .scroll-intense--wide {
       letter-spacing: 0.2em; word-spacing: 0.12em;
-      animation: ms-candle-text 3.6s ease-in-out infinite;
+      animation: scroll-candle-text 3.6s ease-in-out infinite;
     }
-    @keyframes ms-candle-text {
+    @keyframes scroll-candle-text {
       0%, 100% { text-shadow: 1px 1px 0 rgba(255,240,210,0.1), -1px -1px 1px rgba(0,0,0,0.55); }
       50%      { text-shadow: 0 0 7px rgba(255,210,140,0.28), 1px 1px 0 rgba(255,240,210,0.12), -1px -1px 1px rgba(0,0,0,0.5); }
     }
-    .ms-intense--tight {
+    .scroll-intense--tight {
       letter-spacing: -0.01em;
       text-shadow: 0 0 3px rgba(233,221,194,0.28), 1px 1px 0 rgba(0,0,0,0.5), -1px -1px 1px rgba(0,0,0,0.3);
     }
-    .ms-intense--tight .ms-word { display: inline-block; }
+    .scroll-intense--tight .scroll-word { display: inline-block; }
 
-    .ms-link {
+    .scroll-link {
       color: inherit; text-decoration: none; cursor: pointer;
       border-bottom: 1px dashed rgba(193,122,61,0.65);
       padding: 0 0.08em; transition: color 0.2s, border-color 0.2s, text-shadow 0.2s;
     }
-    .ms-link:hover, .ms-link:focus {
+    .scroll-link:hover, .scroll-link:focus {
       color: #d99a51;
       border-bottom-color: #d99a51;
       text-shadow: 0 0 8px rgba(217,154,81,0.5);
@@ -505,7 +505,7 @@ function buildStyles() {
        tied at the top, not a costume change. Pinned only at that top point,
        so every so often a draft catches it and it rustles, tugging back to
        rest — the rest of the scroll stays still. ── */
-    .ms-script {
+    .scroll-script {
       position: relative; z-index: 1;
       max-width: 540px; margin: 1.9rem auto 2.3rem;
       background: linear-gradient(178deg, #f2ead4 0%, #e6d9b8 55%, #dccca4 100%);
@@ -513,10 +513,10 @@ function buildStyles() {
       padding: 2.1rem 1.6rem 1.9rem 2.1rem;
       transform: rotate(var(--script-rot, 0deg));
       transform-origin: 50% 0%;
-      animation: ms-script-flutter 15s ease-in-out infinite;
+      animation: scroll-script-flutter 15s ease-in-out infinite;
       animation-delay: var(--script-delay, 0s);
     }
-    @keyframes ms-script-flutter {
+    @keyframes scroll-script-flutter {
       0%, 4%, 15%, 27%, 40%, 55%, 100% { transform: rotate(var(--script-rot, 0deg)); }
       6%  { transform: rotate(calc(var(--script-rot, 0deg) + 0.6deg)) skewX(0.22deg); }
       9%  { transform: rotate(calc(var(--script-rot, 0deg) - 0.32deg)) skewX(-0.18deg); }
@@ -525,7 +525,7 @@ function buildStyles() {
       46% { transform: rotate(calc(var(--script-rot, 0deg) + 0.36deg)) skewX(0.18deg); }
       50% { transform: rotate(var(--script-rot, 0deg)); }
     }
-    .ms-script-pin {
+    .scroll-script-pin {
       position: absolute; top: -9px; left: 50%; transform: translateX(-50%);
       width: 13px; height: 13px; border-radius: 50%;
       background: radial-gradient(circle at 35% 30%, #a24a3a, #6b2a1f 70%, #4a1c14);
@@ -533,7 +533,7 @@ function buildStyles() {
       z-index: 2;
     }
     /* a short cord trailing from the pin, like a tanzaku's tying thread */
-    .ms-script-pin::after {
+    .scroll-script-pin::after {
       content: ''; position: absolute; top: 11px; left: 50%; transform: translateX(-50%);
       width: 1.5px; height: 16px;
       background: linear-gradient(180deg, rgba(140,50,40,0.75), rgba(140,50,40,0.15));
@@ -542,55 +542,55 @@ function buildStyles() {
        across the whole sheet — both subtle enough to read as paper, not
        pattern. Anchored to the outer box (not the padded inner content) so
        they still line up correctly at the tighter mobile padding below. */
-    .ms-script::before {
+    .scroll-script::before {
       content: ''; position: absolute; top: 0; left: 0; right: 0; z-index: 0;
       height: 5px; pointer-events: none;
       background: linear-gradient(90deg,
         transparent, rgba(150,55,45,0.16) 18%, rgba(70,85,120,0.13) 50%,
         rgba(150,55,45,0.16) 82%, transparent);
     }
-    .ms-script::after {
+    .scroll-script::after {
       content: ''; position: absolute; inset: 0; z-index: 0;
       pointer-events: none;
       background: repeating-linear-gradient(90deg,
         transparent 0 3px, rgba(120,90,50,0.05) 3px 4px);
       mix-blend-mode: multiply;
     }
-    .ms-script-page {
+    .scroll-script-page {
       font-family: 'Courier Prime', 'Courier New', Courier, monospace;
       color: #2b2314;
       font-size: 0.92rem; line-height: 1.65;
       position: relative;
       z-index: 1;
     }
-    .ms-script-slug {
+    .scroll-script-slug {
       font-weight: 700; text-transform: uppercase;
       letter-spacing: 0.04em; margin: 0 0 0.9rem;
     }
-    .ms-script-action {
+    .scroll-script-action {
       margin: 0 0 0.9rem;
     }
-    .ms-script-dialogue {
+    .scroll-script-dialogue {
       max-width: 68%; margin: 0 auto 0.9rem;
     }
-    .ms-script-character {
+    .scroll-script-character {
       text-align: center; text-transform: uppercase; font-weight: 700;
       letter-spacing: 0.03em; margin: 0 0 0.15rem;
     }
-    .ms-script-paren {
+    .scroll-script-paren {
       text-align: center; font-style: italic; font-size: 0.85em;
       opacity: 0.82; margin: 0 0 0.15rem;
     }
-    .ms-script-line { margin: 0; }
+    .scroll-script-line { margin: 0; }
 
     /* ── Preview: dark, cracked stone medallion, Ogham Sail carved into it ── */
-    .ms-preview {
+    .scroll-preview {
       width: 100%; height: 100%; position: relative;
       display: flex; align-items: center; justify-content: center;
       background: radial-gradient(ellipse at center, #2a2318 0%, #1a1510 100%);
     }
-    .ms-preview .ms-grain { opacity: 0.22; }
-    .ms-preview-medallion {
+    .scroll-preview .scroll-grain { opacity: 0.22; }
+    .scroll-preview-medallion {
       width: 62%; height: 62%; position: relative;
       border-radius: 58% 42% 53% 47% / 45% 55% 42% 58%; /* worn stone, not a coin */
       background:
@@ -599,11 +599,11 @@ function buildStyles() {
         radial-gradient(circle, #4a3c24 0%, #241d14 78%);
       box-shadow: 0 0 0 1px rgba(0,0,0,0.5), 0 0 22px rgba(193,122,61,0.18);
       display: flex; align-items: center; justify-content: center;
-      animation: ms-ember 4.2s steps(7) infinite;
-      filter: url(#ms-rough-strong) contrast(1.1) sepia(0.15);
+      animation: scroll-ember 4.2s steps(7) infinite;
+      filter: url(#scroll-rough-strong) contrast(1.1) sepia(0.15);
       /* Safari/WebKit has a long-standing bug where an animated element
          (the box-shadow keyframes above) that also carries a referenced
-         SVG filter (url(#ms-rough-strong)) periodically drops and
+         SVG filter (url(#scroll-rough-strong)) periodically drops and
          re-resolves the filter, which reads as the element flipping
          between two visibly different states rather than a smooth loop.
          Forcing its own compositing layer keeps the filter stable. */
@@ -611,25 +611,25 @@ function buildStyles() {
       transform: translateZ(0);
       will-change: filter, box-shadow;
     }
-    @keyframes ms-ember {
+    @keyframes scroll-ember {
       0%, 100% { box-shadow: 0 0 0 1px rgba(0,0,0,0.5), 0 0 14px rgba(193,122,61,0.12); }
       35%      { box-shadow: 0 0 0 1px rgba(0,0,0,0.5), 0 0 26px rgba(217,154,81,0.3); }
       60%      { box-shadow: 0 0 0 1px rgba(0,0,0,0.5), 0 0 18px rgba(193,122,61,0.18); }
     }
-    .ms-crack {
+    .scroll-crack {
       position: absolute; z-index: 2; pointer-events: none;
       background: linear-gradient(180deg, transparent, rgba(0,0,0,0.75) 20%, rgba(0,0,0,0.5) 65%, transparent 100%);
-      filter: url(#ms-rough-strong);
-      /* Same Safari filter-stability fix as .ms-preview-medallion, its
+      filter: url(#scroll-rough-strong);
+      /* Same Safari filter-stability fix as .scroll-preview-medallion, its
          animated parent - see comment there. */
       -webkit-transform: translateZ(0);
       transform: translateZ(0);
     }
-    .ms-crack-main { left: 12%; top: 4%; width: 2px; height: 62%; transform: rotate(21deg); }
-    .ms-crack-branch { left: 40%; top: 38%; width: 1.5px; height: 26%; transform: rotate(-32deg); opacity: 0.7; }
+    .scroll-crack-main { left: 12%; top: 4%; width: 2px; height: 62%; transform: rotate(21deg); }
+    .scroll-crack-branch { left: 40%; top: 38%; width: 1.5px; height: 26%; transform: rotate(-32deg); opacity: 0.7; }
 
     /* ── Ogham letter Sail: stemline + four strokes off one side ── */
-    .ms-ogham { position: relative; width: 46%; height: 66%; z-index: 1; }
+    .scroll-ogham { position: relative; width: 46%; height: 66%; z-index: 1; }
     .ogham-stem, .ogham-stroke {
       position: absolute;
       background: linear-gradient(180deg, #d9b276, #a8702f 60%, #7a4f1f);
@@ -644,26 +644,26 @@ function buildStyles() {
     .ogham-stroke.s4 { top: 78%; }
 
     @media (prefers-reduced-motion: reduce) {
-      .ms-preview-medallion { animation: none; }
-      .ms-patch-text > p { transform: none !important; }
-      .ms-script { transform: rotate(var(--script-rot, 0deg)) !important; animation: none !important; }
-      .ms-root::before { animation: none; opacity: 1; }
-      .ms-patch::after { animation: none; }
-      .ms-intense--wide { animation: none; }
+      .scroll-preview-medallion { animation: none; }
+      .scroll-patch-text > p { transform: none !important; }
+      .scroll-script { transform: rotate(var(--script-rot, 0deg)) !important; animation: none !important; }
+      .scroll-root::before { animation: none; opacity: 1; }
+      .scroll-patch::after { animation: none; }
+      .scroll-intense--wide { animation: none; }
     }
 
     @media (max-width: 600px) {
-      .ms-patch { padding: 1.7rem 1.1rem; }
-      .ms-patch-text { --ms-base-size: 1.05rem; }
-      .ms-patch-text > p:first-of-type::first-letter { font-size: 2.6rem; }
-      .ms-ogham-panel { max-width: 76px; }
-      .ms-ogham-line {
+      .scroll-patch { padding: 1.7rem 1.1rem; }
+      .scroll-patch-text { --scroll-base-size: 1.05rem; }
+      .scroll-patch-text > p:first-of-type::first-letter { font-size: 2.6rem; }
+      .scroll-ogham-panel { max-width: 76px; }
+      .scroll-ogham-line {
         float: none; display: block; width: auto;
         margin: 0 0 0.9rem; padding-left: 0.5rem; font-size: 1.1rem;
       }
-      .ms-script { padding: 1.7rem 1.1rem 1.5rem 1.5rem; }
-      .ms-script-page { font-size: 0.85rem; }
-      .ms-script-dialogue { max-width: 88%; }
+      .scroll-script { padding: 1.7rem 1.1rem 1.5rem 1.5rem; }
+      .scroll-script-page { font-size: 0.85rem; }
+      .scroll-script-dialogue { max-width: 88%; }
     }
   `;
   document.head.appendChild(style);
@@ -673,24 +673,24 @@ function buildStyles() {
 // hand-wobble, referenced from CSS via filter: url(#id). Inserted once,
 // globally, same singleton pattern as buildStyles().
 function buildSvgDefs() {
-  if (document.getElementById('ms-svg-defs')) return;
+  if (document.getElementById('scroll-svg-defs')) return;
   const wrap = document.createElement('div');
-  wrap.id = 'ms-svg-defs';
+  wrap.id = 'scroll-svg-defs';
   wrap.style.cssText = 'position:absolute; width:0; height:0; overflow:hidden;';
   wrap.innerHTML = `
     <svg width="0" height="0" aria-hidden="true" focusable="false">
       <defs>
-        <filter id="ms-grain" x="-5%" y="-5%" width="110%" height="110%">
+        <filter id="scroll-grain" x="-5%" y="-5%" width="110%" height="110%">
           <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" seed="4" stitchTiles="stitch" result="n"/>
           <feColorMatrix in="n" type="matrix"
             values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.85 0" result="a"/>
           <feComposite in="a" in2="SourceGraphic" operator="over"/>
         </filter>
-        <filter id="ms-rough" x="-25%" y="-25%" width="150%" height="150%">
+        <filter id="scroll-rough" x="-25%" y="-25%" width="150%" height="150%">
           <feTurbulence type="fractalNoise" baseFrequency="0.02 0.06" numOctaves="2" seed="7" result="t"/>
           <feDisplacementMap in="SourceGraphic" in2="t" scale="6" xChannelSelector="R" yChannelSelector="G"/>
         </filter>
-        <filter id="ms-rough-strong" x="-35%" y="-35%" width="170%" height="170%">
+        <filter id="scroll-rough-strong" x="-35%" y="-35%" width="170%" height="170%">
           <feTurbulence type="fractalNoise" baseFrequency="0.02 0.09" numOctaves="3" seed="3" result="t2"/>
           <feDisplacementMap in="SourceGraphic" in2="t2" scale="15" xChannelSelector="R" yChannelSelector="G"/>
         </filter>
@@ -701,7 +701,7 @@ function buildSvgDefs() {
 }
 
 function oghamSail() {
-  return `<div class="ms-ogham" aria-hidden="true">
+  return `<div class="scroll-ogham" aria-hidden="true">
     <span class="ogham-stem"></span>
     <span class="ogham-stroke s1"></span>
     <span class="ogham-stroke s2"></span>
@@ -711,7 +711,7 @@ function oghamSail() {
 }
 
 function oghamPanel() {
-  return `<div class="ms-ogham-panel" aria-hidden="true">${oghamSail()}</div>`;
+  return `<div class="scroll-ogham-panel" aria-hidden="true">${oghamSail()}</div>`;
 }
 
 export function createScroll(container, { preview = false } = {}) {
@@ -720,16 +720,16 @@ export function createScroll(container, { preview = false } = {}) {
 
   if (preview) {
     const root = document.createElement('div');
-    root.className = 'ms-preview';
+    root.className = 'scroll-preview';
     root.setAttribute('aria-hidden', 'true');
     const grain = document.createElement('div');
-    grain.className = 'ms-grain';
+    grain.className = 'scroll-grain';
     const medallion = document.createElement('div');
-    medallion.className = 'ms-preview-medallion';
+    medallion.className = 'scroll-preview-medallion';
     const crackMain = document.createElement('div');
-    crackMain.className = 'ms-crack ms-crack-main';
+    crackMain.className = 'scroll-crack scroll-crack-main';
     const crackBranch = document.createElement('div');
-    crackBranch.className = 'ms-crack ms-crack-branch';
+    crackBranch.className = 'scroll-crack scroll-crack-branch';
     medallion.appendChild(crackMain);
     medallion.appendChild(crackBranch);
     medallion.insertAdjacentHTML('beforeend', oghamSail());
@@ -740,10 +740,10 @@ export function createScroll(container, { preview = false } = {}) {
   }
 
   const root = document.createElement('div');
-  root.className = 'ms-root';
+  root.className = 'scroll-root';
 
   const scroll = document.createElement('div');
-  scroll.className = 'ms-scroll';
+  scroll.className = 'scroll-viewport';
   scroll.setAttribute('tabindex', '-1');
   scroll.setAttribute('role', 'region');
   scroll.setAttribute('aria-label', 'A scroll of found writing, carved fragments, 2000 to the 2010s');
@@ -752,7 +752,7 @@ export function createScroll(container, { preview = false } = {}) {
 
   PATCHES.forEach((patch, i) => {
     const article = document.createElement('article');
-    article.className = `ms-patch ms-patch-tone-${patch.tone}`;
+    article.className = `scroll-patch scroll-patch-tone-${patch.tone}`;
     article.id = patch.id;
     article.style.setProperty('--patch-clip', patchClipPath());
     article.style.setProperty('--glow-delay', `${(Math.random() * -4.2).toFixed(2)}s`);
@@ -764,10 +764,10 @@ export function createScroll(container, { preview = false } = {}) {
     }
 
     const openingLine = firstSentences(patch.body[0], OGHAM_LINES[patch.key] || 1);
-    const oghamHtml = `<span class="ms-ogham-line" aria-hidden="true">${toOgham(openingLine)}</span>`;
+    const oghamHtml = `<span class="scroll-ogham-line" aria-hidden="true">${toOgham(openingLine)}</span>`;
 
     const textWrap = document.createElement('div');
-    textWrap.className = 'ms-patch-text';
+    textWrap.className = 'scroll-patch-text';
     textWrap.innerHTML = oghamHtml + patch.body.map((p, idx) => {
       const rot = (Math.random() * 1.6 - 0.8).toFixed(2);
       const dx = (Math.random() * 6 - 3).toFixed(1);
@@ -776,7 +776,7 @@ export function createScroll(container, { preview = false } = {}) {
       const scale = (0.94 + Math.random() * 0.17).toFixed(3);
       const track = (0.01 + Math.random() * 0.035).toFixed(3);
       const style = `transform: rotate(${rot}deg) translateX(${dx}px); ` +
-        `font-size: calc(var(--ms-base-size, 1.2rem) * ${scale}); letter-spacing: ${track}em;`;
+        `font-size: calc(var(--scroll-base-size, 1.2rem) * ${scale}); letter-spacing: ${track}em;`;
       let out = `<p style="${style}">${renderParagraph(patch.key, idx, p)}</p>`;
       const insert = SCRIPT_INSERTS.find(s => s.patch === patch.key && s.afterIndex === idx);
       if (insert) out += renderScriptBlock(insert.script);
@@ -787,17 +787,17 @@ export function createScroll(container, { preview = false } = {}) {
 
     if (i < PATCHES.length - 1) {
       const seam = document.createElement('div');
-      seam.className = 'ms-seam';
+      seam.className = 'scroll-seam';
       seam.setAttribute('aria-hidden', 'true');
       const motifType = MOTIF_CYCLE[i % MOTIF_CYCLE.length];
-      seam.innerHTML = `<span class="ms-seam-motif"><span class="ms-motif ms-motif-${motifType}"></span></span>`;
+      seam.innerHTML = `<span class="scroll-seam-motif"><span class="scroll-motif scroll-motif-${motifType}"></span></span>`;
       scroll.appendChild(seam);
     }
   });
 
   root.appendChild(scroll);
   const grain = document.createElement('div');
-  grain.className = 'ms-grain';
+  grain.className = 'scroll-grain';
   root.appendChild(grain);
 
   container.appendChild(root);
@@ -805,19 +805,19 @@ export function createScroll(container, { preview = false } = {}) {
   container.style.overflow = 'hidden';
 
   function onLinkClick(e) {
-    const link = e.target.closest('.ms-link');
+    const link = e.target.closest('.scroll-link');
     if (!link) return;
     e.preventDefault();
     const targetEl = scroll.querySelector(`#${link.dataset.target}`);
     if (!targetEl) return;
     targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    targetEl.classList.add('ms-flash');
-    setTimeout(() => targetEl.classList.remove('ms-flash'), 1400);
+    targetEl.classList.add('scroll-flash');
+    setTimeout(() => targetEl.classList.remove('scroll-flash'), 1400);
   }
   scroll.addEventListener('click', onLinkClick);
   function onLinkKeydown(e) {
     if (e.key !== 'Enter' && e.key !== ' ') return;
-    if (!e.target.closest('.ms-link')) return;
+    if (!e.target.closest('.scroll-link')) return;
     e.preventDefault();
     onLinkClick(e);
   }

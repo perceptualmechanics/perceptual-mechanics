@@ -693,7 +693,7 @@ export function createOrbiter(container, { preview = false } = {}) {
       #orbiter-panel-content p { margin: 0 0 1.4rem; }
       /* Poem cross-links, 2026-07-17 — same mechanism as sphere.js's
          fragment-links (see its own panelStyle comment) and scroll.js's
-         ms-link, tuned to orbiter's own green/white palette instead of sphere's
+         scroll-link, tuned to orbiter's own green/white palette instead of sphere's
          blue. A phrase glimmers faintly on its own, on a long slow loop, so
          it reads as something ambient in the text rather than a UI
          affordance shouting for attention; hover/focus stops the glimmer

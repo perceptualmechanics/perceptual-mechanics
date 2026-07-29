@@ -6,6 +6,23 @@ projects (The Secret World, A Manual of Perceptual Mechanics) moved into their o
 files, which are now the source of truth for that material going forward. See "project map"
 below for where things live.
 
+## 1.6.1 (2026-07-29)
+
+Follow-up to 1.6.0's rename pass: Scott asked to go further and rename
+scroll.js's `ms-*` CSS class/id/keyframe prefix too (it stood for
+"manuscript" but didn't spell out the word, so 1.6.0 left it alone as an
+out-of-scope call — flagged transparently at the time). All ~130
+occurrences renamed to `scroll-*`, matching the `{scene}-{element}`
+convention already used everywhere else on the site (orbiter-panel,
+colophon-mark, etc.). One manual follow-up: `ms-scroll` (the scrollable
+content region) would've mechanically become `scroll-scroll`, so that one
+got its own name instead — `scroll-viewport` — to avoid the stutter and
+stay distinct from `scroll-root` (the outer wrapper). Also fixed a
+leftover comment in orbiter.js that named the class by hand
+("ms-link" → "scroll-link"). No visual or behavioral changes — this was
+a pure internal-naming pass, verified with a full-repo grep for zero
+remaining `ms-` occurrences plus a clean production build.
+
 ## 1.6.0 (2026-07-29)
 
 Codebase cleanup pass, no visible-feature changes except two small ones
