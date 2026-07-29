@@ -156,6 +156,19 @@ re-upload the file (rules out an mtime/hash-keyed cache cheaply), check for a
 CDN/cache toggle on the domain in the panel, and if neither moves it, escalate
 to DreamHost support with this exact diagnostic trail.
 
+**Resolved.** Delete-and-reupload alone fixed it — confirmed live, real content
+now serving (`Allow: /`, correct Disallow lines, the Sitemap directive). So it
+really was keyed to the old file's mtime or hash rather than a hard path-based
+override; something server-side was serving a cached/stock substitute for the
+previous file specifically, and a fresh write broke that association. No
+DreamHost ticket needed. One practical scar: rsync's own `-c` flag (checksum
+comparison) means a future deploy that writes byte-identical content to
+robots.txt might not re-trigger a write at all, since rsync would see no diff
+— worth remembering if this ever silently reappears after a deploy that
+otherwise touched everything else. Sitemap coverage (still "Couldn't fetch" as
+of the last check) is the one open item left from this whole thread; give it
+the same ~48-hour window before treating it as its own investigation.
+
 ## 1.7.1 (2026-07-29)
 
 Post-deploy verification of 1.7.0 against the live site, plus the one real bug
