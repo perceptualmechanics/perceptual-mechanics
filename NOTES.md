@@ -126,6 +126,22 @@ Verified: clean build, all 8 pages pass structure/anchor/leak checks, 261
 entries present, both decks now rendering, no dangling dashes, no editorial
 notes, no third-party excerpts.
 
+**Post-deploy status, for whoever picks this up next.** `sitemap.xml` submitted
+directly in Search Console 2026-07-29, since the robots.txt substitution below
+means the `Sitemap:` directive isn't being advertised. It read "Couldn't fetch,
+0 discovered pages, Last read: (empty)" immediately after submitting — i.e.
+never successfully read once, which is the normal state for the first day or
+two and not evidence of a problem. The generated file was checked independently
+and is sound: no BOM, XML declaration on line 1, valid against the sitemap
+schema, 9 URLs, plain ASCII; Scott confirmed it renders correctly in a browser.
+(A fetch tool reporting the body as "binary data" while the file is ASCII was a
+renderer artifact, not a serving fault — worth remembering before chasing it
+again.) If it still says "Couldn't fetch" after ~48 hours, that becomes the same
+investigation as the robots.txt substitution, because both would then point at
+something sitting between Google and the origin rather than at the files. The
+next diagnostic in that case is Search Console's URL Inspection → Test live URL,
+which reports Googlebot's own fetch rather than ours.
+
 ## 1.7.1 (2026-07-29)
 
 Post-deploy verification of 1.7.0 against the live site, plus the one real bug
