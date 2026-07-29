@@ -361,15 +361,30 @@ ${ORRERY.note.split(/\n\s*\n/).map(p => `<p>${lines(p.trim())}</p>`).join('\n')}
 }
 
 function buildLibrary() {
-  // Deliberate policy call (2026-07-29, Scott's): the catalog's `excerpt`
-  // field holds opening passages from published books in copyrighted
+  // TWO fields are deliberately withheld here. Both were learned the hard
+  // way; don't reinstate either without checking with Scott first.
+  //
+  // `excerpt` holds opening passages from published books in copyrighted
   // translations — Heaney's Beowulf, the Penguin Classics editions, and so
   // on. Those stay inside the scene, where they're shown one at a time to a
-  // reader who went looking; they are NOT emitted here, because a crawlable
-  // page is a different act: it publishes, caches, and attributes that text
-  // on this domain. What this page carries instead is the part that is
-  // genuinely Scott's own writing — the resonance notes drawing connections
-  // between titles — plus the plain bibliographic facts of the shelf.
+  // reader who went looking; a crawlable page is a different act, because it
+  // publishes, caches, and attributes that text on this domain.
+  //
+  // `note` is withheld because the scene itself withholds it. library.js
+  // renders the note element empty and keeps the assignment commented out
+  // one line above, with the reason attached: Scott, 2026-07-23, "I'm not
+  // sure I want it there yet." The first version of this page (shipped in
+  // 1.7.0, fixed same day in 1.7.1) published all 97 of them anyway, on the
+  // reasoning that they were the most genuinely original writing in the
+  // file — which was true and beside the point. They also contain live
+  // editorial TODOs ("flag for Scott" ×9, "edition uncertain" ×17). The
+  // rule this cost: a field the scene doesn't display is a field that was
+  // withheld on purpose, and "is it good writing?" is the wrong question to
+  // ask about it. Check what the scene actually renders, not what the data
+  // module happens to contain.
+  //
+  // What's left is the plain bibliographic fact of the shelf, which is
+  // exactly what the piece itself shows.
   const byType = [
     ['Books', libraryItems.filter(i => i.type === 'book')],
     ['Films', libraryItems.filter(i => i.type === 'dvd' || i.type === 'bluray')],
@@ -385,7 +400,6 @@ ${items.map(i => {
     return `  <li>
     <span class="t">${esc(i.title)}</span> — <span class="c">${esc(i.creator)}</span>
     ${ed ? `<span class="e">${esc(ed)}</span>` : ''}
-    ${i.note ? `<span class="n">${esc(i.note)}</span>` : ''}
   </li>`;
   }).join('\n')}
 </ul>`).join('\n');
@@ -402,12 +416,12 @@ ${cdRackItems.map(c => `  <li>
   return {
     slugPath: 'library',
     title: 'The Library',
-    description: 'A real bookshelf, catalogued — books, films, music and divination decks, with notes on how they speak to each other.',
+    description: 'A real bookshelf, catalogued — 107 books, films, music and divination decks.',
     sceneKey: 'library', sceneName: 'the Library',
     lede: `<p><strong>The Library</strong> is a real shelf, photographed and rebuilt as an object you can turn in space and pull a spine from.</p>
-<p>This is its catalogue, with the notes tracing the connections between titles. Quoted passages from the books themselves are not reproduced here — they belong to their authors and translators, and stay inside the piece.</p>`,
+<p>This is its catalogue. The passages quoted from the books themselves aren’t reproduced here — they belong to their authors and translators, and stay inside the piece.</p>`,
     bodyHtml: sections + cds,
-    jsonLd: creativeWork('The Library', 'A catalogued bookshelf with notes on the connections between its titles.', 'library'),
+    jsonLd: creativeWork('The Library', 'A catalogued bookshelf: books, films, music and divination decks.', 'library'),
   };
 }
 

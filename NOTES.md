@@ -37,6 +37,22 @@ them. Read these before adding anything that runs at build time.
   click. Any new scene that carries real writing needs a `/text/` page in the
   same pass, or it ships unfindable — and the whole point of 1.7.0 was that this
   had quietly been true of everything for as long as the site existed.
+- **A field the scene doesn't render was withheld on purpose.** Before
+  republishing any data-module field, grep the scene for what it actually
+  displays — not what the module contains. library.js keeps its `note`
+  assignment commented out with Scott's reason attached ("I'm not sure I want
+  it there yet", 2026-07-23), and 1.7.0 published all 97 of them anyway,
+  editorial TODOs included, on the reasoning that they were the best writing in
+  the file. That reasoning was true and irrelevant. "Is this good?" is the wrong
+  question; "does the site show this?" is the right one. Same discipline as the
+  copyright call on `excerpt`, and it's the one that got missed — a guard you
+  chose to build doesn't cover the case you never thought to check.
+- **Verify a deploy through a cache-buster.** The first fetch of the homepage
+  after the 1.7.0 deploy served a stale copy missing the new link; `?cb=1`
+  returned the current one immediately. Hashed asset filenames make JS/CSS
+  self-busting, but `index.html` itself is cached at the edge, so a
+  freshly-deployed page can look unchanged for a while. Don't diagnose a
+  deploy from an uncache-busted request.
 - **Report a measurement with its method.** Word counts, ratios, and "N checks
   passed" are all method-dependent, and quoting a number from an earlier run
   after changing the method produces a real error (caught in 1.7.0: 40,267 vs
@@ -67,6 +83,61 @@ them. Read these before adding anything that runs at build time.
   unnoticed if any of the three needs another big feature pass. If it ever is
   worth trimming, orrery.js's texture generators and first-person rig are the
   two most self-contained chunks to split out first.
+
+## 1.7.1 (2026-07-29)
+
+Post-deploy verification of 1.7.0 against the live site, plus the one real bug
+it turned up.
+
+**The bug: `/text/library/` was publishing notes the site deliberately hides.**
+library.js renders its note element empty and keeps the assignment commented out
+one line above, with the reason attached — Scott, 2026-07-23: "I'm not sure I
+want it there yet." 1.7.0's prerender read `note` straight off the data module
+and published all 97 of them, on the reasoning that they were the most genuinely
+original writing in the file. True, and beside the point: they also carry live
+editorial TODOs ("flag for Scott" ×9, "edition uncertain" ×17, "could not
+confirm"), notes referring to excerpts the page doesn't show, and one quoting
+Scott directly about a wrong ISBN. Scott's call on the fix: drop them entirely
+so the page shows exactly what the piece shows. The catalogue itself is
+unchanged — 259 entries across Books, Films and Music, with titles, creators and
+editions. Page description and lede updated to stop advertising notes that
+aren't there.
+
+Worth being precise about how this got through: 1.7.0 built a guard against
+publishing third-party `excerpt` text and verified it held — it did, and still
+does. But the guard covered the risk that had been thought about, and never
+asked the more basic question about the field it *was* publishing: does the
+scene show this? That was one grep away. Standing note added.
+
+**Live verification, everything else.** All eight pages serve as real markup
+with no JavaScript (fetched raw, which is the crawler's-eye view): the scroll's
+eleven titles, dates, full prose and the embedded Projection screenplay are all
+present; canonicals correct on every page; the sphere's fragment cross-links
+resolve; the experience-first links into each scene are there. Both redirects
+work, including the untested one — `/text/orrery/index.html` → `/text/orrery/`,
+and `http://www.` → `https://` apex on the new paths.
+
+The landing-page link needed a cache-buster to see: the first fetch returned a
+stale `index.html` without it. Hashed asset names make the JS and CSS
+self-busting, but the HTML itself is edge-cached, so a fresh deploy can look
+unchanged. Standing note added for that too.
+
+**Open, not caused by this work: the live robots.txt isn't ours.** The served
+file is a generic one (`Crawl-delay: 10`, disallowing `/admin/`, `/wp-admin/`,
+`/wp-includes/` — paths that don't exist here), not `public/robots.txt`.
+Confirmed with a cache-buster, so it's coming from the server. Not a 1.7.0
+regression: robots.txt wasn't touched in that change and the repo's copy
+predates it, so it appears never to have been the one served — which also means
+the `Sitemap:` directive has never been advertised. `.htaccess` from the same
+`public/` directory *is* deploying and working, so this isn't a passthrough
+failure; the cause is server-side and needs looking at in the DreamHost panel.
+Impact is real but bounded: nothing in the foreign file blocks `/text/`, so
+indexing isn't prevented. Google ignores `Crawl-delay` (Bing honors it). The
+sitemap can be submitted directly in Search Console regardless of the file.
+
+Verified: clean build, internal notes confirmed absent from the rebuilt page
+(0 occurrences of all four editorial markers), third-party excerpts still
+absent, all 8 pages still generating, other pages untouched.
 
 ## 1.7.0 (2026-07-29)
 
