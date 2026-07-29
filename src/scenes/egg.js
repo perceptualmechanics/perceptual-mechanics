@@ -394,8 +394,24 @@ function buildAurorae(preview) {
     // Perturb per main-ring vertex (grouped by radial step) so the whole
     // tube cross-section at that step shifts together, keeping the tube's
     // own shape intact while the ring's path gets ragged.
-    const jitter = [];
-    for (let i = 0; i <= radialSegs; i++) jitter.push((Math.random() - 0.5) * ringR * 0.22);
+    const rawJitter = [];
+    for (let i = 0; i <= radialSegs; i++) rawJitter.push((Math.random() - 0.5) * ringR * 0.22);
+    // Design pass, 2026-07-29 — the real cause of 1.3.1's white blowout,
+    // seen live: independent per-step random jitter at 72 radial segments
+    // zigzags sharply enough between neighbors to fold the tube's own
+    // cross-section over itself at a grazing viewing angle (exactly the
+    // angle the aurora sits at relative to the default camera), and
+    // additive blending stacks every one of those folded-over layers.
+    // 1.3.1 only pulled back opacity, which can't fix a geometric
+    // overlap. Smoothing the jitter (simple wrapped 3-tap average) keeps
+    // the same "ragged, not a machined donut" character at the scale that
+    // actually reads, while removing the step-to-step zigzag that was
+    // folding the geometry.
+    const jitter = rawJitter.map((v, i) => {
+      const prev = rawJitter[(i - 1 + rawJitter.length) % rawJitter.length];
+      const next = rawJitter[(i + 1) % rawJitter.length];
+      return (prev + v * 2 + next) / 4;
+    });
     for (let i = 0; i < posAttr.count; i++) {
       const ringStep = Math.floor((i / posAttr.count) * (radialSegs + 1)) % (radialSegs + 1);
       const j = jitter[ringStep] || 0;
@@ -408,10 +424,17 @@ function buildAurorae(preview) {
     bandGeo.computeVertexNormals();
 
     const bandMat = new THREE.MeshBasicMaterial({
-      // Pulled back from an initial 0.82-0.97 (see tubeR comment above) —
-      // same overexposure reasoning, seen live rather than guessed.
-      map: bandTex, transparent: true, opacity: 0.66 + Math.random() * 0.14,
-      blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide,
+      // 1.3.1 only pulled opacity back (0.82-0.97 -> 0.66-0.8), which
+      // didn't fix the white blowout seen live — the smoothed jitter
+      // above addresses the actual cause, so opacity is restored toward
+      // genuinely richer than the pre-1.3.0 original (0.6-0.75) again.
+      map: bandTex, transparent: true, opacity: 0.75 + Math.random() * 0.15,
+      // FrontSide, not DoubleSide — a torus tube viewed from outside (the
+      // camera never sits inside the aurora) always has its near surface
+      // facing the camera; DoubleSide was additively rendering the far
+      // (back) wall of the same tube on top of the near wall too, roughly
+      // doubling the stack independent of the fold-over issue above.
+      blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.FrontSide,
     });
     const band = new THREE.Mesh(bandGeo, bandMat);
     band.rotation.x = Math.PI / 2;

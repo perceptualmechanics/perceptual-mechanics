@@ -6,6 +6,30 @@ projects (The Secret World, A Manual of Perceptual Mechanics) moved into their o
 files, which are now the source of truth for that material going forward. See "project map"
 below for where things live.
 
+## 1.3.2 (2026-07-29)
+
+1.3.1 didn't fix it — checked live again after Scott's push, same white
+blowout at both poles. The opacity-only cut was the wrong lever: the real
+cause is geometric, not a raw brightness problem. Two things stack on top
+of each other near the pole (a grazing viewing angle relative to the
+band): the ragged-edge jitter is independent random per radial step at 72
+segments, sharp enough to fold the tube's own cross-section over itself;
+and the band material was DoubleSide, additively rendering the tube's far
+(back) wall on top of its near wall on every torus, camera never being
+inside the tube to need the back face at all. Fixed both — jitter now
+gets a wrapped 3-tap smoothing pass (keeps the same ragged character at
+the scale that reads, removes the step-to-step zigzag that was folding
+it) and the material switched to FrontSide. With the actual overlap
+addressed, opacity is back up to 0.75-0.9 — richer than the pre-1.3.0
+original again, not the too-conservative 0.66-0.8 1.3.1 landed on.
+
+Still built/verified blind on this specific change (no way to re-open
+Chrome against a live deploy mid-turn) — numerically sound, but this is
+the one piece of 1.3.x that's now taken two guesses to land, so it's
+worth Scott's particular attention on the next check.
+
+Verified: node --check, clean vite build.
+
 ## 1.3.1 (2026-07-29)
 
 Live-checked 1.3.0 via real Chrome (available this session, unlike the
