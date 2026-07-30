@@ -28,9 +28,109 @@ import { TEXT_STAGES } from '../text/leafText.js';
 
 const CYCLE_SECONDS = 34; // preview tiles only now — see createLeaf's preview branch
 
-// Eased fall position, 0 (leaf tip) to 1 (ground), across the fall window
-// (roughly frac 0.14 to 0.9 — see PHASE constants in the animate loop).
-function easeInQuad(x) { return x * x; }
+// ─── Release physics: a real threshold, not a scroll cutoff ────────────────
+// 1.8.0 — the piece is about gravity's inevitability, and nothing in the
+// mechanism said so: the drop used to switch from "held" to "falling" the
+// instant scroll crossed a fraction read off a paragraph's real position —
+// an animator's endpoint with a physics-flavored comment attached, not an
+// actual force anywhere. Two real forces now compete for the drop, in the
+// exact two shapes the brief specifies: gravity's pull scales with how much
+// water has coalesced (volume, ~r^3), while surface tension's grip at the
+// leaf-tip neck scales with the neck's circumference (~r) — a wider neck
+// isn't proportionally stronger the way a bigger drop is proportionally
+// heavier. Given F_gravity(r) = K_GRAVITY*r^3 and F_tension(r) = K_TENSION*r,
+// solving F_gravity(r) = F_tension(r) for r gives the radius where the two
+// exactly balance:
+//   K_GRAVITY*r^3 = K_TENSION*r  =>  K_GRAVITY*r^2 = K_TENSION
+//   r = sqrt(K_TENSION / K_GRAVITY)
+// The brief's own note states this inverted (sqrt(K_GRAVITY/K_TENSION)) —
+// algebraically inconsistent with the r^3-vs-r scaling it itself specifies.
+// Implemented the consistent form rather than silently matching the stated
+// formula; flagging the correction here rather than making it quietly.
+//
+// K_GRAVITY and K_TENSION are equal (1 and 1) on purpose, not as a
+// placeholder: with equal intrinsic strength, tension still wins for every
+// r<1 (r^3<r there) purely because volume's cubic growth trails the neck's
+// linear growth at small radii — gravity isn't winning because it's
+// stronger, it's winning because cubic must eventually overtake linear,
+// unconditionally. That's the real content of "we don't even notice":
+// nothing tips the balance at the last second, the outcome was decided by
+// the shape of the two curves from the start. Same "real formula, tuned
+// free constant" precedent as Orbiter's a0.
+const K_GRAVITY = 1;
+const K_TENSION = 1;
+const R_CRITICAL = Math.sqrt(K_TENSION / K_GRAVITY); // = 1, by the algebra above
+
+// GROWTH_CEILING sits above R_CRITICAL (1.15, not 1.0) so the threshold
+// genuinely interrupts the growth curve partway through, rather than
+// coinciding exactly with its own endpoint — otherwise "the physics decides"
+// and "the curve just ends" would be indistinguishable. GROWTH_EXP=3 biases
+// growth toward the LATE part of the hold phase: r^3 stays small for most of
+// holdT's range, so the drop reads as genuinely still for most of the hold
+// phase (point 2's ask), with the one visible swell concentrated in the
+// final stretch — matching the text's own "for that brief instant ...
+// feeling the onward surge ... until there's no more time," which describes
+// a late, brief thing, not a gradual one.
+const GROWTH_CEILING = 1.15;
+const GROWTH_EXP = 3;
+// Where release actually falls within the nominal hold window: solving
+// GROWTH_CEILING * holdT^GROWTH_EXP = R_CRITICAL for holdT. ~0.954 — release
+// arrives in the last ~5% of the hold window, not at its exact edge.
+const RELEASE_HOLD_T = Math.pow(R_CRITICAL / GROWTH_CEILING, 1 / GROWTH_EXP);
+
+function dropRadius(holdT) { return GROWTH_CEILING * Math.pow(Math.max(0, holdT), GROWTH_EXP); }
+function gravityForce(r) { return K_GRAVITY * r * r * r; }
+function tensionForce(r) { return K_TENSION * r; }
+
+// ─── Fall pacing: a hard cut, not an eased ramp ─────────────────────────────
+// The old freefall used easeInQuad (x*x) — derivative exactly zero at x=0,
+// meaning the drop's first instants of motion were nearly imperceptible
+// before speeding up. That's the opposite of "abrupt... without warning."
+// FALL_KICK is the fraction of the fall's total distance covered at constant
+// velocity from the very first instant, so the drop is already moving at a
+// real pace the frame release fires; the remaining (1-FALL_KICK) still
+// accelerates quadratically underneath it, so the fall keeps visibly
+// speeding up toward impact (real gravity, and the text's own mid-fall
+// intensity) — it just doesn't ALSO ease in at the start.
+const FALL_KICK = 0.4;
+function fallCurve(t) { return FALL_KICK * t + (1 - FALL_KICK) * t * t; }
+
+// ─── Leaf recoil: a snap, then a real ring-down ─────────────────────────────
+// cos(), not sin() — the deflection is at its full amplitude in the very
+// first instant after release (cos(0)=1), not ramping up to it the way the
+// old Math.sin(fallFrac*6) shape did (sin(0)=0, same "eases in" problem as
+// the fall itself had). Decays like a real branch settling, tracked on its
+// own elapsed-real-seconds clock rather than scroll fraction — a branch's
+// springiness doesn't care how fast or slow someone is reading.
+const RECOIL_AMPLITUDE = 0.07;
+const RECOIL_FREQ = 18;  // rad/sec
+const RECOIL_DECAY = 5;  // 1/sec
+function recoilAngle(elapsedSec) {
+  return RECOIL_AMPLITUDE * Math.exp(-RECOIL_DECAY * elapsedSec) * Math.cos(RECOIL_FREQ * elapsedSec);
+}
+
+// ─── Sympathetic ambient motion ─────────────────────────────────────────────
+// Gravity's pull as a standing condition of the whole scene, not just the
+// one moment the drop falls. Applied to the two "living, wind-responsive"
+// backdrop layers only (palms/lot, foreground foliage) — the rail, buildings
+// and garage are rigid/architectural and stay perfectly still on purpose,
+// the same distinction a real gust of wind would make. Each layer's own
+// frequency/phase pair is picked to sit clear of the others already moving
+// in this scene (the root group's own pre-existing 0.05Hz drift, and each
+// other) — never a shared clock, so nothing ever reads as reacting to
+// anything else. Driven by tSec alone, never by fall/release state:
+// reacting to the drop's own release would turn atmosphere into a sound
+// effect, which is exactly what the brief warns against. Amplitudes are a
+// few thousandths of a world unit against a ~6.4-unit-tall visible frame —
+// if in doubt, this rounds down rather than up, per the brief's own
+// guardrail: isolate one layer and watch it for several seconds to see it
+// at all; a normal, unfocused glance shouldn't register it.
+function ambientSway(tSec, freqX, freqY, phase, amp) {
+  return {
+    x: Math.sin(tSec * freqX + phase) * amp,
+    y: Math.cos(tSec * freqY + phase * 1.3) * amp * 0.6,
+  };
+}
 
 function makeDropletTexture() {
   const c = document.createElement('canvas');
@@ -545,7 +645,12 @@ export function createLeaf(container, { preview = false } = {}) {
     sharpMesh.position.z = z;
     blurMesh.position.z = z - 0.002; // negligible offset, keeps the pair a stable stack
     backdrop.add(sharpMesh, blurMesh);
-    const layer = { z, sharpMat, blurMat, sharpTex, blurTex };
+    // sharpMesh/blurMesh exposed (not just the materials) so the two
+    // "living" layers can carry a tiny independent sway on their shared x/y
+    // — see ambientSway above and its application in animate(). Moving both
+    // meshes of a pair identically keeps the sharp/blur crossfade visually
+    // locked together as they drift.
+    const layer = { z, sharpMat, blurMat, sharpTex, blurTex, sharpMesh, blurMesh };
     depthLayers.push(layer);
     return layer;
   }
@@ -555,14 +660,21 @@ export function createLeaf(container, { preview = false } = {}) {
   // with the leaf's own round silhouette at 320px thumbnail scale (1.0.32:
   // "the leaf is square now, not round"), and a static thumbnail has no
   // scroll progress to rack focus against anyway.
+  // palmsLotLayer/foliageLayer: the two backdrop layers that get the
+  // sympathetic ambient sway (see ambientSway's own comment) — captured by
+  // name specifically because they're the "living" things already drawn in
+  // this scene (palms, the foreground shrub clusters), unlike the rail or
+  // buildings. null in preview mode, where no backdrop layers exist at all;
+  // every read of these below is guarded accordingly.
+  let palmsLotLayer = null, foliageLayer = null;
   if (!preview) {
     // Haze amount climbs with actual distance (garage farthest -> rail
     // nearest, 0 = no haze at all) — a permanent depth cue independent of
     // whichever layer the moving rack focus currently favors.
     addDepthLayer(cx => { drawGarage(cx, cw, ch, horizonY); applyHaze(cx, cw, ch, 0.6); }, -6.8, cw * 0.02);
     addDepthLayer(cx => { drawBuildings(cx, cw, ch, horizonY); applyHaze(cx, cw, ch, 0.42); }, -6, cw * 0.012);
-    addDepthLayer(cx => { drawPalmsLot(cx, cw, ch, horizonY, lotBottom); applyHaze(cx, cw, ch, 0.22); }, -4.2, cw * 0.014);
-    addDepthLayer(cx => { drawForegroundFoliage(cx, cw, ch, foliageTop); applyHaze(cx, cw, ch, 0.06); }, -2.8, cw * 0.016);
+    palmsLotLayer = addDepthLayer(cx => { drawPalmsLot(cx, cw, ch, horizonY, lotBottom); applyHaze(cx, cw, ch, 0.22); }, -4.2, cw * 0.014);
+    foliageLayer = addDepthLayer(cx => { drawForegroundFoliage(cx, cw, ch, foliageTop); applyHaze(cx, cw, ch, 0.06); }, -2.8, cw * 0.016);
     addDepthLayer(cx => drawRail(cx, cw, ch, railTop, railBottom), -2, cw * 0.009);
   }
 
@@ -886,6 +998,18 @@ export function createLeaf(container, { preview = false } = {}) {
   // mobile" was Scott's own stated concern.
   let animId, tSec = 0, currentFrac = 0, fallVelocity = 0;
   let escapeTriggered = false, splashTriggered = false;
+  // released/releasedAtFrac/releaseElapsed: the physics latch. `released`
+  // flips true the frame gravityForce(r) first exceeds tensionForce(r) (see
+  // the release check in animate(), below) and stays latched — re-checking
+  // the force comparison every frame once already released would let a
+  // spring overshoot flicker the drop between held and falling.
+  // releasedAtFrac captures the exact frac at that instant, becoming the
+  // real fallStart for the fall's own progress interpolation.
+  // releaseElapsed is real elapsed seconds since release, used only for the
+  // leaf's recoil ring-down (see recoilAngle) — deliberately not scroll
+  // fraction, since a branch settling is a mechanical process on its own
+  // clock, not something the reader's scroll speed should govern.
+  let released = false, releasedAtFrac = null, releaseElapsed = 0;
   let lastFrameTime = performance.now();
   // Critically-damped-ish spring in place of the old fixed-rate exponential
   // follow (currentFrac += (target - currentFrac) * 0.18, every frame,
@@ -921,41 +1045,71 @@ export function createLeaf(container, { preview = false } = {}) {
       frac = currentFrac;
     }
 
-    if (frac < PHASE.holdEnd - 0.001 && frac < REARM_MARGIN) {
+    if (frac < REARM_MARGIN) {
       resetMotes();
     }
     if (frac < ESCAPE_FIRE - REARM_MARGIN) escapeTriggered = false;
     if (frac < PHASE.fallEnd - REARM_MARGIN) splashTriggered = false;
 
-    // Surface-tension hold: the drop sits at the leaf tip, trembling.
-    if (frac < PHASE.holdEnd) {
-      // Design pass, 2026-07-29 — Scott: "there's a static white dot at
-      // the tip." There was: this scaled by the raw `frac` (0..PHASE.
-      // holdEnd, i.e. topping out around 0.1-0.15) instead of that
-      // normalized against holdEnd itself, so the droplet's growth across
-      // the entire hold phase was a few percent, not the visible build
-      // the coalescing paragraph above it describes. holdT now runs the
-      // full 0..1 across the hold phase; growS eases in (slow start, fast
-      // swell) to match "coalescing... until there's no more time and —",
-      // and its end value (0.22, 0.28) matches freefall's own starting
-      // scale exactly, so there's no pop at the hold-to-fall handoff.
-      const holdT = Math.min(1, frac / PHASE.holdEnd);
-      const growS = holdT * holdT;
-      const tremble = Math.sin(tSec * 14) * 0.01 * holdT;
-      drop.position.set(tipX + tremble, tipY - 0.06, 0.05);
-      drop.scale.set(0.04 + growS * 0.18, 0.05 + growS * 0.23, 1);
-      dropMat.opacity = 0.35 + holdT * 0.65;
+    // ─── Release: a real force comparison, not a scroll cutoff ────────────
+    // holdT is still driven by scroll position — reading further genuinely
+    // grows the drop, same interaction model as everything else in this
+    // piece. What's different is that the fall's start is whichever frame
+    // gravityForce(r) first exceeds tensionForce(r), not a fixed fraction
+    // read off the text. Re-armed with the same hysteresis-margin idiom
+    // already used for escapeTriggered/splashTriggered below, keyed to the
+    // actual latched release point rather than a stored constant.
+    if (!released) {
+      const holdT = frac / PHASE.holdEnd;
+      const r = dropRadius(holdT);
+      if (gravityForce(r) > tensionForce(r)) {
+        released = true;
+        releasedAtFrac = frac;
+        releaseElapsed = 0;
+      }
+    } else if (frac < releasedAtFrac - REARM_MARGIN) {
+      released = false;
+      releasedAtFrac = null;
+    }
+
+    // Leaf rotation: still while held, snap-and-ring-down once released —
+    // handled once here (not per fall/splash/reform branch below) so the
+    // decay plays out continuously across all three without resetting or
+    // jumping between them.
+    if (released) {
+      releaseElapsed += dt;
+      leaf.group.rotation.z = -0.045 + recoilAngle(releaseElapsed);
+    } else {
       leaf.group.rotation.z = -0.045;
+    }
+
+    if (!released) {
+      // Surface-tension hold: the drop sits at the leaf tip. Genuinely
+      // still, not gently trembling — GROWTH_EXP's cubic bias already
+      // keeps r (and so growVis) tiny for most of this window, so the drop
+      // reads as motionless until the last stretch, where the real surge
+      // the text describes ("feeling the onward surge... until there's no
+      // more time") becomes the one visible thing happening here. growVis's
+      // end value (1, at r=R_CRITICAL) still matches freefall's own
+      // starting scale exactly, so there's no pop at the hold-to-fall
+      // handoff, same continuity the old growS was built to guarantee.
+      const holdT = frac / PHASE.holdEnd;
+      const r = dropRadius(holdT);
+      const growVis = Math.min(1, r / R_CRITICAL);
+      const tremble = Math.sin(tSec * 9) * 0.0025 * growVis;
+      drop.position.set(tipX + tremble, tipY - 0.06, 0.05);
+      drop.scale.set(0.04 + growVis * 0.18, 0.05 + growVis * 0.23, 1);
+      dropMat.opacity = 0.35 + growVis * 0.65;
     } else if (frac < PHASE.fallEnd) {
-      // Freefall, easing in (accelerating).
-      const fallFrac = (frac - PHASE.fallStart) / (PHASE.fallEnd - PHASE.fallStart);
-      const eased = easeInQuad(fallFrac);
+      // Freefall. fallCurve gives an immediate, nonzero velocity right at
+      // release (a hard cut, not an eased ramp from rest) and keeps
+      // accelerating through the rest of the drop — see fallCurve's comment.
+      const fallFrac = Math.max(0, Math.min(1, (frac - releasedAtFrac) / (PHASE.fallEnd - releasedAtFrac)));
+      const eased = fallCurve(fallFrac);
       const y = tipY - 0.06 - eased * (tipY - 0.06 - groundY);
       drop.position.set(tipX + Math.sin(fallFrac * 6) * 0.015, y, 0.05);
       drop.scale.set(0.22, 0.28 + eased * 0.06, 1);
       dropMat.opacity = 1;
-      // Leaf recoils upward right as the drop releases.
-      leaf.group.rotation.z = -0.045 + Math.sin(Math.min(1, fallFrac * 6)) * 0.06;
 
       // Friction: release a few escaping motes early-mid fall.
       if (!escapeTriggered && fallFrac > 0.28) {
@@ -1014,6 +1168,22 @@ export function createLeaf(container, { preview = false } = {}) {
     // (unlike the drop's fall, which is scroll-driven i.e. visitor-
     // initiated), so it respects prefers-reduced-motion.
     if (!reduceMotion) root.position.x = Math.sin(tSec * 0.05) * 0.02;
+
+    // Sympathetic ambient motion on the two "living" backdrop layers — see
+    // ambientSway's own comment for why these two specifically, and why the
+    // frequencies below (0.083/0.061 and 0.037/0.071) were picked clear of
+    // the root drift's own 0.05Hz and of each other. Ongoing regardless of
+    // fall/release state, on purpose.
+    if (!reduceMotion && palmsLotLayer) {
+      const s = ambientSway(tSec, 0.083, 0.061, 0.7, 0.006);
+      palmsLotLayer.sharpMesh.position.x = palmsLotLayer.blurMesh.position.x = s.x;
+      palmsLotLayer.sharpMesh.position.y = palmsLotLayer.blurMesh.position.y = s.y;
+    }
+    if (!reduceMotion && foliageLayer) {
+      const s = ambientSway(tSec, 0.037, 0.071, 3.4, 0.004);
+      foliageLayer.sharpMesh.position.x = foliageLayer.blurMesh.position.x = s.x;
+      foliageLayer.sharpMesh.position.y = foliageLayer.blurMesh.position.y = s.y;
+    }
 
     // Rack focus: sweep the in-focus depth from the rail toward the
     // garage over the course of the fall — Scott: "as they scroll,

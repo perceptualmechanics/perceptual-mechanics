@@ -93,6 +93,97 @@ them. Read these before adding anything that runs at build time.
   worth trimming, orrery.js's texture generators and first-person rig are the
   two most self-contained chunks to split out first.
 
+## 1.8.0 (2026-07-29)
+
+Leaf, rebuilt around its own thesis. Scott's brief: the piece is supposed to
+stage gravity's inevitability and the constant, unnoticed resistance against
+it ("we don't even notice") — and nothing in the mechanism said so. The drop
+released on a scroll-fraction cutoff read off a paragraph's real position, the
+fall eased in from rest, and nothing else in the scene was alive. Explicitly:
+go big on scope, but everything shipped should still read as quiet — if any
+of this draws attention to itself as an effect, it's failed on its own terms.
+Three changes, in the brief's own priority order.
+
+**1. A real release threshold, not a scroll cutoff.** Two forces now
+genuinely compete for the drop: gravity's pull scales with accumulated volume
+(~r³), surface tension's grip at the neck scales with its circumference (~r).
+Given F_gravity(r)=K_GRAVITY·r³ and F_tension(r)=K_TENSION·r, solving for where
+they balance gives r_critical = sqrt(K_TENSION/K_GRAVITY) — the brief's own
+note states this inverted (sqrt(K_GRAVITY/K_TENSION)), which is algebraically
+inconsistent with the r³-vs-r scaling it itself specifies; implemented the
+consistent form and flagged the correction here rather than making it quietly.
+K_GRAVITY and K_TENSION are set equal (1 and 1) on purpose — not a
+placeholder, but the real point: at equal intrinsic strength, tension still
+wins for every r<1 purely because cubic growth trails linear growth at small
+radii. Gravity isn't winning because it's stronger; it's winning because cubic
+must eventually overtake linear, unconditionally. That's the literal content
+of "we don't even notice" — nothing tips the balance at the last second, the
+outcome was decided by the shape of the two curves from the start. Same "real
+formula, tuned free constant" precedent as Orbiter's a0: GROWTH_CEILING (1.15)
+sits above r_critical (1) so the threshold genuinely interrupts growth
+partway through rather than coinciding with the curve's own endpoint, and
+GROWTH_EXP=3 biases growth toward the very end of the hold window (~95%
+through it — see point 2). The drop's visible size still tracks scroll
+progress exactly as before; what changed is that the code now performs an
+actual force comparison every frame to decide when it lets go, latched (not
+re-checked once true, so a spring overshoot can't flicker it) and re-armed
+with the same hysteresis idiom already used for the escape/splash motes.
+
+**2. Real stillness, then a real break.** The cubic growth bias from point 1
+does double duty here: for roughly the first 90% of the hold window the drop
+barely changes at all (r³ stays small near zero), so the piece is genuinely,
+uncomfortably still — not gently trembling, closer to no motion at all — with
+the one visible swell concentrated in the brief final stretch, matching the
+text's own "feeling the onward surge... until there's no more time" (a late,
+brief thing, not a gradual one). Tremble amplitude was cut and now scales with
+that same late-biased growth term, so it's near-zero for nearly the whole
+hold. The release itself replaced `easeInQuad` (derivative exactly zero at
+its start — the opposite of "no warning") with a curve that's already moving
+at a real, nonzero pace the instant it fires (40% of the fall's distance
+front-loaded as immediate constant velocity, the rest still accelerating
+underneath it, so the descent keeps speeding up toward impact same as
+before). The leaf's own recoil got the same treatment: cos() instead of sin(),
+so it's at full deflection in the first instant rather than ramping up to it,
+then rings down like a real branch settling — on its own real-elapsed-seconds
+clock, independent of scroll speed, since a branch's springiness doesn't care
+how fast someone's reading.
+
+**3. Sympathetic motion, kept below notice.** The two "living" backdrop
+layers — palms/lot, foreground foliage — each carry a barely-perceptible
+independent drift now, constant and ongoing, never reacting to the drop's own
+release (reacting would turn atmosphere into a sound effect, per the brief's
+own warning). Each layer's frequency/phase pair sits clear of the other and
+of the root group's own pre-existing 0.05Hz drift — verified by
+cross-correlation over a 500-second sample (|r|=0.032, no meaningful
+lockstep) rather than just eyeballing the constants. Amplitude: 0.004–0.006
+world units against a ~6.4-unit-tall visible frame, under 0.1% of the frame
+height — rounded down rather than up, per the brief's own guardrail.
+Deliberately NOT extended to the rail or buildings (rigid/architectural,
+the same distinction a real gust of wind would make) and NOT to a new
+ambient dust-mote system (Leaf has event-triggered escape/splash motes, no
+pre-existing ambient ones — the brief's own "if the scene has any" phrasing
+read as permission to extend what's there, not licence to add new
+population to the scene).
+
+Not touched, per the brief: the found text itself, the backdrop's palette/
+composition, any other scene.
+
+Verified: `node --check`, clean `npx vite build`. A throwaway numerical
+script (22 checks, not committed) confirmed: r_critical = sqrt(K_TENSION/
+K_GRAVITY) = 1 exactly; the two forces are genuinely equal at r_critical;
+the force-difference sign flips exactly once as holdT sweeps 0→1.3 (tension
+wins below, gravity above, no flicker) with zero NaNs; the release lands at
+holdT≈0.9545 (late in the window, not at its edge); fallCurve(0)=0,
+fallCurve(1)=1, monotonic, with derivative at t=0 equal to the configured
+FALL_KICK (nonzero — confirms the hard cut); recoilAngle(0) equals full
+amplitude exactly (confirms the snap) and decays to near-zero within two
+seconds; both ambient-sway layers stay within their configured amplitude
+across a 200-second sample with no NaNs, and their frequencies are
+confirmed distinct from each other and from the root drift's own. `/text/
+leaf/` regenerates byte-identical (leafText.js untouched), and dispose()
+needed no changes — no new Three.js resources were created, only motion
+added to existing ones.
+
 ## 1.7.2 (2026-07-29)
 
 Verified 1.7.1 live. The notes fix landed clean — no editorial TODOs anywhere on
