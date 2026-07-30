@@ -125,7 +125,11 @@ precedent or flagged rather than decided silently:**
   link doesn't error, it just silently lands back on the gallery instead of
   opening the piece. Not fixed as a side effect of this shelving, per the
   brief's own instruction; Scott's call on whether that's fine to leave
-  during the shelving or wants its own small fix.
+  during the shelving or wants its own small fix. **Resolved: leave it.**
+  No error, no visible brokenness, consistent with this shelving's own
+  minimal-footprint approach — revisit only if Leaf stays shelved long
+  enough that the dead link starts to bother, at which point the cheap
+  fix is just dropping the "Open Leaf →" line from that one page.
 
 - **Colophon: two things this touches that weren't in the brief, fixed by
   direct precedent.** Leaf's bibliography entry (colophon.js) is now
