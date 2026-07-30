@@ -109,7 +109,7 @@ export function bindGuardedResize(container, onResize) {
 // ─── Reduced motion ─────────────────────────────────────────────────────────
 // A couple of the heaviest-animated WebGL scenes (orrery, orbiter) had no
 // reduced-motion accommodation at all, while their CSS-driven siblings
-// (leaf, scroll, lens) did. Since a `prefers-reduced-motion` CSS media
+// (leaf, scroll, prism) did. Since a `prefers-reduced-motion` CSS media
 // query can't reach into a requestAnimationFrame loop, scenes that spin/
 // orbit continuously need to check this directly and skip their own
 // autonomous motion (drag-to-orbit stays available either way — that's
@@ -180,8 +180,9 @@ export function mountClippedPreviewCanvas(container, renderer) {
 // finger lifts — without this, that click gets read the same as a genuine
 // tap and opens whatever's under it, so dragging the sphere/orrery on a
 // phone kept accidentally opening panels. Duplicated identically in
-// sphere.js, orrery.js, and lens.js before this; those scenes' own click
-// handlers now start with `if (touchGuard.consume()) return;` instead.
+// sphere.js, orrery.js, and the since-retired lens.js before this; those
+// scenes' own click handlers (prism.js's included, as Lens's successor)
+// start with `if (touchGuard.consume()) return;` instead.
 export function bindTapVsDrag(container) {
   let moved = false;
   const onTouchStart = () => { moved = false; };
@@ -213,7 +214,7 @@ export function bindEscapeClose(onEscape) {
 
 // ─── Read-more panel: shared close mechanics ───────────────────────────────
 // Every scene with a slide-in info panel (sphere's fragments, orbiter's poems,
-// orrery's placards, library's spines, lens's facets) builds its own panel
+// orrery's placards, library's spines, prism's grown pieces) builds its own panel
 // markup and CSS — colors, gradient tint, which side it slides in from — on
 // purpose, tuned to that scene's own palette, so that part stays put in each
 // scene file. What's genuinely identical across all five is how the panel

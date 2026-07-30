@@ -51,6 +51,14 @@
 // Moon Song, 11 as Raise a Glass, and 8/13 in the Lens scene — with
 // six (2, 5, 6, 7, 10, 12) still unplaced.
 //
+// Update (2026-07-30): Lens is retired, superseded by Prism (scenes/
+// prism.js — an organically-grown crystal, not a revision of the four-facet
+// gem). Prism reads only from the six anchor scenes' own existing text
+// modules (this file included), not from Lens's own curated content, so
+// parts 8 and 13 above go back to being unplaced anywhere live on the site
+// — still real, just in git history now, same as thirty-six's other six
+// untyped parts always have been.
+//
 // "DNA" (from Nucleus.doc / Nucleus.rtf) is a third, separate source —
 // short, finished, explicitly dated: "© 2007 Scott Jason Cohen" sits right
 // under it in the source file.

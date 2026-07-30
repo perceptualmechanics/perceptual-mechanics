@@ -448,20 +448,19 @@ html, body {
      viewport just clips off both edges evenly (justify-content:center);
      see the leaf/orrery mobile-fix history in NOTES.md for the screenshot
      that first caught this at seven icons, and the 1.6.0 note for when it
-     went to eight and needed a 38px touch-target override to fit. Leaf
-     shelved 2026-07-29 (main.js/index.html), dropping the live count back
-     to seven — at the BASE rule's 44px min-width that's 7 × 44px = 308px
-     plus 6 gaps at 0.5rem (8px) = 48px, totaling 356px, comfortably under
-     the ~375px smallest common phone width (iPhone SE/12 mini) with room
-     to spare. So the 38px override this block used to carry is gone —
-     verified, not assumed, same as every previous icon-count change on
-     this project — and touch targets are back to the full 44px guideline.
-     If Leaf (or anything else) brings the count back to eight, this needs
-     the same 38px-or-similar override reinstated; the gap override below
-     still applies regardless of count (the default 2.5rem gap is far too
-     wide for any number of icons at phone width). */
+     went to eight and needed a 38px touch-target override to fit. Leaf's
+     shelving (2026-07-29) briefly dropped the live count to seven, which
+     fit at the base 44px min-width with room to spare, so the override was
+     removed. Prism (2026-07-30, superseding the also-shelved Lens) brings
+     the count back to eight: 8 × 44px = 352px plus 7 gaps at 0.5rem (8px)
+     = 56px, totaling 408px — over the ~375px smallest common phone width
+     (iPhone SE/12 mini). Reinstating the same 38px override 1.6.0 used:
+     8 × 38px = 304px + 56px = 360px, comfortably under 375px again.
+     Verified, not assumed, same as every previous icon-count change on
+     this project. */
   #pm-nav { gap: 0.5rem; }
-  /* Seven 200px tiles in a column (~1500px) is always taller than a
+  .nav-icon { min-width: 38px; min-height: 38px; }
+  /* Eight 200px tiles in a column (~1700px) is always taller than a
      phone viewport. align-items:center (inherited from #landing, and the
      cross-axis property since #landing's flex-direction stays row) would
      otherwise vertically center that overflow and require scrolling both

@@ -64,6 +64,13 @@ const BIBLIOGRAPHY = [
   //   ],
   // },
   {
+    scene: 'Prism',
+    entries: [
+      '"If God is white light, then we are all prisms." — Scott Jason Cohen, found in the Spoonfed archive (spoonfed/cyclone/thinks/about/refraction.html, Scott’s first site, pre-dating Kinetic Muse). Surfaced in-scene as a caption, same treatment as Orbiter’s "sing, orbiter."',
+      'Every other piece of writing carried on Prism’s grown branches belongs to Sphere, Scroll, Theater, Orbiter, Leaf, or Orrery — see each of those entries above for its own sourcing. Prism doesn’t originate that writing, it grows a crystal out of it.',
+    ],
+  },
+  {
     scene: 'Selected Works (the scroll)',
     entries: [
       'Essays and short fiction, Scott Cohen, 2000s–2010s.',
@@ -262,18 +269,16 @@ function buildPanel() {
     <section>
       <h2 id="colophon-title" tabindex="-1">Colophon</h2>
       <div class="colophon-sub">perceptual mechanics</div>
-      <!-- "eight" (as of 1.6.0) was already stale before this edit: the
-           live count of "experiences built around found and written text"
-           (every scene except Butterfly, which is pure Lorenz-attractor
-           math with no bibliography entry — see NOTES.md 1.4.0) was seven
-           at the time this was checked (Sphere, Scroll, Theater, Orbiter,
-           Leaf, Orrery, Library), not eight. Leaf's own shelving
-           (2026-07-29, main.js) drops the real count to six (Sphere,
-           Scroll, Theater, Orbiter, Orrery, Library) — set directly to
-           that, correcting both the pre-existing staleness and this
-           change's own effect in one pass. Re-enable Leaf, and this goes
-           back to seven, not eight. -->
-      <p>A personal site by Scott Jason Cohen — six small experiences built
+      <!-- Leaf's shelving (2026-07-29) dropped the live count to six
+           (Sphere, Scroll, Theater, Orbiter, Orrery, Library). Prism
+           (2026-07-30, superseding Lens) brings it back to seven — it
+           doesn't originate new writing of its own (it grows a crystal out
+           of the other six scenes' text, plus one new epigraph line), but
+           Scott's call: it's still a real, self-contained interactive
+           experience built around found and written text, same as the
+           other six, not a mere index over them. Re-enable Leaf and this
+           goes to eight. -->
+      <p>A personal site by Scott Jason Cohen — seven small experiences built
       around found and written text, each its own self-contained piece of
       code, none of it built from image assets: everything on screen is
       drawn live, in the browser, from geometry and canvas-generated

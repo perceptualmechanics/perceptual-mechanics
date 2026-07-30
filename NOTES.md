@@ -93,6 +93,484 @@ them. Read these before adding anything that runs at build time.
   worth trimming, orrery.js's texture generators and first-person rig are the
   two most self-contained chunks to split out first.
 
+## 1.10.0 (2026-07-30)
+
+Prism, round two — two real gaps in 1.9.0, both closed.
+
+**1. The six seeds weren't actually connected.** Confirmed root cause:
+each arm's own collision pool was itself plus the six bare anchor points,
+never another arm's grown branches, and anchor spacing (R=1.6) was wider
+than any arm's real reach — so cross-anchor collisions essentially never
+happened. Six clusters near each other, not one geode.
+
+Fixed by redesigning `dla.js`'s core loop (now `growPoints()`, replacing
+`growPrismStructure()`) around fully-global collision — any walker can
+stick to anything placed so far, from any arm — and shrinking anchor
+spacing to R=0.45, tuned with a throwaway script that swept R from 1.6 down
+to 0.25 and measured how many of the 68 seed pieces actually land on a
+different scene's material at each spacing (0 at R=1.2/1.6, ~40/68 at
+R=0.35–0.55). Landed on R=0.45: 43/68 pieces now bond across scene
+boundaries, verified directly on the real manifest, while each arm still
+grows some locally-attached material of its own too.
+
+This reopened the original stability concern (a literal global pool means
+appending to one scene could move another scene's already-placed piece) —
+resolved by redrawing where "appendable" actually lives, which is also
+exactly what gap 2 required anyway:
+
+**2. Seed content shouldn't be clickable at all.** The original brief never
+distinguished seed from new-growth content, so "click opens the standard
+panel" on all 68 pieces was a reasonable reading at the time — corrected on
+Scott's explicit, confirmed-final instruction. The six original scenes'
+material (`fragments.js`/`scrollPieces.js`/`theaterScript.js`/`poems.js`/
+`leafText.js`/`orreryStory.js`) is now `SEED_PIECES`: grown once, frozen,
+never extended again, and **never clickable** — no panel, no exceptions, no
+shortened excerpt. The only way any of it is visible is a new ambient
+cycle: one line, from one randomly chosen seed piece, surfaces at that
+piece's own grown position, brightens in (~1.4s), holds (~4.2s), fades out
+(~1.4s), and picks a new one — forever, on its own timer, never a raycast
+target.
+
+New `src/text/prismEntries.js` (empty array, documented format) is the
+other half — genuinely new writing, added going forward, one entry per new
+piece. `GROWTH_PIECES` (from that file) is the only thing that keeps the
+click-to-open-the-standard-panel behavior. Because the seed is now
+permanently frozen and growth is a strictly-append-only separate list, both
+gaps resolve together: global collision is safe because the only thing that
+can still grow is the growth list itself, and appending to it is verified
+stable (a throwaway script confirms appending a piece to `prismEntries.js`
+leaves every previously-placed point — seed and growth alike — bit-identical).
+
+Also removed with this: the fragment cross-link mechanism inside Prism's
+panel (sphere fragments no longer have a panel to cross-link between,
+since they're seed content now) and the whole per-kind panel-body renderer
+for seed content — growth pieces have a much simpler shape (`{id, title,
+paragraphs}`), so the panel logic got substantially smaller, not just
+rerouted.
+
+**3. A way to actually add new content.** `utils/prism-curator.html` — a
+standalone local page, title + text in, "add entry" stages it in this
+browser's `localStorage`, "copy as JS" produces a ready-to-paste block for
+`prismEntries.js`. Deliberately copy-paste, not a direct filesystem write:
+the site has no backend anywhere (static build, manual `dist/` upload), and
+this project already has exactly this precedent — `utils/nebula-curator.html`
+(retired, but same shape: local staging area, "copy as JS," pasted in by
+hand) — rather than inventing a second, different pattern for the same
+kind of tool.
+
+## 1.11.0 (2026-07-30)
+
+Prism, round three — the geode still wasn't one geode, and this time the
+bug was real, not a misreading of correct data.
+
+Scott's screenshots showed five or six small, near-identical isolated
+"jack" clusters with visible black gaps between them, despite 1.10.0's own
+verification showing 43/68 pieces genuinely bonding across scene
+boundaries in the underlying data. Both things were true at once — a real
+lesson, not just a fix: **verifying the data isn't verifying the render.**
+The actual bug was a scale mismatch between the two. `dla.js` models every
+stuck point as a sphere of `PARTICLE_RADIUS` (0.045) — two points "touch"
+when within twice that. 1.10.0 rendered branches at radius 0.009–0.014,
+roughly a quarter of the model's own physical scale, and drew nothing at
+all *at* a stuck point — only a thin rod from parent to child. Points that
+were genuinely close or even bonded had no visible mass bridging them.
+
+Two independent fixes, both verified with throwaway scripts before
+landing on numbers, neither one sufficient alone:
+
+**Rendering now matches the model's own scale.** Every stuck point
+(`prism.js`) gets a bead — a sphere sized to `PARTICLE_RADIUS`, not a
+decorative guess — plus a shard back to whatever it actually stuck to,
+now sized as most of that same bead's radius instead of a fifth of it.
+Anchor spheres bumped from 0.028 to 0.052 for the same reason: they were
+rendering *smaller* than the branches were physically modeled to be.
+
+**Anchor spacing tightened, R=0.45 → 0.14.** A throwaway script
+(`tune_r2.mjs`) swept R from 0.45 down to 0.10 against the real per-scene
+piece counts (Sphere 25, Theater 16, Orbiter 14, Scroll 11, Leaf 1, Orrery
+1) and tracked the worst — largest — minimum gap between any two arms'
+actual grown points at each spacing. R=0.45's worst pair (leaf–orrery, both
+single-piece arms with almost no independent reach) sat at 0.845 units,
+nearly the full anchor-to-anchor spacing — effectively two isolated points
+that happened to share a coordinate system. R=0.14 brings that same
+worst-case pair down to 0.155 while keeping the six arms visually distinct
+(structure spans ~0.55–0.78 units, not collapsed into an indistinguishable
+blob) and keeps cross-scene bonding in the same range as before (44/68).
+
+Camera position, fog distances, and wheel-zoom clamps in `prism.js` all
+scaled down by the same ratio (~0.72, matching the structure's own max
+radius shrinking from ~0.77 to ~0.55) to keep the same framing rather than
+leaving the now-denser crystal looking small and adrift in frame.
+
+Verified live, not just numerically: loaded the actual running dev server
+(`localhost:5173/#prism`) via browser automation and confirmed by
+screenshot, from multiple rotations, that the crystal now reads as one
+continuous, intermixed, asymmetric mass — different scenes' colors
+directly touching and overlapping rather than segregated into same-sized
+same-shaped separate clusters — with one small satellite branch (the
+weakest-remaining pair) still visually separate but now legibly *part of*
+the same structure rather than a fully isolated twin of the others. That
+residual gap is real (leaf and orrery's one-piece arms are genuinely
+short-reaching) and consistent with what real DLA growth looks like:
+denser near the well-populated anchors, sparser and more tenuous at the
+thin ones — not a flaw to chase to zero.
+
+Nothing else from rounds one or two changed: seed/growth split, ambient
+cycling, the curator tool, and the distortion/panel/epigraph treatment are
+all untouched.
+
+## 1.12.0 (2026-07-30)
+
+Prism, round four — a design pass, per Scott's own explicit brief. No
+changes to dla.js, the seed/growth data split, or the curator tool; pure
+material, palette, text, and environment work in `prism.js`.
+
+**Two substances, not one.** Every stuck point used to render as one
+uniform smooth-sphere-plus-thin-rod material regardless of whether it was
+a node or the growth connecting it to its parent. Split in two: nodes are
+now low-poly faceted gems (`OctahedronGeometry`, detail 0 — "doesn't need
+to be elaborate to read as cut," per the brief) in a genuinely glassy
+`MeshPhysicalMaterial` (roughness 0.05, transmission 0.88, ior 1.9,
+clearcoat 1, attenuation color/distance) — the same technique already
+proven on the old Lens gem and Orbiter's core, just rescaled down to this
+crystal's much smaller per-node radius (~0.045, matching dla.js's own
+`PARTICLE_RADIUS`). The connective shard between a point and its parent
+keeps the same geometry but gets a rough, barely-transmissive "matrix"
+material instead — same hue, desaturated and darkened via `Color.getHSL`,
+roughness 0.85, transmission 0.03. A real geode's dull rock exterior
+around its dazzling crystal interior, not one substance pretending to be
+two things.
+
+**Palette derived, not invented.** The previous six-color hue wheel (kelly
+green, fire-engine red, cyan, gold, purple, all at full saturation) is
+gone. Each anchor's gem color now comes from that scene's own established
+on-site palette, pulled toward a jewel-tone register:
+
+- sphere → sapphire (`#4a72a8`, from sphere.js's own vertex-color blues)
+- scroll → citrine/topaz (`#c8935a`, from scroll.js's parchment-and-amber)
+- theater → garnet (`#7a2530`, from theater.js's own curtain red `#6b1f1f`)
+- orbiter → emerald (`#3f8a6b`, from orbiter.js's positive-lobe green
+  `0x78ffb4`; its violet negative lobe is amethyst's own family, kept as
+  this anchor's accent rather than a second base color)
+- leaf → peridot (`#7a9a4a`, from leafText's veinMat sage green
+  `0x5a8a55`, shifted more yellow-green than orbiter's cooler emerald)
+- orrery → smoky amber (`#9a5a2e`, from orrery.js's workshop rust/lamp
+  warmth, darker and smokier than scroll's citrine)
+
+Growth gets a neutral moonstone (`#cbb896`), same role the old
+pale-gold GROWTH_HUE played. The matrix material for each anchor is
+derived from the same base color programmatically (`getHSL`/`setHSL`,
+lower saturation and lightness) rather than hand-picking a second set of
+hex values — same "systematic, not picked by eye" discipline the old hue
+wheel used, just deriving from real precedent instead of an arbitrary
+wheel this time.
+
+**Text is genuinely hard to read, on purpose, with a stacked mechanism —
+not decoratively hard, mechanically hard.** Previously every growth
+piece's label was a camera-facing `Sprite` (always legible, always facing
+the viewer), and seed content had no permanent visual presence at all
+outside the single roaming ambient line. Both changed:
+
+- Every piece of text on the crystal (all 68 seed pieces, plus any
+  growth piece) now gets a small, non-billboard label — `Mesh` +
+  `PlaneGeometry`, not `Sprite` — positioned nudged 34% of the way from
+  its own point toward its parent (so it sits inside the local cluster of
+  stuck material rather than floating in free space) and rotated to a
+  fixed orientation derived deterministically from `hashSeed(piece.id)`
+  (stable across reloads — the same "reproducible, not actually random"
+  discipline dla.js's own PRNG uses).
+- Two real, independent obstacles stack, exactly as asked: (1) true
+  optical smallness — the plane is small in world units (0.034×0.013 for
+  seed, 0.05×0.019 for growth) and only subtends enough of the frame to
+  resolve once the visitor has actually zoomed in; (2) because it doesn't
+  billboard, whether it's face-on or edge-on to the camera depends on the
+  crystal's current rotation — a real angle dependency, not a fixed
+  camera-facing readout. `makeWarpedTextTexture`'s own `legibility` knob
+  (already existed for the ghosted-copy distortion) is pushed much lower
+  than before (0.13 for seed, 0.22 for growth, vs. round 2's 0.5 for
+  growth) so even a face-on, close-up read is still fighting real ghosting.
+- The one exception is unchanged from round 2/3: the ambient cycle's
+  single active line still renders on a camera-facing `Sprite` at
+  `legibility: 0.82` — crisp, readable, regardless of angle or zoom, for
+  the duration of its own cycle.
+- Clicking a growth piece no longer depends on being able to read its
+  label first. The raycast target moved from the label to the gem mesh
+  itself (`pieceHitMeshes`), so legibility and clickability are fully
+  decoupled — matching how a real half-buried gem works: you can reach
+  out and touch it before you can make out what's carved on it. Each
+  growth gem now gets its own cloned material (not the shared per-anchor
+  instance seed content uses) so hovering or opening one can pulse its
+  own `emissiveIntensity` without touching any other gem.
+
+**Scroll-to-zoom existed already** (`bindWheelZoom` was already wired in
+round 1) but the hint text only ever said "drag to orbit" — the control
+existed and was never advertised. Fixed by updating the hint to match
+Butterfly/Library's own convention ("drag to orbit · scroll to zoom · click
+a gem to read"), and by widening the actual zoom range (0.22–3.15, from
+0.58–4.5) so the visitor can get close enough to a single gem for the
+angle-dependent reveal above to be meaningful, and far enough out to see
+the cave around it.
+
+**A cave, lit by one fire.** The flat dark void (star-field motes over
+plain black) is gone. A low-poly rock dome (`IcosahedronGeometry`, radius
+3.6, `BackSide` so we see its interior, rough dark `MeshStandardMaterial`)
+now encloses the scene, added to `scene` directly rather than the
+crystal's own rotating `root` group — deliberate, since the whole point is
+that the crystal's rotation should visibly change the shadow it throws
+against fixed walls under a fixed light, not that the environment spins
+along with it. One `PointLight` (warm, `0xff8a44`) stands in for the fire,
+flickering via layered sine waves plus a touch of per-frame jitter on both
+intensity and position; `castShadow` is on for the crystal's gems and
+shards, `receiveShadow` for the cave wall and the shards. Getting the fire
+visibly lighting the wall the camera actually looks at took two corrections
+verified live rather than guessed: physically-correct point-light falloff
+(`decay: 2`) meant the intensity needed to look enormous (7.5) next to the
+flat directional lights used elsewhere on this site before the wall a few
+units out registered as lit rock instead of merging into the fog; and the
+fire's position had to sit roughly along the camera's own viewing axis
+(not on the opposite side) so its light actually travels toward the wall
+the camera is looking at, rather than lighting a wall behind the camera
+that's never in frame. Dust motes recolored from the previous cool lavender
+(star-field-coded) to warm ember amber to match. No figures, no narrative
+staging — same restraint Orrery already uses for its warehouse.
+
+Verified live: reloaded the actual dev server repeatedly through each
+change (palette, gem/matrix split, zoom range, fire position/intensity)
+and confirmed by screenshot rather than by reasoning about the numbers
+alone — the fire-position and intensity corrections above were both things
+that looked wrong on screen before they were fixed, not things caught by
+inspection.
+
+## 1.13.0 (2026-07-30)
+
+Prism — 1.12.0's own report described two things that weren't actually
+true on screen. Scott's correction, correctly harsh: "genuinely glassy" in
+a report is worthless if the render doesn't back it up, and a duplicated
+text echo isn't refraction no matter what it's called in a changelog. Both
+diagnosed and fixed for real this round, each confirmed with a live,
+reproducible test — not just a restatement that the numbers were right.
+
+**1. The nodes weren't glass — the actual missing piece was an
+environment map, confirmed by toggling it live.** The gem material's own
+numbers, unchanged from 1.12.0 and pasted here in full because that's what
+was asked for:
+
+```js
+new THREE.MeshPhysicalMaterial({
+  color: c, metalness: 0, roughness: 0.05, flatShading: true,
+  transmission: 0.88, thickness: 0.11, ior: 1.9,
+  clearcoat: 1, clearcoatRoughness: 0.04,
+  attenuationColor: c, attenuationDistance: 0.22,
+  emissive: c, emissiveIntensity: 0.08,
+  transparent: true, opacity: 0.97,
+  envMap: envRT.texture, envMapIntensity: 1.1,   // ← the line that was missing
+});
+```
+
+`roughness` was already 0.05 (well under the 0.1–0.2 ceiling Scott named),
+`transparent` was already `true`, `thickness` was already 0.11 (non-zero).
+None of those were the bug. The real gap, exactly the fourth thing Scott
+asked to check: **no environment map existed anywhere in the scene, for
+any material.** `scene.environment` had never been set. Confirmed by
+testing, not assumed: setting `scene.environment` directly to a baked
+`RoomEnvironment` (via `THREE.PMREMGenerator`) and reloading immediately
+produced real specular facets on screen — bright, distinct highlight
+triangles that hadn't been there before — proving the missing environment
+was the actual cause. That first test also visibly washed out the entire
+cave/fire scene to flat grey, because `scene.environment` applies to every
+PBR material in the scene (matrix, cave dome) as ambient IBL, not just the
+gems. Fixed by scoping it: the same baked environment is assigned as
+`envMap` directly on the gem materials only (`envMapIntensity: 1.1`),
+leaving `scene.environment` itself unset so the cave/matrix/fire mood is
+untouched. Reloaded again and confirmed both things at once — real facet
+highlights on the gems, cave atmosphere intact.
+
+What transmission alone (without the environment map) was actually doing
+the whole time: correctly sampling the live-rendered scene behind each
+gem, which in this densely-packed cluster is mostly other equally-
+saturated neighboring gems — so "correct transmission, nothing to reflect
+off of, and nothing interesting behind it" reads exactly as "flat opaque
+color," which is what was on screen. Both parts were real: the transmission
+was working, and it still looked wrong, because clearcoat/specular
+reflection — the part of "glassy" that a viewer actually reads as
+"glass," not diffuse plastic — had no environment to catch.
+
+**2. The text distortion was a duplicated ghost, not refraction — replaced
+with the gem's own real transmission, confirmed by directly testing
+whether it's visible through a gem at all.** `makeWarpedTextTexture`
+(1.12.0) baked three offset, semi-transparent copies of the same string.
+On screen, that's a print-twice echo, not refraction, and Scott's read was
+correct. Replaced with `makeTextTexture`: one plain copy, no offset
+duplicate, no ghosting baked in — all of the distortion now has to come
+from somewhere real.
+
+The two real options named in the brief were refraction-through-material
+(no custom shader needed if the text sits behind the gem's own
+transmissive surface) or a genuine shader-based warp. Attempted the first,
+since the label is already a plane positioned nudged behind/inside its own
+gem (`placeLabel`, unchanged from 1.12.0). First attempt didn't work —
+confirmed by an actual test, not assumed: exposed the running scene
+objects to the console, moved the camera to sit exactly behind one real
+label with a real gem between it and the camera (distance confirmed
+via raycasting-by-distance against every mesh in the structure — nearest
+object 0.070 units away, an `OctahedronGeometry` gem with
+`transmission: 0.88`; the label itself at 0.09), and looked. Nothing of
+the text showed through at all, gem or no gem.
+
+Root cause, confirmed by direct A/B toggle on the live object rather than
+inferred: the label material had `transparent: true` (needed at the time
+for its canvas's own transparent background). Flipping that single live
+object's `material.transparent` to `false` — with no other change — made
+the same text immediately visible, visibly bent and tinted differently
+through two separate overlapping facets in the same screenshot. Three.js's
+transmission background pass only captures the *opaque* render queue;
+a transparent-blended plane sitting behind a transmissive gem is invisible
+to that capture and just alpha-composites normally instead of ever being
+sampled as "what's behind the glass." This is a real, specific three.js
+behavior, confirmed by toggling one property on one live object and
+watching the result change, not a guess.
+
+Fixed by making the label opaque for real: `transparent: false` on the
+label material, and — since an opaque plane can't have a transparent
+canvas background either — the canvas is now filled with a solid
+near-black base (`#0a0704`, matching the cave's own fog color) before the
+text is drawn, so the small plane blends into the generally dark scene
+instead of showing as a flat color card. The ambient cycle's own sprite
+(the one crisp exception, unchanged in every other respect) keeps a real
+transparent background — it's a billboard that fades its own opacity in
+and out, never something meant to be captured by a gem's transmission, and
+confirmed live after this change to still render as clean floating text
+with no rectangle artifact.
+
+Screenshot-confirmed result, described plainly rather than claimed: with
+the camera positioned close to one label behind a real gem, the same
+source string ("...g in rosewood...") appears twice in the same frame —
+once through an amber-tinted facet above, once through a blue-grey-tinted
+facet below — at different apparent scale and position in each, which is
+what looking through two separate pieces of angled colored glass at the
+same object actually does. That is the concrete difference from 1.12.0's
+duplicate: two DIFFERENT optical readings of ONE bake, produced by real
+geometry, not two copies of the same bake printed at a fixed offset.
+
+Both fixes verified against the actual default (non-rigged) camera view,
+not just the diagnostic close-up: gems show real specular facets at
+normal viewing distance, the cave/fire mood is unaffected, the ambient
+line still renders clean, and the landing-page preview tile picked up the
+same fix (shared material-construction code, not gated by preview).
+
+No changes to dla.js, prismManifest.js, the seed/growth split, or the
+curator tool this round either — same scope discipline as 1.12.0, just
+actually landed this time.
+
+**Verified:** `node --check` on every touched file; a throwaway script
+confirming 43/68 real cross-scene bonds on the actual manifest (not just a
+synthetic test); a separate throwaway script confirming append-stability
+for the growth phase (added a fake entry, then a second, confirmed the
+first entry and every seed point stayed bit-identical); a clean
+`npx vite build`; and the built `dist/` output grepped directly for both
+the absence of the old seed-panel copy ("Grown from") and the presence of
+the new growth-only copy ("New growth"), plus confirming
+`utils/prism-curator.html` is correctly NOT swept into the build (a
+standalone dev tool, same as its retired predecessor).
+
+## 1.9.0 (2026-07-30)
+
+Prism: rebuild Lens from scratch. Supersedes Lens entirely — not a revision
+of the shelved four-facet gem, a different piece wearing a different name.
+An organically-grown crystal (geode/mineral-accretion energy, no faceted
+precision) that grows a new branch for every real piece of writing on the
+site: Sphere (25), Scroll (11), Theater (16), Orbiter (14), Leaf (1, still
+shelved but its writing still counts — pulled from leafText.js, not from
+the shelved scene), and Orrery (1) — 68 pieces total, plus the six anchor
+points themselves. Butterfly and Library are excluded, same reasoning the
+colophon's own experience count already uses (no text; and Library's own
+text is withheld from its own /text/ page too).
+
+**This is a rename, not a shelving.** `lens.js` is deleted, not commented
+out — same discipline as Egg→Orbiter and Manuscript→Scroll (confirmed via
+`git log --follow`: neither egg.js nor manuscript.js exists anywhere in the
+tree; the old file becomes the new one, content and all, git history is
+the record). Lens itself was shelved twice before this and never un-shelved,
+so nothing here was live to begin with — but it's now gone as a file, not
+paused. Every comment that pointed at "re-enable Lens by uncommenting X"
+(main.js, sceneKit.js's consumer lists, poems.js's sourcing history) is
+rewritten to say what actually happened instead.
+
+**Growth: diffusion-limited aggregation** (src/utils/dla.js) — a random
+walker starts outside the current structure and takes fixed-length steps in
+a uniformly random 3D direction (Box-Muller-sampled, verified against axis
+bias with the same octant-bucket check Orbiter's 1.3.0 satellite-normal fix
+used, on 20,000 samples: <5% deviation) until it comes within sticking
+distance of something already grown, then it's fixed there permanently. No
+manual placement — the branching shape is entirely a byproduct of the
+walk-and-stick rule.
+
+**Two judgment calls, flagged rather than decided silently:**
+
+- **No vite plugin.** The brief allows the growth algorithm to run "once at
+  build time (or on first load, cached)." With only 74 total points the
+  whole simulation finishes in ~55ms (measured), so it runs once,
+  synchronously, at `src/text/prismManifest.js`'s own module-evaluation
+  time — no buildStart hook, no generated file, nothing to gitignore.
+  Simpler than the original plan and nothing that can go stale: every page
+  load recomputes the same deterministic structure fresh from the six text
+  modules.
+- **Six independent arms, not one fully-global collision pool.** Each arm
+  (Sphere, Scroll, Theater, Orbiter, Leaf, Orrery) has its own seeded RNG
+  stream and collides only against the six fixed anchor points plus its own
+  prior growth — not the other five arms' grown branches. The brief's
+  literal wording ("sticks to any existing part of the crystal") would mean
+  a fully shared collision pool, but that breaks permanence: adding one new
+  poem to Orbiter could silently move an already-shipped Sphere fragment's
+  position, months later, for a reason that has nothing to do with that
+  fragment. Verified directly — appending a piece to Orbiter's list, and
+  separately to Sphere's (the first-processed arm, the case most likely to
+  leak), both leave every point on every other arm bit-identical. Six
+  independent arms sharing only the six seed points keeps growth genuinely
+  additive and permanent; cross-anchor attachment stays possible in the
+  narrower sense that a walker can still stick directly to a *different*
+  anchor's raw seed point, just not to another arm's grown branches.
+
+**Distortion is the content, not a flaw** — the one place on the site where
+that's the actual brief. Every piece's title is baked onto a small canvas
+texture as three overlapping, offset, hue-shifted, per-character sine-warped
+copies of itself: genuinely hard to read head-on, on purpose, the same way
+a rough crystal distorts whatever's behind it. Baked once per piece into a
+canvas rather than a live shader — this sandbox has no browser to visually
+confirm a real-time distortion shader against, so a deterministic,
+inspectable bake was the safer, verifiable choice. Once a piece is actually
+opened, the read panel is the site's standard plain read-more panel — no
+distortion carried in, matching the brief's explicit split between the two.
+
+**Epigraph:** "If God is white light, then we are all prisms." — Scott's
+own line, found in the Spoonfed archive
+(spoonfed/cyclone/thinks/about/refraction.html, Scott's first site,
+pre-dating Kinetic Muse). Surfaced in-scene as a caption, same treatment
+Orbiter's "sing, orbiter" gets; full citation added to the colophon's
+bibliography.
+
+**Colophon count.** Prism doesn't originate new writing of its own — it
+grows a crystal out of the other six scenes' text, plus the one epigraph
+line. Asked Scott directly whether it should count toward "N small
+experiences built around found and written text": yes, count it. Six goes
+to seven.
+
+**Eighth live nav icon again.** Reinstated the 38px touch-target override at
+the 480px breakpoint that Leaf's shelving had removed the same week (1.8.1)
+— 8 × 38px + 7 × 8px gaps = 360px, comfortably under the ~375px smallest
+common phone width. Verified by the same arithmetic every previous
+icon-count change on this project has used, not assumed.
+
+**Verified:** `node --check` on every touched/new file; a throwaway
+numerical script (not committed) confirming determinism (two independent
+full runs bit-identical), no NaNs, uniform direction sampling, every piece
+within its recorded stick distance of its parent, and stability under
+append on both the first-processed and last-processed arms; a clean
+`npx vite build` with `lens.js` deleted (nothing else referenced it); and
+the built `dist/` output directly grepped for the new nav icon, preview
+tile, panel markup, and epigraph text, confirming all four actually shipped
+rather than just existing in source.
+
 ## 1.8.1 (2026-07-29)
 
 Shelve Leaf. Same pattern as Cycle, the golden hare mechanic, and Lens

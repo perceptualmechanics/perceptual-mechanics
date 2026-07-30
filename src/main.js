@@ -20,15 +20,18 @@ import { createLibrary }   from './scenes/library.js';
 // (1.0.54) while a data-correction round wrapped up; back live now that
 // there are actual clickable cross-links (see library.js's LIBRARY_LINKS)
 // worth being able to click through.
-// import { createLens } from './scenes/lens.js'; // shelved again (2026-07-17,
-// Scott: "ok, can you just comment out the lens then?" — after a work-in-
-// progress round: tighter beam, princess-cut multi-facet gem, Tree of
-// Life/chakra backdrop (see NOTES.md, 1.0.20), and a screenshot showing the
-// gem crowding the frame and the facet steps reading too subtly. "let's
-// just shelve this for the moment and look at it tomorrow with fresh
-// eyes." Re-enable by uncommenting this import, the SCENES entry below,
-// and the initPreviews() map entry, plus the nav icon + preview tile in
-// index.html (same three spots commented out there).
+// Prism (2026-07-30) supersedes Lens entirely — not a revision of the
+// shelved four-facet gem, a different piece wearing a different name: an
+// organically-grown crystal, one branch per piece of writing on the site,
+// grown by a diffusion-limited-aggregation random walk rather than
+// hand-placed. Unlike Leaf/Cycle/the golden hare (paused experiments, kept
+// on disk, "comment out, don't delete"), this is a real rename/replacement,
+// same discipline already used for Egg→Orbiter and Manuscript→Scroll:
+// lens.js is gone (its content lives on in git history, same as always),
+// prism.js is the file that replaces it. See scenes/prism.js's own header
+// and src/text/prismManifest.js for the growth algorithm and the six
+// anchor scenes.
+import { createPrism }     from './scenes/prism.js';
 import { initColophon }    from './components/colophon.js';
 
 // ─── Scene registry ──────────────────────────────────────────────────────────
@@ -51,8 +54,8 @@ const SCENES = {
                  ariaLabel: 'The Orrery of Los Feliz — a found story, told through a 30-foot orrery: nine planets, their moons, an asteroid belt, in a warehouse you can walk around. Use the arrow keys or WASD to walk, click to look around, click the orrery to read.' },
   library:     { create: createLibrary,    label: 'The Library — once removed.',
                  ariaLabel: 'The Library — a real bookshelf, 107 books, films, and divination decks, rebuilt as a shelf you can turn in space. Drag to orbit, scroll to zoom, click a spine to read what it is.' },
-  // lens: { create: createLens, label: 'The Lens — Four facets, one light.',
-  //         ariaLabel: 'The Lens — a single translucent cut gem with four colored sides, floating free, lit from directly above by a vertical spotlight named Prologue. Drag to orbit, click a facet or the light to read.' },
+  prism:       { create: createPrism,      label: 'Prism — A Crystal, Grown.',
+                 ariaLabel: 'Prism — an organically-grown crystal, one branch per piece of writing on the site, grown by a random-walk-and-stick algorithm rather than hand-placed. Drag to orbit, click a branch to read.' },
 };
 
 let activeScene  = null;
@@ -284,7 +287,7 @@ function initPreviews() {
     // leaf:    document.getElementById('preview-leaf'), // shelved 2026-07-29,
     // see the leaf.js import comment near the top of this file for the full
     // re-enable checklist.
-    // lens:    document.getElementById('preview-lens'),
+    prism:      document.getElementById('preview-prism'),
   };
   for (const [name, el] of Object.entries(map)) {
     if (el) previews[name] = SCENES[name].create(el, { preview: true });
@@ -345,6 +348,7 @@ const PM_GLIMPSE_WORDS = {
   leaf: 'stillness',
   orrery: 'will',
   library: 'catalogued',
+  prism: 'refraction',
   title: 'secrets',
 };
 let pmGlimpseTimer = null;

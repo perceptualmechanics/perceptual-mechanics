@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>prism · growth curator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Electrolize&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      background: #0a0710;
+      color: #fff;
+      font-family: 'Electrolize', monospace;
+      min-height: 100vh;
+    }
+    body { padding: 2rem 1.5rem 4rem; max-width: 700px; margin: 0 auto; }
+
+    h1 {
+      font-size: 0.75rem;
+      letter-spacing: 0.35em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.3);
+      margin-bottom: 0.6rem;
+      font-weight: 400;
+    }
+
+    .setup-box {
+      background: rgba(200,170,255,0.05);
+      border: 1px solid rgba(200,170,255,0.2);
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    .setup-box h2 {
+      font-size: 0.65rem;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: rgba(200,170,255,0.6);
+      margin-bottom: 1rem;
+      font-weight: 400;
+    }
+    .setup-box p {
+      font-size: 0.78rem;
+      color: rgba(255,255,255,0.5);
+      line-height: 1.7;
+      margin-bottom: 0.75rem;
+    }
+    .setup-box p:last-child { margin-bottom: 0; }
+    .setup-box code {
+      font-family: monospace;
+      font-size: 0.75rem;
+      background: rgba(255,255,255,0.08);
+      padding: 0.1rem 0.35rem;
+      border-radius: 3px;
+      color: rgba(210,190,255,0.8);
+    }
+
+    label {
+      display: block;
+      font-size: 0.65rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.4);
+      margin-bottom: 0.4rem;
+      margin-top: 1.2rem;
+    }
+    label:first-of-type { margin-top: 0; }
+
+    input[type="text"], textarea {
+      width: 100%;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(200,170,255,0.2);
+      border-radius: 6px;
+      padding: 0.7rem 0.9rem;
+      color: #fff;
+      font-family: 'Electrolize', monospace;
+      font-size: 0.88rem;
+    }
+    input[type="text"]:focus, textarea:focus {
+      outline: none;
+      border-color: rgba(200,170,255,0.55);
+    }
+    textarea { min-height: 9rem; resize: vertical; line-height: 1.6; }
+
+    .hint {
+      font-size: 0.7rem;
+      color: rgba(255,255,255,0.3);
+      margin-top: 0.35rem;
+      line-height: 1.5;
+    }
+
+    button {
+      font-family: 'Electrolize', monospace;
+      font-size: 0.75rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      border-radius: 6px;
+      padding: 0.65rem 1.1rem;
+      cursor: pointer;
+      border: 1px solid rgba(255,255,255,0.15);
+      background: rgba(255,255,255,0.05);
+      color: rgba(255,255,255,0.75);
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+    }
+    button:hover { background: rgba(255,255,255,0.1); color: #fff; }
+    button:disabled { opacity: 0.35; cursor: default; }
+    .btn-gold {
+      border-color: rgba(230,205,160,0.4);
+      color: rgba(238,225,205,0.9);
+    }
+    .btn-gold:hover { background: rgba(230,205,160,0.15); }
+
+    .actions { display: flex; gap: 0.7rem; margin-top: 1.4rem; flex-wrap: wrap; }
+
+    .divider { border: none; border-top: 1px solid rgba(255,255,255,0.08); margin: 2rem 0; }
+
+    .entry-count {
+      font-size: 0.7rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: rgba(200,170,255,0.4);
+      margin-bottom: 0.6rem;
+    }
+
+    .entry-list { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1.5rem; }
+    .entry-card {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(200,170,255,0.12);
+      border-radius: 8px;
+      padding: 0.75rem 1rem;
+      display: flex;
+      gap: 0.75rem;
+      align-items: flex-start;
+    }
+    .entry-info { flex: 1; min-width: 0; }
+    .entry-title { font-weight: 500; font-size: 0.85rem; color: rgba(255,255,255,0.9); word-break: break-word; }
+    .entry-id { font-size: 0.65rem; color: rgba(200,170,255,0.5); margin-top: 0.2rem; font-family: monospace; }
+    .entry-preview {
+      font-size: 0.75rem; color: rgba(255,255,255,0.45); margin-top: 0.35rem;
+      line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+    }
+    .entry-remove {
+      background: none; border: none; cursor: pointer; color: rgba(255,255,255,0.25);
+      font-size: 1rem; padding: 0; flex-shrink: 0; line-height: 1;
+    }
+    .entry-remove:hover { background: none; color: rgba(255,100,100,0.65); }
+
+    .empty {
+      text-align: center; color: rgba(255,255,255,0.15); font-size: 0.8rem;
+      margin: 2rem 0; letter-spacing: 0.08em; line-height: 1.8;
+    }
+
+    #output-wrap { display: none; }
+    #output {
+      width: 100%; min-height: 10rem; font-family: monospace; font-size: 0.78rem;
+      background: rgba(0,0,0,0.4); border: 1px solid rgba(200,170,255,0.25);
+      border-radius: 6px; padding: 0.9rem; color: rgba(210,255,220,0.85);
+      white-space: pre; overflow: auto; line-height: 1.6;
+    }
+
+    .status { font-size: 0.75rem; color: rgba(255,255,255,0.4); margin-top: 0.6rem; min-height: 1.2em; }
+    .status.ok { color: rgba(100,255,150,0.7); }
+    .status.warn { color: rgba(255,200,100,0.8); }
+  </style>
+</head>
+<body>
+
+  <h1>prism · growth curator</h1>
+
+  <div class="setup-box">
+    <h2>⚙ what this is</h2>
+    <p>
+      Prism's six original scenes (Sphere, Scroll, Theater, Orbiter, Leaf, Orrery) are its
+      frozen <strong>seed</strong> — grown once, ambient only, never editable from here.
+      This tool is for genuinely <strong>new</strong> writing: one entry here becomes one
+      new branch grown onto the crystal the next time the site builds, and — unlike the
+      seed — it's clickable, opening the standard read panel.
+    </p>
+    <p>
+      <strong>How it works:</strong> entries you add below are saved only in this browser's
+      <code>localStorage</code> — nothing is sent anywhere, and nothing is written to disk
+      automatically. When you're ready, hit <strong>"copy as JS"</strong> and paste the
+      result into <code>src/text/prismEntries.js</code>, inside the <code>prismEntries</code>
+      array, then rebuild the site. That's a deliberate choice, not a shortcut: this page is a
+      plain static file with no server behind it, same as the rest of the site, so it has no
+      way to write to the repo itself — a copy-paste hand-off matches the one other tool like
+      this the project already has (<code>utils/nebula-curator.html</code>, retired but same
+      pattern: local staging area, "copy as JS," pasted in by hand).
+    </p>
+  </div>
+
+  <hr class="divider"/>
+
+  <label for="title-input">title</label>
+  <input type="text" id="title-input" placeholder="A title for this piece" autocomplete="off"/>
+
+  <label for="body-input">text</label>
+  <textarea id="body-input" placeholder="The piece itself. Leave a blank line between paragraphs."></textarea>
+  <div class="hint">Blank lines split the text into separate paragraphs — same convention scrollPieces.js and poems.js already use.</div>
+
+  <div class="actions">
+    <button class="btn-gold" id="add-btn">add entry</button>
+  </div>
+  <div class="status" id="add-status"></div>
+
+  <hr class="divider"/>
+
+  <div class="entry-count" id="entry-count"></div>
+  <div class="entry-list" id="entry-list"></div>
+  <div class="empty" id="empty">no entries staged yet</div>
+
+  <div class="actions" id="export-actions" style="display:none">
+    <button class="btn-gold" id="copy-btn">copy as JS</button>
+    <button id="clear-btn">clear all</button>
+  </div>
+  <div class="status" id="copy-status"></div>
+
+  <div id="output-wrap">
+    <label for="output">generated JS — paste into src/text/prismEntries.js</label>
+    <pre id="output"></pre>
+  </div>
+
+  <script type="module">
+    const STORAGE_KEY = 'prism-curator-entries';
+
+    /** @type {{id:string, title:string, paragraphs:string[]}[]} */
+    let entries = [];
+    try { entries = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); } catch {}
+
+    const titleInput  = document.getElementById('title-input');
+    const bodyInput    = document.getElementById('body-input');
+    const addBtn       = document.getElementById('add-btn');
+    const addStatus    = document.getElementById('add-status');
+    const countEl      = document.getElementById('entry-count');
+    const listEl       = document.getElementById('entry-list');
+    const emptyEl      = document.getElementById('empty');
+    const exportActions = document.getElementById('export-actions');
+    const copyBtn      = document.getElementById('copy-btn');
+    const clearBtn     = document.getElementById('clear-btn');
+    const copyStatus   = document.getElementById('copy-status');
+    const outputWrap   = document.getElementById('output-wrap');
+    const outputEl     = document.getElementById('output');
+
+    function save() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+    }
+
+    // Same slugging rule scripts/prerender.js already uses for anchor ids —
+    // lowercase, strip apostrophes, collapse everything else to hyphens.
+    function slugify(s) {
+      return String(s).toLowerCase()
+        .replace(/[’']/g, '')
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '');
+    }
+
+    function uniqueId(title) {
+      const base = `growth:${slugify(title) || 'untitled'}`;
+      let id = base, n = 2;
+      const existing = new Set(entries.map(e => e.id));
+      while (existing.has(id)) { id = `${base}-${n}`; n++; }
+      return id;
+    }
+
+    function render() {
+      countEl.textContent = entries.length
+        ? `${entries.length} entr${entries.length === 1 ? 'y' : 'ies'} staged`
+        : '';
+      emptyEl.style.display = entries.length ? 'none' : 'block';
+      exportActions.style.display = entries.length ? 'flex' : 'none';
+      listEl.innerHTML = '';
+      entries.forEach((e, i) => {
+        const card = document.createElement('div');
+        card.className = 'entry-card';
+        card.innerHTML = `
+          <div class="entry-info">
+            <div class="entry-title"></div>
+            <div class="entry-id"></div>
+            <div class="entry-preview"></div>
+          </div>
+          <button class="entry-remove" aria-label="Remove entry" data-i="${i}">✕</button>
+        `;
+        card.querySelector('.entry-title').textContent = e.title;
+        card.querySelector('.entry-id').textContent = e.id;
+        card.querySelector('.entry-preview').textContent = (e.paragraphs[0] || '');
+        listEl.appendChild(card);
+      });
+      outputWrap.style.display = 'none';
+    }
+
+    addBtn.addEventListener('click', () => {
+      const title = titleInput.value.trim();
+      const raw = bodyInput.value.trim();
+      if (!title || !raw) {
+        addStatus.textContent = 'Both a title and some text are needed.';
+        addStatus.className = 'status warn';
+        return;
+      }
+      const paragraphs = raw.split(/\n\s*\n/).map(p => p.trim()).filter(Boolean);
+      entries.push({ id: uniqueId(title), title, paragraphs });
+      save();
+      titleInput.value = '';
+      bodyInput.value = '';
+      addStatus.textContent = 'Added.';
+      addStatus.className = 'status ok';
+      render();
+    });
+
+    listEl.addEventListener('click', e => {
+      const btn = e.target.closest('.entry-remove');
+      if (!btn) return;
+      entries.splice(Number(btn.dataset.i), 1);
+      save();
+      render();
+    });
+
+    clearBtn.addEventListener('click', () => {
+      if (!confirm('Clear every staged entry? This only clears this browser\'s local staging area — anything already pasted into prismEntries.js is unaffected.')) return;
+      entries = [];
+      save();
+      render();
+    });
+
+    function toJS() {
+      const body = entries.map(e => {
+        const paragraphs = e.paragraphs.map(p => '    ' + JSON.stringify(p)).join(',\n');
+        return `  { id: ${JSON.stringify(e.id)}, title: ${JSON.stringify(e.title)}, paragraphs: [\n${paragraphs},\n  ] },`;
+      }).join('\n');
+      return body;
+    }
+
+    copyBtn.addEventListener('click', () => {
+      const js = toJS();
+      outputEl.textContent = js;
+      outputWrap.style.display = 'block';
+      navigator.clipboard.writeText(js).then(() => {
+        copyStatus.textContent = 'Copied — paste inside prismEntries.js\'s existing array, before the closing "];".';
+        copyStatus.className = 'status ok';
+      }).catch(() => {
+        copyStatus.textContent = 'Couldn\'t reach the clipboard — copy the text below by hand.';
+        copyStatus.className = 'status warn';
+      });
+    });
+
+    render();
+  </script>
+</body>
+</html>
