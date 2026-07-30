@@ -113,7 +113,7 @@
       </svg>
     </button>
 
-    <!-- Orbiter, Leaf -->
+    <!-- Orbiter -->
     <button type="button" class="nav-icon" data-scene="orbiter" aria-label="Orbiter" title="Orbiter — A p-Orbital, Satellites" onmouseover="pmGlimpse('orbiter')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
         <circle cx="12" cy="12" r="6"/>
@@ -123,12 +123,16 @@
       </svg>
     </button>
 
+    <!-- Leaf: shelved 2026-07-29, comment out don't delete (same pattern as
+         Cycle, the golden hare mechanic, and Lens below) — see main.js's
+         leaf.js import comment for the full re-enable checklist.
     <button type="button" class="nav-icon" data-scene="leaf" aria-label="Leaf" title="Leaf — In The End It Falls Slowly Through The Aether" onmouseover="pmGlimpse('leaf')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
         <path d="M12 3c5 2 7 6 5 11-1.5 3.7-4 5.5-5 7-1-1.5-3.5-3.3-5-7-2-5 0-9 5-11z"/>
         <path d="M12 4v15"/>
       </svg>
     </button>
+    -->
 
     <!-- Orrery: sun and concentric orbit rings, hung from a mast — was
          three shells rotated around a shared center, which reads as an
@@ -242,6 +246,8 @@
         </button>
       </li>
 
+      <!-- Leaf: shelved 2026-07-29, comment out don't delete — see main.js's
+           leaf.js import comment for the full re-enable checklist.
       <li class="preview-wrapper" data-scene="leaf">
         <button type="button" class="preview-container" id="preview-leaf"
              title="Leaf — In The End It Falls Slowly Through The Aether"
@@ -249,6 +255,7 @@
              onmouseover="pmGlimpse('leaf')">
         </button>
       </li>
+      -->
 
       <li class="preview-wrapper" data-scene="orrery">
         <button type="button" class="preview-container" id="preview-orrery"

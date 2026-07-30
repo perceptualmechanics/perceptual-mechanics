@@ -93,6 +93,73 @@ them. Read these before adding anything that runs at build time.
   worth trimming, orrery.js's texture generators and first-person rig are the
   two most self-contained chunks to split out first.
 
+## 1.8.1 (2026-07-29)
+
+Shelve Leaf. Same pattern as Cycle, the golden hare mechanic, and Lens
+(twice): comment out, don't delete — a clean one-pass restore whenever it's
+revisited. `leaf.js` itself is completely untouched, including the whole
+1.8.0 rebuild (the depth-of-field rack focus, the physics-driven droplet
+hold/fall/splash cycle, the text-in-phase-with-the-drop mechanic). Nothing
+in it was bad — it just isn't clicking yet as a whole piece.
+
+Four spots, each cross-referencing the other three so a future re-enable
+doesn't need rediscovering: the `import` and `SCENES` registry entry and
+`initPreviews()` map entry in main.js, and the nav icon button + preview
+tile in index.html. Verified nothing else holds a live reference: no
+uncommented `createLeaf` anywhere, and the built JS bundle confirms it —
+leaf.js's code (dropRadius, GROWTH_CEILING, makeDropletTexture, every
+2026-07-29 physics constant) is fully tree-shaken out now that nothing
+imports it, main bundle down ~22KB (503,584 → 481,362 bytes).
+
+**Two things found while doing this that weren't on the list, handled by
+precedent or flagged rather than decided silently:**
+
+- **leafText.js and `/text/leaf/`, confirmed unaffected.** leafText.js is
+  imported by leaf.js and by scripts/prerender.js directly — never through
+  main.js — so disconnecting leaf.js from the nav has zero effect on either
+  the text module or the prerendered page; `/text/leaf/` keeps generating,
+  byte-identical, confirmed in the rebuilt output. One real consequence,
+  flagged to Scott rather than resolved here: that page's "Open Leaf →" link
+  points at `/#leaf`, and with `leaf` no longer a key in `SCENES`,
+  `sceneFromHash()`'s `Object.hasOwn` check now returns false for it — the
+  link doesn't error, it just silently lands back on the gallery instead of
+  opening the piece. Not fixed as a side effect of this shelving, per the
+  brief's own instruction; Scott's call on whether that's fine to leave
+  during the shelving or wants its own small fix.
+
+- **Colophon: two things this touches that weren't in the brief, fixed by
+  direct precedent.** Leaf's bibliography entry (colophon.js) is now
+  commented out too — matching Lens, which carries zero bibliography
+  footprint while shelved, the same "no colophon presence for something
+  not reachable from the nav" rule. And the "eight small experiences"
+  line: turns out this was already stale before today, independent of
+  this change — the live count of text-based experiences (every scene but
+  Butterfly, which has no bibliography entry) was seven, not eight, at
+  the time this was checked. Leaf's shelving drops the real number to
+  six. Set directly to "six," correcting both the pre-existing staleness
+  and this change's own effect in one pass, with a comment explaining the
+  arithmetic so the next scene-count change doesn't have to re-derive it.
+
+**Mobile nav icon count, verified rather than assumed** (per the brief's own
+instruction, same category of fix as every icon-count change on this
+project): the 480px breakpoint's 38px touch-target override was sized for
+eight icons (1.6.0: 8×44px + 7 gaps clipped sub-410px phones). At seven,
+the base 44px rule already fits — 7×44px + 6 gaps at 0.5rem = 356px,
+comfortably under the ~375px smallest common phone width (iPhone SE/12
+mini) with room to spare. Override removed; touch targets are back to the
+full 44px guideline. The gap override (2.5rem → 0.5rem) still applies
+regardless of icon count and stays. Noted in the CSS comment: re-enabling
+Leaf (or anything bringing the count back to eight) needs the 38px-or-
+similar override reinstated.
+
+Verified: `node --check` on both touched JS files, HTML comment balance
+confirmed programmatically (21 opens, 21 closes), clean `npx vite build`.
+Rebuilt output checked directly: 7 live nav-icon buttons, 7 live preview
+tiles (comment blocks present in source but inert, same as every prior
+shelving), "six small experiences" landed in the bundle, the 38px
+min-width override absent from the shipped CSS, and leaf.js's own code
+confirmed gone from the JS bundle entirely.
+
 ## 1.8.0 (2026-07-29)
 
 Leaf, rebuilt around its own thesis. Scott's brief: the piece is supposed to

@@ -53,12 +53,16 @@ const BIBLIOGRAPHY = [
       'Fourteen poems by Scott Jason Cohen — eight shown, one per satellite, a different slice of the full set each visit: "Courtesans of the Old World," "Springtime in the Garden," "Prologue," "Raise a Glass," "Lament for the Future Never Realized," "Moon Song," "After Auden," "The Lovers," and "Haiku," all from Scott Jason Cohen’s Assembled Verse.doc; "DNA," from Nucleus.doc (© 2007 Scott Jason Cohen); and four verse openings that each run on into prose after a few lines — "Apocrypha," "The way her hips sway is unique," "here comes no sun today," and "(Underneath scams and heart attacks," — each its own separate source file.',
     ],
   },
-  {
-    scene: 'Leaf',
-    entries: [
-      '"In The End It Falls Slowly Through The Aether" — Scott Cohen, from Cartography.doc.',
-    ],
-  },
+  // Leaf: shelved 2026-07-29 (see main.js's leaf.js import comment for the
+  // full re-enable checklist) — commented out here too, matching how Lens
+  // (also shelved) carries no bibliography entry at all while offline.
+  // Re-enable this alongside the other four spots.
+  // {
+  //   scene: 'Leaf',
+  //   entries: [
+  //     '"In The End It Falls Slowly Through The Aether" — Scott Cohen, from Cartography.doc.',
+  //   ],
+  // },
   {
     scene: 'Selected Works (the scroll)',
     entries: [
@@ -258,7 +262,18 @@ function buildPanel() {
     <section>
       <h2 id="colophon-title" tabindex="-1">Colophon</h2>
       <div class="colophon-sub">perceptual mechanics</div>
-      <p>A personal site by Scott Jason Cohen — eight small experiences built
+      <!-- "eight" (as of 1.6.0) was already stale before this edit: the
+           live count of "experiences built around found and written text"
+           (every scene except Butterfly, which is pure Lorenz-attractor
+           math with no bibliography entry — see NOTES.md 1.4.0) was seven
+           at the time this was checked (Sphere, Scroll, Theater, Orbiter,
+           Leaf, Orrery, Library), not eight. Leaf's own shelving
+           (2026-07-29, main.js) drops the real count to six (Sphere,
+           Scroll, Theater, Orbiter, Orrery, Library) — set directly to
+           that, correcting both the pre-existing staleness and this
+           change's own effect in one pass. Re-enable Leaf, and this goes
+           back to seven, not eight. -->
+      <p>A personal site by Scott Jason Cohen — six small experiences built
       around found and written text, each its own self-contained piece of
       code, none of it built from image assets: everything on screen is
       drawn live, in the browser, from geometry and canvas-generated

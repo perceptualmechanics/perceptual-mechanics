@@ -3,7 +3,14 @@ import { createButterfly }  from './scenes/butterfly.js';
 import { createScroll }    from './scenes/scroll.js';
 import { createTheater } from './scenes/theater.js';
 import { createOrbiter }   from './scenes/orbiter.js';
-import { createLeaf }      from './scenes/leaf.js';
+// import { createLeaf } from './scenes/leaf.js'; // shelved 2026-07-29 —
+// Scott: same pattern as Cycle, the golden hare mechanic, and Lens (twice):
+// comment out, don't delete. leaf.js itself is untouched, including the
+// 1.8.0 rebuild (depth-of-field rack focus, the physics-driven droplet
+// hold/fall/splash, text-in-phase-with-the-drop) — nothing here was bad, it
+// just isn't clicking yet as a whole piece. Re-enable by uncommenting this
+// import, the SCENES entry below, the initPreviews() map entry, and the nav
+// icon + preview tile in index.html (same four spots, all cross-referenced).
 import { createOrrery }    from './scenes/orrery.js';
 import { createLibrary }   from './scenes/library.js';
 // Re-enabled 2026-07-23 — Scott: "given this analysis, curate the excerpts
@@ -36,8 +43,10 @@ const SCENES = {
                  ariaLabel: 'The Theater — scenes from Truth and Beauty, Paul Revere, and You’ve Got a Friend in Satan, performed by ASCII actors. A different program each visit; click or use the controls to advance.' },
   orbiter:     { create: createOrbiter,    label: 'Orbiter — A p-Orbital, Satellites.',
                  ariaLabel: 'Orbiter — a hydrogen atom’s p-orbital rendered as a fuzzy probability cloud, with satellites in clean elliptical orbits around it. Drag to orbit.' },
-  leaf:        { create: createLeaf,       label: 'Leaf — In The End It Falls Slowly Through The Aether.',
-                 ariaLabel: 'Leaf — a raindrop’s fall from a leaf, told through physics, with the found text arriving in phase with the fall.' },
+  // leaf: { create: createLeaf, label: 'Leaf — In The End It Falls Slowly Through The Aether.',
+  //         ariaLabel: 'Leaf — a raindrop’s fall from a leaf, told through physics, with the found text arriving in phase with the fall.' },
+  // Shelved 2026-07-29 — see the leaf.js import comment above for the full
+  // re-enable checklist (four spots, cross-referenced).
   orrery:      { create: createOrrery,     label: 'The Orrery of Los Feliz.',
                  ariaLabel: 'The Orrery of Los Feliz — a found story, told through a 30-foot orrery: nine planets, their moons, an asteroid belt, in a warehouse you can walk around. Use the arrow keys or WASD to walk, click to look around, click the orrery to read.' },
   library:     { create: createLibrary,    label: 'The Library — once removed.',
@@ -270,9 +279,11 @@ function initPreviews() {
     scroll:     document.getElementById('preview-scroll'),
     theater:    document.getElementById('preview-theater'),
     orbiter:    document.getElementById('preview-orbiter'),
-    leaf:       document.getElementById('preview-leaf'),
     orrery:     document.getElementById('preview-orrery'),
     library:    document.getElementById('preview-library'),
+    // leaf:    document.getElementById('preview-leaf'), // shelved 2026-07-29,
+    // see the leaf.js import comment near the top of this file for the full
+    // re-enable checklist.
     // lens:    document.getElementById('preview-lens'),
   };
   for (const [name, el] of Object.entries(map)) {
