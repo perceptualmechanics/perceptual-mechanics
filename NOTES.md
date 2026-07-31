@@ -93,6 +93,372 @@ them. Read these before adding anything that runs at build time.
   worth trimming, orrery.js's texture generators and first-person rig are the
   two most self-contained chunks to split out first.
 
+## 1.19.0 (2026-07-31)
+
+Prism — shelved. Scott's call after watching the reapplied performance
+fixes run live: still doesn't look right, not pursuing further right now.
+Closing this out plainly rather than leaving it ambiguous: this was the
+second full attempt under the name Prism (1.9.0-1.13.0's organically-grown
+DLA crystal, then 1.14.0-1.18.0's classical dispersion-prism rebuild
+above). Neither landed. No third attempt is currently planned.
+
+**Step 1 — confirmed commit status directly, not assumed.** `git status`/
+`git log` showed the working tree ahead of the last commit by exactly the
+eight files every dispersion-prism round touched, and the last real
+commit (`1d7a8b7`, "1.13.0: ship Prism, replacing Lens") was still HEAD —
+matching every round's own "not committed yet" through 1.18.0.
+
+One real surprise worth flagging plainly: the last committed state was
+**not** the shelved/disconnected state assumed going in. `1d7a8b7` shipped
+the *original organically-grown crystal* Prism live and active — import,
+`SCENES` entry, nav icon, preview tile, colophon entry, all uncommented.
+The crystal version's own shelving (comment-out pattern, done earlier the
+same day per the session's own record) had itself never been committed —
+it sat in the working tree only, and got overwritten by the dispersion
+rebuild before a commit ever captured it. So "discard the working tree"
+alone would have resurrected the *first* Prism attempt live on the site,
+not disconnected anything — the opposite of the goal. Handled by: git-
+restoring every dispersion-build file to HEAD (confirmed the crystal
+version's actual code, comments, and live wiring came back exactly as
+committed), then applying a fresh comment-out pass on top of that restored
+state — same four spots as every other shelve on this project (Cycle, the
+golden hare mechanic, Lens twice, Leaf): the `import` in main.js, its
+`SCENES` entry, its `initPreviews()` map entry, and its nav icon + preview
+tile block in index.html. The scene file itself (now back to the crystal
+version's code), `prismManifest.js`, `prismEntries.js`, and
+`utils/prism-curator.html` all stay on disk untouched, just disconnected.
+
+This file (NOTES.md) was deliberately excluded from the discard — the
+1.14.0-1.18.0 entries above are a real record of real work performed
+(dispersion prism build, two full profiling rounds, an honest dead end on
+the third) and stay as history even though none of that code survives in
+the live site now. package.json's version continues forward from 1.18.0
+rather than reverting to 1.13.0, for the same reason.
+
+Mobile nav: dropping Prism takes the live nav-icon count from eight back
+to seven — the exact count Leaf's own 2026-07-29 shelving already
+produced once. Same fix as that round: the 38px touch-target override
+(needed only at eight icons) removed again; 7 × 44px + 6 × 8px gaps =
+356px, comfortably under the ~375px smallest common phone width at the
+base min-width. Colophon's "small experiences" count drops from seven to
+six (Sphere, Scroll, Theater, Orbiter, Orrery, Library) — Prism's
+bibliography entry commented out, matching how Leaf's already reads while
+shelved.
+
+Build verified clean (`npx vite build`; module count dropped 41→36,
+consistent with prism.js and its dependencies no longer being bundled).
+Live-browser verification (console check, nav-icon count, preview grid)
+was queued but the Chrome extension connection dropped mid-session before
+it could run — the mechanical pattern here (four-spot comment-out) is the
+same one already verified working across every prior shelve on this
+project, and the build output confirms the module is actually gone from
+the bundle, but a fresh live look is still worth doing before this
+ships to production, same as any other change.
+
+Not committed yet.
+
+## 1.18.0 (2026-07-31)
+
+Prism — reapplied the two candidate fixes from round 3's dead end, per
+Scott's call: the diagnosis (continuous cost, cube camera at 3x preview's
+resolution with no throttle, plus a shadow-map pass only active in full
+mode) is trusted and wasn't re-run. What changed is *how* this gets
+verified.
+
+`CUBECAM_FACES_PER_FRAME` dropped back to 1 (from 2) and `cubeSize` back
+to 128 (from 192) for the full scene — both reverted at the end of round
+3 for lack of a measurable improvement, both reapplied here without new
+timing numbers, because round 3 also found *why* the numbers couldn't be
+trusted: the automated profiling tab stayed backgrounded the whole
+session, which throttles real GPU-bound cost out of any CPU-side
+`performance.now()` measurement taken there. That's a tooling ceiling for
+this specific question, not a reason to keep the reverted state.
+
+No further automated profiling on this question, per instruction.
+Screenshot-checked instead, for the two concrete regressions a resolution
+cut and cadence change could plausibly cause: no visible staleness in the
+refracted cave, no obviously-degraded reflection quality at 128px vs
+192px. Console clean on a fresh tab (same two benign THREE.js warnings
+every round has shown; a handful of "message channel closed" exceptions
+turned out to be Chrome-extension messaging noise unrelated to the page,
+confirmed by the fresh-tab check showing none of them).
+
+Verification for whether this actually fixed the bog is Scott watching
+the live scene directly — a plain-language yes/no on smoothness, not
+another round of numbers. Flagged in-code for what to watch for
+specifically: dropping cube-camera cadence to 1 face/frame alone
+previously made frame-time *variance* worse (the mipmap-regeneration
+frame going from diluted across 2 faces to sitting alone), which the
+resolution cut may or may not fully offset — if it still reads as a
+faint periodic catch rather than a flat-out slowdown, that's the
+mechanism, and worth reporting as a distinct signal from "still just
+slow."
+
+Build verified clean (`npx vite build`). Not committed yet.
+
+## 1.17.0 (2026-07-31)
+
+Prism — narrower report from Scott: the landing-page preview tile runs
+smooth, only the full scene bogs. Profiled the specific difference
+between the two rather than the scene in general (same
+`performance.now()` discipline as the last two rounds), and this round
+ends without a verified fix — reported honestly rather than shipped
+unproven, per the standing rule this project runs on.
+
+**Step 1 — burst or continuous?** Instrumented both the one-time scene
+construction (band setup, initial cube capture) and steady per-frame
+cost, separately, for preview and full:
+
+| | preview | full |
+|---|---|---|
+| band setup (68 canvases + meshes), one-time | ~3.4ms | ~4-8ms |
+| initial cube capture, one-time | ~49ms | ~67-95ms |
+| steady per-frame (avg) | ~1.68ms | ~2.7-3.2ms |
+
+Conclusive answer: **continuous, not a burst.** The 68-band setup Scott
+named as the likely suspect is cheap and — this is the important part —
+*identical* in both modes, since that loop was never gated by `preview`
+at all; ruled out directly, not assumed. The one real one-time cost (the
+initial single cube-map capture before the first frame) is a sub-100ms
+hitch either way, present in both modes, scaling only with resolution —
+not sustained stutter. The real signal is the steady-state number: full
+runs continuously ~1.6-1.9x preview's per-frame cost, the whole time the
+scene is open, never dropping to preview's baseline.
+
+**Step 3 — re-checked the ticker system under real full-scene load,
+not assumed unchanged.** Timed the exact band-texture-offset loop inside
+the live full scene: 0.007-0.0085ms average. Round 1's finding holds —
+this was never the cost, confirmed again rather than taken on faith.
+
+**What's actually different, continuously:** the cube camera runs at 3x
+preview's linear resolution (192px vs 64px) on every single frame with
+no throttle at all (preview only refreshes every 8th frame), plus a
+shadow-map pass that's only enabled in full mode at all.
+
+**Two targeted fixes attempted, neither shipped:**
+
+1. Dropped `CUBECAM_FACES_PER_FRAME` from 2 to 1, to halve the
+   continuous cost by spreading it further. Average did fall, but
+   variance got *worse* (stdev 0.71ms vs the existing 0.24ms) — the one
+   frame that also regenerates mipmaps went from being diluted across 2
+   faces to sitting alone, the same "lower average, new periodic spike"
+   trap the last round warned about, just relocated. Reverted.
+2. Dropped `cubeSize` from 192 to 128 for the full scene (uniformly
+   cheaper per face, not a cadence change, so it shouldn't introduce new
+   periodicity the way (1) did). Measured across six repeated 240-frame
+   trials each at 192 and 128 to control for run-to-run noise (~±0.2-
+   0.3ms observed between trials at the *same* resolution) — the two
+   resolutions came out statistically indistinguishable (192: avg 2.77ms
+   across 5 trials; 128: avg 2.71ms across 6 trials). No clean, above-
+   noise win. Reverted.
+
+**Why neither fix could be verified — a real limitation of this round's
+measurement, not a dead end:** every profiling round on this project has
+timed `performance.now()` around `renderer.render()`/cube-face calls,
+which measures CPU-side command *submission* time. That's a fair proxy
+when the tab is genuinely foregrounded and vsync-paced, because a real
+GPU-bound stall shows up as a delayed next frame. This round's automation
+tab was backgrounded for the entire session (`document.hidden` true even
+after an explicit click), which throttles `requestAnimationFrame`
+hard — worked around here by calling the frame body directly
+(`window.__prismRunFrames3`, temporary, removed) instead of waiting on
+real rAF ticks. That workaround solved the sample-count problem but
+undid the one thing that would have let a resolution or shadow-map
+change show up: forcing frames back-to-back with no vsync wait means the
+CPU submission call returns quickly regardless of how much GPU fill-rate
+work it queues, so a genuinely GPU-bound "bog" (plausible here — a
+physically-based refraction shader sampling cube faces, a shadow pass,
+68 overlapping additive-blended planes) would be structurally invisible
+to this technique no matter which knob gets turned. Confirmed this isn't
+an implementation slip: cubeSize was verified to actually change
+(`window.__prismDebugCubeSize`, temporary) and the shadow-map toggle was
+verified live against the actual renderer instance
+(`window.__prismDebugRenderer`, temporary) — both real, both showed no
+measurable delta.
+
+All temporary debug hooks (`__prismPerf3`, `__prismRunFrames3`,
+`__prismDebugCubeSize`, `__prismDebugRenderer`) removed; confirmed via
+`grep` that none remain. Source is back to its exact pre-round-3 runtime
+behavior (`CUBECAM_FACES_PER_FRAME = 2`, `cubeSize = 192` in full mode) —
+comments-only diff, nothing shipped without proof.
+
+Build verified clean (`npx vite build`). Not committed yet.
+
+## 1.16.0 (2026-07-30)
+
+Prism — "the average dropped and it still feels stuttery," per Scott's
+follow-up: a lower mean frame time isn't sufficient evidence of "fixed"
+when perceived smoothness tracks variance, not the average. Re-ran the
+same `performance.now()` instrumentation (`window.__prismPerf2`,
+temporary, removed once confirmed) over a 240-frame sample, this time
+bucketing by `frameCount % 3` to check whether cost correlated with the
+1.15.0 throttle interval rather than just averaging:
+
+| slot (`frameCount % 3`) | avg (ms/frame) |
+|---|---|
+| 0 (cube-camera capture frame) | 6.087 |
+| 1 | ~1.5 |
+| 2 | ~1.5 |
+
+Confirmed exactly the pattern Scott predicted: every 3rd frame carried
+the full six-face cube-camera burst and ran ~4x more expensive than the
+two frames on either side of it — a periodic spike invisible to the
+1.15.0 average (2.446ms) but very visible to the eye.
+
+Fix: replaced the throttled full-burst (`if (frameCount % 3 === 0)
+cubeCamera.update(...)`) with a manually-driven spread — 2 of the 6 cube
+faces rendered per frame (`renderer.setRenderTarget(cubeRT, faceIndex)` +
+`renderer.render(scene, cubeCamera.children[faceIndex])`), cycling
+through all 6 over 3 frames via a rolling cursor. Same total work, same
+average cost, no single frame carries a disproportionate burst.
+Mipmaps are only regenerated on the frame that completes face 6 of 6, not
+every partial render.
+
+Also converted every frame-count-based animation term to real elapsed
+time, since fixed-per-frame increments compound any pacing issue rather
+than just coexist with it: `t` (drives flicker/fan motion), the prism's
+idle rotation-back-to-rest damping, and the ember motes' drift were all
+switched from `+= fixedAmount` to `+= dt * rate` off real
+`performance.now()` deltas — the same pattern already used correctly
+elsewhere on the site (Leaf's spring-physics fall), now applied here too.
+
+Caught one real bug in the process, not just a profiling artifact: driving
+`cubeCamera.children[faceIndex]` manually (instead of the all-in-one
+`cubeCamera.update()`) exposed that `cubeCamera.coordinateSystem` is only
+ever set as a side effect of calling `.update()` normally — calling
+`.updateCoordinateSystem()` directly without it first threw `Invalid
+coordinate system: null`, and did so specifically in the `preview: true`
+instantiation path, which broke the synchronous `initPreviews()` loop for
+every scene after Prism in the nav. Fixed by explicitly setting
+`cubeCamera.coordinateSystem = renderer.coordinateSystem` before that
+call. Verified via a fresh tab navigation to the landing page (exercising
+`initPreviews()` again): zero console errors, preview tile renders
+correctly.
+
+Re-profiled after both fixes, same 240-frame sample, same slot bucketing:
+average 3.352ms, p95 3.8ms, max 5.3ms, stdev 0.288ms — no periodic
+pattern left in the raw per-frame trace (previous round's ~4.5ms swing
+between slot 0 and slots 1/2 is gone). Watched it directly after: reads
+as steady now, not the faint rhythmic catch the 1.15.0 version still had
+despite its lower average. Profiling hook removed once both before/after
+captures were done; confirmed via `grep` that no `__prismPerf2` reference
+is left in the file.
+
+Not committed yet.
+
+## 1.15.0 (2026-07-30)
+
+Prism — "the beams take forever to render," profiled before fixing
+anything, per Scott's explicit brief. Real `performance.now()` timers
+(`window.__prismPerf`, temporary, removed once confirmed) around the two
+named suspects plus total render, not a guess:
+
+| | avg (ms/frame) | p95 | of total |
+|---|---|---|---|
+| cube-camera capture (6-face) | 3.887 | 4.3 | ~77% |
+| band-texture offset loop (×68) | 0.013 | 0.1 | ~0.3% |
+| `renderer.render()` | 1.152 | 1.3 | ~23% |
+| **total** | **5.062** | **5.6** | — |
+
+Confirmed: the cube-camera's every-frame six-face re-capture of the cave
+was the real cost, exactly the brief's first-listed suspect. The 68
+scrolling-text textures were *not* a real cost — profiled at 0.01ms
+combined, because they were never actually being redrawn; `animate()`
+only ever animated `texture.offset.x` (a UV transform), the canvas itself
+is baked once at scene creation and never touched again. Confirmed rather
+than assumed, per the brief's own instruction not to fix the thing that
+sounded plausible without checking.
+
+Fix: `cubeCamera.update()` now runs on a 1-in-3 frame interval
+(`CUBECAM_INTERVAL`) instead of every frame — the cave's own lighting
+(one flickering point light) doesn't change fast enough for a 3-frame-old
+capture to read as stale once it's already being bent through the prism's
+own refraction. The ticker-texture loop was left untouched; there was
+nothing there to throttle.
+
+Re-profiled after, same instrumentation: average frame time dropped from
+5.062ms to 2.446ms (~52% down) — matches the arithmetic (cube-camera's
+~3.9ms cost, now amortized over 3 frames instead of paid every frame, its
+average per-frame contribution drops to roughly a third). Screenshot-
+confirmed no visible staleness in the refracted cave. Profiling hook
+removed once both numbers were captured.
+
+Not committed yet.
+
+## 1.14.0 (2026-07-30)
+
+Prism, rebuilt — a classical dispersion prism, replacing the shelved
+organic-crystal version entirely. Not a revision of the 1.9.0–1.15.0 arc
+below (that whole line, including the working-tree-only 1.14.0/1.15.0
+rounds that never got committed, is what Scott decided to shelve, then
+asked to replace outright with a different core object). Same underlying
+text — the six seed anchors and the growth-piece system — carried forward
+unchanged via prismManifest.js; everything about *how it's rendered* is
+new: one triangular prism (`ExtrudeGeometry` from an equilateral triangle,
+2 caps + 3 sides, real per-face normals), a custom `ShaderMaterial`
+sampling a live `CubeCamera` render of the cave three separate times (once
+per RGB channel) through Snell refraction at Cauchy's-equation-derived
+per-channel indices, and one thin additive band per piece of writing
+(`PRISM_SPECTRUM`, seed then growth, "next open slot" across the visible
+spectrum) fanning out from the exit face — no DLA, no per-point gem, no
+glass-on-glass problem (there's exactly one refractive object in the whole
+scene now).
+
+Three real problems caught by screenshot, not assumed away:
+
+**1. The default camera angle showed a single line, not a fan.** The 68
+bands fan out entirely within the prism's own local XY plane; from the
+initial (un-rotated) camera position that plane was nearly edge-on to the
+view, so 48° of real angular spread compressed to a couple of screen
+pixels — every band visually overlapping. Confirmed by dragging to orbit:
+the same scene, rotated, showed a clearly separated multi-color fan.
+Fixed by giving `root` a baked-in starting rotation (64°, later tuned to
+72° once the light was repositioned) instead of 0, so the fan reads
+correctly without requiring a manual drag first.
+
+**2. The prism read as a flat, uniform brick-red block — no visible
+dispersion at all.** Root cause: the per-fragment fire-tint term added for
+shape definition (`lightColor * diffuse * 0.18` plus a flat 0.05 ambient
+floor) was large enough to dominate the actual three-channel refraction
+sample underneath it, and the cave itself — correctly, it's a dark room
+lit by one small fire, not a bright HDRI — gave the shader very little
+bright/colorful detail to disperse in the first place. Fixed two ways:
+the flat tint term was cut roughly 3–4x (0.18→0.05 diffuse, 0.05→0.015
+ambient) so it stops overpowering the refraction sample, and a small
+saturation/contrast lift (`mix(vec3(luma), color, 2.1)` plus a 1.6x
+brightness multiply) was added so whatever real per-channel divergence the
+sample does produce actually reads on screen. Confirmed by screenshot:
+visible red fringing along real edges of the glass, not a flat wash.
+
+**3. The visible flame glow — added so the shader's cube camera had
+something bright to actually refract, since a `PointLight` has no
+geometry of its own — first rendered as a solid orange marble sitting in
+front of the prism, not a glow.** A flat `MeshBasicMaterial` sphere was
+the wrong primitive for this; replaced with an additive-blended `Sprite`
+using a soft radial-gradient canvas texture, and the underlying firelight
+was moved off the direct camera-to-prism line (it had been sitting almost
+exactly on top of the prism in screen space) to (0.35, 1.2, 1.6).
+
+Seed/growth split, the ambient cycle (one band's text brightens on the
+same fade-in/hold/fade-out/gap timing the old sprite used, all others stay
+dim), and the cave/fog/firelight environment were all carried forward
+directly rather than rebuilt — confirmed still working via screenshot
+(cycling through two separate captures a few seconds apart showed a
+different band brightened each time). `GROWTH_PIECES` is still empty
+(nothing's been added through the curator tool yet), so the clickable-band
+raycast/panel path is unverified live — same honest caveat every previous
+round with empty growth content has carried.
+
+Mobile: Prism's return brings the live icon count back to eight, so the
+480px-breakpoint 38px touch-target override (removed when the count was
+seven) came back too — confirmed by reading the parsed stylesheet
+directly (`document.styleSheets`), not just by eye, since the available
+browser-resize tooling couldn't be forced below ~500px viewport width to
+render the breakpoint live.
+
+Not committed yet — this is a working-tree rebuild pending Scott's own
+review, same as everything else on this project.
+
 ## 1.10.0 (2026-07-30)
 
 Prism, round two — two real gaps in 1.9.0, both closed.

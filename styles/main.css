@@ -449,18 +449,18 @@ html, body {
      see the leaf/orrery mobile-fix history in NOTES.md for the screenshot
      that first caught this at seven icons, and the 1.6.0 note for when it
      went to eight and needed a 38px touch-target override to fit. Leaf's
-     shelving (2026-07-29) briefly dropped the live count to seven, which
-     fit at the base 44px min-width with room to spare, so the override was
-     removed. Prism (2026-07-30, superseding the also-shelved Lens) brings
-     the count back to eight: 8 × 44px = 352px plus 7 gaps at 0.5rem (8px)
-     = 56px, totaling 408px — over the ~375px smallest common phone width
-     (iPhone SE/12 mini). Reinstating the same 38px override 1.6.0 used:
-     8 × 38px = 304px + 56px = 360px, comfortably under 375px again.
-     Verified, not assumed, same as every previous icon-count change on
-     this project. */
+     shelving (2026-07-29) dropped the live count to seven, which fit at
+     the base 44px min-width with room to spare, so that override was
+     removed. Prism's rebuild (2026-07-30) brought it back to eight and the
+     override back with it; Prism's own shelving (2026-07-31, see NOTES.md
+     1.19.0) drops the count back to seven — same math as Leaf's shelving:
+     7 × 44px = 308px plus 6 gaps at 0.5rem (8px) = 48px, totaling 356px,
+     comfortably under the ~375px smallest common phone width (iPhone
+     SE/12 mini) at the base min-width. Override removed again. Verified,
+     not assumed, same as every previous icon-count change on this
+     project. */
   #pm-nav { gap: 0.5rem; }
-  .nav-icon { min-width: 38px; min-height: 38px; }
-  /* Eight 200px tiles in a column (~1700px) is always taller than a
+  /* Seven 200px tiles in a column (~1500px) is always taller than a
      phone viewport. align-items:center (inherited from #landing, and the
      cross-axis property since #landing's flex-direction stays row) would
      otherwise vertically center that overflow and require scrolling both

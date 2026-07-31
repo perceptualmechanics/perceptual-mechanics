@@ -63,13 +63,19 @@ const BIBLIOGRAPHY = [
   //     '"In The End It Falls Slowly Through The Aether" — Scott Cohen, from Cartography.doc.',
   //   ],
   // },
-  {
-    scene: 'Prism',
-    entries: [
-      '"If God is white light, then we are all prisms." — Scott Jason Cohen, found in the Spoonfed archive (spoonfed/cyclone/thinks/about/refraction.html, Scott’s first site, pre-dating Kinetic Muse). Surfaced in-scene as a caption, same treatment as Orbiter’s "sing, orbiter."',
-      'Every other piece of writing carried on Prism’s grown branches belongs to Sphere, Scroll, Theater, Orbiter, Leaf, or Orrery — see each of those entries above for its own sourcing. Prism doesn’t originate that writing, it grows a crystal out of it.',
-    ],
-  },
+  // Prism: shelved 2026-07-31 (see main.js's prism.js import comment for
+  // the full re-enable checklist) — commented out here too, matching how
+  // Leaf carries no bibliography entry while offline. Second full attempt
+  // under this name (organically-grown crystal, then a classical
+  // dispersion prism); neither landed. Re-enable this alongside the other
+  // four spots if a future attempt ever ships.
+  // {
+  //   scene: 'Prism',
+  //   entries: [
+  //     '"If God is white light, then we are all prisms." — Scott Jason Cohen, found in the Spoonfed archive (spoonfed/cyclone/thinks/about/refraction.html, Scott’s first site, pre-dating Kinetic Muse). Surfaced in-scene as a caption, same treatment as Orbiter’s "sing, orbiter."',
+  //     'Every other piece of writing carried on Prism’s grown branches belongs to Sphere, Scroll, Theater, Orbiter, Leaf, or Orrery — see each of those entries above for its own sourcing. Prism doesn’t originate that writing, it grows a crystal out of it.',
+  //   ],
+  // },
   {
     scene: 'Selected Works (the scroll)',
     entries: [
@@ -271,14 +277,13 @@ function buildPanel() {
       <div class="colophon-sub">perceptual mechanics</div>
       <!-- Leaf's shelving (2026-07-29) dropped the live count to six
            (Sphere, Scroll, Theater, Orbiter, Orrery, Library). Prism
-           (2026-07-30, superseding Lens) brings it back to seven — it
-           doesn't originate new writing of its own (it grows a crystal out
-           of the other six scenes' text, plus one new epigraph line), but
-           Scott's call: it's still a real, self-contained interactive
-           experience built around found and written text, same as the
-           other six, not a mere index over them. Re-enable Leaf and this
-           goes to eight. -->
-      <p>A personal site by Scott Jason Cohen — seven small experiences built
+           briefly brought it back to seven across two full attempts (an
+           organically-grown crystal, then a classical dispersion prism);
+           neither landed, and Scott shelved it for good on 2026-07-31 (see
+           main.js's prism.js import comment and NOTES.md 1.19.0) — back to
+           six. Re-enable Leaf and this goes to seven; re-enable both and
+           it goes to eight. -->
+      <p>A personal site by Scott Jason Cohen — six small experiences built
       around found and written text, each its own self-contained piece of
       code, none of it built from image assets: everything on screen is
       drawn live, in the browser, from geometry and canvas-generated
