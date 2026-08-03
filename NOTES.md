@@ -93,6 +93,1442 @@ them. Read these before adding anything that runs at build time.
   worth trimming, orrery.js's texture generators and first-person rig are the
   two most self-contained chunks to split out first.
 
+## 1.32.0 (2026-08-03)
+
+Six-item follow-up brief on Solar Sailer, all closed this pass: finished a font
+spec left half-done, a new secondary accent color, a new ambient layer, a real
+terminus, a fixed opening camera, and a landing-page link relocation.
+
+**Caption body text finished in Orbitron.** 1.31.0 shipped "STATION N OF 10"
+in Orbitron small-caps but left the found-text line below it in the site's
+default Times New Roman italic serif — a leftover from when that line was
+untouched on purpose ("confirmed working, don't touch"). The brief's original
+word was "captions," meaning the whole caption. Both `measure.font` and
+`cx.font` in `makeLabelTexture()` now read `italic ${BODY_FONT_PX}px
+"Orbitron", sans-serif` — kept the italic slant (canvas 2D synthesizes
+oblique for any family, not just ones with a real italic face) so the body
+still visually distinguishes itself from the header, just within one
+typeface instead of two. Confirmed live via `document.fonts.check()` (both
+weights and the italic synthesis all report loaded, not silently falling
+back) and via direct pixel sampling of the generated label canvas — see
+below.
+
+**Gold secondary accent, pulled from Sphere.** Added `GOLD_ACCENT_CSS =
+'rgba(255,220,120,'` — not approximated, the literal value already live on
+`.fragment-link:hover` in `src/scenes/sphere.js`, same discipline as
+matching `HORIZON_COLOR` to the skybox's own gradient stop. Scoped
+narrowly, per the brief ("one deliberate warm accent... not a second
+competing primary color"): only the "STATION N OF M" small-caps text uses
+it; the found-text body keeps its existing near-white. Verified two ways,
+not just eyeballed: (1) read back the actual generated label canvas's pixel
+data — a sampled row through the header text showed 147 of 200 non-
+transparent pixels within gold's RGB range, a sampled row through the body
+text showed 0; (2) a full build with no color-related warnings.
+
+**Sky motes — a second scale of ecology.** New `THREE.Points` system, ten
+motes, positioned 130-340 units above `CAM_TARGET.y` (well over the
+terrain's tallest mound at ~68) across a ±700×500 footprint — far wider and
+sparser than `gridBugs`' own ~420×220 near-ground band. Deliberately
+undirected: plain linear drift wrapping at the bounds, no organicWave-
+steered heading correction the way gridBugs has, so it reads as "distant
+data in transit" rather than a paler copy of the ground creatures, per the
+brief. Verified live: captured all ten motes' positions on load, waited 8
+real seconds, re-read them — every one had moved a genuine, mote-specific
+distance (17-33 units), confirming real per-frame drift rather than a
+static field. (Aside, not a defect in this addition specifically: the
+observed drift is faster than the `0.35-0.85 units/sec` comment states at
+face value, because `tSec += 1/60` per `requestAnimationFrame` call is a
+fixed-timestep assumption already baked into this whole file — vessel
+travel, the CA clock, organicWave, gridBugs — not something new introduced
+here. Worth knowing if a future round ever needs frame-rate-independent
+timing across the piece, but out of scope for this one.)
+
+**A real terminus.** The far end of the rail used to fade into a small
+generic glow sprite — identical treatment to the start, just fainter, which
+read as "trailing off" rather than a second real bookend. `buildTerminus()`
+replaces it: a large tangent-aligned gate ring (radius 11, vs. a station's
+own 6.4), a second ring tilted at a real angle rather than flush with the
+first (a torus is rotationally symmetric about its own axis, so a static or
+animated twist around THAT axis is invisible — tilting about a
+perpendicular axis is what actually reads as a second, structurally
+distinct ring), a cluster of three small crystal cores instead of a
+station's single core, its own point light, and an idle organic pulse on
+the cores/glow (same convention as the stations' own idle glow, gated under
+`!reduceMotion`). Doesn't resolve what the terminus IS narratively — stays
+exactly as ambiguous as the rest of the piece, per the brief. Verified live:
+froze the camera (a temporary debug hook toggling `autoRotate` off, removed
+after) and moved it to the terminus's own exact world position — confirmed
+visually as a large crossed double ring around a crystal cluster, clearly
+distinct in silhouette from any of the ten stations nearby in the same
+shot.
+
+**Opening camera frames the whole route.** The default view used to be
+`camDist = 125` — sized to read one station/the vessel clearly, so the
+first thing a visitor saw was one arbitrary segment of the path. Fixed with
+real math: `computeFramingDistance()` binary-searches, per the container's
+actual aspect ratio, for the smallest camera distance at which every one of
+120 arc-length-spaced curve samples still projects inside the camera's real
+frustum (a 15%-margin NDC bounds check against the actual projection Γ—
+view matrix, not an eyeballed guess). First attempt only fit the single
+starting angle and was wrong in a way only live testing caught: autoRotate
+starts turning `theta` the instant the scene loads, and a fit computed for
+one orientation stops holding within seconds once idle rotation carries the
+camera away from it (confirmed by re-projecting the curve a few seconds
+after load and finding a station well outside frame at an angle the
+single-angle fit never accounted for). Fixed by sweeping the full 360° of
+theta autoRotate will ever visit (36 samples, fixed phi — autoRotate never
+changes phi) and keeping the worst-case distance, so the whole route stays
+framed across the entire idle orbit, not just at the instant of load.
+Clamped to `CAM_MAX` (620, unchanged) on the narrowest phone aspect ratios,
+where the unclamped worst case runs past 900-1000 and would fight the fog/
+scale tuning done for the normal case — past that it gracefully degrades to
+exactly the view a visitor already got from scrolling all the way out
+today, never worse. A real, separate bug caught and fixed along the way
+while sanity-checking the terminus: the frustum-fit check divided a
+projected point's x/y by its homogeneous `w` without checking `w`'s sign —
+a point behind the camera has negative `w`, and dividing by a negative
+number silently flips the result back into a plausible-looking range,
+so a behind-camera point could false-positive as "on screen." Switched to
+an explicit `THREE.Vector4`-based check (`w > 0` required, checked
+before the NDC bounds) — re-ran the full worst-case computation after the
+fix and got the identical distances as before (577.7 at 16:9, etc.), so
+this specific dataset never actually hit the blind spot, but the check is
+now correct regardless. Live-verified over ~40 real seconds of autoRotate:
+sampled the actual projected max |NDC x|/|NDC y| across the sweep four
+times, all comfortably under the 0.85 margin, confirming the fix holds up
+over time rather than just at the instant of load.
+
+**"Read the writing on its own" moved into the colophon.** Removed
+`#landing-textlink` from the landing page entirely — both its HTML
+(`index.html`) and its CSS (`styles/main.css`) — for desktop and mobile
+alike, not conditionally hidden at one breakpoint. It wasn't really a
+mobile-only problem; narrow viewports just made the existing crowding (see
+1.31.1's vignette fix, still needed for `#site-title` alone) most visible.
+The colophon's own Bibliography section already had a very similar
+sentence pointing at `/text/` (from 1.7.0) — rather than add a second,
+redundant link right next to it, that existing sentence's anchor text now
+reads "read the writing on its own" (`src/components/colophon.js`), so the
+moved link lands exactly where the brief asked, without duplicating
+content. Confirmed live: `#landing-textlink` is gone from the DOM on
+`/`, and opening the colophon dialog shows the line correctly inside
+Bibliography.
+
+`package.json` bumped to 1.32.0. `node --check` and `npx vite build` both
+clean on the fully cleaned-up file (all temporary debug hooks — camera/
+curve/terminus/autoRotate/label/sky-mote exposures used for live
+verification — removed before this was considered done). Not committed —
+Scott reviews before anything goes to git, same as every round on this
+scene.
+
+## 1.31.1 (2026-08-03)
+
+Mobile bug, from a screenshot Scott sent (iPhone-width Firefox responsive
+mode, 402×874): the fixed bottom-center `#site-title` and bottom-left
+`#landing-textlink` sit on top of whatever preview tile happens to be at
+the bottom of the screen at rest, cutting straight across it. Root cause:
+below 480px, `#scene-previews` stacks into a single column of eight tiles
+taller than any phone viewport, and `#landing` (their scroll container)
+already has `align-items: flex-start` (a prior fix, same 480px rule, so
+the column starts at the true top and every tile is reachable by
+scrolling) — but nothing addressed the visual collision at whatever
+resting scroll position a real user lands on, which is essentially always
+some tile, not just the last one. Confirmed the exact pattern in Scott's
+screenshot reproduces at true rest (scrollTop 0): sphere fully clear at
+top, then the "scroll" tile (the carved bone/rune-E piece) sitting right
+under both fixed text elements.
+
+Fix: a new `#landing-bottom-fade`, a plain `pointer-events:none` div,
+fixed to the bottom of the viewport, mobile-only (`display:none` above
+480px — desktop only ever wraps 1-2 rows and `#landing`'s own
+`padding-bottom` already keeps the last row clear, so there's nothing to
+fix there). A soft `linear-gradient` from black to transparent, not a
+hard bar — keeps the page's deliberately quiet, text-only footer
+aesthetic intact while making sure whatever tile is passing underneath
+fades to black before it reaches the words, instead of the text cutting
+across it uncomposed. Sits at z-index 50 (above the plain in-flow tiles,
+below both fixed text elements at 310/400 — see the z-index scale note at
+the top of this file).
+
+**A false alarm caught along the way, worth recording so it isn't re-hit:**
+while testing, `resize_window` on the actual Chrome window this session
+controls couldn't get narrower than ~500px CSS width (a browser floor,
+not something this project's CSS can fix) — over the 480px breakpoint, so
+the `align-items:flex-start` mobile fix wasn't engaging, and at that
+width sphere/butterfly measured fully off-screen and un-reachable
+(negative `getBoundingClientRect` top/bottom even at `scrollTop:0`, since
+overflowing centered flex content can't be scrolled into from the
+"wrong" side). Briefly read this as a real regression — a temporary
+`<style>` block forcing the actual sub-480px rules (removed after)
+confirmed it wasn't: at the real breakpoint, `align-items:flex-start`
+does its job and all eight tiles are reachable, matching the 1.31.0-era
+fix's own reasoning. The apparent bug was purely an artifact of this
+session's window-resize floor, not the site. Flagged as a real, separate,
+lower-priority gap for later: the exact same overflow-plus-centering
+failure mode can still occur between 480-768px (the 2-tiles-per-row
+bracket) on a short-enough viewport — confirmed live at 500×731 — but
+fixing it there means giving up vertical centering on the (more common)
+non-overflowing cases in that width range too, a real trade-off rather
+than a clean win, so left alone rather than guessed at.
+
+`package.json` bumped to 1.31.1. `node --check`-equivalent (`npx vite
+build`) clean. Not committed — Scott reviews before anything goes to
+git, same as always.
+
+## 1.31.0 (2026-08-03)
+
+Four-item follow-up brief on Solar Sailer: a real bug (terrain visibility),
+two pieces of the CA/Lévy spec that didn't make it into 1.30.0, and two
+polish items (font, rail). All four closed this pass.
+
+**Terrain visibility — the actual root cause.** Scott's own diagnosis was
+right on both counts, and it's one bug, not two: `terrainMat`
+(`MeshStandardMaterial`) never set `side`, so it defaulted to three.js's
+`FrontSide` — the mesh rendered only when viewed from above. From beneath
+the mountains that's a dark void where the terrain should be; from far
+enough away at a shallow angle, the same one-sided mesh degenerates toward
+a thin line — almost certainly what the 1.30.0 addendum logged as an
+unreproducing "dark void" mid-drag and what earlier screenshots read as a
+stray straight beam. Fix: `side: THREE.DoubleSide` on `terrainMat`, plus
+the same fix on `shimmerMat` (same one-sided-plane risk, smaller surface).
+Verified live, not just reasoned about: dragged the camera to true
+underneath-the-mountain positions (several, not just the default angle)
+and confirmed the grid stays fully visible with no void at any of them,
+then re-checked the shallow-angle/far-distance view that used to thin into
+a line — solid in both cases.
+
+**Real cellular automaton for growth patches.** The old six-sprite
+grow/pulse array is gone. Growth patches are now a `THREE.Points` field
+(`CA_COLS×CA_ROWS` = 34×18) running an actual Game of Life
+(`stepGameOfLife()` — standard B3/S23, fixed non-toroidal boundary),
+stepped every `CA_STEP_INTERVAL` (1.7s) and reseeded from the same
+deterministic `mulberry32`/`hashSeed('beamline-growth-ca')` stream if the
+board ever burns out to zero (small finite Life boards commonly do). Per-
+point brightness eases toward the rule's live/dead state
+(`caBrightness[i] += (target - caBrightness[i]) * easeRate`, instant under
+reduceMotion) rather than snapping, so it still reads as organic rather
+than a strobe. Verified two ways, matching the "same rigor as the
+p-orbital/nucleus work" standard:
+1. A throwaway Node script (`/tmp/verify/life_check.mjs`, deleted after
+   transcription) ran the extracted rule against known ground truth — a
+   blinker oscillating with period 2, a 2×2 block staying static, and an
+   isolated live cell dying from underpopulation — all matched, confirming
+   the rule itself is a correct Game of Life, not an approximation of one.
+2. Live in the running scene: a temporary debug hook logged the board's
+   alive-cell count once per generation, sampled over 46 real seconds.
+   Population moved non-monotonically — 210 → 159 → 148 → 124 → 131 → 128
+   → ... → 71 → 95 → 91 — rising and falling generation to generation
+   rather than following any authored curve, which is exactly what real
+   emergent dynamics look like and an animator's hand-tuned pulse would
+   not produce. Debug hook removed after this confirmed the behavior;
+   `node --check` clean afterward.
+
+**Real Lévy-flight vessel movement.** Constant-speed `getPointAt(loopT)`
+travel is gone. The vessel now takes discrete steps along the same
+arc-length parametrization, with step length drawn from a power-law
+(Pareto) distribution via inverse-CDF sampling —
+`L = L_min · u^(-1/(mu-1))`, `mu = 2.0`, clamped at `L_max = 0.4 ×` the
+curve's total length — off its own deterministic stream
+(`hashSeed('beamline-vessel-levy')`), with an 0.85 forward bias (a minority
+of steps double back, so it reads as real local drift rather than a
+one-way conveyor) and smoothstep easing within each step. The rail/circuit
+itself is untouched as the fixed backbone; only the character of motion
+along it changed, per the brief. Verified two ways:
+1. A throwaway Node script (`/tmp/verify/levy_check.mjs`, deleted after
+   transcription) sampled the same distribution 10,000 times and checked
+   the empirical CCDF's log-log slope against the theoretical `-(mu-1)` —
+   matched, confirming the sampler is a genuine power law, not just
+   "irregular-looking" random noise.
+2. Live in the running scene, via a temporary debug hook logging each
+   step's arc position/length/duration: over ~53 seconds of real
+   animate-time, the recorded steps showed the expected mix — several
+   small, near-zero or negative (backward-drift) steps clustered near a
+   station, punctuated by a few long jumps reaching the `L_max` clamp.
+   One environment wrinkle surfaced and worth recording on its own:
+   `requestAnimationFrame` was severely throttled (~2 frames per 3 real
+   seconds) whenever the automated Chrome tab was backgrounded
+   (`document.hidden === true`), independent of whether screenshots could
+   still be taken — screenshot-only spot-checks would have badly
+   undersampled the vessel's motion and made it look broken or static.
+   Reading `window.__levy*` state directly, and confirming
+   `document.visibilityState` first, was the reliable path; both debug
+   hooks removed once this was confirmed.
+
+**Orbitron, small-caps, scoped to this scene.** Loaded via the site's
+existing single combined Google Fonts `<link>` in `index.html`
+(`&family=Orbitron:wght@400;700;900` appended) — global load, but the font
+is only referenced from `beamline.js`'s own CSS/canvas code, not used
+elsewhere. Two separate small-caps implementations, both confirmed to
+actually render as small-caps rather than silently falling back to plain
+caps:
+1. The DOM hint (`#beamline-hint`) uses real CSS `font-variant:
+   small-caps` over genuine lowercase source text (small-caps has no
+   effect on already-uppercased text, which is why `text-transform:
+   uppercase` was removed rather than kept alongside it) — confirmed via
+   `getComputedStyle` and, this pass, a live zoomed screenshot: "Drag to
+   orbit · Scroll to zoom · Click a station to read" reads cleanly as
+   small caps at 0.7rem.
+2. The canvas station label ("STATION N OF M") uses a manual two-size
+   approach (`layoutSmallCaps()`) since `ctx.font` doesn't reliably support
+   `font-variant` — first letter of each alphabetic word (and any run of
+   digits) at full size, the rest at a smaller size, manual cursor-advance
+   via `measureText` plus an approximate baseline nudge. Confirmed legible
+   at the size actually used in the scene via a live zoomed screenshot.
+
+**Rail visual polish.** The old two-layer core+halo tube read thin at a
+distance. Replaced with a three-layer concentric glow falloff — core
+(radius 0.5, opacity 0.95), mid (radius 1.6, opacity 0.35), outer (radius
+3.2, opacity 0.12), same `buildRailTube()` helper, same liquid-light
+scrolling core texture — added back-to-front so the glow blends correctly.
+Target register was the brief's own reference point (Tron: Legacy's beam-
+rails — real visual weight, not a wireframe line); live screenshot after
+the change shows a substantially thicker, genuinely glowing conduit rather
+than a flat line primitive.
+
+`package.json` bumped to 1.31.0. `node --check` and `npx vite build` both
+clean on the final file with every temporary debug hook removed. Not
+committed — Scott reviews before anything goes to git, same as every round
+on this scene.
+
+## 1.30.0 (2026-08-02)
+
+Beamline pivoted to Solar Sailer — a structural rewrite, not a rename or a
+tuning pass. Scott's brief was explicit that this replaces the mirror-
+bounce geometry model entirely: "not a rename of the same object — a real
+change in what's traveling and how." `reflect()`, `raySphereHit()`,
+`solveBeamPath()`, `buildMirror()`, and the skybox's `ridge()` mountain-
+silhouette painting are all gone. What carried over untouched, per the
+brief: the palette (`ACCENT`/`HORIZON_COLOR` family), the panel-free
+glowing-text caption system (`makeLabelTexture` and friends — genuinely not
+touched, only its callers' variable names), the ambient ecology (shimmer/
+grid bugs/growth patches, still `!reduceMotion`-gated), drag-to-orbit/
+scroll-to-zoom, and `src/text/beamlineText.js` (same ten found-text
+fragments, new anchor points). File and route name are unchanged on
+purpose — "Solar Sailer" is a working concept, not a settled on-site name,
+same position "Beamline" itself was in before "Prism" was tried and
+retired.
+
+**The rail.** A `THREE.CatmullRomCurve3` ('centripetal', to avoid overshoot
+past hand-placed points) through twelve hand-placed waypoints — not solved
+or generated, each one a deliberate choice, per the brief's explicit
+rejection of the "solve for guaranteed-hit geometry" pattern every prior
+mirror-chain round used. X advances roughly monotonically for a legible
+sense of travel; Y alternates deliberately, dipping to 4-6 near the flat
+grid at three points (close enough to cross paths with the grid bugs/
+growth patches) and cresting at 46-68 over three terrain mounds at three
+others — real vertical character across the path's length, not a flat
+wander at one height. Rendered as a single continuous `THREE.TubeGeometry`
+(`buildRailTube()`), replacing the old chain of straight cylinder segments;
+the liquid-light streak texture on its core is unchanged from the mirror
+era, just mapped onto one tube instead of ten.
+
+**The terrain — the actual horizon-seam fix.** Two earlier rounds tried to
+fix the seam by matching the skybox's and the grid floor's colors; both
+were real, partial fixes that still left two separate objects meeting at a
+boundary. This round replaces that boundary with one continuous mesh: a
+single `PlaneGeometry` (320×240 segments across 2600×2000 units), baked
+flat via `geo.rotateX(-Math.PI/2)`, then displaced per-vertex by
+`terrainHeight(x,z)` — a pure function (module scope, also reused live by
+the ecology spawn code so grid bugs/growth patches sit correctly on
+whatever surface height is actually under them). Three mounds, each a
+smoothstep-falloff radial mound with a little angular jag so it doesn't
+read as a perfect dome; smoothstep's zero derivative at both ends of its
+own radius means a mound's height AND slope both reach exactly 0 at the
+join, so there's no seam or crease however many mounds overlap. "If
+there's no seam between two different things, there's nothing left to
+fail to align" — Scott's own framing for why this had to be geometry, not
+another color match.
+
+**The vessel.** A small craft (`buildVessel()` — a cone hull plus an
+engine-ring torus) travels the rail continuously via
+`curve.getPointAt(loopT)`/`getTangentAt(loopT)` — three.js's own built-in
+arc-length parametrization, which replaced the old manual
+`segLengths`/`pulsePosition()` bookkeeping outright (one less thing to get
+wrong by hand). The engine ring carries `makeRingPulseTexture()` — the old
+per-mirror rim's traveling-pulse technique, repurposed exactly as the
+brief asked ("repurpose this same timing approach for whatever reads the
+vessel's own light"), scrolled the same way, now on one conductor instead
+of ten. Vessel travel and the stations' proximity-brighten cue run
+unconditionally (core kinetic content, same as the old traveling pulse
+sprite); the vessel's own engine-pulse scroll and the stations' idle
+organic glow are gated under `!reduceMotion` (decorative flourish, stays
+static-but-visible instead of disappearing).
+
+**The stations.** Ten `buildStation()` beacons (a faceted icosahedron core
+plus a hoop oriented perpendicular to the rail's own tangent there, so the
+vessel visibly threads through it) replace the ten mirrors as anchor
+points, at arc-length positions `[0.0600, 0.1255, 0.2470, 0.3210, 0.4005,
+0.5085, 0.6025, 0.7055, 0.7980, 0.9255]` along the curve — one per
+`BOUNCES[]` entry, same order. User-facing "Bounce N of M" language
+renamed to "Station N of M" throughout (label text, aria-live announcement,
+jump-list, hint text) since nothing bounces anymore; internal DOM ids
+(`#beamline-*`) deliberately left alone — confirmed via a repo-wide search
+that nothing outside this file depends on them.
+
+**Verification, and what this sandbox couldn't do.** This session has no
+reachable Chromium — no cached browser binary, and `npm install puppeteer`
+failed on `getaddrinfo EAI_AGAIN storage.googleapis.com` (no network egress
+to the download host) — so unlike every prior Beamline round, none of this
+was checked with a real screenshot. Per the standing note above ("keep two
+different kinds of unverified separate"), this is genuinely unverified
+live, not just unverified independently, and is flagged that way on
+purpose. What WAS done instead, in place of a screenshot:
+1. `solve_solar_sailer.mjs` (deleted after transcription, same convention
+   as every prior solver): built the real `CatmullRomCurve3` from the
+   waypoints, sampled it at 2000 arc-length-spaced points, and checked
+   every sample against `terrainHeight()`. Minimum clearance 6.491 units
+   (at t=0.5765, near the tallest mound) — zero negative-clearance points
+   anywhere. Zero self-intersections in plan view (300-sample coarse scan,
+   15-unit threshold). Curve length 788.51 units.
+2. `node --check` and `npx vite build` both clean.
+3. A throwaway logic-smoke-test harness (`beamline.harness.js` +
+   `harness_run.mjs`, both deleted after running): stubbed just enough of
+   `document`/`window`/canvas-2d to run the real, unmodified
+   `createBeamline()` end to end with only `THREE.WebGLRenderer`'s
+   constructor swapped for a no-op (the one piece that genuinely needs a
+   GPU context — everything else in the stubbed copy was byte-identical to
+   the shipped file). This exercised terrain vertex-loop construction (77
+   361 vertices, matches 321×241 for the chosen segment counts), curve/
+   station/rail/vessel construction, ecology spawn code, one real
+   `animate()` frame, and `dispose()`, for both `preview:true` and
+   `preview:false` — all clean, no throw. Extended to manually re-invoke
+   the captured `animate()` closure for 2700 frames (45 simulated seconds,
+   past the full 30s `VESSEL_PERIOD`, exercising the loop-around wraparound
+   math for station glow) — clean. Then dispatched a synthetic mousemove+
+   click at a station's real position projected through the real camera
+   (after manually calling `scene.updateMatrixWorld(true)`, since the
+   no-op fake renderer never does what a real `renderer.render()` does)
+   and confirmed the label sprite actually went visible with a real
+   texture map and a sane on-screen scale — the full hover→click→
+   showLabel→updateLabelScale pipeline, exercised for real, just without
+   pixels. This is strong evidence the logic is sound; it is NOT the same
+   as seeing it, and Scott's own visual check — particularly of the vessel
+   hull's proportions, the terrain's mound silhouettes, and the rail's
+   thickness at a distance, none of which a headless smoke test can judge
+   — is still the real verification this needs before it ships.
+4. Numbers not otherwise sourced here: `CAM_TARGET`
+   (199.944150, 25.345350, 0.531666) is the real 3D centroid of the same
+   2000-sample curve scan, transcribed at full precision, not rounded.
+
+`package.json` bumped to 1.30.0. Not committed — Scott reviews before
+anything goes to git, same as every round on this scene.
+
+**Addendum, same day — live-verified after all.** The no-browser limitation
+above was specific to the earlier `mcp__workspace__bash` sandbox, not a
+hard limit of every environment this project gets worked in — a later
+session in the same day had real Claude-in-Chrome access to Scott's own
+running dev server and could finally check this properly. Live findings:
+click-to-read confirmed working exactly as designed (station beacon stays
+visible, glowing text appears beside it, no panel — screenshot showed
+"STATION 6 OF 10" with its real found-text line). The vessel reads as
+visually distinct from the stations (small dark cone versus the
+hexagon-plus-ring beacons) but is noticeably fainter/smaller than the
+stations at a normal viewing distance — worth a closer look if it turns
+out to be hard to spot in practice, not fixed this pass since it wasn't
+flagged as broken, just modest. Dragged to true extremes in both
+directions (near-straight-up-from-below and near-overhead-looking-down,
+each via two stacked large drags) plus a diagonal combination and a
+zoom-out — terrain, fog, and skybox blended cleanly at every angle tested,
+no seam, no visible edge. One single screenshot mid-way through the first,
+fastest combined drag+zoom+click batch showed what looked like a dark void
+where terrain should be; it did not reproduce across three further
+attempts at similar or identical camera transforms, including two-step
+drags reaching further than that one did, and is logged here as (most
+likely) a transient captured-mid-transition frame rather than a real
+regression — flagged rather than quietly dropped, in case it recurs.
+`console` showed no errors from this scene (one pre-existing, unrelated
+THREE.js `toNonIndexed()` warning from a dependency chunk, and a few
+Chrome-extension-messaging exceptions unrelated to this page).
+
+## 1.29.0 (2026-08-02)
+
+Beamline — two combined passes: three real gaps closed from the "precise,
+checkable specs" round (every number reported back had been accurate, but
+none of them specified FEEL, so the results were technically right and
+still read wrong), plus two bounded ambient-life additions.
+
+**1. Mirror spacing.** Turns were already measuring near-perfect 90°, but
+mirrors sat close enough (hop ~7-9 units against ~9-11-unit diameters,
+under one diameter of travel per bounce) that ten correct right angles
+still read as one visual knot. New hard rule via a new solver
+(`solve_beamline_maze.mjs`, deleted after transcription): each mirror-to-
+mirror leg must be 4-6x the larger of its two mirrors' own diameters.
+Measured ratios across all 9 legs: 4.311-5.144. That ratio is scale-
+invariant (segLen/radius = 2k regardless of absolute size), which pushed
+hop/radius to 8-12 — past the ~6 that already caused a real miss once at
+6-decimal transcription precision. Fixed by writing the transcribed
+literals at full float64 precision (JS's own digits) instead of rounding
+to 6 decimals, removing the truncation-error source rather than fighting
+the brief's own ratio: replayed maxDrift is exactly 0, max angle deviation
+from 90° 0.002926°, both independently reconfirmed. Path extent grew from
+~46.6×0×7.0 to ~303.6×0×64.8.
+
+First attempt at the camera/scene rescale got this wrong in an
+instructive way: scaled CAM_TARGET/CAM_MIN/CAM_MAX/camDist by the same
+~6.59x the path extent grew, on the theory that would hold the mirror-to-
+viewport framing ratio constant. Checked live and it didn't — mirror
+RADIUS only grew ~20% (governed by drift-safety math, not the spacing
+rule), so scaling viewing distance by 6.59x made every mirror a barely-
+visible, unclickable dot. Corrected: camera distance for "read a mirror
+clearly" now tracks MIRROR size (CAM_MIN 30, default camDist 110/90
+preview — close to the old 22/45), while CAM_MAX (420) is set separately,
+large enough to pull back and see the whole new, much-longer path.
+Similarly, beam thickness, label offset, and source/exit/pulse sprite
+scale now track the ~20% mirror-radius growth, not the ~6.59x path-extent
+growth — an earlier version scaled all of these together and produced a
+scene that read as "everything is a thick blue smear," not a legible
+maze.
+
+**2. Horizon seam.** Real cause, not a camera-angle problem: `scene.fog`
+(the color the grid floor fades TO at distance) was an unrelated dark
+navy (`0x020714`) while the skybox's own horizon band rendered a bright
+blue (`#0d56c0`, the sky gradient's own final stop) — the floor and the
+sky it fades into never agreed on a color at the boundary. Fixed by
+pulling that color out to a shared `HORIZON_COLOR` constant and using it
+for BOTH `scene.fog` and the skybox gradient's own final stop, so they're
+now structurally unable to drift apart again. Added a second, smaller
+fix: `makeGroundHazeTexture()`, a large radial-gradient disc (transparent
+center, HORIZON_COLOR edge) laid just above the floor, repainting the
+floor's own silhouette edge against the sky with a smooth gradient rather
+than a hard geometric line. `PHI_MAX` (the camera-angle clamp that
+shipped last round) is removed entirely — full phi range restored.
+Verified live at the clamp's own former extreme (near-overhead, dragged
+repeatedly toward near-underneath) with the real fix in place: no seam
+reappeared at any angle tested.
+
+**3. Caption.** The previous round's card was smaller and more legible,
+but still "a large, dark, hard-bordered rectangle sitting on top of the
+mirror it's meant to label." Dropped entirely — `makeLabelTexture()`
+rewritten to draw text-only onto a fully transparent canvas, sized
+tightly to the actual wrapped text content (measured first, drawn
+second) rather than a fixed 640×260 card. Contrast against both the dark
+grid and the bright sky comes from a dark stroke plus a soft dark
+canvas-shadow behind each glyph (`drawOutlinedText()`), not a background
+fill. Bounce number renders as a smaller line above the body text, same
+stack, not a separate header bar. Legibility target reworked from "whole
+sprite hits 240px on screen" (which, once the canvas is tightly fit to
+content instead of a fixed card, would make one-line and three-line
+bounces render at different effective font sizes) to "body text hits a
+fixed 27px effective size regardless of how many lines it wraps to" —
+`TEXT_SCALE_RATIO = TEXT_TARGET_PX / BODY_FONT_PX` computed once,
+applied against each label's own canvas height every frame. Confirmed
+live: caption renders as glowing text beside the mirror, mirror fully
+visible underneath and around it, text sharp and readable without
+cropping or enlarging the screenshot.
+
+**4. Ambient ecology** (new, bounded — no day/night cycle, no weather, no
+terrain rebuild). A shared `organicWave()` helper (sum of a few
+incommensurate-frequency sine waves, seeded per-instance) drives all
+three additions below plus the ring pulse in #5, so nothing here reads as
+metronomic:
+- **Grid shimmer** — a second, low-contrast soft-blob CanvasTexture
+  layered just above the grid, additively blended, scrolled via
+  organicWave-driven offsets (wanders, doesn't slide in one direction).
+  Tuned down twice live after the first pass (5 large blobs, opacity
+  0.45) washed out the actual grid lines entirely; final version (3
+  small blobs, opacity 0.16) reads as a subtle heartbeat instead.
+- **Grid bugs** — 14 small glowing points, each an independent steered
+  random walk (heading nudges by a small organicWave delta every frame,
+  softly steered back if it wanders past the corridor's real extent),
+  seeded via the same `mulberry32`/`hashSeed` PRNG Prism's DLA growth
+  uses (`src/utils/dla.js`) for the same determinism reason.
+- **Growth patches** — 6 sparse soft-green glow sprites snapped to real
+  grid-line intersections, pulsing opacity/scale slowly and
+  independently via organicWave. Six, deliberately — "sparse reads as
+  ecology, many reads as decoration," the brief's own words.
+- All three gated under `!reduceMotion`, same as the existing dust
+  rotation/liquid-light scroll — present but static for a reduced-motion
+  visitor, not hidden.
+
+**5. Ring pulse.** Rim brightness was flat/static (no per-frame code
+touched it at all, confirmed by reading the render loop before changing
+anything). Replaced with `makeRingPulseTexture()` — a dim baseline strip
+with one bright band — mapped as each rim's `emissiveMap` and cloned per
+mirror (`buildMirror()` now takes a shared source texture and clones it,
+so all 10 rims can scroll independently). TorusGeometry's U axis already
+wraps around the ring's own main circumference, so scrolling the clone's
+`offset.x` each frame makes the band visibly travel around the ring —
+current flowing through a conductor, not a flat glow. Rate and
+emissiveIntensity both driven by `organicWave()` with a per-mirror seed
+(`i * 1.732 + 0.6`, deliberately non-integer so no two mirrors share a
+rhythm).
+
+`node --check` and `npx vite build` clean. Temp solver script deleted.
+package.json bumped to 1.29.0. Not committed — Scott reviews before
+anything goes to git.
+
+## 1.28.0 (2026-08-02)
+
+Beamline — Scott's "precise, checkable specs only" brief: four items,
+each written as a hard numeric rule specifically because "electric blue"
+and "readable" had both been technically satisfied and still missed
+visually, twice. Reporting actual measured values per the brief's own
+verification standard, not just a description of having addressed each
+item.
+
+**1. Exact 90° turns.** Replaced the flat lab-bench geometry with a
+strictly axis-aligned Manhattan path (alternating pure ±X / pure ±Z
+segments — any two perpendicular world axes have an exactly-zero dot
+product, so the turn angle is structural, not tuned) via a new solver
+(`solve_beamline_90.mjs`, deleted after transcription per convention).
+Measured angle, replayed against the actual 6-decimal-rounded
+`sourcePos`/`dir0`/`MIRRORS` literals that ship in `beamline.js` (not the
+solver's easier full-precision internal number) — max deviation from 90°
+across all 10 turns: **0.179265°**, independently reconfirmed via a
+second standalone script (`verify90.mjs`, also deleted) with zero missed
+reflections. Comfortably inside the brief's "within a degree or two"
+tolerance.
+
+**2. Grid/mountain depth bug.** Root cause: `phi` (the orbit-drag polar
+angle) was clamped to `[PHI_EPS, π - PHI_EPS]`, which let a full drag pull
+the camera to nearly directly under `CAM_TARGET`, looking up through the
+floor plane from below — reads as the grid rendering above the mountain
+skybox. Added `PHI_MAX = π/2 - 0.1` and clamped the drag handler to
+`[PHI_EPS, PHI_MAX]`, a structural guarantee that `camera.y ≥
+CAM_TARGET.y` for every `camDist` in `[CAM_MIN, CAM_MAX]`, not a tuned
+number. Verified live via Claude in Chrome against the real dev server
+across the full drag range — default framing, zoomed in tight on a single
+mirror, zoomed out to see the whole path, dragged to the phi-clamp's
+own extreme (near-overhead) in both directions — grid stayed below the
+horizon in every one; at the clamp's extreme the mountains simply leave
+frame (camera looking down at the bench), never the floor rendering
+through them.
+
+**3. Exact canonical hex color.** One numeric value, `0x0066ff` (hue
+~216°, inside the brief's stated #0080FF–#0066FF range), applied via a
+new `ACCENT`/`ACCENT_HALO`/`ACCENT_DEEP`/`ACCENT_SHADOW` constant block
+at module scope — only lightness varies per touchpoint (rim vs. chassis
+shadow vs. halo), hue never does. Replaced every previously
+uncoordinated cyan-leaning color (hue ~187–200°: grid line, beam
+core/halo, pulse/source lights, hemisphere/key/ambient lights, dust,
+skybox horizon glow, label border, CSS title-shadow/hint/sub-label
+colors) with a value from this one family. Confirmed live: the grid,
+mirror rims, beam, and skybox horizon now read as the same saturated
+blue in a single screenshot, not different blues per element.
+
+**4. Caption legibility.** Root cause confirmed: the label sprite's
+world-space height was fixed (`LABEL_WORLD_H = 2.15`), but
+`SpriteMaterial`'s default `sizeAttenuation: true` still shrinks a
+fixed-world-size sprite on screen as its anchor mirror gets farther from
+camera — exactly what made a distant mirror's caption unreadable. Fixed
+by computing the sprite's world-space scale every frame from the
+*current* camera distance (`H = targetPx · 2·tan(fov/2) · d / viewportH`,
+the standard perspective-projection inverse — canceling the distance term
+that was shrinking it) via a new `updateLabelScale()`, called both on
+`showLabel()` and every frame the label is visible. Target: 240px
+on-screen sprite height, chosen so the card's own largest text (28px
+italic body text on the 640×260 source canvas) renders at ≥ the site's
+own title-main text's largest size elsewhere in this scene (1.6rem =
+25.6px, from `#beamline-title-main`'s `clamp()`): 240 × (28/260) ≈
+25.8px — meets that bar with margin. Measured live: clicked a mirror at
+the true default (non-zoomed) camera distance and at a mirror zoomed in
+close, screenshotted both without cropping or enlarging — caption card
+height measured **≈240px** in both screenshots (matches the 240px
+target exactly, confirming the distance-independence actually holds),
+text sharp and fully readable at normal viewing size in both.
+
+Live verification used a synthetic-click technique worth noting for next
+time: the scene's click handler only acts on `hoveredMirror`, which is
+set by `mousemove`, not by click coordinates — and the piece's own slow
+`autoRotate` combined with real network round-trip latency between
+separate tool calls was enough drift that naive screenshot-then-click
+attempts missed the mirror almost every time. Fixed by dispatching a
+dense `mousemove` grid sweep *and* the resulting click within one
+synchronous `javascript_tool` execution (no round-trip in between), then
+batching that with the verification screenshot via `browser_batch` so
+the ~4.4s label sustain-then-fade window couldn't elapse between click
+and capture.
+
+`node --check` and `npx vite build` clean. package.json bumped to
+1.28.0. Not committed yet — Scott reviews before anything goes to git.
+
+## 1.27.1 (2026-08-02)
+
+Beamline — one camera-framing bug, found and fixed with an actual browser
+in hand for the first time this session (Scott pointed at his own local
+`localhost:5173/#beamline`, giving Claude in Chrome a real dev server to
+reach — a different situation from the sandbox-only environment 1.27.0
+shipped under, which had no path to a real browser at all).
+
+The lab-bench layout from 1.27.0 was geometrically correct (all ten
+mirrors real, non-overlapping, zero misses) but the DEFAULT camera angle
+made it look wrong anyway: CAM_DIR was mostly-Z (0.25, 0.45, 0.86), which
+looks almost straight down the same Z axis the zigzag itself separates
+mirrors along. Two mirrors genuinely apart in Z barely move apart on
+screen when the camera looks nearly along that axis — they project to
+nearly the same screen position, reading as an overlapping cluster
+instead of a legible zigzag. This is exactly the kind of bug that a
+script-based geometry check (however thorough) cannot catch, because the
+geometry itself was fine — only its DEFAULT screen projection was
+misleading. Confirmed by dragging to a more oblique angle live: the same
+geometry immediately read as a clear, LIGO-style zigzag once the
+viewpoint had a real X/Z mix instead of being Z-dominant. Rebalanced
+CAM_DIR to (0.6, 0.5, 0.62) to make that oblique angle the default.
+
+Also used the working browser connection to confirm, live, everything
+1.27.0's notes had flagged as unverified: the billboarded bounce label
+(appears near the clicked mirror, correctly billboarded, legible
+"BOUNCE N OF 10" + found-text card, fades on empty-space click as
+designed — confirmed via the accessibility jump-list, `document.
+querySelector('[role="dialog"] button').click()`, since the label's
+~4.4s sustain-then-fade window is too tight to reliably screenshot across
+separate tool round-trips otherwise), the electric-blue mirror material
+close-up, and the rebuilt skybox gradient. All read as intended. A
+temporary `window.__beamlineDebug` hook added mid-session to inspect the
+label sprite's real position/opacity/NDC coordinates was removed before
+this shipped — grepped for afterward to confirm.
+
+`node --check` and `npx vite build` clean; prerendered `/text/beamline/`
+page still contains all 10 bounce texts. package.json bumped to 1.27.1.
+Not committed yet — same as always, this is build/wire/verify only;
+Scott reviews before anything goes to git.
+
+## 1.27.0 (2026-08-02)
+
+Beamline — four fixes from Scott's direct review of the live 10-mirror
+"Tron Legacy Outlands" piece: mirror layout, mirror-material color, a
+skybox bug, and the blurb display.
+
+**1. Lab-bench layout, not freeform 3D scatter.** Mirrors previously
+floated at varied heights across a loose volume, reading as debris rather
+than instrumentation. Constrained every hit point's Y to a narrow band
+(-1.35 to 1.34) just above the floor — real optics-bench mirrors mount at
+one consistent height — and let the beam's own zigzag across X/Z carry
+the "laboratory instrument" read instead.
+
+Getting there took three real, independently-caught bugs, in order:
+
+1. Flattening Y broke every prior randomized-search solver this project
+   has used (even with real backtracking) — removing Y as a free axis
+   removes mirrors' main way of avoiding each other, and greedy search
+   kept hitting structural dead ends no seed change escaped. Replaced
+   with a fundamentally different construction: design the waypoints
+   first (a deliberate serpentine, X monotonically advancing so no two
+   path segments can cross), then solve for the exact mirror normal at
+   each waypoint via the reflection identity n = normalize(d' - d) —
+   guaranteed hit, no search needed. First attempt at this had the sign
+   backwards (n = normalize(d - d'), the mirror image of the correct
+   identity) — reflect() doesn't care about a normal's sign, but the
+   center-offset construction (center = hitPoint - n·radius) does, and
+   the wrong sign put hitPoint on the sphere's far side relative to the
+   incoming ray, so raySphereHit's near-root selection found a completely
+   different point and silently broke the whole downstream chain. Caught
+   as "construction failed a real hit test — should be impossible by
+   construction."
+2. Reflection off a curved mirror amplifies positional error by roughly
+   2×hop/radius per bounce. The first working geometry used ~16-unit hops
+   against ~2.6-unit-radius mirrors (ratio ~6), which compounded
+   6-decimal rounding error by 10-14x per bounce and produced a real,
+   visible miss by mirror 6. Fixed by shrinking hop/radius via a small
+   numeric parameter sweep (zigzag amplitude, x-step, radius) rather than
+   further hand-tuning.
+3. Independently re-verifying the transcribed values (this project's
+   standing discipline — never trust a solver's own "ALL CLEAR")
+   surfaced a THIRD bug: the rounding-robustness check only rounded the
+   mirrors' own centers/radii, not sourcePos/dir0 — but those get rounded
+   too when transcribed (same 6-decimal convention as everything else in
+   this file), and an error at the very first hop has nine more bounces
+   to compound through. A version that "passed" by this incomplete check
+   produced two real misses once independently replayed with source/dir0
+   also rounded. Separately, the overlap check itself had been comparing
+   full mathematical sphere volumes, but each mirror only ever renders a
+   shallow cap (SphereGeometry's capAngle carves a ~25-30° dish, not the
+   whole sphere) — at the larger radii bug 2's fix needed, whole-sphere
+   clearance and low drift turned out to be mutually exclusive across the
+   entire space actually searched. Re-deriving the overlap check against
+   the real rendered cap geometry (a disk of radius·sin(capAngle) at each
+   hit point) reopened a real solution: two caps facing different
+   directions can sit far closer than sum-of-radii apart without ever
+   visually touching. Final geometry: zero misses replaying this file's
+   own exact reflect()/raySphereHit() against the literal transcribed
+   numbers, cap-to-cap clearance ≥1.21 units at a 0.4-unit safety margin,
+   max 6-decimal-rounding drift 0.0075 units (source, dir0, and every
+   mirror all rounded — the real shipped condition, not an easier proxy
+   for it).
+
+Camera framing (CAM_TARGET/CAM_DIR/camDist/CAM_MIN/CAM_MAX), fog
+distances, camera.far, floor position, and the dust box were all
+recomputed for the new, much more elongated extent (~52.8×2.7×5.9, vs.
+the volume-scattered version's roughly-cubic ~24.8×28.2×19.5) — CAM_DIR
+now points mostly along Z with modest elevation so the default view looks
+across the bench's length instead of down it.
+
+**2. Mirror material recolored to electric blue.** The 08-01 Tron palette
+pass had landed on the skybox/beam/fog but never actually reached the
+mirror cap/rim/back materials — checked directly (not assumed already
+covered) and they were still the original cyan/teal (`0x0a3a4a`,
+`0x00d9ff`, `0x021018`). Shifted to a deep, saturated blue family (hue
+~222-228°, not cyan's ~189-194°) as its own standalone material fix, not
+a global palette change.
+
+**3. Skybox ticker-line bug.** The "stock ticker" line pattern traced
+back to `ridge()`'s glow-stroke retrace — confirmed authored code, not a
+stray/leftover asset, via code trace and a zoomed screenshot match. Per
+the review's own fallback instruction, removed outright (the filled
+cliff silhouette, which Scott called out as good, is untouched) rather
+than reskinned. Sky gradient also rebuilt toward genuine electric blue
+(hue ~215-220°, not ~190-205°) at the horizon and glow band, keeping the
+same near-black-at-top shape.
+
+**4. Side panel replaced with a billboarded in-scene label.** The
+archive-style DOM reading pane (`#beamline-panel`, close button, scroll
+region) is gone entirely, replaced by a small canvas-texture card mapped
+onto a `THREE.Sprite` (`makeLabelTexture()`/`showLabel()`), positioned
+near — not overlapping — the clicked mirror's own hit point, offset along
+its real surface normal. Sprites are billboarded by definition, so
+"always faces the camera regardless of orbit" needed no extra code.
+Behavior: appears on click, replaces the previous label immediately on a
+different mirror click, sustains ~3.4s then fades over ~1s, or an
+empty-space click jumps straight to the start of that same fade window
+(no separate close/open state machine). "Bounce N of 10" numbering
+carried into the lighter treatment. The jump-list (keyboard/AT mirror
+selection) still works, now calling `showLabel()`; a new visually-hidden
+`aria-live="polite"` region (`#beamline-sr-live`) carries the same
+"Bounce N of M: <text>" content the DOM panel used to expose, since the
+sprite itself has no text content an assistive technology can read.
+
+**Verification caveat — read before trusting this section blind.** This
+pass could NOT be confirmed live in a browser: the dev server runs inside
+an isolated sandbox with no path back to a real Chrome instance (not the
+same "no browser tool available" situation prior passes hit — a
+genuinely different environment constraint this time). What WAS done:
+`node --check` and `npx vite build` both clean; the exact literal
+sourcePos/dir0/MIRRORS values now in `beamline.js` were independently
+replayed through this file's own copied-verbatim `reflect()`/
+`raySphereHit()` in a standalone script (zero misses, cap-overlap clear,
+Y range confirmed -1.35 to 1.34); `grep -c "text:" src/text/
+beamlineText.js` confirms all 10 found-text fragments are still present
+and untouched by this pass. None of that substitutes for actually looking
+at it. Scott should check, in particular: the new camera framing
+(CAM_TARGET/CAM_DIR/CAM_MIN/CAM_MAX were computed analytically from the
+solved geometry's real centroid/extent, not tuned by eye against a
+rendered frame the way every previous camera pass on this scene was), the
+label's on-screen size/position relative to each mirror at LABEL_OFFSET
+4.2, and the new mirror radii (~5.4-6.4, up from ~3.9-4.7) reading as
+proportionate rather than oversized against the rest of the scene. Temp
+scripts (`solve_beamline_flat.mjs`, `sweep_beamline_flat.mjs`,
+`verify_beamline_final.mjs`) deleted from the project root after
+transcribing. package.json bumped to 1.27.0. Not committed yet — same as
+always, this is build/wire/verify only; Scott reviews before anything
+goes to git.
+
+## 1.26.0 (2026-08-02)
+
+Beamline — 3 new found-text fragments staged, from the found-text brief
+handed off the same day (Storyline.doc, Scott's personal writing archive
+outside this repo; wording transcribed verbatim from the brief, not
+independently re-checked against the source file, same standing caveat as
+every prior Beamline passage). 10 bounces total now, up from 7.
+
+The brief itself flagged that 3 new fragments meant 3 new bounces, and 10
+mirrors is past the 6-8 "real EUV lithography path" range the original
+7-mirror count was justified against (1.23.0) — explicitly not a default
+to assume, a decision for Scott. Asked directly; his answer was "go to 10
+mirrors," full stop, no merging or dropping of existing bounces. Proceeded
+on that basis.
+
+Placement, per the brief's own suggested (non-load-bearing) default: Find
+#1 — a real laser/mirror passage, single undivided bounce for the same
+reason the electron-beam passage stays undivided ("THE MIRROR" is the
+payoff line) — staged directly after the electron-beam bounce, both being
+real optics/light-propagation language. Find #2's two fragments (focus/
+perception) staged next, between the mechanical opening and the musical
+(harps/superstrings) stretch. The existing four passages/seven bounces
+shift down three slots but keep their internal order and pairing exactly
+as shipped in 1.23.0/1.24.0.
+
+Geometry: extended the just-shipped 7-mirror chain (1.25.0, same day) to
+10 with a fresh solver (solve_beamline_10.mjs), same source/dir0 and same
+guaranteed-hit + growth-targeted-at-6.5 discipline as the just-finished
+re-tightening — not a new spacing calibration, a continuation of it.
+Mirrors 0-6 came out identical to the 1.25.0 chain (same seed reproduces
+the same first seven searches); 7-9 are new. Camera framing (CAM_TARGET/
+camDist/CAM_MIN/CAM_MAX), fog distances, floor position, dust box, and
+PULSE_PERIOD all recomputed/rescaled a second time the same day for the
+new ~24.8×28.2×19.5 extent (up from 1.25.0's ~16.7×23.9×16.2, an expected
+consequence of three more real bounces, not a reopening of the spacing
+fix).
+
+Two real solver bugs caught before anything shipped, both found by this
+project's standing discipline of independently re-verifying the exact
+runtime values in a fresh Node check rather than trusting the solver
+script's own "ALL CLEAR" self-report:
+
+1. The solver's own "survives 6-decimal rounding" check was silently a
+   no-op — it re-derived each mirror's center from whatever origin/
+   direction the PREVIOUS *rounded* hit had already produced, and
+   mirrorFromTarget() guarantees a hit by construction for whatever ray
+   it's handed, so the check could never fail no matter how far the path
+   had already drifted. Caught via a debug counter showing zero
+   rejections at every single bounce. Fixed by testing the real thing:
+   round the true chain's own FIXED, full-precision centers (the ones
+   that actually ship), then simulate hits against those exact rounded
+   spheres, not against a re-aimed target.
+2. Separately, the standalone Node re-verification (run fresh against
+   this file's own exact MIRRORS values, same discipline as every prior
+   pass) failed at mirror 7 even after fix #1 — traced to the solver's
+   console output printing radius to only 4 decimal places
+   (`toFixed(4)`) while its internal check used full 6-decimal precision,
+   so the actually-verified-safe radius never made it into what got
+   transcribed. At 9-10 reflections deep this system is sensitive enough
+   that the missing two decimal places alone flipped mirror 7 from a
+   solid hit to a total miss (disc went from positive to roughly -146 —
+   not a graze, a completely different geometry). Fixed by printing
+   radius to 6 decimals like every other value, then re-verifying
+   independently before shipping; while at it, upgraded mirrors 0-6's
+   radii in beamline.js from the 4-decimal values shipped in 1.25.0 to
+   the newly-surfaced 6-decimal ones for consistency (both independently
+   verified as hitting correctly; this is a precision upgrade, not a
+   correction of a live bug in 1.25.0).
+
+Confirmed live via Chrome: all 10 bounces open via the accessibility
+jump-list in order, each checked against its exact staged text; zero
+console warnings or errors on a hard reload; homepage preview tile
+re-renders correctly; mobile viewport (390×844) holds up, same
+pre-existing title/hint-vs-nav overlap as every other scene, untouched by
+this pass. `node --check` and `npx vite build` both clean; prerendered
+`/text/beamline/` page confirmed to contain all 10 bounce texts (`grep -c
+"Bounce"` = 10). Temp solver script `solve_beamline_10.mjs` deleted from
+the project root after transcribing. package.json bumped to 1.26.0. Not
+committed yet — same as always, this is build/wire/verify only; Scott
+reviews before anything goes to git.
+
+## 1.25.0 (2026-08-02)
+
+Beamline — three fixes from Scott's direct review of the 1.24.0 "Tron
+Legacy Outlands" pass, called out as related and fixed in the order given:
+the skybox not actually being 3D was flagged as the root issue behind both
+the color and spacing complaints reading worse than intended, so that one
+went first.
+
+**The skybox wasn't real 3D — root cause, not cosmetic.** Scott caught
+this by comparing two drag-orbited screenshots and noticing the cliff
+silhouette sat in the exact same screen position in both, despite the
+beam/mirrors clearly having moved — proof the backdrop was reading as a
+flat layer, not geometry inside the scene. Root cause, once traced: drag-
+to-orbit worked by rotating `root` (the group holding the mirrors, beam,
+floor, dust) in front of a camera that never actually moved — a scheme
+that looked identical to a real orbit for everything parented to root, but
+meant nothing NOT parented to root (the skybox, by design, so it wouldn't
+spin with the apparatus) ever had a reason to look different frame to
+frame, because the camera's own position and look direction were static.
+Fixed at the source rather than patched around it: the camera now uses
+real spherical orbit around CAM_TARGET (theta/phi, standard math-
+convention spherical coordinates, derived at startup from the previous
+fixed CAM_DIR so default framing didn't shift), and `root` no longer
+rotates at all — auto-rotate and drag both now adjust theta/phi and move
+the actual camera. Every object in the scene, sky included, sits at a
+real fixed world position now, so dragging shows genuine parallax the way
+an actual skybox has to. Confirmed live: two drag-orbited screenshots now
+show a visibly different slice of the mountain silhouette, not the same
+one twice.
+
+**Mirror spacing tightened back down.** The 1.24.0 wide pass overcorrected
+— "way too spread out... a few sparse dots" — against Scott's own stated
+reference point: "closer to how the original 3-mirror version felt
+spatially." Regenerated the full 7-mirror chain again (solve_beamline_
+tight.mjs, same guaranteed-hit + overlap/clearance/turn-angle discipline
+as every prior pass), scored this time on real outward growth-from-source
+per bounce targeted at ~6.5 — enough to keep turning outward rather than
+folding into a knot, well short of the wide pass's unlimited maximize-
+growth scoring that stretched hops to 9-17 units apiece. Extent came out
+~16.7×23.9×16.2 (down from ~24×36×47), source/dir0 pulled back in from
+the wide pass's own widened seed for the same reason. Camera framing
+(CAM_TARGET/camDist/CAM_MIN/CAM_MAX) recomputed from the new bounding box.
+
+Caught one real bug transcribing this: `dir0` was typed into the source
+file from the solver script's own rounded-for-display console output
+(`(0.969, 0.242, 0.048)`, three decimals) instead of being computed the
+same way the solver computed it (`normalize(1, 0.25, 0.05)` at full
+float64 precision) — the exact "rounding compounds across chained
+reflections" failure mode 1.23.0 already fixed once for mirror centers,
+just relocated to dir0 this time. Six of seven mirrors missed live,
+caught immediately via `[beamline] beam misses a staged mirror]` console
+warnings on reload. Fixed by computing dir0 in beamline.js the identical
+way the solver does, re-verified with a standalone Node check against the
+file's own exact runtime values (all 7 hit, zero misses) before touching
+Chrome again.
+
+**Palette pushed toward real electric blue.** Scott's read: the previous
+gradient was "light, fairly desaturated cyan... too soft" against the
+actual Outlands reference, which runs near-black at the top and saves
+saturation for a glowing horizon line, not a broad pale wash. Skybox
+gradient reworked so the top 82% stays near-black/deep-navy (previously
+the bright stop started much earlier), with a real saturated electric
+blue — not pale cyan-white — at the very last stop; the separate horizon
+glow band stays bright and narrow so it reads as a distinct "glowing
+line," not a diffuse tint. Also traced the pastel read to the scene's own
+ambient/hemisphere/directional lighting, which had been broadly washing
+every mirror chassis and the floor in the same bright blue regardless of
+proximity to anything actually glowing — cut intensities (hemisphere
+0.6→0.4, directional 0.65→0.42, ambient 0.45→0.28) and deepened their
+colors, while leaving the rim/beam/pulse materials (unlit or independently
+emissive, unaffected by scene lights) untouched, since those are what's
+supposed to carry the actual brightness — the fix is contrast, not
+turning everything down evenly. Fog darkened and pulled in to match the
+smaller path (0x030a18→0x020714, distances rescaled to the new extent).
+
+**Floor grid extended toward the horizon** (Scott's "worth trying, not
+required" add-on) — enlarged 220×220→700×700 (well past the non-preview
+fog-far distance of 90, so it fades into fog before its own edge would
+ever be visible) with `makeGridTexture()` given a `repeat` parameter so
+cell density stayed constant at the new size rather than stretching.
+
+Confirmed live via Chrome against the local dev server: two drag-orbit
+screenshots at different angles show genuinely different skyline slices
+(parallax working); all 7 mirrors read as one cohesive, tightly-connected
+zigzag route at both close and pulled-back zoom; clicking through all 7
+via the accessibility jump-list confirms every bounce still opens the
+correct staged text; zero console warnings or errors on a hard reload;
+homepage preview tile re-renders correctly at the new darker/tighter
+look; mobile viewport (390×844) holds up, same pre-existing title/hint-
+vs-nav-bar overlap as every other scene, untouched by this pass. `node
+--check` and `npx vite build` both clean; prerendered `/text/beamline/`
+page confirmed to still contain all 7 bounce texts. Temp solver script
+`solve_beamline_tight.mjs` deleted from the project root after
+transcribing, same as every solver script before it. package.json bumped
+to 1.25.0. Not committed yet — same as always, this is build/wire/verify
+only; Scott reviews before anything goes to git.
+
+## 1.24.0 (2026-08-01)
+
+Beamline — two follow-up requests from Scott after the 7-mirror scale-up
+shipped: spread the mirrors out more (they still read as clustered), and
+lean into a Tron: Legacy aesthetic — liquid light for the beam, a skybox
+reminiscent of the outlands cliffs where Flynn lived in exile.
+
+Wider spread: regenerated the whole 7-mirror chain from scratch with
+`solve_beamline_wide.mjs`, a new randomized search built on the same
+methodology 1.23.0 established (no overlapping mirror volumes, real turn
+angles per bounce — 22°-150°, meaningful clearance margin on every hit,
+6-decimal-precision re-check against the exact rounded values before
+shipping) but scored to maximize outward growth from the source instead of
+just picking any valid next bounce. Source position and initial beam
+direction both widened too, so the spread starts from the first bounce,
+not just the later ones. Bounding extent grew from roughly 23.6×12.6×16 to
+23.6×35.6×46.8 — the path now genuinely fills a large volume instead of
+clustering near the origin. Camera (CAM_TARGET/CAM_DIR/camDist/CAM_MIN/
+CAM_MAX) and camera.far all recomputed from the new bounding box; far
+widened 200→460, sized off the worst-case camera-to-skybox-surface
+distance (see below), not just the mirror path itself.
+
+Tron aesthetic, four pieces:
+
+- **Liquid light beam.** New `makeLiquidLightTexture()` — a small
+  procedurally-generated canvas of irregular vertical alpha streaks,
+  tiled via `RepeatWrapping` and scaled to each beam segment's length,
+  with `texture.offset.y` scrolling every frame (gated behind
+  `prefersReducedMotion()` like every other animated element in this
+  scene) to read as flowing rather than static. No shader — consistent
+  with this project's standing preference for cheap procedural textures
+  over exotic material work. Core beam recolored to a saturated cyan
+  (`0x1ef2ff`), halo softened around it (`0x6fd9ff`).
+- **Mirror chassis + rim.** Cap material went dark glossy chassis
+  (`0x0a0e16` with a low cyan emissive) instead of a bright reflective
+  surface; the rim went from a flat non-emissive ring to a strongly
+  emissive saturated cyan (`0x00d9ff`) — the glowing-edge, dark-body
+  panel language Tron's disc and light-cycle surfaces use. The BackSide
+  "backing" mesh from the 1.23.0 fix got the same dark treatment so a
+  mirror reads as one consistent object from every angle.
+- **Skybox.** New `makeSkyboxTexture()` — a 2048×1024 canvas: a gradient
+  sky, a horizon glow band, and a seeded pseudo-random-walk jagged cliff
+  silhouette (two parallax layers, replaying the same seed for the fill
+  and the glow-stroke ridge line so they trace identically) plus a
+  sparse starfield above it. Mapped onto a large BackSide sphere
+  (radius 260) added directly to `scene`, not `root` — `root` is what
+  `bindOrbitDrag` rotates, and a skybox has to stay visually fixed while
+  the mirror apparatus spins in front of it, or the cliffs would spin
+  too. `fog: false` on the skybox material so it stays crisp regardless
+  of scene fog. This is the one piece of this pass not yet visually
+  distinctive beyond "canyon vista with a glowing horizon" — deliberately
+  bare, per Scott's ask, rather than reaching for the Grid's city/
+  building geometry, which is a different part of the film's world than
+  the outlands cliffs he asked for.
+- **Palette cohesion.** Grid floor texture recolored cyan and enlarged
+  (60×60 → 220×220, repositioned to the new path's centroid); fog color
+  matched to the skybox's horizon tone so distant geometry fades into the
+  same atmosphere instead of a mismatched haze; Hemisphere/Directional/
+  Ambient/pulse-point lighting all recolored into the same cyan family;
+  source/exit/pulse sprites recolored and rescaled up to read at the
+  larger scale; dust cloud recentered on the new path centroid, enlarged
+  spread box, recolored cyan; `#beamline-panel`/`#beamline-title`/
+  `#beamline-hint` CSS accent colors shifted from the old cool-blue
+  (`rgba(150-230,190-230,255,...)`) family to the same saturated cyan
+  (`rgba(0,217,255,...)` / `0x00d9ff`) used everywhere else in this pass,
+  the one piece of the redesign that lives in CSS rather than Three.js
+  materials.
+
+Confirmed live via Chrome against the local dev server: default framing
+loads clean with the skybox visible behind the apparatus; dragging to
+orbit and scrolling to zoom both confirm all 7 mirrors now sit spread
+across a genuinely large volume rather than clustered near one point;
+clicking through every mirror via the accessibility jump-list confirms
+all 7 bounce panels still open with the correct staged text and the new
+cyan title/border/close-button colors render as written; homepage preview
+tile re-renders correctly with the new look; mobile viewport (390×844)
+holds up, panel opens and reads correctly there too (same pre-existing
+title/hint-vs-nav-bar overlap at that width as every other scene carries,
+untouched by this pass — only color values changed here, not position).
+Zero console errors on reload (one pre-existing, unrelated THREE.js
+`toNonIndexed()` warning, not introduced by this pass). `node --check`
+and `npx vite build` both clean. Temp search script
+`solve_beamline_wide.mjs` deleted from the project root after the
+geometry was transcribed, same as every solver script before it.
+package.json bumped to 1.24.0. Not committed yet — same as always, this
+is build/wire/verify only; Scott reviews before anything goes to git.
+
+## 1.23.0 (2026-08-01)
+
+Beamline — scaled from 3 mirrors to 7. Scott's call: 3 read as a proof of
+concept, not the actual machine; real EUV lithography paths run 6-8. Also
+added two more found passages from Compendion.pages (a lightning-
+tetrahedrons fragment and an electron-beam/CD passage — the same
+verbatim-staging caveat as the original three applies to both), splitting
+three of the four passages across two bounces each at their own natural
+pauses, so all four found texts now cover all seven mirrors without any
+new source-hunting. The electron-beam passage stays a single, undivided
+bounce by Scott's explicit direction — "channel of electrons, glowing
+orange-red" is genuine electron-beam-physics language, written in 2008
+with no relationship to this piece, and splitting it would blunt the one
+line that most directly names the actual phenomenon the scene stages.
+Staged on the mirror closest to the beam's literal origin point, verified
+by script rather than assumed.
+
+Mirrors 0-2 kept their exact original geometry; mirrors 3-6 were solved
+with a randomized search (solve_beamline_auto.mjs) rather than hand-placed
+or picked one at a time, checking three things at once: no two mirror
+volumes may overlap, every bounce must turn the beam by a real angle
+(20°+, rejecting near-straight pass-throughs), and each hit needs a
+comfortable clearance margin, not just a technical intersection.
+
+That third check exists because of a bug this round caught live and the
+first Beamline pass never needed to guard against: a mirror placement can
+pass every check in a script at full float64 precision and still miss
+once shipped, if the actual hit is a near-graze and the numbers get
+rounded when typed into the source file. First attempt used 3-decimal
+centers/radii (matching the original 3-mirror pass's own precision) and
+one of the new mirrors — mirror 6, six reflections deep — missed live in
+the browser, confirmed via `[beamline] beam misses a staged mirror]`
+console warnings and a screenshot showing only 3 real bounces where 7
+should have been. Root cause, isolated by re-running the same chain at
+3/4/5/6-decimal precision explicitly: rounding error from all six prior
+reflections compounds ahead of a marginal mirror, and 3 decimals wasn't
+enough headroom even though the search's own hit-check passed at full
+precision. Fixed two ways — the search now requires each hit to clear the
+sphere by a real margin (not just `disc >= 0`), and the shipped numbers
+are written to 6 decimals instead of 3. Re-verified against the exact
+rounded values before they went into beamline.js, and confirmed with zero
+console warnings on a clean reload.
+
+Camera (CAM_TARGET/CAM_DIR/camDist/CAM_MIN/CAM_MAX) recomputed from the
+new path's actual bounding box — extent grew from roughly 16×21×7 to
+21.5×12.6×16, and came out much more evenly spread across all three axes
+this time rather than lopsided into one, which reads as a better-staged
+volume, not just a bigger one.
+
+Second live bug, caught by Scott after the above shipped: seen from
+behind, mirrors weren't there at all — the concave cap geometry only ever
+had a front face, so with the piece's own unrestricted drag-to-orbit
+camera it was trivial to rotate around a mirror and look straight through
+it into empty space. Not something the first 3-mirror pass surfaced,
+since nobody had gone looking from the back yet. Fixed in buildMirror()
+with a second mesh sharing the same geometry (no duplicate GPU buffer)
+rendered BackSide-only, dark and non-reflective — exactly the faces the
+front mesh's FrontSide culls, so the back reads as a solid mount instead
+of a hole. Not raycast-targeted, so it doesn't touch what's clickable.
+Confirmed by rotating a full loop around the path live; every mirror
+stays solid from every angle now.
+
+Also fixed in passing, unrelated to this scale-up: `scripts/prerender.js`
+was calling `buildLeaf()` in its `pages` array even though that function
+had been comment-shelved when Leaf was disconnected (1.21.0) — broke the
+build outright (`ReferenceError: buildLeaf is not defined`) the first time
+`npx vite build` ran this round. Removed the stale call; `buildLeaf()`
+itself stays untouched in its comment block, same as everything else
+shelved on this project.
+
+Confirmed live via Chrome against the local dev server: all seven bounces
+open the correct panel text in order (verified by driving the
+accessibility jump-list programmatically — `Bounce 1 of 7` through
+`Bounce 7 of 7`, each checked against the exact staged string, more
+reliable than pixel-hunting mirrors in a rotating 3D scene for this many
+stops), drag-to-orbit and scroll-to-zoom both still work at the new scale,
+the panel close button works, the homepage preview tile still renders
+correctly post-scale-up, and mobile viewport (390×844) doesn't crash
+(same pre-existing title/hint overlap at that width as every other scene
+carries, not a new regression). `node --check` and `npx vite build` both
+clean; prerendered `/text/beamline/` page shows all seven bounces with the
+right text; every mirror confirmed solid from behind after the backing
+fix. package.json bumped to 1.23.0. Not committed yet — same as always,
+this is build/wire/verify only; Scott reviews before anything goes to
+git.
+
+## 1.22.0 (2026-07-31)
+
+Beamline — new scene, ground-up, not a revision of anything shelved. Scott's
+brief: a staged sequence of curved mirrors modeled on a real EUV-lithography
+optical path, built around reflection rather than transmission specifically
+because reflection is mechanically different from every failure mode Lens
+and Prism hit — nothing here requires seeing one transmissive object through
+another, and nothing needs a continuously-recaptured cube camera. No new
+writing: everything staged is found text from Compendion.pages, newly
+located and confirmed unused elsewhere on the site — a primary epigraph
+("The body is the prism of the dream"), a secondary/framing one ("Kinetic
+Muse. Because life has to go somewhere" — likely Kinetic Muse's own
+naming-origin line), and three found fragments staged one per mirror bounce
+(harps/superstrings, the "pluck at them both" passage, seven-colored/
+prisms). Caveat worth flagging: the sandbox has no access to Compendion.pages
+directly, so src/text/beamlineText.js stages the text exactly as given in
+Scott's brief, ellipses included — not independently verified against the
+source file. Worth a quick confirm before this is considered final.
+
+Camera/interaction carries none of Leaf's locked-camera constraint — default
+sceneKit.js drag-to-orbit/scroll-to-zoom from the start, since nothing about
+a staged-bounce structure calls for restricting it.
+
+Real math, not hand-tuned approximation, same discipline as the p-orbital/
+nucleus work: real vector reflection (r = d - 2(d·n)n), real ray-sphere
+intersection via the quadratic formula, and the beam path solved bounce by
+bounce rather than each mirror's position eyeballed independently. First
+placement attempt hand-guessed mirror centers by art direction, and live
+verification (Chrome, console) caught it immediately — a `[beamline] beam
+misses a staged mirror` warning and only 1 of 3 mirrors actually connected
+in the rendered path, exactly the hand-tuned-approximation failure mode the
+brief warned against. Fixed with a "guaranteed-hit construction": derive
+each mirror's center from a point already known to lie on the incoming ray
+plus a chosen facing normal plus a radius, which makes the intersection true
+by construction rather than by luck. Verified with a throwaway Node script
+(solve_beamline.mjs, run against the real `three` package, not reimplemented
+math) before the computed numbers went into beamline.js; the script itself
+was deleted after — the numbers it produced are what's live, not the script.
+
+Camera zoom needed its own fix once the mirror fix moved everything off
+world-origin: the naive "camera.position.z += delta" dolly (fine for
+sphere.js/orbiter.js, whose content sits at the origin) doesn't work for
+content centered elsewhere. Replaced with CAM_TARGET/CAM_DIR/camDist +
+updateCamera(), dollying along a fixed direction from a fixed target point.
+
+Live verification (Chrome, localhost dev server) caught a second real bug
+after the above: the preview-tile thumbnail on the landing page rendered
+completely blank — an empty 8th tile next to Library, no error in console.
+Root cause: the renderer's canvas was gated behind `if (!preview)
+container.appendChild(...)`, which is the right shape for the Firefox-safe
+circular-clip pattern leaf.js and orrery.js use (mountClippedPreviewCanvas,
+which blits the off-DOM WebGL canvas onto a visible 2D canvas clipped to an
+ellipse, since Firefox doesn't reliably CSS-clip a raw WebGL canvas to a
+circle) — but beamline.js never actually called mountClippedPreviewCanvas,
+so preview mode ended up with nothing appended to the DOM at all. Fixed by
+wiring in the same three-point pattern orrery.js uses: mount after renderer
+setup, `.blit()` right after `renderer.render()` in the animate loop,
+`.dispose()` in cleanup. Preview tile now renders correctly.
+
+Wiring: src/text/beamlineText.js (new), src/scenes/beamline.js (new, ~650
+lines — mirror/beam-segment builders, hover/click raycasting against the
+mirror meshes, a read-more panel matching orbiter.js/orrery.js conventions,
+a traveling light pulse with real arc-length-parametrized constant-speed
+travel along the solved multi-segment path), main.js (import + SCENES entry
++ initPreviews() entry + PM_GLIMPSE_WORDS entry), index.html (nav icon +
+preview tile + structured-data keywords), colophon.js (bibliography entry;
+"small experiences" count stays at seven, matching the site's existing
+convention of not counting the Butterfly/Lorenz-attractor piece in that
+tally), scripts/prerender.js (buildBeamline() → /text/beamline/, confirmed
+in the build output alongside the other 8 prerendered text pages).
+
+Confirmed live via Chrome against the local dev server: drag-to-orbit and
+scroll-to-zoom both work: the whole beam/mirror path rotates and dollies
+correctly. All three mirrors are click-to-read — verified each bounce
+individually (Bounce 1 "Here are harps, here are superstrings," Bounce 2
+"Pluck at them both...", Bounce 3 "Seven-colored, prisms, starlight...")
+opens the matching panel text, and the panel's close button (and the
+title/hint fade-in on close) work. Preview tile renders correctly post-fix.
+Mobile viewport (390×844) doesn't crash and the scene renders, though the
+title/hint text overlaps at that width — the same layout behavior other
+scenes' title bars already have at that breakpoint, not a Beamline-specific
+regression. `node --check` and `npx vite build` both clean, prerender
+output includes all three bounce texts. package.json bumped to 1.22.0. Not
+committed yet — per usual, this is build/wire/verify only; Scott reviews
+before anything goes to git.
+
+## 1.21.0 (2026-07-31)
+
+Leaf — shelved again, same day as the 1.20.0 ground-up rebuild. Scott's
+call: "shelve leaf for the time being," no verdict on the work itself
+attached, which reads as genuinely open to revisiting rather than the
+closed-for-good tone Prism's shelving carried. Same four-spot comment-out
+pattern as every other shelve on this project (Cycle, the golden hare
+mechanic, Lens twice, Prism, and Leaf's own first shelving on 2026-07-29):
+main.js's import/`SCENES` entry/`initPreviews()` entry, index.html's nav
+icon + preview tile. leaf.js itself is untouched on disk, including the
+full 1.20.0 rebuild (real 3D diorama, threshold-driven droplet physics,
+the hard cut to the cosmic/holographic-boundary state) — none of that
+code is gone, just disconnected. colophon.js's bibliography entry and
+"small experiences" count (seven → six) reverted, index.html's structured-
+data keywords and live-scene-count comments reverted to seven scenes,
+package.json bumped to 1.21.0. Not committed — the 1.20.0 rebuild itself
+never got committed either, so this shelve undoes it entirely at the
+working-tree level; nothing about Leaf is in git history from this round.
+
+## 1.20.0 (2026-07-31)
+
+Leaf — ground-up rebuild, replacing the shelved 1.8.x version entirely, not
+revising it. Scott's brief: two states, one hard cut. State one is a small,
+locked-camera diorama (a leaf, a droplet building at its tip, a balcony/sky
+backdrop) where scroll is the only input; state two is a large-scale cosmic
+flash — an expanding field of light pressing against a shimmering
+holographic boundary — that unlocks full drag-to-orbit/zoom the instant the
+drop hits the ground, stays unlocked through the remaining text, and
+re-locks once the piece loops back to the leaf state. Name stays Leaf on
+purpose — the brief was explicit that the smallness of the framing is the
+point, and naming it toward the reveal would spoil it.
+
+**A genuine first for this project: live browser verification, mid-build.**
+Every prior scene on this site was built and shipped blind — no working
+headless browser in this sandbox, ever, across dozens of entries in this
+file. This session, Scott ran a local `vite` dev server on his own machine
+and handed over the URL, and the Chrome extension (on his real browser,
+same machine as the dev server) could reach it directly — the first time
+work here has been screenshotted, scrolled, dragged, and console-checked
+*during* development rather than after. Several real bugs below were
+caught this way, live, that would otherwise have shipped and waited for
+Scott's own spot-check to surface.
+
+**Physics — carried forward, not redesigned.** Scott's own framing:
+the 1.8.0 threshold-release physics (gravity ~r^3 vs. surface-tension ~r at
+the neck, R_CRITICAL = sqrt(K_TENSION/K_GRAVITY), the growth-curve bias
+toward a late release, the fall's hard-kick-then-accelerate curve, the
+leaf's cos()-based recoil ring-down) were never actually wrong, only the
+staging around them was — so they're carried forward into this version
+almost verbatim, now driving a real 3D mesh instead of a 2D sprite. New in
+this pass: a post-release wobble (`dropWobble`, same decaying-oscillation
+idiom as the leaf's own recoil), because real drop pinch-off photography
+shows a brief oblate/prolate oscillation settling toward a flattened
+spheroid — not the teardrop shape drops are conventionally drawn as. The
+teardrop only appears here at all while the drop is HELD (a real pendant
+drop under gravity+tension does narrow at the neck and bulge below) —
+correctly saved for the wrong moment in every cartoon version, including
+this project's own prior one.
+
+**A real bug caught live: the droplet was nearly invisible.**
+`MeshPhysicalMaterial({transmission:1, ...})` — real glass/water
+refraction — rendered against this diorama's flat sky/backdrop planes as
+almost nothing: transmission bends whatever's behind an object, and a
+uniform-color plane has no detail to bend. Confirmed by zooming into a
+live screenshot: a faint smudge, not a droplet. Fixed two ways — dialed
+transmission back to 0.85 with a slight blue-white tint so the sphere
+itself has SOME presence regardless of background, and added a small
+additive catch-light sprite as a child of the drop, offset off-center.
+The honest mechanism by which a real water drop reads against open sky is
+mostly a bright specular highlight, not its transmission — the physically
+"purer" material alone was actually the less physically-honest-looking
+result.
+
+**A real bug caught live: foreground content was off-frame.** First
+render put the leaf cropped against the top edge and the balcony rail
+reduced to a dense sliver hugging the bottom — both symptoms of the same
+mistake: `layoutDiorama()`'s visible-width math assumed every diorama
+element sat at the same depth (`CAM_DIST`) as the leaf, but the rail and
+foreground foliage were placed much closer to the camera (z=2.6 against
+a 5.6-unit camera distance), so they projected far larger and further
+off-center than the layout math accounted for. Fixed by pushing the
+camera back (5.6 → 7.2 units), flattening the leaf/ground to the depth
+the layout math actually assumes, and pulling the near-camera elements
+(rail, foliage, grass) in from z≈2.6 to z≈0.9–1.1 — close enough to read
+as foreground, not so close the perspective math breaks down. Confirmed
+by screenshot, not just recomputed by hand.
+
+**Real 3D throughout, not a flat-plane collage — same tier as Orbiter,
+per the brief.** The leaf is `ExtrudeGeometry` now (real thickness, real
+face normals) instead of a flat `ShapeGeometry`, lit by an actual
+directional "sun" + hemisphere + ambient rig. The balcony rail is real
+baluster/rail geometry. Foreground foliage clusters are deformed
+icosahedra (irregular vertex-push, not a smooth platonic solid) with
+their own independent sway. A cluster of real individual grass blades
+(each its own thin plane, each its own sway phase) sits near the ground —
+the brief's explicit ask ("grass... responding to the same gravity
+field"). A few low-poly palms (tapered trunk + fanned frond blades, crown
+separated from trunk so only the crown carries sway — a real palm's trunk
+barely moves, its fronds do) sit further back. What's deliberately NOT
+real geometry: the distant garage/apartment-block/parking-lot band, kept
+as lit, fogged canvas-texture planes — far enough back, and correctly lit
++ fogged now (real `THREE.Fog` replaces the old dual sharp/blur
+rack-focus bake entirely; this is a simplification as much as an upgrade,
+since fog + real lighting do the depth-cueing job a cheaper way), that
+modeling every window individually would cost real complexity for zero
+perceptible gain. Sympathetic ambient sway (`makeSwayer`/`tickSwayer`, a
+data-driven list rather than named per-layer variables) extends the same
+guardrails 1.8.0 established: independent freq/phase per element so
+nothing ever synchronizes, amplitudes in the few-thousandths-of-a-unit
+range, round down on any doubt.
+
+**The hard-cut trigger, with the buffer the brief asked for.** The cut
+fires the moment scroll-fraction crosses the real, DOM-measured boundary
+of the impact paragraph ("the drop explodes on the ground...") — checked
+every animation frame against the spring-smoothed fraction, not a raw
+scroll delta, so a fast scroll can't skip past a `>=` check the way it
+could skip past an exact-equality one. The actual buffer the brief asked
+for is the REVERSE direction's re-arm margin (`CUT_REARM_MARGIN`, ~3.5%
+of the whole piece's scroll range) — wide enough that hovering right at
+the seam doesn't flicker the cut on and off; without it, chatter at the
+boundary was the real risk, not a missed trigger. Camera lock/unlock,
+lighting, and fog all swap in the same single frame the visibility swap
+happens — no easing in either direction, matching "hard cut, not a slow
+dissolve" literally.
+
+**The loop-back is a real auto-scroll, not just "you can scroll back
+up."** Manual scroll-back through the cosmic text re-locks the camera
+immediately (verified live: dragging the cosmic camera, then scrolling
+back past the cut boundary, snaps straight back to the fixed diorama
+shot). But per the brief ("the sequence loops back around"), reaching the
+very end of the text and sitting there untouched for a couple of seconds
+now eases `caption.scrollTop` back to 0 on its own (`AUTOSCROLL_SEC`,
+cubic ease) — confirmed live, twice, at different points in the text, both
+times correctly NOT firing early (idle time at frac≈0.75 doesn't arm it)
+and correctly completing the full lock/unlock cycle once it does.
+
+**Cosmic visual — genuinely reads as intended, confirmed on screen, not
+just in the abstract.** An expanding particle field (each particle's own
+asymptotic approach to its own "reach," short of the true boundary radius
+— visually, the field never quite finishes arriving) inside a
+`ShaderMaterial` boundary sphere carrying a real fresnel rim, an
+interference pattern from two wavefronts baked into the surface (the
+brief's own nice-to-have — done, since live shader verification was
+actually possible this session for the first time), and a triple-sine
+flicker so the surface never fully settles into one static image — the
+mechanism behind "doesn't fully resolve or dissipate cleanly," not just a
+comment saying so. Screenshotted zoomed-in and zoomed-out, both read as
+intended (an "IMAX/Space Engine" register, not a toy). FOV itself jumps
+34°→60° at the cut (narrow/composed → wide/immersive) as a second, free
+lever on the scale change, on top of everything else that changes in the
+same frame.
+
+**Wiring back in.** Same four-spot re-enable pattern this project always
+uses for a shelve/unshelve, run in reverse: uncommented the import,
+`SCENES` entry, and `initPreviews()` entry in main.js, and the nav icon +
+preview tile in index.html. Also: colophon.js's bibliography entry and
+"small experiences" count (six → seven) restored, index.html's
+structured-data keyword list and live-scene-count comments updated,
+package.json bumped to 1.20.0.
+
+**What's confirmed live this session, and what isn't.** Confirmed via the
+dev-server + Chrome loop above: the hard cut fires and un-fires correctly
+in both directions (including the re-arm buffer not chattering), drag-to-
+orbit and wheel-zoom both work once unlocked, the auto-loop-back
+completes and correctly re-locks, the droplet is now actually visible
+through the full hold/fall arc, the preview tile shows only the leaf
+vignette (never cosmic, on purpose — see "not spoiling the reveal" above)
+with zero console errors, `npx vite build` is clean (38 modules, 8
+prerendered text pages including `/text/leaf/`, unchanged since the found
+text itself wasn't touched), and a 420px-wide viewport doesn't break
+layout or throw. Not done this session: an actual deploy/production
+check (this was all against localhost), a close look at
+`prefers-reduced-motion` specifically (the gate is wired the same way
+every other scene's is, but never toggled and watched), and real device
+testing on an actual phone rather than a resized desktop window. Worth
+Scott's own pass before this ships to production, same as everything
+else on this project — the live-verification loop this session closes a
+lot of the historical "built blind" gap, not all of it.
+
+Not committed yet.
+
 ## 1.19.0 (2026-07-31)
 
 Prism — shelved. Scott's call after watching the reapplied performance

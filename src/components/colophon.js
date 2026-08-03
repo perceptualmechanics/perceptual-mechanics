@@ -53,10 +53,10 @@ const BIBLIOGRAPHY = [
       'Fourteen poems by Scott Jason Cohen — eight shown, one per satellite, a different slice of the full set each visit: "Courtesans of the Old World," "Springtime in the Garden," "Prologue," "Raise a Glass," "Lament for the Future Never Realized," "Moon Song," "After Auden," "The Lovers," and "Haiku," all from Scott Jason Cohen’s Assembled Verse.doc; "DNA," from Nucleus.doc (© 2007 Scott Jason Cohen); and four verse openings that each run on into prose after a few lines — "Apocrypha," "The way her hips sway is unique," "here comes no sun today," and "(Underneath scams and heart attacks," — each its own separate source file.',
     ],
   },
-  // Leaf: shelved 2026-07-29 (see main.js's leaf.js import comment for the
-  // full re-enable checklist) — commented out here too, matching how Lens
-  // (also shelved) carries no bibliography entry at all while offline.
-  // Re-enable this alongside the other four spots.
+  // Leaf: shelved again 2026-07-31 (see main.js's leaf.js import comment
+  // for the full re-enable checklist) — commented out here too, matching
+  // how Lens (also shelved) carries no bibliography entry at all while
+  // offline. Re-enable this alongside the other four spots.
   // {
   //   scene: 'Leaf',
   //   entries: [
@@ -92,6 +92,12 @@ const BIBLIOGRAPHY = [
     scene: 'The Sphere',
     entries: [
       'Interconnected prose fragments, Scott Cohen.',
+    ],
+  },
+  {
+    scene: 'Beamline',
+    entries: [
+      '"The body is the prism of the dream" and "life has to go somewhere" (epigraphs), plus the harps/superstrings and seven-colored/prisms passages, staged one fragment per mirror — Scott Jason Cohen, from Compendion.pages.',
     ],
   },
 ];
@@ -275,15 +281,14 @@ function buildPanel() {
     <section>
       <h2 id="colophon-title" tabindex="-1">Colophon</h2>
       <div class="colophon-sub">perceptual mechanics</div>
-      <!-- Leaf's shelving (2026-07-29) dropped the live count to six
-           (Sphere, Scroll, Theater, Orbiter, Orrery, Library). Prism
-           briefly brought it back to seven across two full attempts (an
-           organically-grown crystal, then a classical dispersion prism);
-           neither landed, and Scott shelved it for good on 2026-07-31 (see
-           main.js's prism.js import comment and NOTES.md 1.19.0) — back to
-           six. Re-enable Leaf and this goes to seven; re-enable both and
-           it goes to eight. -->
-      <p>A personal site by Scott Jason Cohen — six small experiences built
+      <!-- Leaf shelved again 2026-07-31, same day as its ground-up rebuild
+           and same day Beamline shipped as a brand-new scene (Sphere,
+           Scroll, Theater, Orbiter, Orrery, Library, Beamline) — seven.
+           Prism (two full attempts: an organically-grown crystal, then a
+           classical dispersion prism) never landed and stays shelved for
+           good — see main.js's prism.js import comment and NOTES.md
+           1.19.0. Re-enable Leaf and this goes to eight. -->
+      <p>A personal site by Scott Jason Cohen — seven small experiences built
       around found and written text, each its own self-contained piece of
       code, none of it built from image assets: everything on screen is
       drawn live, in the browser, from geometry and canvas-generated
@@ -305,9 +310,9 @@ function buildPanel() {
       <h3>Bibliography</h3>
       <p class="colophon-sub" style="margin-bottom:1rem;">Where the text in each piece actually comes from.</p>
       <p style="margin-bottom:1.4rem;">Every piece of writing on this site is
-      also collected as <a href="/text/">plain reading pages</a> — the same
-      words, set down without the machinery, so they can be linked to and
-      found.</p>
+      also collected as plain reading pages — <a href="/text/">read the
+      writing on its own</a>, the same words set down without the machinery,
+      so they can be linked to and found.</p>
       <dl id="colophon-bib">${buildBibliographyHTML()}</dl>
     </section>
 

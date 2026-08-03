@@ -35,9 +35,12 @@
        equivalent of the old <meta name="keywords"> tag -- that one's been
        ignored by Google since 2009 (Bing doesn't weight it either), but
        this property genuinely feeds crawlers' topic understanding. Terms
-       below are pulled straight from the site's own seven live scenes
+       below are pulled straight from the site's own eight live scenes
        rather than reached-for (Prism shelved 2026-07-31, its two keyword
-       terms dropped along with it — see main.js's import comment). -->
+       terms dropped along with it; Leaf shelved again the same day after
+       a brief re-enable, its own two terms dropped too; Beamline added
+       the same day as a new scene, its own two terms added — see main.js's
+       import comments). -->
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -53,7 +56,8 @@
       "chaos theory", "Lorenz attractor", "phase space visualization",
       "hypertext fiction", "digital poetry", "illuminated scroll",
       "orrery", "solar system model", "interactive fiction",
-      "ASCII theater", "quantum orbital visualization", "digital library"
+      "ASCII theater", "quantum orbital visualization", "digital library",
+      "optical reflection simulation", "EUV lithography"
     ]
   }
   </script>
@@ -62,7 +66,11 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <!-- Zen Maru Gothic dropped 2026-07-22 — was leaf.js's caption font only,
        now replaced by Coda there, so nothing on the site uses it anymore. -->
-  <link href="https://fonts.googleapis.com/css2?family=Electrolize&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=IM+Fell+English:ital@0;1&family=Cinzel:wght@400;600&family=Patrick+Hand&family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=Noto+Sans+Ogham&family=Coda:wght@400;800&display=swap" rel="stylesheet">
+  <!-- Orbitron added 2026-08-03 — Beamline/Solar Sailer's own HUD-chrome
+       font (hint text + station-number label), scoped there via CSS only;
+       loaded here alongside every other scene's font for the same reason
+       Electrolize etc. all live in this one combined request. -->
+  <link href="https://fonts.googleapis.com/css2?family=Electrolize&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=IM+Fell+English:ital@0;1&family=Cinzel:wght@400;600&family=Patrick+Hand&family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=Noto+Sans+Ogham&family=Coda:wght@400;800&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
   <title>perceptual mechanics</title>
   <meta name="theme-color" content="#000000"/>
   <link rel="stylesheet" href="./styles/main.css">
@@ -71,8 +79,9 @@
 
   <a href="#landing" class="skip-link">Skip to main content</a>
 
-  <!-- Persistent nav bar — seven live scenes (Leaf and Prism both shelved;
-       see their own comments below). -->
+  <!-- Persistent nav bar — eight live scenes (Leaf and Prism both shelved;
+       Beamline added 2026-07-31, a new scene — see its own comment below
+       and NOTES.md). -->
   <nav id="pm-nav" aria-label="Perceptual Mechanics navigation">
 
     <!-- Sphere: geodesic / icosahedron outline -->
@@ -125,9 +134,9 @@
       </svg>
     </button>
 
-    <!-- Leaf: shelved 2026-07-29, comment out don't delete (same pattern as
-         Cycle, the golden hare mechanic, and Lens below) — see main.js's
-         leaf.js import comment for the full re-enable checklist.
+    <!-- Leaf: shelved again 2026-07-31, comment out don't delete (same
+         pattern as Cycle, the golden hare mechanic, and Lens below) — see
+         main.js's leaf.js import comment for the full re-enable checklist.
     <button type="button" class="nav-icon" data-scene="leaf" aria-label="Leaf" title="Leaf — In The End It Falls Slowly Through The Aether" onmouseover="pmGlimpse('leaf')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
         <path d="M12 3c5 2 7 6 5 11-1.5 3.7-4 5.5-5 7-1-1.5-3.5-3.3-5-7-2-5 0-9 5-11z"/>
@@ -172,6 +181,18 @@
         <line x1="7.3" y1="15" x2="7.3" y2="18.5"/>
         <line x1="16" y1="15.6" x2="16" y2="18.5"/>
         <line x1="18.2" y1="15.2" x2="18.2" y2="18.5"/>
+      </svg>
+    </button>
+
+    <!-- Beamline: a beam bouncing between three angled mirror strokes —
+         new scene, 2026-07-31. See NOTES.md. -->
+    <button type="button" class="nav-icon" data-scene="beamline" aria-label="Beamline" title="Beamline" onmouseover="pmGlimpse('beamline')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 19 L9 10 L14 15 L21 5"/>
+        <path d="M7.2 11.6 L10.8 8.4"/>
+        <path d="M12 16.8 L16 13.2"/>
+        <circle cx="3" cy="19" r="1" fill="currentColor" stroke="none"/>
+        <circle cx="21" cy="5" r="1" fill="currentColor" stroke="none"/>
       </svg>
     </button>
 
@@ -271,12 +292,12 @@
         </button>
       </li>
 
-      <!-- Leaf: shelved 2026-07-29, comment out don't delete — see main.js's
-           leaf.js import comment for the full re-enable checklist.
+      <!-- Leaf: shelved again 2026-07-31, comment out don't delete — see
+           main.js's leaf.js import comment for the full re-enable checklist.
       <li class="preview-wrapper" data-scene="leaf">
         <button type="button" class="preview-container" id="preview-leaf"
              title="Leaf — In The End It Falls Slowly Through The Aether"
-             aria-label="Leaf — a raindrop's fall from a leaf, told through physics, found text arriving in phase with the fall. Press Enter to expand."
+             aria-label="Leaf — a raindrop's fall from a leaf, told through real physics, locked to one fixed view; the moment it hits the ground, a hard cut opens onto a free-camera cosmic scene. Press Enter to expand."
              onmouseover="pmGlimpse('leaf')">
         </button>
       </li>
@@ -298,6 +319,14 @@
         </button>
       </li>
 
+      <li class="preview-wrapper" data-scene="beamline">
+        <button type="button" class="preview-container" id="preview-beamline"
+             title="Beamline"
+             aria-label="Beamline — a staged sequence of curved mirrors, a beam of light bouncing between them, found text surfacing at each bounce. Press Enter to expand."
+             onmouseover="pmGlimpse('beamline')">
+        </button>
+      </li>
+
       <!-- Prism: shelved 2026-07-31, comment out don't delete — see main.js's
            prism.js import comment for the full re-enable checklist.
       <li class="preview-wrapper" data-scene="prism">
@@ -310,15 +339,27 @@
       -->
     </ul>
 
-    <!-- The writing, plainly. Added 2026-07-29: every piece above builds its
-         text client-side and only after a click, so none of it had ever been
-         reachable by search or linkable from outside the page. /text/ is the
-         same writing as real static pages, generated at build time from the
-         same modules the scenes import (see scripts/prerender.js). Kept
-         deliberately quiet down here — the experiences are the work; this is
-         the way in for someone who arrived looking for a line they
-         remembered. -->
-    <p id="landing-textlink"><a href="/text/">Read the writing on its own</a></p>
+    <!-- "Read the writing on its own" (1.7.0's /text/ prerender work) used to
+         live here as its own persistent bottom-left link — moved into the
+         colophon dialog as of 1.31.2, alongside the bibliography it belongs
+         next to (see src/components/colophon.js), on both desktop and
+         mobile. It was never a mobile-only problem (crowded against
+         #site-title/tiles at narrow widths, see the vignette below), just
+         most visible there; the landing page didn't need a second
+         persistent fixed-position link once the colophon already exists
+         as the place for exactly this kind of "the actual machinery lives
+         here" content. -->
+
+    <!-- Mobile bottom vignette, added 2026-08-03: on narrow viewports the
+         preview grid becomes a single scrollable column taller than the
+         viewport (see styles/main.css), so whichever tile lands at the
+         bottom of the screen sits directly under the fixed #site-title at
+         almost any scroll position — a real overlap, not an edge case.
+         Purely decorative, aria-hidden; a sibling of the other fixed footer
+         elements so it hides with them via #landing's own display:none in
+         expandScene(). #landing-textlink is gone as of 1.31.2 (see above)
+         but #site-title alone still needs this. -->
+    <div id="landing-bottom-fade" aria-hidden="true"></div>
   </main>
 
   <!-- Full screen experience overlay — no close button; nav is the navigation -->

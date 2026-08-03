@@ -221,43 +221,46 @@ html, body {
   padding: 1rem;
 }
 
-/* ─── "Read the writing on its own" ────────────────────────────────────────
-   Added 2026-07-29 alongside the static /text/ pages. Fixed rather than
-   in-flow on purpose: #landing is a centering flex row whose only child is
-   the preview grid, and adding a second flex item would sit beside the grid
-   rather than under it (making it a column would also invert what the 480px
-   `align-items: flex-start` rule below means, which exists for a documented
-   reason). Bottom-left is the one corner still free — #site-title owns
-   bottom-center, #colophon-mark bottom-right. It stays a child of #landing so
-   the existing `landing.style.display = 'none'` in expandScene() hides it
-   with everything else when a scene opens, no separate visibility logic.
-   Deliberately quiet: the experiences are the work, this is the side door. */
-#landing-textlink {
-  position: fixed;
-  bottom: 1.35rem;
-  left: 1.4rem;
-  margin: 0;
-  z-index: 310;
-}
-#landing-textlink a {
-  font-family: 'Times New Roman', serif;
-  font-size: 0.62rem;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.32);
-  text-decoration: none;
-  transition: color 0.4s ease;
-}
-#landing-textlink a:hover,
-#landing-textlink a:focus {
-  color: rgba(255, 255, 255, 0.72);
-}
-@media (max-width: 600px) {
-  /* #site-title is centered at bottom:1.2rem; on a narrow phone its text
-     block reaches far enough left to collide with this. Lift it clear
-     rather than hiding it — mobile-first indexing means a link hidden on
-     small screens is a link that counts for less. */
-  #landing-textlink { bottom: 3.4rem; }
+/* ─── "Read the writing on its own" — moved, 1.31.2 ─────────────────────────
+   Lived here as its own fixed bottom-left element from 2026-07-29 (alongside
+   the static /text/ pages) until 2026-08-03, when it moved into the colophon
+   dialog instead (src/components/colophon.js's Bibliography section, right
+   next to the sourcing content it's actually about) — on both desktop and
+   mobile, not conditionally hidden at one breakpoint. It was crowding other
+   fixed elements at narrow widths (the immediate trigger), but the deeper
+   reason: the landing page didn't need a second permanent fixed-position
+   link once the colophon already exists as the place for exactly this kind
+   of "here's the machinery" content. See #landing-bottom-fade below, still
+   needed for #site-title alone. */
+
+/* ─── Bottom vignette (mobile column stack) ─────────────────────────────────
+   Added 2026-08-03. Below 480px #scene-previews switches to
+   flex-direction:column (see the 480px rule further down) and the resulting
+   column runs taller than the viewport, scrolling inside #landing. #site-
+   title is position:fixed, so it doesn't scroll with it — at nearly every
+   scroll position except full-top and full-rest-at-bottom, whatever tile
+   happens to be at the screen's bottom edge sits directly under that fixed
+   text, cutting through it. A soft gradient (not a hard bar, to stay
+   consistent with the rest of this page's quiet, text-only footer) fades
+   that edge to black before it reaches the words, sitting above the plain
+   in-flow tiles but below the fixed text (z-index scale at the top of this
+   file). pointer-events:none so it never blocks a tap on a tile poking up
+   into it. Hidden above 480px on purpose — at those widths the grid only
+   ever wraps 1-2 rows, and #landing's own padding-bottom already keeps the
+   last row clear of the fixed footer, so there's nothing for this to fix
+   there. (#landing-textlink used to share this problem too — moved into
+   the colophon as of 1.31.2, see the note above.) */
+#landing-bottom-fade { display: none; }
+@media (max-width: 480px) {
+  #landing-bottom-fade {
+    display: block;
+    position: fixed;
+    left: 0; right: 0; bottom: 0;
+    height: 7rem;
+    z-index: 50;
+    pointer-events: none;
+    background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0) 100%);
+  }
 }
 
 .preview-wrapper {

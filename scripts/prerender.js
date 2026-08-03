@@ -29,6 +29,7 @@ import { cdRackItems } from '../src/text/cdRack.js';
 import { SCENES as theaterScenes, CHARACTERS } from '../src/text/theaterScript.js';
 import { TEXT_STAGES } from '../src/text/leafText.js';
 import { ORRERY } from '../src/text/orreryStory.js';
+import { EPIGRAPH_PRIMARY, EPIGRAPH_SECONDARY, BOUNCES } from '../src/text/beamlineText.js';
 
 const ORIGIN = 'https://perceptualmechanics.com';
 const AUTHOR = 'Scott Jason Cohen';
@@ -326,7 +327,7 @@ ${beats}
     bodyHtml: body,
     jsonLd: creativeWork('Scenes from Three Scripts', 'Verbatim scenes from three scripts by Scott Jason Cohen.', 'theater', theaterScenes.map(s => s.slug)),
   };
-}
+}/* 
 
 function buildLeaf() {
   const body = `<article class="piece">
@@ -342,7 +343,7 @@ ${TEXT_STAGES.map(s => `<p>${lines(s.text)}</p>`).join('\n')}
     bodyHtml: body,
     jsonLd: creativeWork('In The End It Falls Slowly Through The Aether', 'A single raindrop’s life, told through physics.', 'leaf'),
   };
-}
+} */
 
 function buildOrrery() {
   const body = `<article class="piece">
@@ -357,6 +358,24 @@ ${ORRERY.note.split(/\n\s*\n/).map(p => `<p>${lines(p.trim())}</p>`).join('\n')}
     lede: `<p>The account below is the placard inside <strong>the Orrery of Los Feliz</strong> — a warehouse you can walk around, with the machine it describes built at full scale in the middle of it.</p>`,
     bodyHtml: body,
     jsonLd: creativeWork(ORRERY.name, 'A found account of a thirty-foot orrery in a Los Feliz warehouse.', 'orrery'),
+  };
+}
+
+function buildBeamline() {
+  const body = `<article class="piece">
+<p class="note">${esc(EPIGRAPH_PRIMARY)}</p>
+<p class="note">${esc(EPIGRAPH_SECONDARY)}</p>
+${BOUNCES.map((b, i) => `<h2>Bounce ${i + 1}</h2>\n<p>${lines(b.text)}</p>`).join('\n')}
+</article>`;
+  return {
+    slugPath: 'beamline',
+    title: 'Beamline',
+    description: 'A staged sequence of mirrors, bouncing light and found text together — the piece staged in Beamline.',
+    sceneKey: 'beamline', sceneName: 'Beamline',
+    lede: `<p>In <strong>Beamline</strong> a beam of light travels a staged path between curved mirrors, real reflection geometry bouncing it from one to the next; this text surfaces at each bounce point in turn.</p>
+<p>Here it is as one continuous piece, epigraph first.</p>`,
+    bodyHtml: body,
+    jsonLd: creativeWork('Beamline', 'Found text staged across a mirror bounce sequence.', 'beamline'),
   };
 }
 
@@ -484,7 +503,7 @@ ${pages.map(p => `  <li><a href="/text/${p.slugPath}/">${esc(p.title)}</a><span 
 export function prerender(outDir) {
   const pages = [
     buildScroll(), buildPoems(), buildFragments(),
-    buildTheater(), buildLeaf(), buildOrrery(), buildLibrary(),
+    buildTheater(), buildOrrery(), buildBeamline(), buildLibrary(),
   ];
   const all = [buildIndex(pages), ...pages];
 

@@ -3,16 +3,23 @@ import { createButterfly }  from './scenes/butterfly.js';
 import { createScroll }    from './scenes/scroll.js';
 import { createTheater } from './scenes/theater.js';
 import { createOrbiter }   from './scenes/orbiter.js';
-// import { createLeaf } from './scenes/leaf.js'; // shelved 2026-07-29 —
-// Scott: same pattern as Cycle, the golden hare mechanic, and Lens (twice):
-// comment out, don't delete. leaf.js itself is untouched, including the
-// 1.8.0 rebuild (depth-of-field rack focus, the physics-driven droplet
-// hold/fall/splash, text-in-phase-with-the-drop) — nothing here was bad, it
-// just isn't clicking yet as a whole piece. Re-enable by uncommenting this
-// import, the SCENES entry below, the initPreviews() map entry, and the nav
-// icon + preview tile in index.html (same four spots, all cross-referenced).
+// import { createLeaf } from './scenes/leaf.js'; // shelved again 2026-07-31
+// — Scott: "shelve leaf for the time being," same pattern as every other
+// shelve on this project (Cycle, the golden hare mechanic, Lens twice,
+// Prism, and Leaf's own first shelving on 2026-07-29): comment out, don't
+// delete. This is the 1.20.0 ground-up rebuild (locked-camera diorama,
+// hard cut to a free-camera cosmic scene, real threshold-driven droplet
+// physics) — unlike Prism, no verdict on the work itself came with this
+// one, and "for the time being" reads as open to revisiting rather than
+// closed for good. Re-enable by uncommenting this import, the SCENES
+// entry below, the initPreviews() map entry, and the nav icon + preview
+// tile in index.html (same four spots, all cross-referenced).
 import { createOrrery }    from './scenes/orrery.js';
 import { createLibrary }   from './scenes/library.js';
+// New scene, 2026-07-31 — a staged sequence of curved mirrors, real
+// reflection geometry (not transmission) bouncing a beam between them.
+// See NOTES.md.
+import { createBeamline }  from './scenes/beamline.js';
 // Re-enabled 2026-07-23 — Scott: "given this analysis, curate the excerpts
 // to create hyperlinks between them a la my other writings in the site,"
 // after a close-read of the whole catalog (library_resonances.md) turned
@@ -47,13 +54,15 @@ const SCENES = {
   orbiter:     { create: createOrbiter,    label: 'Orbiter — A p-Orbital, Satellites.',
                  ariaLabel: 'Orbiter — a hydrogen atom’s p-orbital rendered as a fuzzy probability cloud, with satellites in clean elliptical orbits around it. Drag to orbit.' },
   // leaf: { create: createLeaf, label: 'Leaf — In The End It Falls Slowly Through The Aether.',
-  //         ariaLabel: 'Leaf — a raindrop’s fall from a leaf, told through physics, with the found text arriving in phase with the fall.' },
-  // Shelved 2026-07-29 — see the leaf.js import comment above for the full
-  // re-enable checklist (four spots, cross-referenced).
+  //         ariaLabel: 'Leaf — a raindrop’s fall from a leaf, told through real physics, locked to one fixed view; the moment it hits the ground, a hard cut opens onto a free-camera cosmic scene for the rest of the piece.' },
+  // Shelved again 2026-07-31 — see the leaf.js import comment above for
+  // the full re-enable checklist (four spots, cross-referenced).
   orrery:      { create: createOrrery,     label: 'The Orrery of Los Feliz.',
                  ariaLabel: 'The Orrery of Los Feliz — a found story, told through a 30-foot orrery: nine planets, their moons, an asteroid belt, in a warehouse you can walk around. Use the arrow keys or WASD to walk, click to look around, click the orrery to read.' },
   library:     { create: createLibrary,    label: 'The Library — once removed.',
                  ariaLabel: 'The Library — a real bookshelf, 107 books, films, and divination decks, rebuilt as a shelf you can turn in space. Drag to orbit, scroll to zoom, click a spine to read what it is.' },
+  beamline:    { create: createBeamline,   label: 'Beamline.',
+                 ariaLabel: 'Beamline — a staged sequence of curved mirrors, a beam of light bouncing between them, found text surfacing at each bounce. Drag to orbit, scroll to zoom, click a mirror to read.' },
   // prism: { create: createPrism, label: 'Prism — A Crystal, Grown.',
   //          ariaLabel: '...' },
   // Shelved 2026-07-31 — see the prism.js import comment above for the
@@ -284,11 +293,12 @@ function initPreviews() {
     scroll:     document.getElementById('preview-scroll'),
     theater:    document.getElementById('preview-theater'),
     orbiter:    document.getElementById('preview-orbiter'),
+    // leaf:    document.getElementById('preview-leaf'), // shelved again
+    // 2026-07-31, see the leaf.js import comment near the top of this
+    // file for the full re-enable checklist.
     orrery:     document.getElementById('preview-orrery'),
     library:    document.getElementById('preview-library'),
-    // leaf:    document.getElementById('preview-leaf'), // shelved 2026-07-29,
-    // see the leaf.js import comment near the top of this file for the full
-    // re-enable checklist.
+    beamline:   document.getElementById('preview-beamline'),
     // prism:   document.getElementById('preview-prism'), // shelved
     // 2026-07-31, see the prism.js import comment near the top of this
     // file for the full re-enable checklist.
@@ -353,6 +363,7 @@ const PM_GLIMPSE_WORDS = {
   orrery: 'will',
   library: 'catalogued',
   prism: 'refraction',
+  beamline: 'incidence',
   title: 'secrets',
 };
 let pmGlimpseTimer = null;
