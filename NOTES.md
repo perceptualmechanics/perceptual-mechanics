@@ -93,6 +93,246 @@ them. Read these before adding anything that runs at build time.
   worth trimming, orrery.js's texture generators and first-person rig are the
   two most self-contained chunks to split out first.
 
+## 1.33.2 (2026-08-03)
+
+Third edge pass, and a real misfire on the way there. Scott's actual
+complaint was "the rectangular grid of dots as seen from above... expand
+that grid so it looks more organic... tapers off the further you get away
+from the solar sailer" — first read as the terrain's tiled grid-line
+*texture* (`makeGridTexture()`), built and live-tested a replacement
+(`makeOrganicGroundTexture()`, individual canvas-drawn dots instead of
+tiled lines), hit a real sub-pixel-minification bug on the first pass
+(dots blurred into a solid mass at high density), partially fixed it, then
+got stopped: "you did the wrong thing. revert what you did" — fully
+reverted, `makeGridTexture()` and its call site restored verbatim, verified
+clean via `node --check`/grep/`npx vite build`. The correction that
+followed wasn't about execution quality, it was about target: "I think you
+were working on the wrong aspect" — a formal follow-up brief then named the
+real layer.
+
+**The actual target was a different system entirely** — the growth-patches
+Game-of-Life lattice (`caPoints`/`caGeo`/`caMat`), a genuine rectangular
+point field (`CA_COLS`×`CA_ROWS`) that 1.33.1's terrain `edgeFalloff()`
+never touched at all, since it's its own `THREE.Points` object with a fixed
+extent, not part of the terrain height field. Confirmed by elimination
+before editing (per the brief's own explicit request): `sceneKit.js` is
+generic interaction helpers only (orbit drag, wheel zoom, tap-vs-drag —
+nothing that renders anything); `gridBugs` is 14 randomly-scattered
+points with no lattice structure, too sparse to read as "a grid of
+intersections"; the CA lattice is the only true regular grid of points in
+the file, bright (size 4.4, additive blending) and large enough (was
+34×18=612 points) to plausibly be what reads as a rectangular patch.
+Confirmed live via a temporary `caPoints.visible` toggle (since removed) —
+hiding it removed every dot on screen and left only the terrain's own
+much fainter texture crosshatching, conclusively separating the two
+layers.
+
+**Same underlying idea as 1.33.1, applied to a different axis.** The
+Game-of-Life simulation itself still runs on the full, untouched
+rectangular grid — its neighbor topology has to stay a real rectangle, and
+touching that would corrupt the automaton's own dynamics for no reason.
+What changed is purely how each point *renders*: at setup, each of the
+lattice's points gets an elliptical `edge` factor from its own distance to
+`CAM_TARGET` (same normalized-radius shape as `edgeFalloff()`, against the
+lattice's own half-extents), then three things derive from that factor —
+density (a point deep in the outer band has a low, once-decided chance of
+ever being `caEligible` at all, so the perimeter genuinely thins rather
+than just dimming), position (jitter scaled by `1 - edge`, zero in the
+interior, growing toward the true edge, so eligible edge points scatter off
+the perfect lattice instead of staying grid-locked), and brightness (the
+animate loop's per-frame color multiplies by the same smooth `edge` factor
+on top of the density thinning). Also widened the lattice itself
+(`CA_COLS`/`CA_ROWS`: 34×18 → 64×34, ~705×375 units, same aspect ratio) so
+the field reads as part of something larger rather than a bounded tile —
+this raises the simulated cell count to 2176 and the render loop's
+per-frame work proportionally, both trivial at these sizes.
+
+**Verified two ways.** (1) `verify_ca_falloff.mjs` (since deleted, same
+throwaway-script convention as every other piece of real math on this
+scene) replicated the exact falloff/jitter/eligibility logic against the
+real seeded RNG stream: center point reads edge=1 (untouched), the
+rectangle's true corners read edge=0 (they sit outside the ellipse
+entirely, by construction — the four lattice corners are always fully
+suppressed, which is what gives the field a rounded rather than rectangular
+silhouette), overall eligible fraction ~57% (expected, since a meaningful
+slice of the rectangular lattice's own corners fall outside the unit
+ellipse and are permanently thinned to nothing), max jitter ~1.1×
+`GRID_CELL`. (2) Live, across multiple camera angles and zoom levels (not
+just the default view) — every edge checked (near, both sides, far into
+the fog) shows the field thinning and fraying gradually into darkness, no
+straight cutoff line at any angle. Worth noting for the record: from
+directly overhead at max zoom-out, fog saturates before any of this is
+visible at all (same finding as 1.33.1) — the meaningful test was at the
+closer/angled vantages where the field is actually in frame, matching how
+1.33.1 handled the same wrinkle.
+
+`package.json` bumped to 1.33.2. `node --check` and `npx vite build` both
+clean; the temporary `window.__beamline_debug` hook used for the
+visibility A/B test removed and confirmed absent by grep before this was
+considered done. Not committed — same review convention as every round on
+this scene.
+
+## 1.33.1 (2026-08-03)
+
+Single-item follow-up: 1.33.0's boundary fix only addressed horizontal
+distance fog, which fades a hard edge when looking *across* the landscape
+but can't hide anything when looking straight down — from directly
+overhead, the whole extent is visible at once, at a roughly uniform
+distance from the camera, so there's no near/far gradient for linear fog to
+fade through. Flagged as still reading like a bounded plot from that angle,
+"confirmed by design" — the height field was uniform-strength right up to
+the plane's literal edge, so any view that put the boundary in frame would
+show a real cliff, fog or no fog.
+
+**Real geometric taper, not just fog.** `terrainHeight()` now splits into
+two parts: `MOUNTAINS` (rail-adjacent, clearance-critical, still
+completely untouched — deliberately excluded from the new falloff on
+principle, even though they sit at normalized radius ~0.03 and would never
+actually be affected by it, so a future edit can't accidentally change
+that) and a `wild` term (`FAR_PEAKS` + `VALLEYS` + the noise layer, same
+generation as 1.33.0) that's now multiplied by a new `edgeFalloff(x, z)`.
+The falloff is elliptical, not circular — normalized separately against
+the plane's actual `PLANE_HALF_X`/`PLANE_HALF_Z` (8000×6400 isn't square),
+so it reaches exactly 0 at the real boundary in every direction rather than
+a circle that clips one axis early or leaves the other exposed. Full
+strength out to 55% of the half-extent (comfortably past every hand-placed
+`FAR_PEAK`, all under ~40%, so the skyline is visually unchanged), smoothly
+tapering to flat by the literal edge.
+
+**Verified two ways.** (1) `verify_edge_falloff.mjs` (since deleted, same
+convention as every other throwaway solver script on this scene): rail
+clearance still reads exactly 6.491 (the `wild` split leaves `MOUNTAINS`'
+contribution completely unweighted), the camera ground-clamp sweep from
+1.33.0 is still airtight at exactly its 8-unit margin, and height at all
+four plane edges plus the far corner reads exactly `FLOOR_Y` (-4, zero
+relief) — a full taper profile sampled center-to-edge shows a smooth,
+monotonic falloff with no discontinuity. (2) Live, from the specific angle
+the brief called out: parked the camera directly overhead (`phi≈0`) at
+`CAM_MAX` (620) — the visible footprint at that height turns out to sit
+entirely within the untapered zone regardless (fog also saturates
+completely up there, per Fog's linear `smoothstep(near,far,depth)`
+mix-to-fogColor, which is *why* a purely vertical view was never actually
+showing a literal edge under the current FOV/zoom range) — then, since that
+didn't stress the actual taper, moved the camera directly (bypassing the
+normal orbit clamp, for inspection only) to hover closer and lower over
+the taper band itself and directly over the literal plane edge: both show a
+smooth, uncreased dissolve from ground into fog/darkness, no cliff, no
+notch, at the exact boundary. Confirms the taper is correct by
+construction, not just "currently unreachable by luck" the way the
+pre-existing FOV/CAM_MAX numbers happened to make the *old*, untapered edge
+invisible in practice.
+
+`package.json` bumped to 1.33.1. `node --check` and `npx vite build` both
+clean; temporary debug hooks (camera position/phi/theta overrides used for
+the overhead and edge inspection) removed and confirmed absent by grep
+before this was considered done. Not committed — same review convention as
+every round on this scene.
+
+## 1.33.0 (2026-08-03)
+
+"Diorama to environment" brief on Solar Sailer — five items, explicitly
+framed as one real gap rather than a bug list: only the rail and three
+mounds read as a real place, everything else was a bounded plot. Two of
+the five directly reverse 1.32.0 choices (Orbitron-on-body, gold-on-header)
+after seeing them live.
+
+**Real wilderness terrain.** `terrainHeight()`'s three hand-placed
+`MOUNTAINS` — unchanged, still the rail's own clearance-critical
+neighbors — are now one layer among several. Added `FAR_PEAKS` (ten more
+smoothstep mounds, varied height/radius/position, not a symmetric pair)
+and `VALLEYS` (two depressions, same technique, negative), plus a seeded
+value-noise `fbm`/`ridged` layer (own lattice hash, not `Math.random` — same
+determinism convention as `mulberry32`/`hashSeed` elsewhere) filling the
+space between them for real rolling/ridged texture in every direction.
+Every addition is zeroed out inside a protected zone (see the camera bug
+below for why that zone is a circle, not the rail's own bounding box) so
+the rail's verified 6.491-unit clearance is provably unchanged — re-run
+against the full new height field by `verify_wilderness.mjs`/
+`verify_wilderness2.mjs` (both since deleted), identical to the original
+number.
+
+**Grid boundary hidden.** Terrain plane grew from 2600×2000 (320×240 segs)
+to 8000×6400 (640×512 segs) — ~3.1x the linear extent for ~4.3x the vertex
+count, still one static mesh/draw call. Fog tightened from
+`(60,700)`/`(45,400)` to `(60,560)`/`(45,400)` — not strictly load-bearing
+for hiding the edge any more (the enlarged plane alone puts the edge ~2580
+units past the worst-case camera position) but a shorter falloff suits the
+new ground-level default's naturally hazier sightlines. Grid texture
+repeat recalculated (727×582) to keep ~11-unit cells at the new size.
+
+**Ground-level default camera, plus a real bug caught live.** The old
+default (computed via `computeFramingDistance`'s full-theta-sweep worst
+case, ~578-620 units out) genuinely framed the whole route, but from high
+above — a drone survey, not a visitor in the landscape. New approach: `THETA`
+is real math, not hand-tuned — the direction from `CAM_TARGET` toward
+`P_START` itself, so the camera sits beyond `P_START` looking back down the
+route's own long axis, which compresses most of its 450-unit length into
+depth instead of needing width in frame. `GROUND_PHI_Y = -0.05` puts the
+camera near the valley floor. Replaced `computeFramingDistance` (36-angle
+theta sweep, sized the old high default) with `fitRouteAtTheta` (single-angle
+fit, since the new design no longer needs to survive autoRotate's drift the
+way the old one did) — fits the whole route at ~261 units (16:9) up to ~506
+(a narrow phone portrait), always under `CAM_MAX`.
+
+Live testing caught a real bug this shipped with, not a hypothetical:
+scrolling to `CAM_MAX` at the new shallow phi put the camera *underground*
+— the old rectangular "corridor" only protected `FAR_PEAKS` from the rail,
+not from the camera's own much larger reachable area, and a peak's footprint
+lined up with a scrollable theta/distance. Root cause was the phi/distance
+relationship itself: at a steep phi (the old design), more distance always
+meant more height, so the camera could never approach terrain without also
+rising above it; at this shallow phi, height barely changes with distance,
+so nothing prevented the camera's (x,z) from sweeping into a tall feature's
+footprint. Fixed two ways: (1) the protected zone is now a circle centered
+on `CAM_TARGET` with radius `CAM_MAX+80`, covering every reachable camera
+position rather than just the rail, and `FAR_PEAKS`/`VALLEYS` were pushed
+out beyond it (visible past the fog, never physically reachable — the usual
+"see it, don't collide with it" treatment for distant scenery); (2)
+`updateCamera()` itself now has a hard runtime floor — computed Y is never
+allowed below `terrainHeight` at the camera's own (x,z) plus an 8-unit
+margin, independent of the orbit math, catching the rail-adjacent
+`MOUNTAINS` too (close enough to still be reachable at low phi/close zoom).
+Verified airtight both ways: a full theta×distance sweep script showed
+clearance pinned exactly at the 8-unit margin everywhere once both fixes
+were in, and reproducing the exact live bug scenario (`setTheta`/`setCamDist`
+debug hooks, since removed) in the running app confirmed the same — the
+original failing case (`clearance -42.12` at theta 150°, dist 92) now reads
+`clearance 8` exactly.
+
+**Caption fade, much slower — and length-aware, not just longer.** The old
+`LABEL_SUSTAIN`/`LABEL_FADE` were one fixed 3.4s/1.0s for every caption, but
+`BOUNCES` text ranges from 3 words to 116 (the "THE MIRROR" passage) — a
+single constant could only ever be right for one length. Replaced with
+`computeSustain(text)`: `words / WORDS_PER_SECOND` (2.3, a deliberately
+unhurried pace — glowing found text in a 3D scene reads slower than a
+printed page), floored at 3.0s so short fragments don't blink past.
+`LABEL_FADE` alone went from 1.0s to 2.4s. Verified with real timing, not
+estimation: a page-side trace sampling `labelMat.opacity` every 300ms
+confirmed the shortest caption (3 words) holds at full opacity exactly to
+3.0s then fades linearly to 0 by 5.4s, and the longest (116 words) computes
+a 50.4s sustain — watched, not just computed, before calling the pacing
+right, per the brief.
+
+**Body caption text reverted to serif italic; gold moved to the body.**
+1.32.0's Orbitron-on-body and gold-on-header, seen live, read wrong — technical
+label font carrying poetic found text, clashing with the serif-italic
+epigraph in the same scene. `cx.font`/`measure.font` for the body are back
+to `italic ${BODY_FONT_PX}px "Times New Roman", serif`; `bounceStyle` (the
+"STATION N OF M" line) is back to the original near-white
+(`rgba(238,247,255,0.98)` fill, matching the body's own color, just at the
+smaller stroke/glow weights the smaller font already used); the body's
+`drawOutlinedText` now takes `GOLD_ACCENT_CSS` for fill and glow instead.
+Orbitron itself untouched on the header. Confirmed live via screenshot:
+"STATION 9 OF 10" in Orbitron small-caps, near-white; "Seven-colored,
+prisms, starlight..." below it in a clear serif italic, gold.
+
+`package.json` bumped to 1.33.0. `node --check` and `npx vite build` both
+clean. All temporary debug hooks (autoRotate/label/camera-position/
+terrain-height exposures used for live verification, including the ones
+that caught the underground-camera bug) removed before this was considered
+done — confirmed by grep. Not committed — Scott reviews before anything
+goes to git, same as every round on this scene.
+
 ## 1.32.0 (2026-08-03)
 
 Six-item follow-up brief on Solar Sailer, all closed this pass: finished a font

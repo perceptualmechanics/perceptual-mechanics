@@ -123,7 +123,12 @@ function organicWave(t, seed = 0) {
 // with the rail curve by solve_solar_sailer.mjs (since deleted): minimum
 // terrain clearance along the whole sampled curve is 6.491 units (at
 // t=0.5765, near the second/tallest mound), zero negative-clearance points
-// anywhere across 2000 samples.
+// anywhere across 2000 samples. Left completely unchanged by the
+// 2026-08-03 wilderness pass below — this is the clearance-critical part of
+// the height field, and every addition since is designed to contribute
+// exactly zero inside CORRIDOR_X/CORRIDOR_Z (see below), so this number
+// still holds byte-for-byte (re-verified by verify_wilderness.mjs, since
+// deleted, same convention).
 export const FLOOR_Y = -4;
 const MOUNTAINS = [
   { cx: 90, cz: 35, radius: 48, height: 40, seed: 11 },
@@ -133,7 +138,172 @@ const MOUNTAINS = [
 // Generic smoothstep, t in [0,1] — used for the mound falloff below AND
 // (as of the Lévy-flight pass) the vessel's own per-step glide easing.
 function smoothstep01(t) { return t * t * (3 - 2 * t); }
+
+// ─── 2026-08-03: "diorama to environment" — real terrain beyond the rail ──
+// Scott's brief: only the rail and the three MOUNTAINS above read as a real
+// place; everything past them was flat grid to a visible edge. Two more
+// layers, both zeroed out inside a protected zone so the rail's own
+// verified 6.491-unit clearance can't regress.
+//
+// That protected zone (SAFE_RADIUS/SAFE_FADE below) started as a small box
+// around just the rail's own WAYPOINTS bounding rectangle, matching
+// MOUNTAINS' own footprint — wrong, caught live: the ground-level default
+// camera (item 3, in createBeamline below) orbits CAM_TARGET at distances
+// up to CAM_MAX (620), and at this new shallow ground-level phi, camera
+// height barely rises with distance — a scroll-zoom-out at the default
+// angle put the camera *underground* the moment its (x,z) position swept
+// near a FAR_PEAK that was only guaranteed clear of the rail, not of the
+// camera's own much larger reachable area. Fixed two ways, together:
+// (1) the protected zone is now a CIRCLE centered on CAM_TARGET with
+// radius CAM_MAX+80 (700) — covers every position the camera can reach at
+// any theta/phi/dist within the normal orbit range, not just the rail
+// corridor (which sits entirely inside this circle anyway, so rail
+// clearance is unaffected — re-verified at exactly 6.491 by
+// verify_wilderness2.mjs, since deleted); (2) createBeamline's own
+// updateCamera() (below) adds a hard runtime floor — camera.y is never
+// allowed below terrainHeight at its own (x,z) plus a safety margin,
+// regardless of what the raw orbit math computes — a second, independent
+// safety net for the rail-adjacent MOUNTAINS above, which sit *inside*
+// this circle and can still be close enough at low phi/close zoom to graze
+// without it (verified: airtight across a full theta×dist sweep at the
+// default phi, minimum clearance exactly equals the margin everywhere).
+//
+// Layer 1, FAR_PEAKS/VALLEYS: hand-placed background peaks and depressions
+// at varied heights/radii/positions in a loose ring around the rail's own
+// footprint — real, distinct silhouette variety (an actual skyline at
+// different heights, not a symmetric pair) rather than leaving shape
+// entirely to noise. Same smoothstep-mound technique as MOUNTAINS, just
+// placed well beyond SAFE_RADIUS (each entry's distance from CAM_TARGET
+// minus its own radius clears SAFE_RADIUS by a 40-unit margin, re-verified
+// by verify_wilderness2.mjs) — visible on the horizon through the fog, but
+// never physically reachable by the camera, the same "see it, never
+// collide with it" arrangement real open-world scenes use for distant
+// scenery.
+const FAR_PEAKS = [
+  { cx: -649, cz: 356, radius: 180, height: 130, seed: 5 },
+  { cx: -352, cz: -698, radius: 150, height: 95, seed: 19 },
+  { cx: 90, cz: 954, radius: 220, height: 150, seed: 31 },
+  { cx: 763, cz: -740, radius: 190, height: 110, seed: 44 },
+  { cx: 1089, cz: 459, radius: 260, height: 175, seed: 58 },
+  { cx: 1081, cz: -227, radius: 170, height: 90, seed: 67 },
+  { cx: -119, cz: 885, radius: 200, height: 120, seed: 79 },
+  { cx: 704, cz: 734, radius: 150, height: 85, seed: 91 },
+  { cx: -744, cz: -105, radius: 210, height: 140, seed: 103 },
+  { cx: 1168, cz: 68, radius: 230, height: 160, seed: 121 },
+];
+const VALLEYS = [
+  { cx: -758, cz: 59, radius: 220, depth: 22, seed: 137 },
+  { cx: 1236, cz: -89, radius: 300, depth: 18, seed: 149 },
+];
+
+// CAM_TARGET's own x/z (the orbit pivot, defined as a runtime constant
+// inside createBeamline below) — duplicated here at module scope since
+// terrainHeight() has to stay a plain (x,z)→height function, callable
+// without a scene instance. Kept in sync by hand; if CAM_TARGET's x/z ever
+// change, update these too.
+const CAM_TARGET_XZ = { x: 199.944150, z: 0.531666 };
+const SAFE_RADIUS = 700; // CAM_MAX (620) + 80 margin
+const SAFE_FADE = 260;
+function corridorFactor(x, z) {
+  const dx = x - CAM_TARGET_XZ.x, dz = z - CAM_TARGET_XZ.z;
+  const d = Math.sqrt(dx * dx + dz * dz);
+  if (d <= SAFE_RADIUS) return 0;
+  return smoothstep01(Math.min(1, (d - SAFE_RADIUS) / SAFE_FADE));
+}
+
+// 2026-08-03, second edge pass: horizontal distance fog hides the boundary
+// when looking across the landscape, but does nothing for a straight-down
+// view — from directly overhead, the whole extent is visible at a roughly
+// uniform camera distance (height dominates over the small horizontal
+// spread within frame), so there's no near/far gradient for fog to fade
+// through, and the plane's literal edge can show as a hard color line
+// against the background. The real fix has to be geometric: the wilderness
+// layers (FAR_PEAKS/VALLEYS/noise — NOT MOUNTAINS, see below) taper to
+// exactly flat by the plane's actual boundary, so there's no height (and
+// therefore no lit slope/silhouette) left to see a "shape" of, edge or
+// otherwise, from any angle including straight down. Matches the plane's
+// own aspect ratio (an ellipse, not a circle — the plane is 8000×6400, not
+// square) so the taper reaches exactly 0 at the real edge in every
+// direction, not a circle that clips one axis early or leaves the other
+// exposed. TERRAIN_CENTER/PLANE_HALF_X/PLANE_HALF_Z duplicate
+// createBeamline's own terrain-plane constants for the same reason
+// CAM_TARGET_XZ does above — kept in sync by hand.
+const TERRAIN_CENTER = { x: 200, z: 0 };
+const PLANE_HALF_X = 4000, PLANE_HALF_Z = 3200;
+const EDGE_FALLOFF_START = 0.55; // fraction of half-extent where the taper begins — FAR_PEAKS/VALLEYS all sit well inside this (rNorm ≤ ~0.4), so the hand-placed skyline is untouched; only the noise layer actually reaches this far out
+function edgeFalloff(x, z) {
+  const nx = (x - TERRAIN_CENTER.x) / PLANE_HALF_X;
+  const nz = (z - TERRAIN_CENTER.z) / PLANE_HALF_Z;
+  const rNorm = Math.sqrt(nx * nx + nz * nz);
+  if (rNorm <= EDGE_FALLOFF_START) return 1;
+  if (rNorm >= 1) return 0;
+  return 1 - smoothstep01((rNorm - EDGE_FALLOFF_START) / (1 - EDGE_FALLOFF_START));
+}
+
+// Layer 2, WILDERNESS_NOISE: deterministic hash-based 2D value noise (own
+// seeded lattice hash, not Math.random — same determinism convention as
+// mulberry32/hashSeed elsewhere in this project), summed across four
+// octaves (fractal Brownian motion) for multi-scale rolling variation, plus
+// a "ridged" variant (folds the noise around its midpoint so ridgelines
+// read as creases rather than smooth rolling hills — the standard ridged-
+// multifractal terrain technique) layered on top for sharper ridge detail.
+// This is what fills the space between/around the hand-placed FAR_PEAKS so
+// a ground-level view reads as real landscape in every direction, not
+// isolated mounds floating on a flat plain between them.
+function hash2(ix, iz, seed) {
+  let h = (ix * 374761393 + iz * 668265263 + seed * 2246822519) | 0;
+  h = (h ^ (h >>> 13)) | 0;
+  h = Math.imul(h, 1274126177);
+  h = (h ^ (h >>> 16)) >>> 0;
+  return h / 4294967296;
+}
+function valueNoise2D(x, z, seed) {
+  const ix = Math.floor(x), iz = Math.floor(z);
+  const fx = x - ix, fz = z - iz;
+  const sx = smoothstep01(fx), sz = smoothstep01(fz);
+  const a = hash2(ix, iz, seed), b = hash2(ix + 1, iz, seed);
+  const c = hash2(ix, iz + 1, seed), d = hash2(ix + 1, iz + 1, seed);
+  const ab = a + (b - a) * sx;
+  const cd = c + (d - c) * sx;
+  return ab + (cd - ab) * sz;
+}
+function fbm(x, z, seed, octaves = 4) {
+  let sum = 0, amp = 0.5, freq = 1, norm = 0;
+  for (let o = 0; o < octaves; o++) {
+    sum += amp * valueNoise2D(x * freq, z * freq, seed + o * 101);
+    norm += amp;
+    amp *= 0.5;
+    freq *= 2.15;
+  }
+  return sum / norm; // 0..1
+}
+function ridged(x, z, seed, octaves = 4) {
+  let sum = 0, amp = 0.5, freq = 1, norm = 0;
+  for (let o = 0; o < octaves; o++) {
+    const n = 1 - Math.abs(valueNoise2D(x * freq, z * freq, seed + o * 101) * 2 - 1);
+    sum += amp * n * n;
+    norm += amp;
+    amp *= 0.5;
+    freq *= 2.15;
+  }
+  return sum / norm; // 0..1
+}
+const WILDERNESS_SCALE = 1 / 340; // broad, slow features — which areas are highlands vs lowlands
+const RIDGE_SCALE = 1 / 130;      // finer ridged layer on top, for actual ridgelines
+function wildernessHeight(x, z) {
+  const base = (fbm(x * WILDERNESS_SCALE, z * WILDERNESS_SCALE, 5000) - 0.5) * 2 * 34; // ±34 broad relief
+  const ridge = ridged(x * RIDGE_SCALE, z * RIDGE_SCALE, 9000) * 26; // 0..26 ridge detail on top
+  return base + ridge;
+}
+
 export function terrainHeight(x, z) {
+  // MOUNTAINS: rail-critical, verified against the curve's own 6.491-unit
+  // minimum clearance — never scaled by edgeFalloff (they sit at rNorm well
+  // under 0.03, deep inside the untapered zone, so this is purely a safety
+  // discipline, not a visible change: multiplying by edgeFalloff here would
+  // always be multiplying by exactly 1 in practice, but leaving the term
+  // out entirely means it's structurally impossible for a future edit to
+  // this file to accidentally make it otherwise).
   let h = 0;
   for (const m of MOUNTAINS) {
     const dx = x - m.cx, dz = z - m.cz;
@@ -145,6 +315,32 @@ export function terrainHeight(x, z) {
     const jag = 1 + 0.15 * Math.sin(angle * 7 + m.seed) + 0.08 * Math.sin(angle * 13 + m.seed * 2);
     h += m.height * s * jag;
   }
+
+  // Wilderness: FAR_PEAKS/VALLEYS/noise, same as last round, now scaled by
+  // edgeFalloff as a group so all of it — hand-placed peaks and generated
+  // noise alike — tapers to exactly 0 by the plane's real boundary.
+  let wild = 0;
+  for (const p of FAR_PEAKS) {
+    const dx = x - p.cx, dz = z - p.cz;
+    const d = Math.sqrt(dx * dx + dz * dz);
+    if (d >= p.radius) continue;
+    const t = 1 - d / p.radius;
+    const s = smoothstep01(t);
+    const angle = Math.atan2(dz, dx);
+    const jag = 1 + 0.18 * Math.sin(angle * 5 + p.seed) + 0.10 * Math.sin(angle * 11 + p.seed * 2);
+    wild += p.height * s * jag;
+  }
+  for (const v of VALLEYS) {
+    const dx = x - v.cx, dz = z - v.cz;
+    const d = Math.sqrt(dx * dx + dz * dz);
+    if (d >= v.radius) continue;
+    const t = 1 - d / v.radius;
+    wild -= v.depth * smoothstep01(t);
+  }
+  const cf = corridorFactor(x, z);
+  if (cf > 0) wild += wildernessHeight(x, z) * cf;
+  h += wild * edgeFalloff(x, z);
+
   return FLOOR_Y + h;
 }
 
@@ -661,12 +857,17 @@ export function createBeamline(container, { preview = false } = {}) {
   const h = container.clientHeight || window.innerHeight;
 
   const scene = new THREE.Scene();
-  // Fog widened for the Solar Sailer pivot's much larger extent (the rail's
-  // own bounding diagonal is now ~500 units, up from the mirror chain's
-  // ~310) — near/far chosen so a station at CAM_MIN stays unfogged while
-  // the terrain still fades smoothly well before its own edge (see the
-  // terrain mesh's size below, comfortably beyond this far distance).
-  scene.fog = new THREE.Fog(HORIZON_COLOR, preview ? 45 : 60, preview ? 400 : 700);
+  // 2026-08-03: tightened from 700 to 560 (far) as part of the "diorama to
+  // environment" pass — not strictly needed for hiding the terrain's own
+  // edge any more (the enlarged plane below puts that edge ~2580 units from
+  // the worst-case camera position, verified by verify_wilderness.mjs,
+  // massively past any fog distance), but a shorter falloff reads better
+  // for the new ground-level default camera (item 3, below): real
+  // ground-level sightlines are naturally hazier/shorter than an overhead
+  // view's, and the moodier, more enclosed falloff suits "standing in the
+  // landscape" better than seeing clearly for 700 units. Near/far still
+  // chosen so a station at CAM_MIN stays unfogged.
+  scene.fog = new THREE.Fog(HORIZON_COLOR, preview ? 45 : 60, preview ? 400 : 560);
   scene.background = new THREE.Color(0x00020a);
 
   // Far plane cleared out to comfortably contain the skybox sphere (radius
@@ -728,64 +929,72 @@ export function createBeamline(container, { preview = false } = {}) {
   // footprint the way the flat mirror-bench era could get away with — this
   // path has real vertical extent now) — computed by the same verification
   // script from 2000 arc-length-spaced samples, transcribed at full
-  // precision. CAM_DIR keeps the oblique X/Z mix earlier rounds on this
-  // scene established live (a Z-heavy angle looks nearly straight down
-  // whatever axis a path's own turns are separated along, collapsing them
-  // on screen) — reused here as a reasonable starting angle for a
-  // structurally different path, to be corrected live if it doesn't hold.
-  // CAM_MIN is sized to read the STATIONS/vessel clearly close-up (their
-  // own real size, not the rail's total extent — the lesson an earlier
+  // precision. The opening angle itself (THETA/GROUND_PHI_Y, below) is no
+  // longer a hand-tuned CAM_DIR vector as of the 2026-08-03 ground-level
+  // pass — see that section's own comment for the current, real-math-
+  // derived reasoning. CAM_MIN is sized to read the STATIONS/vessel clearly
+  // close-up (their own real size, not the rail's total extent — the lesson an earlier
   // Beamline round learned the hard way: scaling camera distance with path
   // extent when the object you're actually looking at barely changed size
   // made everything an unreadable dot). CAM_MAX is sized off the rail's own
   // ~500-unit bounding diagonal, so zooming all the way out shows the whole
   // curve — scroll-to-zoom's own ceiling, unchanged.
   const CAM_TARGET = new THREE.Vector3(199.944150, 25.345350, 0.531666);
-  const CAM_DIR = new THREE.Vector3(0.6, 0.5, 0.62).normalize();
   const CAM_MIN = 28, CAM_MAX = 620;
 
-  // 2026-08-03: the OPENING camera used to just be CAM_MIN-adjacent (125),
-  // sized to read one station/the vessel clearly — which meant the very
-  // first thing a visitor saw was one arbitrary segment of the path, not
-  // its overall shape. Scrolling in on any one piece was always meant to be
-  // a visitor's own choice (see CAM_MIN's own comment above), not the
-  // starting state.
+  // 2026-08-03, second pass ("diorama to environment," item 3): the
+  // previous round's opening camera (CAM_DIR (0.6,0.5,0.62), a hand-tuned
+  // moderate-elevation angle, fit via computeFramingDistance's full-
+  // theta-sweep worst case) genuinely did frame the whole route — but from
+  // ~578-620 units out and well above CAM_TARGET's own height, reading as a
+  // drone survey of a bounded plot, not a visitor standing in a landscape.
+  // Scott's brief allowed the "frame the whole route" goal to stay, but
+  // asked for it from ground level instead.
   //
-  // First attempt only fit the curve at the exact starting angle (CAM_DIR)
-  // and was wrong: autoRotate (below) starts turning theta the moment the
-  // scene loads, and phi/theta together determine the actual view — a
-  // fit computed for ONE orientation stops holding within seconds as the
-  // idle orbit carries the camera away from it, since this curve's real 3D
-  // shape isn't rotationally symmetric around CAM_TARGET (confirmed live:
-  // re-projecting the curve a few seconds after load showed P_START well
-  // outside the frame, at a theta the single-angle fit never accounted
-  // for). Fixed by fitting against autoRotate's actual behavior instead of
-  // one instant: it only ever varies theta, never phi, so
-  // computeFramingDistance sweeps a full 360° of theta at the fixed
-  // starting phi and keeps the WORST-case (largest) required distance —
-  // the whole route stays in frame across the entire idle orbit, not just
-  // at the moment of load. Same binary-search-against-the-real-projection-
-  // matrix technique as before (and as updateLabelScale's own on-screen-
-  // size math elsewhere in this file), just evaluated at every angle a
-  // visitor will actually be shown, not one. Clamped to CAM_MAX rather than
-  // let past it — on narrow phone aspect ratios the unclamped worst-case
-  // distance runs well past 900-1000 and starts fighting the fog/scale
-  // tuning done for the normal case; past CAM_MAX this gracefully degrades
-  // to exactly the view a visitor already got from manually scrolling all
-  // the way out today, never anything worse.
-  function computeFramingDistance(aspect) {
+  // The fix isn't a smaller version of the old orbit — it's a different
+  // theta. The route's own real shape is long and thin (WAYPOINTS span 450
+  // units in X, only 187 in Z, 64 in Y): looking at it broadside needs
+  // real distance to fit that width in frame, but looking down its own
+  // length compresses most of that length into the depth axis instead,
+  // where perspective — not distance — does the work. THETA below is real
+  // math, not hand-tuned: it's the direction from CAM_TARGET (the curve's
+  // centroid) toward P_START itself, so sitting beyond P_START on that same
+  // line and looking back puts P_START in the near foreground with the
+  // rest of the route receding toward P_END, the classic "road stretching
+  // into the distance" establishing shot. GROUND_PHI_Y is a small
+  // *negative* pitch (camera slightly below CAM_TARGET's own y=25.35,
+  // closer to the valley floor) rather than the old CAM_DIR's +0.5 —
+  // ground-level, and looking very slightly up at anything that rises
+  // above camera height, per the brief's own "across and slightly up."
+  //
+  // Verified together by verify_camera.mjs (since deleted, per this
+  // project's convention): at THETA/GROUND_PHI_Y, fitRouteAtTheta's single-
+  // angle fit needs only ~261 units at 16:9, scaling up to ~506 at a narrow
+  // phone portrait aspect (9:19.5) — always comfortably under CAM_MAX, so
+  // the clamp below is a safety net, not the normal case. Terrain clearance
+  // at that position is 15.35 units (flat ground there, no nearby mound);
+  // swept across the FULL autoRotate theta range at this same camDist/phi,
+  // minimum clearance anywhere is 7.24 units — safe everywhere the idle
+  // orbit will actually carry the camera, even though (unlike the old
+  // design) this fit is only guaranteed to hold at the one starting theta,
+  // not the whole orbit — autoRotate drifting to a less favorable angle
+  // after the first few seconds is expected and fine; the terrain there is
+  // real, not a void, so the view degrades gracefully rather than breaking.
+  const P_START = WAYPOINTS[0];
+  const THETA = Math.atan2(P_START.x - CAM_TARGET.x, P_START.z - CAM_TARGET.z);
+  const GROUND_PHI_Y = -0.05;
+  function fitRouteAtTheta(aspect) {
     const margin = 0.85; // NDC target — 15% padding on every side, so the route's own bookends aren't jammed against the frame edge
     const N = 120; // runtime curve-sample count — dense enough to catch the real shape, not re-verifying clearance (already done by solve_solar_sailer.mjs)
-    const THETA_SAMPLES = 36; // 10° steps around the full idle-orbit circle autoRotate sweeps
     camera.aspect = aspect;
     camera.updateProjectionMatrix();
-    const phi0 = Math.acos(THREE.MathUtils.clamp(CAM_DIR.y, -1, 1));
+    const phi0 = Math.acos(THREE.MathUtils.clamp(GROUND_PHI_Y, -1, 1));
     const sinPhi = Math.sin(phi0), cosPhi = Math.cos(phi0);
-    function fitsAt(dist, th) {
+    function fitsAt(dist) {
       camera.position.set(
-        CAM_TARGET.x + dist * sinPhi * Math.sin(th),
+        CAM_TARGET.x + dist * sinPhi * Math.sin(THETA),
         CAM_TARGET.y + dist * cosPhi,
-        CAM_TARGET.z + dist * sinPhi * Math.cos(th),
+        CAM_TARGET.z + dist * sinPhi * Math.cos(THETA),
       );
       camera.lookAt(CAM_TARGET);
       camera.updateMatrixWorld(true);
@@ -799,7 +1008,8 @@ export function createBeamline(container, { preview = false } = {}) {
         // invisible (behind the camera) read as comfortably on-screen. Using
         // Vector4 here keeps w visible so behind-camera points are rejected
         // outright rather than false-positiving through the margin check —
-        // caught live while sanity-checking the terminus (see NOTES.md).
+        // caught live while sanity-checking the terminus in the prior round
+        // (see NOTES.md's 1.32.0 entry).
         const v4 = new THREE.Vector4(p.x, p.y, p.z, 1).applyMatrix4(vp);
         if (v4.w <= 0) return false;
         const ndcX = v4.x / v4.w, ndcY = v4.y / v4.w;
@@ -807,29 +1017,37 @@ export function createBeamline(container, { preview = false } = {}) {
       }
       return true;
     }
-    let worst = CAM_MIN;
-    for (let k = 0; k < THETA_SAMPLES; k++) {
-      const th = (k / THETA_SAMPLES) * Math.PI * 2;
-      let lo = CAM_MIN, hi = 3000;
-      for (let iter = 0; iter < 40; iter++) {
-        const mid = (lo + hi) / 2;
-        if (fitsAt(mid, th)) hi = mid; else lo = mid;
-      }
-      worst = Math.max(worst, hi);
+    let lo = CAM_MIN, hi = 3000;
+    for (let iter = 0; iter < 40; iter++) {
+      const mid = (lo + hi) / 2;
+      if (fitsAt(mid)) hi = mid; else lo = mid;
     }
-    return worst;
+    return hi;
   }
-  let camDist = preview ? 95 : Math.min(computeFramingDistance(w / h), CAM_MAX);
-  let theta = Math.atan2(CAM_DIR.x, CAM_DIR.z);
-  let phi = Math.acos(THREE.MathUtils.clamp(CAM_DIR.y, -1, 1));
+  let camDist = preview ? 95 : Math.min(fitRouteAtTheta(w / h), CAM_MAX);
+  let theta = THETA;
+  let phi = Math.acos(THREE.MathUtils.clamp(GROUND_PHI_Y, -1, 1));
   const PHI_EPS = 0.06;
+  // Hard runtime floor, added alongside the ground-level default (item 3):
+  // the shallow default phi barely raises camera height with distance, so
+  // the raw spherical position can dip underground near the rail-adjacent
+  // MOUNTAINS (close enough to the orbit pivot to still be reachable) even
+  // though SAFE_RADIUS above keeps the newer FAR_PEAKS out of reach
+  // entirely. CAMERA_GROUND_CLEARANCE never lets the computed Y sit below
+  // the terrain directly beneath the camera's own (x,z) plus this margin —
+  // verified airtight (clearance == margin, exactly, everywhere) across a
+  // full theta×dist sweep at the default phi by verify_wilderness2.mjs
+  // (since deleted). Doesn't touch X/Z or the look target, so orbit/zoom
+  // still feel the same; it just refuses to let the camera go underground.
+  const CAMERA_GROUND_CLEARANCE = 8;
   function updateCamera() {
     const sinPhi = Math.sin(phi);
-    camera.position.set(
-      CAM_TARGET.x + camDist * sinPhi * Math.sin(theta),
-      CAM_TARGET.y + camDist * Math.cos(phi),
-      CAM_TARGET.z + camDist * sinPhi * Math.cos(theta),
-    );
+    const x = CAM_TARGET.x + camDist * sinPhi * Math.sin(theta);
+    const z = CAM_TARGET.z + camDist * sinPhi * Math.cos(theta);
+    let y = CAM_TARGET.y + camDist * Math.cos(phi);
+    const minY = terrainHeight(x, z) + CAMERA_GROUND_CLEARANCE;
+    if (y < minY) y = minY;
+    camera.position.set(x, y, z);
     camera.lookAt(CAM_TARGET);
   }
   updateCamera();
@@ -873,17 +1091,29 @@ export function createBeamline(container, { preview = false } = {}) {
   // displaced per-vertex by terrainHeight() (defined above, module scope,
   // shared with the ambient-ecology spawn code below so grid bugs and
   // growth patches sit correctly ON this same surface rather than floating
-  // above or clipping into a mound). Sized well past the fog-far distance
-  // above so the plane's own physical edge is never visible; segment
-  // density (320×240 across a 2600×2000 plane, ~7-8 units per vertex) is
-  // enough to read the mounds as real hills once MeshStandardMaterial's
-  // lighting response shades their slopes, without the vertex count
-  // becoming its own performance problem. Gated to !preview, same as the
-  // old flat floor was — preview tiles stay cheap.
+  // above or clipping into a mound).
+  //
+  // 2026-08-03: enlarged from 2600×2000 to 8000×6400 as part of "diorama to
+  // environment" (item 2) — the old extent's own edge was visible from the
+  // default camera. Segment count went from 320×240 to 640×512 (16 units/
+  // vertex, vs ~8 before) — a deliberate, checked trade: ~3.1x the linear
+  // extent for ~4.3x the vertex count (327,680 vs 76,800), still a single
+  // static mesh/draw call and well within what a modern WebGL context
+  // handles for one-time per-vertex displacement, but roughly 2x coarser
+  // per-vertex right at the rail's own mounds than before. Accepted because
+  // (a) MeshStandardMaterial's smooth-shaded normals still read the mounds
+  // as real hills at this density, and (b) the alternative — keeping the
+  // original fine mesh and tiling a second, coarser mesh around it — is a
+  // real multi-LOD terrain system, out of scope for one round. Combined
+  // with the tightened fog above, verify_wilderness.mjs (since deleted)
+  // confirmed the plane's actual edge sits ~2580 units beyond the
+  // worst-case camera position (CAM_MAX + CAM_TARGET's own offset from
+  // TERRAIN_CENTER), so no orbit/zoom position can reach it. Gated to
+  // !preview, same as before — preview tiles stay cheap.
   let terrain = null, terrainGeo = null, terrainMat = null, terrainTex = null;
   const TERRAIN_CENTER = { x: 200, z: 0 };
   if (!preview) {
-    terrainGeo = new THREE.PlaneGeometry(2600, 2000, 320, 240);
+    terrainGeo = new THREE.PlaneGeometry(8000, 6400, 640, 512);
     terrainGeo.rotateX(-Math.PI / 2);
     const pos = terrainGeo.attributes.position;
     for (let i = 0; i < pos.count; i++) {
@@ -894,8 +1124,9 @@ export function createBeamline(container, { preview = false } = {}) {
     pos.needsUpdate = true;
     terrainGeo.computeVertexNormals();
 
-    terrainTex = makeGridTexture(236);
-    terrainTex.repeat.y = 182; // plane isn't square (2600×2000) — keeps grid cells ~11 units on both axes
+    terrainTex = makeGridTexture(); // repeat arg irrelevant — both axes overridden next line for the new 8000×6400 extent
+    terrainTex.repeat.x = 727; // plane isn't square — keeps grid cells ~11 units on both axes (8000/727≈11.0)
+    terrainTex.repeat.y = 582; // 6400/582≈11.0
     // side: DoubleSide — real bug, not a leftover artifact: with the default
     // FrontSide, the mesh vanished entirely once the camera drifted beneath
     // the mountains (nothing left to render but the backface, which
@@ -1368,8 +1599,20 @@ export function createBeamline(container, { preview = false } = {}) {
   // block's stability, an isolated cell dying of underpopulation) with a
   // throwaway Node script before wiring in, same as every other piece of
   // real computation in this file.
-  const CA_COLS = 34, CA_ROWS = 18; // ≈374×198 units at GRID_CELL spacing — close to the old sparse patches' spawn footprint
+  // 2026-08-03, third edge pass: this lattice is a SEPARATE layer from the
+  // terrain mesh (its own Points system, own fixed extent) — the wilderness
+  // edgeFalloff() above only tapers terrain height, so it never touched this
+  // grid at all, which is why it kept reading as a hard-edged rectangular
+  // patch even after the terrain's own boundary dissolved. Same underlying
+  // idea applied here instead to density/position/brightness: the Game-of-
+  // Life SIMULATION still runs on the full plain rectangular COLS×ROWS grid
+  // (its own neighbor topology has to stay a real rectangle, same as before —
+  // untouched), but each point's RENDERED density/position/brightness is
+  // additionally shaped by caEdgeFactor/caEligible below, computed once at
+  // setup from that point's own distance from CAM_TARGET.
+  const CA_COLS = 64, CA_ROWS = 34; // ≈705×375 units at GRID_CELL spacing — roughly doubled linear extent so the field reads as part of a larger whole, not a bounded tile
   const GRID_CELL = 2600 / 236; // ≈11.02 — the real on-screen cell spacing the terrain's own grid texture produces
+  const CA_EDGE_START = 0.7; // fraction of the lattice's own half-extent where the perimeter falloff begins — matches EDGE_FALLOFF_START's role for the terrain
   function stepGameOfLife(grid, cols, rows) {
     const next = new Uint8Array(cols * rows);
     for (let y = 0; y < rows; y++) {
@@ -1388,6 +1631,8 @@ export function createBeamline(container, { preview = false } = {}) {
   }
   let caGrid = null, caGeo = null, caMat = null, caTex = null, caPoints = null;
   const caBrightness = [];
+  let caEdgeFactor = null; // per-point smooth brightness multiplier from the perimeter falloff (1 in the interior, →0 at the true edge)
+  let caEligible = null; // per-point stochastic existence flag — thins the field itself (gaps), not just brightness, so the boundary reads as fraying rather than uniformly dimming
   let caRng = null, caTimer = 0;
   const CA_STEP_INTERVAL = 1.7; // seconds per generation — a real automaton's own discrete clock, not an organic wander
   const CA_SEED_DENSITY = 0.28; // classic "random soup" density for interesting Life activity
@@ -1404,10 +1649,33 @@ export function createBeamline(container, { preview = false } = {}) {
     const colors = new Float32Array(CA_COLS * CA_ROWS * 3);
     const baseX = CAM_TARGET.x - (CA_COLS / 2) * GRID_CELL;
     const baseZ = CAM_TARGET.z - (CA_ROWS / 2) * GRID_CELL;
+    const caHalfW = (CA_COLS / 2) * GRID_CELL, caHalfH = (CA_ROWS / 2) * GRID_CELL;
+    caEdgeFactor = new Float32Array(CA_COLS * CA_ROWS);
+    caEligible = new Uint8Array(CA_COLS * CA_ROWS);
     for (let cy = 0; cy < CA_ROWS; cy++) {
       for (let cx = 0; cx < CA_COLS; cx++) {
         const i = cy * CA_COLS + cx;
-        const wx = baseX + cx * GRID_CELL, wz = baseZ + cy * GRID_CELL;
+        const gx = baseX + cx * GRID_CELL, gz = baseZ + cy * GRID_CELL;
+        // Elliptical falloff, same shape as edgeFalloff() above but against
+        // this lattice's own (non-square) half-extents rather than the
+        // terrain plane's.
+        const nx = (gx - CAM_TARGET.x) / caHalfW, nz = (gz - CAM_TARGET.z) / caHalfH;
+        const rNorm = Math.sqrt(nx * nx + nz * nz);
+        const edge = rNorm <= CA_EDGE_START ? 1
+          : rNorm >= 1 ? 0
+          : 1 - smoothstep01((rNorm - CA_EDGE_START) / (1 - CA_EDGE_START));
+        caEdgeFactor[i] = edge;
+        // Density falloff: a point deep in the perimeter band has a low
+        // chance of ever being eligible to render at all, decided once
+        // (not re-rolled every frame) so gaps stay fixed rather than
+        // flickering.
+        caEligible[i] = caRng() < edge ? 1 : 0;
+        // Position jitter: zero in the untouched interior, growing toward
+        // the true edge, so eligible edge points scatter off the perfect
+        // lattice instead of staying grid-locked right up to a line.
+        const jitterStrength = 1 - edge;
+        const wx = gx + (caRng() - 0.5) * GRID_CELL * 2.2 * jitterStrength;
+        const wz = gz + (caRng() - 0.5) * GRID_CELL * 2.2 * jitterStrength;
         positions[i * 3] = wx;
         positions[i * 3 + 1] = terrainHeight(wx, wz) + 0.35;
         positions[i * 3 + 2] = wz;
@@ -1526,9 +1794,9 @@ export function createBeamline(container, { preview = false } = {}) {
       const colorAttr = caGeo.attributes.color;
       const easeRate = reduceMotion ? 1 : 0.1;
       for (let i = 0; i < caGrid.length; i++) {
-        const target = caGrid[i];
+        const target = caEligible[i] ? caGrid[i] : 0; // ineligible perimeter points never light up, regardless of the automaton's own state
         caBrightness[i] += (target - caBrightness[i]) * easeRate;
-        const b = caBrightness[i];
+        const b = caBrightness[i] * caEdgeFactor[i]; // smooth brightness taper on top of the stochastic thinning above
         colorAttr.setXYZ(i, 0.47 * b, 0.86 * b, 0.75 * b); // rgba(120,220,190,) normalized, scaled by brightness
       }
       colorAttr.needsUpdate = true;
