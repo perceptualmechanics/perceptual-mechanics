@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { poems } from '../text/poems.js';
-import { bindOrbitDrag, bindGuardedResize, prefersReducedMotion, createPanelCloser, createJumpList, escapeHtml } from '../utils/sceneKit.js';
+import { bindOrbitDrag, bindGuardedResize, prefersReducedMotion, createPanelCloser, createJumpList, escapeHtml, HINT_TEXT_COLOR } from '../utils/sceneKit.js';
 
 // ─── Poem cross-links, 2026-07-17 ──────────────────────────────────────────
 // Same mechanism, and the same rule, as the geodesic sphere's facet-to-
@@ -665,7 +665,7 @@ export function createOrbiter(container, { preview = false } = {}) {
       #orbiter-hint {
         top: 4.5rem; right: 1.2rem; font-size: 0.55rem; letter-spacing: 0.2em;
         text-transform: uppercase; line-height: 1.8; text-align: right;
-        color: rgba(255,255,255,0.3);
+        color: ${HINT_TEXT_COLOR};
       }
       @media (max-width: 600px) {
         #orbiter-caption { white-space: normal; width: 88vw; font-size: 0.7rem; }
@@ -833,7 +833,11 @@ export function createOrbiter(container, { preview = false } = {}) {
       const duration = (9 + Math.random() * 7).toFixed(1);
       link.style.animationDelay = `-${delay}s`;
       link.style.animationDuration = `${duration}s`;
-      link.setAttribute('role', 'button');
+      // role="link", not "button" -- this navigates to a different poem
+      // within the panel, same as library.js's .library-link and sphere.js's
+      // .fragment-link; code audit, 2026-08-03, converging all three on the
+      // semantically correct role.
+      link.setAttribute('role', 'link');
       link.setAttribute('tabindex', '0');
       link.setAttribute('aria-label', `Follow the echo to: ${link.dataset.target}`);
     });

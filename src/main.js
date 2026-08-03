@@ -40,6 +40,7 @@ import { createBeamline }  from './scenes/beamline.js';
 // initPreviews() map entry, and the nav icon + preview tile in index.html
 // (same four spots Leaf's own shelving comment cross-references).
 import { initColophon }    from './components/colophon.js';
+import { HINT_TEXT_COLOR } from './utils/sceneKit.js';
 
 // ─── Scene registry ──────────────────────────────────────────────────────────
 const SCENES = {
@@ -146,7 +147,7 @@ butterflyStyle.textContent = `
   }
   #butterfly-hint {
     position: fixed; top: 4.5rem; right: 1.2rem;
-    color: rgba(255,255,255,0.3);
+    color: ${HINT_TEXT_COLOR};
     font-size: 0.55rem; letter-spacing: 0.2em;
     text-transform: uppercase; pointer-events: none;
     text-align: right; z-index: 310; line-height: 1.8;
@@ -343,6 +344,14 @@ initColophon();
 // on window rather than kept module-private because inline onmouseover=""
 // attributes (index.html's nav icons, site-title, preview tiles) execute
 // in global scope, not this module's.
+//
+// Code audit, 2026-08-03: every trigger element is a real <button>, so
+// it's keyboard-focusable — but onmouseover never fires on focus, which
+// meant a keyboard-only visitor tabbing through the exact same controls
+// could never reach this, mouse-only parity for an otherwise input-
+// agnostic control. index.html now pairs each onmouseover="pmGlimpse(...)"
+// with a matching onfocus="pmGlimpse(...)" so both input methods have the
+// same 1-in-100 chance.
 //
 // PM_GLIMPSE_WORDS is a plain object, keyed by the same string every
 // onmouseover="pmGlimpse('sphere')" etc. passes in — a array of

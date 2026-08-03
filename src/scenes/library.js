@@ -3,6 +3,7 @@ import { libraryItems } from '../text/library.js';
 import { cdRackItems } from '../text/cdRack.js';
 import {
   bindOrbitDrag, bindWheelZoom, bindGuardedResize, prefersReducedMotion, createPanelCloser, createJumpList, escapeHtml,
+  HINT_TEXT_COLOR,
 } from '../utils/sceneKit.js';
 
 // ─── The Library ────────────────────────────────────────────────────────────
@@ -1246,7 +1247,7 @@ export function createLibrary(container, { preview = false } = {}) {
       #library-hint {
         top: 4.5rem; right: 1.2rem; font-size: 0.55rem; letter-spacing: 0.2em;
         text-transform: uppercase; line-height: 1.8; text-align: right;
-        color: rgba(255,255,255,0.3);
+        color: ${HINT_TEXT_COLOR};
       }
       @media (max-width: 600px) {
         #library-caption { white-space: normal; width: 88vw; font-size: 0.7rem; }

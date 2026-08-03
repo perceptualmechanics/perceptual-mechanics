@@ -1278,11 +1278,20 @@ export function createBeamline(container, { preview = false } = {}) {
       #beamline-title-sub {
         display: block; margin-top: 0.5rem;
         font-size: clamp(0.62rem, 1.3vw, 0.8rem);
-        letter-spacing: 0.05em; color: rgba(150,190,255,0.55);
+        /* Code audit, 2026-08-03: was rgba(150,190,255,0.55), ~3.7:1
+           against black at this size -- under WCAG's 4.5:1 minimum for
+           text this small. 0.68 (~5.3:1) keeps the same tint, just deeper. */
+        letter-spacing: 0.05em; color: rgba(150,190,255,0.68);
       }
       #beamline-hint {
         top: 4.5rem; right: 1.2rem; font-size: 0.7rem; letter-spacing: 0.18em;
-        line-height: 1.8; text-align: right; color: rgba(120,170,255,0.5);
+        line-height: 1.8; text-align: right;
+        /* Code audit, 2026-08-03: was rgba(120,170,255,0.5), ~2.8:1 against
+           black -- under WCAG's 4.5:1 minimum for text this small. 0.72
+           (~4.9:1) keeps the same tint, just deeper -- same fix as the
+           other six scenes' hint text (sceneKit.js's HINT_TEXT_COLOR),
+           just not the shared constant since this one's tinted, not white. */
+        color: rgba(120,170,255,0.72);
         /* Orbitron + real font-variant:small-caps (2026-08-03) — the hint
            reads as HUD chrome, not literary text, so it gets the piece's
            sci-fi tech font instead of the epigraph's serif. small-caps needs

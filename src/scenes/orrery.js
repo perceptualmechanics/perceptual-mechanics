@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { bindOrbitDrag, bindWheelZoom, bindGuardedResize, prefersReducedMotion, createPanelCloser, createJumpList, mountClippedPreviewCanvas, bindTapVsDrag } from '../utils/sceneKit.js';
+import { bindOrbitDrag, bindWheelZoom, bindGuardedResize, prefersReducedMotion, createPanelCloser, createJumpList, mountClippedPreviewCanvas, bindTapVsDrag, HINT_TEXT_COLOR } from '../utils/sceneKit.js';
 // The found story lives in src/text/ now (2026-07-29) — shared with the
 // prerender step that builds /text/orrery/, so the placard and the published
 // page can't drift.
@@ -1665,7 +1665,7 @@ export function createOrrery(container, { preview = false } = {}) {
            overlay, same as butterfly's own label/hint in main.js. Below
            300 they're only visible during the overlay's ~0.6s fade-in,
            then gone once it's fully opaque. */
-        position: fixed; color: rgba(255,255,255,0.3);
+        position: fixed; color: ${HINT_TEXT_COLOR};
         text-transform: uppercase; pointer-events: none; text-align: center;
         z-index: 310; font-family: 'Times New Roman', serif;
         transition: opacity 0.3s ease;

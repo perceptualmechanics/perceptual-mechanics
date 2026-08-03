@@ -93,6 +93,59 @@ them. Read these before adding anything that runs at build time.
   worth trimming, orrery.js's texture generators and first-person rig are the
   two most self-contained chunks to split out first.
 
+## 1.33.3 (2026-08-03)
+
+Full code audit (best practices, abstraction/hoisting opportunities,
+semantic/a11y sweep) — see CODE_AUDIT.md at the repo root for the full
+report, citations, and what was already solid before this pass. Three
+items implemented from it:
+
+**Hint-label contrast + duplication.** Six scenes (sphere, orbiter, orrery,
+library, prism, butterfly) independently wrote the same top-right control-
+hint element and all converged on `rgba(255,255,255,0.3)` at 0.55rem —
+~2.5:1 contrast against black, under WCAG's 4.5:1 minimum for text that
+small. Centralized as `sceneKit.js`'s `HINT_TEXT_COLOR` (0.6 alpha, ~7.4:1)
+and swapped into all six. Beamline's own hint/caption-sub use a tinted
+blue, not the shared white constant, so those got their own alpha bump
+(0.5→0.72 and 0.55→0.68 respectively) computed to clear 4.5:1 while
+keeping the same tint.
+
+**`butterfly.js` refactored onto `sceneKit.js`.** Was hand-rolling mouse/
+touch drag-to-orbit, wheel zoom, guarded resize, and the reduced-motion
+check — despite being one of the two scenes `sceneKit.js`'s own header
+comment cites as the reference implementation `bindOrbitDrag` was
+extracted from. Same sensitivity and phi/radius clamps, now via the
+shared helpers instead of a second copy.
+
+**Small a11y fixes.** `sphere.js`'s `.fragment-link` was missing a
+`:focus` style its two siblings (`orbiter.js`'s `.poem-link`,
+`library.js`'s `.library-link`) both have — added. All three also
+disagreed on ARIA role (`button` vs. `link`) for the identical "phrase
+that navigates to related content" pattern — converged on `role="link"`,
+the semantically correct one, in sphere.js and orbiter.js. `pmGlimpse`
+(the tab-title easter egg) fired on `onmouseover` only, so a keyboard-only
+visitor tabbing through the same nav icons/site-title/preview tiles could
+never trigger it — every trigger in index.html now pairs `onmouseover`
+with a matching `onfocus`.
+
+Verified: `node --check` and `npx vite build` clean throughout. Live-
+verified beamline's hint contrast (visibly more legible), butterfly's
+drag-to-orbit and wheel-zoom (both still work, no console errors) after
+the sceneKit refactor, and sphere's fragment-link (`role="link"`,
+`tabindex="0"`, hint color computed as `rgba(255,255,255,0.6)` — all
+correct) via direct DOM inspection. Did not individually re-verify the
+other five hint-label scenes (orbiter/orrery/library/prism/butterfly's
+own visual) or orbiter's `.poem-link` live — same mechanical one-line
+change applied identically everywhere, `node --check` + build catch any
+syntax-level break, and the pattern was verified correct on two
+independent instances. Remaining audit items (the `.fragment-link`/
+`.library-link` role choice was resolved, but `#experience-overlay`'s
+`aria-modal="true"` semantic tension is flagged, not fixed, and
+`orrery.js`'s own caption color and `sphere.js`'s facet-id label — both
+found during the fix pass, both same contrast-failure family, neither in
+the originally approved scope — are worth a follow-up look) are still
+open, see CODE_AUDIT.md.
+
 ## 1.33.2 (2026-08-03)
 
 Third edge pass, and a real misfire on the way there. Scott's actual

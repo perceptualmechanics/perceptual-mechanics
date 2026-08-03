@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import {
   bindOrbitDrag, bindWheelZoom, bindGuardedResize, prefersReducedMotion,
   bindTapVsDrag, bindEscapeClose, createPanelCloser, createJumpList,
+  HINT_TEXT_COLOR,
 } from '../utils/sceneKit.js';
 import {
   ANCHORS_META, SEED_PIECES, SEED_PIECES_BY_ID, GROWTH_PIECES, GROWTH_PIECES_BY_ID,
@@ -253,7 +254,7 @@ function injectStyles() {
     #prism-hint {
       top: 4.5rem; right: 1.2rem; font-size: 0.55rem; letter-spacing: 0.2em;
       line-height: 1.8; text-align: right; text-transform: uppercase;
-      color: rgba(255,255,255,0.3);
+      color: ${HINT_TEXT_COLOR};
     }
     #prism-caption {
       bottom: 3rem; left: 50%; transform: translateX(-50%);

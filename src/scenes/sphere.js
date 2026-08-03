@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { CSS2DRenderer, CSS2DObject } from 'three/examples/jsm/renderers/CSS2DRenderer.js';
 import { fragments } from '../text/fragments.js';
-import { bindOrbitDrag, bindWheelZoom, bindGuardedResize, prefersReducedMotion, createPanelCloser, createJumpList, bindTapVsDrag } from '../utils/sceneKit.js';
+import { bindOrbitDrag, bindWheelZoom, bindGuardedResize, prefersReducedMotion, createPanelCloser, createJumpList, bindTapVsDrag, HINT_TEXT_COLOR } from '../utils/sceneKit.js';
 
 export function createSphere(container, { preview = false } = {}) {
   const w = container.clientWidth  || window.innerWidth;
@@ -232,7 +232,7 @@ export function createSphere(container, { preview = false } = {}) {
          exactly as they were — both already distinct, worth keeping. */
       #sphere-hint {
         position: fixed; top: 4.5rem; right: 1.2rem;
-        color: rgba(255,255,255,0.3);
+        color: ${HINT_TEXT_COLOR};
         font-size: 0.55rem; letter-spacing: 0.2em;
         text-transform: uppercase; pointer-events: none;
         text-align: right; z-index: 310; line-height: 1.8;
@@ -282,7 +282,7 @@ export function createSphere(container, { preview = false } = {}) {
         92%{color:rgba(180,210,255,.28);text-shadow:0 0 6px rgba(180,210,255,.12);}
       }
       .fragment-link{color:inherit;text-decoration:none;border-bottom:none;cursor:default;transition:color .2s;animation:silk-glimmer 12s ease-in-out infinite;}
-      .fragment-link:hover{color:rgba(255,220,120,.95);cursor:pointer;animation:none;text-shadow:0 0 12px rgba(255,220,120,.3);}
+      .fragment-link:hover,.fragment-link:focus{color:rgba(255,220,120,.95);cursor:pointer;animation:none;text-shadow:0 0 12px rgba(255,220,120,.3);}
       @media(prefers-reduced-motion:reduce){.fragment-link{animation:none;}}
     `;
     document.head.appendChild(panelStyle);
@@ -318,7 +318,11 @@ export function createSphere(container, { preview = false } = {}) {
           const duration = (9 + Math.random() * 7).toFixed(1);
           link.style.animationDelay = `-${delay}s`;
           link.style.animationDuration = `${duration}s`;
-          link.setAttribute('role', 'button');
+          // role="link", not "button" -- this navigates to different
+          // content within the panel, same as library.js's .library-link;
+          // code audit, 2026-08-03, converging the two on the semantically
+          // correct role.
+          link.setAttribute('role', 'link');
           link.setAttribute('tabindex', '0');
           link.setAttribute('aria-label', `Navigate to fragment: ${link.dataset.target}`);
         });
@@ -355,7 +359,9 @@ export function createSphere(container, { preview = false } = {}) {
         const duration = (9 + Math.random() * 7).toFixed(1);
         link.style.animationDelay = `-${delay}s`;
         link.style.animationDuration = `${duration}s`;
-        link.setAttribute('role', 'button');
+        // role="link" -- see the matching comment in navigateToFragment()
+        // above.
+        link.setAttribute('role', 'link');
         link.setAttribute('tabindex', '0');
         link.setAttribute('aria-label', `Navigate to fragment: ${link.dataset.target}`);
       });

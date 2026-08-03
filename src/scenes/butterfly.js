@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { bindOrbitDrag, bindWheelZoom, bindGuardedResize, prefersReducedMotion } from '../utils/sceneKit.js';
 
 const SIGMA = 10, RHO = 28, BETA = 8 / 3;
 const DT = 0.005;
@@ -207,9 +208,9 @@ export function createButterfly(container, { preview = false } = {}) {
     phi:    Math.acos(camera.position.y / camera.position.length()),
     theta:  Math.atan2(camera.position.x, camera.position.z),
   };
-  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  let isDragging=false, prevMouse={x:0,y:0}, autoJitter=!prefersReducedMotion;
-  let autoRotate = !preview && !prefersReducedMotion; // slow camera orbit
+  const reduceMotion = prefersReducedMotion();
+  let autoJitter = !reduceMotion;
+  let autoRotate = !preview && !reduceMotion; // slow camera orbit
   const ROTATE_SPEED = 0.0008;
 
   function updateCamera() {
@@ -219,54 +220,37 @@ export function createButterfly(container, { preview = false } = {}) {
     camera.lookAt(0,0,0);
   }
 
-  // Named so dispose() can remove them. Several of these are bound to
-  // `window`, not `container` — meaning they never had any per-scene scope
-  // to begin with, and previously ran forever after leaving butterfly,
-  // stacking a fresh duplicate set each time the scene was revisited. The
-  // container-bound ones are just as stale afterward: container is the
-  // shared #experience-container element every scene reuses (main.js only
-  // clears its innerHTML between scenes, never replaces the node itself).
-  let onMouseDown = null, onMouseUp = null, onMouseMove = null, onWheel = null,
-      onTouchStart = null, onTouchEnd = null, onTouchMove = null;
-
+  // Drag-to-orbit + wheel zoom, via sceneKit (code audit, 2026-08-03) —
+  // this exact scene used to hand-roll all of this (mouse + touch drag,
+  // wheel zoom, resize guard, reduced-motion check) despite being one of
+  // the two reference implementations sceneKit.js's own header comment
+  // says bindOrbitDrag was extracted from — the migration back onto the
+  // shared helper never happened, so this drifted the moment sceneKit.js
+  // was touched again without butterfly in the loop. Same sensitivity
+  // (0.005, applied uniformly to theta/phi same as before) and the same
+  // phi/radius clamps, just no longer a second copy to keep in sync.
+  let orbitDrag = null, wheelZoom = null;
   if (!preview) {
-    onMouseDown = e=>{isDragging=true;autoJitter=false;prevMouse={x:e.clientX,y:e.clientY};};
-    container.addEventListener('mousedown', onMouseDown);
-    onMouseUp = ()=>{isDragging=false;setTimeout(()=>{autoJitter=true;},3000);};
-    window.addEventListener('mouseup', onMouseUp);
-    onMouseMove = e=>{
-      if(!isDragging)return;
-      spherical.theta-=(e.clientX-prevMouse.x)*0.005;
-      spherical.phi=Math.max(.1,Math.min(Math.PI-.1,spherical.phi+(e.clientY-prevMouse.y)*0.005));
-      prevMouse={x:e.clientX,y:e.clientY};
-    };
-    window.addEventListener('mousemove', onMouseMove);
-    onWheel = e=>{spherical.radius=Math.max(40,Math.min(220,spherical.radius+e.deltaY*0.08));};
-    container.addEventListener('wheel', onWheel);
-    onTouchStart = e=>{isDragging=true;autoJitter=false;prevMouse={x:e.touches[0].clientX,y:e.touches[0].clientY};};
-    container.addEventListener('touchstart', onTouchStart, {passive:true});
-    onTouchEnd = ()=>{isDragging=false;setTimeout(()=>{autoJitter=true;},3000);};
-    window.addEventListener('touchend', onTouchEnd);
-    onTouchMove = e=>{
-      if(!isDragging)return;
-      spherical.theta-=(e.touches[0].clientX-prevMouse.x)*0.005;
-      spherical.phi=Math.max(.1,Math.min(Math.PI-.1,spherical.phi+(e.touches[0].clientY-prevMouse.y)*0.005));
-      prevMouse={x:e.touches[0].clientX,y:e.touches[0].clientY};
-    };
-    window.addEventListener('touchmove', onTouchMove, {passive:true});
+    orbitDrag = bindOrbitDrag(container, {
+      sensitivity: 0.005,
+      onDragStart: () => { autoJitter = false; },
+      onDrag: (dx, dy) => {
+        spherical.theta -= dx;
+        spherical.phi = Math.max(.1, Math.min(Math.PI - .1, spherical.phi + dy));
+      },
+      onDragEnd: () => { setTimeout(() => { autoJitter = true; }, 3000); },
+    });
+    wheelZoom = bindWheelZoom(container, {
+      onZoom: deltaY => { spherical.radius = Math.max(40, Math.min(220, spherical.radius + deltaY * 0.08)); },
+    });
   }
 
   // ─── Resize ─────────────────────────────────────────────────────────────────
-  function resize() {
-    const w=container.clientWidth,h=container.clientHeight;
-    // Container is hidden (e.g. the landing grid sits behind an active
-    // full-screen scene) — clientWidth/Height report 0 in that state.
-    // Bail out rather than zeroing the renderer; a real resize event will
-    // fire again once the container is visible and correctly sized.
-    if (!w || !h) return;
-    camera.aspect=w/h;camera.updateProjectionMatrix();renderer.setSize(w,h);
-  }
-  window.addEventListener('resize',resize);
+  const resizeCtl = bindGuardedResize(container, (w, h) => {
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+    renderer.setSize(w, h);
+  });
 
   // ─── Jitter state ────────────────────────────────────────────────────────────
   let rotVelX=0,rotVelY=0,rotVelZ=0;
@@ -293,7 +277,7 @@ export function createButterfly(container, { preview = false } = {}) {
     }
 
     // Slow camera orbit — sweep theta when not dragging
-    if (autoRotate && !isDragging) {
+    if (autoRotate && !(orbitDrag && orbitDrag.isDragging)) {
       spherical.theta += ROTATE_SPEED;
       updateCamera();
     } else if (!preview) {
@@ -397,14 +381,9 @@ export function createButterfly(container, { preview = false } = {}) {
   return {
     dispose() {
       cancelAnimationFrame(animId);
-      window.removeEventListener('resize', resize);
-      if (onMouseDown) container.removeEventListener('mousedown', onMouseDown);
-      if (onMouseUp) window.removeEventListener('mouseup', onMouseUp);
-      if (onMouseMove) window.removeEventListener('mousemove', onMouseMove);
-      if (onWheel) container.removeEventListener('wheel', onWheel);
-      if (onTouchStart) container.removeEventListener('touchstart', onTouchStart);
-      if (onTouchEnd) window.removeEventListener('touchend', onTouchEnd);
-      if (onTouchMove) window.removeEventListener('touchmove', onTouchMove);
+      resizeCtl.dispose();
+      orbitDrag?.dispose();
+      wheelZoom?.dispose();
       // THREE.js resource cleanup — previously missing entirely (only the
       // renderer itself was disposed), leaking the spacetime grid's line
       // geometries/materials, both trail sets' geometries/materials, and

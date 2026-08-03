@@ -284,6 +284,21 @@ export function createJumpList(container, { label, items, getLabel, onSelect }) 
   return { dispose() { list.remove(); } };
 }
 
+// ─── Shared hint-label color ────────────────────────────────────────────────
+// Code audit, 2026-08-03: six scenes (sphere, orbiter, orrery, library,
+// prism, and butterfly via main.js) each independently wrote their own
+// top-right "drag to orbit · scroll to zoom" style control-hint text, and
+// all six converged on the exact same color: rgba(255,255,255,0.3). That
+// value measures ~2.5:1 contrast against a black background at the
+// 0.55rem/~8.8px size every one of them uses — well under WCAG's 4.5:1
+// minimum for text that small (the 3:1 "large text" allowance only applies
+// at ~18.7px bold or larger). 0.6 alpha (~7.4:1 against black, well clear
+// of the minimum) is the fix; centralized here so the next scene copies a
+// value that's actually correct, and any future adjustment is one edit
+// instead of six. Doesn't touch each scene's own positioning, font, or
+// (where present) responsive/collision-avoidance CSS — only the color.
+export const HINT_TEXT_COLOR = 'rgba(255,255,255,0.6)';
+
 // ─── HTML escaping ──────────────────────────────────────────────────────────
 // Every scene that injects found text (poems, notes, spine titles) into a
 // read-more panel's innerHTML needs this, and four of them (orbiter, scroll,
