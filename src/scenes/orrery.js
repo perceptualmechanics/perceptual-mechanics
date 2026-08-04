@@ -1874,6 +1874,18 @@ export function createOrrery(container, { preview = false } = {}) {
     panel.setAttribute('role', 'dialog');
     panel.setAttribute('aria-modal', 'false');
     panel.setAttribute('aria-labelledby', 'orrery-panel-title');
+    // Cross-site consistency review, 2026-08-03: flagged the ✦ bullet +
+    // era/provenance line here as possibly inconsistent with orbiter.js's
+    // Haiku panel and sphere.js's Digression panel, which have neither.
+    // Confirmed intentional, not an oversight: this scene's whole panel is
+    // ONE found artifact (a real short-short someone else wrote, author
+    // and provenance unknown — see the colophon's Bibliography), so it
+    // gets real attribution, the same way library.js's per-item panel
+    // shows creator/publisher/year for its found books and films. Orbiter/
+    // Sphere's panels cycle through many of Scott's own WRITTEN pieces —
+    // his own authorship is already stated once in the colophon, so
+    // there's no per-item provenance to show, and no bullet either.
+    // Found gets attribution; written doesn't. Site-wide rule, not a gap.
     panel.innerHTML = `
       <button type="button" id="orrery-panel-close" aria-label="Close panel">✕</button>
       <div id="orrery-panel-title" tabindex="-1">✦ ${ORRERY.name}</div>

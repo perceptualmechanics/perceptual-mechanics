@@ -93,6 +93,58 @@ them. Read these before adding anything that runs at build time.
   worth trimming, orrery.js's texture generators and first-person rig are the
   two most self-contained chunks to split out first.
 
+## 1.33.4 (2026-08-04)
+
+Cross-site consistency review (full screenshot pass across all eight
+scenes plus colophon and overview grid). Four findings, three acted on:
+
+**Beamline's overview-grid thumbnail was stale.** The preview tile showed
+the bare rail against empty dark space — no terrain, no mountains —
+because the entire terrain mesh was skipped whenever `preview: true`, not
+just rendered at lower detail. Restructured so terrain builds in both
+modes: preview gets a smaller/coarser mesh (1600×1280, 60×48 segments vs.
+the full scene's 8000×6400, 640×512) built from the same `terrainHeight()`
+field and texture-repeat scaling, so the thumbnail now matches the scene
+it's a preview of. Shimmer effect and dispose() were already gated/
+optional-chained correctly and needed no changes.
+
+**Panel title treatment (diamond bullet + "found · undated" provenance
+line, present on Orrery's panel, absent from Orbiter's and Sphere's) is
+intentional, not an oversight.** Confirmed against the colophon's found-
+vs-written convention: Orrery's panel describes one found artifact with
+real provenance metadata; Library's per-item panels carry real
+bibliographic fields (isbn13, publisher, runtime, etc.) for the same
+reason; Orbiter's Haiku and Sphere's Digression are Scott's own written
+work, correctly carrying no provenance tag. Added a documentation-only
+comment above orrery.js's panel markup stating this so it doesn't read as
+an inconsistency to the next pass — no behavior change.
+
+**`prism.js` removed.** 943 lines, fully disconnected since the scene's
+2026-07-31 shelving (import, nav-icon, preview-tile, and colophon
+bibliography entry were all already commented out) — verified no other
+file referenced it. Unlike Leaf's shelving, Prism's two attempts (DLA
+crystal, then classical dispersion) both landed with a final verdict and
+no third attempt planned, so this didn't fit the project's usual "comment
+out, don't delete, might revisit" pattern — it's git history now if ever
+needed. The surrounding commented-out re-enable-checklist references to
+it in main.js/index.html/colophon.js were left as-is; they're inert and
+weren't part of what was asked.
+
+**Hint-line visibility on panel-open — investigated, left as-is.**
+Confirmed at the code level (not live — orrery's pointer-lock rig throws
+`WrongDocumentError` under synthetic clicks, making automated live repro
+unreliable) that orrery and prism hid the hint/caption element via
+`hideAmbient()` on panel-open, while sphere/orbiter/library never touched
+it — a real inconsistency, and orrery's hiding traces back to a side
+effect of an old title-duplication fix, not a deliberate policy. Decided
+to leave it unresolved rather than force a site-wide rule now.
+
+Verified: `node --check` on beamline.js and orrery.js, `npx vite build`
+clean. Did not re-run a full live pass across all eight scenes this
+round — beamline's preview terrain was confirmed visually via a Chrome
+screenshot of the landing grid; the other three items were code-level
+only, per the above.
+
 ## 1.33.3 (2026-08-03)
 
 Full code audit (best practices, abstraction/hoisting opportunities,

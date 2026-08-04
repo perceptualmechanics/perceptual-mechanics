@@ -1110,10 +1110,24 @@ export function createBeamline(container, { preview = false } = {}) {
   // worst-case camera position (CAM_MAX + CAM_TARGET's own offset from
   // TERRAIN_CENTER), so no orbit/zoom position can reach it. Gated to
   // !preview, same as before — preview tiles stay cheap.
+  // Preview note, 2026-08-03: this whole mesh used to be skipped in preview
+  // outright ("preview tiles stay cheap") — a reasonable call when it was
+  // three MOUNTAINS mounds, but once the wilderness pass (FAR_PEAKS/
+  // VALLEYS/noise, 1.33.0) landed, the landing-page tile stopped
+  // representing the scene at all: "bare rail against empty dark space,"
+  // per a cross-site consistency review (2026-08-03), while the full scene
+  // had long since grown an entire environment around it. Fix: preview
+  // gets the exact same terrainHeight() field — mountains, wilderness,
+  // edge falloff, all of it — just at a much smaller extent and far
+  // coarser resolution (2,928 vertices vs. 327,680), since a small, distant
+  // tile can't show fine detail anyway and doesn't need the full mesh's
+  // per-vertex cost repeated across every scene's preview rendering at once.
   let terrain = null, terrainGeo = null, terrainMat = null, terrainTex = null;
   const TERRAIN_CENTER = { x: 200, z: 0 };
-  if (!preview) {
-    terrainGeo = new THREE.PlaneGeometry(8000, 6400, 640, 512);
+  {
+    const W = preview ? 1600 : 8000, H = preview ? 1280 : 6400;
+    const SEGX = preview ? 60 : 640, SEGY = preview ? 48 : 512;
+    terrainGeo = new THREE.PlaneGeometry(W, H, SEGX, SEGY);
     terrainGeo.rotateX(-Math.PI / 2);
     const pos = terrainGeo.attributes.position;
     for (let i = 0; i < pos.count; i++) {
@@ -1124,9 +1138,9 @@ export function createBeamline(container, { preview = false } = {}) {
     pos.needsUpdate = true;
     terrainGeo.computeVertexNormals();
 
-    terrainTex = makeGridTexture(); // repeat arg irrelevant — both axes overridden next line for the new 8000×6400 extent
-    terrainTex.repeat.x = 727; // plane isn't square — keeps grid cells ~11 units on both axes (8000/727≈11.0)
-    terrainTex.repeat.y = 582; // 6400/582≈11.0
+    terrainTex = makeGridTexture(); // repeat arg irrelevant — both axes overridden next line for whichever extent above
+    terrainTex.repeat.x = preview ? 145 : 727; // plane isn't square — keeps grid cells ~11 units on both axes (1600/145≈11.0, 8000/727≈11.0)
+    terrainTex.repeat.y = preview ? 116 : 582; // 1280/116≈11.0, 6400/582≈11.0
     // side: DoubleSide — real bug, not a leftover artifact: with the default
     // FrontSide, the mesh vanished entirely once the camera drifted beneath
     // the mountains (nothing left to render but the backface, which
