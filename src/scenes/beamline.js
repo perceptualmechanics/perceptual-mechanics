@@ -1317,7 +1317,22 @@ export function createBeamline(container, { preview = false } = {}) {
         font-weight: 600;
       }
       @media (max-width: 600px) {
+        /* Cross-site consistency review, 2026-08-04: title is centered
+           (left:50%, translateX(-50%)) and hint is pinned right (right:
+           1.2rem) -- fine side by side on desktop, but this 90vw title
+           width (added earlier just to stop the title itself overflowing)
+           puts the title's own right edge almost at the viewport edge,
+           landing directly under the hint text on phone widths. Caught via
+           a live mobile pass (375px), not by inspection -- title and hint
+           text were rendering on top of each other. Fix: stack the hint
+           below the title instead of beside it, both centered, matching
+           the vertical rhythm the title/sub-epigraph pair already use. */
         #beamline-title { width: 90vw; }
+        #beamline-hint {
+          left: 50%; right: auto; top: 7.6rem;
+          transform: translateX(-50%);
+          text-align: center; width: 90vw;
+        }
       }
       #beamline-sr-live {
         position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;

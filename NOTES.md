@@ -93,6 +93,67 @@ them. Read these before adding anything that runs at build time.
   worth trimming, orrery.js's texture generators and first-person rig are the
   two most self-contained chunks to split out first.
 
+## 2.0.0 (2026-08-04)
+
+Called as a milestone, not a rewrite — the version number is catching up
+to a body of work that's been accumulating in small point releases since
+1.30.0: Beamline's rail/terrain/vessel rewrite and its follow-on passes
+(cellular-automaton growth patches, Lévy-flight vessel movement, real
+wilderness terrain with edge falloff, ground-level camera), the full code
+audit (hint-label contrast across seven scenes, butterfly.js onto
+sceneKit, small a11y fixes), the cross-site consistency review (stale
+Beamline thumbnail, prism.js removal, the found-vs-written provenance
+convention written down), and one more live pass done specifically before
+calling this 2.0.
+
+That last pass, done on request at true phone widths (a 375px iframe,
+since this session's window-resize tooling wouldn't go narrower than
+~500px) rather than just eyeballing at desktop size, caught two real bugs
+neither of which showed up in any of the desktop-only live-verification
+passes earlier this cycle:
+
+**Nav bar unreachable icons.** `#pm-nav` lays out its buttons with
+`justify-content: center` and no wrap or scroll, so whenever total button
+width exceeds the viewport, the outermost icons clip off both edges
+evenly rather than wrapping — this exact failure mode has recurred three
+times now across scene-count changes (1.6.0, 1.13.0, and now), each time
+because a scene was added or restored without rechecking the icon-count
+math. Prism's shelving (1.19.0) dropped the live count to seven and
+removed the touch-target override that made eight icons fit; Beamline
+shipped afterward, bringing the count back to eight, and nobody restored
+the override. Sphere and Beamline — the first and last icons — were
+completely unreachable on any phone-width screen. Fixed by reinstating
+the same 38px min-width/min-height override used in 1.6.0 and 1.13.0
+(8 × 38px + 7 × 8px gap = 360px, under the ~375px smallest common phone
+width). The standing comment in styles/main.css now says explicitly:
+recheck this math specifically whenever a nav-bar scene is added or
+restored, not just assumed current.
+
+**Beamline title/hint collision on phone widths.** `#beamline-title` is
+centered and `#beamline-hint` is right-anchored — fine side by side on
+desktop, but the title's own `width: 90vw` (added earlier just to stop it
+overflowing) put its right edge close enough to the hint that their text
+rendered on top of each other below ~600px. Orrery hit this identical
+problem earlier and fixed it by stacking the hint below the title instead
+of beside it, both centered (see the orrery.js 600px block) — applied the
+same fix here, same 7.6rem offset.
+
+Also done this round, at the user's request: `packages/bardjs` was split
+out into its own standalone repo (`~/Documents/bardjs`, git history
+preserved via `git subtree split`, 8 commits) so it can live as an
+independent public project going forward. `packages/bardjs` stays in
+place here unchanged — the workspace dependency and build are untouched;
+the new repo is bardjs's home for future work, not a replacement for this
+copy.
+
+Verified: `node --check` on the two changed files, `npx vite build`
+clean, both mobile fixes re-verified visually after the edit (iframe
+screenshots showing all 8 nav icons on-screen at 375px, and the
+beamline title/hint no longer overlapping). Did not re-run a full desktop
+pass on top of this round's changes since neither fix touches
+desktop-width layout — the media queries are the only thing that
+changed.
+
 ## 1.33.4 (2026-08-04)
 
 Cross-site consistency review (full screenshot pass across all eight
