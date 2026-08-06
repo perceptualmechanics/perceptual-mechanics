@@ -202,8 +202,16 @@ const VALLEYS = [
 // without a scene instance. Kept in sync by hand; if CAM_TARGET's x/z ever
 // change, update these too.
 const CAM_TARGET_XZ = { x: 199.944150, z: 0.531666 };
-const SAFE_RADIUS = 700; // CAM_MAX (620) + 80 margin
-const SAFE_FADE = 260;
+const SAFE_RADIUS = 700; // CAM_MAX (620) + 80 margin — STRUCTURAL, tied to the camera's own max distance elsewhere in this file; shrinking it risks wilderness terrain poking up inside the camera's actual safe zone
+const SAFE_FADE = 260; // TUNABLE — how many world units the wilderness layer takes to fade from 0 to full strength, moving outward past SAFE_RADIUS. Shorter = wilderness appears more abruptly right at the boundary; longer = a more gradual, harder-to-notice transition.
+// A plain radial smoothstep fade-in, centered on the camera's own target
+// point rather than the terrain's center: 0 (no wilderness contribution at
+// all) inside SAFE_RADIUS, ramping smoothly up to 1 (full contribution)
+// over the next SAFE_FADE units outward, 1 everywhere beyond that. This is
+// what keeps the generated wilderness noise (wildernessHeight, used only
+// where this factor is > 0 in terrainHeight below) from ever interfering
+// with the hand-placed, camera-safe area right around where the camera
+// actually operates.
 function corridorFactor(x, z) {
   const dx = x - CAM_TARGET_XZ.x, dz = z - CAM_TARGET_XZ.z;
   const d = Math.sqrt(dx * dx + dz * dz);
@@ -228,9 +236,25 @@ function corridorFactor(x, z) {
 // exposed. TERRAIN_CENTER/PLANE_HALF_X/PLANE_HALF_Z duplicate
 // createBeamline's own terrain-plane constants for the same reason
 // CAM_TARGET_XZ does above — kept in sync by hand.
+// TERRAIN_CENTER/PLANE_HALF_X/PLANE_HALF_Z: STRUCTURAL — these must match
+// the actual terrain plane's real center/dimensions elsewhere in this file
+// (kept in sync by hand, per the comment above). They're not a "how big
+// should the taper region feel" dial; they're where the plane's boundary
+// actually IS, and the whole point of this function is to reach exactly 0
+// exactly there.
 const TERRAIN_CENTER = { x: 200, z: 0 };
 const PLANE_HALF_X = 4000, PLANE_HALF_Z = 3200;
 const EDGE_FALLOFF_START = 0.55; // fraction of half-extent where the taper begins — FAR_PEAKS/VALLEYS all sit well inside this (rNorm ≤ ~0.4), so the hand-placed skyline is untouched; only the noise layer actually reaches this far out
+// rNorm is an ELLIPTICAL normalized radius, not a circular one: dividing x
+// and z by DIFFERENT half-extents (PLANE_HALF_X vs PLANE_HALF_Z, since the
+// plane is 8000x6400, not square) before combining them means rNorm=1
+// traces an ellipse matching the plane's actual aspect ratio, not a circle
+// that would clip the short axis early or leave the long axis's edge
+// exposed. Below EDGE_FALLOFF_START, full strength (1, no taper at all);
+// beyond rNorm=1 (off the plane entirely), zero; the smoothstep01 in
+// between is what makes that transition a smooth ease rather than a
+// visible hard edge — same smoothstep01 helper used throughout this file
+// for exactly that "no visible seam" reason.
 function edgeFalloff(x, z) {
   const nx = (x - TERRAIN_CENTER.x) / PLANE_HALF_X;
   const nz = (z - TERRAIN_CENTER.z) / PLANE_HALF_Z;
@@ -250,6 +274,19 @@ function edgeFalloff(x, z) {
 // This is what fills the space between/around the hand-placed FAR_PEAKS so
 // a ground-level view reads as real landscape in every direction, not
 // isolated mounds floating on a flat plain between them.
+// A deterministic integer hash: given a lattice cell (ix, iz) and a seed,
+// always returns the SAME pseudo-random value in [0, 1) — this is what
+// makes the noise below reproducible (same terrain every load) rather than
+// different every time, without needing to store a giant precomputed grid.
+// The three large multiplier constants (374761393, 668265263, 2246822519)
+// and the bit-mixing steps below (XOR-shift, then a multiply, then another
+// XOR-shift) are STRUCTURAL — they're a standard integer-hash recipe
+// (similar in spirit to hashes used in Squirrel3/FastNoise-style lattice
+// noise) chosen specifically for good avalanche behavior (a tiny change in
+// ix/iz/seed should scramble the output unpredictably, with no visible
+// pattern); swapping them for arbitrary different numbers can reintroduce
+// visible grid-aligned artifacts (repeating stripes/checkerboards in the
+// terrain) rather than just "looking a bit different."
 function hash2(ix, iz, seed) {
   let h = (ix * 374761393 + iz * 668265263 + seed * 2246822519) | 0;
   h = (h ^ (h >>> 13)) | 0;
@@ -257,6 +294,16 @@ function hash2(ix, iz, seed) {
   h = (h ^ (h >>> 16)) >>> 0;
   return h / 4294967296;
 }
+// "Value noise": hash each of the 4 integer lattice points surrounding
+// (x, z) to get 4 independent random values at the cell corners, then
+// smoothly interpolate between them based on how far (x, z) sits inside
+// that cell — smoothstep01 (not plain linear interpolation) on the
+// fractional position (fx, fz) is what keeps the result's slope
+// continuous across cell boundaries, so adjacent cells blend seamlessly
+// instead of showing visible creases where one cell's hash value hands
+// off to the next. `ab`/`cd` interpolate along x first (top edge, bottom
+// edge of the cell), then the final line interpolates those two along z —
+// this two-step process is exactly bilinear interpolation.
 function valueNoise2D(x, z, seed) {
   const ix = Math.floor(x), iz = Math.floor(z);
   const fx = x - ix, fz = z - iz;
@@ -267,6 +314,32 @@ function valueNoise2D(x, z, seed) {
   const cd = c + (d - c) * sx;
   return ab + (cd - ab) * sz;
 }
+// Fractal Brownian motion (fBm): the standard technique for natural-
+// looking terrain noise — stack several "octaves" of the same noise
+// function at increasing frequency and decreasing amplitude, then sum
+// them, so the result has both broad rolling shape (early octaves: low
+// frequency, high amplitude) AND fine detail on top (later octaves: high
+// frequency, low amplitude) rather than looking uniformly smooth or
+// uniformly jittery at only one scale.
+//   octaves: TUNABLE — how many layers to stack. More octaves add finer
+//     detail but cost more valueNoise2D calls per point; 4 is already the
+//     point of diminishing visual return for terrain at this scale.
+//   amp *= 0.5 each octave: TUNABLE ("persistence" in noise terminology —
+//     how much amplitude survives each successive, higher-frequency
+//     octave). Closer to 1 keeps high-frequency detail loud relative to
+//     the broad shape (rougher-looking terrain); closer to 0 makes the
+//     broad shape dominate and higher octaves nearly invisible.
+//   freq *= 2.15 each octave: TUNABLE ("lacunarity" — how much finer each
+//     successive octave's detail is). The classic default is exactly 2.0
+//     (each octave doubles in frequency); 2.15 is a deliberate small
+//     departure from that so the octaves' patterns don't line up as
+//     regularly, avoiding faint repeating structure that landing exactly
+//     on integer-doubled frequencies can produce.
+//   norm: not tunable — this is bookkeeping, not a shaping choice. Since
+//     the amplitudes summed (amp, amp*0.5, amp*0.25, ...) don't add up to
+//     1 on their own, dividing by their actual total keeps the final
+//     result normalized to a predictable 0..1 range regardless of how
+//     many octaves are used above.
 function fbm(x, z, seed, octaves = 4) {
   let sum = 0, amp = 0.5, freq = 1, norm = 0;
   for (let o = 0; o < octaves; o++) {
@@ -277,6 +350,17 @@ function fbm(x, z, seed, octaves = 4) {
   }
   return sum / norm; // 0..1
 }
+// "Ridged" multifractal noise — same octave-stacking idea as fbm above,
+// but each octave's raw noise value first gets folded around its own
+// midpoint: `1 - Math.abs(noise*2 - 1)` maps noise=0.5 (the midpoint) to
+// 1 (the fold's peak) and noise=0 or noise=1 (the extremes) to 0 — so
+// instead of smooth rolling hills, values near the old midpoint become
+// sharp ridgelines and values near the old extremes become valleys/flats.
+// Squaring that folded value (`n * n`) sharpens the ridge crests further
+// — a straight fold alone gives soft-topped ridges, squaring makes the
+// peak of each ridge noticeably narrower/crisper than its base, which is
+// what actually makes this read as "mountain ridges" rather than "rolling
+// hills with creases."
 function ridged(x, z, seed, octaves = 4) {
   let sum = 0, amp = 0.5, freq = 1, norm = 0;
   for (let o = 0; o < octaves; o++) {
@@ -288,9 +372,23 @@ function ridged(x, z, seed, octaves = 4) {
   }
   return sum / norm; // 0..1
 }
+// WILDERNESS_SCALE / RIDGE_SCALE: TUNABLE — both are spatial frequencies
+// (1 / feature-size-in-world-units) fed into fbm/ridged above. Smaller
+// values (bigger denominator) stretch each noise feature across more
+// world space — broader, slower-changing shapes; larger values compress
+// features into a smaller area — busier, faster-changing detail. The two
+// are set roughly 2.6x apart (340 vs 130) so the broad highlands/lowlands
+// layer and the finer ridge layer read as genuinely different scales of
+// feature rather than two copies of the same-sized bumps.
 const WILDERNESS_SCALE = 1 / 340; // broad, slow features — which areas are highlands vs lowlands
 const RIDGE_SCALE = 1 / 130;      // finer ridged layer on top, for actual ridgelines
 function wildernessHeight(x, z) {
+  // Both the ±34 and the 26 below are TUNABLE height ranges (world units)
+  // — raise either to make that layer's contribution to the final terrain
+  // taller/deeper. fbm's own output is remapped from its native 0..1 range
+  // to -1..1 first (`(...- 0.5) * 2`) so the broad layer can push terrain
+  // both up AND down from the baseline, not just up; ridged's output
+  // stays 0..1 (ridges only add height, they don't carve below baseline).
   const base = (fbm(x * WILDERNESS_SCALE, z * WILDERNESS_SCALE, 5000) - 0.5) * 2 * 34; // ±34 broad relief
   const ridge = ridged(x * RIDGE_SCALE, z * RIDGE_SCALE, 9000) * 26; // 0..26 ridge detail on top
   return base + ridge;
@@ -304,6 +402,23 @@ export function terrainHeight(x, z) {
   // always be multiplying by exactly 1 in practice, but leaving the term
   // out entirely means it's structurally impossible for a future edit to
   // this file to accidentally make it otherwise).
+  // Each hand-placed mountain (and, below, FAR_PEAKS/VALLEYS) is a radial
+  // bump: distance `d` from the mountain's own center (m.cx, m.cz),
+  // converted to `t` = 1 at the very center down to 0 at the mountain's
+  // outer radius, then smoothstep01(t) turns that linear falloff into an
+  // eased one (rises gently from the rim, not a sharp cone). `angle` is
+  // this point's bearing around the mountain's center; `jag` perturbs the
+  // otherwise perfectly circular bump by TWO overlaid sine waves at
+  // different angular frequencies (7 and 13 "lobes" around the full
+  // circle) and different strengths (0.15 and 0.08) — like two overlaid
+  // ripples of different wavelengths — so the silhouette reads as an
+  // irregular, natural peak rather than a smooth dome; m.seed offsets each
+  // mountain's own jag pattern so multiple mountains don't share the
+  // exact same jagged shape rotated. TUNABLE: raise 7/13 for a more
+  // finely-serrated outline, raise 0.15/0.08 for deeper jaggedness (push
+  // either too far and `jag` can go negative, inverting the bump into a
+  // dip in that direction — the two are kept comfortably below 1 combined
+  // specifically to avoid that).
   let h = 0;
   for (const m of MOUNTAINS) {
     const dx = x - m.cx, dz = z - m.cz;
@@ -319,6 +434,10 @@ export function terrainHeight(x, z) {
   // Wilderness: FAR_PEAKS/VALLEYS/noise, same as last round, now scaled by
   // edgeFalloff as a group so all of it — hand-placed peaks and generated
   // noise alike — tapers to exactly 0 by the plane's real boundary.
+  // Same radial-bump-plus-angular-jag technique as MOUNTAINS above, just
+  // its own jag frequencies/strengths (5 & 11 lobes, 0.18 & 0.10 strength)
+  // so these peaks don't share an identical jagged silhouette with the
+  // near mountains.
   let wild = 0;
   for (const p of FAR_PEAKS) {
     const dx = x - p.cx, dz = z - p.cz;
@@ -330,6 +449,12 @@ export function terrainHeight(x, z) {
     const jag = 1 + 0.18 * Math.sin(angle * 5 + p.seed) + 0.10 * Math.sin(angle * 11 + p.seed * 2);
     wild += p.height * s * jag;
   }
+  // Valleys are the same radial-falloff idea as the peaks above, minus the
+  // angular jag (a smooth circular dip reads fine for a depression, less
+  // needs to fight against looking like a perfect crater the way a smooth
+  // peak reads as an unnaturally perfect dome) — `wild -=` instead of
+  // `wild +=` is the only real difference: this carves height away rather
+  // than adding it.
   for (const v of VALLEYS) {
     const dx = x - v.cx, dz = z - v.cz;
     const d = Math.sqrt(dx * dx + dz * dz);
@@ -1243,15 +1368,47 @@ export function createBeamline(container, { preview = false } = {}) {
   // following — this governs the CHARACTER of motion ALONG that backbone
   // (progress in real arc-length units, wrapping at the ends like the old
   // constant-speed loop did), not a replacement for having a real path.
+  // ─── Annotation pass, 2026-08-04: tunable vs structural, at a glance ───
+  // LEVY_MU: TUNABLE, but with a hard mathematical floor — must stay
+  //   strictly greater than 1 (the formula below divides by MU-1; at
+  //   exactly 1 that's a division by zero, and approaching 1 the exponent
+  //   blows up toward -infinity, producing wildly huge steps almost
+  //   always). Above that floor, it's a real dial on the distribution's
+  //   SHAPE: lower mu (closer to 1) = heavier tail = more frequent extreme
+  //   long jumps relative to short ones; higher mu = lighter tail = steps
+  //   cluster more tightly around LEVY_L_MIN, behaving more like ordinary
+  //   constant-ish motion. 2.0 is a real, commonly-cited value from the
+  //   Lévy-flight-foraging literature (see the paragraph above), not an
+  //   arbitrary round number.
+  // LEVY_L_MIN / LEVY_L_MAX: TUNABLE — both are fractions of the rail's
+  //   own total length (totalLength), so they scale automatically if the
+  //   rail curve itself changes. LEVY_L_MIN sets the floor for EVERY
+  //   step's length (raising it makes even the smallest local-drift steps
+  //   bigger); LEVY_L_MAX is purely a safety clamp on the distribution's
+  //   naturally unbounded tail (raising it lets rare extreme jumps cover
+  //   more of the rail in one bound; it does not affect the many small/
+  //   medium steps at all, since most draws never come close to it).
+  // LEVY_FORWARD_BIAS: TUNABLE, plain probability in [0, 1] — 0.85 means
+  //   85% of steps net-progress forward, 15% double back. 1.0 would
+  //   remove backtracking entirely (a one-way conveyor); 0.5 would make
+  //   direction a coin flip with no net forward drift at all.
   const LEVY_MU = 2.0;
   const LEVY_L_MIN = totalLength * 0.006;
   const LEVY_L_MAX = totalLength * 0.4;
   const LEVY_FORWARD_BIAS = 0.85; // most steps net-progress forward along the rail; a minority double back, real "local drift" rather than a one-way conveyor
   const levyRng = mulberry32(hashSeed('beamline-vessel-levy'));
+  // The inverse-CDF sampling formula itself, term by term (see the big
+  // comment above for how this was verified against the theoretical
+  // slope): a Lévy/Pareto distribution's CDF is F(L) = 1 - (Lmin/L)^(mu-1)
+  // for L ≥ Lmin. Solving F(L) = u for L (the standard "inverse transform
+  // sampling" trick — plug in a uniform random u and solve for the value
+  // whose cumulative probability equals it) gives exactly the formula
+  // below. This is *why* it produces the right distribution, not just an
+  // empirically-tuned formula that happens to look Lévy-ish.
   function sampleLevyStep() {
-    const u = Math.max(levyRng(), 1e-9);
+    const u = Math.max(levyRng(), 1e-9); // clamped away from exactly 0 — u=0 would make the exponentiation below divide by zero / return Infinity
     const L = LEVY_L_MIN * Math.pow(u, -1 / (LEVY_MU - 1));
-    return Math.min(L, LEVY_L_MAX);
+    return Math.min(L, LEVY_L_MAX); // the safety clamp described above — without it, an extremely small u (rare but possible) could sample a step far larger than the whole rail
   }
   let vesselArc = 0, stepFromArc = 0, stepDelta = 0, stepStartT = 0, stepDuration = 1;
   function beginLevyStep(fromArc, atTime) {
@@ -1262,7 +1419,11 @@ export function createBeamline(container, { preview = false } = {}) {
     stepStartT = atTime;
     // Bigger jumps glide a little longer, but capped — what should scale
     // with step length is DIRECTNESS (a long jump reads as "went straight
-    // there"), not a proportionally slower crawl.
+    // there"), not a proportionally slower crawl. TUNABLE: 3.2 (seconds,
+    // the hard cap), 0.35 (minimum glide time for even a zero-length
+    // step), and the totalLength*0.05 divisor (how much step length it
+    // takes to add one extra second of glide) are all independent dials
+    // on the vessel's pacing, not on the Lévy statistics themselves.
     stepDuration = Math.min(3.2, 0.35 + L / (totalLength * 0.05));
   }
   beginLevyStep(0, 0);
@@ -1648,9 +1809,34 @@ export function createBeamline(container, { preview = false } = {}) {
   // untouched), but each point's RENDERED density/position/brightness is
   // additionally shaped by caEdgeFactor/caEligible below, computed once at
   // setup from that point's own distance from CAM_TARGET.
+  // CA_COLS / CA_ROWS: TUNABLE — the lattice's dimensions in cells. More
+  //   cells = a bigger patch of ground covered, at the cost of more
+  //   points to update every generation (cols*rows grows quadratically-
+  //   ish with a proportional size increase in both directions at once).
   const CA_COLS = 64, CA_ROWS = 34; // ≈705×375 units at GRID_CELL spacing — roughly doubled linear extent so the field reads as part of a larger whole, not a bounded tile
-  const GRID_CELL = 2600 / 236; // ≈11.02 — the real on-screen cell spacing the terrain's own grid texture produces
-  const CA_EDGE_START = 0.7; // fraction of the lattice's own half-extent where the perimeter falloff begins — matches EDGE_FALLOFF_START's role for the terrain
+  const GRID_CELL = 2600 / 236; // ≈11.02 — the real on-screen cell spacing the terrain's own grid texture produces — STRUCTURAL: this is measured to match the terrain grid texture, not a free spacing choice; changing it desyncs the lattice from the ground pattern it's meant to sit on
+  const CA_EDGE_START = 0.7; // fraction of the lattice's own half-extent where the perimeter falloff begins — matches EDGE_FALLOFF_START's role for the terrain — TUNABLE, same effect as that constant: smaller = falloff band starts closer to center (more of the lattice looks "eroded"), closer to 1 = only the very outer rim fades
+  // Conway's Game of Life, the standard B3/S23 rule, spelled out here in
+  // full — this IS the entire rule, nothing else governs how the pattern
+  // evolves generation to generation:
+  //   - n = how many of this cell's 8 neighbors (the dx/dy loop below,
+  //     skipping (0,0) which is the cell itself) are currently alive.
+  //     Neighbors past the grid's own edge simply aren't counted (the
+  //     nx/ny bounds check) — this grid does NOT wrap around; an edge
+  //     cell has fewer effective neighbors than an interior one, which is
+  //     itself part of why activity tends to die out faster right at the
+  //     lattice's boundary.
+  //   - B3/S23, read literally in the last line: a currently-DEAD cell is
+  //     "Born" only if n is exactly 3; a currently-ALIVE cell "Survives"
+  //     only if n is 2 or 3, and dies otherwise (from either loneliness —
+  //     n<2 — or overcrowding — n>3). These specific thresholds (2, 3, 3)
+  //     are STRUCTURAL, not a style choice: they're the exact numbers
+  //     that make the classic Game of Life produce the well-known mix of
+  //     stable shapes, oscillators, and gliders this scene's own
+  //     comments reference verifying against. Changing them creates a
+  //     genuinely different automaton (most other B/S rule combinations
+  //     either die out almost immediately or fill the entire grid solid)
+  //     — not "the same Life with a different look."
   function stepGameOfLife(grid, cols, rows) {
     const next = new Uint8Array(cols * rows);
     for (let y = 0; y < rows; y++) {
@@ -1672,8 +1858,8 @@ export function createBeamline(container, { preview = false } = {}) {
   let caEdgeFactor = null; // per-point smooth brightness multiplier from the perimeter falloff (1 in the interior, →0 at the true edge)
   let caEligible = null; // per-point stochastic existence flag — thins the field itself (gaps), not just brightness, so the boundary reads as fraying rather than uniformly dimming
   let caRng = null, caTimer = 0;
-  const CA_STEP_INTERVAL = 1.7; // seconds per generation — a real automaton's own discrete clock, not an organic wander
-  const CA_SEED_DENSITY = 0.28; // classic "random soup" density for interesting Life activity
+  const CA_STEP_INTERVAL = 1.7; // seconds per generation — a real automaton's own discrete clock, not an organic wander — TUNABLE: lower = the pattern visibly evolves faster; this only paces how often stepGameOfLife() is CALLED, it has no effect on the rule itself
+  const CA_SEED_DENSITY = 0.28; // classic "random soup" density for interesting Life activity — TUNABLE, but not freely: Life is known to behave interestingly (a mix of die-off, stabilization, and sustained activity) around densities roughly in the 0.2-0.4 range; push it much lower and almost everything dies in a few generations, push it much higher and the grid tends to collapse into a static, over-crowded mess faster
   function seedCaGrid() {
     const grid = new Uint8Array(CA_COLS * CA_ROWS);
     for (let i = 0; i < grid.length; i++) grid[i] = caRng() < CA_SEED_DENSITY ? 1 : 0;
@@ -1696,7 +1882,13 @@ export function createBeamline(container, { preview = false } = {}) {
         const gx = baseX + cx * GRID_CELL, gz = baseZ + cy * GRID_CELL;
         // Elliptical falloff, same shape as edgeFalloff() above but against
         // this lattice's own (non-square) half-extents rather than the
-        // terrain plane's.
+        // terrain plane's. Same three-part read as that function: nx/nz
+        // normalize this point's offset from the camera target into
+        // ellipse-relative units, rNorm is the combined normalized
+        // "radius" (0 at center, 1 exactly at the lattice's own outer
+        // edge), and `edge` is 1 inside CA_EDGE_START, 0 beyond rNorm=1,
+        // and a smoothstep01 ease in between — the value 1 = full
+        // strength, 0 = none, used twice below for two DIFFERENT effects.
         const nx = (gx - CAM_TARGET.x) / caHalfW, nz = (gz - CAM_TARGET.z) / caHalfH;
         const rNorm = Math.sqrt(nx * nx + nz * nz);
         const edge = rNorm <= CA_EDGE_START ? 1
@@ -1706,11 +1898,26 @@ export function createBeamline(container, { preview = false } = {}) {
         // Density falloff: a point deep in the perimeter band has a low
         // chance of ever being eligible to render at all, decided once
         // (not re-rolled every frame) so gaps stay fixed rather than
-        // flickering.
+        // flickering. This is a genuine coin-flip weighted by `edge`
+        // (edge=1 → always eligible, edge=0.3 → 30% chance, edge=0 →
+        // never) — a DIFFERENT use of the same `edge` value than
+        // caEdgeFactor's own brightness-multiplier role above; one shapes
+        // which points exist at all (sparser near the boundary), the
+        // other shapes how bright the ones that do exist can get.
         caEligible[i] = caRng() < edge ? 1 : 0;
         // Position jitter: zero in the untouched interior, growing toward
         // the true edge, so eligible edge points scatter off the perfect
         // lattice instead of staying grid-locked right up to a line.
+        // (caRng() - 0.5) is a uniform offset centered on 0 (equally
+        // likely to nudge either direction); jitterStrength (0 in the
+        // interior, rising to 1 right at the true edge, since edge itself
+        // falls from 1 to 0 over that same span) scales how far that
+        // nudge is allowed to reach. TUNABLE: 2.2 (multiplied by
+        // GRID_CELL, so it scales automatically if grid spacing changes)
+        // is the maximum jitter distance in units of grid-cell-widths at
+        // full strength — raise it for edge points to scatter looser/
+        // farther from the lattice, lower it to keep them closer to a
+        // recognizable grid even near the boundary.
         const jitterStrength = 1 - edge;
         const wx = gx + (caRng() - 0.5) * GRID_CELL * 2.2 * jitterStrength;
         const wz = gz + (caRng() - 0.5) * GRID_CELL * 2.2 * jitterStrength;
@@ -1830,6 +2037,18 @@ export function createBeamline(container, { preview = false } = {}) {
         if (alive === 0) caGrid = seedCaGrid();
       }
       const colorAttr = caGeo.attributes.color;
+      // easeRate: TUNABLE — this is a standard exponential-ease-toward-
+      // target step (`current += (target - current) * rate`, run once per
+      // frame): each frame, brightness closes the gap toward its target
+      // (fully lit or fully dark, from the automaton's own binary state)
+      // by 10% of whatever gap remains, rather than snapping instantly.
+      // That's what makes a cell's birth/death read as a fade rather than
+      // an abrupt flicker — the automaton itself only knows "alive" or
+      // "dead," this is a purely visual smoothing layer on top of that
+      // binary state. Raise toward 1 for a snappier, less smoothed
+      // transition; reduceMotion forces exactly 1 (instant, no ease) so a
+      // reduced-motion visitor still sees the real current state without
+      // the animated fade itself being motion.
       const easeRate = reduceMotion ? 1 : 0.1;
       for (let i = 0; i < caGrid.length; i++) {
         const target = caEligible[i] ? caGrid[i] : 0; // ineligible perimeter points never light up, regardless of the automaton's own state

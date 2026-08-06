@@ -165,13 +165,30 @@ function makePOrbitalDotTexture() {
 
 function buildOrbitalCloud(preview) {
   const count = preview ? 900 : 2800;
-  // Tuning constant (not the real Bohr radius) for r^2 * e^(-r/A0) — chosen
-  // so the bulk of the sampled cloud sits comfortably inside the
-  // satellites' own inner orbit radius (1.35); see the function-header
-  // comment above for the numerical check behind this value.
+  // ─── Annotation pass, 2026-08-04: what each constant here controls ────
+  // count: TUNABLE. More points = a denser-looking cloud, same shape. No
+  //   effect on the underlying math at all — it's just how many times
+  //   sampleUpperLobePoint() below gets called.
+  // A0: TUNABLE (this is the whole "size dial" for the orbital). It's the
+  //   single length-scale in the density formula r^2*e^(-r/A0) — the
+  //   distance along a lobe where the probability density actually peaks
+  //   is exactly r=2*A0 (see the comment above this function for the
+  //   calculus). Raise A0 and the whole dumbbell gets longer/fatter and
+  //   the peak-brightness band slides outward with it; lower it and the
+  //   cloud shrinks toward the nucleus. It is deliberately NOT the real
+  //   Bohr radius (~0.53 Angstrom in atomic units) — this is a picked
+  //   visual scale, chosen so the cloud sits inside the satellites' inner
+  //   orbit radius (1.35 below), not a physical constant.
   const A0 = 0.175;
-  const R_MAX = A0 * 9; // truncation radius — e^(-9) is negligible, this just bounds the rejection-sampling proposal
-  const F_MAX = 4 * A0 * A0 * Math.exp(-2); // max of r^2*e^(-r/A0) (at r=2*A0) times max of cos^2(theta)=1
+  // R_MAX and F_MAX are STRUCTURAL, not independent knobs — both are
+  // *derived from* A0 by the rejection-sampling math itself (see
+  // sampleUpperLobePoint below), not separate aesthetic choices. If A0
+  // changes, these formulas already track it correctly on their own;
+  // don't hand-edit R_MAX/F_MAX to a different multiple without redoing
+  // the math they're based on, or the sampler below silently produces a
+  // truncated or mis-normalized cloud instead of erroring.
+  const R_MAX = A0 * 9; // truncation radius: e^(-9) ≈ 0.0001, so cutting the proposal distribution off here throws away a negligible sliver of the true (infinite-tailed) distribution rather than biasing it
+  const F_MAX = 4 * A0 * A0 * Math.exp(-2); // the true peak of r^2*e^(-r/A0)*cos^2(theta): the radial factor peaks at r=2*A0 (value (2A0)^2*e^-2), the angular factor cos^2(theta) peaks at 1 when theta=0 (right on the lobe's axis) — multiplying the two peak values together bounds the *whole* 2D density, which is exactly what the rejection test below needs
 
   const positions = new Float32Array(count * 3);
   const colors = new Float32Array(count * 3);
@@ -194,16 +211,46 @@ function buildOrbitalCloud(preview) {
   // is built below as an exact mirror of this one, not sampled
   // independently, so the two lobes match particle-for-particle rather
   // than merely "on average."
+  // ─── Rejection sampling, term by term ──────────────────────────────────
+  // Rejection sampling is a general technique for drawing samples from a
+  // distribution you can *evaluate* (compute a density for) but can't
+  // easily invert into a formula: repeatedly propose a random candidate
+  // point plus a random "keep it?" threshold, and keep the candidate only
+  // if it clears that threshold. Do this enough times and the surviving
+  // points are distributed exactly like the target density, not the
+  // (uniform) proposal distribution you drew candidates from.
   function sampleUpperLobePoint() {
     let r, u, weight;
     do {
+      // Propose a candidate (r, u): r uniform over [0, R_MAX] (candidate
+      // distance from the nucleus), u = cos(theta) uniform over [0, 1]
+      // (candidate angle off the lobe's own axis, upper half only — see
+      // the "why only the upper half" note above this function). This is
+      // a UNIFORM proposal — it does not yet look like a p-orbital at
+      // all; the accept/reject step below is what sculpts it into one.
       r = Math.random() * R_MAX;
       u = Math.random();
+      // The actual (unnormalized) p-orbital density at this candidate
+      // point: r^2 * e^(-r/A0) is the radial part (probability of being
+      // at distance r from the nucleus — rises then falls, peaking at
+      // r=2*A0), u*u is cos^2(theta), the angular part (probability of
+      // being at angle theta off-axis — maximal on-axis at theta=0/u=1,
+      // zero at the equator/nodal-plane at theta=90°/u=0). Multiplying
+      // them combines "how far out" and "how on-axis" into one weight:
+      // a point far out AND on-axis scores high, a point far out but
+      // near the equator scores low even though it's the same distance.
       weight = r * r * Math.exp(-r / A0) * u * u;
     } while (Math.random() * F_MAX >= weight);
-    const phi = Math.random() * Math.PI * 2;
-    const y = r * u;
-    const perpR = r * Math.sqrt(Math.max(0, 1 - u * u));
+    // Accept/reject test: draw a random height up to the known ceiling
+    // F_MAX and keep the candidate only if the real density at this point
+    // clears that height. A point near the true density's peak (weight
+    // close to F_MAX) almost always survives; a point far from the peak
+    // (weight close to 0) almost always gets rejected and the loop tries
+    // again. The net effect, after many draws, is exactly the r^2*e^(-r/
+    // A0)*cos^2(theta) distribution — not an approximation of its shape.
+    const phi = Math.random() * Math.PI * 2; // azimuth: uniform all the way around the lobe's axis — a p-orbital has no preferred direction to spin the dumbbell around, only along it, so this angle carries no shaping information, just spreads points evenly around the tube
+    const y = r * u; // height along the lobe's axis = distance * cos(theta) — plain spherical-to-Cartesian, u already IS cos(theta) so no trig call is even needed here
+    const perpR = r * Math.sqrt(Math.max(0, 1 - u * u)); // distance from the axis = distance * sin(theta), via sin^2+cos^2=1 (Math.max guards a tiny negative under sqrt from floating-point error when u rounds to exactly 1)
     return { x: perpR * Math.cos(phi), y, z: perpR * Math.sin(phi), r };
   }
 
@@ -214,6 +261,22 @@ function buildOrbitalCloud(preview) {
     // (r near 2*A0, close to the lobe's own axis) read hotter than ones
     // out toward the fading tail, on top of what sheer overlap density
     // under additive blending already does for free.
+    //
+    // Note: this recomputes the RADIAL factor only (p.r*p.r*Math.exp(-p.r/
+    // A0), divided by its own peak value 4*A0*A0*Math.exp(-2) — the same
+    // expression F_MAX above already computes for the angular-inclusive
+    // ceiling) — it does NOT reuse the angular cos^2(theta) term, so two
+    // particles at the same radius get the same brightness regardless of
+    // how close to the nodal plane they are, even though a real orbital's
+    // density does fall off angularly too. In practice most surviving
+    // samples near the equator (u near 0) were already heavily filtered
+    // out by the rejection test above, so this is a minor simplification,
+    // not a visible error — flagged here as observed, not changed, per
+    // this pass's own "annotate, don't refactor" scope.
+    // TUNABLE: 0.35 (the floor) and 0.65 (the range) below control how
+    // washed-out the dimmest particles look vs. how much hotter the
+    // brightest ones get — raising the floor makes the whole cloud read
+    // more uniformly bright and less "peaked."
     const dens = 0.35 + 0.65 * Math.min(1, (p.r * p.r * Math.exp(-p.r / A0)) / (4 * A0 * A0 * Math.exp(-2)));
 
     [1, -1].forEach(lobeSign => {
@@ -239,9 +302,9 @@ function buildOrbitalCloud(preview) {
       dx /= dl; dy /= dl; dz /= dl;
       drift[idx] = {
         dx, dy, dz,
-        phase: Math.random() * Math.PI * 2,
-        speed: 0.3 + Math.random() * 0.5,
-        amp: 0.015 + Math.random() * 0.02,
+        phase: Math.random() * Math.PI * 2, // TUNABLE only in the sense of range (0 to 2*PI is "no bias in starting point") — this is what keeps every particle's sine wave out of sync with every other's, so the swarm shimmers rather than pulsing in unison
+        speed: 0.3 + Math.random() * 0.5, // TUNABLE: how fast each particle's own oscillation cycles — raise for a jitterier/faster-shimmering cloud
+        amp: 0.015 + Math.random() * 0.02, // TUNABLE: how far each particle strays from its sampled position — raise for a looser/fuzzier-looking cloud, lower to make the underlying rejection-sampled shape read more crisply
       };
     });
   }
@@ -327,8 +390,25 @@ function buildNucleusDetail(preview) {
   // actually reads as "a cluster" rather than just "a pair." Offsets are a
   // regular tetrahedron's own vertex directions, scaled to sit just
   // outside the old plain sphere's radius.
+  // NUCLEON_R (nucleon cloud size) and SPREAD (distance from center) are
+  // both TUNABLE, both as fractions of NUCLEUS_RADIUS so they scale
+  // together automatically if that changes. Raise SPREAD to open the
+  // cluster out more (reads as looser/less bound); raise NUCLEON_R to
+  // make the individual nucleon clouds overlap more (reads as a single
+  // fuzzy blob instead of four distinct ones).
   const NUCLEON_R = NUCLEUS_RADIUS * 0.62;
   const SPREAD = NUCLEUS_RADIUS * 0.5;
+  // Four vertex directions of a regular tetrahedron: these are four
+  // alternating corners of a cube (same parity of sign flips — an even
+  // number of minus signs in each triple, i.e. (+++), (+--), (-+-),
+  // (--+)) — a standard construction, STRUCTURAL. Any four cube corners
+  // with mixed/inconsistent parity would NOT be equidistant from each
+  // other, so this specific sign pattern isn't an arbitrary pick among
+  // the cube's 8 corners; it's the one grouping of 4 that's actually
+  // tetrahedral. .normalize() shrinks each to length 1 (a direction, not
+  // yet a position), then .multiplyScalar(SPREAD) scales all four out to
+  // the same distance from center — so the four nucleons sit at the
+  // vertices of a regular tetrahedron of "radius" SPREAD.
   const offsets = [
     new THREE.Vector3(1, 1, 1), new THREE.Vector3(1, -1, -1),
     new THREE.Vector3(-1, 1, -1), new THREE.Vector3(-1, -1, 1),
@@ -352,7 +432,38 @@ function buildNucleusDetail(preview) {
     // density-by-construction approach, just isotropic instead of lobed.
     const positions = new Float32Array(particleCount * 3);
     for (let i = 0; i < particleCount; i++) {
+      // rad: distance from this nucleon's own center, built from two
+      // independent tricks stacked together — STRUCTURAL as written (the
+      // exponents/counts below are what make each trick actually do its
+      // job; see the two bullets), though the overall NUCLEON_R scale is
+      // tunable above.
+      //   1. Math.cbrt(u) for a single uniform u in [0,1]: converts a
+      //      uniform 1D random number into a radius that's uniform BY
+      //      VOLUME inside a solid ball. A sphere's volume grows with
+      //      r^3, so for a truly volume-uniform fill, P(radius <= r) must
+      //      equal r^3 (in units where the outer radius is 1) — inverting
+      //      that CDF is exactly cube-rooting a uniform variable. Without
+      //      this, sampling rad = NUCLEON_R * u directly (no cbrt) would
+      //      pack points toward the CENTER, since a thin shell near r=0
+      //      encloses far less volume than an equally-thin shell near the
+      //      surface, yet a plain linear u would give both shells equal
+      //      point counts.
+      //   2. Math.min(rand(), rand()) instead of one rand(): taking the
+      //      smaller of two independent uniform draws skews the result
+      //      toward 0 — this is what actually produces the "denser core,
+      //      soft falloff toward the edge" look (a plain single-cbrt draw
+      //      alone would be uniform-by-volume, i.e. flat density, no
+      //      falloff at all). The two tricks compose: min-of-two shapes
+      //      the density profile, cbrt converts that shaped 1D value into
+      //      a volumetrically-correct 3D radius.
       const rad = NUCLEON_R * Math.cbrt(Math.min(Math.random(), Math.random()));
+      // theta/phi: a uniformly random DIRECTION (not weighted toward the
+      // poles) — same inverse-CDF trick as the star field below
+      // (acos(2u-1) rather than a plain uniform angle), needed here
+      // because a nucleon's own cloud has no preferred axis the way the
+      // p-orbital lobes do (isotropic, not lobed) — see the star-field
+      // comment further down in this file for why a plain `Math.random()
+      // * Math.PI` would be wrong here.
       const theta = Math.acos(2 * Math.random() - 1);
       const phi = Math.random() * Math.PI * 2;
       positions[i * 3]     = offset.x + rad * Math.sin(theta) * Math.cos(phi);
@@ -468,7 +579,7 @@ function buildSatellites(preview) {
   const panelGeo = new THREE.PlaneGeometry(0.09, 0.026);
 
   for (let i = 0; i < count; i++) {
-    const radius = 1.35 + Math.random() * 0.85;
+    const radius = 1.35 + Math.random() * 0.85; // TUNABLE: orbit radii land between 1.35 and 2.2 units out. Raising the floor (1.35) pushes every satellite farther from the cloud; raising the range (0.85) spreads them across a wider band. 1.35 isn't arbitrary though — it's the same floor A0 above was tuned against, so the orbital cloud's tail stays mostly inside it; push it down much further and satellites start passing through the cloud itself.
 
     const pivot = new THREE.Object3D();
     // Design pass, 2026-07-29 — Scott: orbits read as roughly coplanar.
@@ -481,11 +592,51 @@ function buildSatellites(preview) {
     // plane tilts independently, the way a real population (launched at
     // different times, into different mission-specific inclinations)
     // actually would, rather than clustering near a shared tilt.
+    // ─── Annotation pass, 2026-08-04 — a subtlety worth understanding,
+    // not changing (this pass is comments-only): this builds `normal` by
+    // drawing x/y/z each uniformly from [-1,1] and normalizing the
+    // result, which is NOT actually a uniform random direction on the
+    // sphere — it's biased toward the cube's corner directions (like
+    // (1,1,1)) over its face-center directions (like (1,0,0)), because a
+    // cube has proportionally more volume tucked into its corner regions
+    // than a sphere does, and normalizing just projects that lopsided
+    // volume straight onto the sphere's surface. Confirmed numerically
+    // (bucketing 500k samples by their largest axis component and
+    // comparing the histogram against the demonstrably-correct Gaussian
+    // method dla.js's randomUnitVector3 uses): this method visibly
+    // over-samples corner-ish directions and under-samples face-ish ones.
+    //
+    // NOTES.md's 1.3.0 entry says this was verified "with an octant-
+    // bucket check on 20k samples — evenly spread" — that check counted
+    // samples by which of the 8 sign-octants (+++, ++-, ...) they landed
+    // in, which this method DOES get right (it's symmetric under axis
+    // sign flips) — but an octant count can't see the corner-vs-face bias
+    // at all, since that bias is symmetric across octant boundaries too.
+    // Passing that specific check didn't actually rule out the bias this
+    // comment describes.
+    //
+    // In practice: with only ~14 satellites the effect is subtle, not
+    // obviously wrong to the eye, which is presumably why it's gone
+    // unnoticed. dla.js's randomUnitVector3(rng) — three independent
+    // Gaussian components, normalized — is the already-correct fix used
+    // elsewhere in this codebase (beamline.js's own random directions);
+    // swapping this call site to match would be a real, working fix, but
+    // is deliberately NOT made here since this pass is annotation-only.
     const normal = new THREE.Vector3(
       Math.random() * 2 - 1, Math.random() * 2 - 1, Math.random() * 2 - 1
     ).normalize();
+    // setFromUnitVectors(a, b) builds the quaternion (a compact
+    // rotation representation) that rotates vector `a` onto vector `b` —
+    // here, whatever rotation carries "straight up" (0,1,0) onto this
+    // satellite's own random `normal`. Applying that rotation to the
+    // pivot means the pivot's local Y axis now points along `normal`;
+    // since the satellite's `body` is attached to the pivot offset along
+    // X (see `body.position.x = radius` below) and the pivot spins around
+    // its own Y each frame (see animate()), the body sweeps a circle
+    // whose plane is perpendicular to `normal` — i.e., `normal` becomes
+    // that orbit's normal vector, exactly as advertised.
     pivot.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), normal);
-    pivot.rotateZ(Math.random() * Math.PI * 2); // free ascending-node spin around that normal
+    pivot.rotateZ(Math.random() * Math.PI * 2); // free ascending-node spin around that normal — without this, every orbit's own "reference longitude" would be correlated with how `normal` itself was constructed, instead of independently random
     group.add(pivot);
 
     const body = new THREE.Group();
@@ -522,7 +673,7 @@ function buildSatellites(preview) {
     // holds now that the shape is a p-orbital cloud instead — see the
     // 2026-07-29 pivot note at the top of this file.)
     const ringMat = new THREE.MeshBasicMaterial({
-      color: 0xffe08a, transparent: true, opacity: 0.045 + Math.random() * 0.065,
+      color: 0xffe08a, transparent: true, opacity: 0.045 + Math.random() * 0.065, // TUNABLE: each ring's opacity lands between 0.045 and 0.11. Raise both numbers together to make orbit paths more visible overall; widen the gap between them for more variation ring-to-ring.
     });
     const ring = new THREE.Mesh(ringGeo, ringMat);
     ring.rotation.x = Math.PI / 2;
@@ -531,6 +682,11 @@ function buildSatellites(preview) {
     sats.push({
       pivot, body, hit, beacon, beaconMat,
       // Scott: slow these down — was (0.25 + rand*0.35), now less than half that.
+      // TUNABLE: magnitude 0.09-0.23 controls orbital speed (raise for a
+      // faster sweep); the separate 50/50 sign flip is what gives some
+      // satellites clockwise and others counter-clockwise motion — remove
+      // the `* (Math.random() < 0.5 ? 1 : -1)` and every satellite would
+      // orbit the same direction.
       speed: (0.09 + Math.random() * 0.14) * (Math.random() < 0.5 ? 1 : -1),
       ringMat, ringGeo,
       poemIndex: (i + poemOffset) % poems.length,
@@ -573,11 +729,21 @@ export function createOrbiter(container, { preview = false } = {}) {
   scene.add(rim);
 
   // ─── Deep-field stars ───────────────────────────────────────────────────
-  const starCount = preview ? 250 : 700;
+  const starCount = preview ? 250 : 700; // TUNABLE: pure density, no shape effect
   const starPos = new Float32Array(starCount * 3);
   for (let i = 0; i < starCount; i++) {
-    const r = 20 + Math.random() * 20;
-    const theta = Math.random() * Math.PI * 2;
+    const r = 20 + Math.random() * 20; // TUNABLE shell: stars land at a random distance between 20 and 40 units out — raise either number to push the whole field farther out or thicken/thin the shell
+    const theta = Math.random() * Math.PI * 2; // azimuth around the vertical axis — uniform is correct here, every azimuth is equivalent by symmetry
+    // phi (polar angle from the +Y axis) is deliberately NOT
+    // `Math.random() * Math.PI` — that would bunch stars up near the
+    // poles, because lines of constant phi near a pole trace out much
+    // smaller circles (less actual surface area) than ones near the
+    // equator, yet a plain uniform phi would hand them equal numbers of
+    // points regardless. acos(2u-1) for a uniform u in [0,1] is the
+    // correct inverse-CDF fix, same fix the nucleon cloud above uses and
+    // the same problem dla.js's randomUnitVector3 solves a different way
+    // (via three Gaussians) for beamline's own random directions — three
+    // different call sites in this codebase, same underlying math.
     const phi = Math.acos(2 * Math.random() - 1);
     starPos[i * 3]     = r * Math.sin(phi) * Math.cos(theta);
     starPos[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta);
@@ -964,6 +1130,9 @@ export function createOrbiter(container, { preview = false } = {}) {
       // Slow precession of the whole p-orbital cloud, distinct from the
       // nucleus's own spin and the satellites' independent orbits — keeps
       // the dumbbell shape from ever settling into one static silhouette.
+      // TUNABLE: 0.008 is the precession rate — raise it to spin the
+      // whole dumbbell visibly faster (0 would freeze it, matching only
+      // the per-particle drift above for any sense of motion).
       aurorae.group.rotation.y = t * 0.008;
       satellites.sats.forEach(s => {
         s.pivot.rotation.y += s.speed * 0.01;

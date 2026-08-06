@@ -78,6 +78,60 @@ them. Read these before adding anything that runs at build time.
   a few pages, the same mistake in the root rule can loop the homepage (1.7.0,
   following 1.2.3).
 
+## Annotated math — where to start tuning
+
+Comments-only pass (2026-08-06): the real math in each scene now has
+line/block-level comments in the source explaining what it implements, why
+each term is shaped the way it is, and which constants are safe to play with
+vs. structural. No logic changed — this section is just a map of where to
+look first.
+
+- **`src/scenes/orbiter.js`** — a p-orbital electron wavefunction (rejection
+  sampling of `r²·e^(-r/a0)·cos²θ`) plus a small tetrahedral "quark shimmer"
+  nucleus. Start with `A0` (lobe size), `R_MAX`/`F_MAX` (sampling envelope —
+  raise `F_MAX` if the render looks sparse), and the nucleus's isotropic
+  radial-sampling constants. Also documents a real, verified bias in
+  `buildSatellites()`'s random-unit-vector construction (biased toward cube
+  corners, not fixed by the 1.3.0 note's octant check) — left as a comment
+  per scope, not corrected.
+- **`src/scenes/beamline.js`** — three independent systems worth knowing
+  apart: a real Conway's Game of Life (B3/S23) driving the `caPoints` growth
+  lattice (`CA_COLS`/`CA_ROWS`/`CA_STEP_INTERVAL`/`CA_SEED_DENSITY` are the
+  tunables; the birth/survival thresholds 2/3/3 are structural — they define
+  the rule), a Lévy-flight (Pareto power-law) step distribution for vessel
+  movement (`LEVY_MU`/`LEVY_L_MIN`/`LEVY_L_MAX`/`LEVY_FORWARD_BIAS`), and an
+  elliptical radial edge-falloff applied twice — once to the terrain height
+  field, once (more recently) to the point lattice's density/jitter/
+  brightness (`EDGE_FALLOFF_START`/`CA_EDGE_START` are the tunable band
+  widths; the plane-half and center constants are structural anchors).
+  fBm/ridged-multifractal terrain noise is also annotated (`persistence`/
+  `lacunarity`/octave count).
+- **`src/scenes/butterfly.js`** — the actual Lorenz attractor (not a
+  stylized approximation): `SIGMA`/`RHO`/`BETA` are the classic chaotic
+  parameters (structural — `RHO` below ~24.74 collapses the chaos into a
+  fixed point), `DT` is the Euler-integration step size (tunable for
+  smoothness vs. speed). `TRAJECTORIES`' near-identical starting points are
+  there specifically to show sensitive dependence on initial conditions.
+- **`src/scenes/orrery.js`** — real solar-system data (`au`, `relDiameter`
+  in `PLANET_DATA`) compressed with `Math.sqrt` to fit a ~100x real ratio
+  into a small room while preserving order — genuine data, deliberately
+  non-linear display scaling. The orbital `speed` in `orbits.push()` is
+  explicitly NOT Kepler's third law (that would freeze the outer planets
+  for any human viewing session) — it's a linear-by-index legibility
+  simplification, documented as such. `innerR`/`outerR`/`minSize`/`maxSize`
+  are the tunable screen-space bands.
+- **`src/scenes/sphere.js`** — genuine geodesic sphere subdivision, though
+  the subdivision algorithm itself is `THREE.IcosahedronGeometry`'s built-
+  in (not custom code); `detail` is the tunable face-count/smoothness knob.
+  Also documents the label system's real vector math: a normal·view-
+  direction dot product for backface visibility/fade, and an `atan2`-based
+  screen-space angle recovery for keeping label text upright as the sphere
+  rotates.
+- **`src/scenes/leaf.js`** — `buildFoliageClump()`'s per-vertex outward
+  jitter (displacing each vertex along its own radius-from-center normal,
+  skewed to bulge outward more than inward) is a small but real technique
+  worth reading alongside sphere.js's subdivision explanation.
+
 ## Watching (no action needed yet)
 
 - **Scene file size.** orrery.js (~2,320 lines) and library.js (~1,800) are now

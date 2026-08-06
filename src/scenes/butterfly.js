@@ -1,9 +1,60 @@
 import * as THREE from 'three';
 import { bindOrbitDrag, bindWheelZoom, bindGuardedResize, prefersReducedMotion } from '../utils/sceneKit.js';
 
+// ─── Annotation pass, 2026-08-04: the Lorenz attractor ─────────────────────
+// This is the actual, classic Lorenz system (Edward Lorenz, 1963) — a
+// simplified model of atmospheric convection (warm air rising, cooling,
+// sinking, in a rotating fluid layer) reduced to three coupled variables:
+// x = the rate of convective overturning (how fast the fluid is rolling),
+// y = the temperature difference between the rising and falling sides,
+// z = how much the vertical temperature profile deviates from a straight-
+// line gradient. It's not a stylized approximation of chaos, and not
+// invented for this scene — it's the same three equations Lorenz derived
+// and the same three constants below (10, 28, 8/3) that produce the
+// famous double-lobed "butterfly" shape in the textbook case; this scene
+// is a direct, literal render of that system's trajectory through 3D
+// space, not an artist's impression of what chaos might look like.
+//
+// SIGMA (the Prandtl number: how much the fluid's viscosity resists motion
+// relative to how well it conducts heat), RHO (the Rayleigh number: how
+// strongly convection is being driven — think "how hard is this being
+// heated from below"), and BETA (a geometric ratio tied to the shape of
+// the convection cell) are STRUCTURAL, not just aesthetic dials — this
+// specific trio (10, 28, 8/3) is the well-known parameter set where the
+// system is chaotic AND produces the two-lobed butterfly attractor
+// specifically. Changing them isn't guaranteed to just "look different" —
+// push RHO below roughly 24.74 and the chaotic behavior can collapse
+// entirely into a fixed point or a simple periodic loop (the trajectory
+// spirals down to a single resting point or a repeating circuit instead of
+// wandering forever); push the three far out of their classical ratios and
+// the two lobes can merge, shrink unevenly, or the whole shape can blow up
+// toward infinity. Small nudges (a few percent) are reasonably safe to
+// experiment with and will visibly reshape the lobes; large ones need
+// actually checking the trajectory stays bounded, not just eyeballing it.
+//
+// DT is TUNABLE, but is a numerical-stability knob, not a shape knob: it's
+// the timestep for the Euler integration below (see lorenzStep), i.e. how
+// far along the curve one step advances per call. Smaller DT traces the
+// same curve more smoothly/accurately at the cost of needing more steps to
+// cover the same distance; push DT too large and the simple Euler method
+// used here can overshoot and destabilize instead of tracing the real
+// curve (the trajectory visibly breaks up or flies apart rather than
+// looking like a rougher butterfly).
 const SIGMA = 10, RHO = 28, BETA = 8 / 3;
 const DT = 0.005;
 
+// Seven near-identical starting points — most pairs differ by as little as
+// 0.000001 in a single coordinate — deliberately chosen to demonstrate the
+// Lorenz system's own namesake property: sensitive dependence on initial
+// conditions, i.e. the actual "butterfly effect" (a butterfly flapping its
+// wings in Brazil could, in principle, be the difference in a tornado
+// forming in Texas — Lorenz's own metaphor for this exact mathematical
+// behavior, and *why* this attractor's shape looks like a butterfly is a
+// separate, unrelated coincidence from the phrase). Each of these seven
+// trajectories starts on essentially the same point and, run through the
+// identical equations below, visibly diverges onto its own distinct path
+// after enough steps — that divergence is the entire point of rendering
+// seven trails instead of one, not a visual-variety choice.
 const TRAJECTORIES = [
   { x:  0.1,       y: 0.0,      z: 20.0,      color: new THREE.Color(1.0,  1.0,  0.95) },
   { x:  0.100001,  y: 0.0,      z: 20.0,      color: new THREE.Color(1.0,  0.82, 0.28) },
@@ -14,13 +65,46 @@ const TRAJECTORIES = [
   { x:  0.100002,  y: 0.0,      z: 20.0,      color: new THREE.Color(1.0,  0.88, 0.45) },
 ];
 
+// One Euler-integration step of the Lorenz ODEs — the simplest possible
+// numerical method for "how does this point move next": compute the
+// instantaneous rate of change (dx, dy, dz) from the CURRENT position,
+// then nudge the position by rate * DT (a first-order approximation —
+// good enough here because DT is small and this only needs to look
+// physically plausible, not survive rigorous numerical-accuracy scrutiny).
+// The three equations themselves, term by term:
 function lorenzStep(p) {
+  // dx/dt = sigma*(y - x): x chases y, at a rate set by sigma. On its own
+  // this term alone would just pull x and y together and settle down —
+  // it's the coupling with the other two equations below that keeps the
+  // whole system perpetually unsettled instead.
   const dx = SIGMA * (p.y - p.x);
+  // dy/dt = x*(rho - z) - y: the system's actual engine of instability —
+  // x multiplying (rho - z) is a genuine nonlinear term (x times a
+  // function of z, not a plain linear combination), and nonlinearity like
+  // this is exactly what allows chaotic, never-repeating behavior; a
+  // purely linear system of equations could only ever spiral into a fixed
+  // point or a perfectly repeating cycle, never true chaos. The trailing
+  // `- y` is a linear damping term pulling y back down on its own.
   const dy = p.x * (RHO - p.z) - p.y;
+  // dz/dt = x*y - beta*z: another nonlinear product (x times y) driving z
+  // upward, opposed by a linear decay (-beta*z) pulling it back down —
+  // same push/pull shape as the y equation, different pair of variables.
   const dz = p.x * p.y - BETA * p.z;
   p.x += dx * DT; p.y += dy * DT; p.z += dz * DT;
 }
 
+// Not part of the Lorenz math itself — a bookkeeping helper so the whole
+// shape renders centered in view instead of off to one side. A trajectory
+// starting at (0.1, 0, 20) begins on a transient approach path before it
+// actually settles onto the attractor proper (the repeating double-lobe
+// shape) — the first 2000 steps here are thrown away for exactly that
+// reason (TUNABLE in principle, but 2000 is already comfortably past the
+// point any of these starting points has settled; shortening it risks
+// measuring the discarded approach path instead of the actual attractor).
+// The following 6000 steps then just track a running bounding box
+// (min/max on each axis) of a point that's actually on the attractor,
+// and the returned "center" is that box's midpoint — a numerical measurement
+// of where the shape actually sits in space, not a hand-picked offset.
 function findCenter(scale) {
   const probe = { x: 0.1, y: 0.0, z: 20.0 };
   for (let i = 0; i < 2000; i++) lorenzStep(probe);
@@ -213,6 +297,12 @@ export function createButterfly(container, { preview = false } = {}) {
   let autoRotate = !preview && !reduceMotion; // slow camera orbit
   const ROTATE_SPEED = 0.0008;
 
+  // Standard spherical-to-Cartesian conversion — the camera orbits at a
+  // fixed distance (radius) from the origin, and phi (angle down from the
+  // +Y "up" axis) / theta (angle around that axis) are the two knobs drag-
+  // to-orbit and the slow auto-rotate below actually change frame to
+  // frame; this is just the formula that turns those two angles plus a
+  // distance back into an x/y/z position to point the camera from.
   function updateCamera() {
     camera.position.x = spherical.radius * Math.sin(spherical.phi) * Math.sin(spherical.theta);
     camera.position.y = spherical.radius * Math.cos(spherical.phi);
@@ -292,6 +382,12 @@ export function createButterfly(container, { preview = false } = {}) {
         trail.posArray[idx]  =trail.state.x*SCALE;
         trail.posArray[idx+1]=trail.state.y*SCALE;
         trail.posArray[idx+2]=trail.state.z*SCALE;
+        // Fade-in only, not part of the Lorenz math: brand-new trails ramp
+        // from 30% brightness up to full as they fill their buffer for the
+        // first time (trail.count/MAX_PTS goes 0->1), so a trail doesn't
+        // pop in at full brightness the instant it starts. Once full
+        // (count reaches MAX_PTS and the ring buffer starts overwriting
+        // its own oldest points), b just stays at 1.0 permanently.
         const b=trail.count<MAX_PTS?0.3+(trail.count/MAX_PTS)*0.7:1.0;
         trail.colArray[idx]  =trail.color.r*b;
         trail.colArray[idx+1]=trail.color.g*b;
@@ -335,10 +431,33 @@ export function createButterfly(container, { preview = false } = {}) {
       butterflyPos.set(localX, localY, localZ).applyEuler(root.rotation);
 
       // ─── Spacetime grid distortion ────────────────────────────────────────
-      // Each grid vertex gets pulled toward butterflyPos
+      // Not Lorenz math — a separate, simpler physical analogy: this is an
+      // inverse-square attraction, the same functional shape as Newtonian
+      // gravity or Coulomb's law (force/displacement falls off as 1 over
+      // distance-squared), used here purely for the visual of the grid
+      // sagging toward the butterfly like a mass sitting on a rubber sheet
+      // ("spacetime" is a deliberate, tongue-in-cheek name — this is not a
+      // real relativity simulation, just borrowing the shape of the curve).
       // displacement = PULL_STRENGTH / (dist^2 + SOFTENING)
+      //
+      // PULL_STRENGTH: TUNABLE — the strength of the attraction. Raise it
+      // and every grid vertex gets tugged harder toward the butterfly's
+      // current position (a more dramatic sag); 0 would leave the grid
+      // perfectly flat/undistorted.
       const PULL_STRENGTH = 40;
+      // SOFTENING: TUNABLE, but a stability knob more than a visual one —
+      // added to dist^2 before dividing specifically so a vertex that ends
+      // up extremely close to the butterfly (dist approaching 0) doesn't
+      // divide by a near-zero number and spike toward infinity. Lowering
+      // it lets nearby vertices get pulled in harder before the MAX_DISP
+      // cap below takes over; it can't be zero without risking exactly
+      // the division blow-up it exists to prevent.
       const SOFTENING     = 18;  // prevents division by zero and clamps max pull
+      // MAX_DISP: TUNABLE hard ceiling — no vertex can ever move farther
+      // than this many units from its rest position, however close the
+      // butterfly gets. Without this second cap, a vertex passed directly
+      // through by the butterfly would still be governed only by
+      // SOFTENING, which softens but doesn't strictly bound the result.
       const MAX_DISP      = 4;  // hard cap on displacement
 
       let vIdx = 0; // global vertex index across all lines
@@ -347,11 +466,24 @@ export function createButterfly(container, { preview = false } = {}) {
           const rest = gridVertexRestPositions[vIdx];
           const rx = rest.x, ry = rest.y, rz = rest.z;
 
+          // Vector from this vertex's rest position to the butterfly's
+          // current position, and its length (dist) and squared length
+          // (dist2, cheaper to compute and all the inverse-square law
+          // actually needs).
           const dx = butterflyPos.x - rx;
           const dy = butterflyPos.y - ry;
           const dz = butterflyPos.z - rz;
           const dist2 = dx*dx + dy*dy + dz*dz;
           const dist  = Math.sqrt(dist2);
+          // `pull` is a single scalar fraction (of the full dx/dy/dz
+          // vector) applied below — Math.min between the raw inverse-
+          // square falloff and MAX_DISP re-expressed as its own fraction
+          // (MAX_DISP / dist) means whichever constraint is stricter at
+          // this exact distance wins, point by point, rather than
+          // computing the inverse-square value and clamping it after —
+          // mathematically equivalent here since both are being compared
+          // as the same "fraction of the vector to move," just written as
+          // one min() instead of a separate clamp step.
           const pull  = Math.min(PULL_STRENGTH / (dist2 + SOFTENING), MAX_DISP / Math.max(dist, 0.001));
 
           posArr[vi*3]   = rx + dx * pull;

@@ -37,6 +37,16 @@ import { ORRERY } from '../text/orreryStory.js';
 // spray-paint job over the scrap-metal bodies (see makeSprayPaintTexture)
 // rather than the poster's own clean flat fills — junk-metal orrery, not a
 // print.
+// ─── Annotation pass, 2026-08-04 ────────────────────────────────────────
+// `au` here is the real semi-major axis (average orbital distance from
+// the sun) of each planet in astronomical units (1 AU = Earth's own
+// distance from the sun) — genuine solar-system data, STRUCTURAL, not
+// invented or stylized for this scene. Same for `relDiameter` (each
+// planet's real diameter relative to Earth's). What IS a deliberate
+// visual choice, applied later where these values get used (see the
+// sqrtAU/sqrtDia compression below), is how those real ratios get
+// squeezed down to fit one small room — the underlying numbers
+// themselves are just the actual solar system.
 const PLANET_DATA = [
   { name: 'Mercury', color: 0xe0447a, au: 0.39, relDiameter: 0.38, moons: [] },
   { name: 'Venus',   color: 0x9974c9, au: 0.72, relDiameter: 0.95, moons: [] },
@@ -336,12 +346,36 @@ function buildOrrery(preview, suspendTopY, rafterY) {
   // so Mercury and Pluto both fit), close to coplanar and braced back to
   // the mast so it reads as one welded machine, not nine floating rings. ──
   const planets = preview ? PLANET_DATA.slice(0, 5) : PLANET_DATA;
+  // Real AU ratios span roughly 100x (Mercury 0.39 to Pluto 39.5) — mapped
+  // directly onto a small room, Mercury's ring would sit almost on top of
+  // the mast while the outer planets would need to be impossibly far out,
+  // or the inner planets would bunch into visual noise. Math.sqrt is the
+  // actual compression: it shrinks large values proportionally MORE than
+  // small ones (sqrt(39.5)≈6.28 is only ~9x sqrt(0.39)≈0.62, not 100x),
+  // while still preserving the correct ORDER and relative spacing rank —
+  // Mercury is still closest, Pluto still farthest, everything in between
+  // still lands in the right relative position, just with the extremes
+  // pulled in toward the middle. This is a real, if simplified, technique
+  // (softer than a log-scale, gentler than linear) — not an approximation
+  // of the real distances so much as a deliberate, legible re-projection
+  // of their real ORDER onto a room-sized budget.
   const sqrtAU = planets.map(p => Math.sqrt(p.au));
+  // auMin/auMax normalize the compressed values to a 0..1 range (below,
+  // (sqrtAU[i]-auMin)/(auMax-auMin)), which lerp (linear interpolation)
+  // then maps onto the actual innerR..outerR screen-space band — same
+  // "normalize then lerp into a target range" pattern used again just
+  // below for planet size, and common throughout this file wherever a
+  // real-world value needs to become a screen distance.
   const auMin = Math.min(...sqrtAU), auMax = Math.max(...sqrtAU);
+  // Same sqrt-compression idea, independently applied to planet SIZE
+  // (relDiameter spans an even wider real range — Jupiter is roughly 28x
+  // Pluto's diameter) so the smallest and largest bodies both stay
+  // visible and comparable at room scale, same reasoning as the orbital
+  // spacing above.
   const sqrtDia = planets.map(p => Math.sqrt(p.relDiameter));
   const diaMin = Math.min(...sqrtDia), diaMax = Math.max(...sqrtDia);
-  const innerR = (preview ? 0.55 : 0.6) * SR, outerR = (preview ? 2.1 : 3.7) * SR;
-  const minSize = (preview ? 0.018 : 0.024) * SS, maxSize = (preview ? 0.065 : 0.09) * SS;
+  const innerR = (preview ? 0.55 : 0.6) * SR, outerR = (preview ? 2.1 : 3.7) * SR; // TUNABLE screen-space band the compressed orbits get mapped into — widen the gap for more visual separation between rings
+  const minSize = (preview ? 0.018 : 0.024) * SS, maxSize = (preview ? 0.065 : 0.09) * SS; // TUNABLE screen-space band for compressed planet sizes, same idea
 
   const orbits = [];
   const TILT_BASE = 0.52;
@@ -429,9 +463,33 @@ function buildOrrery(preview, suspendTopY, rafterY) {
       const moonMesh = new THREE.Mesh(moonGeo, bronzeMat);
       moonMesh.position.x = size * 1.8 + mi * (size * 0.9 + 0.012 * HW);
       moonPivot.add(moonMesh);
+      // Moon orbital speed: no physical model here, just "faster than the
+      // planet, and each successive moon a bit faster still" (mi * 0.1) —
+      // hand-tuned for a pleasing spin rate, not derived from moon.relSize
+      // or distance. TUNABLE: all three constants freely.
       return { pivot: moonPivot, speed: 0.6 + Math.random() * 0.4 + mi * 0.1 };
     });
 
+    // Worth being precise about what IS and ISN'T real celestial mechanics
+    // here: the orbital SPACING and body SIZE above are drawn from actual
+    // solar-system data (au, relDiameter), compressed but order-preserving
+    // — genuine. This speed formula is NOT Kepler's third law (period² ∝
+    // semi-major-axis³, i.e. angular speed ∝ 1/au^1.5) — under real
+    // physics Pluto would complete roughly 1/1020th of an orbit in the
+    // time Mercury completes one whole one, which would render as
+    // motionless for any viewing session. Instead this decreases speed
+    // LINEARLY with orbital index i (outer planets simply move somewhat
+    // slower than inner ones, in a fixed ratio by position, not by the
+    // real cube of their distance) — a deliberate legibility choice: it
+    // keeps every ring's motion visible within a normal viewing window
+    // while still preserving the correct RELATIVE ordering (inner
+    // planets visibly outpace outer ones), which is the property that
+    // actually matters for this to read as "an orrery," not the exact
+    // physical ratio. TUNABLE: 0.16 (Mercury's own speed) and the 0.7
+    // factor (how much slower Pluto ends up, as a fraction of Mercury's
+    // speed) both reshape the spread between fastest and slowest ring;
+    // the trailing `+ Math.random() * 0.012` jitter keeps rings from
+    // ever landing on the exact same phase relationship every visit.
     orbits.push({
       pivot, moons,
       speed: 0.16 - i * (0.16 / planets.length) * 0.7 + Math.random() * 0.012,
@@ -454,6 +512,12 @@ function buildOrrery(preview, suspendTopY, rafterY) {
     const beltCount = preview ? 14 : 34;
     const beltSpread = (radii[jupiterIdx] - radii[marsIdx]) * 0.35;
     for (let i = 0; i < beltCount; i++) {
+      // Polar placement: uniform random angle `a` around the ring, and a
+      // radius `r` drawn uniformly around beltRadius (not uniform-by-AREA,
+      // which would need r ∝ sqrt(random()) — this scatters slightly denser
+      // near the belt's mean radius than a true uniform-disc fill would,
+      // but for a few dozen decorative chunks the difference isn't visible).
+      // This is placement, not a physical asteroid-distribution model.
       const a = Math.random() * Math.PI * 2;
       const r = beltRadius + (Math.random() - 0.5) * beltSpread;
       const chunk = new THREE.Mesh(debrisGeo, debrisMat);
@@ -2240,10 +2304,32 @@ export function createOrrery(container, { preview = false } = {}) {
     }
 
     if (!reduceMotion) {
+      // This is the actual orbital motion: each planet's pivot (an empty
+      // Object3D at the sun's position, with the planet mesh offset out
+      // along X — set up back in the build function) is rotated a little
+      // further around Y every frame. Because the planet mesh only carries
+      // an X offset, rotating its parent pivot sweeps it around a perfect
+      // circle — the pivot IS the orbit. `speed` (computed once per planet
+      // at build time, see the orbits.push() comment above) times a fixed
+      // 0.01 per-frame rate is what turns "faster planets" into "faster
+      // radians per frame." `direction` is always 1 here (real planets
+      // don't orbit backwards) but the multiply is left in so a future
+      // retrograde object would just need direction: -1, no other change.
+      // Moons rotate the same way around their own pivot (nested inside
+      // the planet's bodyGroup), at a flat 0.02 rate instead of 0.01 —
+      // TUNABLE: raise/lower either 0.01 or 0.02 to speed up or slow down
+      // planets vs. moons uniformly across the whole scene.
       orrery.orbits.forEach(o => {
         o.pivot.rotation.y += o.speed * o.direction * 0.01;
         o.moons.forEach(m => { m.pivot.rotation.y += m.speed * 0.02; });
       });
+      // The "unidentified cosmic objects" past Pluto get the same orbit
+      // treatment plus their own independent tumble (mesh.rotation.x/y
+      // advancing at different rates than the orbit itself, and than each
+      // other) — spin and orbit are two unrelated rotations layered on the
+      // same object, which is why they read as tumbling debris rather than
+      // planets. TUNABLE: the 0.01/0.007 spin-rate ratio controls how
+      // "tumbly" vs. simply-spinning each object looks.
       orrery.unknowns.forEach(u => {
         u.pivot.rotation.y += u.speed * u.direction * 0.01;
         u.mesh.rotation.x += u.spin * 0.01;

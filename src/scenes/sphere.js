@@ -49,6 +49,21 @@ export function createSphere(container, { preview = false } = {}) {
   scene.add(fillLight);
 
   // ─── Geometry ─────────────────────────────────────────────────────────────
+  // Geodesic sphere subdivision: this is genuine geodesic geometry, but the
+  // subdivision math itself is Three.js's built-in, not custom code here.
+  // IcosahedronGeometry starts from the 20 equilateral-triangle faces of a
+  // regular icosahedron (the most sphere-like Platonic solid) and recursively
+  // splits each triangle into 4 smaller ones `detail` times, then pushes
+  // every new vertex out to the target radius — the classic way to build a
+  // near-uniform triangular mesh over a sphere (also how geodesic domes are
+  // built). `detail` is TUNABLE: 0 = the bare 20-face icosahedron facets
+  // visibly, 2 (current) = 20 * 4^2 = 320 faces, smooth enough to read as a
+  // sphere while still showing individual flat facets up close; each +1 in
+  // detail quadruples the face count and rendering cost. The radius (1.4) is
+  // also freely TUNABLE — it only scales the sphere, no downstream coupling.
+  // `.toNonIndexed()` duplicates shared vertices per-face so each triangle
+  // can be colored independently below (an indexed geometry would force
+  // every face touching a shared vertex to share that vertex's color).
   const detail = 2;
   const geo = new THREE.IcosahedronGeometry(1.4, detail).toNonIndexed();
   const faceCount = geo.attributes.position.count / 3;
@@ -59,6 +74,20 @@ export function createSphere(container, { preview = false } = {}) {
     new THREE.Color(0x4e8ab8), new THREE.Color(0x7ab8d8),
   ];
 
+  // Per-face color assignment: not random, but not a simple repeat either.
+  // Base color cycles through the 6-color palette by face index (i %
+  // palette.length), so neighboring faces get different but non-random
+  // colors. `nudge` is a small deterministic "dither" added on top —
+  // (i * 13) % 7 walks through the 7 residues {0..6} in a fixed but
+  // non-sequential order as i increases (13 and 7 share no common factor,
+  // so this cycles through all 7 values before repeating, avoiding the
+  // banding a simple i % 7 would show against the 6-color palette cycle).
+  // Dividing by 40 keeps the nudge subtle (small brightness variation, not
+  // a color change). r/g/b are nudged by different fractions of it
+  // (nudge, nudge*0.5, -nudge*0.2) purely so the dither reads as a warm/cool
+  // shift rather than a flat brightness change. TUNABLE: the palette colors
+  // themselves, and the 40 divisor (smaller = more visible per-face
+  // variegation, larger = flatter/more uniform faces).
   const colors = new Float32Array(geo.attributes.position.count * 3);
   for (let i = 0; i < faceCount; i++) {
     const base = palette[i % palette.length].clone();
@@ -511,15 +540,40 @@ export function createSphere(container, { preview = false } = {}) {
     fillLight.position.set(Math.sin(lightAngle*.5)*3, -3, Math.cos(lightAngle*.5)*3);
 
     if (!preview && labelData.length) {
+      // Label distance-scaling: real inverse relationship (scale ∝ 1/camDist)
+      // so labels keep a roughly constant apparent size as the camera zooms,
+      // clamped to [0.5, 3.0] so they don't vanish or balloon at the zoom
+      // extremes. 3.8 (chosen to match the default camera.position.z, i.e.
+      // scale = 1 at the starting distance) is TUNABLE as an overall
+      // label-size dial; the clamp bounds are TUNABLE for how much they're
+      // allowed to grow/shrink before hitting a floor/ceiling.
       camera.getWorldDirection(cameraDir);
       normalMatrix.getNormalMatrix(sphere.matrixWorld);
       const camDist = camera.position.z;
       const scale = Math.max(0.5, Math.min(3.0, 3.8 / camDist));
 
       for (const { label, normal, upVec, div } of labelData) {
+        // Backface visibility test: a label should only show on the side of
+        // the sphere facing the camera. worldNormal is the face's outward
+        // normal transformed into world space by the sphere's current
+        // rotation; cameraDir is the direction the camera is looking. Their
+        // dot product is the cosine of the angle between them — it's -1
+        // when the normal points straight at the camera (face fully facing
+        // us) and +1 when it points straight away (face on the far side).
+        // `dot < -0.1` (rather than < 0) gives a small buffer past the true
+        // silhouette edge so labels don't flicker in and out right at the
+        // horizon of the sphere as it rotates. TUNABLE: -0.1 trades label
+        // visibility duration (less negative = labels appear/disappear
+        // closer to face-on, more negative = they linger further round the
+        // curve before hiding).
         worldNormal.copy(normal).applyMatrix3(normalMatrix).normalize();
         const dot = worldNormal.dot(cameraDir);
         if (dot < -0.1) {
+          // Opacity ramps from 0 (right at the -0.1 visibility threshold)
+          // up to a cap of 0.25 as the face turns more fully toward the
+          // camera — so labels fade in near the silhouette edge instead of
+          // snapping on at full strength. TUNABLE: 0.25 (max label opacity)
+          // and 0.35 (how fast it ramps up) both reshape this fade.
           const opacity = Math.min(0.25, (-dot - 0.1) * 0.35);
           div.style.setProperty('--base-opacity', opacity.toFixed(3));
           div.style.visibility = 'visible';
@@ -527,6 +581,17 @@ export function createSphere(container, { preview = false } = {}) {
           div.style.fontSize = `${(7 * scale).toFixed(1)}px`;
           div.style.width    = `${(60 * scale).toFixed(0)}px`;
           div.style.height   = `${(52 * scale).toFixed(0)}px`;
+          // Label rotation: to keep each label's text upright relative to
+          // the sphere's surface (not the screen) as the sphere spins, we
+          // project two nearby 3D points onto the 2D screen — the label's
+          // center, and a point offset slightly along its local "up"
+          // direction (upVec, the face's own tangent-plane up) — then use
+          // atan2 on the screen-space delta between them to recover the
+          // angle that direction makes on screen. atan2(dx, -dy) rather
+          // than atan2(dy, dx) is just this codebase's convention for
+          // measuring angle from screen-up instead of screen-right; the
+          // 180/Math.PI converts the result from radians to the degrees
+          // CSS rotate() expects.
           const centerWorld = label.position.clone().applyMatrix4(sphere.matrixWorld);
           worldUp.copy(upVec).applyMatrix3(normalMatrix).normalize();
           const tipWorld = centerWorld.clone().addScaledVector(worldUp, 0.15);

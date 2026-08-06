@@ -398,14 +398,34 @@ function buildRail(width) {
 // into something closer to an actual leaf cluster's silhouette, same
 // found-object logic as the leaf's own asymmetric shape.
 function buildFoliageClump(radius, color) {
+  // detail=2 is Three.js's built-in geodesic subdivision (see sphere.js for
+  // the full explanation of how IcosahedronGeometry's detail parameter
+  // works) — enough vertices for the per-vertex jitter below to read as an
+  // organic bumpy surface rather than a handful of flat facets.
   const geo = new THREE.IcosahedronGeometry(radius, 2);
   const pos = geo.attributes.position;
   for (let i = 0; i < pos.count; i++) {
     const v = new THREE.Vector3().fromBufferAttribute(pos, i);
+    // Because this is a sphere, the vertex position itself IS the outward
+    // direction from the center — normalizing it gives the surface normal
+    // `n` at that point without any separate calculation. Displacing the
+    // vertex along its own normal by a random amount pushes points outward
+    // (or slightly inward) while keeping the surface roughly sphere-shaped,
+    // rather than moving them sideways into a lumpy/self-intersecting mess.
+    // `(Math.random() - 0.3)` skews the random range to [-0.3, 0.7] instead
+    // of [-0.5, 0.5] — biased toward pushing OUT more than pulling in, which
+    // is what gives the clump its bulbous, cluster-of-berries silhouette
+    // instead of a symmetric dented sphere. TUNABLE: the -0.3 skew (shift
+    // toward more/less outward bulge) and the trailing * radius * 0.3
+    // (overall jitter magnitude, as a fraction of the clump's radius).
     const n = v.clone().normalize();
     v.addScaledVector(n, (Math.random() - 0.3) * radius * 0.3);
     pos.setXYZ(i, v.x, v.y, v.z);
   }
+  // Vertex normals must be recomputed after moving vertices — the original
+  // normals (perfect-sphere directions) no longer match the new, jittered
+  // surface, and stale normals would make the lighting look wrong (flat or
+  // inside-out shading) even though the geometry itself moved correctly.
   geo.computeVertexNormals();
   const mat = new THREE.MeshStandardMaterial({ color, roughness: 0.85, metalness: 0 });
   return { mesh: new THREE.Mesh(geo, mat), geo, mat };
