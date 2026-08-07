@@ -1,6 +1,5 @@
 import * as THREE from 'three';
-import { libraryItems } from './library.text.js';
-import { cdRackItems } from './library.cdRack.js';
+import { libraryItems, cdRackItems } from './library.text.js';
 import {
   bindOrbitDrag, bindWheelZoom, bindGuardedResize, prefersReducedMotion, createPanelCloser, createJumpList, escapeHtml, parseHTML,
 } from '../../utils/sceneKit.js';
@@ -49,7 +48,7 @@ const TOTAL_H = ROWS * CUBBY_H + (ROWS + 1) * FRAME_T;
 // :D" — invented wholesale, not catalogued off a real photo like the shelf
 // (he doesn't own any of these anymore). Built up album-by-album across a
 // long back-and-forth: 114 albums, 55 artists, hand-dictated rather than
-// filler (library.cdRack.js carries the full provenance note).
+// filler (library.text.js's CD-rack section carries the full provenance note).
 //
 // Two earlier passes tried building this as its own object: first sharing
 // the shelf's camera and rotation pivot (broke down because anything off to

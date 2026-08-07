@@ -84,8 +84,7 @@
 // vector/filter math, generated fresh in the browser, just with more tools
 // in the box.
 
-import { scrollPieces } from './scroll.text.js';
-import { toOgham } from './scroll.ogham.js';
+import { scrollPieces, toOgham } from './scroll.text.js';
 import { escapeHtml, parseHTML } from '../../utils/sceneKit.js';
 import scrollHtml from './scroll.html?raw';
 import './scroll.css';
