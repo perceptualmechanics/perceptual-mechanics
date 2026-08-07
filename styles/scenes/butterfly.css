@@ -1,0 +1,40 @@
+/* Butterfly scene styles (label + hint overlay, positioned on document.body
+   rather than inside the scene's own container — see the header comment in
+   main.js's "Butterfly overlay extras" section for why). Previously
+   injected at runtime via document.createElement('style') directly in
+   main.js — this was NOTES.md's own flagged inconsistency: every other
+   scene keeps its overlay styles self-contained in its own scene file;
+   butterfly's ended up split across main.js/main.css instead. Moved here
+   to close that gap, same as every other scene's stylesheet. The old
+   JS-template interpolation of sceneKit.js's HINT_TEXT_COLOR is now
+   var(--hint-text-color), defined once in styles/main.css. No visual change. */
+
+#butterfly-exp-label {
+  position: fixed;
+  bottom: 3rem; left: 50%; transform: translateX(-50%);
+  color: rgba(255,255,255,0.85);
+  font-size: clamp(0.85rem, 2.5vw, 1.6rem);
+  letter-spacing: clamp(0.1em, 1vw, 0.4em);
+  text-transform: uppercase;
+  pointer-events: none; text-align: center;
+  white-space: nowrap; z-index: 310;
+  font-family: 'Times New Roman', serif;
+}
+@media (max-width: 600px) {
+  #butterfly-exp-label {
+    white-space: normal; width: 88vw;
+    left: 6vw; transform: none;
+    bottom: 5.5rem;
+  }
+}
+#butterfly-hint {
+  position: fixed; top: 4.5rem; right: 1.2rem;
+  color: var(--hint-text-color);
+  font-size: 0.55rem; letter-spacing: 0.2em;
+  text-transform: uppercase; pointer-events: none;
+  text-align: right; z-index: 310; line-height: 1.8;
+  font-family: 'Times New Roman', serif;
+}
+@media (prefers-reduced-motion: reduce) {
+  #butterfly-exp-label, #butterfly-hint { transition: none; }
+}

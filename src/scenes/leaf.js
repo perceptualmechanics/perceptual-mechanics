@@ -3,6 +3,7 @@ import {
   prefersReducedMotion, mountClippedPreviewCanvas, bindGuardedResize,
   bindOrbitDrag, bindWheelZoom,
 } from '../utils/sceneKit.js';
+import '../../styles/scenes/leaf.css';
 // The text lives in src/text/ — the prerender step that builds /text/leaf/
 // imports the same module, so the published piece and the staged one are
 // guaranteed to be the same words. Untouched by this rebuild: the found
@@ -931,73 +932,10 @@ export function createLeaf(container, { preview = false } = {}) {
   }
 
   // ─── Caption / hint (full scene only) ───────────────────────────────────
+  // Styles (#leaf-caption, #leaf-hint, #leaf-grain, and their .cosmic
+  // variants) live in styles/scenes/leaf.css — no runtime injection needed
+  // now that it's a real stylesheet.
   let caption = null, hint = null, grain = null;
-  if (!preview && !document.getElementById('leaf-styles')) {
-    const style = document.createElement('style');
-    style.id = 'leaf-styles';
-    style.textContent = `
-      #leaf-caption {
-        position: fixed; left: 4vw; top: 4.5rem; bottom: 4.5rem;
-        width: min(62vw, 60rem);
-        overflow-y: auto; -webkit-overflow-scrolling: touch;
-        pointer-events: all; z-index: 310;
-        scrollbar-color: rgba(20,20,16,0.35) transparent;
-        scrollbar-width: thin;
-        -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 6%, black 94%, transparent 100%);
-                mask-image: linear-gradient(to bottom, transparent 0%, black 6%, black 94%, transparent 100%);
-        transition: width 0.01s;
-      }
-      /* Cosmic state: the visual goes full-bleed/IMAX, so the text steps
-         back into a narrower, quieter column rather than competing with
-         it for the same right-third framing the locked diorama used —
-         the layout itself amplifies the scale jump the brief asks for. */
-      #leaf-caption.cosmic {
-        left: 3vw; width: min(38vw, 34rem);
-      }
-      #leaf-caption p {
-        text-align: left;
-        color: rgba(18, 16, 12, 0.92);
-        font-family: 'Coda', sans-serif;
-        font-weight: 400;
-        font-size: clamp(1.6rem, 3.2vw, 2.6rem);
-        letter-spacing: 0.005em;
-        line-height: 1.5;
-        text-shadow:
-          0 1px 18px rgba(255,255,255,0.65),
-          0 1px 2px rgba(255,255,255,0.4),
-          0 0 10px rgba(0,0,0,0.4),
-          0 0 3px rgba(0,0,0,0.5);
-        margin: 0 0 2.2rem;
-      }
-      #leaf-caption.cosmic p {
-        color: rgba(230, 236, 250, 0.92);
-        text-shadow:
-          0 1px 14px rgba(140,170,255,0.4),
-          0 0 8px rgba(0,0,0,0.7);
-      }
-      #leaf-caption p:last-child { margin-bottom: 0; }
-      #leaf-hint {
-        position: fixed; top: 4.5rem; right: 1.2rem;
-        color: rgba(40,36,30,0.4);
-        font-size: 0.55rem; letter-spacing: 0.2em;
-        text-transform: uppercase; pointer-events: none;
-        text-align: right; z-index: 310; line-height: 1.8;
-        font-family: 'Coda', sans-serif;
-      }
-      #leaf-hint.cosmic { color: rgba(210,220,245,0.45); }
-      @media (max-width: 800px) {
-        #leaf-caption, #leaf-caption.cosmic { left: 50%; top: auto; bottom: 4.5rem; transform: translateX(-50%); width: 88vw; height: 30vh; }
-        #leaf-caption p { text-align: center; font-size: 1rem; }
-      }
-      #leaf-grain {
-        position: absolute; inset: 0; pointer-events: none; z-index: 5;
-        opacity: 0.1; mix-blend-mode: overlay;
-        background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/></svg>");
-        background-size: 160px 160px;
-      }
-    `;
-    document.head.appendChild(style);
-  }
 
   let targetScrollFrac = 0;
   const PHASE = { holdEnd: 0.16, cutStart: 0.62 };

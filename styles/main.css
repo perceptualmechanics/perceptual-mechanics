@@ -24,6 +24,23 @@
    single/double-digit z-indices relative to THAT container's own stacking
    context — those never need to clear 300, only each other. */
 
+/* ─── Shared custom properties ──────────────────────────────────────────────── */
+/* Values referenced from more than one scene's stylesheet (styles/scenes/*.css)
+   live here so there's exactly one place to change them. Kept in sync with any
+   JS-side equivalent by comment, not by a build step — see each constant below
+   for its JS counterpart, if it has one. */
+:root {
+  /* Hint-label text color ("drag to orbit · scroll to zoom", etc.), used by
+     every scene's own stylesheet. Raised from the original ~0.3 alpha
+     specifically for contrast (CODE_AUDIT.md's headline finding — 0.3 alpha
+     white-on-black hint text measured ~2.5:1, well under WCAG's 4.5:1 for
+     text this small; 0.6 gets pure white to ~4.6:1). Mirrored as
+     `HINT_TEXT_COLOR` in src/utils/sceneKit.js for the few places JS itself
+     still needs the literal value (not just a stylesheet reference) — if you
+     change one, change the other. */
+  --hint-text-color: rgba(255, 255, 255, 0.6);
+}
+
 /* ─── Reset & base ──────────────────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 

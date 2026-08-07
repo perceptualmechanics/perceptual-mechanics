@@ -147,6 +147,67 @@ look first.
   worth trimming, orrery.js's texture generators and first-person rig are the
   two most self-contained chunks to split out first.
 
+## 2.0.1 (2026-08-07)
+
+Scott: "it's not a matter of too many styles, it's that I hate the React
+convention of doing everything in the JS. I'm an old school 'separate your
+HTML, CSS, and JS' guy" — in response to noticing how much CSS text was
+living inside scene files as `document.createElement('style')` +
+`.textContent` template literals.
+
+That pattern was real and deliberate (see the "Annotated math" section
+above's neighbor for context, and the audit entry a few sections down): nine
+scene files plus `colophon.js` and `main.js` each injected their own
+`<style>` block at runtime, guarded by `if (!document.getElementById(...))`
+so it only landed once. Checked before touching anything: almost none of it
+was actually dynamic (the only interpolated value anywhere in ~1,600 lines
+of injected CSS was a single shared color, `HINT_TEXT_COLOR`) — this was
+plain static CSS that happened to be typed inside a JS string instead of a
+`.css` file, not real CSS-in-JS with a reason to be there.
+
+Split into one real stylesheet per scene: `styles/scenes/{sphere,scroll,
+leaf,orbiter,beamline,theater,library,orrery,colophon,butterfly}.css`, each
+imported at the top of its own JS file (`import '../../styles/scenes/
+x.css'`) instead of injected at runtime. `HINT_TEXT_COLOR` becomes
+`var(--hint-text-color)`, defined once in `styles/main.css`'s new `:root`
+block, with a comment on each side pointing at the other so they don't
+silently drift.
+
+The one thing worth being deliberate about: the project's shelving
+convention (Prism, Leaf, Cycle, goldenHare — comment out the import, done)
+depends on each scene being one self-contained unit. A CSS *import inside
+the scene's own JS file* preserves that exactly — when a scene's import is
+commented out of `main.js`, its CSS import goes with it and never enters
+the bundle, same as before. Verified this actually holds: leaf.js is
+currently shelved, and `#leaf-caption` (leaf.css's own selector) does not
+appear anywhere in the built CSS output, while every other converted
+scene's selectors do. This was the deciding factor over the alternative
+(consolidating everything into `main.css`), which would have left a
+shelved scene's CSS sitting in a shared file with no automatic cleanup.
+
+Butterfly's overlay CSS (`#butterfly-exp-label`, `#butterfly-hint`) was the
+one scene NOTES.md had already flagged as inconsistent — split across
+`main.js`/`main.css` instead of self-contained like every other scene (see
+the 2026-07-17 audit entry below). Folded into `styles/scenes/
+butterfly.css` along with everything else, closing that gap.
+
+Not touched, on purpose: the small number of genuinely dynamic
+`.style.property =` assignments elsewhere (hover cursors, drag rotation
+transforms, randomized per-instance animation delays) — those depend on
+runtime state and have nowhere else to live. Also not touched: the 7
+literal `style="..."` HTML-attribute strings in scroll.js/theater.js/
+colophon.js — a separate, much smaller pattern, not what this pass was
+about.
+
+Verified: `node --check` on every touched file, `npx vite build` clean
+(main JS bundle dropped ~73kB as the CSS moved out of it; main CSS bundle
+grew correspondingly, from ~5.7kB to ~45kB), and spot-checked the built CSS
+output directly for each scene's distinctive selectors (`.face-label`,
+`#sphere-panel`, `.scroll-root`, `#orbiter-panel`, `#beamline-title`,
+`.tab-root`, `#library-panel`, `#orrery-walkpad`, `#colophon-mark`,
+`#butterfly-exp-label`, `--hint-text-color`) — all present except leaf's,
+exactly as expected for a shelved scene.
+
 ## 2.0.0 (2026-08-04)
 
 Called as a milestone, not a rewrite — the version number is catching up

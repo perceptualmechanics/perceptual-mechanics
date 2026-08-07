@@ -1,7 +1,8 @@
 import * as THREE from 'three';
 import { CSS2DRenderer, CSS2DObject } from 'three/examples/jsm/renderers/CSS2DRenderer.js';
 import { fragments } from '../text/fragments.js';
-import { bindOrbitDrag, bindWheelZoom, bindGuardedResize, prefersReducedMotion, createPanelCloser, createJumpList, bindTapVsDrag, HINT_TEXT_COLOR } from '../utils/sceneKit.js';
+import { bindOrbitDrag, bindWheelZoom, bindGuardedResize, prefersReducedMotion, createPanelCloser, createJumpList, bindTapVsDrag } from '../utils/sceneKit.js';
+import '../../styles/scenes/sphere.css';
 
 export function createSphere(container, { preview = false } = {}) {
   const w = container.clientWidth  || window.innerWidth;
@@ -133,36 +134,8 @@ export function createSphere(container, { preview = false } = {}) {
       return plain.slice(from, from + 55);
     }
 
-    // Add label styles
-    const style = document.createElement('style');
-    style.textContent = `
-      @keyframes wisp {
-        0%   { opacity: var(--base-opacity, 0); }
-        30%  { opacity: calc(var(--base-opacity, 0.12) * 0.3); }
-        60%  { opacity: calc(var(--base-opacity, 0.12)); }
-        80%  { opacity: calc(var(--base-opacity, 0.12) * 0.6); }
-        100% { opacity: var(--base-opacity, 0); }
-      }
-      .face-label {
-        color: rgba(255,255,255,1.0);
-        font-family: 'Electrolize', sans-serif;
-        font-size: 7px;
-        line-height: 1.4;
-        width: 60px;
-        height: 52px;
-        text-align: center;
-        pointer-events: none;
-        user-select: none;
-        word-wrap: break-word;
-        overflow: hidden;
-        white-space: normal;
-        animation: wisp var(--duration, 6s) ease-in-out infinite;
-        animation-delay: var(--delay, 0s);
-        transform-origin: center center;
-      }
-    `;
-    document.head.appendChild(style);
-
+    // Label styles live in styles/scenes/sphere.css (.face-label, @keyframes
+    // wisp) — no runtime injection needed now that it's a real stylesheet.
     const pos = geo.attributes.position;
     for (let i = 0; i < faceCount; i++) {
       const fi = i % fragments.length;
@@ -245,76 +218,8 @@ export function createSphere(container, { preview = false } = {}) {
       <div id="sphere-panel-content"></div>
       <div id="sphere-facet-id"></div>
     `;
-    const panelStyle = document.createElement('style');
-    panelStyle.textContent = `
-      /* Design pass, 2026-07-17: this panel was the one outlier on the whole
-         site — a flat, opaque, fully-saturated cyan slab (#7ad) with a solid
-         navy border, sitting next to orbiter/orrery/leaf's dark, translucent,
-         moody panels (near-black background, a faint radial tint keyed to
-         the scene's own palette, thin low-alpha colored border). Brought in
-         line with that language: same near-black-plus-tint recipe, blue kept
-         only as a low-alpha accent (border, scrollbar, facet-id) rather than
-         the whole surface. Electrolize kept — unlike the poem/prose-heavy
-         panels elsewhere, these fragments read as hypertext/interconnected-
-         prose, and the geometric sans fits that better than serif would.
-         The silk-glimmer gold link animation and clicked-side slide-in stay
-         exactly as they were — both already distinct, worth keeping. */
-      #sphere-hint {
-        position: fixed; top: 4.5rem; right: 1.2rem;
-        color: ${HINT_TEXT_COLOR};
-        font-size: 0.55rem; letter-spacing: 0.2em;
-        text-transform: uppercase; pointer-events: none;
-        text-align: right; z-index: 310; line-height: 1.8;
-        font-family: 'Times New Roman', serif;
-      }
-      #sphere-panel {
-        position:absolute;top:0;right:0;width:33%;height:100%;
-        background:
-          radial-gradient(ellipse at 30% 0%, rgba(70,110,180,0.25), transparent 60%),
-          #05070d;
-        border-left:1px solid rgba(120,170,255,0.18);
-        padding:3rem 2.5rem;transform:translateX(100%);
-        transition:transform .5s cubic-bezier(.16,1,.3,1);
-        overflow-y:scroll;z-index:10;
-        scrollbar-color:rgba(120,170,255,0.3) #05070d;scrollbar-width:thin;
-        font-family:'Electrolize',sans-serif;
-      }
-      /* Enters from whichever side of the screen was actually clicked —
-         .from-left is toggled in JS right before opening. no-transition
-         is applied for one frame while the side flips, so the flip itself
-         (an instant layout change, not something transform can animate)
-         happens while the panel is still off-screen, not visibly. */
-      #sphere-panel.from-left {
-        left:0; right:auto;
-        border-left:none; border-right:1px solid rgba(120,170,255,0.18);
-        transform:translateX(-100%);
-      }
-      #sphere-panel.no-transition{transition:none!important;}
-      @media(max-width:700px){
-        #sphere-panel{width:85%;padding:4rem 1.5rem 2rem;}
-        #sphere-panel-title{font-size:1.05rem;letter-spacing:.15em;}
-        #sphere-panel-content{font-size:0.9rem;line-height:1.7;}
-      }
-      #sphere-panel.open{transform:translateX(0);}
-      #sphere-panel-title{
-        font-size:1.15rem;letter-spacing:.22em;text-transform:uppercase;
-        color:rgba(210,225,255,.85);margin-bottom:1.4rem;
-        border-bottom:1px solid rgba(120,170,255,0.18);padding-bottom:1.4rem;
-      }
-      #sphere-panel-content{color:rgba(220,228,245,.78);font-size:1rem;line-height:1.8;}
-      #sphere-panel-content p{padding:0 0 1rem;}
-      #sphere-panel-close{position:absolute;top:1.5rem;right:1.5rem;background:none;border:none;color:rgba(255,255,255,0.4);font-size:1.2rem;cursor:pointer;padding:.5rem;}
-      #sphere-panel-close:hover{color:rgba(255,255,255,.9);}
-      #sphere-facet-id{font-size:.6rem;letter-spacing:.3em;color:rgba(180,200,255,.3);margin-top:2rem;text-transform:uppercase;}
-      @keyframes silk-glimmer{
-        0%,85%,100%{color:inherit;text-shadow:none;}
-        92%{color:rgba(180,210,255,.28);text-shadow:0 0 6px rgba(180,210,255,.12);}
-      }
-      .fragment-link{color:inherit;text-decoration:none;border-bottom:none;cursor:default;transition:color .2s;animation:silk-glimmer 12s ease-in-out infinite;}
-      .fragment-link:hover,.fragment-link:focus{color:rgba(255,220,120,.95);cursor:pointer;animation:none;text-shadow:0 0 12px rgba(255,220,120,.3);}
-      @media(prefers-reduced-motion:reduce){.fragment-link{animation:none;}}
-    `;
-    document.head.appendChild(panelStyle);
+    // Panel/hint/fragment-link styles live in styles/scenes/sphere.css —
+    // see that file's header comment for the 2026-07-17 design-pass note.
     container.style.position="relative";container.style.overflow="hidden";container.appendChild(panel);
     panelTitle   = panel.querySelector('#sphere-panel-title');
     panelContent = panel.querySelector('#sphere-panel-content');

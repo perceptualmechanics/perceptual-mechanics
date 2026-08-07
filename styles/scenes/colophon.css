@@ -1,0 +1,139 @@
+/* Colophon styles. Previously injected at runtime via injectStyles() in
+   colophon.js (document.createElement('style'), double-guarded by a
+   module-level `styleInjected` flag plus
+   `document.getElementById('colophon-styles')`); moved to a real
+   stylesheet, imported once at the top of colophon.js. No visual change. */
+
+#colophon-mark {
+  position: fixed; right: 1.5rem; bottom: 1.5rem;
+  /* Same ~44px touch-target reasoning as .nav-icon in main.css. */
+  width: 48px; height: 48px; min-width: 44px; min-height: 44px;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(10,8,6,0.35); border: 1px solid rgba(220,190,140,0.25);
+  border-radius: 50%; cursor: pointer; z-index: 60;
+  transition: opacity 0.25s, transform 0.2s, background 0.2s;
+  opacity: 0.6;
+}
+#colophon-mark img {
+  width: 78%; height: auto; display: block; position: relative;
+  /* Burnished-gold read: warm the ink's browns toward true gold and
+     add a soft gold halo, rather than leaving it at flat scan colors. */
+  filter: sepia(0.4) saturate(2) brightness(1.1) contrast(1.05)
+          drop-shadow(0 0 4px rgba(255,195,90,0.55));
+}
+/* The actual "gleam" — a bright highlight sweeping across the hare on
+   a slow cycle, masked to the hare's own silhouette (same PNG, reused
+   as an alpha mask) so the shine only crosses the metal, not the
+   transparent gaps between the scrollwork. mix-blend-mode:screen
+   lays the highlight on top of the already-gold-filtered image
+   underneath rather than replacing it. */
+#colophon-mark::after {
+  content: '';
+  position: absolute; inset: 0;
+  -webkit-mask-image: url('/hare-colophon.png');
+  mask-image: url('/hare-colophon.png');
+  -webkit-mask-size: 78% auto; mask-size: 78% auto;
+  -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat;
+  -webkit-mask-position: center; mask-position: center;
+  background: linear-gradient(115deg,
+    transparent 25%, rgba(255,244,210,0.95) 47%,
+    rgba(255,215,130,1) 50%, rgba(255,244,210,0.95) 53%, transparent 75%);
+  background-size: 300% 300%;
+  background-position: 0% 50%;
+  mix-blend-mode: screen;
+  opacity: 0;
+  pointer-events: none;
+  animation: colophon-gleam 5s ease-in-out infinite;
+}
+@keyframes colophon-gleam {
+  0%, 75%  { opacity: 0;   background-position: 0% 50%; }
+  82%      { opacity: 0.9; }
+  92%      { opacity: 0.9; background-position: 100% 50%; }
+  100%     { opacity: 0;   background-position: 100% 50%; }
+}
+#colophon-mark:hover, #colophon-mark:focus-visible {
+  opacity: 1; transform: scale(1.08); background: rgba(10,8,6,0.55);
+}
+#colophon-mark:focus-visible {
+  outline: 2px solid rgba(255,255,255,0.6); outline-offset: 3px;
+}
+
+#colophon-backdrop {
+  position: fixed; inset: 0; z-index: 9000;
+  background: rgba(4,3,2,0.75);
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.35s ease;
+  display: flex; align-items: center; justify-content: center;
+  padding: 4vh 1.5rem;
+}
+#colophon-backdrop.open { opacity: 1; pointer-events: all; }
+
+#colophon-panel {
+  width: min(640px, 100%); max-height: 88vh; overflow-y: auto;
+  background:
+    radial-gradient(ellipse at 30% 0%, rgba(60,48,32,0.3), transparent 60%),
+    #0d0a07;
+  border: 1px solid rgba(220,200,180,0.15);
+  border-radius: 6px;
+  padding: 2.75rem 2.25rem 2.25rem;
+  position: relative;
+  font-family: 'Times New Roman', serif;
+  color: rgba(225,218,205,0.75);
+  transform: translateY(10px); transition: transform 0.35s ease;
+  scrollbar-color: rgba(220,200,180,0.3) #0a0908; scrollbar-width: thin;
+}
+#colophon-backdrop.open #colophon-panel { transform: translateY(0); }
+
+#colophon-close {
+  position: absolute; top: 1.2rem; right: 1.2rem; background: none;
+  border: none; color: rgba(255,255,255,0.4); font-size: 1.2rem;
+  cursor: pointer; padding: .5rem; line-height: 1;
+}
+#colophon-close:hover { color: rgba(255,255,255,0.9); }
+
+#colophon-panel h2 {
+  font-size: 1.3rem; letter-spacing: 0.1em; text-transform: uppercase;
+  color: rgba(238,225,205,0.85); margin-bottom: 0.3rem; font-weight: normal;
+}
+#colophon-panel .colophon-sub {
+  font-size: 0.8rem; font-style: italic; color: rgba(225,215,195,0.4);
+  margin-bottom: 1.6rem;
+}
+#colophon-panel h3 {
+  font-size: 0.78rem; letter-spacing: 0.18em; text-transform: uppercase;
+  color: rgba(230,205,160,0.8); font-weight: normal;
+  margin: 2rem 0 0.8rem; padding-top: 1.6rem;
+  border-top: 1px solid rgba(220,200,180,0.15);
+}
+#colophon-panel section:first-of-type h3 { border-top: none; padding-top: 0; }
+#colophon-panel p { font-size: 0.92rem; line-height: 1.75; margin: 0 0 0.9rem; }
+#colophon-panel a { color: rgba(230,205,160,0.85); }
+#colophon-panel a:hover, #colophon-panel a:focus-visible { color: rgba(255,235,190,1); }
+
+#colophon-bib dt {
+  font-size: 0.8rem; letter-spacing: 0.03em; color: rgba(190,255,210,0.7);
+  margin-top: 1.1rem;
+}
+#colophon-bib dd {
+  font-size: 0.86rem; line-height: 1.7; color: rgba(210,215,205,0.65);
+  margin: 0.3rem 0 0; padding-left: 0;
+}
+#colophon-bib dd + dt { margin-top: 1.3rem; }
+
+#colophon-feedback-link {
+  display: inline-block; margin-top: 0.3rem;
+  font-size: 0.92rem; padding: 0.5rem 0;
+}
+
+@media (max-width: 600px) {
+  #colophon-panel { padding: 3.5rem 1.4rem 1.6rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  #colophon-mark { transition: none; }
+  #colophon-mark:hover { transform: none; }
+  #colophon-backdrop, #colophon-panel { transition: none; }
+  /* Gold filter on the img itself stays (that's color, not motion) —
+     only the sweeping gleam animation is autonomous motion, so only
+     that gets switched off. */
+  #colophon-mark::after { animation: none; opacity: 0; }
+}

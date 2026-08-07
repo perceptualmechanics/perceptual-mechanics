@@ -40,7 +40,7 @@ import { createBeamline }  from './scenes/beamline.js';
 // initPreviews() map entry, and the nav icon + preview tile in index.html
 // (same four spots Leaf's own shelving comment cross-references).
 import { initColophon }    from './components/colophon.js';
-import { HINT_TEXT_COLOR } from './utils/sceneKit.js';
+import '../styles/scenes/butterfly.css';
 
 // ─── Scene registry ──────────────────────────────────────────────────────────
 const SCENES = {
@@ -120,44 +120,10 @@ const landing      = document.getElementById('landing');
 const siteTitle    = document.getElementById('site-title');
 
 // ─── Butterfly overlay extras (label + hint) ──────────────────────────────────
-// Both are position:fixed on document.body, outside #experience-overlay, so
-// their z-index must clear #experience-overlay's own (300, styles/main.css)
-// or they render behind its background/canvas once the fade-in finishes —
-// visible only during the ~0.6s opacity transition, then gone. Must stay
-// under #site-title (400) and #pm-nav (500) so those still win.
-const butterflyStyle = document.createElement('style');
-butterflyStyle.textContent = `
-  #butterfly-exp-label {
-    position: fixed;
-    bottom: 3rem; left: 50%; transform: translateX(-50%);
-    color: rgba(255,255,255,0.85);
-    font-size: clamp(0.85rem, 2.5vw, 1.6rem);
-    letter-spacing: clamp(0.1em, 1vw, 0.4em);
-    text-transform: uppercase;
-    pointer-events: none; text-align: center;
-    white-space: nowrap; z-index: 310;
-    font-family: 'Times New Roman', serif;
-  }
-  @media (max-width: 600px) {
-    #butterfly-exp-label {
-      white-space: normal; width: 88vw;
-      left: 6vw; transform: none;
-      bottom: 5.5rem;
-    }
-  }
-  #butterfly-hint {
-    position: fixed; top: 4.5rem; right: 1.2rem;
-    color: ${HINT_TEXT_COLOR};
-    font-size: 0.55rem; letter-spacing: 0.2em;
-    text-transform: uppercase; pointer-events: none;
-    text-align: right; z-index: 310; line-height: 1.8;
-    font-family: 'Times New Roman', serif;
-  }
-  @media (prefers-reduced-motion: reduce) {
-    #butterfly-exp-label, #butterfly-hint { transition: none; }
-  }
-`;
-document.head.appendChild(butterflyStyle);
+// Both are position:fixed on document.body, outside #experience-overlay —
+// see styles/scenes/butterfly.css's header comment for why this scene's
+// styles ended up here instead of colocated in butterfly.js like every
+// other scene, and for the z-index reasoning.
 
 // ─── Nav icons ────────────────────────────────────────────────────────────────
 function setActiveIcon(sceneName) {
