@@ -225,6 +225,33 @@ described are unchanged.)
   worth trimming, orrery.js's texture generators and first-person rig are the
   two most self-contained chunks to split out first.
 
+## 2.1.1 (2026-08-07)
+
+Small tidiness pass requested right after 2.1.0 shipped: "in scroll, can we
+consolidate scroll.bodies and scroll.text? that split doesn't seem
+necessary... Look for opportunities to consolidate textfiles throughout the
+scenes. I like lightweight but exceptionally strong architecture."
+
+**scroll**: `scroll.bodies.js` (raw paragraph arrays) and `scroll.ogham.js`
+(the transliteration alphabet) merged into `scroll.text.js`. Also fixed a
+stray "the eleven pieces" in that file's header comment — should have read
+twelve since the 2.1.0 Cartography/Leaf merge, just never got updated.
+`scroll.js` now does one `import { scrollPieces, toOgham } from
+'./scroll.text.js'` instead of two.
+
+**library**: `library.cdRack.js` merged into `library.text.js` the same
+way — the real bookshelf and the invented CD collection keep their own
+header comments and a section divider, only the file split went away.
+`library.js` and `scripts/prerender.js` updated to import both
+`libraryItems` and `cdRackItems` from the one file.
+
+Surveyed every other scene first: beamline, orbiter, orrery, sphere, and
+theater already had exactly one `.text.js` file each and needed no change.
+Verified with `node --check`, a clean `npx vite build` (prerender still
+finds all 8 text pages), and a headless smoke test importing the merged
+modules directly to confirm every scroll piece and every library/CD item
+still resolves to the right data.
+
 ## 2.1.0 (2026-08-07)
 
 Continuation of 2.0.1's per-scene split, driven by a direct set of
