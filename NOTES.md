@@ -25,12 +25,14 @@ them. Read these before adding anything that runs at build time.
   edit. If a file's correct contents are a function of something else in the
   repo, generate it from that thing. The same goes for anything that has to
   agree with a list of scenes, pages, or routes.
-- **Published copies import; they never copy.** Content lives in `src/text/`
-  with no rendering attached, and anything that republishes it — a page, a feed,
-  an export — imports the same module the scene does. Two copies of the same
-  paragraph will drift, and the drift is invisible until someone notices the
-  site and the archive disagree. When moving content to make this true, deep-
-  compare the moved constants against `HEAD` and confirm lossless before
+- **Published copies import; they never copy.** Content lives in a `.text.js`
+  module colocated with the scene that shows it (`src/scenes/<name>/<name>.text.js`
+  — see the "Per-scene folder structure" convention below; `src/text/` doesn't
+  exist as of 2.1.0), with no rendering attached, and anything that republishes
+  it — a page, a feed, an export — imports that same module. Two copies of the
+  same paragraph will drift, and the drift is invisible until someone notices
+  the site and the archive disagree. When moving content to make this true,
+  deep-compare the moved constants against `HEAD` and confirm lossless before
   shipping.
 - **Client-rendered content is invisible content.** Anything built inside a
   click handler is unreachable to crawlers, which run JavaScript but don't
@@ -78,6 +80,78 @@ them. Read these before adding anything that runs at build time.
   a few pages, the same mistake in the root rule can loop the homepage (1.7.0,
   following 1.2.3).
 
+## Per-scene folder structure & markup conventions
+
+Established across 2.1.0 (folder restructure) and applied consistently to
+every scene since. Read this before touching any scene's markup, styles, or
+adding a new scene.
+
+- **One self-contained folder per scene.** `src/scenes/<name>/<name>.{js,css,
+  html}`, plus `<name>.text.js` (or `<name>.<thing>.js` for a scene with more
+  than one data module, e.g. library's `library.text.js` +
+  `library.cdRack.js`, or scroll's `scroll.text.js` + `scroll.bodies.js` +
+  `scroll.ogham.js`) for anything that's real writing/content rather than
+  scene logic. Components that aren't scenes (colophon) follow the same
+  pattern one level up: `src/components/<name>/<name>.{js,css,html,text.js}`.
+  Nothing about a scene should live outside its own folder except the shared
+  `src/utils/sceneKit.js` grab-bag and the one-line registration in
+  `src/main.js`.
+- **Static shell markup lives in `<name>.html`, imported as a raw string.**
+  `import fooHtml from './foo.html?raw'` at the top of `foo.js`, parsed via
+  `parseHTML()` (`src/utils/sceneKit.js`) — a `<template>` element under the
+  hood, so the string becomes a real, safely-queryable `DocumentFragment`
+  before anything touches the live DOM. The dividing line for what goes in
+  the `.html` file vs. stays JS-built: genuinely static structure (a panel's
+  skeleton, a hint paragraph's fixed wording, a button) goes in the file;
+  genuinely per-instance/data-driven content (a library spine's title, an
+  orrery placard's found text pulled from `.text.js`, per-item DOM built in
+  a loop) gets set via `textContent`/`innerHTML` on the parsed elements
+  after mount, same as it would if hand-built. A scene with real preview-vs-
+  full-mode branching (theater, library) keeps both mutually-exclusive
+  fragments in the one `.html` file, since only one is ever mounted per call
+  — see theater.html's own header comment for the reasoning.
+- **Classes for styling; ids only where something genuinely needs one.** A
+  real id is justified by exactly two things: it's the target of an ARIA
+  idref (`aria-labelledby`, `aria-describedby`, `aria-controls` all require
+  a real id per spec — every scene's panel title is the recurring example,
+  e.g. `library-panel-title`), or the code needs `document.getElementById`
+  / global DOM uniqueness (scroll's `scroll-svg-defs` guards against double-
+  injecting its SVG filter defs across repeat scene visits; its three
+  `<filter id="...">` elements are ids because CSS `filter: url(#id)`
+  requires one). Everything else — a local `panel.querySelector(...)` scoped
+  to one scene instance, a button a closure already holds a reference to —
+  converts to a class with no functional difference, and should. When an
+  element keeps its id for one of the two reasons above, give it a class
+  too if it also needs styling (e.g. `id="library-panel-title"
+  class="library-panel-title"`) — the id is there for the ARIA relationship
+  alone, not doing double duty as a style hook.
+- **Semantic HTML, fewer divs.** Reach for `<section>`, `<aside>`, `<nav>`,
+  `<h1>`–`<h6>`, `<blockquote>`, `<figure>` before a bare `<div>`/`<span>`
+  wherever a native element's meaning actually fits — a panel's title is a
+  real heading (`<h2>`, still `tabindex="-1"` and focusable the same as a
+  div was), a non-modal in-scene read-more panel is `<aside role="dialog"
+  aria-modal="false">`, the site's one true modal (colophon) is `role=
+  "dialog" aria-modal="true"`. A `<section>` with its own `aria-label` or
+  `aria-labelledby` already implies an accessible landmark region — no need
+  for an explicit `role="region"` alongside it. Converting a `<div>` to a
+  heading/paragraph tag changes its user-agent default margins (headings
+  carry top margin, paragraphs carry top+bottom) — reset them explicitly in
+  CSS (`margin: 0 0 <old-bottom-value>`) so layout stays pixel-identical;
+  every conversion this round called this out in a comment at the site of
+  the change. Don't force semantics that don't fit just to avoid a div —
+  scroll.js's excerpt text stays a plain `<p>`, not a `<blockquote>`, per
+  Scott's own explicit call (see library.js's populatePanel comment) that
+  quoted excerpts read better as plain text there.
+- **Text data is real content, not scene logic — colocate it, but keep
+  scene and prerender importing the same module.** Every `.text.js` (or
+  `.<thing>.js`) module a scene imports must also be the exact module
+  `scripts/prerender.js` imports for that scene's `/text/<name>/` pages —
+  moving one without the other breaks the build (prerender.js's imports are
+  live code, not just documentation) or silently forks the content into two
+  copies that drift. `src/text/` as a shared top-level folder is gone as of
+  2.1.0 — every module that used to live there moved into the scene folder
+  that actually uses it.
+
 ## Annotated math — where to start tuning
 
 Comments-only pass (2026-08-06): the real math in each scene now has
@@ -86,7 +160,11 @@ each term is shaped the way it is, and which constants are safe to play with
 vs. structural. No logic changed — this section is just a map of where to
 look first.
 
-- **`src/scenes/orbiter.js`** — a p-orbital electron wavefunction (rejection
+(File paths below updated 2.1.0 to the current per-scene-folder locations —
+see "Per-scene folder structure" under Standing notes. The math and constants
+described are unchanged.)
+
+- **`src/scenes/orbiter/orbiter.js`** — a p-orbital electron wavefunction (rejection
   sampling of `r²·e^(-r/a0)·cos²θ`) plus a small tetrahedral "quark shimmer"
   nucleus. Start with `A0` (lobe size), `R_MAX`/`F_MAX` (sampling envelope —
   raise `F_MAX` if the render looks sparse), and the nucleus's isotropic
@@ -94,7 +172,7 @@ look first.
   `buildSatellites()`'s random-unit-vector construction (biased toward cube
   corners, not fixed by the 1.3.0 note's octant check) — left as a comment
   per scope, not corrected.
-- **`src/scenes/beamline.js`** — three independent systems worth knowing
+- **`src/scenes/beamline/beamline.js`** — three independent systems worth knowing
   apart: a real Conway's Game of Life (B3/S23) driving the `caPoints` growth
   lattice (`CA_COLS`/`CA_ROWS`/`CA_STEP_INTERVAL`/`CA_SEED_DENSITY` are the
   tunables; the birth/survival thresholds 2/3/3 are structural — they define
@@ -106,13 +184,13 @@ look first.
   widths; the plane-half and center constants are structural anchors).
   fBm/ridged-multifractal terrain noise is also annotated (`persistence`/
   `lacunarity`/octave count).
-- **`src/scenes/butterfly.js`** — the actual Lorenz attractor (not a
+- **`src/scenes/butterfly/butterfly.js`** — the actual Lorenz attractor (not a
   stylized approximation): `SIGMA`/`RHO`/`BETA` are the classic chaotic
   parameters (structural — `RHO` below ~24.74 collapses the chaos into a
   fixed point), `DT` is the Euler-integration step size (tunable for
   smoothness vs. speed). `TRAJECTORIES`' near-identical starting points are
   there specifically to show sensitive dependence on initial conditions.
-- **`src/scenes/orrery.js`** — real solar-system data (`au`, `relDiameter`
+- **`src/scenes/orrery/orrery.js`** — real solar-system data (`au`, `relDiameter`
   in `PLANET_DATA`) compressed with `Math.sqrt` to fit a ~100x real ratio
   into a small room while preserving order — genuine data, deliberately
   non-linear display scaling. The orbital `speed` in `orbits.push()` is
@@ -120,17 +198,17 @@ look first.
   for any human viewing session) — it's a linear-by-index legibility
   simplification, documented as such. `innerR`/`outerR`/`minSize`/`maxSize`
   are the tunable screen-space bands.
-- **`src/scenes/sphere.js`** — genuine geodesic sphere subdivision, though
+- **`src/scenes/sphere/sphere.js`** — genuine geodesic sphere subdivision, though
   the subdivision algorithm itself is `THREE.IcosahedronGeometry`'s built-
   in (not custom code); `detail` is the tunable face-count/smoothness knob.
   Also documents the label system's real vector math: a normal·view-
   direction dot product for backface visibility/fade, and an `atan2`-based
   screen-space angle recovery for keeping label text upright as the sphere
   rotates.
-- **`src/scenes/leaf.js`** — `buildFoliageClump()`'s per-vertex outward
-  jitter (displacing each vertex along its own radius-from-center normal,
-  skewed to bulge outward more than inward) is a small but real technique
-  worth reading alongside sphere.js's subdivision explanation.
+- ~~`src/scenes/leaf.js`~~ — Leaf (and its `buildFoliageClump()` per-vertex
+  outward-jitter technique) was retired and deleted 2026-08-07 rather than
+  picked back up; its one piece of writing lives on in the scroll now (see
+  2.1.0 below). Removed from this map since the file no longer exists.
 
 ## Watching (no action needed yet)
 
@@ -146,6 +224,97 @@ look first.
   unnoticed if any of the three needs another big feature pass. If it ever is
   worth trimming, orrery.js's texture generators and first-person rig are the
   two most self-contained chunks to split out first.
+
+## 2.1.0 (2026-08-07)
+
+Continuation of 2.0.1's per-scene split, driven by a direct set of
+corrections from Scott: "I don't know why everything has an ID rather than
+a class, but classes should be used for styling, and IDs only for necessary
+JS/DOM behaviors. Pick a CSS naming scheme that makes sense," "all the
+markup should be as semantic and specific as possible... the fewer DIVs,
+the better," "move all the text into the new component structure as
+external files within the subfolder," and "delete leaf and prism and lens
+and any references to them in the project. not picking those up again" —
+followed by "do a full audit/clean and tag as 2.1." See "Per-scene folder
+structure & markup conventions" above for the standing rules this
+established; this entry is the changelog of applying them.
+
+**Folder restructure completed for the three scenes 2.0.1 hadn't reached
+yet**: library, orrery, and colophon each moved from a flat
+`src/scenes/x.js` + `styles/scenes/x.css` pair into a self-contained
+`src/scenes/x/` (or `src/components/colophon/`) folder with `.js`/`.css`/
+`.html`, following sphere/butterfly/scroll/orbiter/beamline/theater's own
+2.0.x precedent. `styles/scenes/` is gone entirely now that every scene
+owns its own stylesheet.
+
+**Classes-for-styling retrofit, all eight scenes plus colophon.** Every
+scene's CSS/HTML/JS selector triplet got the same treatment: `#scene-x` →
+`.scene-x` everywhere except the one or two elements that have a real
+reason to keep an id (almost always the panel title, target of
+`aria-labelledby`; scroll's SVG filter defs and their `getElementById`
+double-injection guard are the only other case). sphere, orbiter, and
+beamline were built before this rule existed and got retrofitted; library,
+orrery, and colophon were built after and followed it from the start;
+theater and scroll already used classes throughout and needed no id
+changes, only the text-colocation piece below.
+
+**Semantic HTML pass.** Panel titles that were `<div tabindex="-1">`
+became real `<h2 id="..." class="..." tabindex="-1">` (sphere, orbiter,
+orrery, library) — margins reset explicitly in CSS so the UA default
+heading margin didn't shift any layout. A couple of plain-text `<div>`s
+that were really short paragraph labels (library's kind/creator lines)
+became `<p>`, same margin-reset treatment. Orrery's ambient title/panel
+title, hint, caption, crosshair, lock-prompt, and touch walkpad all moved
+from `document.createElement` calls scattered through two functions into
+one `orrery.html` fragment, parsed once and handed piece-by-piece to
+whichever function needs it (`createFirstPersonRig` now takes its overlay
+elements as parameters instead of building its own).
+
+**Text data colocated into scene folders, prerender.js updated in
+lockstep.** Every remaining `src/text/*.js` module moved next to the scene
+that imports it: `fragments.js` → `sphere/sphere.text.js`, `poems.js` →
+`orbiter/orbiter.text.js`, `beamlineText.js` → `beamline/beamline.text.js`,
+`scrollPieces.js`/`scrollTexts.js`/`ogham.js` → `scroll/scroll.text.js`/
+`scroll.bodies.js`/`scroll.ogham.js`, `library.js`/`cdRack.js` →
+`library/library.text.js`/`library.cdRack.js`, `orreryStory.js` →
+`orrery/orrery.text.js`. Colophon's `BIBLIOGRAPHY` array (previously
+inline in `colophon.js`) moved to `colophon/colophon.text.js`. `src/text/`
+as a shared folder no longer exists. `scripts/prerender.js`'s imports were
+updated line-for-line with every move — verified via `npx vite build`
+after each one, since a missed prerender import fails the build immediately
+(this is exactly the failure mode the 1.7.0 "published copies import"
+standing note warns about).
+
+**Leaf, Prism, and Lens deleted for good**, not just shelved: `src/scenes/
+leaf.{js,css,html}`, `src/utils/dla.js`'s DLA growth code (dead once Prism
+was gone; `mulberry32`/`hashSeed` split out into the new `src/utils/prng.js`
+since beamline still uses them), every commented-out import/registry/nav-
+icon reference in `main.js` and `index.html`, and the shelving-history
+comments in `colophon.js`, `sceneKit.js`, and `poems.js`'s header. Leaf's
+one piece of writing — "In The End It Falls Slowly Through The Aether"
+(Cartography.doc) — was extracted and folded into the scroll instead of
+being lost: dated 2002–2003 from the source file's own OLE metadata
+(`create_time`/`last_saved_time`, read via Python's `olefile`, since no
+date existed anywhere else for it), slotted chronologically between
+Self-Mutilation (2002) and The Vigil (Nov 2003). The scroll is twelve
+pieces now, not eleven. A handful of stale in-code comments that named
+Leaf/Prism as still-existing illustrative examples (sceneKit.js's design-
+rationale comments, a couple of cross-scene "same treatment as X" notes)
+were reworded to drop the dead references rather than left to confuse a
+future reader who can't open the file being pointed at.
+
+Verified: `node --check` on every touched file after each scene's
+conversion, `npx vite build` clean throughout (including the prerender
+step — 8 text pages + sitemap, unchanged in count), and a live Chrome pass
+against the dev server for all eight scenes plus colophon — preview tiles,
+panel open/populate/close, cross-links, cover art, video embeds, and the
+new semantic markup (`h2` titles, `<p>` labels) all checked, console clear
+of errors on every one. Confirmed via `grep` that no live code path
+references `src/text/`, `styles/scenes/`, or the deleted Leaf/Prism/Lens
+files; the only remaining mentions of those three names are historical
+(this file's own past entries, and a couple of factual "here's where this
+piece of writing used to live" credits in colophon's bibliography and
+scroll.bodies.js — provenance, not dead code).
 
 ## 2.0.1 (2026-08-07)
 

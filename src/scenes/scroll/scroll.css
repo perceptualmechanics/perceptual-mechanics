@@ -1,0 +1,400 @@
+/* Scroll scene styles. Part of the 2026-08-07 component restructure: this
+   scene is now a self-contained folder (scroll.js/.css/.html) instead of a
+   flat JS file that injected its own <style> block at runtime. The static
+   preview tile, opening Ogham mark, and SVG filter defs also moved out of
+   scroll.js into scroll.html; the per-piece text patches stay JS-generated,
+   since they're genuinely built from data (scroll.text.js), not fixed
+   markup. No visual change from any earlier version of this file. */
+
+.scroll-root {
+  width: 100%; height: 100%;
+  background: linear-gradient(165deg, #14100b 0%, #1d1912 50%, #110d08 100%);
+  color: #e9ddc2;
+  font-family: 'IM Fell English', Georgia, serif;
+  overflow: hidden;
+  position: relative;
+}
+/* an unsteady candle somewhere off to the side, not a flat vignette.
+   negative z-index so it always sits behind the (non-positioned) scroll
+   content, rather than fighting default stacking order. */
+.scroll-root::before {
+  content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  background:
+    radial-gradient(circle at 24% 18%, rgba(255,214,150,0.85), rgba(255,196,120,0.4) 18%, transparent 42%),
+    radial-gradient(circle at 78% 66%, rgba(255,180,100,0.4), transparent 50%),
+    radial-gradient(ellipse at 18% 8%, rgba(0,0,0,0.45), transparent 48%),
+    radial-gradient(ellipse at 84% 88%, rgba(0,0,0,0.6), transparent 55%),
+    repeating-linear-gradient(38deg, rgba(0,0,0,0.045) 0 1px, transparent 1px 6px);
+  animation: scroll-candlelight 4.2s ease-in-out infinite;
+}
+@keyframes scroll-candlelight {
+  0%, 100%  { opacity: 1; }
+  15%       { opacity: 0.62; }
+  30%       { opacity: 1; }
+  46%       { opacity: 0.7; }
+  58%       { opacity: 0.95; }
+  74%       { opacity: 0.6; }
+  88%       { opacity: 0.9; }
+}
+.scroll-viewport {
+  width: 100%; height: 100%;
+  overflow-y: auto; overflow-x: hidden;
+  padding: 3.2rem 1.4rem 6rem;
+  scrollbar-color: rgba(140,105,55,0.4) transparent;
+  scrollbar-width: thin;
+}
+.scroll-viewport:focus { outline: none; }
+
+/* dust and scratches on the glass, over everything, static through scroll */
+.scroll-grain {
+  position: absolute; inset: 0; z-index: 5; pointer-events: none;
+  filter: url(#scroll-grain);
+  mix-blend-mode: multiply;
+  opacity: 0.13;
+}
+
+/* ── Opening mark: the Ogham letter Sail, carved once at the top of the
+   scroll — the same glyph the preview medallion carries, here bare on
+   the hide itself rather than cut into stone. Reuses .scroll-ogham's own
+   stem/stroke markup; this override just gives it room to be the sole
+   mark on the page instead of one small carving inside a medallion. ── */
+.scroll-ogham-panel {
+  max-width: 100px; margin: 0 auto 2.6rem; aspect-ratio: 0.6 / 1;
+  display: flex; align-items: center; justify-content: center;
+}
+.scroll-ogham-panel .scroll-ogham {
+  width: 82%; height: 92%;
+  filter: url(#scroll-rough) drop-shadow(0 2px 3px rgba(0,0,0,0.5));
+}
+
+/* ── Primordial marginal motifs — spiral, chevron, cup-and-ring, dots ── */
+.scroll-motif { display: block; width: 100%; height: 100%; opacity: 0.85; filter: url(#scroll-rough); }
+.scroll-motif-spiral {
+  background: conic-gradient(from 90deg, transparent 0deg, #a8702f 40deg, transparent 90deg,
+    #a8702f 170deg, transparent 220deg, #a8702f 300deg, transparent 360deg);
+  border-radius: 50%;
+  -webkit-mask: radial-gradient(circle, transparent 18%, black 24%, black 42%, transparent 48%);
+          mask: radial-gradient(circle, transparent 18%, black 24%, black 42%, transparent 48%);
+}
+.scroll-motif-chevron {
+  background-image: repeating-linear-gradient(45deg, transparent 0 6px, #a8702f 6px 9px, transparent 9px 15px),
+                     repeating-linear-gradient(-45deg, transparent 0 6px, #8a3b22 6px 9px, transparent 9px 15px);
+  -webkit-mask: radial-gradient(circle, black 40%, transparent 72%);
+          mask: radial-gradient(circle, black 40%, transparent 72%);
+}
+.scroll-motif-cupring {
+  background: radial-gradient(circle, transparent 8%, #a8702f 10% 14%, transparent 16% 30%, #8a3b22 32% 36%, transparent 38%);
+  border-radius: 50%;
+}
+.scroll-motif-dots {
+  background-image: radial-gradient(#a8702f 22%, transparent 24%);
+  background-size: 30% 30%;
+  background-position: 15% 15%, 65% 15%, 15% 65%, 65% 65%;
+}
+
+/* ── Seam: where one patch of hide was lashed to the next ── */
+.scroll-seam {
+  max-width: 820px; margin: 0 auto; height: 44px; position: relative;
+  display: flex; align-items: center; justify-content: center;
+}
+.scroll-seam::before {
+  content: ''; position: absolute; left: 4%; right: 4%; top: 50%; height: 2px;
+  background: repeating-linear-gradient(90deg, #5c4426 0 10px, transparent 10px 14px);
+  opacity: 0.55; transform: translateY(-50%);
+  filter: url(#scroll-rough);
+}
+.scroll-seam::after {
+  content: ''; position: absolute; left: 4%; right: 4%; top: 50%; height: 10px;
+  background-image: repeating-linear-gradient(90deg, transparent 0 12px, rgba(60,44,24,0.5) 12px 13px, transparent 13px 24px);
+  transform: translateY(-50%) rotate(-1deg);
+  filter: url(#scroll-rough);
+}
+.scroll-seam-motif { width: 26px; height: 26px; position: relative; z-index: 1;
+  background: radial-gradient(circle, rgba(28,23,18,0.9) 55%, transparent 72%); border-radius: 50%; }
+
+/* ── Patch: one section of hide, one uninterrupted stretch of text ──
+   clip-path (set per instance in JS, --patch-clip below) cuts the whole
+   perimeter into a ragged, disjointed hide-shape — not just top/bottom. */
+.scroll-patch {
+  max-width: 820px; margin: 0 auto; padding: 2.2rem 1.9rem;
+  position: relative; scroll-margin-top: 2rem;
+  transition: box-shadow 0.4s ease;
+  clip-path: var(--patch-clip, none);
+}
+.scroll-patch.scroll-flash { box-shadow: 0 0 0 2px rgba(184,122,50,0.55) inset; }
+
+.scroll-patch-tone-0 { background: linear-gradient(160deg, #241d14 0%, #2c2417 55%, #221b12 100%); }
+.scroll-patch-tone-1 { background: linear-gradient(160deg, #2e2517 0%, #382c1a 55%, #2a2115 100%); }
+.scroll-patch-tone-2 { background: linear-gradient(160deg, #3c2f1b 0%, #47381f 55%, #382b18 100%); }
+.scroll-patch-tone-3 { background: linear-gradient(160deg, #4c3c20 0%, #584722 55%, #453620 100%); }
+.scroll-patch-tone-4 { background: linear-gradient(160deg, #5d4a26 0%, #6a5628 55%, #55441f 100%); }
+.scroll-patch-tone-5 { background: linear-gradient(160deg, #6b582e 0%, #7a6530 55%, #64521f 100%); }
+
+/* ink stains and worn patches, scattered per instance, behind the text */
+.scroll-stain { position: absolute; pointer-events: none; border-radius: 50%; z-index: 0; }
+
+/* The ambient candlelight (.scroll-root::before) sits behind every patch, so
+   on its own it only ever shows in the gaps between them — never while
+   actually reading one. This is the same light, painted again on top of
+   the parchment itself: a soft warm wash that pulses on the same rhythm,
+   screen-blended so it only ever adds light and never dims the text.
+   Each patch runs on its own negative delay so the whole scroll doesn't
+   flicker in unison — one candle, many patches catching it differently. */
+.scroll-patch::after {
+  content: ''; position: absolute; inset: 0; z-index: 2; pointer-events: none;
+  background: radial-gradient(ellipse at 26% 14%, rgba(255,205,140,0.22), transparent 58%);
+  mix-blend-mode: screen;
+  animation: scroll-candlelight 4.2s ease-in-out infinite;
+  animation-delay: var(--glow-delay, 0s);
+}
+
+.scroll-patch-text { position: relative; z-index: 1; }
+.scroll-patch-text { --scroll-base-size: 1.2rem; }
+.scroll-patch-text > p {
+  font-family: 'IM Fell English', Georgia, serif;
+  font-size: var(--scroll-base-size); line-height: 1.85; margin: 0 0 1.15rem;
+  color: #e9ddc2;
+  text-shadow: 1px 1px 0 rgba(255,240,210,0.1), -1px -1px 1px rgba(0,0,0,0.55);
+  letter-spacing: 0.01em;
+}
+.scroll-patch-text > p:last-child { margin-bottom: 0; }
+
+/* incised versal opening each patch — Cinzel, sparingly, as an inscriptional accent */
+.scroll-patch-text > p:first-of-type::first-letter {
+  font-family: 'Cinzel', 'IM Fell English', serif;
+  font-weight: 600;
+  font-size: 3.4rem; line-height: 0.72;
+  float: left; margin: 0.05em 0.12em 0 0;
+  color: #c17a3d;
+  text-shadow: 1.5px 1.5px 0 rgba(0,0,0,0.65), -1px -1px 0 rgba(255,220,170,0.15);
+}
+
+/* Ogham marginalia: the opening line of each piece, transliterated,
+   standing in the left margin like a real illuminated manuscript's
+   marginal note — the prose wraps around it, same as the drop-cap
+   above. Deliberately the calm one: no per-instance rotate/scale
+   jitter, steady letter-spacing, a cooler and quieter tone than the
+   warm frenzy of the ink beside it. A thin stemline on its left edge
+   nods to how Ogham actually reads — notches keyed off a straight
+   edge, not floating free the way Latin letters do. */
+.scroll-ogham-line {
+  float: left;
+  width: 118px;
+  margin: 0.1rem 1.2rem 0.6rem 0;
+  padding-left: 0.6rem;
+  border-left: 1px solid rgba(184,196,214,0.35);
+  font-family: 'Noto Sans Ogham', sans-serif;
+  font-size: 1.3rem;
+  line-height: 1.75;
+  letter-spacing: 0.03em;
+  color: rgba(184, 196, 214, 0.72);
+  text-shadow: none;
+  word-break: break-word;
+  user-select: none;
+}
+
+.scroll-rubric {
+  color: #c17a3d;
+  text-shadow: 1px 1px 0 rgba(255,220,170,0.12), -1px -1px 1px rgba(0,0,0,0.6);
+}
+
+/* intense passages: the hand pressing harder, not a color change.
+   'wide' — deliberate, weighty, the pen slowing down; a faint candlelit
+   glow on the tracking rather than a static effect.
+   'tight' — the hand writing faster than it can properly form letters;
+   words crowd together and jostle off the baseline, not a "sinister
+   whisper" italic. */
+.scroll-intense--wide {
+  letter-spacing: 0.2em; word-spacing: 0.12em;
+  animation: scroll-candle-text 3.6s ease-in-out infinite;
+}
+@keyframes scroll-candle-text {
+  0%, 100% { text-shadow: 1px 1px 0 rgba(255,240,210,0.1), -1px -1px 1px rgba(0,0,0,0.55); }
+  50%      { text-shadow: 0 0 7px rgba(255,210,140,0.28), 1px 1px 0 rgba(255,240,210,0.12), -1px -1px 1px rgba(0,0,0,0.5); }
+}
+.scroll-intense--tight {
+  letter-spacing: -0.01em;
+  text-shadow: 0 0 3px rgba(233,221,194,0.28), 1px 1px 0 rgba(0,0,0,0.5), -1px -1px 1px rgba(0,0,0,0.3);
+}
+.scroll-intense--tight .scroll-word { display: inline-block; }
+
+.scroll-link {
+  color: inherit; text-decoration: none; cursor: pointer;
+  border-bottom: 1px dashed rgba(193,122,61,0.65);
+  padding: 0 0.08em; transition: color 0.2s, border-color 0.2s, text-shadow 0.2s;
+}
+.scroll-link:hover, .scroll-link:focus {
+  color: #d99a51;
+  border-bottom-color: #d99a51;
+  text-shadow: 0 0 8px rgba(217,154,81,0.5);
+}
+
+/* ── A pinned-in script page: the one scene the narrator recounts is set
+   in real Hollywood format on a typed sheet tucked into the hide, clean-
+   edged on purpose — a deliberate contrast against the ragged parchment
+   around it, a different object entirely. Paper leans slightly toward
+   washi-white rather than aged manila, with a faint fiber grain and a
+   whisper of dye-bleed under the pin — a quiet nod to a tanzaku strip
+   tied at the top, not a costume change. Pinned only at that top point,
+   so every so often a draft catches it and it rustles, tugging back to
+   rest — the rest of the scroll stays still. ── */
+.scroll-script {
+  position: relative; z-index: 1;
+  max-width: 540px; margin: 1.9rem auto 2.3rem;
+  background: linear-gradient(178deg, #f2ead4 0%, #e6d9b8 55%, #dccca4 100%);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.5), 0 1px 0 rgba(255,255,255,0.2) inset;
+  padding: 2.1rem 1.6rem 1.9rem 2.1rem;
+  transform: rotate(var(--script-rot, 0deg));
+  transform-origin: 50% 0%;
+  animation: scroll-script-flutter 15s ease-in-out infinite;
+  animation-delay: var(--script-delay, 0s);
+}
+@keyframes scroll-script-flutter {
+  0%, 4%, 15%, 27%, 40%, 55%, 100% { transform: rotate(var(--script-rot, 0deg)); }
+  6%  { transform: rotate(calc(var(--script-rot, 0deg) + 0.6deg)) skewX(0.22deg); }
+  9%  { transform: rotate(calc(var(--script-rot, 0deg) - 0.32deg)) skewX(-0.18deg); }
+  12% { transform: rotate(calc(var(--script-rot, 0deg) + 0.18deg)); }
+  42% { transform: rotate(calc(var(--script-rot, 0deg) - 0.68deg)) skewX(-0.26deg); }
+  46% { transform: rotate(calc(var(--script-rot, 0deg) + 0.36deg)) skewX(0.18deg); }
+  50% { transform: rotate(var(--script-rot, 0deg)); }
+}
+.scroll-script-pin {
+  position: absolute; top: -9px; left: 50%; transform: translateX(-50%);
+  width: 13px; height: 13px; border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #a24a3a, #6b2a1f 70%, #4a1c14);
+  box-shadow: 0 2px 3px rgba(0,0,0,0.55), 0 0 0 1px rgba(0,0,0,0.3);
+  z-index: 2;
+}
+/* a short cord trailing from the pin, like a tanzaku's tying thread */
+.scroll-script-pin::after {
+  content: ''; position: absolute; top: 11px; left: 50%; transform: translateX(-50%);
+  width: 1.5px; height: 16px;
+  background: linear-gradient(180deg, rgba(140,50,40,0.75), rgba(140,50,40,0.15));
+}
+/* faint dye-bleed under the pin, and a whisper of vertical fiber grain
+   across the whole sheet — both subtle enough to read as paper, not
+   pattern. Anchored to the outer box (not the padded inner content) so
+   they still line up correctly at the tighter mobile padding below. */
+.scroll-script::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; z-index: 0;
+  height: 5px; pointer-events: none;
+  background: linear-gradient(90deg,
+    transparent, rgba(150,55,45,0.16) 18%, rgba(70,85,120,0.13) 50%,
+    rgba(150,55,45,0.16) 82%, transparent);
+}
+.scroll-script::after {
+  content: ''; position: absolute; inset: 0; z-index: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(90deg,
+    transparent 0 3px, rgba(120,90,50,0.05) 3px 4px);
+  mix-blend-mode: multiply;
+}
+.scroll-script-page {
+  font-family: 'Courier Prime', 'Courier New', Courier, monospace;
+  color: #2b2314;
+  font-size: 0.92rem; line-height: 1.65;
+  position: relative;
+  z-index: 1;
+}
+.scroll-script-slug {
+  font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.04em; margin: 0 0 0.9rem;
+}
+.scroll-script-action {
+  margin: 0 0 0.9rem;
+}
+.scroll-script-dialogue {
+  max-width: 68%; margin: 0 auto 0.9rem;
+}
+.scroll-script-character {
+  text-align: center; text-transform: uppercase; font-weight: 700;
+  letter-spacing: 0.03em; margin: 0 0 0.15rem;
+}
+.scroll-script-paren {
+  text-align: center; font-style: italic; font-size: 0.85em;
+  opacity: 0.82; margin: 0 0 0.15rem;
+}
+.scroll-script-line { margin: 0; }
+
+/* ── Preview: dark, cracked stone medallion, Ogham Sail carved into it ── */
+.scroll-preview {
+  width: 100%; height: 100%; position: relative;
+  display: flex; align-items: center; justify-content: center;
+  background: radial-gradient(ellipse at center, #2a2318 0%, #1a1510 100%);
+}
+.scroll-preview .scroll-grain { opacity: 0.22; }
+.scroll-preview-medallion {
+  width: 62%; height: 62%; position: relative;
+  border-radius: 58% 42% 53% 47% / 45% 55% 42% 58%; /* worn stone, not a coin */
+  background:
+    radial-gradient(circle at 30% 25%, rgba(255,255,255,0.05), transparent 40%),
+    radial-gradient(circle at 68% 75%, rgba(0,0,0,0.38), transparent 55%),
+    radial-gradient(circle, #4a3c24 0%, #241d14 78%);
+  box-shadow: 0 0 0 1px rgba(0,0,0,0.5), 0 0 22px rgba(193,122,61,0.18);
+  display: flex; align-items: center; justify-content: center;
+  animation: scroll-ember 4.2s steps(7) infinite;
+  filter: url(#scroll-rough-strong) contrast(1.1) sepia(0.15);
+  /* Safari/WebKit has a long-standing bug where an animated element
+     (the box-shadow keyframes above) that also carries a referenced
+     SVG filter (url(#scroll-rough-strong)) periodically drops and
+     re-resolves the filter, which reads as the element flipping
+     between two visibly different states rather than a smooth loop.
+     Forcing its own compositing layer keeps the filter stable. */
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  will-change: filter, box-shadow;
+}
+@keyframes scroll-ember {
+  0%, 100% { box-shadow: 0 0 0 1px rgba(0,0,0,0.5), 0 0 14px rgba(193,122,61,0.12); }
+  35%      { box-shadow: 0 0 0 1px rgba(0,0,0,0.5), 0 0 26px rgba(217,154,81,0.3); }
+  60%      { box-shadow: 0 0 0 1px rgba(0,0,0,0.5), 0 0 18px rgba(193,122,61,0.18); }
+}
+.scroll-crack {
+  position: absolute; z-index: 2; pointer-events: none;
+  background: linear-gradient(180deg, transparent, rgba(0,0,0,0.75) 20%, rgba(0,0,0,0.5) 65%, transparent 100%);
+  filter: url(#scroll-rough-strong);
+  /* Same Safari filter-stability fix as .scroll-preview-medallion, its
+     animated parent - see comment there. */
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+}
+.scroll-crack-main { left: 12%; top: 4%; width: 2px; height: 62%; transform: rotate(21deg); }
+.scroll-crack-branch { left: 40%; top: 38%; width: 1.5px; height: 26%; transform: rotate(-32deg); opacity: 0.7; }
+
+/* ── Ogham letter Sail: stemline + four strokes off one side ── */
+.scroll-ogham { position: relative; width: 46%; height: 66%; z-index: 1; }
+.ogham-stem, .ogham-stroke {
+  position: absolute;
+  background: linear-gradient(180deg, #d9b276, #a8702f 60%, #7a4f1f);
+  box-shadow: 1px 1px 0 rgba(0,0,0,0.5), -1px -1px 0 rgba(255,224,180,0.12);
+  border-radius: 1px;
+}
+.ogham-stem { left: 8%; top: 0; bottom: 0; width: 11%; }
+.ogham-stroke { left: 8%; width: 76%; height: 9%; }
+.ogham-stroke.s1 { top: 6%; }
+.ogham-stroke.s2 { top: 30%; }
+.ogham-stroke.s3 { top: 54%; }
+.ogham-stroke.s4 { top: 78%; }
+
+@media (prefers-reduced-motion: reduce) {
+  .scroll-preview-medallion { animation: none; }
+  .scroll-patch-text > p { transform: none !important; }
+  .scroll-script { transform: rotate(var(--script-rot, 0deg)) !important; animation: none !important; }
+  .scroll-root::before { animation: none; opacity: 1; }
+  .scroll-patch::after { animation: none; }
+  .scroll-intense--wide { animation: none; }
+}
+
+@media (max-width: 600px) {
+  .scroll-patch { padding: 1.7rem 1.1rem; }
+  .scroll-patch-text { --scroll-base-size: 1.05rem; }
+  .scroll-patch-text > p:first-of-type::first-letter { font-size: 2.6rem; }
+  .scroll-ogham-panel { max-width: 76px; }
+  .scroll-ogham-line {
+    float: none; display: block; width: auto;
+    margin: 0 0 0.9rem; padding-left: 0.5rem; font-size: 1.1rem;
+  }
+  .scroll-script { padding: 1.7rem 1.1rem 1.5rem 1.5rem; }
+  .scroll-script-page { font-size: 0.85rem; }
+  .scroll-script-dialogue { max-width: 88%; }
+}

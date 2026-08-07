@@ -21,15 +21,14 @@
 import fs from 'fs';
 import path from 'path';
 
-import { scrollPieces } from '../src/text/scrollPieces.js';
-import { poems } from '../src/text/poems.js';
-import { fragments } from '../src/text/fragments.js';
-import { libraryItems } from '../src/text/library.js';
-import { cdRackItems } from '../src/text/cdRack.js';
-import { SCENES as theaterScenes, CHARACTERS } from '../src/text/theaterScript.js';
-import { TEXT_STAGES } from '../src/text/leafText.js';
-import { ORRERY } from '../src/text/orreryStory.js';
-import { EPIGRAPH_PRIMARY, EPIGRAPH_SECONDARY, BOUNCES } from '../src/text/beamlineText.js';
+import { scrollPieces } from '../src/scenes/scroll/scroll.text.js';
+import { poems } from '../src/scenes/orbiter/orbiter.text.js';
+import { fragments } from '../src/scenes/sphere/sphere.text.js';
+import { libraryItems } from '../src/scenes/library/library.text.js';
+import { cdRackItems } from '../src/scenes/library/library.cdRack.js';
+import { SCENES as theaterScenes, CHARACTERS } from '../src/scenes/theater/theater.text.js';
+import { ORRERY } from '../src/scenes/orrery/orrery.text.js';
+import { EPIGRAPH_PRIMARY, EPIGRAPH_SECONDARY, BOUNCES } from '../src/scenes/beamline/beamline.text.js';
 
 const ORIGIN = 'https://perceptualmechanics.com';
 const AUTHOR = 'Scott Jason Cohen';
@@ -241,12 +240,12 @@ ${paras}
   return {
     slugPath: 'scroll',
     title: 'A Scroll of Found Writing',
-    description: 'Eleven prose pieces, 2000 to the 2010s — the complete texts carried on the Scroll.',
+    description: 'Twelve prose pieces, 2000 to the 2010s — the complete texts carried on the Scroll.',
     sceneKey: 'scroll', sceneName: 'the Scroll',
-    lede: `<p>These eleven pieces live on <strong>the Scroll</strong> — a hide-and-bark scroll you unroll, patch lashed to patch, oldest and most soot-stained at the top. That is where they are meant to be read.</p>
+    lede: `<p>These twelve pieces live on <strong>the Scroll</strong> — a hide-and-bark scroll you unroll, patch lashed to patch, oldest and most soot-stained at the top. That is where they are meant to be read.</p>
 <p>The Scroll shows them bare, with no titles or dates, on purpose. This page is the archive rather than the work: same words, in the same order, with enough information to tell you what you are looking at.</p>`,
     bodyHtml: body,
-    jsonLd: creativeWork('A Scroll of Found Writing', 'Eleven prose pieces, 2000 to the 2010s.', 'scroll', scrollPieces.map(p => p.title)),
+    jsonLd: creativeWork('A Scroll of Found Writing', 'Twelve prose pieces, 2000 to the 2010s.', 'scroll', scrollPieces.map(p => p.title)),
   };
 }
 
@@ -327,23 +326,7 @@ ${beats}
     bodyHtml: body,
     jsonLd: creativeWork('Scenes from Three Scripts', 'Verbatim scenes from three scripts by Scott Jason Cohen.', 'theater', theaterScenes.map(s => s.slug)),
   };
-}/* 
-
-function buildLeaf() {
-  const body = `<article class="piece">
-${TEXT_STAGES.map(s => `<p>${lines(s.text)}</p>`).join('\n')}
-</article>`;
-  return {
-    slugPath: 'leaf',
-    title: 'In The End It Falls Slowly Through The Aether',
-    description: 'A single raindrop’s life, told through real physics — the found piece staged in Leaf.',
-    sceneKey: 'leaf', sceneName: 'Leaf',
-    lede: `<p>In <strong>Leaf</strong> this arrives a paragraph at a time, each one timed to the phase of the fall it describes — the drop swelling, releasing, stretching, breaking.</p>
-<p>Here it is as one continuous piece.</p>`,
-    bodyHtml: body,
-    jsonLd: creativeWork('In The End It Falls Slowly Through The Aether', 'A single raindrop’s life, told through physics.', 'leaf'),
-  };
-} */
+}
 
 function buildOrrery() {
   const body = `<article class="piece">
@@ -404,7 +387,7 @@ function buildLibrary() {
   //
   // What's left is the plain bibliographic fact of the shelf, which is
   // exactly what the piece itself shows.
-  // Type strings must match src/text/library.js exactly. 'divination_box' was
+  // Type strings must match src/scenes/library/library.text.js exactly. 'divination_box' was
   // written here as 'box' in 1.7.0, which silently dropped both decks from the
   // page for a day while the lede went on advertising them — a filter that
   // matches nothing looks identical to a category that's empty. Asserted below

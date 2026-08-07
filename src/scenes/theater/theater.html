@@ -1,0 +1,44 @@
+<!--
+  Theater scene shell markup. Preview and full modes are mutually exclusive
+  per call (see theater.js), so both top-level fragments live in this one
+  file and the unused one is simply never mounted.
+
+  Full-mode content is almost entirely dynamic — actor figures, speech
+  bubbles, interstitial cards, and the end card are all rendered per
+  bard.js event by TheaterRenderer, since that's genuinely data-driven, not
+  static shape. This file provides only the containers those events fill,
+  plus the seat-house row (built separately by buildHouseRow() in theater.js
+  — a small hand-authored loop over fixed seat data, not static markup) and
+  the transport controls, which are real, always-present buttons.
+-->
+
+<div class="tab-preview" aria-hidden="true">
+  <div class="reel-glow"></div>
+  <div class="film-reel"></div>
+</div>
+
+<div class="tab-root">
+  <div class="tab-curtain" aria-hidden="true"></div>
+  <div class="tab-screen-frame">
+    <section class="tab-screen" tabindex="-1" aria-label="The Theater — scenes from Truth and Beauty and Paul Revere, performed by ASCII actors. Click to advance, or use the controls below.">
+      <div class="tab-slug" aria-hidden="true"></div>
+      <!-- The ASCII figures and their speech bubbles are a visual
+           performance — .tab-sr-live below carries the same content as
+           real text, so the raw glyphs are hidden from assistive tech
+           rather than read character by character. -->
+      <div class="tab-stage" aria-hidden="true"></div>
+      <div class="tab-caption"></div>
+      <!-- Narrated via .tab-sr-live instead. -->
+      <div class="tab-interstitial" aria-hidden="true"></div>
+    </section>
+  </div>
+
+  <div class="tab-controls" role="group" aria-label="Theater playback controls">
+    <button type="button" class="tab-btn" data-act="prev" aria-label="Previous line">&lt; prev</button>
+    <button type="button" class="tab-btn" data-act="play" aria-label="Pause">&gt; play</button>
+    <button type="button" class="tab-btn" data-act="next" aria-label="Next line">next &gt;</button>
+    <span class="tab-progress"></span>
+  </div>
+
+  <div class="tab-sr-live" aria-live="polite" aria-atomic="true"></div>
+</div>

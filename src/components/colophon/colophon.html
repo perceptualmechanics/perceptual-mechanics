@@ -1,0 +1,59 @@
+<!--
+  Colophon shell markup: the fixed hare mark, the modal backdrop, and the
+  panel's full content. Only .colophon-bib starts empty — the bibliography
+  is real data (colophon.text.js), filled in via buildBibliographyHTML()
+  after mount. Everything else here is copy that never changes.
+
+  colophon-title keeps a real id — it's the target of the panel's
+  aria-labelledby, which per spec has to resolve to an actual id, not a
+  class. Every other part is styled and looked up purely by class.
+-->
+
+<button type="button" class="colophon-mark" aria-label="Colophon, bibliography, and feedback" aria-haspopup="dialog">
+  <img src="/hare-colophon.png" alt="" />
+</button>
+
+<div class="colophon-backdrop">
+  <div class="colophon-panel" role="dialog" aria-modal="true" aria-labelledby="colophon-title">
+    <button type="button" class="colophon-close" aria-label="Close colophon">&#10005;</button>
+
+    <section>
+      <h2 id="colophon-title" tabindex="-1">Colophon</h2>
+      <p class="colophon-sub">perceptual mechanics</p>
+      <p>A personal site by Scott Jason Cohen — seven small experiences built
+      around found and written text, each its own self-contained piece of
+      code, none of it built from image assets: everything on screen is
+      drawn live, in the browser, from geometry and canvas-generated
+      texture. Built with Three.js and vanilla JavaScript.</p>
+      <h3>The mark</h3>
+      <p>The leaping hare used as this site's colophon — carrying the moon,
+      Venus, Mercury, a sun, and a star cut straight through its body —
+      is drawn by <a href="https://abbywilliams.studio/" target="_blank" rel="noopener noreferrer">Abby Williams</a>.
+      It's also a found line of Scott's own, the reason a hare is the mark
+      at all: "A Golden Hare ran across the sky, carrying the sun in its
+      belly, where it would be safe. The hare ran up the ladder to the sky."</p>
+      <h3>Elsewhere</h3>
+      <p>More perceptual mechanics on
+      <a href="https://www.youtube.com/channel/UCzALlcscmGHgXJVyN6lMInw" target="_blank" rel="noopener noreferrer">YouTube</a>
+      and <a href="https://www.patreon.com/cw/perceptualmechanics" target="_blank" rel="noopener noreferrer">Patreon</a>.</p>
+    </section>
+
+    <section>
+      <h3>Bibliography</h3>
+      <p class="colophon-sub" style="margin-bottom:1rem;">Where the text in each piece actually comes from.</p>
+      <p style="margin-bottom:1.4rem;">Every piece of writing on this site is
+      also collected as plain reading pages — <a href="/text/">read the
+      writing on its own</a>, the same words set down without the machinery,
+      so they can be linked to and found.</p>
+      <dl class="colophon-bib"></dl>
+    </section>
+
+    <section>
+      <h3>Feedback</h3>
+      <p>Found a bug, or just want to say something about one of these?</p>
+      <a class="colophon-feedback-link" href="mailto:perceptualmechanics@gmail.com?subject=perceptualmechanics.com">perceptualmechanics@gmail.com</a>
+    </section>
+
+    <p class="colophon-sub" style="margin-top:2rem;">&copy; 2026 Scott Jason Cohen. All rights reserved.</p>
+  </div>
+</div>

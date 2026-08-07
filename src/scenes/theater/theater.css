@@ -1,0 +1,311 @@
+/* Theater scene styles. Previously injected at runtime via buildStyles() in
+   theater.js (document.createElement('style'), guarded against double-
+   injection by `if (document.getElementById('tab-styles')) return;`); moved
+   to a real stylesheet, imported once at the top of theater.js. No visual
+   change — an ES module import is deduplicated by the bundler regardless of
+   how many times it's imported, so this keeps the same "loaded exactly
+   once" behavior the old guard existed for. 2026-08-07: moved into
+   src/scenes/theater/ alongside theater.js/theater.html/theater.text.js as
+   part of the site-wide per-scene folder restructure. All selectors here
+   were already classes, not IDs — no renaming needed for this pass. */
+
+.tab-root {
+  width: 100%; height: 100%; position: relative; overflow: hidden;
+  background: radial-gradient(ellipse at 50% 15%, #241a12 0%, #0b0705 65%, #050302 100%);
+  color: #d8cdb8;
+  font-family: 'Courier New', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 1.6rem 1rem 0.6rem;
+}
+
+/* ── curtain, ASCII swags ── */
+.tab-curtain {
+  width: 100%; max-width: 900px; text-align: center;
+  color: #6b1f1f; font-size: clamp(0.6rem, 1.6vw, 1rem);
+  letter-spacing: 0.05em; line-height: 1; white-space: pre; overflow: hidden;
+  opacity: 0.85; margin-bottom: 0.3rem;
+}
+
+/* ── the screen ── */
+.tab-screen-frame {
+  position: relative; width: 100%; max-width: 900px; flex: 0 0 auto;
+  margin: 0.3rem 0 0.5rem;
+  border-radius: 6px;
+  padding: 10px;
+  background: #1a120b;
+  box-shadow: 0 0 0 1px #3a2a18, 0 10px 40px rgba(0,0,0,0.6);
+}
+.tab-screen-frame::before {
+  content: ''; position: absolute; inset: 2px; border-radius: 4px;
+  background-image: radial-gradient(circle, #e8b84b 1.5px, transparent 1.8px);
+  background-size: 16px 16px;
+  background-position: center;
+  -webkit-mask: linear-gradient(#000 0 0);
+  opacity: 0.35; pointer-events: none;
+  padding: 8px; box-sizing: border-box;
+}
+.tab-screen {
+  position: relative; width: 100%;
+  aspect-ratio: 2 / 1; /* a proper widescreen picture, not a tower of headspace */
+  min-height: 200px; max-height: 62vh;
+  background:
+    repeating-linear-gradient(0deg, rgba(0,0,0,0.05) 0 1px, transparent 1px 3px),
+    radial-gradient(ellipse at 50% 40%, #f2ede0 0%, #ddd6c2 75%, #c9c1a8 100%);
+  border-radius: 3px; overflow: visible; /* dialogue floats over the screen rather than being clipped by it */
+  display: flex; flex-direction: column;
+  padding-bottom: 54px; /* clear room for the audience silhouette overlay */
+  animation: screen-flicker 4s steps(2) infinite;
+}
+@keyframes screen-flicker {
+  0%, 96%, 100% { filter: brightness(1); }
+  97% { filter: brightness(0.97); }
+  98% { filter: brightness(1.02); }
+}
+.tab-slug {
+  flex: 0 0 auto; text-align: center; padding: 0.7rem 0.6rem 0.2rem;
+  font-size: clamp(0.62rem, 1.6vw, 0.85rem); letter-spacing: 0.08em;
+  color: #4a4030; opacity: 0.8; white-space: pre-wrap;
+}
+.tab-stage {
+  flex: 1 1 auto; position: relative; min-height: 0;
+  display: flex; align-items: flex-end; justify-content: space-evenly;
+  padding: 0 0.6rem 0.6rem;
+}
+.tab-actor {
+  flex: 0 1 auto; display: flex; flex-direction: column; align-items: center;
+  opacity: 0; transition: opacity 0.35s ease;
+  color: #221c14; position: relative;
+}
+.tab-actor.on { opacity: 1; }
+.tab-actor pre.sf {
+  margin: 0; font-size: clamp(0.7rem, 1.9vw, 1.05rem); line-height: 1.05;
+  font-weight: bold; animation: sf-bob 2.8s ease-in-out infinite;
+}
+.tab-actor.talking pre.sf { animation: sf-bob 2.8s ease-in-out infinite, sf-talk 0.45s ease-in-out 2; }
+@keyframes sf-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-2px); } }
+@keyframes sf-talk { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.06); } }
+.tab-actor .sf-name { font-size: 0.72em; margin-top: 0.1em; font-weight: bold; }
+.tab-actor .sf-tag { font-size: 0.6em; opacity: 0.65; font-style: italic; }
+
+.tab-bubble {
+  position: absolute; left: 50%; bottom: 100%; margin-bottom: 6px;
+  transform: translateX(-50%);
+  white-space: pre; font-size: clamp(0.58rem, 1.5vw, 0.82rem); line-height: 1.25;
+  color: #221c14; background: #f4efe0; /* fully opaque — it floats over dark backgrounds too */
+  box-shadow: 0 2px 8px rgba(0,0,0,0.45), 0 0 0 1px rgba(0,0,0,0.15);
+  padding: 2px 4px; border-radius: 3px;
+  opacity: 0; transition: opacity 0.25s ease;
+  pointer-events: none; max-width: min(72vw, 380px); overflow-x: auto;
+  z-index: 4; /* always float above the house overlay and frame texture */
+}
+.tab-bubble.on { opacity: 1; }
+.tab-bubble .bubble-name { display: block; font-weight: bold; opacity: 0.6; font-size: 0.85em; margin-bottom: 0.1em; }
+
+.tab-caption {
+  flex: 0 0 auto; text-align: center; padding: 0.3rem 0.8rem 0.7rem;
+  font-style: italic; font-size: clamp(0.66rem, 1.7vw, 0.88rem);
+  color: #4a4030; opacity: 0; transition: opacity 0.3s ease; min-height: 1.4em;
+}
+.tab-caption.on { opacity: 0.85; }
+
+/* ── theater house: seat blocks split by aisles, a few occupied by
+   patrons — overlaying the bottom of the screen itself, MST3K-style. ── */
+.tab-house {
+  position: absolute; left: 10px; right: 10px; bottom: 10px; height: 46px;
+  display: flex; align-items: flex-end; justify-content: center;
+  gap: clamp(14px, 5vw, 34px); /* the aisles */
+  padding: 0 0.6rem;
+  pointer-events: none; z-index: 3;
+}
+.tab-house-section {
+  display: flex; align-items: flex-end;
+  gap: clamp(3px, 1.2vw, 10px);
+}
+.tab-seat {
+  width: clamp(16px, 3vw, 26px); height: clamp(18px, 3.6vw, 30px);
+  background: #100c08; border-radius: 6px 6px 1px 1px;
+  opacity: 0.92;
+  position: relative; flex: 0 0 auto;
+}
+.tab-seat.occupied::before {
+  content: ''; position: absolute; left: 50%; bottom: 55%; transform: translateX(-50%);
+  width: 46%; aspect-ratio: 1; background: #030201; border-radius: 50%;
+}
+.tab-seat.occupied::after {
+  content: ''; position: absolute; left: 50%; bottom: -2px; transform: translateX(-50%);
+  width: 78%; height: 60%; background: #030201; border-radius: 50% 50% 8% 8%;
+}
+/* the two silhouettes down front who won't stop talking through the movie */
+.tab-seat.host {
+  opacity: 1;
+  filter: drop-shadow(0 0 5px rgba(232,184,75,0.4));
+}
+.tab-seat.host::before {
+  width: 54%; bottom: 62%;
+}
+.tab-seat.host::after {
+  width: 86%; height: 66%;
+}
+.tab-seat-nub {
+  position: absolute; left: 50%; bottom: 108%; transform: translateX(-50%);
+  width: 18%; aspect-ratio: 1; background: #030201; border-radius: 50%;
+}
+
+/* ── end card ── */
+.tab-card {
+  position: absolute; inset: 0; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; text-align: center;
+  background: #ddd6c2; z-index: 5; cursor: pointer; padding: 1rem;
+  color: #221c14; border: none; width: 100%; font: inherit;
+}
+.tab-card h1 {
+  font-family: 'Courier New', monospace; font-weight: bold;
+  font-size: clamp(1.4rem, 6vw, 2.6rem); margin: 0 0 0.3em; letter-spacing: 0.04em;
+}
+.tab-card pre.tab-ascii-title { font-size: clamp(0.5rem, 1.6vw, 0.85rem); line-height: 1.15; margin: 0 0 0.6em; opacity: 0.75; }
+.tab-card p { font-size: clamp(0.85rem, 2.2vw, 1.05rem); margin: 0.2em 0; opacity: 0.75; max-width: 480px; }
+.tab-card .tab-tap { margin-top: 1.2em; font-size: 0.85rem; opacity: 0.5; }
+
+/* ── interstitial: a between-scenes theater bumper slide ── */
+.tab-interstitial {
+  position: absolute; inset: 0; z-index: 6;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  text-align: center; padding: 1rem;
+  background: radial-gradient(ellipse at 50% 40%, #1a120b 0%, #0b0705 80%);
+  color: #e8b84b;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+.tab-interstitial.on { opacity: 1; }
+.tab-inter-eyebrow {
+  font-size: clamp(0.55rem, 1.6vw, 0.75rem); letter-spacing: 0.14em;
+  opacity: 0.75; margin-bottom: 0.5em; text-transform: uppercase;
+}
+.tab-inter-main {
+  font-weight: bold; font-size: clamp(1rem, 3.4vw, 1.6rem);
+  max-width: 32ch; line-height: 1.3; margin-bottom: 0.4em;
+}
+.tab-inter-sub {
+  font-size: clamp(0.62rem, 1.6vw, 0.8rem); opacity: 0.6; font-style: italic; max-width: 34ch;
+}
+
+/* ── transport controls ── */
+.tab-controls {
+  flex: 0 0 auto; display: flex; align-items: center; justify-content: center;
+  gap: 0.5rem; padding: 0.5rem 1rem; font-size: 0.88rem;
+}
+.tab-btn {
+  font-family: 'Courier New', monospace; font-size: 0.88rem;
+  background: #1a120b; border: 1px solid #6b5638; border-radius: 3px;
+  padding: 0.3rem 0.7rem; cursor: pointer; color: #d8cdb8;
+}
+.tab-btn:hover, .tab-btn:focus-visible { background: #2a2018; border-color: #e8b84b; color: #e8b84b; }
+.tab-btn:active { transform: translateY(1px); }
+.tab-progress { opacity: 0.55; min-width: 5.5em; text-align: center; }
+
+/* Screen-reader-only live narration — visually hidden, announces each
+   beat (scene changes, actions, and dialogue) as the reel plays. */
+.tab-sr-live {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  pre.sf, .tab-screen, .film-reel, .tab-preview::before { animation: none !important; }
+}
+@media (max-width: 640px) {
+  .tab-house { height: 32px; bottom: 6px; }
+  .tab-screen { padding-bottom: 40px; }
+}
+
+/* ── vertical phones: narrow width, held in portrait ── */
+@media (max-width: 480px), (max-width: 700px) and (orientation: portrait) {
+  .tab-root { padding: 0.9rem 0.4rem 0.4rem; }
+  .tab-curtain { font-size: 0.42rem; margin-bottom: 0.15rem; }
+  .tab-screen-frame { padding: 6px; margin: 0.2rem 0 0.4rem; }
+  .tab-screen { aspect-ratio: 4 / 3; min-height: 240px; padding-bottom: 42px; }
+  /* Design pass, 2026-07-17 (Scott: mobile readability check) — .tab-slug
+     and .tab-caption were both being set here to a smaller font-size
+     than their OWN desktop clamp() floor (0.62rem/0.66rem respectively)
+     — backwards, since mobile is exactly where shrinking further hurts
+     most. .tab-caption in particular is the italic per-beat description
+     line, the thing most likely to actually be read start to finish, so
+     it gets the larger bump of the two. Neither shrinks below its
+     desktop floor anymore. */
+  .tab-slug { font-size: 0.68rem; padding: 0.5rem 0.35rem 0.15rem; letter-spacing: 0.04em; }
+  .tab-stage {
+    flex-wrap: wrap; row-gap: 0.5rem; column-gap: 0.4rem;
+    padding: 0 0.3rem 0.4rem; align-content: flex-end;
+  }
+  .tab-actor pre.sf { font-size: 0.6rem; }
+  .tab-actor .sf-name { font-size: 0.58em; }
+  .tab-actor .sf-tag { font-size: 0.5em; }
+  .tab-bubble { max-width: 88vw; font-size: 0.54rem; }
+  .tab-caption { font-size: 0.74rem; line-height: 1.35; padding: 0.2rem 0.4rem 0.5rem; min-height: 1.2em; }
+  .tab-house { height: 24px; bottom: 4px; gap: 9px; }
+  .tab-house-section { gap: 1.5px; }
+  .tab-seat { width: 10px; height: 12px; }
+  .tab-controls { gap: 0.3rem; padding: 0.4rem 0.4rem; flex-wrap: wrap; }
+  .tab-btn { font-size: 0.74rem; padding: 0.26rem 0.5rem; }
+  .tab-progress { min-width: auto; font-size: 0.7rem; }
+  .tab-card h1 { font-size: 1.5rem; }
+  .tab-card pre.tab-ascii-title { font-size: 0.42rem; }
+  .tab-card p { font-size: 0.8rem; }
+  /* The interstitial's own italic sub-line (.tab-inter-sub) had no
+     mobile override at all — just the desktop clamp() floor (0.62rem)
+     at opacity:0.6 on a near-black background. Same category of
+     problem as .tab-caption above, same fix: a firmer floor and a
+     touch more opacity so it holds up on a phone screen, not just a
+     desktop monitor at a comfortable distance. */
+  .tab-inter-sub { font-size: 0.78rem; line-height: 1.4; opacity: 0.75; }
+}
+@media (max-width: 480px) and (orientation: portrait) {
+  /* portrait phones have height to spare — let the screen breathe a bit */
+  .tab-screen { aspect-ratio: 1 / 1; min-height: 300px; }
+}
+
+/* ── preview: a rotating black & white film reel ── */
+.tab-preview {
+  width: 100%; height: 100%; position: relative; overflow: hidden;
+  background: radial-gradient(ellipse at 50% 35%, #2a2a2a 0%, #0d0d0d 70%, #020202 100%);
+  display: flex; align-items: center; justify-content: center;
+}
+.tab-preview::before {
+  /* faint scratched-film-stock grain */
+  content: ''; position: absolute; inset: 0; z-index: 2; pointer-events: none;
+  background-image:
+    repeating-linear-gradient(115deg, rgba(255,255,255,0.06) 0 1px, transparent 1px 38px),
+    repeating-linear-gradient(68deg, rgba(255,255,255,0.045) 0 1px, transparent 1px 53px);
+  mix-blend-mode: screen;
+  animation: reel-flicker 1.8s steps(4) infinite;
+}
+.reel-glow {
+  position: absolute; left: 50%; top: 50%; width: 72%; aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(circle, rgba(255,255,255,0.16), transparent 70%);
+  filter: blur(6px); pointer-events: none;
+}
+.film-reel {
+  position: relative; z-index: 1;
+  width: min(58%, 150px); aspect-ratio: 1;
+  border-radius: 49% 51% 50% 50% / 51% 49% 51% 49%; /* a hair off true-round — well-worn, not machined */
+  background: #161616;
+  border: clamp(3px, 2.4%, 7px) solid #5c5c5c;
+  box-shadow: 0 0 16px rgba(255,255,255,0.14), inset 0 0 14px rgba(0,0,0,0.7);
+  animation: reel-spin 3.4s linear infinite;
+}
+.film-reel::after {
+  content: ''; position: absolute; left: 50%; top: 50%;
+  width: 20%; height: 20%; transform: translate(-50%, -50%);
+  border-radius: 50%; background: #0a0a0a; border: 2px solid #5c5c5c;
+}
+.reel-hole {
+  position: absolute; left: 50%; top: 50%;
+  width: 20%; height: 20%; margin: -10% 0 0 -10%;
+  border-radius: 50%;
+  background: radial-gradient(circle, #eee 0%, #b0b0b0 55%, #4a4a4a 100%);
+  box-shadow: 0 0 6px rgba(255,255,255,0.4);
+  transform: rotate(var(--a, 0deg)) translateY(-170%);
+}
+@keyframes reel-spin { to { transform: rotate(360deg); } }
+@keyframes reel-flicker { 0%, 100% { opacity: 1; } 50% { opacity: 0.9; } }

@@ -1,0 +1,242 @@
+/* Orrery scene styles. Previously injected at runtime via
+   document.createElement('style') inside orrery.js (full-experience only,
+   guarded by `if (!preview && !document.getElementById('orrery-styles'))`);
+   moved to a real stylesheet, imported once at the top of orrery.js. The
+   old JS-template interpolation of sceneKit.js's HINT_TEXT_COLOR is now
+   var(--hint-text-color), defined once in styles/main.css. No visual change.
+
+   2026-08-07: every selector below switched from id to class (#orrery-x ->
+   .orrery-x) per the site-wide convention — classes for styling, ids
+   reserved for real DOM uniqueness or an ARIA idref. orrery-panel-title is
+   the one exception: it keeps a real id (target of the panel's
+   aria-labelledby) alongside its class. */
+
+.orrery-panel {
+  position: absolute; top: 0; right: 0; width: 38%; height: 100%;
+  background:
+    radial-gradient(ellipse at 30% 0%, rgba(60,48,32,0.25), transparent 60%),
+    #0d0a07;
+  border-left: 1px solid rgba(220,200,180,0.15);
+  padding: 3rem 2rem; transform: translateX(100%);
+  transition: transform .5s cubic-bezier(.16,1,.3,1);
+  overflow-y: scroll; z-index: 10;
+  scrollbar-color: rgba(220,200,180,0.3) #0a0908; scrollbar-width: thin;
+  font-family: 'Times New Roman', serif;
+}
+.orrery-panel.open { transform: translateX(0); }
+.orrery-panel-title {
+  /* Now an <h2> (was a plain div) so the panel has a real heading to match
+     its aria-labelledby target — reset the UA default heading margin/weight
+     so the layout is pixel-identical to the old div. */
+  font-size: 0.95rem; letter-spacing: 0.24em; text-transform: uppercase;
+  color: rgba(238,225,205,0.75); font-weight: normal; margin: 0 0 0.5rem;
+}
+.orrery-panel-era {
+  /* Was 0.35 — real content (a date/era line), not a decorative
+     aria-hidden hint, and at 0.35 against this panel's near-black
+     background it landed around 2.6:1, well under WCAG AA's 4.5:1 for
+     normal text. Raised just enough to clear AA while staying the
+     quietest line in the panel (below panel-note's 0.7 and
+     panel-title's 0.75), so the intended hierarchy holds.
+     <p> now (was a div) — margin reset to keep the exact old spacing. */
+  font-size: 0.75rem; letter-spacing: 0.05em; color: rgba(225,215,195,0.55);
+  margin: 0 0 1.4rem; font-style: italic;
+  border-bottom: 1px solid rgba(220,200,180,0.15); padding-bottom: 1.4rem;
+}
+.orrery-panel-note {
+  /* <p> now (was a div) — margin reset, same reasoning as -era above. */
+  font-size: 0.98rem; line-height: 1.85; color: rgba(225,218,205,0.7);
+  white-space: pre-line; margin: 0;
+}
+.orrery-panel-close {
+  position: absolute; top: 1.5rem; right: 1.5rem; background: none;
+  border: none; color: rgba(255,255,255,0.4); font-size: 1.2rem;
+  cursor: pointer; padding: .5rem; z-index: 2;
+}
+.orrery-panel-close:hover { color: rgba(255,255,255,0.9); }
+
+@media (max-width: 700px) {
+  .orrery-panel { width: 88%; padding: 4rem 1.3rem 2rem; }
+}
+.orrery-hint, .orrery-caption {
+  /* z-index must clear #experience-overlay (styles/main.css: fixed,
+     z-index:300) — these are appended to document.body, outside the
+     overlay, same as butterfly's own label/hint in main.js. Below
+     300 they're only visible during the overlay's ~0.6s fade-in,
+     then gone once it's fully opaque. */
+  position: fixed; color: var(--hint-text-color);
+  text-transform: uppercase; pointer-events: none; text-align: center;
+  z-index: 310; font-family: 'Times New Roman', serif;
+  transition: opacity 0.3s ease;
+}
+/* .orrery-title shares the same z-index:310/body-level trick, for
+   the same reason. That z-index is exactly what breaks once the
+   info panel opens: .orrery-panel is nested inside #experience-
+   overlay (z-index:300) and only reaches z-index:10 within that
+   stacking context, so no z-index panel could have would ever let
+   it paint above a document.body sibling at 310 — that's how
+   stacking contexts work, not a value to out-escalate. Scott's
+   screenshot showed exactly that: the ambient title and hint
+   printing straight through the open panel, doubling "THE ORRERY
+   OF LOS FELIZ" with the panel's own heading. Simplest real fix:
+   once the panel's open, the ambient labels are redundant anyway
+   (the panel has its own title and era line) — fade them out
+   instead of fighting the stacking order. See openPanel() and its
+   three close sites below. */
+.orrery-title.panel-open, .orrery-hint.panel-open, .orrery-caption.panel-open {
+  opacity: 0;
+}
+.orrery-hint {
+  top: 4.5rem; right: 1.2rem; font-size: 0.55rem; letter-spacing: 0.2em;
+  line-height: 1.8; text-align: right;
+}
+.orrery-caption {
+  bottom: 3rem; left: 50%; transform: translateX(-50%);
+  font-size: clamp(0.7rem, 1.6vw, 0.95rem); letter-spacing: 0.08em;
+  white-space: nowrap; font-style: italic; text-transform: none;
+  color: rgba(255,255,255,0.4);
+}
+@media (max-width: 600px) {
+  .orrery-caption { white-space: normal; width: 88vw; font-size: 0.7rem; }
+}
+/* .orrery-hint (top:4.5rem, right-anchored, no width) and
+   .orrery-title (centered, shrink-wrapped to its own widest line)
+   collide far more often than the old mobile-only fix assumed.
+   Confirmed live on perceptualmechanics.com at 1512px — a fully
+   open, non-maximized but perfectly ordinary desktop window, nowhere
+   near a phone: "THE ORRERY OF LOS FELIZ" alone, at this font size
+   and letter-spacing, is wide enough that its centered block's right
+   edge (measured: x≈1030) lands past the hint's left edge
+   (measured: x≈939), printing straight through "walk with
+   wasd/arrows." The subtitle line only makes a bad case worse; the
+   title's main line by itself is already enough. A single pixel
+   breakpoint can't cover every combination of font metrics and
+   window width that produces that, so this is measured instead of
+   guessed: checkTitleHintCollision(), below, reads both elements'
+   actual rendered rects and toggles this same class whenever they
+   overlap, on load and on every resize. The max-width:600px query
+   stays too, as a floor that still applies even if JS is
+   unavailable or hasn't run yet. */
+.orrery-hint.stacked {
+  top: 7.6rem; right: 6vw; left: 6vw;
+  font-size: 0.5rem; letter-spacing: 0.14em; line-height: 1.6;
+  text-align: center;
+}
+@media (max-width: 600px) {
+  .orrery-hint {
+    top: 7.6rem; right: 6vw; left: 6vw;
+    font-size: 0.5rem; letter-spacing: 0.14em; line-height: 1.6;
+    text-align: center;
+  }
+}
+
+/* ─── Micro-Myst (Scott, 2026-07-17: "don't import the Myst
+   aesthetic, it's still the early '90s, but it should feel like the
+   Myst developers were working on this for a different game" —
+   a full reset from the compressed-video pass that was here before.
+   That pass leaned on a "you're watching lossy video" metaphor:
+   macroblocks, hard-stepped color banding, chroma smear. All of it
+   is gone. What's left is a soft vignette and a single faint grain
+   pass — the texture belongs to the RENDER now (warm ray-traced-era
+   lighting, real Three.js fog doing the atmospheric-haze work — see
+   the fog color note near createOrrery — and the camera-drag lag
+   near the bottom of this file, standing in for those slightly
+   labored pre-rendered transition movies), not to a screen sitting
+   between the visitor and the room. ─────────────────────────────── */
+.orrery-vignette {
+  position: absolute; inset: 0; pointer-events: none; z-index: 5;
+  background: radial-gradient(ellipse at center, rgba(0,0,0,0) 42%, rgba(10,7,4,0.6) 100%);
+}
+.orrery-grain {
+  /* One layer, same fine feTurbulence noise the compressed-video
+     pass also used underneath everything else — kept on its own
+     now, quieter (opacity roughly a third of what it was), because
+     a period CRT/CD-ROM render always carried a little noise even
+     at rest. Static, no drift animation — this isn't standing in
+     for a moving video signal anymore, just the render's own grain. */
+  position: absolute; inset: 0; pointer-events: none; z-index: 6;
+  opacity: 0.3; mix-blend-mode: overlay;
+  background-image:
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)' opacity='0.55'/></svg>");
+  background-size: 160px 160px;
+}
+.orrery-title {
+  /* #pm-nav (site.css) is a fixed, 3.5rem-tall, z-index:500 bar —
+     sit clear below it. #experience-overlay (also site.css) is
+     z-index:300 and fades to fully opaque over 0.6s - this is
+     appended to document.body outside that overlay, so it needs to
+     clear 300 too, or it only shows during the fade-in and then
+     gets covered once the overlay settles (this was the "appears
+     for a second then disappears" bug). 310 matches butterfly's
+     own body-level label/hint in main.js, same issue there. */
+  position: fixed; top: 4.4rem; left: 50%; transform: translateX(-50%);
+  text-align: center; pointer-events: none; z-index: 310;
+  font-family: 'Times New Roman', serif; color: rgba(238,225,205,0.82);
+  transition: opacity 0.3s ease;
+}
+.orrery-title-main {
+  display: block; font-size: clamp(1rem, 3vw, 1.7rem);
+  letter-spacing: 0.32em; text-transform: uppercase;
+  text-shadow: 0 0 18px rgba(0,0,0,0.85), 0 1px 0 rgba(0,0,0,0.6);
+}
+.orrery-title-sub {
+  display: block; margin-top: 0.55rem;
+  font-size: clamp(0.62rem, 1.3vw, 0.8rem); font-style: italic;
+  letter-spacing: 0.03em; color: rgba(225,215,195,0.5);
+  text-transform: none;
+}
+@media (max-width: 600px) {
+  .orrery-title { top: 3.9rem; width: 90vw; }
+  .orrery-title-sub { padding: 0 3vw; }
+}
+
+/* ─── First-person rig, 2026-07-22 ──────────────────────────────── */
+.orrery-crosshair {
+  position: absolute; top: 50%; left: 50%; width: 6px; height: 6px;
+  margin: -3px 0 0 -3px; border-radius: 50%;
+  background: rgba(255,255,255,0.35); pointer-events: none; z-index: 4;
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+.orrery-crosshair.active {
+  background: rgba(255,214,150,0.9); transform: scale(1.8);
+}
+/* Design pass, 2026-07-29 — Scott: once the room is doing its own
+   atmospheric/mystery work, a bold pill centered dead in the middle
+   of the frame undercuts it — competing with the machine for the
+   one spot every other bit of chrome (crosshair, title) already
+   wants. Moved to a bottom-right corner (clear of the crosshair,
+   the walkpad at bottom-left, and the bottom-center caption),
+   shrunk, and made more transparent so it reads as ambient UI
+   chrome, not a modal-style call to action. The show/hide behavior
+   itself (toggled via .hidden below, driven by pointer-lock state)
+   is untouched — still reappears whenever unlocked, same fix as
+   the 2026-07-26 note further down about not permanently hiding it. */
+.orrery-lock-prompt {
+  position: absolute; bottom: 1.5rem; right: 1.4rem;
+  z-index: 7; background: rgba(10,7,4,0.4); color: rgba(220,207,190,0.6);
+  border: 1px solid rgba(220,200,180,0.2); border-radius: 1.4rem;
+  padding: 0.45rem 0.95rem; font-family: 'Times New Roman', serif;
+  font-size: 0.68rem; letter-spacing: 0.06em; cursor: pointer;
+  transition: opacity 0.4s ease;
+}
+.orrery-lock-prompt.hidden { opacity: 0; pointer-events: none; }
+@media (max-width: 600px) {
+  /* Clear of the walkpad's own top edge (bottom:1.6rem, height 6rem)
+     on narrow screens where corner UI crowds together. */
+  .orrery-lock-prompt { bottom: 8rem; }
+}
+.orrery-walkpad {
+  position: absolute; left: 1.2rem; bottom: 1.6rem; z-index: 7;
+  width: 8.6rem; height: 6rem; display: grid;
+  grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(2, 1fr);
+  gap: 0.35rem;
+}
+.wp-btn {
+  background: rgba(20,16,12,0.45); border: 1px solid rgba(220,200,180,0.25);
+  border-radius: 0.5rem; color: rgba(238,225,205,0.75); font-size: 1.1rem;
+  touch-action: none; line-height: 1;
+}
+.wp-fwd   { grid-row: 1; grid-column: 2; }
+.wp-left  { grid-row: 2; grid-column: 1; }
+.wp-back  { grid-row: 2; grid-column: 2; }
+.wp-right { grid-row: 2; grid-column: 3; }

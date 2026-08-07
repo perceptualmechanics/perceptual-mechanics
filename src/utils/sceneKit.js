@@ -109,7 +109,7 @@ export function bindGuardedResize(container, onResize) {
 // ─── Reduced motion ─────────────────────────────────────────────────────────
 // A couple of the heaviest-animated WebGL scenes (orrery, orbiter) had no
 // reduced-motion accommodation at all, while their CSS-driven siblings
-// (leaf, scroll, prism) did. Since a `prefers-reduced-motion` CSS media
+// (scroll, among others) did. Since a `prefers-reduced-motion` CSS media
 // query can't reach into a requestAnimationFrame loop, scenes that spin/
 // orbit continuously need to check this directly and skip their own
 // autonomous motion (drag-to-orbit stays available either way — that's
@@ -124,8 +124,8 @@ export function prefersReducedMotion() {
 // to a circle failed in Firefox: `contain: paint` on `.preview-container`,
 // `clip-path: circle(50%)` on the same, `border-radius: 50%` on the canvas
 // element itself, and finally an opaque `::after` ring painted on top of the
-// canvas — all defeated. Scott confirmed it's specifically the two heaviest
-// scenes (orrery, leaf), not every WebGL preview tile — sphere/butterfly/orbiter
+// canvas — all defeated. Scott confirmed it's specifically the heaviest
+// scenes (orrery among them), not every WebGL preview tile — sphere/butterfly/orbiter
 // clip fine in the same browser with the exact same CSS. That's the real
 // signal: Firefox is promoting only the demanding canvases to a GPU
 // compositing layer that sits outside the page's normal paint/z-order
@@ -180,8 +180,7 @@ export function mountClippedPreviewCanvas(container, renderer) {
 // finger lifts — without this, that click gets read the same as a genuine
 // tap and opens whatever's under it, so dragging the sphere/orrery on a
 // phone kept accidentally opening panels. Duplicated identically in
-// sphere.js, orrery.js, and the since-retired lens.js before this; those
-// scenes' own click handlers (prism.js's included, as Lens's successor)
+// sphere.js and orrery.js before this; those scenes' own click handlers
 // start with `if (touchGuard.consume()) return;` instead.
 export function bindTapVsDrag(container) {
   let moved = false;
@@ -214,10 +213,10 @@ export function bindEscapeClose(onEscape) {
 
 // ─── Read-more panel: shared close mechanics ───────────────────────────────
 // Every scene with a slide-in info panel (sphere's fragments, orbiter's poems,
-// orrery's placards, library's spines, prism's grown pieces) builds its own panel
+// orrery's placards, library's spines) builds its own panel
 // markup and CSS — colors, gradient tint, which side it slides in from — on
 // purpose, tuned to that scene's own palette, so that part stays put in each
-// scene file. What's genuinely identical across all five is how the panel
+// scene file. What's genuinely identical across all four is how the panel
 // CLOSES: remove the `.open` class, run whatever scene-specific cleanup
 // closing implies (deselect a highlighted facet/satellite/spine, restore its
 // color), and return focus to `container` — the same three steps whether the
@@ -285,10 +284,10 @@ export function createJumpList(container, { label, items, getLabel, onSelect }) 
 }
 
 // ─── Shared hint-label color ────────────────────────────────────────────────
-// Code audit, 2026-08-03: six scenes (sphere, orbiter, orrery, library,
-// prism, and butterfly via main.js) each independently wrote their own
+// Code audit, 2026-08-03: five scenes (sphere, orbiter, orrery, library,
+// and butterfly via main.js) each independently wrote their own
 // top-right "drag to orbit · scroll to zoom" style control-hint text, and
-// all six converged on the exact same color: rgba(255,255,255,0.3). That
+// all five converged on the exact same color: rgba(255,255,255,0.3). That
 // value measures ~2.5:1 contrast against a black background at the
 // 0.55rem/~8.8px size every one of them uses — well under WCAG's 4.5:1
 // minimum for text that small (the 3:1 "large text" allowance only applies
@@ -310,4 +309,26 @@ export function escapeHtml(s) {
   const div = document.createElement('div');
   div.textContent = s;
   return div.innerHTML;
+}
+
+// ─── Static HTML template parsing ──────────────────────────────────────────
+// 2026-08-07 restructure: each scene's static shell markup (hint, caption,
+// panel skeleton, and similar chrome that doesn't change shape at runtime)
+// now lives in its own <scene>.html file, imported as a raw string via
+// Vite's `?raw` suffix (e.g. `import html from './sphere.html?raw'`) instead
+// of being built via chained document.createElement/innerHTML calls in JS.
+// A <template> element is the standard way to turn that string into real,
+// inert DOM nodes without executing embedded scripts or triggering premature
+// image loads — `.content` is a DocumentFragment you can querySelector into
+// before anything is attached to the visible document. One scene's HTML file
+// can (and often does) contain more than one top-level element — e.g. a hint
+// paragraph that belongs on document.body and a panel that belongs inside
+// the scene's own container, which have different mount points (see any
+// scene's z-index-scale comment for why) — so the caller pulls each piece
+// out by id and appends it wherever it actually needs to live, exactly as
+// the old createElement-based code did.
+export function parseHTML(html) {
+  const template = document.createElement('template');
+  template.innerHTML = html.trim();
+  return template.content;
 }

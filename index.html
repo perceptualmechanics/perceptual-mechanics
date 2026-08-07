@@ -35,12 +35,7 @@
        equivalent of the old <meta name="keywords"> tag -- that one's been
        ignored by Google since 2009 (Bing doesn't weight it either), but
        this property genuinely feeds crawlers' topic understanding. Terms
-       below are pulled straight from the site's own eight live scenes
-       rather than reached-for (Prism shelved 2026-07-31, its two keyword
-       terms dropped along with it; Leaf shelved again the same day after
-       a brief re-enable, its own two terms dropped too; Beamline added
-       the same day as a new scene, its own two terms added — see main.js's
-       import comments). -->
+       below are pulled straight from the site's own eight live scenes. -->
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -64,8 +59,6 @@
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <!-- Zen Maru Gothic dropped 2026-07-22 — was leaf.js's caption font only,
-       now replaced by Coda there, so nothing on the site uses it anymore. -->
   <!-- Orbitron added 2026-08-03 — Beamline/Solar Sailer's own HUD-chrome
        font (hint text + station-number label), scoped there via CSS only;
        loaded here alongside every other scene's font for the same reason
@@ -79,9 +72,7 @@
 
   <a href="#landing" class="skip-link">Skip to main content</a>
 
-  <!-- Persistent nav bar — eight live scenes (Leaf and Prism both shelved;
-       Beamline added 2026-07-31, a new scene — see its own comment below
-       and NOTES.md). -->
+  <!-- Persistent nav bar — eight live scenes. -->
   <nav id="pm-nav" aria-label="Perceptual Mechanics navigation">
 
     <!-- Sphere: geodesic / icosahedron outline -->
@@ -134,17 +125,6 @@
       </svg>
     </button>
 
-    <!-- Leaf: shelved again 2026-07-31, comment out don't delete (same
-         pattern as Cycle, the golden hare mechanic, and Lens below) — see
-         main.js's leaf.js import comment for the full re-enable checklist.
-    <button type="button" class="nav-icon" data-scene="leaf" aria-label="Leaf" title="Leaf — In The End It Falls Slowly Through The Aether" onmouseover="pmGlimpse('leaf')" onfocus="pmGlimpse('leaf')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M12 3c5 2 7 6 5 11-1.5 3.7-4 5.5-5 7-1-1.5-3.5-3.3-5-7-2-5 0-9 5-11z"/>
-        <path d="M12 4v15"/>
-      </svg>
-    </button>
-    -->
-
     <!-- Orrery: sun and concentric orbit rings, hung from a mast — was
          three shells rotated around a shared center, which reads as an
          atom (electron orbits), not an orrery (planets in one plane).
@@ -196,28 +176,6 @@
       </svg>
     </button>
 
-    <!-- Prism: shelved 2026-07-31, comment out don't delete (same pattern as
-         Cycle, the golden hare mechanic, Lens twice, and Leaf above) — see
-         main.js's prism.js import comment for the full re-enable checklist
-         and NOTES.md 1.19.0 for why. This was the second full attempt under
-         this name (an organically-grown crystal, then this classical
-         dispersion prism); neither landed, no third attempt is planned.
-    <button type="button" class="nav-icon" data-scene="prism" aria-label="Prism" title="Prism — A Crystal, Grown" onmouseover="pmGlimpse('prism')" onfocus="pmGlimpse('prism')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M12 12 L12 3"/>
-        <path d="M12 6 L10 4 M12 6 L14 3.5"/>
-        <path d="M12 12 L19 8"/>
-        <path d="M16 9.5 L18.5 8.5 M16 9.5 L17 11.5"/>
-        <path d="M12 12 L18 17"/>
-        <path d="M15.5 14.5 L17.5 15 M15.5 14.5 L15 16.5"/>
-        <path d="M12 12 L6 18"/>
-        <path d="M9 15 L7.5 16.5 M9 15 L10.5 16.5"/>
-        <path d="M12 12 L4 11"/>
-        <path d="M7 11.3 L5 10 M7 11.3 L6 13"/>
-        <circle cx="12" cy="12" r="1" fill="currentColor" stroke="none"/>
-      </svg>
-    </button>
-    -->
   </nav>
 
   <!-- Site title — bottom center, links back to gallery. Semantic pass,
@@ -292,17 +250,6 @@
         </button>
       </li>
 
-      <!-- Leaf: shelved again 2026-07-31, comment out don't delete — see
-           main.js's leaf.js import comment for the full re-enable checklist.
-      <li class="preview-wrapper" data-scene="leaf">
-        <button type="button" class="preview-container" id="preview-leaf"
-             title="Leaf — In The End It Falls Slowly Through The Aether"
-             aria-label="Leaf — a raindrop's fall from a leaf, told through real physics, locked to one fixed view; the moment it hits the ground, a hard cut opens onto a free-camera cosmic scene. Press Enter to expand."
-             onmouseover="pmGlimpse('leaf')" onfocus="pmGlimpse('leaf')">
-        </button>
-      </li>
-      -->
-
       <li class="preview-wrapper" data-scene="orrery">
         <button type="button" class="preview-container" id="preview-orrery"
              title="The Orrery of Los Feliz"
@@ -327,16 +274,6 @@
         </button>
       </li>
 
-      <!-- Prism: shelved 2026-07-31, comment out don't delete — see main.js's
-           prism.js import comment for the full re-enable checklist.
-      <li class="preview-wrapper" data-scene="prism">
-        <button type="button" class="preview-container" id="preview-prism"
-             title="Prism — A Crystal, Grown"
-             aria-label="Prism — an organically-grown crystal, one branch per piece of writing on the site, grown by a random-walk-and-stick algorithm rather than hand-placed. Drag to orbit, click a branch to read. Press Enter to expand."
-             onmouseover="pmGlimpse('prism')" onfocus="pmGlimpse('prism')">
-        </button>
-      </li>
-      -->
     </ul>
 
     <!-- "Read the writing on its own" (1.7.0's /text/ prerender work) used to

@@ -1,0 +1,17 @@
+<!--
+  Beamline (Solar Sailer) scene shell markup — full scene only. The title
+  card's two lines are genuinely dynamic (EPIGRAPH_PRIMARY/SECONDARY,
+  pulled from beamlineText.js) so this file only provides the empty
+  <span> slots; beamline.js fills their textContent after parsing this
+  shell. Hint text and the sr-only live region (used to announce station
+  labels as the vessel passes each one) are both fully static.
+-->
+
+<div class="beamline-title" aria-hidden="true">
+  <span class="beamline-title-main"></span>
+  <span class="beamline-title-sub"></span>
+</div>
+
+<p class="beamline-hint" aria-hidden="true">drag to orbit &nbsp;·&nbsp; scroll to zoom &nbsp;·&nbsp; click a station to read</p>
+
+<div class="beamline-sr-live" aria-live="polite"></div>

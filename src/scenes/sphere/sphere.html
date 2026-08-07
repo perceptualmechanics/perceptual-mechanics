@@ -1,0 +1,32 @@
+<!--
+  Sphere scene shell markup — the static chrome that doesn't change shape at
+  runtime, imported into sphere.js as a raw string (`?raw`) and parsed via
+  sceneKit.js's parseHTML(). Full-experience only (preview mode never
+  mounts any of this).
+
+  Two top-level pieces here, because they have two different real mount
+  points in the live DOM, not one:
+    - .sphere-hint is appended to document.body (fixed, outside the scene's
+      own container -- see any scene's z-index-scale comment in
+      styles/main.css for why body-level chrome needs z-index >= 310).
+    - .sphere-panel is appended inside this scene's own container element.
+  sphere.js picks each one out by class after parsing and puts it where it
+  belongs -- same two destinations the old createElement-based code used.
+
+  sphere-panel-title keeps a real id — it's the target of the panel's
+  aria-labelledby, which per spec has to resolve to an actual id, not a
+  class. Every other part is styled and looked up purely by class.
+
+  Genuinely dynamic content is NOT here: .sphere-panel-title and
+  .sphere-panel-content start empty and get filled in by JS per fragment
+  clicked (openFragment()/navigateToFragment() in sphere.js), the same way
+  they always have.
+-->
+<p class="sphere-hint" aria-hidden="true">drag to rotate &nbsp;&middot;&nbsp; click a facet</p>
+
+<aside class="sphere-panel" role="dialog" aria-modal="false" aria-labelledby="sphere-panel-title">
+  <button type="button" class="sphere-panel-close" aria-label="Close fragment panel">&#10005;</button>
+  <h2 id="sphere-panel-title" class="sphere-panel-title" tabindex="-1">Fragment</h2>
+  <div class="sphere-panel-content"></div>
+  <p class="sphere-facet-id"></p>
+</aside>

@@ -1,0 +1,65 @@
+<!--
+  Scroll scene shell markup. Most of this scene's actual content (the eleven
+  patches of text, their stains, their ragged clip-paths) is generated per
+  instance from data in scroll.text.js -- genuinely dynamic, so it stays
+  JS-built, not faked into a static template here. What IS static -- never
+  changes shape, no per-instance randomization -- lives in this file:
+  the preview tile, the opening Ogham mark, and the hidden SVG filter defs
+  every patch's CSS filter references.
+-->
+
+<!-- Preview tile (landing-page thumbnail): dark, cracked stone medallion,
+     the Ogham letter Sail carved into it. Used only when { preview: true }. -->
+<div class="scroll-preview" aria-hidden="true">
+  <div class="scroll-preview-medallion">
+    <div class="scroll-crack scroll-crack-main"></div>
+    <div class="scroll-crack scroll-crack-branch"></div>
+    <div class="scroll-ogham" aria-hidden="true">
+      <span class="ogham-stem"></span>
+      <span class="ogham-stroke s1"></span>
+      <span class="ogham-stroke s2"></span>
+      <span class="ogham-stroke s3"></span>
+      <span class="ogham-stroke s4"></span>
+    </div>
+  </div>
+  <div class="scroll-grain"></div>
+</div>
+
+<!-- Opening mark (full scene only): the same Ogham Sail glyph, standing
+     alone at the very top of the scroll -- the only mark on it besides the
+     words themselves. -->
+<div class="scroll-ogham-panel" aria-hidden="true">
+  <div class="scroll-ogham" aria-hidden="true">
+    <span class="ogham-stem"></span>
+    <span class="ogham-stroke s1"></span>
+    <span class="ogham-stroke s2"></span>
+    <span class="ogham-stroke s3"></span>
+    <span class="ogham-stroke s4"></span>
+  </div>
+</div>
+
+<!-- Hidden SVG filter defs: feTurbulence/feDisplacementMap for grain and
+     hand-wobble, referenced from scroll.css via filter: url(#id). Needed in
+     both preview and full mode, since scroll.css uses these filters in
+     both -- mounted once, globally, on document.body (guarded in scroll.js
+     against double-injection across repeat scene visits). -->
+<div id="scroll-svg-defs" style="position:absolute; width:0; height:0; overflow:hidden;">
+  <svg width="0" height="0" aria-hidden="true" focusable="false">
+    <defs>
+      <filter id="scroll-grain" x="-5%" y="-5%" width="110%" height="110%">
+        <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" seed="4" stitchTiles="stitch" result="n"/>
+        <feColorMatrix in="n" type="matrix"
+          values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.85 0" result="a"/>
+        <feComposite in="a" in2="SourceGraphic" operator="over"/>
+      </filter>
+      <filter id="scroll-rough" x="-25%" y="-25%" width="150%" height="150%">
+        <feTurbulence type="fractalNoise" baseFrequency="0.02 0.06" numOctaves="2" seed="7" result="t"/>
+        <feDisplacementMap in="SourceGraphic" in2="t" scale="6" xChannelSelector="R" yChannelSelector="G"/>
+      </filter>
+      <filter id="scroll-rough-strong" x="-35%" y="-35%" width="170%" height="170%">
+        <feTurbulence type="fractalNoise" baseFrequency="0.02 0.09" numOctaves="3" seed="3" result="t2"/>
+        <feDisplacementMap in="SourceGraphic" in2="t2" scale="15" xChannelSelector="R" yChannelSelector="G"/>
+      </filter>
+    </defs>
+  </svg>
+</div>

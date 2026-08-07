@@ -1,0 +1,17 @@
+<!--
+  Orbiter scene shell markup — full scene only (preview mode never mounts
+  any of this). The poem panel's title/content are genuinely dynamic
+  (swapped per-satellite-click, with cross-link HTML built per poem in
+  orbiter.js's renderPoemInto/renderStanza) so only the panel's static
+  skeleton — close button, empty title/content slots — lives here.
+-->
+
+<p class="orbiter-caption" aria-hidden="true">sing, orbiter</p>
+
+<p class="orbiter-hint" aria-hidden="true">drag to orbit &nbsp;·&nbsp; click a satellite to read a poem &nbsp;·&nbsp; click the nucleus to look inside</p>
+
+<aside class="orbiter-panel" role="dialog" aria-modal="false" aria-labelledby="orbiter-panel-title">
+  <button type="button" class="orbiter-panel-close" aria-label="Close panel">&#10005;</button>
+  <h2 id="orbiter-panel-title" class="orbiter-panel-title" tabindex="-1"></h2>
+  <div class="orbiter-panel-content"></div>
+</aside>

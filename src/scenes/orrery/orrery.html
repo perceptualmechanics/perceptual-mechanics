@@ -1,0 +1,46 @@
+<!--
+  Orrery scene shell markup — full mode only (the preview tile is just the
+  WebGL canvas, no overlay chrome). Two mostly-independent widget groups
+  share this one fragment, both parsed out of it in createOrrery():
+
+  - the ambient title/hint/caption plus the read-more panel (the found
+    "placard" story housed in orrery.text.js)
+  - the first-person rig's own overlay chrome (crosshair, click-to-look
+    prompt, touch walkpad), built inside createFirstPersonRig()
+
+  .orrery-title-main and .orrery-panel-title/-era/-note start empty —
+  they're set from ORRERY (orrery.text.js) via textContent/innerHTML after
+  mount, since that's real data, not shell markup. .orrery-lock-prompt
+  also starts empty (its text depends on canLock, a runtime feature
+  check). Everything else here is copy that never changes.
+-->
+
+<div class="orrery-vignette" aria-hidden="true"></div>
+<div class="orrery-grain" aria-hidden="true"></div>
+
+<div class="orrery-title" aria-hidden="true">
+  <span class="orrery-title-main"></span>
+  <span class="orrery-title-sub">About thirty feet high, the peak poking out of the warehouse skylights.</span>
+</div>
+
+<aside class="orrery-panel" role="dialog" aria-modal="false" aria-labelledby="orrery-panel-title">
+  <button type="button" class="orrery-panel-close" aria-label="Close panel">&#10005;</button>
+  <h2 id="orrery-panel-title" class="orrery-panel-title" tabindex="-1"></h2>
+  <p class="orrery-panel-era"></p>
+  <p class="orrery-panel-note"></p>
+</aside>
+
+<p class="orrery-hint" aria-hidden="true">walk with WASD/arrows &nbsp;&middot;&nbsp; click to look around &nbsp;&middot;&nbsp; click the control box or a flyer</p>
+
+<p class="orrery-caption" aria-hidden="true">still on, receiving information from the heavens</p>
+
+<div class="orrery-crosshair" aria-hidden="true"></div>
+
+<button type="button" class="orrery-lock-prompt"></button>
+
+<div class="orrery-walkpad" aria-hidden="true">
+  <button type="button" class="wp-btn wp-fwd" aria-label="Walk forward">&#9650;</button>
+  <button type="button" class="wp-btn wp-left" aria-label="Strafe left">&#9664;</button>
+  <button type="button" class="wp-btn wp-back" aria-label="Walk backward">&#9660;</button>
+  <button type="button" class="wp-btn wp-right" aria-label="Strafe right">&#9654;</button>
+</div>

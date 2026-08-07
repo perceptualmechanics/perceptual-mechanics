@@ -1,25 +1,14 @@
-import { createSphere }     from './scenes/sphere.js';
-import { createButterfly }  from './scenes/butterfly.js';
-import { createScroll }    from './scenes/scroll.js';
-import { createTheater } from './scenes/theater.js';
-import { createOrbiter }   from './scenes/orbiter.js';
-// import { createLeaf } from './scenes/leaf.js'; // shelved again 2026-07-31
-// — Scott: "shelve leaf for the time being," same pattern as every other
-// shelve on this project (Cycle, the golden hare mechanic, Lens twice,
-// Prism, and Leaf's own first shelving on 2026-07-29): comment out, don't
-// delete. This is the 1.20.0 ground-up rebuild (locked-camera diorama,
-// hard cut to a free-camera cosmic scene, real threshold-driven droplet
-// physics) — unlike Prism, no verdict on the work itself came with this
-// one, and "for the time being" reads as open to revisiting rather than
-// closed for good. Re-enable by uncommenting this import, the SCENES
-// entry below, the initPreviews() map entry, and the nav icon + preview
-// tile in index.html (same four spots, all cross-referenced).
-import { createOrrery }    from './scenes/orrery.js';
-import { createLibrary }   from './scenes/library.js';
+import { createSphere }     from './scenes/sphere/sphere.js';
+import { createButterfly }  from './scenes/butterfly/butterfly.js';
+import { createScroll }    from './scenes/scroll/scroll.js';
+import { createTheater } from './scenes/theater/theater.js';
+import { createOrbiter }   from './scenes/orbiter/orbiter.js';
+import { createOrrery }    from './scenes/orrery/orrery.js';
+import { createLibrary }   from './scenes/library/library.js';
 // New scene, 2026-07-31 — a staged sequence of curved mirrors, real
 // reflection geometry (not transmission) bouncing a beam between them.
 // See NOTES.md.
-import { createBeamline }  from './scenes/beamline.js';
+import { createBeamline }  from './scenes/beamline/beamline.js';
 // Re-enabled 2026-07-23 — Scott: "given this analysis, curate the excerpts
 // to create hyperlinks between them a la my other writings in the site,"
 // after a close-read of the whole catalog (library_resonances.md) turned
@@ -27,20 +16,7 @@ import { createBeamline }  from './scenes/beamline.js';
 // (1.0.54) while a data-correction round wrapped up; back live now that
 // there are actual clickable cross-links (see library.js's LIBRARY_LINKS)
 // worth being able to click through.
-// import { createPrism } from './scenes/prism.js'; // shelved 2026-07-31 —
-// Scott's call after watching the rebuilt version run live, performance
-// fixes and all: still doesn't look right, not pursuing further right now.
-// Same pattern as every other shelve on this project (Cycle, the golden
-// hare mechanic, Lens twice, Leaf): comment out, don't delete. This closes
-// out Prism's second full attempt — first an organically-grown DLA
-// crystal (1.9.0-1.13.0), then this classical dispersion-prism rebuild
-// (1.14.0-1.18.0, never committed) — see NOTES.md 1.19.0 for the full
-// account. Neither landed; no third attempt is currently planned. Re-
-// enable by uncommenting this import, the SCENES entry below, the
-// initPreviews() map entry, and the nav icon + preview tile in index.html
-// (same four spots Leaf's own shelving comment cross-references).
-import { initColophon }    from './components/colophon.js';
-import '../styles/scenes/butterfly.css';
+import { initColophon }    from './components/colophon/colophon.js';
 
 // ─── Scene registry ──────────────────────────────────────────────────────────
 const SCENES = {
@@ -54,20 +30,12 @@ const SCENES = {
                  ariaLabel: 'The Theater — scenes from Truth and Beauty, Paul Revere, and You’ve Got a Friend in Satan, performed by ASCII actors. A different program each visit; click or use the controls to advance.' },
   orbiter:     { create: createOrbiter,    label: 'Orbiter — A p-Orbital, Satellites.',
                  ariaLabel: 'Orbiter — a hydrogen atom’s p-orbital rendered as a fuzzy probability cloud, with satellites in clean elliptical orbits around it. Drag to orbit.' },
-  // leaf: { create: createLeaf, label: 'Leaf — In The End It Falls Slowly Through The Aether.',
-  //         ariaLabel: 'Leaf — a raindrop’s fall from a leaf, told through real physics, locked to one fixed view; the moment it hits the ground, a hard cut opens onto a free-camera cosmic scene for the rest of the piece.' },
-  // Shelved again 2026-07-31 — see the leaf.js import comment above for
-  // the full re-enable checklist (four spots, cross-referenced).
   orrery:      { create: createOrrery,     label: 'The Orrery of Los Feliz.',
                  ariaLabel: 'The Orrery of Los Feliz — a found story, told through a 30-foot orrery: nine planets, their moons, an asteroid belt, in a warehouse you can walk around. Use the arrow keys or WASD to walk, click to look around, click the orrery to read.' },
   library:     { create: createLibrary,    label: 'The Library — once removed.',
                  ariaLabel: 'The Library — a real bookshelf, 107 books, films, and divination decks, rebuilt as a shelf you can turn in space. Drag to orbit, scroll to zoom, click a spine to read what it is.' },
   beamline:    { create: createBeamline,   label: 'Beamline.',
                  ariaLabel: 'Beamline — a staged sequence of curved mirrors, a beam of light bouncing between them, found text surfacing at each bounce. Drag to orbit, scroll to zoom, click a mirror to read.' },
-  // prism: { create: createPrism, label: 'Prism — A Crystal, Grown.',
-  //          ariaLabel: '...' },
-  // Shelved 2026-07-31 — see the prism.js import comment above for the
-  // full re-enable checklist (four spots, cross-referenced).
 };
 
 let activeScene  = null;
@@ -119,12 +87,6 @@ const expContainer = document.getElementById('experience-container');
 const landing      = document.getElementById('landing');
 const siteTitle    = document.getElementById('site-title');
 
-// ─── Butterfly overlay extras (label + hint) ──────────────────────────────────
-// Both are position:fixed on document.body, outside #experience-overlay —
-// see styles/scenes/butterfly.css's header comment for why this scene's
-// styles ended up here instead of colocated in butterfly.js like every
-// other scene, and for the z-index reasoning.
-
 // ─── Nav icons ────────────────────────────────────────────────────────────────
 function setActiveIcon(sceneName) {
   document.querySelectorAll('.nav-icon').forEach(b => {
@@ -147,10 +109,6 @@ function expandScene(sceneName, triggerEl = null) {
     expContainer.innerHTML = '';
   }
 
-  // Clean up butterfly extras
-  document.getElementById('butterfly-exp-label')?.remove();
-  document.getElementById('butterfly-hint')?.remove();
-
   activeScene = sceneName;
   setActiveIcon(sceneName);
   setHash(sceneName);
@@ -160,21 +118,6 @@ function expandScene(sceneName, triggerEl = null) {
   overlay.classList.toggle('butterfly-bg', sceneName === 'butterfly');
   overlay.setAttribute('aria-hidden', 'false');
   overlay.setAttribute('aria-label', SCENES[sceneName]?.ariaLabel ?? 'Full screen experience.');
-
-  // Butterfly extras
-  if (sceneName === 'butterfly') {
-    const label = document.createElement('p');
-    label.id = 'butterfly-exp-label';
-    label.textContent = 'Chaos Butterfly in Phase Space, 2026';
-    label.setAttribute('aria-hidden', 'true');
-    document.body.appendChild(label);
-
-    const hint = document.createElement('p');
-    hint.id = 'butterfly-hint';
-    hint.innerHTML = 'drag to orbit &nbsp;·&nbsp; scroll to zoom';
-    hint.setAttribute('aria-hidden', 'true');
-    document.body.appendChild(hint);
-  }
 
   fullInstance = SCENES[sceneName].create(expContainer, { preview: false });
   // Focus the container for screen readers
@@ -189,8 +132,6 @@ function returnToGallery() {
   overlay.classList.remove('active', 'butterfly-bg');
   overlay.setAttribute('aria-hidden', 'true');
   setHash(null);
-  document.getElementById('butterfly-exp-label')?.remove();
-  document.getElementById('butterfly-hint')?.remove();
 
   setTimeout(() => {
     if (fullInstance) { fullInstance.dispose(); fullInstance = null; expContainer.innerHTML = ''; }
@@ -260,15 +201,9 @@ function initPreviews() {
     scroll:     document.getElementById('preview-scroll'),
     theater:    document.getElementById('preview-theater'),
     orbiter:    document.getElementById('preview-orbiter'),
-    // leaf:    document.getElementById('preview-leaf'), // shelved again
-    // 2026-07-31, see the leaf.js import comment near the top of this
-    // file for the full re-enable checklist.
     orrery:     document.getElementById('preview-orrery'),
     library:    document.getElementById('preview-library'),
     beamline:   document.getElementById('preview-beamline'),
-    // prism:   document.getElementById('preview-prism'), // shelved
-    // 2026-07-31, see the prism.js import comment near the top of this
-    // file for the full re-enable checklist.
   };
   for (const [name, el] of Object.entries(map)) {
     if (el) previews[name] = SCENES[name].create(el, { preview: true });
@@ -334,10 +269,8 @@ const PM_GLIMPSE_WORDS = {
   scroll: 'savagery',
   theater: 'light entertainment',
   orbiter: 'lantern',
-  leaf: 'stillness',
   orrery: 'will',
   library: 'catalogued',
-  prism: 'refraction',
   beamline: 'incidence',
   title: 'secrets',
 };

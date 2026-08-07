@@ -1,0 +1,1640 @@
+import * as THREE from 'three';
+import { libraryItems } from './library.text.js';
+import { cdRackItems } from './library.cdRack.js';
+import {
+  bindOrbitDrag, bindWheelZoom, bindGuardedResize, prefersReducedMotion, createPanelCloser, createJumpList, escapeHtml, parseHTML,
+} from '../../utils/sceneKit.js';
+import './library.css';
+import libraryHtml from './library.html?raw';
+
+// ─── The Library ────────────────────────────────────────────────────────────
+// Scott: "for that picture of the bookshelf in the assets folder, can you
+// scan that and see if you can identify all the media there?" — then, once
+// the catalog existed (library.text.js, 107 books/films/decks read off
+// a real photo of his shelf, corrected against IMG_1202.jpeg after an
+// earlier pass used the wrong picture): "add a new scene to
+// perceptualmechanics, library. Build out infrastructure as usual."
+//
+// A 4x2 Kallax-style cube shelf, same physical layout as the real one
+// (row/col/pos in library.js preserve left-to-right shelf order), rebuilt
+// as a floating 3D object rather than a room you walk through — closer to
+// the sphere/orbiter model (drag to orbit, click something small to read about
+// it) than the orrery's walk-around warehouse, since a shelf reads fine as
+// an object held up to the light rather than a space to stand inside.
+//
+// No real cover art or spine photography anywhere — same rule as every
+// other scene's canvas-drawn textures (the orrery's poster/audio system is
+// the clearest precedent: real film/album titles, but nothing lifted from
+// an actual copyrighted image). Every spine here is a plain canvas
+// background color plus the title/creator drawn as text, standing in for
+// the real spine design rather than reproducing it.
+
+const CUBBY_W = 2.4;
+const CUBBY_H = 1.7;
+const CUBBY_D = 1.0;
+const FRAME_T = 0.09;
+// Scott, 2026-07-23: "let's turn the bookcase vertical." Was a 4x2
+// landscape grid (4 wide, 2 tall); now 2x4 portrait (2 wide, 4 tall) — a
+// pure 90-degree transpose of the same cubbies. Every item's stored
+// row/col in library.js is untouched (still "left-to-right shelf order"
+// off the real photo); only which axis COLS/ROWS walks, and which field
+// feeds cubbyLeft() vs cubbyTop() in buildItems(), swapped.
+const COLS = 2;
+const ROWS = 4;
+const TOTAL_W = COLS * CUBBY_W + (COLS + 1) * FRAME_T;
+const TOTAL_H = ROWS * CUBBY_H + (ROWS + 1) * FRAME_T;
+
+// ─── CDs ────────────────────────────────────────────────────────────────────
+// Scott, 2026-07-23: "i have the notion of adding a CD rack to the bookshelf
+// :D" — invented wholesale, not catalogued off a real photo like the shelf
+// (he doesn't own any of these anymore). Built up album-by-album across a
+// long back-and-forth: 114 albums, 55 artists, hand-dictated rather than
+// filler (library.cdRack.js carries the full provenance note).
+//
+// Two earlier passes tried building this as its own object: first sharing
+// the shelf's camera and rotation pivot (broke down because anything off to
+// the side of a shared pivot swings through a much bigger arc than the
+// centered object, and was out of frame entirely on mobile), then as a
+// second object with its own rotation group and a "Shelf / CD Rack" switch
+// to pick which was active (which worked, but per Scott: "we're
+// overthinking this. just put the CDs in the bookcase with the books and
+// movies. the switch is a bit too much architecture.").
+//
+// So: no separate object, no separate camera, no switch. The CDs are just
+// more items in the same cubbies as the books and films — placeCdsInCubbies()
+// distributes them across the shelf's existing 8 cubbies, appended after
+// whatever books/films are already there, and buildItems() (below) renders
+// and sizes them like any other item, just thinner and shorter, with their
+// own texture (makeCdSpineTexture). They ride the exact same root group,
+// camera, drag/zoom, and raycast as every other spine on the shelf — nothing
+// about the shelf itself changed to make room for them.
+//
+// Interaction, 2026-07-24 (Scott: "let's redo the CD info. Lose the
+// tooltip, open a panel, and put either a music video or a live
+// performance that's available on YouTube. I don't think we need the
+// Apple Music/Spotify links any more."): the separate click-to-pin
+// tooltip is gone. A CD click now falls straight through to the exact
+// same .library-panel every book and film already uses — populatePanel()
+// (below) needed no CD-specific branch at all, since it already embedded
+// whatever `youtube`/`scene` a film carried; CDs just carry the same two
+// fields now, pointing at a music video or live performance instead of a
+// film scene (see cdRack.js for where those live, and its header for the
+// research/sourcing note). No search-links, no artist/album-only tooltip
+// markup to maintain — the kind label just reads "Album" instead of
+// "Book"/"Blu-ray".
+
+// Muted, curated palette — deliberately not a rainbow of random hues, so
+// the shelf reads as "someone's actual bookshelf" rather than a bar chart.
+const PALETTE = [
+  '#c9c0ab', '#242226', '#7a3230', '#2f4d3a', '#28344a',
+  '#8a5a3f', '#5a4a6b', '#9c8a45', '#3a3a3a', '#647568',
+  '#a8433a', '#3d5a6b',
+];
+// Divination decks/boxes get their own small, darker, starrier palette —
+// they read as distinct objects on the real shelf (Kim Krans' two boxes),
+// not just thicker books.
+const BOX_PALETTE = ['#141428', '#1c1830', '#101018'];
+
+// Scott, 2026-07-24 (screenshot of the shelf): "can we make the blurays and
+// the CDs a bit more visually distinct from one another? there's a lot of
+// visual sameness happening." Root cause: DVDs/Blu-rays were drawn through
+// the exact same makeSpineTexture() as books (foil caps, embossed bands,
+// the same 12-color PALETTE) — only their box dimensions differed — and
+// CDs, while already on their own thinner texture, drew from that same
+// PALETTE too, so a cubby's "media block" was just a thinner smear of the
+// same colors as its books. Fixed by giving discs and CDs their own
+// narrow, near-monochrome palettes plus their own texture treatment (see
+// makeDiscSpineTexture/makeCdSpineTexture below), so each material reads
+// as a distinct physical object: matte varied-color cloth binding for
+// books, uniform glossy near-black plastic cases for the Blu-rays (real
+// disc shelves are famously almost all one color, unlike a bookshelf),
+// pale jewel-case paper for the CDs.
+const DISC_PALETTE = ['#0d0f16', '#10141f', '#141013', '#0c1119'];
+const CD_PALETTE = ['#e8e3d4', '#dcd6c6', '#cfc9b8', '#e2ddd0'];
+
+// Cheap deterministic string hash (djb2) — used so a given title always
+// gets the same simulated thickness/color/height on every visit, rather
+// than reshuffling the shelf each reload.
+function hash(str) {
+  let h = 5381;
+  for (let i = 0; i < str.length; i++) h = ((h << 5) + h + str.charCodeAt(i)) | 0;
+  return Math.abs(h);
+}
+function hash01(str, salt) {
+  return (hash(str + salt) % 10000) / 10000;
+}
+
+// ─── Cross-links, 2026-07-23 ────────────────────────────────────────────────
+// Same mechanism, and the same rule, as sphere.js's fragment-links, orbiter.js's
+// poem-links, and scroll.js's LINKS: only phrases already sitting in the
+// catalog text get wired up as jumps to another item's panel. Scott: "given
+// this analysis, curate the excerpts to create hyperlinks between them a la
+// my other writings in the site" — "this analysis" being a close read of the
+// whole 107-item catalog for real resonances (see library_resonances.md),
+// which is also where the curated note/excerpt additions in
+// library.text.js supporting these phrases came from. Keyed by item id
+// + field name (note/scene/excerpt/excerpt_from), since — unlike orbiter.text.js's
+// stanza-indexed text — library items don't share a single "the text" field.
+const LIBRARY_LINKS = [
+  // A coin decides everything, twice: Chigurh's coin toss and Stoppard's,
+  // played completely straight in one and as metaphysical comedy in the
+  // other.
+  { id: 49, field: 'scene',   phrase: 'coin toss',                        target: 72 },
+  { id: 72, field: 'excerpt', phrase: 'A coin spins in the air',          target: 49 },
+  // "The Origin of Love" is a direct staging of Aristophanes' speech from
+  // the Symposium, sitting a few cubbies away.
+  { id: 40, field: 'scene',        phrase: 'Origin of Love',              target: 13 },
+  { id: 13, field: 'excerpt_from', phrase: 'Hedwig and the Angry Inch',   target: 40 },
+  // Kubrick's stargate, argued over by the two directors who built on it:
+  // Tarkovsky's Solaris as a rebuttal, Malick's Tree of Life borrowing
+  // Kubrick's own effects supervisor.
+  { id: 63, field: 'note', phrase: 'The Tree of Life',        target: 33 },
+  { id: 63, field: 'note', phrase: 'Solaris',                 target: 53 },
+  { id: 53, field: 'note', phrase: '2001: A Space Odyssey',   target: 63 },
+  { id: 53, field: 'note', phrase: 'The Tree of Life',        target: 33 },
+  { id: 33, field: 'note', phrase: '2001: A Space Odyssey',   target: 63 },
+  { id: 33, field: 'note', phrase: 'Solaris',                 target: 53 },
+  // Kurosawa's one idea about honor and code, tested across four decades
+  // and, in Jarmusch's case, two cultures.
+  { id: 31, field: 'note', phrase: 'Throne of Blood',                     target: 41 },
+  { id: 31, field: 'note', phrase: 'Dreams',                              target: 44 },
+  { id: 31, field: 'note', phrase: 'Ghost Dog: The Way of the Samurai',   target: 54 },
+  { id: 41, field: 'note', phrase: 'Seven Samurai',                      target: 31 },
+  { id: 44, field: 'note', phrase: 'Seven Samurai',                      target: 31 },
+  { id: 54, field: 'note', phrase: 'Seven Samurai',                      target: 31 },
+  // Joyce dismantling, book by book, his own faith that a story has a
+  // beginning and an end — and Hofstadter's "strange loop" describing the
+  // same shape from mathematics instead of prose.
+  { id: 11, field: 'note', phrase: 'Ulysses',                             target: 85 },
+  { id: 85, field: 'note', phrase: 'A Portrait of the Artist as a Young Man', target: 11 },
+  { id: 85, field: 'note', phrase: 'Finnegans Wake',                      target: 89 },
+  { id: 89, field: 'note', phrase: 'Gödel, Escher, Bach',                 target: 73 },
+  { id: 73, field: 'note', phrase: 'Finnegans Wake',                      target: 89 },
+  // wabi-sabi as essay, then as plot.
+  { id: 51, field: 'note', phrase: 'In Praise of Shadows',                target: 75 },
+  { id: 75, field: 'note', phrase: 'Tokyo Story',                         target: 51 },
+  // Interior consciousness dissolving plot, in two very different languages.
+  { id: 3,  field: 'note', phrase: '1Q84',                                target: 86 },
+  { id: 86, field: 'note', phrase: 'Água Viva',                           target: 3 },
+  // The epic relay: Homer to Virgil to Dante, each poet picking up the
+  // previous one's hand.
+  { id: 82, field: 'note', phrase: 'the Odyssey',                         target: 81 },
+  { id: 82, field: 'note', phrase: 'the Iliad',                           target: 80 },
+  { id: 82, field: 'note', phrase: 'The Divine Comedy',                   target: 91 },
+  { id: 81, field: 'note', phrase: 'the Aeneid',                         target: 82 },
+  { id: 80, field: 'note', phrase: 'the Aeneid',                         target: 82 },
+  { id: 91, field: 'note', phrase: 'the Aeneid',                         target: 82 },
+
+  // Added 2026-07-23, alongside the 13 new ISBN-sourced books: same rule,
+  // phrases already sitting in the (newly curated) note text.
+  // Merrill's Sandover <-> the occult-reference cluster.
+  { id: 108, field: 'note', phrase: 'Alchemy & Mysticism',                target: 6 },
+  { id: 6,   field: 'note', phrase: 'The Changing Light at Sandover',     target: 108 },
+  // The Beatles telling their own story two ways.
+  { id: 109, field: 'note', phrase: 'The Lyrics',                        target: 103 },
+  { id: 103, field: 'note', phrase: 'The Beatles Anthology',              target: 109 },
+  // VALIS's literal split-self <-> the Symposium/Hedwig "other half" thread.
+  { id: 110, field: 'note', phrase: 'the Symposium',                     target: 13 },
+  { id: 110, field: 'note', phrase: 'Hedwig',                            target: 40 },
+  { id: 13,  field: 'note', phrase: 'VALIS',                             target: 110 },
+  { id: 40,  field: 'note', phrase: 'VALIS',                             target: 110 },
+  // Nabokov's two novels here.
+  { id: 111, field: 'note', phrase: 'Lolita',                            target: 115 },
+  { id: 115, field: 'note', phrase: 'Pale Fire',                         target: 111 },
+  // The two volumes of SubGenius scripture.
+  { id: 113, field: 'note', phrase: 'Revelation X',                      target: 114 },
+  { id: 114, field: 'note', phrase: 'The Book of the SubGenius',         target: 113 },
+  // Scott's own two professional Mage sourcebooks, and the core rulebook
+  // both were written for.
+  { id: 116, field: 'note', phrase: 'Blood Treachery',                   target: 117 },
+  { id: 116, field: 'note', phrase: 'The Spirit Ways',                   target: 118 },
+  { id: 117, field: 'note', phrase: 'Mage: The Ascension',               target: 116 },
+  { id: 118, field: 'note', phrase: 'Mage: The Ascension',               target: 116 },
+  { id: 118, field: 'note', phrase: 'Blood Treachery',                   target: 117 },
+  // Prometheus Rising joins the physics-vs-feeling triangle.
+  { id: 119, field: 'note', phrase: '2001: A Space Odyssey',             target: 63 },
+  { id: 119, field: 'note', phrase: 'Solaris',                           target: 53 },
+  { id: 119, field: 'note', phrase: 'The Tree of Life',                  target: 33 },
+  { id: 33,  field: 'note', phrase: 'Prometheus Rising',                 target: 119 },
+  // Everything Is Under Control joins the chance/pattern/paranoia cluster.
+  { id: 120, field: 'note', phrase: 'Gravity’s Rainbow',                 target: 78 },
+  { id: 120, field: 'note', phrase: 'Borges’s Collected Fictions',       target: 79 },
+  { id: 78,  field: 'note', phrase: 'Everything Is Under Control',       target: 120 },
+  { id: 79,  field: 'note', phrase: 'Everything Is Under Control',       target: 120 },
+
+  // Added 2026-07-23, named one at a time mid-conversation rather than
+  // from a shelf photo or an ISBN batch.
+  // Harpur's third-category argument, threaded through the channeled-
+  // material / split-self / pattern-finding clusters already on the shelf.
+  { id: 121, field: 'note', phrase: 'The Changing Light at Sandover',    target: 108 },
+  { id: 121, field: 'note', phrase: 'the Symposium',                    target: 13 },
+  { id: 121, field: 'note', phrase: 'Everything Is Under Control',      target: 120 },
+  { id: 108, field: 'note', phrase: 'Daimonic Reality',                 target: 121 },
+  { id: 13,  field: 'note', phrase: 'Daimonic Reality',                 target: 121 },
+  { id: 120, field: 'note', phrase: 'Daimonic Reality',                 target: 121 },
+  // Chiang's "Understand" joins the physics-vs-feeling triangle as a
+  // fourth telling, this time as plot rather than argument.
+  { id: 122, field: 'note', phrase: '2001: A Space Odyssey',            target: 63 },
+  { id: 122, field: 'note', phrase: 'Solaris',                          target: 53 },
+  { id: 122, field: 'note', phrase: 'The Tree of Life',                 target: 33 },
+  { id: 33,  field: 'note', phrase: 'Stories of Your Life and Others',  target: 122 },
+
+  // Added 2026-07-23, a second batch of 25 ISBNs pasted in directly.
+  // Merrill's Collected Poems <-> Sandover, the rest of the same career.
+  { id: 125, field: 'note', phrase: 'The Changing Light at Sandover',   target: 108 },
+  // Huxley's "Mind at Large" and Narby's shamanic DNA-vision both point
+  // back to Harpur's third category.
+  { id: 128, field: 'note', phrase: 'Daimonic Reality',                target: 121 },
+  { id: 131, field: 'note', phrase: 'Daimonic Reality',                target: 121 },
+  // Food of the Gods joins the Wilson/McKenna psychedelic-consciousness
+  // lineage.
+  { id: 129, field: 'note', phrase: 'Prometheus Rising',               target: 119 },
+  { id: 129, field: 'note', phrase: 'Everything Is Under Control',     target: 120 },
+  // Planetary joins the chance/pattern/paranoia cluster.
+  { id: 130, field: 'note', phrase: 'Gravity’s Rainbow',               target: 78 },
+  { id: 130, field: 'note', phrase: 'Borges’s Collected Fictions',     target: 79 },
+  { id: 130, field: 'note', phrase: 'Everything Is Under Control',     target: 120 },
+  // The Kybalion and Holy Blood, Holy Grail both join the
+  // channeled-or-invented occult-reference cluster.
+  { id: 133, field: 'note', phrase: 'Alchemy & Mysticism',             target: 6 },
+  { id: 139, field: 'note', phrase: 'Alchemy & Mysticism',             target: 6 },
+  // Kitchen Confidential joins the built-persona cluster.
+  { id: 134, field: 'note', phrase: 'Wooderson',                       target: 32 },
+  { id: 134, field: 'note', phrase: 'Hedwig',                          target: 40 },
+  // The Squared Circle's kayfabe joins the belief-as-technology cluster.
+  { id: 137, field: 'note', phrase: 'The Book of the SubGenius',       target: 113 },
+  { id: 137, field: 'note', phrase: 'Everything Is Under Control',     target: 120 },
+  // Two design monographs, shelved as reference for each other.
+  { id: 124, field: 'note', phrase: 'Alexander McQueen',               target: 141 },
+  { id: 141, field: 'note', phrase: 'Tord Boontje',                    target: 124 },
+  // The Godfather and Wiseguy, two very different tones about the same
+  // underworld.
+  { id: 142, field: 'note', phrase: 'Wiseguy',                         target: 140 },
+  // Decreation joins the split/divided-self cluster a third way.
+  { id: 145, field: 'note', phrase: 'Hedwig',                          target: 40 },
+  { id: 145, field: 'note', phrase: 'VALIS',                           target: 110 },
+];
+
+// Wraps any LIBRARY_LINKS phrases that belong to this item+field in a
+// clickable <a class="library-link" data-target="id">, same beat as
+// sphere.js's fragment-links: escape the raw text first, then replace the
+// (already-escaped) phrase so nothing else in the string can be
+// reinterpreted as markup.
+function renderLinkedField(itemId, field, text) {
+  let html = escapeHtml(text);
+  LIBRARY_LINKS
+    .filter(l => l.id === itemId && l.field === field)
+    .forEach(link => {
+      const esc = escapeHtml(link.phrase);
+      html = html.replace(esc, `<a class="library-link" data-target="${link.target}" role="link" tabindex="0">${esc}</a>`);
+    });
+  return html;
+}
+
+// Pulls the video id out of a youtube.com/watch?v=... URL so the panel can
+// embed it (youtube-nocookie.com/embed/ID) instead of just linking out.
+function youtubeEmbedSrc(url) {
+  try {
+    const u = new URL(url);
+    const id = u.searchParams.get('v');
+    return id ? `https://www.youtube-nocookie.com/embed/${id}` : null;
+  } catch {
+    return null;
+  }
+}
+
+function wrapSpineText(text, maxChars) {
+  const words = text.split(' ');
+  const lines = [];
+  let cur = '';
+  for (const w of words) {
+    const next = cur ? `${cur} ${w}` : w;
+    if (next.length > maxChars && cur) { lines.push(cur); cur = w; }
+    else cur = next;
+  }
+  if (cur) lines.push(cur);
+  return lines;
+}
+
+// Canvas-drawn spine face — vertical (bottom-to-top) title, smaller creator
+// line beneath it, on a flat color field. Deliberately plain: this is meant
+// to read as "a book on a shelf" from across the room, not as a legible
+// cover design up close (the click-to-read panel carries the real text).
+//
+// Scott, 2026-07-23, after the vertical shelf/Babel work: "the books
+// themselves are very plain! What could we do to give them a bit more
+// pizzazz?" Added, without touching the "no real cover art" rule: a
+// per-item tint wash (so two books sharing one of the ~12 palette colors
+// don't render as pixel-identical swatches — different dye lots, same
+// cloth), a top-lit vertical gradient and a soft left/right vignette (the
+// spine reads as a rounded object catching light, not a flat card), 1-2
+// embossed horizontal bands above/below the title (old-hardcover binding
+// cords), contrast-aware ink color (light spines get dark ink, dark
+// spines keep the cream), and font alternation (collapsed to one font,
+// then restored with real per-item variety — see BOOK_FONTS etc. below).
+// Fine per-pixel grain was tried and dropped — at the
+// on-screen size a spine actually renders at, it mostly vanishes into
+// texture minification, the same "too subtle to register" mistake made
+// (and fixed) twice already on the Babel backdrop; broad tonal moves like
+// these read at any distance.
+//
+// Scott, 2026-07-23: "change the title font on the media items to a more
+// readable, thinner sans-serif font." Collapsed the earlier serif
+// alternation (Georgia/Times for books, Helvetica Neue/Georgia for CDs)
+// down to one system sans stack for every spine. Then, 2026-07-24, after
+// seeing the shelf at full zoom: "the font's the same on everything, which
+// is the complete opposite of real life (except for the Penguin Classics
+// lulz). We need more visual variety to make it look like a real media
+// collection." Right call — a real shelf is a mess of different
+// publishers'/studios'/labels' house type, and one uniform font across
+// 250-odd spines was quietly working against the "someone's actual
+// collection" read as much as the shared color palette had been.
+//
+// Restores real per-item variety, still with no webfont: nothing else in
+// the codebase's canvas-drawn textures (orrery's posters, butterfly's
+// caption) loads a custom font for canvas text, and doing so here would
+// risk a FOUT-in-a-texture bug — the canvas snapshots synchronously, so if
+// the webfont hasn't finished loading yet the fallback gets baked in
+// permanently instead of swapping in later like real DOM text would. So
+// the variety comes entirely from curated *system* font stacks.
+//
+// First pass (still 2026-07-24) just swapped which font-family string got
+// used per item — but at the size a spine actually renders at, "Georgia"
+// vs "Times New Roman" vs "Palatino" all read as "a serif," and
+// "-apple-system" vs "Verdana" vs "Trebuchet MS" all read as "a sans."
+// Scott, looking at a full-zoom screenshot: "MOAR." Right diagnosis: family
+// alone wasn't doing the work — real shelves get their variety mostly from
+// weight and case (a bold all-caps thriller next to a thin italic literary
+// title next to a wide-tracked academic serif), not from subtly different
+// serif geometries. So each pool below is now a set of *treatments*
+// (family + weight + italic + upper/title-case + letter-tracking) rather
+// than just a font-family list, picked per-item (via hash01, so a given
+// spine always lands on the same face across reloads) from a pool tuned
+// per material: books get the widest spread — serif, sans, a monospace
+// outlier, thin to black weight, plain and tracked-caps — the way
+// different publishers' and decades' house styles actually clash on a
+// real shelf; Blu-rays lean bold/condensed/all-caps (movie poster
+// packaging); CDs stay closer to clean (the original readability ask)
+// but range from thin to a punchier tracked-caps treatment for the
+// louder genres; the two divination boxes share one fixed tracked-caps
+// serif treatment suited to old esoteric-text/grimoire design.
+function treatment(font, opts = {}) {
+  return { font, weight: 400, italic: false, upper: false, tracking: 0, ...opts };
+}
+const BOOK_TREATMENTS = [
+  treatment('Georgia, "Times New Roman", Times, serif'),
+  treatment('"Times New Roman", Times, Georgia, serif', { italic: true }),
+  treatment('-apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif', { weight: 300 }),
+  treatment('Verdana, Geneva, sans-serif', { weight: 700, upper: true, tracking: 1.5 }),
+  treatment('"Trebuchet MS", Helvetica, sans-serif', { italic: true }),
+  treatment('"Courier New", Courier, monospace', { upper: true, tracking: 1 }),
+  treatment('Palatino, "Palatino Linotype", Georgia, serif', { italic: true }),
+  treatment('"Arial Narrow", Arial, sans-serif', { weight: 700, upper: true }),
+  treatment('"Arial Black", Arial, sans-serif', { weight: 900, upper: true, tracking: 0.5 }),
+  treatment('Georgia, serif', { weight: 700, upper: true, tracking: 2 }),
+];
+const BOX_TREATMENT = treatment('Palatino, "Palatino Linotype", Georgia, serif', { italic: true, upper: true, tracking: 2 });
+const DISC_TREATMENTS = [
+  treatment('"Arial Narrow", Arial, sans-serif', { weight: 900, upper: true, tracking: 1 }),
+  treatment('Arial, Helvetica, sans-serif', { weight: 700, upper: true, tracking: 0.5 }),
+  treatment('"Trebuchet MS", Helvetica, sans-serif', { weight: 700, upper: true }),
+  treatment('Georgia, "Times New Roman", Times, serif', { weight: 700, upper: true, tracking: 1.5 }),
+  treatment('"Arial Black", Arial, sans-serif', { weight: 900, upper: true, tracking: 1 }),
+];
+const CD_TREATMENTS = [
+  treatment('-apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif', { weight: 300 }),
+  treatment('Verdana, Geneva, sans-serif'),
+  treatment('"Trebuchet MS", Helvetica, sans-serif', { weight: 700, upper: true, tracking: 1 }),
+  treatment('"Arial Narrow", Arial, sans-serif', { weight: 700, upper: true }),
+  treatment('Georgia, "Times New Roman", Times, serif', { italic: true }),
+];
+function pickTreatment(pool, seed) {
+  const idx = Math.floor(hash01(seed, 'font') * pool.length);
+  return pool[Math.min(idx, pool.length - 1)];
+}
+// Applies a treatment to the given size; caller still owns save/restore.
+function setTitleFont(cx, t, size) {
+  cx.font = `${t.italic ? 'italic ' : ''}${t.weight} ${size}px ${t.font}`;
+  if ('letterSpacing' in cx) cx.letterSpacing = `${t.tracking}px`;
+}
+function titleCase(text, t) {
+  return t.upper ? text.toUpperCase() : text;
+}
+function relLuminance(hex) {
+  const col = new THREE.Color(hex);
+  return 0.2126 * col.r + 0.7152 * col.g + 0.0722 * col.b;
+}
+
+function makeSpineTexture(baseColor, title, creator, isBox) {
+  const c = document.createElement('canvas');
+  c.width = 112; c.height = 800;
+  const cx = c.getContext('2d');
+  cx.fillStyle = baseColor;
+  cx.fillRect(0, 0, c.width, c.height);
+
+  // Per-item tint wash — same base swatch, different dye lot each time.
+  const tr = Math.floor(hash01(title, 'tr') * 255);
+  const tg = Math.floor(hash01(title, 'tg') * 255);
+  const tb = Math.floor(hash01(title, 'tb') * 255);
+  cx.fillStyle = `rgba(${tr},${tg},${tb},0.07)`;
+  cx.fillRect(0, 0, c.width, c.height);
+
+  // Top-lit vertical gradient — light catching the spine from above,
+  // rather than a flat, evenly-lit swatch.
+  const vgrad = cx.createLinearGradient(0, 0, 0, c.height);
+  vgrad.addColorStop(0, 'rgba(255,255,255,0.18)');
+  vgrad.addColorStop(0.45, 'rgba(255,255,255,0)');
+  vgrad.addColorStop(1, 'rgba(0,0,0,0.24)');
+  cx.fillStyle = vgrad;
+  cx.fillRect(0, 0, c.width, c.height);
+
+  // Left/right vignette — the spine's slight roundedness, not a flat card.
+  const hgrad = cx.createLinearGradient(0, 0, c.width, 0);
+  hgrad.addColorStop(0, 'rgba(0,0,0,0.3)');
+  hgrad.addColorStop(0.14, 'rgba(0,0,0,0)');
+  hgrad.addColorStop(0.86, 'rgba(0,0,0,0)');
+  hgrad.addColorStop(1, 'rgba(0,0,0,0.3)');
+  cx.fillStyle = hgrad;
+  cx.fillRect(0, 0, c.width, c.height);
+
+  if (isBox) {
+    // A scattering of small dots standing in for the starry/celestial
+    // boxes on the real shelf (Kim Krans' Tarot/Alchemy decks) — an
+    // abstraction, not a reproduction of the real box art. A few thin
+    // constellation lines between nearby dots read as a considered
+    // pattern rather than scattered confetti.
+    const dotCount = 22;
+    const pts = [];
+    for (let i = 0; i < dotCount; i++) {
+      pts.push({
+        x: hash01(title, `dotx${i}`) * c.width,
+        y: hash01(title, `doty${i}`) * c.height,
+        r: 0.6 + hash01(title, `dotr${i}`) * 1.3,
+      });
+    }
+    cx.strokeStyle = 'rgba(255,255,255,0.16)';
+    cx.lineWidth = 0.8;
+    for (let i = 0; i < 4; i++) {
+      const a = pts[Math.floor(hash01(title, `la${i}`) * pts.length)];
+      const b = pts[Math.floor(hash01(title, `lb${i}`) * pts.length)];
+      if (a === b) continue;
+      cx.beginPath();
+      cx.moveTo(a.x, a.y);
+      cx.lineTo(b.x, b.y);
+      cx.stroke();
+    }
+    cx.fillStyle = 'rgba(255,255,255,0.5)';
+    pts.forEach(p => {
+      cx.beginPath();
+      cx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      cx.fill();
+    });
+  } else {
+    // A thin top/bottom rule, like foil-stamped spine caps.
+    cx.fillStyle = 'rgba(255,255,255,0.18)';
+    cx.fillRect(0, 10, c.width, 3);
+    cx.fillRect(0, c.height - 13, c.width, 3);
+
+    // 1-2 embossed bands above and/or below the title block — the raised
+    // binding cords on an old hardcover, kept clear of the text itself.
+    const bandSpots = [0.1 + hash01(title, 'b0') * 0.12, 0.8 + hash01(title, 'b1') * 0.12];
+    bandSpots.forEach((frac, i) => {
+      if (i === 1 && hash01(title, 'bskip') > 0.7) return; // not every spine gets both
+      const by = c.height * frac;
+      cx.fillStyle = 'rgba(0,0,0,0.22)';
+      cx.fillRect(0, by, c.width, 3);
+      cx.fillStyle = 'rgba(255,255,255,0.12)';
+      cx.fillRect(0, by + 3, c.width, 1);
+    });
+  }
+
+  // Contrast-aware ink: the palette runs from near-black to pale tan, so
+  // one fixed cream text color read poorly against the lightest spines.
+  const lum = relLuminance(baseColor);
+  const inkTitle = lum > 0.55 ? 'rgba(32,26,20,0.88)' : 'rgba(240,236,224,0.92)';
+  const inkCreator = lum > 0.55 ? 'rgba(32,26,20,0.6)' : 'rgba(240,236,224,0.62)';
+
+  const t = isBox ? BOX_TREATMENT : pickTreatment(BOOK_TREATMENTS, title);
+
+  cx.save();
+  cx.translate(c.width / 2, c.height / 2);
+  cx.rotate(Math.PI / 2);
+  cx.textAlign = 'center';
+  cx.textBaseline = 'middle';
+  cx.fillStyle = inkTitle;
+  setTitleFont(cx, t, 34);
+  const lines = wrapSpineText(title, 26).slice(0, 3);
+  const lineH = 40;
+  const startY = -((lines.length - 1) * lineH) / 2 - (creator ? 14 : 0);
+  lines.forEach((line, i) => cx.fillText(titleCase(line, t), 0, startY + i * lineH));
+  if (creator) {
+    cx.font = `italic 300 22px ${t.font}`;
+    if ('letterSpacing' in cx) cx.letterSpacing = '0px';
+    cx.fillStyle = inkCreator;
+    cx.fillText(creator.split(' · ')[0].split(' (')[0], 0, startY + lines.length * lineH + 6);
+  }
+  cx.restore();
+
+  const tex = new THREE.CanvasTexture(c);
+  return tex;
+}
+
+function cubbyLeft(col) { return -TOTAL_W / 2 + FRAME_T + (col - 1) * (CUBBY_W + FRAME_T); }
+function cubbyTop(row) { return TOTAL_H / 2 - FRAME_T - (row - 1) * (CUBBY_H + FRAME_T); }
+
+// Canvas-drawn Blu-ray/DVD spine — deliberately near-featureless next to a
+// book. A real disc shelf reads as a uniform block of dark glossy plastic,
+// not a rainbow of cloth bindings, so this skips the dye-wash/embossed-
+// band/foil-cap treatment makeSpineTexture gives books entirely, and draws
+// from DISC_PALETTE's narrow near-black range instead of the book PALETTE.
+// A tight, bright specular streak stands in for the hard-plastic shine a
+// spine of book cloth never has; the only per-item color variety is a
+// single thin accent bar (hue varies per title — never a specific studio's
+// real branding), echoing the small colored spine labels real disc sets
+// sometimes carry.
+//
+// No director byline: Scott, 2026-07-24, same conversation as the "MOAR"
+// font-variety request — "remove the director names from the films."
+// Fair correction: real disc spines essentially never carry a director
+// credit (that's back-of-case/booklet information), unlike a book spine
+// where the author's name is the whole point. The panel still shows
+// writer/producer in its detail lines when the catalog has them; this was
+// the one redundant, unrealistic byline sitting where a director's name
+// never actually appears.
+function makeDiscSpineTexture(baseColor, title) {
+  const c = document.createElement('canvas');
+  c.width = 80; c.height = 720;
+  const cx = c.getContext('2d');
+  cx.fillStyle = baseColor;
+  cx.fillRect(0, 0, c.width, c.height);
+
+  const streakX = c.width * (0.25 + hash01(title, 'streak') * 0.35);
+  const sgrad = cx.createLinearGradient(streakX - 14, 0, streakX + 14, 0);
+  sgrad.addColorStop(0, 'rgba(255,255,255,0)');
+  sgrad.addColorStop(0.5, 'rgba(255,255,255,0.24)');
+  sgrad.addColorStop(1, 'rgba(255,255,255,0)');
+  cx.fillStyle = sgrad;
+  cx.fillRect(0, 0, c.width, c.height);
+
+  const vgrad = cx.createLinearGradient(0, 0, 0, c.height);
+  vgrad.addColorStop(0, 'rgba(255,255,255,0.1)');
+  vgrad.addColorStop(0.5, 'rgba(255,255,255,0)');
+  vgrad.addColorStop(1, 'rgba(0,0,0,0.3)');
+  cx.fillStyle = vgrad;
+  cx.fillRect(0, 0, c.width, c.height);
+
+  // A single thin accent bar, low on the spine — the only per-item hue
+  // variety a disc case gets.
+  const hue = Math.floor(hash01(title, 'accent') * 360);
+  cx.fillStyle = `hsla(${hue}, 45%, 48%, 0.55)`;
+  cx.fillRect(0, c.height - 34, c.width, 4);
+
+  const lum = relLuminance(baseColor);
+  const ink = lum > 0.55 ? 'rgba(26,22,18,0.9)' : 'rgba(238,234,222,0.92)';
+  const t = pickTreatment(DISC_TREATMENTS, title);
+
+  cx.save();
+  cx.translate(c.width / 2, c.height / 2);
+  cx.rotate(Math.PI / 2);
+  cx.textAlign = 'center';
+  cx.textBaseline = 'middle';
+  cx.fillStyle = ink;
+  setTitleFont(cx, t, 32);
+  const lines = wrapSpineText(title, 24).slice(0, 3);
+  const lineH = 38;
+  const startY = -((lines.length - 1) * lineH) / 2;
+  lines.forEach((line, i) => cx.fillText(titleCase(line, t), 0, startY + i * lineH));
+  cx.restore();
+
+  return new THREE.CanvasTexture(c);
+}
+
+// Canvas-drawn CD spine — same "no real cover art" rule as makeSpineTexture,
+// simplified for a jewel-case spine rather than a book: album title (larger,
+// vertical) over a smaller artist line, on a glossier flat color field. No
+// dye-wash/embossed-band/dot-constellation treatment the books get — the
+// spine is thin enough on screen that that detail would just be noise; a
+// simple top-lit gradient plus contrast-aware ink is enough for it to read
+// as "a CD," not "a thin book." Draws from the pale CD_PALETTE (the paper
+// tray-card visible through a jewel case's clear plastic spine) rather than
+// the book PALETTE, plus a thin prismatic sliver near one edge — the
+// reflective disc itself, just visible through the spine — since a flat
+// pale card alone read too much like a thin, blank book (Scott, 2026-07-24:
+// "make the blurays and the CDs a bit more visually distinct").
+function makeCdSpineTexture(baseColor, artist, album) {
+  const c = document.createElement('canvas');
+  c.width = 72; c.height = 640;
+  const cx = c.getContext('2d');
+  cx.fillStyle = baseColor;
+  cx.fillRect(0, 0, c.width, c.height);
+
+  const vgrad = cx.createLinearGradient(0, 0, 0, c.height);
+  vgrad.addColorStop(0, 'rgba(255,255,255,0.3)');
+  vgrad.addColorStop(0.5, 'rgba(255,255,255,0)');
+  vgrad.addColorStop(1, 'rgba(0,0,0,0.32)');
+  cx.fillStyle = vgrad;
+  cx.fillRect(0, 0, c.width, c.height);
+
+  // A thin prismatic sliver near one edge — the reflective edge of the CD
+  // itself, just visible through the jewel case spine. Never a full "shiny
+  // disc" render, just enough to read as "there's a mirrored disc in
+  // here," distinguishing a CD from a plain pale slip of card.
+  const prism = cx.createLinearGradient(0, 0, 0, c.height);
+  prism.addColorStop(0, 'rgba(255,130,180,0.4)');
+  prism.addColorStop(0.25, 'rgba(255,220,120,0.34)');
+  prism.addColorStop(0.5, 'rgba(140,255,200,0.34)');
+  prism.addColorStop(0.75, 'rgba(140,180,255,0.36)');
+  prism.addColorStop(1, 'rgba(200,140,255,0.34)');
+  cx.fillStyle = prism;
+  cx.fillRect(5, 0, 5, c.height);
+
+  const lum = relLuminance(baseColor);
+  const ink = lum > 0.55 ? 'rgba(26,22,18,0.88)' : 'rgba(238,234,222,0.92)';
+  const inkSub = lum > 0.55 ? 'rgba(26,22,18,0.58)' : 'rgba(238,234,222,0.62)';
+  const t = pickTreatment(CD_TREATMENTS, album);
+
+  cx.save();
+  cx.translate(c.width / 2, c.height / 2);
+  cx.rotate(Math.PI / 2);
+  cx.textAlign = 'center';
+  cx.textBaseline = 'middle';
+  setTitleFont(cx, t, 30);
+  cx.fillStyle = ink;
+  const albumLines = wrapSpineText(album, 24).slice(0, 2);
+  const lineH = 34;
+  const startY = -((albumLines.length - 1) * lineH) / 2 - 12;
+  albumLines.forEach((line, i) => cx.fillText(titleCase(line, t), 0, startY + i * lineH));
+  cx.font = `italic 300 19px ${t.font}`;
+  if ('letterSpacing' in cx) cx.letterSpacing = '0px';
+  cx.fillStyle = inkSub;
+  cx.fillText(artist, 0, startY + albumLines.length * lineH + 10);
+  cx.restore();
+
+  return new THREE.CanvasTexture(c);
+}
+
+// Distributes the 114 CDs across the same 8 cubbies the books/films already
+// live in (row-major reading order), in catalog order so the genre lanes
+// cdRack.js was built in mostly stay together within a cubby, appended
+// after whatever's already there (pos = existing max + 1, 2, 3...).
+//
+// This briefly scattered CDs among the books for a "slightly disorganized
+// bookshelf" look (Scott, 2026-07-23 — tried raw-pos scatter, then
+// rank-space scatter with stratified bands, then plain random rank; see
+// git history for that whole detour), then Scott asked to undo it:
+// "group the books together and the Blurays/CDs together." So CDs are
+// back to a plain sequential append per cubby, and buildItems() below
+// also now pulls the shelf's existing Blu-rays out of their photographed,
+// interspersed positions into that same trailing block, via a
+// group-before-pos sort instead of a straight pos sort.
+// Returns items already shaped like a libraryItems entry (type/title/creator/
+// row/col/pos/scene/youtube) so buildItems and the shared panel machinery
+// (populatePanel, in createLibrary below) can treat them identically to a
+// book or film — `scene`/`youtube` here point at a music video or live
+// performance instead of a film scene, but it's the same two fields.
+// Accepts the (already per-visit-shuffled, see reshuffleWithinType above)
+// CD list rather than always reading module-level cdRackItems directly, so
+// which album lands in which cubby/slot also changes on every page load —
+// the maxPos scan below still reads the fixed libraryItems row/col/pos,
+// which is fine: reshuffleWithinType only permutes *content* among a
+// cubby's existing slots, so the set of pos values already used in each
+// cubby is unchanged regardless of that day's shuffle.
+function placeCdsInCubbies(cdItems = cdRackItems) {
+  const maxPos = new Map();
+  libraryItems.forEach(it => {
+    const key = `${it.row}-${it.col}`;
+    maxPos.set(key, Math.max(maxPos.get(key) || 0, it.pos));
+  });
+
+  const cubbies = [];
+  for (let row = 1; row <= COLS; row++) {
+    for (let col = 1; col <= ROWS; col++) cubbies.push({ row, col });
+  }
+
+  const perCubby = Math.ceil(cdItems.length / cubbies.length);
+  const placed = [];
+  cubbies.forEach(({ row, col }, i) => {
+    const key = `${row}-${col}`;
+    let pos = maxPos.get(key) || 0;
+    cdItems.slice(i * perCubby, (i + 1) * perCubby).forEach(cd => {
+      pos += 1;
+      placed.push({
+        id: `cd-${cd.id}`, type: 'cd', title: cd.album, creator: cd.artist,
+        artist: cd.artist, album: cd.album, row, col, pos,
+        scene: cd.video, youtube: cd.youtube,
+      });
+    });
+  });
+  return placed;
+}
+
+// Books (plus the two divination boxes, which are book-shaped objects on
+// the shelf) are "the books"; Blu-rays and CDs are "the media." Scott,
+// 2026-07-24: "group the books together and the Blurays/CDs together."
+// Sorting by group before pos (see buildItems below) pulls the Blu-rays
+// out of their photographed, interspersed shelf order and puts the CDs
+// (already trailing per-cubby via placeCdsInCubbies above) alongside them,
+// into one contiguous block per cubby — each group keeps its own internal
+// order, only the two groups themselves stop interleaving.
+function shelfGroup(type) {
+  return type === 'bluray' || type === 'cd' ? 1 : 0;
+}
+
+// ─── Per-visit reshuffle ────────────────────────────────────────────────────
+// Scott, 2026-07-24: "randomize the order of each of the media types (books,
+// movies, music) so that they're not always in the same place when someone
+// visits." Every catalog entry's row/col/pos still preserves the real
+// shelf's photographed layout (library.text.js's own header comment) —
+// that's still the source of truth for which slots exist and how many each
+// cubby holds — but which item's content lands in which slot is now
+// re-shuffled fresh on every page load, independently per type (books,
+// films, and music each only shuffle among their own slots, so a book can
+// never land in a former CD's spot or vice versa). This deliberately uses
+// real per-load randomness (Math.random), not the deterministic hash01 used
+// everywhere else in this file — hash01 exists so a given item looks the
+// same across reloads once you've found it; this does the opposite, on
+// purpose, so the shelf itself feels different each visit.
+function shuffled(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+// Permutes item *content* among the row/col/pos slots already held by the
+// items matching `isType`, leaving every other item (and every slot's
+// row/col/pos itself) untouched. Two independent calls (books, then films)
+// keep the two pools from ever crossing into each other's slots.
+function reshuffleWithinType(items, isType) {
+  const slotIdx = [];
+  items.forEach((it, i) => { if (isType(it)) slotIdx.push(i); });
+  const slots = slotIdx.map(i => ({ row: items[i].row, col: items[i].col, pos: items[i].pos }));
+  const content = shuffled(slotIdx.map(i => items[i]));
+  const out = items.slice();
+  slotIdx.forEach((i, k) => {
+    out[i] = { ...content[k], ...slots[k] };
+  });
+  return out;
+}
+const isBookType = it => it.type === 'book' || it.type === 'divination_box';
+const isFilmType = it => it.type === 'dvd' || it.type === 'bluray';
+
+// ─── Shelf frame ────────────────────────────────────────────────────────────
+function buildFrame() {
+  const group = new THREE.Group();
+  const mat = new THREE.MeshStandardMaterial({ color: 0xe8e2d2, roughness: 0.85, metalness: 0.02 });
+  const geos = [];
+
+  function box(w, h, d, x, y, z) {
+    const geo = new THREE.BoxGeometry(w, h, d);
+    geos.push(geo);
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.position.set(x, y, z);
+    group.add(mesh);
+  }
+
+  // Verticals (left edge, 3 dividers, right edge)
+  for (let i = 0; i <= COLS; i++) {
+    const x = -TOTAL_W / 2 + FRAME_T / 2 + i * (CUBBY_W + FRAME_T);
+    box(FRAME_T, TOTAL_H, CUBBY_D, x, 0, 0);
+  }
+  // Horizontals (top edge, 1 divider, bottom edge)
+  for (let i = 0; i <= ROWS; i++) {
+    const y = TOTAL_H / 2 - FRAME_T / 2 - i * (CUBBY_H + FRAME_T);
+    box(TOTAL_W, FRAME_T, CUBBY_D, 0, y, 0);
+  }
+  // Back panel, thin — closes the cubbies visually from behind.
+  box(TOTAL_W, TOTAL_H, 0.04, 0, 0, -CUBBY_D / 2 - 0.02);
+
+  return { group, mat, geos };
+}
+
+// ─── Library of Babel backdrop ──────────────────────────────────────────────
+// Scott, 2026-07-23: "what if we treated this bookshelf as a real-world
+// extrusion of Borges' Library of Babel? Faintly seen through the Veil in
+// the background" — then, clarifying: "the Library of Babel is faintly
+// seen through the Veil, the bookshelf looks normal." So: the shelf's own
+// materials/lighting are untouched: this is a second, separate layer, a
+// receding stack of hexagonal gallery outlines (Borges' library is built
+// of identical connected hexagonal rooms, unbroken and — as far as anyone
+// inside it can tell — infinite) placed well behind the shelf's back
+// panel. scene.fog (matched to the clear color, same trick as orrery.js)
+// is what makes it read as "faintly seen through the Veil" rather than
+// crisply rendered architecture: the nearest hexagons are just barely
+// legible, and the fog swallows the rest into black before the eye can
+// resolve how far the recession actually goes — which is the point; the
+// Veil is Scott's own term (documented at length in archive_against_library
+// .md) for the perceptual screen between ordinary reality and what lies
+// past it, so this is deliberately NOT fully renderable.
+//
+// Second pass (v1.0.61) built a single stack of concentric rings sharing
+// one center on-axis behind the shelf — a "tunnel," not a lattice, which
+// is also why it swung dramatically to one side under a slight drag.
+// Third pass (v1.0.63) fixed that by tiling a proper edge-sharing
+// honeycomb across two flat planes behind the shelf.
+//
+// Fourth pass, Scott: "let's detach the hexagons so they don't form a
+// honeycomb pattern, just hexagons attached by strands, and let's make
+// the Library of Babel 3d around it... think of it like what you did
+// with the butterfly's phase space" — i.e. butterfly.js's volumetric
+// spider-silk grid, which fills a real 3D cube around the Lorenz
+// attractor rather than sitting behind it as a flat backdrop. So: no
+// more shared edges, no more flat planes. Independent hexagon "gallery"
+// nodes are scattered through a cube surrounding the shelf on every
+// side, each tumbled to its own random 3D orientation, linked to its
+// nearest neighbors by thin strand-rods (Borges' galleries connect to
+// each other, not tile seamlessly into one surface). A keep-out column
+// matching the shelf's own x/y footprint (through every z) keeps any
+// node or strand from ever drawing across the shelf's own books —
+// "the bookshelf looks normal" still holds, now from every angle, not
+// just head-on.
+function hexEdgeLocalTransforms(r) {
+  const apothem = r * Math.cos(Math.PI / 6);
+  const out = [];
+  for (let k = 0; k < 6; k++) {
+    const thetaMid = Math.PI / 6 + (k + 0.5) * (Math.PI / 3);
+    out.push({
+      x: apothem * Math.cos(thetaMid),
+      y: apothem * Math.sin(thetaMid),
+      rotZ: thetaMid + Math.PI / 2,
+      length: r, // regular hexagon: edge length equals circumradius
+    });
+  }
+  return out;
+}
+
+function buildBabelBackdrop() {
+  const group = new THREE.Group();
+  const disposables = [];
+
+  // ── Node field: jittered 3D grid, thinned and tumbled, so it reads as
+  // scattered galleries rather than a mechanical lattice. Density raised
+  // from the first detached-field pass (v1.0.64, ~75 nodes/87 strands)
+  // per Scott: "moar hexes and strands."
+  const nodes = [];
+  const extent = 9.5;
+  const step = 2.9;
+  const keepOutX = TOTAL_W / 2 + 0.7;
+  const keepOutY = TOTAL_H / 2 + 0.7;
+  let ni = 0;
+  for (let gx = -extent; gx <= extent; gx += step) {
+    for (let gy = -extent; gy <= extent; gy += step) {
+      for (let gz = -extent; gz <= extent; gz += step) {
+        ni++;
+        // Keep-out column matches the shelf's own width/height at every
+        // depth, not just around its physical thickness — so nothing
+        // ever renders in front of or behind the shelf's own silhouette.
+        if (Math.abs(gx) < keepOutX && Math.abs(gy) < keepOutY) continue;
+        if (hash01(`babel-skip-${ni}`, 'k') > 0.58) continue; // thin the field
+        const jit = step * 0.75;
+        nodes.push({
+          pos: new THREE.Vector3(
+            gx + (hash01(`babel-jx-${ni}`, 'x') - 0.5) * jit,
+            gy + (hash01(`babel-jy-${ni}`, 'y') - 0.5) * jit,
+            gz + (hash01(`babel-jz-${ni}`, 'z') - 0.5) * jit,
+          ),
+          rx: (hash01(`babel-rx-${ni}`, 'a') - 0.5) * Math.PI,
+          ry: (hash01(`babel-ry-${ni}`, 'b') - 0.5) * Math.PI,
+          rz: (hash01(`babel-rz-${ni}`, 'c') - 0.5) * Math.PI,
+          r: 0.5 + hash01(`babel-r-${ni}`, 'd') * 0.4,
+          // Shimmer, per node — same idea as orbiter.js's per-particle drift
+          // phase/speed pairs, so the whole field doesn't pulse in lockstep.
+          phase: hash01(`babel-ph-${ni}`, 'p') * Math.PI * 2,
+          speed: 0.25 + hash01(`babel-sp-${ni}`, 's') * 0.35,
+        });
+      }
+    }
+  }
+
+  // ── Hexagon edges: one InstancedMesh for every node's outline, each
+  // tumbled to its own orientation (node transform composed with each
+  // edge's local placement in the hex's own plane). All 6 edges of a
+  // given hex share that node's shimmer phase, so a hexagon brightens
+  // and dims as one gallery, not six flickering pieces.
+  const edgeColor = new THREE.Color(0x92a9d8);
+  const edgeGeo = new THREE.BoxGeometry(1, 0.045, 0.045);
+  const edgeMat = new THREE.MeshBasicMaterial({
+    color: edgeColor, transparent: true, opacity: 0.26, depthWrite: false, fog: true,
+  });
+  const edgeMesh = new THREE.InstancedMesh(edgeGeo, edgeMat, nodes.length * 6);
+  disposables.push(edgeGeo, edgeMat);
+
+  const dummy = new THREE.Object3D();
+  const local = new THREE.Object3D();
+  const tmpColor = new THREE.Color();
+  let ei = 0;
+  nodes.forEach(node => {
+    dummy.position.copy(node.pos);
+    dummy.rotation.set(node.rx, node.ry, node.rz);
+    dummy.scale.set(1, 1, 1);
+    dummy.updateMatrix();
+    const nodeMatrix = dummy.matrix.clone();
+    node.edgeStart = ei;
+    hexEdgeLocalTransforms(node.r).forEach(e => {
+      local.position.set(e.x, e.y, 0);
+      local.rotation.set(0, 0, e.rotZ);
+      local.scale.set(e.length, 1, 1);
+      local.updateMatrix();
+      edgeMesh.setMatrixAt(ei, nodeMatrix.clone().multiply(local.matrix));
+      edgeMesh.setColorAt(ei, edgeColor);
+      ei++;
+    });
+  });
+  edgeMesh.instanceMatrix.needsUpdate = true;
+  edgeMesh.instanceColor.needsUpdate = true;
+  group.add(edgeMesh);
+
+  // ── Strands: connect each node to its nearest neighbors so the field
+  // reads as a network, not scattered confetti. Computed once at build
+  // time — O(n^2) over a couple hundred nodes is still trivial.
+  const strandPairs = [];
+  const seen = new Set();
+  const maxStrandLen = 6.0;
+  nodes.forEach((node, i) => {
+    const dists = nodes
+      .map((other, j) => (i === j ? null : { j, d: node.pos.distanceTo(other.pos) }))
+      .filter(Boolean)
+      .sort((a, b) => a.d - b.d);
+    let linked = 0;
+    for (const { j, d } of dists) {
+      if (linked >= 2 || d > maxStrandLen) break;
+      const key = i < j ? `${i}-${j}` : `${j}-${i}`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        strandPairs.push([i, j]);
+      }
+      linked++;
+    }
+  });
+
+  let strandMesh = null;
+  const strandColor = new THREE.Color(0x7f96c2);
+  const strandPhases = [];
+  if (strandPairs.length) {
+    // Thickness/opacity deliberately close to the hex edges', not fainter —
+    // a first pass at 0.02 thickness / 0.16 opacity repeated the exact
+    // "too thin to actually render" mistake the very first backdrop
+    // attempt made with 1px LineLoop hexagons (v1.0.61): Scott couldn't
+    // tell if the strands were showing at all, because they mostly
+    // weren't, on a rod this thin over multi-unit lengths.
+    const strandGeo = new THREE.BoxGeometry(1, 0.038, 0.038);
+    const strandMat = new THREE.MeshBasicMaterial({
+      color: strandColor, transparent: true, opacity: 0.24, depthWrite: false, fog: true,
+    });
+    strandMesh = new THREE.InstancedMesh(strandGeo, strandMat, strandPairs.length);
+    disposables.push(strandGeo, strandMat);
+
+    strandPairs.forEach(([i, j], si) => {
+      const a = nodes[i].pos, b = nodes[j].pos;
+      const mid = new THREE.Vector3().addVectors(a, b).multiplyScalar(0.5);
+      const dir = new THREE.Vector3().subVectors(b, a);
+      const len = dir.length();
+      const quat = new THREE.Quaternion().setFromUnitVectors(
+        new THREE.Vector3(1, 0, 0), dir.clone().normalize(),
+      );
+      dummy.position.copy(mid);
+      dummy.quaternion.copy(quat);
+      dummy.scale.set(len, 1, 1);
+      dummy.updateMatrix();
+      strandMesh.setMatrixAt(si, dummy.matrix);
+      strandMesh.setColorAt(si, strandColor);
+      strandPhases.push({
+        phase: hash01(`babel-strand-ph-${si}`, 'p') * Math.PI * 2,
+        speed: 0.2 + hash01(`babel-strand-sp-${si}`, 's') * 0.3,
+      });
+    });
+    strandMesh.instanceMatrix.needsUpdate = true;
+    strandMesh.instanceColor.needsUpdate = true;
+    group.add(strandMesh);
+  }
+
+  // Shimmer: rather than per-instance materials (impractical at this
+  // instance count), fake per-instance opacity by darkening each
+  // instance's own color toward black — since the backdrop always sits
+  // against the scene's pure-black clear color, dimming color reads
+  // identically to dimming opacity, at a fraction of the cost. Skipped
+  // entirely under prefers-reduced-motion by the caller.
+  function update(t) {
+    nodes.forEach(node => {
+      const b = 0.55 + Math.sin(t * node.speed + node.phase) * 0.45;
+      tmpColor.copy(edgeColor).multiplyScalar(Math.max(0.12, b));
+      for (let k = 0; k < 6; k++) edgeMesh.setColorAt(node.edgeStart + k, tmpColor);
+    });
+    edgeMesh.instanceColor.needsUpdate = true;
+
+    if (strandMesh) {
+      strandPhases.forEach((sp, si) => {
+        const b = 0.55 + Math.sin(t * sp.speed + sp.phase) * 0.45;
+        tmpColor.copy(strandColor).multiplyScalar(Math.max(0.12, b));
+        strandMesh.setColorAt(si, tmpColor);
+      });
+      strandMesh.instanceColor.needsUpdate = true;
+    }
+  }
+
+  return { group, disposables, update };
+}
+
+// ─── Items (books/dvds/blurays/boxes) ──────────────────────────────────────
+function buildItems(preview) {
+  const group = new THREE.Group();
+  const meshes = [];
+  const disposables = [];
+
+  // Per-visit reshuffle (see reshuffleWithinType above): books and films
+  // each get their content re-permuted among their own existing slots, and
+  // the CD list is shuffled before it's distributed into cubbies — all
+  // fresh Math.random() per page load, so the shelf reads differently each
+  // visit instead of always matching the photographed layout exactly.
+  const shuffledLibrary = reshuffleWithinType(reshuffleWithinType(libraryItems, isBookType), isFilmType);
+  const shuffledCds = shuffled(cdRackItems);
+
+  // Group items by cubby so widths can be distributed to exactly fill
+  // each cubby's available width regardless of how many items landed
+  // there (6 on the low end, 25 on the high end, on the real shelf —
+  // now with the 114 CDs from placeCdsInCubbies() appended on top).
+  const byCubby = new Map();
+  [...shuffledLibrary, ...placeCdsInCubbies(shuffledCds)].forEach(it => {
+    const key = `${it.row}-${it.col}`;
+    if (!byCubby.has(key)) byCubby.set(key, []);
+    byCubby.get(key).push(it);
+  });
+
+  const padX = 0.06;
+  const gap = 0.006;
+  const floorGap = 0.025;
+
+  byCubby.forEach(items => {
+    items.sort((a, b) => shelfGroup(a.type) - shelfGroup(b.type) || a.pos - b.pos);
+    const { row, col } = items[0];
+    // Transposed for the vertical shelf: old row (1-2) now walks the new
+    // 2-wide axis, old col (1-4) now walks the new 4-tall axis — a clean
+    // 90-degree rotation of the same cubbies, item row/col values untouched.
+    const left = cubbyLeft(row);
+    const top = cubbyTop(col);
+    const availW = CUBBY_W - padX * 2 - gap * (items.length - 1);
+
+    const weights = items.map(it => {
+      const isBox = it.type === 'divination_box';
+      const isCd = it.type === 'cd';
+      // CDs are thin jewel cases, not much wider than their own gloss —
+      // about half a book's width on the shelf.
+      const base = isBox ? 2.2 : isCd ? 0.5 : 1.0;
+      const jitter = hash01(it.title, 'w') * 0.6;
+      return base + jitter;
+    });
+    const totalWeight = weights.reduce((a, b) => a + b, 0);
+
+    let cursorX = left + padX;
+    items.forEach((it, i) => {
+      const isBox = it.type === 'divination_box';
+      const isDisc = it.type === 'dvd' || it.type === 'bluray';
+      const isCd = it.type === 'cd';
+      const w = (weights[i] / totalWeight) * availW;
+
+      const heightFactor = isBox
+        ? 0.36 + hash01(it.title, 'h') * 0.1
+        : isDisc
+        ? 0.76 + hash01(it.title, 'h') * 0.08
+        : isCd
+        ? 0.5 + hash01(it.title, 'h') * 0.1
+        : 0.8 + hash01(it.title, 'h') * 0.18;
+      const h = CUBBY_H * heightFactor;
+
+      const depth = isBox
+        ? 0.32 + hash01(it.title, 'd') * 0.1
+        : isDisc || isCd
+        ? 0.12 + hash01(it.title, 'd') * 0.04
+        : 0.68 + hash01(it.title, 'd') * 0.16;
+
+      const palette = isBox ? BOX_PALETTE : isDisc ? DISC_PALETTE : isCd ? CD_PALETTE : PALETTE;
+      const color = palette[hash(it.title) % palette.length];
+
+      const x = cursorX + w / 2;
+      const y = top - CUBBY_H + floorGap + h / 2;
+      const z = CUBBY_D / 2 - depth / 2 - 0.01;
+
+      const geo = new THREE.BoxGeometry(Math.max(w, 0.02), h, depth);
+      disposables.push(geo);
+
+      let mats;
+      if (preview) {
+        const flat = new THREE.MeshStandardMaterial({ color, roughness: 0.8 });
+        disposables.push(flat);
+        mats = flat;
+      } else {
+        const tex = isCd
+          ? makeCdSpineTexture(color, it.creator, it.title)
+          : isDisc
+          ? makeDiscSpineTexture(color, it.title)
+          : makeSpineTexture(color, it.title, it.creator, isBox);
+        // Finish variety — most book spines are a matte cloth/paper
+        // binding, a minority (~1 in 5) a glossier trade-paperback
+        // laminate, so the shelf doesn't read as one uniform plastic
+        // material. Discs and CDs skip the roulette entirely: real disc
+        // cases and jewel cases are hard glossy plastic every time, which
+        // is itself part of what makes them read as a different material
+        // from the books (Scott, 2026-07-24 — the "visual sameness" fix).
+        const isGlossy = isDisc || isCd || hash01(it.title, 'gloss') > 0.8;
+        const rough = isDisc
+          ? 0.22 + hash01(it.title, 'r2') * 0.1
+          : isCd
+          ? 0.3 + hash01(it.title, 'r2') * 0.12
+          : isGlossy
+          ? 0.35 + hash01(it.title, 'r2') * 0.15
+          : 0.72 + hash01(it.title, 'r2') * 0.18;
+        const metal = isDisc ? 0.18 : isCd ? 0.1 : isGlossy ? 0.05 : 0;
+        // Side/back faces shaded darker than the front — the same base
+        // color otherwise made every face of the box read as one flat
+        // plane rather than a real 3D object catching light unevenly.
+        const sideColor = new THREE.Color(color).multiplyScalar(0.82);
+        const backColor = new THREE.Color(color).multiplyScalar(0.7);
+        const front = new THREE.MeshStandardMaterial({ map: tex, roughness: rough, metalness: metal });
+        const side = new THREE.MeshStandardMaterial({ color: sideColor, roughness: rough });
+        const pageColor = it.type === 'book' ? '#e9e3d2' : color;
+        const pages = new THREE.MeshStandardMaterial({ color: pageColor, roughness: 0.9 });
+        const back = new THREE.MeshStandardMaterial({ color: backColor, roughness: rough });
+        disposables.push(tex, front, side, pages, back);
+        mats = [side, side, pages, pages, front, back];
+      }
+
+      const mesh = new THREE.Mesh(geo, mats);
+      mesh.position.set(x, y, z);
+      mesh.userData.item = it;
+      group.add(mesh);
+      meshes.push(mesh);
+
+      cursorX += w + gap;
+    });
+  });
+
+  return { group, meshes, disposables };
+}
+
+export function createLibrary(container, { preview = false } = {}) {
+  const w = container.clientWidth || window.innerWidth;
+  const h = container.clientHeight || window.innerHeight;
+
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(42, w / h, 0.1, 100);
+  // Pulled back from the old 8.5/7.2 landscape framing — the vertical
+  // shelf's TOTAL_H is now the tall side (~7.25 vs the old ~3.67), so the
+  // camera needs more room to keep it in frame.
+  const baseDist = preview ? 14 : 12;
+  camera.position.set(0, 0.15, baseDist);
+  camera.lookAt(0, 0, 0);
+  // Fog matched to the clear color, same convention as orrery.js — kept
+  // well past maxDist so the shelf itself never fogs at any zoom level;
+  // it only ever dims the Library of Babel backdrop receding behind it.
+  scene.fog = new THREE.Fog(0x000000, 18, 56);
+
+  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  renderer.setPixelRatio(window.devicePixelRatio);
+  renderer.setSize(w, h);
+  renderer.setClearColor(0x000000, 1);
+  renderer.domElement.setAttribute('aria-hidden', 'true');
+  container.appendChild(renderer.domElement);
+
+  const root = new THREE.Group();
+  scene.add(root);
+
+  scene.add(new THREE.AmbientLight(0xfff4e0, 0.7));
+  const key = new THREE.DirectionalLight(0xfff0d8, 1.1);
+  key.position.set(4, 5, 6);
+  scene.add(key);
+  const rim = new THREE.DirectionalLight(0x8fa8ff, 0.4);
+  rim.position.set(-5, -2, -4);
+  scene.add(rim);
+
+  // Library of Babel first, so it's fully behind the frame/items in the
+  // group's draw order as well as in depth — added under root, not scene,
+  // so it turns together with the shelf under drag rather than sitting
+  // fixed like a skybox.
+  const babel = buildBabelBackdrop();
+  root.add(babel.group);
+
+  const frame = buildFrame();
+  root.add(frame.group);
+
+  // Books, films, divination decks, and now CDs — buildItems() places the
+  // CDs among them via placeCdsInCubbies() (see the CDs header comment
+  // above), all one shelf, one group, one everything below.
+  const items = buildItems(preview);
+  root.add(items.group);
+
+  // ─── Caption + hint + panel (full only) ─────────────────────────────────
+  let caption = null, hint = null, panel = null, panelTitle = null, panelCreator = null, panelBodyEl = null, panelCloser = null, jumpList = null;
+  // Programmatically focusable so closing the panel (✕, outside click, or
+  // Escape) has somewhere real to send focus back to, rather than leaving
+  // it on a now-hidden close button or nowhere at all.
+  if (!preview) container.tabIndex = -1;
+  // Caption/hint/panel/library-link markup+styles live in library.html and
+  // library.css — no runtime element construction or style injection
+  // needed now that both are real files, pulled in via parseHTML.
+  if (!preview) {
+    const shell = parseHTML(libraryHtml);
+    caption = shell.querySelector('.library-caption');
+    hint = shell.querySelector('.library-hint');
+    panel = shell.querySelector('.library-panel');
+    document.body.appendChild(caption);
+    document.body.appendChild(hint);
+
+    container.style.position = 'relative';
+    container.style.overflow = 'hidden';
+    container.appendChild(panel);
+    panelTitle = panel.querySelector('.library-panel-title');
+    panelCreator = panel.querySelector('.library-panel-creator');
+    panelBodyEl = panel.querySelector('.library-panel-body');
+
+    panelCloser = createPanelCloser(panel, container, {
+      closeBtn: panel.querySelector('.library-panel-close'),
+      onClose: closePanel,
+    });
+
+    // Cross-link navigation — follow the threads (click + keyboard), same
+    // fade-out/swap-content/fade-in beat as sphere.js's navigateToFragment
+    // and orbiter.js's navigateToPoem. Deliberately doesn't touch `selected`/the
+    // spine the panel was originally opened from, same precedent those two
+    // set — following a link swaps panel content, nothing in the 3D scene.
+    // populatePanel (defined below, hoisted) re-stripes every .library-link
+    // it renders, so no separate stagger step is needed here.
+    function navigateToItem(targetId) {
+      const target = libraryItems.find(i => i.id === targetId);
+      if (!target) return;
+      panelBodyEl.style.transition = 'opacity .18s';
+      panelBodyEl.style.opacity = '0';
+      setTimeout(() => {
+        populatePanel(target);
+        panel.scrollTop = 0;
+        panelBodyEl.style.opacity = '1';
+        setTimeout(() => panelTitle.focus(), 50);
+      }, 180);
+    }
+    panelBodyEl.addEventListener('click', e => {
+      const link = e.target.closest('.library-link');
+      if (!link) return;
+      e.stopPropagation();
+      navigateToItem(Number(link.dataset.target));
+    });
+    panelBodyEl.addEventListener('keydown', e => {
+      if (e.key !== 'Enter' && e.key !== ' ') return;
+      const link = e.target.closest('.library-link');
+      if (!link) return;
+      e.preventDefault();
+      e.stopPropagation();
+      navigateToItem(Number(link.dataset.target));
+    });
+  }
+
+  // The scene-specific half of a close: panelCloser (sceneKit.js) handles
+  // the .open toggle, Escape, the outside-click trigger, and returning
+  // focus to `container` — this only does what's specific to the library
+  // (clear the video embed, deselect the spine). Doesn't touch focus itself,
+  // since not every close should move it (the in-place item swap, for one,
+  // deliberately doesn't call this at all).
+  function closePanel() {
+    if (!panel) return;
+    panel.querySelector('.library-panel-video').innerHTML = '';
+    selected = null;
+  }
+
+  // ─── Hover/click raycast, screen-space mouse (matches orbiter/sphere) ───────
+  const raycaster = new THREE.Raycaster();
+  const mouse = new THREE.Vector2();
+  let hovered = null, selected = null;
+  let onContainerMouseMove = null, onContainerClick = null, onContainerMouseLeave = null;
+
+  // Fills the (already-open, or about-to-open) panel with one item's
+  // content. Pulled out into its own function so both a direct spine click
+  // and following a cross-link (navigateToItem, above) can populate the
+  // same panel without duplicating this logic.
+  function populatePanel(it) {
+    panel.querySelector('.library-panel-kind').textContent =
+      ({ book: 'Book', dvd: 'DVD', bluray: 'Blu-ray', divination_box: 'Divination deck', cd: 'Album' })[it.type] || it.type;
+    panelTitle.textContent = it.title;
+    panelCreator.textContent = it.creator || '';
+
+    // Bibliographic/filmographic detail lines — only the fields a given
+    // item actually has (books carry isbn13/publisher/pages, films carry
+    // release_year/runtime/country; not every field applies to every
+    // item). See library.text.js's header for how these were sourced.
+    const detailsEl = panel.querySelector('.library-panel-details');
+    const noteEl = panel.querySelector('.library-panel-note');
+    const excerptEl = panel.querySelector('.library-panel-excerpt');
+    const excerptFromEl = panel.querySelector('.library-panel-excerpt-from');
+    const coverEl = panel.querySelector('.library-panel-cover');
+    const videoEl = panel.querySelector('.library-panel-video');
+    const sceneEl = panel.querySelector('.library-panel-scene');
+    const lines = [];
+    if (it.publisher) lines.push(`${it.publisher}${it.publish_year ? `, ${it.publish_year}` : ''}`);
+    if (it.pages) lines.push(`${it.pages} pages`);
+    if (it.isbn13) lines.push(`ISBN ${it.isbn13}`);
+    if (it.release_year) lines.push(`${it.release_year}${it.country ? ` · ${it.country}` : ''}`);
+    if (it.runtime_min) lines.push(`${it.runtime_min} min`);
+    if (it.writer) lines.push(`written by ${it.writer}`);
+    if (it.producer) lines.push(`produced by ${it.producer}`);
+    detailsEl.innerHTML = lines.map(l => `<p>${l}</p>`).join('');
+    // Note text disabled for now (Scott, 2026-07-23: "I'm not sure I want
+    // it there yet") -- commented out rather than deleted so it's a
+    // one-line revert. Underlying `note` data and the cross-links that
+    // live inside it (LIBRARY_LINKS, field: 'note') are untouched.
+    // noteEl.innerHTML = it.note ? renderLinkedField(it.id, 'note', it.note) : '';
+    noteEl.innerHTML = '';
+
+    // Content area, above the bibliographic details: a film gets its
+    // pivotal scene embedded (not just linked), a CD gets a music video or
+    // live performance the same way (2026-07-24: CDs moved onto this same
+    // panel — see the CDs header comment above), a book gets its excerpt
+    // (plain text, not a blockquote, sits above the details block per
+    // Scott's request) plus a cover thumbnail when a cover image is
+    // publicly available via Open Library's covers API (keyed off the
+    // ISBN we already looked up) -- this is the "real image" allowance
+    // for the art/photo/reference books that don't have a natural
+    // textual excerpt. See library.text.js's header for the
+    // sourcing/copyright discipline behind these fields. Cross-links
+    // (2026-07-23) live inline in note/scene/excerpt/excerpt_from text,
+    // rendered via renderLinkedField -- see LIBRARY_LINKS above.
+    videoEl.innerHTML = '';
+    sceneEl.innerHTML = '';
+    if (it.youtube) {
+      const embedSrc = youtubeEmbedSrc(it.youtube);
+      if (embedSrc) {
+        const iframe = document.createElement('iframe');
+        iframe.src = embedSrc;
+        iframe.title = it.scene ? `${it.title} — ${it.scene}` : it.title;
+        iframe.allow = 'accelerometer; encrypted-media; gyroscope; picture-in-picture';
+        iframe.allowFullscreen = true;
+        iframe.loading = 'lazy';
+        videoEl.appendChild(iframe);
+      }
+      const captionLabel = it.type === 'cd' ? 'video' : 'pivotal scene';
+      sceneEl.innerHTML = it.scene ? `${captionLabel}: ${renderLinkedField(it.id, 'scene', it.scene)}` : '';
+    }
+
+    excerptEl.innerHTML = it.excerpt ? `“${renderLinkedField(it.id, 'excerpt', it.excerpt)}”` : '';
+    excerptFromEl.innerHTML = it.excerpt_from ? `— ${renderLinkedField(it.id, 'excerpt_from', it.excerpt_from)}` : '';
+
+    if (it.isbn13) {
+      coverEl.hidden = false;
+      coverEl.onerror = () => { coverEl.hidden = true; };
+      coverEl.src = `https://covers.openlibrary.org/b/isbn/${it.isbn13}-L.jpg`;
+      coverEl.alt = `Cover of ${it.title}`;
+    } else {
+      coverEl.hidden = true;
+      coverEl.removeAttribute('src');
+    }
+
+    panel.querySelectorAll('.library-link').forEach(link => {
+      const delay = (Math.random() * 12).toFixed(1);
+      const duration = (9 + Math.random() * 7).toFixed(1);
+      link.style.animationDelay = `-${delay}s`;
+      link.style.animationDuration = `${duration}s`;
+      const targetItem = libraryItems.find(i => i.id === Number(link.dataset.target));
+      link.setAttribute('aria-label', `Go to: ${targetItem ? targetItem.title : 'related item'}`);
+    });
+  }
+
+  // Populate the panel with one item and open it fresh — shared by the
+  // spine click handler's own "nothing open yet" branch and the keyboard
+  // jump list below, neither of which needs the click handler's other
+  // branch (swapping content in an already-open panel without closing it
+  // first, tuned for a mouse clicking rapidly across adjacent spines).
+  function openItem(mesh, { fromLeft } = {}) {
+    selected = mesh;
+    populatePanel(mesh.userData.item);
+    if (!panel.classList.contains('open') && fromLeft !== undefined
+        && panel.classList.contains('from-left') !== fromLeft) {
+      panel.classList.add('no-transition');
+      panel.classList.toggle('from-left', fromLeft);
+      void panel.offsetWidth; // force reflow before re-enabling the transition
+      panel.classList.remove('no-transition');
+    }
+    panel.classList.add('open');
+    setTimeout(() => panelTitle.focus(), 50);
+  }
+
+  if (!preview) {
+    onContainerMouseMove = e => {
+      if (panel.classList.contains('open')) return;
+      const rect = container.getBoundingClientRect();
+      mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+      mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+      raycaster.setFromCamera(mouse, camera);
+      const hits = raycaster.intersectObjects(items.meshes);
+      const hitMesh = hits.length ? hits[0].object : null;
+      if (hitMesh !== hovered) {
+        if (hovered) hovered.scale.set(1, 1, 1);
+        hovered = hitMesh;
+        if (hovered) hovered.scale.set(1.04, 1.02, 1.15);
+      }
+      container.style.cursor = hovered ? 'pointer' : 'default';
+    };
+    container.addEventListener('mousemove', onContainerMouseMove);
+
+    onContainerMouseLeave = () => {
+      if (hovered) { hovered.scale.set(1, 1, 1); hovered = null; }
+      container.style.cursor = 'default';
+    };
+    container.addEventListener('mouseleave', onContainerMouseLeave);
+
+    onContainerClick = e => {
+      const rect = container.getBoundingClientRect();
+      mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+      mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+      raycaster.setFromCamera(mouse, camera);
+      const hits = raycaster.intersectObjects(items.meshes);
+      const hitMesh = hits.length ? hits[0].object : null;
+      const it = hitMesh ? hitMesh.userData.item : null;
+
+      if (hitMesh && hovered !== hitMesh) {
+        if (hovered) hovered.scale.set(1, 1, 1);
+        hovered = hitMesh;
+        hovered.scale.set(1.04, 1.02, 1.15);
+      }
+
+      if (panel.classList.contains('open')) {
+        // Any click that reaches here is on the canvas, not the panel —
+        // panel's own listener (above) already stopPropagation()s clicks
+        // inside it, so `!panel.contains(e.target)` was never actually
+        // doing anything: this branch always fired and just closed the
+        // panel, even when the click landed on a different spine. Scott,
+        // 2026-07-23: "when the panel's open and I click on a new item,
+        // the old item still remains for a few seconds before it gets
+        // replaced" — that was this: click #1 closed the panel (old
+        // content visible through the close transition), and only a
+        // second click actually opened the new item. Raycast the click
+        // directly (already done above) and, if it hit a spine, swap the
+        // panel's content in place (same fade beat as navigateToItem)
+        // instead of closing.
+        if (hitMesh) {
+          selected = hitMesh;
+
+          // Scott, 2026-07-23: "if a left panel is open and then I click on
+          // the right-hand side, the new content will appear in the open
+          // left panel, rather than closing the left and opening the
+          // right." The in-place content fade below never re-checked which
+          // side the new click actually landed on, so it just kept
+          // whichever anchor the panel already had. If the click is on the
+          // panel's current side, that fade is still right (no need to
+          // move anything) -- only cross to a real close/reopen when the
+          // side actually changes, so the panel visibly relocates the way
+          // it does on a fresh open, instead of an instant same-frame
+          // teleport (which flipping `from-left` while `open` would cause,
+          // since the panel is fully on-screen at that point, unlike the
+          // closed-panel case this trick was originally written for).
+          const clickedLeft = (e.clientX - rect.left) < rect.width / 2;
+          if (panel.classList.contains('from-left') !== clickedLeft) {
+            panel.classList.remove('open');
+            setTimeout(() => {
+              panel.classList.add('no-transition');
+              panel.classList.toggle('from-left', clickedLeft);
+              void panel.offsetWidth; // force reflow before re-enabling the transition
+              panel.classList.remove('no-transition');
+              populatePanel(it);
+              panel.scrollTop = 0;
+              panelBodyEl.style.opacity = '1'; // guard against a same-side fade-out still in flight
+              panel.classList.add('open');
+              setTimeout(() => panelTitle.focus(), 50);
+            }, 500); // matches .library-panel's own close transition (transform .5s)
+            return;
+          }
+
+          panelBodyEl.style.transition = 'opacity .18s';
+          panelBodyEl.style.opacity = '0';
+          setTimeout(() => {
+            populatePanel(it);
+            panel.scrollTop = 0;
+            panelBodyEl.style.opacity = '1';
+          }, 180);
+          return;
+        }
+        panelCloser.close();
+        return;
+      }
+
+      if (!hitMesh) return;
+      // Panel is guaranteed closed here (the block above already returns
+      // early for an open-panel click), so flipping the anchor side is
+      // invisible to the user.
+      openItem(hitMesh, { fromLeft: (e.clientX - rect.left) < rect.width / 2 });
+    };
+    container.addEventListener('click', onContainerClick);
+
+    // Keyboard access, 2026-07-26: spines are otherwise raycast-only — no
+    // keyboard equivalent existed for "point at a spine." One button per
+    // item — the entire catalog, same as clicking any spine directly —
+    // closing first (harmless no-op if nothing's open) rather than
+    // reproducing the click path's in-place-swap animation, which was
+    // tuned for a mouse rapidly clicking across adjacent spines, not a
+    // single deliberate keyboard pick.
+    jumpList = createJumpList(container, {
+      label: 'Browse the shelf: books, films, and albums',
+      items: items.meshes,
+      getLabel: mesh => {
+        const it = mesh.userData.item;
+        return it.creator ? `${it.title} — ${it.creator}` : it.title;
+      },
+      onSelect: mesh => { closePanel(); openItem(mesh, { fromLeft: false }); },
+    });
+  }
+
+  // ─── Drag to orbit/pan + wheel zoom ──────────────────────────────────────
+  // Auto-rotate stopped per Scott, 2026-07-22: "let's stop the auto-rotate
+  // for the moment." Shelf now only turns under drag. (The old `autoRotate`
+  // flag was hardcoded false and never toggled anywhere, so it was
+  // removed rather than kept as permanently-dead code — if it needs to
+  // come back, reintroduce the flag and check it in animate() below.)
+  //
+  // Vertical drag used to tilt the whole shelf object (root.rotation.x,
+  // clamped to +-0.4 rad / ~23 deg) — Scott, 2026-07-24, full-zoom
+  // screenshot: "there's still no real way to zoom in and see the top and
+  // bottom shelves." Correct diagnosis: at min zoom the topmost row's
+  // center sits roughly 33 deg off dead-center, past that old clamp, so it
+  // was structurally out of reach no matter how far you dragged. Swapped
+  // the vertical axis from an object tilt to a camera pan: the camera and
+  // its look target now translate up/down together along the shelf's
+  // height (an "elevator," not a tilt), the same `dy` sign convention
+  // orrery.js's mouse-look already uses (drag up -> look up). `panLimit`
+  // is sized off TOTAL_H/CUBBY_H so the top and bottom row's center is
+  // always reachable, with a little headroom past it. Horizontal drag is
+  // unchanged — still spins the shelf object itself.
+  const baseCamLift = 0.15; // small permanent downward-look bias, kept from the original framing
+  let camDist = camera.position.length();
+  let panY = 0;
+  const panLimit = TOTAL_H / 2 - CUBBY_H / 2 + 0.3;
+  const vertPanScale = panLimit / 0.4; // preserves the old drag-distance-to-clamp feel at the new range
+  function updateCamera() {
+    camera.position.set(0, panY + baseCamLift, camDist);
+    camera.lookAt(0, panY, 0);
+  }
+
+  const orbitDrag = bindOrbitDrag(container, {
+    onDrag: (dx, dy) => {
+      root.rotation.y += dx;
+      panY = Math.max(-panLimit, Math.min(panLimit, panY - dy * vertPanScale));
+      updateCamera();
+    },
+  });
+
+  const minDist = preview ? 6.5 : 4.2;
+  // Raised from 11/11.5 so the taller vertical shelf can still be zoomed
+  // out to fit, and so there's room to drift toward the Babel backdrop
+  // before the fog (near=18) swallows it.
+  const maxDist = preview ? 17 : 17;
+  const wheelZoom = bindWheelZoom(container, {
+    isBlocked: () => !preview && panel?.classList.contains('open'),
+    onZoom: deltaY => {
+      camDist = Math.max(minDist, Math.min(maxDist, camDist + deltaY * 0.004));
+      updateCamera();
+    },
+  });
+
+  const reduceMotion = prefersReducedMotion();
+
+  let animId;
+  let babelT = 0;
+  function animate() {
+    animId = requestAnimationFrame(animate);
+    // Library of Babel shimmer — Scott, 2026-07-23: "let's make them a bit
+    // dynamic, maybe the shimmer effect?" Same per-object phase/speed
+    // pulse convention as orbiter.js's per-particle drift and aurora shimmers,
+    // adapted to InstancedMesh (see buildBabelBackdrop's update()).
+    if (!reduceMotion) {
+      babelT += 0.016;
+      babel.update(babelT);
+    }
+    renderer.render(scene, camera);
+  }
+  animate();
+
+  const resize = bindGuardedResize(container, (nw, nh) => {
+    camera.aspect = nw / nh;
+    camera.updateProjectionMatrix();
+    renderer.setSize(nw, nh);
+  });
+
+  return {
+    dispose() {
+      cancelAnimationFrame(animId);
+      orbitDrag.dispose();
+      wheelZoom.dispose();
+      resize.dispose();
+      panelCloser?.dispose();
+      jumpList?.dispose();
+      if (onContainerMouseMove) container.removeEventListener('mousemove', onContainerMouseMove);
+      if (onContainerClick) container.removeEventListener('click', onContainerClick);
+      if (onContainerMouseLeave) container.removeEventListener('mouseleave', onContainerMouseLeave);
+      renderer.dispose();
+      frame.geos.forEach(g => g.dispose());
+      frame.mat.dispose();
+      items.disposables.forEach(d => d.dispose());
+      babel.disposables.forEach(d => d.dispose());
+      if (caption) caption.remove();
+      if (hint) hint.remove();
+      if (panel) panel.remove();
+      renderer.domElement.remove();
+    },
+  };
+}
