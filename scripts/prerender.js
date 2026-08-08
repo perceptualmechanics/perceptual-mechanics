@@ -25,7 +25,7 @@ import { scrollPieces } from '../src/scenes/scroll/scroll.text.js';
 import { poems } from '../src/scenes/orbiter/orbiter.text.js';
 import { fragments } from '../src/scenes/sphere/sphere.text.js';
 import { libraryItems, cdRackItems } from '../src/scenes/library/library.text.js';
-import { SCENES as theaterScenes, CHARACTERS } from '../src/scenes/theater/theater.text.js';
+import { PIECES as theaterPieces } from '../src/scenes/theater/theater.text.js';
 import { ORRERY } from '../src/scenes/orrery/orrery.text.js';
 import { EPIGRAPH_PRIMARY, EPIGRAPH_SECONDARY, BOUNCES } from '../src/scenes/beamline/beamline.text.js';
 
@@ -297,23 +297,38 @@ ${html}
 }
 
 function buildTheater() {
-  const body = theaterScenes.map(sc => {
-    const beats = sc.beats.map(b => {
-      if (b.a) return `<p class="action">${esc(b.a)}</p>`;
-      if (b.c) {
-        const name = CHARACTERS[b.c]?.name ?? b.c;
-        return `<p class="cue">${esc(name)}${b.voice ? ' (offstage)' : ''}</p>`
-          + `<p class="line">${lines(b.t ?? '')}</p>`;
-      }
-      return '';
-    }).filter(Boolean).join('\n');
-    return `<article class="piece" id="${slug(sc.slug)}">
-<h2>${esc(sc.slug)}</h2>
+  // theater.text.js organizes its three plays as separate pieces (2026-08-08)
+  // — grouped here the same way library.js groups books/films/decks: an
+  // <h2> per piece (its title and date), with each scene inside it still
+  // getting its own <article class="piece"> (now headed <h3>, since the
+  // piece itself now owns the <h2> level).
+  const body = theaterPieces.map(piece => {
+    const scenesHtml = piece.scenes.map(sc => {
+      const beats = sc.beats.map(b => {
+        if (b.a) return `<p class="action">${esc(b.a)}</p>`;
+        if (b.c) {
+          const name = piece.characters[b.c]?.name ?? b.c;
+          return `<p class="cue">${esc(name)}${b.voice ? ' (offstage)' : ''}</p>`
+            + `<p class="line">${lines(b.t ?? '')}</p>`;
+        }
+        return '';
+      }).filter(Boolean).join('\n');
+      return `<article class="piece" id="${slug(sc.slug)}">
+<h3>${esc(sc.slug)}</h3>
 <div class="script">
 ${beats}
 </div>
 </article>`;
+    }).join('\n\n');
+
+    return `<section class="piece-group">
+<h2>${esc(piece.title)}</h2>
+<p class="meta">${esc(piece.date)}</p>
+${scenesHtml}
+</section>`;
   }).join('\n\n');
+
+  const allScenes = theaterPieces.flatMap(p => p.scenes);
 
   return {
     slugPath: 'theater',
@@ -321,9 +336,9 @@ ${beats}
     description: 'Verbatim scenes from Truth and Beauty (2001), Paul Revere (c. 2009), and You’ve Got a Friend in Satan (1996).',
     sceneKey: 'theater', sceneName: 'the Theater',
     lede: `<p>In <strong>the Theater</strong> these are performed by ASCII actors in a little repertory house, reshuffled into a different program every time you walk in.</p>
-<p>Printed here as script. All dialogue is verbatim; the selection is curated, not the complete plays.</p>`,
+<p>Printed here as script, grouped by which of the three plays each scene belongs to. All dialogue is verbatim; the selection is curated, not the complete plays.</p>`,
     bodyHtml: body,
-    jsonLd: creativeWork('Scenes from Three Scripts', 'Verbatim scenes from three scripts by Scott Jason Cohen.', 'theater', theaterScenes.map(s => s.slug)),
+    jsonLd: creativeWork('Scenes from Three Scripts', 'Verbatim scenes from three scripts by Scott Jason Cohen.', 'theater', allScenes.map(s => s.slug)),
   };
 }
 

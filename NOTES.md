@@ -225,6 +225,55 @@ described are unchanged.)
   worth trimming, orrery.js's texture generators and first-person rig are the
   two most self-contained chunks to split out first.
 
+## 2.2.0 (2026-08-08)
+
+Two of the three bard.js to-dos added right after 2.1.1 shipped, plus a real
+interaction bug caught live on Sphere.
+
+**bard.js synced, theater.text.js restructured by piece.** perceptualmechanics'
+`packages/bardjs` workspace copy had gone stale — the standalone repo
+(`~/Documents/bardjs`, its own git history, real CC0-1.0/repository metadata)
+had moved on to a Fountain-subset authoring layer and a real test suite while
+this copy still predated all of it. Synced the copy wholesale (source, demo,
+tests, package.json, README, LICENSE); `node --test` inside the package
+passes 16/16, and the site still builds clean against it.
+
+theater.text.js's `CHARACTERS`/`SCENES` — one flat dict and one flat array
+spanning all three plays with only a comment marking where one ended and the
+next began — became a `PIECES` array: Truth and Beauty (2001), Paul Revere
+(c. 2009), You've Got a Friend in Satan (1996), each with its own `key`,
+`title`, `date`, `characters`, and `scenes`. Generated programmatically (a
+script imported the live exports, partitioned scenes/characters by piece,
+and re-serialized) rather than hand-edited, specifically so the ~800 lines
+of verbatim dialogue couldn't be transcribed wrong in the process — checked
+with `assert.deepEqual` against the original flat exports before and after
+a follow-up indentation pass, byte-for-byte identical both times.
+
+theater.js's repertory-house reel still wants one shuffled program and one
+flat character lookup across all three plays at once (that's the whole
+conceit — a mixed program, not three separate showings), so it derives both
+from `PIECES` with `Object.assign`/`flatMap` at module load rather than
+`theater.text.js` flattening itself back out. `scripts/prerender.js`'s
+`/text/theater/` page now groups by piece too — an `<h2>` per play (title +
+date, same pattern library.js's page already uses for Books/Films/Divination
+decks), individual scenes demoted to `<h3>` underneath.
+
+**Sphere: fixed the same open-panel cross-side bug library.js already had
+fixed.** Scott: "on sphere on desktop, when a panel is open and you click on
+the other side of the screen, the new text replaces the old in the
+already-open panel, when the behavior should really be closing the current
+panel and opening the panel on the other side." `sphere.js`'s `openFragment`
+only ever re-anchored the panel's slide-in side when it was closed — a
+leftover from before library.js's 2026-07-23 fix for the identical report
+("if a left panel is open and then I click on the right-hand side, the new
+content will appear in the open left panel, rather than closing the left and
+opening the right"). Ported that exact fix: a same-side click while open
+still swaps content in place, but a cross-side click now closes the panel,
+waits out its own .5s close transition, re-anchors, and reopens — matching
+what a fresh open looks like instead of teleporting a fully-visible panel
+sideways. Verified with a headless class-list state-machine simulation
+(no browser available in this environment) rather than a live click-through.
+
 ## 2.1.1 (2026-08-07)
 
 Small tidiness pass requested right after 2.1.0 shipped: "in scroll, can we

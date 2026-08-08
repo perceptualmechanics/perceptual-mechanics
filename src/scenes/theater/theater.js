@@ -36,10 +36,18 @@ import './theater.css';
 import theaterHtml from './theater.html?raw';
 // The cast list and the reel live alongside this scene in theater.text.js
 // (moved out of the shared src/text/ 2026-07-29, then colocated here
-// 2026-08-07) — content, not rendering. The prerender step that builds
-// /text/theater/ imports the same module, so the published script and the
-// one performed on stage can't drift apart.
-import { CHARACTERS, SCENES } from './theater.text.js';
+// 2026-08-07, restructured by piece 2026-08-08) — content, not rendering.
+// The prerender step that builds /text/theater/ imports the same module,
+// so the published script and the one performed on stage can't drift apart.
+//
+// theater.text.js organizes its three plays as separate pieces now (each
+// with its own cast and scene list), but this scene's whole conceit is one
+// shuffled reel drawing from all three at once — a repertory house running
+// a mixed program, not three separate showings — so CHARACTERS/SCENES are
+// flattened back out here, once, at module load.
+import { PIECES } from './theater.text.js';
+const CHARACTERS = Object.assign({}, ...PIECES.map(p => p.characters));
+const SCENES = PIECES.flatMap(p => p.scenes);
 
 // Stick-figure poses stay here: presentation, not script.
 const POSES = {

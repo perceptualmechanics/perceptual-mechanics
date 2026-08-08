@@ -256,39 +256,66 @@ export function createSphere(container, { preview = false } = {}) {
     // Populate the panel with fragment `fi` and open it — shared by the
     // facet click handler below and the keyboard jump list (createJumpList,
     // sceneKit.js), which has no click position of its own to derive a
-    // slide-in side from, hence `fromLeft` being optional. Only flips the
-    // anchor side when the panel wasn't already open, same precedent as the
-    // click path this was extracted from — a facet-to-facet swap (or a
-    // second jump-list pick) keeps whichever side the panel already
-    // anchored to rather than jumping.
+    // slide-in side from, hence `fromLeft` being optional.
     function openFragment(fi, { facetLabel, fromLeft } = {}) {
-      panelTitle.textContent = fragments[fi].title;
-      panelContent.innerHTML = fragments[fi].text;
-      facetIdEl.textContent  = facetLabel ?? `Fragment ${fi + 1} of ${fragments.length}`;
+      const populate = () => {
+        panelTitle.textContent = fragments[fi].title;
+        panelContent.innerHTML = fragments[fi].text;
+        facetIdEl.textContent  = facetLabel ?? `Fragment ${fi + 1} of ${fragments.length}`;
+        // Stagger glimmer delays + a11y
+        panelContent.querySelectorAll('.fragment-link').forEach(link => {
+          const delay = (Math.random() * 12).toFixed(1);
+          const duration = (9 + Math.random() * 7).toFixed(1);
+          link.style.animationDelay = `-${delay}s`;
+          link.style.animationDuration = `${duration}s`;
+          // role="link" -- see the matching comment in navigateToFragment()
+          // above.
+          link.setAttribute('role', 'link');
+          link.setAttribute('tabindex', '0');
+          link.setAttribute('aria-label', `Navigate to fragment: ${link.dataset.target}`);
+        });
+      };
 
-      if (!panel.classList.contains('open') && fromLeft !== undefined
-          && panel.classList.contains('from-left') !== fromLeft) {
+      const wasOpen = panel.classList.contains('open');
+      const sideMismatch = fromLeft !== undefined && panel.classList.contains('from-left') !== fromLeft;
+
+      if (wasOpen && sideMismatch) {
+        // Crossing to the other side of an already-open panel: close first,
+        // then reopen anchored to the new side once the close transition
+        // finishes. Same fix as library.js's identical bug (Scott,
+        // 2026-07-23: "if a left panel is open and then I click on the
+        // right-hand side, the new content will appear in the open left
+        // panel, rather than closing the left and opening the right").
+        // Flipping from-left instantly while open would teleport the
+        // fully-visible panel sideways instead of visibly relocating it the
+        // way a fresh open does.
+        panel.classList.remove('open');
+        setTimeout(() => {
+          panel.classList.add('no-transition');
+          panel.classList.toggle('from-left', fromLeft);
+          void panel.offsetWidth; // force reflow before re-enabling the transition
+          panel.classList.remove('no-transition');
+          populate();
+          panelContent.scrollTop = 0;
+          panelContent.style.opacity = '1'; // guard against a same-side fade still in flight
+          panelTitle.style.opacity = '1';
+          panel.classList.add('open');
+          setTimeout(() => panelTitle.focus(), 50);
+        }, 500); // matches .sphere-panel's own close transition (transform .5s, sphere.css)
+        return;
+      }
+
+      if (!wasOpen && sideMismatch) {
         panel.classList.add('no-transition');
         panel.classList.toggle('from-left', fromLeft);
         void panel.offsetWidth; // force reflow before re-enabling the transition
         panel.classList.remove('no-transition');
       }
 
+      populate();
       panel.classList.add('open');
       // Move focus to panel for screen readers
       setTimeout(() => panelTitle.focus(), 50);
-      // Stagger glimmer delays + a11y on first open
-      panelContent.querySelectorAll('.fragment-link').forEach(link => {
-        const delay = (Math.random() * 12).toFixed(1);
-        const duration = (9 + Math.random() * 7).toFixed(1);
-        link.style.animationDelay = `-${delay}s`;
-        link.style.animationDuration = `${duration}s`;
-        // role="link" -- see the matching comment in navigateToFragment()
-        // above.
-        link.setAttribute('role', 'link');
-        link.setAttribute('tabindex', '0');
-        link.setAttribute('aria-label', `Navigate to fragment: ${link.dataset.target}`);
-      });
     }
 
     // Keyboard access, 2026-07-26: facets are otherwise raycast-only — no
