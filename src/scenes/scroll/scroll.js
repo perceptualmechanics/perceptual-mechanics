@@ -174,6 +174,26 @@ const OGHAM_LINES = {
   crocodile: 1,
 };
 
+// The Ogham margin line and the opening paragraph's drop cap both float left
+// (scroll.css), and by default a float keeps pulling every SUBSEQUENT sibling
+// narrower until something finally clears past its bottom edge. That's the
+// intended look for ordinary prose — a paragraph or two visibly wrapping
+// around the marginal note is the point, and it self-clears naturally once a
+// paragraph's own lines run long enough — true for every piece except the
+// ones listed here, where a short opening (relative to its own Ogham column)
+// or a run of short paragraphs (Fire Vigil's back-and-forth dialogue) means
+// nothing clears the float for a while. Each value is how many leading
+// paragraphs get boxed together with the Ogham line into one `.scroll-
+// opening` clearfix (scroll.css) instead of left to wrap naturally — picked
+// by eye once per piece, the same way TONES and OGHAM_LINES above are:
+// there are twelve of these, fixed, not a thousand, so a live look beats a
+// general-purpose measurement pass. A piece not listed here needs no
+// grouping at all; paragraph 0 already clears its own Ogham line on its own.
+const OPENING_GROUP = {
+  flying: 3, death: 2, pygmalion: 3, selfmutilation: 2, cartography: 6,
+  firevigil: 3, identity: 2, holography: 2, projection: 2, crocodile: 4,
+};
+
 function firstSentences(text, count) {
   // Em dash counts as a sentence boundary here alongside .!? — cartography's
   // opening paragraph is one long comma-spliced clause building to an em
@@ -344,11 +364,26 @@ export function createScroll(container, { preview = false } = {}) {
     }
 
     const openingLine = firstSentences(patch.body[0], OGHAM_LINES[patch.key] || 1);
-    const oghamHtml = `<span class="scroll-ogham-line" aria-hidden="true">${toOgham(openingLine)}</span>`;
+    // Cartography's opening is one 441-character comma-spliced clause running
+    // to a single em dash (see firstSentences' comment) — transliterated at
+    // the standard 118px column width that comes out roughly 2300px tall,
+    // nearly double the piece's own body text, which (now that .scroll-patch-
+    // text properly contains its float — see scroll.css) shows up as a long
+    // stretch of dead space at the bottom of the patch rather than a bug, but
+    // still isn't right. A wider column for unusually long opening lines
+    // keeps every character transliterated (no truncating real text) while
+    // bringing the column's height back in proportion to the piece it's
+    // marking. 200 characters is comfortably past every other piece's
+    // opening (the runner-up is Projection's two-sentence opener at 151;
+    // Cartography's is 452 — checked by running firstSentences over all
+    // twelve pieces directly rather than guessing).
+    const oghamWide = openingLine.length > 200;
+    const oghamHtml = `<span class="scroll-ogham-line${oghamWide ? ' scroll-ogham-line--wide' : ''}" aria-hidden="true">${toOgham(openingLine)}</span>`;
 
+    const groupCount = OPENING_GROUP[patch.key] || 0;
     const textWrap = document.createElement('div');
-    textWrap.className = 'scroll-patch-text';
-    textWrap.innerHTML = oghamHtml + patch.body.map((p, idx) => {
+    textWrap.className = groupCount > 0 ? 'scroll-patch-text scroll-patch-text--contained' : 'scroll-patch-text';
+    const paragraphHtml = patch.body.map((p, idx) => {
       const rot = (Math.random() * 1.6 - 0.8).toFixed(2);
       const dx = (Math.random() * 6 - 3).toFixed(1);
       // Sometimes slightly larger, sometimes the tracking runs a little
@@ -361,7 +396,14 @@ export function createScroll(container, { preview = false } = {}) {
       const insert = SCRIPT_INSERTS.find(s => s.patch === patch.key && s.afterIndex === idx);
       if (insert) out += renderScriptBlock(insert.script);
       return out;
-    }).join('');
+    });
+    // See OPENING_GROUP above — groupCount leading paragraphs (0 meaning
+    // "none, leave it uncontained") get boxed with the Ogham line into one
+    // .scroll-opening clearfix; the rest render exactly as plain siblings.
+    textWrap.innerHTML = groupCount > 0
+      ? `<div class="scroll-opening">${oghamHtml}${paragraphHtml.slice(0, groupCount).join('')}</div>` +
+        paragraphHtml.slice(groupCount).join('')
+      : oghamHtml + paragraphHtml.join('');
     article.appendChild(textWrap);
     scroll.appendChild(article);
 

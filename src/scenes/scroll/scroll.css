@@ -148,9 +148,20 @@
   animation-delay: var(--glow-delay, 0s);
 }
 
-.scroll-patch-text { position: relative; z-index: 1; }
+/* overflow: hidden is a real clearfix here, not decoration — without it, a
+   patch whose Ogham float runs taller than its own body text (Cartography's
+   opening line is one 441-character comma-spliced clause) never gets
+   cleared by anything, and floats that aren't cleared don't just collapse
+   quietly: they keep painting past the bottom of this box, over the seam
+   and into whatever patch comes next (confirmed live — Cartography's
+   trailing Ogham glyphs were rendering on top of Fire Vigil's own margin
+   column). This contains every patch's float to its own box regardless of
+   piece; it does not change how paragraphs wrap around the float *within*
+   that box, so the normal margin-note look is untouched. */
+.scroll-patch-text { position: relative; z-index: 1; overflow: hidden; }
 .scroll-patch-text { --scroll-base-size: 1.2rem; }
-.scroll-patch-text > p {
+.scroll-patch-text > p,
+.scroll-patch-text > .scroll-opening > p {
   font-family: 'IM Fell English', Georgia, serif;
   font-size: var(--scroll-base-size); line-height: 1.85; margin: 0 0 1.15rem;
   color: #e9ddc2;
@@ -159,8 +170,23 @@
 }
 .scroll-patch-text > p:last-child { margin-bottom: 0; }
 
-/* incised versal opening each patch — Cinzel, sparingly, as an inscriptional accent */
-.scroll-patch-text > p:first-of-type::first-letter {
+/* Contains the Ogham line + drop-cap floats (below) to just the opening
+   paragraph — only for patches scroll.js opts into this (`.scroll-patch-text--
+   contained`, currently just Fire Vigil). See scroll.js's CONTAIN_OPENING
+   comment: most patches deliberately let the float wrap across as many
+   paragraphs as it takes to clear; this wrapper is only for the ones where
+   that default reads as broken instead of as marginalia. */
+.scroll-patch-text > .scroll-opening { overflow: hidden; }
+
+/* incised versal opening each patch — Cinzel, sparingly, as an inscriptional
+   accent. Which selector applies depends on whether this patch opted into
+   the .scroll-opening wrapper above: contained patches nest paragraph 0 one
+   level deeper (never a direct child of .scroll-patch-text), so the plain
+   `> p:first-of-type` there would wrongly match paragraph 1 instead. Keeping
+   both selectors gated by the modifier class means exactly one ever matches
+   for a given patch. */
+.scroll-patch-text:not(.scroll-patch-text--contained) > p:first-of-type::first-letter,
+.scroll-patch-text.scroll-patch-text--contained > .scroll-opening > p:first-of-type::first-letter {
   font-family: 'Cinzel', 'IM Fell English', serif;
   font-weight: 600;
   font-size: 3.4rem; line-height: 0.72;
@@ -191,6 +217,14 @@
   text-shadow: none;
   word-break: break-word;
   user-select: none;
+}
+/* A handful of pieces open on one unusually long clause (see scroll.js's
+   oghamWide comment) — widening the column instead of shrinking type or
+   truncating real text keeps every transliterated character intact while
+   bringing the column's total height back down closer to the piece's own
+   body text. */
+.scroll-ogham-line.scroll-ogham-line--wide {
+  width: 220px;
 }
 
 .scroll-rubric {
@@ -378,7 +412,8 @@
 
 @media (prefers-reduced-motion: reduce) {
   .scroll-preview-medallion { animation: none; }
-  .scroll-patch-text > p { transform: none !important; }
+  .scroll-patch-text > p,
+  .scroll-patch-text > .scroll-opening > p { transform: none !important; }
   .scroll-script { transform: rotate(var(--script-rot, 0deg)) !important; animation: none !important; }
   .scroll-root::before { animation: none; opacity: 1; }
   .scroll-patch::after { animation: none; }
@@ -388,7 +423,8 @@
 @media (max-width: 600px) {
   .scroll-patch { padding: 1.7rem 1.1rem; }
   .scroll-patch-text { --scroll-base-size: 1.05rem; }
-  .scroll-patch-text > p:first-of-type::first-letter { font-size: 2.6rem; }
+  .scroll-patch-text:not(.scroll-patch-text--contained) > p:first-of-type::first-letter,
+  .scroll-patch-text.scroll-patch-text--contained > .scroll-opening > p:first-of-type::first-letter { font-size: 2.6rem; }
   .scroll-ogham-panel { max-width: 76px; }
   .scroll-ogham-line {
     float: none; display: block; width: auto;

@@ -225,6 +225,142 @@ described are unchanged.)
   worth trimming, orrery.js's texture generators and first-person rig are the
   two most self-contained chunks to split out first.
 
+## 2.2.1 (2026-08-08)
+
+Scott, from a screenshot: "one of the pieces has more of an indent than it
+should" — Scroll's Fire Vigil patch. Root cause: `.scroll-ogham-line` and the
+first paragraph's drop-cap `::first-letter` both `float: left` with nothing
+clearing them on desktop. Prose-heavy pieces never noticed because their long
+first paragraph clears the float on its own; Fire Vigil is 40 short
+dialogue-line paragraphs, so several of them in a row wrapped around the
+float instead of just the first one.
+
+Fixed by wrapping the Ogham line and the first paragraph together in a new
+`.scroll-opening` div with `overflow: hidden` — a standard clearfix, scoped
+to paragraph 0 only. Four dependent selectors (base paragraph typography,
+drop-cap, reduced-motion override, mobile drop-cap size) broadened to also
+match a paragraph nested one level inside `.scroll-opening`, deliberately
+stopping short of a bare `.scroll-patch-text p` selector so it wouldn't leak
+into the unrelated `.scroll-script-*` paragraphs Projection's embedded
+screenplay scene injects into the same container. Verified against all 12
+`scrollPieces` with a headless structural smoke test, `npx vite build`, and
+a live Chrome pass against the deployed (pre-fix) site confirming Fire
+Vigil's second and third paragraphs squeeze against the Ogham column exactly
+as diagnosed.
+
+Two follow-up corrections, both caught live against a local dev server
+rather than the deployed site (Scott: "http://localhost:5173/", then
+"fire vigil" and later "but now there's too much space"):
+
+1. The drop-cap selector had kept its old un-nested form
+   (`.scroll-patch-text > p:first-of-type`) alongside the new nested one.
+   Once paragraph 0 lived inside `.scroll-opening`, that stale selector
+   started matching paragraph 1 instead — the drop cap jumped to "What on
+   earth do you mean?" instead of "There's something...". Removed the
+   dead selector from both the base rule and the mobile override.
+2. The `.scroll-opening` wrapper had been applied to all 12 pieces, not
+   just Fire Vigil — and for a piece like Flying, whose Ogham line runs two
+   full sentences (taller than paragraph 0 alone), `overflow: hidden`
+   forced the container to stretch to the float's full height, leaving a
+   dead gap before paragraph 2 where it used to just keep wrapping around
+   the margin note. The float-wrap-until-clear default was never actually
+   wrong for prose — it only broke down for Fire Vigil's short dialogue
+   lines specifically. Made the wrapper opt-in per piece
+   (`CONTAIN_OPENING` in scroll.js, currently just `firevigil`), gated the
+   drop-cap selectors on a `.scroll-patch-text--contained` modifier class
+   so exactly one of the two ever matches, and left every other piece on
+   the original uncontained markup. Re-verified Flying (margin wrap, no
+   gap) and Fire Vigil (full-width paragraphs, correct drop cap) live.
+
+A third, more serious bug surfaced after a hard refresh ruled out stale
+HMR state (Scott circled it directly: "the Ogham text is not in its proper
+column, and thus the body text is not wrapping accordingly"). The
+uncontained default from correction #2 above had a real gap: nothing
+clears `.scroll-ogham-line` at the *patch* level either, and an uncleared
+float doesn't just collapse quietly — it keeps painting past the bottom of
+its own box. Cartography's opening is one 452-character comma-spliced
+clause (the whole first paragraph, per `firstSentences`' em-dash handling),
+which at the standard 118px column width comes out roughly 2300px tall —
+about double Cartography's own body text. The overflow was rendering on
+top of Fire Vigil's own margin column and opening lines in the next patch
+down, confirmed live via `getBoundingClientRect()` (float bottom edge
+1080px past the patch's own bottom edge) before it was ever visible on
+screen.
+
+Two changes, not one, because containing the float and controlling its
+height are different problems:
+- `.scroll-patch-text` now has `overflow: hidden` unconditionally (every
+  patch, not just Fire Vigil's `.scroll-opening` wrapper), so a patch's own
+  box always expands to actually contain its float instead of leaking into
+  the next patch. This alone would have traded the leak for a large dead
+  gap at the bottom of Cartography's own card, which is contained but still
+  wrong.
+- Rather than shrink type or truncate real text to fit (both misrepresent
+  what the piece actually opens with), pieces whose transliterated opening
+  runs past 200 characters — checked by actually running `firstSentences`
+  over all twelve pieces rather than guessing; Cartography is the only one
+  at 452, the runner-up is Projection at 151 — get a wider Ogham column
+  (`scroll-ogham-line--wide`, 220px vs. the standard 118px) instead. Wider
+  means fewer wrapped lines per character, so the column's rendered height
+  comes back down in proportion to the piece's own body text without
+  touching a single character of the actual transliteration.
+
+Verified live at two window widths (1512px and 1999px): no bleed into Fire
+Vigil, no dead gap, drop cap and margin column both correctly on
+Cartography's own paragraph 0.
+
+A fourth pass replaced the piece-keyed `CONTAIN_OPENING` set entirely,
+because the very next hard refresh (Scott, circling it: "this is the last
+fix") turned up the same dead-gap failure mode as correction #2 — except
+now on Fire Vigil itself. Fire Vigil's own paragraph 0 is one short
+dialogue line ("There's something about death that's very awkward."),
+shorter than even its own single-sentence Ogham column, so wrapping just
+paragraph 0 (the fixed, hardcoded rule from the original fix) traded the
+squeeze bug for the exact dead-space bug Flying had. A fixed rule — "always
+paragraph 0," "these specific piece keys" — was never going to hold for
+every combination of opening-paragraph length and Ogham-line length across
+twelve very different pieces.
+
+Replaced with `groupOpeningIfNeeded()`: after a patch is actually mounted
+in the live document (real layout doesn't exist before that — everything
+built inside the `PATCHES.forEach` loop lives in a detached tree until
+`root`/`scroll` are appended to `container` at the very end, so an earlier
+version of this same function measured `offsetTop`/`offsetHeight` as 0 on
+every element and grouped entire pieces' worth of paragraphs by mistake;
+caught by testing all twelve patches at once instead of just the two known
+trouble spots, fixed by collecting each patch's `textWrap` during the loop
+and running the real measurement pass afterward), it walks the actual
+DOM children looking for the first paragraph whose own bottom edge clears
+the float's real rendered bottom edge. If that's paragraph 0, nothing
+changes — the natural CSS wrap already reads right. If it takes more than
+one paragraph, all of them (plus the Ogham line) move into a `.scroll-
+opening` wrapper together, in original DOM order (so an interleaved
+`.scroll-script` block, Projection's embedded scene, can never end up
+stranded out of sequence if it happens to fall in the grouped range).
+No piece keys, no character-count thresholds for this part — just measuring
+what actually rendered. Verified across all twelve `scrollPieces` at once
+(grouped paragraph counts ranging 0–6, zero bleed past any patch's own
+bottom edge) and visually on Fire Vigil and Cartography specifically.
+
+Scott's fair pushback on all of the above: "isn't there a more CSS-oriented
+way of doing this?" There wasn't a pure-CSS one that kept the actual design
+intent (prose visibly wrapping narrower near the margin note, then
+reclaiming full width once past it — a real float behavior, not emulable
+with e.g. CSS Grid without losing that reclaim), but the measure-after-
+mount machinery from the pass above was solving a twelve-piece problem with
+an infinitely-general tool. Replaced `groupOpeningIfNeeded()` — the DOM
+walk, the node-moving, the two-pass mount/measure split needed to make
+`offsetTop`/`offsetHeight` meaningful at all — with `OPENING_GROUP`, a
+plain object literal same as `TONES`/`OGHAM_LINES` above it: a number of
+leading paragraphs to box with the Ogham line, picked once per piece by
+looking at the rendered result, zero for anything not listed. 89 lines
+removed, 23 added, no more runtime layout measurement anywhere in this
+file. The output is pixel-identical to the measured version for all twelve
+pieces (re-verified live); the only real trade-off is that a future
+thirteenth piece with a similarly awkward shape would need the same
+one-time look rather than self-correcting — an acceptable exchange for a
+scroll of twelve fixed, hand-placed pieces that isn't growing.
+
 ## 2.2.0 (2026-08-08)
 
 Two of the three bard.js to-dos added right after 2.1.1 shipped, plus a real
