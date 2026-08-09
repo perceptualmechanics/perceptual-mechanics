@@ -102,6 +102,42 @@
   position: absolute; inset: 0; width: 100%; height: 100%;
   border: 1px solid rgba(230,215,180,0.15);
 }
+/* Click-to-load facade standing in for the embed until the visitor commits
+   to watching (see buildVideoFacade in library.js): YouTube's own
+   thumbnail image sits behind a dark scrim so it reads as calm and muted
+   rather than a busy promotional still, topped with a small play control
+   in the panel's own gold accent — the same color as .library-link's
+   glimmer below — instead of YouTube's red play button and "Watch on
+   YouTube" mark. */
+.library-panel-video-facade {
+  position: absolute; inset: 0; width: 100%; height: 100%; padding: 0;
+  border: 1px solid rgba(230,215,180,0.15); cursor: pointer;
+  background-color: #14100c; background-size: cover; background-position: center;
+  display: flex; align-items: center; justify-content: center;
+}
+.library-panel-video-facade::before {
+  content: ''; position: absolute; inset: 0;
+  background: rgba(10,8,6,0.4);
+}
+.library-panel-video-facade::after {
+  /* A pure-CSS play triangle — border-width asymmetry turns a zero-size
+     box into a triangle pointing right; the left margin re-centers it
+     optically, since a triangle's own visual center sits left of its
+     bounding box's center. */
+  content: ''; position: relative;
+  width: 0; height: 0; margin-left: 0.25rem;
+  border-style: solid; border-width: 0.7rem 0 0.7rem 1.1rem;
+  border-color: transparent transparent transparent rgba(230,180,95,.9);
+  filter: drop-shadow(0 0 8px rgba(0,0,0,0.6));
+  transition: border-color .2s;
+}
+.library-panel-video-facade:hover::after,
+.library-panel-video-facade:focus-visible::after {
+  border-left-color: rgba(245,210,140,1);
+}
+.library-panel-video-facade:focus-visible {
+  outline: 2px solid rgba(230,180,95,.9); outline-offset: -4px;
+}
 .library-panel-scene {
   display: block; margin: 0.6rem 0 1.4rem;
   color: rgba(220,210,195,0.6); font-size: 0.8rem;

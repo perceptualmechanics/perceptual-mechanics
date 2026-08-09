@@ -28,11 +28,17 @@ const CUBBY_W = 2.4;
 const CUBBY_H = 1.7;
 const CUBBY_D = 1.0;
 const FRAME_T = 0.09;
-// A 2x4 portrait grid (2 wide, 4 tall). Every item's stored row/col
-// preserves "left-to-right shelf order" off the real photo; COLS/ROWS
-// below determine which axis each one walks.
-const COLS = 2;
-const ROWS = 4;
+// The grid's own shape is derived from the catalog, not hand-set: COLS is
+// however many distinct `row` values libraryItems actually uses (the
+// shelf's 2-wide axis), ROWS is however many distinct `col` values it uses
+// (the 4-tall axis) — see the "Transposed for the vertical shelf" comment
+// on buildItems below for why row maps to the wide axis and col to the
+// tall one. Add a book to a fifth col or a third row in library.text.js and
+// the frame, the camera framing, and every other size derived from
+// TOTAL_W/TOTAL_H below grows to fit it — nothing here needs to be told
+// the shelf got bigger.
+const COLS = Math.max(...libraryItems.map(it => it.row));
+const ROWS = Math.max(...libraryItems.map(it => it.col));
 const TOTAL_W = COLS * CUBBY_W + (COLS + 1) * FRAME_T;
 const TOTAL_H = ROWS * CUBBY_H + (ROWS + 1) * FRAME_T;
 
@@ -263,6 +269,49 @@ function youtubeEmbedSrc(url) {
   } catch {
     return null;
   }
+}
+
+// YouTube's own static thumbnail file for the same video — plain image,
+// none of the embedded player's own UI chrome (the red play button, the
+// "Watch on YouTube" mark) baked in, since those belong to the iframe
+// player's overlay, not the thumbnail itself.
+function youtubeThumbnailSrc(url) {
+  try {
+    const u = new URL(url);
+    const id = u.searchParams.get('v');
+    return id ? `https://i.ytimg.com/vi/${id}/hqdefault.jpg` : null;
+  } catch {
+    return null;
+  }
+}
+
+// A click-to-load facade standing in for the embed until the visitor
+// actually wants to watch: YouTube's own thumbnail image, muted under a
+// scrim and topped with a small site-styled play control (library.css'
+// .library-panel-video-facade), rather than the real iframe player
+// sitting there by default with its own red play button and "Watch on
+// YouTube" branding — a foreign, promotional visual language next to this
+// panel's calm serif type and restrained gold accents. The genuine player
+// only loads on click, replacing the button in place; the video never
+// autoplays unasked, and the request to YouTube itself (and whatever it
+// tracks) doesn't happen until the visitor actually commits to watching.
+function buildVideoFacade(it, embedSrc) {
+  const thumbSrc = youtubeThumbnailSrc(it.youtube);
+  const label = it.type === 'cd' ? 'video' : 'pivotal scene';
+  const facade = document.createElement('button');
+  facade.type = 'button';
+  facade.className = 'library-panel-video-facade';
+  if (thumbSrc) facade.style.backgroundImage = `url("${thumbSrc}")`;
+  facade.setAttribute('aria-label', `Play ${label}: ${it.title}`);
+  facade.addEventListener('click', () => {
+    const iframe = document.createElement('iframe');
+    iframe.src = `${embedSrc}?autoplay=1`;
+    iframe.title = it.scene ? `${it.title} — ${it.scene}` : it.title;
+    iframe.allow = 'accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture';
+    iframe.allowFullscreen = true;
+    facade.replaceWith(iframe);
+  }, { once: true });
+  return facade;
 }
 
 function wrapSpineText(text, maxChars) {
@@ -768,6 +817,22 @@ function buildFrame() {
 // node or strand from ever drawing across the shelf's own books —
 // "the bookshelf looks normal" still holds, now from every angle, not
 // just head-on.
+//
+// Each hexagon carries both a wireframe outline (edgeMesh, unlit — the
+// gallery's own structural rods) and a filled pane behind it (faceMesh,
+// a real MeshStandardMaterial catching this scene's key/rim/ambient
+// lights at whatever angle that node's own tumble presents to them) —
+// the fill is what turns a scattered set of line segments into something
+// that reads as an actual lit room at a distance, rather than wireframe
+// decoration. Depth itself needs no separate parallax mechanism: nodes
+// sit at real, varying distances along every axis (not a flat field at
+// one depth), and drag rotates the whole babel+shelf assembly as one
+// rigid body under this scene's fixed lights and fixed camera — under a
+// perspective projection, a rigid body's own nearer points sweep faster
+// across the screen than its farther ones for the same rotation, exactly
+// the differential motion a hand-tuned two-speed layer trick would be
+// trying to fake, except this version falls straight out of the real 3D
+// placement and the projection math instead of an eyeballed ratio.
 function hexEdgeLocalTransforms(r) {
   const apothem = r * Math.cos(Math.PI / 6);
   const out = [];
@@ -781,6 +846,29 @@ function hexEdgeLocalTransforms(r) {
     });
   }
   return out;
+}
+
+// A unit-circumradius hexagon, triangle-fanned from its own center, lying
+// in the local XY plane — the filled counterpart to hexEdgeLocalTransforms'
+// wireframe edges. Vertex k sits at angle pi/6 + k*(pi/3): the same angle
+// hexEdgeLocalTransforms implies for the corner between its edge k-1 and
+// edge k, so a face and its six edges share exact corners rather than two
+// independently-eyeballed hexagons that happen to be close. Instanced and
+// scaled per node by that node's own r (see buildBabelBackdrop), the same
+// way the edges scale their own length by r.
+function hexFaceGeometry() {
+  const positions = [0, 0, 0];
+  for (let k = 0; k <= 6; k++) {
+    const theta = Math.PI / 6 + k * (Math.PI / 3);
+    positions.push(Math.cos(theta), Math.sin(theta), 0);
+  }
+  const indices = [];
+  for (let k = 1; k <= 6; k++) indices.push(0, k, k + 1);
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+  geo.setIndex(indices);
+  geo.computeVertexNormals();
+  return geo;
 }
 
 function buildBabelBackdrop() {
@@ -803,7 +891,7 @@ function buildBabelBackdrop() {
         // depth, not just around its physical thickness — so nothing
         // ever renders in front of or behind the shelf's own silhouette.
         if (Math.abs(gx) < keepOutX && Math.abs(gy) < keepOutY) continue;
-        if (hash01(`babel-skip-${ni}`, 'k') > 0.58) continue; // thin the field
+        if (hash01(`babel-skip-${ni}`, 'k') > 0.5) continue; // thin the field
         const jit = step * 0.75;
         nodes.push({
           pos: new THREE.Vector3(
@@ -832,16 +920,32 @@ function buildBabelBackdrop() {
   const edgeColor = new THREE.Color(0x92a9d8);
   const edgeGeo = new THREE.BoxGeometry(1, 0.045, 0.045);
   const edgeMat = new THREE.MeshBasicMaterial({
-    color: edgeColor, transparent: true, opacity: 0.26, depthWrite: false, fog: true,
+    color: edgeColor, transparent: true, opacity: 0.32, depthWrite: false, fog: true,
   });
   const edgeMesh = new THREE.InstancedMesh(edgeGeo, edgeMat, nodes.length * 6);
   disposables.push(edgeGeo, edgeMat);
+
+  // ── Hexagon faces: a filled, lit pane behind each node's own six edges
+  // — real MeshStandardMaterial, not the unlit MeshBasicMaterial the edges
+  // use, so the key/rim/ambient lights already set up below (same three
+  // this scene lights the shelf with) fall across each gallery's face at
+  // its own tumbled angle and actually shade it, rather than every hex
+  // reading as a flat, uniformly-lit outline regardless of orientation.
+  // Kept nearly transparent (a pane of glass, not a wall) so it reads as
+  // "a hexagonal room," not a solid tile blocking the depth behind it.
+  const faceGeo = hexFaceGeometry();
+  const faceMat = new THREE.MeshStandardMaterial({
+    color: edgeColor, transparent: true, opacity: 0.1, roughness: 0.5,
+    metalness: 0, side: THREE.DoubleSide, depthWrite: false, fog: true,
+  });
+  const faceMesh = new THREE.InstancedMesh(faceGeo, faceMat, nodes.length);
+  disposables.push(faceGeo, faceMat);
 
   const dummy = new THREE.Object3D();
   const local = new THREE.Object3D();
   const tmpColor = new THREE.Color();
   let ei = 0;
-  nodes.forEach(node => {
+  nodes.forEach((node, ni) => {
     dummy.position.copy(node.pos);
     dummy.rotation.set(node.rx, node.ry, node.rz);
     dummy.scale.set(1, 1, 1);
@@ -857,9 +961,22 @@ function buildBabelBackdrop() {
       edgeMesh.setColorAt(ei, edgeColor);
       ei++;
     });
+
+    // Same node transform as the edges, scaled by this node's own
+    // circumradius so the face exactly fills the hexagon its edges
+    // outline (hexFaceGeometry's unit hexagon needs that scale applied
+    // per-instance, the same way hexEdgeLocalTransforms bakes r into
+    // each edge's own local length).
+    dummy.scale.set(node.r, node.r, node.r);
+    dummy.updateMatrix();
+    faceMesh.setMatrixAt(ni, dummy.matrix);
+    faceMesh.setColorAt(ni, edgeColor);
   });
   edgeMesh.instanceMatrix.needsUpdate = true;
   edgeMesh.instanceColor.needsUpdate = true;
+  faceMesh.instanceMatrix.needsUpdate = true;
+  faceMesh.instanceColor.needsUpdate = true;
+  group.add(faceMesh);
   group.add(edgeMesh);
 
   // ── Strands: connect each node to its nearest neighbors so the field
@@ -930,12 +1047,16 @@ function buildBabelBackdrop() {
   // identically to dimming opacity, at a fraction of the cost. Skipped
   // entirely under prefers-reduced-motion by the caller.
   function update(t) {
-    nodes.forEach(node => {
+    nodes.forEach((node, ni) => {
       const b = 0.55 + Math.sin(t * node.speed + node.phase) * 0.45;
       tmpColor.copy(edgeColor).multiplyScalar(Math.max(0.12, b));
       for (let k = 0; k < 6; k++) edgeMesh.setColorAt(node.edgeStart + k, tmpColor);
+      // Same phase/speed as this node's edges, so a hexagon's face and its
+      // own outline brighten and dim together, as one gallery.
+      faceMesh.setColorAt(ni, tmpColor);
     });
     edgeMesh.instanceColor.needsUpdate = true;
+    faceMesh.instanceColor.needsUpdate = true;
 
     if (strandMesh) {
       strandPhases.forEach((sp, si) => {
@@ -1086,16 +1207,53 @@ function buildItems(preview) {
   return { group, meshes, disposables };
 }
 
+// Hover affordance for a spine: a small scale bump plus a warm glow on its
+// front (title) face — same accent color as the panel's own cross-link
+// glimmer (rgba(230,180,95,...) in library.css) — so a spine visibly
+// signals "this is clickable" before the cursor even changes. Only the
+// front material (index 4 of the [side, side, pages, pages, front, back]
+// array buildItems assembles per item) gets the glow; each item's
+// materials are unique instances, never shared, so this never bleeds onto
+// a neighboring spine.
+const HOVER_GLOW_HEX = 0xe6b45f;
+function setSpineHovered(mesh, isHovered) {
+  mesh.scale.set(isHovered ? 1.04 : 1, isHovered ? 1.02 : 1, isHovered ? 1.15 : 1);
+  const front = mesh.material[4];
+  front.emissive.setHex(isHovered ? HOVER_GLOW_HEX : 0x000000);
+  front.emissiveIntensity = isHovered ? 0.5 : 0;
+}
+
+// Distance a perspective camera must sit at to fit a `width` x `height`
+// rectangle fully in frame, with `margin` extra room beyond an exact fit
+// (1 = exact fit; >1 pulls back further). Checks both the vertical fit
+// (straight from the camera's own fov) and the horizontal fit (derived
+// from fov + the camera's actual aspect, the standard relationship
+// between a perspective camera's vertical and horizontal field of view)
+// and returns whichever one the rectangle's shape actually needs — so the
+// shelf reframes itself correctly however wide or tall the grid grows
+// (see COLS/ROWS above), rather than a distance hand-picked to fit
+// today's 2x4 grid specifically.
+function distanceToFit(camera, width, height, margin) {
+  const halfFovY = THREE.MathUtils.degToRad(camera.fov) / 2;
+  const distForHeight = ((height / 2) * margin) / Math.tan(halfFovY);
+  const distForWidth = ((width / 2) * margin) / (Math.tan(halfFovY) * camera.aspect);
+  return Math.max(distForHeight, distForWidth);
+}
+
 export function createLibrary(container, { preview = false } = {}) {
   const w = container.clientWidth || window.innerWidth;
   const h = container.clientHeight || window.innerHeight;
 
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(42, w / h, 0.1, 100);
-  // Pulled back from the old 8.5/7.2 landscape framing — the vertical
-  // shelf's TOTAL_H is now the tall side (~7.25 vs the old ~3.67), so the
-  // camera needs more room to keep it in frame.
-  const baseDist = preview ? 14 : 12;
+  // Pulled back enough to keep the whole shelf in frame — computed from
+  // the grid's actual TOTAL_W/TOTAL_H (see COLS/ROWS above) and this
+  // camera's own fov/aspect, not a fixed distance, so the framing stays
+  // correct however the grid's shape changes. The margin (an actual
+  // design choice, not a derivable quantity) leaves room for the Library
+  // of Babel backdrop to recede behind the shelf before the fog swallows
+  // it.
+  const baseDist = distanceToFit(camera, TOTAL_W, TOTAL_H, 1.3);
   camera.position.set(0, 0.15, baseDist);
   camera.lookAt(0, 0, 0);
   // Fog matched to the clear color, same convention as orrery.js — kept
@@ -1272,15 +1430,7 @@ export function createLibrary(container, { preview = false } = {}) {
     sceneEl.innerHTML = '';
     if (it.youtube) {
       const embedSrc = youtubeEmbedSrc(it.youtube);
-      if (embedSrc) {
-        const iframe = document.createElement('iframe');
-        iframe.src = embedSrc;
-        iframe.title = it.scene ? `${it.title} — ${it.scene}` : it.title;
-        iframe.allow = 'accelerometer; encrypted-media; gyroscope; picture-in-picture';
-        iframe.allowFullscreen = true;
-        iframe.loading = 'lazy';
-        videoEl.appendChild(iframe);
-      }
+      if (embedSrc) videoEl.appendChild(buildVideoFacade(it, embedSrc));
       const captionLabel = it.type === 'cd' ? 'video' : 'pivotal scene';
       sceneEl.innerHTML = it.scene ? `${captionLabel}: ${renderLinkedField(it.id, 'scene', it.scene)}` : '';
     }
@@ -1337,16 +1487,16 @@ export function createLibrary(container, { preview = false } = {}) {
       const hits = raycaster.intersectObjects(items.meshes);
       const hitMesh = hits.length ? hits[0].object : null;
       if (hitMesh !== hovered) {
-        if (hovered) hovered.scale.set(1, 1, 1);
+        if (hovered) setSpineHovered(hovered, false);
         hovered = hitMesh;
-        if (hovered) hovered.scale.set(1.04, 1.02, 1.15);
+        if (hovered) setSpineHovered(hovered, true);
       }
       container.style.cursor = hovered ? 'pointer' : 'default';
     };
     container.addEventListener('mousemove', onContainerMouseMove);
 
     onContainerMouseLeave = () => {
-      if (hovered) { hovered.scale.set(1, 1, 1); hovered = null; }
+      if (hovered) { setSpineHovered(hovered, false); hovered = null; }
       container.style.cursor = 'default';
     };
     container.addEventListener('mouseleave', onContainerMouseLeave);
@@ -1361,9 +1511,9 @@ export function createLibrary(container, { preview = false } = {}) {
       const it = hitMesh ? hitMesh.userData.item : null;
 
       if (hitMesh && hovered !== hitMesh) {
-        if (hovered) hovered.scale.set(1, 1, 1);
+        if (hovered) setSpineHovered(hovered, false);
         hovered = hitMesh;
-        hovered.scale.set(1.04, 1.02, 1.15);
+        setSpineHovered(hovered, true);
       }
 
       if (panel.classList.contains('open')) {
@@ -1470,11 +1620,14 @@ export function createLibrary(container, { preview = false } = {}) {
     },
   });
 
-  const minDist = preview ? 6.5 : 4.2;
-  // Raised from 11/11.5 so the taller vertical shelf can still be zoomed
-  // out to fit, and so there's room to drift toward the Babel backdrop
-  // before the fog (near=18) swallows it.
-  const maxDist = preview ? 17 : 17;
+  // Zoom range as a ratio of baseDist rather than a fixed distance, so it
+  // scales along with the shelf if the grid ever grows (see COLS/ROWS
+  // above). The ratios themselves are a real design choice, not a
+  // derivable quantity — preview tiles get a narrower range since they're
+  // a small, mostly non-interactive thumbnail, not a scene meant to be
+  // explored up close.
+  const minDist = baseDist * (preview ? 0.46 : 0.35);
+  const maxDist = baseDist * (preview ? 1.21 : 1.42);
   const wheelZoom = bindWheelZoom(container, {
     isBlocked: () => !preview && panel?.classList.contains('open'),
     onZoom: deltaY => {

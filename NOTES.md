@@ -225,6 +225,82 @@ described are unchanged.)
   worth trimming, orrery.js's texture generators and first-person rig are the
   two most self-contained chunks to split out first.
 
+## 2.2.3 (2026-08-09)
+
+**Library visual pass: hex backdrop, spine hover, dynamic shelf, YouTube panels.**
+Four independent fixes against live screenshots, not a redesign.
+
+Hexagon backdrop (`buildBabelBackdrop` in library.js). The wireframe-only
+gallery field read as flat decoration for two real reasons: its edges use
+an unlit `MeshBasicMaterial`, so no light/shading ever crossed a hexagon
+regardless of its tumbled orientation, and there was nothing behind the
+edges for light to catch anyway. Added a second InstancedMesh — a filled
+hex face per node, built from a new `hexFaceGeometry()` whose vertices are
+placed at the exact angles the existing edge geometry already implies (a
+face and its own six edges share literal corners, verified to floating-
+point precision with a standalone script, not eyeballed), using a real
+`MeshStandardMaterial` that catches this scene's existing key/rim/ambient
+lights. Field density raised slightly (the per-node thinning threshold
+from keeping 42% of grid candidates to 50%) and edge opacity raised from
+0.26 to 0.32 for legibility. Deliberately did *not* add a hand-tuned
+differential rotation speed between the backdrop and the shelf to fake
+parallax: the nodes already sit at real, varying depth along every axis,
+and a rigid body's nearer points already sweep the screen faster than its
+farther ones under a perspective camera for the same rotation — genuine
+parallax was already present in the math, just invisible against unlit,
+low-opacity wireframe. Making the geometry actually catch light was the
+real fix; a second tuning knob on top of correct physics would have been
+exactly the kind of hand-tuned approximation this pass was trying to move
+away from.
+
+Spine hover. Cursor already changed to a pointer and a small scale bump
+already existed, but neither reads clearly as "interactive" from a static
+frame. Added a warm emissive glow (0xe6b45f, the same accent
+`.library-link`'s cross-link glimmer already uses) on a spine's front
+face on hover, via a new `setSpineHovered()` — safe because every item's
+materials are unique instances, never shared, so the glow can never bleed
+onto a neighboring spine.
+
+Dynamic shelf structure. `COLS`/`ROWS` were hardcoded literals (2 and 4)
+alongside `libraryItems`, whose own `row`/`col` fields already define the
+real grid shape. Replaced both with `Math.max(...)` over the catalog
+itself, so the frame, `TOTAL_W`/`TOTAL_H`, and every size derived from
+them grow automatically the next time an item lands in a new row or
+column — no second place to remember to update. Camera framing had the
+same problem one level up: `baseDist`/`minDist`/`maxDist` were fixed
+distances tuned to today's 2x4 grid. Replaced `baseDist` with a real
+`distanceToFit()` derived from the camera's own fov/aspect and the grid's
+actual `TOTAL_W`/`TOTAL_H` (verified numerically to reproduce today's
+12/14 split almost exactly, purely from each container's own aspect —
+full-screen's wide aspect binds on height, a preview tile's narrower
+aspect binds on width), and made `minDist`/`maxDist` ratios of `baseDist`
+rather than fixed numbers, so the whole camera system reframes itself
+correctly if the shelf's grid ever changes shape again.
+
+YouTube panels. The album/blu-ray panels' actual problem was never the
+panel layout (confirmed solid and consistent across book/album/blu-ray —
+the book panel, with no video at all, was the cleanest of the three,
+which was the tell) — it was YouTube's own iframe player sitting there by
+default with its own red play button and "Watch on YouTube" branding,
+a foreign visual language next to this site's calm serif type and
+restrained gold accents. Replaced the always-on iframe with a click-to-
+load facade (`buildVideoFacade`, `.library-panel-video-facade` in
+library.css): YouTube's own clean static thumbnail file (no player UI
+baked into it) under a dark scrim, topped with a small CSS-drawn play
+triangle in the panel's own gold accent. The real iframe only mounts on
+click, autoplaying at that point since the visitor just asked for it —
+nothing requests YouTube, or loads its branding, until then.
+
+Verified with `node --check`, a standalone script confirming the new hex
+face geometry's vertices exactly match the existing edge geometry's
+corners, a runtime smoke test exercising the new Three.js calls (geometry
+construction, InstancedMesh, MeshStandardMaterial) directly in Node, a
+numerical check that the new camera-fit formula reproduces today's
+baseDist values across a range of aspect ratios, and `npx vite build`.
+No live browser check was available in this session's sandbox; a visual
+pass against the deployed/dev-server site is still worth doing before
+calling this final.
+
 ## 2.2.2 (2026-08-09)
 
 **Comment cleanup pass: NOTES.md becomes the single canonical history.**
