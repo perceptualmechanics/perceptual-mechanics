@@ -76,12 +76,44 @@ const overlay      = document.getElementById('experience-overlay');
 const expContainer = document.getElementById('experience-container');
 const landing      = document.getElementById('landing');
 const siteTitle    = document.getElementById('site-title');
+const pmNav        = document.getElementById('pm-nav');
 
 // ─── Nav icons ────────────────────────────────────────────────────────────────
 function setActiveIcon(sceneName) {
   document.querySelectorAll('.nav-icon').forEach(b => {
     b.classList.toggle('active', b.dataset.scene === sceneName);
   });
+}
+
+// ─── Modal focus containment ─────────────────────────────────────────────────
+// #experience-overlay carries aria-modal="true" (index.html), which tells
+// assistive tech everything outside it is inert. #pm-nav and #site-title
+// sit outside #landing (which display:none already pulls out of the tab
+// order and AT tree while a scene is open) but stay in the document at all
+// times, so they need the same treatment made explicit: tabindex="-1"
+// removes them from the keyboard tab order, aria-hidden="true" removes
+// them from the AT tree. Neither touches their click handlers, so a mouse
+// or touch visitor can still jump straight from one scene to another —
+// only Tab-based and screen-reader navigation are actually contained,
+// matching what aria-modal already promises. Escape (below) is the way
+// out for keyboard/AT visitors, the same role a modal's own close control
+// would play.
+const chromeEls = [siteTitle, ...document.querySelectorAll('.nav-icon')];
+function setChromeInert(hidden) {
+  chromeEls.forEach(el => el.setAttribute('tabindex', hidden ? '-1' : '0'));
+  pmNav.setAttribute('aria-hidden', String(hidden));
+  siteTitle.setAttribute('aria-hidden', String(hidden));
+}
+
+// Every button/link inside the open scene, in DOM order — a read-more
+// panel's close button and cross-links, a keyboard jump list's entries,
+// whatever a given scene actually has. Some scenes (butterfly) have none
+// at all, since there's nothing to click into; the Tab handling below
+// still keeps focus contained in that case, it just has nowhere real to
+// go but back to expContainer itself.
+function overlayFocusables() {
+  return Array.from(expContainer.querySelectorAll('button, a[href], [tabindex]'))
+    .filter(el => el.tabIndex !== -1);
 }
 
 // ─── Expand a scene ───────────────────────────────────────────────────────────
@@ -102,6 +134,7 @@ function expandScene(sceneName, triggerEl = null) {
   activeScene = sceneName;
   setActiveIcon(sceneName);
   setHash(sceneName);
+  setChromeInert(true);
 
   landing.style.display = 'none';
   overlay.classList.add('active');
@@ -121,6 +154,7 @@ function returnToGallery() {
 
   overlay.classList.remove('active', 'butterfly-bg');
   overlay.setAttribute('aria-hidden', 'true');
+  setChromeInert(false);
   setHash(null);
 
   setTimeout(() => {
@@ -163,9 +197,20 @@ document.querySelectorAll('.nav-icon').forEach(btn => {
 // element, so no manual keydown handling is needed.
 siteTitle.addEventListener('click', returnToGallery);
 
-// ─── Keyboard: Escape → gallery ───────────────────────────────────────────────
+// ─── Keyboard: Escape → gallery, Tab trapped inside the open scene ─────────────
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape' && activeScene) returnToGallery();
+  if (!activeScene) return;
+  if (e.key === 'Escape') { returnToGallery(); return; }
+  if (e.key !== 'Tab') return;
+  const els = overlayFocusables();
+  const first = els[0] ?? expContainer;
+  const last = els[els.length - 1] ?? expContainer;
+  const active = document.activeElement;
+  if (e.shiftKey && (active === first || active === expContainer)) {
+    e.preventDefault(); last.focus();
+  } else if (!e.shiftKey && active === last) {
+    e.preventDefault(); first.focus();
+  }
 });
 
 // ─── Preview container clicks ─────────────────────────────────────────────────

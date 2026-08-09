@@ -225,6 +225,106 @@ described are unchanged.)
   worth trimming, orrery.js's texture generators and first-person rig are the
   two most self-contained chunks to split out first.
 
+## 2.2.5 (2026-08-09)
+
+**`#experience-overlay`'s `aria-modal="true"`, made honest — solution #2
+from the 2.2.4 "Watching" note (keep true modality, make it real).**
+`#pm-nav` and `#site-title` now get `tabindex="-1"` and `aria-hidden="true"`
+the moment a scene opens (`setChromeInert()` in main.js), restored the
+moment `returnToGallery()` starts closing it — so a keyboard or
+screen-reader visitor can no longer Tab into or hear about controls that
+`aria-modal="true"` was already telling them didn't exist. Click handlers
+on both are untouched, so a mouse or touch visitor can still jump straight
+from one scene to another exactly as before — only Tab-based and
+assistive-tech navigation are actually contained now, closing the gap
+between the attribute's promise and the real behavior.
+
+Paired with a real focus trap on `#experience-overlay` itself
+(`overlayFocusables()` + the keydown handler, main.js), the same
+Tab/Shift+Tab-wraps-at-the-boundary mechanism `colophon.js` already uses
+for its own true-modal dialog — collected into the same keydown listener
+that already handled Escape, rather than a second listener. Scenes with
+real focusable content (a panel's close button, cross-links, a keyboard
+jump list) wrap correctly at the first/last of those; a scene with none at
+all (butterfly, pure WebGL with no clickable DOM content) still contains
+Tab on `expContainer` itself rather than leaking focus out to the skip
+link. Escape remains the way out for a keyboard/screen-reader visitor, the
+same role a modal's own close control would play elsewhere.
+
+Verified with `node --check`, `npx vite build`, and a jsdom-based smoke
+test exercising the exact tabIndex/aria-hidden/focus/activeElement logic
+against a real (if minimal) DOM — chrome inert/restore, an empty-scene Tab
+trap, and a populated-scene trap wrapping correctly at both ends while
+leaving in-between Tab presses to native browser behavior. The test script
+lived in the sandbox's scratch space only, not the repo — same discipline
+as retiring `sim_sphere_panel.mjs` a few entries up.
+
+**Library panel focus ring.** The browser's own unstyled default blue
+focus outline was showing on `.library-panel-title` (visible every time a
+panel opens, since `library.js` focuses it programmatically) and
+`.library-panel-close` — neither had any `:focus`/`:focus-visible` rule at
+all, so both fell through to the UA default, clashing with the panel's
+warm parchment/gold palette. Added `:focus-visible` rules on both, styled
+with the same gold accent (`rgba(230,180,95,.9)`) the panel's cross-links
+and video-facade play control already use — `:focus-visible` specifically,
+not `:focus`, so a mouse click into the panel never shows a ring, only
+actual keyboard navigation does. Also converted `.library-link`'s existing
+`:hover, :focus` rule to `:hover, :focus-visible` for the same reason,
+even though its own custom color/glow treatment (not an outline) made the
+practical difference smaller there. `.library-panel-video-facade` already
+used `:focus-visible` with the same gold accent when it was built earlier
+this session — no change needed, just confirms the pattern was already
+right there.
+
+## 2.2.4 (2026-08-09)
+
+**Codebase inventory, acted on.** First three items from a top-to-bottom
+craft pass (dead code, doc hygiene, one contained perf fix) — the pass
+also turned up one real a11y/semantics decision that isn't mine to make
+unilaterally, logged instead under "Watching" above.
+
+Deleted `check_apostrophes.mjs` and `sim_sphere_panel.mjs`, both committed
+in 2.2.0 alongside that round's real work and never cleaned up.
+`check_apostrophes.mjs` imports `./src/scenes/theater/theater.text.js.bak`,
+a file that never existed in tracked history — it would throw if run.
+`sim_sphere_panel.mjs` is a standalone reimplementation of the Sphere
+panel's cross-side-click logic, written to verify the 2.2.0 panel-switch
+bug fix — that fix already shipped and is already documented here. Same
+category as the beamline `verify_*.mjs` scripts retired earlier: a
+throwaway solver/verification script that outlived the fix it checked.
+
+Deleted `CODE_AUDIT.md`. It predated the 2.1.0 per-scene folder restructure
+(cited `prism.js`/`leaf.js` by path, both long gone) and most of its
+findings are already resolved: the copy-pasted hint-label contrast issue
+(fixed via `sceneKit.js`'s `HINT_TEXT_COLOR`), butterfly.js's non-adoption
+of `sceneKit.js` helpers (fixed), and `sphere.css`'s missing `:focus` style
+on `.fragment-link` (fixed) were all checked against current code and
+confirmed done. One finding is still genuinely open — `#experience-overlay`'s
+`aria-modal="true"` vs. its actually-reachable nav bar — moved into the
+"Watching" section above rather than lost with the file.
+
+Fixed a real per-frame allocation in beamline.js's vessel-on-curve
+movement: `curve.getPointAt`/`getTangentAt` without a target argument each
+return a freshly allocated `Vector3`, and the orientation quaternion was
+built fresh too (`new THREE.Quaternion().setFromUnitVectors(...)`) —
+three allocations every animation frame for a value that only needs
+overwriting. Pre-allocated `vesselPos`/`vesselTangent`/`vesselQuat` once
+outside the loop and pass them as write targets instead. Checked orrery's
+own animation loop for the same pattern (it uses different orbital math,
+no curve sampling) — this looks isolated to beamline, not systemic.
+
+Two items from the inventory intentionally not acted on: `scroll.text.js`
+exports 13 per-piece constants (`flying`, `ironGods`, etc.) that nothing
+outside the file imports by name — only the assembled `scrollPieces` is
+ever used elsewhere — harmless, low-priority, left alone for now. Scene
+folder structure itself was checked scene-by-scene and confirmed fully
+consistent with the `.js`/`.css`/`.html`/`.text.js` convention; butterfly's
+missing `.text.js` looked like an exception but isn't — it's the one scene
+with no literary content to colocate, exactly what the convention already
+allows for.
+
+Verified with `node --check` and `npx vite build`.
+
 ## 2.2.3 (2026-08-09)
 
 **Library visual pass: hex backdrop, spine hover, dynamic shelf, YouTube panels.**

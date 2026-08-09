@@ -70,6 +70,15 @@
   border-bottom: 1px solid rgba(230,215,180,0.15);
   margin: 0 0 1.4rem; padding-bottom: 1.4rem;
 }
+.library-panel-title:focus-visible {
+  /* Programmatically focused every time the panel opens (library.js) —
+     the browser's own default blue ring clashes with this panel's warm
+     parchment/gold palette; this swaps it for the same gold accent
+     .library-link and the video facade's play control already use.
+     :focus-visible (not :focus) so a mouse click into the panel never
+     shows it — only the actual keyboard-relevant case does. */
+  outline: 1px solid rgba(230,180,95,.9); outline-offset: 4px;
+}
 .library-panel-creator { color: rgba(230,220,200,0.7); font-size: 0.95rem; font-style: italic; margin: 0; }
 .library-panel-details {
   margin-top: 1.4rem; padding-top: 1.2rem;
@@ -150,6 +159,9 @@
   cursor: pointer; padding: .5rem; z-index: 2;
 }
 .library-panel-close:hover { color: rgba(255,255,255,0.9); }
+.library-panel-close:focus-visible {
+  outline: 1px solid rgba(230,180,95,.9); outline-offset: 1px;
+}
 .library-panel-excerpt-from {
   margin: -1rem 0 1.4rem; color: rgba(220,210,195,0.5);
   font-size: 0.78rem; font-style: italic; line-height: 1.6;
@@ -169,7 +181,7 @@
   cursor: pointer; transition: color .2s;
   animation: library-glimmer 12s ease-in-out infinite;
 }
-.library-link:hover, .library-link:focus {
+.library-link:hover, .library-link:focus-visible {
   color: rgba(230,180,95,.95); text-shadow: 0 0 10px rgba(230,180,95,.3);
   animation: none; outline: none;
 }

@@ -1238,6 +1238,12 @@ export function createBeamline(container, { preview = false } = {}) {
   root.add(vessel.group);
   const STATION_GLOW_ARC = 20; // world units of arc-length either side of the vessel's real position that a station counts as "lit"
   const FORWARD_AXIS = new THREE.Vector3(0, 0, 1);
+  // Reused every animation frame for the vessel's position/orientation
+  // (see animate() below) instead of letting getPointAt/getTangentAt/the
+  // orientation quaternion each allocate a fresh object 60 times a second.
+  const vesselPos = new THREE.Vector3();
+  const vesselTangent = new THREE.Vector3();
+  const vesselQuat = new THREE.Quaternion();
 
   // ─── Lévy flight — real step-length statistics, not constant speed ─────
   // Bees, butterflies, and other foragers move in a well-documented real
@@ -1890,10 +1896,14 @@ export function createBeamline(container, { preview = false } = {}) {
       vesselArc = ((pos % totalLength) + totalLength) % totalLength;
     }
     const vesselU = vesselArc / totalLength;
-    const vesselPos = curve.getPointAt(vesselU);
-    const vesselTangent = curve.getTangentAt(vesselU).normalize();
+    // Written into the reusable vesselPos/vesselTangent/vesselQuat (declared
+    // above, near FORWARD_AXIS) rather than letting getPointAt/getTangentAt
+    // and the orientation quaternion each allocate a fresh object here,
+    // every frame.
+    curve.getPointAt(vesselU, vesselPos);
+    curve.getTangentAt(vesselU, vesselTangent).normalize();
     vessel.group.position.copy(vesselPos);
-    vessel.group.quaternion.copy(new THREE.Quaternion().setFromUnitVectors(FORWARD_AXIS, vesselTangent));
+    vessel.group.quaternion.copy(vesselQuat.setFromUnitVectors(FORWARD_AXIS, vesselTangent));
     vesselLight.position.copy(vesselPos);
     const flicker = 0.9 + Math.sin(tSec * 17) * 0.1;
     vessel.glowMat.opacity = flicker * 0.85;
