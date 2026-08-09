@@ -225,6 +225,56 @@ described are unchanged.)
   worth trimming, orrery.js's texture generators and first-person rig are the
   two most self-contained chunks to split out first.
 
+## 2.2.13 (2026-08-09)
+
+**Gravitational lensing: break radial symmetry.** Flagged after live
+frame-by-frame review of 2.2.12: real, dynamic, genuinely not a static
+image — but reads as "a rando sphere," a clean regular bubble, not
+spacetime warping. Root cause was structural, not cosmetic: a single UV
+offset radiating from one centered point is radially symmetric BY
+CONSTRUCTION, no matter how its strength varies over time — every point on
+a sphere's own surface normal points straight out from the same center.
+Real gravitational lensing isn't spherically symmetric either (it depends
+on mass distribution and viewing geometry, producing asymmetric arcs — a
+circular Einstein ring is the rare perfect-alignment special case), so the
+fix moves the underlying math closer to the real thing rather than layering
+noise on the same one-center formula, consistent with how this file already
+treats every other effect (orbital mechanics, terrain falloff, the
+telescope's own chirp).
+
+Two structural changes, no cosmetic noise:
+
+- **Three off-center "masses" replace the one centered pull.** Each
+  contributes a real point-mass deflection term — offset magnitude ∝
+  1/distance toward that mass, the actual thin-lens formula, written as
+  `d/(dot(d,d)+eps)` so it's already direction-correct and never divides
+  by exactly zero — summed in the fragment shader. Three independent pulls
+  can't collapse back into a single radial gradient the way one centered
+  term always will. Each mass then wanders around its own fixed home point
+  in `animate()` via `organicPulse` — the same layered non-integer-ratio
+  math already built for this telescope's earlier pulse and reused again
+  here, not a fourth timing system — at its own pair of mutually
+  non-integer-ratio frequencies, so no two masses ever drift back into
+  sync and the combined pattern keeps shifting asymmetrically over time,
+  not just growing and shrinking in place.
+- **Silhouette, no longer a perfect circle.** The lens mesh was plain
+  `SphereGeometry` — no amount of internal shader work changes an exactly
+  circular outline. Displaced with the SAME `fbm3`/`hash3` noise field
+  already built for the planet bodies (`buildAgedPlanetGeometry`), sampling
+  each vertex's own normalized direction directly — reused rather than a
+  second noise system, and simpler than the planets' version since there's
+  no texture here needing UV correlation.
+
+Verified live from the actual ground-camera distance, not a zoomed test
+shot: the warp now reads as distinct asymmetric smears/arcs bending the
+lattice's own threads, not a uniform bulge, and the silhouette itself is
+visibly irregular rather than a clean circle. Confirmed the pattern
+continues to evolve over real time (compared captures ~6s and ~26s apart) —
+slow at the mass-wander scale (by design, `organicPulse` at very low
+frequencies), fast and dramatic at the chirp scale (same real ~34-second
+schedule from 2.2.12, still intact and still visibly distinguishable from
+baseline).
+
 ## 2.2.12 (2026-08-09)
 
 **Radio telescope: lensing, not a beam; dish goes static.** Two

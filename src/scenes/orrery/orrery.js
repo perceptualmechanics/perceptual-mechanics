@@ -289,6 +289,22 @@ function organicPulse(clock, freq = 1) {
   return (a * 0.5 + b * 0.32 + c * 0.18 + 1) / 2; // weights sum to 1, so the raw sum stays in [-1,1]
 }
 
+// The telescope's gravitational-lensing hub (see gravLens in buildOrrery)
+// is driven by three "masses," not one centered point — a single centered
+// pull is inescapably radially symmetric by construction, three off-center
+// ones can't be. Home positions fixed (evenly spaced, same shape as the
+// web's own 3-ring cross-bracing elsewhere in this file), each mass then
+// wanders around its own home in animate() via organicPulse at its own
+// pair of frequencies — deliberately mutually non-integer-ratio (no two
+// share a small common factor) so no two masses ever drift back into
+// sync with each other, keeping the combined pattern asymmetric over time
+// as well as at any single instant.
+const LENS_MASS_HOMES = [
+  { x: 0.4 * Math.cos(0), y: 0.4 * Math.sin(0), freqA: 0.017, freqB: 0.041 },
+  { x: 0.4 * Math.cos((2 * Math.PI) / 3), y: 0.4 * Math.sin((2 * Math.PI) / 3), freqA: 0.023, freqB: 0.013 },
+  { x: 0.4 * Math.cos((4 * Math.PI) / 3), y: 0.4 * Math.sin((4 * Math.PI) / 3), freqA: 0.031, freqB: 0.019 },
+];
+
 // (u, v) -> the point on the unit sphere that (u, v) addresses. Used
 // identically by buildAgedPlanetGeometry and makeAgedPlanetTextures
 // below so a texture pixel and a geometry vertex at the same (u, v)
@@ -706,30 +722,64 @@ function buildOrrery(preview, suspendTopY, rafterY) {
   // exception on this whole site: true per-pixel bending of the ACTUAL
   // background based on screen position isn't achievable any other way,
   // and the brief itself names "shader-based" as an acceptable path for
-  // exactly this reason. Kept as small and legible as a shader gets —
-  // sample a snapshot of everything behind the lens (captured into
-  // lensBackdropRT just before the real frame, see animate()) at each
-  // pixel's own screen position, offset outward by that pixel's own
-  // view-space surface normal. That's the actual mechanism: offset grows
-  // with normal.xy, which itself grows toward the sphere's silhouette
-  // edge — center of the lens barely bends, the edge bends hardest, the
-  // same "more bending farther from dead-center" shape real lensing near
-  // a point mass has.
+  // exactly this reason.
+  //
+  // Round 2 of this effect: a single UV offset radiating outward from one
+  // centered point is, BY CONSTRUCTION, radially symmetric no matter how
+  // its strength varies over time — every point's own surface normal on a
+  // sphere points straight out from the same center, so the result reads
+  // as "a clean bubble," flagged directly ("a rando sphere"). Real
+  // gravitational lensing isn't spherically symmetric either — it depends
+  // on mass distribution and viewing geometry, producing asymmetric arcs,
+  // not a tidy ring (a circular Einstein ring is the rare
+  // perfect-alignment special case). Fixed at the actual math, not with
+  // noise layered on top of the same one-center formula: three off-center
+  // "masses," each pulling the sampled UV toward itself with real
+  // point-mass deflection falloff (offset magnitude ∝ 1/distance — the
+  // textbook thin-lens formula, same "real formula over a hand-tuned
+  // curve" standard as the telescope's own chirp math below and the
+  // planet-compression sqrt(AU) elsewhere in this file), summed. Three
+  // independent pulls can't collapse back into one clean radial gradient
+  // the way a single centered term always will.
+  //
+  // Silhouette: also a perfect circle before this pass, however strong
+  // the fill got, since the mesh itself was a plain SphereGeometry — no
+  // amount of internal shader work changes an exactly circular outline.
+  // Displaced with the SAME fbm3/hash3 noise field already built for the
+  // planet bodies above (buildAgedPlanetGeometry) — reused rather than
+  // inventing a second noise system — sampling each vertex's own
+  // normalized direction directly (no UV-correlation trick needed here,
+  // since this mesh carries no texture to keep in sync with).
   //
   // Deliberately larger than the solid webHub it surrounds — a lensing
   // effect confined to the hub's own tiny footprint wouldn't read at
   // ground-camera distance; sized instead to visibly warp the nearer
-  // lattice threads and the dark skylight opening behind it.
-  // TUNABLE, and bumped up once live: at 0.42 (visually about half the
-  // dish's own radius) the warp only read clearly under a tight zoom, not
-  // from the fixed ground-camera distance every other effect on this
-  // scene has to clear — a bigger lens patch to warp gives the eye more
-  // area to actually notice bending in.
+  // lattice threads and the dark skylight opening behind it. (0.62 —
+  // bumped up once live, per the same ground-camera legibility check as
+  // every other effect on this scene.)
   const LENS_RADIUS = dishR * 0.62;
+  const lensSeed = Math.floor(Math.random() * 1e6);
+  const lensGeo = new THREE.SphereGeometry(LENS_RADIUS, 40, 30);
+  const lensPos = lensGeo.attributes.position;
+  const LENS_RAGGED_FREQ = 2.6, LENS_RAGGED_AMT = 0.24; // TUNABLE: noise frequency / how far the silhouette wanders off a perfect sphere
+  for (let i = 0; i < lensPos.count; i++) {
+    const x = lensPos.getX(i), y = lensPos.getY(i), z = lensPos.getZ(i);
+    const len = Math.hypot(x, y, z) || 1;
+    const nx = x / len, ny = y / len, nz = z / len;
+    const n = fbm3(nx * LENS_RAGGED_FREQ, ny * LENS_RAGGED_FREQ, nz * LENS_RAGGED_FREQ, lensSeed, 4);
+    const r = LENS_RADIUS * (1 + (n - 0.5) * LENS_RAGGED_AMT);
+    lensPos.setXYZ(i, nx * r, ny * r, nz * r);
+  }
+  lensGeo.computeVertexNormals();
   const lensUniforms = {
     uBackdrop: { value: null }, // wired up in createOrrery, once the renderer/render-target exist
     uResolution: { value: new THREE.Vector2(1, 1) },
-    uStrength: { value: 0.02 }, // TUNABLE base — animate() drives this per-frame
+    // xy = this mass's current position in the same surface-normal space
+    // vViewNormal.xy lives in; z = its own current pull strength. All
+    // three driven per-frame in animate() — see LENS_MASS_HOMES there.
+    uMass0: { value: new THREE.Vector3(0.4, 0, 0.008) },
+    uMass1: { value: new THREE.Vector3(-0.2, 0.35, 0.008) },
+    uMass2: { value: new THREE.Vector3(-0.2, -0.35, 0.008) },
     uTint: { value: new THREE.Color(0xfff1d6) },
   };
   const lensMat = new THREE.ShaderMaterial({
@@ -744,20 +794,33 @@ function buildOrrery(preview, suspendTopY, rafterY) {
     fragmentShader: `
       uniform sampler2D uBackdrop;
       uniform vec2 uResolution;
-      uniform float uStrength;
+      uniform vec3 uMass0;
+      uniform vec3 uMass1;
+      uniform vec3 uMass2;
       uniform vec3 uTint;
       varying vec3 vViewNormal;
+      // Real point-mass deflection: pull toward the mass, magnitude
+      // inversely proportional to distance (the thin-lens formula) —
+      // d/(dot(d,d)+eps) is that same 1/r falloff written in a form
+      // that's already direction-correct and never divides by exactly
+      // zero, so no separate normalize() call (and no NaN risk at the
+      // mass's own center) is needed.
+      vec2 deflect(vec2 p, vec3 mass) {
+        vec2 d = mass.xy - p;
+        return d * (mass.z / (dot(d, d) + 0.02));
+      }
       void main() {
-        vec2 uv = gl_FragCoord.xy / uResolution;
-        vec2 bend = vViewNormal.xy * uStrength;
-        vec3 warped = texture2D(uBackdrop, uv + bend).rgb;
+        vec2 p = vViewNormal.xy;
+        vec2 bend = deflect(p, uMass0) + deflect(p, uMass1) + deflect(p, uMass2);
+        vec2 uv = gl_FragCoord.xy / uResolution + bend;
+        vec3 warped = texture2D(uBackdrop, uv).rgb;
         // A light warm tint, not a full recolor — this should still read
         // as "a warp of what's really there," not a stained-glass ball.
         gl_FragColor = vec4(mix(warped, warped * uTint, 0.3), 1.0);
       }
     `,
   });
-  const lensMesh = new THREE.Mesh(new THREE.SphereGeometry(LENS_RADIUS, 32, 32), lensMat);
+  const lensMesh = new THREE.Mesh(lensGeo, lensMat);
   lensMesh.position.y = apexY;
   dishGroup.add(lensMesh);
   const gravLens = { mesh: lensMesh, uniforms: lensUniforms };
@@ -2629,15 +2692,25 @@ export function createOrrery(container, { preview = false } = {}) {
         chirp = envelope * (0.5 + 0.5 * Math.sin(phase));
       }
 
-      // uStrength is a screen-space UV offset (see the fragment shader in
-      // buildOrrery) — kept small (a few percent of the screen) even at
-      // full chirp intensity: too strong and the sampled backdrop just
-      // looks like a smeared mess, too weak and it reads as a rendering
-      // glitch rather than deliberate distortion (the exact risk flagged
-      // up front). This range was tuned live against that failure mode
-      // on both ends.
+      // Each mass's own pull (see LENS_MASS_HOMES and the deflect()
+      // formula in buildOrrery's fragment shader) rides the SAME
+      // baseline+chirp schedule as before — kept small even at full chirp
+      // intensity, same "too strong reads as a smear, too weak reads as a
+      // glitch" balance already tuned live — but now also wanders around
+      // its own home point and flexes its own individual strength
+      // independently, so the combined pattern shifts asymmetrically over
+      // time rather than one bubble simply swelling and shrinking.
       const distortion = baseline + chirp * 1.4;
-      orrery.gravLens.uniforms.uStrength.value = 0.02 + distortion * 0.04;
+      const massStrength = 0.006 + distortion * 0.013;
+      const uniformKeys = ['uMass0', 'uMass1', 'uMass2'];
+      LENS_MASS_HOMES.forEach((home, i) => {
+        const wanderX = organicPulse(t, home.freqA) - 0.5;
+        const wanderY = organicPulse(t, home.freqB) - 0.5;
+        const mx = home.x + wanderX * 0.22;
+        const my = home.y + wanderY * 0.22;
+        const mStrength = massStrength * (0.65 + organicPulse(t, home.freqA * 1.7) * 0.7);
+        orrery.gravLens.uniforms[uniformKeys[i]].value.set(mx, my, mStrength);
+      });
     }
 
     if (!hovered && !selected) {
