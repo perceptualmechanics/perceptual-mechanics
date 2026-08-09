@@ -225,6 +225,68 @@ described are unchanged.)
   worth trimming, orrery.js's texture generators and first-person rig are the
   two most self-contained chunks to split out first.
 
+## 2.2.12 (2026-08-09)
+
+**Radio telescope: lensing, not a beam; dish goes static.** Two
+simplifications, both from the same brief.
+
+*Dish pulse, removed entirely.* The 2.2.11 traveling pulse "isn't working"
+— static contrast (one clean, untarnished bronze surface in a room of
+deliberately weathered ones) carries the "something's different here" job
+better than an animation that isn't landing. Collapsed the whole per-segment
+clone system (`spokeSegMeshes`/`ringMat`/`webHubMat`, built specifically so
+the old pulse could light pieces of the web independently) down to one
+shared, unanimated material for every strut — no more chained
+apex-to-rim segments either, since those only existed to give the pulse
+somewhere to travel. Simpler code, not just quieter visuals.
+
+**Backstory settled: gravitational waves, not radio.** Raw spacetime
+distortion, not carried by matter — physically, that means the correct
+receiving effect is localized lensing (warping whatever's behind the hub),
+not a beam. Replaced the particle stream with a real-time distortion effect
+at the hub, in two layers riding the same uniform: a continuous, gentle
+baseline (`organicPulse` — the same layered non-integer-ratio-frequency math
+built for the removed dish pulse, repurposed to drive distortion strength
+instead of brightness) representing the solar system's own tracked orbital
+motion ("error tolerance approaching perfection," per the found text), plus
+an occasional merger-event "chirp" riding on top — a real linear-chirp
+waveform (rising instantaneous frequency, envelope peaking near
+coalescence then cutting off) scheduled every 34 real seconds via
+`performance.now()`, not the scene's own slow orbital clock (`t`), which
+would have stretched that into a ~9-minute wait — a bug caught before
+shipping by actually doing the arithmetic on `t`'s own `+0.001`/frame rate.
+
+**Implementation note — the one shader on this whole site.** Tried
+`MeshPhysicalMaterial`'s stock `transmission`/`ior` first, since it's the
+built-in, no-GLSL path for real refraction and this file avoids custom
+shaders everywhere else. Checked live: it rendered as an opaque lit sphere,
+not a see-through lensing window, even at an exaggerated ior (2.6) and with
+`transparent` unset — the automatic backdrop capture just wasn't reading as
+transmissive in this pipeline. Fell back to a small hand-authored
+`ShaderMaterial` (explicitly sanctioned by the brief itself, which named
+"shader-based" as an acceptable direction) that samples a same-frame
+backdrop snapshot (`lensBackdropRT`, captured by hiding the lens mesh,
+rendering once, then rendering again for real — two `renderer.render()`
+calls per frame now, at half-resolution for the snapshot) with UVs bent by
+each pixel's own view-space normal — bending grows toward the sphere's
+silhouette edge, same shape real lensing has near a point mass.
+
+**Legibility, tuned live against the flagged failure mode** ("could read as
+a rendering glitch, not deliberate distortion"): the first pass (lens
+radius 0.42× the dish radius, modest uStrength) only read clearly under a
+tight zoom, not from the fixed ground-camera distance. Enlarged the lens
+patch to 0.62× dish radius and raised the uStrength range so the warp
+visibly bends the lattice's own bronze threads even in an unzoomed shot.
+Verified live across one full real 34-second chirp cycle (not simulated —
+`performance.now()`-driven, same schedule a real visitor gets): baseline
+captures read as a calm, gentle wave in the threads crossing the lens;
+captures taken during the chirp window (both the ~2s-after-load event and
+the following one at ~35s) show a visibly sharper, more jagged distortion,
+confirming the two intensities are genuinely distinguishable and that the
+schedule repeats correctly. Also confirmed the now-static dish material
+doesn't flicker (compared two time-spaced captures of a spoke well away
+from the lens).
+
 ## 2.2.11 (2026-08-09)
 
 **Radio telescope: beam directionality + organic pulse.** Scott confirmed the

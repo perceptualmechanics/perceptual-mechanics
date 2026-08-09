@@ -629,120 +629,138 @@ function buildOrrery(preview, suspendTopY, rafterY) {
   // assembly used before, just realized as a lattice of struts along that
   // cone's surface instead of a filled mesh over it.
   const apexY = -dishH / 2, rimY = dishH / 2;
+  // Round 3: the dish's own weirdness is now purely material, not
+  // animated. Earlier passes tried to sell "still on" with a traveling
+  // light pulse along the web's threads — it didn't land (flagged
+  // directly: "it isn't working"). Static contrast carries this better —
+  // this is the one clean, untarnished piece of bronze in a room full of
+  // deliberately weathered ones (see the aging system below, and the
+  // planet-body patina above it), full stop, no glow cycle. One shared,
+  // unanimated material for every strut in the web — no more per-segment
+  // .clone()s, since nothing needs to light independently anymore.
   const webMat = new THREE.MeshStandardMaterial({
-    color: 0xd9a862, emissive: 0xffb35c, emissiveIntensity: 0.55, roughness: 0.28, metalness: 0.9,
-  }); // template only, never itself added to the scene — every strut below gets its own .clone() so the pulse can light pieces of the web independently
-  const WEB_SPOKES = 9;    // TUNABLE: radial threads, apex to rim
-  const WEB_RINGS = 3;     // TUNABLE: cross-bracing circles between apex and rim (rim itself counts as the outermost)
-  const WEB_SEGMENTS = 4;  // TUNABLE: pieces each spoke is cut into — what lets the receiving pulse below show a hotspot actually traveling along a spoke's length, rather than a strut only ever being uniformly bright or dim
+    color: 0xd9a862, emissive: 0xffb35c, emissiveIntensity: 0.5, roughness: 0.28, metalness: 0.9,
+  });
+  const WEB_SPOKES = 9; // TUNABLE: radial threads, apex to rim
+  const WEB_RINGS = 3;  // TUNABLE: cross-bracing circles between apex and rim (rim itself counts as the outermost)
   const spokeDirs = Array.from({ length: WEB_SPOKES }, (_, i) => {
     const a = (i / WEB_SPOKES) * Math.PI * 2;
     return { x: Math.cos(a), z: Math.sin(a) };
   });
-  // Radial spokes. spokeSegMeshes[i] is ordered apex -> rim (index 0
-  // nearest the hub) — the receiving pulse in the animate loop walks this
-  // same order.
-  const spokeSegMeshes = spokeDirs.map(dir => {
-    const segs = [];
-    for (let s = 0; s < WEB_SEGMENTS; s++) {
-      const t0 = s / WEB_SEGMENTS, t1 = (s + 1) / WEB_SEGMENTS;
-      const from = new THREE.Vector3(dir.x * dishR * t0, apexY + (rimY - apexY) * t0, dir.z * dishR * t0);
-      const to = new THREE.Vector3(dir.x * dishR * t1, apexY + (rimY - apexY) * t1, dir.z * dishR * t1);
-      segs.push(addStrut(dishGroup, from, to, (preview ? 0.009 : 0.012) * HW, webMat.clone()));
-    }
-    return segs;
+  // Radial spokes, apex to rim — one strut each now, not chained segments
+  // (those existed only to let the old traveling pulse light pieces of a
+  // spoke in sequence; with the pulse gone, one piece per spoke is simpler
+  // and exactly as structurally legible).
+  spokeDirs.forEach(dir => {
+    const from = new THREE.Vector3(0, apexY, 0);
+    const to = new THREE.Vector3(dir.x * dishR, rimY, dir.z * dishR);
+    addStrut(dishGroup, from, to, (preview ? 0.009 : 0.012) * HW, webMat);
   });
   // Cross-bracing rings — straight WEB_SPOKES-gon segments between
   // adjacent spokes at a few heights, not smooth circles: a spiderweb's
-  // cross-threads run straight between radial threads, and (see above)
-  // this is a found, not fabricated, shape — a mathematically perfect
-  // circle here would read as machined instead. One shared, non-cloned
-  // material: these aren't part of the traveling pulse, just a steady
-  // ambient glow (see animate loop) so the structural half of the web
-  // doesn't look dead next to the animated half.
-  const ringMat = webMat.clone();
+  // cross-threads run straight between radial threads, and (see the
+  // "found, not designed" note above) this is a found, not fabricated,
+  // shape — a mathematically perfect circle here would read as machined
+  // instead.
   for (let k = 1; k <= WEB_RINGS; k++) {
-    const t = k / WEB_RINGS, y = apexY + (rimY - apexY) * t, r = dishR * t;
+    const rt = k / WEB_RINGS, y = apexY + (rimY - apexY) * rt, r = dishR * rt;
     for (let i = 0; i < WEB_SPOKES; i++) {
       const a = spokeDirs[i], b = spokeDirs[(i + 1) % WEB_SPOKES];
       const from = new THREE.Vector3(a.x * r, y, a.z * r);
       const to = new THREE.Vector3(b.x * r, y, b.z * r);
-      addStrut(dishGroup, from, to, (preview ? 0.006 : 0.008) * HW, ringMat);
+      addStrut(dishGroup, from, to, (preview ? 0.006 : 0.008) * HW, webMat);
     }
   }
-  // The web's own center — where every spoke meets, and where the
-  // receiving pulse actually converges and flashes on arrival. Replaces
-  // the earlier version's separate antenna-and-feed-bulb assembly: a real
-  // dish's prime-focus feed sits ABOVE the dish, catching what the
-  // reflector bounces up to it, but this is a web, not an engineered
-  // reflector, so "receiving" reads more truly as everything converging
-  // inward to the web's own hub instead of up to a feed floating over it.
-  const webHubMat = webMat.clone();
-  const webHub = new THREE.Mesh(new THREE.SphereGeometry((preview ? 0.028 : 0.036) * HW, 10, 10), webHubMat);
+  // The web's own physical center — where every spoke actually meets.
+  // Replaces the earlier version's separate antenna-and-feed-bulb
+  // assembly: a real dish's prime-focus feed sits ABOVE the dish, but
+  // this is a found web, not an engineered reflector, so everything
+  // converges inward to its own hub instead of up to a feed floating
+  // over it. Solid and unanimated, same webMat as the rest of the
+  // structure — the "something is happening here" work now belongs
+  // entirely to gravLens below, not to this mesh.
+  const webHub = new THREE.Mesh(new THREE.SphereGeometry((preview ? 0.028 : 0.036) * HW, 10, 10), webMat);
   webHub.position.y = apexY;
   dishGroup.add(webHub);
 
-  // The receiving effect has two parts, kept deliberately different from
-  // each other (and from the skylight's own separate, unrelated, static
-  // light beam — see beamMat in buildWarehouse) so neither could be
-  // mistaken for incidental lighting:
-  //  1. A stream of points sliding down the web's own conical silhouette,
-  //     extended upward past the rim into open sky, converging on the
-  //     real focus (the hub) — see orrery.signalStream in the animate
-  //     loop. Reworked from an earlier version that fell straight down
-  //     and only bent inward in the last moment before landing: that
-  //     read as generic falling drift with no clear destination (verified
-  //     live, flagged directly — points appeared to pass laterally
-  //     through the frame rather than arrive anywhere in particular).
-  //     This version keeps the same real-math backbone (the dish's own
-  //     cone equation, r(y) = dishR * (y - apexY) / dishH, just no longer
-  //     clamped to y <= rimY) but applies it for the WHOLE fall, not just
-  //     the end of it, so every particle is visibly narrowing toward the
-  //     hub for its entire visible trip, not only the last instant.
-  //  2. A pulse of light that visibly TRAVELS inward — rim to hub, along
-  //     all nine spokes at once — built by animating each spoke's own
-  //     WEB_SEGMENTS pieces in sequence rather than any shader trick; see
-  //     the animate loop for the actual per-segment math, including the
-  //     organicPulse-driven timing/brightness variation that keeps
-  //     successive passes from looking identical.
-  // Direction matters in both: everything moves DOWN and IN, never OUT,
-  // so this reads unambiguously as receiving, not transmitting.
+  // ─── The receiving effect, rebuilt around what this thing actually
+  // detects: gravitational waves, not light or radio — raw spacetime
+  // distortion, not carried by matter at all. A directional beam (this
+  // scene's earlier attempt, and the literal thing plenty of other
+  // objects on this site already do — see the projector cone, the
+  // skylight's own beamMat) is physically the WRONG picture for that:
+  // gravitational waves don't arrive as a shaft traveling into a
+  // receiver, they stretch and squeeze the space they pass through. The
+  // physically correct visual is a localized lensing/refraction warp of
+  // whatever's visible behind and around the hub — background stars, the
+  // skylight opening, the web's own far threads — not particle geometry.
   //
-  // Each particle's own compass angle and its fixed offset from the
-  // ideal cone surface (rMult, a small per-particle multiplier so they
-  // don't all trace the exact same mathematical line) are fixed for
-  // good; only its position along the fall cycle changes over time —
-  // same "fixed base state + a deterministic function of the clock"
-  // shape as the dust motes below (see the animate loop), not per-frame
-  // mutation, so it can't drift out of sync with itself.
-  const STREAM_COUNT = preview ? 7 : 13; // TUNABLE
-  // TUNABLE, but not free to pick arbitrarily large: since the whole fall
-  // now traces the dish's own cone equation (see the animate loop) rather
-  // than a fixed-radius vertical drop, the cone's radius at the TOP of the
-  // fall grows linearly with this span — pick too big a number and the
-  // stream visibly flares out past the skylight's own rectangular opening
-  // (holeW/holeH in buildWarehouse) into the solid ceiling around it. 0.9x
-  // dishH keeps the widest particle (rMult up to ~1.18) comfortably inside
-  // the hole with margin to spare, checked against holeW/holeH's own units.
-  const STREAM_FALL_SPAN = dishH * 0.9;
-  const STREAM_BASE_COLOR = new THREE.Color(0xffe8bb);
-  const streamGeo = new THREE.BufferGeometry();
-  streamGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(STREAM_COUNT * 3), 3));
-  const streamColorAttr = new THREE.BufferAttribute(new Float32Array(STREAM_COUNT * 3), 3);
-  for (let i = 0; i < STREAM_COUNT; i++) streamColorAttr.setXYZ(i, STREAM_BASE_COLOR.r * 0.4, STREAM_BASE_COLOR.g * 0.4, STREAM_BASE_COLOR.b * 0.4);
-  streamGeo.setAttribute('color', streamColorAttr);
-  const streamMat = new THREE.PointsMaterial({
-    color: 0xffffff, vertexColors: true, size: (preview ? 0.014 : 0.019) * HW, sizeAttenuation: true,
-    transparent: true, opacity: 0.85, depthWrite: false, blending: THREE.AdditiveBlending,
+  // First tried on THREE.MeshPhysicalMaterial's stock transmission/IOR
+  // model — the built-in, no-shader path for real refraction, and this
+  // file's usual rule is to avoid custom GLSL entirely (see every other
+  // effect below: vertex colors, per-segment material clones, CanvasTexture
+  // paint, all deliberately chosen over shaders). Checked live: its
+  // automatic backdrop capture didn't render as see-through in this scene's
+  // pipeline — it read as an opaque lit sphere, not a lensing window, even
+  // at an exaggerated ior. A hand-authored shader is the one deliberate
+  // exception on this whole site: true per-pixel bending of the ACTUAL
+  // background based on screen position isn't achievable any other way,
+  // and the brief itself names "shader-based" as an acceptable path for
+  // exactly this reason. Kept as small and legible as a shader gets —
+  // sample a snapshot of everything behind the lens (captured into
+  // lensBackdropRT just before the real frame, see animate()) at each
+  // pixel's own screen position, offset outward by that pixel's own
+  // view-space surface normal. That's the actual mechanism: offset grows
+  // with normal.xy, which itself grows toward the sphere's silhouette
+  // edge — center of the lens barely bends, the edge bends hardest, the
+  // same "more bending farther from dead-center" shape real lensing near
+  // a point mass has.
+  //
+  // Deliberately larger than the solid webHub it surrounds — a lensing
+  // effect confined to the hub's own tiny footprint wouldn't read at
+  // ground-camera distance; sized instead to visibly warp the nearer
+  // lattice threads and the dark skylight opening behind it.
+  // TUNABLE, and bumped up once live: at 0.42 (visually about half the
+  // dish's own radius) the warp only read clearly under a tight zoom, not
+  // from the fixed ground-camera distance every other effect on this
+  // scene has to clear — a bigger lens patch to warp gives the eye more
+  // area to actually notice bending in.
+  const LENS_RADIUS = dishR * 0.62;
+  const lensUniforms = {
+    uBackdrop: { value: null }, // wired up in createOrrery, once the renderer/render-target exist
+    uResolution: { value: new THREE.Vector2(1, 1) },
+    uStrength: { value: 0.02 }, // TUNABLE base — animate() drives this per-frame
+    uTint: { value: new THREE.Color(0xfff1d6) },
+  };
+  const lensMat = new THREE.ShaderMaterial({
+    uniforms: lensUniforms,
+    vertexShader: `
+      varying vec3 vViewNormal;
+      void main() {
+        vViewNormal = normalize(normalMatrix * normal);
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      }
+    `,
+    fragmentShader: `
+      uniform sampler2D uBackdrop;
+      uniform vec2 uResolution;
+      uniform float uStrength;
+      uniform vec3 uTint;
+      varying vec3 vViewNormal;
+      void main() {
+        vec2 uv = gl_FragCoord.xy / uResolution;
+        vec2 bend = vViewNormal.xy * uStrength;
+        vec3 warped = texture2D(uBackdrop, uv + bend).rgb;
+        // A light warm tint, not a full recolor — this should still read
+        // as "a warp of what's really there," not a stained-glass ball.
+        gl_FragColor = vec4(mix(warped, warped * uTint, 0.3), 1.0);
+      }
+    `,
   });
-  const streamPoints = new THREE.Points(streamGeo, streamMat);
-  dishGroup.add(streamPoints);
-  const streamParticles = Array.from({ length: STREAM_COUNT }, () => ({
-    angle: Math.random() * Math.PI * 2,
-    rMult: 0.82 + Math.random() * 0.36, // fixed per-particle spread off the ideal cone surface, so the stream doesn't trace one perfectly graphic line
-    phase: Math.random(),
-    speed: 0.045 + Math.random() * 0.025,
-  }));
+  const lensMesh = new THREE.Mesh(new THREE.SphereGeometry(LENS_RADIUS, 32, 32), lensMat);
+  lensMesh.position.y = apexY;
+  dishGroup.add(lensMesh);
+  const gravLens = { mesh: lensMesh, uniforms: lensUniforms };
   group.add(dishGroup);
 
   // ─── The nine real planets — order, relative size, and orbital spacing
@@ -1018,9 +1036,7 @@ function buildOrrery(preview, suspendTopY, rafterY) {
   // needs its own collider.
   const colliders = [{ x: 0, z: 0, r: 0.6 }];
 
-  const signalStream = { geo: streamGeo, particles: streamParticles, dishR, dishH, hubY: apexY, fallSpan: STREAM_FALL_SPAN, baseColor: STREAM_BASE_COLOR };
-  const webPulse = { spokeSegMeshes, webHubMat, ringMat };
-  return { group, hitTarget: hub, lampMat, orbits, unknowns, signalStream, webPulse, belt, baseY, mastHeight, colliders, ringInfo };
+  return { group, hitTarget: hub, lampMat, orbits, unknowns, gravLens, belt, baseY, mastHeight, colliders, ringInfo };
 }
 
 // ─── The warehouse — floor, a ceiling with a skylight cut into it, roof
@@ -2045,6 +2061,25 @@ export function createOrrery(container, { preview = false } = {}) {
   const rafterY   = ceilingY - (preview ? 0.35 : 0.45);
   const suspendTopY = rafterY - (preview ? 0.3 : 0.4);
   const orrery = buildOrrery(preview, suspendTopY, rafterY);
+
+  // Backdrop capture for the telescope's gravitational-lensing hub (see
+  // gravLens in buildOrrery) — a snapshot of the scene taken with the lens
+  // mesh hidden, retaken every frame just before the real render (see
+  // animate()), that the lens shader then samples with bent UVs. Half
+  // resolution: the lensing effect only ever needs to read as a soft warp,
+  // never a crisp mirror, and a lower-res source texture buys that
+  // softness for free while halving the cost of this extra render pass.
+  const LENS_RT_SCALE = 0.5; // TUNABLE
+  const lensBackdropRT = new THREE.WebGLRenderTarget(
+    Math.max(1, Math.round(w * LENS_RT_SCALE)),
+    Math.max(1, Math.round(h * LENS_RT_SCALE)),
+  );
+  orrery.gravLens.uniforms.uBackdrop.value = lensBackdropRT.texture;
+  // uResolution must match gl_FragCoord's own space — the actual drawing
+  // buffer (CSS size × devicePixelRatio), not the CSS size itself, or the
+  // bend offset lands at the wrong screen scale on any non-1x display.
+  orrery.gravLens.uniforms.uResolution.value.set(renderer.domElement.width, renderer.domElement.height);
+
   const floorY = orrery.baseY - (preview ? 0.9 : 1.3);
   const warehouse = buildWarehouse(preview, floorY, ceilingY, rafterY);
 
@@ -2537,105 +2572,91 @@ export function createOrrery(container, { preview = false } = {}) {
       }
       dustAttr.needsUpdate = true;
 
-      // The radio telescope's received-signal stream (part 1 of 2 — see
-      // the "receiving effect has two parts" comment above streamParticles
-      // in buildOrrery). Same "fixed base state + a deterministic function
-      // of dustClock" shape as the dust motes just above (reusing the same
-      // already-rescaled clock, not a separate one), each particle's own
-      // fall cycle computed fresh from its fixed angle/rMult/phase, never
-      // mutated frame to frame. Reworked from a fall-then-late-bend shape
-      // to a single continuous slide down the dish's own cone equation —
-      // r(y) = dishR * (y - apexY) / dishH — just no longer clamped to
-      // y <= rimY, so the SAME real cone the lattice is built from simply
-      // keeps extending upward into the open sky above it. A particle's
-      // (x, z) at any height is that height's cone radius times its own
-      // fixed angle/rMult, so it visibly narrows toward the hub for its
-      // ENTIRE trip, not just the last instant — the direct fix for
-      // "particles drift laterally past the dish with no clear
-      // convergence," flagged live after the first version.
-      const stream = orrery.signalStream;
-      const streamAttr = stream.geo.attributes.position;
-      const streamColorAttr = stream.geo.attributes.color;
-      const coneSlope = stream.dishR / stream.dishH;
-      for (let i = 0; i < stream.particles.length; i++) {
-        const p = stream.particles[i];
-        const cycle = (dustClock * p.speed + p.phase) % 1; // 0 = just set off from above, 1 = arriving at the hub
-        const y = stream.hubY + (1 - cycle) * stream.fallSpan;
-        const r = coneSlope * (y - stream.hubY) * p.rMult;
-        streamAttr.setXYZ(i, Math.cos(p.angle) * r, y, Math.sin(p.angle) * r);
-        // Brightens sharply as it nears the hub (vertex colors + additive
-        // blending, both native PointsMaterial features — no shader) so
-        // the eye reads "arriving and being received," not "passing
-        // through," the second half of the same flagged note.
-        const boost = 0.35 + cycle * cycle * 1.5;
-        streamColorAttr.setXYZ(i, stream.baseColor.r * boost, stream.baseColor.g * boost, stream.baseColor.b * boost);
+      // The radio telescope's receiving effect — see the "rebuilt around
+      // what this thing actually detects" comment on gravLens in
+      // buildOrrery. Two scales, both riding the SAME uStrength uniform
+      // (how hard the lens shader bends its backdrop sample), so they
+      // read as one continuous phenomenon at different intensities
+      // rather than two separate effects switching on and off:
+      //  1. Baseline — the continuous, low-level gravitational motion of
+      //     the solar system's own bodies (what the found text's "error
+      //     tolerance approaching perfection" is actually describing).
+      //     Two organicPulse calls at unrelated base frequencies, summed —
+      //     the exact layered-frequency math built for the earlier dish
+      //     pulse, repurposed here to drive distortion strength instead
+      //     of brightness, so that work wasn't wasted, just re-pointed.
+      //  2. Chirp — an occasional merger event (real gravitational-wave
+      //     language: two compact objects spiraling together, radiating
+      //     faster and louder as they close, cutting off at coalescence).
+      //     Scheduled as a deterministic function of real elapsed time (no
+      //     random timing, no accumulated state — periodic but rare, same
+      //     shape as every other clock-driven effect in this file), riding
+      //     ON TOP of the baseline as a temporary boost, not replacing it.
+      const baseline = organicPulse(t, 0.6) * 0.5 + organicPulse(t, 0.23) * 0.3;
+
+      // realSeconds, not t: t is the orrery's own slow orbital clock
+      // (+0.001/frame, ~0.06/real-second — fine for a baseline that just
+      // needs to breathe gently forever) but a scheduled "every 34
+      // seconds" event needs to mean actual seconds a visitor experiences,
+      // not t's compressed orbital time. now (performance.now(), already
+      // computed above for dt) gives that directly, frame-rate independent.
+      const realSeconds = now / 1000;
+      const CHIRP_PERIOD = 34; // TUNABLE: real seconds between merger events
+      const CHIRP_DUR = 5.5;   // TUNABLE: how long one event lasts
+      const chirpLocal = realSeconds % CHIRP_PERIOD;
+      let chirp = 0;
+      if (chirpLocal < CHIRP_DUR) {
+        const u = chirpLocal / CHIRP_DUR; // this event's own 0..1 progress
+        // Envelope: rises toward the merger (u ~ 0.85), rings down fast
+        // after — real inspiral amplitude grows toward coalescence, then
+        // the signal cuts off sharply once the bodies actually merge.
+        const envelope = u < 0.85 ? smoothstep01(u / 0.85) : Math.max(0, 1 - (u - 0.85) / 0.15);
+        // A standard linear chirp: instantaneous frequency rises linearly
+        // with time (f(u) = F0 + K*u), phase is frequency's own integral
+        // — the textbook chirp definition radar/sonar/audio all use, not
+        // a claim of exact inspiral physics (a real merger's frequency
+        // sweep actually accelerates faster than linear toward the end),
+        // but the same "rising pitch toward a peak" character asked for,
+        // in closed form (no accumulated per-frame phase, same rule as
+        // the telescope's earlier FM work).
+        const F0 = 2, K = 14;
+        const phase = 2 * Math.PI * (F0 * u + K * u * u / 2);
+        // Oscillates around a rising pedestal rather than through zero —
+        // ior/thickness can't go negative, but the real signal itself
+        // alternately stretches and squeezes; this keeps that alternating
+        // character legible (rapid late-stage ripples, not a smooth
+        // ramp) while staying physically valid for the material.
+        chirp = envelope * (0.5 + 0.5 * Math.sin(phase));
       }
-      streamAttr.needsUpdate = true;
-      streamColorAttr.needsUpdate = true;
 
-      // Part 2: the pulse that visibly travels inward along the web's own
-      // spokes, rim to hub, all nine at once. wavePos 0->1 is one full
-      // inward sweep; waveT (1->0) is that same sweep expressed as the
-      // spoke's own apex(0)..rim(1) parameter, so it can be compared
-      // directly against each segment's own position along the spoke.
-      // Each segment lights up as the wave passes its own position (a
-      // triangular window centered on the wave, not a hard on/off, so it
-      // reads as a hotspot actually traveling rather than pieces of the
-      // spoke blinking independently); the hub itself flashes brightest
-      // exactly when the wave finishes arriving there (waveT -> 0) — the
-      // moment of reception, not a separately-timed effect.
-      //
-      // Flagged live: a single clean periodic cycle reads as mechanical,
-      // not alive — real "alive" pulsing varies in period and amplitude
-      // cycle to cycle. Two layers of that variation, both closed-form
-      // functions of dustClock (no accumulated state, same rule as
-      // everywhere else in this file):
-      //  - The sweep's own RATE is frequency-modulated (real FM, the same
-      //    principle a synth uses for vibrato): it breathes between 0.65x
-      //    and 1.35x of WEB_PULSE_SPEED on a slow, non-integer-ratio
-      //    cycle (FM_RATE), so successive rim-to-hub trips visibly differ
-      //    in how long they take, rather than looping identically every
-      //    ~12.5s.
-      //  - The peak BRIGHTNESS of each pass (ampMod) and a small fast
-      //    texture jitter both come from organicPulse — three sines at
-      //    non-integer-ratio frequencies (see its own comment above) that
-      //    never realign, so no two passes hit the same peak either.
-      const WEB_PULSE_SPEED = 0.08; // TUNABLE: base sweep rate
-      const FM_DEPTH = 0.35; // TUNABLE: how far the rate swings, as a fraction of WEB_PULSE_SPEED
-      const FM_RATE = 0.037; // TUNABLE: how slowly the rate itself breathes — deliberately not a clean fraction of WEB_PULSE_SPEED so the two never realign
-      const wavePhase = WEB_PULSE_SPEED * dustClock + (FM_DEPTH * WEB_PULSE_SPEED / FM_RATE) * Math.sin(dustClock * FM_RATE);
-      const wavePos = ((wavePhase % 1) + 1) % 1;
-      const waveT = 1 - wavePos;
-      const segCount = orrery.webPulse.spokeSegMeshes[0].length;
-      const winW = (1 / segCount) * 1.3; // TUNABLE: how wide the traveling hotspot is, in spoke-length fractions
-      const ampMod = 0.82 + organicPulse(dustClock, 0.031) * 0.34; // TUNABLE: slow pass-to-pass brightness variation
-      const jitter = (organicPulse(dustClock, 4.7) - 0.5) * 0.07; // TUNABLE: faster, low-amplitude texture noise
-      orrery.webPulse.spokeSegMeshes.forEach(segs => {
-        segs.forEach((seg, k) => {
-          const segMidT = (k + 0.5) / segCount;
-          const glow = Math.max(0, 1 - Math.abs(waveT - segMidT) / winW);
-          seg.material.emissiveIntensity = 0.45 + glow * 0.9 * ampMod + jitter;
-        });
-      });
-      // The hub flashes as the wave arrives (waveT -> 0) — same window,
-      // plus a second term for waveT -> 1 so it also catches the instant
-      // a fresh wave sets off from the rim, reading as one continuous
-      // "received... sent the next one out" cycle rather than a flash
-      // that only ever happens at one end.
-      const hubGlow = Math.max(0, 1 - Math.abs(waveT) / winW) + Math.max(0, 1 - Math.abs(waveT - 1) / winW);
-      orrery.webPulse.webHubMat.emissiveIntensity = 0.5 + Math.min(1, hubGlow) * 1.3 * ampMod + jitter;
+      // uStrength is a screen-space UV offset (see the fragment shader in
+      // buildOrrery) — kept small (a few percent of the screen) even at
+      // full chirp intensity: too strong and the sampled backdrop just
+      // looks like a smeared mess, too weak and it reads as a rendering
+      // glitch rather than deliberate distortion (the exact risk flagged
+      // up front). This range was tuned live against that failure mode
+      // on both ends.
+      const distortion = baseline + chirp * 1.4;
+      orrery.gravLens.uniforms.uStrength.value = 0.02 + distortion * 0.04;
     }
-
-    // The web's cross-bracing (not part of the traveling pulse above, see
-    // ringMat in buildOrrery) gets its own steady glow so the structural
-    // half of the antenna reads as "alive" too, not dark next to the
-    // animated spokes/hub — now organicPulse-driven rather than a single
-    // clean sine, same "not a mechanical blink cycle" reasoning as above.
-    orrery.webPulse.ringMat.emissiveIntensity = 0.4 + organicPulse(t, 3) * 0.3;
 
     if (!hovered && !selected) {
       orrery.hitTarget.scale.setScalar(1.0 + Math.sin(t * 8) * 0.03);
     }
+
+    // Backdrop capture for the gravitational-lensing hub (see gravLens in
+    // buildOrrery): hide the lens mesh, render everything else from the
+    // real camera into lensBackdropRT, then show it again and do the real
+    // render — the lens shader samples that snapshot with bent UVs, so it
+    // always needs a fresh "what's actually behind me from here" image,
+    // every frame, regardless of reduceMotion (the camera itself can still
+    // move under reduced motion; only the decorative animations above are
+    // gated).
+    orrery.gravLens.mesh.visible = false;
+    renderer.setRenderTarget(lensBackdropRT);
+    renderer.render(scene, camera);
+    renderer.setRenderTarget(null);
+    orrery.gravLens.mesh.visible = true;
 
     renderer.render(scene, camera);
     clippedPreview?.blit();
@@ -2646,6 +2667,8 @@ export function createOrrery(container, { preview = false } = {}) {
     camera.aspect = w / h;
     camera.updateProjectionMatrix();
     renderer.setSize(w, h);
+    lensBackdropRT.setSize(Math.max(1, Math.round(w * LENS_RT_SCALE)), Math.max(1, Math.round(h * LENS_RT_SCALE)));
+    orrery.gravLens.uniforms.uResolution.value.set(renderer.domElement.width, renderer.domElement.height);
     checkTitleHintCollision?.();
   });
 
@@ -2664,6 +2687,7 @@ export function createOrrery(container, { preview = false } = {}) {
       }
       if (audioCtx) { audioCtx.close(); audioCtx = null; }
       renderer.dispose();
+      lensBackdropRT.dispose();
       clippedPreview?.dispose();
       starGeo.dispose();
       starMat.dispose();
