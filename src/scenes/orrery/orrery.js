@@ -34,9 +34,13 @@ import { ORRERY } from './orrery.text.js';
 // scale, Mercury and Pluto can't share a small scene at all.
 // Colors match a print Scott owns — a minimalist "The Solar System" poster,
 // flat bold color per planet against dark slate green. Applied here as a
-// spray-paint job over the scrap-metal bodies (see makeSprayPaintTexture)
-// rather than the poster's own clean flat fills — junk-metal orrery, not a
-// print.
+// spray-paint job over bronze bodies (see makeSprayPaintTexture) rather than
+// the poster's own clean flat fills — junk-metal orrery, not a print. That
+// paint job is decades old by the time a visitor sees it, per the found
+// text ("great bronze balls... painted a most royal purple," found still
+// hanging, mid-motion, in a warehouse) — see the "Planet-body aging" block
+// above buildAgedPlanetGeometry for the worn-paint/patina/seam-grime pass
+// built on top of this base texture.
 // ─── Real solar-system data vs. deliberate visual compression ───────────
 // `au` here is the real semi-major axis (average orbital distance from
 // the sun) of each planet in astronomical units (1 AU = Earth's own
@@ -198,6 +202,251 @@ function makeSprayPaintTexture(hex) {
   return tex;
 }
 
+// ─── Planet-body aging: seamless 3D noise shared by geometry + texture ──
+// "De-pristine the planets": the found text calls these "great bronze
+// balls," painted, hanging in a warehouse for decades — the flat spray-
+// paint job above reads as freshly made, not as a machine that's sat
+// mostly still, occasionally bumped and handled, for that long. Patina,
+// worn paint over bronze, irregular geometry, and seam grime should read
+// as ONE material story rather than four separate effects layered on
+// top of each other, so all four below share a single height field: a
+// raised/exposed point on an object handled over decades wears its
+// paint down to bare bronze and burnishes shiny in the process; a
+// recessed/sheltered point never gets touched, so its paint survives but
+// dust and tarnish settle into it instead. Both are opposite readings of
+// the SAME field, not two unrelated noise sources — so the color,
+// roughness, metalness, and emissive maps below, and the mesh
+// displacement itself (buildAgedPlanetGeometry), all agree with each
+// other about which points on the sphere are "high" and which are "low."
+//
+// That field has to be genuinely seamless across the whole sphere,
+// including the UV wrap and both poles — a flat 2D (u,v) noise lookup
+// creases visibly at u=0/u=1 and pinches at the poles. Feeding each
+// point's own 3D unit direction into the noise instead sidesteps that
+// entirely, since there's no wraparound edge in 3D space to begin with.
+// Same deterministic lattice-hash value-noise technique as beamline.js's
+// WILDERNESS_NOISE (own seeded hash, not Math.random, so a single seed
+// reproduces an identical field wherever it's sampled again), extended
+// from 2 dimensions to 3, with the same avalanche-mixing recipe
+// (XOR-shift, multiply, XOR-shift) and structural constants as
+// beamline.js's hash2, plus one more large odd multiplier for the third
+// input.
+function hash3(ix, iy, iz, seed) {
+  let h = (ix * 374761393 + iy * 668265263 + iz * 2147483647 + seed * 2246822519) | 0;
+  h = (h ^ (h >>> 13)) | 0;
+  h = Math.imul(h, 1274126177);
+  h = (h ^ (h >>> 16)) >>> 0;
+  return h / 4294967296;
+}
+function smoothstep01(t) { return t * t * (3 - 2 * t); }
+// Trilinear interpolation between the 8 lattice-cell corners surrounding
+// (x, y, z) — the 3D generalization of beamline.js's valueNoise2D.
+function valueNoise3D(x, y, z, seed) {
+  const ix = Math.floor(x), iy = Math.floor(y), iz = Math.floor(z);
+  const fx = smoothstep01(x - ix), fy = smoothstep01(y - iy), fz = smoothstep01(z - iz);
+  const c000 = hash3(ix, iy, iz, seed),         c100 = hash3(ix + 1, iy, iz, seed);
+  const c010 = hash3(ix, iy + 1, iz, seed),     c110 = hash3(ix + 1, iy + 1, iz, seed);
+  const c001 = hash3(ix, iy, iz + 1, seed),     c101 = hash3(ix + 1, iy, iz + 1, seed);
+  const c011 = hash3(ix, iy + 1, iz + 1, seed), c111 = hash3(ix + 1, iy + 1, iz + 1, seed);
+  const x00 = c000 + (c100 - c000) * fx, x10 = c010 + (c110 - c010) * fx;
+  const x01 = c001 + (c101 - c001) * fx, x11 = c011 + (c111 - c011) * fx;
+  const y0 = x00 + (x10 - x00) * fy, y1 = x01 + (x11 - x01) * fy;
+  return y0 + (y1 - y0) * fz;
+}
+// Fractal Brownian motion — same octave-stacking as beamline.js's fbm:
+// stack several frequencies of valueNoise3D so the result has broad
+// blotchy shape (low-frequency, high-amplitude early octaves) with
+// finer variation layered on top, instead of looking uniformly smooth.
+function fbm3(x, y, z, seed, octaves = 4) {
+  let sum = 0, amp = 0.5, freq = 1, norm = 0;
+  for (let o = 0; o < octaves; o++) {
+    sum += amp * valueNoise3D(x * freq, y * freq, z * freq, seed + o * 101);
+    norm += amp;
+    amp *= 0.5;
+    freq *= 2.15;
+  }
+  return sum / norm; // 0..1
+}
+function clamp01(x) { return x < 0 ? 0 : x > 1 ? 1 : x; }
+function remap01(x, lo, hi) { return clamp01((x - lo) / (hi - lo)); }
+
+// (u, v) -> the point on the unit sphere that (u, v) addresses. Used
+// identically by buildAgedPlanetGeometry and makeAgedPlanetTextures
+// below so a texture pixel and a geometry vertex at the same (u, v)
+// always land on the exact same physical point on the body — the whole
+// wear/patina/grime system depends on that agreement holding exactly,
+// not approximately, which is also why this scene hand-builds the
+// sphere geometry below rather than trusting THREE.SphereGeometry's own
+// (unverified-from-here) UV layout to match.
+function sphericalDir(u, v, out) {
+  const theta = u * Math.PI * 2, phi = v * Math.PI;
+  const s = Math.sin(phi);
+  out.x = s * Math.cos(theta);
+  out.y = Math.cos(phi);
+  out.z = s * Math.sin(theta);
+  return out;
+}
+
+const AGE_FREQ_H = 2.4;       // TUNABLE: roughly how many broad wear/patina blotches wrap the sphere
+const AGE_FREQ_EDGE = 8;      // TUNABLE: finer noise that roughens the wear/grime boundary into an organic chip/tarnish edge instead of a smooth gradient ring
+const AGE_EDGE_JITTER = 0.08; // TUNABLE: how far AGE_FREQ_EDGE can locally shift the wear/grime threshold
+// fbm3 at these settings empirically lands around mean 0.5, std ~0.11 (see
+// verify_planet_aging.mjs, run once during development, not part of the
+// repo) — NOT a uniform 0..1 spread, so these bands are calibrated against
+// that actual distribution rather than guessed against the theoretical
+// range: WEAR/GRIME both start around the ~85th/15th percentile and reach
+// full effect around the ~98th/2nd, so only a minority of each body's
+// surface (its highest and lowest points) ever shows real wear or grime —
+// "aged, not decayed," per the brief's own ceiling.
+const WEAR_LO = 0.58, WEAR_HI = 0.74;   // TUNABLE: band of the height field that transitions from intact paint to bare, burnished bronze
+const GRIME_LO = 0.58, GRIME_HI = 0.74; // TUNABLE: band of (1 - height) that transitions from clean to patinated/grimy — same band as WEAR_LO/HI by design: fbm3's own spread is close to symmetric around 0.5
+const AGE_DISPLACE_AMT = 0.07;          // TUNABLE: fraction of radius the surface bulges/dimples by — kept modest, "aged, not decayed"
+const SEAM_DIR = new THREE.Vector3(-1, 0, 0); // every planet's mounting arm attaches along local -X (see arm.position.x below) — one fixed direction, true for all nine bodies, not derived per-planet
+const SEAM_DOT_LO = 0.55;               // TUNABLE: angular reach (as a dot-product threshold) of the grime smudge around SEAM_DIR
+const AGE_SEGMENTS_W = 28, AGE_SEGMENTS_H = 20; // resolution for the hand-built planet geometry below — enough to carry the displacement as real bumps rather than a faceted lump, still trivial at nine bodies
+
+// A UV sphere built by hand (rather than THREE.SphereGeometry) so its UV
+// layout is known exactly instead of assumed — see sphericalDir above
+// for why that guarantee matters here. Standard grid-of-quads
+// construction: a (segH+1) x (segW+1) vertex grid, each quad split into
+// two triangles, computeVertexNormals afterward so the displaced
+// surface still shades correctly (a perfect sphere's own analytic
+// normals are no longer right once vertices have moved).
+function buildAgedPlanetGeometry(radius, seedH) {
+  const positions = [], uvs = [];
+  const dir = new THREE.Vector3();
+  for (let iy = 0; iy <= AGE_SEGMENTS_H; iy++) {
+    const v = iy / AGE_SEGMENTS_H;
+    for (let ix = 0; ix <= AGE_SEGMENTS_W; ix++) {
+      const u = ix / AGE_SEGMENTS_W;
+      sphericalDir(u, v, dir);
+      const h = fbm3(dir.x * AGE_FREQ_H, dir.y * AGE_FREQ_H, dir.z * AGE_FREQ_H, seedH, 4);
+      const r = radius * (1 + (h - 0.5) * 2 * AGE_DISPLACE_AMT);
+      positions.push(dir.x * r, dir.y * r, dir.z * r);
+      uvs.push(u, v);
+    }
+  }
+  const indices = [];
+  const rowLen = AGE_SEGMENTS_W + 1;
+  for (let iy = 0; iy < AGE_SEGMENTS_H; iy++) {
+    for (let ix = 0; ix < AGE_SEGMENTS_W; ix++) {
+      const a = iy * rowLen + ix, b = a + 1, c = a + rowLen, d = c + 1;
+      indices.push(a, c, b, b, c, d);
+    }
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+  geo.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
+  geo.setIndex(indices);
+  geo.computeVertexNormals();
+  geo.computeBoundingSphere();
+  return geo;
+}
+
+// Builds the color/roughness/metalness/emissive canvas maps for one
+// planet body, all four sampled together in a single pass over the same
+// per-pixel field so they stay consistent with each other and with
+// buildAgedPlanetGeometry's displacement (same seedH, same sphericalDir,
+// same AGE_FREQ_H). W/H match makeSprayPaintTexture's own canvas size,
+// whose output is reused here as the "paint as originally applied"
+// layer — this pass adds decades of aging on top of that existing
+// texture, it doesn't replace it. `texture.flipY = false` on every
+// output canvas is what keeps a canvas pixel at (u, v) and a geometry
+// vertex at UV (u, v) addressing the same point; THREE's default flipY
+// would otherwise vertically mirror the mapping between them.
+function makeAgedPlanetTextures(hex, seedH) {
+  const W = 128, H = 128;
+  const paintTex = makeSprayPaintTexture(hex);
+  const paintData = paintTex.image.getContext('2d').getImageData(0, 0, W, H).data;
+
+  const colorC = document.createElement('canvas'); colorC.width = W; colorC.height = H;
+  const roughC = document.createElement('canvas'); roughC.width = W; roughC.height = H;
+  const metalC = document.createElement('canvas'); metalC.width = W; metalC.height = H;
+  const emisC = document.createElement('canvas'); emisC.width = W; emisC.height = H;
+  const colorCx = colorC.getContext('2d'), roughCx = roughC.getContext('2d');
+  const metalCx = metalC.getContext('2d'), emisCx = emisC.getContext('2d');
+  const colorImg = colorCx.createImageData(W, H), roughImg = roughCx.createImageData(W, H);
+  const metalImg = metalCx.createImageData(W, H), emisImg = emisCx.createImageData(W, H);
+
+  const col = new THREE.Color(hex);
+  // Matches bronzeMaterial's own base/highlight tones, so an exposed
+  // patch of "bronze" here reads as the same metal the moons are cast
+  // from elsewhere in the scene, not an unrelated color invented just
+  // for this effect.
+  const bronze = { r: 138, g: 100, b: 56 };
+  const burnish = { r: 214, g: 178, b: 122 }; // the shine a handled/rubbed high point picks up
+  // Dark, desaturated tarnish rather than green verdigris, on purpose —
+  // verdigris needs sustained rain/moisture exposure, and this machine
+  // has hung indoors, mostly undisturbed, for decades, which tarnishes
+  // bronze toward soot-brown/black rather than green.
+  const tarnish = { r: 27, g: 21, b: 15 };
+
+  const dir = new THREE.Vector3();
+  for (let py = 0; py < H; py++) {
+    const v = py / H;
+    for (let px = 0; px < W; px++) {
+      const u = px / W;
+      sphericalDir(u, v, dir);
+      const h = fbm3(dir.x * AGE_FREQ_H, dir.y * AGE_FREQ_H, dir.z * AGE_FREQ_H, seedH, 4);
+      const edge = fbm3(dir.x * AGE_FREQ_EDGE, dir.y * AGE_FREQ_EDGE, dir.z * AGE_FREQ_EDGE, seedH + 7919, 2);
+      const jitter = (edge - 0.5) * AGE_EDGE_JITTER;
+      const wearAmt = remap01(h, WEAR_LO + jitter, WEAR_HI + jitter);
+      const grimeAmt = remap01(1 - h, GRIME_LO + jitter, GRIME_HI + jitter);
+      const seamAmt = remap01(SEAM_DIR.dot(dir), SEAM_DOT_LO, 1) * 0.85;
+
+      const i = (py * W + px) * 4;
+      const bronzeR = bronze.r + (burnish.r - bronze.r) * wearAmt;
+      const bronzeG = bronze.g + (burnish.g - bronze.g) * wearAmt;
+      const bronzeB = bronze.b + (burnish.b - bronze.b) * wearAmt;
+      let r = paintData[i] + (bronzeR - paintData[i]) * wearAmt;
+      let g = paintData[i + 1] + (bronzeG - paintData[i + 1]) * wearAmt;
+      let b = paintData[i + 2] + (bronzeB - paintData[i + 2]) * wearAmt;
+      r += (tarnish.r - r) * grimeAmt * 0.8;
+      g += (tarnish.g - g) * grimeAmt * 0.8;
+      b += (tarnish.b - b) * grimeAmt * 0.8;
+      const seamShadow = 1 - seamAmt * 0.55;
+      colorImg.data[i] = r * seamShadow; colorImg.data[i + 1] = g * seamShadow; colorImg.data[i + 2] = b * seamShadow; colorImg.data[i + 3] = 255;
+
+      // Roughness/metalness follow the same wear-vs-grime logic a
+      // real-time PBR wear map would use: intact paint is matte and
+      // non-metallic; bronze bared by wear is shinier and metallic,
+      // brightest right at the burnished high points; grimy recesses are
+      // duller, and slightly less reflectively metallic under a film of
+      // dust, than whatever's underneath.
+      let rough = lerp(0.78, 0.3, wearAmt);
+      rough = lerp(rough, 0.92, grimeAmt);
+      rough = lerp(rough, Math.min(0.97, rough + 0.15), seamAmt);
+      const roughByte = Math.round(clamp01(rough) * 255);
+      roughImg.data[i] = roughImg.data[i + 1] = roughImg.data[i + 2] = roughByte; roughImg.data[i + 3] = 255;
+
+      let metal = lerp(0.08, 0.82, wearAmt);
+      metal = lerp(metal, metal * 0.5, grimeAmt);
+      const metalByte = Math.round(clamp01(metal) * 255);
+      metalImg.data[i] = metalImg.data[i + 1] = metalImg.data[i + 2] = metalByte; metalImg.data[i + 3] = 255;
+
+      // The scene's structure key light relies on a flat emissive tint
+      // (see bodyMat below) to keep planet bodies legibly colored
+      // without out-competing the ring/mast structure for attention —
+      // that tint should follow the paint, not the bronze, so it fades
+      // out exactly where the paint itself has worn away or gone under
+      // grime, instead of uniformly glowing the original color straight
+      // through the new wear/patina.
+      const emisAmt = clamp01(1 - wearAmt - grimeAmt * 0.6);
+      emisImg.data[i] = col.r * 255 * emisAmt;
+      emisImg.data[i + 1] = col.g * 255 * emisAmt;
+      emisImg.data[i + 2] = col.b * 255 * emisAmt;
+      emisImg.data[i + 3] = 255;
+    }
+  }
+  colorCx.putImageData(colorImg, 0, 0);
+  roughCx.putImageData(roughImg, 0, 0);
+  metalCx.putImageData(metalImg, 0, 0);
+  emisCx.putImageData(emisImg, 0, 0);
+
+  const asTexture = c => { const t = new THREE.CanvasTexture(c); t.flipY = false; return t; };
+  return { map: asTexture(colorC), roughnessMap: asTexture(roughC), metalnessMap: asTexture(metalC), emissiveMap: asTexture(emisC) };
+}
+
 const BOLT_TONE = 0x18140f;
 
 // ─── First-person walkthrough tuning ─────────────────────────────────────
@@ -315,30 +564,147 @@ function buildOrrery(preview, suspendTopY, rafterY) {
 
   // ─── The radio telescope — "still on, receiving information from the
   // heavens." A riser from the suspension collar continues the mast upward,
-  // through the roof, to a rough sheet-metal dish and a pulsing signal bulb.
-  // Riser height tuned so this whole assembly clears the ceiling by a wide,
-  // unmistakable margin (was clearing it by as little as 0.05-0.1 units
-  // before — technically "poking out," but not legibly so): the found
-  // story's own text says it plainly ("about 30 feet high, the peak poking
-  // out of the warehouse skylights"), so the peak should read as clearly
-  // above the roofline, surrounded by the sky/star field beyond it, not
-  // just barely grazing the hole.
+  // through the roof, to a bronze lattice antenna. Riser height tuned so
+  // this whole assembly clears the ceiling by a wide, unmistakable margin
+  // (was clearing it by as little as 0.05-0.1 units before — technically
+  // "poking out," but not legibly so): the found story's own text says it
+  // plainly ("about 30 feet high, the peak poking out of the warehouse
+  // skylights"), so the peak should read as clearly above the roofline,
+  // surrounded by the sky/star field beyond it, not just barely grazing
+  // the hole.
+  //
+  // Round 2 of this element — two things were actually wrong with the
+  // first version, both caught from ground-camera screenshots: a filled
+  // solid dish read as flat and unbraced up close (no visible structure to
+  // it), and the "receiving" effect wasn't legible as its own deliberate
+  // thing next to the skylight's own pre-existing, unrelated ambient light
+  // beam (see beamMat in buildWarehouse — that beam was already there,
+  // nothing to do with this telescope). Both are addressed by rebuilding
+  // the dish as an actual open lattice — a bronze web of radial spokes and
+  // cross-bracing rings, apex down, rim up, same cone silhouette as
+  // before — rather than a filled surface: the lattice itself IS the
+  // visible structure (no separate "add supports" step), and it gives the
+  // receiving pulse below somewhere concrete to travel along.
+  //
+  // Worth being explicit about what IS and ISN'T designed here: this
+  // object is found, not engineered by Peter Hight — its web shape is
+  // just what it already was when found, not a mesh dish deliberately
+  // optimized for wind load or reception the way a real one would be. It
+  // happens to work as a receiver; nobody designed it to — a strange found
+  // shape, not good engineering. That's also why it gets its own material
+  // below instead of reusing bronzeMaterial() or the planet-body aging
+  // system (see makeAgedPlanetTextures/buildAgedPlanetGeometry): every
+  // other bronze surface on this sculpture is deliberately weathered, but
+  // this one — sitting at the single most weather-exposed point on the
+  // whole piece, poking through the roof itself — stays clean and bright.
+  // Not an inconsistency; a second unexplained detail sitting alongside
+  // "still on, receiving," same as that line: this hasn't aged the way
+  // everything below it has.
   const riserTopY = suspendTopY + (preview ? 1.0 : 1.35);
   addStrut(group, new THREE.Vector3(0, suspendTopY, 0), new THREE.Vector3(0, riserTopY, 0), (preview ? 0.03 : 0.04) * HW, mastMat);
   const dishGroup = new THREE.Group();
   dishGroup.position.y = riserTopY;
-  const dishGeo = new THREE.ConeGeometry((preview ? 0.2 : 0.26) * HW, (preview ? 0.16 : 0.22) * HW, 8, 1, true);
-  const dish = new THREE.Mesh(dishGeo, steelMat);
-  dish.rotation.x = Math.PI;
-  dishGroup.add(dish);
-  const antennaGeo = new THREE.CylinderGeometry(0.008 * HW, 0.008 * HW, (preview ? 0.16 : 0.22) * HW, 5);
-  const antenna = new THREE.Mesh(antennaGeo, steelMat);
-  antenna.position.y = (preview ? 0.14 : 0.18) * HW;
-  dishGroup.add(antenna);
-  const signalMat = new THREE.MeshStandardMaterial({ color: 0xffe8bb, emissive: 0xffcc77, emissiveIntensity: 1, transparent: true, opacity: 0.8 });
-  const signal = new THREE.Mesh(new THREE.SphereGeometry((preview ? 0.03 : 0.04) * HW, 8, 8), signalMat);
-  signal.position.y = (preview ? 0.24 : 0.32) * HW;
-  dishGroup.add(signal);
+  const dishR = (preview ? 0.34 : 0.44) * HW, dishH = (preview ? 0.24 : 0.32) * HW;
+  // Apex (the web's own center/hub — where the receiving pulse below
+  // actually converges) at -dishH/2, rim at +dishH/2: the same cone this
+  // assembly used before, just realized as a lattice of struts along that
+  // cone's surface instead of a filled mesh over it.
+  const apexY = -dishH / 2, rimY = dishH / 2;
+  const webMat = new THREE.MeshStandardMaterial({
+    color: 0xd9a862, emissive: 0xffb35c, emissiveIntensity: 0.55, roughness: 0.28, metalness: 0.9,
+  }); // template only, never itself added to the scene — every strut below gets its own .clone() so the pulse can light pieces of the web independently
+  const WEB_SPOKES = 9;    // TUNABLE: radial threads, apex to rim
+  const WEB_RINGS = 3;     // TUNABLE: cross-bracing circles between apex and rim (rim itself counts as the outermost)
+  const WEB_SEGMENTS = 4;  // TUNABLE: pieces each spoke is cut into — what lets the receiving pulse below show a hotspot actually traveling along a spoke's length, rather than a strut only ever being uniformly bright or dim
+  const spokeDirs = Array.from({ length: WEB_SPOKES }, (_, i) => {
+    const a = (i / WEB_SPOKES) * Math.PI * 2;
+    return { x: Math.cos(a), z: Math.sin(a) };
+  });
+  // Radial spokes. spokeSegMeshes[i] is ordered apex -> rim (index 0
+  // nearest the hub) — the receiving pulse in the animate loop walks this
+  // same order.
+  const spokeSegMeshes = spokeDirs.map(dir => {
+    const segs = [];
+    for (let s = 0; s < WEB_SEGMENTS; s++) {
+      const t0 = s / WEB_SEGMENTS, t1 = (s + 1) / WEB_SEGMENTS;
+      const from = new THREE.Vector3(dir.x * dishR * t0, apexY + (rimY - apexY) * t0, dir.z * dishR * t0);
+      const to = new THREE.Vector3(dir.x * dishR * t1, apexY + (rimY - apexY) * t1, dir.z * dishR * t1);
+      segs.push(addStrut(dishGroup, from, to, (preview ? 0.009 : 0.012) * HW, webMat.clone()));
+    }
+    return segs;
+  });
+  // Cross-bracing rings — straight WEB_SPOKES-gon segments between
+  // adjacent spokes at a few heights, not smooth circles: a spiderweb's
+  // cross-threads run straight between radial threads, and (see above)
+  // this is a found, not fabricated, shape — a mathematically perfect
+  // circle here would read as machined instead. One shared, non-cloned
+  // material: these aren't part of the traveling pulse, just a steady
+  // ambient glow (see animate loop) so the structural half of the web
+  // doesn't look dead next to the animated half.
+  const ringMat = webMat.clone();
+  for (let k = 1; k <= WEB_RINGS; k++) {
+    const t = k / WEB_RINGS, y = apexY + (rimY - apexY) * t, r = dishR * t;
+    for (let i = 0; i < WEB_SPOKES; i++) {
+      const a = spokeDirs[i], b = spokeDirs[(i + 1) % WEB_SPOKES];
+      const from = new THREE.Vector3(a.x * r, y, a.z * r);
+      const to = new THREE.Vector3(b.x * r, y, b.z * r);
+      addStrut(dishGroup, from, to, (preview ? 0.006 : 0.008) * HW, ringMat);
+    }
+  }
+  // The web's own center — where every spoke meets, and where the
+  // receiving pulse actually converges and flashes on arrival. Replaces
+  // the earlier version's separate antenna-and-feed-bulb assembly: a real
+  // dish's prime-focus feed sits ABOVE the dish, catching what the
+  // reflector bounces up to it, but this is a web, not an engineered
+  // reflector, so "receiving" reads more truly as everything converging
+  // inward to the web's own hub instead of up to a feed floating over it.
+  const webHubMat = webMat.clone();
+  const webHub = new THREE.Mesh(new THREE.SphereGeometry((preview ? 0.028 : 0.036) * HW, 10, 10), webHubMat);
+  webHub.position.y = apexY;
+  dishGroup.add(webHub);
+
+  // The receiving effect has two parts, kept deliberately different from
+  // each other (and from the skylight's own separate, unrelated, static
+  // light beam — see beamMat in buildWarehouse) so neither could be
+  // mistaken for incidental lighting:
+  //  1. A sparse rain of points falling straight down through the open
+  //     lattice from above — the literal incoming signal. Real math over
+  //     a generic sparkle effect, same reasoning as before: since the
+  //     actual source is astronomically distant, incoming radiation
+  //     arrives as effectively PARALLEL rays, so each point just falls
+  //     straight down, then bends at the moment it crosses the web's own
+  //     cone silhouette and converges on the hub — see orrery.signalStream
+  //     in the animate loop.
+  //  2. A pulse of light that visibly TRAVELS inward — rim to hub, along
+  //     all nine spokes at once, repeating on a clear, readable cycle —
+  //     built by animating each spoke's own WEB_SEGMENTS pieces in
+  //     sequence rather than any shader trick; see the animate loop for
+  //     the actual per-segment math.
+  // Direction matters in both: everything moves DOWN and IN, never OUT,
+  // so this reads unambiguously as receiving, not transmitting.
+  //
+  // Each falling point's landing spot is fixed for good (uniform sampling
+  // across the web's circular opening — sqrt(random), not plain random,
+  // for true uniform-by-AREA coverage rather than a center-weighted
+  // clump), and only its position along the fall-then-converge cycle
+  // changes over time — same "fixed base state + a deterministic function
+  // of the clock" shape as the dust motes below (see the animate loop),
+  // not per-frame mutation, so it can't drift out of sync with itself.
+  const STREAM_COUNT = preview ? 7 : 13; // TUNABLE
+  const STREAM_FALL_SPAN = dishH * 2.4; // TUNABLE: how far above the rim each point's fall starts
+  const STREAM_FALL_FRAC = 0.6; // TUNABLE: how much of each point's cycle is the fall vs. the converge-to-hub
+  const streamGeo = new THREE.BufferGeometry();
+  streamGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(STREAM_COUNT * 3), 3));
+  const streamMat = new THREE.PointsMaterial({
+    color: 0xffe8bb, size: (preview ? 0.013 : 0.018) * HW, sizeAttenuation: true,
+    transparent: true, opacity: 0.7, depthWrite: false,
+  });
+  const streamPoints = new THREE.Points(streamGeo, streamMat);
+  dishGroup.add(streamPoints);
+  const streamParticles = Array.from({ length: STREAM_COUNT }, () => {
+    const a = Math.random() * Math.PI * 2, r = Math.sqrt(Math.random()) * dishR * 0.92;
+    return { x: Math.cos(a) * r, z: Math.sin(a) * r, phase: Math.random(), speed: 0.05 + Math.random() * 0.03 };
+  });
   group.add(dishGroup);
 
   // ─── The nine real planets — order, relative size, and orbital spacing
@@ -424,20 +790,38 @@ function buildOrrery(preview, suspendTopY, rafterY) {
     const bodyGroup = new THREE.Group();
     bodyGroup.position.x = radius;
     pivot.add(bodyGroup);
-    const bodyGeo = new THREE.SphereGeometry(size, 16, 16);
-    // Kept moderate rather than bright — together with the dedicated
-    // structure key light (see createOrrery), this keeps the planet
-    // bodies from reading as more prominent than the ring/mast structure
-    // holding them, without dimming the planets into nothing.
+    // seedH fixes ONE aging field for this body — see the "Planet-body
+    // aging" block above buildAgedPlanetGeometry — reused for both its
+    // displaced geometry and every map on its material, so the bumps,
+    // the worn paint, the patina, and the seam grime all agree with each
+    // other about where on this particular ball is "high" and "low."
+    // Freshly randomized per body per page load, same as every other
+    // procedural texture in this file (makeSprayPaintTexture,
+    // makeMetalTexture) — no two visits render the same wear pattern.
+    const seedH = Math.floor(Math.random() * 1e6);
+    const bodyGeo = buildAgedPlanetGeometry(size, seedH);
+    const agedMaps = makeAgedPlanetTextures(planet.color, seedH);
+    // emissive is white (not planet.color) because the actual color now
+    // lives in agedMaps.emissiveMap itself, already weighted by wear —
+    // see the comment on that map inside makeAgedPlanetTextures.
+    // Intensity kept at the same 0.17 as before this pass: moderate
+    // rather than bright, so — together with the dedicated structure key
+    // light (see createOrrery) — the planet bodies still read as
+    // secondary to the ring/mast structure holding them, not more
+    // prominent than it.
     const bodyMat = new THREE.MeshStandardMaterial({
-      map: makeSprayPaintTexture(planet.color),
-      emissive: planet.color, emissiveIntensity: 0.17,
-      roughness: 0.68, metalness: 0.1,
+      map: agedMaps.map,
+      roughnessMap: agedMaps.roughnessMap, roughness: 1,
+      metalnessMap: agedMaps.metalnessMap, metalness: 1,
+      emissiveMap: agedMaps.emissiveMap, emissive: 0xffffff, emissiveIntensity: 0.17,
     });
     const body = new THREE.Mesh(bodyGeo, bodyMat);
     bodyGroup.add(body);
 
-    // A short mounting arm — the ball rides a bracket on the ring.
+    // A short mounting arm — the ball rides a bracket on the ring. Always
+    // along local -X, which is exactly what SEAM_DIR (above,
+    // makeAgedPlanetTextures) assumes when it darkens the body's own
+    // surface with grime right where this arm actually meets it.
     const armGeo = new THREE.CylinderGeometry(0.006 * HW, 0.006 * HW, (preview ? 0.03 : 0.04) * HW, 5);
     const arm = new THREE.Mesh(armGeo, steelMat);
     arm.rotation.z = Math.PI / 2;
@@ -500,13 +884,30 @@ function buildOrrery(preview, suspendTopY, rafterY) {
   // does: between Mars and Jupiter, not out past everything else. ─────────
   const marsIdx = planets.findIndex(p => p.name === 'Mars');
   const jupiterIdx = planets.findIndex(p => p.name === 'Jupiter');
+  let belt = null;
   if (marsIdx !== -1 && jupiterIdx !== -1) {
     const beltRadius = (radii[marsIdx] + radii[jupiterIdx]) / 2;
     const beltY = ringYBase + ((marsIdx + jupiterIdx) / 2) * (preview ? 0.06 : 0.05);
     const beltGroup = new THREE.Group();
     beltGroup.position.y = beltY;
+    // Every ring in this scene (see ring.rotation.x above, per planet) is
+    // tilted, each by its own independently-jittered amount — the belt sat
+    // perfectly flat instead, which reads as floating out of plane with
+    // the tilted structure around it rather than as one more ring of the
+    // same machine. Splits the difference between its two neighbors'
+    // actual tilts (Mars, Jupiter) rather than inventing an unrelated
+    // value of its own.
+    beltGroup.rotation.x = (ringInfo[marsIdx].tilt + ringInfo[jupiterIdx].tilt) / 2;
     group.add(beltGroup);
-    const debrisMat = new THREE.MeshStandardMaterial({ color: 0x554433, roughness: 0.85, metalness: 0.3 });
+    // A touch of warm emissive on top of the dark scrap color — pure
+    // diffuse-only 0x554433 chunks this small read as nearly black
+    // against the room's own dark curtain backdrop under this scene's
+    // deliberately sparse lighting (checked live: at normal viewing
+    // distance they were effectively invisible), losing the "a scatter
+    // of debris, distinct from the smooth painted planets" the found
+    // text calls for. The glow is faint and doesn't change the belt's
+    // actual color, just keeps it from vanishing into the dark.
+    const debrisMat = new THREE.MeshStandardMaterial({ color: 0x554433, emissive: 0x3a2c1c, emissiveIntensity: 0.35, roughness: 0.85, metalness: 0.3 });
     const debrisGeo = new THREE.IcosahedronGeometry(1, 0);
     const beltCount = preview ? 14 : 34;
     const beltSpread = (radii[jupiterIdx] - radii[marsIdx]) * 0.35;
@@ -520,17 +921,33 @@ function buildOrrery(preview, suspendTopY, rafterY) {
       const a = Math.random() * Math.PI * 2;
       const r = beltRadius + (Math.random() - 0.5) * beltSpread;
       const chunk = new THREE.Mesh(debrisGeo, debrisMat);
-      const s = ((preview ? 0.01 : 0.014) + Math.random() * (preview ? 0.01 : 0.013)) * HW;
+      // Slightly larger floor than before (was 0.01/0.014*HW) — same
+      // legibility issue as the emissive bump above: too small to read
+      // as a "scatter of debris" at normal viewing distance, easy to
+      // mistake for visual noise or miss entirely.
+      const s = ((preview ? 0.014 : 0.019) + Math.random() * (preview ? 0.012 : 0.015)) * HW;
       chunk.scale.setScalar(s);
       chunk.position.set(Math.cos(a) * r, (Math.random() - 0.5) * 0.06, Math.sin(a) * r);
       chunk.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI);
       beltGroup.add(chunk);
     }
+    // Parented to beltGroup, in ITS local space (from beltGroup's own
+    // origin, no beltY offset — already carried by beltGroup.position.y)
+    // rather than to `group` in world space, so these braces automatically
+    // inherit the same tilt the chunks above just got, instead of bracing
+    // a tilted disk from an untilted anchor.
     [0, Math.PI / 2].forEach(angle => {
-      const from = new THREE.Vector3(0, beltY, 0);
-      const to = new THREE.Vector3(Math.cos(angle) * beltRadius * 0.96, beltY, Math.sin(angle) * beltRadius * 0.96);
-      addStrut(group, from, to, (preview ? 0.006 : 0.008) * HW, steelMat);
+      const from = new THREE.Vector3(0, 0, 0);
+      const to = new THREE.Vector3(Math.cos(angle) * beltRadius * 0.96, 0, Math.sin(angle) * beltRadius * 0.96);
+      addStrut(beltGroup, from, to, (preview ? 0.006 : 0.008) * HW, steelMat);
     });
+    // Static before this pass — every other ring/orbit in the room
+    // continuously drifts (see orbits.forEach in animate()) except this
+    // one, which read as inert/disconnected from the rest of the machine.
+    // Speed splits the difference between Mars's and Jupiter's own orbital
+    // speeds, same reasoning as the tilt above — debris between them
+    // moving at a rate between theirs, not an arbitrary new number.
+    belt = { group: beltGroup, speed: (orbits[marsIdx].speed + orbits[jupiterIdx].speed) / 2 };
   }
 
   // ─── "A few other unidentified cosmic objects" — past Pluto, welded on
@@ -563,7 +980,9 @@ function buildOrrery(preview, suspendTopY, rafterY) {
   // needs its own collider.
   const colliders = [{ x: 0, z: 0, r: 0.6 }];
 
-  return { group, hitTarget: hub, lampMat, orbits, unknowns, signal, signalMat, baseY, mastHeight, colliders, ringInfo };
+  const signalStream = { geo: streamGeo, particles: streamParticles, dishR, dishH, hubY: apexY, fallSpan: STREAM_FALL_SPAN, fallFrac: STREAM_FALL_FRAC };
+  const webPulse = { spokeSegMeshes, webHubMat, ringMat };
+  return { group, hitTarget: hub, lampMat, orbits, unknowns, signalStream, webPulse, belt, baseY, mastHeight, colliders, ringInfo };
 }
 
 // ─── The warehouse — floor, a ceiling with a skylight cut into it, roof
@@ -2036,6 +2455,11 @@ export function createOrrery(container, { preview = false } = {}) {
         o.pivot.rotation.y += o.speed * o.direction * 0.01;
         o.moons.forEach(m => { m.pivot.rotation.y += m.speed * 0.02; });
       });
+      // The asteroid belt drifts the same way every planet ring does —
+      // rotating the whole (already-tilted, see buildOrrery) beltGroup
+      // around its own local Y axis, same "pivot.rotation.y += speed *
+      // 0.01" shape as the planet orbits just above.
+      if (orrery.belt) orrery.belt.group.rotation.y += orrery.belt.speed * 0.01;
       // The "unidentified cosmic objects" past Pluto get the same orbit
       // treatment plus their own independent tumble (mesh.rotation.x/y
       // advancing at different rates than the orbit itself, and than each
@@ -2074,10 +2498,75 @@ export function createOrrery(container, { preview = false } = {}) {
         dustAttr.array[i3 + 2] = warehouse.dust.base[i3 + 2] + Math.cos(dustClock * d.wobbleSpeed + d.phase) * d.wobbleAmp;
       }
       dustAttr.needsUpdate = true;
+
+      // The radio telescope's received-signal stream (part 1 of 2 — see
+      // the "receiving effect has two parts" comment above streamParticles
+      // in buildOrrery). Same "fixed base state + a deterministic function
+      // of dustClock" shape as the dust motes just above (reusing the same
+      // already-rescaled clock, not a separate one), each particle's own
+      // fall-then-converge cycle computed fresh from its fixed landing
+      // spot and phase, never mutated frame to frame.
+      const stream = orrery.signalStream;
+      const streamAttr = stream.geo.attributes.position;
+      for (let i = 0; i < stream.particles.length; i++) {
+        const p = stream.particles[i];
+        const cycle = (dustClock * p.speed + p.phase) % 1;
+        const r = Math.hypot(p.x, p.z);
+        // Height of the web's own real conical silhouette at this
+        // particle's radius — apex/hub at -dishH/2 (r=0), rim at +dishH/2
+        // (r=dishR), the exact shape the lattice above is built from.
+        const surfaceY = -stream.dishH / 2 + (r / stream.dishR) * stream.dishH;
+        let x, y, z;
+        if (cycle < stream.fallFrac) {
+          const f = cycle / stream.fallFrac;
+          x = p.x; z = p.z;
+          y = (surfaceY + stream.fallSpan) - f * stream.fallSpan;
+        } else {
+          const f = (cycle - stream.fallFrac) / (1 - stream.fallFrac);
+          x = p.x * (1 - f); z = p.z * (1 - f);
+          y = surfaceY + (stream.hubY - surfaceY) * f;
+        }
+        streamAttr.setXYZ(i, x, y, z);
+      }
+      streamAttr.needsUpdate = true;
+
+      // Part 2: the pulse that visibly travels inward along the web's own
+      // spokes, rim to hub, all nine at once. wavePos 0->1 is one full
+      // inward sweep; waveT (1->0) is that same sweep expressed as the
+      // spoke's own apex(0)..rim(1) parameter, so it can be compared
+      // directly against each segment's own position along the spoke.
+      // Each segment lights up as the wave passes its own position (a
+      // triangular window centered on the wave, not a hard on/off, so it
+      // reads as a hotspot actually traveling rather than pieces of the
+      // spoke blinking independently); the hub itself flashes brightest
+      // exactly when the wave finishes arriving there (waveT -> 0) — the
+      // moment of reception, not a separately-timed effect.
+      const WEB_PULSE_SPEED = 0.08; // TUNABLE: how fast the pulse sweeps from rim to hub
+      const wavePos = (dustClock * WEB_PULSE_SPEED) % 1;
+      const waveT = 1 - wavePos;
+      const segCount = orrery.webPulse.spokeSegMeshes[0].length;
+      const winW = (1 / segCount) * 1.3; // TUNABLE: how wide the traveling hotspot is, in spoke-length fractions
+      orrery.webPulse.spokeSegMeshes.forEach(segs => {
+        segs.forEach((seg, k) => {
+          const segMidT = (k + 0.5) / segCount;
+          const glow = Math.max(0, 1 - Math.abs(waveT - segMidT) / winW);
+          seg.material.emissiveIntensity = 0.45 + glow * 0.9;
+        });
+      });
+      // The hub flashes as the wave arrives (waveT -> 0) — same window,
+      // plus a second term for waveT -> 1 so it also catches the instant
+      // a fresh wave sets off from the rim, reading as one continuous
+      // "received... sent the next one out" cycle rather than a flash
+      // that only ever happens at one end.
+      const hubGlow = Math.max(0, 1 - Math.abs(waveT) / winW) + Math.max(0, 1 - Math.abs(waveT - 1) / winW);
+      orrery.webPulse.webHubMat.emissiveIntensity = 0.5 + Math.min(1, hubGlow) * 1.3;
     }
 
-    // The radio telescope's received-signal pulse.
-    orrery.signalMat.emissiveIntensity = 0.6 + Math.abs(Math.sin(t * 4)) * 1.2;
+    // The web's cross-bracing (not part of the traveling pulse above, see
+    // ringMat in buildOrrery) gets its own steady glow so the structural
+    // half of the antenna reads as "alive" too, not dark next to the
+    // animated spokes/hub.
+    orrery.webPulse.ringMat.emissiveIntensity = 0.4 + Math.abs(Math.sin(t * 3)) * 0.3;
 
     if (!hovered && !selected) {
       orrery.hitTarget.scale.setScalar(1.0 + Math.sin(t * 8) * 0.03);

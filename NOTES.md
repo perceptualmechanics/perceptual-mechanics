@@ -225,6 +225,159 @@ described are unchanged.)
   worth trimming, orrery.js's texture generators and first-person rig are the
   two most self-contained chunks to split out first.
 
+## 2.2.10 (2026-08-09)
+
+**Radio telescope: round 2 — lattice rebuild, untarnished bronze, real
+receiving effect.** The 2.2.9 ground-legibility pass fixed contrast/scale but
+not substance: up close the "dish" was still a flat, unbraced octagon with no
+structure, and the only visible "receiving" cue (soft diagonal light) turned
+out to be the skylight opening's own pre-existing ambient light, unrelated to
+any telescope code — flagged directly from ground-camera screenshots. Full
+rebuild on three fronts:
+
+- **Geometry.** Replaced the solid dish + antenna/feed-bulb assembly with an
+  open lattice — 9 spokes radiating from a central hub, cross-braced by 3
+  concentric rings, each spoke built from 4 chained `addStrut()` cylinder
+  segments (apex→rim) rather than one solid face. The lattice pattern IS the
+  structure now, so it doesn't need a separate strut system bolted onto a
+  shape — reasoned as a found object (its web shape is simply what Peter found
+  hanging there, not an engineered receiver), not a designed instrument.
+- **Material.** Built from the same base bronze as the rest of the sculpture,
+  but deliberately skipped the 2.2.7 patina/wear treatment — the one clean,
+  bright bronze surface on the whole piece, at its most weather-exposed point.
+  An intentional unexplained anomaly sitting alongside "still on, receiving
+  information from the heavens," not a continuity error.
+- **Receiving effect.** Two distinct, additive layers, both keyed off the
+  existing `dustClock` (no new clock): (1) the pre-existing particle stream,
+  renamed to converge on `hubY` instead of a dish focus — sparse points
+  falling straight down and bending onto the lattice; (2) new — a traveling
+  brightness pulse that sweeps rim→hub along each spoke's 4 segments once per
+  ~12.5s cycle (`WEB_PULSE_SPEED`), each segment's `emissiveIntensity` driven
+  by a triangular window around the pulse's current position, implemented via
+  per-segment material `.clone()`s since this project doesn't use custom
+  shaders. Both read as motion moving *into* the lattice, matching "receiving,
+  not transmitting."
+
+Verified live via ground-camera zoom screenshots (not a flown-up view): the
+lattice reads clearly as an open radiating web with cross-bracing, not a
+filled shape; the bronze is visibly brighter/cleaner than the weathered mast
+below it; brightness distribution across the spokes visibly differs across
+three screenshots spaced ~4s apart (JS-side `setTimeout` used to force real
+wall-clock gaps between captures), consistent with the pulse animating rather
+than static. Distinguishing from the skylight's ambient light was the
+explicit ask given the round-1 mixup: the ambient beam is a soft-edged,
+neutral-gray, diffuse cone with no sharp features; the new lattice glow is a
+sharp-edged, warm-orange/bronze geometric web with a bright hub — different in
+color, edge sharpness, and shape, not just brightness. `WEB_PULSE_SPEED` and
+the segment window width are called out inline as tunables if the sweep needs
+to read faster/slower live.
+
+## 2.2.9 (2026-08-09)
+
+**Asteroid belt: two real bugs, caught from Scott's own screen recording.**
+The belt chunks were 1) sitting in a perfectly flat, untilted plane while
+every ring/orbit around them (including the two rings bounding the belt,
+Mars and Jupiter) is tilted by its own jittered amount, and 2) never
+animated at all — `beltGroup` had no per-frame rotation update, unlike
+every other pivot in the scene. Together this read as debris "out of
+plane" and inert against a room where everything else visibly drifts —
+exactly what got flagged. Fixed both from the actual planet data already
+computed for its neighbors rather than inventing new numbers: tilt is the
+average of `ringInfo[marsIdx].tilt`/`ringInfo[jupiterIdx].tilt`, drift
+speed is the average of their own orbital speeds. The belt's mast-bracing
+struts were re-parented into `beltGroup`'s own local space so they inherit
+the same tilt instead of anchoring a tilted disk from an untilted point.
+Confirmed live: chunks now sit in a coherent tilted band with the rest of
+the structure and visibly drift frame to frame.
+
+**Radio telescope: ground-legibility rework.** The 2.2.8 pass modeled the
+dish "correctly" but missed the scene's actual constraint — this camera is
+ground-locked, no fly-up, so a visitor can never get closer to the peak
+than the floor. At that real distance, steep angle, and darkness, fine
+geometry doesn't matter; only silhouette and contrast do, and the dish was
+sharing plain steelMat with the surrounding structure, disappearing into
+it. Fix: dish sized up (~50% larger), given its own warm emissive material
+(`dishMat`, distinct from the gray steel around it) instead of blending in,
+and the WHOLE dish now pulses on the same clock as the feed bulb (high
+0.6 floor plus pulse, so it never fully dims) rather than relying on one
+small bulb to carry "still on" from thirty feet up. Verified from the
+actual ground-level walkthrough camera (not a flown-up test view): the
+dish now reads as a clearly lit, distinct shape well before any fine
+detail would, which is the only bar that matters here.
+
+## 2.2.8 (2026-08-09)
+
+**Orrery: radio telescope pinnacle, made legibly active.** The found text is
+specific — "still on, receiving information from the heavens" — but the only
+thing selling that before this pass was a single bulb's brightness pulsing
+(`signalMat.emissiveIntensity`), which reads as a light left on, not an
+instrument doing something; motion is what actually sells "active" at a
+distance, which a brightness oscillation alone doesn't provide. Added a
+sparse (6/11, preview/full) point stream at the dish: real math over a
+generic sparkle effect, per this scene's own standard — since the actual
+source is astronomically distant, incoming radiation arrives as effectively
+parallel rays, and a dish reflects every one of them, regardless of where it
+lands, up to the same focus (where the existing `signal` bulb already sits).
+Each point falls straight down (the parallel ray) from above the dish,
+bends the instant it crosses the dish's own real conical surface at that
+(x, z) — the exact shape `dish` itself is built from — and converges on the
+focus, same "fixed base state + a deterministic function of the clock" shape
+as the existing dust motes (dustClock reused directly, not a second clock).
+Landing spots are sqrt(random)-sampled across the dish's circular opening
+for true uniform-by-area coverage, fixed per particle for good; only the
+phase advances. Live-verified: the dish/antenna assembly and the ceiling
+hole it pokes through (with the star field beyond visible through it) both
+read clearly from a normal walkthrough vantage. The stream itself is
+small and deliberately quiet by design ("shouldn't compete for attention
+with the orbiting planets") — confirmed present and moving in the running
+scene, but a moving few-pixel point field at that brightness is at the edge
+of what a compressed automated screenshot can resolve; asked Scott to
+eyeball it live for final sign-off on legibility.
+
+**Asteroid belt legibility.** Also flagged in the same brief — checked live
+and confirmed: 34 (14 preview) pure-diffuse `0x554433` chunks at
+0.01–0.024×HW read as nearly invisible against this scene's own dark,
+sparse lighting, next to now visibly-aged, emissive-boosted planets. Gave
+`debrisMat` a faint warm emissive (doesn't change its actual color, just
+keeps it from vanishing into the dark) and raised the minimum chunk size
+slightly. Re-checked live: now reads as its own scattered field, distinct
+from the smooth painted planet bodies, as the found text's "the asteroid
+belt, and a few other unidentified cosmic objects" calls for.
+
+**Peak-through-skylight** — re-checked live per the same brief; already
+correct as of the riser-height fix noted in the "radio telescope" comment
+in `buildOrrery` (predates this entry). No change needed.
+
+## 2.2.7 (2026-08-09)
+
+**Orrery: de-pristine the planets.** The found text calls the nine bodies
+"great bronze balls," painted, found still hanging in a warehouse for
+decades — the flat spray-paint job they had before this pass read as
+freshly made, not as a machine that's sat mostly still, occasionally bumped
+and handled, for that long. Patina, worn-paint-over-bronze, irregular
+geometry, and seam grime (the brief's four requested directions) all now
+share ONE seeded 3D noise field per planet body (`hash3`/`valueNoise3D`/
+`fbm3` — a 3D extension of beamline.js's own WILDERNESS_NOISE technique,
+seamless across the whole sphere including both poles and the UV wrap,
+unlike a flat 2D lookup) rather than reading as four independent effects
+layered on top of each other: a raised/exposed point wears its paint to
+bare bronze and burnishes shiny; a recessed/sheltered point keeps its paint
+but collects patina and grime instead. Color, roughness, metalness, and
+emissive maps, AND the mesh's own displacement, are all sampled from that
+identical field — the same real-time PBR wear-map technique games use for
+prop wear, not a generic filter. Geometry is now hand-built (own UV sphere,
+`buildAgedPlanetGeometry`) rather than `THREE.SphereGeometry`, specifically
+so the texture canvas and the displaced mesh are GUARANTEED to agree on
+which (u, v) addresses which point — verified this holds (and that the
+noise field itself is well-behaved: bounded, smooth, non-degenerate) with a
+standalone Node script before trusting it live, same verification habit as
+prior 3D-geometry passes in this project. Grime also collects at the one
+fixed, real seam every planet has — where its mounting arm actually meets
+the sphere (`SEAM_DIR`), not just in the random noise. Verified live via
+close-up screenshots (zoomed browser captures of individual planet
+surfaces): visible patina blotches, bronze showing through at high points,
+and a grime smudge right at the arm's real contact point.
+
 ## 2.2.6 (2026-08-09)
 
 **Library catalog fix: Chinatown → Casablanca.** id 67 (bluray shelf, row 1
