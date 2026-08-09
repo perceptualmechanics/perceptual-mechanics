@@ -270,6 +270,25 @@ function fbm3(x, y, z, seed, octaves = 4) {
 function clamp01(x) { return x < 0 ? 0 : x > 1 ? 1 : x; }
 function remap01(x, lo, hi) { return clamp01((x - lo) / (hi - lo)); }
 
+// A pulse that genuinely never repeats within any practical viewing
+// window, without reaching for Math.random() or any accumulated
+// per-frame state: three sines at deliberately non-integer-ratio
+// frequencies (1, the golden ratio PHI, and sqrt(2)*1.3 — none a clean
+// multiple of another) summed with independent phases and weights. No
+// two of the three share a common period, so the sum's own period is
+// effectively infinite in practice — the same reasoning (and the same
+// trick a synthesizer uses for a "breathing" pad or vibrato) as the FM
+// phase math in the telescope's traveling pulse below. Still a pure,
+// deterministic function of `clock` — same "fixed base state + function
+// of time" rule as everything else in this file. Returns 0..1.
+const PHI = 1.6180339887;
+function organicPulse(clock, freq = 1) {
+  const a = Math.sin(clock * freq);
+  const b = Math.sin(clock * freq * PHI + 1.7);
+  const c = Math.sin(clock * freq * Math.SQRT2 * 1.3 + 4.1);
+  return (a * 0.5 + b * 0.32 + c * 0.18 + 1) / 2; // weights sum to 1, so the raw sum stays in [-1,1]
+}
+
 // (u, v) -> the point on the unit sphere that (u, v) addresses. Used
 // identically by buildAgedPlanetGeometry and makeAgedPlanetTextures
 // below so a texture pixel and a geometry vertex at the same (u, v)
@@ -667,44 +686,63 @@ function buildOrrery(preview, suspendTopY, rafterY) {
   // each other (and from the skylight's own separate, unrelated, static
   // light beam — see beamMat in buildWarehouse) so neither could be
   // mistaken for incidental lighting:
-  //  1. A sparse rain of points falling straight down through the open
-  //     lattice from above — the literal incoming signal. Real math over
-  //     a generic sparkle effect, same reasoning as before: since the
-  //     actual source is astronomically distant, incoming radiation
-  //     arrives as effectively PARALLEL rays, so each point just falls
-  //     straight down, then bends at the moment it crosses the web's own
-  //     cone silhouette and converges on the hub — see orrery.signalStream
-  //     in the animate loop.
+  //  1. A stream of points sliding down the web's own conical silhouette,
+  //     extended upward past the rim into open sky, converging on the
+  //     real focus (the hub) — see orrery.signalStream in the animate
+  //     loop. Reworked from an earlier version that fell straight down
+  //     and only bent inward in the last moment before landing: that
+  //     read as generic falling drift with no clear destination (verified
+  //     live, flagged directly — points appeared to pass laterally
+  //     through the frame rather than arrive anywhere in particular).
+  //     This version keeps the same real-math backbone (the dish's own
+  //     cone equation, r(y) = dishR * (y - apexY) / dishH, just no longer
+  //     clamped to y <= rimY) but applies it for the WHOLE fall, not just
+  //     the end of it, so every particle is visibly narrowing toward the
+  //     hub for its entire visible trip, not only the last instant.
   //  2. A pulse of light that visibly TRAVELS inward — rim to hub, along
-  //     all nine spokes at once, repeating on a clear, readable cycle —
-  //     built by animating each spoke's own WEB_SEGMENTS pieces in
-  //     sequence rather than any shader trick; see the animate loop for
-  //     the actual per-segment math.
+  //     all nine spokes at once — built by animating each spoke's own
+  //     WEB_SEGMENTS pieces in sequence rather than any shader trick; see
+  //     the animate loop for the actual per-segment math, including the
+  //     organicPulse-driven timing/brightness variation that keeps
+  //     successive passes from looking identical.
   // Direction matters in both: everything moves DOWN and IN, never OUT,
   // so this reads unambiguously as receiving, not transmitting.
   //
-  // Each falling point's landing spot is fixed for good (uniform sampling
-  // across the web's circular opening — sqrt(random), not plain random,
-  // for true uniform-by-AREA coverage rather than a center-weighted
-  // clump), and only its position along the fall-then-converge cycle
-  // changes over time — same "fixed base state + a deterministic function
-  // of the clock" shape as the dust motes below (see the animate loop),
-  // not per-frame mutation, so it can't drift out of sync with itself.
+  // Each particle's own compass angle and its fixed offset from the
+  // ideal cone surface (rMult, a small per-particle multiplier so they
+  // don't all trace the exact same mathematical line) are fixed for
+  // good; only its position along the fall cycle changes over time —
+  // same "fixed base state + a deterministic function of the clock"
+  // shape as the dust motes below (see the animate loop), not per-frame
+  // mutation, so it can't drift out of sync with itself.
   const STREAM_COUNT = preview ? 7 : 13; // TUNABLE
-  const STREAM_FALL_SPAN = dishH * 2.4; // TUNABLE: how far above the rim each point's fall starts
-  const STREAM_FALL_FRAC = 0.6; // TUNABLE: how much of each point's cycle is the fall vs. the converge-to-hub
+  // TUNABLE, but not free to pick arbitrarily large: since the whole fall
+  // now traces the dish's own cone equation (see the animate loop) rather
+  // than a fixed-radius vertical drop, the cone's radius at the TOP of the
+  // fall grows linearly with this span — pick too big a number and the
+  // stream visibly flares out past the skylight's own rectangular opening
+  // (holeW/holeH in buildWarehouse) into the solid ceiling around it. 0.9x
+  // dishH keeps the widest particle (rMult up to ~1.18) comfortably inside
+  // the hole with margin to spare, checked against holeW/holeH's own units.
+  const STREAM_FALL_SPAN = dishH * 0.9;
+  const STREAM_BASE_COLOR = new THREE.Color(0xffe8bb);
   const streamGeo = new THREE.BufferGeometry();
   streamGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(STREAM_COUNT * 3), 3));
+  const streamColorAttr = new THREE.BufferAttribute(new Float32Array(STREAM_COUNT * 3), 3);
+  for (let i = 0; i < STREAM_COUNT; i++) streamColorAttr.setXYZ(i, STREAM_BASE_COLOR.r * 0.4, STREAM_BASE_COLOR.g * 0.4, STREAM_BASE_COLOR.b * 0.4);
+  streamGeo.setAttribute('color', streamColorAttr);
   const streamMat = new THREE.PointsMaterial({
-    color: 0xffe8bb, size: (preview ? 0.013 : 0.018) * HW, sizeAttenuation: true,
-    transparent: true, opacity: 0.7, depthWrite: false,
+    color: 0xffffff, vertexColors: true, size: (preview ? 0.014 : 0.019) * HW, sizeAttenuation: true,
+    transparent: true, opacity: 0.85, depthWrite: false, blending: THREE.AdditiveBlending,
   });
   const streamPoints = new THREE.Points(streamGeo, streamMat);
   dishGroup.add(streamPoints);
-  const streamParticles = Array.from({ length: STREAM_COUNT }, () => {
-    const a = Math.random() * Math.PI * 2, r = Math.sqrt(Math.random()) * dishR * 0.92;
-    return { x: Math.cos(a) * r, z: Math.sin(a) * r, phase: Math.random(), speed: 0.05 + Math.random() * 0.03 };
-  });
+  const streamParticles = Array.from({ length: STREAM_COUNT }, () => ({
+    angle: Math.random() * Math.PI * 2,
+    rMult: 0.82 + Math.random() * 0.36, // fixed per-particle spread off the ideal cone surface, so the stream doesn't trace one perfectly graphic line
+    phase: Math.random(),
+    speed: 0.045 + Math.random() * 0.025,
+  }));
   group.add(dishGroup);
 
   // ─── The nine real planets — order, relative size, and orbital spacing
@@ -980,7 +1018,7 @@ function buildOrrery(preview, suspendTopY, rafterY) {
   // needs its own collider.
   const colliders = [{ x: 0, z: 0, r: 0.6 }];
 
-  const signalStream = { geo: streamGeo, particles: streamParticles, dishR, dishH, hubY: apexY, fallSpan: STREAM_FALL_SPAN, fallFrac: STREAM_FALL_FRAC };
+  const signalStream = { geo: streamGeo, particles: streamParticles, dishR, dishH, hubY: apexY, fallSpan: STREAM_FALL_SPAN, baseColor: STREAM_BASE_COLOR };
   const webPulse = { spokeSegMeshes, webHubMat, ringMat };
   return { group, hitTarget: hub, lampMat, orbits, unknowns, signalStream, webPulse, belt, baseY, mastHeight, colliders, ringInfo };
 }
@@ -2504,31 +2542,36 @@ export function createOrrery(container, { preview = false } = {}) {
       // in buildOrrery). Same "fixed base state + a deterministic function
       // of dustClock" shape as the dust motes just above (reusing the same
       // already-rescaled clock, not a separate one), each particle's own
-      // fall-then-converge cycle computed fresh from its fixed landing
-      // spot and phase, never mutated frame to frame.
+      // fall cycle computed fresh from its fixed angle/rMult/phase, never
+      // mutated frame to frame. Reworked from a fall-then-late-bend shape
+      // to a single continuous slide down the dish's own cone equation —
+      // r(y) = dishR * (y - apexY) / dishH — just no longer clamped to
+      // y <= rimY, so the SAME real cone the lattice is built from simply
+      // keeps extending upward into the open sky above it. A particle's
+      // (x, z) at any height is that height's cone radius times its own
+      // fixed angle/rMult, so it visibly narrows toward the hub for its
+      // ENTIRE trip, not just the last instant — the direct fix for
+      // "particles drift laterally past the dish with no clear
+      // convergence," flagged live after the first version.
       const stream = orrery.signalStream;
       const streamAttr = stream.geo.attributes.position;
+      const streamColorAttr = stream.geo.attributes.color;
+      const coneSlope = stream.dishR / stream.dishH;
       for (let i = 0; i < stream.particles.length; i++) {
         const p = stream.particles[i];
-        const cycle = (dustClock * p.speed + p.phase) % 1;
-        const r = Math.hypot(p.x, p.z);
-        // Height of the web's own real conical silhouette at this
-        // particle's radius — apex/hub at -dishH/2 (r=0), rim at +dishH/2
-        // (r=dishR), the exact shape the lattice above is built from.
-        const surfaceY = -stream.dishH / 2 + (r / stream.dishR) * stream.dishH;
-        let x, y, z;
-        if (cycle < stream.fallFrac) {
-          const f = cycle / stream.fallFrac;
-          x = p.x; z = p.z;
-          y = (surfaceY + stream.fallSpan) - f * stream.fallSpan;
-        } else {
-          const f = (cycle - stream.fallFrac) / (1 - stream.fallFrac);
-          x = p.x * (1 - f); z = p.z * (1 - f);
-          y = surfaceY + (stream.hubY - surfaceY) * f;
-        }
-        streamAttr.setXYZ(i, x, y, z);
+        const cycle = (dustClock * p.speed + p.phase) % 1; // 0 = just set off from above, 1 = arriving at the hub
+        const y = stream.hubY + (1 - cycle) * stream.fallSpan;
+        const r = coneSlope * (y - stream.hubY) * p.rMult;
+        streamAttr.setXYZ(i, Math.cos(p.angle) * r, y, Math.sin(p.angle) * r);
+        // Brightens sharply as it nears the hub (vertex colors + additive
+        // blending, both native PointsMaterial features — no shader) so
+        // the eye reads "arriving and being received," not "passing
+        // through," the second half of the same flagged note.
+        const boost = 0.35 + cycle * cycle * 1.5;
+        streamColorAttr.setXYZ(i, stream.baseColor.r * boost, stream.baseColor.g * boost, stream.baseColor.b * boost);
       }
       streamAttr.needsUpdate = true;
+      streamColorAttr.needsUpdate = true;
 
       // Part 2: the pulse that visibly travels inward along the web's own
       // spokes, rim to hub, all nine at once. wavePos 0->1 is one full
@@ -2541,16 +2584,37 @@ export function createOrrery(container, { preview = false } = {}) {
       // spoke blinking independently); the hub itself flashes brightest
       // exactly when the wave finishes arriving there (waveT -> 0) — the
       // moment of reception, not a separately-timed effect.
-      const WEB_PULSE_SPEED = 0.08; // TUNABLE: how fast the pulse sweeps from rim to hub
-      const wavePos = (dustClock * WEB_PULSE_SPEED) % 1;
+      //
+      // Flagged live: a single clean periodic cycle reads as mechanical,
+      // not alive — real "alive" pulsing varies in period and amplitude
+      // cycle to cycle. Two layers of that variation, both closed-form
+      // functions of dustClock (no accumulated state, same rule as
+      // everywhere else in this file):
+      //  - The sweep's own RATE is frequency-modulated (real FM, the same
+      //    principle a synth uses for vibrato): it breathes between 0.65x
+      //    and 1.35x of WEB_PULSE_SPEED on a slow, non-integer-ratio
+      //    cycle (FM_RATE), so successive rim-to-hub trips visibly differ
+      //    in how long they take, rather than looping identically every
+      //    ~12.5s.
+      //  - The peak BRIGHTNESS of each pass (ampMod) and a small fast
+      //    texture jitter both come from organicPulse — three sines at
+      //    non-integer-ratio frequencies (see its own comment above) that
+      //    never realign, so no two passes hit the same peak either.
+      const WEB_PULSE_SPEED = 0.08; // TUNABLE: base sweep rate
+      const FM_DEPTH = 0.35; // TUNABLE: how far the rate swings, as a fraction of WEB_PULSE_SPEED
+      const FM_RATE = 0.037; // TUNABLE: how slowly the rate itself breathes — deliberately not a clean fraction of WEB_PULSE_SPEED so the two never realign
+      const wavePhase = WEB_PULSE_SPEED * dustClock + (FM_DEPTH * WEB_PULSE_SPEED / FM_RATE) * Math.sin(dustClock * FM_RATE);
+      const wavePos = ((wavePhase % 1) + 1) % 1;
       const waveT = 1 - wavePos;
       const segCount = orrery.webPulse.spokeSegMeshes[0].length;
       const winW = (1 / segCount) * 1.3; // TUNABLE: how wide the traveling hotspot is, in spoke-length fractions
+      const ampMod = 0.82 + organicPulse(dustClock, 0.031) * 0.34; // TUNABLE: slow pass-to-pass brightness variation
+      const jitter = (organicPulse(dustClock, 4.7) - 0.5) * 0.07; // TUNABLE: faster, low-amplitude texture noise
       orrery.webPulse.spokeSegMeshes.forEach(segs => {
         segs.forEach((seg, k) => {
           const segMidT = (k + 0.5) / segCount;
           const glow = Math.max(0, 1 - Math.abs(waveT - segMidT) / winW);
-          seg.material.emissiveIntensity = 0.45 + glow * 0.9;
+          seg.material.emissiveIntensity = 0.45 + glow * 0.9 * ampMod + jitter;
         });
       });
       // The hub flashes as the wave arrives (waveT -> 0) — same window,
@@ -2559,14 +2623,15 @@ export function createOrrery(container, { preview = false } = {}) {
       // "received... sent the next one out" cycle rather than a flash
       // that only ever happens at one end.
       const hubGlow = Math.max(0, 1 - Math.abs(waveT) / winW) + Math.max(0, 1 - Math.abs(waveT - 1) / winW);
-      orrery.webPulse.webHubMat.emissiveIntensity = 0.5 + Math.min(1, hubGlow) * 1.3;
+      orrery.webPulse.webHubMat.emissiveIntensity = 0.5 + Math.min(1, hubGlow) * 1.3 * ampMod + jitter;
     }
 
     // The web's cross-bracing (not part of the traveling pulse above, see
     // ringMat in buildOrrery) gets its own steady glow so the structural
     // half of the antenna reads as "alive" too, not dark next to the
-    // animated spokes/hub.
-    orrery.webPulse.ringMat.emissiveIntensity = 0.4 + Math.abs(Math.sin(t * 3)) * 0.3;
+    // animated spokes/hub — now organicPulse-driven rather than a single
+    // clean sine, same "not a mechanical blink cycle" reasoning as above.
+    orrery.webPulse.ringMat.emissiveIntensity = 0.4 + organicPulse(t, 3) * 0.3;
 
     if (!hovered && !selected) {
       orrery.hitTarget.scale.setScalar(1.0 + Math.sin(t * 8) * 0.03);

@@ -225,6 +225,65 @@ described are unchanged.)
   worth trimming, orrery.js's texture generators and first-person rig are the
   two most self-contained chunks to split out first.
 
+## 2.2.11 (2026-08-09)
+
+**Radio telescope: beam directionality + organic pulse.** Scott confirmed the
+2.2.10 particle stream is real and dish-isolated (traced individual points
+frame-by-frame against the fixed lattice), but flagged two remaining
+mechanical tells — both pointing at the same underlying idea: this object is
+found, not engineered, so its own effects shouldn't read as too clean either.
+
+*Beam directionality.* The old stream fell straight down at a fixed (x, z)
+for 60% of its cycle and only bent inward in the last moment before landing
+— at a glance that reads as generic falling drift with no destination, not
+arrival. Reworked to a single continuous slide down the dish's own real cone
+equation, `r(y) = dishR * (y - apexY) / dishH`, just no longer clamped to
+`y <= rimY` — the SAME cone the lattice is physically built from simply keeps
+extending upward into the sky above it. A particle's radius at any height is
+that height's cone radius times its own fixed angle and a small per-particle
+multiplier (`rMult`, so it doesn't trace one perfectly graphic line); the
+whole visible trip narrows toward the hub, not just the last instant. Also
+added vertex-color brightening as each particle nears the hub (native
+`PointsMaterial` `vertexColors` + `AdditiveBlending`, no shader — same house
+rule as everywhere else in this file), so arrival visibly flashes rather than
+just passing through. One geometry consequence worth logging: since the fall
+now traces the cone outward from the hub instead of a fixed vertical drop,
+`STREAM_FALL_SPAN` had to shrink from the original 3.4x dishH-equivalent down
+to 0.9x dishH, or the widest particles would flare out past the skylight's
+own rectangular opening into the solid ceiling around it — checked directly
+against `holeW`/`holeH` in `buildWarehouse`, not eyeballed.
+
+*Organic pulse.* The traveling rim-to-hub pulse was one clean periodic
+sweep (`wavePos = (dustClock * WEB_PULSE_SPEED) % 1`) — identical lap every
+~12.5s, which reads as a mechanical blink cycle, not something alive. Added
+`organicPulse()`, a new module-level helper: three sines at deliberately
+non-integer-ratio frequencies (1, the golden ratio, √2×1.3) with independent
+phases, summed — none of the three share a common period, so the sum
+effectively never repeats within any practical viewing window, without
+reaching for `Math.random()` or any per-frame accumulated state (still a
+pure function of the clock, same rule as every other animation in this
+file). Two layers of it now do real work: the sweep's own RATE is frequency-
+modulated (closed-form FM — the literal vibrato technique, applied to travel
+speed instead of pitch) so it breathes between 0.65x and 1.35x of its base
+rate on a slow, unrelated cycle, meaning successive rim-to-hub trips visibly
+differ in how long they take; and the peak BRIGHTNESS of each pass, plus a
+small fast jitter, both ride `organicPulse` too, so no two passes hit the
+same intensity either. The standing ring/hub baseline glow (previously a
+flat `Math.abs(Math.sin(t*3))`) got the same treatment for consistency.
+
+Verified live via ground-camera zoom screenshots spaced several seconds
+apart (JS-side `setTimeout` for real wall-clock gaps, same method as
+2.2.10): three captures of the same tight lattice region show a materially
+different count and position of bright converging points each time — 0-1
+visible in the first capture, 4-5 clearly visible, differently placed, by
+the third — plus visibly different per-spoke brightness distribution,
+consistent with both the stream's continuous convergence and the pulse's
+FM/amplitude variation actually running rather than looping identically.
+Also exported a short GIF via the browser tooling's own recording feature
+(downloaded to Scott's machine) as the more direct verification format he
+asked for, given a live effect like this is easier to just watch than to
+take on faith from a written description.
+
 ## 2.2.10 (2026-08-09)
 
 **Radio telescope: round 2 — lattice rebuild, untarnished bronze, real
