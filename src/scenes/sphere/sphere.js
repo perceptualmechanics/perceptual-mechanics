@@ -196,13 +196,9 @@ export function createSphere(container, { preview = false } = {}) {
   if (!preview) {
     // Shell markup (hint paragraph + panel skeleton) lives in sphere.html —
     // see that file's own header comment for why it's two top-level pieces
-    // with two different mount points, and sphere.css for the 2026-07-17
-    // design-pass note on the panel's look. Design pass itself, 2026-07-17:
-    // every other scene shows a small instructional hint (drag/click) —
-    // sphere never got one, which left it the one scene a first-time
-    // visitor has to guess at. Same treatment as orbiter/orrery's hint
-    // text: fixed top-right, z-index 310 (must clear #experience-overlay —
-    // see styles/main.css's z-index-scale comment), Times New Roman
+    // with two different mount points. The hint matches orbiter/orrery's
+    // treatment: fixed top-right, z-index 310 (must clear #experience-overlay
+    // — see styles/main.css's z-index-scale comment), Times New Roman
     // regardless of the scene's own body font, since hints are chrome, not
     // scene content, and read as one consistent voice across the whole site.
     const frag = parseHTML(sphereHtml);
@@ -243,9 +239,7 @@ export function createSphere(container, { preview = false } = {}) {
           link.style.animationDelay = `-${delay}s`;
           link.style.animationDuration = `${duration}s`;
           // role="link", not "button" -- this navigates to different
-          // content within the panel, same as library.js's .library-link;
-          // code audit, 2026-08-03, converging the two on the semantically
-          // correct role.
+          // content within the panel, same as library.js's .library-link.
           link.setAttribute('role', 'link');
           link.setAttribute('tabindex', '0');
           link.setAttribute('aria-label', `Navigate to fragment: ${link.dataset.target}`);
@@ -282,13 +276,9 @@ export function createSphere(container, { preview = false } = {}) {
       if (wasOpen && sideMismatch) {
         // Crossing to the other side of an already-open panel: close first,
         // then reopen anchored to the new side once the close transition
-        // finishes. Same fix as library.js's identical bug (Scott,
-        // 2026-07-23: "if a left panel is open and then I click on the
-        // right-hand side, the new content will appear in the open left
-        // panel, rather than closing the left and opening the right").
-        // Flipping from-left instantly while open would teleport the
-        // fully-visible panel sideways instead of visibly relocating it the
-        // way a fresh open does.
+        // finishes. Flipping from-left instantly while open would teleport
+        // the fully-visible panel sideways instead of visibly relocating it
+        // the way a fresh open does. Same pattern as library.js's panel.
         panel.classList.remove('open');
         setTimeout(() => {
           panel.classList.add('no-transition');
@@ -318,14 +308,13 @@ export function createSphere(container, { preview = false } = {}) {
       setTimeout(() => panelTitle.focus(), 50);
     }
 
-    // Keyboard access, 2026-07-26: facets are otherwise raycast-only — no
-    // keyboard equivalent existed for "point at a facet." One button per
-    // fragment (not per facet — several facets can map to the same
-    // fragment via the `% fragments.length` below, so a facet isn't a
-    // meaningful unit for a visitor who can't see the geometry). Doesn't
-    // attempt to also highlight a facet in the 3D view; that's a decorative
-    // affordance for the mouse/touch path, not essential to reading the
-    // fragment.
+    // Keyboard equivalent for "point at a facet" — facets themselves are
+    // otherwise raycast-only. One button per fragment (not per facet —
+    // several facets can map to the same fragment via the
+    // `% fragments.length` below, so a facet isn't a meaningful unit for a
+    // visitor who can't see the geometry). Doesn't attempt to also
+    // highlight a facet in the 3D view; that's a decorative affordance for
+    // the mouse/touch path, not essential to reading the fragment.
     jumpList = createJumpList(container, {
       label: 'Read a fragment from the sphere',
       items: fragments,
@@ -368,14 +357,10 @@ export function createSphere(container, { preview = false } = {}) {
     touchGuard = bindTapVsDrag(container);
     onContainerClick = e => {
       if (touchGuard.consume()) return;
-      // Was `panel.classList.contains('open') && !panel.contains(e.target)`
-      // — closed the panel on ANY canvas click while open, even one that
-      // landed squarely on a different facet (hoveredFace is tracked live
-      // by mousemove above regardless of panel state, so it's already
-      // known here). Fixed 2026-07-23 as part of the same fix shipped for
-      // library.js's identical bug: only close on an actual empty-space
-      // click; a click that hit a facet swaps the panel's content in
-      // place instead.
+      // Only close on an actual empty-space click — a click that hits a
+      // facet should swap the panel's content in place instead of closing
+      // it. hoveredFace is tracked live by mousemove above regardless of
+      // panel state, so it's already known here.
       if (panel.classList.contains('open') && hoveredFace === -1) {
         panelCloser.close();
         return;
@@ -403,9 +388,7 @@ export function createSphere(container, { preview = false } = {}) {
   }
 
   // ─── Drag to rotate (mouse + touch, via sceneKit) ──────────────────────────
-  // Previously mouse-only despite touch listeners already existing above for
-  // tap-vs-drag detection — rotating the sphere silently didn't work on
-  // phones/tablets. bindOrbitDrag unifies both input paths.
+  // bindOrbitDrag unifies mouse and touch input for rotating the sphere.
   let autoRotate = true;
   const orbitDrag = bindOrbitDrag(container, {
     onDragStart: () => { autoRotate = false; },

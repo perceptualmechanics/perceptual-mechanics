@@ -1,9 +1,6 @@
 // ─── Colophon bibliography ──────────────────────────────────────────────────
-// Centralizes source information that used to live scattered per-scene —
-// most directly, orbiter.js used to show a per-poem "source" line (which doc
-// each poem came from) inside its own reading panel; that's been pulled out
-// in favor of listing it all here, once, alongside every other scene's
-// literary sourcing. See NOTES.md.
+// Centralizes where the text in every scene actually comes from, one entry
+// per scene, rendered into the colophon panel's Bibliography section.
 
 export const BIBLIOGRAPHY = [
   {
@@ -44,10 +41,6 @@ export const BIBLIOGRAPHY = [
     ],
   },
 ];
-// The Golden Hare's found line — "A Golden Hare ran across the sky, carrying
-// the sun in its belly, where it would be safe. The hare ran up the ladder
-// to the sky." — used to have its own "Elsewhere on the site" entry here,
-// crediting the wandering-hare component that used to carry it. That
-// component's retired now (see colophon.js's own header comment), so the
-// line moved into the credits section itself instead, right next to the
-// mark it's named after — see colophon.html's "The mark" section.
+// The Golden Hare's found line lives in colophon.html's "The mark" section,
+// credited there next to the hare mark it's named after, rather than as a
+// separate bibliography entry here.

@@ -2,14 +2,9 @@
   Butterfly scene shell markup — the title label and hint paragraph, both
   fixed on document.body rather than inside this scene's own container (see
   butterfly.css's header comment for the z-index/stacking-context reasoning
-  every scene with body-level chrome shares).
-
-  Until the 2026-08-07 restructure, these two elements were the one
-  exception on the whole site: created and torn down by main.js itself,
-  hardcoded to this scene's name, instead of owned by butterfly.js's own
-  create()/dispose() lifecycle like every other scene's hint/caption/title.
-  That's fixed now -- butterfly.js parses this file and mounts/removes these
-  itself, same pattern as sphere.html, orbiter.html, etc.
+  every scene with body-level chrome shares). butterfly.js parses this file
+  and mounts/removes these itself, same pattern as sphere.html, orbiter.html,
+  etc.
 -->
 <p class="butterfly-exp-label" aria-hidden="true">Chaos Butterfly in Phase Space, 2026</p>
 <p class="butterfly-hint" aria-hidden="true">drag to orbit &nbsp;&middot;&nbsp; scroll to zoom</p>

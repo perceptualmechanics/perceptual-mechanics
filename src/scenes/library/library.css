@@ -1,16 +1,12 @@
-/* Library scene styles. Previously injected at runtime via
-   document.createElement('style') inside library.js (full-experience only,
-   guarded by `if (!preview && !document.getElementById('library-styles'))`);
-   moved to a real stylesheet, imported once at the top of library.js. The
-   old JS-template interpolation of sceneKit.js's HINT_TEXT_COLOR is now
-   var(--hint-text-color), defined once in styles/main.css. No visual change.
+/* Library scene styles, imported once at the top of library.js. Hint text
+   color comes from var(--hint-text-color), defined once in styles/main.css.
 
-   2026-08-07: every selector below switched from id to class (#library-x ->
-   .library-x) per the site-wide convention — classes for styling, ids
-   reserved for cases that need real DOM uniqueness or an ARIA idref.
-   library-panel-title is the one exception: it keeps a real id (target of
-   the panel's aria-labelledby) alongside its class, so it's styled here the
-   same way as everything else. */
+   Every selector below is a class (.library-x), per the site-wide
+   convention — classes for styling, ids reserved for cases that need real
+   DOM uniqueness or an ARIA idref. library-panel-title is the one
+   exception: it keeps a real id (target of the panel's aria-labelledby)
+   alongside its class, so it's styled here the same way as everything
+   else. */
 
 .library-caption, .library-hint {
   position: fixed; color: rgba(255,255,255,0.35);
@@ -61,15 +57,14 @@
 .library-panel.from-left.open { transform: translateX(0); }
 .library-panel.no-transition { transition: none !important; }
 .library-panel-kind {
-  /* <p> now (was a div) — zero the UA default top/bottom margin so it
-     still reads as a tight label line, not a paragraph. */
+  /* This is a <p> — zero the UA default top/bottom margin so it still
+     reads as a tight label line, not a paragraph. */
   font-size: 0.65rem; letter-spacing: 0.25em; text-transform: uppercase;
   color: rgba(230,215,180,0.5); margin: 0 0 0.6rem;
 }
 .library-panel-title {
-  /* Now an <h2> (was a plain div) so the panel has a real heading to match
-     its aria-labelledby target — reset the UA default heading margin/weight
-     so the layout is pixel-identical to the old div. */
+  /* This is the panel's <h2>, matching its aria-labelledby target —
+     the UA default heading margin/weight is reset here. */
   font-size: 1.15rem; letter-spacing: 0.03em; font-weight: normal;
   color: rgba(245,238,222,0.92); line-height: 1.4;
   border-bottom: 1px solid rgba(230,215,180,0.15);

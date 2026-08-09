@@ -1,8 +1,7 @@
 // ─── The Orrery of Los Feliz: the found story ──────────────────────────────
-// The placard text the scene's read-more panel shows. Moved out of
-// orrery.js (2026-07-29) so the prerender step that builds
-// /text/orrery/ reads the same source the scene does. Colocated into
-// scenes/orrery/ (2026-08-07) alongside orrery.js/css/html.
+// The placard text the scene's read-more panel shows, colocated alongside
+// orrery.js/css/html so the prerender step that builds /text/orrery/
+// reads the same source the scene does.
 
 export const ORRERY = {
   name: 'The Orrery of Los Feliz',

@@ -21,15 +21,13 @@
 // pygmalion is a complete personal essay, internally dated to the events of
 // May 2000 (an early online personal ad, a woman calling herself "Jane" who
 // turns out to have spent eight years impersonating her own friend Melissa —
-// borrowed hobbies, borrowed biography, a fabricated Southern accent). Found
-// in the second archive deep-dive (2026-07-16), recovered from an old
-// Windows profile backup ("possible forcefed.txt", a draft later polished
-// into "Pygmalion.doc" — the title used here). Full text, unedited.
+// borrowed hobbies, borrowed biography, a fabricated Southern accent).
+// Recovered from an old Windows profile backup ("possible forcefed.txt", a
+// draft later polished into "Pygmalion.doc" — the title used here). Full
+// text, unedited.
 //
-// Folded in from the former scroll.bodies.js and scroll.ogham.js, 2026-08-07
-// — the split into raw-bodies/piece-metadata/ogham-alphabet files wasn't
-// carrying its weight, so the scroll's whole text layer (bodies, transliteration,
-// and the piece list that ties them together) now lives in this one file.
+// This file holds the scroll's whole text layer: raw bodies, Ogham
+// transliteration, and the piece list that ties them together.
 
 export const flying = [
   `One time, I was on a plane by myself. I was leaving everything I knew, everyone I loved, everywhere I had been, to try and stake my claim. To get my career, my passion, and my life going. I looked out the scratchy Plexiglass window. I saw the sea of clouds below me. I saw the horizon, infinite and daring. I looked down at the green and brown earth. And a wave of vertigo overcame me. I grabbed the armrests tightly, squeezing my eyes shut, trying to make the world stop spinning...no good.`,
@@ -97,9 +95,6 @@ export const selfMutilation = [
 // of the fall. Recovered from Cartography.doc (archive/Writing archive);
 // OLE metadata on the source file gives create_time 2002-03-11 and
 // last_saved_time 2003-04-19, hence the '2002–2003' date below.
-// Moved here 2026-08-07 when the scene it used to stage (Leaf, shelved
-// since 2026-07-31) was retired and deleted for good rather than picked up
-// again — the words themselves outlast the staging.
 export const cartography = [
   `As the droplets descend down the texture of the leaf, coalescing at the downward point, anticipating the end of their stable lives, joining a hundred million molecules for the freefall drop, poised on the brink before the gravity of the situation overwhelms the surface tension, for that brief instant every Mickey Mouse molecule knowing what is to come, feeling the onward surge as the weight increases, ever steadier, until there's no more time and —`,
   `the pull downward begins, the drop falls from the leaf, which recoils upwards in release, and it is angels in a ball as they're pulled ever downward, freefall, guts flying, screaming, and everyone wants to fly apart but that surface tension pulls them in, forcing them to stick together, and together they fall, bound by forces outside their control —`,
@@ -472,11 +467,10 @@ export function toOgham(str) {
 // reader besides.
 //
 // So the titles and dates live here — not invented for the occasion, but the
-// real ones, already recorded in scroll.js's own header comment since the
-// scene was built, and traceable to the source documents in the archive
-// (Fire.doc for The Vigil and The Calamity, Pygmalion.doc, and so on). The
-// scene ignores `title` and `date` entirely and renders only `body`, exactly
-// as before; the prerender step that builds /text/scroll/ uses all three.
+// real ones, traceable to the source documents in the archive (Fire.doc for
+// The Vigil and The Calamity, Pygmalion.doc, and so on). The scene ignores
+// `title` and `date` entirely and renders only `body`; the prerender step
+// that builds /text/scroll/ uses all three.
 //
 // Order is chronological, oldest first — the same order the scroll lashes its
 // patches together in, oldest and most soot-stained at the top.

@@ -5,17 +5,9 @@ import { createTheater } from './scenes/theater/theater.js';
 import { createOrbiter }   from './scenes/orbiter/orbiter.js';
 import { createOrrery }    from './scenes/orrery/orrery.js';
 import { createLibrary }   from './scenes/library/library.js';
-// New scene, 2026-07-31 — a staged sequence of curved mirrors, real
-// reflection geometry (not transmission) bouncing a beam between them.
-// See NOTES.md.
+// A staged sequence of curved mirrors, real reflection geometry (not
+// transmission) bouncing a beam between them.
 import { createBeamline }  from './scenes/beamline/beamline.js';
-// Re-enabled 2026-07-23 — Scott: "given this analysis, curate the excerpts
-// to create hyperlinks between them a la my other writings in the site,"
-// after a close-read of the whole catalog (library_resonances.md) turned
-// up genuine cross-title resonances. Shelved briefly the day before
-// (1.0.54) while a data-correction round wrapped up; back live now that
-// there are actual clickable cross-links (see library.js's LIBRARY_LINKS)
-// worth being able to click through.
 import { initColophon }    from './components/colophon/colophon.js';
 
 // ─── Scene registry ──────────────────────────────────────────────────────────
@@ -44,14 +36,12 @@ let lastTrigger  = null; // whichever nav icon / preview tile launched the activ
 const previews   = {};
 
 // ─── Hash deep links ─────────────────────────────────────────────────────────
-// Until 2026-07-29 the site had no routing of any kind: all eight scenes
-// lived behind a click on one URL, so no scene could be linked to,
-// bookmarked, shared, or reached from outside the page at all. The static
-// text pages under /text/ need exactly that — a real way to send a reader
-// from the writing into the piece it belongs to — so a scene needs a name
-// in the URL. A full History API router would be overkill here (one page,
+// A hash names the open scene (`/#scroll` etc.) so any scene can be linked
+// to, bookmarked, shared, or reached from outside the page — the static
+// text pages under /text/ send readers back into the piece they belong to
+// this way. A full History API router would be overkill here (one page,
 // eight client-rendered scenes, no server-side routes on a static host);
-// a hash names a scene, costs nothing to serve, and can't 404.
+// a hash costs nothing to serve, and can't 404.
 //
 // `syncingHash` guards the round trip: assigning location.hash fires
 // hashchange, which would otherwise re-enter expandScene/returnToGallery
@@ -144,15 +134,13 @@ function returnToGallery() {
     // that they're visible again, in case the window changed size while
     // an experience was open.
     window.dispatchEvent(new Event('resize'));
-    // Return focus to whichever control launched this scene. Used to
-    // query `.preview-container:focus-within` here, which can never
-    // actually match by this point: focus already moved into
+    // Return focus to whichever control launched this scene. Can't rely on
+    // `.preview-container:focus-within` here: focus already moved into
     // expContainer the moment the scene launched (see expandScene below),
     // and clearing expContainer's innerHTML just above moves focus to
-    // <body> once its focused descendant is removed from the DOM — so
-    // the query always silently found nothing. Tracking the real trigger
-    // element directly (both nav icons and preview tiles stay in the DOM
-    // the whole time, just hidden) is the only thing that actually works.
+    // <body> once its focused descendant is removed from the DOM. Tracking
+    // the real trigger element directly (both nav icons and preview tiles
+    // stay in the DOM the whole time, just hidden) is what actually works.
     lastTrigger?.focus();
   }, 600);
 }
@@ -170,10 +158,9 @@ document.querySelectorAll('.nav-icon').forEach(btn => {
 });
 
 // ─── Site title → gallery ─────────────────────────────────────────────────────
-// Semantic pass, 2026-07-22: #site-title is a real <button> now (index.html),
-// not an <a href="#" role="button"> — no href to preventDefault(), and
-// Enter/Space activation comes free with the element, so the manual
-// keydown listener this used to need is gone too.
+// #site-title is a real <button> (index.html) — no href to
+// preventDefault(), and Enter/Space activation comes free with the
+// element, so no manual keydown handling is needed.
 siteTitle.addEventListener('click', returnToGallery);
 
 // ─── Keyboard: Escape → gallery ───────────────────────────────────────────────
@@ -182,12 +169,10 @@ document.addEventListener('keydown', e => {
 });
 
 // ─── Preview container clicks ─────────────────────────────────────────────────
-// Semantic pass, 2026-07-22: .preview-container is a real <button> now
-// (index.html), not a <div role="button" tabindex="0">, so it gets
-// Enter/Space activation for free — the manual keydown listener this used
-// to need is gone; a single click listener on the button itself covers
-// mouse, touch, and keyboard activation alike (native buttons dispatch a
-// real click event for all three).
+// .preview-container is a real <button> (index.html), so it gets
+// Enter/Space activation for free — a single click listener on the button
+// itself covers mouse, touch, and keyboard activation alike (native
+// buttons dispatch a real click event for all three).
 document.querySelectorAll('.preview-wrapper').forEach(w => {
   const container = w.querySelector('.preview-container');
   container.addEventListener('click', () => expandScene(w.dataset.scene, container));
@@ -231,9 +216,6 @@ window.addEventListener('hashchange', () => {
 // ─── Colophon ─────────────────────────────────────────────────────────────────
 // Persistent mark, bottom-right of the landing page. See components/
 // colophon.js for why it needs no visibility logic of its own here.
-// (The wandering golden-hare component that used to live here is retired —
-// the mark itself is a hare now, so a second, separate wandering hare
-// mechanic was redundant. See NOTES.md, "1.0.1" entry, for what replaced it.)
 initColophon();
 
 // ─── Status-bar easter egg ──────────────────────────────────────────────────
@@ -246,22 +228,16 @@ initColophon();
 // attributes (index.html's nav icons, site-title, preview tiles) execute
 // in global scope, not this module's.
 //
-// Code audit, 2026-08-03: every trigger element is a real <button>, so
-// it's keyboard-focusable — but onmouseover never fires on focus, which
-// meant a keyboard-only visitor tabbing through the exact same controls
-// could never reach this, mouse-only parity for an otherwise input-
-// agnostic control. index.html now pairs each onmouseover="pmGlimpse(...)"
-// with a matching onfocus="pmGlimpse(...)" so both input methods have the
-// same 1-in-100 chance.
+// Every trigger element is a real <button>, so it's keyboard-focusable —
+// but onmouseover never fires on focus, so index.html pairs each
+// onmouseover="pmGlimpse(...)" with a matching onfocus="pmGlimpse(...)",
+// giving mouse and keyboard visitors the same 1-in-100 chance.
 //
 // PM_GLIMPSE_WORDS is a plain object, keyed by the same string every
-// onmouseover="pmGlimpse('sphere')" etc. passes in — a array of
-// { key, text } pairs briefly lived here instead (2026-07-18ish) and broke
-// this silently: truth['sphere'] on an array doesn't find the element
-// whose .key is 'sphere', it just comes back undefined, so the tab title
-// was flickering to the literal string "undefined" instead of the actual
-// word. Keep this a plain object so the bracket lookup below is a real
-// key lookup, not an array index.
+// onmouseover="pmGlimpse('sphere')" etc. passes in, so the bracket lookup
+// below is a real key lookup. An array of { key, text } pairs would look up
+// by index instead, so a missing/renamed key would resolve to `undefined`
+// rather than failing loudly.
 const PM_ORIGINAL_TITLE = document.title;
 const PM_GLIMPSE_WORDS = {
   sphere: 'zen archery',

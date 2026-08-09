@@ -1,22 +1,16 @@
 // ─── Poems ─────────────────────────────────────────────────────────────────
-// Full, unedited verse (Scott's own writing), pulled from a search of
-// archives/Writing archive/ (2026-07-17) specifically for poetry — a
-// different register from everything else already wired into the site,
-// which is mostly prose (the scroll's essays and short fiction) or found
-// fragments (Golden Hare, the Orrery). Not yet placed in any scene — this
-// file exists so the text is captured and ready, same reasoning as
-// scroll.bodies.js: get the source down first, decide the container later.
+// Full, unedited verse (Scott's own writing), drawn from the writing
+// archive — a different register from everything else wired into the
+// site, which is mostly prose (the scroll's essays and short fiction) or
+// found fragments (Golden Hare, the Orrery).
 //
 // A handful of files (Apocrypha.doc, "The way her hips sway is unique.doc",
 // "here comes no sun today.docx", "(Underneath scams and heart attacks,.pdf")
 // open with a few real lines of verse and then dissolve into the same
 // trance/stream-of-consciousness prose that runs through a lot of the
-// archive (the "Void" / "Slack" private mythology material, already noted
-// in NOTES.md from earlier sessions). Those openers used to be kept in a
-// separate `poemFragments` export, held apart on the theory that they
-// weren't "complete" poems — Scott's call (2026-07-17): they're all poems,
-// they're all equal, so they live in `poems` now too, each with a `note`
-// explaining where its source text runs on into prose.
+// archive (the "Void" / "Slack" private mythology material). These live in
+// `poems` alongside the fully-formed pieces, each with a `note` explaining
+// where its source text runs on into prose.
 //
 // Two sources, with one deliberate overlap:
 //

@@ -4,7 +4,7 @@ import { bindOrbitDrag, bindGuardedResize, prefersReducedMotion, createPanelClos
 import './orbiter.css';
 import orbiterHtml from './orbiter.html?raw';
 
-// ─── Poem cross-links, 2026-07-17 ──────────────────────────────────────────
+// ─── Poem cross-links ───────────────────────────────────────────────────────
 // Same mechanism, and the same rule, as the geodesic sphere's facet-to-
 // fragment links in sphere.js and the scroll's LINKS in scroll.js: only
 // phrases already sitting in the raw text get wired up, nothing added to
@@ -30,35 +30,22 @@ const POEM_LINKS = [
 ];
 
 // ─── Orbiter: p-orbital, Satellites ────────────────────────────────────────
-// Design pass, 2026-07-29 — full conceptual pivot, replacing the piece that
-// used to live here. The old version was Earth (tinted green) with its
-// magnetic field traced in glowing lines and an aurora at the poles; before
-// that, an even older "worldline" concept (Google Maps satellite tiles + a
-// personal geographic path). Scott's note on the magnetosphere version,
-// after two rounds of trying to make its day/tail asymmetry read clearly:
-// drop the concept entirely rather than keep tuning it.
+// A hydrogen atom's p-orbital — the actual shape an electron's wavefunction
+// takes in that state, rendered as a fuzzy probability cloud rather than a
+// solid mesh. A p-orbital is two lobes on opposite sides of a center, split
+// by a flat nodal plane where the electron's presence-probability is
+// exactly zero — a dumbbell silhouette, recognizable without a label. The
+// two lobes are built in buildOrbitalCloud below; the green/violet color
+// split stands for wavefunction phase — the two lobes of a real p-orbital
+// carry opposite sign, and that's genuinely what the color difference is
+// showing.
 //
-// What's here now: a hydrogen atom's p-orbital — the actual shape an
-// electron's wavefunction takes in that state, rendered as a fuzzy
-// probability cloud rather than a solid mesh. A p-orbital is two lobes on
-// opposite sides of a center, split by a flat nodal plane where the
-// electron's presence-probability is exactly zero — a dumbbell silhouette,
-// recognizable without a label, and genuinely different from a sphere in a
-// way the old magnetosphere shape never quite managed to be from every
-// angle. The two lobes reuse this file's own existing geometry: what used
-// to be the aurora bands at the poles (see buildOrbitalCloud, formerly
-// buildAurorae) are now the two lobes, and the green/violet color split
-// that used to be "arbitrary polar aurora colors" now stands for
-// wavefunction phase — the two lobes of a real p-orbital carry opposite
-// sign, and that's genuinely what the color difference is showing.
-//
-// The satellites (buildSatellites, below) are untouched — same clean,
-// deterministic, tilted elliptical orbits as before. What changed is what
-// they mean: precise classical paths swept through and around a cloud that
-// has no precise path at all, the same word ("orbit") doing two completely
-// different kinds of work at two different scales in the same frame. Kept
-// deliberately crisp against the cloud's own deliberate fuzziness — that
-// contrast is the point, not something to soften.
+// The satellites (buildSatellites, below) sweep clean, deterministic,
+// tilted elliptical orbits — precise classical paths through and around a
+// cloud that has no precise path at all, the same word ("orbit") doing two
+// completely different kinds of work at two different scales in the same
+// frame. Kept deliberately crisp against the cloud's own deliberate
+// fuzziness — that contrast is the point, not something to soften.
 //
 // No textures fetched over the network — every texture on this site,
 // including the small nucleus below, is a canvas gradient drawn at load
@@ -67,13 +54,11 @@ const POEM_LINKS = [
 const NUCLEUS_RADIUS = 0.16;
 
 // ─── Nucleus ────────────────────────────────────────────────────────────────
-// The old Earth surface/cloud-shell texture generators (photoreal continents,
-// separate rotating cloud layer) are gone — a hydrogen atom's nucleus is a
-// single proton, not a textured planet. Replaced with one small, simple,
-// bright canvas texture: a hot, mottled plasma-like core rather than a flat
-// sphere, just enough surface interest to read as an energetic point rather
-// than an inert ball, small enough that the p-orbital cloud around it is
-// unmistakably the visual subject.
+// A hydrogen atom's nucleus is a single proton, not a textured planet: one
+// small, simple, bright canvas texture — a hot, mottled plasma-like core
+// rather than a flat sphere, just enough surface interest to read as an
+// energetic point rather than an inert ball, small enough that the
+// p-orbital cloud around it is unmistakably the visual subject.
 function makeNucleusTexture() {
   const c = document.createElement('canvas');
   c.width = 256; c.height = 256;
@@ -104,25 +89,9 @@ function makeNucleusTexture() {
 }
 
 // ─── p-orbital probability cloud ───────────────────────────────────────────
-// Rebuilt 2026-07-17 — Scott, seeing it running, questioned the original
-// design: a torus-shaped "aurora band" hugging the surface at each pole.
-// Replaced 2026-07-29 with a genuinely fuzzy particle-density cloud — no
-// solid mesh, no hard edge anywhere. The green/violet colors and the two
-// pole positions are the only things carried over from that old version
-// (see the file-header comment above); everything about how the shape
-// itself is generated is new.
-//
-// Refined again 2026-07-29, second round — Scott, after seeing it live:
-// the two lobes read as visibly unequal in size (one taller than the
-// other), and each one read as a roughly uniform-width column rather than
-// a teardrop that bulges in the middle. The first version's approach (a
-// triangular distribution for how far out a particle sits, a parabola for
-// how wide) was a hand-built approximation of the right shape, not the
-// real thing, and evidently not a close enough one. Replaced with actual
-// rejection sampling against the real 2p-orbital probability density,
-// |psi|^2 ∝ r^2 * e^(-r/a0) * cos^2(theta) — the formula Scott supplied —
-// which fixes both notes at once rather than needing separate hand-tuned
-// fixes for "equal size" and "bulges in the middle":
+// A genuinely fuzzy particle-density cloud — no solid mesh, no hard edge
+// anywhere — built from actual rejection sampling against the real
+// 2p-orbital probability density, |psi|^2 ∝ r^2 * e^(-r/a0) * cos^2(theta):
 //   - r^2 * e^(-r/a0) genuinely peaks at r = 2*a0 (basic calculus: the
 //     r^2 growth wins for small r, the exponential decay wins for large
 //     r, so the product rises then falls) — a real bulge-then-taper along
@@ -139,11 +108,9 @@ function makeNucleusTexture() {
 //     sampled — the lower lobe is built as a precise reflection (y -> -y)
 //     of the upper one, particle for particle. That guarantees identical
 //     particle count and identical vertical extent between the two
-//     lobes, which is what "equal size" actually requires; leaving it to
-//     two independent random draws (the first version's approach, and
-//     still what a naive full-range sample of this same distribution
-//     would do) only gives equal counts on average, not the particle-for-
-//     particle match Scott's note called for.
+//     lobes, which is what true mirror symmetry requires; a naive
+//     full-range sample of this same distribution would only give equal
+//     counts on average, not a particle-for-particle match.
 // a0 (A0 below) is a tuning constant, not the real Bohr radius — chosen
 // (see check_porbital3.mjs/check_porbital4.mjs in the working notes) so
 // the bulk of the sampled cloud sits comfortably inside the satellites'
@@ -167,7 +134,7 @@ function makePOrbitalDotTexture() {
 
 function buildOrbitalCloud(preview) {
   const count = preview ? 900 : 2800;
-  // ─── Annotation pass, 2026-08-04: what each constant here controls ────
+  // ─── What each constant here controls ──────────────────────────────────
   // count: TUNABLE. More points = a denser-looking cloud, same shape. No
   //   effect on the underlying math at all — it's just how many times
   //   sampleUpperLobePoint() below gets called.
@@ -201,10 +168,9 @@ function buildOrbitalCloud(preview) {
   const base = new Float32Array(count * 3);
   const drift = [];
 
-  // Same two hues the old aurora band carried (see makeShimmerTexture's
-  // retired '120,255,180' / '195,140,255' pair) — now standing for
-  // wavefunction phase rather than an arbitrary color choice: the
-  // teal-green lobe is the orbital's +phase lobe, the violet lobe is -phase.
+  // These two hues stand for wavefunction phase rather than being an
+  // arbitrary color choice: the teal-green lobe is the orbital's +phase
+  // lobe, the violet lobe is -phase.
   const colorPos = new THREE.Color(0x78ffb4);
   const colorNeg = new THREE.Color(0xc978ff);
 
@@ -273,8 +239,7 @@ function buildOrbitalCloud(preview) {
     // density does fall off angularly too. In practice most surviving
     // samples near the equator (u near 0) were already heavily filtered
     // out by the rejection test above, so this is a minor simplification,
-    // not a visible error — flagged here as observed, not changed, per
-    // this pass's own "annotate, don't refactor" scope.
+    // not a visible error.
     // TUNABLE: 0.35 (the floor) and 0.65 (the range) below control how
     // washed-out the dimmest particles look vs. how much hotter the
     // brightest ones get — raising the floor makes the whole cloud read
@@ -338,12 +303,11 @@ function buildOrbitalCloud(preview) {
 }
 
 // ─── Nucleus internal detail (click to reveal) ─────────────────────────────
-// Added 2026-07-29 — the nucleus was previously a plain accent sphere with
-// no interaction. Click it (same affordance as a satellite: cursor
-// changes, it brightens on hover) and it resolves into internal structure
-// instead of staying an inert dot; click again to collapse it back.
-// Built lazily, on first click only — nothing here costs anything while
-// the nucleus sits collapsed.
+// Click the nucleus (same affordance as a satellite: cursor changes, it
+// brightens on hover) and it resolves into internal structure instead of
+// staying an inert dot; click again to collapse it back. Built lazily, on
+// first click only — nothing here costs anything while the nucleus sits
+// collapsed.
 //
 // Color confinement, and why there's no membrane here: individual quarks
 // and gluons are never observable in isolation at any achievable energy —
@@ -540,33 +504,23 @@ function buildNucleusDetail(preview) {
 // ─── Satellites ─────────────────────────────────────────────────────────────
 // Same tilted-pivot orbit trick as the orrery in orrery.js: rotate the pivot,
 // the body (attached at a fixed radius on the pivot) sweeps a real orbit.
-// 2026-07-17: each satellite now carries one of Scott's poems (src/text/
-// orbiter.text.js) and is clickable, same mechanism as the geodesic sphere's
-// facet-to-fragment links in sphere.js — a raycast hit opens a text panel.
-// A small emissive beacon and a generous invisible hit-sphere (the visible
-// body is tiny) make them findable/clickable at this scale.
+// Each satellite carries one of Scott's poems (orbiter.text.js) and is
+// clickable, same mechanism as the geodesic sphere's facet-to-fragment
+// links in sphere.js — a raycast hit opens a text panel. A small emissive
+// beacon and a generous invisible hit-sphere (the visible body is tiny)
+// make them findable/clickable at this scale.
 function buildSatellites(preview) {
   const group = new THREE.Group();
-  // Design pass, 2026-07-29 — Scott: satellite/orbit density felt thin
-  // next to Butterfly's particle count, and the fourteen poems weren't
-  // otherwise surfaced anywhere in-scene. Bumping the full count to
-  // poems.length turns the offset trick below into a full bijection —
-  // every poem gets exactly one satellite, every load, rather than only
-  // whichever 8-poem slice happened to land — so density and "the poems
-  // live here" are the same fix. Preview stays modest; it's a 320px tile
-  // with no click-through anyway.
+  // Full count matches poems.length exactly, turning the offset trick below
+  // into a full bijection — every poem gets exactly one satellite, every
+  // load. Preview stays modest; it's a 320px tile with no click-through
+  // anyway.
   const count = preview ? 6 : poems.length;
   const sats = [];
-  // Design pass, 2026-07-17: with poems.length (now 14, after folding the
-  // opening-fragment poems into orbiter.text.js) bigger than the old fixed
-  // `count` of 8, a plain `i % poems.length` always equals `i` — the same
-  // first 8 poems, every load, forever; nothing past index `count-1` was
-  // ever reachable. A random per-load offset means a different
-  // consecutive slice of the pool each visit instead (or, now that count
-  // equals poems.length in the full scene, a different rotation of the
-  // same full set) — fits the site's own found-by-chance logic (the
-  // colophon's own hidden mark and bibliography) better than a fixed 1:1
-  // index mapping would.
+  // A random per-load offset means a different rotation of the full poem
+  // set each visit, rather than a fixed 1:1 index mapping — fits the
+  // site's own found-by-chance logic (the colophon's own hidden mark and
+  // bibliography) better.
   const poemOffset = Math.floor(Math.random() * poems.length);
   const bodyMat = new THREE.MeshBasicMaterial({ color: 0xe8e4d8 });
   const panelMat = new THREE.MeshBasicMaterial({
@@ -574,9 +528,7 @@ function buildSatellites(preview) {
   });
   const hitMat = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false });
   // Identical for every satellite, so built once here rather than per-loop
-  // like bodyMat/panelMat already are — was previously re-created inside
-  // the loop below (harmless but wasteful: up to 14 redundant BufferGeometry
-  // allocations per scene load).
+  // like bodyMat/panelMat already are.
   const coreGeo = new THREE.BoxGeometry(0.026, 0.026, 0.026);
   const panelGeo = new THREE.PlaneGeometry(0.09, 0.026);
 
@@ -584,47 +536,28 @@ function buildSatellites(preview) {
     const radius = 1.35 + Math.random() * 0.85; // TUNABLE: orbit radii land between 1.35 and 2.2 units out. Raising the floor (1.35) pushes every satellite farther from the cloud; raising the range (0.85) spreads them across a wider band. 1.35 isn't arbitrary though — it's the same floor A0 above was tuned against, so the orbital cloud's tail stays mostly inside it; push it down much further and satellites start passing through the cloud itself.
 
     const pivot = new THREE.Object3D();
-    // Design pass, 2026-07-29 — Scott: orbits read as roughly coplanar.
-    // The old Euler-angle composition (rotation.x = inclination,
-    // rotation.z = a small ascending-node wobble, rotation.y = random)
-    // doesn't sample orientation space uniformly, and with only 8
-    // satellites the bias showed. Building the pivot's orientation from a
-    // genuinely random point on the unit sphere — used as the orbit's own
-    // normal — gives real variety instead: every satellite's orbital
-    // plane tilts independently, the way a real population (launched at
-    // different times, into different mission-specific inclinations)
-    // actually would, rather than clustering near a shared tilt.
-    // ─── Annotation pass, 2026-08-04 — a subtlety worth understanding,
-    // not changing (this pass is comments-only): this builds `normal` by
-    // drawing x/y/z each uniformly from [-1,1] and normalizing the
-    // result, which is NOT actually a uniform random direction on the
-    // sphere — it's biased toward the cube's corner directions (like
+    // Each satellite's orbital plane tilts independently, the way a real
+    // population (launched at different times, into different
+    // mission-specific inclinations) actually would, rather than
+    // clustering near a shared tilt: the pivot's orientation is built from
+    // a random point on the unit sphere, used as the orbit's own normal.
+    //
+    // Known subtlety: drawing x/y/z each uniformly from [-1,1] and
+    // normalizing the result is NOT actually a uniform random direction on
+    // the sphere — it's biased toward the cube's corner directions (like
     // (1,1,1)) over its face-center directions (like (1,0,0)), because a
     // cube has proportionally more volume tucked into its corner regions
     // than a sphere does, and normalizing just projects that lopsided
-    // volume straight onto the sphere's surface. Confirmed numerically
-    // (bucketing 500k samples by their largest axis component and
-    // comparing the histogram against the demonstrably-correct Gaussian
-    // method described below): this method visibly over-samples
-    // corner-ish directions and under-samples face-ish ones.
-    //
-    // NOTES.md's 1.3.0 entry says this was verified "with an octant-
-    // bucket check on 20k samples — evenly spread" — that check counted
-    // samples by which of the 8 sign-octants (+++, ++-, ...) they landed
-    // in, which this method DOES get right (it's symmetric under axis
-    // sign flips) — but an octant count can't see the corner-vs-face bias
-    // at all, since that bias is symmetric across octant boundaries too.
-    // Passing that specific check didn't actually rule out the bias this
-    // comment describes.
-    //
-    // In practice: with only ~14 satellites the effect is subtle, not
-    // obviously wrong to the eye, which is presumably why it's gone
-    // unnoticed. The actual fix: draw three independent standard-normal
+    // volume straight onto the sphere's surface (confirmed numerically:
+    // bucketing 500k samples by their largest axis component shows visible
+    // over-sampling of corner-ish directions). An octant-based check
+    // (counting samples by which of the 8 sign-octants they land in) can't
+    // catch this, since the bias is symmetric across octant boundaries.
+    // With only ~14 satellites the effect is subtle, not obviously wrong
+    // to the eye. The actual fix: draw three independent standard-normal
     // (Gaussian) components and normalize the result — the multivariate
     // normal distribution is itself rotationally symmetric, so no
-    // direction is favored, unlike a per-axis uniform draw. Swapping this
-    // call site to that would be a real, working fix, but is deliberately
-    // NOT made here since this pass is annotation-only.
+    // direction is favored, unlike a per-axis uniform draw.
     const normal = new THREE.Vector3(
       Math.random() * 2 - 1, Math.random() * 2 - 1, Math.random() * 2 - 1
     ).normalize();
@@ -654,8 +587,7 @@ function buildSatellites(preview) {
     const beacon = new THREE.Mesh(new THREE.SphereGeometry(0.012, 8, 8), beaconMat);
     body.add(beacon);
     // Invisible, generous hit target — the visible parts are too small to
-    // reliably click/hover on their own. Scott: still too hard to land on
-    // — bumped up further (0.09 -> 0.16).
+    // reliably click/hover on their own.
     const hit = new THREE.Mesh(new THREE.SphereGeometry(0.16, 8, 8), hitMat);
     body.add(hit);
     body.position.x = radius;
@@ -664,17 +596,13 @@ function buildSatellites(preview) {
     // Faint orbit ring, so the path is visible even when the satellite itself
     // is a single small point.
     const ringGeo = new THREE.TorusGeometry(radius, 0.002, 6, 64);
-    // Opacity varied per ring now (was a flat 0.12 for all) — a real
-    // satellite population's paths wouldn't all read with equal
-    // prominence; some fainter, some a little more distinct, reads as
-    // messier/richer rather than a uniform stack of identical rings.
-    // Pulled down again (0.07-0.18 -> 0.045-0.11), second design pass —
-    // these are perfectly circular by nature, and were competing with —
-    // and diluting — the one shape actually telling this scene's story.
-    // (Written when that story was a magnetosphere with field lines to
-    // compete against; the reasoning about not diluting the shape still
-    // holds now that the shape is a p-orbital cloud instead — see the
-    // 2026-07-29 pivot note at the top of this file.)
+    // Opacity varied per ring — a real satellite population's paths
+    // wouldn't all read with equal prominence; some fainter, some a little
+    // more distinct, reads as messier/richer rather than a uniform stack
+    // of identical rings. Kept faint overall since these are perfectly
+    // circular by nature and would otherwise compete with — and dilute —
+    // the p-orbital cloud, the one shape actually telling this scene's
+    // story.
     const ringMat = new THREE.MeshBasicMaterial({
       color: 0xffe08a, transparent: true, opacity: 0.045 + Math.random() * 0.065, // TUNABLE: each ring's opacity lands between 0.045 and 0.11. Raise both numbers together to make orbit paths more visible overall; widen the gap between them for more variation ring-to-ring.
     });
@@ -684,7 +612,6 @@ function buildSatellites(preview) {
 
     sats.push({
       pivot, body, hit, beacon, beaconMat,
-      // Scott: slow these down — was (0.25 + rand*0.35), now less than half that.
       // TUNABLE: magnitude 0.09-0.23 controls orbital speed (raise for a
       // faster sweep); the separate 50/50 sign flip is what gives some
       // satellites clockwise and others counter-clockwise motion — remove
@@ -765,9 +692,9 @@ export function createOrbiter(container, { preview = false } = {}) {
   // cloud around it (below) is unmistakably the thing the scene is about.
   const nucleusTex = makeNucleusTexture();
   const geo = new THREE.SphereGeometry(NUCLEUS_RADIUS, preview ? 24 : 40, preview ? 24 : 40);
-  // Design pass, 2026-07-29 — transparent:true added (opacity itself
-  // stays 1 until someone actually clicks) so this can fade out in favor
-  // of the internal detail below without needing a material swap.
+  // transparent:true (opacity itself stays 1 until someone actually
+  // clicks) so this can fade out in favor of the internal detail below
+  // without needing a material swap.
   const NUCLEUS_BASE_EMISSIVE = 0.55;
   const mat = new THREE.MeshStandardMaterial({
     map: nucleusTex,
@@ -843,14 +770,14 @@ export function createOrbiter(container, { preview = false } = {}) {
       navigateToPoem(link);
     });
 
-    // Keyboard access, 2026-07-26: satellites are otherwise raycast-only —
-    // no keyboard equivalent existed for "point at a satellite" — so a
-    // keyboard-only visitor could orbit the scene but never actually read a
-    // poem. One button per satellite, calling the exact same
-    // selectedSat-then-openPoem() beat the mouse click below already does.
-    // 2026-07-29: the nucleus is now a second raycast-only interaction, so
-    // it gets a button in this exact same list rather than a separate
-    // mechanism — one more <li> in the same jump list, not new UI chrome.
+    // Keyboard equivalent for "point at a satellite" — satellites are
+    // otherwise raycast-only, which would leave a keyboard-only visitor
+    // able to orbit the scene but never read a poem. One button per
+    // satellite, calling the exact same selectedSat-then-openPoem() beat
+    // the mouse click below already does. The nucleus is a second
+    // raycast-only interaction, so it gets a button in this exact same
+    // list rather than a separate mechanism — one more <li> in the same
+    // jump list, not new UI chrome.
     const NUCLEUS_JUMP_ITEM = {};
     jumpList = createJumpList(container, {
       label: 'Read a poem from one of the satellites, or look inside the nucleus',
@@ -903,8 +830,7 @@ export function createOrbiter(container, { preview = false } = {}) {
       link.style.animationDuration = `${duration}s`;
       // role="link", not "button" -- this navigates to a different poem
       // within the panel, same as library.js's .library-link and sphere.js's
-      // .fragment-link; code audit, 2026-08-03, converging all three on the
-      // semantically correct role.
+      // .fragment-link.
       link.setAttribute('role', 'link');
       link.setAttribute('tabindex', '0');
       link.setAttribute('aria-label', `Follow the echo to: ${link.dataset.target}`);
@@ -981,15 +907,10 @@ export function createOrbiter(container, { preview = false } = {}) {
     };
     container.addEventListener('mousemove', onContainerMouseMove);
     onContainerClick = e => {
-      // Was `panel.classList.contains('open') && !panel.contains(e.target)`
-      // — closed the panel on any canvas click while open, even one that
-      // hit a different satellite (hoveredSat is tracked live by mousemove
-      // above regardless of panel state). Fixed 2026-07-23, same root
-      // cause as library.js's identical bug: only close on an actual
-      // empty-space click. hoveredNucleus gets the same treatment now it's
-      // a second real click target — clicking the nucleus while the poem
-      // panel happens to be open should toggle the nucleus, not also (or
-      // instead) close the panel.
+      // Only close the panel on an actual empty-space click — hoveredSat
+      // and hoveredNucleus are tracked live by mousemove above regardless
+      // of panel state, so a click that lands on either one toggles that
+      // target instead of also (or instead) closing the panel.
       if (panel.classList.contains('open') && !hoveredSat && !hoveredNucleus) {
         panelCloser.close();
         return;
@@ -1045,7 +966,7 @@ export function createOrbiter(container, { preview = false } = {}) {
 
       // Per-particle drift/shimmer — each point nudges along its own fixed
       // direction on its own sine wave, so the cloud reads as gently alive
-      // rather than a static point cloud, per the brief's explicit ask.
+      // rather than a static point cloud.
       for (let i = 0; i < aurorae.count; i++) {
         const d = aurorae.drift[i];
         const s = Math.sin(t * d.speed + d.phase) * d.amp;
@@ -1058,8 +979,7 @@ export function createOrbiter(container, { preview = false } = {}) {
     }
 
     // A slow overall shimmer on top of the per-particle drift — the whole
-    // cloud's brightness breathes gently, same beat the old aurora bands
-    // used to pulse on.
+    // cloud's brightness breathes gently.
     aurorae.phase += 0.012;
     aurorae.mat.opacity = Math.max(0.5, aurorae.baseOpacity + Math.sin(aurorae.phase) * 0.15);
 

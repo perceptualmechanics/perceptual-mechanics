@@ -17,17 +17,14 @@
 //   Holography · Projection                               (2009–2012)
 //   The Crocodile Photograph                              (undated, later — newest hide)
 //
-// In The End It Falls Slowly Through The Aether (Cartography.doc) joined the
-// scroll 2026-08-07, folded in from scenes/leaf.js when that scene was
-// retired for good rather than shelved again — a raindrop's fall told
-// through real physics, one paragraph per stage of the drop. Slotted by its
-// source file's own OLE metadata (created 2002-03-11, last saved 2003-04-19),
-// between Self-Mutilation and The Vigil.
+// In The End It Falls Slowly Through The Aether (Cartography.doc) — a
+// raindrop's fall told through real physics, one paragraph per stage of the
+// drop — is slotted by its own OLE metadata (created 2002-03-11, last saved
+// 2003-04-19) between Self-Mutilation and The Vigil.
 //
-// Pygmalion is the newest addition (2026-07-16, second archive deep dive) but
-// the oldest-dated piece on the scroll — internally dated to May 2000, same
-// cluster as Iron Gods/Flying/Thoughts Of Death Abounds, so it's slotted in
-// there rather than tacked on at the end. A found-out catfishing essay
+// Pygmalion is the oldest-dated piece on the scroll — internally dated to
+// May 2000, same cluster as Iron Gods/Flying/Thoughts Of Death Abounds, so
+// it's slotted in there rather than tacked on at the end. A found-out catfishing essay
 // (a woman calling herself "Jane" turns out to be a years-long impersonation
 // of her own friend), it's already in conversation with Identity Theft and
 // Projection — same subject, a self built out of someone else's material —
@@ -61,15 +58,15 @@
 // all already there in his own words.
 //
 // Content note: The Impossible Bliss of Self-Mutilation, Identity Theft, and
-// The Vigil are all considerably darker and more graphic than what was here
-// before — body horror, a body-swap turn, and a dying man's bathroom-floor
-// bitterness, not a tonal match for the neighboring pieces so much as a
-// deliberate contrast. Full, unedited text; nothing softened.
+// The Vigil are considerably darker and more graphic than the neighboring
+// pieces — body horror, a body-swap turn, and a dying man's bathroom-floor
+// bitterness — a deliberate contrast rather than a tonal mismatch. Full,
+// unedited text; nothing softened.
 //
-// No longer CSS-only by design constraint — this pass leans on a few hidden
-// inline SVG filters (feTurbulence/feDisplacementMap for grain and wobble)
-// alongside the CSS, in service of one goal: this should read as a beaten,
-// handled object, not a rendered one. Every patch is clipped to its own
+// Rendering leans on a few hidden inline SVG filters (feTurbulence/
+// feDisplacementMap for grain and wobble) alongside the CSS, in service of
+// one goal: this should read as a beaten, handled object, not a rendered
+// one. Every patch is clipped to its own
 // randomized, ragged, disjointed perimeter — not just a torn top and
 // bottom, the whole hide-shape is uneven. Ink stains and worn patches are
 // scattered per instance. Every line of body text carries its own small
@@ -90,8 +87,8 @@ import scrollHtml from './scroll.html?raw';
 import './scroll.css';
 
 // Hide darkness per patch — oldest hide darkest and most soot-stained, newest
-// still pale. Presentation, so it stays here rather than in src/text/, keyed
-// off the piece's own key. The ordering and the text itself now come from
+// still pale. Presentation, so it stays here rather than in scroll.text.js,
+// keyed off the piece's own key. The ordering and the text itself come from
 // scroll.text.js, which the prerender step for /text/scroll/ also reads —
 // one list, so the scroll and the published page can't fall out of order or
 // out of sync with each other.
@@ -115,10 +112,9 @@ const LINKS = [
   { patch: 'selfmutilation', para: 0,  phrase: "You can’t be afraid to lose everything.", target: 'patch-death' },
   { patch: 'projection',     para: 36, phrase: 'Jeremy Constantilios',                    target: 'patch-holography' },
   { patch: 'holography',     para: 0,  phrase: 'Jeremy Constantilios',                    target: 'patch-projection' },
-  // 'Pilgrimage to Hell' used to be rubric-ink only, decorative — but it's
-  // the exact same joke, verbatim, in both pieces (Jeremy's own version of
-  // it in Holography, the narrator's in Projection), so it's promoted to a
-  // real link each way rather than just colored.
+  // 'Pilgrimage to Hell' is a real link each way, not just rubric-ink
+  // coloring — it's the exact same joke, verbatim, in both pieces (Jeremy's
+  // own version of it in Holography, the narrator's in Projection).
   { patch: 'holography',     para: 15, phrase: 'pilgrimage to Hell',                      target: 'patch-projection' },
   { patch: 'projection',     para: 2,  phrase: 'pilgrimage to Hell',                      target: 'patch-holography' },
   // Pygmalion (2000) is the oldest-dated piece on the scroll, nine years
@@ -312,9 +308,9 @@ function buildStain() {
   return el;
 }
 
-// Preview tile, opening Ogham mark, and SVG filter defs all moved to
-// scroll.html — genuinely static markup, unlike the per-piece patches below
-// (those stay JS-generated because they're actually built from data).
+// Preview tile, opening Ogham mark, and SVG filter defs live in scroll.html
+// — genuinely static markup, unlike the per-piece patches below (those stay
+// JS-generated because they're actually built from data).
 
 // Hidden SVG filter defs — feTurbulence/feDisplacementMap for grain and
 // hand-wobble, referenced from CSS via filter: url(#id). Inserted once,
@@ -367,13 +363,11 @@ export function createScroll(container, { preview = false } = {}) {
     // Cartography's opening is one 441-character comma-spliced clause running
     // to a single em dash (see firstSentences' comment) — transliterated at
     // the standard 118px column width that comes out roughly 2300px tall,
-    // nearly double the piece's own body text, which (now that .scroll-patch-
-    // text properly contains its float — see scroll.css) shows up as a long
-    // stretch of dead space at the bottom of the patch rather than a bug, but
-    // still isn't right. A wider column for unusually long opening lines
-    // keeps every character transliterated (no truncating real text) while
-    // bringing the column's height back in proportion to the piece it's
-    // marking. 200 characters is comfortably past every other piece's
+    // nearly double the piece's own body text: a long stretch of dead space
+    // at the bottom of the patch. A wider column for unusually long opening
+    // lines keeps every character transliterated (no truncating real text)
+    // while bringing the column's height back in proportion to the piece
+    // it's marking. 200 characters is comfortably past every other piece's
     // opening (the runner-up is Projection's two-sentence opener at 151;
     // Cartography's is 452 — checked by running firstSentences over all
     // twelve pieces directly rather than guessing).

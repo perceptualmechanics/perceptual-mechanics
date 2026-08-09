@@ -225,6 +225,55 @@ described are unchanged.)
   worth trimming, orrery.js's texture generators and first-person rig are the
   two most self-contained chunks to split out first.
 
+## 2.2.2 (2026-08-09)
+
+**Comment cleanup pass: NOTES.md becomes the single canonical history.**
+Full sweep across every scene file (sphere, butterfly, scroll, orbiter,
+beamline, theater, library, orrery), their per-scene `.js`/`.css`/`.html`/
+`.text.js` component files, the colophon component, `main.js`, and the
+shared utils (`sceneKit.js`, `prng.js`) — the whole codebase. Going
+forward, in-code comments explain what a piece of code is for, in present
+tense; they no longer carry dates, "fixed on X to address Y" framing,
+before/after comparisons, quoted feedback, or references back to specific
+past sessions or briefs. That information wasn't deleted — this codebase's
+own changelog already documented nearly all of it under its own dated
+entries (checked file-by-file via grep before editing anything), so this
+pass was almost entirely subtractive: removing narrative that was already
+recorded here, rather than relocating new content.
+
+What got removed, by category: dated pass/round labels ("Design pass,
+2026-07-29", "Code audit, 2026-08-03", "Semantic pass, 2026-07-22",
+"Annotation pass, 2026-08-04", and similar); before/after comparisons
+("was a div", "used to carry", "replaces the old mirror rim"); references
+to specific past verification scripts since deleted
+(`solve_solar_sailer.mjs`, `verify_wilderness.mjs`, `verify_wilderness2.mjs`,
+`verify_camera.mjs` in beamline.js); quoted feedback attributed to Scott by
+name, in code comments specifically (not in NOTES.md, where that's exactly
+the right place for it); and self-references back to "the brief" or to
+NOTES.md itself. What stayed untouched: the math-annotation pass
+commissioned separately (orbiter's p-orbital wavefunction, beamline's CA
+lattice/Lévy-flight/terrain falloff, butterfly's Lorenz attractor,
+orrery's orbital mechanics) — those comments already explained what a
+formula represents, which is the same "purpose, not chronology" standard
+this pass enforces, just for math instead of narrative; literary/content
+provenance facts inside `.text.js` files (when a piece was actually
+written, archive/file sourcing, real bibliographic data) since those
+describe the source material itself, not this repo's history; and the
+actual values of data fields that render into the site's UI (library's
+`note`/`excerpt` fields, colophon's `BIBLIOGRAPHY` entries) even where a
+value happens to contain a dated remark — editing displayed content was
+never in scope here, only code comments.
+
+Two incidental fixes surfaced along the way, unrelated to comment style:
+`beamline.html` referenced a nonexistent `beamlineText.js` instead of the
+real `beamline.text.js`; `scroll.css` referenced a stale `CONTAIN_OPENING`
+value and claimed only one piece used it when ten do, and `scroll.html`'s
+patch count had drifted to "eleven" after Cartography brought the total to
+twelve — both corrected.
+
+Verified with `node --check` on every touched file and a clean
+`npx vite build`; no behavior, markup, or rendered content changed.
+
 ## 2.2.1 (2026-08-08)
 
 Scott, from a screenshot: "one of the pieces has more of an indent than it

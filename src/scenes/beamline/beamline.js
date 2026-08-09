@@ -9,77 +9,55 @@ import { EPIGRAPH_PRIMARY, EPIGRAPH_SECONDARY, BOUNCES } from './beamline.text.j
 import { mulberry32, hashSeed } from '../../utils/prng.js';
 
 // ─── Canonical accent color ─────────────────────────────────────────────────
-// Unchanged across the 2026-08-02 Solar Sailer pivot below — the brief was
-// explicit that the palette carries over untouched from Beamline. Hue ~216°,
-// one numeric hex value applied to every touchpoint (rail, stations, vessel,
-// UI); only lightness/darkness varies per-touchpoint, never hue.
+// Hue ~216°, one numeric hex value applied to every touchpoint (rail,
+// stations, vessel, UI); only lightness/darkness varies per-touchpoint,
+// never hue.
 const ACCENT = 0x0066ff;        // canonical — rail core, station glow, vessel light
 const ACCENT_HALO = 0x4d94ff;   // lighter tint, same hue — rail halo, dust
 const ACCENT_DEEP = 0x002152;   // darker tint, same hue — vessel/station chassis fill
 const ACCENT_SHADOW = 0x000e24; // darkest tint, same hue — unused directly here, kept for parity with the rest of the site's palette set
 
-// Secondary gold accent, added 2026-08-03 — pulled from Sphere's own gold
+// Secondary gold accent — pulled from Sphere's own gold
 // (src/scenes/sphere.js's .fragment-link:hover, rgba(255,220,120,.95)), not
-// approximated from scratch, same discipline as matching HORIZON_COLOR to
-// the skybox's own gradient stop above. Scoped narrowly on purpose: the
-// station numbering text only (see makeLabelTexture's bounceStyle below),
-// one deliberate warm accent against the cool blue field — the same
-// register as Orbiter's teal/violet pairing elsewhere on the site, not a
-// second competing primary color, so it isn't applied to the rail, stations,
+// approximated from scratch. Scoped narrowly on purpose: the station
+// numbering text only (see makeLabelTexture's bounceStyle below), one
+// deliberate warm accent against the cool blue field — the same register
+// as Orbiter's teal/violet pairing elsewhere on the site, not a second
+// competing primary color, so it isn't applied to the rail, stations,
 // vessel, or anything else ACCENT already owns.
 const GOLD_ACCENT_CSS = 'rgba(255,220,120,'; // canvas fillStyle prefix, same shape as makeGlowTexture's hue param
 
 // The skybox's own horizon-band color (matches makeSkyboxTexture()'s sky
 // gradient's final stop, '#0d56c0', below) — pulled out to a shared
 // constant so scene.fog can be set to the SAME value rather than an
-// independently-chosen one. This is still part of the horizon-seam fix, but
-// as of the 2026-08-02 Solar Sailer pivot it's no longer carrying the WHOLE
-// fix by itself — see terrainHeight()/the terrain mesh below for the actual
-// structural fix (a single continuous mesh, not two objects meeting).
-// Matching this color to the skybox is now just what keeps the terrain's
-// own far edge (well past the fog line, see scene.fog below) from ever
-// reading as a color step even in principle.
+// independently-chosen one. The terrain mesh (a single continuous mesh,
+// see terrainHeight() below) is what actually prevents a horizon seam;
+// matching this color to the skybox just keeps the terrain's own far edge
+// (well past the fog line, see scene.fog below) from ever reading as a
+// color step even in principle.
 const HORIZON_COLOR = 0x0d56c0;
 // #rrggbb string form of the same constant — canvas 2D APIs (skybox
 // gradient) want a CSS color string; THREE.Fog wants the numeric hex.
 // Deriving one from the other keeps them structurally unable to drift apart.
 const HORIZON_CSS = '#' + HORIZON_COLOR.toString(16).padStart(6, '0');
 
-// ─── Solar Sailer (formerly Beamline) ──────────────────────────────────────
-// 2026-08-02: a structural pivot, not a rename. Full history of the mirror-
-// bounce-chain era (real reflection math off staged concave mirrors, the
-// optics-bench framing, every camera/spacing/seam fix that era needed) lives
-// in NOTES.md, not re-derived here — none of that geometry model survives
-// this pass. What DOES carry over unchanged: the palette above, the panel-
-// free glowing-text caption system (makeLabelTexture and friends, below —
-// confirmed working, not touched), the ambient ecology (grid shimmer,
-// wandering grid-bug particles, growth patches, all still gated under
-// prefersReducedMotion), and drag-to-orbit/scroll-to-zoom camera control.
+// ─── Solar Sailer ───────────────────────────────────────────────────────────
+// A small craft — the vessel — travels a rail continuously across a
+// wilderness terrain; the rail itself stays visible as its own glowing
+// conduit (see makeLiquidLightTexture below). Ten stations along the rail
+// anchor the found text (beamline.text.js).
 //
-// What's real math here, same "real math over hand-tuned approximation"
-// discipline the mirror era used for its own reflect()/raySphereHit(): the
-// terrain height field (terrainHeight() below) is a genuine continuous
-// function evaluated per-vertex across one single PlaneGeometry — ground and
-// "mountain" are the same mesh, not two objects whose colors have to be kept
-// in sync by hand. That's the actual fix for the horizon seam two earlier
-// rounds tried to fix by matching fog/sky colors and couldn't: there's
-// nothing left to fail to align once there's only one piece of geometry.
+// The terrain height field (terrainHeight() below) is a genuine continuous
+// function evaluated per-vertex across one single PlaneGeometry — ground
+// and "mountain" are the same mesh, not two objects whose colors have to
+// be kept in sync by hand, so there's nothing that can fail to align at
+// the horizon.
 //
-// What's hand-authored, deliberately NOT solved-for the way the mirror
-// chain's waypoints were: the rail itself. WAYPOINTS below (see
-// createBeamline) are placed by eye, each one a real decision about where
-// the conduit dips low across the flat grid (near the ambient ecology) or
-// rises up over the terrain's mounds — verified afterward for terrain
-// clearance and self-intersection (solve_solar_sailer.mjs, since deleted
-// per this project's convention of not keeping throwaway solver scripts),
-// not generated from a rule the way the old reflection chain was.
-//
-// A small craft — the vessel — travels the rail continuously; the rail
-// itself stays visible as its own glowing conduit (the mirror era's liquid-
-// light beam treatment, reused here almost unchanged, see
-// makeLiquidLightTexture below). Ten stations replace the ten mirrors as
-// anchor points for the same found text (beamline.text.js,
-// untouched by this pivot — same content, new anchor points).
+// The rail itself is hand-authored rather than generated from a rule:
+// WAYPOINTS below (see createBeamline) are placed by eye, each one a real
+// decision about where the conduit dips low across the flat grid (near
+// the ambient ecology) or rises up over the terrain's mounds, then
+// verified for terrain clearance and self-intersection.
 
 const CYCLE_SECONDS = 10; // preview tiles only — one full pulse loop
 
@@ -99,38 +77,30 @@ function organicWave(t, seed = 0) {
 }
 
 // ─── Terrain height field ───────────────────────────────────────────────
-// The actual horizon-seam fix: one continuous function, sampled per-vertex
-// across a single PlaneGeometry (see createBeamline below) so "ground" and
-// "mountain" are never two separate objects that could drift out of visual
-// sync — there's nothing left to fail to align.
+// One continuous function, sampled per-vertex across a single
+// PlaneGeometry (see createBeamline below) so "ground" and "mountain" are
+// never two separate objects that could drift out of visual sync — there's
+// nothing left to fail to align at any seam.
 //
-// FLOOR_Y is the flat baseline (matches the old flat grid's own y position,
-// kept for continuity with the ambient-ecology code that still expects a
-// "just above the grid" height). Each mountain is a smooth radial mound
+// FLOOR_Y is the flat baseline. Each mountain is a smooth radial mound
 // added on top of that baseline via smoothstep falloff — smoothstep's own
 // zero derivative at both t=0 and t=1 means a mound's height AND its slope
 // both reach exactly 0 at its own radius, so it joins the flat plane with
 // no crease or ring, regardless of how many mounds overlap or how close
 // together they sit. A little angular "jag" (two sine harmonics of the
 // angle around each mound's own center) keeps the mounds from reading as
-// perfect smooth domes — same seeded-irregularity instinct as the old
-// skybox ridge-line silhouette this replaces, just built as real geometry
-// this time instead of painted onto a backdrop texture.
+// perfect smooth domes.
 //
 // Centers/radii/heights below are hand-placed, not solved — chosen so each
 // mound sits directly under one of the rail's own hand-placed crest
 // waypoints (see WAYPOINTS in createBeamline), with radii kept well short
 // of the distance to any neighboring waypoint so a mound never bleeds height
-// into a station or dip that isn't meant to be near it. Verified together
-// with the rail curve by solve_solar_sailer.mjs (since deleted): minimum
-// terrain clearance along the whole sampled curve is 6.491 units (at
-// t=0.5765, near the second/tallest mound), zero negative-clearance points
-// anywhere across 2000 samples. Left completely unchanged by the
-// 2026-08-03 wilderness pass below — this is the clearance-critical part of
-// the height field, and every addition since is designed to contribute
-// exactly zero inside CORRIDOR_X/CORRIDOR_Z (see below), so this number
-// still holds byte-for-byte (re-verified by verify_wilderness.mjs, since
-// deleted, same convention).
+// into a station or dip that isn't meant to be near it. Minimum terrain
+// clearance along the whole rail curve is 6.491 units, with zero
+// negative-clearance points anywhere along it. Every wilderness addition
+// below is designed to contribute exactly zero inside CORRIDOR_X/CORRIDOR_Z
+// (see below), so that clearance figure holds regardless of what the
+// wilderness layers do further out.
 export const FLOOR_Y = -4;
 const MOUNTAINS = [
   { cx: 90, cz: 35, radius: 48, height: 40, seed: 11 },
@@ -141,34 +111,23 @@ const MOUNTAINS = [
 // (as of the Lévy-flight pass) the vessel's own per-step glide easing.
 function smoothstep01(t) { return t * t * (3 - 2 * t); }
 
-// ─── 2026-08-03: "diorama to environment" — real terrain beyond the rail ──
-// Scott's brief: only the rail and the three MOUNTAINS above read as a real
-// place; everything past them was flat grid to a visible edge. Two more
-// layers, both zeroed out inside a protected zone so the rail's own
-// verified 6.491-unit clearance can't regress.
+// ─── Wilderness: real terrain beyond the rail ──────────────────────────────
+// Beyond the rail and the three MOUNTAINS above lies real generated
+// terrain rather than flat grid to a visible edge. Two more layers, both
+// zeroed out inside a protected zone so the rail's own 6.491-unit
+// clearance can't regress.
 //
-// That protected zone (SAFE_RADIUS/SAFE_FADE below) started as a small box
-// around just the rail's own WAYPOINTS bounding rectangle, matching
-// MOUNTAINS' own footprint — wrong, caught live: the ground-level default
-// camera (item 3, in createBeamline below) orbits CAM_TARGET at distances
-// up to CAM_MAX (620), and at this new shallow ground-level phi, camera
-// height barely rises with distance — a scroll-zoom-out at the default
-// angle put the camera *underground* the moment its (x,z) position swept
-// near a FAR_PEAK that was only guaranteed clear of the rail, not of the
-// camera's own much larger reachable area. Fixed two ways, together:
-// (1) the protected zone is now a CIRCLE centered on CAM_TARGET with
-// radius CAM_MAX+80 (700) — covers every position the camera can reach at
-// any theta/phi/dist within the normal orbit range, not just the rail
-// corridor (which sits entirely inside this circle anyway, so rail
-// clearance is unaffected — re-verified at exactly 6.491 by
-// verify_wilderness2.mjs, since deleted); (2) createBeamline's own
-// updateCamera() (below) adds a hard runtime floor — camera.y is never
-// allowed below terrainHeight at its own (x,z) plus a safety margin,
-// regardless of what the raw orbit math computes — a second, independent
-// safety net for the rail-adjacent MOUNTAINS above, which sit *inside*
-// this circle and can still be close enough at low phi/close zoom to graze
-// without it (verified: airtight across a full theta×dist sweep at the
-// default phi, minimum clearance exactly equals the margin everywhere).
+// The protected zone (SAFE_RADIUS/SAFE_FADE below) is a CIRCLE centered on
+// CAM_TARGET with radius CAM_MAX+80 (700) — this covers every position the
+// camera can reach at any theta/phi/dist within its normal orbit range,
+// not just the rail corridor (which sits entirely inside this circle
+// anyway, so rail clearance is unaffected). This alone isn't sufficient
+// for the rail-adjacent MOUNTAINS, which sit *inside* the circle and can
+// still be close enough at low phi/close zoom to graze the camera — so
+// createBeamline's own updateCamera() (below) adds a second, independent
+// safety net: a hard runtime floor where camera.y is never allowed below
+// terrainHeight at its own (x,z) plus a safety margin, regardless of what
+// the raw orbit math computes.
 //
 // Layer 1, FAR_PEAKS/VALLEYS: hand-placed background peaks and depressions
 // at varied heights/radii/positions in a loose ring around the rail's own
@@ -176,11 +135,10 @@ function smoothstep01(t) { return t * t * (3 - 2 * t); }
 // different heights, not a symmetric pair) rather than leaving shape
 // entirely to noise. Same smoothstep-mound technique as MOUNTAINS, just
 // placed well beyond SAFE_RADIUS (each entry's distance from CAM_TARGET
-// minus its own radius clears SAFE_RADIUS by a 40-unit margin, re-verified
-// by verify_wilderness2.mjs) — visible on the horizon through the fog, but
-// never physically reachable by the camera, the same "see it, never
-// collide with it" arrangement real open-world scenes use for distant
-// scenery.
+// minus its own radius clears SAFE_RADIUS by a 40-unit margin) — visible
+// on the horizon through the fog, but never physically reachable by the
+// camera, the same "see it, never collide with it" arrangement real
+// open-world scenes use for distant scenery.
 const FAR_PEAKS = [
   { cx: -649, cz: 356, radius: 180, height: 130, seed: 5 },
   { cx: -352, cz: -698, radius: 150, height: 95, seed: 19 },
@@ -221,22 +179,21 @@ function corridorFactor(x, z) {
   return smoothstep01(Math.min(1, (d - SAFE_RADIUS) / SAFE_FADE));
 }
 
-// 2026-08-03, second edge pass: horizontal distance fog hides the boundary
-// when looking across the landscape, but does nothing for a straight-down
-// view — from directly overhead, the whole extent is visible at a roughly
-// uniform camera distance (height dominates over the small horizontal
-// spread within frame), so there's no near/far gradient for fog to fade
-// through, and the plane's literal edge can show as a hard color line
-// against the background. The real fix has to be geometric: the wilderness
-// layers (FAR_PEAKS/VALLEYS/noise — NOT MOUNTAINS, see below) taper to
-// exactly flat by the plane's actual boundary, so there's no height (and
-// therefore no lit slope/silhouette) left to see a "shape" of, edge or
-// otherwise, from any angle including straight down. Matches the plane's
-// own aspect ratio (an ellipse, not a circle — the plane is 8000×6400, not
-// square) so the taper reaches exactly 0 at the real edge in every
-// direction, not a circle that clips one axis early or leaves the other
-// exposed. TERRAIN_CENTER/PLANE_HALF_X/PLANE_HALF_Z duplicate
-// createBeamline's own terrain-plane constants for the same reason
+// Horizontal distance fog hides the terrain boundary when looking across
+// the landscape, but does nothing for a straight-down view — from directly
+// overhead, the whole extent is visible at a roughly uniform camera
+// distance, so there's no near/far gradient for fog to fade through, and
+// the plane's literal edge could show as a hard color line against the
+// background. The fix is geometric: the wilderness layers (FAR_PEAKS/
+// VALLEYS/noise — NOT MOUNTAINS, see below) taper to exactly flat by the
+// plane's actual boundary, so there's no height (and therefore no lit
+// slope/silhouette) left to see a "shape" of, edge or otherwise, from any
+// angle including straight down. The taper matches the plane's own aspect
+// ratio (an ellipse, not a circle — the plane is 8000×6400, not square) so
+// it reaches exactly 0 at the real edge in every direction, not a circle
+// that clips one axis early or leaves the other exposed.
+// TERRAIN_CENTER/PLANE_HALF_X/PLANE_HALF_Z duplicate createBeamline's own
+// terrain-plane constants for the same reason
 // CAM_TARGET_XZ does above — kept in sync by hand.
 // TERRAIN_CENTER/PLANE_HALF_X/PLANE_HALF_Z: STRUCTURAL — these must match
 // the actual terrain plane's real center/dimensions elsewhere in this file
@@ -433,8 +390,8 @@ export function terrainHeight(x, z) {
     h += m.height * s * jag;
   }
 
-  // Wilderness: FAR_PEAKS/VALLEYS/noise, same as last round, now scaled by
-  // edgeFalloff as a group so all of it — hand-placed peaks and generated
+  // Wilderness: FAR_PEAKS/VALLEYS/noise, scaled by edgeFalloff as a group
+  // so all of it — hand-placed peaks and generated
   // noise alike — tapers to exactly 0 by the plane's real boundary.
   // Same radial-bump-plus-angular-jag technique as MOUNTAINS above, just
   // its own jag frequencies/strengths (5 & 11 lobes, 0.18 & 0.10 strength)
@@ -486,10 +443,8 @@ function makeGlowTexture(hue = 'rgba(200,225,255,') {
 }
 
 // A faint grid, standing in for a digital landscape — Tron's own game-grid
-// floor, now draped over real terrain geometry (see the terrain mesh in
-// createBeamline) rather than a single flat plane. The texture itself is
-// unchanged by the Solar Sailer pivot; only how it's mapped (across a
-// displaced, not flat, PlaneGeometry) changed.
+// floor, draped over the real terrain geometry (see the terrain mesh in
+// createBeamline) rather than a flat plane.
 function makeGridTexture(repeat = 20) {
   const c = document.createElement('canvas');
   c.width = 512; c.height = 512;
@@ -536,13 +491,9 @@ function makeShimmerTexture() {
 }
 
 // A thin bright band crossing an otherwise dim (never fully dark — current
-// always flowing) strip. 2026-08-02: no longer a mirror rim's own
-// emissiveMap — the Solar Sailer brief specifically asked that this exact
-// timing/technique be repurposed for "whatever reads the vessel's own
-// light," so as of this pivot it's cloned once, mounted on the vessel's own
-// engine ring (see buildVessel below), and scrolled the same way the old
-// per-mirror rims were: current flowing through a conductor, just one
-// conductor now (the vessel), not ten (the old mirrors).
+// always flowing) strip, mounted on the vessel's own engine ring (see
+// buildVessel below) and scrolled to read as current flowing through a
+// conductor.
 function makeRingPulseTexture() {
   const c = document.createElement('canvas');
   c.width = 256; c.height = 16;
@@ -570,10 +521,8 @@ function makeRingPulseTexture() {
 // canvas texture: dark upper sky fading to a glowing electric-blue horizon
 // band, a scattering of stars above it.
 //
-// 2026-08-02 (Solar Sailer pivot): this used to also paint a jagged cliff
-// silhouette across the lower band via a seeded pseudo-random walk
-// (ridge(), since removed) — that job now belongs to real terrain geometry
-// (terrainHeight() above), so this texture only needs to carry the sky
+// The terrain mesh (terrainHeight() above) carries the actual ground/
+// mountain silhouette, so this texture only needs to carry the sky
 // gradient, the horizon glow, and the stars; a plain dark fill stands in
 // for whatever's below the horizon line that the terrain mesh doesn't
 // itself cover at extreme zoom/angle.
@@ -629,11 +578,8 @@ function makeSkyboxTexture() {
 // ─── Liquid light ───────────────────────────────────────────────────────
 // A vertical alpha-streak texture, tiled and scrolled along the rail's own
 // length, standing in for "liquid light" flow rather than a flat-shaded
-// tube. Unchanged by the Solar Sailer pivot — the brief explicitly kept
-// this treatment as "the rail's own visual (the conduit itself, always
-// visible, glowing)"; only what it's mapped onto changed (a single
-// TubeGeometry following the hand-placed curve, see buildRailTube below,
-// rather than a chain of straight cylinder segments).
+// tube. Mapped onto a single TubeGeometry following the hand-placed curve
+// (see buildRailTube below).
 function makeLiquidLightTexture() {
   const c = document.createElement('canvas');
   c.width = 8; c.height = 256;
@@ -656,24 +602,17 @@ function makeLiquidLightTexture() {
 }
 
 // ─── Station label ────────────────────────────────────────────────────
-// Text-only, no background panel — this whole system (wrapLines through
-// makeLabelTexture) is untouched by the Solar Sailer pivot, per the brief's
-// explicit "confirmed working and shouldn't be touched." Only the callers
-// (showLabel/dismissLabel in createBeamline, below) changed what kind of
-// object they're labeling — a station on the rail, not a mirror.
+// Text-only, no background panel. showLabel/dismissLabel in createBeamline
+// (below) call into this to label a station on the rail.
 //
-// 2026-08-03, tried then reverted same day: the font brief's "captions"
-// was applied to the found-text body too for one round, putting the whole
-// label in Orbitron. Scott's own read on seeing it live: Orbitron works as
-// a short technical label ("STATION N OF 10") but is tonally wrong for the
-// found poetic text underneath it — it clashed with both the lyrical
-// content and the serif-italic epigraph sitting above it in the same
-// scene. Body text is back to the site's standard italic serif, the same
-// voice every other scene already uses for its own found text; Orbitron
-// stays exactly where it was already working, on the small-caps header
-// line only. The gold accent moved down onto the body text instead (see
-// bounceStyle below) — one deliberate warm accent still exists, it's just
-// not asking Orbitron to carry both jobs at once.
+// The "STATION N OF 10" header line ships in Orbitron small-caps, a short
+// technical label; the found poetic text underneath stays in the site's
+// standard italic serif, the same voice every other scene uses for its
+// own found text — Orbitron would clash with both the lyrical content and
+// the serif-italic epigraph sitting above it in the same scene. The gold
+// accent lives on the body text (see bounceStyle below) rather than on
+// the header, so there's still one deliberate warm accent without asking
+// Orbitron to carry both jobs at once.
 function wrapLines(cx, text, maxWidth) {
   const words = text.split(' ');
   let line = '', lines = [];
@@ -710,8 +649,8 @@ const BOUNCE_LINE_H = 30;
 const BODY_LINE_H = 42;
 
 // ─── Manual small-caps (canvas has no font-variant support) ─────────────
-// 2026-08-03: the "STATION N OF M" line ships in Orbitron small-caps, same
-// as the DOM hint text — but a canvas 2D context can't be told
+// The "STATION N OF M" line ships in Orbitron small-caps, same as the DOM
+// hint text — but a canvas 2D context can't be told
 // font-variant: small-caps the way real CSS can (browser support for that
 // inside ctx.font's shorthand is unreliable to nonexistent), so this is the
 // manual equivalent: each word's first letter draws at the full BOUNCE_FONT_PX,
@@ -751,11 +690,8 @@ function makeLabelTexture(bounceLabel, text) {
 
   const measure = document.createElement('canvas').getContext('2d');
   measure.textBaseline = 'top';
-  // 2026-08-03: gold moved off the header and onto the found-text body
-  // (see the body's drawOutlinedText call below) — the numbering line is
-  // back to the piece's original near-white, same fill/glow color the body
-  // uses, just at the smaller stroke/glow weights this smaller font size
-  // already called for.
+  // The numbering line stays near-white; the gold accent lives on the
+  // found-text body instead (see the body's drawOutlinedText call below).
   const bounceStyle = {
     fill: 'rgba(238,247,255,0.98)', stroke: 'rgba(2,5,12,0.92)', strokeWidth: 4,
     glow: 'rgba(1,3,9,0.95)', glowBlur: 7,
@@ -779,13 +715,12 @@ function makeLabelTexture(bounceLabel, text) {
 
   // "STATION N OF M" ships in Orbitron, manual small-caps (see
   // layoutSmallCaps above) — the piece's HUD-chrome font, near-white like
-  // the rest of the piece's chrome. The found-text body below is back to
-  // the site's standard italic serif (Times New Roman) as of 2026-08-03 —
-  // Orbitron reads wrong on the poetic found text, see the comment above —
-  // and carries the gold accent (GOLD_ACCENT_CSS, Sphere's own value, see
-  // the constant above) instead: one deliberate warm accent, now on the
-  // words themselves rather than the numbering, still not a wholesale
-  // palette change.
+  // the rest of the piece's chrome. The found-text body below stays in
+  // the site's standard italic serif (Times New Roman), since Orbitron
+  // reads wrong on the poetic found text, and carries the gold accent
+  // (GOLD_ACCENT_CSS, Sphere's own value, see the constant above) instead:
+  // one deliberate warm accent, on the words themselves rather than the
+  // numbering, not a wholesale palette change.
   layoutSmallCaps(cx, bounceLabel, {
     bigPx: BOUNCE_FONT_PX, smallPx: SMALLCAPS_FONT_PX, draw: true, x: pad, y: pad, style: bounceStyle,
   });
@@ -805,18 +740,16 @@ function makeLabelTexture(bounceLabel, text) {
 }
 
 // ─── Station beacon ─────────────────────────────────────────────────────
-// Replaces buildMirror() — a small glowing waypoint marker, not a
-// reflective optic, since nothing bounces anymore. A faceted core "gem"
-// (an Icosahedron, not a smooth sphere — reads as a deliberate marker, not
-// a natural object) sits at a fixed point on the rail, ringed by a hoop
-// oriented perpendicular to the rail's own tangent there — the vessel
-// visibly threads through it as it passes, echoing the old mirror rim's
-// "current flowing through a conductor" read but as a real waypoint gate
-// rather than a bounce point. No scrolling emissiveMap here — that traveling-
-// pulse technique now belongs exclusively to the vessel's own engine ring
-// (see buildVessel below); stations instead get a slower, independent
-// organic idle glow (driven by organicWave in createBeamline's animate
-// loop), plus a brief real brighten when the vessel actually passes.
+// A small glowing waypoint marker on the rail. A faceted core "gem" (an
+// Icosahedron, not a smooth sphere — reads as a deliberate marker, not a
+// natural object) sits at a fixed point on the rail, ringed by a hoop
+// oriented perpendicular to the rail's own tangent there, so the vessel
+// visibly threads through it as it passes, reading as a real waypoint
+// gate. No scrolling emissiveMap here — that traveling-pulse technique
+// belongs exclusively to the vessel's own engine ring (see buildVessel
+// below); stations instead get a slower, independent organic idle glow
+// (driven by organicWave in createBeamline's animate loop), plus a brief
+// real brighten when the vessel actually passes.
 function buildStation(point, tangent) {
   const coreGeo = new THREE.IcosahedronGeometry(3.2, 0);
   const coreMat = new THREE.MeshStandardMaterial({
@@ -843,12 +776,13 @@ function buildStation(point, tangent) {
 }
 
 // ─── Terminus — a real destination, not a fade to nothing ───────────────
-// Added 2026-08-03: the rail had a clear origin at P_START (the small
-// start-glow sprite, still just below) but simply trailed off into empty
-// space at the far end — one real bookend, not two. This doesn't resolve
-// WHAT the terminus is narratively (the piece's own "maybe compiling into
-// something, maybe not" ambiguity stays exactly as ambiguous as ever) — it
-// only needs to visually exist as a real endpoint the eye can land on.
+// The rail has a clear origin at P_START (the small start-glow sprite,
+// below) and a matching real endpoint at the far end — one real bookend
+// at each side, rather than trailing off into empty space. This doesn't
+// resolve WHAT the terminus is narratively (the piece's own "maybe
+// compiling into something, maybe not" ambiguity stays exactly as
+// ambiguous as ever) — it only needs to visually exist as a real endpoint
+// the eye can land on.
 // Deliberately NOT just a bigger station: buildStation is one core plus one
 // ring; this is a crossed double ring (a genuine gateway the vessel visibly
 // passes through, not a hoop-plus-single-core silhouette) around a cluster
@@ -910,15 +844,12 @@ function buildTerminus(point, tangent) {
 }
 
 // ─── Rail conduit ───────────────────────────────────────────────────────
-// Replaces buildBeamSegment()'s chain of straight cylinders with a single
-// continuous THREE.TubeGeometry following the hand-placed curve — "the
-// conduit itself, always visible, glowing," per the brief, just one piece
-// of geometry along the curve's whole length rather than one cylinder per
-// leg. liquid=true (the bright inner core only) maps the same liquid-light
-// streak texture used since the mirror era, repeated along the tube's own
-// arc length so streak density stays consistent regardless of how long the
-// curve is, exactly the same technique as before — the loop is just gone
-// because there's only one segment now.
+// A single continuous THREE.TubeGeometry following the hand-placed curve
+// — the conduit itself, always visible, glowing, one piece of geometry
+// along the curve's whole length. liquid=true (the bright inner core
+// only) maps the liquid-light streak texture, repeated along the tube's
+// own arc length so streak density stays consistent regardless of how
+// long the curve is.
 function buildRailTube(curve, radius, opacity, liquid = false) {
   const geo = new THREE.TubeGeometry(curve, 400, radius, 8, false);
   let map = null;
@@ -943,9 +874,8 @@ function buildRailTube(curve, radius, opacity, liquid = false) {
 // hull points local +Z by default (see the ConeGeometry rotate below) so
 // orienting the whole group to the rail's tangent each frame is a single
 // quaternion, no separate per-frame "point it at the direction of travel"
-// bookkeeping. The engine ring carries the repurposed traveling-pulse
-// texture (see makeRingPulseTexture above) — this is "whatever reads the
-// vessel's own light," scrolled the same way the old mirror rims were.
+// bookkeeping. The engine ring carries the traveling-pulse texture (see
+// makeRingPulseTexture above), scrolled to read as the vessel's own light.
 function buildVessel(ringPulseTex) {
   const hullGeo = new THREE.ConeGeometry(1.7, 4.6, 6);
   hullGeo.rotateX(Math.PI / 2); // apex now points local +Z (forward), not +Y
@@ -984,16 +914,14 @@ export function createBeamline(container, { preview = false } = {}) {
   const h = container.clientHeight || window.innerHeight;
 
   const scene = new THREE.Scene();
-  // 2026-08-03: tightened from 700 to 560 (far) as part of the "diorama to
-  // environment" pass — not strictly needed for hiding the terrain's own
-  // edge any more (the enlarged plane below puts that edge ~2580 units from
-  // the worst-case camera position, verified by verify_wilderness.mjs,
-  // massively past any fog distance), but a shorter falloff reads better
-  // for the new ground-level default camera (item 3, below): real
-  // ground-level sightlines are naturally hazier/shorter than an overhead
-  // view's, and the moodier, more enclosed falloff suits "standing in the
-  // landscape" better than seeing clearly for 700 units. Near/far still
-  // chosen so a station at CAM_MIN stays unfogged.
+  // The far fog distance isn't needed for hiding the terrain's own edge
+  // (the plane below puts that edge well past any fog distance regardless)
+  // — a shorter falloff instead reads better for the ground-level default
+  // camera (item 3, below): real ground-level sightlines are naturally
+  // hazier/shorter than an overhead view's, and the moodier, more enclosed
+  // falloff suits "standing in the landscape" better than seeing clearly
+  // for hundreds of units. Near/far still chosen so a station at CAM_MIN
+  // stays unfogged.
   scene.fog = new THREE.Fog(HORIZON_COLOR, preview ? 45 : 60, preview ? 400 : 560);
   scene.background = new THREE.Color(0x00020a);
 
@@ -1006,9 +934,8 @@ export function createBeamline(container, { preview = false } = {}) {
   // ─── Rail: hand-placed control points, not solved/generated ────────────
   // Twelve points: the conduit's own visible ends (P_START/P_END) plus the
   // ten station waypoints, one per BOUNCES[] entry in beamline.text.js, same
-  // order (S1 = bounce 0, closest to the path's start — same convention the
-  // old mirror chain used for its source-proximal first bounce). Each point
-  // was placed by hand, not solved: X advances roughly monotonically for a
+  // order (S1 = bounce 0, closest to the path's start). Each point was
+  // placed by hand, not solved: X advances roughly monotonically for a
   // legible left-to-right sense of travel, Z sweeps in a loose S-curve, and
   // Y alternates deliberately — low near the flat grid (close enough to
   // cross paths with the ambient ecology below) at S1/S5/S9, rising to
@@ -1016,16 +943,13 @@ export function createBeamline(container, { preview = false } = {}) {
   // S3/S7/S10, giving the path real vertical character across its length
   // rather than a flat wander at one height.
   //
-  // Verified together with the terrain height field by solve_solar_sailer.mjs
-  // (since deleted, per this project's convention of not keeping throwaway
-  // solver scripts once their numbers are transcribed): minimum terrain
-  // clearance 6.491 units anywhere along 2000 arc-length-spaced samples,
-  // zero self-intersections in plan view, curve length 788.51 units.
-  // CatmullRomCurve3's 'centripetal' type is used specifically because it
-  // doesn't overshoot past hand-placed control points the way the default
-  // 'catmullrom' type can — overshoot here would have meant the curve
-  // dipping through terrain or crossing itself between two points that were
-  // individually verified clear.
+  // Minimum terrain clearance is 6.491 units anywhere along 2000
+  // arc-length-spaced samples, with zero self-intersections in plan view
+  // and a curve length of 788.51 units. CatmullRomCurve3's 'centripetal'
+  // type is used specifically because it doesn't overshoot past
+  // hand-placed control points the way the default 'catmullrom' type can
+  // — overshoot here would mean the curve dipping through terrain or
+  // crossing itself between two points that are individually clear.
   const WAYPOINTS = [
     { name: 'P_START', x: -40, y: 6,  z: 10 },
     { name: 'S1',      x: 0,   y: 4,  z: -15 },
@@ -1044,75 +968,63 @@ export function createBeamline(container, { preview = false } = {}) {
     WAYPOINTS.map(p => new THREE.Vector3(p.x, p.y, p.z)),
     false, 'centripetal',
   );
-  // Arc-length-uniform parameter (u, 0..1) for each of the ten stations —
-  // the nearest-sample match from the same 2000-point arc-length scan
-  // solve_solar_sailer.mjs used to verify terrain clearance, so these
-  // values are consistent with curve.getPointAt(u)'s own arc-length
-  // parametrization at runtime (three.js's default arcLengthDivisions,
-  // left untouched here so the two stay in agreement).
+  // Arc-length-uniform parameter (u, 0..1) for each of the ten stations,
+  // matched from a 2000-point arc-length scan so these values are
+  // consistent with curve.getPointAt(u)'s own arc-length parametrization
+  // at runtime (three.js's default arcLengthDivisions, left untouched here
+  // so the two stay in agreement).
   const STATION_ARC_T = [0.0600, 0.1255, 0.2470, 0.3210, 0.4005, 0.5085, 0.6025, 0.7055, 0.7980, 0.9255];
 
   // The camera targets the rail's real 3D centroid (not just its X/Z
-  // footprint the way the flat mirror-bench era could get away with — this
-  // path has real vertical extent now) — computed by the same verification
-  // script from 2000 arc-length-spaced samples, transcribed at full
-  // precision. The opening angle itself (THETA/GROUND_PHI_Y, below) is no
-  // longer a hand-tuned CAM_DIR vector as of the 2026-08-03 ground-level
-  // pass — see that section's own comment for the current, real-math-
-  // derived reasoning. CAM_MIN is sized to read the STATIONS/vessel clearly
-  // close-up (their own real size, not the rail's total extent — the lesson an earlier
-  // Beamline round learned the hard way: scaling camera distance with path
-  // extent when the object you're actually looking at barely changed size
-  // made everything an unreadable dot). CAM_MAX is sized off the rail's own
+  // footprint — this path has real vertical extent), computed from 2000
+  // arc-length-spaced samples, transcribed at full precision. See the
+  // ground-level camera section below for how the opening angle
+  // (THETA/GROUND_PHI_Y) is derived. CAM_MIN is sized to read the
+  // STATIONS/vessel clearly close-up (their own real size, not the rail's
+  // total extent — scaling camera distance with path extent when the
+  // object you're actually looking at barely changes size makes everything
+  // an unreadable dot). CAM_MAX is sized off the rail's own
   // ~500-unit bounding diagonal, so zooming all the way out shows the whole
   // curve — scroll-to-zoom's own ceiling, unchanged.
   const CAM_TARGET = new THREE.Vector3(199.944150, 25.345350, 0.531666);
   const CAM_MIN = 28, CAM_MAX = 620;
 
-  // 2026-08-03, second pass ("diorama to environment," item 3): the
-  // previous round's opening camera (CAM_DIR (0.6,0.5,0.62), a hand-tuned
-  // moderate-elevation angle, fit via computeFramingDistance's full-
-  // theta-sweep worst case) genuinely did frame the whole route — but from
-  // ~578-620 units out and well above CAM_TARGET's own height, reading as a
-  // drone survey of a bounded plot, not a visitor standing in a landscape.
-  // Scott's brief allowed the "frame the whole route" goal to stay, but
-  // asked for it from ground level instead.
+  // The opening camera frames the whole route from ground level rather
+  // than from well above CAM_TARGET's height, so it reads as a visitor
+  // standing in a landscape rather than a drone survey of a bounded plot.
   //
-  // The fix isn't a smaller version of the old orbit — it's a different
-  // theta. The route's own real shape is long and thin (WAYPOINTS span 450
-  // units in X, only 187 in Z, 64 in Y): looking at it broadside needs
-  // real distance to fit that width in frame, but looking down its own
-  // length compresses most of that length into the depth axis instead,
-  // where perspective — not distance — does the work. THETA below is real
-  // math, not hand-tuned: it's the direction from CAM_TARGET (the curve's
+  // The route's own real shape is long and thin (WAYPOINTS span 450 units
+  // in X, only 187 in Z, 64 in Y): looking at it broadside needs real
+  // distance to fit that width in frame, but looking down its own length
+  // compresses most of that length into the depth axis instead, where
+  // perspective — not distance — does the work. THETA below is real math,
+  // not hand-tuned: it's the direction from CAM_TARGET (the curve's
   // centroid) toward P_START itself, so sitting beyond P_START on that same
   // line and looking back puts P_START in the near foreground with the
   // rest of the route receding toward P_END, the classic "road stretching
   // into the distance" establishing shot. GROUND_PHI_Y is a small
   // *negative* pitch (camera slightly below CAM_TARGET's own y=25.35,
-  // closer to the valley floor) rather than the old CAM_DIR's +0.5 —
-  // ground-level, and looking very slightly up at anything that rises
-  // above camera height, per the brief's own "across and slightly up."
+  // closer to the valley floor) — ground-level, and looking very slightly
+  // up at anything that rises above camera height.
   //
-  // Verified together by verify_camera.mjs (since deleted, per this
-  // project's convention): at THETA/GROUND_PHI_Y, fitRouteAtTheta's single-
-  // angle fit needs only ~261 units at 16:9, scaling up to ~506 at a narrow
-  // phone portrait aspect (9:19.5) — always comfortably under CAM_MAX, so
-  // the clamp below is a safety net, not the normal case. Terrain clearance
-  // at that position is 15.35 units (flat ground there, no nearby mound);
-  // swept across the FULL autoRotate theta range at this same camDist/phi,
+  // At THETA/GROUND_PHI_Y, fitRouteAtTheta's single-angle fit needs only
+  // ~261 units at 16:9, scaling up to ~506 at a narrow phone portrait
+  // aspect (9:19.5) — always comfortably under CAM_MAX, so the clamp below
+  // is a safety net, not the normal case. Terrain clearance at that
+  // position is 15.35 units (flat ground there, no nearby mound); swept
+  // across the full autoRotate theta range at this same camDist/phi,
   // minimum clearance anywhere is 7.24 units — safe everywhere the idle
-  // orbit will actually carry the camera, even though (unlike the old
-  // design) this fit is only guaranteed to hold at the one starting theta,
-  // not the whole orbit — autoRotate drifting to a less favorable angle
-  // after the first few seconds is expected and fine; the terrain there is
-  // real, not a void, so the view degrades gracefully rather than breaking.
+  // orbit will actually carry the camera, even though this fit is only
+  // guaranteed to hold at the one starting theta, not the whole orbit —
+  // autoRotate drifting to a less favorable angle after the first few
+  // seconds is expected and fine; the terrain there is real, not a void,
+  // so the view degrades gracefully rather than breaking.
   const P_START = WAYPOINTS[0];
   const THETA = Math.atan2(P_START.x - CAM_TARGET.x, P_START.z - CAM_TARGET.z);
   const GROUND_PHI_Y = -0.05;
   function fitRouteAtTheta(aspect) {
     const margin = 0.85; // NDC target — 15% padding on every side, so the route's own bookends aren't jammed against the frame edge
-    const N = 120; // runtime curve-sample count — dense enough to catch the real shape, not re-verifying clearance (already done by solve_solar_sailer.mjs)
+    const N = 120; // runtime curve-sample count — dense enough to catch the real shape; this samples for framing, not for terrain clearance
     camera.aspect = aspect;
     camera.updateProjectionMatrix();
     const phi0 = Math.acos(THREE.MathUtils.clamp(GROUND_PHI_Y, -1, 1));
@@ -1134,9 +1046,7 @@ export function createBeamline(container, { preview = false } = {}) {
         // into a plausible-looking range, making a point that's actually
         // invisible (behind the camera) read as comfortably on-screen. Using
         // Vector4 here keeps w visible so behind-camera points are rejected
-        // outright rather than false-positiving through the margin check —
-        // caught live while sanity-checking the terminus in the prior round
-        // (see NOTES.md's 1.32.0 entry).
+        // outright rather than false-positiving through the margin check.
         const v4 = new THREE.Vector4(p.x, p.y, p.z, 1).applyMatrix4(vp);
         if (v4.w <= 0) return false;
         const ndcX = v4.x / v4.w, ndcY = v4.y / v4.w;
@@ -1155,17 +1065,15 @@ export function createBeamline(container, { preview = false } = {}) {
   let theta = THETA;
   let phi = Math.acos(THREE.MathUtils.clamp(GROUND_PHI_Y, -1, 1));
   const PHI_EPS = 0.06;
-  // Hard runtime floor, added alongside the ground-level default (item 3):
-  // the shallow default phi barely raises camera height with distance, so
-  // the raw spherical position can dip underground near the rail-adjacent
-  // MOUNTAINS (close enough to the orbit pivot to still be reachable) even
-  // though SAFE_RADIUS above keeps the newer FAR_PEAKS out of reach
-  // entirely. CAMERA_GROUND_CLEARANCE never lets the computed Y sit below
-  // the terrain directly beneath the camera's own (x,z) plus this margin —
-  // verified airtight (clearance == margin, exactly, everywhere) across a
-  // full theta×dist sweep at the default phi by verify_wilderness2.mjs
-  // (since deleted). Doesn't touch X/Z or the look target, so orbit/zoom
-  // still feel the same; it just refuses to let the camera go underground.
+  // Hard runtime floor: the shallow default phi barely raises camera
+  // height with distance, so the raw spherical position can dip
+  // underground near the rail-adjacent MOUNTAINS (close enough to the
+  // orbit pivot to still be reachable) even though SAFE_RADIUS above keeps
+  // the FAR_PEAKS out of reach entirely. CAMERA_GROUND_CLEARANCE never
+  // lets the computed Y sit below the terrain directly beneath the
+  // camera's own (x,z) plus this margin. Doesn't touch X/Z or the look
+  // target, so orbit/zoom still feel the same; it just refuses to let the
+  // camera go underground.
   const CAMERA_GROUND_CLEARANCE = 8;
   function updateCamera() {
     const sinPhi = Math.sin(phi);
@@ -1220,35 +1128,22 @@ export function createBeamline(container, { preview = false } = {}) {
   // growth patches sit correctly ON this same surface rather than floating
   // above or clipping into a mound).
   //
-  // 2026-08-03: enlarged from 2600×2000 to 8000×6400 as part of "diorama to
-  // environment" (item 2) — the old extent's own edge was visible from the
-  // default camera. Segment count went from 320×240 to 640×512 (16 units/
-  // vertex, vs ~8 before) — a deliberate, checked trade: ~3.1x the linear
-  // extent for ~4.3x the vertex count (327,680 vs 76,800), still a single
-  // static mesh/draw call and well within what a modern WebGL context
-  // handles for one-time per-vertex displacement, but roughly 2x coarser
-  // per-vertex right at the rail's own mounds than before. Accepted because
-  // (a) MeshStandardMaterial's smooth-shaded normals still read the mounds
-  // as real hills at this density, and (b) the alternative — keeping the
-  // original fine mesh and tiling a second, coarser mesh around it — is a
-  // real multi-LOD terrain system, out of scope for one round. Combined
-  // with the tightened fog above, verify_wilderness.mjs (since deleted)
-  // confirmed the plane's actual edge sits ~2580 units beyond the
-  // worst-case camera position (CAM_MAX + CAM_TARGET's own offset from
-  // TERRAIN_CENTER), so no orbit/zoom position can reach it. Gated to
-  // !preview, same as before — preview tiles stay cheap.
-  // Preview note, 2026-08-03: this whole mesh used to be skipped in preview
-  // outright ("preview tiles stay cheap") — a reasonable call when it was
-  // three MOUNTAINS mounds, but once the wilderness pass (FAR_PEAKS/
-  // VALLEYS/noise, 1.33.0) landed, the landing-page tile stopped
-  // representing the scene at all: "bare rail against empty dark space,"
-  // per a cross-site consistency review (2026-08-03), while the full scene
-  // had long since grown an entire environment around it. Fix: preview
-  // gets the exact same terrainHeight() field — mountains, wilderness,
-  // edge falloff, all of it — just at a much smaller extent and far
-  // coarser resolution (2,928 vertices vs. 327,680), since a small, distant
-  // tile can't show fine detail anyway and doesn't need the full mesh's
-  // per-vertex cost repeated across every scene's preview rendering at once.
+  // The plane is 8000×6400 at 640×512 segments (16 units/vertex),
+  // 327,680 vertices total — still a single static mesh/draw call, well
+  // within what a modern WebGL context handles for one-time per-vertex
+  // displacement. MeshStandardMaterial's smooth-shaded normals still read
+  // the mounds as real hills at this density; a true multi-LOD terrain
+  // system (fine mesh near the rail, coarser tiling further out) would be
+  // more precise but is more machinery than this scene needs. The plane's
+  // actual edge sits well beyond the worst-case camera position (CAM_MAX +
+  // CAM_TARGET's own offset from TERRAIN_CENTER), so no orbit/zoom
+  // position can reach it. Gated to !preview — preview tiles stay cheap.
+  //
+  // Preview gets the exact same terrainHeight() field — mountains,
+  // wilderness, edge falloff, all of it — just at a much smaller extent
+  // and far coarser resolution (2,928 vertices vs. 327,680), so the
+  // landing-page tile represents the same environment as the full scene
+  // without a small, distant tile needing the full mesh's per-vertex cost.
   let terrain = null, terrainGeo = null, terrainMat = null, terrainTex = null;
   const TERRAIN_CENTER = { x: 200, z: 0 };
   {
@@ -1268,14 +1163,13 @@ export function createBeamline(container, { preview = false } = {}) {
     terrainTex = makeGridTexture(); // repeat arg irrelevant — both axes overridden next line for whichever extent above
     terrainTex.repeat.x = preview ? 145 : 727; // plane isn't square — keeps grid cells ~11 units on both axes (1600/145≈11.0, 8000/727≈11.0)
     terrainTex.repeat.y = preview ? 116 : 582; // 1280/116≈11.0, 6400/582≈11.0
-    // side: DoubleSide — real bug, not a leftover artifact: with the default
-    // FrontSide, the mesh vanished entirely once the camera drifted beneath
+    // side: DoubleSide is load-bearing here, not a leftover default: with
+    // FrontSide, the mesh vanishes entirely once the camera drifts beneath
     // the mountains (nothing left to render but the backface, which
     // FrontSide culls), and the same mesh viewed nearly edge-on from a
-    // moderate distance thinned into what looked like a stray straight beam
-    // in earlier screenshots — one root cause, two symptoms. DoubleSide
-    // means there's no "wrong side" to view this single-sheet mesh from at
-    // any camera position.
+    // moderate distance thins into what reads as a stray straight beam —
+    // one root cause, two symptoms. DoubleSide means there's no "wrong
+    // side" to view this single-sheet mesh from at any camera position.
     terrainMat = new THREE.MeshStandardMaterial({
       color: 0x02040a, map: terrainTex, emissive: 0xffffff, emissiveMap: terrainTex,
       emissiveIntensity: 0.5, roughness: 0.85, metalness: 0.05, fog: true,
@@ -1319,16 +1213,13 @@ export function createBeamline(container, { preview = false } = {}) {
     stations.push({
       ...st, point, tangent, lateral, arcT: t, baseEmissive: 1.0, stationIndex: i,
       // Per-station organic-pulse seed/rate — irrational-ish offsets so no
-      // two stations fall into a shared rhythm, same convention the old
-      // per-mirror ring pulse used.
+      // two stations fall into a shared rhythm.
       pulseSeed: i * 1.732 + 0.6, pulseRate: 0.5 + ((i * 37) % 11) * 0.03, idleGlow: 0,
     });
   }
 
-  // Start glow — the rail's clear origin, standing in for the old source
-  // sprite (same makeGlowTexture technique, same rough scale). Left as-is
-  // per the brief: only the far end read as trailing into nothing, not
-  // this one.
+  // Start glow — the rail's clear origin (makeGlowTexture, same technique
+  // used throughout for point-light sprites).
   const startTex = makeGlowTexture('rgba(235,250,255,');
   const startMat = new THREE.SpriteMaterial({ map: startTex, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending });
   const startSprite = new THREE.Sprite(startMat);
@@ -1336,9 +1227,8 @@ export function createBeamline(container, { preview = false } = {}) {
   startSprite.position.copy(curve.getPointAt(0));
   root.add(startSprite);
 
-  // The far end's real terminus (see buildTerminus above) — replaces what
-  // used to be just a small fading glow sprite, the same "one real bookend,
-  // not two" gap the 2026-08-03 brief flagged.
+  // The far end's real terminus (see buildTerminus above) — a real bookend
+  // matching the start glow, so the rail doesn't trail into nothing.
   const terminus = buildTerminus(curve.getPointAt(1), curve.getTangentAt(1).normalize());
   root.add(terminus.group);
 
@@ -1355,22 +1245,20 @@ export function createBeamline(container, { preview = false } = {}) {
   // much longer, more direct jumps, with step LENGTHS following a power-law
   // (Pareto) distribution rather than one constant speed. sampleLevyStep()
   // below is the standard inverse-CDF sampler for that distribution
-  // (L = Lmin * u^(-1/(mu-1)) for u ~ Uniform(0,1)) — verified with a
-  // throwaway Node script before wiring in: the empirical CCDF's slope in
-  // log-log space matched the theoretical -(mu-1) almost exactly across two
-  // decades of step length, not just "looks irregular enough by eye."
-  // mu=2.0 (a well-studied value in the real Lévy-flight-foraging
-  // literature) puts about half of all steps under 2×Lmin (the "lingering,
-  // small local drift" the brief asked for) and roughly one in ten past
-  // 10×Lmin (the occasional long, direct jump) — the clamp at LEVY_L_MAX
-  // just keeps a rare extreme draw from ever exceeding a large fraction of
-  // the whole rail in one bound.
+  // (L = Lmin * u^(-1/(mu-1)) for u ~ Uniform(0,1)); the empirical CCDF's
+  // slope in log-log space matches the theoretical -(mu-1) almost exactly
+  // across two decades of step length. mu=2.0 (a well-studied value in the
+  // real Lévy-flight-foraging literature) puts about half of all steps
+  // under 2×Lmin (lingering, small local drift) and roughly one in ten
+  // past 10×Lmin (the occasional long, direct jump) — the clamp at
+  // LEVY_L_MAX just keeps a rare extreme draw from ever exceeding a large
+  // fraction of the whole rail in one bound.
   //
   // The rail/curve stays the fixed backbone the vessel is loosely
   // following — this governs the CHARACTER of motion ALONG that backbone
-  // (progress in real arc-length units, wrapping at the ends like the old
-  // constant-speed loop did), not a replacement for having a real path.
-  // ─── Annotation pass, 2026-08-04: tunable vs structural, at a glance ───
+  // (progress in real arc-length units, wrapping at the ends), not a
+  // replacement for having a real path.
+  // ─── Tunable vs structural, at a glance ───
   // LEVY_MU: TUNABLE, but with a hard mathematical floor — must stay
   //   strictly greater than 1 (the formula below divides by MU-1; at
   //   exactly 1 that's a division by zero, and approaching 1 the exponent
@@ -1471,20 +1359,17 @@ export function createBeamline(container, { preview = false } = {}) {
   // ─── Station label sprite ───────────────────────────────────────────────
   const LABEL_OFFSET = 7;     // world units off the station's own point, along its lateral direction
   const LABEL_LIFT = 3;       // small +Y nudge so the label reads as beside-and-above, not level with the station
-  // 2026-08-03: sustain used to be one fixed 3.4s for every caption, which
-  // was much too fast for this piece's real range — BOUNCES text runs from
-  // 3 words to 116 (the "THE MIRROR" passage), and a single constant can't
-  // serve both without either blinking past the short ones or cutting off
-  // the long one mid-read. Sustain is now computed per caption from its own
-  // word count (computeSustain, below) at a deliberately unhurried pace —
-  // slower than typical silent-reading wpm, since this is glowing found
-  // text floating in a 3D scene, not a printed page, and takes longer to
-  // parse in practice. Watched a full read-through of the longest passage
-  // at normal reading pace before settling on WORDS_PER_SECOND; err toward
-  // too slow, per the brief, rather than repeat the too-fast problem.
+  // A single fixed sustain doesn't work for this piece's real range —
+  // BOUNCES text runs from 3 words to 116 (the "THE MIRROR" passage), and
+  // one constant can't serve both without either blinking past the short
+  // ones or cutting off the long one mid-read. Sustain is computed per
+  // caption from its own word count (computeSustain, below) at a
+  // deliberately unhurried pace — slower than typical silent-reading wpm,
+  // since this is glowing found text floating in a 3D scene, not a
+  // printed page, and takes longer to parse in practice.
   const WORDS_PER_SECOND = 2.3;
   const LABEL_SUSTAIN_MIN = 3.0; // floor so even the shortest fragment (3 words) doesn't blink past
-  const LABEL_FADE = 2.4;        // seconds to fade out — was 1.0, also too fast on its own
+  const LABEL_FADE = 2.4;        // seconds to fade out, unhurried enough to read comfortably
   function computeSustain(text) {
     const words = text.trim().split(/\s+/).filter(Boolean).length;
     return Math.max(LABEL_SUSTAIN_MIN, words / WORDS_PER_SECOND);
@@ -1611,13 +1496,12 @@ export function createBeamline(container, { preview = false } = {}) {
   }
 
   // ─── Ambient ecology ─────────────────────────────────────────────────
-  // Carried over unchanged in spirit from Beamline, per the brief — three
-  // bounded, sparse additions, still deliberately not a terrain/weather/
-  // day-night rebuild. The one real change: since the ground is no longer
-  // flat, every spawn position below samples terrainHeight() for its own Y
-  // rather than assuming a fixed height, so bugs and growth patches sit
-  // correctly on the actual surface wherever that surface happens to be —
-  // including up on a mound's slope, not just the flat corridor.
+  // Three bounded, sparse additions, deliberately not a terrain/weather/
+  // day-night rebuild. Since the ground isn't flat, every spawn position
+  // below samples terrainHeight() for its own Y rather than assuming a
+  // fixed height, so bugs and growth patches sit correctly on the actual
+  // surface wherever that surface happens to be — including up on a
+  // mound's slope, not just the flat corridor.
 
   // Grid shimmer — a terrain-conforming clone of the terrain geometry
   // itself (same vertex positions, nudged up slightly), so the shimmer's
@@ -1671,11 +1555,12 @@ export function createBeamline(container, { preview = false } = {}) {
     root.add(gridBugs);
   }
 
-  // Sky motes — a different scale of the same information-ecology, added
-  // 2026-08-03. The sky above the terrain was empty aside from the skybox's
-  // own painted-in stars (a flat 2D texture, see makeSkyboxTexture — those
-  // never move and aren't real 3D objects the camera can orbit around).
-  // These are real points, sparse and deliberately bigger/slower/rarer than
+  // Sky motes — a different scale of the same information-ecology. The
+  // sky above the terrain would otherwise be empty aside from the
+  // skybox's own painted-in stars (a flat 2D texture, see
+  // makeSkyboxTexture — those never move and aren't real 3D objects the
+  // camera can orbit around). These are real points, sparse and
+  // deliberately bigger/slower/rarer than
   // the grid bugs just above — "distant data in transit," not ground-
   // ecology creatures at a higher altitude. Two concrete differences from
   // gridBugs keep them from reading as a mere recolor of the same system:
@@ -1724,22 +1609,22 @@ export function createBeamline(container, { preview = false } = {}) {
   // Whether a patch spreads, stabilizes, or dies out is the actual output of
   // stepGameOfLife() below running against the current generation — nothing
   // here scripts the outcome, the same "real math over hand-tuned
-  // approximation" discipline as terrainHeight()/the rail curve. Verified
-  // against known Life ground truth (a blinker's period-2 oscillation, a
-  // block's stability, an isolated cell dying of underpopulation) with a
-  // throwaway Node script before wiring in, same as every other piece of
-  // real computation in this file.
-  // 2026-08-03, third edge pass: this lattice is a SEPARATE layer from the
-  // terrain mesh (its own Points system, own fixed extent) — the wilderness
-  // edgeFalloff() above only tapers terrain height, so it never touched this
-  // grid at all, which is why it kept reading as a hard-edged rectangular
-  // patch even after the terrain's own boundary dissolved. Same underlying
-  // idea applied here instead to density/position/brightness: the Game-of-
-  // Life SIMULATION still runs on the full plain rectangular COLS×ROWS grid
-  // (its own neighbor topology has to stay a real rectangle, same as before —
-  // untouched), but each point's RENDERED density/position/brightness is
-  // additionally shaped by caEdgeFactor/caEligible below, computed once at
-  // setup from that point's own distance from CAM_TARGET.
+  // approximation" discipline as terrainHeight()/the rail curve. Matches
+  // known Life ground truth (a blinker's period-2 oscillation, a block's
+  // stability, an isolated cell dying of underpopulation).
+  //
+  // This lattice is a SEPARATE layer from the terrain mesh (its own
+  // Points system, own fixed extent) — the wilderness edgeFalloff() above
+  // only tapers terrain height, so it has no effect on this grid, which is
+  // why the patch would otherwise read as a hard-edged rectangle even
+  // though the terrain's own boundary dissolves smoothly. The same
+  // underlying idea is applied here instead to density/position/
+  // brightness: the Game-of-Life SIMULATION still runs on the full plain
+  // rectangular COLS×ROWS grid (its own neighbor topology has to stay a
+  // real rectangle), but each point's RENDERED density/position/
+  // brightness is additionally shaped by caEdgeFactor/caEligible below,
+  // computed once at setup from that point's own distance from
+  // CAM_TARGET.
   // CA_COLS / CA_ROWS: TUNABLE — the lattice's dimensions in cells. More
   //   cells = a bigger patch of ground covered, at the cost of more
   //   points to update every generation (cols*rows grows quadratically-
@@ -1885,8 +1770,7 @@ export function createBeamline(container, { preview = false } = {}) {
       if (railCore.map) {
         railCore.map.offset.y -= (1 / 60) * (preview ? 0.5 : 0.85);
       }
-      // Vessel's own light — the engine ring's traveling pulse, the same
-      // technique/timing the old mirror rims used, repurposed per the brief.
+      // Vessel's own light — the engine ring's traveling pulse.
       const engineRate = 0.35 + organicWave(tSec * 0.04, 2.4) * 0.45;
       vessel.pulseMap.offset.x -= engineRate * (1 / 60);
       vessel.ringMat.emissiveIntensity = 1.4 + organicWave(tSec * 0.6, 7.1) * 1.2;

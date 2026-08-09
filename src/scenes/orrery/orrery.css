@@ -1,15 +1,10 @@
-/* Orrery scene styles. Previously injected at runtime via
-   document.createElement('style') inside orrery.js (full-experience only,
-   guarded by `if (!preview && !document.getElementById('orrery-styles'))`);
-   moved to a real stylesheet, imported once at the top of orrery.js. The
-   old JS-template interpolation of sceneKit.js's HINT_TEXT_COLOR is now
-   var(--hint-text-color), defined once in styles/main.css. No visual change.
+/* Orrery scene styles, imported once at the top of orrery.js. Hint text
+   color comes from var(--hint-text-color), defined once in styles/main.css.
 
-   2026-08-07: every selector below switched from id to class (#orrery-x ->
-   .orrery-x) per the site-wide convention — classes for styling, ids
-   reserved for real DOM uniqueness or an ARIA idref. orrery-panel-title is
-   the one exception: it keeps a real id (target of the panel's
-   aria-labelledby) alongside its class. */
+   Every selector below is a class (.orrery-x), per the site-wide
+   convention — classes for styling, ids reserved for real DOM uniqueness
+   or an ARIA idref. orrery-panel-title is the one exception: it keeps a
+   real id (target of the panel's aria-labelledby) alongside its class. */
 
 .orrery-panel {
   position: absolute; top: 0; right: 0; width: 38%; height: 100%;
@@ -25,26 +20,24 @@
 }
 .orrery-panel.open { transform: translateX(0); }
 .orrery-panel-title {
-  /* Now an <h2> (was a plain div) so the panel has a real heading to match
-     its aria-labelledby target — reset the UA default heading margin/weight
-     so the layout is pixel-identical to the old div. */
+  /* This is the panel's <h2>, matching its aria-labelledby target — the
+     UA default heading margin/weight is reset here. */
   font-size: 0.95rem; letter-spacing: 0.24em; text-transform: uppercase;
   color: rgba(238,225,205,0.75); font-weight: normal; margin: 0 0 0.5rem;
 }
 .orrery-panel-era {
-  /* Was 0.35 — real content (a date/era line), not a decorative
-     aria-hidden hint, and at 0.35 against this panel's near-black
-     background it landed around 2.6:1, well under WCAG AA's 4.5:1 for
-     normal text. Raised just enough to clear AA while staying the
-     quietest line in the panel (below panel-note's 0.7 and
-     panel-title's 0.75), so the intended hierarchy holds.
-     <p> now (was a div) — margin reset to keep the exact old spacing. */
+  /* Real content (a date/era line), not a decorative aria-hidden hint —
+     0.55 alpha against this panel's near-black background clears WCAG
+     AA's 4.5:1 for normal text while staying the quietest line in the
+     panel (below panel-note's 0.7 and panel-title's 0.75), so the
+     intended hierarchy holds. This is a <p> — margin reset to control
+     spacing precisely. */
   font-size: 0.75rem; letter-spacing: 0.05em; color: rgba(225,215,195,0.55);
   margin: 0 0 1.4rem; font-style: italic;
   border-bottom: 1px solid rgba(220,200,180,0.15); padding-bottom: 1.4rem;
 }
 .orrery-panel-note {
-  /* <p> now (was a div) — margin reset, same reasoning as -era above. */
+  /* This is a <p> — margin reset, same reasoning as -era above. */
   font-size: 0.98rem; line-height: 1.85; color: rgba(225,218,205,0.7);
   white-space: pre-line; margin: 0;
 }
@@ -70,19 +63,14 @@
   transition: opacity 0.3s ease;
 }
 /* .orrery-title shares the same z-index:310/body-level trick, for
-   the same reason. That z-index is exactly what breaks once the
-   info panel opens: .orrery-panel is nested inside #experience-
-   overlay (z-index:300) and only reaches z-index:10 within that
-   stacking context, so no z-index panel could have would ever let
-   it paint above a document.body sibling at 310 — that's how
-   stacking contexts work, not a value to out-escalate. Scott's
-   screenshot showed exactly that: the ambient title and hint
-   printing straight through the open panel, doubling "THE ORRERY
-   OF LOS FELIZ" with the panel's own heading. Simplest real fix:
-   once the panel's open, the ambient labels are redundant anyway
-   (the panel has its own title and era line) — fade them out
-   instead of fighting the stacking order. See openPanel() and its
-   three close sites below. */
+   the same reason. .orrery-panel is nested inside #experience-overlay
+   (z-index:300) and only reaches z-index:10 within that stacking
+   context, so no z-index the panel could have would ever let it paint
+   above a document.body sibling at 310 — that's how stacking contexts
+   work, not a value to out-escalate. Once the panel's open, the
+   ambient labels are redundant anyway (the panel has its own title and
+   era line) — fade them out instead of fighting the stacking order.
+   See openPanel() and its three close sites below. */
 .orrery-title.panel-open, .orrery-hint.panel-open, .orrery-caption.panel-open {
   opacity: 0;
 }
@@ -130,30 +118,24 @@
   }
 }
 
-/* ─── Micro-Myst (Scott, 2026-07-17: "don't import the Myst
-   aesthetic, it's still the early '90s, but it should feel like the
-   Myst developers were working on this for a different game" —
-   a full reset from the compressed-video pass that was here before.
-   That pass leaned on a "you're watching lossy video" metaphor:
-   macroblocks, hard-stepped color banding, chroma smear. All of it
-   is gone. What's left is a soft vignette and a single faint grain
-   pass — the texture belongs to the RENDER now (warm ray-traced-era
-   lighting, real Three.js fog doing the atmospheric-haze work — see
-   the fog color note near createOrrery — and the camera-drag lag
-   near the bottom of this file, standing in for those slightly
-   labored pre-rendered transition movies), not to a screen sitting
-   between the visitor and the room. ─────────────────────────────── */
+/* ─── Micro-Myst ─────────────────────────────────────────────────
+   Early-'90s CD-ROM adventure game atmosphere, not a literal Myst
+   import: a soft vignette and a single faint grain pass. The texture
+   belongs to the RENDER (warm ray-traced-era lighting, real Three.js
+   fog doing the atmospheric-haze work — see the fog color note near
+   createOrrery — and the camera-drag lag near the bottom of this
+   file, standing in for those slightly labored pre-rendered
+   transition movies), not to a screen sitting between the visitor
+   and the room. ─────────────────────────────── */
 .orrery-vignette {
   position: absolute; inset: 0; pointer-events: none; z-index: 5;
   background: radial-gradient(ellipse at center, rgba(0,0,0,0) 42%, rgba(10,7,4,0.6) 100%);
 }
 .orrery-grain {
-  /* One layer, same fine feTurbulence noise the compressed-video
-     pass also used underneath everything else — kept on its own
-     now, quieter (opacity roughly a third of what it was), because
-     a period CRT/CD-ROM render always carried a little noise even
-     at rest. Static, no drift animation — this isn't standing in
-     for a moving video signal anymore, just the render's own grain. */
+  /* Fine feTurbulence noise, kept quiet — a period CRT/CD-ROM render
+     always carried a little noise even at rest. Static, no drift
+     animation: this is the render's own grain, not a moving video
+     signal. */
   position: absolute; inset: 0; pointer-events: none; z-index: 6;
   opacity: 0.3; mix-blend-mode: overlay;
   background-image:
@@ -166,9 +148,8 @@
      z-index:300 and fades to fully opaque over 0.6s - this is
      appended to document.body outside that overlay, so it needs to
      clear 300 too, or it only shows during the fade-in and then
-     gets covered once the overlay settles (this was the "appears
-     for a second then disappears" bug). 310 matches butterfly's
-     own body-level label/hint in main.js, same issue there. */
+     gets covered once the overlay settles. 310 matches butterfly's
+     own body-level label/hint in main.js, same reasoning there. */
   position: fixed; top: 4.4rem; left: 50%; transform: translateX(-50%);
   text-align: center; pointer-events: none; z-index: 310;
   font-family: 'Times New Roman', serif; color: rgba(238,225,205,0.82);
@@ -190,7 +171,7 @@
   .orrery-title-sub { padding: 0 3vw; }
 }
 
-/* ─── First-person rig, 2026-07-22 ──────────────────────────────── */
+/* ─── First-person rig ───────────────────────────────────────────── */
 .orrery-crosshair {
   position: absolute; top: 50%; left: 50%; width: 6px; height: 6px;
   margin: -3px 0 0 -3px; border-radius: 50%;
@@ -200,17 +181,14 @@
 .orrery-crosshair.active {
   background: rgba(255,214,150,0.9); transform: scale(1.8);
 }
-/* Design pass, 2026-07-29 — Scott: once the room is doing its own
-   atmospheric/mystery work, a bold pill centered dead in the middle
-   of the frame undercuts it — competing with the machine for the
-   one spot every other bit of chrome (crosshair, title) already
-   wants. Moved to a bottom-right corner (clear of the crosshair,
-   the walkpad at bottom-left, and the bottom-center caption),
-   shrunk, and made more transparent so it reads as ambient UI
-   chrome, not a modal-style call to action. The show/hide behavior
-   itself (toggled via .hidden below, driven by pointer-lock state)
-   is untouched — still reappears whenever unlocked, same fix as
-   the 2026-07-26 note further down about not permanently hiding it. */
+/* Sits in the bottom-right corner (clear of the crosshair, the walkpad
+   at bottom-left, and the bottom-center caption), small and
+   transparent enough to read as ambient UI chrome rather than a
+   modal-style call to action competing with the room's own
+   atmospheric/mystery work for the center of the frame. Show/hide is
+   toggled via .hidden below, driven by pointer-lock state — it
+   reappears whenever unlocked, rather than permanently hiding after
+   first use. */
 .orrery-lock-prompt {
   position: absolute; bottom: 1.5rem; right: 1.4rem;
   z-index: 7; background: rgba(10,7,4,0.4); color: rgba(220,207,190,0.6);

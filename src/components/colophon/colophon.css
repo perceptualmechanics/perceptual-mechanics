@@ -1,14 +1,10 @@
-/* Colophon styles. Previously injected at runtime via injectStyles() in
-   colophon.js (document.createElement('style'), double-guarded by a
-   module-level `styleInjected` flag plus
-   `document.getElementById('colophon-styles')`); moved to a real
-   stylesheet, imported once at the top of colophon.js. No visual change.
+/* Colophon styles, imported once at the top of colophon.js.
 
-   2026-08-07: every selector below switched from id to class (#colophon-x
-   -> .colophon-x) per the site-wide convention — classes for styling, ids
-   reserved for real DOM uniqueness or an ARIA idref. colophon-title is the
-   one exception: it keeps a real id (target of the panel's
-   aria-labelledby) alongside its heading semantics. */
+   Every selector below is a class (.colophon-x), per the site-wide
+   convention — classes for styling, ids reserved for real DOM uniqueness
+   or an ARIA idref. colophon-title is the one exception: it keeps a real
+   id (target of the panel's aria-labelledby) alongside its heading
+   semantics. */
 
 .colophon-mark {
   position: fixed; right: 1.5rem; bottom: 1.5rem;
@@ -102,9 +98,7 @@
   color: rgba(238,225,205,0.85); margin-bottom: 0.3rem; font-weight: normal;
 }
 .colophon-panel .colophon-sub {
-  /* <p> now (was a div, for the very first "perceptual mechanics" line
-     only — the other two colophon-sub lines were already <p>) — margin
-     reset to zero the UA default top margin the div never had. */
+  /* A <p> — margin reset to zero the UA default top margin. */
   font-size: 0.8rem; font-style: italic; color: rgba(225,215,195,0.4);
   margin: 0 0 1.6rem;
 }

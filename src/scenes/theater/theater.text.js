@@ -1,12 +1,8 @@
 // ─── The Theater: script content ───────────────────────────────────────────
 // Organized by piece — Truth and Beauty (2001), Paul Revere (c. 2009), and
 // You've Got a Friend in Satan (1996) — each with its own cast and scene
-// list, rather than one flat CHARACTERS dict and one flat SCENES array
-// spanning all three works with only a comment marking where one ended and
-// the next began. Restructured 2026-08-08 for the same reason the scroll's
-// text files were consolidated the same week: one clear shape per kind of
-// content, matching how the site already organizes everything else that's
-// really a collection of separate pieces.
+// list, matching how the site organizes every other collection of
+// separate pieces.
 //
 // theater.js still wants one shuffled reel and one flat character lookup
 // across all three plays for its repertory-house conceit — it derives both

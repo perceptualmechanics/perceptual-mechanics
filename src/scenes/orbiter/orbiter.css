@@ -1,11 +1,5 @@
-/* Orbiter scene styles. Previously injected at runtime via
-   document.createElement('style') inside orbiter.js (full-experience only,
-   guarded by `if (!preview && !document.getElementById('orbiter-styles'))`);
-   moved to a real stylesheet, imported once at the top of orbiter.js. The
-   old JS-template interpolation of sceneKit.js's HINT_TEXT_COLOR is now
-   var(--hint-text-color), defined once in styles/main.css. No visual change.
-   2026-08-07: moved into src/scenes/orbiter/ alongside orbiter.js and
-   orbiter.html as part of the site-wide per-scene folder restructure. */
+/* Orbiter scene styles, imported once at the top of orbiter.js. Hint text
+   color comes from var(--hint-text-color), defined once in styles/main.css. */
 
 /* z-index must clear #experience-overlay (styles/main.css: fixed,
    z-index:300) — appended to document.body, outside that overlay,
@@ -17,15 +11,9 @@
 }
 .orbiter-caption {
   bottom: 3rem; left: 50%; transform: translateX(-50%);
-  /* Design pass, 2026-07-29 — Scott: nothing in the scene signalled
-     there was text content here at all, unlike Butterfly's own
-     title/date label (#butterfly-exp-label in main.js: clamp
-     .85-1.6rem, opacity .85). This carried the epigraph
-     ("sing, orbiter," Richard Kenney) the whole time but at a size
-     and opacity that read as ambient chrome, not a title. Brought
-     up to comparable weight — same clamp floor/ceiling as
-     Butterfly's label, same rough opacity — while keeping the
-     italic/green identity that's orbiter's own, not Butterfly's. */
+  /* Carries the epigraph ("sing, orbiter," Richard Kenney) at a weight
+     comparable to Butterfly's own title/date label, while keeping the
+     italic/green identity that's orbiter's own. */
   font-size: clamp(0.85rem, 2.3vw, 1.5rem); letter-spacing: 0.08em;
   font-style: italic; white-space: nowrap;
   color: rgba(165,255,205,0.8);
@@ -50,23 +38,20 @@
 }
 .orbiter-panel.open { transform: translateX(0); }
 .orbiter-panel-title {
-  /* Now an <h2> (was a plain div) so the panel has a real heading to match
-     its aria-labelledby target — margin fully reset (not just bottom) so
-     the UA default heading top-margin doesn't shift the layout. */
+  /* This is the panel's <h2>, matching its aria-labelledby target — margin
+     fully reset (not just bottom) so the UA default heading top-margin
+     doesn't shift the layout. */
   font-size: 0.95rem; letter-spacing: 0.2em; text-transform: uppercase;
   font-weight: normal; color: rgba(190,255,210,0.8);
-  /* No more separate .orbiter-panel-source line below this (moved to the
-     colophon's bibliography) — the border/padding it used to carry
-     now sits directly under the title instead. */
   border-bottom: 1px solid rgba(160,255,200,0.15);
   padding-bottom: 1.4rem; margin: 0 0 1.6rem;
 }
 .orbiter-panel-content { color: rgba(210,235,220,0.75); font-size: 0.98rem; line-height: 1.85; }
 .orbiter-panel-content p { margin: 0 0 1.4rem; }
-/* Poem cross-links, 2026-07-17 — same mechanism as sphere.js's
-   fragment-links (see its own panelStyle comment) and scroll.js's
-   scroll-link, tuned to orbiter's own green/white palette instead of sphere's
-   blue. A phrase glimmers faintly on its own, on a long slow loop, so
+/* Poem cross-links — same mechanism as sphere.js's fragment-links and
+   scroll.js's scroll-link, tuned to orbiter's own green/white palette
+   instead of sphere's blue. A phrase glimmers faintly on its own, on a
+   long slow loop, so
    it reads as something ambient in the text rather than a UI
    affordance shouting for attention; hover/focus stops the glimmer
    and lights it up gold to invite the click. */

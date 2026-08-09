@@ -1,13 +1,7 @@
-/* Beamline (Solar Sailer) scene styles. Previously injected at runtime via
-   document.createElement('style') inside beamline.js (full-experience only,
-   guarded by `if (!preview && !document.getElementById('beamline-styles'))`);
-   moved to a real stylesheet, imported once at the top of beamline.js. No
-   visual change. Note: beamline's hint color is deliberately its own tinted
-   rgba(120,170,255,...), not the shared --hint-text-color other scenes use
-   (see the code-audit comment below) — left as its own literal value here
-   on purpose. 2026-08-07: moved into src/scenes/beamline/ alongside
-   beamline.js and beamline.html as part of the site-wide per-scene folder
-   restructure. */
+/* Beamline (Solar Sailer) scene styles, imported once at the top of
+   beamline.js. Beamline's hint color is deliberately its own tinted
+   rgba(120,170,255,...), not the shared --hint-text-color other scenes
+   use — left as its own literal value on purpose (see below). */
 
 .beamline-title, .beamline-hint {
   position: fixed; pointer-events: none; z-index: 310;
@@ -25,41 +19,33 @@
 .beamline-title-sub {
   display: block; margin-top: 0.5rem;
   font-size: clamp(0.62rem, 1.3vw, 0.8rem);
-  /* Code audit, 2026-08-03: was rgba(150,190,255,0.55), ~3.7:1
-     against black at this size -- under WCAG's 4.5:1 minimum for
-     text this small. 0.68 (~5.3:1) keeps the same tint, just deeper. */
+  /* 0.68 alpha (~5.3:1 against black) meets WCAG's 4.5:1 minimum for
+     text this small while keeping the tint. */
   letter-spacing: 0.05em; color: rgba(150,190,255,0.68);
 }
 .beamline-hint {
   top: 4.5rem; right: 1.2rem; font-size: 0.7rem; letter-spacing: 0.18em;
   line-height: 1.8; text-align: right;
-  /* Code audit, 2026-08-03: was rgba(120,170,255,0.5), ~2.8:1 against
-     black -- under WCAG's 4.5:1 minimum for text this small. 0.72
-     (~4.9:1) keeps the same tint, just deeper -- same fix as the
-     other six scenes' hint text (sceneKit.js's HINT_TEXT_COLOR),
-     just not the shared constant since this one's tinted, not white. */
+  /* 0.72 alpha (~4.9:1 against black) meets WCAG's 4.5:1 minimum for
+     text this small; kept as its own literal rather than the shared
+     --hint-text-color constant since this scene's hint is tinted, not
+     white. */
   color: rgba(120,170,255,0.72);
-  /* Orbitron + real font-variant:small-caps (2026-08-03) — the hint
-     reads as HUD chrome, not literary text, so it gets the piece's
-     sci-fi tech font instead of the epigraph's serif. small-caps needs
-     actual lowercase source characters to convert (the innerHTML below
-     is deliberately lowercase, not forced upper via text-transform the
-     way this used to work) — confirmed live that this renders as true
-     small capitals, not silently falling back to normal lowercase. */
+  /* The hint reads as HUD chrome, not literary text, so it gets the
+     piece's sci-fi tech font instead of the epigraph's serif.
+     small-caps needs actual lowercase source characters to convert, so
+     the innerHTML below is deliberately lowercase rather than forced
+     upper via text-transform. */
   font-family: 'Orbitron', sans-serif; font-variant: small-caps;
   font-weight: 600;
 }
 @media (max-width: 600px) {
-  /* Cross-site consistency review, 2026-08-04: title is centered
-     (left:50%, translateX(-50%)) and hint is pinned right (right:
-     1.2rem) -- fine side by side on desktop, but this 90vw title
-     width (added earlier just to stop the title itself overflowing)
-     puts the title's own right edge almost at the viewport edge,
-     landing directly under the hint text on phone widths. Caught via
-     a live mobile pass (375px), not by inspection -- title and hint
-     text were rendering on top of each other. Fix: stack the hint
-     below the title instead of beside it, both centered, matching
-     the vertical rhythm the title/sub-epigraph pair already use. */
+  /* Title is centered (left:50%, translateX(-50%)) and hint is pinned
+     right (right: 1.2rem) -- fine side by side on desktop, but at
+     narrow widths the title's 90vw width brings its own right edge
+     close enough to the hint to collide. Stack the hint below the
+     title instead of beside it, both centered, matching the vertical
+     rhythm the title/sub-epigraph pair already use. */
   .beamline-title { width: 90vw; }
   .beamline-hint {
     left: 50%; right: auto; top: 7.6rem;

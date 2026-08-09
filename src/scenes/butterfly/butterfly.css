@@ -1,12 +1,8 @@
 /* Butterfly scene styles (label + hint overlay, positioned on document.body
    rather than inside the scene's own container -- see butterfly.html's
-   header comment for the z-index/stacking-context reasoning). Part of the
-   2026-08-07 component restructure: this was the one scene whose markup,
-   styles, AND lifecycle were split out into main.js instead of being
-   self-contained -- now fully folded into this folder (butterfly.js owns
-   creating/removing .butterfly-exp-label and .butterfly-hint itself, same
-   as every other scene's hint/caption/title), closing that gap for good.
-   No visual change from any earlier version of this file. */
+   header comment for the z-index/stacking-context reasoning). butterfly.js
+   owns creating/removing .butterfly-exp-label and .butterfly-hint itself,
+   same as every other scene's hint/caption/title. */
 
 .butterfly-exp-label {
   position: fixed;

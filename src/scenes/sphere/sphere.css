@@ -1,10 +1,5 @@
-/* Sphere scene styles. Part of the 2026-08-07 component restructure: each
-   scene is now a self-contained folder (sphere.js/.css/.html) instead of a
-   flat JS file that injected its own <style> block at runtime — real
-   HTML/CSS/JS separation, one file per concern, all three living side by
-   side. Imported as a plain side-effect import from sphere.js
-   (`import './sphere.css'`). No visual change from any earlier version of
-   this file. */
+/* Sphere scene styles, imported as a plain side-effect import from
+   sphere.js (`import './sphere.css'`). */
 
 /* ─── Fragment face labels ───────────────────────────────────────────────── */
 @keyframes wisp {
@@ -33,18 +28,12 @@
 }
 
 /* ─── Fragment reading panel ─────────────────────────────────────────────── */
-/* Design pass, 2026-07-17: this panel was the one outlier on the whole
-   site — a flat, opaque, fully-saturated cyan slab (#7ad) with a solid
-   navy border, sitting next to orbiter/orrery's dark, translucent,
-   moody panels (near-black background, a faint radial tint keyed to
-   the scene's own palette, thin low-alpha colored border). Brought in
-   line with that language: same near-black-plus-tint recipe, blue kept
-   only as a low-alpha accent (border, scrollbar, facet-id) rather than
-   the whole surface. Electrolize kept — unlike the poem/prose-heavy
-   panels elsewhere, these fragments read as hypertext/interconnected-
-   prose, and the geometric sans fits that better than serif would.
-   The silk-glimmer gold link animation and clicked-side slide-in stay
-   exactly as they were — both already distinct, worth keeping. */
+/* Matches the sitewide panel language shared with orbiter/orrery: a
+   near-black background with a faint radial tint keyed to the scene's own
+   palette, and blue kept only as a low-alpha accent (border, scrollbar,
+   facet-id) rather than the whole surface. Electrolize rather than a serif
+   — unlike the poem/prose-heavy panels elsewhere, these fragments read as
+   hypertext/interconnected prose, and the geometric sans fits that better. */
 .sphere-hint {
   position: fixed; top: 4.5rem; right: 1.2rem;
   color: var(--hint-text-color);
@@ -83,9 +72,9 @@
 }
 .sphere-panel.open{transform:translateX(0);}
 .sphere-panel-title{
-  /* Now an <h2> (was a plain div) so the panel has a real heading to match
-     its aria-labelledby target — margin fully reset (not just bottom) so
-     the UA default heading top-margin doesn't shift the layout. */
+  /* An <h2> so the panel has a real heading matching its aria-labelledby
+     target — margin fully reset (not just bottom) so the UA default
+     heading top-margin doesn't shift the layout. */
   font-size:1.15rem;letter-spacing:.22em;text-transform:uppercase;
   font-weight:normal;color:rgba(210,225,255,.85);margin:0 0 1.4rem;
   border-bottom:1px solid rgba(120,170,255,0.18);padding-bottom:1.4rem;
@@ -95,8 +84,8 @@
 .sphere-panel-close{position:absolute;top:1.5rem;right:1.5rem;background:none;border:none;color:rgba(255,255,255,0.4);font-size:1.2rem;cursor:pointer;padding:.5rem;}
 .sphere-panel-close:hover{color:rgba(255,255,255,.9);}
 .sphere-facet-id{
-  /* Now a <p> (was a div) — margin fully reset so the UA default
-     top+bottom paragraph margin doesn't add space this never had. */
+  /* A <p> — margin fully reset so the UA default top+bottom paragraph
+     margin doesn't add space this element isn't meant to have. */
   font-size:.6rem;letter-spacing:.3em;color:rgba(180,200,255,.3);
   margin:2rem 0 0;text-transform:uppercase;
 }

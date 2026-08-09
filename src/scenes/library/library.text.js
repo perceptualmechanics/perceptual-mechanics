@@ -1,62 +1,41 @@
-// Folded together with library.cdRack.js, 2026-08-07 — one scene, one text
-// file, matching every other scene on the site. The two catalogs below stay
-// clearly separated (real bookshelf vs. invented CD collection) by their own
-// header comments and a section divider; only the file split was removed.
+// One scene, one text file. The two catalogs below stay clearly separated
+// (real bookshelf vs. invented CD collection) by their own header comments
+// and a section divider.
 //
-// The real bookshelf, cataloged from a photo (IMG_1202.jpeg) Scott took of
-// his own shelf and asked to be scanned for every distinct book, film, and
-// divination deck on it. See the library scene (library.js, this folder) for
-// how this becomes a 3D shelf you can look around and click into.
+// The real bookshelf, cataloged from a photo of Scott's own shelf, scanned
+// for every distinct book, film, and divination deck on it. See the
+// library scene (library.js, this folder) for how this becomes a 3D shelf
+// you can look around and click into.
 //
 // row/col/pos preserve the real shelf's layout — a 4x2 Kallax-style cube
 // shelf, row 1 on top — and pos is left-to-right order within that cubby,
 // so the scene lays these out in the same order they actually sit in
 // Scott's apartment.
 //
-// A first pass at this catalog was built from the wrong source photo
-// (IMG_1192.jpeg, a distorted panorama); this is the corrected version,
-// re-read directly from IMG_1202.jpeg (5712x4284, straight-on).
+// Every isbn13/publisher/publish_year/pages/translator/editor field below
+// was looked up (Open Library, publisher pages, WorldCat-adjacent
+// bookseller listings), not guessed — and where a specific edition
+// couldn't be pinned down from the spine alone (a title with several
+// active printings, or an ambiguous translation), that's recorded in a
+// `note` field rather than silently picking one. release_year/
+// runtime_min/country on the film entries were looked up the same way;
+// ISBN doesn't apply to films, so those keep their Criterion spine
+// numbers (in `creator`) as their identifier instead.
 //
-// Bibliographic/filmographic data (2026-07-22): Scott asked for ISBNs and
-// as much data on each item as could be assembled. Every isbn13/publisher/
-// publish_year/pages/translator/editor field below was looked up (Open
-// Library, publisher pages, WorldCat-adjacent bookseller listings), not
-// guessed — and where a specific edition couldn't be pinned down from the
-// spine alone (a title with several active printings, or an ambiguous
-// translation), that's recorded in a `note` field rather than silently
-// picking one. release_year/runtime_min/country on the film entries were
-// looked up the same way; ISBN doesn't apply to films, so those keep their
-// Criterion spine numbers (in `creator`) as their identifier instead.
-//
-// Panel content pass (2026-07-22, same day): Scott asked for writer/
-// producer credits on every film, a short excerpt for as many books as
-// possible, and a YouTube link to one pivotal scene per film — this is the
-// content the read panel actually surfaces now.
-//   - `writer` / `producer` on every bluray/bluray entry, researched the same
+// The read panel surfaces writer/producer credits on every film, a short
+// excerpt for as many books as possible, and a YouTube link to one
+// pivotal, non-spoiling scene per film.
+//   - `writer` / `producer` on every bluray entry, researched the same
 //     way as the rest of the filmographic data.
 //   - `youtube` (a link) + `scene` (what it shows) on every film — picked
-//     for being a genuinely pivotal/iconic moment, preferring official
-//     studio/Movieclips-style uploads where one existed. Links can rot;
-//     that's an accepted tradeoff for linking out to real footage instead
-//     of hosting/reproducing it here.
-//
-// Spoiler pass (2026-07-24): Scott noticed a lot of the picks above were
-// literally the climax/ending — Vertigo's bell tower, Chinatown's "my
-// sister, my daughter," Kill Bill Vol. 2's finishing move, Dekalog's
-// closing scene, and so on — and asked for scenes that don't give the
-// endings away. Re-picked 21 of the 44 films for an earlier/non-resolving
-// moment instead (same real-footage rule as above; a few of the
-// hardest-to-clip arthouse titles — Dekalog, Seven Samurai, Throne of
-// Blood, The 39 Steps, La Jetée, Solaris, Tokyo Story — don't have
-// individual scene clips on YouTube at all, so those point at the film's
-// own trailer instead, which is non-spoiler by definition). The other 23
-// were already safe (openings, mid-film set pieces, quotable dialogue
-// that doesn't resolve anything) and are untouched.
-//
-// Scott, same day, liked that fallback enough to make it a standing rule:
-// for any film added to this shelf in the future, if no individual
-// non-spoiler scene clip exists on YouTube, use the official trailer
-// rather than reaching for a clip that gives away the ending.
+//     for being a genuinely pivotal/iconic moment that doesn't give away
+//     the ending, preferring official studio/Movieclips-style uploads
+//     where one exists. For films with no individual non-spoiler scene
+//     clip on YouTube (a handful of harder-to-clip arthouse titles), the
+//     link points at the film's own trailer instead, which is non-spoiler
+//     by definition — the standing rule for any film added to this shelf
+//     in the future. Links can rot; that's an accepted tradeoff for
+//     linking out to real footage instead of hosting/reproducing it here.
 //   - `excerpt` on books/decks where a short, fair-use-scale quotation
 //     exists to give (mostly opening lines, matched to the specific
 //     translation on the shelf where translation matters). Deliberately
@@ -66,9 +45,6 @@
 //     — there's no natural "excerpt" for those. Also deliberately skipped
 //     for The Lyrics (McCartney) — reproducing song lyrics, even briefly,
 //     is a firmer copyright line than a novel's opening sentence.
-//
-// Scott's own review pass on all of this is still pending — expect
-// corrections.
 export const libraryItems = [
   { id: 1, type: 'book', title: 'Beowulf', creator: 'trans. Seamus Heaney', row: 1, col: 1, pos: 0, isbn13: '9780393330106', publisher: 'W. W. Norton & Company', translator: 'Seamus Heaney', note: 'Norton standalone paperback edition; Norton Critical Edition variant is 9780393938371', excerpt: 'So. The Spear-Danes in days gone by and the kings who ruled them had courage and greatness. We have heard of those princes’ heroic campaigns. There was Shield Sheafson, scourge of many tribes, this terror of the hall-troops had come far. A foundling to start with, he would flourish later on as his powers waxed and his worth was proved. In the end each clan on the outlying coasts beyond the whale-road had to yield to him and begin to pay tribute. That was one good king.' },
   { id: 2, type: 'book', title: 'Shinto: The Kami Way', creator: 'Sokyo Ono', row: 1, col: 1, pos: 1, isbn13: '9780804819602', publisher: 'Tuttle Publishing', publish_year: 1994, note: 'multiple Tuttle printings exist; also 9780804805254 (1989)' },
@@ -178,12 +154,10 @@ export const libraryItems = [
   { id: 106, type: 'book', title: 'The French Laundry, Per Se', creator: 'Thomas Keller (Artisan)', row: 2, col: 4, pos: 5, isbn13: '9781579658496', publisher: 'Artisan', publish_year: 2020, pages: 400, full_title: 'The French Laundry, Per Se' },
   { id: 107, type: 'book', title: 'Expanding Universe: Photographs from the Hubble Space Telescope', creator: 'Taschen', row: 2, col: 4, pos: 6, isbn13: '9783836549226', publisher: 'TASCHEN', pages: 260, creator_full: 'essay by Owen Edwards, interview with Zoltan Levay', note: '25th-anniversary edition; a 30th-anniversary edition with new images also exists — edition uncertain' },
 
-  // Added 2026-07-23: 13 more books, from ISBNs Scott provided directly
-  // rather than read off a shelf photo. Placement wasn't cataloged from a
-  // real photo this time -- Scott: "I don't care about exact placement,
-  // randomize them" -- so row/col/pos below are arbitrary (spread across
-  // the existing book cubbies, never the film-only cubbies), not a record
-  // of where these physically sit.
+  // These books were added from ISBNs Scott provided directly rather than
+  // read off a shelf photo, so row/col/pos below are arbitrary (spread
+  // across the existing book cubbies, never the film-only cubbies), not a
+  // record of where these physically sit.
   { id: 108, type: 'book', title: 'The Changing Light at Sandover', creator: 'James Merrill', row: 2, col: 1, pos: 100, isbn13: '9780679410836', publisher: 'Knopf', publish_year: 1992, pages: 560, note: 'a 560-page epic assembled from twenty-five years of Ouija-board transcripts. The epigraph on Blood Treachery, the Mage sourcebook Scott co-wrote, is drawn from this book. Shelved not far from Alchemy & Mysticism and the Library of Esoterica series, which take the same kind of channeled material as reference instead of epic verse. Patrick Harpur’s Daimonic Reality gives the board itself a name for what it might be: neither proof of spirits nor merely two men’s shared imagination, but a third thing disclosed through both at once. Ephraim, early in the poem, names the place he speaks from — the same name, “the Surround,” Scott has used in his own private cosmology since at least 2003.', excerpt: 'AM I IN YR ROOM SO ARE ALL YR DEAD WHO HAVE NOT GONE INTO OTHER BODIES… NOW DO U UNDERSTAND WHAT HEAVEN IS IT IS THE SURROUND OF THE LIVING' },
   { id: 109, type: 'book', title: 'The Beatles Anthology', creator: 'The Beatles', row: 2, col: 4, pos: 100, isbn13: '9780811826846', publisher: 'Chronicle Books', publish_year: 2000, pages: 368, note: 'an authorized oral history assembled from interviews with Paul McCartney, George Harrison, and Ringo Starr (plus archival tape of John Lennon) — a fuller group self-telling than The Lyrics gives from McCartney alone.' },
   { id: 110, type: 'book', title: 'VALIS', creator: 'Philip K. Dick', row: 1, col: 1, pos: 100, isbn13: '9780547572413', publisher: 'Mariner Books', publish_year: 2011, pages: 271, note: 'first published 1981. Dick splits himself into a narrator (Phil) and an alter ego (Horselover Fat) to write about his own gnostic vision — his own version of the split self Aristophanes describes in the Symposium, and that Hedwig sings about elsewhere on this shelf.', excerpt: 'Horselover Fat’s nervous breakdown began the day he got the phone call from Gloria asking if he had any Nembutals.' },
@@ -198,16 +172,13 @@ export const libraryItems = [
   { id: 119, type: 'book', title: 'Prometheus Rising', creator: 'Robert Anton Wilson', row: 1, col: 1, pos: 101, isbn13: '9780692710609', publisher: 'Hilaritas Press', publish_year: 2016, pages: 321, note: 'first published 1983; an eight-circuit model of consciousness built to be tried on rather than just read — Wilson’s own version of the physics-vs-feeling argument that 2001: A Space Odyssey, Solaris, and The Tree of Life stage as directors arguing with each other elsewhere on this shelf.' },
   { id: 120, type: 'book', title: 'Everything Is Under Control: Conspiracies, Cults, and Cover-Ups', creator: 'Robert Anton Wilson', row: 1, col: 2, pos: 101, isbn13: '9780061984310', publisher: 'HarperCollins', publish_year: 2009, pages: 456, note: 'first published 1998; an encyclopedia-format survey of conspiracy theories, cults, and secret societies — pattern-finding taken to its most maximalist extreme, the same impulse running through Gravity’s Rainbow and Borges’s Collected Fictions on this shelf. Patrick Harpur’s Daimonic Reality asks the harder version of the same question this book only surveys from outside.' },
 
-  // Added 2026-07-23, mid-conversation, not from a shelf photo or a batch
-  // of ISBNs but named one at a time as the conversation itself surfaced
-  // them. Same randomized-placement rule as the July 23 batch above.
+  // Same randomized-placement rule as the batch above — not from a shelf
+  // photo, so row/col/pos are arbitrary.
   { id: 121, type: 'book', title: 'Daimonic Reality: A Field Guide to the Otherworld', creator: 'Patrick Harpur', row: 1, col: 2, pos: 102, isbn13: '9780937663097', publisher: 'Pine Winds Press', publish_year: 2003, pages: 329, note: 'first published 1994 (Viking). Argues that daimons — fairies, apparitions, UFOs, visions — are neither literally real beings nor mere psychological projection, but a third category: real without being physical, disclosed through an imagination Harpur treats (via Henry Corbin’s mundus imaginalis) as a genuine perceptual faculty rather than a fantasy-generator. Gives an actual name and argument to the same blurred medium The Changing Light at Sandover’s Ouija board and the Symposium keep gesturing at without settling. Everything Is Under Control surveys the same territory from the outside; this book asks whether the choice between “real” and “made up” was ever the right question.' },
   { id: 122, type: 'book', title: 'Stories of Your Life and Others', creator: 'Ted Chiang', row: 1, col: 1, pos: 102, isbn13: '9781101972120', publisher: 'Vintage Books', publish_year: 2016, pages: 285, note: 'first published 2002. The second story, “Understand,” gives Physics vs. Ecstatics its cleanest fictional staging yet: a man undergoes an experimental treatment, cascades toward superintelligence, and chases a totalizing, self-transcendent understanding — pure computation and comprehension pushed to its ceiling, the same argument 2001: A Space Odyssey, Solaris, and The Tree of Life stage as directors arguing with each other, replayed here as plot — only to be undone not by a smarter version of the same axis, but by a second enhanced mind that never bothered with pure comprehension and instead mastered basic emotional manipulation. No amount of vertical climb on one axis buys safety from the axis nobody was watching.' },
 
-  // Added 2026-07-23, a second batch of 25 ISBNs pasted in directly
-  // ("More books:"). Same rule as both prior rounds: row/col/pos below
-  // are arbitrary, spread across the existing book-only cubbies, not a
-  // record of physical placement.
+  // Same rule as above: row/col/pos below are arbitrary, spread across
+  // the existing book-only cubbies, not a record of physical placement.
   { id: 123, type: 'book', title: 'The Glass Bead Game', creator: 'Hermann Hesse', row: 1, col: 1, pos: 103, isbn13: '9780312278496', publisher: 'Picador USA', publish_year: 2002, pages: 558, note: 'first published 1943 (as Das Glasperlenspiel); a monastic order spends its life perfecting a synthesis-game that unifies all of music, mathematics, and philosophy into a single symbolic language — Scott’s own decades-long ambition, voiced in Storyline.doc and elsewhere, to blend belief, science, magic, and perception into one overarching hypothesis, given a 20th-century German novel’s worth of scale.' },
   { id: 124, type: 'book', title: 'Tord Boontje', creator: 'Martina Margetts (ed.)', row: 2, col: 4, pos: 103, isbn13: '9780847829293', publisher: 'Rizzoli', publish_year: 2007, pages: 240, note: 'Scott, 2026-07-23, after this shelf went up: "I think one of the newer books got the wrong ISBN, the one you have listed as \'Swip Stolk.\' Correct for the real ISBN" — the ISBN search that produced "Swip Stolk" during the original cataloging round was simply wrong; this is the actual book, a monograph on the Dutch-born, UK-based designer’s lace-cut, organic product and lighting work (the Garland lightshade chief among it) — reference material, alongside the Alexander McQueen and Taschen volumes on this shelf, rather than something to be read start to finish.' },
   { id: 125, type: 'book', title: 'Collected Poems', creator: 'James Merrill', row: 2, col: 1, pos: 102, isbn13: '9780375411397', publisher: 'Knopf', publish_year: 2001, pages: 885, note: 'edited by J.D. McClatchy and Stephen Yenser; everything outside the Sandover trilogy — the shorter lyric poems Merrill wrote across the same decades he was holding the séances that became The Changing Light at Sandover, shelved a few cubbies away.' },
@@ -250,22 +221,17 @@ export const libraryItems = [
 // real cover art anywhere in this scene — CD spines are canvas-drawn schematic
 // textures only, artist/album as plain text.
 //
-// Interaction, 2026-07-24: CDs open the same #library-panel every book and
-// film already uses (an earlier click-to-pin tooltip with Apple Music/
-// Spotify search-links was tried first and then dropped — Scott: "let's
-// redo the CD info. Lose the tooltip, open a panel, and put either a music
-// video or a live performance that's available on YouTube. I don't think
-// we need the Apple Music/Spotify links any more."). Each entry below
-// carries `video` (a short description of what the clip shows — mirrors
-// `scene` on the film entries in library.js) and `youtube` (a real,
-// verified video URL: an official music video where one exists, otherwise
-// a genuine live performance of a song from that specific album — never a
-// generic "best of" or an unrelated song). No search-links are generated
-// anymore. Every URL below was pulled from an actual web search result,
-// never fabricated — for a handful of older/scene-less tracks (ambient
-// pieces, some jazz, some Krautrock) no traditional "video" exists, so the
-// closest genuine real thing (a live performance, an official audio upload,
-// or a documented archival video) was used instead.
+// CDs open the same #library-panel every book and film already uses.
+// Each entry below carries `video` (a short description of what the clip
+// shows — mirrors `scene` on the film entries in library.js) and
+// `youtube` (a real, verified video URL: an official music video where
+// one exists, otherwise a genuine live performance of a song from that
+// specific album — never a generic "best of" or an unrelated song). Every
+// URL below was pulled from an actual web search result, never
+// fabricated — for a handful of older/scene-less tracks (ambient pieces,
+// some jazz, some Krautrock) no traditional "video" exists, so the
+// closest genuine real thing (a live performance, an official audio
+// upload, or a documented archival video) was used instead.
 
 export const cdRackItems = [
   // --- The Beatles (A Hard Day's Night onward) ---

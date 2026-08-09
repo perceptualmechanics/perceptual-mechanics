@@ -3,11 +3,7 @@
 // single dialog covering three things a site like this should say somewhere
 // but that don't belong inside any one scene: who made it, where the text in
 // it actually came from, and how to get in touch. Lives outside the scene
-// registry entirely, same as the wandering-hare component this replaced
-// (`components/goldenHare.js`, retired 2026-07-17 — once the colophon's own
-// mark became an actual hare, a second, separate wandering-hare easter egg
-// was redundant; see NOTES.md's "1.0.1" entry). This one's fixed in place
-// rather than wandering.
+// registry entirely. Fixed in place, not wandering.
 //
 // Scoped to the landing page on purpose, not fixed to document.body: it's
 // appended inside #landing, which main.js already sets to display:none
@@ -35,10 +31,6 @@ import { bindEscapeClose, parseHTML } from '../../utils/sceneKit.js';
 import './colophon.css';
 import colophonHtml from './colophon.html?raw';
 import { BIBLIOGRAPHY } from './colophon.text.js';
-
-// Colophon's markup+CSS live in colophon.html/colophon.css (imported
-// above) — no runtime element construction or style injection needed now
-// that all three are real files, pulled in via parseHTML.
 
 function buildBibliographyHTML() {
   return BIBLIOGRAPHY.map(group => `

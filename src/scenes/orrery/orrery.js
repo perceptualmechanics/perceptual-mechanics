@@ -12,22 +12,20 @@ import { ORRERY } from './orrery.text.js';
 // mysterious 30-foot orrery — a moving model of the solar system, a working
 // radio telescope at its peak — to a warehouse in Los Feliz.
 //
-// Third pass on this scene (see NOTES.md, "nebula retired, orrery promoted"
-// and the second-pass entry right after it). The first rebuild grounded it
-// as junk-metal, Survival Research Labs-style construction instead of a
-// free-floating sci-fi prop. This pass pushes that further, at Scott's
-// direction: the whole mechanism now hangs from chains bolted to the roof
-// trusses rather than standing on the floor (odder, more SRL — a machine
-// installed by a crew who had a hoist and a warehouse ceiling, not a
-// foundation crew), the walls carry a few taped-up early-90s show flyers
-// (Nirvana, R.E.M., For Squirrels — dating the space itself, not just the
-// machine), and the nine bodies are the actual planets: correct order,
-// roughly-correct relative sizes and orbital spacing (compressed with a
-// square root so Mercury and Pluto both fit on screen), their real notable
-// moons, Saturn's rings, and the asteroid belt sitting where it actually
-// does — between Mars and Jupiter, not stuck out past Pluto. The "few other
-// unidentified cosmic objects" from the text now read as what's left after
-// naming nine real planets: the odd stuff further out, past Pluto.
+// The scene grounds this as junk-metal, Survival Research Labs-style
+// construction rather than a free-floating sci-fi prop: the whole
+// mechanism hangs from chains bolted to the roof trusses rather than
+// standing on the floor (a machine installed by a crew who had a hoist
+// and a warehouse ceiling, not a foundation crew), the walls carry a few
+// taped-up early-90s show flyers (Nirvana, R.E.M., For Squirrels — dating
+// the space itself, not just the machine), and the nine bodies are the
+// actual planets: correct order, roughly-correct relative sizes and
+// orbital spacing (compressed with a square root so Mercury and Pluto
+// both fit on screen), their real notable moons, Saturn's rings, and the
+// asteroid belt sitting where it actually does — between Mars and
+// Jupiter, not stuck out past Pluto. The "few other unidentified cosmic
+// objects" from the text read as what's left after naming nine real
+// planets: the odd stuff further out, past Pluto.
 
 
 // Real planets, in order. `au` (semi-major axis, real units) drives orbital
@@ -39,7 +37,7 @@ import { ORRERY } from './orrery.text.js';
 // spray-paint job over the scrap-metal bodies (see makeSprayPaintTexture)
 // rather than the poster's own clean flat fills — junk-metal orrery, not a
 // print.
-// ─── Annotation pass, 2026-08-04 ────────────────────────────────────────
+// ─── Real solar-system data vs. deliberate visual compression ───────────
 // `au` here is the real semi-major axis (average orbital distance from
 // the sun) of each planet in astronomical units (1 AU = Earth's own
 // distance from the sun) — genuine solar-system data, STRUCTURAL, not
@@ -202,9 +200,9 @@ function makeSprayPaintTexture(hex) {
 
 const BOLT_TONE = 0x18140f;
 
-// ─── First-person walkthrough tuning, 2026-07-22 (Scott: "have first-
-// person camera movement in orrery, like someone's wandering around with
-// arrow keys... mouse-look and collision... feel like a Myst level"). ────
+// ─── First-person walkthrough tuning ─────────────────────────────────────
+// Arrow-key movement, mouse-look, and collision — a Myst-like walkthrough
+// feel. ────
 const PLAYER_RADIUS = 0.3;
 const EYE_HEIGHT = 1.7;          // above floorY — happens to land almost
                                  // exactly at the control hub's own height
@@ -250,13 +248,13 @@ function buildOrrery(preview, suspendTopY, rafterY) {
   const mastMat = paintedMastMaterial(preview);
   const bronzeMat = bronzeMaterial();
 
-  // Size pass, 2026-07-17 — Scott asked for the orrery itself substantially
-  // bigger without growing the warehouse around it. HW thickens the mast
-  // and hardware; SR widens the orbit rings (capped just inside the side
-  // walls — wallDist is 6.5/5 in buildWarehouse); SS grows the planet
-  // bodies themselves, no wall constraint so closer to the full ask.
-  // Mast height and every vertical anchor (baseY, suspendTopY, rafterY,
-  // riserTopY) are untouched — the room stays exactly the size it was.
+  // The orrery itself reads substantially bigger without growing the
+  // warehouse around it. HW thickens the mast and hardware; SR widens the
+  // orbit rings (capped just inside the side walls — wallDist is 6.5/5 in
+  // buildWarehouse); SS grows the planet bodies themselves, with no wall
+  // constraint. Mast height and every vertical anchor (baseY,
+  // suspendTopY, rafterY, riserTopY) stay fixed — the room itself keeps
+  // its own size regardless of these scale factors.
   const HW = 1.4, SR = 1.45, SS = 2.2;
 
   // ─── The mast — steel and wood, painted royal purple, hanging from the
@@ -398,12 +396,12 @@ function buildOrrery(preview, suspendTopY, rafterY) {
     const yOffset = ringYBase + i * (preview ? 0.06 : 0.05);
     ringInfo.push({ radius, yOffset, tilt });
 
-    // Tube thickened a step (0.008/0.01 -> 0.011/0.014 * HW), design pass
-    // 2026-07-29 — Scott: the rings/mast are the orrery's own namesake
-    // mechanism and should be the most confidently-read structure in the
-    // room, but were thin enough that the small planet bodies riding them
-    // out-competed them for attention. Doesn't change radius/tilt (the
-    // collision math in createOrrery keys off those, not tube thickness).
+    // Tube thickness is deliberately generous: the rings/mast are the
+    // orrery's own namesake mechanism and should be the most
+    // confidently-read structure in the room, not out-competed for
+    // attention by the small planet bodies riding them. Doesn't change
+    // radius/tilt (the collision math in createOrrery keys off those, not
+    // tube thickness).
     const ringGeo = new THREE.TorusGeometry(radius, (preview ? 0.011 : 0.014) * HW, 6, 20);
     const ring = new THREE.Mesh(ringGeo, steelMat);
     ring.rotation.x = Math.PI / 2 + tilt;
@@ -427,11 +425,10 @@ function buildOrrery(preview, suspendTopY, rafterY) {
     bodyGroup.position.x = radius;
     pivot.add(bodyGroup);
     const bodyGeo = new THREE.SphereGeometry(size, 16, 16);
-    // Eased back a touch (0.22 -> 0.17), same design pass as the ring
-    // thickness above — the planet bodies were reading as more prominent
-    // than the structure holding them; this and the new dedicated
-    // structure key light (see createOrrery) are the two halves of
-    // shifting that balance without dimming the planets into nothing.
+    // Kept moderate rather than bright — together with the dedicated
+    // structure key light (see createOrrery), this keeps the planet
+    // bodies from reading as more prominent than the ring/mast structure
+    // holding them, without dimming the planets into nothing.
     const bodyMat = new THREE.MeshStandardMaterial({
       map: makeSprayPaintTexture(planet.color),
       emissive: planet.color, emissiveIntensity: 0.17,
@@ -687,20 +684,14 @@ function makePegboardTexture() {
 // A taped-up early-90s show flyer — xeroxed, high-contrast, a little
 // water-stained. Band names only (no logos/artwork reproduced) — enough to
 // date the room without borrowing anyone's actual design.
-// Design pass, 2026-07-29 — Scott: these are a good, specific "what IS
-// this thing" hook (the found-object mixtape/flyer detail is exactly the
-// kind of thing that should sell the room as a real place someone lived
-// in), but small enough at their old size/resolution to miss entirely at
-// normal viewing distance. Canvas resolution bumped 200x280 -> 260x364
-// (same aspect, more headroom before scaling-down blur sets in at a
-// distance) and every stroke/font size scaled up with it, plus the band
-// name's own contrast pushed higher (pure black on a lightened paper
-// stock, thicker outline) — the two things that actually determine
-// legibility from across a room are the physical plane size (handled at
-// the call site, in buildWarehouse) and how much contrast survives
-// getting minified from here down to a few dozen screen pixels; a
-// same-resolution-but-bigger-plane poster would've just been a blurrier
-// big poster.
+// These are a good, specific "what IS this thing" hook — the found-object
+// mixtape/flyer detail is exactly the kind of thing that sells the room
+// as a real place someone lived in. Legibility from across the room comes
+// down to two things: the physical plane size (handled at the call site,
+// in buildWarehouse) and how much contrast survives getting minified from
+// this canvas resolution down to a few dozen screen pixels — the band
+// name's contrast is pushed high (pure black on a lightened paper stock,
+// thicker outline) specifically so it still reads at a distance.
 function makePosterTexture(band, sub) {
   const c = document.createElement('canvas');
   c.width = 260; c.height = 364;
@@ -758,11 +749,11 @@ function makePosterTexture(band, sub) {
 }
 
 // ─── Poster audio ───────────────────────────────────────────────────────────
-// Scott asked for "MIDI versions of some of the artists' songs on the
-// posters," played back like a staticy radio. Actual transcriptions of real
+// Clicking a poster plays a short MIDI-style riff evocative of that band,
+// like a staticy radio tuning in. Actual transcriptions of real
 // Nirvana/R.E.M./Beastie Boys/For Squirrels recordings — even rendered as
 // MIDI — would still be reproducing those bands' copyrighted compositions,
-// so that's not something to build here. What's below instead: short,
+// so that's not what this builds. Instead: short,
 // original note sequences only evocative of each poster's genre/era (a
 // grunge-ish power-chord vamp, a jangly arpeggio, a syncopated bassline, an
 // alt-rock progression), synthesized live with oscillators and run through
@@ -817,12 +808,10 @@ function makeDustMoteTexture() {
 function buildWarehouse(preview, floorY, ceilingY, rafterY) {
   const group = new THREE.Group();
   const span = preview ? 14 : 20;
-  // Full mode widened 6.5 → 8.5, 2026-07-22 (Scott: after adding real
-  // collision on the planet rings' tilted low edge, the old room was too
-  // snug — the outermost rings' physical radius (~5.4) left less than a
-  // meter of walking corridor before the wall, and that's before a ring
-  // collider even entered the picture. Preview tile untouched (never
-  // walkable, was already comfortably clear at its own smaller scale).
+  // Full-mode wall distance leaves real walking corridor beyond the
+  // outermost rings' physical radius (~5.4) even before a ring collider
+  // enters the picture. The preview tile stays at a smaller scale — it's
+  // never walkable, so it doesn't need the same clearance.
   const wallDist = preview ? 5 : 8.5;
 
   const floorMat = new THREE.MeshStandardMaterial({ map: makeConcreteTexture(), roughness: 0.95, metalness: 0.05 });
@@ -833,11 +822,10 @@ function buildWarehouse(preview, floorY, ceilingY, rafterY) {
 
   // Ceiling with a rectangular skylight hole, sized to what the mast
   // actually pokes through, plus a second, smaller skylight panel off to
-  // one side — design pass, 2026-07-29: Scott's note was that the room's
-  // ~30ft vertical scale wasn't reading, and a second opening (real
-  // warehouses almost never have just one skylight panel) gives the
-  // second angled beam below somewhere to actually originate from,
-  // rather than a shaft of light with no visible source.
+  // one side — real warehouses almost never have just one skylight panel,
+  // and the second opening gives the second angled beam below somewhere
+  // to actually originate from, rather than a shaft of light with no
+  // visible source.
   const holeW = preview ? 0.7 : 0.9, holeH = preview ? 0.7 : 0.9;
   const hole2W = holeW * 0.55, hole2H = holeH * 0.55;
   const hole2X = span * 0.22, hole2Z = -span * 0.16;
@@ -886,16 +874,16 @@ function buildWarehouse(preview, floorY, ceilingY, rafterY) {
   });
 
   // ─── Skylight shafts ────────────────────────────────────────────────────
-  // Design pass, 2026-07-29 — Scott: the room's own scale (~30ft, the mast
-  // poking out through the roof) wasn't reading; the darkness/sparseness
-  // is the right instinct for a Myst-style read, the fix is making the few
-  // lit things read as lit, not adding more light generally. Two levers:
-  // the beam's own opacity bumped enough to actually see the shaft (was
-  // 0.05, nearly invisible), and — the standard cheap Myst-era trick for
-  // selling scale in an empty vertical space — visible dust motes drifting
-  // through it, added as a particle system just below. Both beams tilted
-  // off vertical ("angled shafts," not straight-down columns) so they read
-  // as directional sunlight rather than a generic glow column.
+  // The room's ~30ft vertical scale (the mast poking out through the
+  // roof) reads through the few lit things reading as genuinely lit,
+  // rather than through added ambient light — the darkness/sparseness is
+  // the right instinct for a Myst-style room. Two levers: the beam's own
+  // opacity is high enough to actually see the shaft, and — the standard
+  // cheap Myst-era trick for selling scale in an empty vertical space —
+  // visible dust motes drift through it, added as a particle system just
+  // below. Both beams are tilted off vertical ("angled shafts," not
+  // straight-down columns) so they read as directional sunlight rather
+  // than a generic glow column.
   const beamMat = new THREE.MeshBasicMaterial({
     color: 0xcfe0ff, transparent: true, opacity: 0.09, side: THREE.DoubleSide, depthWrite: false,
   });
@@ -991,12 +979,9 @@ function buildWarehouse(preview, floorY, ceilingY, rafterY) {
   sideWall.position.set(-wallDist, (ceilingY + floorY) / 2, 0);
   group.add(sideWall);
 
-  // Closing the box, 2026-07-22 (first-person pass) — these two walls used
-  // to be the only ones, because the camera never actually approached the
-  // open sides (a fixed, distant establishing shot). Now that a visitor
-  // can walk around inside the room, the other two sides need real walls
-  // too, or "wandering around" would let you walk straight out into the
-  // starfield beyond. Same texture, undecorated — the flyers/pegboard/
+  // Since a visitor can walk around inside the room, all four sides need
+  // real walls, or "wandering around" would let you walk straight out
+  // into the starfield beyond. Same texture, undecorated — the flyers/pegboard/
   // clutter stay on the original two walls; these just keep the room a
   // room. Normals face inward (rotation chosen the same way the two walls
   // above already do: pointing back toward the room's center).
@@ -1024,10 +1009,9 @@ function buildWarehouse(preview, floorY, ceilingY, rafterY) {
   const posterMeshes = [];
   if (!preview) {
     const baseY = floorY + wallHeight * 0.34;
-    // Design pass, 2026-07-29 — enlarged ~1.4x (0.95x1.33 -> 1.3x1.85 base)
-    // and respaced further apart (was -2.3/-0.55/0.35/1.9, tight enough
-    // that the bigger planes would start lapping) so all four read at
-    // normal viewing distance without walking up close, per Scott's note.
+    // Sized and spaced so all four posters read at normal viewing
+    // distance without walking up close, with enough gap between them
+    // that the larger planes don't lap over each other.
     const posters = [
       { band: 'Nirvana', sub: 'Live — All Ages', x: -2.75, y: baseY + 0.2, rot: -0.09, scale: 1.08, z: -wallDist + 0.03 },
       { band: 'R.E.M.', sub: 'Live — Doors 8pm', x: -0.75, y: baseY - 0.34, rot: 0.05, scale: 0.86, z: -wallDist + 0.025 },
@@ -1037,9 +1021,9 @@ function buildWarehouse(preview, floorY, ceilingY, rafterY) {
     posters.forEach(p => {
       const posterMat = new THREE.MeshStandardMaterial({
         map: makePosterTexture(p.band, p.sub), roughness: 0.85, metalness: 0,
-        // Bumped 0.5 -> 0.78 (base) — these are meant to read as lit focal
-        // objects worth noticing across a dark room, Myst-style, not just
-        // legible once you're already standing in front of one.
+        // High base emissive intensity — these read as lit focal objects
+        // worth noticing across a dark room, Myst-style, not just legible
+        // once you're already standing in front of one.
         emissive: 0x0c0a08, emissiveIntensity: 0.78,
       });
       const poster = new THREE.Mesh(new THREE.PlaneGeometry(1.3 * p.scale, 1.82 * p.scale), posterMat);
@@ -1103,11 +1087,11 @@ function buildWarehouse(preview, floorY, ceilingY, rafterY) {
       group.add(clutter);
     });
 
-    // ─── A few inert mechanical details, 2026-07-17 (Scott: "micro-Myst"
-    // — objects you'd poke at without being told what they do). None of
-    // these are wired to anything; they're not meant to be understood,
-    // just found, the way a real workshop accumulates fittings whose
-    // original purpose outlived whoever installed them. ──────────────────
+    // ─── A few inert mechanical details — micro-Myst objects you'd poke
+    // at without being told what they do. None of these are wired to
+    // anything; they're not meant to be understood, just found, the way a
+    // real workshop accumulates fittings whose original purpose outlived
+    // whoever installed them. ──────────────────
     const detailMat = new THREE.MeshStandardMaterial({ color: 0x2e2a24, roughness: 0.65, metalness: 0.55 });
     const detailAccentMat = new THREE.MeshStandardMaterial({ color: 0x8a2a1f, roughness: 0.45, metalness: 0.3 });
 
@@ -1161,11 +1145,9 @@ function buildWarehouse(preview, floorY, ceilingY, rafterY) {
     wheelGroup.position.set(-wallDist + 0.16, floorY + 0.5, 0.6);
     group.add(wheelGroup);
 
-    // ─── More clutter, 2026-07-17 (Scott: "the room needs more clutter")
-    // — the first pass left one corner furnished and the rest of the room
-    // empty floor. Filling out a second corner and the space between,
-    // reusing the existing texture/material helpers so nothing new gets
-    // pulled into the bundle. ───────────────────────────────────────────
+    // ─── More clutter — a second corner and the space between it and the
+    // first are filled out too, reusing the existing texture/material
+    // helpers so nothing new gets pulled into the bundle. ───────────────────────────────────────────
 
     // A second stack of crates, opposite corner from the first, different
     // sizes and offsets so the two piles don't read as copy-pasted.
@@ -1408,17 +1390,12 @@ function createFirstPersonRig({ container, camera, renderer, colliders, wallLimi
   // ─── Mouse-look ─────────────────────────────────────────────────────────
   const onPointerLockChange = () => {
     locked = document.pointerLockElement === canvasEl;
-    // Simple toggle, on purpose: 1.2.1 briefly hid this for good after the
-    // first engage, reasoning that a dead prompt (clicking it did nothing,
-    // back when tryEngage was a true one-shot) was worse than none. But
-    // tryEngage now genuinely re-engages on any click while unlocked (see
-    // below), so a visible "click to look around" is a real, working
-    // invitation again every time you're unlocked — including right after
-    // closing the read-more panel (releaseLock(), below), which is exactly
-    // when a visitor most needs the reminder that clicking gets them back
-    // into look-around mode. Scott, 2026-07-26: "once you close the panel,
-    // the click to look around button doesn't return... that would throw
-    // people off."
+    // Simple toggle, on purpose: tryEngage genuinely re-engages on any
+    // click while unlocked (see below), so a visible "click to look
+    // around" is a real, working invitation every time you're unlocked —
+    // including right after closing the read-more panel (releaseLock(),
+    // below), which is exactly when a visitor most needs the reminder
+    // that clicking gets them back into look-around mode.
     prompt.classList.toggle('hidden', locked);
   };
   document.addEventListener('pointerlockchange', onPointerLockChange);
@@ -1465,12 +1442,9 @@ function createFirstPersonRig({ container, camera, renderer, colliders, wallLimi
   // holds it (the canvas) — a sibling DOM element, like the read-more
   // panel's own close button or the keyboard jump list, never receives a
   // real click while locked, no matter where the invisible OS cursor
-  // conceptually is. Scott, 2026-07-26, live-site report: "if I'm in
-  // looking-around mode and I open the panel, there's a weird event
-  // happening where I can't click back into the window to close it" — this
-  // is why. createOrrery calls this from openPanel() so the panel becomes
-  // clickable the moment it opens; tryEngage (above) re-engages on the
-  // click that follows closing it.
+  // conceptually is. createOrrery calls this from openPanel() so the
+  // panel becomes clickable the moment it opens; tryEngage (above)
+  // re-engages on the click that follows closing it.
   function releaseLock() {
     if (document.pointerLockElement === canvasEl) document.exitPointerLock();
   }
@@ -1617,14 +1591,13 @@ export function createOrrery(container, { preview = false } = {}) {
   const floorY = orrery.baseY - (preview ? 0.9 : 1.3);
   const warehouse = buildWarehouse(preview, floorY, ceilingY, rafterY);
 
-  // Design pass, 2026-07-29 — Scott: the orrery's own ring/mast structure
-  // is the namesake mechanism and should be the single most confidently-lit
-  // object in the room, ahead of the small planet bodies it carries. A
-  // dedicated spotlight aimed at the ring assembly (rather than another
-  // global fill light, which would fight the deliberate Myst-style
-  // darkness everywhere else) — angled down from roughly where the main
-  // skylight shaft above falls, so the two read as the same light source
-  // rather than two unrelated ones.
+  // The orrery's own ring/mast structure is the namesake mechanism and
+  // should be the single most confidently-lit object in the room, ahead
+  // of the small planet bodies it carries. A dedicated spotlight aimed at
+  // the ring assembly (rather than another global fill light, which would
+  // fight the deliberate Myst-style darkness everywhere else) — angled
+  // down from roughly where the main skylight shaft above falls, so the
+  // two read as the same light source rather than two unrelated ones.
   const structureTarget = new THREE.Object3D();
   structureTarget.position.set(0, orrery.baseY + orrery.mastHeight * 0.32, 0);
   scene.add(structureTarget);
@@ -1698,10 +1671,9 @@ export function createOrrery(container, { preview = false } = {}) {
     title.querySelector('.orrery-title-main').textContent = ORRERY.name;
 
     // role/aria-modal/aria-labelledby live directly on .orrery-panel in
-    // orrery.html now. Cross-site consistency review, 2026-08-03: flagged the ✦ bullet +
-    // era/provenance line here as possibly inconsistent with orbiter.js's
-    // Haiku panel and sphere.js's Digression panel, which have neither.
-    // Confirmed intentional, not an oversight: this scene's whole panel is
+    // orrery.html. The ✦ bullet + era/provenance line here is deliberate,
+    // not an inconsistency with orbiter.js's Haiku panel or sphere.js's
+    // Digression panel, which have neither: this scene's whole panel is
     // ONE found artifact (a real short-short someone else wrote, author
     // and provenance unknown — see the colophon's Bibliography), so it
     // gets real attribution, the same way library.js's per-item panel
@@ -1744,11 +1716,11 @@ export function createOrrery(container, { preview = false } = {}) {
       },
     });
 
-    // Keyboard access, 2026-07-26: the control box and the flyers are
-    // otherwise raycast-only, aimed via the first-person crosshair — no
-    // keyboard equivalent existed for "look at the control box" or "look at
-    // a flyer." One button for the found story, one per flyer (each plays
-    // its own riff directly, same as playPosterRiff(band) below the click
+    // Keyboard equivalent for "look at the control box" or "look at a
+    // flyer" — the control box and the flyers are otherwise raycast-only,
+    // aimed via the first-person crosshair. One button for the found
+    // story, one per flyer (each plays its own riff directly, same as
+    // playPosterRiff(band) below the click
     // handler already does), so a keyboard-only visitor can read and listen
     // without ever having to aim.
     jumpList = createJumpList(container, {
@@ -1776,16 +1748,15 @@ export function createOrrery(container, { preview = false } = {}) {
       const overlaps = t.right > h.left && t.left < h.right && t.bottom > h.top && t.top < h.bottom;
       hint.classList.toggle('stacked', overlaps);
       // Measured, not guessed (see the block comment above this function):
-      // .stacked's own top:7.6rem in CSS assumed the title block is always
-      // exactly two short lines. At some widths the subtitle wraps to two
-      // lines itself, pushing its real bottom edge past that fixed offset
-      // and crowding the hint right up against it (Scott, 2026-07-26
-      // screenshot: three lines of text stacked with almost no gap).
-      // Once stacked, position the hint a fixed gap below the title's own
-      // *measured* bottom instead, so it tracks however many lines the
-      // title block actually rendered as, at any width or font metrics.
-      // Cleared on the non-stacked path so the default CSS top:4.5rem
-      // (title and hint side by side, not stacked) applies again.
+      // .stacked's own top:7.6rem in CSS assumes the title block is
+      // exactly two short lines, but at some widths the subtitle wraps to
+      // two lines itself, pushing its real bottom edge past that fixed
+      // offset and crowding the hint right up against it. Once stacked,
+      // position the hint a fixed gap below the title's own *measured*
+      // bottom instead, so it tracks however many lines the title block
+      // actually rendered as, at any width or font metrics. Cleared on
+      // the non-stacked path so the default CSS top:4.5rem (title and
+      // hint side by side, not stacked) applies again.
       hint.style.top = overlaps ? `${t.bottom + 16}px` : '';
     };
     requestAnimationFrame(checkTitleHintCollision);
@@ -1919,16 +1890,11 @@ export function createOrrery(container, { preview = false } = {}) {
       // it doesn't also act on whatever's under the crosshair.
       if (fp.tryEngage(e)) return;
       if (panel.classList.contains('open')) {
-        // Was: any canvas click while the info panel was open closed it
-        // outright — including a click on a poster, which meant the
-        // first click after opening the panel silently ate the poster's
-        // audio riff (it took a second click, after the panel finished
-        // closing, to actually hear anything). hovered/hoveredPoster are
-        // both updated every frame from the crosshair regardless of
-        // panel state (see the animate() loop), so they're already
-        // current here. Fixed 2026-07-23, same root cause as library.js's
-        // identical bug: only close on an actual empty-space click, and
-        // let a poster hit still play, panel open or not.
+        // Only close on an actual empty-space click, letting a poster hit
+        // still play whether the panel is open or not — hovered/
+        // hoveredPoster are both updated every frame from the crosshair
+        // regardless of panel state (see the animate() loop), so they're
+        // already current here.
         if (hoveredPoster) { playPosterRiff(hoveredPoster.band); return; }
         if (!panel.contains(e.target)) panelCloser.close();
         return;
@@ -1953,10 +1919,9 @@ export function createOrrery(container, { preview = false } = {}) {
   let orbitDrag = null, wheelZoom = null, targetRotationY = root.rotation.y;
 
   if (preview) {
-    // Preview tile: unchanged from before this pass — drag nudges a
-    // target angle, animate() eases root's rotation toward it, no camera
-    // movement at all. See the first-person rig above for what full mode
-    // does instead.
+    // Preview tile: drag nudges a target angle, animate() eases root's
+    // rotation toward it, no camera movement at all. See the first-person
+    // rig above for what full mode does instead.
     orbitDrag = bindOrbitDrag(container, {
       onDrag: dx => { targetRotationY += dx; },
     });
@@ -1966,8 +1931,7 @@ export function createOrrery(container, { preview = false } = {}) {
       },
     });
   } else {
-    // ─── Ring-dip colliders, 2026-07-22 (Scott: "I could pass through
-    // the planet rings... let's [widen the room and] fix that"). ────────
+    // ─── Ring-dip colliders ───────────────────────────────────────────
     // Each ring is a torus tilted by `tilt` about the X axis (see the
     // ring.rotation.x = π/2 + tilt in buildOrrery). Most of a tilted ring
     // stays well overhead — only the low side of the biggest rings ever

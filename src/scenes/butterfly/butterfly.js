@@ -3,7 +3,7 @@ import { bindOrbitDrag, bindWheelZoom, bindGuardedResize, prefersReducedMotion, 
 import butterflyHtml from './butterfly.html?raw';
 import './butterfly.css';
 
-// ─── Annotation pass, 2026-08-04: the Lorenz attractor ─────────────────────
+// ─── The Lorenz attractor ───────────────────────────────────────────────────
 // This is the actual, classic Lorenz system (Edward Lorenz, 1963) — a
 // simplified model of atmospheric convection (warm air rising, cooling,
 // sinking, in a rotating fluid layer) reduced to three coupled variables:
@@ -152,13 +152,11 @@ export function createButterfly(container, { preview = false } = {}) {
   container.appendChild(renderer.domElement);
 
   // ─── Label + hint (full only) ────────────────────────────────────────────
-  // Until 2026-08-07 these two elements were created and torn down by
-  // main.js itself, hardcoded to this scene's name — the one scene on the
-  // site whose overlay chrome wasn't self-contained. Now owned by this
-  // scene's own create()/dispose() lifecycle, same as every other scene's
-  // hint/caption/title (see sphere.js for the reference pattern). Markup
-  // lives in butterfly.html; both elements mount on document.body rather
-  // than inside `container` — see butterfly.css's header comment for why.
+  // Owned by this scene's own create()/dispose() lifecycle, same as every
+  // other scene's hint/caption/title (see sphere.js for the reference
+  // pattern). Markup lives in butterfly.html; both elements mount on
+  // document.body rather than inside `container` — see butterfly.css's
+  // header comment for why.
   let expLabel = null, hint = null;
   if (!preview) {
     const frag = parseHTML(butterflyHtml);
@@ -329,15 +327,8 @@ export function createButterfly(container, { preview = false } = {}) {
     camera.lookAt(0,0,0);
   }
 
-  // Drag-to-orbit + wheel zoom, via sceneKit (code audit, 2026-08-03) —
-  // this exact scene used to hand-roll all of this (mouse + touch drag,
-  // wheel zoom, resize guard, reduced-motion check) despite being one of
-  // the two reference implementations sceneKit.js's own header comment
-  // says bindOrbitDrag was extracted from — the migration back onto the
-  // shared helper never happened, so this drifted the moment sceneKit.js
-  // was touched again without butterfly in the loop. Same sensitivity
-  // (0.005, applied uniformly to theta/phi same as before) and the same
-  // phi/radius clamps, just no longer a second copy to keep in sync.
+  // Drag-to-orbit + wheel zoom, via sceneKit — shared with every other
+  // scene's camera controls rather than a separate implementation.
   let orbitDrag = null, wheelZoom = null;
   if (!preview) {
     orbitDrag = bindOrbitDrag(container, {
@@ -537,13 +528,12 @@ export function createButterfly(container, { preview = false } = {}) {
       wheelZoom?.dispose();
       expLabel?.remove();
       hint?.remove();
-      // THREE.js resource cleanup — previously missing entirely (only the
-      // renderer itself was disposed), leaking the spacetime grid's line
+      // THREE.js resource cleanup: disposes the spacetime grid's line
       // geometries/materials, both trail sets' geometries/materials, and
-      // (full scene only) 220 math-symbol sprites' materials/textures on
-      // every visit to this scene. Textures/materials are shared across
-      // many sprites, so disposing the same one more than once here is
-      // harmless — THREE.js no-ops a repeat dispose() call.
+      // (full scene only) the 220 math-symbol sprites' materials/textures.
+      // Textures/materials are shared across many sprites, so disposing the
+      // same one more than once here is harmless — THREE.js no-ops a
+      // repeat dispose() call.
       gridLines.forEach(g => g.geo.dispose());
       gridMats.forEach(m => m.dispose());
       trails.forEach(tr => { tr.geo.dispose(); tr.mat.dispose(); });

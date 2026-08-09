@@ -11,7 +11,7 @@
       styles/main.css for why body-level chrome needs z-index >= 310).
     - .sphere-panel is appended inside this scene's own container element.
   sphere.js picks each one out by class after parsing and puts it where it
-  belongs -- same two destinations the old createElement-based code used.
+  belongs.
 
   sphere-panel-title keeps a real id — it's the target of the panel's
   aria-labelledby, which per spec has to resolve to an actual id, not a

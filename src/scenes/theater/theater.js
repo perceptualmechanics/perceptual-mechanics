@@ -26,22 +26,20 @@
 // the bottom of the screen, MST3K-style, the marquee-bulb frame) where
 // actual pixels are more honest than trying to fake them in text.
 //
-// As of 1.0.23, what happens and when is driven by bard.js (packages/
-// bardjs) instead of a bespoke state machine — see the "bard.js wiring"
-// comment further down for what changed and what didn't.
+// What happens and when is driven by bard.js (packages/bardjs) — see the
+// "bard.js wiring" comment further down for how this scene uses it.
 
 import { Player, compileLegacyScript, shuffle, asciiBubble } from 'bardjs';
 import { escapeHtml, parseHTML } from '../../utils/sceneKit.js';
 import './theater.css';
 import theaterHtml from './theater.html?raw';
 // The cast list and the reel live alongside this scene in theater.text.js
-// (moved out of the shared src/text/ 2026-07-29, then colocated here
-// 2026-08-07, restructured by piece 2026-08-08) — content, not rendering.
-// The prerender step that builds /text/theater/ imports the same module,
-// so the published script and the one performed on stage can't drift apart.
+// — content, not rendering. The prerender step that builds /text/theater/
+// imports the same module, so the published script and the one performed
+// on stage can't drift apart.
 //
-// theater.text.js organizes its three plays as separate pieces now (each
-// with its own cast and scene list), but this scene's whole conceit is one
+// theater.text.js organizes its three plays as separate pieces, but this
+// scene's whole conceit is one
 // shuffled reel drawing from all three at once — a repertory house running
 // a mixed program, not three separate showings — so CHARACTERS/SCENES are
 // flattened back out here, once, at module load.
@@ -127,16 +125,11 @@ const INTERSTITIALS = [
 ];
 
 // ─── bard.js wiring ──────────────────────────────────────────────────────
-// The reel now runs on bard.js's Player (packages/bardjs) instead of a
-// bespoke state machine — compileLegacyScript converts these SCENES
-// (unchanged, written years before bard.js existed) into the engine's
-// chorus/enter/exit/line vocabulary, verified beat-for-beat against all
-// 773 resulting events (see NOTES.md, 1.0.23) before this ever touched the
-// live renderer. TheaterRenderer below reuses the exact same DOM structure
-// and `.tab-*` classes styles/scenes/theater.css already defines — nothing about the
-// visuals, CSS, or hand-tuned mobile breakpoints changed, only what drives
-// them. Actor figures, cowsay bubbles, and captions are all still drawn by
-// this file; bard.js only owns "what happens next and when."
+// The reel runs on bard.js's Player (packages/bardjs) — compileLegacyScript
+// converts these SCENES into the engine's chorus/enter/exit/line
+// vocabulary. TheaterRenderer below draws actor figures, cowsay bubbles,
+// and captions using the same DOM structure and `.tab-*` classes
+// theater.css defines; bard.js only owns "what happens next and when."
 class TheaterRenderer {
   constructor({ stage, captionEl, slugEl, interstitialEl, srLive }) {
     this.stage = stage;
@@ -174,16 +167,14 @@ class TheaterRenderer {
   }
 
   onEnter(keys) {
-    // Fixes a real bug (Scott, 2026-07-23: "on some of the interstitials,
-    // the next button isn't working"): compileScript tags the intermission
-    // event with the *upcoming* scene's sceneIndex, not the outgoing one,
-    // so Player only fires onSceneChange (the only other place that clears
-    // '.on' here) once -- when landing ON the interstitial, not when
-    // leaving it. The new scene's first real event shares that same
-    // sceneIndex, so nothing dismissed the card; the whole scene played
-    // out silently behind it while "next" looked dead. Every real stage
-    // event now clears the card itself instead of relying on a scene
-    // boundary that may not exist between it and the interstitial.
+    // compileScript tags the intermission event with the *upcoming*
+    // scene's sceneIndex, not the outgoing one, so Player only fires
+    // onSceneChange (the only other place that clears '.on' here) once --
+    // when landing ON the interstitial, not when leaving it. The new
+    // scene's first real event shares that same sceneIndex, so nothing
+    // would dismiss the card on its own; every real stage event clears
+    // the card itself instead of relying on a scene boundary that may not
+    // exist between it and the interstitial.
     this.interstitialEl.classList.remove('on');
     keys.forEach(k => this.ensureActor(k));
   }
@@ -291,12 +282,10 @@ export function createTheater(container, { preview = false } = {}) {
   }
 
   function showEndCard() {
-    // Pre-existing latent bug fixed here in passing: the old goTo() scheduled
-    // another setTimeout(showEndCard, 2000) on every call once already at
-    // the last index, so repeatedly clicking past the end (unlikely in
-    // practice, but possible) could stack up duplicate end cards, and a
-    // click on an older one would restart() while a newer one silently
-    // stayed put. Guard against re-entry instead.
+    // Guarded against re-entry: without this, repeatedly triggering the
+    // end state (unlikely in practice, but possible) could stack up
+    // duplicate end cards, with a click on an older one calling restart()
+    // while a newer one silently stayed put.
     if (!player.isAtEnd || endCard) return;
     endCard = document.createElement('button');
     endCard.type = 'button';
@@ -308,8 +297,7 @@ export function createTheater(container, { preview = false } = {}) {
       <p class="tab-tap">click for tonight’s next showing</p>
     `;
     // Native <button> already fires 'click' for both Enter and Space, so
-    // no manual keydown handler is needed (that was only required back
-    // when this was a div[role=button]).
+    // no manual keydown handler is needed.
     endCard.addEventListener('click', restart);
     screen.appendChild(endCard);
     setPlayLabel();

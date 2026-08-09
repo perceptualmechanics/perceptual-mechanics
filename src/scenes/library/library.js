@@ -7,14 +7,10 @@ import './library.css';
 import libraryHtml from './library.html?raw';
 
 // ─── The Library ────────────────────────────────────────────────────────────
-// Scott: "for that picture of the bookshelf in the assets folder, can you
-// scan that and see if you can identify all the media there?" — then, once
-// the catalog existed (library.text.js, 107 books/films/decks read off
-// a real photo of his shelf, corrected against IMG_1202.jpeg after an
-// earlier pass used the wrong picture): "add a new scene to
-// perceptualmechanics, library. Build out infrastructure as usual."
+// A real shelf of books, films, and divination decks, cataloged from a
+// photo of Scott's own shelf (library.text.js).
 //
-// A 4x2 Kallax-style cube shelf, same physical layout as the real one
+// A 2x4 Kallax-style cube shelf, same physical layout as the real one
 // (row/col/pos in library.js preserve left-to-right shelf order), rebuilt
 // as a floating 3D object rather than a room you walk through — closer to
 // the sphere/orbiter model (drag to orbit, click something small to read about
@@ -32,55 +28,37 @@ const CUBBY_W = 2.4;
 const CUBBY_H = 1.7;
 const CUBBY_D = 1.0;
 const FRAME_T = 0.09;
-// Scott, 2026-07-23: "let's turn the bookcase vertical." Was a 4x2
-// landscape grid (4 wide, 2 tall); now 2x4 portrait (2 wide, 4 tall) — a
-// pure 90-degree transpose of the same cubbies. Every item's stored
-// row/col in library.js is untouched (still "left-to-right shelf order"
-// off the real photo); only which axis COLS/ROWS walks, and which field
-// feeds cubbyLeft() vs cubbyTop() in buildItems(), swapped.
+// A 2x4 portrait grid (2 wide, 4 tall). Every item's stored row/col
+// preserves "left-to-right shelf order" off the real photo; COLS/ROWS
+// below determine which axis each one walks.
 const COLS = 2;
 const ROWS = 4;
 const TOTAL_W = COLS * CUBBY_W + (COLS + 1) * FRAME_T;
 const TOTAL_H = ROWS * CUBBY_H + (ROWS + 1) * FRAME_T;
 
 // ─── CDs ────────────────────────────────────────────────────────────────────
-// Scott, 2026-07-23: "i have the notion of adding a CD rack to the bookshelf
-// :D" — invented wholesale, not catalogued off a real photo like the shelf
-// (he doesn't own any of these anymore). Built up album-by-album across a
-// long back-and-forth: 114 albums, 55 artists, hand-dictated rather than
-// filler (library.text.js's CD-rack section carries the full provenance note).
+// Invented wholesale, not catalogued off a real photo like the shelf
+// (Scott doesn't own any of these anymore) — 114 albums, 55 artists,
+// hand-dictated rather than filler (library.text.js's CD-rack section
+// carries the full provenance note).
 //
-// Two earlier passes tried building this as its own object: first sharing
-// the shelf's camera and rotation pivot (broke down because anything off to
-// the side of a shared pivot swings through a much bigger arc than the
-// centered object, and was out of frame entirely on mobile), then as a
-// second object with its own rotation group and a "Shelf / CD Rack" switch
-// to pick which was active (which worked, but per Scott: "we're
-// overthinking this. just put the CDs in the bookcase with the books and
-// movies. the switch is a bit too much architecture.").
-//
-// So: no separate object, no separate camera, no switch. The CDs are just
+// No separate object, no separate camera, no switch: the CDs are just
 // more items in the same cubbies as the books and films — placeCdsInCubbies()
 // distributes them across the shelf's existing 8 cubbies, appended after
 // whatever books/films are already there, and buildItems() (below) renders
 // and sizes them like any other item, just thinner and shorter, with their
 // own texture (makeCdSpineTexture). They ride the exact same root group,
 // camera, drag/zoom, and raycast as every other spine on the shelf — nothing
-// about the shelf itself changed to make room for them.
+// about the shelf itself changes to make room for them.
 //
-// Interaction, 2026-07-24 (Scott: "let's redo the CD info. Lose the
-// tooltip, open a panel, and put either a music video or a live
-// performance that's available on YouTube. I don't think we need the
-// Apple Music/Spotify links any more."): the separate click-to-pin
-// tooltip is gone. A CD click now falls straight through to the exact
-// same .library-panel every book and film already uses — populatePanel()
-// (below) needed no CD-specific branch at all, since it already embedded
-// whatever `youtube`/`scene` a film carried; CDs just carry the same two
-// fields now, pointing at a music video or live performance instead of a
-// film scene (see cdRack.js for where those live, and its header for the
-// research/sourcing note). No search-links, no artist/album-only tooltip
-// markup to maintain — the kind label just reads "Album" instead of
-// "Book"/"Blu-ray".
+// A CD click falls straight through to the exact same .library-panel
+// every book and film already uses — populatePanel() (below) needs no
+// CD-specific branch at all, since it already embeds whatever `youtube`/
+// `scene` a film carries; CDs just carry the same two fields, pointing at
+// a music video or live performance instead of a film scene (see
+// library.text.js's CD-rack section for where those live, and its header
+// for the research/sourcing note). The kind label just reads "Album"
+// instead of "Book"/"Blu-ray".
 
 // Muted, curated palette — deliberately not a rainbow of random hues, so
 // the shelf reads as "someone's actual bookshelf" rather than a bar chart.
@@ -94,20 +72,14 @@ const PALETTE = [
 // not just thicker books.
 const BOX_PALETTE = ['#141428', '#1c1830', '#101018'];
 
-// Scott, 2026-07-24 (screenshot of the shelf): "can we make the blurays and
-// the CDs a bit more visually distinct from one another? there's a lot of
-// visual sameness happening." Root cause: DVDs/Blu-rays were drawn through
-// the exact same makeSpineTexture() as books (foil caps, embossed bands,
-// the same 12-color PALETTE) — only their box dimensions differed — and
-// CDs, while already on their own thinner texture, drew from that same
-// PALETTE too, so a cubby's "media block" was just a thinner smear of the
-// same colors as its books. Fixed by giving discs and CDs their own
-// narrow, near-monochrome palettes plus their own texture treatment (see
-// makeDiscSpineTexture/makeCdSpineTexture below), so each material reads
-// as a distinct physical object: matte varied-color cloth binding for
-// books, uniform glossy near-black plastic cases for the Blu-rays (real
-// disc shelves are famously almost all one color, unlike a bookshelf),
-// pale jewel-case paper for the CDs.
+// Discs and CDs get their own narrow, near-monochrome palettes plus their
+// own texture treatment (see makeDiscSpineTexture/makeCdSpineTexture
+// below), so each material reads as a distinct physical object: matte
+// varied-color cloth binding for books, uniform glossy near-black plastic
+// cases for the Blu-rays (real disc shelves are famously almost all one
+// color, unlike a bookshelf), pale jewel-case paper for the CDs — rather
+// than all three sharing a single palette and reading as one thinner
+// smear of the same colors.
 const DISC_PALETTE = ['#0d0f16', '#10141f', '#141013', '#0c1119'];
 const CD_PALETTE = ['#e8e3d4', '#dcd6c6', '#cfc9b8', '#e2ddd0'];
 
@@ -123,17 +95,13 @@ function hash01(str, salt) {
   return (hash(str + salt) % 10000) / 10000;
 }
 
-// ─── Cross-links, 2026-07-23 ────────────────────────────────────────────────
+// ─── Cross-links ────────────────────────────────────────────────────────────
 // Same mechanism, and the same rule, as sphere.js's fragment-links, orbiter.js's
 // poem-links, and scroll.js's LINKS: only phrases already sitting in the
-// catalog text get wired up as jumps to another item's panel. Scott: "given
-// this analysis, curate the excerpts to create hyperlinks between them a la
-// my other writings in the site" — "this analysis" being a close read of the
-// whole 107-item catalog for real resonances (see library_resonances.md),
-// which is also where the curated note/excerpt additions in
-// library.text.js supporting these phrases came from. Keyed by item id
-// + field name (note/scene/excerpt/excerpt_from), since — unlike orbiter.text.js's
-// stanza-indexed text — library items don't share a single "the text" field.
+// catalog text get wired up as jumps to another item's panel. Keyed by
+// item id + field name (note/scene/excerpt/excerpt_from), since — unlike
+// orbiter.text.js's stanza-indexed text — library items don't share a
+// single "the text" field.
 const LIBRARY_LINKS = [
   // A coin decides everything, twice: Chigurh's coin toss and Stoppard's,
   // played completely straight in one and as metaphysical comedy in the
@@ -184,8 +152,6 @@ const LIBRARY_LINKS = [
   { id: 80, field: 'note', phrase: 'the Aeneid',                         target: 82 },
   { id: 91, field: 'note', phrase: 'the Aeneid',                         target: 82 },
 
-  // Added 2026-07-23, alongside the 13 new ISBN-sourced books: same rule,
-  // phrases already sitting in the (newly curated) note text.
   // Merrill's Sandover <-> the occult-reference cluster.
   { id: 108, field: 'note', phrase: 'Alchemy & Mysticism',                target: 6 },
   { id: 6,   field: 'note', phrase: 'The Changing Light at Sandover',     target: 108 },
@@ -221,8 +187,6 @@ const LIBRARY_LINKS = [
   { id: 78,  field: 'note', phrase: 'Everything Is Under Control',       target: 120 },
   { id: 79,  field: 'note', phrase: 'Everything Is Under Control',       target: 120 },
 
-  // Added 2026-07-23, named one at a time mid-conversation rather than
-  // from a shelf photo or an ISBN batch.
   // Harpur's third-category argument, threaded through the channeled-
   // material / split-self / pattern-finding clusters already on the shelf.
   { id: 121, field: 'note', phrase: 'The Changing Light at Sandover',    target: 108 },
@@ -238,7 +202,6 @@ const LIBRARY_LINKS = [
   { id: 122, field: 'note', phrase: 'The Tree of Life',                 target: 33 },
   { id: 33,  field: 'note', phrase: 'Stories of Your Life and Others',  target: 122 },
 
-  // Added 2026-07-23, a second batch of 25 ISBNs pasted in directly.
   // Merrill's Collected Poems <-> Sandover, the rest of the same career.
   { id: 125, field: 'note', phrase: 'The Changing Light at Sandover',   target: 108 },
   // Huxley's "Mind at Large" and Narby's shamanic DNA-vision both point
@@ -320,61 +283,40 @@ function wrapSpineText(text, maxChars) {
 // to read as "a book on a shelf" from across the room, not as a legible
 // cover design up close (the click-to-read panel carries the real text).
 //
-// Scott, 2026-07-23, after the vertical shelf/Babel work: "the books
-// themselves are very plain! What could we do to give them a bit more
-// pizzazz?" Added, without touching the "no real cover art" rule: a
+// Without touching the "no real cover art" rule, each spine gets: a
 // per-item tint wash (so two books sharing one of the ~12 palette colors
 // don't render as pixel-identical swatches — different dye lots, same
 // cloth), a top-lit vertical gradient and a soft left/right vignette (the
 // spine reads as a rounded object catching light, not a flat card), 1-2
 // embossed horizontal bands above/below the title (old-hardcover binding
-// cords), contrast-aware ink color (light spines get dark ink, dark
-// spines keep the cream), and font alternation (collapsed to one font,
-// then restored with real per-item variety — see BOOK_FONTS etc. below).
-// Fine per-pixel grain was tried and dropped — at the
-// on-screen size a spine actually renders at, it mostly vanishes into
-// texture minification, the same "too subtle to register" mistake made
-// (and fixed) twice already on the Babel backdrop; broad tonal moves like
-// these read at any distance.
+// cords), and contrast-aware ink color (light spines get dark ink, dark
+// spines keep the cream). These broad tonal moves read at any distance,
+// unlike fine per-pixel grain, which vanishes into texture minification
+// at the on-screen size a spine actually renders at.
 //
-// Scott, 2026-07-23: "change the title font on the media items to a more
-// readable, thinner sans-serif font." Collapsed the earlier serif
-// alternation (Georgia/Times for books, Helvetica Neue/Georgia for CDs)
-// down to one system sans stack for every spine. Then, 2026-07-24, after
-// seeing the shelf at full zoom: "the font's the same on everything, which
-// is the complete opposite of real life (except for the Penguin Classics
-// lulz). We need more visual variety to make it look like a real media
-// collection." Right call — a real shelf is a mess of different
-// publishers'/studios'/labels' house type, and one uniform font across
-// 250-odd spines was quietly working against the "someone's actual
-// collection" read as much as the shared color palette had been.
+// Font variety comes entirely from curated *system* font stacks, with no
+// webfont: nothing else in the codebase's canvas-drawn textures (orrery's
+// posters, butterfly's caption) loads a custom font for canvas text,
+// since doing so here would risk a FOUT-in-a-texture bug — the canvas
+// snapshots synchronously, so if the webfont hasn't finished loading yet
+// the fallback gets baked in permanently instead of swapping in later
+// like real DOM text would.
 //
-// Restores real per-item variety, still with no webfont: nothing else in
-// the codebase's canvas-drawn textures (orrery's posters, butterfly's
-// caption) loads a custom font for canvas text, and doing so here would
-// risk a FOUT-in-a-texture bug — the canvas snapshots synchronously, so if
-// the webfont hasn't finished loading yet the fallback gets baked in
-// permanently instead of swapping in later like real DOM text would. So
-// the variety comes entirely from curated *system* font stacks.
-//
-// First pass (still 2026-07-24) just swapped which font-family string got
-// used per item — but at the size a spine actually renders at, "Georgia"
+// A real shelf gets its variety mostly from weight and case (a bold
+// all-caps thriller next to a thin italic literary title next to a
+// wide-tracked academic serif), not from subtly different serif
+// geometries alone — at the size a spine actually renders at, "Georgia"
 // vs "Times New Roman" vs "Palatino" all read as "a serif," and
-// "-apple-system" vs "Verdana" vs "Trebuchet MS" all read as "a sans."
-// Scott, looking at a full-zoom screenshot: "MOAR." Right diagnosis: family
-// alone wasn't doing the work — real shelves get their variety mostly from
-// weight and case (a bold all-caps thriller next to a thin italic literary
-// title next to a wide-tracked academic serif), not from subtly different
-// serif geometries. So each pool below is now a set of *treatments*
-// (family + weight + italic + upper/title-case + letter-tracking) rather
-// than just a font-family list, picked per-item (via hash01, so a given
-// spine always lands on the same face across reloads) from a pool tuned
-// per material: books get the widest spread — serif, sans, a monospace
-// outlier, thin to black weight, plain and tracked-caps — the way
-// different publishers' and decades' house styles actually clash on a
-// real shelf; Blu-rays lean bold/condensed/all-caps (movie poster
-// packaging); CDs stay closer to clean (the original readability ask)
-// but range from thin to a punchier tracked-caps treatment for the
+// "-apple-system" vs "Verdana" vs "Trebuchet MS" all read as "a sans." So
+// each pool below is a set of *treatments* (family + weight + italic +
+// upper/title-case + letter-tracking) rather than just a font-family
+// list, picked per-item (via hash01, so a given spine always lands on the
+// same face across reloads) from a pool tuned per material: books get the
+// widest spread — serif, sans, a monospace outlier, thin to black weight,
+// plain and tracked-caps — the way different publishers' and decades'
+// house styles actually clash on a real shelf; Blu-rays lean
+// bold/condensed/all-caps (movie poster packaging); CDs stay closer to
+// clean but range from thin to a punchier tracked-caps treatment for the
 // louder genres; the two divination boxes share one fixed tracked-caps
 // serif treatment suited to old esoteric-text/grimoire design.
 function treatment(font, opts = {}) {
@@ -552,14 +494,10 @@ function cubbyTop(row) { return TOTAL_H / 2 - FRAME_T - (row - 1) * (CUBBY_H + F
 // real branding), echoing the small colored spine labels real disc sets
 // sometimes carry.
 //
-// No director byline: Scott, 2026-07-24, same conversation as the "MOAR"
-// font-variety request — "remove the director names from the films."
-// Fair correction: real disc spines essentially never carry a director
+// No director byline: real disc spines essentially never carry a director
 // credit (that's back-of-case/booklet information), unlike a book spine
 // where the author's name is the whole point. The panel still shows
-// writer/producer in its detail lines when the catalog has them; this was
-// the one redundant, unrealistic byline sitting where a director's name
-// never actually appears.
+// writer/producer in its detail lines when the catalog has them.
 function makeDiscSpineTexture(baseColor, title) {
   const c = document.createElement('canvas');
   c.width = 80; c.height = 720;
@@ -618,8 +556,7 @@ function makeDiscSpineTexture(baseColor, title) {
 // tray-card visible through a jewel case's clear plastic spine) rather than
 // the book PALETTE, plus a thin prismatic sliver near one edge — the
 // reflective disc itself, just visible through the spine — since a flat
-// pale card alone read too much like a thin, blank book (Scott, 2026-07-24:
-// "make the blurays and the CDs a bit more visually distinct").
+// pale card alone would read too much like a thin, blank book.
 function makeCdSpineTexture(baseColor, artist, album) {
   const c = document.createElement('canvas');
   c.width = 72; c.height = 640;
@@ -677,15 +614,11 @@ function makeCdSpineTexture(baseColor, artist, album) {
 // cdRack.js was built in mostly stay together within a cubby, appended
 // after whatever's already there (pos = existing max + 1, 2, 3...).
 //
-// This briefly scattered CDs among the books for a "slightly disorganized
-// bookshelf" look (Scott, 2026-07-23 — tried raw-pos scatter, then
-// rank-space scatter with stratified bands, then plain random rank; see
-// git history for that whole detour), then Scott asked to undo it:
-// "group the books together and the Blurays/CDs together." So CDs are
-// back to a plain sequential append per cubby, and buildItems() below
-// also now pulls the shelf's existing Blu-rays out of their photographed,
-// interspersed positions into that same trailing block, via a
-// group-before-pos sort instead of a straight pos sort.
+// Books and Blu-rays/CDs each group together within a cubby rather than
+// scattering — CDs append sequentially, and buildItems() below also pulls
+// the shelf's existing Blu-rays out of their photographed, interspersed
+// positions into that same trailing block, via a group-before-pos sort
+// instead of a straight pos sort.
 // Returns items already shaped like a libraryItems entry (type/title/creator/
 // row/col/pos/scene/youtube) so buildItems and the shared panel machinery
 // (populatePanel, in createLibrary below) can treat them identically to a
@@ -728,9 +661,8 @@ function placeCdsInCubbies(cdItems = cdRackItems) {
 }
 
 // Books (plus the two divination boxes, which are book-shaped objects on
-// the shelf) are "the books"; Blu-rays and CDs are "the media." Scott,
-// 2026-07-24: "group the books together and the Blurays/CDs together."
-// Sorting by group before pos (see buildItems below) pulls the Blu-rays
+// the shelf) are "the books"; Blu-rays and CDs are "the media." Sorting
+// by group before pos (see buildItems below) pulls the Blu-rays
 // out of their photographed, interspersed shelf order and puts the CDs
 // (already trailing per-cubby via placeCdsInCubbies above) alongside them,
 // into one contiguous block per cubby — each group keeps its own internal
@@ -740,13 +672,13 @@ function shelfGroup(type) {
 }
 
 // ─── Per-visit reshuffle ────────────────────────────────────────────────────
-// Scott, 2026-07-24: "randomize the order of each of the media types (books,
-// movies, music) so that they're not always in the same place when someone
-// visits." Every catalog entry's row/col/pos still preserves the real
-// shelf's photographed layout (library.text.js's own header comment) —
-// that's still the source of truth for which slots exist and how many each
-// cubby holds — but which item's content lands in which slot is now
-// re-shuffled fresh on every page load, independently per type (books,
+// The shelf reshuffles which item lands where on every visit, so it's not
+// always in the same arrangement. Every catalog entry's row/col/pos still
+// preserves the real shelf's photographed layout (library.text.js's own
+// header comment) — that's still the source of truth for which slots
+// exist and how many each cubby holds — but which item's content lands in
+// which slot is re-shuffled fresh on every page load, independently per
+// type (books,
 // films, and music each only shuffle among their own slots, so a book can
 // never land in a former CD's spot or vice versa). This deliberately uses
 // real per-load randomness (Math.random), not the deterministic hash01 used
@@ -811,40 +743,27 @@ function buildFrame() {
 }
 
 // ─── Library of Babel backdrop ──────────────────────────────────────────────
-// Scott, 2026-07-23: "what if we treated this bookshelf as a real-world
-// extrusion of Borges' Library of Babel? Faintly seen through the Veil in
-// the background" — then, clarifying: "the Library of Babel is faintly
-// seen through the Veil, the bookshelf looks normal." So: the shelf's own
-// materials/lighting are untouched: this is a second, separate layer, a
-// receding stack of hexagonal gallery outlines (Borges' library is built
+// This bookshelf is treated as a real-world extrusion of Borges' Library
+// of Babel, faintly seen through the Veil in the background: the shelf's
+// own materials/lighting stay untouched, and this is a second, separate
+// layer — a field of hexagonal gallery outlines (Borges' library is built
 // of identical connected hexagonal rooms, unbroken and — as far as anyone
-// inside it can tell — infinite) placed well behind the shelf's back
-// panel. scene.fog (matched to the clear color, same trick as orrery.js)
-// is what makes it read as "faintly seen through the Veil" rather than
-// crisply rendered architecture: the nearest hexagons are just barely
-// legible, and the fog swallows the rest into black before the eye can
-// resolve how far the recession actually goes — which is the point; the
-// Veil is Scott's own term (documented at length in archive_against_library
-// .md) for the perceptual screen between ordinary reality and what lies
-// past it, so this is deliberately NOT fully renderable.
+// inside it can tell — infinite) surrounding the shelf on every side.
+// scene.fog (matched to the clear color, same trick as orrery.js) is what
+// makes it read as "faintly seen through the Veil" rather than crisply
+// rendered architecture: the nearest hexagons are just barely legible,
+// and the fog swallows the rest into black before the eye can resolve how
+// far the recession actually goes — which is the point; the Veil is
+// Scott's own term (documented at length in archive_against_library.md)
+// for the perceptual screen between ordinary reality and what lies past
+// it, so this is deliberately NOT fully renderable.
 //
-// Second pass (v1.0.61) built a single stack of concentric rings sharing
-// one center on-axis behind the shelf — a "tunnel," not a lattice, which
-// is also why it swung dramatically to one side under a slight drag.
-// Third pass (v1.0.63) fixed that by tiling a proper edge-sharing
-// honeycomb across two flat planes behind the shelf.
-//
-// Fourth pass, Scott: "let's detach the hexagons so they don't form a
-// honeycomb pattern, just hexagons attached by strands, and let's make
-// the Library of Babel 3d around it... think of it like what you did
-// with the butterfly's phase space" — i.e. butterfly.js's volumetric
-// spider-silk grid, which fills a real 3D cube around the Lorenz
-// attractor rather than sitting behind it as a flat backdrop. So: no
-// more shared edges, no more flat planes. Independent hexagon "gallery"
-// nodes are scattered through a cube surrounding the shelf on every
-// side, each tumbled to its own random 3D orientation, linked to its
-// nearest neighbors by thin strand-rods (Borges' galleries connect to
-// each other, not tile seamlessly into one surface). A keep-out column
+// Independent hexagon "gallery" nodes are scattered through a cube
+// surrounding the shelf on every side, each tumbled to its own random 3D
+// orientation, linked to its nearest neighbors by thin strand-rods
+// (Borges' galleries connect to each other, not tile seamlessly into one
+// surface, the same volumetric-field approach butterfly.js's phase-space
+// grid uses around the Lorenz attractor). A keep-out column
 // matching the shelf's own x/y footprint (through every z) keeps any
 // node or strand from ever drawing across the shelf's own books —
 // "the bookshelf looks normal" still holds, now from every angle, not
@@ -869,9 +788,7 @@ function buildBabelBackdrop() {
   const disposables = [];
 
   // ── Node field: jittered 3D grid, thinned and tumbled, so it reads as
-  // scattered galleries rather than a mechanical lattice. Density raised
-  // from the first detached-field pass (v1.0.64, ~75 nodes/87 strands)
-  // per Scott: "moar hexes and strands."
+  // scattered galleries rather than a mechanical lattice.
   const nodes = [];
   const extent = 9.5;
   const step = 2.9;
@@ -972,12 +889,9 @@ function buildBabelBackdrop() {
   const strandColor = new THREE.Color(0x7f96c2);
   const strandPhases = [];
   if (strandPairs.length) {
-    // Thickness/opacity deliberately close to the hex edges', not fainter —
-    // a first pass at 0.02 thickness / 0.16 opacity repeated the exact
-    // "too thin to actually render" mistake the very first backdrop
-    // attempt made with 1px LineLoop hexagons (v1.0.61): Scott couldn't
-    // tell if the strands were showing at all, because they mostly
-    // weren't, on a rod this thin over multi-unit lengths.
+    // Thickness/opacity deliberately close to the hex edges', not
+    // fainter — a rod this thin over multi-unit lengths barely registers
+    // at lower thickness/opacity values.
     const strandGeo = new THREE.BoxGeometry(1, 0.038, 0.038);
     const strandMat = new THREE.MeshBasicMaterial({
       color: strandColor, transparent: true, opacity: 0.24, depthWrite: false, fog: true,
@@ -1135,7 +1049,7 @@ function buildItems(preview) {
         // material. Discs and CDs skip the roulette entirely: real disc
         // cases and jewel cases are hard glossy plastic every time, which
         // is itself part of what makes them read as a different material
-        // from the books (Scott, 2026-07-24 — the "visual sameness" fix).
+        // from the books.
         const isGlossy = isDisc || isCd || hash01(it.title, 'gloss') > 0.8;
         const rough = isDisc
           ? 0.22 + hash01(it.title, 'r2') * 0.1
@@ -1335,26 +1249,25 @@ export function createLibrary(container, { preview = false } = {}) {
     if (it.writer) lines.push(`written by ${it.writer}`);
     if (it.producer) lines.push(`produced by ${it.producer}`);
     detailsEl.innerHTML = lines.map(l => `<p>${l}</p>`).join('');
-    // Note text disabled for now (Scott, 2026-07-23: "I'm not sure I want
-    // it there yet") -- commented out rather than deleted so it's a
-    // one-line revert. Underlying `note` data and the cross-links that
-    // live inside it (LIBRARY_LINKS, field: 'note') are untouched.
+    // Note text is intentionally disabled -- commented out rather than
+    // deleted so it's a one-line revert. Underlying `note` data and the
+    // cross-links that live inside it (LIBRARY_LINKS, field: 'note') are
+    // untouched.
     // noteEl.innerHTML = it.note ? renderLinkedField(it.id, 'note', it.note) : '';
     noteEl.innerHTML = '';
 
     // Content area, above the bibliographic details: a film gets its
     // pivotal scene embedded (not just linked), a CD gets a music video or
-    // live performance the same way (2026-07-24: CDs moved onto this same
-    // panel — see the CDs header comment above), a book gets its excerpt
-    // (plain text, not a blockquote, sits above the details block per
-    // Scott's request) plus a cover thumbnail when a cover image is
+    // live performance the same way (see the CDs header comment above), a
+    // book gets its excerpt (plain text, not a blockquote, sits above the
+    // details block) plus a cover thumbnail when a cover image is
     // publicly available via Open Library's covers API (keyed off the
     // ISBN we already looked up) -- this is the "real image" allowance
     // for the art/photo/reference books that don't have a natural
     // textual excerpt. See library.text.js's header for the
     // sourcing/copyright discipline behind these fields. Cross-links
-    // (2026-07-23) live inline in note/scene/excerpt/excerpt_from text,
-    // rendered via renderLinkedField -- see LIBRARY_LINKS above.
+    // live inline in note/scene/excerpt/excerpt_from text, rendered via
+    // renderLinkedField -- see LIBRARY_LINKS above.
     videoEl.innerHTML = '';
     sceneEl.innerHTML = '';
     if (it.youtube) {
@@ -1455,34 +1368,22 @@ export function createLibrary(container, { preview = false } = {}) {
 
       if (panel.classList.contains('open')) {
         // Any click that reaches here is on the canvas, not the panel —
-        // panel's own listener (above) already stopPropagation()s clicks
-        // inside it, so `!panel.contains(e.target)` was never actually
-        // doing anything: this branch always fired and just closed the
-        // panel, even when the click landed on a different spine. Scott,
-        // 2026-07-23: "when the panel's open and I click on a new item,
-        // the old item still remains for a few seconds before it gets
-        // replaced" — that was this: click #1 closed the panel (old
-        // content visible through the close transition), and only a
-        // second click actually opened the new item. Raycast the click
-        // directly (already done above) and, if it hit a spine, swap the
-        // panel's content in place (same fade beat as navigateToItem)
-        // instead of closing.
+        // the panel's own listener (above) already stopPropagation()s
+        // clicks inside it. Raycast the click directly (already done
+        // above) and, if it hit a spine, swap the panel's content in
+        // place (same fade beat as navigateToItem) instead of closing, so
+        // clicking a new item while the panel's open replaces the content
+        // immediately rather than needing a second click.
         if (hitMesh) {
           selected = hitMesh;
 
-          // Scott, 2026-07-23: "if a left panel is open and then I click on
-          // the right-hand side, the new content will appear in the open
-          // left panel, rather than closing the left and opening the
-          // right." The in-place content fade below never re-checked which
-          // side the new click actually landed on, so it just kept
-          // whichever anchor the panel already had. If the click is on the
-          // panel's current side, that fade is still right (no need to
-          // move anything) -- only cross to a real close/reopen when the
-          // side actually changes, so the panel visibly relocates the way
-          // it does on a fresh open, instead of an instant same-frame
-          // teleport (which flipping `from-left` while `open` would cause,
-          // since the panel is fully on-screen at that point, unlike the
-          // closed-panel case this trick was originally written for).
+          // The in-place content fade below only applies when the click
+          // is on the panel's current side (no need to move anything) —
+          // it crosses to a real close/reopen when the side actually
+          // changes, so the panel visibly relocates the way it does on a
+          // fresh open, instead of an instant same-frame teleport (which
+          // flipping `from-left` while `open` would cause, since the
+          // panel is fully on-screen at that point).
           const clickedLeft = (e.clientX - rect.left) < rect.width / 2;
           if (panel.classList.contains('from-left') !== clickedLeft) {
             panel.classList.remove('open');
@@ -1521,13 +1422,12 @@ export function createLibrary(container, { preview = false } = {}) {
     };
     container.addEventListener('click', onContainerClick);
 
-    // Keyboard access, 2026-07-26: spines are otherwise raycast-only — no
-    // keyboard equivalent existed for "point at a spine." One button per
-    // item — the entire catalog, same as clicking any spine directly —
-    // closing first (harmless no-op if nothing's open) rather than
-    // reproducing the click path's in-place-swap animation, which was
-    // tuned for a mouse rapidly clicking across adjacent spines, not a
-    // single deliberate keyboard pick.
+    // Keyboard equivalent for "point at a spine" — spines are otherwise
+    // raycast-only. One button per item — the entire catalog, same as
+    // clicking any spine directly — closing first (harmless no-op if
+    // nothing's open) rather than reusing the click path's in-place-swap
+    // animation, which is tuned for a mouse rapidly clicking across
+    // adjacent spines, not a single deliberate keyboard pick.
     jumpList = createJumpList(container, {
       label: 'Browse the shelf: books, films, and albums',
       items: items.meshes,
@@ -1540,30 +1440,23 @@ export function createLibrary(container, { preview = false } = {}) {
   }
 
   // ─── Drag to orbit/pan + wheel zoom ──────────────────────────────────────
-  // Auto-rotate stopped per Scott, 2026-07-22: "let's stop the auto-rotate
-  // for the moment." Shelf now only turns under drag. (The old `autoRotate`
-  // flag was hardcoded false and never toggled anywhere, so it was
-  // removed rather than kept as permanently-dead code — if it needs to
-  // come back, reintroduce the flag and check it in animate() below.)
+  // The shelf only turns under drag, no auto-rotate.
   //
-  // Vertical drag used to tilt the whole shelf object (root.rotation.x,
-  // clamped to +-0.4 rad / ~23 deg) — Scott, 2026-07-24, full-zoom
-  // screenshot: "there's still no real way to zoom in and see the top and
-  // bottom shelves." Correct diagnosis: at min zoom the topmost row's
-  // center sits roughly 33 deg off dead-center, past that old clamp, so it
-  // was structurally out of reach no matter how far you dragged. Swapped
-  // the vertical axis from an object tilt to a camera pan: the camera and
-  // its look target now translate up/down together along the shelf's
-  // height (an "elevator," not a tilt), the same `dy` sign convention
-  // orrery.js's mouse-look already uses (drag up -> look up). `panLimit`
-  // is sized off TOTAL_H/CUBBY_H so the top and bottom row's center is
-  // always reachable, with a little headroom past it. Horizontal drag is
-  // unchanged — still spins the shelf object itself.
+  // Vertical drag pans the camera rather than tilting the shelf object:
+  // the camera and its look target translate up/down together along the
+  // shelf's height (an "elevator," not a tilt), the same `dy` sign
+  // convention orrery.js's mouse-look uses (drag up -> look up). This
+  // keeps the top and bottom row's center reachable at any zoom level,
+  // which a fixed-angle object tilt can't guarantee once the shelf is
+  // tall enough that the topmost row sits well off dead-center at min
+  // zoom. `panLimit` is sized off TOTAL_H/CUBBY_H so the top and bottom
+  // row's center is always reachable, with a little headroom past it.
+  // Horizontal drag is unchanged — still spins the shelf object itself.
   const baseCamLift = 0.15; // small permanent downward-look bias, kept from the original framing
   let camDist = camera.position.length();
   let panY = 0;
   const panLimit = TOTAL_H / 2 - CUBBY_H / 2 + 0.3;
-  const vertPanScale = panLimit / 0.4; // preserves the old drag-distance-to-clamp feel at the new range
+  const vertPanScale = panLimit / 0.4; // scales drag distance to the pan range
   function updateCamera() {
     camera.position.set(0, panY + baseCamLift, camDist);
     camera.lookAt(0, panY, 0);
@@ -1596,9 +1489,8 @@ export function createLibrary(container, { preview = false } = {}) {
   let babelT = 0;
   function animate() {
     animId = requestAnimationFrame(animate);
-    // Library of Babel shimmer — Scott, 2026-07-23: "let's make them a bit
-    // dynamic, maybe the shimmer effect?" Same per-object phase/speed
-    // pulse convention as orbiter.js's per-particle drift and aurora shimmers,
+    // Library of Babel shimmer — same per-object phase/speed pulse
+    // convention as orbiter.js's per-particle drift and aurora shimmers,
     // adapted to InstancedMesh (see buildBabelBackdrop's update()).
     if (!reduceMotion) {
       babelT += 0.016;

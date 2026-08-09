@@ -1,10 +1,7 @@
-/* Scroll scene styles. Part of the 2026-08-07 component restructure: this
-   scene is now a self-contained folder (scroll.js/.css/.html) instead of a
-   flat JS file that injected its own <style> block at runtime. The static
-   preview tile, opening Ogham mark, and SVG filter defs also moved out of
-   scroll.js into scroll.html; the per-piece text patches stay JS-generated,
-   since they're genuinely built from data (scroll.text.js), not fixed
-   markup. No visual change from any earlier version of this file. */
+/* Scroll scene styles. The static preview tile, opening Ogham mark, and SVG
+   filter defs live in scroll.html; the per-piece text patches stay
+   JS-generated, since they're genuinely built from data (scroll.text.js),
+   not fixed markup. */
 
 .scroll-root {
   width: 100%; height: 100%;
@@ -151,13 +148,12 @@
 /* overflow: hidden is a real clearfix here, not decoration — without it, a
    patch whose Ogham float runs taller than its own body text (Cartography's
    opening line is one 441-character comma-spliced clause) never gets
-   cleared by anything, and floats that aren't cleared don't just collapse
-   quietly: they keep painting past the bottom of this box, over the seam
-   and into whatever patch comes next (confirmed live — Cartography's
-   trailing Ogham glyphs were rendering on top of Fire Vigil's own margin
-   column). This contains every patch's float to its own box regardless of
-   piece; it does not change how paragraphs wrap around the float *within*
-   that box, so the normal margin-note look is untouched. */
+   cleared by anything, and an uncleared float doesn't just collapse
+   quietly: it keeps painting past the bottom of this box, over the seam and
+   into whatever patch comes next. This contains every patch's float to its
+   own box regardless of piece; it does not change how paragraphs wrap
+   around the float *within* that box, so the normal margin-note look is
+   untouched. */
 .scroll-patch-text { position: relative; z-index: 1; overflow: hidden; }
 .scroll-patch-text { --scroll-base-size: 1.2rem; }
 .scroll-patch-text > p,
@@ -171,11 +167,11 @@
 .scroll-patch-text > p:last-child { margin-bottom: 0; }
 
 /* Contains the Ogham line + drop-cap floats (below) to just the opening
-   paragraph — only for patches scroll.js opts into this (`.scroll-patch-text--
-   contained`, currently just Fire Vigil). See scroll.js's CONTAIN_OPENING
-   comment: most patches deliberately let the float wrap across as many
-   paragraphs as it takes to clear; this wrapper is only for the ones where
-   that default reads as broken instead of as marginalia. */
+   paragraphs — only for patches scroll.js opts into this
+   (`.scroll-patch-text--contained`, per its OPENING_GROUP lookup). Most
+   patches deliberately let the float wrap across as many paragraphs as it
+   takes to clear; this wrapper is only for the ones where that default
+   would read as broken instead of as marginalia. */
 .scroll-patch-text > .scroll-opening { overflow: hidden; }
 
 /* incised versal opening each patch — Cinzel, sparingly, as an inscriptional

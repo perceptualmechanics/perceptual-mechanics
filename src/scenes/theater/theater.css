@@ -1,13 +1,6 @@
-/* Theater scene styles. Previously injected at runtime via buildStyles() in
-   theater.js (document.createElement('style'), guarded against double-
-   injection by `if (document.getElementById('tab-styles')) return;`); moved
-   to a real stylesheet, imported once at the top of theater.js. No visual
-   change — an ES module import is deduplicated by the bundler regardless of
-   how many times it's imported, so this keeps the same "loaded exactly
-   once" behavior the old guard existed for. 2026-08-07: moved into
-   src/scenes/theater/ alongside theater.js/theater.html/theater.text.js as
-   part of the site-wide per-scene folder restructure. All selectors here
-   were already classes, not IDs — no renaming needed for this pass. */
+/* Theater scene styles, imported once at the top of theater.js. An ES
+   module import is deduplicated by the bundler regardless of how many
+   times it's imported, so this stays loaded exactly once. */
 
 .tab-root {
   width: 100%; height: 100%; position: relative; overflow: hidden;
@@ -224,14 +217,12 @@
   .tab-curtain { font-size: 0.42rem; margin-bottom: 0.15rem; }
   .tab-screen-frame { padding: 6px; margin: 0.2rem 0 0.4rem; }
   .tab-screen { aspect-ratio: 4 / 3; min-height: 240px; padding-bottom: 42px; }
-  /* Design pass, 2026-07-17 (Scott: mobile readability check) — .tab-slug
-     and .tab-caption were both being set here to a smaller font-size
-     than their OWN desktop clamp() floor (0.62rem/0.66rem respectively)
-     — backwards, since mobile is exactly where shrinking further hurts
+  /* .tab-slug and .tab-caption both stay at or above their own desktop
+     clamp() floor (0.62rem/0.66rem respectively) even at this breakpoint,
+     since mobile is exactly where shrinking further hurts readability
      most. .tab-caption in particular is the italic per-beat description
      line, the thing most likely to actually be read start to finish, so
-     it gets the larger bump of the two. Neither shrinks below its
-     desktop floor anymore. */
+     it gets the larger of the two floors. */
   .tab-slug { font-size: 0.68rem; padding: 0.5rem 0.35rem 0.15rem; letter-spacing: 0.04em; }
   .tab-stage {
     flex-wrap: wrap; row-gap: 0.5rem; column-gap: 0.4rem;

@@ -4,15 +4,6 @@
 // randomness — grid-bug wander paths and sky motes in beamline.js, for
 // instance. Pure math, no THREE.js, no DOM — runs identically in Node and
 // in the browser.
-//
-// Originally lived in dla.js alongside the diffusion-limited-aggregation
-// growth code that used to power the Prism scene (a random walker takes
-// fixed-length steps in a random direction until it sticks to existing
-// structure — real algorithm, not hand-placed geometry). Prism never landed
-// after two full attempts and was retired for good 2026-08-07; the growth
-// machinery (growPoints, randomUnitVector3, and the DLA-specific constants)
-// left with it, since nothing else in the codebase ever called them. These
-// two functions are the part that outlived it.
 
 // mulberry32 — small, fast, and (this is the only property that matters
 // here) perfectly reproducible: the same seed produces the same sequence on

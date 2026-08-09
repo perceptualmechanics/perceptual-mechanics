@@ -1,11 +1,9 @@
 // ─── Scene Kit ──────────────────────────────────────────────────────────────
-// Small, dependency-free helpers factored out of repeated boilerplate that
-// had drifted slightly out of sync across scenes — most notably: two of the
-// four drag-to-orbit scenes (sphere.js, orrery.js) never actually had touch
-// support for the rotation itself (only for telling a tap from a drag), so
-// "drag to orbit" silently didn't work on phones/tablets in those two scenes
-// even though the other two (orbiter.js, butterfly.js) had it fine. Centralizing
-// this means that class of gap can't reopen the next time a scene is added.
+// Small, dependency-free helpers shared across scenes for input handling
+// (drag-to-orbit with unified mouse/touch support, wheel zoom, guarded
+// resize), accessibility (reduced-motion checks, escape-to-close, keyboard
+// jump lists), and DOM plumbing (HTML escaping, static-template parsing)
+// that every scene would otherwise reimplement independently.
 //
 // Every helper here returns a `dispose()` (or is itself idempotent to call
 // again), matching the teardown convention every scene's own `dispose()`
@@ -82,11 +80,10 @@ export function bindWheelZoom(container, { onZoom, isBlocked } = {}) {
 }
 
 // ─── Guarded resize ─────────────────────────────────────────────────────────
-// The same three-line guard was copy-pasted into every scene: a hidden
-// ancestor (the landing grid sitting behind an active full-screen scene)
-// makes clientWidth/Height read 0, and resizing a renderer to 0 (or falling
-// back to window size for what's actually a small preview tile) is the bug
-// that guard exists to prevent. Also wires the orientationchange retry
+// Guards against a hidden ancestor (the landing grid sitting behind an
+// active full-screen scene) reading clientWidth/Height as 0, which would
+// otherwise resize a renderer to 0 or fall back to window size for what's
+// actually a small preview tile. Also wires the orientationchange retry
 // (some mobile browsers fire resize before the new dimensions are settled).
 export function bindGuardedResize(container, onResize) {
   const handler = () => {
@@ -107,43 +104,34 @@ export function bindGuardedResize(container, onResize) {
 }
 
 // ─── Reduced motion ─────────────────────────────────────────────────────────
-// A couple of the heaviest-animated WebGL scenes (orrery, orbiter) had no
-// reduced-motion accommodation at all, while their CSS-driven siblings
-// (scroll, among others) did. Since a `prefers-reduced-motion` CSS media
-// query can't reach into a requestAnimationFrame loop, scenes that spin/
-// orbit continuously need to check this directly and skip their own
-// autonomous motion (drag-to-orbit stays available either way — that's
-// motion the visitor asked for, not motion imposed on them).
+// A `prefers-reduced-motion` CSS media query can't reach into a
+// requestAnimationFrame loop, so scenes that spin/orbit continuously check
+// this directly and skip their own autonomous motion (drag-to-orbit stays
+// available either way — that's motion the visitor asked for, not motion
+// imposed on them).
 export function prefersReducedMotion() {
   return typeof window !== 'undefined'
     && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches === true;
 }
 
 // ─── Preview-tile circular clip (Firefox WebGL workaround) ─────────────────
-// Four straight CSS-only attempts at clipping a preview tile's WebGL canvas
-// to a circle failed in Firefox: `contain: paint` on `.preview-container`,
-// `clip-path: circle(50%)` on the same, `border-radius: 50%` on the canvas
-// element itself, and finally an opaque `::after` ring painted on top of the
-// canvas — all defeated. Scott confirmed it's specifically the heaviest
-// scenes (orrery among them), not every WebGL preview tile — sphere/butterfly/orbiter
-// clip fine in the same browser with the exact same CSS. That's the real
-// signal: Firefox is promoting only the demanding canvases to a GPU
-// compositing layer that sits outside the page's normal paint/z-order
-// entirely, unreachable by any CSS clip/overflow/z-index mechanism, no
-// matter which element in the chain owns the property.
+// Firefox promotes some WebGL canvases (the heaviest scenes, orrery among
+// them) to a GPU compositing layer that sits outside the page's normal
+// paint/z-order entirely, unreachable by any CSS clip/overflow/z-index
+// mechanism no matter which element in the chain owns the property.
 //
-// The one technique that can't be defeated by that: don't display the
-// WebGL canvas at all. Let the scene keep rendering into it exactly as
-// before (off-DOM, never appended), then copy its finished pixels every
+// The one technique that isn't defeated by that: don't display the WebGL
+// canvas at all. The scene keeps rendering into it exactly as normal
+// (off-DOM, never appended), then this copies its finished pixels every
 // frame onto a plain 2D `<canvas>` that IS in the DOM. `ctx.clip()` there
 // is software rasterization, not GPU layer compositing — every browser
 // honors it unconditionally, because there's no accelerated layer left to
 // bypass it with.
 //
 // Opt-in per scene (call this only from a `preview` branch) rather than a
-// blanket site-wide change: the five scenes that already clip fine don't
-// need the extra per-frame copy, and confining this to the two scenes that
-// actually have the bug keeps the blast radius of any mistake small.
+// blanket site-wide change: scenes that already clip fine with plain CSS
+// don't need the extra per-frame copy, so this stays confined to the
+// scenes that actually need it.
 export function mountClippedPreviewCanvas(container, renderer) {
   const display = document.createElement('canvas');
   display.setAttribute('aria-hidden', 'true');
@@ -178,10 +166,8 @@ export function mountClippedPreviewCanvas(container, renderer) {
 // ─── Tap-vs-drag guard ──────────────────────────────────────────────────────
 // A touch-drag to orbit the camera also fires a trailing `click` once the
 // finger lifts — without this, that click gets read the same as a genuine
-// tap and opens whatever's under it, so dragging the sphere/orrery on a
-// phone kept accidentally opening panels. Duplicated identically in
-// sphere.js and orrery.js before this; those scenes' own click handlers
-// start with `if (touchGuard.consume()) return;` instead.
+// tap and opens whatever's under it. A scene's own click handler starts
+// with `if (touchGuard.consume()) return;` to filter that out.
 export function bindTapVsDrag(container) {
   let moved = false;
   const onTouchStart = () => { moved = false; };
@@ -201,10 +187,10 @@ export function bindTapVsDrag(container) {
 }
 
 // ─── Escape-to-close ────────────────────────────────────────────────────────
-// Standard modal-dialog expectation that none of the site's three read-more
-// panels (sphere, orrery, orbiter) had — closing only worked via the explicit
-// close button or a click outside. Attaches at the document level so it
-// fires regardless of what currently has focus inside the panel.
+// Standard modal-dialog expectation for a read-more panel: Escape closes it
+// alongside the explicit close button or a click outside. Attaches at the
+// document level so it fires regardless of what currently has focus inside
+// the panel.
 export function bindEscapeClose(onEscape) {
   const handler = e => { if (e.key === 'Escape') onEscape(); };
   document.addEventListener('keydown', handler);
@@ -255,8 +241,8 @@ export function createPanelCloser(panel, container, { closeBtn, onClose } = {}) 
 // sphere, orbiter, orrery, and library all raycast their interactive 3D objects
 // (facets, satellites, posters, spines) — real, readable content a mouse or
 // touch visitor reaches by hovering and clicking, but that a keyboard-only
-// visitor previously had no way to reach at all: nothing simulates "point
-// at a facet" from a keyboard. This builds the accessible way in — a real
+// visitor has no way to reach otherwise: nothing simulates "point at a
+// facet" from a keyboard. This builds the accessible way in — a real
 // list of real `<button>`s, one per selectable item, that call the exact
 // same select-and-open function the mouse click already does (each scene
 // passes that in as `onSelect`; this owns none of the panel/selection logic
@@ -284,27 +270,22 @@ export function createJumpList(container, { label, items, getLabel, onSelect }) 
 }
 
 // ─── Shared hint-label color ────────────────────────────────────────────────
-// Code audit, 2026-08-03: five scenes (sphere, orbiter, orrery, library,
-// and butterfly via main.js) each independently wrote their own
-// top-right "drag to orbit · scroll to zoom" style control-hint text, and
-// all five converged on the exact same color: rgba(255,255,255,0.3). That
-// value measures ~2.5:1 contrast against a black background at the
-// 0.55rem/~8.8px size every one of them uses — well under WCAG's 4.5:1
-// minimum for text that small (the 3:1 "large text" allowance only applies
-// at ~18.7px bold or larger). 0.6 alpha (~7.4:1 against black, well clear
-// of the minimum) is the fix; centralized here so the next scene copies a
-// value that's actually correct, and any future adjustment is one edit
-// instead of six. Doesn't touch each scene's own positioning, font, or
-// (where present) responsive/collision-avoidance CSS — only the color.
+// The color for every scene's top-right "drag to orbit · scroll to zoom"
+// style control-hint text (sphere, orbiter, orrery, library, and butterfly
+// via main.js). 0.6 alpha white measures ~7.4:1 contrast against a black
+// background at the ~8.8px size these hints use — well clear of WCAG's
+// 4.5:1 minimum for text that small (the 3:1 "large text" allowance only
+// applies at ~18.7px bold or larger). Centralized here so any future
+// adjustment is one edit instead of several; doesn't touch each scene's own
+// positioning, font, or responsive/collision-avoidance CSS — only the color.
 export const HINT_TEXT_COLOR = 'rgba(255,255,255,0.6)';
 
 // ─── HTML escaping ──────────────────────────────────────────────────────────
-// Every scene that injects found text (poems, notes, spine titles) into a
-// read-more panel's innerHTML needs this, and four of them (orbiter, scroll,
-// theater, library) had each grown their own identical copy. Round-trips the
-// string through a detached element's textContent/innerHTML rather than a
-// hand-rolled regex, so it escapes quotes too — matters wherever the escaped
-// string lands inside an HTML attribute, not just element content.
+// Used by every scene that injects found text (poems, notes, spine titles)
+// into a read-more panel's innerHTML. Round-trips the string through a
+// detached element's textContent/innerHTML rather than a hand-rolled regex,
+// so it escapes quotes too — matters wherever the escaped string lands
+// inside an HTML attribute, not just element content.
 export function escapeHtml(s) {
   const div = document.createElement('div');
   div.textContent = s;
@@ -312,14 +293,13 @@ export function escapeHtml(s) {
 }
 
 // ─── Static HTML template parsing ──────────────────────────────────────────
-// 2026-08-07 restructure: each scene's static shell markup (hint, caption,
-// panel skeleton, and similar chrome that doesn't change shape at runtime)
-// now lives in its own <scene>.html file, imported as a raw string via
-// Vite's `?raw` suffix (e.g. `import html from './sphere.html?raw'`) instead
-// of being built via chained document.createElement/innerHTML calls in JS.
-// A <template> element is the standard way to turn that string into real,
-// inert DOM nodes without executing embedded scripts or triggering premature
-// image loads — `.content` is a DocumentFragment you can querySelector into
+// Each scene's static shell markup (hint, caption, panel skeleton, and
+// similar chrome that doesn't change shape at runtime) lives in its own
+// <scene>.html file, imported as a raw string via Vite's `?raw` suffix
+// (e.g. `import html from './sphere.html?raw'`). A <template> element is
+// the standard way to turn that string into real, inert DOM nodes without
+// executing embedded scripts or triggering premature image loads —
+// `.content` is a DocumentFragment you can querySelector into
 // before anything is attached to the visible document. One scene's HTML file
 // can (and often does) contain more than one top-level element — e.g. a hint
 // paragraph that belongs on document.body and a panel that belongs inside
