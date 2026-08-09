@@ -289,22 +289,6 @@ function organicPulse(clock, freq = 1) {
   return (a * 0.5 + b * 0.32 + c * 0.18 + 1) / 2; // weights sum to 1, so the raw sum stays in [-1,1]
 }
 
-// The telescope's gravitational-lensing hub (see gravLens in buildOrrery)
-// is driven by three "masses," not one centered point — a single centered
-// pull is inescapably radially symmetric by construction, three off-center
-// ones can't be. Home positions fixed (evenly spaced, same shape as the
-// web's own 3-ring cross-bracing elsewhere in this file), each mass then
-// wanders around its own home in animate() via organicPulse at its own
-// pair of frequencies — deliberately mutually non-integer-ratio (no two
-// share a small common factor) so no two masses ever drift back into
-// sync with each other, keeping the combined pattern asymmetric over time
-// as well as at any single instant.
-const LENS_MASS_HOMES = [
-  { x: 0.4 * Math.cos(0), y: 0.4 * Math.sin(0), freqA: 0.017, freqB: 0.041 },
-  { x: 0.4 * Math.cos((2 * Math.PI) / 3), y: 0.4 * Math.sin((2 * Math.PI) / 3), freqA: 0.023, freqB: 0.013 },
-  { x: 0.4 * Math.cos((4 * Math.PI) / 3), y: 0.4 * Math.sin((4 * Math.PI) / 3), freqA: 0.031, freqB: 0.019 },
-];
-
 // (u, v) -> the point on the unit sphere that (u, v) addresses. Used
 // identically by buildAgedPlanetGeometry and makeAgedPlanetTextures
 // below so a texture pixel and a geometry vertex at the same (u, v)
@@ -666,11 +650,16 @@ function buildOrrery(preview, suspendTopY, rafterY) {
   // Radial spokes, apex to rim — one strut each now, not chained segments
   // (those existed only to let the old traveling pulse light pieces of a
   // spoke in sequence; with the pulse gone, one piece per spoke is simpler
-  // and exactly as structurally legible).
+  // and exactly as structurally legible). Collected into latticeStruts —
+  // each addStrut() call already builds its OWN un-shared CylinderGeometry,
+  // which is exactly what the ripple effect below needs (see the comment
+  // above ripplers): mutating one strut's position attribute per frame
+  // never touches any other.
+  const latticeStruts = [];
   spokeDirs.forEach(dir => {
     const from = new THREE.Vector3(0, apexY, 0);
     const to = new THREE.Vector3(dir.x * dishR, rimY, dir.z * dishR);
-    addStrut(dishGroup, from, to, (preview ? 0.009 : 0.012) * HW, webMat);
+    latticeStruts.push(addStrut(dishGroup, from, to, (preview ? 0.009 : 0.012) * HW, webMat));
   });
   // Cross-bracing rings — straight WEB_SPOKES-gon segments between
   // adjacent spokes at a few heights, not smooth circles: a spiderweb's
@@ -684,7 +673,7 @@ function buildOrrery(preview, suspendTopY, rafterY) {
       const a = spokeDirs[i], b = spokeDirs[(i + 1) % WEB_SPOKES];
       const from = new THREE.Vector3(a.x * r, y, a.z * r);
       const to = new THREE.Vector3(b.x * r, y, b.z * r);
-      addStrut(dishGroup, from, to, (preview ? 0.006 : 0.008) * HW, webMat);
+      latticeStruts.push(addStrut(dishGroup, from, to, (preview ? 0.006 : 0.008) * HW, webMat));
     }
   }
   // The web's own physical center — where every spoke actually meets.
@@ -693,137 +682,60 @@ function buildOrrery(preview, suspendTopY, rafterY) {
   // this is a found web, not an engineered reflector, so everything
   // converges inward to its own hub instead of up to a feed floating
   // over it. Solid and unanimated, same webMat as the rest of the
-  // structure — the "something is happening here" work now belongs
-  // entirely to gravLens below, not to this mesh.
+  // structure — including, now, the ripple below: the hub is just
+  // another lattice vertex meeting point, not exempted from it.
   const webHub = new THREE.Mesh(new THREE.SphereGeometry((preview ? 0.028 : 0.036) * HW, 10, 10), webMat);
   webHub.position.y = apexY;
   dishGroup.add(webHub);
 
-  // ─── The receiving effect, rebuilt around what this thing actually
-  // detects: gravitational waves, not light or radio — raw spacetime
-  // distortion, not carried by matter at all. A directional beam (this
-  // scene's earlier attempt, and the literal thing plenty of other
-  // objects on this site already do — see the projector cone, the
-  // skylight's own beamMat) is physically the WRONG picture for that:
-  // gravitational waves don't arrive as a shaft traveling into a
-  // receiver, they stretch and squeeze the space they pass through. The
-  // physically correct visual is a localized lensing/refraction warp of
-  // whatever's visible behind and around the hub — background stars, the
-  // skylight opening, the web's own far threads — not particle geometry.
+  // ─── The receiving effect, round 3: no rendered object at all. Two
+  // earlier attempts (a particle beam, then a lensing patch built from
+  // either a MeshPhysicalMaterial sphere or a hand-shaded one) both
+  // failed for the SAME underlying reason, confirmed live each time: this
+  // scene already has an established visual vocabulary for "a small
+  // round-ish or irregular thing near the hub" — the nine planets, the
+  // asteroid-belt rocks — so any new mesh placed there gets sorted into
+  // that category by the eye regardless of how irregular its silhouette
+  // or texture gets. Making the edge ragged just changed which kind of
+  // object it read as (asteroid instead of sphere); it never stopped
+  // reading as an object. There's a physical reason the lensing version
+  // was fighting itself on top of that: real lensing only reads as
+  // bending when there's rich background detail to bend FOR COMPARISON,
+  // and what's actually behind the hub is mostly dark void and a few
+  // sparse stars — not enough there to make a bend legible, which is
+  // exactly why that version needed to generate its own visible surface
+  // just to be seen at all. The moment an effect has its own rendered
+  // surface, it's a thing, not a distortion of something else.
   //
-  // First tried on THREE.MeshPhysicalMaterial's stock transmission/IOR
-  // model — the built-in, no-shader path for real refraction, and this
-  // file's usual rule is to avoid custom GLSL entirely (see every other
-  // effect below: vertex colors, per-segment material clones, CanvasTexture
-  // paint, all deliberately chosen over shaders). Checked live: its
-  // automatic backdrop capture didn't render as see-through in this scene's
-  // pipeline — it read as an opaque lit sphere, not a lensing window, even
-  // at an exaggerated ior. A hand-authored shader is the one deliberate
-  // exception on this whole site: true per-pixel bending of the ACTUAL
-  // background based on screen position isn't achievable any other way,
-  // and the brief itself names "shader-based" as an acceptable path for
-  // exactly this reason.
+  // So: nothing new appears near the hub. The lattice struts already
+  // built above (latticeStruts, both the radial spokes and the ring
+  // cross-bracing) just subtly aren't quite solid — real per-frame vertex
+  // displacement on their own existing geometry, not a new mesh laid over
+  // them. addStrut() already gives every strut its own un-shared
+  // CylinderGeometry (see its own comment above latticeStruts), so this
+  // is safe: mutating one strut's position attribute every frame can
+  // never bleed into any other strut, the rings, the mast, or anything
+  // else in the room.
   //
-  // Round 2 of this effect: a single UV offset radiating outward from one
-  // centered point is, BY CONSTRUCTION, radially symmetric no matter how
-  // its strength varies over time — every point's own surface normal on a
-  // sphere points straight out from the same center, so the result reads
-  // as "a clean bubble," flagged directly ("a rando sphere"). Real
-  // gravitational lensing isn't spherically symmetric either — it depends
-  // on mass distribution and viewing geometry, producing asymmetric arcs,
-  // not a tidy ring (a circular Einstein ring is the rare
-  // perfect-alignment special case). Fixed at the actual math, not with
-  // noise layered on top of the same one-center formula: three off-center
-  // "masses," each pulling the sampled UV toward itself with real
-  // point-mass deflection falloff (offset magnitude ∝ 1/distance — the
-  // textbook thin-lens formula, same "real formula over a hand-tuned
-  // curve" standard as the telescope's own chirp math below and the
-  // planet-compression sqrt(AU) elsewhere in this file), summed. Three
-  // independent pulls can't collapse back into one clean radial gradient
-  // the way a single centered term always will.
-  //
-  // Silhouette: also a perfect circle before this pass, however strong
-  // the fill got, since the mesh itself was a plain SphereGeometry — no
-  // amount of internal shader work changes an exactly circular outline.
-  // Displaced with the SAME fbm3/hash3 noise field already built for the
-  // planet bodies above (buildAgedPlanetGeometry) — reused rather than
-  // inventing a second noise system — sampling each vertex's own
-  // normalized direction directly (no UV-correlation trick needed here,
-  // since this mesh carries no texture to keep in sync with).
-  //
-  // Deliberately larger than the solid webHub it surrounds — a lensing
-  // effect confined to the hub's own tiny footprint wouldn't read at
-  // ground-camera distance; sized instead to visibly warp the nearer
-  // lattice threads and the dark skylight opening behind it. (0.62 —
-  // bumped up once live, per the same ground-camera legibility check as
-  // every other effect on this scene.)
-  const LENS_RADIUS = dishR * 0.62;
-  const lensSeed = Math.floor(Math.random() * 1e6);
-  const lensGeo = new THREE.SphereGeometry(LENS_RADIUS, 40, 30);
-  const lensPos = lensGeo.attributes.position;
-  const LENS_RAGGED_FREQ = 2.6, LENS_RAGGED_AMT = 0.24; // TUNABLE: noise frequency / how far the silhouette wanders off a perfect sphere
-  for (let i = 0; i < lensPos.count; i++) {
-    const x = lensPos.getX(i), y = lensPos.getY(i), z = lensPos.getZ(i);
-    const len = Math.hypot(x, y, z) || 1;
-    const nx = x / len, ny = y / len, nz = z / len;
-    const n = fbm3(nx * LENS_RAGGED_FREQ, ny * LENS_RAGGED_FREQ, nz * LENS_RAGGED_FREQ, lensSeed, 4);
-    const r = LENS_RADIUS * (1 + (n - 0.5) * LENS_RAGGED_AMT);
-    lensPos.setXYZ(i, nx * r, ny * r, nz * r);
-  }
-  lensGeo.computeVertexNormals();
-  const lensUniforms = {
-    uBackdrop: { value: null }, // wired up in createOrrery, once the renderer/render-target exist
-    uResolution: { value: new THREE.Vector2(1, 1) },
-    // xy = this mass's current position in the same surface-normal space
-    // vViewNormal.xy lives in; z = its own current pull strength. All
-    // three driven per-frame in animate() — see LENS_MASS_HOMES there.
-    uMass0: { value: new THREE.Vector3(0.4, 0, 0.008) },
-    uMass1: { value: new THREE.Vector3(-0.2, 0.35, 0.008) },
-    uMass2: { value: new THREE.Vector3(-0.2, -0.35, 0.008) },
-    uTint: { value: new THREE.Color(0xfff1d6) },
-  };
-  const lensMat = new THREE.ShaderMaterial({
-    uniforms: lensUniforms,
-    vertexShader: `
-      varying vec3 vViewNormal;
-      void main() {
-        vViewNormal = normalize(normalMatrix * normal);
-        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-      }
-    `,
-    fragmentShader: `
-      uniform sampler2D uBackdrop;
-      uniform vec2 uResolution;
-      uniform vec3 uMass0;
-      uniform vec3 uMass1;
-      uniform vec3 uMass2;
-      uniform vec3 uTint;
-      varying vec3 vViewNormal;
-      // Real point-mass deflection: pull toward the mass, magnitude
-      // inversely proportional to distance (the thin-lens formula) —
-      // d/(dot(d,d)+eps) is that same 1/r falloff written in a form
-      // that's already direction-correct and never divides by exactly
-      // zero, so no separate normalize() call (and no NaN risk at the
-      // mass's own center) is needed.
-      vec2 deflect(vec2 p, vec3 mass) {
-        vec2 d = mass.xy - p;
-        return d * (mass.z / (dot(d, d) + 0.02));
-      }
-      void main() {
-        vec2 p = vViewNormal.xy;
-        vec2 bend = deflect(p, uMass0) + deflect(p, uMass1) + deflect(p, uMass2);
-        vec2 uv = gl_FragCoord.xy / uResolution + bend;
-        vec3 warped = texture2D(uBackdrop, uv).rgb;
-        // A light warm tint, not a full recolor — this should still read
-        // as "a warp of what's really there," not a stained-glass ball.
-        gl_FragColor = vec4(mix(warped, warped * uTint, 0.3), 1.0);
-      }
-    `,
+  // Each strut's own UNDISPLACED position attribute, its own half-length
+  // (how far its local geometry extends from center along its own axis —
+  // read directly off its own vertices rather than re-deriving it from
+  // addStrut's `dist`, so this stays correct even if that call site ever
+  // changes), and a fixed random phase (so 36 struts don't all wobble in
+  // lockstep) are captured once, right here, then only ever READ from in
+  // animate() — same "fixed base state + a deterministic function of the
+  // clock" shape as every other animated geometry in this file (the
+  // planet-body displacement above, the dust motes below), never
+  // per-frame mutation of a running value, so it can't drift or
+  // compound.
+  const ripplers = latticeStruts.map(strut => {
+    const posAttr = strut.geometry.attributes.position;
+    const base = posAttr.array.slice();
+    let halfLen = 0;
+    for (let i = 1; i < base.length; i += 3) halfLen = Math.max(halfLen, Math.abs(base[i]));
+    return { posAttr, base, halfLen: halfLen || 1, phase: Math.random() * Math.PI * 2, freqScale: 0.85 + Math.random() * 0.3 };
   });
-  const lensMesh = new THREE.Mesh(lensGeo, lensMat);
-  lensMesh.position.y = apexY;
-  dishGroup.add(lensMesh);
-  const gravLens = { mesh: lensMesh, uniforms: lensUniforms };
+  const gravLens = { ripplers };
   group.add(dishGroup);
 
   // ─── The nine real planets — order, relative size, and orbital spacing
@@ -2125,24 +2037,6 @@ export function createOrrery(container, { preview = false } = {}) {
   const suspendTopY = rafterY - (preview ? 0.3 : 0.4);
   const orrery = buildOrrery(preview, suspendTopY, rafterY);
 
-  // Backdrop capture for the telescope's gravitational-lensing hub (see
-  // gravLens in buildOrrery) — a snapshot of the scene taken with the lens
-  // mesh hidden, retaken every frame just before the real render (see
-  // animate()), that the lens shader then samples with bent UVs. Half
-  // resolution: the lensing effect only ever needs to read as a soft warp,
-  // never a crisp mirror, and a lower-res source texture buys that
-  // softness for free while halving the cost of this extra render pass.
-  const LENS_RT_SCALE = 0.5; // TUNABLE
-  const lensBackdropRT = new THREE.WebGLRenderTarget(
-    Math.max(1, Math.round(w * LENS_RT_SCALE)),
-    Math.max(1, Math.round(h * LENS_RT_SCALE)),
-  );
-  orrery.gravLens.uniforms.uBackdrop.value = lensBackdropRT.texture;
-  // uResolution must match gl_FragCoord's own space — the actual drawing
-  // buffer (CSS size × devicePixelRatio), not the CSS size itself, or the
-  // bend offset lands at the wrong screen scale on any non-1x display.
-  orrery.gravLens.uniforms.uResolution.value.set(renderer.domElement.width, renderer.domElement.height);
-
   const floorY = orrery.baseY - (preview ? 0.9 : 1.3);
   const warehouse = buildWarehouse(preview, floorY, ceilingY, rafterY);
 
@@ -2635,26 +2529,31 @@ export function createOrrery(container, { preview = false } = {}) {
       }
       dustAttr.needsUpdate = true;
 
-      // The radio telescope's receiving effect — see the "rebuilt around
-      // what this thing actually detects" comment on gravLens in
-      // buildOrrery. Two scales, both riding the SAME uStrength uniform
-      // (how hard the lens shader bends its backdrop sample), so they
-      // read as one continuous phenomenon at different intensities
-      // rather than two separate effects switching on and off:
+      // The radio telescope's receiving effect — see the "round 3: no
+      // rendered object at all" comment on gravLens in buildOrrery. Two
+      // scales, both riding the same ripple amplitude, so they read as one
+      // continuous phenomenon at different intensities rather than two
+      // separate effects switching on and off — but BOTH recalibrated to a
+      // much milder ceiling than the earlier (removed) lensing pass, since
+      // this now perturbs real, already-visible structure instead of
+      // filling a rendered shape: overdo this one and the lattice itself
+      // starts to look broken, not "genuinely warping":
       //  1. Baseline — the continuous, low-level gravitational motion of
       //     the solar system's own bodies (what the found text's "error
       //     tolerance approaching perfection" is actually describing).
       //     Two organicPulse calls at unrelated base frequencies, summed —
       //     the exact layered-frequency math built for the earlier dish
-      //     pulse, repurposed here to drive distortion strength instead
-      //     of brightness, so that work wasn't wasted, just re-pointed.
+      //     pulse and reused again here (a third time now), not a fresh
+      //     bespoke system.
       //  2. Chirp — an occasional merger event (real gravitational-wave
       //     language: two compact objects spiraling together, radiating
       //     faster and louder as they close, cutting off at coalescence).
       //     Scheduled as a deterministic function of real elapsed time (no
       //     random timing, no accumulated state — periodic but rare, same
       //     shape as every other clock-driven effect in this file), riding
-      //     ON TOP of the baseline as a temporary boost, not replacing it.
+      //     ON TOP of the baseline as a temporary boost, not replacing it —
+      //     "something changed" on close attention, not a visual event
+      //     that grabs focus.
       const baseline = organicPulse(t, 0.6) * 0.5 + organicPulse(t, 0.23) * 0.3;
 
       // realSeconds, not t: t is the orrery's own slow orbital clock
@@ -2692,44 +2591,43 @@ export function createOrrery(container, { preview = false } = {}) {
         chirp = envelope * (0.5 + 0.5 * Math.sin(phase));
       }
 
-      // Each mass's own pull (see LENS_MASS_HOMES and the deflect()
-      // formula in buildOrrery's fragment shader) rides the SAME
-      // baseline+chirp schedule as before — kept small even at full chirp
-      // intensity, same "too strong reads as a smear, too weak reads as a
-      // glitch" balance already tuned live — but now also wanders around
-      // its own home point and flexes its own individual strength
-      // independently, so the combined pattern shifts asymmetrically over
-      // time rather than one bubble simply swelling and shrinking.
+      // distortion combines both scales into one amplitude, exactly as the
+      // removed lensing pass did — reusing that same combination shape,
+      // just re-pointed at a real geometric displacement instead of a UV
+      // bend. RIPPLE_AMP's own range is the actual "mild ceiling" this
+      // round calls for: even at distortion's peak (mid-chirp), the
+      // absolute displacement stays a small fraction of a strut's own
+      // length — tuned live to sit at "you might not notice it unless
+      // you're already looking for it," not "obviously animated."
       const distortion = baseline + chirp * 1.4;
-      const massStrength = 0.006 + distortion * 0.013;
-      const uniformKeys = ['uMass0', 'uMass1', 'uMass2'];
-      LENS_MASS_HOMES.forEach((home, i) => {
-        const wanderX = organicPulse(t, home.freqA) - 0.5;
-        const wanderY = organicPulse(t, home.freqB) - 0.5;
-        const mx = home.x + wanderX * 0.22;
-        const my = home.y + wanderY * 0.22;
-        const mStrength = massStrength * (0.65 + organicPulse(t, home.freqA * 1.7) * 0.7);
-        orrery.gravLens.uniforms[uniformKeys[i]].value.set(mx, my, mStrength);
+      const RIPPLE_AMP = 0.0035 + distortion * 0.006; // TUNABLE
+      const RIPPLE_RATE = 0.16; // TUNABLE: carrier oscillation rate, in dustClock units
+      orrery.gravLens.ripplers.forEach(r => {
+        const { posAttr, base, halfLen, phase, freqScale } = r;
+        const timePhaseX = dustClock * RIPPLE_RATE * freqScale + phase;
+        const timePhaseZ = timePhaseX + 1.3; // offset so X/Z don't wobble in the same plane — a slight ellipse, not a flat sway
+        const sx = Math.sin(timePhaseX), sz = Math.sin(timePhaseZ);
+        for (let i = 0; i < base.length; i += 3) {
+          const by = base[i + 1];
+          // Envelope: zero at both of the strut's own endpoints, peak at
+          // its middle — every strut here is welded to a neighbor (or the
+          // hub, or the rim) at both ends, so displacing an endpoint would
+          // visibly pull it loose from whatever it's joined to. Anchoring
+          // the ends and letting only the middle move keeps the whole
+          // lattice's joints intact while it ripples.
+          const t01 = clamp01((by / halfLen + 1) / 2);
+          const envelope = Math.sin(Math.PI * t01);
+          posAttr.array[i]     = base[i]     + envelope * RIPPLE_AMP * sx;
+          posAttr.array[i + 1] = by;
+          posAttr.array[i + 2] = base[i + 2] + envelope * RIPPLE_AMP * sz;
+        }
+        posAttr.needsUpdate = true;
       });
     }
 
     if (!hovered && !selected) {
       orrery.hitTarget.scale.setScalar(1.0 + Math.sin(t * 8) * 0.03);
     }
-
-    // Backdrop capture for the gravitational-lensing hub (see gravLens in
-    // buildOrrery): hide the lens mesh, render everything else from the
-    // real camera into lensBackdropRT, then show it again and do the real
-    // render — the lens shader samples that snapshot with bent UVs, so it
-    // always needs a fresh "what's actually behind me from here" image,
-    // every frame, regardless of reduceMotion (the camera itself can still
-    // move under reduced motion; only the decorative animations above are
-    // gated).
-    orrery.gravLens.mesh.visible = false;
-    renderer.setRenderTarget(lensBackdropRT);
-    renderer.render(scene, camera);
-    renderer.setRenderTarget(null);
-    orrery.gravLens.mesh.visible = true;
 
     renderer.render(scene, camera);
     clippedPreview?.blit();
@@ -2740,8 +2638,6 @@ export function createOrrery(container, { preview = false } = {}) {
     camera.aspect = w / h;
     camera.updateProjectionMatrix();
     renderer.setSize(w, h);
-    lensBackdropRT.setSize(Math.max(1, Math.round(w * LENS_RT_SCALE)), Math.max(1, Math.round(h * LENS_RT_SCALE)));
-    orrery.gravLens.uniforms.uResolution.value.set(renderer.domElement.width, renderer.domElement.height);
     checkTitleHintCollision?.();
   });
 
@@ -2760,7 +2656,6 @@ export function createOrrery(container, { preview = false } = {}) {
       }
       if (audioCtx) { audioCtx.close(); audioCtx = null; }
       renderer.dispose();
-      lensBackdropRT.dispose();
       clippedPreview?.dispose();
       starGeo.dispose();
       starMat.dispose();

@@ -225,6 +225,53 @@ described are unchanged.)
   worth trimming, orrery.js's texture generators and first-person rig are the
   two most self-contained chunks to split out first.
 
+## 2.2.14 (2026-08-09)
+
+**Gravitational lensing: warp the lattice itself, remove the rendered
+mass.** Diagnosis, confirmed live, of why the previous two passes (a
+particle beam, then a lensing patch — first `MeshPhysicalMaterial`
+transmission, then a hand-shaded asymmetric-multi-mass version) all kept
+failing the same way: this scene already has an established visual
+vocabulary for "a small round-ish or irregular thing near the hub" — the
+nine planets, the asteroid-belt rocks — so ANY separate mesh placed there
+gets sorted into that category by the eye, no matter how irregular its
+silhouette or texture. 2.2.13's ragged edge and asymmetric warp didn't
+escape "object," it just changed which kind (asteroid instead of sphere).
+There's a physical reason the lensing version was fighting itself on top of
+that: real lensing only reads as bending when there's rich background
+detail to bend FOR COMPARISON, and what's actually behind the hub is mostly
+dark void and a few sparse stars — not enough there to make a bend legible,
+which is exactly why that version needed to generate its own visible
+surface just to be seen at all.
+
+Fix: remove the rendered object entirely. No mesh, no shader, no generated
+texture, nothing new appears near the hub. Instead, the lattice struts
+already built above (`latticeStruts` — collected from the existing
+`addStrut()` calls, which already gives each strut its own un-shared
+`CylinderGeometry`) get real per-frame vertex displacement: a small
+transverse wobble, enveloped to zero at each strut's own two endpoints
+(peak at the middle) so joints never visibly separate from their
+neighbors, driven by the same `organicPulse` layered-frequency math reused
+a third time now, plus the existing real-linear-chirp merger event on the
+same ~34-second schedule — both recalibrated to a genuinely mild ceiling
+(absolute displacement a small fraction of a strut's own length) rather
+than removed, per the brief's explicit "mildness isn't a tuning parameter,
+it's close to the whole point: a mild rendered object is just a smaller
+object, a mild geometry wobble has no such ceiling." All the render-target
+backdrop-capture plumbing from 2.2.12/2.2.13 (the two-pass hide/capture/
+render, the half-res `WebGLRenderTarget`, its resize/dispose handling) goes
+away with it — this version needs none of it.
+
+Verified live at actual ground-camera distance, including during an active
+chirp window (checked within the first few seconds after page load, when
+the ripple is at its own peak): the lattice reads as a clean, ordinary web
+structure, no glow, no blob, nothing that could be mistaken for a new
+object at any point checked. The wobble itself is intentionally close to
+invisible by design — hard to confirm from a still screenshot the same way
+brighter effects could be; this one is closer to something Scott should
+eyeball live himself than something a compressed automated capture can
+prove either way, similar to the 2.2.8 dust-stream precedent.
+
 ## 2.2.13 (2026-08-09)
 
 **Gravitational lensing: break radial symmetry.** Flagged after live

@@ -1,6 +1,6 @@
 {
   "name": "perceptual-mechanics",
-  "version": "2.2.13",
+  "version": "2.2.14",
   "type": "module",
   "workspaces": [
     "packages/*"
