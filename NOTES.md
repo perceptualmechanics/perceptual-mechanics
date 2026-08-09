@@ -225,6 +225,15 @@ described are unchanged.)
   worth trimming, orrery.js's texture generators and first-person rig are the
   two most self-contained chunks to split out first.
 
+## 2.2.6 (2026-08-09)
+
+**Library catalog fix: Chinatown → Casablanca.** id 67 (bluray shelf, row 1
+col 4 pos 20) was cataloged as Chinatown (Polanski, 1974); Scott asked for it
+to be replaced with Casablanca (Michael Curtiz, 1942, 4K UHD). Credits and
+runtime confirmed against the 2022 80th-anniversary Warner Bros. 4K restoration;
+`scene`/`youtube` point to the "Play it, Sam" piano scene. Content-only change,
+`library.text.js`.
+
 ## 2.2.5 (2026-08-09)
 
 **`#experience-overlay`'s `aria-modal="true"`, made honest — solution #2
