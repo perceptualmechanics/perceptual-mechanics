@@ -225,6 +225,54 @@ described are unchanged.)
   worth trimming, orrery.js's texture generators and first-person rig are the
   two most self-contained chunks to split out first.
 
+## 2.2.18 (2026-08-10)
+
+**Solid resonator: drop the baseline, keep only the strike.** Scott's read
+of the actual working ripple (2.2.17 fixed the geometry bug that had kept
+it motionless): now that it genuinely moves, a permanently-warping lattice
+reads as ambient spacetime distortion happening to the whole scene, not as
+a solid object that occasionally responds to being struck — and a
+resonator's entire physical point is that it sits still until struck.
+Dropped the continuous "solar system's own gravitational hum" baseline
+term entirely (it had been summed with the ring event since 2.2.14). The
+struts now hold their exact built geometry at rest — zero displacement,
+not just small — and the only thing that ever moves them is an actual
+ring event, exactly as often as before (every ~34 real seconds, ringing
+for up to 9s and dying out).
+
+The ring math itself (damped harmonic oscillator, `exp(-decay*u) *
+sin(2*PI*freq*u)`) is unchanged — that was already live-verified against
+its own closed-form prediction in 2.2.15. What changed is where the per-
+strut `phase`/`freqScale` values go: they used to desynchronize the (now-
+removed) baseline carrier; they now desynchronize each strut's own ring
+instead, so different parts of the lattice ring at slightly different
+local frequencies and phases when struck rather than as one perfectly
+rigid unit — physically more right than before, and reuses rather than
+discards the existing per-strut infrastructure.
+
+Also: `webMat`'s `emissiveIntensity` trimmed from 0.5 to 0.38 — the
+lattice is deliberately the one clean, bright, unweathered surface on the
+piece (see the comment where `webMat` is built), but read as a bit too
+contrasted against the rest of the scene. Small adjustment, same design
+intent.
+
+**Verification note:** confirmed the code logic directly (ring's decay
+envelope is exactly zero outside the ~9s window, not just small — the
+lattice is genuinely static the ~74% of the time between events) and
+confirmed visually that the lattice holds a clean, straight silhouette at
+rest. Did not get a fresh live capture of an actual strike event under
+the new per-strut-desynchronized math specifically — the same
+`document.hidden`-while-`hasFocus`-true quirk from 2.2.17 recurred
+(0 debug-hook updates across a 3-second poll), and forcing the automated
+browser tab to a genuinely foregrounded state wasn't achievable this
+round. Leaning on the fact that the underlying ring formula itself was
+already live-verified in 2.2.15 (caught an actual strike, matched the
+closed-form prediction almost exactly) and that this round's change to it
+is a structurally simple one (per-strut frequency/phase substitution, no
+new geometry, no new timing source) — but this is a real gap, not a
+formality, and worth Scott's own eyes on an actual strike next time he's
+looking at it live.
+
 ## 2.2.17 (2026-08-10)
 
 **Found the real bug: the ripple had never moved a single vertex.**

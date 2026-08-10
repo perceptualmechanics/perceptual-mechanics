@@ -643,8 +643,12 @@ function buildOrrery(preview, suspendTopY, rafterY) {
   // planet-body patina above it), full stop, no glow cycle. One shared,
   // unanimated material for every strut in the web — no more per-segment
   // .clone()s, since nothing needs to light independently anymore.
+  // emissiveIntensity trimmed slightly (0.5 -> 0.38, 2.2.18) — still the
+  // one clean, bright, unweathered surface on the piece per the comment
+  // above, just eased back a touch after reading as a bit too contrasted
+  // against the rest of the scene.
   const webMat = new THREE.MeshStandardMaterial({
-    color: 0xd9a862, emissive: 0xffb35c, emissiveIntensity: 0.5, roughness: 0.28, metalness: 0.9,
+    color: 0xd9a862, emissive: 0xffb35c, emissiveIntensity: 0.38, roughness: 0.28, metalness: 0.9,
   });
   const WEB_SPOKES = 9; // TUNABLE: radial threads, apex to rim
   const WEB_RINGS = 3;  // TUNABLE: cross-bracing circles between apex and rim (rim itself counts as the outermost)
@@ -2550,91 +2554,63 @@ export function createOrrery(container, { preview = false } = {}) {
       dustAttr.needsUpdate = true;
 
       // The radio telescope's receiving effect — see the "round 3: no
-      // rendered object at all" comment on gravLens in buildOrrery. Two
-      // scales, both driving the same per-strut wobble, so they read as
-      // one continuous phenomenon at different intensities rather than two
-      // separate effects switching on and off:
-      //  1. Baseline — the continuous, low-level gravitational motion of
-      //     the solar system's own bodies (what the found text's "error
-      //     tolerance approaching perfection" is actually describing).
-      //     Two organicPulse calls at unrelated base frequencies, summed —
-      //     the exact layered-frequency math built for the earlier dish
-      //     pulse and reused again here (a third time now), not a fresh
-      //     bespoke system.
-      //  2. Ring — an occasional distant catastrophic event (black hole or
-      //     neutron star merger). Rewritten from an earlier version that
-      //     modeled the SOURCE's own rising-frequency chirp directly —
-      //     wrong physical object for what this thing actually is. The
-      //     backstory settled since: this is a resonator (tuning-fork/
-      //     crystal-radio-like, same deliberate orbital/orbiter conflation
-      //     as Orbiter elsewhere on the site), not a receiver replaying the
-      //     source's own waveform. A struck resonator doesn't chirp — the
-      //     chirp belongs to the distant event, which this object never
-      //     directly sees. What a struck resonator actually does is
-      //     simpler and doesn't depend on what struck it: it rings at its
-      //     own natural frequency and decays. That's a real, standard
-      //     waveform — a damped harmonic oscillator's impulse response,
-      //     amplitude * exp(-decay*u) * sin(2*PI*freq*u) — not the linear
-      //     chirp this used to be.
-      const baseline = organicPulse(t, 0.6) * 0.5 + organicPulse(t, 0.23) * 0.3;
-
+      // rendered object at all" comment on gravLens in buildOrrery.
+      //
+      // 2.2.18: dropped the always-on baseline layer entirely. Through
+      // 2.2.14-17 this had two scales summed together — a continuous low-
+      // level "solar system's own gravitational hum" plus an occasional
+      // stronger ring event — on the reasoning that they'd read as one
+      // phenomenon at different intensities. Once 2.2.17 actually fixed
+      // the geometry bug that had kept the whole thing motionless, Scott's
+      // read of the real, moving result was that a permanently-warping
+      // lattice reads as ambient spacetime distortion happening TO the
+      // scene, not as a solid object that occasionally responds to being
+      // struck — and a resonator's entire physical point is that it sits
+      // still until struck. So: no baseline term anymore. The struts hold
+      // their exact built geometry at rest; the only thing that ever moves
+      // them is an actual ring event.
+      //
+      // The ring event itself is unchanged in kind — rewritten in 2.2.15
+      // from an earlier version that modeled the SOURCE's own rising-
+      // frequency chirp directly (wrong physical object: this is a
+      // resonator, same deliberate orbital/orbiter conflation as Orbiter
+      // elsewhere on the site, not a receiver replaying the source's own
+      // waveform — a struck resonator doesn't chirp, it rings at its own
+      // natural frequency and decays, regardless of what struck it). That
+      // remains a genuine damped harmonic oscillator's impulse response:
+      // amplitude * exp(-decay*u) * sin(2*PI*freq*u).
+      //
       // realSeconds, not t: t is the orrery's own slow orbital clock
-      // (+0.001/frame, ~0.06/real-second — fine for a baseline that just
-      // needs to breathe gently forever) but a scheduled "every 34
-      // seconds" event needs to mean actual seconds a visitor experiences,
-      // not t's compressed orbital time. now (performance.now(), already
-      // computed above for dt) gives that directly, frame-rate independent.
+      // (+0.001/frame, ~0.06/real-second) but a scheduled "every 34
+      // seconds" event needs to mean actual seconds a visitor experiences.
+      // now (performance.now(), already computed above for dt) gives that
+      // directly, frame-rate independent.
       const realSeconds = now / 1000;
       const RING_PERIOD = 34;     // TUNABLE: real seconds between struck events
       const RING_DECAY = 0.6;     // TUNABLE: how fast the ring dies out (per second)
       const RING_FREQ = 2.6;      // TUNABLE: the resonator's OWN natural frequency (cycles/second) — fixed regardless of what struck it
       const RING_WINDOW = 9;      // TUNABLE: wide enough for RING_DECAY to fully die out; no computation needed past this
       const ringLocal = realSeconds % RING_PERIOD;
-      // A genuine damped sinusoid, not an envelope-times-chirp: the strike
-      // itself is treated as instantaneous (u = seconds since the strike,
-      // no separate rise phase), since a resonator's own ring starts at
-      // its peak the moment it's struck and only ever decays from there.
-      const ring = ringLocal < RING_WINDOW
-        ? Math.exp(-ringLocal * RING_DECAY) * Math.sin(2 * Math.PI * RING_FREQ * ringLocal)
-        : 0;
-
-      // Visibility floor correction, round three — and the real fix this
-      // time. Rounds one and two (2.2.15, 2.2.16) both retuned this
-      // amplitude against on-screen pixel-projection math and both were
-      // wrong to trust it, because the geometry had a structural bug (see
-      // the LATTICE_SEGS comment above, where latticeStruts is built) that
-      // made the actual per-vertex displacement exactly zero regardless of
-      // amplitude — confirmed by reading the mutated position buffer
-      // directly and finding the displaced-minus-base delta was ~1e-18,
-      // float noise, not motion. Every amplitude number shipped in those
-      // two rounds was tuned against an effect that had never moved a
-      // single vertex. With LATTICE_SEGS now giving each strut real
-      // interior vertices, the SAME 2.2.16 constants (0.04 baseline peak,
-      // 0.2 ring peak) produced real motion for the first time — and it
-      // was too much: at those magnitudes the lattice reads as visibly
-      // bent/kinked even in a single still frame, not as a strut wobbling,
-      // because a lateral displacement that's a large fraction of the
-      // strut's own half-length breaks the eye's sense of "this is a
-      // straight line" long before it needs to move very far in absolute
-      // pixels — a straight-line kink is far more perceptible than an
-      // equivalent-sized displacement of something without a straight
-      // edge to break. Backed off to a level that stayed visibly straight
-      // in every captured frame at typical baseline values, with the ring
-      // event's peak kept low enough that baseline-plus-ring together
-      // still doesn't reach the magnitude that read as broken.
-      const BASE_AMP = 0.02 + baseline * 0.025; // TUNABLE
-      const RING_AMP = 0.045; // TUNABLE: peak contribution right at the strike, riding `ring`'s own decay
-      const RIPPLE_RATE = 0.16; // TUNABLE: baseline carrier oscillation rate, in dustClock units
+      // Shared decay envelope: the whole lattice was struck by the same
+      // distant event at the same instant, so every strut's ring dies out
+      // on the same real-time schedule. Zero (not just small) outside the
+      // window — this is what makes the resonator genuinely solid and
+      // unmoving between events, not just quiet.
+      const ringDecay = ringLocal < RING_WINDOW ? Math.exp(-ringLocal * RING_DECAY) : 0;
+      const RING_AMP = 0.045; // TUNABLE: peak contribution right at the strike, riding `ringDecay`
       orrery.gravLens.ripplers.forEach(r => {
         const { posAttr, base, halfLen, phase, freqScale } = r;
-        const timePhaseX = dustClock * RIPPLE_RATE * freqScale + phase;
-        const timePhaseZ = timePhaseX + 1.3; // offset so X/Z don't wobble in the same plane — a slight ellipse, not a flat sway
-        // Baseline (slow hum) and ring (fast decaying strike) are summed,
-        // not multiplied — two real, independent contributions to the same
-        // displacement, same as how an actual struck object's motion would
-        // combine its own resting vibration with a fresh impulse response.
-        const dx = Math.sin(timePhaseX) * BASE_AMP + ring * RING_AMP;
-        const dz = Math.sin(timePhaseZ) * BASE_AMP + ring * RING_AMP * 0.8;
+        // freqScale/phase were built to desynchronize a continuous
+        // baseline carrier (2.2.14-17); with that carrier gone, they now
+        // desynchronize each strut's own ring instead — same reuse-not-
+        // rebuild rule as everywhere else in this driver. Different parts
+        // of a real struck object ring in slightly different local modes,
+        // not as one perfectly rigid unit, so this is more physically
+        // right than before, not just a repurposed leftover.
+        const ringPhaseX = 2 * Math.PI * RING_FREQ * freqScale * ringLocal + phase;
+        const ringPhaseZ = ringPhaseX + 1.3; // offset so X/Z don't ring in the same plane — a slight ellipse, not a flat sway
+        const dx = ringDecay * Math.sin(ringPhaseX) * RING_AMP;
+        const dz = ringDecay * Math.sin(ringPhaseZ) * RING_AMP * 0.8;
         for (let i = 0; i < base.length; i += 3) {
           const by = base[i + 1];
           // Envelope: zero at both of the strut's own endpoints, peak at
