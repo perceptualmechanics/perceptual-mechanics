@@ -225,6 +225,31 @@ described are unchanged.)
   worth trimming, orrery.js's texture generators and first-person rig are the
   two most self-contained chunks to split out first.
 
+## 2.2.16 (2026-08-10)
+
+**Ripple bumped again: 2.2.15 was still too faint.** Scott's live read after
+2.2.15: the calibration fix was real (the effect went from provably-invisible
+to provably-present) but the actual chosen ceiling — ~4-5px baseline, ~15px
+ring peak, deliberately conservative to stay on the safe side of "faintly
+noticeable" — undershot in practice. Raised `BASE_AMP` from `0.018 +
+baseline*0.022` to `0.04 + baseline*0.045` and `RING_AMP` from `0.11` to
+`0.2`: roughly 2x, using the same pixel-projection math validated in 2.2.15
+(predicted vs. live-measured ring curve matched to three decimal places
+that round) — projects to roughly 6-13px baseline and ~27-31px at the ring
+peak at the same ~8.96-unit camera distance, 54° FOV, 1318px viewport used
+last round.
+
+**Not live-verified this round** — the Chrome browser automation extension
+was disconnected for the whole of this pass (repeated connection attempts
+all failed the same way, not a one-off blip), so unlike every other round
+this session, this one shipped on the math alone: confirmed via `grep` that
+the temporary debug-hook code was fully removed again, and via a clean
+`npx vite build`, but there was no live pixel-on-screen or live-sampled-
+curve confirmation the way 2.2.14 and 2.2.15 got. Worth an actual live
+check next time Chrome's reachable, or Scott's own eyeball, before treating
+this number as final — the 2.2.15 entry is the template for what that
+check should look like if the automation path is unavailable again.
+
 ## 2.2.15 (2026-08-09)
 
 **Ripple was invisible: calibration, not a bug — plus a waveform

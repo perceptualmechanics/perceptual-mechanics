@@ -2578,22 +2578,22 @@ export function createOrrery(container, { preview = false } = {}) {
         ? Math.exp(-ringLocal * RING_DECAY) * Math.sin(2 * Math.PI * RING_FREQ * ringLocal)
         : 0;
 
-      // Visibility floor correction: the previous constants (roughly
-      // 0.0035-0.0083 baseline) were sized relative to a strut's own
-      // length, which turned out to be the wrong yardstick — at the
-      // camera's actual real-world distance from the mast peak (~9 units
-      // at a typical standing position), that absolute displacement
-      // projects to well under a screen pixel, reading as literally
-      // nothing rather than "mild." Confirmed live as a calibration
-      // problem, not a broken effect — the code was firing every frame the
-      // whole time. Retuned against on-screen pixel size at that distance,
-      // not strut length: BASE_AMP now lands a couple of screen pixels at
-      // a normal standing distance (faintly noticeable if you're looking
-      // for it), RING_AMP peaks a few times stronger (genuinely
-      // distinguishable on close attention, still short of an event that
-      // grabs focus).
-      const BASE_AMP = 0.018 + baseline * 0.022; // TUNABLE
-      const RING_AMP = 0.11; // TUNABLE: peak contribution right at the strike, riding `ring`'s own decay
+      // Visibility floor correction, round two: round one retuned against
+      // on-screen pixel size at the camera's actual real-world distance
+      // from the mast peak (~9 units at a typical standing position) —
+      // correct fix for the underlying calibration bug (absolute
+      // world-unit displacement sized against strut length instead of
+      // viewing distance, projecting to sub-pixel and reading as nothing),
+      // but landed too conservative once actually visible: ~4-5px baseline
+      // read as "faintly noticeable" on paper but still too faint in
+      // practice. Bumped further — still the same pixel-projection
+      // reasoning, just aimed at a clearly-visible ceiling instead of a
+      // barely-crossed-the-threshold one: baseline now lands roughly
+      // 6-13px at that same distance, RING_AMP roughly 30px at the strike
+      // peak — a wobble you'd notice without hunting for it, and an event
+      // that reads as a distinct, obvious pulse.
+      const BASE_AMP = 0.04 + baseline * 0.045; // TUNABLE
+      const RING_AMP = 0.2; // TUNABLE: peak contribution right at the strike, riding `ring`'s own decay
       const RIPPLE_RATE = 0.16; // TUNABLE: baseline carrier oscillation rate, in dustClock units
       orrery.gravLens.ripplers.forEach(r => {
         const { posAttr, base, halfLen, phase, freqScale } = r;
