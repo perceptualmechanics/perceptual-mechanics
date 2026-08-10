@@ -225,6 +225,129 @@ described are unchanged.)
   worth trimming, orrery.js's texture generators and first-person rig are the
   two most self-contained chunks to split out first.
 
+## 2.2.22 (2026-08-10)
+
+**Real Keplerian motion for the orrery's planets, replacing randomized
+placement — the orrery never stopped running, nobody was there to see it,
+but time kept passing. Same premise as the telescope resonator's "still
+on," now applied to the planets.** Position is a deterministic function of
+real wall-clock time, not time-since-page-load: `orreryNowMs()` reads
+`Date.now()` every frame, so reloading the page doesn't reset anything and
+two visits at genuinely different real moments show genuinely different
+configurations. This is the one requirement flagged first and most firmly
+in the brief, so it's called out first here too — it's also the one that's
+hardest to see wrong by accident, since a session-time bug looks identical
+to a correct build across any single test session and only shows up across
+separate real visits.
+
+**The math.** Mean anomaly grows linearly in real time, `M(t) = M₀ +
+2π·t/T`; Kepler's equation `M = E − e·sin(E)` is solved for the eccentric
+anomaly `E` via 6 Newton iterations from a starting guess of `E₀ = M`
+(`solveEccentricAnomaly`, converges in 3-5 for every eccentricity actually
+in use here, 6 kept as a safety margin); orbital-plane position comes from
+`x = a(cosE − e)`, `y = a√(1−e²)·sinE` (`keplerOrbitPosition`) rather than
+going through true anomaly, avoiding trig-branch issues. Kepler's second
+law (equal areas in equal times) isn't separately authored anywhere — it
+falls straight out of solving the equation correctly, confirmed live (see
+Verification below) by sampling equal real-time steps around Mercury's
+orbit and checking the swept area stays constant while the swept angle
+varies 2x between perihelion and aphelion. Kepler's third law is applied
+the same way: `periodYears = a^1.5` (the standard solar-mass-normalized
+convention, Earth = 1 year at 1 AU exactly) rather than periods being
+picked independently — semi-major axes reuse the existing `PLANET_DATA[i].au`
+field already used for the compressed ring radius, rather than adding a
+second, slightly-different `a` (per the file's own standing rule against
+two copies of the same fact drifting apart).
+
+**Time scaling.** One global constant, `SECONDS_PER_VISUAL_YEAR = 250`,
+multiplies real elapsed seconds into "visual years" before it ever reaches
+the orbital math — a uniform scalar, so it preserves T²∝a³ exactly (chosen
+so Mercury's real ~0.24-year period compresses to ~61 real seconds,
+roughly matching the previous system's pacing). Real J2000.0 orbital
+elements (semi-major axis, eccentricity, mean longitude, longitude of
+perihelion) were sourced for all 9 bodies via low-precision planetary
+elements; mean anomaly at epoch computed as `M₀ = L − ϖ`. **Deliberate
+choice, made rather than defaulted into: real eccentricities are kept
+as-is, not exaggerated.** Most planets' orbits really are nearly circular,
+and that's worth showing honestly — Mercury (e≈0.206) and Pluto (e≈0.249),
+the two most eccentric, are also conveniently the innermost and outermost
+rings, so real physics alone delivers visible variety without needing to
+fudge numbers for legibility. Bonus, not a separate requirement: real
+orbital periods have no small-integer ratios to each other, so the
+long-term configuration doesn't repeat on any short cycle — the same
+non-repeating quality the resonator's eigenmodes and organicPulse already
+lean on elsewhere in this file, arrived at here as a natural consequence of
+using real data rather than something separately imposed.
+
+**Moons — same math, applied recursively.** A moon is a child of its
+planet's own `bodyGroup`, so its Kepler position is computed relative to
+whatever local origin that group currently has — no separate system, and
+no explicit "add the planet's position" step needed, exactly as specified.
+There's no real per-moon orbital-element data at this scale of a
+solar-system overview, so each moon gets a fixed, documented illustrative
+eccentricity (`MOON_E = 0.06`) and a deterministic (not random) initial
+phase spread across siblings by the golden angle (~137.5°) rather than
+`Math.random()` — the previous per-session-random moon speed was itself a
+small instance of the same session-time bug the brief warned about for
+planets. Each moon's period is still derived from its own orbital radius
+via `T ∝ r^1.5` off a tunable `MOON_PERIOD_BASE_SECONDS = 6` (the
+innermost moon's real-time period), so a farther moon around the same
+planet genuinely moves slower — the third law applied one level down, not
+re-authored from scratch.
+
+**What changed mechanically.** The old system rotated a fixed-offset
+`pivot` a little further every frame (`pivot.rotation.y += speed *
+direction * 0.01`) — a per-frame accumulation keyed to how many frames had
+run, which is exactly the "time-since-load, not wall-clock" failure mode
+the brief called out. `pivot` now only ever carries the ring's fixed tilt;
+a new `bodyGroup`-and-moon-pivot position/rotation is set fresh from the
+clock every frame by `applyKeplerPosition`, replicating the old visual
+behavior exactly (mounting arm along local −X always pointing back toward
+the orbit center) by moving the rotation responsibility from parent to
+self so it can be recomputed rather than integrated. The asteroid belt (out
+of scope for this pass, unchanged) reads an averaged `speed` field off two
+planets' orbit records for its own drift rate; that field is preserved,
+now derived from the real mean angular velocity (`2π /
+(periodYears·SECONDS_PER_VISUAL_YEAR) / 0.6`, matching the old unit
+convention) rather than the old hand-tuned legibility compromise — the
+belt inherits genuine physics as a side effect, not a break.
+
+**The fast-forward hook stays in the shipped code, not stripped.** The
+brief explicitly asked for a way to test elliptical motion and long-term
+configuration change without waiting for real months to pass, so
+`orreryNowMs()` checks `window.__orreryTimeOverrideMs` (a `number`) before
+falling back to `Date.now()` — this one is permanent by design, unlike the
+temporary `__orreryDebug` hooks used elsewhere in this file's history,
+which were added and removed for this round the same as always.
+
+**Verification.** Real time barely moves between two quick reloads, so
+rapid-reload testing can't demonstrate this the way it can for other
+features — used the override hook instead, plus a from-scratch Node
+replica of the exact same formulas checked first (perihelion/aphelion
+distances match `a(1∓e)` to 6 decimal places; swept-area ratio between
+perihelion and aphelion sample windows came out to 1.0000035, i.e. Kepler's
+second law holding without being separately coded). Then confirmed live
+against the actual running scene (not just the Node replica) via a
+temporary debug hook exposing `orreryNowMs`/`applyKeplerPosition`/
+`keplerOrbitPosition`/the live `orbits` array: sampled Mercury's position at
+13 equal real-time steps across one full period directly from the live
+orbit record — angular deltas ranged 20.3°-45.6° between perihelion and
+aphelion (not constant, confirming elliptical motion is really wired
+end-to-end, not just correct in isolation); confirmed `window
+.__orreryTimeOverrideMs` is actually read by the live `orreryNowMs()`;
+force-rendered the scene at real-now and again at real-now + 5,000,000ms
+(80 visual years) and screenshotted both — inner planets visibly shifted
+position, outer planets barely moved, consistent with real differential
+orbital speed; confirmed a moon's local position relative to its parent's
+`bodyGroup` matches its own orbital elements (recursive parenting
+verified, not just asserted). Chrome tab was backgrounded
+(`document.hidden: true`) for this whole check, so the rAF loop itself
+never ran during verification — all of the above drove the production
+functions directly and forced explicit `renderer.render()` calls, the same
+workaround this file has used since 2.2.16 for the same reason. Debug hook
+removed and confirmed clean by grep before commit; `npx vite build`
+succeeded before and after hook removal.
+
 ## 2.2.21 (2026-08-10)
 
 **Tone both down a touch.** `IMPULSE_STRENGTH` 0.7 -> 0.55, `BASELINE_AMP`

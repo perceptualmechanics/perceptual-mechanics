@@ -51,16 +51,27 @@ import { ORRERY } from './orrery.text.js';
 // sqrtAU/sqrtDia compression below), is how those real ratios get
 // squeezed down to fit one small room — the underlying numbers
 // themselves are just the actual solar system.
+// e (orbital eccentricity) and m0Deg (mean anomaly at the J2000.0 epoch,
+// in degrees) are real values — JPL/Meeus low-precision elements, mean
+// anomaly derived as M0 = L - ϖ (mean longitude minus longitude of
+// perihelion) at J2000. Used by buildOrrery's Keplerian orbit math (see
+// keplerOrbitPosition) — real eccentricities kept as-is rather than
+// exaggerated for legibility (see that comment for the reasoning): most
+// planets' orbits really are nearly circular, and that's worth showing
+// honestly rather than papering over; Mercury and Pluto (also,
+// conveniently, the innermost and outermost rings) are eccentric enough
+// in reality to read clearly at a glance, which is real physics doing the
+// work of visual variety on its own, not something added for effect.
 const PLANET_DATA = [
-  { name: 'Mercury', color: 0xe0447a, au: 0.39, relDiameter: 0.38, moons: [] },
-  { name: 'Venus',   color: 0x9974c9, au: 0.72, relDiameter: 0.95, moons: [] },
-  { name: 'Earth',   color: 0x35c4d4, au: 1.00, relDiameter: 1.00, moons: [{ relSize: 0.27 }] },
-  { name: 'Mars',    color: 0xe35440, au: 1.52, relDiameter: 0.53, moons: [{ relSize: 0.06 }, { relSize: 0.04 }] },
-  { name: 'Jupiter', color: 0xf0821f, au: 5.20, relDiameter: 11.2, moons: [{ relSize: 0.09 }, { relSize: 0.08 }, { relSize: 0.13 }, { relSize: 0.12 }] },
-  { name: 'Saturn',  color: 0xf0c020, au: 9.54, relDiameter: 9.45, moons: [{ relSize: 0.12 }], ring: true },
-  { name: 'Uranus',  color: 0xa8cc32, au: 19.2, relDiameter: 4.0,  moons: [{ relSize: 0.03 }] },
-  { name: 'Neptune', color: 0xa8a284, au: 30.1, relDiameter: 3.88, moons: [{ relSize: 0.03 }] },
-  { name: 'Pluto',   color: 0xd9d0ba, au: 39.5, relDiameter: 0.18, moons: [{ relSize: 0.5 }] },
+  { name: 'Mercury', color: 0xe0447a, au: 0.39, relDiameter: 0.38, moons: [], e: 0.2056, m0Deg: 174.79 },
+  { name: 'Venus',   color: 0x9974c9, au: 0.72, relDiameter: 0.95, moons: [], e: 0.0068, m0Deg: 50.45 },
+  { name: 'Earth',   color: 0x35c4d4, au: 1.00, relDiameter: 1.00, moons: [{ relSize: 0.27 }], e: 0.0167, m0Deg: 357.52 },
+  { name: 'Mars',    color: 0xe35440, au: 1.52, relDiameter: 0.53, moons: [{ relSize: 0.06 }, { relSize: 0.04 }], e: 0.0934, m0Deg: 19.41 },
+  { name: 'Jupiter', color: 0xf0821f, au: 5.20, relDiameter: 11.2, moons: [{ relSize: 0.09 }, { relSize: 0.08 }, { relSize: 0.13 }, { relSize: 0.12 }], e: 0.0484, m0Deg: 19.65 },
+  { name: 'Saturn',  color: 0xf0c020, au: 9.54, relDiameter: 9.45, moons: [{ relSize: 0.12 }], ring: true, e: 0.0542, m0Deg: 317.51 },
+  { name: 'Uranus',  color: 0xa8cc32, au: 19.2, relDiameter: 4.0,  moons: [{ relSize: 0.03 }], e: 0.0472, m0Deg: 142.27 },
+  { name: 'Neptune', color: 0xa8a284, au: 30.1, relDiameter: 3.88, moons: [{ relSize: 0.03 }], e: 0.0086, m0Deg: 259.91 },
+  { name: 'Pluto',   color: 0xd9d0ba, au: 39.5, relDiameter: 0.18, moons: [{ relSize: 0.5 }], e: 0.2488, m0Deg: 14.86 },
 ];
 
 // ─── Weathered-metal textures — canvas, not image assets, same rule as
@@ -288,6 +299,132 @@ function organicPulse(clock, freq = 1) {
   const c = Math.sin(clock * freq * Math.SQRT2 * 1.3 + 4.1);
   return (a * 0.5 + b * 0.32 + c * 0.18 + 1) / 2; // weights sum to 1, so the raw sum stays in [-1,1]
 }
+
+// ─── Real Keplerian orbital motion for the orrery's planets and moons ───
+// (2.2.22). The orrery never stopped running — nobody was there to see
+// it, but time kept passing — so a visit should show wherever the real
+// mechanism has actually gotten to by now, not a reshuffled arrangement.
+// That requires position to be a function of actual wall-clock time
+// (Date.now(), real milliseconds since the Unix epoch), never
+// performance.now() or any per-frame accumulated value: session time
+// resets on every reload, so a position keyed to it would always start
+// from the same configuration and the bug would be invisible within any
+// single test session — it would only ever show up across genuinely
+// separate visits, exactly the kind of mistake this is easy to make and
+// hard to catch. orreryNowMs() is the one place that decision gets made;
+// everything else in this section takes a `nowMs` parameter rather than
+// calling Date.now() itself, so there's exactly one seam to check.
+//
+// __orreryTimeOverrideMs lets testing fast-forward or jump to an
+// arbitrary date without waiting for real time to pass (set it from the
+// console, e.g. `window.__orreryTimeOverrideMs = Date.now() + 86400000*30`
+// to preview 30 days out) — the verification method this feature
+// explicitly needs, since reloading twice in a row barely moves real time
+// at all. Left in permanently (not stripped before shipping): harmless
+// when unset, useful for real debugging later, and it's the only way
+// anyone can practically confirm the elliptical shape or long-term
+// configuration changes without waiting for actual months to pass.
+function orreryNowMs() {
+  return (typeof window !== 'undefined' && typeof window.__orreryTimeOverrideMs === 'number')
+    ? window.__orreryTimeOverrideMs
+    : Date.now();
+}
+
+const J2000_EPOCH_MS = Date.UTC(2000, 0, 1, 12, 0, 0); // J2000.0 — the standard epoch PLANET_DATA's m0Deg values are anchored to
+// TUNABLE: real orbital periods span ~0.24 years (Mercury) to ~248 years
+// (Pluto) — direct real time would make Mercury take 88 real days per
+// orbit and Pluto effectively motionless for any viewing session. One
+// global multiplier compresses this onto a human-watchable timescale
+// without disturbing Kepler's third law at all (uniform scaling preserves
+// ratios exactly, so T^2 ∝ a^3 stays exactly true in compressed time too)
+// — 250 real seconds per "visual year" lands Mercury's orbit around a
+// minute (close to this scene's earlier hand-tuned pacing) while Pluto's
+// takes several real hours, the same roughly 1030x real ratio between
+// them, not a stylized approximation of it.
+const SECONDS_PER_VISUAL_YEAR = 250;
+
+function normalizeAngle(a) {
+  const twoPi = Math.PI * 2;
+  return ((a % twoPi) + twoPi) % twoPi;
+}
+
+// Solves Kepler's equation M = E - e*sin(E) for the eccentric anomaly E
+// via Newton's method (starting guess E0 = M, per the standard textbook
+// approach — converges in a handful of iterations for realistic orbital
+// eccentricities; 6 iterations here is a safety margin over the 3-5 that
+// are typically sufficient, still trivially cheap).
+function solveEccentricAnomaly(M, e) {
+  let E = M;
+  for (let i = 0; i < 6; i++) {
+    E -= (E - e * Math.sin(E) - M) / (1 - e * Math.cos(E));
+  }
+  return E;
+}
+
+// A single shared function for both planets (real au/e/m0Deg data) and
+// moons (small fixed illustrative e, deterministic spread of m0 — see the
+// moon-building comment in buildOrrery for why no real per-moon data is
+// used) — the physics is identical at either scale, which is exactly the
+// "same math, applied recursively" the brief asked for. `orbit.a` and
+// `orbit.screenRadius` can be in any consistent units (real AU for
+// planets, already-compressed screen units for moons): what actually
+// drives the returned screen radius is the dimensionless ratio
+// rReal/orbit.a, which is scale-invariant by construction.
+//
+// Returns { rScreen, angle }: angle is the true anomaly (0 at perihelion,
+// increasing in the direction of real orbital motion), and rScreen is the
+// body's current screen-space distance from its orbit's center — this is
+// what makes the motion genuinely elliptical rather than a circular
+// approximation: rScreen oscillates between orbit.screenRadius*(1-e) and
+// orbit.screenRadius*(1+e) over one full period, exactly the same
+// fractional variation the real orbit has, applied to the (sqrt-
+// compressed, for planets) baseline radius already established elsewhere
+// in this file for unrelated spacing reasons.
+function keplerOrbitPosition(orbit, nowMs) {
+  const visualYears = (nowMs - J2000_EPOCH_MS) / 1000 / SECONDS_PER_VISUAL_YEAR;
+  const M = normalizeAngle(orbit.m0 + (2 * Math.PI * visualYears) / orbit.periodYears);
+  const E = solveEccentricAnomaly(M, orbit.e);
+  // x = a(cosE - e), y = a*sqrt(1-e^2)*sinE — the orbital-plane position
+  // this form gives directly (no separate true-anomaly trig-branch
+  // handling needed); rReal = distance from the focus = a(1 - e*cosE),
+  // and atan2 of the same two components gives the true anomaly for the
+  // angle. This automatically satisfies Kepler's second law (equal areas
+  // in equal times — faster near perihelion, slower near aphelion): that
+  // speed variation isn't authored anywhere, it falls straight out of
+  // solving the equation.
+  const rReal = orbit.a * (1 - orbit.e * Math.cos(E));
+  const angle = Math.atan2(Math.sqrt(1 - orbit.e * orbit.e) * Math.sin(E), Math.cos(E) - orbit.e);
+  return { rScreen: orbit.screenRadius * (rReal / orbit.a), angle };
+}
+
+// Positions a body (already time-varying via keplerOrbitPosition) within
+// its own orbit's local X/Z plane, and rotates it to match — replicating
+// exactly what the old "rotate a fixed-offset pivot every frame" approach
+// produced (the mounting arm, built along local -X, always pointing back
+// toward the orbit's own center), just computed directly instead of
+// accumulated: bodyGroup.rotation.y = angle applied to a
+// (rScreen, 0, 0)-relative offset is mathematically identical to the old
+// parent-pivot-rotation scheme, with the rotation moved from parent to
+// self so it can be set fresh from the clock every frame rather than
+// integrated.
+function applyKeplerPosition(mesh, orbit, nowMs) {
+  const { rScreen, angle } = keplerOrbitPosition(orbit, nowMs);
+  mesh.position.set(rScreen * Math.cos(angle), 0, -rScreen * Math.sin(angle));
+  mesh.rotation.y = angle;
+}
+
+// Moons have no real per-body orbital-element data at this scale, so their
+// Kepler inputs are fixed, deliberately-illustrative constants rather than
+// sourced values (see the moons.map comment in buildOrrery for the full
+// reasoning): a small, gently-visible eccentricity; a real-time period for
+// the innermost moon of each planet that further moons then scale up from
+// via T ∝ r^1.5 (Kepler's third law, applied recursively); and a
+// deterministic (not random) per-moon initial phase spread by the golden
+// angle, so multiple moons around one planet never land in a repeating or
+// coincidentally-aligned arrangement.
+const MOON_E = 0.06;
+const MOON_PERIOD_BASE_SECONDS = 6;
+const MOON_GOLDEN_ANGLE = 2.399963229; // radians, ~137.5°
 
 // (u, v) -> the point on the unit sphere that (u, v) addresses. Used
 // identically by buildAgedPlanetGeometry and makeAgedPlanetTextures
@@ -888,6 +1025,12 @@ function buildOrrery(preview, suspendTopY, rafterY) {
   const diaMin = Math.min(...sqrtDia), diaMax = Math.max(...sqrtDia);
   const innerR = (preview ? 0.55 : 0.6) * SR, outerR = (preview ? 2.1 : 3.7) * SR; // TUNABLE screen-space band the compressed orbits get mapped into — widen the gap for more visual separation between rings
   const minSize = (preview ? 0.018 : 0.024) * SS, maxSize = (preview ? 0.065 : 0.09) * SS; // TUNABLE screen-space band for compressed planet sizes, same idea
+  // Read wall-clock time exactly once for the whole build, so every body's
+  // initial (pre-first-frame) position reflects the same instant — matters
+  // for reduced-motion visitors, who never reach the animate() loop's own
+  // per-frame orreryNowMs() call, and for the very first rendered frame
+  // before animate() has run at all.
+  const buildNowMs = orreryNowMs();
 
   const orbits = [];
   const TILT_BASE = 0.52;
@@ -933,8 +1076,12 @@ function buildOrrery(preview, suspendTopY, rafterY) {
     pivot.position.y = yOffset;
     group.add(pivot);
 
+    // bodyGroup no longer sits at a fixed local offset with its PARENT
+    // pivot rotating every frame — see the Keplerian-motion comment above
+    // organicPulse. It's positioned directly, every frame, by
+    // applyKeplerPosition below; pivot now only ever carries the fixed
+    // ring tilt.
     const bodyGroup = new THREE.Group();
-    bodyGroup.position.x = radius;
     pivot.add(bodyGroup);
     // seedH fixes ONE aging field for this body — see the "Planet-body
     // aging" block above buildAgedPlanetGeometry — reused for both its
@@ -984,46 +1131,84 @@ function buildOrrery(preview, suspendTopY, rafterY) {
       bodyGroup.add(satRing);
     }
 
+    // Moons now get the same real Kepler treatment as planets (see the
+    // comment block above organicPulse) applied recursively: each moon's
+    // orbit is computed around bodyGroup's own current (moving) position,
+    // simply by being a child of bodyGroup — no separate system needed,
+    // exactly as specified. There's no real per-moon orbital-element data
+    // at this level of a solar-system overview the way there is for the
+    // planets themselves, so eccentricity and initial phase are fixed,
+    // deliberately-documented illustrative choices rather than sourced
+    // values: MOON_E is a small constant (a gentle, visible-but-not-wild
+    // ellipse) and each moon's initial mean anomaly is spread by the
+    // golden angle (~137.5°) per index — deterministic and non-repeating
+    // across moons, not random, so it's still "same visit, same
+    // configuration" like everything else here. Each moon's PERIOD still
+    // obeys Kepler's third law relative to its own orbital radius
+    // (T ∝ r^1.5), so a moon further from its planet genuinely moves
+    // slower than one closer in, the same relationship the planets have
+    // to the sun — just anchored to MOON_PERIOD_BASE_SECONDS (the
+    // innermost moon's real-time period) instead of Earth's.
     const moons = planet.moons.map((moon, mi) => {
       const moonPivot = new THREE.Object3D();
       bodyGroup.add(moonPivot);
       const moonSize = Math.max(0.006 * HW, size * moon.relSize * (preview ? 0.8 : 1));
       const moonGeo = new THREE.SphereGeometry(moonSize, 8, 8);
       const moonMesh = new THREE.Mesh(moonGeo, bronzeMat);
-      moonMesh.position.x = size * 1.8 + mi * (size * 0.9 + 0.012 * HW);
       moonPivot.add(moonMesh);
-      // Moon orbital speed: no physical model here, just "faster than the
-      // planet, and each successive moon a bit faster still" (mi * 0.1) —
-      // hand-tuned for a pleasing spin rate, not derived from moon.relSize
-      // or distance. TUNABLE: all three constants freely.
-      return { pivot: moonPivot, speed: 0.6 + Math.random() * 0.4 + mi * 0.1 };
+      const moonRadius = size * 1.8 + mi * (size * 0.9 + 0.012 * HW);
+      const baseMoonRadius = size * 1.8; // mi === 0 case, defines the base period
+      const moonPeriodYears =
+        (MOON_PERIOD_BASE_SECONDS * Math.pow(moonRadius / baseMoonRadius, 1.5)) /
+        SECONDS_PER_VISUAL_YEAR;
+      const moonOrbit = {
+        a: moonRadius,
+        e: MOON_E,
+        m0: mi * MOON_GOLDEN_ANGLE,
+        periodYears: moonPeriodYears,
+        screenRadius: moonRadius,
+      };
+      applyKeplerPosition(moonPivot, moonOrbit, buildNowMs);
+      return { pivot: moonPivot, orbit: moonOrbit };
     });
 
-    // Worth being precise about what IS and ISN'T real celestial mechanics
-    // here: the orbital SPACING and body SIZE above are drawn from actual
-    // solar-system data (au, relDiameter), compressed but order-preserving
-    // — genuine. This speed formula is NOT Kepler's third law (period² ∝
-    // semi-major-axis³, i.e. angular speed ∝ 1/au^1.5) — under real
-    // physics Pluto would complete roughly 1/1020th of an orbit in the
-    // time Mercury completes one whole one, which would render as
-    // motionless for any viewing session. Instead this decreases speed
-    // LINEARLY with orbital index i (outer planets simply move somewhat
-    // slower than inner ones, in a fixed ratio by position, not by the
-    // real cube of their distance) — a deliberate legibility choice: it
-    // keeps every ring's motion visible within a normal viewing window
-    // while still preserving the correct RELATIVE ordering (inner
-    // planets visibly outpace outer ones), which is the property that
-    // actually matters for this to read as "an orrery," not the exact
-    // physical ratio. TUNABLE: 0.16 (Mercury's own speed) and the 0.7
-    // factor (how much slower Pluto ends up, as a fraction of Mercury's
-    // speed) both reshape the spread between fastest and slowest ring;
-    // the trailing `+ Math.random() * 0.012` jitter keeps rings from
-    // ever landing on the exact same phase relationship every visit.
-    orbits.push({
-      pivot, moons,
-      speed: 0.16 - i * (0.16 / planets.length) * 0.7 + Math.random() * 0.012,
+    // Real Kepler orbital elements, sourced from J2000.0 low-precision
+    // planetary elements (see the PLANET_DATA comment for the source and
+    // the deliberate real-vs-exaggerated-eccentricity decision). `a` reuses
+    // the same planet.au already used for the ring's screen-space radius
+    // above — one number, not two slightly-different copies of the same
+    // fact. `periodYears` is derived from `a` via Kepler's third law
+    // (T² ∝ a³, so T = a^1.5 when a is in AU and T is in years — the
+    // standard solar-mass-normalized convention where Earth's own period
+    // is exactly 1 at a = 1 AU) rather than being independently authored,
+    // per the brief. `screenRadius` is the already-computed, compressed
+    // ring radius — keplerOrbitPosition works in a dimensionless
+    // rReal/a ratio, so it scales cleanly onto the compressed screen
+    // geometry without needing real AU distances on screen.
+    //
+    // `speed` is kept, still in the OLD unit convention (radians per frame
+    // at 60fps, divided by 0.01) purely for the asteroid belt's existing
+    // `(orbits[marsIdx].speed + orbits[jupiterIdx].speed) / 2` averaging
+    // below, which is out of scope for this pass — but it's now the real
+    // mean angular velocity derived from periodYears, not a hand-tuned
+    // legibility compromise, so the belt inherits genuine physics too as a
+    // side effect.
+    const periodYears = Math.pow(planet.au, 1.5);
+    const meanAngularVelocity = (2 * Math.PI) / (periodYears * SECONDS_PER_VISUAL_YEAR);
+    const orbitRecord = {
+      pivot,
+      bodyGroup,
+      moons,
+      a: planet.au,
+      e: planet.e,
+      m0: THREE.MathUtils.degToRad(planet.m0Deg),
+      periodYears,
+      screenRadius: radius,
+      speed: meanAngularVelocity / 0.6,
       direction: 1, // real planets all orbit the same way — no alternating
-    });
+    };
+    applyKeplerPosition(bodyGroup, orbitRecord, buildNowMs);
+    orbits.push(orbitRecord);
   });
 
   // ─── The asteroid belt — scrap and debris, sitting where it actually
@@ -2590,24 +2775,24 @@ export function createOrrery(container, { preview = false } = {}) {
     }
 
     if (!reduceMotion) {
-      // This is the actual orbital motion: each planet's pivot (an empty
-      // Object3D at the sun's position, with the planet mesh offset out
-      // along X — set up back in the build function) is rotated a little
-      // further around Y every frame. Because the planet mesh only carries
-      // an X offset, rotating its parent pivot sweeps it around a perfect
-      // circle — the pivot IS the orbit. `speed` (computed once per planet
-      // at build time, see the orbits.push() comment above) times a fixed
-      // 0.01 per-frame rate is what turns "faster planets" into "faster
-      // radians per frame." `direction` is always 1 here (real planets
-      // don't orbit backwards) but the multiply is left in so a future
-      // retrograde object would just need direction: -1, no other change.
-      // Moons rotate the same way around their own pivot (nested inside
-      // the planet's bodyGroup), at a flat 0.02 rate instead of 0.01 —
-      // TUNABLE: raise/lower either 0.01 or 0.02 to speed up or slow down
-      // planets vs. moons uniformly across the whole scene.
+      // Real Kepler motion (2.2.22): each planet's position is a
+      // deterministic function of real wall-clock time (orreryNowMs, which
+      // reads Date.now() unless window.__orreryTimeOverrideMs is set for
+      // testing — see the comment above organicPulse), not an
+      // accumulated per-frame rotation. The orrery keeps running whether
+      // or not anyone's watching; reloading the page doesn't reset it,
+      // and two visits at genuinely different real moments show genuinely
+      // different configurations. One orreryNowMs() call per frame keeps
+      // every body in the scene reading the same instant, then
+      // applyKeplerPosition solves Kepler's equation fresh for each body
+      // (bodyGroup for planets, moonPivot for moons — a moon's own orbit
+      // is computed around its parent bodyGroup's current, already-moving
+      // position simply because it's a child of it, no separate system
+      // needed).
+      const nowMs = orreryNowMs();
       orrery.orbits.forEach(o => {
-        o.pivot.rotation.y += o.speed * o.direction * 0.01;
-        o.moons.forEach(m => { m.pivot.rotation.y += m.speed * 0.02; });
+        applyKeplerPosition(o.bodyGroup, o, nowMs);
+        o.moons.forEach(m => { applyKeplerPosition(m.pivot, m.orbit, nowMs); });
       });
       // The asteroid belt drifts the same way every planet ring does —
       // rotating the whole (already-tilted, see buildOrrery) beltGroup
