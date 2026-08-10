@@ -225,6 +225,72 @@ described are unchanged.)
   worth trimming, orrery.js's texture generators and first-person rig are the
   two most self-contained chunks to split out first.
 
+## 2.2.17 (2026-08-10)
+
+**Found the real bug: the ripple had never moved a single vertex.**
+Requested after Scott's live read of 2.2.16: still too faint. Before
+touching amplitude a third time, checked the geometry itself rather than
+trusting the scalar math again — read the actual mutated position buffer
+directly via a temporary console hook (`window.__vertDebug`, not a
+screenshot). Result: `latticeStruts` are built from
+`CylinderGeometry(thickness, thickness, dist, 6)` inside `addStrut()`,
+which doesn't pass a `heightSegments` argument — it defaults to 1, meaning
+each strut has exactly two rings of vertices, both sitting precisely at
+its own two endpoints. The ripple's envelope (`Math.sin(Math.PI * t01)`,
+2.2.14) is deliberately zero at `t01 = 0` and `t01 = 1` — the anchored
+endpoints — and peaks at the middle. With no vertices anywhere except the
+endpoints, every single vertex on every strut had `t01` exactly 0 or 1,
+so the envelope was exactly zero everywhere, always. Confirmed directly:
+`(displaced - base)` on a sampled vertex came back `~1e-18` — floating-
+point noise, not motion. The scalar chain (`baseline`, `ring`, `BASE_AMP`,
+`RING_AMP`) was computing correctly and had been the whole time, which is
+exactly why 2.2.15 and 2.2.16 both "verified" clean via the debug hook's
+scalar readout — that readout was measuring the multiplier, never the
+thing it was supposed to multiply. Nobody had checked that the vertices it
+multiplies against actually existed anywhere but the strut's own two
+fixed ends.
+
+Fix: `addStrut()` now takes an optional `heightSegments` parameter
+(defaults to 1, so every other caller — mast, chains, belt struts, etc. —
+is unaffected). The two lattice-strut call sites pass `LATTICE_SEGS = 8`,
+giving each strut 9 rings of vertices spanning its length, so the envelope
+has real interior geometry to act on. Reconfirmed live: `distinctYCount`
+went from 2 to 9, and the same sampled middle vertex now reads a genuine
+nonzero displacement matching the expected magnitude.
+
+With real motion for the first time, the SAME constants shipped in
+2.2.16 (tuned only against the never-moving scalar output) turned out to
+be far too much: the lattice read as visibly bent/kinked in single still
+frames, not as a subtle wobble — a straight strut breaking out of its own
+straight line reads as "broken" well before the displacement is large in
+absolute terms, which is a different and much lower threshold than the
+pixel-projection math from 2.2.15/2.2.16 assumed. Recalibrated down by
+eye against actual rendered frames (not the scalar debug readout) until
+the lattice held a clean, straight silhouette at typical baseline values:
+`BASE_AMP` 0.02 + baseline*0.025 (down from 0.04 + baseline*0.045),
+`RING_AMP` 0.045 (down from 0.2) — chosen so baseline-plus-ring-peak
+together stay under the magnitude that read as broken, not just baseline
+alone.
+
+**Verification honesty note:** the Chrome tab was `document.hidden: true`
+for part of this session (known project quirk — background tabs throttle
+or fully pause `requestAnimationFrame` even while screenshots keep
+working), which made a planned live capture of the ring-event peak
+unreliable — a 4-second poll of the debug hook returned zero updates.
+Rather than guess, the ring amplitude was bounded analytically against
+the baseline ceiling that WAS confirmed visually (baseline-max plus
+ring-peak kept below the magnitude already seen to look broken) instead
+of being confirmed at its own literal peak frame. Worth an actual live
+check of a strike event specifically, next time the tab can be kept
+foregrounded through one. Screenshot-diff pixel comparison was also tried
+this round and abandoned for the same reason — it returned a handful of
+scattered single-pixel changes consistent with dust-mote noise, not
+coherent strut-edge movement, most likely because the throttled tab
+wasn't rendering fresh frames between the two captures. The direct
+vertex-buffer read (not screenshots) is what actually caught the bug and
+confirmed the fix; screenshots confirmed the final visual ceiling looked
+clean, not broken.
+
 ## 2.2.16 (2026-08-10)
 
 **Ripple bumped again: 2.2.15 was still too faint.** Scott's live read after

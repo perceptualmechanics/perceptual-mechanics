@@ -497,10 +497,15 @@ function addBolts(parent, radius, count, ringGeoRadius) {
 
 // A welded brace (or a chain link) between two arbitrary points — used both
 // for the ring-to-mast braces and the ceiling-to-mast suspension chains.
-function addStrut(parent, from, to, thickness, mat) {
+// heightSegments defaults to 1 (just the two end rings) since almost every
+// caller draws a static, never-deformed strut and doesn't need the extra
+// geometry. The lattice struts are the one caller that passes more: see the
+// 2.2.17 note at their call site — a strut ripple can only bend a strut that
+// actually HAS vertices along its length to bend.
+function addStrut(parent, from, to, thickness, mat, heightSegments = 1) {
   const mid = from.clone().add(to).multiplyScalar(0.5);
   const dist = from.distanceTo(to);
-  const geo = new THREE.CylinderGeometry(thickness, thickness, dist, 6);
+  const geo = new THREE.CylinderGeometry(thickness, thickness, dist, 6, heightSegments);
   const strut = new THREE.Mesh(geo, mat);
   strut.position.copy(mid);
   strut.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), to.clone().sub(from).normalize());
@@ -655,11 +660,26 @@ function buildOrrery(preview, suspendTopY, rafterY) {
   // which is exactly what the ripple effect below needs (see the comment
   // above ripplers): mutating one strut's position attribute per frame
   // never touches any other.
+  //
+  // LATTICE_SEGS (2.2.17 fix): addStrut's default heightSegments is 1 —
+  // just the two end rings — which is fine for every OTHER strut in this
+  // file (static, never displaced), but the ripple's envelope is
+  // deliberately zero at a strut's own two endpoints (anchored joints) and
+  // peaks at the middle. With only 2 end rings and no middle ring, every
+  // vertex on these struts sat exactly at one of the two endpoints, so the
+  // envelope was exactly zero everywhere — the ripple driver was firing
+  // correct amplitude values every frame across three rounds (2.2.14-16)
+  // while the actual geometry never moved a single float's worth. Confirmed
+  // live by reading the mutated position buffer directly (not a screenshot):
+  // displaced-minus-base came back ~1e-18, i.e. float noise, not motion.
+  // 8 height segments gives the middle of each strut real vertices for the
+  // envelope to actually act on.
+  const LATTICE_SEGS = 8;
   const latticeStruts = [];
   spokeDirs.forEach(dir => {
     const from = new THREE.Vector3(0, apexY, 0);
     const to = new THREE.Vector3(dir.x * dishR, rimY, dir.z * dishR);
-    latticeStruts.push(addStrut(dishGroup, from, to, (preview ? 0.009 : 0.012) * HW, webMat));
+    latticeStruts.push(addStrut(dishGroup, from, to, (preview ? 0.009 : 0.012) * HW, webMat, LATTICE_SEGS));
   });
   // Cross-bracing rings — straight WEB_SPOKES-gon segments between
   // adjacent spokes at a few heights, not smooth circles: a spiderweb's
@@ -673,7 +693,7 @@ function buildOrrery(preview, suspendTopY, rafterY) {
       const a = spokeDirs[i], b = spokeDirs[(i + 1) % WEB_SPOKES];
       const from = new THREE.Vector3(a.x * r, y, a.z * r);
       const to = new THREE.Vector3(b.x * r, y, b.z * r);
-      latticeStruts.push(addStrut(dishGroup, from, to, (preview ? 0.006 : 0.008) * HW, webMat));
+      latticeStruts.push(addStrut(dishGroup, from, to, (preview ? 0.006 : 0.008) * HW, webMat, LATTICE_SEGS));
     }
   }
   // The web's own physical center — where every spoke actually meets.
@@ -2578,22 +2598,32 @@ export function createOrrery(container, { preview = false } = {}) {
         ? Math.exp(-ringLocal * RING_DECAY) * Math.sin(2 * Math.PI * RING_FREQ * ringLocal)
         : 0;
 
-      // Visibility floor correction, round two: round one retuned against
-      // on-screen pixel size at the camera's actual real-world distance
-      // from the mast peak (~9 units at a typical standing position) —
-      // correct fix for the underlying calibration bug (absolute
-      // world-unit displacement sized against strut length instead of
-      // viewing distance, projecting to sub-pixel and reading as nothing),
-      // but landed too conservative once actually visible: ~4-5px baseline
-      // read as "faintly noticeable" on paper but still too faint in
-      // practice. Bumped further — still the same pixel-projection
-      // reasoning, just aimed at a clearly-visible ceiling instead of a
-      // barely-crossed-the-threshold one: baseline now lands roughly
-      // 6-13px at that same distance, RING_AMP roughly 30px at the strike
-      // peak — a wobble you'd notice without hunting for it, and an event
-      // that reads as a distinct, obvious pulse.
-      const BASE_AMP = 0.04 + baseline * 0.045; // TUNABLE
-      const RING_AMP = 0.2; // TUNABLE: peak contribution right at the strike, riding `ring`'s own decay
+      // Visibility floor correction, round three — and the real fix this
+      // time. Rounds one and two (2.2.15, 2.2.16) both retuned this
+      // amplitude against on-screen pixel-projection math and both were
+      // wrong to trust it, because the geometry had a structural bug (see
+      // the LATTICE_SEGS comment above, where latticeStruts is built) that
+      // made the actual per-vertex displacement exactly zero regardless of
+      // amplitude — confirmed by reading the mutated position buffer
+      // directly and finding the displaced-minus-base delta was ~1e-18,
+      // float noise, not motion. Every amplitude number shipped in those
+      // two rounds was tuned against an effect that had never moved a
+      // single vertex. With LATTICE_SEGS now giving each strut real
+      // interior vertices, the SAME 2.2.16 constants (0.04 baseline peak,
+      // 0.2 ring peak) produced real motion for the first time — and it
+      // was too much: at those magnitudes the lattice reads as visibly
+      // bent/kinked even in a single still frame, not as a strut wobbling,
+      // because a lateral displacement that's a large fraction of the
+      // strut's own half-length breaks the eye's sense of "this is a
+      // straight line" long before it needs to move very far in absolute
+      // pixels — a straight-line kink is far more perceptible than an
+      // equivalent-sized displacement of something without a straight
+      // edge to break. Backed off to a level that stayed visibly straight
+      // in every captured frame at typical baseline values, with the ring
+      // event's peak kept low enough that baseline-plus-ring together
+      // still doesn't reach the magnitude that read as broken.
+      const BASE_AMP = 0.02 + baseline * 0.025; // TUNABLE
+      const RING_AMP = 0.045; // TUNABLE: peak contribution right at the strike, riding `ring`'s own decay
       const RIPPLE_RATE = 0.16; // TUNABLE: baseline carrier oscillation rate, in dustClock units
       orrery.gravLens.ripplers.forEach(r => {
         const { posAttr, base, halfLen, phase, freqScale } = r;
