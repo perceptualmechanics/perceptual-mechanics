@@ -225,6 +225,17 @@ described are unchanged.)
   worth trimming, orrery.js's texture generators and first-person rig are the
   two most self-contained chunks to split out first.
 
+## 2.2.21 (2026-08-10)
+
+**Tone both down a touch.** `IMPULSE_STRENGTH` 0.7 -> 0.55, `BASELINE_AMP`
+0.008 -> 0.006 (~21% cut each, same ratio applied to both so their
+relative proportion — strike roughly 6x the baseline — stays as
+calibrated in 2.2.20). Peak strike displacement now ~0.024 world units
+(down from ~0.030), typical baseline ~0.004 (down from ~0.005). Verified
+via the same live-eigenvector numeric check as 2.2.20 (not a screenshot
+comparison) before shipping. Debug hook added and removed again for the
+check, confirmed clean by grep + build.
+
 ## 2.2.20 (2026-08-10)
 
 **Real coupled-oscillator physics on the lattice's own connectivity,

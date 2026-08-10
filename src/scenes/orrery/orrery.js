@@ -2684,8 +2684,8 @@ export function createOrrery(container, { preview = false } = {}) {
       const FREQ_SCALE = 14;    // TUNABLE: converts the graph's raw sqrt(eigenvalue) units into real angular frequency (rad/s) — chosen so the lowest modes land around ~1Hz, the highest around ~5Hz, a similar range to the single hand-picked RING_FREQ earlier rounds used
       const DAMP_BASE = 0.5;    // TUNABLE: every mode's own minimum damping (per second)
       const DAMP_FREQ_SCALE = 0.05; // TUNABLE: additional damping proportional to a mode's own frequency — "real materials damp higher frequencies faster" (the brief's optional refinement), cheap to include since it's just one more multiply per mode
-      const IMPULSE_STRENGTH = 0.7;  // TUNABLE: overall strike strength — calibrated (see NOTES.md 2.2.20) against this specific graph's own eigenvector magnitudes, not a generic constant
-      const BASELINE_AMP = 0.008;    // TUNABLE: continuous per-mode hum amplitude, well below the strike's own peak
+      const IMPULSE_STRENGTH = 0.55; // TUNABLE: overall strike strength — calibrated (see NOTES.md 2.2.20/2.2.21) against this specific graph's own eigenvector magnitudes, not a generic constant
+      const BASELINE_AMP = 0.006;    // TUNABLE: continuous per-mode hum amplitude, well below the strike's own peak
 
       const { values, vectors } = orrery.gravLens.modes;
       const nJoints = orrery.gravLens.nJoints;
