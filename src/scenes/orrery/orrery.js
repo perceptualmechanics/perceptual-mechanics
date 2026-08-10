@@ -517,6 +517,56 @@ function addStrut(parent, from, to, thickness, mat, heightSegments = 1) {
 
 function lerp(a, b, t) { return a + (b - a) * t; }
 
+// Classic cyclic Jacobi eigenvalue algorithm for a real symmetric matrix —
+// used once, at load, to find the telescope lattice's own natural
+// vibration modes (see the receiving-effect comment in buildOrrery). Not a
+// general-purpose numerical library import: this is ~30 lines of a
+// textbook algorithm, appropriate for the small (27x27) matrix it runs on
+// exactly once, and it keeps the physics fully inspectable in this file
+// rather than behind a dependency. Repeatedly zeroes the largest
+// off-diagonal pair via a rotation until the matrix is (numerically)
+// diagonal; the accumulated rotations are the eigenvectors, the final
+// diagonal is the eigenvalues. Returns both sorted ascending (so index 0
+// is always the lowest-frequency mode).
+function jacobiEigenSymmetric(matrix, n, maxSweeps = 100) {
+  const A = matrix.map(row => row.slice());
+  const V = Array.from({ length: n }, (_, i) => Array.from({ length: n }, (_, j) => (i === j ? 1 : 0)));
+  for (let sweep = 0; sweep < maxSweeps; sweep++) {
+    let offDiagSum = 0;
+    for (let p = 0; p < n; p++) for (let q = p + 1; q < n; q++) offDiagSum += A[p][q] * A[p][q];
+    if (offDiagSum < 1e-24) break; // converged
+    for (let p = 0; p < n; p++) {
+      for (let q = p + 1; q < n; q++) {
+        if (Math.abs(A[p][q]) < 1e-18) continue;
+        const theta = (A[q][q] - A[p][p]) / (2 * A[p][q]);
+        const t = (theta >= 0 ? 1 : -1) / (Math.abs(theta) + Math.sqrt(theta * theta + 1));
+        const c = 1 / Math.sqrt(t * t + 1), s = t * c;
+        const app = A[p][p], aqq = A[q][q], apq = A[p][q];
+        A[p][p] = c * c * app - 2 * s * c * apq + s * s * aqq;
+        A[q][q] = s * s * app + 2 * s * c * apq + c * c * aqq;
+        A[p][q] = 0; A[q][p] = 0;
+        for (let i = 0; i < n; i++) {
+          if (i === p || i === q) continue;
+          const aip = A[i][p], aiq = A[i][q];
+          A[i][p] = c * aip - s * aiq; A[p][i] = A[i][p];
+          A[i][q] = s * aip + c * aiq; A[q][i] = A[i][q];
+        }
+        for (let i = 0; i < n; i++) {
+          const vip = V[i][p], viq = V[i][q];
+          V[i][p] = c * vip - s * viq;
+          V[i][q] = s * vip + c * viq;
+        }
+      }
+    }
+  }
+  const eigenvalues = Array.from({ length: n }, (_, i) => A[i][i]);
+  const order = eigenvalues.map((v, i) => i).sort((a, b) => eigenvalues[a] - eigenvalues[b]);
+  return {
+    values: order.map(i => eigenvalues[i]),
+    vectors: order.map(i => V.map(row => row[i])), // vectors[n] is mode n's own 27-component shape
+  };
+}
+
 function buildOrrery(preview, suspendTopY, rafterY) {
   const group = new THREE.Group();
   const steelMat = steelMaterial(preview);
@@ -658,89 +708,149 @@ function buildOrrery(preview, suspendTopY, rafterY) {
     const a = (i / WEB_SPOKES) * Math.PI * 2;
     return { x: Math.cos(a), z: Math.sin(a) };
   });
-  // Radial spokes, apex to rim — one strut each now, not chained segments
-  // (those existed only to let the old traveling pulse light pieces of a
-  // spoke in sequence; with the pulse gone, one piece per spoke is simpler
-  // and exactly as structurally legible).
-  spokeDirs.forEach(dir => {
-    const from = new THREE.Vector3(0, apexY, 0);
-    const to = new THREE.Vector3(dir.x * dishR, rimY, dir.z * dishR);
-    addStrut(dishGroup, from, to, (preview ? 0.009 : 0.012) * HW, webMat);
-  });
-  // Cross-bracing rings — straight WEB_SPOKES-gon segments between
-  // adjacent spokes at a few heights, not smooth circles: a spiderweb's
-  // cross-threads run straight between radial threads, and (see the
-  // "found, not designed" note above) this is a found, not fabricated,
-  // shape — a mathematically perfect circle here would read as machined
-  // instead.
-  for (let k = 1; k <= WEB_RINGS; k++) {
-    const rt = k / WEB_RINGS, y = apexY + (rimY - apexY) * rt, r = dishR * rt;
-    for (let i = 0; i < WEB_SPOKES; i++) {
-      const a = spokeDirs[i], b = spokeDirs[(i + 1) % WEB_SPOKES];
-      const from = new THREE.Vector3(a.x * r, y, a.z * r);
-      const to = new THREE.Vector3(b.x * r, y, b.z * r);
-      addStrut(dishGroup, from, to, (preview ? 0.006 : 0.008) * HW, webMat);
+
+  // ─── The receiving effect, round 5: real coupled-oscillator physics on
+  // the lattice's own actual connectivity, not an authored waveform.
+  //
+  // Rounds 1-2 (particle beam, then a lensing patch) failed because this
+  // scene already has visual vocabulary for "a small round-ish or
+  // irregular thing near the hub" (the planets, the asteroid belt), so any
+  // new mesh there gets sorted into that category regardless of shape —
+  // whatever moves has to be the lattice's own existing geometry, not a
+  // new object. Round 3 (2.2.14-2.2.18) displaced each strut's own
+  // vertices independently, which (once 2.2.17 fixed the bug that had
+  // kept it motionless) read as "everything's wobbling," not a resonant
+  // object — an incoherent tangle of unrelated local motion is how cloth
+  // moves, not a bronze lattice welded solid at every joint. Round 4
+  // (2.2.19) fixed THAT by replacing per-vertex motion with one rigid
+  // "wine glass" ovalizing transform on the whole dish — correct in kind
+  // (coherent, anchored, rigid), but hand-authored: one shape, one
+  // frequency, no relationship to which point actually got struck or how
+  // far a disturbance is from there.
+  //
+  // This round replaces the hand-authored transform with the real thing:
+  // every joint where struts actually meet is treated as a point mass,
+  // every strut between two joints as a spring, and the whole lattice's
+  // motion is the genuine solution to that system — standard textbook
+  // mass-spring-damper network physics, the discrete version of how a
+  // bell or a crystal actually rings when struck:
+  //   m·ẍᵢ = −Σⱼ kᵢⱼ(xᵢ−xⱼ) − γ·ẋᵢ,  summed over every joint j that i is
+  // actually connected to by a real strut (M·ẍ + C·ẋ + K·x = F(t) in
+  // matrix form). This is NOT the closed-form phonon dispersion relation a
+  // perfectly regular, evenly-repeating lattice would have (ω =
+  // 2√(k/m)·|sin(ka/2)| for the simplest 1D chain) — that only applies to
+  // a regular repeating structure, and this mesh, built from real strut
+  // connectivity rather than a uniform grid, isn't one. The general
+  // eigenmode approach below is the right fit for the geometry that
+  // actually exists here, not a shortcut reached for by mistake.
+  //
+  // 28 joints: the apex/hub (pinned, see below) plus 3 rings of 9 points
+  // each, at the same radii/heights the old cross-bracing rings used. Each
+  // spoke, previously one continuous strut from apex straight to rim, is
+  // now built as 3 shorter collinear struts (apex-ring1, ring1-ring2,
+  // ring2-ring3/rim) so the RENDERED geometry has an actual joint
+  // everywhere the physics says one exists — visually identical at rest,
+  // but every strut endpoint is now a real dynamical point the physics can
+  // move, rather than needing interior vertices on one long strut (the
+  // 2.2.17 bug class doesn't apply here: nothing ever touches a strut's
+  // own geometry after it's built, only its position/rotation/scale,
+  // recomputed from its two joints' live positions the same way addStrut
+  // itself computes them once).
+  //
+  // The apex is pinned — excluded as a free variable, always zero
+  // displacement — because it's rigidly welded to the mast, a much
+  // stiffer assembly than this web: physically the lattice's boundary
+  // condition, not one more joint that vibrates. This also removes the
+  // trivial rigid-body zero-mode an unanchored graph's Laplacian would
+  // otherwise have, and keeps the hub visually anchored the way 2.2.19's
+  // rigid transform did.
+  const N_RING = WEB_SPOKES, N_LEVELS = WEB_RINGS, N_JOINTS = N_RING * N_LEVELS; // 27 free joints
+  const jointIdx = (level, i) => level * N_RING + i; // level 0..2 = ring 1..3 (rim), i = spoke index
+  const jointBasePos = [];
+  for (let level = 0; level < N_LEVELS; level++) {
+    const rt = (level + 1) / N_LEVELS, y = apexY + (rimY - apexY) * rt, r = dishR * rt;
+    for (let i = 0; i < N_RING; i++) {
+      const d = spokeDirs[i];
+      jointBasePos.push(new THREE.Vector3(d.x * r, y, d.z * r));
     }
   }
-  // The web's own physical center — where every spoke actually meets.
-  // Replaces the earlier version's separate antenna-and-feed-bulb
-  // assembly: a real dish's prime-focus feed sits ABOVE the dish, but
-  // this is a found web, not an engineered reflector, so everything
-  // converges inward to its own hub instead of up to a feed floating
-  // over it. Solid and unanimated, same webMat as the rest of the
-  // structure — sitting dead center on dishGroup's own X/Z scaling axis
-  // (see the receiving-effect comment below), so it stays put as the
-  // resonator's fixed anchor point even while the rim rings.
+  const apexBasePos = new THREE.Vector3(0, apexY, 0);
+  // Spring stiffness: a real rod's axial stiffness scales with its
+  // cross-section, so the ratio between the circumferential and radial
+  // strut THICKNESSES already committed to below (0.008 vs 0.012 at full
+  // scale) is reused directly as a relative-stiffness proxy, rather than
+  // inventing an unrelated number — simplified (true stiffness would use
+  // area and real beam bending, not just a thickness ratio), but grounded
+  // in a value this file already chose for an unrelated reason, not
+  // picked to make the animation look a particular way.
+  const K_RADIAL = 1;
+  const K_CIRCUM = (preview ? 0.006 : 0.008) / (preview ? 0.009 : 0.012);
+  const K = Array.from({ length: N_JOINTS }, () => new Array(N_JOINTS).fill(0));
+  function addSpring(a, b, k) {
+    // a/b: a free-joint index (0..N_JOINTS-1), or -1 for the pinned apex.
+    if (a >= 0) K[a][a] += k;
+    if (b >= 0) K[b][b] += k;
+    if (a >= 0 && b >= 0) { K[a][b] -= k; K[b][a] -= k; }
+  }
+  for (let i = 0; i < N_RING; i++) {
+    addSpring(-1, jointIdx(0, i), K_RADIAL);              // apex - ring1 (this spoke's innermost segment)
+    addSpring(jointIdx(0, i), jointIdx(1, i), K_RADIAL);  // ring1 - ring2
+    addSpring(jointIdx(1, i), jointIdx(2, i), K_RADIAL);  // ring2 - ring3 (rim)
+  }
+  for (let level = 0; level < N_LEVELS; level++) {
+    for (let i = 0; i < N_RING; i++) {
+      addSpring(jointIdx(level, i), jointIdx(level, (i + 1) % N_RING), K_CIRCUM);
+    }
+  }
+  // Solved once, here, at scene build — the lattice's topology never
+  // changes at runtime, so its eigenmodes don't either. animate() below
+  // only ever evaluates a closed-form sum over these fixed modes every
+  // frame; nothing gets re-solved live.
+  const modes = jacobiEigenSymmetric(K, N_JOINTS);
+
+  // The actual strut meshes: 27 radial segments (3 per spoke, per the
+  // joint layout above) + 27 circumferential (unchanged in count from
+  // before — still literally the cross-bracing rings). Each is recorded
+  // with which two joints it connects (a jointBasePos index, or -1 for
+  // the pinned apex) and its own built length, so animate() can
+  // reposition/reorient/rescale it from the joints' live physics
+  // positions every frame.
+  const ringStruts = []; // { mesh, jointA, jointB, baseFrom, baseTo, builtLen }
+  function addRingStrut(fromPos, toPos, jointA, jointB, thickness) {
+    const mesh = addStrut(dishGroup, fromPos, toPos, thickness, webMat);
+    ringStruts.push({ mesh, jointA, jointB, baseFrom: fromPos.clone(), baseTo: toPos.clone(), builtLen: fromPos.distanceTo(toPos) || 1 });
+  }
+  for (let i = 0; i < N_RING; i++) {
+    const thickness = (preview ? 0.009 : 0.012) * HW;
+    addRingStrut(apexBasePos, jointBasePos[jointIdx(0, i)], -1, jointIdx(0, i), thickness);
+    addRingStrut(jointBasePos[jointIdx(0, i)], jointBasePos[jointIdx(1, i)], jointIdx(0, i), jointIdx(1, i), thickness);
+    addRingStrut(jointBasePos[jointIdx(1, i)], jointBasePos[jointIdx(2, i)], jointIdx(1, i), jointIdx(2, i), thickness);
+  }
+  for (let level = 0; level < N_LEVELS; level++) {
+    const thickness = (preview ? 0.006 : 0.008) * HW;
+    for (let i = 0; i < N_RING; i++) {
+      addRingStrut(jointBasePos[jointIdx(level, i)], jointBasePos[jointIdx(level, (i + 1) % N_RING)], jointIdx(level, i), jointIdx(level, (i + 1) % N_RING), thickness);
+    }
+  }
+  // The web's own physical center — where every spoke actually meets, and
+  // (see above) the lattice's one pinned/anchored joint. Solid and
+  // unanimated, same webMat as the rest of the structure; it never moves,
+  // which is now a literal boundary condition of the physics rather than
+  // an approximation of one.
   const webHub = new THREE.Mesh(new THREE.SphereGeometry((preview ? 0.028 : 0.036) * HW, 10, 10), webMat);
   webHub.position.y = apexY;
   dishGroup.add(webHub);
 
-  // ─── The receiving effect, round 4: a rigid mode, not a floppy one.
-  //
-  // Rounds 1-2 (particle beam, then a lensing patch built from either a
-  // MeshPhysicalMaterial sphere or a hand-shaded one) both failed for the
-  // same underlying reason, confirmed live each time: this scene already
-  // has an established visual vocabulary for "a small round-ish or
-  // irregular thing near the hub" — the nine planets, the asteroid-belt
-  // rocks — so any new mesh placed there gets sorted into that category
-  // by the eye regardless of how irregular its silhouette or texture
-  // gets. Making the edge ragged just changed which kind of object it
-  // read as (asteroid instead of sphere); it never stopped reading as an
-  // object. Real lensing also only reads as bending when there's rich
-  // background detail to bend FOR COMPARISON, and what's actually behind
-  // the hub is mostly dark void and a few sparse stars — not enough there
-  // to make a bend legible. So: nothing new ever appears near the hub;
-  // whatever moves has to be the lattice's own existing geometry.
-  //
-  // Round 3 (2.2.14-2.2.18) tried that as real per-vertex displacement on
-  // each strut's own geometry, each strut given its own random phase and
-  // frequency so all 36 wouldn't move in lockstep. Once 2.2.17 fixed the
-  // geometry bug that had kept it motionless the whole time (see NOTES.md
-  // — addStrut()'s default heightSegments left every strut with vertices
-  // only at its own two endpoints, exactly where the displacement
-  // envelope was deliberately zero), that per-strut independence turned
-  // out to be exactly the wrong kind of variety: it read as "everything's
-  // wobbling," not "a resonant chime vibrating through a solid
-  // crystalline structure." That's the physically correct read for what
-  // per-strut-independent motion actually looks like — an incoherent
-  // tangle of unrelated local motion is how cloth or a floppy net moves,
-  // not how a bronze lattice welded solid at every joint moves even when
-  // genuinely ringing. A struck bell or tuning fork stays RIGID: every
-  // point on it moves in one shared, coherent pattern (a standing-wave
-  // "mode shape"), which is what makes it read as solid and resonant
-  // instead of floppy.
-  //
-  // So: no more per-vertex displacement, no more per-strut phase/
-  // frequency variety. One shared, rigid transform on the whole dishGroup
-  // instead — the classic "wine glass" mode an axisymmetric struck object
-  // actually rings in: the rim ovalizes, squeezing in on one axis while
-  // bulging on the perpendicular one, the same amount and the same phase
-  // everywhere, anchored at the center. Every strut, the hub, and every
-  // joint between them move together by construction, because it's one
-  // transform on their shared parent, not independent per-vertex writes —
-  // and it can't reintroduce 2.2.17's whole bug class either, since
-  // there's no per-vertex geometry mutation left to get wrong.
-  const gravLens = { dishGroup };
+  // Baseline hum: a few of the lattice's own lowest, real natural modes,
+  // driven continuously and gently rather than left silent between strike
+  // events (the "solar system's own ongoing gravitational hum" from the
+  // original brief) — captured here as a fixed random per-mode, per-axis
+  // phase so the modes don't all peak in sync, same "random phase chosen
+  // once at build, only ever read from in animate()" pattern as the
+  // ripplers this replaced.
+  const BASELINE_MODE_COUNT = 2; // TUNABLE: how many of the lowest modes hum continuously
+  const basePhase = Array.from({ length: BASELINE_MODE_COUNT }, () => [Math.random(), Math.random(), Math.random()].map(r => r * Math.PI * 2));
+  const gravLens = { dishGroup, jointBasePos, modes, ringStruts, nJoints: N_JOINTS, basePhase };
   group.add(dishGroup);
 
   // ─── The nine real planets — order, relative size, and orbital spacing
@@ -2428,6 +2538,15 @@ export function createOrrery(container, { preview = false } = {}) {
     });
   }
 
+  // Reusable scratch objects for the telescope's per-frame modal physics
+  // (see the ripple-driver comment inside animate() below) — allocated
+  // once here rather than per-frame, so 54 struts' worth of vector math
+  // every frame doesn't churn the garbage collector.
+  const _jointDisp = Array.from({ length: orrery.gravLens.nJoints }, () => new THREE.Vector3());
+  const _qRing = [[], [], []]; // [axis][mode] scratch — this frame's modal amplitude, baseline + ring combined
+  const _scratchFrom = new THREE.Vector3(), _scratchTo = new THREE.Vector3(), _scratchMid = new THREE.Vector3(), _scratchDir = new THREE.Vector3();
+  const _UP = new THREE.Vector3(0, 1, 0);
+
   // ─── Animate ──────────────────────────────────────────────────────────────
   let animId, t = 0, lastFrame = performance.now();
   function animate() {
@@ -2534,8 +2653,25 @@ export function createOrrery(container, { preview = false } = {}) {
       }
       dustAttr.needsUpdate = true;
 
-      // The radio telescope's receiving effect — see the "round 4: a rigid
-      // mode, not a floppy one" comment on gravLens in buildOrrery.
+      // The radio telescope's receiving effect — see the "round 5: real
+      // coupled-oscillator physics" comment on gravLens in buildOrrery.
+      // Two closed-form sums, evaluated fresh every frame from the modes
+      // solved once at build (nothing here re-solves anything live):
+      //
+      //  1. Baseline (continuous, "solar system's own gravitational hum")
+      //     — the lattice's own lowest `BASELINE_MODE_COUNT` natural modes,
+      //     each driven as a simple ongoing sinusoid at that mode's own
+      //     real frequency, small and fixed-amplitude, never decaying.
+      //  2. Ring (occasional struck event) — an impulse applied at one
+      //     joint, decomposed onto EVERY mode (an impulse excites every
+      //     mode in proportion to how much that mode "lives" at the
+      //     struck point), each then ringing at its own frequency and
+      //     decaying at its own rate: x(t) = Σₙ Aₙ·e^(−γₙt)·sin(ωₙt). Which
+      //     joint gets struck, and from which direction, is a deterministic
+      //     hash of the event index (hash3, already used elsewhere in this
+      //     file for planet aging) — not Math.random() per frame, so it's
+      //     reproducible and varies strike to strike without any runtime
+      //     state to drift.
       //
       // realSeconds, not t: t is the orrery's own slow orbital clock
       // (+0.001/frame, ~0.06/real-second) but a scheduled "every 34
@@ -2543,33 +2679,88 @@ export function createOrrery(container, { preview = false } = {}) {
       // now (performance.now(), already computed above for dt) gives that
       // directly, frame-rate independent.
       const realSeconds = now / 1000;
-      const RING_PERIOD = 34;     // TUNABLE: real seconds between struck events
-      const RING_DECAY = 0.6;     // TUNABLE: how fast the ring dies out (per second)
-      const RING_FREQ = 2.6;      // TUNABLE: the resonator's OWN natural frequency (cycles/second) — fixed regardless of what struck it
-      const RING_WINDOW = 9;      // TUNABLE: wide enough for RING_DECAY to fully die out; no computation needed past this
-      const ringLocal = realSeconds % RING_PERIOD;
-      // A genuine damped sinusoid — the strike itself is instantaneous (u
-      // = seconds since the strike, no separate rise phase), since a
-      // resonator's own ring starts at its peak the moment it's struck and
-      // only ever decays from there. Zero (not just small) outside the
-      // window: this is what makes the resonator genuinely solid and
-      // unmoving between events, not just quiet.
-      const ring = ringLocal < RING_WINDOW
-        ? Math.exp(-ringLocal * RING_DECAY) * Math.sin(2 * Math.PI * RING_FREQ * ringLocal)
-        : 0;
-      // The classic "wine glass" ovalizing mode: squeeze in on one axis,
-      // bulge on the perpendicular one, at the SAME phase for the whole
-      // structure — one number, one shared transform, so every strut, the
-      // hub, and every joint between them move together by construction.
-      // Scaling only X/Z (never Y) leaves the exact center axis (X=0,
-      // Z=0 — where the hub meets the mast) mathematically undisturbed,
-      // since scaling never moves a point already on the scaling axis:
-      // the resonator stays anchored to the mast at its actual mount
-      // point while the rim breathes around it, same as a bell rings
-      // while its stationary mount doesn't.
-      const CHIME_AMP = 0.05; // TUNABLE: peak ovalizing amount, as a fraction of the dish's own scale
-      const chime = ring * CHIME_AMP;
-      orrery.gravLens.dishGroup.scale.set(1 + chime, 1, 1 - chime);
+      const RING_PERIOD = 34;   // TUNABLE: real seconds between struck events
+      const RING_WINDOW = 6;    // TUNABLE: wide enough for every mode's own decay to die out (shorter than earlier rounds' 9s — see NOTES.md 2.2.20, the real modal decay settles faster)
+      const FREQ_SCALE = 14;    // TUNABLE: converts the graph's raw sqrt(eigenvalue) units into real angular frequency (rad/s) — chosen so the lowest modes land around ~1Hz, the highest around ~5Hz, a similar range to the single hand-picked RING_FREQ earlier rounds used
+      const DAMP_BASE = 0.5;    // TUNABLE: every mode's own minimum damping (per second)
+      const DAMP_FREQ_SCALE = 0.05; // TUNABLE: additional damping proportional to a mode's own frequency — "real materials damp higher frequencies faster" (the brief's optional refinement), cheap to include since it's just one more multiply per mode
+      const IMPULSE_STRENGTH = 0.7;  // TUNABLE: overall strike strength — calibrated (see NOTES.md 2.2.20) against this specific graph's own eigenvector magnitudes, not a generic constant
+      const BASELINE_AMP = 0.008;    // TUNABLE: continuous per-mode hum amplitude, well below the strike's own peak
+
+      const { values, vectors } = orrery.gravLens.modes;
+      const nJoints = orrery.gravLens.nJoints;
+      const eventIndex = Math.floor(realSeconds / RING_PERIOD);
+      const strikeSeed = 91711; // arbitrary fixed seed, just needs to differ from other hash3 callers in this file
+      const strikeJoint = Math.floor(hash3(eventIndex, 0, 0, strikeSeed) * nJoints);
+      // A mostly-horizontal strike direction (real events here are struck
+      // from "outside," roughly along the dish's own X/Z plane) with a
+      // small vertical component for variety — one unit vector per event,
+      // reused for all 3 axes' impulse strength below.
+      const strikeTheta = hash3(eventIndex, 1, 0, strikeSeed) * Math.PI * 2;
+      const strikeVertical = (hash3(eventIndex, 2, 0, strikeSeed) - 0.5) * 0.5;
+      const impulseDir = [Math.cos(strikeTheta), strikeVertical, Math.sin(strikeTheta)];
+      const tSinceStrike = realSeconds - eventIndex * RING_PERIOD;
+      const ringActive = tSinceStrike >= 0 && tSinceStrike < RING_WINDOW;
+
+      // qTotal[axis][mode]: this frame's scalar modal amplitude, summed
+      // from baseline + ring, before being projected back onto the 27
+      // joints via each mode's own eigenvector.
+      for (let axis = 0; axis < 3; axis++) {
+        for (let n = 0; n < nJoints; n++) {
+          let q = 0;
+          if (n < orrery.gravLens.basePhase.length) {
+            const omega = Math.sqrt(Math.max(values[n], 0)) * FREQ_SCALE;
+            q += BASELINE_AMP * Math.sin(omega * realSeconds + orrery.gravLens.basePhase[n][axis]);
+          }
+          if (ringActive) {
+            const omega = Math.sqrt(Math.max(values[n], 0)) * FREQ_SCALE;
+            if (omega > 1e-6) {
+              const gamma = DAMP_BASE + DAMP_FREQ_SCALE * omega;
+              const omegaD2 = omega * omega - gamma * gamma;
+              if (omegaD2 > 1e-6) {
+                const omegaD = Math.sqrt(omegaD2);
+                const v0 = impulseDir[axis] * IMPULSE_STRENGTH * vectors[n][strikeJoint];
+                q += (v0 / omegaD) * Math.exp(-gamma * tSinceStrike) * Math.sin(omegaD * tSinceStrike);
+              }
+            }
+          }
+          _qRing[axis][n] = q;
+        }
+      }
+      // Project modal amplitudes back onto physical joint displacement —
+      // one 27x27 matrix-vector product per axis, cheap (~2000 multiply-
+      // adds total, once a frame).
+      for (let j = 0; j < nJoints; j++) {
+        let dx = 0, dy = 0, dz = 0;
+        for (let n = 0; n < nJoints; n++) {
+          const vn = vectors[n][j];
+          dx += vn * _qRing[0][n];
+          dy += vn * _qRing[1][n];
+          dz += vn * _qRing[2][n];
+        }
+        _jointDisp[j].set(dx, dy, dz);
+      }
+      // Reposition every strut from its two joints' live displaced
+      // positions — the exact same position/quaternion math addStrut()
+      // itself used once at construction, just re-run every frame instead
+      // of once. builtLen/current-length ratio rescales along the strut's
+      // own axis too, so a strut whose two joints happen to move slightly
+      // farther apart or closer together doesn't visibly detach from
+      // either end.
+      orrery.gravLens.ringStruts.forEach(rs => {
+        _scratchFrom.copy(rs.baseFrom);
+        if (rs.jointA >= 0) _scratchFrom.add(_jointDisp[rs.jointA]);
+        _scratchTo.copy(rs.baseTo);
+        if (rs.jointB >= 0) _scratchTo.add(_jointDisp[rs.jointB]);
+        _scratchMid.copy(_scratchFrom).add(_scratchTo).multiplyScalar(0.5);
+        _scratchDir.copy(_scratchTo).sub(_scratchFrom);
+        const dist = _scratchDir.length();
+        if (dist < 1e-6) return; // degenerate (shouldn't happen at these displacement scales), skip rather than divide by zero
+        _scratchDir.divideScalar(dist);
+        rs.mesh.position.copy(_scratchMid);
+        rs.mesh.quaternion.setFromUnitVectors(_UP, _scratchDir);
+        rs.mesh.scale.y = dist / rs.builtLen;
+      });
     }
 
     if (!hovered && !selected) {

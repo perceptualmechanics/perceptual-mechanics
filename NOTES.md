@@ -225,6 +225,108 @@ described are unchanged.)
   worth trimming, orrery.js's texture generators and first-person rig are the
   two most self-contained chunks to split out first.
 
+## 2.2.20 (2026-08-10)
+
+**Real coupled-oscillator physics on the lattice's own connectivity,
+replacing the hand-authored "wine glass" transform.** Full spec supplied
+for what the resonator's vibration should actually be, now that it's
+understood as a real physical object rather than an authored curve: treat
+every joint where struts meet as a point mass, every strut as a spring,
+and solve the genuine mass-spring-damper network — `m·ẍᵢ = −Σⱼ
+kᵢⱼ(xᵢ−xⱼ) − γ·ẋᵢ`, the discrete textbook version of how a bell or
+crystal actually rings when struck. Explicitly not the closed-form phonon
+dispersion relation a perfectly regular repeating lattice would have
+(`ω = 2√(k/m)·|sin(ka/2)|`) — flagged in the brief as a shortcut that only
+applies to a uniform grid, which this irregular mesh isn't; the general
+eigenmode approach is the right fit for the geometry that actually exists.
+
+Before implementing, checked one apparent conflict with 2.2.18's explicit
+instruction to remove the continuous baseline entirely: this spec's
+"two-scale signal" section brings a baseline back (gently exciting a few
+low-order modes). Asked rather than guessing — the two aren't actually in
+tension: 2.2.18 killed the baseline because it was incoherent (each strut
+independently, randomly out of phase, reading as floppy noise), not
+because ambient motion is inherently wrong. Scott confirmed: bring back a
+baseline, built from the same real coherent eigenmode physics as the
+strike, just gentle.
+
+**Implementation.** 28 joints: the apex (pinned — rigidly welded to the
+mast, a much stiffer assembly than this web, so it's the lattice's
+boundary condition rather than one more free mass; also removes the
+trivial rigid-body zero-mode an unanchored graph's Laplacian would
+otherwise have) plus 3 rings of 9 points each, at the same radii the old
+cross-bracing rings used. Each spoke — previously one continuous strut
+from apex to rim — is now built as 3 shorter collinear segments (apex-
+ring1, ring1-ring2, ring2-ring3/rim), so the rendered geometry has an
+actual joint everywhere the physics says one exists; visually identical
+at rest. Spring stiffness: radial vs. circumferential struts already had
+different built THICKNESSES (0.012 vs 0.008 at full scale) for an
+unrelated reason, so that ratio is reused directly as a relative-
+stiffness proxy rather than inventing a new number — simplified (real
+axial stiffness scales with cross-sectional area, and true rod mechanics
+would include bending), but grounded in a value the file already
+committed to, not picked to make the animation look a particular way.
+
+Eigenmodes solved via a from-scratch classic cyclic Jacobi eigenvalue
+algorithm (`jacobiEigenSymmetric`, ~40 lines, textbook implementation, no
+new dependency) on the resulting 27x27 weighted graph Laplacian — small
+enough that this runs once at scene build and is genuinely free at
+runtime. Per frame, animate() only evaluates two closed-form sums: a
+continuous low-amplitude hum on the lowest 2 modes, and (during a ~34s-
+scheduled strike) an impulse decomposed onto all 27 modes — `x(t) =
+Σₙ Aₙ·e^(−γₙt)·sin(ωₙt)` — each ringing at its own real frequency and
+decaying at its own rate (damping scales with frequency per the brief's
+optional refinement: real materials damp higher modes faster). Which
+joint gets struck and from which direction is a deterministic hash of the
+event index (`hash3`, the same utility already used for planet aging
+elsewhere in this file) rather than `Math.random()` per frame — a fixed,
+reproducible sequence of strikes, not accumulating runtime state.
+
+Struts no longer get their own vertices displaced (the whole 2.2.17 bug
+class doesn't apply here — nothing touches a strut's geometry after it's
+built). Instead each of the 54 struts is repositioned/reoriented/rescaled
+every frame from its own two joints' live displaced positions, the exact
+same position/quaternion math `addStrut()` used once at construction, now
+re-run on demand — 27 joints × 27 modes × 3 axes is a cheap matrix-vector
+product (~2000 multiply-adds/frame), not a re-solve.
+
+**Calibration.** Node-side prototyping (replicating the exact same graph/
+Jacobi/impulse-response code outside the browser) before touching the
+live scene, to avoid guessing constants blind: `FREQ_SCALE=14` lands the
+lowest modes around ~1Hz and highest around ~5Hz, matching the earlier
+single hand-picked `RING_FREQ=2.6`'s ballpark; `DAMP_BASE=0.5`,
+`DAMP_FREQ_SCALE=0.05` settle the ring within ~5-6s (`RING_WINDOW`
+trimmed from 9s to 6s accordingly — the real modal decay is faster than
+the old single-oscillator model was); `IMPULSE_STRENGTH=0.7` calibrated
+against this specific graph's own eigenvector magnitudes (confirmed live,
+not just in the Node prototype) to land peak per-joint displacement
+around 0.03 world units, matching 2.2.19's confirmed-good ceiling.
+`BASELINE_AMP=0.008` lands baseline displacement around 0.005, roughly
+6x smaller than the strike peak, a similar ratio to earlier rounds.
+
+**Verification.** Confirmed the eigenvalues computed live in the browser
+match the Node prototype's exactly (0.1981, 0.5102, 0.5102, 1.3004... —
+same graph, same solver, same answer) and that the solver's output is
+genuinely orthonormal (mode·itself = 1, mode·another = 0). Confirmed the
+full per-frame pipeline end-to-end by replicating animate()'s own formula
+in a console harness against the live scene's real joint/mode data (not
+a simplified stand-in), forcing specific post-strike times and rendering
+directly — the same "bypass the frozen rAF loop, force a render" method
+2.2.19 used, since the same tab-backgrounding quirk was present again
+this round. This confirmed, live and visually: the point of peak
+displacement genuinely moves from joint to joint over time (0.05s: struck
+joint itself; 0.2s-0.8s: different, progressively farther joints) —
+real wave propagation through the actual structure, not an authored
+curve — and the lattice stayed visibly straight and intact at every
+sampled time, no kinking, at the calibrated peak magnitude. Baseline hum
+magnitude confirmed via the same live eigenvector data to sit in the
+intended faint range across a range of sampled times. Did not get a
+direct screen capture of an entirely unmanipulated, real-clock-driven
+strike this round (would need a genuinely foregrounded tab through a
+full ~34s cycle) — leaning on the console-harness verification, which
+runs the identical formula against the identical live data, as
+equivalent evidence, but flagging the distinction rather than blurring it.
+
 ## 2.2.19 (2026-08-10)
 
 **A rigid mode, not a floppy one.** Scott's read of the working 2.2.18
