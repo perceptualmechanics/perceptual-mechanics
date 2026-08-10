@@ -225,6 +225,64 @@ described are unchanged.)
   worth trimming, orrery.js's texture generators and first-person rig are the
   two most self-contained chunks to split out first.
 
+## 2.2.19 (2026-08-10)
+
+**A rigid mode, not a floppy one.** Scott's read of the working 2.2.18
+ring event: it presented as "everything's wobbling," not "a resonant
+chime vibrating through a solid crystalline structure." Correct diagnosis
+of the actual cause — round 3 (2.2.14-2.2.18) displaced each strut's own
+vertices independently, with its own random phase and frequency so the 36
+struts wouldn't move in lockstep. That per-strut independence is exactly
+what an incoherent tangle of unrelated local motion looks like (cloth, a
+floppy net, seaweed); it's not how a bronze lattice welded solid at every
+joint moves even when genuinely ringing. A struck bell or tuning fork
+stays rigid — every point on it moves in one shared, coherent pattern (a
+standing-wave "mode shape") — which is what makes it read as solid and
+resonant instead of floppy.
+
+Replaced the whole per-vertex system with a single rigid transform on the
+dish's own group: the classic "wine glass" ovalizing mode an axisymmetric
+struck object actually rings in — squeeze in on one axis, bulge on the
+perpendicular one, same amount and same phase everywhere. Scaling only
+X/Z (Y untouched) leaves the exact center axis mathematically undisturbed
+by construction, since scaling never moves a point already on the scaling
+axis — the hub/mast junction sits exactly there, so it stays anchored
+while the rim breathes around it, the same way a bell rings while its
+stationary mount doesn't move. `latticeStruts`, `LATTICE_SEGS`, and the
+whole `ripplers` per-vertex-displacement system (2.2.14-2.2.18) are gone;
+`gravLens` now just holds a reference to `dishGroup` itself.
+`addStrut()`'s `heightSegments` parameter (added in 2.2.17) is kept —
+generically useful, harmless default, and its comment documents a real
+lesson (a strut with no vertices along its length can't be bent by
+per-vertex displacement) — but nothing currently passes a non-default
+value.
+
+One nice side effect: a Group.scale transform is one of the most basic,
+well-tested primitives in the renderer, so this class of change can't
+reintroduce 2.2.17's bug (a strut silently having no vertices to move) —
+there's no per-vertex geometry mutation left to get wrong.
+
+**Verification.** The same `document.hidden` rAF quirk showed up again,
+but harder this time — a direct poll of `dishGroup.scale` over 4.5 real
+seconds came back completely frozen (identical value every 100ms), i.e.
+the render loop was genuinely stalled, not just throttled, for that
+stretch. Rather than wait it out, verified the mechanism directly instead
+of the schedule: read the live (mid-decay) scale value the loop had
+already written before stalling, then bypassed the frozen loop entirely
+by setting `dishGroup.scale` to test values by hand and calling
+`renderer.render()` directly to force a fresh frame each time. At the
+shipped `CHIME_AMP` (0.05 peak, ±5%) the difference from rest was real
+but subtle at screenshot-crop scale — expected, since that's the intended
+"occasional, noticeable, not garish" magnitude. At an exaggerated test
+value (±15%, verification-only, never shipped) the effect was
+unambiguous: the whole lattice stretched as one coherent, still-perfectly-
+straight shape, with the mast still passing cleanly through dead center —
+confirming the mechanism (coherent, rigid, center-anchored) is correct
+independent of the exact shipped magnitude, and ruling out the "still
+reads as floppy" failure mode specifically. The ring-event scheduling
+itself (`RING_PERIOD`/`RING_DECAY`/`RING_FREQ`) is unchanged from 2.2.15,
+where it was live-verified against its own closed-form prediction.
+
 ## 2.2.18 (2026-08-10)
 
 **Solid resonator: drop the baseline, keep only the strike.** Scott's read

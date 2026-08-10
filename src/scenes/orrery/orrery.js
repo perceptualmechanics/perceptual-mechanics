@@ -497,11 +497,13 @@ function addBolts(parent, radius, count, ringGeoRadius) {
 
 // A welded brace (or a chain link) between two arbitrary points — used both
 // for the ring-to-mast braces and the ceiling-to-mast suspension chains.
-// heightSegments defaults to 1 (just the two end rings) since almost every
-// caller draws a static, never-deformed strut and doesn't need the extra
-// geometry. The lattice struts are the one caller that passes more: see the
-// 2.2.17 note at their call site — a strut ripple can only bend a strut that
-// actually HAS vertices along its length to bend.
+// heightSegments defaults to 1 (just the two end rings), which is enough
+// for every current caller — all static, never individually deformed.
+// Left tunable rather than hardcoded because of a real lesson from 2.2.17:
+// a strut with no vertices along its own length can't be bent by anything
+// that displaces individual vertices, only by a transform on the whole
+// mesh or its parent (see NOTES.md 2.2.17/2.2.18) — worth remembering
+// before any future effect tries per-vertex strut deformation again.
 function addStrut(parent, from, to, thickness, mat, heightSegments = 1) {
   const mid = from.clone().add(to).multiplyScalar(0.5);
   const dist = from.distanceTo(to);
@@ -659,31 +661,11 @@ function buildOrrery(preview, suspendTopY, rafterY) {
   // Radial spokes, apex to rim — one strut each now, not chained segments
   // (those existed only to let the old traveling pulse light pieces of a
   // spoke in sequence; with the pulse gone, one piece per spoke is simpler
-  // and exactly as structurally legible). Collected into latticeStruts —
-  // each addStrut() call already builds its OWN un-shared CylinderGeometry,
-  // which is exactly what the ripple effect below needs (see the comment
-  // above ripplers): mutating one strut's position attribute per frame
-  // never touches any other.
-  //
-  // LATTICE_SEGS (2.2.17 fix): addStrut's default heightSegments is 1 —
-  // just the two end rings — which is fine for every OTHER strut in this
-  // file (static, never displaced), but the ripple's envelope is
-  // deliberately zero at a strut's own two endpoints (anchored joints) and
-  // peaks at the middle. With only 2 end rings and no middle ring, every
-  // vertex on these struts sat exactly at one of the two endpoints, so the
-  // envelope was exactly zero everywhere — the ripple driver was firing
-  // correct amplitude values every frame across three rounds (2.2.14-16)
-  // while the actual geometry never moved a single float's worth. Confirmed
-  // live by reading the mutated position buffer directly (not a screenshot):
-  // displaced-minus-base came back ~1e-18, i.e. float noise, not motion.
-  // 8 height segments gives the middle of each strut real vertices for the
-  // envelope to actually act on.
-  const LATTICE_SEGS = 8;
-  const latticeStruts = [];
+  // and exactly as structurally legible).
   spokeDirs.forEach(dir => {
     const from = new THREE.Vector3(0, apexY, 0);
     const to = new THREE.Vector3(dir.x * dishR, rimY, dir.z * dishR);
-    latticeStruts.push(addStrut(dishGroup, from, to, (preview ? 0.009 : 0.012) * HW, webMat, LATTICE_SEGS));
+    addStrut(dishGroup, from, to, (preview ? 0.009 : 0.012) * HW, webMat);
   });
   // Cross-bracing rings — straight WEB_SPOKES-gon segments between
   // adjacent spokes at a few heights, not smooth circles: a spiderweb's
@@ -697,7 +679,7 @@ function buildOrrery(preview, suspendTopY, rafterY) {
       const a = spokeDirs[i], b = spokeDirs[(i + 1) % WEB_SPOKES];
       const from = new THREE.Vector3(a.x * r, y, a.z * r);
       const to = new THREE.Vector3(b.x * r, y, b.z * r);
-      latticeStruts.push(addStrut(dishGroup, from, to, (preview ? 0.006 : 0.008) * HW, webMat, LATTICE_SEGS));
+      addStrut(dishGroup, from, to, (preview ? 0.006 : 0.008) * HW, webMat);
     }
   }
   // The web's own physical center — where every spoke actually meets.
@@ -706,60 +688,59 @@ function buildOrrery(preview, suspendTopY, rafterY) {
   // this is a found web, not an engineered reflector, so everything
   // converges inward to its own hub instead of up to a feed floating
   // over it. Solid and unanimated, same webMat as the rest of the
-  // structure — including, now, the ripple below: the hub is just
-  // another lattice vertex meeting point, not exempted from it.
+  // structure — sitting dead center on dishGroup's own X/Z scaling axis
+  // (see the receiving-effect comment below), so it stays put as the
+  // resonator's fixed anchor point even while the rim rings.
   const webHub = new THREE.Mesh(new THREE.SphereGeometry((preview ? 0.028 : 0.036) * HW, 10, 10), webMat);
   webHub.position.y = apexY;
   dishGroup.add(webHub);
 
-  // ─── The receiving effect, round 3: no rendered object at all. Two
-  // earlier attempts (a particle beam, then a lensing patch built from
-  // either a MeshPhysicalMaterial sphere or a hand-shaded one) both
-  // failed for the SAME underlying reason, confirmed live each time: this
-  // scene already has an established visual vocabulary for "a small
-  // round-ish or irregular thing near the hub" — the nine planets, the
-  // asteroid-belt rocks — so any new mesh placed there gets sorted into
-  // that category by the eye regardless of how irregular its silhouette
-  // or texture gets. Making the edge ragged just changed which kind of
-  // object it read as (asteroid instead of sphere); it never stopped
-  // reading as an object. There's a physical reason the lensing version
-  // was fighting itself on top of that: real lensing only reads as
-  // bending when there's rich background detail to bend FOR COMPARISON,
-  // and what's actually behind the hub is mostly dark void and a few
-  // sparse stars — not enough there to make a bend legible, which is
-  // exactly why that version needed to generate its own visible surface
-  // just to be seen at all. The moment an effect has its own rendered
-  // surface, it's a thing, not a distortion of something else.
+  // ─── The receiving effect, round 4: a rigid mode, not a floppy one.
   //
-  // So: nothing new appears near the hub. The lattice struts already
-  // built above (latticeStruts, both the radial spokes and the ring
-  // cross-bracing) just subtly aren't quite solid — real per-frame vertex
-  // displacement on their own existing geometry, not a new mesh laid over
-  // them. addStrut() already gives every strut its own un-shared
-  // CylinderGeometry (see its own comment above latticeStruts), so this
-  // is safe: mutating one strut's position attribute every frame can
-  // never bleed into any other strut, the rings, the mast, or anything
-  // else in the room.
+  // Rounds 1-2 (particle beam, then a lensing patch built from either a
+  // MeshPhysicalMaterial sphere or a hand-shaded one) both failed for the
+  // same underlying reason, confirmed live each time: this scene already
+  // has an established visual vocabulary for "a small round-ish or
+  // irregular thing near the hub" — the nine planets, the asteroid-belt
+  // rocks — so any new mesh placed there gets sorted into that category
+  // by the eye regardless of how irregular its silhouette or texture
+  // gets. Making the edge ragged just changed which kind of object it
+  // read as (asteroid instead of sphere); it never stopped reading as an
+  // object. Real lensing also only reads as bending when there's rich
+  // background detail to bend FOR COMPARISON, and what's actually behind
+  // the hub is mostly dark void and a few sparse stars — not enough there
+  // to make a bend legible. So: nothing new ever appears near the hub;
+  // whatever moves has to be the lattice's own existing geometry.
   //
-  // Each strut's own UNDISPLACED position attribute, its own half-length
-  // (how far its local geometry extends from center along its own axis —
-  // read directly off its own vertices rather than re-deriving it from
-  // addStrut's `dist`, so this stays correct even if that call site ever
-  // changes), and a fixed random phase (so 36 struts don't all wobble in
-  // lockstep) are captured once, right here, then only ever READ from in
-  // animate() — same "fixed base state + a deterministic function of the
-  // clock" shape as every other animated geometry in this file (the
-  // planet-body displacement above, the dust motes below), never
-  // per-frame mutation of a running value, so it can't drift or
-  // compound.
-  const ripplers = latticeStruts.map(strut => {
-    const posAttr = strut.geometry.attributes.position;
-    const base = posAttr.array.slice();
-    let halfLen = 0;
-    for (let i = 1; i < base.length; i += 3) halfLen = Math.max(halfLen, Math.abs(base[i]));
-    return { posAttr, base, halfLen: halfLen || 1, phase: Math.random() * Math.PI * 2, freqScale: 0.85 + Math.random() * 0.3 };
-  });
-  const gravLens = { ripplers };
+  // Round 3 (2.2.14-2.2.18) tried that as real per-vertex displacement on
+  // each strut's own geometry, each strut given its own random phase and
+  // frequency so all 36 wouldn't move in lockstep. Once 2.2.17 fixed the
+  // geometry bug that had kept it motionless the whole time (see NOTES.md
+  // — addStrut()'s default heightSegments left every strut with vertices
+  // only at its own two endpoints, exactly where the displacement
+  // envelope was deliberately zero), that per-strut independence turned
+  // out to be exactly the wrong kind of variety: it read as "everything's
+  // wobbling," not "a resonant chime vibrating through a solid
+  // crystalline structure." That's the physically correct read for what
+  // per-strut-independent motion actually looks like — an incoherent
+  // tangle of unrelated local motion is how cloth or a floppy net moves,
+  // not how a bronze lattice welded solid at every joint moves even when
+  // genuinely ringing. A struck bell or tuning fork stays RIGID: every
+  // point on it moves in one shared, coherent pattern (a standing-wave
+  // "mode shape"), which is what makes it read as solid and resonant
+  // instead of floppy.
+  //
+  // So: no more per-vertex displacement, no more per-strut phase/
+  // frequency variety. One shared, rigid transform on the whole dishGroup
+  // instead — the classic "wine glass" mode an axisymmetric struck object
+  // actually rings in: the rim ovalizes, squeezing in on one axis while
+  // bulging on the perpendicular one, the same amount and the same phase
+  // everywhere, anchored at the center. Every strut, the hub, and every
+  // joint between them move together by construction, because it's one
+  // transform on their shared parent, not independent per-vertex writes —
+  // and it can't reintroduce 2.2.17's whole bug class either, since
+  // there's no per-vertex geometry mutation left to get wrong.
+  const gravLens = { dishGroup };
   group.add(dishGroup);
 
   // ─── The nine real planets — order, relative size, and orbital spacing
@@ -2553,32 +2534,8 @@ export function createOrrery(container, { preview = false } = {}) {
       }
       dustAttr.needsUpdate = true;
 
-      // The radio telescope's receiving effect — see the "round 3: no
-      // rendered object at all" comment on gravLens in buildOrrery.
-      //
-      // 2.2.18: dropped the always-on baseline layer entirely. Through
-      // 2.2.14-17 this had two scales summed together — a continuous low-
-      // level "solar system's own gravitational hum" plus an occasional
-      // stronger ring event — on the reasoning that they'd read as one
-      // phenomenon at different intensities. Once 2.2.17 actually fixed
-      // the geometry bug that had kept the whole thing motionless, Scott's
-      // read of the real, moving result was that a permanently-warping
-      // lattice reads as ambient spacetime distortion happening TO the
-      // scene, not as a solid object that occasionally responds to being
-      // struck — and a resonator's entire physical point is that it sits
-      // still until struck. So: no baseline term anymore. The struts hold
-      // their exact built geometry at rest; the only thing that ever moves
-      // them is an actual ring event.
-      //
-      // The ring event itself is unchanged in kind — rewritten in 2.2.15
-      // from an earlier version that modeled the SOURCE's own rising-
-      // frequency chirp directly (wrong physical object: this is a
-      // resonator, same deliberate orbital/orbiter conflation as Orbiter
-      // elsewhere on the site, not a receiver replaying the source's own
-      // waveform — a struck resonator doesn't chirp, it rings at its own
-      // natural frequency and decays, regardless of what struck it). That
-      // remains a genuine damped harmonic oscillator's impulse response:
-      // amplitude * exp(-decay*u) * sin(2*PI*freq*u).
+      // The radio telescope's receiving effect — see the "round 4: a rigid
+      // mode, not a floppy one" comment on gravLens in buildOrrery.
       //
       // realSeconds, not t: t is the orrery's own slow orbital clock
       // (+0.001/frame, ~0.06/real-second) but a scheduled "every 34
@@ -2591,42 +2548,28 @@ export function createOrrery(container, { preview = false } = {}) {
       const RING_FREQ = 2.6;      // TUNABLE: the resonator's OWN natural frequency (cycles/second) — fixed regardless of what struck it
       const RING_WINDOW = 9;      // TUNABLE: wide enough for RING_DECAY to fully die out; no computation needed past this
       const ringLocal = realSeconds % RING_PERIOD;
-      // Shared decay envelope: the whole lattice was struck by the same
-      // distant event at the same instant, so every strut's ring dies out
-      // on the same real-time schedule. Zero (not just small) outside the
-      // window — this is what makes the resonator genuinely solid and
+      // A genuine damped sinusoid — the strike itself is instantaneous (u
+      // = seconds since the strike, no separate rise phase), since a
+      // resonator's own ring starts at its peak the moment it's struck and
+      // only ever decays from there. Zero (not just small) outside the
+      // window: this is what makes the resonator genuinely solid and
       // unmoving between events, not just quiet.
-      const ringDecay = ringLocal < RING_WINDOW ? Math.exp(-ringLocal * RING_DECAY) : 0;
-      const RING_AMP = 0.045; // TUNABLE: peak contribution right at the strike, riding `ringDecay`
-      orrery.gravLens.ripplers.forEach(r => {
-        const { posAttr, base, halfLen, phase, freqScale } = r;
-        // freqScale/phase were built to desynchronize a continuous
-        // baseline carrier (2.2.14-17); with that carrier gone, they now
-        // desynchronize each strut's own ring instead — same reuse-not-
-        // rebuild rule as everywhere else in this driver. Different parts
-        // of a real struck object ring in slightly different local modes,
-        // not as one perfectly rigid unit, so this is more physically
-        // right than before, not just a repurposed leftover.
-        const ringPhaseX = 2 * Math.PI * RING_FREQ * freqScale * ringLocal + phase;
-        const ringPhaseZ = ringPhaseX + 1.3; // offset so X/Z don't ring in the same plane — a slight ellipse, not a flat sway
-        const dx = ringDecay * Math.sin(ringPhaseX) * RING_AMP;
-        const dz = ringDecay * Math.sin(ringPhaseZ) * RING_AMP * 0.8;
-        for (let i = 0; i < base.length; i += 3) {
-          const by = base[i + 1];
-          // Envelope: zero at both of the strut's own endpoints, peak at
-          // its middle — every strut here is welded to a neighbor (or the
-          // hub, or the rim) at both ends, so displacing an endpoint would
-          // visibly pull it loose from whatever it's joined to. Anchoring
-          // the ends and letting only the middle move keeps the whole
-          // lattice's joints intact while it ripples.
-          const t01 = clamp01((by / halfLen + 1) / 2);
-          const envelope = Math.sin(Math.PI * t01);
-          posAttr.array[i]     = base[i]     + envelope * dx;
-          posAttr.array[i + 1] = by;
-          posAttr.array[i + 2] = base[i + 2] + envelope * dz;
-        }
-        posAttr.needsUpdate = true;
-      });
+      const ring = ringLocal < RING_WINDOW
+        ? Math.exp(-ringLocal * RING_DECAY) * Math.sin(2 * Math.PI * RING_FREQ * ringLocal)
+        : 0;
+      // The classic "wine glass" ovalizing mode: squeeze in on one axis,
+      // bulge on the perpendicular one, at the SAME phase for the whole
+      // structure — one number, one shared transform, so every strut, the
+      // hub, and every joint between them move together by construction.
+      // Scaling only X/Z (never Y) leaves the exact center axis (X=0,
+      // Z=0 — where the hub meets the mast) mathematically undisturbed,
+      // since scaling never moves a point already on the scaling axis:
+      // the resonator stays anchored to the mast at its actual mount
+      // point while the rim breathes around it, same as a bell rings
+      // while its stationary mount doesn't.
+      const CHIME_AMP = 0.05; // TUNABLE: peak ovalizing amount, as a fraction of the dish's own scale
+      const chime = ring * CHIME_AMP;
+      orrery.gravLens.dishGroup.scale.set(1 + chime, 1, 1 - chime);
     }
 
     if (!hovered && !selected) {
