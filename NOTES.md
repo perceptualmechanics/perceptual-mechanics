@@ -225,6 +225,63 @@ described are unchanged.)
   worth trimming, orrery.js's texture generators and first-person rig are the
   two most self-contained chunks to split out first.
 
+## 2.2.15 (2026-08-09)
+
+**Ripple was invisible: calibration, not a bug — plus a waveform
+correction.** Status check requested before any retuning, since the last
+two rounds both had verification gaps. Re-read the 2.2.14 `ripplers`
+construction and the `animate()` driver line-by-line first: no structural
+bug — `latticeStruts` correctly populated from both strut-building loops,
+`ripplers` correctly derived for all 36 struts, the driver correctly wrote
+`posAttr.array` and set `needsUpdate` every frame. Confirmed live with a
+temporary debug hook (`window.__rippleDebug`, removed before commit) that
+read the actual per-frame amplitude/ring values plus the running scene's
+own camera distance, FOV, and viewport height out of the live closures
+(`camera`, `renderer`) rather than guessing them: camera-to-hub distance
+≈8.96 world units, viewport height 1318px, 54° FOV. At that geometry,
+2.2.14's `RIPPLE_AMP` (~0.0035–0.0083 absolute world units, sized against a
+strut's own length) projects to well under one screen pixel — genuinely
+invisible regardless of correct execution. The old shader-based lensing
+approach (2.2.12/2.2.13) had manipulated screen-space UV percentages,
+which are scale-invariant with camera distance; the geometry-displacement
+approach that replaced it in 2.2.14 uses absolute world-unit displacement,
+which has no such invariance. That's the actual root cause, not a firing
+bug. Retuned against on-screen pixel size instead of strut length:
+baseline now projects to roughly 4-5px at this camera distance (faintly
+noticeable if you're looking for it, not "obviously animated"), event peak
+to roughly 15px (genuinely distinguishable on close attention).
+
+Separately, a backstory correction: the object was still being modeled as
+a radio telescope replaying the distant chirp signal directly (a rising-
+frequency linear chirp, `F0 + K*u`). Reframed as a resonator instead — the
+same deliberate conflation Orbiter already runs elsewhere on the site
+(electron orbitals as satellite orbits) — a struck tuning fork or crystal
+doesn't reproduce the waveform that struck it, it rings at its own fixed
+natural frequency and decays. Replaced the linear chirp with a genuine
+damped-harmonic-oscillator impulse response, `exp(-decay*u) *
+sin(2*PI*freq*u)`, `freq` fixed at the resonator's own 2.6 Hz rather than
+sweeping. Baseline (the solar system's own continuous gravitational hum)
+and the ring event are summed, not multiplied, matching how a real struck
+object's resting vibration and a fresh impulse would actually combine.
+
+Verified live, not just numerically: caught the strike moment directly via
+the debug hook's rapid polling (sampled every ~80ms through an actual
+event) and confirmed the observed curve matches the closed-form prediction
+almost exactly (0.8564 observed vs. 0.854 predicted at u=0.121s post-
+strike) — the ring genuinely rings at a fixed frequency and decays, it
+does not chirp. Also confirmed visually: located the lattice on screen
+(requires pitching up roughly 30-35° from the default level gaze — the
+hub sits just outside the top edge of frame at zero pitch, consistent with
+"the peak poking out of the skylights"), zoomed on it, and captured two
+frames 1.5s apart; at JPEG-compression scale the few-pixel wobble is not
+reliably distinguishable by eye between two stills, which is the expected
+and intended result for an effect calibrated to "faintly noticeable," not
+"obviously animated" — the pixel-projection math and the live-sampled
+ring curve are the more reliable evidence here, not the screenshot
+comparison itself. Debug hook (`window.__rippleDebug`, plus a temporary
+`gravLens.__debugHub` reference) fully removed before commit; confirmed by
+grep and a clean `npx vite build`.
+
 ## 2.2.14 (2026-08-09)
 
 **Gravitational lensing: warp the lattice itself, remove the rendered

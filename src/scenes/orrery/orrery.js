@@ -2531,13 +2531,9 @@ export function createOrrery(container, { preview = false } = {}) {
 
       // The radio telescope's receiving effect — see the "round 3: no
       // rendered object at all" comment on gravLens in buildOrrery. Two
-      // scales, both riding the same ripple amplitude, so they read as one
-      // continuous phenomenon at different intensities rather than two
-      // separate effects switching on and off — but BOTH recalibrated to a
-      // much milder ceiling than the earlier (removed) lensing pass, since
-      // this now perturbs real, already-visible structure instead of
-      // filling a rendered shape: overdo this one and the lattice itself
-      // starts to look broken, not "genuinely warping":
+      // scales, both driving the same per-strut wobble, so they read as
+      // one continuous phenomenon at different intensities rather than two
+      // separate effects switching on and off:
       //  1. Baseline — the continuous, low-level gravitational motion of
       //     the solar system's own bodies (what the found text's "error
       //     tolerance approaching perfection" is actually describing).
@@ -2545,15 +2541,21 @@ export function createOrrery(container, { preview = false } = {}) {
       //     the exact layered-frequency math built for the earlier dish
       //     pulse and reused again here (a third time now), not a fresh
       //     bespoke system.
-      //  2. Chirp — an occasional merger event (real gravitational-wave
-      //     language: two compact objects spiraling together, radiating
-      //     faster and louder as they close, cutting off at coalescence).
-      //     Scheduled as a deterministic function of real elapsed time (no
-      //     random timing, no accumulated state — periodic but rare, same
-      //     shape as every other clock-driven effect in this file), riding
-      //     ON TOP of the baseline as a temporary boost, not replacing it —
-      //     "something changed" on close attention, not a visual event
-      //     that grabs focus.
+      //  2. Ring — an occasional distant catastrophic event (black hole or
+      //     neutron star merger). Rewritten from an earlier version that
+      //     modeled the SOURCE's own rising-frequency chirp directly —
+      //     wrong physical object for what this thing actually is. The
+      //     backstory settled since: this is a resonator (tuning-fork/
+      //     crystal-radio-like, same deliberate orbital/orbiter conflation
+      //     as Orbiter elsewhere on the site), not a receiver replaying the
+      //     source's own waveform. A struck resonator doesn't chirp — the
+      //     chirp belongs to the distant event, which this object never
+      //     directly sees. What a struck resonator actually does is
+      //     simpler and doesn't depend on what struck it: it rings at its
+      //     own natural frequency and decays. That's a real, standard
+      //     waveform — a damped harmonic oscillator's impulse response,
+      //     amplitude * exp(-decay*u) * sin(2*PI*freq*u) — not the linear
+      //     chirp this used to be.
       const baseline = organicPulse(t, 0.6) * 0.5 + organicPulse(t, 0.23) * 0.3;
 
       // realSeconds, not t: t is the orrery's own slow orbital clock
@@ -2563,50 +2565,46 @@ export function createOrrery(container, { preview = false } = {}) {
       // not t's compressed orbital time. now (performance.now(), already
       // computed above for dt) gives that directly, frame-rate independent.
       const realSeconds = now / 1000;
-      const CHIRP_PERIOD = 34; // TUNABLE: real seconds between merger events
-      const CHIRP_DUR = 5.5;   // TUNABLE: how long one event lasts
-      const chirpLocal = realSeconds % CHIRP_PERIOD;
-      let chirp = 0;
-      if (chirpLocal < CHIRP_DUR) {
-        const u = chirpLocal / CHIRP_DUR; // this event's own 0..1 progress
-        // Envelope: rises toward the merger (u ~ 0.85), rings down fast
-        // after — real inspiral amplitude grows toward coalescence, then
-        // the signal cuts off sharply once the bodies actually merge.
-        const envelope = u < 0.85 ? smoothstep01(u / 0.85) : Math.max(0, 1 - (u - 0.85) / 0.15);
-        // A standard linear chirp: instantaneous frequency rises linearly
-        // with time (f(u) = F0 + K*u), phase is frequency's own integral
-        // — the textbook chirp definition radar/sonar/audio all use, not
-        // a claim of exact inspiral physics (a real merger's frequency
-        // sweep actually accelerates faster than linear toward the end),
-        // but the same "rising pitch toward a peak" character asked for,
-        // in closed form (no accumulated per-frame phase, same rule as
-        // the telescope's earlier FM work).
-        const F0 = 2, K = 14;
-        const phase = 2 * Math.PI * (F0 * u + K * u * u / 2);
-        // Oscillates around a rising pedestal rather than through zero —
-        // ior/thickness can't go negative, but the real signal itself
-        // alternately stretches and squeezes; this keeps that alternating
-        // character legible (rapid late-stage ripples, not a smooth
-        // ramp) while staying physically valid for the material.
-        chirp = envelope * (0.5 + 0.5 * Math.sin(phase));
-      }
+      const RING_PERIOD = 34;     // TUNABLE: real seconds between struck events
+      const RING_DECAY = 0.6;     // TUNABLE: how fast the ring dies out (per second)
+      const RING_FREQ = 2.6;      // TUNABLE: the resonator's OWN natural frequency (cycles/second) — fixed regardless of what struck it
+      const RING_WINDOW = 9;      // TUNABLE: wide enough for RING_DECAY to fully die out; no computation needed past this
+      const ringLocal = realSeconds % RING_PERIOD;
+      // A genuine damped sinusoid, not an envelope-times-chirp: the strike
+      // itself is treated as instantaneous (u = seconds since the strike,
+      // no separate rise phase), since a resonator's own ring starts at
+      // its peak the moment it's struck and only ever decays from there.
+      const ring = ringLocal < RING_WINDOW
+        ? Math.exp(-ringLocal * RING_DECAY) * Math.sin(2 * Math.PI * RING_FREQ * ringLocal)
+        : 0;
 
-      // distortion combines both scales into one amplitude, exactly as the
-      // removed lensing pass did — reusing that same combination shape,
-      // just re-pointed at a real geometric displacement instead of a UV
-      // bend. RIPPLE_AMP's own range is the actual "mild ceiling" this
-      // round calls for: even at distortion's peak (mid-chirp), the
-      // absolute displacement stays a small fraction of a strut's own
-      // length — tuned live to sit at "you might not notice it unless
-      // you're already looking for it," not "obviously animated."
-      const distortion = baseline + chirp * 1.4;
-      const RIPPLE_AMP = 0.0035 + distortion * 0.006; // TUNABLE
-      const RIPPLE_RATE = 0.16; // TUNABLE: carrier oscillation rate, in dustClock units
+      // Visibility floor correction: the previous constants (roughly
+      // 0.0035-0.0083 baseline) were sized relative to a strut's own
+      // length, which turned out to be the wrong yardstick — at the
+      // camera's actual real-world distance from the mast peak (~9 units
+      // at a typical standing position), that absolute displacement
+      // projects to well under a screen pixel, reading as literally
+      // nothing rather than "mild." Confirmed live as a calibration
+      // problem, not a broken effect — the code was firing every frame the
+      // whole time. Retuned against on-screen pixel size at that distance,
+      // not strut length: BASE_AMP now lands a couple of screen pixels at
+      // a normal standing distance (faintly noticeable if you're looking
+      // for it), RING_AMP peaks a few times stronger (genuinely
+      // distinguishable on close attention, still short of an event that
+      // grabs focus).
+      const BASE_AMP = 0.018 + baseline * 0.022; // TUNABLE
+      const RING_AMP = 0.11; // TUNABLE: peak contribution right at the strike, riding `ring`'s own decay
+      const RIPPLE_RATE = 0.16; // TUNABLE: baseline carrier oscillation rate, in dustClock units
       orrery.gravLens.ripplers.forEach(r => {
         const { posAttr, base, halfLen, phase, freqScale } = r;
         const timePhaseX = dustClock * RIPPLE_RATE * freqScale + phase;
         const timePhaseZ = timePhaseX + 1.3; // offset so X/Z don't wobble in the same plane — a slight ellipse, not a flat sway
-        const sx = Math.sin(timePhaseX), sz = Math.sin(timePhaseZ);
+        // Baseline (slow hum) and ring (fast decaying strike) are summed,
+        // not multiplied — two real, independent contributions to the same
+        // displacement, same as how an actual struck object's motion would
+        // combine its own resting vibration with a fresh impulse response.
+        const dx = Math.sin(timePhaseX) * BASE_AMP + ring * RING_AMP;
+        const dz = Math.sin(timePhaseZ) * BASE_AMP + ring * RING_AMP * 0.8;
         for (let i = 0; i < base.length; i += 3) {
           const by = base[i + 1];
           // Envelope: zero at both of the strut's own endpoints, peak at
@@ -2617,9 +2615,9 @@ export function createOrrery(container, { preview = false } = {}) {
           // lattice's joints intact while it ripples.
           const t01 = clamp01((by / halfLen + 1) / 2);
           const envelope = Math.sin(Math.PI * t01);
-          posAttr.array[i]     = base[i]     + envelope * RIPPLE_AMP * sx;
+          posAttr.array[i]     = base[i]     + envelope * dx;
           posAttr.array[i + 1] = by;
-          posAttr.array[i + 2] = base[i + 2] + envelope * RIPPLE_AMP * sz;
+          posAttr.array[i + 2] = base[i + 2] + envelope * dz;
         }
         posAttr.needsUpdate = true;
       });
