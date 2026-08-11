@@ -381,5 +381,5 @@ export const cdRackItems = [
   // --- Last confirmed round ---
   { id: 113, artist: 'Lush', album: 'Gala', video: '"Sweetness and Light," official music video', youtube: 'https://www.youtube.com/watch?v=u7cqkpy4QrQ' },
   { id: 114, artist: 'Built to Spill', album: 'Keep It Like a Secret', video: '"Carry the Zero," the band\'s best-known song', youtube: 'https://www.youtube.com/watch?v=MEeolUZeW9M' },
-  { id: 115, artist: 'The Beach Boys', album: 'Pet Sounds', video: '"God Only Knows," the band\'s best song', youtube: 'https://youtu.be/NADx3-qRxek?si=n-hr7Afszv645Eqa' },
+  { id: 115, artist: 'The Beach Boys', album: 'Pet Sounds', video: '"God Only Knows," the band\'s best song', youtube: 'https://www.youtube.com/watch?v=M0lj3WX_5ps' },
 ];
