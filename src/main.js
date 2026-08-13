@@ -291,8 +291,8 @@ const PM_GLIMPSE_WORDS = {
   theater: 'light entertainment',
   orbiter: 'lantern',
   orrery: 'will',
-  library: 'catalogued',
-  beamline: 'incidence',
+  library: 'medium',
+  beamline: 'emergence',
   title: 'secrets',
 };
 let pmGlimpseTimer = null;
