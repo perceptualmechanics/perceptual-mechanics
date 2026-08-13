@@ -1637,7 +1637,7 @@ export function createBeamline(container, { preview = false } = {}) {
   //   ish with a proportional size increase in both directions at once).
   const CA_COLS = 64, CA_ROWS = 34; // ≈705×375 units at GRID_CELL spacing — roughly doubled linear extent so the field reads as part of a larger whole, not a bounded tile
   const GRID_CELL = 2600 / 236; // ≈11.02 — the real on-screen cell spacing the terrain's own grid texture produces — STRUCTURAL: this is measured to match the terrain grid texture, not a free spacing choice; changing it desyncs the lattice from the ground pattern it's meant to sit on
-  const CA_EDGE_START = 0.7; // fraction of the lattice's own half-extent where the perimeter falloff begins — matches EDGE_FALLOFF_START's role for the terrain — TUNABLE, same effect as that constant: smaller = falloff band starts closer to center (more of the lattice looks "eroded"), closer to 1 = only the very outer rim fades
+  const CA_EDGE_START = 0.8; // fraction of the lattice's own half-extent where the perimeter falloff begins — matches EDGE_FALLOFF_START's role for the terrain — TUNABLE, same effect as that constant: smaller = falloff band starts closer to center (more of the lattice looks "eroded"), closer to 1 = only the very outer rim fades
   // Conway's Game of Life, the standard B3/S23 rule, spelled out here in
   // full — this IS the entire rule, nothing else governs how the pattern
   // evolves generation to generation:
