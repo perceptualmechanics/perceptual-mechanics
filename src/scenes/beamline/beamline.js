@@ -12,10 +12,10 @@ import { mulberry32, hashSeed } from '../../utils/prng.js';
 // Hue ~216°, one numeric hex value applied to every touchpoint (rail,
 // stations, vessel, UI); only lightness/darkness varies per-touchpoint,
 // never hue.
-const ACCENT = 0x0066ff;        // canonical — rail core, station glow, vessel light
-const ACCENT_HALO = 0x4d94ff;   // lighter tint, same hue — rail halo, dust
-const ACCENT_DEEP = 0x002152;   // darker tint, same hue — vessel/station chassis fill
-const ACCENT_SHADOW = 0x000e24; // darkest tint, same hue — unused directly here, kept for parity with the rest of the site's palette set
+const ACCENT = 0x50C878;        // canonical — rail core, station glow, vessel light
+const ACCENT_HALO = 0x8ADAA4;   // lighter tint, same hue — rail halo, dust
+const ACCENT_DEEP = 0x309A54;   // darker tint, same hue — vessel/station chassis fill
+const ACCENT_SHADOW = 0x1E6034; // darkest tint, same hue — unused directly here, kept for parity with the rest of the site's palette set
 
 // Secondary gold accent — pulled from Sphere's own gold
 // (src/scenes/sphere.js's .fragment-link:hover, rgba(255,220,120,.95)), not
@@ -28,14 +28,14 @@ const ACCENT_SHADOW = 0x000e24; // darkest tint, same hue — unused directly he
 const GOLD_ACCENT_CSS = 'rgba(255,220,120,'; // canvas fillStyle prefix, same shape as makeGlowTexture's hue param
 
 // The skybox's own horizon-band color (matches makeSkyboxTexture()'s sky
-// gradient's final stop, '#0d56c0', below) — pulled out to a shared
+// gradient's final stop below) — pulled out to a shared
 // constant so scene.fog can be set to the SAME value rather than an
 // independently-chosen one. The terrain mesh (a single continuous mesh,
 // see terrainHeight() below) is what actually prevents a horizon seam;
 // matching this color to the skybox just keeps the terrain's own far edge
 // (well past the fog line, see scene.fog below) from ever reading as a
 // color step even in principle.
-const HORIZON_COLOR = 0x0d56c0;
+const HORIZON_COLOR = 0x1E6034;
 // #rrggbb string form of the same constant — canvas 2D APIs (skybox
 // gradient) want a CSS color string; THREE.Fog wants the numeric hex.
 // Deriving one from the other keeps them structurally unable to drift apart.
@@ -535,9 +535,9 @@ function makeSkyboxTexture() {
   const horizonY = h * 0.58;
   const sky = cx.createLinearGradient(0, 0, 0, horizonY);
   sky.addColorStop(0, '#00030c');
-  sky.addColorStop(0.5, '#020a22');
-  sky.addColorStop(0.82, '#041c40');
-  sky.addColorStop(0.95, '#0a3a78');
+  sky.addColorStop(0.5, '#020d22');
+  sky.addColorStop(0.82, '#042140');
+  sky.addColorStop(0.95, '#0a6978');
   sky.addColorStop(1, HORIZON_CSS); // = scene.fog's color, see HORIZON_COLOR above
   cx.fillStyle = sky;
   cx.fillRect(0, 0, w, horizonY);
