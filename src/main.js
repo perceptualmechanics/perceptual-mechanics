@@ -289,7 +289,7 @@ const PM_GLIMPSE_WORDS = {
   butterfly: 'complexity',
   scroll: 'savagery',
   theater: 'light entertainment',
-  orbiter: 'lantern',
+  orbiter: 'atmosphere',
   orrery: 'will',
   library: 'medium',
   beamline: 'emergence',
