@@ -19,13 +19,23 @@ const ACCENT_SHADOW = 0x1E6034; // darkest tint, same hue — unused directly he
 
 // Secondary gold accent — pulled from Sphere's own gold
 // (src/scenes/sphere.js's .fragment-link:hover, rgba(255,220,120,.95)), not
-// approximated from scratch. Scoped narrowly on purpose: the station
-// numbering text only (see makeLabelTexture's bounceStyle below), one
-// deliberate warm accent against the cool blue field — the same register
-// as Orbiter's teal/violet pairing elsewhere on the site, not a second
-// competing primary color, so it isn't applied to the rail, stations,
-// vessel, or anything else ACCENT already owns.
+// approximated from scratch. Previously scoped to the station numbering
+// text only (see makeLabelTexture's bounceStyle below); as of the emerald
+// palette pass it also gets one standing, non-text presence — see
+// buildStation's warmed core and buildVessel's rim light below — so gold
+// isn't entirely absent from the idle wide view (no station open) the way
+// it used to be. Still deliberately minor next to ACCENT: a glint at each
+// waypoint's own heart and a thin edge on the vessel, not a third field
+// color competing with the rail for attention.
 const GOLD_ACCENT_CSS = 'rgba(255,220,120,'; // canvas fillStyle prefix, same shape as makeGlowTexture's hue param
+const GOLD_ACCENT = 0xffdc78; // numeric form of the same rgb(255,220,120) — Three.js materials want a hex, canvas 2D wants the rgba() string above; both derived from the same Sphere-sourced value, just for different APIs
+// Station core, warmed — a hand-picked blend of ACCENT and GOLD_ACCENT at
+// roughly 3:1 (green:gold), not a fresh color: R 80→124, G 200→205, B
+// 120→120 (green and gold already share the same blue channel, so only R/G
+// shift). Reads as "emerald with a warm glint at its heart," not a second
+// hue — the core is the one small spot per waypoint that carries it; the
+// ring around it (buildStation below) stays pure ACCENT.
+const STATION_CORE_WARM = 0x7ccd78;
 
 // The skybox's own horizon-band color (matches makeSkyboxTexture()'s sky
 // gradient's final stop below) — pulled out to a shared
@@ -754,7 +764,13 @@ function buildStation(point, tangent) {
   const coreGeo = new THREE.IcosahedronGeometry(3.2, 0);
   const coreMat = new THREE.MeshStandardMaterial({
     color: 0x0a0d18, metalness: 0.75, roughness: 0.22,
-    emissive: ACCENT, emissiveIntensity: 1.0,
+    // Warmed (STATION_CORE_WARM, see that constant's comment), not plain
+    // ACCENT — the standing gold presence for tweak #2: every waypoint gem
+    // carries a small warm glint at its own heart even with no station
+    // open, so gold isn't only ever a text color. The ring just below stays
+    // pure ACCENT, so the warmth reads as one small accent per marker, not
+    // a second field color.
+    emissive: STATION_CORE_WARM, emissiveIntensity: 1.0,
   });
   const core = new THREE.Mesh(coreGeo, coreMat);
   core.position.copy(point);
@@ -885,6 +901,24 @@ function buildVessel(ringPulseTex) {
   });
   const hull = new THREE.Mesh(hullGeo, hullMat);
 
+  // Rim light — the standing gold presence for tweak #2, on the vessel
+  // itself. Cheap inverted-hull technique (a backface-only shell, scaled
+  // slightly larger than the hull it wraps, sharing its geometry — no
+  // second geometry to dispose): at any silhouette edge the backface
+  // shows through past the front face, reading as a thin glowing outline;
+  // everywhere else the front hull simply occludes it. No fresnel shader,
+  // just depth + winding order doing the real work, same "cheap real
+  // technique over a hand-tuned approximation" register as the rest of
+  // this scene. Deliberately subtle (low opacity, additive) and confined
+  // to the hull alone — the engine ring behind it keeps carrying the
+  // vessel's actual light, so this never competes with that or the rail.
+  const rimMat = new THREE.MeshBasicMaterial({
+    color: GOLD_ACCENT, transparent: true, opacity: 0.3, side: THREE.BackSide,
+    blending: THREE.AdditiveBlending, depthWrite: false,
+  });
+  const rim = new THREE.Mesh(hullGeo, rimMat);
+  rim.scale.setScalar(1.14);
+
   const pulseMap = ringPulseTex.clone();
   pulseMap.needsUpdate = true;
   const ringGeo = new THREE.TorusGeometry(1.5, 0.22, 8, 32);
@@ -904,9 +938,9 @@ function buildVessel(ringPulseTex) {
   glow.position.set(0, 0, -2.2);
 
   const group = new THREE.Group();
-  group.add(hull, ring, glow);
+  group.add(hull, rim, ring, glow);
 
-  return { group, hull, hullGeo, hullMat, ring, ringGeo, ringMat, pulseMap, glow, glowMat, glowTex };
+  return { group, hull, hullGeo, hullMat, rim, rimMat, ring, ringGeo, ringMat, pulseMap, glow, glowMat, glowTex };
 }
 
 export function createBeamline(container, { preview = false, initialPieceId = null, onPieceChange = null } = {}) {
@@ -914,15 +948,28 @@ export function createBeamline(container, { preview = false, initialPieceId = nu
   const h = container.clientHeight || window.innerHeight;
 
   const scene = new THREE.Scene();
-  // The far fog distance isn't needed for hiding the terrain's own edge
-  // (the plane below puts that edge well past any fog distance regardless)
-  // — a shorter falloff instead reads better for the ground-level default
-  // camera (item 3, below): real ground-level sightlines are naturally
-  // hazier/shorter than an overhead view's, and the moodier, more enclosed
-  // falloff suits "standing in the landscape" better than seeing clearly
-  // for hundreds of units. Near/far still chosen so a station at CAM_MIN
-  // stays unfogged.
-  scene.fog = new THREE.Fog(HORIZON_COLOR, preview ? 45 : 60, preview ? 400 : 560);
+  // Exponential fog (FogExp2), not linear — real atmospheric scattering
+  // falls off as 1 - exp(-(density*distance)^2) (Beer-Lambert, the same
+  // "real math over hand-tuned approximation" discipline as terrainHeight()
+  // and the rail curve), not a straight ramp clamped hard at both ends.
+  // THREE.Fog's old near/far pair had two flat plateaus baked in — fully
+  // unfogged below `near`, fully fogged (one flat solid color) above `far`
+  // — which is exactly why terrain read as "uniform regardless of
+  // distance": anything past 560 units (most of FAR_PEAKS) was literally
+  // the same clamped color, and a single nearby MOUNTAINS mound (~50 units
+  // radius) span too little of the 500-unit linear window to show its own
+  // near-to-far falloff. FogExp2 has no hard clamp — it keeps asymptotically
+  // approaching the fog color at any distance, so a mound's own near and
+  // far slopes read as visibly different, and the far peaks keep receding
+  // rather than sitting at one flat plateau. Density chosen to land at the
+  // same ~85-90% blend the old `far` value did (560 full / 400 preview),
+  // preserving the scene's existing hazy, enclosed mood — this corrects the
+  // clamping artifact, not the overall amount of haze. Still the SAME
+  // HORIZON_COLOR terrain fades toward (see that constant's own comment —
+  // matching the skybox's horizon band is what keeps the terrain's far edge
+  // from ever reading as a color seam).
+  const FOG_DENSITY = preview ? 0.0035 : 0.0025;
+  scene.fog = new THREE.FogExp2(HORIZON_COLOR, FOG_DENSITY);
   scene.background = new THREE.Color(0x00020a);
 
   // Far plane cleared out to comfortably contain the skybox sphere (radius
@@ -1990,7 +2037,7 @@ export function createBeamline(container, { preview = false, initialPieceId = nu
       terminus.gate2Geo.dispose(); terminus.gate2Mat.dispose();
       terminus.coreGeo.dispose(); terminus.coreMat.dispose();
       terminus.glowTex.dispose(); terminus.glowMat.dispose();
-      vessel.hullGeo.dispose(); vessel.hullMat.dispose();
+      vessel.hullGeo.dispose(); vessel.hullMat.dispose(); vessel.rimMat.dispose(); // rim shares hullGeo, disposed once above
       vessel.ringGeo.dispose(); vessel.ringMat.dispose(); vessel.pulseMap.dispose();
       vessel.glowTex.dispose(); vessel.glowMat.dispose();
       ringPulseTex.dispose();

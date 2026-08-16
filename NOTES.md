@@ -248,6 +248,56 @@ described are unchanged.)
   worth trimming, orrery.js's texture generators and first-person rig are the
   two most self-contained chunks to split out first.
 
+## 2.3.1 (2026-08-16)
+
+**Beamline: emerald palette tweaks.** Two small follow-ups to the "going
+green" pass (see 2.2.4-area history), both in service of the same stated
+color hierarchy: navy is void/field, green is terrain/life, cyan is
+energy/motion (rail, vessel), gold is attention/meaning.
+
+**1. Atmospheric perspective on the terrain.** `scene.fog` was
+`THREE.Fog` (linear, near 60/far 560 full, 45/400 preview) — a straight
+ramp clamped hard at both ends: fully unfogged below `near`, one flat
+solid color above `far`. That clamping was the actual bug behind "near and
+far mountains read the same" — most of FAR_PEAKS sat past the `far` clamp
+and were literally identical, and a single nearby MOUNTAINS mound (~50-unit
+radius) spans too little of the 500-unit linear window to show its own
+near-to-far falloff. Switched to `THREE.FogExp2` (density 0.0025 full /
+0.0035 preview, tuned to land at roughly the same overall haze the old
+`far` value did, so the scene's existing enclosed/moody read is preserved,
+not the amount of haze changed — the clamping artifact is what's fixed).
+Real exponential (Beer-Lambert-shaped) falloff has no hard clamp, so a
+single mound's own near and far slopes now read as visibly different, and
+FAR_PEAKS keep receding rather than sitting at one flat plateau. Same
+HORIZON_COLOR terrain fades toward as before — still load-bearing for
+matching the skybox's own horizon band, unchanged.
+
+**2. A standing gold presence in the idle state.** Gold previously only
+ever appeared in station/caption text, meaning the idle wide view (no
+station open) was 100% green/blue for as long as the vessel was simply
+traveling. Two additions, both deliberately minor: `STATION_CORE_WARM`
+(0x7ccd78, a hand-computed ~3:1 blend of ACCENT and the existing
+Sphere-sourced GOLD_ACCENT, both share the same blue channel so only R/G
+shift) replaces plain ACCENT on `buildStation`'s core emissive — every
+waypoint gem now carries a warm glint at its own heart, while the ring
+around it stays pure ACCENT. And `buildVessel` gets a rim light: a
+backface-only shell sharing the hull's own geometry, scaled 1.14x, gold,
+additive, opacity 0.3 — the standard cheap inverted-hull rim-light
+technique (winding order + depth doing the work, no fresnel shader),
+confined to the hull alone so it never competes with the engine ring's own
+green/cyan pulse or the rail.
+
+Verified: `node --check`, `npm run verify-links` + bare `npx vite build`
+clean. Live in Chrome against the dev server: the default idle framing
+before/after shows the near/center mountain now carrying visible grid
+detail with a genuine near-to-far gradient (previously flat navy-black),
+and every visible waypoint gem showing a warm facet against its own green
+ring even with no station open. Rim light confirmed by pausing the scene's
+own animation loop and manually driving camera + vessel position/render
+calls (temporary debug hook, removed after) to frame the hull at close
+range — a thin bright gold edge is visible along its silhouette, distinct
+from the green fill and the cyan/green engine glow behind it.
+
 ## 2.3.0 (2026-08-16)
 
 **Linking infrastructure: the foundation a discovery brief asked for, built as
