@@ -248,6 +248,106 @@ described are unchanged.)
   worth trimming, orrery.js's texture generators and first-person rig are the
   two most self-contained chunks to split out first.
 
+## 2.3.2 (2026-08-16)
+
+**Beamline: growth-patch reach, terrain color variation, and two real bugs
+found along the way.**
+
+**1. Growth-patch CA now extends into the fog, not just hidden by it.** The
+2.3.1 fog fix (linear → FogExp2) made distance genuinely fade things rather
+than clamp at a plateau — this pass gives it something real to fade. The
+real question asked first: does the Game-of-Life simulation already scope
+itself to an active region, or does it run the full grid uniformly
+regardless of distance? It ran uniformly — `stepGameOfLife()` processed the
+whole COLS×ROWS grid every generation, and (the actually expensive part) a
+per-frame brightness-easing loop touched every point's color attribute
+every single frame, both with zero distance awareness. Naively growing the
+grid to reach farther would have scaled both costs directly with area.
+Fixed with a two-tier LOD instead (`createGrowthTier()`, replacing the old
+single inline setup): NEAR is exactly the original grid, unchanged (64×34
+cells, 11-unit spacing, 1.7s/generation, per-frame eased fade). FAR is a
+second, much larger, much coarser field — 46×24 cells at 3x the spacing
+(9x fewer points per unit area), stepping every 4th NEAR-generation, and
+skipping the per-frame ease entirely (brightness snaps only on its own
+infrequent step) — its steady per-frame cost is close to zero. FAR's own
+reach (half-extents ~760×400) was solved from the fog density itself, not
+picked by eye: blend = 1-exp(-(density·d)²) hits ~97% by d≈750 along the
+wider axis at FOG_DENSITY 0.0025. Both tiers keep the default
+`fog: true` a PointsMaterial already has and reuse the SAME elliptical
+extent-falloff technique the terrain's own edgeFalloff() established — no
+second, separate fade invented for this pass, per the brief.
+
+**2. Found live: the transient station label never cleared its own hash.**
+Sphere/orbiter/library's persistent panels keep the URL in sync with what's
+on screen by construction; Beamline's label is deliberately transient (see
+its own header comment) and nothing ever called `onPieceChange(null)` when
+it finished its own auto-fade. A clicked (or deep-linked) station's hash
+(`#beamline/<id>`) stayed in the URL indefinitely after the label itself
+had long since faded to nothing — reported live as "the URL shows a station
+but nothing's there." Fixed: the same branch that already hides the sprite
+now also calls `onPieceChange?.(null)`, resetting the hash to bare
+`#beamline`, the same contract every other scene's panel-close already
+keeps.
+
+**3. Found live: a real crash, not just a stale hash — this is what "the
+page dies on refresh" actually was.** `openPieceById(initialPieceId)` was
+called immediately after its own definition, well before this scene's `let
+hoveredStation = null, selectedStation = null;` — and `showLabel()` (which
+`openPieceById` calls) assigns `selectedStation` as its first line. A fresh
+load of `#beamline/<id>` hit that binding's temporal dead zone and threw
+`ReferenceError: Cannot access 'selectedStation' before initialization`,
+aborting `createBeamline()` entirely — every single time, for every id.
+Explains the exact symptom reported: navigating between scenes in-app never
+passes a piece id through this path (no crash), but a hard refresh at a
+`#beamline/<id>` URL always does (`main.js`'s own initial-hash handling).
+Fixed by moving the call to just before `animate()`, the first point in the
+function where every variable `showLabel` touches is already declared —
+pre-existing since Beamline picked up piece-level deep-linking in 2.3.0,
+unrelated to this pass's other changes, just found while live-testing them.
+
+**4. Terrain color was genuinely flat, not just fog-obscured.** Live
+sampling of several distant mountain peaks returned identical color values
+regardless of which peak was sampled — the terrain material had no color
+variation of its own. Root cause was two-layered: the terrain never wrote
+per-vertex color in the first place, and separately `terrainMat.map` was
+set to the same near-black grid canvas doing double duty as `emissiveMap`,
+which as `map` was crushing the diffuse channel (`color * vertexColor *
+map`) to near-nothing regardless of what `color` held — the visible read
+was almost entirely emissive. Fixed by reusing data that already exists
+rather than hand-painting variation, per the brief: (1) a hypsometric
+color ramp (`hypsometricColor()`) keyed off the same height value
+`terrainHeight()` already computes, interpolating across the site's own
+ACCENT_SHADOW → ACCENT_DEEP → ACCENT → ACCENT_HALO stops (same palette,
+reused wholesale, not new colors); (2) a finer fBm noise layer
+(`terrainVertexColor()`, using the existing `fbm()` primitive) multiplied
+in as a subtle per-vertex shade so slopes don't band. Both are baked once
+into a real `color` BufferAttribute at mesh-build time, not computed per
+frame. `map` was removed from the diffuse channel entirely (kept only as
+`emissiveMap`, unchanged grid-line glow) and `color` changed from
+`0x02040a` to neutral `0xffffff` so the new vertex colors render at their
+own true value.
+
+Verified: `node --check`, `npm run verify-links` + bare `npx vite build`
+clean. Live in Chrome: point counts confirmed (NEAR 2,176 + FAR 1,104 =
+3,280, up from 2,176, not the 5-7x a naive uniform expansion to the same
+reach would have needed); manually drove 300 simulated frames via a
+temporary debug hook (`document.hidden` throttles rAF in this sandbox's
+background tab, so wall-clock waits don't reflect real frame pacing —
+driving frames directly and timing with `performance.now()` does) — 1.50ms/
+frame for the full scene update+render (≈668 FPS headroom), of which the
+two CA tiers' own tick cost is 0.04ms combined; confirmed no hard edge at
+FAR's own outer boundary and meaningfully farther visible reach at several
+zoom levels; confirmed the ReferenceError is gone and `#beamline/<id>`
+loads cleanly for multiple ids (1, 3, 7) with no console errors; confirmed
+the hash resets to `#beamline` once a label's own fade completes (verified
+by manually driving frames past `labelSustain + LABEL_FADE`, same
+rAF-throttling workaround as the perf check); confirmed the three
+hand-placed MOUNTAINS peaks (heights 40/55/32) now compute distinct
+hypsometric RGB values (~[71,187,110]/[101,206,136]/[60,171,97] vs. an
+identical flat color for all three before) and read as visibly distinct
+tones live (olive, blue-teal with ridge banding, brighter green), with
+background peaks still fading correctly into the FogExp2 haze.
+
 ## 2.3.1 (2026-08-16)
 
 **Beamline: emerald palette tweaks.** Two small follow-ups to the "going

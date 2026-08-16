@@ -438,6 +438,58 @@ export function terrainHeight(x, z) {
   return FLOOR_Y + h;
 }
 
+// ─── Terrain color: hypsometric ramp + noise, not a flat material color ──
+// Confirmed live: the terrain material's own `color` was one flat value
+// applied everywhere — sampling several distant mountain peaks returned
+// literally identical RGB regardless of which peak, most obvious on the
+// big continuous MOUNTAINS masses where a large uniform shape makes flat
+// color impossible to miss. Fixed with real data-driven variation, not
+// hand-tuned per-mountain colors — the same discipline as terrainHeight()
+// itself and the Orrery's own patina work: reuse data that already exists.
+//
+// Layer 1, hypsometric tinting: color keyed to the SAME height value
+// terrainHeight() already computes to build the geometry — no separate
+// data source. The four stops are ACCENT_SHADOW → ACCENT_DEEP → ACCENT →
+// ACCENT_HALO (all defined at the top of this file), reused wholesale
+// rather than a new hand-picked ramp: this scene's own established green
+// tints, already doing this exact "same hue, four brightness steps" job
+// everywhere else it appears (rail halo, station chassis, vessel light).
+// ACCENT_SHADOW is worth calling out specifically — it's the literal same
+// hex as HORIZON_COLOR (0x1E6034), so the lowest ground ties directly into
+// the fog/void color instead of an arbitrary invented "ground floor" hue.
+const TERRAIN_COLOR_RANGE = 70; // TUNABLE — height (in world units above FLOOR_Y) the ramp spans before clamping to ACCENT_HALO. Set from MOUNTAINS' own tallest peak (55) plus headroom, not guessed: the three hand-placed near mountains — the ones actually confirmed flat during live testing — span nearly the full ramp this way. FAR_PEAKS (up to 175) simply clip to the top stop past this, same practical-range clipping real hypsometric maps use; they're deep enough in fog by then that the clip is never visible as a hard line.
+const TERRAIN_COLOR_STOPS = [ACCENT_SHADOW, ACCENT_DEEP, ACCENT, ACCENT_HALO].map(hex => ({
+  r: ((hex >> 16) & 255) / 255, g: ((hex >> 8) & 255) / 255, b: (hex & 255) / 255,
+}));
+function hypsometricColor(h) {
+  const t = Math.max(0, Math.min(1, (h - FLOOR_Y) / TERRAIN_COLOR_RANGE));
+  const seg = t * (TERRAIN_COLOR_STOPS.length - 1); // 0..3 across 4 stops
+  const i = Math.min(TERRAIN_COLOR_STOPS.length - 2, Math.floor(seg));
+  const localT = seg - i;
+  const a = TERRAIN_COLOR_STOPS[i], b = TERRAIN_COLOR_STOPS[i + 1];
+  return { r: a.r + (b.r - a.r) * localT, g: a.g + (b.g - a.g) * localT, b: a.b + (b.b - a.b) * localT };
+}
+// Layer 2, fine noise on top: real terrain color isn't perfectly correlated
+// with height — it has its own texture, or hypsometric tinting alone reads
+// as crude banding. Reuses fbm() (defined above, the exact same value-noise
+// fBm terrainHeight()'s own wilderness layer already runs), just at a much
+// finer spatial frequency — this is surface-level color texture, not
+// landform shape, so it needs to change over ~20 units, not the ~130-340
+// units WILDERNESS_SCALE/RIDGE_SCALE work at. Same technique category as
+// the Orrery's bronze patina noise. Output remapped from fbm's native 0..1
+// to a symmetric brightness multiplier centered on 1, so it reads as
+// mottled brighter/darker patches breaking up the ramp rather than a flat
+// tint shift.
+const TERRAIN_NOISE_SCALE = 1 / 22; // TUNABLE — spatial frequency of the surface texture noise; smaller denominator = finer/busier mottling
+const TERRAIN_NOISE_STRENGTH = 0.22; // TUNABLE — ±22% brightness variation; enough to visibly break up hypsometric banding without reading as static/noisy
+const TERRAIN_NOISE_SEED = 13500; // distinct from terrainHeight's own noise seeds (5000, 9000) so this texture doesn't correlate 1:1 with the height field's own broad shape
+function terrainVertexColor(wx, wz, h) {
+  const base = hypsometricColor(h);
+  const n = fbm(wx * TERRAIN_NOISE_SCALE, wz * TERRAIN_NOISE_SCALE, TERRAIN_NOISE_SEED, 3);
+  const shade = 1 + (n - 0.5) * 2 * TERRAIN_NOISE_STRENGTH;
+  return { r: base.r * shade, g: base.g * shade, b: base.b * shade };
+}
+
 // ─── Canvas textures ────────────────────────────────────────────────────
 function makeGlowTexture(hue = 'rgba(200,225,255,') {
   const c = document.createElement('canvas');
@@ -1199,12 +1251,22 @@ export function createBeamline(container, { preview = false, initialPieceId = nu
     terrainGeo = new THREE.PlaneGeometry(W, H, SEGX, SEGY);
     terrainGeo.rotateX(-Math.PI / 2);
     const pos = terrainGeo.attributes.position;
+    // Real per-vertex color, computed from the SAME height value used to
+    // displace this vertex in the first place (see terrainVertexColor()
+    // above) — not a second, independent data source. This is what
+    // actually varies now; the grid texture below stays exactly what it
+    // was, an emissive-only overlay.
+    const colors = new Float32Array(pos.count * 3);
     for (let i = 0; i < pos.count; i++) {
       const wx = pos.getX(i) + TERRAIN_CENTER.x;
       const wz = pos.getZ(i) + TERRAIN_CENTER.z;
-      pos.setY(i, terrainHeight(wx, wz));
+      const y = terrainHeight(wx, wz);
+      pos.setY(i, y);
+      const c = terrainVertexColor(wx, wz, y);
+      colors[i * 3] = c.r; colors[i * 3 + 1] = c.g; colors[i * 3 + 2] = c.b;
     }
     pos.needsUpdate = true;
+    terrainGeo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
     terrainGeo.computeVertexNormals();
 
     terrainTex = makeGridTexture(); // repeat arg irrelevant — both axes overridden next line for whichever extent above
@@ -1217,8 +1279,21 @@ export function createBeamline(container, { preview = false, initialPieceId = nu
     // moderate distance thins into what reads as a stray straight beam —
     // one root cause, two symptoms. DoubleSide means there's no "wrong
     // side" to view this single-sheet mesh from at any camera position.
+    //
+    // `color` is now white and `map` has been dropped from the diffuse
+    // channel entirely (terrainTex still drives `emissiveMap`, unchanged)
+    // — previously map AND color were both doing diffuse duty, and
+    // terrainTex's own canvas fill is near-black (#02040a) everywhere
+    // except its thin grid lines, so diffuse*map was crushing anything
+    // in `color` to almost nothing regardless of what it was. That's
+    // WHY the flat single color went unnoticed for as long as it did:
+    // the terrain's visible read was already coming almost entirely from
+    // emissive (the grid texture), not lit diffuse. vertexColors:true
+    // wires in the real per-vertex color above; white `color` is a
+    // neutral multiplier so it comes through at its own true value,
+    // shaped by the scene's actual (dim, moody) lighting same as before.
     terrainMat = new THREE.MeshStandardMaterial({
-      color: 0x02040a, map: terrainTex, emissive: 0xffffff, emissiveMap: terrainTex,
+      color: 0xffffff, vertexColors: true, emissive: 0xffffff, emissiveMap: terrainTex,
       emissiveIntensity: 0.5, roughness: 0.85, metalness: 0.05, fog: true,
       side: THREE.DoubleSide,
     });
@@ -1485,7 +1560,7 @@ export function createBeamline(container, { preview = false, initialPieceId = nu
     const station = stations.find(s => BOUNCES[s.stationIndex]?.id === id);
     if (station) showLabel(station);
   }
-  if (!preview && initialPieceId !== null) openPieceById(initialPieceId);
+  // NOT called here — see the call site near animate() below for why.
 
   // ─── Drag to orbit + wheel zoom (sceneKit) ─────────────────────────────
   let autoRotate = true;
@@ -1680,25 +1755,45 @@ export function createBeamline(container, { preview = false, initialPieceId = nu
   // known Life ground truth (a blinker's period-2 oscillation, a block's
   // stability, an isolated cell dying of underpopulation).
   //
+  // Two tiers, NEAR + FAR (see the createGrowthTier() calls below), not one
+  // uniform grid stretched to cover more ground — the question that decided
+  // this: does the simulation already scope itself to an active region near
+  // the camera? It didn't. stepGameOfLife() ran the full COLS×ROWS grid
+  // every generation regardless of distance, and — the actually expensive
+  // part — a per-frame brightness-easing loop touched every point's color
+  // attribute every single frame, also regardless of distance. Naively
+  // growing COLS/ROWS to reach much farther out would have scaled BOTH
+  // costs directly with area (quadratic in linear reach). The fix is the
+  // one the brief asked for: cells far enough out that the scene's own fog
+  // (see scene.fog, now FogExp2, above) already obscures cell-level detail
+  // don't need full simulation fidelity to look correct. NEAR keeps
+  // exactly today's grid, spacing, step rate, and per-frame eased fade —
+  // no change, no regression risk to the close-up read. FAR is a second,
+  // much larger, much coarser field (3x the cell spacing, so 9x fewer
+  // points per unit area) that only re-simulates every 4th NEAR-generation
+  // and snaps its brightness on those steps instead of easing every frame
+  // — its steady per-frame cost is close to zero. Both tiers reuse the
+  // SAME elliptical extent-falloff technique already established here
+  // (mirroring the terrain's own edgeFalloff()) for their own outer
+  // boundary, and both keep the default `fog: true` a PointsMaterial
+  // already has — so it's the EXISTING fog system doing the actual
+  // "recede into haze" work, at FAR's own much larger scale, not a new,
+  // second fade invented for this pass.
+  //
   // This lattice is a SEPARATE layer from the terrain mesh (its own
   // Points system, own fixed extent) — the wilderness edgeFalloff() above
   // only tapers terrain height, so it has no effect on this grid, which is
-  // why the patch would otherwise read as a hard-edged rectangle even
-  // though the terrain's own boundary dissolves smoothly. The same
-  // underlying idea is applied here instead to density/position/
-  // brightness: the Game-of-Life SIMULATION still runs on the full plain
-  // rectangular COLS×ROWS grid (its own neighbor topology has to stay a
-  // real rectangle), but each point's RENDERED density/position/
-  // brightness is additionally shaped by caEdgeFactor/caEligible below,
-  // computed once at setup from that point's own distance from
-  // CAM_TARGET.
-  // CA_COLS / CA_ROWS: TUNABLE — the lattice's dimensions in cells. More
-  //   cells = a bigger patch of ground covered, at the cost of more
-  //   points to update every generation (cols*rows grows quadratically-
-  //   ish with a proportional size increase in both directions at once).
-  const CA_COLS = 64, CA_ROWS = 34; // ≈705×375 units at GRID_CELL spacing — roughly doubled linear extent so the field reads as part of a larger whole, not a bounded tile
-  const GRID_CELL = 2600 / 236; // ≈11.02 — the real on-screen cell spacing the terrain's own grid texture produces — STRUCTURAL: this is measured to match the terrain grid texture, not a free spacing choice; changing it desyncs the lattice from the ground pattern it's meant to sit on
-  const CA_EDGE_START = 0.8; // fraction of the lattice's own half-extent where the perimeter falloff begins — matches EDGE_FALLOFF_START's role for the terrain — TUNABLE, same effect as that constant: smaller = falloff band starts closer to center (more of the lattice looks "eroded"), closer to 1 = only the very outer rim fades
+  // why a tier would otherwise read as a hard-edged rectangle even though
+  // the terrain's own boundary dissolves smoothly. The same underlying idea
+  // is applied here instead to density/position/brightness: each tier's
+  // Game-of-Life SIMULATION still runs on its own full plain rectangular
+  // COLS×ROWS grid (the neighbor topology has to stay a real rectangle),
+  // but each point's RENDERED density/position/brightness is additionally
+  // shaped by that tier's own edgeFactor/eligible arrays, computed once at
+  // setup from the point's own distance from CAM_TARGET.
+  const GRID_CELL = 2600 / 236; // ≈11.02 — the real on-screen cell spacing the terrain's own grid texture produces — STRUCTURAL: this is measured to match the terrain grid texture, not a free spacing choice; changing it desyncs either tier from the ground pattern it's meant to sit on. FAR uses a clean multiple of this (3x), not an unrelated spacing, so its points still land on real terrain grid intersections, just every third one.
+  const CA_EDGE_START = 0.8; // fraction of a tier's own half-extent where its perimeter falloff begins — matches EDGE_FALLOFF_START's role for the terrain — TUNABLE, same effect as that constant: smaller = falloff band starts closer to center (more of the lattice looks "eroded"), closer to 1 = only the very outer rim fades. Shared by both tiers.
+  const CA_SEED_DENSITY = 0.28; // classic "random soup" density for interesting Life activity — TUNABLE, but not freely: Life is known to behave interestingly (a mix of die-off, stabilization, and sustained activity) around densities roughly in the 0.2-0.4 range; push it much lower and almost everything dies in a few generations, push it much higher and the grid tends to collapse into a static, over-crowded mess faster
   // Conway's Game of Life, the standard B3/S23 rule, spelled out here in
   // full — this IS the entire rule, nothing else governs how the pattern
   // evolves generation to generation:
@@ -1719,7 +1814,9 @@ export function createBeamline(container, { preview = false, initialPieceId = nu
   //     comments reference verifying against. Changing them creates a
   //     genuinely different automaton (most other B/S rule combinations
   //     either die out almost immediately or fill the entire grid solid)
-  //     — not "the same Life with a different look."
+  //     — not "the same Life with a different look." Shared by both tiers
+  //     — FAR runs the exact same rule, just less often (see
+  //     createGrowthTier's stepInterval below), not a simplified rule.
   function stepGameOfLife(grid, cols, rows) {
     const next = new Uint8Array(cols * rows);
     for (let y = 0; y < rows; y++) {
@@ -1736,89 +1833,145 @@ export function createBeamline(container, { preview = false, initialPieceId = nu
     }
     return next;
   }
-  let caGrid = null, caGeo = null, caMat = null, caTex = null, caPoints = null;
-  const caBrightness = [];
-  let caEdgeFactor = null; // per-point smooth brightness multiplier from the perimeter falloff (1 in the interior, →0 at the true edge)
-  let caEligible = null; // per-point stochastic existence flag — thins the field itself (gaps), not just brightness, so the boundary reads as fraying rather than uniformly dimming
-  let caRng = null, caTimer = 0;
-  const CA_STEP_INTERVAL = 1.7; // seconds per generation — a real automaton's own discrete clock, not an organic wander — TUNABLE: lower = the pattern visibly evolves faster; this only paces how often stepGameOfLife() is CALLED, it has no effect on the rule itself
-  const CA_SEED_DENSITY = 0.28; // classic "random soup" density for interesting Life activity — TUNABLE, but not freely: Life is known to behave interestingly (a mix of die-off, stabilization, and sustained activity) around densities roughly in the 0.2-0.4 range; push it much lower and almost everything dies in a few generations, push it much higher and the grid tends to collapse into a static, over-crowded mess faster
-  function seedCaGrid() {
-    const grid = new Uint8Array(CA_COLS * CA_ROWS);
-    for (let i = 0; i < grid.length; i++) grid[i] = caRng() < CA_SEED_DENSITY ? 1 : 0;
-    return grid;
-  }
-  if (!preview) {
-    caTex = makeGlowTexture('rgba(120,220,190,'); // slightly green-shifted from ACCENT — reads as young growth, not more current
-    caRng = mulberry32(hashSeed('beamline-growth-ca'));
-    caGrid = seedCaGrid();
-    const positions = new Float32Array(CA_COLS * CA_ROWS * 3);
-    const colors = new Float32Array(CA_COLS * CA_ROWS * 3);
-    const baseX = CAM_TARGET.x - (CA_COLS / 2) * GRID_CELL;
-    const baseZ = CAM_TARGET.z - (CA_ROWS / 2) * GRID_CELL;
-    const caHalfW = (CA_COLS / 2) * GRID_CELL, caHalfH = (CA_ROWS / 2) * GRID_CELL;
-    caEdgeFactor = new Float32Array(CA_COLS * CA_ROWS);
-    caEligible = new Uint8Array(CA_COLS * CA_ROWS);
-    for (let cy = 0; cy < CA_ROWS; cy++) {
-      for (let cx = 0; cx < CA_COLS; cx++) {
-        const i = cy * CA_COLS + cx;
-        const gx = baseX + cx * GRID_CELL, gz = baseZ + cy * GRID_CELL;
-        // Elliptical falloff, same shape as edgeFalloff() above but against
-        // this lattice's own (non-square) half-extents rather than the
-        // terrain plane's. Same three-part read as that function: nx/nz
-        // normalize this point's offset from the camera target into
-        // ellipse-relative units, rNorm is the combined normalized
-        // "radius" (0 at center, 1 exactly at the lattice's own outer
-        // edge), and `edge` is 1 inside CA_EDGE_START, 0 beyond rNorm=1,
-        // and a smoothstep01 ease in between — the value 1 = full
-        // strength, 0 = none, used twice below for two DIFFERENT effects.
-        const nx = (gx - CAM_TARGET.x) / caHalfW, nz = (gz - CAM_TARGET.z) / caHalfH;
+  // Builds one tier of the growth lattice — called twice below (NEAR, FAR)
+  // with different cols/rows/cellSize/stepInterval/ease, so the two tiers'
+  // setup and per-frame update logic can't drift apart into two hand-
+  // maintained copies of the same ~80 lines. `ease: true` reproduces the
+  // original single-tier behavior exactly (per-frame exponential brightness
+  // ease, reduceMotion snaps it to instant); `ease: false` is FAR's own
+  // cheap path — brightness is written only on the tier's own (infrequent)
+  // generation step, nothing touches its color attribute on the frames in
+  // between, which is what actually keeps FAR's steady per-frame cost low
+  // regardless of how many points it has.
+  function createGrowthTier({ name, cols, rows, cellSize, stepInterval, ease, tex, colorRgb }) {
+    const rng = mulberry32(hashSeed(`beamline-growth-ca-${name}`));
+    const seedGrid = () => {
+      const g = new Uint8Array(cols * rows);
+      for (let i = 0; i < g.length; i++) g[i] = rng() < CA_SEED_DENSITY ? 1 : 0;
+      return g;
+    };
+    let grid = seedGrid();
+    const positions = new Float32Array(cols * rows * 3);
+    const colors = new Float32Array(cols * rows * 3);
+    const edgeFactor = new Float32Array(cols * rows);
+    const eligible = new Uint8Array(cols * rows);
+    const brightness = new Float32Array(cols * rows);
+    const baseX = CAM_TARGET.x - (cols / 2) * cellSize;
+    const baseZ = CAM_TARGET.z - (rows / 2) * cellSize;
+    const halfW = (cols / 2) * cellSize, halfH = (rows / 2) * cellSize;
+    // Same elliptical extent-falloff as the original single-tier version
+    // (see the header comment above) — computed once here per tier against
+    // THAT tier's own half-extents, not a shared/global one.
+    for (let cy = 0; cy < rows; cy++) {
+      for (let cx = 0; cx < cols; cx++) {
+        const i = cy * cols + cx;
+        const gx = baseX + cx * cellSize, gz = baseZ + cy * cellSize;
+        const nx = (gx - CAM_TARGET.x) / halfW, nz = (gz - CAM_TARGET.z) / halfH;
         const rNorm = Math.sqrt(nx * nx + nz * nz);
         const edge = rNorm <= CA_EDGE_START ? 1
           : rNorm >= 1 ? 0
           : 1 - smoothstep01((rNorm - CA_EDGE_START) / (1 - CA_EDGE_START));
-        caEdgeFactor[i] = edge;
-        // Density falloff: a point deep in the perimeter band has a low
-        // chance of ever being eligible to render at all, decided once
-        // (not re-rolled every frame) so gaps stay fixed rather than
-        // flickering. This is a genuine coin-flip weighted by `edge`
-        // (edge=1 → always eligible, edge=0.3 → 30% chance, edge=0 →
-        // never) — a DIFFERENT use of the same `edge` value than
-        // caEdgeFactor's own brightness-multiplier role above; one shapes
-        // which points exist at all (sparser near the boundary), the
-        // other shapes how bright the ones that do exist can get.
-        caEligible[i] = caRng() < edge ? 1 : 0;
-        // Position jitter: zero in the untouched interior, growing toward
-        // the true edge, so eligible edge points scatter off the perfect
-        // lattice instead of staying grid-locked right up to a line.
-        // (caRng() - 0.5) is a uniform offset centered on 0 (equally
-        // likely to nudge either direction); jitterStrength (0 in the
-        // interior, rising to 1 right at the true edge, since edge itself
-        // falls from 1 to 0 over that same span) scales how far that
-        // nudge is allowed to reach. TUNABLE: 2.2 (multiplied by
-        // GRID_CELL, so it scales automatically if grid spacing changes)
-        // is the maximum jitter distance in units of grid-cell-widths at
-        // full strength — raise it for edge points to scatter looser/
-        // farther from the lattice, lower it to keep them closer to a
-        // recognizable grid even near the boundary.
+        edgeFactor[i] = edge;
+        eligible[i] = rng() < edge ? 1 : 0;
         const jitterStrength = 1 - edge;
-        const wx = gx + (caRng() - 0.5) * GRID_CELL * 2.2 * jitterStrength;
-        const wz = gz + (caRng() - 0.5) * GRID_CELL * 2.2 * jitterStrength;
+        const wx = gx + (rng() - 0.5) * cellSize * 2.2 * jitterStrength;
+        const wz = gz + (rng() - 0.5) * cellSize * 2.2 * jitterStrength;
         positions[i * 3] = wx;
         positions[i * 3 + 1] = terrainHeight(wx, wz) + 0.35;
         positions[i * 3 + 2] = wz;
-        caBrightness.push(caGrid[i]); // start already at the seed's own state, no fade-in from black on load
+        brightness[i] = grid[i]; // start already at the seed's own state, no fade-in from black on load
       }
     }
-    caGeo = new THREE.BufferGeometry();
-    caGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-    caGeo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-    caMat = new THREE.PointsMaterial({
-      size: 4.4, map: caTex, vertexColors: true, transparent: true,
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+    const mat = new THREE.PointsMaterial({
+      size: 4.4, map: tex, vertexColors: true, transparent: true,
       depthWrite: false, sizeAttenuation: true, blending: THREE.AdditiveBlending,
     });
-    caPoints = new THREE.Points(caGeo, caMat);
-    root.add(caPoints);
+    const points = new THREE.Points(geo, mat);
+    const [cr, cg, cb] = colorRgb.map(v => v / 255);
+    function writeColors() {
+      const colorAttr = geo.attributes.color;
+      for (let i = 0; i < grid.length; i++) {
+        const b = brightness[i] * edgeFactor[i];
+        colorAttr.setXYZ(i, cr * b, cg * b, cb * b);
+      }
+      colorAttr.needsUpdate = true;
+    }
+    writeColors(); // paint the seeded state immediately, don't wait for the first step
+    let timer = 0;
+    function tick(dt, reduceMotion) {
+      timer += dt;
+      let stepped = false;
+      if (timer >= stepInterval) {
+        timer -= stepInterval;
+        grid = stepGameOfLife(grid, cols, rows);
+        // A small/finite random-soup Life board commonly burns out to all-
+        // dead or settles into static still-lifes; reseed (continuing the
+        // SAME deterministic rng stream, so this stays reproducible across
+        // reloads) if the board goes fully dark, rather than leaving the
+        // grid permanently empty.
+        let alive = 0;
+        for (let i = 0; i < grid.length; i++) alive += grid[i];
+        if (alive === 0) grid = seedGrid();
+        stepped = true;
+      }
+      if (ease) {
+        // NEAR's own behavior, unchanged: brightness closes 10% of the
+        // remaining gap toward its target every frame (reduceMotion forces
+        // that to 100%, i.e. instant) — see the original comment this was
+        // lifted from for why that reads as a fade rather than a flicker.
+        const rate = reduceMotion ? 1 : 0.1;
+        for (let i = 0; i < grid.length; i++) {
+          const target = eligible[i] ? grid[i] : 0;
+          brightness[i] += (target - brightness[i]) * rate;
+        }
+        writeColors();
+      } else if (stepped) {
+        // FAR's own behavior: no per-frame work at all except on the rare
+        // frame its own generation actually advances — snap straight to
+        // the new state then. Cheap, and correct: fog already keeps this
+        // tier from ever reading as a crisp, individually-legible flicker.
+        for (let i = 0; i < grid.length; i++) brightness[i] = eligible[i] ? grid[i] : 0;
+        writeColors();
+      }
+    }
+    return { points, geo, mat, tick };
+  }
+  let caNear = null, caFar = null, caGlowTex = null;
+  if (!preview) {
+    caGlowTex = makeGlowTexture('rgba(120,220,190,'); // slightly green-shifted from ACCENT — reads as young growth, not more current. Shared by both tiers — one texture, not two.
+    caNear = createGrowthTier({
+      name: 'near', cols: 64, rows: 34, cellSize: GRID_CELL, stepInterval: 1.7,
+      // TUNABLE: lower stepInterval = the pattern visibly evolves faster;
+      // this only paces how often stepGameOfLife() is CALLED for this
+      // tier, it has no effect on the rule itself. ≈705×375 units at
+      // GRID_CELL spacing — unchanged from before this pass.
+      ease: true, tex: caGlowTex, colorRgb: [120, 220, 190],
+    });
+    caFar = createGrowthTier({
+      // 46×24 at 3x the cell spacing ≈1520×792 units (half-extents
+      // ~760×396) — reasoned from the fog itself, not picked by eye: at
+      // FOG_DENSITY 0.0025 (see scene.fog above), blend = 1-exp(-(d·k)^2)
+      // reaches ~97% by d≈750 along the wider (x) axis. Past that, this
+      // tier's own points are already almost entirely fog-colored before
+      // its own edgeFactor/eligible erosion (same technique as NEAR, just
+      // computed against this tier's own larger half-extents) does
+      // anything — the fog is doing the real hiding, same as the terrain's
+      // own wilderness layer sitting "visible on the horizon, never
+      // reachable." The shorter (z) axis reaches only ~63% blend at ITS
+      // own true edge — the same asymmetry NEAR already has (its own
+      // aspect ratio is preserved here, not newly introduced), and the
+      // erosion band covers the rest.
+      name: 'far', cols: 46, rows: 24, cellSize: GRID_CELL * 3, stepInterval: 1.7 * 4,
+      // 4x NEAR's own interval — still the real B3/S23 rule (see
+      // stepGameOfLife), just ticking less often. A generation this far
+      // out changing every ~6.8s instead of ~1.7s is not something anyone
+      // could track through this much haze regardless.
+      ease: false, tex: caGlowTex, colorRgb: [120, 220, 190],
+    });
+    root.add(caNear.points, caFar.points);
   }
 
   // ─── Animate ─────────────────────────────────────────────────────────────
@@ -1897,49 +2050,17 @@ export function createBeamline(container, { preview = false, initialPieceId = nu
     }
 
     // Growth-patch cellular automaton — the generation clock itself always
-    // advances (a real automaton's discrete ticks aren't the kind of
-    // decorative ambient motion reduceMotion is meant to quiet, any more
-    // than the vessel's own travel below is); what DOES respect reduceMotion
-    // is how a cell's brightness gets there — eased over several frames
-    // normally, snapped instantly when motion is reduced, so a reduced-
-    // motion visitor still sees the automaton's real current state, just
-    // without the fade.
-    if (caGrid) {
-      caTimer += 1 / 60;
-      if (caTimer >= CA_STEP_INTERVAL) {
-        caTimer -= CA_STEP_INTERVAL;
-        caGrid = stepGameOfLife(caGrid, CA_COLS, CA_ROWS);
-        // A small/finite random-soup Life board commonly burns out to all-
-        // dead or settles into static still-lifes; reseed (continuing the
-        // SAME deterministic rng stream, so this stays reproducible across
-        // reloads) if the board goes fully dark, rather than leaving the
-        // grid permanently empty.
-        let alive = 0;
-        for (let i = 0; i < caGrid.length; i++) alive += caGrid[i];
-        if (alive === 0) caGrid = seedCaGrid();
-      }
-      const colorAttr = caGeo.attributes.color;
-      // easeRate: TUNABLE — this is a standard exponential-ease-toward-
-      // target step (`current += (target - current) * rate`, run once per
-      // frame): each frame, brightness closes the gap toward its target
-      // (fully lit or fully dark, from the automaton's own binary state)
-      // by 10% of whatever gap remains, rather than snapping instantly.
-      // That's what makes a cell's birth/death read as a fade rather than
-      // an abrupt flicker — the automaton itself only knows "alive" or
-      // "dead," this is a purely visual smoothing layer on top of that
-      // binary state. Raise toward 1 for a snappier, less smoothed
-      // transition; reduceMotion forces exactly 1 (instant, no ease) so a
-      // reduced-motion visitor still sees the real current state without
-      // the animated fade itself being motion.
-      const easeRate = reduceMotion ? 1 : 0.1;
-      for (let i = 0; i < caGrid.length; i++) {
-        const target = caEligible[i] ? caGrid[i] : 0; // ineligible perimeter points never light up, regardless of the automaton's own state
-        caBrightness[i] += (target - caBrightness[i]) * easeRate;
-        const b = caBrightness[i] * caEdgeFactor[i]; // smooth brightness taper on top of the stochastic thinning above
-        colorAttr.setXYZ(i, 0.47 * b, 0.86 * b, 0.75 * b); // rgba(120,220,190,) normalized, scaled by brightness
-      }
-      colorAttr.needsUpdate = true;
-    }
+    // advances for both tiers (a real automaton's discrete ticks aren't the
+    // kind of decorative ambient motion reduceMotion is meant to quiet, any
+    // more than the vessel's own travel below is); what DOES respect
+    // reduceMotion is NEAR's own per-frame brightness ease (see
+    // createGrowthTier above) — eased over several frames normally, snapped
+    // instantly when motion is reduced, so a reduced-motion visitor still
+    // sees the automaton's real current state, just without the fade. FAR
+    // already snaps unconditionally (no ease to begin with), so reduceMotion
+    // has nothing further to do there.
+    caNear?.tick(1 / 60, reduceMotion);
+    caFar?.tick(1 / 60, reduceMotion);
 
     // Vessel travel — real Lévy-flight step statistics along the whole
     // hand-placed curve (see the Lévy setup above), not constant speed:
@@ -1988,6 +2109,22 @@ export function createBeamline(container, { preview = false, initialPieceId = nu
     // Station label — sustains, then fades, then hides, same single-block
     // state machine as before; dismissLabel() rewinds into the same window
     // rather than a separate close path.
+    //
+    // Bug fixed here: the hash gets set to `#beamline/<id>` the moment a
+    // label opens (showLabel's own onPieceChange call), but nothing ever
+    // cleared it back once the label finished its OWN auto-fade — unlike
+    // sphere/orbiter/library's persistent panels, this label is transient
+    // by design, so the hash has to be transient too, or it silently falls
+    // out of sync with what's actually on screen: URL still says a specific
+    // station is open, page shows nothing. A fresh load at that now-stale
+    // URL still opens and plays the label through its own normal
+    // sustain/fade right on schedule (openPieceById below), so it isn't a
+    // crash — it just fades out exactly like a click would, and then
+    // nothing on screen ever again matches what the address bar claims,
+    // for as long as that tab stays open. onPieceChange(null) below resets
+    // the hash to bare `#beamline` the moment the label actually hides,
+    // the same "URL reflects what's visible, nothing more" contract every
+    // other scene's own panel-close already keeps.
     if (labelSprite.visible) {
       updateLabelScale();
       const age = tSec - labelShownAt;
@@ -1998,12 +2135,33 @@ export function createBeamline(container, { preview = false, initialPieceId = nu
       } else {
         labelSprite.visible = false;
         selectedStation = null;
+        onPieceChange?.(null);
       }
     }
 
     renderer.render(scene, camera);
     clippedPreview?.blit();
   }
+
+  // Deep-link entry — called here, not up by openPieceById's own
+  // definition (where it used to sit), and that move is load-bearing, not
+  // cosmetic. This scene's own click handler declares `let hoveredStation
+  // = null, selectedStation = null;` further down the function than
+  // openPieceById's own definition, and showLabel() (which openPieceById
+  // calls) assigns `selectedStation` as its very first line. Calling
+  // openPieceById(initialPieceId) any earlier than this — including right
+  // after its own definition — runs into that `let` binding's temporal
+  // dead zone and throws a real ReferenceError ("Cannot access
+  // 'selectedStation' before initialization"), which aborts
+  // createBeamline() entirely: a fresh load of `#beamline/<id>` (exactly
+  // what this call exists to support) never rendered anything at all,
+  // every time, and `expandScene` in main.js had nothing left to catch it
+  // with. By this point in the function every variable showLabel touches
+  // (selectedStation, labelSprite, labelMat, viewportH, camera) is long
+  // since declared, so this is simply the first point in the function
+  // where calling it is actually safe.
+  if (!preview && initialPieceId !== null) openPieceById(initialPieceId);
+
   animate();
 
   const resize = bindGuardedResize(container, (nw, nh) => {
@@ -2046,7 +2204,9 @@ export function createBeamline(container, { preview = false, initialPieceId = nu
       shimmerGeo?.dispose(); shimmerMat?.dispose(); shimmerTex?.dispose();
       gridBugsGeo?.dispose(); gridBugsMat?.dispose(); gridBugsTex?.dispose();
       skyMotesGeo?.dispose(); skyMotesMat?.dispose(); skyMotesTex?.dispose();
-      caGeo?.dispose(); caMat?.dispose(); caTex?.dispose();
+      caNear?.geo.dispose(); caNear?.mat.dispose();
+      caFar?.geo.dispose(); caFar?.mat.dispose();
+      caGlowTex?.dispose(); // shared by both tiers, disposed once
       labelTex?.dispose(); labelMat.dispose();
 
       jumpList?.dispose();
