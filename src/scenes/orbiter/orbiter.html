@@ -1,9 +1,11 @@
 <!--
   Orbiter scene shell markup — full scene only (preview mode never mounts
-  any of this). The poem panel's title/content are genuinely dynamic
+  any of this). The poem panel's title/content/refs are genuinely dynamic
   (swapped per-satellite-click, with cross-link HTML built per poem in
-  orbiter.js's renderPoemInto/renderStanza) so only the panel's static
-  skeleton — close button, empty title/content slots — lives here.
+  orbiter.js's renderPoemInto/renderStanza; .orbiter-panel-refs filled by
+  the same function — see sceneKit.js's formatInboundNote) so only the
+  panel's static skeleton — close button, empty title/content/refs slots —
+  lives here.
 -->
 
 <p class="orbiter-caption" aria-hidden="true">sing, orbiter</p>
@@ -14,4 +16,5 @@
   <button type="button" class="orbiter-panel-close" aria-label="Close panel">&#10005;</button>
   <h2 id="orbiter-panel-title" class="orbiter-panel-title" tabindex="-1"></h2>
   <div class="orbiter-panel-content"></div>
+  <p class="orbiter-panel-refs"></p>
 </aside>

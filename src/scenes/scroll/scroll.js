@@ -82,7 +82,8 @@
 // in the box.
 
 import { scrollPieces, toOgham } from './scroll.text.js';
-import { escapeHtml, parseHTML } from '../../utils/sceneKit.js';
+import { getOutboundLinks, getInboundLinks } from '../../links.js';
+import { escapeHtml, parseHTML, wireCrossLinks } from '../../utils/sceneKit.js';
 import scrollHtml from './scroll.html?raw';
 import './scroll.css';
 
@@ -100,6 +101,7 @@ const TONES = {
 
 const PATCHES = scrollPieces.map(p => ({
   key: p.key,
+  pieceId: p.id, // stable per-scene id (src/links.js addressing) — id below is a DOM element id string, a different thing that happens to share the name "id"
   id: `patch-${p.key}`,
   body: p.body,
   tone: TONES[p.key] ?? 0,
@@ -107,23 +109,15 @@ const PATCHES = scrollPieces.map(p => ({
 
 const MOTIF_CYCLE = ['spiral', 'chevron', 'cupring', 'dots'];
 
-// Phrases already present in the raw text that get wired as live cross-links.
-const LINKS = [
-  { patch: 'selfmutilation', para: 0,  phrase: "You can’t be afraid to lose everything.", target: 'patch-death' },
-  { patch: 'projection',     para: 36, phrase: 'Jeremy Constantilios',                    target: 'patch-holography' },
-  { patch: 'holography',     para: 0,  phrase: 'Jeremy Constantilios',                    target: 'patch-projection' },
-  // 'Pilgrimage to Hell' is a real link each way, not just rubric-ink
-  // coloring — it's the exact same joke, verbatim, in both pieces (Jeremy's
-  // own version of it in Holography, the narrator's in Projection).
-  { patch: 'holography',     para: 15, phrase: 'pilgrimage to Hell',                      target: 'patch-projection' },
-  { patch: 'projection',     para: 2,  phrase: 'pilgrimage to Hell',                      target: 'patch-holography' },
-  // Pygmalion (2000) is the oldest-dated piece on the scroll, nine years
-  // before Projection was written — but it already names, in so many words,
-  // the exact mechanism Projection spends its whole length dramatizing:
-  // falling for a self-built image of someone rather than the person
-  // herself. The word is right there in Pygmalion's own text.
-  { patch: 'pygmalion',      para: 44, phrase: 'projection',                              target: 'patch-projection' },
-];
+// Phrases already present in the raw text that get wired as live
+// cross-links used to live in a LINKS array here, keyed by `patch` (the
+// string above) + paragraph index. Migrated into the shared src/links.js
+// store — { scene: 'scroll', id: pieceId, field: 'body', index: para } —
+// alongside every other scene's, using the same numeric id scrollPieces
+// entries carry now instead of the patch key. RUBRICS, INTENSITIES, and
+// SCRIPT_INSERTS below are a different concern (styling/typesetting, not
+// links) and stay exactly as they were — nothing about this migration
+// touches them.
 
 // Rubric ink — color only, no link. Sparingly applied, echoing across pieces.
 const RUBRICS = [
@@ -229,13 +223,11 @@ function renderScriptBlock(elements) {
     `</div>`;
 }
 
-function renderParagraph(patchKey, index, text) {
+function renderParagraph(pieceId, patchKey, index, text) {
   let html = escapeHtml(text);
-  const link = LINKS.find(l => l.patch === patchKey && l.para === index);
-  if (link) {
-    const esc = escapeHtml(link.phrase);
-    html = html.replace(esc, `<a class="scroll-link" data-target="${link.target}" role="link" tabindex="0">${esc}</a>`);
-  }
+  const links = getOutboundLinks('scroll', pieceId, 'body', index)
+    .map(l => ({ ...l, phrase: escapeHtml(l.phrase) }));
+  html = wireCrossLinks(html, links, 'scroll-link');
   const rubric = RUBRICS.find(r => r.patch === patchKey && r.para === index);
   if (rubric) {
     const esc = escapeHtml(rubric.phrase);
@@ -322,7 +314,7 @@ function buildSvgDefs() {
   document.body.appendChild(frag.querySelector('#scroll-svg-defs'));
 }
 
-export function createScroll(container, { preview = false } = {}) {
+export function createScroll(container, { preview = false, initialPieceId = null, onPieceChange = null } = {}) {
   buildSvgDefs();
   // One parse serves whichever branch below actually runs (preview and
   // full are mutually exclusive per call) — the piece that ends up unused
@@ -386,7 +378,7 @@ export function createScroll(container, { preview = false } = {}) {
       const track = (0.01 + Math.random() * 0.035).toFixed(3);
       const style = `transform: rotate(${rot}deg) translateX(${dx}px); ` +
         `font-size: calc(var(--scroll-base-size, 1.2rem) * ${scale}); letter-spacing: ${track}em;`;
-      let out = `<p style="${style}">${renderParagraph(patch.key, idx, p)}</p>`;
+      let out = `<p style="${style}">${renderParagraph(patch.pieceId, patch.key, idx, p)}</p>`;
       const insert = SCRIPT_INSERTS.find(s => s.patch === patch.key && s.afterIndex === idx);
       if (insert) out += renderScriptBlock(insert.script);
       return out;
@@ -399,6 +391,22 @@ export function createScroll(container, { preview = false } = {}) {
         paragraphHtml.slice(groupCount).join('')
       : oghamHtml + paragraphHtml.join('');
     article.appendChild(textWrap);
+
+    // Inbound-reference acknowledgment — deliberately NOT the "Referenced
+    // from X" treatment sphere/orbiter/library use, since this scene's
+    // whole point (see file header) is that pieces carry no titles, no
+    // sources, no dates on their own hide. Naming the source piece here
+    // would be the one thing this scene refuses to do everywhere else, so
+    // this only ever marks THAT a passage is echoed elsewhere, never which
+    // piece — same quiet-metadata register as the other scenes' notes,
+    // just deliberately untitled to match scroll's own bare-text rule.
+    if (getInboundLinks('scroll', patch.pieceId).length) {
+      const refsEl = document.createElement('p');
+      refsEl.className = 'scroll-patch-refs';
+      refsEl.textContent = 'echoed elsewhere on the scroll';
+      article.appendChild(refsEl);
+    }
+
     scroll.appendChild(article);
 
     if (i < PATCHES.length - 1) {
@@ -424,11 +432,11 @@ export function createScroll(container, { preview = false } = {}) {
     const link = e.target.closest('.scroll-link');
     if (!link) return;
     e.preventDefault();
-    const targetEl = scroll.querySelector(`#${link.dataset.target}`);
-    if (!targetEl) return;
-    targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    targetEl.classList.add('scroll-flash');
-    setTimeout(() => targetEl.classList.remove('scroll-flash'), 1400);
+    // Same not-yet-cross-scene note as library.js/orbiter.js: every link in
+    // the shared store currently targets 'scroll' itself.
+    if (link.dataset.targetScene !== 'scroll') return;
+    const targetPatch = PATCHES.find(p => p.pieceId === Number(link.dataset.targetId));
+    if (targetPatch) jumpToPatch(targetPatch);
   }
   scroll.addEventListener('click', onLinkClick);
   function onLinkKeydown(e) {
@@ -439,9 +447,42 @@ export function createScroll(container, { preview = false } = {}) {
   }
   scroll.addEventListener('keydown', onLinkKeydown);
 
+  // Scrolls to and flashes a patch, reporting it as the "open" piece —
+  // shared by onLinkClick above, the initial-load deep link below, and
+  // openPieceById (returned below, for a same-scene hash edit). Scroll has
+  // no open/closed panel state the way sphere/orbiter/library do (the
+  // whole piece is always fully rendered); "opening a piece" here means
+  // "scroll to and highlight it," which is also the only moment this scene
+  // ever reports a piece change — ordinary scrolling past a patch doesn't.
+  //
+  // The scroll's own DOM element ids are still built from each patch's
+  // `key` (`patch-iron` etc, set on PATCHES above) rather than the numeric
+  // id directly — the shared store and the hash only know pieces by id, so
+  // this resolves that back to the element id actually in the DOM.
+  function jumpToPatch(targetPatch, { smooth = true } = {}) {
+    const targetEl = scroll.querySelector(`#${targetPatch.id}`);
+    if (!targetEl) return;
+    onPieceChange?.(targetPatch.pieceId);
+    targetEl.scrollIntoView({ behavior: smooth ? 'smooth' : 'auto', block: 'start' });
+    targetEl.classList.add('scroll-flash');
+    setTimeout(() => targetEl.classList.remove('scroll-flash'), 1400);
+  }
+
+  function openPieceById(id) {
+    const targetPatch = PATCHES.find(p => p.pieceId === id);
+    if (targetPatch) jumpToPatch(targetPatch, { smooth: false });
+  }
+  // Deep-link entry — jump straight there rather than smooth-scrolling
+  // from the top, same reasoning sphere/orbiter/library skip their open
+  // transition on initial load.
+  if (initialPieceId !== null) openPieceById(initialPieceId);
+
   setTimeout(() => scroll.focus(), 100);
 
   return {
+    // Same-scene deep link support (main.js's expandScene) — see
+    // openPieceById above.
+    openPieceById,
     dispose() {
       scroll.removeEventListener('click', onLinkClick);
       scroll.removeEventListener('keydown', onLinkKeydown);

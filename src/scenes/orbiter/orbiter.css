@@ -48,6 +48,17 @@
 }
 .orbiter-panel-content { color: rgba(210,235,220,0.75); font-size: 0.98rem; line-height: 1.85; }
 .orbiter-panel-content p { margin: 0 0 1.4rem; }
+/* Inbound-reference note ("Referenced from X") — same quiet-metadata
+   treatment as sphere.css's .sphere-facet-id, tuned to orbiter's own
+   green palette instead of sphere's blue. Empty (no margin/space taken)
+   when there's nothing to show — orbiter.js only ever sets textContent
+   here, never toggles visibility, so an empty <p> needs to collapse to
+   nothing on its own. */
+.orbiter-panel-refs {
+  font-size: .6rem; letter-spacing: .3em; color: rgba(200,255,220,.3);
+  margin: 2rem 0 0; text-transform: uppercase;
+}
+.orbiter-panel-refs:empty { margin: 0; }
 /* Poem cross-links — same mechanism as sphere.js's fragment-links and
    scroll.js's scroll-link, tuned to orbiter's own green/white palette
    instead of sphere's blue. A phrase glimmers faintly on its own, on a

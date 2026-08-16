@@ -4,6 +4,10 @@
 // reads the same source the scene does.
 
 export const ORRERY = {
+  // The orrery is one placard, one piece — id kept for consistency with
+  // every other scene's addressing scheme (see NOTES.md's Linking &
+  // Addressing entry), not because there's more than one thing to number.
+  id: 1,
   name: 'The Orrery of Los Feliz',
   era: 'found · undated',
   note: `We were tipped off by a news item coupled with the creditors’ lawsuits against Peter Hight, our synchronicity sensitives finding a common link between the two. The news item said that the FCC was investigating a pirate radio station somewhere in the Los Feliz area. It was buried in the local section of the Times. The creditors were a foundry, a warehouse and a sculpture studio, trying to get paid for some very large pieces they had made. We tracked the warehouse down and with a little persuasion convinced the landlord to let us in.

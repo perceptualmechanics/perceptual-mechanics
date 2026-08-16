@@ -479,24 +479,24 @@ export function toOgham(str) {
 // so the published page can say so plainly rather than implying a full text.
 
 export const scrollPieces = [
-  { key: 'iron',           title: 'Iron Gods',                              date: 'c. 2000',            body: ironGods },
-  { key: 'flying',         title: 'Flying',                                 date: 'c. 2000',            body: flying },
-  { key: 'death',          title: 'Thoughts Of Death Abounds',              date: 'c. 2000',            body: death },
-  { key: 'pygmalion',      title: 'Pygmalion',                              date: 'May 2000',           body: pygmalion },
-  { key: 'selfmutilation', title: 'The Impossible Bliss of Self-Mutilation', date: '2002',               body: selfMutilation },
-  { key: 'cartography',    title: 'In The End It Falls Slowly Through The Aether', date: '2002–2003',   body: cartography },
-  { key: 'firevigil',      title: 'The Vigil',                              date: 'November 2003',      body: fireVigil,
+  { id: 1, key: 'iron',           title: 'Iron Gods',                              date: 'c. 2000',            body: ironGods },
+  { id: 2, key: 'flying',         title: 'Flying',                                 date: 'c. 2000',            body: flying },
+  { id: 3, key: 'death',          title: 'Thoughts Of Death Abounds',              date: 'c. 2000',            body: death },
+  { id: 4, key: 'pygmalion',      title: 'Pygmalion',                              date: 'May 2000',           body: pygmalion },
+  { id: 5, key: 'selfmutilation', title: 'The Impossible Bliss of Self-Mutilation', date: '2002',               body: selfMutilation },
+  { id: 6, key: 'cartography',    title: 'In The End It Falls Slowly Through The Aether', date: '2002–2003',   body: cartography },
+  { id: 7, key: 'firevigil',      title: 'The Vigil',                              date: 'November 2003',      body: fireVigil,
     excerpt: 'One of two scenes embedded in Fire.doc, reproduced complete and unedited from where the source document’s opening word-association litany ends.' },
-  { key: 'firecalamity',   title: 'The Calamity',                           date: 'November 2003',      body: fireCalamity,
+  { id: 8, key: 'firecalamity',   title: 'The Calamity',                           date: 'November 2003',      body: fireCalamity,
     excerpt: 'The second of the two scenes embedded in Fire.doc, likewise complete and unedited from that point on.' },
-  { key: 'identity',       title: 'Identity Theft',                         date: '2009',               body: identityTheft },
-  { key: 'holography',     title: 'Holography',                             date: '2009–2012',          body: holography,
+  { id: 9, key: 'identity',       title: 'Identity Theft',                         date: '2009',               body: identityTheft },
+  { id: 10, key: 'holography',     title: 'Holography',                             date: '2009–2012',          body: holography,
     excerpt: 'One complete, self-contained movement — Jeremy Constantilios’s flight into and landing in Los Angeles — excerpted from a chapter running to roughly 10,500 words, ending at a natural scene break.' },
-  { key: 'projection',     title: 'Projection',                             date: '2009–2012',          body: projection,
+  { id: 11, key: 'projection',     title: 'Projection',                             date: '2009–2012',          body: projection,
     // The one island of screenplay formatting on an otherwise all-prose
     // scroll: a scene the narrator is recounting, so it's set as a real
     // script rather than folded into a running paragraph. Not a word of it
     // changed — only the line breaks are new.
     script: { after: 23, lines: projectionScript } },
-  { key: 'crocodile',      title: 'The Crocodile Photograph',               date: 'undated, later',     body: crocodilePhotograph },
+  { id: 12, key: 'crocodile',      title: 'The Crocodile Photograph',               date: 'undated, later',     body: crocodilePhotograph },
 ];

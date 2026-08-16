@@ -1,11 +1,12 @@
 import * as THREE from 'three';
 import { CSS2DRenderer, CSS2DObject } from 'three/examples/jsm/renderers/CSS2DRenderer.js';
 import { fragments } from './sphere.text.js';
-import { bindOrbitDrag, bindWheelZoom, bindGuardedResize, prefersReducedMotion, createPanelCloser, createJumpList, bindTapVsDrag, parseHTML } from '../../utils/sceneKit.js';
+import { getOutboundLinks, getInboundLinks } from '../../links.js';
+import { bindOrbitDrag, bindWheelZoom, bindGuardedResize, prefersReducedMotion, createPanelCloser, createJumpList, bindTapVsDrag, parseHTML, wireCrossLinks, formatInboundNote } from '../../utils/sceneKit.js';
 import sphereHtml from './sphere.html?raw';
 import './sphere.css';
 
-export function createSphere(container, { preview = false } = {}) {
+export function createSphere(container, { preview = false, initialPieceId = null, onPieceChange = null } = {}) {
   const w = container.clientWidth  || window.innerWidth;
   const h = container.clientHeight || window.innerHeight;
 
@@ -193,6 +194,11 @@ export function createSphere(container, { preview = false } = {}) {
   // bound directly to it and never removed keeps firing after this scene
   // is gone, reading stale closures against a disposed scene.
   let onContainerMouseMove = null, onContainerClick = null, touchGuard = null;
+  // Set inside the !preview block below, once openFragment actually exists
+  // — kept at this outer scope so the returned openPieceById() (deep-link
+  // support, main.js) can reach it without openFragment itself needing to
+  // be anything other than a plain block-scoped function.
+  let openFragmentRef = null;
   if (!preview) {
     // Shell markup (hint paragraph + panel skeleton) lives in sphere.html —
     // see that file's own header comment for why it's two top-level pieces
@@ -216,19 +222,51 @@ export function createSphere(container, { preview = false } = {}) {
       onClose: () => { if (selectedFace !== -1) { restoreFaceColor(selectedFace); selectedFace = -1; } },
     });
 
+    // Wires a fragment's `text` (already-authored, trusted HTML — real <p>
+    // tags, not escaped-then-rendered plain text the way library/orbiter/
+    // scroll's linkable fields are) with whatever links.js's
+    // getOutboundLinks() has for it. Until 2026-08-16 these anchors were
+    // hand-typed straight into sphere.text.js's `text` strings
+    // (`<a class="fragment-link" data-target="Wingspan">...`); they're
+    // wired at render time now, same beat as every other scene, so the
+    // links live in one place (src/links.js) instead of half of them
+    // sitting inline in prose and the other half in per-scene tables.
+    function renderFragmentHtml(fragment) {
+      const links = getOutboundLinks('sphere', fragment.id, 'text');
+      return wireCrossLinks(fragment.text, links, 'fragment-link');
+    }
+
+    // The inbound half of a links.js relationship — "Referenced from X" —
+    // appended to the same facetIdEl line every fragment already shows
+    // ("Fragment N of 25"), rather than a separate element, so a piece
+    // that's only ever a target still visibly carries the connection
+    // instead of the link only being discoverable by clicking through from
+    // the source. Plain text, not a link: there's no phrase here to jump
+    // from, only the fact of being referenced (see sceneKit.js's
+    // formatInboundNote for why this doesn't try to construct one).
+    function withInboundNote(fragmentId, base) {
+      const note = formatInboundNote(
+        getInboundLinks('sphere', fragmentId).map(l => fragments.find(f => f.id === l.from.id)?.title)
+      );
+      return note ? `${base} · ${note}` : base;
+    }
+
     // Fragment link navigation — follow the threads (click + keyboard)
     function navigateToFragment(link) {
-      const targetTitle = link.dataset.target;
-      const targetIdx = fragments.findIndex(f => f.title === targetTitle);
+      // Same not-yet-cross-scene note as the other three linked scenes:
+      // every link in the shared store currently targets 'sphere' itself.
+      if (link.dataset.targetScene !== 'sphere') return;
+      const targetIdx = fragments.findIndex(f => f.id === Number(link.dataset.targetId));
       if (targetIdx === -1) return;
+      onPieceChange?.(fragments[targetIdx].id);
       panelContent.style.transition = 'opacity .18s';
       panelTitle.style.transition = 'opacity .18s';
       panelContent.style.opacity = '0';
       panelTitle.style.opacity = '0';
       setTimeout(() => {
         panelTitle.textContent = fragments[targetIdx].title;
-        panelContent.innerHTML = fragments[targetIdx].text;
-        facetIdEl.textContent = `Fragment ${targetIdx + 1} of ${fragments.length} · ${fragments[targetIdx].title}`;
+        panelContent.innerHTML = renderFragmentHtml(fragments[targetIdx]);
+        facetIdEl.textContent = withInboundNote(fragments[targetIdx].id, `Fragment ${targetIdx + 1} of ${fragments.length} · ${fragments[targetIdx].title}`);
         panelContent.scrollTop = 0;
         panelContent.style.opacity = '1';
         panelTitle.style.opacity = '1';
@@ -242,7 +280,10 @@ export function createSphere(container, { preview = false } = {}) {
           // content within the panel, same as library.js's .library-link.
           link.setAttribute('role', 'link');
           link.setAttribute('tabindex', '0');
-          link.setAttribute('aria-label', `Navigate to fragment: ${link.dataset.target}`);
+          const targetFrag = link.dataset.targetScene === 'sphere'
+            ? fragments.find(f => f.id === Number(link.dataset.targetId))
+            : null;
+          link.setAttribute('aria-label', `Navigate to fragment: ${targetFrag ? targetFrag.title : 'related fragment'}`);
         });
       }, 180);
     }
@@ -252,10 +293,11 @@ export function createSphere(container, { preview = false } = {}) {
     // sceneKit.js), which has no click position of its own to derive a
     // slide-in side from, hence `fromLeft` being optional.
     function openFragment(fi, { facetLabel, fromLeft } = {}) {
+      onPieceChange?.(fragments[fi].id);
       const populate = () => {
         panelTitle.textContent = fragments[fi].title;
-        panelContent.innerHTML = fragments[fi].text;
-        facetIdEl.textContent  = facetLabel ?? `Fragment ${fi + 1} of ${fragments.length}`;
+        panelContent.innerHTML = renderFragmentHtml(fragments[fi]);
+        facetIdEl.textContent  = withInboundNote(fragments[fi].id, facetLabel ?? `Fragment ${fi + 1} of ${fragments.length}`);
         // Stagger glimmer delays + a11y
         panelContent.querySelectorAll('.fragment-link').forEach(link => {
           const delay = (Math.random() * 12).toFixed(1);
@@ -266,7 +308,10 @@ export function createSphere(container, { preview = false } = {}) {
           // above.
           link.setAttribute('role', 'link');
           link.setAttribute('tabindex', '0');
-          link.setAttribute('aria-label', `Navigate to fragment: ${link.dataset.target}`);
+          const targetFrag = link.dataset.targetScene === 'sphere'
+            ? fragments.find(f => f.id === Number(link.dataset.targetId))
+            : null;
+          link.setAttribute('aria-label', `Navigate to fragment: ${targetFrag ? targetFrag.title : 'related fragment'}`);
         });
       };
 
@@ -321,6 +366,8 @@ export function createSphere(container, { preview = false } = {}) {
       getLabel: f => f.title,
       onSelect: (f, fi) => openFragment(fi, { fromLeft: false }),
     });
+
+    openFragmentRef = openFragment;
 
     panelContent.addEventListener('click', e => {
       const link = e.target.closest('.fragment-link');
@@ -385,6 +432,15 @@ export function createSphere(container, { preview = false } = {}) {
       },
     });
 
+    // Deep-link entry — a fresh load of #sphere/<id> opens straight to
+    // that fragment instead of the sphere's plain default (nothing
+    // selected). An id that doesn't resolve is silently ignored, same
+    // defensive stance sceneFromHash/parseHash take in main.js for a
+    // scene name that doesn't exist.
+    if (initialPieceId !== null) {
+      const initialIdx = fragments.findIndex(f => f.id === initialPieceId);
+      if (initialIdx !== -1) openFragment(initialIdx, { fromLeft: false });
+    }
   }
 
   // ─── Drag to rotate (mouse + touch, via sceneKit) ──────────────────────────
@@ -518,6 +574,14 @@ export function createSphere(container, { preview = false } = {}) {
 
   // ─── Cleanup ──────────────────────────────────────────────────────────────
   return {
+    // Same-scene deep link support (main.js's expandScene, when the sphere
+    // is already open and a new #sphere/<id> hash arrives) — opens a
+    // fragment by id without tearing the scene down. No-op in preview mode
+    // or if the id doesn't resolve.
+    openPieceById(id) {
+      const idx = fragments.findIndex(f => f.id === id);
+      if (idx !== -1) openFragmentRef?.(idx, { fromLeft: false });
+    },
     dispose() {
       cancelAnimationFrame(animId);
       orbitDrag.dispose();

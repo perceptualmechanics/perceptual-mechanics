@@ -909,7 +909,7 @@ function buildVessel(ringPulseTex) {
   return { group, hull, hullGeo, hullMat, ring, ringGeo, ringMat, pulseMap, glow, glowMat, glowTex };
 }
 
-export function createBeamline(container, { preview = false } = {}) {
+export function createBeamline(container, { preview = false, initialPieceId = null, onPieceChange = null } = {}) {
   const w = container.clientWidth  || window.innerWidth;
   const h = container.clientHeight || window.innerHeight;
 
@@ -1403,6 +1403,7 @@ export function createBeamline(container, { preview = false } = {}) {
 
   function showLabel(s) {
     selectedStation = s;
+    onPieceChange?.(BOUNCES[s.stationIndex]?.id);
     labelTex?.dispose();
     const stationLabel = `Station ${s.stationIndex + 1} of ${stations.length}`;
     const text = BOUNCES[s.stationIndex]?.text ?? '';
@@ -1425,6 +1426,19 @@ export function createBeamline(container, { preview = false } = {}) {
   function dismissLabel() {
     if (labelSprite.visible) labelShownAt = tSec - labelSustain;
   }
+
+  // Deep-link entry/re-entry — resolves a BOUNCES id to its station and
+  // shows its label immediately, same call showLabel's own click/jump-list
+  // paths make. The label is transient by design (see showLabel/
+  // dismissLabel above — beamline never had a persistent open/closed panel
+  // the way sphere/orbiter/library do), so this doesn't try to keep it
+  // pinned open; it just surfaces on arrival the same as clicking the
+  // station would.
+  function openPieceById(id) {
+    const station = stations.find(s => BOUNCES[s.stationIndex]?.id === id);
+    if (station) showLabel(station);
+  }
+  if (!preview && initialPieceId !== null) openPieceById(initialPieceId);
 
   // ─── Drag to orbit + wheel zoom (sceneKit) ─────────────────────────────
   let autoRotate = true;
@@ -1953,6 +1967,9 @@ export function createBeamline(container, { preview = false } = {}) {
   });
 
   return {
+    // Same-scene deep link support (main.js's expandScene) — see
+    // openPieceById above.
+    openPieceById,
     dispose() {
       cancelAnimationFrame(animId);
       resize.dispose();

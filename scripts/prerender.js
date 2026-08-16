@@ -28,6 +28,7 @@ import { libraryItems, cdRackItems } from '../src/scenes/library/library.text.js
 import { PIECES as theaterPieces } from '../src/scenes/theater/theater.text.js';
 import { ORRERY } from '../src/scenes/orrery/orrery.text.js';
 import { EPIGRAPH_PRIMARY, EPIGRAPH_SECONDARY, BOUNCES } from '../src/scenes/beamline/beamline.text.js';
+import { getOutboundLinks } from '../src/links.js';
 
 const ORIGIN = 'https://perceptualmechanics.com';
 const AUTHOR = 'Scott Jason Cohen';
@@ -45,6 +46,19 @@ function slug(s) {
     .replace(/[’']/g, '')
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '');
+}
+
+// A small "open this exact piece in the live scene" link, placed right
+// under a piece's own heading. Added 2026-08-16 alongside the live
+// experience's own #scene/id deep-linking (main.js) — before that, this
+// page's per-piece slug anchors (id="${slug(title)}" below) had nothing on
+// the live-scene side to resolve to; a reader following one from outside
+// the site could get to this page's own section but never into the actual
+// scene at that specific piece, only its default state. No new CSS class:
+// this inherits the page's own `a { color: #d9b13f }` rule already
+// defined in page()'s <style>, same as every other link on the page.
+function pieceLink(sceneKey, id, sceneName) {
+  return `<p class="meta"><a href="/#${sceneKey}/${id}">Open in ${esc(sceneName)} →</a></p>`;
 }
 
 // Poems and prose arrive as raw strings with real newlines inside them.
@@ -231,6 +245,7 @@ function buildScroll() {
     return `<article class="piece" id="${slug(p.title)}">
 <h2>${esc(p.title)}</h2>
 <p class="meta">${esc(p.date)}</p>
+${pieceLink('scroll', p.id, 'the Scroll')}
 ${p.excerpt ? `<p class="note">${esc(p.excerpt)}</p>` : ''}
 ${paras}
 </article>`;
@@ -251,6 +266,7 @@ ${paras}
 function buildPoems() {
   const body = poems.map(p => `<article class="piece" id="${slug(p.title)}">
 <h2>${esc(p.title)}</h2>
+${pieceLink('orbiter', p.id, 'Orbiter')}
 ${p.note ? `<p class="note">${esc(p.note)}</p>` : ''}
 ${p.stanzas.map(s => `<p>${lines(s)}</p>`).join('\n')}
 </article>`).join('\n\n');
@@ -268,18 +284,24 @@ ${p.stanzas.map(s => `<p>${lines(s)}</p>`).join('\n')}
 }
 
 function buildFragments() {
-  // The fragments are already authored as HTML, and their cross-links are
-  // real hypertext — an <a data-target="Wingspan"> that the Sphere resolves
-  // to another facet at runtime. Every fragment is on this one page, so those
-  // become ordinary in-page anchors here and the hypertext survives the
-  // translation instead of flattening into plain prose.
+  // The fragments' cross-links used to be hand-typed straight into the
+  // fragment's own HTML (`<a class="fragment-link" data-target="Wingspan">`),
+  // so this function used to just rewrite that attribute into an ordinary
+  // in-page anchor. Since the 2026-08-16 linking pass those links live in
+  // src/links.js instead (getOutboundLinks), same as every other scene's —
+  // this now wires them the same way sphere.js does at runtime, just
+  // targeting an in-page `#slug` anchor instead of a live-panel data
+  // attribute, since every fragment is on this one page.
   const body = fragments.map(f => {
-    const html = f.text.replace(
-      /<a class="fragment-link" data-target="([^"]+)">/g,
-      (_, target) => `<a href="#${slug(target)}">`
-    );
+    let html = f.text;
+    getOutboundLinks('sphere', f.id, 'text').forEach(l => {
+      const target = fragments.find(fr => fr.id === l.to.id);
+      if (!target) return;
+      html = html.replace(l.phrase, `<a href="#${slug(target.title)}">${l.phrase}</a>`);
+    });
     return `<article class="piece" id="${slug(f.title)}">
 <h2>${esc(f.title)}</h2>
+${pieceLink('sphere', f.id, 'the Sphere')}
 ${html}
 </article>`;
   }).join('\n\n');
@@ -359,10 +381,22 @@ ${ORRERY.note.split(/\n\s*\n/).map(p => `<p>${lines(p.trim())}</p>`).join('\n')}
 }
 
 function buildBeamline() {
+  // Each bounce gets its own id="p<id>" + live deep-link now (added
+  // 2026-08-16) — it had neither before, since BOUNCES had no id field at
+  // all until this pass gave every scene's pieces one (see NOTES.md's
+  // "Linking & addressing" entry). "p" prefix, not the bare number: HTML5
+  // technically allows an id to start with a digit, but it isn't a valid
+  // CSS identifier that way (`#7 { ... }` doesn't parse without escaping)
+  // and reads oddly as a URL fragment on its own — unlike sphere/orbiter/
+  // scroll above, which already had title-derived slug ids before this
+  // pass and keep them unchanged, beamline never had per-piece ids on this
+  // page at all, so there's no existing convention here to stay
+  // consistent with; "p<id>" is the new one, used here and in
+  // buildLibrary below.
   const body = `<article class="piece">
 <p class="note">${esc(EPIGRAPH_PRIMARY)}</p>
 <p class="note">${esc(EPIGRAPH_SECONDARY)}</p>
-${BOUNCES.map((b, i) => `<h2>Bounce ${i + 1}</h2>\n<p>${lines(b.text)}</p>`).join('\n')}
+${BOUNCES.map((b, i) => `<h2 id="p${b.id}">Bounce ${i + 1}</h2>\n${pieceLink('beamline', b.id, 'Beamline')}\n<p>${lines(b.text)}</p>`).join('\n')}
 </article>`;
   return {
     slugPath: 'beamline',
@@ -432,9 +466,19 @@ ${items.map(i => {
     // the Maya Deren collection). The em-dash is part of the title-creator
     // join, so it only belongs here when there's something on the other side
     // of it; otherwise the line ends on a dangling dash.
-    return `  <li>
+    // id="p<id>" + a live deep-link (added 2026-08-16, same as every other
+    // scene — see buildBeamline's comment above for the "p" prefix). Not
+    // added to the Music/cds list below: cdRackItems' own ids reuse the
+    // same 1..N range as libraryItems' ids (they're separate arrays,
+    // always kept apart at runtime by library.js's "cd-<n>" string-id
+    // convention — see that file's populatePanel comment), so a bare
+    // numeric id here would be ambiguous between a book/film/deck and a
+    // CD. Nothing in src/links.js or the live #library/<id> hash addresses
+    // a CD today, so this only wires the space that's actually unambiguous.
+    return `  <li id="p${i.id}">
     <span class="t">${esc(i.title)}</span>${i.creator ? ` — <span class="c">${esc(i.creator)}</span>` : ''}
     ${ed ? `<span class="e">${esc(ed)}</span>` : ''}
+    ${pieceLink('library', i.id, 'the Library')}
   </li>`;
   }).join('\n')}
 </ul>`).join('\n');

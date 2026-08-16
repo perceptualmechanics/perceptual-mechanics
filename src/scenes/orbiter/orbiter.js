@@ -1,33 +1,21 @@
 import * as THREE from 'three';
 import { poems } from './orbiter.text.js';
-import { bindOrbitDrag, bindGuardedResize, prefersReducedMotion, createPanelCloser, createJumpList, escapeHtml, parseHTML } from '../../utils/sceneKit.js';
+import { getOutboundLinks, getInboundLinks } from '../../links.js';
+import { bindOrbitDrag, bindGuardedResize, prefersReducedMotion, createPanelCloser, createJumpList, escapeHtml, parseHTML, wireCrossLinks, formatInboundNote } from '../../utils/sceneKit.js';
 import './orbiter.css';
 import orbiterHtml from './orbiter.html?raw';
 
 // ─── Poem cross-links ───────────────────────────────────────────────────────
-// Same mechanism, and the same rule, as the geodesic sphere's facet-to-
-// fragment links in sphere.js and the scroll's LINKS in scroll.js: only
-// phrases already sitting in the raw text get wired up, nothing added to
-// make a connection exist. Keyed by poem title + stanza index (0-based,
-// matching poem.stanzas) rather than an id, since orbiter.text.js entries don't
-// carry one. A few of these pairs turned out to already share a source —
-// Moon Song and Raise a Glass are parts 9 and 11 of the same unpublished
-// cycle, thirty-six.doc (see orbiter.text.js's header comment) — which is
-// presumably why the vocabulary echoes at all; the DNA/Apocrypha and
-// DNA/Haiku pairs, by contrast, are two completely unrelated source
-// documents landing on the same word independently.
-const POEM_LINKS = [
-  { title: 'Lament for the Future Never Realized', stanza: 1,  phrase: 'stones',      target: 'Moon Song' },
-  { title: 'Moon Song',                             stanza: 3,  phrase: 'stones',      target: 'Lament for the Future Never Realized' },
-  { title: 'The Lovers',                            stanza: 0,  phrase: 'mirrors',     target: 'Lament for the Future Never Realized' },
-  { title: 'Lament for the Future Never Realized', stanza: 3,  phrase: 'Mirrors',     target: 'The Lovers' },
-  { title: 'Moon Song',                             stanza: 10, phrase: 'latticework', target: 'Raise a Glass' },
-  { title: 'Raise a Glass',                         stanza: 1,  phrase: 'latticework', target: 'Moon Song' },
-  { title: 'DNA',                                   stanza: 0,  phrase: 'Coalescing',  target: 'Apocrypha' },
-  { title: 'Apocrypha',                             stanza: 0,  phrase: 'Coalescing',  target: 'DNA' },
-  { title: 'DNA',                                   stanza: 0,  phrase: 'Reveal',      target: 'Haiku' },
-  { title: 'Haiku',                                 stanza: 4,  phrase: 'revealed',    target: 'DNA' },
-];
+// POEM_LINKS used to live here, keyed by poem title + stanza index since
+// orbiter.text.js entries didn't carry an id yet. Now every poem has one
+// (orbiter.text.js), and the links themselves moved into the shared
+// src/links.js store — { scene: 'orbiter', id, field: 'stanzas', index }
+// — alongside every other scene's. A few of these pairs turned out to
+// already share a source — Moon Song and Raise a Glass are parts 9 and 11
+// of the same unpublished cycle, thirty-six.doc (see orbiter.text.js's
+// header comment) — which is presumably why the vocabulary echoes at all;
+// the DNA/Apocrypha and DNA/Haiku pairs, by contrast, are two completely
+// unrelated source documents landing on the same word independently.
 
 // ─── Orbiter: p-orbital, Satellites ────────────────────────────────────────
 // A hydrogen atom's p-orbital — the actual shape an electron's wavefunction
@@ -626,7 +614,7 @@ function buildSatellites(preview) {
   return { group, sats, bodyMat, panelMat, hitMat, coreGeo, panelGeo };
 }
 
-export function createOrbiter(container, { preview = false } = {}) {
+export function createOrbiter(container, { preview = false, initialPieceId = null, onPieceChange = null } = {}) {
   const w = container.clientWidth  || window.innerWidth;
   const h = container.clientHeight || window.innerHeight;
 
@@ -729,7 +717,7 @@ export function createOrbiter(container, { preview = false } = {}) {
   root.add(satellites.group);
 
   // ─── Caption + hint + poem panel (full only) ────────────────────────────
-  let caption = null, hint = null, panel = null, panelTitle = null, panelContent = null, panelCloser = null, jumpList = null;
+  let caption = null, hint = null, panel = null, panelTitle = null, panelContent = null, panelRefs = null, panelCloser = null, jumpList = null;
   // Static shell markup (caption text, hint text, panel skeleton) lives in
   // orbiter.html, parsed via parseHTML below. Caption/hint/panel/poem-link
   // styles live in orbiter.css, imported above. The epigraph ("sing,
@@ -749,6 +737,7 @@ export function createOrbiter(container, { preview = false } = {}) {
     container.appendChild(panel);
     panelTitle   = panel.querySelector('.orbiter-panel-title');
     panelContent = panel.querySelector('.orbiter-panel-content');
+    panelRefs    = panel.querySelector('.orbiter-panel-refs');
 
     panelCloser = createPanelCloser(panel, container, {
       closeBtn: panel.querySelector('.orbiter-panel-close'),
@@ -803,24 +792,33 @@ export function createOrbiter(container, { preview = false } = {}) {
   let onContainerMouseMove = null, onContainerClick = null;
 
   // A stanza can carry more than one live link (DNA's single stanza has
-  // two), so this walks every POEM_LINKS entry for that stanza rather than
-  // stopping at the first match the way scroll.js's per-paragraph
-  // LINKS/RUBRICS/INTENSITIES lookups do — those never needed more than one
-  // hit per paragraph, this does.
-  function renderStanza(title, index, text) {
-    let html = escapeHtml(text);
-    POEM_LINKS.filter(l => l.title === title && l.stanza === index).forEach(link => {
-      const esc = escapeHtml(link.phrase);
-      html = html.replace(esc, `<a class="poem-link" data-target="${escapeHtml(link.target)}" role="link" tabindex="0">${esc}</a>`);
-    });
-    return html.replace(/\n/g, '<br>');
+  // two), so this walks every link getOutboundLinks() returns for that
+  // stanza rather than stopping at the first match the way scroll.js's
+  // per-paragraph LINKS/RUBRICS/INTENSITIES lookups do — those never
+  // needed more than one hit per paragraph, this does.
+  function renderStanza(poemId, index, text) {
+    const html = escapeHtml(text);
+    const links = getOutboundLinks('orbiter', poemId, 'stanzas', index)
+      .map(l => ({ ...l, phrase: escapeHtml(l.phrase) }));
+    return wireCrossLinks(html, links, 'poem-link').replace(/\n/g, '<br>');
   }
   function renderPoemInto(poem) {
     panelTitle.textContent = poem.title;
     panelContent.innerHTML = poem.stanzas
-      .map((st, i) => `<p>${renderStanza(poem.title, i, st)}</p>`)
+      .map((st, i) => `<p>${renderStanza(poem.id, i, st)}</p>`)
       .join('');
     panelContent.scrollTop = 0;
+    // Inbound half of a links.js relationship — see sceneKit.js's
+    // formatInboundNote and sphere.js's matching withInboundNote for why
+    // this exists: without it, a poem that's only ever a link's target
+    // (Lament for the Future Never Realized, for instance) never shows any
+    // sign of the connection unless a reader happens to click through from
+    // the other poem first.
+    if (panelRefs) {
+      panelRefs.textContent = formatInboundNote(
+        getInboundLinks('orbiter', poem.id).map(l => poems.find(p => p.id === l.from.id)?.title)
+      ) ?? '';
+    }
     // Stagger glimmer delays + a11y attributes, same treatment as sphere's
     // fragment-links on open/navigate.
     panelContent.querySelectorAll('.poem-link').forEach(link => {
@@ -833,12 +831,16 @@ export function createOrbiter(container, { preview = false } = {}) {
       // .fragment-link.
       link.setAttribute('role', 'link');
       link.setAttribute('tabindex', '0');
-      link.setAttribute('aria-label', `Follow the echo to: ${link.dataset.target}`);
+      const targetPoem = link.dataset.targetScene === 'orbiter'
+        ? poems.find(p => p.id === Number(link.dataset.targetId))
+        : null;
+      link.setAttribute('aria-label', `Follow the echo to: ${targetPoem ? targetPoem.title : 'related poem'}`);
     });
   }
   function openPoem(sat) {
     const poem = poems[sat.poemIndex];
     if (!panel || !poem) return;
+    onPieceChange?.(poem.id);
     renderPoemInto(poem);
     panel.classList.add('open');
     setTimeout(() => panelTitle.focus(), 50);
@@ -849,8 +851,14 @@ export function createOrbiter(container, { preview = false } = {}) {
   // opened from — sphere's own navigateToFragment leaves the clicked
   // facet's highlight alone too, same precedent.
   function navigateToPoem(link) {
-    const targetIdx = poems.findIndex(p => p.title === link.dataset.target);
+    // Same not-yet-cross-scene note as library.js's navigateToItem: every
+    // link in the shared store currently targets 'orbiter' itself, so this
+    // is a no-op guard against a future cross-scene target rather than a
+    // real branch today.
+    if (link.dataset.targetScene !== 'orbiter') return;
+    const targetIdx = poems.findIndex(p => p.id === Number(link.dataset.targetId));
     if (targetIdx === -1) return;
+    onPieceChange?.(poems[targetIdx].id);
     panelContent.style.transition = 'opacity .18s';
     panelTitle.style.transition = 'opacity .18s';
     panelContent.style.opacity = '0';
@@ -861,6 +869,18 @@ export function createOrbiter(container, { preview = false } = {}) {
       panelTitle.style.opacity = '1';
     }, 180);
   }
+
+  // Deep-link entry/re-entry — resolves a poem id to its satellite (same
+  // selectedSat + openPoem beat a real click/jump-list selection uses, so
+  // the 3D highlight matches what the panel shows) and opens it. A no-op
+  // if the scene has no panel yet (preview) or the id doesn't resolve to
+  // any satellite's poemIndex.
+  function openPoemById(id) {
+    const poemIdx = poems.findIndex(p => p.id === id);
+    const sat = poemIdx !== -1 && satellites.sats.find(s => s.poemIndex === poemIdx);
+    if (sat) { selectedSat = sat; openPoem(sat); }
+  }
+  if (!preview && initialPieceId !== null) openPoemById(initialPieceId);
 
   // Toggles the nucleus between its plain collapsed sphere and its
   // internal proton/neutron/quark detail — see buildNucleusDetail's own
@@ -1040,6 +1060,9 @@ export function createOrbiter(container, { preview = false } = {}) {
   });
 
   return {
+    // Same-scene deep link support (main.js's expandScene) — see
+    // openPoemById above.
+    openPieceById: openPoemById,
     dispose() {
       cancelAnimationFrame(animId);
       orbitDrag.dispose();

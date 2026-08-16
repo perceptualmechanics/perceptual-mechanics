@@ -49,6 +49,7 @@
 
 export const poems = [
   {
+    id: 1,
     title: 'Courtesans of the Old World',
     source: `Scott Jason Cohen's Assembled Verse.doc`,
     stanzas: [
@@ -78,6 +79,7 @@ Unwanted.`,
     ],
   },
   {
+    id: 2,
     title: 'Springtime in the Garden',
     source: `Scott Jason Cohen's Assembled Verse.doc`,
     stanzas: [
@@ -102,6 +104,7 @@ Carried on pheremones to my siblings.`,
     ],
   },
   {
+    id: 3,
     title: 'Prologue',
     source: `Scott Jason Cohen's Assembled Verse.doc`,
     stanzas: [
@@ -112,6 +115,7 @@ Me from head to toe.`,
     ],
   },
   {
+    id: 4,
     title: 'Raise a Glass',
     source: `Scott Jason Cohen's Assembled Verse.doc`,
     stanzas: [
@@ -153,6 +157,7 @@ opens his eyes.`,
     ],
   },
   {
+    id: 5,
     title: 'Lament for the Future Never Realized',
     source: `Scott Jason Cohen's Assembled Verse.doc`,
     note: `Scott's own later excerpt of "thirty-six.doc" (a longer, unedited 13-part source cycle, not itself included in this file) — parts 1, 3, and 4 of that cycle, retitled and lightly polished, part 2 dropped entirely.`,
@@ -291,6 +296,7 @@ Above midwestern U.S.A.`,
     ],
   },
   {
+    id: 6,
     title: 'Moon Song',
     source: `Scott Jason Cohen's Assembled Verse.doc`,
     stanzas: [
@@ -325,6 +331,7 @@ Into garments of moonsilk, a latticework ladder
     ],
   },
   {
+    id: 7,
     title: 'After Auden',
     source: `Scott Jason Cohen's Assembled Verse.doc`,
     stanzas: [
@@ -335,6 +342,7 @@ Now there's no one there to help her
     ],
   },
   {
+    id: 8,
     title: 'The Lovers',
     source: `Scott Jason Cohen's Assembled Verse.doc`,
     stanzas: [
@@ -348,6 +356,7 @@ Physics has a heart all its own.`,
     ],
   },
   {
+    id: 9,
     title: 'Haiku',
     source: `Scott Jason Cohen's Assembled Verse.doc`,
     stanzas: [
@@ -372,6 +381,7 @@ Flow forth perfectly.`,
     ],
   },
   {
+    id: 10,
     title: 'DNA',
     source: `Nucleus.doc / Nucleus.rtf`,
     note: `© 2007 Scott Jason Cohen — the only poem in this file with an explicit date and copyright line in the source.`,
@@ -389,6 +399,7 @@ The Sefer Torah is recoiled, restored.`,
     ],
   },
   {
+    id: 11,
     title: 'Apocrypha',
     source: `Apocrypha.doc`,
     note: `The verse that opens the piece — the rest of Apocrypha.doc dissolves into the same trance/stream-of-consciousness prose that runs through a lot of the archive.`,
@@ -400,6 +411,7 @@ Coalescing into buoyant green somewhere around the chin.`,
     ],
   },
   {
+    id: 12,
     title: 'The way her hips sway is unique',
     source: `"The way her hips sway is unique.doc"`,
     note: `Titled with its own first line, same as the piece below. A few more short verse passages ("Your eyes are questing...") are scattered through the prose that follows.`,
@@ -414,6 +426,7 @@ We might need a rewrite.`,
     ],
   },
   {
+    id: 13,
     title: 'here comes no sun today',
     source: `"here comes no sun today.docx"`,
     note: `Also titled with its own first line.`,
@@ -425,6 +438,7 @@ here somethings get real queer`,
     ],
   },
   {
+    id: 14,
     title: '(Underneath scams and heart attacks,',
     source: `"(Underneath scams and heart attacks,.pdf"`,
     note: `Also titled with its own first line; the prose that follows references "The Machinist's Union," a separate piece elsewhere in the archive.`,

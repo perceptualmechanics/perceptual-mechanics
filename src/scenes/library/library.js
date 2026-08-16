@@ -1,7 +1,8 @@
 import * as THREE from 'three';
 import { libraryItems, cdRackItems } from './library.text.js';
+import { getOutboundLinks, getInboundLinks } from '../../links.js';
 import {
-  bindOrbitDrag, bindWheelZoom, bindGuardedResize, prefersReducedMotion, createPanelCloser, createJumpList, escapeHtml, parseHTML,
+  bindOrbitDrag, bindWheelZoom, bindGuardedResize, prefersReducedMotion, createPanelCloser, createJumpList, escapeHtml, parseHTML, wireCrossLinks, formatInboundNote,
 } from '../../utils/sceneKit.js';
 import './library.css';
 import libraryHtml from './library.html?raw';
@@ -102,161 +103,24 @@ function hash01(str, salt) {
 }
 
 // ─── Cross-links ────────────────────────────────────────────────────────────
-// Same mechanism, and the same rule, as sphere.js's fragment-links, orbiter.js's
-// poem-links, and scroll.js's LINKS: only phrases already sitting in the
-// catalog text get wired up as jumps to another item's panel. Keyed by
-// item id + field name (note/scene/excerpt/excerpt_from), since — unlike
-// orbiter.text.js's stanza-indexed text — library items don't share a
-// single "the text" field.
-const LIBRARY_LINKS = [
-  // A coin decides everything, twice: Chigurh's coin toss and Stoppard's,
-  // played completely straight in one and as metaphysical comedy in the
-  // other.
-  { id: 49, field: 'scene',   phrase: 'coin toss',                        target: 72 },
-  { id: 72, field: 'excerpt', phrase: 'A coin spins in the air',          target: 49 },
-  // "The Origin of Love" is a direct staging of Aristophanes' speech from
-  // the Symposium, sitting a few cubbies away.
-  { id: 40, field: 'scene',        phrase: 'Origin of Love',              target: 13 },
-  { id: 13, field: 'excerpt_from', phrase: 'Hedwig and the Angry Inch',   target: 40 },
-  // Kubrick's stargate, argued over by the two directors who built on it:
-  // Tarkovsky's Solaris as a rebuttal, Malick's Tree of Life borrowing
-  // Kubrick's own effects supervisor.
-  { id: 63, field: 'note', phrase: 'The Tree of Life',        target: 33 },
-  { id: 63, field: 'note', phrase: 'Solaris',                 target: 53 },
-  { id: 53, field: 'note', phrase: '2001: A Space Odyssey',   target: 63 },
-  { id: 53, field: 'note', phrase: 'The Tree of Life',        target: 33 },
-  { id: 33, field: 'note', phrase: '2001: A Space Odyssey',   target: 63 },
-  { id: 33, field: 'note', phrase: 'Solaris',                 target: 53 },
-  // Kurosawa's one idea about honor and code, tested across four decades
-  // and, in Jarmusch's case, two cultures.
-  { id: 31, field: 'note', phrase: 'Throne of Blood',                     target: 41 },
-  { id: 31, field: 'note', phrase: 'Dreams',                              target: 44 },
-  { id: 31, field: 'note', phrase: 'Ghost Dog: The Way of the Samurai',   target: 54 },
-  { id: 41, field: 'note', phrase: 'Seven Samurai',                      target: 31 },
-  { id: 44, field: 'note', phrase: 'Seven Samurai',                      target: 31 },
-  { id: 54, field: 'note', phrase: 'Seven Samurai',                      target: 31 },
-  // Joyce dismantling, book by book, his own faith that a story has a
-  // beginning and an end — and Hofstadter's "strange loop" describing the
-  // same shape from mathematics instead of prose.
-  { id: 11, field: 'note', phrase: 'Ulysses',                             target: 85 },
-  { id: 85, field: 'note', phrase: 'A Portrait of the Artist as a Young Man', target: 11 },
-  { id: 85, field: 'note', phrase: 'Finnegans Wake',                      target: 89 },
-  { id: 89, field: 'note', phrase: 'Gödel, Escher, Bach',                 target: 73 },
-  { id: 73, field: 'note', phrase: 'Finnegans Wake',                      target: 89 },
-  // wabi-sabi as essay, then as plot.
-  { id: 51, field: 'note', phrase: 'In Praise of Shadows',                target: 75 },
-  { id: 75, field: 'note', phrase: 'Tokyo Story',                         target: 51 },
-  // Interior consciousness dissolving plot, in two very different languages.
-  { id: 3,  field: 'note', phrase: '1Q84',                                target: 86 },
-  { id: 86, field: 'note', phrase: 'Água Viva',                           target: 3 },
-  // The epic relay: Homer to Virgil to Dante, each poet picking up the
-  // previous one's hand.
-  { id: 82, field: 'note', phrase: 'the Odyssey',                         target: 81 },
-  { id: 82, field: 'note', phrase: 'the Iliad',                           target: 80 },
-  { id: 82, field: 'note', phrase: 'The Divine Comedy',                   target: 91 },
-  { id: 81, field: 'note', phrase: 'the Aeneid',                         target: 82 },
-  { id: 80, field: 'note', phrase: 'the Aeneid',                         target: 82 },
-  { id: 91, field: 'note', phrase: 'the Aeneid',                         target: 82 },
+// The catalog's phrase-to-phrase links live in src/links.js now, alongside
+// every other scene's — LIBRARY_LINKS used to be its own array here, keyed
+// the same way (item id + field name: note/scene/excerpt/excerpt_from,
+// since library items don't share a single 'the text' field the way
+// orbiter's stanzas or sphere's fragments do), migrated as-is into the
+// shared store's { scene: 'library', id, field } shape. See NOTES.md's
+// "Linking & addressing" entry for why this moved.
 
-  // Merrill's Sandover <-> the occult-reference cluster.
-  { id: 108, field: 'note', phrase: 'Alchemy & Mysticism',                target: 6 },
-  { id: 6,   field: 'note', phrase: 'The Changing Light at Sandover',     target: 108 },
-  // The Beatles telling their own story two ways.
-  { id: 109, field: 'note', phrase: 'The Lyrics',                        target: 103 },
-  { id: 103, field: 'note', phrase: 'The Beatles Anthology',              target: 109 },
-  // VALIS's literal split-self <-> the Symposium/Hedwig "other half" thread.
-  { id: 110, field: 'note', phrase: 'the Symposium',                     target: 13 },
-  { id: 110, field: 'note', phrase: 'Hedwig',                            target: 40 },
-  { id: 13,  field: 'note', phrase: 'VALIS',                             target: 110 },
-  { id: 40,  field: 'note', phrase: 'VALIS',                             target: 110 },
-  // Nabokov's two novels here.
-  { id: 111, field: 'note', phrase: 'Lolita',                            target: 115 },
-  { id: 115, field: 'note', phrase: 'Pale Fire',                         target: 111 },
-  // The two volumes of SubGenius scripture.
-  { id: 113, field: 'note', phrase: 'Revelation X',                      target: 114 },
-  { id: 114, field: 'note', phrase: 'The Book of the SubGenius',         target: 113 },
-  // Scott's own two professional Mage sourcebooks, and the core rulebook
-  // both were written for.
-  { id: 116, field: 'note', phrase: 'Blood Treachery',                   target: 117 },
-  { id: 116, field: 'note', phrase: 'The Spirit Ways',                   target: 118 },
-  { id: 117, field: 'note', phrase: 'Mage: The Ascension',               target: 116 },
-  { id: 118, field: 'note', phrase: 'Mage: The Ascension',               target: 116 },
-  { id: 118, field: 'note', phrase: 'Blood Treachery',                   target: 117 },
-  // Prometheus Rising joins the physics-vs-feeling triangle.
-  { id: 119, field: 'note', phrase: '2001: A Space Odyssey',             target: 63 },
-  { id: 119, field: 'note', phrase: 'Solaris',                           target: 53 },
-  { id: 119, field: 'note', phrase: 'The Tree of Life',                  target: 33 },
-  { id: 33,  field: 'note', phrase: 'Prometheus Rising',                 target: 119 },
-  // Everything Is Under Control joins the chance/pattern/paranoia cluster.
-  { id: 120, field: 'note', phrase: 'Gravity’s Rainbow',                 target: 78 },
-  { id: 120, field: 'note', phrase: 'Borges’s Collected Fictions',       target: 79 },
-  { id: 78,  field: 'note', phrase: 'Everything Is Under Control',       target: 120 },
-  { id: 79,  field: 'note', phrase: 'Everything Is Under Control',       target: 120 },
-
-  // Harpur's third-category argument, threaded through the channeled-
-  // material / split-self / pattern-finding clusters already on the shelf.
-  { id: 121, field: 'note', phrase: 'The Changing Light at Sandover',    target: 108 },
-  { id: 121, field: 'note', phrase: 'the Symposium',                    target: 13 },
-  { id: 121, field: 'note', phrase: 'Everything Is Under Control',      target: 120 },
-  { id: 108, field: 'note', phrase: 'Daimonic Reality',                 target: 121 },
-  { id: 13,  field: 'note', phrase: 'Daimonic Reality',                 target: 121 },
-  { id: 120, field: 'note', phrase: 'Daimonic Reality',                 target: 121 },
-  // Chiang's "Understand" joins the physics-vs-feeling triangle as a
-  // fourth telling, this time as plot rather than argument.
-  { id: 122, field: 'note', phrase: '2001: A Space Odyssey',            target: 63 },
-  { id: 122, field: 'note', phrase: 'Solaris',                          target: 53 },
-  { id: 122, field: 'note', phrase: 'The Tree of Life',                 target: 33 },
-  { id: 33,  field: 'note', phrase: 'Stories of Your Life and Others',  target: 122 },
-
-  // Merrill's Collected Poems <-> Sandover, the rest of the same career.
-  { id: 125, field: 'note', phrase: 'The Changing Light at Sandover',   target: 108 },
-  // Huxley's "Mind at Large" and Narby's shamanic DNA-vision both point
-  // back to Harpur's third category.
-  { id: 128, field: 'note', phrase: 'Daimonic Reality',                target: 121 },
-  { id: 131, field: 'note', phrase: 'Daimonic Reality',                target: 121 },
-  // Food of the Gods joins the Wilson/McKenna psychedelic-consciousness
-  // lineage.
-  { id: 129, field: 'note', phrase: 'Prometheus Rising',               target: 119 },
-  { id: 129, field: 'note', phrase: 'Everything Is Under Control',     target: 120 },
-  // Planetary joins the chance/pattern/paranoia cluster.
-  { id: 130, field: 'note', phrase: 'Gravity’s Rainbow',               target: 78 },
-  { id: 130, field: 'note', phrase: 'Borges’s Collected Fictions',     target: 79 },
-  { id: 130, field: 'note', phrase: 'Everything Is Under Control',     target: 120 },
-  // The Kybalion and Holy Blood, Holy Grail both join the
-  // channeled-or-invented occult-reference cluster.
-  { id: 133, field: 'note', phrase: 'Alchemy & Mysticism',             target: 6 },
-  { id: 139, field: 'note', phrase: 'Alchemy & Mysticism',             target: 6 },
-  // Kitchen Confidential joins the built-persona cluster.
-  { id: 134, field: 'note', phrase: 'Wooderson',                       target: 32 },
-  { id: 134, field: 'note', phrase: 'Hedwig',                          target: 40 },
-  // The Squared Circle's kayfabe joins the belief-as-technology cluster.
-  { id: 137, field: 'note', phrase: 'The Book of the SubGenius',       target: 113 },
-  { id: 137, field: 'note', phrase: 'Everything Is Under Control',     target: 120 },
-  // Two design monographs, shelved as reference for each other.
-  { id: 124, field: 'note', phrase: 'Alexander McQueen',               target: 141 },
-  { id: 141, field: 'note', phrase: 'Tord Boontje',                    target: 124 },
-  // The Godfather and Wiseguy, two very different tones about the same
-  // underworld.
-  { id: 142, field: 'note', phrase: 'Wiseguy',                         target: 140 },
-  // Decreation joins the split/divided-self cluster a third way.
-  { id: 145, field: 'note', phrase: 'Hedwig',                          target: 40 },
-  { id: 145, field: 'note', phrase: 'VALIS',                           target: 110 },
-];
-
-// Wraps any LIBRARY_LINKS phrases that belong to this item+field in a
-// clickable <a class="library-link" data-target="id">, same beat as
-// sphere.js's fragment-links: escape the raw text first, then replace the
-// (already-escaped) phrase so nothing else in the string can be
-// reinterpreted as markup.
+// Wraps whatever links.js's getOutboundLinks() returns for this item+field
+// into clickable <a class="library-link">s, same beat as every other
+// scene's now-shared wireCrossLinks (sceneKit.js): escape the raw text
+// first (the escaped phrase is what getOutboundLinks' phrases are checked
+// against — see scripts/verify-links.mjs), then let wireCrossLinks replace
+// each one so nothing else in the string can be reinterpreted as markup.
 function renderLinkedField(itemId, field, text) {
-  let html = escapeHtml(text);
-  LIBRARY_LINKS
-    .filter(l => l.id === itemId && l.field === field)
-    .forEach(link => {
-      const esc = escapeHtml(link.phrase);
-      html = html.replace(esc, `<a class="library-link" data-target="${link.target}" role="link" tabindex="0">${esc}</a>`);
-    });
-  return html;
+  const html = escapeHtml(text);
+  const links = getOutboundLinks('library', itemId, field).map(l => ({ ...l, phrase: escapeHtml(l.phrase) }));
+  return wireCrossLinks(html, links, 'library-link');
 }
 
 // Pulls the video id out of a youtube.com/watch?v=... URL so the panel can
@@ -1240,7 +1104,7 @@ function distanceToFit(camera, width, height, margin) {
   return Math.max(distForHeight, distForWidth);
 }
 
-export function createLibrary(container, { preview = false } = {}) {
+export function createLibrary(container, { preview = false, initialPieceId = null, onPieceChange = null } = {}) {
   const w = container.clientWidth || window.innerWidth;
   const h = container.clientHeight || window.innerHeight;
 
@@ -1331,7 +1195,15 @@ export function createLibrary(container, { preview = false } = {}) {
     // set — following a link swaps panel content, nothing in the 3D scene.
     // populatePanel (defined below, hoisted) re-stripes every .library-link
     // it renders, so no separate stagger step is needed here.
-    function navigateToItem(targetId) {
+    // `targetScene` is always 'library' today — links.js has no cross-scene
+    // entries yet (this pass builds the addressing/store the next one needs,
+    // it doesn't author new cross-scene links itself; see NOTES.md). A
+    // non-library target is left as a no-op rather than silently mis-firing:
+    // whichever pass wires up cross-scene navigation gives this a real body
+    // (main.js's hash router already resolves `#scene/id` for any scene, so
+    // that'll likely just be `location.hash = \`${targetScene}/${targetId}\``).
+    function navigateToItem(targetScene, targetId) {
+      if (targetScene !== 'library') return;
       const target = libraryItems.find(i => i.id === targetId);
       if (!target) return;
       panelBodyEl.style.transition = 'opacity .18s';
@@ -1347,7 +1219,7 @@ export function createLibrary(container, { preview = false } = {}) {
       const link = e.target.closest('.library-link');
       if (!link) return;
       e.stopPropagation();
-      navigateToItem(Number(link.dataset.target));
+      navigateToItem(link.dataset.targetScene, Number(link.dataset.targetId));
     });
     panelBodyEl.addEventListener('keydown', e => {
       if (e.key !== 'Enter' && e.key !== ' ') return;
@@ -1355,7 +1227,7 @@ export function createLibrary(container, { preview = false } = {}) {
       if (!link) return;
       e.preventDefault();
       e.stopPropagation();
-      navigateToItem(Number(link.dataset.target));
+      navigateToItem(link.dataset.targetScene, Number(link.dataset.targetId));
     });
   }
 
@@ -1382,6 +1254,13 @@ export function createLibrary(container, { preview = false } = {}) {
   // and following a cross-link (navigateToItem, above) can populate the
   // same panel without duplicating this logic.
   function populatePanel(it) {
+    // CDs-on-shelf carry a string id ("cd-<n>", placeCdsInCubbies above) —
+    // deliberately disambiguated from libraryItems' plain numeric ids
+    // since they share the same 1..N range in their own source arrays.
+    // links.js and the #library/<id> hash only ever address the numeric
+    // (book/film/deck) space today, so a CD's own numeric id isn't
+    // reported here — see NOTES.md's "Linking & addressing" entry.
+    if (typeof it.id === 'number') onPieceChange?.(it.id);
     panel.querySelector('.library-panel-kind').textContent =
       ({ book: 'Book', dvd: 'DVD', bluray: 'Blu-ray', divination_box: 'Divination deck', cd: 'Album' })[it.type] || it.type;
     panelTitle.textContent = it.title;
@@ -1398,6 +1277,12 @@ export function createLibrary(container, { preview = false } = {}) {
     const coverEl = panel.querySelector('.library-panel-cover');
     const videoEl = panel.querySelector('.library-panel-video');
     const sceneEl = panel.querySelector('.library-panel-scene');
+    const refsEl = panel.querySelector('.library-panel-refs');
+    refsEl.textContent = typeof it.id === 'number'
+      ? formatInboundNote(
+          getInboundLinks('library', it.id).map(l => libraryItems.find(i => i.id === l.from.id)?.title)
+        ) ?? ''
+      : '';
     const lines = [];
     if (it.publisher) lines.push(`${it.publisher}${it.publish_year ? `, ${it.publish_year}` : ''}`);
     if (it.pages) lines.push(`${it.pages} pages`);
@@ -1409,7 +1294,7 @@ export function createLibrary(container, { preview = false } = {}) {
     detailsEl.innerHTML = lines.map(l => `<p>${l}</p>`).join('');
     // Note text is intentionally disabled -- commented out rather than
     // deleted so it's a one-line revert. Underlying `note` data and the
-    // cross-links that live inside it (LIBRARY_LINKS, field: 'note') are
+    // cross-links that live inside it (src/links.js, field: 'note') are
     // untouched.
     // noteEl.innerHTML = it.note ? renderLinkedField(it.id, 'note', it.note) : '';
     noteEl.innerHTML = '';
@@ -1425,7 +1310,7 @@ export function createLibrary(container, { preview = false } = {}) {
     // textual excerpt. See library.text.js's header for the
     // sourcing/copyright discipline behind these fields. Cross-links
     // live inline in note/scene/excerpt/excerpt_from text, rendered via
-    // renderLinkedField -- see LIBRARY_LINKS above.
+    // renderLinkedField -- see src/links.js.
     videoEl.innerHTML = '';
     sceneEl.innerHTML = '';
     if (it.youtube) {
@@ -1453,7 +1338,9 @@ export function createLibrary(container, { preview = false } = {}) {
       const duration = (9 + Math.random() * 7).toFixed(1);
       link.style.animationDelay = `-${delay}s`;
       link.style.animationDuration = `${duration}s`;
-      const targetItem = libraryItems.find(i => i.id === Number(link.dataset.target));
+      const targetItem = link.dataset.targetScene === 'library'
+        ? libraryItems.find(i => i.id === Number(link.dataset.targetId))
+        : null;
       link.setAttribute('aria-label', `Go to: ${targetItem ? targetItem.title : 'related item'}`);
     });
   }
@@ -1589,6 +1476,16 @@ export function createLibrary(container, { preview = false } = {}) {
     });
   }
 
+  // Deep-link entry/re-entry — resolves a (numeric, book/film/deck-space —
+  // see populatePanel's comment) piece id to its spine mesh and opens it,
+  // same beat as a real spine click or jump-list pick. No-op in preview
+  // mode or if the id doesn't resolve.
+  function openPieceById(id) {
+    const mesh = items.meshes.find(m => m.userData.item.id === id);
+    if (mesh) openItem(mesh, { fromLeft: false });
+  }
+  if (!preview && initialPieceId !== null) openPieceById(initialPieceId);
+
   // ─── Drag to orbit/pan + wheel zoom ──────────────────────────────────────
   // The shelf only turns under drag, no auto-rotate.
   //
@@ -1660,6 +1557,9 @@ export function createLibrary(container, { preview = false } = {}) {
   });
 
   return {
+    // Same-scene deep link support (main.js's expandScene) — see
+    // openPieceById above.
+    openPieceById,
     dispose() {
       cancelAnimationFrame(animId);
       orbitDrag.dispose();

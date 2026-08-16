@@ -30,12 +30,14 @@ export const EPIGRAPH_SECONDARY = 'life has to go somewhere';
 // cosmic (seven-colored/prisms).
 export const BOUNCES = [
   {
+    id: 1,
     // Electron/CD passage — written 2008, no relationship to this piece,
     // genuine electron-beam-physics language ("channel of electrons,
     // glowing orange-red"). Single bounce, closest to the source.
     text: '...every solid-state hum of vacuum tubes warming up the channel of electrons, glowing orange-red on the back of the CD cover.',
   },
   {
+    id: 2,
     // Find #1 — Storyline.doc, entry dated 9/30–10/1/2003, confirmed
     // identical across the original file and two independently-dated
     // backup copies. Single, undivided bounce — "THE MIRROR" is the
@@ -43,6 +45,7 @@ export const BOUNCES = [
     text: "HOLY CRAP! Lasers get hot! They need to be cooled! I swear this makes sense! Because I'm always, always, ALWAYS craving cold water! And me thinking about lasers and whatnot as a useful metaphor – jesus, there's a gem in my heart focusing all this light within and through me – oh my god, I'm the lasing medium…and the laser…no, wait, the light pours through me…and my psyche and mind and body are the medium…and the laser light is that which comes out of me. We're grasping our way towards an analogy, but jumping jesus…this could be something…and my third eye is the focusing mechanism – THE MIRROR – the fucking mirror isn't letting anything out",
   },
   {
+    id: 3,
     // Find #2a — Storyline.doc, ~9/29–30/2003, same cross-copy
     // verification as Find #1. A separate diary entry from 2b below, not
     // joined or ellipsis-bridged (that would be new writing the source
@@ -50,31 +53,38 @@ export const BOUNCES = [
     text: 'Circle the lenses over the crystal refractor of your heart.',
   },
   {
+    id: 4,
     // Find #2b — Storyline.doc, same week as 2a, same verification.
     text: 'I was just thinking, "I need focus," and suddenly I pictured lenses at my feet and at the top of my head (especially at my feet, though), and now things are definitely coming back into focus! How odd! Just saying the word evoked the image which affected the body.',
   },
   {
+    id: 5,
     // Harps/superstrings, part one.
     text: 'Here are harps, here are superstrings.',
   },
   {
+    id: 6,
     // Harps/superstrings, part two — same passage as part one.
     text: "Pluck at them both, send me vibrating, harmonics echoing at mathematically precise points... my own bow waits to be bent.",
   },
   {
+    id: 7,
     // Lightning tetrahedrons, part one.
     text: 'Microscopic lightning tetrahedrons shimmering in air for half a second and then phasing out...',
   },
   {
+    id: 8,
     // Lightning tetrahedrons, part two — split at the same ellipsis pause
     // the source text already has.
     text: 'union of heaven and earth, union of thought and action, union of spark and fusion, the blend, the soul and psyche, the divine fire.',
   },
   {
+    id: 9,
     // Seven-colored/prisms, part one.
     text: 'Seven-colored, prisms, starlight...',
   },
   {
+    id: 10,
     // Seven-colored/prisms, part two.
     text: 'Vibrating at a different frequency. Harmonics, tuning.',
   },

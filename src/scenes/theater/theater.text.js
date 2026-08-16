@@ -36,6 +36,7 @@ export const PIECES = [
     },
     scenes: [
       {
+        id: 1,
         slug: 'INT. MERCURY BAR. NIGHT.',
         order: ['brian', 'paul'],
         beats: [
@@ -77,6 +78,7 @@ export const PIECES = [
         ],
       },
       {
+        id: 2,
         slug: 'INT. SYMPHONY HALL / BACKSTAGE / DRESSING ROOM. NIGHT.',
         order: ['brian', 'emma', 'bjorn'],
         beats: [
@@ -178,6 +180,7 @@ export const PIECES = [
         ],
       },
       {
+        id: 3,
         slug: 'EXT. COFFEEHOUSE. NIGHT.',
         order: ['brian', 'kirstin'],
         beats: [
@@ -270,6 +273,7 @@ export const PIECES = [
         ],
       },
       {
+        id: 4,
         slug: 'INT. CANDY FACTORY. DAY. (A MOVIE SET.)',
         order: ['brian', 'sadler', 'gregg', 'amber'],
         beats: [
@@ -351,6 +355,7 @@ export const PIECES = [
         ],
       },
       {
+        id: 5,
         slug: 'INT. MERCURY BAR. NIGHT. (LATER.)',
         order: ['brian', 'paul', 'sarah'],
         beats: [
@@ -401,6 +406,7 @@ export const PIECES = [
         ],
       },
       {
+        id: 6,
         slug: 'INT. MOVIE THEATER, THEN RESTAURANT. NIGHT.',
         order: ['brian', 'sadler', 'emma', 'paul', 'sarah', 'amber'],
         beats: [
@@ -453,6 +459,7 @@ export const PIECES = [
     },
     scenes: [
       {
+        id: 7,
         slug: 'EXT. DUCK TOUR VEHICLE. DAY.',
         order: ['tourpaul'],
         beats: [
@@ -469,6 +476,7 @@ export const PIECES = [
         ],
       },
       {
+        id: 8,
         slug: 'INT. THE DEN, HALLWAY & LIVING ROOM. NIGHT.',
         order: ['alex', 'john', 'heather', 'rebecca', 'jeff', 'susan'],
         beats: [
@@ -581,6 +589,7 @@ export const PIECES = [
     },
     scenes: [
       {
+        id: 9,
         slug: 'INT. HELL. HORACE’S DESK.',
         order: ['horace', 'art'],
         beats: [
@@ -626,6 +635,7 @@ export const PIECES = [
         ],
       },
       {
+        id: 10,
         slug: 'INT. HELL. CONTINUOUS.',
         order: ['horace', 'satanvoice'],
         beats: [
@@ -646,6 +656,7 @@ export const PIECES = [
         ],
       },
       {
+        id: 11,
         slug: 'INT. HELL. CONTINUOUS. (THE ASSIGNMENT.)',
         order: ['horace', 'satanvoice'],
         beats: [
@@ -670,6 +681,7 @@ export const PIECES = [
         ],
       },
       {
+        id: 12,
         slug: 'INT. THE LIVING ROOM. NIGHT.',
         order: ['todd', 'traci', 'aaron', 'katie'],
         beats: [
@@ -728,6 +740,7 @@ export const PIECES = [
         ],
       },
       {
+        id: 13,
         slug: 'INT. THE LIVING ROOM. NIGHT. (THE PITCH.)',
         order: ['horace', 'todd', 'traci', 'aaron', 'katie', 'thewoman'],
         beats: [
@@ -771,6 +784,7 @@ export const PIECES = [
         ],
       },
       {
+        id: 14,
         slug: 'INT. THE LIVING ROOM. NIGHT. (BACKUP.)',
         order: ['horace', 'art', 'aaron', 'katie'],
         beats: [
@@ -814,6 +828,7 @@ export const PIECES = [
         ],
       },
       {
+        id: 15,
         slug: 'INT. THE LIVING ROOM. NIGHT. (THE SIGNATURE.)',
         order: ['horace', 'art', 'todd', 'katie', 'aaron', 'traci'],
         beats: [
@@ -853,6 +868,7 @@ export const PIECES = [
         ],
       },
       {
+        id: 16,
         slug: 'INT. THE LIVING ROOM, THEN HELL. NIGHT. (THE TWIST.)',
         order: ['satan', 'horace', 'art', 'todd', 'katie', 'aaron', 'satanvoice'],
         beats: [

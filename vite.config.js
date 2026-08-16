@@ -1,6 +1,30 @@
 import { resolve } from 'path';
 import { defineConfig } from 'vite';
 import { prerender } from './scripts/prerender.js';
+import { verifyLinks } from './scripts/verify-links.mjs';
+
+// ─── Link store verification ────────────────────────────────────────────────
+// Same reasoning as prerenderTextPages() below, same fix: a plain npm
+// "prebuild" script would silently never run against the bare
+// `npx vite build` this repo actually gets verified with (NOTES.md).
+// buildStart, not closeBundle — this should fail loud and fail first,
+// before spending time on the rest of the build, not after dist/ already
+// has output in it.
+function verifyLinksPlugin() {
+  return {
+    name: 'pm-verify-links',
+    apply: 'build',
+    buildStart() {
+      const { ok, failures, log } = verifyLinks();
+      log.forEach(line => console.log(line));
+      if (!ok) {
+        this.error(`verify-links: ${failures} check(s) failed — see above. Fix src/links.js or the scene .text.js file(s) it points at before building.`);
+      } else {
+        console.log(`  ✓ verify-links: all checks passed`);
+      }
+    },
+  };
+}
 
 // ─── Static text pages ──────────────────────────────────────────────────────
 // Runs as a build plugin rather than as a second `npm run build` step on
@@ -27,7 +51,7 @@ function prerenderTextPages() {
 }
 
 export default defineConfig({
-  plugins: [prerenderTextPages()],
+  plugins: [verifyLinksPlugin(), prerenderTextPages()],
   build: {
     rollupOptions: {
       input: {

@@ -43,6 +43,18 @@ const previews   = {};
 // eight client-rendered scenes, no server-side routes on a static host);
 // a hash costs nothing to serve, and can't 404.
 //
+// Extended 2026-08-16 to a second, optional segment — `#scene/id` — naming
+// a specific piece within the scene (the `id` every scene's pieces now
+// carry, see NOTES.md's "Linking & addressing" entry), not just the scene
+// itself. Before this, no hash below the scene level existed at all: every
+// scene's own piece-open functions (openFragment, navigateToItem,
+// navigateToPoem, scroll's onLinkClick, beamline's equivalent) lived
+// entirely in JS memory, so a link could only ever say "open this scene,"
+// never "here's the specific piece." `id` (not a title-derived slug) for
+// the same reason every scene migrated off title/patch keys onto real ids
+// — it's stable across a piece being retitled, and it's the same value
+// links.js and every scene's own render code already key off.
+//
 // `syncingHash` guards the round trip: assigning location.hash fires
 // hashchange, which would otherwise re-enter expandScene/returnToGallery
 // for the very transition that just set it.
@@ -52,17 +64,34 @@ function navIconFor(sceneName) {
   return document.querySelector(`.nav-icon[data-scene="${sceneName}"]`);
 }
 
-function sceneFromHash() {
-  const key = decodeURIComponent(location.hash.replace(/^#/, ''));
+// Returns { scene, pieceId } — pieceId is null when the hash only names a
+// scene (`#scroll`) or the piece segment isn't a valid positive integer.
+function parseHash() {
+  const raw = decodeURIComponent(location.hash.replace(/^#/, ''));
+  const [sceneKey, pieceRaw] = raw.split('/');
   // hasOwn, not `key in SCENES` — `in` walks the prototype chain, so
   // /#toString would otherwise resolve to a "scene" and throw on .create.
-  return Object.hasOwn(SCENES, key) ? key : null;
+  const scene = Object.hasOwn(SCENES, sceneKey) ? sceneKey : null;
+  const pieceId = pieceRaw !== undefined && /^\d+$/.test(pieceRaw) ? Number(pieceRaw) : null;
+  return { scene, pieceId: scene ? pieceId : null };
 }
 
-function setHash(sceneName) {
+// `push`: true for a real scene-to-scene navigation (adds a Back-able
+// history entry, existing behavior, unchanged) — false for a piece-level
+// update inside a scene that's already open (a click on a fragment/poem/
+// item link, or the jump list). Those use replaceState so following ten
+// cross-links doesn't leave ten dead entries between the visitor and the
+// Back button; Back still means "leave the scene," same as before this
+// piece-level hash existed at all.
+function setHash(sceneName, pieceId, { push = true } = {}) {
   syncingHash = true;
-  if (sceneName) {
-    location.hash = sceneName;
+  const next = sceneName ? (pieceId ? `${sceneName}/${pieceId}` : sceneName) : '';
+  if (next) {
+    if (push) {
+      location.hash = next;
+    } else {
+      history.replaceState(null, '', `${location.pathname}${location.search}#${next}`);
+    }
   } else if (location.hash) {
     // replaceState rather than clearing the hash directly: assigning
     // location.hash = '' leaves a bare trailing '#' in the URL and pushes
@@ -120,8 +149,27 @@ function overlayFocusables() {
 // `triggerEl`: whichever control launched this (a nav icon or a preview
 // tile) — stashed so returnToGallery() can send focus back to the actual
 // thing the visitor activated, not guess at it after the fact.
-function expandScene(sceneName, triggerEl = null) {
-  if (activeScene === sceneName) return;
+//
+// `pieceId`: which piece (fragment/poem/item/patch/bounce — the `id` each
+// scene's pieces now carry) to open immediately, if any. Passed through as
+// `initialPieceId` to the scene's own create(), which is what actually
+// opens it — main.js has no idea what a "piece" looks like inside a given
+// scene, only that scenes which support this open one on mount and report
+// every subsequent change back via `onPieceChange`. Scenes that don't
+// support piece-level addressing yet (theater's shuffled reel has no
+// random-access "open scene N" the way the others have "open piece N";
+// orrery has exactly one piece and no separate open/closed state to begin
+// with) just ignore `initialPieceId`/`onPieceChange` — see each scene's own
+// create() for whether it's wired.
+function expandScene(sceneName, triggerEl = null, pieceId = null) {
+  if (activeScene === sceneName) {
+    // Already open — a same-scene deep link (address-bar edit, or a
+    // cross-link that happens to land back on this scene) still needs to
+    // open the new piece, just without tearing the scene down and
+    // rebuilding it from scratch.
+    if (pieceId) fullInstance?.openPieceById?.(pieceId);
+    return;
+  }
   lastTrigger = triggerEl;
 
   // Tear down previous full instance
@@ -133,7 +181,7 @@ function expandScene(sceneName, triggerEl = null) {
 
   activeScene = sceneName;
   setActiveIcon(sceneName);
-  setHash(sceneName);
+  setHash(sceneName, pieceId);
   setChromeInert(true);
 
   landing.style.display = 'none';
@@ -142,7 +190,17 @@ function expandScene(sceneName, triggerEl = null) {
   overlay.setAttribute('aria-hidden', 'false');
   overlay.setAttribute('aria-label', SCENES[sceneName]?.ariaLabel ?? 'Full screen experience.');
 
-  fullInstance = SCENES[sceneName].create(expContainer, { preview: false });
+  fullInstance = SCENES[sceneName].create(expContainer, {
+    preview: false,
+    initialPieceId: pieceId,
+    // A piece opened *inside* the already-open scene (a fragment click, a
+    // jump-list selection, a cross-link) updates the hash's piece segment
+    // without pushing a new history entry — see setHash's own comment for
+    // why (`push: false`). sceneName is closed over rather than read from
+    // `activeScene` so this can't fire against a hash update for a scene
+    // that's since been torn down and replaced.
+    onPieceChange: id => setHash(sceneName, id, { push: false }),
+  });
   // Focus the container for screen readers
   expContainer.setAttribute('tabindex', '-1');
   setTimeout(() => expContainer.focus(), 100);
@@ -248,13 +306,13 @@ initPreviews();
 // real page underneath, not an empty one. The nav icon is passed as the
 // trigger so returnToGallery()'s focus restore still has somewhere sensible
 // to send focus, same as a click would.
-const initialScene = sceneFromHash();
-if (initialScene) expandScene(initialScene, navIconFor(initialScene));
+const initialHash = parseHash();
+if (initialHash.scene) expandScene(initialHash.scene, navIconFor(initialHash.scene), initialHash.pieceId);
 
 window.addEventListener('hashchange', () => {
   if (syncingHash) return; // our own write, not a real navigation
-  const scene = sceneFromHash();
-  if (scene) expandScene(scene, navIconFor(scene));
+  const { scene, pieceId } = parseHash();
+  if (scene) expandScene(scene, navIconFor(scene), pieceId);
   else returnToGallery();
 });
 

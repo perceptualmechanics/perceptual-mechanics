@@ -13,6 +13,12 @@
   library-panel-title keeps a real id — it's the target of the panel's
   aria-labelledby, which per spec has to resolve to an actual id, not a
   class. Every other panel part is styled and looked up purely by class.
+
+  library-panel-refs is the inbound-reference note ("Referenced from X") —
+  filled by library.js's populatePanel via sceneKit.js's formatInboundNote,
+  same quiet-metadata convention as sphere's facet-id line and orbiter's
+  own panel-refs. Only numeric (non-CD) items ever have anything to show
+  here, since links.js only addresses numeric piece ids.
 -->
 
 <p class="library-caption" aria-hidden="true">the library — once removed</p>
@@ -32,5 +38,6 @@
     <p class="library-panel-excerpt-from"></p>
     <div class="library-panel-details"></div>
     <p class="library-panel-note"></p>
+    <p class="library-panel-refs"></p>
   </div>
 </aside>

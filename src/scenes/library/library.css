@@ -167,6 +167,16 @@
   font-size: 0.78rem; font-style: italic; line-height: 1.6;
 }
 .library-panel-excerpt-from:empty { display: none; margin: 0; }
+/* Inbound-reference note ("Referenced from X") — same quiet-metadata
+   treatment as sphere.css's .sphere-facet-id and orbiter.css's own
+   .orbiter-panel-refs, tuned to library's warm parchment/gold palette.
+   library.js only ever sets textContent here, never toggles visibility,
+   so :empty needs to collapse the line to nothing on its own. */
+.library-panel-refs {
+  font-size: .6rem; letter-spacing: .3em; color: rgba(230,215,180,.3);
+  margin: 1.4rem 0 0; text-transform: uppercase;
+}
+.library-panel-refs:empty { margin: 0; }
 /* Cross-links, same mechanism as sphere.js's fragment-link and orbiter.js's
    poem-link: a phrase glimmers faintly on its own slow loop so a link
    reads as "alive" even before it's noticed, tuned to library's own

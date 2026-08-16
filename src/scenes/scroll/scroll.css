@@ -166,6 +166,22 @@
 }
 .scroll-patch-text > p:last-child { margin-bottom: 0; }
 
+/* Inbound-reference acknowledgment — same quiet-metadata register as
+   sphere's facet-id / orbiter's / library's panel-refs, but deliberately
+   nameless (see scroll.js's comment above where this is appended): this
+   scene shows no titles anywhere else, so this only marks that a passage
+   is echoed elsewhere, never which piece. Sits below the patch's own
+   text, in the same faded amber as the Ogham margin line rather than the
+   handwritten body serif, so it reads as a small inscribed note rather
+   than more of the found prose. */
+.scroll-patch-refs {
+  position: relative; z-index: 1;
+  font-family: 'Cinzel', 'IM Fell English', serif;
+  font-size: 0.62rem; letter-spacing: 0.28em; text-transform: uppercase;
+  color: rgba(193, 122, 61, 0.55);
+  margin: 1.3rem 0 0; text-shadow: none;
+}
+
 /* Contains the Ogham line + drop-cap floats (below) to just the opening
    paragraphs — only for patches scroll.js opts into this
    (`.scroll-patch-text--contained`, per its OPENING_GROUP lookup). Most

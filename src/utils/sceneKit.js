@@ -292,6 +292,62 @@ export function escapeHtml(s) {
   return div.innerHTML;
 }
 
+// ─── Cross-piece links (src/links.js) ──────────────────────────────────────
+// The one place that turns a list of links.js rows into live markup —
+// sphere, orbiter, scroll, and library all called this same beat
+// separately before the 2026-08-16 linking pass (find a phrase already
+// sitting in a field's text, wrap it in an anchor pointing at another
+// piece), copy-pasted four times with a different data attribute and
+// class name each time. Now it's one function; each scene still owns its
+// own link class name (fragment-link/poem-link/scroll-link/library-link)
+// for its own CSS, and still decides what `html` is before calling this —
+// escaped plain text for a field that's just prose (library's note/scene/
+// excerpt, orbiter's stanza, scroll's paragraph), or a field's own already-
+// trusted HTML as-authored for a field that IS markup (sphere's fragment
+// text, which keeps its own <p> tags). This never escapes anything itself,
+// only replaces a literal phrase with that phrase wrapped in an <a>.
+//
+// `links` is whatever a scene's own call to `getOutboundLinks(scene, id,
+// field, index)` (src/links.js) returned — every row already resolved to
+// the one field/slot the caller is about to render, so this just wires
+// each one in turn. The target now carries both a scene and an id
+// (data-target-scene/data-target-id) rather than the single `data-target`
+// each scene used to write by hand — a link can only ever name one piece
+// unambiguously once more than one scene's pieces share the same address
+// space, which is exactly what unifying every scene onto `{ scene, id }`
+// (NOTES.md's "Linking & addressing" entry) was for.
+export function wireCrossLinks(html, links, linkClass) {
+  let out = html;
+  links.forEach(l => {
+    out = out.replace(
+      l.phrase,
+      `<a class="${linkClass}" data-target-scene="${l.to.scene}" data-target-id="${l.to.id}" role="link" tabindex="0">${l.phrase}</a>`
+    );
+  });
+  return out;
+}
+
+// ─── Inbound-reference note ─────────────────────────────────────────────────
+// "Referenced from X" / "X and Y" / "X, Y, and Z" — the target side of a
+// links.js relationship. Added 2026-08-16 alongside wireCrossLinks() above:
+// wireCrossLinks is the outbound half (a phrase in the source piece's own
+// text becomes a clickable jump), this is the inbound half (the target
+// piece says something back), which is what actually makes a link "surface
+// from both ends" rather than only being discoverable by clicking through
+// from the source. `titles`: display names for each link in
+// getInboundLinks()'s result, same order — a scene passes these in rather
+// than this function looking them up, since only the scene knows how to
+// resolve its own (and any other scene's) pieces to a title. Returns null
+// for no inbound links, so a caller can skip rendering the line entirely
+// rather than showing an empty "Referenced from ".
+export function formatInboundNote(titles) {
+  const names = titles.filter(Boolean);
+  if (!names.length) return null;
+  if (names.length === 1) return `Referenced from ${names[0]}`;
+  if (names.length === 2) return `Referenced from ${names[0]} and ${names[1]}`;
+  return `Referenced from ${names.slice(0, -1).join(', ')}, and ${names[names.length - 1]}`;
+}
+
 // ─── Static HTML template parsing ──────────────────────────────────────────
 // Each scene's static shell markup (hint, caption, panel skeleton, and
 // similar chrome that doesn't change shape at runtime) lives in its own

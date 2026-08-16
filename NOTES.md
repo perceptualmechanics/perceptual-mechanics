@@ -79,6 +79,29 @@ them. Read these before adding anything that runs at build time.
   rather than generalizing a proven one — a bad regex confined to `/text/` costs
   a few pages, the same mistake in the root rule can loop the homepage (1.7.0,
   following 1.2.3).
+- **A script only wired as an npm pre-lifecycle hook ("prebuild" etc.) doesn't
+  actually run.** Verification around here is almost always a bare
+  `npx vite build`, which skips npm's own script lifecycle entirely — the same
+  reason `scripts/prerender.js` runs from a `closeBundle` vite plugin hook
+  (1.7.0) is why `scripts/verify-links.mjs` runs from a `buildStart` plugin hook
+  (2.3.0) instead of a `"prebuild": "npm run verify-links"` line, which was
+  the first draft and would have silently never fired. Anything that must
+  gate every build belongs in `vite.config.js`, not `package.json`'s
+  `scripts` block.
+- **Linking & addressing: one scheme, one store.** Every scene's pieces carry
+  a stable, unique-*within-that-scene* `id` (a real field on the piece, e.g.
+  `sphere.text.js`'s fragments, never derived from a title or any other
+  mutable text) — library's items were the original model for this; every
+  other scene migrated onto it in 2.3.0. A link between two pieces —
+  same-scene or, once anything actually does that, cross-scene — is one row
+  in `src/links.js`, addressed by `{ scene, id }` pairs, not a value
+  hand-authored into two different scenes' own files. `getOutboundLinks`/
+  `getInboundLinks` (`src/links.js`) are how a scene reads its own links back
+  out, including ones where it's only the target — see that file's own header
+  for the full model and scripts/verify-links.mjs for how it's kept honest.
+  Any future scene that wants clickable cross-piece links reads and writes
+  `src/links.js`; it does not grow its own local link table the way sphere/
+  orbiter/scroll/library each independently did before this.
 
 ## Per-scene folder structure & markup conventions
 
@@ -224,6 +247,158 @@ described are unchanged.)
   unnoticed if any of the three needs another big feature pass. If it ever is
   worth trimming, orrery.js's texture generators and first-person rig are the
   two most self-contained chunks to split out first.
+
+## 2.3.0 (2026-08-16)
+
+**Linking infrastructure: the foundation a discovery brief asked for, built as
+its own project rather than folded into the cross-scene linking feature it
+sets up.** The discovery brief that preceded this (delivered separately, in
+chat) found four real gaps underneath the site's existing per-scene linking
+feature — inconsistent piece addressing, no live deep-linking below the scene
+level, the static/live sides of the site unable to agree on a piece, and a
+curation process with no durable record or repeatable check. This pass fixes
+all four, and replaces the one-directional-hand-authored-per-scene link
+pattern with a single shared store, per Scott's explicit decision in the
+follow-up brief. Cross-scene linking itself — actually authoring a link from
+one scene's piece to another's — is deliberately **not** part of this pass;
+that's the smaller follow-up brief this sets up, not this one.
+
+**1. Unified piece addressing.** Every scene's pieces now carry a stable,
+per-scene-unique numeric `id` — library's items were already the right model
+(real ids, not derived from a title); sphere, orbiter, and scroll migrated
+onto it from title-string and `patch`-string keys respectively, and beamline's
+`BOUNCES` got ids for the first time (they had none at all before — bounce 0
+through bounce 9, `id: 1..10`). Theater's scenes and the orrery's single
+placard got ids too, for uniformity, even though neither is wired into
+deep-linking below (see #2). IDs were assigned by a script (mechanical,
+in existing array order), not by hand, specifically to rule out transcription
+error across ~60 pieces.
+
+**2. Live deep-linking, built for the first time — not extended, since nothing
+existed to extend.** Confirmed at discovery: no scene could be linked to a
+specific piece within it, live. The hash scheme (`main.js`) now supports
+`#scene/id` alongside the existing `#scene` — `parseHash()` replaces
+`sceneFromHash()`, `setHash()` takes an optional piece id and a `push` flag
+(a real scene-to-scene navigation still pushes a history entry; a piece
+opened inside an already-open scene uses `replaceState`, so following ten
+cross-links doesn't leave ten dead entries between the visitor and Back).
+Every scene's `create()` now accepts `initialPieceId` (open straight to a
+piece on load) and `onPieceChange` (report every piece it opens back to
+main.js, including ones reached by clicking a facet/satellite/spine
+directly, not just a cross-link), and returns `openPieceById(id)` so a
+same-scene hash edit while the scene's already open doesn't need a full
+teardown/rebuild. Wired into sphere, orbiter, library, scroll, and beamline —
+the five scenes that have a real "open a specific piece" mechanism. Theater
+(a shuffled, advance-only reel with no random-access "open scene N") and
+orrery (one piece, no separate open/closed state) are documented exceptions,
+not oversights — building theater a real random-access jump would be a
+genuine new feature, out of scope here.
+
+**3. Static and live sides now agree, via the same id.** The `/text/<scene>/`
+pages already had working per-piece slug anchors (`/text/fragments/#wingspan`)
+before this — untouched, since they work and nothing forced a change. What
+they never had: any link back into the live scene at that specific piece.
+Every piece on every prerendered page now carries a small
+`Open in <Scene> →` link to `/#<scene>/<id>`, right under its heading — same
+underlying id-based model as the live hash, just not the same URL string
+(the slug anchor is a page-internal convenience; the id is the actual
+address). Skipped for the Library's Music section on purpose: `cdRackItems`
+and `libraryItems` are separate arrays that both start numbering at 1, so a
+bare numeric id there would be ambiguous between a CD and a book/film/deck —
+flagged as a real (if harmless-today) asymmetry in
+`scripts/verify-links.mjs`'s own output, not silently worked around.
+Beamline's bounces and the Library's books/films/decks got real per-piece
+anchors on this page for the first time in the same pass (neither had one
+before — beamline had no per-bounce heading id at all, library's catalog was
+a flat unanchored list).
+
+**Caught during this pass, not before it:** stripping sphere's inline
+`<a class="fragment-link" data-target="...">` anchors out into the shared
+store (see below) silently broke `/text/fragments/`'s own in-page cross-links
+— `buildFragments()` in `scripts/prerender.js` was rewriting that literal
+markup into `#slug` anchors, and once the markup moved, that regex matched
+nothing. Fixed in the same pass (`buildFragments` now reads
+`getOutboundLinks('sphere', ...)` and re-wires the phrases itself, same as
+sphere.js does at runtime) — worth a build-output diff after any future
+change to how a scene's links are authored, not just a syntax check, since
+this kind of break produces a clean build with silently thinner output.
+
+**Decision made, not defaulted into: single shared link store.** Per the
+follow-up brief, explicitly rejecting the alternative of just continuing the
+existing pattern. `src/links.js` is now the one array every link lives in —
+sphere's fragment-links (formerly hand-typed straight into the fragment's own
+HTML), orbiter's `POEM_LINKS`, scroll's `LINKS`, and library's `LIBRARY_LINKS`
+(85 rows, the single largest table) all migrated in, none left running
+alongside the new store. Each row is `{ from: { scene, id, field, index? },
+phrase, to: { scene, id } }` — deliberately *not* a symmetric two-phrase
+record: the reverse direction's prose is separately authored (or may not
+exist at all), so there's nothing to derive automatically for it. What *is*
+automatic now: `getInboundLinks(scene, id)` answers "what points at this
+piece" for any piece from the one array, without a second hand-written row.
+`sceneKit.js`'s new `wireCrossLinks()` replaces four
+separate, near-identical phrase-wrap-into-`<a>` implementations with one;
+sphere's fragments — previously the one scene whose links lived as literal
+markup inside the found text rather than a separate phrase table — now
+render the same way the other three always did (`renderFragmentHtml()`,
+sphere.js), which is what made moving its links into the shared store
+possible in the first place.
+
+**4. Verification and documentation made durable.** `scripts/verify-links.mjs`
+checks per-scene id uniqueness and every `links.js` row (source field exists,
+phrase exists verbatim in it, target resolves) — committed, not run once by
+hand and discarded the way the LIBRARY_LINKS 31→56 round's own check was
+(see 1.0.55 below). Runs from a `buildStart` vite plugin
+(`verifyLinksPlugin()`, `vite.config.js`), not an npm `"prebuild"` script — a
+`prebuild` hook was the first draft and would have silently never run against
+the bare `npx vite build` this repo is actually verified with (see the new
+Standing note above); confirmed by deliberately corrupting a phrase and
+re-running `npx vite build` directly, which failed loudly, then restoring and
+confirming a clean build. `npm run verify-links` still works too, as a fast
+standalone check while editing. The addressing/linking convention itself is
+now a Standing note (above), not just implicit in the code, specifically so a
+future scene doesn't reinvent a fifth incompatible scheme.
+
+**5. Inbound links now surface live, on both ends.** Caught in review, not
+found independently: the first draft of this pass made `getInboundLinks`
+queryable but never rendered it anywhere, so a linked-to piece showed nothing
+acknowledging the link — the source side worked, the target side didn't. The
+single-store decision's actual point was that a link authored once surfaces
+from *both* ends, so this was a real gap, not a scope choice. Fixed with a
+quiet, non-clickable text line next to each scene's existing quiet-metadata
+element (`sceneKit.js`'s new `formatInboundNote()` builds the "Referenced
+from X" / "X and Y" / "X, Y, and Z" text): sphere's `.sphere-facet-id` line,
+orbiter's new `.orbiter-panel-refs`, library's new `.library-panel-refs`.
+Scroll is the one deliberate exception — the scene's whole design is that
+pieces carry no titles, sources, or dates on the hide itself (see the file's
+own header), and all six of its links are scroll-to-scroll, so naming the
+source piece would violate the one rule scroll holds everywhere else. It
+gets a nameless marker instead (`.scroll-patch-refs`, "echoed elsewhere on
+the scroll") — acknowledges the link without naming what's on the other end.
+Beamline has zero links either direction today, so it's untouched.
+
+**What this doesn't do:** author any new links, cross-scene or otherwise —
+every one of the 146 rows in `links.js` is a direct migration of a link that
+already existed, verified against the same source text it was checked
+against originally. Cross-scene linking is now a genuinely small addition on
+top of this (addressable pieces, working deep-links, a store built to hold
+a `to` in a different scene from `from` already), not a structural one — that
+remains its own, separate pass.
+
+Verified: `node --check` on every touched file; `npm run verify-links` and a
+bare `npx vite build` both clean (146/146 links resolve, all ~65 pieces
+across 8 scenes carry unique per-scene ids); confirmed the verify step
+actually gates the real build command by deliberately breaking a phrase and
+re-running `npx vite build` (failed, as it should) before restoring; diffed
+`dist/text/fragments/index.html` before and after the sphere migration to
+catch (and then fix) the cross-link regression above — every phrase-wrapped
+anchor present before is present after, same targets; spot-checked
+`dist/text/*/index.html` for the new per-piece `Open in <Scene> →` links
+(count matches piece count in every case: 25 sphere, 14 orbiter, 12 scroll,
+10 beamline, 147 library); live-checked the inbound-link fix in Chrome
+against the running dev server, one migrated link per scene, both source and
+target side — `#sphere/16`, `#orbiter/6`, `#library/72` each rendered the
+correct "Referenced from" text on the target piece, `#scroll/3` rendered the
+nameless marker on all three of scroll's actual inbound targets.
 
 ## 2.2.22 (2026-08-10)
 
