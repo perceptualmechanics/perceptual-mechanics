@@ -189,7 +189,14 @@ export function createConstellation(container, { preview = false, initialPieceId
     color: 0xbfd6ff, transparent: true, opacity: 0.34, depthWrite: false,
   });
   const strandMesh = rows.length ? new THREE.InstancedMesh(strandGeo, strandMat, rows.length) : null;
-  const hitGeo = new THREE.BoxGeometry(1, 1.4, 1.4);
+  // Cross-section padding around each strand's true 0.07-unit rendered
+  // width. 1.4 (the original figure) measured out to only ~5px wide on
+  // screen at this scene's own default/zoomed-out camera distances (46°
+  // FOV, CAM_MAX 260) — nowhere near a real click target. 4.4 keeps a
+  // ~12px-wide target even at full zoom-out, without the strands (sparse,
+  // 22 of them across a wide dome) starting to overlap each other's hit
+  // regions at normal viewing distance.
+  const hitGeo = new THREE.BoxGeometry(1, 4.4, 4.4);
   const hitMat = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false });
   const strandHit = rows.length ? new THREE.InstancedMesh(hitGeo, hitMat, rows.length) : null;
 
@@ -251,14 +258,11 @@ export function createConstellation(container, { preview = false, initialPieceId
   // separate animation state to blend.
   function buildSpider() {
     const group = new THREE.Group();
-    const bodyMat = new THREE.MeshStandardMaterial({
-      color: 0x0a0d18, metalness: 0.55, roughness: 0.35,
-      emissive: GOLD_ACCENT, emissiveIntensity: 0.4,
-    });
-    const bodyGeo = new THREE.OctahedronGeometry(preview ? 1.6 : 2.1, 1);
-    const body = new THREE.Mesh(bodyGeo, bodyMat);
-    group.add(body);
-
+    // No body mesh — pure radiating leg geometry, hub is an empty point in
+    // space where all eight hips share the same local origin. Consistent
+    // with the site's existing Tempest-style vector-line aesthetic (thin
+    // glowing strokes, no filled/solid forms) rather than a bulbous or
+    // solid mass at the center.
     const legMat = new THREE.MeshBasicMaterial({ color: GOLD_ACCENT, transparent: true, opacity: 0.6 });
     const femurLen = preview ? 2.3 : 3.1, tibiaLen = preview ? 2.6 : 3.5;
     const femurGeo = new THREE.BoxGeometry(femurLen, 0.2, 0.2);
@@ -294,7 +298,7 @@ export function createConstellation(container, { preview = false, initialPieceId
         reactionAmp: 0,
       });
     }
-    return { group, body, bodyGeo, bodyMat, legMat, femurGeo, tibiaGeo, legs };
+    return { group, legMat, femurGeo, tibiaGeo, legs };
   }
   const spider = buildSpider();
   scene.add(spider.group);
@@ -432,28 +436,42 @@ export function createConstellation(container, { preview = false, initialPieceId
   }) : null;
 
   // ─── Touch a strand ───────────────────────────────────────────────────────
+  // `pickStrandAt` is the one raycast both hover and click funnel through.
+  // The original version only had this logic inline inside `onMove`, and
+  // `onClick` trusted whatever `hoveredIdx` that had last left behind —
+  // fine on a desktop where mousemove reliably precedes click at the same
+  // coordinates, but a real click/tap has no such guarantee (a touch tap's
+  // compatibility mousemove doesn't fire on every browser, and the canopy's
+  // own slow autoRotate means even a desktop hover can go stale by a few
+  // pixels between "aim" and "click"). Click now always re-checks the ray
+  // at its own event coordinates rather than trusting stale hover state.
   const raycaster = new THREE.Raycaster();
   const pointerNdc = new THREE.Vector2();
   let hoveredIdx = -1;
   let onMove = null, onClick = null;
+  function pickStrandAt(clientX, clientY) {
+    const rect = container.getBoundingClientRect();
+    pointerNdc.x = ((clientX - rect.left) / rect.width) * 2 - 1;
+    pointerNdc.y = -((clientY - rect.top) / rect.height) * 2 + 1;
+    raycaster.setFromCamera(pointerNdc, camera);
+    const hits = raycaster.intersectObject(strandHit);
+    return hits.length ? hits[0].instanceId : -1;
+  }
   if (!preview && strandHit) {
     onMove = e => {
-      const rect = container.getBoundingClientRect();
-      pointerNdc.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
-      pointerNdc.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
-      raycaster.setFromCamera(pointerNdc, camera);
-      const hits = raycaster.intersectObject(strandHit);
-      const newHover = hits.length ? hits[0].instanceId : -1;
+      const newHover = pickStrandAt(e.clientX, e.clientY);
       if (newHover !== hoveredIdx) {
         hoveredIdx = newHover;
         container.style.cursor = hoveredIdx !== -1 ? 'pointer' : 'default';
       }
     };
     container.addEventListener('mousemove', onMove);
-    onClick = () => {
+    onClick = e => {
       if (touchGuard?.consume()) return;
-      if (hoveredIdx === -1) return;
-      const info = strandInfo[hoveredIdx];
+      const idx = pickStrandAt(e.clientX, e.clientY);
+      if (idx === -1) return;
+      hoveredIdx = idx;
+      const info = strandInfo[idx];
       info.excite = 1;
       triggerReaction(info.mid, isPrimed(info.row));
     };
@@ -564,7 +582,6 @@ export function createConstellation(container, { preview = false, initialPieceId
       nodeGeo.dispose(); nodeMat.dispose(); dotTex.dispose();
       strandGeo.dispose(); strandMat.dispose();
       hitGeo.dispose(); hitMat.dispose();
-      spider.bodyGeo.dispose(); spider.bodyMat.dispose();
       spider.legMat.dispose(); spider.femurGeo.dispose(); spider.tibiaGeo.dispose();
 
       titleEl?.remove();

@@ -248,6 +248,50 @@ described are unchanged.)
   worth trimming, orrery.js's texture generators and first-person rig are the
   two most self-contained chunks to split out first.
 
+## 2.5.1 (2026-08-16)
+
+**The Constellation: strand-click fix, spider redesign, doorway removed.**
+Four follow-ups to 2.5.0, all from live testing after ship.
+
+**Strand-click bug, fixed.** The "verified live" claim in 2.5.0 was built
+on triggering `triggerReaction()` via the `.pm-jumplist` keyboard shortcut
+and the thread-follow deep link's automatic call — neither one exercises
+the actual raycast-driven `onClick` handler on rendered strand geometry.
+On a real click, nothing happened. Root cause, confirmed via a real
+OS-level hover+click against `constellation.js`'s rendered canvas (not the
+jump list): two compounding problems. First, `onClick` only trusted
+whatever `hoveredIdx` a prior `mousemove` had last left behind rather than
+re-checking the ray at its own click coordinates — fine when hover and
+click land on the same pixel, not guaranteed on a real click or tap.
+Second, the invisible hit-target box around each strand (`1.4`
+world-unit cross-section) measured out to only ~5px wide on screen at
+this scene's own default and zoomed-out camera distances — a target far
+too thin to reliably hit by eye. Fixed both: `pickStrandAt()` is now the
+one raycast hover and click both funnel through (click always re-checks
+live, never trusts stale hover state), and the hit cross-section is up to
+`4.4` world units, keeping a real target (~12px+) even fully zoomed out.
+Verified via a genuine OS-level hover-then-click on rendered strand
+pixels (Chrome MCP), confirmed by cursor state, a decaying leg-reaction
+burst, and a clean rebuild — not the jump list.
+
+**Spider redesign: no torso.** Removed the octahedron body mesh entirely
+— the spider is now pure radiating leg geometry meeting at an empty hub
+point, consistent with the site's existing thin-vector-line aesthetic
+(no filled/solid forms) rather than a bulbous or solid mass at the
+center.
+
+**Nav icon and preview tile removed.** The Constellation is no longer
+listed anywhere — no nav bar icon, no landing-page preview tile. The
+scene, its route, and both entry-point mechanisms (ground glimpse,
+thread-follow filament) stay fully live; a direct `#constellation` URL
+still loads it, it's just not browsable. Colophon copy updated to "nine
+small experiences" (the honest total, including the now-unlisted
+Constellation and the always-unlisted Butterfly) and the qualifying
+"built around found and written text" clause — written specifically to
+exclude Butterfly — was cut rather than reworded, since the sentence that
+already follows it ("each its own self-contained piece of code...") was
+already true of both math-only pieces without any adjustment.
+
 ## 2.5.0 (2026-08-16)
 
 **The Constellation, Phase 3: the scene itself ships, with both entry

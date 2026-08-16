@@ -321,7 +321,9 @@ function initPreviews() {
     orrery:     document.getElementById('preview-orrery'),
     library:    document.getElementById('preview-library'),
     beamline:   document.getElementById('preview-beamline'),
-    constellation: document.getElementById('preview-constellation'),
+    // No 'constellation' entry — that scene has no landing preview tile,
+    // by design (2026-08-16). Its route and both in-scene entry points
+    // stay fully live; see SCENES above and pm:navigate below.
   };
   for (const [name, el] of Object.entries(map)) {
     if (el) previews[name] = SCENES[name].create(el, { preview: true });
@@ -402,7 +404,9 @@ const PM_GLIMPSE_WORDS = {
   orrery: 'will',
   library: 'medium',
   beamline: 'emergence',
-  constellation: 'resonance',
+  // No 'constellation' entry — its onmouseover="pmGlimpse(...)" trigger
+  // lived only on the nav icon and preview tile, both removed (2026-08-16)
+  // along with this scene's advertised doorway.
   title: 'secrets',
 };
 let pmGlimpseTimer = null;
