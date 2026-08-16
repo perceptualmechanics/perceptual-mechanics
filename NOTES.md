@@ -248,6 +248,119 @@ described are unchanged.)
   worth trimming, orrery.js's texture generators and first-person rig are the
   two most self-contained chunks to split out first.
 
+## 2.5.0 (2026-08-16)
+
+**The Constellation, Phase 3: the scene itself ships, with both entry
+points.** Ninth scene, `src/scenes/constellation/`. Visualizes only
+`resonances.js`'s approved rows (22/22 as of this build) — nodes are
+placed on a dome overhead, one 45° azimuth wedge per originating scene
+(sphere/orbiter/library/scroll/theater/orrery/beamline/butterfly), each
+piece's own position deterministic from a hash of its `{scene,id[,
+beatId]}` key so layout is stable across reloads. Strands connecting them
+are InstancedMesh rods (library.js's own hexagon-edge technique, reused
+rather than `THREE.Line` — see that file's own header on why this
+codebase avoids Line for anything but a single simple wireframe).
+Camera is a real spherical orbit pivoting at the world origin, phi
+clamped to the lower hemisphere only — "orbit underneath a canopy,"
+literally below the node dome, looking up.
+
+**The spider**: eight legs, each a hip→femur→knee→tibia hierarchy,
+idling on independent per-leg sine phases, drifting slowly along its own
+circular path near the dome's underside, oriented so its local "up" (the
+plane its legs radiate in) always points outward from the origin — belly
+toward the camera, back toward the canopy, "walking the underside"
+literally rather than just described that way. Touching a strand (click,
+or the keyboard jump list — "Strand N", no titles disclosed, purely
+atmospheric per the brief) flicks the nearest leg + two sympathetic
+neighbors; a strand tied to whatever piece the visitor had open in
+whatever scene they arrived from flicks all eight at once.
+
+**"Elsewhere" tracking, new**: no scene has ever read another scene's
+live state before this. `main.js` now stashes `{scene,id}` into
+`sessionStorage` (`pm_elsewhere`) every time any scene reports a piece
+open, via the same `onPieceChange` callback that already existed for the
+hash — Constellation reads it once on mount to decide which strands are
+"primed" for the big reaction. Session-scoped only (cleared on tab
+close), nothing persisted.
+
+**Two entry points, both additive** (Scott's 2026-08-16 brief, "The
+ground glimpse" — this is the concept it specified):
+
+1. **Ground glimpse** — `src/utils/constellationEntry.js`'s
+   `createGroundGlimpse()`. A patch of ground goes translucent for
+   well under a second (real fade envelope: fadeIn→hold→fadeOut, plus a
+   ~0.55s invisible forgiveness window after the visual fade completes),
+   showing a small procedurally-doodled hint of strands underneath.
+   Trigger is a flat, non-cyclic coin flip on a 2.5s check interval —
+   deliberately simpler than the resonator's layered-frequency timing,
+   per Scott's own instruction that this effect wants "truly
+   unpredictable," not "feels alive." Wired into the only two scenes with
+   a literal ground/floor plane: beamline (terrain, sampled via the real
+   `terrainHeight()` the camera's own ground-clamp already uses) and
+   orrery (flat warehouse floor, spawned near wherever the visitor is
+   currently standing). Sphere/orbiter/library/scroll/theater/butterfly
+   don't get this — none of them have a real floor to glimpse through.
+   **Calibration**: `triggerProbability: 0.012` per 2.5s check → mean
+   wait to first trigger ≈ 208s (~3.5 min). Tested live: one natural,
+   un-forced trigger observed at 59s into a continuous ~3.4-minute
+   session on beamline — earlier than the mean but well within a
+   geometric distribution's real spread (~25% chance of firing that
+   early). Felt genuinely unpredictable rather than routine over that
+   window, matching the brief's own goal; this is one real sample from a
+   probabilistic process, not a guarantee, and the rate is easy to retune
+   (`GLIMPSE_TRIGGER_PROBABILITY`, one constant per scene) if it reads
+   differently over a longer real visit.
+2. **Thread-follow filament** — same file's `wireResonanceThread()`. A
+   small, unlabeled pulsing filament at the bottom-left corner of a
+   panel (`.pm-thread`, styles/main.css — same "found, not offered"
+   register as the colophon's hidden hare), appearing only when the
+   piece currently open participates in an approved resonance. Wired
+   into sphere/orbiter/library/scroll/orrery's own panel-render
+   functions. **Not** wired into beamline (its "open piece" state is a
+   3D sprite label, not a DOM panel — no container to attach a button
+   to without a much larger rework) or theater (no per-piece panel at
+   all, and it doesn't report `onPieceChange` in the first place — see
+   the Phase 3 architecture survey). Both entry points dispatch a
+   `pm:navigate` window event; `main.js` owns the one listener that
+   turns it into a real `expandScene('constellation', ..., resonanceId)`
+   call, so a glimpse-click or thread-click gets identical history/hash/
+   focus handling to any nav-icon click. Arriving via a specific
+   resonance id (`initialPieceId`, reused to mean a resonance row's own
+   `id` — Constellation's one departure from that param's usual
+   piece-id meaning) orients the camera at that exact strand and fires
+   the big reaction automatically — "arriving already oriented at the
+   strand that brought you," per the original brainstorm.
+
+**Site wiring**: ninth nav icon + preview tile (`index.html`), `SCENES`
+entry (`main.js`), colophon copy "seven" → "eight small experiences"
+(Scott's explicit call — Constellation counts as an eighth, "its entire
+content is those seven pieces, just diagrammed rather than read"),
+`vite.config.js`'s two "eight scenes" dev comments → "nine", and a new
+`verifyResonancesPlugin()` added to the actual build (`buildStart`, same
+pattern as `verifyLinksPlugin()`) — `verify-resonances` previously only
+ran when someone remembered to type it by hand; now a broken/unresolved
+row can't silently reach a build.
+
+**Also**: Butterfly's title text is now addressable (`butterfly.text.js`,
+built in 2.4.3) and checked for resonances against the corpus, but
+Butterfly itself is explicitly NOT a ground-glimpse candidate — no
+literal floor/landscape, just a Lorenz-attractor visualization in open
+space (Scott's own note, 2026-08-16: "being linkable and being a
+glimpse-host are separate questions").
+
+Verified live in Chrome throughout: strand touch → leg reaction (jump
+list, deterministic), thread-follow filament → correct camera
+orientation + big reaction (confirmed via `sessionStorage` state and the
+resulting `#constellation/<id>` hash), both scenes' ground glimpses →
+`consumeIfHit` → real navigation (confirmed via a `window.__pmGroundGlimpse`
+debug hook, same precedent as orrery's existing
+`window.__orreryTimeOverrideMs` — never read by production code), full
+landing page (all nine previews) with no console errors beyond
+pre-existing, unrelated browser-extension messaging noise.
+
+Verified: `npm run verify-resonances`, `npm run verify-links`, bare
+`npx vite build` all clean.
+
 ## 2.4.4 (2026-08-16)
 
 **The Constellation, review gate cleared again: 22/22 approved.** Scott

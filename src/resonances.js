@@ -267,3 +267,34 @@ export const RESONANCES = [
     status: 'approved',
   },
 ];
+
+// ─── Query helpers ──────────────────────────────────────────────────────────
+// Same shape as links.js's getOutboundLinks/getInboundLinks, for the two
+// consumers Phase 3 actually has: the Constellation scene itself (needs
+// every approved row, full stop) and each found-text scene's own panel
+// code (needs "does the piece I'm currently showing participate in any
+// approved resonance" — the thread-follow entry point).
+
+// Every row the Constellation scene should render as a strand. Only
+// 'approved' — 'pending'/'rejected' rows exist for the review record, not
+// for display.
+export function getApprovedResonances() {
+  return RESONANCES.filter(r => r.status === 'approved');
+}
+
+function endpointMatches(ep, scene, id, beatId) {
+  if (ep.scene !== scene) return false;
+  if (scene === 'theater') return beatId !== undefined && ep.beatId === beatId;
+  return ep.id === id;
+}
+
+// Approved rows where the given piece is either endpoint — what a scene's
+// panel checks to decide whether to show a thread-follow filament next to
+// whatever's currently open. `beatId` only matters for theater; every
+// other scene passes just (scene, id).
+export function getResonancesForPiece(scene, id, beatId) {
+  return RESONANCES.filter(r =>
+    r.status === 'approved' &&
+    (endpointMatches(r.a, scene, id, beatId) || endpointMatches(r.b, scene, id, beatId))
+  );
+}

@@ -3,6 +3,7 @@ import { CSS2DRenderer, CSS2DObject } from 'three/examples/jsm/renderers/CSS2DRe
 import { fragments } from './sphere.text.js';
 import { getOutboundLinks, getInboundLinks } from '../../links.js';
 import { bindOrbitDrag, bindWheelZoom, bindGuardedResize, prefersReducedMotion, createPanelCloser, createJumpList, bindTapVsDrag, parseHTML, wireCrossLinks, formatInboundNote } from '../../utils/sceneKit.js';
+import { wireResonanceThread } from '../../utils/constellationEntry.js';
 import sphereHtml from './sphere.html?raw';
 import './sphere.css';
 
@@ -187,7 +188,7 @@ export function createSphere(container, { preview = false, initialPieceId = null
 
   // Panel (full only)
   let panel = null, panelContent = null, panelTitle = null, facetIdEl = null, hint = null;
-  let wheelZoom = null, panelCloser = null, jumpList = null;
+  let wheelZoom = null, panelCloser = null, jumpList = null, threadUI = null;
   // Named so dispose() can remove them — container is the shared
   // #experience-container element every scene reuses (main.js only clears
   // its innerHTML between scenes, never replaces the node), so a listener
@@ -267,6 +268,7 @@ export function createSphere(container, { preview = false, initialPieceId = null
         panelTitle.textContent = fragments[targetIdx].title;
         panelContent.innerHTML = renderFragmentHtml(fragments[targetIdx]);
         facetIdEl.textContent = withInboundNote(fragments[targetIdx].id, `Fragment ${targetIdx + 1} of ${fragments.length} · ${fragments[targetIdx].title}`);
+        threadUI = wireResonanceThread(panel, 'sphere', fragments[targetIdx].id);
         panelContent.scrollTop = 0;
         panelContent.style.opacity = '1';
         panelTitle.style.opacity = '1';
@@ -298,6 +300,7 @@ export function createSphere(container, { preview = false, initialPieceId = null
         panelTitle.textContent = fragments[fi].title;
         panelContent.innerHTML = renderFragmentHtml(fragments[fi]);
         facetIdEl.textContent  = withInboundNote(fragments[fi].id, facetLabel ?? `Fragment ${fi + 1} of ${fragments.length}`);
+        threadUI = wireResonanceThread(panel, 'sphere', fragments[fi].id);
         // Stagger glimmer delays + a11y
         panelContent.querySelectorAll('.fragment-link').forEach(link => {
           const delay = (Math.random() * 12).toFixed(1);
@@ -588,6 +591,7 @@ export function createSphere(container, { preview = false, initialPieceId = null
       wheelZoom?.dispose();
       panelCloser?.dispose();
       jumpList?.dispose();
+      threadUI?.dispose();
       touchGuard?.dispose();
       if (onContainerMouseMove) container.removeEventListener('mousemove', onContainerMouseMove);
       if (onContainerClick) container.removeEventListener('click', onContainerClick);

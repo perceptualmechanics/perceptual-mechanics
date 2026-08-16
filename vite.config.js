@@ -2,6 +2,7 @@ import { resolve } from 'path';
 import { defineConfig } from 'vite';
 import { prerender } from './scripts/prerender.js';
 import { verifyLinks } from './scripts/verify-links.mjs';
+import { verifyResonances } from './scripts/verify-resonances.mjs';
 
 // ─── Link store verification ────────────────────────────────────────────────
 // Same reasoning as prerenderTextPages() below, same fix: a plain npm
@@ -21,6 +22,30 @@ function verifyLinksPlugin() {
         this.error(`verify-links: ${failures} check(s) failed — see above. Fix src/links.js or the scene .text.js file(s) it points at before building.`);
       } else {
         console.log(`  ✓ verify-links: all checks passed`);
+      }
+    },
+  };
+}
+
+// ─── Resonance store verification ───────────────────────────────────────────
+// Same reasoning and same fix as verifyLinksPlugin() above, for
+// src/resonances.js instead of src/links.js — added Phase 3 (2026-08-16),
+// now that the Constellation scene actually reads RESONANCES at runtime.
+// Previously `npm run verify-resonances` only ran when someone remembered
+// to type it by hand; a broken or unresolvable row could reach a build
+// silently. buildStart, same as verify-links, so both fail before either
+// wastes time on the rest of the build.
+function verifyResonancesPlugin() {
+  return {
+    name: 'pm-verify-resonances',
+    apply: 'build',
+    buildStart() {
+      const { ok, failures, log } = verifyResonances();
+      log.forEach(line => console.log(line));
+      if (!ok) {
+        this.error(`verify-resonances: ${failures} check(s) failed — see above. Fix src/resonances.js or the scene .text.js file(s) it points at before building.`);
+      } else {
+        console.log(`  ✓ verify-resonances: all checks passed`);
       }
     },
   };
@@ -51,7 +76,7 @@ function prerenderTextPages() {
 }
 
 export default defineConfig({
-  plugins: [verifyLinksPlugin(), prerenderTextPages()],
+  plugins: [verifyLinksPlugin(), verifyResonancesPlugin(), prerenderTextPages()],
   build: {
     rollupOptions: {
       input: {
@@ -62,12 +87,12 @@ export default defineConfig({
         bardDemo: resolve(__dirname, 'packages/bardjs/demo/index.html'),
       },
       output: {
-        // All eight scenes render as landing-page previews at once (see
+        // All nine scenes render as landing-page previews at once (see
         // initPreviews() in main.js), so none of their code can be code-
         // split behind a dynamic import() the way a more conventional
         // route-per-page site would -- every scene is genuinely needed on
         // first load. What CAN split cleanly: three.js itself barely
-        // changes between deploys, while the app code (all eight scenes)
+        // changes between deploys, while the app code (all nine scenes)
         // changes on nearly every one this week alone. Bundled together,
         // every deploy invalidates the visitor's cached copy of three.js
         // too, forcing a full ~1MB re-download for a one-line CSS tweak.

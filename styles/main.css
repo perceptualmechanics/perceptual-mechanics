@@ -440,6 +440,45 @@ html, body {
   outline-offset: -2px;
 }
 
+/* ─── Thread-follow filament (Constellation entry point) ─────────────────────
+   A small, quiet "found" affordance at the bottom-left corner of a read-more
+   panel — deliberately not styled like a normal link or button (no visible
+   label, no hover-underline), the same "something noticed, not something
+   offered" register as the colophon's own hidden hare mark. Appears only
+   when the piece currently open participates in an approved Layer 2
+   resonance (src/resonances.js) — every scene's panel gets it from this one
+   rule, via src/utils/constellationEntry.js's wireResonanceThread(). Every
+   scene's own panel is already `position: absolute/relative` for its own
+   close button (top-right); bottom-left keeps this well clear of that and
+   of any scene-specific chrome. */
+.pm-thread {
+  position: absolute;
+  bottom: 1.1rem; left: 1.1rem;
+  width: 1.5rem; height: 1.5rem;
+  padding: 0; border: none; background: none;
+  cursor: pointer;
+  z-index: 2;
+}
+.pm-thread::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(135deg,
+    transparent 40%, rgba(210,225,255,0.5) 47%,
+    rgba(235,242,255,0.85) 50%, rgba(210,225,255,0.5) 53%, transparent 60%);
+  animation: pm-thread-pulse 3.6s ease-in-out infinite;
+}
+.pm-thread:hover::before, .pm-thread:focus-visible::before {
+  animation-play-state: paused;
+  filter: brightness(1.7);
+}
+@keyframes pm-thread-pulse {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.8; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pm-thread::before { animation: none; opacity: 0.55; }
+}
+
 /* ─── Focus styles ──────────────────────────────────────────────────────────── */
 #experience-close:focus {
   outline: 2px solid rgba(255,255,255,0.6);

@@ -4,6 +4,7 @@ import { getOutboundLinks, getInboundLinks } from '../../links.js';
 import {
   bindOrbitDrag, bindWheelZoom, bindGuardedResize, prefersReducedMotion, createPanelCloser, createJumpList, escapeHtml, parseHTML, wireCrossLinks, formatInboundNote,
 } from '../../utils/sceneKit.js';
+import { wireResonanceThread } from '../../utils/constellationEntry.js';
 import './library.css';
 import libraryHtml from './library.html?raw';
 
@@ -1160,7 +1161,7 @@ export function createLibrary(container, { preview = false, initialPieceId = nul
   root.add(items.group);
 
   // ─── Caption + hint + panel (full only) ─────────────────────────────────
-  let caption = null, hint = null, panel = null, panelTitle = null, panelCreator = null, panelBodyEl = null, panelCloser = null, jumpList = null;
+  let caption = null, hint = null, panel = null, panelTitle = null, panelCreator = null, panelBodyEl = null, panelCloser = null, jumpList = null, threadUI = null;
   // Programmatically focusable so closing the panel (✕, outside click, or
   // Escape) has somewhere real to send focus back to, rather than leaving
   // it on a now-hidden close button or nowhere at all.
@@ -1283,6 +1284,15 @@ export function createLibrary(container, { preview = false, initialPieceId = nul
           getInboundLinks('library', it.id).map(l => libraryItems.find(i => i.id === l.from.id)?.title)
         ) ?? ''
       : '';
+    // CDs (string ids, "cd-<n>") aren't addressable by resonances.js any
+    // more than they are by links.js — see the comment above on why the
+    // numeric id space stays book/film/deck-only.
+    if (typeof it.id === 'number') {
+      threadUI = wireResonanceThread(panel, 'library', it.id);
+    } else {
+      panel.querySelector('.pm-thread')?.remove();
+      threadUI = null;
+    }
     const lines = [];
     if (it.publisher) lines.push(`${it.publisher}${it.publish_year ? `, ${it.publish_year}` : ''}`);
     if (it.pages) lines.push(`${it.pages} pages`);
@@ -1567,6 +1577,7 @@ export function createLibrary(container, { preview = false, initialPieceId = nul
       resize.dispose();
       panelCloser?.dispose();
       jumpList?.dispose();
+      threadUI?.dispose();
       if (onContainerMouseMove) container.removeEventListener('mousemove', onContainerMouseMove);
       if (onContainerClick) container.removeEventListener('click', onContainerClick);
       if (onContainerMouseLeave) container.removeEventListener('mouseleave', onContainerMouseLeave);

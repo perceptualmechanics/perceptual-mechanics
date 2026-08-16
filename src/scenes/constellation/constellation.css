@@ -1,0 +1,35 @@
+/* Constellation scene styles (title + hint overlay, positioned on
+   document.body — see constellation.html's header comment and
+   butterfly.css's original z-index/stacking-context reasoning, which
+   every scene with body-level chrome shares). constellation.js owns
+   creating/removing .constellation-title and .constellation-hint itself. */
+
+.constellation-title {
+  position: fixed;
+  bottom: 3rem; left: 50%; transform: translateX(-50%);
+  color: rgba(210,225,255,0.85);
+  font-size: clamp(0.85rem, 2.5vw, 1.6rem);
+  letter-spacing: clamp(0.1em, 1vw, 0.4em);
+  text-transform: uppercase;
+  pointer-events: none; text-align: center;
+  white-space: nowrap; z-index: 310;
+  font-family: 'Times New Roman', serif;
+}
+@media (max-width: 600px) {
+  .constellation-title {
+    white-space: normal; width: 88vw;
+    left: 6vw; transform: none;
+    bottom: 5.5rem;
+  }
+}
+.constellation-hint {
+  position: fixed; top: 4.5rem; right: 1.2rem;
+  color: var(--hint-text-color);
+  font-size: 0.55rem; letter-spacing: 0.2em;
+  text-transform: uppercase; pointer-events: none;
+  text-align: right; z-index: 310; line-height: 1.8;
+  font-family: 'Times New Roman', serif;
+}
+@media (prefers-reduced-motion: reduce) {
+  .constellation-title, .constellation-hint { transition: none; }
+}

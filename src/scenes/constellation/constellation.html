@@ -1,0 +1,13 @@
+<!--
+  Constellation scene shell markup — title label and hint paragraph, both
+  fixed on document.body rather than inside this scene's own container,
+  same z-index/stacking-context reasoning every scene with body-level
+  chrome shares (see butterfly.css's header comment). constellation.js
+  parses this file and mounts/removes these itself.
+
+  No read-more panel here, on purpose — this scene is purely atmospheric
+  (constellation-brief.md: "it doesn't curate anything itself"), so there's
+  nothing to open and nothing to read beyond the title/hint below.
+-->
+<p class="constellation-title" aria-hidden="true">The Constellation</p>
+<p class="constellation-hint" aria-hidden="true">drag to orbit &nbsp;&middot;&nbsp; scroll to zoom &nbsp;&middot;&nbsp; touch a strand</p>

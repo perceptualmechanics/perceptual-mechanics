@@ -8,6 +8,13 @@ import { createLibrary }   from './scenes/library/library.js';
 // A staged sequence of curved mirrors, real reflection geometry (not
 // transmission) bouncing a beam between them.
 import { createBeamline }  from './scenes/beamline/beamline.js';
+// The Constellation — ninth scene, Phase 3 (2026-08-16). Visualizes
+// src/resonances.js's approved Layer 2 links; see constellation.js's own
+// header comment for the full picture. No found text of its own, so it
+// has no ariaLabel-worthy "what this scene contains" the way every other
+// scene's own label describes actual content — the label below says what
+// it IS instead.
+import { createConstellation } from './scenes/constellation/constellation.js';
 import { initColophon }    from './components/colophon/colophon.js';
 
 // ─── Scene registry ──────────────────────────────────────────────────────────
@@ -28,6 +35,8 @@ const SCENES = {
                  ariaLabel: 'The Library — a real bookshelf, 107 books, films, and divination decks, rebuilt as a shelf you can turn in space. Drag to orbit, scroll to zoom, click a spine to read what it is.' },
   beamline:    { create: createBeamline,   label: 'Beamline.',
                  ariaLabel: 'Beamline — a staged sequence of curved mirrors, a beam of light bouncing between them, found text surfacing at each bounce. Drag to orbit, scroll to zoom, click a mirror to read.' },
+  constellation: { create: createConstellation, label: 'The Constellation.',
+                 ariaLabel: 'The Constellation — a web of thin glowing strands connecting resonant pieces across every other scene, an eight-legged spider walking its underside. Drag to orbit, scroll to zoom, touch a strand.' },
 };
 
 let activeScene  = null;
@@ -59,6 +68,25 @@ const previews   = {};
 // hashchange, which would otherwise re-enter expandScene/returnToGallery
 // for the very transition that just set it.
 let syncingHash = false;
+
+// ─── "Elsewhere" — the one cross-scene signal the Constellation reads ──────
+// No scene has ever read another scene's live state (each scene's own
+// "currently open piece" — orbiter's selectedSat, beamline's
+// selectedStation, etc. — is a private closure, reported outward only via
+// onPieceChange, which used to go nowhere but the URL hash). The
+// Constellation's spider needs one thing more than the hash gives it:
+// "what was the visitor just doing, elsewhere" surviving the trip INTO
+// the Constellation scene itself, not just visible in the address bar of
+// whatever scene they left. sessionStorage (not persisted, cleared when
+// the tab closes) is the right lifetime for that — a real memory of the
+// current visit, not a permanent record. Constellation reads this once on
+// mount (constellation.js); nothing else on the site reads it.
+function rememberElsewhere(sceneName, pieceId) {
+  if (!sceneName || sceneName === 'constellation' || pieceId == null) return;
+  try {
+    sessionStorage.setItem('pm_elsewhere', JSON.stringify({ scene: sceneName, id: pieceId, t: Date.now() }));
+  } catch { /* private-mode/storage-disabled — Constellation just treats every strand as un-primed */ }
+}
 
 function navIconFor(sceneName) {
   return document.querySelector(`.nav-icon[data-scene="${sceneName}"]`);
@@ -182,6 +210,7 @@ function expandScene(sceneName, triggerEl = null, pieceId = null) {
   activeScene = sceneName;
   setActiveIcon(sceneName);
   setHash(sceneName, pieceId);
+  rememberElsewhere(sceneName, pieceId);
   setChromeInert(true);
 
   landing.style.display = 'none';
@@ -199,7 +228,7 @@ function expandScene(sceneName, triggerEl = null, pieceId = null) {
     // why (`push: false`). sceneName is closed over rather than read from
     // `activeScene` so this can't fire against a hash update for a scene
     // that's since been torn down and replaced.
-    onPieceChange: id => setHash(sceneName, id, { push: false }),
+    onPieceChange: id => { setHash(sceneName, id, { push: false }); rememberElsewhere(sceneName, id); },
   });
   // Focus the container for screen readers
   expContainer.setAttribute('tabindex', '-1');
@@ -292,6 +321,7 @@ function initPreviews() {
     orrery:     document.getElementById('preview-orrery'),
     library:    document.getElementById('preview-library'),
     beamline:   document.getElementById('preview-beamline'),
+    constellation: document.getElementById('preview-constellation'),
   };
   for (const [name, el] of Object.entries(map)) {
     if (el) previews[name] = SCENES[name].create(el, { preview: true });
@@ -314,6 +344,27 @@ window.addEventListener('hashchange', () => {
   const { scene, pieceId } = parseHash();
   if (scene) expandScene(scene, navIconFor(scene), pieceId);
   else returnToGallery();
+});
+
+// ─── pm:navigate — the Constellation's two entry points ────────────────────
+// Ground glimpses (beamline/orrery, via src/utils/constellationEntry.js's
+// createGroundGlimpse) and thread-follow filaments (any found-text scene's
+// panel, via that same file's wireResonanceThread) both live inside a
+// scene's own module and have no reference to expandScene — this is the
+// one seam between them and main.js's actual routing. Dispatched rather
+// than imported directly so neither helper needs to know main.js exists;
+// routed through expandScene (not a bespoke path) so a glimpse-click or
+// thread-click gets the exact same history/hash/focus handling as a nav-
+// icon click. `pieceId` here is a resonance row's own `id` (see
+// constellation.js's header comment for why that reuse is safe), not a
+// piece id — main.js has no idea what either scene's own "piece" concept
+// means, same as every other cross-scene deep link already passing through
+// this file.
+window.addEventListener('pm:navigate', e => {
+  const { scene: targetScene, pieceId } = e.detail ?? {};
+  if (targetScene && Object.hasOwn(SCENES, targetScene)) {
+    expandScene(targetScene, navIconFor(targetScene), pieceId ?? null);
+  }
 });
 
 // ─── Colophon ─────────────────────────────────────────────────────────────────
@@ -351,6 +402,7 @@ const PM_GLIMPSE_WORDS = {
   orrery: 'will',
   library: 'medium',
   beamline: 'emergence',
+  constellation: 'resonance',
   title: 'secrets',
 };
 let pmGlimpseTimer = null;
