@@ -32,6 +32,7 @@ import { BOUNCES } from '../src/scenes/beamline/beamline.text.js';
 import { libraryItems, cdRackItems } from '../src/scenes/library/library.text.js';
 import { PIECES as theaterPieces, BEATS as theaterBeats } from '../src/scenes/theater/theater.text.js';
 import { ORRERY } from '../src/scenes/orrery/orrery.text.js';
+import { BUTTERFLY } from '../src/scenes/butterfly/butterfly.text.js';
 import { RESONANCES } from '../src/resonances.js';
 import { writeFileSync } from 'fs';
 import { resolve, dirname } from 'path';
@@ -143,6 +144,9 @@ function resolveEndpoint(ep) {
     case 'orrery': {
       return { title: `Orrery — "${ORRERY.name}"`, rawText: ORRERY.note };
     }
+    case 'butterfly': {
+      return { title: `Butterfly — "${BUTTERFLY.title}"`, rawText: BUTTERFLY.text };
+    }
     case 'theater': {
       if (ep.beatId !== undefined) {
         const b = theaterBeats.find(x => x.id === ep.beatId);
@@ -214,12 +218,15 @@ centered on the actual matched text rather than truncated from the start.
 If an excerpt is instead labeled as not matching any rationale quote,
 that's flagged explicitly rather than silently passed off as relevant.
 
-Proposed by two passes: a corpus-wide read across all seven found-text
-scenes (sphere, orbiter, library, scroll, beamline, theater, orrery —
-butterfly has no found text) for connotative candidates, and the mechanical
-scan above for verbatim ones. Deliberately not exhaustive — quality over
-coverage, per the standing instruction that a smaller, defensible list
-beats a large, noisy one.
+Proposed by two passes: a corpus-wide read across all seven prose/verse
+found-text scenes (sphere, orbiter, library, scroll, beamline, theater,
+orrery) for connotative candidates, and the mechanical scan above for
+verbatim ones. Butterfly was added afterward, addressed by its single line
+of found text — its own placard title, "Chaos Butterfly in Phase Space,
+2026" — once it was pointed out that the title itself is worth checking
+against the corpus, not just the seven scenes with body copy. Deliberately
+not exhaustive — quality over coverage, per the standing instruction that a
+smaller, defensible list beats a large, noisy one.
 
 ---
 

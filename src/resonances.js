@@ -59,12 +59,13 @@
 // resonance actually wants to point at.
 //
 // Nothing in this file is wired into the live site yet — the Constellation
-// scene itself doesn't exist yet. All 20 rows were reviewed and approved
-// by Scott on 2026-08-16 (docs/constellation_resonances.md, "i'm good
-// with all of these") — the review gate this file exists for has been
-// cleared for the current set. Building the actual scene against this
-// data is the next phase, not this one; a future discovery pass adding
-// more rows still starts them at 'pending', same as this round did.
+// scene itself doesn't exist yet. Rows 1–20 were reviewed and approved by
+// Scott on 2026-08-16 (docs/constellation_resonances.md, "i'm good with
+// all of these"). Rows 21–22 were added the same day after Scott pointed
+// out that Butterfly has found text too (its own placard title) — those
+// two are 'pending', not inherited approvals, per the same review gate as
+// every other round. Building the actual scene starts once the current
+// pending rows are settled, same discipline as before.
 
 export const RESONANCES = [
   // ── VERBATIM: mechanically confirmed shared found text ──────────────────
@@ -242,5 +243,29 @@ export const RESONANCES = [
     b: { scene: 'orrery', id: 1 },
     rationale: 'Deliberate inversion, not similarity: Horace was "trained as an artist. Modern sculpture. I was good" before Hell reduced him to paperwork, while the Orrery\'s builder — "an unlikely candidate to construct such a thing. A dropout of community college" — produced an untrained masterpiece. Two sculptors, opposite relationships between training and output.',
     status: 'approved',
+  },
+  // ── Added after the 2.4.2 approval round: Butterfly was pointed out as
+  // having found text after all — not body copy like the other six, but
+  // its own placard title, "Chaos Butterfly in Phase Space, 2026"
+  // (src/scenes/butterfly/butterfly.text.js). That title turns out to be a
+  // near-verbatim echo of the exact phrase two already-approved pieces use
+  // (row 18's own Sphere/Scroll pairing). Both rows below start at
+  // 'pending' — same review gate as every other round, not inherited from
+  // 18's approval.
+  {
+    id: 21,
+    basis: 'connotative',
+    a: { scene: 'butterfly', id: 1 },
+    b: { scene: 'scroll', id: 11 },
+    rationale: 'Butterfly\'s entire found text is its own title, "Chaos Butterfly in Phase Space, 2026" — a near-exact echo of Projection\'s own phrase, "a chaos butterfly; a Lorenz attractor; two focal points around which events swirl." The scene is, in effect, a working visualization of the image Projection names outright (it renders a Lorenz attractor; "phase space" is the literal mathematical term for the plot Projection is describing in prose).',
+    status: 'pending',
+  },
+  {
+    id: 22,
+    basis: 'connotative',
+    a: { scene: 'butterfly', id: 1 },
+    b: { scene: 'sphere', id: 4 },
+    rationale: '"Fractal"\'s catalog phrase "Chaos butterflies... Waveform collapsing" shares the same two words as Butterfly\'s title (singular in the title, plural in the list). Already linked to Projection via row 18 for the identical reason; flagging separately because Butterfly is the one piece on the site that isn\'t just referencing this phrase but is named after it and renders the thing itself, so leaving it out of that existing pairing would be the more arbitrary choice.',
+    status: 'pending',
   },
 ];

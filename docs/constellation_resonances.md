@@ -8,7 +8,7 @@ Scott has read the rationale for a given row and marked it `approved` in
 `src/resonances.js` (a `rejected` row stays in the data — kept, not deleted —
 so the full discovery pass output stays auditable).
 
-**20 candidates: 7 verbatim, 13 connotative — 20 approved, 0 pending, 0 rejected.**
+**22 candidates: 7 verbatim, 15 connotative — 20 approved, 2 pending, 0 rejected.**
 
 Two different kinds of claim, reviewed differently:
 
@@ -29,12 +29,15 @@ centered on the actual matched text rather than truncated from the start.
 If an excerpt is instead labeled as not matching any rationale quote,
 that's flagged explicitly rather than silently passed off as relevant.
 
-Proposed by two passes: a corpus-wide read across all seven found-text
-scenes (sphere, orbiter, library, scroll, beamline, theater, orrery —
-butterfly has no found text) for connotative candidates, and the mechanical
-scan above for verbatim ones. Deliberately not exhaustive — quality over
-coverage, per the standing instruction that a smaller, defensible list
-beats a large, noisy one.
+Proposed by two passes: a corpus-wide read across all seven prose/verse
+found-text scenes (sphere, orbiter, library, scroll, beamline, theater,
+orrery) for connotative candidates, and the mechanical scan above for
+verbatim ones. Butterfly was added afterward, addressed by its single line
+of found text — its own placard title, "Chaos Butterfly in Phase Space,
+2026" — once it was pointed out that the title itself is worth checking
+against the corpus, not just the seven scenes with body copy. Deliberately
+not exhaustive — quality over coverage, per the standing instruction that a
+smaller, defensible list beats a large, noisy one.
 
 ---
 
@@ -125,7 +128,7 @@ beats a large, noisy one.
 
 ---
 
-## Connotative (13)
+## Connotative (15)
 
 ### 8. [APPROVED]
 
@@ -282,4 +285,28 @@ beats a large, noisy one.
 Our investigation into Peter Hight is pending, but from all appearances he appears to be an unlikely candidate to construct such a thing. A dropout of community college.
 
 **Rationale:** Deliberate inversion, not similarity: Horace was "trained as an artist. Modern sculpture. I was good" before Hell reduced him to paperwork, while the Orrery's builder — "an unlikely candidate to construct such a thing. A dropout of community college" — produced an untrained masterpiece. Two sculptors, opposite relationships between training and output.
+
+---
+
+### 21. [PENDING]
+
+**Butterfly — "Chaos Butterfly in Phase Space, 2026"**
+> Chaos Butterfly in Phase Space, 2026
+
+**Scroll — "Projection" (#11)**
+> …ealize. I am trying to explain to you what happened to me in Los Angeles, and it's all circular and tangenting and who knows if I'll ever truly find the point. A chaos butterfly; a Lorenz attractor; two focal points around which events swirl. Accept that this won't be a three-act blitzkrieg on your senses and we'll be fine. After an initial email flurry, we had a marathon phone conversation, the so…
+
+**Rationale:** Butterfly's entire found text is its own title, "Chaos Butterfly in Phase Space, 2026" — a near-exact echo of Projection's own phrase, "a chaos butterfly; a Lorenz attractor; two focal points around which events swirl." The scene is, in effect, a working visualization of the image Projection names outright (it renders a Lorenz attractor; "phase space" is the literal mathematical term for the plot Projection is describing in prose).
+
+---
+
+### 22. [PENDING]
+
+**Butterfly — "Chaos Butterfly in Phase Space, 2026"**
+> Chaos Butterfly in Phase Space, 2026
+
+**Sphere — "Fractal" (#4)**
+> …. Redesigns when we get bored. High-energy wavelengths close to our ear. Radiant bodies. Leaves absorbing sunlight. Up the bark, down the well. Fluid dynamics. Chaos butterflies. Silver strings. Nebulae. Glowing green eggs. The physics of perception. Waveform collapsing. Detachable faces. Plotting vectors. Plush rug. Hidden pen. Statem…
+
+**Rationale:** "Fractal"'s catalog phrase "Chaos butterflies... Waveform collapsing" shares the same two words as Butterfly's title (singular in the title, plural in the list). Already linked to Projection via row 18 for the identical reason; flagging separately because Butterfly is the one piece on the site that isn't just referencing this phrase but is named after it and renders the thing itself, so leaving it out of that existing pairing would be the more arbitrary choice.
 

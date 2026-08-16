@@ -248,6 +248,34 @@ described are unchanged.)
   worth trimming, orrery.js's texture generators and first-person rig are the
   two most self-contained chunks to split out first.
 
+## 2.4.3 (2026-08-16)
+
+**The Constellation: Butterfly turns out to have found text too.**
+Pointed out mid-approval that Butterfly's fixed placard line, "Chaos
+Butterfly in Phase Space, 2026," is itself found text worth checking
+against the corpus — the site's other "no found text" scene turned out
+to have exactly one line of it, its own title. New
+`src/scenes/butterfly/butterfly.text.js` exports `BUTTERFLY = { id: 1,
+title, text }` so it can be addressed as `{ scene: 'butterfly', id: 1 }`
+like every other scene's pieces; not wired into `butterfly.html` or
+`main.js`'s existing (independently, slightly differently punctuated)
+copies of the same string — this module exists solely for Layer 2
+addressing. `verify-resonances.mjs` and `build-resonances-doc.mjs` both
+get a `butterfly` resolver.
+
+Checked the title against the corpus: it's a near-verbatim echo of a
+phrase two already-approved pieces both use — Sphere's "Fractal" ("Chaos
+butterflies... Waveform collapsing") and Scroll's "Projection" ("a chaos
+butterfly; a Lorenz attractor"), already linked to each other via 2.4.1's
+row 18. Added two new rows (21, 22: Butterfly↔Projection,
+Butterfly↔Fractal), both `basis: 'connotative'`, both `status: 'pending'`
+— not inherited approvals, same review gate as every prior round. Doc
+regenerated: 22 rows total (7 verbatim, 15 connotative; 20 approved, 2
+pending).
+
+Verified: `npm run verify-resonances` (22 rows resolve), `npm run
+verify-links`, bare `npx vite build` all clean.
+
 ## 2.4.2 (2026-08-16)
 
 **The Constellation, Phase 1 review gate cleared.** Scott read

@@ -25,6 +25,7 @@ import { BOUNCES } from '../src/scenes/beamline/beamline.text.js';
 import { libraryItems, cdRackItems } from '../src/scenes/library/library.text.js';
 import { PIECES as theaterPieces, BEATS as theaterBeats } from '../src/scenes/theater/theater.text.js';
 import { ORRERY } from '../src/scenes/orrery/orrery.text.js';
+import { BUTTERFLY } from '../src/scenes/butterfly/butterfly.text.js';
 import { RESONANCES } from '../src/resonances.js';
 
 const STATUSES = new Set(['pending', 'approved', 'rejected']);
@@ -40,6 +41,7 @@ const RESOLVERS = {
   scroll: ep => scrollPieces.find(it => it.id === ep.id),
   beamline: ep => BOUNCES.find(it => it.id === ep.id),
   orrery: ep => (ORRERY.id === ep.id ? ORRERY : undefined),
+  butterfly: ep => (BUTTERFLY.id === ep.id ? BUTTERFLY : undefined),
   library: ep => libraryItems.find(it => it.id === ep.id) ?? cdRackItems.find(it => it.id === ep.id),
   // Theater is the one scene where a Layer 2 endpoint should carry beatId,
   // not id — see resonances.js's own header. Still accepts a bare `id`
