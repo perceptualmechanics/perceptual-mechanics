@@ -248,6 +248,102 @@ described are unchanged.)
   worth trimming, orrery.js's texture generators and first-person rig are the
   two most self-contained chunks to split out first.
 
+## 2.4.0 (2026-08-16)
+
+**The Constellation, Phase 1: Theater gets real per-beat addressing, and a
+reviewable Layer 2 (cross-scene resonance) link store exists for the first
+time.** Prerequisite/discovery work for a planned ninth scene (the
+Constellation — a vector-line map of connotative links between pieces
+across every scene, not built yet). Nothing in this pass touches the live
+site; it's data infrastructure and a candidate list, gated on Scott's
+review before any of it becomes a real feature.
+
+**1. Theater: 736 beats, individually addressable, reversing an earlier
+scene-level-only call.** A prior pass proposed addressing Theater at its
+existing 16-scene granularity for the Constellation, reasoning that most
+individual dialogue beats are too fragmentary to be a serious resonance
+candidate. Overturned on review: a resonance is supposed to point at a
+*specific* piece of text, not a 40-scene-average neighborhood, and
+addressability doesn't have to mean every beat becomes a node — it only
+has to mean a beat *can* be one if the discovery pass actually picks it,
+same as how most pieces in every other scene never end up in a resonance
+either. No natural existing key was available to reuse — beats were
+plain, unindexed objects in an array, addressed only by position — so
+this required real new work, not just exposing something already there:
+a mechanical script inserted `id: N` (1..736, one flat sequence spanning
+all 3 plays/16 scenes) immediately after each beat's opening brace,
+verified line-by-line against the pre-edit file to confirm zero
+characters of any beat's actual dialogue/stage-direction text changed,
+only the new field was added. A new flat `BEATS` export
+(theater.text.js) surfaces `{ id, sceneId, playKey, playTitle, sceneSlug,
+type, text, character }` for every beat, derived from `PIECES` rather
+than hand-maintained, same reasoning as theater.js's own `SCENES =
+PIECES.flatMap(...)`. This is a disjoint id space from theater's existing
+scene-level `id` (1..16, what links.js/verify-links.mjs still use,
+completely untouched) — a beat's id and its parent scene's id are never
+compared or confused, because Layer 2 addressing for theater always
+carries both `id` (scene) and `beatId` (the specific line) together.
+`compileLegacyScene`/bard.js ignore the new field entirely (confirmed
+live: Theater still plays start-to-finish, "773" event counter unchanged,
+no console errors).
+
+**2. `src/resonances.js`: a new, deliberately separate store for Layer
+2.** Not an extension of `links.js` — Layer 1 stays exactly as it is,
+untouched by this pass. A resonance is symmetric (two pieces evoke each
+other; neither is a "source" the way `links.js`'s `from` is), carries a
+`rationale` instead of a matched verbatim `phrase` (there's nothing to
+check a connotative link against), and `status` (`pending` / `approved` /
+`rejected`) is the actual review gate, not decoration — nothing gets read
+by a future Constellation scene unless it's `approved`. Endpoints reuse
+`links.js`'s `{ scene, id }` shape, with theater rows carrying an
+additional `beatId`. `scripts/verify-resonances.mjs` (own npm script,
+`verify-resonances`, not yet wired into the vite build the way
+`verify-links` is — nothing consumes this data live yet, so nothing
+build-blocking depends on it being valid; that changes once the
+Constellation scene actually reads from it) checks every row's endpoints
+resolve, `a`/`b` aren't the same piece, no duplicate unordered pairs, and
+`rationale` is real.
+
+**3. Discovery pass: 15 candidate resonances, all `pending`, written up
+in a real, committed document.** Full-corpus read across all seven
+found-text scenes' complete `.text.js` content (not scoped to
+previously-linked pieces) — sphere, orbiter, library, scroll, beamline,
+theater (now at beat granularity), orrery. Six of the fifteen are the
+same discovery expressed as separate precise pairs, not padding: Sphere's
+"Quiver" and "Matrices" fragments turn out to contain, near-verbatim, the
+exact same found passage Beamline's `BOUNCES` split across five different
+stops — not a thematic echo, the identical source text landing whole in
+one piece and fragmented across another. The rest are real thematic/
+imagistic connections (a shared uncommon word — "boneyard" — used for the
+same kind of image in Sphere and Orbiter; optics-as-love-metaphor in
+Orbiter's "The Lovers" and Beamline's mirror passage; Sphere's own poem
+titled "Orbiter" living outside the scene actually called that; Theater's
+Satan literalizing, as comedy, the exact argument Scroll's "Iron Gods"
+makes in dead earnest) plus one direct textual find: Sphere's "Wingspan"
+names the Orrery by name in its own opening line, with nothing currently
+connecting the two pieces.
+
+`scripts/build-resonances-doc.mjs` generates `docs/constellation_
+resonances.md` FROM `src/resonances.js` — the doc is a rendering, not a
+second copy, specifically so it can't drift the way the historical
+`library_resonances.md` apparently did (it exists nowhere in this repo's
+git history, evidently a session-scratch artifact from the earlier
+linking pass that was never actually committed — the exact gap this
+setup is built to avoid). Regenerate after any status change in
+`RESONANCES` (`node scripts/build-resonances-doc.mjs`).
+
+**What this explicitly doesn't do:** build the Constellation scene
+itself, approve or ship any resonance, or touch Layer 1/`links.js`/the
+live site in any way. Every one of the 15 candidates is `pending`. Scott
+reads `docs/constellation_resonances.md` and marks approvals directly in
+`src/resonances.js`; work on the actual scene doesn't start until that's
+done, per the staging plan this pass is Phase 1 of.
+
+Verified: `node --check` on every touched/new file; `npm run
+verify-links`, `npm run verify-resonances`, and a bare `npx vite build`
+all clean; live in Chrome, Theater plays a full session (multiple scenes,
+prev/next, pause) with the new beat ids present and zero behavior change.
+
 ## 2.3.2 (2026-08-16)
 
 **Beamline: growth-patch reach, terrain color variation, and two real bugs

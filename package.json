@@ -1,6 +1,6 @@
 {
   "name": "perceptual-mechanics",
-  "version": "2.3.2",
+  "version": "2.4.0",
   "type": "module",
   "workspaces": [
     "packages/*"
@@ -9,7 +9,8 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "verify-links": "node scripts/verify-links.mjs"
+    "verify-links": "node scripts/verify-links.mjs",
+    "verify-resonances": "node scripts/verify-resonances.mjs"
   },
   "dependencies": {
     "bardjs": "*",
