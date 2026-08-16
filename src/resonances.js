@@ -62,10 +62,10 @@
 // scene itself doesn't exist yet. Rows 1–20 were reviewed and approved by
 // Scott on 2026-08-16 (docs/constellation_resonances.md, "i'm good with
 // all of these"). Rows 21–22 were added the same day after Scott pointed
-// out that Butterfly has found text too (its own placard title) — those
-// two are 'pending', not inherited approvals, per the same review gate as
-// every other round. Building the actual scene starts once the current
-// pending rows are settled, same discipline as before.
+// out that Butterfly has found text too (its own placard title), and
+// approved separately ("approved, fold them in") once he'd read them. All
+// 22 rows are now 'approved'; a future discovery pass adding more rows
+// still starts them at 'pending', same as every round so far.
 
 export const RESONANCES = [
   // ── VERBATIM: mechanically confirmed shared found text ──────────────────
@@ -249,16 +249,14 @@ export const RESONANCES = [
   // its own placard title, "Chaos Butterfly in Phase Space, 2026"
   // (src/scenes/butterfly/butterfly.text.js). That title turns out to be a
   // near-verbatim echo of the exact phrase two already-approved pieces use
-  // (row 18's own Sphere/Scroll pairing). Both rows below start at
-  // 'pending' — same review gate as every other round, not inherited from
-  // 18's approval.
+  // (row 18's own Sphere/Scroll pairing). Reviewed and approved 2026-08-16.
   {
     id: 21,
     basis: 'connotative',
     a: { scene: 'butterfly', id: 1 },
     b: { scene: 'scroll', id: 11 },
     rationale: 'Butterfly\'s entire found text is its own title, "Chaos Butterfly in Phase Space, 2026" — a near-exact echo of Projection\'s own phrase, "a chaos butterfly; a Lorenz attractor; two focal points around which events swirl." The scene is, in effect, a working visualization of the image Projection names outright (it renders a Lorenz attractor; "phase space" is the literal mathematical term for the plot Projection is describing in prose).',
-    status: 'pending',
+    status: 'approved',
   },
   {
     id: 22,
@@ -266,6 +264,6 @@ export const RESONANCES = [
     a: { scene: 'butterfly', id: 1 },
     b: { scene: 'sphere', id: 4 },
     rationale: '"Fractal"\'s catalog phrase "Chaos butterflies... Waveform collapsing" shares the same two words as Butterfly\'s title (singular in the title, plural in the list). Already linked to Projection via row 18 for the identical reason; flagging separately because Butterfly is the one piece on the site that isn\'t just referencing this phrase but is named after it and renders the thing itself, so leaving it out of that existing pairing would be the more arbitrary choice.',
-    status: 'pending',
+    status: 'approved',
   },
 ];

@@ -248,6 +248,23 @@ described are unchanged.)
   worth trimming, orrery.js's texture generators and first-person rig are the
   two most self-contained chunks to split out first.
 
+## 2.4.4 (2026-08-16)
+
+**The Constellation, review gate cleared again: 22/22 approved.** Scott
+read rows 21–22 (the Butterfly pairings added in 2.4.3) and approved
+them — "approved, fold them in." `src/resonances.js`: both rows'
+`status` flipped `pending` → `approved`; header and the rows' own block
+comment updated to record it. Doc regenerated: 22 rows, 22 approved, 0
+pending, 0 rejected.
+
+Full resonance set is now settled. Phase 3 (the actual scene, spider,
+nav/colophon wiring) is still on hold — Scott hasn't landed on an
+entry-point mechanism yet ("something underneath this, haven't decided
+what"); starts once that's decided.
+
+Verified: `npm run verify-resonances` (22/22 approved), `npm run
+verify-links`, bare `npx vite build` all clean.
+
 ## 2.4.3 (2026-08-16)
 
 **The Constellation: Butterfly turns out to have found text too.**

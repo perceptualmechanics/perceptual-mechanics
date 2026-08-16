@@ -8,7 +8,7 @@ Scott has read the rationale for a given row and marked it `approved` in
 `src/resonances.js` (a `rejected` row stays in the data — kept, not deleted —
 so the full discovery pass output stays auditable).
 
-**22 candidates: 7 verbatim, 15 connotative — 20 approved, 2 pending, 0 rejected.**
+**22 candidates: 7 verbatim, 15 connotative — 22 approved, 0 pending, 0 rejected.**
 
 Two different kinds of claim, reviewed differently:
 
@@ -288,7 +288,7 @@ Our investigation into Peter Hight is pending, but from all appearances he appea
 
 ---
 
-### 21. [PENDING]
+### 21. [APPROVED]
 
 **Butterfly — "Chaos Butterfly in Phase Space, 2026"**
 > Chaos Butterfly in Phase Space, 2026
@@ -300,7 +300,7 @@ Our investigation into Peter Hight is pending, but from all appearances he appea
 
 ---
 
-### 22. [PENDING]
+### 22. [APPROVED]
 
 **Butterfly — "Chaos Butterfly in Phase Space, 2026"**
 > Chaos Butterfly in Phase Space, 2026
