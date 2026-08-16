@@ -248,6 +248,28 @@ described are unchanged.)
   worth trimming, orrery.js's texture generators and first-person rig are the
   two most self-contained chunks to split out first.
 
+## 2.4.2 (2026-08-16)
+
+**The Constellation, Phase 1 review gate cleared.** Scott read
+`docs/constellation_resonances.md` end to end and approved all 20
+candidates from 2.4.1 (7 verbatim, 13 connotative) — "i'm good with all
+of these." `src/resonances.js`: every row's `status` flipped
+`pending` → `approved`; header comment updated to record the approval
+(date, quote, and a note that any future discovery pass still starts
+new rows at `pending` rather than inheriting this round's approval).
+Doc regenerated from the data so `[APPROVED]` actually reflects
+`resonances.js` rather than being hand-edited to match.
+
+Nothing wired into the live scene yet — approval clears the review gate
+this data store exists for, it doesn't build anything. Building the
+actual Constellation scene against this now-approved set, plus the
+nav/colophon copy update ("seven" → "eight" small experiences) and an
+entry-point mechanism (brainstormed, not yet decided), is Phase 3 and
+starts from a separate go-ahead.
+
+Verified: `npm run verify-resonances` (20 approved, 0 pending, 0
+rejected), `npm run verify-links`, bare `npx vite build` all clean.
+
 ## 2.4.1 (2026-08-16)
 
 **The Constellation, Phase 1 follow-up: split verbatim duplicate detection

@@ -8,7 +8,7 @@ Scott has read the rationale for a given row and marked it `approved` in
 `src/resonances.js` (a `rejected` row stays in the data — kept, not deleted —
 so the full discovery pass output stays auditable).
 
-**20 candidates: 7 verbatim, 13 connotative — 0 approved, 20 pending, 0 rejected.**
+**20 candidates: 7 verbatim, 13 connotative — 20 approved, 0 pending, 0 rejected.**
 
 Two different kinds of claim, reviewed differently:
 
@@ -40,7 +40,7 @@ beats a large, noisy one.
 
 ## Verbatim (7)
 
-### 1. [PENDING]
+### 1. [APPROVED]
 
 **Sphere — "Quiver" (#14)**
 > …ppropriate. A song — How your eyes light up the sky How I loved to tell you why You mean the world to me — keeps me moving past yearning and sorrow and regret. Here are harps, here are superstrings. Pluck at them both, send me vibrating, harmonics echoing at mathematically precise points. The higher the note, the higher the breath. Your breath and mine, s…
@@ -52,7 +52,7 @@ beats a large, noisy one.
 
 ---
 
-### 2. [PENDING]
+### 2. [APPROVED]
 
 **Sphere — "Quiver" (#14)**
 > …t up the sky How I loved to tell you why You mean the world to me — keeps me moving past yearning and sorrow and regret. Here are harps, here are superstrings. Pluck at them both, send me vibrating, harmonics echoing at mathematically precise points. The higher the note, the higher the breath. Your breath and mine, swirling, searching for it. A song lost in feedback, when you don't have any other way to en…
@@ -64,7 +64,7 @@ beats a large, noisy one.
 
 ---
 
-### 3. [PENDING]
+### 3. [APPROVED]
 
 **Sphere — "Quiver" (#14)**
 > …ack the same target, no bending left or right, no words left except how my red-gold-green heart isn't the same, how my own bow waits to be bent. (Oh, naughty.) Seven-colored, prisms, starlight. All these things, and not you. Vibrating at a different frequency. Harmonics, tuning. Hear the timbre of voice as the chords express themselves. Your sweet vo…
@@ -76,7 +76,7 @@ beats a large, noisy one.
 
 ---
 
-### 4. [PENDING]
+### 4. [APPROVED]
 
 **Sphere — "Quiver" (#14)**
 > …pt how my red-gold-green heart isn't the same, how my own bow waits to be bent. (Oh, naughty.) Seven-colored, prisms, starlight. All these things, and not you. Vibrating at a different frequency. Harmonics, tuning. Hear the timbre of voice as the chords express themselves. Your sweet voice.
@@ -88,7 +88,7 @@ beats a large, noisy one.
 
 ---
 
-### 5. [PENDING]
+### 5. [APPROVED]
 
 **Sphere — "Matrices" (#11)**
 > Microscopic lightning tetrahedrons shimmering in air for half a second and then phasing out. Red warm tunnels, waves and bands of cyclonic turbulence. A golden/blue paisley fractal lazily radiating from my star. Your astounding geologic warmth, a fire running through earth, permeating everything. Flashes of telepathy. Union of heaven and earth, union of thought and action, union of spark and fusion, the blend, the soul and psyche, the divine fire. The slow, profound swirl around us.
@@ -100,7 +100,7 @@ beats a large, noisy one.
 
 ---
 
-### 6. [PENDING]
+### 6. [APPROVED]
 
 **Sphere — "Matrices" (#11)**
 > Microscopic lightning tetrahedrons shimmering in air for half a second and then phasing out. Red warm tunnels, waves and bands of cyclonic turbulence. A golden/blue paisley fractal lazily radiating from my star. Your astounding geologic warmth, a fire running through earth, permeating everything. Flashes of telepathy. Union of heaven and earth, union of thought and action, union of spark and fusion, the blend, the soul and psyche, the divine fire. The slow, profound swirl around us.
@@ -112,7 +112,7 @@ beats a large, noisy one.
 
 ---
 
-### 7. [PENDING]
+### 7. [APPROVED]
 
 **Sphere — "Circumstance" (#15)**
 > …own filth. You came in at precisely 2:37:82 P.M. which is where we will mark the beginning. The note chimes here, slice it down to sixteenths, thirty-seconds, every solid-state hum of vacuum tubes warming up the channel of electrons, glowing orange-red on the back of the CD cover. Walking tall on the range, here we go, indestructible soul energies like plutonium discovered and created simultaneously. Where the feathers fall, we just don…
@@ -127,7 +127,7 @@ beats a large, noisy one.
 
 ## Connotative (13)
 
-### 8. [PENDING]
+### 8. [APPROVED]
 
 **Sphere — "Wingspan" (#16)**
 > Arboretum. Orrery. Aerial photographs. Off the wing. Carmen Chameleon. Sugar plum fairy. The ache and shape of things. Free flight, gliding over wheat fields. All the while catching up on my sleep.…
@@ -139,7 +139,7 @@ beats a large, noisy one.
 
 ---
 
-### 9. [PENDING]
+### 9. [APPROVED]
 
 **Sphere — "Orbiter" (#12)**
 > Tonight, looking upwards after a slow holy day, the full moon peering straight down on me, and a ring like a supernova, like a solar system, like Ptolemy's sphere, like the iris of an eye and Selene Herself the glaring opalescent pupil, contracted from the incoming light and staring straight at me.
@@ -151,7 +151,7 @@ beats a large, noisy one.
 
 ---
 
-### 10. [PENDING]
+### 10. [APPROVED]
 
 **Sphere — "Stolnaphase" (#1)**
 > …rth, wanders through woods and wreckage, the charred remains of a dead world and the blossoming promise of what comes tomorrow. There, within the confines of a boneyard (huge metallic ribcage offering the semblance of shelter), he finds the remains of the last woman to walk the earth. What to do with the sad fossils of a race…
@@ -163,7 +163,7 @@ beats a large, noisy one.
 
 ---
 
-### 11. [PENDING]
+### 11. [APPROVED]
 
 **Orbiter — "The Lovers" (#8)**
 > Their fingers, calloused and tired, Still glowed with a magnetic Pull nearly impossible to resist. The hall of mirrors, the floor show, The seeing eye did their best To polarize them, but it seems Physics has a heart all its own.
@@ -175,7 +175,7 @@ beats a large, noisy one.
 
 ---
 
-### 12. [PENDING]
+### 12. [APPROVED]
 
 **Sphere — "Everything's A Number" (#13)**
 > …ld be. Say why, ask wherefore, and it's only because we are what we are at any given moment, and you can only start from that moment. The storms of sycophancy. Healing your shoulder by reinjuring it. Set it in the proper place. The body has to perform to help swath the soul. There is the full-on breath, the unimpeachable address, that startling revelation…
@@ -187,7 +187,7 @@ beats a large, noisy one.
 
 ---
 
-### 13. [PENDING]
+### 13. [APPROVED]
 
 **Theater — You've Got a Friend in Satan, "INT. THE LIVING ROOM, THEN HELL. NIGHT. (THE TWIST.)" (beat #701)**
 > satan: Silence, fool! Yes, I do apologize for Horace. He isn’t a very good worker. You see, what we at HellCo really do is help the living achieve their goals in life. Don’t think of it as damnation — think of it as your Final Promotion.
@@ -199,7 +199,7 @@ beats a large, noisy one.
 
 ---
 
-### 14. [PENDING]
+### 14. [APPROVED]
 
 **Theater — Truth and Beauty, "INT. SYMPHONY HALL / BACKSTAGE / DRESSING ROOM. NIGHT." (beat #65)**
 > brian: Oh, to be a cello.
@@ -211,7 +211,7 @@ beats a large, noisy one.
 
 ---
 
-### 15. [PENDING]
+### 15. [APPROVED]
 
 **Orrery — "The Orrery of Los Feliz"**
 > …ed cosmic objects were represented. Great bronze balls swirled around the center spike of steel and wood, painted a most royal purple. The pinnacle was in fact a miniature radio telescope, pointed straight up, and it was still on, receiving information from the heavens. What is most interesting about the orrery – apart from it having been built in the first place – is that the orbits of the planets are precisely and mathemati…
@@ -223,7 +223,7 @@ beats a large, noisy one.
 
 ---
 
-### 16. [PENDING]
+### 16. [APPROVED]
 
 **Sphere — "Algebra" (#21)**
 > …our quirks and baggage and minds and heart the way they were that New Year's night. And while the equation itself can be massaged, simplified and expanded, the variables don't change. We have this answer because that is who we were then, and no amount of hope or wishful thinking can change that. And this is no loop, plugging the solution ba…
@@ -235,7 +235,7 @@ beats a large, noisy one.
 
 ---
 
-### 17. [PENDING]
+### 17. [APPROVED]
 
 **Scroll — "Projection" (#11)**
 > …tle scene is, it happens and life once more moves forward according to the script. I'm not entirely sure why Brian is in L.A., except inasmuch as Brian is some projection of me and, well, I was in L.A. Couldn't be that simple. Needless to say, Brian's stuff is giving me trouble. As written, Brian is learning about the troupe of…
@@ -247,7 +247,7 @@ beats a large, noisy one.
 
 ---
 
-### 18. [PENDING]
+### 18. [APPROVED]
 
 **Sphere — "Fractal" (#4)**
 > …. Redesigns when we get bored. High-energy wavelengths close to our ear. Radiant bodies. Leaves absorbing sunlight. Up the bark, down the well. Fluid dynamics. Chaos butterflies. Silver strings. Nebulae. Glowing green eggs. The physics of perception. Waveform collapsing. Detachable faces. Plotting vectors. Plush rug. Hidden pen. Statem…
@@ -259,7 +259,7 @@ beats a large, noisy one.
 
 ---
 
-### 19. [PENDING]
+### 19. [APPROVED]
 
 **Theater — Truth and Beauty, "INT. CANDY FACTORY. DAY. (A MOVIE SET.)" (beat #285)**
 > brian: Ahh, yes, you must be the new assistant. Welcome to my laboratory. I am the head scientist here, Archibald Query. And what might your name be?
@@ -271,7 +271,7 @@ beats a large, noisy one.
 
 ---
 
-### 20. [PENDING]
+### 20. [APPROVED]
 
 **Theater — You've Got a Friend in Satan, "INT. HELL. CONTINUOUS." (beat #506)**
 > horace: I didn’t want this job. I was trained as an artist. Modern sculpture. I was good — the state government even bought one of my pieces. It was “Diving in Hamburg.” They put it in a bus station. And then the Citizens for Decency got all riled up and filed a protest and they took it down. People shouldn’t have problems with dead squirrels arranged in a crucifix, okay? Am I wrong on this? Then, one day, I step out into the street and get smacked by a dump truck. And here I am.
