@@ -248,6 +248,86 @@ described are unchanged.)
   worth trimming, orrery.js's texture generators and first-person rig are the
   two most self-contained chunks to split out first.
 
+## 2.4.1 (2026-08-16)
+
+**The Constellation, Phase 1 follow-up: split verbatim duplicate detection
+from connotative discovery, and fix the review doc's own verifiability
+gap.** Feedback on 2.4.0's 15 candidates: 1–6 and 9 (and likely 13) were
+claims of literally shared found text, not connotative resonance — a
+different, more certain kind of claim that shouldn't be argued for with a
+rationale the way a real thematic reading needs to be.
+
+**1. `scripts/find-verbatim-overlaps.mjs`: mechanical, corpus-wide
+duplicate detection.** Word-shingle matching (K=5, 6-word minimum
+reported span — a classic plagiarism-detection technique) across every
+piece in all seven found-text scenes, flat and scene-agnostic. Not an
+LLM judgment call, same category of certainty as `verify-links.mjs`
+checking a phrase exists. Found 19 exact overlaps: the 6 already known
+from 2.4.0's close reading, one genuinely new one missed the first time
+(Sphere's "Circumstance" and Beamline's bounce 1 share the same 23-word
+electron/CD passage), and 12 intra-scene duplicates that turned out to
+be the site's own existing annotation/callback conventions working as
+designed rather than discoveries — library notes that deliberately
+cross-reference other library notes, and Theater dialogue repeating its
+own lines as an intentional callback within a single play. Those 12 are
+real but excluded from the Constellation: same-scene, already-expected,
+not what Layer 2 is for. Tried K=4 as a sensitivity check — 208 results,
+almost entirely coincidental short phrases and intentional in-script
+callbacks — confirming K=5 is the right noise floor, with one
+under-threshold true positive (a 4-word "seven-colored, prisms,
+starlight" overlap, part of the same passage family as three other rows
+here) kept in by hand rather than lowering the threshold for everyone.
+
+**2. `src/resonances.js` gets a `basis: 'verbatim' | 'connotative'`
+field.** Verbatim rows (7 total, all Sphere↔Beamline, all from the
+mechanical scan) don't need a close read to confirm — the fact isn't in
+question, only whether Scott wants the connection shown. Connotative
+rows (13) are where a rationale is doing real interpretive work.
+`verify-resonances.mjs` now validates `basis` alongside `status`.
+
+**3. A real second connotative pass, not a rehash.** Re-read Paul Revere
+(untouched in the first pass) and the remaining Scroll pieces
+(Projection, Identity Theft, Holography). Confirmed the round-1
+connotative rows hold up under the mechanical scan (none of them are
+secretly verbatim matches) and added five new ones, including the
+strongest find of this round: Scroll's "Projection" is the real-events
+essay Truth and Beauty was dramatized from — its own text says so
+outright ("in 2001 I wrote a script called Truth and Beauty... about an
+out-of-work actor, Brian Sharp, who comes across a real, live Muse.
+Euterpe, as it turns out, muse of music") — paired with the beat where
+the play actually names her. Not an inferred echo, an explicit
+self-citation the corpus already contains. Also added: a shared
+chaos-theory vocabulary between Sphere's "Fractal" and "Projection"
+("chaos butterfly," "waveform collapsing," used independently by each);
+a persona-adoption pairing between Truth and Beauty's Archibald Query
+scene and Scroll's "Identity Theft"; and a deliberate-inversion pairing
+between a Satan character's abandoned sculpture career and the Orrery's
+untrained builder. 20 candidates total (7 verbatim, 13 connotative), all
+still `pending`.
+
+**4. Fixed the review doc's own verifiability gap.** Several round-1
+rationales quoted specific phrases that the doc's truncated excerpts cut
+off before reaching — a claim about exact wording that the document
+itself couldn't be used to check. `scripts/build-resonances-doc.mjs` now
+extracts every quoted span from a rationale and, per endpoint, shows a
+window CENTERED on wherever that quote actually appears in the piece
+(splitting on any ellipsis inside the quote, since that stands in for
+real intervening text) rather than always truncating from the start.
+Pieces short enough not to need windowing (most Beamline bounces,
+Theater beats) are shown in full. Where no quote from the rationale
+matches a given endpoint at all, the doc says so explicitly instead of
+silently showing an unrelated opening excerpt. One genuine misquote
+this caught in the process: the Orrery rationale had "pointed straight
+up, still on" where the source actually reads "pointed straight up, and
+it was still on" — fixed in `resonances.js` itself, not just in the
+doc's excerpting. The doc is now split into Verbatim/Connotative
+sections matching the schema's `basis` field.
+
+Verified: `node --check` on every touched/new file, `npm run
+verify-links`, `npm run verify-resonances`, bare `npx vite build` all
+clean. Still nothing wired into the live site — same review gate as
+2.4.0, now covering 20 rows instead of 15.
+
 ## 2.4.0 (2026-08-16)
 
 **The Constellation, Phase 1: Theater gets real per-beat addressing, and a

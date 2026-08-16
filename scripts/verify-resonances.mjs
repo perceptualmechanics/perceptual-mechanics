@@ -28,6 +28,7 @@ import { ORRERY } from '../src/scenes/orrery/orrery.text.js';
 import { RESONANCES } from '../src/resonances.js';
 
 const STATUSES = new Set(['pending', 'approved', 'rejected']);
+const BASES = new Set(['verbatim', 'connotative']);
 
 // Per-scene id resolvers, one function each: (endpoint) => piece | undefined.
 // Deliberately separate from verify-links.mjs's `scenes` map rather than
@@ -71,12 +72,17 @@ export function verifyResonances() {
   let checked = 0;
   const seenPairs = [];
   const statusCounts = { pending: 0, approved: 0, rejected: 0 };
+  const basisCounts = { verbatim: 0, connotative: 0 };
 
   RESONANCES.forEach((r, i) => {
     const where = `RESONANCES[${i}] (${describe(r.a)} <-> ${describe(r.b)})`;
 
     if (!STATUSES.has(r.status)) {
       fail(`${where}: invalid status "${r.status}" (must be pending/approved/rejected)`);
+      return;
+    }
+    if (!BASES.has(r.basis)) {
+      fail(`${where}: invalid basis "${r.basis}" (must be verbatim/connotative)`);
       return;
     }
     if (typeof r.rationale !== 'string' || r.rationale.trim().length === 0) {
@@ -104,11 +110,12 @@ export function verifyResonances() {
     seenPairs.push([r.a, r.b]);
 
     statusCounts[r.status]++;
+    basisCounts[r.basis]++;
     checked++;
   });
 
   if (checked === RESONANCES.length && RESONANCES.length > 0) {
-    ok(`resonances.js: all ${RESONANCES.length} rows resolve (${statusCounts.approved} approved, ${statusCounts.pending} pending, ${statusCounts.rejected} rejected)`);
+    ok(`resonances.js: all ${RESONANCES.length} rows resolve (${basisCounts.verbatim} verbatim, ${basisCounts.connotative} connotative; ${statusCounts.approved} approved, ${statusCounts.pending} pending, ${statusCounts.rejected} rejected)`);
   } else if (RESONANCES.length === 0) {
     ok('resonances.js: empty (no rows yet)');
   }
