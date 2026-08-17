@@ -1,13 +1,28 @@
 <!--
-  Constellation scene shell markup — title label and hint paragraph, both
-  fixed on document.body rather than inside this scene's own container,
+  Constellation scene shell markup — title/hint (fixed on document.body,
   same z-index/stacking-context reasoning every scene with body-level
-  chrome shares (see butterfly.css's header comment). constellation.js
-  parses this file and mounts/removes these itself.
+  chrome shares — see butterfly.css's header comment) plus, as of round 2
+  (2026-08-16), a real read-more panel mounted inside this scene's own
+  container, same convention as sphere/orbiter/library/scroll's own
+  panels. constellation.js parses this file and mounts/removes each piece
+  itself.
 
-  No read-more panel here, on purpose — this scene is purely atmospheric
-  (constellation-brief.md: "it doesn't curate anything itself"), so there's
-  nothing to open and nothing to read beyond the title/hint below.
+  Reversal, documented: the scene originally shipped panel-less on
+  purpose ("purely atmospheric... no panel, no titles disclosed" — see
+  git history on this file). Scott's round-2 note: every approved
+  resonance carries a reviewed rationale, "the epistemic backbone of this
+  whole feature, the thing that makes a connection trustworthy rather
+  than asserted" — and none of it was visible anywhere in the live scene.
+  The spider reaction alone wasn't a real payoff. This panel is that
+  payoff: which two pieces a touched strand connects, why (the resonance's
+  own rationale text), and a way to jump straight to either one.
 -->
 <p class="constellation-title" aria-hidden="true">The Constellation</p>
 <p class="constellation-hint" aria-hidden="true">drag to orbit &nbsp;&middot;&nbsp; scroll to zoom &nbsp;&middot;&nbsp; touch a strand</p>
+
+<aside class="constellation-panel" role="dialog" aria-modal="false" aria-labelledby="constellation-panel-title">
+  <button type="button" class="constellation-panel-close" aria-label="Close resonance panel">&#10005;</button>
+  <h2 id="constellation-panel-title" class="constellation-panel-title" tabindex="-1">A resonance</h2>
+  <p class="constellation-panel-rationale"></p>
+  <div class="constellation-panel-endpoints"></div>
+</aside>

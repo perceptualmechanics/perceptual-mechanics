@@ -19,10 +19,20 @@
 import * as THREE from 'three';
 import { getResonancesForPiece } from '../resonances.js';
 
-function navigateToConstellation(pieceId) {
+// Generic — any scene, any piece. main.js's own `pm:navigate` listener
+// already resolves this against its SCENES map regardless of which scene
+// is named, so this was never actually constellation-specific; exported
+// now that the Constellation's own click payoff (round 2, 2026-08-16)
+// needs to jump straight to either endpoint of a resonance, not just
+// arrive AT the Constellation the way the two entry points below do.
+export function navigateToPiece(scene, pieceId) {
   window.dispatchEvent(new CustomEvent('pm:navigate', {
-    detail: { scene: 'constellation', pieceId: pieceId ?? null },
+    detail: { scene, pieceId: pieceId ?? null },
   }));
+}
+
+function navigateToConstellation(pieceId) {
+  navigateToPiece('constellation', pieceId);
 }
 
 // ─── Ground glimpse ─────────────────────────────────────────────────────────

@@ -248,6 +248,86 @@ described are unchanged.)
   worth trimming, orrery.js's texture generators and first-person rig are the
   two most self-contained chunks to split out first.
 
+## 2.5.2 (2026-08-16)
+
+**The Constellation, round 2: visibility, payoff, spider, reach diagnosis.**
+Scott's live check of 2.5.1 found it functionally correct (click fix and
+torso removal both genuinely landed) but not working as an experience —
+four real problems.
+
+**Visibility.** Strands were uniform thin gray lines with no depth cue and
+no way to tell one connection from another. Two fixes, both reusing math
+already trusted elsewhere: (1) real `THREE.FogExp2` on the strand
+material only (`scene.fog`, explicit `fog: false` on stars/nodes/spider),
+same exponential Beer-Lambert falloff Beamline's own atmospheric
+perspective already uses — near strands read clearly, far ones fade into
+the background color. (2) A new `SCENE_ACCENT` map (one real,
+already-established color per scene, pulled from each scene's own
+dominant material/light/glow — not invented) drives both a node's dot
+color and a strand's color gradient between its two endpoints. Strands
+are now `SEGMENTS_PER_STRAND` (6) short InstancedMesh sub-boxes per row
+instead of one, each a solid `Color.lerpColors(colorA, colorB, t)` step —
+a quantized gradient along the strand's own length using the same
+instanceColor idiom already established, not a custom shader (none
+exists anywhere else on this site). The click hit-test mesh (`strandHit`)
+was deliberately left untouched — still one box per row, exactly what the
+round-1 click fix landed.
+
+**Click payoff.** Touching a strand used to only trigger a spider
+reaction — none of a resonance's own reviewed rationale, "the epistemic
+backbone of this whole feature" (Scott), was visible anywhere. Reversed
+the original "purely atmospheric, no panel" design: a real read-more
+panel (`constellation.html`/`.css`, `createPanelCloser`) now opens on
+touch, showing both connected pieces' titles (new
+`constellationPieces.js`, ported from `build-resonances-doc.mjs`'s own
+`resolveEndpoint` so the title format matches the reviewed doc) and the
+resonance's own rationale text, with a jump button to either piece. The
+jump reuses `constellationEntry.js`'s `pm:navigate` dispatch — newly
+exported as generic `navigateToPiece(scene, pieceId)` rather than
+constellation-only, since main.js's own listener already handled any
+target scene. The spider reaction stays, layered alongside the panel, not
+replaced by it.
+
+**Spider: anatomy and behavior.** Anatomy: daddy-longlegs proportions —
+tibia now longer and thinner than the femur (femur 6.2, tibia 9.0 world
+units, full mode), sharper knee bend (1.2 rad vs the original 0.9) for a
+tall, angular stance instead of a generic spider silhouette. Behavior,
+two real states replacing the original single independent orbital drift:
+**rest** (two independent phase-shifted idle sine waves per leg plus a
+slow body-breathing offset along the outward axis — resting now reads as
+alive, not a rigid shape moved only by the camera's own orbit) and
+**travel** (genuine locomotion along the graph the strands themselves
+define — an adjacency map built from `strandInfo`, the spider picks a
+random adjacent node and walks the real straight-line strand between them
+with an eased 0.7s+ transit and an alternating two-group walking gait,
+arriving and resting again before picking the next hop). Verified via a
+temporary debug hook driving `animate()` with manually-advanced
+timestamps (Chrome MCP screenshots in this harness run against a
+backgrounded tab, which throttles `requestAnimationFrame` — see
+`feedback_chrome_tab_raf_throttling.md` — so real wall-clock waiting
+can't confirm motion here; same workaround the ground-glimpse rarity
+calibration used in round 1). Confirmed a full rest→travel→rest cycle:
+correct adjacent-node selection, eased position interpolation, exact
+arrival at the target node's position, and gait/idle math distinct per
+state. The debug hook was removed before this build, same as
+`window.__pmGroundGlimpse` is NOT — this one had no ongoing calibration
+purpose.
+
+**Reach — diagnosed, not decided.** Scott asked whether the existing
+doors (ground glimpse on beamline/orrery, thread-follow on 5 scenes) are
+under-found because they're rare, or because they're as invisible as the
+strands themselves were. Checked `.pm-thread` live against a real
+sphere panel (`#sphere/14`): a 24px diagonal gradient sliver, low/pulsing
+opacity, positioned directly against body-text paragraphs of nearly the
+same gray-blue tone, no label, no distinct color, bottom-left corner
+(outside a reader's natural eye path through the panel). It reads as
+visual noise, not an affordance — genuinely hard to notice even knowing
+exactly where to look. This is very likely the same legibility problem
+strands had, one level up, not (only) a rarity problem. Reported to Scott
+directly; no change made to `.pm-thread` or to entry-point count this
+round — the earned-access door parked at project start is back on the
+table pending his call, not decided here.
+
 ## 2.5.1 (2026-08-16)
 
 **The Constellation: strand-click fix, spider redesign, doorway removed.**

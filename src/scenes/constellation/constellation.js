@@ -1,9 +1,11 @@
 import * as THREE from 'three';
 import {
   bindOrbitDrag, bindWheelZoom, bindGuardedResize, bindTapVsDrag,
-  prefersReducedMotion, parseHTML, createJumpList,
+  prefersReducedMotion, parseHTML, createJumpList, createPanelCloser, escapeHtml,
 } from '../../utils/sceneKit.js';
 import { getApprovedResonances } from '../../resonances.js';
+import { navigateToPiece } from '../../utils/constellationEntry.js';
+import { resolveEndpointTitle } from './constellationPieces.js';
 import constellationHtml from './constellation.html?raw';
 import './constellation.css';
 
@@ -13,10 +15,14 @@ import './constellation.css';
 // approved rows only. Camera orbits BELOW a canopy of thin glowing
 // strands, looking up — the same "underside of the web" framing the
 // spider's own premise depends on (constellation-brief.md), just the
-// visitor's version of it rather than the spider's. Purely atmospheric:
-// touching a strand makes the spider react, nothing more — no panel, no
-// titles disclosed, no click-through to the pieces a strand connects
-// (that's what the pieces' own scenes, and links.js's Layer 1, are for).
+// visitor's version of it rather than the spider's.
+//
+// Round 2 (2026-08-16) reversed the original "purely atmospheric, no
+// panel" design: touching a strand now opens a real read-more panel
+// naming both connected pieces and showing the resonance's own reviewed
+// rationale, with a jump link to either piece — see constellation.html's
+// header comment for why. The spider reaction stays as a secondary,
+// atmospheric response layered alongside the panel, not instead of it.
 //
 // Reached two ways (both additive, per the 2026-08-16 entry-point brief):
 // the ground glimpse (src/utils/constellationEntry.js, wired into beamline
@@ -32,6 +38,25 @@ import './constellation.css';
 const SCENE_ORDER = ['sphere', 'orbiter', 'library', 'scroll', 'theater', 'orrery', 'beamline', 'butterfly'];
 const LEG_COUNT = 8;
 const GOLD_ACCENT = 0xffdc78; // same accent beamline/sphere already use — see NOTES.md's "gold presence" entry
+
+// ─── Per-scene accent colors ────────────────────────────────────────────────
+// Round 2's legibility fix: each scene's own already-established signature
+// color (not invented here — pulled from each scene's own dominant
+// material/light/glow color), used for both a node's own dot color and a
+// strand's color gradient between its two endpoints. A Beamline↔Orrery
+// strand reads green fading to gold — the two scenes' own real accents —
+// rather than a flat uniform gray tangle where no connection is legible
+// at a glance.
+const SCENE_ACCENT = {
+  sphere:    0xffdc78, // sphere.css .fragment-link hover/focus gold
+  orbiter:   0x78ffb4, // orbiter.js's "+phase" particle-cloud green — "the italic/green identity that's orbiter's own"
+  library:   0xe6b45f, // library.js HOVER_GLOW_HEX, the panel's own named gold accent
+  scroll:    0xc17a3d, // scroll.css's drop-cap/rubric ink, "an inscriptional accent"
+  theater:   0xe8b84b, // theater.css's marquee-bulb/bumper gold
+  orrery:    0xffaa55, // orrery.js's workLight, "a plain accent near the machine"
+  beamline:  0x50c878, // beamline.js's own named canonical accent
+  butterfly: 0xff9e1f, // median of butterfly.js's warm gold-to-red-orange trajectory palette
+};
 
 // ─── Deterministic layout ───────────────────────────────────────────────────
 // A small string hash (xmur3-family, not cryptographic — just needs to be
@@ -115,7 +140,18 @@ export function createConstellation(container, { preview = false, initialPieceId
   const h = container.clientHeight || window.innerHeight;
 
   const scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x00010a);
+  const BG_COLOR = 0x00010a;
+  scene.background = new THREE.Color(BG_COLOR);
+  // Distance-based legibility (round 2, 2026-08-16) — real THREE.FogExp2,
+  // the same exponential Beer-Lambert falloff already trusted for
+  // Beamline's own atmospheric perspective (see that file's own header on
+  // why FogExp2 over the old flat-plateau Fog), fogged to exactly the
+  // background color so a faded strand reads as "receding into the void"
+  // rather than toward a mismatched color. Scoped to strands only —
+  // `.fog = false` is set explicitly below on every material that should
+  // stay legible regardless of distance (stars, nodes, the spider).
+  const FOG_DENSITY = preview ? 0.011 : 0.006;
+  scene.fog = new THREE.FogExp2(BG_COLOR, FOG_DENSITY);
 
   const camera = new THREE.PerspectiveCamera(46, w / h, 0.1, 2000);
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
@@ -145,7 +181,7 @@ export function createConstellation(container, { preview = false, initialPieceId
   }
   const starGeo = new THREE.BufferGeometry();
   starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
-  const starMat = new THREE.PointsMaterial({ color: 0xbbccff, size: 0.9, transparent: true, opacity: 0.5, sizeAttenuation: true });
+  const starMat = new THREE.PointsMaterial({ color: 0xbbccff, size: 0.9, transparent: true, opacity: 0.5, sizeAttenuation: true, fog: false });
   const starField = new THREE.Points(starGeo, starMat);
   scene.add(starField);
 
@@ -160,9 +196,13 @@ export function createConstellation(container, { preview = false, initialPieceId
   const nodePos = new Float32Array(nodeList.length * 3);
   const nodeColor = new Float32Array(nodeList.length * 3);
   const tmpColor = new THREE.Color();
+  // Round 2: a node's dot color is its own scene's real established
+  // accent (SCENE_ACCENT above), not an arbitrary rainbow hue — so a
+  // node visibly belongs to the same color a strand touching it fades
+  // toward, instead of the two systems using unrelated palettes.
   nodeList.forEach((n, i) => {
     nodePos[i * 3] = n.pos.x; nodePos[i * 3 + 1] = n.pos.y; nodePos[i * 3 + 2] = n.pos.z;
-    tmpColor.setHSL(n.sceneIdx / SCENE_ORDER.length, 0.55, 0.68);
+    tmpColor.setHex(SCENE_ACCENT[n.scene] ?? 0xffffff);
     nodeColor[i * 3] = tmpColor.r; nodeColor[i * 3 + 1] = tmpColor.g; nodeColor[i * 3 + 2] = tmpColor.b;
   });
   nodeGeo.setAttribute('position', new THREE.BufferAttribute(nodePos, 3));
@@ -170,7 +210,7 @@ export function createConstellation(container, { preview = false, initialPieceId
   const nodeMat = new THREE.PointsMaterial({
     size: preview ? 2.2 : 2.6, map: dotTex, vertexColors: true,
     transparent: true, opacity: 0.9, depthWrite: false,
-    blending: THREE.AdditiveBlending, sizeAttenuation: true,
+    blending: THREE.AdditiveBlending, sizeAttenuation: true, fog: false,
   });
   const nodePoints = new THREE.Points(nodeGeo, nodeMat);
   scene.add(nodePoints);
@@ -179,16 +219,28 @@ export function createConstellation(container, { preview = false, initialPieceId
   // library.js's hexagon edges/strands (see the Phase 3 architecture
   // survey: this codebase avoids THREE.Line for anything but a single
   // simple wireframe, for known cross-browser line-width limitations).
-  // Two meshes sharing identical per-instance transforms: `strandMesh`
-  // (thin, visible) and `strandHit` (thick, invisible) — the "small
-  // visible body, generous invisible hit target" idiom orbiter's
-  // satellites and beamline's stations already use, needed here because
-  // a 0.05-unit-thick rod is not a reasonable raycast target on its own.
+  //
+  // Round 2 splits the VISIBLE geometry from the CLICKABLE geometry, which
+  // didn't need splitting before: `strandHit` stays exactly what it was
+  // (one thick invisible box per row, unchanged since the round-1 click
+  // fix — deliberately not touched again here) but `strandMesh` is now
+  // SEGMENTS_PER_STRAND short sub-boxes per row instead of one, each given
+  // its own solid color lerped between the two endpoint scenes' own
+  // SCENE_ACCENT — a quantized gradient along the strand's own length
+  // (source color at one end fading toward target color at the other),
+  // using the same InstancedMesh/instanceColor idiom already established
+  // rather than a custom shader (no ShaderMaterial exists anywhere else on
+  // this site). 6 segments reads as continuous from normal viewing
+  // distance without meaningfully increasing draw cost (22 rows × 6 = 132
+  // instances, still trivial).
+  const SEGMENTS_PER_STRAND = 6;
   const strandGeo = new THREE.BoxGeometry(1, 0.07, 0.07);
   const strandMat = new THREE.MeshBasicMaterial({
-    color: 0xbfd6ff, transparent: true, opacity: 0.34, depthWrite: false,
+    color: 0xffffff, transparent: true, opacity: 0.5, depthWrite: false,
   });
-  const strandMesh = rows.length ? new THREE.InstancedMesh(strandGeo, strandMat, rows.length) : null;
+  const strandMesh = rows.length
+    ? new THREE.InstancedMesh(strandGeo, strandMat, rows.length * SEGMENTS_PER_STRAND)
+    : null;
   // Cross-section padding around each strand's true 0.07-unit rendered
   // width. 1.4 (the original figure) measured out to only ~5px wide on
   // screen at this scene's own default/zoomed-out camera distances (46°
@@ -197,32 +249,63 @@ export function createConstellation(container, { preview = false, initialPieceId
   // 22 of them across a wide dome) starting to overlap each other's hit
   // regions at normal viewing distance.
   const hitGeo = new THREE.BoxGeometry(1, 4.4, 4.4);
-  const hitMat = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false });
+  const hitMat = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false, fog: false });
   const strandHit = rows.length ? new THREE.InstancedMesh(hitGeo, hitMat, rows.length) : null;
 
-  const strandInfo = []; // { row, mid, len, phase, speed, excite }
+  // Adjacency graph for the spider's own locomotion (below) — every node
+  // key maps to the OTHER node key(s) it shares an approved strand with,
+  // symmetric (resonance rows have no directionality), built once here
+  // since it only ever depends on rows/nodeMap, not on anything the
+  // spider itself does.
+  const adjacency = new Map(); // key -> [{ toKey, toPos }]
+  function addEdge(fromKey, toKey, toPos) {
+    if (!adjacency.has(fromKey)) adjacency.set(fromKey, []);
+    adjacency.get(fromKey).push({ toKey, toPos });
+  }
+
+  const strandInfo = []; // { row, aKey, bKey, aPos, bPos, mid, len, segStart, phase, speed, excite }
   if (strandMesh) {
     const m = new THREE.Matrix4();
     const q = new THREE.Quaternion();
     const AXIS_X = new THREE.Vector3(1, 0, 0);
+    const segColor = new THREE.Color();
+    const colorA = new THREE.Color(), colorB = new THREE.Color();
     rows.forEach((row, i) => {
-      const a = nodeMap.get(pieceKey(row.a)).pos;
-      const b = nodeMap.get(pieceKey(row.b)).pos;
+      const aKey = pieceKey(row.a), bKey = pieceKey(row.b);
+      const a = nodeMap.get(aKey).pos, b = nodeMap.get(bKey).pos;
+      addEdge(aKey, bKey, b);
+      addEdge(bKey, aKey, a);
       const dir = new THREE.Vector3().subVectors(b, a);
       const len = Math.max(0.001, dir.length());
       const mid = new THREE.Vector3().addVectors(a, b).multiplyScalar(0.5);
-      q.setFromUnitVectors(AXIS_X, dir.clone().normalize());
+      const unit = dir.clone().normalize();
+      q.setFromUnitVectors(AXIS_X, unit);
       m.compose(mid, q, new THREE.Vector3(len, 1, 1));
-      strandMesh.setMatrixAt(i, m);
       strandHit.setMatrixAt(i, m);
+
+      colorA.setHex(SCENE_ACCENT[row.a.scene] ?? 0xffffff);
+      colorB.setHex(SCENE_ACCENT[row.b.scene] ?? 0xffffff);
+      const segLen = len / SEGMENTS_PER_STRAND;
+      const segStart = i * SEGMENTS_PER_STRAND;
+      for (let s = 0; s < SEGMENTS_PER_STRAND; s++) {
+        const t = (s + 0.5) / SEGMENTS_PER_STRAND;
+        const segMid = a.clone().addScaledVector(unit, len * t);
+        m.compose(segMid, q, new THREE.Vector3(segLen * 1.04, 1, 1)); // tiny overlap so segment seams don't gap
+        strandMesh.setMatrixAt(segStart + s, m);
+        segColor.lerpColors(colorA, colorB, t);
+        strandMesh.setColorAt(segStart + s, segColor);
+      }
+
       strandInfo.push({
-        row, mid, len,
+        row, aKey, bKey, aPos: a, bPos: b, mid, len, segStart,
+        colorA: colorA.clone(), colorB: colorB.clone(),
         phase: Math.random() * Math.PI * 2,
         speed: 0.5 + Math.random() * 0.6,
         excite: 0, // 0..1, decays after a touch — brightens the strand briefly
       });
     });
     strandMesh.instanceMatrix.needsUpdate = true;
+    strandMesh.instanceColor.needsUpdate = true;
     strandHit.instanceMatrix.needsUpdate = true;
     scene.add(strandMesh, strandHit);
   }
@@ -250,12 +333,17 @@ export function createConstellation(container, { preview = false, initialPieceId
   }
 
   // ─── The spider ─────────────────────────────────────────────────────────
-  // Eight legs, standard anatomy, each a two-segment (femur/tibia)
+  // Eight legs, daddy-longlegs anatomy (round 2, 2026-08-16 — "extremely
+  // long, thin, spindly legs... more exaggerated than what shipped", not a
+  // generic spider silhouette) — each a two-segment (femur/tibia)
   // hierarchy so it reads as a real jointed limb rather than a rigid
-  // spoke. Idles on its own slow cycle; a touched strand makes the
-  // nearest leg (or, for a primed strand, every leg at once) flick — a
-  // fast decaying sine burst layered on top of the idle sway, not a
-  // separate animation state to blend.
+  // spoke, tibia noticeably longer and thinner than the femur (harvestmen
+  // proportions: the terminal segment is the longest, spindliest part of
+  // the leg) and a sharper knee bend for the tall, angular stance that
+  // goes with it. A touched strand makes the nearest leg (or, for a
+  // primed strand, every leg at once) flick — a fast decaying sine burst
+  // layered on top of whatever the leg is already doing (idle sway or
+  // mid-stride), not a separate animation state to blend.
   function buildSpider() {
     const group = new THREE.Group();
     // No body mesh — pure radiating leg geometry, hub is an empty point in
@@ -263,10 +351,10 @@ export function createConstellation(container, { preview = false, initialPieceId
     // with the site's existing Tempest-style vector-line aesthetic (thin
     // glowing strokes, no filled/solid forms) rather than a bulbous or
     // solid mass at the center.
-    const legMat = new THREE.MeshBasicMaterial({ color: GOLD_ACCENT, transparent: true, opacity: 0.6 });
-    const femurLen = preview ? 2.3 : 3.1, tibiaLen = preview ? 2.6 : 3.5;
-    const femurGeo = new THREE.BoxGeometry(femurLen, 0.2, 0.2);
-    const tibiaGeo = new THREE.BoxGeometry(tibiaLen, 0.16, 0.16);
+    const legMat = new THREE.MeshBasicMaterial({ color: GOLD_ACCENT, transparent: true, opacity: 0.6, fog: false });
+    const femurLen = preview ? 4.4 : 6.2, tibiaLen = preview ? 6.4 : 9.0;
+    const femurGeo = new THREE.BoxGeometry(femurLen, 0.1, 0.1);
+    const tibiaGeo = new THREE.BoxGeometry(tibiaLen, 0.07, 0.07);
     const legs = [];
     for (let i = 0; i < LEG_COUNT; i++) {
       const hip = new THREE.Group();
@@ -274,7 +362,7 @@ export function createConstellation(container, { preview = false, initialPieceId
       group.add(hip);
 
       const femurPivot = new THREE.Group();
-      const baseSplay = -0.5 - (i % 2) * 0.12; // slight alternating splay, less mechanically uniform
+      const baseSplay = -0.42 - (i % 2) * 0.1; // slight alternating splay, less mechanically uniform
       femurPivot.rotation.z = baseSplay;
       hip.add(femurPivot);
       const femur = new THREE.Mesh(femurGeo, legMat);
@@ -284,7 +372,7 @@ export function createConstellation(container, { preview = false, initialPieceId
       const knee = new THREE.Group();
       knee.position.x = femurLen;
       femurPivot.add(knee);
-      const baseBend = 0.9;
+      const baseBend = 1.2; // sharper than the original 0.9 — a taller, more angular knee, daddy-longlegs rather than a low crouching spider
       knee.rotation.z = baseBend;
       const tibia = new THREE.Mesh(tibiaGeo, legMat);
       tibia.position.x = tibiaLen / 2;
@@ -302,27 +390,59 @@ export function createConstellation(container, { preview = false, initialPieceId
   }
   const spider = buildSpider();
   scene.add(spider.group);
-  const SPIDER_RADIUS = DOME_RADIUS * 0.5;
-  let spiderAzimuth = Math.random() * Math.PI * 2;
-  let spiderPolarPhase = Math.random() * Math.PI * 2;
 
-  function spiderPositionAt(az, polarPhaseVal) {
-    const polar = 0.32 + Math.sin(polarPhaseVal) * 0.14 + 0.28; // stays comfortably below the node band, above the camera's usual range
-    return new THREE.Vector3(
-      SPIDER_RADIUS * Math.sin(polar) * Math.cos(az),
-      SPIDER_RADIUS * Math.cos(polar),
-      SPIDER_RADIUS * Math.sin(polar) * Math.sin(az),
-    );
+  // ─── Locomotion: rest at a node, travel to an adjacent one ──────────────
+  // Round 2 replaces the original independent orbiting drift (a fixed
+  // circular path with no relationship to the actual strand geometry)
+  // with real locomotion along the graph the strands themselves define —
+  // "the spider actually travels between strands over time," genuinely
+  // walking node to node along a strand's own line, not idling at a fixed
+  // point while the camera does all the apparent work. Falls back to a
+  // fixed point straight overhead if there are no approved rows at all
+  // (nodeList empty — no graph to walk).
+  const FALLBACK_POS = new THREE.Vector3(0, DOME_RADIUS * 0.7, 0);
+  let spiderNodeKey = nodeList.length ? nodeList[Math.floor(Math.random() * nodeList.length)].key : null;
+  const spiderPos = (spiderNodeKey ? nodeMap.get(spiderNodeKey).pos : FALLBACK_POS).clone();
+  let spiderState = 'rest'; // 'rest' | 'travel'
+  let spiderRestT = 0;
+  let spiderRestDuration = 3 + Math.random() * 5;
+  let spiderTravel = null; // { toKey, fromPos, toPos, t, duration }
+  let spiderBreathePhase = Math.random() * Math.PI * 2;
+  let spiderOutward = spiderPos.clone().normalize(); // recomputed every updateSpiderTransform call, cached for the idle-breathe offset
+
+  function pickNextEdge(fromKey) {
+    const edges = adjacency.get(fromKey);
+    return edges && edges.length ? edges[Math.floor(Math.random() * edges.length)] : null;
   }
+  const WALK_SPEED = preview ? 5 : 7; // world units/sec
+  function startTravel() {
+    const edge = spiderNodeKey ? pickNextEdge(spiderNodeKey) : null;
+    if (!edge) { spiderRestT = 0; return; } // isolated node (shouldn't happen — every node here has >=1 approved strand) or empty graph; just keep resting
+    const fromPos = spiderPos.clone();
+    const dist = fromPos.distanceTo(edge.toPos);
+    spiderTravel = { toKey: edge.toKey, fromPos, toPos: edge.toPos.clone(), t: 0, duration: Math.max(0.7, dist / WALK_SPEED) };
+    spiderState = 'travel';
+  }
+  function finishTravel() {
+    spiderNodeKey = spiderTravel.toKey;
+    spiderPos.copy(spiderTravel.toPos);
+    spiderTravel = null;
+    spiderState = 'rest';
+    spiderRestT = 0;
+    spiderRestDuration = 3 + Math.random() * 5;
+  }
+  // Smoothstep-style ease so travel accelerates out of rest and decelerates
+  // into the next node rather than gliding at a robotic constant velocity.
+  function easeInOutQuad(u) { return u < 0.5 ? 2 * u * u : 1 - Math.pow(-2 * u + 2, 2) / 2; }
+
   function updateSpiderTransform() {
-    const pos = spiderPositionAt(spiderAzimuth, spiderPolarPhase);
-    spider.group.position.copy(pos);
+    spider.group.position.copy(spiderPos);
     // Body's local +Y (the plane the legs radiate around) faces AWAY from
     // the world origin — outward into the canopy, belly toward the
-    // camera below — "walking its underside" made literal.
-    const outward = pos.clone().normalize();
-    spider.group.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), outward);
-    return pos;
+    // camera below — "walking its underside" made literal, and correct
+    // at any position along the dome's surface, resting or mid-travel.
+    spiderOutward = spiderPos.clone().normalize();
+    spider.group.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), spiderOutward);
   }
   updateSpiderTransform();
 
@@ -406,14 +526,52 @@ export function createConstellation(container, { preview = false, initialPieceId
     }
   }
 
-  // ─── Title/hint chrome (full only) ───────────────────────────────────────
-  let titleEl = null, hintEl = null;
+  // ─── Title/hint chrome + resonance panel (full only) ─────────────────────
+  let titleEl = null, hintEl = null, panel = null, panelCloser = null;
+  let panelTitleEl = null, panelRationaleEl = null, panelEndpointsEl = null;
   if (!preview) {
     const frag = parseHTML(constellationHtml);
     titleEl = frag.querySelector('.constellation-title');
     hintEl = frag.querySelector('.constellation-hint');
     document.body.appendChild(titleEl);
     document.body.appendChild(hintEl);
+
+    panel = frag.querySelector('.constellation-panel');
+    container.appendChild(panel);
+    panelTitleEl = panel.querySelector('.constellation-panel-title');
+    panelRationaleEl = panel.querySelector('.constellation-panel-rationale');
+    panelEndpointsEl = panel.querySelector('.constellation-panel-endpoints');
+    panelCloser = createPanelCloser(panel, container, {
+      closeBtn: panel.querySelector('.constellation-panel-close'),
+    });
+  }
+
+  // Round 2's real click payoff: which two pieces this strand connects,
+  // the resonance's own reviewed rationale (its "epistemic backbone" —
+  // Scott's own framing), and a jump straight to either one. Reuses
+  // constellationPieces.js's resolveEndpointTitle for the title format
+  // (matching docs/constellation_resonances.md) and constellationEntry's
+  // navigateToPiece for the jump — the same generic pm:navigate dispatch
+  // every cross-scene navigation on this site already goes through.
+  function openResonancePanel(row) {
+    if (!panel) return;
+    const endpointA = resolveEndpointTitle(row.a);
+    const endpointB = resolveEndpointTitle(row.b);
+    panelTitleEl.textContent = row.basis === 'verbatim' ? 'A shared passage' : 'A resonance';
+    panelRationaleEl.textContent = row.rationale;
+    panelEndpointsEl.innerHTML = '';
+    [{ ep: row.a, resolved: endpointA }, { ep: row.b, resolved: endpointB }].forEach(({ ep, resolved }) => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'constellation-endpoint-link';
+      btn.innerHTML = `${escapeHtml(resolved.title)}<span class="constellation-endpoint-go">Open this piece</span>`;
+      btn.addEventListener('click', e => {
+        e.stopPropagation();
+        navigateToPiece(ep.scene, resolved.pieceId);
+      });
+      panelEndpointsEl.appendChild(btn);
+    });
+    panel.classList.add('open');
   }
 
   // ─── Drag to orbit + wheel zoom ──────────────────────────────────────────
@@ -474,32 +632,35 @@ export function createConstellation(container, { preview = false, initialPieceId
       const info = strandInfo[idx];
       info.excite = 1;
       triggerReaction(info.mid, isPrimed(info.row));
+      openResonancePanel(info.row);
     };
     container.addEventListener('click', onClick);
   }
 
   // Keyboard equivalent — strands are otherwise raycast-only. Labels stay
-  // generic ("Strand N"), same "atmospheric, not curated" restraint as the
-  // rest of the scene: this triggers the same reaction a touch would,
-  // nothing about which two pieces a strand connects is ever disclosed.
+  // generic ("Strand N") — the panel itself is what discloses which two
+  // pieces a strand connects once it's open; the jump-list label doesn't
+  // need to spoil that in advance.
   let jumpList = null;
   if (!preview && strandInfo.length) {
     jumpList = createJumpList(container, {
       label: 'Touch a strand',
       items: strandInfo,
       getLabel: (_info, i) => `Strand ${i + 1}`,
-      onSelect: info => { info.excite = 1; triggerReaction(info.mid, isPrimed(info.row)); },
+      onSelect: info => { info.excite = 1; triggerReaction(info.mid, isPrimed(info.row)); openResonancePanel(info.row); },
     });
   }
 
-  if (followedStrand) { followedStrand.excite = 1; triggerReaction(followedStrand.mid, true); }
+  if (followedStrand) {
+    followedStrand.excite = 1;
+    triggerReaction(followedStrand.mid, true);
+    openResonancePanel(followedStrand.row);
+  }
 
   const reduceMotion = prefersReducedMotion();
 
   // ─── Animate ──────────────────────────────────────────────────────────────
   let animId, lastT = performance.now();
-  const tmpM = new THREE.Matrix4();
-  const tmpPos = new THREE.Vector3(), tmpQuat = new THREE.Quaternion(), tmpScale = new THREE.Vector3();
   function animate(now) {
     animId = requestAnimationFrame(animate);
     const dt = Math.min(0.05, (now - lastT) / 1000);
@@ -510,41 +671,96 @@ export function createConstellation(container, { preview = false, initialPieceId
         theta += preview ? 0.0018 : 0.0006;
         updateCamera();
       }
-      spiderAzimuth += 0.012 * dt * 10;
-      spiderPolarPhase += 0.4 * dt;
+      // Locomotion state machine — see the "Locomotion" comment above for
+      // why this replaced the original independent orbital drift. Gated
+      // entirely under reduceMotion, same as the old drift was: a visitor
+      // who's asked for reduced motion gets a spider that holds its
+      // resting node the whole time rather than ever walking.
+      if (spiderState === 'rest') {
+        spiderRestT += dt;
+        if (spiderRestT >= spiderRestDuration) startTravel();
+      } else if (spiderTravel) {
+        spiderTravel.t += dt;
+        const u = Math.min(1, spiderTravel.t / spiderTravel.duration);
+        spiderPos.lerpVectors(spiderTravel.fromPos, spiderTravel.toPos, easeInOutQuad(u));
+        if (u >= 1) finishTravel();
+      }
       updateSpiderTransform();
+      // Idle breathing — a small in/out offset along the spider's own
+      // outward-facing axis while resting, on top of (not instead of)
+      // the per-leg idle sway below, so "resting" still reads as a body
+      // breathing rather than a rigid shape parked at a point. Travel
+      // itself is real translation, which already sells "alive" on its
+      // own, so this only runs at rest.
+      if (spiderState === 'rest') {
+        const breathe = Math.sin(now * 0.0009 + spiderBreathePhase) * 0.14;
+        spider.group.position.addScaledVector(spiderOutward, breathe);
+      }
     }
 
-    // Strand shimmer + touch excitement decay.
+    // Strand shimmer + touch excitement decay. Re-lerps each segment's own
+    // colorA→colorB gradient every frame rather than overwriting with a
+    // flat color — shimmer/excite modulate BRIGHTNESS of the real
+    // source→target gradient, they don't replace it. Distance fade itself
+    // needs no JS here at all — scene.fog handles that per-fragment.
     if (strandMesh) {
-      strandInfo.forEach((s, i) => {
+      strandInfo.forEach(s => {
         s.phase += dt * s.speed;
         const shimmer = reduceMotion ? 0.7 : 0.55 + Math.sin(s.phase) * 0.35;
         s.excite = Math.max(0, s.excite - dt * 1.6);
-        const brightness = Math.min(1.4, shimmer + s.excite * 1.1);
-        tmpColor.setRGB(0.75, 0.84, 1).multiplyScalar(brightness);
-        strandMesh.setColorAt(i, tmpColor);
+        const brightness = Math.min(1.6, shimmer + s.excite * 1.3);
+        for (let seg = 0; seg < SEGMENTS_PER_STRAND; seg++) {
+          const t = (seg + 0.5) / SEGMENTS_PER_STRAND;
+          tmpColor.lerpColors(s.colorA, s.colorB, t).multiplyScalar(brightness);
+          strandMesh.setColorAt(s.segStart + seg, tmpColor);
+        }
       });
       strandMesh.instanceColor.needsUpdate = true;
     }
 
-    // Node shimmer, cheap per-vertex-color reuse of the same technique.
+    // Node shimmer, cheap per-vertex-color reuse of the same technique —
+    // modulates brightness of the node's own SCENE_ACCENT rather than an
+    // arbitrary HSL rainbow (see the node-color setup above).
     if (!reduceMotion) {
       const colAttr = nodeGeo.attributes.color;
       nodeList.forEach((n, i) => {
         const b = 0.75 + Math.sin(now * 0.0012 + i * 0.7) * 0.25;
-        tmpColor.setHSL(n.sceneIdx / SCENE_ORDER.length, 0.55, 0.68).multiplyScalar(b);
+        tmpColor.setHex(SCENE_ACCENT[n.scene] ?? 0xffffff).multiplyScalar(b);
         colAttr.setXYZ(i, tmpColor.r, tmpColor.g, tmpColor.b);
       });
       colAttr.needsUpdate = true;
     }
 
-    // Spider legs: idle sway (gated by reduceMotion) plus a reaction burst
-    // (always runs — a reaction is a direct response to something the
-    // visitor just did, not ambient decoration, same distinction every
-    // other scene's own click-driven transitions already make).
-    spider.legs.forEach(l => {
-      const idle = reduceMotion ? 0 : Math.sin(now * 0.001 * l.idleSpeed + l.idlePhase) * 0.05;
+    // Spider legs: two states, distinct motion for each (round 2 — "resting
+    // should still read as alive" and "genuine locomotion... a real scope
+    // difference from idle motion"), plus a reaction burst layered on top
+    // of whichever one's running (always runs regardless of reduceMotion —
+    // a reaction is a direct response to something the visitor just did,
+    // not ambient decoration, same distinction every other scene's own
+    // click-driven transitions already make).
+    spider.legs.forEach((l, li) => {
+      let idle = 0, idle2 = 0, gait = 0;
+      if (!reduceMotion) {
+        if (spiderState === 'rest') {
+          // Two independent, phase-shifted sine waves (femur + a slower,
+          // smaller knee wave) rather than one value driving both joints
+          // in lockstep — reads as small continuous adjustments, not a
+          // rigid shape that only appears to move because the camera
+          // orbits around it.
+          idle = Math.sin(now * 0.0011 * l.idleSpeed + l.idlePhase) * 0.09;
+          idle2 = Math.sin(now * 0.0006 * l.idleSpeed * 0.7 + l.idlePhase * 1.7) * 0.05;
+        } else {
+          // Walking gait: legs alternate in two groups of four (a
+          // simplified tripod-style gait), swinging through a bigger arc
+          // than idle sway ever uses — the primary visual signal that
+          // this is real locomotion, synced to elapsed time rather than
+          // to travel progress so the cadence stays consistent regardless
+          // of how far a given hop happens to be.
+          const group = li % 2;
+          const gaitPhase = now * 0.0044 + group * Math.PI;
+          gait = Math.sin(gaitPhase) * 0.24;
+        }
+      }
       let burst = 0;
       if (l.reactionT !== null) {
         l.reactionT += dt;
@@ -552,8 +768,8 @@ export function createConstellation(container, { preview = false, initialPieceId
         burst = Math.sin(l.reactionT * 26) * 0.5 * decay * l.reactionAmp;
         if (l.reactionT > 1.2) l.reactionT = null;
       }
-      l.femurPivot.rotation.z = l.baseSplay + idle + burst;
-      l.knee.rotation.z = l.baseBend - idle * 0.6 - burst * 0.8;
+      l.femurPivot.rotation.z = l.baseSplay + idle + gait + burst;
+      l.knee.rotation.z = l.baseBend - idle2 * 0.8 - gait * 0.65 - burst * 0.8;
     });
 
     renderer.render(scene, camera);
@@ -574,6 +790,7 @@ export function createConstellation(container, { preview = false, initialPieceId
       wheelZoom?.dispose();
       touchGuard?.dispose();
       jumpList?.dispose();
+      panelCloser?.dispose();
       if (onMove) container.removeEventListener('mousemove', onMove);
       if (onClick) container.removeEventListener('click', onClick);
       renderer.dispose();
@@ -586,6 +803,7 @@ export function createConstellation(container, { preview = false, initialPieceId
 
       titleEl?.remove();
       hintEl?.remove();
+      panel?.remove();
       renderer.domElement.remove();
     },
   };
