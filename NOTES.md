@@ -248,6 +248,42 @@ described are unchanged.)
   worth trimming, orrery.js's texture generators and first-person rig are the
   two most self-contained chunks to split out first.
 
+## 2.5.6 (2026-08-18)
+
+**The Constellation, galactic disc correction.** Scott checked v2.5.5's
+backdrop directly and found it didn't work: no visible core, no spiral
+arms, no density gradient — just a uniform scatter of dim points,
+denser than the plain ambient star field but structurally identical to
+it. His diagnosis traced it to his own round-5 spec: the fix for "only
+visible from a narrow slice of orbit angles" had been to thicken the
+disc and soften its tilt, but a disc galaxy's thinness (the Milky Way is
+roughly a thousand times wider than it is thick) is *why* it reads as a
+galaxy rather than a cloud — thickening it to chase angle-independence
+washed the real spiral/density structure into visual uniformity. The
+"legible from every angle" requirement itself was wrong, not just
+poorly executed: a genuinely thin plane shouldn't look the same
+everywhere — edge-on it should read as a thin band, only closer to
+face-on should the spiral actually open up, and that variation is
+correct behavior for the geometry, not a bug to engineer around.
+
+Corrected in `buildGalaxy()`: thickness back to real proportions (4 +
+16·e^(-d/scale) vs. the previous 60 + 260·e^(-d/scale) — several times
+thinner), arm angular scatter tightened (0.05–0.27 rad vs. 0.3–0.85) so
+arms read as distinct bands rather than a broad smear, the interarm
+field fraction dropped (32%→14%) so the gaps between arms are visibly
+sparser, and a sharper core falloff (0.18× the decay scale, not 0.5×)
+with a real brightness boost (up to ~3× at the core, arm particles ~4×
+brighter than field particles) so density contrast — not just point
+count — is what reads as structure. Tilt eased back up slightly
+(0.3/0.15 rad) since a modest tilt is still what makes the silhouette
+actually vary across an orbit, now that thinness does the real work.
+Verified by dragging through a wide range of orbit angles and evaluating
+each on its own terms (does this look like a plausible view of a flat
+structure from this angle) rather than checking for sameness — most
+angles sampled produced a clearly textured, denser-than-ambient band
+with visible clumping (arm crossings) rather than the flat uniform
+scatter that was live before.
+
 ## 2.5.5 (2026-08-18)
 
 **The Constellation, round 5: spider removed, strands brightened, a

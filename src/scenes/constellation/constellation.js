@@ -205,19 +205,31 @@ export function createConstellation(container, { preview = false, initialPieceId
   // arms — not every star sits exactly on-rail) so the shape doesn't read
   // as too clean/mechanical up close.
   //
+  // Round 5 correction (2026-08-18): the first pass thickened the disc
+  // substantially to chase "legible from every orbit angle" — but a real
+  // disc galaxy is extremely flat (the Milky Way is on the order of a
+  // thousand times wider than it is thick), and that thinness is WHY a
+  // galaxy reads as a galaxy: edge-on it's a thin bright band, only
+  // closer to face-on does the spiral actually open up. Thickening it to
+  // fake angle-independence washed the real structure into a uniform
+  // scatter — structurally indistinguishable from the plain ambient star
+  // field already used elsewhere on the site. Corrected: genuinely thin
+  // again, tighter arm scatter and a much sparser interarm field so
+  // density contrast (not just point count) reads as actual bands
+  // against dark gaps, and a sharply brighter/warmer core cluster near
+  // R_MIN. This is NOT expected to look the same from every camera
+  // angle — a thin plane SHOULDN'T; edge-on gives a band, more face-on
+  // gives arms-and-core, and that variation is the correct behavior for
+  // the geometry, not a bug.
+  //
   // The whole structure's radial sampling starts at GALAXY_R_MIN, well
   // beyond CAM_MAX and DOME_RADIUS, rather than at the world origin the
   // strands/camera share — a real exponential falloff, just for a distant
   // galaxy the visitor is nowhere near the center of, which is also what
   // keeps it honestly behind the strands in depth at every camera
-  // distance rather than only by luck of a particular angle. Dimmed and
-  // cooled well below the strands' own brightness (multiplied down, low
-  // opacity, no additive blending), `fog: false` (fog stays scoped to
-  // strands only, same as the star field), and tilted off the camera's
-  // own theta/Y orbit axis so its silhouette actually changes as a
-  // visitor drags to orbit, not just its arm pattern rotating in a plane
-  // that always faces the camera identically. Purely atmosphere — no
-  // relationship to resonance data of any kind.
+  // distance. Dimmed and cooled well below the strands' own brightness,
+  // `fog: false` (fog stays scoped to strands only, same as the star
+  // field). Purely atmosphere — no relationship to resonance data.
   function buildGalaxy() {
     const ARMS = 3;
     const PITCH = 0.3; // b in r = a·e^(bθ) — real spiral galaxies run roughly 0.2–0.4
@@ -225,8 +237,8 @@ export function createConstellation(container, { preview = false, initialPieceId
     const R_MIN = preview ? 260 : 480; // inner edge — safely beyond CAM_MAX/DOME_RADIUS
     const R_MAX = preview ? 900 : 1800; // stays inside the camera's far plane (2000) with margin
     const DECAY_SCALE = preview ? 220 : 380; // 1/λ — most mass within a few of these past R_MIN
-    const COUNT = preview ? 1400 : 4200;
-    const FIELD_FRACTION = 0.32; // particles that skip the arm lock — a soft disc field, not every star on-rail
+    const COUNT = preview ? 1700 : 5000;
+    const FIELD_FRACTION = 0.14; // particles that skip the arm lock — sparse enough that arms read as denser bands, not a uniform haze with a pattern painted on top
 
     function sampleD() {
       // Inverse-CDF sample of an exponential distribution, resampled if it
@@ -247,36 +259,43 @@ export function createConstellation(container, { preview = false, initialPieceId
     for (let i = 0; i < COUNT; i++) {
       const d = sampleD();
       const r = R_MIN + d;
+      const isArm = Math.random() >= FIELD_FRACTION;
       let theta;
-      if (Math.random() < FIELD_FRACTION) {
+      if (!isArm) {
         theta = Math.random() * Math.PI * 2;
       } else {
         const armIdx = Math.floor(Math.random() * ARMS);
         const idealTheta = Math.log(r / ARM_SCALE) / PITCH;
-        // Real arms broaden with radius rather than staying a hairline —
-        // more angular scatter the farther out a particle sits.
-        const scatter = (Math.random() - 0.5) * (0.3 + (d / (R_MAX - R_MIN)) * 0.55);
+        // Real arms broaden with radius, but only modestly — tight enough
+        // that an arm still reads as a distinct denser band against the
+        // sparse field between arms, not a broad smear that overlaps its
+        // neighbors.
+        const scatter = (Math.random() - 0.5) * (0.05 + (d / (R_MAX - R_MIN)) * 0.22);
         theta = idealTheta + armIdx * (Math.PI * 2 / ARMS) + scatter;
       }
       const rj = r * (1 + (Math.random() - 0.5) * 0.05);
       const x = rj * Math.cos(theta);
       const z = rj * Math.sin(theta);
-      // A genuinely thick disc rather than a razor-flat pancake — real
-      // galaxies are much thinner than this relative to their radius, but
-      // this scene's camera stays close to the structure's own inner
-      // edge on a narrow 46° FOV (framed for the strand dome, not for
-      // catching a paper-thin plane at exactly the right elevation), so a
-      // flat disc reliably orbited out of frame entirely between
-      // verification passes. Puffing the Y-extent out — still governed by
-      // the same exponential falloff, still carrying the spiral arms —
-      // trades some realism for actually reading as atmosphere from
-      // normal orbiting rather than only from a lucky angle.
-      const thickness = 60 + 260 * Math.exp(-d / (DECAY_SCALE * 0.6));
+      // Genuinely thin — real disc-galaxy proportions, not a compromise
+      // for visibility. This is what makes an edge-on view read as a
+      // thin band rather than a puffball.
+      const thickness = 4 + 16 * Math.exp(-d / (DECAY_SCALE * 0.5));
       const y = (Math.random() - 0.5) * thickness;
 
       pos[i * 3] = x; pos[i * 3 + 1] = y; pos[i * 3 + 2] = z;
 
-      c.copy(armColor).lerp(coreColor, Math.exp(-d / (DECAY_SCALE * 0.5))).multiplyScalar(0.8);
+      // Sharp core falloff (0.18× the decay scale, not 0.5×) so only
+      // particles genuinely near R_MIN read warm/bright — a real compact
+      // core, not a gentle gradient smeared across the whole disc — plus
+      // a real brightness boost on top of the color shift, and a
+      // separate arm-vs-field brightness split so arm particles visibly
+      // outshine the sparse interarm background rather than density
+      // alone (thinned out by additive blending at low opacity) having
+      // to carry the whole contrast.
+      const coreBlend = Math.exp(-d / (DECAY_SCALE * 0.18));
+      const coreBoost = 1 + coreBlend * 2.2;
+      const armFieldMult = isArm ? 1.5 : 0.4;
+      c.copy(armColor).lerp(coreColor, coreBlend).multiplyScalar(0.62 * coreBoost * armFieldMult);
       col[i * 3] = c.r; col[i * 3 + 1] = c.g; col[i * 3 + 2] = c.b;
     }
 
@@ -297,14 +316,17 @@ export function createConstellation(container, { preview = false, initialPieceId
       blending: THREE.AdditiveBlending,
     });
     const points = new THREE.Points(geo, mat);
-    // A modest tilt, not a steep one — the camera's own orbit is
-    // rotationally symmetric around Y (theta spins around it freely), so
-    // a small, deliberate break from that symmetry is what makes the
-    // silhouette actually shift as a visitor drags to orbit, without
-    // tilting so far that the (now-thick, but still radius-limited)
-    // structure swings mostly out of the camera's narrow FOV.
-    points.rotation.x = 0.18;
-    points.rotation.z = 0.1;
+    // A deliberate tilt — the camera's own orbit is rotationally
+    // symmetric around Y (theta spins around it freely), so without a
+    // break from that symmetry the disc would always present the same
+    // edge-on/face-on mix regardless of theta. This tilt is what makes
+    // an orbit actually sweep through a range of real views of a flat
+    // structure: closer to edge-on (a thin band) at some angles, closer
+    // to face-on (arms and core visible) at others — genuinely different
+    // depending on where the visitor drags to, which is correct for a
+    // thin 3D plane and not something to flatten out for consistency.
+    points.rotation.x = 0.3;
+    points.rotation.z = 0.15;
     return { points, geo, mat };
   }
   const galaxy = buildGalaxy();
