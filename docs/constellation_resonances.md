@@ -8,7 +8,7 @@ Scott has read the rationale for a given row and marked it `approved` in
 `src/resonances.js` (a `rejected` row stays in the data — kept, not deleted —
 so the full discovery pass output stays auditable).
 
-**46 candidates: 7 verbatim, 39 connotative — 22 approved, 24 pending, 0 rejected.**
+**64 candidates: 7 verbatim, 57 connotative — 22 approved, 42 pending, 0 rejected.**
 
 Two different kinds of claim, reviewed differently:
 
@@ -128,7 +128,7 @@ smaller, defensible list beats a large, noisy one.
 
 ---
 
-## Connotative (39)
+## Connotative (57)
 
 ### 8. [APPROVED]
 
@@ -380,7 +380,7 @@ Our investigation into Peter Hight is pending, but from all appearances he appea
 **Scroll — "Projection" (#11)**
 > …ealize. I am trying to explain to you what happened to me in Los Angeles, and it's all circular and tangenting and who knows if I'll ever truly find the point. A chaos butterfly; a Lorenz attractor; two focal points around which events swirl. Accept that this won't be a three-act blitzkrieg on your senses and we'll be fine. After an initial email flurry, we had a marathon phone conversation, the so…
 
-**Rationale:** Algebra works a breakup entirely through equation language — "the variables don't change... irrational and nonlinear" — while Projection works the same kind of breakup through physics instead: "a chaos butterfly; a Lorenz attractor; two focal points around which events swirl," the double-slit experiment, Feynman diagrams. Different branch of math/science, same underlying move: a heartbreak rendered legible only by treating it as a fixed structural fact rather than a feeling that could have gone differently — the same argument row 16 makes pairing Algebra with the Symposium, run a second time against a different piece.
+**Rationale:** Algebra works a breakup entirely through equation language — "the variables don't change... irrational and nonlinear" — while Projection works the same kind of breakup through physics instead: "a chaos butterfly; a Lorenz attractor; two focal points around which events swirl," the double-slit experiment, Feynman diagrams. Different branch of math/science, same underlying move: a heartbreak rendered legible only by treating it as a fixed structural fact rather than a feeling that could have gone differently — the same argument row 16 makes pairing Algebra with the Symposium, run a second time against a different piece. A separate close-reading pass landed on this exact pair independently, adding one more specific: Projection's own fictional bestseller is literally titled Strange Attractors: A Love Affair with Chaos, a mathematician's romance — not just the same theme as Algebra, the same conceit.
 
 ---
 
@@ -392,7 +392,7 @@ Our investigation into Peter Hight is pending, but from all appearances he appea
 **Scroll — "Projection" (#11)**
 > A symphony. The pillars of the concert hall, wisping upwards like smoke, curved, sandblasted metal because the glare was too much for other buildings. There will be no mirrors in the desert; this is the sun's kingdom, and to amplify or reflect is pointless. Only refraction will do. Split the… (no rationale quote matched this piece — showing opening text instead; check the full piece directly if the claim isn't verifiable from this excerpt)
 
-**Rationale:** Aftershock's "another quake deep within my core, rumbling to the surface... the ground once more stabilizes" is a metaphor; Projection's own account is the literal event underneath it — "I was going through my first earthquake in L.A... a second quake shook me while on the 32nd floor of a skyscraper days later, as I was thinking about moving back to Boston... You can't write these things; you can only recount them later." One piece supplies the image, the other supplies the real occasion for it.
+**Rationale:** Aftershock's "another quake deep within my core, rumbling to the surface... the ground once more stabilizes" is a metaphor; Projection's own account is the literal event underneath it — "I was going through my first earthquake in L.A... a second quake shook me while on the 32nd floor of a skyscraper days later, as I was thinking about moving back to Boston... You can't write these things; you can only recount them later." One piece supplies the image, the other supplies the real occasion for it. A separate close-reading pass landed on this same pair independently, describing it the same way: "real heartbreak reframed at cosmic scale... same coping mechanism, different scale."
 
 ---
 
@@ -476,7 +476,7 @@ Our investigation into Peter Hight is pending, but from all appearances he appea
 **Library — "Neuromancer" (#127)**
 > first published 1984; coined “cyberspace” and describes the Matrix as “a global consensus-hallucination” — the word Scott’s own 2003 cosmology-in-progress (Storyline.doc) explicitly refused to reuse for “the Surround” (“I cannot use the word matrix anymore, fuck you very much, Wachowski Brothers”), even though Gibson, not the Wachowskis, got there first.
 
-**Rationale:** fireCalamity's extended rant against The Matrix's physics — "No, fuck The Matrix, you're not a battery for shitty robots... it's all some sort of Gnostic bullshit about a world of lies and shit, but it's a shitty metaphor" — and the library's Neuromancer note, quoting a separate 2003 document's identical refusal ("I cannot use the word matrix anymore, fuck you very much, Wachowski Brothers"), are two different pieces from the same year independently reaching the same specific target for the same reason.
+**Rationale:** fireCalamity's extended rant against The Matrix's physics — "No, fuck The Matrix, you're not a battery for shitty robots... it's all some sort of Gnostic bullshit about a world of lies and shit, but it's a shitty metaphor" — and the library's Neuromancer note, quoting a separate 2003 document's identical refusal ("I cannot use the word matrix anymore, fuck you very much, Wachowski Brothers"), are two different pieces from the same year independently reaching the same specific target for the same reason. A separate close-reading pass found this same pair independently, in the same terms.
 
 ---
 
@@ -548,7 +548,7 @@ Our investigation into Peter Hight is pending, but from all appearances he appea
 **Theater — Truth and Beauty, "INT. CANDY FACTORY. DAY. (A MOVIE SET.)" (beat #217)**
 > On the set of Sadler’s ultra-low-budget epic, “Fluff You Up.” Brian, in Edwardian costume and a fake moustache, sits between two vats. Sadler, Zen and scruffy, holds court from a chrome wheelchair.
 
-**Rationale:** Projection names this directly: "I have another friend, Chris Sadler. I used him as the basis for a character in two scripts... He became a character in my scripts as a free spirit, mad, unhinged yet unabashedly vital and dynamic." Theater's own Sadler — introduced here as "Zen and scruffy," holding court from a wheelchair, mid-shoot on a deliberately unhinged marshmallow-fluff epic — is that character on stage. Same relationship as row 17's Kirstin/Euterpe pairing, a second named character instead of the first.
+**Rationale:** Projection names this directly: "I have another friend, Chris Sadler. I used him as the basis for a character in two scripts... He became a character in my scripts as a free spirit, mad, unhinged yet unabashedly vital and dynamic." Theater's own Sadler — introduced here as "Zen and scruffy," holding court from a wheelchair, mid-shoot on a deliberately unhinged marshmallow-fluff epic — is that character on stage. Same relationship as row 17's Kirstin/Euterpe pairing, a second named character instead of the first. A separate close-reading pass landed on this same pair independently ("verifiable against both texts directly, distinct from the already-established Brian/Jeremy origin link") — see also the two other, genuinely distinct Projection/Truth-and-Beauty threads added below (Kirstin's Lysander note, beat 363).
 
 ---
 
@@ -560,7 +560,7 @@ Our investigation into Peter Hight is pending, but from all appearances he appea
 **Library — "The Changing Light at Sandover" (#108)**
 > AM I IN YR ROOM SO ARE ALL YR DEAD WHO HAVE NOT GONE INTO OTHER BODIES… NOW DO U UNDERSTAND WHAT HEAVEN IS IT IS THE SURROUND OF THE LIVING — a 560-page epic assembled from twenty-five years of Ouija-board transcripts. The epigraph on Blood Treachery, the Mage sourcebook Scott co-wrote, is drawn… (no rationale quote matched this piece — showing opening text instead; check the full piece directly if the claim isn't verifiable from this excerpt)
 
-**Rationale:** Sadler's cast explains their absurd movie lore with a single deadpan line — "How do you all know this?" / "Ouija board." — the exact device Merrill spent twenty-five years of actual transcripts turning into a 560-page epic, per the library's own note. Same channeling apparatus, opposite register: one played for a laugh line, one taken seriously enough to become The Changing Light at Sandover.
+**Rationale:** Sadler's cast explains their absurd movie lore with a single deadpan line — "How do you all know this?" / "Ouija board." — the exact device Merrill spent twenty-five years of actual transcripts turning into a 560-page epic, per the library's own note. Same channeling apparatus, opposite register: one played for a laugh line, one taken seriously enough to become The Changing Light at Sandover. A separate close-reading pass landed on this same pair independently — worth noting since another new row below (Sadler's "Channeling." beat, also paired with this same SubGenius book) is a related but distinct find, not a restatement of this one.
 
 ---
 
@@ -597,4 +597,220 @@ Our investigation into Peter Hight is pending, but from all appearances he appea
 > French translation of the tabletop RPG Nobilis, second edition; players anchor a Power — Death, the Sun, Entropy itself — into a human vessel and defend a plural, meaning-laden reality against the Excrucians, entities whose whole purpose is unmaking it into flat nothing. The clearest game-genre cousin yet to the Surround/Umbra/chimerical cluster: a system built entirely around a permeable membrane between the mundane and the numinous, and what it costs a person to stand at it.
 
 **Rationale:** Alex and Jeff's drunk 3am bit — "I want to be God Emperor of the planet" / "And what does that make me?" / "Goddess Empress" — is played entirely for laughs, but it's structurally the same fantasy Nobilis builds an entire game around, per the library's note: "players anchor a Power — Death, the Sun, Entropy itself — into a human vessel." One is a joke two friends make up on a couch; the other is a whole rules system for taking the same joke seriously.
+
+---
+
+### 47. [PENDING]
+
+**Orbiter — "Raise a Glass" (#4)**
+> …ork is undamaged. No coat of paint needs to be reapplied. / Carpenters and chanteuses occupy the middle lodge. The sickly-sweet liquid was brought before them, the glass resonated, the Brownian motion harmonized with a frequency echoed by angels. Nothing bubbled over, thank Goodness. / Distilled, concentrated, a single drop dabbed into either eye, this project thrust back into azure-blue and bumblebee,…
+
+**Beamline — bounce #5**
+> Here are harps, here are superstrings.
+
+**Rationale:** Raise a Glass's "the glass resonated, the Brownian motion harmonized with a frequency echoed by angels" lands in the same vocabulary as the verbatim harps/superstrings cluster above (rows 1–2, also sourced through Beamline's bounce 5) — independently, no shared source text, just the same resonance/vibration register reached for from a different poem entirely.
+
+---
+
+### 48. [PENDING]
+
+**Sphere — "Digression #1" (#5)**
+> …it of all. Here in the Southland, we spend our days consumed with apocalypse. Here it is the easiest of all to consider just how the end might come about. Here we dig for fire. Here we keep watch on the fault lines and fractures, waiting for what will spit up through the cracks. Here we tend the flames, making sure nothing else comes…
+
+**Scroll — "The Calamity" (#8)**
+> You see, it starts like this.  What we are talking about is the release of energy.  All things have energy, yes?  All things are energy, if you want to split Einsteinian hairs about it, but all things have a temperature, correct?  We’ll take basic physics now and work our way to general relativity… (no rationale quote matched this piece — showing opening text instead; check the full piece directly if the claim isn't verifiable from this excerpt)
+
+**Rationale:** Digression #1's abstract Southland apocalypse-dread — "we dig for fire... we keep watch on the fault lines and fractures, waiting for what will spit up through the cracks... we tend the flames" — and fireCalamity's literal wildfire, visible in the middle distance during a party while characters joke about it, are the same regional anxiety at two different removes: one mythologized into ritual language, one staged as background color nobody in the scene takes seriously enough.
+
+---
+
+### 49. [PENDING]
+
+**Sphere — "Wingspan" (#16)**
+> Arboretum. Orrery. Aerial photographs. Off the wing. Carmen Chameleon. Sugar plum fairy. The ache and shape of things. Free flight, gliding over wheat fields. All the while catching up on my sleep. Crushed out by a heel, pointed asphalt, smoking a Cavendish in Santa Monica. Femme fatales and dimestore cowboys have r…
+
+**Scroll — "Flying" (#2)**
+> …e sky, literally, is the limit. And I still have that sick feeling in my stomach. It'll always be there, to remind me of where I was, what I struggled against. I'm flying. Finally.
+
+**Rationale:** Wingspan's catalog opens with flight imagery ("Free flight, gliding over wheat fields") among dozens of other fragments; Flying is the full narrative version of that same image — terror, freefall, and an eventual release, ending "I'm flying. Finally." A catalog entry and the complete arc it comes from.
+
+---
+
+### 50. [PENDING]
+
+**Sphere — "Called Shot" (#8)**
+> …xact moment, a bolt of lightning lit up, exactly where I had pointed. Astounded, I shouted with glee. Did you see that? Wow! Did I do that? Was it coincidence? Synchronicity? Holy crap! Thrilled was I, but also doubtful, for I so desperately wanted it to be my doing, my will working on the world. But of course I knew it was just co…
+
+**Orrery — "The Orrery of Los Feliz"**
+> We were tipped off by a news item coupled with the creditors’ lawsuits against Peter Hight, our synchronicity sensitives finding a common link between the two. The news item said that the FCC was investigating a pirate radio station somewhere in the Los Feliz area. It…
+
+**Rationale:** Both pieces use the actual word "synchronicity" for the same underlying question: Called Shot's "Was it coincidence? Synchronicity?" over a lightning strike that seems to follow the narrator's own pointing finger, and the Orrery's "our synchronicity sensitives finding a common link" between a news item and a lawsuit. A memoir fragment and an invented cosmology, same specific word for the same kind of maybe-meaningful coincidence.
+
+---
+
+### 51. [PENDING]
+
+**Sphere — "Joycean" (#9)**
+> Crimkranng off the sodden walls. Leadlined afterdisiacs rummuging underskin. The endless furry walls, the tunnel upwads. Lookiter skinny bones protuding from a white slip as she rung downgrou…
+
+**Library — "Finnegans Wake" (#89)**
+> …o exists — edition uncertain. Its opening line completes the sentence its own last line leaves hanging mid-thought — the same shape Douglas Hofstadter calls a “strange loop” in Gödel, Escher, Bach.
+
+**Rationale:** Joycean is a deliberate Wake-style portmanteau piece ("Crimkranng off the sodden walls... unbound and unhinged, careening like a bumper car") sitting in the same corpus as the library's own entry on the book it's imitating, whose note even names the specific formal device ("strange loop") this fragment is playing with rather than just referencing.
+
+---
+
+### 52. [PENDING]
+
+**Sphere — "Quiver" (#14)**
+> …ppropriate. A song — How your eyes light up the sky How I loved to tell you why You mean the world to me — keeps me moving past yearning and sorrow and regret. Here are harps, here are superstrings. Pluck at them both, send me vibrating, harmonics echoing at mathematically precise points. The higher the note, the higher the breath. Your breath and mine, swirling, searching for it. A song lost…
+
+**Scroll — "The Impossible Bliss of Self-Mutilation" (#5)**
+> You’re staring at me because you see what you wish you could be.  You can’t help it.  I used to be like you, worrying about what was mine, grabbing everything I could and guarding it like a dragon on top of the hoard.  But you hold on too tight, and you’ll lose it anyway, and it’ll hurt more.  You… (no rationale quote matched this piece — showing opening text instead; check the full piece directly if the claim isn't verifiable from this excerpt)
+
+**Rationale:** Quiver's "Here are harps, here are superstrings. Pluck at them both, send me vibrating" — wanting to be played, surrendered to, tender — and Self-Mutilation's profane, escalating comedy of deliberate self-surrender are the same structural move at opposite registers: giving yourself over to something as its own kind of proof. Distinct from row 12 above (Everything's A Number, a different Sphere piece, paired with this same Self-Mutilation for a different reason — pain as a route to relief, not surrender as proof).
+
+---
+
+### 53. [PENDING]
+
+**Orbiter — "The Lovers" (#8)**
+> Their fingers, calloused and tired, Still glowed with a magnetic Pull nearly impossible to resist. The hall of mirrors, the floor show, The seeing eye did their best To polarize them, but it seems Physics has a heart all its own.
+
+**Scroll — "The Impossible Bliss of Self-Mutilation" (#5)**
+> You’re staring at me because you see what you wish you could be.  You can’t help it.  I used to be like you, worrying about what was mine, grabbing everything I could and guarding it like a dragon on top of the hoard.  But you hold on too tight, and you’ll lose it anyway, and it’ll hurt more.  You… (no rationale quote matched this piece — showing opening text instead; check the full piece directly if the claim isn't verifiable from this excerpt)
+
+**Rationale:** The Lovers' "physics has a heart all its own" — control overtaken by something outside the self — against Self-Mutilation's deliberate self-surrender played as body horror: the same structural move as row 52 above, reached a second time from a different Orbiter poem. Worth reviewing both Sphere-Quiver and Orbiter-Lovers against Self-Mutilation together rather than picking one, since they're making a related but not identical claim.
+
+---
+
+### 54. [PENDING]
+
+**Scroll — "Projection" (#11)**
+> A symphony. The pillars of the concert hall, wisping upwards like smoke, curved, sandblasted metal because the glare was too much for other buildings. There will be no mirrors in the desert; this is the sun's kingdom, and to amplify or reflect is pointless. Only refraction will do. Split the… (no rationale quote matched this piece — showing opening text instead; check the full piece directly if the claim isn't verifiable from this excerpt)
+
+**Theater — You've Got a Friend in Satan, "INT. THE LIVING ROOM. NIGHT. (THE PITCH.)" (beat #603)**
+> horace: STOP IT! Now listen to me, you shit-for-brains do-nothing slacker toads!!! I’ve been sent here to ask you kindly for your souls, for which, in return, you will get ANYTHING you want! ANYTHING! Cars, jewelry, women, men, fame, fortune, ANYTHING!
+
+**Rationale:** Projection floats the idea that a stranger encountered in L.A. might be a scripted actor sent to nudge the day toward something ("this little scene you witnessed is one of the pivot points of the forward motion of space-time"). You've Got a Friend in Satan makes the identical premise literal: Horace's pitch — "I've been sent here to ask you kindly for your souls, for which, in return, you will get ANYTHING you want" — and Art really do perform a script that reshapes four strangers' lives, beat by beat.
+
+---
+
+### 55. [PENDING]
+
+**Theater — Truth and Beauty, "INT. CANDY FACTORY. DAY. (A MOVIE SET.)" (beat #276)**
+> sadler: Channeling.
+
+**Library — "The Book of the SubGenius" (#113)**
+> the source scripture of “Slack” as a concept — the Church of the SubGenius’s central virtue, and almost certainly where that word entered Scott’s own private vocabulary for it. A second volume, Revelation X, sits beside it here.
+
+**Rationale:** Sadler's single-word answer for how he knows an invented piece of movie lore — "Channeling." — right after swallowing a spoonful of marshmallow fluff "to honor our subject," is mock-devotion played as a bit. The library's own note calls the source of "Slack" real scripture for the Church of the SubGenius. Same register — absurd material handled with genuine devotional seriousness — landed on independently: a 2001 script and a 2026 shelf note.
+
+---
+
+### 56. [PENDING]
+
+**Sphere — "Circumstance" (#15)**
+> …re the feathers fall, we just don't know. This is the life we have been given by circumstance, and we cannot apologize for playing our roles exactly as we are; we can only come to understand that our roles are so much more flexible than we ever think they are. Thus endeth the lesson, kids, run home safe and put these new ideas into practice. Let us all know how they turn out.
+
+**Scroll — "Pygmalion" (#4)**
+> …air for anything good to come of it, and now everyone has lost, leaving me with broken bits of a hollow statue strewn throughout emails and phone conversations. There are two modes of sensing, I believe: projection and observation.  Observation is the taking in of stimuli and recognizing the uniqueness of that thing as a separate object in the worl…
+
+**Rationale:** Circumstance and Pygmalion both state the persona-theory explicitly rather than only dramatizing it: "we can only come to understand that our roles are so much more flexible than we ever think they are" against "there are two modes of sensing... projection and observation... we create a person, and we trust that it's accurate." A statement-of-thesis pairing, one level up from the dramatized instances (Identity Theft, Archibald Query) this file already links elsewhere.
+
+---
+
+### 57. [PENDING]
+
+**Sphere — "Steamroll" (#20)**
+> 'Why are you keeping me at arms' length?' 'If I don't, you'll flatten me.' 'Ah. As much as I might want to, I can't disagree.' —
+
+**Theater — Truth and Beauty, "EXT. COFFEEHOUSE. NIGHT." (beat #150)**
+> kirstin: Yes. It’s scary to embrace something you love. Because love is lack of control, being at the mercy of something else. It’s very disconcerting.
+
+**Rationale:** Steamroll's "Why are you keeping me at arms' length?" / "If I don't, you'll flatten me" and Kirstin's "It's scary to embrace something you love. Because love is lack of control, being at the mercy of something else" are the same specific claim: guardedness as protection from being overwhelmed by something wanted, not from indifference to it.
+
+---
+
+### 58. [PENDING]
+
+**Sphere — "Current" (#23)**
+> Skittery across wavelines, turbulence, skipping off the atmosphere, bounce a red-hot discus shielding you from the rest of the currents. Treetop foam, detritus picked up and laid on seaside graves from the previous epoch. Windflow, art tunnel, cresting in a 2-D front stirred rapidly around cellbands, settling down in a dinnerplate where two months from now leaves will decorate the cracked concrete: the anticipation, the knowledge of what will be, the settling sun, the autumnal.
+
+**Scroll — "In The End It Falls Slowly Through The Aether" (#6)**
+> As the droplets descend down the texture of the leaf, coalescing at the downward point, anticipating the end of their stable lives, joining a hundred million molecules for the freefall drop, poised on the brink before the gravity of the situation overwhelms the surface tension, for that brief… (no rationale quote matched this piece — showing opening text instead; check the full piece directly if the claim isn't verifiable from this excerpt)
+
+**Rationale:** Current's impressionistic weather-as-mood ("skittery across wavelines, turbulence... the anticipation, the knowledge of what will be, the settling sun") and Cartography's explicit staged physics of a single raindrop's fall are the same vehicle — a real or quasi-real physical process — used to meditate on inevitability, one worked out in full mechanical detail, the other left as mood.
+
+---
+
+### 59. [PENDING]
+
+**Sphere — "Starbought" (#17)**
+> …ing us thrash about like goats on a Sinai mountainside. The Hebrews, wrapped in cloth, brought forth for your edification. Here, let the miracle commence soon. Show me an act of God to shatter this enclave, to bring light into dark, to do, in short, what one expects of any reasonably competent deity. Believe me, a lot more rides on this than one man's simple fait…
+
+**Theater — You've Got a Friend in Satan, "INT. THE LIVING ROOM. NIGHT. (THE PITCH.)" (beat #603)**
+> horace: STOP IT! Now listen to me, you shit-for-brains do-nothing slacker toads!!! I’ve been sent here to ask you kindly for your souls, for which, in return, you will get ANYTHING you want! ANYTHING! Cars, jewelry, women, men, fame, fortune, ANYTHING!
+
+**Rationale:** Starbought demands a sign from an indifferent god who never quite answers — "Show me an act of God to shatter this enclave... what one expects of any reasonably competent deity." Horace's pitch offers exactly that transaction from the other direction, and someone in the room takes the deal a few beats later. Same plea, unanswered in one piece and answered in the other.
+
+---
+
+### 60. [PENDING]
+
+**Orbiter — "Haiku" (#9)**
+> It feels like her tongue Parting the walls of desire Against both our wills. / Her bare, sanguine arms Writing, typing, smoothing down Errant hair of babe, / Her jeweled forehead Glowing, growing wet with thought, Reflecting the light / Pouring down and through Her eyes, nerves, cells, all the while Still a mystery / Yet to be revealed To me or millions, waiting For the proper time / When pen hits paper, Thought meets fiction, and the words Flow forth perfectly.
+
+**Scroll — "Projection" (#11)**
+> …Baja Fresh near Amoeba Music, not going anywhere. This is not where I wanted this to go. The actor subplot is a conceit I threw into the mix because -- This is going nowhere. Around and around in circles. After L.A.X. finally ended things, I thought I was done. Maybe not quite suicidal (now that would have been emo), but with that pure despair of the truly hear…
+
+**Rationale:** A deliberate inversion, not a similarity: Haiku ends on effortless creative flow — "When pen hits paper, / Thought meets fiction, and the words / Flow forth perfectly" — while Projection is an entire essay about that not happening, "going nowhere. Around and around in circles." Same subject (writing as a channel for feeling), opposite outcome. Distinct from row 30 above, which pairs this same Haiku with Sphere's Trapdoor for a different reason (desire as involuntary loss of self).
+
+---
+
+### 61. [PENDING]
+
+**Theater — Paul Revere, "INT. THE DEN, HALLWAY & LIVING ROOM. NIGHT." (beat #444)**
+> alex: We’ll all become rich and own the world.
+
+**Sphere — "Digression #2" (#6)**
+> This is how we bounce: we find someone that has a high caliber of energy, and we throw ourselves at them with all the force we can muster. These words aren't mine. They're borrowed from a polyglot we found scattered on leaves, hidde…
+
+**Rationale:** A group of friends inventing shared fantasy roles together after a chaotic night ("We'll all become rich and own the world... I call Towel Boy... Can I be the Bard?") and Digression #2's account of the same impulse in miniature — "we find someone that has a high caliber of energy... invented some rules and just let the whole thing run its course" — are both about a found group improvising arbitrary shared meaning on the spot, one at party-scene length, one compressed into a paragraph.
+
+---
+
+### 62. [PENDING]
+
+**Scroll — "Projection" (#11)**
+> …se-effect, shimmering glances up the hills...I was in a lucid dream. It was magic occurring around me and through me. It was the otherworld, a fae enchantment. Titania and Oberon were standing by the pool of their house off Mulholland, staring down at me, watching the ass's progress. The La Brea tar pits were a vast untapped resource, d…
+
+**Theater — Truth and Beauty, "INT. MOVIE THEATER, THEN RESTAURANT. NIGHT." (beat #363)**
+> Inside, in delicate script: “Brian — My older sister told me that there’s a new production of A Midsummer Night’s Dream getting ready. I think you’d make the perfect Lysander. — K. P.S. Congratulations!”
+
+**Rationale:** A third, distinct thread between this pair — beyond row 17's Kirstin-naming and row 42's Sadler-sourcing above. Projection invokes "Titania and Oberon... standing by the pool" as the register for how unreal L.A. felt, a fae-enchantment metaphor. Truth and Beauty's closing beat has Kirstin suggesting Brian for Lysander in an actual, real production of A Midsummer Night's Dream — the same play, metaphor in one piece and literal plot in the other.
+
+---
+
+### 63. [PENDING]
+
+**Orbiter — "DNA" (#10)**
+> As the congregation rises, the doors Slide open; the rabbi raises up the Twin scrolls, dictated by God, from the ark. Uncovered, unrolled, the sacred letters Reveal themselves, the primeval sequence Coalescing into the stuff of life (Word and phrase manifesting character). The parashah read aloud, the message Replicates in the hearts of the gathered; The Sefer Torah is recoiled, restored.
+
+**Library — "The Changing Light at Sandover" (#108)**
+> AM I IN YR ROOM SO ARE ALL YR DEAD WHO HAVE NOT GONE INTO OTHER BODIES… NOW DO U UNDERSTAND WHAT HEAVEN IS IT IS THE SURROUND OF THE LIVING — a 560-page epic assembled from twenty-five years of Ouija-board transcripts. The epigraph on Blood Treachery, the Mage sourcebook Scott co-wrote, is drawn… (no rationale quote matched this piece — showing opening text instead; check the full piece directly if the claim isn't verifiable from this excerpt)
+
+**Rationale:** Weaker, flagged as such: DNA's sacred genetic "sequence... Word and phrase manifesting character" and the library's note on Sandover's channeled scripture are both about revelation arriving pre-encoded in a text, but the echo is abstract — a real resonance in kind, not in any shared specific image, worth Scott's own read rather than a confident claim either way.
+
+---
+
+### 64. [PENDING]
+
+**Orbiter — "Courtesans of the Old World" (#1)**
+> …your Nonchalance (well-practiced), your look Centuries old and waiting for something Richer than jewels, gold, the treasures of The pharaohs – / There you are, hidden behind bulletproof glass, Isolated and precious beyond words. There you are, Lighting my cigarette in a crowded bar. There You are, face buried in the crook of your Girlfriend's neck on the ride between St. Paul And the…
+
+**Theater — Truth and Beauty, "EXT. COFFEEHOUSE. NIGHT." (beat #150)**
+> kirstin: Yes. It’s scary to embrace something you love. Because love is lack of control, being at the mercy of something else. It’s very disconcerting.
+
+**Rationale:** Weaker, flagged as such, included for completeness rather than pushed hard: Courtesans of the Old World's untouchable, transactionally-guarded women ("hidden behind bulletproof glass, isolated and precious beyond words") loosely rhyme with Kirstin's own guardedness in the same beat already linked above (row 57) — looser than that pairing, more mood than argument.
 

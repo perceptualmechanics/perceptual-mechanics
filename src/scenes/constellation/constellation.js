@@ -333,60 +333,173 @@ export function createConstellation(container, { preview = false, initialPieceId
   }
 
   // ─── The spider ─────────────────────────────────────────────────────────
-  // Eight legs, daddy-longlegs anatomy (round 2, 2026-08-16 — "extremely
-  // long, thin, spindly legs... more exaggerated than what shipped", not a
-  // generic spider silhouette) — each a two-segment (femur/tibia)
-  // hierarchy so it reads as a real jointed limb rather than a rigid
-  // spoke, tibia noticeably longer and thinner than the femur (harvestmen
-  // proportions: the terminal segment is the longest, spindliest part of
-  // the leg) and a sharper knee bend for the tall, angular stance that
-  // goes with it. A touched strand makes the nearest leg (or, for a
-  // primed strand, every leg at once) flick — a fast decaying sine burst
-  // layered on top of whatever the leg is already doing (idle sway or
-  // mid-stride), not a separate animation state to blend.
+  // Round 4 (2026-08-18): Scott inspected the round-2 shape directly (not
+  // a description of it), found it read as a placeholder — eight straight
+  // lines from one point, one bend each, even 45-degree radial symmetry,
+  // "the Atari 1982 read" — then, after a first structural pass, gave a
+  // second, more precise spec building on real daddy-longlegs anatomy,
+  // "as checkable as the fog falloff formula." This is that spec, built
+  // literally:
+  //   - Hub: a small, closed, elongated OVAL outline (a LineLoop, not a
+  //     filled mass, not the spherical wireframe the first pass used) —
+  //     real width along its own long axis, legs attaching along its two
+  //     long sides rather than around one vertex.
+  //   - Attachment: four points per long side (eight total), positioned
+  //     BY the hub's own long axis (LEG_ROWS' xFrac below), not spread
+  //     evenly around a circle — real front-to-back unevenness in both
+  //     spacing and angle, the way an actual daddy-longlegs attaches.
+  //   - Per leg: three joints, four segments (coxa→femur→knee→ankle),
+  //     each segment narrower than the last from hub to tip. The
+  //     signature silhouette — coxa and femur angling UP and outward from
+  //     the hub, past the body's own height, before the knee joint
+  //     reverses sharply and the tibia angles back DOWN toward the
+  //     surface, with the ankle giving the tarsus tip a faint curl on the
+  //     way down — is what actually reads as "daddy-longlegs" rather
+  //     than "generic spider"; a single V-bend never gets there no matter
+  //     how thin the lines are.
+  //   - Asymmetry: every leg gets its own small random jitter on top of
+  //     its row's base angles/length, so no two legs — including
+  //     mirrored left/right pairs — are identical copies.
+  //   - Idle motion: each of the four joints drifts independently (own
+  //     phase, own speed), all the time, not just at rest — there's
+  //     finally real per-joint structure for "small continuous
+  //     adjustments" (round 2's own phrase) to actually happen within,
+  //     which is also what stops the creature from reading as "only
+  //     moving because the camera orbits around it."
+  const LEG_ROWS = [
+    // { xFrac, lenScale, coxaBase, femurBase, kneeBase, ankleBase } —
+    // front-to-back position along the hub's long axis (xFrac, as a
+    // fraction of HUB_LEN) and base joint angles, deliberately uneven
+    // rather than four identical rows. coxaBase/femurBase are RELATIVE
+    // rotations that both add to the upward-outward reach; kneeBase is
+    // the big relative reversal back down; ankleBase is the small
+    // relative curl back up at the very tip.
+    { xFrac: -0.85, lenScale: 0.80, coxaBase: 0.40, femurBase: 0.28, kneeBase: -2.00, ankleBase: 0.50 },
+    { xFrac: -0.28, lenScale: 1.00, coxaBase: 0.48, femurBase: 0.36, kneeBase: -2.15, ankleBase: 0.58 },
+    { xFrac: 0.32, lenScale: 0.96, coxaBase: 0.50, femurBase: 0.33, kneeBase: -2.20, ankleBase: 0.62 },
+    { xFrac: 0.80, lenScale: 0.76, coxaBase: 0.42, femurBase: 0.26, kneeBase: -1.95, ankleBase: 0.48 },
+  ];
   function buildSpider() {
     const group = new THREE.Group();
-    // No body mesh — pure radiating leg geometry, hub is an empty point in
-    // space where all eight hips share the same local origin. Consistent
-    // with the site's existing Tempest-style vector-line aesthetic (thin
-    // glowing strokes, no filled/solid forms) rather than a bulbous or
-    // solid mass at the center.
+
+    // Closed oval hub — a LineLoop (auto-closes last point to first, no
+    // duplicate needed), flat in local XZ (the body's own long/front-back
+    // axis is local X, matching LEG_ROWS' xFrac), so a camera looking up
+    // from below sees the oval roughly face-on, the way you'd see a real
+    // bug's body outline looking up at its belly.
+    const HUB_LEN = preview ? 2.0 : 2.8; // semi-major, along the body axis
+    const HUB_WID = preview ? 0.85 : 1.15; // semi-minor, across
+    const HUB_SEGS = 14;
+    const hubPts = [];
+    for (let s = 0; s < HUB_SEGS; s++) {
+      const a = (s / HUB_SEGS) * Math.PI * 2;
+      hubPts.push(new THREE.Vector3(Math.cos(a) * HUB_LEN, 0, Math.sin(a) * HUB_WID));
+    }
+    const hubGeo = new THREE.BufferGeometry().setFromPoints(hubPts);
+    const hubMat = new THREE.LineBasicMaterial({ color: GOLD_ACCENT, transparent: true, opacity: 0.55, fog: false });
+    const hub = new THREE.LineLoop(hubGeo, hubMat);
+    group.add(hub);
+
     const legMat = new THREE.MeshBasicMaterial({ color: GOLD_ACCENT, transparent: true, opacity: 0.6, fog: false });
-    const femurLen = preview ? 4.4 : 6.2, tibiaLen = preview ? 6.4 : 9.0;
-    const femurGeo = new THREE.BoxGeometry(femurLen, 0.1, 0.1);
-    const tibiaGeo = new THREE.BoxGeometry(tibiaLen, 0.07, 0.07);
+    const scale = preview ? 0.72 : 1;
+    const coxaBaseLen = 1.3 * scale, femurBaseLen = 3.6 * scale, tibiaBaseLen = 5.8 * scale, tarsusBaseLen = 1.7 * scale;
+    const geosToDispose = [hubGeo];
+    const jitter = amp => (Math.random() - 0.5) * 2 * amp; // small per-leg-per-attribute noise, no two legs identical
+    const mkIdle = () => ({ phase: Math.random() * Math.PI * 2, speed: 0.4 + Math.random() * 0.35 });
     const legs = [];
     for (let i = 0; i < LEG_COUNT; i++) {
+      const row = LEG_ROWS[i % 4];
+      const side = i < 4 ? 1 : -1; // one long side of the hub vs. the other — bilateral, not radial
+      const lenScale = row.lenScale + jitter(0.05);
+
+      // Attachment point: on the hub's own edge, at this row's position
+      // along the long axis — NOT spread evenly around a circle.
+      const hipX = row.xFrac * HUB_LEN;
+      const hipZ = side * HUB_WID * 0.94;
       const hip = new THREE.Group();
-      hip.rotation.y = (i / LEG_COUNT) * Math.PI * 2;
+      hip.position.set(hipX, 0, hipZ);
+      // Local +X should point outward, sideways off the body axis, with a
+      // small fore/aft lean that varies by row (front rows sweep slightly
+      // forward, back rows slightly backward) — mirrored, not duplicated,
+      // across the two sides.
+      const leanRad = row.xFrac * 0.32 + jitter(0.05);
+      const azRight = -Math.PI / 2 + leanRad;
+      hip.rotation.y = side === 1 ? azRight : (Math.PI - azRight);
       group.add(hip);
 
+      // Coxa: short first segment, angles UP and outward from the hub.
+      const coxaLen = coxaBaseLen * lenScale;
+      const coxaBase = row.coxaBase + jitter(0.06);
+      const coxaPivot = new THREE.Group();
+      coxaPivot.rotation.z = coxaBase;
+      hip.add(coxaPivot);
+      const coxaGeo = new THREE.BoxGeometry(coxaLen, 0.11, 0.11);
+      const coxa = new THREE.Mesh(coxaGeo, legMat);
+      coxa.position.x = coxaLen / 2;
+      coxaPivot.add(coxa);
+      geosToDispose.push(coxaGeo);
+
+      // Femur: continues the upward-outward reach to the peak — the
+      // "knee higher than the body" the whole silhouette depends on.
+      const femurLen = femurBaseLen * lenScale;
+      const femurBase = row.femurBase + jitter(0.06);
+      const femurJoint = new THREE.Group();
+      femurJoint.position.x = coxaLen;
+      coxaPivot.add(femurJoint);
       const femurPivot = new THREE.Group();
-      const baseSplay = -0.42 - (i % 2) * 0.1; // slight alternating splay, less mechanically uniform
-      femurPivot.rotation.z = baseSplay;
-      hip.add(femurPivot);
+      femurPivot.rotation.z = femurBase;
+      femurJoint.add(femurPivot);
+      const femurGeo = new THREE.BoxGeometry(femurLen, 0.085, 0.085);
       const femur = new THREE.Mesh(femurGeo, legMat);
       femur.position.x = femurLen / 2;
       femurPivot.add(femur);
+      geosToDispose.push(femurGeo);
 
-      const knee = new THREE.Group();
-      knee.position.x = femurLen;
-      femurPivot.add(knee);
-      const baseBend = 1.2; // sharper than the original 0.9 — a taller, more angular knee, daddy-longlegs rather than a low crouching spider
-      knee.rotation.z = baseBend;
+      // Knee: the reversal — a big relative bend that sends the tibia
+      // back down toward the surface instead of continuing to climb.
+      const tibiaLen = tibiaBaseLen * lenScale;
+      const kneeBase = row.kneeBase + jitter(0.08);
+      const kneeJoint = new THREE.Group();
+      kneeJoint.position.x = femurLen;
+      femurPivot.add(kneeJoint);
+      const kneePivot = new THREE.Group();
+      kneePivot.rotation.z = kneeBase;
+      kneeJoint.add(kneePivot);
+      const tibiaGeo = new THREE.BoxGeometry(tibiaLen, 0.05, 0.05);
       const tibia = new THREE.Mesh(tibiaGeo, legMat);
       tibia.position.x = tibiaLen / 2;
-      knee.add(tibia);
+      kneePivot.add(tibia);
+      geosToDispose.push(tibiaGeo);
+
+      // Ankle: short, thin terminal segment with a faint curl back up —
+      // a foot touching down, not a stick ending in a point.
+      const tarsusLen = tarsusBaseLen * lenScale;
+      const ankleBase = row.ankleBase + jitter(0.05);
+      const ankleJoint = new THREE.Group();
+      ankleJoint.position.x = tibiaLen;
+      kneePivot.add(ankleJoint);
+      const anklePivot = new THREE.Group();
+      anklePivot.rotation.z = ankleBase;
+      ankleJoint.add(anklePivot);
+      const tarsusGeo = new THREE.BoxGeometry(tarsusLen, 0.03, 0.03);
+      const tarsus = new THREE.Mesh(tarsusGeo, legMat);
+      tarsus.position.x = tarsusLen / 2;
+      anklePivot.add(tarsus);
+      geosToDispose.push(tarsusGeo);
 
       legs.push({
-        femurPivot, knee, baseSplay, baseBend,
-        idlePhase: Math.random() * Math.PI * 2,
-        idleSpeed: 0.5 + Math.random() * 0.25,
+        coxaPivot, femurPivot, kneePivot, anklePivot,
+        baseCoxa: coxaBase, baseFemur: femurBase, baseKnee: kneeBase, baseAnkle: ankleBase,
+        // Four independent idle drifts, one per joint — round 2's "small,
+        // continuous adjustments, not a rigid shape" finally has real
+        // per-joint structure to happen in, instead of being folded into
+        // just two shared sine terms.
+        idle: { coxa: mkIdle(), femur: mkIdle(), knee: mkIdle(), ankle: mkIdle() },
         reactionT: null, // null = not reacting; else seconds since triggered
         reactionAmp: 0,
       });
     }
-    return { group, legMat, femurGeo, tibiaGeo, legs };
+    return { group, legMat, hubMat, geosToDispose, legs };
   }
   const spider = buildSpider();
   scene.add(spider.group);
@@ -731,35 +844,37 @@ export function createConstellation(container, { preview = false, initialPieceId
       colAttr.needsUpdate = true;
     }
 
-    // Spider legs: two states, distinct motion for each (round 2 — "resting
-    // should still read as alive" and "genuine locomotion... a real scope
-    // difference from idle motion"), plus a reaction burst layered on top
-    // of whichever one's running (always runs regardless of reduceMotion —
-    // a reaction is a direct response to something the visitor just did,
-    // not ambient decoration, same distinction every other scene's own
-    // click-driven transitions already make).
+    // Spider legs: four independently-phased idle drifts (one per joint,
+    // running continuously — not gated to rest-only anymore, per Scott's
+    // own follow-up: "idle motion should be per-joint and out of phase
+    // across legs... this should also resolve the 'not moving, just
+    // rotating with the camera' complaint"), a walking gait layered on
+    // top during travel (phase-delayed joint to joint — femur leads,
+    // knee follows, ankle follows that, a wave running down the leg
+    // rather than the whole leg swinging as one rigid unit), and a
+    // reaction burst on top of whichever of those is running.
     spider.legs.forEach((l, li) => {
-      let idle = 0, idle2 = 0, gait = 0;
+      let idleC = 0, idleF = 0, idleK = 0, idleA = 0;
       if (!reduceMotion) {
-        if (spiderState === 'rest') {
-          // Two independent, phase-shifted sine waves (femur + a slower,
-          // smaller knee wave) rather than one value driving both joints
-          // in lockstep — reads as small continuous adjustments, not a
-          // rigid shape that only appears to move because the camera
-          // orbits around it.
-          idle = Math.sin(now * 0.0011 * l.idleSpeed + l.idlePhase) * 0.09;
-          idle2 = Math.sin(now * 0.0006 * l.idleSpeed * 0.7 + l.idlePhase * 1.7) * 0.05;
-        } else {
-          // Walking gait: legs alternate in two groups of four (a
-          // simplified tripod-style gait), swinging through a bigger arc
-          // than idle sway ever uses — the primary visual signal that
-          // this is real locomotion, synced to elapsed time rather than
-          // to travel progress so the cadence stays consistent regardless
-          // of how far a given hop happens to be.
-          const group = li % 2;
-          const gaitPhase = now * 0.0044 + group * Math.PI;
-          gait = Math.sin(gaitPhase) * 0.24;
-        }
+        idleC = Math.sin(now * 0.0009 * l.idle.coxa.speed + l.idle.coxa.phase) * 0.05;
+        idleF = Math.sin(now * 0.0010 * l.idle.femur.speed + l.idle.femur.phase) * 0.06;
+        idleK = Math.sin(now * 0.0007 * l.idle.knee.speed + l.idle.knee.phase) * 0.08;
+        idleA = Math.sin(now * 0.0012 * l.idle.ankle.speed + l.idle.ankle.phase) * 0.05;
+      }
+      let gaitF = 0, gaitK = 0, gaitA = 0;
+      if (!reduceMotion && spiderState === 'travel') {
+        // Walking gait: legs alternate in two groups of four (a
+        // simplified tripod-style gait), synced to elapsed time rather
+        // than travel progress so the cadence stays consistent regardless
+        // of how far a given hop happens to be. Each joint picks the wave
+        // up a little later than the one before it (phase delay), which
+        // is what makes it read as a leg pushing off and following
+        // through rather than a single arm swinging as a rigid unit.
+        const group = li % 2;
+        const gaitPhase = now * 0.0044 + group * Math.PI;
+        gaitF = Math.sin(gaitPhase) * 0.22;
+        gaitK = Math.sin(gaitPhase - 0.4) * 0.16;
+        gaitA = Math.sin(gaitPhase - 0.8) * 0.10;
       }
       let burst = 0;
       if (l.reactionT !== null) {
@@ -768,8 +883,10 @@ export function createConstellation(container, { preview = false, initialPieceId
         burst = Math.sin(l.reactionT * 26) * 0.5 * decay * l.reactionAmp;
         if (l.reactionT > 1.2) l.reactionT = null;
       }
-      l.femurPivot.rotation.z = l.baseSplay + idle + gait + burst;
-      l.knee.rotation.z = l.baseBend - idle2 * 0.8 - gait * 0.65 - burst * 0.8;
+      l.coxaPivot.rotation.z = l.baseCoxa + idleC + burst * 0.3;
+      l.femurPivot.rotation.z = l.baseFemur + idleF + gaitF + burst;
+      l.kneePivot.rotation.z = l.baseKnee + idleK + gaitK - burst * 0.8;
+      l.anklePivot.rotation.z = l.baseAnkle + idleA + gaitA - burst * 0.4;
     });
 
     renderer.render(scene, camera);
@@ -799,7 +916,8 @@ export function createConstellation(container, { preview = false, initialPieceId
       nodeGeo.dispose(); nodeMat.dispose(); dotTex.dispose();
       strandGeo.dispose(); strandMat.dispose();
       hitGeo.dispose(); hitMat.dispose();
-      spider.legMat.dispose(); spider.femurGeo.dispose(); spider.tibiaGeo.dispose();
+      spider.legMat.dispose(); spider.hubMat.dispose();
+      spider.geosToDispose.forEach(g => g.dispose());
 
       titleEl?.remove();
       hintEl?.remove();

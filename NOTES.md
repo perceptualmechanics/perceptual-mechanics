@@ -248,6 +248,63 @@ described are unchanged.)
   worth trimming, orrery.js's texture generators and first-person rig are the
   two most self-contained chunks to split out first.
 
+## 2.5.4 (2026-08-18)
+
+**The Constellation, round 4: spider structural fix + a second discovery
+pass merged in.** Scott inspected the shipped spider directly (not a
+description of it) and found it read as a placeholder, not a creature:
+eight perfectly straight lines from one exact point, one bend each, even
+45-degree radial symmetry — "the Atari 1982 read." A follow-up message
+gave a precise, buildable spec, treating it explicitly as a geometry
+problem before a style problem: a small closed oval hub (not a point,
+not a filled mass) with legs attaching at four uneven points along each
+long side; three joints and four segments per leg, tapering thickest at
+the hub to thinnest at the tip; the actual daddy-longlegs signature —
+coxa and femur angling up and outward past the body's own height before
+the knee joint reverses and the tibia angles back down toward the
+surface, the ankle giving the tarsus tip a faint curl on the way down;
+no two legs identical, including mirrored pairs; and idle motion running
+independently per joint, all the time, not just at rest. Rebuilt
+`buildSpider()` and the per-leg animation loop in
+`src/scenes/constellation/constellation.js` to match, verified with a
+temporary debug hook (removed before commit, same discipline as every
+prior round) that put the camera directly on the spider from a
+side-on angle — confirmed the up-then-reverse-down silhouette reads
+clearly, tapering and unevenness both visible, hub genuinely present.
+
+Separately confirmed live (not just committed) that round 2's visibility
+work is actually shipped: `THREE.FogExp2` distance fade scoped to
+strands only, and the `SCENE_ACCENT` color-blend gradient on both nodes
+and strands, are both present and wired in `constellation.js` right now
+— reported plainly rather than assumed.
+
+**Resonance discovery, second pass merged.** A second, independent
+close-reading pass (all 8 found-text scenes, four rounds) turned up 26
+candidates. Cross-checked against the 24 pending rows this project's own
+round 3 had just added: five were the same pair as an existing pending
+row (28, 29, 36, 42, 43) — each of those rationales got a one-line
+corroboration note instead of a duplicate row, since two independent
+passes landing on the same connection is itself worth recording. Three
+were same-scene pairs (Sphere Matrices/In The Flesh, Sphere
+Stolnaphase/Starbought, Scroll Pygmalion/Identity Theft) — excluded, and
+a standing exclusion rule for same-scene pairs and same-source-document
+splits (Holography/Projection, already correctly excluded, prompted the
+second half of the rule) is now documented at the top of
+`src/resonances.js` so a future pass catches both by construction rather
+than relying on manual review. The remaining 18 were genuinely new,
+verified against the live corpus, and added as rows 47–64, all
+`status: 'pending'`. Total: 64 rows, 22 approved (untouched), 42
+pending. `docs/constellation_resonances.md` regenerated,
+`verify-resonances.mjs` and the full build both pass.
+
+**Visual/composition design pass — explicitly not done this round.**
+Scott's own framing: the camera/vantage/framing question and the
+constellation-vs-web read are worth a real look now that there's a
+denser dataset (64 rows vs. 22), but that look should happen once the
+data lands, not before — "not deciding blind again." Nothing about
+camera, vantage, node density presentation, or the sparse/web framing
+was touched this round. That's the next round's actual work.
+
 ## 2.5.3 (2026-08-17)
 
 **The Constellation, round 3: expanded resonance discovery.** Scott's
