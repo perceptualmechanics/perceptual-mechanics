@@ -266,6 +266,215 @@ export const RESONANCES = [
     rationale: '"Fractal"\'s catalog phrase "Chaos butterflies... Waveform collapsing" shares the same two words as Butterfly\'s title (singular in the title, plural in the list). Already linked to Projection via row 18 for the identical reason; flagging separately because Butterfly is the one piece on the site that isn\'t just referencing this phrase but is named after it and renders the thing itself, so leaving it out of that existing pairing would be the more arbitrary choice.',
     status: 'approved',
   },
+
+  // ── Round 3 discovery pass (2026-08-17): expanded resonance discovery ───
+  // Scott's own instruction for this round: the first pass's high approval
+  // rate (22/22) is evidence it was too conservative, not that the corpus
+  // is thin, and "quality over coverage, small defensible list" is
+  // explicitly retired as a governing instruction — the review gate below
+  // (his own read of each row) is the real quality control, not list
+  // length. Run as three separate targeted passes across the full corpus
+  // (all 8 found-text scenes, read in full for this round) rather than one
+  // holistic read: shared vocabulary/imagery beyond the mechanical
+  // exact-phrase scanner, emotional/thematic shape independent of shared
+  // words, and structural/documentary echoes (direct naming, shared
+  // source documents, library notes that already cite a piece by name —
+  // row 17's Projection/Truth and Beauty pairing is the existing model for
+  // this last category). Deliberately left large and uneven rather than
+  // pre-filtered for defensibility, per instruction; every row below is
+  // 'pending', additive only — rows 1–22 above are untouched.
+  {
+    id: 23,
+    basis: 'connotative',
+    a: { scene: 'sphere', id: 1 },
+    b: { scene: 'scroll', id: 2 },
+    rationale: '"Stolnaphase"\'s opening — "the angel puckers his lips, waiting for the expected grace from on high, but it never comes... he flies down to Earth" — and "Flying"\'s own visitation — "HE is there, enveloping me, my essence, my body... he has wings, he\'s filling and growing beyond me... power is the fire of heaven under your wings" — both stage a winged figure as the vehicle for a grace that either withholds itself or overwhelms. Independently written, same image system.',
+    status: 'pending',
+  },
+  {
+    id: 24,
+    basis: 'connotative',
+    a: { scene: 'sphere', id: 3 },
+    b: { scene: 'library', id: 111 },
+    rationale: '"Thalia" describes itself as a mask that outlives its own telling — "I am the construct you project outward... I am the lie you tell yourselves to keep you sane" — the same structure the library\'s own note names in Pale Fire: "a 999-line poem followed by a commentary whose annotator, not the poet, turns out to be the real subject." Both pieces make the frame around a story the actual subject of the story.',
+    status: 'pending',
+  },
+  {
+    id: 25,
+    basis: 'connotative',
+    a: { scene: 'sphere', id: 17 },
+    b: { scene: 'library', id: 113 },
+    rationale: '"Starbought" names its own resolution outright — "This will be the way, this Slack, this zen" — capitalized exactly the way the library\'s own note identifies the word\'s source: The Book of the SubGenius, "the source scripture of \'Slack\' as a concept... almost certainly where that word entered Scott\'s own private vocabulary for it." A single shared word, but a traceable one — the library note is effectively naming this poem\'s source.',
+    status: 'pending',
+  },
+  {
+    id: 26,
+    basis: 'connotative',
+    a: { scene: 'sphere', id: 17 },
+    b: { scene: 'scroll', id: 11 },
+    rationale: 'Both pieces independently reach for the same specific, unusual detail — Starbought\'s "Here, on the 32nd floor, the view is spectacular if looked outward, daunting if looking down" and Projection\'s "a second quake shook me while on the 32nd floor of a skyscraper days later" — an oddly precise number to coincide by chance. Below the mechanical scanner\'s phrase-length threshold; found by direct reading.',
+    status: 'pending',
+  },
+  {
+    id: 27,
+    basis: 'connotative',
+    a: { scene: 'sphere', id: 17 },
+    b: { scene: 'scroll', id: 8 },
+    rationale: 'Starbought\'s earnest "here it is anyway in its raw form, my chi, circulating once more after this daftness" and fireCalamity\'s self-conscious "this isn\'t some New Age bullshit, either... you got chakras, most people call \'em glands" reach for the same body-as-energy-system vocabulary from opposite registers — one sincere, one defensively ironic — which is itself worth noticing rather than a weakness in the pairing.',
+    status: 'pending',
+  },
+  {
+    id: 28,
+    basis: 'connotative',
+    a: { scene: 'sphere', id: 21 },
+    b: { scene: 'scroll', id: 11 },
+    rationale: 'Algebra works a breakup entirely through equation language — "the variables don\'t change... irrational and nonlinear" — while Projection works the same kind of breakup through physics instead: "a chaos butterfly; a Lorenz attractor; two focal points around which events swirl," the double-slit experiment, Feynman diagrams. Different branch of math/science, same underlying move: a heartbreak rendered legible only by treating it as a fixed structural fact rather than a feeling that could have gone differently — the same argument row 16 makes pairing Algebra with the Symposium, run a second time against a different piece.',
+    status: 'pending',
+  },
+  {
+    id: 29,
+    basis: 'connotative',
+    a: { scene: 'sphere', id: 24 },
+    b: { scene: 'scroll', id: 11 },
+    rationale: 'Aftershock\'s "another quake deep within my core, rumbling to the surface... the ground once more stabilizes" is a metaphor; Projection\'s own account is the literal event underneath it — "I was going through my first earthquake in L.A... a second quake shook me while on the 32nd floor of a skyscraper days later, as I was thinking about moving back to Boston... You can\'t write these things; you can only recount them later." One piece supplies the image, the other supplies the real occasion for it.',
+    status: 'pending',
+  },
+  {
+    id: 30,
+    basis: 'connotative',
+    a: { scene: 'sphere', id: 22 },
+    b: { scene: 'orbiter', id: 9 },
+    rationale: 'Trapdoor\'s "the bottom drops out... I become a conduit, a tunnel, something not myself" and Haiku\'s "It feels like her tongue / Parting the walls of desire / Against both our wills" both frame desire/intimacy as something that happens to the speaker rather than something the speaker does — an involuntary loss of the self\'s own boundary, not a chosen act.',
+    status: 'pending',
+  },
+  {
+    id: 31,
+    basis: 'connotative',
+    a: { scene: 'orbiter', id: 4 },
+    b: { scene: 'scroll', id: 9 },
+    rationale: 'Raise a Glass stages transformation as literal violence done to a body — "Burnt beyond recognition, Spontaneously from the inside... the bone fragments had their code extracted" — while Identity Theft stages a different transformation the same way: "Something detached... I was staring at my right hand, which clutched what looked like Gary\'s... skin." Both treat becoming something/someone else as a bodily event, not a metaphorical one.',
+    status: 'pending',
+  },
+  {
+    id: 32,
+    basis: 'connotative',
+    a: { scene: 'orbiter', id: 5 },
+    b: { scene: 'library', id: 130 },
+    rationale: 'The library\'s own note names this poem directly: Planetary is "structurally close to Scott\'s own \'Lament for the Future Never Realized\' (Tesla, Verne, Wells, and Edison conspiring to vanish before their inventions are weaponized)" — exactly Lament\'s own plot (Nikola, Wells, Verne and the assembled inventors resolving to disappear from public view rather than see their machines "usurped... to kill the hope within Man\'s breast"). Not an inferred echo; the library entry is already pointing at this specific poem.',
+    status: 'pending',
+  },
+  {
+    id: 33,
+    basis: 'connotative',
+    a: { scene: 'orbiter', id: 12 },
+    b: { scene: 'library', id: 73 },
+    rationale: 'The poem is explicitly about noticing you\'re caught inside a repeating structure — "Not deja vu, but a sense of an assumed role / That I\'ve stepped into once again. / We might need a rewrite" — a plain-language description of the same shape Hofstadter spends 800 pages formalizing as a "strange loop," per the library\'s own note (already cited for Finnegans Wake\'s opening/closing sentence elsewhere on that shelf).',
+    status: 'pending',
+  },
+  {
+    id: 34,
+    basis: 'connotative',
+    a: { scene: 'orbiter', id: 6 },
+    b: { scene: 'sphere', id: 15 },
+    rationale: 'Weaker than the other rows here, flagged as such: Moon Song\'s "the egg giving way to the peacock of fire" and Circumstance\'s "Where the feathers fall, we just don\'t know" both reach for feather/plumage imagery at a moment of uncertain fate, but it\'s a shared image register more than a shared specific word — real, but softer evidence than row 10\'s "boneyard," worth Scott\'s own judgment.',
+    status: 'pending',
+  },
+  {
+    id: 35,
+    basis: 'connotative',
+    a: { scene: 'beamline', id: 2 },
+    b: { scene: 'library', id: 127 },
+    rationale: 'Beamline\'s bounce 2 is drawn from Storyline.doc, dated 9/30–10/1/2003 (per beamline.text.js\'s own header) — the same document the library\'s Neuromancer note quotes directly: "I cannot use the word matrix anymore, fuck you very much, Wachowski Brothers," cited as evidence of "Scott\'s own 2003 cosmology-in-progress." Bounce 2\'s "we\'re grasping our way towards an analogy... the fucking mirror isn\'t letting anything out" is that same 2003 project in motion — reaching for original vocabulary (lasing medium, focusing mirror) rather than the borrowed word the library note says he\'d already rejected.',
+    status: 'pending',
+  },
+  {
+    id: 36,
+    basis: 'connotative',
+    a: { scene: 'scroll', id: 8 },
+    b: { scene: 'library', id: 127 },
+    rationale: 'fireCalamity\'s extended rant against The Matrix\'s physics — "No, fuck The Matrix, you\'re not a battery for shitty robots... it\'s all some sort of Gnostic bullshit about a world of lies and shit, but it\'s a shitty metaphor" — and the library\'s Neuromancer note, quoting a separate 2003 document\'s identical refusal ("I cannot use the word matrix anymore, fuck you very much, Wachowski Brothers"), are two different pieces from the same year independently reaching the same specific target for the same reason.',
+    status: 'pending',
+  },
+  {
+    id: 37,
+    basis: 'connotative',
+    a: { scene: 'scroll', id: 11 },
+    b: { scene: 'library', id: 112 },
+    rationale: 'The library\'s own note states this outright: "Scott\'s own The L.A. Project takes its epigraph from this play: \'Not Physics but Ecstatics Makes the Engine Run.\'" Projection is explicitly that project, by its own account — "the project, to write about what happened to me in L.A." — and its entire argument is the epigraph\'s argument staged at essay length: physics and quantum vocabulary (double-slit experiment, Feynman diagrams, parallel universes) reached for again and again to describe something that was never actually about physics. Not an inferred echo — the library entry is naming this piece\'s own epigraph.',
+    status: 'pending',
+  },
+  {
+    id: 38,
+    basis: 'connotative',
+    a: { scene: 'scroll', id: 2 },
+    b: { scene: 'library', id: 112 },
+    rationale: 'A second, smaller echo of the same source: Flying\'s own word for what it\'s after — "I\'m seeking ekstasis" — is the Greek root of the exact word the library note quotes from this play\'s epigraph, "Ecstatics." Below the mechanical scanner\'s threshold (a single shared root, not a phrase); found by direct reading.',
+    status: 'pending',
+  },
+  {
+    id: 39,
+    basis: 'connotative',
+    a: { scene: 'scroll', id: 3 },
+    b: { scene: 'library', id: 121 },
+    rationale: '"Thoughts Of Death Abounds" narrates a Yoruba shell divination without ever settling whether it\'s superstition or something real — "An orisha? Then he tapped my hand... Death? It came up 7-9" — the narrator both performing the ritual in earnest and holding it at arm\'s length. That\'s precisely the position the library\'s Daimonic Reality note describes: daimons as "neither literally real beings nor mere psychological projection, but a third category," a question the essay dramatizes rather than answers.',
+    status: 'pending',
+  },
+  {
+    id: 40,
+    basis: 'connotative',
+    a: { scene: 'scroll', id: 11 },
+    b: { scene: 'library', id: 25 },
+    rationale: 'Projection is the piece that coins the site\'s own "strange attractors" vocabulary — "a chaos butterfly; a Lorenz attractor; two focal points around which events swirl" — and even titles its fictional bestseller after the term (Strange Attractors: A Love Affair with Chaos). Gleick\'s book is the real, nontechnical popularization of exactly that vocabulary sitting on Scott\'s own shelf — the reference the essay\'s metaphor is drawing on, not a coincidence of two pieces landing on the same word independently.',
+    status: 'pending',
+  },
+  {
+    id: 41,
+    basis: 'connotative',
+    a: { scene: 'butterfly', id: 1 },
+    b: { scene: 'library', id: 25 },
+    rationale: 'Butterfly\'s whole found text is its own placard title, "Chaos Butterfly in Phase Space, 2026," already linked to Projection and Fractal for sharing that phrase (rows 18/21/22). Gleick\'s book is the nonfiction source underneath all three — the actual popular-science text that put "chaos," "phase space," and "the butterfly effect" into circulation as a single cluster of terms, making this the fourth and most literal node in that cluster rather than a fifth coincidence.',
+    status: 'pending',
+  },
+  {
+    id: 42,
+    basis: 'connotative',
+    a: { scene: 'scroll', id: 11 },
+    b: { scene: 'theater', id: 4, beatId: 217 },
+    rationale: 'Projection names this directly: "I have another friend, Chris Sadler. I used him as the basis for a character in two scripts... He became a character in my scripts as a free spirit, mad, unhinged yet unabashedly vital and dynamic." Theater\'s own Sadler — introduced here as "Zen and scruffy," holding court from a wheelchair, mid-shoot on a deliberately unhinged marshmallow-fluff epic — is that character on stage. Same relationship as row 17\'s Kirstin/Euterpe pairing, a second named character instead of the first.',
+    status: 'pending',
+  },
+  {
+    id: 43,
+    basis: 'connotative',
+    a: { scene: 'theater', id: 4, beatId: 229 },
+    b: { scene: 'library', id: 108 },
+    rationale: 'Sadler\'s cast explains their absurd movie lore with a single deadpan line — "How do you all know this?" / "Ouija board." — the exact device Merrill spent twenty-five years of actual transcripts turning into a 560-page epic, per the library\'s own note. Same channeling apparatus, opposite register: one played for a laugh line, one taken seriously enough to become The Changing Light at Sandover.',
+    status: 'pending',
+  },
+  {
+    id: 44,
+    basis: 'connotative',
+    a: { scene: 'theater', id: 6, beatId: 360 },
+    b: { scene: 'library', id: 132 },
+    rationale: 'The bicycle messenger who delivers Brian\'s letter is given one unmistakable detail — "he notices the messenger\'s sneakers have wings painted on the heels" — literal Hermes iconography attached to a minor background character. The library\'s own note on Hyde\'s book names Hermes specifically as "a single figure who exists to cross boundaries that are supposed to be uncrossable," exactly this messenger\'s narrative function: he\'s the one who crosses from a stranger at the door into the letter that reopens Brian and Kirstin\'s story.',
+    status: 'pending',
+  },
+  {
+    id: 45,
+    basis: 'connotative',
+    a: { scene: 'theater', id: 10, beatId: 513 },
+    b: { scene: 'library', id: 137 },
+    rationale: 'Satan\'s voice breaks the fourth wall to call it out directly — "Don\'t even try to lie, Horace, you were talking to the audience" — a play openly admitting its own performed reality mid-scene. The library\'s note on wrestling\'s kayfabe describes the same structure played straight: "the collectively maintained fiction that scripted violence is real... its own kind of belief technology." One names the fiction as a joke, the other studies it as a real social mechanism.',
+    status: 'pending',
+  },
+  {
+    id: 46,
+    basis: 'connotative',
+    a: { scene: 'theater', id: 8, beatId: 445 },
+    b: { scene: 'library', id: 147 },
+    rationale: 'Alex and Jeff\'s drunk 3am bit — "I want to be God Emperor of the planet" / "And what does that make me?" / "Goddess Empress" — is played entirely for laughs, but it\'s structurally the same fantasy Nobilis builds an entire game around, per the library\'s note: "players anchor a Power — Death, the Sun, Entropy itself — into a human vessel." One is a joke two friends make up on a couch; the other is a whole rules system for taking the same joke seriously.',
+    status: 'pending',
+  },
 ];
 
 // ─── Query helpers ──────────────────────────────────────────────────────────

@@ -248,6 +248,48 @@ described are unchanged.)
   worth trimming, orrery.js's texture generators and first-person rig are the
   two most self-contained chunks to split out first.
 
+## 2.5.3 (2026-08-17)
+
+**The Constellation, round 3: expanded resonance discovery.** Scott's
+read on the first discovery pass's 91% approval rate (20 approved / 2
+pending as he recalled it — the file itself showed 22/22 approved, 0
+pending by this point, likely just an imprecise recollection, not acted
+on) was that it's evidence the pass was too conservative, not that the
+corpus is thin. He cited specific evidence the corpus runs deeper: two
+pieces independently reaching for "boneyard" (already row 10), two more
+independently reaching for chaos-theory vocabulary (rows 18/21/22), and
+four Beamline bounces that turned out to be literal fragments of two
+Sphere poems (the verbatim rows 1–7), all found before this pass by
+mechanical scanning or accident. Instruction: drop "quality over
+coverage, small defensible list" as a governing rule for the discovery
+pass — it predates the human review gate (Scott reading and approving
+each row) and is now redundant with it. Run several separate, targeted
+passes instead of one holistic read, let the candidate list get big and
+messy on purpose, and don't pre-filter for defensibility before it
+reaches him — that's his job now, not discovery's. Per-row rationale
+rigor stays exactly as it was.
+
+Three passes run directly against the full corpus (all 8 found-text
+scenes read start to finish for this round, not sampled): shared
+vocabulary/imagery beyond `scripts/find-verbatim-overlaps.mjs`'s own
+exact-phrase threshold (near-matches, single unusual shared words,
+shared image systems); emotional/thematic shape independent of shared
+wording (grief through myth, desire as involuntary loss of self,
+transformation staged as bodily violence); and structural/documentary
+echoes — pieces or library notes naming each other directly, shared
+source documents, explicit character/epigraph lineage, with row 17's
+Projection/Truth and Beauty pairing as the existing model for that last
+category. Turned up 24 new candidate rows (ids 23–46, `docs/
+constellation_resonances.md` regenerated, `verify-resonances.mjs` and
+the full build both pass), including a couple of the same caliber as
+row 17: the library's own Angels in America note states outright that
+"Scott's own The L.A. Project" (Projection, by its own account) takes
+its epigraph from that play, and a separate library note names
+Orbiter's "Lament for the Future Never Realized" directly by title. All
+24 new rows are `status: 'pending'` — nothing here was self-approved;
+rows 1–22 are untouched, and review is Scott's, same as every round so
+far.
+
 ## 2.5.2 (2026-08-16)
 
 **The Constellation, round 2: visibility, payoff, spider, reach diagnosis.**
