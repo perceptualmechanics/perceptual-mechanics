@@ -13,16 +13,20 @@ import './constellation.css';
 // The ninth scene, and the only one with no found text of its own — it
 // visualizes src/resonances.js's Layer 2 (cross-scene, connotative links),
 // approved rows only. Camera orbits BELOW a canopy of thin glowing
-// strands, looking up — the same "underside of the web" framing the
-// spider's own premise depends on (constellation-brief.md), just the
-// visitor's version of it rather than the spider's.
+// strands, looking up.
 //
 // Round 2 (2026-08-16) reversed the original "purely atmospheric, no
 // panel" design: touching a strand now opens a real read-more panel
 // naming both connected pieces and showing the resonance's own reviewed
 // rationale, with a jump link to either piece — see constellation.html's
-// header comment for why. The spider reaction stays as a secondary,
-// atmospheric response layered alongside the panel, not instead of it.
+// header comment for why.
+//
+// Round 5 (2026-08-18) removed the spider entirely (creature, locomotion,
+// reaction-trigger, dispose) — it was atmosphere layered on top of the
+// panel, never the mechanism; the panel is what stays. Replaced with a
+// brighter strand baseline and a real logarithmic-spiral galactic disc
+// backdrop (see the ─── Galactic backdrop ─── block below), both purely
+// visual — no connection to resonance data.
 //
 // Reached two ways (both additive, per the 2026-08-16 entry-point brief):
 // the ground glimpse (src/utils/constellationEntry.js, wired into beamline
@@ -36,8 +40,6 @@ import './constellation.css';
 // names a specific strand to arrive already oriented at.
 
 const SCENE_ORDER = ['sphere', 'orbiter', 'library', 'scroll', 'theater', 'orrery', 'beamline', 'butterfly'];
-const LEG_COUNT = 8;
-const GOLD_ACCENT = 0xffdc78; // same accent beamline/sphere already use — see NOTES.md's "gold presence" entry
 
 // ─── Per-scene accent colors ────────────────────────────────────────────────
 // Round 2's legibility fix: each scene's own already-established signature
@@ -149,7 +151,7 @@ export function createConstellation(container, { preview = false, initialPieceId
   // background color so a faded strand reads as "receding into the void"
   // rather than toward a mismatched color. Scoped to strands only —
   // `.fog = false` is set explicitly below on every material that should
-  // stay legible regardless of distance (stars, nodes, the spider).
+  // stay legible regardless of distance (stars, nodes, the galactic backdrop).
   const FOG_DENSITY = preview ? 0.011 : 0.006;
   scene.fog = new THREE.FogExp2(BG_COLOR, FOG_DENSITY);
 
@@ -184,6 +186,129 @@ export function createConstellation(container, { preview = false, initialPieceId
   const starMat = new THREE.PointsMaterial({ color: 0xbbccff, size: 0.9, transparent: true, opacity: 0.5, sizeAttenuation: true, fog: false });
   const starField = new THREE.Points(starGeo, starMat);
   scene.add(starField);
+
+  // ─── Galactic backdrop ───────────────────────────────────────────────────
+  // Round 5 (2026-08-18): a genuine 3D galactic disc, not a flat skybox
+  // image — the same standing preference for real-computed backdrops as
+  // Beamline's actual terrain mesh or Orrery's actual orbital mechanics,
+  // applied here to a spiral galaxy. Two real formulas, not a hand-placed
+  // swirl:
+  //   - Arm shape: the logarithmic spiral r = a·e^(b·θ) (the textbook
+  //     equation real spiral-arm pitch fits closely), inverted per
+  //     particle to find the θ a given radius sits at on a given arm,
+  //     then offset by that arm's own share of the full turn.
+  //   - Density: true exponential radial falloff via inverse-CDF sampling
+  //     of r (a galactic disc's real surface-brightness profile) —
+  //     brightest/densest near the structure's own core, smoothly
+  //     thinning outward — not a uniform scatter thinned by eye.
+  // A minority of particles skip the arm-locked θ (a soft field around the
+  // arms — not every star sits exactly on-rail) so the shape doesn't read
+  // as too clean/mechanical up close.
+  //
+  // The whole structure's radial sampling starts at GALAXY_R_MIN, well
+  // beyond CAM_MAX and DOME_RADIUS, rather than at the world origin the
+  // strands/camera share — a real exponential falloff, just for a distant
+  // galaxy the visitor is nowhere near the center of, which is also what
+  // keeps it honestly behind the strands in depth at every camera
+  // distance rather than only by luck of a particular angle. Dimmed and
+  // cooled well below the strands' own brightness (multiplied down, low
+  // opacity, no additive blending), `fog: false` (fog stays scoped to
+  // strands only, same as the star field), and tilted off the camera's
+  // own theta/Y orbit axis so its silhouette actually changes as a
+  // visitor drags to orbit, not just its arm pattern rotating in a plane
+  // that always faces the camera identically. Purely atmosphere — no
+  // relationship to resonance data of any kind.
+  function buildGalaxy() {
+    const ARMS = 3;
+    const PITCH = 0.3; // b in r = a·e^(bθ) — real spiral galaxies run roughly 0.2–0.4
+    const ARM_SCALE = preview ? 34 : 60; // a — sets how much winding happens across the visible radial range
+    const R_MIN = preview ? 260 : 480; // inner edge — safely beyond CAM_MAX/DOME_RADIUS
+    const R_MAX = preview ? 900 : 1800; // stays inside the camera's far plane (2000) with margin
+    const DECAY_SCALE = preview ? 220 : 380; // 1/λ — most mass within a few of these past R_MIN
+    const COUNT = preview ? 1400 : 4200;
+    const FIELD_FRACTION = 0.32; // particles that skip the arm lock — a soft disc field, not every star on-rail
+
+    function sampleD() {
+      // Inverse-CDF sample of an exponential distribution, resampled if it
+      // overshoots the visible range — d is distance PAST R_MIN, so r =
+      // R_MIN + d is where density is highest (d=0) and falls off
+      // exponentially as d grows.
+      let d;
+      do { d = -Math.log(1 - Math.random()) * DECAY_SCALE; } while (d > R_MAX - R_MIN);
+      return d;
+    }
+
+    const pos = new Float32Array(COUNT * 3);
+    const col = new Float32Array(COUNT * 3);
+    const coreColor = new THREE.Color(0xfff1d6);
+    const armColor = new THREE.Color(0x5f7fd0);
+    const c = new THREE.Color();
+
+    for (let i = 0; i < COUNT; i++) {
+      const d = sampleD();
+      const r = R_MIN + d;
+      let theta;
+      if (Math.random() < FIELD_FRACTION) {
+        theta = Math.random() * Math.PI * 2;
+      } else {
+        const armIdx = Math.floor(Math.random() * ARMS);
+        const idealTheta = Math.log(r / ARM_SCALE) / PITCH;
+        // Real arms broaden with radius rather than staying a hairline —
+        // more angular scatter the farther out a particle sits.
+        const scatter = (Math.random() - 0.5) * (0.3 + (d / (R_MAX - R_MIN)) * 0.55);
+        theta = idealTheta + armIdx * (Math.PI * 2 / ARMS) + scatter;
+      }
+      const rj = r * (1 + (Math.random() - 0.5) * 0.05);
+      const x = rj * Math.cos(theta);
+      const z = rj * Math.sin(theta);
+      // A genuinely thick disc rather than a razor-flat pancake — real
+      // galaxies are much thinner than this relative to their radius, but
+      // this scene's camera stays close to the structure's own inner
+      // edge on a narrow 46° FOV (framed for the strand dome, not for
+      // catching a paper-thin plane at exactly the right elevation), so a
+      // flat disc reliably orbited out of frame entirely between
+      // verification passes. Puffing the Y-extent out — still governed by
+      // the same exponential falloff, still carrying the spiral arms —
+      // trades some realism for actually reading as atmosphere from
+      // normal orbiting rather than only from a lucky angle.
+      const thickness = 60 + 260 * Math.exp(-d / (DECAY_SCALE * 0.6));
+      const y = (Math.random() - 0.5) * thickness;
+
+      pos[i * 3] = x; pos[i * 3 + 1] = y; pos[i * 3 + 2] = z;
+
+      c.copy(armColor).lerp(coreColor, Math.exp(-d / (DECAY_SCALE * 0.5))).multiplyScalar(0.8);
+      col[i * 3] = c.r; col[i * 3 + 1] = c.g; col[i * 3 + 2] = c.b;
+    }
+
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    geo.setAttribute('color', new THREE.BufferAttribute(col, 3));
+    // Additive blending (same technique nodeMat already uses) rather than
+    // normal — at a dim, cool color and low-ish opacity, normal blending's
+    // straight src*alpha dilution made the whole structure read as
+    // essentially invisible against the near-black background even though
+    // the geometry itself was correct. Additive keeps it reading as dim,
+    // distant light rather than a flat translucent shape, while staying
+    // well below the strands' own brightness (which runs uncapped past
+    // 1.0 at full opacity, vs. this material's fixed sub-1.0 opacity).
+    const mat = new THREE.PointsMaterial({
+      size: preview ? 1.5 : 2.0, vertexColors: true, transparent: true,
+      opacity: 0.7, depthWrite: false, sizeAttenuation: true, fog: false,
+      blending: THREE.AdditiveBlending,
+    });
+    const points = new THREE.Points(geo, mat);
+    // A modest tilt, not a steep one — the camera's own orbit is
+    // rotationally symmetric around Y (theta spins around it freely), so
+    // a small, deliberate break from that symmetry is what makes the
+    // silhouette actually shift as a visitor drags to orbit, without
+    // tilting so far that the (now-thick, but still radius-limited)
+    // structure swings mostly out of the camera's narrow FOV.
+    points.rotation.x = 0.18;
+    points.rotation.z = 0.1;
+    return { points, geo, mat };
+  }
+  const galaxy = buildGalaxy();
+  scene.add(galaxy.points);
 
   // ─── Nodes + strands, built from the approved Layer 2 set only ─────────
   const rows = getApprovedResonances();
@@ -235,8 +360,15 @@ export function createConstellation(container, { preview = false, initialPieceId
   // instances, still trivial).
   const SEGMENTS_PER_STRAND = 6;
   const strandGeo = new THREE.BoxGeometry(1, 0.07, 0.07);
+  // Round 5 (2026-08-18): brightened significantly — legible up close but
+  // too dim at the default zoomed-out viewing distance most visitors
+  // actually use. Opacity raised and additive blending added (the same
+  // technique nodeMat already uses) so strands read as genuinely glowing
+  // lines against the dark background rather than flat translucent rods.
+  // Fog fade and the SCENE_ACCENT gradient blend below are unchanged.
   const strandMat = new THREE.MeshBasicMaterial({
-    color: 0xffffff, transparent: true, opacity: 0.5, depthWrite: false,
+    color: 0xffffff, transparent: true, opacity: 0.92, depthWrite: false,
+    blending: THREE.AdditiveBlending,
   });
   const strandMesh = rows.length
     ? new THREE.InstancedMesh(strandGeo, strandMat, rows.length * SEGMENTS_PER_STRAND)
@@ -252,17 +384,6 @@ export function createConstellation(container, { preview = false, initialPieceId
   const hitMat = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false, fog: false });
   const strandHit = rows.length ? new THREE.InstancedMesh(hitGeo, hitMat, rows.length) : null;
 
-  // Adjacency graph for the spider's own locomotion (below) — every node
-  // key maps to the OTHER node key(s) it shares an approved strand with,
-  // symmetric (resonance rows have no directionality), built once here
-  // since it only ever depends on rows/nodeMap, not on anything the
-  // spider itself does.
-  const adjacency = new Map(); // key -> [{ toKey, toPos }]
-  function addEdge(fromKey, toKey, toPos) {
-    if (!adjacency.has(fromKey)) adjacency.set(fromKey, []);
-    adjacency.get(fromKey).push({ toKey, toPos });
-  }
-
   const strandInfo = []; // { row, aKey, bKey, aPos, bPos, mid, len, segStart, phase, speed, excite }
   if (strandMesh) {
     const m = new THREE.Matrix4();
@@ -273,8 +394,6 @@ export function createConstellation(container, { preview = false, initialPieceId
     rows.forEach((row, i) => {
       const aKey = pieceKey(row.a), bKey = pieceKey(row.b);
       const a = nodeMap.get(aKey).pos, b = nodeMap.get(bKey).pos;
-      addEdge(aKey, bKey, b);
-      addEdge(bKey, aKey, a);
       const dir = new THREE.Vector3().subVectors(b, a);
       const len = Math.max(0.001, dir.length());
       const mid = new THREE.Vector3().addVectors(a, b).multiplyScalar(0.5);
@@ -308,280 +427,6 @@ export function createConstellation(container, { preview = false, initialPieceId
     strandMesh.instanceColor.needsUpdate = true;
     strandHit.instanceMatrix.needsUpdate = true;
     scene.add(strandMesh, strandHit);
-  }
-
-  // ─── "Elsewhere" priming ─────────────────────────────────────────────────
-  // main.js stashes the last piece opened in ANY scene into sessionStorage
-  // (see its own comment there) whenever a visitor opens something — this
-  // is the only cross-scene "what are you currently interacting with"
-  // signal the site has (no scene reads another scene's live state; see
-  // the Phase 3 architecture survey). A strand touching that piece gets a
-  // bigger reaction than an unrelated one — constellation-brief.md's
-  // "rests until a strand tied to whatever the visitor's currently
-  // interacting with elsewhere gets touched, then reacts."
-  let elsewhereKey = null;
-  try {
-    const raw = sessionStorage.getItem('pm_elsewhere');
-    if (raw) {
-      const e = JSON.parse(raw);
-      if (e && e.scene) elsewhereKey = `${e.scene}:${e.id}`;
-    }
-  } catch { /* sessionStorage unavailable (private mode etc.) — elsewhere stays null, every touch reads as an equal, un-primed strand */ }
-  function isPrimed(row) {
-    if (!elsewhereKey) return false;
-    return pieceKey(row.a) === elsewhereKey || pieceKey(row.b) === elsewhereKey;
-  }
-
-  // ─── The spider ─────────────────────────────────────────────────────────
-  // Round 4 (2026-08-18): Scott inspected the round-2 shape directly (not
-  // a description of it), found it read as a placeholder — eight straight
-  // lines from one point, one bend each, even 45-degree radial symmetry,
-  // "the Atari 1982 read" — then, after a first structural pass, gave a
-  // second, more precise spec building on real daddy-longlegs anatomy,
-  // "as checkable as the fog falloff formula." This is that spec, built
-  // literally:
-  //   - Hub: a small, closed, elongated OVAL outline (a LineLoop, not a
-  //     filled mass, not the spherical wireframe the first pass used) —
-  //     real width along its own long axis, legs attaching along its two
-  //     long sides rather than around one vertex.
-  //   - Attachment: four points per long side (eight total), positioned
-  //     BY the hub's own long axis (LEG_ROWS' xFrac below), not spread
-  //     evenly around a circle — real front-to-back unevenness in both
-  //     spacing and angle, the way an actual daddy-longlegs attaches.
-  //   - Per leg: three joints, four segments (coxa→femur→knee→ankle),
-  //     each segment narrower than the last from hub to tip. The
-  //     signature silhouette — coxa and femur angling UP and outward from
-  //     the hub, past the body's own height, before the knee joint
-  //     reverses sharply and the tibia angles back DOWN toward the
-  //     surface, with the ankle giving the tarsus tip a faint curl on the
-  //     way down — is what actually reads as "daddy-longlegs" rather
-  //     than "generic spider"; a single V-bend never gets there no matter
-  //     how thin the lines are.
-  //   - Asymmetry: every leg gets its own small random jitter on top of
-  //     its row's base angles/length, so no two legs — including
-  //     mirrored left/right pairs — are identical copies.
-  //   - Idle motion: each of the four joints drifts independently (own
-  //     phase, own speed), all the time, not just at rest — there's
-  //     finally real per-joint structure for "small continuous
-  //     adjustments" (round 2's own phrase) to actually happen within,
-  //     which is also what stops the creature from reading as "only
-  //     moving because the camera orbits around it."
-  const LEG_ROWS = [
-    // { xFrac, lenScale, coxaBase, femurBase, kneeBase, ankleBase } —
-    // front-to-back position along the hub's long axis (xFrac, as a
-    // fraction of HUB_LEN) and base joint angles, deliberately uneven
-    // rather than four identical rows. coxaBase/femurBase are RELATIVE
-    // rotations that both add to the upward-outward reach; kneeBase is
-    // the big relative reversal back down; ankleBase is the small
-    // relative curl back up at the very tip.
-    { xFrac: -0.85, lenScale: 0.80, coxaBase: 0.40, femurBase: 0.28, kneeBase: -2.00, ankleBase: 0.50 },
-    { xFrac: -0.28, lenScale: 1.00, coxaBase: 0.48, femurBase: 0.36, kneeBase: -2.15, ankleBase: 0.58 },
-    { xFrac: 0.32, lenScale: 0.96, coxaBase: 0.50, femurBase: 0.33, kneeBase: -2.20, ankleBase: 0.62 },
-    { xFrac: 0.80, lenScale: 0.76, coxaBase: 0.42, femurBase: 0.26, kneeBase: -1.95, ankleBase: 0.48 },
-  ];
-  function buildSpider() {
-    const group = new THREE.Group();
-
-    // Closed oval hub — a LineLoop (auto-closes last point to first, no
-    // duplicate needed), flat in local XZ (the body's own long/front-back
-    // axis is local X, matching LEG_ROWS' xFrac), so a camera looking up
-    // from below sees the oval roughly face-on, the way you'd see a real
-    // bug's body outline looking up at its belly.
-    const HUB_LEN = preview ? 2.0 : 2.8; // semi-major, along the body axis
-    const HUB_WID = preview ? 0.85 : 1.15; // semi-minor, across
-    const HUB_SEGS = 14;
-    const hubPts = [];
-    for (let s = 0; s < HUB_SEGS; s++) {
-      const a = (s / HUB_SEGS) * Math.PI * 2;
-      hubPts.push(new THREE.Vector3(Math.cos(a) * HUB_LEN, 0, Math.sin(a) * HUB_WID));
-    }
-    const hubGeo = new THREE.BufferGeometry().setFromPoints(hubPts);
-    const hubMat = new THREE.LineBasicMaterial({ color: GOLD_ACCENT, transparent: true, opacity: 0.55, fog: false });
-    const hub = new THREE.LineLoop(hubGeo, hubMat);
-    group.add(hub);
-
-    const legMat = new THREE.MeshBasicMaterial({ color: GOLD_ACCENT, transparent: true, opacity: 0.6, fog: false });
-    const scale = preview ? 0.72 : 1;
-    const coxaBaseLen = 1.3 * scale, femurBaseLen = 3.6 * scale, tibiaBaseLen = 5.8 * scale, tarsusBaseLen = 1.7 * scale;
-    const geosToDispose = [hubGeo];
-    const jitter = amp => (Math.random() - 0.5) * 2 * amp; // small per-leg-per-attribute noise, no two legs identical
-    const mkIdle = () => ({ phase: Math.random() * Math.PI * 2, speed: 0.4 + Math.random() * 0.35 });
-    const legs = [];
-    for (let i = 0; i < LEG_COUNT; i++) {
-      const row = LEG_ROWS[i % 4];
-      const side = i < 4 ? 1 : -1; // one long side of the hub vs. the other — bilateral, not radial
-      const lenScale = row.lenScale + jitter(0.05);
-
-      // Attachment point: on the hub's own edge, at this row's position
-      // along the long axis — NOT spread evenly around a circle.
-      const hipX = row.xFrac * HUB_LEN;
-      const hipZ = side * HUB_WID * 0.94;
-      const hip = new THREE.Group();
-      hip.position.set(hipX, 0, hipZ);
-      // Local +X should point outward, sideways off the body axis, with a
-      // small fore/aft lean that varies by row (front rows sweep slightly
-      // forward, back rows slightly backward) — mirrored, not duplicated,
-      // across the two sides.
-      const leanRad = row.xFrac * 0.32 + jitter(0.05);
-      const azRight = -Math.PI / 2 + leanRad;
-      hip.rotation.y = side === 1 ? azRight : (Math.PI - azRight);
-      group.add(hip);
-
-      // Coxa: short first segment, angles UP and outward from the hub.
-      const coxaLen = coxaBaseLen * lenScale;
-      const coxaBase = row.coxaBase + jitter(0.06);
-      const coxaPivot = new THREE.Group();
-      coxaPivot.rotation.z = coxaBase;
-      hip.add(coxaPivot);
-      const coxaGeo = new THREE.BoxGeometry(coxaLen, 0.11, 0.11);
-      const coxa = new THREE.Mesh(coxaGeo, legMat);
-      coxa.position.x = coxaLen / 2;
-      coxaPivot.add(coxa);
-      geosToDispose.push(coxaGeo);
-
-      // Femur: continues the upward-outward reach to the peak — the
-      // "knee higher than the body" the whole silhouette depends on.
-      const femurLen = femurBaseLen * lenScale;
-      const femurBase = row.femurBase + jitter(0.06);
-      const femurJoint = new THREE.Group();
-      femurJoint.position.x = coxaLen;
-      coxaPivot.add(femurJoint);
-      const femurPivot = new THREE.Group();
-      femurPivot.rotation.z = femurBase;
-      femurJoint.add(femurPivot);
-      const femurGeo = new THREE.BoxGeometry(femurLen, 0.085, 0.085);
-      const femur = new THREE.Mesh(femurGeo, legMat);
-      femur.position.x = femurLen / 2;
-      femurPivot.add(femur);
-      geosToDispose.push(femurGeo);
-
-      // Knee: the reversal — a big relative bend that sends the tibia
-      // back down toward the surface instead of continuing to climb.
-      const tibiaLen = tibiaBaseLen * lenScale;
-      const kneeBase = row.kneeBase + jitter(0.08);
-      const kneeJoint = new THREE.Group();
-      kneeJoint.position.x = femurLen;
-      femurPivot.add(kneeJoint);
-      const kneePivot = new THREE.Group();
-      kneePivot.rotation.z = kneeBase;
-      kneeJoint.add(kneePivot);
-      const tibiaGeo = new THREE.BoxGeometry(tibiaLen, 0.05, 0.05);
-      const tibia = new THREE.Mesh(tibiaGeo, legMat);
-      tibia.position.x = tibiaLen / 2;
-      kneePivot.add(tibia);
-      geosToDispose.push(tibiaGeo);
-
-      // Ankle: short, thin terminal segment with a faint curl back up —
-      // a foot touching down, not a stick ending in a point.
-      const tarsusLen = tarsusBaseLen * lenScale;
-      const ankleBase = row.ankleBase + jitter(0.05);
-      const ankleJoint = new THREE.Group();
-      ankleJoint.position.x = tibiaLen;
-      kneePivot.add(ankleJoint);
-      const anklePivot = new THREE.Group();
-      anklePivot.rotation.z = ankleBase;
-      ankleJoint.add(anklePivot);
-      const tarsusGeo = new THREE.BoxGeometry(tarsusLen, 0.03, 0.03);
-      const tarsus = new THREE.Mesh(tarsusGeo, legMat);
-      tarsus.position.x = tarsusLen / 2;
-      anklePivot.add(tarsus);
-      geosToDispose.push(tarsusGeo);
-
-      legs.push({
-        coxaPivot, femurPivot, kneePivot, anklePivot,
-        baseCoxa: coxaBase, baseFemur: femurBase, baseKnee: kneeBase, baseAnkle: ankleBase,
-        // Four independent idle drifts, one per joint — round 2's "small,
-        // continuous adjustments, not a rigid shape" finally has real
-        // per-joint structure to happen in, instead of being folded into
-        // just two shared sine terms.
-        idle: { coxa: mkIdle(), femur: mkIdle(), knee: mkIdle(), ankle: mkIdle() },
-        reactionT: null, // null = not reacting; else seconds since triggered
-        reactionAmp: 0,
-      });
-    }
-    return { group, legMat, hubMat, geosToDispose, legs };
-  }
-  const spider = buildSpider();
-  scene.add(spider.group);
-
-  // ─── Locomotion: rest at a node, travel to an adjacent one ──────────────
-  // Round 2 replaces the original independent orbiting drift (a fixed
-  // circular path with no relationship to the actual strand geometry)
-  // with real locomotion along the graph the strands themselves define —
-  // "the spider actually travels between strands over time," genuinely
-  // walking node to node along a strand's own line, not idling at a fixed
-  // point while the camera does all the apparent work. Falls back to a
-  // fixed point straight overhead if there are no approved rows at all
-  // (nodeList empty — no graph to walk).
-  const FALLBACK_POS = new THREE.Vector3(0, DOME_RADIUS * 0.7, 0);
-  let spiderNodeKey = nodeList.length ? nodeList[Math.floor(Math.random() * nodeList.length)].key : null;
-  const spiderPos = (spiderNodeKey ? nodeMap.get(spiderNodeKey).pos : FALLBACK_POS).clone();
-  let spiderState = 'rest'; // 'rest' | 'travel'
-  let spiderRestT = 0;
-  let spiderRestDuration = 3 + Math.random() * 5;
-  let spiderTravel = null; // { toKey, fromPos, toPos, t, duration }
-  let spiderBreathePhase = Math.random() * Math.PI * 2;
-  let spiderOutward = spiderPos.clone().normalize(); // recomputed every updateSpiderTransform call, cached for the idle-breathe offset
-
-  function pickNextEdge(fromKey) {
-    const edges = adjacency.get(fromKey);
-    return edges && edges.length ? edges[Math.floor(Math.random() * edges.length)] : null;
-  }
-  const WALK_SPEED = preview ? 5 : 7; // world units/sec
-  function startTravel() {
-    const edge = spiderNodeKey ? pickNextEdge(spiderNodeKey) : null;
-    if (!edge) { spiderRestT = 0; return; } // isolated node (shouldn't happen — every node here has >=1 approved strand) or empty graph; just keep resting
-    const fromPos = spiderPos.clone();
-    const dist = fromPos.distanceTo(edge.toPos);
-    spiderTravel = { toKey: edge.toKey, fromPos, toPos: edge.toPos.clone(), t: 0, duration: Math.max(0.7, dist / WALK_SPEED) };
-    spiderState = 'travel';
-  }
-  function finishTravel() {
-    spiderNodeKey = spiderTravel.toKey;
-    spiderPos.copy(spiderTravel.toPos);
-    spiderTravel = null;
-    spiderState = 'rest';
-    spiderRestT = 0;
-    spiderRestDuration = 3 + Math.random() * 5;
-  }
-  // Smoothstep-style ease so travel accelerates out of rest and decelerates
-  // into the next node rather than gliding at a robotic constant velocity.
-  function easeInOutQuad(u) { return u < 0.5 ? 2 * u * u : 1 - Math.pow(-2 * u + 2, 2) / 2; }
-
-  function updateSpiderTransform() {
-    spider.group.position.copy(spiderPos);
-    // Body's local +Y (the plane the legs radiate around) faces AWAY from
-    // the world origin — outward into the canopy, belly toward the
-    // camera below — "walking its underside" made literal, and correct
-    // at any position along the dome's surface, resting or mid-travel.
-    spiderOutward = spiderPos.clone().normalize();
-    spider.group.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), spiderOutward);
-  }
-  updateSpiderTransform();
-
-  // Triggers a reaction: `bigReaction` (a primed strand, or the strand a
-  // thread-follow deep link arrived on) flicks every leg at once; an
-  // ordinary touch flicks only the leg nearest the strand's own direction
-  // from the spider, so a visitor idly touching several strands sees the
-  // reaction move around the spider rather than the same leg every time.
-  function triggerReaction(strandMidWorld, bigReaction) {
-    if (bigReaction) {
-      spider.legs.forEach(l => { l.reactionT = 0; l.reactionAmp = 1; });
-      return;
-    }
-    const spiderPos = spider.group.position;
-    const toStrand = new THREE.Vector3().subVectors(strandMidWorld, spiderPos);
-    const localDir = toStrand.applyQuaternion(spider.group.quaternion.clone().invert());
-    const angle = Math.atan2(localDir.z, localDir.x);
-    const norm = ((angle % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
-    const nearest = Math.round(norm / (Math.PI * 2 / LEG_COUNT)) % LEG_COUNT;
-    spider.legs[nearest].reactionT = 0;
-    spider.legs[nearest].reactionAmp = 1;
-    // A faint sympathetic twitch on its two neighbors reads as a real
-    // body responding, not one limb operating in isolation.
-    [(nearest + 1) % LEG_COUNT, (nearest - 1 + LEG_COUNT) % LEG_COUNT].forEach(ni => {
-      if (spider.legs[ni].reactionT === null) { spider.legs[ni].reactionT = 0; spider.legs[ni].reactionAmp = 0.35; }
-    });
   }
 
   // ─── Camera: real spherical orbit, pivot at the world origin, clamped to
@@ -744,7 +589,6 @@ export function createConstellation(container, { preview = false, initialPieceId
       hoveredIdx = idx;
       const info = strandInfo[idx];
       info.excite = 1;
-      triggerReaction(info.mid, isPrimed(info.row));
       openResonancePanel(info.row);
     };
     container.addEventListener('click', onClick);
@@ -760,13 +604,12 @@ export function createConstellation(container, { preview = false, initialPieceId
       label: 'Touch a strand',
       items: strandInfo,
       getLabel: (_info, i) => `Strand ${i + 1}`,
-      onSelect: info => { info.excite = 1; triggerReaction(info.mid, isPrimed(info.row)); openResonancePanel(info.row); },
+      onSelect: info => { info.excite = 1; openResonancePanel(info.row); },
     });
   }
 
   if (followedStrand) {
     followedStrand.excite = 1;
-    triggerReaction(followedStrand.mid, true);
     openResonancePanel(followedStrand.row);
   }
 
@@ -784,31 +627,6 @@ export function createConstellation(container, { preview = false, initialPieceId
         theta += preview ? 0.0018 : 0.0006;
         updateCamera();
       }
-      // Locomotion state machine — see the "Locomotion" comment above for
-      // why this replaced the original independent orbital drift. Gated
-      // entirely under reduceMotion, same as the old drift was: a visitor
-      // who's asked for reduced motion gets a spider that holds its
-      // resting node the whole time rather than ever walking.
-      if (spiderState === 'rest') {
-        spiderRestT += dt;
-        if (spiderRestT >= spiderRestDuration) startTravel();
-      } else if (spiderTravel) {
-        spiderTravel.t += dt;
-        const u = Math.min(1, spiderTravel.t / spiderTravel.duration);
-        spiderPos.lerpVectors(spiderTravel.fromPos, spiderTravel.toPos, easeInOutQuad(u));
-        if (u >= 1) finishTravel();
-      }
-      updateSpiderTransform();
-      // Idle breathing — a small in/out offset along the spider's own
-      // outward-facing axis while resting, on top of (not instead of)
-      // the per-leg idle sway below, so "resting" still reads as a body
-      // breathing rather than a rigid shape parked at a point. Travel
-      // itself is real translation, which already sells "alive" on its
-      // own, so this only runs at rest.
-      if (spiderState === 'rest') {
-        const breathe = Math.sin(now * 0.0009 + spiderBreathePhase) * 0.14;
-        spider.group.position.addScaledVector(spiderOutward, breathe);
-      }
     }
 
     // Strand shimmer + touch excitement decay. Re-lerps each segment's own
@@ -819,9 +637,12 @@ export function createConstellation(container, { preview = false, initialPieceId
     if (strandMesh) {
       strandInfo.forEach(s => {
         s.phase += dt * s.speed;
-        const shimmer = reduceMotion ? 0.7 : 0.55 + Math.sin(s.phase) * 0.35;
+        // Round 5: baseline raised (0.55→0.85) so strands read bright at
+        // rest, not just when excited — the excite pulse is still a
+        // distinct boost on top of this, not the only source of brightness.
+        const shimmer = reduceMotion ? 0.95 : 0.85 + Math.sin(s.phase) * 0.35;
         s.excite = Math.max(0, s.excite - dt * 1.6);
-        const brightness = Math.min(1.6, shimmer + s.excite * 1.3);
+        const brightness = Math.min(1.9, shimmer + s.excite * 1.3);
         for (let seg = 0; seg < SEGMENTS_PER_STRAND; seg++) {
           const t = (seg + 0.5) / SEGMENTS_PER_STRAND;
           tmpColor.lerpColors(s.colorA, s.colorB, t).multiplyScalar(brightness);
@@ -843,51 +664,6 @@ export function createConstellation(container, { preview = false, initialPieceId
       });
       colAttr.needsUpdate = true;
     }
-
-    // Spider legs: four independently-phased idle drifts (one per joint,
-    // running continuously — not gated to rest-only anymore, per Scott's
-    // own follow-up: "idle motion should be per-joint and out of phase
-    // across legs... this should also resolve the 'not moving, just
-    // rotating with the camera' complaint"), a walking gait layered on
-    // top during travel (phase-delayed joint to joint — femur leads,
-    // knee follows, ankle follows that, a wave running down the leg
-    // rather than the whole leg swinging as one rigid unit), and a
-    // reaction burst on top of whichever of those is running.
-    spider.legs.forEach((l, li) => {
-      let idleC = 0, idleF = 0, idleK = 0, idleA = 0;
-      if (!reduceMotion) {
-        idleC = Math.sin(now * 0.0009 * l.idle.coxa.speed + l.idle.coxa.phase) * 0.05;
-        idleF = Math.sin(now * 0.0010 * l.idle.femur.speed + l.idle.femur.phase) * 0.06;
-        idleK = Math.sin(now * 0.0007 * l.idle.knee.speed + l.idle.knee.phase) * 0.08;
-        idleA = Math.sin(now * 0.0012 * l.idle.ankle.speed + l.idle.ankle.phase) * 0.05;
-      }
-      let gaitF = 0, gaitK = 0, gaitA = 0;
-      if (!reduceMotion && spiderState === 'travel') {
-        // Walking gait: legs alternate in two groups of four (a
-        // simplified tripod-style gait), synced to elapsed time rather
-        // than travel progress so the cadence stays consistent regardless
-        // of how far a given hop happens to be. Each joint picks the wave
-        // up a little later than the one before it (phase delay), which
-        // is what makes it read as a leg pushing off and following
-        // through rather than a single arm swinging as a rigid unit.
-        const group = li % 2;
-        const gaitPhase = now * 0.0044 + group * Math.PI;
-        gaitF = Math.sin(gaitPhase) * 0.22;
-        gaitK = Math.sin(gaitPhase - 0.4) * 0.16;
-        gaitA = Math.sin(gaitPhase - 0.8) * 0.10;
-      }
-      let burst = 0;
-      if (l.reactionT !== null) {
-        l.reactionT += dt;
-        const decay = Math.exp(-l.reactionT * 5.5);
-        burst = Math.sin(l.reactionT * 26) * 0.5 * decay * l.reactionAmp;
-        if (l.reactionT > 1.2) l.reactionT = null;
-      }
-      l.coxaPivot.rotation.z = l.baseCoxa + idleC + burst * 0.3;
-      l.femurPivot.rotation.z = l.baseFemur + idleF + gaitF + burst;
-      l.kneePivot.rotation.z = l.baseKnee + idleK + gaitK - burst * 0.8;
-      l.anklePivot.rotation.z = l.baseAnkle + idleA + gaitA - burst * 0.4;
-    });
 
     renderer.render(scene, camera);
   }
@@ -913,11 +689,10 @@ export function createConstellation(container, { preview = false, initialPieceId
       renderer.dispose();
 
       starGeo.dispose(); starMat.dispose();
+      galaxy.geo.dispose(); galaxy.mat.dispose();
       nodeGeo.dispose(); nodeMat.dispose(); dotTex.dispose();
       strandGeo.dispose(); strandMat.dispose();
       hitGeo.dispose(); hitMat.dispose();
-      spider.legMat.dispose(); spider.hubMat.dispose();
-      spider.geosToDispose.forEach(g => g.dispose());
 
       titleEl?.remove();
       hintEl?.remove();

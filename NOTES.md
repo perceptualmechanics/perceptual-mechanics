@@ -248,6 +248,67 @@ described are unchanged.)
   worth trimming, orrery.js's texture generators and first-person rig are the
   two most self-contained chunks to split out first.
 
+## 2.5.5 (2026-08-18)
+
+**The Constellation, round 5: spider removed, strands brightened, a
+galactic backdrop added.** Scott closed out spider iteration rather than
+continuing to tune it — the click-payoff panel (rationale text + jump
+links to both connected pieces) is the actual mechanism, confirmed
+working independently in round 4; the spider was atmosphere layered on
+top of it. Removed entirely from `src/scenes/constellation/
+constellation.js`: `buildSpider()` and its oval-hub/tapering-leg
+geometry, the locomotion state machine (rest/travel across the strand
+graph's own adjacency), `triggerReaction()`, the per-joint idle/gait
+animate() loop, and all associated dispose cleanup — along with
+`LEG_COUNT`, `GOLD_ACCENT`, `LEG_ROWS`, the adjacency `Map`, and the
+"elsewhere priming" (`isPrimed`/`elsewhereKey`) block, all of which
+existed only to feed the spider's reactions. The three call sites
+(`onClick`, the jump-list `onSelect`, the thread-follow auto-trigger)
+each dropped only their `triggerReaction(...)` call — `info.excite = 1`
+(the strand's own touch-brighten pulse, unrelated to the spider) and
+`openResonancePanel(row)` (the real payoff) stayed untouched at all
+three. Verified live via a real raycast click on rendered strand
+geometry (not the jump-list shortcut) that the panel still opens
+correctly post-removal.
+
+**Strands brightened.** The problem was specifically legibility at the
+default zoomed-out distance most visitors actually use, not up close.
+`strandMat`'s opacity raised (0.5→0.92) and switched to
+`THREE.AdditiveBlending` (the same technique `nodeMat` already used, so
+strands now read as glowing lines rather than flat translucent rods);
+the per-frame shimmer baseline raised (0.55→0.85, reduced-motion flat
+value 0.7→0.95) and the brightness cap raised (1.6→1.9) so the excite
+pulse on touch still reads as a distinct boost on top. `THREE.FogExp2`
+distance fade and the `SCENE_ACCENT` color-blend gradient between
+connected scenes — both explicitly called out to preserve — are
+untouched.
+
+**A real galactic disc backdrop, added.** Not a flat skybox image — two
+actual formulas, same standing preference for computed-not-painted
+backdrops as Beamline's terrain or Orrery's orbital mechanics. Arm shape
+from the logarithmic spiral r = a·e^(bθ), inverted per particle to place
+it on one of three arms; density from a true exponential radial falloff
+via inverse-CDF sampling, densest near the structure's own inner edge
+and thinning outward, plus a ~32% "field" fraction that skips the
+arm-lock so it doesn't read as too clean up close. Verifying this
+against the exact failure mode flagged for the spider in round 4 (looked
+right from one debug angle, wrong from the angles a visitor actually
+uses) turned up the same problem twice: the first version tilted the
+whole disc plane substantially (0.52/0.24 rad) and kept it razor-flat,
+which meant it was only in the camera's narrow 46° FOV from a fraction
+of orbit angles — real from one lucky theta, empty air the rest of the
+time. Fixed by puffing the disc's own Y-extent out substantially (still
+governed by the same exponential falloff, still carrying the spiral
+arms, just thicker than a real galaxy's actual proportions) and cutting
+the tilt back to a modest 0.18/0.1 rad, then re-checked across several
+real drag-to-orbit angles (not a single screenshot) before calling it
+settled. Positioned starting well beyond `CAM_MAX`/`DOME_RADIUS` (not
+centered on the visitor), dimmer and cooler than the strands
+(`AdditiveBlending` but low opacity and darkened vertex colors, vs. the
+strands' own uncapped-past-1.0 brightness), `fog: false` (fog stays
+scoped to strands only). Purely atmosphere — no relationship to
+resonance data.
+
 ## 2.5.4 (2026-08-18)
 
 **The Constellation, round 4: spider structural fix + a second discovery
