@@ -12,8 +12,7 @@ import './constellation.css';
 // ─── The Constellation ──────────────────────────────────────────────────────
 // The ninth scene, and the only one with no found text of its own — it
 // visualizes src/resonances.js's Layer 2 (cross-scene, connotative links),
-// approved rows only. Camera orbits BELOW a canopy of thin glowing
-// strands, looking up.
+// approved rows only.
 //
 // Round 2 (2026-08-16) reversed the original "purely atmospheric, no
 // panel" design: touching a strand now opens a real read-more panel
@@ -21,25 +20,45 @@ import './constellation.css';
 // rationale, with a jump link to either piece — see constellation.html's
 // header comment for why.
 //
-// Round 5 (2026-08-18) removed the spider entirely (creature, locomotion,
-// reaction-trigger, dispose) — it was atmosphere layered on top of the
-// panel, never the mechanism; the panel is what stays. Replaced with a
-// brighter strand baseline and a real logarithmic-spiral galactic disc
-// backdrop (see the ─── Galactic backdrop ─── block below), both purely
-// visual — no connection to resonance data.
+// Round 5 (2026-08-18) removed the spider entirely, brightened the
+// strands, and added a real logarithmic-spiral galactic backdrop.
+//
+// Round 7 (2026-08-18) — full reset: every prior round positioned nodes
+// arbitrarily (a hash-seeded dome placement) and drew strands between
+// whichever ones happened to resonate. That's decorative placement, not
+// a layout the data actually produced — no amount of brightness or
+// backdrop tuning was ever going to make arbitrary dots read as a real
+// graph, because the graph's real shape never had anywhere to become
+// visible. Fixed with an actual force-directed layout (Fruchterman-
+// Reingold: mutual repulsion between every pair of nodes, attraction
+// between nodes sharing an approved resonance, relaxed to equilibrium —
+// see layoutForceDirected below), which produces genuine clusters:
+// tightly-interconnected pieces pull together, unconnected or loosely-
+// connected ones drift apart. The camera also lost its "underneath a
+// canopy" constraint from this same round — a force-directed graph has
+// no inherent up or down, so orbiting is now a conventional full-freedom
+// external view, the same drag/zoom house pattern already used
+// elsewhere on the site (Orbiter, Orrery's own preview-tile drag), just
+// without a hemisphere bias.
+//
+// Known tension, flagged rather than resolved this round: the
+// ground-glimpse entry point (src/utils/constellationEntry.js, wired
+// into beamline/orrery) was built entirely on the premise that this
+// scene lives underneath something, revealed through a floor. That
+// premise no longer holds now that the destination is an external star
+// map, not an underside. Left untouched pending an explicit decision —
+// see NOTES.md's round-7 entry. Thread-follow (the other entry point)
+// doesn't depend on the underneath framing and is unaffected.
 //
 // Reached two ways (both additive, per the 2026-08-16 entry-point brief):
-// the ground glimpse (src/utils/constellationEntry.js, wired into beamline
-// and orrery, the only two scenes with a literal floor) and the
-// thread-follow filament (same file, wired into every found-text scene's
-// panel). Both dispatch `pm:navigate` on window; main.js's own listener
-// is what actually calls expandScene('constellation', ..., resonanceId) —
-// this file has no idea how it got opened, only whether `initialPieceId`
-// (reused here to mean a resonance row's own `id`, not a piece id — see
-// this scene's own entry in main.js's SCENES map for why that's safe)
-// names a specific strand to arrive already oriented at.
-
-const SCENE_ORDER = ['sphere', 'orbiter', 'library', 'scroll', 'theater', 'orrery', 'beamline', 'butterfly'];
+// the ground glimpse and the thread-follow filament (same file, wired
+// into every found-text scene's panel). Both dispatch `pm:navigate` on
+// window; main.js's own listener is what actually calls
+// expandScene('constellation', ..., resonanceId) — this file has no idea
+// how it got opened, only whether `initialPieceId` (reused here to mean
+// a resonance row's own `id`, not a piece id — see this scene's own
+// entry in main.js's SCENES map for why that's safe) names a specific
+// strand to arrive already oriented at.
 
 // ─── Per-scene accent colors ────────────────────────────────────────────────
 // Round 2's legibility fix: each scene's own already-established signature
@@ -60,7 +79,6 @@ const SCENE_ACCENT = {
   butterfly: 0xff9e1f, // median of butterfly.js's warm gold-to-red-orange trajectory palette
 };
 
-// ─── Deterministic layout ───────────────────────────────────────────────────
 // A small string hash (xmur3-family, not cryptographic — just needs to be
 // stable and evenly spread) so every piece's node position is the same
 // every load/build, without persisting coordinates anywhere. Two different
@@ -85,41 +103,134 @@ function pieceKey(ep) {
     : `${ep.scene}:${ep.id}`;
 }
 
-// One node per unique piece touched by an approved row, positioned on the
-// upper part of a sphere centered at the world origin (the camera orbits
-// BELOW the origin — see updateCamera below — so every node ends up with
-// y > 0, "overhead," without the camera and the canopy needing separate
-// pivots). Each scene gets its own 45-degree azimuth wedge (SCENE_ORDER),
-// so a scene's pieces cluster together rather than scattering randomly —
-// legible as "the sphere's corner of the sky," not just noise.
-function buildNodes(rows, domeRadius) {
+// One node per unique piece touched by an approved row — no other piece
+// in the corpus becomes a node at all, so there's nothing isolated/dim to
+// contrast against; every dot on screen participates in at least one
+// resonance by construction. Position is a placeholder here (the real
+// work happens in layoutForceDirected below); this just establishes
+// identity.
+function buildNodes(rows) {
   const nodes = new Map();
-  const SECTOR = (Math.PI * 2) / SCENE_ORDER.length;
   rows.forEach(r => {
     [r.a, r.b].forEach(ep => {
       const key = pieceKey(ep);
       if (nodes.has(key)) return;
-      const sceneIdx = Math.max(0, SCENE_ORDER.indexOf(ep.scene));
-      const az = hashStr01(key + ':az');
-      const po = hashStr01(key + ':po');
-      const ra = hashStr01(key + ':ra');
-      const azimuth = sceneIdx * SECTOR + (az - 0.5) * SECTOR * 0.86;
-      // Polar angle off zenith (+Y): kept within a band well short of the
-      // equator so the whole canopy reads as a dome overhead rather than
-      // wrapping down to camera height, where it would compete with the
-      // strands for a visitor's attention right in front of the lens.
-      const polar = 0.14 + po * 0.60;
-      const radius = domeRadius * (0.9 + ra * 0.16);
-      const x = radius * Math.sin(polar) * Math.cos(azimuth);
-      const z = radius * Math.sin(polar) * Math.sin(azimuth);
-      const y = radius * Math.cos(polar);
-      nodes.set(key, {
-        key, scene: ep.scene, sceneIdx,
-        pos: new THREE.Vector3(x, y, z),
-      });
+      nodes.set(key, { key, scene: ep.scene, pos: new THREE.Vector3() });
     });
   });
   return nodes;
+}
+
+// ─── Real force-directed layout ─────────────────────────────────────────────
+// Fruchterman-Reingold, the standard algorithm for exactly this problem —
+// not a hand-tuned approximation. Two real forces, run to equilibrium:
+//   - Repulsion between EVERY pair of nodes (F = k²/d), pushing everything
+//     apart by default — this is what gives isolated/loosely-connected
+//     pieces somewhere to drift to.
+//   - Attraction between nodes sharing an approved resonance (F = d²/k),
+//     pulling connected pairs together — this is what produces real
+//     clusters: tightly-interconnected groups pull into a tight knot,
+//     sitting apart from other clusters.
+// A cooling schedule (temperature `t` shrinking linearly to 0 across the
+// run) caps how far a node can move in a single step, so the system settles
+// into equilibrium instead of oscillating. Extended to 3D directly (same
+// two force laws, positions/deltas just carry a z-component) rather than
+// laying out in 2D and lifting afterward.
+//
+// One addition beyond textbook FR, needed because this graph is sparse and
+// far from fully connected (22 approved rows, 32 nodes — many small
+// islands of 1-3 pieces with nothing pulling them toward the rest): a mild
+// gravity term pulls every node back toward the centroid each step,
+// proportional to its own distance from it. Without this, disconnected
+// components have no attractive force acting on them at all and drift
+// apart under pure repulsion without bound (confirmed empirically — see
+// NOTES.md's round-7 entry for the actual numbers). With it, isolated
+// pieces still land clearly OUTSIDE the interconnected clusters — that's
+// the desired "periphery" read — just not at unbounded distance.
+//
+// Deterministic by construction: initial positions are seeded from
+// hashStr01 (not Math.random()), and the relaxation itself has no
+// randomness, so the same approved-rows set always settles into the same
+// shape on every load/build, matching this file's existing "deterministic
+// layout, no persisted coordinates" convention.
+function layoutForceDirected(nodeList, rows, scale) {
+  const n = nodeList.length;
+  if (n === 0) return;
+
+  nodeList.forEach(nd => {
+    const ax = hashStr01(nd.key + ':x') * 2 - 1;
+    const ay = hashStr01(nd.key + ':y') * 2 - 1;
+    const az = hashStr01(nd.key + ':z') * 2 - 1;
+    nd.pos.set(ax, ay, az).multiplyScalar(scale * 0.5);
+  });
+
+  const idx = new Map(nodeList.map((nd, i) => [nd.key, i]));
+  const edges = [];
+  rows.forEach(row => {
+    const a = idx.get(pieceKey(row.a));
+    const b = idx.get(pieceKey(row.b));
+    if (a !== undefined && b !== undefined && a !== b) edges.push([a, b]);
+  });
+
+  const k = scale / Math.cbrt(n); // ideal edge length — the standard FR sizing for n nodes in a volume ~scale³
+  const GRAVITY = 1.0; // calibrated live (see NOTES.md) so disconnected islands settle at a bounded, still-clearly-separate distance rather than flying apart under unbounded repulsion
+  const ITERATIONS = 400;
+  const t0 = scale * 0.06;
+
+  const disp = nodeList.map(() => new THREE.Vector3());
+  const delta = new THREE.Vector3();
+
+  for (let iter = 0; iter < ITERATIONS; iter++) {
+    disp.forEach(v => v.set(0, 0, 0));
+
+    // Repulsion — every pair, every iteration. O(n²) but n is small (a
+    // few dozen nodes), so this is trivial even at 400 iterations.
+    for (let i = 0; i < n; i++) {
+      for (let j = i + 1; j < n; j++) {
+        delta.subVectors(nodeList[i].pos, nodeList[j].pos);
+        let dist = delta.length();
+        if (dist < 0.05) dist = 0.05; // guard against a singularity if two nodes ever land exactly on each other
+        const force = (k * k) / dist;
+        delta.multiplyScalar(force / dist);
+        disp[i].add(delta);
+        disp[j].sub(delta);
+      }
+    }
+
+    // Attraction — only between nodes sharing an approved resonance.
+    edges.forEach(([a, b]) => {
+      delta.subVectors(nodeList[a].pos, nodeList[b].pos);
+      let dist = delta.length();
+      if (dist < 0.05) dist = 0.05;
+      const force = (dist * dist) / k;
+      delta.multiplyScalar(force / dist);
+      disp[a].sub(delta);
+      disp[b].add(delta);
+    });
+
+    // Gravity — see the function's own header comment for why a sparse,
+    // largely-disconnected graph needs this beyond textbook FR.
+    for (let i = 0; i < n; i++) {
+      disp[i].addScaledVector(nodeList[i].pos, -GRAVITY);
+    }
+
+    // Cooling: cap this step's displacement to the current temperature.
+    const t = t0 * (1 - iter / ITERATIONS);
+    for (let i = 0; i < n; i++) {
+      const len = disp[i].length();
+      if (len > 0.0001) {
+        const capped = Math.min(len, Math.max(t, 0.02));
+        nodeList[i].pos.addScaledVector(disp[i], capped / len);
+      }
+    }
+  }
+
+  // Recenter on the actual centroid so the camera's pivot (world origin)
+  // is the layout's own center of mass, not an arbitrary point.
+  const centroid = new THREE.Vector3();
+  nodeList.forEach(nd => centroid.add(nd.pos));
+  centroid.multiplyScalar(1 / n);
+  nodeList.forEach(nd => nd.pos.sub(centroid));
 }
 
 // A soft round dot, reused for every node marker — same "canvas gradient,
@@ -141,21 +252,46 @@ export function createConstellation(container, { preview = false, initialPieceId
   const w = container.clientWidth || window.innerWidth;
   const h = container.clientHeight || window.innerHeight;
 
+  // ─── Graph first — everything else (camera bounds, fog density, where
+  // the star field/galaxy backdrop sit) derives from the layout's own
+  // actual resulting scale, computed here before any of that downstream
+  // setup runs. A bigger or smaller approved set changes boundRadius, and
+  // the whole scene adjusts to match rather than assuming a fixed size.
+  const rows = getApprovedResonances();
+  const nodeMap = buildNodes(rows);
+  const nodeList = Array.from(nodeMap.values());
+  const GRAPH_SCALE = preview ? 90 : 150;
+  layoutForceDirected(nodeList, rows, GRAPH_SCALE);
+  let boundRadius = 1;
+  nodeList.forEach(n => { boundRadius = Math.max(boundRadius, n.pos.length()); });
+
+  const CAM_MIN = Math.max(20, boundRadius * 0.45);
+  const CAM_MAX = boundRadius * 3.0;
+  const CAM_DEFAULT = boundRadius * 1.9;
+  const FOG_DENSITY = 1.55 / CAM_MAX; // same dimensionless product the pre-reset camera/fog pairing used, just re-derived for the new scale
+  const STAR_R_MIN = CAM_MAX * 1.25;
+  const STAR_R_MAX = CAM_MAX * 1.75;
+  const GALAXY_R_MIN = STAR_R_MAX * 1.3;
+  const GALAXY_R_MAX = GALAXY_R_MIN * 3.5;
+  const CAM_FAR = Math.max(2000, GALAXY_R_MAX * 1.3);
+  // Visual-size constants (round 5/6) were tuned against the old, smaller
+  // camera range (CAM_MAX 260 full / 140 preview). The graph's real scale
+  // pushed CAM_MAX out substantially, so point/rod sizes scale up by the
+  // same ratio to keep the same apparent on-screen size rather than
+  // shrinking into the larger distances.
+  const SCALE_FACTOR = CAM_MAX / (preview ? 140 : 260);
+
   const scene = new THREE.Scene();
   const BG_COLOR = 0x00010a;
   scene.background = new THREE.Color(BG_COLOR);
   // Distance-based legibility (round 2, 2026-08-16) — real THREE.FogExp2,
   // the same exponential Beer-Lambert falloff already trusted for
-  // Beamline's own atmospheric perspective (see that file's own header on
-  // why FogExp2 over the old flat-plateau Fog), fogged to exactly the
-  // background color so a faded strand reads as "receding into the void"
-  // rather than toward a mismatched color. Scoped to strands only —
+  // Beamline's own atmospheric perspective. Scoped to strands only —
   // `.fog = false` is set explicitly below on every material that should
   // stay legible regardless of distance (stars, nodes, the galactic backdrop).
-  const FOG_DENSITY = preview ? 0.011 : 0.006;
   scene.fog = new THREE.FogExp2(BG_COLOR, FOG_DENSITY);
 
-  const camera = new THREE.PerspectiveCamera(46, w / h, 0.1, 2000);
+  const camera = new THREE.PerspectiveCamera(46, w / h, 0.1, CAM_FAR);
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
   renderer.setPixelRatio(window.devicePixelRatio);
   renderer.setSize(w, h);
@@ -170,11 +306,13 @@ export function createConstellation(container, { preview = false, initialPieceId
   scene.add(key);
 
   // ─── Deep-field stars, same construction as orbiter.js's own (a uniform
-  // random direction via acos(2u-1), not a naive polar-biased sample). ───
+  // random direction via acos(2u-1), not a naive polar-biased sample),
+  // sized to sit clearly beyond the graph and the camera's own max zoom-
+  // out, whatever the graph's actual scale turns out to be. ─────────────
   const starCount = preview ? 300 : 900;
   const starPos = new Float32Array(starCount * 3);
   for (let i = 0; i < starCount; i++) {
-    const r = 300 + Math.random() * 300;
+    const r = STAR_R_MIN + Math.random() * (STAR_R_MAX - STAR_R_MIN);
     const theta = Math.random() * Math.PI * 2;
     const phiA = Math.acos(2 * Math.random() - 1);
     starPos[i * 3] = r * Math.sin(phiA) * Math.cos(theta);
@@ -183,68 +321,31 @@ export function createConstellation(container, { preview = false, initialPieceId
   }
   const starGeo = new THREE.BufferGeometry();
   starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
-  const starMat = new THREE.PointsMaterial({ color: 0xbbccff, size: 0.9, transparent: true, opacity: 0.5, sizeAttenuation: true, fog: false });
+  const starMat = new THREE.PointsMaterial({ color: 0xbbccff, size: 0.9 * SCALE_FACTOR, transparent: true, opacity: 0.5, sizeAttenuation: true, fog: false });
   const starField = new THREE.Points(starGeo, starMat);
   scene.add(starField);
 
   // ─── Galactic backdrop ───────────────────────────────────────────────────
-  // Round 5 (2026-08-18): a genuine 3D galactic disc, not a flat skybox
-  // image — the same standing preference for real-computed backdrops as
-  // Beamline's actual terrain mesh or Orrery's actual orbital mechanics,
-  // applied here to a spiral galaxy. Two real formulas, not a hand-placed
-  // swirl:
-  //   - Arm shape: the logarithmic spiral r = a·e^(b·θ) (the textbook
-  //     equation real spiral-arm pitch fits closely), inverted per
-  //     particle to find the θ a given radius sits at on a given arm,
-  //     then offset by that arm's own share of the full turn.
-  //   - Density: true exponential radial falloff via inverse-CDF sampling
-  //     of r (a galactic disc's real surface-brightness profile) —
-  //     brightest/densest near the structure's own core, smoothly
-  //     thinning outward — not a uniform scatter thinned by eye.
-  // A minority of particles skip the arm-locked θ (a soft field around the
-  // arms — not every star sits exactly on-rail) so the shape doesn't read
-  // as too clean/mechanical up close.
-  //
-  // Round 5 correction (2026-08-18): the first pass thickened the disc
-  // substantially to chase "legible from every orbit angle" — but a real
-  // disc galaxy is extremely flat (the Milky Way is on the order of a
-  // thousand times wider than it is thick), and that thinness is WHY a
-  // galaxy reads as a galaxy: edge-on it's a thin bright band, only
-  // closer to face-on does the spiral actually open up. Thickening it to
-  // fake angle-independence washed the real structure into a uniform
-  // scatter — structurally indistinguishable from the plain ambient star
-  // field already used elsewhere on the site. Corrected: genuinely thin
-  // again, tighter arm scatter and a much sparser interarm field so
-  // density contrast (not just point count) reads as actual bands
-  // against dark gaps, and a sharply brighter/warmer core cluster near
-  // R_MIN. This is NOT expected to look the same from every camera
-  // angle — a thin plane SHOULDN'T; edge-on gives a band, more face-on
-  // gives arms-and-core, and that variation is the correct behavior for
-  // the geometry, not a bug.
-  //
-  // The whole structure's radial sampling starts at GALAXY_R_MIN, well
-  // beyond CAM_MAX and DOME_RADIUS, rather than at the world origin the
-  // strands/camera share — a real exponential falloff, just for a distant
-  // galaxy the visitor is nowhere near the center of, which is also what
-  // keeps it honestly behind the strands in depth at every camera
-  // distance. Dimmed and cooled well below the strands' own brightness,
-  // `fog: false` (fog stays scoped to strands only, same as the star
-  // field). Purely atmosphere — no relationship to resonance data.
-  function buildGalaxy() {
+  // Round 5: a genuine 3D galactic disc, not a flat skybox image. Two real
+  // formulas, not a hand-placed swirl — arm shape from the logarithmic
+  // spiral r = a·e^(bθ), density from a true exponential radial falloff
+  // via inverse-CDF sampling of r. Round 5 correction: genuinely thin,
+  // not thickened to fake angle-independence (a thin plane SHOULDN'T look
+  // the same from every angle — edge-on is a band, face-on opens into
+  // arms). Round 7: R_MIN/R_MAX now derive from the graph's own actual
+  // scale (GALAXY_R_MIN/GALAXY_R_MAX above) instead of fixed constants,
+  // same reasoning as the star field.
+  function buildGalaxy(R_MIN, R_MAX) {
     const ARMS = 3;
     const PITCH = 0.3; // b in r = a·e^(bθ) — real spiral galaxies run roughly 0.2–0.4
-    const ARM_SCALE = preview ? 34 : 60; // a — sets how much winding happens across the visible radial range
-    const R_MIN = preview ? 260 : 480; // inner edge — safely beyond CAM_MAX/DOME_RADIUS
-    const R_MAX = preview ? 900 : 1800; // stays inside the camera's far plane (2000) with margin
-    const DECAY_SCALE = preview ? 220 : 380; // 1/λ — most mass within a few of these past R_MIN
+    const ARM_SCALE = R_MIN * 0.125; // a — sets how much winding happens across the visible radial range
+    const DECAY_SCALE = (R_MAX - R_MIN) * 0.3; // 1/λ — most mass within a few of these past R_MIN
     const COUNT = preview ? 1700 : 5000;
     const FIELD_FRACTION = 0.14; // particles that skip the arm lock — sparse enough that arms read as denser bands, not a uniform haze with a pattern painted on top
+    const THICK_BASE = R_MIN * 0.006;
+    const THICK_CORE = R_MIN * 0.024;
 
     function sampleD() {
-      // Inverse-CDF sample of an exponential distribution, resampled if it
-      // overshoots the visible range — d is distance PAST R_MIN, so r =
-      // R_MIN + d is where density is highest (d=0) and falls off
-      // exponentially as d grows.
       let d;
       do { d = -Math.log(1 - Math.random()) * DECAY_SCALE; } while (d > R_MAX - R_MIN);
       return d;
@@ -266,32 +367,17 @@ export function createConstellation(container, { preview = false, initialPieceId
       } else {
         const armIdx = Math.floor(Math.random() * ARMS);
         const idealTheta = Math.log(r / ARM_SCALE) / PITCH;
-        // Real arms broaden with radius, but only modestly — tight enough
-        // that an arm still reads as a distinct denser band against the
-        // sparse field between arms, not a broad smear that overlaps its
-        // neighbors.
         const scatter = (Math.random() - 0.5) * (0.05 + (d / (R_MAX - R_MIN)) * 0.22);
         theta = idealTheta + armIdx * (Math.PI * 2 / ARMS) + scatter;
       }
       const rj = r * (1 + (Math.random() - 0.5) * 0.05);
       const x = rj * Math.cos(theta);
       const z = rj * Math.sin(theta);
-      // Genuinely thin — real disc-galaxy proportions, not a compromise
-      // for visibility. This is what makes an edge-on view read as a
-      // thin band rather than a puffball.
-      const thickness = 4 + 16 * Math.exp(-d / (DECAY_SCALE * 0.5));
+      const thickness = THICK_BASE + THICK_CORE * Math.exp(-d / (DECAY_SCALE * 0.5));
       const y = (Math.random() - 0.5) * thickness;
 
       pos[i * 3] = x; pos[i * 3 + 1] = y; pos[i * 3 + 2] = z;
 
-      // Sharp core falloff (0.18× the decay scale, not 0.5×) so only
-      // particles genuinely near R_MIN read warm/bright — a real compact
-      // core, not a gentle gradient smeared across the whole disc — plus
-      // a real brightness boost on top of the color shift, and a
-      // separate arm-vs-field brightness split so arm particles visibly
-      // outshine the sparse interarm background rather than density
-      // alone (thinned out by additive blending at low opacity) having
-      // to carry the whole contrast.
       const coreBlend = Math.exp(-d / (DECAY_SCALE * 0.18));
       const coreBoost = 1 + coreBlend * 2.2;
       const armFieldMult = isArm ? 1.5 : 0.4;
@@ -302,51 +388,29 @@ export function createConstellation(container, { preview = false, initialPieceId
     const geo = new THREE.BufferGeometry();
     geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
     geo.setAttribute('color', new THREE.BufferAttribute(col, 3));
-    // Additive blending (same technique nodeMat already uses) rather than
-    // normal — at a dim, cool color and low-ish opacity, normal blending's
-    // straight src*alpha dilution made the whole structure read as
-    // essentially invisible against the near-black background even though
-    // the geometry itself was correct. Additive keeps it reading as dim,
-    // distant light rather than a flat translucent shape, while staying
-    // well below the strands' own brightness (which runs uncapped past
-    // 1.0 at full opacity, vs. this material's fixed sub-1.0 opacity).
     const mat = new THREE.PointsMaterial({
-      size: preview ? 1.5 : 2.0, vertexColors: true, transparent: true,
+      size: (preview ? 1.5 : 2.0) * SCALE_FACTOR, vertexColors: true, transparent: true,
       opacity: 0.7, depthWrite: false, sizeAttenuation: true, fog: false,
       blending: THREE.AdditiveBlending,
     });
     const points = new THREE.Points(geo, mat);
-    // A deliberate tilt — the camera's own orbit is rotationally
-    // symmetric around Y (theta spins around it freely), so without a
-    // break from that symmetry the disc would always present the same
-    // edge-on/face-on mix regardless of theta. This tilt is what makes
-    // an orbit actually sweep through a range of real views of a flat
-    // structure: closer to edge-on (a thin band) at some angles, closer
-    // to face-on (arms and core visible) at others — genuinely different
-    // depending on where the visitor drags to, which is correct for a
-    // thin 3D plane and not something to flatten out for consistency.
+    // A deliberate tilt so the disc's silhouette actually varies as a
+    // visitor orbits (edge-on band at some angles, more face-on
+    // arms-and-core at others) rather than presenting the same mix at
+    // every theta.
     points.rotation.x = 0.3;
     points.rotation.z = 0.15;
     return { points, geo, mat };
   }
-  const galaxy = buildGalaxy();
+  const galaxy = buildGalaxy(GALAXY_R_MIN, GALAXY_R_MAX);
   scene.add(galaxy.points);
 
-  // ─── Nodes + strands, built from the approved Layer 2 set only ─────────
-  const rows = getApprovedResonances();
-  const DOME_RADIUS = preview ? 78 : 130;
-  const nodeMap = buildNodes(rows, DOME_RADIUS);
-  const nodeList = Array.from(nodeMap.values());
-
+  // ─── Node + strand rendering, built from the layout computed above ──────
   const dotTex = makeDotTexture();
   const nodeGeo = new THREE.BufferGeometry();
   const nodePos = new Float32Array(nodeList.length * 3);
   const nodeColor = new Float32Array(nodeList.length * 3);
   const tmpColor = new THREE.Color();
-  // Round 2: a node's dot color is its own scene's real established
-  // accent (SCENE_ACCENT above), not an arbitrary rainbow hue — so a
-  // node visibly belongs to the same color a strand touching it fades
-  // toward, instead of the two systems using unrelated palettes.
   nodeList.forEach((n, i) => {
     nodePos[i * 3] = n.pos.x; nodePos[i * 3 + 1] = n.pos.y; nodePos[i * 3 + 2] = n.pos.z;
     tmpColor.setHex(SCENE_ACCENT[n.scene] ?? 0xffffff);
@@ -355,7 +419,7 @@ export function createConstellation(container, { preview = false, initialPieceId
   nodeGeo.setAttribute('position', new THREE.BufferAttribute(nodePos, 3));
   nodeGeo.setAttribute('color', new THREE.BufferAttribute(nodeColor, 3));
   const nodeMat = new THREE.PointsMaterial({
-    size: preview ? 2.2 : 2.6, map: dotTex, vertexColors: true,
+    size: (preview ? 2.2 : 2.6) * SCALE_FACTOR, map: dotTex, vertexColors: true,
     transparent: true, opacity: 0.9, depthWrite: false,
     blending: THREE.AdditiveBlending, sizeAttenuation: true, fog: false,
   });
@@ -363,46 +427,24 @@ export function createConstellation(container, { preview = false, initialPieceId
   scene.add(nodePoints);
 
   // Strand rods — thin InstancedMesh boxes, same house technique as
-  // library.js's hexagon edges/strands (see the Phase 3 architecture
-  // survey: this codebase avoids THREE.Line for anything but a single
-  // simple wireframe, for known cross-browser line-width limitations).
+  // library.js's hexagon edges/strands.
   //
-  // Round 2 splits the VISIBLE geometry from the CLICKABLE geometry, which
-  // didn't need splitting before: `strandHit` stays exactly what it was
-  // (one thick invisible box per row, unchanged since the round-1 click
-  // fix — deliberately not touched again here) but `strandMesh` is now
-  // SEGMENTS_PER_STRAND short sub-boxes per row instead of one, each given
-  // its own solid color lerped between the two endpoint scenes' own
-  // SCENE_ACCENT — a quantized gradient along the strand's own length
-  // (source color at one end fading toward target color at the other),
-  // using the same InstancedMesh/instanceColor idiom already established
-  // rather than a custom shader (no ShaderMaterial exists anywhere else on
-  // this site). 6 segments reads as continuous from normal viewing
-  // distance without meaningfully increasing draw cost (22 rows × 6 = 132
-  // instances, still trivial).
+  // Round 7: cross-section widened substantially (real visual weight for
+  // connections that exist, not a thin faint line) and scaled by
+  // SCALE_FACTOR along with everything else now that the graph's real
+  // extent pushed the camera range out.
   const SEGMENTS_PER_STRAND = 6;
-  const strandGeo = new THREE.BoxGeometry(1, 0.07, 0.07);
-  // Round 5 (2026-08-18): brightened significantly — legible up close but
-  // too dim at the default zoomed-out viewing distance most visitors
-  // actually use. Opacity raised and additive blending added (the same
-  // technique nodeMat already uses) so strands read as genuinely glowing
-  // lines against the dark background rather than flat translucent rods.
-  // Fog fade and the SCENE_ACCENT gradient blend below are unchanged.
+  const STRAND_WIDTH = 0.16 * SCALE_FACTOR;
+  const strandGeo = new THREE.BoxGeometry(1, STRAND_WIDTH, STRAND_WIDTH);
   const strandMat = new THREE.MeshBasicMaterial({
-    color: 0xffffff, transparent: true, opacity: 0.92, depthWrite: false,
+    color: 0xffffff, transparent: true, opacity: 0.95, depthWrite: false,
     blending: THREE.AdditiveBlending,
   });
   const strandMesh = rows.length
     ? new THREE.InstancedMesh(strandGeo, strandMat, rows.length * SEGMENTS_PER_STRAND)
     : null;
-  // Cross-section padding around each strand's true 0.07-unit rendered
-  // width. 1.4 (the original figure) measured out to only ~5px wide on
-  // screen at this scene's own default/zoomed-out camera distances (46°
-  // FOV, CAM_MAX 260) — nowhere near a real click target. 4.4 keeps a
-  // ~12px-wide target even at full zoom-out, without the strands (sparse,
-  // 22 of them across a wide dome) starting to overlap each other's hit
-  // regions at normal viewing distance.
-  const hitGeo = new THREE.BoxGeometry(1, 4.4, 4.4);
+  const HIT_WIDTH = 10 * SCALE_FACTOR;
+  const hitGeo = new THREE.BoxGeometry(1, HIT_WIDTH, HIT_WIDTH);
   const hitMat = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false, fog: false });
   const strandHit = rows.length ? new THREE.InstancedMesh(hitGeo, hitMat, rows.length) : null;
 
@@ -451,23 +493,23 @@ export function createConstellation(container, { preview = false, initialPieceId
     scene.add(strandMesh, strandHit);
   }
 
-  // ─── Camera: real spherical orbit, pivot at the world origin, clamped to
-  // the LOWER hemisphere so it always stays under the node canopy above —
-  // "orbit underneath," not a generic look-at-center orbit. ────────────────
+  // ─── Camera: full external orbit ─────────────────────────────────────────
+  // Round 7: no floor, no looking-up vantage, no constrained elevation
+  // range — a real force-directed graph has no inherent up or down, so a
+  // star map of it gets a conventional external view instead. Same
+  // bindOrbitDrag/bindWheelZoom house pattern already proven elsewhere on
+  // the site (Orbiter's drag-to-rotate, Orrery's own preview-tile drag),
+  // just applied here as a genuine spherical camera orbit with a normal
+  // pole clamp rather than a hemisphere restriction.
   const PIVOT = new THREE.Vector3(0, 0, 0);
-  const CAM_MIN = preview ? 30 : 45;
-  const CAM_MAX = preview ? 140 : 260;
-  let camDist = (CAM_MIN + CAM_MAX) * 0.42;
+  let camDist = CAM_DEFAULT;
   let theta = Math.random() * Math.PI * 2;
-  // phi measured from +Y: Math.PI/2 is eye-level with the pivot, Math.PI is
-  // straight down from above the pivot looking... no — cos(phi) negative
-  // for phi>PI/2 puts the camera BELOW the pivot's own height, which is
-  // what "underneath" needs. Clamped well short of straight-up (PHI_MAX)
-  // so the view never flips through the zenith into looking straight down
-  // the strands' own long axis, where the canopy reads as a flat smear.
-  const PHI_MIN = Math.PI / 2 + 0.12;
-  const PHI_MAX = Math.PI - 0.08;
-  let phi = Math.PI - 0.55;
+  // Clamped a small margin short of the poles (not 0/PI exactly) so
+  // azimuth never flips through a gimbal singularity — otherwise the
+  // full range, not the old lower-hemisphere-only band.
+  const PHI_MIN = 0.15;
+  const PHI_MAX = Math.PI - 0.15;
+  let phi = Math.PI / 2 - 0.25; // a modest downward tilt off dead-level — reads as looking AT the map, not up or down through it
   function updateCamera() {
     const sinPhi = Math.sin(phi);
     camera.position.set(
@@ -482,11 +524,7 @@ export function createConstellation(container, { preview = false, initialPieceId
   // Thread-follow deep link: `initialPieceId` (main.js's generic piece-id
   // hash slot, reused here as a resonance row's own `id` — see this
   // file's header comment) names the exact strand this scene should
-  // arrive already oriented at. Orients theta/phi toward that strand's
-  // midpoint and fires the same big reaction a primed strand touch would
-  // — arriving via a followed thread IS the "elsewhere interaction" this
-  // scene reacts to, whether or not sessionStorage's own elsewhere match
-  // happens to agree.
+  // arrive already oriented at.
   let followedStrand = null;
   if (!preview && initialPieceId !== null) {
     const info = strandInfo.find(s => s.row.id === initialPieceId);
@@ -496,12 +534,7 @@ export function createConstellation(container, { preview = false, initialPieceId
       const r = dir.length() || 1;
       theta = Math.atan2(dir.x, dir.z);
       phi = THREE.MathUtils.clamp(Math.acos(THREE.MathUtils.clamp(dir.y / r, -1, 1)), PHI_MIN, PHI_MAX);
-      // If the strand's own polar angle is above PHI_MIN's ceiling (steep,
-      // near-overhead strands are common given the node dome sits mostly
-      // near zenith), phi still clamps into range above — theta alone
-      // (which direction to face) carries most of "oriented at the strand
-      // that brought you" in that case, same as any other steep strand.
-      camDist = THREE.MathUtils.clamp(r * 1.35, CAM_MIN, CAM_MAX);
+      camDist = THREE.MathUtils.clamp(r * 1.6, CAM_MIN, CAM_MAX);
       updateCamera();
     }
   }
@@ -527,12 +560,8 @@ export function createConstellation(container, { preview = false, initialPieceId
   }
 
   // Round 2's real click payoff: which two pieces this strand connects,
-  // the resonance's own reviewed rationale (its "epistemic backbone" —
-  // Scott's own framing), and a jump straight to either one. Reuses
-  // constellationPieces.js's resolveEndpointTitle for the title format
-  // (matching docs/constellation_resonances.md) and constellationEntry's
-  // navigateToPiece for the jump — the same generic pm:navigate dispatch
-  // every cross-scene navigation on this site already goes through.
+  // the resonance's own reviewed rationale, and a jump straight to either
+  // one.
   function openResonancePanel(row) {
     if (!panel) return;
     const endpointA = resolveEndpointTitle(row.a);
@@ -568,21 +597,12 @@ export function createConstellation(container, { preview = false, initialPieceId
   }) : null;
   const wheelZoom = !preview ? bindWheelZoom(container, {
     onZoom: deltaY => {
-      camDist = THREE.MathUtils.clamp(camDist + deltaY * 0.05, CAM_MIN, CAM_MAX);
+      camDist = THREE.MathUtils.clamp(camDist + deltaY * 0.05 * SCALE_FACTOR, CAM_MIN, CAM_MAX);
       updateCamera();
     },
   }) : null;
 
   // ─── Touch a strand ───────────────────────────────────────────────────────
-  // `pickStrandAt` is the one raycast both hover and click funnel through.
-  // The original version only had this logic inline inside `onMove`, and
-  // `onClick` trusted whatever `hoveredIdx` that had last left behind —
-  // fine on a desktop where mousemove reliably precedes click at the same
-  // coordinates, but a real click/tap has no such guarantee (a touch tap's
-  // compatibility mousemove doesn't fire on every browser, and the canopy's
-  // own slow autoRotate means even a desktop hover can go stale by a few
-  // pixels between "aim" and "click"). Click now always re-checks the ray
-  // at its own event coordinates rather than trusting stale hover state.
   const raycaster = new THREE.Raycaster();
   const pointerNdc = new THREE.Vector2();
   let hoveredIdx = -1;
@@ -616,10 +636,7 @@ export function createConstellation(container, { preview = false, initialPieceId
     container.addEventListener('click', onClick);
   }
 
-  // Keyboard equivalent — strands are otherwise raycast-only. Labels stay
-  // generic ("Strand N") — the panel itself is what discloses which two
-  // pieces a strand connects once it's open; the jump-list label doesn't
-  // need to spoil that in advance.
+  // Keyboard equivalent — strands are otherwise raycast-only.
   let jumpList = null;
   if (!preview && strandInfo.length) {
     jumpList = createJumpList(container, {
@@ -651,17 +668,10 @@ export function createConstellation(container, { preview = false, initialPieceId
       }
     }
 
-    // Strand shimmer + touch excitement decay. Re-lerps each segment's own
-    // colorA→colorB gradient every frame rather than overwriting with a
-    // flat color — shimmer/excite modulate BRIGHTNESS of the real
-    // source→target gradient, they don't replace it. Distance fade itself
-    // needs no JS here at all — scene.fog handles that per-fragment.
+    // Strand shimmer + touch excitement decay.
     if (strandMesh) {
       strandInfo.forEach(s => {
         s.phase += dt * s.speed;
-        // Round 5: baseline raised (0.55→0.85) so strands read bright at
-        // rest, not just when excited — the excite pulse is still a
-        // distinct boost on top of this, not the only source of brightness.
         const shimmer = reduceMotion ? 0.95 : 0.85 + Math.sin(s.phase) * 0.35;
         s.excite = Math.max(0, s.excite - dt * 1.6);
         const brightness = Math.min(1.9, shimmer + s.excite * 1.3);
@@ -674,9 +684,7 @@ export function createConstellation(container, { preview = false, initialPieceId
       strandMesh.instanceColor.needsUpdate = true;
     }
 
-    // Node shimmer, cheap per-vertex-color reuse of the same technique —
-    // modulates brightness of the node's own SCENE_ACCENT rather than an
-    // arbitrary HSL rainbow (see the node-color setup above).
+    // Node shimmer, cheap per-vertex-color reuse of the same technique.
     if (!reduceMotion) {
       const colAttr = nodeGeo.attributes.color;
       nodeList.forEach((n, i) => {

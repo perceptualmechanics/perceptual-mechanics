@@ -248,6 +248,75 @@ described are unchanged.)
   worth trimming, orrery.js's texture generators and first-person rig are the
   two most self-contained chunks to split out first.
 
+## 2.5.7 (2026-08-18)
+
+**The Constellation, full reset: real force-directed layout, real star
+map.** Scott committed fully to one metaphor after diagnosing why every
+prior round's brightness/backdrop tuning never fixed the "random dots"
+complaint: nodes were positioned arbitrarily (a hash-seeded dome
+placement) with strand lines drawn between whichever ones happened to
+resonate — decorative placement, not a layout the data actually
+produced. No amount of visual tuning was ever going to fix that, because
+the graph's real shape never had anywhere to become visible.
+
+Replaced with an actual Fruchterman-Reingold force-directed layout in
+`layoutForceDirected()`: mutual repulsion between every pair of nodes
+(F=k²/d), attraction between nodes sharing an approved resonance
+(F=d²/k), relaxed to equilibrium over 400 iterations with a linear
+cooling schedule. One addition beyond textbook FR, found necessary by
+testing against the real data (22 approved rows, 32 nodes, sparse and
+far from fully connected): a mild gravity term pulling every node toward
+the centroid each step. Without it, disconnected components (islands of
+1-3 pieces with nothing pulling them toward the rest of the graph) drift
+apart under unopposed repulsion without bound — confirmed empirically
+via a throwaway test script before writing the real version: at
+gravity=0, bounding radius blew out to ~1900 world units against an
+ideal edge length of 47; at gravity=1.0 (the value shipped), bounding
+radius settles to ~195, connected pairs average 51 units apart vs. 247
+for the graph as a whole — a ~4.9x separation ratio between "connected"
+and "everything." Deterministic throughout: initial positions seed from
+the existing `hashStr01` (not `Math.random()`), and the relaxation
+itself has no randomness, so the same approved set settles into the same
+shape every load/build. Only pieces touched by an approved resonance
+become nodes at all (already true structurally before this round, just
+confirmed still holds) — nothing isolated/unlit to contrast against.
+
+Camera lost its "underneath a canopy" constraint from the same round —
+PHI_MIN/PHI_MAX widened from a lower-hemisphere-only band to a
+conventional near-full range (a small margin short of the poles to
+avoid a gimbal flip), default elevation reset to a neutral "looking at
+the map" angle instead of a below-and-up bias, no floor, no forced
+vantage. Same `bindOrbitDrag`/`bindWheelZoom` house pattern already used
+elsewhere on the site — this wasn't a new interaction model, just the
+existing one without an artificial hemisphere restriction.
+
+Strand connections widened substantially (0.07→0.16 world units before
+scale-compensation) for real visual weight — prominent, not thin faint
+lines — and every size/distance constant (camera bounds, fog density,
+star-field and galaxy-backdrop radii, point sizes, strand/hit widths)
+now derives from the layout's own actual bounding radius rather than
+fixed numbers tuned for the old hash-placed dome, so the whole scene's
+proportions stay consistent even if the approved-rows set grows or
+shrinks later.
+
+**Verified live, the layout being the actual test this round**: dragged
+to orbit across multiple angles and confirmed genuine constellation
+shapes — a 5-branch star around the corpus's one real hub (`sphere:14`,
+degree 5), several tight 2-3 node clusters, all visibly separated by
+real empty space, not scattered uniformly. Click-payoff panel (real
+raycast click, not the jump-list shortcut) still opens correctly on the
+new geometry.
+
+**Flagged, not decided**: the ground-glimpse entry point
+(`src/utils/constellationEntry.js`, wired into beamline/orrery) was
+built entirely on the premise that this scene lives underneath
+something, revealed through a floor — a premise that no longer holds
+now that the destination is an external star map rather than an
+underside. Left completely untouched this round, per Scott's own
+explicit instruction not to decide this or propose a replacement here.
+Thread-follow (the other entry point) doesn't depend on the underneath
+framing and needed no changes.
+
 ## 2.5.6 (2026-08-18)
 
 **The Constellation, galactic disc correction.** Scott checked v2.5.5's
