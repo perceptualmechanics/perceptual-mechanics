@@ -16,6 +16,7 @@ import { createBeamline }  from './scenes/beamline/beamline.js';
 // it IS instead.
 import { createConstellation } from './scenes/constellation/constellation.js';
 import { initColophon }    from './components/colophon/colophon.js';
+import { prefersReducedMotion } from './utils/sceneKit.js';
 
 // ─── Scene registry ──────────────────────────────────────────────────────────
 const SCENES = {
@@ -189,7 +190,14 @@ function overlayFocusables() {
 // orrery has exactly one piece and no separate open/closed state to begin
 // with) just ignore `initialPieceId`/`onPieceChange` — see each scene's own
 // create() for whether it's wired.
+// True only for the span between a swap-transition's fade-out starting
+// and its fade-in finishing mounting — guards against a second nav click
+// or Escape landing mid-fade and racing the pending mountNext() below
+// (dispose-ing/creating on top of a transition already in flight).
+let transitioning = false;
+
 function expandScene(sceneName, triggerEl = null, pieceId = null) {
+  if (transitioning) return;
   if (activeScene === sceneName) {
     // Already open — a same-scene deep link (address-bar edit, or a
     // cross-link that happens to land back on this scene) still needs to
@@ -200,44 +208,84 @@ function expandScene(sceneName, triggerEl = null, pieceId = null) {
   }
   lastTrigger = triggerEl;
 
-  // Tear down previous full instance
-  if (fullInstance) {
-    fullInstance.dispose();
-    fullInstance = null;
-    expContainer.innerHTML = '';
+  // Direct scene-to-scene (one full instance already live, jumping
+  // straight to a different one) vs. gallery-to-scene (activeScene is
+  // null, the overlay is about to fade in from nothing for the first
+  // time). Only the former ever cut instantly with no transition at all
+  // — reported 2026-08-18 via a Harmonics resonant-link click, but the
+  // instant cut was never specific to that path: nav-icon-to-nav-icon
+  // while a scene is already open goes through this exact same branch
+  // and was equally an instant cut, just rarely exercised (most
+  // navigation goes scene → gallery → scene, which already had the fade
+  // below via returnToGallery). Fixed at the root (this function, the
+  // one seam every direct scene jump already shares — nav icon,
+  // preview tile, hash change, pm:navigate alike) rather than special-
+  // cased for Harmonics.
+  const swapping = activeScene !== null;
+
+  function mountNext() {
+    if (fullInstance) {
+      fullInstance.dispose();
+      fullInstance = null;
+      expContainer.innerHTML = '';
+    }
+
+    activeScene = sceneName;
+    setActiveIcon(sceneName);
+    setHash(sceneName, pieceId);
+    rememberElsewhere(sceneName, pieceId);
+    setChromeInert(true);
+
+    landing.style.display = 'none';
+    overlay.classList.add('active');
+    overlay.classList.toggle('butterfly-bg', sceneName === 'butterfly');
+    overlay.setAttribute('aria-hidden', 'false');
+    overlay.setAttribute('aria-label', SCENES[sceneName]?.ariaLabel ?? 'Full screen experience.');
+
+    fullInstance = SCENES[sceneName].create(expContainer, {
+      preview: false,
+      initialPieceId: pieceId,
+      // A piece opened *inside* the already-open scene (a fragment click, a
+      // jump-list selection, a cross-link) updates the hash's piece segment
+      // without pushing a new history entry — see setHash's own comment for
+      // why (`push: false`). sceneName is closed over rather than read from
+      // `activeScene` so this can't fire against a hash update for a scene
+      // that's since been torn down and replaced.
+      onPieceChange: id => { setHash(sceneName, id, { push: false }); rememberElsewhere(sceneName, id); },
+    });
+    // Focus the container for screen readers
+    expContainer.setAttribute('tabindex', '-1');
+    setTimeout(() => expContainer.focus(), 100);
+    transitioning = false;
   }
 
-  activeScene = sceneName;
-  setActiveIcon(sceneName);
-  setHash(sceneName, pieceId);
-  rememberElsewhere(sceneName, pieceId);
-  setChromeInert(true);
-
-  landing.style.display = 'none';
-  overlay.classList.add('active');
-  overlay.classList.toggle('butterfly-bg', sceneName === 'butterfly');
-  overlay.setAttribute('aria-hidden', 'false');
-  overlay.setAttribute('aria-label', SCENES[sceneName]?.ariaLabel ?? 'Full screen experience.');
-
-  fullInstance = SCENES[sceneName].create(expContainer, {
-    preview: false,
-    initialPieceId: pieceId,
-    // A piece opened *inside* the already-open scene (a fragment click, a
-    // jump-list selection, a cross-link) updates the hash's piece segment
-    // without pushing a new history entry — see setHash's own comment for
-    // why (`push: false`). sceneName is closed over rather than read from
-    // `activeScene` so this can't fire against a hash update for a scene
-    // that's since been torn down and replaced.
-    onPieceChange: id => { setHash(sceneName, id, { push: false }); rememberElsewhere(sceneName, id); },
-  });
-  // Focus the container for screen readers
-  expContainer.setAttribute('tabindex', '-1');
-  setTimeout(() => expContainer.focus(), 100);
+  if (swapping && !prefersReducedMotion()) {
+    // Reuses #experience-overlay's own opacity transition (styles/main.css,
+    // 0.6s ease) — the same fade returnToGallery already plays on the
+    // gallery edge — just retriggered here for a scene-to-scene jump
+    // instead of only scene-to-gallery. Toggling `.active` off fades the
+    // whole overlay (background + the old scene's own canvas, both
+    // children of it) down through near-black (#000811, matching body's
+    // own #000 — no flash to an unrelated color); mountNext tears down
+    // the old instance, builds the new one, and turns `.active` back on
+    // once there's something real to fade up into.
+    transitioning = true;
+    overlay.classList.remove('active');
+    setTimeout(mountNext, 600);
+  } else {
+    // Reduced motion: main.css already sets `#experience-overlay
+    // { transition: none }` under this media query, so toggling `.active`
+    // off/on would just be two instant jumps with a dead 600ms gap in
+    // between — worse than today's true instant cut, not an accommodation.
+    // Skip the delay entirely instead, matching every other reduced-motion
+    // check on the site (skip the motion, don't replace it with a pause).
+    mountNext();
+  }
 }
 
 // ─── Return to gallery ────────────────────────────────────────────────────────
 function returnToGallery() {
-  if (!activeScene) return;
+  if (transitioning || !activeScene) return;
 
   overlay.classList.remove('active', 'butterfly-bg');
   overlay.setAttribute('aria-hidden', 'true');

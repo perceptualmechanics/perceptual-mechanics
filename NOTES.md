@@ -248,6 +248,51 @@ described are unchanged.)
   worth trimming, orrery.js's texture generators and first-person rig are the
   two most self-contained chunks to split out first.
 
+## 2.5.8 (2026-08-18)
+
+**Scene-to-scene transition: fixed the instant hard cut.** Reported
+directly: clicking a resonant link inside the Constellation's payoff
+panel ("open this piece") jumped straight to the target scene with zero
+transition. Checked first, per Scott's own instruction, whether normal
+nav-bar switching already had some fade this was simply bypassing —
+it didn't. `#experience-overlay`'s only transition (`opacity 0.6s ease`,
+`styles/main.css`) fires on the `.active` class toggling off/on, which
+only ever happened on the gallery edges (`returnToGallery`'s existing
+600ms delay before tearing the scene down). `expandScene()` itself —
+the one shared seam every direct scene-to-scene jump goes through
+(nav-icon click while a different scene is already open, preview tiles,
+hash changes, and `pm:navigate` alike) — disposed the old instance and
+mounted the new one synchronously, with `.active` never leaving `true`.
+So the instant cut was never specific to the resonant-link path: nav-
+icon-to-nav-icon while a scene is already open hit the exact same
+branch and was equally broken, just rarely exercised in practice (most
+browsing goes scene → gallery → scene, which already had the fade).
+
+Fixed at that one shared seam rather than special-cased for the
+Constellation: when `expandScene()` detects a direct swap (`activeScene`
+already set to something else), it now fades `.active` off, waits for
+the existing 600ms transition, disposes/mounts the new scene, then
+fades `.active` back on — reusing the overlay's own existing opacity
+transition (fades through near-black, `#000811` ≈ body's own `#000`,
+no flash to an unrelated color) rather than building a second mechanism.
+`prefers-reduced-motion` skips the delay entirely rather than playing it
+without the animation, matching every other reduced-motion check on the
+site (main.css already sets `transition: none` on the overlay under that
+media query, so toggling `.active` under it would just be two instant
+jumps with a dead 600ms gap in between — worse than the original cut,
+not an accommodation). A `transitioning` guard prevents a second nav
+click or Escape from landing mid-fade and racing the pending mount.
+
+**Verified live**: polled `getComputedStyle(overlay).opacity` on a real
+timer across an actual swap (Beamline → Orbiter via nav icon) —
+0.84 → 0.02 over ~500ms, `.active` flips back on at ~650ms (matching the
+600ms delay), climbs 0.44 → 1.0 by ~1.26s. Confirmed the same fade fires
+from a real pointer click on the Constellation's own resonant-link
+button (landed cleanly on Beamline waypoint #5, matching that
+resonance's own rationale). Confirmed `prefers-reduced-motion` stays a
+true instant cut (opacity held at 1 the whole time, hash updated
+immediately, no dip).
+
 ## 2.5.7 (2026-08-18)
 
 **The Constellation, full reset: real force-directed layout, real star
