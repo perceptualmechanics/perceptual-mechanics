@@ -59,12 +59,19 @@
 }
 .constellation-panel-title {
   font-size: 1.05rem; letter-spacing: .18em; text-transform: uppercase;
-  font-weight: normal; color: rgba(255,232,190,.85); margin: 0 0 1.4rem;
+  font-weight: normal; color: rgba(255,232,190,.85); margin: 0 0 .5rem;
+}
+/* Round 8: a node can carry more than one resonance now that lines are
+   gone — this small line under the title ("Resonates with 3 pieces")
+   is the only place that count is disclosed before scrolling the list. */
+.constellation-panel-subtitle {
+  font-size: .7rem; letter-spacing: .1em; text-transform: uppercase;
+  color: rgba(255,220,150,.5); margin: 0 0 1.4rem;
   border-bottom: 1px solid rgba(255,220,150,0.18); padding-bottom: 1.4rem;
 }
 .constellation-panel-rationale {
   color: rgba(228,222,208,.82); font-size: .95rem; line-height: 1.8;
-  margin: 0 0 2rem;
+  margin: 0 0 1rem;
 }
 .constellation-panel-close {
   position: absolute; top: 1.5rem; right: 1.5rem; background: none;
@@ -72,8 +79,19 @@
   cursor: pointer; padding: .5rem;
 }
 .constellation-panel-close:hover { color: rgba(255,255,255,.9); }
-.constellation-panel-endpoints {
-  display: flex; flex-direction: column; gap: .8rem;
+/* Round 8: one repeatable block per resonance the clicked node
+   participates in (rationale + jump button), replacing the old
+   single-rationale/two-endpoint layout — see constellation.html's own
+   header for why. */
+.constellation-panel-resonances {
+  display: flex; flex-direction: column;
+}
+.constellation-resonance-entry {
+  margin-bottom: 1.8rem; padding-bottom: 1.8rem;
+  border-bottom: 1px solid rgba(255,220,150,0.1);
+}
+.constellation-resonance-entry:last-child {
+  margin-bottom: 0; padding-bottom: 0; border-bottom: none;
 }
 .constellation-endpoint-link {
   display: block; text-align: left; color: rgba(255,232,190,.9);

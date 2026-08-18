@@ -248,6 +248,74 @@ described are unchanged.)
   worth trimming, orrery.js's texture generators and first-person rig are the
   two most self-contained chunks to split out first.
 
+## 2.5.9 (2026-08-18)
+
+**The Constellation: resonance as synchronization, not lines.** Full
+commitment to dropping drawn connection lines entirely. Scott's own
+diagnosis of why round 7's full-orbit camera reset kept looking like
+ball-and-stick molecules rather than a constellation: a shape drawn with
+lines only reads correctly from one specific vantage, and once the
+camera could orbit freely, that vantage requirement was the actual bug
+— not something more brightness/backdrop tuning was ever going to fix.
+
+Replaced the drawn strands with real phase coupling — the Kuramoto
+model, the same coupled-oscillator physics behind the Orrery's resonator
+chime (fireflies, wall clocks, one struck object ringing), extended here
+from one object to many influencing each other's rhythm over time. Every
+node carries a phase θᵢ(t) and a natural frequency ωᵢ; coupling follows
+the real resonance graph — `dθᵢ/dt = ωᵢ + K·Σⱼ sin(θⱼ−θᵢ)`, summed only
+over each node's actual approved-resonance neighbors (the same `adj`
+adjacency the force-directed layout already uses), not a mean-field
+model where every node influences every other. Frequencies/initial
+phases seed from the existing `hashStr01` (deterministic, same shape
+every load), spread ±0.06 Hz around a 0.2 Hz base — non-uniform enough
+that any observed lock is a real consequence of coupling overcoming a
+genuine mismatch, not coincidence. K tuned by simulating the real
+approved-rows graph in a throwaway script before writing the real
+version: at K=2π·0.15 rad/s, every multi-node cluster in the current
+22-row/32-node corpus reaches ~0.97–1.00 phase coherence within ~5
+simulated seconds and holds it. Node brightness is a direct function of
+its own current phase (`0.35 + pulse`, `pulse = 0.5+0.5·sin(θ)`) — this
+IS the resonance signal now, not a decorative shimmer, so unlike the old
+strand shimmer it runs unconditionally rather than gating behind
+`prefers-reduced-motion`.
+
+The force-directed layout from round 7 stays untouched — connected
+pieces sitting closer together is a good complementary signal, it just
+no longer has lines drawn on top of it. Node raycasting rewritten
+against the `THREE.Points` object directly (`Raycaster.params.Points.
+threshold`) now that there's no separate hit-mesh to click. The payoff
+panel was extended for a node that can carry more than one resonance —
+the corpus's one real hub (`sphere:14`, degree 5) shows all five,
+one entry per connection, each with its own reviewed rationale and jump
+button, rather than assuming a single-connection layout still applies.
+Clicking a node also briefly boosts its own and its synced neighbors'
+brightness (`triggerBoost`) — spotlighting the existing pulse signal
+rather than drawing new geometry.
+
+**Verified live** — a single screenshot can't confirm a slow (~5s)
+convergence the way it could a static layout, so this leaned on real
+time-series observation instead: polled the live phase array via a
+temporary debug hook across an actual page load, watching all 11 real
+multi-node connected components climb from a genuinely mixed, still-
+converging state (0.42–0.80 order parameter at t≈2.8s) to full lock
+(0.97–1.00 at t≈16.5s) — matching the offline prototype's ~5-second
+convergence prediction, and confirming this is a real emergent
+consequence of coupling, not an instant or scripted cue. Confirmed the
+new multi-resonance panel via a real pointer click (not the jump-list
+shortcut) on the corpus's actual hub node, landing correctly on all five
+of its resonances. Confirmed the scene reads as a coherent field of dots
+from multiple different drag-to-orbit angles, including ones far from
+the load-time default — the actual point of the change, since brightness
+pulsing (unlike a drawn line) carries no single "correct" vantage.
+
+Known honest caveat, left in the code's own comments: the current
+22-row corpus has no fully isolated (zero-edge) node, so today's visible
+contrast is cluster-vs-cluster rather than synced-vs-totally-isolated —
+a future approved row that leaves some piece with only a not-yet-
+approved connection would introduce a genuinely independent drifting
+node without any change to this code.
+
 ## 2.5.8 (2026-08-18)
 
 **Scene-to-scene transition: fixed the instant hard cut.** Reported
