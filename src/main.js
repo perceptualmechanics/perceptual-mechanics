@@ -8,12 +8,14 @@ import { createLibrary }   from './scenes/library/library.js';
 // A staged sequence of curved mirrors, real reflection geometry (not
 // transmission) bouncing a beam between them.
 import { createBeamline }  from './scenes/beamline/beamline.js';
-// The Constellation — ninth scene, Phase 3 (2026-08-16). Visualizes
-// src/resonances.js's approved Layer 2 links; see constellation.js's own
-// header comment for the full picture. No found text of its own, so it
-// has no ariaLabel-worthy "what this scene contains" the way every other
-// scene's own label describes actual content — the label below says what
-// it IS instead.
+// Harmonics — ninth scene, Phase 3 (2026-08-16), renamed from "The
+// Constellation" 2026-08-18 (user-facing name only — internal module/
+// folder/class names stay `constellation`, see constellation.js's own
+// header for why). Visualizes src/resonances.js's approved Layer 2
+// links; see constellation.js's own header comment for the full
+// picture. No found text of its own, so it has no ariaLabel-worthy
+// "what this scene contains" the way every other scene's own label
+// describes actual content — the label below says what it IS instead.
 import { createConstellation } from './scenes/constellation/constellation.js';
 import { initColophon }    from './components/colophon/colophon.js';
 import { prefersReducedMotion } from './utils/sceneKit.js';
@@ -36,8 +38,8 @@ const SCENES = {
                  ariaLabel: 'The Library — a real bookshelf, 107 books, films, and divination decks, rebuilt as a shelf you can turn in space. Drag to orbit, scroll to zoom, click a spine to read what it is.' },
   beamline:    { create: createBeamline,   label: 'Beamline.',
                  ariaLabel: 'Beamline — a staged sequence of curved mirrors, a beam of light bouncing between them, found text surfacing at each bounce. Drag to orbit, scroll to zoom, click a mirror to read.' },
-  constellation: { create: createConstellation, label: 'The Constellation.',
-                 ariaLabel: 'The Constellation — a web of thin glowing strands connecting resonant pieces across every other scene, an eight-legged spider walking its underside. Drag to orbit, scroll to zoom, touch a strand.' },
+  constellation: { create: createConstellation, label: 'Harmonics.',
+                 ariaLabel: 'Harmonics — resonant pieces across every other scene, laid out by how strongly they connect and pulsing in sync with whatever they resonate with. Drag to orbit, scroll to zoom, touch a node.' },
 };
 
 let activeScene  = null;
@@ -369,9 +371,7 @@ function initPreviews() {
     orrery:     document.getElementById('preview-orrery'),
     library:    document.getElementById('preview-library'),
     beamline:   document.getElementById('preview-beamline'),
-    // No 'constellation' entry — that scene has no landing preview tile,
-    // by design (2026-08-16). Its route and both in-scene entry points
-    // stay fully live; see SCENES above and pm:navigate below.
+    constellation: document.getElementById('preview-constellation'),
   };
   for (const [name, el] of Object.entries(map)) {
     if (el) previews[name] = SCENES[name].create(el, { preview: true });
@@ -396,20 +396,19 @@ window.addEventListener('hashchange', () => {
   else returnToGallery();
 });
 
-// ─── pm:navigate — the Constellation's two entry points ────────────────────
-// Ground glimpses (beamline/orrery, via src/utils/constellationEntry.js's
-// createGroundGlimpse) and thread-follow filaments (any found-text scene's
-// panel, via that same file's wireResonanceThread) both live inside a
-// scene's own module and have no reference to expandScene — this is the
-// one seam between them and main.js's actual routing. Dispatched rather
-// than imported directly so neither helper needs to know main.js exists;
-// routed through expandScene (not a bespoke path) so a glimpse-click or
-// thread-click gets the exact same history/hash/focus handling as a nav-
-// icon click. `pieceId` here is a resonance row's own `id` (see
-// constellation.js's header comment for why that reuse is safe), not a
-// piece id — main.js has no idea what either scene's own "piece" concept
-// means, same as every other cross-scene deep link already passing through
-// this file.
+// ─── pm:navigate ─────────────────────────────────────────────────────────
+// Generic cross-scene jump, dispatched rather than imported directly so a
+// scene module never needs a reference to expandScene or to know main.js
+// exists — routed through expandScene (not a bespoke path) so it gets the
+// exact same history/hash/focus handling as a nav-icon click. Originally
+// built for two Harmonics-specific entry points (ground-glimpse, thread-
+// follow — both retired 2026-08-18, see src/utils/constellationEntry.js's
+// own header) plus Harmonics' own payoff panel jumping to either side of a
+// resonance; only the last of those three still fires this event. `pieceId`
+// is whatever the target scene's own `initialPieceId` expects (a real piece
+// id, per each scene's own create()) — main.js has no idea what a "piece"
+// looks like inside any given scene, same as every other cross-scene deep
+// link passing through this file.
 window.addEventListener('pm:navigate', e => {
   const { scene: targetScene, pieceId } = e.detail ?? {};
   if (targetScene && Object.hasOwn(SCENES, targetScene)) {
@@ -452,9 +451,7 @@ const PM_GLIMPSE_WORDS = {
   orrery: 'will',
   library: 'medium',
   beamline: 'emergence',
-  // No 'constellation' entry — its onmouseover="pmGlimpse(...)" trigger
-  // lived only on the nav icon and preview tile, both removed (2026-08-16)
-  // along with this scene's advertised doorway.
+  constellation: 'synchrony',
   title: 'secrets',
 };
 let pmGlimpseTimer = null;

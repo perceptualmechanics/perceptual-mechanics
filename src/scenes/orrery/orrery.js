@@ -6,7 +6,6 @@ import orreryHtml from './orrery.html?raw';
 // the prerender step that builds /text/orrery/, so the placard and the
 // published page can't drift.
 import { ORRERY } from './orrery.text.js';
-import { createGroundGlimpse, wireResonanceThread } from '../../utils/constellationEntry.js';
 
 // ─── The Orrery of Los Feliz ───────────────────────────────────────────────
 // A found short-short, full and unedited, undated. Investigators track a
@@ -2341,37 +2340,6 @@ export function createOrrery(container, { preview = false } = {}) {
   const floorY = orrery.baseY - (preview ? 0.9 : 1.3);
   const warehouse = buildWarehouse(preview, floorY, ceilingY, rafterY);
 
-  // ─── Ground glimpse (Constellation entry point) ─────────────────────────
-  // Orrery is one of only two scenes with a real ground plane — the other
-  // is beamline's terrain; see src/utils/constellationEntry.js's own
-  // header comment for why every other scene doesn't get this. The floor
-  // here is genuinely flat concrete (buildWarehouse above), not a height
-  // field, so pickPoint is simpler than beamline's own: a random offset
-  // from wherever the visitor is actually standing right now (camera.
-  // position tracks the first-person rig's own world position at eye
-  // height), clamped inside the walls — near the visitor on purpose,
-  // since a glimpse spawning across the warehouse from a walking visitor
-  // would rarely actually be seen.
-  const GLIMPSE_TRIGGER_PROBABILITY = 0.012; // calibrated live, 2026-08-16 — see NOTES.md's Phase 3 entry
-  const groundGlimpse = !preview ? createGroundGlimpse({
-    scene,
-    pickPoint: () => {
-      const ang = Math.random() * Math.PI * 2;
-      const dist = 3 + Math.random() * 6;
-      const bound = warehouse.wallDist - 1;
-      return {
-        x: THREE.MathUtils.clamp(camera.position.x + Math.cos(ang) * dist, -bound, bound),
-        y: floorY,
-        z: THREE.MathUtils.clamp(camera.position.z + Math.sin(ang) * dist, -bound, bound),
-      };
-    },
-    radius: 2.2, // human-scale, not beamline's landscape scale — this floor is walked on close-up, not viewed from a distant orbit
-    checkIntervalSec: 2.5,
-    triggerProbability: GLIMPSE_TRIGGER_PROBABILITY,
-  }) : null;
-  // Live calibration/testing hook only — never read by production code.
-  if (!preview && groundGlimpse) window.__pmGroundGlimpse = groundGlimpse;
-
   // The orrery's own ring/mast structure is the namesake mechanism and
   // should be the single most confidently-lit object in the room, ahead
   // of the small planet bodies it carries. A dedicated spotlight aimed at
@@ -2426,7 +2394,7 @@ export function createOrrery(container, { preview = false } = {}) {
   // injection needed now that both are real files, pulled in via parseHTML.
 
   // ─── Panel (full only) ────────────────────────────────────────────────────
-  let panel = null, panelTitle = null, panelEra = null, panelNote = null, panelCloser = null, jumpList = null, threadUI = null;
+  let panel = null, panelTitle = null, panelEra = null, panelNote = null, panelCloser = null, jumpList = null;
   let hint = null, caption = null, vignette = null, grain = null, title = null;
   let checkTitleHintCollision = null;
   let shell = null, crosshairEl = null, lockPromptEl = null, walkpadEl = null;
@@ -2469,11 +2437,6 @@ export function createOrrery(container, { preview = false } = {}) {
     panelTitle.textContent = `✦ ${ORRERY.name}`;
     panelEra.textContent = ORRERY.era;
     panelNote.innerHTML = ORRERY.note;
-    // Thread-follow filament, wired once here rather than from openPanel()
-    // — the orrery's panel content is entirely static (one found artifact,
-    // ORRERY.id === 1 always), same "no separate open-time population" case
-    // as scroll's own per-patch wiring.
-    threadUI = wireResonanceThread(panel, 'orrery', ORRERY.id);
     container.style.position = 'relative';
     container.style.overflow = 'hidden';
     // First-person pass: the OS cursor is hidden the whole time in full
@@ -2553,7 +2516,7 @@ export function createOrrery(container, { preview = false } = {}) {
   // first-person crosshair), not literal mouse position — see animate()
   // below and createFirstPersonRig's own comment for why.
   const raycaster = new THREE.Raycaster();
-  let hovered = false, selected = false, hoveredGlimpse = false;
+  let hovered = false, selected = false;
   let fp = null;
 
   function setEmphasis(on) {
@@ -2675,11 +2638,6 @@ export function createOrrery(container, { preview = false } = {}) {
       // First click/tap just engages mouse-look (desktop pointer lock);
       // it doesn't also act on whatever's under the crosshair.
       if (fp.tryEngage(e)) return;
-      // Glimpse takes priority over everything else a click could mean
-      // here — it's rare and brief on purpose, so if one happens to be
-      // active when a visitor clicks, that's almost certainly what they
-      // meant to hit, poster/orrery/panel notwithstanding.
-      if (hoveredGlimpse && groundGlimpse?.consumeIfHit([groundGlimpse.hitMesh])) return;
       if (panel.classList.contains('open')) {
         // Only close on an actual empty-space click, letting a poster hit
         // still play whether the panel is open or not — hovered/
@@ -2813,15 +2771,8 @@ export function createOrrery(container, { preview = false } = {}) {
           if (hoveredPoster) hoveredPoster.mesh.material.emissiveIntensity = hoveredPoster.baseEmissive * 2.4;
         }
       }
-      const glimpseHit = groundGlimpse?.hitMesh;
-      hoveredGlimpse = glimpseHit ? raycaster.intersectObject(glimpseHit).length > 0 : false;
-      fp.crosshairEl.classList.toggle('active', hovered || !!hoveredPoster || hoveredGlimpse);
+      fp.crosshairEl.classList.toggle('active', hovered || !!hoveredPoster);
     }
-
-    // Ground glimpse ticks unconditionally, same reasoning as beamline's
-    // own — it's the entry-point mechanism itself, not ambient decoration
-    // to quiet under reduceMotion.
-    groundGlimpse?.update(dt);
 
     if (!reduceMotion) {
       // Real Kepler motion (2.2.22): each planet's position is a
@@ -3022,13 +2973,11 @@ export function createOrrery(container, { preview = false } = {}) {
       resize.dispose();
       panelCloser?.dispose();
       jumpList?.dispose();
-      threadUI?.dispose();
       if (!preview) {
         touchGuard?.dispose();
         container.removeEventListener('click', onContainerClick);
       }
       if (audioCtx) { audioCtx.close(); audioCtx = null; }
-      groundGlimpse?.dispose();
       renderer.dispose();
       clippedPreview?.dispose();
       starGeo.dispose();

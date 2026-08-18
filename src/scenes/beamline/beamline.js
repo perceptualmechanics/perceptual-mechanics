@@ -7,7 +7,6 @@ import './beamline.css';
 import beamlineHtml from './beamline.html?raw';
 import { EPIGRAPH_PRIMARY, EPIGRAPH_SECONDARY, BOUNCES } from './beamline.text.js';
 import { mulberry32, hashSeed } from '../../utils/prng.js';
-import { createGroundGlimpse } from '../../utils/constellationEntry.js';
 
 // ─── Canonical accent color ─────────────────────────────────────────────────
 // Hue ~216°, one numeric hex value applied to every touchpoint (rail,
@@ -1089,37 +1088,6 @@ export function createBeamline(container, { preview = false, initialPieceId = nu
   const CAM_TARGET = new THREE.Vector3(199.944150, 25.345350, 0.531666);
   const CAM_MIN = 28, CAM_MAX = 620;
 
-  // ─── Ground glimpse (Constellation entry point) ─────────────────────────
-  // Beamline is one of only two scenes with a real ground plane (see
-  // src/utils/constellationEntry.js's own header comment) — this is where
-  // the "look down through the floor" doorway into the Constellation
-  // actually lives on this scene. Picks a random point within a loose box
-  // around CAM_TARGET (where the rail/stations/vessel already draw the
-  // visitor's eye, not an arbitrary spot on the far, empty terrain) and
-  // samples the real terrain height there via terrainHeight() — same
-  // function the camera's own ground-clearance clamp uses, so the patch
-  // always sits flush with the actual mountain surface beneath it, not
-  // floating or buried.
-  //
-  // triggerProbability calibrated live, session of 2026-08-16 — see
-  // NOTES.md's Phase 3 entry for the observed real-session trigger rate,
-  // not just this configured number.
-  const GLIMPSE_TRIGGER_PROBABILITY = 0.012;
-  const groundGlimpse = !preview ? createGroundGlimpse({
-    scene,
-    pickPoint: () => {
-      const x = CAM_TARGET.x + (Math.random() - 0.5) * 140;
-      const z = CAM_TARGET.z + (Math.random() - 0.5) * 140;
-      return { x, y: terrainHeight(x, z), z };
-    },
-    radius: 9,
-    checkIntervalSec: 2.5,
-    triggerProbability: GLIMPSE_TRIGGER_PROBABILITY,
-  }) : null;
-  // Live calibration/testing hook only — never read by production code.
-  // Same precedent as orrery.js's window.__orreryTimeOverrideMs.
-  if (!preview && groundGlimpse) window.__pmGroundGlimpse = groundGlimpse;
-
   // The opening camera frames the whole route from ground level rather
   // than from well above CAM_TARGET's height, so it reads as a visitor
   // standing in a landscape rather than a drone survey of a bounded plot.
@@ -1614,7 +1582,7 @@ export function createBeamline(container, { preview = false, initialPieceId = nu
   }) : null;
 
   // ─── Hover / click on stations (+ the ground glimpse, when active) ──────
-  let hoveredStation = null, selectedStation = null, hoveredGlimpse = false;
+  let hoveredStation = null, selectedStation = null;
   const raycaster = new THREE.Raycaster();
   const pointerNdc = new THREE.Vector2();
   let disposeHoverClick = null;
@@ -1631,22 +1599,11 @@ export function createBeamline(container, { preview = false, initialPieceId = nu
         hoveredStation = newHover;
         container.style.cursor = hoveredStation ? 'pointer' : 'default';
       }
-      // Glimpse hit-test is a separate raycast against its own (invisible,
-      // generous) hit mesh — only ever non-null while a glimpse is
-      // actually clickable (createGroundGlimpse's own isClickable), so
-      // this is a no-op almost all the time. Takes cursor priority over
-      // "nothing hovered" but not over an actual station, on the
-      // reasoning that a station is always legible/intentional while a
-      // glimpse is a passing, secondary thing.
-      const glimpseHit = groundGlimpse?.hitMesh;
-      hoveredGlimpse = glimpseHit ? raycaster.intersectObject(glimpseHit).length > 0 : false;
-      if (hoveredGlimpse && !hoveredStation) container.style.cursor = 'pointer';
     };
     container.addEventListener('mousemove', onMove);
 
     const onClick = () => {
       if (touchGuard.consume()) return;
-      if (hoveredGlimpse && groundGlimpse?.consumeIfHit([groundGlimpse.hitMesh])) return;
       if (!hoveredStation) { dismissLabel(); return; }
       showLabel(hoveredStation);
     };
@@ -2105,13 +2062,6 @@ export function createBeamline(container, { preview = false, initialPieceId = nu
     caNear?.tick(1 / 60, reduceMotion);
     caFar?.tick(1 / 60, reduceMotion);
 
-    // Ground glimpse — always ticks (its own trigger roll/fade envelope
-    // isn't ambient decoration to quiet under reduceMotion; it's the
-    // entry-point mechanism itself, and a reduced-motion visitor should
-    // still be able to find and use it, same reasoning as the label fade
-    // above running unconditionally).
-    groundGlimpse?.update(1 / 60);
-
     // Vessel travel — real Lévy-flight step statistics along the whole
     // hand-placed curve (see the Lévy setup above), not constant speed:
     // mostly small local glides, occasionally a longer, more direct one.
@@ -2233,7 +2183,6 @@ export function createBeamline(container, { preview = false, initialPieceId = nu
       disposeHoverClick?.();
       touchGuard?.dispose();
       clippedPreview?.dispose();
-      groundGlimpse?.dispose();
       renderer.dispose();
 
       skyGeo.dispose(); skyMat.dispose(); skyTex.dispose();

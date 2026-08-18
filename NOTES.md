@@ -248,6 +248,104 @@ described are unchanged.)
   worth trimming, orrery.js's texture generators and first-person rig are the
   two most self-contained chunks to split out first.
 
+## 2.6.0 (2026-08-18)
+
+**"The Constellation" renamed "Harmonics"; nav icon + landing preview
+tile restored; both in-scene entry points (ground-glimpse, thread-
+follow) retired entirely.** Arrived as a distinct brief mid-build of
+2.5.9's Kuramoto round. Five parts:
+
+**Rename**, user-facing text only — on-screen title (constellation.html),
+nav tooltip/aria-label and colophon-adjacent copy (main.js's SCENES
+entry, rewritten to describe the current Kuramoto/node reality rather
+than the removed spider/strands it still described), the new preview
+tile's own title/aria-label. Internal module/folder/class names
+(`src/scenes/constellation/`, `constellation.js`, `createConstellation`,
+`.constellation-*` CSS classes) deliberately kept the old name — flagged
+optional/lower-priority in the brief, skipped as genuinely out of scope
+for a rename that changes nothing anyone sees.
+
+**Nav icon + preview tile restored** — a deliberate reversal of the
+2026-08-16 removal, not a mistake being corrected. New icon: three small
+dots each with their own pulse ring (not concentric around one shared
+center the way Orrery's mast-and-orbits icon is) — a different-sources-
+pulsing-separately motif matching what the scene actually shows now.
+Preview tile is a genuinely live instance, same as all eight others —
+Harmonics' Kuramoto integration and brightness-pulse code both run
+unconditionally regardless of `preview`, so this tile shows real,
+currently-converging phase sync the whole time it's on screen. This
+turned out to make the brief's "honest limitation" concern moot: every
+preview tile on this site has always been a live mini-scene, never a
+static image, so Harmonics' being time-based isn't a special case
+needing a workaround — it gets the exact same treatment every other
+scene already has.
+
+**Nine tiles, real layout**: tried a fixed 3×3 CSS grid first (a genuine
+improvement over letting flex-wrap's automatic wrapping decide, which is
+what stranded the tile alone on its own row the last time this scene had
+one) — Scott's own follow-up preferred a 4-then-5 split instead. Since a
+single CSS grid can't natively give two rows different column counts,
+switched to flex-wrap with an explicit forced line break
+(`.preview-row-break`, a zero-height 100%-wide flex item) between the
+4th and 5th tile — same "a chosen layout, not an emergent one" reasoning
+as the grid attempt, just the right tool for THIS specific shape. Tile
+size dropped 320px → 240px so five actually fit one row at ordinary
+desktop widths; the forced break turns itself off below 1200px, falling
+back to ordinary auto-wrap rather than trying to cram a 5-wide row into
+a laptop screen.
+
+**Fixed along the way, not part of the brief**: restoring nav-bar entry
+#9 reopened a recurring bug (fourth occurrence, per the code's own
+running note) — touch targets no longer fit 375px phone width at nine
+icons. Tightened to 34px icons / 0.35rem gap, with a note that a 10th
+scene will need a structural fix (wrap/scroll the nav bar) rather than
+shrinking targets a fifth time. Separately, live-checking the new grid
+surfaced a real clipping bug: `#landing`'s `align-items: center` centers
+overflowing content symmetrically above and below, and since scrollTop
+can't go negative, whatever overflowed off the top was simply
+unreachable — three rows of 240px tiles routinely exceeds a laptop's
+actual available height in a way two rows never did at typical desktop
+widths, so this was latent in the CSS the whole time but had no trigger
+until nine tiles forced a taller grid. Fixed with `align-items: safe
+center` (falls back to flex-start, no clipping, the moment content
+doesn't fit — the general fix, not another width-specific patch), kept
+behind a plain `center` fallback first for browsers that don't parse
+`safe`.
+
+**Retired entirely — ground-glimpse and thread-follow**, both in-scene
+entry points from `src/utils/constellationEntry.js`, now that ordinary
+nav/preview covers discovery the way it does for every other scene. Full
+removal, not disabling: `createGroundGlimpse` and its wiring came out of
+beamline.js (terrain pickPoint, click/hover consumeIfHit, per-frame
+update, dispose) and orrery.js (warehouse-floor pickPoint, same
+wiring); `wireResonanceThread` and its wiring came out of sphere.js,
+orbiter.js, library.js, scroll.js, and orrery.js (each scene's own
+call sites, `threadUI`/`threadUIs` state, dispose cleanup), plus the
+shared `.pm-thread` CSS block (styles/main.css) and the now-fully-dead
+`createGroundGlimpse`/`wireResonanceThread` functions themselves —
+`constellationEntry.js` now exports only `navigateToPiece`, which
+Harmonics' own payoff panel still uses to jump to either side of a
+resonance. This resolves round 7's "flagged, not decided" ground-glimpse
+tension (its whole premise — a floor to look down through — stopped
+holding once Harmonics' camera lost the underneath constraint) by
+deciding it outright rather than leaving it open any longer.
+
+Named tradeoff, not a reason to reconsider: thread-follow let someone
+jump straight from a piece they were reading into that piece's specific
+resonance, already selected and oriented. Reaching Harmonics via nav now
+lands generally, not on a specific connection — finding a particular
+node again means navigating there directly inside the scene.
+
+**Colophon** already correctly read "nine small experiences" from the
+2026-08-16 decision — checked live, no change needed.
+
+**Verified**: full build + verify-links/verify-resonances clean; no
+console errors across beamline/orrery/sphere/orbiter/library/scroll
+(the six touched files) or Harmonics itself; landing grid checked at
+both a wide desktop width (4-then-5, no clipping) and a narrower width
+(graceful fallback to auto-wrap, break disabled); preview tile confirmed
+clickable and correctly opening Harmonics with the new title.
+
 ## 2.5.9 (2026-08-18)
 
 **The Constellation: resonance as synchronization, not lines.** Full

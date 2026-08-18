@@ -2,7 +2,6 @@ import * as THREE from 'three';
 import { poems } from './orbiter.text.js';
 import { getOutboundLinks, getInboundLinks } from '../../links.js';
 import { bindOrbitDrag, bindGuardedResize, prefersReducedMotion, createPanelCloser, createJumpList, escapeHtml, parseHTML, wireCrossLinks, formatInboundNote } from '../../utils/sceneKit.js';
-import { wireResonanceThread } from '../../utils/constellationEntry.js';
 import './orbiter.css';
 import orbiterHtml from './orbiter.html?raw';
 
@@ -718,7 +717,7 @@ export function createOrbiter(container, { preview = false, initialPieceId = nul
   root.add(satellites.group);
 
   // ─── Caption + hint + poem panel (full only) ────────────────────────────
-  let caption = null, hint = null, panel = null, panelTitle = null, panelContent = null, panelRefs = null, panelCloser = null, jumpList = null, threadUI = null;
+  let caption = null, hint = null, panel = null, panelTitle = null, panelContent = null, panelRefs = null, panelCloser = null, jumpList = null;
   // Static shell markup (caption text, hint text, panel skeleton) lives in
   // orbiter.html, parsed via parseHTML below. Caption/hint/panel/poem-link
   // styles live in orbiter.css, imported above. The epigraph ("sing,
@@ -820,7 +819,6 @@ export function createOrbiter(container, { preview = false, initialPieceId = nul
         getInboundLinks('orbiter', poem.id).map(l => poems.find(p => p.id === l.from.id)?.title)
       ) ?? '';
     }
-    threadUI = wireResonanceThread(panel, 'orbiter', poem.id);
     // Stagger glimmer delays + a11y attributes, same treatment as sphere's
     // fragment-links on open/navigate.
     panelContent.querySelectorAll('.poem-link').forEach(link => {
@@ -1070,7 +1068,6 @@ export function createOrbiter(container, { preview = false, initialPieceId = nul
       orbitDrag.dispose();
       resize.dispose();
       panelCloser?.dispose();
-      threadUI?.dispose();
       if (onContainerMouseMove) container.removeEventListener('mousemove', onContainerMouseMove);
       if (onContainerClick) container.removeEventListener('click', onContainerClick);
       renderer.dispose();

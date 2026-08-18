@@ -84,7 +84,6 @@
 import { scrollPieces, toOgham } from './scroll.text.js';
 import { getOutboundLinks, getInboundLinks } from '../../links.js';
 import { escapeHtml, parseHTML, wireCrossLinks } from '../../utils/sceneKit.js';
-import { wireResonanceThread } from '../../utils/constellationEntry.js';
 import scrollHtml from './scroll.html?raw';
 import './scroll.css';
 
@@ -339,11 +338,6 @@ export function createScroll(container, { preview = false, initialPieceId = null
 
   scroll.appendChild(frag.querySelector('.scroll-ogham-panel'));
 
-  // Thread-follow filaments — see the note at the appendChild call below for
-  // why this scene wires them at BUILD time (once per patch, here) rather
-  // than at "open" time the way sphere/orbiter/library do.
-  const threadUIs = [];
-
   PATCHES.forEach((patch, i) => {
     const article = document.createElement('article');
     article.className = `scroll-patch scroll-patch-tone-${patch.tone}`;
@@ -412,19 +406,6 @@ export function createScroll(container, { preview = false, initialPieceId = null
       refsEl.textContent = 'echoed elsewhere on the scroll';
       article.appendChild(refsEl);
     }
-
-    // Thread-follow filament (Constellation entry point) — wired here,
-    // once, at build time, rather than from jumpToPatch() the way sphere/
-    // orbiter/library wire theirs from their own open/navigate functions.
-    // Those three scenes only ever populate ONE piece into their panel at
-    // a time; scroll renders every patch fully, always, right from the
-    // start (this file's own header) — there's no separate "open" moment
-    // to hook for most of a visit, just ordinary scrolling past a patch
-    // that was already on the page. `article` (position: relative,
-    // scroll.css) is a perfectly good anchor for the filament in its own
-    // right, so this calls wireResonanceThread once per patch instead of
-    // waiting for an event that, for most patches, never actually fires.
-    threadUIs.push(wireResonanceThread(article, 'scroll', patch.pieceId));
 
     scroll.appendChild(article);
 
@@ -505,7 +486,6 @@ export function createScroll(container, { preview = false, initialPieceId = null
     dispose() {
       scroll.removeEventListener('click', onLinkClick);
       scroll.removeEventListener('keydown', onLinkKeydown);
-      threadUIs.forEach(t => t?.dispose());
       root.remove();
     }
   };

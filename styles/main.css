@@ -201,7 +201,27 @@ html, body {
 #landing {
   width: 100%; height: 100%;
   display: flex;
+  /* 2026-08-18: plain `center` clips the TOP of the grid whenever its
+     content is taller than #landing's available height — align-items:
+     center on a scrollable flex container centers overflow symmetrically
+     above and below, and scrollTop can't go negative, so the portion that
+     overflowed off the top is simply unreachable no matter how far you
+     scroll. Caught live once Harmonics' tile brought the desktop grid
+     (styles/main.css, #scene-previews) to a fixed 3 rows — three 320px
+     rows (1056px incl. gaps) routinely exceeds a laptop's actual available
+     height (viewport minus this nav clearance and the bottom padding
+     below), which two rows never did at typical desktop widths, so this
+     bug existed in the CSS the whole time but had no way to actually
+     trigger before. `safe center` is the real, general fix: center when
+     it fits, fall back to flex-start (no clipping) the moment it doesn't,
+     rather than special-casing another width where it happens to overflow.
+     Plain `center` above stays first for browsers that don't parse `safe`
+     — an unsupported value invalidates just that one declaration, so
+     those browsers silently keep the working fallback instead of losing
+     centering entirely; browsers that do support it use the second,
+     safer declaration instead (last valid one wins). */
   align-items: center;
+  align-items: safe center;
   justify-content: center;
   padding-top: 3.5rem;    /* clear nav (#pm-nav's own height) */
   /* Same idea at the bottom: on any window short enough that the two-row
@@ -227,15 +247,52 @@ html, body {
   /* Semantic pass, 2026-07-22: was a plain <div role="list">. A real <ul>
      needs its own default list chrome reset (marker + the browser's
      default margin/indent) — padding was already explicit here, covering
-     the default padding-inline-start these rules would otherwise add. */
+     the default padding-inline-start these rules would otherwise add.
+
+     2026-08-18, twice: first switched flex-wrap → a fixed 3×3 CSS grid
+     when Harmonics' tile brought the count to nine (flex-wrap's own
+     automatic wrapping had no way to know nine divides evenly, so it
+     wrapped wherever the container's actual width happened to run out).
+     Scott's own follow-up preferred a 4-then-5 split over the square —
+     a CSS grid can't do two different column counts on two different
+     rows on its own, so this went back to flex-wrap, but now with an
+     explicit forced line break (`.preview-row-break` below) between the
+     4th and 5th tile instead of leaving the wrap point to chance, same
+     "a chosen layout, not an emergent one" reasoning as the grid attempt.
+     Tile size dropped 320px → 240px so five actually fit one row at
+     ordinary desktop widths instead of silently wrapping to 4/1 or
+     3/2 on a narrower browser — see .preview-row-break's own comment for
+     where this stops being enforced. */
   list-style: none;
   margin: 0;
   display: flex;
-  gap: 3rem;
-  align-items: center;
-  justify-content: center;
   flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 1.5rem;
   padding: 1rem;
+}
+
+/* Forces the wrap point between the 4th and 5th preview tile (see
+   #scene-previews' own comment) rather than leaving flex-wrap to break
+   wherever the container's width happens to run out. A zero-height,
+   100%-wide flex item pushes everything after it onto a new line — the
+   standard CSS technique for an explicit break inside a wrapping flex
+   row. `aria-hidden` and no content: it carries no information, it's
+   layout-only. Turned off below 1200px (falls back to ordinary flex-wrap)
+   since five 240px tiles plus four gaps no longer reliably fits a
+   narrower browser — a deliberate 4-and-5 split is only worth enforcing
+   where it can actually render as one, not forced at a width where it'd
+   just look cramped or start wrapping unevenly again anyway. */
+.preview-row-break {
+  flex-basis: 100%;
+  width: 0;
+  height: 0;
+  margin: 0;
+  padding: 0;
+}
+@media (max-width: 1200px) {
+  .preview-row-break { display: none; }
 }
 
 /* ─── "Read the writing on its own" — moved, 1.31.2 ─────────────────────────
@@ -299,8 +356,8 @@ html, body {
   border: none;
   font: inherit;
   display: block;
-  width: 320px;
-  height: 320px;
+  width: 240px;
+  height: 240px;
   cursor: pointer;
   border-radius: 50%;
   overflow: hidden;
@@ -440,45 +497,6 @@ html, body {
   outline-offset: -2px;
 }
 
-/* ─── Thread-follow filament (Constellation entry point) ─────────────────────
-   A small, quiet "found" affordance at the bottom-left corner of a read-more
-   panel — deliberately not styled like a normal link or button (no visible
-   label, no hover-underline), the same "something noticed, not something
-   offered" register as the colophon's own hidden hare mark. Appears only
-   when the piece currently open participates in an approved Layer 2
-   resonance (src/resonances.js) — every scene's panel gets it from this one
-   rule, via src/utils/constellationEntry.js's wireResonanceThread(). Every
-   scene's own panel is already `position: absolute/relative` for its own
-   close button (top-right); bottom-left keeps this well clear of that and
-   of any scene-specific chrome. */
-.pm-thread {
-  position: absolute;
-  bottom: 1.1rem; left: 1.1rem;
-  width: 1.5rem; height: 1.5rem;
-  padding: 0; border: none; background: none;
-  cursor: pointer;
-  z-index: 2;
-}
-.pm-thread::before {
-  content: '';
-  position: absolute; inset: 0;
-  background: linear-gradient(135deg,
-    transparent 40%, rgba(210,225,255,0.5) 47%,
-    rgba(235,242,255,0.85) 50%, rgba(210,225,255,0.5) 53%, transparent 60%);
-  animation: pm-thread-pulse 3.6s ease-in-out infinite;
-}
-.pm-thread:hover::before, .pm-thread:focus-visible::before {
-  animation-play-state: paused;
-  filter: brightness(1.7);
-}
-@keyframes pm-thread-pulse {
-  0%, 100% { opacity: 0.3; }
-  50% { opacity: 0.8; }
-}
-@media (prefers-reduced-motion: reduce) {
-  .pm-thread::before { animation: none; opacity: 0.55; }
-}
-
 /* ─── Focus styles ──────────────────────────────────────────────────────────── */
 #experience-close:focus {
   outline: 2px solid rgba(255,255,255,0.6);
@@ -496,11 +514,15 @@ html, body {
 
 /* ─── Responsive ────────────────────────────────────────────────────────────── */
 @media (max-width: 768px) {
-  #scene-previews { gap: 2rem; }
-  .preview-container { width: 240px; height: 240px; }
+  /* .preview-row-break already turns itself off at 1200px (see its own
+     comment), so #scene-previews is back to ordinary auto-wrapping
+     flex-wrap by the time this breakpoint applies — nothing further to
+     override here beyond a tighter gap for the narrower viewport; tile
+     size stays the same 240px as the desktop base. */
+  #scene-previews { gap: 1rem; }
 }
 @media (max-width: 480px) {
-  #scene-previews { gap: 1.5rem; flex-direction: column; padding: 1rem 1rem 3rem; }
+  #scene-previews { flex-direction: column; gap: 1.5rem; padding: 1rem 1rem 3rem; }
   .preview-container { width: 200px; height: 200px; }
   /* Icons at their touch-target width plus this gap must fit inside the
      viewport — #pm-nav has no wrap or scroll, so anything wider than the
@@ -521,12 +543,24 @@ html, body {
      Reinstating the same fix as before: 8 × 44px = 352px plus 7 gaps at
      0.5rem (8px) = 56px, totaling 408px, over the ~375px smallest common
      phone width (iPhone SE/12 mini). At the 38px override: 8 × 38px =
-     304px + 56px = 360px, comfortably under 375px again. This is now the
-     third time this exact bug has recurred across a scene-count change —
-     worth checking this math specifically any time a nav-bar scene is
-     added or restored, not just assuming the override state is current. */
-  #pm-nav { gap: 0.5rem; }
-  .nav-icon { min-width: 38px; min-height: 38px; }
+     304px + 56px = 360px, comfortably under 375px again.
+     2026-08-18: Harmonics' nav icon restored, count back to nine — same
+     math again, fourth time this has recurred. 9 × 38px = 342px + 8 gaps
+     at 0.5rem (8px) = 64px = 406px, over 375px again. Tightened both
+     knobs this time (34px icons, 0.35rem gap): 9 × 34px = 306px + 8 ×
+     5.6px = 44.8px = 350.8px, ~24px of margin under 375px. 34px is below
+     the usual ~44px touch-target guideline, same tradeoff this override
+     has made every time before — if a tenth scene shows up, this same
+     shrink-to-fit approach runs out of headroom fast, and the real fix
+     at that point is probably letting #pm-nav wrap or scroll on the
+     narrowest widths instead of continuing to shrink targets, which
+     would also need #experience-overlay's padding-top:3.5rem "clear
+     nav" assumption (styles/main.css) revisited since that assumes a
+     single-row bar. Worth checking this math any time a nav-bar scene
+     is added or restored, not just assuming the override state is
+     current. */
+  #pm-nav { gap: 0.35rem; }
+  .nav-icon { min-width: 34px; min-height: 34px; }
   /* Seven 200px tiles in a column (~1500px) is always taller than a
      phone viewport. align-items:center (inherited from #landing, and the
      cross-axis property since #landing's flex-direction stays row) would

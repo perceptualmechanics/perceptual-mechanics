@@ -46,12 +46,17 @@ import './constellation.css';
 // resonates with (possibly more than one piece), since there's no
 // longer a single line to click.
 //
-// Known tension, flagged rather than resolved: the ground-glimpse entry
-// point (src/utils/constellationEntry.js, wired into beamline/orrery)
-// was built on the premise that this scene lives underneath something,
-// revealed through a floor — retired as a live premise since round 7's
-// camera reset. Still unresolved; left untouched. Thread-follow (the
-// other entry point) is unaffected either way.
+// Round 9 (2026-08-18) renamed this scene "Harmonics" everywhere
+// user-facing (title, nav tooltip, colophon) — this module, its folder,
+// and every internal identifier (class prefixes, `constellation.js`
+// itself, `createConstellation`) deliberately kept the old name; a full
+// internal rename was flagged as optional/lower-priority and skipped as
+// out of scope for this round. Same round resolved round 7's "flagged,
+// not decided" ground-glimpse tension below by retiring both in-scene
+// entry points entirely (ground-glimpse and thread-follow) now that a
+// normal nav icon + landing preview tile cover discovery — see
+// src/utils/constellationEntry.js's own removal and main.js/beamline.js/
+// orrery.js's dispose cleanup for what that took.
 
 // ─── Per-scene accent colors ────────────────────────────────────────────────
 // Each scene's own already-established signature color, used for a
