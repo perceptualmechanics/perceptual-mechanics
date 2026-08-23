@@ -353,9 +353,21 @@ export function createConstellation(container, { preview = false, initialPieceId
   key.position.set(4, 8, 3);
   scene.add(key);
 
-  // ─── Deep-field stars ─────────────────────────────────────────────────────
-  const starCount = preview ? 300 : 900;
+  // ─── Deep-field stars (punched up 3.1.2, 2026-08-23) ───────────────────────
+  // More stars, slightly bigger/brighter, and — the actual "punch up" —
+  // real per-star color variation via vertex colors instead of one flat
+  // tint applied to every point. Weighted toward cool blue-white (majority
+  // of real naked-eye stars), white, and an occasional warm gold outlier,
+  // each further scaled by its own random brightness, so the field reads
+  // less like a uniform dust and more like an actual sky.
+  const starCount = preview ? 400 : 1200;
   const starPos = new Float32Array(starCount * 3);
+  const starCol = new Float32Array(starCount * 3);
+  const STAR_PALETTE = [
+    new THREE.Color(0xdbe6ff), // cool blue-white — majority
+    new THREE.Color(0xffffff), // white
+    new THREE.Color(0xfff3d6), // warm pale gold — occasional outlier
+  ];
   for (let i = 0; i < starCount; i++) {
     const r = STAR_R_MIN + Math.random() * (STAR_R_MAX - STAR_R_MIN);
     const theta2 = Math.random() * Math.PI * 2;
@@ -363,10 +375,17 @@ export function createConstellation(container, { preview = false, initialPieceId
     starPos[i * 3] = r * Math.sin(phiA) * Math.cos(theta2);
     starPos[i * 3 + 1] = Math.abs(r * Math.sin(phiA) * Math.sin(theta2));
     starPos[i * 3 + 2] = r * Math.cos(phiA);
+    const pick = Math.random();
+    const c = pick < 0.62 ? STAR_PALETTE[0] : pick < 0.92 ? STAR_PALETTE[1] : STAR_PALETTE[2];
+    const b = 0.75 + Math.random() * 0.5; // per-star brightness variance
+    starCol[i * 3] = c.r * b;
+    starCol[i * 3 + 1] = c.g * b;
+    starCol[i * 3 + 2] = c.b * b;
   }
   const starGeo = new THREE.BufferGeometry();
   starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
-  const starMat = new THREE.PointsMaterial({ color: 0xbbccff, size: 0.9 * SCALE_FACTOR, transparent: true, opacity: 0.5, sizeAttenuation: true, fog: false });
+  starGeo.setAttribute('color', new THREE.BufferAttribute(starCol, 3));
+  const starMat = new THREE.PointsMaterial({ vertexColors: true, size: 1.05 * SCALE_FACTOR, transparent: true, opacity: 0.62, sizeAttenuation: true, fog: false });
   const starField = new THREE.Points(starGeo, starMat);
   scene.add(starField);
 

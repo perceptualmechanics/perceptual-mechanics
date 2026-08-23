@@ -248,6 +248,21 @@ described are unchanged.)
   worth trimming, orrery.js's texture generators and first-person rig are the
   two most self-contained chunks to split out first.
 
+## 3.1.2 (2026-08-23)
+
+**Deep-field starfield punched up.** Round 10.1's "punch it up" pass had
+reworked the nebula/galaxy backdrop but left the separate, simpler deep-
+field star layer untouched — Scott's follow-up asked specifically for that
+one. Count up 900→1200 (300→400 preview), size 0.9→1.05×SCALE_FACTOR,
+opacity 0.5→0.62, and — the actual punch — real per-star color instead of
+one flat tint applied to the whole field: vertex colors drawn from a small
+palette (cool blue-white majority, white, occasional warm pale-gold
+outlier), each further scaled by its own random brightness. Reads like an
+actual sky instead of a uniform haze, without competing with the resonance
+nodes for attention.
+
+**Verified**: full build clean; checked live via Scott's dev server.
+
 ## 3.1.1 (2026-08-23)
 
 **Nodes spread apart slightly more.** Direct follow-up to 3.1.0: approving
