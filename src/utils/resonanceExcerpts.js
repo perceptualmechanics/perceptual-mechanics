@@ -1,6 +1,6 @@
 // ─── Resonance excerpt windowing ────────────────────────────────────────────
 // Shared by scripts/build-resonances-doc.mjs (the committed review doc) and
-// src/scenes/constellation/constellationPieces.js (Harmonics' own live
+// src/scenes/harmonics/harmonicsPieces.js (Harmonics' own live
 // side-by-side passage display, 2026-08-18) — both need the exact same
 // answer to "given a rationale's quoted language and a piece's full raw
 // text, what's the relevant excerpt to show." Originally written once,
@@ -20,7 +20,7 @@
 // arbitrary opening excerpt as if it were the relevant part.
 //
 // Plain functions, no DOM/Node dependency either way — safe to import from
-// a Vite-bundled browser module (constellationPieces.js) or a bare `node`
+// a Vite-bundled browser module (harmonicsPieces.js) or a bare `node`
 // script (build-resonances-doc.mjs) alike.
 
 export const FULL_TEXT_THRESHOLD = 500; // pieces at or under this length are shown whole, no windowing needed

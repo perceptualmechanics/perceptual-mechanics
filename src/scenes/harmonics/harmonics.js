@@ -4,13 +4,13 @@ import {
   prefersReducedMotion, parseHTML, createJumpList, createPanelCloser, escapeHtml,
 } from '../../utils/sceneKit.js';
 import { getApprovedResonances, getPendingResonances } from '../../resonances.js';
-import { navigateToPiece } from '../../utils/constellationEntry.js';
-import { resolveEndpoint } from './constellationPieces.js';
+import { navigateToPiece } from '../../utils/harmonicsEntry.js';
+import { resolveEndpoint } from './harmonicsPieces.js';
 import { extractQuotes, snippetFor } from '../../utils/resonanceExcerpts.js';
-import constellationHtml from './constellation.html?raw';
-import './constellation.css';
+import harmonicsHtml from './harmonics.html?raw';
+import './harmonics.css';
 
-// ─── The Constellation ──────────────────────────────────────────────────────
+// ─── The harmonics ──────────────────────────────────────────────────────
 // The ninth scene, and the only one with no found text of its own — it
 // visualizes src/resonances.js's Layer 2 (cross-scene, connotative links),
 // approved rows only.
@@ -29,10 +29,10 @@ import './constellation.css';
 // "underneath a canopy" constraint.
 //
 // Round 8 (2026-08-18) — dropped drawn connection lines entirely. A
-// constellation shape drawn with lines only reads correctly from one
+// harmonics shape drawn with lines only reads correctly from one
 // vantage; once the camera could orbit freely (round 7), that's exactly
 // why this kept looking like ball-and-stick molecules rather than a
-// constellation. Fixed by making resonance a TEMPORAL signal instead of
+// harmonics. Fixed by making resonance a TEMPORAL signal instead of
 // a spatial one: every node is a Kuramoto oscillator (see the Kuramoto
 // section below) — the same coupled-oscillator physics behind the
 // Orrery's resonator chime, extended here from one struck object ringing
@@ -49,21 +49,21 @@ import './constellation.css';
 //
 // Round 9 (2026-08-18) renamed this scene "Harmonics" everywhere
 // user-facing (title, nav tooltip, colophon) — this module, its folder,
-// and every internal identifier (class prefixes, `constellation.js`
-// itself, `createConstellation`) deliberately kept the old name; a full
+// and every internal identifier (class prefixes, `harmonics.js`
+// itself, `createharmonics`) deliberately kept the old name; a full
 // internal rename was flagged as optional/lower-priority and skipped as
 // out of scope for this round. Same round resolved round 7's "flagged,
 // not decided" ground-glimpse tension below by retiring both in-scene
 // entry points entirely (ground-glimpse and thread-follow) now that a
 // normal nav icon + landing preview tile cover discovery — see
-// src/utils/constellationEntry.js's own removal and main.js/beamline.js/
+// src/utils/harmonicsEntry.js's own removal and main.js/beamline.js/
 // orrery.js's dispose cleanup for what that took.
 //
 // Round 10 (2026-08-18) — four real additions, all keyed off data already
 // in the system rather than decoration: (1) a hover halo/brighten on
 // nodes (previously only the cursor changed); (2) the payoff panel now
 // shows real side-by-side excerpts from both pieces' own text (via
-// constellationPieces.js's resolveEndpoint + resonanceExcerpts.js's
+// harmonicsPieces.js's resolveEndpoint + resonanceExcerpts.js's
 // snippetFor) — the reviewed rationale still picks which quoted span
 // each excerpt centers on, but isn't printed in the panel itself;
 // (3) sonification — every
@@ -254,7 +254,7 @@ function makeDotTexture() {
   return new THREE.CanvasTexture(c);
 }
 
-export function createConstellation(container, { preview = false, initialPieceId = null } = {}) {
+export function createharmonics(container, { preview = false, initialPieceId = null } = {}) {
   const w = container.clientWidth || window.innerWidth;
   const h = container.clientHeight || window.innerHeight;
 
@@ -753,23 +753,23 @@ export function createConstellation(container, { preview = false, initialPieceId
   let panelTitleEl = null, panelSubtitleEl = null, panelResonancesEl = null;
   let soundToggleEl = null, soundToggleLabelEl = null;
   if (!preview) {
-    const frag = parseHTML(constellationHtml);
-    titleEl = frag.querySelector('.constellation-title');
-    hintEl = frag.querySelector('.constellation-hint');
+    const frag = parseHTML(harmonicsHtml);
+    titleEl = frag.querySelector('.harmonics-title');
+    hintEl = frag.querySelector('.harmonics-hint');
     document.body.appendChild(titleEl);
     document.body.appendChild(hintEl);
 
-    soundToggleEl = frag.querySelector('.constellation-sound-toggle');
-    soundToggleLabelEl = soundToggleEl.querySelector('.constellation-sound-toggle-label');
+    soundToggleEl = frag.querySelector('.harmonics-sound-toggle');
+    soundToggleLabelEl = soundToggleEl.querySelector('.harmonics-sound-toggle-label');
     document.body.appendChild(soundToggleEl);
 
-    panel = frag.querySelector('.constellation-panel');
+    panel = frag.querySelector('.harmonics-panel');
     container.appendChild(panel);
-    panelTitleEl = panel.querySelector('.constellation-panel-title');
-    panelSubtitleEl = panel.querySelector('.constellation-panel-subtitle');
-    panelResonancesEl = panel.querySelector('.constellation-panel-resonances');
+    panelTitleEl = panel.querySelector('.harmonics-panel-title');
+    panelSubtitleEl = panel.querySelector('.harmonics-panel-subtitle');
+    panelResonancesEl = panel.querySelector('.harmonics-panel-resonances');
     panelCloser = createPanelCloser(panel, container, {
-      closeBtn: panel.querySelector('.constellation-panel-close'),
+      closeBtn: panel.querySelector('.harmonics-panel-close'),
     });
   }
 
@@ -812,25 +812,25 @@ export function createConstellation(container, { preview = false, initialPieceId
       const otherSnippet = snippetFor(resolved.rawText, quotes);
 
       const entry = document.createElement('div');
-      entry.className = 'constellation-resonance-entry';
+      entry.className = 'harmonics-resonance-entry';
 
       const pair = document.createElement('div');
-      pair.className = 'constellation-excerpt-pair';
+      pair.className = 'harmonics-excerpt-pair';
       const selfQ = document.createElement('blockquote');
-      selfQ.className = 'constellation-excerpt';
+      selfQ.className = 'harmonics-excerpt';
       selfQ.style.borderLeftColor = selfHex;
-      selfQ.innerHTML = `<span class="constellation-excerpt-label">${escapeHtml(self.title)}</span>${escapeHtml(selfSnippet)}`;
+      selfQ.innerHTML = `<span class="harmonics-excerpt-label">${escapeHtml(self.title)}</span>${escapeHtml(selfSnippet)}`;
       const otherQ = document.createElement('blockquote');
-      otherQ.className = 'constellation-excerpt';
+      otherQ.className = 'harmonics-excerpt';
       otherQ.style.borderLeftColor = otherHex;
-      otherQ.innerHTML = `<span class="constellation-excerpt-label">${escapeHtml(resolved.title)}</span>${escapeHtml(otherSnippet)}`;
+      otherQ.innerHTML = `<span class="harmonics-excerpt-label">${escapeHtml(resolved.title)}</span>${escapeHtml(otherSnippet)}`;
       pair.appendChild(selfQ);
       pair.appendChild(otherQ);
       entry.appendChild(pair);
 
       const btn = document.createElement('button');
       btn.type = 'button';
-      btn.className = 'constellation-endpoint-link';
+      btn.className = 'harmonics-endpoint-link';
       btn.textContent = 'Open this piece →';
       btn.setAttribute('aria-label', `Open ${resolved.title}`);
       btn.addEventListener('click', e => {

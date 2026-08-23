@@ -1,6 +1,6 @@
 // ─── Find verbatim/near-verbatim overlaps across the whole found-text corpus
 // ────────────────────────────────────────────────────────────────────────
-// Mechanical duplicate detection for the Constellation's Step A: either two
+// Mechanical duplicate detection for the harmonics's Step A: either two
 // spans of text share the same underlying words or they don't — this is a
 // fact, checkable by a script, not a judgment call for an LLM reasoning
 // pass to make. Same category of check as verify-links.mjs, just for a
@@ -21,7 +21,7 @@
 // This is corpus-wide and scene-agnostic: it reports same-scene overlaps
 // too (two pieces in the same scene sharing text), not just cross-scene
 // ones, since that's still a fact worth surfacing even if it doesn't
-// become a Constellation resonance. Output is plain, sorted by overlap
+// become a harmonics resonance. Output is plain, sorted by overlap
 // length, meant to be read directly or piped to a file.
 
 import { fragments } from '../src/scenes/sphere/sphere.text.js';

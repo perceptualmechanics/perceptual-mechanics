@@ -50,7 +50,7 @@ export const LINKS = [
   { from: { scene: 'sphere', id: 5, field: 'text' }, phrase: 'dig for fire.', to: { scene: 'sphere', id: 11 } },
   { from: { scene: 'sphere', id: 5, field: 'text' }, phrase: 'Nothing comes without sacrifice.', to: { scene: 'sphere', id: 24 } },
   { from: { scene: 'sphere', id: 6, field: 'text' }, phrase: 'This is how we bounce: we find someone that has a high caliber of energy, and we throw ourselves at them with all the force we can muster.', to: { scene: 'sphere', id: 22 } },
-  { from: { scene: 'sphere', id: 7, field: 'text' }, phrase: 'There is nothing to be drawn from constellations, arbitrary abstract lines.', to: { scene: 'sphere', id: 17 } },
+  { from: { scene: 'sphere', id: 7, field: 'text' }, phrase: 'There is nothing to be drawn from harmonicss, arbitrary abstract lines.', to: { scene: 'sphere', id: 17 } },
   { from: { scene: 'sphere', id: 7, field: 'text' }, phrase: 'light gives us everything we have.', to: { scene: 'sphere', id: 12 } },
   { from: { scene: 'sphere', id: 8, field: 'text' }, phrase: 'a flash from heaven to earth at the tip of my finger.', to: { scene: 'sphere', id: 17 } },
   { from: { scene: 'sphere', id: 8, field: 'text' }, phrase: 'Just the sense of knowing was worth it.', to: { scene: 'sphere', id: 24 } },

@@ -6,14 +6,14 @@
 // (Layer 2) is discovered, not authored — thematic/associative connection
 // between two pieces of found or written text, not necessarily sharing a
 // phrase, discovered by a full-corpus reasoning pass rather than written in
-// at piece-creation time. It exists to feed the Constellation scene.
+// at piece-creation time. It exists to feed the harmonics scene.
 //
 // A row here is symmetric — two pieces evoke each other, neither is a
 // "source" the way links.js's `from` is — and carries a `rationale`
 // instead of a matched `phrase`, since there's no single verbatim
 // substring to check most of these against. The rationale is what makes a
 // discovered link legible and reviewable at all; see
-// docs/constellation_resonances.md for the actual candidate list, the
+// docs/harmonics_resonances.md for the actual candidate list, the
 // verified quoted text behind each rationale, and review status.
 //
 // `basis` — added after round 1 review — separates two genuinely different
@@ -40,7 +40,7 @@
 //   'pending'  — proposed by the discovery pass, not yet reviewed.
 //   'approved' — Scott read the rationale (or, for verbatim rows, decided
 //                he wants the connection shown) and confirmed it. Only
-//                these should ever be read by the Constellation scene.
+//                these should ever be read by the harmonics scene.
 //   'rejected' — Scott read it and said no. Kept (not deleted) so the
 //                discovery pass's full output stays auditable — a rejected
 //                row is a record that this pair was considered and turned
@@ -79,11 +79,11 @@
 //     that's a scope decision for Scott to make deliberately, not
 //     something a discovery pass should fold in by default.
 //
-// This file feeds the Constellation scene (src/scenes/constellation/),
+// This file feeds the harmonics scene (src/scenes/harmonics/),
 // shipped since v2.5.0 — only 'approved' rows are ever rendered there
 // (see getApprovedResonances below), so a 'pending' row added here has no
 // live effect until Scott reviews and approves it. Rows 1–20 were reviewed and approved by
-// Scott on 2026-08-16 (docs/constellation_resonances.md, "i'm good with
+// Scott on 2026-08-16 (docs/harmonics_resonances.md, "i'm good with
 // all of these"). Rows 21–22 were added the same day after Scott pointed
 // out that Butterfly has found text too (its own placard title), and
 // approved separately ("approved, fold them in") once he'd read them. All
@@ -100,7 +100,7 @@ export const RESONANCES = [
   // same passage family as #3/#4/#6 below, not a separate claim. The
   // script also surfaced 12 other exact-overlap pairs, all intra-scene
   // (library-note cross-references and theater's own intentional
-  // callback lines within a single play) — real, but not Constellation
+  // callback lines within a single play) — real, but not harmonics
   // material: they're the site's existing internal annotation/callback
   // style working as designed, not a cross-piece discovery. Full script
   // output is reproducible by running `node
@@ -660,12 +660,12 @@ export const RESONANCES = [
 
 // ─── Query helpers ──────────────────────────────────────────────────────────
 // Same shape as links.js's getOutboundLinks/getInboundLinks, for the two
-// consumers Phase 3 actually has: the Constellation scene itself (needs
+// consumers Phase 3 actually has: the harmonics scene itself (needs
 // every approved row, full stop) and each found-text scene's own panel
 // code (needs "does the piece I'm currently showing participate in any
 // approved resonance" — the thread-follow entry point).
 
-// Every row the Constellation scene should render as a strand. Only
+// Every row the harmonics scene should render as a strand. Only
 // 'approved' — 'pending'/'rejected' rows exist for the review record, not
 // for display.
 export function getApprovedResonances() {
@@ -677,7 +677,7 @@ export function getApprovedResonances() {
 // still awaiting review. Deliberately NOT the same query as approved rows:
 // this is an honest picture of the system's actual current state (more
 // connections found than confirmed, some always still in motion), not
-// decoration invented for its own sake — see constellation.js's own
+// decoration invented for its own sake — see harmonics.js's own
 // comment where this is consumed for how these render (never Kuramoto-
 // coupled, no full payoff panel). 'rejected' rows are excluded on purpose:
 // Scott already looked at those and said no, so surfacing them again,

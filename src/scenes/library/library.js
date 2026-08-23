@@ -315,7 +315,7 @@ function makeSpineTexture(baseColor, title, creator, isBox) {
     // A scattering of small dots standing in for the starry/celestial
     // boxes on the real shelf (Kim Krans' Tarot/Alchemy decks) — an
     // abstraction, not a reproduction of the real box art. A few thin
-    // constellation lines between nearby dots read as a considered
+    // harmonics lines between nearby dots read as a considered
     // pattern rather than scattered confetti.
     const dotCount = 22;
     const pts = [];
@@ -462,7 +462,7 @@ function makeDiscSpineTexture(baseColor, title) {
 // Canvas-drawn CD spine — same "no real cover art" rule as makeSpineTexture,
 // simplified for a jewel-case spine rather than a book: album title (larger,
 // vertical) over a smaller artist line, on a glossier flat color field. No
-// dye-wash/embossed-band/dot-constellation treatment the books get — the
+// dye-wash/embossed-band/dot-harmonics treatment the books get — the
 // spine is thin enough on screen that that detail would just be noise; a
 // simple top-lit gradient plus contrast-aware ink is enough for it to read
 // as "a CD," not "a thin book." Draws from the pale CD_PALETTE (the paper

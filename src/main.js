@@ -9,14 +9,14 @@ import { createLibrary }   from './scenes/library/library.js';
 // transmission) bouncing a beam between them.
 import { createBeamline }  from './scenes/beamline/beamline.js';
 // Harmonics — ninth scene, Phase 3 (2026-08-16), renamed from "The
-// Constellation" 2026-08-18 (user-facing name only — internal module/
-// folder/class names stay `constellation`, see constellation.js's own
+// harmonics" 2026-08-18 (user-facing name only — internal module/
+// folder/class names stay `harmonics`, see harmonics.js's own
 // header for why). Visualizes src/resonances.js's approved Layer 2
-// links; see constellation.js's own header comment for the full
+// links; see harmonics.js's own header comment for the full
 // picture. No found text of its own, so it has no ariaLabel-worthy
 // "what this scene contains" the way every other scene's own label
 // describes actual content — the label below says what it IS instead.
-import { createConstellation } from './scenes/constellation/constellation.js';
+import { createharmonics } from './scenes/harmonics/harmonics.js';
 import { initColophon }    from './components/colophon/colophon.js';
 import { prefersReducedMotion } from './utils/sceneKit.js';
 
@@ -38,7 +38,7 @@ const SCENES = {
                  ariaLabel: 'The Library — a real bookshelf, 107 books, films, and divination decks, rebuilt as a shelf you can turn in space. Drag to orbit, scroll to zoom, click a spine to read what it is.' },
   beamline:    { create: createBeamline,   label: 'Beamline.',
                  ariaLabel: 'Beamline — a staged sequence of curved mirrors, a beam of light bouncing between them, found text surfacing at each bounce. Drag to orbit, scroll to zoom, click a mirror to read.' },
-  constellation: { create: createConstellation, label: 'Harmonics.',
+  harmonics: { create: createharmonics, label: 'Harmonics.',
                  ariaLabel: 'Harmonics — resonant pieces across every other scene, laid out by how strongly they connect and pulsing in sync with whatever they resonate with. Drag to orbit, scroll to zoom, touch a node.' },
 };
 
@@ -72,23 +72,23 @@ const previews   = {};
 // for the very transition that just set it.
 let syncingHash = false;
 
-// ─── "Elsewhere" — the one cross-scene signal the Constellation reads ──────
+// ─── "Elsewhere" — the one cross-scene signal the harmonics reads ──────
 // No scene has ever read another scene's live state (each scene's own
 // "currently open piece" — orbiter's selectedSat, beamline's
 // selectedStation, etc. — is a private closure, reported outward only via
 // onPieceChange, which used to go nowhere but the URL hash). The
-// Constellation's spider needs one thing more than the hash gives it:
+// harmonics's spider needs one thing more than the hash gives it:
 // "what was the visitor just doing, elsewhere" surviving the trip INTO
-// the Constellation scene itself, not just visible in the address bar of
+// the harmonics scene itself, not just visible in the address bar of
 // whatever scene they left. sessionStorage (not persisted, cleared when
 // the tab closes) is the right lifetime for that — a real memory of the
-// current visit, not a permanent record. Constellation reads this once on
-// mount (constellation.js); nothing else on the site reads it.
+// current visit, not a permanent record. harmonics reads this once on
+// mount (harmonics.js); nothing else on the site reads it.
 function rememberElsewhere(sceneName, pieceId) {
-  if (!sceneName || sceneName === 'constellation' || pieceId == null) return;
+  if (!sceneName || sceneName === 'harmonics' || pieceId == null) return;
   try {
     sessionStorage.setItem('pm_elsewhere', JSON.stringify({ scene: sceneName, id: pieceId, t: Date.now() }));
-  } catch { /* private-mode/storage-disabled — Constellation just treats every strand as un-primed */ }
+  } catch { /* private-mode/storage-disabled — harmonics just treats every strand as un-primed */ }
 }
 
 function navIconFor(sceneName) {
@@ -97,21 +97,21 @@ function navIconFor(sceneName) {
 
 // ─── Public URL slug for Harmonics (3.1.3, 2026-08-23) ─────────────────────
 // The 2026-08-18 rename deliberately kept every INTERNAL name —
-// src/scenes/constellation/, the SCENES registry key below, .constellation-*
-// CSS classes — as `constellation` (see main.js's own header and
-// constellation.js's), reasoning that none of that is visible to a visitor.
+// src/scenes/harmonics/, the SCENES registry key below, .harmonics-*
+// CSS classes — as `harmonics` (see main.js's own header and
+// harmonics.js's), reasoning that none of that is visible to a visitor.
 // The URL hash turned out to be the one exception: it's the literal address
 // bar text, seen and shareable, not implementation detail — flagged live by
-// Scott after the rename had otherwise fully shipped. No real `#constellation`
+// Scott after the rename had otherwise fully shipped. No real `#harmonics`
 // links exist anywhere to preserve (the scene only just started writing that
 // hash at all, and never publicly), so this is NOT a backward-compat shim —
 // it's a one-way translation at the two seams where a hash is actually read
 // or written: setHash writes the public slug, parseHash reads it back. The
-// SCENES key itself stays `constellation` rather than being renamed
-// (cascades into index.html's data-scene attributes, #preview-constellation,
+// SCENES key itself stays `harmonics` rather than being renamed
+// (cascades into index.html's data-scene attributes, #preview-harmonics,
 // main.js's own PM_GLIMPSE_WORDS key, and every other place the internal
 // string is compared, for a complaint that was specifically about the URL).
-const PUBLIC_SLUG = { constellation: 'harmonics' }; // internal SCENES key -> URL slug
+const PUBLIC_SLUG = { harmonics: 'harmonics' }; // internal SCENES key -> URL slug
 const SLUG_TO_INTERNAL = Object.fromEntries(Object.entries(PUBLIC_SLUG).map(([k, v]) => [v, k]));
 
 // Returns { scene, pieceId } — pieceId is null when the hash only names a
@@ -392,7 +392,7 @@ function initPreviews() {
     orrery:     document.getElementById('preview-orrery'),
     library:    document.getElementById('preview-library'),
     beamline:   document.getElementById('preview-beamline'),
-    constellation: document.getElementById('preview-constellation'),
+    harmonics: document.getElementById('preview-harmonics'),
   };
   for (const [name, el] of Object.entries(map)) {
     if (el) previews[name] = SCENES[name].create(el, { preview: true });
@@ -423,7 +423,7 @@ window.addEventListener('hashchange', () => {
 // exists — routed through expandScene (not a bespoke path) so it gets the
 // exact same history/hash/focus handling as a nav-icon click. Originally
 // built for two Harmonics-specific entry points (ground-glimpse, thread-
-// follow — both retired 2026-08-18, see src/utils/constellationEntry.js's
+// follow — both retired 2026-08-18, see src/utils/harmonicsEntry.js's
 // own header) plus Harmonics' own payoff panel jumping to either side of a
 // resonance; only the last of those three still fires this event. `pieceId`
 // is whatever the target scene's own `initialPieceId` expects (a real piece
@@ -472,7 +472,7 @@ const PM_GLIMPSE_WORDS = {
   orrery: 'will',
   library: 'medium',
   beamline: 'emergence',
-  constellation: 'vibe',
+  harmonics: 'vibe',
   title: 'secrets',
 };
 let pmGlimpseTimer = null;

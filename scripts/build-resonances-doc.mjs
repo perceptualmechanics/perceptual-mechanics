@@ -1,5 +1,5 @@
-// ─── Build the Constellation resonances review document ────────────────────
-// Generates docs/constellation_resonances.md FROM src/resonances.js — the
+// ─── Build the harmonics resonances review document ────────────────────
+// Generates docs/harmonics_resonances.md FROM src/resonances.js — the
 // doc is a rendering of that data, not a second copy of it, so the two
 // can't drift out of sync the way the historical (never-committed)
 // library_resonances.md apparently did. Run after any change to
@@ -118,11 +118,11 @@ function renderSection(rows) {
   return rows.map(renderRow).join('\n---\n\n');
 }
 
-const doc = `# Constellation resonances — candidate review
+const doc = `# harmonics resonances — candidate review
 
 Generated from \`src/resonances.js\` by \`scripts/build-resonances-doc.mjs\` — do not
 hand-edit this file, edit \`RESONANCES\` and regenerate instead. This is the
-durable, committed review document the Constellation's Layer 2 (cross-scene,
+durable, committed review document the harmonics's Layer 2 (cross-scene,
 connotative) links depend on: nothing here ships to the live scene until
 Scott has read the rationale for a given row and marked it \`approved\` in
 \`src/resonances.js\` (a \`rejected\` row stays in the data — kept, not deleted —
@@ -172,6 +172,6 @@ ${renderSection(verbatimRows)}
 ${renderSection(connotativeRows)}
 `;
 
-const outPath = resolve(__dirname, '../docs/constellation_resonances.md');
+const outPath = resolve(__dirname, '../docs/harmonics_resonances.md');
 writeFileSync(outPath, doc);
 console.log(`Wrote ${outPath} (${RESONANCES.length} rows: ${basisCounts.verbatim} verbatim, ${basisCounts.connotative} connotative; ${counts.approved} approved, ${counts.pending} pending, ${counts.rejected} rejected)`);

@@ -30,7 +30,7 @@ function verifyLinksPlugin() {
 // ─── Resonance store verification ───────────────────────────────────────────
 // Same reasoning and same fix as verifyLinksPlugin() above, for
 // src/resonances.js instead of src/links.js — added Phase 3 (2026-08-16),
-// now that the Constellation scene actually reads RESONANCES at runtime.
+// now that the harmonics scene actually reads RESONANCES at runtime.
 // Previously `npm run verify-resonances` only ran when someone remembered
 // to type it by hand; a broken or unresolvable row could reach a build
 // silently. buildStart, same as verify-links, so both fail before either

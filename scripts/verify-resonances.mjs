@@ -1,4 +1,4 @@
-// ─── Verify resonances: repeatable check for the Layer 2 (Constellation)
+// ─── Verify resonances: repeatable check for the Layer 2 (harmonics)
 // link store ─────────────────────────────────────────────────────────────
 // Same discipline as verify-links.mjs, for src/resonances.js instead of
 // src/links.js. Checks, per row:
@@ -15,7 +15,7 @@
 //
 // Exported as a function, same reason as verify-links.mjs: vite.config.js
 // can run it as a build plugin, and `npm run verify-resonances` gives a
-// fast standalone check while editing docs/constellation_resonances.md or
+// fast standalone check while editing docs/harmonics_resonances.md or
 // src/resonances.js by hand.
 
 import { fragments } from '../src/scenes/sphere/sphere.text.js';

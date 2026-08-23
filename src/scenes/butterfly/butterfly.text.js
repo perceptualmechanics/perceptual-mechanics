@@ -4,7 +4,7 @@
 // Space, 2026" (the fixed label in butterfly.html / the `label` string in
 // main.js's SCENES map). Broken out into its own module, id kept for
 // consistency with every other scene's addressing scheme (see NOTES.md's
-// Linking & Addressing entry), so the Constellation's Layer 2 discovery pass
+// Linking & Addressing entry), so the harmonics's Layer 2 discovery pass
 // can address it as a piece like any other scene's pieces, even though it's
 // one line rather than a paragraph. Not wired into butterfly.html or
 // main.js's rendering — those already carry their own (slightly differently

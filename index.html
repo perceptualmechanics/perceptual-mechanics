@@ -176,7 +176,7 @@
       </svg>
     </button>
 
-    <!-- Harmonics (src/scenes/constellation/ — internal name kept, see
+    <!-- Harmonics (src/scenes/harmonics/ — internal name kept, see
          that file's own header for why) — 2026-08-16 launched with no
          nav icon or preview tile, reachable only via two in-scene entry
          points (ground glimpse, thread-follow filament). Restored here
@@ -187,7 +187,7 @@
          drawn as small pulse rings — a deliberately different motif from
          Orrery's concentric ellipses (those share one center around a
          mast; these are separate sources, each pulsing on its own). -->
-    <button type="button" class="nav-icon" data-scene="constellation" aria-label="Harmonics" title="Harmonics" onmouseover="pmGlimpse('constellation')" onfocus="pmGlimpse('constellation')">
+    <button type="button" class="nav-icon" data-scene="harmonics" aria-label="Harmonics" title="Harmonics" onmouseover="pmGlimpse('harmonics')" onfocus="pmGlimpse('harmonics')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
         <circle cx="7" cy="8" r="1" fill="currentColor" stroke="none"/>
         <circle cx="17" cy="7.5" r="1" fill="currentColor" stroke="none"/>
@@ -308,11 +308,11 @@
            `preview`, so this tile shows real, currently-converging
            pulsing the whole time it's on screen, not a frame chosen to
            stand in for motion it can't show. -->
-      <li class="preview-wrapper" data-scene="constellation">
-        <button type="button" class="preview-container" id="preview-constellation"
+      <li class="preview-wrapper" data-scene="harmonics">
+        <button type="button" class="preview-container" id="preview-harmonics"
              title="Harmonics"
              aria-label="Harmonics — resonant pieces across every other scene, laid out by how strongly they connect and pulsing in sync with whatever they resonate with. Press Enter to expand."
-             onmouseover="pmGlimpse('constellation')" onfocus="pmGlimpse('constellation')">
+             onmouseover="pmGlimpse('harmonics')" onfocus="pmGlimpse('harmonics')">
         </button>
       </li>
 

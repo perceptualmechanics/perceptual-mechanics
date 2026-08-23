@@ -18,7 +18,7 @@
 // source).
 //
 // Every beat now carries its own `id` too, added 2026-08-16 for the
-// Constellation's Layer 2 (cross-scene resonance) addressing — a flat
+// harmonics's Layer 2 (cross-scene resonance) addressing — a flat
 // sequence, 1..736, assigned mechanically in existing file order by a
 // script that only ever inserted `id: N, ` immediately after each beat's
 // opening brace (verified line-by-line against the pre-edit file: zero
@@ -32,7 +32,7 @@
 // its own header for why. Reasoning for going this granular at all, after
 // an earlier pass proposed staying at scene-level only: a resonance is
 // between two specific pieces of text, not "somewhere in this scene" — see
-// NOTES.md's Constellation entry.
+// NOTES.md's harmonics entry.
 
 export const PIECES = [
   {
@@ -950,7 +950,7 @@ export const PIECES = [
 // is the raw cast key (e.g. 'brian'), not the display name — look it up in
 // the beat's own play's `characters` map if a display name is needed.
 //
-// This is what the Constellation's discovery pass and any future
+// This is what the harmonics's discovery pass and any future
 // Layer-2-aware UI should read from, rather than re-flattening PIECES
 // themselves — one place that knows how a beat's id maps back to its play
 // and scene.
