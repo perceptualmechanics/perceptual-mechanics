@@ -248,6 +248,60 @@ described are unchanged.)
   worth trimming, orrery.js's texture generators and first-person rig are the
   two most self-contained chunks to split out first.
 
+## 3.2.0 (2026-08-23)
+
+**Nebula depth pass: dust-lane occlusion layer, second starfield density
+pass.** Requested after 3.1.0/3.1.1 nearly doubled node count and gave the
+field more room — the node field reads "louder" now, and the backdrop
+hadn't grown to match. Diagnosis, not just a vibe: the nebula (galaxy
+clusters + filaments) is pure emission — every point in that layer is the
+same kind of soft additive light, which tops out at "pretty haze" because
+nothing in it can read as solid or foregrounded. Real deep-field images
+get most of their depth from dust LANES blocking light behind them, not
+from the gas that glows — extinction, not emission — and that absorptive
+half of the picture was missing.
+
+**Dust-lane layer** (`buildDustLanes`, constellation.js): a second, sparser
+Points layer, same sprite approach as the glow galaxy, inverted intent —
+dark (near-black, faint violet cast), ordinary NormalBlending instead of
+AdditiveBlending, so it dims what it overlaps instead of adding to it.
+Filament-only (no round-clump mode), so it reads as lanes, not blobs;
+`renderOrder` after the glow layer, plus its own independent rotation
+(different axis/speed than the glow layer's own), so the two visibly drift
+apart as the camera orbits rather than moving in lockstep — that's the
+actual parallax/depth cue, not a static angle.
+
+Live-tuned the hard way: an initial guess at per-point size (roughly 2.8×
+a glow point) turned out completely invisible in a frozen dust-on/dust-off
+A/B screenshot pair at the default camera distance. Root cause: the glow
+layer's apparent size comes almost entirely from 5000 densely-overlapping
+ADDITIVE points compounding, not from any single point being large — a
+sparse, non-additive layer needs real per-point size to read as anything
+at all. Landed on ~28× SCALE_FACTOR (roughly 5× the first guess) after
+stepping through 3×, 5×, and 8× live and comparing frozen screenshots;
+also needed each point given its own soft radial-gradient sprite (reusing
+makeDotTexture(), the same technique node dots already use) since a bare
+PointsMaterial renders hard-edged squares that only blend into haze when
+thousands of them overlap additively — true at this layer's original
+sparse count too, so it needed the sprite as much as the size fix.
+
+**Starfield, second pass**: separate from the nebula question, and lower
+risk — another density/brightness bump (1200→1600, opacity 0.62→0.72) on
+top of 3.1.2's per-star color variation, so the deep-field layer holds up
+behind ~61 nodes rather than the ~32 it was originally balanced against.
+
+**Verified**: full build clean. Live-checked with a temporary debug hook
+(`window.__pmDebug`, removed before shipping) exposing the scene/camera/
+material references directly — froze the auto-orbit camera, toggled the
+dust layer visible/hidden at the identical frame for a clean A/B, and
+stepped through several size/opacity values before landing on the tuned
+numbers now in the code. Re-verified from multiple orbit angles and two
+zoom levels with the final checked-in values (not debug overrides): dust
+smudges read consistently, visibly darken glow-cluster edges where they
+overlap, and don't overwhelm the node field. Also checked the landing
+page's live preview tile — dust is subtle enough at that small size not to
+disrupt the thumbnail.
+
 ## 3.1.3 (2026-08-23)
 
 **Harmonics' URL now reads `#harmonics`, not `#constellation`.** The

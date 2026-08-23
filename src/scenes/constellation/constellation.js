@@ -353,14 +353,16 @@ export function createConstellation(container, { preview = false, initialPieceId
   key.position.set(4, 8, 3);
   scene.add(key);
 
-  // ─── Deep-field stars (punched up 3.1.2, 2026-08-23) ───────────────────────
-  // More stars, slightly bigger/brighter, and — the actual "punch up" —
-  // real per-star color variation via vertex colors instead of one flat
-  // tint applied to every point. Weighted toward cool blue-white (majority
-  // of real naked-eye stars), white, and an occasional warm gold outlier,
-  // each further scaled by its own random brightness, so the field reads
-  // less like a uniform dust and more like an actual sky.
-  const starCount = preview ? 400 : 1200;
+  // ─── Deep-field stars (punched up 3.1.2, second pass 3.2.0) ────────────────
+  // 3.1.2 added per-star color variation via vertex colors instead of one
+  // flat tint applied to every point — weighted toward cool blue-white
+  // (majority of real naked-eye stars), white, and an occasional warm gold
+  // outlier, each further scaled by its own random brightness. This pass
+  // (3.2.0, alongside the dust-lane layer above) is purely density/
+  // brightness: count and opacity nudged up again so this layer still
+  // holds up as a backdrop behind ~61 nodes, the field it was actually
+  // balanced against when 3.1.2 shipped having been ~32.
+  const starCount = preview ? 550 : 1600;
   const starPos = new Float32Array(starCount * 3);
   const starCol = new Float32Array(starCount * 3);
   const STAR_PALETTE = [
@@ -385,7 +387,7 @@ export function createConstellation(container, { preview = false, initialPieceId
   const starGeo = new THREE.BufferGeometry();
   starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
   starGeo.setAttribute('color', new THREE.BufferAttribute(starCol, 3));
-  const starMat = new THREE.PointsMaterial({ vertexColors: true, size: 1.05 * SCALE_FACTOR, transparent: true, opacity: 0.62, sizeAttenuation: true, fog: false });
+  const starMat = new THREE.PointsMaterial({ vertexColors: true, size: 1.15 * SCALE_FACTOR, transparent: true, opacity: 0.72, sizeAttenuation: true, fog: false });
   const starField = new THREE.Points(starGeo, starMat);
   scene.add(starField);
 
@@ -492,7 +494,107 @@ export function createConstellation(container, { preview = false, initialPieceId
     return { points, geo, mat, count: COUNT, baseColor };
   }
   const galaxy = buildGalaxy(GALAXY_R_MIN, GALAXY_R_MAX);
+  galaxy.points.renderOrder = 0;
   scene.add(galaxy.points);
+
+  // ─── Dust-lane occlusion layer (3.2.0, 2026-08-23) ─────────────────────────
+  // The glow clusters above are pure emission — every point in that layer
+  // is the same kind of soft additive light, which tops out at "pretty
+  // haze": nothing in it can read as solid or foregrounded, because
+  // nothing in it is doing anything but adding brightness. Real deep-field
+  // images (Orion, the Pillars, Carina) get most of their sense of depth
+  // from dust LANES blocking light behind them, not from the gas that
+  // glows — extinction, not emission. Flagged after 3.1.0/3.1.1 nearly
+  // doubled node count and gave the field more room: the backdrop hadn't
+  // grown to match, and a denser node field made the flat, uniformly-lit
+  // haze read as even flatter by comparison.
+  //
+  // Same sprite/Points approach as buildGalaxy, just inverted intent: dark,
+  // low-alpha, ordinary (not additive) blending, so each point DIMS
+  // whatever it overlaps rather than adding to it. Every point is
+  // filament-only (unlike the glow layer's mix of clumps + filaments) —
+  // dust wants to read as LANES, not blobs. `renderOrder` after the glow
+  // layer's own 0 makes this consistently sit "in front" for blending
+  // purposes; its own independent rotation (different axis/speed than the
+  // glow layer's) is what actually sells depth as the camera orbits — two
+  // layers turning at different rates is real parallax, not a static
+  // camera-angle accident that only reads from one vantage point.
+  function buildDustLanes(R_MIN, R_MAX) {
+    const COUNT = preview ? 700 : 2200;
+    const LANE_COUNT = preview ? 6 : 14;
+    const dustColor = new THREE.Color(0x140b1e); // near-black, faint cool-violet cast — never pure 0x000 (would just vanish against the bg)
+
+    function gauss() {
+      return (Math.random() + Math.random() + Math.random() - 1.5) / 1.5;
+    }
+
+    // Anchor points a lane threads between. Reused pairwise (like the glow
+    // layer's filament fraction) but ALL of it, not a fraction — this
+    // layer has no round-clump mode at all.
+    const anchors = [];
+    for (let k = 0; k < LANE_COUNT; k++) {
+      const r = R_MIN + Math.random() * (R_MAX - R_MIN);
+      const theta2 = Math.random() * Math.PI * 2;
+      const phi = Math.acos(2 * Math.random() - 1);
+      anchors.push(new THREE.Vector3(
+        r * Math.sin(phi) * Math.cos(theta2),
+        r * Math.sin(phi) * Math.sin(theta2) * 0.75,
+        r * Math.cos(phi),
+      ));
+    }
+
+    const pos = new Float32Array(COUNT * 3);
+    const col = new Float32Array(COUNT * 3);
+    const c = new THREE.Color();
+    for (let i = 0; i < COUNT; i++) {
+      const a = anchors[(Math.random() * anchors.length) | 0];
+      let b = anchors[(Math.random() * anchors.length) | 0];
+      for (let tries = 0; b === a && tries < 5; tries++) b = anchors[(Math.random() * anchors.length) | 0];
+      const t = Math.random();
+      const jitter = (R_MAX - R_MIN) * 0.05;
+      pos[i * 3] = THREE.MathUtils.lerp(a.x, b.x, t) + gauss() * jitter;
+      pos[i * 3 + 1] = THREE.MathUtils.lerp(a.y, b.y, t) + gauss() * jitter;
+      pos[i * 3 + 2] = THREE.MathUtils.lerp(a.z, b.z, t) + gauss() * jitter;
+      c.copy(dustColor).multiplyScalar(0.7 + Math.random() * 0.6);
+      col[i * 3] = c.r; col[i * 3 + 1] = c.g; col[i * 3 + 2] = c.b;
+    }
+
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    geo.setAttribute('color', new THREE.BufferAttribute(col, 3));
+    // The glow layer above has no `map` either — bare PointsMaterial
+    // renders hard-edged squares, which thousands of dense, additively-
+    // blended points smooth into a haze without anyone noticing. This
+    // layer is sparser AND non-additive, so a hard square edge would
+    // actually show — needs its own soft radial-gradient sprite (same
+    // technique as makeDotTexture(), used for node dots) so each point
+    // reads as a soft smudge fading at the edges, not a tiny dark tile.
+    const dustTex = makeDotTexture();
+    const mat = new THREE.PointsMaterial({
+      // MUCH bigger than the glow points, and not a small bump — live-
+      // tuned after an initial guess (5.6×SCALE_FACTOR, matching roughly
+      // 2.8× a glow point) turned out completely invisible in a frozen
+      // dust-on/dust-off A/B at default camera distance: the glow layer's
+      // apparent size comes almost entirely from 5000 densely-overlapping
+      // ADDITIVE points compounding, not from any single point being
+      // large, so a sparse non-additive layer needs real per-point size to
+      // read as anything at all. ~28× SCALE_FACTOR is what actually shows
+      // up as soft dark smudges rather than nothing. No `blending`
+      // override: PointsMaterial defaults to THREE.NormalBlending, which
+      // is the entire point here — AdditiveBlending (the glow layer's
+      // choice) can only ever brighten, never darken, so it was never an
+      // option for this layer.
+      size: (preview ? 21 : 28) * SCALE_FACTOR, map: dustTex, vertexColors: true,
+      transparent: true, opacity: 0.55, depthWrite: false, sizeAttenuation: true, fog: false,
+    });
+    const points = new THREE.Points(geo, mat);
+    points.renderOrder = 1;
+    points.rotation.x = -0.22;
+    points.rotation.z = 0.4; // deliberately different tilt than galaxy.points' own — independent rotation axes read as real parallax, not two layers moving in lockstep
+    return { points, geo, mat, tex: dustTex, count: COUNT };
+  }
+  const dustLanes = buildDustLanes(GALAXY_R_MIN, GALAXY_R_MAX);
+  scene.add(dustLanes.points);
 
   // ─── Galaxy twinkle (round 10.1) ─────────────────────────────────────────
   // The backdrop was flagged as reading like a frozen diagram — a static
@@ -1035,6 +1137,12 @@ export function createConstellation(container, { preview = false, initialPieceId
       // the Points object's own rotation) but it's what actually reads
       // as "alive" rather than a frozen diagram, at any zoom/angle.
       galaxy.points.rotation.y += dt * 0.012;
+      // Dust lanes turn at a genuinely different rate than the glow layer
+      // (not just a different starting tilt) — that's what makes the
+      // depth read as the camera orbits over time, not just from a lucky
+      // single angle. Slightly slower and reversed, so the two layers
+      // visibly drift apart rather than appearing to co-rotate.
+      dustLanes.points.rotation.y -= dt * 0.008;
 
       // Stochastic twinkle: offer a few random candidates each frame,
       // let roughly half actually land (keeps it sparse/irregular rather
@@ -1196,6 +1304,7 @@ export function createConstellation(container, { preview = false, initialPieceId
 
       starGeo.dispose(); starMat.dispose();
       galaxy.geo.dispose(); galaxy.mat.dispose();
+      dustLanes.geo.dispose(); dustLanes.mat.dispose(); dustLanes.tex.dispose();
       nodeGeo.dispose(); nodeMat.dispose(); nodeHaloMat.dispose(); dotTex.dispose();
       hoverSprite.material.dispose();
       pendingGeo?.dispose(); pendingMat?.dispose();
