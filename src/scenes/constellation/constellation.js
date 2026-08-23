@@ -162,8 +162,9 @@ function buildAdjacency(nodeList, rows) {
 // equilibrium under a linear cooling schedule. Extended to 3D directly.
 // A mild gravity term (nodes pulled toward the centroid each step,
 // proportional to their own distance from it) is the one addition beyond
-// textbook FR — this graph is sparse and far from fully connected (22
-// approved rows, 32 nodes, many small islands), and without it,
+// textbook FR — this graph is sparse and far from fully connected (64
+// approved rows, ~61 nodes as of 3.1.0's full pending-approval, many small
+// islands), and without it,
 // disconnected components have no attractive force acting on them at all
 // and drift apart under pure repulsion without bound (confirmed
 // empirically in a throwaway test script — see NOTES.md's round-7 entry
@@ -265,7 +266,13 @@ export function createConstellation(container, { preview = false, initialPieceId
   const nodeMap = buildNodes(rows);
   const nodeList = Array.from(nodeMap.values());
   const { adj, edges } = buildAdjacency(nodeList, rows);
-  const GRAPH_SCALE = preview ? 90 : 150;
+  // Bumped 90/150 → 120/200 (3.1.1, 2026-08-23): approving all 42 pending
+  // resonances took node count from ~32 to ~61 at the old scale — k (ideal
+  // edge length) shrinks as cbrt(n) with node count held fixed, so the old
+  // scale alone would already read visibly tighter even before "spread
+  // them apart more" per Scott's own direct feedback live. ~33% up covers
+  // both the node-count growth and gives real added breathing room.
+  const GRAPH_SCALE = preview ? 120 : 200;
   layoutForceDirected(nodeList, edges, GRAPH_SCALE);
   let boundRadius = 1;
   nodeList.forEach(n => { boundRadius = Math.max(boundRadius, n.pos.length()); });

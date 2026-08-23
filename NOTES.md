@@ -248,6 +248,23 @@ described are unchanged.)
   worth trimming, orrery.js's texture generators and first-person rig are the
   two most self-contained chunks to split out first.
 
+## 3.1.1 (2026-08-23)
+
+**Nodes spread apart slightly more.** Direct follow-up to 3.1.0: approving
+all 42 pending resonances took node count from ~32 to ~61 without touching
+`GRAPH_SCALE`, and since the force-directed layout's ideal edge length `k`
+shrinks as `cbrt(n)` with the volume held fixed, the scene had visibly
+tightened even before Scott asked for more room live. `GRAPH_SCALE` bumped
+90/150 → 120/200 (constellation.js) — about 33% up, which both offsets the
+node-count growth and gives real added spacing on top, rather than just
+restoring the old density. Every downstream dimension (camera bounds, fog,
+star field, galaxy radius) derives from the layout's own resulting scale,
+so this one number was the only thing that needed to move.
+
+**Verified**: full build clean; checked live via Scott's dev server —
+clear separation between nodes and clusters, no crowding, at the default
+desktop camera distance.
+
 ## 3.1.0 (2026-08-23)
 
 **All 42 pending resonances approved.** Scott's own call, made right after
