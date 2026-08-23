@@ -451,7 +451,7 @@ const PM_GLIMPSE_WORDS = {
   orrery: 'will',
   library: 'medium',
   beamline: 'emergence',
-  constellation: 'synchrony',
+  constellation: 'vibe',
   title: 'secrets',
 };
 let pmGlimpseTimer = null;
