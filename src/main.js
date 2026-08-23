@@ -95,11 +95,31 @@ function navIconFor(sceneName) {
   return document.querySelector(`.nav-icon[data-scene="${sceneName}"]`);
 }
 
+// ─── Public URL slug for Harmonics (3.1.3, 2026-08-23) ─────────────────────
+// The 2026-08-18 rename deliberately kept every INTERNAL name —
+// src/scenes/constellation/, the SCENES registry key below, .constellation-*
+// CSS classes — as `constellation` (see main.js's own header and
+// constellation.js's), reasoning that none of that is visible to a visitor.
+// The URL hash turned out to be the one exception: it's the literal address
+// bar text, seen and shareable, not implementation detail — flagged live by
+// Scott after the rename had otherwise fully shipped. No real `#constellation`
+// links exist anywhere to preserve (the scene only just started writing that
+// hash at all, and never publicly), so this is NOT a backward-compat shim —
+// it's a one-way translation at the two seams where a hash is actually read
+// or written: setHash writes the public slug, parseHash reads it back. The
+// SCENES key itself stays `constellation` rather than being renamed
+// (cascades into index.html's data-scene attributes, #preview-constellation,
+// main.js's own PM_GLIMPSE_WORDS key, and every other place the internal
+// string is compared, for a complaint that was specifically about the URL).
+const PUBLIC_SLUG = { constellation: 'harmonics' }; // internal SCENES key -> URL slug
+const SLUG_TO_INTERNAL = Object.fromEntries(Object.entries(PUBLIC_SLUG).map(([k, v]) => [v, k]));
+
 // Returns { scene, pieceId } — pieceId is null when the hash only names a
 // scene (`#scroll`) or the piece segment isn't a valid positive integer.
 function parseHash() {
   const raw = decodeURIComponent(location.hash.replace(/^#/, ''));
-  const [sceneKey, pieceRaw] = raw.split('/');
+  const [rawKey, pieceRaw] = raw.split('/');
+  const sceneKey = SLUG_TO_INTERNAL[rawKey] ?? rawKey;
   // hasOwn, not `key in SCENES` — `in` walks the prototype chain, so
   // /#toString would otherwise resolve to a "scene" and throw on .create.
   const scene = Object.hasOwn(SCENES, sceneKey) ? sceneKey : null;
@@ -116,7 +136,8 @@ function parseHash() {
 // piece-level hash existed at all.
 function setHash(sceneName, pieceId, { push = true } = {}) {
   syncingHash = true;
-  const next = sceneName ? (pieceId ? `${sceneName}/${pieceId}` : sceneName) : '';
+  const publicName = sceneName ? (PUBLIC_SLUG[sceneName] ?? sceneName) : sceneName;
+  const next = publicName ? (pieceId ? `${publicName}/${pieceId}` : publicName) : '';
   if (next) {
     if (push) {
       location.hash = next;

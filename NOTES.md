@@ -248,6 +248,27 @@ described are unchanged.)
   worth trimming, orrery.js's texture generators and first-person rig are the
   two most self-contained chunks to split out first.
 
+## 3.1.3 (2026-08-23)
+
+**Harmonics' URL now reads `#harmonics`, not `#constellation`.** The
+2026-08-18 rename deliberately kept every internal name — module/folder,
+the SCENES registry key, `.constellation-*` CSS classes — as
+`constellation`, reasoning that none of it is visible to a visitor. The
+address bar turned out to be the exception: it's literal, visible,
+shareable text, not implementation detail, and Scott caught it live after
+the rename had otherwise fully shipped. Fixed with a thin slug translation
+at main.js's two hash seams — `setHash` writes the public `harmonics` slug,
+`parseHash` reads it back — rather than renaming the SCENES key itself,
+which would have cascaded into index.html's `data-scene` attributes,
+`#preview-constellation`, and every other place the internal string gets
+compared, for a complaint that was specifically about the URL. Not a
+backward-compat shim: no real `#constellation` links exist anywhere to
+preserve, since the scene only just started writing that hash at all and
+never publicly.
+
+**Verified**: full build clean; nav-icon click confirmed writing
+`#harmonics` live via Scott's dev server.
+
 ## 3.1.2 (2026-08-23)
 
 **Deep-field starfield punched up.** Round 10.1's "punch it up" pass had
