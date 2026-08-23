@@ -37,7 +37,7 @@ export const BIBLIOGRAPHY = [
   {
     scene: 'Beamline',
     entries: [
-      '"The body is the prism of the dream" and "life has to go somewhere" (epigraphs), plus the harps/superstrings and seven-colored/prisms passages, staged one fragment per mirror — Scott Jason Cohen, from Compendion.pages.',
+      '"The body is the prism of the dream" and "life has to go somewhere" (epigraphs), plus the harps/superstrings and seven-colored/prisms passages, staged one fragment per mirror — Scott Jason Cohen.',
     ],
   },
 ];

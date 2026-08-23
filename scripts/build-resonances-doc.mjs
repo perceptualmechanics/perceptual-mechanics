@@ -24,6 +24,12 @@
 // fallback snippet is clearly labeled as such rather than silently
 // passing off an arbitrary opening excerpt as if it were the relevant
 // part.
+//
+// 2026-08-18: the windowing functions themselves (stripHtml, extractQuotes,
+// snippetFor) moved into src/utils/resonanceExcerpts.js — Harmonics' own
+// live payoff panel needs the exact same logic to show real side-by-side
+// passages, not a second reimplementation that could quietly drift from
+// what this doc shows.
 
 import { fragments } from '../src/scenes/sphere/sphere.text.js';
 import { poems } from '../src/scenes/orbiter/orbiter.text.js';
@@ -34,87 +40,12 @@ import { PIECES as theaterPieces, BEATS as theaterBeats } from '../src/scenes/th
 import { ORRERY } from '../src/scenes/orrery/orrery.text.js';
 import { BUTTERFLY } from '../src/scenes/butterfly/butterfly.text.js';
 import { RESONANCES } from '../src/resonances.js';
+import { stripHtml, extractQuotes, snippetFor } from '../src/utils/resonanceExcerpts.js';
 import { writeFileSync } from 'fs';
 import { resolve, dirname } from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-
-const FULL_TEXT_THRESHOLD = 500; // pieces at or under this length are shown whole, no windowing needed
-const WINDOW_CONTEXT = 160; // chars of context on each side of a located quote
-
-function stripHtml(s) {
-  return s.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
-}
-
-function normalizeForSearch(s) {
-  return s
-    .toLowerCase()
-    .replace(/[’‘]/g, "'")
-    .replace(/[“”]/g, '"')
-    .replace(/\s+/g, ' ')
-    .trim();
-}
-
-// Pull every "quoted span" out of a rationale string — straight or
-// typographic double quotes, 4+ characters, since shorter than that is
-// too generic to be worth locating.
-function trimEdgePunctuation(s) {
-  return s.replace(/^[\s,.;:!?—–\-"']+/, '').replace(/[\s,.;:!?—–\-"']+$/, '');
-}
-
-// A quote in a rationale sometimes spans an ellipsis ("I'm the lasing
-// medium... THE MIRROR") standing in for real intervening text this
-// piece actually has — that whole span won't appear contiguously
-// anywhere, so each side of the ellipsis is also offered as its own
-// candidate quote to search for independently.
-function extractQuotes(rationale) {
-  const matches = [...rationale.matchAll(/["“]([^"”]{4,200})["”]/g)];
-  const raw = matches.map(m => m[1]);
-  const withSplits = raw.flatMap(q => [q, ...q.split(/\.\.\.|…/)]);
-  return withSplits
-    .map(trimEdgePunctuation)
-    .filter(q => q.length >= 4);
-}
-
-// Given a piece's raw text and the rationale's quotes, find the first
-// quote (normalized, so punctuation/case differences don't block a
-// match) that actually appears in this piece, and return a window of
-// context around it. Returns null if no quote matches.
-function findQuoteWindow(rawText, quotes) {
-  const normText = normalizeForSearch(rawText);
-  for (const quote of quotes) {
-    const normQuote = normalizeForSearch(quote);
-    if (!normQuote) continue;
-    const idx = normText.indexOf(normQuote);
-    if (idx === -1) continue;
-    // Map the normalized-text index back onto the raw text approximately
-    // by locating the same fraction of the way through — normalization
-    // only strips/collapses whitespace and quote-character style, so raw
-    // and normalized text stay close enough in length for this to land
-    // in the right neighborhood; the window is generous specifically to
-    // absorb that slack.
-    const ratio = rawText.length / normText.length;
-    const rawIdx = Math.max(0, Math.round(idx * ratio));
-    const from = Math.max(0, rawIdx - WINDOW_CONTEXT);
-    const to = Math.min(rawText.length, rawIdx + normQuote.length + WINDOW_CONTEXT);
-    const prefix = from > 0 ? '…' : '';
-    const suffix = to < rawText.length ? '…' : '';
-    return `${prefix}${rawText.slice(from, to).trim()}${suffix}`;
-  }
-  return null;
-}
-
-function snippetFor(rawText, quotes) {
-  if (rawText.length <= FULL_TEXT_THRESHOLD) return rawText.trim();
-  const windowed = findQuoteWindow(rawText, quotes);
-  if (windowed) return windowed;
-  // No quote from the rationale matched this piece — say so plainly
-  // rather than quietly showing an arbitrary opening excerpt that might
-  // not relate to the claim at all.
-  const opening = rawText.slice(0, 300).replace(/\s+\S*$/, '');
-  return `${opening}… (no rationale quote matched this piece — showing opening text instead; check the full piece directly if the claim isn't verifiable from this excerpt)`;
-}
 
 // Returns { title, rawText } for one resonance endpoint — the raw text is
 // windowed into a snippet later, once we know which quotes to look for.

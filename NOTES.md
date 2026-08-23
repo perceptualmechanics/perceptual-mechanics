@@ -248,6 +248,104 @@ described are unchanged.)
   worth trimming, orrery.js's texture generators and first-person rig are the
   two most self-contained chunks to split out first.
 
+## 3.0.0 (2026-08-23)
+
+**Harmonics round 10: sound, side-by-side passages, a living atmosphere —
+plus a full sitewide QA pass and one real cross-scene bug found and fixed
+along the way.** Major bump because this is the largest single addition to
+Harmonics since the Kuramoto rewrite (2.5.9), it's the first sound this site
+has ever shipped, and the QA pass touched every scene, not just this one.
+
+**Sonification** — the Kuramoto phase model (2.5.9) now drives real audio,
+not just brightness. `.constellation-sound-toggle` is both the explicit
+first-gesture trigger browsers require before any audio can play and the
+ongoing mute control; the Web Audio graph itself builds lazily on first
+click, same convention as orrery.js's own `getAudioCtx()`. Each node is a
+pair of detuned sine oscillators (natural beating/shimmer, not a flat tone)
+feeding one shared voice gain, split dry/wet into a `DynamicsCompressorNode`
+safety limiter and a `ConvolverNode` reverb built from a synthesized
+decaying-noise impulse response — no external audio asset. Pitch and gain
+both track live Kuramoto phase per node; gain additionally falls off with
+camera distance, so nodes fade out as the piece orbits away from them,
+per Scott's own request while listening live. Overall level and timbre went
+through several live-tuned passes on Scott's direct feedback — starting loud
+and plain, ending quiet, reverberant, and "spa/singing-bells" in character —
+because the right level for this kind of ambient, always-on sound turned out
+to only be findable by ear, not by guessing a number up front.
+
+**Side-by-side passages** — the payoff panel now shows each resonance's two
+pieces in their own words, not just Scott's rationale describing them.
+`resolveEndpointTitle` became `resolveEndpoint` (constellationPieces.js),
+now returning each endpoint's own raw text alongside its title; a new
+`src/utils/resonanceExcerpts.js` extracts the quoted span a rationale
+actually points to and windows a readable excerpt around it, shared between
+this live panel and `scripts/build-resonances-doc.mjs` so the two never
+describe a resonance differently. The rationale caption that briefly sat
+under the excerpts came out entirely per explicit instruction mid-round —
+the rationale still silently picks which quoted span each excerpt centers
+on, it just isn't printed as its own paragraph anymore.
+
+**Living atmosphere** — faint, unlit points drifting independently through
+the scene, one per piece named in a resonance row still awaiting review
+(`getPendingResonances()`, resonances.js). Deliberately not the same query
+as approved rows: an honest picture of the system's actual current state
+(more connections found than confirmed) rather than decoration invented for
+its own sake. Never Kuramoto-coupled and no full payoff panel on click, just
+enough feedback (a minimal "pending review" panel) to distinguish them from
+confirmed nodes without pretending they're the same thing.
+
+**Backdrop rewrite** — the galactic backdrop's log-spiral-arm point
+distribution came out entirely, replaced by a cluster/filament model
+(`buildGalaxy`): points scatter around a small number of randomly placed
+cluster centers, with a fraction interpolated between two distinct clusters
+to form connective filaments, colored by blending an O-III blue against an
+H-alpha red per cluster. This followed direct feedback that rotation and
+twinkle alone weren't enough — the underlying point math itself read as "a
+constrained geometric band" no matter how it moved, so the fix had to be
+structural, not animated. Nodes got a second, larger, dimmer halo layer
+(sharing the confirmed nodes' own geometry/color buffers, no extra per-frame
+cost) so they read forward against a now much livelier background.
+
+**QA pass** — full click-through of all nine scenes, a mobile pass down to
+~500px, and an accessibility pass against `prefers-reduced-motion`, verified
+live rather than assumed from code. Found and fixed:
+
+- Two reduced-motion gaps in this round's own new code: the node hover
+  halo eased its scale unconditionally (now jumps instantly under reduced
+  motion) and the living-atmosphere points drifted unconditionally (now
+  frozen, still visible/clickable, under reduced motion).
+- A real, pre-existing sitewide bug, unrelated to Harmonics: `#pm-nav`'s
+  only icon-shrink override was gated behind `max-width: 480px`, leaving
+  every viewport from 480px to ~716px with no override at all — four of
+  nine nav icons were completely clipped off-screen and unreachable in that
+  whole range (confirmed via `getBoundingClientRect()` at 500px before and
+  after). Moved the override into the existing 768px breakpoint, which
+  comfortably fits all nine icons at their shrunk size; verified fixed at
+  500px and unaffected at desktop widths.
+- A malformed, already-uncommitted edit in colophon.html: an unclosed `<p>`
+  around a new Patreon link, and that link missing the `rel="noopener
+  noreferrer"` every other external link in the file carries. Closed the
+  tag, added the attribute.
+
+**Known, not fixed**: on short mobile viewports, the resonance panel's
+side-by-side excerpts can make it tall enough that its own bottom content
+sits under the fixed title and sound-toggle chip, both of which visibly
+bleed over the panel's text. Root cause isn't this panel's own z-index —
+its real ancestor is main.js's scene-mount wrapper (`.active`, fixed,
+z-index:300), which caps it below the body-level chrome at z-index:310
+regardless of what the panel itself is set to. A real fix means changing
+that shared wrapper's z-index, which every scene's own panel depends on
+(sphere.css has the identical relationship, unreported, just rarely
+triggered by shorter content) — left as a documented cosmetic edge case
+rather than a sitewide stacking change made without a regression budget to
+cover all nine scenes.
+
+**Verified**: full build + verify-links/verify-resonances clean; sound,
+excerpts, and atmosphere confirmed live with real audio via a genuine user
+gesture, not screenshots; reduced-motion fixes confirmed live via a patched
+`matchMedia` forcing a scene remount; mobile nav fix confirmed live at
+500px before and after.
+
 ## 2.6.0 (2026-08-18)
 
 **"The Constellation" renamed "Harmonics"; nav icon + landing preview

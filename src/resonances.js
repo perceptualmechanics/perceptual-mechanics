@@ -672,6 +672,21 @@ export function getApprovedResonances() {
   return RESONANCES.filter(r => r.status === 'approved');
 }
 
+// Round 10 (2026-08-18): Harmonics' "living atmosphere" — faint, unlit,
+// independently drifting points representing the pieces named in rows
+// still awaiting review. Deliberately NOT the same query as approved rows:
+// this is an honest picture of the system's actual current state (more
+// connections found than confirmed, some always still in motion), not
+// decoration invented for its own sake — see constellation.js's own
+// comment where this is consumed for how these render (never Kuramoto-
+// coupled, no full payoff panel). 'rejected' rows are excluded on purpose:
+// Scott already looked at those and said no, so surfacing them again,
+// even faintly, would contradict a real decision rather than just show
+// an in-progress one.
+export function getPendingResonances() {
+  return RESONANCES.filter(r => r.status === 'pending');
+}
+
 function endpointMatches(ep, scene, id, beatId) {
   if (ep.scene !== scene) return false;
   if (scene === 'theater') return beatId !== undefined && ep.beatId === beatId;

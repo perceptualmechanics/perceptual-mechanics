@@ -520,6 +520,21 @@ html, body {
      override here beyond a tighter gap for the narrower viewport; tile
      size stays the same 240px as the desktop base. */
   #scene-previews { gap: 1rem; }
+  /* 3.0 QA pass (2026-08-23): this used to only live in the 480px block
+     below, which left a real dead zone — at the BASE (unshrunk) sizing,
+     9 icons × 44px + 8 gaps × 2.5rem(40px) = 716px. Any viewport from
+     480px up to that ~716px point got the desktop gap/size with no
+     override, so #pm-nav (no wrap/scroll, justify-content:center)
+     silently clipped icons off both edges with nothing visibly wrong —
+     caught live at a 500px width during the 3.0 QA pass, where Sphere
+     and Butterfly sat off the left edge and Beamline/Harmonics off the
+     right, all four unreachable. Moving the shrink here (768px, already
+     an existing breakpoint in this file) closes that gap with room to
+     spare: 9 × 34px + 8 × 0.35rem(5.6px) = 350.8px fits from 768px all
+     the way down to the narrowest common phone widths, so the 480px
+     block below no longer needs to own this. */
+  #pm-nav { gap: 0.35rem; }
+  .nav-icon { min-width: 34px; min-height: 34px; }
 }
 @media (max-width: 480px) {
   #scene-previews { flex-direction: column; gap: 1.5rem; padding: 1rem 1rem 3rem; }
@@ -545,22 +560,15 @@ html, body {
      phone width (iPhone SE/12 mini). At the 38px override: 8 × 38px =
      304px + 56px = 360px, comfortably under 375px again.
      2026-08-18: Harmonics' nav icon restored, count back to nine — same
-     math again, fourth time this has recurred. 9 × 38px = 342px + 8 gaps
-     at 0.5rem (8px) = 64px = 406px, over 375px again. Tightened both
-     knobs this time (34px icons, 0.35rem gap): 9 × 34px = 306px + 8 ×
-     5.6px = 44.8px = 350.8px, ~24px of margin under 375px. 34px is below
-     the usual ~44px touch-target guideline, same tradeoff this override
-     has made every time before — if a tenth scene shows up, this same
-     shrink-to-fit approach runs out of headroom fast, and the real fix
-     at that point is probably letting #pm-nav wrap or scroll on the
-     narrowest widths instead of continuing to shrink targets, which
-     would also need #experience-overlay's padding-top:3.5rem "clear
-     nav" assumption (styles/main.css) revisited since that assumes a
-     single-row bar. Worth checking this math any time a nav-bar scene
-     is added or restored, not just assuming the override state is
-     current. */
-  #pm-nav { gap: 0.35rem; }
-  .nav-icon { min-width: 34px; min-height: 34px; }
+     math again, fourth time this has recurred. Tightened both knobs
+     (34px icons, 0.35rem gap): 9 × 34px + 8 × 5.6px = 350.8px.
+     2026-08-23 (3.0 QA pass): the actual #pm-nav/.nav-icon overrides
+     moved up to the 768px breakpoint above — the base (unshrunk) math
+     overflows at 716px (9×44 + 8×40), so gating the fix behind 480px
+     left every width from 480-716px with no override at all, clipping
+     icons off both edges with nothing visibly broken about the layout
+     otherwise. Caught live at 500px during that pass. This block's
+     #scene-previews/#landing rules are unrelated and stay here. */
   /* Seven 200px tiles in a column (~1500px) is always taller than a
      phone viewport. align-items:center (inherited from #landing, and the
      cross-axis property since #landing's flex-direction stays row) would
