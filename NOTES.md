@@ -248,6 +248,27 @@ described are unchanged.)
   worth trimming, orrery.js's texture generators and first-person rig are the
   two most self-contained chunks to split out first.
 
+## 3.1.0 (2026-08-23)
+
+**All 42 pending resonances approved.** Scott's own call, made right after
+seeing 3.0.0 live — every row discovered across earlier rounds and written
+with real rationale now ships as a full Kuramoto-coupled node with sound and
+a complete side-by-side payoff panel, not just a faint atmosphere point.
+64 of 64 rows now `approved`, 0 `pending`, 0 `rejected` (resonances.js,
+regenerated docs/constellation_resonances.md via
+`build-resonances-doc.mjs`).
+
+**Named tradeoff**: the "living atmosphere" feature shipped in 3.0.0
+(faint, unlit points drifting for pieces whose resonance is still awaiting
+review — see `getPendingResonances()`, resonances.js) now renders nothing,
+since there are no pending rows left to draw. The code itself is untouched
+and will populate again the moment a future discovery pass adds new
+candidate rows; nothing here is a regression, just an emptied-out feature
+until there's something pending again.
+
+**Verified**: full build + verify-links/verify-resonances clean, all 64
+rows resolve.
+
 ## 3.0.0 (2026-08-23)
 
 **Harmonics round 10: sound, side-by-side passages, a living atmosphere —

@@ -312,7 +312,7 @@ export const RESONANCES = [
     a: { scene: 'sphere', id: 1 },
     b: { scene: 'scroll', id: 2 },
     rationale: '"Stolnaphase"\'s opening — "the angel puckers his lips, waiting for the expected grace from on high, but it never comes... he flies down to Earth" — and "Flying"\'s own visitation — "HE is there, enveloping me, my essence, my body... he has wings, he\'s filling and growing beyond me... power is the fire of heaven under your wings" — both stage a winged figure as the vehicle for a grace that either withholds itself or overwhelms. Independently written, same image system.',
-    status: 'pending',
+    status: 'approved',
   },
   {
     id: 24,
@@ -320,7 +320,7 @@ export const RESONANCES = [
     a: { scene: 'sphere', id: 3 },
     b: { scene: 'library', id: 111 },
     rationale: '"Thalia" describes itself as a mask that outlives its own telling — "I am the construct you project outward... I am the lie you tell yourselves to keep you sane" — the same structure the library\'s own note names in Pale Fire: "a 999-line poem followed by a commentary whose annotator, not the poet, turns out to be the real subject." Both pieces make the frame around a story the actual subject of the story.',
-    status: 'pending',
+    status: 'approved',
   },
   {
     id: 25,
@@ -328,7 +328,7 @@ export const RESONANCES = [
     a: { scene: 'sphere', id: 17 },
     b: { scene: 'library', id: 113 },
     rationale: '"Starbought" names its own resolution outright — "This will be the way, this Slack, this zen" — capitalized exactly the way the library\'s own note identifies the word\'s source: The Book of the SubGenius, "the source scripture of \'Slack\' as a concept... almost certainly where that word entered Scott\'s own private vocabulary for it." A single shared word, but a traceable one — the library note is effectively naming this poem\'s source.',
-    status: 'pending',
+    status: 'approved',
   },
   {
     id: 26,
@@ -336,7 +336,7 @@ export const RESONANCES = [
     a: { scene: 'sphere', id: 17 },
     b: { scene: 'scroll', id: 11 },
     rationale: 'Both pieces independently reach for the same specific, unusual detail — Starbought\'s "Here, on the 32nd floor, the view is spectacular if looked outward, daunting if looking down" and Projection\'s "a second quake shook me while on the 32nd floor of a skyscraper days later" — an oddly precise number to coincide by chance. Below the mechanical scanner\'s phrase-length threshold; found by direct reading.',
-    status: 'pending',
+    status: 'approved',
   },
   {
     id: 27,
@@ -344,7 +344,7 @@ export const RESONANCES = [
     a: { scene: 'sphere', id: 17 },
     b: { scene: 'scroll', id: 8 },
     rationale: 'Starbought\'s earnest "here it is anyway in its raw form, my chi, circulating once more after this daftness" and fireCalamity\'s self-conscious "this isn\'t some New Age bullshit, either... you got chakras, most people call \'em glands" reach for the same body-as-energy-system vocabulary from opposite registers — one sincere, one defensively ironic — which is itself worth noticing rather than a weakness in the pairing.',
-    status: 'pending',
+    status: 'approved',
   },
   {
     id: 28,
@@ -352,7 +352,7 @@ export const RESONANCES = [
     a: { scene: 'sphere', id: 21 },
     b: { scene: 'scroll', id: 11 },
     rationale: 'Algebra works a breakup entirely through equation language — "the variables don\'t change... irrational and nonlinear" — while Projection works the same kind of breakup through physics instead: "a chaos butterfly; a Lorenz attractor; two focal points around which events swirl," the double-slit experiment, Feynman diagrams. Different branch of math/science, same underlying move: a heartbreak rendered legible only by treating it as a fixed structural fact rather than a feeling that could have gone differently — the same argument row 16 makes pairing Algebra with the Symposium, run a second time against a different piece. A separate close-reading pass landed on this exact pair independently, adding one more specific: Projection\'s own fictional bestseller is literally titled Strange Attractors: A Love Affair with Chaos, a mathematician\'s romance — not just the same theme as Algebra, the same conceit.',
-    status: 'pending',
+    status: 'approved',
   },
   {
     id: 29,
@@ -360,7 +360,7 @@ export const RESONANCES = [
     a: { scene: 'sphere', id: 24 },
     b: { scene: 'scroll', id: 11 },
     rationale: 'Aftershock\'s "another quake deep within my core, rumbling to the surface... the ground once more stabilizes" is a metaphor; Projection\'s own account is the literal event underneath it — "I was going through my first earthquake in L.A... a second quake shook me while on the 32nd floor of a skyscraper days later, as I was thinking about moving back to Boston... You can\'t write these things; you can only recount them later." One piece supplies the image, the other supplies the real occasion for it. A separate close-reading pass landed on this same pair independently, describing it the same way: "real heartbreak reframed at cosmic scale... same coping mechanism, different scale."',
-    status: 'pending',
+    status: 'approved',
   },
   {
     id: 30,
@@ -368,7 +368,7 @@ export const RESONANCES = [
     a: { scene: 'sphere', id: 22 },
     b: { scene: 'orbiter', id: 9 },
     rationale: 'Trapdoor\'s "the bottom drops out... I become a conduit, a tunnel, something not myself" and Haiku\'s "It feels like her tongue / Parting the walls of desire / Against both our wills" both frame desire/intimacy as something that happens to the speaker rather than something the speaker does — an involuntary loss of the self\'s own boundary, not a chosen act.',
-    status: 'pending',
+    status: 'approved',
   },
   {
     id: 31,
@@ -376,7 +376,7 @@ export const RESONANCES = [
     a: { scene: 'orbiter', id: 4 },
     b: { scene: 'scroll', id: 9 },
     rationale: 'Raise a Glass stages transformation as literal violence done to a body — "Burnt beyond recognition, Spontaneously from the inside... the bone fragments had their code extracted" — while Identity Theft stages a different transformation the same way: "Something detached... I was staring at my right hand, which clutched what looked like Gary\'s... skin." Both treat becoming something/someone else as a bodily event, not a metaphorical one.',
-    status: 'pending',
+    status: 'approved',
   },
   {
     id: 32,
@@ -384,7 +384,7 @@ export const RESONANCES = [
     a: { scene: 'orbiter', id: 5 },
     b: { scene: 'library', id: 130 },
     rationale: 'The library\'s own note names this poem directly: Planetary is "structurally close to Scott\'s own \'Lament for the Future Never Realized\' (Tesla, Verne, Wells, and Edison conspiring to vanish before their inventions are weaponized)" — exactly Lament\'s own plot (Nikola, Wells, Verne and the assembled inventors resolving to disappear from public view rather than see their machines "usurped... to kill the hope within Man\'s breast"). Not an inferred echo; the library entry is already pointing at this specific poem.',
-    status: 'pending',
+    status: 'approved',
   },
   {
     id: 33,
@@ -392,7 +392,7 @@ export const RESONANCES = [
     a: { scene: 'orbiter', id: 12 },
     b: { scene: 'library', id: 73 },
     rationale: 'The poem is explicitly about noticing you\'re caught inside a repeating structure — "Not deja vu, but a sense of an assumed role / That I\'ve stepped into once again. / We might need a rewrite" — a plain-language description of the same shape Hofstadter spends 800 pages formalizing as a "strange loop," per the library\'s own note (already cited for Finnegans Wake\'s opening/closing sentence elsewhere on that shelf).',
-    status: 'pending',
+    status: 'approved',
   },
   {
     id: 34,
@@ -400,7 +400,7 @@ export const RESONANCES = [
     a: { scene: 'orbiter', id: 6 },
     b: { scene: 'sphere', id: 15 },
     rationale: 'Weaker than the other rows here, flagged as such: Moon Song\'s "the egg giving way to the peacock of fire" and Circumstance\'s "Where the feathers fall, we just don\'t know" both reach for feather/plumage imagery at a moment of uncertain fate, but it\'s a shared image register more than a shared specific word — real, but softer evidence than row 10\'s "boneyard," worth Scott\'s own judgment.',
-    status: 'pending',
+    status: 'approved',
   },
   {
     id: 35,
@@ -408,7 +408,7 @@ export const RESONANCES = [
     a: { scene: 'beamline', id: 2 },
     b: { scene: 'library', id: 127 },
     rationale: 'Beamline\'s bounce 2 is drawn from Storyline.doc, dated 9/30–10/1/2003 (per beamline.text.js\'s own header) — the same document the library\'s Neuromancer note quotes directly: "I cannot use the word matrix anymore, fuck you very much, Wachowski Brothers," cited as evidence of "Scott\'s own 2003 cosmology-in-progress." Bounce 2\'s "we\'re grasping our way towards an analogy... the fucking mirror isn\'t letting anything out" is that same 2003 project in motion — reaching for original vocabulary (lasing medium, focusing mirror) rather than the borrowed word the library note says he\'d already rejected.',
-    status: 'pending',
+    status: 'approved',
   },
   {
     id: 36,
@@ -416,7 +416,7 @@ export const RESONANCES = [
     a: { scene: 'scroll', id: 8 },
     b: { scene: 'library', id: 127 },
     rationale: 'fireCalamity\'s extended rant against The Matrix\'s physics — "No, fuck The Matrix, you\'re not a battery for shitty robots... it\'s all some sort of Gnostic bullshit about a world of lies and shit, but it\'s a shitty metaphor" — and the library\'s Neuromancer note, quoting a separate 2003 document\'s identical refusal ("I cannot use the word matrix anymore, fuck you very much, Wachowski Brothers"), are two different pieces from the same year independently reaching the same specific target for the same reason. A separate close-reading pass found this same pair independently, in the same terms.',
-    status: 'pending',
+    status: 'approved',
   },
   {
     id: 37,
@@ -424,7 +424,7 @@ export const RESONANCES = [
     a: { scene: 'scroll', id: 11 },
     b: { scene: 'library', id: 112 },
     rationale: 'The library\'s own note states this outright: "Scott\'s own The L.A. Project takes its epigraph from this play: \'Not Physics but Ecstatics Makes the Engine Run.\'" Projection is explicitly that project, by its own account — "the project, to write about what happened to me in L.A." — and its entire argument is the epigraph\'s argument staged at essay length: physics and quantum vocabulary (double-slit experiment, Feynman diagrams, parallel universes) reached for again and again to describe something that was never actually about physics. Not an inferred echo — the library entry is naming this piece\'s own epigraph.',
-    status: 'pending',
+    status: 'approved',
   },
   {
     id: 38,
@@ -432,7 +432,7 @@ export const RESONANCES = [
     a: { scene: 'scroll', id: 2 },
     b: { scene: 'library', id: 112 },
     rationale: 'A second, smaller echo of the same source: Flying\'s own word for what it\'s after — "I\'m seeking ekstasis" — is the Greek root of the exact word the library note quotes from this play\'s epigraph, "Ecstatics." Below the mechanical scanner\'s threshold (a single shared root, not a phrase); found by direct reading.',
-    status: 'pending',
+    status: 'approved',
   },
   {
     id: 39,
@@ -440,7 +440,7 @@ export const RESONANCES = [
     a: { scene: 'scroll', id: 3 },
     b: { scene: 'library', id: 121 },
     rationale: '"Thoughts Of Death Abounds" narrates a Yoruba shell divination without ever settling whether it\'s superstition or something real — "An orisha? Then he tapped my hand... Death? It came up 7-9" — the narrator both performing the ritual in earnest and holding it at arm\'s length. That\'s precisely the position the library\'s Daimonic Reality note describes: daimons as "neither literally real beings nor mere psychological projection, but a third category," a question the essay dramatizes rather than answers.',
-    status: 'pending',
+    status: 'approved',
   },
   {
     id: 40,
@@ -448,7 +448,7 @@ export const RESONANCES = [
     a: { scene: 'scroll', id: 11 },
     b: { scene: 'library', id: 25 },
     rationale: 'Projection is the piece that coins the site\'s own "strange attractors" vocabulary — "a chaos butterfly; a Lorenz attractor; two focal points around which events swirl" — and even titles its fictional bestseller after the term (Strange Attractors: A Love Affair with Chaos). Gleick\'s book is the real, nontechnical popularization of exactly that vocabulary sitting on Scott\'s own shelf — the reference the essay\'s metaphor is drawing on, not a coincidence of two pieces landing on the same word independently.',
-    status: 'pending',
+    status: 'approved',
   },
   {
     id: 41,
@@ -456,7 +456,7 @@ export const RESONANCES = [
     a: { scene: 'butterfly', id: 1 },
     b: { scene: 'library', id: 25 },
     rationale: 'Butterfly\'s whole found text is its own placard title, "Chaos Butterfly in Phase Space, 2026," already linked to Projection and Fractal for sharing that phrase (rows 18/21/22). Gleick\'s book is the nonfiction source underneath all three — the actual popular-science text that put "chaos," "phase space," and "the butterfly effect" into circulation as a single cluster of terms, making this the fourth and most literal node in that cluster rather than a fifth coincidence.',
-    status: 'pending',
+    status: 'approved',
   },
   {
     id: 42,
@@ -464,7 +464,7 @@ export const RESONANCES = [
     a: { scene: 'scroll', id: 11 },
     b: { scene: 'theater', id: 4, beatId: 217 },
     rationale: 'Projection names this directly: "I have another friend, Chris Sadler. I used him as the basis for a character in two scripts... He became a character in my scripts as a free spirit, mad, unhinged yet unabashedly vital and dynamic." Theater\'s own Sadler — introduced here as "Zen and scruffy," holding court from a wheelchair, mid-shoot on a deliberately unhinged marshmallow-fluff epic — is that character on stage. Same relationship as row 17\'s Kirstin/Euterpe pairing, a second named character instead of the first. A separate close-reading pass landed on this same pair independently ("verifiable against both texts directly, distinct from the already-established Brian/Jeremy origin link") — see also the two other, genuinely distinct Projection/Truth-and-Beauty threads added below (Kirstin\'s Lysander note, beat 363).',
-    status: 'pending',
+    status: 'approved',
   },
   {
     id: 43,
@@ -472,7 +472,7 @@ export const RESONANCES = [
     a: { scene: 'theater', id: 4, beatId: 229 },
     b: { scene: 'library', id: 108 },
     rationale: 'Sadler\'s cast explains their absurd movie lore with a single deadpan line — "How do you all know this?" / "Ouija board." — the exact device Merrill spent twenty-five years of actual transcripts turning into a 560-page epic, per the library\'s own note. Same channeling apparatus, opposite register: one played for a laugh line, one taken seriously enough to become The Changing Light at Sandover. A separate close-reading pass landed on this same pair independently — worth noting since another new row below (Sadler\'s "Channeling." beat, also paired with this same SubGenius book) is a related but distinct find, not a restatement of this one.',
-    status: 'pending',
+    status: 'approved',
   },
   {
     id: 44,
@@ -480,7 +480,7 @@ export const RESONANCES = [
     a: { scene: 'theater', id: 6, beatId: 360 },
     b: { scene: 'library', id: 132 },
     rationale: 'The bicycle messenger who delivers Brian\'s letter is given one unmistakable detail — "he notices the messenger\'s sneakers have wings painted on the heels" — literal Hermes iconography attached to a minor background character. The library\'s own note on Hyde\'s book names Hermes specifically as "a single figure who exists to cross boundaries that are supposed to be uncrossable," exactly this messenger\'s narrative function: he\'s the one who crosses from a stranger at the door into the letter that reopens Brian and Kirstin\'s story.',
-    status: 'pending',
+    status: 'approved',
   },
   {
     id: 45,
@@ -488,7 +488,7 @@ export const RESONANCES = [
     a: { scene: 'theater', id: 10, beatId: 513 },
     b: { scene: 'library', id: 137 },
     rationale: 'Satan\'s voice breaks the fourth wall to call it out directly — "Don\'t even try to lie, Horace, you were talking to the audience" — a play openly admitting its own performed reality mid-scene. The library\'s note on wrestling\'s kayfabe describes the same structure played straight: "the collectively maintained fiction that scripted violence is real... its own kind of belief technology." One names the fiction as a joke, the other studies it as a real social mechanism.',
-    status: 'pending',
+    status: 'approved',
   },
   {
     id: 46,
@@ -496,7 +496,7 @@ export const RESONANCES = [
     a: { scene: 'theater', id: 8, beatId: 445 },
     b: { scene: 'library', id: 147 },
     rationale: 'Alex and Jeff\'s drunk 3am bit — "I want to be God Emperor of the planet" / "And what does that make me?" / "Goddess Empress" — is played entirely for laughs, but it\'s structurally the same fantasy Nobilis builds an entire game around, per the library\'s note: "players anchor a Power — Death, the Sun, Entropy itself — into a human vessel." One is a joke two friends make up on a couch; the other is a whole rules system for taking the same joke seriously.',
-    status: 'pending',
+    status: 'approved',
   },
 
   // ── Second discovery pass (2026-08-18): a separate close read of the
@@ -518,7 +518,7 @@ export const RESONANCES = [
     a: { scene: 'orbiter', id: 4 },
     b: { scene: 'beamline', id: 5 },
     rationale: 'Raise a Glass\'s "the glass resonated, the Brownian motion harmonized with a frequency echoed by angels" lands in the same vocabulary as the verbatim harps/superstrings cluster above (rows 1–2, also sourced through Beamline\'s bounce 5) — independently, no shared source text, just the same resonance/vibration register reached for from a different poem entirely.',
-    status: 'pending',
+    status: 'approved',
   },
   {
     id: 48,
@@ -526,7 +526,7 @@ export const RESONANCES = [
     a: { scene: 'sphere', id: 5 },
     b: { scene: 'scroll', id: 8 },
     rationale: 'Digression #1\'s abstract Southland apocalypse-dread — "we dig for fire... we keep watch on the fault lines and fractures, waiting for what will spit up through the cracks... we tend the flames" — and fireCalamity\'s literal wildfire, visible in the middle distance during a party while characters joke about it, are the same regional anxiety at two different removes: one mythologized into ritual language, one staged as background color nobody in the scene takes seriously enough.',
-    status: 'pending',
+    status: 'approved',
   },
   {
     id: 49,
@@ -534,7 +534,7 @@ export const RESONANCES = [
     a: { scene: 'sphere', id: 16 },
     b: { scene: 'scroll', id: 2 },
     rationale: 'Wingspan\'s catalog opens with flight imagery ("Free flight, gliding over wheat fields") among dozens of other fragments; Flying is the full narrative version of that same image — terror, freefall, and an eventual release, ending "I\'m flying. Finally." A catalog entry and the complete arc it comes from.',
-    status: 'pending',
+    status: 'approved',
   },
   {
     id: 50,
@@ -542,7 +542,7 @@ export const RESONANCES = [
     a: { scene: 'sphere', id: 8 },
     b: { scene: 'orrery', id: 1 },
     rationale: 'Both pieces use the actual word "synchronicity" for the same underlying question: Called Shot\'s "Was it coincidence? Synchronicity?" over a lightning strike that seems to follow the narrator\'s own pointing finger, and the Orrery\'s "our synchronicity sensitives finding a common link" between a news item and a lawsuit. A memoir fragment and an invented cosmology, same specific word for the same kind of maybe-meaningful coincidence.',
-    status: 'pending',
+    status: 'approved',
   },
   {
     id: 51,
@@ -550,7 +550,7 @@ export const RESONANCES = [
     a: { scene: 'sphere', id: 9 },
     b: { scene: 'library', id: 89 },
     rationale: 'Joycean is a deliberate Wake-style portmanteau piece ("Crimkranng off the sodden walls... unbound and unhinged, careening like a bumper car") sitting in the same corpus as the library\'s own entry on the book it\'s imitating, whose note even names the specific formal device ("strange loop") this fragment is playing with rather than just referencing.',
-    status: 'pending',
+    status: 'approved',
   },
   {
     id: 52,
@@ -558,7 +558,7 @@ export const RESONANCES = [
     a: { scene: 'sphere', id: 14 },
     b: { scene: 'scroll', id: 5 },
     rationale: 'Quiver\'s "Here are harps, here are superstrings. Pluck at them both, send me vibrating" — wanting to be played, surrendered to, tender — and Self-Mutilation\'s profane, escalating comedy of deliberate self-surrender are the same structural move at opposite registers: giving yourself over to something as its own kind of proof. Distinct from row 12 above (Everything\'s A Number, a different Sphere piece, paired with this same Self-Mutilation for a different reason — pain as a route to relief, not surrender as proof).',
-    status: 'pending',
+    status: 'approved',
   },
   {
     id: 53,
@@ -566,7 +566,7 @@ export const RESONANCES = [
     a: { scene: 'orbiter', id: 8 },
     b: { scene: 'scroll', id: 5 },
     rationale: 'The Lovers\' "physics has a heart all its own" — control overtaken by something outside the self — against Self-Mutilation\'s deliberate self-surrender played as body horror: the same structural move as row 52 above, reached a second time from a different Orbiter poem. Worth reviewing both Sphere-Quiver and Orbiter-Lovers against Self-Mutilation together rather than picking one, since they\'re making a related but not identical claim.',
-    status: 'pending',
+    status: 'approved',
   },
   {
     id: 54,
@@ -574,7 +574,7 @@ export const RESONANCES = [
     a: { scene: 'scroll', id: 11 },
     b: { scene: 'theater', id: 13, beatId: 603 },
     rationale: 'Projection floats the idea that a stranger encountered in L.A. might be a scripted actor sent to nudge the day toward something ("this little scene you witnessed is one of the pivot points of the forward motion of space-time"). You\'ve Got a Friend in Satan makes the identical premise literal: Horace\'s pitch — "I\'ve been sent here to ask you kindly for your souls, for which, in return, you will get ANYTHING you want" — and Art really do perform a script that reshapes four strangers\' lives, beat by beat.',
-    status: 'pending',
+    status: 'approved',
   },
   {
     id: 55,
@@ -582,7 +582,7 @@ export const RESONANCES = [
     a: { scene: 'theater', id: 4, beatId: 276 },
     b: { scene: 'library', id: 113 },
     rationale: 'Sadler\'s single-word answer for how he knows an invented piece of movie lore — "Channeling." — right after swallowing a spoonful of marshmallow fluff "to honor our subject," is mock-devotion played as a bit. The library\'s own note calls the source of "Slack" real scripture for the Church of the SubGenius. Same register — absurd material handled with genuine devotional seriousness — landed on independently: a 2001 script and a 2026 shelf note.',
-    status: 'pending',
+    status: 'approved',
   },
   {
     id: 56,
@@ -590,7 +590,7 @@ export const RESONANCES = [
     a: { scene: 'sphere', id: 15 },
     b: { scene: 'scroll', id: 4 },
     rationale: 'Circumstance and Pygmalion both state the persona-theory explicitly rather than only dramatizing it: "we can only come to understand that our roles are so much more flexible than we ever think they are" against "there are two modes of sensing... projection and observation... we create a person, and we trust that it\'s accurate." A statement-of-thesis pairing, one level up from the dramatized instances (Identity Theft, Archibald Query) this file already links elsewhere.',
-    status: 'pending',
+    status: 'approved',
   },
   {
     id: 57,
@@ -598,7 +598,7 @@ export const RESONANCES = [
     a: { scene: 'sphere', id: 20 },
     b: { scene: 'theater', id: 3, beatId: 150 },
     rationale: 'Steamroll\'s "Why are you keeping me at arms\' length?" / "If I don\'t, you\'ll flatten me" and Kirstin\'s "It\'s scary to embrace something you love. Because love is lack of control, being at the mercy of something else" are the same specific claim: guardedness as protection from being overwhelmed by something wanted, not from indifference to it.',
-    status: 'pending',
+    status: 'approved',
   },
   {
     id: 58,
@@ -606,7 +606,7 @@ export const RESONANCES = [
     a: { scene: 'sphere', id: 23 },
     b: { scene: 'scroll', id: 6 },
     rationale: 'Current\'s impressionistic weather-as-mood ("skittery across wavelines, turbulence... the anticipation, the knowledge of what will be, the settling sun") and Cartography\'s explicit staged physics of a single raindrop\'s fall are the same vehicle — a real or quasi-real physical process — used to meditate on inevitability, one worked out in full mechanical detail, the other left as mood.',
-    status: 'pending',
+    status: 'approved',
   },
   {
     id: 59,
@@ -614,7 +614,7 @@ export const RESONANCES = [
     a: { scene: 'sphere', id: 17 },
     b: { scene: 'theater', id: 13, beatId: 603 },
     rationale: 'Starbought demands a sign from an indifferent god who never quite answers — "Show me an act of God to shatter this enclave... what one expects of any reasonably competent deity." Horace\'s pitch offers exactly that transaction from the other direction, and someone in the room takes the deal a few beats later. Same plea, unanswered in one piece and answered in the other.',
-    status: 'pending',
+    status: 'approved',
   },
   {
     id: 60,
@@ -622,7 +622,7 @@ export const RESONANCES = [
     a: { scene: 'orbiter', id: 9 },
     b: { scene: 'scroll', id: 11 },
     rationale: 'A deliberate inversion, not a similarity: Haiku ends on effortless creative flow — "When pen hits paper, / Thought meets fiction, and the words / Flow forth perfectly" — while Projection is an entire essay about that not happening, "going nowhere. Around and around in circles." Same subject (writing as a channel for feeling), opposite outcome. Distinct from row 30 above, which pairs this same Haiku with Sphere\'s Trapdoor for a different reason (desire as involuntary loss of self).',
-    status: 'pending',
+    status: 'approved',
   },
   {
     id: 61,
@@ -630,7 +630,7 @@ export const RESONANCES = [
     a: { scene: 'theater', id: 8, beatId: 444 },
     b: { scene: 'sphere', id: 6 },
     rationale: 'A group of friends inventing shared fantasy roles together after a chaotic night ("We\'ll all become rich and own the world... I call Towel Boy... Can I be the Bard?") and Digression #2\'s account of the same impulse in miniature — "we find someone that has a high caliber of energy... invented some rules and just let the whole thing run its course" — are both about a found group improvising arbitrary shared meaning on the spot, one at party-scene length, one compressed into a paragraph.',
-    status: 'pending',
+    status: 'approved',
   },
   {
     id: 62,
@@ -638,7 +638,7 @@ export const RESONANCES = [
     a: { scene: 'scroll', id: 11 },
     b: { scene: 'theater', id: 6, beatId: 363 },
     rationale: 'A third, distinct thread between this pair — beyond row 17\'s Kirstin-naming and row 42\'s Sadler-sourcing above. Projection invokes "Titania and Oberon... standing by the pool" as the register for how unreal L.A. felt, a fae-enchantment metaphor. Truth and Beauty\'s closing beat has Kirstin suggesting Brian for Lysander in an actual, real production of A Midsummer Night\'s Dream — the same play, metaphor in one piece and literal plot in the other.',
-    status: 'pending',
+    status: 'approved',
   },
   {
     id: 63,
@@ -646,7 +646,7 @@ export const RESONANCES = [
     a: { scene: 'orbiter', id: 10 },
     b: { scene: 'library', id: 108 },
     rationale: 'Weaker, flagged as such: DNA\'s sacred genetic "sequence... Word and phrase manifesting character" and the library\'s note on Sandover\'s channeled scripture are both about revelation arriving pre-encoded in a text, but the echo is abstract — a real resonance in kind, not in any shared specific image, worth Scott\'s own read rather than a confident claim either way.',
-    status: 'pending',
+    status: 'approved',
   },
   {
     id: 64,
@@ -654,7 +654,7 @@ export const RESONANCES = [
     a: { scene: 'orbiter', id: 1 },
     b: { scene: 'theater', id: 3, beatId: 150 },
     rationale: 'Weaker, flagged as such, included for completeness rather than pushed hard: Courtesans of the Old World\'s untouchable, transactionally-guarded women ("hidden behind bulletproof glass, isolated and precious beyond words") loosely rhyme with Kirstin\'s own guardedness in the same beat already linked above (row 57) — looser than that pairing, more mood than argument.',
-    status: 'pending',
+    status: 'approved',
   },
 ];
 

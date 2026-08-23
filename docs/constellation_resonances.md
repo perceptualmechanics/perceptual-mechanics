@@ -8,7 +8,7 @@ Scott has read the rationale for a given row and marked it `approved` in
 `src/resonances.js` (a `rejected` row stays in the data — kept, not deleted —
 so the full discovery pass output stays auditable).
 
-**64 candidates: 7 verbatim, 57 connotative — 22 approved, 42 pending, 0 rejected.**
+**64 candidates: 7 verbatim, 57 connotative — 64 approved, 0 pending, 0 rejected.**
 
 Two different kinds of claim, reviewed differently:
 
@@ -312,7 +312,7 @@ Our investigation into Peter Hight is pending, but from all appearances he appea
 
 ---
 
-### 23. [PENDING]
+### 23. [APPROVED]
 
 **Sphere — "Stolnaphase" (#1)**
 > Floating in rosewood, the angel puckers his lips, waiting for the expected grace from on high, but it never comes. Distraught and confused, he flies down to Earth, wanders through woods and wreckage, the charred remains of a dead world and the blossoming promise of what co…
@@ -324,7 +324,7 @@ Our investigation into Peter Hight is pending, but from all appearances he appea
 
 ---
 
-### 24. [PENDING]
+### 24. [APPROVED]
 
 **Sphere — "Thalia" (#3)**
 > …o, really, it's just that stupidly large. And everywhere, at every time, things happen. Some subtle and unnoticed, some grand and spectacular, most in between. I am the construct you project outward to try and tame the interplay of atoms and arguments. You extrapolate, construct, arrange. The mind, outraged at the blind injustice of pure existence, creates…
@@ -336,7 +336,7 @@ Our investigation into Peter Hight is pending, but from all appearances he appea
 
 ---
 
-### 25. [PENDING]
+### 25. [APPROVED]
 
 **Sphere — "Starbought" (#17)**
 > …ou with carriages and bankers. The parker password. Enormous relief, oh my goodness, all this built-up thunderstorm cannot deign to keep us off the wrong path. This will be the way, this Slack, this zen. Oh, the curtains, oh the shield from the cruel sun, oh the double-edge, oh God your gift brings life and ends it and for that we are fearful and in awe. And t…
@@ -348,7 +348,7 @@ Our investigation into Peter Hight is pending, but from all appearances he appea
 
 ---
 
-### 26. [PENDING]
+### 26. [APPROVED]
 
 **Sphere — "Starbought" (#17)**
 > …sonably competent deity. Believe me, a lot more rides on this than one man's simple faith. Sacrifice your son, your cock, your self. Ben Jeshua. Arvor calmate. Here, on the 32nd floor, the view is spectacular if looked outward, daunting if looking down. Garnet and gold rings your mind. Here is everything I ever wanted to give to you, here it is, everything that will not be, here it is anyway in its raw form,…
@@ -360,7 +360,7 @@ Our investigation into Peter Hight is pending, but from all appearances he appea
 
 ---
 
-### 27. [PENDING]
+### 27. [APPROVED]
 
 **Sphere — "Starbought" (#17)**
 > …d outward, daunting if looking down. Garnet and gold rings your mind. Here is everything I ever wanted to give to you, here it is, everything that will not be, here it is anyway in its raw form, my chi, circulating once more after this daftness. A mala on my right wrist to count away the time. Pony up, my dear, it's a long ride to the old West. Better the civilized East Coast for you with carriages an…
@@ -372,7 +372,7 @@ Our investigation into Peter Hight is pending, but from all appearances he appea
 
 ---
 
-### 28. [PENDING]
+### 28. [APPROVED]
 
 **Sphere — "Algebra" (#21)**
 > …ith our quirks and baggage and minds and heart the way they were that New Year's night. And while the equation itself can be massaged, simplified and expanded, the variables don't change. We have this answer because that is who we were then, and no amount of hope or wishful thinking can change that. And this is no loop, plugging the solution ba…
@@ -384,7 +384,7 @@ Our investigation into Peter Hight is pending, but from all appearances he appea
 
 ---
 
-### 29. [PENDING]
+### 29. [APPROVED]
 
 **Sphere — "Aftershock" (#24)**
 > There it was again: another quake deep within my core, rumbling to the surface, as those memories and moments and that sense of profound loss; how could she let that go? stands in confusion as the ground once more stabilizes, but I get the sense that any answer I receive will never be truly satisfying. And the world continues, since no one feels that quake but me.
@@ -396,7 +396,7 @@ Our investigation into Peter Hight is pending, but from all appearances he appea
 
 ---
 
-### 30. [PENDING]
+### 30. [APPROVED]
 
 **Sphere — "Trapdoor" (#22)**
 > With you, the bottom drops out, swings uselessly from my left foot, and everything becomes raw experience, all the sadness and shame and unhappiness consumes me. I become a conduit, a tunnel, something not myself, unnerved, until I remember that this trapdoor business and I close it once more and collect myself. And then I am collecting experience once more.
@@ -408,7 +408,7 @@ Our investigation into Peter Hight is pending, but from all appearances he appea
 
 ---
 
-### 31. [PENDING]
+### 31. [APPROVED]
 
 **Orbiter — "Raise a Glass" (#4)**
 > Burnt beyond recognition, Spontaneously from the inside. The remains fit into a small glass jar, carried by the headmaster as he strode across campus. It was unlike any sample he had previously obtained. / In the la…
@@ -420,7 +420,7 @@ Our investigation into Peter Hight is pending, but from all appearances he appea
 
 ---
 
-### 32. [PENDING]
+### 32. [APPROVED]
 
 **Orbiter — "Lament for the Future Never Realized" (#5)**
 > …ations take our work And try to build a slaughterhouse! / Yes, soon, my friends, one maddened Serb Will send this world down into Dis! And our machines will be usurped To kill the hope within Man's breast!" / "What can we do?" the question raised. "We'll fight them!" "No, we're pacifists!" "Jump to the future!" says old H.G.…
@@ -432,7 +432,7 @@ Our investigation into Peter Hight is pending, but from all appearances he appea
 
 ---
 
-### 33. [PENDING]
+### 33. [APPROVED]
 
 **Orbiter — "The way her hips sway is unique" (#12)**
 > Shades of recognition, Echoes telling me that this scene has been played before. Not deja vu, but a sense of an assumed role That I've stepped into once again. We might need a rewrite.
@@ -444,7 +444,7 @@ Our investigation into Peter Hight is pending, but from all appearances he appea
 
 ---
 
-### 34. [PENDING]
+### 34. [APPROVED]
 
 **Orbiter — "Moon Song" (#6)**
 > …suspension fluid matrix, / silver flagellant fish, green clear saltwater, / laughing through waves washing me ashore. / This is the lost, the first, Om-Alpha, the egg giving way to the peacock of fire, Beloved me, first born of facewear, Whose elegant touch refines the spun web Into garments of moonsilk, a latticework ladder Ascending from boneyard to Arcadi…
@@ -456,7 +456,7 @@ Our investigation into Peter Hight is pending, but from all appearances he appea
 
 ---
 
-### 35. [PENDING]
+### 35. [APPROVED]
 
 **Beamline — bounce #2**
 > …ing medium…and the laser…no, wait, the light pours through me…and my psyche and mind and body are the medium…and the laser light is that which comes out of me. We're grasping our way towards an analogy, but jumping jesus…this could be something…and my third eye is the focusing mechanism – THE MIRROR – the fucking mirror isn't letting anything out
@@ -468,7 +468,7 @@ Our investigation into Peter Hight is pending, but from all appearances he appea
 
 ---
 
-### 36. [PENDING]
+### 36. [APPROVED]
 
 **Scroll — "The Calamity" (#8)**
 > …cessing machine. Now.  It’s the use you make this energy have that’s what’s important.  See what I mean?  Like, okay, your body contains a certain amount of energy.  No, fuck The Matrix, you’re not a battery for shitty robots.  What a waste of time that was, right?  I mean, let’s let Keanu figure that one out later, but humans as a power source when you have access to nuclear…
@@ -480,7 +480,7 @@ Our investigation into Peter Hight is pending, but from all appearances he appea
 
 ---
 
-### 37. [PENDING]
+### 37. [APPROVED]
 
 **Scroll — "Projection" (#11)**
 > …undstage, the live- action set you've seen a hundred thousand times and never recognized. Production costs are cheaper here. Oh, where was I? Yes, the project. The project, to write about what happened to me in L.A. Actually, stunningly easy to, if I wanted to get to the point: my heart got broken. Wait, hold on, not that simple. Surely not. It's odd, isn't it, that my re…
@@ -492,7 +492,7 @@ Our investigation into Peter Hight is pending, but from all appearances he appea
 
 ---
 
-### 38. [PENDING]
+### 38. [APPROVED]
 
 **Scroll — "Flying" (#2)**
 > …wed by the ground someone set me free, okay? I start working. The evidence of some of that work still exists elsewhere on the Web. Most of it is inside me. For I'm seeking ekstasis. Waking up. Sun shines. Blue sky masks cold wind. A culmination. A confusion. A confirmation. And a clay mask slides off my face and shatters on the ground. So…
@@ -504,7 +504,7 @@ Our investigation into Peter Hight is pending, but from all appearances he appea
 
 ---
 
-### 39. [PENDING]
+### 39. [APPROVED]
 
 **Scroll — "Thoughts Of Death Abounds" (#3)**
 > …hells in his hand, and with a sharp slap, he cast them on the mat. He hunched over them, muttering, then looking up past me at - what? The air? Something else? An orisha? Then he tapped my hand. I revealed the stone. Yes or no. This went on for about ten minutes. After each "yes" he would make a note. Then he sat up and told me what it all meant in th…
@@ -516,7 +516,7 @@ Our investigation into Peter Hight is pending, but from all appearances he appea
 
 ---
 
-### 40. [PENDING]
+### 40. [APPROVED]
 
 **Scroll — "Projection" (#11)**
 > …fr Foer and Dave Eggers: precociously brilliant and hopelessly earnest. Jeremy would be going to L.A. to talk to agents and producers about adapting his novel, Strange Attractors: A Love Affair with Chaos, the story of an semi-autistic mathematician and an English professor's romance. It had "prestige picture" written all over it. Of co…
@@ -528,7 +528,7 @@ Our investigation into Peter Hight is pending, but from all appearances he appea
 
 ---
 
-### 41. [PENDING]
+### 41. [APPROVED]
 
 **Butterfly — "Chaos Butterfly in Phase Space, 2026"**
 > Chaos Butterfly in Phase Space, 2026
@@ -540,7 +540,7 @@ Our investigation into Peter Hight is pending, but from all appearances he appea
 
 ---
 
-### 42. [PENDING]
+### 42. [APPROVED]
 
 **Scroll — "Projection" (#11)**
 > …left after two years, went to film school, and now works for his father's advertising company. Or did; he is now on the Internet, looking for a job in Boston. I have another friend, Chris Sadler. I used him as the basis for a character in two scripts. He works in film. He went to film school in Orlando and now works with Sam Raimi and Jon Favreau. He is a character, the sort of person who is referred to by…
@@ -552,7 +552,7 @@ Our investigation into Peter Hight is pending, but from all appearances he appea
 
 ---
 
-### 43. [PENDING]
+### 43. [APPROVED]
 
 **Theater — Truth and Beauty, "INT. CANDY FACTORY. DAY. (A MOVIE SET.)" (beat #229)**
 > sadler: Ouija board.
@@ -564,7 +564,7 @@ Our investigation into Peter Hight is pending, but from all appearances he appea
 
 ---
 
-### 44. [PENDING]
+### 44. [APPROVED]
 
 **Theater — Truth and Beauty, "INT. MOVIE THEATER, THEN RESTAURANT. NIGHT." (beat #360)**
 > As he picks it up, he notices the messenger’s sneakers have wings painted on the heels.
@@ -576,7 +576,7 @@ Our investigation into Peter Hight is pending, but from all appearances he appea
 
 ---
 
-### 45. [PENDING]
+### 45. [APPROVED]
 
 **Theater — You've Got a Friend in Satan, "INT. HELL. CONTINUOUS." (beat #513)**
 > satanvoice: Don’t even try to lie, Horace, you were talking to the audience.
@@ -588,7 +588,7 @@ Our investigation into Peter Hight is pending, but from all appearances he appea
 
 ---
 
-### 46. [PENDING]
+### 46. [APPROVED]
 
 **Theater — Paul Revere, "INT. THE DEN, HALLWAY & LIVING ROOM. NIGHT." (beat #445)**
 > jeff: I want to be God Emperor of the planet.
@@ -600,7 +600,7 @@ Our investigation into Peter Hight is pending, but from all appearances he appea
 
 ---
 
-### 47. [PENDING]
+### 47. [APPROVED]
 
 **Orbiter — "Raise a Glass" (#4)**
 > …ork is undamaged. No coat of paint needs to be reapplied. / Carpenters and chanteuses occupy the middle lodge. The sickly-sweet liquid was brought before them, the glass resonated, the Brownian motion harmonized with a frequency echoed by angels. Nothing bubbled over, thank Goodness. / Distilled, concentrated, a single drop dabbed into either eye, this project thrust back into azure-blue and bumblebee,…
@@ -612,7 +612,7 @@ Our investigation into Peter Hight is pending, but from all appearances he appea
 
 ---
 
-### 48. [PENDING]
+### 48. [APPROVED]
 
 **Sphere — "Digression #1" (#5)**
 > …it of all. Here in the Southland, we spend our days consumed with apocalypse. Here it is the easiest of all to consider just how the end might come about. Here we dig for fire. Here we keep watch on the fault lines and fractures, waiting for what will spit up through the cracks. Here we tend the flames, making sure nothing else comes…
@@ -624,7 +624,7 @@ Our investigation into Peter Hight is pending, but from all appearances he appea
 
 ---
 
-### 49. [PENDING]
+### 49. [APPROVED]
 
 **Sphere — "Wingspan" (#16)**
 > Arboretum. Orrery. Aerial photographs. Off the wing. Carmen Chameleon. Sugar plum fairy. The ache and shape of things. Free flight, gliding over wheat fields. All the while catching up on my sleep. Crushed out by a heel, pointed asphalt, smoking a Cavendish in Santa Monica. Femme fatales and dimestore cowboys have r…
@@ -636,7 +636,7 @@ Our investigation into Peter Hight is pending, but from all appearances he appea
 
 ---
 
-### 50. [PENDING]
+### 50. [APPROVED]
 
 **Sphere — "Called Shot" (#8)**
 > …xact moment, a bolt of lightning lit up, exactly where I had pointed. Astounded, I shouted with glee. Did you see that? Wow! Did I do that? Was it coincidence? Synchronicity? Holy crap! Thrilled was I, but also doubtful, for I so desperately wanted it to be my doing, my will working on the world. But of course I knew it was just co…
@@ -648,7 +648,7 @@ Our investigation into Peter Hight is pending, but from all appearances he appea
 
 ---
 
-### 51. [PENDING]
+### 51. [APPROVED]
 
 **Sphere — "Joycean" (#9)**
 > Crimkranng off the sodden walls. Leadlined afterdisiacs rummuging underskin. The endless furry walls, the tunnel upwads. Lookiter skinny bones protuding from a white slip as she rung downgrou…
@@ -660,7 +660,7 @@ Our investigation into Peter Hight is pending, but from all appearances he appea
 
 ---
 
-### 52. [PENDING]
+### 52. [APPROVED]
 
 **Sphere — "Quiver" (#14)**
 > …ppropriate. A song — How your eyes light up the sky How I loved to tell you why You mean the world to me — keeps me moving past yearning and sorrow and regret. Here are harps, here are superstrings. Pluck at them both, send me vibrating, harmonics echoing at mathematically precise points. The higher the note, the higher the breath. Your breath and mine, swirling, searching for it. A song lost…
@@ -672,7 +672,7 @@ Our investigation into Peter Hight is pending, but from all appearances he appea
 
 ---
 
-### 53. [PENDING]
+### 53. [APPROVED]
 
 **Orbiter — "The Lovers" (#8)**
 > Their fingers, calloused and tired, Still glowed with a magnetic Pull nearly impossible to resist. The hall of mirrors, the floor show, The seeing eye did their best To polarize them, but it seems Physics has a heart all its own.
@@ -684,7 +684,7 @@ Our investigation into Peter Hight is pending, but from all appearances he appea
 
 ---
 
-### 54. [PENDING]
+### 54. [APPROVED]
 
 **Scroll — "Projection" (#11)**
 > A symphony. The pillars of the concert hall, wisping upwards like smoke, curved, sandblasted metal because the glare was too much for other buildings. There will be no mirrors in the desert; this is the sun's kingdom, and to amplify or reflect is pointless. Only refraction will do. Split the… (no rationale quote matched this piece — showing opening text instead)
@@ -696,7 +696,7 @@ Our investigation into Peter Hight is pending, but from all appearances he appea
 
 ---
 
-### 55. [PENDING]
+### 55. [APPROVED]
 
 **Theater — Truth and Beauty, "INT. CANDY FACTORY. DAY. (A MOVIE SET.)" (beat #276)**
 > sadler: Channeling.
@@ -708,7 +708,7 @@ Our investigation into Peter Hight is pending, but from all appearances he appea
 
 ---
 
-### 56. [PENDING]
+### 56. [APPROVED]
 
 **Sphere — "Circumstance" (#15)**
 > …re the feathers fall, we just don't know. This is the life we have been given by circumstance, and we cannot apologize for playing our roles exactly as we are; we can only come to understand that our roles are so much more flexible than we ever think they are. Thus endeth the lesson, kids, run home safe and put these new ideas into practice. Let us all know how they turn out.
@@ -720,7 +720,7 @@ Our investigation into Peter Hight is pending, but from all appearances he appea
 
 ---
 
-### 57. [PENDING]
+### 57. [APPROVED]
 
 **Sphere — "Steamroll" (#20)**
 > 'Why are you keeping me at arms' length?' 'If I don't, you'll flatten me.' 'Ah. As much as I might want to, I can't disagree.' —
@@ -732,7 +732,7 @@ Our investigation into Peter Hight is pending, but from all appearances he appea
 
 ---
 
-### 58. [PENDING]
+### 58. [APPROVED]
 
 **Sphere — "Current" (#23)**
 > Skittery across wavelines, turbulence, skipping off the atmosphere, bounce a red-hot discus shielding you from the rest of the currents. Treetop foam, detritus picked up and laid on seaside graves from the previous epoch. Windflow, art tunnel, cresting in a 2-D front stirred rapidly around cellbands, settling down in a dinnerplate where two months from now leaves will decorate the cracked concrete: the anticipation, the knowledge of what will be, the settling sun, the autumnal.
@@ -744,7 +744,7 @@ Our investigation into Peter Hight is pending, but from all appearances he appea
 
 ---
 
-### 59. [PENDING]
+### 59. [APPROVED]
 
 **Sphere — "Starbought" (#17)**
 > …ing us thrash about like goats on a Sinai mountainside. The Hebrews, wrapped in cloth, brought forth for your edification. Here, let the miracle commence soon. Show me an act of God to shatter this enclave, to bring light into dark, to do, in short, what one expects of any reasonably competent deity. Believe me, a lot more rides on this than one man's simple fait…
@@ -756,7 +756,7 @@ Our investigation into Peter Hight is pending, but from all appearances he appea
 
 ---
 
-### 60. [PENDING]
+### 60. [APPROVED]
 
 **Orbiter — "Haiku" (#9)**
 > It feels like her tongue Parting the walls of desire Against both our wills. / Her bare, sanguine arms Writing, typing, smoothing down Errant hair of babe, / Her jeweled forehead Glowing, growing wet with thought, Reflecting the light / Pouring down and through Her eyes, nerves, cells, all the while Still a mystery / Yet to be revealed To me or millions, waiting For the proper time / When pen hits paper, Thought meets fiction, and the words Flow forth perfectly.
@@ -768,7 +768,7 @@ Our investigation into Peter Hight is pending, but from all appearances he appea
 
 ---
 
-### 61. [PENDING]
+### 61. [APPROVED]
 
 **Theater — Paul Revere, "INT. THE DEN, HALLWAY & LIVING ROOM. NIGHT." (beat #444)**
 > alex: We’ll all become rich and own the world.
@@ -780,7 +780,7 @@ Our investigation into Peter Hight is pending, but from all appearances he appea
 
 ---
 
-### 62. [PENDING]
+### 62. [APPROVED]
 
 **Scroll — "Projection" (#11)**
 > …se-effect, shimmering glances up the hills...I was in a lucid dream. It was magic occurring around me and through me. It was the otherworld, a fae enchantment. Titania and Oberon were standing by the pool of their house off Mulholland, staring down at me, watching the ass's progress. The La Brea tar pits were a vast untapped resource, d…
@@ -792,7 +792,7 @@ Our investigation into Peter Hight is pending, but from all appearances he appea
 
 ---
 
-### 63. [PENDING]
+### 63. [APPROVED]
 
 **Orbiter — "DNA" (#10)**
 > As the congregation rises, the doors Slide open; the rabbi raises up the Twin scrolls, dictated by God, from the ark. Uncovered, unrolled, the sacred letters Reveal themselves, the primeval sequence Coalescing into the stuff of life (Word and phrase manifesting character). The parashah read aloud, the message Replicates in the hearts of the gathered; The Sefer Torah is recoiled, restored.
@@ -804,7 +804,7 @@ Our investigation into Peter Hight is pending, but from all appearances he appea
 
 ---
 
-### 64. [PENDING]
+### 64. [APPROVED]
 
 **Orbiter — "Courtesans of the Old World" (#1)**
 > …your Nonchalance (well-practiced), your look Centuries old and waiting for something Richer than jewels, gold, the treasures of The pharaohs – / There you are, hidden behind bulletproof glass, Isolated and precious beyond words. There you are, Lighting my cigarette in a crowded bar. There You are, face buried in the crook of your Girlfriend's neck on the ride between St. Paul And the…
