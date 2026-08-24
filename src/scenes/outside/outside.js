@@ -3,86 +3,88 @@ import {
   bindOrbitDrag, bindWheelZoom, bindGuardedResize, bindTapVsDrag,
   prefersReducedMotion, parseHTML,
 } from '../../utils/sceneKit.js';
-import { POWER_SOURCES, OER_DROPPED, OER_KEPT, MICHAEL_GABRIEL_AXIS } from './outside.text.js';
+import { POWER_SOURCES, CENTER_ORIGINS, NEWEST_ORIGINS } from './outside.text.js';
 import outsideHtml from './outside.html?raw';
 import './outside.css';
 
-// ─── Outside — the tenth scene, 2026-08-24 ─────────────────────────────────
-// Renamed from "Vantage." Every other scene on this site visualizes ONE
-// account of its own material. This one visualizes the fact that Apherion's
-// own cosmology — eleven dimensions, mapped to the Muses — is itself just
-// one account among several the project's own notes describe (OER's,
-// eventually Ring of Light's, the Machinists' Union's), and per the
-// project's own standing principle ("No canon — no origin/account in
-// Holography is ever authoritative"), none of them is privileged as the
-// default. This scene makes both of those things literally true,
-// mechanically, not just illustrated: the eleven dimensions are real
-// 11-component vectors in genuine 11-dimensional space (src/scenes/outside/
-// outside.text.js, transcribed verbatim from Scott's own project notes —
-// nothing here is invented prose), Apherion's and OER's "views" are two
-// different, real 3×11 projection matrices applied to that same underlying
-// data, and there is no default: orientation drifts continuously on its own
-// ambient cycle from load, never resting on either account's exact
-// alignment, occasionally and briefly coinciding with one without pausing
-// there or announcing it.
+// ─── Outside — round 3, a floral cosmology map (2026-08-24) ────────────────
+// Full pivot, not another correction on the retired build: the 7-vs-11
+// OER/Apherion projection thesis (real 11D vectors, two 3x11 projection
+// matrices, a drifting basis) is gone entirely — Scott's call after seeing
+// it live twice, that the underlying idea belonged in a different register
+// than this scene should occupy. What replaces it: a real, generated flower
+// — a lotus floating in violet space — mapping the five Power Sources (each
+// a petal) and their Folk Origins, with Magi and Psi (the one cross-cutting
+// Origin axis that isn't anchored to any single Power Source) as the
+// center, not a sixth petal. See outside.text.js's own header for exactly
+// where every name comes from.
 //
-// ─── The math, in outline ───────────────────────────────────────────────────
-// Apherion's eleven dimensions are the standard basis vectors of R^11
-// (dimension i = e_i). Centered on their own centroid, these are exactly
-// the eleven vertices of a regular 10-simplex — the unique highest-
-// symmetry shape with eleven equidistant points, guaranteed by construction,
-// not styled to look that way. Apherion's own "account" is the specific 3D
-// projection that best preserves that symmetry: the real/imaginary parts of
-// the first two nontrivial discrete-Fourier eigenvectors of the 11-cycle
-// permutation (the Coxeter element of the simplex's own symmetry group) —
-// closed-form, not an arbitrary nice-looking camera angle. The first
-// harmonic alone places all eleven points on a regular hendecagon; this
-// scene's third axis comes from the second harmonic of that same symmetry,
-// not a bolted-on depth hack.
+// ─── The geometry, in outline ───────────────────────────────────────────────
+// Each petal is a real generated surface, not a flat decal: a local (u, w)
+// grid — u = fraction along the petal's length (0 at the receptacle, 1 at
+// the tip), w = fraction of the petal's width (-1..1) — mapped through a
+// rose-curve-family width profile (halfWidth(u) = maxHalfWidth *
+// sin(pi*u^0.75)^0.85, the sin(pi*u) shape being the classic single-lobe
+// member of the same superformula/rose-curve family the retired build's own
+// header explained) that pinches to a true point at both u=0 and u=1 — a
+// real petal silhouette, not a flat ellipse or a starfish arm (an actual
+// Gielis-superformula polar curve for the WHOLE five-lobed outline was
+// tried first and rendered — verified with a rendered PNG, not eyeballed
+// blind — as a five-pointed star with a pinched waist between each point,
+// not a lotus; five separately-lofted petal lobes, each its own member of
+// the same curve family, is what actually reads as a flower). Height
+// arches upward from base to tip (z(u) = height * sin(pi/2 * u^0.9)),
+// giving every petal real cupped dimensionality rather than sitting flat.
 //
-// OER's account is a genuine coordinate projection: a 3×11 matrix built the
-// same way, but restricted to just its seven KEPT dimensions (OER_KEPT,
-// outside.text.js) — the four dropped dimensions get literal zero columns,
-// mathematically absent from this view, not dimmed or occluded.
+// Five simple petals (Gabriel, Michael, Raphael, Emmanuel) sit at the
+// five-fold angles (72 degrees apart); Nature's petal is a compound
+// cluster of THREE smaller lobes fanned within its own 72-degree sector —
+// Nature is already established in the notes as a trine (three Folk
+// Origins on one Power Source), and a cluster of three attached lobes
+// renders that as real asymmetry in the geometry itself, not a uniform
+// fifth petal with extra decoration. Verified with a rendered PNG before
+// writing any Three.js code: reads immediately as "one fuller, denser
+// petal-cluster" against the four simple petals.
 //
-// True rotation in 11 dimensions happens in a plane spanned by two basis
-// vectors, not around one axis (eleven dimensions have 55 independent such
-// planes, dim(SO(11)) = n(n-1)/2). This scene never exposes that as 55
-// controls: the ambient drift continuously rotates a small, fixed set of
-// coordinate-index planes (rotateInPlane, below); manual drag maps to two
-// further planes built from the account structure itself — horizontal drag
-// rotates within the plane separating OER's kept dimensions from its
-// dropped ones, vertical drag rotates toward Apherion's own maximal-
-// symmetry basis.
+// Magi and Psi sit on a small gold seedpod dome at the center — a real
+// botanical fact, not a stretched metaphor: actual lotus flowers (Nelumbo
+// nucifera) have a gold-green seed receptacle at the center of
+// violet-pink petals. The void itself is a deep violet-black rather than
+// neutral, and a soft violet nebular glow sits behind the flower, using
+// the same clustered-clump-and-filament technique Harmonics' own backdrop
+// uses (harmonics.js's buildGalaxy), recolored into this scene's own
+// register rather than Harmonics' Hubble red/blue.
 //
-// ─── Round 2 correction (2026-08-24) ────────────────────────────────────
-// Scott's read of the live v3.3.0 build: eleven correctly-positioned
-// points is not a shape, it's a scatter — a shape is the points AND
-// every connection between them. Also: this scene isn't Harmonics with
-// different math, it's closer to Butterfly's register — a pure visual
-// object, no text, no panel, no click-for-keywords. Two changes below,
-// both load-bearing, not decoration:
-//   1. All C(11,2) = 55 possible edges between the eleven dimension
-//      points now render continuously (buildEdgePairs/the wireframe
-//      LineSegments below), not on hover/click. This turns out to be the
-//      actual payoff, not just a visual fix: OER's basis already zeroes
-//      four dimensions' basis-vector components (see buildOerBasis), so
-//      a dropped dimension's projected position already collapses toward
-//      the origin as the current basis approaches OER's own — that was
-//      true in the math from the start, it just had nothing rendered
-//      that could show it. With the wireframe in place, watching four
-//      vertices visibly pull inward and drag their edges with them AS
-//      the drift or drag approaches OER's basis tells the entire OER-
-//      vs-Apherion story with zero text, purely through geometry gaining
-//      and losing connectivity.
-//   2. The panel is gone. No title, no keyword chips, no excerpts —
-//      nothing displays a word once the scene is running. Touching a
-//      point instead triggers a real traveling pulse: a brightness wave
-//      computed from straight-line distance from the touched point
-//      (frozen at touch time) to every other point, propagating outward
-//      and fading, applied as a genuine time/distance function
-//      (triggerPulse/pulseWave below), not a hand-waved animation.
-const N = 11; // Apherion's full dimensionality
+// ─── Ambient motion ──────────────────────────────────────────────────────
+// No auto-rotation of any kind — per the brief, a rigid geometric spin is
+// exactly the wrong register for this subject (that was the retired
+// scene's own drift mechanism). Instead the whole flower breathes: a slow,
+// smooth global scale/arch cycle (breathePhase, below) plus a slightly
+// faster, independently-phased sway per petal, running unconditionally —
+// the sole source of ambient motion, on its own, regardless of
+// interaction. Camera orbit is real and user-driven only (drag rotates a
+// standard spherical camera around the flower, clamped so it can't flip
+// through the poles); nothing auto-rotates the view.
+//
+// ─── Sound ───────────────────────────────────────────────────────────────
+// A fresh pass, not a reuse of the retired beat-frequency/account-filter
+// design (that was built specifically for the projection mechanism this
+// pivot removes). Scott's own pick, offered as an explicit choice: a
+// breath-synced pad — one soft sine pair through a shared lowpass filter,
+// both the pad's volume and the filter's cutoff tracking the exact same
+// breathePhase(t) driving the geometry, so the sound and the visual
+// "inhale" are the same signal, not two coincidentally-similar cycles.
+//
+// ─── Touch ───────────────────────────────────────────────────────────────
+// Touching anywhere on the flower's real surface (raycast against the
+// actual petal/seedpod meshes, not proxy points) triggers a soft pulse of
+// light that travels outward from the touched point across the surface —
+// the same genuine distance/time wavefront math the retired build used
+// (pulseWave, below), adapted from sparse graph edges to a continuous
+// mesh. No text, no panel — the entire response is light moving across a
+// real surface.
+
+const TWO_PI = Math.PI * 2;
 
 function makeDotTexture() {
   const c = document.createElement('canvas');
@@ -97,501 +99,416 @@ function makeDotTexture() {
   return new THREE.CanvasTexture(c);
 }
 
-// ─── 11D linear algebra — small, closed-form, no matrix library needed ─────
-function zeros() { return new Array(N).fill(0); }
-function basisVector(i) { const v = zeros(); v[i] = 1; return v; }
-function dot(a, b) { let s = 0; for (let i = 0; i < N; i++) s += a[i] * b[i]; return s; }
-function norm(a) { return Math.sqrt(dot(a, a)); }
-function normalized(a) { const n = norm(a) || 1; return a.map(x => x / n); }
-function addScaled(target, v, scale) { for (let i = 0; i < N; i++) target[i] += v[i] * scale; }
-
-// Real rotation of `vecs` (an array of 11D vectors, mutated in place) within
-// the 2-plane spanned by orthonormal p1/p2, by `angle` radians. Works for
-// ANY orthonormal pair — a coordinate-index pair (the ambient drift) or an
-// arbitrary derived pair (the account-structure planes manual drag uses).
-function rotateInPlane(vecs, p1, p2, angle) {
-  const c = Math.cos(angle), s = Math.sin(angle);
-  for (const v of vecs) {
-    const a = dot(v, p1), b = dot(v, p2);
-    const na = a * c - b * s, nb = a * s + b * c;
-    addScaled(v, p1, na - a);
-    addScaled(v, p2, nb - b);
+// ─── Shared petal topology — every petal (the four simple ones and
+// Nature's three sub-lobes) uses the same (u, w) grid and triangle
+// index buffer; only the per-instance length/width/height/angle/color
+// differ, applied fresh each frame (see updatePetal, below). ────────────
+const U_SEGS = 16, W_SEGS = 9;
+function buildPetalTopology() {
+  const count = U_SEGS * W_SEGS;
+  const uArr = new Float32Array(count), wArr = new Float32Array(count);
+  for (let iu = 0; iu < U_SEGS; iu++) {
+    const u = iu / (U_SEGS - 1);
+    for (let iw = 0; iw < W_SEGS; iw++) {
+      const w = (iw / (W_SEGS - 1)) * 2 - 1;
+      const i = iu * W_SEGS + iw;
+      uArr[i] = u; wArr[i] = w;
+    }
   }
-}
-
-// Apherion's canonical 3-basis: k=1 and k=2 real DFT harmonics of the
-// 11-cycle. See header comment for why this is the real maximal-symmetry
-// projection, not a chosen camera angle.
-function buildApherionBasis() {
-  const bx = zeros(), by = zeros(), bz = zeros();
-  for (let i = 0; i < N; i++) {
-    bx[i] = Math.cos((2 * Math.PI * i) / N);
-    by[i] = Math.sin((2 * Math.PI * i) / N);
-    bz[i] = Math.cos((4 * Math.PI * i) / N);
+  const idx = [];
+  for (let iu = 0; iu < U_SEGS - 1; iu++) {
+    for (let iw = 0; iw < W_SEGS - 1; iw++) {
+      const a = iu * W_SEGS + iw, b = (iu + 1) * W_SEGS + iw;
+      const c = (iu + 1) * W_SEGS + (iw + 1), d = iu * W_SEGS + (iw + 1);
+      idx.push(a, b, d, b, c, d);
+    }
   }
-  return [normalized(bx), normalized(by), normalized(bz)];
+  return { uArr, wArr, indices: new Uint16Array(idx), count };
 }
 
-// OER's canonical 3-basis: the same construction, restricted to its seven
-// kept dimensions only — dropped dimensions get a literal 0 in every basis
-// vector, so they contribute nothing to the projection at all.
-function buildOerBasis() {
-  const kept = OER_KEPT;
-  const M = kept.length;
-  const bx = zeros(), by = zeros(), bz = zeros();
-  kept.forEach((dimIdx, rank) => {
-    bx[dimIdx] = Math.cos((2 * Math.PI * rank) / M);
-    by[dimIdx] = Math.sin((2 * Math.PI * rank) / M);
-    bz[dimIdx] = Math.cos((4 * Math.PI * rank) / M);
-  });
-  return [normalized(bx), normalized(by), normalized(bz)];
+// The petal's own local shape — the width profile is the sin(pi*u) rose-
+// curve member of the same superformula family the retired build used for
+// its 11D basis, restricted to one lobe instead of the whole five-fold
+// curve (see header comment for why the whole-curve version reads as a
+// starfish, not a flower). Pinches to an exact point at u=0 and u=1.
+function petalHalfWidth(u) {
+  return Math.pow(Math.sin(Math.PI * Math.pow(u, 0.75)), 0.85);
 }
-
-// Every one of the C(11,2) = 55 possible edges of the simplex — the
-// complete graph on eleven vertices, computed once. See the round-2
-// header note for why all 55 render continuously rather than none.
-const EDGE_PAIRS = [];
-for (let i = 0; i < N; i++) for (let j = i + 1; j < N; j++) EDGE_PAIRS.push([i, j]);
+function petalHeightProfile(u, w) {
+  return Math.sin((Math.PI / 2) * Math.pow(u, 0.9)) * (1 - 0.05 * Math.abs(w));
+}
 
 export function createOutside(container, { preview = false, initialPieceId = null } = {}) {
-  const w = container.clientWidth || window.innerWidth;
-  const h = container.clientHeight || window.innerHeight;
+  const w0 = container.clientWidth || window.innerWidth;
+  const h0 = container.clientHeight || window.innerHeight;
   const SCALE = preview ? 90 : 150;
-  const SCALE_FACTOR = (preview ? 90 : 150) / 150;
-
-  const APHERION_BASIS = buildApherionBasis();
-  const OER_BASIS = buildOerBasis();
-
-  // The plane separating OER's kept dimensions from its dropped ones —
-  // manual horizontal drag rotates within this, per the header comment.
-  const keptDir = normalized(OER_KEPT.reduce((acc, i) => { addScaled(acc, basisVector(i), 1); return acc; }, zeros()));
-  let droppedRaw = OER_DROPPED.reduce((acc, i) => { addScaled(acc, basisVector(i), 1); return acc; }, zeros());
-  addScaled(droppedRaw, keptDir, -dot(droppedRaw, keptDir)); // Gram-Schmidt against keptDir
-  const droppedDir = normalized(droppedRaw);
-  const OER_SPLIT_PLANE = [keptDir, droppedDir];
-  const APHERION_PLANE = [APHERION_BASIS[0], APHERION_BASIS[2]];
-
-  // ─── The ambient orientation basis — the scene's real "camera" in 11D.
-  // Starts deliberately off both named accounts (no privileged starting
-  // account), drifts continuously, occasionally and briefly passes near
-  // one or the other. ────────────────────────────────────────────────────
-  let Cx = basisVector(0).slice(), Cy = basisVector(1).slice(), Cz = basisVector(2).slice();
-  // Seed away from any coordinate axis or either account's own basis so
-  // load never coincidentally starts aligned.
-  rotateInPlane([Cx, Cy, Cz], normalized(basisVector(0).map((v, i) => v + 0.3 * ((i * 7919) % 11))), normalized(basisVector(5).map((v, i) => v + 0.2 * ((i * 104729) % 11))), 0.9);
-
-  const DRIFT_PLANES = [
-    { i: 0, j: 3, freq: 0.021 },
-    { i: 1, j: 6, freq: 0.017 },
-    { i: 2, j: 9, freq: 0.013 },
-    { i: 4, j: 8, freq: 0.026 },
-    { i: 5, j: 10, freq: 0.011 },
-    { i: 0, j: 7, freq: 0.009 },
-  ];
-
-  // ─── Temperature — Michael/Gabriel/Lucifer, honest crossover ──────────────
-  // Real electroweak symmetry restoration is a smooth crossover for the
-  // actual measured Higgs mass, not a sharp phase transition — modeled here
-  // with a tanh blend (C-infinity smooth everywhere, no kink at the
-  // midpoint), never a clean threshold. Runs on its own ambient cycle,
-  // deliberately built from different, incommensurate frequencies than the
-  // orientation drift above, so nothing implies the two are causally
-  // linked.
-  const T_CRIT = 0.5, T_WIDTH = 0.12;
-  function temperatureAt(t) {
-    const raw = Math.sin(t * 0.083) * 0.6 + Math.sin(t * 0.031 + 1.7) * 0.4;
-    return THREE.MathUtils.clamp((raw + 1) / 2, 0, 1);
-  }
-  // 1 = fully split (cold, low T), 0 = fully fused (hot, high T).
-  function separationFraction(temp) {
-    return (1 - Math.tanh((temp - T_CRIT) / T_WIDTH)) / 2;
-  }
-  const MG_CENTER_RADIUS = 1.25;
-  const MG_MAX_OFFSET = 0.85;
+  const SCALE_FACTOR = SCALE / 150;
 
   const scene = new THREE.Scene();
-  const BG_COLOR = 0x040108;
+  const BG_COLOR = 0x0d0518; // deep violet-black, not neutral — keeps the site's space-scene identity while staying this scene's own register
   scene.background = new THREE.Color(BG_COLOR);
-  scene.fog = new THREE.FogExp2(BG_COLOR, 0.9 / (SCALE * 2.6));
+  scene.fog = new THREE.FogExp2(BG_COLOR, 0.85 / (SCALE * 2.6));
 
-  const CAM_DEFAULT = SCALE * 2.6;
-  const CAM_MIN = SCALE * 1.3, CAM_MAX = SCALE * 4.5;
-  const camera = new THREE.PerspectiveCamera(46, w / h, 0.1, CAM_MAX * 3);
-  let camDist = CAM_DEFAULT;
-  camera.position.set(0, 0, camDist);
-  camera.lookAt(0, 0, 0);
+  // ─── Camera — a real spherical orbit around a fixed flower, not a
+  // basis rotation. Default sits at a 3/4-elevated angle (tested against a
+  // rendered mockup at the same elevation before committing) so the
+  // petals' own arch reads immediately, not a flat overhead view. ────────
+  const CAM_DEFAULT = SCALE * 2.35;
+  const CAM_MIN = SCALE * 1.25, CAM_MAX = SCALE * 4.2;
+  const POLAR_MIN = 0.22, POLAR_MAX = 2.35; // radians from +Y — clamped short of either pole
+  let azimuth = 0.35, polar = 1.08, camDist = CAM_DEFAULT; // ~28deg elevation by default
+  const camera = new THREE.PerspectiveCamera(46, w0 / h0, 0.1, CAM_MAX * 3);
+  function updateCameraPosition() {
+    const sp = Math.sin(polar), cp = Math.cos(polar);
+    camera.position.set(camDist * sp * Math.sin(azimuth), camDist * cp, camDist * sp * Math.cos(azimuth));
+    camera.lookAt(0, 0, 0);
+  }
+  updateCameraPosition();
 
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
   renderer.setPixelRatio(window.devicePixelRatio);
-  renderer.setSize(w, h);
+  renderer.setSize(w0, h0);
   renderer.setClearColor(0x000000, 1);
   renderer.domElement.setAttribute('aria-hidden', 'true');
   container.appendChild(renderer.domElement);
   if (!preview) container.tabIndex = -1;
 
-  scene.add(new THREE.AmbientLight(0x223355, 1.0));
+  // ─── Lighting — key/rim/hemisphere, same convention Orbiter/Library/
+  // Beamline use for their own lit meshes, tinted to this scene's palette
+  // so the petals' real curvature (the arch, the cupping) actually reads
+  // through shading gradients rather than flat color alone. ──────────────
+  scene.add(new THREE.HemisphereLight(0x6a4fd8, 0x0a0510, 0.7));
+  scene.add(new THREE.AmbientLight(0x2a1f45, 0.6));
+  const keyLight = new THREE.DirectionalLight(0xffe6c2, 0.85);
+  keyLight.position.set(SCALE * 0.8, SCALE * 1.4, SCALE * 1.2);
+  scene.add(keyLight);
+  const rimLight = new THREE.DirectionalLight(0x8a6fff, 0.45);
+  rimLight.position.set(-SCALE * 1.1, SCALE * 0.4, -SCALE * 1.3);
+  scene.add(rimLight);
 
-  // ─── Deep field, minimal — this scene's own subject is already dense;
-  // the backdrop stays sparse and quiet on purpose. ─────────────────────────
-  const starCount = preview ? 250 : 700;
+  const dotTex = makeDotTexture();
+
+  // ─── Deep field — sparse stars, further out than the nebula below. ─────
+  const starCount = preview ? 220 : 650;
   const starPos = new Float32Array(starCount * 3);
   for (let i = 0; i < starCount; i++) {
-    const r = SCALE * (3.2 + Math.random() * 2.2);
-    const th = Math.random() * Math.PI * 2, ph = Math.acos(2 * Math.random() - 1);
+    const r = SCALE * (3.4 + Math.random() * 2.2);
+    const th = Math.random() * TWO_PI, ph = Math.acos(2 * Math.random() - 1);
     starPos[i * 3] = r * Math.sin(ph) * Math.cos(th);
     starPos[i * 3 + 1] = r * Math.sin(ph) * Math.sin(th);
     starPos[i * 3 + 2] = r * Math.cos(ph);
   }
   const starGeo = new THREE.BufferGeometry();
   starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
-  const starMat = new THREE.PointsMaterial({ color: 0x8899cc, size: 0.8 * SCALE_FACTOR, transparent: true, opacity: 0.4, sizeAttenuation: true, fog: false });
-  const starField = new THREE.Points(starGeo, starMat);
-  scene.add(starField);
+  const starMat = new THREE.PointsMaterial({ color: 0x9a8ccf, size: 0.75 * SCALE_FACTOR, transparent: true, opacity: 0.4, sizeAttenuation: true, fog: false });
+  scene.add(new THREE.Points(starGeo, starMat));
 
-  const dotTex = makeDotTexture();
-
-  // ─── Palette — continuity with Harmonics' own Hubble blend for Apherion's
-  // fuller view; OER's rank-7 view goes colder/flatter/more desaturated,
-  // per the brief. `accountBlend` (computed each frame from how closely
-  // the drifting basis currently matches each account) drives both. ───────
-  const APHERION_WARM = new THREE.Color(0xff3d5c), APHERION_COOL = new THREE.Color(0x3fb8ff);
-  const OER_COLOR = new THREE.Color(0x8fa3b0);
-
-  // ─── Dimension points (11) ──────────────────────────────────────────────
-  const dimGeo = new THREE.BufferGeometry();
-  const dimPos = new Float32Array(N * 3);
-  const dimCol = new Float32Array(N * 3);
-  dimGeo.setAttribute('position', new THREE.BufferAttribute(dimPos, 3));
-  dimGeo.setAttribute('color', new THREE.BufferAttribute(dimCol, 3));
-  const dimMat = new THREE.PointsMaterial({
-    size: (preview ? 3.4 : 4.0) * SCALE_FACTOR, map: dotTex, vertexColors: true,
-    transparent: true, opacity: 0.95, depthWrite: false, blending: THREE.AdditiveBlending, sizeAttenuation: true, fog: false,
-  });
-  const dimPoints = new THREE.Points(dimGeo, dimMat);
-  scene.add(dimPoints);
-  // Soft corona riding on the same position/color buffers — same
-  // technique as harmonics.js's own nodeHaloMat: eleven sparse points
-  // alone, even at a readable core size, read as faint specks against a
-  // near-black backdrop (found the hard way tuning Harmonics' own
-  // dust-lane layer this session). A second, larger, lower-opacity
-  // additive layer sharing the same geometry is what actually makes
-  // each one read as a landmark rather than a stray star.
-  const dimHaloMat = new THREE.PointsMaterial({
-    size: (preview ? 9 : 11) * SCALE_FACTOR, map: dotTex, vertexColors: true,
-    transparent: true, opacity: 0.35, depthWrite: false, blending: THREE.AdditiveBlending, sizeAttenuation: true, fog: false,
-  });
-  const dimHalo = new THREE.Points(dimGeo, dimHaloMat);
-  scene.add(dimHalo);
-
-  // ─── Power Source points (5) — anchored further out along their own
-  // dimension's axis, same convention Harmonics uses for its atmosphere:
-  // visually distinct from, not competing with, the dimension vertices. ───
-  const psGeo = new THREE.BufferGeometry();
-  const psPos = new Float32Array(POWER_SOURCES.length * 3);
-  const psCol = new Float32Array(POWER_SOURCES.length * 3);
-  psGeo.setAttribute('position', new THREE.BufferAttribute(psPos, 3));
-  psGeo.setAttribute('color', new THREE.BufferAttribute(psCol, 3));
-  const psMat = new THREE.PointsMaterial({
-    size: (preview ? 2.6 : 3.1) * SCALE_FACTOR, map: dotTex, vertexColors: true,
-    transparent: true, opacity: 0.85, depthWrite: false, blending: THREE.AdditiveBlending, sizeAttenuation: true, fog: false,
-  });
-  const psPoints = new THREE.Points(psGeo, psMat);
-  scene.add(psPoints);
-  const psHaloMat = new THREE.PointsMaterial({
-    size: (preview ? 7 : 9) * SCALE_FACTOR, map: dotTex, vertexColors: true,
-    transparent: true, opacity: 0.3, depthWrite: false, blending: THREE.AdditiveBlending, sizeAttenuation: true, fog: false,
-  });
-  const psHalo = new THREE.Points(psGeo, psHaloMat);
-  scene.add(psHalo);
-  const PS_RADIUS = 1.4;
-
-  // ─── Michael / Gabriel — Lucifer is their intersection, not a third
-  // point (see outside.text.js's LUCIFER_LINE). ───────────────────────────
-  const mgGeo = new THREE.BufferGeometry();
-  const mgPos = new Float32Array(2 * 3);
-  const mgCol = new Float32Array(2 * 3);
-  mgGeo.setAttribute('position', new THREE.BufferAttribute(mgPos, 3));
-  mgGeo.setAttribute('color', new THREE.BufferAttribute(mgCol, 3));
-  const mgMat = new THREE.PointsMaterial({
-    size: (preview ? 3.0 : 3.6) * SCALE_FACTOR, map: dotTex, vertexColors: true,
-    transparent: true, opacity: 0.9, depthWrite: false, blending: THREE.AdditiveBlending, sizeAttenuation: true, fog: false,
-  });
-  const mgPoints = new THREE.Points(mgGeo, mgMat);
-  scene.add(mgPoints);
-  const mgHaloMat = new THREE.PointsMaterial({
-    size: (preview ? 8 : 10) * SCALE_FACTOR, map: dotTex, vertexColors: true,
-    transparent: true, opacity: 0.32, depthWrite: false, blending: THREE.AdditiveBlending, sizeAttenuation: true, fog: false,
-  });
-  const mgHalo = new THREE.Points(mgGeo, mgHaloMat);
-  scene.add(mgHalo);
-
-  // ─── The wireframe — the actual shape, not just its vertices ───────────
-  // All 55 edges of the complete graph on the eleven dimension points,
-  // always on. Vertex colors are copied from dimCol every frame (below),
-  // so the OER-dropped dimming and warm/cool account blend already
-  // computed for the points carry straight through to the edges that
-  // touch them — one color computation, not two. Thin and additive so
-  // density reads as structure, not noise; WIRE_BRIGHTNESS keeps it
-  // visibly quieter than the points themselves, and depthFadeFor()
-  // (computed per-frame from actual camera distance, not a fixed value)
-  // dims far edges relative to near ones as the shape turns in 3D.
-  const WIRE_BRIGHTNESS = 0.6, WIRE_DEPTH_FLOOR = 0.28;
-  const wireGeo = new THREE.BufferGeometry();
-  const wirePos = new Float32Array(EDGE_PAIRS.length * 2 * 3);
-  const wireCol = new Float32Array(EDGE_PAIRS.length * 2 * 3);
-  wireGeo.setAttribute('position', new THREE.BufferAttribute(wirePos, 3));
-  wireGeo.setAttribute('color', new THREE.BufferAttribute(wireCol, 3));
-  const wireMat = new THREE.LineBasicMaterial({
-    vertexColors: true, transparent: true, opacity: 0.5,
-    blending: THREE.AdditiveBlending, depthWrite: false, fog: false,
-  });
-  const wireframe = new THREE.LineSegments(wireGeo, wireMat);
-  scene.add(wireframe);
-
-  // ─── Power Source anchor edges (5) — each Power Source point connects
-  // straight back to the dimension it's anchored to (their positions are
-  // already exactly colinear with the origin: PS position = PS_RADIUS ×
-  // that dimension's own basis vector, so this is a real edge, not a
-  // decorative line), gradient-colored from the dimension's own color to
-  // the Power Source's own — nothing floats disconnected from the
-  // simplex. ─────────────────────────────────────────────────────────────
-  const psEdgeGeo = new THREE.BufferGeometry();
-  const psEdgePos = new Float32Array(POWER_SOURCES.length * 2 * 3);
-  const psEdgeCol = new Float32Array(POWER_SOURCES.length * 2 * 3);
-  psEdgeGeo.setAttribute('position', new THREE.BufferAttribute(psEdgePos, 3));
-  psEdgeGeo.setAttribute('color', new THREE.BufferAttribute(psEdgeCol, 3));
-  const psEdgeMat = new THREE.LineBasicMaterial({
-    vertexColors: true, transparent: true, opacity: 0.6,
-    blending: THREE.AdditiveBlending, depthWrite: false, fog: false,
-  });
-  const psEdges = new THREE.LineSegments(psEdgeGeo, psEdgeMat);
-  scene.add(psEdges);
-
-  // ─── Michael/Gabriel edge — their whole relationship is already
-  // "opposite ends of one axis" in the data; Lucifer is already exactly
-  // its midpoint. One edge, in its own color rather than blended from
-  // Michael's warm/Gabriel's cool, so it doesn't disappear into the
-  // denser 55-edge structure. No pre-existing "Lucifer color" turned up
-  // anywhere in the codebase (checked) — this lavender is newly chosen
-  // here, a threshold tone distinct from both the simplex edges' warm/
-  // cool family and the scene's own violet chrome. ─────────────────────
-  const LUCIFER_EDGE_COLOR = new THREE.Color(0x9a6bff);
-  const mgEdgeGeo = new THREE.BufferGeometry();
-  const mgEdgePos = new Float32Array(2 * 3);
-  const mgEdgeCol = new Float32Array(2 * 3);
-  mgEdgeGeo.setAttribute('position', new THREE.BufferAttribute(mgEdgePos, 3));
-  mgEdgeGeo.setAttribute('color', new THREE.BufferAttribute(mgEdgeCol, 3));
-  const mgEdgeMat = new THREE.LineBasicMaterial({
-    vertexColors: true, transparent: true, opacity: 0.75,
-    blending: THREE.AdditiveBlending, depthWrite: false, fog: false,
-  });
-  const mgEdge = new THREE.LineSegments(mgEdgeGeo, mgEdgeMat);
-  scene.add(mgEdge);
-
-  // Faint ghost of the underlying crossover curve — separation vs.
-  // temperature, plotted as its own small diagram near Michael/Gabriel
-  // rather than warped into the 11D projection (every point at every
-  // temperature sits on the SAME straight line through their shared axis
-  // in the real data, so the curve shape only reads as a curve here, as a
-  // graph). Static geometry, billboarded toward the camera each frame.
-  const GHOST_SAMPLES = 40;
-  const ghostGeo = new THREE.BufferGeometry();
-  const ghostPos = new Float32Array(GHOST_SAMPLES * 3);
-  // Deliberately small — a corner diagram beside Michael/Gabriel's own
-  // points, not a screen-spanning feature. First pass at 0.9/0.55×SCALE
-  // dominated the whole frame next to eleven sparse dimension points;
-  // live-tuned down to a scale that reads as "a small trace," matching
-  // the brief's own "faint" framing.
-  const GHOST_SPAN = SCALE * 0.16, GHOST_HEIGHT = SCALE * 0.11;
-  for (let i = 0; i < GHOST_SAMPLES; i++) {
-    const temp = i / (GHOST_SAMPLES - 1);
-    const sep = separationFraction(temp);
-    ghostPos[i * 3] = (temp - 0.5) * GHOST_SPAN;
-    ghostPos[i * 3 + 1] = sep * GHOST_HEIGHT;
-    ghostPos[i * 3 + 2] = 0;
+  // ─── Soft violet nebular glow — Harmonics' own clustered-clump +
+  // filament technique (harmonics.js's buildGalaxy), recolored into this
+  // scene's violet-magenta register instead of Harmonics' H-alpha/O-III
+  // Hubble palette. Independent clumps with their own hue bias, connected
+  // by sparse wisps, genuinely 3D — same reasoning as Harmonics' own
+  // header comment for why a single clean curve reads as "a diagram," not
+  // real gravitational structure. ─────────────────────────────────────────
+  function buildNebula(rMin, rMax) {
+    const count = preview ? 900 : 2400;
+    const clusterCount = preview ? 5 : 10;
+    const filamentFraction = 0.3;
+    const coreColor = new THREE.Color(0xd268ff); // warm magenta-violet
+    const armColor = new THREE.Color(0x4a35a8);  // cool deep violet-blue
+    function gauss() { return (Math.random() + Math.random() + Math.random() - 1.5) / 1.5; }
+    const clusters = [];
+    for (let k = 0; k < clusterCount; k++) {
+      const r = rMin + Math.random() * (rMax - rMin);
+      const th = Math.random() * TWO_PI, ph = Math.acos(2 * Math.random() - 1);
+      clusters.push({
+        center: new THREE.Vector3(r * Math.sin(ph) * Math.cos(th), r * Math.sin(ph) * Math.sin(th) * 0.7, r * Math.cos(ph)),
+        spread: (rMax - rMin) * (0.1 + Math.random() * 0.18),
+        hueBias: Math.random(),
+      });
+    }
+    const pos = new Float32Array(count * 3), col = new Float32Array(count * 3);
+    const c = new THREE.Color();
+    for (let i = 0; i < count; i++) {
+      let x, y, z, blend;
+      if (clusters.length >= 2 && Math.random() < filamentFraction) {
+        const a = clusters[(Math.random() * clusters.length) | 0];
+        let b = clusters[(Math.random() * clusters.length) | 0];
+        for (let tries = 0; b === a && tries < 5; tries++) b = clusters[(Math.random() * clusters.length) | 0];
+        const t = Math.random(), jitter = (rMax - rMin) * 0.04;
+        x = THREE.MathUtils.lerp(a.center.x, b.center.x, t) + gauss() * jitter;
+        y = THREE.MathUtils.lerp(a.center.y, b.center.y, t) + gauss() * jitter;
+        z = THREE.MathUtils.lerp(a.center.z, b.center.z, t) + gauss() * jitter;
+        blend = THREE.MathUtils.lerp(a.hueBias, b.hueBias, t);
+      } else {
+        const cl = clusters[(Math.random() * clusters.length) | 0];
+        x = cl.center.x + gauss() * cl.spread;
+        y = cl.center.y + gauss() * cl.spread;
+        z = cl.center.z + gauss() * cl.spread;
+        blend = THREE.MathUtils.clamp(cl.hueBias + gauss() * 0.15, 0, 1);
+      }
+      pos[i * 3] = x; pos[i * 3 + 1] = y; pos[i * 3 + 2] = z;
+      c.copy(armColor).lerp(coreColor, blend).multiplyScalar(0.55 + Math.random() * 0.3);
+      col[i * 3] = c.r; col[i * 3 + 1] = c.g; col[i * 3 + 2] = c.b;
+    }
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    geo.setAttribute('color', new THREE.BufferAttribute(col, 3));
+    const mat = new THREE.PointsMaterial({
+      size: (preview ? 1.6 : 2.1) * SCALE_FACTOR, vertexColors: true, transparent: true,
+      opacity: 0.5, depthWrite: false, sizeAttenuation: true, fog: false, blending: THREE.AdditiveBlending,
+    });
+    const points = new THREE.Points(geo, mat);
+    points.rotation.x = 0.25; points.rotation.z = 0.12;
+    return { points, geo, mat };
   }
-  ghostGeo.setAttribute('position', new THREE.BufferAttribute(ghostPos, 3));
-  const ghostMatTop = new THREE.LineBasicMaterial({ color: 0xffcc88, transparent: true, opacity: 0.16, fog: false });
-  const ghostLineTop = new THREE.Line(ghostGeo, ghostMatTop);
-  const ghostGeoBottom = ghostGeo.clone();
-  const ghostBottomPos = ghostGeoBottom.attributes.position.array;
-  for (let i = 0; i < GHOST_SAMPLES; i++) ghostBottomPos[i * 3 + 1] *= -1;
-  ghostGeoBottom.attributes.position.needsUpdate = true;
-  const ghostLineBottom = new THREE.Line(ghostGeoBottom, ghostMatTop);
-  const ghostGroup = new THREE.Group();
-  ghostGroup.add(ghostLineTop, ghostLineBottom);
-  scene.add(ghostGroup);
+  const nebula = buildNebula(SCALE * 1.5, SCALE * 3.1);
+  scene.add(nebula.points);
 
-  // ─── Account-closeness — a continuous similarity score between the
-  // current drifting basis and each account's own canonical basis (sum of
-  // squared dot products across both 3-bases — 1 when the subspaces fully
-  // align, ~0 when orthogonal). Drives palette blend, the passive account
-  // label, and the shared sound filter — never a hard state switch. ──────
-  function subspaceScore(basisA, basisB) {
-    let s = 0;
-    for (const a of basisA) for (const b of basisB) s += dot(a, b) ** 2;
-    return s / 3;
+  // ═══ THE FLOWER ═══════════════════════════════════════════════════════
+  const topo = buildPetalTopology();
+  const BASE_LENGTH = SCALE * 0.95, BASE_WIDTH = SCALE * 0.30, BASE_HEIGHT = SCALE * 0.38;
+
+  const PETAL_HUE = [0.74, 0.79, 0.83, 0.88]; // Gabriel, Michael, Raphael, Emmanuel
+  const NATURE_SUB_HUE = [0.705, 0.72, 0.735]; // Nature's own three sub-lobes — coolest of the violet family, but still violet, not blue
+  const GOLD_HUE = 0.115;
+
+  // Petal material — real MeshStandardMaterial so the arch/cup catches
+  // the key/rim lights above; vertexColors carries the per-petal hue and
+  // the base-to-tip gradient; a low uniform emissive keeps petals from
+  // going fully black in shadow, matching the site's glowing-cosmic-
+  // subject convention elsewhere (Beamline's vessel, Orbiter's cloud).
+  function makePetalMaterial() {
+    return new THREE.MeshStandardMaterial({
+      vertexColors: true, side: THREE.DoubleSide, roughness: 0.55, metalness: 0.06,
+      transparent: true, opacity: 0.95, emissive: new THREE.Color(0x2a1250), emissiveIntensity: 0.55,
+    });
   }
-  let accountBlend = 0.5; // 0 = reads as OER, 1 = reads as Apherion
 
-  // ─── Chrome: title/hint/sound-toggle only — no panel, no account label.
-  // Round 2 correction: nothing in this scene displays a word once it's
-  // running. Title/hint/sound-toggle stay because they're the site-wide
-  // grammar every scene carries (what every visitor already expects,
-  // not scene-specific content) — the account label and the read-more
-  // panel were both scene-specific content, and are gone entirely. ────────
-  let titleEl = null, hintEl = null;
-  let soundToggleEl = null, soundToggleLabelEl = null;
+  // One petal "instance": its own geometry/buffers (topology shared, only
+  // positions/colors are per-instance), plus the parameters updatePetal
+  // needs every frame (angle, base dimensions, hue, breathing phase).
+  function makePetalInstance({ angle, length, halfWidth, height, hue, swayIndex }) {
+    const geo = new THREE.BufferGeometry();
+    const pos = new Float32Array(topo.count * 3);
+    const col = new Float32Array(topo.count * 3);
+    geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    geo.setAttribute('color', new THREE.BufferAttribute(col, 3));
+    geo.setIndex(new THREE.BufferAttribute(topo.indices, 1));
+    const mat = makePetalMaterial();
+    const mesh = new THREE.Mesh(geo, mat);
+    scene.add(mesh);
+    return {
+      angle, cosA: Math.cos(angle), sinA: Math.sin(angle),
+      length, halfWidth, height, hue, swayIndex,
+      geo, pos, col, mat, mesh,
+    };
+  }
+
+  const petalInstances = [];
+  POWER_SOURCES.forEach((_ps, pi) => {
+    const angle = (TWO_PI * pi) / 5;
+    if (pi < 4) {
+      petalInstances.push(makePetalInstance({
+        angle, length: BASE_LENGTH, halfWidth: BASE_WIDTH, height: BASE_HEIGHT,
+        hue: PETAL_HUE[pi], swayIndex: pi,
+      }));
+    } else {
+      // Nature's compound cluster — three smaller lobes fanned within its
+      // own sector, real asymmetry rather than one uniform fifth petal.
+      const spread = 0.255; // radians, ~14.6deg either side — comfortably inside the 72deg sector
+      const subOffsets = [-spread, 0, spread];
+      const subLenScale = [0.72, 0.82, 0.72];
+      const subWidScale = [0.62, 0.72, 0.62];
+      const subHeightScale = [0.85, 0.95, 0.85];
+      subOffsets.forEach((off, si) => {
+        petalInstances.push(makePetalInstance({
+          angle: angle + off, length: BASE_LENGTH * subLenScale[si], halfWidth: BASE_WIDTH * subWidScale[si],
+          height: BASE_HEIGHT * subHeightScale[si], hue: NATURE_SUB_HUE[si], swayIndex: 4 + si * 0.4,
+        }));
+      });
+    }
+  });
+  const NATURE_CLUSTER_START = 4; // petalInstances[4..6] are Nature's three sub-lobes
+
+  // ─── Center seedpod — Magi/Psi's dome. Real botanical fact: lotus
+  // flowers have a gold-green seed receptacle at the center of
+  // violet-pink petals; this isn't a stretched metaphor, it's what one
+  // actually looks like, and it already matches this structure. ─────────
+  const podGeo = new THREE.SphereGeometry(SCALE * 0.15, 20, 14);
+  podGeo.scale(1, 0.82, 1);
+  const podMat = new THREE.MeshStandardMaterial({
+    color: new THREE.Color().setHSL(GOLD_HUE, 0.7, 0.52), roughness: 0.42, metalness: 0.18,
+    emissive: new THREE.Color().setHSL(GOLD_HUE, 0.8, 0.18), emissiveIntensity: 0.55,
+  });
+  const podMesh = new THREE.Mesh(podGeo, podMat);
+  podMesh.position.set(0, SCALE * 0.07, 0);
+  scene.add(podMesh);
+
+  const pickTargets = [...petalInstances.map(p => p.mesh), podMesh];
+
+  // ─── Landmark points — Power Sources (5, at petal tips), Folk Origins
+  // (7, nested along their petal), Magi/Psi (2, on the seedpod). Same
+  // point+halo convention every sparse landmark on this site uses (a
+  // second, larger, lower-opacity additive layer sharing the same
+  // buffers) — a handful of bare points read as faint specks otherwise. ──
+  function makePointGroup(count, size, haloSize, haloOpacity) {
+    const geo = new THREE.BufferGeometry();
+    const pos = new Float32Array(count * 3), col = new Float32Array(count * 3);
+    geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    geo.setAttribute('color', new THREE.BufferAttribute(col, 3));
+    const mat = new THREE.PointsMaterial({
+      size: size * SCALE_FACTOR, map: dotTex, vertexColors: true, transparent: true,
+      opacity: 0.95, depthWrite: false, blending: THREE.AdditiveBlending, sizeAttenuation: true, fog: false,
+    });
+    const points = new THREE.Points(geo, mat);
+    scene.add(points);
+    const haloMat = new THREE.PointsMaterial({
+      size: haloSize * SCALE_FACTOR, map: dotTex, vertexColors: true, transparent: true,
+      opacity: haloOpacity, depthWrite: false, blending: THREE.AdditiveBlending, sizeAttenuation: true, fog: false,
+    });
+    const halo = new THREE.Points(geo, haloMat);
+    scene.add(halo);
+    return { geo, pos, col, mat, points, haloMat, halo };
+  }
+
+  const psPoints = makePointGroup(5, preview ? 3.4 : 4.0, preview ? 9 : 11, 0.34);
+  const originPoints = makePointGroup(7, preview ? 2.6 : 3.0, preview ? 7.5 : 9, 0.3);
+  const centerPoints = makePointGroup(CENTER_ORIGINS.length, preview ? 3.0 : 3.5, preview ? 8 : 10, 0.36);
+
+  // A faint extra glow marking Tempered and Psychopomps — the newest two
+  // Origins in the whole cosmology (see outside.text.js). Optional detail:
+  // its own small point group (NOT sharing originPoints' buffer — a
+  // shared buffer would glow every origin, not just these two), updated
+  // from the same two anchor positions each frame, below.
+  const newestGlow = makePointGroup(NEWEST_ORIGINS.length, preview ? 4 : 5, preview ? 13 : 16, 0.28);
+
+  // Anchor tables — where each landmark point sits, in (petal instance, u)
+  // terms, resolved to world position fresh every frame from the SAME
+  // per-petal formula the mesh itself uses, so markers stay glued to the
+  // breathing surface exactly rather than drifting off it.
+  const PS_ANCHORS = [
+    { inst: 0, u: 1 }, { inst: 1, u: 1 }, { inst: 2, u: 1 }, { inst: 3, u: 1 },
+    { inst: NATURE_CLUSTER_START + 1, u: 1 }, // Nature's own marker: center sub-lobe's tip
+  ];
+  const originEntries = [];
+  POWER_SOURCES.forEach((ps, pi) => {
+    ps.origins.forEach((name, oi) => {
+      if (pi < 4) {
+        originEntries.push({ name, inst: pi, u: 0.62, newest: NEWEST_ORIGINS.includes(name) });
+      } else {
+        // Nature's three: left/right sub-lobes get their own tip (no
+        // competing Power-Source marker there); the center sub-lobe's
+        // tip is taken by Chaos Engine's own marker above, so its
+        // origin (the second of the three) nests instead.
+        const subI = NATURE_CLUSTER_START + oi;
+        const u = oi === 1 ? 0.66 : 1;
+        originEntries.push({ name, inst: subI, u, newest: NEWEST_ORIGINS.includes(name) });
+      }
+    });
+  });
+
+  // ─── Chrome: title/hint/sound-toggle — unchanged site-wide grammar. ────
+  let titleEl = null, hintEl = null, soundToggleEl = null, soundToggleLabelEl = null;
   if (!preview) {
     const frag = parseHTML(outsideHtml);
     titleEl = frag.querySelector('.outside-title');
     hintEl = frag.querySelector('.outside-hint');
     document.body.appendChild(titleEl);
     document.body.appendChild(hintEl);
-
     soundToggleEl = frag.querySelector('.outside-sound-toggle');
     soundToggleLabelEl = soundToggleEl.querySelector('.outside-sound-toggle-label');
     document.body.appendChild(soundToggleEl);
   }
 
-  // ─── Manual drag → SO(11) planes, not a camera orbit. Horizontal drag
-  // rotates within the plane separating OER's kept dimensions from its
-  // dropped ones; vertical drag rotates toward Apherion's own maximal-
-  // symmetry basis. Temporarily takes over from the ambient drift, same
-  // site-wide grammar every other scene uses, resuming on release. ────────
-  let autoRotate = true;
-  let resumeTimer = null;
+  // ─── Drag → real camera orbit (not a basis rotation — there's no
+  // abstract basis anymore, just a real 3D object). Clamped polar range
+  // so it can't flip through either pole. Wheel zoom controls distance,
+  // same as every other scene. ────────────────────────────────────────────
+  const ORBIT_SPEED = 1.4;
   const orbitDrag = !preview ? bindOrbitDrag(container, {
-    onDragStart: () => {
-      autoRotate = false;
-      if (resumeTimer) clearTimeout(resumeTimer);
-    },
     onDrag: (dx, dy) => {
-      // dx/dy already come out sensitivity-scaled (see bindOrbitDrag) —
-      // scaled again here only to a comfortable angular speed for a
-      // basis rotation rather than a camera pan.
-      rotateInPlane([Cx, Cy, Cz], OER_SPLIT_PLANE[0], OER_SPLIT_PLANE[1], dx);
-      rotateInPlane([Cx, Cy, Cz], APHERION_PLANE[0], APHERION_PLANE[1], -dy);
-    },
-    onDragEnd: () => {
-      resumeTimer = setTimeout(() => { autoRotate = true; }, 3000);
+      azimuth += dx * ORBIT_SPEED;
+      polar = THREE.MathUtils.clamp(polar - dy * ORBIT_SPEED, POLAR_MIN, POLAR_MAX);
+      updateCameraPosition();
     },
   }) : null;
-  const touchGuard = !preview ? bindTapVsDrag(container) : null;
   const wheelZoom = !preview ? bindWheelZoom(container, {
     onZoom: deltaY => {
       camDist = THREE.MathUtils.clamp(camDist + deltaY * 0.05 * SCALE_FACTOR, CAM_MIN, CAM_MAX);
-      camera.position.set(0, 0, camDist);
+      updateCameraPosition();
     },
   }) : null;
+  // A touch-drag orbit ends in a synthetic click on mobile (touchend
+  // doesn't preventDefault it) — without this guard, every orbit gesture
+  // would also fire a spurious pulse at the release point.
+  const touchGuard = !preview ? bindTapVsDrag(container) : null;
 
-  // ─── Touch a node ─────────────────────────────────────────────────────────
+  // ─── Touch — a real pulse across the real surface ──────────────────────
   const raycaster = new THREE.Raycaster();
   const pointerNdc = new THREE.Vector2();
-  function pickAt(clientX, clientY, obj, threshold) {
-    const rect = container.getBoundingClientRect();
-    pointerNdc.x = ((clientX - rect.left) / rect.width) * 2 - 1;
-    pointerNdc.y = -((clientY - rect.top) / rect.height) * 2 + 1;
-    raycaster.setFromCamera(pointerNdc, camera);
-    raycaster.params.Points.threshold = threshold;
-    const hits = raycaster.intersectObject(obj);
-    return hits.length ? hits[0].index : -1;
-  }
-  // ─── Touch response — a real traveling pulse, not a panel. Straight-
-  // line distance from the touched point (frozen at the moment of touch)
-  // to every other point drives a genuine time/distance wave function
-  // (pulseWave, in the animate loop below) — a brightness boost that
-  // reaches nearer points sooner and farther points later, then fades.
-  // No text is ever displayed; this is the entire response. ───────────────
-  const PULSE_SPEED = SCALE * 3;   // world units/sec the wavefront travels
-  const PULSE_WIDTH = 0.14;        // seconds — how wide the wavefront is
-  const PULSE_DURATION = 1.4;      // seconds — hard cutoff, wave has long since passed
-  const PULSE_BOOST = 0.9;         // added brightness at the wavefront's peak
+  const PULSE_SPEED = SCALE * 2.6, PULSE_WIDTH = 0.16, PULSE_DURATION = 1.6, PULSE_BOOST = 0.55;
   let pulseActive = false, pulseStart = 0;
   const pulseOrigin = new THREE.Vector3();
-  const _pulseVec = new THREE.Vector3();
-  function triggerPulse(x, y, z) {
-    pulseOrigin.set(x, y, z);
-    pulseStart = elapsed;
-    pulseActive = true;
-  }
-  // Gaussian wavefront centered at `t == dist/PULSE_SPEED` — reaches
-  // nearer points sooner, farther points later, real distance/time math
-  // rather than a hand-tuned easing curve.
+  const _pv = new THREE.Vector3();
+  function triggerPulse(point) { pulseOrigin.copy(point); pulseStart = elapsed; pulseActive = true; }
   function pulseWave(t, dist) {
     if (t < 0) return 0;
-    const wavefront = t - dist / PULSE_SPEED;
-    return Math.exp(-(wavefront * wavefront) / (2 * PULSE_WIDTH * PULSE_WIDTH));
+    const wf = t - dist / PULSE_SPEED;
+    return Math.exp(-(wf * wf) / (2 * PULSE_WIDTH * PULSE_WIDTH));
   }
   function pulseBoostAt(x, y, z) {
     if (!pulseActive) return 0;
-    _pulseVec.set(x, y, z);
-    return pulseWave(elapsed - pulseStart, pulseOrigin.distanceTo(_pulseVec)) * PULSE_BOOST;
-  }
-  // Depth cueing for the wireframe: real per-frame distance-to-camera,
-  // normalized against the CURRENT spread of the eleven points (not a
-  // fixed world-scale constant), so it self-adjusts at any zoom level.
-  const dimCamDist = new Float32Array(N);
-  const _depthVec = new THREE.Vector3();
-  function depthFadeAt(camDistForIndex, minD, maxD) {
-    const t = maxD > minD ? (camDistForIndex - minD) / (maxD - minD) : 0;
-    return THREE.MathUtils.lerp(1, WIRE_DEPTH_FLOOR, THREE.MathUtils.clamp(t, 0, 1));
+    _pv.set(x, y, z);
+    return pulseWave(elapsed - pulseStart, pulseOrigin.distanceTo(_pv)) * PULSE_BOOST;
   }
   let onClick = null;
   if (!preview) {
     onClick = e => {
       if (touchGuard?.consume()) return;
-      const th = 7 * SCALE_FACTOR;
-      let idx = pickAt(e.clientX, e.clientY, dimPoints, th);
-      if (idx !== -1) { triggerPulse(dimPos[idx * 3], dimPos[idx * 3 + 1], dimPos[idx * 3 + 2]); return; }
-      idx = pickAt(e.clientX, e.clientY, psPoints, th);
-      if (idx !== -1) { triggerPulse(psPos[idx * 3], psPos[idx * 3 + 1], psPos[idx * 3 + 2]); return; }
-      idx = pickAt(e.clientX, e.clientY, mgPoints, th);
-      if (idx !== -1) { triggerPulse(mgPos[idx * 3], mgPos[idx * 3 + 1], mgPos[idx * 3 + 2]); return; }
+      const rect = container.getBoundingClientRect();
+      pointerNdc.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+      pointerNdc.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+      raycaster.setFromCamera(pointerNdc, camera);
+      const hits = raycaster.intersectObjects(pickTargets, false);
+      if (hits.length) triggerPulse(hits[0].point);
     };
     container.addEventListener('click', onClick);
   }
 
-  // ─── Sound — one voice, two mechanisms on the same signal ──────────────
-  // Temperature (Michael/Gabriel split): two oscillators, same base pitch,
-  // detuning apart as separationFraction moves — the beat between them is
-  // the split's audible signature, resolving gradually, no clean threshold.
-  // Account (OER/Apherion): that same pair runs through one shared lowpass
-  // filter — OER's rank-7 view keeps only the fundamentals (narrow),
-  // Apherion's fuller view opens toward the full harmonic series (wide).
-  // The filter acts on the beat pair directly; there is no separate
-  // "account tone." Lazy AudioContext on first gesture, same convention as
-  // every other scene's own sound toggle.
-  let audioCtx = null, oscA = null, oscB = null, filter = null, masterGain = null;
+  // ─── Sound — breath-synced pad. Root + fifth sine pair through one
+  // shared lowpass filter; both the pad's own volume and the filter's
+  // cutoff track breathePhase(t) directly, so the sound "inhales" on
+  // exactly the same signal driving the geometry, not a separate cycle
+  // that merely happens to feel similar. Lazy AudioContext on first
+  // gesture, same convention every other scene's sound toggle uses. ──────
+  let audioCtx = null, oscA = null, oscB = null, filter = null, padGain = null, muteGain = null;
   let soundEnabled = false;
-  const BASE_HZ = 220, MAX_DETUNE_HZ = 7;
-  const FILTER_MIN_HZ = 480, FILTER_MAX_HZ = 9000;
+  const PAD_ROOT_HZ = 110, PAD_FIFTH_HZ = 164.81;
+  const FILTER_MIN_HZ = 260, FILTER_MAX_HZ = 1300;
+  const PAD_GAIN_MIN = 0.035, PAD_GAIN_MAX = 0.1;
   function buildAudioGraph() {
     if (audioCtx) return;
     audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    masterGain = audioCtx.createGain();
-    masterGain.gain.value = 0;
+    muteGain = audioCtx.createGain(); muteGain.gain.value = 0;
+    padGain = audioCtx.createGain(); padGain.gain.value = PAD_GAIN_MIN;
     filter = audioCtx.createBiquadFilter();
-    filter.type = 'lowpass';
-    filter.Q.value = 1.2;
-    filter.frequency.value = FILTER_MIN_HZ;
-    oscA = audioCtx.createOscillator();
-    oscB = audioCtx.createOscillator();
+    filter.type = 'lowpass'; filter.Q.value = 0.8; filter.frequency.value = FILTER_MIN_HZ;
+    oscA = audioCtx.createOscillator(); oscB = audioCtx.createOscillator();
     oscA.type = 'sine'; oscB.type = 'sine';
-    oscA.frequency.value = BASE_HZ; oscB.frequency.value = BASE_HZ;
+    oscA.frequency.value = PAD_ROOT_HZ; oscB.frequency.value = PAD_FIFTH_HZ;
     oscA.connect(filter); oscB.connect(filter);
-    filter.connect(masterGain);
-    masterGain.connect(audioCtx.destination);
+    filter.connect(padGain); padGain.connect(muteGain); muteGain.connect(audioCtx.destination);
     oscA.start(); oscB.start();
   }
   function setSoundEnabled(on) {
     soundEnabled = on;
     if (on) buildAudioGraph();
     if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
-    if (masterGain) {
+    if (muteGain) {
       const now = audioCtx.currentTime;
-      masterGain.gain.cancelScheduledValues(now);
-      masterGain.gain.linearRampToValueAtTime(on ? 0.14 : 0, now + 0.25);
+      muteGain.gain.cancelScheduledValues(now);
+      muteGain.gain.linearRampToValueAtTime(on ? 1 : 0, now + 0.6);
     }
     if (soundToggleEl) {
       soundToggleEl.setAttribute('aria-pressed', String(on));
@@ -600,142 +517,155 @@ export function createOutside(container, { preview = false, initialPieceId = nul
   }
   if (soundToggleEl) soundToggleEl.addEventListener('click', () => setSoundEnabled(!soundEnabled));
 
+  // ─── Breathing — the sole ambient motion source, unconditional. ────────
+  const BREATHE_FREQ = 0.11; // ~57s full cycle
+  function breathePhase(t) { return 0.5 + 0.5 * Math.sin(t * BREATHE_FREQ); }
+  function petalSway(t, swayIndex) {
+    return 1 + 0.03 * Math.sin(t * (0.07 + 0.011 * swayIndex) + swayIndex * 1.9);
+  }
+
   const reduceMotion = prefersReducedMotion();
   let elapsed = 0;
   let animId, lastT = performance.now();
+  const tmpColor = new THREE.Color();
+  const _anchor = new THREE.Vector3(); // reused scratch — every anchor read/write below happens immediately, no cross-frame state
+
+  function updatePetal(inst, t, globalScaleXY, globalScaleZ) {
+    const sway = reduceMotion ? 1 : petalSway(t, inst.swayIndex);
+    const length = inst.length * globalScaleXY * sway;
+    const halfWidth = inst.halfWidth * globalScaleXY * sway;
+    const height = inst.height * globalScaleZ * sway;
+    for (let i = 0; i < topo.count; i++) {
+      const u = topo.uArr[i], w = topo.wArr[i];
+      const hw = halfWidth * petalHalfWidth(u);
+      const localX = u * length, localY = w * hw;
+      const y = height * petalHeightProfile(u, w);
+      // Petals spread in the X-Z plane (world "ground" plane), arching
+      // up into Y — Y is this camera's own pole axis (see the spherical
+      // orbit above), so the flower's face-normal lines up with the
+      // camera's natural elevation sweep. An earlier pass spread petals
+      // in X-Y instead, which put the flower's face perpendicular to the
+      // orbit's pole — every view looked edge-on/foreshortened no matter
+      // the azimuth, confirmed live via a temporary debug hook before
+      // this fix (screenshots at several forced azimuths all showed the
+      // same collapsed, non-flower-reading silhouette).
+      const x = localX * inst.cosA - localY * inst.sinA;
+      const zPlane = localX * inst.sinA + localY * inst.cosA;
+      inst.pos[i * 3] = x; inst.pos[i * 3 + 1] = y; inst.pos[i * 3 + 2] = zPlane;
+
+      const lightness = THREE.MathUtils.lerp(0.32, 0.66, u);
+      tmpColor.setHSL(inst.hue, 0.6, lightness);
+      const boost = pulseBoostAt(x, y, zPlane);
+      inst.col[i * 3] = Math.min(1, tmpColor.r + boost);
+      inst.col[i * 3 + 1] = Math.min(1, tmpColor.g + boost);
+      inst.col[i * 3 + 2] = Math.min(1, tmpColor.b + boost);
+    }
+    inst.geo.attributes.position.needsUpdate = true;
+    inst.geo.attributes.color.needsUpdate = true;
+    inst.geo.computeVertexNormals();
+    // Bounding sphere is normally computed once, lazily, on first
+    // raycast — recomputed explicitly every frame instead, since the
+    // breathing motion above moves real vertices and a stale cached
+    // sphere from an earlier frame could make touch miss the surface
+    // near a petal's own edge.
+    inst.geo.computeBoundingSphere();
+  }
+
+  function anchorWorldPos(inst, u, out) {
+    const hw = 0; // centerline (w=0)
+    const length = inst._curLength, height = inst._curHeight;
+    const localX = u * length, localY = hw;
+    const y = height * petalHeightProfile(u, 0);
+    const x = localX * inst.cosA - localY * inst.sinA;
+    const zPlane = localX * inst.sinA + localY * inst.cosA;
+    out.set(x, y, zPlane);
+    return out;
+  }
+
   function animate(now) {
     animId = requestAnimationFrame(animate);
     const dt = Math.min(0.05, (now - lastT) / 1000);
     lastT = now;
     if (!reduceMotion) elapsed += dt;
 
-    // Ambient orientation drift — independent of everything else,
-    // deliberately never resting on a named account's own alignment.
-    if (!reduceMotion && autoRotate) {
-      for (const p of DRIFT_PLANES) rotateInPlane([Cx, Cy, Cz], basisVector(p.i), basisVector(p.j), p.freq * dt);
-    }
-
-    // Temperature — its own independent ambient cycle, uncorrelated with
-    // the orientation drift above (different, incommensurate frequencies).
-    const temp = temperatureAt(elapsed);
-    const sep = separationFraction(temp);
-
-    // Project every point through the CURRENT drifting basis.
-    for (let i = 0; i < N; i++) {
-      const v = basisVector(i);
-      dimPos[i * 3] = dot(Cx, v) * SCALE;
-      dimPos[i * 3 + 1] = dot(Cy, v) * SCALE;
-      dimPos[i * 3 + 2] = dot(Cz, v) * SCALE;
-    }
-    dimGeo.attributes.position.needsUpdate = true;
-
-    POWER_SOURCES.forEach((ps, i) => {
-      const v = basisVector(ps.dimension).map(x => x * PS_RADIUS);
-      psPos[i * 3] = dot(Cx, v) * SCALE;
-      psPos[i * 3 + 1] = dot(Cy, v) * SCALE;
-      psPos[i * 3 + 2] = dot(Cz, v) * SCALE;
-    });
-    psGeo.attributes.position.needsUpdate = true;
-
-    const axis = basisVector(MICHAEL_GABRIEL_AXIS);
-    const mVec = axis.map(x => x * (MG_CENTER_RADIUS + sep * MG_MAX_OFFSET));
-    const gVec = axis.map(x => x * (MG_CENTER_RADIUS - sep * MG_MAX_OFFSET));
-    mgPos[0] = dot(Cx, mVec) * SCALE; mgPos[1] = dot(Cy, mVec) * SCALE; mgPos[2] = dot(Cz, mVec) * SCALE;
-    mgPos[3] = dot(Cx, gVec) * SCALE; mgPos[4] = dot(Cy, gVec) * SCALE; mgPos[5] = dot(Cz, gVec) * SCALE;
-    mgGeo.attributes.position.needsUpdate = true;
-    ghostGroup.position.set(mgPos[0], mgPos[1], mgPos[2]);
-    ghostGroup.quaternion.copy(camera.quaternion);
-
-    camera.lookAt(0, 0, 0);
-
-    // Account closeness — continuous, drives the palette (no label left
-    // to lean on — see round-2 header note — so this now has to carry
-    // the OER/Apherion distinction on its own, together with the
-    // wireframe's own vertex-collapse).
-    const apherionScore = subspaceScore([Cx, Cy, Cz], APHERION_BASIS);
-    const oerScore = subspaceScore([Cx, Cy, Cz], OER_BASIS);
-    const targetBlend = apherionScore / (apherionScore + oerScore + 0.0001);
-    accountBlend += (targetBlend - accountBlend) * Math.min(1, dt * 2);
-
     if (pulseActive && elapsed - pulseStart > PULSE_DURATION) pulseActive = false;
 
-    const tmp = new THREE.Color();
-    for (let i = 0; i < N; i++) {
-      const dropped = OER_DROPPED.includes(i);
-      const legibility = dropped ? THREE.MathUtils.lerp(0.15, 1, accountBlend) : 1;
-      tmp.copy(APHERION_WARM).lerp(APHERION_COOL, (i % 7) / 7).lerp(OER_COLOR, 1 - accountBlend);
-      const boost = pulseBoostAt(dimPos[i * 3], dimPos[i * 3 + 1], dimPos[i * 3 + 2]);
-      dimCol[i * 3] = Math.min(1, tmp.r * legibility + boost);
-      dimCol[i * 3 + 1] = Math.min(1, tmp.g * legibility + boost);
-      dimCol[i * 3 + 2] = Math.min(1, tmp.b * legibility + boost);
-      dimCamDist[i] = camera.position.distanceTo(_depthVec.set(dimPos[i * 3], dimPos[i * 3 + 1], dimPos[i * 3 + 2]));
-    }
-    dimGeo.attributes.color.needsUpdate = true;
-    POWER_SOURCES.forEach((ps, i) => {
-      tmp.copy(APHERION_WARM).lerp(APHERION_COOL, 0.5).lerp(OER_COLOR, 1 - accountBlend);
-      const boost = pulseBoostAt(psPos[i * 3], psPos[i * 3 + 1], psPos[i * 3 + 2]);
-      psCol[i * 3] = Math.min(1, tmp.r + boost);
-      psCol[i * 3 + 1] = Math.min(1, tmp.g + boost);
-      psCol[i * 3 + 2] = Math.min(1, tmp.b + boost);
+    const bp = breathePhase(elapsed);
+    const globalScaleXY = 1 + 0.035 * (bp - 0.5) * 2;
+    const globalScaleZ = 1 + 0.12 * (bp - 0.5) * 2;
+
+    petalInstances.forEach(inst => {
+      inst._curLength = inst.length * globalScaleXY * (reduceMotion ? 1 : petalSway(elapsed, inst.swayIndex));
+      inst._curHeight = inst.height * globalScaleZ * (reduceMotion ? 1 : petalSway(elapsed, inst.swayIndex));
+      updatePetal(inst, elapsed, globalScaleXY, globalScaleZ);
     });
-    psGeo.attributes.color.needsUpdate = true;
+
+    podMesh.scale.setScalar(1 + 0.02 * (bp - 0.5) * 2);
     {
-      const boostM = pulseBoostAt(mgPos[0], mgPos[1], mgPos[2]);
-      const boostG = pulseBoostAt(mgPos[3], mgPos[4], mgPos[5]);
-      mgCol[0] = Math.min(1, 1 + boostM); mgCol[1] = Math.min(1, 0.85 + boostM); mgCol[2] = Math.min(1, 0.55 + boostM);
-      mgCol[3] = Math.min(1, 0.55 + boostG); mgCol[4] = Math.min(1, 0.75 + boostG); mgCol[5] = Math.min(1, 1 + boostG);
+      const boost = pulseBoostAt(podMesh.position.x, podMesh.position.y, podMesh.position.z);
+      podMat.emissiveIntensity = 0.55 + boost * 0.8;
     }
-    mgGeo.attributes.color.needsUpdate = true;
 
-    // ─── The wireframe itself — all 55 edges, positions and colors both
-    // pulled straight from the point data just computed above, so the
-    // OER-collapse, account blend, and pulse all carry through for free.
-    let minD = Infinity, maxD = -Infinity;
-    for (let i = 0; i < N; i++) { if (dimCamDist[i] < minD) minD = dimCamDist[i]; if (dimCamDist[i] > maxD) maxD = dimCamDist[i]; }
-    EDGE_PAIRS.forEach(([a, b], e) => {
-      const p0 = e * 6, p1 = e * 6 + 3;
-      wirePos[p0] = dimPos[a * 3]; wirePos[p0 + 1] = dimPos[a * 3 + 1]; wirePos[p0 + 2] = dimPos[a * 3 + 2];
-      wirePos[p1] = dimPos[b * 3]; wirePos[p1 + 1] = dimPos[b * 3 + 1]; wirePos[p1 + 2] = dimPos[b * 3 + 2];
-      const fa = depthFadeAt(dimCamDist[a], minD, maxD) * WIRE_BRIGHTNESS;
-      const fb = depthFadeAt(dimCamDist[b], minD, maxD) * WIRE_BRIGHTNESS;
-      wireCol[p0] = dimCol[a * 3] * fa; wireCol[p0 + 1] = dimCol[a * 3 + 1] * fa; wireCol[p0 + 2] = dimCol[a * 3 + 2] * fa;
-      wireCol[p1] = dimCol[b * 3] * fb; wireCol[p1 + 1] = dimCol[b * 3 + 1] * fb; wireCol[p1 + 2] = dimCol[b * 3 + 2] * fb;
+    // ─── Power Source markers, at each petal's tip ───────────────────────
+    PS_ANCHORS.forEach((a, i) => {
+      const inst = petalInstances[a.inst];
+      anchorWorldPos(inst, a.u, _anchor);
+      psPoints.pos[i * 3] = _anchor.x; psPoints.pos[i * 3 + 1] = _anchor.y; psPoints.pos[i * 3 + 2] = _anchor.z;
+      tmpColor.setHSL(inst.hue, 0.55, 0.72);
+      const boost = pulseBoostAt(_anchor.x, _anchor.y, _anchor.z);
+      psPoints.col[i * 3] = Math.min(1, tmpColor.r + boost);
+      psPoints.col[i * 3 + 1] = Math.min(1, tmpColor.g + boost);
+      psPoints.col[i * 3 + 2] = Math.min(1, tmpColor.b + boost);
     });
-    wireGeo.attributes.position.needsUpdate = true;
-    wireGeo.attributes.color.needsUpdate = true;
+    psPoints.geo.attributes.position.needsUpdate = true;
+    psPoints.geo.attributes.color.needsUpdate = true;
 
-    // Power Source anchor edges — gradient from the anchor dimension's
-    // own current color to the Power Source's own, nothing floats free.
-    POWER_SOURCES.forEach((ps, i) => {
-      const p0 = i * 6, p1 = i * 6 + 3;
-      const d = ps.dimension;
-      psEdgePos[p0] = dimPos[d * 3]; psEdgePos[p0 + 1] = dimPos[d * 3 + 1]; psEdgePos[p0 + 2] = dimPos[d * 3 + 2];
-      psEdgePos[p1] = psPos[i * 3]; psEdgePos[p1 + 1] = psPos[i * 3 + 1]; psEdgePos[p1 + 2] = psPos[i * 3 + 2];
-      psEdgeCol[p0] = dimCol[d * 3]; psEdgeCol[p0 + 1] = dimCol[d * 3 + 1]; psEdgeCol[p0 + 2] = dimCol[d * 3 + 2];
-      psEdgeCol[p1] = psCol[i * 3]; psEdgeCol[p1 + 1] = psCol[i * 3 + 1]; psEdgeCol[p1 + 2] = psCol[i * 3 + 2];
+    // ─── Folk Origin markers, nested along their petal ───────────────────
+    let newestIdx = 0;
+    originEntries.forEach((e, i) => {
+      const inst = petalInstances[e.inst];
+      anchorWorldPos(inst, e.u, _anchor);
+      originPoints.pos[i * 3] = _anchor.x; originPoints.pos[i * 3 + 1] = _anchor.y; originPoints.pos[i * 3 + 2] = _anchor.z;
+      tmpColor.setHSL(inst.hue, 0.5, 0.8);
+      const boost = pulseBoostAt(_anchor.x, _anchor.y, _anchor.z);
+      originPoints.col[i * 3] = Math.min(1, tmpColor.r + boost);
+      originPoints.col[i * 3 + 1] = Math.min(1, tmpColor.g + boost);
+      originPoints.col[i * 3 + 2] = Math.min(1, tmpColor.b + boost);
+      // Tempered/Psychopomps also write into newestGlow's own small
+      // buffer — a separate point group (not a shared-buffer trick), so
+      // only these two ever render on that extra glow layer.
+      if (e.newest) {
+        const j = newestIdx++;
+        newestGlow.pos[j * 3] = _anchor.x; newestGlow.pos[j * 3 + 1] = _anchor.y; newestGlow.pos[j * 3 + 2] = _anchor.z;
+        newestGlow.col[j * 3] = Math.min(1, tmpColor.r + boost);
+        newestGlow.col[j * 3 + 1] = Math.min(1, tmpColor.g + boost);
+        newestGlow.col[j * 3 + 2] = Math.min(1, tmpColor.b + boost);
+      }
     });
-    psEdgeGeo.attributes.position.needsUpdate = true;
-    psEdgeGeo.attributes.color.needsUpdate = true;
+    originPoints.geo.attributes.position.needsUpdate = true;
+    originPoints.geo.attributes.color.needsUpdate = true;
+    newestGlow.geo.attributes.position.needsUpdate = true;
+    newestGlow.geo.attributes.color.needsUpdate = true;
 
-    // Michael/Gabriel edge — Lucifer's own color, boosted by the same
-    // pulse math as everything else if either endpoint was touched.
-    {
-      mgEdgePos[0] = mgPos[0]; mgEdgePos[1] = mgPos[1]; mgEdgePos[2] = mgPos[2];
-      mgEdgePos[3] = mgPos[3]; mgEdgePos[4] = mgPos[4]; mgEdgePos[5] = mgPos[5];
-      const boostM = pulseBoostAt(mgPos[0], mgPos[1], mgPos[2]);
-      const boostG = pulseBoostAt(mgPos[3], mgPos[4], mgPos[5]);
-      mgEdgeCol[0] = Math.min(1, LUCIFER_EDGE_COLOR.r + boostM); mgEdgeCol[1] = Math.min(1, LUCIFER_EDGE_COLOR.g + boostM); mgEdgeCol[2] = Math.min(1, LUCIFER_EDGE_COLOR.b + boostM);
-      mgEdgeCol[3] = Math.min(1, LUCIFER_EDGE_COLOR.r + boostG); mgEdgeCol[4] = Math.min(1, LUCIFER_EDGE_COLOR.g + boostG); mgEdgeCol[5] = Math.min(1, LUCIFER_EDGE_COLOR.b + boostG);
-    }
-    mgEdgeGeo.attributes.position.needsUpdate = true;
-    mgEdgeGeo.attributes.color.needsUpdate = true;
+    // ─── Magi / Psi — two points near the seedpod's own surface ──────────
+    const podR = SCALE * 0.15;
+    const magiPos = [-podR * 0.42, SCALE * 0.07 + podR * 0.68, podR * 0.22];
+    const psiPos = [podR * 0.42, SCALE * 0.07 + podR * 0.68, -podR * 0.18];
+    [magiPos, psiPos].forEach((p, i) => {
+      centerPoints.pos[i * 3] = p[0]; centerPoints.pos[i * 3 + 1] = p[1]; centerPoints.pos[i * 3 + 2] = p[2];
+      tmpColor.setHSL(GOLD_HUE, 0.65, 0.85);
+      const boost = pulseBoostAt(p[0], p[1], p[2]);
+      centerPoints.col[i * 3] = Math.min(1, tmpColor.r + boost);
+      centerPoints.col[i * 3 + 1] = Math.min(1, tmpColor.g + boost);
+      centerPoints.col[i * 3 + 2] = Math.min(1, tmpColor.b + boost);
+    });
+    centerPoints.geo.attributes.position.needsUpdate = true;
+    centerPoints.geo.attributes.color.needsUpdate = true;
 
     if (audioCtx && soundEnabled) {
       const nowT = audioCtx.currentTime;
-      const detune = sep * MAX_DETUNE_HZ;
-      oscA.frequency.setTargetAtTime(BASE_HZ + detune, nowT, 0.4);
-      oscB.frequency.setTargetAtTime(BASE_HZ - detune, nowT, 0.4);
-      filter.frequency.setTargetAtTime(THREE.MathUtils.lerp(FILTER_MIN_HZ, FILTER_MAX_HZ, accountBlend), nowT, 0.5);
+      padGain.gain.setTargetAtTime(THREE.MathUtils.lerp(PAD_GAIN_MIN, PAD_GAIN_MAX, bp), nowT, 0.6);
+      filter.frequency.setTargetAtTime(THREE.MathUtils.lerp(FILTER_MIN_HZ, FILTER_MAX_HZ, bp), nowT, 0.6);
     }
 
     renderer.render(scene, camera);
@@ -751,33 +681,31 @@ export function createOutside(container, { preview = false, initialPieceId = nul
   });
 
   if (initialPieceId != null) {
-    // No sub-scene piece addressing yet for this scene (unlike Sphere/
-    // Orbiter/etc.'s own numbered pieces) — a deep link just opens the
-    // scene itself, same as Orrery's own single-piece scenes.
+    // No sub-scene piece addressing yet for this scene — a deep link just
+    // opens the scene itself, same as Orrery's own single-piece scenes.
   }
 
   return {
     dispose() {
       cancelAnimationFrame(animId);
-      if (resumeTimer) clearTimeout(resumeTimer);
       resize.dispose();
       orbitDrag?.dispose();
-      touchGuard?.dispose();
       wheelZoom?.dispose();
+      touchGuard?.dispose();
       if (onClick) container.removeEventListener('click', onClick);
       renderer.dispose();
       starGeo.dispose(); starMat.dispose();
-      dimGeo.dispose(); dimMat.dispose(); dimHaloMat.dispose();
-      psGeo.dispose(); psMat.dispose(); psHaloMat.dispose();
-      mgGeo.dispose(); mgMat.dispose(); mgHaloMat.dispose();
-      wireGeo.dispose(); wireMat.dispose();
-      psEdgeGeo.dispose(); psEdgeMat.dispose();
-      mgEdgeGeo.dispose(); mgEdgeMat.dispose();
-      ghostGeo.dispose(); ghostGeoBottom.dispose(); ghostMatTop.dispose();
+      nebula.geo.dispose(); nebula.mat.dispose();
+      petalInstances.forEach(inst => { inst.geo.dispose(); inst.mat.dispose(); });
+      podGeo.dispose(); podMat.dispose();
+      psPoints.geo.dispose(); psPoints.mat.dispose(); psPoints.haloMat.dispose();
+      originPoints.geo.dispose(); originPoints.mat.dispose(); originPoints.haloMat.dispose();
+      centerPoints.geo.dispose(); centerPoints.mat.dispose(); centerPoints.haloMat.dispose();
+      newestGlow.geo.dispose(); newestGlow.mat.dispose(); newestGlow.haloMat.dispose();
       dotTex.dispose();
       if (oscA) { try { oscA.stop(); } catch { /* already stopped */ } oscA.disconnect(); }
       if (oscB) { try { oscB.stop(); } catch { /* already stopped */ } oscB.disconnect(); }
-      filter?.disconnect(); masterGain?.disconnect();
+      filter?.disconnect(); padGain?.disconnect(); muteGain?.disconnect();
       if (audioCtx) audioCtx.close().catch(() => {});
       titleEl?.remove(); hintEl?.remove(); soundToggleEl?.remove();
       container.innerHTML = '';

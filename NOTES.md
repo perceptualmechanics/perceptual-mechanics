@@ -338,6 +338,107 @@ different one, toggled sound on/off, no console errors from the scene's
 own code. Debug hooks fully stripped before this build. Full `npx vite
 build` clean.
 
+## 3.5.0 (2026-08-24)
+
+**Outside, pivoted: a floral cosmology map replaces the projection thesis
+entirely.** Scott's call after seeing the 11D-projection build live twice
+(3.3.0, then 3.4.0's wireframe correction): not another correction pass —
+the whole 7-vs-11 OER/Apherion mechanism belonged in a different register
+than this scene should occupy. "This scene isn't Harmonics with different
+math... a pure visual object." What replaces it: a real, generated lotus
+mapping a different, simpler structure from the same project notes — the
+five Power Sources as petals, their Folk Origins nested along each one,
+Magi and Psi (the one cross-cutting Origin axis, will versus mind, not
+anchored to any single Power Source) as the center, not a sixth petal.
+
+**Content, freshly sourced**: `outside.text.js` fully rewritten from a
+different corner of Scott's Holography.scriv notes than the retired build
+used — the Power-Source-to-angel pairing is verbatim from a journal
+passage ("these devices of Gabriel's... the chaos engine is Nature's; the
+black hole is Emmanuel's; the antimatter bottle is Raphael's... Michael's?
+The bright idea"), Folk Origin names and descriptions from the settled
+"Folk" document (Celestials and Divinities, Magi, Psi, Fae, Elementals,
+Naturals, Quick and Infernals), plus Tempered and Psychopomps — both
+still-open "New Folk Origin" entries in the project's own Notes checklist,
+not yet in the Folk document proper but real, settled vocabulary, used
+honestly as such.
+
+**Geometry**: each petal is a real generated surface (a local u/w grid
+lofted through a rose-curve-family width profile, `sin(pi*u)`-shaped,
+pinching to an exact point at both the receptacle and the tip), arching
+upward from base to tip for genuine cupped dimensionality rather than a
+flat decal. A full Gielis-superformula polar curve for the whole five-
+lobed outline was tried first — rendered to a PNG and actually looked at,
+not eyeballed from code — and read as a five-pointed starfish with a
+pinched waist between each point, not a lotus. Five separately-lofted
+petal lobes read as a flower; one continuous five-fold curve didn't, so
+that's what shipped. Nature's own petal is a compound cluster of three
+smaller lobes fanned within its 72-degree sector rather than one uniform
+fifth petal — Nature already carries three Folk Origins at once in the
+notes, so the geometry renders that asymmetry directly instead of
+smoothing it away.
+
+**Palette**: deep violet-black void (not neutral), a soft violet-magenta
+nebular glow behind the flower reusing Harmonics' own clustered-clump-and-
+filament technique recolored out of its Hubble red/blue, five petals in
+one violet-to-magenta family (individually hued, never a rainbow), and a
+warm gold seedpod at the center — a real botanical fact about actual lotus
+flowers (gold-green receptacle, violet-pink petals), not a stretched
+metaphor.
+
+**Ambient motion**: no auto-rotation of any kind — explicitly the wrong
+register for this subject per the brief, since that was the retired
+scene's own mechanism. Instead the whole flower breathes continuously: a
+slow global scale/arch cycle plus independently-phased per-petal sway,
+running unconditionally regardless of interaction. Camera orbit is real
+and user-driven only (a standard spherical orbit, clamped short of both
+poles).
+
+**A real orientation bug, caught and fixed live, not guessed at**: the
+first working build had petals spreading in the X-Y plane while the
+camera orbited around the Y axis as its pole — every default and forced-
+azimuth view looked edge-on/collapsed no matter the angle, confirmed via
+a temporary debug hook forcing several camera azimuths and screenshotting
+each (all showed the same non-flower silhouette, ruling out "just a bad
+default angle"). Root cause: the flower's own face-normal was
+perpendicular to the camera's actual sweep axis. Fixed by spreading
+petals in the X-Z plane with the arch in Y instead, matching the camera's
+own pole — the same convention every other lit-mesh scene on this site
+already uses.
+
+**Sound — a fresh pass**, Scott's own explicit pick from a short menu: a
+breath-synced pad. Two sine oscillators (root + fifth) through one shared
+lowpass filter; both the pad's volume and the filter's cutoff track the
+exact same `breathePhase(t)` driving the geometry, so the sound and the
+visual "inhale" are one signal, not two coincidentally-similar cycles.
+Replaces the retired build's beat-frequency/account-filter design outright
+rather than adapting it — that design was built specifically for the
+projection mechanism this pivot removes.
+
+**Nav/site wiring**: new five-petal nav icon (real 72-degree rotations of
+one petal template, generated and rendered to a PNG to confirm it actually
+reads as a flower at icon size before committing the path data), replacing
+the 9-gon-plus-axis that echoed the now-retired projection idea. Preview
+tile and `aria-label`s across `main.js`/`index.html` updated to describe
+the flower, not the account-projection thesis.
+
+**Verified live**, not from a screenshot alone: reads as one connected
+flower from the default view and from several forced camera angles (one
+centered directly on Nature's own sector, confirming the compound cluster
+visibly reads as fuller/denser than a single petal, not just numerically
+distinct); Magi/Psi read as a seedpod at the center, not a sixth petal;
+touched the flower with a real pointer click (not a shortcut) and got a
+real pulse, no panel, no text anywhere; pulse propagation confirmed
+numerically, not by eyeballing screenshot timing against latency — sampled
+`pulseBoostAt` at a near point and a far point every 150ms through one
+in-page async loop (avoiding round-trip latency entirely) and confirmed
+the brightness peak genuinely migrates from near (peaks ~150ms, ~0.35)
+to far (peaks ~300ms, ~0.52) before both decay to zero by 900ms; dragged
+with a real pointer and confirmed the camera orbit and its pole clamp;
+toggled sound on and confirmed `aria-pressed` state; no console errors
+from the scene's own code. Debug hooks fully stripped before this build.
+Clean `npx vite build`.
+
 ## 3.4.0 (2026-08-24)
 
 **Outside, corrected: wireframe replaces the panel.** Scott's diagnosis

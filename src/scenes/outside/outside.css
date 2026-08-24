@@ -4,13 +4,15 @@
    shares). outside.js owns creating/removing each element itself.
    Accent color is a cool violet rather than the gold family Sphere/
    Scroll/Orrery/Beamline/Harmonics share — this scene isn't one more
-   piece in that accent thread, it's the thing underneath all of them
-   (Apherion's own eleven-dimension cosmology), so it gets its own.
+   piece in that accent thread, it gets its own, and round 3's lotus
+   palette (violet petals, gold center) only reinforces that choice.
 
    Round 2 (2026-08-24): removed .outside-account-label and the entire
-   .outside-panel block — this scene is a pure visual object now, no
-   text of any kind once it's running. See outside.js's own round-2
-   header note. */
+   .outside-panel block — this scene is a pure visual object, no text
+   of any kind once it's running. Round 3, same day: the panel-removal
+   and no-text rules both carry straight through the full pivot from a
+   projection diagram to a generated flower (see outside.js's own
+   round-3 header note) — nothing here needed to change. */
 
 .outside-title {
   position: fixed;
