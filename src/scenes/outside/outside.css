@@ -1,0 +1,138 @@
+/* outside scene styles (title + hint + account-label + sound-toggle,
+   positioned on document.body — see harmonics.css's own header for the
+   z-index/stacking-context reasoning every scene with body-level
+   chrome shares). outside.js owns creating/removing each element
+   itself. Accent color is a cool violet rather than the gold family
+   Sphere/Scroll/Orrery/Beamline/Harmonics share — this scene isn't
+   one more piece in that accent thread, it's the thing underneath all
+   of them (Apherion's own eleven-dimension cosmology), so it gets its
+   own. */
+
+.outside-title {
+  position: fixed;
+  bottom: 3rem; left: 50%; transform: translateX(-50%);
+  color: rgba(215,200,255,0.85);
+  font-size: clamp(0.85rem, 2.5vw, 1.6rem);
+  letter-spacing: clamp(0.1em, 1vw, 0.4em);
+  text-transform: uppercase;
+  pointer-events: none; text-align: center;
+  white-space: nowrap; z-index: 310;
+  font-family: 'Times New Roman', serif;
+}
+@media (max-width: 600px) {
+  .outside-title {
+    white-space: normal; width: 88vw;
+    left: 6vw; transform: none;
+    bottom: 5.5rem;
+  }
+}
+.outside-hint {
+  position: fixed; top: 4.5rem; right: 1.2rem;
+  color: var(--hint-text-color);
+  font-size: 0.55rem; letter-spacing: 0.2em;
+  text-transform: uppercase; pointer-events: none;
+  text-align: right; z-index: 310; line-height: 1.8;
+  font-family: 'Times New Roman', serif;
+}
+@media (prefers-reduced-motion: reduce) {
+  .outside-title, .outside-hint, .outside-account-label { transition: none; }
+}
+
+/* ─── Account label ───────────────────────────────────────────────────────
+   A passive readout, never a control — see outside.js's own header
+   comment on why there's no default account. Opacity is driven frame
+   by frame from JS (how closely the drifting basis currently matches
+   a named account), not by a CSS state class, so this only sets the
+   resting style; the transition softens JS's own per-frame opacity
+   writes into something that doesn't flicker. */
+.outside-account-label {
+  position: fixed; top: 1.4rem; left: 50%; transform: translateX(-50%);
+  color: rgba(215,200,255,0.7);
+  font-size: 0.6rem; letter-spacing: 0.3em; text-transform: uppercase;
+  pointer-events: none; text-align: center; z-index: 310;
+  font-family: 'Electrolize', sans-serif;
+  opacity: 0; transition: opacity .6s ease;
+}
+
+/* ─── Sound toggle ─────────────────────────────────────────────────────────
+   Same bottom-left placement/behavior as harmonics-sound-toggle (the
+   explicit first-gesture trigger AND ongoing mute control), tinted to
+   this scene's own violet rather than gold. */
+.outside-sound-toggle {
+  position: fixed; bottom: 3rem; left: 1.5rem; z-index: 310;
+  display: flex; align-items: center; gap: .55rem;
+  background: rgba(8,5,15,0.55); border: 1px solid rgba(200,170,255,0.3);
+  border-radius: 999px; padding: .5rem 1rem;
+  color: rgba(220,200,255,.75); font-family: 'Electrolize', sans-serif;
+  font-size: .62rem; letter-spacing: .16em; text-transform: uppercase;
+  cursor: pointer; transition: background .2s, border-color .2s, color .2s;
+}
+.outside-sound-toggle:hover, .outside-sound-toggle:focus-visible {
+  background: rgba(200,170,255,0.12); border-color: rgba(200,170,255,0.55);
+  color: rgba(230,215,255,.95);
+}
+.outside-sound-toggle-dot {
+  width: .5rem; height: .5rem; border-radius: 50%; flex: none;
+  background: rgba(200,170,255,0.3);
+  transition: background .2s, box-shadow .2s;
+}
+.outside-sound-toggle[aria-pressed="true"] .outside-sound-toggle-dot {
+  background: #cba7ff; box-shadow: 0 0 8px 2px rgba(200,170,255,0.7);
+}
+@media (max-width: 600px) {
+  .outside-sound-toggle { bottom: 5.5rem; left: 1rem; padding: .4rem .8rem; }
+}
+
+/* ─── Panel — same sitewide language (near-black, faint radial tint,
+   slides in from the right) as every other scene's own panel, tinted
+   to this scene's violet. */
+.outside-panel {
+  position: absolute; top: 0; right: 0; width: 33%; height: 100%;
+  background:
+    radial-gradient(ellipse at 30% 0%, rgba(150,110,220,0.26), transparent 62%),
+    #07050d;
+  border-left: 1px solid rgba(200,170,255,0.22);
+  padding: 3rem 2.5rem;
+  transform: translateX(100%);
+  transition: transform .5s cubic-bezier(.16,1,.3,1);
+  overflow-y: auto; z-index: 10;
+  scrollbar-color: rgba(200,170,255,0.3) #07050d; scrollbar-width: thin;
+  font-family: 'Electrolize', sans-serif;
+}
+.outside-panel.open { transform: translateX(0); }
+@media (max-width: 700px) {
+  .outside-panel { width: 85%; padding: 4rem 1.5rem 2rem; }
+}
+.outside-panel-title {
+  font-size: 1.05rem; letter-spacing: .18em; text-transform: uppercase;
+  font-weight: normal; color: rgba(225,210,255,.88); margin: 0 0 .5rem;
+}
+.outside-panel-subtitle {
+  font-size: .7rem; letter-spacing: .1em; text-transform: uppercase;
+  color: rgba(200,170,255,.55); margin: 0 0 1.4rem;
+  border-bottom: 1px solid rgba(200,170,255,0.18); padding-bottom: 1.4rem;
+}
+.outside-keyword-list {
+  list-style: none; margin: 0; padding: 0;
+  display: flex; flex-wrap: wrap; gap: .5rem;
+}
+.outside-keyword-list li {
+  padding: .35rem .75rem; border-radius: 999px;
+  border: 1px solid rgba(200,170,255,0.25);
+  background: rgba(200,170,255,0.06);
+  font-size: .74rem; letter-spacing: .04em;
+  color: rgba(230,222,245,.85);
+}
+.outside-excerpt {
+  margin: 0; padding: .9rem 1rem;
+  border-left: 2px solid rgba(200,170,255,0.4);
+  background: rgba(200,170,255,0.04);
+  font-size: .86rem; line-height: 1.7; font-style: italic;
+  color: rgba(232,226,245,.9);
+}
+.outside-panel-close {
+  position: absolute; top: 1.5rem; right: 1.5rem; background: none;
+  border: none; color: rgba(255,255,255,0.4); font-size: 1.2rem;
+  cursor: pointer; padding: .5rem;
+}
+.outside-panel-close:hover { color: rgba(255,255,255,.9); }

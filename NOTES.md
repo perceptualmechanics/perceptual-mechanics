@@ -248,6 +248,96 @@ described are unchanged.)
   worth trimming, orrery.js's texture generators and first-person rig are the
   two most self-contained chunks to split out first.
 
+## 3.3.0 (2026-08-24)
+
+**"Outside" — tenth scene, a real projection of Apherion's eleven
+dimensions.** Every other scene visualizes one account of its own found
+material. This one visualizes the fact that Apherion's own cosmology is
+itself just one account among several the source notes describe — not
+illustrated, mechanically true: the eleven dimensions (`outside.text.js`,
+transcribed verbatim from Scott's Holography.scriv notes, uploaded
+2026-08-24) are real 11-component vectors in genuine 11D space, and
+Apherion's and OER's "views" are two different, real 3×11 projection
+matrices applied to that same underlying data.
+
+**The math.** Apherion's eleven dimensions are the standard basis of R^11;
+centered, they're exactly the vertices of a regular 10-simplex. Apherion's
+own account is the closed-form maximal-symmetry projection of that
+simplex — the real/imaginary parts of the first two nontrivial discrete-
+Fourier eigenvectors of the 11-cycle (`buildApherionBasis`), no
+eigendecomposition library needed, just trig. OER's account
+(`buildOerBasis`) is the same construction restricted to its seven kept
+dimensions (`OER_KEPT`) — the four dropped ones get a literal zero in
+every basis vector, mathematically absent, not dimmed. True rotation
+happens in 2-basis-vector planes (`rotateInPlane`, general enough for any
+orthonormal pair, not just coordinate axes): ambient drift continuously
+rotates six fixed coordinate-index planes at incommensurate frequencies,
+deliberately never resting on either account's own alignment; manual drag
+(replacing camera-orbit) rotates within two account-derived planes instead
+— horizontal drag in the plane separating OER's kept/dropped dimensions,
+vertical drag toward Apherion's own basis.
+
+**Michael/Gabriel/Lucifer**, honest crossover: real electroweak symmetry
+restoration at the measured Higgs mass is a smooth crossover, not a sharp
+transition, so `separationFraction` uses a tanh blend, no clean threshold.
+Michael and Gabriel sit opposite each other along the Mnemosyne axis (the
+only dimension either name is textually anchored to); Lucifer has no
+independent position at all — always exactly their midpoint, literally
+realizing the found line "I am the intersection of Michael and Gabriel." A
+faint ghosting trace of the underlying separation-vs-temperature curve
+sits near them as its own small diagram (real positions along one axis
+project to a straight line, not a curve — the curve only reads as a curve
+here, as a 2D plot).
+
+**Sound**: two oscillators at a shared base pitch, detuned apart by up to
+±7Hz as `separationFraction` moves (the beat is the split's audible
+signature); both run through one shared lowpass filter driven by account
+closeness — OER's narrow rank-7 view keeps only the fundamentals,
+Apherion's fuller view opens the filter toward ~9kHz. Same lazy-
+`AudioContext`-on-first-gesture and sound-toggle convention as Harmonics.
+
+**Content**: every label, keyword, and excerpt is pre-existing text from
+Scott's own project notes — no new writing, same site-wide rule every
+other scene follows. Two of the five Power Source anchors and all four of
+OER's dropped dimensions are explicitly-flagged inference (reasoned from
+each item's own documented character), not claimed as pre-existing canon;
+the Antimatter Bottle's excerpt is honestly `null` (that Interlude was
+never written) rather than backfilled.
+
+**A real bug, caught and fixed before shipping**: the panel's content
+functions updated its title/body but never added the `.open` class, so
+touching a point silently did nothing — content changed in the DOM, panel
+never slid into view. Found by chaining a temporary debug hook through the
+exact same `pickAt`/`onClick` path the real click handler uses (confirmed
+the raycasting itself was correct — a real click landing exactly on a
+point's own projected screen coordinate still failed to open anything),
+not by guessing. Also fixed along the way: sparse dimension/Power-Source/
+Michael-Gabriel points were nearly invisible at their initial size — same
+lesson as 3.2.0's dust-lane layer, sparse non-additive-adjacent points
+need a second, larger, low-opacity halo layer riding the same buffer to
+read as landmarks rather than stray stars (added `dimHaloMat`/`psHaloMat`/
+`mgHaloMat`, mirroring harmonics.js's own `nodeHaloMat`). The ghosting
+bifurcation curve's first size guess also badly overshot ("faint diagram"
+rendered as a screen-spanning feature) and got scaled down live.
+
+**Nav/landing**: new nav icon (a real regular 9-gon with one axis line,
+echoing the account-projection idea at icon scale) and preview tile;
+`.preview-row-break` moved from after the 4th tile to after the 5th for an
+even 5-then-5 landing grid now that there are ten. Colophon count updated
+to "ten small experiences."
+
+**Verified live**, not from a screenshot: dragged (SO(11)-plane rotation,
+not camera orbit) and watched the projected point cloud visibly
+reconfigure; froze ambient drift via a temporary debug hook and confirmed
+`accountBlend`/`apherionScore`/`oerScore` track a real subspace-alignment
+computation (not a fixed default) and that `temp`→`sep` follows the tanh
+formula exactly, not an arbitrary easing; touched a real point with a real
+pointer click (not a shortcut) and got a real panel — Aphrodite's
+keywords, present-in-both-accounts framing — closed it, reopened a
+different one, toggled sound on/off, no console errors from the scene's
+own code. Debug hooks fully stripped before this build. Full `npx vite
+build` clean.
+
 ## 3.2.0 (2026-08-23)
 
 **Nebula depth pass: dust-lane occlusion layer, second starfield density

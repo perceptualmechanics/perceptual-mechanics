@@ -17,6 +17,13 @@ import { createBeamline }  from './scenes/beamline/beamline.js';
 // "what this scene contains" the way every other scene's own label
 // describes actual content — the label below says what it IS instead.
 import { createharmonics } from './scenes/harmonics/harmonics.js';
+// Outside — tenth scene (2026-08-24). Every other scene visualizes ONE
+// account of its own material; this one visualizes the fact that
+// Apherion's own eleven-dimension cosmology is itself just one account
+// among several — real 11D vectors, real projection matrices for
+// Apherion's and OER's own views, no privileged default. See
+// outside.js's own header for the full picture.
+import { createOutside }   from './scenes/outside/outside.js';
 import { initColophon }    from './components/colophon/colophon.js';
 import { prefersReducedMotion } from './utils/sceneKit.js';
 
@@ -40,6 +47,8 @@ const SCENES = {
                  ariaLabel: 'Beamline — a staged sequence of curved mirrors, a beam of light bouncing between them, found text surfacing at each bounce. Drag to orbit, scroll to zoom, click a mirror to read.' },
   harmonics: { create: createharmonics, label: 'Harmonics.',
                  ariaLabel: 'Harmonics — resonant pieces across every other scene, laid out by how strongly they connect and pulsing in sync with whatever they resonate with. Drag to orbit, scroll to zoom, touch a node.' },
+  outside:     { create: createOutside,    label: 'Outside.',
+                 ariaLabel: 'Outside — Apherion’s eleven dimensions and the five Sources of Power, projected from real eleven-dimensional data. No account is the default; the view drifts continuously and occasionally, briefly, aligns with one. Drag to rotate, scroll to zoom, touch a point.' },
 };
 
 let activeScene  = null;
@@ -111,7 +120,7 @@ function navIconFor(sceneName) {
 // (cascades into index.html's data-scene attributes, #preview-harmonics,
 // main.js's own PM_GLIMPSE_WORDS key, and every other place the internal
 // string is compared, for a complaint that was specifically about the URL).
-const PUBLIC_SLUG = { harmonics: 'harmonics' }; // internal SCENES key -> URL slug
+const PUBLIC_SLUG = { harmonics: 'harmonics', outside: 'outside' }; // internal SCENES key -> URL slug
 const SLUG_TO_INTERNAL = Object.fromEntries(Object.entries(PUBLIC_SLUG).map(([k, v]) => [v, k]));
 
 // Returns { scene, pieceId } — pieceId is null when the hash only names a
@@ -393,6 +402,7 @@ function initPreviews() {
     library:    document.getElementById('preview-library'),
     beamline:   document.getElementById('preview-beamline'),
     harmonics: document.getElementById('preview-harmonics'),
+    outside:    document.getElementById('preview-outside'),
   };
   for (const [name, el] of Object.entries(map)) {
     if (el) previews[name] = SCENES[name].create(el, { preview: true });
@@ -473,6 +483,7 @@ const PM_GLIMPSE_WORDS = {
   library: 'medium',
   beamline: 'emergence',
   harmonics: 'vibe',
+  outside: 'intersection',
   title: 'secrets',
 };
 let pmGlimpseTimer = null;

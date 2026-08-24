@@ -198,6 +198,22 @@
       </svg>
     </button>
 
+    <!-- Outside (src/scenes/outside/) — tenth scene, 2026-08-24. Icon is
+         a real regular 9-gon (the same maximal-symmetry-projection idea
+         the scene itself computes for Apherion's eleven dimensions,
+         simplified to a shape that reads at icon size) with one axis
+         line through it, echoing the account-projection thesis rather
+         than the resonance/pulse motif Harmonics uses. -->
+    <button type="button" class="nav-icon" data-scene="outside" aria-label="Outside" title="Outside" onmouseover="pmGlimpse('outside')" onfocus="pmGlimpse('outside')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 4 L17.14 5.87 L19.88 10.61 L18.93 16 L14.74 19.52 L9.26 19.52 L5.07 16 L4.12 10.61 L6.86 5.87 Z"/>
+        <path d="M12 4 L9.26 19.52"/>
+        <circle cx="12" cy="4" r="1" fill="currentColor" stroke="none"/>
+        <circle cx="18.93" cy="16" r="1" fill="currentColor" stroke="none"/>
+        <circle cx="9.26" cy="19.52" r="1" fill="currentColor" stroke="none"/>
+      </svg>
+    </button>
+
   </nav>
 
   <!-- Site title — bottom center, links back to gallery. Semantic pass,
@@ -264,11 +280,6 @@
         </button>
       </li>
 
-      <!-- Forces the wrap point here (4 tiles above, 5 below) rather than
-           leaving flex-wrap to break wherever the viewport width happens
-           to run out — see styles/main.css's .preview-row-break comment. -->
-      <li class="preview-row-break" aria-hidden="true"></li>
-
       <li class="preview-wrapper" data-scene="orbiter">
         <button type="button" class="preview-container" id="preview-orbiter"
              title="Orbiter — A p-Orbital, Satellites"
@@ -276,6 +287,13 @@
              onmouseover="pmGlimpse('orbiter')" onfocus="pmGlimpse('orbiter')">
         </button>
       </li>
+
+      <!-- Forces the wrap point here (5 tiles above, 5 below, now that
+           Outside is the tenth tile) rather than leaving flex-wrap to
+           break wherever the viewport width happens to run out — see
+           styles/main.css's .preview-row-break comment. Moved from after
+           the 4th tile (theater) to after the 5th (orbiter) 2026-08-24. -->
+      <li class="preview-row-break" aria-hidden="true"></li>
 
       <li class="preview-wrapper" data-scene="orrery">
         <button type="button" class="preview-container" id="preview-orrery"
@@ -313,6 +331,19 @@
              title="Harmonics"
              aria-label="Harmonics — resonant pieces across every other scene, laid out by how strongly they connect and pulsing in sync with whatever they resonate with. Press Enter to expand."
              onmouseover="pmGlimpse('harmonics')" onfocus="pmGlimpse('harmonics')">
+        </button>
+      </li>
+
+      <!-- Outside: a genuinely live preview, same as every other tile —
+           the ambient orientation drift and temperature cycle both run
+           unconditionally regardless of `preview`, so this tile shows
+           real, currently-drifting projection the whole time it's on
+           screen. -->
+      <li class="preview-wrapper" data-scene="outside">
+        <button type="button" class="preview-container" id="preview-outside"
+             title="Outside"
+             aria-label="Outside — Apherion's eleven dimensions and the five Sources of Power, projected from real eleven-dimensional data, drifting continuously with no default account. Press Enter to expand."
+             onmouseover="pmGlimpse('outside')" onfocus="pmGlimpse('outside')">
         </button>
       </li>
 

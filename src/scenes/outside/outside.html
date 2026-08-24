@@ -1,0 +1,24 @@
+<!--
+  outside scene shell markup — title/hint/sound-toggle fixed on
+  document.body, same convention every scene with body-level chrome
+  shares (see harmonics.html's own header). Adds one element none of
+  the other scenes need: .outside-account-label, a passive readout
+  that only shows itself when the ambient drift happens to be close to
+  a named account's own exact projection — never a control, never
+  clickable, per the brief's "no default account" requirement. The
+  read-more panel opens on a touched dimension, Power Source, or the
+  Michael/Gabriel pair, same pattern as harmonics.html's node panel.
+-->
+<p class="outside-title" aria-hidden="true">Outside</p>
+<p class="outside-hint" aria-hidden="true">drag to rotate &nbsp;&middot;&nbsp; scroll to zoom &nbsp;&middot;&nbsp; touch a point</p>
+<p class="outside-account-label" aria-hidden="true"></p>
+<button type="button" class="outside-sound-toggle" aria-pressed="false">
+  <span class="outside-sound-toggle-dot" aria-hidden="true"></span>
+  <span class="outside-sound-toggle-label">Sound off</span>
+</button>
+
+<aside class="outside-panel" role="dialog" aria-modal="false" aria-labelledby="outside-panel-title">
+  <button type="button" class="outside-panel-close" aria-label="Close panel">&#10005;</button>
+  <h2 id="outside-panel-title" class="outside-panel-title" tabindex="-1">A dimension</h2>
+  <div class="outside-panel-body"></div>
+</aside>

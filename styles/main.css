@@ -262,7 +262,10 @@ html, body {
      Tile size dropped 320px → 240px so five actually fit one row at
      ordinary desktop widths instead of silently wrapping to 4/1 or
      3/2 on a narrower browser — see .preview-row-break's own comment for
-     where this stops being enforced. */
+     where this stops being enforced.
+     Outside's tile (2026-08-24) brought the count to ten, an even split
+     — the break moved from after the 4th tile to after the 5th
+     (index.html), giving a real 5-then-5 rather than 4-then-5/6. */
   list-style: none;
   margin: 0;
   display: flex;
@@ -273,7 +276,7 @@ html, body {
   padding: 1rem;
 }
 
-/* Forces the wrap point between the 4th and 5th preview tile (see
+/* Forces the wrap point between the 5th and 6th preview tile (see
    #scene-previews' own comment) rather than leaving flex-wrap to break
    wherever the container's width happens to run out. A zero-height,
    100%-wide flex item pushes everything after it onto a new line — the
@@ -281,9 +284,11 @@ html, body {
    row. `aria-hidden` and no content: it carries no information, it's
    layout-only. Turned off below 1200px (falls back to ordinary flex-wrap)
    since five 240px tiles plus four gaps no longer reliably fits a
-   narrower browser — a deliberate 4-and-5 split is only worth enforcing
+   narrower browser — a deliberate 5-and-5 split is only worth enforcing
    where it can actually render as one, not forced at a width where it'd
-   just look cramped or start wrapping unevenly again anyway. */
+   just look cramped or start wrapping unevenly again anyway. Moved from
+   after the 4th tile (was 4-and-5) to after the 5th (2026-08-24, Outside
+   brought the count to ten, an even split). */
 .preview-row-break {
   flex-basis: 100%;
   width: 0;
@@ -532,7 +537,9 @@ html, body {
      an existing breakpoint in this file) closes that gap with room to
      spare: 9 × 34px + 8 × 0.35rem(5.6px) = 350.8px fits from 768px all
      the way down to the narrowest common phone widths, so the 480px
-     block below no longer needs to own this. */
+     block below no longer needs to own this.
+     Outside's nav icon (2026-08-24) brought the count to ten — same
+     math still clears easily: 10 × 34px + 9 × 5.6px = 390.4px. */
   #pm-nav { gap: 0.35rem; }
   .nav-icon { min-width: 34px; min-height: 34px; }
 }
