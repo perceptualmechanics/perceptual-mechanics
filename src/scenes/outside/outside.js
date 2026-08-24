@@ -301,8 +301,20 @@ export function createOutside(container, { preview = false, initialPieceId = nul
   const topo = buildPetalTopology();
   const BASE_LENGTH = SCALE * 0.95, BASE_WIDTH = SCALE * 0.30, BASE_HEIGHT = SCALE * 0.38;
 
-  const PETAL_HUE = [0.74, 0.79, 0.83, 0.88]; // Gabriel, Michael, Raphael, Emmanuel
-  const NATURE_SUB_HUE = [0.705, 0.72, 0.735]; // Nature's own three sub-lobes — coolest of the violet family, but still violet, not blue
+  // Round 5 fix — the original pivot brief asked for "related-but-distinct
+  // shades within one violet-to-magenta-to-lavender family," but the first
+  // pass (hue 0.74-0.88, one shared saturation of 0.6 for every petal) read
+  // close to uniform: too narrow a hue band, and no saturation contrast to
+  // help the eye separate them. Widened to evenly-spaced steps across the
+  // full safe range of that family (roughly 240deg-345deg — cool lavender
+  // through violet to deep pink, staying clear of true blue on one end and
+  // true red on the other) and paired each with its own saturation, so hue
+  // AND saturation both carry identity rather than hue alone doing all the
+  // work in a cramped band.
+  const PETAL_HUE = [0.803, 0.669, 0.869, 0.736]; // Gabriel, Michael, Raphael, Emmanuel
+  const PETAL_SAT = [0.65, 0.42, 0.58, 0.78]; // Michael desaturated/cool ("glossy, tempered"); Emmanuel deepest/most saturated ("gravitational")
+  const NATURE_SUB_HUE = [0.92, 0.94, 0.96]; // Nature's own three sub-lobes — its own richer plum/rose corner of the family, distinct from all four simple petals
+  const NATURE_SUB_SAT = 0.6;
   const GOLD_HUE = 0.115;
 
   // Petal material — real MeshStandardMaterial so the arch/cup catches
@@ -321,6 +333,14 @@ export function createOutside(container, { preview = false, initialPieceId = nul
   // the alpha (mix faceAlpha -> edgeAlpha) and a small edge-glow color
   // boost — the same shader three.js already compiles for lighting, not
   // a heavier custom material.
+  //
+  // Round 5: the same rim mechanism is reused (not a second visual
+  // language) for hover/proximity — whichever petal the cursor is over
+  // gets its own fresnelGlow uniform boosted above BASE_FRESNEL_GLOW, a
+  // "this one" cue before the petal is actually touched. See hoveredInst
+  // and the pointermove listener below, and the hover-glow lerp inside
+  // updatePetal.
+  const BASE_FRESNEL_GLOW = 0.4, HOVER_FRESNEL_BOOST = 0.75, HOVER_LERP_RATE = 0.15;
   function makePetalMaterial() {
     const mat = new THREE.MeshStandardMaterial({
       vertexColors: true, side: THREE.DoubleSide, roughness: 0.55, metalness: 0.06,
@@ -328,7 +348,7 @@ export function createOutside(container, { preview = false, initialPieceId = nul
     });
     mat.onBeforeCompile = shader => {
       shader.uniforms.fresnelPower = { value: 2.3 };
-      shader.uniforms.fresnelGlow = { value: 0.4 };
+      shader.uniforms.fresnelGlow = { value: BASE_FRESNEL_GLOW };
       shader.uniforms.faceAlpha = { value: 0.5 };
       shader.uniforms.edgeAlpha = { value: 1.0 };
       shader.fragmentShader = shader.fragmentShader
@@ -353,7 +373,7 @@ export function createOutside(container, { preview = false, initialPieceId = nul
   // One petal "instance": its own geometry/buffers (topology shared, only
   // positions/colors are per-instance), plus the parameters updatePetal
   // needs every frame (angle, base dimensions, hue, breathing phase).
-  function makePetalInstance({ angle, length, halfWidth, height, hue, swayIndex, psIndex }) {
+  function makePetalInstance({ angle, length, halfWidth, height, hue, sat, swayIndex, psIndex }) {
     const geo = new THREE.BufferGeometry();
     const pos = new Float32Array(topo.count * 3);
     const col = new Float32Array(topo.count * 3);
@@ -365,7 +385,7 @@ export function createOutside(container, { preview = false, initialPieceId = nul
     scene.add(mesh);
     return {
       angle, cosA: Math.cos(angle), sinA: Math.sin(angle),
-      length, halfWidth, height, hue, swayIndex, psIndex,
+      length, halfWidth, height, hue, sat, swayIndex, psIndex, hoverGlow: 0,
       geo, pos, col, mat, mesh,
     };
   }
@@ -376,7 +396,7 @@ export function createOutside(container, { preview = false, initialPieceId = nul
     if (pi < 4) {
       petalInstances.push(makePetalInstance({
         angle, length: BASE_LENGTH, halfWidth: BASE_WIDTH, height: BASE_HEIGHT,
-        hue: PETAL_HUE[pi], swayIndex: pi, psIndex: pi,
+        hue: PETAL_HUE[pi], sat: PETAL_SAT[pi], swayIndex: pi, psIndex: pi,
       }));
     } else {
       // Nature's compound cluster — three smaller lobes fanned within its
@@ -389,7 +409,7 @@ export function createOutside(container, { preview = false, initialPieceId = nul
       subOffsets.forEach((off, si) => {
         petalInstances.push(makePetalInstance({
           angle: angle + off, length: BASE_LENGTH * subLenScale[si], halfWidth: BASE_WIDTH * subWidScale[si],
-          height: BASE_HEIGHT * subHeightScale[si], hue: NATURE_SUB_HUE[si], swayIndex: 4 + si * 0.4, psIndex: 4,
+          height: BASE_HEIGHT * subHeightScale[si], hue: NATURE_SUB_HUE[si], sat: NATURE_SUB_SAT, swayIndex: 4 + si * 0.4, psIndex: 4,
         }));
       });
     }
@@ -549,6 +569,30 @@ export function createOutside(container, { preview = false, initialPieceId = nul
     container.addEventListener('click', onClick);
   }
 
+  // ─── Hover/proximity — a "this one" cue before the petal is actually
+  // touched, reusing the Fresnel rim mechanism already built for
+  // translucency rather than inventing a second visual language (round
+  // 5). Petals only, not the seedpod — same reasoning as the chime gate
+  // above. hoveredInst is read every frame inside updatePetal, which
+  // lerps each petal's own fresnelGlow uniform toward a boosted value if
+  // it's the hovered one, or back toward BASE_FRESNEL_GLOW otherwise. ────
+  const petalMeshes = petalInstances.map(p => p.mesh);
+  let hoveredInst = null;
+  let onPointerMove = null, onPointerLeave = null;
+  if (!preview) {
+    onPointerMove = e => {
+      const rect = container.getBoundingClientRect();
+      pointerNdc.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+      pointerNdc.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+      raycaster.setFromCamera(pointerNdc, camera);
+      const hits = raycaster.intersectObjects(petalMeshes, false);
+      hoveredInst = hits.length ? petalInstances.find(inst => inst.mesh === hits[0].object) : null;
+    };
+    onPointerLeave = () => { hoveredInst = null; };
+    container.addEventListener('pointermove', onPointerMove);
+    container.addEventListener('pointerleave', onPointerLeave);
+  }
+
   // ─── Sound — breath-synced pad. Root + fifth sine pair through one
   // shared lowpass filter; both the pad's own volume and the filter's
   // cutoff track breathePhase(t) directly, so the sound "inhales" on
@@ -556,11 +600,20 @@ export function createOutside(container, { preview = false, initialPieceId = nul
   // that merely happens to feel similar. Lazy AudioContext on first
   // gesture, same convention every other scene's sound toggle uses. ──────
   let audioCtx = null, oscA = null, oscB = null, filter = null, padGain = null, muteGain = null;
+  let padDriftLfo = null, padDriftGain = null;
   let reverbConvolver = null;
   let soundEnabled = false;
   const PAD_ROOT_HZ = 110, PAD_FIFTH_HZ = 164.81;
   const FILTER_MIN_HZ = 260, FILTER_MAX_HZ = 1300;
-  const PAD_GAIN_MIN = 0.035, PAD_GAIN_MAX = 0.1;
+  // Round 5 fix — the pad itself was reading as a persistent hum, not a
+  // breath. Confirmed live (not guessed): RMS of the post-mix signal was
+  // ~0.068 immediately after enabling sound with nothing touched yet, and
+  // never dropped meaningfully lower — PAD_GAIN_MIN was 0.035, so the pad
+  // never actually reached anything close to silence at the trough of its
+  // own breathing cycle, which is exactly what reads as an always-on drone
+  // rather than an in-and-out breath. Floor dropped near-silent; ceiling
+  // trimmed slightly too, per the brief's own "dial it back" option.
+  const PAD_GAIN_MIN = 0.006, PAD_GAIN_MAX = 0.085;
   // A synthesized impulse response (exponentially-decaying noise) rather
   // than a loaded audio file — genuine convolution reverb, no external
   // asset. Used only by Emmanuel's chime (below), whose whole ask is
@@ -585,6 +638,16 @@ export function createOutside(container, { preview = false, initialPieceId = nul
     oscA = audioCtx.createOscillator(); oscB = audioCtx.createOscillator();
     oscA.type = 'sine'; oscB.type = 'sine';
     oscA.frequency.value = PAD_ROOT_HZ; oscB.frequency.value = PAD_FIFTH_HZ;
+    // A perfectly static two-tone pair reads as a machine hum no matter how
+    // its volume is modulated, because nothing else about the sound moves.
+    // A slow, small detune drift on the fifth (a few cents, far below pitch
+    // perception as an actual note change) gives the pad real breath/life
+    // instead of a fixed drone — round 5 fix, alongside the floor/ceiling
+    // trim above.
+    padDriftLfo = audioCtx.createOscillator(); padDriftLfo.type = 'sine'; padDriftLfo.frequency.value = 0.045;
+    padDriftGain = audioCtx.createGain(); padDriftGain.gain.value = 6; // cents of detune depth
+    padDriftLfo.connect(padDriftGain); padDriftGain.connect(oscB.detune);
+    padDriftLfo.start();
     oscA.connect(filter); oscB.connect(filter);
     filter.connect(padGain); padGain.connect(muteGain); muteGain.connect(audioCtx.destination);
     oscA.start(); oscB.start();
@@ -621,15 +684,25 @@ export function createOutside(container, { preview = false, initialPieceId = nul
     // established endpoint is "glossy, featureless, polished beyond all
     // reason" (Notes.rtf) — a single sine has, by construction, zero
     // harmonics, which is that image in sound rather than a metaphor for
-    // it. Fast attack, long clean exponential decay.
+    // it.
+    //
+    // Round 5: Michael and Emmanuel were hard to tell apart in a live
+    // listen — both landing as "some kind of sustained bell." Fixed on
+    // envelope shape, not timbre: Michael is struck (near-instant attack),
+    // short and controlled (decay tightened from 2.6s to 1.0s so it reads
+    // as contained rather than ringing), dry (no reverb send at all — see
+    // chimeEmmanuel's wet path for the opposite choice), and stays in its
+    // own bright/high register. Opposite of Emmanuel on all four axes
+    // (attack shape, decay length, reverb, register) rather than relying
+    // on pitch alone to separate them.
     const osc = audioCtx.createOscillator();
     osc.type = 'sine'; osc.frequency.value = 660;
     const g = audioCtx.createGain();
     g.gain.setValueAtTime(0, now);
-    g.gain.linearRampToValueAtTime(CHIME_GAIN, now + 0.008);
-    g.gain.exponentialRampToValueAtTime(0.0001, now + 2.6);
-    osc.connect(g); g.connect(muteGain);
-    osc.start(now); osc.stop(now + 2.7);
+    g.gain.linearRampToValueAtTime(CHIME_GAIN, now + 0.006); // struck — near-instant attack
+    g.gain.exponentialRampToValueAtTime(0.0001, now + 1.0); // short, controlled decay
+    osc.connect(g); g.connect(muteGain); // dry — no reverb send, precise and contained
+    osc.start(now); osc.stop(now + 1.1);
   }
   function chimeGabriel(now) {
     // Quick and Infernals — real downward pitch resolution, not a static
@@ -668,21 +741,42 @@ export function createOutside(container, { preview = false, initialPieceId = nul
   }
   function chimeEmmanuel(now) {
     // Celestials and Divinities — long decay, real reverb tail, low and
-    // wide. Gravitational scale, not a quick pluck: low fundamental,
-    // dry/wet split into the synthesized convolution reverb built in
-    // buildAudioGraph, a long ~4.5s envelope.
-    const osc = audioCtx.createOscillator();
-    osc.type = 'triangle'; osc.frequency.value = 130;
-    const g = audioCtx.createGain();
+    // wide. Gravitational scale, not a quick pluck.
+    //
+    // Round 5, two fixes:
+    //
+    // (1) Envelope — opposite of Michael on purpose (see chimeMichael's
+    // own comment): a slow swelling attack, not struck — arriving rather
+    // than plucked — into a long decay (~5.6s total) with a real reverb
+    // tail. Pitch-matching shouldn't be required to tell them apart; the
+    // attack shape and register alone should do it.
+    //
+    // (2) Bass — psychoacoustic harmonic reinforcement, not just a low
+    // fundamental. The true fundamental stays at 130Hz (the actual low
+    // register isn't raised), but most laptop/phone speaker drivers roll
+    // off hard under ~150Hz, so that fundamental alone can be near-
+    // inaudible on small hardware. Reinforcing the 2nd (260Hz) and 3rd
+    // (390Hz) harmonics with real presence — not token amounts — lets the
+    // ear reconstruct the low pitch from harmonics small speakers CAN
+    // reproduce, the standard psychoacoustic-bass technique.
+    const FUND = 130;
+    const osc1 = audioCtx.createOscillator(); osc1.type = 'sine'; osc1.frequency.value = FUND;
+    const osc2 = audioCtx.createOscillator(); osc2.type = 'sine'; osc2.frequency.value = FUND * 2;
+    const osc3 = audioCtx.createOscillator(); osc3.type = 'sine'; osc3.frequency.value = FUND * 3;
+    const gFund = audioCtx.createGain(); gFund.gain.value = 1;
+    const g2nd = audioCtx.createGain(); g2nd.gain.value = 0.55; // real presence, not a token amount
+    const g3rd = audioCtx.createGain(); g3rd.gain.value = 0.32;
+    const g = audioCtx.createGain(); // shared swell/decay envelope for all three partials
     g.gain.setValueAtTime(0, now);
-    g.gain.linearRampToValueAtTime(CHIME_GAIN * 0.9, now + 0.03);
-    g.gain.exponentialRampToValueAtTime(0.0001, now + 4.5);
+    g.gain.linearRampToValueAtTime(CHIME_GAIN * 0.9, now + 1.1); // slow swell — arriving, not struck
+    g.gain.exponentialRampToValueAtTime(0.0001, now + 5.6); // long decay
+    osc1.connect(gFund); osc2.connect(g2nd); osc3.connect(g3rd);
+    gFund.connect(g); g2nd.connect(g); g3rd.connect(g);
     const dry = audioCtx.createGain(); dry.gain.value = 0.35;
-    const wet = audioCtx.createGain(); wet.gain.value = 0.9;
-    osc.connect(g);
+    const wet = audioCtx.createGain(); wet.gain.value = 1.0;
     g.connect(dry); dry.connect(muteGain);
     g.connect(wet); wet.connect(reverbConvolver);
-    osc.start(now); osc.stop(now + 4.7);
+    [osc1, osc2, osc3].forEach(o => { o.start(now); o.stop(now + 5.8); });
   }
   function chimeNature(now) {
     // Naturals/Fae/Elementals — genuinely generative, not hand-tuned: the
@@ -751,7 +845,7 @@ export function createOutside(container, { preview = false, initialPieceId = nul
       inst.pos[i * 3] = x; inst.pos[i * 3 + 1] = y; inst.pos[i * 3 + 2] = zPlane;
 
       const lightness = THREE.MathUtils.lerp(0.32, 0.66, u);
-      tmpColor.setHSL(inst.hue, 0.6, lightness);
+      tmpColor.setHSL(inst.hue, inst.sat, lightness);
       const boost = pulseBoostAt(x, y, zPlane);
       inst.col[i * 3] = Math.min(1, tmpColor.r + boost);
       inst.col[i * 3 + 1] = Math.min(1, tmpColor.g + boost);
@@ -766,6 +860,13 @@ export function createOutside(container, { preview = false, initialPieceId = nul
     // sphere from an earlier frame could make touch miss the surface
     // near a petal's own edge.
     inst.geo.computeBoundingSphere();
+
+    // Hover/proximity glow — smoothly lerp toward 1 if this is the
+    // currently-hovered petal, back toward 0 otherwise, then drive the
+    // material's own Fresnel rim uniform with it (round 5).
+    inst.hoverGlow = THREE.MathUtils.lerp(inst.hoverGlow, inst === hoveredInst ? 1 : 0, HOVER_LERP_RATE);
+    const shader = inst.mat.userData.shader;
+    if (shader) shader.uniforms.fresnelGlow.value = BASE_FRESNEL_GLOW + inst.hoverGlow * HOVER_FRESNEL_BOOST;
   }
 
   function anchorWorldPos(inst, u, out) {
@@ -890,6 +991,8 @@ export function createOutside(container, { preview = false, initialPieceId = nul
       wheelZoom?.dispose();
       touchGuard?.dispose();
       if (onClick) container.removeEventListener('click', onClick);
+      if (onPointerMove) container.removeEventListener('pointermove', onPointerMove);
+      if (onPointerLeave) container.removeEventListener('pointerleave', onPointerLeave);
       renderer.dispose();
       starGeo.dispose(); starMat.dispose();
       nebula.geo.dispose(); nebula.mat.dispose();
@@ -902,6 +1005,8 @@ export function createOutside(container, { preview = false, initialPieceId = nul
       dotTex.dispose();
       if (oscA) { try { oscA.stop(); } catch { /* already stopped */ } oscA.disconnect(); }
       if (oscB) { try { oscB.stop(); } catch { /* already stopped */ } oscB.disconnect(); }
+      if (padDriftLfo) { try { padDriftLfo.stop(); } catch { /* already stopped */ } padDriftLfo.disconnect(); }
+      padDriftGain?.disconnect();
       filter?.disconnect(); padGain?.disconnect(); muteGain?.disconnect();
       reverbConvolver?.disconnect();
       if (audioCtx) audioCtx.close().catch(() => {});

@@ -338,6 +338,77 @@ different one, toggled sound on/off, no console errors from the scene's
 own code. Debug hooks fully stripped before this build. Full `npx vite
 build` clean.
 
+## 3.7.0 (2026-08-24)
+
+**Outside, round 5: audio fixes + petal differentiation.** Feedback from a
+live listen on v3.6.0 plus the chimes pass — three audio items, one visual
+item that was already scoped once (the original pivot brief's "related-but-
+distinct shades" ask) and needed finishing.
+
+**Hum, diagnosed before fixed.** Tested both of the two live hypotheses
+rather than guessing: sampled the RMS of the post-mix audio signal (via a
+temporary AnalyserNode tap and debug hook, stripped before this build)
+immediately after enabling sound with nothing touched, then again after
+touching all five petals in sequence and waiting for every envelope to
+fully decay. The level after interaction settled back down (and tracked
+the pad's own slow breathing cycle predictably) rather than climbing —
+ruling out a leaked-node accumulation bug. The immediate-on-load reading
+(~0.068 RMS, never dropping much lower) confirmed the actual cause: the
+pad's own gain floor (`PAD_GAIN_MIN`) was 0.035, so it never came close to
+real silence even at the trough of its breathing cycle — a design/mix
+issue, not a bug. Fixed by dropping the floor to 0.006 and trimming the
+ceiling to 0.085, plus adding a slow (~0.045Hz), small (6-cent) detune
+drift on the pad's fifth — a perfectly static two-tone pair reads as a
+machine hum no matter how its volume is modulated, because nothing else
+about the sound moves.
+
+**Emmanuel's bass — real psychoacoustic reinforcement.** His chime was
+too quiet on small speakers because its 130Hz fundamental sits below what
+most laptop/phone drivers can reproduce. Rather than raising the actual
+register, the 2nd (260Hz) and 3rd (390Hz) harmonics are now reinforced
+with real presence (0.55 and 0.32 relative amplitude, not token amounts)
+alongside the true fundamental — the standard psychoacoustic-bass
+technique: the ear reconstructs a low pitch from harmonics a small speaker
+CAN play, even when the true fundamental is inaudible on that hardware.
+
+**Michael vs. Emmanuel — opposite envelope shapes, not just different
+pitches.** Both were landing as "some kind of sustained bell." Michael is
+now struck (near-instant attack), short and controlled (decay tightened
+1.0s), dry (no reverb send), staying bright/high. Emmanuel now has a
+genuine slow swelling attack (~1.1s, arriving rather than struck) into a
+long decay (~5.6s) with a real wet reverb tail, staying low/wide. Opposite
+on all four axes — attack shape, decay length, reverb, register — so
+pitch-matching shouldn't be needed to tell them apart by ear.
+
+**Petal differentiation — finishing the original pivot brief's ask, not
+new scope.** The first pass (hue 0.74-0.88, one shared saturation of 0.6
+for every petal) read close to uniform. Widened to five evenly-spaced hues
+across the full safe span of the violet-to-magenta-to-lavender family
+(roughly 240deg-345deg, staying clear of true blue and true red), each
+paired with its own saturation (Michael desaturated/cool for "glossy,
+tempered"; Emmanuel deepest/most saturated for "gravitational"; Nature's
+cluster moved into its own richer plum/rose corner distinct from all four
+simple petals) — hue and saturation both now carry identity, not hue alone
+in a cramped band.
+
+**Hover/proximity glow — new, on top of the above.** Reuses the Fresnel
+rim mechanism already built for translucency (round 4) rather than a
+second visual language: whichever petal is nearest the cursor gets its own
+`fresnelGlow` uniform smoothly boosted above the baseline, a "this one" cue
+before the petal is actually touched. Raycasts on `pointermove` against
+petal meshes only (not the seedpod), lerped per-frame inside `updatePetal`
+for a soft transition rather than a hard on/off.
+
+**Live verification:** RMS before/after interaction confirmed no
+accumulation (see hum section above); triggering Michael and Emmanuel back
+to back produced no console errors and the new multi-oscillator harmonic
+stack/swell envelopes ran clean; hover glow confirmed via before/after
+zoomed screenshots of the same petal tip (visibly brighter white rim while
+hovered, fading back down when the cursor moved away); five petals
+confirmed visually distinct from two different camera angles, no longer
+reading as a uniform wash. All debug probes (AnalyserNode tap, RMS hook)
+stripped before this build. Full `npx vite build` clean.
+
 ## 3.6.0 (2026-08-24)
 
 **Outside, round 4: Fresnel-based petal translucency + five per-petal
