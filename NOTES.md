@@ -338,6 +338,54 @@ different one, toggled sound on/off, no console errors from the scene's
 own code. Debug hooks fully stripped before this build. Full `npx vite
 build` clean.
 
+## 3.6.0 (2026-08-24)
+
+**Outside, round 4: Fresnel-based petal translucency + five per-petal
+chimes.** Refinement on the shipped v3.5.0 lotus, not another correction
+pass.
+
+Petal translucency now comes from a real Fresnel term rather than a flat
+opacity value. `makePetalMaterial()` patches MeshStandardMaterial's own
+compiled shader via `onBeforeCompile` — lighting and vertex-color handling
+stay exactly as-is, only the final alpha and a small edge-glow addition are
+driven by `pow(1 - |view·normal|, fresnelPower)`. The result reads as glassy
+and thin through the face of each petal, brighter and more solid right at
+the silhouette edge — verified live at the default angle and again after a
+drag-orbit to a different azimuth, so it's the actual rim-light behavior of
+translucent geometry, not a lucky angle.
+
+Each petal now plays its own chime on touch, each grounded in something
+already established about that Power Source this session rather than five
+arbitrary notes: Michael (Tempered) gets a pure overtone-free sine — his own
+"polished beyond all reason" endpoint, in audio. Gabriel (Quick and
+Infernals) gets a real exponential downward frequency ramp — the Portable
+Hell's whole shape is descent. Raphael (Psychopomps) gets two oscillators
+~3Hz apart, close enough to shimmer rather than separate into a clear beat —
+reusing the retired build's own beat-frequency technique, repurposed: the
+Antimatter Bottle contains two things that would annihilate if they
+touched. Emmanuel (Celestials and Divinities) gets a long low tone through a
+synthesized convolution reverb (an impulse response built programmatically
+from decaying stereo noise, no external audio file) — gravitational scale,
+not a pluck. Nature's compound petal drives its pitch jitter off a real
+logistic map (`x = 3.9x(1-x)`, seeded fresh from `Math.random()` each
+trigger) rather than a fixed arpeggio — confirmed live to produce a
+genuinely different note sequence on two separate triggers, not just
+sounding different by chance. The gold seedpod (Magi/Psi) stays silent on
+touch — an open question flagged in the brief, resolved via an explicit
+AskUserQuestion rather than assumed, matching the same "reads as the thing
+that isn't a petal" logic that put it at the center rather than a sixth
+petal in round 3.
+
+**Live verification:** all five Power-Source petals (Gabriel, Michael,
+Raphael, Emmanuel, Nature) confirmed individually touchable and each
+dispatching its own distinct `psIndex` (0–4) via a temporary console probe;
+the gold pod confirmed to dispatch no chime at all on touch (structural, not
+just silent — the click handler's petal-instance lookup finds nothing to
+trigger). Nature's chime sequence sampled twice, produced two different note
+sequences, confirming the chaotic-map approach is actually generative and
+not cosmetic. All debug probes stripped before this build. Full `npx vite
+build` clean.
+
 ## 3.5.0 (2026-08-24)
 
 **Outside, pivoted: a floral cosmology map replaces the projection thesis

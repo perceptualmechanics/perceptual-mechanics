@@ -83,6 +83,38 @@ import './outside.css';
 // (pulseWave, below), adapted from sparse graph edges to a continuous
 // mesh. No text, no panel — the entire response is light moving across a
 // real surface.
+//
+// ─── Round 4 — translucency + per-petal chimes (2026-08-24) ────────────────
+// Refinement on the shipped v3.5.0 lotus, not another correction pass.
+// Two additions:
+//
+// Petal translucency now uses a real Fresnel term (makePetalMaterial,
+// below) rather than a flat opacity value — MeshStandardMaterial's own
+// compiled shader is patched via onBeforeCompile (not swapped for a
+// heavier custom ShaderMaterial) so lighting/vertex-color handling stay
+// exactly as-is; only the final alpha and a small edge-glow boost are
+// driven by pow(1 - |view·normal|, fresnelPower). Reads as glassy/thin
+// through the face of each petal, brighter and more solid right at the
+// silhouette edge — the actual visual signature of translucent petals,
+// not a uniform see-through wash.
+//
+// Each petal now plays its own chime on touch (triggerChime, in the Sound
+// section below), grounded in what this session already established about
+// that Power Source rather than five arbitrary notes: Michael gets a pure
+// overtone-free sine (his own "polished beyond all reason" endpoint, in
+// audio); Gabriel gets a real downward frequency ramp (Portable Hell's
+// whole shape is descent); Raphael gets two barely-detuned tones that
+// shimmer rather than separate (reusing the retired build's own beat-
+// frequency technique, repurposed — Antimatter Bottle contains two things
+// that would annihilate if they touched); Emmanuel gets a long reverb-
+// tailed low tone through a synthesized convolution impulse (gravitational
+// scale, not a pluck); Nature's compound petal drives its pitch jitter off
+// a real logistic map (r=3.9, seeded fresh each trigger) rather than a
+// fixed "chaotic-sounding" run, so it's genuinely different every time,
+// not just metaphorically chaotic. The gold seedpod (Magi/Psi) stays
+// silent on touch — confirmed explicitly via an AskUserQuestion, not
+// assumed — the same "reads as the thing that isn't a petal" logic that
+// put it at the center rather than as a sixth petal in round 3.
 
 const TWO_PI = Math.PI * 2;
 
@@ -278,17 +310,50 @@ export function createOutside(container, { preview = false, initialPieceId = nul
   // the base-to-tip gradient; a low uniform emissive keeps petals from
   // going fully black in shadow, matching the site's glowing-cosmic-
   // subject convention elsewhere (Beamline's vessel, Orbiter's cloud).
+  //
+  // Translucency is Fresnel-driven, not flat opacity (round 4,
+  // 2026-08-24) — flat opacity reads thin/synthetic; real translucent
+  // organic material (petals, leaves, skin) is most transparent straight
+  // through the face and brightest/most opaque at grazing edges, because
+  // that's where light reflects off the surface rather than passing
+  // through it. `onBeforeCompile` patches the standard shader with a
+  // real Fresnel term (view direction vs. surface normal) driving both
+  // the alpha (mix faceAlpha -> edgeAlpha) and a small edge-glow color
+  // boost — the same shader three.js already compiles for lighting, not
+  // a heavier custom material.
   function makePetalMaterial() {
-    return new THREE.MeshStandardMaterial({
+    const mat = new THREE.MeshStandardMaterial({
       vertexColors: true, side: THREE.DoubleSide, roughness: 0.55, metalness: 0.06,
-      transparent: true, opacity: 0.95, emissive: new THREE.Color(0x2a1250), emissiveIntensity: 0.55,
+      transparent: true, depthWrite: false, emissive: new THREE.Color(0x2a1250), emissiveIntensity: 0.55,
     });
+    mat.onBeforeCompile = shader => {
+      shader.uniforms.fresnelPower = { value: 2.3 };
+      shader.uniforms.fresnelGlow = { value: 0.4 };
+      shader.uniforms.faceAlpha = { value: 0.5 };
+      shader.uniforms.edgeAlpha = { value: 1.0 };
+      shader.fragmentShader = shader.fragmentShader
+        .replace('#include <common>', `
+          #include <common>
+          uniform float fresnelPower;
+          uniform float fresnelGlow;
+          uniform float faceAlpha;
+          uniform float edgeAlpha;
+        `)
+        .replace('#include <dithering_fragment>', `
+          float pmFresnel = pow(1.0 - clamp(abs(dot(normalize(vViewPosition), normal)), 0.0, 1.0), fresnelPower);
+          gl_FragColor.rgb += pmFresnel * fresnelGlow;
+          gl_FragColor.a = mix(faceAlpha, edgeAlpha, pmFresnel);
+          #include <dithering_fragment>
+        `);
+      mat.userData.shader = shader;
+    };
+    return mat;
   }
 
   // One petal "instance": its own geometry/buffers (topology shared, only
   // positions/colors are per-instance), plus the parameters updatePetal
   // needs every frame (angle, base dimensions, hue, breathing phase).
-  function makePetalInstance({ angle, length, halfWidth, height, hue, swayIndex }) {
+  function makePetalInstance({ angle, length, halfWidth, height, hue, swayIndex, psIndex }) {
     const geo = new THREE.BufferGeometry();
     const pos = new Float32Array(topo.count * 3);
     const col = new Float32Array(topo.count * 3);
@@ -300,7 +365,7 @@ export function createOutside(container, { preview = false, initialPieceId = nul
     scene.add(mesh);
     return {
       angle, cosA: Math.cos(angle), sinA: Math.sin(angle),
-      length, halfWidth, height, hue, swayIndex,
+      length, halfWidth, height, hue, swayIndex, psIndex,
       geo, pos, col, mat, mesh,
     };
   }
@@ -311,7 +376,7 @@ export function createOutside(container, { preview = false, initialPieceId = nul
     if (pi < 4) {
       petalInstances.push(makePetalInstance({
         angle, length: BASE_LENGTH, halfWidth: BASE_WIDTH, height: BASE_HEIGHT,
-        hue: PETAL_HUE[pi], swayIndex: pi,
+        hue: PETAL_HUE[pi], swayIndex: pi, psIndex: pi,
       }));
     } else {
       // Nature's compound cluster — three smaller lobes fanned within its
@@ -324,7 +389,7 @@ export function createOutside(container, { preview = false, initialPieceId = nul
       subOffsets.forEach((off, si) => {
         petalInstances.push(makePetalInstance({
           angle: angle + off, length: BASE_LENGTH * subLenScale[si], halfWidth: BASE_WIDTH * subWidScale[si],
-          height: BASE_HEIGHT * subHeightScale[si], hue: NATURE_SUB_HUE[si], swayIndex: 4 + si * 0.4,
+          height: BASE_HEIGHT * subHeightScale[si], hue: NATURE_SUB_HUE[si], swayIndex: 4 + si * 0.4, psIndex: 4,
         }));
       });
     }
@@ -471,7 +536,15 @@ export function createOutside(container, { preview = false, initialPieceId = nul
       pointerNdc.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
       raycaster.setFromCamera(pointerNdc, camera);
       const hits = raycaster.intersectObjects(pickTargets, false);
-      if (hits.length) triggerPulse(hits[0].point);
+      if (!hits.length) return;
+      triggerPulse(hits[0].point);
+      // Chime on touch — petals only. The gold center (Magi/Psi) stays
+      // silent on purpose: the same "reads as the thing that isn't a
+      // petal" logic that put it at the center rather than as a sixth
+      // petal (confirmed explicitly, not assumed — see outside.js's own
+      // round-4 header note).
+      const hitInst = petalInstances.find(inst => inst.mesh === hits[0].object);
+      if (hitInst) triggerChime(hitInst.psIndex);
     };
     container.addEventListener('click', onClick);
   }
@@ -483,10 +556,25 @@ export function createOutside(container, { preview = false, initialPieceId = nul
   // that merely happens to feel similar. Lazy AudioContext on first
   // gesture, same convention every other scene's sound toggle uses. ──────
   let audioCtx = null, oscA = null, oscB = null, filter = null, padGain = null, muteGain = null;
+  let reverbConvolver = null;
   let soundEnabled = false;
   const PAD_ROOT_HZ = 110, PAD_FIFTH_HZ = 164.81;
   const FILTER_MIN_HZ = 260, FILTER_MAX_HZ = 1300;
   const PAD_GAIN_MIN = 0.035, PAD_GAIN_MAX = 0.1;
+  // A synthesized impulse response (exponentially-decaying noise) rather
+  // than a loaded audio file — genuine convolution reverb, no external
+  // asset. Used only by Emmanuel's chime (below), whose whole ask is
+  // "long decay, real reverb tail, low and wide."
+  function makeImpulseResponse(ctx, duration, decay) {
+    const rate = ctx.sampleRate;
+    const length = Math.floor(rate * duration);
+    const impulse = ctx.createBuffer(2, length, rate);
+    for (let ch = 0; ch < 2; ch++) {
+      const data = impulse.getChannelData(ch);
+      for (let i = 0; i < length; i++) data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / length, decay);
+    }
+    return impulse;
+  }
   function buildAudioGraph() {
     if (audioCtx) return;
     audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -500,6 +588,9 @@ export function createOutside(container, { preview = false, initialPieceId = nul
     oscA.connect(filter); oscB.connect(filter);
     filter.connect(padGain); padGain.connect(muteGain); muteGain.connect(audioCtx.destination);
     oscA.start(); oscB.start();
+    reverbConvolver = audioCtx.createConvolver();
+    reverbConvolver.buffer = makeImpulseResponse(audioCtx, 3.4, 2.1);
+    reverbConvolver.connect(muteGain);
   }
   function setSoundEnabled(on) {
     soundEnabled = on;
@@ -516,6 +607,112 @@ export function createOutside(container, { preview = false, initialPieceId = nul
     }
   }
   if (soundToggleEl) soundToggleEl.addEventListener('click', () => setSoundEnabled(!soundEnabled));
+
+  // ─── Five petal chimes — each grounded in what's already established
+  // about that Power Source this session, not five arbitrary notes.
+  // Every voice is built fresh per trigger (oscillator nodes are one-shot
+  // in Web Audio) and routed to muteGain, so the same sound-toggle gate
+  // that mutes the pad also mutes chimes — one on/off switch for the
+  // whole scene, not two. Silent when sound is off (touching a petal
+  // still gives the visual pulse either way). ─────────────────────────────
+  const CHIME_GAIN = 0.22;
+  function chimeMichael(now) {
+    // Tempered — a pure, close-to-overtone-free bell. Michael's own
+    // established endpoint is "glossy, featureless, polished beyond all
+    // reason" (Notes.rtf) — a single sine has, by construction, zero
+    // harmonics, which is that image in sound rather than a metaphor for
+    // it. Fast attack, long clean exponential decay.
+    const osc = audioCtx.createOscillator();
+    osc.type = 'sine'; osc.frequency.value = 660;
+    const g = audioCtx.createGain();
+    g.gain.setValueAtTime(0, now);
+    g.gain.linearRampToValueAtTime(CHIME_GAIN, now + 0.008);
+    g.gain.exponentialRampToValueAtTime(0.0001, now + 2.6);
+    osc.connect(g); g.connect(muteGain);
+    osc.start(now); osc.stop(now + 2.7);
+  }
+  function chimeGabriel(now) {
+    // Quick and Infernals — real downward pitch resolution, not a static
+    // tone. "The Portable Hell's whole shape is descent" — a genuine
+    // exponential frequency ramp down, not a pitch-bend effect layered on
+    // top. Triangle (a little richer than Michael's pure sine) keeps the
+    // two texturally distinct even before the descent registers.
+    const osc = audioCtx.createOscillator();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(520, now);
+    osc.frequency.exponentialRampToValueAtTime(170, now + 1.1);
+    const g = audioCtx.createGain();
+    g.gain.setValueAtTime(0, now);
+    g.gain.linearRampToValueAtTime(CHIME_GAIN, now + 0.01);
+    g.gain.exponentialRampToValueAtTime(0.0001, now + 1.3);
+    osc.connect(g); g.connect(muteGain);
+    osc.start(now); osc.stop(now + 1.4);
+  }
+  function chimeRaphael(now) {
+    // Psychopomps — two tones ~3Hz apart, close enough to shimmer rather
+    // than resolve into a clear separate beat. Reuses the retired sound
+    // design's own beat-frequency technique, repurposed rather than
+    // reinvented: the Antimatter Bottle is specifically about containing
+    // two things that would annihilate if they touched, and a gentle,
+    // controlled beat is that idea in audio.
+    const oscA2 = audioCtx.createOscillator(), oscB2 = audioCtx.createOscillator();
+    oscA2.type = 'sine'; oscB2.type = 'sine';
+    oscA2.frequency.value = 440; oscB2.frequency.value = 443;
+    const g = audioCtx.createGain();
+    g.gain.setValueAtTime(0, now);
+    g.gain.linearRampToValueAtTime(CHIME_GAIN * 0.85, now + 0.015);
+    g.gain.exponentialRampToValueAtTime(0.0001, now + 3.0);
+    oscA2.connect(g); oscB2.connect(g); g.connect(muteGain);
+    oscA2.start(now); oscB2.start(now);
+    oscA2.stop(now + 3.1); oscB2.stop(now + 3.1);
+  }
+  function chimeEmmanuel(now) {
+    // Celestials and Divinities — long decay, real reverb tail, low and
+    // wide. Gravitational scale, not a quick pluck: low fundamental,
+    // dry/wet split into the synthesized convolution reverb built in
+    // buildAudioGraph, a long ~4.5s envelope.
+    const osc = audioCtx.createOscillator();
+    osc.type = 'triangle'; osc.frequency.value = 130;
+    const g = audioCtx.createGain();
+    g.gain.setValueAtTime(0, now);
+    g.gain.linearRampToValueAtTime(CHIME_GAIN * 0.9, now + 0.03);
+    g.gain.exponentialRampToValueAtTime(0.0001, now + 4.5);
+    const dry = audioCtx.createGain(); dry.gain.value = 0.35;
+    const wet = audioCtx.createGain(); wet.gain.value = 0.9;
+    osc.connect(g);
+    g.connect(dry); dry.connect(muteGain);
+    g.connect(wet); wet.connect(reverbConvolver);
+    osc.start(now); osc.stop(now + 4.7);
+  }
+  function chimeNature(now) {
+    // Naturals/Fae/Elementals — genuinely generative, not hand-tuned: the
+    // logistic map (x = r*x*(1-x), r = 3.9, deep in the chaotic regime)
+    // drives real pitch jitter, seeded from Math.random() each trigger so
+    // it's actually different every time, not a fixed "chaotic-sounding"
+    // arpeggio. Elementals were already grounded in real chaos theory
+    // this session (the Chaos Engine itself) — this makes the petal's
+    // own chime actually chaotic rather than metaphorically so.
+    const r = 3.9;
+    let x = 0.15 + Math.random() * 0.7;
+    const steps = 6, stepDur = 0.11, baseFreq = 300;
+    const osc = audioCtx.createOscillator();
+    osc.type = 'sine';
+    for (let i = 0; i < steps; i++) {
+      x = r * x * (1 - x);
+      osc.frequency.setValueAtTime(baseFreq * (0.7 + 0.9 * x), now + i * stepDur);
+    }
+    const g = audioCtx.createGain();
+    g.gain.setValueAtTime(0, now);
+    g.gain.linearRampToValueAtTime(CHIME_GAIN * 0.8, now + 0.01);
+    g.gain.exponentialRampToValueAtTime(0.0001, now + steps * stepDur + 0.6);
+    osc.connect(g); g.connect(muteGain);
+    osc.start(now); osc.stop(now + steps * stepDur + 0.7);
+  }
+  const CHIME_FNS = [chimeGabriel, chimeMichael, chimeRaphael, chimeEmmanuel, chimeNature]; // index matches POWER_SOURCES order
+  function triggerChime(psIndex) {
+    if (!soundEnabled || !audioCtx) return;
+    CHIME_FNS[psIndex]?.(audioCtx.currentTime);
+  }
 
   // ─── Breathing — the sole ambient motion source, unconditional. ────────
   const BREATHE_FREQ = 0.11; // ~57s full cycle
@@ -706,6 +903,7 @@ export function createOutside(container, { preview = false, initialPieceId = nul
       if (oscA) { try { oscA.stop(); } catch { /* already stopped */ } oscA.disconnect(); }
       if (oscB) { try { oscB.stop(); } catch { /* already stopped */ } oscB.disconnect(); }
       filter?.disconnect(); padGain?.disconnect(); muteGain?.disconnect();
+      reverbConvolver?.disconnect();
       if (audioCtx) audioCtx.close().catch(() => {});
       titleEl?.remove(); hintEl?.remove(); soundToggleEl?.remove();
       container.innerHTML = '';
