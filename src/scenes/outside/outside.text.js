@@ -5,6 +5,15 @@
 // Per the site's standing rule, no new writing: what's on screen is found
 // text, same as every other scene's own .text.js.
 //
+// Round 2 correction (2026-08-24): the scene itself no longer displays
+// ANY of this as text — no panel, no labels (see outside.js's own round-2
+// header note). DIMENSIONS' names/keywords and ACCOUNTS' labels are kept
+// here anyway as the underlying source-of-truth data (dimension NAMES/
+// indices still drive outside.js's math and comments even though the
+// keyword lists themselves aren't rendered), not dead weight — same
+// "content lives in its own .text.js regardless of how it's currently
+// consumed" convention every other scene's data module follows.
+//
 // Source: Holography.scriv/Files/Data/.../content.rtf ("Notes"), the
 // section headed "Apherion's eleven-dimension cosmology, mapped to the
 // Muses" — marked settled/Reference, not a pending item. Order (1–11) and

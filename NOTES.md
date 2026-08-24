@@ -338,6 +338,70 @@ different one, toggled sound on/off, no console errors from the scene's
 own code. Debug hooks fully stripped before this build. Full `npx vite
 build` clean.
 
+## 3.4.0 (2026-08-24)
+
+**Outside, corrected: wireframe replaces the panel.** Scott's diagnosis
+after seeing 3.3.0 live: a shape isn't eleven correctly-positioned
+points — it's the points *and every connection between them*. Nothing in
+the original brief asked for the connections, so nothing rendered them.
+That's a gap in the brief, not just the build. This scene isn't Harmonics
+with different math; it's a pure visual object, closer to Butterfly's
+register than Harmonics' — no text, no panel, no click-for-keywords, ever.
+
+**All C(11,2) = 55 edges** between the eleven dimension points' live
+projected positions now render continuously (`EDGE_PAIRS`, `wireframe` —
+`THREE.LineSegments`, thin, additive, depth-faded so nearer edges read
+brighter than farther ones). Edge vertex colors are read directly from the
+same `dimCol` array already computed for the points each frame, not a
+separate color pass — OER-dropped dimming and account-blend warm/cool
+shift propagate to every edge touching a point for free.
+
+**The actual payoff**: OER's basis already zeroes four dimensions'
+basis-vector components by construction (`buildOerBasis`), so as the live
+basis approaches OER's own, those four vertices' projected positions were
+already collapsing toward the origin — true in the underlying math since
+3.3.0, just never visible without edges to show what's missing. Now the
+wireframe visibly loses and regains four vertices as the view drifts
+between accounts. That's the entire OER-vs-Apherion thesis, told with zero
+text, purely through geometry losing and regaining vertices. Verified by
+forcing the live basis to exactly OER's and exactly Apherion's via a
+temporary debug hook and comparing: a seven-vertex network with a
+collapsed center versus the full eleven-vertex structure.
+
+**Michael/Gabriel** get their own edge (they already sat opposite each
+other along one axis; Lucifer is already exactly the midpoint). No
+pre-existing "threshold lavender" or any Lucifer-specific color exists
+anywhere in the codebase (checked, not assumed) — `0x9a6bff` is a new
+choice, documented as new in the code rather than claimed as a returning
+one. Power Source anchors and the Michael/Gabriel/Lucifer trio also get
+their own connecting edges to their anchor dimensions, so nothing in the
+frame reads as unexplained debris.
+
+**Touch/click**: the panel is gone entirely — `openDimensionPanel`,
+`openPowerSourcePanel`, `openLuciferPanel`, the `<aside>` markup, all of
+it. Touching a point now triggers a real traveling pulse instead
+(`triggerPulse` — a Gaussian wavefront, `exp(-(t - dist/speed)² /
+(2·width²))`, computed per-vertex from the touched point's frozen
+position, genuinely propagating outward along the edges over real
+distance and time, not a canned animation curve). Verified numerically,
+not by eyeballing a screenshot against latency: sampled `dimCol` at two
+different elapsed times via a debug hook and confirmed the brightness
+peak actually migrates from the touched point to a farther one.
+
+**Content**: `outside.text.js`'s data (dimension names, keywords, account
+labels) stays as source-of-truth — dimension names/indices still drive
+the math and comments — but none of it renders as text anymore. Zero
+exposed text during the running experience beyond the fixed title/hint/
+sound-toggle chrome that already existed.
+
+**Verified live**: reads as one connected object from multiple drag
+angles, not eleven scattered points; the OER collapse is visibly
+demonstrable via forced-basis comparison, not just true in the data; no
+panel or text appears anywhere on click or touch; no console errors from
+the scene's own code. Debug hooks (`__pmOutsideSetBasis`, `__pmOutsideDebug`,
+`__pmOutsideTriggerPulse`, `__pmOutsidePulseState`) fully stripped before
+this build. Clean `npx vite build`.
+
 ## 3.2.0 (2026-08-23)
 
 **Nebula depth pass: dust-lane occlusion layer, second starfield density

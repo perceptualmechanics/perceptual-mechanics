@@ -1,9 +1,9 @@
 import * as THREE from 'three';
 import {
   bindOrbitDrag, bindWheelZoom, bindGuardedResize, bindTapVsDrag,
-  prefersReducedMotion, parseHTML, createPanelCloser, escapeHtml,
+  prefersReducedMotion, parseHTML,
 } from '../../utils/sceneKit.js';
-import { DIMENSIONS, POWER_SOURCES, OER_DROPPED, OER_KEPT, LUCIFER_LINE, MICHAEL_GABRIEL_AXIS, ACCOUNTS } from './outside.text.js';
+import { POWER_SOURCES, OER_DROPPED, OER_KEPT, MICHAEL_GABRIEL_AXIS } from './outside.text.js';
 import outsideHtml from './outside.html?raw';
 import './outside.css';
 
@@ -54,8 +54,35 @@ import './outside.css';
 // rotates within the plane separating OER's kept dimensions from its
 // dropped ones, vertical drag rotates toward Apherion's own maximal-
 // symmetry basis.
+//
+// ─── Round 2 correction (2026-08-24) ────────────────────────────────────
+// Scott's read of the live v3.3.0 build: eleven correctly-positioned
+// points is not a shape, it's a scatter — a shape is the points AND
+// every connection between them. Also: this scene isn't Harmonics with
+// different math, it's closer to Butterfly's register — a pure visual
+// object, no text, no panel, no click-for-keywords. Two changes below,
+// both load-bearing, not decoration:
+//   1. All C(11,2) = 55 possible edges between the eleven dimension
+//      points now render continuously (buildEdgePairs/the wireframe
+//      LineSegments below), not on hover/click. This turns out to be the
+//      actual payoff, not just a visual fix: OER's basis already zeroes
+//      four dimensions' basis-vector components (see buildOerBasis), so
+//      a dropped dimension's projected position already collapses toward
+//      the origin as the current basis approaches OER's own — that was
+//      true in the math from the start, it just had nothing rendered
+//      that could show it. With the wireframe in place, watching four
+//      vertices visibly pull inward and drag their edges with them AS
+//      the drift or drag approaches OER's basis tells the entire OER-
+//      vs-Apherion story with zero text, purely through geometry gaining
+//      and losing connectivity.
+//   2. The panel is gone. No title, no keyword chips, no excerpts —
+//      nothing displays a word once the scene is running. Touching a
+//      point instead triggers a real traveling pulse: a brightness wave
+//      computed from straight-line distance from the touched point
+//      (frozen at touch time) to every other point, propagating outward
+//      and fading, applied as a genuine time/distance function
+//      (triggerPulse/pulseWave below), not a hand-waved animation.
 const N = 11; // Apherion's full dimensionality
-const RIGHT_KEY = 'ArrowRight';
 
 function makeDotTexture() {
   const c = document.createElement('canvas');
@@ -119,6 +146,12 @@ function buildOerBasis() {
   });
   return [normalized(bx), normalized(by), normalized(bz)];
 }
+
+// Every one of the C(11,2) = 55 possible edges of the simplex — the
+// complete graph on eleven vertices, computed once. See the round-2
+// header note for why all 55 render continuously rather than none.
+const EDGE_PAIRS = [];
+for (let i = 0; i < N; i++) for (let j = i + 1; j < N; j++) EDGE_PAIRS.push([i, j]);
 
 export function createOutside(container, { preview = false, initialPieceId = null } = {}) {
   const w = container.clientWidth || window.innerWidth;
@@ -292,6 +325,69 @@ export function createOutside(container, { preview = false, initialPieceId = nul
   const mgHalo = new THREE.Points(mgGeo, mgHaloMat);
   scene.add(mgHalo);
 
+  // ─── The wireframe — the actual shape, not just its vertices ───────────
+  // All 55 edges of the complete graph on the eleven dimension points,
+  // always on. Vertex colors are copied from dimCol every frame (below),
+  // so the OER-dropped dimming and warm/cool account blend already
+  // computed for the points carry straight through to the edges that
+  // touch them — one color computation, not two. Thin and additive so
+  // density reads as structure, not noise; WIRE_BRIGHTNESS keeps it
+  // visibly quieter than the points themselves, and depthFadeFor()
+  // (computed per-frame from actual camera distance, not a fixed value)
+  // dims far edges relative to near ones as the shape turns in 3D.
+  const WIRE_BRIGHTNESS = 0.6, WIRE_DEPTH_FLOOR = 0.28;
+  const wireGeo = new THREE.BufferGeometry();
+  const wirePos = new Float32Array(EDGE_PAIRS.length * 2 * 3);
+  const wireCol = new Float32Array(EDGE_PAIRS.length * 2 * 3);
+  wireGeo.setAttribute('position', new THREE.BufferAttribute(wirePos, 3));
+  wireGeo.setAttribute('color', new THREE.BufferAttribute(wireCol, 3));
+  const wireMat = new THREE.LineBasicMaterial({
+    vertexColors: true, transparent: true, opacity: 0.5,
+    blending: THREE.AdditiveBlending, depthWrite: false, fog: false,
+  });
+  const wireframe = new THREE.LineSegments(wireGeo, wireMat);
+  scene.add(wireframe);
+
+  // ─── Power Source anchor edges (5) — each Power Source point connects
+  // straight back to the dimension it's anchored to (their positions are
+  // already exactly colinear with the origin: PS position = PS_RADIUS ×
+  // that dimension's own basis vector, so this is a real edge, not a
+  // decorative line), gradient-colored from the dimension's own color to
+  // the Power Source's own — nothing floats disconnected from the
+  // simplex. ─────────────────────────────────────────────────────────────
+  const psEdgeGeo = new THREE.BufferGeometry();
+  const psEdgePos = new Float32Array(POWER_SOURCES.length * 2 * 3);
+  const psEdgeCol = new Float32Array(POWER_SOURCES.length * 2 * 3);
+  psEdgeGeo.setAttribute('position', new THREE.BufferAttribute(psEdgePos, 3));
+  psEdgeGeo.setAttribute('color', new THREE.BufferAttribute(psEdgeCol, 3));
+  const psEdgeMat = new THREE.LineBasicMaterial({
+    vertexColors: true, transparent: true, opacity: 0.6,
+    blending: THREE.AdditiveBlending, depthWrite: false, fog: false,
+  });
+  const psEdges = new THREE.LineSegments(psEdgeGeo, psEdgeMat);
+  scene.add(psEdges);
+
+  // ─── Michael/Gabriel edge — their whole relationship is already
+  // "opposite ends of one axis" in the data; Lucifer is already exactly
+  // its midpoint. One edge, in its own color rather than blended from
+  // Michael's warm/Gabriel's cool, so it doesn't disappear into the
+  // denser 55-edge structure. No pre-existing "Lucifer color" turned up
+  // anywhere in the codebase (checked) — this lavender is newly chosen
+  // here, a threshold tone distinct from both the simplex edges' warm/
+  // cool family and the scene's own violet chrome. ─────────────────────
+  const LUCIFER_EDGE_COLOR = new THREE.Color(0x9a6bff);
+  const mgEdgeGeo = new THREE.BufferGeometry();
+  const mgEdgePos = new Float32Array(2 * 3);
+  const mgEdgeCol = new Float32Array(2 * 3);
+  mgEdgeGeo.setAttribute('position', new THREE.BufferAttribute(mgEdgePos, 3));
+  mgEdgeGeo.setAttribute('color', new THREE.BufferAttribute(mgEdgeCol, 3));
+  const mgEdgeMat = new THREE.LineBasicMaterial({
+    vertexColors: true, transparent: true, opacity: 0.75,
+    blending: THREE.AdditiveBlending, depthWrite: false, fog: false,
+  });
+  const mgEdge = new THREE.LineSegments(mgEdgeGeo, mgEdgeMat);
+  scene.add(mgEdge);
+
   // Faint ghost of the underlying crossover curve — separation vs.
   // temperature, plotted as its own small diagram near Michael/Gabriel
   // rather than warped into the 11D projection (every point at every
@@ -338,10 +434,14 @@ export function createOutside(container, { preview = false, initialPieceId = nul
   }
   let accountBlend = 0.5; // 0 = reads as OER, 1 = reads as Apherion
 
-  // ─── Chrome: title/hint/sound-toggle/panel (full only) ─────────────────
-  let titleEl = null, hintEl = null, panel = null, panelCloser = null;
-  let panelTitleEl = null, panelBodyEl = null;
-  let soundToggleEl = null, soundToggleLabelEl = null, accountLabelEl = null;
+  // ─── Chrome: title/hint/sound-toggle only — no panel, no account label.
+  // Round 2 correction: nothing in this scene displays a word once it's
+  // running. Title/hint/sound-toggle stay because they're the site-wide
+  // grammar every scene carries (what every visitor already expects,
+  // not scene-specific content) — the account label and the read-more
+  // panel were both scene-specific content, and are gone entirely. ────────
+  let titleEl = null, hintEl = null;
+  let soundToggleEl = null, soundToggleLabelEl = null;
   if (!preview) {
     const frag = parseHTML(outsideHtml);
     titleEl = frag.querySelector('.outside-title');
@@ -349,47 +449,9 @@ export function createOutside(container, { preview = false, initialPieceId = nul
     document.body.appendChild(titleEl);
     document.body.appendChild(hintEl);
 
-    accountLabelEl = frag.querySelector('.outside-account-label');
-    document.body.appendChild(accountLabelEl);
-
     soundToggleEl = frag.querySelector('.outside-sound-toggle');
     soundToggleLabelEl = soundToggleEl.querySelector('.outside-sound-toggle-label');
     document.body.appendChild(soundToggleEl);
-
-    panel = frag.querySelector('.outside-panel');
-    container.appendChild(panel);
-    panelTitleEl = panel.querySelector('.outside-panel-title');
-    panelBodyEl = panel.querySelector('.outside-panel-body');
-    panelCloser = createPanelCloser(panel, container, {
-      closeBtn: panel.querySelector('.outside-panel-close'),
-    });
-  }
-
-  function openDimensionPanel(i) {
-    if (!panel) return;
-    const dim = DIMENSIONS[i];
-    panelTitleEl.textContent = dim.name;
-    const dropped = OER_DROPPED.includes(i);
-    panelBodyEl.innerHTML = `
-      <p class="outside-panel-subtitle">${dropped ? 'Absent from OER’s account' : 'Present in both accounts'}</p>
-      <ul class="outside-keyword-list">${dim.keywords.map(k => `<li>${escapeHtml(k)}</li>`).join('')}</ul>`;
-    panel.classList.add('open');
-  }
-  function openPowerSourcePanel(i) {
-    if (!panel) return;
-    const ps = POWER_SOURCES[i];
-    panelTitleEl.textContent = ps.name;
-    const anchorName = DIMENSIONS[ps.dimension].name;
-    panelBodyEl.innerHTML = `
-      <p class="outside-panel-subtitle">Anchored to ${escapeHtml(anchorName)}</p>
-      ${ps.excerpt ? `<blockquote class="outside-excerpt">${escapeHtml(ps.excerpt)}</blockquote>` : '<p class="outside-panel-subtitle">No text yet.</p>'}`;
-    panel.classList.add('open');
-  }
-  function openLuciferPanel() {
-    if (!panel) return;
-    panelTitleEl.textContent = 'Lucifer';
-    panelBodyEl.innerHTML = `<blockquote class="outside-excerpt">${escapeHtml(LUCIFER_LINE)}</blockquote>`;
-    panel.classList.add('open');
   }
 
   // ─── Manual drag → SO(11) planes, not a camera orbit. Horizontal drag
@@ -435,17 +497,57 @@ export function createOutside(container, { preview = false, initialPieceId = nul
     const hits = raycaster.intersectObject(obj);
     return hits.length ? hits[0].index : -1;
   }
+  // ─── Touch response — a real traveling pulse, not a panel. Straight-
+  // line distance from the touched point (frozen at the moment of touch)
+  // to every other point drives a genuine time/distance wave function
+  // (pulseWave, in the animate loop below) — a brightness boost that
+  // reaches nearer points sooner and farther points later, then fades.
+  // No text is ever displayed; this is the entire response. ───────────────
+  const PULSE_SPEED = SCALE * 3;   // world units/sec the wavefront travels
+  const PULSE_WIDTH = 0.14;        // seconds — how wide the wavefront is
+  const PULSE_DURATION = 1.4;      // seconds — hard cutoff, wave has long since passed
+  const PULSE_BOOST = 0.9;         // added brightness at the wavefront's peak
+  let pulseActive = false, pulseStart = 0;
+  const pulseOrigin = new THREE.Vector3();
+  const _pulseVec = new THREE.Vector3();
+  function triggerPulse(x, y, z) {
+    pulseOrigin.set(x, y, z);
+    pulseStart = elapsed;
+    pulseActive = true;
+  }
+  // Gaussian wavefront centered at `t == dist/PULSE_SPEED` — reaches
+  // nearer points sooner, farther points later, real distance/time math
+  // rather than a hand-tuned easing curve.
+  function pulseWave(t, dist) {
+    if (t < 0) return 0;
+    const wavefront = t - dist / PULSE_SPEED;
+    return Math.exp(-(wavefront * wavefront) / (2 * PULSE_WIDTH * PULSE_WIDTH));
+  }
+  function pulseBoostAt(x, y, z) {
+    if (!pulseActive) return 0;
+    _pulseVec.set(x, y, z);
+    return pulseWave(elapsed - pulseStart, pulseOrigin.distanceTo(_pulseVec)) * PULSE_BOOST;
+  }
+  // Depth cueing for the wireframe: real per-frame distance-to-camera,
+  // normalized against the CURRENT spread of the eleven points (not a
+  // fixed world-scale constant), so it self-adjusts at any zoom level.
+  const dimCamDist = new Float32Array(N);
+  const _depthVec = new THREE.Vector3();
+  function depthFadeAt(camDistForIndex, minD, maxD) {
+    const t = maxD > minD ? (camDistForIndex - minD) / (maxD - minD) : 0;
+    return THREE.MathUtils.lerp(1, WIRE_DEPTH_FLOOR, THREE.MathUtils.clamp(t, 0, 1));
+  }
   let onClick = null;
   if (!preview) {
     onClick = e => {
       if (touchGuard?.consume()) return;
       const th = 7 * SCALE_FACTOR;
       let idx = pickAt(e.clientX, e.clientY, dimPoints, th);
-      if (idx !== -1) { openDimensionPanel(idx); return; }
+      if (idx !== -1) { triggerPulse(dimPos[idx * 3], dimPos[idx * 3 + 1], dimPos[idx * 3 + 2]); return; }
       idx = pickAt(e.clientX, e.clientY, psPoints, th);
-      if (idx !== -1) { openPowerSourcePanel(idx); return; }
+      if (idx !== -1) { triggerPulse(psPos[idx * 3], psPos[idx * 3 + 1], psPos[idx * 3 + 2]); return; }
       idx = pickAt(e.clientX, e.clientY, mgPoints, th);
-      if (idx !== -1) { openLuciferPanel(); return; }
+      if (idx !== -1) { triggerPulse(mgPos[idx * 3], mgPos[idx * 3 + 1], mgPos[idx * 3 + 2]); return; }
     };
     container.addEventListener('click', onClick);
   }
@@ -544,39 +646,89 @@ export function createOutside(container, { preview = false, initialPieceId = nul
     ghostGroup.position.set(mgPos[0], mgPos[1], mgPos[2]);
     ghostGroup.quaternion.copy(camera.quaternion);
 
-    // Account closeness — continuous, drives palette/sound/label together.
+    camera.lookAt(0, 0, 0);
+
+    // Account closeness — continuous, drives the palette (no label left
+    // to lean on — see round-2 header note — so this now has to carry
+    // the OER/Apherion distinction on its own, together with the
+    // wireframe's own vertex-collapse).
     const apherionScore = subspaceScore([Cx, Cy, Cz], APHERION_BASIS);
     const oerScore = subspaceScore([Cx, Cy, Cz], OER_BASIS);
     const targetBlend = apherionScore / (apherionScore + oerScore + 0.0001);
     accountBlend += (targetBlend - accountBlend) * Math.min(1, dt * 2);
+
+    if (pulseActive && elapsed - pulseStart > PULSE_DURATION) pulseActive = false;
 
     const tmp = new THREE.Color();
     for (let i = 0; i < N; i++) {
       const dropped = OER_DROPPED.includes(i);
       const legibility = dropped ? THREE.MathUtils.lerp(0.15, 1, accountBlend) : 1;
       tmp.copy(APHERION_WARM).lerp(APHERION_COOL, (i % 7) / 7).lerp(OER_COLOR, 1 - accountBlend);
-      dimCol[i * 3] = tmp.r * legibility; dimCol[i * 3 + 1] = tmp.g * legibility; dimCol[i * 3 + 2] = tmp.b * legibility;
+      const boost = pulseBoostAt(dimPos[i * 3], dimPos[i * 3 + 1], dimPos[i * 3 + 2]);
+      dimCol[i * 3] = Math.min(1, tmp.r * legibility + boost);
+      dimCol[i * 3 + 1] = Math.min(1, tmp.g * legibility + boost);
+      dimCol[i * 3 + 2] = Math.min(1, tmp.b * legibility + boost);
+      dimCamDist[i] = camera.position.distanceTo(_depthVec.set(dimPos[i * 3], dimPos[i * 3 + 1], dimPos[i * 3 + 2]));
     }
     dimGeo.attributes.color.needsUpdate = true;
     POWER_SOURCES.forEach((ps, i) => {
       tmp.copy(APHERION_WARM).lerp(APHERION_COOL, 0.5).lerp(OER_COLOR, 1 - accountBlend);
-      psCol[i * 3] = tmp.r; psCol[i * 3 + 1] = tmp.g; psCol[i * 3 + 2] = tmp.b;
+      const boost = pulseBoostAt(psPos[i * 3], psPos[i * 3 + 1], psPos[i * 3 + 2]);
+      psCol[i * 3] = Math.min(1, tmp.r + boost);
+      psCol[i * 3 + 1] = Math.min(1, tmp.g + boost);
+      psCol[i * 3 + 2] = Math.min(1, tmp.b + boost);
     });
     psGeo.attributes.color.needsUpdate = true;
-    mgCol[0] = 1; mgCol[1] = 0.85; mgCol[2] = 0.55;
-    mgCol[3] = 0.55; mgCol[4] = 0.75; mgCol[5] = 1;
+    {
+      const boostM = pulseBoostAt(mgPos[0], mgPos[1], mgPos[2]);
+      const boostG = pulseBoostAt(mgPos[3], mgPos[4], mgPos[5]);
+      mgCol[0] = Math.min(1, 1 + boostM); mgCol[1] = Math.min(1, 0.85 + boostM); mgCol[2] = Math.min(1, 0.55 + boostM);
+      mgCol[3] = Math.min(1, 0.55 + boostG); mgCol[4] = Math.min(1, 0.75 + boostG); mgCol[5] = Math.min(1, 1 + boostG);
+    }
     mgGeo.attributes.color.needsUpdate = true;
 
-    camera.lookAt(0, 0, 0);
+    // ─── The wireframe itself — all 55 edges, positions and colors both
+    // pulled straight from the point data just computed above, so the
+    // OER-collapse, account blend, and pulse all carry through for free.
+    let minD = Infinity, maxD = -Infinity;
+    for (let i = 0; i < N; i++) { if (dimCamDist[i] < minD) minD = dimCamDist[i]; if (dimCamDist[i] > maxD) maxD = dimCamDist[i]; }
+    EDGE_PAIRS.forEach(([a, b], e) => {
+      const p0 = e * 6, p1 = e * 6 + 3;
+      wirePos[p0] = dimPos[a * 3]; wirePos[p0 + 1] = dimPos[a * 3 + 1]; wirePos[p0 + 2] = dimPos[a * 3 + 2];
+      wirePos[p1] = dimPos[b * 3]; wirePos[p1 + 1] = dimPos[b * 3 + 1]; wirePos[p1 + 2] = dimPos[b * 3 + 2];
+      const fa = depthFadeAt(dimCamDist[a], minD, maxD) * WIRE_BRIGHTNESS;
+      const fb = depthFadeAt(dimCamDist[b], minD, maxD) * WIRE_BRIGHTNESS;
+      wireCol[p0] = dimCol[a * 3] * fa; wireCol[p0 + 1] = dimCol[a * 3 + 1] * fa; wireCol[p0 + 2] = dimCol[a * 3 + 2] * fa;
+      wireCol[p1] = dimCol[b * 3] * fb; wireCol[p1 + 1] = dimCol[b * 3 + 1] * fb; wireCol[p1 + 2] = dimCol[b * 3 + 2] * fb;
+    });
+    wireGeo.attributes.position.needsUpdate = true;
+    wireGeo.attributes.color.needsUpdate = true;
 
-    // Passive account label — fades in only when the drift happens to
-    // coincide closely with a named account, never a control, never paused.
-    if (accountLabelEl) {
-      const closeness = Math.max(apherionScore, oerScore);
-      const show = closeness > 0.82;
-      accountLabelEl.style.opacity = show ? String(THREE.MathUtils.clamp((closeness - 0.82) / 0.15, 0, 1)) : '0';
-      accountLabelEl.textContent = apherionScore > oerScore ? ACCOUNTS.apherion.label : ACCOUNTS.oer.label;
+    // Power Source anchor edges — gradient from the anchor dimension's
+    // own current color to the Power Source's own, nothing floats free.
+    POWER_SOURCES.forEach((ps, i) => {
+      const p0 = i * 6, p1 = i * 6 + 3;
+      const d = ps.dimension;
+      psEdgePos[p0] = dimPos[d * 3]; psEdgePos[p0 + 1] = dimPos[d * 3 + 1]; psEdgePos[p0 + 2] = dimPos[d * 3 + 2];
+      psEdgePos[p1] = psPos[i * 3]; psEdgePos[p1 + 1] = psPos[i * 3 + 1]; psEdgePos[p1 + 2] = psPos[i * 3 + 2];
+      psEdgeCol[p0] = dimCol[d * 3]; psEdgeCol[p0 + 1] = dimCol[d * 3 + 1]; psEdgeCol[p0 + 2] = dimCol[d * 3 + 2];
+      psEdgeCol[p1] = psCol[i * 3]; psEdgeCol[p1 + 1] = psCol[i * 3 + 1]; psEdgeCol[p1 + 2] = psCol[i * 3 + 2];
+    });
+    psEdgeGeo.attributes.position.needsUpdate = true;
+    psEdgeGeo.attributes.color.needsUpdate = true;
+
+    // Michael/Gabriel edge — Lucifer's own color, boosted by the same
+    // pulse math as everything else if either endpoint was touched.
+    {
+      mgEdgePos[0] = mgPos[0]; mgEdgePos[1] = mgPos[1]; mgEdgePos[2] = mgPos[2];
+      mgEdgePos[3] = mgPos[3]; mgEdgePos[4] = mgPos[4]; mgEdgePos[5] = mgPos[5];
+      const boostM = pulseBoostAt(mgPos[0], mgPos[1], mgPos[2]);
+      const boostG = pulseBoostAt(mgPos[3], mgPos[4], mgPos[5]);
+      mgEdgeCol[0] = Math.min(1, LUCIFER_EDGE_COLOR.r + boostM); mgEdgeCol[1] = Math.min(1, LUCIFER_EDGE_COLOR.g + boostM); mgEdgeCol[2] = Math.min(1, LUCIFER_EDGE_COLOR.b + boostM);
+      mgEdgeCol[3] = Math.min(1, LUCIFER_EDGE_COLOR.r + boostG); mgEdgeCol[4] = Math.min(1, LUCIFER_EDGE_COLOR.g + boostG); mgEdgeCol[5] = Math.min(1, LUCIFER_EDGE_COLOR.b + boostG);
     }
+    mgEdgeGeo.attributes.position.needsUpdate = true;
+    mgEdgeGeo.attributes.color.needsUpdate = true;
 
     if (audioCtx && soundEnabled) {
       const nowT = audioCtx.currentTime;
@@ -612,20 +764,22 @@ export function createOutside(container, { preview = false, initialPieceId = nul
       orbitDrag?.dispose();
       touchGuard?.dispose();
       wheelZoom?.dispose();
-      panelCloser?.dispose();
       if (onClick) container.removeEventListener('click', onClick);
       renderer.dispose();
       starGeo.dispose(); starMat.dispose();
       dimGeo.dispose(); dimMat.dispose(); dimHaloMat.dispose();
       psGeo.dispose(); psMat.dispose(); psHaloMat.dispose();
       mgGeo.dispose(); mgMat.dispose(); mgHaloMat.dispose();
+      wireGeo.dispose(); wireMat.dispose();
+      psEdgeGeo.dispose(); psEdgeMat.dispose();
+      mgEdgeGeo.dispose(); mgEdgeMat.dispose();
       ghostGeo.dispose(); ghostGeoBottom.dispose(); ghostMatTop.dispose();
       dotTex.dispose();
       if (oscA) { try { oscA.stop(); } catch { /* already stopped */ } oscA.disconnect(); }
       if (oscB) { try { oscB.stop(); } catch { /* already stopped */ } oscB.disconnect(); }
       filter?.disconnect(); masterGain?.disconnect();
       if (audioCtx) audioCtx.close().catch(() => {});
-      titleEl?.remove(); hintEl?.remove(); soundToggleEl?.remove(); accountLabelEl?.remove(); panel?.remove();
+      titleEl?.remove(); hintEl?.remove(); soundToggleEl?.remove();
       container.innerHTML = '';
     },
   };
