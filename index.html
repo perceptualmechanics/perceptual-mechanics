@@ -225,6 +225,22 @@
        this always semantically was. -->
   <button type="button" id="site-title" aria-label="Return to gallery" onmouseover="pmGlimpse('title')" onfocus="pmGlimpse('title')">perceptual mechanics</button>
 
+  <!-- Fullscreen toggle — persistent, site-wide, wired once here at the same
+       shared-chrome level as #pm-nav/#site-title (main.js) rather than
+       duplicated into each of the ten scenes' own body-level chrome, the
+       way the sound toggle currently is (only 2 of 10 scenes have one, so
+       there's no truly site-wide sound-toggle slot to actually match).
+       Standard Fullscreen API, applied to the whole page (documentElement),
+       not just the open scene's own canvas. Starts `hidden` and main.js
+       only reveals it if the Fullscreen API is actually present —
+       iOS Safari has no element/document fullscreen outside a <video>,
+       a real platform ceiling, not a bug to paper over with a dead button. -->
+  <button type="button" id="fullscreen-toggle" aria-pressed="false" aria-label="Enter fullscreen" title="Fullscreen" hidden>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M8 3H4a1 1 0 0 0-1 1v4M16 3h4a1 1 0 0 1 1 1v4M8 21H4a1 1 0 0 1-1-1v-4M16 21h4a1 1 0 0 0 1-1v-4"/>
+    </svg>
+  </button>
+
   <!-- Landing -->
   <main id="landing">
     <!-- a11y audit, 2026-07-22: the page had zero headings anywhere —

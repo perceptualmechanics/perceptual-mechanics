@@ -892,6 +892,7 @@ export function createOutside(container, { preview = false, initialPieceId = nul
       muteGain.gain.cancelScheduledValues(now);
       muteGain.gain.linearRampToValueAtTime(on ? 1 : 0, now + 0.6);
     }
+    if (on) startAmbientScheduler(); else stopAmbientScheduler();
     if (soundToggleEl) {
       soundToggleEl.setAttribute('aria-pressed', String(on));
       if (soundToggleLabelEl) soundToggleLabelEl.textContent = on ? 'Sound on' : 'Sound off';
@@ -933,6 +934,96 @@ export function createOutside(container, { preview = false, initialPieceId = nul
     const stopAt = now + attack + release + 0.3;
     [osc1, osc2, osc3].forEach(o => { o.start(now); o.stop(stopAt); });
   }
+
+  // ─── Ambient scheduling — decoupled from the render loop ────────────────
+  // The trigger check used to live inside animate() (`Math.random() <
+  // rate*dt`, once per rAF frame) — but requestAnimationFrame throttles
+  // hard in a backgrounded tab (first caught during the curtain-motion
+  // verification pass: this sandbox reported itself backgrounded even
+  // while focused, and the render loop stalled entirely). A per-frame
+  // Bernoulli check is only a good approximation of a Poisson process when
+  // frames arrive often and regularly — exactly what stops being true the
+  // moment it's needed most.
+  //
+  // Standard lookahead-scheduler pattern instead (Chris Wilson, "A Tale of
+  // Two Clocks" — the canonical Web Audio reference for this exact
+  // problem): a periodic tick, independent of rAF, looks a short window
+  // ahead of audioCtx.currentTime (the audio hardware's own real-time
+  // clock — keeps advancing in a hidden tab even when rAF and ordinary
+  // timers don't) and schedules every note due inside that window via its
+  // own oscillator's .start(exactTime). The tick only has to run often
+  // enough to keep topping up the window; it doesn't need to land on the
+  // exact instant a note should start — setInterval's own imprecision
+  // never shows up in the actual audio timing, only in how far ahead
+  // notes get queued. Most engines (Chrome among them) also exempt a tab
+  // that's currently producing audible output from background-timer
+  // throttling, which this benefits from for free most of the time — real,
+  // but not load-bearing: the lookahead window plus the catch-up loop
+  // below (`while`, not `if`) mean a late tick just schedules its whole
+  // backlog at once rather than losing it. A note or two landing in a
+  // near-simultaneous burst after a long gap is a fine outcome, not a bug.
+  //
+  // A real ceiling this doesn't try to defeat: an OS or browser can still
+  // suspend the AudioContext outright under aggressive power-saving states
+  // (mobile Safari especially) — the sound toggle is the visitor's own
+  // escape hatch if that ever matters to them. This fix targets normal tab
+  // backgrounding, not every possible power state.
+  const SCHEDULE_AHEAD = 1.2;    // seconds — how far past "now" to schedule notes each tick
+  const SCHEDULE_INTERVAL = 250; // ms — comfortably under the browser's first (1s) background-throttle tier, so ordinary (non-intensive) backgrounding never even opens a gap
+  let nextAmbientTime = 0;
+  let ambientSchedulerId = null;
+
+  // Same shape as the visual breathePhase below, but driven off
+  // audioCtx.currentTime rather than the scene's own `elapsed` — `elapsed`
+  // is intentionally allowed to free-drift while backgrounded (nothing is
+  // on screen to animate, see animate()'s own dt clamp), so reusing it
+  // here would silently reintroduce the exact rAF dependency this fix
+  // removes. The two clocks start at slightly different moments (elapsed
+  // from scene mount, this from whenever the AudioContext is first built,
+  // on first gesture) — a small, harmless phase offset between the visual
+  // swell and the audio swell, not a bug worth chasing.
+  function ambientBreathePhase(t) { return 0.5 + 0.5 * Math.sin(t * BREATHE_FREQ); }
+
+  function scheduleAmbientNotes() {
+    if (!audioCtx || !soundEnabled) return;
+    const now = audioCtx.currentTime;
+    while (nextAmbientTime < now + SCHEDULE_AHEAD) {
+      const bp = ambientBreathePhase(nextAmbientTime);
+      const rate = THREE.MathUtils.lerp(AMBIENT_RATE_MIN, AMBIENT_RATE_MAX, bp); // notes/sec
+      let idx = Math.floor(Math.random() * AMBIENT_FREQS.length);
+      if (AMBIENT_FREQS[idx] === lastAmbientFreq) idx = (idx + 1 + Math.floor(Math.random() * (AMBIENT_FREQS.length - 1))) % AMBIENT_FREQS.length;
+      lastAmbientFreq = AMBIENT_FREQS[idx];
+      triggerAmbientChime(nextAmbientTime, lastAmbientFreq);
+      // Exponential inter-arrival time — the continuous-time equivalent of
+      // the old per-frame "Math.random() < rate*dt" check, and what
+      // actually makes this independent of how often the tick itself runs.
+      const wait = -Math.log(1 - Math.random()) / Math.max(rate, 0.0001);
+      nextAmbientTime += wait;
+    }
+  }
+
+  function startAmbientScheduler() {
+    if (ambientSchedulerId != null || !audioCtx) return;
+    // Reseed rather than resume from wherever nextAmbientTime was left —
+    // otherwise turning sound back on after it's been off a while would
+    // read a whole backlog of notes as "due" against a stale clock and
+    // fire them all at once on the very first tick.
+    nextAmbientTime = audioCtx.currentTime + 0.3;
+    scheduleAmbientNotes();
+    ambientSchedulerId = setInterval(scheduleAmbientNotes, SCHEDULE_INTERVAL);
+  }
+  function stopAmbientScheduler() {
+    if (ambientSchedulerId != null) { clearInterval(ambientSchedulerId); ambientSchedulerId = null; }
+  }
+  // Some engines (mobile Safari especially) auto-suspend the AudioContext
+  // on backgrounding and expect an explicit resume() once the tab is
+  // visible again — belt-and-suspenders alongside setSoundEnabled's own
+  // resume() call, since that one only fires on an actual toggle click,
+  // never on a visibility change by itself.
+  const onVisibilityChange = () => {
+    if (!document.hidden && audioCtx?.state === 'suspended' && soundEnabled) audioCtx.resume();
+  };
+  document.addEventListener('visibilitychange', onVisibilityChange);
 
   // ─── Five petal chimes — each grounded in what's already established
   // about that Power Source this session, not five arbitrary notes.
@@ -1229,23 +1320,12 @@ export function createOutside(container, { preview = false, initialPieceId = nul
     centerPoints.geo.attributes.position.needsUpdate = true;
     centerPoints.geo.attributes.color.needsUpdate = true;
 
-    // ─── Ambient chime triggering — Poisson-process style: each frame,
-    // fire probability is rate*dt against Math.random(), never a fixed
-    // timer, so the pattern can't fall into an audible repeat. rate itself
-    // is breath-gated (denser near the swell's peak bp≈1, sparser at the
-    // trough bp≈0) — the tie to breathePhase(t) the brief asked to keep,
-    // without ever firing notes together in lockstep the way the old pad
-    // did. No-immediate-repeat note selection avoids the same pitch
-    // landing twice in a row.
-    if (audioCtx && soundEnabled) {
-      const rate = THREE.MathUtils.lerp(AMBIENT_RATE_MIN, AMBIENT_RATE_MAX, bp);
-      if (Math.random() < rate * dt) {
-        let idx = Math.floor(Math.random() * AMBIENT_FREQS.length);
-        if (AMBIENT_FREQS[idx] === lastAmbientFreq) idx = (idx + 1 + Math.floor(Math.random() * (AMBIENT_FREQS.length - 1))) % AMBIENT_FREQS.length;
-        lastAmbientFreq = AMBIENT_FREQS[idx];
-        triggerAmbientChime(audioCtx.currentTime, lastAmbientFreq);
-      }
-    }
+    // Ambient chime triggering moved off this per-frame check entirely —
+    // see startAmbientScheduler()/scheduleAmbientNotes() in the Sound
+    // section above. rAF-driven triggering went silent under tab
+    // backgrounding (this scene's own render loop stalls exactly when
+    // that happens); a setInterval-driven lookahead scheduler keyed to
+    // audioCtx.currentTime doesn't.
 
     // ─── Background curtains — billboard to the camera every frame (so
     // orbiting never shows one edge-on), then displace in local X/Y via
@@ -1312,6 +1392,8 @@ export function createOutside(container, { preview = false, initialPieceId = nul
       // Ambient chime oscillators are one-shot (built fresh per triggered
       // note, same convention as the five petal chimes) — nothing
       // persistent to stop/disconnect here beyond the shared nodes below.
+      stopAmbientScheduler();
+      document.removeEventListener('visibilitychange', onVisibilityChange);
       muteGain?.disconnect();
       reverbConvolver?.disconnect();
       if (audioCtx) audioCtx.close().catch(() => {});

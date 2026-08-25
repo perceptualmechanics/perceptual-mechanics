@@ -166,6 +166,7 @@ const expContainer = document.getElementById('experience-container');
 const landing      = document.getElementById('landing');
 const siteTitle    = document.getElementById('site-title');
 const pmNav        = document.getElementById('pm-nav');
+const fsToggle     = document.getElementById('fullscreen-toggle');
 
 // ─── Nav icons ────────────────────────────────────────────────────────────────
 function setActiveIcon(sceneName) {
@@ -187,11 +188,12 @@ function setActiveIcon(sceneName) {
 // matching what aria-modal already promises. Escape (below) is the way
 // out for keyboard/AT visitors, the same role a modal's own close control
 // would play.
-const chromeEls = [siteTitle, ...document.querySelectorAll('.nav-icon')];
+const chromeEls = [siteTitle, fsToggle, ...document.querySelectorAll('.nav-icon')];
 function setChromeInert(hidden) {
   chromeEls.forEach(el => el.setAttribute('tabindex', hidden ? '-1' : '0'));
   pmNav.setAttribute('aria-hidden', String(hidden));
   siteTitle.setAttribute('aria-hidden', String(hidden));
+  fsToggle?.setAttribute('aria-hidden', String(hidden));
 }
 
 // Every button/link inside the open scene, in DOM order — a read-more
@@ -494,3 +496,58 @@ window.pmGlimpse = function (key) {
   clearTimeout(pmGlimpseTimer);
   pmGlimpseTimer = setTimeout(() => { document.title = PM_ORIGINAL_TITLE; }, 1100);
 };
+
+// ─── Fullscreen toggle ───────────────────────────────────────────────────────
+// Standard Fullscreen API, wired once here rather than duplicated into each
+// scene — see index.html's own comment at the button. Fullscreens
+// document.documentElement (the whole page: nav, landing, and any open
+// scene alike), matching the brief's "site-wide," not "per-scene."
+//
+// Feature-detected at load, not just at click time: iOS Safari has no
+// element/document Fullscreen API outside a <video>, so the button stays
+// `hidden` there rather than showing a control that would silently do
+// nothing on tap — the same "withhold what the platform doesn't actually
+// support" principle as every other honest-capability-signaling choice on
+// this site (e.g. NEWEST_ORIGINS's glow layer only marking what's actually
+// new, not decorating every origin the same way).
+const fsEnabled = document.fullscreenEnabled ?? document.webkitFullscreenEnabled ?? false;
+if (fsToggle && fsEnabled) {
+  fsToggle.hidden = false;
+
+  const FS_ICON_ENTER = '<path d="M8 3H4a1 1 0 0 0-1 1v4M16 3h4a1 1 0 0 1 1 1v4M8 21H4a1 1 0 0 1-1-1v-4M16 21h4a1 1 0 0 0 1-1v-4"/>';
+  const FS_ICON_EXIT = '<path d="M4 9V5a1 1 0 0 1 1-1h4M20 9V5a1 1 0 0 0-1-1h-4M4 15v4a1 1 0 0 0 1 1h4M20 15v4a1 1 0 0 1-1 1h-4"/>';
+
+  const isFullscreen = () => Boolean(document.fullscreenElement ?? document.webkitFullscreenElement);
+
+  function syncFsToggle() {
+    const active = isFullscreen();
+    fsToggle.setAttribute('aria-pressed', String(active));
+    fsToggle.setAttribute('aria-label', active ? 'Exit fullscreen' : 'Enter fullscreen');
+    fsToggle.title = active ? 'Exit fullscreen' : 'Enter fullscreen';
+    const svg = fsToggle.querySelector('svg');
+    if (svg) svg.innerHTML = active ? FS_ICON_EXIT : FS_ICON_ENTER;
+  }
+
+  fsToggle.addEventListener('click', () => {
+    if (isFullscreen()) {
+      const exit = document.exitFullscreen ?? document.webkitExitFullscreen;
+      exit?.call(document);
+    } else {
+      const root = document.documentElement;
+      const request = root.requestFullscreen ?? root.webkitRequestFullscreen;
+      // Denied, blocked, or simply unsupported as a Promise (older
+      // webkit-prefixed implementations don't return one) — nothing to
+      // recover either way, the button's own state just stays "not
+      // fullscreen," which is already accurate.
+      request?.call(root)?.catch?.(() => {});
+    }
+  });
+
+  // 'fullscreenchange' fires on document per spec — covers Escape, the
+  // browser's own chrome control, and this button alike, so syncFsToggle
+  // only needs to live in one place regardless of how fullscreen was
+  // exited. webkitfullscreenchange alongside it for older Safari.
+  document.addEventListener('fullscreenchange', syncFsToggle);
+  document.addEventListener('webkitfullscreenchange', syncFsToggle);
+  syncFsToggle();
+}

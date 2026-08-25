@@ -318,6 +318,60 @@ adding a new scene.
   check here confirms responsive CSS at a narrow-but-not-true-phone width
   and confirms touch-adjacent code paths exist, not a literal on-device
   touch test.
+- **A genuinely site-wide, persistent control belongs at the shared
+  index.html/main.js level, not duplicated into each scene's own
+  body-level chrome.** The distinction that matters: `#pm-nav` and
+  `#site-title` are the actual shared layer — one implementation, present
+  identically on the landing page and every scene, wired once in main.js.
+  Each scene's own title/hint/sound-toggle (e.g. `outside.html`/
+  `outside.js`) is a *different* thing that looks similar — scene-owned
+  markup, appended/removed on that scene's own mount/dispose, tinted to
+  that scene's own palette, and (for the sound toggle specifically) only
+  present on the 2 of 10 scenes that actually have sound. A brief asking
+  to "match the sound toggle" for something that needs to appear
+  everywhere is really asking to match the site's pill-button/icon-button
+  *grammar*, not to literally clone an element that doesn't exist on 8 of
+  the 10 scenes it needs to appear on. Case in point, 2026-08-25: the
+  fullscreen toggle (see 3.9.5 below) is genuinely site-wide, so it's one
+  `<button id="fullscreen-toggle">` in `index.html`, wired once in
+  `main.js`, sharing `#site-title`'s neutral white/black scrim treatment
+  and z-index tier (400) rather than any one scene's accent color — not
+  ten copies. Placed at `top:4.5rem; left:1.2rem` specifically because
+  every scene's own `-hint` rule already owns `top:4.5rem; right:1.2rem`
+  (confirmed by checking every scene's CSS, not assumed) — the opposite
+  corner, same "clears `#pm-nav`" distance, so it can never collide with
+  per-scene chrome on any of the ten.
+  One real gotcha hit while building it, worth remembering: a `hidden`
+  attribute (used to withhold the button entirely on platforms without
+  the Fullscreen API, e.g. iOS Safari) only actually hides an element if
+  nothing with higher CSS specificity than the UA stylesheet's plain
+  `[hidden] { display: none }` sets its own `display`. An id selector
+  (`#fullscreen-toggle { display: flex; ... }`) beats that attribute
+  selector, so without an explicit `#fullscreen-toggle[hidden] { display:
+  none; }` override, `hidden` would silently stop hiding anything the
+  moment the element also has an id-level `display` rule — checked
+  against the actual cascade, not assumed to just work.
+- **Continuous or generative audio triggering must be scheduled off
+  `AudioContext.currentTime`, never decided inside the render loop.** A
+  real, already-encountered failure mode, not a hypothetical: Outside's
+  ambient chime bed used to decide "should a note fire" once per
+  `requestAnimationFrame` frame (`Math.random() < rate*dt`) — but rAF
+  throttles hard in a backgrounded tab (first caught during the
+  curtain-motion verification pass, see the Firefox-preview-tile entry's
+  neighbor in memory: this sandbox reports itself backgrounded even while
+  focused, and the render loop stalls). Anything gating audio on that loop
+  goes silent exactly when backgrounding happens, the opposite of
+  "persistent background audio." Fixed in 3.9.5 with the standard
+  lookahead-scheduler pattern (Chris Wilson, "A Tale of Two Clocks"): a
+  `setInterval` tick, independent of rAF, looks a short window ahead of
+  `audioCtx.currentTime` (the audio hardware's own real-time clock, which
+  keeps advancing in a hidden tab even when rAF and ordinary timers slow
+  down) and schedules every note due inside that window via its own
+  oscillator's `.start(exactTime)` — see `scheduleAmbientNotes()` /
+  `startAmbientScheduler()` in `outside.js`. Any future scene with its own
+  generative/ambient (not purely one-shot-on-click) audio should use the
+  same pattern from the start rather than wiring a fresh instance of this
+  bug.
 
 ## Annotated math — where to start tuning
 
@@ -481,6 +535,70 @@ keywords, present-in-both-accounts framing — closed it, reopened a
 different one, toggled sound on/off, no console errors from the scene's
 own code. Debug hooks fully stripped before this build. Full `npx vite
 build` clean.
+
+## 3.9.5 (2026-08-25)
+
+**Fullscreen (site-wide) + continual background audio.** Two independent
+features from the same brief; haptics dropped from that brief entirely
+per Scott's call, out of scope here.
+
+**Fullscreen.** Standard Fullscreen API, wired once at the shared
+`index.html`/`main.js` chrome level (`#fullscreen-toggle`) rather than
+duplicated into each of the ten scenes — see the new "Per-scene folder
+structure" entry above for why matching the sound toggle's own placement
+literally wasn't actually the right target (only 2 of 10 scenes have
+one). Fullscreens `document.documentElement` — the whole page, nav and
+all, not just the open scene's own canvas. Feature-detected at load
+(`document.fullscreenEnabled`); the button stays `hidden` entirely on
+platforms with no Fullscreen API for arbitrary elements (iOS Safari,
+notably) rather than showing a dead control. `fullscreenchange` (not a
+click-only callback) keeps the button's icon/`aria-pressed`/label in sync
+regardless of how fullscreen was exited — Escape, the browser's own
+fullscreen-exit chrome, or the button itself all resolve to the same
+listener. Added to `main.js`'s existing modal-focus-containment list
+(`chromeEls`) alongside `#site-title`, so it's keyboard-inert while a
+scene's own overlay is open, same as the rest of the persistent chrome.
+
+**Continual background audio — Outside's ambient bed decoupled from
+rAF.** Real, previously-flagged problem (see the new NOTES.md standing
+entry): the ambient chime layer's trigger check lived inside `animate()`,
+gated on `requestAnimationFrame`, which throttles hard in a backgrounded
+tab — audio would go silent exactly when the brief wanted it to keep
+breathing. Replaced with a lookahead scheduler (`scheduleAmbientNotes()`,
+`startAmbientScheduler()`/`stopAmbientScheduler()` in `outside.js`): a
+`setInterval` tick, independent of rAF, schedules any note due within a
+1.2s window ahead of `audioCtx.currentTime` via that note's own
+`.start(exactTime)`, using an exponential inter-arrival draw (the
+continuous-time equivalent of the old per-frame Bernoulli check) so the
+result is frame-rate-independent by construction rather than merely
+frame-rate-tolerant. Rate still tracks breathePhase — same swell-driven
+character as before — just computed off `audioCtx.currentTime` instead of
+the visual `elapsed` clock, since `elapsed` is intentionally allowed to
+free-drift while backgrounded (nothing on screen to animate) and reusing
+it would have silently reintroduced the same rAF dependency. Added a
+`visibilitychange` resume() as a second line of defense for engines that
+auto-suspend the AudioContext on backgrounding (mobile Safari especially).
+Explicit, accepted ceiling (per the brief): an OS/browser can still
+suspend the AudioContext outright under aggressive power-saving states —
+the sound toggle is the visitor's own way out if that ever matters to
+them; this targets normal backgrounding, not every possible power state.
+
+**Verification.** No live browser in this sandbox (standing limitation,
+see memory) — verified instead with two headless logic-smoke-test
+harnesses reproducing the actual scheduling math and the actual
+fullscreen-toggle state machine outside the DOM: (1) the scheduler
+produces a plausible note rate under normal ticking, catches up correctly
+and boundedly (not runaway/hanging) after a simulated 65s throttle gap —
+Chrome's own "intensive" background-timer throttling tier — and stays
+stable across five repeated gaps; (2) the toggle correctly reveals only
+when the API is present, flips `aria-pressed`/label/icon on click, and
+resyncs correctly when fullscreen is exited via the mocked
+`fullscreenchange` path (standing in for Escape/the browser's own
+control) rather than only the button. Full `npx vite build` clean.
+Genuinely unverified here and worth a live spot-check: cross-browser
+fullscreen behavior (esp. Safari's webkit-prefixed path) and a real
+several-minutes-backgrounded listen, both of which need a real browser
+this sandbox doesn't have.
 
 ## 3.9.4 (2026-08-25)
 

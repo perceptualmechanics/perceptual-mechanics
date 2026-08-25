@@ -11,7 +11,7 @@
      9000  #colophon-backdrop / #colophon-panel (a true modal dialog, not
            scoped to any one scene — sits above the nav on purpose)
       500  #pm-nav
-      400  #site-title
+      400  #site-title / #fullscreen-toggle
       310  body-level scene overlays (title/hint/caption elements a scene
            appends to document.body — MUST be ≥310, see above)
       300  #experience-overlay
@@ -195,6 +195,59 @@ html, body {
 }
 @media (prefers-reduced-motion: reduce) {
   #site-title::before, #site-title::after { display: none; }
+}
+
+/* ─── Fullscreen toggle ─────────────────────────────────────────────────────── */
+/* Persistent, site-wide (see index.html's own comment at the button) —
+   placed at top: 4.5rem (clears #pm-nav, same landmark every scene's own
+   hint text clears) but on the LEFT rather than every scene's hint text's
+   own top-right slot (each scene's own -hint rule: top:4.5rem; right:1.2rem),
+   so this never overlaps it on any of the ten scenes or the landing page.
+   Neutral white/black palette matching #site-title's own scrim treatment
+   (not tinted to any one scene's accent) since this shows everywhere.
+   z-index 400, same tier as #site-title — both persistent, both need to
+   clear #experience-overlay's 300 (see the z-index scale comment at the
+   top of this file). */
+#fullscreen-toggle {
+  position: fixed;
+  top: 4.5rem; left: 1.2rem;
+  z-index: 400;
+  display: flex; align-items: center; justify-content: center;
+  width: 44px; height: 44px; /* touch target, same guideline as .nav-icon */
+  border: 1px solid rgba(255,255,255,0.25);
+  border-radius: 50%;
+  background: rgba(0,0,0,0.4);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: rgba(255,255,255,0.6);
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s, color 0.2s;
+}
+#fullscreen-toggle:hover,
+#fullscreen-toggle:focus-visible {
+  background: rgba(255,255,255,0.12);
+  border-color: rgba(255,255,255,0.5);
+  color: rgba(255,255,255,0.95);
+}
+#fullscreen-toggle:focus-visible {
+  outline: 2px solid rgba(255,255,255,0.5);
+  outline-offset: 3px;
+}
+#fullscreen-toggle svg { width: 18px; height: 18px; display: block; }
+/* The button's own `display: flex` above is an ID selector — higher
+   specificity than the UA stylesheet's plain `[hidden] { display: none }`
+   rule (an attribute selector, not !important per the HTML spec), so
+   without this override an ID rule setting `display` would win and the
+   `hidden` attribute main.js sets for unsupported browsers would silently
+   stop hiding anything. Caught by checking this against how `hidden`
+   actually cascades, not assumed. */
+#fullscreen-toggle[hidden] { display: none; }
+@media (prefers-reduced-motion: reduce) {
+  #fullscreen-toggle { transition: none; }
+}
+@media (max-width: 600px) {
+  #fullscreen-toggle { top: 4rem; left: 0.8rem; width: 38px; height: 38px; }
+  #fullscreen-toggle svg { width: 16px; height: 16px; }
 }
 
 /* ─── Landing ───────────────────────────────────────────────────────────────── */
