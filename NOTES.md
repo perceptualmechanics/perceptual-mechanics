@@ -174,6 +174,29 @@ adding a new scene.
   copies that drift. `src/text/` as a shared top-level folder is gone as of
   2.1.0 — every module that used to live there moved into the scene folder
   that actually uses it.
+- **Any new WebGL scene must wire its preview tile into
+  `mountClippedPreviewCanvas` (sceneKit.js).** The landing page's
+  `.preview-container` tiles are meant to be circular (`border-radius:50%`
+  + `clip-path:circle(50%)`), but a sufficiently heavy WebGL canvas gets
+  promoted to its own GPU compositing layer in Firefox and ignores that
+  clip entirely — the tile renders as a plain square. First hit and fixed
+  for leaf/orrery around 1.0.36-1.0.41 (full diagnostic history in this
+  file); the fix itself lives in `sceneKit.js` and is opt-in per scene, not
+  automatic, so it does nothing for a scene that never calls it. Harmonics
+  and Outside were both built after the fix already existed and both
+  shipped with the bug anyway (fixed in 3.9.2) because neither one was
+  wired in — they just used the older, naive `container.appendChild
+  (renderer.domElement)` pattern that predates the fix. Any scene with a
+  `THREE.WebGLRenderer` needs, in its `preview` branch: skip the direct
+  `appendChild`, call `mountClippedPreviewCanvas(container, renderer)`
+  instead, add `clippedPreview?.blit()` right after `renderer.render(...)`
+  in the animate loop, and `clippedPreview?.dispose()` in `dispose()` — see
+  orrery.js, beamline.js, harmonics.js, or outside.js for the exact
+  four-point pattern. Lighter scenes (sphere, butterfly, scroll) haven't
+  hit this and clip fine via plain CSS, but there's no reliable weight
+  threshold to predict which will — the safe default for any new WebGL
+  scene is to wire the fix in from the start rather than wait for a Firefox
+  screenshot to catch it.
 
 ## Annotated math — where to start tuning
 
