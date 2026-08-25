@@ -16,7 +16,13 @@ jobs:
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          # Node 20's security support window ended 2026-04-30 (checked
+          # against endoflife.date, 2026-08-25) -- was still pinned here
+          # for months after. Node 24 is current Active LTS (see
+          # package.json's own `engines` field, and NOTES.md's periodic
+          # best-practices review). vite 6's own engines range
+          # (^18||^20||>=22) already covers this.
+          node-version: 24
           cache: 'npm'
 
       - name: Install dependencies

@@ -1,7 +1,10 @@
 {
   "name": "perceptual-mechanics",
-  "version": "3.9.3",
+  "version": "3.9.4",
   "type": "module",
+  "engines": {
+    "node": ">=22.0.0"
+  },
   "workspaces": [
     "packages/*"
   ],

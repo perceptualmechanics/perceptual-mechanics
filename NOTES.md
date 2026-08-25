@@ -21,13 +21,14 @@ guidance rather than trusting stale training-era defaults — recommended
 practice in this space (security headers, LTS windows, framework
 versions) shifts on a timescale of months, not years.
 
-**First pass, 2026-08-25 — findings, not yet all acted on:**
-- CI (`​.github/workflows/deploy.yml`) pins `node-version: 20`; Node 20's
-  security support window ended 2026-04-30 (confirmed via endoflife.date)
-  — the live deploy pipeline has been running on an unsupported Node
-  release for months. Node 24 is current Active LTS.
-- No `engines` field in `package.json` documenting the Node version this
-  project actually expects, in dev or CI.
+**First pass, 2026-08-25 — findings, most not yet acted on:**
+- ~~CI pins `node-version: 20`~~ **Fixed (3.9.4).** Node 20's security
+  support window ended 2026-04-30 (confirmed via endoflife.date) — the
+  live deploy pipeline had been running on an unsupported Node release
+  for months. Bumped `deploy.yml` to Node 24 (current Active LTS; vite
+  6's own `engines` range, `^18||^20||>=22`, already covers it) and added
+  a real `engines.node: ">=22.0.0"` field to `package.json` documenting
+  the actual floor, rather than leaving it undocumented.
 - `.htaccess` handles canonical-host redirects only — no HSTS,
   `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`, or
   `frame-ancestors`/`X-Frame-Options`. None of these are in place today.
@@ -480,6 +481,41 @@ keywords, present-in-both-accounts framing — closed it, reopened a
 different one, toggled sound on/off, no console errors from the scene's
 own code. Debug hooks fully stripped before this build. Full `npx vite
 build` clean.
+
+## 3.9.4 (2026-08-25)
+
+**Standing process: periodic current-best-practices review, first pass.**
+Scott asked to find gaps against outside best practices specifically
+(not just this project's own internal conventions) and make that a
+recurring habit rather than a one-off. Added "Standing process — periodic
+best-practices review" at the top of NOTES.md; searched current guidance
+(not trained-in defaults, which drift on a months-not-years timescale for
+this kind of thing) on Node.js LTS status, HTTP security headers, and
+Core Web Vitals thresholds.
+
+Findings, logged in full in the new standing-process section: stale Node
+LTS pinned in CI (fixed this round, see below), no `engines` field
+(fixed), no HTTP security headers in `.htaccess` (HSTS,
+`X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`,
+`frame-ancestors`), no CSP (complicated here by site-wide inline
+`onmouseover`/`onclick` handlers — the `pmGlimpse` easter egg and every
+scene-open trigger — which a naive CSP breaks), Google Fonts loaded from
+Google's CDN rather than self-hosted, `vite` two majors behind current
+(8.2.2 vs. the 6.4.3 here), and the chronic `chunks larger than 500kB`
+build warning never explicitly resolved or accepted as-is. Asked Scott
+which to action now rather than deciding unilaterally, since every one of
+them either touches the live deploy pipeline, touches server config
+that's untestable from this sandbox, risks breaking working
+functionality if done naively, or is a real effort-vs-payoff call.
+
+**Actioned this round:** the Node/CI item only, per Scott's pick.
+`.github/workflows/deploy.yml`'s `node-version` moved 20 → 24 (current
+Active LTS); `package.json` gained `"engines": { "node": ">=22.0.0" }`,
+matching vite 6's own floor rather than an arbitrary number. Verified the
+build itself is Node-version-agnostic (no Node-20-specific behavior
+anywhere in the build path) and confirmed clean locally on this sandbox's
+own Node 22.23.2. The rest of the findings stay logged, open, for a later
+pass.
 
 ## 3.9.3 (2026-08-25)
 
