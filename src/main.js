@@ -482,7 +482,7 @@ const PM_GLIMPSE_WORDS = {
   library: 'medium',
   beamline: 'emergence',
   harmonics: 'vibe',
-  outside: 'lotus',
+  outside: 'bloom',
   title: 'secrets',
 };
 let pmGlimpseTimer = null;
