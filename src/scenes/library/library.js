@@ -1160,20 +1160,24 @@ export function createLibrary(container, { preview = false, initialPieceId = nul
   root.add(items.group);
 
   // ─── Caption + hint + panel (full only) ─────────────────────────────────
-  let caption = null, hint = null, panel = null, panelTitle = null, panelCreator = null, panelBodyEl = null, panelCloser = null, jumpList = null;
+  let title = null, hint = null, panel = null, panelTitle = null, panelCreator = null, panelBodyEl = null, panelCloser = null, jumpList = null;
   // Programmatically focusable so closing the panel (✕, outside click, or
   // Escape) has somewhere real to send focus back to, rather than leaving
   // it on a now-hidden close button or nowhere at all.
   if (!preview) container.tabIndex = -1;
-  // Caption/hint/panel/library-link markup+styles live in library.html and
+  // Title/hint/panel/library-link markup+styles live in library.html and
   // library.css — no runtime element construction or style injection
-  // needed now that both are real files, pulled in via parseHTML.
+  // needed now that both are real files, pulled in via parseHTML. Site-
+  // wide title consistency pass (2026-08-25): "the library — once
+  // removed" used to be the only bottom-center line here; it's now the
+  // subtitle beneath a real "LIBRARY" title (see NOTES.md's title-block
+  // entry).
   if (!preview) {
     const shell = parseHTML(libraryHtml);
-    caption = shell.querySelector('.library-caption');
+    title = shell.querySelector('.library-title');
     hint = shell.querySelector('.library-hint');
     panel = shell.querySelector('.library-panel');
-    document.body.appendChild(caption);
+    document.body.appendChild(title);
     document.body.appendChild(hint);
 
     container.style.position = 'relative';
@@ -1575,7 +1579,7 @@ export function createLibrary(container, { preview = false, initialPieceId = nul
       frame.mat.dispose();
       items.disposables.forEach(d => d.dispose());
       babel.disposables.forEach(d => d.dispose());
-      if (caption) caption.remove();
+      if (title) title.remove();
       if (hint) hint.remove();
       if (panel) panel.remove();
       renderer.domElement.remove();

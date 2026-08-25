@@ -39,6 +39,53 @@
      still needs the literal value (not just a stylesheet reference) — if you
      change one, change the other. */
   --hint-text-color: rgba(255, 255, 255, 0.6);
+
+  /* ─── Title-block safe zone (2026-08-25 site-wide consistency pass) ───────
+     The single source of truth for how close a scene's own bottom-center
+     title/subtitle text is allowed to sit to #site-title's fixed footer
+     pill (main.css, bottom:1.2rem) — every scene that positions a title
+     there (see "Per-scene folder structure" in NOTES.md) anchors to this
+     value instead of a separately-eyeballed bottom offset, so a new
+     subtitle line added to any scene is safe by construction rather than
+     needing its own collision check. Scenes gaining a subtitle stack it
+     ABOVE this anchor (title higher, subtitle at the anchor), so the
+     block's bottom edge never moves closer to the footer than this value,
+     no matter how many lines it grows to.
+
+     Was 3rem initially — measured live (getBoundingClientRect on Beamline's
+     3-line block, whose subtitle sits fully within #site-title's pill
+     width) and found only ~3px of real clearance between the title block's
+     bottom edge and the pill's top edge at that value: 3rem exactly
+     matches the gap down to #site-title's own bottom(1.2rem) + height
+     (~1.64rem) ≈ 2.84rem, leaving a razor-thin margin that every title's
+     own text-shadow blur (12–20px) blows straight through, regardless of
+     scene — it just wasn't visually obvious until a subtitle line's text
+     landed entirely under the pill's horizontal footprint. Raised to 4.5rem
+     for ~27px of real clearance, comfortably outside any of this site's
+     text-shadow blur radii. */
+  --title-block-bottom: 4.5rem;
+  --title-block-bottom-mobile: 6.5rem;
+
+  /* A different, larger safe zone for an actual SCROLLABLE content region
+     (as opposed to fixed decorative title text above) — Scroll is the one
+     scene whose own body text scrolls, full-width and horizontally
+     centered, directly under #site-title's own horizontally-centered
+     pill. Padding at the end of the scrollable content doesn't help here
+     (it only protects the last few lines); the scrollable viewport's own
+     box has to stop short of this band instead, so real paragraph text
+     can never render underneath the footer at ANY scroll position, not
+     just the top/bottom. See scroll.css's own .scroll-viewport rule.
+
+     Raised from 4.5rem to 7.5rem once Scroll gained its own bottom-center
+     .scroll-title (site-wide title pass, 2026-08-25): that title is ALSO
+     position:fixed chrome sitting in this same bottom band, at
+     --title-block-bottom, above the footer pill — so on Scroll specifically
+     the boundary scrolling text must clear is the title's top edge, not
+     the footer's. Caught live: 4.5rem only cleared the footer, and body
+     text was scrolling straight through the title text above it. 7.5rem
+     clears --title-block-bottom (4.5rem) plus the title's own rendered
+     line height and a small buffer. */
+  --footer-safe-zone: 7.5rem;
 }
 
 /* ─── Reset & base ──────────────────────────────────────────────────────────── */

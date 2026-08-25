@@ -2389,14 +2389,13 @@ export function createOrrery(container, { preview = false } = {}) {
   root.add(warehouse.group);
 
   // ─── Panel + window-chrome styling ───────────────────────────────────────
-  // Panel/hint/caption/title/crosshair/walkpad markup+styles live in
+  // Panel/hint/title/crosshair/walkpad markup+styles live in
   // orrery.html and orrery.css — no runtime element construction or style
   // injection needed now that both are real files, pulled in via parseHTML.
 
   // ─── Panel (full only) ────────────────────────────────────────────────────
   let panel = null, panelTitle = null, panelEra = null, panelNote = null, panelCloser = null, jumpList = null;
-  let hint = null, caption = null, vignette = null, grain = null, title = null;
-  let checkTitleHintCollision = null;
+  let hint = null, vignette = null, grain = null, title = null;
   let shell = null, crosshairEl = null, lockPromptEl = null, walkpadEl = null;
   if (!preview) {
     shell = parseHTML(orreryHtml);
@@ -2405,7 +2404,6 @@ export function createOrrery(container, { preview = false } = {}) {
     title = shell.querySelector('.orrery-title');
     panel = shell.querySelector('.orrery-panel');
     hint = shell.querySelector('.orrery-hint');
-    caption = shell.querySelector('.orrery-caption');
     crosshairEl = shell.querySelector('.orrery-crosshair');
     lockPromptEl = shell.querySelector('.orrery-lock-prompt');
     walkpadEl = shell.querySelector('.orrery-walkpad');
@@ -2483,32 +2481,19 @@ export function createOrrery(container, { preview = false } = {}) {
     });
 
     document.body.appendChild(hint);
-    document.body.appendChild(caption);
 
-    // See the .orrery-hint.stacked comment above: measure the actual
-    // rendered rects instead of guessing a pixel breakpoint. rAF-deferred
-    // so it reads layout after the browser has actually placed both
-    // elements (their width depends on font load / letter-spacing, not
-    // just the numbers in this file), and re-checked on every resize.
-    checkTitleHintCollision = () => {
-      if (!title || !hint) return;
-      const t = title.getBoundingClientRect();
-      const h = hint.getBoundingClientRect();
-      const overlaps = t.right > h.left && t.left < h.right && t.bottom > h.top && t.top < h.bottom;
-      hint.classList.toggle('stacked', overlaps);
-      // Measured, not guessed (see the block comment above this function):
-      // .stacked's own top:7.6rem in CSS assumes the title block is
-      // exactly two short lines, but at some widths the subtitle wraps to
-      // two lines itself, pushing its real bottom edge past that fixed
-      // offset and crowding the hint right up against it. Once stacked,
-      // position the hint a fixed gap below the title's own *measured*
-      // bottom instead, so it tracks however many lines the title block
-      // actually rendered as, at any width or font metrics. Cleared on
-      // the non-stacked path so the default CSS top:4.5rem (title and
-      // hint side by side, not stacked) applies again.
-      hint.style.top = overlaps ? `${t.bottom + 16}px` : '';
-    };
-    requestAnimationFrame(checkTitleHintCollision);
+    // The measured title/hint collision-avoidance that used to live here
+    // (checkTitleHintCollision, resize-rechecked) existed only because the
+    // title used to sit at the top of frame, close enough to the
+    // top-right hint to actually overlap at some widths — confirmed live
+    // at 1512px, not a mobile-only edge case. Site-wide title consistency
+    // pass (2026-08-25) moved the title to bottom-center, matching every
+    // other scene (see NOTES.md's title-block entry); title and hint no
+    // longer share any vertical band at any width, so the whole
+    // measure-and-reposition mechanism is dead code now, removed rather
+    // than left behind unused. Also dropped: the two-line subtitle (title-
+    // sub) and .orrery-caption entirely — Scott's explicit call, title
+    // only from here on.
   }
 
   // ─── Interaction ─────────────────────────────────────────────────────────
@@ -2524,7 +2509,7 @@ export function createOrrery(container, { preview = false } = {}) {
     orrery.hitTarget.scale.setScalar(on ? 1.4 : 1.0);
   }
 
-  // The ambient title/hint/caption are fixed to document.body at
+  // The ambient title/hint are fixed to document.body at
   // z-index:310, specifically so they clear #experience-overlay's own
   // z-index:300 (see the CSS comments above). .orrery-panel lives inside
   // that overlay and can never out-rank a body-level sibling no matter its
@@ -2533,7 +2518,6 @@ export function createOrrery(container, { preview = false } = {}) {
   function hideAmbient(hidden) {
     title.classList.toggle('panel-open', hidden);
     hint.classList.toggle('panel-open', hidden);
-    caption.classList.toggle('panel-open', hidden);
   }
 
   function openPanel() {
@@ -2961,7 +2945,6 @@ export function createOrrery(container, { preview = false } = {}) {
     camera.aspect = w / h;
     camera.updateProjectionMatrix();
     renderer.setSize(w, h);
-    checkTitleHintCollision?.();
   });
 
   return {
@@ -2992,7 +2975,6 @@ export function createOrrery(container, { preview = false } = {}) {
       });
       if (panel) panel.remove();
       if (hint) hint.remove();
-      if (caption) caption.remove();
       if (vignette) vignette.remove();
       if (grain) grain.remove();
       if (title) title.remove();

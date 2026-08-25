@@ -372,6 +372,64 @@ adding a new scene.
   generative/ambient (not purely one-shot-on-click) audio should use the
   same pattern from the start rather than wiring a fresh instance of this
   bug.
+- **A scene's bottom-center title/subtitle anchors to `--title-block-bottom`
+  (main.css `:root`), never a separately-eyeballed offset.** Established in
+  the 2026-08-25 site-wide title consistency pass: every scene converged on
+  uppercase/tracked/bottom-center for its title, with an optional subtitle
+  in a visually secondary treatment directly beneath (never replacing the
+  title). Markup pattern: a wrapper (`position:fixed; bottom:
+  var(--title-block-bottom); left:50%; transform:translateX(-50%)`,
+  `display:flex; flex-direction:column`) containing the title span first,
+  subtitle span(s) after — this grows the block *upward* as lines are
+  added, so its bottom edge (the point closest to `#site-title`'s footer
+  pill) never moves regardless of line count. Mobile gets its own
+  `--title-block-bottom-mobile` on the same wrapper.
+  Real bug, caught live rather than assumed safe: the shared var shipped
+  this pass at `3rem`, sized against a single-line title and never actually
+  measured against `#site-title`'s real footprint. `getBoundingClientRect()`
+  on Beamline's block (the one scene with three lines — title + two-line
+  epigraph-as-subtitle) showed only ~3px of true clearance between the
+  block's bottom edge and the pill's top edge — invisible on a short,
+  narrow subtitle (Orbiter, Library) but a real visible overlap once a
+  subtitle's text happened to sit entirely within the pill's horizontal
+  footprint, made worse by every title's own text-shadow blur (12–20px)
+  bleeding straight through a 3px gap. This wasn't Beamline-specific — the
+  block's bottom edge sits at the same distance from the pill on every
+  scene regardless of line count, so all nine scenes referencing the var
+  had the same razor-thin margin; it just hadn't been *visibly* triggered
+  yet. Fixed by raising `--title-block-bottom` to `4.5rem` (~27px real
+  clearance) rather than patching Beamline in isolation. Lesson: a shared
+  CSS-var safe-zone still needs a live `getBoundingClientRect()` check
+  against the thing it's meant to clear, not just an eyeballed value that
+  happens to look fine on the first scene it's tried against.
+  Scroll is the one exception to the "just use the shared var" rule,
+  because it's the one scene whose own body content actually scrolls
+  underneath this same bottom band — see `--footer-safe-zone` below.
+- **`--footer-safe-zone` (main.css `:root`) is for an actual SCROLLABLE
+  content region sharing the footer's bottom band, not fixed decorative
+  title text — Scroll is currently the only scene that needs it.** Padding
+  at the end of scrollable content only protects the last few lines; the
+  scrollable viewport's own box has to stop short of the reserved band
+  instead (`height: calc(100% - var(--footer-safe-zone))`), so real
+  paragraph text can never render underneath fixed chrome at *any* scroll
+  position, not just the start/end — see `scroll.css`'s `.scroll-viewport`
+  rule and its inline comment for the full diagnosis. Two real collisions
+  found and fixed here in the same pass, not one: first, `#site-title`'s
+  footer pill was rendering directly over Scroll's own body text
+  mid-paragraph (fixed by introducing this var at `4.5rem`); second, once
+  Scroll gained its own bottom-center `.scroll-title` in this same pass,
+  *that* title — also `position:fixed` chrome in the same band, sitting
+  above the footer — started colliding with scrolling body text the exact
+  same way, since `4.5rem` only cleared the footer, not the title now
+  floating above it. Caught live by scrolling through multiple depths, not
+  just checking the top of the scene. Raised to `7.5rem` to clear both.
+  General lesson for any future scene with genuinely full-width scrolling
+  body content (unlike every other scene's narrow side panel, which
+  structurally never reaches the horizontally-centered footer): the
+  reserved band has to clear *every* piece of fixed chrome stacked in it,
+  not just the outermost one — check what's actually anchored in that
+  space before picking a value, and verify by scrolling through the whole
+  range live.
 
 ## Annotated math — where to start tuning
 
@@ -535,6 +593,37 @@ keywords, present-in-both-accounts framing — closed it, reopened a
 different one, toggled sound on/off, no console errors from the scene's
 own code. Debug hooks fully stripped before this build. Full `npx vite
 build` clean.
+
+## 3.9.6 (2026-08-25)
+
+**Site-wide title/subtitle consistency pass.** Full ten-scene review found
+three of ten scenes (Sphere, Scroll) had no title at all, one (Beamline)
+had its title parked at the top of frame rather than the site's established
+bottom-center convention, one (Orrery) carried two stray subtitle lines
+that no longer earned their place, and a real vocabulary inconsistency
+(Sphere's hint read "drag to rotate" against every other scene's "drag to
+orbit" for the identical gesture). Converged all ten on one system:
+uppercase, tracked-out, bottom-center title; an optional subtitle directly
+beneath in a visually secondary treatment, never replacing the title.
+Per-scene: Orbiter and Library each gained an uppercase title with their
+existing caption demoted to subtitle; Beamline's title moved from
+top-of-frame to bottom-center, with its existing two-line epigraph
+consolidating into the subtitle slot; Orrery kept its title only, moved to
+bottom-center, both stray subtitle lines cut outright (nothing carried
+forward); Sphere and Scroll each gained a title where none existed before
+(no subtitle for either — neither has a natural epigraph candidate).
+Sphere's hint corrected to "drag to orbit." See the new NOTES.md entries
+under "Per-scene folder structure & markup conventions" for the full
+`--title-block-bottom` / `--footer-safe-zone` convention this pass
+established, including two real collision bugs caught and fixed live
+(not just implemented and assumed correct): the shared title-block safe
+zone had only ~3px of real clearance against `#site-title`'s footer pill
+(raised `3rem` → `4.5rem`), and Scroll's own newly-added title collided
+with its own scrolling body text the same way the footer used to (raised
+`--footer-safe-zone` `4.5rem` → `7.5rem` to clear both). Verified live via
+Claude in Chrome across all ten scenes plus Theater's pager (structurally
+unaffected — normal in-flow layout, not fixed/scrollable) and Scroll at
+multiple scroll depths, not just the top. Full `npx vite build` clean.
 
 ## 3.9.5 (2026-08-25)
 

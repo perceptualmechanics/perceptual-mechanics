@@ -1,13 +1,17 @@
 <!--
-  Beamline (Solar Sailer) scene shell markup — full scene only. The title
-  card's two lines are genuinely dynamic (EPIGRAPH_PRIMARY/SECONDARY,
-  pulled from beamline.text.js) so this file only provides the empty
-  <span> slots; beamline.js fills their textContent after parsing this
-  shell. Hint text and the sr-only live region (used to announce station
-  labels as the vessel passes each one) are both fully static.
+  Beamline (Solar Sailer) scene shell markup — full scene only.
+  .beamline-title-name is a real, static "Beamline" title (site-wide
+  title consistency pass, 2026-08-25 — see NOTES.md's title-block entry).
+  The two epigraph lines beneath it are genuinely dynamic
+  (EPIGRAPH_PRIMARY/SECONDARY, pulled from beamline.text.js) so this file
+  only provides their empty <span> slots; beamline.js fills their
+  textContent after parsing this shell — they're the subtitle now, not
+  the title. Hint text and the sr-only live region (used to announce
+  station labels as the vessel passes each one) are both fully static.
 -->
 
 <div class="beamline-title" aria-hidden="true">
+  <span class="beamline-title-name">Beamline</span>
   <span class="beamline-title-main"></span>
   <span class="beamline-title-sub"></span>
 </div>

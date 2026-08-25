@@ -8,14 +8,30 @@
    alongside its class, so it's styled here the same way as everything
    else. */
 
-.library-caption, .library-hint {
+.library-title, .library-hint {
   position: fixed; color: rgba(255,255,255,0.35);
   pointer-events: none; text-align: center; z-index: 310;
   font-family: 'Times New Roman', serif;
 }
-.library-caption {
-  bottom: 3rem; left: 50%; transform: translateX(-50%);
-  font-size: clamp(0.7rem, 1.6vw, 0.95rem); letter-spacing: 0.06em;
+/* ─── Title block (site-wide consistency pass, 2026-08-25) ──────────────
+   Was just .library-caption (the epigraph-style name alone, standing in
+   for a title it wasn't) — now a real "LIBRARY" title with that line
+   demoted to the subtitle beneath it, same structure every scene uses
+   (see NOTES.md's title-block entry). Anchored to the shared
+   --title-block-bottom var so this stays clear of #site-title's footer
+   pill by construction. */
+.library-title {
+  bottom: var(--title-block-bottom); left: 50%; transform: translateX(-50%);
+  display: flex; flex-direction: column; align-items: center; gap: 0.3rem;
+}
+.library-title-main {
+  font-size: clamp(0.85rem, 2.5vw, 1.6rem);
+  letter-spacing: clamp(0.1em, 1vw, 0.4em);
+  text-transform: uppercase; white-space: nowrap;
+  color: rgba(230,215,180,0.75);
+}
+.library-title-sub {
+  font-size: clamp(0.7rem, 1.8vw, 1.1rem); letter-spacing: 0.06em;
   font-style: italic; white-space: nowrap;
   color: rgba(230,215,180,0.55);
 }
@@ -25,7 +41,11 @@
   color: var(--hint-text-color);
 }
 @media (max-width: 600px) {
-  .library-caption { white-space: normal; width: 88vw; font-size: 0.7rem; }
+  .library-title {
+    bottom: var(--title-block-bottom-mobile); width: 88vw;
+  }
+  .library-title-main, .library-title-sub { white-space: normal; }
+  .library-title-sub { font-size: 0.7rem; }
 }
 .library-panel {
   position: absolute; top: 0; right: 0; width: 34%; height: 100%;

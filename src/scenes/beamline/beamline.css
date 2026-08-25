@@ -7,17 +7,34 @@
   position: fixed; pointer-events: none; z-index: 310;
   font-family: 'Times New Roman', serif; transition: opacity 0.3s ease;
 }
+/* ─── Title block (site-wide consistency pass, 2026-08-25) ──────────────
+   Moved from top:4.4rem to bottom-center, matching every other scene's
+   title placement (see NOTES.md's title-block entry) — was the one scene
+   with its title at the top of frame instead. Anchored to the shared
+   --title-block-bottom var, same as every other scene, so this stays
+   clear of #site-title's footer pill by construction: .beamline-title-name
+   is the new real title, above the anchor; the two epigraph lines
+   (still filled from beamline.text.js) consolidate into the subtitle
+   position at/below it, in place of standing in as the title themselves. */
 .beamline-title {
-  top: 4.4rem; left: 50%; transform: translateX(-50%);
+  bottom: var(--title-block-bottom); left: 50%; transform: translateX(-50%);
   text-align: center; color: rgba(200,245,255,0.88);
+  display: flex; flex-direction: column; align-items: center; gap: 0.3rem;
 }
-.beamline-title-main {
-  display: block; font-size: clamp(1rem, 3vw, 1.6rem);
-  letter-spacing: 0.14em; font-style: italic;
+.beamline-title-name {
+  display: block;
+  font-size: clamp(0.85rem, 2.5vw, 1.6rem);
+  letter-spacing: clamp(0.1em, 1vw, 0.4em);
+  text-transform: uppercase;
   text-shadow: 0 0 20px rgba(0,102,255,0.45), 0 1px 0 rgba(0,0,0,0.6);
 }
+.beamline-title-main {
+  display: block; font-size: clamp(0.85rem, 2.2vw, 1.25rem);
+  letter-spacing: 0.1em; font-style: italic;
+  text-shadow: 0 0 16px rgba(0,102,255,0.4), 0 1px 0 rgba(0,0,0,0.6);
+}
 .beamline-title-sub {
-  display: block; margin-top: 0.5rem;
+  display: block;
   font-size: clamp(0.62rem, 1.3vw, 0.8rem);
   /* 0.68 alpha (~5.3:1 against black) meets WCAG's 4.5:1 minimum for
      text this small while keeping the tint. */
@@ -40,18 +57,15 @@
   font-weight: 600;
 }
 @media (max-width: 600px) {
-  /* Title is centered (left:50%, translateX(-50%)) and hint is pinned
-     right (right: 1.2rem) -- fine side by side on desktop, but at
-     narrow widths the title's 90vw width brings its own right edge
-     close enough to the hint to collide. Stack the hint below the
-     title instead of beside it, both centered, matching the vertical
-     rhythm the title/sub-epigraph pair already use. */
-  .beamline-title { width: 90vw; }
-  .beamline-hint {
-    left: 50%; right: auto; top: 7.6rem;
-    transform: translateX(-50%);
-    text-align: center; width: 90vw;
-  }
+  /* The title/hint collision this block used to guard against (title's
+     90vw width reaching the hint's right-pinned position) no longer
+     exists now that the title moved to bottom-center — hint stays
+     top-right, title's now at the opposite corner and vertical edge of
+     the screen entirely, so the old "stack hint below title" override
+     is dead weight, removed rather than left behind unused. hint now
+     just falls back to every other scene's plain top:4.5rem;right:1.2rem. */
+  .beamline-title { bottom: var(--title-block-bottom-mobile); width: 90vw; }
+  .beamline-title-name, .beamline-title-main, .beamline-title-sub { white-space: normal; }
 }
 .beamline-sr-live {
   position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;

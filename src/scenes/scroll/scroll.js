@@ -327,6 +327,17 @@ export function createScroll(container, { preview = false, initialPieceId = null
     return { dispose() { root.remove(); } };
   }
 
+  // Title — site-wide consistency pass (2026-08-25, see NOTES.md's
+  // title-block entry). Appended to document.body like every other
+  // scene's bottom-center title, not inside .scroll-root, for the same
+  // z-index/stacking-context reasoning every scene with body-level
+  // chrome shares. No subtitle: this scene deliberately shows no titles
+  // anywhere else (see .scroll-patch-refs's own comment in scroll.css),
+  // so a single bare name is the right amount of chrome, not an
+  // epigraph.
+  const title = frag.querySelector('.scroll-title');
+  document.body.appendChild(title);
+
   const root = document.createElement('div');
   root.className = 'scroll-root';
 
@@ -487,6 +498,7 @@ export function createScroll(container, { preview = false, initialPieceId = null
       scroll.removeEventListener('click', onLinkClick);
       scroll.removeEventListener('keydown', onLinkKeydown);
       root.remove();
+      title.remove();
     }
   };
 }

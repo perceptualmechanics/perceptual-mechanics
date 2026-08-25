@@ -717,19 +717,23 @@ export function createOrbiter(container, { preview = false, initialPieceId = nul
   root.add(satellites.group);
 
   // ─── Caption + hint + poem panel (full only) ────────────────────────────
-  let caption = null, hint = null, panel = null, panelTitle = null, panelContent = null, panelRefs = null, panelCloser = null, jumpList = null;
-  // Static shell markup (caption text, hint text, panel skeleton) lives in
-  // orbiter.html, parsed via parseHTML below. Caption/hint/panel/poem-link
-  // styles live in orbiter.css, imported above. The epigraph ("sing,
-  // orbiter," Richard Kenney) stays uncredited in-scene by design — full
-  // attribution now lives in the colophon's bibliography instead, same as
-  // every poem's source line below.
+  let title = null, hint = null, panel = null, panelTitle = null, panelContent = null, panelRefs = null, panelCloser = null, jumpList = null;
+  // Static shell markup (title/subtitle text, hint text, panel skeleton)
+  // lives in orbiter.html, parsed via parseHTML below. Title/hint/panel/
+  // poem-link styles live in orbiter.css, imported above. Site-wide title
+  // consistency pass (2026-08-25): "sing, orbiter" (Richard Kenney) used
+  // to be the only bottom-center line here, standing in for a title it
+  // wasn't — now it's the subtitle beneath a real "ORBITER" title, same
+  // structure as every other scene (see NOTES.md's title-block entry).
+  // The epigraph stays uncredited in-scene by design either way — full
+  // attribution lives in the colophon's bibliography, same as every
+  // poem's source line below.
   if (!preview) {
     const shell = parseHTML(orbiterHtml);
-    caption = shell.querySelector('.orbiter-caption');
+    title = shell.querySelector('.orbiter-title');
     hint = shell.querySelector('.orbiter-hint');
     panel = shell.querySelector('.orbiter-panel');
-    document.body.appendChild(caption);
+    document.body.appendChild(title);
     document.body.appendChild(hint);
 
     container.style.position = 'relative';
@@ -1094,7 +1098,7 @@ export function createOrbiter(container, { preview = false, initialPieceId = nul
       satellites.hitMat.dispose();
       satellites.coreGeo.dispose();
       satellites.panelGeo.dispose();
-      if (caption) caption.remove();
+      if (title) title.remove();
       if (hint) hint.remove();
       if (panel) panel.remove();
       jumpList?.dispose();

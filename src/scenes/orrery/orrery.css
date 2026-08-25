@@ -51,12 +51,12 @@
 @media (max-width: 700px) {
   .orrery-panel { width: 88%; padding: 4rem 1.3rem 2rem; }
 }
-.orrery-hint, .orrery-caption {
+.orrery-hint {
   /* z-index must clear #experience-overlay (styles/main.css: fixed,
-     z-index:300) — these are appended to document.body, outside the
-     overlay, same as butterfly's own label/hint in main.js. Below
-     300 they're only visible during the overlay's ~0.6s fade-in,
-     then gone once it's fully opaque. */
+     z-index:300) — appended to document.body, outside the overlay,
+     same as butterfly's own label/hint in main.js. Below 300 it's
+     only visible during the overlay's ~0.6s fade-in, then gone once
+     it's fully opaque. */
   position: fixed; color: var(--hint-text-color);
   text-transform: uppercase; pointer-events: none; text-align: center;
   z-index: 310; font-family: 'Times New Roman', serif;
@@ -71,51 +71,12 @@
    ambient labels are redundant anyway (the panel has its own title and
    era line) — fade them out instead of fighting the stacking order.
    See openPanel() and its three close sites below. */
-.orrery-title.panel-open, .orrery-hint.panel-open, .orrery-caption.panel-open {
+.orrery-title.panel-open, .orrery-hint.panel-open {
   opacity: 0;
 }
 .orrery-hint {
   top: 4.5rem; right: 1.2rem; font-size: 0.55rem; letter-spacing: 0.2em;
   line-height: 1.8; text-align: right;
-}
-.orrery-caption {
-  bottom: 3rem; left: 50%; transform: translateX(-50%);
-  font-size: clamp(0.7rem, 1.6vw, 0.95rem); letter-spacing: 0.08em;
-  white-space: nowrap; font-style: italic; text-transform: none;
-  color: rgba(255,255,255,0.4);
-}
-@media (max-width: 600px) {
-  .orrery-caption { white-space: normal; width: 88vw; font-size: 0.7rem; }
-}
-/* .orrery-hint (top:4.5rem, right-anchored, no width) and
-   .orrery-title (centered, shrink-wrapped to its own widest line)
-   collide far more often than the old mobile-only fix assumed.
-   Confirmed live on perceptualmechanics.com at 1512px — a fully
-   open, non-maximized but perfectly ordinary desktop window, nowhere
-   near a phone: "THE ORRERY OF LOS FELIZ" alone, at this font size
-   and letter-spacing, is wide enough that its centered block's right
-   edge (measured: x≈1030) lands past the hint's left edge
-   (measured: x≈939), printing straight through "walk with
-   wasd/arrows." The subtitle line only makes a bad case worse; the
-   title's main line by itself is already enough. A single pixel
-   breakpoint can't cover every combination of font metrics and
-   window width that produces that, so this is measured instead of
-   guessed: checkTitleHintCollision(), below, reads both elements'
-   actual rendered rects and toggles this same class whenever they
-   overlap, on load and on every resize. The max-width:600px query
-   stays too, as a floor that still applies even if JS is
-   unavailable or hasn't run yet. */
-.orrery-hint.stacked {
-  top: 7.6rem; right: 6vw; left: 6vw;
-  font-size: 0.5rem; letter-spacing: 0.14em; line-height: 1.6;
-  text-align: center;
-}
-@media (max-width: 600px) {
-  .orrery-hint {
-    top: 7.6rem; right: 6vw; left: 6vw;
-    font-size: 0.5rem; letter-spacing: 0.14em; line-height: 1.6;
-    text-align: center;
-  }
 }
 
 /* ─── Micro-Myst ─────────────────────────────────────────────────
@@ -143,14 +104,16 @@
   background-size: 160px 160px;
 }
 .orrery-title {
-  /* #pm-nav (site.css) is a fixed, 3.5rem-tall, z-index:500 bar —
-     sit clear below it. #experience-overlay (also site.css) is
-     z-index:300 and fades to fully opaque over 0.6s - this is
-     appended to document.body outside that overlay, so it needs to
-     clear 300 too, or it only shows during the fade-in and then
-     gets covered once the overlay settles. 310 matches butterfly's
-     own body-level label/hint in main.js, same reasoning there. */
-  position: fixed; top: 4.4rem; left: 50%; transform: translateX(-50%);
+  /* Site-wide title consistency pass (2026-08-25): moved from
+     top:4.4rem to bottom-center, matching every other scene's title
+     placement (see NOTES.md's title-block entry) — was the one scene
+     with its title at the top of frame instead. Anchored to the shared
+     --title-block-bottom var so this clears #site-title's footer pill
+     by construction, the same reasoning --title-block-bottom's own
+     comment (styles/main.css) documents. z-index:310 still clears
+     #experience-overlay's z-index:300, same as every other body-level
+     scene element (see styles/main.css's z-index scale). */
+  position: fixed; bottom: var(--title-block-bottom); left: 50%; transform: translateX(-50%);
   text-align: center; pointer-events: none; z-index: 310;
   font-family: 'Times New Roman', serif; color: rgba(238,225,205,0.82);
   transition: opacity 0.3s ease;
@@ -160,15 +123,13 @@
   letter-spacing: 0.32em; text-transform: uppercase;
   text-shadow: 0 0 18px rgba(0,0,0,0.85), 0 1px 0 rgba(0,0,0,0.6);
 }
-.orrery-title-sub {
-  display: block; margin-top: 0.55rem;
-  font-size: clamp(0.62rem, 1.3vw, 0.8rem); font-style: italic;
-  letter-spacing: 0.03em; color: rgba(225,215,195,0.5);
-  text-transform: none;
-}
+/* .orrery-title-sub (the "About thirty feet high..." line) and
+   .orrery-caption ("still on, receiving information from the heavens")
+   are both cut entirely, not just repositioned — Scott's explicit call:
+   title only, going forward (site-wide title consistency pass,
+   2026-08-25, see NOTES.md's title-block entry). */
 @media (max-width: 600px) {
-  .orrery-title { top: 3.9rem; width: 90vw; }
-  .orrery-title-sub { padding: 0 3vw; }
+  .orrery-title { bottom: var(--title-block-bottom-mobile); width: 90vw; }
 }
 
 /* ─── First-person rig ───────────────────────────────────────────── */
