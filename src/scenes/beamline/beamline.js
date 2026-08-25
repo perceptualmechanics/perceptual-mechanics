@@ -760,7 +760,7 @@ function makeLabelTexture(bounceLabel, text) {
   };
   const bounceWidth = layoutSmallCaps(measure, bounceLabel, { bigPx: BOUNCE_FONT_PX, smallPx: SMALLCAPS_FONT_PX, draw: false });
 
-  measure.font = `italic ${BODY_FONT_PX}px "Times New Roman", serif`;
+  measure.font = `italic ${BODY_FONT_PX}px "Arapey", serif`;
   measure.letterSpacing = '0px';
   const bodyLines = wrapLines(measure, text, maxTextWidth);
   const bodyWidth = Math.max(...bodyLines.map(l => measure.measureText(l).width));
@@ -778,8 +778,11 @@ function makeLabelTexture(bounceLabel, text) {
   // "STATION N OF M" ships in Orbitron, manual small-caps (see
   // layoutSmallCaps above) — the piece's HUD-chrome font, near-white like
   // the rest of the piece's chrome. The found-text body below stays in
-  // the site's standard italic serif (Times New Roman), since Orbitron
-  // reads wrong on the poetic found text, and carries the gold accent
+  // the site's standard italic serif (Arapey as of the 2026-08-25/26
+  // serif swap — labelFontsReady above guards this specific draw call
+  // against the webfont-loading race; Orbitron here has no such guard,
+  // a pre-existing gap out of scope for that pass), since Orbitron reads
+  // wrong on the poetic found text, and carries the gold accent
   // (GOLD_ACCENT_CSS, Sphere's own value, see the constant above) instead:
   // one deliberate warm accent, on the words themselves rather than the
   // numbering, not a wholesale palette change.
@@ -787,7 +790,7 @@ function makeLabelTexture(bounceLabel, text) {
     bigPx: BOUNCE_FONT_PX, smallPx: SMALLCAPS_FONT_PX, draw: true, x: pad, y: pad, style: bounceStyle,
   });
 
-  cx.font = `italic ${BODY_FONT_PX}px "Times New Roman", serif`;
+  cx.font = `italic ${BODY_FONT_PX}px "Arapey", serif`;
   cx.letterSpacing = '0px';
   bodyLines.forEach((line, i) => {
     drawOutlinedText(cx, line, pad, pad + BOUNCE_LINE_H + gap + i * BODY_LINE_H, {
@@ -1485,6 +1488,20 @@ export function createBeamline(container, { preview = false, initialPieceId = nu
   }
 
   // ─── Station label sprite ───────────────────────────────────────────────
+  // makeLabelTexture's found-text body renders in Arapey (site-wide serif
+  // swap, 2026-08-25/26) — a real webfont, unlike the system "Times New
+  // Roman" it replaced, baked into a static THREE.CanvasTexture that never
+  // gets told to redraw once the font actually finishes loading. Kicked
+  // off here, as early as this scene's setup runs, rather than waited on
+  // inside showLabel itself, so it has the whole time between scene mount
+  // and a user's first station click to resolve — showLabel below still
+  // awaits it, but in practice it should already be settled by then. See
+  // NOTES.md's "A site-wide webfont swap does not automatically extend to
+  // Canvas-drawn text" entry for why this guard exists at all (nothing
+  // else in this codebase needed one, since every other canvas font here
+  // is either Orbitron — a pre-existing, still-unguarded gap, out of
+  // scope for this pass — or a system font with no loading race).
+  const labelFontsReady = document.fonts.load(`italic ${BODY_FONT_PX}px "Arapey"`).catch(() => {});
   const LABEL_OFFSET = 7;     // world units off the station's own point, along its lateral direction
   const LABEL_LIFT = 3;       // small +Y nudge so the label reads as beside-and-above, not level with the station
   // A single fixed sustain doesn't work for this piece's real range —
@@ -1523,9 +1540,16 @@ export function createBeamline(container, { preview = false, initialPieceId = nu
     labelSprite.scale.set(worldH * labelAspect, worldH, 1);
   }
 
-  function showLabel(s) {
+  async function showLabel(s) {
     selectedStation = s;
     onPieceChange?.(BOUNCES[s.stationIndex]?.id);
+    // Awaits labelFontsReady (kicked off at scene setup, above) before the
+    // canvas draw so Arapey has a chance to actually be the font in use —
+    // resolves immediately once loaded, which in practice is almost always
+    // already true by the time a user clicks a station. `await` on an
+    // already-resolved promise still yields one microtask, not a visible
+    // delay.
+    await labelFontsReady;
     labelTex?.dispose();
     const stationLabel = `Station ${s.stationIndex + 1} of ${stations.length}`;
     const text = BOUNCES[s.stationIndex]?.text ?? '';

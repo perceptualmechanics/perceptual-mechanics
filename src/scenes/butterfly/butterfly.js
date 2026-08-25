@@ -266,23 +266,53 @@ export function createButterfly(container, { preview = false } = {}) {
 
   // ─── Math sprites ─────────────────────────────────────────────────────────
   const spriteData = [];
+  // Set by dispose() below — guards the async font-load callback further
+  // down from touching a texture that's already been disposed, if the
+  // scene is torn down before Arapey finishes loading.
+  let symbolsDisposed = false;
   if (!preview) {
     const symbols = [
       'σ','ρ','β','λ','∂','∇','∞','π','Δ','ω','φ','ψ','θ','α',
       'dx/dt','dy/dt','dz/dt','σ(y−x)','8/3','28','10',
       'f(x)','∫','∑','lim','→','ℝ³','ẋ','ẏ','ż','βz','ρ−z',
     ];
+    // Site-wide serif swap (2026-08-25/26): these symbol sprites now draw
+    // in Arapey, a real webfont, rather than the system "Times New Roman"
+    // they used before — but this whole array is built once, synchronously,
+    // right here at scene mount, and each texture is a static canvas bitmap
+    // that (unlike DOM text) never repaints itself once painted. If Arapey
+    // hasn't finished loading yet at this exact moment, the first paint
+    // below falls back to plain serif and would stay that way for the
+    // scene's entire lifetime with no further correction. So each entry
+    // keeps a `redraw()` closure over its own canvas/ctx, drawn once
+    // immediately (so the scene never waits on network before rendering,
+    // same as every other scene's synchronous mount) and re-run once
+    // document.fonts.load() actually resolves, flagging the existing
+    // CanvasTexture object (shared by reference across every sprite that
+    // uses it — see textures[] below) with needsUpdate rather than
+    // creating and reassigning new Texture objects to 220 sprites.
     function makeSymbolTexture(text) {
       const c = document.createElement('canvas');
       c.width=128; c.height=64;
       const cx=c.getContext('2d');
-      cx.font='italic 22px Times New Roman,serif';
-      cx.fillStyle='rgba(200,220,255,0.7)';
-      cx.textAlign='center'; cx.textBaseline='middle';
-      cx.fillText(text,64,32);
-      return new THREE.CanvasTexture(c);
+      const tex = new THREE.CanvasTexture(c);
+      const paint = () => {
+        cx.clearRect(0,0,c.width,c.height);
+        cx.font='italic 22px "Arapey", serif';
+        cx.fillStyle='rgba(200,220,255,0.7)';
+        cx.textAlign='center'; cx.textBaseline='middle';
+        cx.fillText(text,64,32);
+      };
+      paint();
+      return { tex, redraw() { paint(); tex.needsUpdate = true; } };
     }
-    const textures = symbols.map(makeSymbolTexture);
+    const symbolEntries = symbols.map(makeSymbolTexture);
+    const textures = symbolEntries.map(e => e.tex);
+    // .catch: font-loading failure just means the fallback serif sticks
+    // around, not a scene-breaking error.
+    document.fonts.load('italic 22px "Arapey"').then(() => {
+      if (!symbolsDisposed) symbolEntries.forEach(e => e.redraw());
+    }).catch(() => {});
     for (let i=0;i<220;i++) {
       const mat = new THREE.SpriteMaterial({
         map: textures[Math.floor(Math.random()*textures.length)],
@@ -523,6 +553,7 @@ export function createButterfly(container, { preview = false } = {}) {
   return {
     dispose() {
       cancelAnimationFrame(animId);
+      symbolsDisposed = true;
       resizeCtl.dispose();
       orbitDrag?.dispose();
       wheelZoom?.dispose();

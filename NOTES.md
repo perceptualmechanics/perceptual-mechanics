@@ -431,33 +431,58 @@ adding a new scene.
   space before picking a value, and verify by scrolling through the whole
   range live.
 - **A site-wide webfont swap does not automatically extend to
-  Canvas-drawn text (`ctx.font = '...'`).** Real scope boundary hit in
-  the 3.9.7 Arapey swap: the shared editorial serif (`'Times New Roman',
-  serif`, CSS-declared, DOM text) converted cleanly to `'Arapey', serif`
-  everywhere it appeared, because DOM text automatically reflows once a
-  `@font-face` finishes loading — there's no race to worry about.
-  `beamline.js`'s station-placard body text and `butterfly.js`'s axis
-  label are drawn onto an offscreen `<canvas>` and baked into a static
-  `THREE.CanvasTexture`/bitmap; if that draw call runs before a webfont
-  has finished loading, the canvas silently falls back to the next
-  generic in the stack and — unlike DOM text — never gets a chance to
-  redraw once the real font arrives, since nothing in this codebase
-  currently awaits `document.fonts.ready`/`document.fonts.load()` before
-  generating a texture (checked; no such guard exists anywhere yet).
-  Deliberately left both of these on `"Times New Roman", serif` — a
-  system font with zero loading race — rather than swap them and
-  introduce a real, easy-to-miss bug (first station a user opens might
-  render in the wrong font depending on load timing, forever, since the
-  texture never regenerates). `library.js`'s `BOOK_TREATMENTS`/
-  `DISC_TREATMENTS`/`CD_TREATMENTS` are a separate, unrelated case: those
+  Canvas-drawn text (`ctx.font = '...'`) — it needs an explicit
+  font-load guard, not a plain find-and-replace.** Real scope boundary
+  hit in the 3.9.7 Arapey swap, then closed in 3.9.8: the shared
+  editorial serif (`'Times New Roman', serif`, CSS-declared, DOM text)
+  converted cleanly everywhere it appeared in 3.9.7, because DOM text
+  automatically reflows once a `@font-face` finishes loading — no race
+  to worry about there. `beamline.js`'s station-placard body text and
+  `butterfly.js`'s axis-label sprites are drawn onto an offscreen
+  `<canvas>` and baked into a static `THREE.CanvasTexture`/bitmap;
+  if that draw call runs before a webfont has finished loading, the
+  canvas silently falls back to the next generic in the stack and —
+  unlike DOM text — never gets a chance to redraw once the real font
+  arrives on its own. 3.9.7 left both on `"Times New Roman", serif`
+  rather than risk that; 3.9.8 added a real guard to each and switched
+  them to Arapey:
+  - `beamline.js`: `labelFontsReady` (a `document.fonts.load(...)`
+    promise) is kicked off once at scene setup — as early as possible,
+    maximizing the time it has to resolve before a user's first click —
+    and `showLabel()` (now `async`) awaits it before generating each
+    station's texture. Every click regenerates the texture anyway (a
+    pre-existing pattern, not new), so this only matters for whichever
+    station happens to be the very first one clicked.
+  - `butterfly.js`: draws its ~30 unique symbol textures once,
+    synchronously, at scene mount — so a stale bake here would be
+    permanent for the scene's whole lifetime, not just one label.
+    Each texture keeps its own `redraw()` closure over its canvas/ctx;
+    the scene renders immediately with whatever's available (same
+    synchronous-mount contract every other scene follows), and a
+    `document.fonts.load(...).then(...)` fires each texture's
+    `redraw()` + `needsUpdate = true` once Arapey actually resolves —
+    updates every sprite sharing that texture object at once, no need
+    to walk and reassign 220 sprite materials individually. A
+    `symbolsDisposed` flag (set in `dispose()`) guards the callback
+    from touching an already-disposed texture if the scene unmounts
+    before the font finishes loading.
+  Verified the guard actually does something, not just that it compiles
+  clean: `canvas.measureText()` with `'22px "Arapey", serif'` measures
+  narrower than the same string in a knowingly-bogus font name (which
+  the browser measures identically to the plain generic fallback) —
+  confirms Arapey is the font actually in use, not silently falling
+  back, more reliable than eyeballing tiny italic canvas glyphs in a
+  screenshot.
+  `library.js`'s `BOOK_TREATMENTS`/`DISC_TREATMENTS`/`CD_TREATMENTS`
+  remain a separate, unrelated case, untouched by either pass: those
   intentionally cycle through *several* different system serif/sans
   fonts (Georgia, Times New Roman, Palatino, Verdana, ...) as a variety
   mechanism so shelf spines don't look uniform — see that file's own
   comment at `BOOK_TREATMENTS` — not an instance of "the site's shared
-  serif" at all, so out of scope for this swap on a different, unrelated
-  ground. If a future pass wants Arapey in canvas text too, it needs a
-  real `document.fonts.load('italic 16px Arapey')` (or similar) awaited
-  before the texture-generation call, not a plain find-and-replace.
+  serif" at all. `layoutSmallCaps`'s Orbitron usage in `beamline.js`
+  (the "STATION N OF M" line, same texture) also has no font-load
+  guard — a pre-existing gap, out of scope for this pass, flagged rather
+  than silently left for a future reader to rediscover.
 
 ## Annotated math — where to start tuning
 
@@ -621,6 +646,33 @@ keywords, present-in-both-accounts framing — closed it, reopened a
 different one, toggled sound on/off, no console errors from the scene's
 own code. Debug hooks fully stripped before this build. Full `npx vite
 build` clean.
+
+## 3.9.8 (2026-08-25)
+
+**Arapey extended to the two canvas-rendered text spots 3.9.7 deliberately
+skipped.** Scott asked directly for these after reading 3.9.7's scope
+note. `beamline.js`'s station-placard body text and `butterfly.js`'s
+~30 floating math-symbol sprites now render in Arapey rather than
+"Times New Roman" — but not via a plain string swap, since both are
+baked into static `THREE.CanvasTexture` bitmaps that never repaint
+themselves the way DOM text does. Each got a real
+`document.fonts.load(...)` guard first: `beamline.js`'s `showLabel()` is
+now `async` and awaits a promise kicked off at scene setup before
+generating each station's texture; `butterfly.js` draws its symbol
+textures immediately with whatever's available (so scene mount stays
+synchronous, same as every other scene) and redraws each one in place
+once Arapey's load promise actually resolves, guarded by a
+`symbolsDisposed` flag against firing after the scene unmounts. See the
+new NOTES.md entry above (same title as 3.9.7's, now updated) for the
+full pattern and the `canvas.measureText()`-based verification technique
+used to confirm the font is genuinely active rather than silently
+falling back. `library.js`'s intentional multi-font spine-variety pool
+and `layoutSmallCaps`'s pre-existing unguarded Orbitron usage remain
+out of scope, both flagged explicitly rather than silently skipped.
+Live-verified via Claude in Chrome (Beamline: clicked a station, found
+text rendered in Arapey's italic; Butterfly: confirmed via font-metrics
+comparison in the browser console, since the symbol sprites render too
+small on screen to eyeball reliably). Full `npx vite build` clean.
 
 ## 3.9.7 (2026-08-25)
 
