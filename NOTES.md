@@ -197,19 +197,35 @@ adding a new scene.
   threshold to predict which will — the safe default for any new WebGL
   scene is to wire the fix in from the start rather than wait for a Firefox
   screenshot to catch it.
-- **Any new scene needs a secret word for the status-bar easter egg — ask
-  Scott, don't invent one.** `PM_GLIMPSE_WORDS` in `main.js` (see "Status-
-  bar easter egg" comment there) keys every scene's `pmGlimpse('<key>')`
-  hover trigger to a word that flickers into the browser tab title for
-  ~1.1s on a 1-in-100 hover/focus chance. Every existing scene has one
-  (sphere: "zen archery", orrery: "will", outside: "lotus", etc.) and it's
-  Scott's own word, not a paraphrase of the scene's description — a new
-  scene missing an entry fails silently (`pmGlimpse` no-ops on an unknown
-  key rather than showing "undefined", so the gap won't surface as a bug,
-  just as an easter egg that never fires for that scene). Ask before
-  shipping, the same way sound-design choices and other Scott's-own-call
-  items get an explicit ask elsewhere in this file, rather than guessing a
-  word that sounds plausible.
+- **Any new scene needs a secret word for the status-bar easter egg —
+  abstract/thematic, never a literal noun for what's on screen.**
+  `PM_GLIMPSE_WORDS` in `main.js` (see "Status-bar easter egg" comment
+  there) keys every scene's `pmGlimpse('<key>')` hover trigger to a word
+  that flickers into the browser tab title for ~1.1s on a 1-in-100
+  hover/focus chance. Look at the existing set as a whole and the pattern
+  is consistent: sphere → "zen archery", butterfly → "complexity", scroll →
+  "savagery", orbiter → "atmosphere", orrery → "will", library → "medium",
+  beamline → "emergence", harmonics → "vibe", outside → "bloom". None of
+  these name the rendered object (no "sphere," "wings," "star field," or
+  "flower") — every one names the *idea underneath* it: a mood, a theme, an
+  abstract concept the scene is really about. That's the actual bar for a
+  good word here, not just "Scott's own call, ask first" (though it is
+  that too) — a proposed word should be judged against this pattern before
+  it ships.
+  Case in point, 2026-08-25: a brief (drafted externally, on Scott's
+  behalf, by another assistant) called for changing Outside's word from
+  "bloom" to "lotus." Made the change as asked, no pushback — but "lotus"
+  is exactly the kind of literal, on-the-nose choice the existing set
+  avoids (it just names the flower Outside already renders); "bloom" is
+  the abstract-verb version of the same image, matching "will" and
+  "atmosphere" and "emergence" in register. Scott reverted it back to
+  "bloom" unprompted and called it out as the better call. Lesson: when a
+  future brief — from Scott directly, or drafted on his behalf by another
+  assistant — proposes a literal word for this slot, that's worth a
+  flagged second look before implementing verbatim, not just a compliant
+  edit. A new scene missing an entry fails silently either way
+  (`pmGlimpse` no-ops on an unknown key rather than showing "undefined"),
+  so there's no runtime signal forcing the question — it has to be asked.
 
 ## Annotated math — where to start tuning
 
