@@ -13,7 +13,7 @@
   text-transform: uppercase;
   pointer-events: none; text-align: center;
   white-space: nowrap; z-index: 310;
-  font-family: 'Times New Roman', serif;
+  font-family: 'Arapey', serif;
 }
 @media (max-width: 600px) {
   .butterfly-exp-label {
@@ -28,7 +28,7 @@
   font-size: 0.55rem; letter-spacing: 0.2em;
   text-transform: uppercase; pointer-events: none;
   text-align: right; z-index: 310; line-height: 1.8;
-  font-family: 'Times New Roman', serif;
+  font-family: 'Arapey', serif;
 }
 @media (prefers-reduced-motion: reduce) {
   .butterfly-exp-label, .butterfly-hint { transition: none; }

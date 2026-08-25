@@ -5,7 +5,7 @@
 
 .beamline-title, .beamline-hint {
   position: fixed; pointer-events: none; z-index: 310;
-  font-family: 'Times New Roman', serif; transition: opacity 0.3s ease;
+  font-family: 'Arapey', serif; transition: opacity 0.3s ease;
 }
 /* ─── Title block (site-wide consistency pass, 2026-08-25) ──────────────
    Moved from top:4.4rem to bottom-center, matching every other scene's

@@ -2,13 +2,17 @@
   Library scene shell markup — full mode only. The bookshelf, Library-of-
   Babel backdrop, and every spine/item mesh are built entirely as Three.js
   geometry in library.js, so they have no HTML counterpart; this file is
-  just the caption, the hint text, and the read-more panel's skeleton.
+  just the hint text and the read-more panel's skeleton. This scene
+  briefly had a bottom-center title/subtitle ("Library" / "the library —
+  once removed") in the 2026-08-25 site-wide title consistency pass;
+  removed again same day, both lines, per Scott's call — no title chrome
+  here.
 
-  .library-caption and .library-hint are appended straight to <body> (they
-  sit fixed over the whole viewport, same convention as sphere/orbiter's
-  own caption+hint), while .library-panel is appended into the scene
-  container. library.js pulls all three out of this one fragment by class
-  and places each where it belongs.
+  .library-hint is appended straight to <body> (fixed over the whole
+  viewport, same convention as sphere/orbiter's own hint), while
+  .library-panel is appended into the scene container. library.js pulls
+  both out of this one fragment by class and places each where it
+  belongs.
 
   library-panel-title keeps a real id — it's the target of the panel's
   aria-labelledby, which per spec has to resolve to an actual id, not a
@@ -20,11 +24,6 @@
   own panel-refs. Only numeric (non-CD) items ever have anything to show
   here, since links.js only addresses numeric piece ids.
 -->
-
-<div class="library-title" aria-hidden="true">
-  <span class="library-title-main">Library</span>
-  <span class="library-title-sub">the library — once removed</span>
-</div>
 
 <p class="library-hint" aria-hidden="true">drag to orbit &nbsp;&middot;&nbsp; scroll to zoom &nbsp;&middot;&nbsp; click a spine to read &nbsp;&middot;&nbsp; click a CD to watch</p>
 

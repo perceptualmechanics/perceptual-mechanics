@@ -76,16 +76,20 @@
      can never render underneath the footer at ANY scroll position, not
      just the top/bottom. See scroll.css's own .scroll-viewport rule.
 
-     Raised from 4.5rem to 7.5rem once Scroll gained its own bottom-center
-     .scroll-title (site-wide title pass, 2026-08-25): that title is ALSO
-     position:fixed chrome sitting in this same bottom band, at
-     --title-block-bottom, above the footer pill — so on Scroll specifically
-     the boundary scrolling text must clear is the title's top edge, not
-     the footer's. Caught live: 4.5rem only cleared the footer, and body
-     text was scrolling straight through the title text above it. 7.5rem
-     clears --title-block-bottom (4.5rem) plus the title's own rendered
-     line height and a small buffer. */
-  --footer-safe-zone: 7.5rem;
+     Briefly raised from 4.5rem to 7.5rem when Scroll gained its own
+     bottom-center .scroll-title (site-wide title pass, 2026-08-25): that
+     title was ALSO position:fixed chrome sitting in this same bottom
+     band, above the footer pill, so while it existed the boundary
+     scrolling text had to clear was the title's top edge, not the
+     footer's (caught live: 4.5rem only cleared the footer, and body text
+     was scrolling straight through the title text above it). The title
+     was removed again the same day (Scroll's own "no titles" design,
+     see scroll.js's file header) — back to 4.5rem now that this only
+     needs to clear #site-title's own footer pill. If a future pass ever
+     gives Scroll its own title back, revisit this value together with
+     --title-block-bottom rather than assuming 4.5rem alone still
+     suffices. */
+  --footer-safe-zone: 4.5rem;
 }
 
 /* ─── Reset & base ──────────────────────────────────────────────────────────── */

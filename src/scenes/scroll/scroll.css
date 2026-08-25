@@ -73,7 +73,13 @@
    safe-zone reasoning as this pass's title-block work, applied to a
    scrollable region instead of fixed text. Any future scene with its own
    full-width scrolling body content should reuse this same pattern rather
-   than re-discovering the collision. */
+   than re-discovering the collision.
+
+   This scene briefly also had its own bottom-center .scroll-title
+   (removed same day, see above) sitting in this same band, which for a
+   short time meant --footer-safe-zone had to clear both the footer pill
+   AND that title — since the title's gone again, the var only needs to
+   clear the footer pill alone; see its own comment in main.css. */
 
 /* dust and scratches on the glass, over everything, static through scroll */
 .scroll-grain {
@@ -83,35 +89,10 @@
   opacity: 0.13;
 }
 
-/* ─── Title (site-wide consistency pass, 2026-08-25) ─────────────────────
-   This scene had no title at all before — added at the standard
-   bottom-center treatment every scene uses, anchored to the shared
-   --title-block-bottom var (styles/main.css) so it stays clear of
-   #site-title's footer pill by construction, same as every other scene.
-   Tinted to this scene's own amber/parchment accent (the same #c17a3d
-   family .scroll-rubric and .scroll-link already use) rather than plain
-   white, matching how every other scene's title carries its own palette.
-   No subtitle: this scene deliberately shows no titles or attribution
-   anywhere else (see .scroll-patch-refs's own comment below), so a bare
-   name is the right amount of chrome. */
-.scroll-title {
-  position: fixed;
-  bottom: var(--title-block-bottom); left: 50%; transform: translateX(-50%);
-  color: rgba(217,154,81,0.85);
-  font-size: clamp(0.85rem, 2.5vw, 1.6rem);
-  letter-spacing: clamp(0.1em, 1vw, 0.4em);
-  text-transform: uppercase;
-  pointer-events: none; text-align: center;
-  white-space: nowrap; z-index: 310;
-  font-family: 'IM Fell English', Georgia, serif;
-}
-@media (max-width: 600px) {
-  .scroll-title {
-    white-space: normal; width: 88vw;
-    left: 6vw; transform: none;
-    bottom: var(--title-block-bottom-mobile);
-  }
-}
+/* This scene briefly gained a bottom-center title in the 2026-08-25
+   site-wide title consistency pass; removed again same day per Scott's
+   call — no title chrome here, consistent with this scene's own
+   stated "no titles" design and .scroll-patch-refs's own comment below. */
 
 /* ── Opening mark: the Ogham letter Sail, carved once at the top of the
    scroll — the same glyph the preview medallion carries, here bare on

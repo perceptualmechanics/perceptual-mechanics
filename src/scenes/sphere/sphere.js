@@ -186,7 +186,7 @@ export function createSphere(container, { preview = false, initialPieceId = null
   const mouse = new THREE.Vector2();
 
   // Panel (full only)
-  let panel = null, panelContent = null, panelTitle = null, facetIdEl = null, hint = null, title = null;
+  let panel = null, panelContent = null, panelTitle = null, facetIdEl = null, hint = null;
   let wheelZoom = null, panelCloser = null, jumpList = null;
   // Named so dispose() can remove them — container is the shared
   // #experience-container element every scene reuses (main.js only clears
@@ -200,21 +200,17 @@ export function createSphere(container, { preview = false, initialPieceId = null
   // be anything other than a plain block-scoped function.
   let openFragmentRef = null;
   if (!preview) {
-    // Shell markup (title + hint paragraph + panel skeleton) lives in
+    // Shell markup (hint paragraph + panel skeleton) lives in
     // sphere.html — see that file's own header comment for why it's
     // several top-level pieces with different mount points. The hint
     // matches orbiter/orrery's treatment: fixed top-right, z-index 310
     // (must clear #experience-overlay — see styles/main.css's z-index-scale
-    // comment), Times New Roman regardless of the scene's own body font,
-    // since hints are chrome, not scene content, and read as one
-    // consistent voice across the whole site. Title added in the site-wide
-    // title consistency pass (2026-08-25, see NOTES.md's title-block
-    // entry) — this scene had no title at all before; no subtitle either,
-    // since none of this scene's own text (sphere.text.js) is a natural
-    // epigraph candidate the way orbiter's/library's captions were.
+    // comment), Arapey regardless of the scene's own body font, since
+    // hints are chrome, not scene content, and read as one consistent
+    // voice across the whole site. This scene briefly gained a bottom-
+    // center title in the 2026-08-25 site-wide title consistency pass;
+    // removed again same day per Scott's call — no title chrome here.
     const frag = parseHTML(sphereHtml);
-    title = frag.querySelector('.sphere-title');
-    document.body.appendChild(title);
     hint = frag.querySelector('.sphere-hint');
     document.body.appendChild(hint);
 
@@ -607,7 +603,6 @@ export function createSphere(container, { preview = false, initialPieceId = null
       if (labelRenderer) labelRenderer.domElement.remove();
       if (panel) panel.remove();
       if (hint) hint.remove();
-      if (title) title.remove();
       renderer.domElement.remove();
     }
   };

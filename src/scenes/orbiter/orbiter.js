@@ -718,16 +718,16 @@ export function createOrbiter(container, { preview = false, initialPieceId = nul
 
   // ─── Caption + hint + poem panel (full only) ────────────────────────────
   let title = null, hint = null, panel = null, panelTitle = null, panelContent = null, panelRefs = null, panelCloser = null, jumpList = null;
-  // Static shell markup (title/subtitle text, hint text, panel skeleton)
-  // lives in orbiter.html, parsed via parseHTML below. Title/hint/panel/
+  // Static shell markup (subtitle text, hint text, panel skeleton) lives
+  // in orbiter.html, parsed via parseHTML below. Title/hint/panel/
   // poem-link styles live in orbiter.css, imported above. Site-wide title
-  // consistency pass (2026-08-25): "sing, orbiter" (Richard Kenney) used
-  // to be the only bottom-center line here, standing in for a title it
-  // wasn't — now it's the subtitle beneath a real "ORBITER" title, same
-  // structure as every other scene (see NOTES.md's title-block entry).
-  // The epigraph stays uncredited in-scene by design either way — full
-  // attribution lives in the colophon's bibliography, same as every
-  // poem's source line below.
+  // consistency pass (2026-08-25) briefly promoted "sing, orbiter"
+  // (Richard Kenney) to a subtitle beneath a new "ORBITER" title; per
+  // Scott's same-day follow-up, only the subtitle stays — .orbiter-title
+  // is still the wrapper's class/mount point, just with one line inside
+  // it now instead of two. The epigraph stays uncredited in-scene either
+  // way — full attribution lives in the colophon's bibliography, same as
+  // every poem's source line below.
   if (!preview) {
     const shell = parseHTML(orbiterHtml);
     title = shell.querySelector('.orbiter-title');

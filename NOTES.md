@@ -430,6 +430,34 @@ adding a new scene.
   not just the outermost one — check what's actually anchored in that
   space before picking a value, and verify by scrolling through the whole
   range live.
+- **A site-wide webfont swap does not automatically extend to
+  Canvas-drawn text (`ctx.font = '...'`).** Real scope boundary hit in
+  the 3.9.7 Arapey swap: the shared editorial serif (`'Times New Roman',
+  serif`, CSS-declared, DOM text) converted cleanly to `'Arapey', serif`
+  everywhere it appeared, because DOM text automatically reflows once a
+  `@font-face` finishes loading — there's no race to worry about.
+  `beamline.js`'s station-placard body text and `butterfly.js`'s axis
+  label are drawn onto an offscreen `<canvas>` and baked into a static
+  `THREE.CanvasTexture`/bitmap; if that draw call runs before a webfont
+  has finished loading, the canvas silently falls back to the next
+  generic in the stack and — unlike DOM text — never gets a chance to
+  redraw once the real font arrives, since nothing in this codebase
+  currently awaits `document.fonts.ready`/`document.fonts.load()` before
+  generating a texture (checked; no such guard exists anywhere yet).
+  Deliberately left both of these on `"Times New Roman", serif` — a
+  system font with zero loading race — rather than swap them and
+  introduce a real, easy-to-miss bug (first station a user opens might
+  render in the wrong font depending on load timing, forever, since the
+  texture never regenerates). `library.js`'s `BOOK_TREATMENTS`/
+  `DISC_TREATMENTS`/`CD_TREATMENTS` are a separate, unrelated case: those
+  intentionally cycle through *several* different system serif/sans
+  fonts (Georgia, Times New Roman, Palatino, Verdana, ...) as a variety
+  mechanism so shelf spines don't look uniform — see that file's own
+  comment at `BOOK_TREATMENTS` — not an instance of "the site's shared
+  serif" at all, so out of scope for this swap on a different, unrelated
+  ground. If a future pass wants Arapey in canvas text too, it needs a
+  real `document.fonts.load('italic 16px Arapey')` (or similar) awaited
+  before the texture-generation call, not a plain find-and-replace.
 
 ## Annotated math — where to start tuning
 
@@ -593,6 +621,47 @@ keywords, present-in-both-accounts framing — closed it, reopened a
 different one, toggled sound on/off, no console errors from the scene's
 own code. Debug hooks fully stripped before this build. Full `npx vite
 build` clean.
+
+## 3.9.7 (2026-08-25)
+
+**Shared serif swapped to Arapey; title-block pass partially reverted per
+Scott's same-day follow-up.** Two quick, independent changes on top of
+3.9.6, both from direct requests rather than a written brief.
+
+**Serif swap.** The site's shared editorial serif — `'Times New Roman',
+serif`, used across colophon, beamline, harmonics, orbiter, library,
+sphere, butterfly, orrery, outside, and the prerendered `/text/` pages —
+is now `'Arapey', serif` (Google Fonts, added to the existing combined
+`fonts.googleapis.com` request in `index.html`). Scroll's own `IM Fell
+English`/`Cinzel` manuscript fonts are untouched — a deliberately
+different, scene-specific choice, not the shared site serif. Two
+categories of `Times New Roman` usage deliberately left alone, for
+reasons that aren't obvious from a plain find-and-replace — see the new
+NOTES.md entry above ("A site-wide webfont swap does not automatically
+extend to Canvas-drawn text") for the full reasoning: beamline.js's
+station-placard text and butterfly.js's axis label are drawn onto
+`<canvas>` and baked into a static texture, where a webfont-loading race
+could permanently bake in the wrong fallback font with no code in this
+project currently guarding against that; library.js's book/disc/CD spine
+treatments intentionally cycle through several different system fonts on
+purpose, unrelated to "the site's serif" at all.
+
+**Title-block partial revert.** Same day as 3.9.6 shipped, Scott asked to
+remove the title/subtitle entirely from Sphere, Scroll, and Library, and
+to trim Orbiter down to subtitle-only (drop the "ORBITER" line, keep
+"sing, orbiter"). Implemented directly: Sphere and Scroll lose their
+title chrome entirely (both scenes go back to having none, same as
+before 3.9.6 — Scroll's own file-header design note, "no titles," turns
+out to already argue against having added one); Library loses both its
+"LIBRARY" title and "the library — once removed" subtitle, the caption
+text no longer rendering anywhere in-scene; Orbiter keeps only "sing,
+orbiter." Scroll's `--footer-safe-zone` reverted from `7.5rem` back to
+`4.5rem` since it no longer needs to clear its own title, just
+`#site-title`'s footer pill. Beamline/Orrery/Butterfly/Harmonics/Outside
+keep the titles 3.9.6 gave them — this revert only touched the four
+scenes named. Live-verified all four post-revert (a mid-session local
+dev-server restart interrupted the first verification pass; resumed
+cleanly after). Full `npx vite build` clean throughout.
 
 ## 3.9.6 (2026-08-25)
 

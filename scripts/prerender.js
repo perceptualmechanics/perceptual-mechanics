@@ -107,7 +107,7 @@ ${JSON.stringify(jsonLd, null, 2)}
   * { box-sizing: border-box; }
   body {
     margin: 0; background: #0a0a0a; color: #ded9d0;
-    font-family: Georgia, 'Iowan Old Style', 'Times New Roman', serif;
+    font-family: 'Arapey', Georgia, 'Iowan Old Style', serif;
     font-size: 1.06rem; line-height: 1.72;
     -webkit-text-size-adjust: 100%;
   }
@@ -121,7 +121,7 @@ ${JSON.stringify(jsonLd, null, 2)}
   a:hover, a:focus { color: #f0cf6a; }
   header.masthead { border-bottom: 1px solid #2a2620; padding-bottom: 1.4rem; margin-bottom: 2rem; }
   header.masthead a.home {
-    font-family: 'Times New Roman', serif; letter-spacing: 0.34em; text-transform: uppercase;
+    font-family: 'Arapey', serif; letter-spacing: 0.34em; text-transform: uppercase;
     font-size: 0.66rem; color: #8c8377; text-decoration: none;
   }
   header.masthead a.home:hover, header.masthead a.home:focus { color: #d9b13f; }

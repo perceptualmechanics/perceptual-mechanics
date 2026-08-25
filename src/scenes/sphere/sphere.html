@@ -4,16 +4,14 @@
   sceneKit.js's parseHTML(). Full-experience only (preview mode never
   mounts any of this).
 
-  Three top-level pieces here, because they have different real mount
+  Two top-level pieces here, because they have different real mount
   points in the live DOM, not one:
-    - .sphere-title and .sphere-hint are both appended to document.body
-      (fixed, outside the scene's own container -- see any scene's
-      z-index-scale comment in styles/main.css for why body-level chrome
-      needs z-index >= 310). .sphere-title was added in the site-wide
-      title consistency pass (2026-08-25, see NOTES.md's title-block
-      entry) -- this scene had no title at all before; no subtitle either,
-      since sphere.text.js has no natural epigraph candidate the way
-      orbiter's/library's captions were.
+    - .sphere-hint is appended to document.body (fixed, outside the
+      scene's own container -- see any scene's z-index-scale comment in
+      styles/main.css for why body-level chrome needs z-index >= 310).
+      This scene briefly gained a bottom-center title in the 2026-08-25
+      site-wide title consistency pass; removed again same day per
+      Scott's call -- no title chrome here.
     - .sphere-panel is appended inside this scene's own container element.
   sphere.js picks each one out by class after parsing and puts it where it
   belongs.
@@ -27,8 +25,6 @@
   clicked (openFragment()/navigateToFragment() in sphere.js), the same way
   they always have.
 -->
-<p class="sphere-title" aria-hidden="true">Sphere</p>
-
 <p class="sphere-hint" aria-hidden="true">drag to orbit &nbsp;&middot;&nbsp; click a facet</p>
 
 <aside class="sphere-panel" role="dialog" aria-modal="false" aria-labelledby="sphere-panel-title">
