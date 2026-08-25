@@ -338,6 +338,83 @@ different one, toggled sound on/off, no console errors from the scene's
 own code. Debug hooks fully stripped before this build. Full `npx vite
 build` clean.
 
+## 3.9.0 (2026-08-25)
+
+**Outside, round 7: ambient redesign — spa chimes, not drone.** Replaced
+the continuous breath-synced pad entirely with a generative pentatonic
+chime layer. The pad's "hum" problem, revisited after round 5's floor/
+ceiling fix, turned out to be structural: a held tone reads as a drone no
+matter how quiet its own trough gets. The fix had to change what kind of
+sound this was, not just how loud it got.
+
+**Scale.** A-Hirajoshi {A, B, C, E, F} — semitone offsets [0,2,3,7,8] from
+A — named first in the brief over generic major pentatonic for its
+wistful, settled character. One honest caveat, checked rather than taken
+on faith: Hirajoshi is NOT anhemitonic. A major-type pentatonic (0,2,4,7,9)
+truly has no semitone or tritone between any two of its degrees; Hirajoshi
+has both (a semitone between its 2nd and 3rd degrees, a tritone between
+its 2nd and 5th) — confirmed by direct interval computation, not assumed.
+That tension is the actual source of the scale's "wistful" character, not
+an oversight in the brief's "structurally impossible to clash" framing,
+which is exactly true only for anhemitonic scales. Proceeding with
+Hirajoshi anyway, as explicitly and first named: long attack/release,
+heavy reverb, and sparse stochastic triggering keep two colliding tones
+rarely both near full volume at once, and the scale's own mild tension
+reads as part of its intended calm-but-wistful character rather than a
+flaw.
+
+**Timbre and register.** Each ambient note is a fundamental plus two upper
+partials detuned a few Hz off a clean 2x/3x harmonic ratio — the same
+beat-frequency principle as chimeRaphael's paired tones and the old pad's
+own detune drift, aimed at a gentler target here. Moved up out of bass
+entirely: the pool spans A4 (440Hz) to F6 (~1397Hz), not a retextured
+version of the old 110/165Hz pad register.
+
+**Triggering.** Kept the tie to breathePhase(t) — the same signal driving
+the petal animation — but moved what it modulates: instead of one
+continuous tone's volume rising and falling each cycle, the *rate* of a
+Poisson-process-style stochastic trigger now tracks breath phase (denser
+near the swell's peak, sparser at the trough). Individual notes fire
+independently at random within that envelope rather than all together on
+each cycle, with no-immediate-repeat note selection. Verified numerically
+(not just by ear) in an isolated Node harness reusing the exact trigger
+math: gap coefficient of variation ~1.0 (Poisson signature; a fixed
+interval would show ~0), zero immediate-repeat violations, no periodic
+pattern detected at any short lag, and trigger density genuinely
+concentrated near breath-phase deciles close to the peak.
+
+**Coordination check**, done before shipping per the brief: Raphael's
+440/443Hz lands exactly on A4; Michael's 660Hz sits ~2 cents from E5
+(659.25) — imperceptible; Gabriel's 520→170Hz ramp starts near C5 and ends
+near F3 (same pitch class as F5 in the ambient pool). Two deliberate
+non-matches: Emmanuel's 390Hz partial is a harmonic-series overtone of his
+130Hz fundamental (psychoacoustic bass reinforcement, not an independent
+note) and lands off-scale near G; Nature's logistic-map pitch jitter stays
+deliberately unquantized, since unquantized chaos is that petal's whole
+point.
+
+**Live verification.** RMS-sampled via a temporary AnalyserNode tapped
+into the mix bus (same technique as round 5's hum diagnosis): fresh page
+load with sound on and nothing touched measured RMS 0 exactly — no hum,
+confirmed rather than assumed. A forced trigger (bypassing the
+probabilistic gate) showed the envelope rise from 0 to a peak around 1.5s,
+then decay smoothly to near-silence by ~9s — the full graph (partials,
+shared envelope, dry/wet split into the existing reverb convolver, mix
+bus) confirmed wired correctly end to end. Touching a petal afterward
+still produced its own chime cleanly layered against the ambient bed, and
+the console stayed clean (only the pre-existing, unrelated
+`toNonIndexed()` THREE warning). Could not verify the natural (non-forced)
+stochastic firing rate against real wall-clock time in this sandbox — the
+same known limitation as round 6
+([[feedback_chrome_tab_raf_throttling]]): this environment's automated
+browser tab reports `document.visibilityState:'hidden'` even while
+focused, throttling `requestAnimationFrame` (and therefore the `animate()`
+loop the trigger check lives in) to a near-stop. Substituted the same
+workaround established in round 6 — verified the exact trigger logic
+numerically outside the throttled loop instead of trusting a live
+real-time listen. All debug hooks stripped before this build. Full `npx
+vite build` clean.
+
 ## 3.8.0 (2026-08-24)
 
 **Outside, round 6: core/petal seam + gauzy background curtains.** Polish

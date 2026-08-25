@@ -67,13 +67,15 @@ import './outside.css';
 // through the poles); nothing auto-rotates the view.
 //
 // ─── Sound ───────────────────────────────────────────────────────────────
-// A fresh pass, not a reuse of the retired beat-frequency/account-filter
-// design (that was built specifically for the projection mechanism this
-// pivot removes). Scott's own pick, offered as an explicit choice: a
-// breath-synced pad — one soft sine pair through a shared lowpass filter,
-// both the pad's volume and the filter's cutoff tracking the exact same
-// breathePhase(t) driving the geometry, so the sound and the visual
-// "inhale" are the same signal, not two coincidentally-similar cycles.
+// Originally a breath-synced pad (one soft sine pair through a shared
+// lowpass filter) — replaced in a later pass because a held drone reads
+// as a hum no matter how its volume is trimmed. Now a generative ambient
+// chime layer: individual Hirajoshi-pentatonic tones trigger stochastically
+// (never on a fixed interval), with the *rate* of triggering — not a
+// continuous tone's volume — tracking breathePhase(t), so the tie to the
+// same signal driving the geometry survives the redesign. See the "Sound"
+// section below for the scale choice, coordination against the five petal
+// chimes, and an honest caveat about Hirajoshi's own semitone/tritone.
 //
 // ─── Touch ───────────────────────────────────────────────────────────────
 // Touching anywhere on the flower's real surface (raycast against the
@@ -762,31 +764,60 @@ export function createOutside(container, { preview = false, initialPieceId = nul
     container.addEventListener('pointerleave', onPointerLeave);
   }
 
-  // ─── Sound — breath-synced pad. Root + fifth sine pair through one
-  // shared lowpass filter; both the pad's own volume and the filter's
-  // cutoff track breathePhase(t) directly, so the sound "inhales" on
-  // exactly the same signal driving the geometry, not a separate cycle
-  // that merely happens to feel similar. Lazy AudioContext on first
-  // gesture, same convention every other scene's sound toggle uses. ──────
-  let audioCtx = null, oscA = null, oscB = null, filter = null, padGain = null, muteGain = null;
-  let padDriftLfo = null, padDriftGain = null;
+  // ─── Sound — generative ambient chime layer, replacing the old
+  // continuous breath-synced pad. The pad kept reading as a "hum" even
+  // after round 5's floor/ceiling fix because a held drone is a hum by
+  // definition, no matter how quiet its trough gets — the fix had to be
+  // structural, not another volume trim. Individual pentatonic tones now
+  // trigger stochastically, gated by the same breathePhase(t) that drives
+  // the petal animation (denser near the swell's peak, sparser at the
+  // trough) rather than one continuous tone whose volume merely rises and
+  // falls. Lazy AudioContext on first gesture, same convention every other
+  // scene's sound toggle uses. ─────────────────────────────────────────
+  let audioCtx = null, muteGain = null;
   let reverbConvolver = null;
   let soundEnabled = false;
-  const PAD_ROOT_HZ = 110, PAD_FIFTH_HZ = 164.81;
-  const FILTER_MIN_HZ = 260, FILTER_MAX_HZ = 1300;
-  // Round 5 fix — the pad itself was reading as a persistent hum, not a
-  // breath. Confirmed live (not guessed): RMS of the post-mix signal was
-  // ~0.068 immediately after enabling sound with nothing touched yet, and
-  // never dropped meaningfully lower — PAD_GAIN_MIN was 0.035, so the pad
-  // never actually reached anything close to silence at the trough of its
-  // own breathing cycle, which is exactly what reads as an always-on drone
-  // rather than an in-and-out breath. Floor dropped near-silent; ceiling
-  // trimmed slightly too, per the brief's own "dial it back" option.
-  const PAD_GAIN_MIN = 0.006, PAD_GAIN_MAX = 0.085;
+  let lastAmbientFreq = 0;
+  // A-Hirajoshi {A, B, C, E, F} — semitone offsets [0,2,3,7,8] from A.
+  // Named first in the brief over generic major pentatonic for its
+  // wistful, settled character (the actual character real spa/zen
+  // soundscapes use). Two octaves, kept up out of bass register entirely —
+  // "move this whole layer up, don't keep it low and just retexture it."
+  //
+  // Honest caveat: Hirajoshi/Kumoi are NOT anhemitonic. A major-type
+  // pentatonic (0,2,4,7,9) truly has no semitone or tritone between any
+  // two of its degrees; Hirajoshi's own C–B dyad is a semitone and its
+  // B–F dyad is a tritone — that dissonant interval is the actual source
+  // of the "wistful" character, not an oversight. The brief's "no interval
+  // in a pentatonic scale is dissonant" premise is exactly true only for
+  // anhemitonic scales. Proceeding with Hirajoshi anyway, as explicitly
+  // (and first) named, because the practical clash risk is low here: long
+  // attack/release, heavy reverb, and sparse stochastic triggering mean
+  // two colliding tones are rarely both near full volume at once, and the
+  // scale's own mild tension reads as part of its calm-but-wistful
+  // character rather than a flaw.
+  const AMBIENT_FREQS = [
+    440.00, 493.88, 523.25, 659.25, 698.46,    // A4 B4 C5 E5 F5
+    880.00, 987.77, 1046.50, 1318.51, 1396.91, // A5 B5 C6 E6 F6
+  ];
+  // Coordination check against the five petal chimes, done before
+  // finalizing per the brief rather than skipped: Raphael's 440/443 lands
+  // exactly on A4; Michael's 660 sits ~2 cents from E5 (659.25) —
+  // imperceptibly close; Gabriel's 520→170 ramp starts near C5 (523.25)
+  // and ends near F3 (174.61, same pitch class as F5). Two deliberate
+  // non-matches, both defensible: Emmanuel's 390Hz partial is a harmonic-
+  // series overtone of his 130Hz fundamental (psychoacoustic bass
+  // reinforcement, not an independent melodic note) and lands off-scale
+  // near G — physically motivated, not arbitrary; Nature's logistic-map
+  // pitch jitter is deliberately unquantized to any scale, since
+  // unquantized chaos is that petal's whole point. Everything else this
+  // scene plays sits on or within a few cents of this same Hirajoshi set.
+  const AMBIENT_GAIN = 0.075;
+  const AMBIENT_RATE_MIN = 0.025, AMBIENT_RATE_MAX = 0.16; // notes/sec, breath-gated
   // A synthesized impulse response (exponentially-decaying noise) rather
   // than a loaded audio file — genuine convolution reverb, no external
-  // asset. Used only by Emmanuel's chime (below), whose whole ask is
-  // "long decay, real reverb tail, low and wide."
+  // asset. Used by Emmanuel's chime and now the ambient layer, whose own
+  // ask is "generous reverb tail, large open space, never close-mic'd."
   function makeImpulseResponse(ctx, duration, decay) {
     const rate = ctx.sampleRate;
     const length = Math.floor(rate * duration);
@@ -801,25 +832,7 @@ export function createOutside(container, { preview = false, initialPieceId = nul
     if (audioCtx) return;
     audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     muteGain = audioCtx.createGain(); muteGain.gain.value = 0;
-    padGain = audioCtx.createGain(); padGain.gain.value = PAD_GAIN_MIN;
-    filter = audioCtx.createBiquadFilter();
-    filter.type = 'lowpass'; filter.Q.value = 0.8; filter.frequency.value = FILTER_MIN_HZ;
-    oscA = audioCtx.createOscillator(); oscB = audioCtx.createOscillator();
-    oscA.type = 'sine'; oscB.type = 'sine';
-    oscA.frequency.value = PAD_ROOT_HZ; oscB.frequency.value = PAD_FIFTH_HZ;
-    // A perfectly static two-tone pair reads as a machine hum no matter how
-    // its volume is modulated, because nothing else about the sound moves.
-    // A slow, small detune drift on the fifth (a few cents, far below pitch
-    // perception as an actual note change) gives the pad real breath/life
-    // instead of a fixed drone — round 5 fix, alongside the floor/ceiling
-    // trim above.
-    padDriftLfo = audioCtx.createOscillator(); padDriftLfo.type = 'sine'; padDriftLfo.frequency.value = 0.045;
-    padDriftGain = audioCtx.createGain(); padDriftGain.gain.value = 6; // cents of detune depth
-    padDriftLfo.connect(padDriftGain); padDriftGain.connect(oscB.detune);
-    padDriftLfo.start();
-    oscA.connect(filter); oscB.connect(filter);
-    filter.connect(padGain); padGain.connect(muteGain); muteGain.connect(audioCtx.destination);
-    oscA.start(); oscB.start();
+    muteGain.connect(audioCtx.destination);
     reverbConvolver = audioCtx.createConvolver();
     reverbConvolver.buffer = makeImpulseResponse(audioCtx, 3.4, 2.1);
     reverbConvolver.connect(muteGain);
@@ -839,6 +852,41 @@ export function createOutside(container, { preview = false, initialPieceId = nul
     }
   }
   if (soundToggleEl) soundToggleEl.addEventListener('click', () => setSoundEnabled(!soundEnabled));
+
+  // ─── Ambient chime voice — one generative note from the Hirajoshi pool
+  // above. Inharmonic on purpose: a fundamental plus two upper partials
+  // detuned a few Hz off a clean 2x/3x harmonic ratio, the same beat-
+  // frequency principle chimeRaphael and the old pad's drift both used,
+  // aimed at a gentler target here — a soft, slow shimmer rather than a
+  // sterile pure-harmonic bell. Long attack and release (both randomized
+  // per note so notes don't swell in lockstep), mostly wet through the
+  // shared reverb convolver so this layer sits back in a large room rather
+  // than up close. ─────────────────────────────────────────────────────
+  function triggerAmbientChime(now, freq) {
+    const osc1 = audioCtx.createOscillator(); osc1.type = 'sine';
+    osc1.frequency.value = freq;
+    const osc2 = audioCtx.createOscillator(); osc2.type = 'sine';
+    osc2.frequency.value = freq * 2 + (Math.random() * 1.6 - 0.8); // detuned off a clean octave
+    const osc3 = audioCtx.createOscillator(); osc3.type = 'sine';
+    osc3.frequency.value = freq * 3 + (Math.random() * 3 - 1.5); // detuned off a clean 12th
+    const g1 = audioCtx.createGain(); g1.gain.value = 1;
+    const g2 = audioCtx.createGain(); g2.gain.value = 0.34;
+    const g3 = audioCtx.createGain(); g3.gain.value = 0.16;
+    const attack = 1.4 + Math.random() * 1.2; // 1.4-2.6s, per the brief's "long attack (1-3+s)"
+    const release = 4 + Math.random() * 2; // 4-6s
+    const env = audioCtx.createGain();
+    env.gain.setValueAtTime(0, now);
+    env.gain.linearRampToValueAtTime(AMBIENT_GAIN, now + attack);
+    env.gain.exponentialRampToValueAtTime(0.0001, now + attack + release);
+    osc1.connect(g1); osc2.connect(g2); osc3.connect(g3);
+    g1.connect(env); g2.connect(env); g3.connect(env);
+    const dry = audioCtx.createGain(); dry.gain.value = 0.22;
+    const wet = audioCtx.createGain(); wet.gain.value = 0.85; // mostly wet — large, open space
+    env.connect(dry); dry.connect(muteGain);
+    env.connect(wet); wet.connect(reverbConvolver);
+    const stopAt = now + attack + release + 0.3;
+    [osc1, osc2, osc3].forEach(o => { o.start(now); o.stop(stopAt); });
+  }
 
   // ─── Five petal chimes — each grounded in what's already established
   // about that Power Source this session, not five arbitrary notes.
@@ -1129,10 +1177,22 @@ export function createOutside(container, { preview = false, initialPieceId = nul
     centerPoints.geo.attributes.position.needsUpdate = true;
     centerPoints.geo.attributes.color.needsUpdate = true;
 
+    // ─── Ambient chime triggering — Poisson-process style: each frame,
+    // fire probability is rate*dt against Math.random(), never a fixed
+    // timer, so the pattern can't fall into an audible repeat. rate itself
+    // is breath-gated (denser near the swell's peak bp≈1, sparser at the
+    // trough bp≈0) — the tie to breathePhase(t) the brief asked to keep,
+    // without ever firing notes together in lockstep the way the old pad
+    // did. No-immediate-repeat note selection avoids the same pitch
+    // landing twice in a row.
     if (audioCtx && soundEnabled) {
-      const nowT = audioCtx.currentTime;
-      padGain.gain.setTargetAtTime(THREE.MathUtils.lerp(PAD_GAIN_MIN, PAD_GAIN_MAX, bp), nowT, 0.6);
-      filter.frequency.setTargetAtTime(THREE.MathUtils.lerp(FILTER_MIN_HZ, FILTER_MAX_HZ, bp), nowT, 0.6);
+      const rate = THREE.MathUtils.lerp(AMBIENT_RATE_MIN, AMBIENT_RATE_MAX, bp);
+      if (Math.random() < rate * dt) {
+        let idx = Math.floor(Math.random() * AMBIENT_FREQS.length);
+        if (AMBIENT_FREQS[idx] === lastAmbientFreq) idx = (idx + 1 + Math.floor(Math.random() * (AMBIENT_FREQS.length - 1))) % AMBIENT_FREQS.length;
+        lastAmbientFreq = AMBIENT_FREQS[idx];
+        triggerAmbientChime(audioCtx.currentTime, lastAmbientFreq);
+      }
     }
 
     // ─── Background curtains — billboard to the camera every frame (so
@@ -1195,11 +1255,10 @@ export function createOutside(container, { preview = false, initialPieceId = nul
       centerPoints.geo.dispose(); centerPoints.mat.dispose(); centerPoints.haloMat.dispose();
       newestGlow.geo.dispose(); newestGlow.mat.dispose(); newestGlow.haloMat.dispose();
       dotTex.dispose();
-      if (oscA) { try { oscA.stop(); } catch { /* already stopped */ } oscA.disconnect(); }
-      if (oscB) { try { oscB.stop(); } catch { /* already stopped */ } oscB.disconnect(); }
-      if (padDriftLfo) { try { padDriftLfo.stop(); } catch { /* already stopped */ } padDriftLfo.disconnect(); }
-      padDriftGain?.disconnect();
-      filter?.disconnect(); padGain?.disconnect(); muteGain?.disconnect();
+      // Ambient chime oscillators are one-shot (built fresh per triggered
+      // note, same convention as the five petal chimes) — nothing
+      // persistent to stop/disconnect here beyond the shared nodes below.
+      muteGain?.disconnect();
       reverbConvolver?.disconnect();
       if (audioCtx) audioCtx.close().catch(() => {});
       titleEl?.remove(); hintEl?.remove(); soundToggleEl?.remove();
