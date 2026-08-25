@@ -131,6 +131,98 @@ function makeDotTexture() {
   return new THREE.CanvasTexture(c);
 }
 
+// ─── Round 6 — seam/vein texture. One canvas texture doing two jobs, per
+// the brief: faint vein-line surface detail across the whole petal, and a
+// warm gold glow concentrated at v=0 (the root, where flat petal geometry
+// meets the spherical pod — a real geometric seam, since a sphere and a
+// flat plane can only ever touch along a thin contact line). Sampled via
+// emissiveMap with emissive forced to white (see makePetalMaterial) so the
+// texture's own painted colors carry straight through as additive light,
+// unconstrained by any base material tint — the base violet fill baked
+// into this texture IS the petal's ambient emissive (replacing the old
+// flat color), not a mask multiplied against it. uv.y follows u (0=root,
+// 1=tip, see buildPetalTopology's uvArr below); uv.x follows w (width). ──
+function makeSeamVeinTexture() {
+  const w = 96, h = 320;
+  const c = document.createElement('canvas');
+  c.width = w; c.height = h;
+  const cx = c.getContext('2d');
+  const baseR = 42, baseG = 18, baseB = 80; // the old flat emissive (0x2a1250), now baked in directly
+  const goldR = 255, goldG = 205, goldB = 120;
+  for (let y = 0; y < h; y++) {
+    const v = y / (h - 1);
+    const goldT = Math.max(0, 1 - v / 0.32); // fully faded by v~0.32 — wide enough to cover the contact line at normal viewing distance, not just a thin rim
+    const ease = goldT * goldT * (3 - 2 * goldT); // smoothstep
+    const r = baseR + (goldR - baseR) * ease;
+    const g = baseG + (goldG - baseG) * ease;
+    const b = baseB + (goldB - baseB) * ease;
+    cx.fillStyle = `rgb(${r | 0},${g | 0},${b | 0})`;
+    cx.fillRect(0, y, w, 1);
+  }
+  // Faint veins fanning from the root toward the tip — the surface-detail
+  // half of this texture's double duty.
+  cx.strokeStyle = 'rgba(255,255,255,0.10)';
+  cx.lineWidth = 1.5;
+  const veinCount = 6;
+  for (let i = 0; i < veinCount; i++) {
+    const x1 = w * (0.12 + (i / (veinCount - 1)) * 0.76);
+    cx.beginPath();
+    cx.moveTo(w * 0.5, 0);
+    cx.quadraticCurveTo(w * 0.5, h * 0.35, x1, h);
+    cx.stroke();
+  }
+  const tex = new THREE.CanvasTexture(c);
+  tex.wrapS = THREE.ClampToEdgeWrapping;
+  tex.wrapT = THREE.ClampToEdgeWrapping;
+  return tex;
+}
+
+// ─── Compact 2D simplex noise — the standard permutation/gradient
+// algorithm (Perlin's simplex method), written out directly rather than
+// pulled from a dependency (none is in package.json). Used only by the
+// background curtains below, driving their displacement instead of a sine
+// wave: noise reads as air movement, a sine wave reads as mechanical
+// waving, and that distinction is the entire point of using it. Each
+// caller gets its own seeded permutation table (small xorshift PRNG) so
+// multiple curtains don't all billow in lockstep. ─────────────────────────
+function makeSimplex2D(seed) {
+  let s = (seed >>> 0) || 1;
+  function rand() {
+    s ^= s << 13; s ^= s >>> 17; s ^= s << 5; s >>>= 0;
+    return s / 4294967296;
+  }
+  const p = new Uint8Array(256);
+  for (let i = 0; i < 256; i++) p[i] = i;
+  for (let i = 255; i > 0; i--) {
+    const j = Math.floor(rand() * (i + 1));
+    const t = p[i]; p[i] = p[j]; p[j] = t;
+  }
+  const perm = new Uint8Array(512);
+  for (let i = 0; i < 512; i++) perm[i] = p[i & 255];
+  const grad2 = [[1, 1], [-1, 1], [1, -1], [-1, -1], [1, 0], [-1, 0], [0, 1], [0, -1]];
+  const F2 = 0.5 * (Math.sqrt(3) - 1), G2 = (3 - Math.sqrt(3)) / 6;
+  return function noise2D(xin, yin) {
+    const sk = (xin + yin) * F2;
+    const i = Math.floor(xin + sk), j = Math.floor(yin + sk);
+    const t = (i + j) * G2;
+    const X0 = i - t, Y0 = j - t;
+    const x0 = xin - X0, y0 = yin - Y0;
+    let i1, j1;
+    if (x0 > y0) { i1 = 1; j1 = 0; } else { i1 = 0; j1 = 1; }
+    const x1 = x0 - i1 + G2, y1 = y0 - j1 + G2;
+    const x2 = x0 - 1 + 2 * G2, y2 = y0 - 1 + 2 * G2;
+    const ii = i & 255, jj = j & 255;
+    let n0 = 0, n1 = 0, n2 = 0;
+    let t0 = 0.5 - x0 * x0 - y0 * y0;
+    if (t0 >= 0) { t0 *= t0; const g = grad2[perm[ii + perm[jj]] % 8]; n0 = t0 * t0 * (g[0] * x0 + g[1] * y0); }
+    let t1 = 0.5 - x1 * x1 - y1 * y1;
+    if (t1 >= 0) { t1 *= t1; const g = grad2[perm[ii + i1 + perm[jj + j1]] % 8]; n1 = t1 * t1 * (g[0] * x1 + g[1] * y1); }
+    let t2 = 0.5 - x2 * x2 - y2 * y2;
+    if (t2 >= 0) { t2 *= t2; const g = grad2[perm[ii + 1 + perm[jj + 1]] % 8]; n2 = t2 * t2 * (g[0] * x2 + g[1] * y2); }
+    return 70 * (n0 + n1 + n2); // roughly -1..1
+  };
+}
+
 // ─── Shared petal topology — every petal (the four simple ones and
 // Nature's three sub-lobes) uses the same (u, w) grid and triangle
 // index buffer; only the per-instance length/width/height/angle/color
@@ -139,12 +231,15 @@ const U_SEGS = 16, W_SEGS = 9;
 function buildPetalTopology() {
   const count = U_SEGS * W_SEGS;
   const uArr = new Float32Array(count), wArr = new Float32Array(count);
+  const uvArr = new Float32Array(count * 2); // static per (u,w) — shared across every petal instance, same as indices
   for (let iu = 0; iu < U_SEGS; iu++) {
     const u = iu / (U_SEGS - 1);
     for (let iw = 0; iw < W_SEGS; iw++) {
       const w = (iw / (W_SEGS - 1)) * 2 - 1;
       const i = iu * W_SEGS + iw;
       uArr[i] = u; wArr[i] = w;
+      uvArr[i * 2] = (w + 1) * 0.5; // texture U — petal width
+      uvArr[i * 2 + 1] = u;         // texture V — 0 at root (pod seam), 1 at tip
     }
   }
   const idx = [];
@@ -155,7 +250,7 @@ function buildPetalTopology() {
       idx.push(a, b, d, b, c, d);
     }
   }
-  return { uArr, wArr, indices: new Uint16Array(idx), count };
+  return { uArr, wArr, uvArr, indices: new Uint16Array(idx), count };
 }
 
 // The petal's own local shape — the width profile is the sin(pi*u) rose-
@@ -297,6 +392,70 @@ export function createOutside(container, { preview = false, initialPieceId = nul
   const nebula = buildNebula(SCALE * 1.5, SCALE * 3.1);
   scene.add(nebula.points);
 
+  // ─── Background curtains — gauzy translucent planes, folded into the
+  // same layered-glow lineage as the nebula above (violet family,
+  // additive, soft-edged) rather than built as a separate system. A few
+  // large soft-edged planes sit at different depths/azimuths around the
+  // flower, billboarded to the camera every frame so they always face the
+  // viewer regardless of orbit angle — orbiting then produces real
+  // parallax BETWEEN the planes themselves (not just against the flower),
+  // since each sits at a genuinely different distance from the origin.
+  // Displacement is 2D simplex noise sampled per-vertex over time, not a
+  // sine wave — noise reads as air movement, sine reads as mechanical
+  // waving, and that distinction is the entire effect (see
+  // makeSimplex2D's own header for why). ──────────────────────────────────
+  function makeCurtainTexture(hue) {
+    const s = 128;
+    const c = document.createElement('canvas');
+    c.width = s; c.height = s;
+    const cx = c.getContext('2d');
+    const col = new THREE.Color().setHSL(hue, 0.55, 0.6);
+    const r = Math.round(col.r * 255), g = Math.round(col.g * 255), b = Math.round(col.b * 255);
+    const grad = cx.createRadialGradient(s / 2, s / 2, 0, s / 2, s / 2, s / 2);
+    grad.addColorStop(0, `rgba(${r},${g},${b},0.85)`);
+    grad.addColorStop(0.55, `rgba(${r},${g},${b},0.32)`);
+    grad.addColorStop(1, `rgba(${r},${g},${b},0)`);
+    cx.fillStyle = grad;
+    cx.fillRect(0, 0, s, s);
+    return new THREE.CanvasTexture(c);
+  }
+  // Placed opposite the scene's own default camera azimuth (not scattered
+  // at arbitrary angles) so at least some curtains sit "behind the flower"
+  // as actually framed on load, per the brief — verified this by hand
+  // against the camera's own FOV/position math the first time through:
+  // the original arbitrary azimuths (1.05, -0.55, 2.35 rad) put every
+  // curtain outside the camera's ~47deg diagonal FOV at the default view,
+  // so nothing rendered until orbited nearly all the way around.
+  //
+  // Radii all sit well beyond CAM_MAX (SCALE*4.2) on purpose — caught live
+  // on the first pass: with a curtain closer than the camera's own max
+  // orbit distance, rotating toward it could put the camera nearer to the
+  // plane than its own size, and a large billboarded plane that close
+  // fills the entire viewport with a flat wash of color, reading as a
+  // glitch rather than a backdrop. Pushing every radius past CAM_MAX means
+  // the camera can never get closer to a curtain than its own size,
+  // regardless of zoom or orbit angle.
+  const CURTAIN_BACK_AZ = azimuth + Math.PI;
+  const CURTAIN_CONFIGS = [
+    { az: CURTAIN_BACK_AZ - 0.32, polar: 0.95, r: SCALE * 4.4, w: SCALE * 4.6, h: SCALE * 5.4, hue: 0.78, opacity: 0.65, seed: 11 },
+    { az: CURTAIN_BACK_AZ + 0.18, polar: 1.15, r: SCALE * 4.9, w: SCALE * 4.8, h: SCALE * 5.6, hue: 0.71, opacity: 0.48, seed: 47 },
+    { az: CURTAIN_BACK_AZ + 0.6, polar: 1.35, r: SCALE * 5.4, w: SCALE * 5.0, h: SCALE * 5.8, hue: 0.85, opacity: 0.38, seed: 83 },
+  ];
+  const curtainPlanes = CURTAIN_CONFIGS.map(cfg => {
+    const geo = new THREE.PlaneGeometry(cfg.w, cfg.h, 7, 5);
+    const base = geo.attributes.position.array.slice(); // undisturbed local positions — the noise displacement below is always relative to these, never cumulative
+    const tex = makeCurtainTexture(cfg.hue);
+    const mat = new THREE.MeshBasicMaterial({
+      map: tex, transparent: true, opacity: cfg.opacity, depthWrite: false,
+      blending: THREE.AdditiveBlending, side: THREE.DoubleSide, fog: false,
+    });
+    const mesh = new THREE.Mesh(geo, mat);
+    const sp = Math.sin(cfg.polar), cp = Math.cos(cfg.polar);
+    mesh.position.set(cfg.r * sp * Math.sin(cfg.az), cfg.r * cp, cfg.r * sp * Math.cos(cfg.az));
+    scene.add(mesh);
+    return { mesh, geo, mat, tex, base, noise: makeSimplex2D(cfg.seed), driftSpeed: 0.02 + Math.random() * 0.01 };
+  });
+
   // ═══ THE FLOWER ═══════════════════════════════════════════════════════
   const topo = buildPetalTopology();
   const BASE_LENGTH = SCALE * 0.95, BASE_WIDTH = SCALE * 0.30, BASE_HEIGHT = SCALE * 0.38;
@@ -341,10 +500,19 @@ export function createOutside(container, { preview = false, initialPieceId = nul
   // and the pointermove listener below, and the hover-glow lerp inside
   // updatePetal.
   const BASE_FRESNEL_GLOW = 0.4, HOVER_FRESNEL_BOOST = 0.75, HOVER_LERP_RATE = 0.15;
+  // Round 6 — the flat emissive color above is replaced by the seam/vein
+  // texture (makeSeamVeinTexture, module scope): emissive is forced to
+  // white so emissiveMap's own painted RGB carries straight through as
+  // the petal's ambient glow, letting the texture bake in both the old
+  // uniform violet fill AND a warm gold boost concentrated at the root —
+  // the same texture doing the seam-blending job the brief asks for,
+  // rather than a second element layered on top of an unresolved seam.
+  const seamVeinTex = makeSeamVeinTexture();
   function makePetalMaterial() {
     const mat = new THREE.MeshStandardMaterial({
       vertexColors: true, side: THREE.DoubleSide, roughness: 0.55, metalness: 0.06,
-      transparent: true, depthWrite: false, emissive: new THREE.Color(0x2a1250), emissiveIntensity: 0.55,
+      transparent: true, depthWrite: false,
+      emissive: new THREE.Color(0xffffff), emissiveIntensity: 1, emissiveMap: seamVeinTex,
     });
     mat.onBeforeCompile = shader => {
       shader.uniforms.fresnelPower = { value: 2.3 };
@@ -379,6 +547,7 @@ export function createOutside(container, { preview = false, initialPieceId = nul
     const col = new Float32Array(topo.count * 3);
     geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
     geo.setAttribute('color', new THREE.BufferAttribute(col, 3));
+    geo.setAttribute('uv', new THREE.BufferAttribute(topo.uvArr, 2)); // static, shared read-only across every instance — same reasoning as topo.indices
     geo.setIndex(new THREE.BufferAttribute(topo.indices, 1));
     const mat = makePetalMaterial();
     const mesh = new THREE.Mesh(geo, mat);
@@ -966,6 +1135,27 @@ export function createOutside(container, { preview = false, initialPieceId = nul
       filter.frequency.setTargetAtTime(THREE.MathUtils.lerp(FILTER_MIN_HZ, FILTER_MAX_HZ, bp), nowT, 0.6);
     }
 
+    // ─── Background curtains — billboard to the camera every frame (so
+    // orbiting never shows one edge-on), then displace in local X/Y via
+    // simplex noise sampled at each vertex's own undisturbed base position
+    // plus a slowly-advancing time offset — coherent, organic billowing
+    // rather than independent per-vertex jitter. Static (billboard only,
+    // no billow) under reduced motion, same convention as petal sway.
+    curtainPlanes.forEach(cp => {
+      cp.mesh.quaternion.copy(camera.quaternion);
+      if (reduceMotion) return;
+      const arr = cp.geo.attributes.position.array;
+      const t = elapsed * cp.driftSpeed;
+      for (let i = 0; i < arr.length; i += 3) {
+        const bx = cp.base[i], by = cp.base[i + 1];
+        const nx = cp.noise(bx * 0.006 + t, by * 0.006);
+        const ny = cp.noise(bx * 0.006, by * 0.006 + t + 100);
+        arr[i] = bx + nx * SCALE * 0.06;
+        arr[i + 1] = by + ny * SCALE * 0.05;
+      }
+      cp.geo.attributes.position.needsUpdate = true;
+    });
+
     renderer.render(scene, camera);
   }
   animId = requestAnimationFrame(animate);
@@ -996,6 +1186,8 @@ export function createOutside(container, { preview = false, initialPieceId = nul
       renderer.dispose();
       starGeo.dispose(); starMat.dispose();
       nebula.geo.dispose(); nebula.mat.dispose();
+      curtainPlanes.forEach(cp => { cp.geo.dispose(); cp.mat.dispose(); cp.tex.dispose(); scene.remove(cp.mesh); });
+      seamVeinTex.dispose();
       petalInstances.forEach(inst => { inst.geo.dispose(); inst.mat.dispose(); });
       podGeo.dispose(); podMat.dispose();
       psPoints.geo.dispose(); psPoints.mat.dispose(); psPoints.haloMat.dispose();

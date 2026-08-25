@@ -338,6 +338,81 @@ different one, toggled sound on/off, no console errors from the scene's
 own code. Debug hooks fully stripped before this build. Full `npx vite
 build` clean.
 
+## 3.8.0 (2026-08-24)
+
+**Outside, round 6: core/petal seam + gauzy background curtains.** Polish
+pass on the shipped lotus — two items meant to work together, not two
+separate additions.
+
+**Seam.** The visible seam where petals meet the gold pod is a real
+geometry problem, not a texture problem: a sphere and a flat petal plane
+can only ever touch along a thin contact line, since their surfaces curve
+in incompatible ways at the join. Took the brief's cheaper-but-real option
+rather than deforming petal-root geometry: a single canvas texture
+(`makeSeamVeinTexture`) doing double duty, sampled via `emissiveMap` with
+`emissive` forced to white so the texture's own painted colors carry
+straight through as additive light. Most of the petal keeps a dim violet
+fill (replacing the old flat `emissive` color 1:1, not layered on top of
+it); the region right at the root (`uv.y` near 0, mapped directly from the
+shared `u` parameter already used for petal shape) blends up to a warm gold
+that optically continues into the pod's own gold glow. The same texture
+also carries a handful of faint vein-line strokes fanning from root to
+tip — the surface detail the original pivot brief asked for, and the exact
+same visual element doing the seam-blending work, per the brief's own
+framing, not decoration layered on an unresolved seam.
+
+**Background curtains.** Extended the existing layered-glow backdrop
+lineage (harmonics.js's `buildGalaxy` → outside.js's own point-based
+nebula) rather than building a new system: three large soft-edged
+translucent planes, violet family, additive blending, billboarded to the
+camera every frame. Placed opposite the scene's own default camera azimuth
+(`CURTAIN_BACK_AZ = azimuth + Math.PI`) so at least some sit "behind the
+flower" as actually framed on load — the first attempt scattered them at
+arbitrary azimuths and put every one of them outside the camera's own
+~47deg diagonal FOV at the default view, so nothing rendered until orbited
+nearly a full circle. Displacement is real 2D simplex noise
+(`makeSimplex2D`, written out directly — no dependency for it exists in
+package.json), not a sine wave: noise reads as air movement, sine reads as
+mechanical waving, and that distinction was the brief's whole point in
+specifying it.
+
+**A real bug caught before shipping:** the first working placement put all
+three curtains at radii CLOSER than the camera's own max orbit distance
+(`CAM_MAX`). Orbiting toward one put the camera nearer to the plane than
+the plane's own size, and a large billboarded plane that close fills the
+entire viewport with a flat wash of color — confirmed live via a drag
+sweep, not assumed. Fixed by pushing every curtain radius past `CAM_MAX`,
+so the camera can never get closer to one than its own size regardless of
+zoom or orbit angle. Opacity was tuned twice after that fix, live: pushing
+the radii out (to fix the wash bug) made the same opacity values read as
+nearly invisible against the star field even though angular size was kept
+constant by scaling width/height proportionally — confirmed empirically
+that they were still rendering (a temporary debug hook projected each
+curtain's world position through the camera to NDC space and found them
+on-screen, just faint) before raising opacity to a level that reads clearly
+without becoming a spotlight.
+
+**Verification, and one real limitation of this sandbox.** Seam confirmed
+to read as a continuous transition at normal viewing distance via direct
+screenshot, not just close-up. Parallax between the three curtains (not
+just against the flower) confirmed via a multi-step orbit drag sequence —
+their screen positions shift at visibly different rates, consistent with
+their genuinely different depths (865/987/1061 world units from camera at
+one sampled orbit position, read via a temporary debug hook). The noise-
+vs-sine motion character could NOT be confirmed via real-time screenshots:
+this sandbox's automated browser tab reports
+`document.visibilityState:'hidden'` even while focused, which throttles
+`requestAnimationFrame` to a near-stop, so wall-clock time-lapse
+screenshots showed zero change regardless of whether the code was correct
+(a known limitation from earlier in this project — see
+[[feedback_chrome_tab_raf_throttling]]). Verified instead by forcing the
+exact same per-vertex displacement code animate() runs with explicit fake
+elapsed values (0, 5, 10, 50, 100) through a temporary debug hook and
+confirming the output is smooth, spatially coherent across neighboring
+vertices, and non-periodic across those samples — the actual signature of
+simplex noise, not inspectable by eye but confirmed numerically. All debug
+hooks stripped before this build. Full `npx vite build` clean.
+
 ## 3.7.0 (2026-08-24)
 
 **Outside, round 5: audio fixes + petal differentiation.** Feedback from a
