@@ -6,6 +6,63 @@ projects (The Secret World, A Manual of Perceptual Mechanics) moved into their o
 files, which are now the source of truth for that material going forward. See "project map"
 below for where things live.
 
+## Standing process — periodic best-practices review
+
+Added 2026-08-25, at Scott's explicit request, as its own standing habit
+rather than a one-off: periodically check this project against *current*
+outside best practices (security headers, dependency support windows,
+performance/Core Web Vitals guidance, accessibility standards), not just
+against its own accumulated internal conventions. The two are different
+failure modes — everything below this line can be internally consistent
+and still be quietly behind what the wider web now considers baseline,
+the same way "no console errors" doesn't mean "no accessibility gap" (see
+the 2026-08-25 Outside `createJumpList` entry). Search for current
+guidance rather than trusting stale training-era defaults — recommended
+practice in this space (security headers, LTS windows, framework
+versions) shifts on a timescale of months, not years.
+
+**First pass, 2026-08-25 — findings, not yet all acted on:**
+- CI (`​.github/workflows/deploy.yml`) pins `node-version: 20`; Node 20's
+  security support window ended 2026-04-30 (confirmed via endoflife.date)
+  — the live deploy pipeline has been running on an unsupported Node
+  release for months. Node 24 is current Active LTS.
+- No `engines` field in `package.json` documenting the Node version this
+  project actually expects, in dev or CI.
+- `.htaccess` handles canonical-host redirects only — no HSTS,
+  `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`, or
+  `frame-ancestors`/`X-Frame-Options`. None of these are in place today.
+- No CSP. Real complication if one gets added later: the nav icons and
+  preview tiles use inline `onmouseover`/`onfocus`/`onclick` attributes
+  site-wide (the `pmGlimpse` easter egg, scene-opening) — a naive
+  `script-src` lockdown breaks all of them without either a refactor to
+  `addEventListener` or a CSP3 `'unsafe-hashes'`/nonce approach. Worth
+  scoping deliberately, not bolting on as an afterthought.
+- Google Fonts loaded from `fonts.googleapis.com`/`fonts.gstatic.com` at
+  request time rather than self-hosted — an extra DNS/TLS hop against LCP,
+  and (independent of that) sends visitor IPs to Google on every load.
+- `vite` is on 6.4.3; latest is 8.2.2 — two majors behind. `npm audit`
+  is clean (0 vulnerabilities) as of this check, but nothing in CI gates
+  future regressions the way `verify-links`/`verify-resonances` gate
+  content regressions.
+- The `(!) Some chunks are larger than 500 kB` Rollup warning has printed
+  on every single build this session without ever being addressed or
+  explicitly accepted — a warning nobody ever resolves is functionally
+  the same as no warning at all. The three.js/app split already
+  documented in `vite.config.js` is deliberate, but the underlying cause
+  — every scene's full-mode code loads eagerly on first paint, not just
+  its preview — is a real architectural choice, not just a threshold
+  number. Genuinely unresolved as of this pass: either accept the current
+  size with a documented reason and raise `chunkSizeWarningLimit` so the
+  warning only fires again for a real regression, or pursue lazy-loading
+  each scene's full-mode code on expand (bigger change, real Core Web
+  Vitals payoff on first load). Scott's call on effort vs. payoff for a
+  site at this scale — not decided here.
+
+This section should get revisited on its own cadence going forward —
+next time, check whether the items above got resolved, and run the same
+"what's actually current now" search again rather than assuming this list
+is still accurate.
+
 ## Standing notes — build tooling, generated output, SEO
 
 Rules that earned their place by being learned the hard way. They apply to any
