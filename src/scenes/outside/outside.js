@@ -70,12 +70,12 @@ import './outside.css';
 // Originally a breath-synced pad (one soft sine pair through a shared
 // lowpass filter) — replaced in a later pass because a held drone reads
 // as a hum no matter how its volume is trimmed. Now a generative ambient
-// chime layer: individual Hirajoshi-pentatonic tones trigger stochastically
+// chime layer: individual Kumoi-pentatonic tones trigger stochastically
 // (never on a fixed interval), with the *rate* of triggering — not a
 // continuous tone's volume — tracking breathePhase(t), so the tie to the
 // same signal driving the geometry survives the redesign. See the "Sound"
 // section below for the scale choice, coordination against the five petal
-// chimes, and an honest caveat about Hirajoshi's own semitone/tritone.
+// chimes, and an honest caveat about Kumoi's own semitone/tritone.
 //
 // ─── Touch ───────────────────────────────────────────────────────────────
 // Touching anywhere on the flower's real surface (raycast against the
@@ -778,40 +778,45 @@ export function createOutside(container, { preview = false, initialPieceId = nul
   let reverbConvolver = null;
   let soundEnabled = false;
   let lastAmbientFreq = 0;
-  // A-Hirajoshi {A, B, C, E, F} — semitone offsets [0,2,3,7,8] from A.
-  // Named first in the brief over generic major pentatonic for its
-  // wistful, settled character (the actual character real spa/zen
-  // soundscapes use). Two octaves, kept up out of bass register entirely —
-  // "move this whole layer up, don't keep it low and just retexture it."
+  // A-Kumoi {A, B, C, E, F#} — semitone offsets [0,2,3,7,9] from A. Swapped
+  // in from A-Hirajoshi {A,B,C,E,F} (offsets [0,2,3,7,8]) per request — the
+  // two scales share four of five degrees (A,B,C,E); only the sixth degree
+  // moves from F to F#. Two octaves, kept up out of bass register entirely
+  // — "move this whole layer up, don't keep it low and just retexture it."
   //
-  // Honest caveat: Hirajoshi/Kumoi are NOT anhemitonic. A major-type
-  // pentatonic (0,2,4,7,9) truly has no semitone or tritone between any
-  // two of its degrees; Hirajoshi's own C–B dyad is a semitone and its
-  // B–F dyad is a tritone — that dissonant interval is the actual source
-  // of the "wistful" character, not an oversight. The brief's "no interval
-  // in a pentatonic scale is dissonant" premise is exactly true only for
-  // anhemitonic scales. Proceeding with Hirajoshi anyway, as explicitly
-  // (and first) named, because the practical clash risk is low here: long
-  // attack/release, heavy reverb, and sparse stochastic triggering mean
-  // two colliding tones are rarely both near full volume at once, and the
-  // scale's own mild tension reads as part of its calm-but-wistful
-  // character rather than a flaw.
+  // Honest caveat, still true after the swap: Kumoi (like Hirajoshi) is NOT
+  // anhemitonic. A major-type pentatonic (0,2,4,7,9) truly has no semitone
+  // or tritone between any two of its degrees; Kumoi's own C–B dyad is a
+  // semitone (same as Hirajoshi's, since B and C carry over unchanged) and
+  // its C–F# dyad is a tritone (Hirajoshi's tritone was B–F instead — the
+  // dissonant pair moved with the swapped degree, it didn't disappear).
+  // That dissonant interval is the actual source of the "wistful"
+  // character, not an oversight. Proceeding with Kumoi as requested because
+  // the practical clash risk is low here: long attack/release, heavy
+  // reverb, and sparse stochastic triggering mean two colliding tones are
+  // rarely both near full volume at once, and the scale's own mild tension
+  // reads as part of its calm-but-wistful character rather than a flaw.
   const AMBIENT_FREQS = [
-    440.00, 493.88, 523.25, 659.25, 698.46,    // A4 B4 C5 E5 F5
-    880.00, 987.77, 1046.50, 1318.51, 1396.91, // A5 B5 C6 E6 F6
+    440.00, 493.88, 523.25, 659.25, 739.99,    // A4 B4 C5 E5 F#5
+    880.00, 987.77, 1046.50, 1318.51, 1479.98, // A5 B5 C6 E6 F#6
   ];
-  // Coordination check against the five petal chimes, done before
-  // finalizing per the brief rather than skipped: Raphael's 440/443 lands
-  // exactly on A4; Michael's 660 sits ~2 cents from E5 (659.25) —
-  // imperceptibly close; Gabriel's 520→170 ramp starts near C5 (523.25)
-  // and ends near F3 (174.61, same pitch class as F5). Two deliberate
-  // non-matches, both defensible: Emmanuel's 390Hz partial is a harmonic-
-  // series overtone of his 130Hz fundamental (psychoacoustic bass
-  // reinforcement, not an independent melodic note) and lands off-scale
-  // near G — physically motivated, not arbitrary; Nature's logistic-map
-  // pitch jitter is deliberately unquantized to any scale, since
-  // unquantized chaos is that petal's whole point. Everything else this
-  // scene plays sits on or within a few cents of this same Hirajoshi set.
+  // Coordination check against the five petal chimes, redone after the
+  // Kumoi swap rather than assumed to still hold: since A/B/C/E carry over
+  // unchanged, only chimes that touch the swapped F/F# degree needed a
+  // second look. Raphael's 440/443 still lands exactly on A4; Michael's
+  // 660 still sits ~2 cents from E5 (659.25); Gabriel's 520→170 ramp still
+  // starts near C5 (523.25), but its old endpoint (170, close to F3's
+  // 174.61 under Hirajoshi) no longer lands near anything in-scale — F is
+  // gone, replaced by F#3 (185.00), a full 15Hz further away. Retuned
+  // Gabriel's endpoint to 164.81 (E3, the nearest actual Kumoi tone) below
+  // rather than leaving a chime that quietly stopped matching the ambient
+  // bed it's meant to sit inside. Two deliberate non-matches, unaffected by
+  // the swap and still defensible: Emmanuel's 390Hz partial is a harmonic-
+  // series overtone of his 130Hz fundamental (itself ~exact on Kumoi's C3
+  // at 130.81) and lands off-scale near G — physically motivated, not
+  // arbitrary; Nature's logistic-map pitch jitter is deliberately
+  // unquantized to any scale, since unquantized chaos is that petal's whole
+  // point.
   const AMBIENT_GAIN = 0.075;
   const AMBIENT_RATE_MIN = 0.025, AMBIENT_RATE_MAX = 0.16; // notes/sec, breath-gated
   // A synthesized impulse response (exponentially-decaying noise) rather
@@ -853,7 +858,7 @@ export function createOutside(container, { preview = false, initialPieceId = nul
   }
   if (soundToggleEl) soundToggleEl.addEventListener('click', () => setSoundEnabled(!soundEnabled));
 
-  // ─── Ambient chime voice — one generative note from the Hirajoshi pool
+  // ─── Ambient chime voice — one generative note from the Kumoi pool
   // above. Inharmonic on purpose: a fundamental plus two upper partials
   // detuned a few Hz off a clean 2x/3x harmonic ratio, the same beat-
   // frequency principle chimeRaphael and the old pad's drift both used,
@@ -927,10 +932,16 @@ export function createOutside(container, { preview = false, initialPieceId = nul
     // exponential frequency ramp down, not a pitch-bend effect layered on
     // top. Triangle (a little richer than Michael's pure sine) keeps the
     // two texturally distinct even before the descent registers.
+    //
+    // Endpoint retuned from 170 to 164.81 (E3) when the ambient bed swapped
+    // from Hirajoshi to Kumoi — 170 sat close to F3 (in Hirajoshi's scale)
+    // but Kumoi replaces F with F#, leaving the old target off-scale. E3 is
+    // the nearest actual Kumoi tone, close enough to the original that the
+    // descent's shape and feel are unchanged.
     const osc = audioCtx.createOscillator();
     osc.type = 'triangle';
     osc.frequency.setValueAtTime(520, now);
-    osc.frequency.exponentialRampToValueAtTime(170, now + 1.1);
+    osc.frequency.exponentialRampToValueAtTime(164.81, now + 1.1);
     const g = audioCtx.createGain();
     g.gain.setValueAtTime(0, now);
     g.gain.linearRampToValueAtTime(CHIME_GAIN, now + 0.01);

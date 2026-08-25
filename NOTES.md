@@ -338,6 +338,41 @@ different one, toggled sound on/off, no console errors from the scene's
 own code. Debug hooks fully stripped before this build. Full `npx vite
 build` clean.
 
+## 3.9.1 (2026-08-25)
+
+**Outside, ambient scale swap: Hirajoshi → Kumoi, plus a consistency
+fix.** Requested immediately after v3.9.0 shipped. Kumoi {A,B,C,E,F#}
+shares four of five degrees with Hirajoshi {A,B,C,E,F} — only the sixth
+degree moves (F → F#) — so most of the round's own coordination work
+carried over unchanged: Raphael (A4 exact), Michael (~E5), and Emmanuel's
+fundamental (~C3) all stayed matched without any edits, since none of them
+touch the swapped degree. Confirmed by direct interval computation, again,
+that Kumoi is exactly as hemitonic as Hirajoshi (one semitone, one
+tritone, just on a different pair of degrees — B–C and C–F# instead of
+B–C and B–F) rather than assuming the swap sidestepped the earlier caveat.
+
+**The one real inconsistency the swap introduced:** Gabriel's descending
+chime used to end near 170Hz, close to F3 (174.61) under Hirajoshi. Kumoi
+drops F for F#, so that endpoint silently stopped matching anything in the
+new ambient scale — a chime that used to sit inside the bed's harmony now
+sitting just outside it. Caught because it was asked about directly rather
+than left implicit; retuned the endpoint to 164.81 (E3, the nearest actual
+Kumoi tone) so all five petal chimes stay coordinated with the ambient
+layer post-swap, not just four of five.
+
+**Verification.** Interval and frequency math re-checked numerically in
+the same standalone harness used for v3.9.0's Hirajoshi check, extended to
+confirm Kumoi's specific semitone/tritone pair and that the retuned 164.81
+lands within a few thousandths of a Hz of true E3. Full `npx vite build`
+clean. Live smoke test (fresh AudioContext, forced trigger on the new F#5
+degree, forced Gabriel chime): RMS stayed exactly 0 before any trigger (no
+hum reintroduced), the swelling/decaying envelope on the forced F#5 note
+behaved identically to v3.9.0's verified shape, Gabriel's retuned chime
+fired without error, and the console stayed clean. Did not repeat the full
+multi-minute non-repeating-pattern check from v3.9.0 — only the frequency
+pool changed, not the trigger logic itself, so that verification still
+holds. Debug hooks stripped before this build.
+
 ## 3.9.0 (2026-08-25)
 
 **Outside, round 7: ambient redesign — spa chimes, not drone.** Replaced
