@@ -197,6 +197,19 @@ adding a new scene.
   threshold to predict which will — the safe default for any new WebGL
   scene is to wire the fix in from the start rather than wait for a Firefox
   screenshot to catch it.
+- **Any new scene needs a secret word for the status-bar easter egg — ask
+  Scott, don't invent one.** `PM_GLIMPSE_WORDS` in `main.js` (see "Status-
+  bar easter egg" comment there) keys every scene's `pmGlimpse('<key>')`
+  hover trigger to a word that flickers into the browser tab title for
+  ~1.1s on a 1-in-100 hover/focus chance. Every existing scene has one
+  (sphere: "zen archery", orrery: "will", outside: "lotus", etc.) and it's
+  Scott's own word, not a paraphrase of the scene's description — a new
+  scene missing an entry fails silently (`pmGlimpse` no-ops on an unknown
+  key rather than showing "undefined", so the gap won't surface as a bug,
+  just as an easter egg that never fires for that scene). Ask before
+  shipping, the same way sound-design choices and other Scott's-own-call
+  items get an explicit ask elsewhere in this file, rather than guessing a
+  word that sounds plausible.
 
 ## Annotated math — where to start tuning
 
