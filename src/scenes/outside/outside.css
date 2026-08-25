@@ -72,3 +72,13 @@
 @media (max-width: 600px) {
   .outside-sound-toggle { bottom: 5.5rem; left: 1rem; padding: .4rem .8rem; }
 }
+
+/* ─── Screen-reader live region ────────────────────────────────────────────
+   Announces which petal's chime was just triggered via the keyboard jump
+   list (outside.js) — visually hidden, same off-screen-clip technique as
+   beamline-sr-live. The jump list itself is styled globally (.pm-jumplist
+   in main.css), no scene-specific CSS needed for it. */
+.outside-sr-live {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+}

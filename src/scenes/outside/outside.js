@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import {
   bindOrbitDrag, bindWheelZoom, bindGuardedResize, bindTapVsDrag,
-  prefersReducedMotion, parseHTML, mountClippedPreviewCanvas,
+  prefersReducedMotion, parseHTML, mountClippedPreviewCanvas, createJumpList,
 } from '../../utils/sceneKit.js';
 import { POWER_SOURCES, CENTER_ORIGINS, NEWEST_ORIGINS } from './outside.text.js';
 import outsideHtml from './outside.html?raw';
@@ -675,6 +675,7 @@ export function createOutside(container, { preview = false, initialPieceId = nul
 
   // ─── Chrome: title/hint/sound-toggle — unchanged site-wide grammar. ────
   let titleEl = null, hintEl = null, soundToggleEl = null, soundToggleLabelEl = null;
+  let srLiveEl = null;
   if (!preview) {
     const frag = parseHTML(outsideHtml);
     titleEl = frag.querySelector('.outside-title');
@@ -684,6 +685,8 @@ export function createOutside(container, { preview = false, initialPieceId = nul
     soundToggleEl = frag.querySelector('.outside-sound-toggle');
     soundToggleLabelEl = soundToggleEl.querySelector('.outside-sound-toggle-label');
     document.body.appendChild(soundToggleEl);
+    srLiveEl = frag.querySelector('.outside-sr-live');
+    container.appendChild(srLiveEl);
   }
 
   // ─── Drag → real camera orbit (not a basis rotation — there's no
@@ -747,6 +750,35 @@ export function createOutside(container, { preview = false, initialPieceId = nul
       if (hitInst) triggerChime(hitInst.psIndex);
     };
     container.addEventListener('click', onClick);
+  }
+
+  // ─── Keyboard/screen-reader equivalent for petal touch. Every other
+  // click/touch-driven WebGL scene on the site (harmonics, library,
+  // orbiter, sphere, orrery, beamline) has a createJumpList; Outside never
+  // got one after the v3.5.0 pivot removed its old panel-based interaction
+  // — the "no text, no panel" rule this scene otherwise follows is about
+  // withheld CONTENT, not about withholding the touch interaction itself
+  // from keyboard-only and screen-reader users, so the gap was a real
+  // accessibility miss, not a design choice (2026-08-25 audit). Reuses the
+  // exact same triggerPulse/triggerChime calls the mouse path uses, at the
+  // same PS_ANCHORS world position a mouse hit on that petal's tip would
+  // resolve to, so keyboard activation gives the identical pulse+chime
+  // result rather than a lesser stand-in.
+  let jumpList = null;
+  const _jumpAnchor = new THREE.Vector3();
+  if (!preview) {
+    jumpList = createJumpList(container, {
+      label: 'Touch a petal to hear its chime',
+      items: POWER_SOURCES,
+      getLabel: (ps, i) => `${ps.angel}'s petal — ${ps.device}`,
+      onSelect: (ps, i) => {
+        const a = PS_ANCHORS[i];
+        anchorWorldPos(petalInstances[a.inst], a.u, _jumpAnchor);
+        triggerPulse(_jumpAnchor);
+        triggerChime(i);
+        if (srLiveEl) srLiveEl.textContent = `${ps.angel}'s petal — ${ps.device}`;
+      },
+    });
   }
 
   // ─── Hover/proximity — a "this one" cue before the petal is actually
@@ -1284,6 +1316,7 @@ export function createOutside(container, { preview = false, initialPieceId = nul
       reverbConvolver?.disconnect();
       if (audioCtx) audioCtx.close().catch(() => {});
       titleEl?.remove(); hintEl?.remove(); soundToggleEl?.remove();
+      jumpList?.dispose(); srLiveEl?.remove();
       container.innerHTML = '';
     },
   };

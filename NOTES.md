@@ -226,6 +226,40 @@ adding a new scene.
   edit. A new scene missing an entry fails silently either way
   (`pmGlimpse` no-ops on an unknown key rather than showing "undefined"),
   so there's no runtime signal forcing the question — it has to be asked.
+- **A mobile viewport check and a keyboard/a11y check are part of shipping
+  any scene or feature change, not a separate occasional pass.** Both were
+  previously treated as their own standalone QA rounds (see the 2.x-era
+  "Mobile QA pass" / "Accessibility audit" entries); as of 2026-08-25
+  they're folded into the normal verification step for any visual or
+  interactive change, the same way a `npx vite build` and a live check
+  already are. Concrete case that prompted this: Outside's petal-touch
+  interaction (pulse + chime) had had zero keyboard equivalent since the
+  v3.5.0 pivot removed its old panel — every other click/touch-driven
+  WebGL scene on the site (harmonics, library, orbiter, sphere, orrery,
+  beamline) has a `createJumpList` (sceneKit.js) wired in as the keyboard/
+  screen-reader path, but Outside's own touch system was raycast-only, and
+  the gap went unnoticed for months because verification here has
+  defaulted to a desktop-mouse Chrome run. Fixed in the same pass (a
+  `createJumpList` over the five petals + an `aria-live` region announcing
+  which one fired, reusing the exact same `triggerPulse`/`triggerChime`
+  calls the mouse path uses — see outside.js's own comment at the jump-
+  list call site).
+  Going forward, before shipping: (1) any new click/touch-driven
+  interaction on a WebGL canvas needs a `createJumpList` equivalent unless
+  the scene is genuinely passive/non-interactive (butterfly, the nebula
+  backdrops); (2) any new persistent DOM control (toggle, button) gets a
+  real keyboard-focus-and-activate check, not just a glance at its aria
+  attributes — an `aria-pressed` that's never actually reachable by Tab is
+  no better than one that's missing; (3) resize the browser to ≤600px
+  width (this project's own existing mobile breakpoint, see main.css) and
+  confirm no layout collision before shipping a visual change, the same
+  spirit as the 1.0.11/1.0.40 mobile bugs caught this way. One honest
+  limitation of this sandbox, noted rather than glossed over: the
+  browser-automation environment used for live verification caps window
+  width around 500px and can't dispatch genuine touch events, so a mobile
+  check here confirms responsive CSS at a narrow-but-not-true-phone width
+  and confirms touch-adjacent code paths exist, not a literal on-device
+  touch test.
 
 ## Annotated math — where to start tuning
 
@@ -389,6 +423,56 @@ keywords, present-in-both-accounts framing — closed it, reopened a
 different one, toggled sound on/off, no console errors from the scene's
 own code. Debug hooks fully stripped before this build. Full `npx vite
 build` clean.
+
+## 3.9.3 (2026-08-25)
+
+**Outside: keyboard/screen-reader equivalent for petal touch (a11y
+audit).** Scott asked to double-check accessibility on this session's
+Outside work and run a mobile pass. Audit turned up a real, pre-existing
+gap rather than anything introduced this session: Outside is the only
+click/touch-driven WebGL scene on the site without a `createJumpList`
+(harmonics, library, orbiter, sphere, orrery, and beamline all have one).
+The v3.5.0 pivot removed Outside's old panel-based interaction along with
+its keyboard-accessible controls, and the replacement — raycast petal
+touch triggering a pulse + chime — never got its own keyboard path added
+back. Canvas is `aria-hidden`, so keyboard-only and screen-reader users
+had no way to trigger the interaction at all.
+
+Fixed with the same pattern beamline.js uses: a `createJumpList` of the
+five Power-Source petals (`Gabriel's petal — The Portable Hell`, etc.,
+pulled straight from `POWER_SOURCES`), each `onSelect` calling the exact
+same `triggerPulse`/`triggerChime` the mouse path calls, at the same
+`PS_ANCHORS` world position a mouse hit on that petal's tip would resolve
+to — keyboard activation gives an identical result, not a lesser stand-in.
+Added an `aria-live="polite"` region (`.outside-sr-live`, same visually-
+hidden technique as beamline's) announcing which petal fired.
+
+Verified live via the actual keyboard path, not a shortcut: focused the
+real `<button>` via `.focus()`, then a genuine `Return` keypress dispatched
+through the browser (not a synthetic `.click()` call or a direct
+`onSelect()` invocation) — confirmed the sr-live text updated and no
+console errors, meaning native browser button-activation semantics fired
+the handler exactly as a real keyboard user's Enter/Space would.
+
+**Mobile pass.** Resized to the narrowest width this sandbox's browser
+automation will allow (~500px, capped below the true phone widths tested
+in earlier mobile-bug rounds) and confirmed: Outside's existing
+`max-width:600px` breakpoints still hold (title/hint/sound-toggle
+positioned without collision), the landing grid's single-column mobile
+stack still renders Harmonics and Outside as proper circles post-3.9.2's
+Firefox fix, and the new sr-live/jump-list additions have zero visual
+footprint (confirmed no layout shift). Limitation noted rather than
+glossed over: this sandbox can't dispatch genuine touch events or resize
+below ~500px, so this confirms responsive CSS at a narrow-but-not-true-
+phone width, not a literal on-device test.
+
+**Made both checks standard, not ad hoc**, per Scott's explicit ask — see
+the new standing-note bullet in "Per-scene folder structure & markup
+conventions" (mobile-viewport + keyboard/a11y check folded into normal
+shipping verification going forward, with this Outside gap as the
+concrete case that prompted it).
+
+Full `npx vite build` clean.
 
 ## 3.9.2 (2026-08-25)
 
