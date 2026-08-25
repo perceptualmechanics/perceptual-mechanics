@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import {
   bindOrbitDrag, bindWheelZoom, bindGuardedResize, bindTapVsDrag,
-  prefersReducedMotion, parseHTML,
+  prefersReducedMotion, parseHTML, mountClippedPreviewCanvas,
 } from '../../utils/sceneKit.js';
 import { POWER_SOURCES, CENTER_ORIGINS, NEWEST_ORIGINS } from './outside.text.js';
 import outsideHtml from './outside.html?raw';
@@ -299,7 +299,16 @@ export function createOutside(container, { preview = false, initialPieceId = nul
   renderer.setSize(w0, h0);
   renderer.setClearColor(0x000000, 1);
   renderer.domElement.setAttribute('aria-hidden', 'true');
-  container.appendChild(renderer.domElement);
+  // Preview tiles: never append the WebGL canvas itself — see
+  // mountClippedPreviewCanvas's own comment in sceneKit.js. A heavy WebGL
+  // canvas gets promoted to its own GPU compositing layer in Firefox and
+  // ignores the tile's clip-path/border-radius entirely, so the preview
+  // renders as a square instead of the circle every other tile shows
+  // (already hit and fixed this way for orrery and beamline). Full scene
+  // is unaffected (no circular tile there), so it keeps the plain direct
+  // append it always had.
+  const clippedPreview = preview ? mountClippedPreviewCanvas(container, renderer) : null;
+  if (!preview) container.appendChild(renderer.domElement);
   if (!preview) container.tabIndex = -1;
 
   // ─── Lighting — key/rim/hemisphere, same convention Orbiter/Library/
@@ -1228,6 +1237,7 @@ export function createOutside(container, { preview = false, initialPieceId = nul
     });
 
     renderer.render(scene, camera);
+    clippedPreview?.blit();
   }
   animId = requestAnimationFrame(animate);
 
@@ -1255,6 +1265,7 @@ export function createOutside(container, { preview = false, initialPieceId = nul
       if (onPointerMove) container.removeEventListener('pointermove', onPointerMove);
       if (onPointerLeave) container.removeEventListener('pointerleave', onPointerLeave);
       renderer.dispose();
+      clippedPreview?.dispose();
       starGeo.dispose(); starMat.dispose();
       nebula.geo.dispose(); nebula.mat.dispose();
       curtainPlanes.forEach(cp => { cp.geo.dispose(); cp.mat.dispose(); cp.tex.dispose(); scene.remove(cp.mesh); });

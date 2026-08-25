@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import {
   bindOrbitDrag, bindWheelZoom, bindGuardedResize, bindTapVsDrag,
   prefersReducedMotion, parseHTML, createJumpList, createPanelCloser, escapeHtml,
+  mountClippedPreviewCanvas,
 } from '../../utils/sceneKit.js';
 import { getApprovedResonances, getPendingResonances } from '../../resonances.js';
 import { navigateToPiece } from '../../utils/harmonicsEntry.js';
@@ -345,7 +346,16 @@ export function createharmonics(container, { preview = false, initialPieceId = n
   renderer.setSize(w, h);
   renderer.setClearColor(0x000000, 1);
   renderer.domElement.setAttribute('aria-hidden', 'true');
-  container.appendChild(renderer.domElement);
+  // Preview tiles: never append the WebGL canvas itself — see
+  // mountClippedPreviewCanvas's own comment in sceneKit.js. A heavy WebGL
+  // canvas gets promoted to its own GPU compositing layer in Firefox and
+  // ignores the tile's clip-path/border-radius entirely, so the preview
+  // renders as a square instead of the circle every other tile shows
+  // (already hit and fixed this way for orrery and beamline). Full scene
+  // is unaffected (no circular tile there), so it keeps the plain direct
+  // append it always had.
+  const clippedPreview = preview ? mountClippedPreviewCanvas(container, renderer) : null;
+  if (!preview) container.appendChild(renderer.domElement);
   if (!preview) container.tabIndex = -1;
 
   scene.add(new THREE.AmbientLight(0x223355, 1.0));
@@ -1280,6 +1290,7 @@ export function createharmonics(container, { preview = false, initialPieceId = n
     }
 
     renderer.render(scene, camera);
+    clippedPreview?.blit();
   }
   animId = requestAnimationFrame(animate);
 
@@ -1301,6 +1312,7 @@ export function createharmonics(container, { preview = false, initialPieceId = n
       if (onMove) container.removeEventListener('mousemove', onMove);
       if (onClick) container.removeEventListener('click', onClick);
       renderer.dispose();
+      clippedPreview?.dispose();
 
       starGeo.dispose(); starMat.dispose();
       galaxy.geo.dispose(); galaxy.mat.dispose();

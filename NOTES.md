@@ -338,6 +338,53 @@ different one, toggled sound on/off, no console errors from the scene's
 own code. Debug hooks fully stripped before this build. Full `npx vite
 build` clean.
 
+## 3.9.2 (2026-08-25)
+
+**Harmonics + Outside preview tiles: the Firefox square-tile bug,
+recurring.** Scott sent a Firefox screenshot of the live landing page:
+both tiles rendered as plain squares instead of the circle every other
+tile shows. This is a known, previously-diagnosed bug (see 1.0.36-1.0.41
+and the leaf/orrery history) — a sufficiently heavy WebGL canvas gets
+promoted to its own GPU compositing layer in Firefox and ignores the
+tile's `clip-path`/`border-radius` entirely, no matter which CSS clipping
+mechanism the ancestor uses. The fix (`mountClippedPreviewCanvas` in
+sceneKit.js) was already applied to orrery and beamline, the two scenes
+that hit it originally, but neither harmonics.js nor outside.js was ever
+wired into it — both were built later, after the fix existed, and both
+just directly `container.appendChild(renderer.domElement)` the same way
+the pre-fix scenes used to.
+
+Wired both into the same established pattern used by orrery/beamline:
+`mountClippedPreviewCanvas(container, renderer)` when `preview` is true
+(never append the live WebGL canvas itself), `clippedPreview?.blit()`
+right after `renderer.render(...)` each frame, `clippedPreview?.dispose()`
+in `dispose()`. Full-scene rendering is untouched in both — the bug and
+the fix only ever apply to the small preview-tile canvases.
+
+**A real limitation, noted rather than glossed over:** this session's
+browser automation is Chrome-based, not Firefox, so the specific Firefox
+GPU-layer-promotion bug can't be reproduced or re-verified directly here.
+Confirmed instead that harmonics and outside both still render correctly
+in Chrome after the change (no regression — Chrome never had this bug to
+begin with, so a clean Chrome render doesn't prove the Firefox fix,
+only that nothing broke). The underlying mechanism (draw the off-DOM
+WebGL canvas onto a plain 2D canvas via `ctx.drawImage()`, clipped with
+`ctx.clip()`) is the exact same code already proven to fix this in Firefox
+for orrery and beamline, so the fix is trusted on precedent rather than
+re-observed firsthand. Worth Scott confirming on his end.
+
+**Incidental finding, not fixed (different bug, different symptom):**
+while checking every preview tile's rendered state to confirm the two
+real fixes, butterfly's own tile rendered fully blank in Chrome — not
+square-instead-of-circular like the Firefox bug, just empty, with no
+console error. Its `<canvas>` is present and mounted correctly; nothing
+is drawing on it. Flagged to Scott rather than touched, since it's
+unrelated to what was actually asked (could be an intentional
+starts-empty-until-hover design for the attractor trail, or a real
+separate bug — needs its own look either way).
+
+Full `npx vite build` clean.
+
 ## 3.9.1 (2026-08-25)
 
 **Outside, ambient scale swap: Hirajoshi → Kumoi, plus a consistency
