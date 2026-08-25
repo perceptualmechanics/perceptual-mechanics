@@ -186,6 +186,68 @@ export function bindTapVsDrag(container) {
   };
 }
 
+// ─── Persisted sound-toggle ─────────────────────────────────────────────────
+// Shared by every scene with its own sound-toggle button (currently
+// harmonics, outside) — one localStorage key for the whole site, not one
+// per scene, so turning sound on in one audio-enabled scene is remembered
+// the next time you land on any other one, the same way a real mute switch
+// would be, rather than each scene silently forgetting your choice the
+// moment you navigate away.
+//
+// Two real constraints shape this, not just "read/write a value":
+//   1. Browsers require a genuine user gesture before an AudioContext can
+//      actually produce sound (autoplay policy). A remembered "on"
+//      preference can update the toggle button's own visual state
+//      immediately on mount — but the real setSoundEnabled(true) call has
+//      to wait for the user's first gesture inside the scene, not fire at
+//      load, or the browser silently leaves the context suspended (and
+//      some browsers log a console warning about it). Wired here via a
+//      one-time 'pointerdown' listener on the scene's own interactive
+//      container — orbit-drag, a node click, anything — rather than
+//      requiring the user to specifically re-click the sound button itself
+//      to get back the state they already chose last time.
+//   2. If the user explicitly clicks the toggle themselves before that
+//      first gesture fires (most obviously: immediately turning a
+//      remembered "on" back off), the deferred activation must not
+//      override that choice a moment later — guarded by the same
+//      `pendingActivation` flag the click handler clears.
+//
+// `setSoundEnabled` must already exist in the calling scene and, when
+// called, both apply the real on/off state AND sync the toggle button's
+// own aria-pressed/label (every scene's own setSoundEnabled already does
+// this for its own click handler) — this helper only adds persistence and
+// the deferred-first-gesture activation around it; it derives "what should
+// a click flip to" from the button's own current aria-pressed rather than
+// a scene-private variable, since that's the one piece of state already
+// guaranteed to stay in sync no matter which scene calls this.
+export function bindPersistedSoundToggle(container, toggleEl, setSoundEnabled) {
+  if (!toggleEl) return;
+  const KEY = 'pm-sound-enabled';
+  let pendingActivation = false;
+  try { pendingActivation = localStorage.getItem(KEY) === '1'; } catch { /* private browsing / storage disabled — just skip persistence */ }
+
+  if (pendingActivation) {
+    toggleEl.setAttribute('aria-pressed', 'true');
+    const label = toggleEl.querySelector('span:last-child');
+    if (label) label.textContent = 'Sound on';
+  }
+
+  toggleEl.addEventListener('click', () => {
+    pendingActivation = false;
+    const nowOn = toggleEl.getAttribute('aria-pressed') !== 'true';
+    setSoundEnabled(nowOn);
+    try { localStorage.setItem(KEY, nowOn ? '1' : '0'); } catch { /* same as above */ }
+  });
+
+  if (pendingActivation) {
+    container.addEventListener('pointerdown', function activateStoredSound() {
+      if (!pendingActivation) return;
+      pendingActivation = false;
+      setSoundEnabled(true);
+    }, { once: true });
+  }
+}
+
 // ─── Escape-to-close ────────────────────────────────────────────────────────
 // Standard modal-dialog expectation for a read-more panel: Escape closes it
 // alongside the explicit close button or a click outside. Attaches at the

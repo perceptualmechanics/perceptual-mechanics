@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import {
   bindOrbitDrag, bindWheelZoom, bindGuardedResize, bindTapVsDrag,
   prefersReducedMotion, parseHTML, createJumpList, createPanelCloser, escapeHtml,
-  mountClippedPreviewCanvas,
+  mountClippedPreviewCanvas, bindPersistedSoundToggle,
 } from '../../utils/sceneKit.js';
 import { getApprovedResonances, getPendingResonances } from '../../resonances.js';
 import { navigateToPiece } from '../../utils/harmonicsEntry.js';
@@ -1125,9 +1125,12 @@ export function createharmonics(container, { preview = false, initialPieceId = n
     }
   }
 
-  if (soundToggleEl) {
-    soundToggleEl.addEventListener('click', () => setSoundEnabled(!soundEnabled));
-  }
+  // Persisted, site-wide (shared with Outside) via one localStorage key —
+  // see bindPersistedSoundToggle's own comment in sceneKit.js for why this
+  // needs a deferred first-gesture activation rather than just re-reading
+  // the stored value at mount (browser autoplay policy) and how it avoids
+  // fighting an explicit click on the toggle itself.
+  bindPersistedSoundToggle(container, soundToggleEl, setSoundEnabled);
 
   const reduceMotion = prefersReducedMotion();
 

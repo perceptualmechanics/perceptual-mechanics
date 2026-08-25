@@ -647,6 +647,48 @@ different one, toggled sound on/off, no console errors from the scene's
 own code. Debug hooks fully stripped before this build. Full `npx vite
 build` clean.
 
+## 3.9.9 (2026-08-25)
+
+**Sound on/off persisted across Harmonics and Outside via one shared
+localStorage key.** Scott asked for this directly, plus a survey of
+other localStorage opportunities. New `bindPersistedSoundToggle(container,
+toggleEl, setSoundEnabled)` in `sceneKit.js`, used by both scenes' own
+sound-toggle wiring in place of the old plain click listener. Deliberately
+one `pm-sound-enabled` key shared across both scenes rather than two
+independent per-scene keys — turning sound on in Harmonics and later
+landing on Outside shows it already on, the way a real mute switch would
+work, not two disconnected memories. Scott's call to revisit if he wants
+independent per-scene state instead.
+
+Two real constraints shaped this beyond a plain read/write: (1) the
+browser autoplay policy means an `AudioContext` can only start following
+a genuine user gesture, so a remembered "on" preference updates the
+toggle button's own visual state immediately at mount but defers the
+actual `setSoundEnabled(true)` call to the scene's first `pointerdown`
+(drag, click, anything) via a one-time listener — confirmed live with a
+monkey-patched `AudioContext` that the deferred call produces a real
+`state: "running"` context, not just a UI update; (2) if Scott explicitly
+clicks the toggle himself before that first gesture fires (most likely:
+turning a remembered "on" back off), the deferred activation must not
+override that choice a moment later — guarded by a `pendingActivation`
+flag the click handler clears, confirmed live by clicking off immediately
+on a fresh reload with "on" stored and seeing it stay off. Both scenes'
+existing preview-mode guard (`toggleEl` stays `null` in preview) makes
+the helper a no-op there for free.
+
+**Other localStorage opportunities: none found worth adding right now.**
+Fullscreen was the obvious next candidate and isn't viable — the
+Fullscreen API requires a fresh, transient user gesture on every single
+entry attempt (unlike audio's gesture-then-sticky-activation model), so a
+stored "was fullscreen" preference could never actually auto-apply on
+load; the toggle already has to be a manual click every time regardless.
+Checked Orrery and Theater too: Orrery's interaction state is
+narrative/CSS-class state tied to the walking-sim itself, not a settings
+toggle worth remembering between visits; Theater's play/pause is expected
+to reset per visit like any video embed. No volume slider, theme switch,
+or dismissible-onboarding mechanism exists anywhere in the site currently
+that would be a candidate either.
+
 ## 3.9.8 (2026-08-25)
 
 **Arapey extended to the two canvas-rendered text spots 3.9.7 deliberately

@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import {
   bindOrbitDrag, bindWheelZoom, bindGuardedResize, bindTapVsDrag,
   prefersReducedMotion, parseHTML, mountClippedPreviewCanvas, createJumpList,
+  bindPersistedSoundToggle,
 } from '../../utils/sceneKit.js';
 import { POWER_SOURCES, CENTER_ORIGINS, NEWEST_ORIGINS } from './outside.text.js';
 import outsideHtml from './outside.html?raw';
@@ -898,7 +899,12 @@ export function createOutside(container, { preview = false, initialPieceId = nul
       if (soundToggleLabelEl) soundToggleLabelEl.textContent = on ? 'Sound on' : 'Sound off';
     }
   }
-  if (soundToggleEl) soundToggleEl.addEventListener('click', () => setSoundEnabled(!soundEnabled));
+  // Persisted, site-wide (shared with Harmonics) via one localStorage key —
+  // see bindPersistedSoundToggle's own comment in sceneKit.js for why this
+  // needs a deferred first-gesture activation rather than just re-reading
+  // the stored value at mount (browser autoplay policy) and how it avoids
+  // fighting an explicit click on the toggle itself.
+  bindPersistedSoundToggle(container, soundToggleEl, setSoundEnabled);
 
   // ─── Ambient chime voice — one generative note from the Kumoi pool
   // above. Inharmonic on purpose: a fundamental plus two upper partials
