@@ -647,6 +647,73 @@ different one, toggled sound on/off, no console errors from the scene's
 own code. Debug hooks fully stripped before this build. Full `npx vite
 build` clean.
 
+## 3.9.15 (2026-08-26)
+
+**Full-site CSS audit, per Scott's ask** ("audit all the CSS in the site...
+kludges that can be refactored into a much more graceful and lightweight
+(and modern...) way of doing things"). Read all 12 stylesheets (~2700
+lines) in full, plus targeted greps for `!important`, vendor prefixes,
+`float:`, negative-margin/`translate(-50%)` centering, after the 3.9.14
+flexbox pass. Three confirmed, no-judgment-call fixes shipped; everything
+else checked and found to already be the correct, modern tool for the
+job — logged below so the reasoning doesn't have to be redone later.
+
+**Fixed:**
+- Deleted a dead `@media (max-width:600px) { #butterfly-exp-label {...}
+  #butterfly-hint {...} }` block (`styles/main.css`, 9 `!important`
+  declarations) — confirmed unreachable: no element anywhere in the
+  codebase has `id="butterfly-exp-label"` or `id="butterfly-hint"`
+  (butterfly's real markup uses classes, wrapped in
+  `.butterfly-exp-label-row` since 3.9.14). Leftover from before the
+  class-based convention.
+- Removed `-webkit-overflow-scrolling: touch;` from `#landing`
+  (`styles/main.css`) — this is exactly Scott's "who's using left
+  positioning in 2026" category, one axis over: WebKit shipped native
+  momentum scrolling for all overflow elements in iOS 13 (2019) and the
+  property has had zero effect since. Confirmed via search before
+  removing, per the standing best-practices-review process.
+- Added the missing unprefixed `mask: linear-gradient(#000 0 0);`
+  alongside `-webkit-mask` in `theater.css`'s `.tab-screen-frame::before`
+  — every other masked element in the codebase (scroll.css, colophon.css)
+  already paired the prefix with the standard property; this one was
+  WebKit-only with no fallback, so the dot-texture silently didn't render
+  in Firefox.
+
+**Checked and left as-is** (the audit's judgment calls, recorded so a
+future pass doesn't re-litigate them):
+- `-webkit-backdrop-filter` (2 sites, `main.css`) — searched current
+  support data: unprefixed `backdrop-filter` only shipped in Safari 18
+  (June 2024); Safari 9–17 and older iOS still need the prefix. Keeping
+  both costs nothing and is the currently-recommended approach.
+- The eight remaining `left:50%;transform:translateX(-50%)` (or
+  `translateY`/both-axis) instances, all in `theater.css` and
+  `scroll.css` — a speech bubble, seat-silhouette pseudo-elements, a
+  script-pin and its cord, a decorative reel-glow, a film-reel hub, and a
+  seam hairline. Every one centers a small *absolutely-positioned
+  decorative element* within its own positioned ancestor at a precise,
+  arbitrary offset — the opposite case from 3.9.13/3.9.14's bug (a
+  letter-spaced text box self-measuring its own width to center across
+  the full viewport/row). Flexbox has no clean equivalent for this
+  (pseudo-elements can't be flex containers of themselves), so this is
+  the idiomatic tool, not a kludge — left untouched.
+- `float:` layout (`scroll.css`'s drop-cap and Ogham margin note,
+  `library.css`'s panel cover image) — genuine text-wraps-around-element
+  effects. There's still no flex/grid replacement for that; float remains
+  the correct tool.
+- `!important` on `transition/animation:none` (theater/scroll/sphere/
+  library, all inside `prefers-reduced-motion` blocks or a
+  `.no-transition` state-flip utility) — a standard, correct use to
+  guarantee the override regardless of other rules' specificity.
+- `!important` on `.preview-container canvas { width; height; }`
+  (`main.css`) — required, not stylistic: Three.js's `renderer.setSize()`
+  sets inline `style.width`/`style.height` on the canvas element itself,
+  and inline styles beat any non-`!important` stylesheet rule.
+- `-webkit-transform: translateZ(0)` on the Scroll medallion/crack
+  elements — already has its own code comment documenting it as a
+  targeted fix for a specific Safari filter+animation compositing bug,
+  kept deliberately alongside `will-change`. Already-considered, not
+  re-flagged.
+
 ## 3.9.14 (2026-08-26)
 
 **Every centered title refactored from transform-based to flexbox

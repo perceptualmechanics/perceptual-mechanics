@@ -374,7 +374,6 @@ html, body {
      this, everything past the first couple of tiles was simply
      unreachable, no scrollbar, no way to get to it. */
   overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
 }
 
 #scene-previews {
@@ -579,26 +578,6 @@ html, body {
 #experience-container canvas {
   position: absolute;
   inset: 0;
-}
-
-/* ─── Butterfly mobile ──────────────────────────────────────────────────────── */
-@media (max-width: 600px) {
-  #butterfly-exp-label {
-    font-size: 0.85rem !important;
-    letter-spacing: 0.15em !important;
-    white-space: normal !important;
-    text-align: center !important;
-    width: 90vw !important;
-    bottom: 5rem !important;
-    left: 5vw !important;
-    transform: none !important;
-    line-height: 1.6 !important;
-  }
-  #butterfly-hint {
-    font-size: 0.5rem !important;
-    top: 4.5rem !important;
-    right: 1rem !important;
-  }
 }
 
 /* ─── Keyboard jump lists ───────────────────────────────────────────────────── */
