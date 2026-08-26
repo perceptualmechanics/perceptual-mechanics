@@ -647,6 +647,32 @@ different one, toggled sound on/off, no console errors from the scene's
 own code. Debug hooks fully stripped before this build. Full `npx vite
 build` clean.
 
+## 3.9.10 (2026-08-26)
+
+**Fix: persisted sound preference showed "on" but no audio played after
+switching scenes.** Scott caught this immediately after 3.9.9 shipped.
+Root cause: `bindPersistedSoundToggle` deferred activation to the new
+scene's own first `pointerdown`, but switching scenes here is a click on
+the shared nav — not a gesture inside the newly-mounted scene's own
+container — so that listener could sit unfired indefinitely; the toggle
+correctly showed "on" (visual state is separate from audio activation)
+while `setSoundEnabled(true)` never actually ran. Fixed by calling
+`setSoundEnabled(true)` immediately at mount when a stored "on"
+preference is found, rather than only from the deferred listener. This
+is safe because the site is a single-page app: whatever gesture switched
+scenes in the first place (a nav click, an earlier drag) already grants
+the document sticky user-activation before the new scene's mount code
+runs, so the browser doesn't block it. The one-time `pointerdown`
+fallback stays in place for the case immediate activation can't cover —
+a cold page load landing directly on a scene via a deep link, with no
+gesture anywhere on the page yet — and the explicit-override guard
+(clicking the toggle off before that fallback fires) is preserved,
+renamed `pendingActivation` → `overridden` for clarity. Verified with a
+headless logic harness (Chrome extension wasn't reachable this session)
+covering: immediate activation with no container gesture at all, the
+cold-load pointerdown fallback, explicit-override-holds, and
+stored-off-does-nothing — all 9 assertions pass.
+
 ## 3.9.9 (2026-08-25)
 
 **Sound on/off persisted across Harmonics and Outside via one shared

@@ -196,21 +196,31 @@ export function bindTapVsDrag(container) {
 //
 // Two real constraints shape this, not just "read/write a value":
 //   1. Browsers require a genuine user gesture before an AudioContext can
-//      actually produce sound (autoplay policy). A remembered "on"
-//      preference can update the toggle button's own visual state
-//      immediately on mount — but the real setSoundEnabled(true) call has
-//      to wait for the user's first gesture inside the scene, not fire at
-//      load, or the browser silently leaves the context suspended (and
-//      some browsers log a console warning about it). Wired here via a
-//      one-time 'pointerdown' listener on the scene's own interactive
-//      container — orbit-drag, a node click, anything — rather than
-//      requiring the user to specifically re-click the sound button itself
-//      to get back the state they already chose last time.
-//   2. If the user explicitly clicks the toggle themselves before that
-//      first gesture fires (most obviously: immediately turning a
-//      remembered "on" back off), the deferred activation must not
-//      override that choice a moment later — guarded by the same
-//      `pendingActivation` flag the click handler clears.
+//      actually produce sound (autoplay policy) — but this site is a
+//      single-page app, so scenes mount/unmount within the same document
+//      rather than a real page navigation. Whatever gesture the user made
+//      to switch scenes in the first place (a nav click, an earlier drag)
+//      already set the document's sticky user-activation flag before this
+//      scene's own mount code even runs, so calling setSoundEnabled(true)
+//      immediately at mount works correctly in the overwhelming common
+//      case. An earlier version of this deferred activation to the
+//      scene's *own* first pointerdown instead — which sounds more
+//      cautious, but was actually a bug: switching scenes is normally a
+//      click on the shared nav, not a gesture inside the new scene's own
+//      container, so the deferred listener could sit unfired forever and
+//      the toggle would show "on" with no sound until the user happened
+//      to drag the canvas. Fixed by trying immediately and keeping a
+//      one-time 'pointerdown' fallback only for the one case immediate
+//      activation can't cover: a cold page load landing directly on a
+//      scene via a deep link, before any gesture has happened anywhere
+//      on the page yet. setSoundEnabled(true) is idempotent —
+//      buildAudioGraph() no-ops once a context exists, resume() is safe
+//      to call again — so firing it twice (immediate + fallback) is free.
+//   2. If the user explicitly clicks the toggle themselves before the
+//      fallback gesture fires (most obviously: immediately turning a
+//      remembered "on" back off before ever touching the canvas), that
+//      choice must not get overridden a moment later — guarded by the
+//      `overridden` flag the click handler sets.
 //
 // `setSoundEnabled` must already exist in the calling scene and, when
 // called, both apply the real on/off state AND sync the toggle button's
@@ -223,29 +233,35 @@ export function bindTapVsDrag(container) {
 export function bindPersistedSoundToggle(container, toggleEl, setSoundEnabled) {
   if (!toggleEl) return;
   const KEY = 'pm-sound-enabled';
-  let pendingActivation = false;
-  try { pendingActivation = localStorage.getItem(KEY) === '1'; } catch { /* private browsing / storage disabled — just skip persistence */ }
+  let storedOn = false;
+  try { storedOn = localStorage.getItem(KEY) === '1'; } catch { /* private browsing / storage disabled — just skip persistence */ }
 
-  if (pendingActivation) {
+  let overridden = false; // set once the user explicitly clicks the toggle, so a later fallback activation can't undo their choice
+
+  if (storedOn) {
     toggleEl.setAttribute('aria-pressed', 'true');
     const label = toggleEl.querySelector('span:last-child');
     if (label) label.textContent = 'Sound on';
+
+    // Try starting audio right away — see the comment above for why this
+    // is correct in this SPA's common case (the scene-switch gesture
+    // itself already granted sticky activation) rather than overcautious.
+    setSoundEnabled(true);
+
+    // Cold-load fallback: only matters if the immediate attempt above
+    // landed on a document with no activation yet at all.
+    container.addEventListener('pointerdown', function activateStoredSound() {
+      if (overridden) return;
+      setSoundEnabled(true);
+    }, { once: true });
   }
 
   toggleEl.addEventListener('click', () => {
-    pendingActivation = false;
+    overridden = true;
     const nowOn = toggleEl.getAttribute('aria-pressed') !== 'true';
     setSoundEnabled(nowOn);
     try { localStorage.setItem(KEY, nowOn ? '1' : '0'); } catch { /* same as above */ }
   });
-
-  if (pendingActivation) {
-    container.addEventListener('pointerdown', function activateStoredSound() {
-      if (!pendingActivation) return;
-      pendingActivation = false;
-      setSoundEnabled(true);
-    }, { once: true });
-  }
 }
 
 // ─── Escape-to-close ────────────────────────────────────────────────────────
