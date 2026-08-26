@@ -6,10 +6,20 @@
 
 .harmonics-title {
   position: fixed;
-  bottom: 3rem; left: 50%; transform: translateX(-50%);
+  bottom: 3rem; left: 50%;
+  /* translateX(-50%) centers the box, but letter-spacing's trailing gap
+     (added after the last character too, not just between characters —
+     a real Chrome rendering quirk, confirmed live via DevTools 2026-08-26)
+     inflates that box's width, shifting the visible glyphs left of true
+     center. --tracking is shared between letter-spacing and this calc so
+     they can't drift apart; see #site-title's fuller comment in
+     styles/main.css for the general explanation, applied identically
+     here and in outside.css/butterfly.css's matching -title/-label. */
+  --tracking: clamp(0.1em, 1vw, 0.4em);
+  transform: translateX(calc(-50% + var(--tracking) / 2));
   color: rgba(210,225,255,0.85);
   font-size: clamp(0.85rem, 2.5vw, 1.6rem);
-  letter-spacing: clamp(0.1em, 1vw, 0.4em);
+  letter-spacing: var(--tracking);
   text-transform: uppercase;
   pointer-events: none; text-align: center;
   white-space: nowrap; z-index: 310;

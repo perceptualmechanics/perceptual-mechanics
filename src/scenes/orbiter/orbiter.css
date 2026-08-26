@@ -24,7 +24,16 @@
 .orbiter-title-sub {
   /* Carries the epigraph ("sing, orbiter," Richard Kenney) — same italic/
      green identity it's always had. */
-  font-size: clamp(0.75rem, 2vw, 1.25rem); letter-spacing: 0.08em;
+  font-size: clamp(0.75rem, 2vw, 1.25rem);
+  /* .orbiter-title's flex column centers this line by its own margin-box
+     width (align-items: center); letter-spacing's trailing gap (added
+     after the last character too — see #site-title's fuller comment in
+     styles/main.css) inflates that width and shifts the visible glyphs
+     left of true center. margin-right: -tracking cancels it, same
+     technique as beamline.css's title lines. */
+  --tracking: 0.08em;
+  letter-spacing: var(--tracking);
+  margin-right: calc(-1 * var(--tracking));
   font-style: italic; white-space: nowrap;
   color: rgba(165,255,205,0.8);
   text-shadow: 0 0 16px rgba(120,255,180,0.35);

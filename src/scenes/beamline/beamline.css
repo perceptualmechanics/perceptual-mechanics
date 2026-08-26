@@ -21,24 +21,42 @@
   text-align: center; color: rgba(200,245,255,0.88);
   display: flex; flex-direction: column; align-items: center; gap: 0.3rem;
 }
+/* Each title line below sits inside .beamline-title's flex column, which
+   centers every line by its own margin-box width (align-items: center).
+   letter-spacing's trailing gap (added after the last character too, not
+   just between characters — a real Chrome rendering quirk, see
+   #site-title's fuller comment in styles/main.css) inflates that width,
+   shifting each line's visible glyphs left of its own true center.
+   margin-right: -tracking cancels the gap's contribution to the margin
+   box, which flex's own align-items centering already accounts for — no
+   translateX compensation needed here the way harmonics.css/outside.css/
+   butterfly.css's single self-centered titles require. */
 .beamline-title-name {
   display: block;
   font-size: clamp(0.85rem, 2.5vw, 1.6rem);
-  letter-spacing: clamp(0.1em, 1vw, 0.4em);
+  --tracking: clamp(0.1em, 1vw, 0.4em);
+  letter-spacing: var(--tracking);
+  margin-right: calc(-1 * var(--tracking));
   text-transform: uppercase;
   text-shadow: 0 0 20px rgba(0,102,255,0.45), 0 1px 0 rgba(0,0,0,0.6);
 }
 .beamline-title-main {
   display: block; font-size: clamp(0.85rem, 2.2vw, 1.25rem);
-  letter-spacing: 0.1em; font-style: italic;
+  --tracking: 0.1em;
+  letter-spacing: var(--tracking);
+  margin-right: calc(-1 * var(--tracking));
+  font-style: italic;
   text-shadow: 0 0 16px rgba(0,102,255,0.4), 0 1px 0 rgba(0,0,0,0.6);
 }
 .beamline-title-sub {
   display: block;
   font-size: clamp(0.62rem, 1.3vw, 0.8rem);
+  --tracking: 0.05em;
+  letter-spacing: var(--tracking);
+  margin-right: calc(-1 * var(--tracking));
   /* 0.68 alpha (~5.3:1 against black) meets WCAG's 4.5:1 minimum for
      text this small while keeping the tint. */
-  letter-spacing: 0.05em; color: rgba(150,190,255,0.68);
+  color: rgba(150,190,255,0.68);
 }
 .beamline-hint {
   top: 4.5rem; right: 1.2rem; font-size: 0.7rem; letter-spacing: 0.18em;

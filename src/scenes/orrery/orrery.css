@@ -120,7 +120,19 @@
 }
 .orrery-title-main {
   display: block; font-size: clamp(1rem, 3vw, 1.7rem);
-  letter-spacing: 0.32em; text-transform: uppercase;
+  /* .orrery-title's own translateX(-50%) shrink-to-fits around this
+     child, so letter-spacing's trailing gap (added after the last
+     character too — see #site-title's fuller comment in styles/main.css)
+     inflates the parent's centered width too, not just this element's
+     own. margin-right: -tracking cancels the gap's contribution to this
+     block's shrink-to-fit-relevant outer width, which the parent's own
+     centering then correctly reflects — same technique as
+     beamline.css/orbiter.css's flex-child title lines, different parent
+     layout mode, same fix. */
+  --tracking: 0.32em;
+  letter-spacing: var(--tracking);
+  margin-right: calc(-1 * var(--tracking));
+  text-transform: uppercase;
   text-shadow: 0 0 18px rgba(0,0,0,0.85), 0 1px 0 rgba(0,0,0,0.6);
 }
 /* .orrery-title-sub (the "About thirty feet high..." line) and

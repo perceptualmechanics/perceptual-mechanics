@@ -647,6 +647,47 @@ different one, toggled sound on/off, no console errors from the scene's
 own code. Debug hooks fully stripped before this build. Full `npx vite
 build` clean.
 
+## 3.9.13 (2026-08-26)
+
+**Fixed: every centered, tracked-out title site-wide was slightly
+off-center.** Scott caught it via DevTools on Harmonics — the title's
+computed box was visibly wider than the visible text, shifting the
+glyphs left of true center. Root cause, confirmed with an isolated test
+(measuring a 9-character string with and without letter-spacing: the
+width difference was exactly 9× the letter-spacing value, not 8×):
+Chrome adds letter-spacing's gap after the LAST character too, not just
+between characters. Any element centered by its own measured width
+(`left:50%; transform:translateX(-50%)`, or flex `align-items:center`,
+or a shrink-to-fit block) ends up centering that inflated box instead of
+the visible glyphs, landing the text half a letter-spacing-width left of
+where it should be.
+
+This hit every title using the site's "uppercase, tracked-out,
+bottom-center" convention (see NOTES.md's title-block entries) since
+letter-spacing is core to that look. Two fix patterns depending on
+where the letter-spacing and the centering mechanism live:
+- **Self-centered** (both on the same element — `#site-title`,
+  `.harmonics-title`, `.outside-title`, `.butterfly-exp-label`): a
+  shared `--tracking` custom property feeds both `letter-spacing` and
+  `transform: translateX(calc(-50% + var(--tracking) / 2))` — the `+
+  tracking/2` nudges the box right by exactly half the phantom trailing
+  gap, since `translateX`'s percentage is relative to the element's own
+  (inflated) border-box and margin doesn't affect it.
+- **Child-of-centered-parent** (letter-spacing on a line inside a flex
+  `align-items:center` column or a shrink-to-fit block —
+  `.beamline-title-name/-main/-sub`, `.orbiter-title-sub`,
+  `.orrery-title-main`): `margin-right: calc(-1 * var(--tracking))` on
+  the child. Flex's `align-items` and shrink-to-fit sizing both use the
+  margin box, so a negative margin here correctly propagates up and
+  fixes the parent's own centering too — no transform math needed.
+
+Verified live for all seven with a script that measures the true ink
+position (a `Range` around only the first character, immune to the
+trailing-gap ambiguity) rather than trusting `getBoundingClientRect()` on
+the whole element, which measures the same inflated box the bug comes
+from. All seven landed at 0.00px (±0.01px rounding) from true viewport
+center.
+
 ## 3.9.12 (2026-08-26)
 
 **Sound toggle un-shared: Harmonics and Outside now remember their sound

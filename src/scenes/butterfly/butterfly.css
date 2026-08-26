@@ -6,10 +6,14 @@
 
 .butterfly-exp-label {
   position: fixed;
-  bottom: 3rem; left: 50%; transform: translateX(-50%);
+  bottom: 3rem; left: 50%;
+  /* Same letter-spacing-trailing-gap centering fix as harmonics-title —
+     see that rule's fuller comment in harmonics.css. */
+  --tracking: clamp(0.1em, 1vw, 0.4em);
+  transform: translateX(calc(-50% + var(--tracking) / 2));
   color: rgba(255,255,255,0.85);
   font-size: clamp(0.85rem, 2.5vw, 1.6rem);
-  letter-spacing: clamp(0.1em, 1vw, 0.4em);
+  letter-spacing: var(--tracking);
   text-transform: uppercase;
   pointer-events: none; text-align: center;
   white-space: nowrap; z-index: 310;

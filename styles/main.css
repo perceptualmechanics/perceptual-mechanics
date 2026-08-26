@@ -188,9 +188,23 @@ html, body {
   position: fixed;
   bottom: 1.2rem;
   left: 50%;
-  transform: translateX(-50%);
+  /* letter-spacing (below) adds its gap AFTER the last character too, not
+     just between characters — Chrome renders that trailing gap as real
+     box width. A plain translateX(-50%) centers that inflated box, which
+     shifts the visible glyphs half a letter-spacing-width left of true
+     center (caught live, 2026-08-26: DevTools showed the box measurably
+     wider than the visible text). --tracking is reused in both
+     letter-spacing and this calc so they can never drift apart; the
+     +var(--tracking)/2 nudges the translate right by exactly half the
+     phantom trailing gap to compensate. Same fix, same reasoning, applied
+     everywhere else in this codebase a letter-spaced run is centered via
+     its own translateX(-50%) — see harmonics.css/outside.css/
+     butterfly.css's -title/-label rules, and beamline.css/orbiter.css/
+     orrery.css's margin-right variant for the flex/shrink-to-fit case. */
+  --tracking: 0.3em;
+  letter-spacing: var(--tracking);
+  transform: translateX(calc(-50% + var(--tracking) / 2));
   font-size: 0.7rem;
-  letter-spacing: 0.3em;
   text-transform: uppercase;
   color: rgba(255,255,255,0.5);
   pointer-events: all;
