@@ -246,7 +246,15 @@ export function bindPersistedSoundToggle(container, toggleEl, setSoundEnabled) {
     // Try starting audio right away — see the comment above for why this
     // is correct in this SPA's common case (the scene-switch gesture
     // itself already granted sticky activation) rather than overcautious.
-    setSoundEnabled(true);
+    // Deferred to a microtask rather than called inline: this function is
+    // typically invoked partway through a scene's own mount/setup code,
+    // before every local variable the scene's setSoundEnabled might touch
+    // has necessarily been declared yet (a `let` declared later in the
+    // same function is still in its temporal dead zone at this point) —
+    // queuing it lets the calling scene's mount function finish running
+    // first, still well before the next paint/gesture, so there's no
+    // user-visible delay.
+    Promise.resolve().then(() => setSoundEnabled(true));
 
     // Cold-load fallback: only matters if the immediate attempt above
     // landed on a document with no activation yet at all.

@@ -647,6 +647,31 @@ different one, toggled sound on/off, no console errors from the scene's
 own code. Debug hooks fully stripped before this build. Full `npx vite
 build` clean.
 
+## 3.9.11 (2026-08-26)
+
+**Fix: 3.9.10's own fix threw in Outside.** Calling `setSoundEnabled(true)`
+synchronously and immediately from `bindPersistedSoundToggle` — the whole
+point of 3.9.10 — turned out to run partway through `createOutside`'s own
+setup code, before `let ambientSchedulerId` (declared later in the same
+function) had executed its declaration statement. `setSoundEnabled(true)`
+calls `startAmbientScheduler()`, which reads `ambientSchedulerId` —
+hitting the temporal dead zone and throwing
+`ReferenceError: Cannot access 'ambientSchedulerId' before initialization`
+on every Outside mount with a stored "on" preference, caught live via
+Chrome console right after 3.9.10 shipped. `harmonics.js` didn't happen to
+hit this (no `let` declared after its own `bindPersistedSoundToggle` call
+in the mount body), but the bug was really "calling an immediate callback
+mid-function depends on declaration order in the caller," not anything
+Outside-specific. Fixed generally in `sceneKit.js`: the immediate
+activation attempt is now wrapped in `Promise.resolve().then(...)`,
+deferring it to a microtask so the calling scene's entire mount function
+finishes running first — still well before the next paint or any user
+gesture, so the activation is still effectively immediate, just no longer
+coupled to where in the function body the helper happens to be called.
+Verified live in both directions (Harmonics→Outside, Outside→Harmonics)
+via nav-click scene switches with no canvas gesture: fresh AudioContext
+is `running` immediately on mount in each case, zero console errors.
+
 ## 3.9.10 (2026-08-26)
 
 **Fix: persisted sound preference showed "on" but no audio played after
