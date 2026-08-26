@@ -647,6 +647,23 @@ different one, toggled sound on/off, no console errors from the scene's
 own code. Debug hooks fully stripped before this build. Full `npx vite
 build` clean.
 
+## 3.9.12 (2026-08-26)
+
+**Sound toggle un-shared: Harmonics and Outside now remember their sound
+preference independently.** Scott's explicit correction — the shared
+`pm-sound-enabled` mute-switch design from 3.9.9 was the wrong model; he
+wants Harmonics on and Outside off (or vice versa) at the same time, not
+one preference governing both. `bindPersistedSoundToggle` now takes a
+`sceneKey` argument and stores under `pm-sound-enabled:${sceneKey}` —
+Harmonics passes `'harmonics'`, Outside passes `'outside'`. The old
+shared key is simply orphaned, not migrated (both scenes start back at
+their real default, off, rather than inheriting whatever the shared key
+happened to hold — the honest behavior given the model changed, not a
+carryover). Verified live: turned Harmonics on, switched to Outside via
+nav and confirmed it mounted off, switched back to Harmonics and
+confirmed it was still on — independent state, exactly as asked. Zero
+console errors.
+
 ## 3.9.11 (2026-08-26)
 
 **Fix: 3.9.10's own fix threw in Outside.** Calling `setSoundEnabled(true)`

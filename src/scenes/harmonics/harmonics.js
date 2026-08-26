@@ -1130,7 +1130,7 @@ export function createharmonics(container, { preview = false, initialPieceId = n
   // needs a deferred first-gesture activation rather than just re-reading
   // the stored value at mount (browser autoplay policy) and how it avoids
   // fighting an explicit click on the toggle itself.
-  bindPersistedSoundToggle(container, soundToggleEl, setSoundEnabled);
+  bindPersistedSoundToggle(container, soundToggleEl, setSoundEnabled, 'harmonics');
 
   const reduceMotion = prefersReducedMotion();
 

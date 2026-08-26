@@ -188,11 +188,13 @@ export function bindTapVsDrag(container) {
 
 // ─── Persisted sound-toggle ─────────────────────────────────────────────────
 // Shared by every scene with its own sound-toggle button (currently
-// harmonics, outside) — one localStorage key for the whole site, not one
-// per scene, so turning sound on in one audio-enabled scene is remembered
-// the next time you land on any other one, the same way a real mute switch
-// would be, rather than each scene silently forgetting your choice the
-// moment you navigate away.
+// harmonics, outside) — but each scene gets its own localStorage key
+// (`pm-sound-enabled:${sceneKey}`), not one shared across the site.
+// Scott's explicit call: he wants Harmonics and Outside independently
+// mutable, e.g. Harmonics on and Outside off at the same time, rather
+// than one preference governing both like a single site-wide mute
+// switch (that was this helper's original design in v3.9.9 — reversed
+// here per his direct correction, don't reintroduce a shared key).
 //
 // Two real constraints shape this, not just "read/write a value":
 //   1. Browsers require a genuine user gesture before an AudioContext can
@@ -230,9 +232,9 @@ export function bindTapVsDrag(container) {
 // a click flip to" from the button's own current aria-pressed rather than
 // a scene-private variable, since that's the one piece of state already
 // guaranteed to stay in sync no matter which scene calls this.
-export function bindPersistedSoundToggle(container, toggleEl, setSoundEnabled) {
+export function bindPersistedSoundToggle(container, toggleEl, setSoundEnabled, sceneKey) {
   if (!toggleEl) return;
-  const KEY = 'pm-sound-enabled';
+  const KEY = `pm-sound-enabled:${sceneKey}`;
   let storedOn = false;
   try { storedOn = localStorage.getItem(KEY) === '1'; } catch { /* private browsing / storage disabled — just skip persistence */ }
 
