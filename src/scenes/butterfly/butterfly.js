@@ -160,7 +160,7 @@ export function createButterfly(container, { preview = false } = {}) {
   let expLabel = null, hint = null;
   if (!preview) {
     const frag = parseHTML(butterflyHtml);
-    expLabel = frag.querySelector('.butterfly-exp-label');
+    expLabel = frag.querySelector('.butterfly-exp-label-row');
     hint = frag.querySelector('.butterfly-hint');
     document.body.appendChild(expLabel);
     document.body.appendChild(hint);

@@ -4,27 +4,30 @@
    owns creating/removing .butterfly-exp-label and .butterfly-hint itself,
    same as every other scene's hint/caption/title. */
 
-.butterfly-exp-label {
+/* Same flex-wrapper centering approach as .harmonics-title-row — see
+   #site-title-row's fuller comment in styles/main.css. */
+.butterfly-exp-label-row {
   position: fixed;
-  bottom: 3rem; left: 50%;
+  bottom: 3rem; left: 0; right: 0;
+  display: flex; justify-content: center;
+  pointer-events: none; z-index: 310;
+}
+.butterfly-exp-label {
   /* Same letter-spacing-trailing-gap centering fix as harmonics-title —
      see that rule's fuller comment in harmonics.css. */
-  --tracking: clamp(0.1em, 1vw, 0.4em);
-  transform: translateX(calc(-50% + var(--tracking) / 2));
   color: rgba(255,255,255,0.85);
   font-size: clamp(0.85rem, 2.5vw, 1.6rem);
+  --tracking: clamp(0.1em, 1vw, 0.4em);
   letter-spacing: var(--tracking);
+  margin-right: calc(-1 * var(--tracking));
   text-transform: uppercase;
-  pointer-events: none; text-align: center;
-  white-space: nowrap; z-index: 310;
+  text-align: center;
+  white-space: nowrap;
   font-family: 'Arapey', serif;
 }
 @media (max-width: 600px) {
-  .butterfly-exp-label {
-    white-space: normal; width: 88vw;
-    left: 6vw; transform: none;
-    bottom: 5.5rem;
-  }
+  .butterfly-exp-label-row { left: 6vw; right: 6vw; bottom: 5.5rem; }
+  .butterfly-exp-label { white-space: normal; }
 }
 .butterfly-hint {
   position: fixed; top: 4.5rem; right: 1.2rem;

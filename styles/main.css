@@ -175,6 +175,29 @@ html, body {
 .nav-icon svg { width: 22px; height: 22px; display: block; }
 
 /* ─── Site title ────────────────────────────────────────────────────────────── */
+/* Centers #site-title without needing to know its own width — the
+   previous approach (position:fixed;left:50%;transform:translateX(-50%))
+   also had to compensate for letter-spacing's trailing gap (Chrome adds
+   that gap after the LAST character too, not just between characters,
+   inflating the box translateX(-50%) centers) with extra transform math.
+   Flexbox does both jobs at once: justify-content:center centers
+   #site-title (a normal, content-sized flex item — its own pill
+   shape/padding/click target are untouched) using its MARGIN box, so a
+   plain negative margin-right on #site-title itself (see below) cancels
+   the trailing gap with no transform calc needed. This wrapper exists
+   purely for that positioning; it's not semantic and not interactive
+   (pointer-events:none — #site-title re-enables its own), so it's
+   invisible to assistive tech and doesn't intercept clicks meant for
+   whatever's underneath. Standing convention as of 2026-08-26 (see
+   NOTES.md): no more left:50%+translateX(-50%) centering anywhere in
+   this codebase — an ancestor flex/grid container instead. */
+#site-title-row {
+  position: fixed;
+  bottom: 1.2rem; left: 0; right: 0;
+  display: flex; justify-content: center;
+  pointer-events: none;
+  z-index: 400;
+}
 #site-title {
   /* Semantic pass, 2026-07-22: was <a href="#" role="button">. It never
      navigated anywhere (the click handler always preventDefault()'d and
@@ -185,30 +208,23 @@ html, body {
      rather than the browser's default UI font. */
   border: none;
   font-family: inherit;
-  position: fixed;
-  bottom: 1.2rem;
-  left: 50%;
-  /* letter-spacing (below) adds its gap AFTER the last character too, not
-     just between characters — Chrome renders that trailing gap as real
-     box width. A plain translateX(-50%) centers that inflated box, which
-     shifts the visible glyphs half a letter-spacing-width left of true
-     center (caught live, 2026-08-26: DevTools showed the box measurably
-     wider than the visible text). --tracking is reused in both
-     letter-spacing and this calc so they can never drift apart; the
-     +var(--tracking)/2 nudges the translate right by exactly half the
-     phantom trailing gap to compensate. Same fix, same reasoning, applied
-     everywhere else in this codebase a letter-spaced run is centered via
-     its own translateX(-50%) — see harmonics.css/outside.css/
-     butterfly.css's -title/-label rules, and beamline.css/orbiter.css/
-     orrery.css's margin-right variant for the flex/shrink-to-fit case. */
+  /* Still needs to be a positioned element (just not position:fixed
+     anymore, #site-title-row above owns that) — its own ::before/::after
+     smoke-on-hover pseudo-elements are position:absolute and anchor to
+     the nearest positioned ancestor, which has to stay #site-title
+     itself rather than falling through to #site-title-row. */
+  position: relative;
+  /* --tracking/margin-right: cancels letter-spacing's trailing gap so
+     #site-title-row's justify-content:center lands on the visible glyphs
+     rather than the gap-inflated box — see #site-title-row's comment
+     above for the full reasoning. */
   --tracking: 0.3em;
   letter-spacing: var(--tracking);
-  transform: translateX(calc(-50% + var(--tracking) / 2));
+  margin-right: calc(-1 * var(--tracking));
   font-size: 0.7rem;
   text-transform: uppercase;
   color: rgba(255,255,255,0.5);
-  pointer-events: all;
-  z-index: 400;
+  pointer-events: auto;
   white-space: nowrap;
   text-decoration: none;
   transition: color 0.2s, background 0.2s;

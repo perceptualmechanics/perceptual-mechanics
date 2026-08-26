@@ -764,7 +764,7 @@ export function createharmonics(container, { preview = false, initialPieceId = n
   let soundToggleEl = null, soundToggleLabelEl = null;
   if (!preview) {
     const frag = parseHTML(harmonicsHtml);
-    titleEl = frag.querySelector('.harmonics-title');
+    titleEl = frag.querySelector('.harmonics-title-row');
     hintEl = frag.querySelector('.harmonics-hint');
     document.body.appendChild(titleEl);
     document.body.appendChild(hintEl);

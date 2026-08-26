@@ -18,7 +18,13 @@
    block, so this stays clear of #site-title's footer pill by
    construction — same position the original solo caption occupied. */
 .orbiter-title {
-  bottom: var(--title-block-bottom); left: 50%; transform: translateX(-50%);
+  /* left:0;right:0 (rather than left:50%+transform:translateX(-50%))
+     makes this a full-width flex row so align-items:center can center
+     .orbiter-title-sub by its own margin box — see #site-title-row's
+     fuller comment in styles/main.css for why translateX(-50%)
+     self-centering was replaced everywhere in this codebase (standing
+     convention as of 2026-08-26, NOTES.md). */
+  bottom: var(--title-block-bottom); left: 0; right: 0;
   display: flex; flex-direction: column; align-items: center; gap: 0.3rem;
 }
 .orbiter-title-sub {
@@ -45,7 +51,7 @@
 }
 @media (max-width: 600px) {
   .orbiter-title {
-    bottom: var(--title-block-bottom-mobile); width: 88vw;
+    bottom: var(--title-block-bottom-mobile); left: 6vw; right: 6vw;
   }
   .orbiter-title-sub { white-space: normal; font-size: 0.7rem; }
 }

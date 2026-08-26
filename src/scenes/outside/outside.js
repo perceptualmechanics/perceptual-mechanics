@@ -679,7 +679,7 @@ export function createOutside(container, { preview = false, initialPieceId = nul
   let srLiveEl = null;
   if (!preview) {
     const frag = parseHTML(outsideHtml);
-    titleEl = frag.querySelector('.outside-title');
+    titleEl = frag.querySelector('.outside-title-row');
     hintEl = frag.querySelector('.outside-hint');
     document.body.appendChild(titleEl);
     document.body.appendChild(hintEl);

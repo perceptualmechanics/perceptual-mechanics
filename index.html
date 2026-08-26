@@ -223,7 +223,11 @@
        navigated anywhere (main.js's click handler always preventDefault()s
        and calls returnToGallery() itself), so a real <button> is what
        this always semantically was. -->
-  <button type="button" id="site-title" aria-label="Return to gallery" onmouseover="pmGlimpse('title')" onfocus="pmGlimpse('title')">perceptual mechanics</button>
+  <!-- #site-title-row is a plain, non-semantic positioning wrapper (styles/main.css) —
+       #site-title itself stays the real interactive element, unaffected for a11y/click. -->
+  <div id="site-title-row">
+    <button type="button" id="site-title" aria-label="Return to gallery" onmouseover="pmGlimpse('title')" onfocus="pmGlimpse('title')">perceptual mechanics</button>
+  </div>
 
   <!-- Fullscreen toggle — persistent, site-wide, wired once here at the same
        shared-chrome level as #pm-nav/#site-title (main.js) rather than

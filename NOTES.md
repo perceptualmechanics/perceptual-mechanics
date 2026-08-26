@@ -647,6 +647,68 @@ different one, toggled sound on/off, no console errors from the scene's
 own code. Debug hooks fully stripped before this build. Full `npx vite
 build` clean.
 
+## 3.9.14 (2026-08-26)
+
+**Every centered title refactored from transform-based to flexbox
+centering.** Scott's direct follow-up to 3.9.13: the
+`left:50%;transform:translateX(calc(-50% + var(--tracking)/2))` pattern
+that fix relied on — while correct — is exactly the kind of positioning
+math he wants banned outright ("flexbox just does this much better").
+`position:fixed` itself stays wherever it already was (nothing here
+needed to be un-pinned) — only the *centering mechanism* changed.
+
+**#site-title, .harmonics-title, .outside-title, .butterfly-exp-label**
+(previously self-centered: same element had both the letter-spacing and
+the `left:50%;transform` positioning) each gained a plain, non-semantic,
+non-interactive wrapper (`#site-title-row`, `.harmonics-title-row`,
+`.outside-title-row`, `.butterfly-exp-label-row`) that's
+`position:fixed;left:0;right:0;display:flex;justify-content:center;
+pointer-events:none`. The original element becomes a normal flex item
+inside it — `#site-title` re-enables its own `pointer-events:auto` so it
+stays clickable, and separately needed `position:relative` added back
+since its `::before`/`::after` hover-smoke pseudo-elements are
+`position:absolute` and need a positioned ancestor closer than the new
+wrapper. `justify-content:center` centers each flex item by its own
+*margin* box, so the same `--tracking`-driven compensation now happens
+via `margin-right: calc(-1 * var(--tracking))` on the item itself — no
+transform math anywhere. All four elements' static text (confirmed never
+JS-updated after mount) made the wrapper a one-line HTML change with no
+JS logic changes beyond retargeting `querySelector` to the new wrapper
+class for mount/dispose.
+
+**.beamline-title, .orbiter-title, .orrery-title** (already flex/child
+structures — align-items:center column for beamline/orbiter, a
+shrink-to-fit block for orrery, with `margin-right:-tracking` already on
+their children from 3.9.13) needed no markup change at all: just
+swapping the outer wrapper's own `left:50%;transform:translateX(-50%)`
+for `left:0;right:0` (orrery additionally gained
+`display:flex;justify-content:center`, since it wasn't flex before).
+Mobile media-query overrides that used to set an explicit `width` on
+these boxes now set `left`/`right` insets instead, which flex/shrink-to-fit
+naturally resolves into the same effective width.
+
+Verified live for all seven with the same true-ink-position measurement
+technique as 3.9.13 (a `Range` around just the first character) — all
+still land at 0.00px (±0.01px rounding) from true viewport center.
+Additionally verified `#site-title`'s click-to-return-to-gallery,
+hover-state color change, and `::before`/`::after` smoke pseudo-element
+positioning (confirmed anchored to `#site-title` itself, not the new
+wrapper, via `getComputedStyle(el, '::before').left` resolving to a
+button-relative pixel value rather than a viewport-relative one) all
+still work correctly.
+
+**Standing convention as of this version:** no `left:50%` +
+`transform:translateX(-50%)` centering anywhere in this codebase.
+Center with a flex or grid container instead — an ancestor
+`display:flex;justify-content:center` (or `align-items:center` for a
+column stack) on a full-width/edge-to-edge box. `position:fixed`/
+`position:absolute` themselves are unaffected by this — they're still
+the right tool for pinning something to a viewport corner or edge; it's
+specifically the "center by computing your own width and subtracting
+half of it" technique that's banned, letter-spacing bug or not, because
+flexbox does the same job without needing to know the element's own
+width at all.
+
 ## 3.9.13 (2026-08-26)
 
 **Fixed: every centered, tracked-out title site-wide was slightly

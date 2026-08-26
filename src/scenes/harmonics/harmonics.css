@@ -2,35 +2,43 @@
    document.body — see harmonics.html's header comment and
    butterfly.css's original z-index/stacking-context reasoning, which
    every scene with body-level chrome shares). harmonics.js owns
-   creating/removing .harmonics-title and .harmonics-hint itself. */
+   creating/removing .harmonics-title-row and .harmonics-hint itself. */
 
-.harmonics-title {
+/* .harmonics-title-row is a plain, non-semantic flex wrapper that
+   centers .harmonics-title without needing to know its own width — see
+   #site-title-row's fuller comment in styles/main.css for why this
+   replaced left:50%+transform:translateX(-50%) everywhere in this
+   codebase (standing convention as of 2026-08-26, NOTES.md). */
+.harmonics-title-row {
   position: fixed;
-  bottom: 3rem; left: 50%;
-  /* translateX(-50%) centers the box, but letter-spacing's trailing gap
-     (added after the last character too, not just between characters —
-     a real Chrome rendering quirk, confirmed live via DevTools 2026-08-26)
-     inflates that box's width, shifting the visible glyphs left of true
-     center. --tracking is shared between letter-spacing and this calc so
-     they can't drift apart; see #site-title's fuller comment in
-     styles/main.css for the general explanation, applied identically
-     here and in outside.css/butterfly.css's matching -title/-label. */
-  --tracking: clamp(0.1em, 1vw, 0.4em);
-  transform: translateX(calc(-50% + var(--tracking) / 2));
+  bottom: 3rem; left: 0; right: 0;
+  display: flex; justify-content: center;
+  pointer-events: none; z-index: 310;
+}
+.harmonics-title {
+  /* letter-spacing's trailing gap (added after the last character too,
+     not just between characters — a real Chrome rendering quirk,
+     confirmed live via DevTools 2026-08-25) inflates this element's own
+     margin box, which .harmonics-title-row's justify-content:center
+     would otherwise center along with the invisible gap. margin-right
+     cancels exactly that much so the visible glyphs land at true center.
+     --tracking feeds both properties so they can't drift apart; see
+     #site-title's fuller comment in styles/main.css for the general
+     explanation, applied identically here and in outside.css/
+     butterfly.css's matching -title/-label. */
   color: rgba(210,225,255,0.85);
   font-size: clamp(0.85rem, 2.5vw, 1.6rem);
+  --tracking: clamp(0.1em, 1vw, 0.4em);
   letter-spacing: var(--tracking);
+  margin-right: calc(-1 * var(--tracking));
   text-transform: uppercase;
-  pointer-events: none; text-align: center;
-  white-space: nowrap; z-index: 310;
+  text-align: center; /* keeps wrapped mobile lines centered under each other */
+  white-space: nowrap;
   font-family: 'Arapey', serif;
 }
 @media (max-width: 600px) {
-  .harmonics-title {
-    white-space: normal; width: 88vw;
-    left: 6vw; transform: none;
-    bottom: 5.5rem;
-  }
+  .harmonics-title-row { left: 6vw; right: 6vw; bottom: 5.5rem; }
+  .harmonics-title { white-space: normal; }
 }
 .harmonics-hint {
   position: fixed; top: 4.5rem; right: 1.2rem;
