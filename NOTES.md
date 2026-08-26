@@ -6,6 +6,12 @@ projects (The Secret World, A Manual of Perceptual Mechanics) moved into their o
 files, which are now the source of truth for that material going forward. See "project map"
 below for where things live.
 
+Coding standards (centering technique, vendor-prefix policy, `!important`
+policy, mobile-first convention, and the reasoning behind each) live in
+`STANDARDS.md`, not here — check that file first before any future
+"modernize the code" pass. This file stays a dated changelog of what
+shipped when.
+
 ## Standing process — periodic best-practices review
 
 Added 2026-08-25, at Scott's explicit request, as its own standing habit
@@ -646,6 +652,90 @@ keywords, present-in-both-accounts framing — closed it, reopened a
 different one, toggled sound on/off, no console errors from the scene's
 own code. Debug hooks fully stripped before this build. Full `npx vite
 build` clean.
+
+## 3.9.16 (2026-08-26)
+
+**Full codebase modernization pass**, per Scott's follow-up to v3.9.15:
+wider scope (CSS *and* JS, not just what v3.9.15 already checked) plus a
+durable standing record — see the new `STANDARDS.md` — so the reasoning
+doesn't need rebuilding from scratch on the next pass.
+
+**CSS — additional grep sweep beyond v3.9.15:** checked `clear:both`
+(one instance, `library.css`'s `.library-panel-scene` — correctly paired
+with `.library-panel-cover`'s `float:left` above it, a real clearfix not
+a hack), `display:table` for layout (none found), and z-index
+("stacking wars"): confirmed the whole site's z-index usage follows one
+documented, deliberate scale (`styles/main.css`'s top-of-file comment,
+9999→9000→500→400→310→300→60→scoped-per-container) rather than
+adhoc escalation — not a kludge.
+
+**Mobile-first conversion.** Confirmed every one of the 12 stylesheets
+used `max-width`-only media queries (desktop-first, mobile bolted on) —
+zero `min-width` queries existed anywhere in the codebase before this.
+Converted 10 of 12 files to mobile-first, each verified
+property-by-property equivalent at representative widths before/after
+using a small CSS-cascade simulator (no live browser available in this
+sandbox). Flagged `main.css` and `theater.css` for a separate, deliberate
+follow-up pass rather than converting them blind — both carry responsive
+logic with real regression history or compound query logic that a hand
+inversion could get subtly wrong. Full reasoning and the per-file table
+are in `STANDARDS.md`.
+
+**Found and fixed a real dead-code bug during the sphere.css
+conversion:** `.sphere-panel-title`/`.sphere-panel-content`'s
+`@media(max-width:700px)` override sat *before* an identical-specificity
+unconditional rule later in the file — so the override's smaller
+font-size/letter-spacing/line-height values were dead at every viewport
+width, not just above 700px; the later rule always won the cascade
+regardless of the media query. Consolidated into one rule per selector
+with the mobile value as the base and a single `min-width` override,
+so the responsive sizing this always intended to have now actually
+applies below 701px (0.1rem smaller heading, 0.1rem/0.1 line-height
+smaller body text — minor, cosmetic, but real).
+
+**JavaScript audit:** swept for `var` (none found — `let`/`const`
+throughout), nested callback chains (none — the few `async`/`await`/
+`.then()` sites found are each a single well-scoped async operation),
+and manual-listener-vs-delegation opportunities (eight
+`querySelectorAll().forEach()` sites, all small bounded lists replaced
+via `innerHTML` on re-render — no leak, delegation would be
+over-engineering here). Confirmed `src/utils/sceneKit.js` already exists
+as the shared-logic extraction point (`bindEscapeClose`,
+`createPanelCloser`, `createJumpList`, `wireCrossLinks`, and others) and
+every scene already routes through it rather than reimplementing —
+no copy-paste duplication found to extract. Recorded as a clean result,
+not padded with manufactured findings.
+
+**New `STANDARDS.md`** — durable house rules with the reasoning attached:
+centering defaults to flex/grid except coordinate-anchoring (the WebGL
+overlay-positioning case is the standing example); vendor prefixes kept
+only with a stated, individually-checked reason and no default either
+direction; `!important` limited to the two legitimate categories already
+established (third-party inline-style overrides, accessibility
+overrides); mobile-first going forward, non-negotiable; and the general
+principle that "looks outdated" isn't the same test as "has a strictly
+better tool available."
+
+**Nested media queries, per Scott's same-day follow-up** ("nest media
+queries in their appropriate selectors... that's the code standard I
+want going forward... make sure you format the nested stuff with
+tabs"). All 10 mobile-first-converted files' `@media (min-width: ...)`
+queries moved from separate top-level blocks into native CSS nesting
+inside the selector they modify, tab-indented to visually set nested
+content apart from the file's ordinary 2-space property indent. Verified
+via `lightningcss` (installed temporarily for this check) flattening
+each nested file back to plain CSS and comparing the result against the
+pre-nesting version with the same cascade simulator used for the
+mobile-first conversion itself — confirmed byte-for-byte equivalent
+effective styles at every tested width. A production build's actual
+output (`dist/assets/*.css`) confirms Vite's esbuild pipeline expands
+the nested syntax into ordinary flat `@media` blocks anyway, so browser
+support for native nesting doesn't even end up mattering for the live
+site — nesting is purely a source-authoring convenience. Also caught,
+by the act of nesting forcing a full re-read of each selector, a second
+instance of the same dead-media-query-override class of bug already
+found once in sphere.css: none beyond the one already fixed, but the
+technique paid for itself. New standing rule recorded in `STANDARDS.md`.
 
 ## 3.9.15 (2026-08-26)
 

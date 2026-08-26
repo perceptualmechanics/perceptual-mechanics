@@ -16,11 +16,18 @@
 
 /* Same flex-wrapper centering approach as .harmonics-title-row — see
    #site-title-row's fuller comment in styles/main.css. */
+/* Mobile-first (standing convention, see NOTES.md/STANDARDS.md): base rule
+   below targets the smallest viewport by default; the min-width query
+   layers the wider-viewport values on top, never the reverse. */
 .outside-title-row {
   position: fixed;
-  bottom: 3rem; left: 0; right: 0;
+  bottom: 5.5rem; left: 6vw; right: 6vw;
   display: flex; justify-content: center;
   pointer-events: none; z-index: 310;
+
+	@media (min-width: 601px) {
+		left: 0; right: 0; bottom: 3rem;
+	}
 }
 .outside-title {
   /* Same letter-spacing-trailing-gap centering fix as harmonics-title —
@@ -32,12 +39,15 @@
   margin-right: calc(-1 * var(--tracking));
   text-transform: uppercase;
   text-align: center;
-  white-space: nowrap;
+  white-space: normal;
   font-family: 'Arapey', serif;
-}
-@media (max-width: 600px) {
-  .outside-title-row { left: 6vw; right: 6vw; bottom: 5.5rem; }
-  .outside-title { white-space: normal; }
+
+	@media (min-width: 601px) {
+		white-space: nowrap;
+	}
+	@media (prefers-reduced-motion: reduce) {
+		transition: none;
+	}
 }
 .outside-hint {
   position: fixed; top: 4.5rem; right: 1.2rem;
@@ -46,9 +56,10 @@
   text-transform: uppercase; pointer-events: none;
   text-align: right; z-index: 310; line-height: 1.8;
   font-family: 'Arapey', serif;
-}
-@media (prefers-reduced-motion: reduce) {
-  .outside-title, .outside-hint { transition: none; }
+
+	@media (prefers-reduced-motion: reduce) {
+		transition: none;
+	}
 }
 
 /* ─── Sound toggle ─────────────────────────────────────────────────────────
@@ -56,13 +67,17 @@
    explicit first-gesture trigger AND ongoing mute control), tinted to
    this scene's own violet rather than gold. */
 .outside-sound-toggle {
-  position: fixed; bottom: 3rem; left: 1.5rem; z-index: 310;
+  position: fixed; bottom: 5.5rem; left: 1rem; z-index: 310;
   display: flex; align-items: center; gap: .55rem;
   background: rgba(8,5,15,0.55); border: 1px solid rgba(200,170,255,0.3);
-  border-radius: 999px; padding: .5rem 1rem;
+  border-radius: 999px; padding: .4rem .8rem;
   color: rgba(220,200,255,.75); font-family: 'Electrolize', sans-serif;
   font-size: .62rem; letter-spacing: .16em; text-transform: uppercase;
   cursor: pointer; transition: background .2s, border-color .2s, color .2s;
+
+	@media (min-width: 601px) {
+		bottom: 3rem; left: 1.5rem; padding: .5rem 1rem;
+	}
 }
 .outside-sound-toggle:hover, .outside-sound-toggle:focus-visible {
   background: rgba(200,170,255,0.12); border-color: rgba(200,170,255,0.55);
@@ -75,9 +90,6 @@
 }
 .outside-sound-toggle[aria-pressed="true"] .outside-sound-toggle-dot {
   background: #cba7ff; box-shadow: 0 0 8px 2px rgba(200,170,255,0.7);
-}
-@media (max-width: 600px) {
-  .outside-sound-toggle { bottom: 5.5rem; left: 1rem; padding: .4rem .8rem; }
 }
 
 /* ─── Screen-reader live region ────────────────────────────────────────────

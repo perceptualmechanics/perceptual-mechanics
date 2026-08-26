@@ -100,8 +100,12 @@
    stem/stroke markup; this override just gives it room to be the sole
    mark on the page instead of one small carving inside a medallion. ── */
 .scroll-ogham-panel {
-  max-width: 100px; margin: 0 auto 2.6rem; aspect-ratio: 0.6 / 1;
+  max-width: 76px; margin: 0 auto 2.6rem; aspect-ratio: 0.6 / 1;
   display: flex; align-items: center; justify-content: center;
+
+	@media (min-width: 601px) {
+		max-width: 100px;
+	}
 }
 .scroll-ogham-panel .scroll-ogham {
   width: 82%; height: 92%;
@@ -156,11 +160,19 @@
 /* ── Patch: one section of hide, one uninterrupted stretch of text ──
    clip-path (set per instance in JS, --patch-clip below) cuts the whole
    perimeter into a ragged, disjointed hide-shape — not just top/bottom. */
+/* Mobile-first (standing convention, see NOTES.md/STANDARDS.md) from here
+   down: each base rule targets the smallest viewport by default; the
+   single min-width query near the end of this file layers the
+   wider-viewport values on top, never the reverse. */
 .scroll-patch {
-  max-width: 820px; margin: 0 auto; padding: 2.2rem 1.9rem;
+  max-width: 820px; margin: 0 auto; padding: 1.7rem 1.1rem;
   position: relative; scroll-margin-top: 2rem;
   transition: box-shadow 0.4s ease;
   clip-path: var(--patch-clip, none);
+
+	@media (min-width: 601px) {
+		padding: 2.2rem 1.9rem;
+	}
 }
 .scroll-patch.scroll-flash { box-shadow: 0 0 0 2px rgba(184,122,50,0.55) inset; }
 
@@ -198,8 +210,14 @@
    own box regardless of piece; it does not change how paragraphs wrap
    around the float *within* that box, so the normal margin-note look is
    untouched. */
-.scroll-patch-text { position: relative; z-index: 1; overflow: hidden; }
-.scroll-patch-text { --scroll-base-size: 1.2rem; }
+.scroll-patch-text {
+  position: relative; z-index: 1; overflow: hidden;
+  --scroll-base-size: 1.05rem;
+
+	@media (min-width: 601px) {
+		--scroll-base-size: 1.2rem;
+	}
+}
 .scroll-patch-text > p,
 .scroll-patch-text > .scroll-opening > p {
   font-family: 'IM Fell English', Georgia, serif;
@@ -245,10 +263,14 @@
 .scroll-patch-text.scroll-patch-text--contained > .scroll-opening > p:first-of-type::first-letter {
   font-family: 'Cinzel', 'IM Fell English', serif;
   font-weight: 600;
-  font-size: 3.4rem; line-height: 0.72;
+  font-size: 2.6rem; line-height: 0.72;
   float: left; margin: 0.05em 0.12em 0 0;
   color: #c17a3d;
   text-shadow: 1.5px 1.5px 0 rgba(0,0,0,0.65), -1px -1px 0 rgba(255,220,170,0.15);
+
+	@media (min-width: 601px) {
+		font-size: 3.4rem;
+	}
 }
 
 /* Ogham marginalia: the opening line of each piece, transliterated,
@@ -260,19 +282,25 @@
    nods to how Ogham actually reads — notches keyed off a straight
    edge, not floating free the way Latin letters do. */
 .scroll-ogham-line {
-  float: left;
-  width: 118px;
-  margin: 0.1rem 1.2rem 0.6rem 0;
-  padding-left: 0.6rem;
+  float: none;
+  display: block;
+  width: auto;
+  margin: 0 0 0.9rem;
+  padding-left: 0.5rem;
   border-left: 1px solid rgba(184,196,214,0.35);
   font-family: 'Noto Sans Ogham', sans-serif;
-  font-size: 1.3rem;
+  font-size: 1.1rem;
   line-height: 1.75;
   letter-spacing: 0.03em;
   color: rgba(184, 196, 214, 0.72);
   text-shadow: none;
   word-break: break-word;
   user-select: none;
+
+	@media (min-width: 601px) {
+		float: left; display: inline; width: 118px;
+		margin: 0.1rem 1.2rem 0.6rem 0; padding-left: 0.6rem; font-size: 1.3rem;
+	}
 }
 /* A handful of pieces open on one unusually long clause (see scroll.js's
    oghamWide comment) — widening the column instead of shrinking type or
@@ -333,11 +361,15 @@
   max-width: 540px; margin: 1.9rem auto 2.3rem;
   background: linear-gradient(178deg, #f2ead4 0%, #e6d9b8 55%, #dccca4 100%);
   box-shadow: 0 6px 16px rgba(0,0,0,0.5), 0 1px 0 rgba(255,255,255,0.2) inset;
-  padding: 2.1rem 1.6rem 1.9rem 2.1rem;
+  padding: 1.7rem 1.1rem 1.5rem 1.5rem;
   transform: rotate(var(--script-rot, 0deg));
   transform-origin: 50% 0%;
   animation: scroll-script-flutter 15s ease-in-out infinite;
   animation-delay: var(--script-delay, 0s);
+
+	@media (min-width: 601px) {
+		padding: 2.1rem 1.6rem 1.9rem 2.1rem;
+	}
 }
 @keyframes scroll-script-flutter {
   0%, 4%, 15%, 27%, 40%, 55%, 100% { transform: rotate(var(--script-rot, 0deg)); }
@@ -382,9 +414,13 @@
 .scroll-script-page {
   font-family: 'Courier Prime', 'Courier New', Courier, monospace;
   color: #2b2314;
-  font-size: 0.92rem; line-height: 1.65;
+  font-size: 0.85rem; line-height: 1.65;
   position: relative;
   z-index: 1;
+
+	@media (min-width: 601px) {
+		font-size: 0.92rem;
+	}
 }
 .scroll-script-slug {
   font-weight: 700; text-transform: uppercase;
@@ -394,7 +430,11 @@
   margin: 0 0 0.9rem;
 }
 .scroll-script-dialogue {
-  max-width: 68%; margin: 0 auto 0.9rem;
+  max-width: 88%; margin: 0 auto 0.9rem;
+
+	@media (min-width: 601px) {
+		max-width: 68%;
+	}
 }
 .scroll-script-character {
   text-align: center; text-transform: uppercase; font-weight: 700;
@@ -474,19 +514,4 @@
   .scroll-root::before { animation: none; opacity: 1; }
   .scroll-patch::after { animation: none; }
   .scroll-intense--wide { animation: none; }
-}
-
-@media (max-width: 600px) {
-  .scroll-patch { padding: 1.7rem 1.1rem; }
-  .scroll-patch-text { --scroll-base-size: 1.05rem; }
-  .scroll-patch-text:not(.scroll-patch-text--contained) > p:first-of-type::first-letter,
-  .scroll-patch-text.scroll-patch-text--contained > .scroll-opening > p:first-of-type::first-letter { font-size: 2.6rem; }
-  .scroll-ogham-panel { max-width: 76px; }
-  .scroll-ogham-line {
-    float: none; display: block; width: auto;
-    margin: 0 0 0.9rem; padding-left: 0.5rem; font-size: 1.1rem;
-  }
-  .scroll-script { padding: 1.7rem 1.1rem 1.5rem 1.5rem; }
-  .scroll-script-page { font-size: 0.85rem; }
-  .scroll-script-dialogue { max-width: 88%; }
 }

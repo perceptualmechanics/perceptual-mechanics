@@ -15,6 +15,10 @@
   border-radius: 50%; cursor: pointer; z-index: 60;
   transition: opacity 0.25s, transform 0.2s, background 0.2s;
   opacity: 0.6;
+
+	@media (prefers-reduced-motion: reduce) {
+		transition: none;
+	}
 }
 .colophon-mark img {
   width: 78%; height: auto; display: block; position: relative;
@@ -46,6 +50,13 @@
   opacity: 0;
   pointer-events: none;
   animation: colophon-gleam 5s ease-in-out infinite;
+
+  /* Gold filter on .colophon-mark img stays (that's color, not motion) —
+     only this sweeping gleam is autonomous motion, so only this gets
+     switched off. */
+	@media (prefers-reduced-motion: reduce) {
+		animation: none; opacity: 0;
+	}
 }
 @keyframes colophon-gleam {
   0%, 75%  { opacity: 0;   background-position: 0% 50%; }
@@ -55,6 +66,10 @@
 }
 .colophon-mark:hover, .colophon-mark:focus-visible {
   opacity: 1; transform: scale(1.08); background: rgba(10,8,6,0.55);
+
+	@media (prefers-reduced-motion: reduce) {
+		transform: none;
+	}
 }
 .colophon-mark:focus-visible {
   outline: 2px solid rgba(255,255,255,0.6); outline-offset: 3px;
@@ -65,11 +80,18 @@
   background: rgba(4,3,2,0.75);
   opacity: 0; pointer-events: none;
   transition: opacity 0.35s ease;
+
+	@media (prefers-reduced-motion: reduce) {
+		transition: none;
+	}
   display: flex; align-items: center; justify-content: center;
   padding: 4vh 1.5rem;
 }
 .colophon-backdrop.open { opacity: 1; pointer-events: all; }
 
+/* Mobile-first (standing convention, see NOTES.md/STANDARDS.md): base rule
+   below targets the smallest viewport by default; the min-width query
+   layers the wider-viewport values on top, never the reverse. */
 .colophon-panel {
   width: min(640px, 100%); max-height: 88vh; overflow-y: auto;
   background:
@@ -77,12 +99,19 @@
     #0d0a07;
   border: 1px solid rgba(220,200,180,0.15);
   border-radius: 6px;
-  padding: 2.75rem 2.25rem 2.25rem;
+  padding: 3.5rem 1.4rem 1.6rem;
   position: relative;
   font-family: 'Arapey', serif;
   color: rgba(225,218,205,0.75);
   transform: translateY(10px); transition: transform 0.35s ease;
   scrollbar-color: rgba(220,200,180,0.3) #0a0908; scrollbar-width: thin;
+
+	@media (min-width: 601px) {
+		padding: 2.75rem 2.25rem 2.25rem;
+	}
+	@media (prefers-reduced-motion: reduce) {
+		transition: none;
+	}
 }
 .colophon-backdrop.open .colophon-panel { transform: translateY(0); }
 
@@ -126,17 +155,4 @@
 .colophon-feedback-link {
   display: inline-block; margin-top: 0.3rem;
   font-size: 0.92rem; padding: 0.5rem 0;
-}
-
-@media (max-width: 600px) {
-  .colophon-panel { padding: 3.5rem 1.4rem 1.6rem; }
-}
-@media (prefers-reduced-motion: reduce) {
-  .colophon-mark { transition: none; }
-  .colophon-mark:hover { transform: none; }
-  .colophon-backdrop, .colophon-panel { transition: none; }
-  /* Gold filter on the img itself stays (that's color, not motion) —
-     only the sweeping gleam animation is autonomous motion, so only
-     that gets switched off. */
-  .colophon-mark::after { animation: none; opacity: 0; }
 }

@@ -16,16 +16,33 @@
    is the new real title, above the anchor; the two epigraph lines
    (still filled from beamline.text.js) consolidate into the subtitle
    position at/below it, in place of standing in as the title themselves. */
+/* Mobile-first (standing convention, see NOTES.md/STANDARDS.md): base
+   declarations target the smallest viewport by default; the nested
+   min-width query layers the wider-viewport values on top, never the
+   reverse. Native CSS nesting keeps a selector's responsive behavior in
+   the same block as its base rule instead of a separate block elsewhere
+   in the file (standing convention as of 2026-08-26, STANDARDS.md). */
 .beamline-title {
-  /* left:0;right:0 (rather than left:50%+transform:translateX(-50%))
+  /* left:5vw;right:5vw (rather than left:50%+transform:translateX(-50%))
      makes this a full-width flex row so align-items:center can center
      each line below by its own margin box — see #site-title-row's fuller
      comment in styles/main.css for why translateX(-50%) self-centering
      was replaced everywhere in this codebase (standing convention as of
      2026-08-26, NOTES.md). */
-  bottom: var(--title-block-bottom); left: 0; right: 0;
+  bottom: var(--title-block-bottom-mobile); left: 5vw; right: 5vw;
   text-align: center; color: rgba(200,245,255,0.88);
   display: flex; flex-direction: column; align-items: center; gap: 0.3rem;
+
+	@media (min-width: 601px) {
+		/* The title/hint collision this used to guard against (title's 90vw
+		   width reaching the hint's right-pinned position) no longer exists
+		   now that the title moved to bottom-center — hint stays top-right,
+		   title's now at the opposite corner and vertical edge of the screen
+		   entirely, so there's nothing further for .beamline-hint to
+		   override here; it just falls back to every other scene's plain
+		   top:4.5rem;right:1.2rem at every width. */
+		bottom: var(--title-block-bottom); left: 0; right: 0;
+	}
 }
 /* Each title line below sits inside .beamline-title's flex column, which
    centers every line by its own margin-box width (align-items: center).
@@ -54,6 +71,13 @@
   font-style: italic;
   text-shadow: 0 0 16px rgba(0,102,255,0.4), 0 1px 0 rgba(0,0,0,0.6);
 }
+.beamline-title-name, .beamline-title-main, .beamline-title-sub {
+  /* Unconditional, not breakpoint-specific: nothing else in this file ever
+     sets white-space on these three lines, so this is the same at every
+     width — stated explicitly rather than left to rely on the property's
+     own initial value. */
+  white-space: normal;
+}
 .beamline-title-sub {
   display: block;
   font-size: clamp(0.62rem, 1.3vw, 0.8rem);
@@ -79,17 +103,6 @@
      upper via text-transform. */
   font-family: 'Orbitron', sans-serif; font-variant: small-caps;
   font-weight: 600;
-}
-@media (max-width: 600px) {
-  /* The title/hint collision this block used to guard against (title's
-     90vw width reaching the hint's right-pinned position) no longer
-     exists now that the title moved to bottom-center — hint stays
-     top-right, title's now at the opposite corner and vertical edge of
-     the screen entirely, so the old "stack hint below title" override
-     is dead weight, removed rather than left behind unused. hint now
-     just falls back to every other scene's plain top:4.5rem;right:1.2rem. */
-  .beamline-title { bottom: var(--title-block-bottom-mobile); left: 5vw; right: 5vw; }
-  .beamline-title-name, .beamline-title-main, .beamline-title-sub { white-space: normal; }
 }
 .beamline-sr-live {
   position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;

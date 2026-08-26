@@ -6,11 +6,22 @@
 
 /* Same flex-wrapper centering approach as .harmonics-title-row — see
    #site-title-row's fuller comment in styles/main.css. */
+/* Mobile-first (standing convention, see NOTES.md/STANDARDS.md): base
+   declarations target the smallest viewport by default; each nested
+   min-width query layers the wider-viewport values on top, never the
+   reverse. Native CSS nesting (Baseline widely available as of June
+   2026 — Chrome 120+, Firefox 117+, Safari 17.2+) keeps each selector's
+   responsive behavior next to its base rule instead of split into a
+   separate block elsewhere in the file. */
 .butterfly-exp-label-row {
   position: fixed;
-  bottom: 3rem; left: 0; right: 0;
+  bottom: 5.5rem; left: 6vw; right: 6vw;
   display: flex; justify-content: center;
   pointer-events: none; z-index: 310;
+
+	@media (min-width: 601px) {
+		bottom: 3rem; left: 0; right: 0;
+	}
 }
 .butterfly-exp-label {
   /* Same letter-spacing-trailing-gap centering fix as harmonics-title —
@@ -22,12 +33,15 @@
   margin-right: calc(-1 * var(--tracking));
   text-transform: uppercase;
   text-align: center;
-  white-space: nowrap;
+  white-space: normal;
   font-family: 'Arapey', serif;
-}
-@media (max-width: 600px) {
-  .butterfly-exp-label-row { left: 6vw; right: 6vw; bottom: 5.5rem; }
-  .butterfly-exp-label { white-space: normal; }
+
+	@media (min-width: 601px) {
+		white-space: nowrap;
+	}
+	@media (prefers-reduced-motion: reduce) {
+		transition: none;
+	}
 }
 .butterfly-hint {
   position: fixed; top: 4.5rem; right: 1.2rem;
@@ -36,7 +50,8 @@
   text-transform: uppercase; pointer-events: none;
   text-align: right; z-index: 310; line-height: 1.8;
   font-family: 'Arapey', serif;
-}
-@media (prefers-reduced-motion: reduce) {
-  .butterfly-exp-label, .butterfly-hint { transition: none; }
+
+	@media (prefers-reduced-motion: reduce) {
+		transition: none;
+	}
 }
