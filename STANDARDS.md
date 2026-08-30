@@ -119,12 +119,12 @@ stylesheets used `max-width` exclusively; zero `min-width` queries
 existed anywhere), and it's exactly backwards from how the CSS cascade
 is meant to be used for progressive enhancement.
 
-**Per-file status as of v3.9.16:**
+**Per-file status as of v3.9.17: all 12 of 12 stylesheets converted.**
 
 | File | Status |
 |---|---|
-| `styles/main.css` | **Flagged for a larger dedicated rework** — see below |
-| `src/scenes/theater/theater.css` | **Flagged for a larger dedicated rework** — see below |
+| `styles/main.css` | Converted (v3.9.17 — see below for why it waited) |
+| `src/scenes/theater/theater.css` | Converted (v3.9.17 — see below for why it waited) |
 | `src/scenes/beamline/beamline.css` | Converted |
 | `src/scenes/orbiter/orbiter.css` | Converted |
 | `src/scenes/harmonics/harmonics.css` | Converted |
@@ -201,34 +201,57 @@ browser) before and after the restructure, so the conversion changed
 *only* the direction of the media query, not any actual rendered value,
 except where noted (sphere.css).
 
-**`main.css` and `theater.css` were deliberately NOT converted in this
-pass.** Both carry precisely-tuned, historically fragile responsive
-logic where a hand-transcription error during inversion carries real
-regression risk with no live-browser verification available in this
-environment:
+**`main.css` and `theater.css` were deliberately held back from the
+v3.9.16 pass** and converted as a dedicated v3.9.17 follow-up instead,
+with live-browser verification this sandbox didn't have access to at the
+time (a `claude-in-chrome`-connected real Chrome browser became
+available for the follow-up). Both carried precisely-tuned, historically
+fragile responsive logic where a hand-transcription error during
+inversion would have carried real regression risk:
 
 - `main.css`'s nav-icon/landing responsive system has pixel-perfect math
   tied to the live scene count, which has changed at least four times
   and caused a real production bug (icons clipped off both edges,
-  invisible with nothing else visibly wrong) each time it did — see the
-  file's own `/* ─── Responsive ─── */` section comment for the full
-  history. It also has interacting breakpoints at 1200px/768px/480px
-  (`.preview-row-break`, the nav-icon shrink, `#landing-bottom-fade`,
-  `#scene-previews`'s column-stack switch) and a cascade-order-dependent
-  progressive-enhancement trick (`align-items: center` then
-  `align-items: safe center`, relying on declaration order) that a
-  restructure could easily disturb without meaning to.
-- `theater.css` has a compound media query —
+  invisible with nothing else visibly wrong) each time it did. It also
+  had interacting breakpoints at 1200px/768px/480px (`.preview-row-break`,
+  the nav-icon shrink, `#landing-bottom-fade`, `#scene-previews`'s
+  column-stack switch) and a cascade-order-dependent progressive-
+  enhancement trick (`align-items: center` then `align-items: safe
+  center`, relying on declaration order). Converted in v3.9.17: every
+  selector's responsive story now lives nested in its own rule (see
+  `#pm-nav`/`.nav-icon`'s shared comment for the full icon-count math,
+  now consolidated in one place instead of split across two old
+  breakpoints). Live-verified via `claude-in-chrome` at 500px, 606px,
+  650px, and 716px (the exact width the 2026-08-23 3.0 QA pass caught
+  the dead zone at) — all 10 icons rendered fully visible at every
+  width, with the correct tier switch confirmed above 769px.
+- `theater.css` had a genuine compound media query —
   `@media (max-width: 480px), (max-width: 700px) and (orientation:
   portrait)` — mixing an OR of a width-only condition and a
-  width-AND-orientation condition. This doesn't invert to `min-width`
-  along a single dimension without careful two-dimensional boundary
-  algebra; the risk of an off-by-one or logic error is real and would be
-  hard to catch without visual QA.
-
-Converting these two properly is real, scoped follow-up work — do it
-deliberately, with live-browser verification (visual or via the user
-checking on their own machine), not folded into a larger audit pass.
+  width-AND-orientation condition. Inverting each clause independently
+  would have changed the logical relationship between them, not just the
+  direction, so this used De Morgan's law on the whole condition instead:
+  `NOT((width<=480) OR (width<=700 AND portrait))` reduces to
+  `(width>700) OR (width>480 AND landscape)`, i.e.
+  `@media (min-width: 701px), (min-width: 481px) and (orientation:
+  landscape)` — the exact logical complement, not an approximation. Two
+  selectors (`.tab-house`, `.tab-screen`) were touched by three
+  overlapping source queries at once and needed more than one
+  min-width/orientation tier per property; see their own comments in the
+  file for the derivation. Verified with a cascade simulator extended to
+  understand `orientation` (not just width) across 18 width×orientation
+  points spanning every distinct region, then live-verified via
+  `claude-in-chrome` at three of the four regions — full-desktop
+  (900×198 landscape), the compound-query-active mobile tier (500×722
+  portrait), and critically the narrow-but-landscape "in-between" tier
+  (600×198 landscape, the case most likely to expose a De Morgan's-law
+  error) — all matched the derived values exactly. The fourth region
+  (width<=480 AND portrait) could not be reached live: this sandbox's
+  browser pane has a hard ~500px width floor that repeated resize
+  attempts (different widths, different aspect ratios, multiple tabs)
+  couldn't get under, so that region rests on the cascade-simulator
+  verification and hand derivation alone, not a live render. Flagged
+  here rather than silently treated as fully live-verified.
 
 ## JavaScript
 

@@ -2,31 +2,73 @@
    module import is deduplicated by the bundler regardless of how many
    times it's imported, so this stays loaded exactly once. */
 
+/* Mobile-first (standing convention, see STANDARDS.md). This file's
+   responsive rules used to be three top-level max-width blocks, one of
+   which — `@media (max-width: 480px), (max-width: 700px) and
+   (orientation: portrait)` — is a genuine compound query: a logical OR
+   of a width-only condition and a width-AND-orientation condition.
+   Inverting each clause independently would have changed the logical
+   relationship between them, not just the direction, so this used De
+   Morgan's law on the whole condition instead:
+
+     original "mobile" condition:  (width<=480) OR (width<=700 AND portrait)
+     NOT that (the enhancement gate): (width>700) OR (width>480 AND landscape)
+       => @media (min-width: 701px), (min-width: 481px) and (orientation: landscape)
+
+   That negated condition is what appears below wherever a selector was
+   only touched by the compound query — it's the exact logical complement,
+   not an approximation, verified against every (width, orientation)
+   region by hand and re-checked with a cascade simulator extended to
+   understand orientation (both this file's max-width original and this
+   nested min-width rewrite were confirmed to compute identical property
+   values at every tested combination) plus live-browser QA at real
+   viewport/orientation states — see NOTES.md.
+
+   .tab-house and .tab-screen are each touched by THREE overlapping
+   queries (the simple max-width:640px block, the compound query above,
+   and — for .tab-screen only — a further max-width:480px+portrait
+   refinement), so their own nested blocks below use more than one
+   min-width/orientation tier per property; see each selector's own
+   comment for its specific derivation. */
 .tab-root {
   width: 100%; height: 100%; position: relative; overflow: hidden;
   background: radial-gradient(ellipse at 50% 15%, #241a12 0%, #0b0705 65%, #050302 100%);
   color: #d8cdb8;
   font-family: 'Courier New', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
-  padding: 1.6rem 1rem 0.6rem;
+  padding: 0.9rem 0.4rem 0.4rem;
+
+	@media (min-width: 701px), (min-width: 481px) and (orientation: landscape) {
+		padding: 1.6rem 1rem 0.6rem;
+	}
 }
 
 /* ── curtain, ASCII swags ── */
 .tab-curtain {
   width: 100%; max-width: 900px; text-align: center;
-  color: #6b1f1f; font-size: clamp(0.6rem, 1.6vw, 1rem);
+  color: #6b1f1f; font-size: 0.42rem;
   letter-spacing: 0.05em; line-height: 1; white-space: pre; overflow: hidden;
-  opacity: 0.85; margin-bottom: 0.3rem;
+  opacity: 0.85; margin-bottom: 0.15rem;
+
+	@media (min-width: 701px), (min-width: 481px) and (orientation: landscape) {
+		font-size: clamp(0.6rem, 1.6vw, 1rem);
+		margin-bottom: 0.3rem;
+	}
 }
 
 /* ── the screen ── */
 .tab-screen-frame {
   position: relative; width: 100%; max-width: 900px; flex: 0 0 auto;
-  margin: 0.3rem 0 0.5rem;
+  margin: 0.2rem 0 0.4rem;
   border-radius: 6px;
-  padding: 10px;
+  padding: 6px;
   background: #1a120b;
   box-shadow: 0 0 0 1px #3a2a18, 0 10px 40px rgba(0,0,0,0.6);
+
+	@media (min-width: 701px), (min-width: 481px) and (orientation: landscape) {
+		margin: 0.3rem 0 0.5rem;
+		padding: 10px;
+	}
 }
 .tab-screen-frame::before {
   content: ''; position: absolute; inset: 2px; border-radius: 4px;
@@ -40,15 +82,48 @@
 }
 .tab-screen {
   position: relative; width: 100%;
-  aspect-ratio: 2 / 1; /* a proper widescreen picture, not a tower of headspace */
-  min-height: 200px; max-height: 62vh;
   background:
     repeating-linear-gradient(0deg, rgba(0,0,0,0.05) 0 1px, transparent 1px 3px),
     radial-gradient(ellipse at 50% 40%, #f2ede0 0%, #ddd6c2 75%, #c9c1a8 100%);
   border-radius: 3px; overflow: visible; /* dialogue floats over the screen rather than being clipped by it */
   display: flex; flex-direction: column;
-  padding-bottom: 54px; /* clear room for the audience silhouette overlay */
   animation: screen-flicker 4s steps(2) infinite;
+
+  /* aspect-ratio/min-height: base targets the narrowest overall case
+     (width<=480 AND portrait — the old max-width:480px+portrait
+     refinement). The first tier below fires for "NOT that" (min-width
+     OR landscape) and restores the mid-size (old compound-query) values;
+     the second, narrower-scoped tier fires only once BOTH the compound
+     query's own negation also holds, restoring the full desktop values.
+     Because tier two's condition is a strict subset of tier one's, and
+     it's declared after tier one, it always wins where both apply — same
+     "later, more specific wins" cascade the original file relied on with
+     max-width, just inverted. */
+  aspect-ratio: 1 / 1; /* a proper widescreen picture, not a tower of headspace, at the WIDEST tier below */
+  min-height: 300px;
+  max-height: 62vh;
+
+	@media (min-width: 481px), (orientation: landscape) {
+		aspect-ratio: 4 / 3;
+		min-height: 240px;
+	}
+	@media (min-width: 701px), (min-width: 481px) and (orientation: landscape) {
+		aspect-ratio: 2 / 1;
+		min-height: 200px;
+	}
+
+  /* padding-bottom (clears room for the audience silhouette overlay):
+     an independent 3-tier chain with its own two conditions — see
+     .tab-house's own comment just below for the identical pattern
+     (same three source breakpoints, same shared reasoning). */
+  padding-bottom: 42px;
+
+	@media (min-width: 481px) and (orientation: landscape) {
+		padding-bottom: 40px;
+	}
+	@media (min-width: 701px), (min-width: 641px) and (orientation: landscape) {
+		padding-bottom: 54px;
+	}
 }
 @keyframes screen-flicker {
   0%, 96%, 100% { filter: brightness(1); }
@@ -56,14 +131,26 @@
   98% { filter: brightness(1.02); }
 }
 .tab-slug {
-  flex: 0 0 auto; text-align: center; padding: 0.7rem 0.6rem 0.2rem;
-  font-size: clamp(0.62rem, 1.6vw, 0.85rem); letter-spacing: 0.08em;
+  flex: 0 0 auto; text-align: center; padding: 0.5rem 0.35rem 0.15rem;
+  font-size: 0.68rem; letter-spacing: 0.04em;
   color: #4a4030; opacity: 0.8; white-space: pre-wrap;
+
+	@media (min-width: 701px), (min-width: 481px) and (orientation: landscape) {
+		padding: 0.7rem 0.6rem 0.2rem;
+		font-size: clamp(0.62rem, 1.6vw, 0.85rem);
+		letter-spacing: 0.08em;
+	}
 }
 .tab-stage {
   flex: 1 1 auto; position: relative; min-height: 0;
   display: flex; align-items: flex-end; justify-content: space-evenly;
-  padding: 0 0.6rem 0.6rem;
+  flex-wrap: wrap; row-gap: 0.5rem; column-gap: 0.4rem;
+  padding: 0 0.3rem 0.4rem; align-content: flex-end;
+
+	@media (min-width: 701px), (min-width: 481px) and (orientation: landscape) {
+		flex-wrap: nowrap; row-gap: normal; column-gap: normal;
+		padding: 0 0.6rem 0.6rem; align-content: normal;
+	}
 }
 .tab-actor {
   flex: 0 1 auto; display: flex; flex-direction: column; align-items: center;
@@ -72,54 +159,114 @@
 }
 .tab-actor.on { opacity: 1; }
 .tab-actor pre.sf {
-  margin: 0; font-size: clamp(0.7rem, 1.9vw, 1.05rem); line-height: 1.05;
+  margin: 0; font-size: 0.6rem; line-height: 1.05;
   font-weight: bold; animation: sf-bob 2.8s ease-in-out infinite;
+
+	@media (min-width: 701px), (min-width: 481px) and (orientation: landscape) {
+		font-size: clamp(0.7rem, 1.9vw, 1.05rem);
+	}
 }
 .tab-actor.talking pre.sf { animation: sf-bob 2.8s ease-in-out infinite, sf-talk 0.45s ease-in-out 2; }
 @keyframes sf-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-2px); } }
 @keyframes sf-talk { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.06); } }
-.tab-actor .sf-name { font-size: 0.72em; margin-top: 0.1em; font-weight: bold; }
-.tab-actor .sf-tag { font-size: 0.6em; opacity: 0.65; font-style: italic; }
+.tab-actor .sf-name {
+  font-size: 0.58em; margin-top: 0.1em; font-weight: bold;
+
+	@media (min-width: 701px), (min-width: 481px) and (orientation: landscape) {
+		font-size: 0.72em;
+	}
+}
+.tab-actor .sf-tag {
+  font-size: 0.5em; opacity: 0.65; font-style: italic;
+
+	@media (min-width: 701px), (min-width: 481px) and (orientation: landscape) {
+		font-size: 0.6em;
+	}
+}
 
 .tab-bubble {
   position: absolute; left: 50%; bottom: 100%; margin-bottom: 6px;
   transform: translateX(-50%);
-  white-space: pre; font-size: clamp(0.58rem, 1.5vw, 0.82rem); line-height: 1.25;
+  white-space: pre; font-size: 0.54rem; line-height: 1.25;
   color: #221c14; background: #f4efe0; /* fully opaque — it floats over dark backgrounds too */
   box-shadow: 0 2px 8px rgba(0,0,0,0.45), 0 0 0 1px rgba(0,0,0,0.15);
   padding: 2px 4px; border-radius: 3px;
   opacity: 0; transition: opacity 0.25s ease;
-  pointer-events: none; max-width: min(72vw, 380px); overflow-x: auto;
+  pointer-events: none; max-width: 88vw; overflow-x: auto;
   z-index: 4; /* always float above the house overlay and frame texture */
+
+	@media (min-width: 701px), (min-width: 481px) and (orientation: landscape) {
+		font-size: clamp(0.58rem, 1.5vw, 0.82rem);
+		max-width: min(72vw, 380px);
+	}
 }
 .tab-bubble.on { opacity: 1; }
 .tab-bubble .bubble-name { display: block; font-weight: bold; opacity: 0.6; font-size: 0.85em; margin-bottom: 0.1em; }
 
 .tab-caption {
-  flex: 0 0 auto; text-align: center; padding: 0.3rem 0.8rem 0.7rem;
-  font-style: italic; font-size: clamp(0.66rem, 1.7vw, 0.88rem);
-  color: #4a4030; opacity: 0; transition: opacity 0.3s ease; min-height: 1.4em;
+  flex: 0 0 auto; text-align: center; padding: 0.2rem 0.4rem 0.5rem;
+  font-style: italic; font-size: 0.74rem; line-height: 1.35;
+  color: #4a4030; opacity: 0; transition: opacity 0.3s ease; min-height: 1.2em;
+
+	@media (min-width: 701px), (min-width: 481px) and (orientation: landscape) {
+		padding: 0.3rem 0.8rem 0.7rem;
+		font-size: clamp(0.66rem, 1.7vw, 0.88rem);
+		line-height: normal;
+		min-height: 1.4em;
+	}
 }
 .tab-caption.on { opacity: 0.85; }
 
 /* ── theater house: seat blocks split by aisles, a few occupied by
    patrons — overlaying the bottom of the screen itself, MST3K-style. ── */
+/* height/bottom/gap: three overlapping source queries used to apply here
+   (a plain max-width:640px block, and the compound max-width:480px-or-
+   width<=700-portrait block — see the file-header comment above
+   .tab-root for the shared derivation). Mobile-first base below targets
+   the narrowest overall case (old compound query true); the first tier
+   restores the OLD max-width:640px-only region (width>480 AND landscape,
+   width<=640 implied since the second, later tier claims everything past
+   that); the second tier — declared after, so it wins wherever both
+   apply — restores the full desktop values once neither original query
+   would have fired. gap only ever has two states (aisles pinch in only
+   under the compound query), so it gets its own single override instead
+   of being repeated in both tiers. */
 .tab-house {
-  position: absolute; left: 10px; right: 10px; bottom: 10px; height: 46px;
+  position: absolute; left: 10px; right: 10px;
   display: flex; align-items: flex-end; justify-content: center;
-  gap: clamp(14px, 5vw, 34px); /* the aisles */
   padding: 0 0.6rem;
   pointer-events: none; z-index: 3;
+  bottom: 4px; height: 24px;
+  gap: 9px; /* the aisles */
+
+	@media (min-width: 701px), (min-width: 481px) and (orientation: landscape) {
+		gap: clamp(14px, 5vw, 34px);
+	}
+	@media (min-width: 481px) and (orientation: landscape) {
+		bottom: 6px; height: 32px;
+	}
+	@media (min-width: 701px), (min-width: 641px) and (orientation: landscape) {
+		bottom: 10px; height: 46px;
+	}
 }
 .tab-house-section {
   display: flex; align-items: flex-end;
-  gap: clamp(3px, 1.2vw, 10px);
+  gap: 1.5px;
+
+	@media (min-width: 701px), (min-width: 481px) and (orientation: landscape) {
+		gap: clamp(3px, 1.2vw, 10px);
+	}
 }
 .tab-seat {
-  width: clamp(16px, 3vw, 26px); height: clamp(18px, 3.6vw, 30px);
+  width: 10px; height: 12px;
   background: #100c08; border-radius: 6px 6px 1px 1px;
   opacity: 0.92;
   position: relative; flex: 0 0 auto;
+
+	@media (min-width: 701px), (min-width: 481px) and (orientation: landscape) {
+		width: clamp(16px, 3vw, 26px);
+		height: clamp(18px, 3.6vw, 30px);
+	}
 }
 .tab-seat.occupied::before {
   content: ''; position: absolute; left: 50%; bottom: 55%; transform: translateX(-50%);
@@ -154,10 +301,26 @@
 }
 .tab-card h1 {
   font-family: 'Courier New', monospace; font-weight: bold;
-  font-size: clamp(1.4rem, 6vw, 2.6rem); margin: 0 0 0.3em; letter-spacing: 0.04em;
+  font-size: 1.5rem; margin: 0 0 0.3em; letter-spacing: 0.04em;
+
+	@media (min-width: 701px), (min-width: 481px) and (orientation: landscape) {
+		font-size: clamp(1.4rem, 6vw, 2.6rem);
+	}
 }
-.tab-card pre.tab-ascii-title { font-size: clamp(0.5rem, 1.6vw, 0.85rem); line-height: 1.15; margin: 0 0 0.6em; opacity: 0.75; }
-.tab-card p { font-size: clamp(0.85rem, 2.2vw, 1.05rem); margin: 0.2em 0; opacity: 0.75; max-width: 480px; }
+.tab-card pre.tab-ascii-title {
+  font-size: 0.42rem; line-height: 1.15; margin: 0 0 0.6em; opacity: 0.75;
+
+	@media (min-width: 701px), (min-width: 481px) and (orientation: landscape) {
+		font-size: clamp(0.5rem, 1.6vw, 0.85rem);
+	}
+}
+.tab-card p {
+  font-size: 0.8rem; margin: 0.2em 0; opacity: 0.75; max-width: 480px;
+
+	@media (min-width: 701px), (min-width: 481px) and (orientation: landscape) {
+		font-size: clamp(0.85rem, 2.2vw, 1.05rem);
+	}
+}
 .tab-card .tab-tap { margin-top: 1.2em; font-size: 0.85rem; opacity: 0.5; }
 
 /* ── interstitial: a between-scenes theater bumper slide ── */
@@ -180,22 +343,45 @@
   max-width: 32ch; line-height: 1.3; margin-bottom: 0.4em;
 }
 .tab-inter-sub {
-  font-size: clamp(0.62rem, 1.6vw, 0.8rem); opacity: 0.6; font-style: italic; max-width: 34ch;
+  font-size: 0.78rem; line-height: 1.4; opacity: 0.75; font-style: italic; max-width: 34ch;
+
+	@media (min-width: 701px), (min-width: 481px) and (orientation: landscape) {
+		font-size: clamp(0.62rem, 1.6vw, 0.8rem);
+		line-height: normal;
+		opacity: 0.6;
+	}
 }
 
 /* ── transport controls ── */
 .tab-controls {
   flex: 0 0 auto; display: flex; align-items: center; justify-content: center;
-  gap: 0.5rem; padding: 0.5rem 1rem; font-size: 0.88rem;
+  font-size: 0.88rem;
+  gap: 0.3rem; padding: 0.4rem 0.4rem; flex-wrap: wrap;
+
+	@media (min-width: 701px), (min-width: 481px) and (orientation: landscape) {
+		gap: 0.5rem; padding: 0.5rem 1rem; flex-wrap: nowrap;
+	}
 }
 .tab-btn {
-  font-family: 'Courier New', monospace; font-size: 0.88rem;
+  font-family: 'Courier New', monospace;
   background: #1a120b; border: 1px solid #6b5638; border-radius: 3px;
-  padding: 0.3rem 0.7rem; cursor: pointer; color: #d8cdb8;
+  cursor: pointer; color: #d8cdb8;
+  font-size: 0.74rem; padding: 0.26rem 0.5rem;
+
+	@media (min-width: 701px), (min-width: 481px) and (orientation: landscape) {
+		font-size: 0.88rem; padding: 0.3rem 0.7rem;
+	}
 }
 .tab-btn:hover, .tab-btn:focus-visible { background: #2a2018; border-color: #e8b84b; color: #e8b84b; }
 .tab-btn:active { transform: translateY(1px); }
-.tab-progress { opacity: 0.55; min-width: 5.5em; text-align: center; }
+.tab-progress {
+  opacity: 0.55; text-align: center;
+  min-width: auto; font-size: 0.7rem;
+
+	@media (min-width: 701px), (min-width: 481px) and (orientation: landscape) {
+		min-width: 5.5em; font-size: inherit;
+	}
+}
 
 /* Screen-reader-only live narration — visually hidden, announces each
    beat (scene changes, actions, and dialogue) as the reel plays. */
@@ -207,54 +393,16 @@
 @media (prefers-reduced-motion: reduce) {
   pre.sf, .tab-screen, .film-reel, .tab-preview::before { animation: none !important; }
 }
-@media (max-width: 640px) {
-  .tab-house { height: 32px; bottom: 6px; }
-  .tab-screen { padding-bottom: 40px; }
-}
 
-/* ── vertical phones: narrow width, held in portrait ── */
-@media (max-width: 480px), (max-width: 700px) and (orientation: portrait) {
-  .tab-root { padding: 0.9rem 0.4rem 0.4rem; }
-  .tab-curtain { font-size: 0.42rem; margin-bottom: 0.15rem; }
-  .tab-screen-frame { padding: 6px; margin: 0.2rem 0 0.4rem; }
-  .tab-screen { aspect-ratio: 4 / 3; min-height: 240px; padding-bottom: 42px; }
-  /* .tab-slug and .tab-caption both stay at or above their own desktop
-     clamp() floor (0.62rem/0.66rem respectively) even at this breakpoint,
-     since mobile is exactly where shrinking further hurts readability
-     most. .tab-caption in particular is the italic per-beat description
-     line, the thing most likely to actually be read start to finish, so
-     it gets the larger of the two floors. */
-  .tab-slug { font-size: 0.68rem; padding: 0.5rem 0.35rem 0.15rem; letter-spacing: 0.04em; }
-  .tab-stage {
-    flex-wrap: wrap; row-gap: 0.5rem; column-gap: 0.4rem;
-    padding: 0 0.3rem 0.4rem; align-content: flex-end;
-  }
-  .tab-actor pre.sf { font-size: 0.6rem; }
-  .tab-actor .sf-name { font-size: 0.58em; }
-  .tab-actor .sf-tag { font-size: 0.5em; }
-  .tab-bubble { max-width: 88vw; font-size: 0.54rem; }
-  .tab-caption { font-size: 0.74rem; line-height: 1.35; padding: 0.2rem 0.4rem 0.5rem; min-height: 1.2em; }
-  .tab-house { height: 24px; bottom: 4px; gap: 9px; }
-  .tab-house-section { gap: 1.5px; }
-  .tab-seat { width: 10px; height: 12px; }
-  .tab-controls { gap: 0.3rem; padding: 0.4rem 0.4rem; flex-wrap: wrap; }
-  .tab-btn { font-size: 0.74rem; padding: 0.26rem 0.5rem; }
-  .tab-progress { min-width: auto; font-size: 0.7rem; }
-  .tab-card h1 { font-size: 1.5rem; }
-  .tab-card pre.tab-ascii-title { font-size: 0.42rem; }
-  .tab-card p { font-size: 0.8rem; }
-  /* The interstitial's own italic sub-line (.tab-inter-sub) had no
-     mobile override at all — just the desktop clamp() floor (0.62rem)
-     at opacity:0.6 on a near-black background. Same category of
-     problem as .tab-caption above, same fix: a firmer floor and a
-     touch more opacity so it holds up on a phone screen, not just a
-     desktop monitor at a comfortable distance. */
-  .tab-inter-sub { font-size: 0.78rem; line-height: 1.4; opacity: 0.75; }
-}
-@media (max-width: 480px) and (orientation: portrait) {
-  /* portrait phones have height to spare — let the screen breathe a bit */
-  .tab-screen { aspect-ratio: 1 / 1; min-height: 300px; }
-}
+/* Mobile-first as of the theater.css/main.css follow-up pass (see
+   STANDARDS.md) — this file's three top-level max-width blocks (a plain
+   640px breakpoint, the compound "480px or 700px-portrait" query, and a
+   further 480px+portrait refinement) used to live here. Every selector
+   they touched now carries its own nested min-width/orientation-gated
+   override instead — see the file-header comment above .tab-root for the
+   full De Morgan's-law derivation, and .tab-house/.tab-screen's own
+   comments for the two selectors with more than one overlapping tier.
+   Nothing left to declare at this point in the file. */
 
 /* ── preview: a rotating black & white film reel ── */
 .tab-preview {

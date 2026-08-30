@@ -1,6 +1,6 @@
 {
   "name": "perceptual-mechanics",
-  "version": "3.9.16",
+  "version": "3.9.17",
   "type": "module",
   "engines": {
     "node": ">=22.0.0"

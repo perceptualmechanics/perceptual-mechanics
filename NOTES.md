@@ -653,6 +653,86 @@ different one, toggled sound on/off, no console errors from the scene's
 own code. Debug hooks fully stripped before this build. Full `npx vite
 build` clean.
 
+## 3.9.17 (2026-08-30)
+
+**Closes out the mobile-first audit from v3.9.16: `main.css` and
+`theater.css` converted, 12 of 12 stylesheets now mobile-first.** Per
+Scott's own scoping — these two were held back deliberately in v3.9.16
+rather than converted blind, with live-browser QA (not just the cascade
+simulator the other ten used) required specifically for these two given
+their regression history. A `claude-in-chrome`-connected real Chrome
+browser was available for this pass, resolving the "no live browser in
+this sandbox" gap v3.9.16 flagged.
+
+**`styles/main.css`.** Converted `#pm-nav`, `.nav-icon`,
+`#fullscreen-toggle` (+ its `svg`), `#landing`, `#scene-previews`,
+`.preview-row-break`, `.preview-container`, and `#landing-bottom-fade` to
+nested `min-width` overrides, base targeting the smallest viewport. The
+nav-icon/gap math previously split across two top-level breakpoints
+(768px, 480px) now lives consolidated in one comment on `.nav-icon`.
+`#landing`'s cascade-order-dependent `align-items: center` /
+`align-items: safe center` progressive-enhancement pair moved into its
+`min-width: 481px` tier intact, same declaration order preserved.
+Regression test named in the brief: re-verified the nav-icon range live
+at 500px, 606px, 650px, and 716px (the exact width the 2026-08-23 3.0 QA
+pass caught the old dead zone at) — all 10 icons rendered fully visible
+with no clipping at every width, both before touching the file (baseline
+screenshots) and after (live DOM measurement via `getBoundingClientRect`
+on every icon, confirming each sat inside the viewport). Confirmed the
+tier switch at 769px by checking 650px (mobile tier: 34px icons,
+0.35rem gap) against 900px (desktop tier: 44px icons, 2.5rem gap).
+Verified with the existing cascade-simulator tooling (flattened old vs.
+new through `lightningcss` to eliminate serialization noise) across 26
+widths from 320px to 1920px — zero real mismatches; the only reported
+diffs were confirmed cosmetic (shorthand/longhand representation gaps in
+the simulator, `display:none`-nullifies-everything cases). Production
+build confirmed zero `max-width` media queries remain in `main.css`.
+
+**`src/scenes/theater/theater.css`.** This file's middle breakpoint —
+`@media (max-width: 480px), (max-width: 700px) and (orientation:
+portrait)` — is a genuine compound query: a logical OR of a width-only
+condition and a width-AND-orientation condition, flagged in v3.9.16 as
+needing "careful two-dimensional boundary algebra" rather than a
+per-clause flip. Used De Morgan's law on the whole condition:
+`NOT((width<=480) OR (width<=700 AND portrait))` reduces to `(width>700)
+OR (width>480 AND landscape)`, i.e. `@media (min-width: 701px),
+(min-width: 481px) and (orientation: landscape)` — the exact logical
+complement. `.tab-house` and `.tab-screen` were each touched by three
+overlapping source queries (a plain 640px breakpoint, the compound
+query, and — for `.tab-screen` only — a further 480px+portrait
+refinement) and needed more than one min-width/orientation tier per
+property; every other affected selector (18 of them) needed just the one
+negated condition. Verified two ways: (1) a cascade simulator extended
+in this pass to understand `orientation` alongside `min-width`/
+`max-width` (the existing one skipped orientation entirely — a real gap
+for this file specifically), run across 18 width×orientation points
+covering every distinct region the compound logic produces, all
+matching after accounting for the same class of cosmetic
+shorthand-expansion noise seen in the `main.css` check; (2) live via
+`claude-in-chrome` at three of the four regions the logic produces —
+full desktop (900×198 landscape), the mobile tier with the compound
+query active (500×722 portrait), and the narrow-but-landscape
+"in-between" tier (600×198 landscape) that's the single most likely spot
+for a De Morgan's-law slip — all three matched the derived values
+exactly, including the specific case where `.tab-house`'s height/bottom
+restore to the 640px-breakpoint's intermediate values (32px/6px) rather
+than jumping straight to full desktop (46px/10px), and where
+`.tab-screen`'s aspect-ratio jumps straight to the desktop 2/1 rather
+than pausing at the compound query's 4/3. The fourth region (width<=480
+AND portrait) could not be reached live — this sandbox's browser pane
+has a hard ~500px width floor that repeated resize attempts (different
+target widths, different aspect ratios, fresh tabs) couldn't get under —
+so that region rests on the simulator and hand derivation alone, not a
+live render; recorded here rather than silently claimed as fully
+live-verified, per the explicit standing instruction that a genuine
+verification gap is a legitimate outcome to report. Production build
+confirmed zero `max-width` media queries remain anywhere in the built
+CSS site-wide.
+
+**`STANDARDS.md`** updated: the mobile-first per-file table now reads
+12/12 converted; the `main.css`/`theater.css` entries rewritten from "why
+these wait" to "what they needed and how it was verified."
+
 ## 3.9.16 (2026-08-26)
 
 **Full codebase modernization pass**, per Scott's follow-up to v3.9.15:
