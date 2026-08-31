@@ -300,10 +300,21 @@ reasoning, and `loadSceneCreate()`/`prefetchScene()` for the shared
 promise-cache pattern every caller (previews, `expandScene`, hover/touch
 prefetch) goes through so the same scene never gets fetched twice.
 
-**Known incompleteness, not yet resolved:** this only splits scenes at
-the module level. No scene's preview-mode code is physically separated
-from its full-mode code yet (each is still one file, one exported
-`create(container, {preview})` with a runtime branch) — see the
-`initPreviews()` comment in `main.js` and NOTES.md's open-items note.
-Splitting that is real, still-open work; don't assume the 500kB warning
-being gone means first-visit bytes are minimal.
+**Update, v3.10.3, arc closed:** every scene is still one file, one
+exported `create(container, {preview})` with a runtime branch — that
+part of the shape never changed and isn't going to. What changed is
+whether a scene's own *content* (`<name>.text.js` — the actual
+poems/fragments/scripts/catalog) loads eagerly or not. Five scenes
+(Harmonics, Orrery's audio, Sphere, Scroll, Theater) now dynamically
+`import()` that content only inside their full-mode branch, so a preview
+thumbnail that never displays it doesn't pay for it. Two scenes
+(Beamline, Library) were assessed and found to have no safe version of
+this: Beamline's full-mode-only code all closes over scene/camera/
+renderer state, and Library's preview mode needs the real catalog to lay
+out the shelf's own geometry, not just to texture it. Three scenes
+(Orbiter, Butterfly, Outside) remain untouched — checked and found to be
+not worth the risk for the remaining payload (see NOTES.md's 3.10.3
+entry for the exact byte breakdown). Don't assume "scene chunk exists"
+means "that scene's content chunk is deferred" — check the scene's own
+import (static top-of-file vs `import()` inside `if (!preview)`) before
+touching it.

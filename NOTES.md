@@ -59,17 +59,35 @@ versions) shifts on a timescale of months, not years.
   entry: this doesn't shrink first-visit bytes yet, since every scene's
   preview thumbnail still needs its full module — that's tracked
   separately as an open follow-up, not silently dropped.
-- **New, opened by the 3.10.0 work above:** no scene has its preview-mode
-  code physically separated from its full-mode code yet — every scene is
-  still one file with a runtime `if (preview)` branch, so
-  `initPreviews()` still has to load all ten scenes' real modules on
-  every first visit regardless of the dynamic-import split. Real first-
-  load-byte reduction needs that split done scene by scene (confirmed:
-  sphere.js's preview and full paths share all geometry/lighting/
-  renderer setup; theater.js is the one scene that already has a cheap,
-  separate preview branch). Not scoped or started — start with
-  orrery.js/beamline.js/library.js (largest) for the best ROI if this
-  gets picked up.
+- **Preview/full split — done, 2026-08-31 (3.10.3).** Five of ten scenes
+  changed: Harmonics (3.10.1), Orrery (3.10.2, partial — audio only),
+  Sphere/Scroll/Theater (3.10.3). Beamline and Library assessed and
+  skipped for real architectural reasons, not shortcuts (Beamline has no
+  self-contained full-mode-only code; Library's preview needs the real
+  catalog to lay out the shelf's own geometry, not just to texture it).
+  Orbiter/Butterfly/Outside not touched — see the Tier 2 call below.
+  Pattern that held across the whole arc: every "sphere-pattern" scene (all but
+  theater.js/scroll.js) builds its `animate()`/`dispose()` as ONE unified
+  function where genuinely shared per-frame work (orbital motion, ambient
+  particles, cellular automata, physics sims) is interleaved with
+  full-mode-only interaction in the same function body — splitting that
+  safely means restructuring `animate()` itself across a module boundary,
+  real risk for what the survey already showed is often a small payoff
+  (shared geometry/physics dominates most scenes' size either way). The
+  one reliable win-shape: a self-contained full-mode-only subsystem with
+  no closures over scene/camera/renderer state (Harmonics' cross-scene
+  text resolution, Orrery's poster audio, Sphere/Scroll/Theater's own
+  `.text.js` content). **Checkpoint, computed from real build output:**
+  first-visit gzip is roughly 306kB, of which three.js's own vendor chunk
+  is 142.5kB (46.6%, not prunable — genuinely needed by the 3D preview
+  thumbnails). This arc keeps about 82kB gzip of content out of that
+  number entirely, deferred to click-time. Tier 2 (Orbiter/Butterfly/
+  Outside) was explicitly not pursued: the remaining eager `.text.js`
+  content across all three sums to under 2.5% of the total even in the
+  best case, and Orrery/Beamline already set real precedent that this
+  scene shape (continuous, interleaved physics/animation loops) usually
+  has nothing safe to extract. Full detail, exact byte breakdown, and
+  reasoning per scene in the 3.10.1/3.10.2/3.10.3 entries above.
 
 This section should get revisited on its own cadence going forward —
 next time, check whether the items above got resolved, and run the same
@@ -658,6 +676,104 @@ keywords, present-in-both-accounts framing — closed it, reopened a
 different one, toggled sound on/off, no console errors from the scene's
 own code. Debug hooks fully stripped before this build. Full `npx vite
 build` clean.
+
+## 3.10.3 (2026-08-31)
+
+**Tier 1 batch of the preview/full split, plus the real checkpoint
+measurement.** Continuation of 3.10.1/3.10.2's pattern-finding: Scott's
+brief named four scenes as a probable clean-win batch (sphere, scroll,
+library, theater — flagged as "already identified as eagerly
+self-importing their own `.text.js` even in preview mode"), to be
+verified and done together, then a real total-bytes checkpoint before
+deciding whether to chase the smaller, riskier tier below.
+
+**Shipped — sphere.js and theater.js, same shape as Harmonics/Orrery:**
+sphere.js's `fragments` (labels + fragment panel) and theater.js's
+`PIECES`/`CHARACTERS`/`SCENES` (cast + reel) both moved from a static
+top-of-file import to a dynamic `import()` inside each scene's full-mode
+branch, cached-promise pattern, `disposed`-guard so a fast scene switch
+mid-import doesn't touch a torn-down scene. Both scenes' preview modes
+never touched this content in the first place (sphere via an `if
+(!preview)` panel block; theater via its existing early-return preview
+branch) — the fix is purely making the *import* match that, not a
+render-loop change.
+
+**Shipped — scroll.js, same shape but with an added wrinkle:** unlike
+sphere/theater, scroll.js's `PATCHES`/`SCRIPT_INSERTS` were built at
+*module scope* from `scrollPieces` (not inside `createScroll()`), so
+deferring the import also meant pulling that computation into a
+`buildPatches()` helper called once the import resolves, and moving the
+labels+panel DOM construction that depended on it into the same deferred
+block. Real payoff: `scroll.text.js` (the twelve full pieces) is 111.22kB
+built / 44.94kB gzip — the single largest content-splitting win of any
+scene done so far, bigger than Harmonics'.
+
+**Assessed and skipped — library.js, real reason, not a shortcut:** read
+the file in full (1586 lines). `buildItems(preview)` runs unconditionally
+for both modes and builds the shelf's actual 3D geometry — every book's
+and CD's position, size, cubby placement — directly from
+`libraryItems`/`cdRackItems`; preview only swaps in flat-colored
+materials instead of the canvas-drawn spine textures, it doesn't skip the
+catalog itself. Everything genuinely full-mode-only (panel, hint,
+interaction, jump list) was already correctly gated behind `!preview` and
+never touches the big payload. There is no version of "defer the import"
+here that doesn't also change what the preview thumbnail shows — reported
+to Scott before writing any code; his call was to skip it, same
+disposition as Beamline.
+
+**Live-verified** (Claude in Chrome against the real dev server,
+disconnected partway through this session and reconnected mid-verify —
+noted here since it split the verification pass in two): sphere.js — cold
+deep-link, click-path with prefetch, facet-click panel open, scene-to-
+scene swap, Escape/return-to-gallery, zero console errors, confirmed via
+`performance.getEntriesByType('resource')` that `sphere.text.js` loads on
+full-mode entry and not on the landing page. scroll.js — same, plus a
+cross-link click (`.scroll-link` → `#scroll/11`, correct patch scrolled
+to and flashed) and a scene-swap dispose. theater.js — cold full-mode
+entry, `next`/play controls, Escape/return, `theater.text.js` confirmed
+absent from the landing page's network requests and present only after
+opening the scene; syntax and module-shape also checked directly in Node
+(`PIECES` × 3, `CHARACTERS` × 26, `SCENES` × 16) while the browser
+extension was down. One console exception seen throughout ("A listener
+indicated an asynchronous response by returning true, but the message
+channel closed before a response was received") — same single timestamp
+on every check across scene switches, confirming it fires once at page
+load from the Chrome extension itself, unrelated to any of this session's
+code.
+
+**Checkpoint — real total-first-visit-bytes, computed from the actual
+build output, not estimated:** summed the gzip size of every chunk
+`index.html`'s eager `<script>`/`<link>` tags and `initPreviews()`'s
+per-scene dynamic imports actually pull in for a first landing-page
+visit (confirmed via `dist/index.html` that only `main.js`/`main.css`/the
+modulepreload polyfill carry `modulepreload` hints — nothing else is
+prefetched ahead of use). **≈305.8kB gzip total**: ≈280.8kB JS + ≈17.5kB
+CSS + ≈7.5kB `index.html`. `three.js`'s own vendor chunk is 142.52kB of
+that — 46.6% of the whole first visit, and not prunable by this
+technique at all (it's genuininely needed to render the eight 3D scenes'
+preview thumbnails). This session's + 3.10.1/3.10.2's work now keeps
+81.6kB gzip (`sphere.text` 11.76 + `scroll.text` 44.94 + `theater.text`
+23.18 + `orreryAudio` 0.82 + `harmonicsPieces` 0.90) out of that number
+entirely, deferred to click-time.
+
+**Tier 2 decision, per the checkpoint:** the remaining eagerly-loaded
+`.text.js` content not yet touched — `orbiter.text.js` (5.80kB gzip,
+still a static import in orbiter.js) and a small `outside.text.js`-shaped
+chunk (1.37kB gzip) — sums to ≈7.2kB gzip, under 2.5% of the 305.8kB
+total, even in the best case where every byte of it turned out to be
+safely deferrable. `beamline.text.js` (1.02kB gzip) is also still eager,
+but beamline.js was already fully assessed in this arc and found to have
+no safe extraction at all. Per Scott's own stated bar going in ("only
+reconsider Tier 2 if the checkpoint's a real, still-substantial remaining
+payload, not just technically nonzero") and the standing precedent from
+Orrery/Beamline (both confirmed no clean win for this exact scene shape —
+continuous, tightly-interleaved physics/animation loops), Tier 2 is not
+being pursued. The number is in good shape; further work here would be
+marginal-gain, non-trivial-risk. Flagged as a real "stop here" call, not
+a silently abandoned task — self-hosted fonts (real LCP win, also stops
+sending visitor IPs to Google on every load — see the 2026-08-25
+best-practices entry above) is the more load-bearing open item if a
+follow-up session picks anything up next.
 
 ## 3.10.2 (2026-08-31)
 

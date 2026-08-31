@@ -1,6 +1,5 @@
 import * as THREE from 'three';
 import { CSS2DRenderer, CSS2DObject } from 'three/examples/jsm/renderers/CSS2DRenderer.js';
-import { fragments } from './sphere.text.js';
 import { getOutboundLinks, getInboundLinks } from '../../links.js';
 import { bindOrbitDrag, bindWheelZoom, bindGuardedResize, prefersReducedMotion, createPanelCloser, createJumpList, bindTapVsDrag, parseHTML, wireCrossLinks, formatInboundNote } from '../../utils/sceneKit.js';
 import sphereHtml from './sphere.html?raw';
@@ -120,47 +119,6 @@ export function createSphere(container, { preview = false, initialPieceId = null
 
   // ─── Labels (full only) ───────────────────────────────────────────────────
   const labelData = [];
-  if (!preview && labelRenderer) {
-    function stripHtml(html) {
-      const tmp = document.createElement('div');
-      tmp.innerHTML = html;
-      return (tmp.textContent || tmp.innerText || '').replace(/\s+/g, ' ').trim();
-    }
-    function randomExcerpt(fi) {
-      const plain = stripHtml(fragments[fi].text);
-      if (plain.length <= 40) return plain;
-      const maxStart = Math.max(0, plain.length - 60);
-      const start = Math.floor(Math.random() * maxStart);
-      const wordStart = plain.indexOf(' ', start);
-      const from = wordStart === -1 ? start : wordStart + 1;
-      return plain.slice(from, from + 55);
-    }
-
-    // Label styles live in styles/scenes/sphere.css (.face-label, @keyframes
-    // wisp) — no runtime injection needed now that it's a real stylesheet.
-    const pos = geo.attributes.position;
-    for (let i = 0; i < faceCount; i++) {
-      const fi = i % fragments.length;
-      const a = new THREE.Vector3().fromBufferAttribute(pos, i * 3);
-      const b = new THREE.Vector3().fromBufferAttribute(pos, i * 3 + 1);
-      const c = new THREE.Vector3().fromBufferAttribute(pos, i * 3 + 2);
-      const center = new THREE.Vector3().addVectors(a, b).add(c).divideScalar(3);
-      const edge1 = new THREE.Vector3().subVectors(b, a);
-      const edge2 = new THREE.Vector3().subVectors(c, a);
-      const normal = new THREE.Vector3().crossVectors(edge1, edge2).normalize();
-      const toA = new THREE.Vector3().subVectors(a, center).normalize();
-      const upVec = toA.clone().addScaledVector(normal, -toA.dot(normal)).normalize();
-      const div = document.createElement('div');
-      div.className = 'face-label';
-      div.textContent = randomExcerpt(fi);
-      div.style.setProperty('--duration', `${4 + Math.random() * 6}s`);
-      div.style.setProperty('--delay', `${-Math.random() * 8}s`);
-      const label = new CSS2DObject(div);
-      label.position.copy(center.clone().multiplyScalar(1.01));
-      sphere.add(label);
-      labelData.push({ label, normal, upVec, div });
-    }
-  }
 
   // ─── Interaction (full only) ───────────────────────────────────────────────
   const hoverColor    = new THREE.Color(0xf0c060);
@@ -194,256 +152,316 @@ export function createSphere(container, { preview = false, initialPieceId = null
   // bound directly to it and never removed keeps firing after this scene
   // is gone, reading stale closures against a disposed scene.
   let onContainerMouseMove = null, onContainerClick = null, touchGuard = null;
-  // Set inside the !preview block below, once openFragment actually exists
-  // — kept at this outer scope so the returned openPieceById() (deep-link
-  // support, main.js) can reach it without openFragment itself needing to
-  // be anything other than a plain block-scoped function.
+  // Set inside the deferred full-mode block below, once openFragment
+  // actually exists — kept at this outer scope so the returned
+  // openPieceById() (deep-link support, main.js) can reach it without
+  // openFragment itself needing to be anything other than a plain
+  // block-scoped function.
   let openFragmentRef = null;
+  // Fragment content (sphere.text.js) is dynamically imported below, only
+  // in full mode — a preview thumbnail never renders labels or opens the
+  // fragment panel, so it never needs this text (v3.10.3, same shape as
+  // harmonics.js's v3.10.1 fix). fragmentsRef is set once the import
+  // resolves; openPieceById() below guards on it being non-null.
+  // `disposed` lets the async continuation no-op if the scene is torn
+  // down before the import finishes (a fast scene switch).
+  let fragmentsRef = null;
+  let disposed = false;
+
   if (!preview) {
-    // Shell markup (hint paragraph + panel skeleton) lives in
-    // sphere.html — see that file's own header comment for why it's
-    // several top-level pieces with different mount points. The hint
-    // matches orbiter/orrery's treatment: fixed top-right, z-index 310
-    // (must clear #experience-overlay — see styles/main.css's z-index-scale
-    // comment), Arapey regardless of the scene's own body font, since
-    // hints are chrome, not scene content, and read as one consistent
-    // voice across the whole site. This scene briefly gained a bottom-
-    // center title in the 2026-08-25 site-wide title consistency pass;
-    // removed again same day per Scott's call — no title chrome here.
-    const frag = parseHTML(sphereHtml);
-    hint = frag.querySelector('.sphere-hint');
-    document.body.appendChild(hint);
+    import('./sphere.text.js').then(({ fragments }) => {
+      if (disposed) return;
+      fragmentsRef = fragments;
 
-    panel = frag.querySelector('.sphere-panel');
-    container.style.position="relative";container.style.overflow="hidden";container.appendChild(panel);
-    panelTitle   = panel.querySelector('.sphere-panel-title');
-    panelContent = panel.querySelector('.sphere-panel-content');
-    facetIdEl    = panel.querySelector('.sphere-facet-id');
+      // ─── Labels ─────────────────────────────────────────────────────────
+      if (labelRenderer) {
+        function stripHtml(html) {
+          const tmp = document.createElement('div');
+          tmp.innerHTML = html;
+          return (tmp.textContent || tmp.innerText || '').replace(/\s+/g, ' ').trim();
+        }
+        function randomExcerpt(fi) {
+          const plain = stripHtml(fragments[fi].text);
+          if (plain.length <= 40) return plain;
+          const maxStart = Math.max(0, plain.length - 60);
+          const start = Math.floor(Math.random() * maxStart);
+          const wordStart = plain.indexOf(' ', start);
+          const from = wordStart === -1 ? start : wordStart + 1;
+          return plain.slice(from, from + 55);
+        }
 
-    panelCloser = createPanelCloser(panel, container, {
-      closeBtn: panel.querySelector('.sphere-panel-close'),
-      onClose: () => { if (selectedFace !== -1) { restoreFaceColor(selectedFace); selectedFace = -1; } },
-    });
+        // Label styles live in styles/scenes/sphere.css (.face-label, @keyframes
+        // wisp) — no runtime injection needed now that it's a real stylesheet.
+        const pos = geo.attributes.position;
+        for (let i = 0; i < faceCount; i++) {
+          const fi = i % fragments.length;
+          const a = new THREE.Vector3().fromBufferAttribute(pos, i * 3);
+          const b = new THREE.Vector3().fromBufferAttribute(pos, i * 3 + 1);
+          const c = new THREE.Vector3().fromBufferAttribute(pos, i * 3 + 2);
+          const center = new THREE.Vector3().addVectors(a, b).add(c).divideScalar(3);
+          const edge1 = new THREE.Vector3().subVectors(b, a);
+          const edge2 = new THREE.Vector3().subVectors(c, a);
+          const normal = new THREE.Vector3().crossVectors(edge1, edge2).normalize();
+          const toA = new THREE.Vector3().subVectors(a, center).normalize();
+          const upVec = toA.clone().addScaledVector(normal, -toA.dot(normal)).normalize();
+          const div = document.createElement('div');
+          div.className = 'face-label';
+          div.textContent = randomExcerpt(fi);
+          div.style.setProperty('--duration', `${4 + Math.random() * 6}s`);
+          div.style.setProperty('--delay', `${-Math.random() * 8}s`);
+          const label = new CSS2DObject(div);
+          label.position.copy(center.clone().multiplyScalar(1.01));
+          sphere.add(label);
+          labelData.push({ label, normal, upVec, div });
+        }
+      }
 
-    // Wires a fragment's `text` (already-authored, trusted HTML — real <p>
-    // tags, not escaped-then-rendered plain text the way library/orbiter/
-    // scroll's linkable fields are) with whatever links.js's
-    // getOutboundLinks() has for it. Until 2026-08-16 these anchors were
-    // hand-typed straight into sphere.text.js's `text` strings
-    // (`<a class="fragment-link" data-target="Wingspan">...`); they're
-    // wired at render time now, same beat as every other scene, so the
-    // links live in one place (src/links.js) instead of half of them
-    // sitting inline in prose and the other half in per-scene tables.
-    function renderFragmentHtml(fragment) {
-      const links = getOutboundLinks('sphere', fragment.id, 'text');
-      return wireCrossLinks(fragment.text, links, 'fragment-link');
-    }
+      // ─── Panel ──────────────────────────────────────────────────────────
+      // Shell markup (hint paragraph + panel skeleton) lives in
+      // sphere.html — see that file's own header comment for why it's
+      // several top-level pieces with different mount points. The hint
+      // matches orbiter/orrery's treatment: fixed top-right, z-index 310
+      // (must clear #experience-overlay — see styles/main.css's z-index-scale
+      // comment), Arapey regardless of the scene's own body font, since
+      // hints are chrome, not scene content, and read as one consistent
+      // voice across the whole site. This scene briefly gained a bottom-
+      // center title in the 2026-08-25 site-wide title consistency pass;
+      // removed again same day per Scott's call — no title chrome here.
+      const frag = parseHTML(sphereHtml);
+      hint = frag.querySelector('.sphere-hint');
+      document.body.appendChild(hint);
 
-    // The inbound half of a links.js relationship — "Referenced from X" —
-    // appended to the same facetIdEl line every fragment already shows
-    // ("Fragment N of 25"), rather than a separate element, so a piece
-    // that's only ever a target still visibly carries the connection
-    // instead of the link only being discoverable by clicking through from
-    // the source. Plain text, not a link: there's no phrase here to jump
-    // from, only the fact of being referenced (see sceneKit.js's
-    // formatInboundNote for why this doesn't try to construct one).
-    function withInboundNote(fragmentId, base) {
-      const note = formatInboundNote(
-        getInboundLinks('sphere', fragmentId).map(l => fragments.find(f => f.id === l.from.id)?.title)
-      );
-      return note ? `${base} · ${note}` : base;
-    }
+      panel = frag.querySelector('.sphere-panel');
+      container.style.position="relative";container.style.overflow="hidden";container.appendChild(panel);
+      panelTitle   = panel.querySelector('.sphere-panel-title');
+      panelContent = panel.querySelector('.sphere-panel-content');
+      facetIdEl    = panel.querySelector('.sphere-facet-id');
 
-    // Fragment link navigation — follow the threads (click + keyboard)
-    function navigateToFragment(link) {
-      // Same not-yet-cross-scene note as the other three linked scenes:
-      // every link in the shared store currently targets 'sphere' itself.
-      if (link.dataset.targetScene !== 'sphere') return;
-      const targetIdx = fragments.findIndex(f => f.id === Number(link.dataset.targetId));
-      if (targetIdx === -1) return;
-      onPieceChange?.(fragments[targetIdx].id);
-      panelContent.style.transition = 'opacity .18s';
-      panelTitle.style.transition = 'opacity .18s';
-      panelContent.style.opacity = '0';
-      panelTitle.style.opacity = '0';
-      setTimeout(() => {
-        panelTitle.textContent = fragments[targetIdx].title;
-        panelContent.innerHTML = renderFragmentHtml(fragments[targetIdx]);
-        facetIdEl.textContent = withInboundNote(fragments[targetIdx].id, `Fragment ${targetIdx + 1} of ${fragments.length} · ${fragments[targetIdx].title}`);
-        panelContent.scrollTop = 0;
-        panelContent.style.opacity = '1';
-        panelTitle.style.opacity = '1';
-        // Stagger glimmer delays + a11y attributes
-        panelContent.querySelectorAll('.fragment-link').forEach(link => {
-          const delay = (Math.random() * 12).toFixed(1);
-          const duration = (9 + Math.random() * 7).toFixed(1);
-          link.style.animationDelay = `-${delay}s`;
-          link.style.animationDuration = `${duration}s`;
-          // role="link", not "button" -- this navigates to different
-          // content within the panel, same as library.js's .library-link.
-          link.setAttribute('role', 'link');
-          link.setAttribute('tabindex', '0');
-          const targetFrag = link.dataset.targetScene === 'sphere'
-            ? fragments.find(f => f.id === Number(link.dataset.targetId))
-            : null;
-          link.setAttribute('aria-label', `Navigate to fragment: ${targetFrag ? targetFrag.title : 'related fragment'}`);
-        });
-      }, 180);
-    }
+      panelCloser = createPanelCloser(panel, container, {
+        closeBtn: panel.querySelector('.sphere-panel-close'),
+        onClose: () => { if (selectedFace !== -1) { restoreFaceColor(selectedFace); selectedFace = -1; } },
+      });
 
-    // Populate the panel with fragment `fi` and open it — shared by the
-    // facet click handler below and the keyboard jump list (createJumpList,
-    // sceneKit.js), which has no click position of its own to derive a
-    // slide-in side from, hence `fromLeft` being optional.
-    function openFragment(fi, { facetLabel, fromLeft } = {}) {
-      onPieceChange?.(fragments[fi].id);
-      const populate = () => {
-        panelTitle.textContent = fragments[fi].title;
-        panelContent.innerHTML = renderFragmentHtml(fragments[fi]);
-        facetIdEl.textContent  = withInboundNote(fragments[fi].id, facetLabel ?? `Fragment ${fi + 1} of ${fragments.length}`);
-        // Stagger glimmer delays + a11y
-        panelContent.querySelectorAll('.fragment-link').forEach(link => {
-          const delay = (Math.random() * 12).toFixed(1);
-          const duration = (9 + Math.random() * 7).toFixed(1);
-          link.style.animationDelay = `-${delay}s`;
-          link.style.animationDuration = `${duration}s`;
-          // role="link" -- see the matching comment in navigateToFragment()
-          // above.
-          link.setAttribute('role', 'link');
-          link.setAttribute('tabindex', '0');
-          const targetFrag = link.dataset.targetScene === 'sphere'
-            ? fragments.find(f => f.id === Number(link.dataset.targetId))
-            : null;
-          link.setAttribute('aria-label', `Navigate to fragment: ${targetFrag ? targetFrag.title : 'related fragment'}`);
-        });
-      };
+      // Wires a fragment's `text` (already-authored, trusted HTML — real <p>
+      // tags, not escaped-then-rendered plain text the way library/orbiter/
+      // scroll's linkable fields are) with whatever links.js's
+      // getOutboundLinks() has for it. Until 2026-08-16 these anchors were
+      // hand-typed straight into sphere.text.js's `text` strings
+      // (`<a class="fragment-link" data-target="Wingspan">...`); they're
+      // wired at render time now, same beat as every other scene, so the
+      // links live in one place (src/links.js) instead of half of them
+      // sitting inline in prose and the other half in per-scene tables.
+      function renderFragmentHtml(fragment) {
+        const links = getOutboundLinks('sphere', fragment.id, 'text');
+        return wireCrossLinks(fragment.text, links, 'fragment-link');
+      }
 
-      const wasOpen = panel.classList.contains('open');
-      const sideMismatch = fromLeft !== undefined && panel.classList.contains('from-left') !== fromLeft;
+      // The inbound half of a links.js relationship — "Referenced from X" —
+      // appended to the same facetIdEl line every fragment already shows
+      // ("Fragment N of 25"), rather than a separate element, so a piece
+      // that's only ever a target still visibly carries the connection
+      // instead of the link only being discoverable by clicking through from
+      // the source. Plain text, not a link: there's no phrase here to jump
+      // from, only the fact of being referenced (see sceneKit.js's
+      // formatInboundNote for why this doesn't try to construct one).
+      function withInboundNote(fragmentId, base) {
+        const note = formatInboundNote(
+          getInboundLinks('sphere', fragmentId).map(l => fragments.find(f => f.id === l.from.id)?.title)
+        );
+        return note ? `${base} · ${note}` : base;
+      }
 
-      if (wasOpen && sideMismatch) {
-        // Crossing to the other side of an already-open panel: close first,
-        // then reopen anchored to the new side once the close transition
-        // finishes. Flipping from-left instantly while open would teleport
-        // the fully-visible panel sideways instead of visibly relocating it
-        // the way a fresh open does. Same pattern as library.js's panel.
-        panel.classList.remove('open');
+      // Fragment link navigation — follow the threads (click + keyboard)
+      function navigateToFragment(link) {
+        // Same not-yet-cross-scene note as the other three linked scenes:
+        // every link in the shared store currently targets 'sphere' itself.
+        if (link.dataset.targetScene !== 'sphere') return;
+        const targetIdx = fragments.findIndex(f => f.id === Number(link.dataset.targetId));
+        if (targetIdx === -1) return;
+        onPieceChange?.(fragments[targetIdx].id);
+        panelContent.style.transition = 'opacity .18s';
+        panelTitle.style.transition = 'opacity .18s';
+        panelContent.style.opacity = '0';
+        panelTitle.style.opacity = '0';
         setTimeout(() => {
+          panelTitle.textContent = fragments[targetIdx].title;
+          panelContent.innerHTML = renderFragmentHtml(fragments[targetIdx]);
+          facetIdEl.textContent = withInboundNote(fragments[targetIdx].id, `Fragment ${targetIdx + 1} of ${fragments.length} · ${fragments[targetIdx].title}`);
+          panelContent.scrollTop = 0;
+          panelContent.style.opacity = '1';
+          panelTitle.style.opacity = '1';
+          // Stagger glimmer delays + a11y attributes
+          panelContent.querySelectorAll('.fragment-link').forEach(link => {
+            const delay = (Math.random() * 12).toFixed(1);
+            const duration = (9 + Math.random() * 7).toFixed(1);
+            link.style.animationDelay = `-${delay}s`;
+            link.style.animationDuration = `${duration}s`;
+            // role="link", not "button" -- this navigates to different
+            // content within the panel, same as library.js's .library-link.
+            link.setAttribute('role', 'link');
+            link.setAttribute('tabindex', '0');
+            const targetFrag = link.dataset.targetScene === 'sphere'
+              ? fragments.find(f => f.id === Number(link.dataset.targetId))
+              : null;
+            link.setAttribute('aria-label', `Navigate to fragment: ${targetFrag ? targetFrag.title : 'related fragment'}`);
+          });
+        }, 180);
+      }
+
+      // Populate the panel with fragment `fi` and open it — shared by the
+      // facet click handler below and the keyboard jump list (createJumpList,
+      // sceneKit.js), which has no click position of its own to derive a
+      // slide-in side from, hence `fromLeft` being optional.
+      function openFragment(fi, { facetLabel, fromLeft } = {}) {
+        onPieceChange?.(fragments[fi].id);
+        const populate = () => {
+          panelTitle.textContent = fragments[fi].title;
+          panelContent.innerHTML = renderFragmentHtml(fragments[fi]);
+          facetIdEl.textContent  = withInboundNote(fragments[fi].id, facetLabel ?? `Fragment ${fi + 1} of ${fragments.length}`);
+          // Stagger glimmer delays + a11y
+          panelContent.querySelectorAll('.fragment-link').forEach(link => {
+            const delay = (Math.random() * 12).toFixed(1);
+            const duration = (9 + Math.random() * 7).toFixed(1);
+            link.style.animationDelay = `-${delay}s`;
+            link.style.animationDuration = `${duration}s`;
+            // role="link" -- see the matching comment in navigateToFragment()
+            // above.
+            link.setAttribute('role', 'link');
+            link.setAttribute('tabindex', '0');
+            const targetFrag = link.dataset.targetScene === 'sphere'
+              ? fragments.find(f => f.id === Number(link.dataset.targetId))
+              : null;
+            link.setAttribute('aria-label', `Navigate to fragment: ${targetFrag ? targetFrag.title : 'related fragment'}`);
+          });
+        };
+
+        const wasOpen = panel.classList.contains('open');
+        const sideMismatch = fromLeft !== undefined && panel.classList.contains('from-left') !== fromLeft;
+
+        if (wasOpen && sideMismatch) {
+          // Crossing to the other side of an already-open panel: close first,
+          // then reopen anchored to the new side once the close transition
+          // finishes. Flipping from-left instantly while open would teleport
+          // the fully-visible panel sideways instead of visibly relocating it
+          // the way a fresh open does. Same pattern as library.js's panel.
+          panel.classList.remove('open');
+          setTimeout(() => {
+            panel.classList.add('no-transition');
+            panel.classList.toggle('from-left', fromLeft);
+            void panel.offsetWidth; // force reflow before re-enabling the transition
+            panel.classList.remove('no-transition');
+            populate();
+            panelContent.scrollTop = 0;
+            panelContent.style.opacity = '1'; // guard against a same-side fade still in flight
+            panelTitle.style.opacity = '1';
+            panel.classList.add('open');
+            setTimeout(() => panelTitle.focus(), 50);
+          }, 500); // matches .sphere-panel's own close transition (transform .5s, sphere.css)
+          return;
+        }
+
+        if (!wasOpen && sideMismatch) {
           panel.classList.add('no-transition');
           panel.classList.toggle('from-left', fromLeft);
           void panel.offsetWidth; // force reflow before re-enabling the transition
           panel.classList.remove('no-transition');
-          populate();
-          panelContent.scrollTop = 0;
-          panelContent.style.opacity = '1'; // guard against a same-side fade still in flight
-          panelTitle.style.opacity = '1';
-          panel.classList.add('open');
-          setTimeout(() => panelTitle.focus(), 50);
-        }, 500); // matches .sphere-panel's own close transition (transform .5s, sphere.css)
-        return;
+        }
+
+        populate();
+        panel.classList.add('open');
+        // Move focus to panel for screen readers
+        setTimeout(() => panelTitle.focus(), 50);
       }
 
-      if (!wasOpen && sideMismatch) {
-        panel.classList.add('no-transition');
-        panel.classList.toggle('from-left', fromLeft);
-        void panel.offsetWidth; // force reflow before re-enabling the transition
-        panel.classList.remove('no-transition');
-      }
-
-      populate();
-      panel.classList.add('open');
-      // Move focus to panel for screen readers
-      setTimeout(() => panelTitle.focus(), 50);
-    }
-
-    // Keyboard equivalent for "point at a facet" — facets themselves are
-    // otherwise raycast-only. One button per fragment (not per facet —
-    // several facets can map to the same fragment via the
-    // `% fragments.length` below, so a facet isn't a meaningful unit for a
-    // visitor who can't see the geometry). Doesn't attempt to also
-    // highlight a facet in the 3D view; that's a decorative affordance for
-    // the mouse/touch path, not essential to reading the fragment.
-    jumpList = createJumpList(container, {
-      label: 'Read a fragment from the sphere',
-      items: fragments,
-      getLabel: f => f.title,
-      onSelect: (f, fi) => openFragment(fi, { fromLeft: false }),
-    });
-
-    openFragmentRef = openFragment;
-
-    panelContent.addEventListener('click', e => {
-      const link = e.target.closest('.fragment-link');
-      if (!link) return;
-      e.stopPropagation();
-      navigateToFragment(link);
-    });
-
-    panelContent.addEventListener('keydown', e => {
-      if (e.key !== 'Enter' && e.key !== ' ') return;
-      const link = e.target.closest('.fragment-link');
-      if (!link) return;
-      e.preventDefault();
-      e.stopPropagation();
-      navigateToFragment(link);
-    });
-
-    onContainerMouseMove = e => {
-      const rect = container.getBoundingClientRect();
-      mouse.x =  ((e.clientX - rect.left) / rect.width)  * 2 - 1;
-      mouse.y = -((e.clientY - rect.top)  / rect.height) * 2 + 1;
-      raycaster.setFromCamera(mouse, camera);
-      const hits = raycaster.intersectObject(sphere);
-      const newHover = hits.length ? hits[0].faceIndex : -1;
-      if (newHover !== hoveredFace) {
-        if (hoveredFace !== -1 && hoveredFace !== selectedFace) restoreFaceColor(hoveredFace);
-        hoveredFace = newHover;
-        if (hoveredFace !== -1 && hoveredFace !== selectedFace) setFaceColor(hoveredFace, hoverColor);
-      }
-      container.style.cursor = hoveredFace !== -1 ? 'pointer' : 'default';
-    };
-    container.addEventListener('mousemove', onContainerMouseMove);
-
-    touchGuard = bindTapVsDrag(container);
-    onContainerClick = e => {
-      if (touchGuard.consume()) return;
-      // Only close on an actual empty-space click — a click that hits a
-      // facet should swap the panel's content in place instead of closing
-      // it. hoveredFace is tracked live by mousemove above regardless of
-      // panel state, so it's already known here.
-      if (panel.classList.contains('open') && hoveredFace === -1) {
-        panelCloser.close();
-        return;
-      }
-      if (hoveredFace === -1) return;
-      if (selectedFace !== -1 && selectedFace !== hoveredFace) restoreFaceColor(selectedFace);
-      selectedFace = hoveredFace;
-      setFaceColor(selectedFace, selectedColor);
-      const fi = selectedFace % fragments.length;
-      const rect = container.getBoundingClientRect();
-      openFragment(fi, {
-        facetLabel: `Facet ${selectedFace} · Fragment ${fi + 1} of ${fragments.length}`,
-        fromLeft: (e.clientX - rect.left) < rect.width / 2,
+      // Keyboard equivalent for "point at a facet" — facets themselves are
+      // otherwise raycast-only. One button per fragment (not per facet —
+      // several facets can map to the same fragment via the
+      // `% fragments.length` below, so a facet isn't a meaningful unit for a
+      // visitor who can't see the geometry). Doesn't attempt to also
+      // highlight a facet in the 3D view; that's a decorative affordance for
+      // the mouse/touch path, not essential to reading the fragment.
+      jumpList = createJumpList(container, {
+        label: 'Read a fragment from the sphere',
+        items: fragments,
+        getLabel: f => f.title,
+        onSelect: (f, fi) => openFragment(fi, { fromLeft: false }),
       });
-    };
-    container.addEventListener('click', onContainerClick);
 
-    wheelZoom = bindWheelZoom(container, {
-      isBlocked: e => panel && panel.contains(e.target),
-      onZoom: deltaY => {
-        camera.position.z = Math.max(1.8, Math.min(6, camera.position.z + deltaY * 0.005));
-      },
+      openFragmentRef = openFragment;
+
+      panelContent.addEventListener('click', e => {
+        const link = e.target.closest('.fragment-link');
+        if (!link) return;
+        e.stopPropagation();
+        navigateToFragment(link);
+      });
+
+      panelContent.addEventListener('keydown', e => {
+        if (e.key !== 'Enter' && e.key !== ' ') return;
+        const link = e.target.closest('.fragment-link');
+        if (!link) return;
+        e.preventDefault();
+        e.stopPropagation();
+        navigateToFragment(link);
+      });
+
+      onContainerMouseMove = e => {
+        const rect = container.getBoundingClientRect();
+        mouse.x =  ((e.clientX - rect.left) / rect.width)  * 2 - 1;
+        mouse.y = -((e.clientY - rect.top)  / rect.height) * 2 + 1;
+        raycaster.setFromCamera(mouse, camera);
+        const hits = raycaster.intersectObject(sphere);
+        const newHover = hits.length ? hits[0].faceIndex : -1;
+        if (newHover !== hoveredFace) {
+          if (hoveredFace !== -1 && hoveredFace !== selectedFace) restoreFaceColor(hoveredFace);
+          hoveredFace = newHover;
+          if (hoveredFace !== -1 && hoveredFace !== selectedFace) setFaceColor(hoveredFace, hoverColor);
+        }
+        container.style.cursor = hoveredFace !== -1 ? 'pointer' : 'default';
+      };
+      container.addEventListener('mousemove', onContainerMouseMove);
+
+      touchGuard = bindTapVsDrag(container);
+      onContainerClick = e => {
+        if (touchGuard.consume()) return;
+        // Only close on an actual empty-space click — a click that hits a
+        // facet should swap the panel's content in place instead of closing
+        // it. hoveredFace is tracked live by mousemove above regardless of
+        // panel state, so it's already known here.
+        if (panel.classList.contains('open') && hoveredFace === -1) {
+          panelCloser.close();
+          return;
+        }
+        if (hoveredFace === -1) return;
+        if (selectedFace !== -1 && selectedFace !== hoveredFace) restoreFaceColor(selectedFace);
+        selectedFace = hoveredFace;
+        setFaceColor(selectedFace, selectedColor);
+        const fi = selectedFace % fragments.length;
+        const rect = container.getBoundingClientRect();
+        openFragment(fi, {
+          facetLabel: `Facet ${selectedFace} · Fragment ${fi + 1} of ${fragments.length}`,
+          fromLeft: (e.clientX - rect.left) < rect.width / 2,
+        });
+      };
+      container.addEventListener('click', onContainerClick);
+
+      wheelZoom = bindWheelZoom(container, {
+        isBlocked: e => panel && panel.contains(e.target),
+        onZoom: deltaY => {
+          camera.position.z = Math.max(1.8, Math.min(6, camera.position.z + deltaY * 0.005));
+        },
+      });
+
+      // Deep-link entry — a fresh load of #sphere/<id> opens straight to
+      // that fragment instead of the sphere's plain default (nothing
+      // selected). An id that doesn't resolve is silently ignored, same
+      // defensive stance sceneFromHash/parseHash take in main.js for a
+      // scene name that doesn't exist.
+      if (initialPieceId !== null) {
+        const initialIdx = fragments.findIndex(f => f.id === initialPieceId);
+        if (initialIdx !== -1) openFragment(initialIdx, { fromLeft: false });
+      }
     });
-
-    // Deep-link entry — a fresh load of #sphere/<id> opens straight to
-    // that fragment instead of the sphere's plain default (nothing
-    // selected). An id that doesn't resolve is silently ignored, same
-    // defensive stance sceneFromHash/parseHash take in main.js for a
-    // scene name that doesn't exist.
-    if (initialPieceId !== null) {
-      const initialIdx = fragments.findIndex(f => f.id === initialPieceId);
-      if (initialIdx !== -1) openFragment(initialIdx, { fromLeft: false });
-    }
   }
 
   // ─── Drag to rotate (mouse + touch, via sceneKit) ──────────────────────────
@@ -582,10 +600,16 @@ export function createSphere(container, { preview = false, initialPieceId = null
     // fragment by id without tearing the scene down. No-op in preview mode
     // or if the id doesn't resolve.
     openPieceById(id) {
-      const idx = fragments.findIndex(f => f.id === id);
+      // fragmentsRef is null until the dynamic import above resolves — a
+      // same-scene hash change arriving in that narrow window (sub-second,
+      // full mode only) is silently ignored, same defensive stance as an
+      // id that doesn't resolve at all.
+      if (!fragmentsRef) return;
+      const idx = fragmentsRef.findIndex(f => f.id === id);
       if (idx !== -1) openFragmentRef?.(idx, { fromLeft: false });
     },
     dispose() {
+      disposed = true;
       cancelAnimationFrame(animId);
       orbitDrag.dispose();
       wheelZoom?.dispose();

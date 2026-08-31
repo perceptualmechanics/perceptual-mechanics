@@ -81,7 +81,6 @@
 // vector/filter math, generated fresh in the browser, just with more tools
 // in the box.
 
-import { scrollPieces, toOgham } from './scroll.text.js';
 import { getOutboundLinks, getInboundLinks } from '../../links.js';
 import { escapeHtml, parseHTML, wireCrossLinks } from '../../utils/sceneKit.js';
 import scrollHtml from './scroll.html?raw';
@@ -99,13 +98,9 @@ const TONES = {
   holography: 3, projection: 4, crocodile: 5,
 };
 
-const PATCHES = scrollPieces.map(p => ({
-  key: p.key,
-  pieceId: p.id, // stable per-scene id (src/links.js addressing) — id below is a DOM element id string, a different thing that happens to share the name "id"
-  id: `patch-${p.key}`,
-  body: p.body,
-  tone: TONES[p.key] ?? 0,
-}));
+// PATCHES (built from scrollPieces) moved inside createScroll's dynamic
+// import below — scrollPieces is full-mode-only content now (v3.10.3), not
+// available at module scope. See buildPatches().
 
 const MOTIF_CYCLE = ['spiral', 'chevron', 'cupring', 'dots'];
 
@@ -149,9 +144,8 @@ const INTENSITIES = [
 // from the script content that used to trail it).
 // Derived from scroll.text.js rather than restated here, so the scroll and
 // the published /text/scroll/ page insert the scene at the same place.
-const SCRIPT_INSERTS = scrollPieces
-  .filter(p => p.script)
-  .map(p => ({ patch: p.key, afterIndex: p.script.after, script: p.script.lines }));
+// Also moved inside createScroll's dynamic import (see buildPatches()) —
+// same reason as PATCHES above.
 
 // How many opening sentences of each patch's first paragraph get set as an
 // Ogham line in the margin — computed from the real paragraph text itself
@@ -183,6 +177,25 @@ const OPENING_GROUP = {
   flying: 3, death: 2, pygmalion: 3, selfmutilation: 2, cartography: 6,
   firevigil: 3, identity: 2, holography: 2, projection: 2, crocodile: 4,
 };
+
+// Builds PATCHES and SCRIPT_INSERTS from a resolved scrollPieces module —
+// pulled out into its own function so createScroll's dynamic import (full
+// mode only, v3.10.3) can call it once scroll.text.js actually resolves,
+// rather than these being computed unconditionally at module scope the way
+// they were when scrollPieces was a static top-of-file import.
+function buildPatches(scrollPieces) {
+  const PATCHES = scrollPieces.map(p => ({
+    key: p.key,
+    pieceId: p.id, // stable per-scene id (src/links.js addressing) — id below is a DOM element id string, a different thing that happens to share the name "id"
+    id: `patch-${p.key}`,
+    body: p.body,
+    tone: TONES[p.key] ?? 0,
+  }));
+  const SCRIPT_INSERTS = scrollPieces
+    .filter(p => p.script)
+    .map(p => ({ patch: p.key, afterIndex: p.script.after, script: p.script.lines }));
+  return { PATCHES, SCRIPT_INSERTS };
+}
 
 function firstSentences(text, count) {
   // Em dash counts as a sentence boundary here alongside .!? — cartography's
@@ -333,166 +346,197 @@ export function createScroll(container, { preview = false, initialPieceId = null
   // stated design ("no titles/sources/dates/glosses," see file header)
   // and .scroll-patch-refs's own comment in scroll.css.
 
-  const root = document.createElement('div');
-  root.className = 'scroll-root';
+  // The twelve pieces' actual text (scroll.text.js) is dynamically
+  // imported below rather than statically at the top of this file — the
+  // preview branch above returns before ever touching it, so a preview
+  // thumbnail never needs this text (v3.10.3, same shape as sphere.js/
+  // harmonics.js). `disposed` lets the async continuation no-op if the
+  // scene is torn down before the import resolves (a fast scene switch).
+  // `patchesRef`/`jumpToPatchRef` are set once it resolves; the returned
+  // openPieceById() guards on them being non-null.
+  let disposed = false;
+  let root = null, scroll = null;
+  let onLinkClick = null, onLinkKeydown = null;
+  let patchesRef = null, jumpToPatchRef = null;
 
-  const scroll = document.createElement('div');
-  scroll.className = 'scroll-viewport';
-  scroll.setAttribute('tabindex', '-1');
-  scroll.setAttribute('role', 'region');
-  scroll.setAttribute('aria-label', 'A scroll of found writing, carved fragments, 2000 to the 2010s');
+  import('./scroll.text.js').then(({ scrollPieces, toOgham }) => {
+    if (disposed) return;
 
-  scroll.appendChild(frag.querySelector('.scroll-ogham-panel'));
+    const { PATCHES, SCRIPT_INSERTS } = buildPatches(scrollPieces);
+    patchesRef = PATCHES;
 
-  PATCHES.forEach((patch, i) => {
-    const article = document.createElement('article');
-    article.className = `scroll-patch scroll-patch-tone-${patch.tone}`;
-    article.id = patch.id;
-    article.style.setProperty('--patch-clip', patchClipPath());
-    article.style.setProperty('--glow-delay', `${(Math.random() * -4.2).toFixed(2)}s`);
-    article.style.filter = agingFilter(patch.tone);
+    root = document.createElement('div');
+    root.className = 'scroll-root';
 
-    const stainCount = 2 + Math.floor(Math.random() * 2);
-    for (let s = 0; s < stainCount; s++) {
-      article.appendChild(buildStain());
-    }
+    scroll = document.createElement('div');
+    scroll.className = 'scroll-viewport';
+    scroll.setAttribute('tabindex', '-1');
+    scroll.setAttribute('role', 'region');
+    scroll.setAttribute('aria-label', 'A scroll of found writing, carved fragments, 2000 to the 2010s');
 
-    const openingLine = firstSentences(patch.body[0], OGHAM_LINES[patch.key] || 1);
-    // Cartography's opening is one 441-character comma-spliced clause running
-    // to a single em dash (see firstSentences' comment) — transliterated at
-    // the standard 118px column width that comes out roughly 2300px tall,
-    // nearly double the piece's own body text: a long stretch of dead space
-    // at the bottom of the patch. A wider column for unusually long opening
-    // lines keeps every character transliterated (no truncating real text)
-    // while bringing the column's height back in proportion to the piece
-    // it's marking. 200 characters is comfortably past every other piece's
-    // opening (the runner-up is Projection's two-sentence opener at 151;
-    // Cartography's is 452 — checked by running firstSentences over all
-    // twelve pieces directly rather than guessing).
-    const oghamWide = openingLine.length > 200;
-    const oghamHtml = `<span class="scroll-ogham-line${oghamWide ? ' scroll-ogham-line--wide' : ''}" aria-hidden="true">${toOgham(openingLine)}</span>`;
+    scroll.appendChild(frag.querySelector('.scroll-ogham-panel'));
 
-    const groupCount = OPENING_GROUP[patch.key] || 0;
-    const textWrap = document.createElement('div');
-    textWrap.className = groupCount > 0 ? 'scroll-patch-text scroll-patch-text--contained' : 'scroll-patch-text';
-    const paragraphHtml = patch.body.map((p, idx) => {
-      const rot = (Math.random() * 1.6 - 0.8).toFixed(2);
-      const dx = (Math.random() * 6 - 3).toFixed(1);
-      // Sometimes slightly larger, sometimes the tracking runs a little
-      // longer/looser — a hand doesn't set every line at one fixed size.
-      const scale = (0.94 + Math.random() * 0.17).toFixed(3);
-      const track = (0.01 + Math.random() * 0.035).toFixed(3);
-      const style = `transform: rotate(${rot}deg) translateX(${dx}px); ` +
-        `font-size: calc(var(--scroll-base-size, 1.2rem) * ${scale}); letter-spacing: ${track}em;`;
-      let out = `<p style="${style}">${renderParagraph(patch.pieceId, patch.key, idx, p)}</p>`;
-      const insert = SCRIPT_INSERTS.find(s => s.patch === patch.key && s.afterIndex === idx);
-      if (insert) out += renderScriptBlock(insert.script);
-      return out;
+    PATCHES.forEach((patch, i) => {
+      const article = document.createElement('article');
+      article.className = `scroll-patch scroll-patch-tone-${patch.tone}`;
+      article.id = patch.id;
+      article.style.setProperty('--patch-clip', patchClipPath());
+      article.style.setProperty('--glow-delay', `${(Math.random() * -4.2).toFixed(2)}s`);
+      article.style.filter = agingFilter(patch.tone);
+
+      const stainCount = 2 + Math.floor(Math.random() * 2);
+      for (let s = 0; s < stainCount; s++) {
+        article.appendChild(buildStain());
+      }
+
+      const openingLine = firstSentences(patch.body[0], OGHAM_LINES[patch.key] || 1);
+      // Cartography's opening is one 441-character comma-spliced clause running
+      // to a single em dash (see firstSentences' comment) — transliterated at
+      // the standard 118px column width that comes out roughly 2300px tall,
+      // nearly double the piece's own body text: a long stretch of dead space
+      // at the bottom of the patch. A wider column for unusually long opening
+      // lines keeps every character transliterated (no truncating real text)
+      // while bringing the column's height back in proportion to the piece
+      // it's marking. 200 characters is comfortably past every other piece's
+      // opening (the runner-up is Projection's two-sentence opener at 151;
+      // Cartography's is 452 — checked by running firstSentences over all
+      // twelve pieces directly rather than guessing).
+      const oghamWide = openingLine.length > 200;
+      const oghamHtml = `<span class="scroll-ogham-line${oghamWide ? ' scroll-ogham-line--wide' : ''}" aria-hidden="true">${toOgham(openingLine)}</span>`;
+
+      const groupCount = OPENING_GROUP[patch.key] || 0;
+      const textWrap = document.createElement('div');
+      textWrap.className = groupCount > 0 ? 'scroll-patch-text scroll-patch-text--contained' : 'scroll-patch-text';
+      const paragraphHtml = patch.body.map((p, idx) => {
+        const rot = (Math.random() * 1.6 - 0.8).toFixed(2);
+        const dx = (Math.random() * 6 - 3).toFixed(1);
+        // Sometimes slightly larger, sometimes the tracking runs a little
+        // longer/looser — a hand doesn't set every line at one fixed size.
+        const scale = (0.94 + Math.random() * 0.17).toFixed(3);
+        const track = (0.01 + Math.random() * 0.035).toFixed(3);
+        const style = `transform: rotate(${rot}deg) translateX(${dx}px); ` +
+          `font-size: calc(var(--scroll-base-size, 1.2rem) * ${scale}); letter-spacing: ${track}em;`;
+        let out = `<p style="${style}">${renderParagraph(patch.pieceId, patch.key, idx, p)}</p>`;
+        const insert = SCRIPT_INSERTS.find(s => s.patch === patch.key && s.afterIndex === idx);
+        if (insert) out += renderScriptBlock(insert.script);
+        return out;
+      });
+      // See OPENING_GROUP above — groupCount leading paragraphs (0 meaning
+      // "none, leave it uncontained") get boxed with the Ogham line into one
+      // .scroll-opening clearfix; the rest render exactly as plain siblings.
+      textWrap.innerHTML = groupCount > 0
+        ? `<div class="scroll-opening">${oghamHtml}${paragraphHtml.slice(0, groupCount).join('')}</div>` +
+          paragraphHtml.slice(groupCount).join('')
+        : oghamHtml + paragraphHtml.join('');
+      article.appendChild(textWrap);
+
+      // Inbound-reference acknowledgment — deliberately NOT the "Referenced
+      // from X" treatment sphere/orbiter/library use, since this scene's
+      // whole point (see file header) is that pieces carry no titles, no
+      // sources, no dates on their own hide. Naming the source piece here
+      // would be the one thing this scene refuses to do everywhere else, so
+      // this only ever marks THAT a passage is echoed elsewhere, never which
+      // piece — same quiet-metadata register as the other scenes' notes,
+      // just deliberately untitled to match scroll's own bare-text rule.
+      if (getInboundLinks('scroll', patch.pieceId).length) {
+        const refsEl = document.createElement('p');
+        refsEl.className = 'scroll-patch-refs';
+        refsEl.textContent = 'echoed elsewhere on the scroll';
+        article.appendChild(refsEl);
+      }
+
+      scroll.appendChild(article);
+
+      if (i < PATCHES.length - 1) {
+        const seam = document.createElement('div');
+        seam.className = 'scroll-seam';
+        seam.setAttribute('aria-hidden', 'true');
+        const motifType = MOTIF_CYCLE[i % MOTIF_CYCLE.length];
+        seam.innerHTML = `<span class="scroll-seam-motif"><span class="scroll-motif scroll-motif-${motifType}"></span></span>`;
+        scroll.appendChild(seam);
+      }
     });
-    // See OPENING_GROUP above — groupCount leading paragraphs (0 meaning
-    // "none, leave it uncontained") get boxed with the Ogham line into one
-    // .scroll-opening clearfix; the rest render exactly as plain siblings.
-    textWrap.innerHTML = groupCount > 0
-      ? `<div class="scroll-opening">${oghamHtml}${paragraphHtml.slice(0, groupCount).join('')}</div>` +
-        paragraphHtml.slice(groupCount).join('')
-      : oghamHtml + paragraphHtml.join('');
-    article.appendChild(textWrap);
 
-    // Inbound-reference acknowledgment — deliberately NOT the "Referenced
-    // from X" treatment sphere/orbiter/library use, since this scene's
-    // whole point (see file header) is that pieces carry no titles, no
-    // sources, no dates on their own hide. Naming the source piece here
-    // would be the one thing this scene refuses to do everywhere else, so
-    // this only ever marks THAT a passage is echoed elsewhere, never which
-    // piece — same quiet-metadata register as the other scenes' notes,
-    // just deliberately untitled to match scroll's own bare-text rule.
-    if (getInboundLinks('scroll', patch.pieceId).length) {
-      const refsEl = document.createElement('p');
-      refsEl.className = 'scroll-patch-refs';
-      refsEl.textContent = 'echoed elsewhere on the scroll';
-      article.appendChild(refsEl);
+    root.appendChild(scroll);
+    const grain = document.createElement('div');
+    grain.className = 'scroll-grain';
+    root.appendChild(grain);
+
+    container.appendChild(root);
+    container.style.position = 'relative';
+    container.style.overflow = 'hidden';
+
+    onLinkClick = e => {
+      const link = e.target.closest('.scroll-link');
+      if (!link) return;
+      e.preventDefault();
+      // Same not-yet-cross-scene note as library.js/orbiter.js: every link in
+      // the shared store currently targets 'scroll' itself.
+      if (link.dataset.targetScene !== 'scroll') return;
+      const targetPatch = PATCHES.find(p => p.pieceId === Number(link.dataset.targetId));
+      if (targetPatch) jumpToPatch(targetPatch);
+    };
+    scroll.addEventListener('click', onLinkClick);
+    onLinkKeydown = e => {
+      if (e.key !== 'Enter' && e.key !== ' ') return;
+      if (!e.target.closest('.scroll-link')) return;
+      e.preventDefault();
+      onLinkClick(e);
+    };
+    scroll.addEventListener('keydown', onLinkKeydown);
+
+    // Scrolls to and flashes a patch, reporting it as the "open" piece —
+    // shared by onLinkClick above, the initial-load deep link below, and
+    // openPieceById (returned below, for a same-scene hash edit). Scroll has
+    // no open/closed panel state the way sphere/orbiter/library do (the
+    // whole piece is always fully rendered); "opening a piece" here means
+    // "scroll to and highlight it," which is also the only moment this scene
+    // ever reports a piece change — ordinary scrolling past a patch doesn't.
+    //
+    // The scroll's own DOM element ids are still built from each patch's
+    // `key` (`patch-iron` etc, set on PATCHES above) rather than the numeric
+    // id directly — the shared store and the hash only know pieces by id, so
+    // this resolves that back to the element id actually in the DOM.
+    function jumpToPatch(targetPatch, { smooth = true } = {}) {
+      const targetEl = scroll.querySelector(`#${targetPatch.id}`);
+      if (!targetEl) return;
+      onPieceChange?.(targetPatch.pieceId);
+      targetEl.scrollIntoView({ behavior: smooth ? 'smooth' : 'auto', block: 'start' });
+      targetEl.classList.add('scroll-flash');
+      setTimeout(() => targetEl.classList.remove('scroll-flash'), 1400);
     }
+    jumpToPatchRef = jumpToPatch;
 
-    scroll.appendChild(article);
-
-    if (i < PATCHES.length - 1) {
-      const seam = document.createElement('div');
-      seam.className = 'scroll-seam';
-      seam.setAttribute('aria-hidden', 'true');
-      const motifType = MOTIF_CYCLE[i % MOTIF_CYCLE.length];
-      seam.innerHTML = `<span class="scroll-seam-motif"><span class="scroll-motif scroll-motif-${motifType}"></span></span>`;
-      scroll.appendChild(seam);
+    function openPieceByIdImpl(id) {
+      const targetPatch = PATCHES.find(p => p.pieceId === id);
+      if (targetPatch) jumpToPatch(targetPatch, { smooth: false });
     }
+    // Deep-link entry — jump straight there rather than smooth-scrolling
+    // from the top, same reasoning sphere/orbiter/library skip their open
+    // transition on initial load.
+    if (initialPieceId !== null) openPieceByIdImpl(initialPieceId);
+
+    setTimeout(() => scroll.focus(), 100);
   });
 
-  root.appendChild(scroll);
-  const grain = document.createElement('div');
-  grain.className = 'scroll-grain';
-  root.appendChild(grain);
-
-  container.appendChild(root);
-  container.style.position = 'relative';
-  container.style.overflow = 'hidden';
-
-  function onLinkClick(e) {
-    const link = e.target.closest('.scroll-link');
-    if (!link) return;
-    e.preventDefault();
-    // Same not-yet-cross-scene note as library.js/orbiter.js: every link in
-    // the shared store currently targets 'scroll' itself.
-    if (link.dataset.targetScene !== 'scroll') return;
-    const targetPatch = PATCHES.find(p => p.pieceId === Number(link.dataset.targetId));
-    if (targetPatch) jumpToPatch(targetPatch);
-  }
-  scroll.addEventListener('click', onLinkClick);
-  function onLinkKeydown(e) {
-    if (e.key !== 'Enter' && e.key !== ' ') return;
-    if (!e.target.closest('.scroll-link')) return;
-    e.preventDefault();
-    onLinkClick(e);
-  }
-  scroll.addEventListener('keydown', onLinkKeydown);
-
-  // Scrolls to and flashes a patch, reporting it as the "open" piece —
-  // shared by onLinkClick above, the initial-load deep link below, and
-  // openPieceById (returned below, for a same-scene hash edit). Scroll has
-  // no open/closed panel state the way sphere/orbiter/library do (the
-  // whole piece is always fully rendered); "opening a piece" here means
-  // "scroll to and highlight it," which is also the only moment this scene
-  // ever reports a piece change — ordinary scrolling past a patch doesn't.
-  //
-  // The scroll's own DOM element ids are still built from each patch's
-  // `key` (`patch-iron` etc, set on PATCHES above) rather than the numeric
-  // id directly — the shared store and the hash only know pieces by id, so
-  // this resolves that back to the element id actually in the DOM.
-  function jumpToPatch(targetPatch, { smooth = true } = {}) {
-    const targetEl = scroll.querySelector(`#${targetPatch.id}`);
-    if (!targetEl) return;
-    onPieceChange?.(targetPatch.pieceId);
-    targetEl.scrollIntoView({ behavior: smooth ? 'smooth' : 'auto', block: 'start' });
-    targetEl.classList.add('scroll-flash');
-    setTimeout(() => targetEl.classList.remove('scroll-flash'), 1400);
-  }
-
-  function openPieceById(id) {
-    const targetPatch = PATCHES.find(p => p.pieceId === id);
-    if (targetPatch) jumpToPatch(targetPatch, { smooth: false });
-  }
-  // Deep-link entry — jump straight there rather than smooth-scrolling
-  // from the top, same reasoning sphere/orbiter/library skip their open
-  // transition on initial load.
-  if (initialPieceId !== null) openPieceById(initialPieceId);
-
-  setTimeout(() => scroll.focus(), 100);
-
   return {
-    // Same-scene deep link support (main.js's expandScene) — see
-    // openPieceById above.
-    openPieceById,
+    // Same-scene deep link support (main.js's expandScene). fragmentsRef/
+    // jumpToPatchRef are null until the dynamic import above resolves — a
+    // same-scene hash change arriving in that narrow window (sub-second,
+    // full mode only) is silently ignored, same defensive stance as a
+    // patch id that doesn't resolve at all.
+    openPieceById(id) {
+      if (!patchesRef || !jumpToPatchRef) return;
+      const targetPatch = patchesRef.find(p => p.pieceId === id);
+      if (targetPatch) jumpToPatchRef(targetPatch, { smooth: false });
+    },
     dispose() {
-      scroll.removeEventListener('click', onLinkClick);
-      scroll.removeEventListener('keydown', onLinkKeydown);
-      root.remove();
+      disposed = true;
+      if (scroll) {
+        if (onLinkClick) scroll.removeEventListener('click', onLinkClick);
+        if (onLinkKeydown) scroll.removeEventListener('keydown', onLinkKeydown);
+      }
+      if (root) root.remove();
     }
   };
 }

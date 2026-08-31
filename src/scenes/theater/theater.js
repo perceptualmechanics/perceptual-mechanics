@@ -39,13 +39,19 @@ import theaterHtml from './theater.html?raw';
 // on stage can't drift apart.
 //
 // theater.text.js organizes its three plays as separate pieces, but this
-// scene's whole conceit is one
-// shuffled reel drawing from all three at once — a repertory house running
-// a mixed program, not three separate showings — so CHARACTERS/SCENES are
-// flattened back out here, once, at module load.
-import { PIECES } from './theater.text.js';
-const CHARACTERS = Object.assign({}, ...PIECES.map(p => p.characters));
-const SCENES = PIECES.flatMap(p => p.scenes);
+// scene's whole conceit is one shuffled reel drawing from all three at
+// once — a repertory house running a mixed program, not three separate
+// showings — so CHARACTERS/SCENES get flattened back out from it. This
+// used to happen here, once, at module load via a static top-of-file
+// import; now it's dynamically imported inside createTheater's full-mode
+// branch instead (v3.10.4) — the preview branch is a static film-reel
+// icon that never touches the cast or the reel, so it never needs this
+// text. See buildCastAndReel() below.
+function buildCastAndReel(PIECES) {
+  const CHARACTERS = Object.assign({}, ...PIECES.map(p => p.characters));
+  const SCENES = PIECES.flatMap(p => p.scenes);
+  return { CHARACTERS, SCENES };
+}
 
 // Stick-figure poses stay here: presentation, not script.
 const POSES = {
@@ -97,7 +103,10 @@ function buildHouseRow() {
   return house;
 }
 
-function buildActorEl(key) {
+// CHARACTERS is threaded in as a parameter (not a module-scope const)
+// since it's full-mode-only content now, resolved from theater.text.js's
+// dynamic import inside createTheater — see buildCastAndReel() above.
+function buildActorEl(key, CHARACTERS) {
   const ch = CHARACTERS[key];
   const el = document.createElement('div');
   el.className = 'tab-actor';
@@ -131,18 +140,19 @@ const INTERSTITIALS = [
 // and captions using the same DOM structure and `.tab-*` classes
 // theater.css defines; bard.js only owns "what happens next and when."
 class TheaterRenderer {
-  constructor({ stage, captionEl, slugEl, interstitialEl, srLive }) {
+  constructor({ stage, captionEl, slugEl, interstitialEl, srLive, characters }) {
     this.stage = stage;
     this.captionEl = captionEl;
     this.slugEl = slugEl;
     this.interstitialEl = interstitialEl;
     this.srLive = srLive;
+    this.characters = characters;
     this.actors = {};
   }
 
   ensureActor(key) {
     if (this.actors[key]) return this.actors[key];
-    const el = buildActorEl(key);
+    const el = buildActorEl(key, this.characters);
     this.stage.appendChild(el);
     this.actors[key] = el;
     requestAnimationFrame(() => el.classList.add('on'));
@@ -195,7 +205,7 @@ class TheaterRenderer {
   onLine(key, text, { mask, voice, silent } = {}) {
     this.interstitialEl.classList.remove('on');
     this.clearBubbles();
-    const ch = CHARACTERS[key];
+    const ch = this.characters[key];
     const el = this.actors[key]; // absent for a true offstage voice — nothing to attach a figure to
     if (el) {
       el.querySelector('pre.sf').textContent = (POSES[mask] || POSES.idle).join('\n');
@@ -248,104 +258,122 @@ export function createTheater(container, { preview = false } = {}) {
     return { dispose() { root.remove(); } };
   }
 
-  const root = shell.querySelector('.tab-root');
-  const curtain = root.querySelector('.tab-curtain');
-  curtain.textContent = CURTAIN_ROW;
-
-  const screenFrame = root.querySelector('.tab-screen-frame');
-  const screen = root.querySelector('.tab-screen');
-  const slugEl = root.querySelector('.tab-slug');
-  const stage = root.querySelector('.tab-stage');
-  const captionEl = root.querySelector('.tab-caption');
-  const interstitialEl = root.querySelector('.tab-interstitial');
-  const controls = root.querySelector('.tab-controls');
-  const srLive = root.querySelector('.tab-sr-live');
-
-  screenFrame.appendChild(buildHouseRow()); // overlays the bottom of the screen, MST3K-style
-
-  container.appendChild(root);
-  container.style.position = 'relative';
-  container.style.overflow = 'hidden';
-
-  const renderer = new TheaterRenderer({ stage, captionEl, slugEl, interstitialEl, srLive });
-  let endCard = null;
-
-  function updateProgress() {
-    controls.querySelector('.tab-progress').textContent =
-      player.index < 0 ? 'start' : `${player.index + 1} / ${player.length}`;
-  }
-
-  function setPlayLabel() {
-    const btn = controls.querySelector('[data-act="play"]');
-    btn.textContent = player.playing ? '|| pause' : '> play';
-    btn.setAttribute('aria-label', player.playing ? 'Pause' : 'Play');
-  }
-
-  function showEndCard() {
-    // Guarded against re-entry: without this, repeatedly triggering the
-    // end state (unlikely in practice, but possible) could stack up
-    // duplicate end cards, with a click on an older one calling restart()
-    // while a newer one silently stayed put.
-    if (!player.isAtEnd || endCard) return;
-    endCard = document.createElement('button');
-    endCard.type = 'button';
-    endCard.className = 'tab-card';
-    endCard.setAttribute('aria-label', 'The end. Press Enter to reshuffle the reel and start tonight’s next showing.');
-    endCard.innerHTML = `
-      <pre class="tab-ascii-title" aria-hidden="true">-------------------------\n     F A D E   T O   B L A C K\n-------------------------</pre>
-      <h1>THE END</h1>
-      <p class="tab-tap">click for tonight’s next showing</p>
-    `;
-    // Native <button> already fires 'click' for both Enter and Space, so
-    // no manual keydown handler is needed.
-    endCard.addEventListener('click', restart);
-    screen.appendChild(endCard);
-    setPlayLabel();
-    srLive.textContent = 'The end. Press Enter to reshuffle the reel and start tonight’s next showing.';
-    setTimeout(() => endCard?.focus(), 50);
-  }
-
-  // Tracked so dispose() can cancel it — without this, closing the scene
-  // within the 2s window still fires showEndCard() afterward against a
-  // detached `screen`/`endCard`, same class of bug the Player class itself
-  // already guards against internally (see its own dispose()).
+  // The cast list + reel (theater.text.js) are dynamically imported below
+  // rather than statically at the top of this file — the preview branch
+  // above already returned, so a preview thumbnail (a static film-reel
+  // icon) never needs this text (v3.10.4, same shape as sphere.js/
+  // scroll.js/harmonics.js). `disposed` lets the async continuation no-op
+  // if the scene is torn down before the import resolves (a fast scene
+  // switch).
+  let disposed = false;
+  let root = null;
+  let player = null;
   let endCardTimer = null;
-  const player = new Player(compileLegacyScript(shuffle(SCENES)), renderer, {
-    onAdvance: () => { endCard?.remove(); endCard = null; updateProgress(); setPlayLabel(); },
-    onEnd: () => { endCardTimer = setTimeout(showEndCard, 2000); },
+
+  import('./theater.text.js').then(({ PIECES }) => {
+    if (disposed) return;
+
+    const { CHARACTERS, SCENES } = buildCastAndReel(PIECES);
+
+    root = shell.querySelector('.tab-root');
+    const curtain = root.querySelector('.tab-curtain');
+    curtain.textContent = CURTAIN_ROW;
+
+    const screenFrame = root.querySelector('.tab-screen-frame');
+    const screen = root.querySelector('.tab-screen');
+    const slugEl = root.querySelector('.tab-slug');
+    const stage = root.querySelector('.tab-stage');
+    const captionEl = root.querySelector('.tab-caption');
+    const interstitialEl = root.querySelector('.tab-interstitial');
+    const controls = root.querySelector('.tab-controls');
+    const srLive = root.querySelector('.tab-sr-live');
+
+    screenFrame.appendChild(buildHouseRow()); // overlays the bottom of the screen, MST3K-style
+
+    container.appendChild(root);
+    container.style.position = 'relative';
+    container.style.overflow = 'hidden';
+
+    const renderer = new TheaterRenderer({ stage, captionEl, slugEl, interstitialEl, srLive, characters: CHARACTERS });
+    let endCard = null;
+
+    function updateProgress() {
+      controls.querySelector('.tab-progress').textContent =
+        player.index < 0 ? 'start' : `${player.index + 1} / ${player.length}`;
+    }
+
+    function setPlayLabel() {
+      const btn = controls.querySelector('[data-act="play"]');
+      btn.textContent = player.playing ? '|| pause' : '> play';
+      btn.setAttribute('aria-label', player.playing ? 'Pause' : 'Play');
+    }
+
+    function showEndCard() {
+      // Guarded against re-entry: without this, repeatedly triggering the
+      // end state (unlikely in practice, but possible) could stack up
+      // duplicate end cards, with a click on an older one calling restart()
+      // while a newer one silently stayed put.
+      if (!player.isAtEnd || endCard) return;
+      endCard = document.createElement('button');
+      endCard.type = 'button';
+      endCard.className = 'tab-card';
+      endCard.setAttribute('aria-label', 'The end. Press Enter to reshuffle the reel and start tonight’s next showing.');
+      endCard.innerHTML = `
+        <pre class="tab-ascii-title" aria-hidden="true">-------------------------\n     F A D E   T O   B L A C K\n-------------------------</pre>
+        <h1>THE END</h1>
+        <p class="tab-tap">click for tonight’s next showing</p>
+      `;
+      // Native <button> already fires 'click' for both Enter and Space, so
+      // no manual keydown handler is needed.
+      endCard.addEventListener('click', restart);
+      screen.appendChild(endCard);
+      setPlayLabel();
+      srLive.textContent = 'The end. Press Enter to reshuffle the reel and start tonight’s next showing.';
+      setTimeout(() => endCard?.focus(), 50);
+    }
+
+    // Tracked so dispose() can cancel it — without this, closing the scene
+    // within the 2s window still fires showEndCard() afterward against a
+    // detached `screen`/`endCard`, same class of bug the Player class itself
+    // already guards against internally (see its own dispose()).
+    player = new Player(compileLegacyScript(shuffle(SCENES)), renderer, {
+      onAdvance: () => { endCard?.remove(); endCard = null; updateProgress(); setPlayLabel(); },
+      onEnd: () => { endCardTimer = setTimeout(showEndCard, 2000); },
+    });
+
+    // Reshuffle the reel and start again — a different program each showing.
+    function restart() {
+      endCard?.remove();
+      endCard = null;
+      player.restart(compileLegacyScript(shuffle(SCENES)));
+    }
+
+    controls.addEventListener('click', e => {
+      const btn = e.target.closest('.tab-btn');
+      if (!btn) return;
+      const act = btn.dataset.act;
+      if (act === 'prev') player.prev();
+      else if (act === 'next') player.next();
+      else if (act === 'play') { player.toggle(); setPlayLabel(); }
+    });
+
+    screen.addEventListener('click', e => {
+      if (e.target.closest('.tab-btn') || e.target.closest('.tab-card')) return;
+      if (!player.isAtEnd) player.next();
+    });
+
+    // Start immediately, mid-program — no title card, as if you'd just found your seat.
+    player.play();
+    setPlayLabel();
+    setTimeout(() => screen.focus(), 100);
   });
-
-  // Reshuffle the reel and start again — a different program each showing.
-  function restart() {
-    endCard?.remove();
-    endCard = null;
-    player.restart(compileLegacyScript(shuffle(SCENES)));
-  }
-
-  controls.addEventListener('click', e => {
-    const btn = e.target.closest('.tab-btn');
-    if (!btn) return;
-    const act = btn.dataset.act;
-    if (act === 'prev') player.prev();
-    else if (act === 'next') player.next();
-    else if (act === 'play') { player.toggle(); setPlayLabel(); }
-  });
-
-  screen.addEventListener('click', e => {
-    if (e.target.closest('.tab-btn') || e.target.closest('.tab-card')) return;
-    if (!player.isAtEnd) player.next();
-  });
-
-  // Start immediately, mid-program — no title card, as if you'd just found your seat.
-  player.play();
-  setPlayLabel();
-  setTimeout(() => screen.focus(), 100);
 
   return {
     dispose() {
+      disposed = true;
       clearTimeout(endCardTimer);
-      player.dispose();
-      root.remove();
+      if (player) player.dispose();
+      if (root) root.remove();
     }
   };
 }
