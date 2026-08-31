@@ -6,7 +6,6 @@ import {
 } from '../../utils/sceneKit.js';
 import { getApprovedResonances, getPendingResonances } from '../../resonances.js';
 import { navigateToPiece } from '../../utils/harmonicsEntry.js';
-import { resolveEndpoint } from './harmonicsPieces.js';
 import { extractQuotes, snippetFor } from '../../utils/resonanceExcerpts.js';
 import harmonicsHtml from './harmonics.html?raw';
 import './harmonics.css';
@@ -758,11 +757,48 @@ export function createharmonics(container, { preview = false, initialPieceId = n
   }
   updateCamera();
 
+  // ─── Cross-scene piece resolution (full only, dynamic import) ────────────
+  // harmonicsPieces.js's resolveEndpoint() statically imports every OTHER
+  // scene's full .text.js content (~280kB combined, confirmed via
+  // v3.10.0's build output: that's exactly why sphere.text/scroll.text/
+  // library.text/theater.text each got split into their own shared chunk
+  // — they're reachable from both their own scene's chunk and this one).
+  // That's real, correct weight for the one scene whose whole premise is
+  // synthesizing across every other scene — but only once a visitor
+  // actually opens a piece's panel, not just to draw the landing-tile
+  // graph shape. buildNodes()/buildAdjacency()/layoutForceDirected()
+  // above never call resolveEndpoint — they only need resonances.js's own
+  // {scene,id} pairs, which carry no cross-scene text at all — so the
+  // preview's graph positions are already exactly right without this.
+  // Dynamic import() here (not a static one at the top of the file, which
+  // is what this scene had through v3.10.0) means harmonicsPieces.js
+  // never loads for preview mode at all, and only loads in full mode once
+  // openNodePanel/openPendingPanel actually need it, not merely because
+  // the scene mounted. Started here (full-mode setup) rather than
+  // deferred all the way to the click itself, so the common case — open
+  // the scene, then click a node a moment later — usually has it already
+  // resolved by the time a click needs it.
+  let resolveEndpointPromise = null;
+  function loadResolveEndpoint() {
+    return (resolveEndpointPromise ??= import('./harmonicsPieces.js')).then(m => m.resolveEndpoint);
+  }
+
   // ─── Title/hint chrome + resonance panel (full only) ─────────────────────
   let titleEl = null, hintEl = null, panel = null, panelCloser = null;
   let panelTitleEl = null, panelSubtitleEl = null, panelResonancesEl = null;
   let soundToggleEl = null, soundToggleLabelEl = null;
   if (!preview) {
+    // Fire-and-forget: warms resolveEndpointPromise's cache now so the
+    // common case (click a node a moment after the scene opens) usually
+    // finds it already resolved. Discard the return value here rather
+    // than assigning it to resolveEndpointPromise directly — that promise
+    // already resolves to the extracted resolveEndpoint FUNCTION (via the
+    // `.then(m => m.resolveEndpoint)` inside loadResolveEndpoint()), not
+    // to the raw module namespace loadResolveEndpoint()'s own caching
+    // expects to store — assigning it here would make every later call
+    // try to read `.resolveEndpoint` off the function itself instead of
+    // off the module.
+    loadResolveEndpoint();
     const frag = parseHTML(harmonicsHtml);
     titleEl = frag.querySelector('.harmonics-title-row');
     hintEl = frag.querySelector('.harmonics-hint');
@@ -805,9 +841,10 @@ export function createharmonics(container, { preview = false, initialPieceId = n
   // it), but still drives which quoted span each excerpt centers on.
   // `self`'s excerpt is recomputed per-connection (not cached) because
   // different rationales can quote different spans of the SAME piece.
-  function openNodePanel(nodeIndex) {
+  async function openNodePanel(nodeIndex) {
     if (!panel) return;
     const node = nodeList[nodeIndex];
+    const resolveEndpoint = await loadResolveEndpoint();
     const self = resolveEndpoint(node.endpoint);
     const selfHex = `#${(SCENE_ACCENT[node.scene] ?? 0xffffff).toString(16).padStart(6, '0')}`;
     const conns = nodeResonances(nodeIndex);
@@ -857,9 +894,10 @@ export function createharmonics(container, { preview = false, initialPieceId = n
   // Round 10's living atmosphere: touching a pending point gets, at most,
   // a small honest acknowledgment — not the full payoff treatment, since
   // this connection hasn't been reviewed/approved yet.
-  function openPendingPanel(pendingIndex) {
+  async function openPendingPanel(pendingIndex) {
     if (!panel) return;
     const p = pendingList[pendingIndex];
+    const resolveEndpoint = await loadResolveEndpoint();
     const info = resolveEndpoint(p.endpoint);
     panelTitleEl.textContent = info.title;
     panelSubtitleEl.textContent = 'Pending review';

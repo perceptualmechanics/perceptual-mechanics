@@ -2,10 +2,17 @@
 // Harmonics is the one scene whose whole premise is synthesizing across
 // every other scene at once, so it's the one place on the site where
 // importing every other scene's <scene>.text.js is architecturally correct
-// rather than bundle bloat — main.js already imports every scene's own .js
-// module eagerly (no code-splitting exists yet; see its own static import
-// list), so these data-only imports don't add a new eager-load cost, only
-// new weight to a bundle that already includes everything.
+// rather than bundle bloat — but it's real weight (~280kB combined,
+// confirmed via build output), so as of v3.10.1 this module itself is
+// dynamic-imported from harmonics.js (loadResolveEndpoint(), called only
+// in full mode, only once a node/pending panel is actually opened), not
+// pulled in just to draw the landing-tile graph shape. Before that, this
+// comment's own reasoning ("main.js already imports every scene eagerly,
+// so this doesn't add a new cost") was true under the pre-v3.10.0
+// architecture but went stale the moment scenes were split behind
+// dynamic import() — a caution for future readers of comments like this
+// one: a "this is free because X" justification needs rechecking whenever
+// X (here, "every scene loads eagerly anyway") stops being true.
 //
 // `resolveEndpoint` is deliberately modeled on scripts/build-resonances-
 // doc.mjs's own function of the same name (same title format per scene —

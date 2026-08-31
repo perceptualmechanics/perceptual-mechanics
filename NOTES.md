@@ -659,6 +659,81 @@ different one, toggled sound on/off, no console errors from the scene's
 own code. Debug hooks fully stripped before this build. Full `npx vite
 build` clean.
 
+## 3.10.1 (2026-08-31)
+
+**First scene of the preview/full split follow-up flagged in 3.10.0 — Harmonics.**
+Scott's brief: split preview-mode code from full-mode code scene by scene, one
+at a time with full verification, using theater.js's already-separate preview
+branch as the reference shape. Surveyed all 10 scenes first rather than
+guessing sequence from chunk size alone (per his explicit instruction not to):
+most scenes (sphere, butterfly, orbiter, orrery, library, beamline, outside)
+share one build function with `preview ? smaller : bigger` params throughout —
+the bulk of their weight (orrery.js especially, 2,984 lines) is genuinely
+shared geometry-construction code that a split wouldn't meaningfully shrink,
+exactly the caveat Scott raised. theater.js and scroll.js already return
+early in preview mode.
+
+Found something the brief didn't anticipate: Harmonics' preview isn't
+decorative — it unconditionally runs the real Fruchterman-Reingold graph
+layout on live `resonances.js` data, which needs `harmonicsPieces.js`'s
+`resolveEndpoint()` — which statically imports FULL `sphere.text.js` +
+`scroll.text.js` + `library.text.js` + `theater.text.js` (~280kB combined,
+confirmed via 3.10.0's own build output — that's exactly why those four files
+got split into their own shared chunks then). Reported this to Scott before
+starting (AskUserQuestion) since it changes the obvious priority order; he
+chose Harmonics first.
+
+**Turned out to be a clean fix, not a preview redesign.** Read `buildNodes()`/
+`buildAdjacency()`/`layoutForceDirected()` closely: none of them ever call
+`resolveEndpoint()` — they only need `resonances.js`'s own `{scene,id}` pairs,
+which carry no cross-scene text at all. `resolveEndpoint()` is only called
+from `openNodePanel()`/`openPendingPanel()`, both only ever invoked from
+`!preview`-gated click/jump-list/deep-link paths. So the preview's graph
+*shape* was already exactly right without `harmonicsPieces.js` — the fix is
+just deferring that one import, not rebuilding the preview visual.
+
+**What shipped:** removed the static top-of-file `import { resolveEndpoint }
+from './harmonicsPieces.js'`; added `loadResolveEndpoint()`, a cached dynamic
+`import()` kicked off once full mode starts setting up (not deferred all the
+way to the click — the common case, open the scene then click a node a moment
+later, usually finds it already resolved) but never touched by preview mode
+at all. `openNodePanel`/`openPendingPanel` are now `async` and `await` it.
+Updated `harmonicsPieces.js`'s own header comment, which had explicitly
+justified the eager import as "free" under the pre-3.10.0 architecture —
+stale the moment scenes were split, a caution left in place for future
+readers about rechecking "this is free because X" reasoning when X stops
+being true.
+
+**Caught a real bug during verification, not before shipping it:** the eager
+warm-up call at full-mode setup assigned `loadResolveEndpoint()`'s return
+value (a promise resolving to the extracted *function*) back into the cache
+variable meant to hold the raw `import()` promise — double-wrapped it, so the
+real call on click tried to read `.resolveEndpoint` off the function itself
+and threw. Found live (`TypeError: resolveEndpoint is not a function`) before
+this ever reached Scott, fixed by discarding the warm-up call's return value
+instead of reassigning the cache.
+
+**Verified, not assumed:** build output shows `harmonicsPieces.js` as its own
+2.26kB dynamically-imported chunk, no longer statically bundled into
+harmonics' own chunk. Live against `npm run dev`: fresh landing-page load
+requests zero `harmonicsPieces` — confirmed via network tab, not inferred.
+Opening Harmonics and clicking the known hub node (sphere:14, "Quiver")
+correctly loaded `harmonicsPieces.js` on demand and resolved real cross-scene
+content — 6 resonance entries with genuine excerpts pulled from Beamline/
+Theater/Scroll text, and the "Open this piece →" link correctly navigated to
+`#beamline/5`. Zero console errors end to end.
+
+**Honest scope note, not overclaimed:** this specific fix does NOT yet reduce
+total first-visit bytes today, because `sphere.text.js`/`scroll.text.js`/
+`library.text.js`/`theater.text.js` still load on every landing-page visit
+regardless — each of THOSE four scenes still statically imports its own
+`.text.js` unconditionally (their own preview/full split hasn't happened
+yet). Today's win is narrower but real: Harmonics is no longer a SECOND
+reason those four files load, and Harmonics itself no longer pays that
+~280kB cost just to draw its landing-tile graph. The full first-visit-byte
+payoff arrives once each of the remaining scenes gets the same treatment —
+tracked as the open continuation of this same effort, not done in this pass.
+
 ## 3.10.0 (2026-08-31)
 
 **Scene lazy-loading — resolves the chronic Rollup "chunks larger than
