@@ -659,6 +659,55 @@ different one, toggled sound on/off, no console errors from the scene's
 own code. Debug hooks fully stripped before this build. Full `npx vite
 build` clean.
 
+## 3.10.2 (2026-08-31)
+
+**Second scene of the preview/full split — Orrery, scoped down after a real
+finding.** Next in size order after Harmonics. Orrery turned out structurally
+different from Harmonics in a way that changes the risk/reward: its
+`animate()` and `dispose()` are single unified functions where genuinely
+shared per-frame work (real-time Kepler orbital motion, a 27-joint modal-
+physics strut simulation for the telescope, dust motes) runs for BOTH preview
+and full, interleaved in the same function body with full-mode-only bits
+(first-person movement, raycasting, hover state) — not cleanly separable
+without restructuring `animate()` itself across a module boundary. Real
+surgery on the site's largest, most complex scene (2,984 lines), for a
+payoff the survey had already flagged as small (shared geometry dominates
+orrery's size either way). Reported this to Scott before touching
+animate()/dispose() — his call: skip that restructure, take the one genuinely
+clean, low-risk extraction available instead, and move on.
+
+**What shipped:** the poster-audio synthesis (`POSTER_RIFFS`,
+`makeStaticBuffer`, `playPosterRiff`, `getAudioCtx` — the found-story flyers'
+"tune in" sound) moved to a new `src/scenes/orrery/orreryAudio.js`. Genuinely
+self-contained (no closures over orrery.js's scene/camera/renderer state) and
+full-mode-only, so a clean dynamic `import()` — same `loadPosterAudio()`
+promise-caching pattern as Harmonics' `loadResolveEndpoint()`, warmed once
+full mode sets up. One placement wrinkle worth flagging for future scenes:
+the poster-audio code lives at `createOrrery`'s outer scope, not nested
+inside the `if (!preview)` panel-setup block, so the eager warm-up call
+itself needed its own explicit `if (!preview)` guard — easy to miss, since
+the function *definition* is harmless to leave unconditional, only the
+*call* isn't.
+
+**Verified, not assumed:** build output — orrery.js's own chunk 41.30kB ->
+39.86kB, new `orreryAudio.js` chunk 1.65kB (modest, as expected going in).
+Live: `orreryAudio.js` requests zero times on a fresh landing-page load,
+loads on demand once Orrery opens. Direct test of the extracted module
+(`createPosterAudio().play('Nirvana')`) ran clean, zero errors. One false
+alarm caught and ruled out during verification: an automated jump-list click
+surfaced a pointer-lock `WrongDocumentError` in the console — a control test
+(clicking the scene's unrelated "read the found story" jump-list item, code
+this change never touched) reproduced the same error, confirming it's a
+pre-existing container-click-bubbling quirk specific to synthetic automated
+clicks, not a regression from this change.
+
+**Honest scope note:** most of orrery.js's weight is still shared geometry
+construction that a preview/full split can't reduce — this was always going
+to be a modest win, not a Harmonics-sized one, and it's the last change
+planned for this scene under the current approach. The bigger fix (splitting
+`animate()`/`dispose()`) stays explicitly deferred, not silently dropped —
+flagged here for whoever revisits this scene next.
+
 ## 3.10.1 (2026-08-31)
 
 **First scene of the preview/full split follow-up flagged in 3.10.0 — Harmonics.**

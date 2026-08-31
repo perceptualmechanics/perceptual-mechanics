@@ -1497,45 +1497,13 @@ function makePosterTexture(band, sub) {
 }
 
 // ─── Poster audio ───────────────────────────────────────────────────────────
-// Clicking a poster plays a short MIDI-style riff evocative of that band,
-// like a staticy radio tuning in. Actual transcriptions of real
-// Nirvana/R.E.M./Beastie Boys/For Squirrels recordings — even rendered as
-// MIDI — would still be reproducing those bands' copyrighted compositions,
-// so that's not what this builds. Instead: short,
-// original note sequences only evocative of each poster's genre/era (a
-// grunge-ish power-chord vamp, a jangly arpeggio, a syncopated bassline, an
-// alt-rock progression), synthesized live with oscillators and run through
-// a bandpass filter plus a hiss layer so it reads as "caught on a cheap
-// radio." It also happens to fit the found story better than a real
-// recording would — that story is *about* a pirate radio investigation, so
-// clicking a flyer to "tune in" a ghost signal is the same idea, just
-// interactive. Playback only ever starts from a click (never autoplay),
-// which also keeps it inside browser autoplay-gesture rules.
-const POSTER_RIFFS = {
-  'Nirvana': { wave: 'square', notes: [
-    [110, 0.22], [110, 0.22], [130.8, 0.22], [110, 0.22],
-    [98, 0.22], [98, 0.22], [110, 0.22], [87.3, 0.42],
-  ]},
-  'R.E.M.': { wave: 'triangle', notes: [
-    [196, 0.16], [247, 0.16], [294, 0.16], [247, 0.16],
-    [220, 0.16], [262, 0.16], [330, 0.16], [294, 0.34],
-  ]},
-  'Beastie Boys': { wave: 'sawtooth', notes: [
-    [82, 0.14], [82, 0.1], [110, 0.12], [82, 0.14],
-    [73, 0.1], [98, 0.12], [82, 0.14], [65, 0.3],
-  ]},
-  'For Squirrels': { wave: 'triangle', notes: [
-    [164, 0.2], [196, 0.2], [220, 0.2], [196, 0.2],
-    [174, 0.2], [196, 0.2], [220, 0.2], [246, 0.4],
-  ]},
-};
-
-function makeStaticBuffer(ctx, seconds) {
-  const buffer = ctx.createBuffer(1, Math.ceil(ctx.sampleRate * seconds), ctx.sampleRate);
-  const data = buffer.getChannelData(0);
-  for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
-  return buffer;
-}
+// Clicking a poster plays a short MIDI-style riff evocative of that band —
+// see orreryAudio.js's own header for the full reasoning (why original
+// synthesis, not real recordings) and what it plays. Split into its own
+// module (v3.10.2) since it's genuinely self-contained (no closures over
+// this file's scene/camera/renderer state) and full-mode-only — dynamic-
+// imported below only once full mode sets up, not statically here, so the
+// preview tile's module never pulls in synthesis code it can't reach.
 
 // A small soft round sprite for the dust-mote particle system below —
 // same "canvas gradient, no image asset" rule as every other texture on
@@ -2536,66 +2504,34 @@ export function createOrrery(container, { preview = false } = {}) {
     setTimeout(() => panelTitle.focus(), 50);
   }
 
-  // ─── Poster audio ─────────────────────────────────────────────────────
-  // Lazily created on first click, per instance, so preview + full-scene
-  // audio contexts never fight each other and dispose() has a clean
-  // context of its own to close. See POSTER_RIFFS/makeStaticBuffer above
-  // for what this plays and why it's original material, not a real track.
-  let audioCtx = null;
-  function getAudioCtx() {
-    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    if (audioCtx.state === 'suspended') audioCtx.resume();
-    return audioCtx;
+  // ─── Poster audio (dynamic import, full-mode only) ─────────────────────
+  // orreryAudio.js's own createPosterAudio() owns the actual synthesis and
+  // its AudioContext lifecycle now — this just caches the one dynamic
+  // import() so every playPosterRiff() call (jump list, click handler)
+  // shares it rather than re-fetching. Cache the promise that resolves to
+  // the CREATED INSTANCE, not the raw import() promise — a lesson from a
+  // real bug caught during Harmonics' equivalent split (v3.10.1): storing
+  // an already-`.then()`-mapped promise back into the same variable a
+  // loader function also reads/writes double-wraps it. Keeping it to one
+  // assignment, in one place, side-steps that class of bug entirely.
+  let posterAudioPromise = null;
+  function loadPosterAudio() {
+    return (posterAudioPromise ??= import('./orreryAudio.js').then(m => m.createPosterAudio()));
   }
+  // Warmed here (full-mode setup) rather than deferred to the first click,
+  // same reasoning as Harmonics' loadResolveEndpoint(): the common case
+  // (open the scene, click a poster a moment later) usually finds it
+  // already resolved. Guarded: this whole function body runs for both
+  // preview and full (it's defined at outer scope, not inside the
+  // `if (!preview)` panel-setup block above), but posters only exist in
+  // full mode — the warm-up call itself must not fire for preview, or the
+  // preview tile would end up requesting orreryAudio.js exactly like the
+  // static import this replaced.
+  if (!preview) loadPosterAudio();
 
-  function playPosterRiff(band) {
-    const riff = POSTER_RIFFS[band];
-    if (!riff) return;
-    const ctx = getAudioCtx();
-    const now = ctx.currentTime;
-    const totalDur = riff.notes.reduce((s, [, d]) => s + d, 0) + 0.6;
-
-    // "Tuning in": a quick swell up, a hold, then a fade — rather than a
-    // hard on/off — so it reads as catching a signal, not a sound effect.
-    const master = ctx.createGain();
-    master.gain.setValueAtTime(0, now);
-    master.gain.linearRampToValueAtTime(0.5, now + 0.15);
-    master.gain.setValueAtTime(0.5, now + Math.max(0.15, totalDur - 0.45));
-    master.gain.linearRampToValueAtTime(0, now + totalDur);
-    master.connect(ctx.destination);
-
-    // Bandpass stands in for a cheap speaker's narrow frequency response —
-    // everything (notes and static both) gets routed through this.
-    const bandpass = ctx.createBiquadFilter();
-    bandpass.type = 'bandpass';
-    bandpass.frequency.value = 1400;
-    bandpass.Q.value = 0.7;
-    bandpass.connect(master);
-
-    // Static/hiss bed underneath the notes.
-    const staticSrc = ctx.createBufferSource();
-    staticSrc.buffer = makeStaticBuffer(ctx, totalDur);
-    const staticGain = ctx.createGain();
-    staticGain.gain.value = 0.07;
-    staticSrc.connect(staticGain).connect(bandpass);
-    staticSrc.start(now);
-    staticSrc.stop(now + totalDur);
-
-    // The original, genre-evocative note sequence itself.
-    let t = now + 0.15;
-    riff.notes.forEach(([freq, dur]) => {
-      const osc = ctx.createOscillator();
-      osc.type = riff.wave;
-      osc.frequency.value = freq;
-      const noteGain = ctx.createGain();
-      noteGain.gain.setValueAtTime(0.9, t);
-      noteGain.gain.setValueAtTime(0.9, t + dur * 0.7);
-      noteGain.gain.linearRampToValueAtTime(0, t + dur);
-      osc.connect(noteGain).connect(bandpass);
-      osc.start(t);
-      osc.stop(t + dur);
-      t += dur;
-    });
+  async function playPosterRiff(band) {
+    const posterAudio = await loadPosterAudio();
+    posterAudio.play(band);
   }
 
   let hoveredPoster = null;
@@ -2960,7 +2896,7 @@ export function createOrrery(container, { preview = false } = {}) {
         touchGuard?.dispose();
         container.removeEventListener('click', onContainerClick);
       }
-      if (audioCtx) { audioCtx.close(); audioCtx = null; }
+      if (posterAudioPromise) posterAudioPromise.then(pa => pa.dispose());
       renderer.dispose();
       clippedPreview?.dispose();
       starGeo.dispose();
