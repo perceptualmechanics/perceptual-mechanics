@@ -78,6 +78,20 @@ function prerenderTextPages() {
 export default defineConfig({
   plugins: [verifyLinksPlugin(), verifyResonancesPlugin(), prerenderTextPages()],
   build: {
+    // Superseded 2026-08-31 (v3.10.0): all ten scenes are now behind
+    // dynamic import() in main.js's SCENES registry (see its own header
+    // comment there), each landing in its own sub-500kB chunk. The one
+    // chunk left that legitimately exceeds the default 500kB warning is
+    // three.js's own vendor chunk below (~565kB) — a real, understood,
+    // irreducible cost (it's one third-party library, not our code, and
+    // splitting scenes further can't shrink it), not the "every scene's
+    // code bundled together" problem this warning used to be flagging.
+    // Raised rather than left to fire on every build now that it's
+    // pointing at something already accounted for; if a future change
+    // ever pushes a scene chunk (not three.js) past this, the warning
+    // should come back — don't raise it further without checking why
+    // first.
+    chunkSizeWarningLimit: 600,
     rollupOptions: {
       input: {
         main:     resolve(__dirname, 'index.html'),
@@ -87,20 +101,17 @@ export default defineConfig({
         bardDemo: resolve(__dirname, 'packages/bardjs/demo/index.html'),
       },
       output: {
-        // All nine scenes render as landing-page previews at once (see
-        // initPreviews() in main.js), so none of their code can be code-
-        // split behind a dynamic import() the way a more conventional
-        // route-per-page site would -- every scene is genuinely needed on
-        // first load. What CAN split cleanly: three.js itself barely
-        // changes between deploys, while the app code (all nine scenes)
-        // changes on nearly every one this week alone. Bundled together,
-        // every deploy invalidates the visitor's cached copy of three.js
-        // too, forcing a full ~1MB re-download for a one-line CSS tweak.
-        // Splitting it into its own chunk means a returning visitor (or
-        // Scott re-checking a deploy) only re-fetches the smaller app
-        // chunk after most changes -- three.js's own chunk keeps its
-        // cache hit. Doesn't reduce first-visit bytes at all, only
-        // improves repeat-visit/repeat-deploy caching.
+        // three.js barely changes between deploys, while the app code
+        // (all ten scenes, main.js) changes on nearly every deploy.
+        // Without this, every scene chunk that imports 'three' would get
+        // its own copy of it inlined (confirmed via build output -- no
+        // per-scene chunk approaches three.js's size, so Rollup is
+        // correctly deduplicating it here rather than duplicating it
+        // per dynamic-import chunk), and every deploy would invalidate a
+        // returning visitor's cached copy of three.js too, forcing a
+        // full ~565kB re-download for a one-line CSS tweak. This chunk
+        // keeps its own cache hit across deploys that don't touch
+        // three.js itself.
         manualChunks: {
           three: ['three'],
         },

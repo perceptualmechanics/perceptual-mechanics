@@ -1,54 +1,97 @@
-import { createSphere }     from './scenes/sphere/sphere.js';
-import { createButterfly }  from './scenes/butterfly/butterfly.js';
-import { createScroll }    from './scenes/scroll/scroll.js';
-import { createTheater } from './scenes/theater/theater.js';
-import { createOrbiter }   from './scenes/orbiter/orbiter.js';
-import { createOrrery }    from './scenes/orrery/orrery.js';
-import { createLibrary }   from './scenes/library/library.js';
-// A staged sequence of curved mirrors, real reflection geometry (not
-// transmission) bouncing a beam between them.
-import { createBeamline }  from './scenes/beamline/beamline.js';
-// Harmonics — ninth scene, Phase 3 (2026-08-16), renamed from "The
-// harmonics" 2026-08-18 (user-facing name only — internal module/
-// folder/class names stay `harmonics`, see harmonics.js's own
-// header for why). Visualizes src/resonances.js's approved Layer 2
-// links; see harmonics.js's own header comment for the full
-// picture. No found text of its own, so it has no ariaLabel-worthy
-// "what this scene contains" the way every other scene's own label
-// describes actual content — the label below says what it IS instead.
-import { createharmonics } from './scenes/harmonics/harmonics.js';
-// Outside — tenth scene (2026-08-24), pivoted to a floral cosmology map
-// round 3 (same day): a generated lotus mapping the five Power Sources
-// (petals) and their Folk Origins, Magi/Psi as the center. The earlier
-// 7-vs-11 OER/Apherion projection thesis this scene shipped with is fully
-// retired — see outside.js's own header for the full picture.
-import { createOutside }   from './scenes/outside/outside.js';
 import { initColophon }    from './components/colophon/colophon.js';
 import { prefersReducedMotion } from './utils/sceneKit.js';
 
 // ─── Scene registry ──────────────────────────────────────────────────────────
+// Each entry's `load()` is a dynamic import() rather than a static top-of-
+// file import — Rollup code-splits each one into its own lazily-fetched
+// chunk instead of folding all ten scenes (plus main.js's own logic) into
+// one monolithic bundle. Before this (v3.9.17 and earlier), every scene's
+// full module was a static import here, so opening *any* scene — even just
+// rendering its landing-page preview thumbnail via initPreviews() below —
+// required all ten to already be parsed and evaluated, which is exactly
+// what tripped Rollup's "chunks larger than 500kB" warning (main chunk was
+// ~558kB gzipped ~208kB). `exportName` records which named export each
+// scene's module hands back (`createSphere`, `createharmonics` — note the
+// lowercase h, kept internal-only per harmonics.js's own header — etc.),
+// since dynamic import() resolves to the whole module namespace object,
+// not a single function the way the old static imports destructured
+// directly.
+//
+// This does NOT, by itself, shrink first-load bytes: initPreviews() still
+// needs every scene's real create() to render its thumbnail (no scene's
+// preview/full split has been done yet — see NOTES.md's open-items entry
+// for the follow-up), so a first visit still fetches all ten chunks, just
+// now as parallel per-scene requests instead of one blocking chunk. Real,
+// present-tense wins: (1) editing one scene no longer invalidates every
+// visitor's cached copy of the other nine on the next deploy; (2) chunks
+// land under Rollup's 500kB threshold individually; (3) this is the
+// infrastructure a future preview/full split plugs into for free — once a
+// scene's preview branch stops needing its full-mode code, only
+// initPreviews()'s call needs to change, not this registry or expandScene.
 const SCENES = {
-  sphere:      { create: createSphere,     label: 'The Sphere — full screen experience. Press Escape to return.',
-                 ariaLabel: 'The Sphere — interactive geodesic sphere with text fragments.' },
-  butterfly:   { create: createButterfly,  label: 'Chaos Butterfly in Phase Space, 2026.',
-                 ariaLabel: 'Chaos Butterfly in Phase Space, 2026 — Lorenz attractor. Drag to orbit, scroll to zoom.' },
-  scroll:      { create: createScroll,     label: 'Selected Works — A Scroll of Found Writing.',
-                 ariaLabel: 'Selected Works — a scroll of found writing, carved fragments, 2000 to the 2010s. Scroll to read.' },
-  theater:     { create: createTheater,    label: 'The Theater — Now Playing.',
-                 ariaLabel: 'The Theater — scenes from Truth and Beauty, Paul Revere, and You’ve Got a Friend in Satan, performed by ASCII actors. A different program each visit; click or use the controls to advance.' },
-  orbiter:     { create: createOrbiter,    label: 'Orbiter — A p-Orbital, Satellites.',
-                 ariaLabel: 'Orbiter — a hydrogen atom’s p-orbital rendered as a fuzzy probability cloud, with satellites in clean elliptical orbits around it. Drag to orbit.' },
-  orrery:      { create: createOrrery,     label: 'The Orrery of Los Feliz.',
-                 ariaLabel: 'The Orrery of Los Feliz — a found story, told through a 30-foot orrery: nine planets, their moons, an asteroid belt, in a warehouse you can walk around. Use the arrow keys or WASD to walk, click to look around, click the orrery to read.' },
-  library:     { create: createLibrary,    label: 'The Library — once removed.',
-                 ariaLabel: 'The Library — a real bookshelf, 107 books, films, and divination decks, rebuilt as a shelf you can turn in space. Drag to orbit, scroll to zoom, click a spine to read what it is.' },
-  beamline:    { create: createBeamline,   label: 'Beamline.',
-                 ariaLabel: 'Beamline — a staged sequence of curved mirrors, a beam of light bouncing between them, found text surfacing at each bounce. Drag to orbit, scroll to zoom, click a mirror to read.' },
-  harmonics: { create: createharmonics, label: 'Harmonics.',
-                 ariaLabel: 'Harmonics — resonant pieces across every other scene, laid out by how strongly they connect and pulsing in sync with whatever they resonate with. Drag to orbit, scroll to zoom, touch a node.' },
-  outside:     { create: createOutside,    label: 'Outside.',
-                 ariaLabel: 'Outside — a generated lotus mapping the five Sources of Power as petals and their Folk Origins, Magi and Psi at the center. The flower breathes continuously on its own. Drag to orbit, scroll to zoom, touch a petal.' },
+  sphere:    { load: () => import('./scenes/sphere/sphere.js'),       exportName: 'createSphere',
+               label: 'The Sphere — full screen experience. Press Escape to return.',
+               ariaLabel: 'The Sphere — interactive geodesic sphere with text fragments.' },
+  butterfly: { load: () => import('./scenes/butterfly/butterfly.js'), exportName: 'createButterfly',
+               label: 'Chaos Butterfly in Phase Space, 2026.',
+               ariaLabel: 'Chaos Butterfly in Phase Space, 2026 — Lorenz attractor. Drag to orbit, scroll to zoom.' },
+  scroll:    { load: () => import('./scenes/scroll/scroll.js'),       exportName: 'createScroll',
+               label: 'Selected Works — A Scroll of Found Writing.',
+               ariaLabel: 'Selected Works — a scroll of found writing, carved fragments, 2000 to the 2010s. Scroll to read.' },
+  theater:   { load: () => import('./scenes/theater/theater.js'),     exportName: 'createTheater',
+               label: 'The Theater — Now Playing.',
+               ariaLabel: 'The Theater — scenes from Truth and Beauty, Paul Revere, and You’ve Got a Friend in Satan, performed by ASCII actors. A different program each visit; click or use the controls to advance.' },
+  orbiter:   { load: () => import('./scenes/orbiter/orbiter.js'),     exportName: 'createOrbiter',
+               label: 'Orbiter — A p-Orbital, Satellites.',
+               ariaLabel: 'Orbiter — a hydrogen atom’s p-orbital rendered as a fuzzy probability cloud, with satellites in clean elliptical orbits around it. Drag to orbit.' },
+  orrery:    { load: () => import('./scenes/orrery/orrery.js'),       exportName: 'createOrrery',
+               label: 'The Orrery of Los Feliz.',
+               ariaLabel: 'The Orrery of Los Feliz — a found story, told through a 30-foot orrery: nine planets, their moons, an asteroid belt, in a warehouse you can walk around. Use the arrow keys or WASD to walk, click to look around, click the orrery to read.' },
+  library:   { load: () => import('./scenes/library/library.js'),     exportName: 'createLibrary',
+               label: 'The Library — once removed.',
+               ariaLabel: 'The Library — a real bookshelf, 107 books, films, and divination decks, rebuilt as a shelf you can turn in space. Drag to orbit, scroll to zoom, click a spine to read what it is.' },
+  // A staged sequence of curved mirrors, real reflection geometry (not
+  // transmission) bouncing a beam between them.
+  beamline:  { load: () => import('./scenes/beamline/beamline.js'),   exportName: 'createBeamline',
+               label: 'Beamline.',
+               ariaLabel: 'Beamline — a staged sequence of curved mirrors, a beam of light bouncing between them, found text surfacing at each bounce. Drag to orbit, scroll to zoom, click a mirror to read.' },
+  // Harmonics — ninth scene, Phase 3 (2026-08-16), renamed from "The
+  // harmonics" 2026-08-18 (user-facing name only — internal module/
+  // folder/class names stay `harmonics`, see harmonics.js's own header for
+  // why). Visualizes src/resonances.js's approved Layer 2 links; see
+  // harmonics.js's own header comment for the full picture.
+  harmonics: { load: () => import('./scenes/harmonics/harmonics.js'), exportName: 'createharmonics',
+               label: 'Harmonics.',
+               ariaLabel: 'Harmonics — resonant pieces across every other scene, laid out by how strongly they connect and pulsing in sync with whatever they resonate with. Drag to orbit, scroll to zoom, touch a node.' },
+  // Outside — tenth scene (2026-08-24), pivoted to a floral cosmology map
+  // round 3 (same day): a generated lotus mapping the five Power Sources
+  // (petals) and their Folk Origins, Magi/Psi as the center. The earlier
+  // 7-vs-11 OER/Apherion projection thesis this scene shipped with is
+  // fully retired — see outside.js's own header for the full picture.
+  outside:   { load: () => import('./scenes/outside/outside.js'),     exportName: 'createOutside',
+               label: 'Outside.',
+               ariaLabel: 'Outside — a generated lotus mapping the five Sources of Power as petals and their Folk Origins, Magi and Psi at the center. The flower breathes continuously on its own. Drag to orbit, scroll to zoom, touch a petal.' },
 };
+
+// One in-flight/resolved promise per scene, shared by every caller
+// (initPreviews' thumbnail render, expandScene's full-mode open, and the
+// hover/touch-intent prefetch below) — import() itself already caches by
+// module specifier, but caching the promise here too means a prefetch
+// started on pointerenter and a click a moment later resolve the exact
+// same request rather than each independently awaiting import()'s own
+// cache (harmless either way, just keeps there being one obvious place to
+// ask "has scene X's module been requested yet").
+const sceneModulePromises = {};
+function loadSceneCreate(name) {
+  const entry = SCENES[name];
+  return (sceneModulePromises[name] ??= entry.load()).then(mod => mod[entry.exportName]);
+}
+// Fire off a scene's dynamic import without waiting on it — used for
+// hover/touch-intent prefetch, where the point is only to warm the cache
+// before a click arrives, not to block on anything.
+function prefetchScene(name) {
+  if (Object.hasOwn(SCENES, name)) loadSceneCreate(name);
+}
 
 let activeScene  = null;
 let fullInstance = null;
@@ -275,22 +318,56 @@ function expandScene(sceneName, triggerEl = null, pieceId = null) {
     overlay.setAttribute('aria-hidden', 'false');
     overlay.setAttribute('aria-label', SCENES[sceneName]?.ariaLabel ?? 'Full screen experience.');
 
-    fullInstance = SCENES[sceneName].create(expContainer, {
-      preview: false,
-      initialPieceId: pieceId,
-      // A piece opened *inside* the already-open scene (a fragment click, a
-      // jump-list selection, a cross-link) updates the hash's piece segment
-      // without pushing a new history entry — see setHash's own comment for
-      // why (`push: false`). sceneName is closed over rather than read from
-      // `activeScene` so this can't fire against a hash update for a scene
-      // that's since been torn down and replaced.
-      onPieceChange: id => { setHash(sceneName, id, { push: false }); rememberElsewhere(sceneName, id); },
+    // The scene's module is usually already resolved by the time this
+    // runs — initPreviews() below requests every scene's module on page
+    // load, and hovering/touching a nav icon or preview tile prefetches it
+    // too (see the pointerenter/touchstart listeners further down) — so
+    // loadSceneCreate() below typically settles on the very next
+    // microtask. `pm-loading` is only added if it DOESN'T settle within
+    // 150ms, so the fast/common path never flashes a spinner for one
+    // frame; the slow path (a cold click against a chunk nothing prefetched
+    // yet — the case this whole loading state exists for) gets a real
+    // "still working" signal instead of an apparent freeze.
+    let loadingShown = false;
+    const loadingTimer = setTimeout(() => {
+      loadingShown = true;
+      overlay.classList.add('pm-loading');
+    }, 150);
+
+    loadSceneCreate(sceneName).then(create => {
+      clearTimeout(loadingTimer);
+      if (loadingShown) overlay.classList.remove('pm-loading');
+      // A second navigation could have moved on to a different scene
+      // while this one's module was still in flight (rapid nav-icon
+      // clicks, or a hashchange landing mid-fetch) — activeScene would
+      // already point at that later scene by the time this resolves, so
+      // bail rather than mounting a scene nobody's looking at anymore.
+      if (activeScene !== sceneName) return;
+
+      fullInstance = create(expContainer, {
+        preview: false,
+        initialPieceId: pieceId,
+        // A piece opened *inside* the already-open scene (a fragment click, a
+        // jump-list selection, a cross-link) updates the hash's piece segment
+        // without pushing a new history entry — see setHash's own comment for
+        // why (`push: false`). sceneName is closed over rather than read from
+        // `activeScene` so this can't fire against a hash update for a scene
+        // that's since been torn down and replaced.
+        onPieceChange: id => { setHash(sceneName, id, { push: false }); rememberElsewhere(sceneName, id); },
+      });
+      // Focus the container for screen readers
+      expContainer.setAttribute('tabindex', '-1');
+      setTimeout(() => expContainer.focus(), 100);
+      transitioning = false;
     });
-    // Focus the container for screen readers
-    expContainer.setAttribute('tabindex', '-1');
-    setTimeout(() => expContainer.focus(), 100);
-    transitioning = false;
   }
+
+  // Guards re-entrancy for the whole async span now, not just the fade —
+  // a nav click landing while the previous scene's module is still being
+  // fetched (mountNext above, between being called and its loadSceneCreate
+  // resolving) should no-op via the `if (transitioning) return` at the top
+  // of this function, same as during the fade itself.
+  transitioning = true;
 
   if (swapping && !prefersReducedMotion()) {
     // Reuses #experience-overlay's own opacity transition (styles/main.css,
@@ -302,7 +379,6 @@ function expandScene(sceneName, triggerEl = null, pieceId = null) {
     // own #000 — no flash to an unrelated color); mountNext tears down
     // the old instance, builds the new one, and turns `.active` back on
     // once there's something real to fade up into.
-    transitioning = true;
     overlay.classList.remove('active');
     setTimeout(mountNext, 600);
   } else {
@@ -348,9 +424,19 @@ function returnToGallery() {
 }
 
 // ─── Nav icon clicks ──────────────────────────────────────────────────────────
+// pointerenter/touchstart prefetch the scene's module ahead of the actual
+// click — mouse visitors reliably hover before they click, and a touch's
+// touchstart fires before its trailing click by enough margin to matter on
+// a warm cache. { once: true } isn't used here: hovering off and back onto
+// a nav icon should be free to prefetch again if the very first attempt
+// somehow failed (a dropped request), and loadSceneCreate's own promise
+// cache already makes every prefetch after the first a no-op, not a
+// second real fetch.
 document.querySelectorAll('.nav-icon').forEach(btn => {
+  const scene = btn.dataset.scene;
+  btn.addEventListener('pointerenter', () => prefetchScene(scene));
+  btn.addEventListener('touchstart', () => prefetchScene(scene), { passive: true });
   btn.addEventListener('click', () => {
-    const scene = btn.dataset.scene;
     if (activeScene === scene) {
       returnToGallery(); // clicking active icon returns to gallery
     } else {
@@ -388,11 +474,23 @@ document.addEventListener('keydown', e => {
 // buttons dispatch a real click event for all three).
 document.querySelectorAll('.preview-wrapper').forEach(w => {
   const container = w.querySelector('.preview-container');
-  container.addEventListener('click', () => expandScene(w.dataset.scene, container));
+  const scene = w.dataset.scene;
+  container.addEventListener('pointerenter', () => prefetchScene(scene));
+  container.addEventListener('touchstart', () => prefetchScene(scene), { passive: true });
+  container.addEventListener('click', () => expandScene(scene, container));
 });
 
 // ─── Init previews ────────────────────────────────────────────────────────────
-function initPreviews() {
+// Still requests every scene's real module immediately on page load — no
+// scene's preview branch has been split from its full-mode code yet (see
+// the SCENES registry comment above and NOTES.md's open-items entry), so
+// there's no lighter path to render a thumbnail with yet. What changed:
+// each request is now its own dynamic import() (parallel per-scene chunks)
+// instead of all ten already sitting in one statically-imported bundle —
+// loadSceneCreate() shares its promise cache with expandScene() and the
+// hover/touch prefetch listeners above, so none of these ever double-fetch
+// the same scene.
+async function initPreviews() {
   const map = {
     sphere:     document.getElementById('preview-sphere'),
     butterfly:  document.getElementById('preview-butterfly'),
@@ -405,19 +503,28 @@ function initPreviews() {
     harmonics: document.getElementById('preview-harmonics'),
     outside:    document.getElementById('preview-outside'),
   };
-  for (const [name, el] of Object.entries(map)) {
-    if (el) previews[name] = SCENES[name].create(el, { preview: true });
-  }
+  await Promise.all(Object.entries(map).map(async ([name, el]) => {
+    if (!el) return;
+    const create = await loadSceneCreate(name);
+    previews[name] = create(el, { preview: true });
+  }));
 }
 
 initPreviews();
 
 // ─── Open whatever the URL names ─────────────────────────────────────────────
-// Runs after initPreviews() so the landing grid behind the overlay is fully
-// built either way — returning to the gallery from a deep link then finds a
-// real page underneath, not an empty one. The nav icon is passed as the
-// trigger so returnToGallery()'s focus restore still has somewhere sensible
-// to send focus, same as a click would.
+// Called right after initPreviews() kicks off (not after it finishes —
+// initPreviews() is async now, see above) so the landing grid behind the
+// overlay still ends up fully built either way once its own loads settle;
+// returning to the gallery from a deep link then finds a real page
+// underneath, not an empty one. expandScene() here fires its own
+// loadSceneCreate() for the target scene immediately — this is the
+// "initial-page-load deep link triggers the lazy import right away" path —
+// and shares loadSceneCreate's promise cache with initPreviews' own request
+// for the same scene, so a deep link never double-fetches the scene it's
+// opening. The nav icon is passed as the trigger so returnToGallery()'s
+// focus restore still has somewhere sensible to send focus, same as a
+// click would.
 const initialHash = parseHash();
 if (initialHash.scene) expandScene(initialHash.scene, navIconFor(initialHash.scene), initialHash.pieceId);
 

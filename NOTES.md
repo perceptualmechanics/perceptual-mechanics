@@ -51,19 +51,25 @@ versions) shifts on a timescale of months, not years.
   is clean (0 vulnerabilities) as of this check, but nothing in CI gates
   future regressions the way `verify-links`/`verify-resonances` gate
   content regressions.
-- The `(!) Some chunks are larger than 500 kB` Rollup warning has printed
-  on every single build this session without ever being addressed or
-  explicitly accepted — a warning nobody ever resolves is functionally
-  the same as no warning at all. The three.js/app split already
-  documented in `vite.config.js` is deliberate, but the underlying cause
-  — every scene's full-mode code loads eagerly on first paint, not just
-  its preview — is a real architectural choice, not just a threshold
-  number. Genuinely unresolved as of this pass: either accept the current
-  size with a documented reason and raise `chunkSizeWarningLimit` so the
-  warning only fires again for a real regression, or pursue lazy-loading
-  each scene's full-mode code on expand (bigger change, real Core Web
-  Vitals payoff on first load). Scott's call on effort vs. payoff for a
-  site at this scale — not decided here.
+- ~~The `(!) Some chunks are larger than 500 kB` Rollup warning~~ **Fixed
+  (3.10.0).** All ten scenes moved behind dynamic `import()` — see the
+  3.10.0 entry below. The warning is gone (`chunkSizeWarningLimit` raised
+  to 600 for the one legitimate large chunk left, three.js's own vendor
+  chunk, documented in `vite.config.js`). Note the honest caveat in that
+  entry: this doesn't shrink first-visit bytes yet, since every scene's
+  preview thumbnail still needs its full module — that's tracked
+  separately as an open follow-up, not silently dropped.
+- **New, opened by the 3.10.0 work above:** no scene has its preview-mode
+  code physically separated from its full-mode code yet — every scene is
+  still one file with a runtime `if (preview)` branch, so
+  `initPreviews()` still has to load all ten scenes' real modules on
+  every first visit regardless of the dynamic-import split. Real first-
+  load-byte reduction needs that split done scene by scene (confirmed:
+  sphere.js's preview and full paths share all geometry/lighting/
+  renderer setup; theater.js is the one scene that already has a cheap,
+  separate preview branch). Not scoped or started — start with
+  orrery.js/beamline.js/library.js (largest) for the best ROI if this
+  gets picked up.
 
 This section should get revisited on its own cadence going forward —
 next time, check whether the items above got resolved, and run the same
@@ -652,6 +658,123 @@ keywords, present-in-both-accounts framing — closed it, reopened a
 different one, toggled sound on/off, no console errors from the scene's
 own code. Debug hooks fully stripped before this build. Full `npx vite
 build` clean.
+
+## 3.10.0 (2026-08-31)
+
+**Scene lazy-loading — resolves the chronic Rollup "chunks larger than
+500kB" warning via genuine dynamic `import()` code-splitting, not by
+raising the threshold.** Scott's brief was explicit and detailed, flagging
+one specific risk to verify rather than assume before doing any
+implementation work: whether `initPreviews()` rendering every scene's
+landing-page thumbnail already forces that scene's full module to load,
+which would make wrapping the "open scene" call in `import()` alone a
+no-op for bundle size.
+
+**Investigation (before any code changed):** confirmed the risk is real.
+Every scene is a single file exporting one `create(container, {preview})`
+function; `sphere.js` shares all geometry/lighting/renderer/animate-loop
+setup between preview and full modes, gating only the panel/label/
+interaction code behind `if (!preview)` — Rollup can't tree-shake a
+runtime branch, so the whole file is one indivisible unit regardless of
+which mode is invoked. `theater.js` is the one exception: its preview
+branch returns early with a cheap static DOM structure, no `bardjs`
+`Player` instantiation. `vite.config.js`'s own existing comment already
+documented this exact conclusion (an earlier session had reasoned through
+it and concluded scene code-splitting wasn't viable given the
+architecture). Also checked and confirmed clean: `sceneKit.js`'s
+`mountClippedPreviewCanvas` only blits already-rendered pixels, no
+independent module coupling; `wireCrossLinks` is pure string
+manipulation; `harmonics.js`'s resonance-graph builder imports only
+`resonances.js`/`harmonicsPieces.js`/data modules, never another scene's
+full `.js`; `scripts/prerender.js`, `verify-links.mjs`, and
+`verify-resonances.mjs` all import only `.text.js` content modules
+directly, untouched by anything in `main.js`.
+
+Given the real scope — physically splitting preview from full-mode code
+is a per-scene job, and scene sizes run 351 (theater) to 2,984 (orrery)
+lines, several over 1,000 — asked Scott how to scope it rather than
+guessing. Decision: ship the dynamic-import/prefetch/chunking
+infrastructure now (real, immediate wins even without any scene's
+preview/full split), and split preview from full mode scene-by-scene as a
+tracked follow-up (see the open-items note above), not attempted in this
+pass.
+
+**What shipped:**
+- `main.js`'s `SCENES` registry: each scene's entry is now
+  `load: () => import('./scenes/<name>/<name>.js')` plus its export name,
+  instead of a static top-of-file import — Rollup now code-splits each
+  scene into its own chunk. A shared `sceneModulePromises` cache
+  (`loadSceneCreate()`) means `initPreviews()`, `expandScene()`, and the
+  new hover/touch prefetch listeners never double-fetch the same scene.
+- `initPreviews()` still requests every scene's real module on page load
+  (no preview/full split exists yet to avoid this) — but now as ten
+  parallel per-scene requests instead of one blocking monolith.
+- `expandScene()`'s `mountNext()` now awaits `loadSceneCreate()` before
+  mounting, with `transitioning` guarding re-entrancy across the whole
+  async span (a second nav click while a module is mid-fetch now correctly
+  no-ops instead of racing). A stale-mount guard (`if (activeScene !==
+  sceneName) return`) handles a scene changing again before the first
+  fetch resolves.
+- Initial-page-load deep links (`#outside`, `#harmonics`, `#library`, etc.)
+  fire their own `loadSceneCreate()` immediately as part of page load,
+  sharing the cache with `initPreviews()`'s request for the same scene —
+  never a double-fetch.
+- Hover/touch-intent prefetch: `pointerenter`/`touchstart` on nav icons
+  and preview tiles call `prefetchScene()`, warming the module cache
+  ahead of a click. Low practical effect today (every scene loads via
+  `initPreviews()` regardless), but real infrastructure for once the
+  preview/full split lands.
+- Loading state: `#experience-overlay` gets a `.pm-loading` class (pure
+  CSS spinner, `#experience-loading` in `index.html`/`main.css`, no JS
+  render loop) only if a scene's module hasn't resolved within 150ms of
+  the click — avoids a flash on the common cache-hit path, gives a real
+  "still working" signal on a genuinely cold fetch instead of an apparent
+  freeze. Tied into the existing `prefers-reduced-motion` block.
+- `vite.config.js`: `chunkSizeWarningLimit` raised to 600, with the
+  comment explaining why this is now safe — the one remaining chunk over
+  500kB is three.js's own vendor chunk (~565kB, already isolated via the
+  pre-existing `manualChunks`), a real and understood cost, not scene code
+  bundled together the way the warning used to mean. Confirmed via build
+  output, not assumed: no per-scene chunk approaches three.js's size, so
+  Rollup is correctly deduplicating it rather than inlining a copy into
+  every scene's chunk.
+
+**Verified, not assumed:**
+- Before: `main-B-PZblh3.js` 557.91kB (gzip 207.63kB, all ten scenes +
+  main.js logic in one chunk), plus three.js's own 564.66kB chunk — both
+  tripped the warning.
+- After: main chunk down to 22.14kB (app logic only, no scene code, no
+  three.js). Ten separate scene chunks, largest is `harmonics.js` at
+  57.56kB — all comfortably under 500kB. Zero chunks trip the (now 600kB)
+  warning.
+- `npm run build`: `verify-links` (146/146), `verify-resonances`
+  (64/64), and `prerender` (8 text pages) all still pass unchanged —
+  confirmed these build-time scripts only ever imported `.text.js`
+  content modules and `links.js`/`resonances.js` directly, never anything
+  through `main.js`, so nothing about this change could touch them.
+- Live-verified against a real Chrome (not just the production build)
+  running `npm run dev`: network tab shows all ten scenes as genuinely
+  separate module requests, not one bundle. Three cold-load deep links
+  tested as fresh navigations — `#outside`, `#harmonics`, `#library` —
+  each opened correctly with zero console errors. Click-path from the
+  landing grid (sphere) works. Scene-to-scene swap via nav icon while a
+  scene is already open (sphere → outside) works, crossfade intact, zero
+  errors. Escape/return-to-gallery works, focus restore intact.
+- Honest gap: the `pm-loading` spinner's slow-path trigger (a fetch that
+  genuinely takes >150ms) wasn't observed live — no network-throttling
+  tool available in this environment, and local dev serves every module
+  faster than that threshold in every test run. Verified by code review
+  only for that one path, not live.
+- Also incidentally confirmed live: `document.hidden`/`visibilityState`
+  showed the automation's own tab as backgrounded mid-session (known rAF-
+  throttling behavior, not a regression) — caught via the debug-hook-not-
+  screenshot approach rather than mistaking a throttled Lorenz-attractor
+  preview for a broken one.
+
+Not done this session, tracked as open (see the note above in "known open
+items"): the actual preview/full code split per scene, which is the piece
+that would reduce first-visit bytes rather than just resolving the
+build-time warning and improving repeat-visit caching.
 
 ## 3.9.17 (2026-08-30)
 

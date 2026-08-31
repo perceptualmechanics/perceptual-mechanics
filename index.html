@@ -400,6 +400,11 @@
        aria-label="Full screen art experience"
        aria-hidden="true">
     <div id="experience-container"></div>
+    <!-- Shown only while a scene's module is still being fetched (main.js's
+         expandScene, .pm-loading class) — a cold click against a chunk
+         nothing prefetched yet. Purely decorative (the overlay's own
+         aria-label already describes what's opening), so aria-hidden. -->
+    <div id="experience-loading" aria-hidden="true"></div>
   </div>
 
   <script type="module" src="./src/main.js"></script>

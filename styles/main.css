@@ -693,6 +693,39 @@ html, body {
   inset: 0;
 }
 
+/* ─── Scene-load spinner ─────────────────────────────────────────────────────── */
+/* main.js's expandScene() adds .pm-loading to #experience-overlay only when a
+   scene's dynamic import() hasn't resolved within 150ms of the click — the
+   overwhelming common case (module already warmed by initPreviews() or a
+   hover/touch prefetch) never adds it at all, so this never flashes on a
+   cache hit. Pure CSS animation, no JS render loop, per STANDARDS.md's
+   minimize-JS rule. */
+#experience-loading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+#experience-overlay.pm-loading #experience-loading {
+  opacity: 1;
+}
+#experience-loading::before {
+  content: '';
+  width: 2rem;
+  height: 2rem;
+  border: 2px solid rgba(255,255,255,0.25);
+  border-top-color: rgba(255,255,255,0.85);
+  border-radius: 50%;
+  animation: pm-spin 0.9s linear infinite;
+}
+@keyframes pm-spin {
+  to { transform: rotate(360deg); }
+}
+
 /* ─── Keyboard jump lists ───────────────────────────────────────────────────── */
 /* Built by sceneKit.js's createJumpList() for sphere/orbiter/orrery/library — an
    accessible way to reach each scene's raycast-only 3D objects (facets,
@@ -741,6 +774,8 @@ html, body {
   .preview-container:hover { transform: none; }
   .nav-icon { transition: none; }
   .nav-icon:hover { transform: none; }
+  #experience-loading { transition: none; }
+  #experience-loading::before { animation: none; opacity: 0.7; }
 }
 
 /* ─── Responsive ────────────────────────────────────────────────────────────── */

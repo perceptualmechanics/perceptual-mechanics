@@ -284,3 +284,26 @@ manufacturing findings to justify the pass — the honest result of a
 "look for dated patterns" sweep can be "didn't find any," and that's the
 useful thing to record here so a future pass doesn't have to redo this
 sweep from a standing start.
+
+### Scenes load via dynamic `import()`, not a static top-of-file import
+
+As of v3.10.0, `main.js`'s `SCENES` registry holds a `load: () =>
+import('./scenes/<name>/<name>.js')` per scene, not a static
+`import { createX } from ...` at the top of the file — a new scene added
+to the registry should follow the same pattern, not revert to a static
+import. Static imports for all ten scenes were the direct cause of the
+Rollup `chunks larger than 500kB` warning (every scene's code, whether
+needed yet or not, landed in one bundle); dynamic `import()` lets Rollup
+code-split each scene into its own chunk instead. See `main.js`'s own
+`SCENES` registry comment and NOTES.md's 3.10.0 entry for the full
+reasoning, and `loadSceneCreate()`/`prefetchScene()` for the shared
+promise-cache pattern every caller (previews, `expandScene`, hover/touch
+prefetch) goes through so the same scene never gets fetched twice.
+
+**Known incompleteness, not yet resolved:** this only splits scenes at
+the module level. No scene's preview-mode code is physically separated
+from its full-mode code yet (each is still one file, one exported
+`create(container, {preview})` with a runtime branch) — see the
+`initPreviews()` comment in `main.js` and NOTES.md's open-items note.
+Splitting that is real, still-open work; don't assume the 500kB warning
+being gone means first-visit bytes are minimal.
