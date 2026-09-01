@@ -96,6 +96,14 @@ content fix as a possible second victim of the same rename that produced
 `harmonicss`. **Scott confirmed 2026-09-02 that it is original.** It is
 the word he wrote, about a plucked string, and it stays. Don't re-flag it.
 
+**Settled in 4.0.3:** HSTS is at `max-age=31536000`. It was ramped on
+evidence rather than on schedule — v4.0 deployed, and the live site returned
+the header alongside `nosniff` and the cleaned `script-src`, which proved
+DreamHost reads `.htaccess` and `mod_headers` is present. That was the only
+thing the 300-second window existed to test. Still no `preload`, still no
+`includeSubDomains`. Also settled: the eight held Library notes were
+rewritten and released, `NOTE_HOLD` is empty, and all 81 note links render.
+
 **Resolved in 4.0, listed here so they aren't re-derived as open:**
 security headers (all six now set, with reasoning in `.htaccess`); the
 Google Fonts item, which was *already* stale before the audit — the fonts
@@ -117,24 +125,27 @@ no hashes at all.
   404s. It needs a real collector before it does anything — and it is
   worth doing, because the two live CSP bugs 4.0 fixed are exactly what a
   reporting endpoint catches.
-- **HSTS is at `max-age=300`,** one deploy away from a year. Every
-  precondition was verified live on 2026-09-02 — http 301s to https
-  site-wide, zero mixed content across 34 resources, valid cert,
-  `includeSubDomains` omitted so no subdomain is touched. The only
-  remaining unknown is whether DreamHost's Apache applies `.htaccess` at
-  all, and the deploy workflow's "Verify live security headers" step now
-  answers that automatically on every deploy. Let it go green once, then
-  change 300 to 31536000. Never add `preload`.
-- **Eight Library notes are held back from publication** (`NOTE_HOLD` in
-  `src/links.js`). v4.0.2 made a note visible wherever it carries a
-  cross-link; a scan then caught that some are still working notes. #124
-  opens with a dated verbatim quote of Scott to Claude about an ISBN error —
-  private correspondence that would have gone live. Seven more carry
-  edition/runtime/ISBN chatter. Each needs one clause trimmed;
-  `verify-links` fails the build if a new note of the same kind joins the
-  visible set, and reports a held note as ready to release once it scans
-  clean. Nine of the 81 note links stay dark until then — no regression,
-  just an unrealised gain.
+- **A `catalog` field is private only in the sense of not being rendered.**
+  It lives in `library.text.js`, which the scene imports, so the seven
+  catalogue fragments still ship inside the public JS bundle and are
+  fetchable by anyone who requests the chunk. That was equally true of every
+  note before 4.0.2. Getting them genuinely off the server means moving them
+  out of the bundled module — a real architectural change nobody has asked
+  for. Recorded so "private" isn't read as stronger than it is.
+- **The `/text/` pages still publish no Library notes**, while the scene now
+  shows 53. Deliberate, not drift: a crawlable page publishes, caches and
+  attributes text on this domain in a way an in-scene panel does not, which
+  is the same argument already recorded there for `excerpt`. But it is now a
+  decision awaiting Scott rather than a consequence of the scene's own
+  behaviour, and the comment in `scripts/prerender.js` says so.
+- **`createJumpList` still takes a flat list.** Library needed grouping (265
+  stops, a WCAG 2.4.1 problem) and built its own grouped `<nav>` locally
+  rather than extending the shared helper. It is the one place in 4.0 where a
+  scene reimplements something shared instead of using it — exactly the drift
+  STANDARDS.md's third-scene rule exists to prevent. What it would need:
+  an optional `groups: [{label, items}]` shape, a `skipLabel` for a leading
+  bypass control, and a caller-supplied sort, with today's flat callers
+  unchanged.
 - **Library's shelf is still 535 draw calls** (down from 1,603). Merging
   the 265 spines further breaks per-mesh raycast, the hover scale bump
   and per-spine emissive glow simultaneously; it needs a hover mechanism

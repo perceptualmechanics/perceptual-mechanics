@@ -10,6 +10,70 @@ because the code didn't support them.
 
 ---
 
+> ## STATUS — read this before reading the findings
+>
+> **This document is a snapshot taken on 2026-09-01, before v4.0. Almost all
+> of it is now history.** Sixty-three of the seventy-one findings were fixed
+> across v4.0, v4.0.1, v4.0.2 and v4.0.3; the reasoning, the measurements and
+> the things that turned out differently in practice are in `NOTES.md`'s 4.x
+> entries, which supersede this file wherever they disagree.
+>
+> It is kept because it is the only record of what an outside-in look at this
+> project actually surfaces, and because the evidence attached to each finding
+> — what was reproduced in a browser versus read from the code — is worth more
+> than the finding itself. **Read it as a survey, not as a to-do list.**
+>
+> **Two findings in here were simply wrong**, and are left uncorrected below so
+> the correction is visible rather than quietly tidied away:
+>
+> - **Finding 19, the seven "broken" Theater gestures, was a grep artifact** —
+>   `g: '…'` matches the tail of `tag: '…'`. Every authored gesture always
+>   resolved. There was a real gap underneath it (seven characters name a prop
+>   and all stood in the same neutral figure), which 4.0 implemented through
+>   the mechanism that actually carries it, but the finding as written was
+>   false.
+> - **The cache-control finding was overstated.** DreamHost already served 30
+>   days on `/assets/`; the real gain was `immutable`, not the absence of any
+>   caching.
+>
+> ### What did NOT close
+>
+> Current as of v4.0.3. The maintained list lives in
+> `perceptualmechanics-project-brief.md` under "Known open items" — if this
+> and that disagree, that one is right.
+>
+> 1. **Vite is two majors behind** (6.4.3 vs 8.2.2). Deliberately held out of
+>    4.0: the blockers are Rollup 4→5 hook changes affecting the `buildStart`
+>    and `closeBundle` plugins every build gate depends on.
+> 2. **The CSP report endpoint is a placeholder** that 404s. It needs a real
+>    collector — and it is the thing that would have caught the two live CSP
+>    bugs 4.0 fixed.
+> 3. **Library's shelf is still 535 draw calls** (down from 1,603). Going
+>    further breaks per-mesh raycast, the hover scale bump and per-spine
+>    emissive glow at once; it needs a hover mechanism designed first.
+> 4. **Library still builds 265 spine canvases in one synchronous task** at
+>    scene open — ~4× cheaper in raster work now, still one long main-thread
+>    block. Chunking it makes spines pop in, which is a taste decision.
+> 5. **One Orrery navigation quirk**, kept deliberately: two rings' low arcs
+>    leave a 0.46-unit gap a 0.6-unit-wide visitor can be pinched into.
+>    Backing up frees you. Being unable to squeeze between two rings is
+>    correct; a smaller collider would restore the walk-through it replaced.
+> 6. **`catalog` is private only in the sense of not being rendered** — it
+>    ships inside the public JS bundle, as every note did before 4.0.2.
+> 7. **The `/text/` pages publish no Library notes** while the scene now shows
+>    53. Deliberate, but now a decision awaiting Scott rather than a
+>    consequence of the scene's behaviour.
+> 8. **`createJumpList` still takes a flat list**, so Library carries its own
+>    grouped nav — the one place in 4.0 where a scene reimplements something
+>    shared.
+>
+> Not a finding, but the thing most likely to matter: **v4.0.1 through v4.0.3
+> are not deployed.** Production is on v4.0, so the Sphere label rotation, the
+> Library notes and the year-long HSTS are all still waiting on a push.
+
+---
+
+
 ## 1. Broken on the live site now
 
 ### 01 — Every `/text/` page has been unstyled in production since v3.12.1
