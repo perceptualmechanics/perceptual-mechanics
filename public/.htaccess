@@ -241,6 +241,38 @@ RewriteRule ^text/(.*/)?index\.html$ /text/%1 [L,R=301]
 # those third parties serve CORP/CORS headers for them. Its one real payoff
 # is unlocking SharedArrayBuffer and precise timers, which nothing here uses
 # or plans to. It is not an oversight; please don't add it as one.
+#
+# HSTS RAMP — read this before changing the number below.
+#
+# 300 seconds is a deliberate first value, not a placeholder someone forgot
+# to finish. Everything HSTS could break here has already been checked
+# against the live site (2026-09-02): http:// has 301'd to https:// site-wide
+# since 2026-07-28 and still does, the homepage loads 34 resources with zero
+# over http, the certificate is valid, and includeSubDomains is omitted, so
+# www and any future subdomain are untouched by this header entirely.
+#
+# That leaves exactly one thing the short window is guarding, and it is the
+# one thing that cannot be tested from anywhere but production: whether
+# DreamHost's Apache applies this file at all — mod_headers present,
+# .htaccess read, the override allowed. If it does not, the cost of finding
+# out is five minutes rather than a year.
+#
+# The deploy workflow now answers that question by itself. `.github/
+# workflows/deploy.yml`'s "Verify live security headers" step fetches the
+# live site after every rsync and fails the run if any of these headers is
+# missing. So the sequence is: merge, let that step go green once, then
+# change the line below to
+#
+#   Header always set Strict-Transport-Security "max-age=31536000"
+#
+# and ship it. That is the whole ramp, and it is made on evidence rather
+# than on a promise in a comment — which matters, because this project has
+# an entry in NOTES.md about exactly what happens to steps a person has to
+# remember (sitemap.xml sat stale for months).
+#
+# Still NOT to be added, at any max-age: `preload`. Submission to the
+# browser preload list is effectively irreversible on a human timescale and
+# is not undone by lowering or removing this header.
 <IfModule mod_headers.c>
   Header always set Strict-Transport-Security "max-age=300"
   Header always set X-Content-Type-Options "nosniff"

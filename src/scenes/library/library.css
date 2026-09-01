@@ -106,10 +106,25 @@
   color: rgba(220,210,195,0.72); font-size: 0.85rem; line-height: 1.9;
 }
 .library-panel-details p { margin: 0 0 0.3rem; }
+/* This rule shipped for over a month without ever rendering — library.js had
+   its note line commented out since 2026-07-23 — so its colour had never been
+   measured, and the 4.0 contrast pass checked its two neighbours and skipped
+   it for exactly that reason. Now that notes render for the 54 items doing
+   link work, it is real text and was measured: 0.6 alpha composites to
+   rgb(136,117,86) over #0a0806 for 4.51:1, which clears WCAG AA's 4.5:1 for
+   12.8px text by one hundredth and has no headroom at all for the panel's own
+   radial-gradient tint. 0.7 gives rgb(157,135,100), 5.81:1. Italic text at
+   this size wants the margin. */
 .library-panel-note {
-  color: rgba(220,190,140,0.6); font-size: 0.8rem; font-style: italic;
+  color: rgba(220,190,140,0.7); font-size: 0.8rem; font-style: italic;
   line-height: 1.6; margin-top: 0.9rem;
 }
+/* An item outside the visible set must be indistinguishable from an item that
+   never had a note. Without this the empty paragraph still contributes its
+   0.9rem margin-top, so a withheld note would leave a small gap that a
+   comparing reader could read as "something is hidden here". Same idiom as
+   .library-panel-excerpt:empty directly below, which already had it. */
+.library-panel-note:empty { display: none; margin: 0; }
 .library-panel-excerpt {
   margin: 0 0 1.4rem;
   color: rgba(235,228,210,0.88); font-size: 0.98rem;

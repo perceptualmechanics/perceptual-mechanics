@@ -231,9 +231,100 @@ export const WITHHELD_FIELDS = {
   library: new Set(['note']),
 };
 
-// True when the scene draws this field today.
-export function isRenderedField(scene, field) {
-  return RENDERED_FIELDS[scene]?.has(field) === true;
+// ─── Library notes: private by default, visible where they do link work ────
+// Scott's 2026-09-02 call, and it is narrower than "publish the notes". The
+// `note` field stays withheld exactly as decided on 2026-07-23. What changes
+// is that a note which is *structurally load-bearing in the link graph* is no
+// longer hidden — not because it is good writing, but because hiding it
+// breaks the graph. Two ways a note can be load-bearing, and both count:
+//
+//   SOURCE — the note's own text contains the phrase that jumps somewhere
+//   else. Hide the note and the phrase goes with it, so there is nothing to
+//   click and the link exists only in the data.
+//
+//   TARGET — another piece links here, and what the reader came to read is
+//   the note. 4.0 suppressed the "Referenced from —" backlink for exactly
+//   these, on the grounds that it pointed at something invisible. That is no
+//   longer true once the note is shown, so the backlink comes back — for
+//   this set only.
+//
+// Derived from LINKS at module load, never hand-listed. A hand-maintained id
+// list would be a derived artifact somebody has to remember to update, which
+// is the failure mode NOTES.md's sitemap.xml entry exists to warn about: add
+// a link tomorrow and the note it lives in would stay invisible with nothing
+// reporting it.
+//
+// COUNTED, with the method stated, at v4.0.1 against src/links.js and
+// library.text.js:
+//   81  link rows authored with from.field === 'note'
+//   52  distinct items whose note is a SOURCE
+//   43  distinct items that are the TARGET of one of those rows
+//   54  the union — the set below
+//   53  of those 54 actually have a note (one target, #32 Dazed and
+//       Confused, has none; it still gains a backlink to #134, whose note IS
+//       now visible, so that reference is followable rather than dangling)
+//    2  are target-only, i.e. not themselves a source (#32 and #140 Wiseguy)
+//   47  notes stay private, unchanged and entirely absent from the scene
+// cdRackItems carry no notes at all (0 of 115), so the shared id space
+// between the two arrays cannot leak a note onto a CD spine — but callers
+// should still scope this test to library items, not ids alone.
+const libraryNoteRows = LINKS.filter(l => l.from.scene === 'library' && l.from.field === 'note');
+
+// ─── Held back: notes that do link work but are not publishable as written ──
+// Making notes visible surfaced something the decision was taken without:
+// some of them are still working notes, and one is private correspondence.
+// #124 opens with a dated verbatim quote of Scott correcting a cataloguing
+// error — addressed to Claude, about a bug in an earlier cataloguing round.
+// That is not criticism and was never written to be read by anyone else.
+//
+// This is the 1.7.0 incident's exact shape, and 1.7.0's own lesson is the one
+// that applies: "is this good?" is the wrong question, "does the site show
+// this?" is the right one — and the corollary is that turning a field ON
+// makes every word in it a publishing decision, not just the words you had in
+// mind. So these are held out of the visible set until they are trimmed. The
+// cost is that their links stay invisible, which is exactly where they were
+// before this change: no regression, just an unrealised gain.
+//
+// Each entry needs a reason, and removing one should follow trimming the note
+// rather than deciding the reason no longer matters. verify-links.mjs re-runs
+// the scan that found these on every build, so a new note of this kind cannot
+// join the visible set silently, and a note that has been cleaned up is
+// reported as ready to release.
+export const NOTE_HOLD = new Map([
+  [124, 'opens with a dated verbatim quote of Scott to Claude correcting an ISBN error — private correspondence, not criticism'],
+  [6,   'opens with "edition uncertain … flag for Scott" — a working note addressed to Scott'],
+  [11,  'opens with "photo shows … cover style; newer centennial deluxe edition is … flag for Scott"'],
+  [63,  'opens with runtime-varies-by-cut sourcing chatter before reaching the criticism'],
+  [78,  '"earlier Penguin edition 9780140188592 — edition uncertain"'],
+  [86,  '"a 3-volume boxed set also exists (9780345802934)"'],
+  [89,  '"Penguin Modern Classics variant 9780141183114 also exists — edition uncertain"'],
+  [103, '"paperback is 9781324094098 (624pp, 2023) — edition uncertain"'],
+]);
+
+export const LIBRARY_NOTE_VISIBLE = new Set([
+  ...libraryNoteRows.map(l => l.from.id),                                  // sources
+  ...libraryNoteRows.filter(l => l.to.scene === 'library').map(l => l.to.id), // targets
+].filter(id => !NOTE_HOLD.has(id)));
+
+// Fields a scene renders only for some items. Keyed the same way as
+// RENDERED_FIELDS, but the value is a predicate on the piece id rather than a
+// flat yes/no, because "does the site show this?" stopped having one answer
+// for the whole field.
+export const CONDITIONAL_FIELDS = {
+  library: {
+    note: id => LIBRARY_NOTE_VISIBLE.has(id),
+  },
+};
+
+// True when the scene draws this field for this specific piece. `id` is
+// optional so existing callers that only care about unconditional fields keep
+// working; omit it and a conditional field reports false, which is the safe
+// direction — it can only ever hide a link, never surface one that shouldn't
+// be there.
+export function isRenderedField(scene, field, id) {
+  if (RENDERED_FIELDS[scene]?.has(field) === true) return true;
+  const cond = CONDITIONAL_FIELDS[scene]?.[field];
+  return cond !== undefined && id !== undefined && cond(id) === true;
 }
 
 // ─── Query helpers ──────────────────────────────────────────────────────────
@@ -263,6 +354,6 @@ export function getOutboundLinks(scene, id, field, index) {
 export function getInboundLinks(scene, id, { includeWithheld = false } = {}) {
   return LINKS.filter(l =>
     l.to.scene === scene && l.to.id === id
-    && (includeWithheld || isRenderedField(l.from.scene, l.from.field))
+    && (includeWithheld || isRenderedField(l.from.scene, l.from.field, l.from.id))
   );
 }

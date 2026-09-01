@@ -273,6 +273,12 @@ export function verifyLinks() {
   let unknownFields = 0;
   const withheldRows = [];
 
+  // isRenderedField() takes the piece id since v4.0.2, because "does the
+  // scene show this field?" stopped having one answer for the whole field:
+  // library renders a note only for the items whose note is load-bearing in
+  // the link graph. Asking it per row, id included, is the only way this
+  // check reflects what a visitor actually sees.
+  const conditionalRows = [];
   LINKS.forEach((l, i) => {
     const rendered = RENDERED_FIELDS[l.from.scene];
     if (rendered === undefined) {
@@ -280,15 +286,88 @@ export function verifyLinks() {
       fail(`LINKS[${i}]: RENDERED_FIELDS has no entry for scene "${l.from.scene}" — add one (even an empty set) so it's a stated decision rather than an omission.`);
       return;
     }
+    // Unconditionally rendered.
     if (rendersField(rendered, l.from.field)) return;
 
+    // Conditionally rendered, and this particular piece qualifies.
+    if (linkStore.isRenderedField(l.from.scene, l.from.field, l.from.id)) {
+      conditionalRows.push(l);
+      return;
+    }
+
+    // Declared withheld, and not rescued by a condition. Reported, not failed.
     if (rendersField(WITHHELD_FIELDS[l.from.scene], l.from.field)) {
       withheldRows.push(l);
       return;
     }
     unknownFields++;
-    fail(`LINKS[${i}] (${l.from.scene}#${l.from.id} -> ${l.to.scene}#${l.to.id}): "${l.from.field}" is neither in RENDERED_FIELDS.${l.from.scene} (${renderedFieldNames(rendered).join(', ') || 'nothing'}) nor declared in WITHHELD_FIELDS.${l.from.scene}. Either the field name is wrong, or the scene gained a field nobody declared. A link into an undeclared field passes every other check in this file while being invisible on the source side.`);
+    fail(`LINKS[${i}] (${l.from.scene}#${l.from.id} -> ${l.to.scene}#${l.to.id}): "${l.from.field}" is neither in RENDERED_FIELDS.${l.from.scene} (${renderedFieldNames(rendered).join(', ') || 'nothing'}) nor declared in WITHHELD_FIELDS.${l.from.scene}, and no conditional rule covers piece #${l.from.id}. Either the field name is wrong, or the scene gained a field nobody declared. A link into an undeclared field passes every other check in this file while being invisible on the source side.`);
   });
+
+  // The invariant that makes conditional visibility safe. Every row authored
+  // into a conditional field MUST have its source piece covered by that
+  // condition — otherwise the link is invisible on the source side, which is
+  // the whole failure this feature exists to prevent, quietly reintroduced.
+  // It holds by construction today (LIBRARY_NOTE_VISIBLE is derived from
+  // these same rows), and that is exactly why it is worth asserting: a
+  // derivation is one edit away from no longer deriving.
+  const CONDITIONAL_FIELDS = linkStore.CONDITIONAL_FIELDS ?? {};
+  const NOTE_HOLD = linkStore.NOTE_HOLD ?? new Map();
+  let uncovered = 0;
+  let heldRows = 0;
+  LINKS.forEach((l, i) => {
+    const cond = CONDITIONAL_FIELDS[l.from.scene]?.[l.from.field];
+    if (!cond) return;
+    if (cond(l.from.id) === true) return;
+    // Deliberately held back, with a stated reason — reported, not failed.
+    if (NOTE_HOLD.has(l.from.id)) { heldRows++; return; }
+    uncovered++;
+    fail(`LINKS[${i}] (${l.from.scene}#${l.from.id} -> ${l.to.scene}#${l.to.id}): "${l.from.field}" is a conditionally-rendered field, but the condition does not cover piece #${l.from.id} and it is not in NOTE_HOLD — so this link's phrase is authored into content the scene will not display, and there is nothing to click. The condition is supposed to be derived from these rows; if it no longer is, that is the bug.`);
+  });
+  if (!uncovered && conditionalRows.length) {
+    ok(`conditional fields: ${conditionalRows.length} row(s) render from a conditional field; ${heldRows} held back by NOTE_HOLD with a stated reason`);
+  }
+
+  // ── 5. Nothing unpublishable rides along when a field is switched on ──
+  // Turning `note` on for the items doing link work made every word in those
+  // notes a publishing decision. Most are criticism; a few were still working
+  // notes, and one was a dated verbatim quote of Scott to Claude about a
+  // cataloguing error. Those are listed in NOTE_HOLD with reasons.
+  //
+  // This re-runs the scan that found them, so the list cannot go stale in
+  // either direction: a newly-linked note carrying the same kind of content
+  // fails the build rather than quietly publishing, and a held note that has
+  // since been trimmed is reported as ready to release. The pattern is
+  // deliberately broad — it is a prompt to look, not a classifier, and a
+  // false positive costs one line in NOTE_HOLD saying why it is fine.
+  const CATALOGUING = /(flag for Scott|edition uncertain|ISBN\b|9780\d{6}|photo shows|reissued|cover style|earlier printing|runtime varies|varies by cut|commonly cited|spine alone|couldn'?t confirm|Scott,? \d{4}-\d{2}-\d{2})/i;
+  let unpublishable = 0;
+  const releasable = [];
+  {
+    // libraryItems is already imported at the top of this file.
+    const noteRows = LINKS.filter(l => l.from.scene === 'library' && l.from.field === 'note');
+    const wouldBeVisible = new Set([
+      ...noteRows.map(l => l.from.id),
+      ...noteRows.filter(l => l.to.scene === 'library').map(l => l.to.id),
+    ]);
+    libraryItems.forEach(it => {
+      if (!wouldBeVisible.has(it.id) || !it.note?.trim()) return;
+      const flagged = CATALOGUING.test(it.note);
+      const held = NOTE_HOLD.has(it.id);
+      if (flagged && !held) {
+        unpublishable++;
+        const m = it.note.match(CATALOGUING);
+        fail(`library #${it.id} (${it.title}): this note is about to be published because it carries a cross-link, but it still reads like a working note — matched "${m[0]}". Trim it, or add it to NOTE_HOLD in src/links.js with a reason. Turning a field on publishes every word in it, not just the words you had in mind.`);
+      }
+      if (!flagged && held) releasable.push(`#${it.id} ${it.title}`);
+    });
+    if (!unpublishable) {
+      ok(`note readiness: every library note that would be published scans clean; ${NOTE_HOLD.size} held back deliberately`);
+    }
+    if (releasable.length) {
+      ok(`note readiness: ${releasable.length} held note(s) now scan clean and can be released from NOTE_HOLD — ${releasable.join(', ')}`);
+    }
+  }
 
   if (!unknownFields) {
     ok(`rendered fields: all ${LINKS.length} rows link from a field that is either rendered or explicitly declared withheld`);

@@ -139,8 +139,6 @@ they're editorial, not technical.
   overwrites it later in the same frame. Making it work is a visual design
   question: does the type want to rotate with the facets, or was it right by
   accident?
-- **A vertical (9:16) Butterfly export for YouTube Shorts** — an auto-rotate
-  camera sweep. Listed as next-up for a while, never started.
 - **The eleventh scene**, whenever it comes. The content-sourcing question — what
   in `Holography.scriv` or `seeds.md` is ready to be promoted — is a
   conversation, not a build task.

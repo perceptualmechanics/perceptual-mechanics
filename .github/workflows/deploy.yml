@@ -129,3 +129,55 @@ jobs:
             -e "ssh -i ~/.ssh/deploy_key -o IdentitiesOnly=yes -o IdentityAgent=none -o StrictHostKeyChecking=no" \
             dist/ \
             copper_prism@pdx1-shared-a1-46.dreamhost.com:/home/copper_prism/perceptualmechanics.com
+
+      # ─── Post-deploy header check ────────────────────────────────────────
+      # .htaccess is the one part of this project that cannot be tested
+      # anywhere but production. Every build gate in vite.config.js runs
+      # against source; none of them can tell you whether Apache actually
+      # applied a single line of it. That gap is not hypothetical: the CSP
+      # went enforcing in 3.12.1 and quietly served eight unstyled /text/
+      # pages for months, and the six security headers below were found
+      # missing in 4.0 by fetching the live site by hand, because nothing
+      # ever fetched it automatically.
+      #
+      # So the deploy now proves its own server config. This also retires a
+      # manual watch step: HSTS ships at max-age=300 deliberately, and the
+      # only thing that short window is really guarding against is DreamHost
+      # not emitting the header at all (mod_headers absent, .htaccess not
+      # read, an override disallowed). This step answers that on the first
+      # deploy instead of asking someone to remember to check, after which
+      # raising 300 to 31536000 is a one-line change made on evidence.
+      #
+      # A cache-buster because index.html is served with max-age=0 but the
+      # edge can still hold a copy — see NOTES.md's "verify a deploy through
+      # a cache-buster" entry, learned the hard way in 1.7.0.
+      - name: Verify live security headers
+        run: |
+          set -euo pipefail
+          echo "waiting for the deploy to settle"
+          sleep 10
+          headers=$(curl -sS -D - -o /dev/null "https://perceptualmechanics.com/?cb=${GITHUB_SHA}")
+          echo "$headers"
+          fail=0
+          for h in \
+            "strict-transport-security" \
+            "x-content-type-options" \
+            "referrer-policy" \
+            "permissions-policy" \
+            "x-frame-options" \
+            "cross-origin-opener-policy" \
+            "content-security-policy"
+          do
+            if ! printf '%s' "$headers" | grep -qi "^$h:"; then
+              echo "::error::$h is not being served — .htaccess did not take effect"
+              fail=1
+            fi
+          done
+          # The /text/ pages carry the inline <style> the CSP has to allowlist
+          # by hash. Fetching one proves the policy that ships is the policy
+          # those pages were hashed against.
+          if ! curl -sSf -o /dev/null "https://perceptualmechanics.com/text/?cb=${GITHUB_SHA}"; then
+            echo "::error::/text/ did not return 200"
+            fail=1
+          fi
+          exit $fail

@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { libraryItems, cdRackItems } from './library.text.js';
-import { getOutboundLinks, getInboundLinks } from '../../links.js';
+import { getOutboundLinks, getInboundLinks, isRenderedField } from '../../links.js';
 import {
   bindOrbitDrag, bindWheelZoom, bindGuardedResize, bindTapVsDrag, prefersReducedMotion, onReducedMotionChange, createPanelCloser, escapeHtml, parseHTML, wireCrossLinks, formatInboundNote, setPanelSide, clickedLeftHalf, claimContainer, disposeSceneGraph, manageRenderer, createFrameClock, trackTimers,
 } from '../../utils/sceneKit.js';
@@ -1657,12 +1657,28 @@ export function createLibrary(container, { preview = false, initialPieceId = nul
     // header describes fields transcribed from real bibliographic sources.
     // One escape here covers every line the block can ever grow.
     detailsEl.innerHTML = lines.map(l => `<p>${escapeHtml(l)}</p>`).join('');
-    // Note text is intentionally disabled -- commented out rather than
-    // deleted so it's a one-line revert. Underlying `note` data and the
-    // cross-links that live inside it (src/links.js, field: 'note') are
-    // untouched.
-    // noteEl.innerHTML = it.note ? renderLinkedField(it.id, 'note', it.note) : '';
-    noteEl.innerHTML = '';
+    // Notes are private by default and shown only where the note is doing
+    // structural work in the link graph — Scott's 2026-09-02 call. The
+    // 2026-07-23 decision to withhold this field stands for the other 47
+    // notes; what changed is that hiding a note which CONTAINS a cross-link
+    // phrase, or which another piece links to, breaks the link rather than
+    // merely withholding some prose.
+    //
+    // The test lives in links.js (LIBRARY_NOTE_VISIBLE, derived from LINKS at
+    // module load) rather than as a list here, so adding a link tomorrow
+    // brings its note along automatically instead of silently authoring
+    // another invisible one. 54 items qualify, counted; see that file for the
+    // method and the two edge cases.
+    //
+    // Note the deliberate shape of the negative branch: `''`, the same empty
+    // string as before. An item outside the set renders no note text, no
+    // placeholder, no "hidden note" affordance — the paragraph is as empty as
+    // it has been since July, and a reader has no way to tell a withheld note
+    // from an item that simply never had one.
+    const showNote = isRenderedField('library', 'note', it.id);
+    noteEl.innerHTML = (showNote && it.note)
+      ? renderLinkedField(it.id, 'note', it.note)
+      : '';
 
     // Content area, above the bibliographic details: a film gets its
     // pivotal scene embedded (not just linked), a CD gets a music video or

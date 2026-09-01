@@ -96,9 +96,14 @@ no hashes at all.
   404s. It needs a real collector before it does anything — and it is
   worth doing, because the two live CSP bugs 4.0 fixed are exactly what a
   reporting endpoint catches.
-- **HSTS is at `max-age=300`,** deliberately, so it can be ramped to
-  31536000 after confirming nothing breaks. No `preload` (irreversible),
-  and `includeSubDomains` omitted on purpose for shared hosting.
+- **HSTS is at `max-age=300`,** one deploy away from a year. Every
+  precondition was verified live on 2026-09-02 — http 301s to https
+  site-wide, zero mixed content across 34 resources, valid cert,
+  `includeSubDomains` omitted so no subdomain is touched. The only
+  remaining unknown is whether DreamHost's Apache applies `.htaccess` at
+  all, and the deploy workflow's "Verify live security headers" step now
+  answers that automatically on every deploy. Let it go green once, then
+  change 300 to 31536000. Never add `preload`.
 - **Library's shelf is still 535 draw calls** (down from 1,603). Merging
   the 265 spines further breaks per-mesh raycast, the hover scale bump
   and per-spine emissive glow simultaneously; it needs a hover mechanism
@@ -111,8 +116,6 @@ no hashes at all.
   `CSS2DRenderer.render()` overwrites the inline transform later in the
   same frame. Either make it work (write after the CSS2D render) or
   delete ~25 lines from the hot loop. Visual design decision.
-- **`butterfly` auto-rotate / camera-sweep for a vertical (9:16) YouTube
-  Shorts export** — still a "next up" item, still not started.
 - **`beamline.text.js:68`** contains the word "harmonics" in prose.
   Examined during the 4.0 content fix and left alone — unlike the Sphere
   case it reads as original ("harmonics echoing at mathematically precise
