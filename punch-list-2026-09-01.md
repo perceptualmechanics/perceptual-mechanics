@@ -65,7 +65,18 @@ because the code didn't support them.
 >    shared.
 >
 > Vite is no longer among these: v4.1.0 took the 6 → 8 upgrade. Everything
-> through v4.0.3 is deployed and confirmed live (2026-09-02).
+> through **v4.1.0** is deployed and confirmed live (2026-09-02), by matching
+> all 29 hashed asset names on the landing page against the Vite 8 build.
+>
+> **One thing this audit counted without checking.** Finding 22 counted nine
+> live WebGL contexts and eight preview loops that never stopped, and 4.0
+> fixed the stopping. It never asked whether all eight were ever *starting*.
+> On 2026-09-01, three landing tiles were seen blank — two of them holding a
+> canvas that proves no frame had ever completed — and they were inside that
+> count the whole time. Same shape as the 2.9 MB hare: the accounting
+> measured the thing it had gone looking for. The current state of that
+> finding lives in the project brief under "Genuinely open"; the Butterfly
+> half of it is understood, the other half is not currently reproducible.
 
 ---
 

@@ -67,7 +67,20 @@ This is the durable house-rules file (created v3.9.16) — **read it first** bef
 - **3.9.13–3.9.14:** Fixed a real letter-spacing centering bug (Chrome adds the tracking gap after the last character too) and used it to drive a full site-wide refactor from `transform`-based centering to flexbox.
 - **3.9.15:** Full-site CSS audit — removed genuinely dead code (a stale `#butterfly-exp-label` block, an inert `-webkit-overflow-scrolling: touch`) and fixed a real missing-fallback bug (`theater.css`'s mask had only the `-webkit-` prefix).
 - **3.9.16:** Much larger modernization pass — full CSS + JS sweep, mobile-first conversion for 10 of 12 stylesheets (2 flagged for dedicated follow-up), native CSS nesting for all converted media queries, a real dead-cascade-order bug found and fixed in `sphere.css`, and the creation of `STANDARDS.md` itself.
-- **3.9.17 (current, 2026-08-30):** Closed out the mobile-first audit — converted the final two flagged files. `main.css`'s nav-icon/landing responsive system (which has a real, four-times-recurred regression history: icon count changes have repeatedly reintroduced silent edge-clipping at specific pixel thresholds) was converted and live-verified at the exact widths that broke before. `theater.css`'s one genuinely compound media query (`@media (max-width:480px), (max-width:700px) and (orientation:portrait)`) was inverted using actual De Morgan's-law algebra rather than a naive per-clause flip, verified with an orientation-aware cascade simulator plus live-browser spot checks. One honest gap recorded rather than papered over: the narrowest region (width ≤480px AND portrait) couldn't be reached live in this session due to a sandbox browser-pane width floor — it rests on the simulator/hand-derivation only, flagged as such in both `STANDARDS.md` and `NOTES.md`.
+- **3.9.17 (2026-08-30):** Closed out the mobile-first audit — converted the final two flagged files. `main.css`'s nav-icon/landing responsive system (which has a real, four-times-recurred regression history: icon count changes have repeatedly reintroduced silent edge-clipping at specific pixel thresholds) was converted and live-verified at the exact widths that broke before. `theater.css`'s one genuinely compound media query (`@media (max-width:480px), (max-width:700px) and (orientation:portrait)`) was inverted using actual De Morgan's-law algebra rather than a naive per-clause flip, verified with an orientation-aware cascade simulator plus live-browser spot checks. One honest gap recorded rather than papered over: the narrowest region (width ≤480px AND portrait) couldn't be reached live in this session due to a sandbox browser-pane width floor — it rests on the simulator/hand-derivation only, flagged as such in both `STANDARDS.md` and `NOTES.md`.
+- **4.0–4.1.0 (current, 2026-09-02):** the audit release and its follow-ons.
+  4.0 closed 63 of the 71 audit findings, including all eight that were live
+  on production — unstyled `/text/` pages, a stranded audio context on scene
+  exit, nav icons clipped at 375px, a 2.9 MB image in a 36-pixel box — plus
+  an accessibility pass, a shared scene-lifecycle layer in `sceneKit.js`, and
+  large measured wins (one scene 1,070 → 18 draw calls a frame). 4.0.1 made
+  Sphere's label rotation actually render. 4.0.2/4.0.3 released the eight
+  held Library notes, routed catalogue chatter to a private `catalog` field,
+  and ramped HSTS to a year. 4.1.0 took Vite 6 → 8 — a bundler swap, since
+  Vite 8 replaces Rollup with Rolldown — gates proven to still fail before
+  the site was allowed to build, and the CSS minifier pinned because the new
+  default deleted three documented fallbacks.
+
 
 ## Keeping this file true
 
@@ -96,10 +109,15 @@ content fix as a possible second victim of the same rename that produced
 `harmonicss`. **Scott confirmed 2026-09-02 that it is original.** It is
 the word he wrote, about a plucked string, and it stays. Don't re-flag it.
 
-**Deployment state:** everything through v4.0.3 is deployed. Confirmed
-2026-09-02 by fetching the live site — `strict-transport-security:
-max-age=31536000`, the 4.0.3 library chunk, `catalog` present, the withdrawn
-quote absent. Repo and production agree.
+**Deployment state:** everything through **v4.1.0** is deployed. Confirmed
+2026-09-02 against the live site: all 29 hashed asset names the landing page
+references match the Vite 8 build exactly (`main-Hm0591ih.js`,
+`three-5o05UEa6.js`, `main-Ccghcr8I.css` among them), which also means CI on
+Linux/Node 24 and a local build on Node 22 produce identical content hashes —
+the build is reproducible. `strict-transport-security: max-age=31536000`, the
+CSP `style-src` hash matching the build gate's, `/assets/` at
+`max-age=31536000, immutable`, and `/text/library/` returning 200. Repo and
+production agree.
 
 **Settled in 4.1.0:** the Vite 6 → 8 upgrade. Also settled: the `/text/`
 pages deliberately publish no Library notes — the link-graph problem that
@@ -125,6 +143,43 @@ no hashes at all.
 
 **Genuinely open:**
 
+- **Three landing previews were seen blank, and only in one browser.**
+  Recorded here before any fix because the landing page is the site's only
+  real entry point and it looks plausible with seven of ten tiles working —
+  a tile that draws nothing reads as a tile still loading. What was
+  actually seen, 2026-09-01 in Scott's Chrome at 1440×900, on the dev
+  server and on production alike: `preview-harmonics` and `preview-outside`
+  holding a 300×150 canvas, `preview-butterfly` showing a single point.
+  Two separate things, and the first is **not reproducible**:
+  - *Harmonics and Outside.* The 300×150 canvas is not an unsized
+    renderer. It is the 2D display canvas `mountClippedPreviewCanvas`
+    mounts, and that canvas is sized lazily **inside `blit()`** — so
+    300×150 means no frame has ever completed for that tile, not that a
+    sizing path failed. Four scenes use that helper (orrery, beamline,
+    harmonics, outside) and two of them were fine, so the helper is not the
+    discriminator. Re-checked afterwards in the Claude desktop browser
+    against production and in headless Chromium against a local `vite
+    preview` build: **all ten tiles sized 480×480, harmonics and outside
+    both drawing, within 510 ms of load.** No `preview "…" did not load`
+    warning in any of them, so `create()` is not throwing. Until it is seen
+    again it is a one-browser observation, and the cause is unknown.
+  - *Butterfly is a different thing and is understood.* Its canvas is
+    genuinely 480×480 and it renders. The preview branch adds
+    `PPF = 2` points per trajectory **per frame** — a fixed per-frame
+    constant, not `dt`-scaled — across 7 trajectories into a 3,000-point
+    buffer, and new points are drawn at 30% brightness ramping to full only
+    as the buffer fills. At 60 fps that is ~25 seconds to full brightness
+    and roughly 360 dim points at the three-second mark, on a black tile
+    under `FogExp2`. So: one dot. Nothing is broken; the accumulation rate
+    is simply tied to frame rate, which is the exact class of defect 4.0's
+    `createFrameClock` work existed to remove and this constant survived.
+    On a 30 fps machine the wings take fifty seconds.
+
+  The useful structural note, independent of the cause: because
+  `mountClippedPreviewCanvas` sizes on first blit, "this tile has not drawn
+  yet" and "this tile will never draw" are the same observable. That is why
+  the state went unnoticed, and it is the thing worth changing whether or
+  not the original symptom returns.
 - **The CSP report endpoint is a placeholder.** `report-to` and
   `Reporting-Endpoints` are wired to a marked URL on this origin that
   404s. It needs a real collector before it does anything — and it is
