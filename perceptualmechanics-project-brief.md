@@ -143,43 +143,27 @@ no hashes at all.
 
 **Genuinely open:**
 
-- **Three landing previews were seen blank, and only in one browser.**
-  Recorded here before any fix because the landing page is the site's only
-  real entry point and it looks plausible with seven of ten tiles working —
-  a tile that draws nothing reads as a tile still loading. What was
-  actually seen, 2026-09-01 in Scott's Chrome at 1440×900, on the dev
-  server and on production alike: `preview-harmonics` and `preview-outside`
-  holding a 300×150 canvas, `preview-butterfly` showing a single point.
-  Two separate things, and the first is **not reproducible**:
-  - *Harmonics and Outside.* The 300×150 canvas is not an unsized
-    renderer. It is the 2D display canvas `mountClippedPreviewCanvas`
-    mounts, and that canvas is sized lazily **inside `blit()`** — so
-    300×150 means no frame has ever completed for that tile, not that a
-    sizing path failed. Four scenes use that helper (orrery, beamline,
-    harmonics, outside) and two of them were fine, so the helper is not the
-    discriminator. Re-checked afterwards in the Claude desktop browser
-    against production and in headless Chromium against a local `vite
-    preview` build: **all ten tiles sized 480×480, harmonics and outside
-    both drawing, within 510 ms of load.** No `preview "…" did not load`
-    warning in any of them, so `create()` is not throwing. Until it is seen
-    again it is a one-browser observation, and the cause is unknown.
-  - *Butterfly is a different thing and is understood.* Its canvas is
-    genuinely 480×480 and it renders. The preview branch adds
-    `PPF = 2` points per trajectory **per frame** — a fixed per-frame
-    constant, not `dt`-scaled — across 7 trajectories into a 3,000-point
-    buffer, and new points are drawn at 30% brightness ramping to full only
-    as the buffer fills. At 60 fps that is ~25 seconds to full brightness
-    and roughly 360 dim points at the three-second mark, on a black tile
-    under `FogExp2`. So: one dot. Nothing is broken; the accumulation rate
-    is simply tied to frame rate, which is the exact class of defect 4.0's
-    `createFrameClock` work existed to remove and this constant survived.
-    On a 30 fps machine the wings take fifty seconds.
-
-  The useful structural note, independent of the cause: because
-  `mountClippedPreviewCanvas` sizes on first blit, "this tile has not drawn
-  yet" and "this tile will never draw" are the same observable. That is why
-  the state went unnoticed, and it is the thing worth changing whether or
-  not the original symptom returns.
+- **Butterfly's preview accumulates at the display's refresh rate.** Its
+  preview branch adds `PPF = 2` Lorenz integration steps per trajectory per
+  frame — a fixed per-frame count, not `dt`-scaled — across 7 trajectories
+  into a 3,000-point buffer, with new points drawn at 30% brightness ramping
+  to full only as the buffer fills. ~25 seconds to a legible attractor at
+  60 fps; fifty at 30. A visitor gets one dot. **Not fixed, because the
+  scoping assumption is false:** `PPF` is not preview-only. The same constant
+  drives full mode at 4, in the same shared loop, so converting it to
+  wall-clock changes how the expanded scene draws on any non-60Hz display.
+  That is a change to the art rather than a refactor, and it needs Scott's
+  answer to two questions: whether full mode changes with it, and whether a
+  200px tile that gets three seconds of attention should reach its subject
+  faster than the full scene does.
+- **Three more frame-coupling survivors, found by a sweep with a stated
+  ruler.** Sphere runs `lightAngle += 0.003`, `rotation.y += 0.0015` and
+  `rotation.x += 0.0003` in a file with **no frame clock at all** and no
+  comment defending it — the plainest instance of the shape 4.0 was sweeping
+  for, missed entirely. Butterfly's `t += 0.008` likewise. Harmonics'
+  `GALAXY_TWINKLE_KICKS` offers twinkle candidates *per frame* while decaying
+  them by `dt`, so the galaxy sparkles twice as densely at 120Hz. The ruler
+  and the full result are in NOTES.md's 4.1.1 entry; none are fixed.
 - **The CSP report endpoint is a placeholder.** `report-to` and
   `Reporting-Endpoints` are wired to a marked URL on this origin that
   404s. It needs a real collector before it does anything — and it is

@@ -120,16 +120,22 @@ damage was in the new CSS minifier, which silently deleted three documented
 fallbacks. See NOTES.md's 4.1.0 entry. Everything through 4.1.0 is deployed
 and confirmed live.
 
-**One caveat on the scene table above.** On 2026-09-01 three of the ten
-landing preview thumbnails were seen drawing nothing — Harmonics, Outside and
-Butterfly — in one browser, on the dev server and production alike. Butterfly
-is understood and harmless: its thumbnail accumulates two points per
-trajectory per frame into a 3,000-point buffer, so the wings take roughly
-twenty-five seconds to arrive and a visitor who glances at the page sees one
-dot. Nothing is wrong with that scene. The other two have not reproduced
-anywhere since, in two other browsers. So the table describes the ten scenes
-correctly — but don't assume from it that all ten *thumbnails* are currently
-drawing for every visitor. The code brief carries the live state.
+**v4.1.1 (2026-09-02)** fixed two of the ten landing thumbnails, which could
+never draw at all. Harmonics and Outside only *scheduled* their first frame
+instead of drawing it, and the landing page can pause a tile before a queued
+callback runs — so those two had drawn nothing, on every visit, for as long as
+the code has been that way. Nobody could tell, because a thumbnail that has
+never drawn looks exactly like one still loading. Same release made that
+distinguishable from the page itself.
+
+**One caveat still stands on the scene table above.** Butterfly's thumbnail
+draws, but slowly: it adds two points per trajectory per frame into a
+3,000-point buffer, so the wings take roughly twenty-five seconds to arrive
+and a visitor who glances at the page sees one dot. Nothing is wrong with the
+scene — opening it draws the full attractor. Whether a 200px tile should reach
+its subject faster than the full piece does is a taste question waiting on
+Scott, and it can't be answered without also deciding whether the full scene's
+draw rate changes with it.
 
 ---
 
