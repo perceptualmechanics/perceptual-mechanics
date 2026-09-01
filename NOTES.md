@@ -587,6 +587,58 @@ described are unchanged.)
   worth trimming, orrery.js's texture generators and first-person rig are the
   two most self-contained chunks to split out first.
 
+## 3.15.0 (2026-09-01)
+
+**Orrery: moonbeam architectural rebuild — replaces v3.14.0-3.14.3, doesn't patch them.**
+
+Four rounds (3.14.0-3.14.3) each re-anchored an independently-authored
+translucent "beam" mesh's position or shape, and each failed live
+inspection: the antenna/skylight crown sat visibly unlit right next to a
+"beam" supposedly passing through it. Scott's diagnosis, delivered as a
+brief rather than another patch request: the mesh was never connected to
+any actual light source — scenery standing next to one, not the light
+itself — so no amount of re-anchoring its coordinates was ever going to
+fix it. The repeated-failure pattern was itself the signal that the
+architecture was wrong, not the coordinates.
+
+- **Removed the decorative beam mesh entirely** — `beamMat`/`beamGeo`/
+  `beam`/`beamCapMat`/`beamCap` and all their historical patch comments
+  are gone from `buildWarehouse`. There is no stand-in object for the
+  light anymore.
+- **The real `moonSpot` `THREE.SpotLight` now sits physically above the
+  antenna, aimed down through the skylight hole** — repositioned from a
+  guessed coordinate near the ceiling to a position derived from the
+  antenna's own actual built geometry (`riserTopY`, `dishR`, `dishH`,
+  newly exposed from `buildOrrery`'s return value), offset above it by a
+  margin scaled to the dish's own radius (`moonGap = dishR * 3.25`).
+  Because the light is now positioned where the antenna's crown actually
+  is, it illuminates the antenna lattice on the way in and the mechanism
+  below with real falloff — no separate step, no separate mesh to place.
+- **Dust motes now derive from the real light's own axis, cone angle, and
+  position** instead of an independently-authored beam shape with its own
+  coordinates. Motes are sampled along the light's actual axis with
+  cone-radius-at-depth (`coneR = distance * tan(moonAngle)`), biased
+  toward the central axis (`Math.pow(random, 1.8)`) so the shaft reads
+  coherent rather than uniformly filled at depth. `moonPos`/
+  `moonTargetPos`/`moonAngle` are computed once in `createOrrery` and
+  passed into `buildWarehouse` before the actual `SpotLight` is
+  constructed from those same values — light and dust trace back to one
+  computed source, not two independently-placed ones.
+- **Verified live per Scott's explicit requirement** — not by build
+  success or a bounding-box check, both of which had already passed on
+  the broken version multiple times across the four prior rounds. Used
+  `window`-exposed debug hooks (camera pose setters + a synchronous
+  `renderer.render()` bypass, since the tab's `requestAnimationFrame`
+  loop throttles when backgrounded — see
+  [[feedback_chrome_tab_raf_throttling]]) to reposition the first-person
+  camera precisely rather than relying on natural mouse-drag. Confirmed
+  the antenna dish reads clearly lit (warm gold/amber) from four distinct
+  angles: straight-on from the default spawn, a three-quarter view from
+  the left, a closer angle from the right, and a wide framing that shows
+  the dust shaft descending continuously from the same point in space as
+  the lit antenna, rather than as a separate floating effect. All debug
+  hooks removed before shipping.
+
 ## 3.14.3 (2026-09-01)
 
 **Orrery: moonbeam anchor point, one real bug from live review (post-3.14.2).**

@@ -854,8 +854,10 @@ function buildOrrery(preview, suspendTopY, rafterY) {
   // solid dish read as flat and unbraced up close (no visible structure to
   // it), and the "receiving" effect wasn't legible as its own deliberate
   // thing next to the skylight's own pre-existing, unrelated ambient light
-  // beam (see beamMat in buildWarehouse — that beam was already there,
-  // nothing to do with this telescope). Both are addressed by rebuilding
+  // (originally a decorative beam mesh in buildWarehouse, unrelated to this
+  // telescope; that mesh was later removed entirely — see the moonlight
+  // rebuild comment at the moonSpot call site — and the real light now
+  // actually illuminates this lattice directly). Both are addressed by rebuilding
   // the dish as an actual open lattice — a bronze web of radial spokes and
   // cross-bracing rings, apex down, rim up, same cone silhouette as
   // before — rather than a filled surface: the lattice itself IS the
@@ -1374,7 +1376,14 @@ function buildOrrery(preview, suspendTopY, rafterY) {
   // needs its own collider.
   const colliders = [{ x: 0, z: 0, r: 0.6 }];
 
-  return { group, hitTarget: hub, lampMat, orbits, unknowns, gravLens, belt, baseY, mastHeight, colliders, ringInfo };
+  // riserTopY/dishR/dishH exposed so createOrrery can position the real
+  // moonlight SpotLight relative to the antenna's actual built geometry
+  // (rebuild, 2026-09-01) instead of an independently-guessed coordinate —
+  // see the moonlight setup below buildWarehouse's call site.
+  return {
+    group, hitTarget: hub, lampMat, orbits, unknowns, gravLens, belt, baseY, mastHeight, colliders, ringInfo,
+    riserTopY, dishR, dishH,
+  };
 }
 
 // ─── The warehouse — floor, a ceiling with a skylight cut into it, roof
@@ -1756,7 +1765,15 @@ function makeWoodTexture(base, dark) {
   return tex;
 }
 
-function buildWarehouse(preview, floorY, ceilingY, rafterY) {
+// moonPos/moonTargetPos/moonAngle: the real moonlight SpotLight's own
+// position, aim point, and cone half-angle, computed by createOrrery
+// BEFORE this function runs (from the antenna's actual built geometry —
+// see buildOrrery's riserTopY/dishR/dishH) and passed in here so the dust
+// motes below can be derived directly from the same light, rather than
+// authored as an independent shape that has to be kept in sync by hand.
+// Architectural rebuild, 2026-09-01 — see the moonlight comment at the
+// call site for the full reasoning.
+function buildWarehouse(preview, floorY, ceilingY, rafterY, holeW, moonPos, moonTargetPos, moonAngle) {
   const group = new THREE.Group();
   const span = preview ? 14 : 20;
   // Full-mode wall distance leaves real walking corridor beyond the
@@ -1776,8 +1793,10 @@ function buildWarehouse(preview, floorY, ceilingY, rafterY) {
   // one side — real warehouses almost never have just one skylight panel,
   // and the second opening gives the second angled beam below somewhere
   // to actually originate from, rather than a shaft of light with no
-  // visible source.
-  const holeW = preview ? 0.7 : 0.9, holeH = preview ? 0.7 : 0.9;
+  // visible source. holeW is passed in now (was a local const here) so
+  // the caller can use the exact same value when positioning the real
+  // moonlight SpotLight, rather than two independently-maintained copies.
+  const holeH = holeW;
   const hole2W = holeW * 0.55, hole2H = holeH * 0.55;
   const hole2X = span * 0.22, hole2Z = -span * 0.16;
   const shape = new THREE.Shape();
@@ -1824,129 +1843,89 @@ function buildWarehouse(preview, floorY, ceilingY, rafterY) {
     addStrut(group, from, to, preview ? 0.02 : 0.026, trussMat);
   });
 
-  // ─── Skylight shaft ─────────────────────────────────────────────────────
-  // The room's ~30ft vertical scale (the mast poking out through the
-  // roof) reads through the few lit things reading as genuinely lit,
-  // rather than through added ambient light — the darkness/sparseness is
-  // the right instinct for a Myst-style room. Two levers: the beam's own
-  // opacity is high enough to actually see the shaft, and — the standard
-  // cheap Myst-era trick for selling scale in an empty vertical space —
-  // visible dust motes drift through it, added as a particle system just
-  // below. Tilted off vertical ("an angled shaft," not a straight-down
-  // column) so it reads as directional moonlight rather than a generic
-  // glow column.
-  // Bumped a step brighter/cooler (lighting correction pass, 2026-09-01)
-  // now that this is the room's one dramatic light source rather than
-  // one of several — it needs to read as sharp and directional against
-  // a genuinely flat fluorescent baseline everywhere else. Shape
-  // correction, same pass: the real skylight opening cut into the
-  // ceiling below is a square (holeW === holeH), not round, and a
-  // SpotLight's own illumination falloff is always circular by
-  // definition — it has no way to inherit the aperture's actual shape.
-  // The visible shaft is its own separate mesh precisely so it can match
-  // that square footprint: radialSegments=4 makes a 4-sided (square)
-  // cylinder rather than the smooth 16-gon it was; three.js's default
-  // 4-segment cylinder is diamond-oriented (corners on the axes), so
-  // rotation.y is offset 45° to axis-align its flat faces with the real
-  // hole's flat sides instead.
-  //
-  // Origin/anchor correction, later pass (post-v3.14.2): the shaft's
-  // near-plane radius had been holeW * 0.4 — a fraction of the real
-  // hole's own half-width (holeW), not derived from it — so it's sized
-  // to the true aperture now (radiusTop = holeW). That alone wasn't the
-  // full story, though: a Box3().setFromObject(beam) debug check proved
-  // the mesh's own world-space bounding box already reached/exceeded
-  // ceilingY even before this resize, which disproved the original
-  // "geometry doesn't reach the ceiling" theory. The visible gap read as
-  // a rendering/occlusion effect instead — the thin, nearly-transparent
-  // open tube is easy to lose against the opaque ceiling underside and
-  // fog at the exact spot it meets the real hole. Rather than chase the
-  // precise optical mechanism further, anchored the connection directly:
-  // beamCap below is a small bright patch pinned exactly at the real
-  // hole with depthTest/fog disabled, so it reads as flush with the
-  // skylight from any angle regardless of how the tapered shaft itself
-  // renders.
-  const beamMat = new THREE.MeshBasicMaterial({
-    color: 0xc3d9ff, transparent: true, opacity: 0.14, side: THREE.DoubleSide, depthWrite: false,
-  });
-  const beamGeo = new THREE.CylinderGeometry(holeW, holeW * 2.4, ceilingY - floorY, 4, 1, true);
-  const beam = new THREE.Mesh(beamGeo, beamMat);
-  beam.position.y = (ceilingY + floorY) / 2;
-  beam.rotation.y = Math.PI / 4;
-  beam.rotation.z = -0.1;
-  beam.rotation.x = 0.04;
-  group.add(beam);
-
-  // A small bright glow patch sitting exactly at the real hole (holeW,
-  // matching the ceiling cut precisely, not a fraction of it), just
-  // under the ceiling plane to avoid z-fighting — the shaft's own
-  // near-plane, anchored unambiguously to the true opening rather than
-  // relying on the tapered shaft mesh alone to read correctly from
-  // every angle.
-  const beamCapMat = new THREE.MeshBasicMaterial({
-    color: 0xe4eeff, transparent: true, opacity: 0.75, side: THREE.DoubleSide,
-    depthWrite: false, depthTest: false, fog: false,
-  });
-  const beamCap = new THREE.Mesh(new THREE.PlaneGeometry(holeW * 2.3, holeW * 2.3), beamCapMat);
-  beamCap.rotation.x = Math.PI / 2;
-  beamCap.position.set(0, ceilingY - 0.05, 0);
-  beamCap.renderOrder = 10;
-  group.add(beamCap);
-
-  // The second skylight hole above stays as real ceiling geometry (this
-  // is a two-skylight room), but only ever gets one dramatic visible
-  // beam — the moonlight — per Scott's explicit spec. It previously had
-  // its own second glowing shaft mesh; removed (lighting correction
-  // pass, 2026-09-01) rather than kept as a fainter twin, since "exactly
-  // one visible beam-shaft mesh, nothing else" is unambiguous. The hole
-  // itself is unlit, same as the rest of the fluorescent-baseline room.
+  // ─── Skylight shaft — architectural rebuild, 2026-09-01 ────────────────
+  // Four rounds (v3.14.0-v3.14.3) each patched an independently-authored
+  // translucent "beam" mesh's position/shape, and each failed live
+  // inspection — the antenna sat unlit right next to a "beam" supposedly
+  // passing through it, because the mesh was never actually connected to
+  // any light source: scenery standing next to one, not the light itself.
+  // Patching its coordinates again was never going to fully fix that. This
+  // pass removes the mesh entirely. There is no `beam`/`beamCap` object
+  // anymore — the real moonlight `SpotLight` (constructed in createOrrery,
+  // just after this function returns, positioned above the antenna and
+  // aimed down through this exact hole) does that work directly: it lights
+  // the antenna lattice on the way in for free, lights the orrery
+  // mechanism below with real falloff, and leaves nothing to independently
+  // desync from the hole's actual position, because there's only one
+  // object now, not a light in one place and a decorative stand-in nearby.
+  // The second skylight hole above stays as real ceiling geometry (this is
+  // a two-skylight room) but gets no beam of its own — one dramatic light,
+  // one shaft, per Scott's original spec; it stays unlit, same as the rest
+  // of the fluorescent-baseline room.
 
   // ─── Dust motes ─────────────────────────────────────────────────────────
-  // A small particle system drifting slowly upward through the one
-  // visible beam — visible dust in a light shaft is the cheapest, most
-  // legible way to sell "there is a huge volume of air in this room"
-  // that exists, not a geometry problem the way the orrery structure's
-  // own scale is. Returned (not animated here) so createOrrery's shared
-  // animate() loop can update positions each frame, same pattern
-  // buildOrrery uses for orbits/moons.
-  const motePositions = [
-    { x: 0, z: 0, r0: holeW * 0.4, r1: holeW * 2.4, tiltZ: -0.1, tiltX: 0.04, count: preview ? 90 : 210 },
-  ];
-  const moteCount = motePositions.reduce((s, m) => s + m.count, 0);
+  // A real light source alone won't automatically render a visible shaft
+  // through dusty air (true of most real-time renderers generally, not a
+  // limitation being introduced here) — visible dust is still the cheapest,
+  // most legible way to sell "there is a huge volume of air in this room."
+  // What changed: the motes' spawn volume is now computed directly from
+  // moonPos/moonTargetPos/moonAngle — the SAME numbers used to build the
+  // actual SpotLight at the call site — rather than an independent set of
+  // authored coordinates (the old motePositions array) that had to be kept
+  // in sync with the light by hand. If the light moves, this moves with
+  // it, because it's derived, not placed. Sampled along the light's own
+  // axis from just above the ceiling (the antenna's own rim height, so the
+  // dust visibly connects to the lit lattice above the hole) down to the
+  // floor, with each mote's radius-from-axis bounded by the light's actual
+  // cone at that depth — biased toward the axis (rr uses a squared random,
+  // not a uniform one) so the visible dust reads as a coherent shaft
+  // rather than a uniformly-filled wide cone at the greater distances
+  // near the floor, where the true cone radius has grown quite wide.
+  const axis = new THREE.Vector3().subVectors(moonTargetPos, moonPos).normalize();
+  const arbitrary = Math.abs(axis.y) > 0.9 ? new THREE.Vector3(1, 0, 0) : new THREE.Vector3(0, 1, 0);
+  const perpA = new THREE.Vector3().crossVectors(axis, arbitrary).normalize();
+  const perpB = new THREE.Vector3().crossVectors(axis, perpA).normalize();
+  const tAt = y => (y - moonPos.y) / axis.y; // distance along the axis where the ray's height equals y
+  const moteCount = preview ? 90 : 210;
   const motePos = new Float32Array(moteCount * 3);
   const moteBase = new Float32Array(moteCount * 3);
   const moteDrift = [];
-  let mi = 0;
-  motePositions.forEach(beamSpec => {
-    for (let k = 0; k < beamSpec.count; k++) {
-      const frac = Math.random(); // 0 = floor, 1 = ceiling, along this beam's own axis
-      const y = floorY + frac * (ceilingY - floorY);
-      const r = beamSpec.r0 + (beamSpec.r1 - beamSpec.r0) * (1 - frac); // wider low, narrower high, matching the cone
-      const ang = Math.random() * Math.PI * 2;
-      // The beam mesh itself is tilted (rotation.x/z above); approximate
-      // that same tilt here so the motes actually sit inside the visible
-      // cone rather than a plain vertical column next to it.
-      let x = beamSpec.x + r * Math.cos(ang) * (0.55 + Math.random() * 0.45);
-      let z = beamSpec.z + r * Math.sin(ang) * (0.55 + Math.random() * 0.45);
-      x += Math.sin(beamSpec.tiltZ) * (y - (floorY + ceilingY) / 2);
-      z += Math.sin(beamSpec.tiltX) * (y - (floorY + ceilingY) / 2);
-
-      moteBase[mi * 3] = x; moteBase[mi * 3 + 1] = y; moteBase[mi * 3 + 2] = z;
-      motePos[mi * 3] = x; motePos[mi * 3 + 1] = y; motePos[mi * 3 + 2] = z;
-      moteDrift.push({
-        // Slow upward drift (dust rising on thermals) plus a little
-        // independent side-to-side wander — each mote loops back to its
-        // own start height once it drifts past the ceiling, via modulo in
-        // the animate loop rather than a hard reset that would pop.
-        riseSpeed: 0.02 + Math.random() * 0.035,
-        wobbleAmp: 0.02 + Math.random() * 0.03,
-        wobbleSpeed: 0.2 + Math.random() * 0.3,
-        phase: Math.random() * Math.PI * 2,
-        span: ceilingY - floorY,
-      });
-      mi++;
-    }
-  });
+  // Top bound of the dust's own vertical wrap range — deliberately above
+  // ceilingY (a fraction of the remaining gap up to the light itself, which
+  // lands roughly at the antenna's rim height) rather than stopping exactly
+  // at the ceiling, so the dust reads continuous with the antenna's own lit
+  // lattice, not a separate column that happens to start just below it.
+  // Passed through the shared per-mote `span` field the animate loop
+  // already reads (see the dust-animation comment near that loop) — each
+  // mote wraps within floorY..moteWrapTopY, not the ceiling-only range the
+  // old floorY..ceilingY span used.
+  const moteWrapTopY = ceilingY + (moonPos.y - ceilingY) * 0.4;
+  const nearT = tAt(moteWrapTopY);
+  const farT = tAt(floorY);
+  const moteSpan = moteWrapTopY - floorY;
+  for (let k = 0; k < moteCount; k++) {
+    const tt = nearT + Math.random() * (farT - nearT);
+    const center = new THREE.Vector3().copy(moonPos).addScaledVector(axis, tt);
+    const coneR = Math.max(0.02, tt * Math.tan(moonAngle));
+    const ang = Math.random() * Math.PI * 2;
+    const rr = coneR * Math.pow(Math.random(), 1.8); // biased toward the axis — see comment above
+    const p = center
+      .addScaledVector(perpA, Math.cos(ang) * rr)
+      .addScaledVector(perpB, Math.sin(ang) * rr);
+    moteBase[k * 3] = p.x; moteBase[k * 3 + 1] = p.y; moteBase[k * 3 + 2] = p.z;
+    motePos[k * 3] = p.x; motePos[k * 3 + 1] = p.y; motePos[k * 3 + 2] = p.z;
+    moteDrift.push({
+      // Slow upward drift (dust rising on thermals) plus a little
+      // independent side-to-side wander — each mote loops back to its
+      // own start height once it drifts past moteWrapTopY, via modulo in
+      // the animate loop rather than a hard reset that would pop.
+      riseSpeed: 0.02 + Math.random() * 0.035,
+      wobbleAmp: 0.02 + Math.random() * 0.03,
+      wobbleSpeed: 0.2 + Math.random() * 0.3,
+      phase: Math.random() * Math.PI * 2,
+      span: moteSpan,
+    });
+  }
   const moteGeo = new THREE.BufferGeometry();
   moteGeo.setAttribute('position', new THREE.BufferAttribute(motePos, 3));
   const moteTex = makeDustMoteTexture();
@@ -2587,31 +2566,64 @@ export function createOrrery(container, { preview = false } = {}) {
   const orrery = buildOrrery(preview, suspendTopY, rafterY);
 
   const floorY = orrery.baseY - (preview ? 0.9 : 1.3);
-  const warehouse = buildWarehouse(preview, floorY, ceilingY, rafterY);
 
-  // ─── Moonlight — the one dramatic exception to the flat fluorescent
-  // baseline below. A real SpotLight (not a DirectionalLight washing the
-  // whole scene) confined to roughly the same cone as the visible skylight
-  // beam mesh in buildWarehouse, so "inside the shaft" and "actually lit"
-  // are the same region rather than two coincidentally-overlapping
-  // effects. Cool silvery-blue rather than the skylight's true daylight
-  // color — moonlight reads cooler than its actual temperature because
-  // human night vision shifts toward blue at low light (the Purkinje
-  // effect), so leaning blue here is accurate, not just a style choice.
-  // Aimed through the primary skylight hole (centered at x=0,z=0, same as
-  // the beam mesh) at the ring assembly partway up the mast, so the
-  // orrery's restored brass/copper actually sits inside the one light
-  // strong and directional enough to raise real specular highlights —
-  // everywhere the fluorescent fixtures below reach alone should stay
-  // comparatively flat. ───────────────────────────────────────────────
+  // ─── Moonlight — architectural rebuild, 2026-09-01. ─────────────────────
+  // Four rounds (v3.14.0-v3.14.3) each patched an independently-positioned
+  // decorative "beam" mesh's coordinates, and each failed live inspection —
+  // the antenna sat unlit right next to a "beam" that was never actually
+  // connected to any light, just scenery placed near one. That pattern
+  // itself was the signal that the architecture, not the coordinates, was
+  // wrong. This pass removes the decorative mesh entirely and moves the
+  // real SpotLight (already doing the illumination/specular work) to sit
+  // physically above the antenna, aimed down through the skylight hole:
+  //   - Lights the antenna/skylight crown for free — it now sits exactly
+  //     where real light would rake across it on the way in, not as a
+  //     separate step or a separate mesh to position.
+  //   - Lights the orrery mechanism below with real falloff, not an
+  //     approximated cone shape trying to fake what a real light does.
+  //   - Removes the recurring anchor-point bug structurally: there's only
+  //     one object now (the real light), not a light in one place and an
+  //     independently-positioned fake beam representing it nearby.
+  // Position derived from the antenna's own built geometry (orrery.riserTopY/
+  // dishR/dishH — see buildOrrery's return) rather than a guessed
+  // coordinate: the light sits above the dish rim by a margin scaled to the
+  // dish's own radius (moonGap), so it comfortably rakes across the lattice
+  // at close range regardless of preview/full scale, then continues down
+  // through the hole to the ring assembly partway up the mast — the same
+  // target as before, so the orrery's restored brass/copper still sits
+  // inside the one light strong and directional enough to raise real
+  // specular highlights. Cool silvery-blue rather than true daylight color —
+  // moonlight reads cooler than its actual temperature because human night
+  // vision shifts toward blue at low light (the Purkinje effect).
+  //
+  // Computed here, before buildWarehouse, because buildWarehouse's own dust
+  // motes are now derived from this exact position/target/angle too (see
+  // its own comment) — one set of numbers, not two independently-authored
+  // ones that have to be kept in sync by hand.
+  const holeW = preview ? 0.7 : 0.9; // the ceiling's actual skylight-hole half-width, square
+  const moonGap = orrery.dishR * 3.25; // clearance above the dish rim — see reasoning above
+  const moonPos = new THREE.Vector3(
+    holeW * 0.28, orrery.riserTopY + orrery.dishH / 2 + moonGap, holeW * 0.11
+  );
+  const moonTargetPos = new THREE.Vector3(0, orrery.baseY + orrery.mastHeight * 0.32, 0);
+  const moonAngle = 0.35, moonPenumbra = 0.45, moonDecay = 1.0;
+  // Distance/intensity both scale with the light's now-longer throw (it
+  // sits well above the antenna rather than just above the ceiling) —
+  // verify live, not by this arithmetic alone, per Scott's explicit ask.
+  const moonThrow = moonPos.y - floorY;
+  const moonSpotIntensity = preview ? 4.2 : 6.0;
+  const moonSpotDistance = moonThrow * 1.6;
+
+  const warehouse = buildWarehouse(preview, floorY, ceilingY, rafterY, holeW, moonPos, moonTargetPos, moonAngle);
+
   const moonTarget = new THREE.Object3D();
-  moonTarget.position.set(0, orrery.baseY + orrery.mastHeight * 0.32, 0);
+  moonTarget.position.copy(moonTargetPos);
   scene.add(moonTarget);
   const moonSpot = new THREE.SpotLight(
-    0xbfd6ff, preview ? 2.2 : 3.1, preview ? 11 : 16,
-    0.3, 0.5, 1.3
+    0xbfd6ff, moonSpotIntensity, moonSpotDistance,
+    moonAngle, moonPenumbra, moonDecay
   );
-  moonSpot.position.set(0.25, ceilingY + 0.3, 0.1);
+  moonSpot.position.copy(moonPos);
   moonSpot.target = moonTarget;
   scene.add(moonSpot);
 
