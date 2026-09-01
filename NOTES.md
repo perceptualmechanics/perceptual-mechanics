@@ -587,6 +587,23 @@ described are unchanged.)
   worth trimming, orrery.js's texture generators and first-person rig are the
   two most self-contained chunks to split out first.
 
+## 3.13.7 (2026-09-01)
+
+**Landing tiles: Orbiter/Harmonics/Orrery reshuffled.** Two more explicit
+swaps from Scott after 3.13.6's Butterfly/Scroll swap: "swap orbiter with
+harmonics and then harmonics with orrery," applied in that literal
+sequence (orbiter↔harmonics, then the resulting harmonics↔orrery).
+Row 1 is now `sphere, scroll, butterfly, theater, orrery`; row 2 is now
+`harmonics, library, beamline, orbiter, outside` — Outside stays the
+closer, unchanged. Kept nav-bar icons and preview tiles in sync as
+always. The `.preview-row-break` comment (which named "orbiter" as the
+5th tile, since that was true when it was written 2026-08-24) got a
+small correction alongside the reorder — it's now orrery in that slot,
+second scene order change to that position this session alone, so the
+comment now says "whichever tile is 5th" instead of naming one by name.
+Build clean, `verify-links`/`verify-resonances` unaffected, live-verified
+both nav and tile order via the running dev server.
+
 ## 3.13.6 (2026-09-01)
 
 **Landing tiles: swapped Butterfly and Scroll.** Third of Scott's three

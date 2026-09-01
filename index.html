@@ -116,16 +116,6 @@
       </svg>
     </button>
 
-    <!-- Orbiter -->
-    <button type="button" class="nav-icon" data-scene="orbiter" aria-label="Orbiter" title="Orbiter — A p-Orbital, Satellites" onmouseover="pmGlimpse('orbiter')" onfocus="pmGlimpse('orbiter')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="12" cy="12" r="6"/>
-        <path d="M12 3 C18 6 18 18 12 21"/>
-        <path d="M12 3 C6 6 6 18 12 21"/>
-        <circle cx="20" cy="9" r="1" fill="currentColor" stroke="none"/>
-      </svg>
-    </button>
-
     <!-- Orrery: sun and concentric orbit rings, hung from a mast — was
          three shells rotated around a shared center, which reads as an
          atom (electron orbits), not an orrery (planets in one plane).
@@ -140,6 +130,28 @@
         <circle cx="19.9" cy="14.7" r="0.85" fill="currentColor" stroke="none"/>
         <circle cx="6.1" cy="11.9" r="0.65" fill="currentColor" stroke="none"/>
         <circle cx="14.9" cy="11.1" r="0.5" fill="currentColor" stroke="none"/>
+      </svg>
+    </button>
+
+    <!-- Harmonics (src/scenes/harmonics/ — internal name kept, see
+         that file's own header for why) — 2026-08-16 launched with no
+         nav icon or preview tile, reachable only via two in-scene entry
+         points (ground glimpse, thread-follow filament). Restored here
+         2026-08-18 alongside retiring both of those entry points: normal
+         nav/preview now covers discovery, so the earlier "reachable only
+         by chance" design no longer serves a purpose distinct from what
+         every other scene already gets. Nodes pulsing in shared rhythm,
+         drawn as small pulse rings — a deliberately different motif from
+         Orrery's concentric ellipses (those share one center around a
+         mast; these are separate sources, each pulsing on its own). -->
+    <button type="button" class="nav-icon" data-scene="harmonics" aria-label="Harmonics" title="Harmonics" onmouseover="pmGlimpse('harmonics')" onfocus="pmGlimpse('harmonics')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="7" cy="8" r="1" fill="currentColor" stroke="none"/>
+        <circle cx="17" cy="7.5" r="1" fill="currentColor" stroke="none"/>
+        <circle cx="11.5" cy="17" r="1" fill="currentColor" stroke="none"/>
+        <circle cx="7" cy="8" r="3.6"/>
+        <circle cx="17" cy="7.5" r="3.6"/>
+        <circle cx="11.5" cy="17" r="3.6"/>
       </svg>
     </button>
 
@@ -177,25 +189,13 @@
       </svg>
     </button>
 
-    <!-- Harmonics (src/scenes/harmonics/ — internal name kept, see
-         that file's own header for why) — 2026-08-16 launched with no
-         nav icon or preview tile, reachable only via two in-scene entry
-         points (ground glimpse, thread-follow filament). Restored here
-         2026-08-18 alongside retiring both of those entry points: normal
-         nav/preview now covers discovery, so the earlier "reachable only
-         by chance" design no longer serves a purpose distinct from what
-         every other scene already gets. Nodes pulsing in shared rhythm,
-         drawn as small pulse rings — a deliberately different motif from
-         Orrery's concentric ellipses (those share one center around a
-         mast; these are separate sources, each pulsing on its own). -->
-    <button type="button" class="nav-icon" data-scene="harmonics" aria-label="Harmonics" title="Harmonics" onmouseover="pmGlimpse('harmonics')" onfocus="pmGlimpse('harmonics')">
+    <!-- Orbiter -->
+    <button type="button" class="nav-icon" data-scene="orbiter" aria-label="Orbiter" title="Orbiter — A p-Orbital, Satellites" onmouseover="pmGlimpse('orbiter')" onfocus="pmGlimpse('orbiter')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="7" cy="8" r="1" fill="currentColor" stroke="none"/>
-        <circle cx="17" cy="7.5" r="1" fill="currentColor" stroke="none"/>
-        <circle cx="11.5" cy="17" r="1" fill="currentColor" stroke="none"/>
-        <circle cx="7" cy="8" r="3.6"/>
-        <circle cx="17" cy="7.5" r="3.6"/>
-        <circle cx="11.5" cy="17" r="3.6"/>
+        <circle cx="12" cy="12" r="6"/>
+        <path d="M12 3 C18 6 18 18 12 21"/>
+        <path d="M12 3 C6 6 6 18 12 21"/>
+        <circle cx="20" cy="9" r="1" fill="currentColor" stroke="none"/>
       </svg>
     </button>
 
@@ -303,11 +303,11 @@
         </button>
       </li>
 
-      <li class="preview-wrapper" data-scene="orbiter">
-        <button type="button" class="preview-container" id="preview-orbiter"
-             title="Orbiter — A p-Orbital, Satellites"
-             aria-label="Orbiter — a hydrogen atom's p-orbital rendered as a fuzzy probability cloud, with satellites in orbit around it. Press Enter to expand."
-             onmouseover="pmGlimpse('orbiter')" onfocus="pmGlimpse('orbiter')">
+      <li class="preview-wrapper" data-scene="orrery">
+        <button type="button" class="preview-container" id="preview-orrery"
+             title="The Orrery of Los Feliz"
+             aria-label="The Orrery of Los Feliz — a found story, told through a 30-foot orrery. Press Enter to expand."
+             onmouseover="pmGlimpse('orrery')" onfocus="pmGlimpse('orrery')">
         </button>
       </li>
 
@@ -315,14 +315,24 @@
            Outside is the tenth tile) rather than leaving flex-wrap to
            break wherever the viewport width happens to run out — see
            styles/main.css's .preview-row-break comment. Moved from after
-           the 4th tile (theater) to after the 5th (orbiter) 2026-08-24. -->
+           the 4th tile (theater) to after the 5th 2026-08-24; the scene
+           occupying that 5th slot has changed twice since (orbiter, then
+           orrery as of 2026-09-01) but the break itself just needs to
+           stay after whichever tile is 5th, not tied to a specific scene. -->
       <li class="preview-row-break" aria-hidden="true"></li>
 
-      <li class="preview-wrapper" data-scene="orrery">
-        <button type="button" class="preview-container" id="preview-orrery"
-             title="The Orrery of Los Feliz"
-             aria-label="The Orrery of Los Feliz — a found story, told through a 30-foot orrery. Press Enter to expand."
-             onmouseover="pmGlimpse('orrery')" onfocus="pmGlimpse('orrery')">
+      <!-- Harmonics: a genuinely live preview, same as every other tile
+           here (each one is a real, continuously-running mini scene
+           instance, never a static image) — the resonance graph's
+           Kuramoto phase sync runs unconditionally regardless of
+           `preview`, so this tile shows real, currently-converging
+           pulsing the whole time it's on screen, not a frame chosen to
+           stand in for motion it can't show. -->
+      <li class="preview-wrapper" data-scene="harmonics">
+        <button type="button" class="preview-container" id="preview-harmonics"
+             title="Harmonics"
+             aria-label="Harmonics — resonant pieces across every other scene, laid out by how strongly they connect and pulsing in sync with whatever they resonate with. Press Enter to expand."
+             onmouseover="pmGlimpse('harmonics')" onfocus="pmGlimpse('harmonics')">
         </button>
       </li>
 
@@ -342,18 +352,11 @@
         </button>
       </li>
 
-      <!-- Harmonics: a genuinely live preview, same as every other tile
-           here (each one is a real, continuously-running mini scene
-           instance, never a static image) — the resonance graph's
-           Kuramoto phase sync runs unconditionally regardless of
-           `preview`, so this tile shows real, currently-converging
-           pulsing the whole time it's on screen, not a frame chosen to
-           stand in for motion it can't show. -->
-      <li class="preview-wrapper" data-scene="harmonics">
-        <button type="button" class="preview-container" id="preview-harmonics"
-             title="Harmonics"
-             aria-label="Harmonics — resonant pieces across every other scene, laid out by how strongly they connect and pulsing in sync with whatever they resonate with. Press Enter to expand."
-             onmouseover="pmGlimpse('harmonics')" onfocus="pmGlimpse('harmonics')">
+      <li class="preview-wrapper" data-scene="orbiter">
+        <button type="button" class="preview-container" id="preview-orbiter"
+             title="Orbiter — A p-Orbital, Satellites"
+             aria-label="Orbiter — a hydrogen atom's p-orbital rendered as a fuzzy probability cloud, with satellites in orbit around it. Press Enter to expand."
+             onmouseover="pmGlimpse('orbiter')" onfocus="pmGlimpse('orbiter')">
         </button>
       </li>
 
