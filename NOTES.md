@@ -587,6 +587,85 @@ described are unchanged.)
   worth trimming, orrery.js's texture generators and first-person rig are the
   two most self-contained chunks to split out first.
 
+## 4.1.1 (2026-09-02)
+
+Two landing tiles that could never draw, and the reason nobody could tell.
+
+**The observable came first, and it is what found the bug.**
+`mountClippedPreviewCanvas` sizes its 2D display canvas inside `blit()`,
+from the WebGL canvas, because the renderer's backing size isn't final until
+the first frame. The cost of that is an ambiguity: a canvas at the HTML
+default 300×150 means no frame has ever completed, but a canvas that drew
+once is indistinguishable from one drawing every frame — and on the live site
+nothing holds a reference to these instances, so there was no way to ask.
+That is why the 2026-09-01 report of blank tiles could be neither confirmed
+nor dismissed from the page.
+
+`data-blits` on the DOM node closes it. `0` never drew, `1` drew once and
+stopped, a number that climbs between two reads is fine:
+
+    document.querySelector('#preview-harmonics canvas').dataset.blits
+
+Written only when the count crosses a power of two — `(n & (n-1)) === 0` is
+one instruction and 1/2/4/…/1024 is ample for those three cases. The first
+attempt updated every 60th frame and was wrong in a way worth recording: on a
+machine running the loop at 2 fps it sits on "1" for half a minute, which
+reads exactly like the failure it exists to rule out. Caught by testing on a
+2 fps machine rather than by reasoning about it.
+
+**Considered and not shipped:** a dev-mode `console.warn` when a tile has
+blitted nothing after three seconds. Better ergonomics, and it is what would
+have answered the original question in one line. It is not here because a
+timer firing into a page still constructing ten scenes could not be made to
+*prove* it fires under a forced zero-frame failure — and a diagnostic that
+stays silent is indistinguishable from a diagnostic with nothing to report,
+which is the same class of ambiguity this whole change exists to remove.
+Shipping an unverified alarm would have been the false pass.
+
+**Then the cause, which the counter made visible.** Orrery, Beamline and
+Sphere start their loop with a direct `animate()`. Harmonics and Outside
+scheduled it instead — `animId = requestAnimationFrame(animate)` — and
+`main.js` calls `syncPreviewPlayback()` the instant `initPreviews()`
+resolves, which can `setPaused(true)` and cancel a queued first callback
+before it ever runs. A scene that only *scheduled* its first frame has then
+drawn nothing at all. Harmonics and Outside are the only two clipped previews
+without a synchronous first frame, and they are precisely the two tiles
+reported blank, on the dev server and on production alike.
+
+Both now call `animate()` directly, which draws frame 0 and schedules the
+next one, matching what the other three always did.
+
+**Measured, because "ten visible tiles" is the false pass here.** Against the
+built site in Chromium at 1440×900, DPR 2. Forcing the failure by stubbing
+`requestAnimationFrame` to a no-op before load: *before*, harmonics and
+outside sat at 300×150 with `blits=0` while orrery and beamline held 480×480
+with `blits=1`; *after*, all four hold 480×480 `blits=1`. Normal cold load
+unchanged — all four counters climb 1, 4, 8, 16, and the other six tiles are
+untouched (they don't use the helper). Build gates all pass.
+
+**Still open, deliberately.** Butterfly's preview is frame-coupled — `PPF = 2`
+integration steps per trajectory per frame, so ~25 seconds to a legible
+attractor at 60 fps and fifty at 30 — and the fix wasn't taken here because
+the obvious scoping assumption turned out false: `PPF` is not preview-only.
+The same constant drives full mode at 4, so making it wall-clock changes how
+the expanded scene draws on any non-60Hz display. That is a change to the
+art, and it is Scott's call, not a refactor. Recorded in the project brief.
+
+**A sweep, with its ruler stated**, since the 4.0 frame-coupling pass missed
+these and nobody could see what it had covered. Ruler: every self-scheduling
+`requestAnimationFrame` loop in `src/` (eight of them — all ten scenes minus
+Scroll and Theater, which have no `rAF` loop at all and are correct), scanned
+for two shapes — `+=` against a bare numeric literal with no `dt` on the
+line, and `for` loops with a constant bound. Then each hit classified by hand
+into *traversal of a fixed population* (fine) versus *count that decides how
+far state advances* (coupled). Survivors found: Butterfly's `PPF` and `t +=
+0.008`; Sphere's `lightAngle += 0.003`, `rotation.y += 0.0015` and
+`rotation.x += 0.0003`, in a file with no frame clock at all and no comment
+defending it; and Harmonics' `GALAXY_TWINKLE_KICKS` — twinkle candidates
+offered *per frame*, whose decay is `dt`-scaled but whose spawn rate is not,
+so the galaxy sparkles twice as densely at 120Hz. Everything else was
+traversal. All recorded, none fixed here.
+
 ## 4.1.0 (2026-09-02)
 
 Vite 6.4.3 → 8.2.2. Held out of 4.0 on the grounds that the build gates hang
