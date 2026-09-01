@@ -1,6 +1,14 @@
 # perceptualmechanics — project brief
 
-*Prepared 2026-08-31, current as of v3.9.17. Written as a handoff/context document for a fresh chat — everything here should be enough to pick up work on this project without re-deriving it.*
+*Prepared 2026-08-31, refreshed 2026-09-02, current as of **v4.0**. Written as a handoff/context document for a fresh chat — everything here should be enough to pick up work on this project without re-deriving it.*
+
+> **A note on keeping this file honest.** The 2026-09-01 audit found this
+> brief fourteen minor versions stale: it still said "current as of
+> v3.9.17", and three of its six standing open items had been resolved
+> and were still listed as open, while a fourth had flipped the other way
+> without anyone noticing. A handoff document that is wrong is worse than
+> no handoff document, because it is read as current. Refresh this file
+> in the same pass as any release that changes the answers in it.
 
 ## What this is
 
@@ -61,14 +69,61 @@ This is the durable house-rules file (created v3.9.16) — **read it first** bef
 - **3.9.16:** Much larger modernization pass — full CSS + JS sweep, mobile-first conversion for 10 of 12 stylesheets (2 flagged for dedicated follow-up), native CSS nesting for all converted media queries, a real dead-cascade-order bug found and fixed in `sphere.css`, and the creation of `STANDARDS.md` itself.
 - **3.9.17 (current, 2026-08-30):** Closed out the mobile-first audit — converted the final two flagged files. `main.css`'s nav-icon/landing responsive system (which has a real, four-times-recurred regression history: icon count changes have repeatedly reintroduced silent edge-clipping at specific pixel thresholds) was converted and live-verified at the exact widths that broke before. `theater.css`'s one genuinely compound media query (`@media (max-width:480px), (max-width:700px) and (orientation:portrait)`) was inverted using actual De Morgan's-law algebra rather than a naive per-clause flip, verified with an orientation-aware cascade simulator plus live-browser spot checks. One honest gap recorded rather than papered over: the narrowest region (width ≤480px AND portrait) couldn't be reached live in this session due to a sandbox browser-pane width floor — it rests on the simulator/hand-derivation only, flagged as such in both `STANDARDS.md` and `NOTES.md`.
 
-## Known open items (from the standing best-practices review, first pass 2026-08-25 — check whether these are still current before acting)
+## Known open items (as of v4.0, 2026-09-02)
 
-- No security headers in place (HSTS, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`, frame-ancestors) — `.htaccess` currently handles canonical-host redirects only.
-- No CSP — complicated by inline `onmouseover`/`onclick` attributes used site-wide for the `pmGlimpse` easter egg and scene-opening; a naive lockdown would break them without a refactor.
-- Google Fonts loaded at request time rather than self-hosted (LCP cost + sends visitor IPs to Google).
-- Vite is 2 majors behind latest (6.4.3 vs. 8.2.2) — `npm audit` clean as of last check, but nothing in CI gates future dependency regressions the way the content-integrity scripts do.
-- The Rollup "chunks larger than 500kB" warning has fired on every build without being resolved or explicitly accepted — root cause is that every scene's full-mode code loads eagerly on first paint, not lazily on expand. Genuinely undecided: accept current size + raise the warning threshold, or pursue lazy-loading (bigger change, real Core Web Vitals payoff). Scott's call, not yet made.
-- `butterfly` auto-rotate/camera-sweep for a vertical (9:16) YouTube Shorts export — listed as a "next up" item, not started.
+The 2026-09-01 audit produced 71 findings and 4.0 closed all but the
+following. Full evidence for each is in `punch-list-2026-09-01.md`; the
+4.0 entry in `NOTES.md` records what was fixed and what was measured.
+
+**Resolved in 4.0, listed here so they aren't re-derived as open:**
+security headers (all six now set, with reasoning in `.htaccess`); the
+Google Fonts item, which was *already* stale before the audit — the fonts
+have been self-hosted for a while and only a comment still mentioned
+`fonts.gstatic`; the Rollup chunk-size warning, fixed back in 3.10.0; the
+CSP, which now exists, enforces, and is down to `script-src 'self'` with
+no hashes at all.
+
+**Genuinely open:**
+
+- **Vite is two majors behind** (6.4.3 vs 8.2.2 — 6.x is now outside even
+  the "previous" dist-tag). Deliberately held out of 4.0: the real
+  blockers are Rollup 4→5 output-hook changes affecting the
+  `buildStart`/`closeBundle` plugins every build gate here depends on, so
+  it wants its own pass rather than being mixed into a release that
+  touched every scene file. three.js is at 0.185.1, exactly current.
+- **The CSP report endpoint is a placeholder.** `report-to` and
+  `Reporting-Endpoints` are wired to a marked URL on this origin that
+  404s. It needs a real collector before it does anything — and it is
+  worth doing, because the two live CSP bugs 4.0 fixed are exactly what a
+  reporting endpoint catches.
+- **HSTS is at `max-age=300`,** deliberately, so it can be ramped to
+  31536000 after confirming nothing breaks. No `preload` (irreversible),
+  and `includeSubDomains` omitted on purpose for shared hosting.
+- **Library's shelf is still 535 draw calls** (down from 1,603). Merging
+  the 265 spines further breaks per-mesh raycast, the hover scale bump
+  and per-spine emissive glow simultaneously; it needs a hover mechanism
+  designed first, not a bigger merge.
+- **Library builds 265 spine canvases in one synchronous task** at scene
+  open — now ~4× cheaper in raster work, but still one long main-thread
+  block. Chunking it across frames would make spines pop in; that's a
+  taste decision, not a technical one.
+- **Sphere's per-label rotation math has never had any effect** —
+  `CSS2DRenderer.render()` overwrites the inline transform later in the
+  same frame. Either make it work (write after the CSS2D render) or
+  delete ~25 lines from the hot loop. Visual design decision.
+- **`butterfly` auto-rotate / camera-sweep for a vertical (9:16) YouTube
+  Shorts export** — still a "next up" item, still not started.
+- **`beamline.text.js:68`** contains the word "harmonics" in prose.
+  Examined during the 4.0 content fix and left alone — unlike the Sphere
+  case it reads as original ("harmonics echoing at mathematically precise
+  points", under a comment pairing it with "here are harps, here are
+  superstrings"). Needs Scott's eye to settle, not a rename script's.
+- **One Orrery navigation quirk** introduced by the collider fix and kept
+  deliberately: two adjacent rings' low arcs leave a 0.46-unit gap, and a
+  0.6-unit-wide visitor pressed into it can't strafe out sideways.
+  Backing up frees you immediately. Being unable to squeeze between two
+  rings is correct; papering over it with a smaller collider radius would
+  restore the walk-through it replaced.
 
 ## Where things live
 

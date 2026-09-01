@@ -1,7 +1,12 @@
 import * as THREE from 'three';
 import { poems } from './orbiter.text.js';
 import { getOutboundLinks, getInboundLinks } from '../../links.js';
-import { bindOrbitDrag, bindGuardedResize, prefersReducedMotion, createPanelCloser, createJumpList, escapeHtml, parseHTML, wireCrossLinks, formatInboundNote, setPanelSide, clickedLeftHalf } from '../../utils/sceneKit.js';
+import {
+  bindOrbitDrag, bindGuardedResize, bindTapVsDrag, prefersReducedMotion,
+  onReducedMotionChange, createPanelCloser, createJumpList, escapeHtml,
+  parseHTML, wireCrossLinks, formatInboundNote, setPanelSide, clickedLeftHalf,
+  claimContainer, createFrameClock, trackTimers, manageRenderer, disposeSceneGraph,
+} from '../../utils/sceneKit.js';
 import './orbiter.css';
 import orbiterHtml from './orbiter.html?raw';
 
@@ -40,6 +45,18 @@ import orbiterHtml from './orbiter.html?raw';
 // time, not an image asset.
 
 const NUCLEUS_RADIUS = 0.16;
+
+// ─── One uniform pair -> two independent standard normals (Box-Muller) ─────
+// Used by buildSatellites below to draw a genuinely uniform random direction
+// on the sphere. See the comment at its call site for why a per-axis uniform
+// draw isn't one, and why this file carried that bug documented-but-unfixed
+// until v4.0.
+function gaussianPair() {
+  const u = 1 - Math.random(); // (0,1] rather than [0,1) — Math.log(0) is -Infinity
+  const v = Math.random();
+  const r = Math.sqrt(-2 * Math.log(u));
+  return [r * Math.cos(2 * Math.PI * v), r * Math.sin(2 * Math.PI * v)];
+}
 
 // ─── Nucleus ────────────────────────────────────────────────────────────────
 // A hydrogen atom's nucleus is a single proton, not a textured planet: one
@@ -573,25 +590,46 @@ function buildSatellites(preview) {
     // clustering near a shared tilt: the pivot's orientation is built from
     // a random point on the unit sphere, used as the orbit's own normal.
     //
-    // Known subtlety: drawing x/y/z each uniformly from [-1,1] and
-    // normalizing the result is NOT actually a uniform random direction on
-    // the sphere — it's biased toward the cube's corner directions (like
-    // (1,1,1)) over its face-center directions (like (1,0,0)), because a
-    // cube has proportionally more volume tucked into its corner regions
-    // than a sphere does, and normalizing just projects that lopsided
-    // volume straight onto the sphere's surface (confirmed numerically:
-    // bucketing 500k samples by their largest axis component shows visible
+    // This used to draw x/y/z each uniformly from [-1,1] and normalize the
+    // result, which is NOT a uniform random direction on the sphere — it's
+    // biased toward the cube's corner directions (like (1,1,1)) over its
+    // face-center directions (like (1,0,0)), because a cube has
+    // proportionally more volume tucked into its corner regions than a
+    // sphere does, and normalizing just projects that lopsided volume
+    // straight onto the sphere's surface (confirmed numerically: bucketing
+    // 500k samples by their largest axis component shows visible
     // over-sampling of corner-ish directions). An octant-based check
     // (counting samples by which of the 8 sign-octants they land in) can't
-    // catch this, since the bias is symmetric across octant boundaries.
-    // With only ~14 satellites the effect is subtle, not obviously wrong
-    // to the eye. The actual fix: draw three independent standard-normal
-    // (Gaussian) components and normalize the result — the multivariate
-    // normal distribution is itself rotationally symmetric, so no
-    // direction is favored, unlike a per-axis uniform draw.
-    const normal = new THREE.Vector3(
-      Math.random() * 2 - 1, Math.random() * 2 - 1, Math.random() * 2 - 1
-    ).normalize();
+    // catch it, since the bias is symmetric across octant boundaries.
+    //
+    // The file carried that as a documented open item — bug named, fix
+    // written down, deliberately not applied on the grounds that ~14
+    // satellites make it subtle. Measured before closing it, over 500k
+    // samples each: with the old per-axis draw, 35.8% of orbit normals
+    // landed within 20 degrees of one of the eight cube-corner directions
+    // and only 10.4% within 20 degrees of an axis direction; with Gaussian
+    // components it's 24.1% and 18.0%, which are exactly the solid-angle
+    // fractions those caps cover on a sphere (8 and 6 caps of 20 degrees).
+    // So the bias was real and about 1.5x, not marginal — but it lived in
+    // the ensemble, not in any one frame.
+    //
+    // Closed in v4.0, and what made it safe to close is that there is no
+    // tuned composition to protect here: every orbit's radius, tilt, node,
+    // direction and speed is re-drawn at random on every single load, so
+    // "the way it looks" was never one arrangement, only a distribution.
+    // Checked against several loads before and after at the same viewport
+    // — the satellite band reads the same, a scatter of tilted rings at
+    // mixed inclinations, which is what a 1.5x reweighting between two
+    // families of tilt directions looks like at fourteen draws.
+    //
+    // Three independent standard-normal (Gaussian) components, normalized:
+    // the multivariate normal is itself rotationally symmetric, so no
+    // direction is favored. Box-Muller (gaussianPair, top of file) yields
+    // two normals per call, so a 3-vector is two calls with one value
+    // spare.
+    const [gx, gy] = gaussianPair();
+    const [gz] = gaussianPair();
+    const normal = new THREE.Vector3(gx, gy, gz).normalize();
     // setFromUnitVectors(a, b) builds the quaternion (a compact
     // rotation representation) that rotates vector `a` onto vector `b` —
     // here, whatever rotation carries "straight up" (0,1,0) onto this
@@ -667,7 +705,24 @@ export function createOrbiter(container, { preview = false, initialPieceId = nul
   camera.lookAt(0, 0, 0);
 
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-  renderer.setPixelRatio(window.devicePixelRatio);
+  // setPixelRatio(window.devicePixelRatio) used to be called raw here, with
+  // no cap: on a DPR-3 phone that renders nine times the fragments of DPR-1,
+  // which this scene feels more than most (2800 additive-blended sprites,
+  // every one of them overdraw). manageRenderer caps it at 2 and brings two
+  // things this scene never had — a real context release on dispose
+  // (THREE's own renderer.dispose() does not free the GL context) and a
+  // webglcontextlost handler, without which a lost context leaves a black
+  // canvas with the rAF loop still burning CPU behind it.
+  let contextLost = false;
+  const managedRenderer = manageRenderer(renderer, {
+    onLost: () => {
+      // Nothing here can repaint a context that's gone; stop the loop
+      // rather than spin it, and leave rebuilding to the next scene mount.
+      contextLost = true;
+      cancelAnimationFrame(animId);
+      animId = null;
+    },
+  });
   renderer.setSize(w, h);
   // Void tint (design-notes pass, 2026-09-01): was flat 0x000000, the same
   // page-fallback black every under-treated scene defaults to. This
@@ -681,10 +736,31 @@ export function createOrbiter(container, { preview = false, initialPieceId = nul
   renderer.domElement.setAttribute('aria-hidden', 'true');
   container.appendChild(renderer.domElement);
 
-  // Programmatically focusable so closing the panel (✕, outside click, or
-  // Escape) has somewhere real to send focus back to, rather than leaving
-  // it on a now-hidden close button or nowhere at all.
-  if (!preview) container.tabIndex = -1;
+  // #experience-container is shared: main.js empties it between scenes but
+  // never replaces the node, so every inline style written onto it here
+  // outlives this scene. claimContainer records what was on it first and
+  // hands back the restore() that kept getting forgotten — the hover cursor
+  // below goes through claim.setCursor() for exactly that reason.
+  //
+  // No longer set here: `container.tabIndex = -1`. main.js sets
+  // tabindex="-1" on the container itself immediately after create()
+  // returns (that's what gives panelCloser's container.focus() somewhere
+  // real to land when the panel closes), so this was the second of two
+  // writes saying the same thing.
+  const claim = !preview ? claimContainer(container) : null;
+
+  // Deferred work — the auto-rotate resume, the panel's side-flip reopen,
+  // the focus-after-open, the cross-link fade — all goes through one
+  // tracked set so dispose() can drop whatever's still pending in a single
+  // call instead of naming five handles. See each call site for what its
+  // own timer was doing wrong untracked.
+  const timers = trackTimers();
+
+  // Set by anything that changes what's on screen without time moving
+  // forward: a drag, a hover, the nucleus reveal, a resize, a live
+  // reduced-motion flip. See the render call at the bottom of animate()
+  // for why a scene that is genuinely static stops drawing entirely.
+  let needsRender = true;
 
   const root = new THREE.Group();
   scene.add(root);
@@ -710,9 +786,11 @@ export function createOrbiter(container, { preview = false, initialPieceId = nul
     // equator, yet a plain uniform phi would hand them equal numbers of
     // points regardless. acos(2u-1) for a uniform u in [0,1] is the
     // correct inverse-CDF fix, same fix the nucleon cloud above uses —
-    // two call sites in this file needing a uniform random direction, and
-    // both get it right, unlike the satellite pivot's own `normal` above
-    // (see that comment for the fix it's still missing).
+    // two call sites in this file needing a uniform random direction. The
+    // satellite pivot's own `normal` above was the third and the only one
+    // that got it wrong; as of v4.0 it draws Gaussian components instead
+    // (see that comment), so all three are correct now by three different
+    // standard constructions, each right for the shape it's sampling.
     const phi = Math.acos(2 * Math.random() - 1);
     starPos[i * 3]     = r * Math.sin(phi) * Math.cos(theta);
     starPos[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta);
@@ -787,8 +865,13 @@ export function createOrbiter(container, { preview = false, initialPieceId = nul
     document.body.appendChild(title);
     document.body.appendChild(hint);
 
-    container.style.position = 'relative';
-    container.style.overflow = 'hidden';
+    // `container.style.position = 'relative'` and `overflow = 'hidden'`
+    // used to be written here, right before this append. They were already
+    // no-ops — styles/main.css declares exactly those two on
+    // #experience-container — but they were inline styles on the shared
+    // element that nothing ever took off again, which is a latent trap the
+    // day that stylesheet changes. claimContainer above owns both now,
+    // restore included.
     container.appendChild(panel);
     panelTitle   = panel.querySelector('.orbiter-panel-title');
     panelContent = panel.querySelector('.orbiter-panel-content');
@@ -799,17 +882,25 @@ export function createOrbiter(container, { preview = false, initialPieceId = nul
       onClose: () => { selectedSat = null; },
     });
 
+    // v4.0: sceneKit's wireCrossLinks emits real <a href="#orbiter/<id>">
+    // anchors now, not role="link" tabindex="0" divs-in-spirit — so the
+    // Enter/Space keydown handler that used to sit alongside this one is
+    // gone. Enter on a link fires a click natively and lands right here;
+    // Space on a link was always a semantic mismatch (that's a button's
+    // key, and this is a link).
     panelContent.addEventListener('click', e => {
       const link = e.target.closest('.poem-link');
       if (!link) return;
-      e.stopPropagation();
-      navigateToPoem(link);
-    });
-    panelContent.addEventListener('keydown', e => {
-      if (e.key !== 'Enter' && e.key !== ' ') return;
-      const link = e.target.closest('.poem-link');
-      if (!link) return;
-      e.preventDefault();
+      // stopPropagation, not preventDefault: this click must not reach the
+      // container's own click handler underneath the panel (which would
+      // read it as an empty-space click and close the panel out from under
+      // the navigation), but the anchor's own default is wanted — it is
+      // what keeps middle-click, open-in-new-tab and copy-link working.
+      // Following it costs nothing: navigateToPoem reports the new piece
+      // through onPieceChange first, and that is what writes #orbiter/<id>
+      // into the URL, so by the time the browser follows the href it is
+      // already the current URL and no navigation happens. Same call as
+      // sphere.js's .fragment-link handler, for the same reason.
       e.stopPropagation();
       navigateToPoem(link);
     });
@@ -844,7 +935,17 @@ export function createOrbiter(container, { preview = false, initialPieceId = nul
   // its innerHTML between scenes, never replaces the node), so a listener
   // bound directly to it and never removed keeps firing after this scene
   // is gone, reading stale closures against a disposed scene.
-  let onContainerMouseMove = null, onContainerClick = null;
+  let onContainerMouseMove = null, onContainerPointerLeave = null, onContainerClick = null;
+  // A touch-drag to orbit ends in a synthetic mousemove + click at the
+  // release point — indistinguishable from a deliberate tap without this.
+  // Orbiter was one of only two raycast scenes missing the guard entirely
+  // (orrery, outside, sphere, harmonics and beamline all already consume
+  // it first thing in their own click handlers); see onContainerClick.
+  const touchGuard = !preview ? bindTapVsDrag(container) : null;
+  // Built once, not rebuilt per pointer-move — this was a spread plus a
+  // .map over every satellite on each individual mousemove event, for a
+  // list that never changes after buildSatellites returned.
+  const hitTargets = preview ? null : [...satellites.sats.map(s => s.hit), nucleusHit];
 
   // A stanza can carry more than one live link (DNA's single stanza has
   // two), so this walks every link getOutboundLinks() returns for that
@@ -881,11 +982,11 @@ export function createOrbiter(container, { preview = false, initialPieceId = nul
       const duration = (9 + Math.random() * 7).toFixed(1);
       link.style.animationDelay = `-${delay}s`;
       link.style.animationDuration = `${duration}s`;
-      // role="link", not "button" -- this navigates to a different poem
-      // within the panel, same as library.js's .library-link and sphere.js's
-      // .fragment-link.
-      link.setAttribute('role', 'link');
-      link.setAttribute('tabindex', '0');
+      // No role="link"/tabindex="0" written here any more: wireCrossLinks
+      // builds these as real anchors with a real href as of v4.0, so the
+      // link role is implicit and the tab order is native. The aria-label
+      // stays — the phrase itself is the poem's own words, which say
+      // nothing about where following it goes.
       const targetPoem = link.dataset.targetScene === 'orbiter'
         ? poems.find(p => p.id === Number(link.dataset.targetId))
         : null;
@@ -913,12 +1014,12 @@ export function createOrbiter(container, { preview = false, initialPieceId = nul
       // openFragment/library.js's openItem so a side change always
       // visibly relocates the panel rather than teleporting it.
       panel.classList.remove('open');
-      setTimeout(() => {
+      timers.after(500, () => {
         setPanelSide(panel, fromLeft);
         renderPoemInto(poem);
         panel.classList.add('open');
-        setTimeout(() => panelTitle.focus(), 50);
-      }, 500);
+        focusPanelTitle();
+      });
       return;
     }
 
@@ -926,8 +1027,16 @@ export function createOrbiter(container, { preview = false, initialPieceId = nul
 
     renderPoemInto(poem);
     panel.classList.add('open');
-    setTimeout(() => panelTitle.focus(), 50);
+    focusPanelTitle();
   }
+  // Focus can't land on the title until the browser has applied the class
+  // that makes the panel visible, so this waits — but only for a frame,
+  // which is all it ever needed. It was two bare `setTimeout(..., 50)`
+  // calls: the behaviour was the right one (Harmonics still has no focus
+  // move at all when its panel opens), the 50 was a guess at how long a
+  // frame is, and neither handle was cancellable if the scene was torn
+  // down in between.
+  function focusPanelTitle() { timers.nextFrame(() => panelTitle.focus()); }
   // Poem link navigation — follow the threads (click + keyboard), same
   // fade-out/swap-content/fade-in beat as sphere's navigateToFragment.
   // Deliberately doesn't touch selectedSat/the satellite the panel was
@@ -946,11 +1055,15 @@ export function createOrbiter(container, { preview = false, initialPieceId = nul
     panelTitle.style.transition = 'opacity .18s';
     panelContent.style.opacity = '0';
     panelTitle.style.opacity = '0';
-    setTimeout(() => {
+    // Tracked: 180ms matches the opacity transition set two lines up, and
+    // an untracked copy of this could still fire — repopulating the panel
+    // and calling onPieceChange, i.e. rewriting location.hash — after the
+    // scene it belongs to had been disposed and replaced.
+    timers.after(180, () => {
       renderPoemInto(poems[targetIdx]);
       panelContent.style.opacity = '1';
       panelTitle.style.opacity = '1';
-    }, 180);
+    });
   }
 
   // Deep-link entry/re-entry — resolves a poem id to its satellite (same
@@ -980,10 +1093,29 @@ export function createOrbiter(container, { preview = false, initialPieceId = nul
   }
 
   if (!preview) {
-    onContainerMouseMove = e => {
+    // Applying the hover is split out from finding it so that pointerleave
+    // and the click handler can both reach it — three callers, one place
+    // that decides what "hovered" looks like.
+    const applyHover = (hitSat, hitNucleus) => {
+      if (hitSat !== hoveredSat) {
+        if (hoveredSat) hoveredSat.beaconMat.color.setHex(0x9fffc8);
+        hoveredSat = hitSat;
+        if (hoveredSat) hoveredSat.beaconMat.color.setHex(0xffffff);
+        needsRender = true; // a beacon just changed color; under reduced motion nothing else would redraw it
+      }
+      if (hitNucleus !== hoveredNucleus) {
+        hoveredNucleus = hitNucleus;
+        // Brightens on hover — same idiom the orrery's own poster hover
+        // already uses (emissiveIntensity bump), not a new one.
+        mat.emissiveIntensity = hoveredNucleus ? NUCLEUS_BASE_EMISSIVE * 1.8 : NUCLEUS_BASE_EMISSIVE;
+        needsRender = true;
+      }
+      claim.setCursor((hoveredSat || hoveredNucleus) ? 'pointer' : 'default');
+    };
+    const pickAt = (clientX, clientY) => {
       const rect = container.getBoundingClientRect();
-      mouse.x =  ((e.clientX - rect.left) / rect.width)  * 2 - 1;
-      mouse.y = -((e.clientY - rect.top)  / rect.height) * 2 + 1;
+      mouse.x =  ((clientX - rect.left) / rect.width)  * 2 - 1;
+      mouse.y = -((clientY - rect.top)  / rect.height) * 2 + 1;
       raycaster.setFromCamera(mouse, camera);
       // One combined raycast against satellites' hit spheres and the
       // nucleus's own hit sphere — intersectObjects already returns hits
@@ -991,29 +1123,53 @@ export function createOrbiter(container, { preview = false, initialPieceId = nul
       // to the camera wins if they ever overlapped (they don't in
       // practice: the nucleus sits at the very center, satellites orbit
       // no closer than radius 1.35).
-      const hits = raycaster.intersectObjects([...satellites.sats.map(s => s.hit), nucleusHit]);
-      const hit = hits[0]?.object;
-      const hitSat = hit ? satellites.sats.find(s => s.hit === hit) : null;
-      const hitNucleus = hit === nucleusHit;
-      if (hitSat !== hoveredSat) {
-        if (hoveredSat) hoveredSat.beaconMat.color.setHex(0x9fffc8);
-        hoveredSat = hitSat;
-        if (hoveredSat) hoveredSat.beaconMat.color.setHex(0xffffff);
-      }
-      if (hitNucleus !== hoveredNucleus) {
-        hoveredNucleus = hitNucleus;
-        // Brightens on hover — same idiom the orrery's own poster hover
-        // already uses (emissiveIntensity bump), not a new one.
-        mat.emissiveIntensity = hoveredNucleus ? NUCLEUS_BASE_EMISSIVE * 1.8 : NUCLEUS_BASE_EMISSIVE;
-      }
-      container.style.cursor = (hoveredSat || hoveredNucleus) ? 'pointer' : 'default';
+      const hit = raycaster.intersectObjects(hitTargets)[0]?.object;
+      applyHover(hit ? satellites.sats.find(s => s.hit === hit) ?? null : null, hit === nucleusHit);
     };
+    onContainerMouseMove = e => pickAt(e.clientX, e.clientY);
     container.addEventListener('mousemove', onContainerMouseMove);
+    // Hover used to survive the pointer leaving the container altogether:
+    // move the mouse off the canvas and up onto the nav, and the last
+    // satellite's beacon stayed lit white with the cursor stuck on
+    // `pointer`. That's the visible half. The second-order half is
+    // specific to this scene: onContainerClick below branches on
+    // hoveredSat/hoveredNucleus, so a click after re-entering the
+    // container somewhere else could act on the target you'd left behind,
+    // for the one event before a mousemove corrected it. outside.js's
+    // onPointerLeave is the pattern this follows.
+    onContainerPointerLeave = () => applyHover(null, false);
+    container.addEventListener('pointerleave', onContainerPointerLeave);
     onContainerClick = e => {
+      // The trailing click at the end of a touch-drag. Without this guard,
+      // releasing an orbit gesture over a satellite opened that poem, and
+      // releasing over empty space with a panel open closed it — every
+      // orbit gesture on a phone was a potential accidental navigation.
+      // consume() reads and clears in one step, so it goes first, before
+      // any branch that could return early and leave the flag set for the
+      // next click.
+      if (touchGuard.consume()) return;
+      // The keyboard jump list is mounted inside `container` (sceneKit's
+      // createJumpList appends it there), so activating one of its buttons
+      // bubbles a click up to this handler — which, seeing a panel that is
+      // open and nothing hovered, read it as an empty-space click and
+      // closed the poem the button had opened one event earlier. That made
+      // the jump list, the only way a keyboard visitor can reach a poem at
+      // all, a no-op: panel opens, panel closes, nothing on screen. Found
+      // while verifying the touch guard above; the panel itself has had
+      // the equivalent guard all along (createPanelCloser stops clicks
+      // inside it), this is the same guard for the other piece of DOM this
+      // scene puts inside the container.
+      if (e.target.closest('.pm-jumplist')) return;
+      // Resolve what's under this click at the click's own coordinates,
+      // rather than trusting whatever the last mousemove left behind. A
+      // touch tap's synthetic mousemove lands at the same point so this
+      // changes nothing there; what it does buy is that the branches below
+      // are provably about the thing under the pointer now.
+      pickAt(e.clientX, e.clientY);
       // Only close the panel on an actual empty-space click — hoveredSat
-      // and hoveredNucleus are tracked live by mousemove above regardless
-      // of panel state, so a click that lands on either one toggles that
-      // target instead of also (or instead) closing the panel.
+      // and hoveredNucleus are live regardless of panel state, so a click
+      // that lands on either one toggles that target instead of also (or
+      // instead) closing the panel.
       if (panel.classList.contains('open') && !hoveredSat && !hoveredNucleus) {
         panelCloser.close();
         return;
@@ -1029,30 +1185,83 @@ export function createOrbiter(container, { preview = false, initialPieceId = nul
 
   // ─── Drag to orbit (mouse + touch, via sceneKit) ────────────────────────
   let autoRotate = true;
+  let resumeRotateTimer = null;
   const orbitDrag = bindOrbitDrag(container, {
     onDragStart: () => { autoRotate = false; },
     onDrag: (dx, dy) => {
       root.rotation.y += dx;
       root.rotation.x += dy;
+      needsRender = true; // the drag is the only thing moving under reduced motion
     },
-    onDragEnd: () => { setTimeout(() => { autoRotate = true; }, 2500); },
+    onDragEnd: () => {
+      // Cancelled before re-arming: two quick drags in a row used to leave
+      // two pending 2500ms timers, and the older one turned auto-rotate
+      // back on partway through the second pause — the scene starting to
+      // drift again while the visitor was still settling it. Tracked as
+      // well as cancelled, so a drag right before a scene switch doesn't
+      // leave a timer writing to a disposed scene's closure.
+      timers.cancel(resumeRotateTimer);
+      resumeRotateTimer = timers.after(2500, () => { autoRotate = true; });
+    },
   });
 
-  // Reduced motion: gates the autonomous rotation below (nucleus spin,
+  // ─── Animate ──────────────────────────────────────────────────────────────
+  // requestAnimationFrame fires at the display's refresh rate, not at 60Hz,
+  // and every rate in this loop was written as a fixed per-frame constant —
+  // so the whole scene ran at double speed on a 120Hz display and half
+  // speed at 30fps. Measured here before the fix, on a 71Hz display: the
+  // satellites swept 0.713 rad/s per unit of `speed` where the value they
+  // were tuned to is 0.60, and the auto-rotate ran 0.0356 rad/s against a
+  // tuned 0.03 — everything uniformly fps/60 too fast. Re-measured after,
+  // over 1207 consecutive frames on the same machine running at 120Hz:
+  // 0.6003 and 0.03002, i.e. the 60fps-tuned rates at twice the frame
+  // rate. Harmonics, Outside and Orrery already derived a clamped dt from
+  // performance.now(); this is sceneKit's extraction of that, and orbiter
+  // was the outlier.
+  //
+  // `f` below (dt * 60) is the conversion: a constant tuned per-frame at
+  // 60fps multiplied by `f` means the same thing at any refresh rate, and
+  // is exactly the old value when dt is 1/60. No rate in here was
+  // re-derived — every one is the number that was already there.
+  const clock = createFrameClock();
+
+  // Reduced motion gates every autonomous motion below: nucleus spin,
   // orbital-cloud precession + particle drift, satellite orbits, orbiter
-  // auto-rotate). Drag-to-orbit stays available regardless — that's
-  // motion the visitor asks for, not motion imposed on them.
-  const reduceMotion = prefersReducedMotion();
+  // auto-rotate, the quark jitter and gluon-shimmer pulse — and, as of
+  // v4.0, the whole-cloud brightness breathe, which used to sit outside
+  // this guard even though its own comment calls it "the whole cloud's
+  // brightness breathes gently," i.e. autonomous decorative motion by this
+  // file's own definition. While it was outside, a visitor who asked for
+  // stillness still got a scene that never held still. Drag-to-orbit stays
+  // available regardless — that's motion the visitor asks for, not motion
+  // imposed on them.
+  //
+  // `let` and a live subscription, not a one-shot `const`: sampling the
+  // media query once at mount meant someone who turned the OS setting on
+  // while the scene was already open kept the motion until they navigated
+  // away. Orbiter can flip this per-frame for free — nothing here is baked
+  // into geometry at build time.
+  let reduceMotion = prefersReducedMotion();
+  const reduceMotionWatch = onReducedMotionChange(v => {
+    reduceMotion = v;
+    clock.resync();     // don't hand the resuming frame a dt covering the whole still stretch
+    needsRender = true; // going still means one last frame has to be drawn, then none
+  });
 
   const cloudPosAttr = aurorae.geo.attributes.position;
 
-  // ─── Animate ──────────────────────────────────────────────────────────────
-  let animId, t = 0;
+  let animId = null, t = 0;
   function animate() {
     animId = requestAnimationFrame(animate);
-    t += 0.01;
+    const dt = clock.tick();
+    const f = dt * 60; // one "60fps frame" of time, so a per-frame constant stays itself
 
     if (!reduceMotion) {
+      // `t` only advances while motion is actually running, so turning
+      // reduced motion back off resumes the drift where it stopped instead
+      // of teleporting every particle to wherever it would have got to in
+      // the meantime (outside.js gates its own `elapsed` the same way).
+      t += 0.01 * f;
       earth.rotation.y = t * (preview ? 0.06 : 0.03);
       // Slow precession of the whole p-orbital cloud, distinct from the
       // nucleus's own spin and the satellites' independent orbits — keeps
@@ -1062,10 +1271,10 @@ export function createOrbiter(container, { preview = false, initialPieceId = nul
       // the per-particle drift above for any sense of motion).
       aurorae.group.rotation.y = t * 0.008;
       satellites.sats.forEach(s => {
-        s.pivot.rotation.y += s.speed * 0.01;
+        s.pivot.rotation.y += s.speed * 0.01 * f;
       });
       if (autoRotate && !orbitDrag.isDragging) {
-        root.rotation.y += preview ? 0.0015 : 0.0005;
+        root.rotation.y += (preview ? 0.0015 : 0.0005) * f;
       }
 
       // Per-particle drift/shimmer — each point nudges along its own fixed
@@ -1080,12 +1289,16 @@ export function createOrbiter(container, { preview = false, initialPieceId = nul
         cloudPosAttr.array[i3 + 2] = aurorae.base[i3 + 2] + d.dz * s;
       }
       cloudPosAttr.needsUpdate = true;
-    }
 
-    // A slow overall shimmer on top of the per-particle drift — the whole
-    // cloud's brightness breathes gently.
-    aurorae.phase += 0.012;
-    aurorae.mat.opacity = Math.max(0.5, aurorae.baseOpacity + Math.sin(aurorae.phase) * 0.15);
+      // A slow overall shimmer on top of the per-particle drift — the whole
+      // cloud's brightness breathes gently. Inside the reduced-motion guard
+      // as of v4.0 (see the guard's own comment): it is autonomous
+      // decorative motion exactly like the drift it sits on top of, and
+      // while it ran outside the guard there was no state in which this
+      // scene was actually still.
+      aurorae.phase += 0.012 * f;
+      aurorae.mat.opacity = Math.max(0.5, aurorae.baseOpacity + Math.sin(aurorae.phase) * 0.15);
+    }
 
     // ─── Nucleus reveal/collapse ────────────────────────────────────────
     // The fade itself is a direct response to a click (toggleNucleusDetail
@@ -1094,10 +1307,29 @@ export function createOrbiter(container, { preview = false, initialPieceId = nul
     // regardless of reduced motion. Only the continuous quark jitter/
     // shimmer pulse further down is autonomous decorative motion, gated
     // the same way the orbital cloud's own drift is above.
-    nucleusRevealT += ((nucleusRevealed ? 1 : 0) - nucleusRevealT) * 0.08;
-    mat.opacity = 1 - nucleusRevealT;
-    earth.visible = nucleusRevealT < 0.995;
-    if (nucleusDetail) {
+    //
+    // The ease is frame-rate independent the same way everything above is,
+    // but it can't just be multiplied by `f`: an exponential approach
+    // compounds, so `* 0.08` per frame converged twice as fast at 120Hz.
+    // 1 - (1 - 0.08)^(dt*60) is that same curve sampled in real time —
+    // identical at 60fps, unchanged in shape everywhere else.
+    const revealTarget = nucleusRevealed ? 1 : 0;
+    if (nucleusRevealT !== revealTarget) {
+      const gap = revealTarget - nucleusRevealT;
+      // Snapped once it's close enough to see no difference, because an
+      // exponential ease never actually arrives — and "arrived" has to be
+      // a state the dirty flag below can reach, or the scene never stops
+      // redrawing after a single click on the nucleus.
+      nucleusRevealT = Math.abs(gap) < 0.0005 ? revealTarget : nucleusRevealT + gap * (1 - Math.pow(1 - 0.08, f));
+      mat.opacity = 1 - nucleusRevealT;
+      earth.visible = nucleusRevealT < 0.995;
+      needsRender = true;
+    }
+    // Skipped entirely on a still frame: with the reveal settled and
+    // reduced motion on, every write in here would set the value it
+    // already holds — including three per-frame buffer uploads for the
+    // shimmer lines' endpoints.
+    if (nucleusDetail && (needsRender || !reduceMotion)) {
       nucleusDetail.group.visible = nucleusRevealT > 0.005;
       if (nucleusDetail.group.visible) {
         nucleusDetail.nucleons.forEach(n => {
@@ -1105,7 +1337,7 @@ export function createOrbiter(container, { preview = false, initialPieceId = nul
           n.quarks.forEach(q => {
             q.mat.opacity = nucleusRevealT;
             if (!reduceMotion) {
-              q.jitterPhase += 0.02 * q.jitterSpeed;
+              q.jitterPhase += 0.02 * q.jitterSpeed * f;
               const s = Math.sin(q.jitterPhase) * q.jitterAmp;
               q.mesh.position.set(
                 q.base.x + q.jitterDir.x * s,
@@ -1115,7 +1347,7 @@ export function createOrbiter(container, { preview = false, initialPieceId = nul
             }
           });
           n.shimmerLines.forEach(l => {
-            if (!reduceMotion) l.phase += 0.03 * l.speed;
+            if (!reduceMotion) l.phase += 0.03 * l.speed * f;
             // Ongoing exchange, not a fixed glow — oscillates between a
             // dim and a bright state on its own independent phase, same
             // "never resolving into something more solid" the header
@@ -1133,56 +1365,87 @@ export function createOrbiter(container, { preview = false, initialPieceId = nul
       }
     }
 
-    renderer.render(scene, camera);
+    // With the reduced-motion guard covering every autonomous motion in
+    // this loop, a still scene really is still — the same pixels, frame
+    // after frame. Skipping the draw is what that guard buys: no 2800-
+    // sprite additive pass every 8ms for a picture nobody is changing.
+    // Everything that alters the image without advancing time (drag,
+    // hover, the nucleus reveal, resize, a live reduced-motion flip) sets
+    // needsRender itself.
+    if (!reduceMotion || needsRender) {
+      renderer.render(scene, camera);
+      needsRender = false;
+    }
   }
   animate();
+
+  // main.js pauses preview tiles while a full scene is open, and pauses on
+  // visibilitychange. Pausing stops the rAF loop outright rather than
+  // running one that renders nothing; resync() on the way back so the
+  // first frame after the pause isn't one long dt (clamped, but still a
+  // visible lurch) covering the entire time the scene was away.
+  let paused = false;
+  function setPaused(p) {
+    if (p === paused || contextLost) return;
+    paused = p;
+    if (paused) {
+      cancelAnimationFrame(animId);
+      animId = null;
+    } else {
+      clock.resync();
+      needsRender = true;
+      animate();
+    }
+  }
 
   const resize = bindGuardedResize(container, (w, h) => {
     camera.aspect = w / h;
     camera.updateProjectionMatrix();
     renderer.setSize(w, h);
+    // A window dragged between a Retina and a non-Retina display changes
+    // devicePixelRatio with no signal of its own — this resize is the only
+    // notice there is.
+    managedRenderer.applyPixelRatio();
+    needsRender = true; // a resized drawing buffer is blank until something draws into it
   });
 
   return {
     // Same-scene deep link support (main.js's expandScene) — see
     // openPoemById above.
     openPieceById: openPoemById,
+    setPaused,
     dispose() {
       cancelAnimationFrame(animId);
+      timers.dispose();
       orbitDrag.dispose();
+      touchGuard?.dispose();
       resize.dispose();
+      reduceMotionWatch.dispose();
       panelCloser?.dispose();
       if (onContainerMouseMove) container.removeEventListener('mousemove', onContainerMouseMove);
+      if (onContainerPointerLeave) container.removeEventListener('pointerleave', onContainerPointerLeave);
       if (onContainerClick) container.removeEventListener('click', onContainerClick);
-      renderer.dispose();
-      geo.dispose(); mat.dispose(); nucleusTex.dispose();
-      nucleusHit.geometry.dispose(); nucleusHitMat.dispose();
-      if (nucleusDetail) {
-        nucleusDetail.nucleons.forEach(n => {
-          n.geo.dispose(); n.mat.dispose(); n.dotTex.dispose();
-          n.quarks.forEach(q => { q.geo.dispose(); q.mat.dispose(); });
-          n.shimmerLines.forEach(l => { l.geo.dispose(); l.mat.dispose(); });
-        });
-      }
-      starGeo.dispose(); starMat.dispose();
-      aurorae.geo.dispose(); aurorae.mat.dispose(); aurorae.dotTex.dispose();
-      satellites.sats.forEach(s => {
-        s.ringMat.dispose();
-        s.ringGeo.dispose();
-        s.hit.geometry.dispose();
-        s.beacon.geometry.dispose();
-        s.beaconMat.dispose();
-      });
-      satellites.bodyMat.dispose();
-      satellites.panelMat.dispose();
-      satellites.hitMat.dispose();
-      satellites.coreGeo.dispose();
-      satellites.panelGeo.dispose();
+      // This was a hand-written list of every geometry, material and
+      // texture in the scene, and it was genuinely complete — including
+      // the lazily-built nucleusDetail behind its `if (nucleusDetail)`.
+      // It goes through the shared helper anyway: the helper walks the
+      // scene root, so nothing added later can escape it by not being
+      // named, and it clears all 22 texture slots rather than the single
+      // `.map` a hand-written list remembers. `scene`, not `root` —
+      // starField is added straight to the scene, and was the one object
+      // here that a root-only traversal would have missed.
+      disposeSceneGraph(scene);
+      // renderer.dispose() + forceContextLoss() + canvas.remove(), in the
+      // order that actually releases the GL context — THREE's own
+      // dispose() tears down caches and leaves the context alive.
+      managedRenderer.dispose();
       if (title) title.remove();
       if (hint) hint.remove();
       if (panel) panel.remove();
       jumpList?.dispose();
-      renderer.domElement.remove();
+      // Puts back whatever was on the shared container before this scene
+      // claimed it — position, overflow, and the hover cursor.
+      claim?.restore();
     }
   };
 }

@@ -27,6 +27,7 @@ import { PIECES as theaterPieces, BEATS as theaterBeats } from '../src/scenes/th
 import { ORRERY } from '../src/scenes/orrery/orrery.text.js';
 import { BUTTERFLY } from '../src/scenes/butterfly/butterfly.text.js';
 import { RESONANCES } from '../src/resonances.js';
+import { pathToFileURL } from 'node:url';
 
 const STATUSES = new Set(['pending', 'approved', 'rejected']);
 const BASES = new Set(['verbatim', 'connotative']);
@@ -126,7 +127,17 @@ export function verifyResonances() {
 }
 
 // ─── CLI entry point ────────────────────────────────────────────────────────
-if (import.meta.url === `file://${process.argv[1]}`) {
+// pathToFileURL(), not a `file://` + argv[1] template. Building the URL by
+// concatenation gets the escaping wrong for any path containing a space or
+// a non-ASCII character (both need percent-encoding in a file URL), so the
+// two strings never match and the guard is simply false -- the script
+// exits 0 having verified nothing at all, which for a verification script
+// is the worst available failure mode: a silent pass. This repo lives
+// under a path with no space today, but "nobody will ever check this out
+// into ~/My Projects/" is not a guarantee worth resting a build gate on.
+// pathToFileURL does the encoding the same way import.meta.url already
+// did, so the two are comparable for any path.
+if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   const { ok, failures, log } = verifyResonances();
   log.forEach(line => console.log(line));
   console.log('');

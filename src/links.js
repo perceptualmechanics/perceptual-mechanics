@@ -50,7 +50,7 @@ export const LINKS = [
   { from: { scene: 'sphere', id: 5, field: 'text' }, phrase: 'dig for fire.', to: { scene: 'sphere', id: 11 } },
   { from: { scene: 'sphere', id: 5, field: 'text' }, phrase: 'Nothing comes without sacrifice.', to: { scene: 'sphere', id: 24 } },
   { from: { scene: 'sphere', id: 6, field: 'text' }, phrase: 'This is how we bounce: we find someone that has a high caliber of energy, and we throw ourselves at them with all the force we can muster.', to: { scene: 'sphere', id: 22 } },
-  { from: { scene: 'sphere', id: 7, field: 'text' }, phrase: 'There is nothing to be drawn from harmonicss, arbitrary abstract lines.', to: { scene: 'sphere', id: 17 } },
+  { from: { scene: 'sphere', id: 7, field: 'text' }, phrase: 'There is nothing to be drawn from constellations, arbitrary abstract lines.', to: { scene: 'sphere', id: 17 } },
   { from: { scene: 'sphere', id: 7, field: 'text' }, phrase: 'light gives us everything we have.', to: { scene: 'sphere', id: 12 } },
   { from: { scene: 'sphere', id: 8, field: 'text' }, phrase: 'a flash from heaven to earth at the tip of my finger.', to: { scene: 'sphere', id: 17 } },
   { from: { scene: 'sphere', id: 8, field: 'text' }, phrase: 'Just the sense of knowing was worth it.', to: { scene: 'sphere', id: 24 } },
@@ -191,6 +191,51 @@ export const LINKS = [
   { from: { scene: 'library', id: 145, field: 'note' }, phrase: 'VALIS', to: { scene: 'library', id: 110 } },
 ];
 
+// ─── Which fields each scene actually puts on screen ───────────────────────
+// A link is only half a link if the field it is authored into never gets
+// rendered. That was live in v3.16.2 and it looked like this: library.js
+// deliberately withholds each item's `note` (Scott's call, 2026-07-23 —
+// "I'm not sure I want it there yet"), but 81 of the library's 85 rows below
+// are authored into `note`. So the outbound half rendered nowhere, while
+// getInboundLinks() — which never knew about fields — happily kept printing
+// the other end. Throne of Blood's panel said "REFERENCED FROM SEVEN
+// SAMURAI"; Seven Samurai's panel had nothing to click. 45 library items
+// showed that line, and for 41 of them every inbound link came from an
+// unrendered field.
+//
+// The fix Scott chose for 4.0 keeps notes withheld and stops the dangling
+// half from displaying, so a relationship is either visible from both ends or
+// from neither. That needs the data to know what the scenes draw, which is
+// what these two maps are.
+//
+// RENDERED_FIELDS is the allowlist. WITHHELD_FIELDS is the separate, explicit
+// statement that a field exists in the data and is deliberately not shown —
+// the distinction matters, because scripts/verify-links.mjs fails the build on
+// a link from a field that is in NEITHER map (a typo, or a new field nobody
+// wired up) while merely reporting the count of links into a withheld one.
+// Without that split, "deliberately not rendered" and "misspelled" would look
+// identical to the verifier, and the honest state of the library links would
+// have to be papered over to keep the build green.
+//
+// Keep these in step with the scenes: library.js renders scene/excerpt/
+// excerpt_from through renderLinkedField() and has its note line commented
+// out; sphere renders `text`, orbiter `stanzas`, scroll `body`.
+export const RENDERED_FIELDS = {
+  sphere:  new Set(['text']),
+  orbiter: new Set(['stanzas']),
+  scroll:  new Set(['body']),
+  library: new Set(['scene', 'excerpt', 'excerpt_from']),
+};
+
+export const WITHHELD_FIELDS = {
+  library: new Set(['note']),
+};
+
+// True when the scene draws this field today.
+export function isRenderedField(scene, field) {
+  return RENDERED_FIELDS[scene]?.has(field) === true;
+}
+
 // ─── Query helpers ──────────────────────────────────────────────────────────
 
 // Links where `scene`+`id` is the source — what a piece's own render code
@@ -206,9 +251,18 @@ export function getOutboundLinks(scene, id, field, index) {
 }
 
 // Links where `scene`+`id` is the target — every place that references
-// this piece, regardless of which scene it's referenced from. Not read by
-// any scene's rendering yet (see the file header); exposed for whatever
-// the cross-scene-linking pass builds on top of this.
-export function getInboundLinks(scene, id) {
-  return LINKS.filter(l => l.to.scene === scene && l.to.id === id);
+// this piece, regardless of which scene it's referenced from. Rendered as
+// each scene's quiet "Referenced from X" note.
+//
+// v4.0: filtered by whether the SOURCE side is actually on screen. A
+// reference the reader cannot follow back is worse than no reference — it
+// names a piece and then, when they go looking, that piece says nothing in
+// return. `includeWithheld` exists for tooling (verify-links, the resonance
+// doc builder) that wants the raw relationship graph rather than what a
+// visitor can see.
+export function getInboundLinks(scene, id, { includeWithheld = false } = {}) {
+  return LINKS.filter(l =>
+    l.to.scene === scene && l.to.id === id
+    && (includeWithheld || isRenderedField(l.from.scene, l.from.field))
+  );
 }

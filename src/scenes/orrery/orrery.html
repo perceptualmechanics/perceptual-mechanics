@@ -35,7 +35,15 @@
 
 <button type="button" class="orrery-lock-prompt"></button>
 
-<div class="orrery-walkpad" aria-hidden="true">
+<!-- Not aria-hidden. It was, until 2026-09-02 — four real <button>s with
+     good aria-labels sitting inside an aria-hidden container, which is a
+     WCAG 4.1.2 violation (a focusable control removed from the
+     accessibility tree still takes focus, and then reports nothing) and
+     it shipped on every (pointer:coarse) device, touch laptops with real
+     keyboards included. The pad is only appended at all when the device
+     is coarse-pointer (see createFirstPersonRig), so on a plain desktop
+     it never enters the DOM and there is nothing to hide. -->
+<div class="orrery-walkpad">
   <button type="button" class="wp-btn wp-fwd" aria-label="Walk forward">&#9650;</button>
   <button type="button" class="wp-btn wp-left" aria-label="Strafe left">&#9664;</button>
   <button type="button" class="wp-btn wp-back" aria-label="Walk backward">&#9660;</button>

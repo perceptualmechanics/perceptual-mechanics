@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { libraryItems, cdRackItems } from './library.text.js';
 import { getOutboundLinks, getInboundLinks } from '../../links.js';
 import {
-  bindOrbitDrag, bindWheelZoom, bindGuardedResize, prefersReducedMotion, createPanelCloser, createJumpList, escapeHtml, parseHTML, wireCrossLinks, formatInboundNote, setPanelSide, clickedLeftHalf,
+  bindOrbitDrag, bindWheelZoom, bindGuardedResize, bindTapVsDrag, prefersReducedMotion, onReducedMotionChange, createPanelCloser, escapeHtml, parseHTML, wireCrossLinks, formatInboundNote, setPanelSide, clickedLeftHalf, claimContainer, disposeSceneGraph, manageRenderer, createFrameClock, trackTimers,
 } from '../../utils/sceneKit.js';
 import './library.css';
 import libraryHtml from './library.html?raw';
@@ -309,37 +309,60 @@ function vividColor(hex) {
   return `#${c.getHexString()}`;
 }
 
+// ─── Spine texture resolution ───────────────────────────────────────────────
+// Every spine canvas below is *drawn* in its own original, hand-tuned design
+// space (112x800 for a book, 80x720 for a disc, 72x640 for a CD) and
+// *rasterized* at this fraction of it — the 2D context is scaled once, up
+// front, so no font size, line width, gradient stop or offset in any of the
+// three functions had to be rewritten to change this number.
+//
+// Why it isn't 1 any more: 265 spines at full size is ~66 MB of level-0 RGBA
+// texel data, ~88 MB once three.js builds their mipmaps, for objects that
+// occupy roughly 20x140 CSS px on screen. Even on a devicePixelRatio-2
+// display that is ~40 device px across a 112-px-wide texture — the top mip
+// level was never sampled anywhere near 1:1, so a quarter of the memory is
+// invisible at render size. It also quarters the canvas rasterization work in
+// the one long synchronous main-thread task that builds all 265 of these at
+// scene open. Set it back to 1 to compare directly.
+const SPINE_TEXTURE_SCALE = 0.5;
+
 function makeSpineTexture(baseColor, title, creator, isBox) {
+  // Drawn at 112x800, rasterized at SPINE_TEXTURE_SCALE of it — see that
+  // constant's own comment. W/H below are the design-space dimensions the
+  // rest of this function works in; the context scale does the rest.
+  const W = 112, H = 800;
   const c = document.createElement('canvas');
-  c.width = 112; c.height = 800;
+  c.width = Math.round(W * SPINE_TEXTURE_SCALE);
+  c.height = Math.round(H * SPINE_TEXTURE_SCALE);
   const cx = c.getContext('2d');
+  cx.scale(SPINE_TEXTURE_SCALE, SPINE_TEXTURE_SCALE);
   cx.fillStyle = baseColor;
-  cx.fillRect(0, 0, c.width, c.height);
+  cx.fillRect(0, 0, W, H);
 
   // Per-item tint wash — same base swatch, different dye lot each time.
   const tr = Math.floor(hash01(title, 'tr') * 255);
   const tg = Math.floor(hash01(title, 'tg') * 255);
   const tb = Math.floor(hash01(title, 'tb') * 255);
   cx.fillStyle = `rgba(${tr},${tg},${tb},0.07)`;
-  cx.fillRect(0, 0, c.width, c.height);
+  cx.fillRect(0, 0, W, H);
 
   // Top-lit vertical gradient — light catching the spine from above,
   // rather than a flat, evenly-lit swatch.
-  const vgrad = cx.createLinearGradient(0, 0, 0, c.height);
+  const vgrad = cx.createLinearGradient(0, 0, 0, H);
   vgrad.addColorStop(0, 'rgba(255,255,255,0.18)');
   vgrad.addColorStop(0.45, 'rgba(255,255,255,0)');
   vgrad.addColorStop(1, 'rgba(0,0,0,0.24)');
   cx.fillStyle = vgrad;
-  cx.fillRect(0, 0, c.width, c.height);
+  cx.fillRect(0, 0, W, H);
 
   // Left/right vignette — the spine's slight roundedness, not a flat card.
-  const hgrad = cx.createLinearGradient(0, 0, c.width, 0);
+  const hgrad = cx.createLinearGradient(0, 0, W, 0);
   hgrad.addColorStop(0, 'rgba(0,0,0,0.3)');
   hgrad.addColorStop(0.14, 'rgba(0,0,0,0)');
   hgrad.addColorStop(0.86, 'rgba(0,0,0,0)');
   hgrad.addColorStop(1, 'rgba(0,0,0,0.3)');
   cx.fillStyle = hgrad;
-  cx.fillRect(0, 0, c.width, c.height);
+  cx.fillRect(0, 0, W, H);
 
   if (isBox) {
     // A scattering of small dots standing in for the starry/celestial
@@ -351,8 +374,8 @@ function makeSpineTexture(baseColor, title, creator, isBox) {
     const pts = [];
     for (let i = 0; i < dotCount; i++) {
       pts.push({
-        x: hash01(title, `dotx${i}`) * c.width,
-        y: hash01(title, `doty${i}`) * c.height,
+        x: hash01(title, `dotx${i}`) * W,
+        y: hash01(title, `doty${i}`) * H,
         r: 0.6 + hash01(title, `dotr${i}`) * 1.3,
       });
     }
@@ -376,19 +399,19 @@ function makeSpineTexture(baseColor, title, creator, isBox) {
   } else {
     // A thin top/bottom rule, like foil-stamped spine caps.
     cx.fillStyle = 'rgba(255,255,255,0.18)';
-    cx.fillRect(0, 10, c.width, 3);
-    cx.fillRect(0, c.height - 13, c.width, 3);
+    cx.fillRect(0, 10, W, 3);
+    cx.fillRect(0, H - 13, W, 3);
 
     // 1-2 embossed bands above and/or below the title block — the raised
     // binding cords on an old hardcover, kept clear of the text itself.
     const bandSpots = [0.1 + hash01(title, 'b0') * 0.12, 0.8 + hash01(title, 'b1') * 0.12];
     bandSpots.forEach((frac, i) => {
       if (i === 1 && hash01(title, 'bskip') > 0.7) return; // not every spine gets both
-      const by = c.height * frac;
+      const by = H * frac;
       cx.fillStyle = 'rgba(0,0,0,0.22)';
-      cx.fillRect(0, by, c.width, 3);
+      cx.fillRect(0, by, W, 3);
       cx.fillStyle = 'rgba(255,255,255,0.12)';
-      cx.fillRect(0, by + 3, c.width, 1);
+      cx.fillRect(0, by + 3, W, 1);
     });
   }
 
@@ -401,7 +424,7 @@ function makeSpineTexture(baseColor, title, creator, isBox) {
   const t = isBox ? BOX_TREATMENT : pickTreatment(BOOK_TREATMENTS, title);
 
   cx.save();
-  cx.translate(c.width / 2, c.height / 2);
+  cx.translate(W / 2, H / 2);
   cx.rotate(Math.PI / 2);
   cx.textAlign = 'center';
   cx.textBaseline = 'middle';
@@ -442,39 +465,45 @@ function cubbyTop(row) { return TOTAL_H / 2 - FRAME_T - (row - 1) * (CUBBY_H + F
 // where the author's name is the whole point. The panel still shows
 // writer/producer in its detail lines when the catalog has them.
 function makeDiscSpineTexture(baseColor, title) {
+  // Drawn at 80x720, rasterized at SPINE_TEXTURE_SCALE of it — see that
+  // constant's own comment. W/H below are the design-space dimensions the
+  // rest of this function works in; the context scale does the rest.
+  const W = 80, H = 720;
   const c = document.createElement('canvas');
-  c.width = 80; c.height = 720;
+  c.width = Math.round(W * SPINE_TEXTURE_SCALE);
+  c.height = Math.round(H * SPINE_TEXTURE_SCALE);
   const cx = c.getContext('2d');
+  cx.scale(SPINE_TEXTURE_SCALE, SPINE_TEXTURE_SCALE);
   cx.fillStyle = baseColor;
-  cx.fillRect(0, 0, c.width, c.height);
+  cx.fillRect(0, 0, W, H);
 
-  const streakX = c.width * (0.25 + hash01(title, 'streak') * 0.35);
+  const streakX = W * (0.25 + hash01(title, 'streak') * 0.35);
   const sgrad = cx.createLinearGradient(streakX - 14, 0, streakX + 14, 0);
   sgrad.addColorStop(0, 'rgba(255,255,255,0)');
   sgrad.addColorStop(0.5, 'rgba(255,255,255,0.24)');
   sgrad.addColorStop(1, 'rgba(255,255,255,0)');
   cx.fillStyle = sgrad;
-  cx.fillRect(0, 0, c.width, c.height);
+  cx.fillRect(0, 0, W, H);
 
-  const vgrad = cx.createLinearGradient(0, 0, 0, c.height);
+  const vgrad = cx.createLinearGradient(0, 0, 0, H);
   vgrad.addColorStop(0, 'rgba(255,255,255,0.1)');
   vgrad.addColorStop(0.5, 'rgba(255,255,255,0)');
   vgrad.addColorStop(1, 'rgba(0,0,0,0.3)');
   cx.fillStyle = vgrad;
-  cx.fillRect(0, 0, c.width, c.height);
+  cx.fillRect(0, 0, W, H);
 
   // A single thin accent bar, low on the spine — the only per-item hue
   // variety a disc case gets.
   const hue = Math.floor(hash01(title, 'accent') * 360);
   cx.fillStyle = `hsla(${hue}, 45%, 48%, 0.55)`;
-  cx.fillRect(0, c.height - 34, c.width, 4);
+  cx.fillRect(0, H - 34, W, 4);
 
   const lum = relLuminance(baseColor);
   const ink = lum > 0.55 ? 'rgba(26,22,18,0.9)' : 'rgba(238,234,222,0.92)';
   const t = pickTreatment(DISC_TREATMENTS, title);
 
   cx.save();
-  cx.translate(c.width / 2, c.height / 2);
+  cx.translate(W / 2, H / 2);
   cx.rotate(Math.PI / 2);
   cx.textAlign = 'center';
   cx.textBaseline = 'middle';
@@ -501,31 +530,37 @@ function makeDiscSpineTexture(baseColor, title) {
 // reflective disc itself, just visible through the spine — since a flat
 // pale card alone would read too much like a thin, blank book.
 function makeCdSpineTexture(baseColor, artist, album) {
+  // Drawn at 72x640, rasterized at SPINE_TEXTURE_SCALE of it — see that
+  // constant's own comment. W/H below are the design-space dimensions the
+  // rest of this function works in; the context scale does the rest.
+  const W = 72, H = 640;
   const c = document.createElement('canvas');
-  c.width = 72; c.height = 640;
+  c.width = Math.round(W * SPINE_TEXTURE_SCALE);
+  c.height = Math.round(H * SPINE_TEXTURE_SCALE);
   const cx = c.getContext('2d');
+  cx.scale(SPINE_TEXTURE_SCALE, SPINE_TEXTURE_SCALE);
   cx.fillStyle = baseColor;
-  cx.fillRect(0, 0, c.width, c.height);
+  cx.fillRect(0, 0, W, H);
 
-  const vgrad = cx.createLinearGradient(0, 0, 0, c.height);
+  const vgrad = cx.createLinearGradient(0, 0, 0, H);
   vgrad.addColorStop(0, 'rgba(255,255,255,0.3)');
   vgrad.addColorStop(0.5, 'rgba(255,255,255,0)');
   vgrad.addColorStop(1, 'rgba(0,0,0,0.32)');
   cx.fillStyle = vgrad;
-  cx.fillRect(0, 0, c.width, c.height);
+  cx.fillRect(0, 0, W, H);
 
   // A thin prismatic sliver near one edge — the reflective edge of the CD
   // itself, just visible through the jewel case spine. Never a full "shiny
   // disc" render, just enough to read as "there's a mirrored disc in
   // here," distinguishing a CD from a plain pale slip of card.
-  const prism = cx.createLinearGradient(0, 0, 0, c.height);
+  const prism = cx.createLinearGradient(0, 0, 0, H);
   prism.addColorStop(0, 'rgba(255,130,180,0.4)');
   prism.addColorStop(0.25, 'rgba(255,220,120,0.34)');
   prism.addColorStop(0.5, 'rgba(140,255,200,0.34)');
   prism.addColorStop(0.75, 'rgba(140,180,255,0.36)');
   prism.addColorStop(1, 'rgba(200,140,255,0.34)');
   cx.fillStyle = prism;
-  cx.fillRect(5, 0, 5, c.height);
+  cx.fillRect(5, 0, 5, H);
 
   const lum = relLuminance(baseColor);
   const ink = lum > 0.55 ? 'rgba(26,22,18,0.88)' : 'rgba(238,234,222,0.92)';
@@ -533,7 +568,7 @@ function makeCdSpineTexture(baseColor, artist, album) {
   const t = pickTreatment(CD_TREATMENTS, album);
 
   cx.save();
-  cx.translate(c.width / 2, c.height / 2);
+  cx.translate(W / 2, H / 2);
   cx.rotate(Math.PI / 2);
   cx.textAlign = 'center';
   cx.textBaseline = 'middle';
@@ -655,18 +690,49 @@ function reshuffleWithinType(items, isType) {
 const isBookType = it => it.type === 'book' || it.type === 'divination_box';
 const isFilmType = it => it.type === 'dvd' || it.type === 'bluray';
 
+// Concatenates a set of already-positioned BoxGeometries into one. Deliberately
+// hand-rolled rather than pulled from three's own BufferGeometryUtils: importing
+// mergeGeometries added ~5.7 kB to this scene's code-split chunk (measured, v4.0)
+// to save eight draw calls, and every geometry this is ever handed is a
+// BoxGeometry — same three attributes, same layout, always indexed — so the
+// general-purpose version's attribute reconciliation, morph-target handling and
+// group bookkeeping are all cost with nothing to do here. See STANDARDS.md's
+// dynamic-import section for why this file's chunk size is worth defending.
+function mergeBoxes(parts) {
+  const merged = new THREE.BufferGeometry();
+  for (const name of ['position', 'normal', 'uv']) {
+    const size = parts[0].getAttribute(name).itemSize;
+    const total = parts.reduce((n, g) => n + g.getAttribute(name).count, 0);
+    const arr = new Float32Array(total * size);
+    let at = 0;
+    for (const g of parts) { arr.set(g.getAttribute(name).array, at); at += g.getAttribute(name).array.length; }
+    merged.setAttribute(name, new THREE.BufferAttribute(arr, size));
+  }
+  const indices = [];
+  let vertexOffset = 0;
+  for (const g of parts) {
+    for (const i of g.getIndex().array) indices.push(i + vertexOffset);
+    vertexOffset += g.getAttribute('position').count;
+    g.dispose(); // the copy above is the survivor
+  }
+  merged.setIndex(indices);
+  return merged;
+}
+
 // ─── Shelf frame ────────────────────────────────────────────────────────────
 function buildFrame() {
   const group = new THREE.Group();
   const mat = new THREE.MeshStandardMaterial({ color: 0xe8e2d2, roughness: 0.85, metalness: 0.02 });
-  const geos = [];
+  const parts = [];
 
+  // Collected rather than meshed one at a time: the frame's nine boxes never
+  // move relative to each other and all share one material, so their
+  // positions bake straight into a single merged BufferGeometry below —
+  // nine render items become one, for free.
   function box(w, h, d, x, y, z) {
     const geo = new THREE.BoxGeometry(w, h, d);
-    geos.push(geo);
-    const mesh = new THREE.Mesh(geo, mat);
-    mesh.position.set(x, y, z);
-    group.add(mesh);
+    geo.translate(x, y, z);
+    parts.push(geo);
   }
 
   // Verticals (left edge, 3 dividers, right edge)
@@ -682,7 +748,13 @@ function buildFrame() {
   // Back panel, thin — closes the cubbies visually from behind.
   box(TOTAL_W, TOTAL_H, 0.04, 0, 0, -CUBBY_D / 2 - 0.02);
 
-  return { group, mat, geos };
+  group.add(new THREE.Mesh(mergeBoxes(parts), mat));
+
+  // No geos/mat handed back for teardown any more: dispose() now walks the
+  // real scene graph via sceneKit's disposeSceneGraph(root), which reaches
+  // this mesh (and every texture slot on every material in the scene) on its
+  // own — see createLibrary's dispose().
+  return { group };
 }
 
 // ─── Library of Babel backdrop ──────────────────────────────────────────────
@@ -767,7 +839,6 @@ function hexFaceGeometry() {
 
 function buildBabelBackdrop() {
   const group = new THREE.Group();
-  const disposables = [];
 
   // ── Node field: jittered 3D grid, thinned and tumbled, so it reads as
   // scattered galleries rather than a mechanical lattice.
@@ -824,7 +895,6 @@ function buildBabelBackdrop() {
     color: edgeColor, transparent: true, opacity: 0.38, depthWrite: false, fog: true,
   });
   const edgeMesh = new THREE.InstancedMesh(edgeGeo, edgeMat, nodes.length * 6);
-  disposables.push(edgeGeo, edgeMat);
 
   // ── Hexagon faces: a filled, lit pane behind each node's own six edges
   // — real MeshStandardMaterial, not the unlit MeshBasicMaterial the edges
@@ -840,7 +910,6 @@ function buildBabelBackdrop() {
     metalness: 0, side: THREE.DoubleSide, depthWrite: false, fog: true,
   });
   const faceMesh = new THREE.InstancedMesh(faceGeo, faceMat, nodes.length);
-  disposables.push(faceGeo, faceMat);
 
   const dummy = new THREE.Object3D();
   const local = new THREE.Object3D();
@@ -916,7 +985,6 @@ function buildBabelBackdrop() {
       color: strandColor, transparent: true, opacity: 0.28, depthWrite: false, fog: true,
     });
     strandMesh = new THREE.InstancedMesh(strandGeo, strandMat, strandPairs.length);
-    disposables.push(strandGeo, strandMat);
 
     strandPairs.forEach(([i, j], si) => {
       const a = nodes[i].pos, b = nodes[j].pos;
@@ -970,7 +1038,10 @@ function buildBabelBackdrop() {
     }
   }
 
-  return { group, disposables, update };
+  // Every geometry and material built above hangs off a mesh inside `group`,
+  // so the hand-kept disposables list this used to return is gone — dispose()
+  // reaches all of it through disposeSceneGraph(root) instead.
+  return { group, update };
 }
 
 // ─── Rim light on spine edges (design-notes pass, 2026-09-01) ─────────────
@@ -1007,11 +1078,60 @@ function addSpineRim(material, colorHex = 0xffe6bd, power = 2.4, glow = 0.035) {
   };
 }
 
+// ─── Two draw calls per spine, not six ──────────────────────────────────────
+// A mesh with a material ARRAY costs one render item — one draw call — per
+// geometry GROUP, and BoxGeometry ships six of them (+x, -x, +y, -y, +z, -z).
+// So `[side, side, pages, pages, front, back]` was six draw calls per item
+// even though it only ever names three distinct materials, which is 1,590 of
+// this scene's 1,603 calls a frame.
+//
+// This regroups the box into exactly two runs — "the spine face you read"
+// and "the five faces you don't" — and keeps the three distinct non-spine
+// colours by baking them into a vertex-colour attribute that the one body
+// material multiplies through, rather than by naming three materials. Same
+// rendered result; a third of the calls.
+//
+// Two mechanical details worth knowing before touching this:
+//   * Two groups that share a materialIndex are still two render items, so
+//     "everything else" has to be one CONTIGUOUS index run — hence moving
+//     the +z face's six indices to the end of the buffer first.
+//   * BoxGeometry lays out four vertices per face in that same +x, -x, +y,
+//     -y, +z, -z order, 24 in all, which is what the colour loop below
+//     indexes. The +z entry is a placeholder: those vertices are only ever
+//     drawn by the spine material, which has vertexColors off and ignores
+//     the attribute entirely.
+function splitBoxIntoSpineAndBody(geo, sideColor, pageColor, backColor) {
+  const idx = Array.from(geo.getIndex().array);
+  const spine = idx.slice(24, 30); // +z
+  geo.setIndex([...idx.slice(0, 24), ...idx.slice(30, 36), ...spine]);
+  geo.clearGroups();
+  geo.addGroup(0, 30, 0); // body: +x, -x, +y, -y, -z
+  geo.addGroup(30, 6, 1); // spine face: +z
+
+  const faceColors = [sideColor, sideColor, pageColor, pageColor, sideColor, backColor];
+  const colors = new Float32Array(24 * 3);
+  faceColors.forEach((col, f) => {
+    for (let v = 0; v < 4; v++) {
+      const o = (f * 4 + v) * 3;
+      colors[o] = col.r; colors[o + 1] = col.g; colors[o + 2] = col.b;
+    }
+  });
+  geo.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+}
+
 // ─── Items (books/dvds/blurays/boxes) ──────────────────────────────────────
 function buildItems(preview) {
   const group = new THREE.Group();
   const meshes = [];
-  const disposables = [];
+
+  // Preview tiles are ~200px across on the landing page, where a spine is a
+  // sub-pixel sliver of flat colour: nothing there needs its own geometry or
+  // its own material. One unit cube scaled per item replaces 265 separate
+  // BoxGeometries, and one material per distinct palette colour (~20 of them)
+  // replaces 265 MeshStandardMaterials. The tile renders identically — this
+  // is purely the cost of building it.
+  const previewBox = preview ? new THREE.BoxGeometry(1, 1, 1) : null;
+  const previewMats = new Map();
 
   // Per-visit reshuffle (see reshuffleWithinType above): books and films
   // each get their content re-permuted among their own existing slots, and
@@ -1089,15 +1209,17 @@ function buildItems(preview) {
       const y = top - CUBBY_H + floorGap + h / 2;
       const z = CUBBY_D / 2 - depth / 2 - 0.01;
 
-      const geo = new THREE.BoxGeometry(Math.max(w, 0.02), h, depth);
-      disposables.push(geo);
-
-      let mats;
+      let mesh;
       if (preview) {
-        const flat = new THREE.MeshStandardMaterial({ color, roughness: 0.8 });
-        disposables.push(flat);
-        mats = flat;
+        let flat = previewMats.get(color);
+        if (!flat) {
+          flat = new THREE.MeshStandardMaterial({ color, roughness: 0.8 });
+          previewMats.set(color, flat);
+        }
+        mesh = new THREE.Mesh(previewBox, flat);
+        mesh.scale.set(Math.max(w, 0.02), h, depth);
       } else {
+        const geo = new THREE.BoxGeometry(Math.max(w, 0.02), h, depth);
         const tex = isCd
           ? makeCdSpineTexture(color, it.creator, it.title)
           : isDisc
@@ -1131,28 +1253,35 @@ function buildItems(preview) {
         // Side/back faces shaded darker than the front — the same base
         // color otherwise made every face of the box read as one flat
         // plane rather than a real 3D object catching light unevenly.
+        // These three colors now travel as vertex colors on the one body
+        // material rather than as three separate materials; see
+        // splitBoxIntoSpineAndBody above for why, and note the one thing
+        // that genuinely changed: the top/bottom page faces used to carry
+        // roughness 0.9 of their own and now share the body's `rough`
+        // (0.6-0.8 for a matte book). Under this scene's two directional
+        // lights and no environment map that difference is not visible on a
+        // face this small; the colors themselves are untouched.
         const sideColor = new THREE.Color(color).multiplyScalar(0.82);
         const backColor = new THREE.Color(color).multiplyScalar(0.7);
+        const pageColor = new THREE.Color(it.type === 'book' ? '#e9e3d2' : color);
+        splitBoxIntoSpineAndBody(geo, sideColor, pageColor, backColor);
+
         const front = new THREE.MeshStandardMaterial({ map: tex, roughness: rough, metalness: metal });
-        const side = new THREE.MeshStandardMaterial({ color: sideColor, roughness: rough });
-        const pageColor = it.type === 'book' ? '#e9e3d2' : color;
-        const pages = new THREE.MeshStandardMaterial({ color: pageColor, roughness: 0.9 });
-        const back = new THREE.MeshStandardMaterial({ color: backColor, roughness: rough });
-        // Rim light on the two faces that actually carry a visible
-        // silhouette edge against the cubby's shadowed interior/its
-        // shelf neighbors — front (the spine face itself) and side (the
-        // edge a browsing eye catches at an angle). Skipped on
-        // disc/CD/box items' own already-distinct glossy-plastic finish,
-        // which doesn't need the same "used cloth binding" dimension cue.
+        const body = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: rough });
+        // Rim light on the faces that carry a visible silhouette edge
+        // against the cubby's shadowed interior/its shelf neighbors — the
+        // spine face itself and the box around it (which is the edge a
+        // browsing eye catches at an angle, now one material rather than
+        // the old separate `side`). Skipped on disc/CD/box items' own
+        // already-distinct glossy-plastic finish, which doesn't need the
+        // same "used cloth binding" dimension cue.
         if (!isDisc && !isCd && !isBox) {
           addSpineRim(front);
-          addSpineRim(side);
+          addSpineRim(body);
         }
-        disposables.push(tex, front, side, pages, back);
-        mats = [side, side, pages, pages, front, back];
+        mesh = new THREE.Mesh(geo, [body, front]);
       }
 
-      const mesh = new THREE.Mesh(geo, mats);
       mesh.position.set(x, y, z);
       mesh.userData.item = it;
       group.add(mesh);
@@ -1162,21 +1291,26 @@ function buildItems(preview) {
     });
   });
 
-  return { group, meshes, disposables };
+  // No disposables list handed back: dispose() walks the real scene graph
+  // via sceneKit's disposeSceneGraph(root), which reaches every geometry,
+  // every material and — the part the old hand-kept arrays got wrong
+  // sitewide — every texture SLOT on each of them.
+  return { group, meshes };
 }
 
 // Hover affordance for a spine: a small scale bump plus a warm glow on its
 // front (title) face — same accent color as the panel's own cross-link
 // glimmer (rgba(230,180,95,...) in library.css) — so a spine visibly
 // signals "this is clickable" before the cursor even changes. Only the
-// front material (index 4 of the [side, side, pages, pages, front, back]
-// array buildItems assembles per item) gets the glow; each item's
+// front material gets the glow — index 1 of the [body, front] array
+// buildItems assembles per item, which was index 4 of a six-entry array
+// before the regrouping in splitBoxIntoSpineAndBody above. Each item's
 // materials are unique instances, never shared, so this never bleeds onto
 // a neighboring spine.
 const HOVER_GLOW_HEX = 0xe6b45f;
 function setSpineHovered(mesh, isHovered) {
   mesh.scale.set(isHovered ? 1.04 : 1, isHovered ? 1.02 : 1, isHovered ? 1.15 : 1);
-  const front = mesh.material[4];
+  const front = mesh.material[1];
   front.emissive.setHex(isHovered ? HOVER_GLOW_HEX : 0x000000);
   front.emissiveIntensity = isHovered ? 0.5 : 0;
 }
@@ -1211,7 +1345,24 @@ export function createLibrary(container, { preview = false, initialPieceId = nul
   // design choice, not a derivable quantity) leaves room for the Library
   // of Babel backdrop to recede behind the shelf before the fog swallows
   // it.
-  const baseDist = distanceToFit(camera, TOTAL_W, TOTAL_H, 1.3);
+  // Re-derivable rather than computed once: distanceToFit reads
+  // camera.aspect, and every bound below is a ratio of what it returns, so
+  // all of it has to be recomputed when the aspect changes — see the resize
+  // handler at the bottom of this function for the bug that wasn't.
+  //
+  // Zoom range as a ratio of baseDist rather than a fixed distance, so it
+  // scales along with the shelf if the grid ever grows (see COLS/ROWS
+  // above). The ratios themselves are a real design choice, not a
+  // derivable quantity — preview tiles get a narrower range since they're
+  // a small, mostly non-interactive thumbnail, not a scene meant to be
+  // explored up close.
+  let baseDist, minDist, maxDist;
+  function recomputeZoomRange() {
+    baseDist = distanceToFit(camera, TOTAL_W, TOTAL_H, 1.3);
+    minDist = baseDist * (preview ? 0.46 : 0.35);
+    maxDist = baseDist * (preview ? 1.21 : 1.42);
+  }
+  recomputeZoomRange();
   camera.position.set(0, 0.15, baseDist);
   camera.lookAt(0, 0, 0);
   // Void tint (design-notes pass, 2026-09-01): was flat 0x000000, same
@@ -1226,11 +1377,21 @@ export function createLibrary(container, { preview = false, initialPieceId = nul
   scene.fog = new THREE.Fog(VOID_COLOR, 18, 56);
 
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-  renderer.setPixelRatio(window.devicePixelRatio);
   renderer.setSize(w, h);
   renderer.setClearColor(VOID_COLOR, 1);
   renderer.domElement.setAttribute('aria-hidden', 'true');
   container.appendChild(renderer.domElement);
+  // This scene carries more geometry than any other on the site and was the
+  // only one still handing the renderer a raw devicePixelRatio — a DPR-3
+  // phone was shading nine fragments per CSS pixel, on exactly the scene
+  // least able to afford it. manageRenderer caps that at 2 (indistinguishable
+  // at these sizes, per the same finding beamline shipped on), and owns the
+  // two other things this scene never had: a webglcontextlost handler, and a
+  // real forceContextLoss() on teardown so a scene switch actually gives the
+  // context back instead of orphaning it against the browser's ~16 cap.
+  const managed = manageRenderer(renderer, {
+    onLost: () => { cancelAnimationFrame(animId); animId = null; },
+  });
 
   const root = new THREE.Group();
   scene.add(root);
@@ -1254,8 +1415,14 @@ export function createLibrary(container, { preview = false, initialPieceId = nul
   // group's draw order as well as in depth — added under root, not scene,
   // so it turns together with the shelf under drag rather than sitting
   // fixed like a skybox.
-  const babel = buildBabelBackdrop();
-  root.add(babel.group);
+  // Full mode only. 197 nodes become 1,182 edge instances plus ~350 strands,
+  // and its update() reissues ~1,700 setColorAt calls and flags three
+  // instanceColor buffers for a full re-upload every single frame — all of
+  // it invisible inside a 200px landing thumbnail, where the shelf itself
+  // fills the frame and the backdrop is at most a few dark pixels at the
+  // corners. Gated here and again in animate() below.
+  const babel = preview ? null : buildBabelBackdrop();
+  if (babel) root.add(babel.group);
 
   const frame = buildFrame();
   root.add(frame.group);
@@ -1268,10 +1435,29 @@ export function createLibrary(container, { preview = false, initialPieceId = nul
 
   // ─── Hint + panel (full only) ────────────────────────────────────────────
   let hint = null, panel = null, panelTitle = null, panelCreator = null, panelBodyEl = null, panelCloser = null, jumpList = null;
-  // Programmatically focusable so closing the panel (✕, outside click, or
-  // Escape) has somewhere real to send focus back to, rather than leaving
-  // it on a now-hidden close button or nowhere at all.
-  if (!preview) container.tabIndex = -1;
+  let panelSlideMs = 500; // replaced from CSS once the panel is in the document — see below
+  // container is the one shared #experience-container element, which main.js
+  // empties between scenes but never replaces — so every inline style and
+  // attribute a scene writes onto it outlives that scene. This one wrote
+  // position, overflow, tabIndex and (on every hover) cursor, and put none of
+  // them back. claimContainer records what was there first and hands back the
+  // restore() dispose() now calls; every cursor write below goes through its
+  // setCursor so the restore is guaranteed to cover them too.
+  //
+  // tabIndex -1 makes the container programmatically focusable, so closing
+  // the panel (✕, outside click, or Escape) has somewhere real to send focus
+  // back to rather than leaving it on a now-hidden close button or nowhere.
+  const claim = preview ? null : claimContainer(container, { tabIndex: -1 });
+
+  // Every deferred bit of panel choreography below is scheduled through this
+  // so dispose() can drop all of it in one call. The 500ms side-flip was the
+  // live bug: click a spine on the opposite side of the container, then leave
+  // the scene within half a second, and populatePanel() ran against a
+  // detached panel and called onPieceChange() — which is how main.js writes
+  // the URL, so a scene the visitor had already left rewrote location.hash
+  // out from under the one that replaced it. theater.js's endCardTimer
+  // already solves exactly this shape.
+  const timers = trackTimers();
   // Hint/panel/library-link markup+styles live in library.html and
   // library.css — no runtime element construction or style injection
   // needed now that both are real files, pulled in via parseHTML. This
@@ -1285,8 +1471,6 @@ export function createLibrary(container, { preview = false, initialPieceId = nul
     panel = shell.querySelector('.library-panel');
     document.body.appendChild(hint);
 
-    container.style.position = 'relative';
-    container.style.overflow = 'hidden';
     container.appendChild(panel);
     panelTitle = panel.querySelector('.library-panel-title');
     panelCreator = panel.querySelector('.library-panel-creator');
@@ -1296,6 +1480,18 @@ export function createLibrary(container, { preview = false, initialPieceId = nul
       closeBtn: panel.querySelector('.library-panel-close'),
       onClose: closePanel,
     });
+
+    // The side-flip below has to wait out .library-panel's own close
+    // transition before it can re-anchor and reopen the panel. That duration
+    // belongs to the stylesheet, not to a magic 500 hand-mirrored here with a
+    // comment promising the two agree — same single-source-of-truth move
+    // main.js makes for --scene-crossfade, including the fallback, because
+    // getPropertyValue returns '' for an undeclared property and a NaN
+    // timeout fires immediately (which here would flip the panel's side
+    // mid-slide, in full view).
+    const rawSlide = getComputedStyle(panel).getPropertyValue('--library-panel-slide').trim();
+    const slideNum = parseFloat(rawSlide);
+    panelSlideMs = !Number.isFinite(slideNum) ? 500 : (rawSlide.endsWith('ms') ? slideNum : slideNum * 1000);
 
     // Cross-link navigation — follow the threads (click + keyboard), same
     // fade-out/swap-content/fade-in beat as sphere.js's navigateToFragment
@@ -1317,25 +1513,35 @@ export function createLibrary(container, { preview = false, initialPieceId = nul
       if (!target) return;
       panelBodyEl.style.transition = 'opacity .18s';
       panelBodyEl.style.opacity = '0';
-      setTimeout(() => {
+      timers.after(180, () => {
         populatePanel(target);
         panel.scrollTop = 0;
         panelBodyEl.style.opacity = '1';
-        setTimeout(() => panelTitle.focus(), 50);
-      }, 180);
+        timers.after(50, () => panelTitle.focus());
+      });
     }
+    // One handler, not two. wireCrossLinks now emits a real
+    // <a href="#library/id">, and pressing Enter on a real anchor dispatches
+    // a click — so this listener already IS the keyboard path, and the
+    // separate Enter/Space keydown handler that used to sit here (needed only
+    // because an <a> with no href isn't activatable) is duplicate work on the
+    // same event. Space on a link was always a semantic mismatch anyway.
+    //
+    // What the handler still owns is the in-panel fade-and-swap: following a
+    // thread replaces the panel's content in place rather than reloading the
+    // scene through the hash router, and populatePanel's own onPieceChange
+    // keeps the URL in step. preventDefault is what stops the anchor ALSO
+    // navigating and double-handling the same jump — but only for a plain
+    // primary click, so the middle-click/⌘-click/open-in-new-tab behaviour a
+    // real href just gave these links back still reaches the browser.
+    // stopPropagation stays: without it this click carries on to the
+    // container's own canvas click handler underneath the panel.
     panelBodyEl.addEventListener('click', e => {
       const link = e.target.closest('.library-link');
       if (!link) return;
       e.stopPropagation();
-      navigateToItem(link.dataset.targetScene, Number(link.dataset.targetId));
-    });
-    panelBodyEl.addEventListener('keydown', e => {
-      if (e.key !== 'Enter' && e.key !== ' ') return;
-      const link = e.target.closest('.library-link');
-      if (!link) return;
+      if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
       e.preventDefault();
-      e.stopPropagation();
       navigateToItem(link.dataset.targetScene, Number(link.dataset.targetId));
     });
   }
@@ -1353,10 +1559,53 @@ export function createLibrary(container, { preview = false, initialPieceId = nul
   }
 
   // ─── Hover/click raycast, screen-space mouse (matches orbiter/sphere) ───────
+  // The container's rect is cached rather than measured per pointer event.
+  // getBoundingClientRect() forces a synchronous layout, and a mousemove
+  // listener fires at the pointer's poll rate — up to 120Hz on a recent
+  // trackpad, not the frame rate — so hovering used to cost one forced layout
+  // plus 265 bounding-sphere tests plus a freshly allocated results array per
+  // pointer sample, most of them between two frames nobody ever saw. Now a
+  // move only records where the pointer is; the raycast happens once per
+  // frame, in animate().
+  //
+  // The rect is refreshed from three places, which between them cover every
+  // way it can move: the existing guarded-resize callback, window scroll, and
+  // the pointer entering the container (which is what covers the overlay's
+  // own open/close transition — that animates the container's box over
+  // ~600ms and fires no resize event at all).
   const raycaster = new THREE.Raycaster();
   const mouse = new THREE.Vector2();
   let hovered = null, selected = null;
-  let onContainerMouseMove = null, onContainerClick = null, onContainerMouseLeave = null;
+  let containerRect = null;
+  const pointer = { x: 0, y: 0 };
+  let pointerMoved = false;
+  let onContainerMouseMove = null, onContainerClick = null, onContainerMouseLeave = null,
+      onContainerMouseEnter = null, onWindowScroll = null;
+  let touchGuard = null;
+
+  function refreshRect() { containerRect = container.getBoundingClientRect(); }
+
+  function pickAt(clientX, clientY) {
+    if (!containerRect) refreshRect();
+    mouse.x = ((clientX - containerRect.left) / containerRect.width) * 2 - 1;
+    mouse.y = -((clientY - containerRect.top) / containerRect.height) * 2 + 1;
+    raycaster.setFromCamera(mouse, camera);
+    const hits = raycaster.intersectObjects(items.meshes);
+    return hits.length ? hits[0].object : null;
+  }
+
+  // Called once a frame from animate() — see the note above.
+  function updateHover() {
+    if (!pointerMoved || panel?.classList.contains('open')) return;
+    pointerMoved = false;
+    const hitMesh = pickAt(pointer.x, pointer.y);
+    if (hitMesh !== hovered) {
+      if (hovered) setSpineHovered(hovered, false);
+      hovered = hitMesh;
+      if (hovered) setSpineHovered(hovered, true);
+    }
+    claim?.setCursor(hovered ? 'pointer' : 'default');
+  }
 
   // Fills the (already-open, or about-to-open) panel with one item's
   // content. Pulled out into its own function so both a direct spine click
@@ -1400,7 +1649,14 @@ export function createLibrary(container, { preview = false, initialPieceId = nul
     if (it.runtime_min) lines.push(`${it.runtime_min} min`);
     if (it.writer) lines.push(`written by ${it.writer}`);
     if (it.producer) lines.push(`produced by ${it.producer}`);
-    detailsEl.innerHTML = lines.map(l => `<p>${l}</p>`).join('');
+    // Escaped at the join rather than field by field: publisher, writer and
+    // producer were being interpolated raw into innerHTML while every
+    // neighbouring field in this function went through escapeHtml. Nothing in
+    // today's catalog carries markup, so this was latent rather than broken —
+    // but "latent" is a property of the data, and library.text.js's own
+    // header describes fields transcribed from real bibliographic sources.
+    // One escape here covers every line the block can ever grow.
+    detailsEl.innerHTML = lines.map(l => `<p>${escapeHtml(l)}</p>`).join('');
     // Note text is intentionally disabled -- commented out rather than
     // deleted so it's a one-line revert. Underlying `note` data and the
     // cross-links that live inside it (src/links.js, field: 'note') are
@@ -1467,40 +1723,142 @@ export function createLibrary(container, { preview = false, initialPieceId = nul
       setPanelSide(panel, fromLeft);
     }
     panel.classList.add('open');
-    setTimeout(() => panelTitle.focus(), 50);
+    timers.after(50, () => panelTitle.focus());
+  }
+
+  // ─── Keyboard jump list ──────────────────────────────────────────────────
+  // Keyboard equivalent for "point at a spine" — spines are otherwise
+  // raycast-only, and nothing simulates "point at one" from a keyboard.
+  // Selecting closes first (a harmless no-op if nothing's open) rather than
+  // reusing the click path's in-place-swap animation, which is tuned for a
+  // mouse rapidly clicking across adjacent spines, not a single deliberate
+  // keyboard pick.
+  //
+  // Built here rather than through sceneKit's shared createJumpList, which
+  // every other raycast scene still uses. That helper builds one flat <ul> of
+  // buttons parked off-screen and revealed one at a time on focus — exactly
+  // right for sphere's 24 facets, and a WCAG 2.4.1 (Bypass Blocks) failure at
+  // this scene's 265, where a keyboard visitor entering the scene has 265 tab
+  // stops in front of them, no grouping, no search, and no way past. The 115
+  // CDs are most of it.
+  //
+  // Three native <details> groups (Books / Films / Music) inside a <nav>, all
+  // closed to begin with, plus a leading "skip the shelf" control: closed,
+  // the whole list is four tab stops; open one and you get that group and
+  // nothing else. <details>/<summary> is keyboard-operable on its own, so
+  // there is no roving-tabindex or type-ahead machinery here to get wrong.
+  // Within a group the items are sorted by title rather than left in shelf
+  // order — a jump list is for finding a known title, not for walking the
+  // shelf, which is what the shelf itself is for.
+  //
+  // What this would want from createJumpList to move back into sceneKit (that
+  // file is another owner's): an optional `groups` shape — [{ label, items }]
+  // — rendering one collapsed <details> per group with a count in the
+  // summary, a `skipLabel` option for the leading bypass control, and a
+  // caller-supplied sort. Every scene that passes a flat `items` array today
+  // would keep working unchanged.
+  function buildJumpList() {
+    const nav = document.createElement('nav');
+    nav.className = 'library-jumplist';
+    nav.setAttribute('aria-label', 'Browse the shelf');
+    // The list lives INSIDE the scene container (it has to — it's the
+    // keyboard equivalent of pointing at something in it), so without this
+    // every activation bubbles straight on to the container's own canvas
+    // click handler. That handler sees a panel that is now open and a
+    // raycast that hit nothing — a keyboard-activated click reports
+    // clientX/clientY of 0, i.e. the viewport's top-left corner — and
+    // closes the panel the button just opened. Found live in v4.0 while
+    // rebuilding this list: it predates the rebuild (sceneKit's
+    // createJumpList appends into the container the same way), and it made
+    // the entire keyboard path silently useless whenever the corner of the
+    // frame happened to be empty. Same guard createPanelCloser puts on the
+    // panel itself, for the same reason.
+    nav.addEventListener('click', e => e.stopPropagation());
+
+    const skip = document.createElement('button');
+    skip.type = 'button';
+    skip.className = 'library-jumplist-skip';
+    skip.textContent = 'Skip the shelf';
+    skip.addEventListener('click', () => {
+      // Collapse whatever was open on the way past, so the next Tab doesn't
+      // drop the visitor straight back into 115 albums.
+      nav.querySelectorAll('details[open]').forEach(d => { d.open = false; });
+      container.focus();
+    });
+    nav.appendChild(skip);
+
+    const GROUPS = [
+      { label: 'Books', match: it => isBookType(it) },
+      { label: 'Films', match: it => isFilmType(it) },
+      { label: 'Music', match: it => it.type === 'cd' },
+    ];
+    GROUPS.forEach(g => {
+      const group = items.meshes
+        .filter(m => g.match(m.userData.item))
+        .sort((a, b) => a.userData.item.title.localeCompare(b.userData.item.title));
+      if (!group.length) return;
+      const details = document.createElement('details');
+      details.className = 'library-jumplist-group';
+      const summary = document.createElement('summary');
+      summary.textContent = `${g.label} — ${group.length}`;
+      details.appendChild(summary);
+      const ul = document.createElement('ul');
+      group.forEach(mesh => {
+        const it = mesh.userData.item;
+        const li = document.createElement('li');
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.textContent = it.creator ? `${it.title} — ${it.creator}` : it.title;
+        btn.addEventListener('click', () => { closePanel(); openItem(mesh, { fromLeft: false }); });
+        li.appendChild(btn);
+        ul.appendChild(li);
+      });
+      details.appendChild(ul);
+      nav.appendChild(details);
+    });
+
+    container.appendChild(nav);
+    return { dispose() { nav.remove(); } };
   }
 
   if (!preview) {
+    // The trailing click a touch-drag fires when the finger lifts. Library
+    // was the last raycast scene without this guard, and it was not a
+    // theoretical hazard here: bindOrbitDrag binds touch, so on a phone
+    // EVERY drag to spin the shelf ended by opening the read panel for
+    // whichever spine happened to be under the finger when it left the
+    // glass. sphere, orrery, outside, harmonics and beamline all already
+    // consume this the same way — see bindTapVsDrag's own comment.
+    touchGuard = bindTapVsDrag(container);
+
     onContainerMouseMove = e => {
-      if (panel.classList.contains('open')) return;
-      const rect = container.getBoundingClientRect();
-      mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
-      mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
-      raycaster.setFromCamera(mouse, camera);
-      const hits = raycaster.intersectObjects(items.meshes);
-      const hitMesh = hits.length ? hits[0].object : null;
-      if (hitMesh !== hovered) {
-        if (hovered) setSpineHovered(hovered, false);
-        hovered = hitMesh;
-        if (hovered) setSpineHovered(hovered, true);
-      }
-      container.style.cursor = hovered ? 'pointer' : 'default';
+      pointer.x = e.clientX;
+      pointer.y = e.clientY;
+      pointerMoved = true; // the raycast itself happens in animate()
     };
     container.addEventListener('mousemove', onContainerMouseMove);
 
+    onContainerMouseEnter = refreshRect;
+    container.addEventListener('mouseenter', onContainerMouseEnter);
+
+    onWindowScroll = refreshRect;
+    window.addEventListener('scroll', onWindowScroll, { passive: true });
+
     onContainerMouseLeave = () => {
       if (hovered) { setSpineHovered(hovered, false); hovered = null; }
-      container.style.cursor = 'default';
+      pointerMoved = false;
+      claim?.setCursor('default');
     };
     container.addEventListener('mouseleave', onContainerMouseLeave);
 
     onContainerClick = e => {
-      const rect = container.getBoundingClientRect();
-      mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
-      mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
-      raycaster.setFromCamera(mouse, camera);
-      const hits = raycaster.intersectObjects(items.meshes);
-      const hitMesh = hits.length ? hits[0].object : null;
+      if (touchGuard.consume()) return;
+      // A click is rare enough to afford its own fresh measurement, and
+      // measuring here means the panel's side is decided against the box the
+      // visitor actually clicked in rather than a possibly stale one.
+      refreshRect();
+      const rect = containerRect;
+      const hitMesh = pickAt(e.clientX, e.clientY);
       const it = hitMesh ? hitMesh.userData.item : null;
 
       if (hitMesh && hovered !== hitMesh) {
@@ -1530,24 +1888,29 @@ export function createLibrary(container, { preview = false, initialPieceId = nul
           const clickedLeft = clickedLeftHalf(e, rect);
           if (panel.classList.contains('from-left') !== clickedLeft) {
             panel.classList.remove('open');
-            setTimeout(() => {
+            // panelSlideMs is .library-panel's own --library-panel-slide,
+            // read from the stylesheet rather than hardcoded here; tracked so
+            // leaving the scene inside that window can't land populatePanel
+            // (and its onPieceChange -> location.hash write) on a detached
+            // panel.
+            timers.after(panelSlideMs, () => {
               setPanelSide(panel, clickedLeft);
               populatePanel(it);
               panel.scrollTop = 0;
               panelBodyEl.style.opacity = '1'; // guard against a same-side fade-out still in flight
               panel.classList.add('open');
-              setTimeout(() => panelTitle.focus(), 50);
-            }, 500); // matches .library-panel's own close transition (transform .5s)
+              timers.after(50, () => panelTitle.focus());
+            });
             return;
           }
 
           panelBodyEl.style.transition = 'opacity .18s';
           panelBodyEl.style.opacity = '0';
-          setTimeout(() => {
+          timers.after(180, () => {
             populatePanel(it);
             panel.scrollTop = 0;
             panelBodyEl.style.opacity = '1';
-          }, 180);
+          });
           return;
         }
         panelCloser.close();
@@ -1562,21 +1925,7 @@ export function createLibrary(container, { preview = false, initialPieceId = nul
     };
     container.addEventListener('click', onContainerClick);
 
-    // Keyboard equivalent for "point at a spine" — spines are otherwise
-    // raycast-only. One button per item — the entire catalog, same as
-    // clicking any spine directly — closing first (harmless no-op if
-    // nothing's open) rather than reusing the click path's in-place-swap
-    // animation, which is tuned for a mouse rapidly clicking across
-    // adjacent spines, not a single deliberate keyboard pick.
-    jumpList = createJumpList(container, {
-      label: 'Browse the shelf: books, films, and albums',
-      items: items.meshes,
-      getLabel: mesh => {
-        const it = mesh.userData.item;
-        return it.creator ? `${it.title} — ${it.creator}` : it.title;
-      },
-      onSelect: mesh => { closePanel(); openItem(mesh, { fromLeft: false }); },
-    });
+    jumpList = buildJumpList();
   }
 
   // Deep-link entry/re-entry — resolves a (numeric, book/film/deck-space —
@@ -1620,14 +1969,8 @@ export function createLibrary(container, { preview = false, initialPieceId = nul
     },
   });
 
-  // Zoom range as a ratio of baseDist rather than a fixed distance, so it
-  // scales along with the shelf if the grid ever grows (see COLS/ROWS
-  // above). The ratios themselves are a real design choice, not a
-  // derivable quantity — preview tiles get a narrower range since they're
-  // a small, mostly non-interactive thumbnail, not a scene meant to be
-  // explored up close.
-  const minDist = baseDist * (preview ? 0.46 : 0.35);
-  const maxDist = baseDist * (preview ? 1.21 : 1.42);
+  // minDist/maxDist live in recomputeZoomRange() near the camera above, since
+  // every one of them is re-derived on resize.
   const wheelZoom = bindWheelZoom(container, {
     isBlocked: () => !preview && panel?.classList.contains('open'),
     onZoom: deltaY => {
@@ -1636,19 +1979,39 @@ export function createLibrary(container, { preview = false, initialPieceId = nul
     },
   });
 
-  const reduceMotion = prefersReducedMotion();
+  // Sampled live, not only at mount: a visitor who turns the OS setting on
+  // while the scene is already open used to keep the shimmer until they
+  // navigated away. The shimmer is a per-frame color write, so flipping it at
+  // runtime costs nothing — this is exactly the case onReducedMotionChange
+  // exists for (a scene that bakes the decision into geometry legitimately
+  // can't).
+  let reduceMotion = prefersReducedMotion();
+  const motionWatch = onReducedMotionChange(m => { reduceMotion = m; });
 
-  let animId;
+  // Real elapsed time, not a fixed constant per frame. requestAnimationFrame
+  // fires at the display's refresh rate, so the old `babelT += 0.016` ran the
+  // shimmer at double speed on any 120Hz display and half speed on a
+  // throttled one — orrery, outside and harmonics all already derived theirs
+  // from performance.now(); library was the outlier.
+  const clock = createFrameClock();
+
+  let animId = null;
+  let paused = false;
+  let disposed = false;
   let babelT = 0;
   function animate() {
     animId = requestAnimationFrame(animate);
+    const dt = clock.tick();
     // Library of Babel shimmer — same per-object phase/speed pulse
     // convention as orbiter.js's per-particle drift and aurora shimmers,
-    // adapted to InstancedMesh (see buildBabelBackdrop's update()).
-    if (!reduceMotion) {
-      babelT += 0.016;
+    // adapted to InstancedMesh (see buildBabelBackdrop's update()). `dt * 60`
+    // preserves the rate the old per-frame 0.016 was hand-tuned at on a 60Hz
+    // display, rather than silently retuning it while fixing the timebase.
+    if (babel && !reduceMotion) {
+      babelT += dt * 60 * 0.016;
       babel.update(babelT);
     }
+    updateHover();
     renderer.render(scene, camera);
   }
   animate();
@@ -1657,15 +2020,74 @@ export function createLibrary(container, { preview = false, initialPieceId = nul
     camera.aspect = nw / nh;
     camera.updateProjectionMatrix();
     renderer.setSize(nw, nh);
+    // A window dragged between a Retina and a non-Retina display changes
+    // devicePixelRatio with no other signal — see manageRenderer's comment.
+    managed.applyPixelRatio();
+    // The zoom range is derived from how far back this camera has to sit to
+    // fit the shelf, which depends on camera.aspect — which just changed.
+    // Before v4.0 the handler updated the aspect and the renderer and left
+    // the clamp bounds at whatever the aspect had been at construction: open
+    // the library in landscape on a phone and rotate to portrait, and the
+    // shelf's left and right edges ran off frame with no zoom range able to
+    // recover them, though distanceToFit's own comment promises the framing
+    // stays correct however the grid's shape changes. The visitor's current
+    // zoom is carried across as a RATIO of the new base distance, so rotating
+    // the phone re-frames the shelf without also throwing away how far in
+    // they had zoomed.
+    const zoomRatio = camDist / baseDist;
+    recomputeZoomRange();
+    camDist = Math.max(minDist, Math.min(maxDist, baseDist * zoomRatio));
+    panY = Math.max(-panLimit, Math.min(panLimit, panY));
+    updateCamera();
+    refreshRect();
+    // setSize() clears the drawing buffer, and while paused nothing is going
+    // to redraw it — so a resize that lands on a paused scene (a background
+    // tab, an off-screen preview tile) would otherwise leave a black canvas
+    // sitting there until the visitor came back. One frame, only when the
+    // loop isn't running to produce it.
+    if (paused) renderer.render(scene, camera);
   });
 
   return {
     // Same-scene deep link support (main.js's expandScene) — see
     // openPieceById above.
     openPieceById,
+    // The other half of that: `#library/12` edited back down to `#library`
+    // means "close the piece," which main.js asks every scene with piece-level
+    // open/closed state for (optional-chained, so scenes without one need no
+    // stub). The library has exactly that state, so it answers.
+    closePiece() { panelCloser?.close(); },
+    // main.js pauses preview tiles while a full scene is open, and pauses on
+    // visibilitychange. Pausing stops the rAF loop outright rather than
+    // rendering into a canvas nobody is looking at — which for this scene is
+    // 265 spines and, in full mode, the whole Babel field's per-frame color
+    // re-upload.
+    setPaused(nextPaused) {
+      // A torn-down scene stays down: main.js pauses and resumes from
+      // document-level listeners that can outlive one scene's lifetime by a
+      // frame or two, and resuming here would restart the loop against a
+      // renderer whose context has already been released.
+      if (disposed) return;
+      const wanted = !!nextPaused;
+      if (wanted === paused) return;
+      paused = wanted;
+      if (paused) {
+        cancelAnimationFrame(animId);
+        animId = null;
+      } else {
+        // Resync first, or the first frame back carries the whole paused span
+        // as one clamped dt and the shimmer visibly jumps.
+        clock.resync();
+        animate();
+      }
+    },
     dispose() {
+      disposed = true;
       cancelAnimationFrame(animId);
+      timers.dispose();
+      motionWatch.dispose();
       orbitDrag.dispose();
+      touchGuard?.dispose();
       wheelZoom.dispose();
       resize.dispose();
       panelCloser?.dispose();
@@ -1673,14 +2095,22 @@ export function createLibrary(container, { preview = false, initialPieceId = nul
       if (onContainerMouseMove) container.removeEventListener('mousemove', onContainerMouseMove);
       if (onContainerClick) container.removeEventListener('click', onContainerClick);
       if (onContainerMouseLeave) container.removeEventListener('mouseleave', onContainerMouseLeave);
-      renderer.dispose();
-      frame.geos.forEach(g => g.dispose());
-      frame.mat.dispose();
-      items.disposables.forEach(d => d.dispose());
-      babel.disposables.forEach(d => d.dispose());
+      if (onContainerMouseEnter) container.removeEventListener('mouseenter', onContainerMouseEnter);
+      if (onWindowScroll) window.removeEventListener('scroll', onWindowScroll);
+      // One traversal of the actual scene graph instead of three hand-kept
+      // arrays. This scene's own three-arrays version was complete and
+      // correct, unusually — but only for the slots it happened to name, and
+      // routing it through the shared helper is what makes the texture-slot
+      // coverage uniform site-wide rather than per-scene folklore. It also
+      // reaches anything added to `root` later that a hand-kept array
+      // wouldn't have known about.
+      disposeSceneGraph(root);
+      // Frees the GL context for real (THREE's renderer.dispose() does not)
+      // and removes the canvas — see manageRenderer's own comment.
+      managed.dispose();
+      claim?.restore();
       if (hint) hint.remove();
       if (panel) panel.remove();
-      renderer.domElement.remove();
     },
   };
 }

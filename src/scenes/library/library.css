@@ -13,8 +13,10 @@
    consistency pass; removed again same day, both lines, per Scott's
    call — no title chrome here. */
 .library-hint {
-  position: fixed; color: rgba(255,255,255,0.35);
-  pointer-events: none; text-align: center; z-index: 310;
+  /* `color` and `text-align` were each declared twice here; the first of
+     each was dead (overridden by the later declaration in the same block)
+     and is gone as of v4.0 — the live values are the ones kept below. */
+  position: fixed; pointer-events: none; z-index: 310;
   font-family: 'Arapey', serif;
   top: 4.5rem; right: 1.2rem; font-size: 0.55rem; letter-spacing: 0.2em;
   text-transform: uppercase; line-height: 1.8; text-align: right;
@@ -24,16 +26,34 @@
    below targets the smallest viewport by default; the min-width query
    layers the wider-viewport values on top, never the reverse. */
 .library-panel {
+  /* --library-panel-slide is the panel's own slide-in/out duration, read
+     back by library.js (getComputedStyle) for the one place it has to wait
+     out this transition in JS: the side-flip, which closes the panel,
+     re-anchors it to the other edge, and reopens it. That wait used to be
+     a hand-mirrored `}, 500)` sitting in library.js with a comment saying
+     it matched this line — two numbers that had to agree with nothing
+     enforcing it. Same single-source-of-truth move main.js makes for
+     --scene-crossfade. */
+  --library-panel-slide: .5s;
   position: absolute; top: 0; right: 0; width: 88%; height: 100%;
   background: #0a0806; border-left: 1px solid rgba(230,215,180,0.15);
   padding: 4rem 1.3rem 2rem; transform: translateX(100%);
-  transition: transform .5s cubic-bezier(.16,1,.3,1);
+  transition: transform var(--library-panel-slide) cubic-bezier(.16,1,.3,1);
   overflow-y: auto; z-index: 10;
   scrollbar-color: rgba(230,215,180,0.3) #0a0806; scrollbar-width: thin;
   font-family: 'Arapey', serif;
 
 	@media (min-width: 701px) {
 		width: 34%; padding: 3rem 2rem;
+	}
+
+	/* The reduced-motion block in this file only ever covered .library-link's
+	   glimmer; the panel's own half-second slide across the viewport — much
+	   the larger movement of the two — went straight through it. !important
+	   per STANDARDS.md's accessibility-override category, and so this still
+	   wins over the .no-transition/.from-left rules below. */
+	@media (prefers-reduced-motion: reduce) {
+		transition: none !important;
 	}
 }
 .library-panel.open { transform: translateX(0); }
@@ -155,7 +175,11 @@
 .library-panel-scene:empty { display: none; margin: 0; }
 .library-panel-close {
   position: absolute; top: 1.5rem; right: 1.5rem; background: none;
-  border: none; color: rgba(255,255,255,0.4); font-size: 1.2rem;
+  /* Was 0.4 alpha, which composites to ~3.8:1 against the panel's #0a0806
+     at 19.2px non-bold — under WCAG's 4.5:1 for text this size (the 3:1
+     large-text allowance starts at 24px, or 18.7px bold). 0.55 measures
+     ~6.3:1; :hover stays at 0.9 as before. */
+  border: none; color: rgba(255,255,255,0.55); font-size: 1.2rem;
   cursor: pointer; padding: .5rem; z-index: 2;
 }
 .library-panel-close:hover { color: rgba(255,255,255,0.9); }
@@ -173,10 +197,56 @@
    library.js only ever sets textContent here, never toggles visibility,
    so :empty needs to collapse the line to nothing on its own. */
 .library-panel-refs {
-  font-size: .6rem; letter-spacing: .3em; color: rgba(230,215,180,.3);
+  /* Was .3 alpha — ~2.1:1 against #0a0806, the worst contrast in the
+     scene, on the smallest and most widely-tracked text it has. .55
+     measures ~4.7:1, clear of WCAG's 4.5:1 for small text, without
+     promoting this line out of the quiet-metadata register it shares with
+     sphere's .sphere-facet-id and orbiter's .orbiter-panel-refs. */
+  font-size: .6rem; letter-spacing: .3em; color: rgba(230,215,180,.55);
   margin: 1.4rem 0 0; text-transform: uppercase;
 }
 .library-panel-refs:empty { margin: 0; }
+/* ─── Keyboard jump list ────────────────────────────────────────────────
+   Built locally by library.js instead of through sceneKit's shared
+   createJumpList — see that call site's own comment for why 265 items
+   needs grouping and the flat list sceneKit builds doesn't scale to it.
+
+   Same "parked off-screen until something inside actually takes focus"
+   idiom as .pm-jumplist (styles/main.css) and the site skip-link, but the
+   parking moves from each individual button to the whole container: with
+   items grouped into disclosure sections, a group's items have to be able
+   to sit on screen together, which the one-button-at-a-time version can't
+   do. Off-screen rather than display:none because a display:none element
+   can't take focus, and taking focus is the only thing that reveals this. */
+.library-jumplist {
+  position: fixed; top: 3.5rem; left: 1rem; z-index: 320;
+  width: min(80vw, 26rem); max-height: calc(100vh - 5rem);
+  overflow-y: auto;
+  background: #fff; color: #000;
+  font-family: 'Arapey', serif; font-size: 0.85rem;
+  border-radius: 0 0 4px 4px;
+  transform: translateY(-200vh);
+}
+.library-jumplist:focus-within { transform: none; }
+.library-jumplist ul { list-style: none; margin: 0; padding: 0; }
+.library-jumplist summary {
+  font: inherit; font-weight: bold;
+  padding: .5rem 1rem; cursor: pointer;
+}
+.library-jumplist button {
+  display: block; width: 100%;
+  background: none; border: none;
+  font: inherit; color: inherit; text-align: left;
+  padding: .45rem 1rem .45rem 2rem; cursor: pointer;
+}
+/* Compound selector, not a bare class: it has to out-specify the
+   `.library-jumplist button` rule directly above it, which is (0,1,1). */
+.library-jumplist .library-jumplist-skip { font-weight: bold; padding-left: 1rem; }
+.library-jumplist button:focus-visible,
+.library-jumplist summary:focus-visible {
+  outline: 2px solid #000; outline-offset: -2px;
+}
+
 /* Cross-links, same mechanism as sphere.js's fragment-link and orbiter.js's
    poem-link: a phrase glimmers faintly on its own slow loop so a link
    reads as "alive" even before it's noticed, tuned to library's own
@@ -190,9 +260,15 @@
   border-bottom: 1px dotted rgba(225,175,90,.35);
   cursor: pointer; transition: color .2s;
   animation: library-glimmer 12s ease-in-out infinite;
+
+	/* Nested here from the file's old top-level block, per STANDARDS.md's
+	   "nest on touch" rule for a selector whose responsive/media override
+	   gets edited again. */
+	@media (prefers-reduced-motion: reduce) {
+		animation: none;
+	}
 }
 .library-link:hover, .library-link:focus-visible {
   color: rgba(230,180,95,.95); text-shadow: 0 0 10px rgba(230,180,95,.3);
   animation: none; outline: none;
 }
-@media (prefers-reduced-motion: reduce) { .library-link { animation: none; } }

@@ -3,6 +3,7 @@ import {
   bindOrbitDrag, bindWheelZoom, bindGuardedResize, bindTapVsDrag,
   prefersReducedMotion, parseHTML, createJumpList, createPanelCloser, escapeHtml,
   mountClippedPreviewCanvas, bindPersistedSoundToggle, setPanelSide, clickedLeftHalf,
+  manageRenderer, createFrameClock, trackTimers,
 } from '../../utils/sceneKit.js';
 import { getApprovedResonances, getPendingResonances } from '../../resonances.js';
 import { navigateToPiece } from '../../utils/harmonicsEntry.js';
@@ -239,6 +240,52 @@ function layoutForceDirected(nodeList, edges, scale) {
   nodeList.forEach(nd => nd.pos.sub(centroid));
 }
 
+// ─── Layout memoization (v4.0) ──────────────────────────────────────────────
+// The relaxation above is 400 iterations of an O(n²) repulsion pass. Counted
+// live 2026-09-01 against the real corpus — 64 approved rows, 76 unique nodes
+// (the audit that flagged this said ~61; it has grown since, which is the
+// point) — that is 400 × 2,850 pairs = ~1,140,000 vector subtract/length/scale
+// sequences plus 25,600 edge passes, synchronously on the main thread, with
+// nothing yielding — and main.js's initPreviews() instantiates every scene
+// with {preview:true} on first page load, so the landing page paid the whole
+// relaxation before it could paint, concurrently with nine other scenes'
+// setup. The full scene then paid it again on every open, at the same
+// ITERATIONS and the same n (only GRAPH_SCALE differs, 120 vs 200).
+//
+// It is fully deterministic — initial positions seed from hashStr01 and the
+// relaxation itself has no randomness, which the header above already states
+// as a design property — so identical inputs always settle into an identical
+// shape and the result is trivially cacheable. Keyed by everything that can
+// change it: the scale, and the node/edge sets themselves (approving a row
+// has to invalidate this, and 42 rows were approved in one go once already —
+// see GRAPH_SCALE's own note below). The cost grows quadratically with the
+// corpus, so this gets more valuable over time, not less.
+const layoutCache = new Map();
+
+function layoutSignature(nodeList, edges, scale) {
+  // Hashed rather than stored raw: the graph identity has to be in the key,
+  // but the joined key/wiring strings are multi-kilobyte and the Map is
+  // module-level (it outlives every mount).
+  const keys = nodeList.map(nd => nd.key).join(',');
+  const wiring = edges.map(([a, b]) => a + '-' + b).join(',');
+  return `${scale}|${nodeList.length}|${edges.length}|${hashStr01(keys)}|${hashStr01(wiring)}`;
+}
+
+function layoutForceDirectedCached(nodeList, edges, scale) {
+  const sig = layoutSignature(nodeList, edges, scale);
+  const cached = layoutCache.get(sig);
+  if (cached) {
+    nodeList.forEach((nd, i) => nd.pos.set(cached[i * 3], cached[i * 3 + 1], cached[i * 3 + 2]));
+    return;
+  }
+  layoutForceDirected(nodeList, edges, scale);
+  const settled = new Float64Array(nodeList.length * 3);
+  nodeList.forEach((nd, i) => {
+    settled[i * 3] = nd.pos.x; settled[i * 3 + 1] = nd.pos.y; settled[i * 3 + 2] = nd.pos.z;
+  });
+  layoutCache.set(sig, settled);
+}
+
 // A soft round dot, reused for every node marker — same "canvas gradient,
 // no image asset" convention as every other scene's own glow textures.
 function makeDotTexture() {
@@ -258,6 +305,17 @@ export function createharmonics(container, { preview = false, initialPieceId = n
   const w = container.clientWidth || window.innerWidth;
   const h = container.clientHeight || window.innerHeight;
 
+  // Set as the very first thing dispose() does. Every async continuation and
+  // every deferred callback below checks it before touching scene state —
+  // the headline v4.0 bug was exactly a torn-down scene still being driven
+  // from outside itself (see setSoundEnabled and dispose() below, and
+  // bindPersistedSoundToggle's own comment in sceneKit.js).
+  let disposed = false;
+  // Every setTimeout in this file goes through here so dispose() can drop
+  // whatever is still pending in one call — see trackTimers' own comment for
+  // the Library incident that motivated it.
+  const timers = trackTimers();
+
   // ─── Graph first — everything else (camera bounds, fog density, where
   // the star field/galaxy backdrop sit) derives from the layout's own
   // actual resulting scale, computed here before any of that downstream
@@ -273,7 +331,7 @@ export function createharmonics(container, { preview = false, initialPieceId = n
   // them apart more" per Scott's own direct feedback live. ~33% up covers
   // both the node-count growth and gives real added breathing room.
   const GRAPH_SCALE = preview ? 120 : 200;
-  layoutForceDirected(nodeList, edges, GRAPH_SCALE);
+  layoutForceDirectedCached(nodeList, edges, GRAPH_SCALE);
   let boundRadius = 1;
   nodeList.forEach(n => { boundRadius = Math.max(boundRadius, n.pos.length()); });
 
@@ -325,10 +383,34 @@ export function createharmonics(container, { preview = false, initialPieceId = n
   const KURAMOTO_BASE_HZ = 0.2;
   const KURAMOTO_SPREAD_HZ = 0.06;
   const KURAMOTO_K = 2 * Math.PI * 0.15;
-  const omega = nodeList.map(n => 2 * Math.PI * (KURAMOTO_BASE_HZ + (hashStr01(n.key + ':freq') * 2 - 1) * KURAMOTO_SPREAD_HZ));
-  const theta = nodeList.map(n => hashStr01(n.key + ':phase0') * Math.PI * 2);
-  const boost = nodeList.map(() => 0); // 0..~1, decays after a click — briefly emphasizes the clicked node and its synced neighbors rather than drawing new geometry
-  const effHz = nodeList.map(() => KURAMOTO_BASE_HZ); // dθ/dt of the last integration step, in Hz — round 10's sonification pitch input, see below
+  //
+  // v4.0: these four are typed arrays rather than plain ones, and the
+  // adjacency is flattened into CSR (compressed sparse row) alongside them.
+  // The integration loop in animate() used to run `theta.slice()` — a fresh
+  // n-element array allocated every frame — and `adj[i].forEach(j => ...)`,
+  // which builds a fresh closure over coupling/theta/i per node per frame:
+  // ~4,560 a second at the corpus's current 76 nodes. The graph never changes
+  // after mount, so
+  // flattening it once here makes the hot loop two indexed `for`s over
+  // contiguous memory with no allocation at all.
+  const N = nodeList.length;
+  const omega = new Float64Array(N);
+  const theta = new Float64Array(N);
+  const boost = new Float64Array(N); // 0..~1, decays after a click — briefly emphasizes the clicked node and its synced neighbors rather than drawing new geometry
+  const effHz = new Float64Array(N).fill(KURAMOTO_BASE_HZ); // dθ/dt of the last integration step, in Hz — round 10's sonification pitch input, see below
+  nodeList.forEach((n, i) => {
+    omega[i] = 2 * Math.PI * (KURAMOTO_BASE_HZ + (hashStr01(n.key + ':freq') * 2 - 1) * KURAMOTO_SPREAD_HZ);
+    theta[i] = hashStr01(n.key + ':phase0') * Math.PI * 2;
+  });
+  // adjStart[i]..adjStart[i+1] indexes this node's neighbours inside adjIdx —
+  // the exact same graph `adj` holds, just laid out for the hot loop. `adj`
+  // itself stays: triggerBoost below walks it once per click, where a plain
+  // array reads better and costs nothing.
+  const adjStart = new Int32Array(N + 1);
+  for (let i = 0; i < N; i++) adjStart[i + 1] = adjStart[i] + adj[i].length;
+  const adjIdx = new Int32Array(adjStart[N]);
+  for (let i = 0, k = 0; i < N; i++) for (let j = 0; j < adj[i].length; j++) adjIdx[k++] = adj[i][j];
+  const thetaNext = new Float64Array(N); // reused every frame, never reallocated
   function triggerBoost(i) {
     boost[i] = 1;
     adj[i].forEach(j => { boost[j] = Math.max(boost[j], 0.7); });
@@ -341,7 +423,16 @@ export function createharmonics(container, { preview = false, initialPieceId = n
 
   const camera = new THREE.PerspectiveCamera(46, w / h, 0.1, CAM_FAR);
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-  renderer.setPixelRatio(window.devicePixelRatio);
+  // Pixel ratio through manageRenderer rather than raw window.devicePixelRatio
+  // (v4.0). This scene is the site's heaviest overdraw case by some distance —
+  // 1,600 stars, 5,000 additive galaxy points, 2,200 deliberately large soft
+  // dust sprites, 61 nodes and 61 haloes, every one of them transparent with
+  // depthWrite:false — so on a DPR-3 phone uncapped meant nine times the
+  // fragments of the DPR-1 case the look was tuned against. manageRenderer
+  // also owns the real GL-context release and the webglcontextlost handler;
+  // see its own comment in sceneKit.js for why renderer.dispose() alone
+  // isn't enough.
+  const managedRenderer = manageRenderer(renderer);
   renderer.setSize(w, h);
   renderer.setClearColor(0x000000, 1);
   renderer.domElement.setAttribute('aria-hidden', 'true');
@@ -355,7 +446,9 @@ export function createharmonics(container, { preview = false, initialPieceId = n
   // append it always had.
   const clippedPreview = preview ? mountClippedPreviewCanvas(container, renderer) : null;
   if (!preview) container.appendChild(renderer.domElement);
-  if (!preview) container.tabIndex = -1;
+  // No `container.tabIndex = -1` here: main.js:359 already sets tabindex="-1"
+  // on #experience-container when it opens a scene, so this was a second
+  // place to keep in agreement with no second effect.
 
   scene.add(new THREE.AmbientLight(0x223355, 1.0));
   const key = new THREE.DirectionalLight(0xaad4ff, 0.9);
@@ -849,10 +942,32 @@ export function createharmonics(container, { preview = false, initialPieceId = n
   // decision runs, since none of that touches panel DOM classes; `populate`
   // is a plain closure so it can be called either immediately or after the
   // close/wait/reopen dance below, without resolving twice.
+  //
+  // v4.0 — focus on open. Opening a role="dialog" without moving focus into
+  // it leaves a keyboard or screen-reader visitor standing on the (now
+  // invisible) jump-list button behind the panel: no announcement that
+  // anything happened, and nothing to do but blind-Tab until they find it.
+  // harmonics.html:41 has carried `tabindex="-1"` on
+  // .harmonics-panel-title since it was written, specifically so focus could
+  // land there — nothing ever called focus() on it, so the attribute was
+  // dead. Orbiter has the identical panel skeleton and does this correctly in
+  // both branches (orbiter.js:920, :929); this is that, same 50ms beat, which
+  // lets the slide-in start before focus lands rather than announcing a panel
+  // that's still off-screen. createPanelCloser already returns focus to
+  // `container` on close — only the entry half was missing.
+  function focusPanelTitle() {
+    if (disposed || !panelTitleEl) return;
+    panelTitleEl.focus();
+  }
+
   async function openNodePanel(nodeIndex, { fromLeft } = {}) {
     if (!panel) return;
     const node = nodeList[nodeIndex];
     const resolveEndpoint = await loadResolveEndpoint();
+    // The import can settle after the visitor has already left this scene —
+    // populate() would then write into a detached panel (and, before the
+    // focus move above existed, do nothing visible at all).
+    if (disposed) return;
     const self = resolveEndpoint(node.endpoint);
     const selfHex = `#${(SCENE_ACCENT[node.scene] ?? 0xffffff).toString(16).padStart(6, '0')}`;
     const conns = nodeResonances(nodeIndex);
@@ -938,16 +1053,18 @@ export function createharmonics(container, { preview = false, initialPieceId = n
       // then reopen anchored to the new side once the close transition
       // finishes — same pattern as sphere.js/orbiter.js's own panels.
       panel.classList.remove('open');
-      setTimeout(() => {
+      timers.after(500, () => {
         setPanelSide(panel, fromLeft);
         populate();
         panel.classList.add('open');
-      }, 500);
+        timers.after(50, focusPanelTitle);
+      });
       return;
     }
     if (!wasOpen && sideMismatch) setPanelSide(panel, fromLeft);
     populate();
     panel.classList.add('open');
+    timers.after(50, focusPanelTitle);
   }
 
   // Round 10's living atmosphere: touching a pending point gets, at most,
@@ -958,6 +1075,7 @@ export function createharmonics(container, { preview = false, initialPieceId = n
     if (!panel) return;
     const p = pendingList[pendingIndex];
     const resolveEndpoint = await loadResolveEndpoint();
+    if (disposed) return; // same late-resolution guard as openNodePanel above
     const info = resolveEndpoint(p.endpoint);
 
     const populate = () => {
@@ -970,16 +1088,18 @@ export function createharmonics(container, { preview = false, initialPieceId = n
     const sideMismatch = fromLeft !== undefined && panel.classList.contains('from-left') !== fromLeft;
     if (wasOpen && sideMismatch) {
       panel.classList.remove('open');
-      setTimeout(() => {
+      timers.after(500, () => {
         setPanelSide(panel, fromLeft);
         populate();
         panel.classList.add('open');
-      }, 500);
+        timers.after(50, focusPanelTitle);
+      });
       return;
     }
     if (!wasOpen && sideMismatch) setPanelSide(panel, fromLeft);
     populate();
     panel.classList.add('open');
+    timers.after(50, focusPanelTitle);
   }
 
   // Thread-follow deep link: `initialPieceId` (main.js's generic piece-id
@@ -1008,6 +1128,11 @@ export function createharmonics(container, { preview = false, initialPieceId = n
 
   // ─── Drag to orbit + wheel zoom ──────────────────────────────────────────
   let autoRotate = true;
+  // Tracked and single-shot (v4.0): two quick drags used to leave two pending
+  // untracked timers, and the first to fire re-enabled auto-rotate three
+  // seconds after the FIRST drag ended rather than the last — the camera
+  // started drifting under a hand that was still working.
+  let autoRotateTimer = null;
   const touchGuard = !preview ? bindTapVsDrag(container) : null;
   const orbitDrag = !preview ? bindOrbitDrag(container, {
     onDragStart: () => { autoRotate = false; },
@@ -1016,7 +1141,10 @@ export function createharmonics(container, { preview = false, initialPieceId = n
       phi = THREE.MathUtils.clamp(phi - dy, PHI_MIN, PHI_MAX);
       updateCamera();
     },
-    onDragEnd: () => { setTimeout(() => { autoRotate = true; }, 3000); },
+    onDragEnd: () => {
+      if (autoRotateTimer !== null) timers.cancel(autoRotateTimer);
+      autoRotateTimer = timers.after(3000, () => { autoRotateTimer = null; autoRotate = true; });
+    },
   }) : null;
   const wheelZoom = !preview ? bindWheelZoom(container, {
     onZoom: deltaY => {
@@ -1031,10 +1159,13 @@ export function createharmonics(container, { preview = false, initialPieceId = n
   // stands in for the old dedicated hit-mesh now that there's nothing
   // else to click.
   const raycaster = new THREE.Raycaster();
-  raycaster.params.Points.threshold = 8 * SCALE_FACTOR;
+  // No threshold assignment here (removed v4.0): pickNodeAt and pickPendingAt
+  // each set their own — deliberately different radii, see pickPendingAt's own
+  // comment — immediately before every use, so a constructor-time value was
+  // overwritten before it could ever apply to anything.
   const pointerNdc = new THREE.Vector2();
   let hoveredIdx = -1;
-  let onMove = null, onClick = null;
+  let onMove = null, onClick = null, onLeave = null;
   function pickNodeAt(clientX, clientY) {
     const rect = container.getBoundingClientRect();
     pointerNdc.x = ((clientX - rect.left) / rect.width) * 2 - 1;
@@ -1067,6 +1198,18 @@ export function createharmonics(container, { preview = false, initialPieceId = n
       }
     };
     container.addEventListener('mousemove', onMove);
+    // v4.0: moving the cursor off the canvas entirely — onto the nav, onto
+    // the sound toggle, out of the window — never cleared the hover, so the
+    // node stayed brightened with its halo drawn and container.style.cursor
+    // stuck at 'pointer' with nothing under the pointer to justify it.
+    // Outside already handles this correctly (outside.js's onPointerLeave);
+    // same fix, same event.
+    onLeave = () => {
+      if (hoveredIdx === -1) return;
+      hoveredIdx = -1;
+      container.style.cursor = 'default';
+    };
+    container.addEventListener('pointerleave', onLeave);
     onClick = e => {
       if (touchGuard?.consume()) return;
       const idx = pickNodeAt(e.clientX, e.clientY);
@@ -1086,17 +1229,58 @@ export function createharmonics(container, { preview = false, initialPieceId = n
     container.addEventListener('click', onClick);
   }
 
-  // Keyboard equivalent — nodes are otherwise raycast-only. Labels stay
-  // generic ("Piece N") — the panel itself is what discloses identity
-  // once open.
+  // Keyboard equivalent — nodes are otherwise raycast-only.
+  //
+  // v4.0 fixes two things here.
+  //
+  // (1) Labels used to read "Piece 1" … "Piece 61", defended in this comment
+  // as "the panel discloses identity once open." Sixty-one buttons that all
+  // read the same is not a list anyone can navigate, and the defence stopped
+  // being necessary the moment the scene started warming loadResolveEndpoint()
+  // at mount (see the fire-and-forget call in the chrome block above) — the
+  // real titles land a moment later at zero extra cost, and
+  // resolveEndpoint(node.endpoint).title is literally the same string the
+  // panel prints. So the numbered labels stay only as the pre-resolution
+  // fallback, and get replaced in place once the promise settles.
+  //
+  // (2) Pending points had no non-mouse trigger AT ALL: pickPendingAt is a
+  // mouse path only and this list covered `nodeList` alone, so
+  // openPendingPanel was unreachable from a keyboard. They're folded into
+  // this same list rather than given a second one — one list, one Tab stop,
+  // and the "— pending review" suffix carries exactly the distinction the
+  // panel's own subtitle makes. The corpus happens to have zero pending rows
+  // right now (all 42 were approved in one go, see GRAPH_SCALE's note above),
+  // so today this adds nothing to the rendered list; writing it data-driven
+  // means the next pending row is reachable without another pass.
   let jumpList = null;
-  if (!preview && nodeList.length) {
+  const jumpItems = [
+    ...nodeList.map((node, i) => ({ node, index: i, pending: false })),
+    ...pendingList.map((node, i) => ({ node, index: i, pending: true })),
+  ];
+  if (!preview && jumpItems.length) {
     jumpList = createJumpList(container, {
       label: 'Touch a node',
-      items: nodeList,
-      getLabel: (_node, i) => `Piece ${i + 1}`,
-      onSelect: (_node, i) => { triggerBoost(i); openNodePanel(i, { fromLeft: false }); },
+      items: jumpItems,
+      getLabel: item => (item.pending ? `Pending resonance ${item.index + 1}` : `Piece ${item.index + 1}`),
+      onSelect: item => {
+        if (item.pending) { openPendingPanel(item.index, { fromLeft: false }); return; }
+        triggerBoost(item.index);
+        openNodePanel(item.index, { fromLeft: false });
+      },
     });
+    loadResolveEndpoint().then(resolveEndpoint => {
+      if (disposed || !jumpList) return;
+      // createJumpList owns the markup, so relabelling reads its buttons back
+      // out of the DOM in the order it appended them (one per item, same
+      // order as `jumpItems`) rather than duplicating list construction here.
+      const btns = container.querySelectorAll('.pm-jumplist button');
+      jumpItems.forEach((item, i) => {
+        const btn = btns[i];
+        if (!btn) return;
+        const { title } = resolveEndpoint(item.node.endpoint);
+        btn.textContent = item.pending ? `${title} — pending review` : title;
+      });
+    }).catch(() => { /* resolver failed to load — the numbered fallback labels above stand */ });
   }
 
   if (followedNodeIndex !== -1) {
@@ -1230,6 +1414,20 @@ export function createharmonics(container, { preview = false, initialPieceId = n
   }
 
   function setSoundEnabled(on) {
+    // v4.0, the second belt on the headline bug. bindPersistedSoundToggle
+    // used to leave a `pointerdown` listener on the shared
+    // #experience-container — which main.js only ever empties, never
+    // replaces — so one pointer-down inside ANY later scene called straight
+    // into here from a scene that no longer existed, built a brand-new
+    // AudioContext (dispose() nulls audioCtx, so buildAudioGraph's own
+    // `if (audioCtx) return` guard couldn't stop it) and started 152
+    // oscillators (two per node, at the corpus's current 76) plus a convolver
+    // that nothing could ever close. Four
+    // orphaned running contexts were reproduced against Chrome's ~6-per-page
+    // cap. The helper now returns a dispose() and this scene calls it (see
+    // soundToggle below), which is the real fix; this guard makes a stale
+    // call from any other route a no-op too.
+    if (disposed) return;
     soundEnabled = on;
     if (on) buildAudioGraph();
     if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
@@ -1249,16 +1447,107 @@ export function createharmonics(container, { preview = false, initialPieceId = n
   // needs a deferred first-gesture activation rather than just re-reading
   // the stored value at mount (browser autoplay policy) and how it avoids
   // fighting an explicit click on the toggle itself.
-  bindPersistedSoundToggle(container, soundToggleEl, setSoundEnabled, 'harmonics');
+  const soundToggle = bindPersistedSoundToggle(container, soundToggleEl, setSoundEnabled, 'harmonics');
+
+  // ─── Tab visibility (v4.0) ───────────────────────────────────────────────
+  // This scene's entire sonification is driven from animate(), and animate()
+  // is requestAnimationFrame — which stalls when the tab backgrounds. Through
+  // v3.16.2 that meant every setTargetAtTime simply stopped being issued
+  // while all 152 oscillators held their last target: a static chord droning
+  // out of a hidden tab, with the toggle that would stop it unreachable.
+  //
+  // Outside hit the same hazard from the other side and solved it with a
+  // setInterval lookahead scheduler keyed to audioCtx.currentTime (see
+  // outside.js:944-976 for the full writeup). That is the right fix for
+  // discrete scheduled events; this scene is one continuous drone with no
+  // events to schedule ahead, so the cheap correct answer is the opposite —
+  // stop the audio clock rather than try to keep feeding it. Suspending also
+  // fixes the desync the dt clamp caused: with both the simulation and the
+  // audio stopped, they resume in agreement instead of the audible pitch
+  // relationships quietly drifting away from the visible ones.
+  //
+  // The resume half doubles as the mobile-Safari fix Outside already carries:
+  // some engines auto-suspend an AudioContext on backgrounding and expect an
+  // explicit resume() once visible again, which setSoundEnabled's own resume
+  // never covers because it only runs on an actual toggle click.
+  const onVisibilityChange = () => {
+    if (disposed) return;
+    if (document.hidden) {
+      if (audioCtx && audioCtx.state === 'running') audioCtx.suspend();
+      return;
+    }
+    // First frame back would otherwise arrive as one long dt — clamped to
+    // 0.05s, but still a visible jump in every node's phase.
+    clock.resync();
+    if (soundEnabled && audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+  };
+  document.addEventListener('visibilitychange', onVisibilityChange);
 
   const reduceMotion = prefersReducedMotion();
 
+  // ─── Reduced motion: settle the oscillators once, then hold ──────────────
+  // v4.0. The `if (!reduceMotion)` block in animate() gates camera
+  // auto-rotate, both backdrop rotations, the twinkle and the pending drift —
+  // but it closed before the Kuramoto integration and before the node
+  // brightness loop, so all 76 nodes kept their 0.2Hz pulse regardless. That
+  // pulse is not decoration to leave running: this file's own header calls it
+  // "visibly breathing together" and describes it as THE carrier of the
+  // scene's meaning, which is exactly why a continuous full-screen luminance
+  // oscillation is the wrong thing to hand a visitor who asked for none.
+  //
+  // Freezing theta at its seeded initial phases would stop the motion but
+  // would also throw away the one thing the model exists to show. So the
+  // simulation is run to settlement here instead — once, at mount, ~15
+  // simulated seconds against the round-8 tuning note's own measurement that
+  // every multi-node cluster reaches ~0.97-1.00 coherence within ~5 — and
+  // then held. A reduced-motion visitor gets the locked state as a still
+  // image: each cluster at its own shared brightness, exactly the structure
+  // the animation is there to reveal, just not moving. animate() then skips
+  // both the per-frame integration and the per-frame colour upload entirely
+  // (see its own note), so this is cheaper as well as calmer.
+  //
+  // `boost` and `hoverMult` still apply on top: those are visitor-initiated,
+  // and the hover-halo block below already establishes that convention for
+  // this scene (round 10's brighten-on-hover stays under reduced motion, only
+  // the ease is skipped).
+  if (reduceMotion && N) {
+    const SETTLE_DT = 0.05;
+    const SETTLE_STEPS = Math.round(15 / SETTLE_DT);
+    for (let step = 0; step < SETTLE_STEPS; step++) {
+      for (let i = 0; i < N; i++) {
+        let coupling = 0;
+        for (let k = adjStart[i]; k < adjStart[i + 1]; k++) coupling += Math.sin(theta[adjIdx[k]] - theta[i]);
+        const dtheta = omega[i] + KURAMOTO_K * coupling;
+        effHz[i] = Math.abs(dtheta) / (2 * Math.PI);
+        thetaNext[i] = theta[i] + SETTLE_DT * dtheta;
+      }
+      theta.set(thetaNext);
+    }
+  }
+
   // ─── Animate ──────────────────────────────────────────────────────────────
-  let animId, lastT = performance.now();
+  const clock = createFrameClock();
+  let animId = null;
+  let paused = false;
+
+  // Under reduced motion `theta` is held still (settled once at mount above),
+  // so the only things that can change a node's colour between frames are the
+  // two visitor-initiated multipliers — `boost`, decaying after a click, and
+  // `hoverMult`. These track whether either is still in flight, so the
+  // whole-corpus colour loop and its attribute upload can both be skipped once
+  // they've come to rest rather than rewriting a bit-identical buffer 60×/s.
+  let paintedHoverIdx = -2; // -2 = nothing painted yet; -1 is a real "no hover"
+  let painted = false;
+
+  // Sonification bookkeeping — see the audio block at the bottom of animate()
+  // for why each of these exists.
+  const lastFreq = new Float64Array(N).fill(-1);
+  const GAIN_UPDATE_INTERVAL = 0.05; // seconds — ~20Hz
+  let gainAccum = GAIN_UPDATE_INTERVAL;
+
   function animate(now) {
     animId = requestAnimationFrame(animate);
-    const dt = Math.min(0.05, (now - lastT) / 1000);
-    lastT = now;
+    const dt = clock.tick();
 
     if (!reduceMotion) {
       if (autoRotate && !(orbitDrag && orbitDrag.isDragging)) {
@@ -1307,15 +1596,20 @@ export function createharmonics(container, { preview = false, initialPieceId = n
     // sums only over each node's real adjacency, not every other node.
     // `effHz` captures dθ/dt itself (before it's folded into theta) —
     // sonification's pitch input, see the audio section above.
-    const newTheta = theta.slice();
-    for (let i = 0; i < nodeList.length; i++) {
-      let coupling = 0;
-      adj[i].forEach(j => { coupling += Math.sin(theta[j] - theta[i]); });
-      const dtheta = omega[i] + KURAMOTO_K * coupling;
-      effHz[i] = Math.abs(dtheta) / (2 * Math.PI);
-      newTheta[i] = theta[i] + dt * dtheta;
+    // v4.0: allocation-free — CSR adjacency (adjStart/adjIdx) and a reused
+    // thetaNext, replacing a per-frame theta.slice() and a per-node closure.
+    // Skipped entirely under reduced motion: theta was settled once at mount
+    // and deliberately holds there (see the settle loop above).
+    if (!reduceMotion) {
+      for (let i = 0; i < N; i++) {
+        let coupling = 0;
+        for (let k = adjStart[i]; k < adjStart[i + 1]; k++) coupling += Math.sin(theta[adjIdx[k]] - theta[i]);
+        const dtheta = omega[i] + KURAMOTO_K * coupling;
+        effHz[i] = Math.abs(dtheta) / (2 * Math.PI);
+        thetaNext[i] = theta[i] + dt * dtheta;
+      }
+      theta.set(thetaNext);
     }
-    for (let i = 0; i < nodeList.length; i++) theta[i] = newTheta[i];
 
     // Hover halo: eases toward/away from the hovered node's own position
     // and accent color; visible: false when fully faded avoids drawing an
@@ -1342,16 +1636,29 @@ export function createharmonics(container, { preview = false, initialPieceId = n
     // not a decorative shimmer — this IS the resonance signal now.
     // `boost` (click emphasis) and a hover brighten both ride on top,
     // multiplicatively, and neither adds new geometry.
-    const colAttr = nodeGeo.attributes.color;
-    for (let i = 0; i < nodeList.length; i++) {
-      boost[i] = Math.max(0, boost[i] - dt * 1.2);
-      const pulse = 0.5 + 0.5 * Math.sin(theta[i]);
-      const hoverMult = i === hoveredIdx ? 1 + 0.9 * hoverScale : 1;
-      const brightness = Math.min(2.6, (0.35 + 1.0 * pulse) * (1 + boost[i]) * hoverMult);
-      tmpColor.setHex(SCENE_ACCENT[nodeList[i].scene] ?? 0xffffff).multiplyScalar(brightness);
-      colAttr.setXYZ(i, tmpColor.r, tmpColor.g, tmpColor.b);
+    //
+    // v4.0: under reduced motion the phase term is constant, so this whole
+    // loop plus the colour-attribute upload runs only while a click boost is
+    // still decaying or the hover has just moved — otherwise it would be
+    // recomputing an identical buffer every frame to produce an identical
+    // image. (Under normal motion nothing changes: the phase moves every
+    // frame, so every frame genuinely needs the write.)
+    let boostActive = false;
+    for (let i = 0; i < N; i++) { if (boost[i] > 0) { boostActive = true; break; } }
+    if (!reduceMotion || !painted || boostActive || hoveredIdx !== paintedHoverIdx) {
+      const colAttr = nodeGeo.attributes.color;
+      for (let i = 0; i < N; i++) {
+        boost[i] = Math.max(0, boost[i] - dt * 1.2);
+        const pulse = 0.5 + 0.5 * Math.sin(theta[i]);
+        const hoverMult = i === hoveredIdx ? 1 + 0.9 * hoverScale : 1;
+        const brightness = Math.min(2.6, (0.35 + 1.0 * pulse) * (1 + boost[i]) * hoverMult);
+        tmpColor.setHex(SCENE_ACCENT[nodeList[i].scene] ?? 0xffffff).multiplyScalar(brightness);
+        colAttr.setXYZ(i, tmpColor.r, tmpColor.g, tmpColor.b);
+      }
+      colAttr.needsUpdate = true;
+      paintedHoverIdx = hoveredIdx;
+      painted = true;
     }
-    colAttr.needsUpdate = true;
 
     // Living atmosphere: independent linear drift, wrapped back into the
     // volume from a fresh random point/velocity on exit — "appearing and
@@ -1391,23 +1698,50 @@ export function createharmonics(container, { preview = false, initialPieceId = n
     // zoom bounds), so it responds to both zoom AND orbit position, with
     // a floor rather than a hard cutoff — a far node goes quiet, not
     // silent, since it's still part of the chord.
-    if (audioCtx && voices) {
+    //
+    // v4.0, three gates on a block that was scheduling 3 AudioParam events per
+    // node per frame — 228 at the corpus's current 76 nodes, ~13,700 a second:
+    //
+    // (1) `soundEnabled`. This variable was assigned in two places and read in
+    // nowhere at all — the guard here was `if (audioCtx && voices)`. Muting
+    // only ramps masterGain to 0; the context, the 122 oscillators and the
+    // convolver all stay alive, so once a visitor had EVER enabled sound this
+    // loop ran forever at full cost with the toggle reading "Sound off."
+    //
+    // (2) `!document.hidden`. The context is suspended while the tab is
+    // hidden (see onVisibilityChange above), so currentTime isn't advancing
+    // and every event would pile onto the same instant.
+    //
+    // (3) Rate. pitchForEffHz snaps to one of 7 integer harmonics, so
+    // targetFreq genuinely changes only every few seconds — `lastFreq` skips
+    // both frequency ramps until it actually moves. And the gain ramps run at
+    // ~20Hz rather than per-frame: a 0.35s time constant cannot resolve
+    // 120Hz updates, so the ~100 extra events/s per voice were inaudible by
+    // construction.
+    if (soundEnabled && audioCtx && voices && !document.hidden) {
       const now2 = audioCtx.currentTime;
       const DIST_FLOOR = 0.12;
-      for (let i = 0; i < nodeList.length; i++) {
-        const pulse = 0.5 + 0.5 * Math.sin(theta[i]);
-        const dist = camera.position.distanceTo(nodeList[i].pos);
-        const distFactor = THREE.MathUtils.clamp(1 - (dist - CAM_MIN) / (CAM_MAX - CAM_MIN), DIST_FLOOR, 1);
-        const targetGain = Math.min(1, (0.03 + 0.22 * pulse) * (1 + boost[i] * 0.2)) * VOICE_SCALE * distFactor;
-        const targetFreq = pitchForEffHz(effHz[i]);
+      gainAccum += dt;
+      const writeGain = gainAccum >= GAIN_UPDATE_INTERVAL;
+      if (writeGain) gainAccum = 0;
+      for (let i = 0; i < N; i++) {
         // Slower time constants than earlier passes — a singing bowl
         // swells and settles, it doesn't step. Both detuned oscillators
         // glide to the same target frequency so the pair keeps beating
         // at a consistent, gentle rate through a harmonic change rather
         // than snapping in and out of sync.
+        const targetFreq = pitchForEffHz(effHz[i]);
+        if (targetFreq !== lastFreq[i]) {
+          lastFreq[i] = targetFreq;
+          voices[i].osc.frequency.setTargetAtTime(targetFreq, now2, 0.4);
+          voices[i].osc2.frequency.setTargetAtTime(targetFreq, now2, 0.4);
+        }
+        if (!writeGain) continue;
+        const pulse = 0.5 + 0.5 * Math.sin(theta[i]);
+        const dist = camera.position.distanceTo(nodeList[i].pos);
+        const distFactor = THREE.MathUtils.clamp(1 - (dist - CAM_MIN) / (CAM_MAX - CAM_MIN), DIST_FLOOR, 1);
+        const targetGain = Math.min(1, (0.03 + 0.22 * pulse) * (1 + boost[i] * 0.2)) * VOICE_SCALE * distFactor;
         voices[i].gain.gain.setTargetAtTime(targetGain, now2, 0.35);
-        voices[i].osc.frequency.setTargetAtTime(targetFreq, now2, 0.4);
-        voices[i].osc2.frequency.setTargetAtTime(targetFreq, now2, 0.4);
       }
     }
 
@@ -1420,20 +1754,50 @@ export function createharmonics(container, { preview = false, initialPieceId = n
     camera.aspect = nw / nh;
     camera.updateProjectionMatrix();
     renderer.setSize(nw, nh);
+    // A window dragged between a Retina and a non-Retina display changes
+    // devicePixelRatio with no other signal — see manageRenderer's own note.
+    managedRenderer.applyPixelRatio();
   });
 
   return {
+    // main.js pauses preview tiles while a full scene is open, and on
+    // visibilitychange. Stopping the rAF loop is the whole point — a paused
+    // tile shouldn't be integrating 76 coupled oscillators and rendering
+    // ~9,000 transparent points behind an opaque overlay — so the clock has to be
+    // resynced on the way back in, or the first frame home arrives as one
+    // clamped-but-still-visible 50ms jump.
+    setPaused(next) {
+      if (disposed || paused === next) return;
+      paused = next;
+      if (paused) {
+        if (animId !== null) cancelAnimationFrame(animId);
+        animId = null;
+      } else {
+        clock.resync();
+        animId = requestAnimationFrame(animate);
+      }
+    },
     dispose() {
-      cancelAnimationFrame(animId);
+      // First, not last: every deferred callback below (panel population
+      // after an await, the jump-list relabel, a tracked timer that already
+      // fired) reads this before touching scene state.
+      disposed = true;
+      if (animId !== null) cancelAnimationFrame(animId);
+      timers.dispose();
       resize.dispose();
       orbitDrag?.dispose();
       wheelZoom?.dispose();
       touchGuard?.dispose();
       jumpList?.dispose();
       panelCloser?.dispose();
+      // The headline v4.0 leak: this listener used to have no way off the
+      // shared #experience-container at all. See setSoundEnabled above.
+      soundToggle.dispose();
+      document.removeEventListener('visibilitychange', onVisibilityChange);
       if (onMove) container.removeEventListener('mousemove', onMove);
+      if (onLeave) container.removeEventListener('pointerleave', onLeave);
       if (onClick) container.removeEventListener('click', onClick);
-      renderer.dispose();
+      managedRenderer.dispose();
       clippedPreview?.dispose();
 
       starGeo.dispose(); starMat.dispose();
@@ -1454,13 +1818,21 @@ export function createharmonics(container, { preview = false, initialPieceId = n
       compressor?.disconnect();
       reverb?.disconnect();
       reverbGain?.disconnect();
+      // Close AND null, in that order, and null every node hanging off it.
+      // Outside's dispose() does exactly the same thing for exactly this
+      // reason: the two scenes carried the same stale-listener bug and
+      // produced two completely different symptoms purely because one nulled
+      // its context and the other didn't (Harmonics rebuilt a fresh graph;
+      // Outside re-armed an unclearable setInterval against a closed one).
+      // Symmetric teardown is what stops that class of divergence.
       if (audioCtx) { audioCtx.close(); audioCtx = null; }
+      masterGain = compressor = reverb = reverbGain = voices = null;
+      soundEnabled = false;
 
       titleEl?.remove();
       hintEl?.remove();
       soundToggleEl?.remove();
       panel?.remove();
-      renderer.domElement.remove();
     },
   };
 }

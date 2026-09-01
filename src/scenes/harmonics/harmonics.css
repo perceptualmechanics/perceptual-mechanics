@@ -229,7 +229,14 @@
   border: none; color: rgba(255,255,255,0.4); font-size: 1.2rem;
   cursor: pointer; padding: .5rem;
 }
-.harmonics-panel-close:hover { color: rgba(255,255,255,.9); }
+/* :focus-visible alongside :hover (v4.0) — every other interactive control
+   in this file pairs the two (.harmonics-sound-toggle, .harmonics-endpoint-link)
+   and this one didn't, so a keyboard visitor Tabbing to the close button got
+   no styled indication they'd landed on it. It matters more now that opening
+   the panel moves focus into it (harmonics.js's focusPanelTitle), which makes
+   this button the very next Tab stop rather than something reached by
+   accident. */
+.harmonics-panel-close:hover, .harmonics-panel-close:focus-visible { color: rgba(255,255,255,.9); }
 /* Round 8: one repeatable block per resonance the clicked node
    participates in (rationale + jump button), replacing the old
    single-rationale/two-endpoint layout — see harmonics.html's own

@@ -20,6 +20,13 @@
 		transition: none;
 	}
 }
+/* The <img> now sits inside a <picture> (WebP source + PNG fallback).
+   display:contents drops the <picture>'s own box so the <img> stays the
+   direct flex item of .colophon-mark and its width:78% keeps resolving
+   against the button's 48px content box exactly as it did before — a
+   <picture> with a box of its own would shrink-to-fit and the percentage
+   would resolve against that instead. */
+.colophon-mark picture { display: contents; }
 .colophon-mark img {
   width: 78%; height: auto; display: block; position: relative;
   /* Burnished-gold read: warm the ink's browns toward true gold and
@@ -32,7 +39,15 @@
    as an alpha mask) so the shine only crosses the metal, not the
    transparent gaps between the scrollwork. mix-blend-mode:screen
    lays the highlight on top of the already-gold-filtered image
-   underneath rather than replacing it. */
+   underneath rather than replacing it.
+
+   The URL is unchanged but the file behind it is now the 150x129 asset
+   (3,036,690 B -> 30,712 B); its alpha channel, which is the entire
+   point of this mask, survived the resize bit-for-bit. Deliberately the
+   PNG and not the WebP: per STANDARDS.md the -webkit-mask- prefix is
+   carried for Safari 9-15.3, and Safari only gained WebP in 14 — a WebP
+   mask would silently fail there and paint the raw gradient rectangle
+   over the button instead of a hare-shaped gleam. */
 .colophon-mark::after {
   content: '';
   position: absolute; inset: 0;
@@ -72,22 +87,58 @@
 	}
 }
 .colophon-mark:focus-visible {
-  outline: 2px solid rgba(255,255,255,0.6); outline-offset: 3px;
+  outline: var(--focus-ring); outline-offset: 3px;
 }
 
+/* visibility, not just opacity. opacity:0 + pointer-events:none hides a
+   thing from the eye and from the mouse and from NOTHING ELSE: the closed
+   colophon kept every one of its six focusable elements in the tab order,
+   and every one of its headings in the heading tree. Tabbed through all
+   six on the landing page before the fix — the close ✕, the Patreon line,
+   Abby Williams, YouTube, "read the writing on its own", and the mailto —
+   each one taking focus to an invisible control, with the browser
+   helpfully scrolling to a panel that isn't there. Its <h2> and four <h3>s
+   were in the heading tree the same way, so a reader navigating by heading
+   walked into a bibliography from a page that appeared to have none.
+
+   Worse than the landing page: the backdrop is appended to document.body
+   (colophon.js) AFTER #experience-overlay, so all six sat at the very END
+   of the tab order during a scene too — the last thing before wrapping.
+   visibility:hidden covers both, because it removes the subtree from the
+   AT tree and the tab order at once, and unlike `display:none` it's
+   animatable, so the fade survives.
+
+   The two-line transition is the standard way to keep it: opening, the
+   visibility flip happens at 0s so the element is there to fade IN;
+   closing, it's delayed by the full duration so the element stays around
+   long enough to fade OUT before disappearing. Written as a delay rather
+   than relying on visibility's own discrete interpolation, which browsers
+   have historically disagreed about. */
 .colophon-backdrop {
   position: fixed; inset: 0; z-index: 9000;
   background: rgba(4,3,2,0.75);
   opacity: 0; pointer-events: none;
-  transition: opacity 0.35s ease;
+  visibility: hidden;
+  transition: opacity 0.35s ease, visibility 0s linear 0.35s;
+  /* Moved above the nested query (was below it) per STANDARDS.md's
+     "ordinary declarations come before any nested @media block" — nest on
+     touch, and this rule was being touched anyway. */
+  display: flex; align-items: center; justify-content: center;
+  padding: 4vh 1.5rem;
 
 	@media (prefers-reduced-motion: reduce) {
 		transition: none;
 	}
-  display: flex; align-items: center; justify-content: center;
-  padding: 4vh 1.5rem;
 }
-.colophon-backdrop.open { opacity: 1; pointer-events: all; }
+.colophon-backdrop.open {
+  opacity: 1; pointer-events: all;
+  visibility: visible;
+  transition: opacity 0.35s ease, visibility 0s linear 0s;
+
+	@media (prefers-reduced-motion: reduce) {
+		transition: none;
+	}
+}
 
 /* Mobile-first (standing convention, see NOTES.md/STANDARDS.md): base rule
    below targets the smallest viewport by default; the min-width query
@@ -117,10 +168,22 @@
 
 .colophon-close {
   position: absolute; top: 1.2rem; right: 1.2rem; background: none;
-  border: none; color: rgba(255,255,255,0.4); font-size: 1.2rem;
+  border: none;
+  /* 0.4 measured 3.78:1 against the panel's own #0d0a07 ground. The ✕ is
+     1.2rem — real text, not a 24px+ heading — so 4.5:1 is the bar, and it
+     was the panel's only means of closing for a visitor who can't press
+     Escape or click the backdrop. 0.55 measures 6.0:1. */
+  color: rgba(255,255,255,0.55); font-size: 1.2rem;
   cursor: pointer; padding: .5rem; line-height: 1;
 }
 .colophon-close:hover { color: rgba(255,255,255,0.9); }
+/* This button had no focus style at all — the one control in the dialog
+   that a keyboard visitor has to be able to find, and focus landed on it
+   invisibly. --focus-ring is main.css's shared value; both files style the
+   same document, so the :root property resolves here. */
+.colophon-close:focus-visible {
+  outline: var(--focus-ring); outline-offset: 2px; border-radius: 3px;
+}
 
 .colophon-panel h2 {
   font-size: 1.3rem; letter-spacing: 0.1em; text-transform: uppercase;
@@ -128,7 +191,13 @@
 }
 .colophon-panel .colophon-sub {
   /* A <p> — margin reset to zero the UA default top margin. */
-  font-size: 0.8rem; font-style: italic; color: rgba(225,215,195,0.4);
+  /* 0.4 measured 2.98:1 on the panel ground — under the 3:1 floor that even
+     large text gets, and this is 0.8rem italic, so the real bar is 4.5:1.
+     Three separate lines use this class (the "perceptual mechanics"
+     standfirst, the bibliography's intro, the copyright), so all three were
+     failing. 0.6 measures 5.5:1 and keeps it clearly subordinate to the
+     0.75-alpha body text around it, which is the whole job of the rule. */
+  font-size: 0.8rem; font-style: italic; color: rgba(225,215,195,0.6);
   margin: 0 0 1.6rem;
 }
 .colophon-panel h3 {

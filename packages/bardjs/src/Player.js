@@ -38,6 +38,15 @@ export class Player {
     this.curSceneIndex = -1;
     this.playing = false;
     this._timer = null;
+    // Once disposed, a Player stays disposed. clearTimeout alone isn't
+    // enough: the consuming scene's transport controls, its click-to-advance
+    // handler and any deferred work of its own all still hold a reference to
+    // this object after teardown, and every one of them could re-arm the
+    // timer against a renderer whose DOM is already detached. perceptual-
+    // mechanics' Theater hit exactly this shape of bug from the other side
+    // (its own end-card timeout firing post-dispose) before it started
+    // tracking its handles.
+    this._disposed = false;
   }
 
   mount(container) {
@@ -54,6 +63,16 @@ export class Player {
   }
 
   play() {
+    if (this._disposed || !this.length) return this;
+    // Pressing play on a finished reel used to set playing = true and then
+    // schedule nothing (_scheduleNext bails at the end), leaving the caller's
+    // button reading "pause" over a player that would never advance again.
+    // There's nothing to play; say so, and let the consumer decide whether
+    // that means restart().
+    if (this.isAtEnd && this.index >= 0) {
+      this.playing = false;
+      return this;
+    }
     this.playing = true;
     // A fresh (or just-restarted) player has no current event yet — start
     // at the beginning rather than trying to schedule a beat that doesn't
@@ -81,17 +100,33 @@ export class Player {
     return this.goTo(this.index - 1);
   }
 
-  /** Replace the script in place (e.g. a reshuffled program) and start over. */
-  restart(script) {
+  /**
+   * Replace the script in place (e.g. a reshuffled program) and start over.
+   * @param {object} [script]
+   * @param {{ autoplay?: boolean }} [opts] autoplay defaults to true, which
+   *   is what "start over" has always meant here. Pass false when the
+   *   consumer knows the reel should sit still — a visitor with
+   *   prefers-reduced-motion set, say, who asked for the next programme but
+   *   not for it to advance itself.
+   */
+  restart(script, opts = {}) {
+    if (this._disposed) return this;
     if (script) this.script = script;
     this.curSceneIndex = -1;
     this.index = -1;
-    this.playing = true;
+    this.playing = opts.autoplay ?? true;
     return this.goTo(0);
   }
 
   goTo(newIndex) {
+    if (this._disposed) return this;
     clearTimeout(this._timer);
+    // An empty timeline has no index 0 to land on; without this the clamp
+    // below computes 0 anyway and the destructure throws on undefined. A
+    // script that compiled to nothing is a legitimate input (an empty
+    // fountain file, a filter that matched no scenes) — it should sit there,
+    // not blow up the consumer's mount.
+    if (!this.length) return this;
     const clamped = Math.max(0, Math.min(this.length - 1, newIndex));
     this.index = clamped;
 
@@ -114,7 +149,10 @@ export class Player {
   }
 
   dispose() {
+    this._disposed = true;
+    this.playing = false;
     clearTimeout(this._timer);
+    this._timer = null;
     this.renderer.dispose?.();
   }
 
@@ -147,7 +185,7 @@ export class Player {
 
   _scheduleNext() {
     clearTimeout(this._timer);
-    if (!this.playing || this.isAtEnd) return;
+    if (this._disposed || !this.playing || this.isAtEnd) return;
     const { event } = this.script.timeline[this.index];
     const dur = event.type === 'intermission'
       ? INTERMISSION_DUR

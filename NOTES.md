@@ -587,6 +587,384 @@ described are unchanged.)
   worth trimming, orrery.js's texture generators and first-person rig are the
   two most self-contained chunks to split out first.
 
+## 4.0 (2026-09-02)
+
+The audit release. An outside-in review of the whole project — all ten
+scenes, the shell, the build and deploy layer — produced 71 findings, of
+which **eight were live on the production site**. This closes all of them
+plus most of the rest; the Vite 6→8 major arc was explicitly held back
+for its own pass (see "Deliberately not in 4.0" at the end).
+
+Full findings list, with the evidence for each, is in
+`punch-list-2026-09-01.md` at the repo root.
+
+### The eight that were shipping
+
+1. **Every `/text/` page had been unstyled in production since v3.12.1.**
+   `prerender.js`'s `page()` emits one inline `<style>` and links no
+   stylesheet; the CSP switched to enforcing with `style-src 'self'`, so
+   the browser dropped it. All eight pages served as Times black-on-white
+   with no max-width. This is the project's own "a filter that matches
+   nothing looks exactly like a category that's empty" rule in a new
+   costume: the Report-Only pass was a genuinely complete audit *of the
+   SPA at `/`*, and never opened a page outside it. Zero violations
+   observed, because the violating pages were never loaded.
+   Fixed by hashing the style block into `style-src` — and then, because
+   a hand-maintained hash is exactly the derived artifact the standing
+   rules forbid, by having the prerender plugin recompute the hash from
+   the bytes it actually wrote and `this.error()` unless the emitted
+   page, `PAGE_STYLE_SHA256` and `.htaccess` all three agree. Verified by
+   perturbing each of the three in turn and watching the build fail.
+   Also gave those pages the `@font-face` they had always been missing —
+   they asked for Arapey and silently fell back to Georgia.
+
+2. **Leaving Harmonics with sound remembered on stranded a running
+   `AudioContext`, and they accumulated.** `bindPersistedSoundToggle`
+   attached a `pointerdown` listener to `container` and returned nothing
+   — no `dispose()`. `container` is the one shared `#experience-container`
+   that `main.js` only empties, never replaces, so the listener outlived
+   the scene, and one pointer-down inside *any* later scene fired the
+   dead scene's `setSoundEnabled(true)`. Reproduced live: Harmonics →
+   gallery → Butterfly → click, four times, left **four orphaned contexts
+   in state `running`** while sitting in Butterfly, each carrying 152
+   oscillators nothing could close. Chrome caps a page near six, after
+   which the constructor throws unhandled.
+
+3. **Outside had the same listener with a quieter and arguably worse
+   symptom.** It closes `audioCtx` but never nulls it, so
+   `buildAudioGraph()` early-returns — but `startAmbientScheduler()`
+   still ran, and its guard is `ambientSchedulerId != null || !audioCtx`,
+   which after dispose is null-and-truthy. It armed a fresh `setInterval`
+   on a dead closure that `stopAmbientScheduler` could never reach.
+   Console evidence from inside Butterfly: a burst of *"Construction of
+   OscillatorNode is not useful when context is closed"*.
+   The two scenes calling one helper and failing differently, because one
+   nulled a variable and the other didn't, is the whole lesson. Both
+   dispose paths are now symmetric, both keep and call the helper's
+   disposable, and both carry a `disposed` guard so a stale call is inert
+   regardless. After: **one context per visit, closed on leave, zero
+   orphans, stale pointer-down does nothing.**
+
+4. **Nav icons clipped on every 375px iPhone; two icons entirely
+   off-screen at 320px.** Ten icons at 34px with a 5.6px gap need
+   390.4px; `#pm-nav` had zero padding and `justify-content: center`, so
+   below that it overflowed symmetrically off *both* edges. Measured
+   before: `left: -8` / `right: 383` at 375, and 35px each side at 320,
+   which put Sphere and Outside completely out of reach. This is the
+   regression `main.css`'s own comment records as having recurred four
+   times on icon-count changes, and re-tuning a number would have set up
+   the fifth. Replaced with a formula that derives slot, icon and gap
+   from `--nav-count` and the viewport, so the total is bounded by
+   `100vw` for *any* count and there is no breakpoint left to have a dead
+   zone at. Verified at 320/360/375/390/414/768/780/1280 — all ten icons
+   fully visible at every width, and the touch target is a full 44px tall
+   everywhere (it was 34×38, under the minimum). The sweep also found a
+   **second dead zone at 780px** nobody had reported: the old desktop
+   tier needed 800px but started at 769px.
+
+5. **Escape closed the whole scene instead of the open panel.** Both
+   handlers sit on `document` and `main.js`'s is registered at module
+   evaluation, so it always ran first — a reader with a fragment open
+   pressed Escape and landed back on the gallery. `stopPropagation` from
+   the panel side can't help (same node, and later). `sceneKit` now keeps
+   a registry of open panels, fed by `createPanelCloser`, and `main.js`
+   asks `anyPanelOpen()` before returning to the gallery. Beamline's
+   station label is a `THREE.Sprite` with no element to register, so
+   `registerTransientOverlay(predicate)` covers that shape too.
+
+6. **A 2.9 MB PNG loaded on every visit to fill a 36 × 31 px box.**
+   `public/hare-colophon.png` was 2135 × 1839 / 3,036,690 bytes,
+   requested twice (once by the `<img>`, once by the CSS `mask-image`),
+   with no dimensions and no decoding hint. Production resource timing:
+   **91% of total page weight** — 3.04 MB against 277 kB of JS for the
+   entire site — starting at 430ms, taking 1,485ms, and carrying
+   `loadEventEnd` to 1,995ms. Worth stating plainly, because 3.10.x
+   fought hard to defer 82 kB of gzip and this is 36× that: the
+   accounting for that arc counted JS chunks, and the largest first-visit
+   asset on the site was never in the frame. Now **30,712 bytes** at
+   150 × 129 (4× render size), plus a 12,786-byte WebP, alpha verified
+   bit-identical so the mask still works. `social-card.png` 281 kB →
+   107 kB. The original is preserved in `artifacts/`.
+
+7. **A rejected dynamic `import()` bricked the site until reload.** No
+   `.catch()` existed anywhere in the load path. The likeliest real
+   trigger is mundane — a returning visitor whose cached `index.html`
+   names a hashed chunk a deploy replaced. On rejection the loading timer
+   was never cleared and `transitioning` never reset, and since both
+   `expandScene()` and `returnToGallery()` open with
+   `if (transitioning) return`, every click, hash change and Escape
+   became a silent no-op. `sceneModulePromises[name] ??= entry.load()`
+   then cached the *rejected* promise, so retrying could never re-fetch.
+   Now: caught, state reset, cache entry evicted so a retry is a real
+   re-fetch, `Promise.allSettled` in `initPreviews`, and the site's first
+   error UI — a caption, not an alert dialog, because one piece out of
+   ten failing to arrive is not an emergency.
+
+8. **`harmonicss`.** Sphere fragment 7 read "There is nothing to be drawn
+   from harmonicss, arbitrary abstract lines" — the doubled `s` a
+   fingerprint of the 2026-08-18 `constellations → harmonics` rename
+   reaching into a piece of found text. `verify-links` passed the whole
+   time because the same rename corrupted the phrase in `links.js`
+   identically: corrupt compared against corrupt. Restored to
+   `constellations` in both files (Scott's call). The related bare
+   "harmonics" in `beamline.text.js:68` was examined and **left alone** —
+   "harmonics echoing at mathematically precise points" is coherent prose
+   about vibrating strings, sitting under a comment pairing it with
+   "Here are harps, here are superstrings", so it is probably original.
+
+### Accessibility
+
+The site already did the hard parts — jump lists, a per-scene `sr-live`
+region, a real focus trap, reduced-motion branches in most scenes. Nearly
+everything found was in the seams between them.
+
+- **Six invisible links and buttons sat in the tab order on every page
+  load.** The closed colophon used only `opacity: 0` +
+  `pointer-events: none`, which hides it from sight and the mouse but not
+  from Tab or a screen reader, and it is appended to `document.body`
+  *after* `#experience-overlay`, so it was reachable during a scene too.
+  Now `visibility` + `inert`, both deliberately: in a background tab
+  transitions stop advancing, and 650ms after close all six were still
+  focusable with `visibility` alone. Verified 0 focusable closed / 6 open
+  / 0 immediately after close.
+- **The sound toggle in Harmonics and Outside was keyboard-unreachable.**
+  `overlayFocusables()` queried only inside `#experience-container`, but
+  both toggles are appended to `document.body` per the z-index scale. The
+  one control that stops the audio was mouse-only. Body-level scene
+  chrome is now marked `.pm-scene-chrome` and included in the ring.
+- **No `<main>` and no heading while a scene was open** — `#landing` is
+  the only `<main>` and carries the `sr-only <h1>`, and `expandScene`
+  hides it. For nearly all of a visit the document had no landmark but a
+  `aria-hidden` `<nav>` and no heading at all. `#experience-overlay` now
+  carries an `sr-only` heading filled from `SCENES[name].label` — the
+  first reader that registry field has ever had.
+- **Reduced motion**, seven scenes, each miss being the loudest motion in
+  its own scene: Harmonics' Kuramoto integration and 76-node brightness
+  pulse (the thing the file's own header calls the carrier of the scene's
+  meaning) sat one brace outside the guard; Orbiter's cloud breathe;
+  Butterfly's jitter, which one drag re-enabled permanently; Sphere's 320
+  infinitely-animating labels; Orrery's hub pulse, which ran in the
+  preview tiles too, and a stylesheet with no reduced-motion block at all
+  despite five transitions; Scroll's long smooth-scroll jumps; Theater's
+  auto-advancing reel. All fixed, and `prefersReducedMotion` is now a
+  live subscription rather than a one-shot read at mount, so the OS
+  toggle takes effect immediately.
+  One genuinely awkward case, worth recording: Sphere's `.fragment-link`
+  has `color: inherit`, no underline, no border and `cursor: default` —
+  the periodic glimmer was its *only* visual affordance, so killing the
+  animation removed any cue that the text was interactive. Reduced motion
+  now gets a static equivalent rather than nothing.
+- **Contrast**, measured against each rule's real composited background,
+  not assumed: `.sphere-facet-id` 1.98:1 → 4.76 (it carries "Fragment N
+  of 25" *and* the inbound-reference line — content, not decoration);
+  `#site-title` over a bright scene **1.77:1** → 5.34, which directly
+  contradicted its own comment claiming a 0.4-alpha scrim is
+  "scene-brightness-agnostic" (over a white scene the composite is
+  `#999`; an alpha scrim cannot be brightness-agnostic, and the comment
+  now shows the arithmetic); `.library-panel-refs` 2.1 → 4.7;
+  `.colophon-sub` 2.98 → 5.40; four panel ✕ buttons at ~3.8 → 6–7.8; the
+  nav icon idle state at exactly 3.00 → 5.28.
+- **Closed panels stayed in the tab order** in four scenes — transform
+  alone moves a panel off-screen without removing its ✕ from Tab.
+- **Orrery swallowed arrow keys while its panel was open** — `onKeyDown`
+  is on `window` and `preventDefault`ed arrows with no panel guard, so a
+  keyboard visitor who reached the found story through the jump list (the
+  only accessible route in) could not scroll it, while the camera walked
+  around behind them.
+- **Orrery's touch walkpad put four real buttons inside
+  `aria-hidden="true"`** — a WCAG 4.1.2 violation shipping on any coarse
+  pointer. Removing the attribute exposed four buttons that only had
+  `pointerdown` bindings, so Enter/Space were wired at the same time;
+  otherwise it would have traded a 4.1.2 failure for a 2.1.1 one.
+- **Library's jump list was 265 sequential stops** with no grouping and
+  no bypass — fine for Sphere's 24 facets, a WCAG 2.4.1 problem at 265.
+  Now three collapsed groups (Books 106 / Films 44 / Music 115) behind a
+  "Skip the shelf" control: four tab stops.
+- **Harmonics never moved focus into its panel**, and the
+  `tabindex="-1"` sitting on the title for exactly that purpose was dead
+  code. Its jump list also read "Piece 1" … "Piece 76"; it now shows real
+  titles once the endpoint resolver settles, which the scene was already
+  warming at mount.
+- **Beamline and Butterfly marked their own found text `aria-hidden`** —
+  hiding the "drag to orbit" hint is right, hiding the work is not.
+- **Beamline's screen-reader description described a scene that no longer
+  exists** — "a staged sequence of curved mirrors, a beam of light
+  bouncing between them… click a mirror to read." There are no mirrors
+  and no bouncing beam; it is a vessel on a rail with ten stations, which
+  is what the visible hint and the jump list both already said. An
+  `ariaLabel` is the only account of a scene a screen-reader visitor
+  gets, so a stale one is not a stale comment.
+- **A latent bug that would have undone much of the above**: jump-list
+  activations bubble out of the list into the scene's own canvas click
+  handler, which sees an open panel and a raycast that hit nothing (a
+  keyboard-activated click reports clientX/clientY 0,0) and closes the
+  panel the button just opened. Found independently in Library and
+  Orbiter; latent in every scene using the helper. Guard now lives in
+  `createJumpList`.
+
+### Correctness
+
+- **Frame-rate coupling** in four scenes — see STANDARDS.md's new
+  lifecycle section for the rule. Orbiter was measured at **0.713 rad/s
+  against a tuned 0.60**, i.e. literally double speed on a 120Hz display;
+  it now measures 0.6003 over 1207 frames. Beamline's station reading
+  windows were halved. Orrery's asteroid belt ran at 2× while the
+  Kepler-driven planets did not, so it visibly outran the Mars/Jupiter
+  speeds its own speed was derived from; the belt and the "unknowns" now
+  use the same wall-clock closed form the planets do, so a reload doesn't
+  reset them either.
+- **Orbiter and Library were the two raycast scenes missing
+  `bindTapVsDrag`** — so on a phone every orbit gesture ended in a
+  synthetic click at the release point, and spinning the shelf opened
+  whatever spine was under your finger.
+- **81 of the Library's 85 cross-links were authored into the withheld
+  `note` field.** Withholding notes is a deliberate 2026-07-23 decision
+  and it stands; the problem was that `getInboundLinks()` was
+  field-agnostic, so the outbound half rendered nowhere while the inbound
+  half kept printing. *Throne of Blood*'s panel said "REFERENCED FROM
+  SEVEN SAMURAI"; *Seven Samurai*'s panel had nothing to click. 45 items
+  showed that line and 41 of them led nowhere. `links.js` now declares
+  `RENDERED_FIELDS` and `WITHHELD_FIELDS`, `getInboundLinks` filters on
+  the first, and the result is **4 items, all reciprocal**. The two maps
+  are deliberately separate so `verify-links` can hard-fail a field in
+  neither (a typo, or a field nobody wired up) while merely *reporting*
+  the count in a declared-withheld one — collapsing them would mean
+  either failing the build on 81 rows that are the way they are on
+  purpose, or staying silent about a genuine mistake.
+- **Orrery's ring colliders** guarded only the two eye-height crossings.
+  The torus solve was correct; the premise wasn't — below eye level is
+  still inside the visitor's body, and Pluto's ring descends to 0.35
+  units above the floor, sweeping a wide walkable arc guarded by two
+  0.22-radius dots. Now solves the θ range below eye height and samples
+  along it: 8 colliders → 63.
+- **Orrery's bricks were 1.56 m wide.** The baked texture mapped one
+  brick to 1.56 × 0.29 world units at 5.4:1 — roughly 7× oversize and
+  nearly twice as elongated as real running-bond — because the wall plane
+  spanned `span*2` (40 units) for a 17-unit room *and* the texels were
+  non-square. It read as horizontal siding, which is the corrugated look
+  the 2026-09-01 pass set out to remove, re-drawn in brick colours. Now
+  sized from the wall at equal density on both axes with brick and mortar
+  stated in metres: 0.219 × 0.0625 units at 3.5:1.
+- **Orrery's dust motes** kept their spawn radius as they rose, so the
+  light shaft relaxed from a cone into a cylinder within a minute or two
+  — the exact failure the moonbeam rebuild was written to prevent. They
+  now store cone-relative coordinates and recompute x/z from the cone
+  radius at their live height, so by construction a mote cannot leave the
+  cone.
+- **Seven Theater characters name a prop in their `tag` and all stood in
+  the same neutral figure.** Worth recording that the audit finding this
+  came from was **wrong**: it claimed seven authored gestures resolved to
+  no pose, which was a grep artifact — `g: '…'` matches the tail of
+  `tag: '…'`. Every real authored gesture resolves, and always did. The
+  underlying gap was real though, so it was implemented through the
+  mechanism that actually carries it: six poses keyed by `tag`, used as
+  the resting pose, with an authored `g:` still winning. Dev-mode
+  assertions now cover both unresolved gestures and colliding character
+  keys across plays (zero collisions today; `Object.assign` flattening
+  three casts into one namespace had no guard).
+- Plus: `wireCrossLinks` replacing inside text nodes rather than an
+  accumulating HTML string; a `disposed` guard on Beamline's async label
+  path; `#scene/id → #scene` now closing the open piece; unknown hashes
+  cleaned out of the address bar; `returnToGallery` honouring reduced
+  motion the way `expandScene` already documented that it should.
+
+### Performance
+
+Measured, before → after:
+
+| | before | after |
+|---|---|---|
+| Butterfly draw calls / frame | 1,070 | **18** |
+| Butterfly `animate()` median | 2.10 ms | **0.40 ms** |
+| Library draw calls / frame | 1,603 | **535** |
+| Library spine textures | 66.1 MB | **16.5 MB** |
+| Sphere label pass | 4.5–5.3 ms | **0.1–0.2 ms** |
+| Orrery `buildOrrery` (preview) | ~430 ms | **~21 ms** |
+| Harmonics mount (full) | 26.5 ms | **12.4 ms** |
+| Harmonics `setTargetAtTime` /s, toggle **off** | ~13,700 | **0** |
+| First-visit page weight | 3.33 MB | **~0.33 MB** |
+
+The shapes behind those numbers: 867 separate `THREE.Line` objects became
+three indexed `LineSegments` and 220 individually-materialed sprites
+became one atlas; Library's six-material `BoxGeometry` (six render items
+per spine, 265 spines) became two groups with the non-spine colours moved
+to a vertex attribute; Sphere's label loop was writing a style on label N
+and then reading `clientWidth` on label N+1, forcing ~320 synchronous
+layouts per frame; Harmonics' 400-iteration O(n²) relaxation is fully
+deterministic and is now memoized instead of re-run on every mount
+including every preview tile; and Orrery's preview mode was building
+every metal texture and every aged-planet map only to discard them.
+
+Also: eight preview WebGL contexts stopped rendering behind an opaque
+overlay, `renderer.forceContextLoss()` is called for real, pointer-rate
+raycasting moved to frame-rate in four scenes, and the device pixel ratio
+is capped at 2 site-wide rather than in Beamline alone.
+
+### Build, deploy, security, CI
+
+- Six security headers added (HSTS starting at a deliberate 300s ramp, no
+  `preload`, `includeSubDomains` omitted for shared hosting), each with
+  its reasoning in `.htaccess`, and an explicit note on why COEP is *not*
+  added — `require-corp` would break the youtube-nocookie iframe,
+  `i.ytimg.com` thumbnails and `covers.openlibrary.org` covers that this
+  site's own CSP allows, and buys nothing without SharedArrayBuffer.
+- `script-src` reduced to `'self'`; CSP violation reporting wired to a
+  clearly-marked placeholder endpoint that still needs a real collector.
+- `Cache-Control: immutable` for the content-hashed bundles, which is
+  what makes `manualChunks: { three }` actually pay off, and
+  `must-revalidate` for HTML, which is the 1.7.0 stale-homepage incident.
+- **16 passing tests existed and CI never ran them** — and bardjs is not
+  a toy, it is Theater's entire timing engine. Root `test` script added,
+  wired into the workflow, now 20 tests. Also added: `permissions:
+  contents: read`, actions pinned to SHAs (the job holds the production
+  SSH key), a `concurrency` group so two pushes can't race two
+  `rsync --delete` runs against the live document root, and an
+  `npm audit --audit-level=high` gate.
+- `npm audit` was **not** clean, contrary to the standing review's claim:
+  nanoid 3.3.16, HIGH, dev-only via `vite → postcss`. Updated. The
+  lockfile's root entry still said version 1.2.3 against package.json's
+  3.16.2 and is now refreshed.
+- The bardjs demo page was a real Rollup input, so it shipped to
+  production, where the CSP blocked its inline `<style>` and its
+  importmap — unstyled, unlinked from anywhere, and already
+  `Disallow`ed. Dropped from the inputs; source kept for local serving.
+- `verify-scroll-marks.mjs` — new build gate. Scroll's five presentation
+  tables carried verbatim copies of phrases from `scroll.text.js` plus
+  hard-coded paragraph indices, and every way of getting one wrong
+  rendered perfectly and silently. `LINKS` has had a verifier since
+  2.3.0; these never did.
+- `verify-links` gained a phrase-collision check and rendered-field
+  validation; both verify scripts had a CLI guard that broke on any path
+  containing a space — and broke *silently*, exiting 0 having verified
+  nothing, which for a verification script is the worst available failure
+  mode.
+- `/text/` was orphaned from the served HTML: `dist/index.html` contained
+  **zero** `href="/text..."`, because the only link lived inside a `?raw`
+  fragment injected into a `display: none` modal. Eight pages of the
+  site's best writing had one inbound signal each, a sitemap entry. Now
+  three real links. A `<noscript>` fallback points there too.
+
+### Deliberately not in 4.0
+
+- **Vite 6 → 8.** Two majors, and the real blockers are Rollup 4→5 output
+  hook changes affecting the `closeBundle`/`buildStart` plugins this
+  project's build gates depend on. Worth its own pass rather than mixed
+  into a release that touched every scene file. three.js is at 0.185.1,
+  exactly current.
+- **Library's shelf merged into a handful of geometries.** The 2-groups-
+  per-spine route got 67% of the draw calls without behavioural risk;
+  going further breaks per-mesh raycast, the hover scale bump and the
+  per-spine emissive glow at once, and needs a hover mechanism designed
+  first.
+- **Sphere's label rotation math**, which has been dead since it was
+  written — `CSS2DRenderer.render()` overwrites the inline transform
+  later in the same frame. Making it work is a visual design decision,
+  not a performance one.
+- The CSP report collector; the HSTS ramp to a year; and one Orrery
+  navigation quirk that is the honest consequence of the collider fix (a
+  0.46-unit gap between two rings' low arcs is genuinely too narrow for a
+  0.6-unit-wide person, and backing up frees you immediately).
+
 ## 3.16.2 (2026-09-02)
 
 **Orrery: fill-light and fluorescent-brightness polish, post-v3.16.1.**

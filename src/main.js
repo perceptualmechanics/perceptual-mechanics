@@ -1,5 +1,5 @@
 import { initColophon }    from './components/colophon/colophon.js';
-import { prefersReducedMotion } from './utils/sceneKit.js';
+import { anyPanelOpen, prefersReducedMotion } from './utils/sceneKit.js';
 
 // ─── Scene registry ──────────────────────────────────────────────────────────
 // Each entry's `load()` is a dynamic import() rather than a static top-of-
@@ -34,6 +34,15 @@ const SCENES = {
                ariaLabel: 'The Sphere — interactive geodesic sphere with text fragments.' },
   butterfly: { load: () => import('./scenes/butterfly/butterfly.js'), exportName: 'createButterfly',
                label: 'Chaos Butterfly in Phase Space, 2026.',
+               // The one scene that wants a different backdrop than the
+               // shared #000811: its attractor is drawn on true black, and
+               // the faint blue of the default read as a wash behind it.
+               // Declared here rather than as a `.butterfly-bg` class named
+               // in both main.js and main.css (which is how it lived until
+               // 4.0) — one scene's name hardcoded into the shell twice is
+               // exactly the thing that gets missed when a scene is renamed
+               // or a second scene wants the same treatment.
+               overlayBg: '#000000',
                ariaLabel: 'Chaos Butterfly in Phase Space, 2026 — Lorenz attractor. Drag to orbit, scroll to zoom.' },
   scroll:    { load: () => import('./scenes/scroll/scroll.js'),       exportName: 'createScroll',
                label: 'Selected Works — A Scroll of Found Writing.',
@@ -50,11 +59,22 @@ const SCENES = {
   library:   { load: () => import('./scenes/library/library.js'),     exportName: 'createLibrary',
                label: 'The Library — once removed.',
                ariaLabel: 'The Library — a real bookshelf, 107 books, films, and divination decks, rebuilt as a shelf you can turn in space. Drag to orbit, scroll to zoom, click a spine to read what it is.' },
-  // A staged sequence of curved mirrors, real reflection geometry (not
-  // transmission) bouncing a beam between them.
+  // A small vessel travelling a glowing rail across a night wilderness, with
+  // ten stations along it, each holding a fragment of found text.
+  //
+  // Both this comment and the ariaLabel below described curved mirrors and a
+  // bouncing beam until 4.0 — a design the scene moved away from, leaving the
+  // description behind. That mattered more than a stale comment usually does:
+  // an ariaLabel is not decoration, it is the ONLY account of this scene a
+  // screen-reader visitor gets, and it was telling them to click a mirror in a
+  // scene with no mirrors in it. The wording now matches what the visible hint
+  // ("click a station to read") and the jump list ("Station N of 10") already
+  // say, so a sighted visitor and a screen-reader visitor are given the same
+  // word for the same object. (`BOUNCES` still names the data array inside
+  // beamline.text.js — harmless, since nobody reads a variable name out loud.)
   beamline:  { load: () => import('./scenes/beamline/beamline.js'),   exportName: 'createBeamline',
                label: 'Beamline.',
-               ariaLabel: 'Beamline — a staged sequence of curved mirrors, a beam of light bouncing between them, found text surfacing at each bounce. Drag to orbit, scroll to zoom, click a mirror to read.' },
+               ariaLabel: 'Beamline — a small vessel travelling a glowing rail across a night wilderness, with ten stations along it, each holding a fragment of found text. Drag to orbit, scroll to zoom, click a station to read.' },
   // Harmonics — ninth scene, Phase 3 (2026-08-16), renamed from "The
   // harmonics" 2026-08-18 (user-facing name only — internal module/
   // folder/class names stay `harmonics`, see harmonics.js's own header for
@@ -82,21 +102,81 @@ const SCENES = {
 // cache (harmless either way, just keeps there being one obvious place to
 // ask "has scene X's module been requested yet").
 const sceneModulePromises = {};
+// A REJECTED import() must be evicted from this cache, never kept. The
+// realistic trigger for one isn't exotic: a returning visitor whose cached
+// index.html still names a hashed chunk that a later deploy replaced — the
+// fetch 404s and the promise rejects. Before 4.0 that rejected promise
+// stayed in sceneModulePromises forever, so every subsequent attempt at
+// that scene (a second click, the nav icon, a hash change, the preview)
+// re-awaited the same dead promise and could never re-fetch: the scene was
+// permanently unopenable until a manual reload, which is also the one
+// action that would have fixed it. Deleting the entry on rejection is what
+// makes a retry an actual retry. It lives here, in the one function every
+// caller already shares, rather than being repeated at each call site.
 function loadSceneCreate(name) {
   const entry = SCENES[name];
-  return (sceneModulePromises[name] ??= entry.load()).then(mod => mod[entry.exportName]);
+  sceneModulePromises[name] ??= entry.load().catch(err => {
+    delete sceneModulePromises[name];
+    throw err;
+  });
+  return sceneModulePromises[name].then(mod => mod[entry.exportName]);
 }
 // Fire off a scene's dynamic import without waiting on it — used for
 // hover/touch-intent prefetch, where the point is only to warm the cache
 // before a click arrives, not to block on anything.
+// The .catch() here isn't politeness. A prefetch is fire-and-forget by
+// definition — nobody awaits it — so a failed chunk fetch on hover would
+// otherwise surface as an unhandled promise rejection in the console (and
+// in any error reporting) for a visitor who never even clicked the scene.
+// The eviction in loadSceneCreate has already done the only useful work
+// there is to do about a warm-up that didn't warm up.
 function prefetchScene(name) {
-  if (Object.hasOwn(SCENES, name)) loadSceneCreate(name);
+  if (Object.hasOwn(SCENES, name)) loadSceneCreate(name).catch(() => {});
 }
 
 let activeScene  = null;
 let fullInstance = null;
 let lastTrigger  = null; // whichever nav icon / preview tile launched the active scene
-const previews   = {};
+// True only while the CURRENT activeScene's module failed to load, so the
+// error state is showing instead of a scene. Lets a second click on the
+// same nav icon/tile be a real retry rather than expandScene's
+// already-open early return — see expandScene.
+let sceneLoadFailed = false;
+// Handle for the one animation frame between a scene mounting and focus
+// moving into it, kept only so returnToGallery can cancel it — see
+// mountNext. 0 is cancelAnimationFrame's safe no-op argument.
+let pendingFocusFrame = 0;
+
+// ─── Preview playback ────────────────────────────────────────────────────
+// This map was written by initPreviews() and read by absolutely nothing
+// from 3.10.0 until 4.0 — which is the whole bug. expandScene() sets
+// `landing.style.display = 'none'`, and display:none does NOT stop a
+// requestAnimationFrame loop: the callbacks keep being scheduled and the
+// WebGL draw calls keep being issued, they just render into a subtree
+// nobody can see. Counted live before the fix: nine live canvases on a
+// machine showing exactly one scene — the open scene plus all ten
+// previews still drawing at 60fps behind an opaque overlay. Each scene's
+// create() may now return a `setPaused(paused)`; every call below is
+// optional-chained because scene modules adopt it independently of this
+// file, and a scene that hasn't yet simply keeps its old behavior.
+const previews = {};
+// Per-preview visibility, from the IntersectionObserver in initPreviews().
+// Undefined until the observer has reported on a tile for the first time,
+// which is deliberately treated as "on screen" — the tiles that matter are
+// above the fold, and a tile that has never been observed should render,
+// not sit frozen waiting for a callback that already fired.
+const previewOnScreen = {};
+// Site-level reasons to stop ALL previews at once, independent of which
+// tiles happen to be scrolled into view: a scene is open on top of them,
+// or the tab isn't being looked at.
+let previewsSuspended = false;
+
+function syncPreviewPlayback() {
+  previewsSuspended = Boolean(activeScene) || document.hidden;
+  for (const [name, instance] of Object.entries(previews)) {
+    instance?.setPaused?.(previewsSuspended || previewOnScreen[name] === false);
+  }
+}
 
 // ─── Hash deep links ─────────────────────────────────────────────────────────
 // A hash names the open scene (`/#scroll` etc.) so any scene can be linked
@@ -206,10 +286,33 @@ function setHash(sceneName, pieceId, { push = true } = {}) {
 
 const overlay      = document.getElementById('experience-overlay');
 const expContainer = document.getElementById('experience-container');
+const expHeading   = document.getElementById('experience-heading');
+const expError     = document.getElementById('experience-error');
+const expReload    = document.getElementById('experience-error-reload');
 const landing      = document.getElementById('landing');
 const siteTitle    = document.getElementById('site-title');
+const titleRow     = document.getElementById('site-title-row');
 const pmNav        = document.getElementById('pm-nav');
 const fsToggle     = document.getElementById('fullscreen-toggle');
+const skipLink     = document.querySelector('.skip-link');
+
+// ─── The crossfade duration, declared once ───────────────────────────────
+// #experience-overlay's `transition: opacity var(--scene-crossfade)` and the
+// setTimeout()s that wait for that transition to finish have to agree, or
+// the teardown either lands mid-fade (visible flash) or after a dead pause.
+// They used to agree by three separate hardcoded 600s — one in main.css,
+// two here. Reading the custom property means the stylesheet stays the
+// single source of truth and a designer retuning the fade doesn't have to
+// know this file exists. The fallback matters: getPropertyValue returns ''
+// for an undeclared property, and `600 * NaN` timeouts fire immediately,
+// which would tear the old scene down on the first frame of its own fade.
+const CROSSFADE_MS = (() => {
+  const raw = getComputedStyle(document.documentElement)
+    .getPropertyValue('--scene-crossfade').trim();
+  const n = parseFloat(raw);
+  if (!Number.isFinite(n)) return 600;
+  return raw.endsWith('ms') ? n : n * 1000;
+})();
 
 // ─── Nav icons ────────────────────────────────────────────────────────────────
 function setActiveIcon(sceneName) {
@@ -218,37 +321,136 @@ function setActiveIcon(sceneName) {
   });
 }
 
-// ─── Modal focus containment ─────────────────────────────────────────────────
-// #experience-overlay carries aria-modal="true" (index.html), which tells
-// assistive tech everything outside it is inert. #pm-nav and #site-title
-// sit outside #landing (which display:none already pulls out of the tab
-// order and AT tree while a scene is open) but stay in the document at all
-// times, so they need the same treatment made explicit: tabindex="-1"
-// removes them from the keyboard tab order, aria-hidden="true" removes
-// them from the AT tree. Neither touches their click handlers, so a mouse
-// or touch visitor can still jump straight from one scene to another —
-// only Tab-based and screen-reader navigation are actually contained,
-// matching what aria-modal already promises. Escape (below) is the way
-// out for keyboard/AT visitors, the same role a modal's own close control
-// would play.
-const chromeEls = [siteTitle, fsToggle, ...document.querySelectorAll('.nav-icon')];
-function setChromeInert(hidden) {
-  chromeEls.forEach(el => el.setAttribute('tabindex', hidden ? '-1' : '0'));
-  pmNav.setAttribute('aria-hidden', String(hidden));
-  siteTitle.setAttribute('aria-hidden', String(hidden));
-  fsToggle?.setAttribute('aria-hidden', String(hidden));
+// ─── Focus containment while a scene is open ─────────────────────────────
+// What this used to be (3.x): a hand-rolled setChromeInert() that stamped
+// tabindex="-1" onto #site-title, #fullscreen-toggle and every .nav-icon,
+// then set aria-hidden="true" on #pm-nav / #site-title / #fullscreen-toggle,
+// and on the way back out stamped an explicit tabindex="0" onto native
+// <button>s that never needed one. Two things were wrong with it:
+//
+//   1. aria-hidden on #pm-nav while its <button> descendants stayed
+//      focusable is the textbook ARIA-in-HTML violation — a screen reader
+//      lands on a control it has been told does not exist. It only avoided
+//      that in practice because the same call happened to set tabindex="-1"
+//      in the same breath; the two lines were load-bearing for each other
+//      with nothing saying so.
+//   2. It was hiding, from assistive tech, chrome that stays fully VISIBLE
+//      and fully CLICKABLE during a scene. #pm-nav (z-index 500) and
+//      #site-title-row (400) both sit above #experience-overlay (300) on
+//      purpose — index.html says it outright at the overlay: "no close
+//      button; nav is the navigation." A sighted mouse or touch visitor
+//      jumps straight from scene to scene, or taps the title to leave.
+//      Telling a screen-reader user that navigation isn't there is not a
+//      containment policy, it's a worse experience for one group only.
+//
+// The obvious-looking modernization — `inert` on #pm-nav and
+// #site-title-row — was tried and rejected here, and this comment exists so
+// it doesn't get re-proposed every audit: `inert` also kills POINTER
+// interaction, which on a phone removes the only two exits a scene has.
+// There is no Escape key on a touch device; the nav icons and the site
+// title ARE the close button. Inerting them strands the visitor in the
+// scene with nothing but the browser's own Back gesture. `inert` is the
+// right tool for genuinely background content; this chrome isn't
+// background, it's the dialog's own controls that happen to live outside
+// its box.
+//
+// So: nothing gets hidden or un-focusable any more. `aria-modal="true"`
+// came off #experience-overlay in the same pass (index.html) for exactly
+// the same reason — it asserts "everything outside me is inert," which was
+// never true here and was the thing pushing this file toward hiding real
+// controls to make the assertion honest. Containment is now done purely by
+// the Tab ring below, which includes every control that is actually on
+// screen and excludes #landing (display:none already removes it from both
+// the tab order and the AT tree).
+
+// The full Tab ring while a scene is open, in the order a visitor should
+// walk it. Four groups, in this order:
+//   1. Whatever the scene itself put inside #experience-container — a
+//      read-more panel's close button and cross-links, a jump list's
+//      entries. Some scenes (butterfly) have none at all.
+//   2. The overlay's own furniture outside that container, which today
+//      means the scene-load error state's Reload button.
+//   3. Body-level scene chrome marked `.pm-scene-chrome`. Harmonics' and
+//      Outside's sound toggles are deliberately appended to document.body,
+//      not to #experience-container, because the z-index scale (see the top
+//      of styles/main.css) requires body-level scene overlays to sit at
+//      >=310 to clear the overlay itself. That put them outside every query
+//      this function used to make: confirmed live that
+//      .outside-sound-toggle's parentNode is BODY, and that the toggle was
+//      therefore keyboard-unreachable for as long as it has existed — Tab
+//      from inside the scene wrapped back to the top of the container and
+//      never reached it. `.pm-scene-chrome` is the agreed marker class for
+//      exactly this: a scene adds it to anything it hangs off <body> that a
+//      visitor is meant to be able to operate.
+//   4. The persistent site chrome — skip link, nav icons, site title,
+//      fullscreen toggle — which is where a keyboard visitor goes to leave
+//      the scene, and now the same route a mouse visitor already had.
+//
+// The four groups say what's IN the ring, not what order it's walked in.
+// The list is sorted into document order before use, because this handler
+// only ever intercepts the two ends (Tab off the last element, Shift+Tab
+// off the first) and lets the browser sequence everything in between —
+// imposing a different order here would just make the wrap points land in
+// the middle of the visitor's actual path. Document order is already the
+// right story anyway: site chrome, then the scene, then the scene's own
+// body-level controls.
+const FOCUSABLE = 'button, a[href], [tabindex]';
+function collect(root) {
+  return Array.from(root.querySelectorAll(FOCUSABLE)).filter(el =>
+    // tabIndex -1 is opt-out (expContainer itself, colophon's h2).
+    el.tabIndex !== -1 &&
+    // `hidden` on an ancestor (the error state when there's no error,
+    // #fullscreen-toggle where the platform has no Fullscreen API) means
+    // display:none, which is not focusable however it got there.
+    !el.closest('[hidden]') &&
+    !el.disabled
+  );
+}
+function overlayFocusables() {
+  // `.pm-scene-chrome` may be ON the control itself (a bare sound-toggle
+  // <button> hung off body) or on a wrapper around several — accept both.
+  const sceneChrome = Array.from(document.querySelectorAll('.pm-scene-chrome'))
+    .filter(el => !overlay.contains(el))
+    .flatMap(el => (el.matches(FOCUSABLE) ? [el] : []).concat(collect(el)))
+    .filter(el => el.tabIndex !== -1 && !el.closest('[hidden]') && !el.disabled);
+  const siteChrome = [skipLink, ...document.querySelectorAll('.nav-icon'), siteTitle, fsToggle]
+    .filter(el => el && !el.hidden);
+  // A Set, not concat: `.pm-scene-chrome` on a control that is itself inside
+  // another `.pm-scene-chrome` wrapper would otherwise appear twice and make
+  // the wrap points stutter.
+  return [...new Set([...collect(overlay), ...sceneChrome, ...siteChrome])]
+    .sort((a, b) =>
+      (a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING) ? -1 : 1);
 }
 
-// Every button/link inside the open scene, in DOM order — a read-more
-// panel's close button and cross-links, a keyboard jump list's entries,
-// whatever a given scene actually has. Some scenes (butterfly) have none
-// at all, since there's nothing to click into; the Tab handling below
-// still keeps focus contained in that case, it just has nowhere real to
-// go but back to expContainer itself.
-function overlayFocusables() {
-  return Array.from(expContainer.querySelectorAll('button, a[href], [tabindex]'))
-    .filter(el => el.tabIndex !== -1);
+// ─── Scene-load failure ──────────────────────────────────────────────────
+// The first error state this site has ever had. Until 4.0 there was no
+// .catch() anywhere in the load path at all, and a single rejected
+// import() bricked the entire page: loadingTimer was never cleared, so the
+// spinner ran forever; `transitioning` never went back to false, and both
+// expandScene() and returnToGallery() open with `if (transitioning)
+// return`, so from that moment every nav click, every hash change and
+// every Escape was a silent no-op. The page looked alive and answered
+// nothing.
+//
+// Copy rules, deliberately: say what happened and say what fixes it, in
+// the reader's terms. No status codes, no "chunk", no "module", no
+// "error" — and no apology, which would put the visitor in the position of
+// consoling the site. Reload genuinely is the fix in the common case (a
+// cached index.html pointing at a filename a deploy replaced), and the
+// button is a real button so it's reachable by keyboard and included in
+// the Tab ring above.
+function showSceneLoadError() {
+  overlay.classList.remove('pm-loading');
+  overlay.classList.add('pm-load-error');
+  if (expError) expError.hidden = false;
 }
+function clearSceneLoadError() {
+  sceneLoadFailed = false;
+  overlay.classList.remove('pm-load-error');
+  if (expError) expError.hidden = true;
+}
+expReload?.addEventListener('click', () => location.reload());
 
 // ─── Expand a scene ───────────────────────────────────────────────────────────
 // `triggerEl`: whichever control launched this (a nav icon or a preview
@@ -274,12 +476,25 @@ let transitioning = false;
 
 function expandScene(sceneName, triggerEl = null, pieceId = null) {
   if (transitioning) return;
-  if (activeScene === sceneName) {
+  // `!sceneLoadFailed` is what makes a retry possible: when the module
+  // never arrived, activeScene still names this scene (the overlay is
+  // genuinely showing its slot, and Escape still has to mean "leave it"),
+  // so without this the early return below would swallow the second click
+  // on the very icon the visitor is using to try again.
+  if (activeScene === sceneName && !sceneLoadFailed) {
     // Already open — a same-scene deep link (address-bar edit, or a
     // cross-link that happens to land back on this scene) still needs to
     // open the new piece, just without tearing the scene down and
     // rebuilding it from scratch.
     if (pieceId) fullInstance?.openPieceById?.(pieceId);
+    // ...and `#scene/id` edited back down to `#scene` has to mean "close
+    // the piece," which is the whole point of a hash that addresses one.
+    // Before 4.0 this branch simply did nothing in that case: the URL said
+    // no piece was open while the panel was still sitting there on screen.
+    // Optional-chained rather than requiring the method — a scene with no
+    // piece-level open/closed state (theater, orrery) has nothing to close
+    // and needs no no-op stub of its own to satisfy this call.
+    else fullInstance?.closePiece?.();
     return;
   }
   lastTrigger = triggerEl;
@@ -306,17 +521,38 @@ function expandScene(sceneName, triggerEl = null, pieceId = null) {
       expContainer.innerHTML = '';
     }
 
+    clearSceneLoadError();
     activeScene = sceneName;
     setActiveIcon(sceneName);
     setHash(sceneName, pieceId);
     rememberElsewhere(sceneName, pieceId);
-    setChromeInert(true);
 
     landing.style.display = 'none';
+    // Every preview stops here, not just visually. See the `previews`
+    // comment above for what display:none does and doesn't do to a
+    // requestAnimationFrame loop.
+    syncPreviewPlayback();
     overlay.classList.add('active');
-    overlay.classList.toggle('butterfly-bg', sceneName === 'butterfly');
+    // `.butterfly-bg` used to hardcode one scene's name into both this file
+    // and main.css. The backdrop is now a registry field surfaced as a
+    // custom property, and `data-scene` is on the overlay for anything that
+    // wants to style or debug per-scene without another class to remember.
+    overlay.dataset.scene = sceneName;
+    const overlayBg = SCENES[sceneName]?.overlayBg;
+    if (overlayBg) overlay.style.setProperty('--overlay-bg', overlayBg);
+    else overlay.style.removeProperty('--overlay-bg');
     overlay.setAttribute('aria-hidden', 'false');
     overlay.setAttribute('aria-label', SCENES[sceneName]?.ariaLabel ?? 'Full screen experience.');
+    // #landing owns the page's only <main> and its only <h1>, and
+    // expandScene hides it — so from the moment a scene opened, a screen
+    // reader navigating this page by landmark or by heading found exactly
+    // nothing: inside #sphere the tree was NAV (itself aria-hidden) and
+    // MAIN (hidden), with no heading at any level. #experience-container
+    // carries role="main" statically (index.html); this fills in the
+    // heading. SCENES[].label is the field for it — it has read as a
+    // human-facing sentence since the registry was written and, until now,
+    // had no reader anywhere in the codebase.
+    if (expHeading) expHeading.textContent = SCENES[sceneName]?.label ?? 'Full screen experience.';
 
     // The scene's module is usually already resolved by the time this
     // runs — initPreviews() below requests every scene's module on page
@@ -355,10 +591,43 @@ function expandScene(sceneName, triggerEl = null, pieceId = null) {
         // that's since been torn down and replaced.
         onPieceChange: id => { setHash(sceneName, id, { push: false }); rememberElsewhere(sceneName, id); },
       });
-      // Focus the container for screen readers
+      // Focus the container for screen readers. It needs tabindex="-1" to
+      // be focusable at all: only some scenes set it themselves (sphere,
+      // via claimContainer), and the ones that don't — butterfly among them
+      // — leave a plain <div> that .focus() silently declines to move focus
+      // to, so the skip link and this call both landed nowhere. Set here,
+      // unconditionally, after create() has had its say.
+      //
+      // The frame, meanwhile, was a bare
+      // setTimeout(..., 100) — an arbitrary number nobody could justify and
+      // a handle nobody kept, so a visitor who pressed Escape inside that
+      // window got focus yanked back into a container that was already
+      // being torn down. One animation frame is the actual thing being
+      // waited for (the scene's first layout), it's cancellable, and
+      // returnToGallery cancels it.
       expContainer.setAttribute('tabindex', '-1');
-      setTimeout(() => expContainer.focus(), 100);
+      cancelAnimationFrame(pendingFocusFrame);
+      pendingFocusFrame = requestAnimationFrame(() => {
+        pendingFocusFrame = 0;
+        if (activeScene === sceneName) expContainer.focus();
+      });
       transitioning = false;
+    }).catch(() => {
+      // Reached when the scene's chunk genuinely didn't arrive — the
+      // returning-visitor-with-a-stale-index.html case above, an offline
+      // tab, a proxy eating the request. Everything this handler does is
+      // state that the success path would have reset and that nothing else
+      // ever will: the spinner's timer, the spinner class, and above all
+      // `transitioning`, which stays true forever otherwise and turns every
+      // subsequent click, hash change and Escape on the whole site into a
+      // silent no-op.
+      clearTimeout(loadingTimer);
+      transitioning = false;
+      // A later navigation already moved on; that scene owns the overlay
+      // now and must not be replaced by this one's error.
+      if (activeScene !== sceneName) return;
+      sceneLoadFailed = true;
+      showSceneLoadError();
     });
   }
 
@@ -380,7 +649,7 @@ function expandScene(sceneName, triggerEl = null, pieceId = null) {
     // the old instance, builds the new one, and turns `.active` back on
     // once there's something real to fade up into.
     overlay.classList.remove('active');
-    setTimeout(mountNext, 600);
+    setTimeout(mountNext, CROSSFADE_MS);
   } else {
     // Reduced motion: main.css already sets `#experience-overlay
     // { transition: none }` under this media query, so toggling `.active`
@@ -396,16 +665,24 @@ function expandScene(sceneName, triggerEl = null, pieceId = null) {
 function returnToGallery() {
   if (transitioning || !activeScene) return;
 
-  overlay.classList.remove('active', 'butterfly-bg');
+  cancelAnimationFrame(pendingFocusFrame);
+  pendingFocusFrame = 0;
+  overlay.classList.remove('active');
   overlay.setAttribute('aria-hidden', 'true');
-  setChromeInert(false);
+  clearSceneLoadError();
   setHash(null);
 
-  setTimeout(() => {
+  function finish() {
     if (fullInstance) { fullInstance.dispose(); fullInstance = null; expContainer.innerHTML = ''; }
+    delete overlay.dataset.scene;
+    overlay.style.removeProperty('--overlay-bg');
+    if (expHeading) expHeading.textContent = '';
     activeScene = null;
     setActiveIcon(null);
     landing.style.display = '';
+    // The previews are on screen again — un-pause whichever of them the
+    // IntersectionObserver says are actually visible.
+    syncPreviewPlayback();
     // The preview canvases (sphere, butterfly) sat behind a hidden landing
     // grid — their own resize listeners were correctly ignoring 0-size
     // reads while hidden, but haven't re-measured since. Nudge them now
@@ -420,7 +697,18 @@ function returnToGallery() {
     // the real trigger element directly (both nav icons and preview tiles
     // stay in the DOM the whole time, just hidden) is what actually works.
     lastTrigger?.focus();
-  }, 600);
+  }
+
+  // expandScene()'s own reduced-motion branch (see its comment) skips the
+  // delay outright rather than replacing the motion with a pause, on the
+  // grounds that main.css sets `#experience-overlay { transition: none }`
+  // under this query so there is no fade left to wait for. This function
+  // never got the same check and sat through a dead CROSSFADE_MS gap on
+  // every return — the same accommodation applied in one direction only,
+  // which is worse than not having it: leaving a scene felt slower than
+  // entering one, for exactly the visitors who asked for less motion.
+  if (prefersReducedMotion()) finish();
+  else setTimeout(finish, CROSSFADE_MS);
 }
 
 // ─── Nav icon clicks ──────────────────────────────────────────────────────────
@@ -434,10 +722,16 @@ function returnToGallery() {
 // second real fetch.
 document.querySelectorAll('.nav-icon').forEach(btn => {
   const scene = btn.dataset.scene;
-  btn.addEventListener('pointerenter', () => prefetchScene(scene));
+  btn.addEventListener('pointerenter', () => { prefetchScene(scene); pmGlimpse(scene); });
   btn.addEventListener('touchstart', () => prefetchScene(scene), { passive: true });
   btn.addEventListener('click', () => {
-    if (activeScene === scene) {
+    // `&& !sceneLoadFailed`: clicking the icon of the scene you're already
+    // in means "close it" — except when it never opened. Pressing the same
+    // icon again is the obvious thing to do when a piece didn't load, and
+    // it used to return to the gallery instead, which reads as the site
+    // giving up on you. Verified live: fail beamline's chunk, press its
+    // icon a second time, and the retry now re-fetches and mounts.
+    if (activeScene === scene && !sceneLoadFailed) {
       returnToGallery(); // clicking active icon returns to gallery
     } else {
       expandScene(scene, btn);
@@ -450,11 +744,27 @@ document.querySelectorAll('.nav-icon').forEach(btn => {
 // preventDefault(), and Enter/Space activation comes free with the
 // element, so no manual keydown handling is needed.
 siteTitle.addEventListener('click', returnToGallery);
+siteTitle.addEventListener('pointerenter', () => pmGlimpse(siteTitle.dataset.glimpse));
 
 // ─── Keyboard: Escape → gallery, Tab trapped inside the open scene ─────────────
 document.addEventListener('keydown', e => {
   if (!activeScene) return;
-  if (e.key === 'Escape') { returnToGallery(); return; }
+  if (e.key === 'Escape') {
+    // A scene's read-more panel is the innermost thing Escape can close,
+    // so it gets first refusal. Both handlers sit on `document` and this
+    // one is registered at module evaluation — before any scene has
+    // mounted — so it ALWAYS runs first, and stopPropagation from the
+    // panel's side can't help (that only stops other elements, not an
+    // earlier listener on the same node). Reproduced before the fix:
+    // deep-link #sphere/3, confirm .sphere-panel.open, press Escape, land
+    // back on the gallery with the panel never having closed. The panel
+    // registry that answers this lives in sceneKit's createPanelCloser, so
+    // a scene gets the right behavior by using the shared helper it
+    // already has to use, with nothing to remember.
+    if (anyPanelOpen()) return;
+    returnToGallery();
+    return;
+  }
   if (e.key !== 'Tab') return;
   const els = overlayFocusables();
   const first = els[0] ?? expContainer;
@@ -475,7 +785,7 @@ document.addEventListener('keydown', e => {
 document.querySelectorAll('.preview-wrapper').forEach(w => {
   const container = w.querySelector('.preview-container');
   const scene = w.dataset.scene;
-  container.addEventListener('pointerenter', () => prefetchScene(scene));
+  container.addEventListener('pointerenter', () => { prefetchScene(scene); pmGlimpse(scene); });
   container.addEventListener('touchstart', () => prefetchScene(scene), { passive: true });
   container.addEventListener('click', () => expandScene(scene, container));
 });
@@ -490,27 +800,85 @@ document.querySelectorAll('.preview-wrapper').forEach(w => {
 // loadSceneCreate() shares its promise cache with expandScene() and the
 // hover/touch prefetch listeners above, so none of these ever double-fetch
 // the same scene.
+// A tile that isn't on screen isn't worth a frame. On a phone
+// #scene-previews is a single column taller than the viewport (see
+// main.css), so at any scroll position most of the ten tiles are nowhere
+// near it and were still rendering anyway. rootMargin gives a tile a
+// screen-height of runway so it's already running by the time it scrolls
+// into view rather than visibly starting up under the reader's thumb.
+const previewVisibility = 'IntersectionObserver' in window
+  ? new IntersectionObserver(entries => {
+      // Ignore everything reported while a scene is open. #landing is
+      // display:none for that whole span, so every tile dutifully reports
+      // "not intersecting" — for a reason that has nothing to do with
+      // scrolling. Recording it left every preview still frozen after the
+      // visitor came back to the gallery, waiting on an observer callback
+      // that had already been spent. Caught live: return from a scene, all
+      // ten tiles paused, nothing moving.
+      if (activeScene) return;
+      for (const entry of entries) {
+        const name = entry.target.closest('.preview-wrapper')?.dataset.scene;
+        if (name) previewOnScreen[name] = entry.isIntersecting;
+      }
+      syncPreviewPlayback();
+    }, { rootMargin: '100% 0px' })
+  : null;
+
 async function initPreviews() {
-  const map = {
-    sphere:     document.getElementById('preview-sphere'),
-    butterfly:  document.getElementById('preview-butterfly'),
-    scroll:     document.getElementById('preview-scroll'),
-    theater:    document.getElementById('preview-theater'),
-    orbiter:    document.getElementById('preview-orbiter'),
-    orrery:     document.getElementById('preview-orrery'),
-    library:    document.getElementById('preview-library'),
-    beamline:   document.getElementById('preview-beamline'),
-    harmonics: document.getElementById('preview-harmonics'),
-    outside:    document.getElementById('preview-outside'),
-  };
-  await Promise.all(Object.entries(map).map(async ([name, el]) => {
-    if (!el) return;
+  // The ten-entry id map this replaced was a hand-written duplicate of the
+  // registry: every id was mechanically 'preview-' + the SCENES key, so the
+  // only thing the map could ever contribute was a typo or a scene silently
+  // missing from it. Derived from SCENES now, which is also what makes an
+  // eleventh scene a one-line registry change rather than a two-place one.
+  const entries = Object.keys(SCENES)
+    .map(name => [name, document.getElementById(`preview-${name}`)])
+    .filter(([, el]) => el);
+
+  // allSettled, not all: Promise.all rejects on the FIRST failure and
+  // abandons the rest, so one scene's chunk failing to load took down the
+  // whole landing page's previews and left an unhandled rejection behind
+  // it. Each tile stands or falls on its own; a missing thumbnail is a
+  // quiet gap in the gallery, not a broken page.
+  const results = await Promise.allSettled(entries.map(async ([name, el]) => {
     const create = await loadSceneCreate(name);
     previews[name] = create(el, { preview: true });
+    previewVisibility?.observe(el);
   }));
+  for (const [i, r] of results.entries()) {
+    if (r.status === 'rejected') console.warn(`preview "${entries[i][0]}" did not load`, r.reason);
+  }
+  syncPreviewPlayback();
 }
 
 initPreviews();
+
+// ─── Stop rendering what nobody is looking at ────────────────────────────
+// A backgrounded tab already gets its requestAnimationFrame throttled hard
+// by the browser, but "throttled" is not "stopped" — and it does nothing at
+// all about a scene's audio, its physics integration, or the GPU work of
+// the frames it does still run. This is the one signal that covers both the
+// open scene and the previews behind it, so it lives here rather than being
+// re-implemented per scene.
+document.addEventListener('visibilitychange', () => {
+  fullInstance?.setPaused?.(document.hidden);
+  syncPreviewPlayback();
+});
+
+// ─── Leaving the page ────────────────────────────────────────────────────
+// pagehide, not beforeunload/unload: it's the event that actually fires on
+// iOS Safari and the one that fires when a page enters the back/forward
+// cache, which is exactly the case where an undisposed WebGL context and a
+// still-running AudioContext keep holding real resources for a page the
+// visitor thinks they've left. Guarded because a scene's dispose() runs
+// arbitrary teardown and an exception here would abort the rest of it.
+window.addEventListener('pagehide', () => {
+  try { fullInstance?.dispose?.(); } catch { /* leaving anyway */ }
+  fullInstance = null;
+  previewsSuspended = true;
+  for (const instance of Object.values(previews)) {
+    try { instance?.setPaused?.(true); } catch { /* leaving anyway */ }
+  }
+});
 
 // ─── Open whatever the URL names ─────────────────────────────────────────────
 // Called right after initPreviews() kicks off (not after it finishes —
@@ -525,14 +893,46 @@ initPreviews();
 // opening. The nav icon is passed as the trigger so returnToGallery()'s
 // focus restore still has somewhere sensible to send focus, same as a
 // click would.
+// A hash that names nothing — a typo, a truncated share, a stale link to a
+// scene that has since been retired, or the '#' a plain anchor leaves
+// behind — used to just sit in the address bar looking like a real
+// address, with no scene opening and nothing said about it. Nothing can be
+// DONE about an unknown route on a static single-page site, so the honest
+// response is to quietly stop claiming it: replaceState (not a hash
+// assignment, which would push a dead history entry — see setHash's own
+// comment) puts the visitor on the gallery's real URL. A bare '#' counts:
+// location.hash is '' for it, so the check is on the raw string.
+function dropUnknownHash() {
+  if (location.hash) history.replaceState(null, '', location.pathname + location.search);
+}
+
 const initialHash = parseHash();
 if (initialHash.scene) expandScene(initialHash.scene, navIconFor(initialHash.scene), initialHash.pieceId);
+else dropUnknownHash();
 
 window.addEventListener('hashchange', () => {
   if (syncingHash) return; // our own write, not a real navigation
   const { scene, pieceId } = parseHash();
   if (scene) expandScene(scene, navIconFor(scene), pieceId);
-  else returnToGallery();
+  else { returnToGallery(); dropUnknownHash(); }
+});
+
+// ─── Skip link ───────────────────────────────────────────────────────────
+// The skip link's href is #landing, which is both a real fragment (so it
+// still works with no JavaScript at all, which is the whole point of a
+// skip link) and a string the hash router sees. Two problems came out of
+// that: activating it wrote '#landing' into the address bar, where the
+// router reads it as an unknown route; and #landing is display:none the
+// entire time a scene is open, so "skip to main content" pointed at
+// something that wasn't there. Handled rather than re-pointed: whatever is
+// currently the main content is where it goes — #landing on the gallery,
+// the open scene's container during a scene — and preventDefault keeps the
+// URL out of it. #landing carries tabindex="-1" (index.html) because a
+// <main> is not focusable on its own and focus would otherwise stay on the
+// link while only the scroll position moved.
+skipLink?.addEventListener('click', e => {
+  e.preventDefault();
+  (activeScene ? expContainer : landing).focus();
 });
 
 // ─── pm:navigate ─────────────────────────────────────────────────────────
@@ -565,18 +965,32 @@ initColophon();
 // flickers to that element's word for a moment before reverting on its
 // own — not tied to how long the mouse stays put, so it reads as
 // something that happened to you, not a hover state you're controlling.
-// Deliberately rare enough that most visitors never see it once. Exposed
-// on window rather than kept module-private because inline onmouseover=""
-// attributes (index.html's nav icons, site-title, preview tiles) execute
-// in global scope, not this module's.
+// Deliberately rare enough that most visitors never see it once.
 //
-// Every trigger element is a real <button>, so it's keyboard-focusable —
-// but onmouseover never fires on focus, so index.html pairs each
-// onmouseover="pmGlimpse(...)" with a matching onfocus="pmGlimpse(...)",
-// giving mouse and keyboard visitors the same 1-in-100 chance.
+// Module-private as of 4.0. It used to be `window.pmGlimpse` for one
+// reason only: index.html carried 42 inline event-handler attributes
+// (onmouseover + onfocus on ten nav icons, ten preview tiles, and
+// #site-title), and an inline attribute's body executes in global scope,
+// not this module's. All 42 are gone, so the global went with them —
+// nothing outside this file has ever called it. That removal is not
+// optional cleanup: `.htaccess`'s CSP is now `script-src 'self'` with the
+// eleven sha256- hashes and 'unsafe-hashes' dropped, so in production the
+// browser refuses to run an inline handler at all.
 //
-// PM_GLIMPSE_WORDS is a plain object, keyed by the same string every
-// onmouseover="pmGlimpse('sphere')" etc. passes in, so the bracket lookup
+// The rewrite fixed a real bug along the way, not just the CSP. `mouseover`
+// BUBBLES: on a nav icon, it fires on every child shape of the SVG the
+// pointer crosses and again on the button as each one bubbles up, so a
+// single hover pass over the Sphere icon (a circle, an ellipse, a line and
+// a path) fired pmGlimpse four times — four independent 1-in-100 rolls
+// against a documented 1-in-100 chance, measured live. `pointerenter` does
+// not bubble and fires exactly once per element entry, which is why the
+// prefetch listeners three lines from the old attributes had always used
+// it. Hover now goes through those same per-element listeners; keyboard
+// goes through one delegated `focusin` (which does bubble, correctly —
+// focus lands on the button itself, never on an SVG child).
+//
+// PM_GLIMPSE_WORDS is a plain object, keyed by the same `data-scene` value
+// the nav icons and preview wrappers already carry, so the bracket lookup
 // below is a real key lookup. An array of { key, text } pairs would look up
 // by index instead, so a missing/renamed key would resolve to `undefined`
 // rather than failing loudly.
@@ -595,14 +1009,32 @@ const PM_GLIMPSE_WORDS = {
   title: 'secrets',
 };
 let pmGlimpseTimer = null;
-window.pmGlimpse = function (key) {
+function pmGlimpse(key) {
+  if (!key) return;
   if (Math.random() >= 0.01) return;
   const word = PM_GLIMPSE_WORDS[key];
   if (!word) return; // unknown key — fail silently, never show "undefined"
   document.title = word;
   clearTimeout(pmGlimpseTimer);
   pmGlimpseTimer = setTimeout(() => { document.title = PM_ORIGINAL_TITLE; }, 1100);
-};
+}
+
+// Keyboard half of the pair, delegated: `focusin` bubbles (`focus` does
+// not), so one listener covers every trigger element, including any added
+// later. #site-title is the one trigger with no scene of its own, so it
+// carries data-glimpse="title" (index.html); everything else reuses the
+// data-scene the nav icons and preview wrappers already had.
+function glimpseKeyFor(node) {
+  const el = node instanceof Element
+    ? node.closest('[data-glimpse], .nav-icon, .preview-container')
+    : null;
+  if (!el) return null;
+  return el.dataset.glimpse
+    ?? el.dataset.scene
+    ?? el.closest('.preview-wrapper')?.dataset.scene
+    ?? null;
+}
+document.addEventListener('focusin', e => pmGlimpse(glimpseKeyFor(e.target)));
 
 // ─── Fullscreen toggle ───────────────────────────────────────────────────────
 // Standard Fullscreen API, wired once here rather than duplicated into each

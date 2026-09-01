@@ -233,12 +233,24 @@ export function bindTapVsDrag(container) {
 // a scene-private variable, since that's the one piece of state already
 // guaranteed to stay in sync no matter which scene calls this.
 export function bindPersistedSoundToggle(container, toggleEl, setSoundEnabled, sceneKey) {
-  if (!toggleEl) return;
+  if (!toggleEl) return { dispose() {} };
   const KEY = `pm-sound-enabled:${sceneKey}`;
   let storedOn = false;
   try { storedOn = localStorage.getItem(KEY) === '1'; } catch { /* private browsing / storage disabled — just skip persistence */ }
 
   let overridden = false; // set once the user explicitly clicks the toggle, so a later fallback activation can't undo their choice
+
+  // Named rather than inline so dispose() below can remove them again.
+  function activateStoredSound() {
+    if (overridden) return;
+    setSoundEnabled(true);
+  }
+  function onToggleClick() {
+    overridden = true;
+    const nowOn = toggleEl.getAttribute('aria-pressed') !== 'true';
+    setSoundEnabled(nowOn);
+    try { localStorage.setItem(KEY, nowOn ? '1' : '0'); } catch { /* same as above */ }
+  }
 
   if (storedOn) {
     toggleEl.setAttribute('aria-pressed', 'true');
@@ -260,18 +272,29 @@ export function bindPersistedSoundToggle(container, toggleEl, setSoundEnabled, s
 
     // Cold-load fallback: only matters if the immediate attempt above
     // landed on a document with no activation yet at all.
-    container.addEventListener('pointerdown', function activateStoredSound() {
-      if (overridden) return;
-      setSoundEnabled(true);
-    }, { once: true });
+    //
+    // v4.0: this listener MUST come back off again. `container` is the one
+    // shared #experience-container that main.js only ever empties, never
+    // replaces, so a listener left on it outlives the scene that added it.
+    // The bug that produced this fix: leave Harmonics with sound remembered
+    // on, then pointer-down anywhere in ANY later scene, and this fired the
+    // torn-down scene's setSoundEnabled(true) — which built a fresh
+    // AudioContext and started 122 oscillators nothing could ever close.
+    // Reproduced live at four orphaned running contexts against Chrome's
+    // ~6-per-page cap. Outside had the same listener with a quieter
+    // symptom (its audioCtx isn't nulled on dispose, so it re-armed an
+    // unclearable setInterval instead). One helper, one teardown.
+    container.addEventListener('pointerdown', activateStoredSound, { once: true });
   }
 
-  toggleEl.addEventListener('click', () => {
-    overridden = true;
-    const nowOn = toggleEl.getAttribute('aria-pressed') !== 'true';
-    setSoundEnabled(nowOn);
-    try { localStorage.setItem(KEY, nowOn ? '1' : '0'); } catch { /* same as above */ }
-  });
+  toggleEl.addEventListener('click', onToggleClick);
+
+  return {
+    dispose() {
+      container.removeEventListener('pointerdown', activateStoredSound);
+      toggleEl.removeEventListener('click', onToggleClick);
+    },
+  };
 }
 
 // ─── Escape-to-close ────────────────────────────────────────────────────────
@@ -301,7 +324,43 @@ export function bindEscapeClose(onEscape) {
 // `close()` the scene calls itself from its own outside-click/hover-loss
 // logic — one close path, three triggers, instead of the same three-line
 // body copy-pasted at each trigger site.
+// Every panel that goes through createPanelCloser registers itself here, so
+// main.js can ask "is a read-more panel currently open?" before deciding what
+// Escape means. Without this, main.js's own document-level Escape handler —
+// registered at module evaluation, i.e. before any scene mounts, so it always
+// runs first — tore the whole scene down while the reader was only trying to
+// close the panel they were reading. Verified live: deep-link to #sphere/3,
+// press Escape, land back on the gallery. Both handlers sit on `document`, so
+// stopPropagation from the panel's side can't help (that only stops OTHER
+// elements, and main.js's is on the same node and earlier); the fix has to be
+// main.js asking first. Registration lives here rather than in a per-scene
+// return value because STANDARDS.md already establishes that every closeable
+// panel goes through this helper — so there is nothing for a scene to forget.
+const openPanels = new Set();
+
+// Not every dismissible thing is a DOM panel. Beamline's station label is a
+// THREE.Sprite in the 3D scene — it has no element to register and no `.open`
+// class, but Escape should still dismiss it before Escape means "leave the
+// scene". A scene declares one by handing over a predicate.
+const transientOverlays = new Set();
+
+export function registerTransientOverlay(isOpen) {
+  transientOverlays.add(isOpen);
+  return { dispose() { transientOverlays.delete(isOpen); } };
+}
+
+export function anyPanelOpen() {
+  for (const panel of openPanels) {
+    if (panel.isConnected && panel.classList.contains('open')) return true;
+  }
+  for (const isOpen of transientOverlays) {
+    if (isOpen()) return true;
+  }
+  return false;
+}
+
 export function createPanelCloser(panel, container, { closeBtn, onClose } = {}) {
+  openPanels.add(panel);
   function close() {
     if (!panel || !panel.classList.contains('open')) return;
     panel.classList.remove('open');
@@ -318,6 +377,7 @@ export function createPanelCloser(panel, container, { closeBtn, onClose } = {}) 
   return {
     close,
     dispose() {
+      openPanels.delete(panel);
       panel.removeEventListener('click', onPanelClick);
       closeBtn?.removeEventListener('click', onCloseBtnClick);
       escape.dispose();
@@ -353,6 +413,17 @@ export function createJumpList(container, { label, items, getLabel, onSelect }) 
     li.appendChild(btn);
     list.appendChild(li);
   });
+
+  // The list mounts INSIDE the scene's container, so without this a click on
+  // one of its buttons bubbles on to the container's own canvas click handler
+  // — which sees an open panel and a raycast that hit nothing (a
+  // keyboard-activated click reports clientX/clientY 0,0) and closes the very
+  // panel the button just opened. The whole accessible path opened and shut in
+  // the same event. Found independently in library and orbiter during the 4.0
+  // pass, and it was latent in every scene that uses this helper, so the guard
+  // belongs here rather than in five separate click handlers.
+  list.addEventListener('click', e => e.stopPropagation());
+
   container.appendChild(list);
   return { dispose() { list.remove(); } };
 }
@@ -404,15 +475,61 @@ export function escapeHtml(s) {
 // unambiguously once more than one scene's pieces share the same address
 // space, which is exactly what unifying every scene onto `{ scene, id }`
 // (NOTES.md's "Linking & addressing" entry) was for.
+//
+// v4.0 changed two things here, both of which had been latent rather than
+// broken:
+//
+//   1. The anchor now carries a real `href="#scene/id"` instead of
+//      `role="link" tabindex="0"`. That URL shape is exactly what main.js's
+//      hash router already parses, including the same-scene "open this piece"
+//      path, so native activation now does the whole job. Four scenes
+//      (sphere, orbiter, library, scroll) each carried their own copy of the
+//      same Enter/Space keydown handler purely because an <a> with no href
+//      isn't activatable — precisely the duplication this file exists to
+//      absorb. It also gives the links back everything a real link has and a
+//      div-with-a-role never did: middle-click, open-in-new-tab, copy link,
+//      the status-bar preview, and Enter-only activation (Space on a link was
+//      always a semantic mismatch).
+//
+//   2. The phrase substitution walks text nodes instead of running
+//      String.replace over an accumulating HTML string. The old version
+//      searched its own output, markup included, so a phrase could in
+//      principle match inside an attribute an earlier row had just injected,
+//      and a phrase that was a substring of another row's phrase could land
+//      the anchor on the wrong text. There were zero such collisions in the
+//      data — the guarantee was accidental, and 38 phrases are twelve
+//      characters or shorter with two of them a bare em dash. A TreeWalker
+//      can only ever see text, so the class of bug is gone rather than
+//      merely unexercised; verify-links.mjs now asserts the same property in
+//      the data as a second line of defence.
 export function wireCrossLinks(html, links, linkClass) {
-  let out = html;
-  links.forEach(l => {
-    out = out.replace(
-      l.phrase,
-      `<a class="${linkClass}" data-target-scene="${l.to.scene}" data-target-id="${l.to.id}" role="link" tabindex="0">${l.phrase}</a>`
-    );
-  });
-  return out;
+  if (!links?.length) return html;
+  const template = document.createElement('template');
+  template.innerHTML = html;
+
+  for (const l of links) {
+    const walker = document.createTreeWalker(template.content, NodeFilter.SHOW_TEXT);
+    let node, hit = null;
+    while ((node = walker.nextNode())) {
+      // Never nest one cross-link inside another's own text.
+      if (node.parentElement?.closest(`a.${linkClass}`)) continue;
+      const i = node.data.indexOf(l.phrase);
+      if (i !== -1) { hit = { node, i }; break; }
+    }
+    if (!hit) continue;
+
+    const tail = hit.node.splitText(hit.i);
+    tail.splitText(l.phrase.length);
+    const a = document.createElement('a');
+    a.className = linkClass;
+    a.href = `#${l.to.scene}/${l.to.id}`;
+    a.dataset.targetScene = l.to.scene;
+    a.dataset.targetId = String(l.to.id);
+    a.textContent = l.phrase;
+    tail.parentNode.replaceChild(a, tail);
+  }
+
+  return template.innerHTML;
 }
 
 // ─── Inbound-reference note ─────────────────────────────────────────────────
@@ -500,4 +617,210 @@ export function parseHTML(html) {
   const template = document.createElement('template');
   template.innerHTML = html.trim();
   return template.content;
+}
+
+
+// ─── Live reduced-motion changes ────────────────────────────────────────────
+// prefersReducedMotion() above is a one-shot read, and every scene sampled it
+// exactly once at mount — so a visitor who turned the OS setting on while a
+// scene was already open kept getting the motion until they navigated away.
+// This is the subscription half. Scenes that can cheaply flip their own
+// autonomous motion at runtime use it; ones that bake the decision into
+// geometry at build time legitimately don't.
+export function onReducedMotionChange(onChange) {
+  const mq = window.matchMedia?.('(prefers-reduced-motion: reduce)');
+  if (!mq) return { dispose() {} };
+  const handler = e => onChange(e.matches);
+  mq.addEventListener('change', handler);
+  return { dispose() { mq.removeEventListener('change', handler); } };
+}
+
+// ─── Frame clock ────────────────────────────────────────────────────────────
+// requestAnimationFrame fires at the display's refresh rate, not at 60Hz, so
+// anything advanced by a fixed per-frame constant runs at double speed on a
+// 120Hz display and half speed on a throttled one. Four scenes were doing
+// exactly that in v3.16.2 — and in Beamline's case it wasn't cosmetic:
+// computeSustain() derives a *reading duration* in real seconds from
+// WORDS_PER_SECOND, then compared it against a counter advancing by 1/60 per
+// frame, so the 116-word "THE MIRROR" passage got 25 seconds instead of 50 on
+// any ProMotion Mac. Harmonics, Outside and Orrery's planets already did this
+// correctly from performance.now(); this is that pattern, extracted.
+//
+// `dt` is clamped (default 50ms) so a backgrounded tab or a long GC pause
+// resumes rather than teleporting — a scene that integrates position from
+// velocity would otherwise jump the camera through a wall on the first frame
+// back. To preserve a rate that was hand-tuned at 60fps, multiply it by
+// `dt * 60` rather than re-deriving the constant.
+export function createFrameClock({ maxDelta = 0.05 } = {}) {
+  let last = performance.now();
+  let elapsed = 0;
+  return {
+    // Seconds since the previous tick, clamped. Call once at the top of animate().
+    tick() {
+      const now = performance.now();
+      const dt = Math.min(maxDelta, (now - last) / 1000);
+      last = now;
+      elapsed += dt;
+      return dt;
+    },
+    get elapsed() { return elapsed; },
+    // After a deliberate pause, so the first frame back isn't one long dt.
+    resync() { last = performance.now(); },
+  };
+}
+
+// ─── Tracked timers ─────────────────────────────────────────────────────────
+// Scenes schedule a lot of short deferred work — re-open a panel after its
+// close transition, move focus once a slide-in has landed, resume auto-rotate
+// a few seconds after a drag. Fifteen of those were untracked in v3.16.2, and
+// one had a real consequence: Library's 500ms side-flip re-entered
+// populatePanel() on a detached panel, which called onPieceChange(), which is
+// how main.js writes the URL — so a scene you had already left could rewrite
+// location.hash out from under the scene that replaced it. This is the
+// bookkeeping, so a scene's dispose() can drop everything still pending in
+// one call instead of naming each handle.
+export function trackTimers() {
+  const handles = new Set();
+  return {
+    after(ms, fn) {
+      const id = setTimeout(() => { handles.delete(id); fn(); }, ms);
+      handles.add(id);
+      return id;
+    },
+    // For work that only needs to outlast the current frame — no magic
+    // millisecond constant guessing at a CSS transition's duration.
+    nextFrame(fn) {
+      const id = requestAnimationFrame(() => { handles.delete(id); fn(); });
+      handles.add(id);
+      return id;
+    },
+    cancel(id) { clearTimeout(id); cancelAnimationFrame(id); handles.delete(id); },
+    dispose() {
+      for (const id of handles) { clearTimeout(id); cancelAnimationFrame(id); }
+      handles.clear();
+    },
+  };
+}
+
+// ─── Claiming the shared container ──────────────────────────────────────────
+// `container` is the single #experience-container element. main.js clears its
+// innerHTML between scenes but never replaces the node, so any inline style a
+// scene writes onto it survives into the next one. Seven scenes set
+// position/overflow, two set tabIndex, several set cursor on hover — and in
+// v3.16.2 exactly one of them put anything back. The visible version of the
+// bug: Orrery sets `cursor: none` for its crosshair, so leaving Orrery for
+// Theater, Scroll, Butterfly or Outside (the four that never touch cursor
+// themselves) left the visitor with no mouse pointer at all.
+//
+// This records whatever was on the element first and hands back a restore(),
+// which is the half that kept getting forgotten when it was seven separate
+// two-line edits. Past the third-scene threshold STANDARDS.md sets for
+// extraction several times over.
+export function claimContainer(container, { position = 'relative', overflow = 'hidden', cursor, tabIndex } = {}) {
+  const prev = {
+    position: container.style.position,
+    overflow: container.style.overflow,
+    cursor: container.style.cursor,
+    tabIndex: container.hasAttribute('tabindex') ? container.getAttribute('tabindex') : null,
+  };
+  container.style.position = position;
+  container.style.overflow = overflow;
+  if (cursor !== undefined) container.style.cursor = cursor;
+  if (tabIndex !== undefined) container.tabIndex = tabIndex;
+
+  return {
+    // Hover handlers go through this rather than writing the property
+    // directly, so the restore below is guaranteed to cover them too.
+    setCursor(value) { container.style.cursor = value; },
+    restore() {
+      container.style.position = prev.position;
+      container.style.overflow = prev.overflow;
+      container.style.cursor = prev.cursor;
+      if (prev.tabIndex === null) container.removeAttribute('tabindex');
+      else container.setAttribute('tabindex', prev.tabIndex);
+    },
+  };
+}
+
+// ─── Three.js scene-graph disposal ──────────────────────────────────────────
+// The two-line `traverse(o => { o.geometry?.dispose(); o.material?.dispose() })`
+// was copy-pasted into nearly every scene, and every copy had the same hole:
+// `material.dispose()` does NOT dispose the textures hanging off the material.
+// Only `.map` was ever disposed by hand, so every other slot leaked. Orrery
+// alone dropped 27 canvas textures per visit that way, because its planets
+// carry a roughnessMap, a metalnessMap and an emissiveMap alongside the map.
+//
+// Takes the scene root rather than a hand-kept array so nothing added later
+// can quietly escape it — which was the other half of the same bug: objects
+// added straight to `scene` instead of into the group the old traversal
+// walked were never freed at all.
+const TEXTURE_SLOTS = [
+  'map', 'alphaMap', 'aoMap', 'bumpMap', 'displacementMap', 'emissiveMap',
+  'envMap', 'lightMap', 'metalnessMap', 'normalMap', 'roughnessMap',
+  'specularMap', 'gradientMap', 'clearcoatMap', 'clearcoatNormalMap',
+  'clearcoatRoughnessMap', 'sheenColorMap', 'sheenRoughnessMap',
+  'transmissionMap', 'thicknessMap', 'iridescenceMap', 'matcap',
+];
+
+function disposeMaterial(material) {
+  for (const slot of TEXTURE_SLOTS) material[slot]?.dispose?.();
+  material.dispose();
+}
+
+export function disposeSceneGraph(root) {
+  if (!root) return;
+  root.traverse(obj => {
+    obj.geometry?.dispose?.();
+    const m = obj.material;
+    if (!m) return;
+    if (Array.isArray(m)) m.forEach(disposeMaterial);
+    else disposeMaterial(m);
+  });
+  root.clear?.();
+}
+
+// ─── Managed WebGL renderer ─────────────────────────────────────────────────
+// Wraps a renderer the scene has already constructed with its own options
+// (antialias, alpha, depth settings differ per scene and stay the scene's
+// call) and owns the three things every scene needed and none of them had:
+//
+//   1. A device-pixel-ratio cap. Uncapped, a DPR-3 phone renders nine times
+//      the fragments — worst exactly on the heaviest scenes. Beamline already
+//      capped at 2 and looked identical doing it; this is that, everywhere.
+//   2. Real context release. THREE.WebGLRenderer.dispose() tears down caches
+//      but does NOT free the GL context (checked against the pinned 0.185
+//      build). With eight preview contexts alive permanently plus one per
+//      open scene, against a browser cap around sixteen, scene switches
+//      accumulated orphans until the browser force-lost the OLDEST contexts —
+//      which are the landing tiles, so the symptom was a gallery thumbnail
+//      going black for the rest of the session.
+//   3. A webglcontextlost handler. Without one, a lost context (mobile
+//      backgrounding, GPU reset, memory pressure) leaves a permanently black
+//      canvas with the animation loop still burning CPU and nothing logged.
+export function manageRenderer(renderer, { maxPixelRatio = 2, onLost } = {}) {
+  const canvas = renderer.domElement;
+  const applyPixelRatio = () =>
+    renderer.setPixelRatio(Math.min(maxPixelRatio, window.devicePixelRatio || 1));
+  applyPixelRatio();
+
+  const onContextLost = e => {
+    // preventDefault is what makes restoration possible at all; without it
+    // the browser never fires webglcontextrestored.
+    e.preventDefault();
+    onLost?.();
+  };
+  canvas.addEventListener('webglcontextlost', onContextLost);
+
+  return {
+    // Call from the resize handler too — a window dragged between a Retina
+    // and a non-Retina display changes devicePixelRatio without any other
+    // signal.
+    applyPixelRatio,
+    dispose() {
+      canvas.removeEventListener('webglcontextlost', onContextLost);
+      renderer.dispose();
+      renderer.forceContextLoss?.();
+      canvas.remove();
+    },
+  };
 }

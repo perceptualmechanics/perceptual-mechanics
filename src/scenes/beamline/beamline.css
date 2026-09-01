@@ -1,7 +1,18 @@
 /* Beamline (Solar Sailer) scene styles, imported once at the top of
-   beamline.js. Beamline's hint color is deliberately its own tinted
-   rgba(120,170,255,...), not the shared --hint-text-color other scenes
-   use — left as its own literal value on purpose (see below). */
+   beamline.js. Beamline's hint color is deliberately its own tinted value,
+   not the shared --hint-text-color other scenes use — left as its own
+   literal on purpose (see below).
+
+   v4.0 palette pass: every colour in this file was a tint of hue ~216°, the
+   accent this scene used BEFORE the emerald pass, and the two title glows
+   were literally rgba(0,102,255,...) — 0x0066ff itself, the constant
+   beamline.js deleted. See beamline.js's own palette header for the full
+   reasoning and for why the code was corrected rather than the rule
+   relaxed. What survives unchanged is the DECISION recorded here: this
+   scene's title and hint are tinted rather than the site's plain white,
+   and they keep their own literal values rather than the shared constant.
+   Only the hue moved, and each text colour was re-picked to hold its
+   measured contrast against black (recomputed below, not assumed). */
 
 .beamline-title, .beamline-hint {
   position: fixed; pointer-events: none; z-index: 310;
@@ -30,7 +41,7 @@
      was replaced everywhere in this codebase (standing convention as of
      2026-08-26, NOTES.md). */
   bottom: var(--title-block-bottom-mobile); left: 5vw; right: 5vw;
-  text-align: center; color: rgba(200,245,255,0.88);
+  text-align: center; color: rgba(215,250,230,0.88);
   display: flex; flex-direction: column; align-items: center; gap: 0.3rem;
 
 	@media (min-width: 601px) {
@@ -61,7 +72,8 @@
   letter-spacing: var(--tracking);
   margin-right: calc(-1 * var(--tracking));
   text-transform: uppercase;
-  text-shadow: 0 0 20px rgba(0,102,255,0.45), 0 1px 0 rgba(0,0,0,0.6);
+  /* ACCENT (0x50C878) — was rgba(0,102,255,0.45), the deleted accent. */
+  text-shadow: 0 0 20px rgba(80,200,120,0.45), 0 1px 0 rgba(0,0,0,0.6);
 }
 .beamline-title-main {
   display: block; font-size: clamp(0.85rem, 2.2vw, 1.25rem);
@@ -69,7 +81,8 @@
   letter-spacing: var(--tracking);
   margin-right: calc(-1 * var(--tracking));
   font-style: italic;
-  text-shadow: 0 0 16px rgba(0,102,255,0.4), 0 1px 0 rgba(0,0,0,0.6);
+  /* ACCENT (0x50C878) — was rgba(0,102,255,0.4), the deleted accent. */
+  text-shadow: 0 0 16px rgba(80,200,120,0.4), 0 1px 0 rgba(0,0,0,0.6);
 }
 .beamline-title-name, .beamline-title-main, .beamline-title-sub {
   /* Unconditional, not breakpoint-specific: nothing else in this file ever
@@ -84,18 +97,22 @@
   --tracking: 0.05em;
   letter-spacing: var(--tracking);
   margin-right: calc(-1 * var(--tracking));
-  /* 0.68 alpha (~5.3:1 against black) meets WCAG's 4.5:1 minimum for
-     text this small while keeping the tint. */
-  color: rgba(150,190,255,0.68);
+  /* 0.68 alpha (~5.5:1 against black) meets WCAG's 4.5:1 minimum for
+     text this small while keeping the tint. Re-picked for the emerald hue
+     at the same lightness as the rgba(150,190,255,0.68) it replaces, which
+     measured ~5.3:1 — so this is not a contrast regression traded for a
+     colour, it is very slightly better. */
+  color: rgba(150,205,175,0.68);
 }
 .beamline-hint {
   top: 4.5rem; right: 1.2rem; font-size: 0.7rem; letter-spacing: 0.18em;
   line-height: 1.8; text-align: right;
-  /* 0.72 alpha (~4.9:1 against black) meets WCAG's 4.5:1 minimum for
+  /* 0.72 alpha (~5.0:1 against black) meets WCAG's 4.5:1 minimum for
      text this small; kept as its own literal rather than the shared
      --hint-text-color constant since this scene's hint is tinted, not
-     white. */
-  color: rgba(120,170,255,0.72);
+     white. Re-picked for the emerald hue at the same lightness as the
+     rgba(120,170,255,0.72) it replaces, which measured ~4.9:1. */
+  color: rgba(120,185,150,0.72);
   /* The hint reads as HUD chrome, not literary text, so it gets the
      piece's sci-fi tech font instead of the epigraph's serif.
      small-caps needs actual lowercase source characters to convert, so
