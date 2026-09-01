@@ -587,6 +587,40 @@ described are unchanged.)
   worth trimming, orrery.js's texture generators and first-person rig are the
   two most self-contained chunks to split out first.
 
+## 3.13.4 (2026-09-01)
+
+**Harmonics' panel now side-adapts, matching Sphere/Library/Orbiter.**
+First of the three explicitly-sequenced follow-ups Scott asked for after
+3.13.3 ("make harmonics' panel consistent with everything, and do the
+deeper panel redesign, and then tile order"). Harmonics was the one
+remaining panel-using scene not yet wired to sceneKit.js's shared
+`setPanelSide`/`clickedLeftHalf` helpers (extracted this session from
+Sphere/Library, since applied to Orbiter too) — its panel was fixed
+top-right only, same "only opens from one side" gap Orbiter had until
+3.13.1.
+
+Added `.harmonics-panel.from-left`/`.no-transition` CSS rules mirroring
+Orbiter's, imported the two sceneKit helpers into `harmonics.js`, and
+rewrote `openNodePanel`/`openPendingPanel` to accept `{ fromLeft }` and
+run the same wasOpen/sideMismatch close-wait-reopen dance already proven
+in `orbiter.js`'s `openPoem` — with the DOM-populating logic split into a
+`populate()` closure so async content resolution (both functions await
+`loadResolveEndpoint()`) happens before the open/side decision, not
+tangled into it. All three call sites updated: the raycast click handler
+(computes `fromLeft` from click x-position for both node and pending-point
+picks), the keyboard jump list, and the `#harmonics/<id>` deep-link
+follow path (both pass `fromLeft: false`, matching Orbiter's convention
+for non-click entry points).
+
+Build clean, `verify-links`/`verify-resonances` unaffected. Live-verified
+against the running dev server via a JS-dispatched click at a real
+raycast-hit coordinate (grid-scanned via `cursor:pointer` detection, same
+technique as 3.13.1's Orbiter satellite verification) — confirmed a click
+on the left half opens the panel with `.from-left` applied, and a
+follow-up click on the right half while already open runs the full
+close→500ms wait→reopen-on-the-other-side sequence with freshly
+repopulated content, not just a class flip.
+
 ## 3.13.3 (2026-09-01)
 
 **Three books added from ISBNs Scott provided directly.** Same standing

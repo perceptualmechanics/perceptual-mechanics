@@ -142,6 +142,20 @@
 	}
 }
 .harmonics-panel.open { transform: translateX(0); }
+/* Enters from whichever side of the screen was actually clicked — same
+   convention as sphere.css/library.css/orbiter.css (design-notes pass,
+   2026-09-01). .from-left is toggled in JS (sceneKit.js's setPanelSide)
+   right before opening; .no-transition suppresses the flip's own
+   transition for one frame so it happens while the panel is still
+   off-screen, not visibly. This scene's panel was fixed-right only
+   until now. */
+.harmonics-panel.from-left {
+  left: 0; right: auto;
+  border-left: none; border-right: 1px solid rgba(255,220,150,0.22);
+  transform: translateX(-100%);
+}
+.harmonics-panel.from-left.open { transform: translateX(0); }
+.harmonics-panel.no-transition { transition: none !important; }
 .harmonics-panel-title {
   font-size: 1.05rem; letter-spacing: .18em; text-transform: uppercase;
   font-weight: normal; color: rgba(255,232,190,.85); margin: 0 0 .5rem;

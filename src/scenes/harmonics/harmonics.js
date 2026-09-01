@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import {
   bindOrbitDrag, bindWheelZoom, bindGuardedResize, bindTapVsDrag,
   prefersReducedMotion, parseHTML, createJumpList, createPanelCloser, escapeHtml,
-  mountClippedPreviewCanvas, bindPersistedSoundToggle,
+  mountClippedPreviewCanvas, bindPersistedSoundToggle, setPanelSide, clickedLeftHalf,
 } from '../../utils/sceneKit.js';
 import { getApprovedResonances, getPendingResonances } from '../../resonances.js';
 import { navigateToPiece } from '../../utils/harmonicsEntry.js';
@@ -841,73 +841,119 @@ export function createharmonics(container, { preview = false, initialPieceId = n
   // it), but still drives which quoted span each excerpt centers on.
   // `self`'s excerpt is recomputed per-connection (not cached) because
   // different rationales can quote different spans of the SAME piece.
-  async function openNodePanel(nodeIndex) {
+  // `{ fromLeft }` follows the same side-adaptable-panel convention as
+  // Sphere/Library/Orbiter (see sceneKit.js's setPanelSide/clickedLeftHalf
+  // header comment) — the panel docks on whichever side WASN'T clicked, so
+  // it doesn't open underneath the reader's own hand. Content is resolved
+  // (async — loadResolveEndpoint/resolveEndpoint) before the open/side
+  // decision runs, since none of that touches panel DOM classes; `populate`
+  // is a plain closure so it can be called either immediately or after the
+  // close/wait/reopen dance below, without resolving twice.
+  async function openNodePanel(nodeIndex, { fromLeft } = {}) {
     if (!panel) return;
     const node = nodeList[nodeIndex];
     const resolveEndpoint = await loadResolveEndpoint();
     const self = resolveEndpoint(node.endpoint);
     const selfHex = `#${(SCENE_ACCENT[node.scene] ?? 0xffffff).toString(16).padStart(6, '0')}`;
     const conns = nodeResonances(nodeIndex);
-    panelTitleEl.textContent = self.title;
-    panelSubtitleEl.textContent = conns.length === 1 ? 'Resonates with 1 piece' : `Resonates with ${conns.length} pieces`;
-    panelResonancesEl.innerHTML = '';
-    conns.forEach(({ row, other }) => {
-      const resolved = resolveEndpoint(other);
-      const otherHex = `#${(SCENE_ACCENT[other.scene] ?? 0xffffff).toString(16).padStart(6, '0')}`;
-      const quotes = extractQuotes(row.rationale);
-      const selfSnippet = snippetFor(self.rawText, quotes);
-      const otherSnippet = snippetFor(resolved.rawText, quotes);
 
-      const entry = document.createElement('div');
-      entry.className = 'harmonics-resonance-entry';
+    const populate = () => {
+      panelTitleEl.textContent = self.title;
+      panelSubtitleEl.textContent = conns.length === 1 ? 'Resonates with 1 piece' : `Resonates with ${conns.length} pieces`;
+      panelResonancesEl.innerHTML = '';
+      conns.forEach(({ row, other }) => {
+        const resolved = resolveEndpoint(other);
+        const otherHex = `#${(SCENE_ACCENT[other.scene] ?? 0xffffff).toString(16).padStart(6, '0')}`;
+        const quotes = extractQuotes(row.rationale);
+        const selfSnippet = snippetFor(self.rawText, quotes);
+        const otherSnippet = snippetFor(resolved.rawText, quotes);
 
-      const pair = document.createElement('div');
-      pair.className = 'harmonics-excerpt-pair';
-      const selfQ = document.createElement('blockquote');
-      selfQ.className = 'harmonics-excerpt';
-      selfQ.style.borderLeftColor = selfHex;
-      selfQ.innerHTML = `<span class="harmonics-excerpt-label">${escapeHtml(self.title)}</span>${escapeHtml(selfSnippet)}`;
-      const otherQ = document.createElement('blockquote');
-      otherQ.className = 'harmonics-excerpt';
-      otherQ.style.borderLeftColor = otherHex;
-      otherQ.innerHTML = `<span class="harmonics-excerpt-label">${escapeHtml(resolved.title)}</span>${escapeHtml(otherSnippet)}`;
-      pair.appendChild(selfQ);
-      pair.appendChild(otherQ);
-      entry.appendChild(pair);
+        const entry = document.createElement('div');
+        entry.className = 'harmonics-resonance-entry';
 
-      const btn = document.createElement('button');
-      btn.type = 'button';
-      btn.className = 'harmonics-endpoint-link';
-      // Visible text now names the actual target (matches the aria-label
-      // below) rather than the generic "Open this piece →" every button
-      // used to share — with several resonance pairs stacked in one panel,
-      // identical labels gave a sighted reader no way to tell which button
-      // opened which piece without tracing back to that pair's own card
-      // header. Design-notes pass, 2026-09-01.
-      btn.textContent = `Open ${resolved.title} →`;
-      btn.setAttribute('aria-label', `Open ${resolved.title}`);
-      btn.addEventListener('click', e => {
-        e.stopPropagation();
-        navigateToPiece(other.scene, resolved.pieceId);
+        const pair = document.createElement('div');
+        pair.className = 'harmonics-excerpt-pair';
+        const selfQ = document.createElement('blockquote');
+        selfQ.className = 'harmonics-excerpt';
+        selfQ.style.borderLeftColor = selfHex;
+        selfQ.innerHTML = `<span class="harmonics-excerpt-label">${escapeHtml(self.title)}</span>${escapeHtml(selfSnippet)}`;
+        const otherQ = document.createElement('blockquote');
+        otherQ.className = 'harmonics-excerpt';
+        otherQ.style.borderLeftColor = otherHex;
+        otherQ.innerHTML = `<span class="harmonics-excerpt-label">${escapeHtml(resolved.title)}</span>${escapeHtml(otherSnippet)}`;
+        pair.appendChild(selfQ);
+        pair.appendChild(otherQ);
+        entry.appendChild(pair);
+
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'harmonics-endpoint-link';
+        // Visible text now names the actual target (matches the aria-label
+        // below) rather than the generic "Open this piece →" every button
+        // used to share — with several resonance pairs stacked in one panel,
+        // identical labels gave a sighted reader no way to tell which button
+        // opened which piece without tracing back to that pair's own card
+        // header. Design-notes pass, 2026-09-01.
+        btn.textContent = `Open ${resolved.title} →`;
+        btn.setAttribute('aria-label', `Open ${resolved.title}`);
+        btn.addEventListener('click', e => {
+          e.stopPropagation();
+          navigateToPiece(other.scene, resolved.pieceId);
+        });
+        entry.appendChild(btn);
+
+        panelResonancesEl.appendChild(entry);
       });
-      entry.appendChild(btn);
+    };
 
-      panelResonancesEl.appendChild(entry);
-    });
+    const wasOpen = panel.classList.contains('open');
+    const sideMismatch = fromLeft !== undefined && panel.classList.contains('from-left') !== fromLeft;
+    if (wasOpen && sideMismatch) {
+      // Crossing to the other side of an already-open panel: close first,
+      // then reopen anchored to the new side once the close transition
+      // finishes — same pattern as sphere.js/orbiter.js's own panels.
+      panel.classList.remove('open');
+      setTimeout(() => {
+        setPanelSide(panel, fromLeft);
+        populate();
+        panel.classList.add('open');
+      }, 500);
+      return;
+    }
+    if (!wasOpen && sideMismatch) setPanelSide(panel, fromLeft);
+    populate();
     panel.classList.add('open');
   }
 
   // Round 10's living atmosphere: touching a pending point gets, at most,
   // a small honest acknowledgment — not the full payoff treatment, since
-  // this connection hasn't been reviewed/approved yet.
-  async function openPendingPanel(pendingIndex) {
+  // this connection hasn't been reviewed/approved yet. Same fromLeft
+  // side-adaptation as openNodePanel above.
+  async function openPendingPanel(pendingIndex, { fromLeft } = {}) {
     if (!panel) return;
     const p = pendingList[pendingIndex];
     const resolveEndpoint = await loadResolveEndpoint();
     const info = resolveEndpoint(p.endpoint);
-    panelTitleEl.textContent = info.title;
-    panelSubtitleEl.textContent = 'Pending review';
-    panelResonancesEl.innerHTML = '';
+
+    const populate = () => {
+      panelTitleEl.textContent = info.title;
+      panelSubtitleEl.textContent = 'Pending review';
+      panelResonancesEl.innerHTML = '';
+    };
+
+    const wasOpen = panel.classList.contains('open');
+    const sideMismatch = fromLeft !== undefined && panel.classList.contains('from-left') !== fromLeft;
+    if (wasOpen && sideMismatch) {
+      panel.classList.remove('open');
+      setTimeout(() => {
+        setPanelSide(panel, fromLeft);
+        populate();
+        panel.classList.add('open');
+      }, 500);
+      return;
+    }
+    if (!wasOpen && sideMismatch) setPanelSide(panel, fromLeft);
+    populate();
     panel.classList.add('open');
   }
 
@@ -1002,11 +1048,15 @@ export function createharmonics(container, { preview = false, initialPieceId = n
       if (idx !== -1) {
         hoveredIdx = idx;
         triggerBoost(idx);
-        openNodePanel(idx);
+        const rect = container.getBoundingClientRect();
+        openNodePanel(idx, { fromLeft: clickedLeftHalf(e, rect) });
         return;
       }
       const pIdx = pickPendingAt(e.clientX, e.clientY);
-      if (pIdx !== -1) openPendingPanel(pIdx);
+      if (pIdx !== -1) {
+        const rect = container.getBoundingClientRect();
+        openPendingPanel(pIdx, { fromLeft: clickedLeftHalf(e, rect) });
+      }
     };
     container.addEventListener('click', onClick);
   }
@@ -1020,13 +1070,13 @@ export function createharmonics(container, { preview = false, initialPieceId = n
       label: 'Touch a node',
       items: nodeList,
       getLabel: (_node, i) => `Piece ${i + 1}`,
-      onSelect: (_node, i) => { triggerBoost(i); openNodePanel(i); },
+      onSelect: (_node, i) => { triggerBoost(i); openNodePanel(i, { fromLeft: false }); },
     });
   }
 
   if (followedNodeIndex !== -1) {
     triggerBoost(followedNodeIndex);
-    openNodePanel(followedNodeIndex);
+    openNodePanel(followedNodeIndex, { fromLeft: false });
   }
 
   // ─── Sonification (round 10) ─────────────────────────────────────────────
