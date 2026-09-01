@@ -426,17 +426,42 @@ another reason should be moved onto them while it's open:
   specified 50. Multiply a rate tuned at 60fps by `dt * 60` rather than
   re-deriving it.
 
-  **A count is a rate too, and the first sweep could not see it.** The 4.0
-  pass that fixed Orbiter, Beamline, Orrery and Library looked for the rate
-  shape — something advancing by a constant each frame, which is what `+=`
-  finds. It missed the other spelling: *how many things to do this frame*.
-  Butterfly's preview adds `PPF = 2` integration steps per trajectory per
-  frame, and Harmonics offers `GALAXY_TWINKLE_KICKS` twinkle candidates per
-  frame. Neither contains a `+=` against a tuned value; both are frame-rate
-  coupled exactly as much as `t += 0.01` is. When sweeping for this, look for
-  a loop whose iteration count *decides how far state advances* — as opposed
-  to one that traverses a fixed population, which is fine and is most of
-  them. Say which of the two a given loop is before deciding it's clean.
+  **Why the 4.0 pass missed four more, and it is not the reason first
+  recorded here.** The correction matters more than the original claim, so
+  both are kept.
+
+  The first account was that audit finding 16 searched for the *rate* shape
+  (`+=` against a tuned value) and could not see the *count* shape (how many
+  things to do this frame — Butterfly's `PPF`, Harmonics'
+  `GALAXY_TWINKLE_KICKS`). That distinction is real and worth keeping: a loop
+  whose iteration count decides how far state advances is as frame-coupled as
+  `t += 0.01`, and it contains no `+=` at all. When sweeping, say for each
+  loop whether it is that or a traversal of a fixed population — the latter
+  is fine and is most of them.
+
+  But it is not the operative cause, because it does not explain Sphere.
+  `lightAngle += 0.003` is a plain rate in exactly the syntax being searched
+  for, in a file the audit read in full (its stated method: all ten scenes
+  read in full, 22,626 lines). It survived anyway.
+
+  What actually happened is visible in finding 16's own table, whose column
+  header is **"Symptom at 120 Hz"**. Every row is a coupling that
+  *contradicted something else*: Beamline derived a reading duration in real
+  seconds and compared it to a frame counter; Orbiter had a tuned 0.60 rad/s
+  to measure against; Library had a named shimmer rate; Orrery's belt visibly
+  outran the Kepler planets its own speed was derived from. Sphere's ambient
+  rotation and Butterfly's `PPF` have no referent — nothing in either file
+  says what they are supposed to be, and running twice as fast on a 120Hz
+  panel produces no contradiction, just a slightly different look nobody can
+  call wrong. **An audit organised around symptoms finds every instance that
+  is inconsistent with something, and is blind to every instance that is
+  uniformly wrong.**
+
+  The durable lesson is therefore about method, not about counts: the scope
+  was stated — it is right there in the column header — and nobody read it as
+  a limit, so "frame-rate coupling in four scenes" was taken to mean there
+  were four. Report an audit's ruler as loudly as its findings, the same way
+  this project already requires a measurement to be reported with its method.
 
   A second thing that survived because nobody looked for it: **four scenes
   have no frame clock at all.** Butterfly, Sphere, Scroll and Theater. Scroll

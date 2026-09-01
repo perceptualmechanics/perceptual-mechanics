@@ -83,6 +83,18 @@ published all of them anyway on the reasoning that they were good. That reasonin
 was true and irrelevant. "Is this good?" is the wrong question; "does the site
 show this?" is the right one.
 
+**An audit's scope is part of its result.** New, and it cost two passes to
+see. A 2026-09-01 finding listed frame-rate-coupled animation in four scenes,
+in a table whose column header read "Symptom at 120 Hz". Everything in it was
+a coupling that contradicted something else — a reading time in seconds
+compared against a frame counter, a belt outrunning the planets it was
+derived from. Two more scenes had the same defect with nothing to contradict:
+an ambient rotation is not *wrong* at double speed, it is just faster. They
+survived, and "coupling in four scenes" was read as "there were four." An
+audit organised around symptoms is blind to whatever is uniformly wrong, so
+say what was looked for as prominently as what was found — the same rule as
+the one above, applied to a survey instead of a number.
+
 **Report a measurement with its method.** Word counts, ratios and "N checks
 passed" are all method-dependent. Quoting a number from an earlier run after
 changing the method produces a real error. State the ruler alongside the number.
