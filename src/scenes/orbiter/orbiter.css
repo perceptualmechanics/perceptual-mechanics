@@ -73,6 +73,19 @@
 		width: 38%; padding: 3rem 2rem;
 	}
 }
+/* Enters from whichever side of the screen was actually clicked —
+   .from-left is toggled in JS (sceneKit.js's setPanelSide) right before
+   opening. .no-transition is applied for one frame while the side flips,
+   so the flip itself (an instant layout change, not something transform
+   can animate) happens while the panel is still off-screen, not visibly.
+   Same pattern as .sphere-panel/.library-panel (design-notes pass,
+   2026-09-01) — this scene's panel was fixed-right only until now. */
+.orbiter-panel.from-left {
+  left: 0; right: auto;
+  border-left: none; border-right: 1px solid rgba(160,255,200,0.15);
+  transform: translateX(-100%);
+}
+.orbiter-panel.no-transition { transition: none !important; }
 .orbiter-panel.open { transform: translateX(0); }
 .orbiter-panel-title {
   /* This is the panel's <h2>, matching its aria-labelledby target — margin

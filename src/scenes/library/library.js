@@ -279,6 +279,27 @@ function relLuminance(hex) {
   return 0.2126 * col.r + 0.7152 * col.g + 0.0722 * col.b;
 }
 
+// Real saturation/lightness boost, applied at the pixel level (baked into
+// the canvas texture itself, not a material-color multiply, which is what
+// the roughness/lighting tweak below already tried and Scott found
+// insufficient live — the shelf still read desaturated against the
+// backdrop). PALETTE's own hex values stay untouched (still "someone's
+// actual bookshelf," not a rainbow); this only affects what a book's own
+// spine texture actually renders, and only for real books — the disc/CD/
+// box palettes are deliberately near-monochrome design choices (see
+// DISC_PALETTE/CD_PALETTE/BOX_PALETTE's own header comment) that a
+// saturation boost would work against, not toward. Design-notes pass
+// follow-up, 2026-09-01.
+function vividColor(hex) {
+  const c = new THREE.Color(hex);
+  const hsl = { h: 0, s: 0, l: 0 };
+  c.getHSL(hsl);
+  hsl.s = Math.min(1, hsl.s * 1.55 + 0.08);
+  hsl.l = Math.min(0.68, Math.max(hsl.l, hsl.l * 1.18));
+  c.setHSL(hsl.h, hsl.s, hsl.l);
+  return `#${c.getHexString()}`;
+}
+
 function makeSpineTexture(baseColor, title, creator, isBox) {
   const c = document.createElement('canvas');
   c.width = 112; c.height = 800;
@@ -1050,7 +1071,10 @@ function buildItems(preview) {
         : 0.68 + hash01(it.title, 'd') * 0.16;
 
       const palette = isBox ? BOX_PALETTE : isDisc ? DISC_PALETTE : isCd ? CD_PALETTE : PALETTE;
-      const color = palette[hash(it.title) % palette.length];
+      const rawColor = palette[hash(it.title) % palette.length];
+      // Books only — see vividColor's own header comment for why discs/
+      // CDs/boxes are excluded.
+      const color = (!isBox && !isDisc && !isCd) ? vividColor(rawColor) : rawColor;
 
       const x = cursorX + w / 2;
       const y = top - CUBBY_H + floorGap + h / 2;

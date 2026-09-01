@@ -587,6 +587,44 @@ described are unchanged.)
   worth trimming, orrery.js's texture generators and first-person rig are the
   two most self-contained chunks to split out first.
 
+## 3.13.1 (2026-09-01)
+
+**Follow-up fixes from live review of 3.13.0.** Scott caught three real
+gaps after seeing the previous entry's changes live.
+
+*Orbiter panel wasn't actually side-adapting.* 3.13.0's report said this
+was out of scope pending a separate call — Scott made that call directly:
+add it. Turned out `openPoem()` never took a `fromLeft` argument at all
+and `orbiter.css` had no `.from-left` rule — the panel was fixed-right
+this whole time, unlike Sphere/Library. Wired it up properly this time:
+`orbiter.css` gets the same `.from-left`/`.no-transition` pair as
+`sphere.css`/`library.css`, `openPoem()` now takes `{ fromLeft }` and runs
+the same wasOpen/sideMismatch branches as `sphere.js`'s `openFragment`
+(close-wait-reopen when crossing sides on an already-open panel, immediate
+toggle on a fresh open), using the `setPanelSide`/`clickedLeftHalf`
+helpers 3.13.0 already put in `sceneKit.js`. All three call sites
+(satellite click, jump list, deep-link) now pass a real `fromLeft`.
+
+*Library still read desaturated.* The roughness/lighting tweak in 3.13.0
+wasn't enough — confirmed live. Real fix this time: a `vividColor()`
+helper boosts saturation and lightness in HSL space (`getHSL`/`setHSL`),
+applied at the point a book's spine texture is actually drawn (baked into
+the canvas pixels, not a material-color multiply that lighting could wash
+back out), books only — `PALETTE`'s own hex values are untouched, and the
+deliberately near-monochrome disc/CD/box palettes are explicitly excluded
+so their own material distinction (glossy plastic vs. cloth binding)
+doesn't get undermined.
+
+*Harmonics panel excerpts stacked, not side-by-side.* `.harmonics-excerpt-
+pair` used to switch to `flex-direction: row` above 901px, putting the
+self/other excerpts in two narrow columns inside a panel that's already
+only ~33% of the viewport — cramped on its own, and compounding the
+density problem once several resonance pairs stack in one panel (sphere:14
+carries 6). Removed the row override; always column now.
+
+Build clean, verify-links/verify-resonances pass. Live verification still
+pending push.
+
 ## 3.13.0 (2026-09-01)
 
 **Design-notes pass, greenlit half.** Scott's "perceptualmechanics.com —

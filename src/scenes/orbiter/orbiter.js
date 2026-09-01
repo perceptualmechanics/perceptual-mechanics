@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { poems } from './orbiter.text.js';
 import { getOutboundLinks, getInboundLinks } from '../../links.js';
-import { bindOrbitDrag, bindGuardedResize, prefersReducedMotion, createPanelCloser, createJumpList, escapeHtml, parseHTML, wireCrossLinks, formatInboundNote } from '../../utils/sceneKit.js';
+import { bindOrbitDrag, bindGuardedResize, prefersReducedMotion, createPanelCloser, createJumpList, escapeHtml, parseHTML, wireCrossLinks, formatInboundNote, setPanelSide, clickedLeftHalf } from '../../utils/sceneKit.js';
 import './orbiter.css';
 import orbiterHtml from './orbiter.html?raw';
 
@@ -829,7 +829,7 @@ export function createOrbiter(container, { preview = false, initialPieceId = nul
       getLabel: item => item === NUCLEUS_JUMP_ITEM ? 'Look inside the nucleus' : poems[item.poemIndex].title,
       onSelect: item => {
         if (item === NUCLEUS_JUMP_ITEM) { toggleNucleusDetail(); return; }
-        selectedSat = item; openPoem(item);
+        selectedSat = item; openPoem(item, { fromLeft: false });
       },
     });
   }
@@ -892,10 +892,38 @@ export function createOrbiter(container, { preview = false, initialPieceId = nul
       link.setAttribute('aria-label', `Follow the echo to: ${targetPoem ? targetPoem.title : 'related poem'}`);
     });
   }
-  function openPoem(sat) {
+  // fromLeft: which side of the container the triggering click landed on
+  // (undefined for keyboard/deep-link callers with no click position — see
+  // sceneKit.js's setPanelSide/clickedLeftHalf, same pattern as sphere.js's
+  // openFragment and library.js's openItem/onContainerClick). Added
+  // 2026-09-01 — this panel used to be fixed-right only.
+  function openPoem(sat, { fromLeft } = {}) {
     const poem = poems[sat.poemIndex];
     if (!panel || !poem) return;
     onPieceChange?.(poem.id);
+
+    const wasOpen = panel.classList.contains('open');
+    const sideMismatch = fromLeft !== undefined && panel.classList.contains('from-left') !== fromLeft;
+
+    if (wasOpen && sideMismatch) {
+      // Crossing to the other side of an already-open panel: close first,
+      // then reopen anchored to the new side once the close transition
+      // finishes — same 500ms beat as .orbiter-panel's own close
+      // transition (transform .5s, orbiter.css), matching sphere.js's
+      // openFragment/library.js's openItem so a side change always
+      // visibly relocates the panel rather than teleporting it.
+      panel.classList.remove('open');
+      setTimeout(() => {
+        setPanelSide(panel, fromLeft);
+        renderPoemInto(poem);
+        panel.classList.add('open');
+        setTimeout(() => panelTitle.focus(), 50);
+      }, 500);
+      return;
+    }
+
+    if (!wasOpen && sideMismatch) setPanelSide(panel, fromLeft);
+
     renderPoemInto(poem);
     panel.classList.add('open');
     setTimeout(() => panelTitle.focus(), 50);
@@ -933,7 +961,7 @@ export function createOrbiter(container, { preview = false, initialPieceId = nul
   function openPoemById(id) {
     const poemIdx = poems.findIndex(p => p.id === id);
     const sat = poemIdx !== -1 && satellites.sats.find(s => s.poemIndex === poemIdx);
-    if (sat) { selectedSat = sat; openPoem(sat); }
+    if (sat) { selectedSat = sat; openPoem(sat, { fromLeft: false }); }
   }
   if (!preview && initialPieceId !== null) openPoemById(initialPieceId);
 
@@ -993,7 +1021,8 @@ export function createOrbiter(container, { preview = false, initialPieceId = nul
       if (hoveredNucleus) { toggleNucleusDetail(); return; }
       if (!hoveredSat) return;
       selectedSat = hoveredSat;
-      openPoem(selectedSat);
+      const rect = container.getBoundingClientRect();
+      openPoem(selectedSat, { fromLeft: clickedLeftHalf(e, rect) });
     };
     container.addEventListener('click', onContainerClick);
   }
