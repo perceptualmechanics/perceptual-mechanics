@@ -702,13 +702,43 @@ packages, each with `os`/`cpu` constraints), CI on Linux is unaffected, and
 the fix is a single `npm ci` on the Mac. Written up as a standing rule in
 STANDARDS.md under "Tooling", because the setup that causes it is permanent.
 
-**Not verified live, and stated as such.** The dev server was running from
-before the upgrade and swapping `node_modules` under it left it serving a
-Vite 8 client from a Vite 6 process (`__SERVER_FORWARD_CONSOLE__ is not
-defined`), so the browser check could not be completed. That is an artifact
-of upgrading under a live server, not a finding about the upgrade — but a
-green build is exactly what this work was slowed down not to trust, so the
-live pass stands outstanding rather than assumed.
+**The live pass, done afterwards.** It was outstanding at first: the dev
+server had been running from before the upgrade, and swapping `node_modules`
+under it left it serving a Vite 8 client from a Vite 6 process
+(`__SERVER_FORWARD_CONSOLE__ is not defined`). Once Scott ran `npm ci` and
+restarted, the check was completed in Chrome on the Mac at a 1440×900
+viewport, against `localhost:5173`.
+
+Orrery draws the whole room — brick, rings, hanging lamps, the flyers on the
+back wall — and the planets keep moving between frames, so the frame clock is
+running. Harmonics draws its node field, and clicking a node opens the panel
+with both halves of the resonance and a working `OPEN SPHERE — "QUIVER" →`
+button. The Library shelf renders all eight sections with legible spines;
+item 72 shows publisher, ISBN and "REFERENCED FROM NO COUNTRY FOR OLD MEN"
+with **no** note, and item 11 shows its note with **Ulysses** as a real
+`<a href="#library/85">` and its own backlink underneath — so 4.0.2's
+per-item note visibility and 4.0's `wireCrossLinks` rewrite are both doing
+what they claim on screen, not just in the verifier.
+
+The `/text/` page was checked a different way, because the dev server does
+not serve them — they are written at `closeBundle`, so `/text/` there falls
+through to the SPA. Instead the whole of `dist/text/` was diffed between a
+Vite 6 build (at 9f69988) and the Vite 8 build: **all eight pages byte
+identical**. Those pages carry one inline `<style>`, no external stylesheet
+and no script tags at all, so they have no bundler-dependent surface — which
+makes the live look at `perceptualmechanics.com/text/library/` (styled,
+Arapey serif, 22k characters, zero external scripts) a look at the same
+bytes the Vite 8 build produces.
+
+**One thing seen while looking, and it is not ours.** Three landing-page
+previews are blank or nearly so: `preview-harmonics` and `preview-outside`
+sit at the default 300×150 canvas — never sized, so never rendered — and
+`preview-butterfly` shows a single point, because the attractor traces from
+a seed and needs longer than a visit to draw the wings. Production, still
+on the Vite 6 build, shows **exactly the same three**, at the same canvas
+sizes. So it is pre-existing rather than a regression, and it is recorded
+here rather than fixed in a release that was supposed to change the build
+and nothing else. Opening Butterfly itself draws the full attractor.
 
 ## 4.0.3 (2026-09-02)
 
