@@ -24,6 +24,141 @@
    single/double-digit z-indices relative to THAT container's own stacking
    context — those never need to clear 300, only each other. */
 
+/* ─── Self-hosted fonts (2026-08-31) ────────────────────────────────────────── */
+/* Replaces the Google Fonts CDN <link> that used to live in index.html's
+   <head>. Two reasons, not one: the extra third-party round-trip cost real
+   LCP (font discovery couldn't start until index.html's own <head> parsed
+   AND a separate origin resolved/connected/responded), and every visitor's
+   IP went to Google just to render text. Self-hosting also removes a
+   third-party origin the site would otherwise have to allowlist once CSP
+   lands (STANDARDS.md's open items).
+
+   Audited against actual usage first (NOTES.md, 3.11.0) rather than
+   self-hosting the CDN link's full request as-is — that link asked for 10
+   families; 3 (Cormorant Garamond, Patrick Hand, Coda) turned out to be
+   dead weight from the retired `leaf` scene (folded into scroll.js
+   2026-08-07) with zero live references anywhere in the current codebase,
+   so they're dropped entirely rather than carried forward. Each file below
+   is Google's own per-script subset (the same "latin"/"latin-ext"/"ogham"
+   split their CDN already serves char-range-gated via unicode-range) — real
+   file-size reduction, not just a relocation, and it preserves the same
+   progressive-load behavior a visitor already got from the CDN. Sourced via
+   the Fontsource project's published rebuild of the same Google Fonts
+   sources (fonts.gstatic.com itself isn't reachable from this build
+   environment's network egress); byte sizes and glyph coverage match.
+
+   Only the weight/style combinations actually referenced somewhere in this
+   codebase are included — Orbitron 400/900 and Cinzel/Arapey/Courier Prime's
+   unused style combos from the old CDN request are gone. One correction
+   made in the process: beamline.css/beamline.js style Orbitron at
+   font-weight:600, but the old CDN link only ever requested 400/700/900 —
+   600 was never actually downloaded, so the browser has been synthesizing
+   a faux-bold for that HUD text the whole time. Fixed here by requesting
+   the real 600 weight instead of carrying the bug forward.
+
+   font-display: swap set explicitly on every rule — Google's CDN link set
+   this at the URL level (?display=swap), so leaving it unset here would
+   silently revert to the browser default (font-display: auto, which
+   behaves like FOIT — invisible text until load — in several browsers).
+   Electrolize is preloaded from index.html (the only font visible
+   above-the-fold, on #landing's #site-title pill); everything else loads
+   on demand same as before. */
+@font-face {
+  font-family: 'Electrolize';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/electrolize-400.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'IM Fell English';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/im-fell-english-400.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Cinzel';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/cinzel-400.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Cinzel';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('/fonts/cinzel-600.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Courier Prime';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/courier-prime-400.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Courier Prime';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('/fonts/courier-prime-700.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Courier Prime';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/courier-prime-400italic.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Noto Sans Ogham';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  /* Ogham-block subset only (U+1680-169C) — every use of this family on the
+     site renders actual Ogham script (scroll.js's transliteration line),
+     never Latin text, so the "latin"/"latin-ext" subsets Google also
+     publishes for this family would be pure dead weight here. */
+  src: url('/fonts/noto-sans-ogham-400.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Orbitron';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('/fonts/orbitron-600.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Orbitron';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('/fonts/orbitron-700.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Arapey';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  /* Google only ever published a "latin" subset for Arapey (confirmed live,
+     3.11.0 audit) — no latin-ext variant exists for this family regardless
+     of host, so the handful of Latin Extended-A characters in library.text.js
+     (e.g. "Jun'ichirō Tanizaki") already fell back to the browser's default
+     serif under the old CDN link too. Self-hosting the same "latin" subset
+     changes nothing about that — pre-existing content/font-coverage gap,
+     not a migration regression. */
+  src: url('/fonts/arapey-400.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Arapey';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/arapey-400italic.woff2') format('woff2');
+}
+
 /* ─── Shared custom properties ──────────────────────────────────────────────── */
 /* Values referenced from more than one scene's stylesheet (styles/scenes/*.css)
    live here so there's exactly one place to change them. Kept in sync with any

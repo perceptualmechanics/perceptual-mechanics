@@ -57,13 +57,14 @@
   }
   </script>
 
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <!-- Orbitron added 2026-08-03 — Beamline/Solar Sailer's own HUD-chrome
-       font (hint text + station-number label), scoped there via CSS only;
-       loaded here alongside every other scene's font for the same reason
-       Electrolize etc. all live in this one combined request. -->
-  <link href="https://fonts.googleapis.com/css2?family=Electrolize&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=IM+Fell+English:ital@0;1&family=Cinzel:wght@400;600&family=Patrick+Hand&family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=Noto+Sans+Ogham&family=Coda:wght@400;800&family=Orbitron:wght@400;700;900&family=Arapey:ital@0;1&display=swap" rel="stylesheet">
+  <!-- Fonts: self-hosted as of 2026-08-31 (was Google Fonts CDN — see
+       styles/main.css's "Self-hosted fonts" block for the full rationale
+       and the dead-weight-family audit). Electrolize is preloaded here
+       because it's the only font visible above-the-fold (#site-title on
+       #landing, inherited via body's font-family) — this is where the
+       actual LCP win comes from; every other family still loads on demand
+       exactly as it did from the CDN, just from this origin instead. -->
+  <link rel="preload" href="/fonts/electrolize-400.woff2" as="font" type="font/woff2" crossorigin>
   <title>perceptual mechanics</title>
   <meta name="theme-color" content="#000000"/>
   <link rel="stylesheet" href="./styles/main.css">

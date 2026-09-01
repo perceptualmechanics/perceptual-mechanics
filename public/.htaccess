@@ -33,3 +33,20 @@ RewriteRule ^index\.html$ / [L,R=301]
 # %1 is the captured sub-path ('scroll/', or empty for /text/index.html).
 RewriteCond %{THE_REQUEST} \s/+text/(([^\s?]*/)?)index\.html[?\s]
 RewriteRule ^text/(.*/)?index\.html$ /text/%1 [L,R=301]
+
+# Long-lived caching for self-hosted fonts, 2026-08-31. Font files under
+# /fonts/ are the woff2s that used to be served (and cached) by Google's
+# CDN — see styles/main.css's "Self-hosted fonts" block. They're immutable
+# in practice (a font swap means new filenames, per Vite/this repo's own
+# convention elsewhere, not overwriting an existing one), so it's safe to
+# cache them for a year with `immutable`, matching what Google's own CDN
+# effectively did for visitors before this migration.
+<IfModule mod_expires.c>
+  ExpiresActive On
+  ExpiresByType font/woff2 "access plus 1 year"
+</IfModule>
+<IfModule mod_headers.c>
+  <FilesMatch "\.woff2$">
+    Header set Cache-Control "public, max-age=31536000, immutable"
+  </FilesMatch>
+</IfModule>

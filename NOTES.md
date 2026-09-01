@@ -677,6 +677,108 @@ different one, toggled sound on/off, no console errors from the scene's
 own code. Debug hooks fully stripped before this build. Full `npx vite
 build` clean.
 
+## 3.11.0 (2026-08-31)
+
+**Self-hosted fonts — closes the other flagged known-open-item** (see
+3.10.3's own closing line, and the 2026-08-25 best-practices entry
+above). Two real reasons: the extra cross-origin round-trip to
+`fonts.googleapis.com`/`fonts.gstatic.com` cost real LCP (font discovery
+couldn't even begin until a separate origin resolved/connected), and every
+visitor's IP was going to Google just to render text. Also removes a
+third-party origin that would otherwise need CSP allowlisting later.
+
+**Audited first, not assumed.** Read `index.html`'s actual `<link>` and
+grepped every CSS file for real `font-family` usage before touching
+anything, per Scott's explicit instruction not to self-host the CDN
+request as-is. The old link requested 10 families; only 7 turned out to
+have any live CSS/canvas reference: Electrolize, IM Fell English, Cinzel,
+Courier Prime, Noto Sans Ogham, Orbitron, Arapey. The other 3 — Cormorant
+Garamond, Patrick Hand, Coda — traced back to `leaf`, the scene retired
+2026-08-07 (folded into scroll.js); Coda's only other hit anywhere in the
+codebase was a false positive (`library.text.js`'s Led Zeppelin *Coda*
+album entry). All three dropped from the self-hosted set entirely rather
+than carried forward as dead weight.
+
+**Weight/style set trimmed to actual usage, not the CDN request's full
+list.** Grepped every family's real `font-weight`/`font-style`/canvas
+`ctx.font` usage against what the old link requested, and found a real,
+pre-existing bug in the process: `beamline.css`/`beamline.js` render
+Orbitron at `font-weight: 600`, but the old CDN link only ever requested
+400/700/900 — 600 was never actually downloaded, so the browser has been
+silently faux-bolding that HUD text this whole time. Fixed here by
+self-hosting the real 600 weight instead of reproducing the gap.
+IM Fell English's italic (requested, never used) and Orbitron's 400/900
+(requested, never used) were dropped the same way. Final set: Electrolize
+400 · IM Fell English 400 · Cinzel 400/600 · Courier Prime 400/700/400i ·
+Noto Sans Ogham 400 (ogham-block subset only — every use renders actual
+Ogham script, never Latin) · Orbitron 600/700 · Arapey 400/400i.
+
+**Real subsetting, not just relocation.** Each self-hosted file is the
+same per-script subset Google's own CDN already split by `unicode-range`
+(the "latin"/"latin-ext"/"ogham" split their stylesheet uses) — genuine
+byte reduction, not the full default character set, and it preserves the
+same progressive-load shape a visitor already got. Checked rendered
+content against each subset before trusting it: `scroll.text.js`'s Ogham
+line needs the real Ogham block (confirmed, not decorative); library's
+creator names carry real diacritics (Björk, Kieślowski, Tanizaki) that
+need Latin-1 + Latin Extended-A — but Google's own Arapey family turns out
+to only ever publish a "latin" (Latin-1) subset, no latin-ext variant, on
+any host. So the three Latin Extended-A characters (ō, ś, ū) already fell
+back to the browser default serif under the old CDN link too — self-
+hosting the same "latin" subset changes nothing about that; it's a
+pre-existing content/font-coverage gap, not a migration regression.
+Sourced via the Fontsource project's rebuild of the same Google Fonts
+sources — `fonts.gstatic.com` itself isn't reachable from this build
+environment's own network egress, so the actual binaries came from npm
+(`@fontsource/*`) instead of a direct CDN pull; validated each file with
+`fontTools` (correct family name, valid table structure) and checked byte
+sizes land within a few percent of Google's own served sizes before
+trusting them.
+
+**The real mechanics, not just "download and swap":** every rule sets
+`font-display: swap` explicitly (Google's stylesheet set this at the URL
+level — `?display=swap` — so leaving it unset here would've silently
+reverted to `font-display: auto`, FOIT-like in several browsers; a real
+regression, not a neutral change). Electrolize — the only font visible
+above-the-fold, `#site-title` on `#landing` via `body`'s `font-family` —
+gets `<link rel="preload" as="font" type="font/woff2" crossorigin>` in
+`index.html`; every other family still loads on demand, same as before.
+`public/.htaccess` (already handling the canonical-host redirects) gets a
+new block: `mod_expires`/`mod_headers` cache the `/fonts/*.woff2` files for
+a year with `immutable`, matching what Google's CDN effectively gave
+visitors already.
+
+**Canvas-text regression risk — checked, not assumed safe.** NOTES.md
+already documents (3.9.7/3.9.8) that Beamline and Butterfly draw Arapey
+italic directly to canvas and need the CSS Font Loading API
+(`document.fonts.load(...).then(redraw)`) to avoid baking in a stale
+fallback font before the real font resolves. Both guards target `italic
+…px "Arapey"` — parsed both call sites and confirmed the family/style
+string matches a real, correctly self-hosted `@font-face` rule exactly (no
+change needed in either scene's own code; the guard was written host-
+agnostic from the start).
+
+**Verification — structural and network-level only, no live browser
+available in this environment** (same constraint as prior sessions —
+logged in memory, not new here): full `npm run build` clean, `verify-
+links`/`verify-resonances` both pass. Confirmed via `grep -r` across
+`dist/`, `index.html`, `styles/`, `src/`, and `public/` that zero requests
+to `fonts.googleapis.com`/`fonts.gstatic.com` remain anywhere in the
+shipped output (one unrelated hit — a pre-existing SEO comment in
+`index.html` about Google Search Console indexing, not a font reference).
+Ran `vite preview` and `curl`'d every one of the 12 font files directly:
+all 200, all `content-type: font/woff2`. Parsed `styles/main.css`'s
+`@font-face` block programmatically: all 12 rules present, every field
+(family/style/weight/`font-display: swap`/`src`) populated, every
+referenced file exists on disk. Real pixel-level visual regression across
+scenes and an actual before/after Lighthouse/LCP number are NOT done —
+this sandbox has no installable Chromium (no sudo, missing shared libs,
+same block hit and logged in a prior session) and the in-app browser
+can't reach this build's local preview server. Flagged to Scott directly
+rather than reported as done; recommends a real browser spot-check after
+deploy, especially Beamline/Butterfly's canvas text and the landing
+page's font-swap behavior on a throttled connection.
+
 ## 3.10.3 (2026-08-31)
 
 **Tier 1 batch of the preview/full split, plus the real checkpoint
