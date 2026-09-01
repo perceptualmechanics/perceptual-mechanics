@@ -69,41 +69,55 @@ function lines(text) {
   return esc(text).replace(/\n/g, '<br>\n');
 }
 
-// ─── Page shell ─────────────────────────────────────────────────────────────
-// One self-contained template. Styles are inlined rather than shipped as a
-// shared stylesheet: these pages are meant to survive on their own, load
-// instantly, and render fully even if every other asset on the domain is
-// unreachable. Colors are the site's own — near-black ground, warm bone text,
-// the colophon's gold for links — checked against WCAG AA at these sizes.
-function page({ slugPath, title, description, sceneKey, sceneName, lede, bodyHtml, jsonLd }) {
-  const url = `${ORIGIN}/text/${slugPath ? slugPath + '/' : ''}`;
-  return `<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>${esc(title)} — perceptual mechanics</title>
-<meta name="description" content="${esc(description)}"/>
-<meta name="author" content="${AUTHOR}"/>
-<link rel="canonical" href="${url}"/>
-<link rel="icon" href="/favicon.ico" sizes="any"/>
-<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png"/>
-<link rel="apple-touch-icon" href="/apple-touch-icon.png"/>
-<meta property="og:type" content="article"/>
-<meta property="og:url" content="${url}"/>
-<meta property="og:title" content="${esc(title)} — perceptual mechanics"/>
-<meta property="og:description" content="${esc(description)}"/>
-<meta property="og:image" content="${ORIGIN}/social-card.png"/>
-<meta name="twitter:card" content="summary_large_image"/>
-<meta name="twitter:title" content="${esc(title)} — perceptual mechanics"/>
-<meta name="twitter:description" content="${esc(description)}"/>
-<meta name="twitter:image" content="${ORIGIN}/social-card.png"/>
-<meta name="theme-color" content="#000000"/>
-<script type="application/ld+json">
-${JSON.stringify(jsonLd, null, 2)}
-</script>
-<style>
+// ─── Page styles ───────────────────────────────────────────────────────────
+// Hoisted out of page() into its own constant for one reason: public/
+// .htaccess's CSP allowlists this exact block by SHA-256 hash, and a hash is
+// a derived artifact — precisely the kind this project's standing rules say
+// not to maintain by hand. Keeping the style text and its hash adjacent, and
+// exporting both, lets vite.config.js's pm-prerender-text plugin re-derive
+// the hash from the page it actually emitted and fail the build on drift.
+//
+// It failed the other way once, silently: from v3.12.1 (CSP switched from
+// Report-Only to enforcing) until v4.0, style-src was 'self' with no hash
+// and no nonce, so the browser dropped the only stylesheet all eight /text/
+// pages have. document.styleSheets.length === 0 in production the entire
+// time — black-on-white Times at full window width, the archive unstyled,
+// nothing in any log. The Report-Only pass that cleared the policy was a
+// thorough audit of the SPA at / and never opened a page outside it. The
+// enforcing policy also had no report-uri/report-to, so there was no channel
+// for the violation to arrive on either; both halves of that are fixed in
+// 4.0 (see .htaccess's CSP comment).
+//
+// The bytes hashed are exactly what sits between <style> and </style> in
+// page() — which is exactly this template literal, leading and trailing
+// newline included. One space changed in here changes the hash. That is the
+// point: the next CSS tweak fails the build instead of unstyling the
+// archive. Keep the shipped comments in here short for the same reason
+// every other byte of this block is deliberate — it is duplicated verbatim
+// into all eight pages, so the long-form reasoning lives up here, where it
+// costs the reader of the archive nothing.
+//
+// The @font-face is new in 4.0 and fixes a second, quieter version of the
+// same class of bug: these pages have declared `font-family: 'Arapey'`
+// since they shipped (2026-07-29) while loading no font and linking no
+// stylesheet, so every one of them silently rendered in the Georgia
+// fallback — declared intent and actual result disagreeing with nothing
+// anywhere to notice. The face is already self-hosted under /fonts/ (see
+// styles/main.css's "Self-hosted fonts" block) and font-src 'self' already
+// allows it, so matching the intent costs no policy change and one 8.8 kB
+// request. Roman only, deliberately: the italic face is another 9.5 kB to
+// serve two quiet elements (.note, ul.catalog .n), and a synthesized
+// oblique is the right trade on a page whose whole promise is that it
+// loads instantly and renders even if every other asset on the domain is
+// unreachable. font-display: swap so the text is readable before the font
+// arrives, matching main.css.
+export const PAGE_STYLE = `
   :root { color-scheme: dark; }
+  /* Self-hosted, the same face styles/main.css loads; font-src 'self'
+     already allows it. Roman only — see this constant's own comment
+     above for why, and for what this block was missing until 4.0. */
+  @font-face { font-family: 'Arapey'; font-style: normal; font-weight: 400;
+    font-display: swap; src: url('/fonts/arapey-400.woff2') format('woff2'); }
   * { box-sizing: border-box; }
   body {
     margin: 0; background: #0a0a0a; color: #ded9d0;
@@ -175,7 +189,50 @@ ${JSON.stringify(jsonLd, null, 2)}
   footer { border-top: 1px solid #2a2620; margin-top: 3rem; padding-top: 1.4rem; color: #837c70; font-size: 0.85rem; }
   footer a { text-decoration: none; }
   @media (max-width: 600px) { .wrap { padding: 1.75rem 1.05rem 4rem; } h1 { font-size: 1.6rem; } }
-</style>
+`;
+
+// SHA-256 of PAGE_STYLE, base64-encoded, in the exact form CSP's style-src
+// wants. This same string must appear in style-src in public/.htaccess.
+// Don't compute it by hand: change the CSS, run `npx vite build`, and the
+// pm-prerender-text plugin's error prints the value to paste here and there
+// (it checks the emitted page and .htaccess, not just this constant, so a
+// stale copy in either place fails the build rather than the site).
+export const PAGE_STYLE_SHA256 = 'sha256-d0twYSj0NZ/Ct7lC+jDlJkrOgWCQWNuFC2UoM+NHawU=';
+
+// ─── Page shell ─────────────────────────────────────────────────────────────
+// One self-contained template. Styles are inlined rather than shipped as a
+// shared stylesheet: these pages are meant to survive on their own, load
+// instantly, and render fully even if every other asset on the domain is
+// unreachable. Colors are the site's own — near-black ground, warm bone text,
+// the colophon's gold for links — checked against WCAG AA at these sizes.
+function page({ slugPath, title, description, sceneKey, sceneName, lede, bodyHtml, jsonLd }) {
+  const url = `${ORIGIN}/text/${slugPath ? slugPath + '/' : ''}`;
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>${esc(title)} — perceptual mechanics</title>
+<meta name="description" content="${esc(description)}"/>
+<meta name="author" content="${AUTHOR}"/>
+<link rel="canonical" href="${url}"/>
+<link rel="icon" href="/favicon.ico" sizes="any"/>
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png"/>
+<link rel="apple-touch-icon" href="/apple-touch-icon.png"/>
+<meta property="og:type" content="article"/>
+<meta property="og:url" content="${url}"/>
+<meta property="og:title" content="${esc(title)} — perceptual mechanics"/>
+<meta property="og:description" content="${esc(description)}"/>
+<meta property="og:image" content="${ORIGIN}/social-card.png"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="${esc(title)} — perceptual mechanics"/>
+<meta name="twitter:description" content="${esc(description)}"/>
+<meta name="twitter:image" content="${ORIGIN}/social-card.png"/>
+<meta name="theme-color" content="#000000"/>
+<script type="application/ld+json">
+${JSON.stringify(jsonLd, null, 2)}
+</script>
+<style>${PAGE_STYLE}</style>
 </head>
 <body>
 <a href="#main" class="skip-link">Skip to the text</a>

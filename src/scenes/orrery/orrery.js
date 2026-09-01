@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { bindOrbitDrag, bindWheelZoom, bindGuardedResize, prefersReducedMotion, createPanelCloser, createJumpList, mountClippedPreviewCanvas, bindTapVsDrag, parseHTML } from '../../utils/sceneKit.js';
+import { bindOrbitDrag, bindWheelZoom, bindGuardedResize, prefersReducedMotion, onReducedMotionChange, createPanelCloser, createJumpList, mountClippedPreviewCanvas, bindTapVsDrag, parseHTML, claimContainer, disposeSceneGraph, manageRenderer, createFrameClock, trackTimers } from '../../utils/sceneKit.js';
 import './orrery.css';
 import orreryHtml from './orrery.html?raw';
 // The found story lives alongside this scene (orrery.text.js) — shared with
@@ -123,15 +123,22 @@ function makeMetalTexture({ base, rust, highlight, paint }) {
   return tex;
 }
 
-function steelMaterial(preview, repeat = 2) {
-  const tex = makeMetalTexture({ base: '#39322b', rust: '#241e18', highlight: '#6d5c48' });
-  tex.repeat.set(repeat, repeat);
-  return new THREE.MeshStandardMaterial({ map: preview ? null : tex, color: preview ? 0x39322b : 0xffffff, roughness: 0.75, metalness: 0.55 });
-}
+// `steelMaterial` used to live here. Deleted 2026-09-02: it had no callers
+// left at all — the brass/copper restoration pass (see below) replaced every
+// structural surface it used to cover, and nothing was ever pointed back at
+// it afterward.
+//
+// Preview gating, 2026-09-02: every one of these factories used to build the
+// canvas texture unconditionally and then throw it away again on the
+// `preview ? null : tex` line — a full 128x128 canvas plus a CanvasTexture
+// orphaned per call, four calls per tile, ten tiles on the landing page. The
+// preview branch never wanted the map in the first place (it uses the flat
+// `color` fallback), so the honest fix is to not generate it, not to
+// generate it and discard it.
 function paintedMastMaterial(preview) {
-  const tex = makeMetalTexture({ base: '#39322b', rust: '#241e18', highlight: '#6d5c48', paint: '#5b3a72' });
-  tex.repeat.set(1, 3);
-  return new THREE.MeshStandardMaterial({ map: preview ? null : tex, color: preview ? 0x4d3a5c : 0xffffff, roughness: 0.7, metalness: 0.5 });
+  const tex = preview ? null : makeMetalTexture({ base: '#39322b', rust: '#241e18', highlight: '#6d5c48', paint: '#5b3a72' });
+  tex?.repeat.set(1, 3);
+  return new THREE.MeshStandardMaterial({ map: tex, color: preview ? 0x4d3a5c : 0xffffff, roughness: 0.7, metalness: 0.5 });
 }
 function bronzeMaterial() {
   const tex = makeMetalTexture({ base: '#8a6438', rust: '#5a4022', highlight: '#d9ab6c' });
@@ -174,16 +181,16 @@ function addMetalRim(material, colorHex, power = 2.3, glow = 0.07) {
   };
 }
 function brassMaterial(preview, repeat = 2) {
-  const tex = makeMetalTexture({ base: '#8a6a2e', rust: '#3a2c14', highlight: '#d9b866' });
-  tex.repeat.set(repeat, repeat);
-  const mat = new THREE.MeshStandardMaterial({ map: preview ? null : tex, color: preview ? 0x8a6a2e : 0xffffff, roughness: 0.5, metalness: 0.85 });
+  const tex = preview ? null : makeMetalTexture({ base: '#8a6a2e', rust: '#3a2c14', highlight: '#d9b866' });
+  tex?.repeat.set(repeat, repeat);
+  const mat = new THREE.MeshStandardMaterial({ map: tex, color: preview ? 0x8a6a2e : 0xffffff, roughness: 0.5, metalness: 0.85 });
   addMetalRim(mat, 0xffdca0);
   return mat;
 }
 function copperMaterial(preview, repeat = 2) {
-  const tex = makeMetalTexture({ base: '#9a5230', rust: '#4c8c74', highlight: '#dd8a56' });
-  tex.repeat.set(repeat, repeat);
-  const mat = new THREE.MeshStandardMaterial({ map: preview ? null : tex, color: preview ? 0x9a5230 : 0xffffff, roughness: 0.48, metalness: 0.8 });
+  const tex = preview ? null : makeMetalTexture({ base: '#9a5230', rust: '#4c8c74', highlight: '#dd8a56' });
+  tex?.repeat.set(repeat, repeat);
+  const mat = new THREE.MeshStandardMaterial({ map: tex, color: preview ? 0x9a5230 : 0xffffff, roughness: 0.48, metalness: 0.8 });
   addMetalRim(mat, 0xffb37a);
   return mat;
 }
@@ -195,7 +202,15 @@ function copperMaterial(preview, repeat = 2) {
 // fine dark grit on top. Used for the planets — the print Scott's palette
 // comes from uses flat vector fills; this is the same colors, but as if
 // someone actually painted scrap-metal balls with them.
-function makeSprayPaintTexture(hex) {
+// Returns { canvas, ctx } rather than a THREE.CanvasTexture. Its only two
+// callers want different things: the preview planet path wants a real
+// texture (makeSprayPaintTexture below wraps this), while
+// makeAgedPlanetTextures wants nothing but the pixels — it reads them
+// straight back out with getImageData and composites its own maps on top.
+// Handing that second caller a CanvasTexture meant constructing and then
+// orphaning one per planet, nine per full-mode visit, none of which was
+// ever uploaded, bound, or disposed.
+function drawSprayPaint(hex) {
   const c = document.createElement('canvas');
   c.width = 128; c.height = 128;
   const cx = c.getContext('2d');
@@ -259,8 +274,10 @@ function makeSprayPaintTexture(hex) {
   }
   cx.globalAlpha = 1;
 
-  const tex = new THREE.CanvasTexture(c);
-  return tex;
+  return { canvas: c, ctx: cx };
+}
+function makeSprayPaintTexture(hex) {
+  return new THREE.CanvasTexture(drawSprayPaint(hex).canvas);
 }
 
 // ─── Planet-body aging: seamless 3D noise shared by geometry + texture ──
@@ -331,24 +348,13 @@ function fbm3(x, y, z, seed, octaves = 4) {
 function clamp01(x) { return x < 0 ? 0 : x > 1 ? 1 : x; }
 function remap01(x, lo, hi) { return clamp01((x - lo) / (hi - lo)); }
 
-// A pulse that genuinely never repeats within any practical viewing
-// window, without reaching for Math.random() or any accumulated
-// per-frame state: three sines at deliberately non-integer-ratio
-// frequencies (1, the golden ratio PHI, and sqrt(2)*1.3 — none a clean
-// multiple of another) summed with independent phases and weights. No
-// two of the three share a common period, so the sum's own period is
-// effectively infinite in practice — the same reasoning (and the same
-// trick a synthesizer uses for a "breathing" pad or vibrato) as the FM
-// phase math in the telescope's traveling pulse below. Still a pure,
-// deterministic function of `clock` — same "fixed base state + function
-// of time" rule as everything else in this file. Returns 0..1.
-const PHI = 1.6180339887;
-function organicPulse(clock, freq = 1) {
-  const a = Math.sin(clock * freq);
-  const b = Math.sin(clock * freq * PHI + 1.7);
-  const c = Math.sin(clock * freq * Math.SQRT2 * 1.3 + 4.1);
-  return (a * 0.5 + b * 0.32 + c * 0.18 + 1) / 2; // weights sum to 1, so the raw sum stays in [-1,1]
-}
+// `organicPulse` (and the golden-ratio PHI constant it was built on) used
+// to sit here. Deleted 2026-09-02: it drove the telescope dish's traveling
+// light pulse, and that pulse was itself removed in "Round 3" of the dish
+// work (see the webMat comment in buildOrrery, which records why the glow
+// cycle went away) — leaving a documented, carefully-reasoned function with
+// zero callers for several versions. Nothing else in the file wants a
+// non-repeating scalar; the receiving effect is real modal physics now.
 
 // ─── Real Keplerian orbital motion for the orrery's planets and moons ───
 // (2.2.22). The orrery never stopped running — nobody was there to see
@@ -397,6 +403,20 @@ function normalizeAngle(a) {
   const twoPi = Math.PI * 2;
   return ((a % twoPi) + twoPi) % twoPi;
 }
+
+// Real seconds elapsed since the J2000 epoch — the same wall clock
+// keplerOrbitPosition already works from, pulled out on its own for the few
+// pieces of the machine that turn at a constant rate rather than solving an
+// orbit (the asteroid belt, the unidentified objects past Pluto, and their
+// tumble). Those three used to advance by a fixed amount PER FRAME, which
+// made them the only parts of the mechanism whose speed depended on the
+// visitor's refresh rate: on a 120Hz display the belt ran at exactly 2x
+// while the planets — correctly wall-clock driven — did not, so the belt
+// visibly outran the Mars/Jupiter speeds its own rate was averaged from.
+// Driving them from this instead fixes that and, as a bonus, gives them the
+// same "the orrery never stopped, reloading doesn't reset it" property the
+// planets already had.
+function secondsSinceEpoch(nowMs) { return (nowMs - J2000_EPOCH_MS) / 1000; }
 
 // Solves Kepler's equation M = E - e*sin(E) for the eccentric anomaly E
 // via Newton's method (starting guess E0 = M, per the standard textbook
@@ -553,7 +573,7 @@ function buildAgedPlanetGeometry(radius, seedH) {
 // planet body, all four sampled together in a single pass over the same
 // per-pixel field so they stay consistent with each other and with
 // buildAgedPlanetGeometry's displacement (same seedH, same sphericalDir,
-// same AGE_FREQ_H). W/H match makeSprayPaintTexture's own canvas size,
+// same AGE_FREQ_H). W/H match drawSprayPaint's own canvas size,
 // whose output is reused here as the "paint as originally applied"
 // layer — this pass adds decades of aging on top of that existing
 // texture, it doesn't replace it. `texture.flipY = false` on every
@@ -562,8 +582,7 @@ function buildAgedPlanetGeometry(radius, seedH) {
 // would otherwise vertically mirror the mapping between them.
 function makeAgedPlanetTextures(hex, seedH) {
   const W = 128, H = 128;
-  const paintTex = makeSprayPaintTexture(hex);
-  const paintData = paintTex.image.getContext('2d').getImageData(0, 0, W, H).data;
+  const paintData = drawSprayPaint(hex).ctx.getImageData(0, 0, W, H).data;
 
   const colorC = document.createElement('canvas'); colorC.width = W; colorC.height = H;
   const roughC = document.createElement('canvas'); roughC.width = W; roughC.height = H;
@@ -589,9 +608,17 @@ function makeAgedPlanetTextures(hex, seedH) {
 
   const dir = new THREE.Vector3();
   for (let py = 0; py < H; py++) {
-    const v = py / H;
+    // Pixel CENTRES, not pixel corners: a texture sample at UV (u,v) reads
+    // the texel whose centre is at ((px+0.5)/W, (py+0.5)/H), so addressing
+    // it as px/W here would offset the whole aging field by half a texel
+    // against the geometry displacement built from the same (u,v). Half a
+    // texel is small, but the block comment above sphericalDir is explicit
+    // that this agreement has to hold exactly, not approximately — that is
+    // the entire reason this file hand-builds its sphere geometry instead
+    // of trusting THREE.SphereGeometry's UV layout.
+    const v = (py + 0.5) / H;
     for (let px = 0; px < W; px++) {
-      const u = px / W;
+      const u = (px + 0.5) / W;
       sphericalDir(u, v, dir);
       const h = fbm3(dir.x * AGE_FREQ_H, dir.y * AGE_FREQ_H, dir.z * AGE_FREQ_H, seedH, 4);
       const edge = fbm3(dir.x * AGE_FREQ_EDGE, dir.y * AGE_FREQ_EDGE, dir.z * AGE_FREQ_EDGE, seedH + 7919, 2);
@@ -676,16 +703,26 @@ const MOVE_ACCEL = 14;          // how briskly velocity eases to target
 const LOOK_SENS_MOUSE = 0.0022; // pointer-lock's raw, unscaled movementX/Y
 const PITCH_LIMIT = 1.3;        // ~74°, keeps the view from flipping over
 
-function addBolts(parent, radius, count, ringGeoRadius) {
-  const boltGeo = new THREE.SphereGeometry(radius, 6, 6);
-  const boltMat = new THREE.MeshStandardMaterial({ color: BOLT_TONE, roughness: 0.3, metalness: 0.9 });
-  addMetalRim(boltMat, 0xfff0c0, 2.0, 0.09);
+// One ring's worth of bolt heads, as a single InstancedMesh. Was 16
+// individually-added Meshes per ring, x9 rings = 144 draw calls, and worse,
+// each CALL built its own SphereGeometry and its own MeshStandardMaterial
+// (with its own onBeforeCompile rim shader, so nine separately-compiled
+// programs for nine identical materials) — the bolt radius only ever varies
+// by the `preview` flag, so all nine calls within one scene were asking for
+// the exact same pair. The geometry/material are now built once by the
+// caller and handed in, and the 16 per ring become 16 instance matrices:
+// 9 draw calls instead of 144, one shader program instead of nine.
+const _boltMatrix = new THREE.Matrix4();
+function addBolts(parent, geo, mat, count, ringGeoRadius) {
+  const bolts = new THREE.InstancedMesh(geo, mat, count);
   for (let i = 0; i < count; i++) {
     const a = (i / count) * Math.PI * 2;
-    const bolt = new THREE.Mesh(boltGeo, boltMat);
-    bolt.position.set(Math.cos(a) * ringGeoRadius, Math.sin(a) * ringGeoRadius, 0);
-    parent.add(bolt);
+    _boltMatrix.makeTranslation(Math.cos(a) * ringGeoRadius, Math.sin(a) * ringGeoRadius, 0);
+    bolts.setMatrixAt(i, _boltMatrix);
   }
+  bolts.instanceMatrix.needsUpdate = true;
+  parent.add(bolts);
+  return bolts;
 }
 
 // A welded brace (or a chain link) between two arbitrary points — used both
@@ -697,10 +734,19 @@ function addBolts(parent, radius, count, ringGeoRadius) {
 // that displaces individual vertices, only by a transform on the whole
 // mesh or its parent (see NOTES.md 2.2.17/2.2.18) — worth remembering
 // before any future effect tries per-vertex strut deformation again.
-function addStrut(parent, from, to, thickness, mat, heightSegments = 1) {
+// `sharedGeo`, when passed, must be a cylinder of exactly this from/to
+// distance and thickness — the caller has already established that several
+// struts are identical and wants one geometry between them (see the dish
+// lattice's geoCache in buildOrrery: 54 struts, only 4 distinct
+// length/thickness pairs among them, because the three segments of every
+// spoke are equal by construction and each cross-bracing ring's chords are
+// all the same length). Passing a mismatched geometry would silently
+// mis-size the strut, so this stays opt-in per call site rather than a
+// module-level cache keyed by rounded floats.
+function addStrut(parent, from, to, thickness, mat, heightSegments = 1, sharedGeo = null) {
   const mid = from.clone().add(to).multiplyScalar(0.5);
   const dist = from.distanceTo(to);
-  const geo = new THREE.CylinderGeometry(thickness, thickness, dist, 6, heightSegments);
+  const geo = sharedGeo || new THREE.CylinderGeometry(thickness, thickness, dist, 6, heightSegments);
   const strut = new THREE.Mesh(geo, mat);
   strut.position.copy(mid);
   strut.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), to.clone().sub(from).normalize());
@@ -781,6 +827,14 @@ function buildOrrery(preview, suspendTopY, rafterY) {
   // suspendTopY, rafterY, riserTopY) stay fixed — the room itself keeps
   // its own size regardless of these scale factors.
   const HW = 1.4, SR = 1.45, SS = 2.2;
+
+  // One geometry and one material for every bolt head in the scene — see
+  // addBolts. The radius is the same for all nine rings (it only varies by
+  // the preview flag), so there is nothing per-ring to vary.
+  const boltRadius = (preview ? 0.012 : 0.015) * HW;
+  const boltGeo = new THREE.SphereGeometry(boltRadius, 6, 6);
+  const boltMat = new THREE.MeshStandardMaterial({ color: BOLT_TONE, roughness: 0.3, metalness: 0.9 });
+  addMetalRim(boltMat, 0xfff0c0, 2.0, 0.09);
 
   // ─── The mast — steel and wood, painted royal purple, hanging from the
   // suspension collar at the top rather than rooted in a floor: a core
@@ -1018,8 +1072,24 @@ function buildOrrery(preview, suspendTopY, rafterY) {
   // reposition/reorient/rescale it from the joints' live physics
   // positions every frame.
   const ringStruts = []; // { mesh, jointA, jointB, baseFrom, baseTo, builtLen }
+  // 54 struts, but only four distinct (length, thickness) pairs among them,
+  // and that isn't a coincidence to be discovered by measurement: the three
+  // segments of every spoke are equal because the rings are evenly spaced
+  // along the cone, and each cross-bracing ring's nine chords are equal
+  // because its nine joints are evenly spaced around it. Keying the cache on
+  // the built length lets the construction below stay written the obvious
+  // way (from-point, to-point) while still handing addStrut one geometry per
+  // distinct pair instead of 54 near-duplicates.
+  const strutGeoCache = new Map();
   function addRingStrut(fromPos, toPos, jointA, jointB, thickness) {
-    const mesh = addStrut(dishGroup, fromPos, toPos, thickness, webMat);
+    const len = fromPos.distanceTo(toPos);
+    const key = `${thickness}|${len.toFixed(5)}`;
+    let geo = strutGeoCache.get(key);
+    if (!geo) {
+      geo = new THREE.CylinderGeometry(thickness, thickness, len, 6, 1);
+      strutGeoCache.set(key, geo);
+    }
+    const mesh = addStrut(dishGroup, fromPos, toPos, thickness, webMat, 1, geo);
     ringStruts.push({ mesh, jointA, jointB, baseFrom: fromPos.clone(), baseTo: toPos.clone(), builtLen: fromPos.distanceTo(toPos) || 1 });
   }
   for (let i = 0; i < N_RING; i++) {
@@ -1052,7 +1122,12 @@ function buildOrrery(preview, suspendTopY, rafterY) {
   // ripplers this replaced.
   const BASELINE_MODE_COUNT = 2; // TUNABLE: how many of the lowest modes hum continuously
   const basePhase = Array.from({ length: BASELINE_MODE_COUNT }, () => [Math.random(), Math.random(), Math.random()].map(r => r * Math.PI * 2));
-  const gravLens = { dishGroup, jointBasePos, modes, ringStruts, nJoints: N_JOINTS, basePhase };
+  // Named `gravLens` until 2026-09-02 — a fossil from the abandoned
+  // gravitational-lensing round (see the round-by-round history above),
+  // which was two rounds gone by the time this object existed. It holds the
+  // dish lattice's mass-spring eigenmode data and the strut records animate()
+  // drives from them; nothing about it is a lens.
+  const dishPhysics = { dishGroup, jointBasePos, modes, ringStruts, nJoints: N_JOINTS, basePhase };
   group.add(dishGroup);
 
   // ─── The nine real planets — order, relative size, and orbital spacing
@@ -1127,7 +1202,7 @@ function buildOrrery(preview, suspendTopY, rafterY) {
     ring.rotation.x = Math.PI / 2 + tilt;
     ring.position.y = yOffset;
     group.add(ring);
-    addBolts(ring, (preview ? 0.012 : 0.015) * HW, 16, radius);
+    addBolts(ring, boltGeo, boltMat, 16, radius);
 
     // Two struts per ring, bracing it back to the mast.
     [0, Math.PI].forEach(angle => {
@@ -1142,8 +1217,8 @@ function buildOrrery(preview, suspendTopY, rafterY) {
     group.add(pivot);
 
     // bodyGroup no longer sits at a fixed local offset with its PARENT
-    // pivot rotating every frame — see the Keplerian-motion comment above
-    // organicPulse. It's positioned directly, every frame, by
+    // pivot rotating every frame — see the "Real Keplerian orbital motion"
+    // comment block above orreryNowMs. It's positioned directly, every frame, by
     // applyKeplerPosition below; pivot now only ever carries the fixed
     // ring tilt.
     const bodyGroup = new THREE.Group();
@@ -1157,22 +1232,42 @@ function buildOrrery(preview, suspendTopY, rafterY) {
     // procedural texture in this file (makeSprayPaintTexture,
     // makeMetalTexture) — no two visits render the same wear pattern.
     const seedH = Math.floor(Math.random() * 1e6);
-    const bodyGeo = buildAgedPlanetGeometry(size, seedH);
-    const agedMaps = makeAgedPlanetTextures(planet.color, seedH);
-    // emissive is white (not planet.color) because the actual color now
-    // lives in agedMaps.emissiveMap itself, already weighted by wear —
-    // see the comment on that map inside makeAgedPlanetTextures.
-    // Intensity kept at the same 0.17 as before this pass: moderate
-    // rather than bright, so — together with the dedicated structure key
-    // light (see createOrrery) — the planet bodies still read as
-    // secondary to the ring/mast structure holding them, not more
-    // prominent than it.
-    const bodyMat = new THREE.MeshStandardMaterial({
-      map: agedMaps.map,
-      roughnessMap: agedMaps.roughnessMap, roughness: 1,
-      metalnessMap: agedMaps.metalnessMap, metalness: 1,
-      emissiveMap: agedMaps.emissiveMap, emissive: 0xffffff, emissiveIntensity: 0.17,
-    });
+    // Preview tiles skip the whole aging system. It is by a wide margin the
+    // most expensive thing this file does at mount — per planet, ~800K
+    // hash3 calls across buildAgedPlanetGeometry's 29x21 displaced vertex
+    // grid and makeAgedPlanetTextures' four 128x128 maps, plus a full
+    // getImageData readback — and it ran unconditionally for five planets
+    // on every one of the ten landing-page tiles, where each planet is a
+    // handful of screen pixels and not one of the wear, patina, seam-grime
+    // or displacement details it buys is resolvable. A plain sphere wearing
+    // the un-aged spray-paint coat reads identically at tile size; the
+    // aging is a full-mode detail, where the visitor can walk up to a
+    // planet and actually look at it.
+    let bodyGeo, bodyMat;
+    if (preview) {
+      bodyGeo = new THREE.SphereGeometry(size, 16, 12);
+      bodyMat = new THREE.MeshStandardMaterial({
+        map: makeSprayPaintTexture(planet.color), roughness: 0.78, metalness: 0.08,
+        emissive: planet.color, emissiveIntensity: 0.17,
+      });
+    } else {
+      bodyGeo = buildAgedPlanetGeometry(size, seedH);
+      const agedMaps = makeAgedPlanetTextures(planet.color, seedH);
+      // emissive is white (not planet.color) because the actual color now
+      // lives in agedMaps.emissiveMap itself, already weighted by wear —
+      // see the comment on that map inside makeAgedPlanetTextures.
+      // Intensity kept at the same 0.17 as before this pass: moderate
+      // rather than bright, so — together with the dedicated structure key
+      // light (see createOrrery) — the planet bodies still read as
+      // secondary to the ring/mast structure holding them, not more
+      // prominent than it.
+      bodyMat = new THREE.MeshStandardMaterial({
+        map: agedMaps.map,
+        roughnessMap: agedMaps.roughnessMap, roughness: 1,
+        metalnessMap: agedMaps.metalnessMap, metalness: 1,
+        emissiveMap: agedMaps.emissiveMap, emissive: 0xffffff, emissiveIntensity: 0.17,
+      });
+    }
     const body = new THREE.Mesh(bodyGeo, bodyMat);
     bodyGroup.add(body);
 
@@ -1197,7 +1292,8 @@ function buildOrrery(preview, suspendTopY, rafterY) {
     }
 
     // Moons now get the same real Kepler treatment as planets (see the
-    // comment block above organicPulse) applied recursively: each moon's
+    // "Real Keplerian orbital motion" comment block above orreryNowMs)
+    // applied recursively: each moon's
     // orbit is computed around bodyGroup's own current (moving) position,
     // simply by being a child of bodyGroup — no separate system needed,
     // exactly as specified. There's no real per-moon orbital-element data
@@ -1270,7 +1366,6 @@ function buildOrrery(preview, suspendTopY, rafterY) {
       periodYears,
       screenRadius: radius,
       speed: meanAngularVelocity / 0.6,
-      direction: 1, // real planets all orbit the same way — no alternating
     };
     applyKeplerPosition(bodyGroup, orbitRecord, buildNowMs);
     orbits.push(orbitRecord);
@@ -1343,7 +1438,15 @@ function buildOrrery(preview, suspendTopY, rafterY) {
     // Speed splits the difference between Mars's and Jupiter's own orbital
     // speeds, same reasoning as the tilt above — debris between them
     // moving at a rate between theirs, not an arbitrary new number.
-    belt = { group: beltGroup, speed: (orbits[marsIdx].speed + orbits[jupiterIdx].speed) / 2 };
+    // `speed` was in the old per-frame unit convention (applied as
+    // `rotation.y += speed * 0.01` once per frame, i.e. speed * 0.6 rad/s at
+    // 60fps). Converted here, once, into a real angular velocity in rad/s so
+    // animate() can evaluate a closed form off the wall clock instead — see
+    // secondsSinceEpoch. The number itself is unchanged: this is still the
+    // mean of Mars's and Jupiter's own real mean angular velocities.
+    const beltSpeed = (orbits[marsIdx].speed + orbits[jupiterIdx].speed) / 2;
+    belt = { group: beltGroup, omega: beltSpeed * 0.6 };
+    beltGroup.rotation.y = normalizeAngle(belt.omega * secondsSinceEpoch(buildNowMs));
   }
 
   // ─── "A few other unidentified cosmic objects" — past Pluto, welded on
@@ -1351,9 +1454,14 @@ function buildOrrery(preview, suspendTopY, rafterY) {
   const unknowns = [];
   const lastRadius = radii[radii.length - 1];
   const lastY = ringYBase + (planets.length - 1) * (preview ? 0.06 : 0.05);
-  const unknownGeos = [new THREE.IcosahedronGeometry((preview ? 0.05 : 0.07) * HW, 0), new THREE.OctahedronGeometry((preview ? 0.045 : 0.06) * HW, 0)];
   const unknownMat = new THREE.MeshStandardMaterial({ color: 0x5a4d3a, roughness: 0.7, metalness: 0.5 });
   const unknownCount = preview ? 1 : 2;
+  // Built to match unknownCount, not unconditionally: preview only ever
+  // attaches the first of these, so the OctahedronGeometry was constructed,
+  // never parented to anything, and therefore never reached by dispose()'s
+  // scene-graph walk either — allocated and then stranded, once per tile.
+  const unknownGeos = [new THREE.IcosahedronGeometry((preview ? 0.05 : 0.07) * HW, 0)];
+  if (unknownCount > 1) unknownGeos.push(new THREE.OctahedronGeometry((preview ? 0.045 : 0.06) * HW, 0));
   for (let i = 0; i < unknownCount; i++) {
     const radius = lastRadius + ((preview ? 0.25 : 0.34) + i * (preview ? 0.18 : 0.24)) * SR;
     const y = lastY + (i + 1) * (preview ? 0.05 : 0.06);
@@ -1367,7 +1475,25 @@ function buildOrrery(preview, suspendTopY, rafterY) {
     const from = new THREE.Vector3(0, y, 0);
     const to = new THREE.Vector3(Math.cos(angle) * radius * 0.9, y, Math.sin(angle) * radius * 0.9);
     addStrut(group, from, to, (preview ? 0.006 : 0.008) * HW, brassMat);
-    unknowns.push({ pivot, mesh, speed: 0.05 + Math.random() * 0.03, direction: 1, spin: 0.3 + Math.random() * 0.4 });
+    // Same per-frame -> rad/s conversion as the belt above (x0.6 for the old
+    // `+= speed * 0.01` at 60fps, x0.6/x0.42 for the two tumble axes' own
+    // `+= spin * 0.01` / `* 0.007`). `direction` is kept here, unlike the
+    // identically-named dead field the planets' orbitRecord carried: this
+    // one is genuinely read.
+    const u = {
+      pivot, mesh,
+      direction: 1,
+      omegaOrbit: (0.05 + Math.random() * 0.03) * 0.6,
+      omegaSpinX: 0, omegaSpinY: 0,
+    };
+    const spin = 0.3 + Math.random() * 0.4; // TUNABLE: how "tumbly" vs. simply-spinning this object looks
+    u.omegaSpinX = spin * 0.6;
+    u.omegaSpinY = spin * 0.42;
+    const uSec = secondsSinceEpoch(buildNowMs);
+    u.pivot.rotation.y = normalizeAngle(u.omegaOrbit * u.direction * uSec);
+    u.mesh.rotation.x = normalizeAngle(u.omegaSpinX * uSec);
+    u.mesh.rotation.y = normalizeAngle(u.omegaSpinY * uSec);
+    unknowns.push(u);
   }
 
   // A single generous circle covers the mast trunk and the control hub
@@ -1381,7 +1507,7 @@ function buildOrrery(preview, suspendTopY, rafterY) {
   // (rebuild, 2026-09-01) instead of an independently-guessed coordinate —
   // see the moonlight setup below buildWarehouse's call site.
   return {
-    group, hitTarget: hub, lampMat, orbits, unknowns, gravLens, belt, baseY, mastHeight, colliders, ringInfo,
+    group, hitTarget: hub, lampMat, orbits, unknowns, dishPhysics, belt, baseY, mastHeight, colliders, ringInfo,
     riserTopY, dishR, dishH,
   };
 }
@@ -1453,8 +1579,36 @@ function makeConcreteTexture() {
 // nothing GPU-tiles at all. The brick pattern itself is still allowed to
 // look regular (real coursing is periodic); only the peeling paint,
 // which shouldn't be, stops being GPU-repeated.
-function makeBrickTexture() {
-  const W = 768, H = 320;
+//
+// ─── Brick SCALE correction, 2026-09-02 ────────────────────────────────
+// That pass fixed the tiling and left a worse problem in place: nothing
+// tied the canvas's pixel grid to the wall's actual size in world units,
+// so the bricks came out enormous. 768x320 texels of 30x14-pixel bricks,
+// stretched across a 40 x 6.55-unit wall at repeat(1,1), put one brick at
+// 1.56 x 0.29 world units. EYE_HEIGHT is 1.7, i.e. one unit is one metre,
+// so that is a metre-and-a-half brick at 5.4:1 — roughly seven times
+// oversize and nearly twice as elongated as real running bond (~3.4:1).
+// It read as horizontal siding, which is exactly the corrugated look the
+// 2026-09-01 direction set out to replace; the siding had been removed and
+// then accidentally re-drawn in brick colors.
+//
+// Two things were wrong and both are fixed here:
+//   1. The walls were PlaneGeometry(span * 2, ...) = 40 units wide when the
+//      room is only wallDist * 2 ≈ 17 across. They spanned more than twice
+//      the room, most of it behind the other walls where nothing could see
+//      it, and every one of those wasted units stretched the brick.
+//   2. The canvas had NON-SQUARE texels (19.2 px/unit across, 48.9 down),
+//      which is the entire source of the 5.4:1 elongation — a brick drawn
+//      at a perfectly reasonable 30x14 pixels lands on the wall at a
+//      completely different aspect ratio than it was drawn at.
+// So the canvas is now sized FROM the wall it will cover, at a fixed and
+// equal texel density on both axes, and the brick/mortar dimensions are
+// stated in real-world metres and converted once. Change BRICK_PX_PER_UNIT
+// to trade texture memory against crispness; change nothing else to keep
+// the masonry correct.
+const BRICK_UNIT_W = 0.215, BRICK_UNIT_H = 0.065, BRICK_UNIT_MORTAR = 0.010; // metres — a standard modular brick and a 10mm joint
+function makeBrickTexture(wallW, wallH, pxPerUnit) {
+  const W = Math.round(wallW * pxPerUnit), H = Math.round(wallH * pxPerUnit);
   const c = document.createElement('canvas');
   c.width = W; c.height = H;
   const cx = c.getContext('2d');
@@ -1463,7 +1617,11 @@ function makeBrickTexture() {
   cx.fillStyle = '#8c8474';
   cx.fillRect(0, 0, W, H);
 
-  const brickW = 30, brickH = 14, mortar = 2;
+  // Rounded to whole pixels so the mortar joints stay crisp lines rather
+  // than antialiased smears at a fractional offset.
+  const brickW = Math.max(4, Math.round(BRICK_UNIT_W * pxPerUnit));
+  const brickH = Math.max(2, Math.round(BRICK_UNIT_H * pxPerUnit));
+  const mortar = Math.max(1, Math.round(BRICK_UNIT_MORTAR * pxPerUnit));
   const brickBases = ['#8a3f28', '#7a3620', '#98492e', '#6e2f1c', '#8f4530'];
   let row = 0;
   for (let y = -brickH; y < H + brickH; y += brickH + mortar) {
@@ -1494,7 +1652,10 @@ function makeBrickTexture() {
       // base color still reads through.
       cx.globalAlpha = 0.22 + Math.random() * 0.2;
       cx.fillStyle = Math.random() > 0.5 ? '#3a2418' : '#40382a';
-      const bw = 6 + Math.random() * 14, bh = 4 + Math.random() * 8;
+      // Expressed as fractions of the brick rather than the old absolute
+      // 6-20px / 4-12px radii, which were tuned against the 30x14 brick this
+      // pass no longer draws — same look at any BRICK_PX_PER_UNIT.
+      const bw = brickW * (0.2 + Math.random() * 0.47), bh = brickH * (0.29 + Math.random() * 0.57);
       cx.beginPath();
       cx.ellipse(x + Math.random() * brickW, y + Math.random() * brickH, bw, bh, Math.random() * Math.PI, 0, Math.PI * 2);
       cx.fill();
@@ -1520,13 +1681,15 @@ function makeBrickTexture() {
     for (let i = 0; i < steps; i++) {
       const t = i / steps;
       const y = startY + t * runLength;
-      sx += (Math.random() - 0.5) * 3;
-      const width = Math.max(1, 7 + Math.random() * 5 - t * 4);
+      sx += (Math.random() - 0.5) * 0.033 * pxPerUnit;
+      // Runoff streak width in world units (~8-13cm, tapering), converted —
+      // was a fixed pixel count tied to the old canvas resolution.
+      const width = Math.max(1, (0.078 + Math.random() * 0.055 - t * 0.044) * pxPerUnit);
       const alpha = (0.14 + Math.random() * 0.08) * (1 - t * 0.75);
       cx.globalAlpha = Math.max(0, alpha);
       cx.fillStyle = '#241a12';
       cx.beginPath();
-      cx.ellipse(sx, y, width, 6 + Math.random() * 3, 0, 0, Math.PI * 2);
+      cx.ellipse(sx, y, width, (0.067 + Math.random() * 0.033) * pxPerUnit, 0, 0, Math.PI * 2);
       cx.fill();
     }
   }
@@ -1544,7 +1707,7 @@ function makeBrickTexture() {
   for (let i = 0; i < effloBlobs; i++) {
     const ex = Math.random() * W;
     const ey = effloY0 + Math.random() * (H - effloY0);
-    const er = 9 + Math.random() * 20;
+    const er = (0.1 + Math.random() * 0.22) * pxPerUnit;
     cx.globalAlpha = 0.09 + Math.random() * 0.13;
     cx.fillStyle = '#d9d7c9';
     cx.beginPath();
@@ -1576,10 +1739,14 @@ function makeBrickTexture() {
   // uniform overlay. Each cluster is one dominant patch plus a couple of
   // smaller satellite flakes nearby, so patch size varies for real
   // rather than repeating at one scale.
+  // Radii in world units (metres) rather than canvas pixels, same reasoning
+  // as the brick dimensions: at the old 768px width these were 4.1/2.5/1.8
+  // units across a 40-unit wall, which is an eight-metre paint patch. On the
+  // 17-unit wall, at a real size, they read as actual peeling patches.
   const clusters = [
-    { cx: W * 0.08, cy: H * 0.85, r: 78 },  // bottom-left corner, damp/floor-level
-    { cx: W * 0.06, cy: H * 0.12, r: 48 },  // top-left corner, roof-leak adjacent
-    { cx: W * 0.62, cy: H * 0.92, r: 34 },  // a smaller isolated patch, off-corner
+    { cx: W * 0.08, cy: H * 0.85, r: 0.95 * pxPerUnit },  // bottom-left corner, damp/floor-level
+    { cx: W * 0.06, cy: H * 0.12, r: 0.58 * pxPerUnit },  // top-left corner, roof-leak adjacent
+    { cx: W * 0.62, cy: H * 0.92, r: 0.42 * pxPerUnit },  // a smaller isolated patch, off-corner
   ];
   clusters.forEach(({ cx: ccx, cy: ccy, r }) => {
     const patches = [{ x: ccx, y: ccy, r }];
@@ -1607,7 +1774,7 @@ function makeBrickTexture() {
         cx.globalAlpha = 0.6 + Math.random() * 0.25;
         cx.fillStyle = '#7f3a26';
         cx.beginPath();
-        cx.ellipse(fx, fy, 2 + Math.random() * pr * 0.14, 2 + Math.random() * pr * 0.1, Math.random() * Math.PI, 0, Math.PI * 2);
+        cx.ellipse(fx, fy, 0.02 * pxPerUnit + Math.random() * pr * 0.14, 0.02 * pxPerUnit + Math.random() * pr * 0.1, Math.random() * Math.PI, 0, Math.PI * 2);
         cx.fill();
       }
       cx.globalAlpha = 1;
@@ -1975,12 +2142,14 @@ function buildWarehouse(preview, floorY, ceilingY, rafterY, holeW, moonPos, moon
   const nearT = tAt(moteWrapTopY);
   const farT = tAt(floorY);
   const moteSpan = moteWrapTopY - floorY;
+  const moteTanAngle = Math.tan(moonAngle);
   for (let k = 0; k < moteCount; k++) {
     const tt = nearT + Math.random() * (farT - nearT);
     const center = new THREE.Vector3().copy(moonPos).addScaledVector(axis, tt);
-    const coneR = Math.max(0.02, tt * Math.tan(moonAngle));
+    const coneR = Math.max(0.02, tt * moteTanAngle);
     const ang = Math.random() * Math.PI * 2;
-    const rr = coneR * Math.pow(Math.random(), 1.8); // biased toward the axis — see comment above
+    const radFrac = Math.pow(Math.random(), 1.8); // biased toward the axis — see comment above
+    const rr = coneR * radFrac;
     const p = center
       .addScaledVector(perpA, Math.cos(ang) * rr)
       .addScaledVector(perpB, Math.sin(ang) * rr);
@@ -1996,6 +2165,18 @@ function buildWarehouse(preview, floorY, ceilingY, rafterY, holeW, moonPos, moon
       wobbleSpeed: 0.2 + Math.random() * 0.3,
       phase: Math.random() * Math.PI * 2,
       span: moteSpan,
+      // The mote's position within the CONE — a bearing around the light's
+      // axis and a fraction of the cone's radius at whatever depth it
+      // currently sits — rather than a fixed world-space x/z. Spawning
+      // sampled the cone correctly at each depth, but the animation then
+      // wrapped only y and left x/z alone, so within a minute or two every
+      // mote that started wide and low had risen to the top still holding
+      // its wide radius, and the shaft relaxed from a cone into a cylinder.
+      // Keeping these two normalized coordinates lets the loop recompute
+      // x/z from the cone's true radius at the mote's live height, so a
+      // mote that rises stays inside the light the whole way up.
+      ang,
+      radFrac,
     });
   }
   const moteGeo = new THREE.BufferGeometry();
@@ -2015,12 +2196,30 @@ function buildWarehouse(preview, floorY, ceilingY, rafterY, holeW, moonPos, moon
   // confirmed direction: warm red-orange-brown, real mortar lines, real
   // weathering, with a couple of peeling institutional-paint patches
   // rather than uniform brick everywhere.
-  const wallMat = new THREE.MeshStandardMaterial({ map: makeBrickTexture(), roughness: 0.92, metalness: 0.02 });
+  //
+  // Wall extent, 2026-09-02: these were PlaneGeometry(span * 2, ...) = 40
+  // units wide, more than twice the room's own 17-unit width — every unit
+  // past wallDist sat behind one of the other three walls where nothing can
+  // see it, while stretching the brick texture across it all the same (see
+  // makeBrickTexture's own scale-correction comment). The four walls now
+  // span the room and no further. The small overlap past the corner is
+  // deliberate: at exactly wallDist * 2 the four planes meet edge-to-edge on
+  // a shared line, which is where a hairline seam shows up.
   const wallHeight = ceilingY - floorY;
-  const backWall = new THREE.Mesh(new THREE.PlaneGeometry(span * 2, wallHeight), wallMat);
+  const wallW = wallDist * 2 + 0.3;
+  // Texel density in both axes, deliberately equal — non-square texels were
+  // the source of the old elongated-brick bug. Preview tiles get a much
+  // coarser field: the walls are a few dozen pixels there and never walked
+  // up to, so full brick resolution is pure mount cost.
+  const wallMat = new THREE.MeshStandardMaterial({
+    map: makeBrickTexture(wallW, wallHeight, preview ? 48 : 96),
+    roughness: 0.92, metalness: 0.02,
+  });
+  const wallGeo = new THREE.PlaneGeometry(wallW, wallHeight);
+  const backWall = new THREE.Mesh(wallGeo, wallMat);
   backWall.position.set(0, (ceilingY + floorY) / 2, -wallDist);
   group.add(backWall);
-  const sideWall = new THREE.Mesh(new THREE.PlaneGeometry(span * 2, wallHeight), wallMat);
+  const sideWall = new THREE.Mesh(wallGeo, wallMat);
   sideWall.rotation.y = Math.PI / 2;
   sideWall.position.set(-wallDist, (ceilingY + floorY) / 2, 0);
   group.add(sideWall);
@@ -2031,11 +2230,11 @@ function buildWarehouse(preview, floorY, ceilingY, rafterY, holeW, moonPos, moon
   // clutter stay on the original two walls; these just keep the room a
   // room. Normals face inward (rotation chosen the same way the two walls
   // above already do: pointing back toward the room's center).
-  const frontWall = new THREE.Mesh(new THREE.PlaneGeometry(span * 2, wallHeight), wallMat);
+  const frontWall = new THREE.Mesh(wallGeo, wallMat);
   frontWall.rotation.y = Math.PI;
   frontWall.position.set(0, (ceilingY + floorY) / 2, wallDist);
   group.add(frontWall);
-  const farSideWall = new THREE.Mesh(new THREE.PlaneGeometry(span * 2, wallHeight), wallMat);
+  const farSideWall = new THREE.Mesh(wallGeo, wallMat);
   farSideWall.rotation.y = -Math.PI / 2;
   farSideWall.position.set(wallDist, (ceilingY + floorY) / 2, 0);
   group.add(farSideWall);
@@ -2313,7 +2512,13 @@ function buildWarehouse(preview, floorY, ceilingY, rafterY, holeW, moonPos, moon
 
   return {
     group, bulbPosition, posters: posterMeshes, colliders, wallDist,
-    dust: { geo: moteGeo, mat: moteMat, tex: moteTex, base: moteBase, drift: moteDrift, count: moteCount },
+    dust: {
+      geo: moteGeo, mat: moteMat, tex: moteTex, base: moteBase, drift: moteDrift, count: moteCount,
+      // The light's own frame, handed out so the animate loop can rebuild
+      // each mote's x/z from its cone coordinates every frame — same
+      // vectors used to spawn them, not a second copy to keep in sync.
+      origin: moonPos.clone(), axis, perpA, perpB, tanAngle: moteTanAngle,
+    },
   };
 }
 
@@ -2340,7 +2545,7 @@ function buildWarehouse(preview, floorY, ceilingY, rafterY, holeW, moonPos, moon
 // convention would be a coincidence, not a consistency win — the two
 // look/drag paths within this one first-person rig matching each other
 // matters more than either one matching a different kind of scene.
-function createFirstPersonRig({ container, camera, renderer, colliders, wallLimit, eyeY, startPos, startYaw, isBlocked, crosshair, prompt, padEl }) {
+function createFirstPersonRig({ container, camera, renderer, colliders, wallLimit, eyeY, startPos, startYaw, isBlocked, isPanelOpen, crosshair, prompt, padEl }) {
   let yaw = startYaw, pitch = 0;
   camera.rotation.order = 'YXZ';
   camera.position.set(startPos.x, eyeY, startPos.z);
@@ -2368,7 +2573,7 @@ function createFirstPersonRig({ container, camera, renderer, colliders, wallLimi
   // the scene always raycasts from screen-center now (see animate() in
   // createOrrery), locked or not; this dot is what that point actually is,
   // and the OS cursor itself is hidden the whole time in full mode (see
-  // container.style.cursor in createOrrery). Markup itself (.orrery-
+  // createOrrery's claimContainer call). Markup itself (.orrery-
   // crosshair/-lock-prompt/-walkpad) lives in orrery.html, parsed once in
   // createOrrery and handed down here so both consumers share one fragment.
   container.appendChild(crosshair);
@@ -2395,12 +2600,29 @@ function createFirstPersonRig({ container, camera, renderer, colliders, wallLimi
     container.appendChild(padEl);
     const bind = (cls, key) => {
       const el = padEl.querySelector(cls);
-      const on = e => { e.preventDefault(); move[key] = true; };
+      const on = e => { e.preventDefault(); if (isPanelOpen?.()) return; move[key] = true; };
       const off = () => { move[key] = false; };
       el.addEventListener('pointerdown', on);
       el.addEventListener('pointerup', off);
       el.addEventListener('pointerleave', off);
       el.addEventListener('pointercancel', off);
+      // These are real <button>s in the tab order (they stopped being
+      // inside an aria-hidden container on 2026-09-02 — see orrery.html),
+      // and a control that announces itself as a button has to work like
+      // one: a pointerdown-only binding leaves Enter/Space doing nothing,
+      // which trades a WCAG 4.1.2 failure for a 2.1.1 one. Coarse-pointer
+      // devices include touch laptops with real keyboards, which is the
+      // exact case that made the old aria-hidden wrong in the first place.
+      const keyOn = e => {
+        if (e.key !== 'Enter' && e.key !== ' ') return;
+        e.preventDefault(); // Space would otherwise scroll the page under the scene
+        if (isPanelOpen?.()) return;
+        move[key] = true;
+      };
+      const keyOff = e => { if (e.key === 'Enter' || e.key === ' ') move[key] = false; };
+      el.addEventListener('keydown', keyOn);
+      el.addEventListener('keyup', keyOff);
+      el.addEventListener('blur', off);
     };
     bind('.wp-fwd', 'forward');
     bind('.wp-back', 'back');
@@ -2415,22 +2637,36 @@ function createFirstPersonRig({ container, camera, renderer, colliders, wallLimi
     KeyA: 'left',    ArrowLeft: 'left',
     KeyD: 'right',   ArrowRight: 'right',
   };
+  function clearMovement() { move.forward = move.back = move.left = move.right = false; }
   const onKeyDown = e => {
     const flag = KEY_MAP[e.code];
     if (!flag) return;
+    // The read-more panel owns the arrow keys while it is open. This handler
+    // is on `window` and preventDefault()s all four arrows unconditionally,
+    // which meant the panel — overflow-y scrollable, holding the entire
+    // found story, and the ONLY place openPanel() ever sends focus — could
+    // not be scrolled from the keyboard at all. That made the jump list, the
+    // one accessible route into the text, a route into text you then can't
+    // read past the first screenful, while the camera walked around behind
+    // the panel instead. Movement flags are cleared here as well as at the
+    // moment the panel opens (see clearMovement's other caller), so a key
+    // that was already held down when the panel opened can't stick.
+    if (isPanelOpen?.()) { clearMovement(); return; }
     move[flag] = true;
     e.preventDefault(); // arrows shouldn't also scroll the page underneath
   };
   const onKeyUp = e => {
     const flag = KEY_MAP[e.code];
-    if (flag) move[flag] = false;
+    if (!flag) return;
+    if (isPanelOpen?.()) { clearMovement(); return; }
+    move[flag] = false;
   };
   window.addEventListener('keydown', onKeyDown);
   window.addEventListener('keyup', onKeyUp);
   // If focus leaves the window mid-stride (alt-tab, devtools) a key can
   // get stuck "down" forever, since its keyup never reaches here — drop
   // all movement the moment the window blurs.
-  const onBlur = () => { move.forward = move.back = move.left = move.right = false; };
+  const onBlur = () => { clearMovement(); };
   window.addEventListener('blur', onBlur);
 
   // ─── Mouse-look ─────────────────────────────────────────────────────────
@@ -2478,7 +2714,15 @@ function createFirstPersonRig({ container, camera, renderer, colliders, wallLimi
     if (isBlocked?.(e)) return false;
     if (!canLock || locked) return false;
     prompt.classList.add('hidden');
-    canvasEl.requestPointerLock();
+    // Chrome 113+ returns a Promise here, and it REJECTS in contexts that
+    // aren't allowed to lock the pointer at all — an embedded/preview frame
+    // most commonly (caught live in the 4.0 pass's browser pane:
+    // "WrongDocumentError: The root document of this element is not valid
+    // for pointer lock", four uncaught rejections per click). Nothing needs
+    // to happen when it fails: drag-to-look is already the fallback path
+    // and works without any lock. Swallow it rather than leaving an
+    // unhandled rejection in the console of anyone embedding the site.
+    canvasEl.requestPointerLock()?.catch?.(() => {});
     return true;
   }
   const onPromptClick = e => { tryEngage(e); };
@@ -2500,7 +2744,15 @@ function createFirstPersonRig({ container, camera, renderer, colliders, wallLimi
   // the four walls — enough fidelity for "don't walk through the set,"
   // not a full physics engine. Two passes so overlapping colliders (e.g.
   // a corner where two crate piles are close) both get to push.
+  // Accumulated push direction from the last resolveCollisions call, so
+  // update() can take the component of velocity that's driving into the
+  // obstacle back out again. Without that, holding W against a crate kept
+  // integrating velocity toward the crate every frame — the push-out
+  // cancelled the POSITION but never the velocity, so it built up behind the
+  // wall and released as a lurch the instant the visitor turned away.
+  const _pushN = new THREE.Vector2();
   function resolveCollisions(x, z) {
+    _pushN.set(0, 0);
     for (let pass = 0; pass < 2; pass++) {
       for (const c of colliders) {
         const dx = x - c.x, dz = z - c.z;
@@ -2510,12 +2762,31 @@ function createFirstPersonRig({ container, camera, renderer, colliders, wallLimi
           const push = (minDist - dist) / dist;
           x += dx * push;
           z += dz * push;
+          _pushN.x += dx * push;
+          _pushN.y += dz * push;
         }
       }
     }
-    x = Math.max(-wallLimit, Math.min(wallLimit, x));
-    z = Math.max(-wallLimit, Math.min(wallLimit, z));
-    return { x, z };
+    // The four walls are a hard clamp rather than a push-out, so their
+    // "normal" is just the axis that got clamped.
+    const cx = Math.max(-wallLimit, Math.min(wallLimit, x));
+    const cz = Math.max(-wallLimit, Math.min(wallLimit, z));
+    if (cx !== x) _pushN.x += cx - x;
+    if (cz !== z) _pushN.y += cz - z;
+    return { x: cx, z: cz };
+  }
+  // Removes whatever part of `velocity` points into the surface just
+  // collided with, leaving the tangential part — so walking into a wall at
+  // an angle still slides along it, which is what the push-out was already
+  // doing to the position.
+  function projectVelocityOntoTangent() {
+    if (_pushN.lengthSq() < 1e-12) return;
+    _pushN.normalize();
+    const into = velocity.x * _pushN.x + velocity.y * _pushN.y;
+    if (into < 0) {
+      velocity.x -= into * _pushN.x;
+      velocity.y -= into * _pushN.y;
+    }
   }
 
   function update(dt) {
@@ -2540,6 +2811,7 @@ function createFirstPersonRig({ container, camera, renderer, colliders, wallLimi
     velocity.lerp(targetVel, ease);
 
     const next = resolveCollisions(pos.x + velocity.x * dt, pos.y + velocity.y * dt);
+    projectVelocityOntoTangent();
     pos.set(next.x, next.z);
     camera.position.set(pos.x, eyeY, pos.y);
   }
@@ -2548,6 +2820,7 @@ function createFirstPersonRig({ container, camera, renderer, colliders, wallLimi
     update,
     tryEngage,
     releaseLock,
+    clearMovement,
     crosshairEl: crosshair,
     get locked() { return locked; },
     dispose() {
@@ -2571,6 +2844,12 @@ export function createOrrery(container, { preview = false } = {}) {
   const w = container.clientWidth  || window.innerWidth;
   const h = container.clientHeight || window.innerHeight;
 
+  // Every deferred callback this scene schedules goes through here so
+  // dispose() can drop whatever is still pending in one call — see
+  // openPanel's focus hand-off, the one site in this file that wasn't
+  // already tracked.
+  const timers = trackTimers();
+
   const scene    = new THREE.Scene();
   const camera   = new THREE.PerspectiveCamera(54, w / h, 0.1, 500);
   // Preview tile: same fixed, pulled-back establishing shot as before —
@@ -2585,7 +2864,18 @@ export function createOrrery(container, { preview = false } = {}) {
   }
 
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-  renderer.setPixelRatio(window.devicePixelRatio);
+  // Forward-declared so manageRenderer's context-lost handler below can stop
+  // the loop; assigned by animate() itself further down.
+  let animId = null;
+  // manageRenderer caps devicePixelRatio at 2. This is the heaviest scene on
+  // the site and it was the one asking the GPU for an uncapped ratio: on a
+  // DPR-3 phone that is nine times the fragments of a DPR-1 render, for a
+  // difference nothing can resolve. It also owns real context release on
+  // dispose (THREE's renderer.dispose() does not free the GL context) and a
+  // webglcontextlost handler, which this scene had neither of.
+  const managedRenderer = manageRenderer(renderer, {
+    onLost: () => { cancelAnimationFrame(animId); animId = null; },
+  });
   renderer.setSize(w, h);
   // A touch of warmth over pure black (0x030303 before) — the fog is doing
   // real atmospheric-haze work now that the compressed-video overlay isn't
@@ -2601,10 +2891,21 @@ export function createOrrery(container, { preview = false } = {}) {
   const clippedPreview = preview ? mountClippedPreviewCanvas(container, renderer) : null;
   if (!preview) container.appendChild(renderer.domElement);
 
-  // Programmatically focusable so closing the panel (✕, outside click, or
-  // Escape) has somewhere real to send focus back to, rather than leaving
-  // it on a now-hidden close button or nowhere at all.
-  if (!preview) container.tabIndex = -1;
+  // `container` is the single shared #experience-container: main.js empties
+  // it between scenes but never replaces the node, so every inline style
+  // written here outlives this scene unless something puts it back. Nothing
+  // did — most visibly `cursor: none` (set below for the crosshair-only
+  // aiming this scene uses), which followed the visitor into Theater,
+  // Scroll, Butterfly and Outside, none of which touch cursor themselves,
+  // and left them with no mouse pointer at all. claimContainer records the
+  // prior values and hands back the restore() that dispose() now calls.
+  // tabIndex -1 is part of the same claim: it makes the container
+  // programmatically focusable so closing the panel (✕, outside click, or
+  // Escape) has somewhere real to send focus back to, rather than leaving it
+  // on a now-hidden close button or nowhere at all.
+  const claim = preview ? null : claimContainer(container, {
+    position: 'relative', overflow: 'hidden', cursor: 'none', tabIndex: -1,
+  });
 
   // Fog matched to the clear color so only genuinely distant geometry
   // (far wall corners, stars beyond the skylight) softens into haze — the
@@ -2642,6 +2943,23 @@ export function createOrrery(container, { preview = false } = {}) {
   scene.add(hemiLight);
   const ambientLight = new THREE.AmbientLight(0x3f4d47, 0.55);
   scene.add(ambientLight);
+
+  // Everything below that isn't part of the orrery mechanism or the
+  // warehouse shell — the moonbeam's glow sprites, the fluorescent fixture
+  // housings, the star field — used to be added straight to `scene`. That
+  // put them outside both of dispose()'s hand-written traversals (which only
+  // ever walked orrery.group and warehouse.group), so their geometry,
+  // materials and textures were never freed at all: six sprites with six
+  // SpriteMaterials, three fixtures of eight meshes each, and a Points
+  // object, per full-mode visit. They live here instead, and dispose() now
+  // walks the whole scene graph once with disposeSceneGraph rather than two
+  // partial hand-kept lists — a group can't be forgotten if nothing has to
+  // remember it. Deliberately NOT `root`: root is the group the preview
+  // tile's drag rotates, and these are all fixed in world space (the star
+  // field in particular has to stay put under the ceiling's real skylight
+  // hole for the occlusion to work — see the parallax note below).
+  const fixed = new THREE.Group();
+  scene.add(fixed);
 
   // ─── Warehouse vertical layout — decided here, then handed down: the
   // ceiling and roof truss height are fixed first, and the orrery hangs
@@ -2761,7 +3079,7 @@ export function createOrrery(container, { preview = false } = {}) {
     }));
     sprite.position.copy(shaftOrigin).addScaledVector(shaftAxis, dist);
     sprite.scale.setScalar(coneR * 2.4);
-    scene.add(sprite);
+    fixed.add(sprite);
     shaftSprites.push(sprite);
   }
 
@@ -2807,53 +3125,60 @@ export function createOrrery(container, { preview = false } = {}) {
     { x: -wd * 0.15, z: -wd * 0.55 },
   ];
   const housingW = 1.3, housingD = 0.22, housingWallH = 0.11, plateT = 0.03;
+  // All three fixtures are identical, so every part geometry is built once
+  // out here rather than once per fixture inside the loop below — the side
+  // walls and end caps were each being constructed three times over, and the
+  // top plate, hanger, flange and tube likewise.
+  const fy = rafterY - (preview ? 0.08 : 0.12);
+  const topPlateGeo = new THREE.BoxGeometry(housingW, plateT, housingD);
+  const sideWallGeo = new THREE.BoxGeometry(housingW, housingWallH, 0.02);
+  const endCapGeo = new THREE.BoxGeometry(0.02, housingWallH, housingD);
+  const hangerTop = fy + housingWallH / 2 + plateT;
+  const hangerH = rafterY - hangerTop;
+  const hangerGeo = hangerH > 0.001 ? new THREE.CylinderGeometry(0.012, 0.012, hangerH, 6) : null;
+  const flangeGeo = new THREE.CylinderGeometry(0.05, 0.05, 0.02, 10);
+  const tubeGeo = new THREE.CylinderGeometry(0.025, 0.025, 1.15, 8);
   const fluorescentLights = [];
   fixtureSpots.forEach(({ x, z }) => {
-    const fy = rafterY - (preview ? 0.08 : 0.12);
-
     // Top plate + two long side walls + two end caps = an open-bottom
     // trough, so the tube sits recessed inside real sheet-metal rather
     // than next to an unconnected box.
-    const topPlate = new THREE.Mesh(new THREE.BoxGeometry(housingW, plateT, housingD), fixtureHousingMat);
+    const topPlate = new THREE.Mesh(topPlateGeo, fixtureHousingMat);
     topPlate.position.set(x, fy + housingWallH / 2, z);
-    scene.add(topPlate);
-    const sideWallGeo = new THREE.BoxGeometry(housingW, housingWallH, 0.02);
+    fixed.add(topPlate);
     const wallFront = new THREE.Mesh(sideWallGeo, fixtureHousingMat);
     wallFront.position.set(x, fy, z - housingD / 2);
-    scene.add(wallFront);
+    fixed.add(wallFront);
     const wallBack = new THREE.Mesh(sideWallGeo, fixtureHousingMat);
     wallBack.position.set(x, fy, z + housingD / 2);
-    scene.add(wallBack);
-    const endCapGeo = new THREE.BoxGeometry(0.02, housingWallH, housingD);
+    fixed.add(wallBack);
     const endL = new THREE.Mesh(endCapGeo, fixtureHousingMat);
     endL.position.set(x - housingW / 2, fy, z);
-    scene.add(endL);
+    fixed.add(endL);
     const endR = new THREE.Mesh(endCapGeo, fixtureHousingMat);
     endR.position.set(x + housingW / 2, fy, z);
-    scene.add(endR);
+    fixed.add(endR);
 
     // Visible mounting: a thin hanger rod spanning the real gap up to the
     // rafter, plus a small flange flush against it — the actual
     // attachment point, not an implied one.
-    const hangerTop = fy + housingWallH / 2 + plateT;
-    const hangerH = rafterY - hangerTop;
-    if (hangerH > 0.001) {
-      const hanger = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, hangerH, 6), fixtureHousingMat);
+    if (hangerGeo) {
+      const hanger = new THREE.Mesh(hangerGeo, fixtureHousingMat);
       hanger.position.set(x, hangerTop + hangerH / 2, z);
-      scene.add(hanger);
+      fixed.add(hanger);
     }
-    const flange = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.02, 10), fixtureHousingMat);
+    const flange = new THREE.Mesh(flangeGeo, fixtureHousingMat);
     flange.rotation.x = Math.PI / 2;
     flange.position.set(x, rafterY - 0.01, z);
-    scene.add(flange);
+    fixed.add(flange);
 
-    const tube = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 1.15, 8), fixtureTubeMat);
+    const tube = new THREE.Mesh(tubeGeo, fixtureTubeMat);
     tube.rotation.z = Math.PI / 2;
     tube.position.set(x, fy - housingWallH / 2 + 0.015, z);
-    scene.add(tube);
+    fixed.add(tube);
     const fLight = new THREE.PointLight(FLUORESCENT_COLOR, preview ? 0.25 : 0.32, preview ? 8 : 12, 2);
     fLight.position.set(x, fy - 0.15, z);
-    scene.add(fLight);
+    fixed.add(fLight);
     fluorescentLights.push(fLight);
   });
 
@@ -2882,12 +3207,14 @@ export function createOrrery(container, { preview = false } = {}) {
   // animate() — the field is static in world space again, still centered
   // on the room's own origin like the fixed ceiling geometry above it, so
   // occlusion through the real hole keeps working the way it always did.
-  // Parallax is instead suppressed the ordinary way: pushed much farther
-  // out (10x the old spread/height) so a few meters of room-scale camera
-  // movement is a small fraction of the distance to any star, with
-  // `sizeAttenuation: false` (fixed screen-space size in pixels, not
-  // world units) so the far-pushed points don't also shrink into
-  // invisibility.
+  // Parallax is instead suppressed the ordinary way: pushed 4x farther out
+  // in both the horizontal spread and the vertical extent (with 6x the star
+  // count, so the sky doesn't thin out as it grows) — enough that a few
+  // metres of room-scale camera movement is a small fraction of the distance
+  // to any star — with `sizeAttenuation: false` (fixed screen-space size in
+  // pixels, not world units) so the far-pushed points don't also shrink into
+  // invisibility. (This comment said "10x" until 2026-09-02; the code has
+  // said 4x and 6x since the change landed.)
   const starCount = (preview ? 140 : 320) * 6;
   const starSpreadXZ = (preview ? 18 : 28) * 4;
   const starSpreadY = (preview ? 4 : 6) * 4;
@@ -2901,9 +3228,16 @@ export function createOrrery(container, { preview = false } = {}) {
   starGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
   const starMat = new THREE.PointsMaterial({
     color: 0xddeeff, size: preview ? 1.3 : 1.6, transparent: true, opacity: 0.55, sizeAttenuation: false,
+    // scene.fog's far distance is 42 and this field now reaches ±56 with a
+    // vertical extent to match, so a real share of these 1920 points sat
+    // beyond the fog's far plane and rendered as flat fog colour — stars
+    // fogged out by the haze of a room they are supposed to be outside of.
+    // The shaft sprites above already set this; the awareness existed, the
+    // star field just never got it.
+    fog: false,
   });
   const starField = new THREE.Points(starGeo, starMat);
-  scene.add(starField);
+  fixed.add(starField);
 
   const root = new THREE.Group();
   scene.add(root);
@@ -2956,14 +3290,20 @@ export function createOrrery(container, { preview = false } = {}) {
     panelNote  = panel.querySelector('.orrery-panel-note');
     panelTitle.textContent = `✦ ${ORRERY.name}`;
     panelEra.textContent = ORRERY.era;
-    panelNote.innerHTML = ORRERY.note;
-    container.style.position = 'relative';
-    container.style.overflow = 'hidden';
-    // First-person pass: the OS cursor is hidden the whole time in full
-    // mode — hover/click targeting always raycasts from screen-center now
-    // (see createFirstPersonRig's crosshair), so a wandering system arrow
-    // would just be a visual mismatch with what's actually being aimed at.
-    container.style.cursor = 'none';
+    // textContent, not innerHTML. ORRERY.note is a plain template literal
+    // rendered by `white-space: pre-line` (orrery.css), and this scene wires
+    // no cross-links into it the way sphere/orbiter/library do — so innerHTML
+    // bought nothing and opened a path where an `&` or a `<` appearing in the
+    // found text would silently change meaning, or vanish, rather than being
+    // shown as written. This is transcribed source material; it should render
+    // exactly as it is stored.
+    panelNote.textContent = ORRERY.note;
+    // position/overflow/cursor are all claimed (and restored on dispose) up
+    // at claimContainer. The cursor half is why: in full mode the OS cursor
+    // is hidden the whole time — hover/click targeting always raycasts from
+    // screen-center (see createFirstPersonRig's crosshair), so a wandering
+    // system arrow would just be a visual mismatch with what's actually
+    // being aimed at.
     container.appendChild(panel);
 
     // Close callback shared by the close button, Escape, and an outside
@@ -2981,7 +3321,7 @@ export function createOrrery(container, { preview = false } = {}) {
         // once the panel's gone. Pointer lock itself isn't re-requested
         // here (browsers only grant it from a direct user gesture); the
         // next real click on the canvas re-engages it via fp.tryEngage.
-        container.style.cursor = 'none';
+        claim.setCursor('none');
       },
     });
 
@@ -3050,12 +3390,23 @@ export function createOrrery(container, { preview = false } = {}) {
     // createFirstPersonRig for why they otherwise can't be. fp.tryEngage
     // (already wired into every click path) re-engages on whatever click
     // follows the panel closing. The OS cursor is CSS-hidden the rest of
-    // the time (crosshair-based aiming, see container.style.cursor='none'
-    // at scene setup) — restore it too, or the panel would be clickable
+    // the time (crosshair-based aiming, see the claimContainer call at
+    // scene setup) — restore it too, or the panel would be clickable
     // but the visitor still couldn't see where to click.
     fp?.releaseLock();
-    container.style.cursor = '';
-    setTimeout(() => panelTitle.focus(), 50);
+    claim.setCursor('');
+    // Drop any movement key that was held down at the moment the panel
+    // opened. The rig's own key handlers stand down while the panel is open
+    // (so the arrows can scroll the story instead of walking the camera),
+    // which means a key already held gets no further events to clear it.
+    fp?.clearMovement();
+    // Was an untracked `setTimeout(..., 50)` — 50ms being an unexplained
+    // guess at a CSS transition — which fired against a detached <h2> if the
+    // visitor left the scene in that window. One frame is both the right
+    // amount of time (the panel's `visibility` flips to visible with the
+    // .open class, and focus only needs that style recalc to have happened,
+    // not the half-second slide) and tracked, so dispose() drops it.
+    timers.nextFrame(() => panelTitle.focus());
   }
 
   // ─── Poster audio (dynamic import, full-mode only) ─────────────────────
@@ -3137,7 +3488,12 @@ export function createOrrery(container, { preview = false } = {}) {
   // prefers-reduced-motion is for — walking/mouse-look/drag-to-orbit all
   // stay available regardless, since that's motion the visitor asks for,
   // not motion imposed on them.
-  const reduceMotion = prefersReducedMotion();
+  // Read once here, then kept current: a visitor who turns the OS setting on
+  // while the scene is already open used to keep getting the motion until
+  // they navigated away. Everything this flag gates is evaluated fresh
+  // in animate() from a closed form, so flipping it at runtime costs nothing.
+  let reduceMotion = prefersReducedMotion();
+  const reduceMotionSub = onReducedMotionChange(v => { reduceMotion = v; });
 
   let orbitDrag = null, wheelZoom = null, targetRotationY = root.rotation.y;
 
@@ -3164,21 +3520,50 @@ export function createOrrery(container, { preview = false } = {}) {
     // for the θ where y = eyeY gives exactly those two points — everyone
     // else on the ring is either above or below that height and never
     // actually blocks a walking visitor at eye level.
+    // The torus solve itself was right; its premise wasn't. It found the two
+    // θ where the ring crosses eye height EXACTLY and put a collider at each,
+    // as though eye height were the only height that matters. Everything
+    // between those two crossings is the part of the ring that has dipped
+    // BELOW eye level — which is not clearance, it is the ring passing
+    // through the visitor's head, chest and legs. With floorY -3.25, eye
+    // height -1.55 and tilt ≈0.52, four rings cross eye height and Pluto's
+    // descends to y = -2.90, a third of a metre off the floor, sweeping a
+    // wide arc through walkable space that two r=0.22 dots did nothing to
+    // guard. So: solve for the θ RANGE where the ring is below eye level and
+    // sample small circles along the whole arc.
+    //
+    //   (x, y, z) = (R cosθ, yOffset − R sinθ sin(tilt), R sinθ cos(tilt))
+    //   y < eyeY  ⟺  sinθ > (yOffset − eyeY) / (R sin tilt) = s0
+    //
+    // which for |s0| ≤ 1 is the arc θ ∈ (asin s0, π − asin s0); s0 > 1 means
+    // the ring never comes down at all (the four innermost rings), s0 < −1
+    // that the whole ring is low (doesn't happen at this geometry).
     const eyeYAbs = floorY + EYE_HEIGHT;
+    const RING_COLLIDER_R = 0.15;
+    // Centre spacing along the arc has to stay under 2 * (r + PLAYER_RADIUS)
+    // = 0.9, or the visitor fits between two adjacent circles and walks
+    // through the ring anyway. 0.55 leaves real margin without turning one
+    // ring into a hundred colliders.
+    const RING_SAMPLE_SPACING = 0.55;
     const ringDipColliders = [];
     orrery.ringInfo.forEach(({ radius, yOffset, tilt }) => {
       const sinTilt = Math.sin(tilt);
       if (Math.abs(sinTilt) < 1e-6) return;
-      const sinTheta = (yOffset - eyeYAbs) / (radius * sinTilt);
-      if (sinTheta < -1 || sinTheta > 1) return; // this ring never reaches eye height
-      const cosTheta = Math.sqrt(Math.max(0, 1 - sinTheta * sinTheta));
-      const zDip = radius * sinTheta * Math.cos(tilt);
-      const xDip = radius * cosTheta;
-      // A small collider at each mirrored dip point — sized a bit past
-      // the ring's own thin tube radius, enough to actually register as
-      // "something's there" without becoming its own obstacle course.
-      ringDipColliders.push({ x: xDip, z: zDip, r: 0.22 });
-      ringDipColliders.push({ x: -xDip, z: zDip, r: 0.22 });
+      const s0 = (yOffset - eyeYAbs) / (radius * sinTilt);
+      if (s0 > 1) return; // this ring never reaches eye height
+      const theta0 = s0 < -1 ? 0 : Math.asin(s0);
+      const theta1 = s0 < -1 ? Math.PI * 2 : Math.PI - theta0;
+      const arcLen = radius * (theta1 - theta0);
+      const steps = Math.max(2, Math.ceil(arcLen / RING_SAMPLE_SPACING));
+      const cosTilt = Math.cos(tilt);
+      for (let i = 0; i <= steps; i++) {
+        const theta = theta0 + ((theta1 - theta0) * i) / steps;
+        ringDipColliders.push({
+          x: radius * Math.cos(theta),
+          z: radius * Math.sin(theta) * cosTilt,
+          r: RING_COLLIDER_R,
+        });
+      }
     });
 
     const allColliders = [...warehouse.colliders, ...orrery.colliders, ...ringDipColliders];
@@ -3193,6 +3578,7 @@ export function createOrrery(container, { preview = false } = {}) {
       startPos: new THREE.Vector3(0.8, 0, warehouse.wallDist - 1.2),
       startYaw: 0,
       isBlocked: e => panel && panel.contains(e.target),
+      isPanelOpen: () => !!panel && panel.classList.contains('open'),
       crosshair: crosshairEl, prompt: lockPromptEl, padEl: walkpadEl,
     });
   }
@@ -3201,33 +3587,54 @@ export function createOrrery(container, { preview = false } = {}) {
   // (see the ripple-driver comment inside animate() below) — allocated
   // once here rather than per-frame, so 54 struts' worth of vector math
   // every frame doesn't churn the garbage collector.
-  const _jointDisp = Array.from({ length: orrery.gravLens.nJoints }, () => new THREE.Vector3());
+  const _jointDisp = Array.from({ length: orrery.dishPhysics.nJoints }, () => new THREE.Vector3());
   const _qRing = [[], [], []]; // [axis][mode] scratch — this frame's modal amplitude, baseline + ring combined
   const _scratchFrom = new THREE.Vector3(), _scratchTo = new THREE.Vector3(), _scratchMid = new THREE.Vector3(), _scratchDir = new THREE.Vector3();
   const _UP = new THREE.Vector3(0, 1, 0);
+  // The two per-frame allocations the rest of this loop was already careful
+  // to avoid: the raycaster's screen-space point (always screen-centre, so
+  // it never changes) and the poster mesh list (rebuilt from
+  // warehouse.posters by .map() on every single frame, for four meshes that
+  // are fixed for the life of the scene).
+  const _screenCentre = { x: 0, y: 0 };
+  const _posterMeshes = preview ? [] : warehouse.posters.map(p => p.mesh);
 
   // ─── Animate ──────────────────────────────────────────────────────────────
-  let animId, t = 0, lastFrame = performance.now();
+  // `t` used to be a module-of-this-function accumulator advanced by a flat
+  // `t += 0.001` every frame, which made everything keyed to it — the dust,
+  // the control-box idle pulse — run at exactly double speed on a 120Hz
+  // display while the planets, correctly driven from wall-clock time, did
+  // not. createFrameClock gives real elapsed seconds instead (clamped, so a
+  // backgrounded tab resumes rather than teleporting the walk on its first
+  // frame back). T_PER_SECOND is what the old constant worked out to at
+  // 60fps, so every rate hand-tuned against it is preserved exactly.
+  const clock = createFrameClock();
+  const T_PER_SECOND = 0.06;
+  let paused = false;
   function animate() {
     animId = requestAnimationFrame(animate);
-    t += 0.001;
-    const now = performance.now();
-    const dt = Math.min(0.05, (now - lastFrame) / 1000); // clamp: tab-away shouldn't teleport the walk
-    lastFrame = now;
+    const dt = clock.tick();
+    const t = clock.elapsed * T_PER_SECOND;
 
     if (preview) {
       // Ease the tile's rotation toward wherever the last drag left the
       // target, rather than jumping straight there. Reduced-motion
       // visitors get direct 1:1 tracking instead (no lingering post-drag
       // motion they didn't ask for).
-      root.rotation.y = reduceMotion ? targetRotationY : root.rotation.y + (targetRotationY - root.rotation.y) * 0.07;
+      // Exponential ease, framed in real seconds — the same
+      // `1 - exp(-rate * dt)` idiom createFirstPersonRig's MOVE_ACCEL uses,
+      // and for the same reason: the old flat `* 0.07` per frame settled
+      // twice as fast on a 120Hz display as on a 60Hz one. 4.35 is the decay
+      // rate that reproduces 0.07-per-frame at 60fps exactly.
+      const previewEase = 1 - Math.exp(-4.35 * dt);
+      root.rotation.y = reduceMotion ? targetRotationY : root.rotation.y + (targetRotationY - root.rotation.y) * previewEase;
     } else {
       fp.update(dt);
 
       // Hover/click targeting — always from screen-center (the crosshair),
       // every frame, regardless of whether the pointer is locked or the
       // visitor has ever touched the mouse at all. See createFirstPersonRig.
-      raycaster.setFromCamera({ x: 0, y: 0 }, camera);
+      raycaster.setFromCamera(_screenCentre, camera);
       const hits = raycaster.intersectObject(orrery.hitTarget);
       const newHover = hits.length > 0;
       if (newHover !== hovered) {
@@ -3235,7 +3642,7 @@ export function createOrrery(container, { preview = false } = {}) {
         if (!selected) setEmphasis(hovered);
       }
       if (warehouse.posters.length) {
-        const posterHits = raycaster.intersectObjects(warehouse.posters.map(p => p.mesh));
+        const posterHits = raycaster.intersectObjects(_posterMeshes);
         const newPosterHover = posterHits.length
           ? warehouse.posters.find(p => p.mesh === posterHits[0].object)
           : null;
@@ -3252,7 +3659,7 @@ export function createOrrery(container, { preview = false } = {}) {
       // Real Kepler motion (2.2.22): each planet's position is a
       // deterministic function of real wall-clock time (orreryNowMs, which
       // reads Date.now() unless window.__orreryTimeOverrideMs is set for
-      // testing — see the comment above organicPulse), not an
+      // testing — see orreryNowMs's own comment), not an
       // accumulated per-frame rotation. The orrery keeps running whether
       // or not anyone's watching; reloading the page doesn't reset it,
       // and two visits at genuinely different real moments show genuinely
@@ -3270,50 +3677,76 @@ export function createOrrery(container, { preview = false } = {}) {
       });
       // The asteroid belt drifts the same way every planet ring does —
       // rotating the whole (already-tilted, see buildOrrery) beltGroup
-      // around its own local Y axis, same "pivot.rotation.y += speed *
-      // 0.01" shape as the planet orbits just above.
-      if (orrery.belt) orrery.belt.group.rotation.y += orrery.belt.speed * 0.01;
+      // around its own local Y axis. Set from the same wall clock the
+      // planets read, not accumulated per frame: it used to advance by a
+      // flat `speed * 0.01` each frame, so on a 120Hz display it ran at
+      // exactly 2x while the Mars and Jupiter orbits its own rate is
+      // averaged from did not — the belt visibly outran the two rings it
+      // sits between. Same closed form also means a reload no longer
+      // resets it to zero while the planets carry on from where they are.
+      const epochSec = secondsSinceEpoch(nowMs);
+      if (orrery.belt) orrery.belt.group.rotation.y = normalizeAngle(orrery.belt.omega * epochSec);
       // The "unidentified cosmic objects" past Pluto get the same orbit
       // treatment plus their own independent tumble (mesh.rotation.x/y
       // advancing at different rates than the orbit itself, and than each
       // other) — spin and orbit are two unrelated rotations layered on the
       // same object, which is why they read as tumbling debris rather than
-      // planets. TUNABLE: the 0.01/0.007 spin-rate ratio controls how
-      // "tumbly" vs. simply-spinning each object looks.
+      // planets. TUNABLE: omegaSpinX/omegaSpinY's ratio (0.6 vs 0.42 of the
+      // same per-object `spin`) controls how "tumbly" vs. simply-spinning
+      // each object looks.
       orrery.unknowns.forEach(u => {
-        u.pivot.rotation.y += u.speed * u.direction * 0.01;
-        u.mesh.rotation.x += u.spin * 0.01;
-        u.mesh.rotation.y += u.spin * 0.007;
+        u.pivot.rotation.y = normalizeAngle(u.omegaOrbit * u.direction * epochSec);
+        u.mesh.rotation.x = normalizeAngle(u.omegaSpinX * epochSec);
+        u.mesh.rotation.y = normalizeAngle(u.omegaSpinY * epochSec);
       });
 
-      // Dust motes drifting up through the skylight shafts. Each one wraps
-      // from ceiling back to its own start height near the floor once it
-      // rises past the top — a real jump when it happens, not a fade, but
-      // with 260 motes at independent phases/speeds no two wrap in the
-      // same frame, so across the whole swarm it reads as continuous
-      // drift rather than any single visible reset (checked numerically:
-      // one mote's own wrap is a ~5.8-unit jump once per multi-minute
-      // cycle, not something a visitor is likely watching for). `t` here
-      // is already scaled way down (see `t += 0.001` above) for the
-      // orrery's own slow orbital motion, so it's rescaled back up locally
-      // for the mote math below rather than reusing riseSpeed/wobbleSpeed
-      // constants tuned against a different clock.
-      const dustAttr = warehouse.dust.geo.attributes.position;
+      // Dust motes drifting up through the skylight shaft. Each one wraps
+      // from the top of the shaft back to its own start height near the
+      // floor once it rises past the top — a real jump when it happens, not
+      // a fade, but with 240 motes (105 in preview) at independent
+      // phases/speeds no two wrap in the same frame, so across the whole
+      // swarm it reads as continuous drift rather than any single visible
+      // reset (checked numerically: one mote's own wrap is a ~7.6-unit jump
+      // — moteSpan, since the 2026-09-01 moonlight rebuild raised the wrap
+      // ceiling to the antenna's rim — once per multi-minute cycle, not
+      // something a visitor is likely watching for). `t` is the orrery's own
+      // slow orbital clock, so it's rescaled back up locally for the mote
+      // math rather than reusing riseSpeed/wobbleSpeed constants tuned
+      // against a different rate.
+      //
+      // x/z are RECOMPUTED from the light's cone at each mote's live height,
+      // not carried over from its spawn point. Spawning sampled the cone
+      // correctly at every depth; the animation then advanced only y, so
+      // motes that started wide and low kept their wide radius all the way
+      // to the top and the shaft relaxed from a cone into a cylinder within
+      // a minute or two of watching it. Each mote's stored bearing (`ang`)
+      // and radius fraction (`radFrac`) are the cone-relative coordinates
+      // that survive the rise; the same perpA/perpB basis that placed them
+      // is reused here rather than recomputed.
+      const dust = warehouse.dust;
+      const dustAttr = dust.geo.attributes.position;
       const dustClock = t * 60;
-      for (let i = 0; i < warehouse.dust.count; i++) {
-        const d = warehouse.dust.drift[i];
+      const { origin: dOrigin, axis: dAxis, perpA: dPerpA, perpB: dPerpB, tanAngle: dTan } = dust;
+      for (let i = 0; i < dust.count; i++) {
+        const d = dust.drift[i];
         const i3 = i * 3;
-        const startFrac = warehouse.dust.base[i3 + 1] - floorY; // 0..span, this mote's own start height
+        const startFrac = dust.base[i3 + 1] - floorY; // 0..span, this mote's own start height
         const risenFrac = (startFrac + dustClock * d.riseSpeed) % d.span;
-        const wobble = Math.sin(dustClock * d.wobbleSpeed + d.phase) * d.wobbleAmp;
-        dustAttr.array[i3]     = warehouse.dust.base[i3] + wobble;
-        dustAttr.array[i3 + 1] = floorY + risenFrac;
-        dustAttr.array[i3 + 2] = warehouse.dust.base[i3 + 2] + Math.cos(dustClock * d.wobbleSpeed + d.phase) * d.wobbleAmp;
+        const y = floorY + risenFrac;
+        // Distance along the light's own axis at which the cone is at this
+        // height, and the cone's radius there.
+        const along = (y - dOrigin.y) / dAxis.y;
+        const rr = d.radFrac * Math.max(0.02, along * dTan);
+        const ox = Math.cos(d.ang) * rr, oz = Math.sin(d.ang) * rr;
+        const wobPhase = dustClock * d.wobbleSpeed + d.phase;
+        dustAttr.array[i3]     = dOrigin.x + dAxis.x * along + dPerpA.x * ox + dPerpB.x * oz + Math.sin(wobPhase) * d.wobbleAmp;
+        dustAttr.array[i3 + 1] = y;
+        dustAttr.array[i3 + 2] = dOrigin.z + dAxis.z * along + dPerpA.z * ox + dPerpB.z * oz + Math.cos(wobPhase) * d.wobbleAmp;
       }
       dustAttr.needsUpdate = true;
 
       // The radio telescope's receiving effect — see the "round 5: real
-      // coupled-oscillator physics" comment on gravLens in buildOrrery.
+      // coupled-oscillator physics" comment on dishPhysics in buildOrrery.
       // Two closed-form sums, evaluated fresh every frame from the modes
       // solved once at build (nothing here re-solves anything live):
       //
@@ -3333,11 +3766,12 @@ export function createOrrery(container, { preview = false } = {}) {
       //     state to drift.
       //
       // realSeconds, not t: t is the orrery's own slow orbital clock
-      // (+0.001/frame, ~0.06/real-second) but a scheduled "every 34
-      // seconds" event needs to mean actual seconds a visitor experiences.
-      // now (performance.now(), already computed above for dt) gives that
-      // directly, frame-rate independent.
-      const realSeconds = now / 1000;
+      // (~0.06 per real second) but a scheduled "every 34 seconds" event
+      // needs to mean actual seconds a visitor experiences. performance.now()
+      // gives that directly, frame-rate independent — and raw rather than the
+      // frame clock's own `elapsed`, which is deliberately clamped per frame
+      // and so drifts behind real time across a long backgrounded stretch.
+      const realSeconds = performance.now() / 1000;
       const RING_PERIOD = 34;   // TUNABLE: real seconds between struck events
       const RING_WINDOW = 6;    // TUNABLE: wide enough for every mode's own decay to die out (shorter than earlier rounds' 9s — see NOTES.md 2.2.20, the real modal decay settles faster)
       const FREQ_SCALE = 14;    // TUNABLE: converts the graph's raw sqrt(eigenvalue) units into real angular frequency (rad/s) — chosen so the lowest modes land around ~1Hz, the highest around ~5Hz, a similar range to the single hand-picked RING_FREQ earlier rounds used
@@ -3346,8 +3780,8 @@ export function createOrrery(container, { preview = false } = {}) {
       const IMPULSE_STRENGTH = 0.55; // TUNABLE: overall strike strength — calibrated (see NOTES.md 2.2.20/2.2.21) against this specific graph's own eigenvector magnitudes, not a generic constant
       const BASELINE_AMP = 0.006;    // TUNABLE: continuous per-mode hum amplitude, well below the strike's own peak
 
-      const { values, vectors } = orrery.gravLens.modes;
-      const nJoints = orrery.gravLens.nJoints;
+      const { values, vectors } = orrery.dishPhysics.modes;
+      const nJoints = orrery.dishPhysics.nJoints;
       const eventIndex = Math.floor(realSeconds / RING_PERIOD);
       const strikeSeed = 91711; // arbitrary fixed seed, just needs to differ from other hash3 callers in this file
       const strikeJoint = Math.floor(hash3(eventIndex, 0, 0, strikeSeed) * nJoints);
@@ -3364,12 +3798,20 @@ export function createOrrery(container, { preview = false } = {}) {
       // qTotal[axis][mode]: this frame's scalar modal amplitude, summed
       // from baseline + ring, before being projected back onto the 27
       // joints via each mode's own eigenvector.
+      // Between strikes only the BASELINE_MODE_COUNT humming modes carry any
+      // amplitude at all — every other q is identically zero, and so is its
+      // contribution to the projection below. Bounding both loops by that
+      // turns the quiet stretch (28 of every 34 seconds) from a 27x27x3
+      // matrix-vector product into a 2x27x3 one, for exactly the same
+      // output. The full 27 modes still run for the 6 seconds a strike is
+      // ringing.
+      const activeModes = ringActive ? nJoints : orrery.dishPhysics.basePhase.length;
       for (let axis = 0; axis < 3; axis++) {
-        for (let n = 0; n < nJoints; n++) {
+        for (let n = 0; n < activeModes; n++) {
           let q = 0;
-          if (n < orrery.gravLens.basePhase.length) {
+          if (n < orrery.dishPhysics.basePhase.length) {
             const omega = Math.sqrt(Math.max(values[n], 0)) * FREQ_SCALE;
-            q += BASELINE_AMP * Math.sin(omega * realSeconds + orrery.gravLens.basePhase[n][axis]);
+            q += BASELINE_AMP * Math.sin(omega * realSeconds + orrery.dishPhysics.basePhase[n][axis]);
           }
           if (ringActive) {
             const omega = Math.sqrt(Math.max(values[n], 0)) * FREQ_SCALE;
@@ -3391,7 +3833,7 @@ export function createOrrery(container, { preview = false } = {}) {
       // adds total, once a frame).
       for (let j = 0; j < nJoints; j++) {
         let dx = 0, dy = 0, dz = 0;
-        for (let n = 0; n < nJoints; n++) {
+        for (let n = 0; n < activeModes; n++) {
           const vn = vectors[n][j];
           dx += vn * _qRing[0][n];
           dy += vn * _qRing[1][n];
@@ -3406,7 +3848,7 @@ export function createOrrery(container, { preview = false } = {}) {
       // own axis too, so a strut whose two joints happen to move slightly
       // farther apart or closer together doesn't visibly detach from
       // either end.
-      orrery.gravLens.ringStruts.forEach(rs => {
+      orrery.dishPhysics.ringStruts.forEach(rs => {
         _scratchFrom.copy(rs.baseFrom);
         if (rs.jointA >= 0) _scratchFrom.add(_jointDisp[rs.jointA]);
         _scratchTo.copy(rs.baseTo);
@@ -3420,55 +3862,97 @@ export function createOrrery(container, { preview = false } = {}) {
         rs.mesh.quaternion.setFromUnitVectors(_UP, _scratchDir);
         rs.mesh.scale.y = dist / rs.builtLen;
       });
-    }
 
-    if (!hovered && !selected) {
-      orrery.hitTarget.scale.setScalar(1.0 + Math.sin(t * 8) * 0.03);
+      // The control box's idle breathing pulse. This sat just OUTSIDE the
+      // reduced-motion guard until 2026-09-02 — one closing brace too late —
+      // so it kept running for exactly the visitors who asked for no
+      // autonomous motion, and it runs in preview mode too (nothing there
+      // ever sets hovered/selected), which meant every landing-page tile
+      // pulsed under reduced motion as well. Inside the guard now; the flat
+      // scale reduced-motion visitors see instead is set once at setup.
+      if (!hovered && !selected) {
+        orrery.hitTarget.scale.setScalar(1.0 + Math.sin(t * 8) * 0.03);
+      }
     }
 
     renderer.render(scene, camera);
     clippedPreview?.blit();
   }
+  // The one flat, unbreathing size a reduced-motion visitor sees, set once
+  // rather than left to whatever the loop last wrote.
+  if (reduceMotion) orrery.hitTarget.scale.setScalar(1.0);
   animate();
 
   const resize = bindGuardedResize(container, (w, h) => {
     camera.aspect = w / h;
     camera.updateProjectionMatrix();
     renderer.setSize(w, h);
+    // A window dragged between a Retina and a non-Retina display changes
+    // devicePixelRatio with no signal other than this resize.
+    managedRenderer.applyPixelRatio();
   });
 
   return {
+    // main.js pauses preview tiles while a full scene is open, and every
+    // scene on visibilitychange. Cancelling the rAF outright (rather than
+    // early-returning inside it) is what actually stops the work: ten idle
+    // tiles otherwise keep ten callbacks scheduled per frame forever.
+    // resync() on the way back is why the first frame after a pause isn't
+    // one enormous dt that teleports the walk through a wall.
+    setPaused(next) {
+      const want = !!next;
+      if (want === paused) return;
+      paused = want;
+      if (paused) {
+        cancelAnimationFrame(animId);
+        animId = null;
+      } else {
+        clock.resync();
+        animId = requestAnimationFrame(animate);
+      }
+    },
     dispose() {
       cancelAnimationFrame(animId);
+      animId = null;
       orbitDrag?.dispose();
       wheelZoom?.dispose();
       fp?.dispose();
       resize.dispose();
       panelCloser?.dispose();
       jumpList?.dispose();
+      timers.dispose();
+      reduceMotionSub.dispose();
       if (!preview) {
         touchGuard?.dispose();
         container.removeEventListener('click', onContainerClick);
       }
       if (posterAudioPromise) posterAudioPromise.then(pa => pa.dispose());
-      renderer.dispose();
       clippedPreview?.dispose();
-      starGeo.dispose();
-      starMat.dispose();
-      warehouse.group.traverse(obj => {
-        if (obj.geometry) obj.geometry.dispose();
-        if (obj.material) { obj.material.map?.dispose(); obj.material.dispose(); }
-      });
-      orrery.group.traverse(obj => {
-        if (obj.geometry) obj.geometry.dispose();
-        if (obj.material) { obj.material.map?.dispose(); obj.material.dispose(); }
-      });
+      // One walk of the whole scene graph, from the scene root rather than
+      // from two hand-kept groups. The old pair of traversals covered
+      // orrery.group and warehouse.group only — so the moonbeam sprites, the
+      // fluorescent fixtures and the star field, all added straight to
+      // `scene`, were never freed — and each one disposed `material.map`
+      // alone, which meant the planets' roughnessMap, metalnessMap and
+      // emissiveMap leaked as well: 27 canvas textures per full-mode visit.
+      // disposeSceneGraph covers every texture slot and can't miss an object,
+      // because nothing has to remember to add it to a list.
+      disposeSceneGraph(scene);
+      // renderer.dispose() + forceContextLoss() + canvas removal. THREE's own
+      // dispose() tears down caches but does NOT release the GL context, and
+      // this site holds eight preview contexts permanently against a browser
+      // cap around sixteen — orphaning one per scene switch is what made
+      // landing tiles go black mid-session.
+      managedRenderer.dispose();
       if (panel) panel.remove();
       if (hint) hint.remove();
       if (vignette) vignette.remove();
       if (grain) grain.remove();
       if (title) title.remove();
-      renderer.domElement.remove();
+      // Puts back whatever position/overflow/cursor/tabindex the shared
+      // #experience-container had before this scene claimed it — without
+      // this, `cursor: none` followed the visitor into the next scene.
+      claim?.restore();
     }
   };
 }

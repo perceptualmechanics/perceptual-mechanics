@@ -28,10 +28,17 @@
   beyond this note. Round 10.1 removed the rationale caption paragraph
   that briefly sat under the excerpts; the rationale still picks which
   quoted span each excerpt centers on, it just isn't printed anymore.
+
+  v4.0: `.pm-scene-chrome` on the sound toggle. harmonics.js appends that
+  button to document.body (the same body-level chrome convention the title
+  and hint use), but main.js's focus trap only ever queried inside
+  #experience-container — so the toggle was rendered, styled, focusable in
+  principle and completely unreachable by Tab while the scene was open. The
+  trap now also collects `.pm-scene-chrome`; this class is how it finds it.
 -->
 <div class="harmonics-title-row"><p class="harmonics-title" aria-hidden="true">Harmonics</p></div>
 <p class="harmonics-hint" aria-hidden="true">drag to orbit &nbsp;&middot;&nbsp; scroll to zoom &nbsp;&middot;&nbsp; touch a node</p>
-<button type="button" class="harmonics-sound-toggle" aria-pressed="false">
+<button type="button" class="harmonics-sound-toggle pm-scene-chrome" aria-pressed="false">
   <span class="harmonics-sound-toggle-dot" aria-hidden="true"></span>
   <span class="harmonics-sound-toggle-label">Sound off</span>
 </button>

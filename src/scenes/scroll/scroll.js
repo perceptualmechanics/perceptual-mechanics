@@ -82,21 +82,10 @@
 // in the box.
 
 import { getOutboundLinks, getInboundLinks } from '../../links.js';
-import { escapeHtml, parseHTML, wireCrossLinks } from '../../utils/sceneKit.js';
+import { escapeHtml, parseHTML, wireCrossLinks, prefersReducedMotion, claimContainer, trackTimers } from '../../utils/sceneKit.js';
+import { TONES, RUBRICS, INTENSITIES, OGHAM_LINES, OPENING_GROUP } from './scroll.marks.js';
 import scrollHtml from './scroll.html?raw';
 import './scroll.css';
-
-// Hide darkness per patch — oldest hide darkest and most soot-stained, newest
-// still pale. Presentation, so it stays here rather than in scroll.text.js,
-// keyed off the piece's own key. The ordering and the text itself come from
-// scroll.text.js, which the prerender step for /text/scroll/ also reads —
-// one list, so the scroll and the published page can't fall out of order or
-// out of sync with each other.
-const TONES = {
-  iron: 0, flying: 1, death: 1, pygmalion: 1,
-  selfmutilation: 2, cartography: 2, firevigil: 2, firecalamity: 2, identity: 2,
-  holography: 3, projection: 4, crocodile: 5,
-};
 
 // PATCHES (built from scrollPieces) moved inside createScroll's dynamic
 // import below — scrollPieces is full-mode-only content now (v3.10.3), not
@@ -106,37 +95,15 @@ const MOTIF_CYCLE = ['spiral', 'chevron', 'cupring', 'dots'];
 
 // Phrases already present in the raw text that get wired as live
 // cross-links used to live in a LINKS array here, keyed by `patch` (the
-// string above) + paragraph index. Migrated into the shared src/links.js
-// store — { scene: 'scroll', id: pieceId, field: 'body', index: para } —
-// alongside every other scene's, using the same numeric id scrollPieces
-// entries carry now instead of the patch key. RUBRICS, INTENSITIES, and
-// SCRIPT_INSERTS below are a different concern (styling/typesetting, not
-// links) and stay exactly as they were — nothing about this migration
-// touches them.
-
-// Rubric ink — color only, no link. Sparingly applied, echoing across pieces.
-const RUBRICS = [
-  { patch: 'iron',           para: 0,  phrase: 'absolute lie' },
-  { patch: 'flying',         para: 8,  phrase: "I'm flying. Finally." },
-  { patch: 'death',          para: 2,  phrase: 'Thoughts of death abound' },
-  { patch: 'selfmutilation', para: 16, phrase: 'Fuck them.' },
-  { patch: 'identity',       para: 18, phrase: 'Something detached.' },
-  { patch: 'projection',     para: 7,  phrase: 'Los Angeles is an otherworld' },
-];
-
-// Intense passages — letter-spacing distortion only, no color, no link.
-// 'wide' pulls the tracking apart for the declarative/ominous lines;
-// 'tight' crushes it for the breathless/visceral ones. Every phrase below
-// is verbatim, already present in the source text at that paragraph.
-const INTENSITIES = [
-  { patch: 'iron',           para: 10, phrase: 'the men with the cold smiles and the iron eyes smile with satisfaction, and they turn off the stars.', mode: 'wide' },
-  { patch: 'flying',         para: 6,  phrase: 'Tied down shackled chained to the ground wrapped in iron and thrown in a river', mode: 'tight' },
-  { patch: 'death',          para: 11, phrase: 'Sometimes, you must be ready to lose everything before you grasp what you need.', mode: 'wide' },
-  { patch: 'selfmutilation', para: 9,  phrase: 'my entire body torn apart by horses', mode: 'tight' },
-  { patch: 'holography',     para: 29, phrase: 'he has no idea where on Earth he is', mode: 'wide' },
-  { patch: 'projection',     para: 18, phrase: 'the earth fissuring and swallowing me whole', mode: 'tight' },
-  { patch: 'projection',     para: 38, phrase: 'swirling upwards and out, like smoke over hills refracting the endless yellow light', mode: 'wide' },
-];
+// piece's own key string) + paragraph index. Migrated into the shared
+// src/links.js store — { scene: 'scroll', id: pieceId, field: 'body',
+// index: para } — alongside every other scene's, using the same numeric
+// id scrollPieces entries carry now instead of the patch key. RUBRICS,
+// INTENSITIES, and SCRIPT_INSERTS are a different concern
+// (styling/typesetting, not links) and were untouched by that migration.
+// They now live in ./scroll.marks.js — see that file's header for why
+// they moved out of this one, and scripts/verify-scroll-marks.mjs for
+// what now checks them.
 
 // A verbatim scene, pulled out of its home paragraph and set in real
 // screenplay format — rendered after the given paragraph index (post-split,
@@ -146,37 +113,6 @@ const INTENSITIES = [
 // the published /text/scroll/ page insert the scene at the same place.
 // Also moved inside createScroll's dynamic import (see buildPatches()) —
 // same reason as PATCHES above.
-
-// How many opening sentences of each patch's first paragraph get set as an
-// Ogham line in the margin — computed from the real paragraph text itself
-// (not retyped), so it can never drift out of sync with it. Most pieces open
-// on one complete, substantial sentence; a couple open short ("A symphony.")
-// and read better with their second sentence carried along too.
-const OGHAM_LINES = {
-  iron: 1, flying: 2, death: 1, pygmalion: 1, selfmutilation: 2, cartography: 1,
-  firevigil: 1, firecalamity: 1, identity: 1, holography: 1, projection: 2,
-  crocodile: 1,
-};
-
-// The Ogham margin line and the opening paragraph's drop cap both float left
-// (scroll.css), and by default a float keeps pulling every SUBSEQUENT sibling
-// narrower until something finally clears past its bottom edge. That's the
-// intended look for ordinary prose — a paragraph or two visibly wrapping
-// around the marginal note is the point, and it self-clears naturally once a
-// paragraph's own lines run long enough — true for every piece except the
-// ones listed here, where a short opening (relative to its own Ogham column)
-// or a run of short paragraphs (Fire Vigil's back-and-forth dialogue) means
-// nothing clears the float for a while. Each value is how many leading
-// paragraphs get boxed together with the Ogham line into one `.scroll-
-// opening` clearfix (scroll.css) instead of left to wrap naturally — picked
-// by eye once per piece, the same way TONES and OGHAM_LINES above are:
-// there are twelve of these, fixed, not a thousand, so a live look beats a
-// general-purpose measurement pass. A piece not listed here needs no
-// grouping at all; paragraph 0 already clears its own Ogham line on its own.
-const OPENING_GROUP = {
-  flying: 3, death: 2, pygmalion: 3, selfmutilation: 2, cartography: 6,
-  firevigil: 3, identity: 2, holography: 2, projection: 2, crocodile: 4,
-};
 
 // Builds PATCHES and SCRIPT_INSERTS from a resolved scrollPieces module —
 // pulled out into its own function so createScroll's dynamic import (full
@@ -255,6 +191,24 @@ function renderScriptBlock(elements) {
     `</div>`;
 }
 
+// Both marks below run String.replace over HTML that wireCrossLinks has
+// already been through — and as of v4.0 that means over a string
+// wireCrossLinks re-serialized out of a <template>, not the one it was
+// handed. The round trip is stable for the text this scene produces
+// (escapeHtml escapes &, <, > and U+00A0; the HTML serializer escapes
+// exactly those again coming back out), so an escaped phrase still matches
+// — but "still matches" is now a property of two separate pieces of code
+// agreeing, which is precisely why scripts/verify-scroll-marks.mjs exists:
+// it asserts every RUBRICS/INTENSITIES phrase occurs exactly once in the
+// paragraph it names, and that no cross-link phrase overlaps one (an anchor
+// injected into the middle of a rubric phrase would split it across element
+// boundaries and this replace would silently find nothing).
+//
+// The callback form of replace, not a replacement string: a replacement
+// string interprets $&, $`, $' and $1 in the text being substituted in, so
+// any phrase containing a dollar sign would have quietly mangled itself.
+// None do today. The callback form has no such syntax at all, so the hazard
+// is gone rather than merely unexercised.
 function renderParagraph(pieceId, patchKey, index, text) {
   let html = escapeHtml(text);
   const links = getOutboundLinks('scroll', pieceId, 'body', index)
@@ -262,14 +216,14 @@ function renderParagraph(pieceId, patchKey, index, text) {
   html = wireCrossLinks(html, links, 'scroll-link');
   const rubric = RUBRICS.find(r => r.patch === patchKey && r.para === index);
   if (rubric) {
-    const esc = escapeHtml(rubric.phrase);
-    html = html.replace(esc, `<span class="scroll-rubric">${esc}</span>`);
+    html = html.replace(escapeHtml(rubric.phrase), m => `<span class="scroll-rubric">${m}</span>`);
   }
   const intense = INTENSITIES.find(x => x.patch === patchKey && x.para === index);
   if (intense) {
-    const esc = escapeHtml(intense.phrase);
-    const inner = intense.mode === 'tight' ? franticWords(esc) : esc;
-    html = html.replace(esc, `<span class="scroll-intense scroll-intense--${intense.mode}">${inner}</span>`);
+    html = html.replace(escapeHtml(intense.phrase), m => {
+      const inner = intense.mode === 'tight' ? franticWords(m) : m;
+      return `<span class="scroll-intense scroll-intense--${intense.mode}">${inner}</span>`;
+    });
   }
   return html;
 }
@@ -354,9 +308,16 @@ export function createScroll(container, { preview = false, initialPieceId = null
   const frag = parseHTML(scrollHtml);
 
   if (preview) {
-    const root = frag.querySelector('.scroll-preview');
-    container.appendChild(root);
-    return { dispose() { root.remove(); } };
+    const previewRoot = frag.querySelector('.scroll-preview');
+    container.appendChild(previewRoot);
+    return {
+      // See the full-mode setPaused below — same class, same reasoning. A
+      // preview tile behind an open scene is display:none'd, which stops
+      // nothing: the medallion's ember keyframes keep running and keep
+      // re-resolving its SVG filter chain.
+      setPaused(paused) { previewRoot.classList.toggle('scroll-paused', paused); },
+      dispose() { previewRoot.remove(); },
+    };
   }
 
   // This scene briefly gained a bottom-center title in the 2026-08-25
@@ -375,8 +336,19 @@ export function createScroll(container, { preview = false, initialPieceId = null
   // openPieceById() guards on them being non-null.
   let disposed = false;
   let root = null, scroll = null;
-  let onLinkClick = null, onLinkKeydown = null;
+  let onLinkClick = null;
   let patchesRef = null, jumpToPatchRef = null;
+  let glowObserver = null;
+  // Records whatever position/overflow the shared #experience-container had
+  // before this scene wrote its own, and hands back the restore() half —
+  // see claimContainer's own comment in sceneKit.js for the bug that came
+  // of seven scenes writing and one putting anything back.
+  const claim = claimContainer(container);
+  // The flash-highlight's own 1.4s wind-down and the post-mount focus
+  // hand-off, tracked so dispose() drops both — a pending scroll.focus()
+  // firing after teardown pulls focus out of whatever scene replaced this
+  // one, the same way sphere's side-flip timer used to.
+  const timers = trackTimers();
 
   import('./scroll.text.js').then(({ scrollPieces, toOgham }) => {
     if (disposed) return;
@@ -494,9 +466,16 @@ export function createScroll(container, { preview = false, initialPieceId = null
     root.appendChild(bottomFade);
 
     container.appendChild(root);
-    container.style.position = 'relative';
-    container.style.overflow = 'hidden';
 
+    // preventDefault, because this scene's own jump does something a plain
+    // fragment navigation can't: it scrolls the patch into view inside
+    // .scroll-viewport (its own scroll container, not the document) and
+    // flashes it. There is no keydown twin of this any more — wireCrossLinks
+    // emits a real <a href="#scene/id"> as of v4.0, and that URL shape is
+    // exactly what main.js's hash router parses, so Enter is handled by the
+    // anchor itself and comes back round through openPieceById() below. The
+    // hand-rolled Enter/Space handler that used to sit here existed only
+    // because an href-less <a> isn't activatable.
     onLinkClick = e => {
       const link = e.target.closest('.scroll-link');
       if (!link) return;
@@ -508,13 +487,35 @@ export function createScroll(container, { preview = false, initialPieceId = null
       if (targetPatch) jumpToPatch(targetPatch);
     };
     scroll.addEventListener('click', onLinkClick);
-    onLinkKeydown = e => {
-      if (e.key !== 'Enter' && e.key !== ' ') return;
-      if (!e.target.closest('.scroll-link')) return;
-      e.preventDefault();
-      onLinkClick(e);
-    };
-    scroll.addEventListener('keydown', onLinkKeydown);
+
+    // Off-screen patches stop running their candlelight glow. .scroll-patch
+    // carries content-visibility: auto (scroll.css), which already skips
+    // layout and paint for anything off screen — but the ::after glow is a
+    // mix-blend-mode: screen layer on an infinite 4.2s keyframe, and its
+    // animation keeps being ticked regardless. Toggling animation-play-state
+    // from a real IntersectionObserver stops the twelve of them outright,
+    // and covers browsers without content-visibility (Safari before 17) too.
+    // rootMargin gives a patch a screen's warning so it is already at the
+    // right point in its cycle by the time it is actually visible.
+    //
+    // Patches start WITHOUT the class and the observer adds it, not the
+    // other way round. Pre-marking them all and letting the observer clear
+    // the visible one saves a frame of animation nobody sees — but it also
+    // means that anywhere the observer never reports (no IntersectionObserver
+    // at all; a callback the browser hasn't delivered yet; a page that is
+    // hidden, where the rendering steps this callback rides on don't run),
+    // the glow is off rather than on. This way the failure mode is the
+    // behaviour that shipped before this optimisation existed, which is the
+    // right direction for something whose whole job is to change nothing
+    // visible.
+    if ('IntersectionObserver' in window) {
+      glowObserver = new IntersectionObserver(entries => {
+        for (const entry of entries) {
+          entry.target.classList.toggle('scroll-patch--offscreen', !entry.isIntersecting);
+        }
+      }, { root: scroll, rootMargin: '100% 0px' });
+      scroll.querySelectorAll('.scroll-patch').forEach(el => glowObserver.observe(el));
+    }
 
     // Scrolls to and flashes a patch, reporting it as the "open" piece —
     // shared by onLinkClick above, the initial-load deep link below, and
@@ -532,9 +533,16 @@ export function createScroll(container, { preview = false, initialPieceId = null
       const targetEl = scroll.querySelector(`#${targetPatch.id}`);
       if (!targetEl) return;
       onPieceChange?.(targetPatch.pieceId);
-      targetEl.scrollIntoView({ behavior: smooth ? 'smooth' : 'auto', block: 'start' });
+      // A cross-link jump can run the length of up to twelve patches — tens
+      // of thousands of pixels of tall, filtered, blended content sliding
+      // past in one animated sweep, which is a textbook vestibular trigger
+      // and exactly the kind of motion this file's own reduced-motion block
+      // (scroll.css) is otherwise thorough about. Read live rather than
+      // sampled at mount: the visitor may have turned the setting on since.
+      const behavior = smooth && !prefersReducedMotion() ? 'smooth' : 'auto';
+      targetEl.scrollIntoView({ behavior, block: 'start' });
       targetEl.classList.add('scroll-flash');
-      setTimeout(() => targetEl.classList.remove('scroll-flash'), 1400);
+      timers.after(1400, () => targetEl.classList.remove('scroll-flash'));
     }
     jumpToPatchRef = jumpToPatch;
 
@@ -547,7 +555,7 @@ export function createScroll(container, { preview = false, initialPieceId = null
     // transition on initial load.
     if (initialPieceId !== null) openPieceByIdImpl(initialPieceId);
 
-    setTimeout(() => scroll.focus(), 100);
+    timers.after(100, () => scroll.focus());
   });
 
   return {
@@ -561,13 +569,32 @@ export function createScroll(container, { preview = false, initialPieceId = null
       const targetPatch = patchesRef.find(p => p.pieceId === id);
       if (targetPatch) jumpToPatchRef(targetPatch, { smooth: false });
     },
+    // main.js pauses a scene it isn't showing — every preview tile while a
+    // full scene is open, and everything on `visibilitychange`. There is no
+    // requestAnimationFrame loop to cancel here: this scene's motion is all
+    // CSS (the candlelight on .scroll-root::before, twelve patch glows, the
+    // script page's flutter, the intense passages' text glow), and
+    // display:none does not stop a CSS animation any more than it stops a
+    // rAF loop. One class, and .scroll-paused (scroll.css) holds every one
+    // of them at animation-play-state: paused. Idempotent, because main.js
+    // calls it on every sync rather than tracking what it has already told.
+    setPaused(paused) { root?.classList.toggle('scroll-paused', paused); },
     dispose() {
       disposed = true;
-      if (scroll) {
-        if (onLinkClick) scroll.removeEventListener('click', onLinkClick);
-        if (onLinkKeydown) scroll.removeEventListener('keydown', onLinkKeydown);
-      }
+      timers.dispose();
+      glowObserver?.disconnect();
+      if (scroll && onLinkClick) scroll.removeEventListener('click', onLinkClick);
       if (root) root.remove();
+      claim.restore();
+      // #scroll-svg-defs is deliberately NOT removed. buildSvgDefs() appends
+      // it to document.body once, guarded by an id check, and every repeat
+      // visit to this scene reuses that same node — the CSS in scroll.css
+      // references its filters by url(#scroll-grain) / url(#scroll-rough),
+      // and a preview tile on the landing page (which this scene's own
+      // dispose has no say over) is still using them the moment the full
+      // scene closes. Removing it here would break the preview's medallion
+      // until the next visit re-injected it. Said here as well as at the
+      // injection site so this reads as a decision rather than an omission.
     }
   };
 }

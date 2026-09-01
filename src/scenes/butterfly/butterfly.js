@@ -1,5 +1,8 @@
 import * as THREE from 'three';
-import { bindOrbitDrag, bindWheelZoom, bindGuardedResize, prefersReducedMotion, parseHTML } from '../../utils/sceneKit.js';
+import {
+  bindOrbitDrag, bindWheelZoom, bindGuardedResize, prefersReducedMotion, parseHTML,
+  claimContainer, manageRenderer, trackTimers,
+} from '../../utils/sceneKit.js';
 import butterflyHtml from './butterfly.html?raw';
 import './butterfly.css';
 
@@ -139,10 +142,21 @@ export function createButterfly(container, { preview = false } = {}) {
 
   const camera = new THREE.PerspectiveCamera(45, w/h, 0.1, 500);
   camera.position.set(preview ? 5 : 40, preview ? 15 : 35, preview ? 65 : 130);
-  camera.lookAt(preview ? 0 : 0, preview ? 5 : 0, 0);
+  // The x argument was `preview ? 0 : 0` until v4.0 — a copy-paste artifact
+  // from the camera.position.set line above, where all three arguments really
+  // do differ. The y ternary below IS live and stays: preview never calls
+  // updateCamera(), so this one lookAt is the whole of a preview tile's
+  // framing, and it aims slightly above the origin on purpose.
+  camera.lookAt(0, preview ? 5 : 0, 0);
 
+  // Pixel ratio, real GL-context release and the webglcontextlost handler all
+  // via manageRenderer (v4.0). Uncapped setPixelRatio meant a DPR-3 phone
+  // rendered nine times the fragments this scene's look was tuned against —
+  // and this is a heavy overdraw case (every trail, glow and symbol is
+  // transparent and additive). See manageRenderer's own comment in
+  // sceneKit.js for why renderer.dispose() alone doesn't free the context.
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-  renderer.setPixelRatio(window.devicePixelRatio);
+  const managedRenderer = manageRenderer(renderer);
   renderer.setSize(w, h);
   renderer.setClearColor(0x000000, 0);
   renderer.domElement.setAttribute('aria-hidden', 'true');
@@ -150,6 +164,23 @@ export function createButterfly(container, { preview = false } = {}) {
   renderer.domElement.style.height = '100%';
   renderer.domElement.style.display = 'block';
   container.appendChild(renderer.domElement);
+
+  // ─── Claiming the shared container ──────────────────────────────────────
+  // #experience-container is one node main.js reuses between scenes — it
+  // clears innerHTML, never replaces the element — so every inline style a
+  // scene writes here outlives it. Butterfly is one of the four scenes that
+  // never set `cursor` and was therefore a victim of Orrery's `cursor: none`
+  // rather than a cause of anything; going through claimContainer anyway
+  // means position/overflow get put back on the way out, and means there is
+  // one way this is done site-wide rather than seven. Full mode only —
+  // a preview tile's box is the landing page's layout, not this scene's to
+  // claim.
+  const containerClaim = !preview ? claimContainer(container) : null;
+
+  // Every deferred callback this scene schedules, in one place so dispose()
+  // can drop what's still pending — see the drag-end auto-jitter timer below,
+  // which was the untracked one.
+  const timers = trackTimers();
 
   // ─── Label + hint (full only) ────────────────────────────────────────────
   // Owned by this scene's own create()/dispose() lifecycle, same as every
@@ -169,10 +200,30 @@ export function createButterfly(container, { preview = false } = {}) {
   const center = findCenter(SCALE);
 
   // ─── 3D spacetime grid ──────────────────────────────────────────────────────
-  // Spider-silk white grid whose vertices get pulled toward the butterfly
-  let gridLines = [];
-  let gridVertexRestPositions = []; // [{ x,y,z }] — home positions
-  let gridVertexBuffers = [];       // Float32Array refs for live update
+  // Spider-silk white grid whose vertices get pulled toward the butterfly.
+  //
+  // v4.0: three indexed THREE.LineSegments — one per material tier — where
+  // there used to be 867 separate THREE.Line objects. The lattice is 17
+  // Z-slices x 34 in-plane lines (578) plus a 17x17 grid of depth lines
+  // (289); at SEG subdivisions each that is 4,335 vertices, which is not a
+  // lot of geometry, but as 867 meshes it was 867 draw calls and 867
+  // individual buffer uploads every single frame, since the distortion loop
+  // below rewrites every vertex position each frame. Two orders of magnitude
+  // more per-object overhead than the geometry itself warrants.
+  //
+  // Batching per tier is free here: the three tiers ARE the three materials,
+  // and nothing else varied per line. Indexed rather than expanded into
+  // segment pairs on purpose — expanding would have grown 4,335 vertices to
+  // 6,936 and made the per-frame distortion loop (and the bytes it uploads)
+  // proportionally bigger. With an index buffer, the position data stays
+  // exactly what it was and only the indices — written once at build, never
+  // touched again — know that a polyline is a run of segments.
+  //
+  // gridRest is likewise ONE Float32Array of home positions covering every
+  // tier, replacing 4,335 separate { x, y, z } objects; each tier records
+  // where its own run starts.
+  let gridTiers = [];   // [{ geo, posArr, restBase, vertexCount }]
+  let gridRest = null;  // one Float32Array, xyz per vertex, all tiers in order
   const gridMats = []; // so dispose() can free these — see dispose() below
 
   if (!preview) {
@@ -190,39 +241,75 @@ export function createButterfly(container, { preview = false } = {}) {
     });
     gridMats.push(majorMat, minorMat, depthMat);
 
-    function makeGridLine(x1,y1,z1, x2,y2,z2, mat, segments=1) {
-      const pts = [];
-      const rest = [];
-      for (let s = 0; s <= segments; s++) {
-        const t = s / segments;
-        const px = x1 + (x2-x1)*t;
-        const py = y1 + (y2-y1)*t;
-        const pz = z1 + (z2-z1)*t;
-        pts.push(px, py, pz);
-        rest.push({ x: px, y: py, z: pz });
-      }
-      const posArr = new Float32Array(pts);
-      const geo = new THREE.BufferGeometry();
-      geo.setAttribute('position', new THREE.BufferAttribute(posArr, 3));
-      const line = new THREE.Line(geo, mat);
-      scene.add(line);
-      gridLines.push({ geo, posArr, vertexCount: segments + 1 });
-      gridVertexBuffers.push(posArr);
-      gridVertexRestPositions.push(...rest);
-      return { startIdx: gridVertexRestPositions.length - rest.length, count: rest.length };
-    }
+    const SEG = 4; // subdivisions per grid line — this is what lets a straight line curve at all
+
+    // Pass one: collect every line's endpoints, grouped by the tier
+    // (material) it belongs to. Endpoints only, no buffers yet — the real
+    // vertex total has to be known before a single Float32Array is sized,
+    // which is the whole reason this is two passes instead of the old
+    // allocate-as-you-go makeGridLine().
+    const tiers = [
+      { mat: majorMat, lines: [] },
+      { mat: minorMat, lines: [] },
+      { mat: depthMat, lines: [] },
+    ];
+    const [majorTier, minorTier, depthTier] = tiers;
 
     // XY planes at each Z slice — segmented so they can curve
-    const SEG = 4; // subdivisions per grid line for curvature
     for (let z = -dep; z <= dep; z += step) {
-      const mat = (Math.abs(z) % (step*2) === 0) ? majorMat : minorMat;
-      for (let x = -ext; x <= ext; x += step) makeGridLine(x,-ext,z,x,ext,z,mat,SEG);
-      for (let y = -ext; y <= ext; y += step) makeGridLine(-ext,y,z,ext,y,z,mat,SEG);
+      const tier = (Math.abs(z) % (step*2) === 0) ? majorTier : minorTier;
+      for (let x = -ext; x <= ext; x += step) tier.lines.push([x,-ext,z, x,ext,z]);
+      for (let y = -ext; y <= ext; y += step) tier.lines.push([-ext,y,z, ext,y,z]);
     }
     // Z-depth lines
     for (let x = -ext; x <= ext; x += step)
       for (let y = -ext; y <= ext; y += step)
-        makeGridLine(x,y,-dep,x,y,dep,depthMat,SEG);
+        depthTier.lines.push([x,y,-dep, x,y,dep]);
+
+    // Pass two: one position buffer, one index buffer and one LineSegments
+    // per tier, plus that tier's slice of the shared rest-position array.
+    const totalVerts = tiers.reduce((n, t) => n + t.lines.length * (SEG + 1), 0);
+    gridRest = new Float32Array(totalVerts * 3);
+
+    let restBase = 0;
+    for (const tier of tiers) {
+      const vertexCount = tier.lines.length * (SEG + 1);
+      const posArr = new Float32Array(vertexCount * 3);
+      // Two indices per segment. setIndex() picks Uint16 or Uint32 off the
+      // real vertex count itself rather than this code guessing which is
+      // wide enough.
+      const index = new Array(tier.lines.length * SEG * 2);
+      let v = 0, ii = 0;
+      for (const [x1,y1,z1, x2,y2,z2] of tier.lines) {
+        const first = v;
+        for (let sIdx = 0; sIdx <= SEG; sIdx++) {
+          const t = sIdx / SEG;
+          const px = x1 + (x2-x1)*t;
+          const py = y1 + (y2-y1)*t;
+          const pz = z1 + (z2-z1)*t;
+          posArr[v*3] = px; posArr[v*3+1] = py; posArr[v*3+2] = pz;
+          const r = (restBase + v) * 3;
+          gridRest[r] = px; gridRest[r+1] = py; gridRest[r+2] = pz;
+          v++;
+        }
+        for (let sIdx = 0; sIdx < SEG; sIdx++) {
+          index[ii++] = first + sIdx;
+          index[ii++] = first + sIdx + 1;
+        }
+      }
+      const geo = new THREE.BufferGeometry();
+      geo.setAttribute('position', new THREE.BufferAttribute(posArr, 3));
+      geo.setIndex(index);
+      const segments = new THREE.LineSegments(geo, tier.mat);
+      // The distortion loop moves vertices up to MAX_DISP off their rest
+      // positions, which the build-time bounding sphere doesn't know about;
+      // the lattice also surrounds the camera at all times, so per-object
+      // culling had nothing to win here even before this was three objects.
+      segments.frustumCulled = false;
+      scene.add(segments);
+      gridTiers.push({ geo, posArr, restBase, vertexCount });
+      restBase += vertexCount;
+    }
   }
 
   // ─── Butterfly trails ────────────────────────────────────────────────────────
@@ -265,7 +352,14 @@ export function createButterfly(container, { preview = false } = {}) {
   }) : [];
 
   // ─── Math sprites ─────────────────────────────────────────────────────────
+  // Per-instance drift/pulse state, one plain object per symbol — the
+  // rendered state itself lives in the instanced attribute arrays below, not
+  // in a THREE object per sprite.
   const spriteData = [];
+  const SPRITE_COUNT = 220;
+  let spriteMesh = null, spriteMat = null, spriteGeo = null, symbolAtlasTex = null;
+  let spriteOffsets = null;  // Float32Array, xyz per instance — rewritten every frame
+  let spriteOpacity = null;  // Float32Array, one per instance — rewritten every frame
   // Set by dispose() below — guards the async font-load callback further
   // down from touching a texture that's already been disposed, if the
   // scene is torn down before Arapey finishes loading.
@@ -276,61 +370,163 @@ export function createButterfly(container, { preview = false } = {}) {
       'dx/dt','dy/dt','dz/dt','σ(y−x)','8/3','28','10',
       'f(x)','∫','∑','lim','→','ℝ³','ẋ','ẏ','ż','βz','ρ−z',
     ];
-    // Site-wide serif swap (2026-08-25/26): these symbol sprites now draw
-    // in Arapey, a real webfont, rather than the system "Times New Roman"
-    // they used before — but this whole array is built once, synchronously,
-    // right here at scene mount, and each texture is a static canvas bitmap
-    // that (unlike DOM text) never repaints itself once painted. If Arapey
-    // hasn't finished loading yet at this exact moment, the first paint
-    // below falls back to plain serif and would stay that way for the
-    // scene's entire lifetime with no further correction. So each entry
-    // keeps a `redraw()` closure over its own canvas/ctx, drawn once
-    // immediately (so the scene never waits on network before rendering,
-    // same as every other scene's synchronous mount) and re-run once
-    // document.fonts.load() actually resolves, flagging the existing
-    // CanvasTexture object (shared by reference across every sprite that
-    // uses it — see textures[] below) with needsUpdate rather than
-    // creating and reassigning new Texture objects to 220 sprites.
-    function makeSymbolTexture(text) {
-      const c = document.createElement('canvas');
-      c.width=128; c.height=64;
-      const cx=c.getContext('2d');
-      const tex = new THREE.CanvasTexture(c);
-      const paint = () => {
-        cx.clearRect(0,0,c.width,c.height);
-        cx.font='italic 22px "Arapey", serif';
-        cx.fillStyle='rgba(200,220,255,0.7)';
-        cx.textAlign='center'; cx.textBaseline='middle';
-        cx.fillText(text,64,32);
-      };
-      paint();
-      return { tex, redraw() { paint(); tex.needsUpdate = true; } };
-    }
-    const symbolEntries = symbols.map(makeSymbolTexture);
-    const textures = symbolEntries.map(e => e.tex);
+    // v4.0: one texture atlas and one instanced billboard mesh, where this
+    // used to be 32 separate CanvasTextures and 220 THREE.Sprite objects.
+    // A Sprite cannot batch, and these in particular could never have shared
+    // a material anyway — each one animates its own opacity — so 220 sprites
+    // meant 220 draw calls per frame on top of the grid's own, for 220 quads.
+    // The 32 symbol cells now live side by side on one canvas; per-instance
+    // position, size, atlas cell and opacity become instanced attributes; and
+    // the billboarding below is the same view-space offset THREE.Sprite's own
+    // shader does, written out here so the whole set is a single mesh.
+    //
+    // Site-wide serif swap (2026-08-25/26): these symbols draw in Arapey, a
+    // real webfont, rather than the system "Times New Roman" they used
+    // before — but the atlas is painted once, synchronously, right here at
+    // scene mount, and a canvas bitmap (unlike DOM text) never repaints
+    // itself once painted. If Arapey hasn't finished loading at this exact
+    // moment, that first paint falls back to plain serif and would stay that
+    // way for the scene's entire lifetime with no further correction. So
+    // paintAtlas() is kept as a closure, run once immediately (the scene
+    // never waits on the network before rendering, same as every other
+    // scene's synchronous mount) and re-run once document.fonts.load()
+    // actually resolves — flagging the one existing CanvasTexture with
+    // needsUpdate. One repaint now, where it used to be 32.
+    const CELL_W = 128, CELL_H = 64;
+    const ATLAS_COLS = 8;
+    const atlasRows = Math.ceil(symbols.length / ATLAS_COLS);
+    const atlasCanvas = document.createElement('canvas');
+    atlasCanvas.width = ATLAS_COLS * CELL_W;
+    atlasCanvas.height = atlasRows * CELL_H;
+    const acx = atlasCanvas.getContext('2d');
+    const paintAtlas = () => {
+      acx.clearRect(0, 0, atlasCanvas.width, atlasCanvas.height);
+      acx.font = 'italic 22px "Arapey", serif';
+      acx.fillStyle = 'rgba(200,220,255,0.7)';
+      acx.textAlign = 'center'; acx.textBaseline = 'middle';
+      symbols.forEach((text, i) => {
+        const col = i % ATLAS_COLS, row = (i / ATLAS_COLS) | 0;
+        acx.fillText(text, col * CELL_W + CELL_W / 2, row * CELL_H + CELL_H / 2);
+      });
+    };
+    paintAtlas();
+    symbolAtlasTex = new THREE.CanvasTexture(atlasCanvas);
     // .catch: font-loading failure just means the fallback serif sticks
     // around, not a scene-breaking error.
     document.fonts.load('italic 22px "Arapey"').then(() => {
-      if (!symbolsDisposed) symbolEntries.forEach(e => e.redraw());
+      if (symbolsDisposed) return;
+      paintAtlas();
+      symbolAtlasTex.needsUpdate = true;
     }).catch(() => {});
-    for (let i=0;i<220;i++) {
-      const mat = new THREE.SpriteMaterial({
-        map: textures[Math.floor(Math.random()*textures.length)],
-        transparent:true, opacity:0.2+Math.random()*0.3, depthWrite:false,
-      });
-      const sprite = new THREE.Sprite(mat);
-      sprite.position.set((Math.random()-.5)*140,(Math.random()-.5)*140,(Math.random()-.5)*140);
-      const s=2.5+Math.random()*4.5;
-      sprite.scale.set(s*2,s,1);
-      scene.add(sprite);
+
+    spriteOffsets = new Float32Array(SPRITE_COUNT * 3);
+    spriteOpacity = new Float32Array(SPRITE_COUNT);
+    const spriteScale = new Float32Array(SPRITE_COUNT * 2);   // world width/height, never changes
+    const spriteCellUv = new Float32Array(SPRITE_COUNT * 2);  // atlas cell origin, never changes
+    for (let i = 0; i < SPRITE_COUNT; i++) {
+      spriteOffsets[i*3]   = (Math.random()-.5)*140;
+      spriteOffsets[i*3+1] = (Math.random()-.5)*140;
+      spriteOffsets[i*3+2] = (Math.random()-.5)*140;
+      const sz = 2.5 + Math.random()*4.5;
+      spriteScale[i*2] = sz*2; spriteScale[i*2+1] = sz;  // same 2:1 box THREE.Sprite got from scale.set(s*2, s, 1)
+      const cell = Math.floor(Math.random()*symbols.length);
+      const col = cell % ATLAS_COLS, row = (cell / ATLAS_COLS) | 0;
+      spriteCellUv[i*2] = col / ATLAS_COLS;
+      // Canvas rows run top-down and UV space runs bottom-up, and the
+      // texture's default flipY is what reconciles them — so cell row 0 (the
+      // canvas's top row) is the TOP of UV space, not the bottom.
+      spriteCellUv[i*2+1] = 1 - (row + 1) / atlasRows;
+      const baseOpacity = .06 + Math.random()*.14;
+      spriteOpacity[i] = baseOpacity;
       spriteData.push({
-        sprite,
-        vel:{x:(Math.random()-.5)*.008,y:(Math.random()-.5)*.006,z:(Math.random()-.5)*.005},
+        vx:(Math.random()-.5)*.008, vy:(Math.random()-.5)*.006, vz:(Math.random()-.5)*.005,
         phase:Math.random()*Math.PI*2,
         speed:.003+Math.random()*.005,
-        baseOpacity:.06+Math.random()*.14,
+        baseOpacity,
       });
     }
+
+    // A unit quad from -0.5 to 0.5 — exactly the geometry THREE.Sprite uses,
+    // so `position.xy * iScale` below lands in the same place Sprite's own
+    // alignedPosition did.
+    spriteGeo = new THREE.InstancedBufferGeometry();
+    spriteGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array([
+      -0.5,-0.5,0,  0.5,-0.5,0,  0.5,0.5,0,  -0.5,0.5,0,
+    ]), 3));
+    spriteGeo.setAttribute('uv', new THREE.BufferAttribute(new Float32Array([
+      0,0,  1,0,  1,1,  0,1,
+    ]), 2));
+    spriteGeo.setIndex([0,1,2, 0,2,3]);
+    spriteGeo.instanceCount = SPRITE_COUNT;
+    spriteGeo.setAttribute('iOffset',  new THREE.InstancedBufferAttribute(spriteOffsets, 3));
+    spriteGeo.setAttribute('iScale',   new THREE.InstancedBufferAttribute(spriteScale, 2));
+    spriteGeo.setAttribute('iCellUv',  new THREE.InstancedBufferAttribute(spriteCellUv, 2));
+    spriteGeo.setAttribute('iOpacity', new THREE.InstancedBufferAttribute(spriteOpacity, 1));
+
+    // fog:true plus UniformsLib.fog is what keeps these matching what
+    // SpriteMaterial did for free — Material.fog defaults to true, so the old
+    // sprites WERE fogged, and this scene's FogExp2 is strong enough at the
+    // camera's own working distance that dropping it would visibly brighten
+    // every distant symbol. #include <colorspace_fragment> is the other half
+    // of matching: the atlas texture is left at the default colour space,
+    // same as the 32 textures it replaces, so the output encoding has to
+    // happen in exactly the same place it did in SpriteMaterial's shader.
+    spriteMat = new THREE.ShaderMaterial({
+      uniforms: THREE.UniformsUtils.merge([
+        THREE.UniformsLib.fog,
+        { map: { value: null }, cellSize: { value: new THREE.Vector2(1/ATLAS_COLS, 1/atlasRows) } },
+      ]),
+      vertexShader: `
+        attribute vec3 iOffset;
+        attribute vec2 iScale;
+        attribute vec2 iCellUv;
+        attribute float iOpacity;
+        uniform vec2 cellSize;
+        varying vec2 vAtlasUv;
+        varying float vOpacity;
+        #include <fog_pars_vertex>
+        void main() {
+          vAtlasUv = iCellUv + uv * cellSize;
+          vOpacity = iOpacity;
+          // Billboarding, the same way THREE.Sprite does it: take the
+          // instance's position into view space, then offset within the view
+          // plane. The quad therefore always faces the camera and still
+          // shrinks with distance, which is Sprite's default sizeAttenuation.
+          vec4 mvPosition = modelViewMatrix * vec4(iOffset, 1.0);
+          mvPosition.xy += position.xy * iScale;
+          gl_Position = projectionMatrix * mvPosition;
+          #include <fog_vertex>
+        }
+      `,
+      fragmentShader: `
+        uniform sampler2D map;
+        varying vec2 vAtlasUv;
+        varying float vOpacity;
+        #include <fog_pars_fragment>
+        void main() {
+          vec4 texel = texture2D(map, vAtlasUv);
+          float a = texel.a * vOpacity;
+          if (a < 0.004) discard;
+          gl_FragColor = vec4(texel.rgb, a);
+          #include <colorspace_fragment>
+          #include <fog_fragment>
+        }
+      `,
+      transparent: true,
+      depthWrite: false,
+      fog: true,
+    });
+    // Assigned after the merge: UniformsUtils.merge clones every uniform
+    // value it is handed, and a cloned Texture is a second, un-disposable
+    // copy of the same atlas.
+    spriteMat.uniforms.map.value = symbolAtlasTex;
+
+    spriteMesh = new THREE.Mesh(spriteGeo, spriteMat);
+    // Instance positions live in an attribute, not in the geometry's own
+    // bounds, so three's frustum test would be reading a 1x1 quad at the
+    // origin — and these deliberately surround the camera anyway.
+    spriteMesh.frustumCulled = false;
+    scene.add(spriteMesh);
   }
 
   // ─── Orbit controls (full only) ─────────────────────────────────────────────
@@ -340,6 +536,15 @@ export function createButterfly(container, { preview = false } = {}) {
     theta:  Math.atan2(camera.position.x, camera.position.z),
   };
   const reduceMotion = prefersReducedMotion();
+  // Both of these are seeded from reduceMotion, but only autoRotate stays
+  // truthful on its own: onDragEnd below sets autoJitter back to true
+  // unconditionally, so before v4.0 a single drag handed a reduced-motion
+  // visitor continuous random jitter for the rest of the scene's life —
+  // exactly the motion they asked not to be given, three seconds after
+  // touching the scene at all. The fix is the one Sphere already uses:
+  // re-check reduceMotion where the flag is CONSUMED (see animate()), not
+  // only where it is set, so no code path can re-enable motion by forgetting
+  // about it.
   let autoJitter = !reduceMotion;
   let autoRotate = !preview && !reduceMotion; // slow camera orbit
   const ROTATE_SPEED = 0.0008;
@@ -368,7 +573,10 @@ export function createButterfly(container, { preview = false } = {}) {
         spherical.theta -= dx;
         spherical.phi = Math.max(.1, Math.min(Math.PI - .1, spherical.phi + dy));
       },
-      onDragEnd: () => { setTimeout(() => { autoJitter = true; }, 3000); },
+      // Through trackTimers so dispose() drops it — a bare setTimeout here
+      // kept a closure over this scene alive for three seconds after the
+      // visitor had already left it.
+      onDragEnd: () => { timers.after(3000, () => { autoJitter = true; }); },
     });
     wheelZoom = bindWheelZoom(container, {
       onZoom: deltaY => { spherical.radius = Math.max(40, Math.min(220, spherical.radius + deltaY * 0.08)); },
@@ -379,13 +587,21 @@ export function createButterfly(container, { preview = false } = {}) {
   const resizeCtl = bindGuardedResize(container, (w, h) => {
     camera.aspect = w / h;
     camera.updateProjectionMatrix();
+    // Re-applied here too: a window dragged between a Retina and a
+    // non-Retina display changes devicePixelRatio with no other signal.
+    managedRenderer.applyPixelRatio();
     renderer.setSize(w, h);
   });
 
   // ─── Jitter state ────────────────────────────────────────────────────────────
   let rotVelX=0,rotVelY=0,rotVelZ=0;
   let rotX=-1.52,rotY=0.0,rotZ=0.05;
-  let t=0, animId;
+  let t=0, animId = null;
+  // main.js pauses preview tiles while a full scene is open and pauses the
+  // open scene on visibilitychange (see its syncPreviewPlayback comment).
+  // display:none does not stop a requestAnimationFrame loop, so before this
+  // every preview kept issuing its draw calls behind an opaque overlay.
+  let paused = false;
 
   // Current butterfly world-space centroid (for grid distortion)
   const butterflyPos = new THREE.Vector3();
@@ -394,8 +610,10 @@ export function createButterfly(container, { preview = false } = {}) {
     animId = requestAnimationFrame(animate);
     t += 0.008;
 
-    // Butterfly jitter
-    if (autoJitter) {
+    // Butterfly jitter — reduceMotion is re-checked HERE, at the point of
+    // consumption, not only where autoJitter is assigned (see its
+    // declaration above for the bug that made this necessary).
+    if (autoJitter && !reduceMotion) {
       rotVelX=rotVelX*.96+(Math.random()-.5)*.0008;
       rotVelY=rotVelY*.96+(Math.random()-.5)*.0012;
       rotVelZ=rotVelZ*.96+(Math.random()-.5)*.0004;
@@ -500,11 +718,13 @@ export function createButterfly(container, { preview = false } = {}) {
       // SOFTENING, which softens but doesn't strictly bound the result.
       const MAX_DISP      = 4;  // hard cap on displacement
 
-      let vIdx = 0; // global vertex index across all lines
-      for (const { geo, posArr, vertexCount } of gridLines) {
+      for (const { geo, posArr, restBase, vertexCount } of gridTiers) {
         for (let vi = 0; vi < vertexCount; vi++) {
-          const rest = gridVertexRestPositions[vIdx];
-          const rx = rest.x, ry = rest.y, rz = rest.z;
+          // Rest positions come out of the one shared Float32Array at this
+          // tier's own offset — three reads out of a contiguous buffer,
+          // rather than dereferencing one of 4,335 { x, y, z } objects.
+          const r = (restBase + vi) * 3;
+          const rx = gridRest[r], ry = gridRest[r+1], rz = gridRest[r+2];
 
           // Vector from this vertex's rest position to the butterfly's
           // current position, and its length (dist) and squared length
@@ -529,21 +749,34 @@ export function createButterfly(container, { preview = false } = {}) {
           posArr[vi*3]   = rx + dx * pull;
           posArr[vi*3+1] = ry + dy * pull;
           posArr[vi*3+2] = rz + dz * pull;
-          vIdx++;
         }
         geo.attributes.position.needsUpdate = true;
       }
 
-      // Drift math sprites
+      // Drift math sprites — straight into the instanced attribute arrays.
+      //
+      // The wrap test used to read `for (const ax of ['x','y','z'])`, which
+      // allocated a fresh three-element array AND its iterator per sprite per
+      // frame: 220 sprites at 120fps is ~53,000 throwaway objects a second to
+      // save writing three comparisons out twice. Unrolled below.
       const b = 70;
-      for (const d of spriteData) {
-        d.vel.x+=(Math.random()-.5)*.001;d.vel.x*=.99;
-        d.vel.y+=(Math.random()-.5)*.001;d.vel.y*=.99;
-        d.vel.z+=(Math.random()-.5)*.0005;d.vel.z*=.99;
-        d.sprite.position.x+=d.vel.x;d.sprite.position.y+=d.vel.y;d.sprite.position.z+=d.vel.z;
-        for(const ax of['x','y','z']){if(d.sprite.position[ax]>b)d.sprite.position[ax]=-b;if(d.sprite.position[ax]<-b)d.sprite.position[ax]=b;}
-        d.sprite.material.opacity=d.baseOpacity+Math.sin(t*d.speed*10+d.phase)*d.baseOpacity*.4;
+      for (let i = 0; i < SPRITE_COUNT; i++) {
+        const d = spriteData[i];
+        d.vx+=(Math.random()-.5)*.001;d.vx*=.99;
+        d.vy+=(Math.random()-.5)*.001;d.vy*=.99;
+        d.vz+=(Math.random()-.5)*.0005;d.vz*=.99;
+        const o = i*3;
+        let ox = spriteOffsets[o]+d.vx, oy = spriteOffsets[o+1]+d.vy, oz = spriteOffsets[o+2]+d.vz;
+        if (ox > b) ox = -b; else if (ox < -b) ox = b;
+        if (oy > b) oy = -b; else if (oy < -b) oy = b;
+        if (oz > b) oz = -b; else if (oz < -b) oz = b;
+        spriteOffsets[o] = ox; spriteOffsets[o+1] = oy; spriteOffsets[o+2] = oz;
+        spriteOpacity[i] = d.baseOpacity+Math.sin(t*d.speed*10+d.phase)*d.baseOpacity*.4;
       }
+      // Two buffer uploads for the whole set, replacing 220 per-object matrix
+      // updates and 220 material-uniform writes.
+      spriteGeo.attributes.iOffset.needsUpdate = true;
+      spriteGeo.attributes.iOpacity.needsUpdate = true;
     }
 
     renderer.render(scene, camera);
@@ -551,30 +784,51 @@ export function createButterfly(container, { preview = false } = {}) {
   animate();
 
   return {
+    // main.js calls this on every preview tile while a full scene is open,
+    // on any tile scrolled off screen, and on the open scene when the tab is
+    // hidden. Stopping the loop outright rather than running it to an early
+    // return: a paused tile should cost nothing at all, not one no-op
+    // callback per frame. This scene integrates from a fixed per-frame `t`
+    // rather than a wall clock, so there is no clock to resync on the way
+    // back in — the Lorenz trails simply resume where they stopped, which is
+    // exactly right for a trajectory that has no notion of real time.
+    setPaused(next) {
+      const want = Boolean(next);
+      if (want === paused) return;
+      paused = want;
+      if (paused) {
+        cancelAnimationFrame(animId);
+        animId = null;
+      } else {
+        animate();
+      }
+    },
     dispose() {
       cancelAnimationFrame(animId);
       symbolsDisposed = true;
       resizeCtl.dispose();
       orbitDrag?.dispose();
       wheelZoom?.dispose();
+      timers.dispose();
       expLabel?.remove();
       hint?.remove();
-      // THREE.js resource cleanup: disposes the spacetime grid's line
-      // geometries/materials, both trail sets' geometries/materials, and
-      // (full scene only) the 220 math-symbol sprites' materials/textures.
-      // Textures/materials are shared across many sprites, so disposing the
-      // same one more than once here is harmless — THREE.js no-ops a
-      // repeat dispose() call.
-      gridLines.forEach(g => g.geo.dispose());
+      // THREE.js resource cleanup: the spacetime grid's three batched
+      // geometries and their materials, both trail sets' geometries/
+      // materials, and (full scene only) the instanced symbol set — one
+      // geometry, one material and one atlas texture where this used to be
+      // 220 materials and 32 textures.
+      gridTiers.forEach(g => g.geo.dispose());
       gridMats.forEach(m => m.dispose());
       trails.forEach(tr => { tr.geo.dispose(); tr.mat.dispose(); });
       glowTrails.forEach(tr => { tr.geo.dispose(); tr.mat.dispose(); });
-      spriteData.forEach(d => {
-        d.sprite.material.map?.dispose();
-        d.sprite.material.dispose();
-      });
-      renderer.dispose();
-      renderer.domElement.remove();
+      spriteGeo?.dispose();
+      spriteMat?.dispose();
+      symbolAtlasTex?.dispose();
+      // renderer.dispose() + forceContextLoss() + canvas removal, in one
+      // call — see manageRenderer in sceneKit.js for why the plain
+      // renderer.dispose() this used to do never actually freed the context.
+      managedRenderer.dispose();
+      containerClaim?.restore();
     }
   };
 }

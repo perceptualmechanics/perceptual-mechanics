@@ -76,7 +76,16 @@ reasoning:
   Firefox and Safari 15.4+ support the unprefixed property, but older
   Safari doesn't; declare both, prefixed first (v3.9.15 found and fixed
   one instance in `theater.css` that had only the prefixed version with
-  no fallback — a real gap, not a style choice).
+  no fallback — a real gap, not a style choice). **The rule stands but
+  has no example left in the codebase**: v4.0 deleted that `theater.css`
+  declaration entirely, because a second look showed the mask did
+  nothing at all — `mask-clip` defaults to `border-box`, so masking with
+  a solid `linear-gradient(#000 0 0)` masks nothing, and the frame-only
+  bulb ring it was meant to produce was already happening by paint order.
+  Worth recording as its own lesson: v3.9.15 correctly fixed the
+  *pairing* without anyone asking whether the declaration had any effect.
+  Checking that a property is well-formed and checking that it does
+  something are different checks.
 - `-webkit-overflow-scrolling: touch` — **removed** (v3.9.15). WebKit
   shipped native momentum scrolling for all overflow elements in iOS 13
   (2019); the property has had zero effect since. This is the version
@@ -285,6 +294,62 @@ manufacturing findings to justify the pass — the honest result of a
 useful thing to record here so a future pass doesn't have to redo this
 sweep from a standing start.
 
+### Scene lifecycle goes through `sceneKit`, not hand-rolled per scene
+
+v4.0 extracted five lifecycle helpers, each because the same hazard was
+found independently in most of the ten scenes. A new scene uses these
+rather than reinventing them, and an existing scene being touched for
+another reason should be moved onto them while it's open:
+
+- **`claimContainer(container, opts)` → `{ setCursor, restore }`.**
+  `#experience-container` is one element that `main.js` empties but never
+  replaces, so any inline style a scene writes on it survives into the
+  next scene. Seven scenes wrote `position`/`overflow`, two wrote
+  `tabIndex`, several wrote `cursor` on hover, and exactly one put
+  anything back. The visible version: Orrery sets `cursor: none` for its
+  crosshair, so leaving Orrery for Theater, Scroll, Butterfly or Outside
+  left the visitor with no mouse pointer at all. Route hover through
+  `setCursor` so `restore()` is guaranteed to cover it.
+- **`disposeSceneGraph(root)`.** `material.dispose()` does not dispose the
+  textures hanging off the material. Every scene's hand-written traversal
+  disposed `material.map` and nothing else, so `roughnessMap`,
+  `metalnessMap` and `emissiveMap` leaked — 27 canvas textures per visit
+  in Orrery alone. Taking the root rather than a hand-kept array also
+  closes the other half of that bug: objects added straight to `scene`
+  instead of into the group the old traversal walked were never freed.
+- **`manageRenderer(renderer, opts)` → `{ applyPixelRatio, dispose }`.**
+  Caps `devicePixelRatio` at 2 (uncapped, a DPR-3 phone renders nine
+  times the fragments; Beamline had capped since v3.9.x and looked
+  identical doing it), binds a `webglcontextlost` handler, and actually
+  releases the context — `THREE.WebGLRenderer.dispose()` does not, and
+  with eight preview contexts alive permanently plus one per open scene
+  against a browser cap near sixteen, scene switches accumulated orphans
+  until the browser force-lost the *oldest*, i.e. the landing tiles.
+- **`createFrameClock()` → `{ tick, elapsed, resync }`.** No animation
+  advances by a fixed per-frame constant. `requestAnimationFrame` runs at
+  the display's refresh rate, so `t += 0.01` is double speed on a 120Hz
+  panel. Orbiter was measured at 0.713 rad/s against a tuned 0.60. In
+  Beamline it wasn't even cosmetic: `computeSustain()` derives a reading
+  duration in real seconds from a words-per-second constant and compared
+  it against a frame counter, so a 116-word passage got 25 seconds of its
+  specified 50. Multiply a rate tuned at 60fps by `dt * 60` rather than
+  re-deriving it.
+- **`trackTimers()` → `{ after, nextFrame, cancel, dispose }`.** Fifteen
+  untracked `setTimeout`s existed across six scenes. Library's 500ms
+  panel side-flip was the live one: it re-entered `populatePanel()` on a
+  detached panel, which called `onPieceChange()`, which is how `main.js`
+  writes the URL — so a scene you had already left could rewrite
+  `location.hash` out from under the scene that replaced it. Prefer
+  `nextFrame` over a magic millisecond constant guessing at a CSS
+  transition.
+
+**Related contract:** a scene's `create(container, {preview})` returns an
+object that should expose `setPaused(paused)`. `display: none` does not
+stop `requestAnimationFrame`, so before v4.0 all eight WebGL preview
+tiles kept rendering at 60fps behind an opaque overlay alongside the open
+scene, and in a background tab. `main.js` now pauses them on expand, on
+`visibilitychange`, and per-tile via an `IntersectionObserver`.
+
 ### Scenes load via dynamic `import()`, not a static top-of-file import
 
 As of v3.10.0, `main.js`'s `SCENES` registry holds a `load: () =>
@@ -321,18 +386,31 @@ touching it.
 
 ### New interactive code always uses `addEventListener`, never inline handlers
 
-As of v3.12.0's CSP work, `index.html`'s `script-src` allowlists exactly
-11 `sha256-` hashes — one per distinct `onmouseover`/`onfocus`
-`pmGlimpse('<scene>')` string, the only inline event-handler attributes
-left anywhere in the codebase (everything else, including all
-scene-opening/nav-icon interaction, already went through
-`addEventListener` before this policy existed). That hash list is meant
-to stay fixed at 11, legacy-only — a closed set, not a pattern to reach
-for again. Any new interactive markup (a future form, an API-driven
-control, anything) wires up via `addEventListener` from the start; adding
-a new `onclick=`/`onmouseover=` attribute means computing and appending
-another hash to `.htaccess` just to keep the site working, which is real
-friction placed there deliberately so the hash list doesn't quietly grow
-every time new interactivity gets added. See `.htaccess`'s own CSP
-comment block and NOTES.md's 3.12.0 entry for the full policy and
-reasoning.
+**Settled in v4.0: `script-src` is now plain `'self'`.** No
+`'unsafe-hashes'`, no `sha256-` entries, nothing to maintain.
+
+The history matters, because it is why the rule is worth keeping. v3.12.0
+allowlisted exactly 11 hashes — one per distinct `onmouseover`/`onfocus`
+`pmGlimpse('<scene>')` string, the only inline handlers left anywhere in
+the codebase — and declared that list closed at 11, legacy-only, with the
+friction of computing a new hash deliberately left in place so it
+couldn't quietly grow. v4.0 removed the legacy instead: all 42 attributes
+across 21 elements became two delegated listeners in `main.js` keyed off
+`data-scene`.
+
+That turned out to fix a live behavioural bug as a side effect, which is
+the part worth remembering. `mouseover` **bubbles**, so an
+`onmouseover` on a nav `<button>` fired once for every child shape in
+its icon SVG as the pointer crossed them — measured at four calls for a
+single hover pass over the Sphere icon, against a documented "1-in-100
+chance per hover". The delegated replacement uses `pointerenter`, which
+doesn't bubble, and now fires exactly once. The prefetch listeners three
+lines away in the same file had used `pointerenter` correctly all along;
+the inline attributes were the only place the distinction got lost.
+
+So the standing rule is unchanged and now costs nothing to hold: any new
+interactive markup wires up via `addEventListener` from the start. Adding
+an `onclick=`/`onmouseover=` attribute now means re-opening `script-src`,
+which is a much larger conversation than appending a hash was. See
+`.htaccess`'s own CSP comment block and NOTES.md's 3.12.0 and 4.0
+entries.

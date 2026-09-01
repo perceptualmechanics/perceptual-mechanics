@@ -157,3 +157,74 @@ test('end-to-end: a parsed script plays through Player with a stub renderer, no 
   assert.deepEqual(calls[9], ['onLine', 'brian', 'Outside now.']);
   assert.deepEqual(calls[10], ['onEnd']);
 });
+
+// ─── Player: scheduling and teardown hygiene ────────────────────────────────
+// Everything above tests the parser through the Player; these test the Player
+// itself, which had no coverage of its own. All four cover states a consumer
+// can reach from ordinary transport controls (perceptualmechanics' Theater
+// reaches three of them), not internal edge cases: a reel that ends, a scene
+// the visitor closes mid-beat, a reshuffle for someone who has asked their OS
+// for less motion, and a script that compiled to nothing.
+
+/** Minimal renderer: records nothing, throws on nothing. */
+function stub(calls = []) {
+  return {
+    onSceneChange: () => calls.push('scene'),
+    onChorus: () => calls.push('chorus'),
+    onLine: () => calls.push('line'),
+    onEnd: () => calls.push('end'),
+    dispose: () => calls.push('dispose'),
+  };
+}
+
+test('play() on a finished reel reports paused rather than a play that never advances', () => {
+  const script = compileFountainScript(`INT. BAR\n\nOne.\n\nTwo.`, { intermissions: false });
+  const player = new Player(script, stub());
+  player.goTo(script.timeline.length - 1);
+  assert.equal(player.isAtEnd, true);
+  assert.equal(player.playing, false); // goTo() clears it on landing at the end
+  player.play();
+  // The bug this pins: play() used to set playing = true here and then
+  // schedule nothing, so a consumer's button read "pause" over a dead reel.
+  assert.equal(player.playing, false);
+});
+
+test('dispose() makes the player inert — play/next/restart stop mutating it', () => {
+  const script = compileFountainScript(`INT. BAR\n\nOne.\n\nTwo.\n\nThree.`, { intermissions: false });
+  const calls = [];
+  const player = new Player(script, stub(calls));
+  player.goTo(0);
+  const indexAtDispose = player.index;
+  player.dispose();
+  assert.deepEqual(calls.at(-1), 'dispose');
+  const before = calls.length;
+  player.play();
+  player.next();
+  player.restart(script);
+  assert.equal(player.playing, false);
+  assert.equal(player.index, indexAtDispose);
+  assert.equal(calls.length, before, 'no renderer call after dispose');
+});
+
+test('restart({ autoplay: false }) starts the new script at beat 0 without playing', () => {
+  const script = compileFountainScript(`INT. BAR\n\nOne.\n\nTwo.\n\nThree.`, { intermissions: false });
+  const player = new Player(script, stub());
+  player.restart(script, { autoplay: false });
+  assert.equal(player.index, 0);
+  assert.equal(player.playing, false);
+  // Default is unchanged: "start over" still means "start playing".
+  player.restart(script);
+  assert.equal(player.playing, true);
+  // ...which arms a real setTimeout, and node:test won't exit while one is
+  // pending. dispose() is the same call a consumer's teardown makes.
+  player.dispose();
+});
+
+test('an empty timeline sits still instead of throwing on goTo/play', () => {
+  const player = new Player({ scenes: [], timeline: [] }, stub());
+  assert.doesNotThrow(() => player.goTo(0));
+  assert.doesNotThrow(() => player.play());
+  assert.doesNotThrow(() => player.next());
+  assert.equal(player.index, -1);
+  assert.equal(player.playing, false);
+});

@@ -16,16 +16,44 @@
     #0d0a07;
   border-left: 1px solid rgba(220,200,180,0.15);
   padding: 4rem 1.3rem 2rem; transform: translateX(100%);
-  transition: transform .5s cubic-bezier(.16,1,.3,1);
-  overflow-y: scroll; z-index: 10;
+  /* `visibility: hidden` on the CLOSED panel is load-bearing, not belt-and-
+     braces: translateX(100%) only moves the panel off-screen, it doesn't
+     take anything inside it out of the tab order, so the ✕ button stayed
+     focusable while parked outside the viewport — Tab from the jump list
+     landed on an invisible control (WCAG 2.4.7/2.4.3). visibility is a
+     discrete property, so it's transitioned at 0s with a DELAY equal to
+     the slide (`visibility 0s linear .5s` here, on the closed state) and
+     with NO delay on `.open` below: opening reveals the panel instantly so
+     the slide is visible, closing waits for the slide to finish before the
+     panel goes untabbable. Putting `visibility` in the transition list the
+     ordinary way instead would flip it at 50% of the transition and blank
+     the panel mid-slide. */
+  visibility: hidden;
+  transition: transform .5s cubic-bezier(.16,1,.3,1), visibility 0s linear .5s;
+  /* `auto`, not `scroll`: `scroll` reserves a permanent gutter even for the
+     short-viewport case where the found story fits without scrolling.
+     scrollbar-gutter:stable keeps the text from reflowing when the bar
+     appears, which is the only thing `scroll` was actually buying. */
+  overflow-y: auto; scrollbar-gutter: stable; z-index: 10;
   scrollbar-color: rgba(220,200,180,0.3) #0a0908; scrollbar-width: thin;
   font-family: 'Arapey', serif;
 
 	@media (min-width: 701px) {
 		width: 38%; padding: 3rem 2rem;
 	}
+
+	@media (prefers-reduced-motion: reduce) {
+		transition: none;
+	}
 }
-.orrery-panel.open { transform: translateX(0); }
+.orrery-panel.open {
+  transform: translateX(0); visibility: visible;
+  transition: transform .5s cubic-bezier(.16,1,.3,1), visibility 0s linear 0s;
+
+	@media (prefers-reduced-motion: reduce) {
+		transition: none;
+	}
+}
 .orrery-panel-title {
   /* This is the panel's <h2>, matching its aria-labelledby target — the
      UA default heading margin/weight is reset here. */
@@ -49,11 +77,29 @@
   white-space: pre-line; margin: 0;
 }
 .orrery-panel-close {
+  /* Contrast, checked 2026-09-02 — the one control in this panel that
+     never got the arithmetic -era above did. At 1.2rem non-bold this is
+     "normal" text for WCAG purposes (the 3:1 large-text allowance needs
+     18.66px bold or 24px normal), so it needs 4.5:1. The old 0.4 alpha
+     composited over #0d0a07 measures 3.78:1 — a real AA failure, and
+     marginally worse still under the corner of the panel's own radial
+     gradient. 0.62 measures 7.7:1 on the flat background and 7.2:1 under
+     the gradient at full strength, both clear, while staying visibly
+     quieter than the 0.9 hover state. */
   position: absolute; top: 1.5rem; right: 1.5rem; background: none;
-  border: none; color: rgba(255,255,255,0.4); font-size: 1.2rem;
+  border: none; color: rgba(255,255,255,0.62); font-size: 1.2rem;
   cursor: pointer; padding: .5rem; z-index: 2;
 }
 .orrery-panel-close:hover { color: rgba(255,255,255,0.9); }
+/* :hover lifted this to 0.9 but keyboard focus did nothing at all, so the
+   one visitor route that can't hover — the jump list, which is the only
+   accessible way into this panel — got no focus affordance on its way back
+   out. :focus-visible (not :focus) so a mouse click on the ✕ doesn't also
+   paint a ring, same reasoning library.css's own close button documents. */
+.orrery-panel-close:focus-visible {
+  color: rgba(255,255,255,0.95);
+  outline: 1px solid rgba(238,225,205,0.9); outline-offset: 1px;
+}
 
 .orrery-hint {
   /* z-index must clear #experience-overlay (styles/main.css: fixed,
@@ -65,6 +111,10 @@
   text-transform: uppercase; pointer-events: none; text-align: center;
   z-index: 310; font-family: 'Arapey', serif;
   transition: opacity 0.3s ease;
+
+	@media (prefers-reduced-motion: reduce) {
+		transition: none;
+	}
 }
 /* .orrery-title shares the same z-index:310/body-level trick, for
    the same reason. .orrery-panel is nested inside #experience-overlay
@@ -133,6 +183,10 @@
 	@media (min-width: 601px) {
 		bottom: var(--title-block-bottom); left: 0; right: 0;
 	}
+
+	@media (prefers-reduced-motion: reduce) {
+		transition: none;
+	}
 }
 .orrery-title-main {
   display: block; font-size: clamp(1rem, 3vw, 1.7rem);
@@ -160,9 +214,23 @@
   margin: -3px 0 0 -3px; border-radius: 50%;
   background: rgba(255,255,255,0.35); pointer-events: none; z-index: 4;
   transition: transform 0.15s ease, background 0.15s ease;
+
+	@media (prefers-reduced-motion: reduce) {
+		transition: none;
+	}
 }
 .orrery-crosshair.active {
   background: rgba(255,214,150,0.9); transform: scale(1.8);
+
+	/* The scale-1.8 pop is dropped entirely under reduced motion rather
+	   than merely un-transitioned — an instant 80% size jump in the dead
+	   center of the frame every time the crosshair crosses a target is
+	   exactly the kind of involuntary motion this query exists for. The
+	   color flip alone already carries the state, and it's the stronger
+	   of the two signals at 6px anyway. */
+	@media (prefers-reduced-motion: reduce) {
+		transform: none; transition: none;
+	}
 }
 /* Sits in the bottom-right corner (clear of the crosshair, the walkpad
    at bottom-left, and the bottom-center caption), small and
@@ -182,13 +250,31 @@
   border: 1px solid rgba(220,200,180,0.2); border-radius: 1.4rem;
   padding: 0.45rem 0.95rem; font-family: 'Arapey', serif;
   font-size: 0.68rem; letter-spacing: 0.06em; cursor: pointer;
-  transition: opacity 0.4s ease;
+  /* Zero-delay visibility here (the VISIBLE state) so re-showing the
+     prompt is immediate; the delayed half lives on .hidden below. Same
+     discrete-property idiom, and same reason, as .orrery-panel above. */
+  transition: opacity 0.4s ease, visibility 0s linear 0s;
 
 	@media (min-width: 601px) {
 		bottom: 1.5rem;
 	}
+
+	@media (prefers-reduced-motion: reduce) {
+		transition: none;
+	}
 }
-.orrery-lock-prompt.hidden { opacity: 0; pointer-events: none; }
+/* opacity:0 + pointer-events:none hid this from sight and from the mouse
+   but left a real <button> in the tab order — a keyboard visitor Tabbed
+   onto an invisible "click to look around" control they had no way to see
+   (the same class of defect as the closed panel's ✕ above). */
+.orrery-lock-prompt.hidden {
+  opacity: 0; pointer-events: none; visibility: hidden;
+  transition: opacity 0.4s ease, visibility 0s linear 0.4s;
+
+	@media (prefers-reduced-motion: reduce) {
+		transition: none;
+	}
+}
 .orrery-walkpad {
   position: absolute; left: 1.2rem; bottom: 1.6rem; z-index: 7;
   width: 8.6rem; height: 6rem; display: grid;

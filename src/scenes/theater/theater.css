@@ -70,15 +70,37 @@
 		padding: 10px;
 	}
 }
+/* The marquee bulbs: a dot grid tiled across the whole frame, of which only
+   the ring between `inset: 2px` and the screen's own edge is ever seen —
+   .tab-screen paints over the middle of it, opaque, and comes later in tree
+   order. That overlap is what produces the bulbs-around-the-edge look, so
+   it's load-bearing: the dot grid has to stay BEHIND the screen, not above
+   it.
+
+   It used to also carry `-webkit-mask`/`mask: linear-gradient(#000 0 0)`
+   plus `padding: 8px; box-sizing: border-box`, all four of which did
+   nothing. `mask-clip` defaults to border-box, so a solid-black gradient
+   masks exactly the area it already covers; `padding` on an empty absolutely
+   -positioned element with `background-clip: border-box` (also the default)
+   moves nothing. The evident intent — bulbs only around the frame's edge —
+   is real, and already achieved by the overlap above; re-implementing it as
+   `mask: linear-gradient(#000 0 0) content-box exclude` would render
+   identically while adding a mask-composite compatibility problem (the
+   `exclude` keyword and the `-webkit-mask-composite: xor` fallback don't
+   mean the same thing) for zero visual gain. So: deleted, with the reason
+   written down rather than re-added by the next reader who notices the
+   frame has no mask on it.
+
+   NOTE for STANDARDS.md's "-webkit-mask — keep, always paired" rule: the one
+   instance it cites (v3.9.15 added the unprefixed fallback here) is this
+   one, and it's now gone. The rule stands; it just no longer has an example
+   in this codebase. */
 .tab-screen-frame::before {
   content: ''; position: absolute; inset: 2px; border-radius: 4px;
   background-image: radial-gradient(circle, #e8b84b 1.5px, transparent 1.8px);
   background-size: 16px 16px;
   background-position: center;
-  -webkit-mask: linear-gradient(#000 0 0);
-          mask: linear-gradient(#000 0 0);
   opacity: 0.35; pointer-events: none;
-  padding: 8px; box-sizing: border-box;
 }
 .tab-screen {
   position: relative; width: 100%;
@@ -88,6 +110,16 @@
   border-radius: 3px; overflow: visible; /* dialogue floats over the screen rather than being clipped by it */
   display: flex; flex-direction: column;
   animation: screen-flicker 4s steps(2) infinite;
+
+  /* screen-flicker animates `filter`, which gives this element a stacking
+     context for as long as it runs — and the reduced-motion block below
+     takes the animation away, which took the stacking context with it. So
+     whether a .tab-bubble's z-index competed with .tab-house (a SIBLING of
+     this element, z-index 3) or was sealed inside this context depended on
+     an accessibility setting. `isolation: isolate` makes the context
+     unconditional: same painting order in both modes, and it stays true if
+     the flicker is ever retimed or removed. */
+  isolation: isolate;
 
   /* aspect-ratio/min-height: base targets the narrowest overall case
      (width<=480 AND portrait — the old max-width:480px+portrait
@@ -124,6 +156,10 @@
 	@media (min-width: 701px), (min-width: 641px) and (orientation: landscape) {
 		padding-bottom: 54px;
 	}
+
+	@media (prefers-reduced-motion: reduce) {
+		animation: none !important;
+	}
 }
 @keyframes screen-flicker {
   0%, 96%, 100% { filter: brightness(1); }
@@ -156,6 +192,10 @@
   flex: 0 1 auto; display: flex; flex-direction: column; align-items: center;
   opacity: 0; transition: opacity 0.35s ease;
   color: #221c14; position: relative;
+
+	@media (prefers-reduced-motion: reduce) {
+		transition: none !important;
+	}
 }
 .tab-actor.on { opacity: 1; }
 .tab-actor pre.sf {
@@ -164,6 +204,12 @@
 
 	@media (min-width: 701px), (min-width: 481px) and (orientation: landscape) {
 		font-size: clamp(0.7rem, 1.9vw, 1.05rem);
+	}
+
+	/* Also covers `.tab-actor.talking pre.sf`'s two-animation shorthand — the
+	   !important beats it despite the lower specificity. */
+	@media (prefers-reduced-motion: reduce) {
+		animation: none !important;
 	}
 }
 .tab-actor.talking pre.sf { animation: sf-bob 2.8s ease-in-out infinite, sf-talk 0.45s ease-in-out 2; }
@@ -186,18 +232,46 @@
 
 .tab-bubble {
   position: absolute; left: 50%; bottom: 100%; margin-bottom: 6px;
-  transform: translateX(-50%);
+  /* --bubble-shift is written per bubble by TheaterRenderer._placeBubble:
+     centring on a speaker who stands near the edge of the stage used to put
+     part of the cowsay block outside .tab-root's overflow:hidden, where it
+     was clipped mid-glyph (40px of it at 375px) with no way to bring it
+     back. Defaults to 0px, so the bubble is plainly centred until something
+     measures otherwise. */
+  transform: translateX(calc(-50% + var(--bubble-shift, 0px)));
   white-space: pre; font-size: 0.54rem; line-height: 1.25;
   color: #221c14; background: #f4efe0; /* fully opaque — it floats over dark backgrounds too */
   box-shadow: 0 2px 8px rgba(0,0,0,0.45), 0 0 0 1px rgba(0,0,0,0.15);
   padding: 2px 4px; border-radius: 3px;
   opacity: 0; transition: opacity 0.25s ease;
-  pointer-events: none; max-width: 88vw; overflow-x: auto;
-  z-index: 4; /* always float above the house overlay and frame texture */
+  /* No overflow-x here on purpose. It used to say `overflow-x: auto`, which
+     was unreachable by any input — pointer-events:none, no tabindex, so no
+     wheel, no touch drag, no keyboard — and, measured across all 404 bubbles
+     in the reel at 375px, never had anything to scroll either: the widest
+     bubble is 179px against an 88vw (330px) cap, so scrollWidth never
+     exceeded clientWidth once. Dropping it rather than making the bubble
+     focusable: pointer-events:none is load-bearing (the whole screen is a
+     click target that advances the reel), the bubbles are aria-hidden with
+     narration going through .tab-sr-live, and a focusable bubble would join
+     main.js's focus trap for content a screen reader is deliberately not
+     being given. The real clipping is fixed by --bubble-shift above. */
+  pointer-events: none; max-width: 88vw;
+  /* Floats above the actors and the caption, which is all this can promise:
+     .tab-screen is an isolated stacking context (see its own comment), so
+     this z-index is scoped to the screen and never competes with .tab-house
+     (z-index 3), which is .tab-screen's sibling and therefore always paints
+     above it. Nothing overlaps today — bubbles sit above the figures, the
+     house sits in the screen's padding-bottom strip — but the old comment
+     here claimed a guarantee the stacking rules can't give it. */
+  z-index: 4;
 
 	@media (min-width: 701px), (min-width: 481px) and (orientation: landscape) {
 		font-size: clamp(0.58rem, 1.5vw, 0.82rem);
 		max-width: min(72vw, 380px);
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		transition: none !important;
 	}
 }
 .tab-bubble.on { opacity: 1; }
@@ -213,6 +287,10 @@
 		font-size: clamp(0.66rem, 1.7vw, 0.88rem);
 		line-height: normal;
 		min-height: 1.4em;
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		transition: none !important;
 	}
 }
 .tab-caption.on { opacity: 0.85; }
@@ -332,6 +410,10 @@
   color: #e8b84b;
   opacity: 0; pointer-events: none;
   transition: opacity 0.3s ease;
+
+	@media (prefers-reduced-motion: reduce) {
+		transition: none !important;
+	}
 }
 .tab-interstitial.on { opacity: 1; }
 .tab-inter-eyebrow {
@@ -390,9 +472,19 @@
   overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  pre.sf, .tab-screen, .film-reel, .tab-preview::before { animation: none !important; }
-}
+/* prefers-reduced-motion used to be one top-level block here listing four
+   selectors: `pre.sf, .tab-screen, .film-reel, .tab-preview::before {
+   animation: none !important }`. STANDARDS.md allows a multi-selector
+   reduced-motion block to stay top-level, but this one had gone wrong in the
+   specific way nesting is meant to prevent: it only ever cancelled
+   `animation`, and four elements on this stage move by `transition` instead
+   — .tab-actor, .tab-bubble, .tab-caption and .tab-interstitial all fade in
+   on opacity — so under reduced motion they kept fading while everything
+   else stopped. Nobody reading .tab-caption's rule had any reason to look
+   twenty selectors away to notice. Each of the eight selectors now carries
+   its own nested query, next to the animation or transition it turns off. */
+
+
 
 /* Mobile-first as of the theater.css/main.css follow-up pass (see
    STANDARDS.md) — this file's three top-level max-width blocks (a plain
@@ -418,6 +510,18 @@
     repeating-linear-gradient(68deg, rgba(255,255,255,0.045) 0 1px, transparent 1px 53px);
   mix-blend-mode: screen;
   animation: reel-flicker 1.8s steps(4) infinite;
+
+	@media (prefers-reduced-motion: reduce) {
+		animation: none !important;
+	}
+}
+/* Parked by the host — an off-screen tile, a hidden tab. Set from the preview
+   branch's setPaused(); a class rather than an inline animation-play-state
+   because the grain above is a pseudo-element CSSOM can't reach. */
+.tab-preview.paused,
+.tab-preview.paused::before,
+.tab-preview.paused .film-reel {
+  animation-play-state: paused;
 }
 .reel-glow {
   position: absolute; left: 50%; top: 50%; width: 72%; aspect-ratio: 1;
@@ -433,6 +537,10 @@
   border: clamp(3px, 2.4%, 7px) solid #5c5c5c;
   box-shadow: 0 0 16px rgba(255,255,255,0.14), inset 0 0 14px rgba(0,0,0,0.7);
   animation: reel-spin 3.4s linear infinite;
+
+	@media (prefers-reduced-motion: reduce) {
+		animation: none !important;
+	}
 }
 .film-reel::after {
   content: ''; position: absolute; left: 50%; top: 50%;

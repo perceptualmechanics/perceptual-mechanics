@@ -195,6 +195,23 @@
   position: relative; scroll-margin-top: 2rem;
   transition: box-shadow 0.4s ease;
   clip-path: var(--patch-clip, none);
+  /* Three expensive things stack on every one of the twelve patches, all
+     of them live the whole time whether the patch is on screen or not: a
+     five-function filter chain ending in drop-shadow (agingFilter, set
+     per instance in scroll.js), a ~30-point clip-path, and the ::after
+     candlelight glow below — a mix-blend-mode: screen layer on an
+     infinite keyframe. The whole scroll is ~64,000px tall at desktop
+     width, so all but one patch is off screen at any moment.
+     content-visibility: auto lets the browser skip layout, paint and
+     style for the ones that are, and pick them up again as they come
+     into view. contain-intrinsic-size gives it a stand-in height for a
+     patch it hasn't laid out yet; `auto` in front means "and once you
+     HAVE measured this one, remember that instead," which is what keeps
+     the scrollbar and any scrollIntoView from lurching as patches
+     resolve. 4000px is the right order of magnitude for a piece here
+     (they run from roughly 1,500px to 10,000px). */
+  content-visibility: auto;
+  contain-intrinsic-size: auto 4000px;
 
 	@media (min-width: 601px) {
 		padding: 2.2rem 1.9rem;
@@ -225,6 +242,29 @@
   mix-blend-mode: screen;
   animation: scroll-candlelight 4.2s ease-in-out infinite;
   animation-delay: var(--glow-delay, 0s);
+}
+/* Toggled by the IntersectionObserver in scroll.js. content-visibility on
+   the patch itself already skips painting this glow while it's off screen,
+   but the animation is still ticked, and Safari before 17 has no
+   content-visibility at all — so the observer stops the keyframes outright
+   for the eleven-or-so patches nobody is looking at. Patches start without
+   this class — see scroll.js for why the observer adds it rather than
+   removing it. */
+.scroll-patch--offscreen::after { animation-play-state: paused; }
+
+/* Whole-scene pause, set by setPaused() (scroll.js) on this scene's own
+   root — main.js calls it for every preview tile while a full scene is open
+   and for everything on visibilitychange. display:none does not stop a CSS
+   animation, so without this the medallion's ember, the candlelight and
+   twelve patch glows all kept running behind an opaque overlay. Listed
+   selector by selector rather than as a blanket `*` so it's visible exactly
+   what this claims to stop. */
+.scroll-paused::before,
+.scroll-paused .scroll-preview-medallion,
+.scroll-paused .scroll-patch::after,
+.scroll-paused .scroll-script,
+.scroll-paused .scroll-intense--wide {
+  animation-play-state: paused;
 }
 
 /* overflow: hidden is a real clearfix here, not decoration — without it, a
@@ -536,6 +576,16 @@
   .scroll-preview-medallion { animation: none; }
   .scroll-patch-text > p,
   .scroll-patch-text > .scroll-opening > p { transform: none !important; }
+  /* The per-paragraph tilt above was already reset here; the per-WORD tilt
+     inside an intense passage wasn't, and it is the more agitated of the
+     two — franticWords() rotates each word up to 3.5deg and shoves it up to
+     3px off its baseline. It survived because applyDeferredStyles() writes
+     it as a real inline style (the CSP note in scroll.js explains why it
+     can't be a stylesheet rule: the values are per-load random), and an
+     inline style beats any non-!important rule regardless of specificity.
+     Same hand-written-jitter rationale as the paragraph rule, same
+     treatment. */
+  .scroll-intense--tight .scroll-word { transform: none !important; }
   .scroll-script { transform: rotate(var(--script-rot, 0deg)) !important; animation: none !important; }
   .scroll-root::before { animation: none; opacity: 1; }
   .scroll-patch::after { animation: none; }

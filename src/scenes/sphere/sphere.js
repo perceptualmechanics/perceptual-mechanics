@@ -1,7 +1,11 @@
 import * as THREE from 'three';
 import { CSS2DRenderer, CSS2DObject } from 'three/examples/jsm/renderers/CSS2DRenderer.js';
 import { getOutboundLinks, getInboundLinks } from '../../links.js';
-import { bindOrbitDrag, bindWheelZoom, bindGuardedResize, prefersReducedMotion, createPanelCloser, createJumpList, bindTapVsDrag, parseHTML, wireCrossLinks, formatInboundNote, setPanelSide, clickedLeftHalf } from '../../utils/sceneKit.js';
+import { bindOrbitDrag, bindWheelZoom, bindGuardedResize, prefersReducedMotion, onReducedMotionChange, createPanelCloser, createJumpList, bindTapVsDrag, parseHTML, wireCrossLinks, formatInboundNote, setPanelSide, clickedLeftHalf, claimContainer, manageRenderer, trackTimers } from '../../utils/sceneKit.js';
+// The excerpt windowing module's stripHtml, not a second one of this scene's
+// own — see randomExcerpt() below for why the DOM-based copy that used to
+// live there had to go.
+import { stripHtml } from '../../utils/resonanceExcerpts.js';
 import sphereHtml from './sphere.html?raw';
 import './sphere.css';
 
@@ -15,15 +19,42 @@ export function createSphere(container, { preview = false, initialPieceId = null
   camera.position.z = preview ? 5.5 : 3.8;
 
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-  renderer.setPixelRatio(window.devicePixelRatio);
+  // Was a bare setPixelRatio(window.devicePixelRatio) — uncapped, so a DPR-3
+  // phone rendered nine times the fragments for no visible gain. Routed
+  // through manageRenderer (sceneKit) instead, which caps it at 2 and adds
+  // the two things this scene never had: a real forceContextLoss() on
+  // dispose (WebGLRenderer.dispose() tears down caches but leaves the GL
+  // context alive, and the browser force-loses the OLDEST contexts when it
+  // runs out — which are the landing tiles), and a webglcontextlost handler
+  // so a lost context stops the loop instead of burning CPU against a
+  // permanently black canvas.
+  const managedRenderer = manageRenderer(renderer, {
+    onLost: () => { cancelAnimationFrame(animId); animId = 0; },
+  });
   renderer.setSize(w, h);
   renderer.domElement.setAttribute('aria-hidden', 'true'); // visual only
   container.appendChild(renderer.domElement);
 
-  // Programmatically focusable so closing the panel (✕, outside click, or
-  // Escape) has somewhere real to send focus back to, rather than leaving
-  // it on a now-hidden close button or nowhere at all.
-  if (!preview) container.tabIndex = -1;
+  // `container` is the one shared #experience-container main.js only ever
+  // empties, never replaces, so every inline style written here outlives
+  // this scene unless something puts it back. claimContainer records the
+  // previous values and hands back the restore() half (dispose(), below).
+  // position/overflow used to be set much later, inside the dynamic
+  // import's callback — which meant the CSS2D label overlay appended just
+  // below was absolutely positioned against a container that wasn't yet a
+  // containing block. tabIndex: -1 makes the container programmatically
+  // focusable so closing the panel (✕, outside click, or Escape) has
+  // somewhere real to send focus back to, rather than leaving it on a
+  // now-hidden close button or nowhere at all.
+  const claim = preview ? null : claimContainer(container, { tabIndex: -1 });
+
+  // Every deferred beat in this scene goes through here — the panel's
+  // side-flip reopen, the two focus hand-offs, the post-drag auto-rotate
+  // resume — so dispose() drops all of them in one call. The 500ms one is
+  // the consequential one: mid-flight it re-added .open to a panel that had
+  // already been detached and called panelTitle.focus(), stealing focus from
+  // whatever scene had just replaced this one.
+  const timers = trackTimers();
 
   // CSS2D only for full experience
   let labelRenderer = null;
@@ -175,11 +206,18 @@ export function createSphere(container, { preview = false, initialPieceId = null
 
       // ─── Labels ─────────────────────────────────────────────────────────
       if (labelRenderer) {
-        function stripHtml(html) {
-          const tmp = document.createElement('div');
-          tmp.innerHTML = html;
-          return (tmp.textContent || tmp.innerText || '').replace(/\s+/g, ' ').trim();
-        }
+        // stripHtml is imported (src/utils/resonanceExcerpts.js), not
+        // redeclared here. This scene used to carry its own DOM-based copy
+        // — a live `div.innerHTML = fragment.text` per fragment, purely to
+        // read the text back out — which is both a second implementation of
+        // an already-shared function and the one place authored fragment
+        // HTML got parsed by the browser for no rendering reason. The shared
+        // one is regex-based and DOM-free (harmonicsPieces.js and
+        // build-resonances-doc.mjs already use it); the one behavioral
+        // difference is that it doesn't decode HTML entities, so a `&copy;`
+        // in a fragment reaches a label as those six characters. These
+        // labels are 7px, ≤0.25 opacity, randomly-windowed decoration —
+        // worth a note, not a second stripHtml.
         function randomExcerpt(fi) {
           const plain = stripHtml(fragments[fi].text);
           if (plain.length <= 40) return plain;
@@ -212,7 +250,10 @@ export function createSphere(container, { preview = false, initialPieceId = null
           const label = new CSS2DObject(div);
           label.position.copy(center.clone().multiplyScalar(1.01));
           sphere.add(label);
-          labelData.push({ label, normal, upVec, div });
+          // sizedAt: the label-scale this div's fontSize/width/height were
+          // last written at. -1 is a value `scale` can never take (it is
+          // clamped to [0.5, 3.0]), so the first pass always writes.
+          labelData.push({ label, normal, upVec, div, sizedAt: -1 });
         }
       }
 
@@ -232,7 +273,7 @@ export function createSphere(container, { preview = false, initialPieceId = null
       document.body.appendChild(hint);
 
       panel = frag.querySelector('.sphere-panel');
-      container.style.position="relative";container.style.overflow="hidden";container.appendChild(panel);
+      container.appendChild(panel);
       panelTitle   = panel.querySelector('.sphere-panel-title');
       panelContent = panel.querySelector('.sphere-panel-content');
       facetIdEl    = panel.querySelector('.sphere-facet-id');
@@ -283,7 +324,7 @@ export function createSphere(container, { preview = false, initialPieceId = null
         panelTitle.style.transition = 'opacity .18s';
         panelContent.style.opacity = '0';
         panelTitle.style.opacity = '0';
-        setTimeout(() => {
+        timers.after(180, () => {
           panelTitle.textContent = fragments[targetIdx].title;
           panelContent.innerHTML = renderFragmentHtml(fragments[targetIdx]);
           facetIdEl.textContent = withInboundNote(fragments[targetIdx].id, `Fragment ${targetIdx + 1} of ${fragments.length} · ${fragments[targetIdx].title}`);
@@ -296,16 +337,18 @@ export function createSphere(container, { preview = false, initialPieceId = null
             const duration = (9 + Math.random() * 7).toFixed(1);
             link.style.animationDelay = `-${delay}s`;
             link.style.animationDuration = `${duration}s`;
-            // role="link", not "button" -- this navigates to different
-            // content within the panel, same as library.js's .library-link.
-            link.setAttribute('role', 'link');
-            link.setAttribute('tabindex', '0');
+            // No role="link" / tabindex="0" here any more. Both were needed
+            // when wireCrossLinks emitted an href-less <a>, which is neither
+            // a link nor focusable to anything reading the page; as of v4.0
+            // it emits a real href, so a role naming what the element
+            // already is and a tabindex matching what it already has are
+            // just two attributes to keep in sync with nothing.
             const targetFrag = link.dataset.targetScene === 'sphere'
               ? fragments.find(f => f.id === Number(link.dataset.targetId))
               : null;
             link.setAttribute('aria-label', `Navigate to fragment: ${targetFrag ? targetFrag.title : 'related fragment'}`);
           });
-        }, 180);
+        });
       }
 
       // Populate the panel with fragment `fi` and open it — shared by the
@@ -324,10 +367,8 @@ export function createSphere(container, { preview = false, initialPieceId = null
             const duration = (9 + Math.random() * 7).toFixed(1);
             link.style.animationDelay = `-${delay}s`;
             link.style.animationDuration = `${duration}s`;
-            // role="link" -- see the matching comment in navigateToFragment()
-            // above.
-            link.setAttribute('role', 'link');
-            link.setAttribute('tabindex', '0');
+            // No role/tabindex -- see the matching comment in
+            // navigateToFragment() above.
             const targetFrag = link.dataset.targetScene === 'sphere'
               ? fragments.find(f => f.id === Number(link.dataset.targetId))
               : null;
@@ -345,15 +386,17 @@ export function createSphere(container, { preview = false, initialPieceId = null
           // the fully-visible panel sideways instead of visibly relocating it
           // the way a fresh open does. Same pattern as library.js's panel.
           panel.classList.remove('open');
-          setTimeout(() => {
+          // 500ms matches .sphere-panel's own close transition (transform .5s,
+          // sphere.css).
+          timers.after(500, () => {
             setPanelSide(panel, fromLeft);
             populate();
             panelContent.scrollTop = 0;
             panelContent.style.opacity = '1'; // guard against a same-side fade still in flight
             panelTitle.style.opacity = '1';
             panel.classList.add('open');
-            setTimeout(() => panelTitle.focus(), 50);
-          }, 500); // matches .sphere-panel's own close transition (transform .5s, sphere.css)
+            timers.after(50, () => panelTitle.focus());
+          });
           return;
         }
 
@@ -362,7 +405,7 @@ export function createSphere(container, { preview = false, initialPieceId = null
         populate();
         panel.classList.add('open');
         // Move focus to panel for screen readers
-        setTimeout(() => panelTitle.focus(), 50);
+        timers.after(50, () => panelTitle.focus());
       }
 
       // Keyboard equivalent for "point at a facet" — facets themselves are
@@ -381,18 +424,24 @@ export function createSphere(container, { preview = false, initialPieceId = null
 
       openFragmentRef = openFragment;
 
+      // stopPropagation, not preventDefault: the click must not fall through
+      // to the canvas's own click-to-select handler underneath the panel, but
+      // the anchor's own navigation is wanted. navigateToFragment reports the
+      // new piece through onPieceChange first, which is what writes
+      // #sphere/<id> into the URL, so by the time the browser follows the
+      // href it is already the current URL and nothing further happens.
+      //
+      // There is no keydown twin of this any more. wireCrossLinks emits a
+      // real <a href="#scene/id"> as of v4.0, and that URL shape is exactly
+      // what main.js's hash router parses — so Enter is handled natively, by
+      // the anchor, and the hash round-trip lands in openPieceById() below.
+      // The hand-rolled Enter/Space handler that used to sit here existed
+      // only because an href-less <a> isn't activatable; keeping it now would
+      // mean re-implementing (and, for Space, contradicting) what a link
+      // already does.
       panelContent.addEventListener('click', e => {
         const link = e.target.closest('.fragment-link');
         if (!link) return;
-        e.stopPropagation();
-        navigateToFragment(link);
-      });
-
-      panelContent.addEventListener('keydown', e => {
-        if (e.key !== 'Enter' && e.key !== ' ') return;
-        const link = e.target.closest('.fragment-link');
-        if (!link) return;
-        e.preventDefault();
         e.stopPropagation();
         navigateToFragment(link);
       });
@@ -402,34 +451,53 @@ export function createSphere(container, { preview = false, initialPieceId = null
         mouse.x =  ((e.clientX - rect.left) / rect.width)  * 2 - 1;
         mouse.y = -((e.clientY - rect.top)  / rect.height) * 2 + 1;
         raycaster.setFromCamera(mouse, camera);
-        const hits = raycaster.intersectObject(sphere);
+        // `false` — Raycaster.intersectObject's `recursive` argument defaults
+        // to true, and every one of the 320 CSS2DObject labels is a child of
+        // `sphere` (sphere.add(label), in the label loop above). Their
+        // raycast() is a no-op, but walking 320 children of a mesh whose own
+        // geometry is the only thing that can ever be hit isn't free on an
+        // unthrottled mousemove.
+        const hits = raycaster.intersectObject(sphere, false);
         const newHover = hits.length ? hits[0].faceIndex : -1;
         if (newHover !== hoveredFace) {
           if (hoveredFace !== -1 && hoveredFace !== selectedFace) restoreFaceColor(hoveredFace);
           hoveredFace = newHover;
           if (hoveredFace !== -1 && hoveredFace !== selectedFace) setFaceColor(hoveredFace, hoverColor);
         }
-        container.style.cursor = hoveredFace !== -1 ? 'pointer' : 'default';
+        claim.setCursor(hoveredFace !== -1 ? 'pointer' : 'default');
       };
       container.addEventListener('mousemove', onContainerMouseMove);
 
       touchGuard = bindTapVsDrag(container);
       onContainerClick = e => {
         if (touchGuard.consume()) return;
+        // Raycast from THIS event's own coordinates rather than reading
+        // `hoveredFace`. hoveredFace is only ever produced by the mousemove
+        // handler above, so anything that clicks without having moved a
+        // mouse across the canvas first read as an empty-space click on a
+        // facet: a touch tap, a synthetic click, a pointer entering over a
+        // facet from outside the window. The rect is fetched here anyway for
+        // clickedLeftHalf, so this costs one extra raycast on click, not a
+        // second layout read.
+        const rect = container.getBoundingClientRect();
+        mouse.x =  ((e.clientX - rect.left) / rect.width)  * 2 - 1;
+        mouse.y = -((e.clientY - rect.top)  / rect.height) * 2 + 1;
+        raycaster.setFromCamera(mouse, camera);
+        const clickHits = raycaster.intersectObject(sphere, false);
+        const clickedFace = clickHits.length ? clickHits[0].faceIndex : -1;
+
         // Only close on an actual empty-space click — a click that hits a
         // facet should swap the panel's content in place instead of closing
-        // it. hoveredFace is tracked live by mousemove above regardless of
-        // panel state, so it's already known here.
-        if (panel.classList.contains('open') && hoveredFace === -1) {
+        // it.
+        if (panel.classList.contains('open') && clickedFace === -1) {
           panelCloser.close();
           return;
         }
-        if (hoveredFace === -1) return;
-        if (selectedFace !== -1 && selectedFace !== hoveredFace) restoreFaceColor(selectedFace);
-        selectedFace = hoveredFace;
+        if (clickedFace === -1) return;
+        if (selectedFace !== -1 && selectedFace !== clickedFace) restoreFaceColor(selectedFace);
+        selectedFace = clickedFace;
         setFaceColor(selectedFace, selectedColor);
         const fi = selectedFace % fragments.length;
-        const rect = container.getBoundingClientRect();
         openFragment(fi, {
           facetLabel: `Facet ${selectedFace} · Fragment ${fi + 1} of ${fragments.length}`,
           fromLeft: clickedLeftHalf(e, rect),
@@ -466,38 +534,158 @@ export function createSphere(container, { preview = false, initialPieceId = null
       sphere.rotation.x += dy;
       wire.rotation.copy(sphere.rotation);
     },
-    onDragEnd: () => { setTimeout(() => { autoRotate = true; }, 2000); },
+    onDragEnd: () => { timers.after(2000, () => { autoRotate = true; }); },
   });
 
   // Reduced motion: gates the sphere's autonomous auto-rotate. Drag-to-
   // rotate stays available regardless — that's visitor-initiated motion,
-  // not motion imposed on them.
-  const reduceMotion = prefersReducedMotion();
+  // not motion imposed on them. Sampled once at mount AND subscribed to,
+  // so a visitor who turns the OS setting on while the sphere is already
+  // open stops the spin then rather than on the next scene change.
+  let reduceMotion = prefersReducedMotion();
+  const reduceMotionWatch = onReducedMotionChange(m => { reduceMotion = m; });
 
   // ─── Resize ───────────────────────────────────────────────────────────────
-  const resize = bindGuardedResize(container, (w, h) => {
-    camera.aspect = w / h;
+  // viewW/viewH are the container's own dimensions, cached here rather than
+  // read per label in projectToScreen() below. They only change on resize,
+  // and reading them 320 times a frame from inside a loop that is also
+  // WRITING styles is what made this scene expensive: a style write on label
+  // N followed by a layout read for label N+1 leaves the browser no choice
+  // but to flush a synchronous layout, once per label, every frame. Same
+  // pattern beamline.js already uses for its own `viewportH`.
+  let viewW = w, viewH = h;
+  const resize = bindGuardedResize(container, (nw, nh) => {
+    viewW = nw; viewH = nh;
+    camera.aspect = nw / nh;
     camera.updateProjectionMatrix();
-    renderer.setSize(w, h);
-    if (labelRenderer) labelRenderer.setSize(w, h);
+    renderer.setSize(nw, nh);
+    // devicePixelRatio can change with no signal other than a resize — a
+    // window dragged between a Retina and a non-Retina display.
+    managedRenderer.applyPixelRatio();
+    if (labelRenderer) labelRenderer.setSize(nw, nh);
   });
+  // The w/h this scene was constructed with fall back to window.innerWidth
+  // when the container measured 0 (a hidden ancestor at mount). That was
+  // self-correcting while projectToScreen read the live size every frame;
+  // now that it doesn't, run the guarded handler once so viewW/viewH start
+  // from a real measurement. bindGuardedResize's own 0-guard makes this a
+  // no-op if the container still isn't laid out.
+  resize.trigger();
 
   // ─── Animate ──────────────────────────────────────────────────────────────
   const cameraDir = new THREE.Vector3();
   const worldNormal = new THREE.Vector3();
   const worldUp = new THREE.Vector3();
   const normalMatrix = new THREE.Matrix3();
+  // Two more of the same kind — the per-label center/tip the rotation math
+  // below needs in world space. Both used to be `.clone()`d fresh inside the
+  // loop, once per visible label per frame.
+  const centerWorld = new THREE.Vector3();
+  const tipWorld = new THREE.Vector3();
 
-  function projectToScreen(vec3) {
-    const v = vec3.clone().project(camera);
-    return {
-      x: ( v.x * 0.5 + 0.5) * container.clientWidth,
-      y: (-v.y * 0.5 + 0.5) * container.clientHeight,
-    };
+  // Writes into `out` and reuses one scratch Vector3, rather than
+  // `vec3.clone().project(camera)` returning a fresh {x, y}: this is called
+  // twice per visible label per frame, so the old shape allocated a Vector3
+  // and an object literal ~1,600 times a second for values discarded in the
+  // same iteration.
+  const projVec = new THREE.Vector3();
+  const projCenter = { x: 0, y: 0 };
+  const projTip = { x: 0, y: 0 };
+  function projectToScreen(vec3, out) {
+    projVec.copy(vec3).project(camera);
+    out.x = ( projVec.x * 0.5 + 0.5) * viewW;
+    out.y = (-projVec.y * 0.5 + 0.5) * viewH;
+    return out;
+  }
+
+  // One per-frame pass over every label: backface test, opacity ramp,
+  // size, and the screen-space rotation that keeps text upright against
+  // the sphere's own surface. Its own function rather than inline in
+  // animate() so the cost of this pass can be timed on its own — it is by
+  // far the most expensive thing this scene does per frame (320 labels).
+  function updateLabels() {
+    // Label distance-scaling: real inverse relationship (scale ∝ 1/camDist)
+    // so labels keep a roughly constant apparent size as the camera zooms,
+    // clamped to [0.5, 3.0] so they don't vanish or balloon at the zoom
+    // extremes. 3.8 (chosen to match the default camera.position.z, i.e.
+    // scale = 1 at the starting distance) is TUNABLE as an overall
+    // label-size dial; the clamp bounds are TUNABLE for how much they're
+    // allowed to grow/shrink before hitting a floor/ceiling.
+    camera.getWorldDirection(cameraDir);
+    normalMatrix.getNormalMatrix(sphere.matrixWorld);
+    const camDist = camera.position.z;
+    const scale = Math.max(0.5, Math.min(3.0, 3.8 / camDist));
+
+    for (const entry of labelData) {
+      const { label, normal, upVec, div } = entry;
+      // Backface visibility test: a label should only show on the side of
+      // the sphere facing the camera. worldNormal is the face's outward
+      // normal transformed into world space by the sphere's current
+      // rotation; cameraDir is the direction the camera is looking. Their
+      // dot product is the cosine of the angle between them — it's -1
+      // when the normal points straight at the camera (face fully facing
+      // us) and +1 when it points straight away (face on the far side).
+      // `dot < -0.1` (rather than < 0) gives a small buffer past the true
+      // silhouette edge so labels don't flicker in and out right at the
+      // horizon of the sphere as it rotates. TUNABLE: -0.1 trades label
+      // visibility duration (less negative = labels appear/disappear
+      // closer to face-on, more negative = they linger further round the
+      // curve before hiding).
+      worldNormal.copy(normal).applyMatrix3(normalMatrix).normalize();
+      const dot = worldNormal.dot(cameraDir);
+      if (dot < -0.1) {
+        // Opacity ramps from 0 (right at the -0.1 visibility threshold)
+        // up to a cap of 0.25 as the face turns more fully toward the
+        // camera — so labels fade in near the silhouette edge instead of
+        // snapping on at full strength. TUNABLE: 0.25 (max label opacity)
+        // and 0.35 (how fast it ramps up) both reshape this fade.
+        const opacity = Math.min(0.25, (-dot - 0.1) * 0.35);
+        div.style.setProperty('--base-opacity', opacity.toFixed(3));
+        if (!label.visible) {
+          div.style.visibility = 'visible';
+          label.visible = true;
+        }
+        // fontSize/width/height are a function of `scale`, which is a
+        // function of camera distance alone — they cannot change except on
+        // zoom, so writing all three on every label on every frame was 960
+        // wasted string builds and CSS value parses a frame. Tracked
+        // per-label rather than with a single "did scale change" flag so a
+        // label that was hidden through a zoom still gets resized the moment
+        // it comes back round into view.
+        if (entry.sizedAt !== scale) {
+          div.style.fontSize = `${(7 * scale).toFixed(1)}px`;
+          div.style.width    = `${(60 * scale).toFixed(0)}px`;
+          div.style.height   = `${(52 * scale).toFixed(0)}px`;
+          entry.sizedAt = scale;
+        }
+        // Label rotation: to keep each label's text upright relative to
+        // the sphere's surface (not the screen) as the sphere spins, we
+        // project two nearby 3D points onto the 2D screen — the label's
+        // center, and a point offset slightly along its local "up"
+        // direction (upVec, the face's own tangent-plane up) — then use
+        // atan2 on the screen-space delta between them to recover the
+        // angle that direction makes on screen. atan2(dx, -dy) rather
+        // than atan2(dy, dx) is just this codebase's convention for
+        // measuring angle from screen-up instead of screen-right; the
+        // 180/Math.PI converts the result from radians to the degrees
+        // CSS rotate() expects.
+        centerWorld.copy(label.position).applyMatrix4(sphere.matrixWorld);
+        worldUp.copy(upVec).applyMatrix3(normalMatrix).normalize();
+        tipWorld.copy(centerWorld).addScaledVector(worldUp, 0.15);
+        const cs = projectToScreen(centerWorld, projCenter);
+        const ts = projectToScreen(tipWorld, projTip);
+        const angle = Math.atan2(ts.x - cs.x, -(ts.y - cs.y)) * (180/Math.PI);
+        div.style.transform = `rotate(${angle.toFixed(1)}deg)`;
+      } else if (label.visible) {
+        div.style.visibility = 'hidden';
+        label.visible = false;
+      }
+    }
   }
 
   let lightAngle = 0;
-  let animId;
+  let animId = 0;
+  let paused = false;
 
   function animate() {
     animId = requestAnimationFrame(animate);
@@ -513,72 +701,7 @@ export function createSphere(container, { preview = false, initialPieceId = null
     rimLight.position.set(Math.cos(lightAngle+Math.PI)*4, Math.sin(lightAngle*.7)*2, Math.sin(lightAngle+Math.PI)*4);
     fillLight.position.set(Math.sin(lightAngle*.5)*3, -3, Math.cos(lightAngle*.5)*3);
 
-    if (!preview && labelData.length) {
-      // Label distance-scaling: real inverse relationship (scale ∝ 1/camDist)
-      // so labels keep a roughly constant apparent size as the camera zooms,
-      // clamped to [0.5, 3.0] so they don't vanish or balloon at the zoom
-      // extremes. 3.8 (chosen to match the default camera.position.z, i.e.
-      // scale = 1 at the starting distance) is TUNABLE as an overall
-      // label-size dial; the clamp bounds are TUNABLE for how much they're
-      // allowed to grow/shrink before hitting a floor/ceiling.
-      camera.getWorldDirection(cameraDir);
-      normalMatrix.getNormalMatrix(sphere.matrixWorld);
-      const camDist = camera.position.z;
-      const scale = Math.max(0.5, Math.min(3.0, 3.8 / camDist));
-
-      for (const { label, normal, upVec, div } of labelData) {
-        // Backface visibility test: a label should only show on the side of
-        // the sphere facing the camera. worldNormal is the face's outward
-        // normal transformed into world space by the sphere's current
-        // rotation; cameraDir is the direction the camera is looking. Their
-        // dot product is the cosine of the angle between them — it's -1
-        // when the normal points straight at the camera (face fully facing
-        // us) and +1 when it points straight away (face on the far side).
-        // `dot < -0.1` (rather than < 0) gives a small buffer past the true
-        // silhouette edge so labels don't flicker in and out right at the
-        // horizon of the sphere as it rotates. TUNABLE: -0.1 trades label
-        // visibility duration (less negative = labels appear/disappear
-        // closer to face-on, more negative = they linger further round the
-        // curve before hiding).
-        worldNormal.copy(normal).applyMatrix3(normalMatrix).normalize();
-        const dot = worldNormal.dot(cameraDir);
-        if (dot < -0.1) {
-          // Opacity ramps from 0 (right at the -0.1 visibility threshold)
-          // up to a cap of 0.25 as the face turns more fully toward the
-          // camera — so labels fade in near the silhouette edge instead of
-          // snapping on at full strength. TUNABLE: 0.25 (max label opacity)
-          // and 0.35 (how fast it ramps up) both reshape this fade.
-          const opacity = Math.min(0.25, (-dot - 0.1) * 0.35);
-          div.style.setProperty('--base-opacity', opacity.toFixed(3));
-          div.style.visibility = 'visible';
-          label.visible = true;
-          div.style.fontSize = `${(7 * scale).toFixed(1)}px`;
-          div.style.width    = `${(60 * scale).toFixed(0)}px`;
-          div.style.height   = `${(52 * scale).toFixed(0)}px`;
-          // Label rotation: to keep each label's text upright relative to
-          // the sphere's surface (not the screen) as the sphere spins, we
-          // project two nearby 3D points onto the 2D screen — the label's
-          // center, and a point offset slightly along its local "up"
-          // direction (upVec, the face's own tangent-plane up) — then use
-          // atan2 on the screen-space delta between them to recover the
-          // angle that direction makes on screen. atan2(dx, -dy) rather
-          // than atan2(dy, dx) is just this codebase's convention for
-          // measuring angle from screen-up instead of screen-right; the
-          // 180/Math.PI converts the result from radians to the degrees
-          // CSS rotate() expects.
-          const centerWorld = label.position.clone().applyMatrix4(sphere.matrixWorld);
-          worldUp.copy(upVec).applyMatrix3(normalMatrix).normalize();
-          const tipWorld = centerWorld.clone().addScaledVector(worldUp, 0.15);
-          const cs = projectToScreen(centerWorld);
-          const ts = projectToScreen(tipWorld);
-          const angle = Math.atan2(ts.x - cs.x, -(ts.y - cs.y)) * (180/Math.PI);
-          div.style.transform = `rotate(${angle.toFixed(1)}deg)`;
-        } else {
-          div.style.visibility = 'hidden';
-          label.visible = false;
-        }
-      }
-    }
+    if (!preview && labelData.length) updateLabels();
 
     renderer.render(scene, camera);
     if (labelRenderer) labelRenderer.render(scene, camera);
@@ -587,6 +710,18 @@ export function createSphere(container, { preview = false, initialPieceId = null
 
   // ─── Cleanup ──────────────────────────────────────────────────────────────
   return {
+    // main.js pauses a scene it isn't showing — every preview tile while a
+    // full scene is open, and everything on `visibilitychange`. display:none
+    // does not stop a requestAnimationFrame loop: the callbacks keep being
+    // scheduled and the WebGL draws keep being issued into a subtree nobody
+    // can see. Idempotent, because main.js calls it on every sync rather
+    // than tracking which scenes it has already told.
+    setPaused(nextPaused) {
+      if (nextPaused === paused) return;
+      paused = nextPaused;
+      if (paused) { cancelAnimationFrame(animId); animId = 0; }
+      else animate();
+    },
     // Same-scene deep link support (main.js's expandScene, when the sphere
     // is already open and a new #sphere/<id> hash arrives) — opens a
     // fragment by id without tearing the scene down. No-op in preview mode
@@ -603,11 +738,16 @@ export function createSphere(container, { preview = false, initialPieceId = null
     dispose() {
       disposed = true;
       cancelAnimationFrame(animId);
+      // Everything still pending — the 180ms content crossfade, the 500ms
+      // side-flip reopen, the two 50ms focus hand-offs, the 2s auto-rotate
+      // resume — in one call.
+      timers.dispose();
       orbitDrag.dispose();
       wheelZoom?.dispose();
       panelCloser?.dispose();
       jumpList?.dispose();
       touchGuard?.dispose();
+      reduceMotionWatch.dispose();
       if (onContainerMouseMove) container.removeEventListener('mousemove', onContainerMouseMove);
       if (onContainerClick) container.removeEventListener('click', onContainerClick);
       resize.dispose();
@@ -615,11 +755,15 @@ export function createSphere(container, { preview = false, initialPieceId = null
       mat.dispose();
       wire.geometry.dispose();
       wire.material.dispose();
-      renderer.dispose();
       if (labelRenderer) labelRenderer.domElement.remove();
       if (panel) panel.remove();
       if (hint) hint.remove();
-      renderer.domElement.remove();
+      // Disposes the renderer, force-loses its GL context and removes the
+      // canvas — the last of which this used to do by hand.
+      managedRenderer.dispose();
+      // Puts back whatever position/overflow/cursor/tabindex the shared
+      // container had before this scene claimed it.
+      claim?.restore();
     }
   };
 }

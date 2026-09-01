@@ -8,8 +8,12 @@
    0.6s fade-in transition, then gets permanently covered once the overlay
    reaches full opacity. The fix is always the same: give it z-index ≥ 310.
      9999  .skip-link            (focus-only, must beat everything)
-     9000  #colophon-backdrop / #colophon-panel (a true modal dialog, not
-           scoped to any one scene — sits above the nav on purpose)
+     9000  .colophon-backdrop / .colophon-panel (a true modal dialog, not
+           scoped to any one scene — sits above the nav on purpose. Written
+           here as #ids until 4.0, which was simply wrong: colophon.css
+           styles both by class, per that file's own "classes for styling,
+           ids reserved for real DOM uniqueness or an ARIA idref" note, and
+           the only id in the whole component is #colophon-title.)
       500  #pm-nav
       400  #site-title / #fullscreen-toggle
       310  body-level scene overlays (title/hint/caption elements a scene
@@ -225,6 +229,32 @@
      --title-block-bottom rather than assuming 4.5rem alone still
      suffices. */
   --footer-safe-zone: 4.5rem;
+
+  /* ─── Focus ring ────────────────────────────────────────────────────────
+     One ring, everywhere. There were four different outline colours across
+     this file and colophon.css — rgba(255,255,255,0.4) on #site-title, 0.5
+     on .nav-icon and #fullscreen-toggle, 0.6 on .preview-container and
+     .colophon-mark — with no reason stated anywhere for any of them being
+     different from the others. They read as four independent guesses,
+     because that is what they were. 0.75 is the value all of them now
+     share: against this site's black it measures 11.4:1, comfortably past
+     WCAG 2.2's 3:1 for a focus indicator, where the old 0.4 managed 3.7:1
+     and the 0.5 5.3:1 — passing, but with nothing left over for the
+     brighter scene backdrops some of these controls sit on top of.
+     Offset stays per-selector: it depends on the shape being ringed (a
+     circular 240px tile wants more room than a 22px glyph), which is a real
+     difference, unlike the colour. */
+  --focus-ring: 2px solid rgba(255, 255, 255, 0.75);
+
+  /* ─── Scene crossfade ───────────────────────────────────────────────────
+     #experience-overlay's opacity transition, and the two setTimeout()s in
+     main.js that wait for it to finish before tearing the old scene down.
+     Those have to agree exactly: a JS timer shorter than the transition
+     disposes the outgoing scene mid-fade (its canvas blanks in view), a
+     longer one leaves a dead pause on a black screen. They used to agree by
+     three separately-maintained 600s. main.js reads this property at load
+     (CROSSFADE_MS) so the stylesheet stays the one place it's set. */
+  --scene-crossfade: 600ms;
 }
 
 /* ─── Reset & base ──────────────────────────────────────────────────────────── */
@@ -268,88 +298,155 @@ html, body {
 .skip-link:focus { top: 0; }
 
 /* ─── Nav bar ───────────────────────────────────────────────────────────────── */
-/* Mobile-first (standing convention, see STANDARDS.md): #pm-nav's gap and
-   .nav-icon's touch-target size below both target the smallest viewport
-   by default. This pair used to live as separate top-level
-   max-width:768px/480px overrides — see .nav-icon's own comment for the
-   full icon-count-driven history now consolidated there. */
+/* THE ICON-COUNT MATH, ONCE, AS ARITHMETIC THE BROWSER DOES.
+   Read this before touching #pm-nav or .nav-icon. This is the single place
+   in the codebase with a documented history of breaking silently, and it
+   has now broken in production four separate times.
+
+   The failure mode, every time: #pm-nav has no wrap and no scroll and is
+   justify-content:center, so the moment (icons x icon width) + (gaps x gap
+   width) exceeds the viewport, the row overflows off BOTH edges evenly and
+   the outermost icons are simply gone — no scrollbar, no clipping
+   artifact, nothing else visibly wrong on the page. It looks like the site
+   was designed with eight icons.
+
+   The four occurrences:
+     2026-08-04  count went 7 -> 8; needed a 38px touch-target override to fit.
+                 That override then came in and out twice more as the count
+                 moved again.
+     2026-08-23  3.0 QA caught a dead zone between the 480px and desktop
+                 tiers: at 500px wide, Sphere and Butterfly sat off the left
+                 edge and Beamline and Harmonics off the right, all four
+                 unreachable.
+     2026-08-24  count went 9 -> 10 with Outside; the arithmetic was re-run
+                 by hand and happened to still clear.
+     2026-09-01  (this pass) measured live and still failing at the two most
+                 common phone widths: at 375x812 the first icon's left edge
+                 was at -8px and the last icon's right edge at 383px — 8px
+                 clipped off each end on every 375px iPhone. At 320x720 it
+                 was 35px each side, putting Sphere and Outside entirely
+                 off-screen. And a second, previously unnoticed dead zone
+                 sat at the TOP of the desktop tier: 10 x 44px + 9 x 2.5rem
+                 needs 800px, but that tier started at 769px, so 769-800px
+                 clipped too.
+
+   Every one of those fixes was the same shape — re-tune a number against
+   the count of the day — which is why the same bug kept coming back. So
+   this version doesn't have a number to re-tune. `--nav-count` below is
+   the only thing an eleventh scene changes, and the sizing is derived from
+   it so that the row is arithmetically incapable of overflowing:
+
+     slot      = min(84px, (100vw - 2*padding) / count)   per-icon share
+     icon size = min(44px, slot)                          never wider than its share
+     gap       = slot - icon size                         whatever the share has left over
+
+     total = count*icon + (count-1)*gap + 2*padding
+           = count*slot - gap + 2*padding
+           <= count*slot + 2*padding
+           <= 100vw                                       for ANY count.
+
+   Consequences worth knowing: above ~856px this reproduces the old desktop
+   look exactly (44px icons, 2.5rem gaps) — that's what the 84px slot cap
+   is for. Between there and ~460px the gap closes smoothly instead of the
+   row clipping, so there is no breakpoint left to have a dead zone at, and
+   the two media queries this pair used to carry are gone rather than
+   retuned. Below ~460px the icons themselves start shrinking, down to
+   30.4px at 320px.
+
+   Why not flex-wrap to two rows, which would keep a full 44x44 target at
+   every width: #pm-nav's 3.5rem height is a load-bearing constant well
+   outside this file — #landing and #experience-overlay both pad their tops
+   by exactly it, and all ten scene stylesheets (owned elsewhere) position
+   their own hint text at top:4.5rem to clear it. A nav that grows to two
+   rows on phones puts a second row of icons through every one of those.
+   That's a coordinated change across files this pass doesn't own, not a
+   CSS tweak. Recorded here so the option isn't re-proposed as if it were
+   free.
+
+   TOUCH TARGET. 10 x 44px is 440px, so a single row of ten cannot give
+   every icon a 44x44 target on a 320px or 375px phone — that's arithmetic,
+   not a choice. What IS available is taken: height is a full 44px at every
+   width (up from 38px), and .nav-icon::before extends the hit area
+   vertically to the nav bar's own full 3.5rem and horizontally across half
+   the gap on each side, so adjacent targets tile edge-to-edge with no dead
+   space between them and — deliberately — no overlap either, since
+   overlapping targets mean an edge tap opens the wrong scene. At 375px
+   that's a 36.3 x 56px target per icon against the old 34 x 38px; at 460px
+   and up it reaches the full 44px in both axes. */
 #pm-nav {
+  /* Keep equal to the number of .nav-icon buttons in index.html. This is
+     the one value an added or removed scene has to change. */
+  --nav-count: 10;
+  --nav-pad: 0.5rem;
+  /* The widest one icon's share of the row may grow to: 44px of icon plus
+     the 2.5rem gap the desktop layout has always used. */
+  --nav-slot-max: 84px;
+  --nav-icon-max: 44px;
+  --nav-slot: min(var(--nav-slot-max), calc((100vw - 2 * var(--nav-pad)) / var(--nav-count)));
+  --nav-icon-size: min(var(--nav-icon-max), var(--nav-slot));
+  --nav-gap: max(0px, calc(var(--nav-slot) - var(--nav-icon-size)));
+
   position: fixed;
   top: 0; left: 0; right: 0;
   height: 3.5rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.35rem;
+  gap: var(--nav-gap);
+  padding-inline: var(--nav-pad);
   z-index: 500;
   background: rgba(0,0,0,0.55);
   border-bottom: 1px solid rgba(255,255,255,0.08);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-
-	@media (min-width: 769px) {
-		gap: 2.5rem;
-	}
 }
 
-/* 3.0 QA pass (2026-08-23): the icon shrink below used to only live under
-   a max-width:480px query, which left a real dead zone — at the desktop
-   (unshrunk) sizing, 9 icons × 44px + 8 gaps × 2.5rem(40px) = 716px. Any
-   viewport from 480px up to that ~716px point got the desktop gap/size
-   with no override, so #pm-nav (no wrap/scroll, justify-content:center)
-   silently clipped icons off both edges with nothing visibly wrong —
-   caught live at a 500px width during the 3.0 QA pass, where Sphere and
-   Butterfly sat off the left edge and Beamline/Harmonics off the right,
-   all four unreachable. Moving the shrink to the min-width:769px tier
-   below (mobile-first equivalent of the old 768px breakpoint) closes
-   that gap with room to spare: 9 × 34px + 8 × 0.35rem(5.6px) = 350.8px
-   fits from there all the way down to the narrowest common phone widths.
-   Outside's nav icon (2026-08-24) brought the count to ten — same math
-   still clears easily: 10 × 34px + 9 × 5.6px = 390.4px.
-
-   Earlier history, before the 2026-08-23 fix above: icons at their
-   touch-target width plus the nav's gap must fit inside the viewport —
-   #pm-nav has no wrap or scroll, so anything wider than the viewport
-   just clips off both edges evenly. The live icon count moved 7→8→9→10
-   as scenes shipped and were shelved (see NOTES.md for the full
-   timeline), each change threatening to reintroduce edge-clipping at a
-   slightly different pixel threshold — first caught 2026-08-04 at eight
-   icons, needing a 38px touch-target override to fit; that override came
-   in and out twice more as the count changed again before the 2026-08-23
-   fix above made it unconditional at this breakpoint.
-
-   Any future scene addition/removal: re-run this arithmetic (icon
-   count × icon width + (count−1) × gap) against the base (mobile) and
-   min-width:769px tiers before assuming the fit still holds — this is
-   the one place in the codebase with a documented history of silently
-   breaking at exactly this boundary. */
 .nav-icon {
   background: none;
   border: none;
+  padding: 0;
   cursor: pointer;
-  padding: 0.5rem;
-  /* Padding alone (0.5rem + 22px icon) was ~38px — below the ~44px
-     touch-target guideline used at the min-width:769px tier below.
-     min-width/height pads the tap area out without changing the icon's
-     visual size or the nav's layout. */
-  min-width: 34px;
-  min-height: 34px;
+  /* No shrinking, no growing: the width above is already each icon's exact
+     share of the row, and letting flex renegotiate it would put the
+     overflow guarantee back in the browser's hands. */
+  flex: 0 0 auto;
+  width: var(--nav-icon-size);
+  height: var(--nav-icon-max);
   display: flex;
   align-items: center;
   justify-content: center;
-  opacity: 0.35;
+  position: relative;
+  /* Was 0.35, which measured EXACTLY 3.00:1 against the nav's near-black
+     ground — the bare floor WCAG 1.4.11 asks of a non-text control, with
+     nothing to spare, on a 1.3px stroke. 0.5 measures 5.3:1 and is still
+     visibly dimmer than the 1.0 the active and hovered states use, so the
+     "which one am I in" signal these icons carry is untouched. */
+  opacity: 0.5;
   transition: opacity 0.25s, transform 0.2s;
   color: #fff;
-
-	@media (min-width: 769px) {
-		min-width: 44px;
-		min-height: 44px;
-	}
+}
+/* The tap target, larger than the drawn icon and independent of it. Fills
+   the nav bar's full height (44px + 2 x 0.375rem = 3.5rem) and reaches
+   halfway into the gap on each side — so the targets tile with no dead
+   space and no overlap, whatever --nav-count makes the gap. Transparent, so
+   it changes nothing visually; a transparent background is still
+   hit-tested, unlike visibility:hidden. */
+.nav-icon::before {
+  content: '';
+  position: absolute;
+  inset-block: -0.375rem;
+  inset-inline: calc(-0.5 * var(--nav-gap));
 }
 .nav-icon:hover { opacity: 1; transform: scale(1.12); }
 .nav-icon.active { opacity: 1; }
-.nav-icon:focus {
-  outline: 2px solid rgba(255,255,255,0.5);
+/* :focus-visible, not :focus — a mouse click on a nav icon left a ring
+   sitting on it afterwards, which on a page this bare read as a rendering
+   fault rather than a focus indicator. The reveal-on-focus controls
+   (.skip-link, .pm-jumplist button) deliberately keep plain :focus: they
+   are invisible until focused, so they must respond to programmatic focus
+   too, which :focus-visible does not guarantee. */
+.nav-icon:focus-visible {
+  outline: var(--focus-ring);
   outline-offset: 3px;
   border-radius: 3px;
 }
@@ -404,7 +501,8 @@ html, body {
   margin-right: calc(-1 * var(--tracking));
   font-size: 0.7rem;
   text-transform: uppercase;
-  color: rgba(255,255,255,0.5);
+  /* 0.82, was 0.5 — see the scrim comment below for the measurement. */
+  color: rgba(255,255,255,0.82);
   pointer-events: auto;
   white-space: nowrap;
   text-decoration: none;
@@ -412,17 +510,33 @@ html, body {
   cursor: pointer;
   text-shadow: 0 1px 5px rgba(0,0,0,0.75);
   /* A blurred text-shadow alone assumed every scene sat on a dark-ish
-     backdrop — true everywhere except leaf's new bright daytime sky,
-     where the title nearly vanished into the pale cream near the horizon
-     (Scott: "totally getting lost against the palette"). A solid low
-     scrim behind the text is scene-brightness-agnostic — it'll hold up
-     against any future light scene too, not just this one. */
-  background: rgba(0,0,0,0.4);
+     backdrop — true everywhere except leaf's new bright daytime sky, where
+     the title nearly vanished into the pale cream near the horizon (Scott:
+     "totally getting lost against the palette"). The fix at the time was a
+     0.4-alpha scrim, and the comment here claimed that made the title
+     "scene-brightness-agnostic."
+
+     CORRECTION, 4.0 — it did not, and the arithmetic was never done. A
+     0.4-alpha black scrim over a white scene composites to #999, not to
+     anything dark; 0.5-alpha white text over #999 composites to #ccc; #ccc
+     on #999 is 1.77:1. That is the worst contrast anywhere on this site,
+     on its one permanently-visible piece of text, and the comment
+     asserting the opposite is exactly why nobody re-checked it. An alpha
+     scrim can never be brightness-agnostic on its own — it's a blend, so
+     whatever is behind it always comes through in proportion.
+
+     What actually holds: enough scrim that the composite stays dark
+     regardless, and enough text alpha that the text stays bright.
+     Measured (WCAG relative luminance, against each real composited
+     ground): 5.3:1 over a pure-white scene — the worst case, and the one
+     that used to be 1.77:1 — 13.8:1 over black, ~11:1 over mid-grey. The
+     text is 11.2px, so 4.5:1 is the bar it has to clear, not 3:1. */
+  background: rgba(0,0,0,0.65);
   padding: 0.4rem 1rem;
   border-radius: 999px;
 }
-#site-title:hover { color: rgba(255,255,255,0.7); }
-#site-title:focus { outline: 1px solid rgba(255,255,255,0.4); outline-offset: 4px; }
+#site-title:hover { color: rgba(255,255,255,1); }
+#site-title:focus-visible { outline: var(--focus-ring); outline-offset: 4px; }
 
 /* Light translucent smoke curling up on hover */
 #site-title::before,
@@ -458,6 +572,93 @@ html, body {
 @media (prefers-reduced-motion: reduce) {
   #site-title::before, #site-title::after { display: none; }
 }
+
+/* ─── "Read the writing on its own" ─────────────────────────────────────────── */
+/* Back in the served HTML as of 4.0 (see index.html's own comment at the
+   element for why the 1.31.2 removal is partly undone). A fixed-position
+   child of #landing, exactly like #landing-bottom-fade below — out of
+   #landing's flex row so it can't disturb the preview grid's layout, and
+   hidden along with everything else on the landing page by the
+   display:none expandScene() sets on #landing, so it needs no visibility
+   logic of its own.
+
+   Mobile-first: on a phone it sits ABOVE the centered #site-title pill
+   rather than beside it, which is what made the old bottom-left version
+   unlivable at narrow widths (it collided with the pill, the immediate
+   trigger for removing it in 1.31.2). It lands inside
+   #landing-bottom-fade's gradient band on purpose — that fade is what
+   gives small text a dark ground to read against there. From 601px up
+   there's real room at the bottom-left, and it moves there so it isn't
+   stacked on the title.
+
+   0.55 alpha, not the 0.35 the old link used: at this size it's body text
+   as far as WCAG is concerned, and 0.35 white on black is 3.0:1. 0.55
+   measures 6.3:1. */
+#landing-textlink {
+  position: fixed;
+  /* left:0/right:0 + width:fit-content + margin-inline:auto — the box
+     shrink-wraps to the words and centers itself between those two insets.
+     It was `left:0; right:0; text-align:center` on a full-width block,
+     which centered the text just as well but left an invisible,
+     viewport-wide link band across the page: measured live at 320x720, a
+     tap anywhere in that 11px-tall strip navigated to /text/, and the box
+     geometrically overlapped .colophon-mark's 48px button in the corner.
+     Per STANDARDS.md this is auto-margin centering inside a positioned
+     inset, not left:50% + translateX(-50%) self-measuring — the box never
+     has to know its own width, so letter-spacing's trailing gap can't
+     throw it the way it once threw #site-title (and at 0.18em of a 9.6px
+     font the residual would be under a pixel here regardless). */
+  bottom: 5.2rem; left: 0; right: 0;
+  width: fit-content;
+  margin-inline: auto;
+  z-index: 60;
+  font-size: 0.6rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.55);
+  text-decoration: none;
+  text-shadow: 0 1px 5px rgba(0,0,0,0.85);
+  transition: color 0.2s;
+
+	@media (min-width: 601px) {
+		/* Real room at the bottom-left from here up, well clear of both the
+		   centered title and the colophon mark, so it goes back to the corner
+		   the pre-1.31.2 version used. */
+		bottom: 1.6rem; left: 1.5rem; right: auto;
+		margin-inline: 0;
+	}
+	@media (prefers-reduced-motion: reduce) {
+		transition: none;
+	}
+}
+#landing-textlink:hover { color: rgba(255,255,255,0.9); }
+#landing-textlink:focus-visible { outline: var(--focus-ring); outline-offset: 4px; }
+
+/* ─── No-JavaScript fallback ────────────────────────────────────────────────── */
+/* Only ever rendered inside <noscript>, so it is never in the DOM when any
+   of the rest of this file's machinery is running. html/body are
+   overflow:hidden site-wide for the full-screen scene experience, which
+   would otherwise crop this off the page entirely — hence the fixed,
+   full-viewport box with its own scroll. */
+#noscript-fallback {
+  position: fixed;
+  inset: 0;
+  z-index: 9500;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.9rem;
+  padding: 2rem 1.5rem;
+  background: #000;
+  color: rgba(255,255,255,0.85);
+  font-size: 0.95rem;
+  line-height: 1.7;
+  text-align: center;
+}
+#noscript-fallback p { max-width: 34rem; }
+#noscript-fallback a { color: #fff; }
 
 /* ─── Fullscreen toggle ─────────────────────────────────────────────────────── */
 /* Persistent, site-wide (see index.html's own comment at the button) —
@@ -501,7 +702,7 @@ html, body {
   color: rgba(255,255,255,0.95);
 }
 #fullscreen-toggle:focus-visible {
-  outline: 2px solid rgba(255,255,255,0.5);
+  outline: var(--focus-ring);
   outline-offset: 3px;
 }
 #fullscreen-toggle svg {
@@ -666,17 +867,9 @@ html, body {
 	}
 }
 
-/* ─── "Read the writing on its own" — moved, 1.31.2 ─────────────────────────
-   Lived here as its own fixed bottom-left element from 2026-07-29 (alongside
-   the static /text/ pages) until 2026-08-03, when it moved into the colophon
-   dialog instead (src/components/colophon.js's Bibliography section, right
-   next to the sourcing content it's actually about) — on both desktop and
-   mobile, not conditionally hidden at one breakpoint. It was crowding other
-   fixed elements at narrow widths (the immediate trigger), but the deeper
-   reason: the landing page didn't need a second permanent fixed-position
-   link once the colophon already exists as the place for exactly this kind
-   of "here's the machinery" content. See #landing-bottom-fade below, still
-   needed for #site-title alone. */
+/* ("Read the writing on its own" was documented here as removed in 1.31.2.
+   It came back in 4.0 — its rule and the full reasoning are further up this
+   file, under #landing-textlink.) */
 
 /* ─── Bottom vignette (mobile column stack) ─────────────────────────────────
    Added 2026-08-03. Below 480px #scene-previews switches to
@@ -693,8 +886,10 @@ html, body {
    into it. Hidden above 480px on purpose — at those widths the grid only
    ever wraps 1-2 rows, and #landing's own padding-bottom already keeps the
    last row clear of the fixed footer, so there's nothing for this to fix
-   there. (#landing-textlink used to share this problem too — moved into
-   the colophon as of 1.31.2, see the note above.) */
+   there. #landing-textlink shares this band deliberately as of 4.0 — it
+   sits at bottom:5.2rem on phones, using this gradient as the dark ground
+   its small text reads against, and clearing both #site-title below it and
+   .colophon-mark's 48px button in the corner. */
 /* Mobile-first (standing convention, see STANDARDS.md): shown by default
    (base targets the smallest viewport, where it's needed — see the
    comment above), hidden once the min-width:481px tier switches
@@ -788,8 +983,11 @@ html, body {
   transform: scale(1.04);
   box-shadow: 0 0 40px rgba(255,255,255,0.08);
 }
-.preview-container:focus {
-  outline: 2px solid rgba(255,255,255,0.6);
+/* :focus-visible — see .nav-icon's own note. A 240px circle keeping a ring
+   after a mouse click is the most conspicuous version of that problem on
+   this page. */
+.preview-container:focus-visible {
+  outline: var(--focus-ring);
   outline-offset: 4px;
 }
 .preview-container canvas {
@@ -802,19 +1000,24 @@ html, body {
 #experience-overlay {
   position: fixed;
   inset: 0;
-  background: #000811;
+  /* The fallback IS the default backdrop; --overlay-bg is set by main.js
+     only for a scene whose registry entry declares an `overlayBg` (today,
+     Butterfly's true black). This replaced a `.butterfly-bg` class that
+     named one scene in this file and again in main.js — two places to
+     remember, and no way for a second scene to want the same thing without
+     inventing a third. `data-scene` is on the overlay too if some future
+     rule genuinely needs to match a scene by name from CSS. */
+  background: var(--overlay-bg, #000811);
   z-index: 300;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.6s ease;
+  /* Duration shared with main.js's CROSSFADE_MS — see :root. */
+  transition: opacity var(--scene-crossfade) ease;
   padding-top: 3.5rem; /* clear nav */
 }
 #experience-overlay.active {
   opacity: 1;
   pointer-events: all;
-}
-#experience-overlay.butterfly-bg {
-  background: #000000;
 }
 
 #experience-container {
@@ -860,6 +1063,83 @@ html, body {
 @keyframes pm-spin {
   to { transform: rotate(360deg); }
 }
+/* A scene that failed to load has stopped loading — the spinner has to go,
+   or the page claims to still be working while the message beside it says
+   it isn't. */
+#experience-overlay.pm-load-error #experience-loading { opacity: 0; }
+/* And stop it actually spinning, not just spinning invisibly — an
+   opacity:0 element with a running animation still keeps a compositor
+   animation alive for as long as the error is on screen, which on the one
+   code path where something has already gone wrong is the last place to
+   leave a loop running. */
+#experience-overlay.pm-load-error #experience-loading::before { animation: none; }
+
+/* ─── Scene-load error ──────────────────────────────────────────────────────── */
+/* The first error state this site has ever had, so it's worth saying what
+   it is trying to look like: nothing. Same font as everything else
+   (inherited from body), same restrained white-on-near-black, same quiet
+   uppercase tracking as #site-title for the one line of interface text
+   (the button). No red, no icon, no box, no border — an alert dialog would
+   be a much louder object than the thing it's reporting on, which is one
+   piece out of ten failing to arrive. It reads as a caption, because that
+   is what it is. */
+/* `display: flex` on an id selector beats the user-agent stylesheet's
+   `[hidden] { display: none }` on specificity, so `expError.hidden = true`
+   in main.js did nothing and the error caption rendered on top of every
+   scene, always. Same shape as the `#fullscreen-toggle[hidden]` override a
+   few rules up, and the same reason it exists: any rule that sets `display`
+   from an id has to restate the hidden case itself. Two agents lost real
+   time to this one during the 4.0 pass, chasing load failures that weren't
+   happening. */
+#experience-error[hidden] { display: none; }
+
+#experience-error {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 2rem 1.5rem;
+  text-align: center;
+}
+.experience-error-line {
+  font-size: 0.95rem;
+  line-height: 1.7;
+  color: rgba(255,255,255,0.85);
+}
+.experience-error-fix {
+  font-size: 0.85rem;
+  color: rgba(255,255,255,0.6);
+}
+#experience-error-reload {
+  margin-top: 1.2rem;
+  font-family: inherit;
+  font-size: 0.68rem;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.82);
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.3);
+  border-radius: 999px;
+  padding: 0.55rem 1.4rem 0.55rem calc(1.4rem + 0.24em);
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s, color 0.2s;
+
+	@media (prefers-reduced-motion: reduce) {
+		transition: none;
+	}
+}
+#experience-error-reload:hover {
+  background: rgba(255,255,255,0.14);
+  border-color: rgba(255,255,255,0.6);
+  color: #fff;
+}
+#experience-error-reload:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: 3px;
+}
 
 /* ─── Keyboard jump lists ───────────────────────────────────────────────────── */
 /* Built by sceneKit.js's createJumpList() for sphere/orbiter/orrery/library — an
@@ -897,14 +1177,21 @@ html, body {
 }
 
 /* ─── Focus styles ──────────────────────────────────────────────────────────── */
-#experience-close:focus {
-  outline: 2px solid rgba(255,255,255,0.6);
-  outline-offset: 4px;
-}
+/* #experience-close's rule lived here until 4.0, styling an element that
+   appears nowhere else in the repository — index.html's overlay comment
+   says so outright ("no close button; nav is the navigation"), so it was
+   presumably left behind by a close button that was designed and then cut.
+   Every live focus style is now nested in its own selector's rule above and
+   shares the one --focus-ring (see :root), so there is nothing left to
+   declare in this section. */
 
 /* ─── Reduced motion ────────────────────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
   .preview-container { transition: none; }
+  /* main.js checks prefersReducedMotion() at both ends of a scene
+     transition and skips the wait entirely when this is on, rather than
+     leaving a CROSSFADE_MS pause where the fade used to be — see
+     expandScene()/returnToGallery(). */
   #experience-overlay { transition: none; }
   .preview-container:hover { transform: none; }
   .nav-icon { transition: none; }
@@ -917,8 +1204,15 @@ html, body {
 /* Mobile-first as of the theater.css/main.css follow-up pass (see
    STANDARDS.md) — this file's responsive rules used to live here as a
    block of top-level max-width overrides; every one of them now lives
-   nested inside its own selector's rule instead (#pm-nav, .nav-icon,
-   #scene-previews, .preview-row-break, .preview-container, #landing,
-   #landing-bottom-fade, #fullscreen-toggle, #fullscreen-toggle svg — see
-   each selector above), per the site-wide nesting convention. Nothing
-   left to declare at this point in the file. */
+   nested inside its own selector's rule instead (#scene-previews,
+   .preview-row-break, .preview-container, #landing, #landing-bottom-fade,
+   #landing-textlink, #fullscreen-toggle, #fullscreen-toggle svg — see each
+   selector above), per the site-wide nesting convention. Nothing left to
+   declare at this point in the file.
+
+   #pm-nav and .nav-icon dropped OFF that list in 4.0: they no longer have
+   responsive rules to nest, because they no longer have breakpoints. Their
+   sizing is derived from --nav-count with min()/max() and scales
+   continuously, which is what finally closed a bug that had recurred four
+   times at four different pixel thresholds — see that rule's own comment.
+   A breakpoint you don't have can't develop a dead zone. */

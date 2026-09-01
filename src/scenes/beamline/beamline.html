@@ -8,9 +8,21 @@
   textContent after parsing this shell — they're the subtitle now, not
   the title. Hint text and the sr-only live region (used to announce
   station labels as the vessel passes each one) are both fully static.
+
+  aria-hidden stays on the hint only (v4.0). Hiding "drag to orbit / scroll
+  to zoom / click a station to read" is right — those are pointer
+  instructions, and this file's own sr-live region plus the jump list are
+  how a keyboard or screen-reader visitor actually reaches the stations.
+  Hiding the title block was not: the two lines beneath the name are
+  EPIGRAPH_PRIMARY ("The body is the prism of the dream.") and
+  EPIGRAPH_SECONDARY, and per beamline.text.js's own header those are found
+  text from the same archive as the station passages — the same category of
+  content the .beamline-sr-live region exists to announce. The piece's own
+  words were the one thing on screen a screen-reader visitor could not get
+  at, while the instructions for a mouse were fair game.
 -->
 
-<div class="beamline-title" aria-hidden="true">
+<div class="beamline-title">
   <span class="beamline-title-name">Beamline</span>
   <span class="beamline-title-main"></span>
   <span class="beamline-title-sub"></span>

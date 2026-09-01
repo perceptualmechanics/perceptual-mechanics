@@ -2,6 +2,8 @@ import * as THREE from 'three';
 import {
   bindOrbitDrag, bindWheelZoom, bindGuardedResize, prefersReducedMotion,
   createJumpList, bindTapVsDrag, mountClippedPreviewCanvas, parseHTML,
+  bindEscapeClose, claimContainer, manageRenderer, createFrameClock, trackTimers,
+  registerTransientOverlay,
 } from '../../utils/sceneKit.js';
 import './beamline.css';
 import beamlineHtml from './beamline.html?raw';
@@ -9,13 +11,64 @@ import { EPIGRAPH_PRIMARY, EPIGRAPH_SECONDARY, BOUNCES } from './beamline.text.j
 import { mulberry32, hashSeed } from '../../utils/prng.js';
 
 // ─── Canonical accent color ─────────────────────────────────────────────────
-// Hue ~216°, one numeric hex value applied to every touchpoint (rail,
-// stations, vessel, UI); only lightness/darkness varies per-touchpoint,
-// never hue.
-const ACCENT = 0x50C878;        // canonical — rail core, station glow, vessel light
-const ACCENT_HALO = 0x8ADAA4;   // lighter tint, same hue — rail halo, dust
+// Hue ~140° (emerald). One numeric hex value applied to every touchpoint the
+// piece itself is made of — rail, stations, vessel, the grid printed on the
+// terrain, UI; only lightness/darkness varies per-touchpoint, never hue.
+//
+// This comment said "~216°" until v4.0, which is 0x0066ff — the accent this
+// file used BEFORE the emerald pass, not the ACCENT declared directly beneath
+// it. The "never hue" rule was contradicted in live code at the same time, by
+// leftovers the pass never reached because they weren't constants: it
+// converted the material `color:` values and left behind the canvas-2D paths
+// (makeGridTexture's stroke, still carrying a comment naming the deleted
+// 0x0066ff by name; the skybox's horizon glow; the shimmer and dust tints)
+// and two hardcoded 0x0080ff literals — the rail's bright inner core, which
+// is the most prominent object in the scene, and the vessel's own point
+// light. Both of those are touchpoints this very comment names, and the line
+// below has always claimed ACCENT is what colours them.
+//
+// Resolved by fixing the code rather than relaxing the rule, on the evidence
+// that these were misses and not decisions: a comment pointing at a constant
+// that no longer exists is not a design choice, and every colour in this file
+// that IS deliberately not ACCENT (GOLD_ACCENT, STATION_CORE_WARM,
+// HORIZON_COLOR) is a named constant with a paragraph explaining how it was
+// derived and why it earns its place — these five were bare literals with
+// nothing said about them at all. The header immediately below also states
+// outright that gold is the ONE second accent and specifically not "a third
+// field color competing with the rail for attention," which a blue rail core
+// and a blue ground grid plainly were.
+//
+// The canvas-2D helpers now take their colour from these same numeric
+// constants via accentCss() below, rather than a transcribed rgba() copy —
+// the transcription is the thing that got missed last time.
+//
+// beamline.css got the same pass in the same change — its two title glows
+// were the literal rgba(0,102,255,...) too, and its title/hint text tints
+// moved to this hue at matched lightness so the contrast ratios recorded
+// there stay true. The DECISION recorded in that file (this scene's chrome
+// is tinted rather than the site's plain white, with its own literals rather
+// than the shared --hint-text-color) is unchanged; only the hue moved.
+//
+// Deliberately NOT emerald, and not leftovers: the sky gradient, scene.fog
+// and the three scene lights. Those are the cool night the piece sits in
+// rather than touchpoints of the piece, and the band they resolve toward at
+// the horizon is HORIZON_COLOR, which IS this hue. Gold, below, remains the
+// one intentional second accent.
+const ACCENT = 0x50C878;        // canonical — rail core, station glow, vessel light, terrain grid
+const ACCENT_HALO = 0x8ADAA4;   // lighter tint, same hue — rail halo, dust, shimmer
 const ACCENT_DEEP = 0x309A54;   // darker tint, same hue — vessel/station chassis fill
 const ACCENT_SHADOW = 0x1E6034; // darkest tint, same hue — unused directly here, kept for parity with the rest of the site's palette set
+
+// Numeric hex -> the `rgba(r,g,b,` prefix the canvas 2D API wants, same shape
+// and same purpose as GOLD_ACCENT_CSS and HORIZON_CSS below: one value, two
+// APIs, derived rather than transcribed so the two forms are structurally
+// unable to drift apart. Transcribed copies are exactly what the emerald pass
+// missed.
+function accentCss(hex) {
+  return `rgba(${(hex >> 16) & 0xff},${(hex >> 8) & 0xff},${hex & 0xff},`;
+}
+const ACCENT_CSS = accentCss(ACCENT);
+const ACCENT_HALO_CSS = accentCss(ACCENT_HALO);
 
 // Secondary gold accent — pulled from Sphere's own gold
 // (src/scenes/sphere.js's .fragment-link:hover, rgba(255,220,120,.95)), not
@@ -166,12 +219,22 @@ const VALLEYS = [
   { cx: 1236, cz: -89, radius: 300, depth: 18, seed: 149 },
 ];
 
-// CAM_TARGET's own x/z (the orbit pivot, defined as a runtime constant
-// inside createBeamline below) — duplicated here at module scope since
-// terrainHeight() has to stay a plain (x,z)→height function, callable
-// without a scene instance. Kept in sync by hand; if CAM_TARGET's x/z ever
-// change, update these too.
-const CAM_TARGET_XZ = { x: 199.944150, z: 0.531666 };
+// ─── The orbit pivot, defined once ──────────────────────────────────────────
+// The camera's target: the rail's real 3D centroid, computed from 2000
+// arc-length-spaced samples and transcribed at full precision.
+//
+// It lives at module scope because terrainHeight()/corridorFactor() have to
+// stay plain (x,z)→height functions, callable without a scene instance —
+// and createBeamline needs the same point as a THREE.Vector3, which it now
+// DERIVES from this rather than restating the three literals. Until v4.0
+// there were two copies (this one, x/z only, and a Vector3 inside
+// createBeamline) with a comment asking whoever edited one to remember the
+// other. The failure mode of forgetting was not a crash: corridorFactor()
+// centres the wilderness safe zone on this value, so a drifted copy would
+// have quietly let generated wilderness noise intrude into the area the
+// camera actually orbits in — visible only as terrain appearing somewhere
+// it shouldn't, with nothing anywhere saying why.
+const CAM_TARGET_POS = { x: 199.944150, y: 25.345350, z: 0.531666 };
 const SAFE_RADIUS = 700; // CAM_MAX (620) + 80 margin — STRUCTURAL, tied to the camera's own max distance elsewhere in this file; shrinking it risks wilderness terrain poking up inside the camera's actual safe zone
 const SAFE_FADE = 260; // TUNABLE — how many world units the wilderness layer takes to fade from 0 to full strength, moving outward past SAFE_RADIUS. Shorter = wilderness appears more abruptly right at the boundary; longer = a more gradual, harder-to-notice transition.
 // A plain radial smoothstep fade-in, centered on the camera's own target
@@ -183,7 +246,7 @@ const SAFE_FADE = 260; // TUNABLE — how many world units the wilderness layer 
 // with the hand-placed, camera-safe area right around where the camera
 // actually operates.
 function corridorFactor(x, z) {
-  const dx = x - CAM_TARGET_XZ.x, dz = z - CAM_TARGET_XZ.z;
+  const dx = x - CAM_TARGET_POS.x, dz = z - CAM_TARGET_POS.z;
   const d = Math.sqrt(dx * dx + dz * dz);
   if (d <= SAFE_RADIUS) return 0;
   return smoothstep01(Math.min(1, (d - SAFE_RADIUS) / SAFE_FADE));
@@ -202,17 +265,24 @@ function corridorFactor(x, z) {
 // ratio (an ellipse, not a circle — the plane is 8000×6400, not square) so
 // it reaches exactly 0 at the real edge in every direction, not a circle
 // that clips one axis early or leaves the other exposed.
-// TERRAIN_CENTER/PLANE_HALF_X/PLANE_HALF_Z duplicate createBeamline's own
-// terrain-plane constants for the same reason
-// CAM_TARGET_XZ does above — kept in sync by hand.
-// TERRAIN_CENTER/PLANE_HALF_X/PLANE_HALF_Z: STRUCTURAL — these must match
-// the actual terrain plane's real center/dimensions elsewhere in this file
-// (kept in sync by hand, per the comment above). They're not a "how big
-// should the taper region feel" dial; they're where the plane's boundary
-// actually IS, and the whole point of this function is to reach exactly 0
-// exactly there.
+// ─── The terrain plane's real dimensions, defined once ──────────────────────
+// STRUCTURAL, not a "how big should the taper region feel" dial: this is
+// where the plane's boundary actually IS, and the whole point of
+// edgeFalloff() below is to reach exactly 0 exactly there.
+//
+// Same hoist as CAM_TARGET_POS above, for the same reason and with the same
+// failure mode. createBeamline used to declare its own TERRAIN_CENTER and
+// its own W/H, shadowing these — so the "kept in sync by hand" hazard was
+// invisible at the use site, where the reader sees only a local constant
+// with no hint that a module-level twin exists. Both now derive from here.
 const TERRAIN_CENTER = { x: 200, z: 0 };
-const PLANE_HALF_X = 4000, PLANE_HALF_Z = 3200;
+const PLANE_W = 8000, PLANE_H = 6400;
+const PLANE_HALF_X = PLANE_W / 2, PLANE_HALF_Z = PLANE_H / 2;
+// Preview tiles get the exact same height field at a fifth the extent (and
+// a far coarser mesh) — see the terrain block in createBeamline. A fraction
+// of the real plane rather than its own pair of numbers, so "the preview is
+// a smaller window onto the same landscape" stays true by construction.
+const PREVIEW_PLANE_SCALE = 0.2;
 const EDGE_FALLOFF_START = 0.55; // fraction of half-extent where the taper begins — FAR_PEAKS/VALLEYS all sit well inside this (rNorm ≤ ~0.4), so the hand-placed skyline is untouched; only the noise layer actually reaches this far out
 // rNorm is an ELLIPTICAL normalized radius, not a circular one: dividing x
 // and z by DIFFERENT half-extents (PLANE_HALF_X vs PLANE_HALF_Z, since the
@@ -513,7 +583,7 @@ function makeGridTexture(repeat = 20) {
   const cx = c.getContext('2d');
   cx.fillStyle = '#02040a';
   cx.fillRect(0, 0, 512, 512);
-  cx.strokeStyle = 'rgba(0,102,255,0.85)'; // canonical ACCENT (0x0066ff)
+  cx.strokeStyle = ACCENT_CSS + '0.85)'; // canonical ACCENT, derived — this line used to read rgba(0,102,255,0.85) with a comment calling it "canonical ACCENT (0x0066ff)", a constant this file deleted in the emerald pass
   cx.lineWidth = 1;
   for (let i = 0; i <= 16; i++) {
     const p = (512 / 16) * i;
@@ -542,8 +612,11 @@ function makeShimmerTexture() {
   for (let i = 0; i < 3; i++) {
     const x = rand() * 256, y = rand() * 256, r = 26 + rand() * 30;
     const grad = cx.createRadialGradient(x, y, 0, x, y, r);
-    grad.addColorStop(0, 'rgba(130,190,255,0.22)');
-    grad.addColorStop(1, 'rgba(130,190,255,0)');
+    // ACCENT_HALO, same tint as the rail halo and the dust — the shimmer is
+    // the grid's own heartbeat, so it belongs to the grid's colour, not to a
+    // blue it kept from before the emerald pass.
+    grad.addColorStop(0, ACCENT_HALO_CSS + '0.22)');
+    grad.addColorStop(1, ACCENT_HALO_CSS + '0)');
     cx.fillStyle = grad;
     cx.beginPath(); cx.arc(x, y, r, 0, Math.PI * 2); cx.fill();
   }
@@ -607,9 +680,14 @@ function makeSkyboxTexture() {
   // A soft glow band right at the horizon — the piece's one big saturated
   // light source other than the vessel/rail themselves.
   const glow = cx.createLinearGradient(0, horizonY - 55, 0, horizonY + 8);
-  glow.addColorStop(0, 'rgba(0,102,255,0)');
-  glow.addColorStop(0.72, 'rgba(0,102,255,0.4)');
-  glow.addColorStop(1, 'rgba(170,205,255,0.65)');
+  // The saturated stops are ACCENT, derived — they were the same dead
+  // 0,102,255 literal makeGridTexture carried. The hot inner stop stays a
+  // near-white bloom (a saturated light source washes out at its core), just
+  // biased to this hue rather than the old one, so the band resolves into
+  // HORIZON_CSS below it instead of crossing hues on the way.
+  glow.addColorStop(0, ACCENT_CSS + '0)');
+  glow.addColorStop(0.72, ACCENT_CSS + '0.4)');
+  glow.addColorStop(1, 'rgba(205,245,220,0.65)');
   cx.fillStyle = glow;
   cx.fillRect(0, horizonY - 55, w, 63);
 
@@ -930,7 +1008,10 @@ function buildRailTube(curve, radius, opacity, liquid = false) {
     map.repeat.set(1, Math.max(1, len / 2.4));
   }
   const mat = new THREE.MeshBasicMaterial({
-    color: liquid ? 0x0080ff : ACCENT_HALO, map, transparent: true, opacity, depthWrite: false,
+    // The bright inner core is ACCENT and the halo around it ACCENT_HALO —
+    // lightness apart, one hue, which is what the palette header claims and
+    // what the core (a hardcoded 0x0080ff) did not do until v4.0.
+    color: liquid ? ACCENT : ACCENT_HALO, map, transparent: true, opacity, depthWrite: false,
     blending: THREE.AdditiveBlending, side: THREE.DoubleSide,
   });
   const mesh = new THREE.Mesh(geo, mat);
@@ -1088,7 +1169,10 @@ export function createBeamline(container, { preview = false, initialPieceId = nu
   // an unreadable dot). CAM_MAX is sized off the rail's own
   // ~500-unit bounding diagonal, so zooming all the way out shows the whole
   // curve — scroll-to-zoom's own ceiling, unchanged.
-  const CAM_TARGET = new THREE.Vector3(199.944150, 25.345350, 0.531666);
+  // Derived from CAM_TARGET_POS (module scope) rather than restating the
+  // three literals — see that constant's own comment for why there used to
+  // be two copies and what a drift between them would have done.
+  const CAM_TARGET = new THREE.Vector3(CAM_TARGET_POS.x, CAM_TARGET_POS.y, CAM_TARGET_POS.z);
   const CAM_MIN = 28, CAM_MAX = 620;
 
   // The opening camera frames the whole route from ground level rather
@@ -1190,12 +1274,36 @@ export function createBeamline(container, { preview = false, initialPieceId = nu
   updateCamera();
 
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-  renderer.setPixelRatio(Math.min(2, window.devicePixelRatio));
+  // The DPR cap here is not new — this scene has capped at 2 since it
+  // shipped, and it is the in-repo precedent every other scene adopted in
+  // v4.0. What routing it through manageRenderer adds is the other two
+  // things that were missing: a webglcontextlost handler (without one, a
+  // lost context leaves a black canvas with the animation loop still burning
+  // CPU and nothing logged) and a real forceContextLoss() on dispose, since
+  // THREE.WebGLRenderer.dispose() tears down caches but does NOT free the GL
+  // context. See manageRenderer's own comment in sceneKit.js — the cap is
+  // its default, so the behaviour is byte-for-byte what it was.
+  const managedRenderer = manageRenderer(renderer);
   renderer.setSize(w, h);
   renderer.setClearColor(0x00020a, 1);
   renderer.domElement.setAttribute('aria-hidden', 'true');
   if (!preview) container.appendChild(renderer.domElement);
   const clippedPreview = preview ? mountClippedPreviewCanvas(container, renderer) : null;
+
+  // ─── Claiming the shared container ──────────────────────────────────────
+  // #experience-container is one node main.js reuses between scenes (it
+  // clears innerHTML, never replaces the element), so every inline style a
+  // scene writes here outlives it. This scene wrote three — position,
+  // overflow, and `cursor: pointer` on station hover — and put none of them
+  // back. claimContainer records what was there first and hands back the
+  // restore() half that kept getting forgotten; station hover goes through
+  // its setCursor() rather than writing container.style.cursor directly, so
+  // the restore is guaranteed to cover that too.
+  const containerClaim = !preview ? claimContainer(container) : null;
+
+  // Every deferred callback this scene schedules, in one place, so dispose()
+  // can drop whatever is still pending in one call.
+  const timers = trackTimers();
 
   const root = new THREE.Group();
   scene.add(root);
@@ -1220,7 +1328,9 @@ export function createBeamline(container, { preview = false, initialPieceId = nu
   // Rides the traveling vessel, added below once the vessel exists — real
   // dynamic light on the terrain and stations as the vessel actually passes
   // them, not a static highlight baked in.
-  const vesselLight = new THREE.PointLight(0x0080ff, preview ? 1.8 : 2.9, 11, 2);
+  // ACCENT, not a hardcoded 0x0080ff — the palette header has named "vessel
+  // light" as an ACCENT touchpoint since it was written.
+  const vesselLight = new THREE.PointLight(ACCENT, preview ? 1.8 : 2.9, 11, 2);
   scene.add(vesselLight);
 
   // ─── Terrain (single continuous mesh — the actual horizon-seam fix) ────
@@ -1247,9 +1357,13 @@ export function createBeamline(container, { preview = false, initialPieceId = nu
   // landing-page tile represents the same environment as the full scene
   // without a small, distant tile needing the full mesh's per-vertex cost.
   let terrain = null, terrainGeo = null, terrainMat = null, terrainTex = null;
-  const TERRAIN_CENTER = { x: 200, z: 0 };
   {
-    const W = preview ? 1600 : 8000, H = preview ? 1280 : 6400;
+    // TERRAIN_CENTER, PLANE_W and PLANE_H all come from module scope now
+    // (see their comment there) — this block used to redeclare
+    // TERRAIN_CENTER, shadowing the module constant edgeFalloff() reads,
+    // and to spell 8000/6400 and the preview's 1600/1280 as four literals.
+    const W = preview ? PLANE_W * PREVIEW_PLANE_SCALE : PLANE_W;
+    const H = preview ? PLANE_H * PREVIEW_PLANE_SCALE : PLANE_H;
     const SEGX = preview ? 60 : 640, SEGY = preview ? 48 : 512;
     terrainGeo = new THREE.PlaneGeometry(W, H, SEGX, SEGY);
     terrainGeo.rotateX(-Math.PI / 2);
@@ -1471,9 +1585,6 @@ export function createBeamline(container, { preview = false, initialPieceId = nu
     hint = shell.querySelector('.beamline-hint');
     document.body.appendChild(hint);
 
-    container.style.position = 'relative';
-    container.style.overflow = 'hidden';
-
     srLive = shell.querySelector('.beamline-sr-live');
     container.appendChild(srLive);
 
@@ -1530,6 +1641,10 @@ export function createBeamline(container, { preview = false, initialPieceId = nu
   root.add(labelSprite);
   let labelShownAt = -Infinity;
   let viewportH = h; // kept in sync by the resize handler below
+  // Set by dispose() below. showLabel() is the one async function in this
+  // scene, and the only thing standing between its continuation and a
+  // torn-down scene — see the guard immediately after its await.
+  let disposed = false;
 
   function updateLabelScale() {
     const dist = camera.position.distanceTo(labelSprite.position);
@@ -1550,6 +1665,15 @@ export function createBeamline(container, { preview = false, initialPieceId = nu
     // already-resolved promise still yields one microtask, not a visible
     // delay.
     await labelFontsReady;
+    // The reason `disposed` exists. Click a station and leave the scene in
+    // the same tick and this continuation still runs: it would allocate a
+    // fresh CanvasTexture that nothing will ever free (dispose()'s own
+    // labelTex?.dispose() is already long past), assign it to a material
+    // that has already been disposed, and write into an sr-live node that
+    // is no longer in the document. Sphere guards its dynamic text import
+    // exactly this way (`disposed`), Butterfly its font-load callback
+    // (`symbolsDisposed`); Beamline was the one of the three that didn't.
+    if (disposed) return;
     labelTex?.dispose();
     const stationLabel = `Station ${s.stationIndex + 1} of ${stations.length}`;
     const text = BOUNCES[s.stationIndex]?.text ?? '';
@@ -1573,6 +1697,30 @@ export function createBeamline(container, { preview = false, initialPieceId = nu
     if (labelSprite.visible) labelShownAt = tSec - labelSustain;
   }
 
+  // Escape dismisses the station label, through the same shared helper every
+  // closeable panel on the site uses (STANDARDS.md). This scene was skipped
+  // when that rule was written because its label is transient rather than a
+  // panel — it fades on its own — but "transient" is no help to a keyboard
+  // visitor: dismissLabel() was reachable only from a click on empty space,
+  // and clicking empty space is not a keyboard gesture, so someone who
+  // opened a station from the jump list had no way to put it away.
+  //
+  // Half of this needed a change in a file this scene doesn't own, and got
+  // one. main.js's document-level Escape handler is registered at module
+  // evaluation so it always runs first, and it stands down only when
+  // sceneKit's anyPanelOpen() says something is open. That registry is fed by
+  // createPanelCloser and keyed on a DOM element carrying an `.open` class —
+  // and this label is a THREE.Sprite, so it had nothing to register with, and
+  // Escape closed the entire scene as well as dismissing the label. Rather
+  // than smuggle a capture-phase keydown listener into one scene to jump the
+  // queue, sceneKit gained registerTransientOverlay(): a scene hands over a
+  // predicate, anyPanelOpen() consults it, and main.js's handler stands down
+  // for the same reason it does for a real panel.
+  const escapeClose = !preview ? bindEscapeClose(dismissLabel) : null;
+  const transientOverlay = !preview
+    ? registerTransientOverlay(() => labelSprite.visible)
+    : null;
+
   // Deep-link entry/re-entry — resolves a BOUNCES id to its station and
   // shows its label immediately, same call showLabel's own click/jump-list
   // paths make. The label is transient by design (see showLabel/
@@ -1595,10 +1743,12 @@ export function createBeamline(container, { preview = false, initialPieceId = nu
       phi = Math.max(PHI_EPS, Math.min(Math.PI - PHI_EPS, phi - dy));
       updateCamera();
     },
-    onDragEnd: () => { setTimeout(() => { autoRotate = true; }, 2500); },
+    onDragEnd: () => { timers.after(2500, () => { autoRotate = true; }); },
   }) : null;
   const wheelZoom = !preview ? bindWheelZoom(container, {
-    isBlocked: () => false,
+    // No isBlocked: `() => false` is exactly what omitting the key already
+    // means (see bindWheelZoom in sceneKit.js), and spelling it out read as
+    // if this scene had some blocking condition it had decided against.
     onZoom: deltaY => {
       camDist = Math.max(CAM_MIN, Math.min(CAM_MAX, camDist + deltaY * 0.02));
       updateCamera();
@@ -1612,24 +1762,48 @@ export function createBeamline(container, { preview = false, initialPieceId = nu
   let disposeHoverClick = null;
 
   if (!preview) {
-    const onMove = e => {
+    // Hoisted: the ten cores never change, and `stations.map(...)` was
+    // rebuilding the same ten-element array on every single mousemove.
+    const stationCores = stations.map(s => s.core);
+
+    // One place that answers "which station, if any, is under this point in
+    // the viewport" — shared by hover and click, which is the actual fix for
+    // the click bug described below, not just deduplication.
+    function stationAt(clientX, clientY) {
       const rect = container.getBoundingClientRect();
-      pointerNdc.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
-      pointerNdc.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+      pointerNdc.x = ((clientX - rect.left) / rect.width) * 2 - 1;
+      pointerNdc.y = -((clientY - rect.top) / rect.height) * 2 + 1;
       raycaster.setFromCamera(pointerNdc, camera);
-      const hits = raycaster.intersectObjects(stations.map(s => s.core));
-      const newHover = hits.length ? stations.find(s => s.core === hits[0].object) : null;
+      const hits = raycaster.intersectObjects(stationCores);
+      return hits.length ? stations.find(s => s.core === hits[0].object) : null;
+    }
+
+    const onMove = e => {
+      const newHover = stationAt(e.clientX, e.clientY);
       if (newHover !== hoveredStation) {
         hoveredStation = newHover;
-        container.style.cursor = hoveredStation ? 'pointer' : 'default';
+        // Through the claim's setCursor so restore() covers it — see
+        // containerClaim above.
+        containerClaim.setCursor(hoveredStation ? 'pointer' : 'default');
       }
     };
     container.addEventListener('mousemove', onMove);
 
-    const onClick = () => {
+    // Raycast from the click's OWN coordinates rather than reading
+    // hoveredStation. Reading the hover state only worked on touch because
+    // browsers synthesise a mousemove immediately before the synthetic
+    // click, so a tap happened to leave hoveredStation set a moment
+    // earlier — a real dependency on an implementation detail of touch
+    // emulation, not on anything this scene arranges. Anything that
+    // delivers a click without a preceding mousemove over the same point
+    // (a pen tap, an assistive pointer, a dispatched click) hit the
+    // `!hoveredStation` branch and dismissed the label instead of opening
+    // the station that was clicked.
+    const onClick = e => {
       if (touchGuard.consume()) return;
-      if (!hoveredStation) { dismissLabel(); return; }
-      showLabel(hoveredStation);
+      const station = stationAt(e.clientX, e.clientY);
+      if (!station) { dismissLabel(); return; }
+      showLabel(station);
     };
     container.addEventListener('click', onClick);
 
@@ -1642,7 +1816,9 @@ export function createBeamline(container, { preview = false, initialPieceId = nu
   // ─── Ambient dust — a few faint drifting motes for atmosphere ───────────
   let dust = null, dustGeo = null, dustMat = null, dustTex = null;
   if (!preview) {
-    dustTex = makeGlowTexture('rgba(140,180,255,');
+    // ACCENT_HALO, matching the PointsMaterial's own `color` below rather
+    // than multiplying a leftover blue tint against it.
+    dustTex = makeGlowTexture(ACCENT_HALO_CSS);
     const n = 160;
     const positions = new Float32Array(n * 3);
     const dustCenter = CAM_TARGET;
@@ -1841,8 +2017,13 @@ export function createBeamline(container, { preview = false, initialPieceId = nu
   //     — not "the same Life with a different look." Shared by both tiers
   //     — FAR runs the exact same rule, just less often (see
   //     createGrowthTier's stepInterval below), not a simplified rule.
-  function stepGameOfLife(grid, cols, rows) {
-    const next = new Uint8Array(cols * rows);
+  // Writes the next generation into a caller-owned `next` buffer rather than
+  // allocating one per generation: the two tiers between them step roughly
+  // every 1.7s and 6.8s forever, and each step was handing the GC a fresh
+  // 2,176- or 1,104-byte Uint8Array for no reason. The caller ping-pongs the
+  // two buffers (see tick below), so the same two arrays serve for the
+  // lifetime of the scene.
+  function stepGameOfLife(grid, next, cols, rows) {
     for (let y = 0; y < rows; y++) {
       for (let x = 0; x < cols; x++) {
         let n = 0;
@@ -1855,7 +2036,6 @@ export function createBeamline(container, { preview = false, initialPieceId = nu
         next[y * cols + x] = alive ? (n === 2 || n === 3 ? 1 : 0) : (n === 3 ? 1 : 0);
       }
     }
-    return next;
   }
   // Builds one tier of the growth lattice — called twice below (NEAR, FAR)
   // with different cols/rows/cellSize/stepInterval/ease, so the two tiers'
@@ -1869,12 +2049,17 @@ export function createBeamline(container, { preview = false, initialPieceId = nu
   // regardless of how many points it has.
   function createGrowthTier({ name, cols, rows, cellSize, stepInterval, ease, tex, colorRgb }) {
     const rng = mulberry32(hashSeed(`beamline-growth-ca-${name}`));
-    const seedGrid = () => {
-      const g = new Uint8Array(cols * rows);
+    // Seeds in place rather than returning a new array — the reseed path
+    // below refills the live buffer instead of orphaning it, and the rng
+    // stream is consumed in exactly the same order either way, so the
+    // determinism this scene relies on across reloads is unchanged.
+    const seedGrid = g => {
       for (let i = 0; i < g.length; i++) g[i] = rng() < CA_SEED_DENSITY ? 1 : 0;
       return g;
     };
-    let grid = seedGrid();
+    // Two buffers, swapped each generation — see stepGameOfLife above.
+    let grid = seedGrid(new Uint8Array(cols * rows));
+    let gridNext = new Uint8Array(cols * rows);
     const positions = new Float32Array(cols * rows * 3);
     const colors = new Float32Array(cols * rows * 3);
     const edgeFactor = new Float32Array(cols * rows);
@@ -1925,12 +2110,30 @@ export function createBeamline(container, { preview = false, initialPieceId = nu
     }
     writeColors(); // paint the seeded state immediately, don't wait for the first step
     let timer = 0;
+    // NEAR only. `brightness[i] += (target - brightness[i]) * 0.1` converges
+    // asymptotically but never actually ARRIVES, so the ease loop and its
+    // writeColors() — 2,176 setXYZ calls and a ~26KB buffer upload — ran
+    // every frame forever, on a completely still scene, long after the last
+    // visible change. That per-frame colour cost is the exact thing the
+    // two-tier header comment above identifies as the reason FAR exists, so
+    // leaving NEAR paying it unconditionally rather undercut the point.
+    //
+    // Now the loop tracks the largest remaining gap while it eases: once
+    // every cell is within one 8-bit colour step of its target (and those
+    // cells have been snapped exactly onto it, so no residue accumulates),
+    // nothing further is uploaded until the next generation step sets new
+    // targets. At 0.1/frame a full 0→1 transition reaches that threshold in
+    // roughly 0.45s of NEAR's 1.7s generation interval, so about three
+    // quarters of frames now do no colour work at all.
+    let easeSettled = false;
+    const EASE_EPSILON = 1 / 255; // one step of an 8-bit colour channel — below this the upload cannot change a pixel
     function tick(dt, reduceMotion) {
       timer += dt;
       let stepped = false;
       if (timer >= stepInterval) {
         timer -= stepInterval;
-        grid = stepGameOfLife(grid, cols, rows);
+        stepGameOfLife(grid, gridNext, cols, rows);
+        const swap = grid; grid = gridNext; gridNext = swap;
         // A small/finite random-soup Life board commonly burns out to all-
         // dead or settles into static still-lifes; reseed (continuing the
         // SAME deterministic rng stream, so this stays reproducible across
@@ -1938,20 +2141,37 @@ export function createBeamline(container, { preview = false, initialPieceId = nu
         // grid permanently empty.
         let alive = 0;
         for (let i = 0; i < grid.length; i++) alive += grid[i];
-        if (alive === 0) grid = seedGrid();
+        if (alive === 0) seedGrid(grid);
         stepped = true;
       }
       if (ease) {
-        // NEAR's own behavior, unchanged: brightness closes 10% of the
-        // remaining gap toward its target every frame (reduceMotion forces
-        // that to 100%, i.e. instant) — see the original comment this was
-        // lifted from for why that reads as a fade rather than a flicker.
-        const rate = reduceMotion ? 1 : 0.1;
+        // New targets mean there is something to ease toward again.
+        if (stepped) easeSettled = false;
+        if (easeSettled) return;
+        // NEAR's own behavior, unchanged in feel: brightness closes 10% of
+        // the remaining gap toward its target every 60fps frame (reduceMotion
+        // forces that to 100%, i.e. instant) — see the original comment this
+        // was lifted from for why that reads as a fade rather than a
+        // flicker. Scaled by dt*60 as of v4.0 so "per frame" means the same
+        // amount of fade per unit of real time on any display; see animate()
+        // for the same conversion applied to every other rate in this file.
+        const rate = reduceMotion ? 1 : Math.min(1, 0.1 * dt * 60);
+        let maxGap = 0;
         for (let i = 0; i < grid.length; i++) {
           const target = eligible[i] ? grid[i] : 0;
-          brightness[i] += (target - brightness[i]) * rate;
+          const gap = target - brightness[i];
+          const mag = gap < 0 ? -gap : gap;
+          if (mag > maxGap) maxGap = mag;
+          // Snap rather than ease the last invisible sliver, so the value
+          // genuinely reaches its target instead of approaching it forever.
+          if (mag <= EASE_EPSILON) brightness[i] = target;
+          else brightness[i] += gap * rate;
         }
         writeColors();
+        // Measured before this pass's update, so the frame that discovers
+        // everything is within epsilon is also the frame that snapped them
+        // exactly onto target and uploaded that — nothing is left owing.
+        if (maxGap <= EASE_EPSILON) easeSettled = true;
       } else if (stepped) {
         // FAR's own behavior: no per-frame work at all except on the rare
         // frame its own generation actually advances — snap straight to
@@ -1999,24 +2219,44 @@ export function createBeamline(container, { preview = false, initialPieceId = nu
   }
 
   // ─── Animate ─────────────────────────────────────────────────────────────
-  let animId, tSec = 0;
+  // tSec is REAL elapsed seconds as of v4.0. It used to advance by a fixed
+  // 1/60 per frame, which is only true on a 60Hz display — and in this scene
+  // that was never cosmetic. computeSustain() above derives a reading
+  // duration in genuine seconds from WORDS_PER_SECOND, and the fade state
+  // machine at the bottom of this function compares that duration against
+  // tSec: on a 120Hz display tSec ran at double speed, so the 116-word
+  // "THE MIRROR" passage got 25 seconds on screen instead of 50 — an
+  // effective 4.6 words per second, twice the pace the constant asks for.
+  // The Lévy stepDuration cap (commented "3.2 seconds") and LABEL_FADE (2.4)
+  // were halved the same way, and on a throttled display everything ran
+  // slow by the same mechanism in the other direction.
+  //
+  // Every per-frame rate below is multiplied by `frames` — dt expressed in
+  // 60fps frames — rather than being re-derived, so the tuning that was done
+  // against a 60Hz display is preserved exactly there and merely made
+  // correct everywhere else. Rates already written as a per-second value
+  // times (1/60) just take dt directly.
+  let animId = null, tSec = 0;
+  const clock = createFrameClock();
   function animate() {
     animId = requestAnimationFrame(animate);
-    tSec += 1 / 60;
+    const dt = clock.tick();
+    const frames = dt * 60; // 1.0 at 60fps, 0.5 at 120fps — the conversion factor for every hand-tuned per-frame rate below
+    tSec += dt;
 
     if (!reduceMotion) {
       if (autoRotate && !(orbitDrag && orbitDrag.isDragging)) {
-        theta += preview ? 0.003 : 0.0009;
+        theta += (preview ? 0.003 : 0.0009) * frames;
         updateCamera();
       }
-      if (dust) dust.rotation.y += 0.0006;
+      if (dust) dust.rotation.y += 0.0006 * frames;
       // Liquid-light flow along the rail's single continuous tube.
       if (railCore.map) {
-        railCore.map.offset.y -= (1 / 60) * (preview ? 0.5 : 0.85);
+        railCore.map.offset.y -= dt * (preview ? 0.5 : 0.85);
       }
       // Vessel's own light — the engine ring's traveling pulse.
       const engineRate = 0.35 + organicWave(tSec * 0.04, 2.4) * 0.45;
-      vessel.pulseMap.offset.x -= engineRate * (1 / 60);
+      vessel.pulseMap.offset.x -= engineRate * dt;
       vessel.ringMat.emissiveIntensity = 1.4 + organicWave(tSec * 0.6, 7.1) * 1.2;
 
       // Ambient ecology.
@@ -2027,13 +2267,13 @@ export function createBeamline(container, { preview = false, initialPieceId = nu
       if (gridBugs) {
         const posAttr = gridBugsGeo.attributes.position;
         gridBugState.forEach((b, i) => {
-          b.heading += (organicWave(tSec * 0.15, b.seed) - 0.5) * 0.05;
-          b.x += Math.cos(b.heading) * b.speed * (1 / 60);
-          b.z += Math.sin(b.heading) * b.speed * (1 / 60);
+          b.heading += (organicWave(tSec * 0.15, b.seed) - 0.5) * 0.05 * frames;
+          b.x += Math.cos(b.heading) * b.speed * dt;
+          b.z += Math.sin(b.heading) * b.speed * dt;
           const dx = b.x - CAM_TARGET.x, dz = b.z - CAM_TARGET.z;
           if (Math.abs(dx) > 210 || Math.abs(dz) > 110) {
             const home = Math.atan2(-dz, -dx);
-            b.heading += (home - b.heading) * 0.03;
+            b.heading += (home - b.heading) * 0.03 * frames;
           }
           const y = terrainHeight(b.x, b.z) + 0.5 + Math.sin(tSec * 0.4 + b.bob) * 0.15;
           posAttr.setXYZ(i, b.x, y, b.z);
@@ -2048,8 +2288,8 @@ export function createBeamline(container, { preview = false, initialPieceId = nu
       if (skyMotes) {
         const posAttr = skyMotesGeo.attributes.position;
         skyMoteState.forEach((m, i) => {
-          m.x += Math.cos(m.heading) * m.speed * (1 / 60);
-          m.z += Math.sin(m.heading) * m.speed * (1 / 60);
+          m.x += Math.cos(m.heading) * m.speed * dt;
+          m.z += Math.sin(m.heading) * m.speed * dt;
           const dx = m.x - CAM_TARGET.x, dz = m.z - CAM_TARGET.z;
           if (dx > SKY_MOTE_HALF_X) m.x -= 2 * SKY_MOTE_HALF_X;
           else if (dx < -SKY_MOTE_HALF_X) m.x += 2 * SKY_MOTE_HALF_X;
@@ -2083,8 +2323,8 @@ export function createBeamline(container, { preview = false, initialPieceId = nu
     // sees the automaton's real current state, just without the fade. FAR
     // already snaps unconditionally (no ease to begin with), so reduceMotion
     // has nothing further to do there.
-    caNear?.tick(1 / 60, reduceMotion);
-    caFar?.tick(1 / 60, reduceMotion);
+    caNear?.tick(dt, reduceMotion);
+    caFar?.tick(dt, reduceMotion);
 
     // Vessel travel — real Lévy-flight step statistics along the whole
     // hand-placed curve (see the Lévy setup above), not constant speed:
@@ -2191,23 +2431,57 @@ export function createBeamline(container, { preview = false, initialPieceId = nu
   const resize = bindGuardedResize(container, (nw, nh) => {
     camera.aspect = nw / nh;
     camera.updateProjectionMatrix();
+    // A window dragged between a Retina and a non-Retina display changes
+    // devicePixelRatio with no other signal, so the cap is re-applied here.
+    managedRenderer.applyPixelRatio();
     renderer.setSize(nw, nh);
     viewportH = nh;
   });
+
+  // main.js pauses every preview tile while a full scene is open, pauses any
+  // tile scrolled off screen, and pauses the open scene on visibilitychange.
+  // display:none does not stop a requestAnimationFrame loop — the callbacks
+  // keep coming and the draw calls keep being issued into a subtree nobody
+  // can see — so the loop is stopped outright rather than run to an early
+  // return; a paused tile should cost nothing at all.
+  let paused = false;
+  function setPaused(next) {
+    const want = Boolean(next);
+    if (want === paused) return;
+    paused = want;
+    if (paused) {
+      cancelAnimationFrame(animId);
+      animId = null;
+    } else {
+      // Without this the first frame back arrives as one enormous dt — the
+      // whole time the scene sat paused — which the clock clamps to 50ms but
+      // would still show as a jump in the vessel's glide and, worse, as a
+      // chunk bitten out of whatever station label was mid-read.
+      clock.resync();
+      animate();
+    }
+  }
 
   return {
     // Same-scene deep link support (main.js's expandScene) — see
     // openPieceById above.
     openPieceById,
+    setPaused,
     dispose() {
+      // Before anything else: showLabel()'s continuation checks this after
+      // its await, and everything below here is what would make that
+      // continuation unsafe.
+      disposed = true;
       cancelAnimationFrame(animId);
       resize.dispose();
       orbitDrag?.dispose();
       wheelZoom?.dispose();
+      escapeClose?.dispose();
+    transientOverlay?.dispose();
+      timers.dispose();
       disposeHoverClick?.();
       touchGuard?.dispose();
       clippedPreview?.dispose();
-      renderer.dispose();
 
       skyGeo.dispose(); skyMat.dispose(); skyTex.dispose();
       railCore.geo.dispose(); railCore.mat.dispose(); railCore.map?.dispose();
@@ -2237,7 +2511,11 @@ export function createBeamline(container, { preview = false, initialPieceId = nu
       title?.remove();
       hint?.remove();
       srLive?.remove();
-      renderer.domElement.remove();
+      // renderer.dispose() + a real forceContextLoss() + canvas removal, in
+      // one call — see manageRenderer in sceneKit.js for why the plain
+      // renderer.dispose() this used to do never actually freed the context.
+      managedRenderer.dispose();
+      containerClaim?.restore();
     },
   };
 }

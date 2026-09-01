@@ -80,13 +80,40 @@ export function initColophon() {
     }
   }
 
+  // `inert`, alongside colophon.css's visibility:hidden — deliberately both,
+  // and they are not redundant.
+  //
+  // The bug being fixed: a closed colophon used to be hidden by opacity:0 +
+  // pointer-events:none alone, which hides it from the eye and the mouse and
+  // nothing else. All six of its focusable elements stayed in the tab order
+  // and all five of its headings stayed in the heading tree, on the landing
+  // page AND — since the backdrop is appended to document.body after
+  // #experience-overlay — at the end of the tab order during a scene.
+  //
+  // The CSS fix (visibility, transitioned so the fade survives) is the one
+  // that keeps working with no JavaScript at all, but it hands the moment of
+  // removal to a transition, and a transition is not a guarantee: in a
+  // background tab the browser stops advancing them entirely, which was
+  // observed live — 650ms after close(), computed visibility was still
+  // `visible` and all six elements were still focusable, because the tab
+  // wasn't rendering. `inert` is the version that takes effect the instant
+  // it's set, whatever the compositor is or isn't doing, and it covers the
+  // AT tree and pointer input in the same stroke. Set here rather than in
+  // markup so the element is inert from mount, before it has ever opened.
+  backdrop.inert = true;
+
   function open() {
+    backdrop.inert = false;
     backdrop.classList.add('open');
     setTimeout(() => title.focus(), 50);
     backdrop.addEventListener('keydown', onKeydown);
   }
   function close() {
     backdrop.classList.remove('open');
+    // Inert immediately, not after the fade: nobody tabs into a dialog that
+    // is on its way out, and waiting would reintroduce exactly the window
+    // this is here to close.
+    backdrop.inert = true;
     backdrop.removeEventListener('keydown', onKeydown);
     mark.focus();
   }

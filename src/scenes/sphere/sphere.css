@@ -25,6 +25,23 @@
   animation: wisp var(--duration, 6s) ease-in-out infinite;
   animation-delay: var(--delay, 0s);
   transform-origin: center center;
+
+	/* 320 of these run `wisp` forever, each on its own 4–10s period — by a
+	   wide margin the largest source of continuous motion anywhere in this
+	   scene, and until v4.0 the one thing in this file with no
+	   reduced-motion escape at all (the block at the bottom covered
+	   .fragment-link only, and styles/main.css's three blocks don't reach
+	   in here). `animation: none` alone would be wrong: the element has no
+	   opacity of its own, so dropping the animation would leave every label
+	   at opacity 1 — 320 hard white excerpts instead of a faint drift.
+	   --base-opacity is the value sphere.js already writes per frame from
+	   the face's angle to the camera, i.e. the animation's own peak, so
+	   holding it steady keeps the fade-in-around-the-silhouette read and
+	   removes only the pulsing. */
+	@media (prefers-reduced-motion: reduce) {
+		animation: none !important;
+		opacity: var(--base-opacity, 0);
+	}
 }
 
 /* ─── Fragment reading panel ─────────────────────────────────────────────── */
@@ -55,7 +72,16 @@
     #05070d;
   border-left:1px solid rgba(120,170,255,0.18);
   padding:4rem 1.5rem 2rem;transform:translateX(100%);
-  transition:transform .5s cubic-bezier(.16,1,.3,1);
+  /* transform alone moves the panel off-screen but leaves it rendered, so
+     the ✕ stayed in the tab order the whole time the panel was closed —
+     a keyboard visitor Tabbing across the sphere hit a "Close fragment
+     panel" button for a panel that wasn't open. visibility is discretely
+     animatable: listed in the transition it stays `visible` for the whole
+     .5s slide-out and only flips at the end, so closing still animates.
+     .no-transition (below) already carries !important, so the one-frame
+     side-flip guard covers this property too. */
+  visibility:hidden;
+  transition:transform .5s cubic-bezier(.16,1,.3,1), visibility .5s;
   overflow-y:scroll;z-index:10;
   scrollbar-color:rgba(120,170,255,0.3) #05070d;scrollbar-width:thin;
   font-family:'Electrolize',sans-serif;
@@ -75,7 +101,7 @@
   transform:translateX(-100%);
 }
 .sphere-panel.no-transition{transition:none!important;}
-.sphere-panel.open{transform:translateX(0);}
+.sphere-panel.open{transform:translateX(0);visibility:visible;}
 .sphere-panel-title{
   /* An <h2> so the panel has a real heading matching its aria-labelledby
      target — margin fully reset (not just bottom) so the UA default
@@ -104,18 +130,54 @@
 	}
 }
 .sphere-panel-content p{padding:0 0 1rem;}
-.sphere-panel-close{position:absolute;top:1.5rem;right:1.5rem;background:none;border:none;color:rgba(255,255,255,0.4);font-size:1.2rem;cursor:pointer;padding:.5rem;}
+/* rgba(255,255,255,.4) over this panel's #05070d composites to ~3.7:1 —
+   fine for a UI component's own boundary (WCAG 1.4.11), short of the 4.5:1
+   this actually needs, since the ✕ is a text glyph at 1.2rem (19.2px,
+   regular weight — under the 24px "large text" allowance). .5 alpha
+   measures 5.53:1 against the same background and is still visibly quiet.
+   Same arithmetic as sceneKit.js's HINT_TEXT_COLOR comment. */
+.sphere-panel-close{position:absolute;top:1.5rem;right:1.5rem;background:none;border:none;color:rgba(255,255,255,.5);font-size:1.2rem;cursor:pointer;padding:.5rem;}
 .sphere-panel-close:hover{color:rgba(255,255,255,.9);}
+/* :hover was the only state this button had — a keyboard visitor had no way
+   to see where focus was sitting. Matches the hover treatment plus a real
+   ring, and :focus-visible rather than :focus so a mouse click doesn't
+   leave the ring behind. */
+.sphere-panel-close:focus-visible{color:rgba(255,255,255,.9);outline:2px solid rgba(150,190,255,.8);outline-offset:2px;border-radius:2px;}
 .sphere-facet-id{
   /* A <p> — margin fully reset so the UA default top+bottom paragraph
      margin doesn't add space this element isn't meant to have. */
-  font-size:.6rem;letter-spacing:.3em;color:rgba(180,200,255,.3);
+  /* This line is content, not decoration: it carries "Fragment N of 25" and
+     the formatInboundNote "Referenced from …" cross-reference. At .3 alpha
+     it composited to (57.5, 64.9, 85.6) over the panel's #05070d — 1.98:1,
+     where WCAG AA wants 4.5:1 at .6rem. .6 alpha measures 4.76:1 against
+     the same background. Same arithmetic sceneKit.js's HINT_TEXT_COLOR
+     comment does deliberately for the scene hints; this one had simply
+     never been checked. */
+  font-size:.6rem;letter-spacing:.3em;color:rgba(180,200,255,.6);
   margin:2rem 0 0;text-transform:uppercase;
 }
 @keyframes silk-glimmer{
   0%,85%,100%{color:inherit;text-shadow:none;}
   92%{color:rgba(180,210,255,.28);text-shadow:0 0 6px rgba(180,210,255,.12);}
 }
-.fragment-link{color:inherit;text-decoration:none;border-bottom:none;cursor:default;transition:color .2s;animation:silk-glimmer 12s ease-in-out infinite;}
+.fragment-link{
+  color:inherit;text-decoration:none;border-bottom:none;cursor:default;
+  transition:color .2s;animation:silk-glimmer 12s ease-in-out infinite;
+
+	/* The periodic glimmer is this link's ONLY visual affordance — no
+	   underline, no border, colour inherited from the surrounding prose,
+	   and cursor:default. Killing the animation and stopping there (what
+	   this block used to do) left a sighted reduced-motion visitor with
+	   nothing at all: not just no cue that the text is interactive, but no
+	   cue where to hover to find out. Keyboard and AT visitors are fine
+	   either way now that wireCrossLinks emits a real <a href>. So the
+	   static equivalent: a faint rule under the phrase, in the glimmer's
+	   own peak colour, held constant instead of pulsed — and a pointer
+	   cursor, since there is no glimmer left to tell them it is one. */
+	@media (prefers-reduced-motion: reduce) {
+		animation: none !important;
+		border-bottom: 1px dotted rgba(180,210,255,.45);
+		cursor: pointer;
+	}
+}
 .fragment-link:hover,.fragment-link:focus{color:rgba(255,220,120,.95);cursor:pointer;animation:none;text-shadow:0 0 12px rgba(255,220,120,.3);}
-@media(prefers-reduced-motion:reduce){.fragment-link{animation:none;}}

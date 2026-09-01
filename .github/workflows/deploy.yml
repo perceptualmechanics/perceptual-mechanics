@@ -5,16 +5,51 @@ on:
     branches:
       - main
 
+# The job checks out this repo and rsyncs dist/ over SSH; it never writes
+# back to GitHub (no releases, no pages, no commit statuses, no package
+# publishing). Left unset it would run with whatever the repo/org default
+# token scope is -- historically read/write on contents -- while also
+# holding the production DREAMHOST_SSH_KEY, so anything that got code
+# execution in this job could push to the repo as well as to the server.
+# Least privilege: checkout needs contents:read, and nothing here needs
+# more than that.
+permissions:
+  contents: read
+
+# Two pushes landing close together used to start two deploys that both
+# run `rsync --delete` against the live document root. Interleaved, one
+# run's delete pass can remove files the other run has just written --
+# a partially-deleted live site with no failed build to point at.
+# Serialize on a single named group instead.
+#
+# cancel-in-progress: false is the load-bearing half. Cancelling would
+# kill an in-flight rsync partway through its transfer/delete pass and
+# leave exactly the half-written document root this group exists to
+# prevent; far better to let a superseded deploy finish and be
+# overwritten in order by the next one.
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
+      # Actions are pinned to full commit SHAs, not floating tags. A tag is
+      # mutable: whoever controls the action's repo can re-point v4 at new
+      # code at any time, and this job runs with secrets.DREAMHOST_SSH_KEY
+      # in its environment, so a re-pointed tag is arbitrary code execution
+      # against the production server. The trailing comment records which
+      # release each SHA is, since a bare hash is unreadable -- update both
+      # together (`git ls-remote --tags https://github.com/actions/<name>`)
+      # when bumping. Pinned 2026-09-01; both SHAs are what the v4 tag
+      # resolved to at that time, so this changed nothing about what runs.
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
       - name: Set up Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           # Node 20's security support window ended 2026-04-30 (checked
           # against endoflife.date, 2026-08-25) -- was still pinned here
@@ -27,6 +62,27 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      # packages/bardjs is a workspace, not a toy: src/scenes/theater/theater.js
+      # imports Player, compileLegacyScript, shuffle and asciiBubble from it,
+      # which makes it the Theater scene's whole timing engine. Its 16
+      # node --test tests existed and passed all along but nothing ever ran
+      # them in CI, so a regression there shipped silently. The root
+      # `npm test` fans out to every workspace that declares one
+      # (--if-present), so adding a test script to a future workspace wires
+      # it in here automatically. Runs before the build: no reason to spend
+      # build time on code whose tests already fail.
+      - name: Test
+        run: npm test
+
+      # Gate the dependency-advisory regression class the same way. This
+      # was added after a HIGH advisory (nanoid GHSA-2v37-7h3g-55p8, pulled
+      # in dev-only through vite -> postcss) sat unnoticed in the lockfile;
+      # nothing in CI would have said so. --audit-level=high fails only on
+      # high/critical, so a low/moderate transitive advisory with no fix
+      # available doesn't block a deploy of unrelated content.
+      - name: Audit dependencies
+        run: npm audit --audit-level=high
 
       - name: Build
         run: npm run build
@@ -48,7 +104,11 @@ jobs:
 
       - name: Test SSH connection
         run: |
-          ssh -vvv -i ~/.ssh/deploy_key \
+          # -v, not -vvv: level 3 dumps full key-exchange and
+          # authentication negotiation detail into a build log that is
+          # public on this repo. -v is enough to tell "connected" from
+          # "auth failed", which is all this step is for.
+          ssh -v -i ~/.ssh/deploy_key \
             -o IdentitiesOnly=yes \
             -o IdentityAgent=none \
             -o StrictHostKeyChecking=no \
@@ -57,7 +117,15 @@ jobs:
 
       - name: Deploy via rsync
         run: |
-          rsync -rlgoDzvc --delete \
+          # -rlptDzv (was -rlgoDzvc). -g/-o ask to preserve group and
+          # owner, which a non-root SSH login cannot do -- they were
+          # silently no-ops. -t (preserve mtimes) was missing, which is
+          # what forced -c: with no usable timestamps rsync's quick check
+          # is blind, so every deploy had to read and checksum every file
+          # in dist/ on both ends to decide what to send. Preserving mtimes
+          # instead lets the default size+mtime quick check do that work,
+          # and adds -p (permissions) so a mode change actually propagates.
+          rsync -rlptDzv --delete \
             -e "ssh -i ~/.ssh/deploy_key -o IdentitiesOnly=yes -o IdentityAgent=none -o StrictHostKeyChecking=no" \
             dist/ \
             copper_prism@pdx1-shared-a1-46.dreamhost.com:/home/copper_prism/perceptualmechanics.com

@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import {
   bindOrbitDrag, bindWheelZoom, bindGuardedResize, bindTapVsDrag,
   prefersReducedMotion, parseHTML, mountClippedPreviewCanvas, createJumpList,
-  bindPersistedSoundToggle,
+  bindPersistedSoundToggle, manageRenderer, createFrameClock, trackTimers,
 } from '../../utils/sceneKit.js';
 import { POWER_SOURCES, CENTER_ORIGINS, NEWEST_ORIGINS } from './outside.text.js';
 import outsideHtml from './outside.html?raw';
@@ -274,6 +274,21 @@ export function createOutside(container, { preview = false, initialPieceId = nul
   const SCALE = preview ? 90 : 150;
   const SCALE_FACTOR = SCALE / 150;
 
+  // Set as the very first thing dispose() does; see setSoundEnabled below for
+  // the bug this exists to close.
+  let disposed = false;
+  const timers = trackTimers();
+  // Two clocks on purpose. `elapsed` (below) is the MOTION clock — it stops
+  // dead under reduced motion, which is what freezes the breathing and the
+  // sway. This one always advances, and the touch pulse runs off it: with the
+  // pulse keyed to `elapsed`, `elapsed - pulseStart` was permanently 0 under
+  // reduced motion, so it never exceeded PULSE_DURATION, pulseActive never
+  // cleared, and a +0.55 bright spot plus a boosted pod emissive sat on the
+  // flower forever — each new touch relocating the frozen blob rather than
+  // clearing it. A pulse has to be able to end. (What the pulse LOOKS like
+  // under reduced motion is a separate decision — see pulseBoostAt.)
+  const clock = createFrameClock();
+
   const scene = new THREE.Scene();
   const BG_COLOR = 0x0d0518; // deep violet-black, not neutral — keeps the site's space-scene identity while staying this scene's own register
   scene.background = new THREE.Color(BG_COLOR);
@@ -296,7 +311,14 @@ export function createOutside(container, { preview = false, initialPieceId = nul
   updateCameraPosition();
 
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-  renderer.setPixelRatio(window.devicePixelRatio);
+  // Pixel ratio through manageRenderer rather than raw window.devicePixelRatio
+  // (v4.0) — this scene draws 7 double-sided Fresnel MeshStandardMaterial
+  // petals, 2,400 additive nebula points and 3 very large billboarded
+  // additive curtain planes, so an uncapped DPR-3 phone was shading nine
+  // times the fragments the look was tuned against. manageRenderer also owns
+  // the real GL-context release and the webglcontextlost handler; see its own
+  // comment in sceneKit.js.
+  const managedRenderer = manageRenderer(renderer);
   renderer.setSize(w0, h0);
   renderer.setClearColor(0x000000, 1);
   renderer.domElement.setAttribute('aria-hidden', 'true');
@@ -310,7 +332,9 @@ export function createOutside(container, { preview = false, initialPieceId = nul
   // append it always had.
   const clippedPreview = preview ? mountClippedPreviewCanvas(container, renderer) : null;
   if (!preview) container.appendChild(renderer.domElement);
-  if (!preview) container.tabIndex = -1;
+  // No `container.tabIndex = -1` here: main.js:359 already sets tabindex="-1"
+  // on #experience-container when it opens a scene, so this was a second
+  // place to keep in agreement with no second effect.
 
   // ─── Lighting — key/rim/hemisphere, same convention Orbiter/Library/
   // Beamline use for their own lit meshes, tinted to this scene's palette
@@ -561,13 +585,61 @@ export function createOutside(container, { preview = false, initialPieceId = nul
     geo.setAttribute('color', new THREE.BufferAttribute(col, 3));
     geo.setAttribute('uv', new THREE.BufferAttribute(topo.uvArr, 2)); // static, shared read-only across every instance — same reasoning as topo.indices
     geo.setIndex(new THREE.BufferAttribute(topo.indices, 1));
+
+    // ── Per-vertex base colour, computed once here (v4.0) ────────────────
+    // updatePetal used to call tmpColor.setHSL(hue, sat, lerp(0.32,0.66,u))
+    // per vertex per frame — 144 setHSL calls per petal, 1,008 per frame
+    // across the flower, at 60fps. Hue and saturation are constants of the
+    // instance and lightness is a function of `u` alone, which takes exactly
+    // U_SEGS (16) distinct values across the grid — so those 144 calls were
+    // recomputing the same 16 RGB triples nine times over, every frame,
+    // forever. Sixteen conversions here, expanded across the grid once.
+    const uColor = new Float32Array(U_SEGS * 3);
+    const seed = new THREE.Color();
+    for (let iu = 0; iu < U_SEGS; iu++) {
+      seed.setHSL(hue, sat, THREE.MathUtils.lerp(0.32, 0.66, iu / (U_SEGS - 1)));
+      uColor[iu * 3] = seed.r; uColor[iu * 3 + 1] = seed.g; uColor[iu * 3 + 2] = seed.b;
+    }
+    const baseCol = new Float32Array(topo.count * 3);
+    for (let i = 0; i < topo.count; i++) {
+      const src = ((i / W_SEGS) | 0) * 3; // topology lays vertices out as iu * W_SEGS + iw
+      baseCol[i * 3] = uColor[src]; baseCol[i * 3 + 1] = uColor[src + 1]; baseCol[i * 3 + 2] = uColor[src + 2];
+    }
+    col.set(baseCol);
+    geo.attributes.color.needsUpdate = true;
+
+    // ── Analytic bounding sphere (v4.0) ──────────────────────────────────
+    // computeBoundingSphere() was called every frame per petal — a second
+    // full 144-vertex sweep on top of computeVertexNormals' own, purely
+    // because the breathing moves real vertices and a stale sphere could make
+    // a touch miss near a petal's edge (the original comment's reasoning,
+    // which is correct). But the bound is available in closed form: every
+    // vertex has localX in [0,length], |localY| <= halfWidth and y in
+    // [0,height], and the mesh sits at the origin with an identity transform,
+    // so a sphere at the origin of radius hypot(length, halfWidth, height)
+    // contains all of them by construction — conservative, never stale, and
+    // three multiplies instead of a sweep. Raycasting still does the real
+    // triangle test inside it, so a slightly generous sphere costs nothing.
+    const boundingSphere = new THREE.Sphere(new THREE.Vector3(0, 0, 0), Math.hypot(length, halfWidth, height));
+    geo.boundingSphere = boundingSphere;
+
     const mat = makePetalMaterial();
     const mesh = new THREE.Mesh(geo, mat);
     scene.add(mesh);
     return {
       angle, cosA: Math.cos(angle), sinA: Math.sin(angle),
       length, halfWidth, height, hue, sat, swayIndex, psIndex, hoverGlow: 0,
-      geo, pos, col, mat, mesh,
+      // The breathing-scaled length/height for THIS frame. Initialised here
+      // (v4.0) rather than first written inside animate(): the jump list is
+      // built during setup, before the first rAF, so activating a jump-list
+      // button inside that window read undefined out of both, gave
+      // anchorWorldPos NaN coordinates, and made pulseOrigin NaN — which then
+      // turned every petal's colour NaN for the pulse's whole duration.
+      // Near-unhittable, but a genuine uninitialised read. The values below
+      // are the unbreathed rest pose, which is exactly what frame zero
+      // computes anyway.
+      _curLength: length, _curHeight: height,
+      geo, pos, col, baseCol, boundingSphere, mat, mesh,
     };
   }
 
@@ -720,7 +792,12 @@ export function createOutside(container, { preview = false, initialPieceId = nul
   let pulseActive = false, pulseStart = 0;
   const pulseOrigin = new THREE.Vector3();
   const _pv = new THREE.Vector3();
-  function triggerPulse(point) { pulseOrigin.copy(point); pulseStart = elapsed; pulseActive = true; }
+  // The wavefront's own spatial half-width, reused as the radius of the
+  // reduced-motion still highlight below so the two read as the same size.
+  const PULSE_STATIC_RADIUS = PULSE_SPEED * PULSE_WIDTH;
+  // `clock.elapsed`, not `elapsed` — see the two-clocks note at the top of
+  // create(). This is what lets the pulse expire under reduced motion.
+  function triggerPulse(point) { pulseOrigin.copy(point); pulseStart = clock.elapsed; pulseActive = true; }
   function pulseWave(t, dist) {
     if (t < 0) return 0;
     const wf = t - dist / PULSE_SPEED;
@@ -729,7 +806,21 @@ export function createOutside(container, { preview = false, initialPieceId = nul
   function pulseBoostAt(x, y, z) {
     if (!pulseActive) return 0;
     _pv.set(x, y, z);
-    return pulseWave(elapsed - pulseStart, pulseOrigin.distanceTo(_pv)) * PULSE_BOOST;
+    const dist = pulseOrigin.distanceTo(_pv);
+    if (reduceMotion) {
+      // A still highlight around the touch point rather than a wavefront
+      // travelling across the flower. Running the real wave off the
+      // always-advancing clock would fix the never-ends half of the bug and
+      // reintroduce the other half — a 1.6s luminance sweep across the whole
+      // subject is precisely the kind of motion the setting asks to be spared
+      // — so under reduced motion the touch gets the same acknowledgment
+      // without the travel: it appears, holds, and clears on the timer in
+      // animate(). Visitor-initiated feedback is kept, the animation isn't,
+      // matching harmonics.js's hover-halo convention and main.css's own
+      // `.nav-icon:hover { transform: none }`.
+      return Math.exp(-(dist * dist) / (2 * PULSE_STATIC_RADIUS * PULSE_STATIC_RADIUS)) * PULSE_BOOST;
+    }
+    return pulseWave(clock.elapsed - pulseStart, dist) * PULSE_BOOST;
   }
   let onClick = null;
   if (!preview) {
@@ -789,19 +880,29 @@ export function createOutside(container, { preview = false, initialPieceId = nul
   // above. hoveredInst is read every frame inside updatePetal, which
   // lerps each petal's own fresnelGlow uniform toward a boosted value if
   // it's the hovered one, or back toward BASE_FRESNEL_GLOW otherwise. ────
+  //
+  // v4.0: the handler no longer raycasts. It used to run a full-mesh
+  // intersectObjects across all 7 petals — up to 240 ray-triangle tests each,
+  // 1,680 in the worst case — on every single `pointermove`, which fires at
+  // the pointer's own poll rate (120Hz on a trackpad, up to 1000Hz on a
+  // gaming mouse), and `pointermove` covers touch too, so it also ran
+  // throughout every touch-drag orbit. The only consumer, updateHoverGlow,
+  // reads `hoveredInst` once per RENDERED frame, so everything above 60Hz was
+  // discarded before anything looked at it. The handler now just records
+  // where the pointer is; the pick happens once at the top of animate().
   const petalMeshes = petalInstances.map(p => p.mesh);
   let hoveredInst = null;
+  let pointerInside = false;
+  let pointerNdcX = 0, pointerNdcY = 0;
   let onPointerMove = null, onPointerLeave = null;
   if (!preview) {
     onPointerMove = e => {
       const rect = container.getBoundingClientRect();
-      pointerNdc.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
-      pointerNdc.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
-      raycaster.setFromCamera(pointerNdc, camera);
-      const hits = raycaster.intersectObjects(petalMeshes, false);
-      hoveredInst = hits.length ? petalInstances.find(inst => inst.mesh === hits[0].object) : null;
+      pointerNdcX = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+      pointerNdcY = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+      pointerInside = true;
     };
-    onPointerLeave = () => { hoveredInst = null; };
+    onPointerLeave = () => { pointerInside = false; hoveredInst = null; };
     container.addEventListener('pointermove', onPointerMove);
     container.addEventListener('pointerleave', onPointerLeave);
   }
@@ -876,7 +977,7 @@ export function createOutside(container, { preview = false, initialPieceId = nul
     return impulse;
   }
   function buildAudioGraph() {
-    if (audioCtx) return;
+    if (disposed || audioCtx) return;
     audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     muteGain = audioCtx.createGain(); muteGain.gain.value = 0;
     muteGain.connect(audioCtx.destination);
@@ -885,6 +986,21 @@ export function createOutside(container, { preview = false, initialPieceId = nul
     reverbConvolver.connect(muteGain);
   }
   function setSoundEnabled(on) {
+    // v4.0. bindPersistedSoundToggle used to leave a `pointerdown` listener on
+    // the shared #experience-container — which main.js only ever empties,
+    // never replaces — so one pointer-down inside ANY later scene called
+    // straight into here from a scene that no longer existed. Harmonics'
+    // version of that bug built whole new AudioContexts; this one was quieter
+    // and arguably worse: dispose() closed audioCtx but didn't null it, so
+    // buildAudioGraph() early-returned while startAmbientScheduler() went
+    // ahead and armed a fresh setInterval on a dead closure that
+    // stopAmbientScheduler could never reach — visible from inside another
+    // scene as a burst of "Construction of OscillatorNode is not useful when
+    // context is closed". The helper now returns a dispose() and this scene
+    // calls it (see soundToggle below); this guard makes a stale call from any
+    // other route a no-op too, and dispose() now nulls audioCtx exactly the
+    // way Harmonics' does.
+    if (disposed) return;
     soundEnabled = on;
     if (on) buildAudioGraph();
     if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
@@ -904,7 +1020,7 @@ export function createOutside(container, { preview = false, initialPieceId = nul
   // needs a deferred first-gesture activation rather than just re-reading
   // the stored value at mount (browser autoplay policy) and how it avoids
   // fighting an explicit click on the toggle itself.
-  bindPersistedSoundToggle(container, soundToggleEl, setSoundEnabled, 'outside');
+  const soundToggle = bindPersistedSoundToggle(container, soundToggleEl, setSoundEnabled, 'outside');
 
   // ─── Ambient chime voice — one generative note from the Kumoi pool
   // above. Inharmonic on purpose: a fundamental plus two upper partials
@@ -1009,7 +1125,11 @@ export function createOutside(container, { preview = false, initialPieceId = nul
   }
 
   function startAmbientScheduler() {
-    if (ambientSchedulerId != null || !audioCtx) return;
+    // `state === 'closed'` in the guard alongside the null check (v4.0): a
+    // closed context is still truthy, which is exactly how a torn-down scene
+    // used to arm an interval nothing could clear. dispose() nulling audioCtx
+    // already closes that path; this is the local belt.
+    if (ambientSchedulerId != null || !audioCtx || audioCtx.state === 'closed' || disposed) return;
     // Reseed rather than resume from wherever nextAmbientTime was left —
     // otherwise turning sound back on after it's been off a while would
     // read a whole backlog of notes as "due" against a stale clock and
@@ -1026,8 +1146,33 @@ export function createOutside(container, { preview = false, initialPieceId = nul
   // visible again — belt-and-suspenders alongside setSoundEnabled's own
   // resume() call, since that one only fires on an actual toggle click,
   // never on a visibility change by itself.
+  //
+  // v4.0 adds the suspend half, which is a real behaviour decision, not just
+  // symmetry. The lookahead scheduler above exists so note TIMING survives a
+  // backgrounded tab — that was always about correctness under throttling,
+  // never a commitment to keep playing while nobody is looking. And it works:
+  // a hidden tab kept chiming indefinitely, from a page whose only control is
+  // a button the visitor can't see, on a site where every other scene goes
+  // silent the moment you leave it. An ambient art page audibly chiming out of
+  // a background tab is the kind of thing people hunt through twenty tabs to
+  // kill. So: suspend on hide, resume on show — the same call Harmonics now
+  // makes, for the same reason. Nothing is lost by it; suspend() freezes
+  // audioCtx.currentTime, and startAmbientScheduler() reseeds nextAmbientTime
+  // against that clock on the way back, so there's no backlog to dump.
   const onVisibilityChange = () => {
-    if (!document.hidden && audioCtx?.state === 'suspended' && soundEnabled) audioCtx.resume();
+    if (disposed || !audioCtx || audioCtx.state === 'closed') return;
+    if (document.hidden) {
+      if (audioCtx.state === 'running') {
+        stopAmbientScheduler();
+        audioCtx.suspend();
+      }
+      return;
+    }
+    // First frame back would otherwise arrive as one long dt.
+    clock.resync();
+    if (!soundEnabled) return;
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    startAmbientScheduler();
   };
   document.addEventListener('visibilitychange', onVisibilityChange);
 
@@ -1182,13 +1327,32 @@ export function createOutside(container, { preview = false, initialPieceId = nul
   }
 
   const reduceMotion = prefersReducedMotion();
+  // The MOTION clock — deliberately stopped under reduced motion, which is
+  // what freezes the breath and the sway. The always-running `clock` declared
+  // at the top of create() is the other half; see its note there.
   let elapsed = 0;
-  let animId, lastT = performance.now();
+  let animId = null;
+  let paused = false;
+  let petalsBuilt = false; // false until the first frame has written real vertices
   const tmpColor = new THREE.Color();
   const _anchor = new THREE.Vector3(); // reused scratch — every anchor read/write below happens immediately, no cross-frame state
 
-  function updatePetal(inst, t, globalScaleXY, globalScaleZ) {
-    const sway = reduceMotion ? 1 : petalSway(t, inst.swayIndex);
+  // `sway` is passed in rather than recomputed (v4.0): petalSway(elapsed,
+  // swayIndex) used to be evaluated three times per petal per frame across
+  // three call sites that all had to agree about the reduced-motion branch —
+  // one place to get wrong, three places to fix. Now animate() computes it
+  // once and hands the same number to all three consumers.
+  //
+  // `writeGeometry` / `writeColor` are the reduced-motion early-out. With
+  // `elapsed` frozen and sway forced to 1, every value this function computes
+  // is bit-identical to the previous frame's — yet the whole thing ran 60
+  // times a second to produce an unchanged image, including
+  // computeVertexNormals() (which allocates 8 Vector3s per call in r185,
+  // ~3,400 short-lived allocations a second across the flower) and a full
+  // second geometry sweep for the bounding sphere. Under reduced motion the
+  // geometry is written exactly once; only a live touch pulse brings the
+  // colour half back for its 1.6 seconds.
+  function updatePetal(inst, sway, globalScaleXY, globalScaleZ, writeGeometry, writeColor) {
     const length = inst.length * globalScaleXY * sway;
     const halfWidth = inst.halfWidth * globalScaleXY * sway;
     const height = inst.height * globalScaleZ * sway;
@@ -1208,28 +1372,40 @@ export function createOutside(container, { preview = false, initialPieceId = nul
       // same collapsed, non-flower-reading silhouette).
       const x = localX * inst.cosA - localY * inst.sinA;
       const zPlane = localX * inst.sinA + localY * inst.cosA;
-      inst.pos[i * 3] = x; inst.pos[i * 3 + 1] = y; inst.pos[i * 3 + 2] = zPlane;
+      if (writeGeometry) { inst.pos[i * 3] = x; inst.pos[i * 3 + 1] = y; inst.pos[i * 3 + 2] = zPlane; }
 
-      const lightness = THREE.MathUtils.lerp(0.32, 0.66, u);
-      tmpColor.setHSL(inst.hue, inst.sat, lightness);
-      const boost = pulseBoostAt(x, y, zPlane);
-      inst.col[i * 3] = Math.min(1, tmpColor.r + boost);
-      inst.col[i * 3 + 1] = Math.min(1, tmpColor.g + boost);
-      inst.col[i * 3 + 2] = Math.min(1, tmpColor.b + boost);
+      if (writeColor) {
+        // inst.baseCol is the hue/sat/lightness gradient, resolved once at
+        // construction — see makePetalInstance. Only the pulse boost is live.
+        const b = i * 3;
+        const boost = pulseBoostAt(x, y, zPlane);
+        inst.col[b] = Math.min(1, inst.baseCol[b] + boost);
+        inst.col[b + 1] = Math.min(1, inst.baseCol[b + 1] + boost);
+        inst.col[b + 2] = Math.min(1, inst.baseCol[b + 2] + boost);
+      }
     }
-    inst.geo.attributes.position.needsUpdate = true;
-    inst.geo.attributes.color.needsUpdate = true;
-    inst.geo.computeVertexNormals();
-    // Bounding sphere is normally computed once, lazily, on first
-    // raycast — recomputed explicitly every frame instead, since the
-    // breathing motion above moves real vertices and a stale cached
-    // sphere from an earlier frame could make touch miss the surface
-    // near a petal's own edge.
-    inst.geo.computeBoundingSphere();
+    if (writeGeometry) {
+      inst.geo.attributes.position.needsUpdate = true;
+      inst.geo.computeVertexNormals();
+      // The bounding sphere has to track the breathing — a stale one could
+      // make a touch miss the surface near a petal's own edge — but it's the
+      // closed-form bound now, not a second full sweep. See the derivation in
+      // makePetalInstance.
+      inst.boundingSphere.radius = Math.hypot(length, halfWidth, height);
+    }
+    // Colour only changes during a pulse, so this upload is gated too — it
+    // used to fire unconditionally, marking a 1,008-float buffer dirty every
+    // frame of a flower that spends almost all its life at rest.
+    if (writeColor) inst.geo.attributes.color.needsUpdate = true;
+  }
 
-    // Hover/proximity glow — smoothly lerp toward 1 if this is the
-    // currently-hovered petal, back toward 0 otherwise, then drive the
-    // material's own Fresnel rim uniform with it (round 5).
+  // Hover/proximity glow — smoothly lerp toward 1 if this is the
+  // currently-hovered petal, back toward 0 otherwise, then drive the
+  // material's own Fresnel rim uniform with it (round 5). Split out of
+  // updatePetal (v4.0) because it's a uniform write, not geometry: it still
+  // has to run on the frames where the reduced-motion early-out skips the
+  // vertex work, since hover is visitor-initiated.
+  function updateHoverGlow(inst) {
     inst.hoverGlow = THREE.MathUtils.lerp(inst.hoverGlow, inst === hoveredInst ? 1 : 0, HOVER_LERP_RATE);
     const shader = inst.mat.userData.shader;
     if (shader) shader.uniforms.fresnelGlow.value = BASE_FRESNEL_GLOW + inst.hoverGlow * HOVER_FRESNEL_BOOST;
@@ -1246,85 +1422,117 @@ export function createOutside(container, { preview = false, initialPieceId = nul
     return out;
   }
 
-  function animate(now) {
+  function animate() {
     animId = requestAnimationFrame(animate);
-    const dt = Math.min(0.05, (now - lastT) / 1000);
-    lastT = now;
+    const dt = clock.tick();
     if (!reduceMotion) elapsed += dt;
 
-    if (pulseActive && elapsed - pulseStart > PULSE_DURATION) pulseActive = false;
+    // Against clock.elapsed, which always advances — this comparison is what
+    // lets the pulse end under reduced motion. `pulseWasActive` keeps the
+    // frame that clears it doing one last colour write, so the highlight is
+    // actually removed from the buffer rather than left in it.
+    const pulseWasActive = pulseActive;
+    if (pulseActive && clock.elapsed - pulseStart > PULSE_DURATION) pulseActive = false;
+
+    // One raycast per rendered frame instead of one per pointer event — see
+    // the pointermove handler's own note. Skipped mid-drag: an orbit gesture
+    // is moving the camera, not choosing a petal, and this is exactly the
+    // path that ran flat out through every touch-drag.
+    if (pointerInside && !orbitDrag?.isDragging) {
+      pointerNdc.set(pointerNdcX, pointerNdcY);
+      raycaster.setFromCamera(pointerNdc, camera);
+      const hits = raycaster.intersectObjects(petalMeshes, false);
+      hoveredInst = hits.length ? petalInstances.find(inst => inst.mesh === hits[0].object) : null;
+    }
 
     const bp = breathePhase(elapsed);
     const globalScaleXY = 1 + 0.035 * (bp - 0.5) * 2;
     const globalScaleZ = 1 + 0.12 * (bp - 0.5) * 2;
 
+    // Under reduced motion nothing about the surface can change after the
+    // first frame, so the whole rebuild is skipped; a touch pulse brings the
+    // colour half back for as long as it lasts.
+    const writeGeometry = !reduceMotion || !petalsBuilt;
+    const writeColor = writeGeometry || pulseActive || pulseWasActive;
+
     petalInstances.forEach(inst => {
-      inst._curLength = inst.length * globalScaleXY * (reduceMotion ? 1 : petalSway(elapsed, inst.swayIndex));
-      inst._curHeight = inst.height * globalScaleZ * (reduceMotion ? 1 : petalSway(elapsed, inst.swayIndex));
-      updatePetal(inst, elapsed, globalScaleXY, globalScaleZ);
+      const sway = reduceMotion ? 1 : petalSway(elapsed, inst.swayIndex);
+      inst._curLength = inst.length * globalScaleXY * sway;
+      inst._curHeight = inst.height * globalScaleZ * sway;
+      if (writeGeometry || writeColor) updatePetal(inst, sway, globalScaleXY, globalScaleZ, writeGeometry, writeColor);
+      updateHoverGlow(inst);
     });
+    petalsBuilt = true;
 
-    podMesh.scale.setScalar(1 + 0.02 * (bp - 0.5) * 2);
-    {
-      const boost = pulseBoostAt(podMesh.position.x, podMesh.position.y, podMesh.position.z);
-      podMat.emissiveIntensity = 0.55 + boost * 0.8;
-    }
-
-    // ─── Power Source markers, at each petal's tip ───────────────────────
-    PS_ANCHORS.forEach((a, i) => {
-      const inst = petalInstances[a.inst];
-      anchorWorldPos(inst, a.u, _anchor);
-      psPoints.pos[i * 3] = _anchor.x; psPoints.pos[i * 3 + 1] = _anchor.y; psPoints.pos[i * 3 + 2] = _anchor.z;
-      tmpColor.setHSL(inst.hue, 0.55, 0.72);
-      const boost = pulseBoostAt(_anchor.x, _anchor.y, _anchor.z);
-      psPoints.col[i * 3] = Math.min(1, tmpColor.r + boost);
-      psPoints.col[i * 3 + 1] = Math.min(1, tmpColor.g + boost);
-      psPoints.col[i * 3 + 2] = Math.min(1, tmpColor.b + boost);
-    });
-    psPoints.geo.attributes.position.needsUpdate = true;
-    psPoints.geo.attributes.color.needsUpdate = true;
-
-    // ─── Folk Origin markers, nested along their petal ───────────────────
-    let newestIdx = 0;
-    originEntries.forEach((e, i) => {
-      const inst = petalInstances[e.inst];
-      anchorWorldPos(inst, e.u, _anchor);
-      originPoints.pos[i * 3] = _anchor.x; originPoints.pos[i * 3 + 1] = _anchor.y; originPoints.pos[i * 3 + 2] = _anchor.z;
-      tmpColor.setHSL(inst.hue, 0.5, 0.8);
-      const boost = pulseBoostAt(_anchor.x, _anchor.y, _anchor.z);
-      originPoints.col[i * 3] = Math.min(1, tmpColor.r + boost);
-      originPoints.col[i * 3 + 1] = Math.min(1, tmpColor.g + boost);
-      originPoints.col[i * 3 + 2] = Math.min(1, tmpColor.b + boost);
-      // Tempered/Psychopomps also write into newestGlow's own small
-      // buffer — a separate point group (not a shared-buffer trick), so
-      // only these two ever render on that extra glow layer.
-      if (e.newest) {
-        const j = newestIdx++;
-        newestGlow.pos[j * 3] = _anchor.x; newestGlow.pos[j * 3 + 1] = _anchor.y; newestGlow.pos[j * 3 + 2] = _anchor.z;
-        newestGlow.col[j * 3] = Math.min(1, tmpColor.r + boost);
-        newestGlow.col[j * 3 + 1] = Math.min(1, tmpColor.g + boost);
-        newestGlow.col[j * 3 + 2] = Math.min(1, tmpColor.b + boost);
+    // The seedpod and all three landmark point groups ride the same gate as
+    // the petals (v4.0): their positions come from the same breathing-scaled
+    // anchors and their colours from the same pulse, so on a reduced-motion
+    // frame with no live pulse every value here is identical to the last
+    // one's too — measured live before this gate went in, that was 8 buffer
+    // uploads a frame doing nothing (960/s on a 120Hz display).
+    if (writeGeometry || writeColor) {
+      podMesh.scale.setScalar(1 + 0.02 * (bp - 0.5) * 2);
+      {
+        const boost = pulseBoostAt(podMesh.position.x, podMesh.position.y, podMesh.position.z);
+        podMat.emissiveIntensity = 0.55 + boost * 0.8;
       }
-    });
-    originPoints.geo.attributes.position.needsUpdate = true;
-    originPoints.geo.attributes.color.needsUpdate = true;
-    newestGlow.geo.attributes.position.needsUpdate = true;
-    newestGlow.geo.attributes.color.needsUpdate = true;
 
-    // ─── Magi / Psi — two points near the seedpod's own surface ──────────
-    const podR = SCALE * 0.15;
-    const magiPos = [-podR * 0.42, SCALE * 0.07 + podR * 0.68, podR * 0.22];
-    const psiPos = [podR * 0.42, SCALE * 0.07 + podR * 0.68, -podR * 0.18];
-    [magiPos, psiPos].forEach((p, i) => {
-      centerPoints.pos[i * 3] = p[0]; centerPoints.pos[i * 3 + 1] = p[1]; centerPoints.pos[i * 3 + 2] = p[2];
-      tmpColor.setHSL(GOLD_HUE, 0.65, 0.85);
-      const boost = pulseBoostAt(p[0], p[1], p[2]);
-      centerPoints.col[i * 3] = Math.min(1, tmpColor.r + boost);
-      centerPoints.col[i * 3 + 1] = Math.min(1, tmpColor.g + boost);
-      centerPoints.col[i * 3 + 2] = Math.min(1, tmpColor.b + boost);
-    });
-    centerPoints.geo.attributes.position.needsUpdate = true;
-    centerPoints.geo.attributes.color.needsUpdate = true;
+      // ─── Power Source markers, at each petal's tip ───────────────────────
+      PS_ANCHORS.forEach((a, i) => {
+        const inst = petalInstances[a.inst];
+        anchorWorldPos(inst, a.u, _anchor);
+        psPoints.pos[i * 3] = _anchor.x; psPoints.pos[i * 3 + 1] = _anchor.y; psPoints.pos[i * 3 + 2] = _anchor.z;
+        tmpColor.setHSL(inst.hue, 0.55, 0.72);
+        const boost = pulseBoostAt(_anchor.x, _anchor.y, _anchor.z);
+        psPoints.col[i * 3] = Math.min(1, tmpColor.r + boost);
+        psPoints.col[i * 3 + 1] = Math.min(1, tmpColor.g + boost);
+        psPoints.col[i * 3 + 2] = Math.min(1, tmpColor.b + boost);
+      });
+      psPoints.geo.attributes.position.needsUpdate = true;
+      psPoints.geo.attributes.color.needsUpdate = true;
+
+      // ─── Folk Origin markers, nested along their petal ───────────────────
+      let newestIdx = 0;
+      originEntries.forEach((e, i) => {
+        const inst = petalInstances[e.inst];
+        anchorWorldPos(inst, e.u, _anchor);
+        originPoints.pos[i * 3] = _anchor.x; originPoints.pos[i * 3 + 1] = _anchor.y; originPoints.pos[i * 3 + 2] = _anchor.z;
+        tmpColor.setHSL(inst.hue, 0.5, 0.8);
+        const boost = pulseBoostAt(_anchor.x, _anchor.y, _anchor.z);
+        originPoints.col[i * 3] = Math.min(1, tmpColor.r + boost);
+        originPoints.col[i * 3 + 1] = Math.min(1, tmpColor.g + boost);
+        originPoints.col[i * 3 + 2] = Math.min(1, tmpColor.b + boost);
+        // Tempered/Psychopomps also write into newestGlow's own small
+        // buffer — a separate point group (not a shared-buffer trick), so
+        // only these two ever render on that extra glow layer.
+        if (e.newest) {
+          const j = newestIdx++;
+          newestGlow.pos[j * 3] = _anchor.x; newestGlow.pos[j * 3 + 1] = _anchor.y; newestGlow.pos[j * 3 + 2] = _anchor.z;
+          newestGlow.col[j * 3] = Math.min(1, tmpColor.r + boost);
+          newestGlow.col[j * 3 + 1] = Math.min(1, tmpColor.g + boost);
+          newestGlow.col[j * 3 + 2] = Math.min(1, tmpColor.b + boost);
+        }
+      });
+      originPoints.geo.attributes.position.needsUpdate = true;
+      originPoints.geo.attributes.color.needsUpdate = true;
+      newestGlow.geo.attributes.position.needsUpdate = true;
+      newestGlow.geo.attributes.color.needsUpdate = true;
+
+      // ─── Magi / Psi — two points near the seedpod's own surface ──────────
+      const podR = SCALE * 0.15;
+      const magiPos = [-podR * 0.42, SCALE * 0.07 + podR * 0.68, podR * 0.22];
+      const psiPos = [podR * 0.42, SCALE * 0.07 + podR * 0.68, -podR * 0.18];
+      [magiPos, psiPos].forEach((p, i) => {
+        centerPoints.pos[i * 3] = p[0]; centerPoints.pos[i * 3 + 1] = p[1]; centerPoints.pos[i * 3 + 2] = p[2];
+        tmpColor.setHSL(GOLD_HUE, 0.65, 0.85);
+        const boost = pulseBoostAt(p[0], p[1], p[2]);
+        centerPoints.col[i * 3] = Math.min(1, tmpColor.r + boost);
+        centerPoints.col[i * 3 + 1] = Math.min(1, tmpColor.g + boost);
+        centerPoints.col[i * 3 + 2] = Math.min(1, tmpColor.b + boost);
+      });
+      centerPoints.geo.attributes.position.needsUpdate = true;
+      centerPoints.geo.attributes.color.needsUpdate = true;
+    }
 
     // Ambient chime triggering moved off this per-frame check entirely —
     // see startAmbientScheduler()/scheduleAmbientNotes() in the Sound
@@ -1365,6 +1573,9 @@ export function createOutside(container, { preview = false, initialPieceId = nul
     camera.aspect = nw / nh;
     camera.updateProjectionMatrix();
     renderer.setSize(nw, nh);
+    // A window dragged between a Retina and a non-Retina display changes
+    // devicePixelRatio with no other signal — see manageRenderer's own note.
+    managedRenderer.applyPixelRatio();
   });
 
   if (initialPieceId != null) {
@@ -1373,8 +1584,28 @@ export function createOutside(container, { preview = false, initialPieceId = nul
   }
 
   return {
+    // main.js pauses preview tiles while a full scene is open, and on
+    // visibilitychange. A paused tile shouldn't be rebuilding 1,008 petal
+    // vertices and 2,400 nebula points behind an opaque overlay. The clock is
+    // resynced on the way back so the first frame home isn't one long dt —
+    // which for this scene would show up as a visible jump in the breath.
+    setPaused(next) {
+      if (disposed || paused === next) return;
+      paused = next;
+      if (paused) {
+        if (animId !== null) cancelAnimationFrame(animId);
+        animId = null;
+      } else {
+        clock.resync();
+        animId = requestAnimationFrame(animate);
+      }
+    },
     dispose() {
-      cancelAnimationFrame(animId);
+      // First, not last: every deferred callback below reads this before
+      // touching scene state.
+      disposed = true;
+      if (animId !== null) cancelAnimationFrame(animId);
+      timers.dispose();
       resize.dispose();
       orbitDrag?.dispose();
       wheelZoom?.dispose();
@@ -1382,7 +1613,10 @@ export function createOutside(container, { preview = false, initialPieceId = nul
       if (onClick) container.removeEventListener('click', onClick);
       if (onPointerMove) container.removeEventListener('pointermove', onPointerMove);
       if (onPointerLeave) container.removeEventListener('pointerleave', onPointerLeave);
-      renderer.dispose();
+      // The stale-listener leak this whole pass turns on — see
+      // setSoundEnabled above and bindPersistedSoundToggle's own comment.
+      soundToggle.dispose();
+      managedRenderer.dispose();
       clippedPreview?.dispose();
       starGeo.dispose(); starMat.dispose();
       nebula.geo.dispose(); nebula.mat.dispose();
@@ -1402,7 +1636,17 @@ export function createOutside(container, { preview = false, initialPieceId = nul
       document.removeEventListener('visibilitychange', onVisibilityChange);
       muteGain?.disconnect();
       reverbConvolver?.disconnect();
-      if (audioCtx) audioCtx.close().catch(() => {});
+      // Close AND null, in that order — the missing null is precisely why this
+      // scene's version of the stale-listener bug presented as an unclearable
+      // setInterval rather than as Harmonics' stack of orphaned contexts. Both
+      // dispose paths are the same shape now, so the same input can't produce
+      // two different failures again.
+      if (audioCtx) {
+        audioCtx.close().catch(() => {});
+        audioCtx = null;
+      }
+      muteGain = reverbConvolver = null;
+      soundEnabled = false;
       titleEl?.remove(); hintEl?.remove(); soundToggleEl?.remove();
       jumpList?.dispose(); srLiveEl?.remove();
       container.innerHTML = '';
