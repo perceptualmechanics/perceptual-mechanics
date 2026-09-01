@@ -587,6 +587,15 @@ described are unchanged.)
   worth trimming, orrery.js's texture generators and first-person rig are the
   two most self-contained chunks to split out first.
 
+## 3.13.9 (2026-09-01)
+
+**Landing tiles: Theater/Orbiter swapped.** Row 1 is now `sphere, scroll,
+orrery, orbiter, butterfly`; row 2 is now `library, harmonics, beamline,
+theater, outside`. Outside stays the closer, unchanged. Nav icons and
+preview tiles kept in sync. Build clean, `verify-links`/
+`verify-resonances` unaffected, live-verified both nav and tile order via
+the running dev server.
+
 ## 3.13.8 (2026-09-01)
 
 **Landing tiles: Butterfly/Orrery and Harmonics/Library reshuffled
