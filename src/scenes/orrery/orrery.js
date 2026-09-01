@@ -2625,8 +2625,23 @@ export function createOrrery(container, { preview = false } = {}) {
   // own height is known. The old warm ambient accent is gone — warmth
   // lives only in the small practical lamps (the workbench bulb, the
   // control-box indicator), not in the room's general fill. ─────────────
-  scene.add(new THREE.HemisphereLight(0x64778a, 0x14100c, 0.7));
-  scene.add(new THREE.AmbientLight(0x3f4d47, 0.3));
+  // Fill-light correction, 2026-09-02: the two active dramatic sources
+  // (moonbeam, fluorescents) are correctly localized and restrained now,
+  // but that left everything past their reach — the far walls, the floor
+  // in the middle distance, the already-built set dressing (boxes, ladder,
+  // posters, stools, the control box, the orrery's own farther-orbiting
+  // pieces) — going flat and vacant in wide shots. None of that geometry
+  // was missing, it just had nothing dim reflected light to catch: real
+  // rooms have some ambient bounce even away from their main sources.
+  // Raised, not added — same two lights as before, just enough intensity
+  // that geometry stays dimly legible at middle distance without
+  // introducing a third dramatic light or competing with the moonbeam/
+  // fluorescents for visual attention. Verify live: this should read as
+  // "the room has walls and floor," not as its own visible light source.
+  const hemiLight = new THREE.HemisphereLight(0x64778a, 0x14100c, 1.3);
+  scene.add(hemiLight);
+  const ambientLight = new THREE.AmbientLight(0x3f4d47, 0.55);
+  scene.add(ambientLight);
 
   // ─── Warehouse vertical layout — decided here, then handed down: the
   // ceiling and roof truss height are fixed first, and the orrery hangs
@@ -2766,10 +2781,24 @@ export function createOrrery(container, { preview = false } = {}) {
   // shape) with the tube nested inside it, plus a visible hanger rod and
   // ceiling flange so the fixture actually reads as bolted to the rafter
   // rather than floating at the ceiling.
+  // Brightness rebalance, 2026-09-02: these fixtures are supposed to read
+  // as the mundane baseline — the unglamorous "someone bolted a shop
+  // light in" fixture — with the moonbeam doing all the dramatic work.
+  // They were winning attention they shouldn't in any shot containing
+  // both. Turns out lowering the point light's intensity number alone
+  // barely moved the needle (confirmed live, isolating each contributor
+  // in turn): the tube's own base color was a near-white 0xf4fbf6 — close
+  // to full reflectance — so it read as a hot, hard-edged highlight against
+  // the dark room regardless of how dim the light illuminating it was.
+  // Toning the tube's own material down to a dimmer, slightly warm-gray
+  // (alongside the emissive/point-light cuts below) is what actually fixed
+  // it. Verify live from a composition with both a fixture and the
+  // moonbeam in frame — the moonbeam should unambiguously read as the
+  // dominant element.
   const FLUORESCENT_COLOR = 0xdcefe2;
   const fixtureHousingMat = new THREE.MeshStandardMaterial({ color: 0x232420, roughness: 0.6, metalness: 0.5 });
   const fixtureTubeMat = new THREE.MeshStandardMaterial({
-    color: 0xf4fbf6, emissive: FLUORESCENT_COLOR, emissiveIntensity: 1.1, roughness: 0.4,
+    color: 0xcbd6cf, emissive: FLUORESCENT_COLOR, emissiveIntensity: 0.35, roughness: 0.4,
   });
   const wd = warehouse.wallDist;
   const fixtureSpots = [
@@ -2778,6 +2807,7 @@ export function createOrrery(container, { preview = false } = {}) {
     { x: -wd * 0.15, z: -wd * 0.55 },
   ];
   const housingW = 1.3, housingD = 0.22, housingWallH = 0.11, plateT = 0.03;
+  const fluorescentLights = [];
   fixtureSpots.forEach(({ x, z }) => {
     const fy = rafterY - (preview ? 0.08 : 0.12);
 
@@ -2821,9 +2851,10 @@ export function createOrrery(container, { preview = false } = {}) {
     tube.rotation.z = Math.PI / 2;
     tube.position.set(x, fy - housingWallH / 2 + 0.015, z);
     scene.add(tube);
-    const fLight = new THREE.PointLight(FLUORESCENT_COLOR, preview ? 0.5 : 0.65, preview ? 8 : 12, 2);
+    const fLight = new THREE.PointLight(FLUORESCENT_COLOR, preview ? 0.25 : 0.32, preview ? 8 : 12, 2);
     fLight.position.set(x, fy - 0.15, z);
     scene.add(fLight);
+    fluorescentLights.push(fLight);
   });
 
   // The work light lives at the hanging bulb prop if the garage clutter

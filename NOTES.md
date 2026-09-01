@@ -587,6 +587,56 @@ described are unchanged.)
   worth trimming, orrery.js's texture generators and first-person rig are the
   two most self-contained chunks to split out first.
 
+## 3.16.2 (2026-09-02)
+
+**Orrery: fill-light and fluorescent-brightness polish, post-v3.16.1.**
+
+Two balance notes from Scott's live review of the shipped rebuild — not
+bugs, tuning work on top of architecture already confirmed correct.
+
+*Room going flat past the light edge.* Everything close to the moonbeam
+or the fluorescents read rich and detailed; past either source's reach,
+the room — walls, floor, already-built set dressing (boxes, ladder,
+posters, stools, the control box, the orrery's own farther-orbiting
+pieces) — dropped flat and vacant fast in wide shots. A visibility
+problem, not a content problem: none of that geometry was missing, it
+just had nothing dim/reflected light left to catch once the two dramatic
+sources were correctly localized and restrained. Fix: raised the
+existing `HemisphereLight`/`AmbientLight` fill (0.7→1.3, 0.3→0.55) rather
+than adding a third light — same two sources, more intensity, tuned low
+enough that it reads as "the room has walls and floor" rather than its
+own visible source. Verified live: posters, ladder, wall stains, and
+floor texture all stayed legible in wide establishing shots that were
+previously flat black past a few meters, while the moonbeam and antenna
+lattice still clearly read as the dominant focal points in the same
+shots.
+
+*Fluorescents pulling focus they shouldn't.* The fixtures are supposed
+to read as deliberately mundane — the moonbeam does the dramatic work —
+but were showing up bright, sharp-edged, and visually competitive with
+it. Diagnosed live by isolating each contributor in turn (debug toggles
+for the tube's emissive intensity, the point light's intensity, and its
+distance from the tube) rather than guessing: lowering the point light's
+"intensity" number alone barely changed the visible glow, because the
+tube's own base material color was a near-white `0xf4fbf6` — close to
+full reflectance — so it read as a hot, hard-edged highlight against the
+dark room almost regardless of how dim the light hitting it was. Fixed
+by toning the tube's own base color down to a dimmer warm-gray
+(`0xcbd6cf`) alongside cuts to both `emissiveIntensity` (1.1→0.35) and
+the point light's intensity (0.65→0.32 full, 0.5→0.25 preview). Verified
+live from compositions with both a fixture and the moonbeam in frame:
+the moonbeam and lit antenna lattice unambiguously remain the dominant
+element, and the fixtures still read as functional lit tubes, just
+subordinate ones — not an absolute darkening, a rebalance.
+
+Lesson, same shape as the shaft/star lessons two versions back but from
+the opposite direction: a fix aimed at one exposed parameter
+("intensity") can fail to move the actual visible property at all when a
+different, unexamined parameter (base material color/reflectance) is
+doing most of the real work. Isolating contributors one at a time in the
+live scene — rather than adjusting the obvious knob and eyeballing the
+result — is what caught it here.
+
 ## 3.16.1 (2026-09-02)
 
 **Orrery: star-field occlusion regression from v3.16.0, same-day correction.**
