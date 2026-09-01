@@ -126,7 +126,9 @@ they're editorial, not technical.
 "harmonics echoing at mathematically precise points" was flagged during the 4.0
 content fix as a possible second victim of the rename that produced `harmonicss`.
 Scott confirmed 2026-09-02 that it is his own word, about a plucked string. Leave
-it.)*
+it. Also closed in 4.0.1: Sphere's per-label rotation, which had never reached the
+screen and now does — folded out of inversion and tapered so it can't snap. It
+ships.)*
 
 - **The Library's withheld notes.** 81 cross-links were authored into a field the
   scene doesn't display. 4.0 stopped the dangling half from showing, so the
@@ -134,10 +136,6 @@ it.)*
   but it means ~40 real editorial connections are sitting in the data doing
   nothing. The options are to rehome them onto rendered fields, or to reconsider
   showing notes. That's a writing decision.
-- **Sphere's label rotation** has never had any visible effect — the renderer
-  overwrites it later in the same frame. Making it work is a visual design
-  question: does the type want to rotate with the facets, or was it right by
-  accident?
 - **A vertical (9:16) Butterfly export for YouTube Shorts** — an auto-rotate
   camera sweep. Listed as next-up for a while, never started.
 - **The eleventh scene**, whenever it comes. The content-sourcing question — what

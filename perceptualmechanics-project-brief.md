@@ -75,6 +75,13 @@ The 2026-09-01 audit produced 71 findings and 4.0 closed all but the
 following. Full evidence for each is in `punch-list-2026-09-01.md`; the
 4.0 entry in `NOTES.md` records what was fixed and what was measured.
 
+**Settled in 4.0.1:** Sphere's per-label rotation, which had never had any
+effect because `CSS2DRenderer` overwrote the inline transform later in the
+same frame. It now applies after the render, folded out of inversion and
+tapered by `cos(angle)` so it can't snap at the fold boundary. Shipped
+after looking at it in motion — see the 4.0.1 entry in NOTES.md, including
+the two defects that only a live look surfaced.
+
 **Settled, so it isn't re-opened:** `beamline.text.js:68`'s "harmonics
 echoing at mathematically precise points" was flagged during the 4.0
 content fix as a possible second victim of the same rename that produced
@@ -113,10 +120,6 @@ no hashes at all.
   open — now ~4× cheaper in raster work, but still one long main-thread
   block. Chunking it across frames would make spines pop in; that's a
   taste decision, not a technical one.
-- **Sphere's per-label rotation math has never had any effect** —
-  `CSS2DRenderer.render()` overwrites the inline transform later in the
-  same frame. Either make it work (write after the CSS2D render) or
-  delete ~25 lines from the hot loop. Visual design decision.
 - **`butterfly` auto-rotate / camera-sweep for a vertical (9:16) YouTube
   Shorts export** — still a "next up" item, still not started.
 - **One Orrery navigation quirk** introduced by the collider fix and kept

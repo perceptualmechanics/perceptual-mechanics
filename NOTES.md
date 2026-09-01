@@ -587,6 +587,65 @@ described are unchanged.)
   worth trimming, orrery.js's texture generators and first-person rig are the
   two most self-contained chunks to split out first.
 
+## 4.0.1 (2026-09-02)
+
+Two Sphere-and-text items 4.0 deliberately left open, both closed by
+looking at the thing rather than reasoning about it.
+
+**The face labels now actually rotate.** The per-label screen-space angle
+had been computed every frame since the day it was written and never
+reached the screen: `CSS2DRenderer` assigns `element.style.transform` for
+every visible object on every render (CSS2DRenderer.js:238) and runs
+*after* `updateLabels()` in `animate()`, so the `rotate()` was overwritten
+a few microseconds after being written, every frame, for as long as the
+scene has existed. Measured before the fix: **0 of 167 labels carried a
+rotate; all 167 carried only the renderer's translate.** The fix is
+ordering — the angle is stashed on the label entry and applied
+immediately after `labelRenderer.render()`, appending to what the renderer
+just wrote rather than replacing it. Appending is safe against
+accumulation precisely because the renderer assigns.
+
+Then two corrections that only a live look could have produced, which is
+the whole reason this was left as a question rather than shipped blind:
+
+1. **Half the sphere came out upside down.** A facet's tangent-plane "up"
+   points wherever the geometry sends it, so the raw angle covers the full
+   -180..180 — measured live at -178 to +167. Folding anything past a
+   quarter-turn back by 180 fixes the inversion.
+2. **A hard fold at ±90 flickers.** A label sitting near vertical snaps
+   through 180 degrees the instant the sphere carries it across the
+   boundary. In four seconds of ordinary auto-rotation that fired **24
+   times, 18 of them on labels visible at real opacity** — about six
+   flicks a second, which reads as a fault in the page, not an effect.
+   Nothing in a still frame shows this.
+
+So the tilt is tapered by `cos(angle)` rather than applied flat. That is
+zero exactly at ±90, which *removes* the discontinuity instead of hiding
+it — a label approaching vertical eases to horizontal and can no longer
+cross anything. It also puts the effect where it earns its place: facets
+turned toward the viewer, at full opacity and genuinely readable, keep
+most of their tilt; facets near the silhouette, already fading out on the
+backface ramp and already unreadable, sit flat. Peak tilt lands near 32°.
+After: **0 snap events over the same four-second sample**, angles spanning
+-32.1 to +32.1, and 71 of 103 labels tilted more than 15° — so the effect
+is plainly present, not washed out. The sphere now reads as text inscribed
+into the solid rather than floating over it.
+
+**`&copy;` in the label path.** `sphere.text.js` fragment 25 (the
+Colophon) held the only HTML entity in the entire corpus. The panel and
+the `/text/` page both decode it correctly; the face labels take their
+text through the shared regex `stripHtml`, which strips tags and does not
+decode entities, so seven labels were reading `claude &copy; 2003-2026`
+literally — the credit line, which is the one place a raw entity is more
+than cosmetic. Fixed at the source, `&copy;` → `©`.
+
+Deliberately NOT fixed by teaching the shared `stripHtml` to decode
+entities: that utility is also imported by `harmonicsPieces.js` and
+`build-resonances-doc.mjs`, and widening it would carry new surface area
+into both for a benefit that exists exactly once. Fragment 25 has no
+inbound or outbound links and no phrase in `links.js` touches it, so the
+source edit is clear of every check. One instance, one fix.
+
 ## 4.0 (2026-09-02)
 
 The audit release. An outside-in review of the whole project — all ten
