@@ -2838,17 +2838,38 @@ export function createOrrery(container, { preview = false } = {}) {
 
   // Sparse sky beyond the skylight — only really visible through the hole
   // and at the frame edges, not an all-encompassing backdrop.
-  const starCount = preview ? 140 : 320;
+  //
+  // Parallax fix, 2026-09-02 (corrected same day — see below): first pass
+  // recentered this field on the camera's position every frame, which
+  // does cancel parallax but broke occlusion — the real ceiling mesh is
+  // fixed in world space with a small hole cut into it, so a star field
+  // that instead follows the camera around drifts out from under that
+  // fixed geometry and starts rendering unoccluded wherever it happens to
+  // land, i.e. scattered across the frame well outside the hole (caught
+  // live by Scott: "are those stars peeking through the roof, or dust
+  // motes?" — they were neither, they were a leak). Reverted that in
+  // animate() — the field is static in world space again, still centered
+  // on the room's own origin like the fixed ceiling geometry above it, so
+  // occlusion through the real hole keeps working the way it always did.
+  // Parallax is instead suppressed the ordinary way: pushed much farther
+  // out (10x the old spread/height) so a few meters of room-scale camera
+  // movement is a small fraction of the distance to any star, with
+  // `sizeAttenuation: false` (fixed screen-space size in pixels, not
+  // world units) so the far-pushed points don't also shrink into
+  // invisibility.
+  const starCount = (preview ? 140 : 320) * 6;
+  const starSpreadXZ = (preview ? 18 : 28) * 4;
+  const starSpreadY = (preview ? 4 : 6) * 4;
   const positions = new Float32Array(starCount * 3);
   for (let i = 0; i < starCount; i++) {
-    positions[i * 3]     = (Math.random() - 0.5) * (preview ? 18 : 28);
-    positions[i * 3 + 1] = ceilingY + Math.random() * (preview ? 4 : 6);
-    positions[i * 3 + 2] = (Math.random() - 0.5) * (preview ? 18 : 28);
+    positions[i * 3]     = (Math.random() - 0.5) * starSpreadXZ;
+    positions[i * 3 + 1] = ceilingY + Math.random() * starSpreadY;
+    positions[i * 3 + 2] = (Math.random() - 0.5) * starSpreadXZ;
   }
   const starGeo = new THREE.BufferGeometry();
   starGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
   const starMat = new THREE.PointsMaterial({
-    color: 0xddeeff, size: preview ? 0.03 : 0.045, transparent: true, opacity: 0.55, sizeAttenuation: true,
+    color: 0xddeeff, size: preview ? 1.3 : 1.6, transparent: true, opacity: 0.55, sizeAttenuation: false,
   });
   const starField = new THREE.Points(starGeo, starMat);
   scene.add(starField);
@@ -3171,22 +3192,6 @@ export function createOrrery(container, { preview = false } = {}) {
       root.rotation.y = reduceMotion ? targetRotationY : root.rotation.y + (targetRotationY - root.rotation.y) * 0.07;
     } else {
       fp.update(dt);
-
-      // Star parallax fix, 2026-09-02: the star field was placed only a
-      // few units above the ceiling — the same order of distance as the
-      // antenna it's seen behind through the skylight hole — so walking
-      // around the room shifted the stars almost as much as the (much
-      // closer) antenna in front of them. Real stars are so far away that
-      // walking a few meters produces no visible parallax at all; the
-      // antenna should swing across a essentially static sky, not two
-      // foreground objects drifting past each other at similar rates.
-      // Recentering the star field on the camera's position every frame
-      // (translation only — its own rotation is never touched, so it
-      // stays fixed in world orientation) reproduces that directly: it's
-      // the standard "stars are at infinity" trick, cheaper and more
-      // correct here than actually pushing the points to some enormous
-      // finite distance.
-      starField.position.copy(camera.position);
 
       // Hover/click targeting — always from screen-center (the crosshair),
       // every frame, regardless of whether the pointer is locked or the

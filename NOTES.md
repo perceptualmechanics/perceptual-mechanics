@@ -587,6 +587,47 @@ described are unchanged.)
   worth trimming, orrery.js's texture generators and first-person rig are the
   two most self-contained chunks to split out first.
 
+## 3.16.1 (2026-09-02)
+
+**Orrery: star-field occlusion regression from v3.16.0, same-day correction.**
+
+Scott caught this live, from his own screenshots: small white dots scattered
+across the frame well outside the skylight hole's boundary, and asked
+plainly whether they were stars or dust motes. Confirmed via a debug
+toggle (`starField.visible = false`) that they were stars — the
+camera-recentering parallax fix shipped in v3.16.0 canceled parallax
+correctly but broke occlusion doing it. The real ceiling mesh is fixed in
+world space with a small hole cut into it; a star field that instead
+follows the camera's position around drifts out from under that fixed
+geometry, so most of its points end up in world locations with no ceiling
+above them at all and render fully unoccluded, scattered anywhere rather
+than confined to the actual hole.
+
+Reverted the per-frame `starField.position.copy(camera.position)` and
+went back to a static, world-space field centered on the room's own
+origin — matching the fixed ceiling — so occlusion through the real hole
+works exactly as it always did. Parallax is instead suppressed the
+ordinary way: the field's spread and height pushed out 4x, with
+`sizeAttenuation: false` (fixed screen-space pixel size, not world units)
+so the farther points don't also shrink away, and point count scaled up
+~6x to keep the sparse-but-visible density similar to before across the
+now-larger volume. Verified live: with camera orientation held fixed and
+only position shifted several units, the one or two stars visible through
+the hole stayed at essentially the same screen position (parallax still
+suppressed) while a full walk-around confirmed no stray points appear
+outside the hole from any angle (occlusion restored).
+
+Lesson: the multi-angle verification done for v3.16.0's parallax fix only
+checked the parallax property itself (orientation fixed, position
+shifted) — it never checked the wider frame for stray unoccluded points
+from a normal walking pose, which is exactly where the regression showed
+up. A fix for one specific property (parallax) can still break a
+different, unrelated property (occlusion) of the same object; verify the
+whole picture, not just the property the fix targeted. Related: see
+[[feedback_safe_by_constraint_not_verified]] from the same session's
+shaft work for the same shape of lesson on the constraint side rather
+than the property-verification side.
+
 ## 3.16.0 (2026-09-02)
 
 **Orrery: brick depth, real fluorescent housings, safe shaft re-add, star parallax fix.**
