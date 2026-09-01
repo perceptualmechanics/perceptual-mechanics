@@ -54,6 +54,26 @@ the lockfile it writes is correct and complete, and CI (Linux) is unaffected
 — but the Mac needs `npm ci` afterwards before anything will run locally.
 Treat "the sandbox ran npm install" as implying "run `npm ci` here next."
 
+### The assistant builds from its own checkout, not from this folder
+
+The repair above is `npm ci`; the actual fix is to stop two operating systems
+sharing one `node_modules` at all. There is no version of that arrangement
+that works, because `npm ci` installs only the platform variants matching the
+machine it runs on — so whichever side installed last is the side that works,
+and the other one breaks. Alternating repairs is not a workflow.
+
+So: when a build or a gate run needs to happen on the assistant's side, it
+happens in a **separate clone** in the assistant's own container, with its own
+`npm ci`. The repo is public, the tracked tree is about 3.5 MB (`assets/` and
+`artifacts/` are ignored personal files and the build doesn't read them), and
+a clean clone builds and passes all four gates in about a second. Unpushed
+local work travels as a `git format-patch` and `git am`, not as a copied
+folder.
+
+This folder's `node_modules` belongs to the Mac. Nothing on the assistant side
+should write to it — not `npm install`, not `npm ci`, not `npm run build`
+(which runs the local `vite` binary out of it).
+
 ## Documentation
 
 ### An implementation brief closes by naming what it invalidates

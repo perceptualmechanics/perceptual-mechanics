@@ -7,6 +7,14 @@ import { verifyLinks } from './scripts/verify-links.mjs';
 import { verifyResonances } from './scripts/verify-resonances.mjs';
 import { verifyScrollMarks } from './scripts/verify-scroll-marks.mjs';
 
+// Vite 8 warns that `configLoader: 'native'` is planned to become the default.
+// Under that loader this config is handed to Node as real ESM instead of being
+// pre-bundled, and the CJS `__dirname` Vite injects today stops existing.
+// `import.meta.dirname` is the ESM equivalent; it needs Node 20.11+, and this
+// repo requires 22 (package.json engines) with CI on 24, so there is no floor
+// to worry about. Named rather than inlined so the reason lives in one place.
+const HERE = import.meta.dirname;
+
 // ─── Link store verification ────────────────────────────────────────────────
 // Same reasoning as prerenderTextPages() below, same fix: a plain npm
 // "prebuild" script would silently never run against the bare
@@ -86,8 +94,8 @@ function verifyResonancesPlugin() {
 // prerender exactly when it's being checked. closeBundle fires after the
 // public/ passthrough copy, so the generated sitemap.xml lands last and wins.
 function prerenderTextPages() {
-  let outDir = resolve(__dirname, 'dist');
-  let root = __dirname;
+  let outDir = resolve(HERE, 'dist');
+  let root = HERE;
   return {
     name: 'pm-prerender-text',
     apply: 'build',
@@ -246,7 +254,7 @@ export default defineConfig({
     chunkSizeWarningLimit: 600,
     rollupOptions: {
       input: {
-        main:     resolve(__dirname, 'index.html'),
+        main:     resolve(HERE, 'index.html'),
         // utils/shorts.html removed 2026-07-23 (Scott deleted the file
         // directly) -- had to drop this entry too, or every build fails
         // outright with "Could not resolve entry module".
