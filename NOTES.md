@@ -587,6 +587,20 @@ described are unchanged.)
   worth trimming, orrery.js's texture generators and first-person rig are the
   two most self-contained chunks to split out first.
 
+## 3.13.6 (2026-09-01)
+
+**Landing tiles: swapped Butterfly and Scroll.** Third of Scott's three
+sequenced follow-ups. Proposed keeping the tile order as-is (Outside
+correctly stays the closer, Harmonics correctly sits right before it as
+the one scene that synthesizes across every other piece); Scott's one
+adjustment was swapping tiles 2 and 3 (`sphere, scroll, butterfly,
+theater, orbiter` — was `sphere, butterfly, scroll, theater, orbiter`).
+Swapped both the nav-bar icon order and the landing preview-tile order in
+`index.html` (kept in sync, same as every prior tile change) — the
+5-tile row-break stays after the 5th tile, unaffected since it's a
+separate element after Orbiter's own `<li>`. Build clean, live-verified
+tile order via the running dev server.
+
 ## 3.13.5 (2026-09-01)
 
 **Harmonics panel's deeper visual-richness pass.** Second of Scott's
