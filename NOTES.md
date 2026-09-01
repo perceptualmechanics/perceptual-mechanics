@@ -587,6 +587,46 @@ described are unchanged.)
   worth trimming, orrery.js's texture generators and first-person rig are the
   two most self-contained chunks to split out first.
 
+## 3.14.2 (2026-09-01)
+
+**Orrery: moonbeam shape correction, two real bugs from live review.**
+
+- **Beam cross-section didn't match the skylight's actual shape.** The
+  real skylight opening cut into the ceiling (`buildWarehouse`'s `hole`
+  path) is a square (`holeW === holeH`), but the visible beam mesh was a
+  smooth 16-segment cylinder — round light through a square hole. A
+  `SpotLight`'s own falloff is always circular by definition (no native
+  way to shape it to an aperture), which is fine for the light itself;
+  the fix belongs to the beam's own separate mesh, same as the changelog
+  already described it. Changed `radialSegments` from 16 to 4 (a 4-sided
+  cylinder = square cross-section) and added `rotation.y = Math.PI / 4`,
+  since three.js's default 4-segment cylinder is diamond-oriented
+  (corners on-axis) while the real hole's flat sides are what's
+  axis-aligned — confirmed by comparing the hole `Path`'s corner
+  coordinates against the cylinder's default vertex angles, not just
+  eyeballing it.
+- **A second visible beam existed where only one was ever specified.**
+  Investigated rather than assumed the given hypothesis (that the
+  fluorescent fixtures had inherited a beam-mesh pattern) — grep
+  confirmed the fluorescent fixture code adds only a housing box, a tube
+  cylinder, and a `PointLight`, no beam geometry. The actual second beam
+  was `beam2`, a pre-existing secondary-skylight shaft (predating both
+  this pass and 3.14.0) tied to the room's second, smaller skylight hole.
+  Removed `beam2` and its mesh entirely, along with its dedicated
+  dust-mote entry in `motePositions` (mote count on the remaining beam
+  bumped up slightly to keep overall dust density similar). The second
+  skylight hole itself stays as real ceiling geometry — a two-skylight
+  room can have one hole that isn't currently catching a dramatic beam,
+  same as the fluorescent baseline everywhere else.
+- Build clean, `verify-links`/`verify-resonances` unaffected,
+  live-verified via the running dev server from two different angles:
+  exactly one visible beam-shaft mesh in the scene, its silhouette
+  clearly faceted/angular (straight flat edges, not a smooth round taper)
+  from both a head-on and a side-angled view, and fluorescent-lit areas
+  (the workbench corner, a side brick wall) confirmed genuinely
+  beam-free — re-checked specifically since it was flagged as missed in
+  the prior pass.
+
 ## 3.14.1 (2026-09-01)
 
 **Orrery: lighting + brick follow-up correction.** Two specific pieces of

@@ -1824,7 +1824,7 @@ function buildWarehouse(preview, floorY, ceilingY, rafterY) {
     addStrut(group, from, to, preview ? 0.02 : 0.026, trussMat);
   });
 
-  // ─── Skylight shafts ────────────────────────────────────────────────────
+  // ─── Skylight shaft ─────────────────────────────────────────────────────
   // The room's ~30ft vertical scale (the mast poking out through the
   // roof) reads through the few lit things reading as genuinely lit,
   // rather than through added ambient light — the darkness/sparseness is
@@ -1832,48 +1832,52 @@ function buildWarehouse(preview, floorY, ceilingY, rafterY) {
   // opacity is high enough to actually see the shaft, and — the standard
   // cheap Myst-era trick for selling scale in an empty vertical space —
   // visible dust motes drift through it, added as a particle system just
-  // below. Both beams are tilted off vertical ("angled shafts," not
-  // straight-down columns) so they read as directional sunlight rather
-  // than a generic glow column.
+  // below. Tilted off vertical ("an angled shaft," not a straight-down
+  // column) so it reads as directional moonlight rather than a generic
+  // glow column.
   // Bumped a step brighter/cooler (lighting correction pass, 2026-09-01)
-  // now that this beam is the room's one dramatic light source rather
-  // than one of several — it needs to read as sharp and directional
-  // against a genuinely flat fluorescent baseline everywhere else.
+  // now that this is the room's one dramatic light source rather than
+  // one of several — it needs to read as sharp and directional against
+  // a genuinely flat fluorescent baseline everywhere else. Shape
+  // correction, same pass: the real skylight opening cut into the
+  // ceiling below is a square (holeW === holeH), not round, and a
+  // SpotLight's own illumination falloff is always circular by
+  // definition — it has no way to inherit the aperture's actual shape.
+  // The visible shaft is its own separate mesh precisely so it can match
+  // that square footprint: radialSegments=4 makes a 4-sided (square)
+  // cylinder rather than the smooth 16-gon it was; three.js's default
+  // 4-segment cylinder is diamond-oriented (corners on the axes), so
+  // rotation.y is offset 45° to axis-align its flat faces with the real
+  // hole's flat sides instead.
   const beamMat = new THREE.MeshBasicMaterial({
     color: 0xc3d9ff, transparent: true, opacity: 0.14, side: THREE.DoubleSide, depthWrite: false,
   });
-  const beamGeo = new THREE.CylinderGeometry(holeW * 0.4, holeW * 2.4, ceilingY - floorY, 16, 1, true);
+  const beamGeo = new THREE.CylinderGeometry(holeW * 0.4, holeW * 2.4, ceilingY - floorY, 4, 1, true);
   const beam = new THREE.Mesh(beamGeo, beamMat);
   beam.position.y = (ceilingY + floorY) / 2;
+  beam.rotation.y = Math.PI / 4;
   beam.rotation.z = -0.1;
   beam.rotation.x = 0.04;
   group.add(beam);
 
-  // Second, smaller shaft through the second skylight panel above —
-  // fainter and narrower than the main one (a secondary opening, not an
-  // equal twin), tilted the opposite way so the two don't read as a
-  // mechanically repeated pair.
-  const beam2Mat = new THREE.MeshBasicMaterial({
-    color: 0xdce8ff, transparent: true, opacity: 0.065, side: THREE.DoubleSide, depthWrite: false,
-  });
-  const beam2Geo = new THREE.CylinderGeometry(hole2W * 0.4, hole2W * 2.1, ceilingY - floorY, 14, 1, true);
-  const beam2 = new THREE.Mesh(beam2Geo, beam2Mat);
-  beam2.position.set(hole2X * 0.6, (ceilingY + floorY) / 2, hole2Z * 0.6);
-  beam2.rotation.z = 0.14;
-  beam2.rotation.x = -0.06;
-  group.add(beam2);
+  // The second skylight hole above stays as real ceiling geometry (this
+  // is a two-skylight room), but only ever gets one dramatic visible
+  // beam — the moonlight — per Scott's explicit spec. It previously had
+  // its own second glowing shaft mesh; removed (lighting correction
+  // pass, 2026-09-01) rather than kept as a fainter twin, since "exactly
+  // one visible beam-shaft mesh, nothing else" is unambiguous. The hole
+  // itself is unlit, same as the rest of the fluorescent-baseline room.
 
   // ─── Dust motes ─────────────────────────────────────────────────────────
-  // A small particle system drifting slowly upward through both beams —
-  // visible dust in a light shaft is the cheapest, most legible way to
-  // sell "there is a huge volume of air in this room" that exists, not a
-  // geometry problem the way the orrery structure's own scale is.
-  // Returned (not animated here) so createOrrery's shared animate() loop
-  // can update positions each frame, same pattern buildOrrery uses for
-  // orbits/moons.
+  // A small particle system drifting slowly upward through the one
+  // visible beam — visible dust in a light shaft is the cheapest, most
+  // legible way to sell "there is a huge volume of air in this room"
+  // that exists, not a geometry problem the way the orrery structure's
+  // own scale is. Returned (not animated here) so createOrrery's shared
+  // animate() loop can update positions each frame, same pattern
+  // buildOrrery uses for orbits/moons.
   const motePositions = [
-    { x: 0, z: 0, r0: holeW * 0.4, r1: holeW * 2.4, tiltZ: -0.1, tiltX: 0.04, count: preview ? 70 : 170 },
-    { x: hole2X * 0.6, z: hole2Z * 0.6, r0: hole2W * 0.4, r1: hole2W * 2.1, tiltZ: 0.14, tiltX: -0.06, count: preview ? 40 : 90 },
+    { x: 0, z: 0, r0: holeW * 0.4, r1: holeW * 2.4, tiltZ: -0.1, tiltX: 0.04, count: preview ? 90 : 210 },
   ];
   const moteCount = motePositions.reduce((s, m) => s + m.count, 0);
   const motePos = new Float32Array(moteCount * 3);
