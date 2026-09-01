@@ -587,6 +587,26 @@ described are unchanged.)
   worth trimming, orrery.js's texture generators and first-person rig are the
   two most self-contained chunks to split out first.
 
+## 3.13.2 (2026-09-01)
+
+**Carry Library's warm tones into discs/CDs.** Live reaction to 3.13.1's
+`vividColor()` book fix: "oranger warmer tones are great... incorporate
+that into the CDs and Blurays somehow." `DISC_PALETTE` (Blu-ray cases) and
+`CD_PALETTE` (jewel cases) were previously cool blue-black and neutral
+off-white respectively — shifted both warm (umber-black, champagne-tan)
+without touching `vividColor()` itself, since that function preserves
+existing hue and these two palettes' base hues were cool/neutral to begin
+with, not warm — reusing it verbatim would have pushed the discs bluer,
+the opposite of what was asked. Still deliberately near-monochrome, still
+a materially distinct register from the books (glossy plastic vs. cloth
+binding) — this is a hue shift, not a books-style saturation boost or rim
+light. Verified live against the running dev server (localhost:5173),
+confirmed hot-reloaded (fetched the served module source to confirm it
+carried the edit, not a stale bundle).
+
+Build clean. Verify-links/verify-resonances unaffected (no content
+changes).
+
 ## 3.13.1 (2026-09-01)
 
 **Follow-up fixes from live review of 3.13.0.** Scott caught three real

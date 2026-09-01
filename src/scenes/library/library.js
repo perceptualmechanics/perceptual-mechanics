@@ -87,8 +87,17 @@ const BOX_PALETTE = ['#141428', '#1c1830', '#101018'];
 // color, unlike a bookshelf), pale jewel-case paper for the CDs — rather
 // than all three sharing a single palette and reading as one thinner
 // smear of the same colors.
-const DISC_PALETTE = ['#0d0f16', '#10141f', '#141013', '#0c1119'];
-const CD_PALETTE = ['#e8e3d4', '#dcd6c6', '#cfc9b8', '#e2ddd0'];
+// Both palettes shifted warm (design-notes pass follow-up, 2026-09-01) —
+// Scott's reaction to vividColor's warmer book spines was to want that
+// same warmth carried into the discs/CDs too, not just the books. Still
+// near-monochrome, still a materially distinct register from the books
+// (glossy near-black plastic / pale jewel-case paper) — DISC_PALETTE was
+// previously a cool blue-black (hue ~220-230°), now an umber/espresso
+// black (hue ~25-30°) so it reads warm at a glance instead of fighting
+// the shelf's own warm void/backdrop; CD_PALETTE moves from a neutral
+// off-white toward a warmer champagne/tan.
+const DISC_PALETTE = ['#160f0a', '#1a1108', '#170e08', '#140c0a'];
+const CD_PALETTE = ['#ecdcc0', '#e4cfa8', '#dcc59a', '#e8d3b0'];
 
 // Cheap deterministic string hash (djb2) — used so a given title always
 // gets the same simulated thickness/color/height on every visit, rather
