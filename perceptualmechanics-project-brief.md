@@ -75,6 +75,19 @@ The 2026-09-01 audit produced 71 findings and 4.0 closed all but the
 following. Full evidence for each is in `punch-list-2026-09-01.md`; the
 4.0 entry in `NOTES.md` records what was fixed and what was measured.
 
+**Settled in 4.0.1:** Sphere's per-label rotation, which had never had any
+effect because `CSS2DRenderer` overwrote the inline transform later in the
+same frame. It now applies after the render, folded out of inversion and
+tapered by `cos(angle)` so it can't snap at the fold boundary. Shipped
+after looking at it in motion — see the 4.0.1 entry in NOTES.md, including
+the two defects that only a live look surfaced.
+
+**Settled, so it isn't re-opened:** `beamline.text.js:68`'s "harmonics
+echoing at mathematically precise points" was flagged during the 4.0
+content fix as a possible second victim of the same rename that produced
+`harmonicss`. **Scott confirmed 2026-09-02 that it is original.** It is
+the word he wrote, about a plucked string, and it stays. Don't re-flag it.
+
 **Resolved in 4.0, listed here so they aren't re-derived as open:**
 security headers (all six now set, with reasoning in `.htaccess`); the
 Google Fonts item, which was *already* stale before the audit — the fonts
@@ -104,6 +117,16 @@ no hashes at all.
   all, and the deploy workflow's "Verify live security headers" step now
   answers that automatically on every deploy. Let it go green once, then
   change 300 to 31536000. Never add `preload`.
+- **Eight Library notes are held back from publication** (`NOTE_HOLD` in
+  `src/links.js`). v4.0.2 made a note visible wherever it carries a
+  cross-link; a scan then caught that some are still working notes. #124
+  opens with a dated verbatim quote of Scott to Claude about an ISBN error —
+  private correspondence that would have gone live. Seven more carry
+  edition/runtime/ISBN chatter. Each needs one clause trimmed;
+  `verify-links` fails the build if a new note of the same kind joins the
+  visible set, and reports a held note as ready to release once it scans
+  clean. Nine of the 81 note links stay dark until then — no regression,
+  just an unrealised gain.
 - **Library's shelf is still 535 draw calls** (down from 1,603). Merging
   the 265 spines further breaks per-mesh raycast, the hover scale bump
   and per-spine emissive glow simultaneously; it needs a hover mechanism
@@ -112,15 +135,6 @@ no hashes at all.
   open — now ~4× cheaper in raster work, but still one long main-thread
   block. Chunking it across frames would make spines pop in; that's a
   taste decision, not a technical one.
-- **Sphere's per-label rotation math has never had any effect** —
-  `CSS2DRenderer.render()` overwrites the inline transform later in the
-  same frame. Either make it work (write after the CSS2D render) or
-  delete ~25 lines from the hot loop. Visual design decision.
-- **`beamline.text.js:68`** contains the word "harmonics" in prose.
-  Examined during the 4.0 content fix and left alone — unlike the Sphere
-  case it reads as original ("harmonics echoing at mathematically precise
-  points", under a comment pairing it with "here are harps, here are
-  superstrings"). Needs Scott's eye to settle, not a rename script's.
 - **One Orrery navigation quirk** introduced by the collider fix and kept
   deliberately: two adjacent rings' low arcs leave a 0.46-unit gap, and a
   0.6-unit-wide visitor pressed into it can't strafe out sideways.

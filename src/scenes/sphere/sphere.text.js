@@ -146,6 +146,6 @@ export const fragments = [
   {
     id: 25,
     title: "Colophon",
-    text: `<p>created in collaboration with claude</p><p>&copy; 2003-2026 Scott Jason Cohen</p>`
+    text: `<p>created in collaboration with claude</p><p>© 2003-2026 Scott Jason Cohen</p>`
   }
 ];

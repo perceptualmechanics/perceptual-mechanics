@@ -253,7 +253,7 @@ export function createSphere(container, { preview = false, initialPieceId = null
           // sizedAt: the label-scale this div's fontSize/width/height were
           // last written at. -1 is a value `scale` can never take (it is
           // clamped to [0.5, 3.0]), so the first pass always writes.
-          labelData.push({ label, normal, upVec, div, sizedAt: -1 });
+          labelData.push({ label, normal, upVec, div, sizedAt: -1, angle: 0 });
         }
       }
 
@@ -669,17 +669,73 @@ export function createSphere(container, { preview = false, initialPieceId = null
         // measuring angle from screen-up instead of screen-right; the
         // 180/Math.PI converts the result from radians to the degrees
         // CSS rotate() expects.
+        //
+        // This math ran every frame from the day it was written and never
+        // reached the screen. CSS2DRenderer sets `element.style.transform`
+        // by plain assignment on every visible object every frame
+        // (CSS2DRenderer.js:238), and it runs AFTER updateLabels() in
+        // animate() — so writing a rotate() here was overwritten by the
+        // renderer's own translate a few microseconds later, every frame,
+        // for years. Measured before the fix: 0 of 167 labels carried a
+        // rotate(); all 167 carried only the translate.
+        //
+        // The fix is ordering, not maths. The angle is stashed on the entry
+        // here and applied in applyLabelRotations() below, immediately after
+        // labelRenderer.render(), by APPENDING to what the renderer just
+        // wrote rather than replacing it — transform functions compose left
+        // to right, so `translate(-50%,-50%) translate(x,y) rotate(a)`
+        // positions the label and then spins it about its own centre, which
+        // is what was wanted. Appending is safe against accumulation
+        // precisely because the renderer assigns rather than appends.
         centerWorld.copy(label.position).applyMatrix4(sphere.matrixWorld);
         worldUp.copy(upVec).applyMatrix3(normalMatrix).normalize();
         tipWorld.copy(centerWorld).addScaledVector(worldUp, 0.15);
         const cs = projectToScreen(centerWorld, projCenter);
         const ts = projectToScreen(tipWorld, projTip);
-        const angle = Math.atan2(ts.x - cs.x, -(ts.y - cs.y)) * (180/Math.PI);
-        div.style.transform = `rotate(${angle.toFixed(1)}deg)`;
+        //
+        // Two corrections, both found by looking at this on a real sphere
+        // rather than reasoning about it — which is the only way either one
+        // was ever going to surface.
+        //
+        // First: the facet's tangent-plane "up" points wherever the geometry
+        // sends it, so the raw angle covers the full -180..180 and roughly
+        // half the labels rendered upside down. Measured live: -178 to +167.
+        // Adding 180 to anything past a quarter-turn folds those back.
+        //
+        // Second, and the reason this isn't just a clamp: folding at a hard
+        // +-90 boundary means a label sitting near vertical SNAPS through 180
+        // degrees the instant the sphere carries it across the line. In four
+        // seconds of ordinary auto-rotation that fired 24 times, 18 of them
+        // on labels visible at real opacity — about six flicks a second,
+        // which reads as a fault in the page rather than an effect.
+        //
+        // So the tilt is tapered by cos(angle) instead of applied flat. That
+        // is zero exactly at +-90, which removes the discontinuity rather
+        // than hiding it — a label approaching vertical eases to horizontal
+        // and can no longer cross anything. It also puts the effect where it
+        // is worth having: facets turned toward the viewer, whose text is at
+        // full opacity and actually readable, keep most of their tilt, while
+        // facets near the silhouette — already fading out on the backface
+        // ramp, already unreadable — sit flat. Peak tilt lands near 32
+        // degrees, around a raw 49.
+        const raw = Math.atan2(ts.x - cs.x, -(ts.y - cs.y)) * (180/Math.PI);
+        const folded = raw > 90 ? raw - 180 : raw < -90 ? raw + 180 : raw;
+        entry.angle = folded * Math.cos(folded * Math.PI / 180);
       } else if (label.visible) {
         div.style.visibility = 'hidden';
         label.visible = false;
       }
+    }
+  }
+
+  // The second half of the label-rotation pass. Separate from updateLabels()
+  // only because it has to run on the other side of labelRenderer.render();
+  // it does no maths, just applies the angle that pass already computed.
+  // Appending keeps the renderer's own positioning intact.
+  function applyLabelRotations() {
+    for (const entry of labelData) {
+      if (!entry.label.visible) continue;
+      entry.div.style.transform += ` rotate(${entry.angle.toFixed(1)}deg)`;
     }
   }
 
@@ -704,7 +760,11 @@ export function createSphere(container, { preview = false, initialPieceId = null
     if (!preview && labelData.length) updateLabels();
 
     renderer.render(scene, camera);
-    if (labelRenderer) labelRenderer.render(scene, camera);
+    if (labelRenderer) {
+      labelRenderer.render(scene, camera);
+      // Must follow the render — see the ordering note in updateLabels().
+      if (!preview && labelData.length) applyLabelRotations();
+    }
   }
   animate();
 

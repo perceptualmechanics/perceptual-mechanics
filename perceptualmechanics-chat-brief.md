@@ -122,23 +122,23 @@ because the build gates depend on plugin hooks that changed.
 These are the ones where a chat is genuinely more useful than a coding session —
 they're editorial, not technical.
 
-- **The Beamline word.** `beamline.text.js` fragment 6 reads *"Pluck at them
-  both, send me vibrating, harmonics echoing at mathematically precise points…
-  my own bow waits to be bent."* It sits under a comment pairing it with a
-  fragment about harps and superstrings. Given the Sphere rename damage, it's
-  worth asking whether this "harmonics" is original or the same script's second
-  victim — but it reads as genuine, and harmonics *are* what a plucked string
-  produces at precise nodes. Needs Scott's ear, not a diff.
-- **The Library's withheld notes.** 81 cross-links were authored into a field the
-  scene doesn't display. 4.0 stopped the dangling half from showing, so the
-  relationships are now invisible from both ends rather than one — consistent,
-  but it means ~40 real editorial connections are sitting in the data doing
-  nothing. The options are to rehome them onto rendered fields, or to reconsider
-  showing notes. That's a writing decision.
-- **Sphere's label rotation** has never had any visible effect — the renderer
-  overwrites it later in the same frame. Making it work is a visual design
-  question: does the type want to rotate with the facets, or was it right by
-  accident?
+*(One that is closed, so it isn't re-opened: `beamline.text.js` fragment 6's
+"harmonics echoing at mathematically precise points" was flagged during the 4.0
+content fix as a possible second victim of the rename that produced `harmonicss`.
+Scott confirmed 2026-09-02 that it is his own word, about a plucked string. Leave
+it. Also closed in 4.0.1: Sphere's per-label rotation, which had never reached the
+screen and now does — folded out of inversion and tapered so it can't snap. It
+ships.)*
+
+- **Eight Library notes need one clause trimmed each.** v4.0.2 answered the
+  bigger question — a note is now shown wherever it carries a cross-link, and
+  stays private otherwise (45 render, 55 don't). Switching the field on then
+  caught that a few of those notes are still working notes rather than
+  criticism: edition and runtime chatter, and in one case a dated verbatim
+  quote of Scott to Claude about an ISBN error, which would have gone live.
+  Those eight are held in `NOTE_HOLD` with reasons; `verify-links` reports one
+  as ready to release the moment it scans clean. This is genuinely a writing
+  job — read the note, cut the bookkeeping clause, keep the criticism.
 - **The eleventh scene**, whenever it comes. The content-sourcing question — what
   in `Holography.scriv` or `seeds.md` is ready to be promoted — is a
   conversation, not a build task.
