@@ -861,7 +861,7 @@ export function createharmonics(container, { preview = false, initialPieceId = n
       panelTitleEl.textContent = self.title;
       panelSubtitleEl.textContent = conns.length === 1 ? 'Resonates with 1 piece' : `Resonates with ${conns.length} pieces`;
       panelResonancesEl.innerHTML = '';
-      conns.forEach(({ row, other }) => {
+      conns.forEach(({ row, other }, i) => {
         const resolved = resolveEndpoint(other);
         const otherHex = `#${(SCENE_ACCENT[other.scene] ?? 0xffffff).toString(16).padStart(6, '0')}`;
         const quotes = extractQuotes(row.rationale);
@@ -870,18 +870,43 @@ export function createharmonics(container, { preview = false, initialPieceId = n
 
         const entry = document.createElement('div');
         entry.className = 'harmonics-resonance-entry';
+        // Card background/glow accent (see harmonics.css's own comment) —
+        // the connection's OTHER scene color, same hex already resolved
+        // for the excerpt border just below, not a separate palette.
+        entry.style.setProperty('--entry-accent', otherHex);
+
+        // "2 OF 6" — only worth printing once there's more than one card
+        // to locate within; a single-connection node has nothing to
+        // number against (design-notes pass follow-up, 2026-09-01).
+        if (conns.length > 1) {
+          const indexEl = document.createElement('span');
+          indexEl.className = 'harmonics-entry-index';
+          indexEl.textContent = `${i + 1} of ${conns.length}`;
+          entry.appendChild(indexEl);
+        }
 
         const pair = document.createElement('div');
         pair.className = 'harmonics-excerpt-pair';
         const selfQ = document.createElement('blockquote');
         selfQ.className = 'harmonics-excerpt';
         selfQ.style.borderLeftColor = selfHex;
+        selfQ.style.setProperty('--q-accent', selfHex);
         selfQ.innerHTML = `<span class="harmonics-excerpt-label">${escapeHtml(self.title)}</span>${escapeHtml(selfSnippet)}`;
+        // Decorative glyph binding the pair as one resonance, not two
+        // unrelated quotes (see harmonics.css's own comment) — hidden
+        // from assistive tech, which already gets the relationship from
+        // the panel subtitle and each excerpt's own title label.
+        const glyph = document.createElement('div');
+        glyph.className = 'harmonics-resonance-glyph';
+        glyph.setAttribute('aria-hidden', 'true');
+        glyph.textContent = '⟡';
         const otherQ = document.createElement('blockquote');
         otherQ.className = 'harmonics-excerpt';
         otherQ.style.borderLeftColor = otherHex;
+        otherQ.style.setProperty('--q-accent', otherHex);
         otherQ.innerHTML = `<span class="harmonics-excerpt-label">${escapeHtml(resolved.title)}</span>${escapeHtml(otherSnippet)}`;
         pair.appendChild(selfQ);
+        pair.appendChild(glyph);
         pair.appendChild(otherQ);
         entry.appendChild(pair);
 

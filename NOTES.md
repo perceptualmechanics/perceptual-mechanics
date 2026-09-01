@@ -587,6 +587,45 @@ described are unchanged.)
   worth trimming, orrery.js's texture generators and first-person rig are the
   two most self-contained chunks to split out first.
 
+## 3.13.5 (2026-09-01)
+
+**Harmonics panel's deeper visual-richness pass.** Second of Scott's
+three sequenced follow-ups. The panel's own resonance-entry cards were
+the one thing this pass identified as reading genuinely flatter than the
+rest of the site: stacked pairs separated only by a hairline rule, no
+per-connection color variety, no positional hierarchy at the corpus's
+real stress case (sphere:14 "Quiver," 6 stacked resonances). Three
+concrete fixes, all CSS/DOM-only per the project's standing "minimize JS"
+rule — no new dependencies, nothing that needed a shader:
+
+- *Distinct cards, not a running list.* Each `.harmonics-resonance-entry`
+  now has a real background wash and soft glow in that connection's own
+  scene-accent color (`--entry-accent`, same hex `nodeResonances` already
+  resolves for the excerpt border — not an invented palette), via
+  `color-mix()` with a flat-rgba fallback for unsupported browsers.
+  Scanning down 6 stacked cards now gives real per-connection visual
+  variety instead of one gold wash repeated 6 times.
+- *Position within the stack.* A small "N of M" label per card — only
+  rendered when a node has more than one connection, since a single-
+  connection node has nothing to number against.
+- *A glyph binding each self/other excerpt pair.* A small centered ⟡
+  between the two blockquotes (aria-hidden — decorative only, the real
+  relationship is still conveyed by the subtitle count and each excerpt's
+  title label), plus a soft accent-tinted `box-shadow` bleed on each
+  excerpt itself — the same "glow concentrated at an edge, not a flat
+  fill" idea as the Fresnel rim technique used on Library's spines/
+  Orbiter's satellites, translated into CSS since this panel is a flat
+  HTML overlay, not a WebGL material. The panel's own background also
+  picked up a second, cooler counter-glow at the opposite corner (echoing
+  the 3D scene's own O-III/H-alpha nebula duality) for real layered depth
+  instead of one flat radial wash.
+
+Build clean, `verify-links`/`verify-resonances` unaffected. Live-verified
+at the real stress case (`#harmonics/1`, sphere:14's 6 resonances) via
+the running dev server — all 6 cards render as distinct, individually
+tinted, correctly numbered, and legible; scrolled the full panel to
+confirm no overflow/collision at that length.
+
 ## 3.13.4 (2026-09-01)
 
 **Harmonics' panel now side-adapts, matching Sphere/Library/Orbiter.**

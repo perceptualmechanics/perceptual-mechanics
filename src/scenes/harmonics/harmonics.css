@@ -104,8 +104,17 @@
    an explicit request to lean closer to the site's own accent family. */
 .harmonics-panel {
   position: absolute; top: 0; right: 0; width: 85%; height: 100%;
+  /* Deeper panel richness pass (design-notes pass follow-up, 2026-09-01):
+     the single gold wash below read flat next to the rest of the site's
+     layered backdrops (Library's recolored hex-gallery, Orbiter's tinted
+     void) — a second, cooler counter-glow at the opposite corner gives
+     the panel real depth without fighting the gold accent that still
+     dominates. The hue (a muted blue-violet) echoes the 3D scene's own
+     O-III/H-alpha nebula duality sitting just behind this panel, rather
+     than inventing an unrelated color. */
   background:
     radial-gradient(ellipse at 30% 0%, rgba(200,155,70,0.28), transparent 62%),
+    radial-gradient(ellipse at 82% 100%, rgba(90,120,200,0.16), transparent 55%),
     #05070d;
   border-left: 1px solid rgba(255,220,150,0.22);
   padding: 4rem 1.5rem 2rem;
@@ -184,12 +193,31 @@
 .harmonics-excerpt-pair {
   display: flex; flex-direction: column; gap: 1rem; margin: 0 0 1rem;
 }
+/* A small centered glyph between the two excerpts (design-notes pass
+   follow-up, 2026-09-01) — binds self/other visually as ONE resonance
+   unit rather than two quote blocks that happen to be stacked, which is
+   most of why the panel read flat: nothing on screen carried the actual
+   idea ("these two touch") except the surrounding rationale text that
+   round 10.1 already removed. Decorative only (aria-hidden) — the real
+   relationship is still conveyed by harmonics-panel-subtitle's count and
+   each excerpt's own title label. */
+.harmonics-resonance-glyph {
+  align-self: center; font-size: .85rem; line-height: 1;
+  color: rgba(255,220,150,.55);
+}
 .harmonics-excerpt {
   flex: 1 1 0; margin: 0; padding: .75rem .9rem;
   border-left: 2px solid rgba(255,220,150,0.4);
   background: rgba(255,220,150,0.04);
   font-size: .82rem; line-height: 1.65; font-style: italic;
   color: rgba(232,226,214,.88);
+  /* Soft accent-tinted bleed off the colored left border — a CSS analog
+     to the Fresnel rim technique used on Library's spines/Orbiter's
+     satellites (glow concentrated at an edge, not a flat fill).
+     `--q-accent` is set inline per-quote in harmonics.js (same hex as
+     border-left-color), so this is the same self/other scene accent, not
+     an invented third color. Falls back to invisible if unset. */
+  box-shadow: inset 10px 0 16px -14px var(--q-accent, transparent);
 }
 .harmonics-excerpt-label {
   display: block; margin-bottom: .4rem; font-style: normal;
@@ -207,14 +235,35 @@
    single-rationale/two-endpoint layout — see harmonics.html's own
    header for why. */
 .harmonics-panel-resonances {
-  display: flex; flex-direction: column;
+  display: flex; flex-direction: column; gap: 1.2rem;
 }
+/* Design-notes pass follow-up (2026-09-01): a hairline rule between
+   stacked entries read as one continuous flow, not N distinct
+   resonances — exactly the "flatter than the rest of the site" gap the
+   original audit named, and the one that compounds worst at the corpus's
+   real max (sphere:14 "Quiver," 6 stacked pairs, #harmonics/1). Each
+   entry is now a real card: a faint background wash in that connection's
+   OWN scene-accent color (`--entry-accent`, set inline in harmonics.js —
+   same hex nodeResonances already resolves for the excerpt border, not
+   an invented palette) plus a soft accent-colored glow, so scanning down
+   the list gives real per-connection visual variety instead of a uniform
+   gold wash repeated N times. `color-mix` is progressively enhanced —
+   the flat rgba before it is what unsupported browsers keep. */
 .harmonics-resonance-entry {
-  margin-bottom: 1.8rem; padding-bottom: 1.8rem;
-  border-bottom: 1px solid rgba(255,220,150,0.1);
+  padding: 1.1rem 1.1rem 1.3rem; border-radius: 3px;
+  background: rgba(255,220,150,0.03);
+  background: color-mix(in srgb, var(--entry-accent, #ffdc96) 7%, rgba(255,220,150,0.03));
+  box-shadow: inset 0 0 0 1px rgba(255,220,150,0.07), 0 0 26px -16px var(--entry-accent, transparent);
 }
-.harmonics-resonance-entry:last-child {
-  margin-bottom: 0; padding-bottom: 0; border-bottom: none;
+/* Position within the stack ("2 OF 6") — real hierarchy a sighted or
+   screen-reader user can orient by without counting cards themselves;
+   only rendered when a node carries more than one connection (see
+   harmonics.js's populate — a single-connection node has nothing to
+   number against). */
+.harmonics-entry-index {
+  display: block; margin-bottom: .7rem;
+  font-size: .58rem; letter-spacing: .18em; text-transform: uppercase;
+  color: rgba(255,232,190,.4);
 }
 /* Round 10: the button used to repeat the piece's title (the panel had
    no other way to show it) — now that title appears as the "other"
