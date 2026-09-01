@@ -1565,7 +1565,11 @@ export function createOutside(container, { preview = false, initialPieceId = nul
     renderer.render(scene, camera);
     clippedPreview?.blit();
   }
-  animId = requestAnimationFrame(animate);
+  // Called directly, not scheduled — see the matching note in harmonics.js.
+  // A tile whose only frame is a queued rAF callback can be paused before
+  // that callback runs and then has never drawn anything; animate() schedules
+  // the next frame itself, so this draws frame 0 and starts the loop.
+  animate();
 
   const resize = bindGuardedResize(container, () => {
     const nw = container.clientWidth || window.innerWidth;

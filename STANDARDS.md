@@ -425,6 +425,40 @@ another reason should be moved onto them while it's open:
   it against a frame counter, so a 116-word passage got 25 seconds of its
   specified 50. Multiply a rate tuned at 60fps by `dt * 60` rather than
   re-deriving it.
+
+  **A count is a rate too, and the first sweep could not see it.** The 4.0
+  pass that fixed Orbiter, Beamline, Orrery and Library looked for the rate
+  shape — something advancing by a constant each frame, which is what `+=`
+  finds. It missed the other spelling: *how many things to do this frame*.
+  Butterfly's preview adds `PPF = 2` integration steps per trajectory per
+  frame, and Harmonics offers `GALAXY_TWINKLE_KICKS` twinkle candidates per
+  frame. Neither contains a `+=` against a tuned value; both are frame-rate
+  coupled exactly as much as `t += 0.01` is. When sweeping for this, look for
+  a loop whose iteration count *decides how far state advances* — as opposed
+  to one that traverses a fixed population, which is fine and is most of
+  them. Say which of the two a given loop is before deciding it's clean.
+
+  A second thing that survived because nobody looked for it: **four scenes
+  have no frame clock at all.** Butterfly, Sphere, Scroll and Theater. Scroll
+  and Theater are correct — their motion is CSS and DOM, with no `rAF` loop
+  to couple to. Butterfly and Sphere are not: Sphere runs `lightAngle +=
+  0.003` and two rotation constants with no clock in the file, and Butterfly
+  integrates from a fixed per-frame `t += 0.008`. Butterfly's is at least
+  *argued* — a comment on its `setPaused` reasons that a Lorenz trajectory
+  has no notion of real time, which is true of the trajectory and irrelevant
+  to how fast a viewer watches it drawn. Sphere's has no comment at all.
+- **Every scene draws its first frame before `create()` returns.** Call
+  `animate()` directly; do not merely schedule it with
+  `requestAnimationFrame`. `main.js` runs `syncPreviewPlayback()` the moment
+  `initPreviews()` resolves, and that can `setPaused(true)` — cancelling a
+  queued first callback before it ever runs. A scene that scheduled its first
+  frame has then drawn *nothing*, and for a preview tile using
+  `mountClippedPreviewCanvas` that means a canvas still at the 300x150
+  default with no pixels in it. Orrery, Beamline and Sphere always called
+  `animate()` directly; Harmonics and Outside scheduled it, and they are
+  precisely the two tiles reported blank on 2026-09-01. Reproduced by
+  stubbing `requestAnimationFrame` to a no-op before load: the three direct
+  callers hold a frame, the two schedulers hold nothing.
 - **`trackTimers()` → `{ after, nextFrame, cancel, dispose }`.** Fifteen
   untracked `setTimeout`s existed across six scenes. Library's 500ms
   panel side-flip was the live one: it re-entered `populatePanel()` on a

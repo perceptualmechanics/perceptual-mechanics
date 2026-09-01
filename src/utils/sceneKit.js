@@ -132,14 +132,49 @@ export function prefersReducedMotion() {
 // blanket site-wide change: scenes that already clip fine with plain CSS
 // don't need the extra per-frame copy, so this stays confined to the
 // scenes that actually need it.
+// The display canvas is sized inside blit(), from the WebGL canvas, because
+// the renderer's backing size is the only correct answer and it isn't final
+// until the first frame. That has one bad consequence, and it cost a real
+// investigation before anyone named it: a canvas still at the HTML default
+// 300x150 means "no frame has ever completed for this tile", and a canvas
+// that has drawn exactly once is indistinguishable from one drawing every
+// frame. So "hasn't drawn yet" and "will never draw" were the same
+// observable. When three landing tiles were reported blank on 2026-09-01,
+// that ambiguity is why the report could be neither confirmed nor dismissed
+// from the page itself.
+//
+// `data-blits` closes it. On the DOM node rather than only on the returned
+// object because the sighting was on the *live site*, where nothing holds a
+// reference to these instances — from any console, anywhere:
+//
+//   document.querySelector('#preview-harmonics canvas').dataset.blits
+//
+// 0 means never drew. 1 means drew once and stopped. A number that climbs
+// between two reads means it is fine. Written only when the count crosses a
+// power of two — `(n & (n-1)) === 0` is one instruction, and 1/2/4/…/1024 is
+// ample resolution for those three cases without a string conversion every
+// frame. A fixed every-60th-frame cadence was the first attempt and was
+// wrong: on a machine running the loop at 2fps it sits on "1" for half a
+// minute, which reads exactly like the failure it exists to rule out.
+//
+// Considered and not shipped: a dev-mode `console.warn` when a tile has
+// blitted nothing after N seconds. It is the nicer ergonomics, but a timer
+// that fires into a page still constructing ten scenes could not be made to
+// prove it fires under a forced zero-frame failure, and a diagnostic that
+// stays silent is indistinguishable from a diagnostic with nothing to
+// report — the same class of ambiguity this whole helper is being changed to
+// remove. The counter is verifiable, so the counter is what ships.
 export function mountClippedPreviewCanvas(container, renderer) {
   const display = document.createElement('canvas');
   display.setAttribute('aria-hidden', 'true');
   display.style.width = '100%';
   display.style.height = '100%';
   display.style.display = 'block';
+  display.dataset.blits = '0';
   container.appendChild(display);
   const ctx = display.getContext('2d');
+
+  let blits = 0;
 
   return {
     // Call once per frame, right after renderer.render(...) — copies
@@ -158,7 +193,12 @@ export function mountClippedPreviewCanvas(container, renderer) {
       ctx.clip();
       ctx.drawImage(src, 0, 0, w, h);
       ctx.restore();
+      blits++;
+      if ((blits & (blits - 1)) === 0) display.dataset.blits = String(blits);
     },
+    // Same number as `data-blits`, for a caller that already holds the
+    // instance and shouldn't have to go back through the DOM for it.
+    get blits() { return blits; },
     dispose() { display.remove(); },
   };
 }

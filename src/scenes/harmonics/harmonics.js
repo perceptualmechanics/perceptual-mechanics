@@ -1748,7 +1748,15 @@ export function createharmonics(container, { preview = false, initialPieceId = n
     renderer.render(scene, camera);
     clippedPreview?.blit();
   }
-  animId = requestAnimationFrame(animate);
+  // Called directly, not scheduled — the tile must own a first frame before
+  // this function returns. See the note on the same call in orrery.js: a
+  // preview whose only frame is a queued rAF callback can be paused out of
+  // existence by syncPreviewPlayback() before that callback ever runs, and
+  // then it has never drawn at all. orrery, beamline and sphere have always
+  // done it this way; harmonics and outside did not, and they are exactly the
+  // two tiles reported blank on 2026-09-01. animate() schedules the next
+  // frame itself, so this both draws frame 0 and starts the loop.
+  animate();
 
   const resize = bindGuardedResize(container, (nw, nh) => {
     camera.aspect = nw / nh;
