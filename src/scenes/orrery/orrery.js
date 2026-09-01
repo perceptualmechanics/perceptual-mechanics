@@ -1432,21 +1432,34 @@ function makeConcreteTexture() {
 // "real weathering" ask; a couple of institutional cream paint patches
 // with small flaked-off spots do the "peeling paint revealing brick
 // underneath" ask, rather than uniform brick texture everywhere.
+// Brick correction pass, 2026-09-01: the paint patches used to live
+// inside the same small 128x128 tile that GPU-repeats across the wall
+// (tex.repeat 6x2.5) — which meant the exact same patch, at the exact
+// same size and spot, printed 15 times across every wall on a visible
+// grid. No amount of jaggedness fixes that; it reads as tiled because it
+// *is* tiled. Fixed by baking the whole repeated brick field by hand
+// into one much larger canvas (same per-brick loop, just run across a
+// bigger area) and drawing the paint patches once, directly, in that
+// canvas's absolute coordinates — then setting repeat back to (1,1) so
+// nothing GPU-tiles at all. The brick pattern itself is still allowed to
+// look regular (real coursing is periodic); only the peeling paint,
+// which shouldn't be, stops being GPU-repeated.
 function makeBrickTexture() {
+  const W = 768, H = 320;
   const c = document.createElement('canvas');
-  c.width = 128; c.height = 128;
+  c.width = W; c.height = H;
   const cx = c.getContext('2d');
 
   // Mortar base.
   cx.fillStyle = '#8c8474';
-  cx.fillRect(0, 0, 128, 128);
+  cx.fillRect(0, 0, W, H);
 
   const brickW = 30, brickH = 14, mortar = 2;
   const brickBases = ['#8a3f28', '#7a3620', '#98492e', '#6e2f1c', '#8f4530'];
   let row = 0;
-  for (let y = -brickH; y < 128 + brickH; y += brickH + mortar) {
+  for (let y = -brickH; y < H + brickH; y += brickH + mortar) {
     const offset = (row % 2 === 0) ? 0 : -brickW / 2;
-    for (let x = -brickW + offset; x < 128 + brickW; x += brickW + mortar) {
+    for (let x = -brickW + offset; x < W + brickW; x += brickW + mortar) {
       const base = brickBases[Math.floor(Math.random() * brickBases.length)];
       cx.fillStyle = base;
       cx.fillRect(x, y, brickW, brickH);
@@ -1463,45 +1476,70 @@ function makeBrickTexture() {
     row++;
   }
 
-  // A couple of institutional-paint patches, torn/irregular edges, laid
-  // over the brick — cream-beige, semi-opaque so brick color still bleeds
-  // through slightly at the edges.
-  const paintPatches = [
-    { x: 20, y: 30, r: 34 },
-    { x: 95, y: 85, r: 26 },
-  ];
-  paintPatches.forEach(({ x, y, r }) => {
-    cx.globalAlpha = 0.78;
-    cx.fillStyle = '#c7bfa4';
+  // A torn, irregular paint-patch silhouette — two frequencies of jitter
+  // (a handful of big lobes plus fine sawtooth on top of them) so the
+  // outline reads as flaked/torn rather than a smooth rounded blob.
+  function tornPatch(x, y, r) {
     cx.beginPath();
-    const spikes = 10;
+    const spikes = 22;
     for (let i = 0; i <= spikes; i++) {
       const a = (i / spikes) * Math.PI * 2;
-      const rr = r * (0.75 + Math.random() * 0.35);
+      const lobe = 0.55 + Math.random() * 0.75;
+      const jag = 1 + (Math.random() - 0.5) * 0.3;
+      const rr = r * lobe * jag;
       const px = x + Math.cos(a) * rr, py = y + Math.sin(a) * rr;
       if (i === 0) cx.moveTo(px, py); else cx.lineTo(px, py);
     }
     cx.closePath();
-    cx.fill();
-    cx.globalAlpha = 1;
+  }
 
-    // Small flaked-off spots inside the patch, revealing brick tone
-    // underneath rather than a clean uniform paint field.
-    for (let i = 0; i < 7; i++) {
-      const fx = x + (Math.random() - 0.5) * r * 1.3;
-      const fy = y + (Math.random() - 0.5) * r * 1.3;
-      cx.globalAlpha = 0.65 + Math.random() * 0.25;
-      cx.fillStyle = '#7f3a26';
-      cx.beginPath();
-      cx.ellipse(fx, fy, 2 + Math.random() * 5, 2 + Math.random() * 4, Math.random() * Math.PI, 0, Math.PI * 2);
-      cx.fill();
+  // Institutional cream-beige paint, peeling in real clusters near
+  // corners/moisture-prone areas rather than spread evenly — most of the
+  // wall stays plain aged brick, this is the occasional exception, not a
+  // uniform overlay. Each cluster is one dominant patch plus a couple of
+  // smaller satellite flakes nearby, so patch size varies for real
+  // rather than repeating at one scale.
+  const clusters = [
+    { cx: W * 0.08, cy: H * 0.85, r: 78 },  // bottom-left corner, damp/floor-level
+    { cx: W * 0.06, cy: H * 0.12, r: 48 },  // top-left corner, roof-leak adjacent
+    { cx: W * 0.62, cy: H * 0.92, r: 34 },  // a smaller isolated patch, off-corner
+  ];
+  clusters.forEach(({ cx: ccx, cy: ccy, r }) => {
+    const patches = [{ x: ccx, y: ccy, r }];
+    const satellites = 1 + Math.floor(Math.random() * 2);
+    for (let i = 0; i < satellites; i++) {
+      patches.push({
+        x: ccx + (Math.random() - 0.5) * r * 2.2,
+        y: ccy + (Math.random() - 0.5) * r * 2.2,
+        r: r * (0.25 + Math.random() * 0.3),
+      });
     }
-    cx.globalAlpha = 1;
+    patches.forEach(({ x, y, r: pr }) => {
+      cx.globalAlpha = 0.7 + Math.random() * 0.15;
+      cx.fillStyle = '#c7bfa4';
+      tornPatch(x, y, pr);
+      cx.fill();
+      cx.globalAlpha = 1;
+
+      // Small flaked-off spots inside the patch, revealing brick tone
+      // underneath rather than a clean uniform paint field.
+      const flakes = 3 + Math.floor(Math.random() * 4);
+      for (let i = 0; i < flakes; i++) {
+        const fx = x + (Math.random() - 0.5) * pr * 1.3;
+        const fy = y + (Math.random() - 0.5) * pr * 1.3;
+        cx.globalAlpha = 0.6 + Math.random() * 0.25;
+        cx.fillStyle = '#7f3a26';
+        cx.beginPath();
+        cx.ellipse(fx, fy, 2 + Math.random() * pr * 0.14, 2 + Math.random() * pr * 0.1, Math.random() * Math.PI, 0, Math.PI * 2);
+        cx.fill();
+      }
+      cx.globalAlpha = 1;
+    });
   });
 
   const tex = new THREE.CanvasTexture(c);
   tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
-  tex.repeat.set(6, 2.5);
+  tex.repeat.set(1, 1);
   return tex;
 }
 
@@ -1797,8 +1835,12 @@ function buildWarehouse(preview, floorY, ceilingY, rafterY) {
   // below. Both beams are tilted off vertical ("angled shafts," not
   // straight-down columns) so they read as directional sunlight rather
   // than a generic glow column.
+  // Bumped a step brighter/cooler (lighting correction pass, 2026-09-01)
+  // now that this beam is the room's one dramatic light source rather
+  // than one of several — it needs to read as sharp and directional
+  // against a genuinely flat fluorescent baseline everywhere else.
   const beamMat = new THREE.MeshBasicMaterial({
-    color: 0xcfe0ff, transparent: true, opacity: 0.09, side: THREE.DoubleSide, depthWrite: false,
+    color: 0xc3d9ff, transparent: true, opacity: 0.14, side: THREE.DoubleSide, depthWrite: false,
   });
   const beamGeo = new THREE.CylinderGeometry(holeW * 0.4, holeW * 2.4, ceilingY - floorY, 16, 1, true);
   const beam = new THREE.Mesh(beamGeo, beamMat);
@@ -2487,14 +2529,16 @@ export function createOrrery(container, { preview = false } = {}) {
   // almost entirely.
   scene.fog = new THREE.Fog(0x0a0704, preview ? 9 : 12, preview ? 30 : 42);
 
-  // ─── Lighting — dim industrial ambience, brightened a step (Scott: it
-  // was starting too dark), a cool wash falling through the skylight, a
-  // warm accent low down near the machine itself. ────────────────────────
-  scene.add(new THREE.HemisphereLight(0x64778a, 0x14100c, 0.8));
-  const skyLight = new THREE.DirectionalLight(0xcfe0ff, 1.15);
-  skyLight.position.set(0.4, 6, 0.3);
-  scene.add(skyLight);
-  scene.add(new THREE.AmbientLight(0x554a3c, 0.35));
+  // ─── Lighting — design-notes correction pass, 2026-09-01: the room's
+  // baseline light is now mundane fluorescent (flat, cool-white with a
+  // faint green cast, minimal shadow — nobody chose this for ambiance,
+  // they just needed to see), with exactly one dramatic exception: real
+  // moonlight through the skylight, added further below once the orrery's
+  // own height is known. The old warm ambient accent is gone — warmth
+  // lives only in the small practical lamps (the workbench bulb, the
+  // control-box indicator), not in the room's general fill. ─────────────
+  scene.add(new THREE.HemisphereLight(0x64778a, 0x14100c, 0.7));
+  scene.add(new THREE.AmbientLight(0x3f4d47, 0.3));
 
   // ─── Warehouse vertical layout — decided here, then handed down: the
   // ceiling and roof truss height are fixed first, and the orrery hangs
@@ -2508,69 +2552,68 @@ export function createOrrery(container, { preview = false } = {}) {
   const floorY = orrery.baseY - (preview ? 0.9 : 1.3);
   const warehouse = buildWarehouse(preview, floorY, ceilingY, rafterY);
 
-  // The orrery's own ring/mast structure is the namesake mechanism and
-  // should be the single most confidently-lit object in the room, ahead
-  // of the small planet bodies it carries. A dedicated spotlight aimed at
-  // the ring assembly (rather than another global fill light, which would
-  // fight the deliberate Myst-style darkness everywhere else) — angled
-  // down from roughly where the main skylight shaft above falls, so the
-  // two read as the same light source rather than two unrelated ones.
-  const structureTarget = new THREE.Object3D();
-  structureTarget.position.set(0, orrery.baseY + orrery.mastHeight * 0.32, 0);
-  scene.add(structureTarget);
-  // Shifted from a pale neutral cream toward a real sodium-vapor/warm
-  // work-light amber-orange — paired below with a real fixture, since a
-  // beam with nothing to visibly come from undercuts the "real, walkable,
-  // found space" the whole scene depends on.
-  const structureKey = new THREE.SpotLight(
-    0xffa64d, preview ? 1.8 : 2.6, preview ? 11 : 16,
-    Math.PI / 4.2, 0.45, 1.3
+  // ─── Moonlight — the one dramatic exception to the flat fluorescent
+  // baseline below. A real SpotLight (not a DirectionalLight washing the
+  // whole scene) confined to roughly the same cone as the visible skylight
+  // beam mesh in buildWarehouse, so "inside the shaft" and "actually lit"
+  // are the same region rather than two coincidentally-overlapping
+  // effects. Cool silvery-blue rather than the skylight's true daylight
+  // color — moonlight reads cooler than its actual temperature because
+  // human night vision shifts toward blue at low light (the Purkinje
+  // effect), so leaning blue here is accurate, not just a style choice.
+  // Aimed through the primary skylight hole (centered at x=0,z=0, same as
+  // the beam mesh) at the ring assembly partway up the mast, so the
+  // orrery's restored brass/copper actually sits inside the one light
+  // strong and directional enough to raise real specular highlights —
+  // everywhere the fluorescent fixtures below reach alone should stay
+  // comparatively flat. ───────────────────────────────────────────────
+  const moonTarget = new THREE.Object3D();
+  moonTarget.position.set(0, orrery.baseY + orrery.mastHeight * 0.32, 0);
+  scene.add(moonTarget);
+  const moonSpot = new THREE.SpotLight(
+    0xbfd6ff, preview ? 2.2 : 3.1, preview ? 11 : 16,
+    0.3, 0.5, 1.3
   );
-  structureKey.position.set(1.5, orrery.baseY + orrery.mastHeight * 1.05, 1.1);
-  structureKey.target = structureTarget;
-  scene.add(structureKey);
+  moonSpot.position.set(0.25, ceilingY + 0.3, 0.1);
+  moonSpot.target = moonTarget;
+  scene.add(moonSpot);
 
-  // ─── The structure key's fixture — a mounted work-light housing on a
-  // short conduit dropped from the nearest roof truss, aimed down the
-  // same line as the spotlight's own cone so the beam reads as coming
-  // from a real object rather than floating mid-air. Dark worn housing
-  // metal (folded into the brass/copper restoration pass alongside the
-  // rest of the structural steel), a closed cap at the truss end, an
-  // open reflector mouth at the light position with a small warm-lit
-  // bulb-tip glowing inside it. ───────────────────────────────────────
-  const pendantMat = new THREE.MeshStandardMaterial({ color: 0x1c1a17, roughness: 0.55, metalness: 0.75 });
-  const pendantGroup = new THREE.Group();
-  pendantGroup.position.copy(structureKey.position);
-  const beamDir = new THREE.Vector3().subVectors(structureTarget.position, structureKey.position).normalize();
-  pendantGroup.quaternion.setFromUnitVectors(new THREE.Vector3(0, -1, 0), beamDir);
-  scene.add(pendantGroup);
-
-  const shadeGeo = new THREE.CylinderGeometry(0.05, 0.16, 0.22, 16, 1, true);
-  const shade = new THREE.Mesh(shadeGeo, pendantMat);
-  shade.position.y = -0.11;
-  pendantGroup.add(shade);
-
-  const capGeo = new THREE.CylinderGeometry(0.05, 0.05, 0.02, 16);
-  const cap = new THREE.Mesh(capGeo, pendantMat);
-  pendantGroup.add(cap);
-
-  const bulbTipGeo = new THREE.SphereGeometry(0.035, 8, 8);
-  const bulbTipMat = new THREE.MeshStandardMaterial({
-    color: 0xffdca8, emissive: 0xffa64d, emissiveIntensity: 1.4, roughness: 0.4,
+  // ─── Fluorescent tube fixtures — the mundane baseline. Ceiling-mounted
+  // shop-light housings, spaced away from both skylight holes and the
+  // truss cross so they don't compete with the one dramatic source above.
+  // Flat, diffuse, low-intensity, spread across several fixtures rather
+  // than one strong point — the point is that these should look boring,
+  // not that the room should go dark without them. ───────────────────────
+  const FLUORESCENT_COLOR = 0xdcefe2;
+  const fixtureHousingMat = new THREE.MeshStandardMaterial({ color: 0x232420, roughness: 0.6, metalness: 0.5 });
+  const fixtureTubeMat = new THREE.MeshStandardMaterial({
+    color: 0xf4fbf6, emissive: FLUORESCENT_COLOR, emissiveIntensity: 1.1, roughness: 0.4,
   });
-  const bulbTip = new THREE.Mesh(bulbTipGeo, bulbTipMat);
-  bulbTip.position.y = -0.2;
-  pendantGroup.add(bulbTip);
-
-  const cordTop = new THREE.Vector3(pendantGroup.position.x, rafterY, pendantGroup.position.z);
-  addStrut(scene, pendantGroup.position.clone(), cordTop, 0.012, pendantMat);
-  const bracket = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.04, 0.1), pendantMat);
-  bracket.position.copy(cordTop);
-  scene.add(bracket);
+  const wd = warehouse.wallDist;
+  const fixtureSpots = [
+    { x: -wd * 0.5, z: wd * 0.4 },
+    { x: wd * 0.55, z: -wd * 0.25 },
+    { x: -wd * 0.15, z: -wd * 0.55 },
+  ];
+  fixtureSpots.forEach(({ x, z }) => {
+    const fy = rafterY - (preview ? 0.08 : 0.12);
+    const housing = new THREE.Mesh(new THREE.BoxGeometry(1.3, 0.08, 0.16), fixtureHousingMat);
+    housing.position.set(x, fy, z);
+    scene.add(housing);
+    const tube = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 1.15, 8), fixtureTubeMat);
+    tube.rotation.z = Math.PI / 2;
+    tube.position.set(x, fy - 0.06, z);
+    scene.add(tube);
+    const fLight = new THREE.PointLight(FLUORESCENT_COLOR, preview ? 0.5 : 0.65, preview ? 8 : 12, 2);
+    fLight.position.set(x, fy - 0.15, z);
+    scene.add(fLight);
+  });
 
   // The work light lives at the hanging bulb prop if the garage clutter
   // pass built one (full mode only); otherwise a plain accent near the
-  // machine, same as before.
+  // machine, same as before — a small warm practical lamp, not the
+  // room's dramatic source, so it stays untouched by the lighting
+  // correction above.
   const workLight = new THREE.PointLight(0xffaa55, 0.9, preview ? 9 : 13);
   if (warehouse.bulbPosition) workLight.position.copy(warehouse.bulbPosition);
   else workLight.position.set(1.2, -0.6, 1.4);

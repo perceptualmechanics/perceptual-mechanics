@@ -587,6 +587,62 @@ described are unchanged.)
   worth trimming, orrery.js's texture generators and first-person rig are the
   two most self-contained chunks to split out first.
 
+## 3.14.1 (2026-09-01)
+
+**Orrery: lighting + brick follow-up correction.** Two specific pieces of
+3.14.0 needed rework; the brass/copper restoration, its rim-light pass,
+and the general set-dressing aging all stayed exactly as shipped.
+
+- **Lighting rethought — fluorescent baseline, moonlight exception.** The
+  3.14.0 pendant fixture didn't actually justify its own beam (a bare
+  bulb radiates in every direction, it doesn't cast a focused cone), so
+  removed it and `structureKey`'s spotlight entirely rather than patch
+  around the mismatch. Replaced with: (1) three ceiling-mounted
+  fluorescent tube fixtures (housing + tube mesh + a modest cool-white/
+  faint-green `PointLight` each) as the room's flat, diffuse, boring-on-
+  purpose baseline — this scene has no shadow-casting anywhere, so
+  "minimal shadow" was already structurally true; the fix was making the
+  *color and concentration* read as flat, not dramatic; (2) a real
+  `SpotLight` (`moonSpot`, cool silvery-blue `0xbfd6ff`) confined to
+  roughly the same cone as the existing skylight beam mesh, replacing the
+  old scene-wide `skyLight` `DirectionalLight` — a DirectionalLight
+  illuminates everything equally, which would have lit the brass/copper
+  the same everywhere regardless of the visible beam, undercutting the
+  actual point (specular highlights should appear specifically where the
+  beam crosses the mechanism, not uniformly). The primary skylight hole
+  is already centered at the same (x=0, z=0) as the mast, so the beam
+  already crossed the ring assembly without needing to reposition either
+  — verified live rather than assumed. Beam mesh opacity bumped
+  (0.09→0.14) so it reads sharper against the now-genuinely-flat
+  fluorescent fill. Ambient/hemisphere fill recolored from warm amber
+  toward a cooler, dimmer neutral so warmth is confined to the small
+  practical lamps (workbench bulb, control-box indicator) rather than
+  the room's general wash.
+- **Brick paint patches were GPU-tiled, not actually irregular.** The
+  3.14.0 patches lived inside the same small 128×128 canvas tile that
+  `tex.repeat` (6×2.5) stamps across the wall 15 times — identical patch,
+  identical size, identical spot, every repeat. No amount of jaggedness
+  fixes that; it read as tiled because it was tiled. Fixed by baking the
+  full repeated brick field by hand into one large 768×320 canvas (same
+  per-brick loop, just run across the bigger area — brick appearance and
+  scale unchanged, confirmed the math: 768×320 covers exactly the same
+  real-world area as 128×128 at 6×2.5 repeats) and drawing paint patches
+  once, directly, in that canvas's absolute coordinates, with
+  `tex.repeat` set back to (1,1) so nothing GPU-tiles. Patches now: three
+  corner/moisture-clustered groups (a dominant patch plus 1–2 smaller
+  satellites each, so sizes vary for real) with a two-frequency jittered
+  torn-edge outline (22-point polygon, big lobes plus fine sawtooth) —
+  sparser overall (3 clusters across the whole wall vs. 2 patches per
+  small repeating tile) and no longer identifiable as a repeating unit.
+- Build clean, `verify-links`/`verify-resonances` unaffected,
+  live-verified via the running dev server: fluorescent-lit areas
+  (workbench corner, side brick wall) read flat and even; the moonbeam
+  shows a sharp-edged bright cone with a clear brightness falloff exactly
+  at its boundary; orrery ring segments crossing the beam read visibly
+  brighter/more specular than the same rings continuing outside it; a
+  close brick-wall shot shows a single irregular patch with no repeating
+  pattern visible across a large section of wall.
+
 ## 3.14.0 (2026-09-01)
 
 **Orrery: lighting, brick, and metal restoration.** Follow-up to the
