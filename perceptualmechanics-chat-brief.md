@@ -19,7 +19,7 @@ database, everything client-rendered.
 The writing is the point. Roughly **57,000 words** of prose, poetry, scripts and
 catalog entries are published across the ten scenes, most of it drawn from two
 book projects that live outside the repo in a Scrivener file
-(`Holography.scriv`), with unpromoted material staged in `seeds.md`. The visuals
+(`Holography.scriv`). The visuals
 are how the writing is encountered, not decoration around it.
 
 The working relationship on the code side has been Scott (vision, writing,
@@ -140,10 +140,18 @@ ships.)*
   as ready to release the moment it scans clean. This is genuinely a writing
   job — read the note, cut the bookkeeping clause, keep the criticism.
 - **The eleventh scene**, whenever it comes. The content-sourcing question — what
-  in `Holography.scriv` or `seeds.md` is ready to be promoted — is a
+  in `Holography.scriv` is ready to be promoted — is a
   conversation, not a build task.
 
 ---
+
+## Keeping this file true
+
+Any implementation brief or write-up for this project ends by naming which
+lines of this file and of `perceptualmechanics-project-brief.md` its work
+makes untrue — the specific claims, not "the briefs may need updating."
+That is the only gate this documentation gets: no test fails when a brief
+goes stale. If something here contradicts the repo, the repo is right.
 
 ## Working with this from a chat
 
@@ -177,7 +185,6 @@ half this corpus.
   reverse-chronological, very long.
 - **`Holography.scriv`** — the Scrivener project holding the two books the
   writing is drawn from. Outside the repo.
-- **`seeds.md`** — material not yet promoted into that project.
 
 ---
 

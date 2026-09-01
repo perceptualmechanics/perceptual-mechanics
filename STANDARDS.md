@@ -18,6 +18,41 @@ found real anti-patterns alongside patterns that only *look* dated. Both
 kinds are recorded below so the next pass doesn't have to re-derive the
 reasoning.
 
+## Documentation
+
+### An implementation brief closes by naming what it invalidates
+
+Standing rule, added 2026-09-02 at the request of the chat instance that
+reads these files. Any implementation brief, handoff, or write-up produced
+for this project ends by naming **which lines of
+`perceptualmechanics-project-brief.md` and
+`perceptualmechanics-chat-brief.md` the work it describes makes untrue.**
+
+Not "the briefs may need updating" — the specific claims, so the correction
+is a two-minute edit rather than a re-read of both documents.
+
+**Why it earned a rule.** The project brief sat fourteen minor versions
+stale before anyone noticed: it announced itself as "current as of v3.9.17",
+three of its six standing open items had been resolved and were still listed
+as open, and a fourth had flipped the other way. Separately, a 2026-09-02
+correction pass found the two briefs disagreeing with each other and with
+the data — one said the Library holds 147 items and the other 150 (the
+data says 150), and one still described Beamline as a sequence of curved
+mirrors, a design the scene left behind long enough ago that the same stale
+sentence had also reached `main.js`'s `ariaLabel`, where it was the only
+account of that scene a screen-reader visitor got.
+
+None of that is exotic. It is the ordinary fate of a document nobody is
+required to touch. A brief that is wrong is worse than no brief, because it
+is read as current — and these two exist precisely to stop work being
+re-derived or re-proposed, which is the thing they stop doing first when
+they drift.
+
+This is the only gate documentation here will ever have: there is no test
+that fails when a brief goes stale, and no build step can tell that a
+sentence stopped being true. Naming the invalidated lines at the end of the
+work that invalidated them is the one moment when someone reliably knows.
+
 ## CSS
 
 ### Centering: flexbox/grid by default, `left`/`top` + `transform` for coordinate-anchoring only

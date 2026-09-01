@@ -587,6 +587,143 @@ described are unchanged.)
   worth trimming, orrery.js's texture generators and first-person rig are the
   two most self-contained chunks to split out first.
 
+## 4.0.3 (2026-09-02)
+
+The eight held notes released, and HSTS ramped on evidence.
+
+**The notes.** All eight rewritten by Scott and applied verbatim. The cut
+catalogue fragments moved to a new private `catalog` field rather than being
+deleted — ISBNs of other printings, edition uncertainty, "flag for Scott" —
+because that is real reference value even though it is not public content.
+Two deliberate exceptions: #103 keeps its copyright reasoning in the public
+note (only the edition chatter routes across, since that reasoning is the
+only written record of why the entry carries no lyric excerpt), and #124's
+dated quote is deleted outright rather than relocated, because it is
+correspondence and not catalogue data.
+
+`NOTE_HOLD` is now empty; `verify-links` reports **81 of 81** note links
+rendering, up from 72. The mechanism stays deliberately: the hazard is
+structural, not a one-off. Any future link authored into a note brings that
+whole note to the surface with it, and the readiness scan will stop the
+build and point here.
+
+Seven items gained a `catalog` field, not the six the instruction's prose
+said — the per-item routing gave an explicit line for #103 as well, and the
+parenthetical there scopes to the copyright reasoning staying public, which
+is consistent. Followed the explicit per-item routing and flagged it.
+
+**A distinction worth keeping straight, because "private" is doing less work
+than it sounds like it is.** `catalog` lives in `library.text.js`, which the
+scene imports, so those fragments still ship inside the public JS bundle —
+fetchable by anyone who requests the chunk, just never displayed. That was
+equally true of every note before this arc. "Private" here means *not
+rendered*, not *not published*. Getting them genuinely off the server would
+mean living outside the bundled module. Recorded rather than fixed, because
+the fix is a real architectural change and nobody has asked for it.
+
+Related, and the reason that distinction got noticed: #124's quote was
+verified live in the deployed bundle at `assets/library.text-*.js` before
+this release removed it. It had been shipping since the Library scene
+existed. It is also in git history and on GitHub, which this release does
+not and cannot change.
+
+**HSTS: 300 → 31536000.** Not on schedule but on evidence. v4.0 turned out
+to be deployed, and fetching the live site returned
+`strict-transport-security: max-age=300` alongside `nosniff` and the cleaned
+`script-src 'self'` — which is the proof the short window existed to get:
+DreamHost does read `.htaccess`, `mod_headers` is present, and `always`
+survives the 301s this same file generates. With that answered there was
+nothing left for a small max-age to protect against. Still no `preload`, and
+`includeSubDomains` still omitted. The deploy workflow's header check keeps
+watching, which matters more at a year than at 300 seconds: a long pin plus
+a silently-dropped header is the combination that would actually hurt.
+
+**One comment corrected because it had become false rather than merely
+stale.** `scripts/prerender.js` withheld library notes on the stated grounds
+that "the scene withholds it" — untrue since 4.0.2. The `/text/` pages still
+do not publish notes, deliberately: a crawlable page publishes, caches and
+attributes text on this domain in a way an in-scene panel does not, which is
+the same argument already recorded there for `excerpt`. That is now written
+down as a decision awaiting Scott rather than as a consequence of the
+scene's behaviour. The archive is a strict subset of the scene, as it
+already was.
+
+## 4.0.2 (2026-09-02)
+
+Library notes become visible where they do structural work in the link
+graph, and stay private everywhere else.
+
+The `note` field stays withheld as decided 2026-07-23. What changed is that
+a note which is load-bearing in the link graph is no longer hidden — not
+because it is good writing, but because hiding it breaks the link. Two ways
+a note can be load-bearing, and both count: as a **source**, where the
+note's own text carries the phrase that jumps elsewhere, so hiding it leaves
+nothing to click; and as a **target**, where another piece links here and
+what the reader came for is the note, which is why 4.0 suppressed the
+"Referenced from —" backlink for exactly these.
+
+**Counted, with the method stated, rather than taken from the "~40" estimate
+an earlier pass produced.** Against `src/links.js` and `library.text.js`:
+
+  81  link rows authored with `from.field === 'note'`
+  52  distinct items whose note is a SOURCE
+  43  distinct items that are the TARGET of one of those rows
+  54  the union — the visible set
+  53  of those 54 actually have a note (#32 Dazed and Confused is a target
+      with no note of its own; it still gains a backlink to #134, whose note
+      IS visible, so the reference is followable rather than dangling)
+   2  are target-only, i.e. not themselves a source (#32, #140 Wiseguy)
+  47  notes carry no links at all and are unchanged, fully private
+
+`cdRackItems` carry no notes at all (0 of 115), so the shared id space
+between the two arrays cannot leak a note onto a CD spine — but the test is
+still scoped to library items rather than to ids alone.
+
+The set is derived from `LINKS` at module load, never hand-listed. A
+hand-maintained id list is a derived artifact somebody has to remember to
+update, which is the failure mode the `sitemap.xml` entry in this file
+exists to warn about: add a link tomorrow and its note would stay invisible
+with nothing reporting it.
+
+Restoring the backlinks is automatic rather than a second rule —
+`getInboundLinks` now tests the source's visibility per item, so a displayed
+backlink cannot reference an invisible note. Verified: **0 violations across
+all 40 items showing one.**
+
+**Then switching the field on turned every word in those notes into a
+publishing decision, which is the part that had to be caught before it
+shipped.** A scan found eight of the 54 were not publishable as written.
+Seven carried edition, ISBN and runtime chatter. #124 opened with a dated
+verbatim quote of Scott to Claude correcting a cataloguing error —
+correspondence, and it would have gone live. This is the 1.7.0 incident's
+exact shape, and 1.7.0's own lesson is the one that applies, with a
+corollary: turning a field ON publishes every word in it, not just the words
+you had in mind.
+
+Those eight were held in `NOTE_HOLD` with a stated reason each, leaving 45
+notes rendering and 72 of 81 links live — the nine held links stayed exactly
+as invisible as they had been, so no regression, only an unrealised gain.
+`verify-links` re-runs the scan every build, so a new note of that kind
+fails rather than publishes, and a held note that has been trimmed is
+reported as ready to release. The gate was tested by removing #124 from the
+list and confirming the build fails naming it. (Released in 4.0.3.)
+
+Worth recording about the scan itself: the first pass searched for edition
+language and found 7; #63's aside was about runtimes, so the pattern was too
+narrow and the count too low. Widened and re-counted to 8. State the ruler
+alongside the number — and when the ruler is a regex over prose, expect to
+widen it at least once.
+
+**Also:** `.library-panel-note` had never been contrast-checked, because it
+had never rendered — the 4.0 contrast pass measured both its neighbours and
+skipped it for that reason. Now that it is real text: 0.6 alpha composites
+to rgb(136,117,86) over `#0a0806` for 4.51:1, clearing AA's 4.5:1 for
+12.8px by one hundredth with no headroom for the panel's own gradient tint.
+Raised to 0.7 (5.81:1). It also gained the `:empty { display: none }` rule
+its sibling `.library-panel-excerpt` already had, so a withheld note leaves
+no gap: an item outside the set is indistinguishable from one that never had
+a note, which was the requirement.
+
 ## 4.0.1 (2026-09-02)
 
 Two Sphere-and-text items 4.0 deliberately left open, both closed by

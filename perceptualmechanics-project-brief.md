@@ -41,12 +41,12 @@ Static shell markup lives in `<name>.html`, imported as a raw string and parsed 
 4. **Theater** — ASCII-rendered actors performing scenes from three different pieces, MST3K-style with a silhouetted "house" audience; different program each visit.
 5. **Orbiter** — a hydrogen p-orbital rendered as a probability cloud with satellites in clean elliptical orbits.
 6. **Orrery** ("The Orrery of Los Feliz") — a found story told through a 30-foot walkable orrery (nine planets, moons, asteroid belt) — WASD/arrow-key movement, not orbit-drag.
-7. **Library** — a real bookshelf (147 items + 115 CD-rack items) rebuilt as a shelf you can turn and read spines from.
-8. **Beamline** — a staged sequence of curved mirrors with a beam of light *reflecting* (not transmitting) between them, found text surfacing at each bounce.
+7. **Library** — a real bookshelf (150 items + 115 CD-rack items — counted from `library.text.js`, not recalled) rebuilt as a shelf you can turn and read spines from.
+8. **Beamline** — a small vessel travelling a glowing rail across a night wilderness, with ten stations along it, each holding a fragment of found text. (It was a sequence of curved mirrors with a beam reflecting between them; the scene moved on and the description didn't. Corrected here, in the chat brief, and in `main.js`'s `ariaLabel` in 4.0 — that last one mattered most, being the only account of the scene a screen-reader visitor gets.)
 9. **Harmonics** (9th scene; internally still named/keyed `harmonics` everywhere except the public URL slug — a deliberate, documented exception) — visualizes resonant connections across every other scene's content as a force-directed node graph with Kuramoto phase-sync animation and sonification.
 10. **Outside** (10th scene) — a generated lotus/flower (Gielis superformula geometry) mapping a five-part cosmology (Power Sources as petals, Folk Origins, Magi/Psi at center); breathes continuously, Fresnel-based petal translucency, five distinct per-petal chime timbres plus a Kumoi-scale ambient chime bed.
 
-A few earlier scenes (leaf, egg, prism, cycle, and older constellation/ground-glimpse/thread-follow mechanics) were built, shipped, and later **retired/shelved** over the project's history — the current registry above is the live set as of v3.9.17.
+A few earlier scenes (leaf, egg, prism, cycle, and older constellation/ground-glimpse/thread-follow mechanics) were built, shipped, and later **retired/shelved** over the project's history — the current registry above is the live set as of v4.0.3.
 
 ## Standing conventions (full detail in `STANDARDS.md`)
 
@@ -55,7 +55,7 @@ This is the durable house-rules file (created v3.9.16) — **read it first** bef
 - **Centering:** flex/grid by default. `left`/`top` + `transform` is reserved for two legitimate cases only — coordinate-anchoring (a DOM overlay positioned against a point projected from a Three.js scene) or a decorative element at a fixed offset within its own positioned ancestor. Never for viewport/row self-centering (that was a real, fixed bug — letter-spacing's trailing gap threw off self-width-measuring transforms).
 - **Vendor prefixes:** kept only with a stated, individually-checked reason, never by default in either direction.
 - **`!important`:** exactly two legitimate categories — overriding a third-party library's inline styles (Three.js's `renderer.setSize()`), and accessibility overrides (`prefers-reduced-motion`, state-flip utilities like `.no-transition`).
-- **Mobile-first CSS, non-negotiable going forward.** Base rules target the smallest viewport; `min-width` layers on enhancements. As of v3.9.17, **all 12 of 12 stylesheets are converted** (the last two — `main.css` and `theater.css` — were held back from the v3.9.16 pass deliberately due to real regression risk and converted as a dedicated v3.9.17 follow-up with live-browser verification; see below).
+- **Mobile-first CSS, non-negotiable going forward.** Base rules target the smallest viewport; `min-width` layers on enhancements. **All 12 of 12 stylesheets are converted** (completed v3.9.17, still true through v4.0.3, which touched every one of them) (the last two — `main.css` and `theater.css` — were held back from the v3.9.16 pass deliberately due to real regression risk and converted as a dedicated v3.9.17 follow-up with live-browser verification; see below).
 - **Media queries are nested inside their selector**, tab-indented — not separate top-level `@media` blocks. Standing convention since v3.9.16, confirmed harmless for browser support since Vite/esbuild flattens nesting to plain CSS at build time regardless.
 - **Semantic HTML, classes for styling** (ids reserved for real DOM uniqueness or ARIA idrefs), **mobile + accessibility checks are now standard** parts of shipping any change (not a separate later pass).
 - General principle: "looks outdated" isn't the test for whether to change a pattern — "is there a strictly better tool for what this code is doing" is. A full-site audit found real anti-patterns *and* patterns that only look dated; both got recorded so the distinction doesn't need re-litigating.
@@ -68,6 +68,14 @@ This is the durable house-rules file (created v3.9.16) — **read it first** bef
 - **3.9.15:** Full-site CSS audit — removed genuinely dead code (a stale `#butterfly-exp-label` block, an inert `-webkit-overflow-scrolling: touch`) and fixed a real missing-fallback bug (`theater.css`'s mask had only the `-webkit-` prefix).
 - **3.9.16:** Much larger modernization pass — full CSS + JS sweep, mobile-first conversion for 10 of 12 stylesheets (2 flagged for dedicated follow-up), native CSS nesting for all converted media queries, a real dead-cascade-order bug found and fixed in `sphere.css`, and the creation of `STANDARDS.md` itself.
 - **3.9.17 (current, 2026-08-30):** Closed out the mobile-first audit — converted the final two flagged files. `main.css`'s nav-icon/landing responsive system (which has a real, four-times-recurred regression history: icon count changes have repeatedly reintroduced silent edge-clipping at specific pixel thresholds) was converted and live-verified at the exact widths that broke before. `theater.css`'s one genuinely compound media query (`@media (max-width:480px), (max-width:700px) and (orientation:portrait)`) was inverted using actual De Morgan's-law algebra rather than a naive per-clause flip, verified with an orientation-aware cascade simulator plus live-browser spot checks. One honest gap recorded rather than papered over: the narrowest region (width ≤480px AND portrait) couldn't be reached live in this session due to a sandbox browser-pane width floor — it rests on the simulator/hand-derivation only, flagged as such in both `STANDARDS.md` and `NOTES.md`.
+
+## Keeping this file true
+
+Any implementation brief or write-up for this project ends by naming which
+lines of this file and of `perceptualmechanics-chat-brief.md` its work makes
+untrue — the specific claims, not "the briefs may need updating." See
+STANDARDS.md, "An implementation brief closes by naming what it
+invalidates", for why that is the only gate this documentation gets.
 
 ## Known open items (as of v4.0, 2026-09-02)
 
@@ -147,4 +155,4 @@ no hashes at all.
 - **This repo** (`perceptualmechanics`) — the live site + all code. Deploys via manual `dist/` upload.
 - **`STANDARDS.md`** — durable coding standards with reasoning attached. Check first before any modernization pass.
 - **`NOTES.md`** — the dated changelog + working punch list. Very long; recent entries are at the top (reverse-chronological), older architecture/convention notes live in named sections throughout.
-- **Content sourcing** (the two books this site's writing is drawn from) lives outside this repo, in a separate Scrivener project (`Holography.scriv`) plus `seeds.md` in this repo's root for material not yet promoted into that project.
+- **Content sourcing** (the two books this site's writing is drawn from) lives outside this repo, in a separate Scrivener project (`Holography.scriv`).
