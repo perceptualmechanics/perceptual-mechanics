@@ -3,6 +3,13 @@
    JS-generated, since they're genuinely built from data (scroll.text.js),
    not fixed markup. */
 
+/* Was an inline style="" on the element in scroll.html; moved here so
+   style-src can stay 'self' with no inline exceptions (CSP hardening,
+   2026-09-01). */
+#scroll-svg-defs {
+  position: absolute; width: 0; height: 0; overflow: hidden;
+}
+
 .scroll-root {
   width: 100%; height: 100%;
   background: linear-gradient(165deg, #14100b 0%, #1d1912 50%, #110d08 100%);

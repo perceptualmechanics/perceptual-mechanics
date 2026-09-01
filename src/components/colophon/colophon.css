@@ -152,6 +152,12 @@
 }
 .colophon-bib dd + dt { margin-top: 1.3rem; }
 
+/* These three were inline style=""; moved here so style-src can stay
+   'self' with no inline exceptions (CSP hardening, 2026-09-01). */
+.colophon-bib-intro { margin-bottom: 1rem; }
+.colophon-reading-note { margin-bottom: 1.4rem; }
+.colophon-copyright { margin-top: 2rem; }
+
 .colophon-feedback-link {
   display: inline-block; margin-top: 0.3rem;
   font-size: 0.92rem; padding: 0.5rem 0;

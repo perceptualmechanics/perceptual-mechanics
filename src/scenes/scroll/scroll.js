@@ -197,6 +197,20 @@ function buildPatches(scrollPieces) {
   return { PATCHES, SCRIPT_INSERTS };
 }
 
+// CSP note: renderScriptBlock/franticWords/the paragraph loop below all bake
+// per-load Math.random() values into markup, so a real style="" attribute on
+// them can't be hash-allowlisted (unbounded values, not a fixed finite set).
+// They carry the declarations in data-style instead; this walks a freshly
+// inserted subtree and moves each one into the element's real style via a JS
+// property assignment (.style.cssText), which CSP's style-src does not
+// restrict — same category as the existing --patch-clip/filter calls below.
+function applyDeferredStyles(root) {
+  root.querySelectorAll('[data-style]').forEach(el => {
+    el.style.cssText += el.getAttribute('data-style');
+    el.removeAttribute('data-style');
+  });
+}
+
 function firstSentences(text, count) {
   // Em dash counts as a sentence boundary here alongside .!? — cartography's
   // opening paragraph is one long comma-spliced clause building to an em
@@ -230,7 +244,12 @@ function renderScriptBlock(elements) {
       `<p class="scroll-script-line">${escapeHtml(el.text)}</p>` +
       `</div>`;
   }).join('');
-  return `<div class="scroll-script" style="--script-rot: ${rot}deg; --script-delay: ${delay}s;">` +
+  // Randomized per-load values (unbounded, so not CSP-hashable) travel as a
+  // data-style carrier rather than a real style="" attribute; applyDeferredStyles()
+  // below turns it into a .style.setProperty() call once this HTML is in the
+  // DOM — a JS property assignment, which style-src never restricts, same
+  // pattern already used for --patch-clip/filter elsewhere in this file.
+  return `<div class="scroll-script" data-style="--script-rot: ${rot}deg; --script-delay: ${delay}s;">` +
     `<span class="scroll-script-pin" aria-hidden="true"></span>` +
     `<div class="scroll-script-page">${body}</div>` +
     `</div>`;
@@ -262,7 +281,7 @@ function franticWords(escapedPhrase) {
   return escapedPhrase.split(' ').map(word => {
     const rot = (Math.random() * 7 - 3.5).toFixed(1);
     const dy = (Math.random() * 6 - 3).toFixed(1);
-    return `<span class="scroll-word" style="transform: rotate(${rot}deg) translateY(${dy}px);">${word}</span>`;
+    return `<span class="scroll-word" data-style="transform: rotate(${rot}deg) translateY(${dy}px);">${word}</span>`;
   }).join(' ');
 }
 
@@ -416,7 +435,7 @@ export function createScroll(container, { preview = false, initialPieceId = null
         const track = (0.01 + Math.random() * 0.035).toFixed(3);
         const style = `transform: rotate(${rot}deg) translateX(${dx}px); ` +
           `font-size: calc(var(--scroll-base-size, 1.2rem) * ${scale}); letter-spacing: ${track}em;`;
-        let out = `<p style="${style}">${renderParagraph(patch.pieceId, patch.key, idx, p)}</p>`;
+        let out = `<p data-style="${style}">${renderParagraph(patch.pieceId, patch.key, idx, p)}</p>`;
         const insert = SCRIPT_INSERTS.find(s => s.patch === patch.key && s.afterIndex === idx);
         if (insert) out += renderScriptBlock(insert.script);
         return out;
@@ -428,6 +447,7 @@ export function createScroll(container, { preview = false, initialPieceId = null
         ? `<div class="scroll-opening">${oghamHtml}${paragraphHtml.slice(0, groupCount).join('')}</div>` +
           paragraphHtml.slice(groupCount).join('')
         : oghamHtml + paragraphHtml.join('');
+      applyDeferredStyles(textWrap);
       article.appendChild(textWrap);
 
       // Inbound-reference acknowledgment — deliberately NOT the "Referenced

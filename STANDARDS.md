@@ -318,3 +318,21 @@ entry for the exact byte breakdown). Don't assume "scene chunk exists"
 means "that scene's content chunk is deferred" — check the scene's own
 import (static top-of-file vs `import()` inside `if (!preview)`) before
 touching it.
+
+### New interactive code always uses `addEventListener`, never inline handlers
+
+As of v3.12.0's CSP work, `index.html`'s `script-src` allowlists exactly
+11 `sha256-` hashes — one per distinct `onmouseover`/`onfocus`
+`pmGlimpse('<scene>')` string, the only inline event-handler attributes
+left anywhere in the codebase (everything else, including all
+scene-opening/nav-icon interaction, already went through
+`addEventListener` before this policy existed). That hash list is meant
+to stay fixed at 11, legacy-only — a closed set, not a pattern to reach
+for again. Any new interactive markup (a future form, an API-driven
+control, anything) wires up via `addEventListener` from the start; adding
+a new `onclick=`/`onmouseover=` attribute means computing and appending
+another hash to `.htaccess` just to keep the site working, which is real
+friction placed there deliberately so the hash list doesn't quietly grow
+every time new interactivity gets added. See `.htaccess`'s own CSP
+comment block and NOTES.md's 3.12.0 entry for the full policy and
+reasoning.

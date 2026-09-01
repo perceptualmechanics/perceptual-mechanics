@@ -50,3 +50,40 @@ RewriteRule ^text/(.*/)?index\.html$ /text/%1 [L,R=301]
     Header set Cache-Control "public, max-age=31536000, immutable"
   </FilesMatch>
 </IfModule>
+
+# Content Security Policy, 2026-09-01. Shipped as Report-Only first: with no
+# backend and no reporting endpoint, "report-only" here just means violations
+# only show up as console warnings, nothing is blocked, while every scene
+# gets walked and checked before this switches to enforcing
+# (Content-Security-Policy, dropping "-Report-Only").
+#
+# Full external-origin audit before writing this (don't assume, confirm):
+# self-hosted fonts left the site with almost no external origins, except
+# library.js's YouTube embed/thumbnail and Open Library cover images — both
+# real, both allowed explicitly below.
+#
+# script-src: zero eval()/new Function() anywhere, and — contrary to this
+# policy's own original worry — every real interactive element already uses
+# addEventListener, not inline on* attributes. The one true exception is
+# pmGlimpse's onmouseover/onfocus="pmGlimpse('<scene>')" attributes in
+# index.html (11 distinct strings, nav icons + landing tiles): allowlisted
+# by exact SHA-256 hash via 'unsafe-hashes' rather than relaxing script-src
+# with 'unsafe-inline', which would defeat most of CSP's real value for a
+# site with no forms/backend/user data to begin with.
+#
+# style-src: kept at 'self' with zero exceptions. theater.js's reel-hole and
+# scroll.js's hand-lettered-jitter effects used to bake Math.random() values
+# into style="" attributes (unbounded, not hash-allowlistable); refactored to
+# apply them via .style.setProperty()/.style.cssText after DOM insertion
+# instead — a JS property assignment, which style-src never restricts, same
+# category as the WebGL-overlay-positioning pattern already used elsewhere.
+# The few static style="" attributes left (colophon.html, scroll.html) moved
+# into real CSS rules/classes.
+#
+# frame-ancestors 'none': this site is never meant to be embedded in a frame
+# on any page, including its own (Scott's call, 2026-09-01) — only enforceable
+# via a real header, not a <meta> tag, hence delivering this here rather than
+# in index.html.
+<IfModule mod_headers.c>
+  Header set Content-Security-Policy-Report-Only "default-src 'self'; script-src 'self' 'unsafe-hashes' 'sha256-wrGcw4Hh4EADJnjzOcfd5DaWPUIruNgn8nBYgc5yyE8=' 'sha256-zp0uX7PKsea9IkcmQsku4gNaE5Z21TLGMjw1I0X9FGM=' 'sha256-oAZhPI3r1e1alGTJdzYSoEIwmLUIRM8JU1Pz2YPj3+w=' 'sha256-UZaJQeZUGhw8gb3DUVYP2isWNRsYThITn+aHzZ+DemI=' 'sha256-Ugru+QX2p8pU7PRDmF46Xvetac04Y1+/PdaBUcObCBs=' 'sha256-goABNm3NeAhzk+ni9cgu5AyESxrNOSEXuMw0c+2n9i8=' 'sha256-iubMYKz85wEQ/WBzGb4xFlGo1qQEI/PhiZjmBVyVt7Y=' 'sha256-8RTwVgFPnmX0JrXz5Ij4T+a54GOCuZpFKoVXDBSYj7I=' 'sha256-7mkgXz7OJRXXs/g0lSfmO+3bzPiDMzMF37T7ITa9D44=' 'sha256-8ETIdmjbwn670jO3Ay+iom7a0Jzg1nTR8XF2MP6aBYE=' 'sha256-J0nW7LxZhGyHCm+rxtjw9ESL/IaRW96GrrHdDC0yLn8='; style-src 'self'; font-src 'self'; img-src 'self' data: https://i.ytimg.com https://covers.openlibrary.org; connect-src 'self'; frame-src https://www.youtube-nocookie.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests"
+</IfModule>

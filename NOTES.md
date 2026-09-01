@@ -587,6 +587,87 @@ described are unchanged.)
   worth trimming, orrery.js's texture generators and first-person rig are the
   two most self-contained chunks to split out first.
 
+## 3.12.0 (2026-09-01)
+
+**Content Security Policy — shipped Report-Only, not yet enforcing.** Closes
+the last flagged known-open-item from the 2026-08-25 best-practices audit
+(see that entry above): "no CSP (and a real complication if one gets added
+— the site uses inline onmouseover/onclick attributes site-wide)."
+
+**Audited first, not assumed — and the audit overturned two of the brief's
+own starting assumptions.** External origins: expected "close to zero" now
+that fonts are self-hosted (3.11.0) — actually zero *except* three real
+ones `library.js` already loads: a YouTube-nocookie click-to-load embed, its
+`i.ytimg.com` thumbnail, and Open Library's `covers.openlibrary.org` cover
+images. All three are genuine, pre-existing, and now explicitly allowed
+(`frame-src`, `img-src`) rather than silently broken by a naive policy.
+Inline handlers: expected `onclick`-driven scene-opening site-wide per the
+2026-08-25 note — actually every real interaction already uses
+`addEventListener`; the only real inline-handler surface left is
+`pmGlimpse`'s `onmouseover`/`onfocus="pmGlimpse('<scene>')"` on the 20 nav
+icons + landing tiles (11 distinct strings). `eval()`/`new Function()`:
+zero, confirmed by grep, `script-src` needs no `'unsafe-eval'`.
+
+**script-src: hash-allowlist, not `'unsafe-inline'`.** Computed real
+SHA-256 hashes of all 11 exact `pmGlimpse('<scene>')` strings and
+allowlisted them via `'unsafe-hashes' 'sha256-...'` (CSP Level 3) rather
+than relaxing script-src — `'unsafe-inline'` would defeat most of CSP's
+real-world value for a site with no forms/backend/user data to protect in
+the first place, so it was never on the table even as a shortcut.
+
+**style-src: refactored to zero exceptions, not hashed and not relaxed.**
+Audit surfaced a problem the original brief hadn't anticipated: unlike
+pmGlimpse's fixed 11 strings, `theater.js`'s reel-hole angles and (mainly)
+`scroll.js`'s hand-lettered-jitter effects (paragraph rotation/offset/
+scale, per-word tilt, script-card rotation/flutter-delay) bake
+`Math.random()` values straight into `style="..."` attributes — genuinely
+unbounded, not hash-allowlistable. Rather than fall back to `style-src
+'unsafe-inline'` (Scott's call, real relaxation even if lower-risk than
+script-src's version), refactored all of it: theater's reel-hole now
+builds real DOM elements and calls `.style.setProperty('--a', ...)`
+directly; scroll's three dynamic sites carry their computed declarations
+in a `data-style` attribute and a new `applyDeferredStyles()` helper moves
+them onto `.style.cssText` once the markup is in the DOM — a JS property
+assignment, which `style-src` doesn't restrict at all (same category as
+this file's own existing `--patch-clip`/`filter` calls). The remaining
+static `style=""` attributes (three in colophon.html, one in scroll.html)
+moved into real CSS classes/rules. Net result: zero inline style
+anywhere in the codebase, `style-src 'self'` with no exceptions needed.
+
+**Confirmed, not just assumed, the one clarifying note the brief made
+about style-src**: it restricts the `style=""` attribute and literal
+`<style>` blocks, not direct JS `.style.property =` assignment — checked
+against `sphere.js`'s existing WebGL-overlay-positioning pattern, which is
+unaffected by this policy exactly as expected.
+
+**Delivery**: `Content-Security-Policy-Report-Only` header via
+`.htaccess`'s existing `mod_headers` block (already proven live by the
+font-cache `Cache-Control` header, 3.11.0) — a real header rather than a
+`<meta>` tag, since `frame-ancestors` only works via the header at all.
+Also corrected a factual assumption in the original brief along the way:
+deploy is not a manual `dist/` upload, it's `.github/workflows/deploy.yml`
+— push to `main` triggers a GitHub Actions build + `rsync` to DreamHost.
+The Report-Only-before-enforcing caution stands regardless of that
+correction — a bad header still needs a revert-and-push cycle to fix, just
+not a manual re-upload.
+
+Full directive set: `default-src 'self'`; `script-src 'self'
+'unsafe-hashes'` + 11 pmGlimpse hashes; `style-src 'self'`; `font-src
+'self'`; `img-src 'self' data: https://i.ytimg.com
+https://covers.openlibrary.org`; `connect-src 'self'`; `frame-src
+https://www.youtube-nocookie.com`; `object-src 'none'`; `base-uri 'self'`;
+`form-action 'self'`; `frame-ancestors 'none'` (Scott's call — never
+embeddable, even on the site's own pages); `upgrade-insecure-requests`.
+
+**Not yet done, deliberately**: this ships Report-Only so nothing can
+break — violations only show up as console warnings, nothing is blocked.
+Next: walk all ten scenes checking console for violations (real
+pointer clicks/hovers via Claude in Chrome, not synthetic events),
+re-confirm pmGlimpse + scene-opening still work, confirm the header
+actually appears in production response headers. Only after a fully clean
+pass does this switch to enforcing (`Content-Security-Policy`, header name
+change only) with one more full walkthrough after that.
+
 ## 3.3.0 (2026-08-24)
 
 **"Outside" — tenth scene, a real projection of Apherion's eleven

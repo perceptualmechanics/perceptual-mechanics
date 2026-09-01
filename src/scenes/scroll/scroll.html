@@ -48,7 +48,7 @@
      both preview and full mode, since scroll.css uses these filters in
      both -- mounted once, globally, on document.body (guarded in scroll.js
      against double-injection across repeat scene visits). -->
-<div id="scroll-svg-defs" style="position:absolute; width:0; height:0; overflow:hidden;">
+<div id="scroll-svg-defs">
   <svg width="0" height="0" aria-hidden="true" focusable="false">
     <defs>
       <filter id="scroll-grain" x="-5%" y="-5%" width="110%" height="110%">

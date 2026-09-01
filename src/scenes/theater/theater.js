@@ -250,10 +250,16 @@ export function createTheater(container, { preview = false } = {}) {
 
   if (preview) {
     const root = shell.querySelector('.tab-preview');
-    const holes = [0, 60, 120, 180, 240, 300]
-      .map(deg => `<div class="reel-hole" style="--a: ${deg}deg"></div>`)
-      .join('');
-    root.querySelector('.film-reel').innerHTML = holes;
+    // Built as real elements with .style.setProperty() rather than an
+    // innerHTML string with style="--a: ...deg" baked in, so style-src can
+    // stay 'self' with no inline exceptions (CSP hardening, 2026-09-01).
+    const filmReel = root.querySelector('.film-reel');
+    for (const deg of [0, 60, 120, 180, 240, 300]) {
+      const hole = document.createElement('div');
+      hole.className = 'reel-hole';
+      hole.style.setProperty('--a', `${deg}deg`);
+      filmReel.appendChild(hole);
+    }
     container.appendChild(root);
     return { dispose() { root.remove(); } };
   }
