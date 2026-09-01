@@ -18,6 +18,42 @@ found real anti-patterns alongside patterns that only *look* dated. Both
 kinds are recorded below so the next pass doesn't have to re-derive the
 reasoning.
 
+## Tooling
+
+### Never run `npm install` from an assistant sandbox — it poisons `node_modules`
+
+Learned 2026-09-02, during the Vite 8 upgrade, and it will recur because the
+setup that causes it is the normal one.
+
+When Claude works on this project it runs commands in a Linux sandbox that
+**mounts this folder**. The repo is shared; the platform is not. So an
+`npm install` run from there resolves and downloads **Linux** binaries into
+the same `node_modules/` macOS then tries to use, and every package with a
+native component breaks on the Mac. The Vite 8 upgrade did exactly this and
+left `npm run dev` dead with:
+
+    Error: Cannot find native binding.
+    cause: Cannot find module '@rolldown/binding-darwin-arm64'
+
+Nothing about that message points at the actual cause, which is why it is
+worth writing down. It is not an npm bug, not a corrupt install, and not
+anything wrong with the upgrade — the sandbox simply installed for the wrong
+operating system into a folder the other operating system reads.
+
+**The fix is `npm ci` on the Mac**, and it is reliable rather than a guess:
+`package-lock.json` records every platform variant with its own `os`/`cpu`
+constraints (15 rolldown bindings, 26 esbuild packages), so a clean install
+picks the right ones. Use `npm ci`, not `npm install` — `ci` wipes
+`node_modules` and installs exactly what the lock says, which both fixes the
+platform mismatch and leaves the pinned versions untouched. `npm install`
+into the existing broken tree can skip optional dependencies (npm/cli#4828)
+and appear to succeed.
+
+**Going forward:** dependency changes are fine to *decide* in the sandbox —
+the lockfile it writes is correct and complete, and CI (Linux) is unaffected
+— but the Mac needs `npm ci` afterwards before anything will run locally.
+Treat "the sandbox ran npm install" as implying "run `npm ci` here next."
+
 ## Documentation
 
 ### An implementation brief closes by naming what it invalidates

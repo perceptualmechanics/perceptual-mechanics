@@ -692,6 +692,16 @@ immutable` reasoning still pays off), all 8 `/text/` pages generated and
 32 non-hashed files identical, the 32nd being index.html differing only in
 asset hashes. Nested CSS still flattens. `npm audit` clean. 20 tests pass.
 
+**A self-inflicted footgun worth recording.** The upgrade's `npm install`
+was run from the assistant's Linux sandbox, which mounts this folder — so it
+wrote **Linux** native binaries into the `node_modules/` macOS uses, and
+`npm run dev` died on the Mac with "Cannot find native binding …
+@rolldown/binding-darwin-arm64". Nothing in that message points at the cause.
+The lockfile is correct and complete (all 15 rolldown bindings and 26 esbuild
+packages, each with `os`/`cpu` constraints), CI on Linux is unaffected, and
+the fix is a single `npm ci` on the Mac. Written up as a standing rule in
+STANDARDS.md under "Tooling", because the setup that causes it is permanent.
+
 **Not verified live, and stated as such.** The dev server was running from
 before the upgrade and swapping `node_modules` under it left it serving a
 Vite 8 client from a Vite 6 process (`__SERVER_FORWARD_CONSOLE__ is not
