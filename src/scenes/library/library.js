@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { libraryItems, cdRackItems } from './library.text.js';
 import { getOutboundLinks, getInboundLinks } from '../../links.js';
 import {
-  bindOrbitDrag, bindWheelZoom, bindGuardedResize, prefersReducedMotion, createPanelCloser, createJumpList, escapeHtml, parseHTML, wireCrossLinks, formatInboundNote,
+  bindOrbitDrag, bindWheelZoom, bindGuardedResize, prefersReducedMotion, createPanelCloser, createJumpList, escapeHtml, parseHTML, wireCrossLinks, formatInboundNote, setPanelSide, clickedLeftHalf,
 } from '../../utils/sceneKit.js';
 import './library.css';
 import libraryHtml from './library.html?raw';
@@ -781,10 +781,17 @@ function buildBabelBackdrop() {
   // edge's local placement in the hex's own plane). All 6 edges of a
   // given hex share that node's shimmer phase, so a hexagon brightens
   // and dims as one gallery, not six flickering pieces.
-  const edgeColor = new THREE.Color(0x92a9d8);
+  // Recolored warm gold (design-notes pass, 2026-09-01) — was a cool blue
+  // (0x92a9d8) that fought this scene's own warm paper-and-wood palette
+  // rather than reading as part of the same space; the structural depth
+  // here (lit faces, fog recession, shimmer) was already real, so this
+  // only changes hue and opacity, not the underlying technique. Opacity
+  // nudged up slightly too — against the newly-tinted, no-longer-pure-
+  // black void, the previous values read fainter than intended.
+  const edgeColor = new THREE.Color(0xc9a874);
   const edgeGeo = new THREE.BoxGeometry(1, 0.045, 0.045);
   const edgeMat = new THREE.MeshBasicMaterial({
-    color: edgeColor, transparent: true, opacity: 0.32, depthWrite: false, fog: true,
+    color: edgeColor, transparent: true, opacity: 0.38, depthWrite: false, fog: true,
   });
   const edgeMesh = new THREE.InstancedMesh(edgeGeo, edgeMat, nodes.length * 6);
   disposables.push(edgeGeo, edgeMat);
@@ -799,7 +806,7 @@ function buildBabelBackdrop() {
   // "a hexagonal room," not a solid tile blocking the depth behind it.
   const faceGeo = hexFaceGeometry();
   const faceMat = new THREE.MeshStandardMaterial({
-    color: edgeColor, transparent: true, opacity: 0.1, roughness: 0.5,
+    color: edgeColor, transparent: true, opacity: 0.14, roughness: 0.5,
     metalness: 0, side: THREE.DoubleSide, depthWrite: false, fog: true,
   });
   const faceMesh = new THREE.InstancedMesh(faceGeo, faceMat, nodes.length);
@@ -867,7 +874,8 @@ function buildBabelBackdrop() {
   });
 
   let strandMesh = null;
-  const strandColor = new THREE.Color(0x7f96c2);
+  // Warm sibling of edgeColor, same 2026-09-01 recolor.
+  const strandColor = new THREE.Color(0xb89760);
   const strandPhases = [];
   if (strandPairs.length) {
     // Thickness/opacity deliberately close to the hex edges', not
@@ -875,7 +883,7 @@ function buildBabelBackdrop() {
     // at lower thickness/opacity values.
     const strandGeo = new THREE.BoxGeometry(1, 0.038, 0.038);
     const strandMat = new THREE.MeshBasicMaterial({
-      color: strandColor, transparent: true, opacity: 0.24, depthWrite: false, fog: true,
+      color: strandColor, transparent: true, opacity: 0.28, depthWrite: false, fog: true,
     });
     strandMesh = new THREE.InstancedMesh(strandGeo, strandMat, strandPairs.length);
     disposables.push(strandGeo, strandMat);
@@ -933,6 +941,40 @@ function buildBabelBackdrop() {
   }
 
   return { group, disposables, update };
+}
+
+// ─── Rim light on spine edges (design-notes pass, 2026-09-01) ─────────────
+// Book spines have real silhouette edges — a box's corner, the seam
+// between front cover and side — the same candidate outside.js's own
+// Fresnel technique was built for (see that file's own header comment).
+// Same patch-the-compiled-shader approach: onBeforeCompile injects a real
+// Fresnel term (view direction vs. surface normal) into the standard
+// MeshStandardMaterial shader three.js already compiles for lighting,
+// rather than swapping in a heavier custom ShaderMaterial — but unlike
+// Outside's petals (translucent, so Fresnel drives both an alpha mix and
+// an edge glow), a book spine is an opaque solid, so this only adds the
+// glow term, never touches alpha. Kept deliberately faint (glow 0.035) —
+// a bookshelf should read as lit, not as glowing sci-fi objects; the goal
+// is a little more dimension at the silhouette, not a visual effect that
+// calls attention to itself.
+function addSpineRim(material, colorHex = 0xffe6bd, power = 2.4, glow = 0.035) {
+  material.onBeforeCompile = shader => {
+    shader.uniforms.pmRimColor = { value: new THREE.Color(colorHex) };
+    shader.uniforms.pmRimPower = { value: power };
+    shader.uniforms.pmRimGlow  = { value: glow };
+    shader.fragmentShader = shader.fragmentShader
+      .replace('#include <common>', `
+        #include <common>
+        uniform vec3 pmRimColor;
+        uniform float pmRimPower;
+        uniform float pmRimGlow;
+      `)
+      .replace('#include <dithering_fragment>', `
+        float pmRim = pow(1.0 - clamp(abs(dot(normalize(vViewPosition), normal)), 0.0, 1.0), pmRimPower);
+        gl_FragColor.rgb += pmRim * pmRimGlow * pmRimColor;
+        #include <dithering_fragment>
+      `);
+  };
 }
 
 // ─── Items (books/dvds/blurays/boxes) ──────────────────────────────────────
@@ -1036,13 +1078,22 @@ function buildItems(preview) {
         // is itself part of what makes them read as a different material
         // from the books.
         const isGlossy = isDisc || isCd || hash01(it.title, 'gloss') > 0.8;
+        // Matte range trimmed from 0.72-0.90 to 0.6-0.8 (design-notes
+        // pass, 2026-09-01) — the audit found the shelf reading muted/
+        // grey even though the books already carry real palette color;
+        // 0.9 roughness is nearly pure Lambertian diffuse, which under
+        // this scene's two-directional-light setup (no environment map)
+        // shows almost no specular variation at all, reading flatter than
+        // intended. A touch less roughness lets a visible highlight track
+        // the key light across each spine without turning matte cloth
+        // binding into glossy laminate.
         const rough = isDisc
           ? 0.22 + hash01(it.title, 'r2') * 0.1
           : isCd
           ? 0.3 + hash01(it.title, 'r2') * 0.12
           : isGlossy
           ? 0.35 + hash01(it.title, 'r2') * 0.15
-          : 0.72 + hash01(it.title, 'r2') * 0.18;
+          : 0.6 + hash01(it.title, 'r2') * 0.2;
         const metal = isDisc ? 0.18 : isCd ? 0.1 : isGlossy ? 0.05 : 0;
         // Side/back faces shaded darker than the front — the same base
         // color otherwise made every face of the box read as one flat
@@ -1054,6 +1105,16 @@ function buildItems(preview) {
         const pageColor = it.type === 'book' ? '#e9e3d2' : color;
         const pages = new THREE.MeshStandardMaterial({ color: pageColor, roughness: 0.9 });
         const back = new THREE.MeshStandardMaterial({ color: backColor, roughness: rough });
+        // Rim light on the two faces that actually carry a visible
+        // silhouette edge against the cubby's shadowed interior/its
+        // shelf neighbors — front (the spine face itself) and side (the
+        // edge a browsing eye catches at an angle). Skipped on
+        // disc/CD/box items' own already-distinct glossy-plastic finish,
+        // which doesn't need the same "used cloth binding" dimension cue.
+        if (!isDisc && !isCd && !isBox) {
+          addSpineRim(front);
+          addSpineRim(side);
+        }
         disposables.push(tex, front, side, pages, back);
         mats = [side, side, pages, pages, front, back];
       }
@@ -1120,23 +1181,36 @@ export function createLibrary(container, { preview = false, initialPieceId = nul
   const baseDist = distanceToFit(camera, TOTAL_W, TOTAL_H, 1.3);
   camera.position.set(0, 0.15, baseDist);
   camera.lookAt(0, 0, 0);
-  // Fog matched to the clear color, same convention as orrery.js — kept
-  // well past maxDist so the shelf itself never fogs at any zoom level;
-  // it only ever dims the Library of Babel backdrop receding behind it.
-  scene.fog = new THREE.Fog(0x000000, 18, 56);
+  // Void tint (design-notes pass, 2026-09-01): was flat 0x000000, same
+  // page-fallback black every other under-treated scene defaults to —
+  // this shelf's own palette (PALETTE above) is a warm paper-and-wood
+  // register, so the void around it now carries a matching dark umber
+  // rather than a neutral black that fights it. Fog matched to the same
+  // color, same convention as orrery.js — kept well past maxDist so the
+  // shelf itself never fogs at any zoom level; it only ever dims the
+  // Library of Babel backdrop receding behind it.
+  const VOID_COLOR = 0x120d08;
+  scene.fog = new THREE.Fog(VOID_COLOR, 18, 56);
 
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
   renderer.setPixelRatio(window.devicePixelRatio);
   renderer.setSize(w, h);
-  renderer.setClearColor(0x000000, 1);
+  renderer.setClearColor(VOID_COLOR, 1);
   renderer.domElement.setAttribute('aria-hidden', 'true');
   container.appendChild(renderer.domElement);
 
   const root = new THREE.Group();
   scene.add(root);
 
-  scene.add(new THREE.AmbientLight(0xfff4e0, 0.7));
-  const key = new THREE.DirectionalLight(0xfff0d8, 1.1);
+  // Ambient trimmed slightly and key raised to compensate (design-notes
+  // pass, 2026-09-01): flat ambient light washes matte materials evenly
+  // regardless of surface angle, which is part of why the audit's "muted/
+  // grey" read happened even though the books already carry real color —
+  // less flat fill and a stronger directional key gives each spine more
+  // local contrast (real shadow falloff across the box, a visible
+  // highlight where the key catches it) instead of a uniformly lit block.
+  scene.add(new THREE.AmbientLight(0xfff4e0, 0.55));
+  const key = new THREE.DirectionalLight(0xfff0d8, 1.35);
   key.position.set(4, 5, 6);
   scene.add(key);
   const rim = new THREE.DirectionalLight(0x8fa8ff, 0.4);
@@ -1357,10 +1431,7 @@ export function createLibrary(container, { preview = false, initialPieceId = nul
     populatePanel(mesh.userData.item);
     if (!panel.classList.contains('open') && fromLeft !== undefined
         && panel.classList.contains('from-left') !== fromLeft) {
-      panel.classList.add('no-transition');
-      panel.classList.toggle('from-left', fromLeft);
-      void panel.offsetWidth; // force reflow before re-enabling the transition
-      panel.classList.remove('no-transition');
+      setPanelSide(panel, fromLeft);
     }
     panel.classList.add('open');
     setTimeout(() => panelTitle.focus(), 50);
@@ -1423,14 +1494,11 @@ export function createLibrary(container, { preview = false, initialPieceId = nul
           // fresh open, instead of an instant same-frame teleport (which
           // flipping `from-left` while `open` would cause, since the
           // panel is fully on-screen at that point).
-          const clickedLeft = (e.clientX - rect.left) < rect.width / 2;
+          const clickedLeft = clickedLeftHalf(e, rect);
           if (panel.classList.contains('from-left') !== clickedLeft) {
             panel.classList.remove('open');
             setTimeout(() => {
-              panel.classList.add('no-transition');
-              panel.classList.toggle('from-left', clickedLeft);
-              void panel.offsetWidth; // force reflow before re-enabling the transition
-              panel.classList.remove('no-transition');
+              setPanelSide(panel, clickedLeft);
               populatePanel(it);
               panel.scrollTop = 0;
               panelBodyEl.style.opacity = '1'; // guard against a same-side fade-out still in flight
@@ -1457,7 +1525,7 @@ export function createLibrary(container, { preview = false, initialPieceId = nul
       // Panel is guaranteed closed here (the block above already returns
       // early for an open-panel click), so flipping the anchor side is
       // invisible to the user.
-      openItem(hitMesh, { fromLeft: (e.clientX - rect.left) < rect.width / 2 });
+      openItem(hitMesh, { fromLeft: clickedLeftHalf(e, rect) });
     };
     container.addEventListener('click', onContainerClick);
 

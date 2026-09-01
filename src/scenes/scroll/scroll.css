@@ -52,6 +52,25 @@
 }
 .scroll-viewport:focus { outline: none; }
 
+/* ─── Bottom fade, design-notes pass (2026-09-01) ─────────────────────────
+   Same recipe as #landing-bottom-fade (styles/main.css): a non-scrolling
+   gradient strip masking the hard edge where .scroll-viewport's own box
+   stops (--footer-safe-zone above .scroll-root's bottom), so the last
+   visible line of a patch fades into the background instead of getting
+   sliced by the viewport's overflow boundary. Sits above .scroll-grain
+   (z-index 5) so it's visible over the grain texture; targets #110d08,
+   the darkest stop of .scroll-root's own gradient, rather than flat
+   black, so it blends with this scene's warm-dark palette instead of
+   landing's neutral one. */
+.scroll-bottom-fade {
+  position: absolute;
+  left: 0; right: 0; bottom: var(--footer-safe-zone);
+  height: 4.5rem;
+  z-index: 6;
+  pointer-events: none;
+  background: linear-gradient(to top, #110d08 0%, rgba(17,13,8,0) 100%);
+}
+
 /* ─── Footer-collision fix (site-wide consistency pass, 2026-08-25) ──────
    Real bug, caught live: #site-title's fixed footer pill (styles/main.css,
    bottom:1.2rem, horizontally centered) was rendering directly over this

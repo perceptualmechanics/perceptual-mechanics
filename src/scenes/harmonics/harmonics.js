@@ -821,7 +821,7 @@ export function createharmonics(container, { preview = false, initialPieceId = n
 
   // Every approved row this node participates in, paired with the OTHER
   // endpoint — a node can carry more than one (sphere:14, the corpus's
-  // one real hub, currently carries five).
+  // one real hub, currently carries 6 — see resonances.js).
   function nodeResonances(nodeIndex) {
     const node = nodeList[nodeIndex];
     return rows
@@ -878,7 +878,13 @@ export function createharmonics(container, { preview = false, initialPieceId = n
       const btn = document.createElement('button');
       btn.type = 'button';
       btn.className = 'harmonics-endpoint-link';
-      btn.textContent = 'Open this piece →';
+      // Visible text now names the actual target (matches the aria-label
+      // below) rather than the generic "Open this piece →" every button
+      // used to share — with several resonance pairs stacked in one panel,
+      // identical labels gave a sighted reader no way to tell which button
+      // opened which piece without tracing back to that pair's own card
+      // header. Design-notes pass, 2026-09-01.
+      btn.textContent = `Open ${resolved.title} →`;
       btn.setAttribute('aria-label', `Open ${resolved.title}`);
       btn.addEventListener('click', e => {
         e.stopPropagation();

@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { CSS2DRenderer, CSS2DObject } from 'three/examples/jsm/renderers/CSS2DRenderer.js';
 import { getOutboundLinks, getInboundLinks } from '../../links.js';
-import { bindOrbitDrag, bindWheelZoom, bindGuardedResize, prefersReducedMotion, createPanelCloser, createJumpList, bindTapVsDrag, parseHTML, wireCrossLinks, formatInboundNote } from '../../utils/sceneKit.js';
+import { bindOrbitDrag, bindWheelZoom, bindGuardedResize, prefersReducedMotion, createPanelCloser, createJumpList, bindTapVsDrag, parseHTML, wireCrossLinks, formatInboundNote, setPanelSide, clickedLeftHalf } from '../../utils/sceneKit.js';
 import sphereHtml from './sphere.html?raw';
 import './sphere.css';
 
@@ -346,10 +346,7 @@ export function createSphere(container, { preview = false, initialPieceId = null
           // the way a fresh open does. Same pattern as library.js's panel.
           panel.classList.remove('open');
           setTimeout(() => {
-            panel.classList.add('no-transition');
-            panel.classList.toggle('from-left', fromLeft);
-            void panel.offsetWidth; // force reflow before re-enabling the transition
-            panel.classList.remove('no-transition');
+            setPanelSide(panel, fromLeft);
             populate();
             panelContent.scrollTop = 0;
             panelContent.style.opacity = '1'; // guard against a same-side fade still in flight
@@ -360,12 +357,7 @@ export function createSphere(container, { preview = false, initialPieceId = null
           return;
         }
 
-        if (!wasOpen && sideMismatch) {
-          panel.classList.add('no-transition');
-          panel.classList.toggle('from-left', fromLeft);
-          void panel.offsetWidth; // force reflow before re-enabling the transition
-          panel.classList.remove('no-transition');
-        }
+        if (!wasOpen && sideMismatch) setPanelSide(panel, fromLeft);
 
         populate();
         panel.classList.add('open');
@@ -440,7 +432,7 @@ export function createSphere(container, { preview = false, initialPieceId = null
         const rect = container.getBoundingClientRect();
         openFragment(fi, {
           facetLabel: `Facet ${selectedFace} · Fragment ${fi + 1} of ${fragments.length}`,
-          fromLeft: (e.clientX - rect.left) < rect.width / 2,
+          fromLeft: clickedLeftHalf(e, rect),
         });
       };
       container.addEventListener('click', onContainerClick);

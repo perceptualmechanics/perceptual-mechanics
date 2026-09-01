@@ -587,6 +587,74 @@ described are unchanged.)
   worth trimming, orrery.js's texture generators and first-person rig are the
   two most self-contained chunks to split out first.
 
+## 3.13.0 (2026-09-01)
+
+**Design-notes pass, greenlit half.** Scott's "perceptualmechanics.com —
+design notes pass" brief (five items) came back with three pieces
+explicitly cleared to proceed now; tile order, extending side-panels to
+Orbiter/Harmonics, and the deeper Harmonics panel restructure stay open
+for a separate brief.
+
+*Panel side-adaptation extracted to sceneKit.js.* Sphere and Library had
+independently arrived at identical `fromLeft` computation and `.from-left`
+class-toggle mechanics — real duplication, the exact "third scene"
+threshold this project's own convention treats as belonging in
+`sceneKit.js`. Added `setPanelSide()` (the no-transition/reflow/toggle
+sequence) and `clickedLeftHalf()` (the click-position formula) there,
+rewired both scenes to call them. Deliberately narrow extraction — only
+the class-toggle mechanics, not the surrounding open/reopen orchestration,
+which stays scene-specific (sphere.js's `openFragment`, library.js's
+`openItem`/`onContainerClick`) since the two scenes resolve it
+differently. Behavior-neutral; not applied to Orbiter or Harmonics (out of
+scope per the brief).
+
+**Harmonics: fixed the generic "Open this piece →" button text.** With
+several resonance pairs stacked in one panel (confirmed live: sphere:14
+"Quiver" resonates with 6 pieces, the real current max — the "five" in an
+old code comment was stale, fixed too), every button read identically, so
+a sighted user had to trace back to each card's own header to know which
+piece a given button opened. The `aria-label` already named the target;
+the visible text now matches it (`Open ${title} →`). No behavior change.
+
+**Library — closed the two confirmed audit gaps.** Void tint: was flat
+`0x000000`; now a dark umber (`0x120d08`, matching `scene.fog`) fitting
+the shelf's own warm paper-and-wood palette. Backdrop: the Library of
+Babel hex-gallery field (real lit faces + fog recession + shimmer — this
+was already structurally there, just cool-blue and fighting the shelf's
+warm register) recolored to warm gold (`0xc9a874`/`0xb89760`), opacity
+nudged up slightly to read against the now-non-black void. Rim lighting:
+book spines' front/side materials get a real Fresnel term via
+`onBeforeCompile` (same technique as `outside.js`'s petals — glow-only,
+no alpha, since spines are opaque). Saturation: ambient trimmed / key
+light raised for more local contrast, and matte roughness dropped from
+0.72–0.90 to 0.6–0.8 (0.9 is close to pure Lambertian diffuse, which under
+this scene's two-light rig with no environment map showed almost no
+specular variation at all — part of why it read muted despite real
+palette color already being there).
+
+**Orbiter — closed the two confirmed audit gaps.** Void tint: was flat
+`0x000000`; now a dark violet-black (`0x0a0714`) leaning toward the
+p-orbital cloud's own -phase lobe color without fighting the scene's
+green key/ambient lights. Deliberately left the particle-cloud backdrop
+alone — the audit found it already doing real atmospheric work. Rim
+lighting + saturation: satellite bodies were flat, unlit
+`MeshBasicMaterial` in near-white grey — no real color of their own,
+exactly the "saturation carried entirely by the particle clouds" gap the
+audit named. Now real `MeshStandardMaterial` in the scene's own
+established gold accent (`0xffd89a`, matching the orbit rings'
+`0xffe08a`), a real emissive base so the hue reads true against the
+green-tinted lighting, plus the same Fresnel rim technique as Library's
+spines.
+
+Build clean, `verify-links`/`verify-resonances` both pass (64 resonance
+rows, 146 link rows, no regressions). Live visual/behavioral verification
+pending push — same standing sandbox limitation (this project's own
+domain and local preview server are both outside the egress allowlist),
+needs a real-browser pass against production once deployed: Sphere/Library
+side-adaptation re-tested post-refactor, all 6 of Sphere-Quiver's
+Harmonics buttons checked for distinct correct text, Library/Orbiter
+checked before/after against the four audit traits.
+
 ## 3.12.1 (2026-09-01)
 
 **CSP switched from Report-Only to enforcing.** Closes the arc opened in

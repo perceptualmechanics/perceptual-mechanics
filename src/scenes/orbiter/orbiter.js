@@ -489,6 +489,36 @@ function buildNucleusDetail(preview) {
   return { group, nucleons };
 }
 
+// ─── Rim light on satellite bodies (design-notes pass, 2026-09-01) ─────────
+// Same patch-the-compiled-shader Fresnel technique as outside.js's petals
+// and library.js's book spines (see either file's own header comment for
+// the full mechanics) — onBeforeCompile injects a real Fresnel term (view
+// direction vs. surface normal) into whatever shader three.js already
+// compiles for the material, adding a glow at silhouette edges without a
+// heavier custom ShaderMaterial. Satellites carry real silhouette edges
+// (a small box, at real orbital distance from the camera) even though
+// they're tiny — this stays glow-only, same as library.js's spines,
+// not an alpha effect.
+function addRimGlow(material, colorHex, power = 2.4, glow = 0.05) {
+  material.onBeforeCompile = shader => {
+    shader.uniforms.pmRimColor = { value: new THREE.Color(colorHex) };
+    shader.uniforms.pmRimPower = { value: power };
+    shader.uniforms.pmRimGlow  = { value: glow };
+    shader.fragmentShader = shader.fragmentShader
+      .replace('#include <common>', `
+        #include <common>
+        uniform vec3 pmRimColor;
+        uniform float pmRimPower;
+        uniform float pmRimGlow;
+      `)
+      .replace('#include <dithering_fragment>', `
+        float pmRim = pow(1.0 - clamp(abs(dot(normalize(vViewPosition), normal)), 0.0, 1.0), pmRimPower);
+        gl_FragColor.rgb += pmRim * pmRimGlow * pmRimColor;
+        #include <dithering_fragment>
+      `);
+  };
+}
+
 // ─── Satellites ─────────────────────────────────────────────────────────────
 // Same tilted-pivot orbit trick as the orrery in orrery.js: rotate the pivot,
 // the body (attached at a fixed radius on the pivot) sweeps a real orbit.
@@ -510,7 +540,20 @@ function buildSatellites(preview) {
   // site's own found-by-chance logic (the colophon's own hidden mark and
   // bibliography) better.
   const poemOffset = Math.floor(Math.random() * poems.length);
-  const bodyMat = new THREE.MeshBasicMaterial({ color: 0xe8e4d8 });
+  // Was a flat MeshBasicMaterial in near-white grey (0xe8e4d8) — unlit,
+  // and no real color of its own, which is exactly what the audit flagged:
+  // saturation "carried entirely by the particle clouds," the satellite
+  // geometry itself contributing none. Real MeshStandardMaterial now, with
+  // its own warm-gold hue (matching the orbit rings' own established
+  // 0xffe08a accent below, not a new color introduced for this) — a real
+  // emissive base keeps that gold reading true regardless of the scene's
+  // green-tinted key/ambient light mix (same reasoning as the nucleus
+  // material just above), while still responding to real lighting rather
+  // than sitting flat. Rim glow (addRimGlow, same family) added on top.
+  const bodyMat = new THREE.MeshStandardMaterial({
+    color: 0xffd89a, emissive: 0xffd89a, emissiveIntensity: 0.4, roughness: 0.5, metalness: 0.15,
+  });
+  addRimGlow(bodyMat, 0xffe08a);
   const panelMat = new THREE.MeshBasicMaterial({
     color: 0x3f6fb0, transparent: true, opacity: 0.9, side: THREE.DoubleSide,
   });
@@ -626,7 +669,15 @@ export function createOrbiter(container, { preview = false, initialPieceId = nul
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
   renderer.setPixelRatio(window.devicePixelRatio);
   renderer.setSize(w, h);
-  renderer.setClearColor(0x000000, 1);
+  // Void tint (design-notes pass, 2026-09-01): was flat 0x000000, the same
+  // page-fallback black every under-treated scene defaults to. This
+  // scene's own established colors are the p-orbital cloud's teal-green/
+  // violet phase split (buildOrbitalCloud, above) — a very dark
+  // violet-black leans toward the cloud's own -phase lobe without
+  // fighting the green-tinted key/ambient lights below, the same
+  // "pick a hue this scene already owns" approach Outside's own violet
+  // void took.
+  renderer.setClearColor(0x0a0714, 1);
   renderer.domElement.setAttribute('aria-hidden', 'true');
   container.appendChild(renderer.domElement);
 

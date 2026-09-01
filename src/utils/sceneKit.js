@@ -436,6 +436,51 @@ export function formatInboundNote(titles) {
   return `Referenced from ${names.slice(0, -1).join(', ')}, and ${names[names.length - 1]}`;
 }
 
+// ─── Side-adaptable slide-in panel ──────────────────────────────────────────
+// Sphere and Library both independently arrived at the same pattern: a
+// slide-in read-more panel that docks on whichever side of the container
+// WASN'T clicked, so opening it doesn't pop up underneath the reader's own
+// hand — the click's x-position decides `fromLeft`, and a `.from-left` CSS
+// class each scene's own stylesheet keys off (`.sphere-panel.from-left` /
+// `.library-panel.from-left`) flips which side the panel docks on. Real,
+// confirmed duplication in both scenes — the `fromLeft` formula and the
+// `.from-left` toggle mechanics were identical, independently arrived at,
+// which is exactly the "third scene" threshold this project's own
+// convention treats as belonging here (design-notes pass, 2026-09-01).
+// Consolidation only — behavior-neutral, both scenes already worked
+// correctly; this doesn't change what either one does, just where the code
+// that does it lives.
+//
+// `setPanelSide` is deliberately narrow: only the class-toggle mechanics,
+// not when to call it. Toggling `.from-left` needs a one-frame
+// no-transition guard — the panel's own CSS transitions that class the same
+// as `open`, so flipping it in the same frame `open` is about to be added
+// would visibly animate a fully-hidden panel sliding across before it's
+// ever shown. Both scenes fixed this the same way: add `.no-transition`,
+// force a synchronous reflow (`void panel.offsetWidth`) so the browser
+// can't coalesce the class change with the one about to follow, then remove
+// `.no-transition`. This is exactly that sequence, and only that sequence —
+// each scene still owns its own decision about WHEN to call it (a fresh
+// open vs. an already-open panel crossing sides, which involves a
+// close/wait/reopen dance tuned around each scene's own content-population
+// and focus-management code, so that orchestration stays in sphere.js's
+// openFragment and library.js's openItem/onContainerClick rather than
+// being forced into a one-size-fits-all shape here).
+export function setPanelSide(panel, fromLeft) {
+  panel.classList.add('no-transition');
+  panel.classList.toggle('from-left', fromLeft);
+  void panel.offsetWidth; // force reflow before re-enabling the transition
+  panel.classList.remove('no-transition');
+}
+
+// The formula both scenes use to decide which half of the container a click
+// landed in. `rect` is the container's own getBoundingClientRect(), already
+// computed by the caller for its own raycasting — this doesn't force a
+// second one.
+export function clickedLeftHalf(e, rect) {
+  return (e.clientX - rect.left) < rect.width / 2;
+}
+
 // ─── Static HTML template parsing ──────────────────────────────────────────
 // Each scene's static shell markup (hint, caption, panel skeleton, and
 // similar chrome that doesn't change shape at runtime) lives in its own

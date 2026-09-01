@@ -482,6 +482,17 @@ export function createScroll(container, { preview = false, initialPieceId = null
     grain.className = 'scroll-grain';
     root.appendChild(grain);
 
+    // Same #landing-bottom-fade recipe (styles/main.css), reused here: a
+    // fixed, non-scrolling gradient strip sitting right where
+    // .scroll-viewport's own box ends (--footer-safe-zone above the
+    // bottom edge), so the last visible line of text fades out instead of
+    // hitting that box's hard overflow boundary. Design-notes pass,
+    // 2026-09-01.
+    const bottomFade = document.createElement('div');
+    bottomFade.className = 'scroll-bottom-fade';
+    bottomFade.setAttribute('aria-hidden', 'true');
+    root.appendChild(bottomFade);
+
     container.appendChild(root);
     container.style.position = 'relative';
     container.style.overflow = 'hidden';
