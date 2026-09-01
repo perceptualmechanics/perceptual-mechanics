@@ -1,6 +1,6 @@
 # perceptualmechanics — chat brief
 
-*Handoff for a fresh Claude chat. Current as of **v4.1.0**, 2026-09-02.*
+*Handoff for a fresh Claude chat. Current as of **v4.1.2**, 2026-09-02.*
 
 This is the **chat** brief, not the code brief. It assumes no file access, no
 repo, no terminal. Its companion, `perceptualmechanics-project-brief.md`, lives
@@ -109,50 +109,46 @@ on both sides of the check. Prose is not a namespace.
 
 ## Where things stand
 
-**v4.0 shipped 2026-09-02 — the audit release.** An outside-in review produced 71
-findings, eight of them live on the production site, and 4.0 closed all eight
-plus most of the rest.
+Everything below is deployed and confirmed live. Four numbered releases landed
+on 2026-09-02, and they divide cleanly into one big one and the ones that came
+out of looking closely at what it left behind.
 
-The headline items: every `/text/` page had been rendering unstyled since a CSP
-change months earlier; leaving a scene with sound on stranded a running audio
-context; the navigation icons were clipped off both edges of every 375px phone; a
-2.9 MB image was loading on every visit to fill a 36-pixel box.
-
-Also in that release: a substantial accessibility pass, a shared scene-lifecycle
+**v4.0 — the audit release.** An outside-in review produced 71 findings, eight
+of them live on the production site, and 4.0 closed all eight plus most of the
+rest. The headline items: every `/text/` page had been rendering unstyled
+since a CSP change months earlier; leaving a scene with sound on stranded a
+running audio context; the navigation icons were clipped off both edges of
+every 375px phone; a 2.9 MB image was loading on every visit to fill a
+36-pixel box. Also a substantial accessibility pass, a shared scene-lifecycle
 layer that fixed a class of leaks rather than instances of them, and large
-measured performance wins (one scene went from 1,070 draw calls a frame to 18).
-The full findings document is `punch-list-2026-09-01.md`; what shipped is the 4.0
-entry in `NOTES.md`.
+measured performance wins — one scene went from 1,070 draw calls a frame to
+18. Findings in `punch-list-2026-09-01.md`; what shipped, in `NOTES.md`.
 
-**v4.1.0 (2026-09-02)** took the Vite 6 → 8 upgrade, which had been held back
-because the build gates hang off plugin hooks. Vite 8 turned out to replace
-Rollup with Rolldown entirely — a different bundler, not a major of the same
-one. All four gates still fire and still name the specific fault; the real
-damage was in the new CSS minifier, which silently deleted three documented
-fallbacks. See NOTES.md's 4.1.0 entry. Everything through 4.1.0 is deployed
-and confirmed live.
+**v4.0.1–4.0.3** followed it: Sphere's per-label rotation made to actually
+reach the screen, the eight held Library notes rewritten and released, HSTS
+ramped to a year on evidence rather than on schedule.
 
-**v4.1.1 (2026-09-02)** fixed two of the ten landing thumbnails, which could
-never draw at all. Harmonics and Outside only *scheduled* their first frame
-instead of drawing it, and the landing page can pause a tile before a queued
-callback runs — so those two had drawn nothing, on every visit, for as long as
-the code has been that way. Nobody could tell, because a thumbnail that has
-never drawn looks exactly like one still loading. Same release made that
-distinguishable from the page itself.
+**v4.1.0 — Vite 6 → 8**, held back from 4.0 because the build gates hang off
+plugin hooks. Vite 8 turned out to replace Rollup with Rolldown entirely — a
+different bundler, not a major of the same one. Every gate was proven to still
+fail, on purpose, before the site was allowed to build. The real damage was in
+the new CSS minifier, which silently deleted three documented fallbacks.
 
-**v4.1.2 (2026-09-02)** took frame-rate coupling out of Butterfly, Sphere and
-Harmonics' galaxy twinkle. Butterfly's attractor had been drawing at the
-display's refresh rate in *both* modes — twice as fast on a 120Hz panel as on
-a 60Hz one — and Sphere's key light and rotation likewise. The tuned 60fps
-look is unchanged by construction; what changed is that it's now the same on
-every machine.
+**v4.1.1 — two landing thumbnails that had never drawn.** Harmonics and
+Outside only *scheduled* their first frame rather than drawing it, and the
+landing page can pause a tile before a queued callback ever runs. So those two
+had rendered nothing, on every visit, for as long as the code had been that
+way — and nobody could tell, because a thumbnail that has never drawn looks
+exactly like one still loading. That indistinguishability was the actual
+finding, and the same release made the two states tell apart from the page
+itself.
 
-**One taste question is open, and it's yours.** Butterfly's thumbnail still
-takes about twenty-five seconds to become a recognisable Lorenz shape — that
-is now twenty-five seconds everywhere rather than twelve or fifty, but it is
-still longer than anyone looks at a landing page. Raising the preview's rate
-is a one-constant change. The argument against is that the tile would then be
-a different animation from the piece it previews.
+**v4.1.2 — frame-rate coupling** out of Butterfly (both the thumbnail and the
+full scene), Sphere, and Harmonics' galaxy twinkle. The attractor had been
+drawing at the display's refresh rate: twice as fast on a 120Hz panel as on a
+60Hz one. The tuned 60fps look is unchanged by construction; what changed is
+that it is now the same look on every machine, verified by measurement across
+30/60/120/144 fps rather than by looking at it.
 
 ---
 
@@ -178,8 +174,18 @@ empty — don't re-open this as a writing job.)*
   prerendered pages — but it is a content decision that could be revisited,
   not a technical constraint. That makes it a conversation rather than a
   build task.
+- **How fast should Butterfly's thumbnail become a butterfly?** It takes about
+  twenty-five seconds to resolve into a recognisable Lorenz shape — uniformly,
+  since 4.1.2, rather than somewhere between twelve and fifty depending on the
+  visitor's monitor. A visitor gives a landing page a few seconds, so for most
+  of them the tile is a dot. Raising the thumbnail's rate is a one-constant
+  change and would not touch the full scene. The argument against is that the
+  tile would then be a different animation from the piece it previews — the
+  thumbnail shows a trajectory being drawn, and that *is* the scene. A taste
+  call, and a good one for a chat: it is about what a preview is for, not
+  about code.
 - **The eleventh scene**, whenever it comes. The content-sourcing question — what
-  in `Holography.scriv` is ready to be promoted — is a
+  in `Holography.scriv` or `seeds.md` is ready to be promoted — is a
   conversation, not a build task.
 
 ---
@@ -222,12 +228,17 @@ half this corpus.
   requiring them to be re-derived.
 - **`NOTES.md`** — the dated changelog and working punch list,
   reverse-chronological, very long.
-- **`Holography.scriv`** — the Scrivener project holding the two books the
-  writing is drawn from. Outside the repo.
+- **`Holography.scriv`** — the Scrivener project holding the books the
+  published writing is drawn from. Outside the repo.
+- **`seeds.md`** — material not yet promoted into that project. Also outside
+  the repo.
+- **`The New.scriv`** — a second Scrivener project sitting alongside the
+  others. Its relationship to the site isn't recorded anywhere in this repo;
+  worth asking Scott rather than assuming it feeds the scenes.
 
 ---
 
-*Written 2026-09-02 after the v4.0 release and kept current through v4.1.0, by
+*Written 2026-09-02 after the v4.0 release and kept current through v4.1.2, by
 the sessions that shipped them. Scene counts and content totals were read from the live modules
 rather than recalled. If this file and the repo disagree, the repo is right and
 this file is stale — refresh it alongside any release that changes the answers in
