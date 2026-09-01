@@ -587,6 +587,42 @@ described are unchanged.)
   worth trimming, orrery.js's texture generators and first-person rig are the
   two most self-contained chunks to split out first.
 
+## 3.12.1 (2026-09-01)
+
+**CSP switched from Report-Only to enforcing.** Closes the arc opened in
+3.12.0. Verified live on production (not locally — the sandbox's egress
+proxy blocks this project's own domain, so used Claude in Chrome's real
+browser instead, per Scott's "you can use chrome"): confirmed the
+`Content-Security-Policy-Report-Only` header was actually present in
+production response headers (`default-src`, all 11 `sha256-` hashes,
+`frame-ancestors 'none'`, `form-action 'self'` — all there), then walked
+every one of the ten scenes with real pointer clicks (not a hash-URL
+shortcut, not a synthetic event) checking console after each: all 11
+`pmGlimpse('<scene>')` hover-triggered handlers, all 10 scene-opening
+clicks, and — specifically, since this is the one real external-origin
+surface — Library's video facade click (renders the `i.ytimg.com`
+thumbnail, then replaces itself with a real `youtube-nocookie.com`
+iframe on click) and a spine's Open Library cover image
+(`covers.openlibrary.org`). Zero CSP violations anywhere in the whole
+pass; the only console output at all was a pre-existing unrelated
+`THREE.BufferGeometry.toNonIndexed()` warning and a Chrome extension's
+own "message channel closed" noise, neither new nor CSP-related.
+
+Also addressed Scott's addendum to the original brief: `default-src
+'self'` and `form-action 'self'` were, on inspection, already present in
+the 3.12.0 policy (both were part of the original directive set written
+against the audit) — nothing to add there. Recorded the addendum's
+third point — new interactive code always uses `addEventListener`, the
+11-hash allowlist stays fixed and legacy-only — as a standing rule in
+`STANDARDS.md`'s JavaScript section, folded into the 3.12.0 commit.
+
+`.htaccess` now sends `Content-Security-Policy` (not `-Report-Only`) with
+the identical directive set — enforcing means a real violation actually
+blocks the resource instead of just logging it, so this is the point
+where an audit mistake would be visible as breakage rather than a
+console line. Last flagged known-open-item from the 2026-08-25
+best-practices audit is now fully closed.
+
 ## 3.12.0 (2026-09-01)
 
 **Content Security Policy — shipped Report-Only, not yet enforcing.** Closes
