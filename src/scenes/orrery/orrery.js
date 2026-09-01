@@ -138,6 +138,56 @@ function bronzeMaterial() {
   return new THREE.MeshStandardMaterial({ map: tex, roughness: 0.4, metalness: 0.85 });
 }
 
+// ─── Brass/copper restoration (design-notes pass, 2026-09-01, confirmed
+// as the original creative direction, not a new idea) — the orrery's
+// structural framework was always meant to read as brass (the bones of
+// the machine, warm and golden where worn, dark and tarnished in
+// recessed detail) with the more delicate arm mechanisms in copper (real
+// verdigris at joints and seams where moisture collects), not the
+// generic gunmetal steel it had drifted to. Reuses makeMetalTexture's
+// existing highlight/blotch mechanism — the "rust" parameter is really
+// just "localized oxidation," so it doubles as brass tarnish or copper
+// verdigris depending on the colors handed in, no new texture generator
+// needed. Metal reads as metal through edge highlights and specular
+// response, not diffuse color alone, so both materials get a real
+// Fresnel rim-light pass (addMetalRim, mirroring library.js's
+// addSpineRim / orbiter.js's addRimGlow) rather than shipping color
+// alone — flagged in the brief as a critical technical requirement, not
+// optional polish.
+function addMetalRim(material, colorHex, power = 2.3, glow = 0.07) {
+  material.onBeforeCompile = shader => {
+    shader.uniforms.pmRimColor = { value: new THREE.Color(colorHex) };
+    shader.uniforms.pmRimPower = { value: power };
+    shader.uniforms.pmRimGlow  = { value: glow };
+    shader.fragmentShader = shader.fragmentShader
+      .replace('#include <common>', `
+        #include <common>
+        uniform vec3 pmRimColor;
+        uniform float pmRimPower;
+        uniform float pmRimGlow;
+      `)
+      .replace('#include <dithering_fragment>', `
+        float pmRim = pow(1.0 - clamp(abs(dot(normalize(vViewPosition), normal)), 0.0, 1.0), pmRimPower);
+        gl_FragColor.rgb += pmRim * pmRimGlow * pmRimColor;
+        #include <dithering_fragment>
+      `);
+  };
+}
+function brassMaterial(preview, repeat = 2) {
+  const tex = makeMetalTexture({ base: '#8a6a2e', rust: '#3a2c14', highlight: '#d9b866' });
+  tex.repeat.set(repeat, repeat);
+  const mat = new THREE.MeshStandardMaterial({ map: preview ? null : tex, color: preview ? 0x8a6a2e : 0xffffff, roughness: 0.5, metalness: 0.85 });
+  addMetalRim(mat, 0xffdca0);
+  return mat;
+}
+function copperMaterial(preview, repeat = 2) {
+  const tex = makeMetalTexture({ base: '#9a5230', rust: '#4c8c74', highlight: '#dd8a56' });
+  tex.repeat.set(repeat, repeat);
+  const mat = new THREE.MeshStandardMaterial({ map: preview ? null : tex, color: preview ? 0x9a5230 : 0xffffff, roughness: 0.48, metalness: 0.8 });
+  addMetalRim(mat, 0xffb37a);
+  return mat;
+}
+
 // A rattle-can paint job over a rust primer — not a clean flat fill, built
 // from hundreds of tiny semi-transparent dabs so coverage is uneven (denser
 // center, thinner and speckled toward the edge, same way a real spray can
@@ -603,7 +653,12 @@ function makeAgedPlanetTextures(hex, seedH) {
   return { map: asTexture(colorC), roughnessMap: asTexture(roughC), metalnessMap: asTexture(metalC), emissiveMap: asTexture(emisC) };
 }
 
-const BOLT_TONE = 0x18140f;
+// Bright polished brass — the brief's "small bright fittings at contact
+// points, where wear polishes through tarnish to bright metal," a
+// natural fit for bolts/rivets specifically since they're exactly the
+// points that get handled/wrenched most. Was a near-black BOLT_TONE
+// before the brass/copper restoration pass.
+const BOLT_TONE = 0xe6c878;
 
 // ─── First-person walkthrough tuning ─────────────────────────────────────
 // Arrow-key movement, mouse-look, and collision — a Myst-like walkthrough
@@ -623,7 +678,8 @@ const PITCH_LIMIT = 1.3;        // ~74°, keeps the view from flipping over
 
 function addBolts(parent, radius, count, ringGeoRadius) {
   const boltGeo = new THREE.SphereGeometry(radius, 6, 6);
-  const boltMat = new THREE.MeshStandardMaterial({ color: BOLT_TONE, roughness: 0.6, metalness: 0.6 });
+  const boltMat = new THREE.MeshStandardMaterial({ color: BOLT_TONE, roughness: 0.3, metalness: 0.9 });
+  addMetalRim(boltMat, 0xfff0c0, 2.0, 0.09);
   for (let i = 0; i < count; i++) {
     const a = (i / count) * Math.PI * 2;
     const bolt = new THREE.Mesh(boltGeo, boltMat);
@@ -706,7 +762,14 @@ function jacobiEigenSymmetric(matrix, n, maxSweeps = 100) {
 
 function buildOrrery(preview, suspendTopY, rafterY) {
   const group = new THREE.Group();
-  const steelMat = steelMaterial(preview);
+  // Brass for the main structural framework — the bones of the machine,
+  // warm/golden where worn, dark/tarnished in recessed detail. Copper
+  // (thinner members, real verdigris at joints/seams) is reserved for
+  // the more delicate per-planet mounting arms below. Both replace the
+  // generic gunmetal steel this used to be — confirmed as a restoration
+  // of the original creative direction, not a new idea.
+  const brassMat = brassMaterial(preview);
+  const copperMat = copperMaterial(preview);
   const mastMat = paintedMastMaterial(preview);
   const bronzeMat = bronzeMaterial();
 
@@ -734,14 +797,14 @@ function buildOrrery(preview, suspendTopY, rafterY) {
   let prevCollarY = null;
   for (let i = 0; i < collarCount; i++) {
     const y = baseY + (i / (collarCount - 1)) * mastHeight;
-    const collar = new THREE.Mesh(collarGeo, steelMat);
+    const collar = new THREE.Mesh(collarGeo, brassMat);
     collar.rotation.x = Math.PI / 2;
     collar.position.y = y;
     group.add(collar);
     if (!preview && prevCollarY !== null) {
       const braceGeo = new THREE.CylinderGeometry(0.008 * HW, 0.008 * HW, Math.hypot(mastHeight / (collarCount - 1), 0.1) * 1.3, 5);
       [0, Math.PI].forEach(rot => {
-        const brace = new THREE.Mesh(braceGeo, steelMat);
+        const brace = new THREE.Mesh(braceGeo, brassMat);
         brace.position.y = (y + prevCollarY) / 2;
         brace.rotation.z = 0.55;
         brace.rotation.y = rot;
@@ -757,7 +820,7 @@ function buildOrrery(preview, suspendTopY, rafterY) {
   [[1, 0], [-1, 0], [0, 1], [0, -1]].forEach(([dx, dz]) => {
     const from = new THREE.Vector3(dx * (preview ? 0.11 : 0.14) * HW, suspendTopY, dz * (preview ? 0.11 : 0.14) * HW);
     const to = new THREE.Vector3(dx * anchorSpread, rafterY, dz * anchorSpread);
-    addStrut(group, from, to, (preview ? 0.012 : 0.015) * HW, steelMat);
+    addStrut(group, from, to, (preview ? 0.012 : 0.015) * HW, brassMat);
   });
 
   // A bolted control box near the bottom of the mast — the actual
@@ -1058,7 +1121,7 @@ function buildOrrery(preview, suspendTopY, rafterY) {
     // radius/tilt (the collision math in createOrrery keys off those, not
     // tube thickness).
     const ringGeo = new THREE.TorusGeometry(radius, (preview ? 0.011 : 0.014) * HW, 6, 20);
-    const ring = new THREE.Mesh(ringGeo, steelMat);
+    const ring = new THREE.Mesh(ringGeo, brassMat);
     ring.rotation.x = Math.PI / 2 + tilt;
     ring.position.y = yOffset;
     group.add(ring);
@@ -1068,7 +1131,7 @@ function buildOrrery(preview, suspendTopY, rafterY) {
     [0, Math.PI].forEach(angle => {
       const from = new THREE.Vector3(0, yOffset, 0);
       const to = new THREE.Vector3(Math.cos(angle) * radius * 0.94, yOffset, Math.sin(angle) * radius * 0.94);
-      addStrut(group, from, to, (preview ? 0.007 : 0.009) * HW, steelMat);
+      addStrut(group, from, to, (preview ? 0.007 : 0.009) * HW, brassMat);
     });
 
     const pivot = new THREE.Object3D();
@@ -1116,7 +1179,7 @@ function buildOrrery(preview, suspendTopY, rafterY) {
     // makeAgedPlanetTextures) assumes when it darkens the body's own
     // surface with grime right where this arm actually meets it.
     const armGeo = new THREE.CylinderGeometry(0.006 * HW, 0.006 * HW, (preview ? 0.03 : 0.04) * HW, 5);
-    const arm = new THREE.Mesh(armGeo, steelMat);
+    const arm = new THREE.Mesh(armGeo, copperMat);
     arm.rotation.z = Math.PI / 2;
     arm.position.x = -(preview ? 0.015 : 0.02) * HW;
     bodyGroup.add(arm);
@@ -1270,7 +1333,7 @@ function buildOrrery(preview, suspendTopY, rafterY) {
     [0, Math.PI / 2].forEach(angle => {
       const from = new THREE.Vector3(0, 0, 0);
       const to = new THREE.Vector3(Math.cos(angle) * beltRadius * 0.96, 0, Math.sin(angle) * beltRadius * 0.96);
-      addStrut(beltGroup, from, to, (preview ? 0.006 : 0.008) * HW, steelMat);
+      addStrut(beltGroup, from, to, (preview ? 0.006 : 0.008) * HW, brassMat);
     });
     // Static before this pass — every other ring/orbit in the room
     // continuously drifts (see orbits.forEach in animate()) except this
@@ -1301,7 +1364,7 @@ function buildOrrery(preview, suspendTopY, rafterY) {
     pivot.add(mesh);
     const from = new THREE.Vector3(0, y, 0);
     const to = new THREE.Vector3(Math.cos(angle) * radius * 0.9, y, Math.sin(angle) * radius * 0.9);
-    addStrut(group, from, to, (preview ? 0.006 : 0.008) * HW, steelMat);
+    addStrut(group, from, to, (preview ? 0.006 : 0.008) * HW, brassMat);
     unknowns.push({ pivot, mesh, speed: 0.05 + Math.random() * 0.03, direction: 1, spin: 0.3 + Math.random() * 0.4 });
   }
 
@@ -1333,29 +1396,112 @@ function makeConcreteTexture() {
     cx.fill();
   }
   cx.globalAlpha = 1;
+
+  // Real wear — a light pass (keeping the floor's base grey), rather
+  // than a redesign: a couple of dark oil-stain blotches with soft
+  // falloff, plus a faint worn traffic-path streak where feet would
+  // actually cross most.
+  [[34, 96, 22], [88, 40, 15]].forEach(([sx, sy, sr]) => {
+    const stain = cx.createRadialGradient(sx, sy, 0, sx, sy, sr);
+    stain.addColorStop(0, 'rgba(10,9,8,0.55)');
+    stain.addColorStop(0.6, 'rgba(10,9,8,0.22)');
+    stain.addColorStop(1, 'rgba(10,9,8,0)');
+    cx.fillStyle = stain;
+    cx.beginPath();
+    cx.arc(sx, sy, sr, 0, Math.PI * 2);
+    cx.fill();
+  });
+  cx.globalAlpha = 0.14;
+  cx.strokeStyle = '#3a3733';
+  cx.lineWidth = 18;
+  cx.beginPath();
+  cx.moveTo(-10, 70);
+  cx.bezierCurveTo(40, 60, 90, 80, 138, 66);
+  cx.stroke();
+  cx.globalAlpha = 1;
+
   const tex = new THREE.CanvasTexture(c);
   tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
   tex.repeat.set(6, 6);
   return tex;
 }
 
-function makeCorrugatedTexture() {
+// Warm real brick, running-bond coursing with real mortar lines — the
+// brief's confirmed direction, replacing the corrugated-metal siding
+// above. Per-brick color variance and soot/weathering blotches do the
+// "real weathering" ask; a couple of institutional cream paint patches
+// with small flaked-off spots do the "peeling paint revealing brick
+// underneath" ask, rather than uniform brick texture everywhere.
+function makeBrickTexture() {
   const c = document.createElement('canvas');
-  c.width = 32; c.height = 32;
+  c.width = 128; c.height = 128;
   const cx = c.getContext('2d');
-  cx.fillStyle = '#17150f';
-  cx.fillRect(0, 0, 32, 32);
-  cx.strokeStyle = '#2c2820';
-  cx.lineWidth = 2;
-  for (let x = 0; x < 32; x += 5) {
-    cx.beginPath();
-    cx.moveTo(x, 0);
-    cx.lineTo(x, 32);
-    cx.stroke();
+
+  // Mortar base.
+  cx.fillStyle = '#8c8474';
+  cx.fillRect(0, 0, 128, 128);
+
+  const brickW = 30, brickH = 14, mortar = 2;
+  const brickBases = ['#8a3f28', '#7a3620', '#98492e', '#6e2f1c', '#8f4530'];
+  let row = 0;
+  for (let y = -brickH; y < 128 + brickH; y += brickH + mortar) {
+    const offset = (row % 2 === 0) ? 0 : -brickW / 2;
+    for (let x = -brickW + offset; x < 128 + brickW; x += brickW + mortar) {
+      const base = brickBases[Math.floor(Math.random() * brickBases.length)];
+      cx.fillStyle = base;
+      cx.fillRect(x, y, brickW, brickH);
+      // Per-brick weathering — soot/damp blotches, alpha-blended so the
+      // base color still reads through.
+      cx.globalAlpha = 0.22 + Math.random() * 0.2;
+      cx.fillStyle = Math.random() > 0.5 ? '#3a2418' : '#40382a';
+      const bw = 6 + Math.random() * 14, bh = 4 + Math.random() * 8;
+      cx.beginPath();
+      cx.ellipse(x + Math.random() * brickW, y + Math.random() * brickH, bw, bh, Math.random() * Math.PI, 0, Math.PI * 2);
+      cx.fill();
+      cx.globalAlpha = 1;
+    }
+    row++;
   }
+
+  // A couple of institutional-paint patches, torn/irregular edges, laid
+  // over the brick — cream-beige, semi-opaque so brick color still bleeds
+  // through slightly at the edges.
+  const paintPatches = [
+    { x: 20, y: 30, r: 34 },
+    { x: 95, y: 85, r: 26 },
+  ];
+  paintPatches.forEach(({ x, y, r }) => {
+    cx.globalAlpha = 0.78;
+    cx.fillStyle = '#c7bfa4';
+    cx.beginPath();
+    const spikes = 10;
+    for (let i = 0; i <= spikes; i++) {
+      const a = (i / spikes) * Math.PI * 2;
+      const rr = r * (0.75 + Math.random() * 0.35);
+      const px = x + Math.cos(a) * rr, py = y + Math.sin(a) * rr;
+      if (i === 0) cx.moveTo(px, py); else cx.lineTo(px, py);
+    }
+    cx.closePath();
+    cx.fill();
+    cx.globalAlpha = 1;
+
+    // Small flaked-off spots inside the patch, revealing brick tone
+    // underneath rather than a clean uniform paint field.
+    for (let i = 0; i < 7; i++) {
+      const fx = x + (Math.random() - 0.5) * r * 1.3;
+      const fy = y + (Math.random() - 0.5) * r * 1.3;
+      cx.globalAlpha = 0.65 + Math.random() * 0.25;
+      cx.fillStyle = '#7f3a26';
+      cx.beginPath();
+      cx.ellipse(fx, fy, 2 + Math.random() * 5, 2 + Math.random() * 4, Math.random() * Math.PI, 0, Math.PI * 2);
+      cx.fill();
+    }
+    cx.globalAlpha = 1;
+  });
+
   const tex = new THREE.CanvasTexture(c);
   tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
-  tex.repeat.set(10, 4);
+  tex.repeat.set(6, 2.5);
   return tex;
 }
 
@@ -1492,6 +1638,23 @@ function makePosterTexture(band, sub) {
   cx.fillRect(8, 3, 44, 18);
   cx.fillRect(208, 3, 44, 18);
 
+  // Age pass (light touch, per the brief — real weathering elsewhere in
+  // the room means these can no longer read as flat-clean): an overall
+  // yellowing wash, heavier at the edges the way old paper actually
+  // yellows first, plus a soft curl shadow down one side where the
+  // corner has lifted off the wall.
+  const yellow = cx.createRadialGradient(130, 182, 40, 130, 182, 230);
+  yellow.addColorStop(0, 'rgba(150,110,50,0.08)');
+  yellow.addColorStop(1, 'rgba(120,85,35,0.32)');
+  cx.fillStyle = yellow;
+  cx.fillRect(0, 0, 260, 364);
+
+  const curl = cx.createLinearGradient(260, 0, 205, 0);
+  curl.addColorStop(0, 'rgba(20,15,8,0.35)');
+  curl.addColorStop(1, 'rgba(20,15,8,0)');
+  cx.fillStyle = curl;
+  cx.fillRect(205, 0, 55, 364);
+
   const tex = new THREE.CanvasTexture(c);
   return tex;
 }
@@ -1519,6 +1682,40 @@ function makeDustMoteTexture() {
   cx.fillStyle = g;
   cx.fillRect(0, 0, 16, 16);
   return new THREE.CanvasTexture(c);
+}
+
+// Worn wood grain — a light touch for the bench, ladder, and stacked
+// lumber, so they read as handled/aged wood rather than flat color now
+// that the brick/metal around them carries real weathering. Same
+// canvas-generator convention as every other texture in this file.
+function makeWoodTexture(base, dark) {
+  const c = document.createElement('canvas');
+  c.width = 64; c.height = 64;
+  const cx = c.getContext('2d');
+  cx.fillStyle = base;
+  cx.fillRect(0, 0, 64, 64);
+  cx.globalAlpha = 0.28;
+  cx.strokeStyle = dark;
+  for (let i = 0; i < 9; i++) {
+    cx.lineWidth = 0.5 + Math.random() * 1.4;
+    const y = Math.random() * 64;
+    cx.beginPath();
+    cx.moveTo(0, y);
+    cx.bezierCurveTo(20, y + (Math.random() - 0.5) * 6, 44, y + (Math.random() - 0.5) * 6, 64, y + (Math.random() - 0.5) * 4);
+    cx.stroke();
+  }
+  cx.globalAlpha = 0.3;
+  for (let i = 0; i < 3; i++) {
+    cx.fillStyle = dark;
+    const bx = Math.random() * 64, by = Math.random() * 64, br = 2 + Math.random() * 2.5;
+    cx.beginPath();
+    cx.ellipse(bx, by, br, br * 1.7, 0, 0, Math.PI * 2);
+    cx.fill();
+  }
+  cx.globalAlpha = 1;
+  const tex = new THREE.CanvasTexture(c);
+  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+  return tex;
 }
 
 function buildWarehouse(preview, floorY, ceilingY, rafterY) {
@@ -1682,10 +1879,13 @@ function buildWarehouse(preview, floorY, ceilingY, rafterY) {
   const dustMotes = new THREE.Points(moteGeo, moteMat);
   group.add(dustMotes);
 
-  // A couple of dark corrugated walls, back and to one side, pulled in
-  // closer than the floor/ceiling extent so the flyers taped to them
-  // actually read at a legible size.
-  const wallMat = new THREE.MeshStandardMaterial({ map: makeCorrugatedTexture(), roughness: 0.9, metalness: 0.2 });
+  // Warm brick walls, back and to one side, pulled in closer than the
+  // floor/ceiling extent so the flyers taped to them actually read at a
+  // legible size. Replaces the old dark corrugated-metal siding —
+  // confirmed direction: warm red-orange-brown, real mortar lines, real
+  // weathering, with a couple of peeling institutional-paint patches
+  // rather than uniform brick everywhere.
+  const wallMat = new THREE.MeshStandardMaterial({ map: makeBrickTexture(), roughness: 0.92, metalness: 0.02 });
   const wallHeight = ceilingY - floorY;
   const backWall = new THREE.Mesh(new THREE.PlaneGeometry(span * 2, wallHeight), wallMat);
   backWall.position.set(0, (ceilingY + floorY) / 2, -wallDist);
@@ -1784,7 +1984,7 @@ function buildWarehouse(preview, floorY, ceilingY, rafterY) {
 
     // A workbench along the side wall, a little clutter on top, and a bare
     // bulb hanging over it on a cord from the roof truss.
-    const woodMat = new THREE.MeshStandardMaterial({ color: 0x5a4530, roughness: 0.85, metalness: 0 });
+    const woodMat = new THREE.MeshStandardMaterial({ map: makeWoodTexture('#5a4530', '#2c2013'), roughness: 0.85, metalness: 0 });
     const benchHeight = floorY + 0.55;
     const bench = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.05, 1.6), woodMat);
     bench.position.set(-wallDist + 0.4, benchHeight, -1.5);
@@ -1891,7 +2091,7 @@ function buildWarehouse(preview, floorY, ceilingY, rafterY) {
 
     // A ladder leaning against the back wall, off-center from everything
     // else.
-    const ladderMat = new THREE.MeshStandardMaterial({ color: 0x6b5a3c, roughness: 0.8, metalness: 0.1 });
+    const ladderMat = new THREE.MeshStandardMaterial({ map: makeWoodTexture('#6b5a3c', '#332818'), roughness: 0.8, metalness: 0.1 });
     const ladderGroup = new THREE.Group();
     const railLen = 2.2;
     [-0.18, 0.18].forEach(dx => {
@@ -1911,7 +2111,7 @@ function buildWarehouse(preview, floorY, ceilingY, rafterY) {
     colliders.push({ x: -3.4, z: -wallDist + 0.5, r: 0.3 });
 
     // Loose lumber, stacked at a slight angle near the second crate pile.
-    const plankMat = new THREE.MeshStandardMaterial({ color: 0x4a3c28, roughness: 0.9, metalness: 0 });
+    const plankMat = new THREE.MeshStandardMaterial({ map: makeWoodTexture('#4a3c28', '#241a0e'), roughness: 0.9, metalness: 0 });
     for (let i = 0; i < 4; i++) {
       const plank = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.05, 0.14), plankMat);
       plank.position.set(wallDist - 0.5, floorY + 0.08 + i * 0.05, -wallDist + 2.6);
@@ -2318,13 +2518,55 @@ export function createOrrery(container, { preview = false } = {}) {
   const structureTarget = new THREE.Object3D();
   structureTarget.position.set(0, orrery.baseY + orrery.mastHeight * 0.32, 0);
   scene.add(structureTarget);
+  // Shifted from a pale neutral cream toward a real sodium-vapor/warm
+  // work-light amber-orange — paired below with a real fixture, since a
+  // beam with nothing to visibly come from undercuts the "real, walkable,
+  // found space" the whole scene depends on.
   const structureKey = new THREE.SpotLight(
-    0xffe9c4, preview ? 1.8 : 2.6, preview ? 11 : 16,
+    0xffa64d, preview ? 1.8 : 2.6, preview ? 11 : 16,
     Math.PI / 4.2, 0.45, 1.3
   );
   structureKey.position.set(1.5, orrery.baseY + orrery.mastHeight * 1.05, 1.1);
   structureKey.target = structureTarget;
   scene.add(structureKey);
+
+  // ─── The structure key's fixture — a mounted work-light housing on a
+  // short conduit dropped from the nearest roof truss, aimed down the
+  // same line as the spotlight's own cone so the beam reads as coming
+  // from a real object rather than floating mid-air. Dark worn housing
+  // metal (folded into the brass/copper restoration pass alongside the
+  // rest of the structural steel), a closed cap at the truss end, an
+  // open reflector mouth at the light position with a small warm-lit
+  // bulb-tip glowing inside it. ───────────────────────────────────────
+  const pendantMat = new THREE.MeshStandardMaterial({ color: 0x1c1a17, roughness: 0.55, metalness: 0.75 });
+  const pendantGroup = new THREE.Group();
+  pendantGroup.position.copy(structureKey.position);
+  const beamDir = new THREE.Vector3().subVectors(structureTarget.position, structureKey.position).normalize();
+  pendantGroup.quaternion.setFromUnitVectors(new THREE.Vector3(0, -1, 0), beamDir);
+  scene.add(pendantGroup);
+
+  const shadeGeo = new THREE.CylinderGeometry(0.05, 0.16, 0.22, 16, 1, true);
+  const shade = new THREE.Mesh(shadeGeo, pendantMat);
+  shade.position.y = -0.11;
+  pendantGroup.add(shade);
+
+  const capGeo = new THREE.CylinderGeometry(0.05, 0.05, 0.02, 16);
+  const cap = new THREE.Mesh(capGeo, pendantMat);
+  pendantGroup.add(cap);
+
+  const bulbTipGeo = new THREE.SphereGeometry(0.035, 8, 8);
+  const bulbTipMat = new THREE.MeshStandardMaterial({
+    color: 0xffdca8, emissive: 0xffa64d, emissiveIntensity: 1.4, roughness: 0.4,
+  });
+  const bulbTip = new THREE.Mesh(bulbTipGeo, bulbTipMat);
+  bulbTip.position.y = -0.2;
+  pendantGroup.add(bulbTip);
+
+  const cordTop = new THREE.Vector3(pendantGroup.position.x, rafterY, pendantGroup.position.z);
+  addStrut(scene, pendantGroup.position.clone(), cordTop, 0.012, pendantMat);
+  const bracket = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.04, 0.1), pendantMat);
+  bracket.position.copy(cordTop);
+  scene.add(bracket);
 
   // The work light lives at the hanging bulb prop if the garage clutter
   // pass built one (full mode only); otherwise a plain accent near the

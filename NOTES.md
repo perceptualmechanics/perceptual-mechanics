@@ -587,6 +587,59 @@ described are unchanged.)
   worth trimming, orrery.js's texture generators and first-person rig are the
   two most self-contained chunks to split out first.
 
+## 3.14.0 (2026-09-01)
+
+**Orrery: lighting, brick, and metal restoration.** Follow-up to the
+Item 2 visual audit, Scott's own explicit sequencing (light-source fix +
+color together first, brass/copper + rim-light second, brick/set-dressing
+last).
+
+- **Real fixture for the structure spotlight.** `structureKey` had no
+  visible source — the beam just started in mid-air. Added a real
+  mounted work-light housing (reflector shade, cap, glowing bulb tip,
+  cord/bracket dropped to the nearest roof truss) oriented down the same
+  line as the spotlight's own cone, and shifted its color from a pale
+  neutral cream (`0xffe9c4`) to a saturated sodium-vapor/warm-incandescent
+  amber-orange (`0xffa64d`). The existing cool skylight wash (`skyLight`,
+  the two skylight beam meshes) already delivered the "dim diffuse
+  daylight through grimy skylights" half of the two-temperature ask, so
+  that was left as-is and verified rather than rebuilt.
+- **Brass/copper restoration — confirmed as the original creative
+  direction, not a new idea.** Added `brassMaterial`/`copperMaterial`
+  (reusing the existing `makeMetalTexture` canvas generator — its "rust"
+  param doubles as tarnish or verdigris depending on the colors handed
+  in) and reassigned every former `steelMat` usage: brass for the
+  structural framework (mast collar/braces, suspension chains, orbit
+  rings, ring braces, asteroid-belt and boom struts), copper for the
+  thinner per-planet mounting arms. `addBolts`' internal material became
+  bright polished brass (`BOLT_TONE` from near-black to `0xe6c878`,
+  higher metalness/lower roughness) for the "wear polishes through
+  tarnish to bright metal" contact-point detail. Per the brief's explicit
+  flag that this is "a critical technical note, not optional polish,"
+  every one of these materials (plus the bolts) also gets a real Fresnel
+  rim-light pass (`addMetalRim`, mirroring library.js's `addSpineRim` /
+  orbiter.js's `addRimGlow`) — metal reads as metal through edge
+  highlights and specular response, not diffuse color alone.
+- **Brick.** New `makeBrickTexture()` canvas generator — running-bond
+  coursing, real mortar lines, per-brick color/weathering variance, and a
+  couple of torn institutional-paint patches with small flaked-off spots
+  revealing brick underneath — replacing the old dark corrugated-metal
+  wall siding (`makeCorrugatedTexture`, now dead and removed).
+- **Set dressing aged to match, light pass only.** Posters
+  (`makePosterTexture`) gained an overall yellowing wash (heavier at the
+  edges, the way old paper actually yellows first) and a soft curl-shadow
+  down one side. New `makeWoodTexture()` grain generator applied to the
+  workbench, ladder, and stacked lumber (previously flat colors). Floor
+  concrete (`makeConcreteTexture`) gained two soft-edged oil-stain
+  blotches and a faint worn traffic-path streak, base grey unchanged.
+- Build clean, `verify-links`/`verify-resonances` unaffected (Orrery has
+  no link/resonance data), live-verified via the running dev server: the
+  fixture renders as real geometry (not floating) with the beam
+  originating from its bulb tip, the orrery rings read visibly gold/brass
+  rather than gunmetal, the brick walls show mortar lines and a peeling-
+  paint patch, the hanging work-bulb prop and cool skylight wash read as
+  two distinct temperatures across the room.
+
 ## 3.13.9 (2026-09-01)
 
 **Landing tiles: Theater/Orbiter swapped.** Row 1 is now `sphere, scroll,
