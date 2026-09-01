@@ -75,6 +75,12 @@ The 2026-09-01 audit produced 71 findings and 4.0 closed all but the
 following. Full evidence for each is in `punch-list-2026-09-01.md`; the
 4.0 entry in `NOTES.md` records what was fixed and what was measured.
 
+**Settled, so it isn't re-opened:** `beamline.text.js:68`'s "harmonics
+echoing at mathematically precise points" was flagged during the 4.0
+content fix as a possible second victim of the same rename that produced
+`harmonicss`. **Scott confirmed 2026-09-02 that it is original.** It is
+the word he wrote, about a plucked string, and it stays. Don't re-flag it.
+
 **Resolved in 4.0, listed here so they aren't re-derived as open:**
 security headers (all six now set, with reasoning in `.htaccess`); the
 Google Fonts item, which was *already* stale before the audit — the fonts
@@ -113,11 +119,6 @@ no hashes at all.
   delete ~25 lines from the hot loop. Visual design decision.
 - **`butterfly` auto-rotate / camera-sweep for a vertical (9:16) YouTube
   Shorts export** — still a "next up" item, still not started.
-- **`beamline.text.js:68`** contains the word "harmonics" in prose.
-  Examined during the 4.0 content fix and left alone — unlike the Sphere
-  case it reads as original ("harmonics echoing at mathematically precise
-  points", under a comment pairing it with "here are harps, here are
-  superstrings"). Needs Scott's eye to settle, not a rename script's.
 - **One Orrery navigation quirk** introduced by the collider fix and kept
   deliberately: two adjacent rings' low arcs leave a 0.46-unit gap, and a
   0.6-unit-wide visitor pressed into it can't strafe out sideways.

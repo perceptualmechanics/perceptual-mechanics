@@ -710,7 +710,12 @@ Full findings list, with the evidence for each, is in
    "harmonics" in `beamline.text.js:68` was examined and **left alone** —
    "harmonics echoing at mathematically precise points" is coherent prose
    about vibrating strings, sitting under a comment pairing it with
-   "Here are harps, here are superstrings", so it is probably original.
+   "Here are harps, here are superstrings", so it read as original.
+   **Scott confirmed 2026-09-02 that it is.** Recorded as settled rather
+   than left standing, because the next pass will otherwise find the same
+   word beside the same known-bad rename and flag it again — and a
+   suspicion that has already been answered is worse than noise, since it
+   invites re-editing text that was never damaged.
 
 ### Accessibility
 

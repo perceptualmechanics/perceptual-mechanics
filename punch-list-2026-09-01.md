@@ -132,8 +132,11 @@ abstract lines." The doubled *s* is the fingerprint of the 2026-08-18
 the rename corrupted the phrase in `links.js` identically — corrupt against corrupt.
 
 Fix: restore the original word in both files (they must stay byte-identical). Consider a
-lint that fails when a scene key appears inside `.text.js` prose. Also worth an eyeball: a
-bare "harmonics" in `beamline.text.js:68`.
+lint that fails when a scene key appears inside `.text.js` prose.
+
+*Resolved 2026-09-02:* restored to `constellations` in both files. The bare "harmonics" in
+`beamline.text.js:68` was flagged here as worth an eyeball — Scott confirmed it is original
+prose, not rename damage. Settled, not an open question.
 
 ---
 

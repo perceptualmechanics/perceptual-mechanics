@@ -122,13 +122,12 @@ because the build gates depend on plugin hooks that changed.
 These are the ones where a chat is genuinely more useful than a coding session —
 they're editorial, not technical.
 
-- **The Beamline word.** `beamline.text.js` fragment 6 reads *"Pluck at them
-  both, send me vibrating, harmonics echoing at mathematically precise points…
-  my own bow waits to be bent."* It sits under a comment pairing it with a
-  fragment about harps and superstrings. Given the Sphere rename damage, it's
-  worth asking whether this "harmonics" is original or the same script's second
-  victim — but it reads as genuine, and harmonics *are* what a plucked string
-  produces at precise nodes. Needs Scott's ear, not a diff.
+*(One that is closed, so it isn't re-opened: `beamline.text.js` fragment 6's
+"harmonics echoing at mathematically precise points" was flagged during the 4.0
+content fix as a possible second victim of the rename that produced `harmonicss`.
+Scott confirmed 2026-09-02 that it is his own word, about a plucked string. Leave
+it.)*
+
 - **The Library's withheld notes.** 81 cross-links were authored into a field the
   scene doesn't display. 4.0 stopped the dangling half from showing, so the
   relationships are now invisible from both ends rather than one — consistent,
