@@ -587,6 +587,27 @@ described are unchanged.)
   worth trimming, orrery.js's texture generators and first-person rig are the
   two most self-contained chunks to split out first.
 
+## 3.13.3 (2026-09-01)
+
+**Three books added from ISBNs Scott provided directly.** Same standing
+convention as the other ISBN-only batches in `library.text.js` (row/col/pos
+arbitrary, spread across existing book cubbies, never the film-only ones):
+
+- `9780064401487` — *Mrs. Piggle-Wiggle*, Betty MacDonald (id 148)
+- `9780142402498` — *Pippi Longstocking*, Astrid Lindgren (id 149)
+- `9780142408889` — *Encyclopedia Brown, Boy Detective*, Donald J. Sobol (id 150)
+
+No `excerpt` on any of the three — all still-in-copyright 20th-century
+children's books, and a search-sourced quote wasn't confirmed precisely
+enough against this specific print edition to carry the same confidence
+the rest of the shelf's excerpts do; several existing entries already
+skip the field for the same reason. Publisher/year/pages/translator
+looked up per ISBN, not guessed, same standing rule as the rest of the
+catalog.
+
+Build clean, `library items` verify-links count now 150 (was 147), ids
+unique. Verified live against the running dev server.
+
 ## 3.13.2 (2026-09-01)
 
 **Carry Library's warm tones into discs/CDs.** Live reaction to 3.13.1's

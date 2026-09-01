@@ -204,6 +204,21 @@ export const libraryItems = [
   { id: 145, type: 'book', title: 'Decreation: Poetry, Essays, Opera', creator: 'Anne Carson', row: 2, col: 2, pos: 105, isbn13: '9781400078905', publisher: 'Vintage', publish_year: 2006, pages: 272, note: 'takes its title from Simone Weil’s term for undoing the self to make room for something larger — a third vocabulary, after Hedwig’s split and VALIS’s divided narrator, for a self coming apart on purpose rather than by accident.' },
   { id: 146, type: 'book', title: 'Snake ’n’ Bacon’s Cartoon Cabaret', creator: 'Michael Kupperman', row: 1, col: 1, pos: 106, isbn13: '9780380807901', publisher: 'HarperCollins', publish_year: 2000, note: 'absurdist comics starring a snake and a strip of bacon who have, per the strip’s own internal logic, been movie stars since the 1930s — a palette cleanser on a shelf that otherwise takes its own jokes fairly seriously.' },
   { id: 147, type: 'book', title: 'Nobilis, Livre de Base', creator: 'Jenna Katerin Moran (French edition)', row: 2, col: 3, pos: 105, isbn13: '9782970031406', publisher: 'Black Book Éditions', note: 'French translation of the tabletop RPG Nobilis, second edition; players anchor a Power — Death, the Sun, Entropy itself — into a human vessel and defend a plural, meaning-laden reality against the Excrucians, entities whose whole purpose is unmaking it into flat nothing. The clearest game-genre cousin yet to the Surround/Umbra/chimerical cluster: a system built entirely around a permeable membrane between the mundane and the numinous, and what it costs a person to stand at it.' },
+
+  // Same rule as the other ISBN-only batches above: these three came from
+  // ISBNs Scott provided directly (2026-09-01), not a shelf photo, so
+  // row/col/pos below are arbitrary — spread across existing book cubbies,
+  // never the film-only ones. No `excerpt` on any of the three: unlike the
+  // rest of this catalog (mostly public-domain classics or short passages
+  // already confirmed against a specific print edition), these are all
+  // still-in-copyright 20th-century children's books, and a search-sourced
+  // quote wasn't confirmed precisely enough against this specific edition's
+  // text to print with the same confidence the rest of the shelf's excerpts
+  // carry — same standing not-guessed rule as everywhere else in this file,
+  // applied to the excerpt field this time instead of the ISBN.
+  { id: 148, type: 'book', title: 'Mrs. Piggle-Wiggle', creator: 'Betty MacDonald', row: 1, col: 1, pos: 107, isbn13: '9780064401487', publisher: 'HarperCollins', publish_year: 2007, pages: 144, note: 'first published 1947; this specific ISBN edition is illustrated by Alexandra Boiger (earlier printings were illustrated by Hilary Knight — illustrator intentionally not treated as settled beyond this edition\'s own credited artist).' },
+  { id: 149, type: 'book', title: 'Pippi Longstocking', creator: 'Astrid Lindgren', row: 1, col: 2, pos: 108, isbn13: '9780142402498', publisher: 'Puffin Books (Puffin Modern Classics)', publish_year: 2005, pages: 160, translator: 'Florence Lamborn', note: 'illustrated by Louis S. Glanzman; first published in Swedish, 1945.' },
+  { id: 150, type: 'book', title: 'Encyclopedia Brown, Boy Detective', creator: 'Donald J. Sobol', row: 2, col: 2, pos: 106, isbn13: '9780142408889', publisher: 'Puffin Books', publish_year: 2007, pages: 96, note: 'first in the Encyclopedia Brown series; first published 1963.' },
 ];
 
 // ─────────────────────────────────────────────────────────────────────────
