@@ -1849,16 +1849,49 @@ function buildWarehouse(preview, floorY, ceilingY, rafterY) {
   // 4-segment cylinder is diamond-oriented (corners on the axes), so
   // rotation.y is offset 45° to axis-align its flat faces with the real
   // hole's flat sides instead.
+  //
+  // Origin/anchor correction, later pass (post-v3.14.2): the shaft's
+  // near-plane radius had been holeW * 0.4 — a fraction of the real
+  // hole's own half-width (holeW), not derived from it — so it's sized
+  // to the true aperture now (radiusTop = holeW). That alone wasn't the
+  // full story, though: a Box3().setFromObject(beam) debug check proved
+  // the mesh's own world-space bounding box already reached/exceeded
+  // ceilingY even before this resize, which disproved the original
+  // "geometry doesn't reach the ceiling" theory. The visible gap read as
+  // a rendering/occlusion effect instead — the thin, nearly-transparent
+  // open tube is easy to lose against the opaque ceiling underside and
+  // fog at the exact spot it meets the real hole. Rather than chase the
+  // precise optical mechanism further, anchored the connection directly:
+  // beamCap below is a small bright patch pinned exactly at the real
+  // hole with depthTest/fog disabled, so it reads as flush with the
+  // skylight from any angle regardless of how the tapered shaft itself
+  // renders.
   const beamMat = new THREE.MeshBasicMaterial({
     color: 0xc3d9ff, transparent: true, opacity: 0.14, side: THREE.DoubleSide, depthWrite: false,
   });
-  const beamGeo = new THREE.CylinderGeometry(holeW * 0.4, holeW * 2.4, ceilingY - floorY, 4, 1, true);
+  const beamGeo = new THREE.CylinderGeometry(holeW, holeW * 2.4, ceilingY - floorY, 4, 1, true);
   const beam = new THREE.Mesh(beamGeo, beamMat);
   beam.position.y = (ceilingY + floorY) / 2;
   beam.rotation.y = Math.PI / 4;
   beam.rotation.z = -0.1;
   beam.rotation.x = 0.04;
   group.add(beam);
+
+  // A small bright glow patch sitting exactly at the real hole (holeW,
+  // matching the ceiling cut precisely, not a fraction of it), just
+  // under the ceiling plane to avoid z-fighting — the shaft's own
+  // near-plane, anchored unambiguously to the true opening rather than
+  // relying on the tapered shaft mesh alone to read correctly from
+  // every angle.
+  const beamCapMat = new THREE.MeshBasicMaterial({
+    color: 0xe4eeff, transparent: true, opacity: 0.75, side: THREE.DoubleSide,
+    depthWrite: false, depthTest: false, fog: false,
+  });
+  const beamCap = new THREE.Mesh(new THREE.PlaneGeometry(holeW * 2.3, holeW * 2.3), beamCapMat);
+  beamCap.rotation.x = Math.PI / 2;
+  beamCap.position.set(0, ceilingY - 0.05, 0);
+  beamCap.renderOrder = 10;
+  group.add(beamCap);
 
   // The second skylight hole above stays as real ceiling geometry (this
   // is a two-skylight room), but only ever gets one dramatic visible

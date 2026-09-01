@@ -587,6 +587,37 @@ described are unchanged.)
   worth trimming, orrery.js's texture generators and first-person rig are the
   two most self-contained chunks to split out first.
 
+## 3.14.3 (2026-09-01)
+
+**Orrery: moonbeam anchor point, one real bug from live review (post-3.14.2).**
+
+- **Beam's near-plane wasn't visually anchored to the real skylight.**
+  Live review after 3.14.2 (cross-section + duplicate-beam fixes) still
+  showed the beam's visible top edge reading as a floating disconnected
+  line well below the actual ceiling opening. Investigated in code before
+  assuming a cause: `radiusTop` on the beam's `CylinderGeometry` was
+  `holeW * 0.4` — a fraction of the real hole's half-width, not derived
+  from it — so resized it to `radiusTop = holeW`, matching the true
+  aperture. That alone didn't explain the gap, though; a temporary
+  `Box3().setFromObject(beam)` debug hook proved the mesh's own
+  world-space bounding box already reached/exceeded `ceilingY` even
+  before the resize, ruling out "geometry doesn't reach the ceiling" as
+  the mechanism. Also ruled out material subtlety by temporarily swapping
+  the beam to solid opaque red — the cutoff persisted unchanged. The
+  visible gap reads as a rendering/occlusion effect instead: a thin,
+  nearly-transparent open-ended tube is easy to lose against the opaque
+  ceiling underside and distance fog right at the point it should meet
+  the hole. Rather than keep chasing the exact optical mechanism,
+  anchored the connection directly: strengthened `beamCap` (a small
+  bright plane already sitting at the real hole) with
+  `depthTest:false, depthWrite:false, fog:false, renderOrder:10` and a
+  larger, brighter appearance, so it reads as flush with the skylight
+  opening from any angle regardless of how the tapered shaft itself
+  renders. Verified live from three different look-up angles (near
+  head-on, three-quarter, and a side angle past the second unlit
+  skylight hole) — the beam now converges smoothly into the ceiling with
+  no floating disconnected edge in any of them.
+
 ## 3.14.2 (2026-09-01)
 
 **Orrery: moonbeam shape correction, two real bugs from live review.**
