@@ -1,6 +1,6 @@
 # perceptualmechanics — chat brief
 
-*Handoff for a fresh Claude chat. Current as of **v4.0**, 2026-09-02.*
+*Handoff for a fresh Claude chat. Current as of **v4.1.0**, 2026-09-02.*
 
 This is the **chat** brief, not the code brief. It assumes no file access, no
 repo, no terminal. Its companion, `perceptualmechanics-project-brief.md`, lives
@@ -117,7 +117,19 @@ because the build gates hang off plugin hooks. Vite 8 turned out to replace
 Rollup with Rolldown entirely — a different bundler, not a major of the same
 one. All four gates still fire and still name the specific fault; the real
 damage was in the new CSS minifier, which silently deleted three documented
-fallbacks. See NOTES.md's 4.1.0 entry.
+fallbacks. See NOTES.md's 4.1.0 entry. Everything through 4.1.0 is deployed
+and confirmed live.
+
+**One caveat on the scene table above.** On 2026-09-01 three of the ten
+landing preview thumbnails were seen drawing nothing — Harmonics, Outside and
+Butterfly — in one browser, on the dev server and production alike. Butterfly
+is understood and harmless: its thumbnail accumulates two points per
+trajectory per frame into a 3,000-point buffer, so the wings take roughly
+twenty-five seconds to arrive and a visitor who glances at the page sees one
+dot. Nothing is wrong with that scene. The other two have not reproduced
+anywhere since, in two other browsers. So the table describes the ten scenes
+correctly — but don't assume from it that all ten *thumbnails* are currently
+drawing for every visitor. The code brief carries the live state.
 
 ---
 
@@ -132,17 +144,17 @@ content fix as a possible second victim of the rename that produced `harmonicss`
 Scott confirmed 2026-09-02 that it is his own word, about a plucked string. Leave
 it. Also closed in 4.0.1: Sphere's per-label rotation, which had never reached the
 screen and now does — folded out of inversion and tapered so it can't snap. It
-ships.)*
+ships. And closed in 4.0.3: the eight held Library notes. Scott rewrote all
+eight, they were applied verbatim, the catalogue chatter moved to a private
+`catalog` field, the dated quote was deleted outright, and `NOTE_HOLD` is now
+empty — don't re-open this as a writing job.)*
 
-- **Eight Library notes need one clause trimmed each.** v4.0.2 answered the
-  bigger question — a note is now shown wherever it carries a cross-link, and
-  stays private otherwise (45 render, 55 don't). Switching the field on then
-  caught that a few of those notes are still working notes rather than
-  criticism: edition and runtime chatter, and in one case a dated verbatim
-  quote of Scott to Claude about an ISBN error, which would have gone live.
-  Those eight are held in `NOTE_HOLD` with reasons; `verify-links` reports one
-  as ready to release the moment it scans clean. This is genuinely a writing
-  job — read the note, cut the bookkeeping clause, keep the criticism.
+- **The `/text/` archive publishes no Library notes** while the scene now
+  shows 54 of them. Settled as deliberate — the archive stays a strict subset
+  of the scene, and the link-graph problem that drove 4.0.2 doesn't exist on
+  prerendered pages — but it is a content decision that could be revisited,
+  not a technical constraint. That makes it a conversation rather than a
+  build task.
 - **The eleventh scene**, whenever it comes. The content-sourcing question — what
   in `Holography.scriv` is ready to be promoted — is a
   conversation, not a build task.
@@ -192,8 +204,8 @@ half this corpus.
 
 ---
 
-*Written 2026-09-02, immediately after the v4.0 release, by the session that
-shipped it. Scene counts and content totals were read from the live modules
+*Written 2026-09-02 after the v4.0 release and kept current through v4.1.0, by
+the sessions that shipped them. Scene counts and content totals were read from the live modules
 rather than recalled. If this file and the repo disagree, the repo is right and
 this file is stale — refresh it alongside any release that changes the answers in
 it, the way the code brief now says to.*
