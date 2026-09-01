@@ -112,8 +112,12 @@ measured performance wins (one scene went from 1,070 draw calls a frame to 18).
 The full findings document is `punch-list-2026-09-01.md`; what shipped is the 4.0
 entry in `NOTES.md`.
 
-**Deliberately held back:** the Vite 6 → 8 upgrade, which wants its own pass
-because the build gates depend on plugin hooks that changed.
+**v4.1.0 (2026-09-02)** took the Vite 6 → 8 upgrade, which had been held back
+because the build gates hang off plugin hooks. Vite 8 turned out to replace
+Rollup with Rolldown entirely — a different bundler, not a major of the same
+one. All four gates still fire and still name the specific fault; the real
+damage was in the new CSS minifier, which silently deleted three documented
+fallbacks. See NOTES.md's 4.1.0 entry.
 
 ---
 

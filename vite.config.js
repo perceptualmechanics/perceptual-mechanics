@@ -170,6 +170,66 @@ function verifyStyleHash(outDir, root) {
 export default defineConfig({
   plugins: [verifyLinksPlugin(), verifyResonancesPlugin(), verifyScrollMarksPlugin(), prerenderTextPages()],
   build: {
+    // ─── CSS target: pinned, because Vite 8 quietly moved it ─────────────
+    // Vite 8 (Rolldown) defaults to a newer browser baseline than Vite 6
+    // did, and the visible consequence is that its CSS minifier rewrites
+    // `(min-width: 601px)` into Media Queries Level 4 range syntax,
+    // `(width>=601px)`. Measured across the upgrade: Vite 6 emitted ZERO
+    // range-syntax queries, Vite 8 emitted 64 — every responsive rule the
+    // site has.
+    //
+    // Range syntax needs Chrome 104 / Firefox 102 / Safari 16.4. This
+    // project deliberately supports older Safari than that and says so in
+    // STANDARDS.md, twice with reasoning attached: `-webkit-mask` is kept
+    // paired for Safari below 15.4, and `-webkit-backdrop-filter` for
+    // Safari 9–17. A browser old enough to need those prefixes cannot parse
+    // a single one of these 64 queries — and because the CSS here is
+    // mobile-first, failing to parse a `min-width` query doesn't break the
+    // page, it silently serves the small-viewport layout to a desktop.
+    // Wide, silent, and visual: the exact shape this upgrade was slowed
+    // down to look for, just arriving through the minifier rather than
+    // through the nesting flattener that was predicted.
+    //
+    // Pinned to Vite 6's own default target ('modules') so the emitted CSS
+    // is unchanged by the bundler swap. Raise it deliberately, with a
+    // support decision written down, never as a side effect of an upgrade.
+    // ─── CSS minifier: pinned to esbuild ────────────────────────────────
+    // Vite 8 replaced Rollup with Rolldown and brought a new, more
+    // aggressive CSS minifier with it. Three things it did to this
+    // stylesheet, all silent, all found by diffing declaration counts
+    // between a Vite 6 build and a Vite 8 one rather than by anything
+    // failing:
+    //
+    //   1. Deleted the `align-items: center` fallback sitting in front of
+    //      `align-items: safe center`, shipping only the safe form — which
+    //      Safari below 16.4 cannot parse, so the landing grid lost its
+    //      centering entirely there. (Also fixed at the source, in
+    //      styles/main.css, by stating it as @supports; see that comment.)
+    //   2. Deleted the unprefixed `backdrop-filter`, keeping only
+    //      `-webkit-backdrop-filter`. Exactly backwards: Firefox supports
+    //      the unprefixed property and does not support the -webkit- alias,
+    //      so modern Firefox lost the blur on the nav bar entirely.
+    //   3. Deleted `-webkit-transform: translateZ(0)` from scroll.css —
+    //      which STANDARDS.md keeps deliberately, not for support but as a
+    //      targeted workaround for a Safari filter+animation compositing
+    //      bug, with a note saying to re-verify that bug before removing
+    //      it. A minifier cannot know the difference between a prefix kept
+    //      for support and one kept for a bug.
+    //
+    // Points 2 and 3 cannot be fixed by tuning cssTarget: the target that
+    // keeps `min-width` syntax (Firefox below 102) is the same target that
+    // convinces the minifier unprefixed `backdrop-filter` is dead code
+    // (Firefox below 103). The two requirements are one version apart and
+    // point opposite ways, so the target is the wrong lever.
+    //
+    // esbuild is the minifier every shipped build of this site has used.
+    // Pinning to it makes the CSS output of this upgrade byte-identical to
+    // Vite 6's for 11 of 12 stylesheets — the twelfth differs only by the
+    // @supports change above — and a full declaration-count audit across
+    // both builds shows zero properties lost. Vite 8 no longer bundles
+    // esbuild, hence the explicit devDependency.
+    cssMinify: 'esbuild',
+    cssTarget: ['chrome87', 'edge88', 'firefox78', 'safari14'],
     // Superseded 2026-08-31 (v3.10.0): all ten scenes are now behind
     // dynamic import() in main.js's SCENES registry (see its own header
     // comment there), each landing in its own sub-500kB chunk. The one
@@ -221,8 +281,14 @@ export default defineConfig({
         // full ~565kB re-download for a one-line CSS tweak. This chunk
         // keeps its own cache hit across deploys that don't touch
         // three.js itself.
-        manualChunks: {
-          three: ['three'],
+        // Vite 8 swapped Rollup for Rolldown, which takes manualChunks only
+        // as a function — the object form silently was never supported and
+        // fails loudly with "manualChunks is not a function". Same intent,
+        // same single three.js chunk; expressed as the id predicate the new
+        // bundler wants. Verified after the upgrade by confirming the chunk
+        // still exists and still holds three.js alone.
+        manualChunks(id) {
+          if (id.includes('node_modules/three/')) return 'three';
         },
       },
     },

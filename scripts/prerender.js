@@ -497,14 +497,23 @@ function buildLibrary() {
   // longer a reason, and the honest position is that this page now shows
   // LESS than the scene does.
   //
-  // That is a decision for Scott rather than a bug to fix in passing,
-  // because it is not the same act: the comment above about `excerpt` — a
-  // crawlable page publishes, caches and attributes text on this domain in
-  // a way an in-scene panel does not — applies to the notes too, and they
-  // are his own critical writing rather than bibliographic fact. Publishing
-  // them here would be a real editorial choice, not a consistency fix.
-  // Until he makes it, this page stays a strict subset, the same way it
-  // already is for `excerpt`.
+  // SETTLED 2026-09-02, Scott: the archive stays a strict subset of the
+  // scene, and these notes stay off it. Two reasons, and neither is
+  // "we haven't decided yet":
+  //
+  //   The link-graph problem that drove 4.0.2 does not exist here. A note
+  //   became visible in the scene because hiding it broke a live link —
+  //   the phrase had nothing to click, or a backlink pointed at nothing.
+  //   These pages carry no cross-links at all, so there is no half-link to
+  //   repair and no reason the scene's rule should follow across.
+  //
+  //   And the `excerpt` argument above applies unchanged: a crawlable page
+  //   publishes, caches and attributes text on this domain in a way an
+  //   in-scene panel does not. The notes are Scott's own critical writing
+  //   and are not wanted public regardless of what the scene does with
+  //   them.
+  //
+  // So this is a decision, not a lag. Don't "fix" the inconsistency.
   //
   // What's left is the plain bibliographic fact of the shelf, which is
   // exactly what the piece itself shows.

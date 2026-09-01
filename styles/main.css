@@ -773,13 +773,30 @@ html, body {
 		   trigger before. `safe center` is the real, general fix: center when
 		   it fits, fall back to flex-start (no clipping) the moment it doesn't,
 		   rather than special-casing another width where it happens to overflow.
-		   Plain `center` above stays first for browsers that don't parse `safe`
-		   — an unsupported value invalidates just that one declaration, so
-		   those browsers silently keep the working fallback instead of losing
-		   centering entirely; browsers that do support it use the second,
-		   safer declaration instead (last valid one wins). */
+		   Plain `center` stays as the fallback for browsers that don't parse
+		   `safe` (Safari below 16.4, Chrome below 115) — losing the keyword
+		   should cost those browsers the overflow protection, not centering
+		   altogether.
+
+		   Expressed with @supports rather than as two declarations in a row.
+		   The two-declaration idiom — invalid value invalidates just that
+		   declaration, last valid one wins — is correct CSS and worked for
+		   years here, but it only survives a minifier naive enough to leave
+		   both in place. Vite 8's is not: the v4.1.0 upgrade found it had
+		   silently deleted the `center` fallback and shipped `safe center`
+		   alone, which on Safari 15 drops the declaration entirely and leaves
+		   the landing grid uncentered. Nothing failed; it was found by
+		   diffing declaration counts between the two builds.
+
+		   @supports states the same intent in a form no minifier can collapse,
+		   because it cannot know which browsers will parse the query. If
+		   another duplicate-declaration fallback is ever added here, it needs
+		   the same treatment for the same reason. */
 		align-items: center;
-		align-items: safe center;
+
+		@supports (align-items: safe center) {
+			align-items: safe center;
+		}
 	}
 }
 

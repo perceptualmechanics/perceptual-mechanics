@@ -42,9 +42,6 @@ because the code didn't support them.
 > `perceptualmechanics-project-brief.md` under "Known open items" — if this
 > and that disagree, that one is right.
 >
-> 1. **Vite is two majors behind** (6.4.3 vs 8.2.2). Deliberately held out of
->    4.0: the blockers are Rollup 4→5 hook changes affecting the `buildStart`
->    and `closeBundle` plugins every build gate depends on.
 > 2. **The CSP report endpoint is a placeholder** that 404s. It needs a real
 >    collector — and it is the thing that would have caught the two live CSP
 >    bugs 4.0 fixed.
@@ -67,9 +64,8 @@ because the code didn't support them.
 >    grouped nav — the one place in 4.0 where a scene reimplements something
 >    shared.
 >
-> Not a finding, but the thing most likely to matter: **v4.0.1 through v4.0.3
-> are not deployed.** Production is on v4.0, so the Sphere label rotation, the
-> Library notes and the year-long HSTS are all still waiting on a push.
+> Vite is no longer among these: v4.1.0 took the 6 → 8 upgrade. Everything
+> through v4.0.3 is deployed and confirmed live (2026-09-02).
 
 ---
 

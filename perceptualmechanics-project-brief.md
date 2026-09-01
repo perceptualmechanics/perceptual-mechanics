@@ -18,7 +18,7 @@ Collaborators: Scott (vision, writing, curation) and Claude (code, literary anal
 
 ## Tech stack
 
-- **Vite 6.4.3** build pipeline (esbuild-based), no framework — vanilla JS modules, no React/Vue/etc.
+- **Vite 8.2.2** build pipeline (Rolldown-based; CSS minifier pinned to esbuild — see `vite.config.js`), no framework — vanilla JS modules, no React/Vue/etc.
 - **Three.js 0.185** for every WebGL scene.
 - Plain CSS per scene (`<scene>.css`), no CSS framework, no preprocessor.
 - Node 24 (`engines: ">=22.0.0"`), deploys to **DreamHost** via manual `dist/` upload to the public root. No server-side dependencies.
@@ -96,6 +96,17 @@ content fix as a possible second victim of the same rename that produced
 `harmonicss`. **Scott confirmed 2026-09-02 that it is original.** It is
 the word he wrote, about a plucked string, and it stays. Don't re-flag it.
 
+**Deployment state:** everything through v4.0.3 is deployed. Confirmed
+2026-09-02 by fetching the live site — `strict-transport-security:
+max-age=31536000`, the 4.0.3 library chunk, `catalog` present, the withdrawn
+quote absent. Repo and production agree.
+
+**Settled in 4.1.0:** the Vite 6 → 8 upgrade. Also settled: the `/text/`
+pages deliberately publish no Library notes — the link-graph problem that
+drove 4.0.2 does not exist on prerendered pages, and the notes are not
+wanted public regardless. The archive stays a strict subset of the scene;
+`scripts/prerender.js` records the reasoning.
+
 **Settled in 4.0.3:** HSTS is at `max-age=31536000`. It was ramped on
 evidence rather than on schedule — v4.0 deployed, and the live site returned
 the header alongside `nosniff` and the cleaned `script-src`, which proved
@@ -114,12 +125,6 @@ no hashes at all.
 
 **Genuinely open:**
 
-- **Vite is two majors behind** (6.4.3 vs 8.2.2 — 6.x is now outside even
-  the "previous" dist-tag). Deliberately held out of 4.0: the real
-  blockers are Rollup 4→5 output-hook changes affecting the
-  `buildStart`/`closeBundle` plugins every build gate here depends on, so
-  it wants its own pass rather than being mixed into a release that
-  touched every scene file. three.js is at 0.185.1, exactly current.
 - **The CSP report endpoint is a placeholder.** `report-to` and
   `Reporting-Endpoints` are wired to a marked URL on this origin that
   404s. It needs a real collector before it does anything — and it is
@@ -132,12 +137,6 @@ no hashes at all.
   note before 4.0.2. Getting them genuinely off the server means moving them
   out of the bundled module — a real architectural change nobody has asked
   for. Recorded so "private" isn't read as stronger than it is.
-- **The `/text/` pages still publish no Library notes**, while the scene now
-  shows 53. Deliberate, not drift: a crawlable page publishes, caches and
-  attributes text on this domain in a way an in-scene panel does not, which
-  is the same argument already recorded there for `excerpt`. But it is now a
-  decision awaiting Scott rather than a consequence of the scene's own
-  behaviour, and the comment in `scripts/prerender.js` says so.
 - **`createJumpList` still takes a flat list.** Library needed grouping (265
   stops, a WCAG 2.4.1 problem) and built its own grouped `<nav>` locally
   rather than extending the shared helper. It is the one place in 4.0 where a

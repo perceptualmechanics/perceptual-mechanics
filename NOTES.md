@@ -587,6 +587,119 @@ described are unchanged.)
   worth trimming, orrery.js's texture generators and first-person rig are the
   two most self-contained chunks to split out first.
 
+## 4.1.0 (2026-09-02)
+
+Vite 6.4.3 → 8.2.2. Held out of 4.0 on the grounds that the build gates hang
+off plugin hooks; taken now, gates first.
+
+**The premise was wrong in a way that mattered.** The upgrade was scoped
+around "Rollup 4 → 5 hook changes." Vite 8 does not use Rollup at all — it
+replaced it with **Rolldown**, a different bundler in a different language.
+So this was a bundler swap wearing a version bump's clothes, and the risk
+was never really in the hooks.
+
+**The hooks were fine.** Full inventory, which is the thing the upgrade was
+verified against rather than "the build was green":
+
+  pm-verify-links        buildStart                this.error()
+  pm-verify-resonances   buildStart                this.error()
+  pm-verify-scroll-marks buildStart                this.error()
+  pm-prerender-text      configResolved +          this.error() via
+                         closeBundle               verifyStyleHash
+
+Four plugins, five hook sites, and exactly one plugin-context dependency
+across all of them: `this.error()`. No `emitFile`, no `getModuleInfo`, no
+reading bundle shape in `generateBundle`. That narrow surface is why the
+migration came to one line of config rather than a rewrite. (Worth noting
+the brief for this work said three plugins — `verify-scroll-marks`, added in
+4.0, wasn't in the documents it was written from.)
+
+**Control measurement first, per the standing habit.** Before upgrading,
+each gate was broken on Vite 6 and its failure recorded verbatim: a link to
+a nonexistent id; a link from a field in neither RENDERED_FIELDS nor
+WITHHELD_FIELDS; a resonance pointing at nothing; a scroll mark whose phrase
+no longer matches; and the CSP hash gate perturbed at each of its three
+inputs in turn. Seven breaks, seven failures, each naming the specific
+fault.
+
+After the upgrade, all seven were re-run unchanged. **All seven still fail,
+with the same messages.** The only difference is the wrapper: `RollupError`
+became `RolldownError`. `this.error()` works identically in `closeBundle`
+under Rolldown, which was the specific thing worth doubting.
+
+The CLI-entry guard also still holds — both verify scripts, plus the newer
+scroll-marks one, run from a path containing a space and actually verify
+there (proven by breaking a link and watching it fail from that path, not
+just by seeing "All checks passed").
+
+**One config change was required:** `manualChunks` as an object is not
+supported by Rolldown, which takes the function form only. Same single
+three.js chunk, expressed as an id predicate.
+
+**The real damage was somewhere nobody was looking: the CSS minifier.**
+Rolldown brings its own, and it is more aggressive than esbuild. Three
+things it did, all silent, none caught by any gate, all found by diffing
+declaration counts between a Vite 6 build and a Vite 8 one:
+
+  1. **Deleted the `align-items: center` fallback** in front of
+     `align-items: safe center` (styles/main.css, #landing), shipping only
+     the safe form. Safari below 16.4 cannot parse it, so the declaration is
+     dropped and the landing grid loses centering altogether — the exact
+     outcome the two-declaration idiom existed to prevent, with the comment
+     explaining why sitting right above it.
+  2. **Deleted the unprefixed `backdrop-filter`**, keeping only
+     `-webkit-backdrop-filter`. Backwards: Firefox supports the unprefixed
+     property and not the `-webkit-` alias, so modern Firefox would have
+     lost the nav bar's blur entirely.
+  3. **Deleted `-webkit-transform: translateZ(0)`** from scroll.css, which
+     STANDARDS.md keeps deliberately — not for support, but as a targeted
+     workaround for a Safari filter+animation compositing bug, with a note
+     saying to re-verify the bug before removing it. A minifier cannot tell
+     a prefix kept for support from a prefix kept for a bug.
+
+Also, separately: it rewrote every `(min-width: 601px)` into Media Queries
+Level 4 range syntax, `(width>=601px)` — 64 of them, where Vite 6 emitted
+zero. That needs Safari 16.4, and this project deliberately supports older.
+Because the CSS is mobile-first, a query that fails to parse doesn't break
+the page, it serves the small-viewport layout to a desktop. Silent and wide.
+
+**Two fixes, and the reasoning for choosing them:**
+
+`build.cssTarget` is pinned to Vite 6's own default. But target tuning
+cannot solve points 2 and 3 — the target that keeps `min-width` syntax
+(Firefox below 102) is the same target that convinces the minifier
+unprefixed `backdrop-filter` is dead code (Firefox below 103). One version
+apart, pointing opposite ways. The target is the wrong lever.
+
+So `build.cssMinify` is pinned to `'esbuild'` — the minifier every shipped
+build of this site has used. Vite 8 no longer bundles it, hence the explicit
+devDependency. Result: **CSS byte-identical to the Vite 6 output for 11 of
+12 stylesheets**, the twelfth differing only by the @supports change below,
+and a full declaration-count audit across both builds showing **zero
+properties lost**.
+
+And the `safe center` fallback was additionally fixed at the source, as
+`@supports (align-items: safe center)`. The two-declaration idiom is correct
+CSS but only survives a minifier naive enough to leave both in place;
+`@supports` states the same intent in a form no minifier can collapse,
+because it cannot know which browsers will parse the query. If another
+duplicate-declaration fallback is ever added, it needs the same treatment.
+
+**Build output otherwise:** 66 files both sides, 23 JS chunks and 11 CSS
+both sides, the three.js vendor chunk intact (so the `Cache-Control:
+immutable` reasoning still pays off), all 8 `/text/` pages generated and
+**byte-identical**, along with sitemap.xml, .htaccess and robots.txt — 31 of
+32 non-hashed files identical, the 32nd being index.html differing only in
+asset hashes. Nested CSS still flattens. `npm audit` clean. 20 tests pass.
+
+**Not verified live, and stated as such.** The dev server was running from
+before the upgrade and swapping `node_modules` under it left it serving a
+Vite 8 client from a Vite 6 process (`__SERVER_FORWARD_CONSOLE__ is not
+defined`), so the browser check could not be completed. That is an artifact
+of upgrading under a live server, not a finding about the upgrade — but a
+green build is exactly what this work was slowed down not to trust, so the
+live pass stands outstanding rather than assumed.
+
 ## 4.0.3 (2026-09-02)
 
 The eight held notes released, and HSTS ramped on evidence.
