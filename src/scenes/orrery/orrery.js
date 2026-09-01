@@ -1472,6 +1472,24 @@ function makeBrickTexture() {
       const base = brickBases[Math.floor(Math.random() * brickBases.length)];
       cx.fillStyle = base;
       cx.fillRect(x, y, brickW, brickH);
+      // Brick depth pass, 2026-09-02: the swatch-per-brick above still
+      // read as a small closed palette repeating across the wall rather
+      // than real unit-to-unit variation — real brick has continuous
+      // redder/browner drift plus the occasional dark overfired unit, not
+      // five fixed colors. A full-brick low-alpha tint jitter layered on
+      // top of the swatch gives every brick its own shade without needing
+      // real color math, and a rare much-darker overlay stands in for an
+      // overfired brick.
+      cx.globalAlpha = 0.14 + Math.random() * 0.22;
+      cx.fillStyle = Math.random() > 0.5 ? '#b5502e' : '#5c3018';
+      cx.fillRect(x, y, brickW, brickH);
+      cx.globalAlpha = 1;
+      if (Math.random() < 0.05) {
+        cx.globalAlpha = 0.55 + Math.random() * 0.25;
+        cx.fillStyle = '#241209';
+        cx.fillRect(x, y, brickW, brickH);
+        cx.globalAlpha = 1;
+      }
       // Per-brick weathering — soot/damp blotches, alpha-blended so the
       // base color still reads through.
       cx.globalAlpha = 0.22 + Math.random() * 0.2;
@@ -1484,6 +1502,56 @@ function makeBrickTexture() {
     }
     row++;
   }
+
+  // Vertical water-staining, 2026-09-02 — runoff streaks from a roofline,
+  // ledge, or pipe overhead, a strong "old building" cue by itself. Each
+  // streak starts near the top of the canvas (V=1, the wall's ceiling
+  // edge — see the flipY note on floor-level clusters below) at a random
+  // x, meanders slightly as it descends rather than running dead
+  // straight, and fades out partway down instead of reaching the floor —
+  // real runoff staining tapers off, it doesn't uniformly saturate the
+  // whole wall height.
+  const streakCount = 3 + Math.floor(Math.random() * 3);
+  for (let s = 0; s < streakCount; s++) {
+    let sx = Math.random() * W;
+    const startY = Math.random() * H * 0.08;
+    const runLength = H * (0.35 + Math.random() * 0.4);
+    const steps = 70;
+    for (let i = 0; i < steps; i++) {
+      const t = i / steps;
+      const y = startY + t * runLength;
+      sx += (Math.random() - 0.5) * 3;
+      const width = Math.max(1, 7 + Math.random() * 5 - t * 4);
+      const alpha = (0.14 + Math.random() * 0.08) * (1 - t * 0.75);
+      cx.globalAlpha = Math.max(0, alpha);
+      cx.fillStyle = '#241a12';
+      cx.beginPath();
+      cx.ellipse(sx, y, width, 6 + Math.random() * 3, 0, 0, Math.PI * 2);
+      cx.fill();
+    }
+  }
+  cx.globalAlpha = 1;
+
+  // Efflorescence, 2026-09-02 — pale mineral bloom low on the wall where
+  // ground moisture wicks up through old masonry over years. Distinct
+  // from the paint-patch clusters below: powdery, pale, low-contrast, and
+  // hugging the whole bottom band of the wall rather than one isolated
+  // corner. Canvas y near H is the wall's floor edge (the existing
+  // "bottom-left corner, damp/floor-level" paint cluster below already
+  // relies on this same mapping).
+  const effloY0 = H * 0.88;
+  const effloBlobs = 14 + Math.floor(Math.random() * 10);
+  for (let i = 0; i < effloBlobs; i++) {
+    const ex = Math.random() * W;
+    const ey = effloY0 + Math.random() * (H - effloY0);
+    const er = 9 + Math.random() * 20;
+    cx.globalAlpha = 0.09 + Math.random() * 0.13;
+    cx.fillStyle = '#d9d7c9';
+    cx.beginPath();
+    cx.ellipse(ex, ey, er, er * (0.4 + Math.random() * 0.3), Math.random() * Math.PI, 0, Math.PI * 2);
+    cx.fill();
+  }
+  cx.globalAlpha = 1;
 
   // A torn, irregular paint-patch silhouette — two frequencies of jitter
   // (a handful of big lobes plus fine sawtooth on top of them) so the
@@ -1886,7 +1954,11 @@ function buildWarehouse(preview, floorY, ceilingY, rafterY, holeW, moonPos, moon
   const perpA = new THREE.Vector3().crossVectors(axis, arbitrary).normalize();
   const perpB = new THREE.Vector3().crossVectors(axis, perpA).normalize();
   const tAt = y => (y - moonPos.y) / axis.y; // distance along the axis where the ray's height equals y
-  const moteCount = preview ? 90 : 210;
+  // Density bump, 2026-09-02: a small increase (was 90/210) so the shaft
+  // reads as continuous with the new soft volumetric enhancement added at
+  // the call site below, rather than the mote layer and the shaft feeling
+  // like two separate things at different densities.
+  const moteCount = preview ? 105 : 240;
   const motePos = new Float32Array(moteCount * 3);
   const moteBase = new Float32Array(moteCount * 3);
   const moteDrift = [];
@@ -2627,12 +2699,73 @@ export function createOrrery(container, { preview = false } = {}) {
   moonSpot.target = moonTarget;
   scene.add(moonSpot);
 
+  // ─── Moonlight shaft — subtle atmospheric re-add, 2026-09-02. ───────────
+  // The decorative beam mesh removed in v3.15.0 wasn't wrong because a
+  // visible shaft existed — it was wrong because it was an independently-
+  // positioned mesh with its own hardcoded coordinates, free to drift out
+  // of sync with the real light (exactly the failure four patch rounds
+  // couldn't fix). This re-add stays on the safe side of that lesson by
+  // never authoring a coordinate of its own: every vertex below is built
+  // directly from moonSpot.position and moonSpot.target.position — the
+  // same live properties the renderer itself reads to compute the actual
+  // illumination cone — not from a copy of moonPos/moonTargetPos. The
+  // light is static in this scene (nothing in animate() ever moves it),
+  // so computing this once, right here, from the light's own live
+  // transform is equivalent to recomputing it every frame; if the light
+  // is ever animated, this block needs to move into the animate loop with
+  // it, same as the dust motes above would.
+  //
+  // Kept deliberately subtle per Scott's brief, and built to actually be
+  // soft rather than just low-opacity: a solid cone mesh's silhouette is
+  // still a hard geometric edge no matter how transparent its material
+  // is, which is exactly the "dominant graphic wedge" the brief warned
+  // against. Using camera-facing THREE.Sprite billboards instead — the
+  // same reusable radial-gradient texture the dust motes already use
+  // (makeDustMoteTexture, a true per-pixel alpha falloff, no hard
+  // boundary in any direction) — sidesteps that failure mode entirely:
+  // there is no silhouette to soften because a sprite has no edges, just
+  // gradient. A handful of them, sized to the light's own true cone
+  // radius at their depth and spaced along its axis, read as a soft glow
+  // riding the same dust already in the air rather than a separate
+  // graphic object competing with it.
+  const shaftOrigin = moonSpot.position.clone();
+  const shaftAxis = new THREE.Vector3().subVectors(moonSpot.target.position, shaftOrigin).normalize();
+  const shaftLen = moonThrow * 0.6; // stays well short of the floor — an accent, not a room-filling wedge
+  const shaftGlowTex = makeDustMoteTexture();
+  const shaftSpriteCount = 6;
+  const shaftSprites = [];
+  for (let i = 0; i < shaftSpriteCount; i++) {
+    const t = (i + 0.5) / shaftSpriteCount;
+    const dist = shaftLen * t;
+    const coneR = Math.max(0.05, dist * Math.tan(moonAngle));
+    const edgeFade = 1 - Math.pow(Math.abs(t - 0.5) * 2, 2); // soft peak mid-shaft, fades toward both ends
+    const sprite = new THREE.Sprite(new THREE.SpriteMaterial({
+      map: shaftGlowTex, color: 0xbfd6ff, transparent: true,
+      opacity: 0.045 * edgeFade, blending: THREE.AdditiveBlending,
+      depthWrite: false, fog: false,
+    }));
+    sprite.position.copy(shaftOrigin).addScaledVector(shaftAxis, dist);
+    sprite.scale.setScalar(coneR * 2.4);
+    scene.add(sprite);
+    shaftSprites.push(sprite);
+  }
+
   // ─── Fluorescent tube fixtures — the mundane baseline. Ceiling-mounted
   // shop-light housings, spaced away from both skylight holes and the
   // truss cross so they don't compete with the one dramatic source above.
   // Flat, diffuse, low-intensity, spread across several fixtures rather
   // than one strong point — the point is that these should look boring,
   // not that the room should go dark without them. ───────────────────────
+  //
+  // Housing rebuild, 2026-09-02: the original fixture was a single flat
+  // box sitting above the tube — read as a bare glowing bar with no real
+  // fixture around it. Same principle the moonbeam rebuild established
+  // (v3.15.0): light should trace back to real geometry, not float. Built
+  // a real open-bottom reflector-trough housing (a top plate plus two
+  // long side walls and two end caps — the classic cheap shop-light
+  // shape) with the tube nested inside it, plus a visible hanger rod and
+  // ceiling flange so the fixture actually reads as bolted to the rafter
+  // rather than floating at the ceiling.
   const FLUORESCENT_COLOR = 0xdcefe2;
   const fixtureHousingMat = new THREE.MeshStandardMaterial({ color: 0x232420, roughness: 0.6, metalness: 0.5 });
   const fixtureTubeMat = new THREE.MeshStandardMaterial({
@@ -2644,14 +2777,49 @@ export function createOrrery(container, { preview = false } = {}) {
     { x: wd * 0.55, z: -wd * 0.25 },
     { x: -wd * 0.15, z: -wd * 0.55 },
   ];
+  const housingW = 1.3, housingD = 0.22, housingWallH = 0.11, plateT = 0.03;
   fixtureSpots.forEach(({ x, z }) => {
     const fy = rafterY - (preview ? 0.08 : 0.12);
-    const housing = new THREE.Mesh(new THREE.BoxGeometry(1.3, 0.08, 0.16), fixtureHousingMat);
-    housing.position.set(x, fy, z);
-    scene.add(housing);
+
+    // Top plate + two long side walls + two end caps = an open-bottom
+    // trough, so the tube sits recessed inside real sheet-metal rather
+    // than next to an unconnected box.
+    const topPlate = new THREE.Mesh(new THREE.BoxGeometry(housingW, plateT, housingD), fixtureHousingMat);
+    topPlate.position.set(x, fy + housingWallH / 2, z);
+    scene.add(topPlate);
+    const sideWallGeo = new THREE.BoxGeometry(housingW, housingWallH, 0.02);
+    const wallFront = new THREE.Mesh(sideWallGeo, fixtureHousingMat);
+    wallFront.position.set(x, fy, z - housingD / 2);
+    scene.add(wallFront);
+    const wallBack = new THREE.Mesh(sideWallGeo, fixtureHousingMat);
+    wallBack.position.set(x, fy, z + housingD / 2);
+    scene.add(wallBack);
+    const endCapGeo = new THREE.BoxGeometry(0.02, housingWallH, housingD);
+    const endL = new THREE.Mesh(endCapGeo, fixtureHousingMat);
+    endL.position.set(x - housingW / 2, fy, z);
+    scene.add(endL);
+    const endR = new THREE.Mesh(endCapGeo, fixtureHousingMat);
+    endR.position.set(x + housingW / 2, fy, z);
+    scene.add(endR);
+
+    // Visible mounting: a thin hanger rod spanning the real gap up to the
+    // rafter, plus a small flange flush against it — the actual
+    // attachment point, not an implied one.
+    const hangerTop = fy + housingWallH / 2 + plateT;
+    const hangerH = rafterY - hangerTop;
+    if (hangerH > 0.001) {
+      const hanger = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, hangerH, 6), fixtureHousingMat);
+      hanger.position.set(x, hangerTop + hangerH / 2, z);
+      scene.add(hanger);
+    }
+    const flange = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.02, 10), fixtureHousingMat);
+    flange.rotation.x = Math.PI / 2;
+    flange.position.set(x, rafterY - 0.01, z);
+    scene.add(flange);
+
     const tube = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 1.15, 8), fixtureTubeMat);
     tube.rotation.z = Math.PI / 2;
-    tube.position.set(x, fy - 0.06, z);
+    tube.position.set(x, fy - housingWallH / 2 + 0.015, z);
     scene.add(tube);
     const fLight = new THREE.PointLight(FLUORESCENT_COLOR, preview ? 0.5 : 0.65, preview ? 8 : 12, 2);
     fLight.position.set(x, fy - 0.15, z);
@@ -3003,6 +3171,22 @@ export function createOrrery(container, { preview = false } = {}) {
       root.rotation.y = reduceMotion ? targetRotationY : root.rotation.y + (targetRotationY - root.rotation.y) * 0.07;
     } else {
       fp.update(dt);
+
+      // Star parallax fix, 2026-09-02: the star field was placed only a
+      // few units above the ceiling — the same order of distance as the
+      // antenna it's seen behind through the skylight hole — so walking
+      // around the room shifted the stars almost as much as the (much
+      // closer) antenna in front of them. Real stars are so far away that
+      // walking a few meters produces no visible parallax at all; the
+      // antenna should swing across a essentially static sky, not two
+      // foreground objects drifting past each other at similar rates.
+      // Recentering the star field on the camera's position every frame
+      // (translation only — its own rotation is never touched, so it
+      // stays fixed in world orientation) reproduces that directly: it's
+      // the standard "stars are at infinity" trick, cheaper and more
+      // correct here than actually pushing the points to some enormous
+      // finite distance.
+      starField.position.copy(camera.position);
 
       // Hover/click targeting — always from screen-center (the crosshair),
       // every frame, regardless of whether the pointer is locked or the

@@ -587,6 +587,70 @@ described are unchanged.)
   worth trimming, orrery.js's texture generators and first-person rig are the
   two most self-contained chunks to split out first.
 
+## 3.16.0 (2026-09-02)
+
+**Orrery: brick depth, real fluorescent housings, safe shaft re-add, star parallax fix.**
+
+Follow-up to v3.15.0, same room, four items.
+
+- **Brick depth pass, one layer under the existing peeling-paint fix.** The
+  paint patches were already confirmed non-repeating; what was still flat
+  was the base brick-and-mortar texture underneath them. Added a full-brick
+  low-alpha tint jitter (redder/browner per unit, layered on top of the
+  existing 5-swatch base) plus a rare (~5%) much-darker "overfired brick"
+  overlay for real unit-to-unit variation; vertical water-staining streaks
+  meandering down from random near-ceiling origins, fading out partway
+  down rather than reaching the floor; and a band of pale, powdery
+  efflorescence blotches low on the wall (canvas V near the floor edge,
+  same mapping the existing floor-level paint cluster already relies on).
+  Confirmed numerically (bottom-band canvas average brightness up from a
+  mid-wall ~120/69/48 to ~139/94/72 RGB, plus a wide per-pixel red-channel
+  range at both bands) as well as visually in the live walkthrough.
+- **Fluorescent fixtures rebuilt with real housing geometry.** The original
+  fixture was a single flat box above a glowing tube — read as a bare bar
+  with no fixture around it. Built an actual open-bottom reflector-trough
+  housing (top plate + two long side walls + two end caps, the classic
+  cheap shop-light shape) with the tube nested inside it, plus a visible
+  hanger rod spanning the real gap up to the rafter and a mounting flange
+  at the attachment point — same "light traces back to real geometry"
+  principle the moonbeam rebuild established. Confirmed live: the tube now
+  reads as sitting inside a real metal trough with a visible ceiling mount.
+- **Moonlight shaft re-added, safely.** Scott's brief was explicit that the
+  v3.15.0 rebuild removed the old beam mesh because it was an
+  independently-positioned object with its own coordinates, not because a
+  visible shaft is inherently wrong — and that re-adding one without
+  repeating that exact failure mode was the one hard constraint. First
+  attempt (a single translucent cone, still derived live from
+  `moonSpot.position`/`moonSpot.target.position` rather than any
+  independent coordinate) was safe by that standard but still read as a
+  dominant wedge — a solid mesh's silhouette is a hard geometric edge no
+  matter how transparent its material is, exactly what the brief warned
+  against. Replaced it with a handful of camera-facing `THREE.Sprite`
+  billboards reusing the existing dust-mote radial-gradient texture
+  (`makeDustMoteTexture`), sized to the light's own true cone radius at
+  their depth and spaced along its axis — true per-pixel alpha falloff in
+  every direction, no silhouette to soften because a sprite has no edges.
+  Still fully derived from the light's live transform (no independent
+  coordinate), still reads as an extension of the same dust already in the
+  air rather than a competing object. Verified live from four angles: no
+  gap or desync between the glow and the antenna it surrounds at any of
+  them, and the effect reads as a soft ambient glow, not a wedge.
+- **Star-field parallax fix (mid-session addition, flagged live by Scott).**
+  The star points were placed only a few units above the ceiling — about
+  the same order of distance as the antenna they're seen behind through
+  the skylight — so walking around the room shifted the stars almost as
+  much as the much-closer antenna in front of them, instead of the antenna
+  swinging across an essentially static sky the way real (effectively
+  infinite-distance) stars would look. Fixed by recentering the star
+  field's position on the camera's position every frame (translation
+  only — the field's own rotation is never touched, so it stays fixed in
+  world orientation) — the standard "stars are at infinity" technique,
+  cheaper and more correct here than pushing the points to some large
+  finite distance. Verified live: with camera orientation held fixed and
+  only position shifted several units sideways, the stars stayed at
+  essentially the same screen position while the antenna swung sharply
+  across frame, as expected.
+
 ## 3.15.0 (2026-09-01)
 
 **Orrery: moonbeam architectural rebuild — replaces v3.14.0-3.14.3, doesn't patch them.**
