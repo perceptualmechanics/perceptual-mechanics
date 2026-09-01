@@ -228,7 +228,20 @@ export const RENDERED_FIELDS = {
 };
 
 export const WITHHELD_FIELDS = {
-  library: new Set(['note']),
+  // `note` is no longer flatly withheld — see CONDITIONAL_FIELDS below — but
+  // it stays declared here because an item outside the visible set genuinely
+  // is withheld, and a link authored into one of those needs to be reported
+  // rather than silently accepted.
+  //
+  // `catalog` (added 2026-09-02) is the private half of what used to be one
+  // field. When notes went public for the items doing link work, seven of
+  // them turned out to be carrying bibliographic bookkeeping — ISBNs of other
+  // printings, edition uncertainty, "flag for Scott" — which is real
+  // reference value to Scott and not something to publish or to throw away.
+  // It moved here rather than being deleted. Nothing renders it, nothing
+  // links from it, and it should stay that way: this is the field that exists
+  // so the public note doesn't have to carry catalogue chatter.
+  library: new Set(['note', 'catalog']),
 };
 
 // ─── Library notes: private by default, visible where they do link work ────
@@ -291,14 +304,13 @@ const libraryNoteRows = LINKS.filter(l => l.from.scene === 'library' && l.from.f
 // join the visible set silently, and a note that has been cleaned up is
 // reported as ready to release.
 export const NOTE_HOLD = new Map([
-  [124, 'opens with a dated verbatim quote of Scott to Claude correcting an ISBN error — private correspondence, not criticism'],
-  [6,   'opens with "edition uncertain … flag for Scott" — a working note addressed to Scott'],
-  [11,  'opens with "photo shows … cover style; newer centennial deluxe edition is … flag for Scott"'],
-  [63,  'opens with runtime-varies-by-cut sourcing chatter before reaching the criticism'],
-  [78,  '"earlier Penguin edition 9780140188592 — edition uncertain"'],
-  [86,  '"a 3-volume boxed set also exists (9780345802934)"'],
-  [89,  '"Penguin Modern Classics variant 9780141183114 also exists — edition uncertain"'],
-  [103, '"paperback is 9781324094098 (624pp, 2023) — edition uncertain"'],
+  // Empty as of 2026-09-02: all eight were rewritten and released. The
+  // mechanism stays because the hazard it caught is structural, not a
+  // one-off — any future link authored into a note brings that whole note
+  // to the surface with it, and verify-links.mjs's readiness scan will stop
+  // the build and point here. An entry is `[id, reason]`, and removing one
+  // should follow trimming the note rather than deciding the reason no
+  // longer matters.
 ]);
 
 export const LIBRARY_NOTE_VISIBLE = new Set([

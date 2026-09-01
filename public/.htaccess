@@ -257,24 +257,25 @@ RewriteRule ^text/(.*/)?index\.html$ /text/%1 [L,R=301]
 # .htaccess read, the override allowed. If it does not, the cost of finding
 # out is five minutes rather than a year.
 #
-# The deploy workflow now answers that question by itself. `.github/
-# workflows/deploy.yml`'s "Verify live security headers" step fetches the
-# live site after every rsync and fails the run if any of these headers is
-# missing. So the sequence is: merge, let that step go green once, then
-# change the line below to
+# RAMPED 2026-09-02, on evidence rather than on schedule. v4.0 deployed and
+# the live site was fetched: it returned `strict-transport-security:
+# max-age=300` along with nosniff and the cleaned `script-src 'self'`. That
+# is the proof the short window existed to get — DreamHost does read this
+# file, mod_headers is present, and `always` survives the 301s. With that
+# answered there is nothing left for a small max-age to protect against, so
+# this is now a year.
 #
-#   Header always set Strict-Transport-Security "max-age=31536000"
-#
-# and ship it. That is the whole ramp, and it is made on evidence rather
-# than on a promise in a comment — which matters, because this project has
-# an entry in NOTES.md about exactly what happens to steps a person has to
-# remember (sitemap.xml sat stale for months).
+# The deploy workflow keeps checking. `.github/workflows/deploy.yml`'s
+# "Verify live security headers" step fetches the live site after every
+# rsync and fails the run if any of these headers stops being served, which
+# matters more now than it did at 300 seconds: a year-long pin plus a
+# silently-dropped header is the combination that would hurt.
 #
 # Still NOT to be added, at any max-age: `preload`. Submission to the
 # browser preload list is effectively irreversible on a human timescale and
 # is not undone by lowering or removing this header.
 <IfModule mod_headers.c>
-  Header always set Strict-Transport-Security "max-age=300"
+  Header always set Strict-Transport-Security "max-age=31536000"
   Header always set X-Content-Type-Options "nosniff"
   Header always set Referrer-Policy "strict-origin-when-cross-origin"
   Header always set Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(), usb=(), fullscreen=(self)"

@@ -477,18 +477,34 @@ function buildLibrary() {
   // reader who went looking; a crawlable page is a different act, because it
   // publishes, caches, and attributes that text on this domain.
   //
-  // `note` is withheld because the scene itself withholds it. library.js
-  // renders the note element empty and keeps the assignment commented out
-  // one line above, with the reason attached: Scott, 2026-07-23, "I'm not
-  // sure I want it there yet." The first version of this page (shipped in
-  // 1.7.0, fixed same day in 1.7.1) published all 97 of them anyway, on the
-  // reasoning that they were the most genuinely original writing in the
-  // file — which was true and beside the point. They also contain live
-  // editorial TODOs ("flag for Scott" ×9, "edition uncertain" ×17). The
-  // rule this cost: a field the scene doesn't display is a field that was
-  // withheld on purpose, and "is it good writing?" is the wrong question to
-  // ask about it. Check what the scene actually renders, not what the data
-  // module happens to contain.
+  // `note` was withheld here because the scene withheld it. THAT PREMISE
+  // CHANGED on 2026-09-02 (v4.0.2) and this page has deliberately not
+  // followed yet — read on before assuming it is simply out of date.
+  //
+  // The history first, because it is the reason the caution exists. The
+  // first version of this page (1.7.0, fixed same day in 1.7.1) published
+  // all 97 notes on the reasoning that they were the most genuinely
+  // original writing in the file — true, and beside the point. They also
+  // carried live editorial asides ("flag for Scott", "edition uncertain")
+  // and, in one case, a dated verbatim quote of Scott to Claude. The rule
+  // it cost: a field the scene doesn't display was withheld on purpose, and
+  // "is it good writing?" is the wrong question to ask about it.
+  //
+  // What is true now: library.js renders a note for the 54 items whose note
+  // is load-bearing in the link graph (see LIBRARY_NOTE_VISIBLE in
+  // src/links.js), and those notes were rewritten so the catalogue chatter
+  // moved to a private `catalog` field. So "the scene withholds it" is no
+  // longer a reason, and the honest position is that this page now shows
+  // LESS than the scene does.
+  //
+  // That is a decision for Scott rather than a bug to fix in passing,
+  // because it is not the same act: the comment above about `excerpt` — a
+  // crawlable page publishes, caches and attributes text on this domain in
+  // a way an in-scene panel does not — applies to the notes too, and they
+  // are his own critical writing rather than bibliographic fact. Publishing
+  // them here would be a real editorial choice, not a consistency fix.
+  // Until he makes it, this page stays a strict subset, the same way it
+  // already is for `excerpt`.
   //
   // What's left is the plain bibliographic fact of the shelf, which is
   // exactly what the piece itself shows.
