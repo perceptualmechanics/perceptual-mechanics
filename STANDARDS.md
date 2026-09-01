@@ -472,6 +472,24 @@ another reason should be moved onto them while it's open:
   *argued* — a comment on its `setPaused` reasons that a Lorenz trajectory
   has no notion of real time, which is true of the trajectory and irrelevant
   to how fast a viewer watches it drawn. Sphere's has no comment at all.
+- **Converting a per-frame count needs a carry, not a round.** Rates convert
+  cleanly — `x += 0.003` becomes `x += 0.003 * dt * 60` and that is the whole
+  change. Counts don't: 240 points per second divides into no real refresh
+  rate evenly, and `Math.round` per frame rounds the same direction every
+  frame at a given rate, which is frame-rate dependence again in a quieter
+  form. Keep the fractional remainder in a variable that outlives the frame
+  (`carry += rate * dt; const n = Math.floor(carry); carry -= n;`) so the
+  count is exact over an interval rather than merely close per frame. At
+  144fps this is the difference between landing on the tuned value and
+  drifting off it. Butterfly's trail advance and Harmonics' twinkle spawn both
+  do this.
+- **And check what else read that count.** Butterfly's glow trail copied "the
+  last `PPF` points" out of the main ring buffer — a back-reference that was
+  correct only while `PPF` *was* the number written each frame. The moment the
+  count became variable, the same expression started reading the wrong window,
+  silently, and identically at 60fps where `dt` barely moves. A per-frame
+  count is often load-bearing somewhere else; grep every use before converting
+  one, and make the converted value a single variable both sites read.
 - **Every scene draws its first frame before `create()` returns.** Call
   `animate()` directly; do not merely schedule it with
   `requestAnimationFrame`. `main.js` runs `syncPreviewPlayback()` the moment

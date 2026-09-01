@@ -710,7 +710,13 @@ export function createharmonics(container, { preview = false, initialPieceId = n
   // this stays cheap regardless of corpus size.
   const galaxyColAttr = galaxy.geo.attributes.color;
   const galaxyActive = new Map(); // index -> current boost, decaying toward 0
-  const GALAXY_TWINKLE_KICKS = preview ? 2 : 10; // candidates offered per frame — not all land, see below
+  // Candidates offered per *second*, not per frame — not all land, see below.
+  // This was `preview ? 2 : 10` per frame, which made the galaxy sparkle twice
+  // as densely at 120Hz as at 60. The asymmetry is why nothing caught it: the
+  // decay below was already dt-scaled and correct, so only the spawn rate was
+  // coupled, and at 60fps the two agree exactly. Tuned values converted, not
+  // re-derived.
+  const GALAXY_TWINKLE_KICKS_PER_SEC = (preview ? 2 : 10) * 60;
   const GALAXY_TWINKLE_DECAY = 2.0; // roughly half a second to fade back to base
 
   // ─── Nodes — the sole on-screen carrier of resonance now that lines are
@@ -1527,6 +1533,7 @@ export function createharmonics(container, { preview = false, initialPieceId = n
 
   // ─── Animate ──────────────────────────────────────────────────────────────
   const clock = createFrameClock();
+  let twinkleCarry = 0;
   let animId = null;
   let paused = false;
 
@@ -1569,7 +1576,13 @@ export function createharmonics(container, { preview = false, initialPieceId = n
       // let roughly half actually land (keeps it sparse/irregular rather
       // than a metronomic per-frame sparkle), then decay every currently
       // -active point back toward its tuned base color.
-      for (let k = 0; k < GALAXY_TWINKLE_KICKS; k++) {
+      // Same carry as Butterfly's trail advance: the fractional part survives
+      // the frame instead of being rounded inside it, so the count is exact
+      // over an interval rather than merely close per frame.
+      twinkleCarry += GALAXY_TWINKLE_KICKS_PER_SEC * dt;
+      const kicks = Math.floor(twinkleCarry);
+      twinkleCarry -= kicks;
+      for (let k = 0; k < kicks; k++) {
         if (Math.random() < 0.5) continue;
         const idx = (Math.random() * galaxy.count) | 0;
         galaxyActive.set(idx, 0.5 + Math.random() * 1.6);

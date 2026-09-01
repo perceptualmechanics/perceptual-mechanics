@@ -140,14 +140,19 @@ the code has been that way. Nobody could tell, because a thumbnail that has
 never drawn looks exactly like one still loading. Same release made that
 distinguishable from the page itself.
 
-**One caveat still stands on the scene table above.** Butterfly's thumbnail
-draws, but slowly: it adds two points per trajectory per frame into a
-3,000-point buffer, so the wings take roughly twenty-five seconds to arrive
-and a visitor who glances at the page sees one dot. Nothing is wrong with the
-scene — opening it draws the full attractor. Whether a 200px tile should reach
-its subject faster than the full piece does is a taste question waiting on
-Scott, and it can't be answered without also deciding whether the full scene's
-draw rate changes with it.
+**v4.1.2 (2026-09-02)** took frame-rate coupling out of Butterfly, Sphere and
+Harmonics' galaxy twinkle. Butterfly's attractor had been drawing at the
+display's refresh rate in *both* modes — twice as fast on a 120Hz panel as on
+a 60Hz one — and Sphere's key light and rotation likewise. The tuned 60fps
+look is unchanged by construction; what changed is that it's now the same on
+every machine.
+
+**One taste question is open, and it's yours.** Butterfly's thumbnail still
+takes about twenty-five seconds to become a recognisable Lorenz shape — that
+is now twenty-five seconds everywhere rather than twelve or fifty, but it is
+still longer than anyone looks at a landing page. Raising the preview's rate
+is a one-constant change. The argument against is that the tile would then be
+a different animation from the piece it previews.
 
 ---
 

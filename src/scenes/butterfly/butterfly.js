@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import {
   bindOrbitDrag, bindWheelZoom, bindGuardedResize, prefersReducedMotion, parseHTML,
-  claimContainer, manageRenderer, trackTimers,
+  claimContainer, manageRenderer, trackTimers, createFrameClock,
 } from '../../utils/sceneKit.js';
 import butterflyHtml from './butterfly.html?raw';
 import './butterfly.css';
@@ -597,6 +597,19 @@ export function createButterfly(container, { preview = false } = {}) {
   let rotVelX=0,rotVelY=0,rotVelZ=0;
   let rotX=-1.52,rotY=0.0,rotZ=0.05;
   let t=0, animId = null;
+  // Wall clock, so the attractor is drawn at the same speed on every display.
+  // PPF stays the tuned per-frame count and is converted here rather than
+  // re-derived: 2 points/frame at 60fps is 120 points/second, 4 is 240.
+  // STANDARDS.md, "multiply a rate tuned at 60fps by dt * 60".
+  const clock = createFrameClock();
+  const PPS = PPF * 60;
+  // The fractional part has to survive the frame, not be rounded inside it.
+  // 240 points/second does not divide evenly into a frame at any real refresh
+  // rate, and rounding each frame independently would round the same way every
+  // frame at a given rate — which is frame-rate dependence again, just quieter
+  // and harder to see. Carrying the remainder makes the count exact over any
+  // interval instead of merely close per frame.
+  let stepCarry = 0;
   // main.js pauses preview tiles while a full scene is open and pauses the
   // open scene on visibilitychange (see its syncPreviewPlayback comment).
   // display:none does not stop a requestAnimationFrame loop, so before this
@@ -608,7 +621,17 @@ export function createButterfly(container, { preview = false } = {}) {
 
   function animate() {
     animId = requestAnimationFrame(animate);
-    t += 0.008;
+    const dt = clock.tick();
+    t += 0.008 * dt * 60;
+
+    // How many Lorenz steps this frame. dt is clamped at 0.05s by
+    // createFrameClock, so the worst case after a background/resume or a long
+    // main-thread block is 12 points per trajectory in one frame, not a buffer
+    // filled instantly. One value, used by both the trail advance and the glow
+    // copy below — they must agree, see the note there.
+    stepCarry += PPS * dt;
+    const steps = Math.floor(stepCarry);
+    stepCarry -= steps;
 
     // Butterfly jitter — reduceMotion is re-checked HERE, at the point of
     // consumption, not only where autoJitter is assigned (see its
@@ -633,8 +656,8 @@ export function createButterfly(container, { preview = false } = {}) {
     }
 
     // Advance Lorenz trails
-    for (const trail of trails) {
-      for (let s=0;s<PPF;s++) {
+    if (steps > 0) for (const trail of trails) {
+      for (let s=0;s<steps;s++) {
         lorenzStep(trail.state);
         const idx=(trail.head%MAX_PTS)*3;
         trail.posArray[idx]  =trail.state.x*SCALE;
@@ -658,12 +681,19 @@ export function createButterfly(container, { preview = false } = {}) {
     }
 
     // Advance glow trails (copy from main trail head)
-    if (!preview) {
+    if (!preview && steps > 0) {
       for (let ti=0;ti<TRAJECTORIES.length;ti++) {
         const main=trails[ti], glow=glowTrails[ti];
-        // Copy last PPF points from main into glow ring buffer
-        for (let s=0;s<PPF;s++) {
-          const srcIdx=((main.head-PPF+s+MAX_PTS)%MAX_PTS)*3;
+        // Copy the points the trail loop just wrote this frame — `steps`, the
+        // same value, not PPF. This is a back-reference into the main ring
+        // buffer, so it has to equal what was actually written or the glow
+        // tail silently drifts out of step with the trail it shadows: fewer
+        // and points fall out of it, more and it re-copies stale ones. It read
+        // PPF while PPF was the per-frame count and that was correct; the
+        // moment the count became variable it stopped being. Invisible at
+        // 60fps, where dt barely moves.
+        for (let s=0;s<steps;s++) {
+          const srcIdx=((main.head-steps+s+MAX_PTS)%MAX_PTS)*3;
           const dstIdx=(glow.head%GLOW_PTS)*3;
           glow.posArray[dstIdx]  =main.posArray[srcIdx];
           glow.posArray[dstIdx+1]=main.posArray[srcIdx+1];
@@ -788,10 +818,17 @@ export function createButterfly(container, { preview = false } = {}) {
     // on any tile scrolled off screen, and on the open scene when the tab is
     // hidden. Stopping the loop outright rather than running it to an early
     // return: a paused tile should cost nothing at all, not one no-op
-    // callback per frame. This scene integrates from a fixed per-frame `t`
-    // rather than a wall clock, so there is no clock to resync on the way
-    // back in — the Lorenz trails simply resume where they stopped, which is
-    // exactly right for a trajectory that has no notion of real time.
+    // callback per frame. The trails resume exactly where they stopped, which
+    // is right: a Lorenz
+    // trajectory has no notion of real time and nothing about it should be
+    // fast-forwarded to catch up with a wall clock. That argument used to be
+    // made here for integrating from a fixed per-frame `t`, and it was
+    // conflating two separable things — the trajectory's own progress, which
+    // genuinely has no clock, and the rate at which a viewer watches it drawn,
+    // which is nothing but a clock. The first still just resumes; the second
+    // is now wall-clock. resync() below is what keeps them separate, by
+    // making sure the first frame back is one frame's worth of points rather
+    // than the whole pause.
     setPaused(next) {
       const want = Boolean(next);
       if (want === paused) return;
@@ -800,6 +837,7 @@ export function createButterfly(container, { preview = false } = {}) {
         cancelAnimationFrame(animId);
         animId = null;
       } else {
+        clock.resync();
         animate();
       }
     },

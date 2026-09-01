@@ -587,6 +587,100 @@ described are unchanged.)
   worth trimming, orrery.js's texture generators and first-person rig are the
   two most self-contained chunks to split out first.
 
+## 4.1.2 (2026-09-02)
+
+Frame-rate coupling out of the last three places it was hiding. Scott's call
+to fix both of Butterfly's modes rather than just the tile, made with the
+shared-loop structure in hand.
+
+**The assumption that had to be checked first, and was false — again.** The
+brief assumed `butterfly.js:637` was the only consumer of `PPF`. It has three,
+and the third is the dangerous one:
+
+    for (let s=0;s<PPF;s++) {                                    // trail advance
+      ...
+    for (let s=0;s<PPF;s++) {                                    // glow copy
+      const srcIdx=((main.head-PPF+s+MAX_PTS)%MAX_PTS)*3;        // ← back-reference
+
+That last line reaches back exactly `PPF` points into the main ring buffer on
+the assumption that the trail loop just wrote exactly that many. It was
+correct while `PPF` *was* the per-frame count. The moment the count becomes
+variable it is reading the wrong window — fewer and points fall out of the
+glow tail, more and it re-copies stale ones — and it does so silently, and
+identically at 60fps where `dt` barely moves. It also lives in the `!preview`
+branch, so it only exists in the mode this release added. Converting line 637
+alone, which is the obvious reading of "2 points per frame becomes 120 per
+second", would have shipped exactly that.
+
+The fix is one `steps` value, computed once per frame, read by all three.
+
+**What changed.**
+
+- **Butterfly**, both modes: `PPS = PPF * 60` (120 points/sec preview, 240
+  full), accumulated through `createFrameClock` with its existing 0.05s clamp
+  and a carried fractional remainder. `t += 0.008` converted the same way.
+  `setPaused` now calls `clock.resync()` on the way back in.
+- **Sphere**: given a frame clock, which the file had never had — that absence
+  is most of why its three constants outlived the 4.0 pass. `lightAngle +=
+  0.003`, `rotation.y += 0.0015`, `rotation.x += 0.0003`, all now `* dt * 60`.
+- **Harmonics**: `GALAXY_TWINKLE_KICKS` was candidates offered *per frame*
+  while the decay was already `dt`-scaled — so the two agreed exactly at 60fps
+  and nowhere else, and the galaxy sparkled twice as densely at 120Hz. Now per
+  second, with the same carry.
+
+**The carry, because rounding would have looked fine.** 240 points per second
+divides into no real refresh rate evenly. Rounding each frame independently
+rounds the same direction every frame at a given rate, which is frame-rate
+dependence again, quieter. The remainder is kept across frames instead. The
+144fps column below is what that buys.
+
+**Measured, because a butterfly on the landing page is the false pass** — the
+old code produced one too, twenty-five seconds later than anyone waits. Method:
+Chromium against the built site, with `requestAnimationFrame` and
+`performance.now()` replaced by a virtual clock so frame pacing is exact rather
+than throttled, and a temporary hook exposing the point count (removed before
+committing; the shipped build has no hook).
+
+Preview mode, points accumulated, target 120/sec:
+
+| | 1s | 3s | 10s |
+|---|---|---|---|
+| 30fps | 120 | 360 | 1200 |
+| 60fps | 121 | 363 | 1205 |
+| 120fps | 120 | 360 | — |
+| 144fps | 120 | 360 | — |
+
+Slope 120.0/s at 30fps, 120.4/s at 60. The small offset is the synchronous
+first frame from 4.1.1, not a rate difference. Before this change the same
+three columns would have read 600 / 1200 / 2400 at 10s.
+
+Full mode, 2.5s: **600 points at both 30fps and 120fps** (target 240/sec), and
+the glow back-reference asserted directly — the last point written into the
+glow ring must equal the last point the trail loop wrote that frame — **2,625
+assertions across the two runs, zero mismatches.**
+
+Clamp: 30 seconds of wall time with no frames at the 3s mark gives 1209 points
+at 10s against 1205 undisturbed. Four extra points, i.e. one clamped catch-up
+frame, not 3,600.
+
+Sphere and Harmonics after 5.00s of wall time at 30/60/120fps: `lightAngle`
+0.9060 / 0.9000 / 0.9015 against a target of 0.900; `rotation.y` 0.4530 /
+0.4500 / 0.4508 against 0.450; twinkle kicks 603 / 600 / 600 against 600.
+Under 1% spread, where before it would have been 4×.
+
+`data-blits` re-checked after the change rather than assumed from before it,
+cold load in a fresh profile: all four clipped previews at 32 after one second
+of wall time and 512 after ten, every tile 480×480, none at the 300×150
+default. All four build gates pass.
+
+**Left open, and it is a taste question rather than a defect.** Butterfly's
+thumbnail still takes ~25 seconds to become a recognisable Lorenz shape. That
+is now 25 seconds on every machine instead of 12 or 50, which is the whole
+point of this release, but it is still longer than a visitor looks at a landing
+page. Raising the preview's rate is a one-constant change; the argument against
+is that the tile would then be a different animation from the piece it
+previews. Scott's, with the measured behaviour now in front of him.
+
 ## 4.1.1 (2026-09-02)
 
 Two landing tiles that could never draw, and the reason nobody could tell.

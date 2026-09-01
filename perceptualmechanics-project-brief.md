@@ -68,7 +68,7 @@ This is the durable house-rules file (created v3.9.16) — **read it first** bef
 - **3.9.15:** Full-site CSS audit — removed genuinely dead code (a stale `#butterfly-exp-label` block, an inert `-webkit-overflow-scrolling: touch`) and fixed a real missing-fallback bug (`theater.css`'s mask had only the `-webkit-` prefix).
 - **3.9.16:** Much larger modernization pass — full CSS + JS sweep, mobile-first conversion for 10 of 12 stylesheets (2 flagged for dedicated follow-up), native CSS nesting for all converted media queries, a real dead-cascade-order bug found and fixed in `sphere.css`, and the creation of `STANDARDS.md` itself.
 - **3.9.17 (2026-08-30):** Closed out the mobile-first audit — converted the final two flagged files. `main.css`'s nav-icon/landing responsive system (which has a real, four-times-recurred regression history: icon count changes have repeatedly reintroduced silent edge-clipping at specific pixel thresholds) was converted and live-verified at the exact widths that broke before. `theater.css`'s one genuinely compound media query (`@media (max-width:480px), (max-width:700px) and (orientation:portrait)`) was inverted using actual De Morgan's-law algebra rather than a naive per-clause flip, verified with an orientation-aware cascade simulator plus live-browser spot checks. One honest gap recorded rather than papered over: the narrowest region (width ≤480px AND portrait) couldn't be reached live in this session due to a sandbox browser-pane width floor — it rests on the simulator/hand-derivation only, flagged as such in both `STANDARDS.md` and `NOTES.md`.
-- **4.0–4.1.0 (current, 2026-09-02):** the audit release and its follow-ons.
+- **4.0–4.1.0 (2026-09-02):** the audit release and its follow-ons.
   4.0 closed 63 of the 71 audit findings, including all eight that were live
   on production — unstyled `/text/` pages, a stranded audio context on scene
   exit, nav icons clipped at 375px, a 2.9 MB image in a 36-pixel box — plus
@@ -80,6 +80,16 @@ This is the durable house-rules file (created v3.9.16) — **read it first** bef
   Vite 8 replaces Rollup with Rolldown — gates proven to still fail before
   the site was allowed to build, and the CSS minifier pinned because the new
   default deleted three documented fallbacks.
+
+- **4.1.1–4.1.2 (current, 2026-09-02):** the landing page's ten thumbnails.
+  4.1.1 gave every scene a first frame before `create()` returns — Harmonics
+  and Outside had only scheduled theirs, so a pause arriving before that
+  callback left them having drawn nothing at all, which is what the blank-tile
+  sighting was — and added `data-blits` to the clipped-preview canvases so
+  "hasn't drawn yet" and "will never draw" stopped being the same observable.
+  4.1.2 took frame-rate coupling out of Butterfly (both modes), Sphere and
+  Harmonics' twinkle, verified by measurement across 30/60/120/144 fps rather
+  than by looking.
 
 
 ## Keeping this file true
@@ -143,27 +153,16 @@ no hashes at all.
 
 **Genuinely open:**
 
-- **Butterfly's preview accumulates at the display's refresh rate.** Its
-  preview branch adds `PPF = 2` Lorenz integration steps per trajectory per
-  frame — a fixed per-frame count, not `dt`-scaled — across 7 trajectories
-  into a 3,000-point buffer, with new points drawn at 30% brightness ramping
-  to full only as the buffer fills. ~25 seconds to a legible attractor at
-  60 fps; fifty at 30. A visitor gets one dot. **Not fixed, because the
-  scoping assumption is false:** `PPF` is not preview-only. The same constant
-  drives full mode at 4, in the same shared loop, so converting it to
-  wall-clock changes how the expanded scene draws on any non-60Hz display.
-  That is a change to the art rather than a refactor, and it needs Scott's
-  answer to two questions: whether full mode changes with it, and whether a
-  200px tile that gets three seconds of attention should reach its subject
-  faster than the full scene does.
-- **Three more frame-coupling survivors, found by a sweep with a stated
-  ruler.** Sphere runs `lightAngle += 0.003`, `rotation.y += 0.0015` and
-  `rotation.x += 0.0003` in a file with **no frame clock at all** and no
-  comment defending it — the plainest instance of the shape 4.0 was sweeping
-  for, missed entirely. Butterfly's `t += 0.008` likewise. Harmonics'
-  `GALAXY_TWINKLE_KICKS` offers twinkle candidates *per frame* while decaying
-  them by `dt`, so the galaxy sparkles twice as densely at 120Hz. The ruler
-  and the full result are in NOTES.md's 4.1.1 entry; none are fixed.
+- **The three landing tiles reported blank on 2026-09-01 are all accounted
+  for.** Harmonics and Outside were a first-frame race, fixed in 4.1.1 and
+  confirmed live — they had only *scheduled* their first frame, and the page
+  can pause a tile before a queued callback runs. Butterfly was frame-coupled
+  accumulation, fixed in 4.1.2. Nothing here is open; the entry is kept only
+  so the sighting isn't re-investigated from scratch. If blank tiles are ever
+  seen again, `document.querySelector('#preview-<scene> canvas').dataset.blits`
+  is the first thing to read: `0` never drew, `1` drew once and stopped, a
+  number that climbs between two reads means the tile is fine and something
+  else is wrong.
 - **The CSP report endpoint is a placeholder.** `report-to` and
   `Reporting-Endpoints` are wired to a marked URL on this origin that
   404s. It needs a real collector before it does anything — and it is

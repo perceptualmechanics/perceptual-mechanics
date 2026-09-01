@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { CSS2DRenderer, CSS2DObject } from 'three/examples/jsm/renderers/CSS2DRenderer.js';
 import { getOutboundLinks, getInboundLinks } from '../../links.js';
-import { bindOrbitDrag, bindWheelZoom, bindGuardedResize, prefersReducedMotion, onReducedMotionChange, createPanelCloser, createJumpList, bindTapVsDrag, parseHTML, wireCrossLinks, formatInboundNote, setPanelSide, clickedLeftHalf, claimContainer, manageRenderer, trackTimers } from '../../utils/sceneKit.js';
+import { bindOrbitDrag, bindWheelZoom, bindGuardedResize, prefersReducedMotion, onReducedMotionChange, createPanelCloser, createJumpList, bindTapVsDrag, parseHTML, wireCrossLinks, formatInboundNote, setPanelSide, clickedLeftHalf, claimContainer, manageRenderer, trackTimers, createFrameClock } from '../../utils/sceneKit.js';
 // The excerpt windowing module's stripHtml, not a second one of this scene's
 // own — see randomExcerpt() below for why the DOM-based copy that used to
 // live there had to go.
@@ -742,14 +742,22 @@ export function createSphere(container, { preview = false, initialPieceId = null
   let lightAngle = 0;
   let animId = 0;
   let paused = false;
+  // This file had no frame clock at all until 4.1.2, which is most of why its
+  // three per-frame constants outlived the 4.0 pass: there was nothing here
+  // running on a wall clock for them to visibly disagree with, so a key light
+  // and a sphere turning at double speed on a 120Hz panel just looked like a
+  // key light and a sphere turning. Rates below are the tuned 60fps values,
+  // converted rather than re-derived — see STANDARDS.md.
+  const clock = createFrameClock();
 
   function animate() {
     animId = requestAnimationFrame(animate);
-    lightAngle += 0.003;
+    const f = clock.tick() * 60;
+    lightAngle += 0.003 * f;
 
     if (autoRotate && !reduceMotion) {
-      sphere.rotation.y += 0.0015;
-      sphere.rotation.x += 0.0003;
+      sphere.rotation.y += 0.0015 * f;
+      sphere.rotation.x += 0.0003 * f;
       wire.rotation.copy(sphere.rotation);
     }
 
