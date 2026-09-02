@@ -165,13 +165,25 @@
    it keeps the native control — which means arrow keys, Home/End, an
    announced role, an announced value and a real focus ring, none of which a
    canvas-drawn knob would have had without being rebuilt worse.
-   `-webkit-appearance: slider-vertical` is the pre-standard spelling, kept
-   for Safari below 17.4 per STANDARDS.md's rule on prefixes: stated reason,
-   checked individually, paired with the unprefixed form. */
+   `-webkit-appearance: slider-vertical` was here for Safari below 17.4 and is
+   REMOVED as of 2026-09-02, under STANDARDS.md's rule that a prefix is checked
+   individually against current support rather than kept by habit. What changed
+   the answer: Chrome now emits a deprecation warning for it on every page view
+   ("the keyword 'slider-vertical' ... is not standardized. It will be removed
+   in the future. Use writing-mode: vertical-lr; direction: rtl instead" — which
+   is exactly what this rule already does), and the unprefixed form reached full
+   cross-browser support in 2024, two and a half years ago.
+
+   The trade, stated rather than implied: on Safari earlier than 17.4 (March
+   2024) the slider now renders horizontally in a cell sized for a vertical one.
+   That is cosmetic — the control still works, still takes arrow keys, still
+   announces its role and its value — and it is weighed against a console
+   warning on every visit for everyone else, for a property the engine has said
+   it will remove. Same call as `-webkit-overflow-scrolling: touch` in
+   v3.9.15. */
 .apollo-fader input[type="range"] {
   writing-mode: vertical-lr;
   direction: rtl;
-  -webkit-appearance: slider-vertical;
   /* 2.4rem, not the 1.6rem this started as. A vertical range input's WIDTH is
      the axis a thumb has least of, and 1.6rem measured 25.6px on a 390px
      screen — over WCAG 2.5.8's 24px floor, but well under the 44px this site

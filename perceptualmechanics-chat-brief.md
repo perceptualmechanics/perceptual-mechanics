@@ -1,6 +1,6 @@
 # perceptualmechanics — chat brief
 
-*Handoff for a fresh Claude chat. Current as of **v4.4.1**, 2026-09-02.*
+*Handoff for a fresh Claude chat. Current as of **v4.4.2**, 2026-09-02.*
 
 > **Read `WORKING-PROTOCOL.md` first.** It is in the repo and it is short. It
 > records the one failure mode this collaboration keeps producing — a number or
@@ -224,6 +224,17 @@ way — and nobody could tell, because a thumbnail that has never drawn looks
 exactly like one still loading. That indistinguishability was the actual
 finding, and the same release made the two states tell apart from the page
 itself.
+
+**v4.4.2 — the rail had been covering the wavelength scale on every phone.**
+Asked to double-check the pitch ruler on mobile; found the ruler under the rail,
+and the nm labels and the bottom of the band under it as well, since 4.4.0 made
+the rail a row taller. Two constants that were correct at the desktop window
+they were written at — the same failure as the nav-icon count, one layer down,
+the day after that rule was written. The band's height and position now come
+from where the rail actually is. Also two findings inside one Three.js console
+warning: a `.toNonIndexed()` call in Sphere that had never done anything, and a
+face-count formula beside it that is wrong at every detail above 1 while
+agreeing at the two values anyone would check by hand.
 
 **v4.4.1 — the gas itself made percussive.** Emission shipped sounding like a
 tone that arrived quickly rather than a thing that was struck: 16.6% of the

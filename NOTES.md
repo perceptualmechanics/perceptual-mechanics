@@ -587,6 +587,104 @@ described are unchanged.)
   worth trimming, orrery.js's texture generators and first-person rig are the
   two most self-contained chunks to split out first.
 
+## 4.4.2 (2026-09-02)
+
+Scott asked for one thing — "double-check the pitch ruler on mobile" — and the
+check found three. Which is the argument for checking rather than reasoning: the
+ruler was the reported symptom and the smallest of the three.
+
+### The rail had been covering the scale on every phone
+
+The pitch ruler is drawn under the rail at 360px and 390px. But it is not alone
+down there: **the wavelength scale and the bottom of the band were behind the
+rail too**, on every phone, from the moment 4.4.0 put the light-source switch
+inside the rail and made it a row taller. Nothing errored. The nm numbers were
+simply behind an opaque panel.
+
+The cause is two constants:
+
+- `bandY = H * 0.40 - bandH / 2`
+- the ruler drawn a flat `66 * r` below the band
+
+Both were correct at the desktop window they were written at, and neither was
+ever re-derived against a rail that is two rows of faders tall on a phone —
+three rows once the mode switch went in. **The same failure as the nav-icon
+count and the tile grid, one layer down, found the day after that rule was
+written into `STANDARDS.md`.**
+
+So the band's height and position now come from where the rail actually is:
+`layout()` asks the DOM for the rail's top edge, subtracts the vertical budget
+the scale and (if shown) the ruler need, and fits the band into what is left,
+shrinking it if it must and never below a floor of its own. `SCALE_BLOCK` and
+`RULER_BLOCK` are named constants that `layout()` and `drawRuler()` both read —
+a ruler drawn at an offset layout never reserved is precisely how this went
+wrong the first time. Turning the ruler on now re-runs layout, and
+`buildContinuum()` (a per-pixel loop) only re-runs when the band's size actually
+changed.
+
+Verified at 320 / 360 / 390 / 414 / 768 / 1280 / 1440, with the ruler both off
+and on, checking three things at each: band bottom, nm label bottom and ruler
+label bottom all above the rail's top. Fourteen combinations, all clear. At
+320x700 with the ruler on the band shrinks to its 70px floor, which is the
+constraint being honest rather than a failure.
+
+### Two findings inside one console warning
+
+`THREE.BufferGeometry.toNonIndexed(): BufferGeometry is already non-indexed`,
+on every visit, from `sphere.js`.
+
+**The call did nothing.** Its comment is right about why the geometry must be
+non-indexed — per-face colouring needs each triangle to own its vertices — but
+`IcosahedronGeometry` is already non-indexed (`geo.index === null`, checked at
+three.js 185), so the call had never had an effect. Removed; the requirement
+stays written down, because a future change to the geometry does have to hold
+it. Same lesson as the `theater.css` mask: well-formed and does-something are
+different checks, and this one is in JavaScript, so the rule in `STANDARDS.md`
+has been generalised off CSS.
+
+**And the comment's arithmetic was wrong.** It said detail 2 gives
+`20 * 4^2 = 320` faces and that each `+1` quadruples the count.
+`PolyhedronGeometry` splits each of the 20 base faces into `(detail+1)^2`
+triangles, so detail 2 is `20 * 9 = 180`, and 2 to 3 is 1.78x rather than 4x.
+Counted from `geo.attributes.position.count / 3` rather than re-derived:
+
+| detail | actual faces | the comment's formula |
+|---|---|---|
+| 0 | 20 | 20 |
+| 1 | 80 | 80 |
+| 2 | **180** | 320 |
+| 3 | **320** | 1280 |
+
+The wrong formula agrees at detail 0 and 1 — the two cases anyone would check by
+hand. `hell` at 481, in a play set in Hell.
+
+### The deprecation warning was right
+
+`[Deprecation] The keyword 'slider-vertical' specified to an 'appearance'
+property is not standardized. Use <input type=range style="writing-mode:
+vertical-lr; direction: rtl"> instead.`
+
+Which is exactly what the rule already did. `-webkit-appearance:
+slider-vertical` was added in 4.3.0 as a fallback for Safari below 17.4, under
+`STANDARDS.md`'s prefix rule — stated reason, checked individually. Removed one
+release later, under the same rule, because the answer changed: the browser
+issuing the warning gains nothing from the prefix, and the unprefixed form
+reached full cross-browser support in 2024, two and a half years ago. The trade
+is recorded where it lives — on Safari before March 2024 the slider renders
+horizontally in a cell sized for a vertical one, which is cosmetic; the control
+still works, still takes arrow keys, still announces its role and value.
+
+### The third console line was not ours
+
+`A listener indicated an asynchronous response by returning true, but the
+message channel closed before a response was received` is a Chrome extension
+message, not site code — a content script's `chrome.runtime` listener, attributed
+to the page because that is where it was injected. The evidence rather than the
+assertion: this project's headless runs have no extensions loaded, and across
+every run in this pass the only console output from a clean profile was the
+software renderer's own GPU-stall notices. Nothing to fix here, and it is worth
+saying so plainly rather than leaving a line in a console log unaccounted for.
+
 ## 4.4.1 (2026-09-02)
 
 **The gas itself, made percussive.** Emission shipped in 4.4.0 with a fast

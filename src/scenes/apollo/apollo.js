@@ -180,12 +180,49 @@ export function createApollo(container, { preview = false } = {}) {
     } else {
       const pad = Math.round(Math.min(W * 0.06, 90 * r));
       bandX = pad; bandW = Math.max(1, W - pad * 2);
-      bandH = Math.round(Math.min(H * 0.22, 210 * r));
-      // Sits above centre, so the rail and the site's own bottom chrome have
-      // the lower third and the band is not crowded from underneath.
-      bandY = Math.round(H * 0.40 - bandH / 2);
+
+      // ─── Everything below the band is measured, not assumed ────────────────
+      // This was `bandY = H * 0.40 - bandH/2`, with the pitch ruler drawn a
+      // flat 66px under the band. Both numbers came from a desktop window and
+      // neither was ever re-derived. On a 390px phone the rail is two rows of
+      // faders tall — and taller again once 4.4.0 put the light-source switch
+      // inside it — so it rose far enough to cover the wavelength scale, the
+      // bottom of the band, and the pitch ruler entirely. Nothing errored. The
+      // scale was simply behind an opaque panel, on every phone, from the
+      // moment the switch shipped.
+      //
+      // Same shape as the nav-icon count and the tile grid, one layer down: a
+      // constant that was correct at the width it was written at. So this asks
+      // the DOM where the rail actually is.
+      const scaleBlock = SCALE_BLOCK * r;
+      const rulerBlock = rulerOn ? RULER_BLOCK * r : 0;
+      const below = scaleBlock + rulerBlock;
+
+      let floor = H - 8 * r;
+      if (railEl) {
+        const cb = container.getBoundingClientRect();
+        const rb = railEl.getBoundingClientRect();
+        if (rb.height && cb.height) floor = Math.min(floor, (rb.top - cb.top) * (H / cb.height) - 12 * r);
+      }
+      const ceiling = Math.round(H * 0.17);  // clear of the hint, which wraps to two lines on a phone
+
+      let h = Math.round(Math.min(H * 0.22, 210 * r));
+      h = Math.max(Math.round(70 * r), Math.min(h, Math.round(floor - ceiling - below)));
+      bandH = h;
+
+      let y = Math.round(H * 0.40 - bandH / 2);
+      y = Math.min(y, Math.round(floor - below - bandH));
+      bandY = Math.max(ceiling, y);
     }
   }
+
+  // Vertical budget under the band, in CSS pixels before the DPR multiply.
+  // SCALE_BLOCK is the nm tick row plus its labels; RULER_BLOCK is the gap down
+  // to the pitch ruler plus its axis and Hz labels. Named because layout() and
+  // drawRuler() both have to agree about them — a ruler drawn at an offset
+  // layout() never reserved is exactly how this went wrong the first time.
+  const SCALE_BLOCK = 24;
+  const RULER_BLOCK = 46;
 
   // ─── The continuum ────────────────────────────────────────────────────────
   // Figured out first, because it decides whether this is an object or a
@@ -703,11 +740,13 @@ export function createApollo(container, { preview = false } = {}) {
   function drawRuler() {
     if (!rulerOn || preview) return;
     const r = dpr();
-    // Below the wavelength scale, not through it. The first version put the
-    // ruler 34px under the band, which is where the nm labels are — so every
-    // connector crossed a number on its way down and the two axes read as one
-    // tangle. They are two different axes and have to look like it.
-    const y = bandY + bandH + 66 * r;
+    // Below the wavelength scale, not through it, and at the offset layout()
+    // actually reserved rather than at a constant of its own. The first version
+    // put the ruler 34px under the band, which is where the nm labels are, so
+    // every connector crossed a number on the way down; the second used a flat
+    // 66px, which on a phone put it underneath the rail. Both were right at the
+    // window they were written at.
+    const y = bandY + bandH + (SCALE_BLOCK + 22) * r;
     ctx.save();
     ctx.strokeStyle = 'rgba(201,174,116,0.35)';
     ctx.lineWidth = Math.max(1, r * 0.5);
@@ -749,7 +788,7 @@ export function createApollo(container, { preview = false } = {}) {
       // Starts below the nm labels, so a connector never crosses a number.
       ctx.strokeStyle = `rgba(201,174,116,${0.22 * age})`;
       ctx.beginPath();
-      ctx.moveTo(xb, bandY + bandH + 24 * r);
+      ctx.moveTo(xb, bandY + bandH + SCALE_BLOCK * r);
       ctx.lineTo(xr, y - 9 * r);
       ctx.stroke();
       ctx.fillStyle = `rgba(240,228,196,${0.95 * age})`;
@@ -1246,16 +1285,24 @@ export function createApollo(container, { preview = false } = {}) {
     clock.resync();
   });
 
-  // ─── Resize ───────────────────────────────────────────────────────────────
-  const resize = bindGuardedResize(container, () => {
+  // ─── Relayout ─────────────────────────────────────────────────────────────
+  // buildContinuum() is a per-pixel loop over the whole band, so it runs only
+  // when the band's SIZE changed — not on every relayout, and there are now
+  // several: a resize, the rail appearing, and turning the pitch ruler on or
+  // off, which changes how much room the band is allowed.
+  let lastBandW = 0, lastBandH = 0;
+  function relayout() {
     layout();
-    buildContinuum();
-    bandDirty = true;
-  });
+    if (bandW !== lastBandW || bandH !== lastBandH) {
+      lastBandW = bandW; lastBandH = bandH;
+      buildContinuum();
+      bandDirty = true;
+    }
+  }
+  const resize = bindGuardedResize(container, relayout);
 
   // ─── Mount ────────────────────────────────────────────────────────────────
-  layout();
-  buildContinuum();
+  relayout();
   seedFilaments();
   buildBand();
 
@@ -1281,6 +1328,10 @@ export function createApollo(container, { preview = false } = {}) {
     rulerToggleEl.addEventListener('click', () => {
       rulerOn = !rulerOn;
       rulerToggleEl.setAttribute('aria-pressed', String(rulerOn));
+      // The ruler needs room reserved for it, so turning it on can shorten the
+      // band and lift it. Derived rather than animated: the alternative is a
+      // ruler drawn into space nothing allocated.
+      relayout();
       srSay(rulerOn
         ? 'Pitch ruler shown: the same lines laid out by frequency instead of wavelength.'
         : 'Pitch ruler hidden.');
@@ -1289,6 +1340,9 @@ export function createApollo(container, { preview = false } = {}) {
 
     canvas.addEventListener('click', onCanvasClick);
     rebuildJumpList();
+    // The rail exists now, so the band can be placed against where it actually
+    // sits rather than against the bottom of the canvas.
+    relayout();
   }
 
   // Some engines suspend the AudioContext on backgrounding and expect an

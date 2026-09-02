@@ -247,11 +247,33 @@ reasoning:
   *pairing* without anyone asking whether the declaration had any effect.
   Checking that a property is well-formed and checking that it does
   something are different checks.
+
+  **The rule is not about CSS.** `sphere.js` called
+  `IcosahedronGeometry(...).toNonIndexed()` with a correct comment explaining
+  why the geometry has to be non-indexed for per-face colouring — and
+  `IcosahedronGeometry` is already non-indexed, so the call did nothing but
+  print a warning on every visit for as long as the scene has existed. Removed
+  2026-09-02; the requirement it documented is still written down there, because
+  a future change to the geometry does have to hold it. Same three checks every
+  time: is it well-formed, does it do anything, and is the thing it does still
+  needed.
 - `-webkit-overflow-scrolling: touch` — **removed** (v3.9.15). WebKit
   shipped native momentum scrolling for all overflow elements in iOS 13
   (2019); the property has had zero effect since. This is the version
   the standing rule (below) means to catch — a prefix kept out of habit
   long after its reason expired.
+- `-webkit-appearance: slider-vertical` (`apollo.css`, the element faders) —
+  **removed 2026-09-02**, one release after it was added. It was the
+  pre-standard way to stand a range input on end, kept for Safari below 17.4.
+  Two things changed the answer: Chrome now emits a deprecation warning for it
+  on every page view, naming the exact replacement (`writing-mode: vertical-lr;
+  direction: rtl`) that the same rule already carried — so the prefix was buying
+  nothing on the browser that was complaining — and the unprefixed form reached
+  full cross-browser support in 2024. The cost of removal is stated where it
+  lives: on Safari before 17.4 the slider renders horizontally in a cell sized
+  for a vertical one, which is cosmetic rather than functional. This is the same
+  shape as `-webkit-overflow-scrolling: touch` below, caught faster because the
+  engine said so out loud.
 - `-webkit-transform: translateZ(0)` (`scroll.css`, the medallion/crack
   elements) — **keep.** Not a generic "force a GPU layer" cargo-cult
   hack; the element's own code comment documents it as a targeted fix

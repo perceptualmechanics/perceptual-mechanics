@@ -89,16 +89,35 @@ export function createSphere(container, { preview = false, initialPieceId = null
   // splits each triangle into 4 smaller ones `detail` times, then pushes
   // every new vertex out to the target radius — the classic way to build a
   // near-uniform triangular mesh over a sphere (also how geodesic domes are
-  // built). `detail` is TUNABLE: 0 = the bare 20-face icosahedron facets
-  // visibly, 2 (current) = 20 * 4^2 = 320 faces, smooth enough to read as a
-  // sphere while still showing individual flat facets up close; each +1 in
-  // detail quadruples the face count and rendering cost. The radius (1.4) is
-  // also freely TUNABLE — it only scales the sphere, no downstream coupling.
-  // `.toNonIndexed()` duplicates shared vertices per-face so each triangle
-  // can be colored independently below (an indexed geometry would force
-  // every face touching a shared vertex to share that vertex's color).
+  // built). `detail` is TUNABLE: 0 = the bare 20-face
+  // icosahedron, facets visibly; 2 (current) = 180 faces, smooth enough to read
+  // as a sphere while still showing individual flat facets up close. The radius
+  // (1.4) is also freely TUNABLE — it only scales the sphere, no downstream
+  // coupling.
+  //
+  // TWO CORRECTIONS HERE, 2026-09-02, both found from a console warning.
+  //
+  // The arithmetic was wrong. This said "20 * 4^2 = 320 faces" and "each +1 in
+  // detail quadruples the face count", and neither is true of this geometry.
+  // PolyhedronGeometry splits each of the 20 base faces into (detail+1)^2
+  // triangles, not 4^detail — so detail 2 is 20 * 9 = 180 faces, and the step
+  // from 2 to 3 is 1.78x rather than 4x. The wrong formula happens to agree at
+  // detail 0 and detail 1, which is how it survived: the two cases anyone would
+  // check by hand are the two it gets right. Counted from
+  // geo.attributes.position.count / 3 at three.js 185, not re-derived.
+  //
+  // And `.toNonIndexed()` is gone. Its stated reason is correct and is still
+  // the requirement — per-face colouring needs each triangle to own its
+  // vertices, since an indexed geometry would force every face touching a
+  // shared vertex to share that vertex's colour. But IcosahedronGeometry is
+  // ALREADY non-indexed (geo.index === null, verified at 185), so the call did
+  // nothing except emit "THREE.BufferGeometry.toNonIndexed(): BufferGeometry is
+  // already non-indexed" into the console on every visit. Same lesson as the
+  // theater mask in STANDARDS.md: checking that a call is well-formed and
+  // checking that it does anything are different checks. The requirement stays
+  // written down here so a future change to the geometry knows it has to hold.
   const detail = 2;
-  const geo = new THREE.IcosahedronGeometry(1.4, detail).toNonIndexed();
+  const geo = new THREE.IcosahedronGeometry(1.4, detail);
   const faceCount = geo.attributes.position.count / 3;
 
   const palette = [

@@ -1,6 +1,6 @@
 # perceptualmechanics — project brief
 
-*Prepared 2026-08-31, refreshed 2026-09-02, current as of **v4.4.1**. Written as a handoff/context document for a fresh chat — everything here should be enough to pick up work on this project without re-deriving it.*
+*Prepared 2026-08-31, refreshed 2026-09-02, current as of **v4.4.2**. Written as a handoff/context document for a fresh chat — everything here should be enough to pick up work on this project without re-deriving it.*
 
 > **A note on keeping this file honest.** The 2026-09-01 audit found this
 > brief fourteen minor versions stale: it still said "current as of
@@ -117,7 +117,14 @@ This is the durable house-rules file (created v3.9.16) — **read it first** bef
   build's own gate hashes the emitted one, and asserts that hash appears in the
   policy on the same response. In the same pass, CSP reporting was removed
   rather than completed — see Known open items.
-- **4.4.1 (current, 2026-09-02):** emission made percussive — a band-passed
+- **4.4.2 (current, 2026-09-02):** Apollo's band, wavelength scale and pitch
+  ruler were all being drawn under the fader rail on phones — two constants
+  taken from a desktop window and never re-derived against a rail that grew a
+  row in 4.4.0. Vertical layout now measured from the rail's real position;
+  verified at seven widths with the ruler off and on. Plus a dead
+  `.toNonIndexed()` and a wrong face-count formula in `sphere.js`, and the
+  removal of a `-webkit-appearance` prefix the browser had started warning about.
+- **4.4.1 (2026-09-02):** emission made percussive — a band-passed
   noise transient at each onset (Q tied to note length, because a short-lived
   emission is spectrally broader), a two-stage envelope, and a compressor attack
   raised from 4ms to 10ms because it was flattening the strike it was protecting

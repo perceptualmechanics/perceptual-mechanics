@@ -221,6 +221,18 @@ protocol with no record of use is indistinguishable from one nobody reads.
   row describes, made again in the same session the document was written. Named
   before building, and the corrected figure is what went into the code comments
   and `NOTES.md`.
+- **2026-09-02, v4.4.2.** Scott asked for one thing — "double-check the pitch
+  ruler on mobile" — and checking it found three, which is the argument for
+  checking rather than reasoning. The ruler was drawn under the rail on phones,
+  and so were the wavelength labels and the bottom of the band; a Three.js
+  console warning traced to a `.toNonIndexed()` call that had never done
+  anything, and the comment beside it carried a face-count formula that is wrong
+  at every detail level above 1. The formula agreed with reality at detail 0 and
+  1 — the two cases anyone would check by hand — which is `hell` at 481 again.
+  Also: the ruler's `66 * r` offset and the band's `H * 0.40` were both
+  constants correct at the window they were written at, the same failure the
+  nav-icon count and the tile grid had one layer up, found the day after that
+  rule was written down.
 - **2026-09-02, v4.4.1.** The percussiveness measurement states its own scope
   in its output: it reproduces ONE voice offline from the numbers the page
   schedules, without the compressor or the room, and the compressor is part of
