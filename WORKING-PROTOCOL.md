@@ -1,17 +1,20 @@
 # Working protocol — chat instance and Cowork
 
-*Written by Scott, 2026-09-02, after a run of corrections that were all the
-same shape. For the chat instance that writes briefs, for Cowork that builds
-from them, and for later sessions of both.*
+*Written by Scott, 2026-09-02, after a run of corrections that were all the same
+shape. For the chat instance that writes briefs, for Cowork that builds from
+them, and for later sessions of both.*
 
 *Not a process document. A record of a specific failure mode and what actually
 reduces it.*
 
 > **Why this is a file in the repo.** It was written as a message, and a
 > protocol only later sessions cannot read is not one — which is the same
-> observation the document itself makes about the briefs. Added to the tree
-> 2026-09-02 in the same pass as v4.4.0, unedited except for this note.
-> `STANDARDS.md` points here for the rules that outlive any one release.
+> observation the document itself makes about the briefs. Scott's text is
+> reproduced unedited; the two sections marked *(added by Cowork)* at the end
+> are not his and can be cut freely. Revised 2026-09-02 to Scott's second
+> version, which added the Butterfly row, rule 4, and four entries to the
+> shared-lesson list. `STANDARDS.md` points here for the rules that outlive any
+> one release; **`CORRECTED-FACTS.md` is the durable surface rule 4 asks for.**
 
 ---
 
@@ -32,6 +35,7 @@ The instances:
 | A CSP collector needs its domain in `connect-src` | Reports are sent out of band and aren't subject to the policy | Recalled, not checked |
 | Two `.htaccess` items were open | Both fixed in v4.0 with reasoning in comments | Punch list read as current |
 | v4.0.1–4.0.3 not deployed | Deployed; the punch list's own status block had been corrected earlier that day | Punch list read as current |
+| Butterfly's thumbnail takes 25s to become legible — "a live open question" | Fixed in v4.1.3. `butterfly.js:617`, `PPS = preview ? 400 : 240` — the tile reaches the shape in about a second | **Stated three times across three briefs, corrected by Cowork each time** |
 
 **This is not a communication problem between two instances.** It is one
 structural fact:
@@ -82,14 +86,34 @@ Keep the standing instruction: **if an assumption is false, stop and say so
 rather than adapting around it.** That instruction is why nothing broken
 shipped.
 
-### 4. Prohibitions get reasons
+### 4. A correction goes into a file, not a reply
+
+**This is the rule the Butterfly recurrence exists to produce.**
+
+Cowork corrected the 25-second thumbnail claim at the top of the Apollo build.
+The chat instance acknowledged it in the reply, and then repeated it in the next
+brief. Then again. Three times, because **the correction lived in conversation
+and the next brief was written from documents.**
+
+A reply is not a durable surface. The moment a correction lands, it goes into
+whichever file the next session will actually read — the project brief,
+`NOTES.md`, `STANDARDS.md`, or the working notes. If there is no obvious file,
+that is itself the finding: the fact had nowhere to live, which is why it came
+back. **`CORRECTED-FACTS.md` is that file** — a durable surface for corrections
+with no better home. The chat instance reads it before writing a brief; Cowork
+adds a row whenever it corrects a claim that came from one.
+
+**Corollary for the chat instance specifically:** when Cowork corrects a claim,
+write it down before writing the next brief. Not after.
+
+### 5. Prohibitions get reasons
 
 A brief that says "don't fix this with a hardcoded size" without saying why
 invites a workaround. Say what the bad version costs — *it makes the tiles look
 right and leaves the reason in place for the next scene to inherit* — so the
 constraint survives contact with an easier path.
 
-### 5. Every brief closes by naming what it invalidates
+### 6. Every brief closes by naming what it invalidates
 
 Already a standing rule in `STANDARDS.md`. The specific claims, not "the briefs
 may need updating."
@@ -156,13 +180,21 @@ Four separate mechanisms, one shape:
 - The deploy's `/text/` check fetched a page and asserted a status code, under
   a comment claiming it proved the CSP hash matched — **a comment claiming a
   scope the code never had.**
-- Apollo's corona had a per-strand `speed`, a comment reading "right to left,"
-  and an `x` that never changed. The code was correct at what it did — advance a
-  wiggle phase — and **the name and the comment claimed a scope it never had.**
-  The same shape as the `/text/` check, one file over, found four releases
-  later. Nothing failed; the resting state just quietly read as wallpaper, and
-  took the strike response down with it, because a response needs something to
-  differ from.
+- Sorting sodium's lines by frequency selects a pair whose spacing is within 7%
+  of the D doublet's, producing a beat of 0.5165 Hz — **a number that agreed
+  with the prediction to three figures and was measuring the wrong pair.**
+- A comment on `sphere.js`'s face count used `20 × 4²` where the formula is
+  `20 × (d+1)²`. **It agrees at detail 0 and detail 1** — the two cases anyone
+  would check by hand.
+- Apollo's corona had an `x` that never moved, under a variable named `speed`
+  and a comment reading "right to left." **The name and comment claimed a scope
+  the code never had.**
+- Solar **photospheric abundances** are published, sourceable, and would have
+  been actively wrong as line-strength weights — helium second, calcium near
+  nothing, when calcium's H and K are the deepest features in the visible
+  spectrum. **A citation on a wrong answer is worse than an honest ruler**, and
+  this is the most dangerous variant of the pattern because it arrives with a
+  source attached.
 
 > **A number that has an obvious explanation is the one you stop checking.**
 > `hell` at 481, in a play set in Hell.
@@ -172,7 +204,36 @@ And the corollary, which is the one that applies to this document:
 > **An audit's ruler is part of its result.** Say what was looked for as
 > prominently as what was found.
 
-### And one that is new, from 4.4.0
+And one about sample size, from the ambient scheduler:
+
+> **A 25-second sample of Apollo's ambient stream read 0.72 notes/s. The
+> ten-minute run read 0.560, against a configured 0.55.** A listen would have
+> passed. The short sample wasn't wrong about anything except how much it could
+> see.
+
+---
+
+## Division of labour, restated
+
+**The chat instance is good for the writing and the judgement.** Diagnosis,
+architecture, deciding what a thing is for, naming why a fix is the wrong
+shape. It should ask for material rather than reconstruct it.
+
+**Cowork is good for what is true right now.** It reads source, runs the gates,
+measures, and looks at the screen.
+
+**Where they overlap is where the errors are.** Any claim about current state —
+a count, a version, a file's contents, what shipped — belongs to Cowork. The
+chat instance's version of that claim is a hypothesis with a citation attached,
+and should be written as one.
+
+---
+
+## A category the list above does not cover *(added by Cowork)*
+
+Not Scott's text. Kept because it came out of his own observation on 4.4.0 —
+"the failure mode is now recursive" — and it is a different mechanism from the
+ones above rather than another instance of them.
 
 **The failure mode is recursive: a fix can invalidate the instrument that
 verified it.** v4.3.0's frame-rate probe read a single pixel's brightness. 4.4.0
@@ -194,23 +255,9 @@ caught this, and it cost one run to ask.
 
 ---
 
-## Division of labour, restated
-
-**The chat instance is good for the writing and the judgement.** Diagnosis,
-architecture, deciding what a thing is for, naming why a fix is the wrong
-shape. It should ask for material rather than reconstruct it.
-
-**Cowork is good for what is true right now.** It reads source, runs the gates,
-measures, and looks at the screen.
-
-**Where they overlap is where the errors are.** Any claim about current state —
-a count, a version, a file's contents, what shipped — belongs to Cowork. The
-chat instance's version of that claim is a hypothesis with a citation attached,
-and should be written as one.
-
 ---
 
-## Log of this protocol being applied
+## Log of this protocol being applied *(added by Cowork)*
 
 Kept because rule 4 says a method that failed is a finding, and because a
 protocol with no record of use is indistinguishable from one nobody reads.
@@ -221,6 +268,15 @@ protocol with no record of use is indistinguishable from one nobody reads.
   row describes, made again in the same session the document was written. Named
   before building, and the corrected figure is what went into the code comments
   and `NOTES.md`.
+- **2026-09-02, after v4.5.0.** Rule 4 arrived naming `CORRECTED-FACTS.md`, a
+  file that did not exist. Created, and every row in it re-verified from the
+  tree at v4.5.0 rather than copied out of the replies that first made the
+  corrections — a corrections file whose corrections are themselves unchecked
+  would be the original problem with extra steps. Two rows were rewritten in the
+  process: "Fraunhofer catalogued 574 lines" became "over 570, sources differ",
+  and the v4.3.0 statement that Apollo needs no lookahead scheduler was recorded
+  as *true when written and false after 4.5.0* rather than as an error — a fact
+  with an expiry date is a third category the table did not have.
 - **2026-09-02, v4.5.0.** **The Butterfly claim came back.** The ambient-mode
   brief again gave "Butterfly's thumbnail takes twenty-five seconds… a live open
   question" as a reason, three briefs after the same sentence was corrected at

@@ -157,6 +157,18 @@ This is the durable house-rules file (created v3.9.16) — **read it first** bef
   three visual decisions that were made by rendering a version, looking at it,
   and rejecting it.
 
+## Two files to read before writing about this project
+
+- **`CORRECTED-FACTS.md`** — a short, source-cited index of claims that were
+  made and turned out to be wrong, with the corrected form and a file:line for
+  each. Read before writing a brief. Add a row when a claim from a document gets
+  corrected, *before* writing the next thing.
+- **`WORKING-PROTOCOL.md`** — why that file exists: the chat instance writes
+  from documents, this side writes from source, and documents here go stale
+  faster than anyone updates them. Also holds the "stop rather than adapt"
+  instruction, "state the ruler with the result", and "report the invalid
+  harness, not just the working one".
+
 ## Keeping this file true
 
 Any implementation brief or write-up for this project ends by naming which

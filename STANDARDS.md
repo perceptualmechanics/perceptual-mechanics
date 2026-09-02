@@ -8,7 +8,11 @@ looks at this project fresh. NOTES.md has the dated changelog of what
 shipped when; this file has the standing rules those changes established.
 
 **`WORKING-PROTOCOL.md` is the companion to this file** and should be read
-alongside it. This file holds rules about the code; that one holds rules about
+alongside it, and **`CORRECTED-FACTS.md` before writing any brief** — it is a
+short, source-cited index of claims that were made about this project and turned
+out to be wrong. It exists because the same false claim reached three
+consecutive briefs after being corrected in conversation three times: a reply is
+not a durable surface. This file holds rules about the code; that one holds rules about
 how the two instances working on it get things wrong — the chat instance writes
 from documents, this side writes from source, and every correction over a
 two-day arc ran in that one direction. It carries the assumptions-block rule,

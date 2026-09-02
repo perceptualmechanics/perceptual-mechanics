@@ -2,7 +2,16 @@
 
 *Handoff for a fresh Claude chat. Current as of **v4.5.0**, 2026-09-02.*
 
-> **Read `WORKING-PROTOCOL.md` first.** It is in the repo and it is short. It
+> **Read `CORRECTED-FACTS.md` before writing anything, then
+> `WORKING-PROTOCOL.md`.** Both are in the repo and both are short.
+> `CORRECTED-FACTS.md` is a source-cited index of claims that were made about
+> this project and turned out to be wrong — it exists because one false claim
+> reached three consecutive briefs after being corrected in conversation three
+> times, and a reply is not a durable surface. If a number or a status you are
+> about to state appears there, use the corrected form or say where yours came
+> from.
+>
+> **`WORKING-PROTOCOL.md`** is the reasoning behind that. It
 > records the one failure mode this collaboration keeps producing — a number or
 > a status quoted from a document and stated as measured — and the rules that
 > reduce it. The most load-bearing: quote numbers with their provenance and
