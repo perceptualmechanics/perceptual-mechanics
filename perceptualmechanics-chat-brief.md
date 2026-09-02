@@ -1,6 +1,14 @@
 # perceptualmechanics — chat brief
 
-*Handoff for a fresh Claude chat. Current as of **v4.3.0**, 2026-09-02.*
+*Handoff for a fresh Claude chat. Current as of **v4.4.0**, 2026-09-02.*
+
+> **Read `WORKING-PROTOCOL.md` first.** It is in the repo and it is short. It
+> records the one failure mode this collaboration keeps producing — a number or
+> a status quoted from a document and stated as measured — and the rules that
+> reduce it. The most load-bearing: quote numbers with their provenance and
+> scope, never re-attribute one; `punch-list-2026-09-01.md` is a dated snapshot
+> and not a source of open items; if an assumption turns out false, stop and say
+> so rather than adapting around it.
 
 This is the **chat** brief, not the code brief. It assumes no file access, no
 repo, no terminal. Its companion, `perceptualmechanics-project-brief.md`, lives
@@ -71,7 +79,7 @@ Counts read from the live content modules.
 | **Beamline** | A vessel travelling a glowing rail across a night wilderness; found text surfaces at each station | 10 stations |
 | **Harmonics** | Resonant connections across every other scene's content, as a force-directed graph with Kuramoto phase-sync and sonification | 64 approved resonances |
 | **Outside** | A generated lotus (Gielis superformula) mapping a five-part cosmology — Power Sources as petals, Folk Origins, Magi/Psi at centre | 5 power sources |
-| **Apollo** | A solar absorption spectrum you can play. Ten elements on faders put their lines into a band of starlight; clicking a dark line sounds its wavelength as a pitch | 10 elements, 218 lines |
+| **Apollo** | A solar spectrum you can play, in two modes. Ten elements on faders; **absorption** puts their lines into a band of starlight as gaps you sound by clicking, **emission** darkens the band and stands the same lines in it bright, struck rather than sustained | 10 elements, 218 lines across all ten (iron 50, sodium 6) |
 
 Earlier scenes — leaf, egg, prism, cycle, and some older constellation and
 ground-glimpse mechanics — were built, shipped, and retired. The eleven above
@@ -216,6 +224,21 @@ way — and nobody could tell, because a thumbnail that has never drawn looks
 exactly like one still loading. That indistinguishability was the actual
 finding, and the same release made the two states tell apart from the page
 itself.
+
+**v4.4.0 — Apollo gets a second instrument, and the gallery is 4/4/3.**
+Emission mode: the same wavelengths from the other side, so the element data is
+untouched and only what the light is doing changes. The band goes dark and the
+lines stand bright in it; the corona goes with it, because there is no light in
+transit when the gas is the source; and a note becomes a strike rather than a
+tone. Fader state persists across the switch. The binding constraint turned out
+to be the sodium beat — a plucked decay is shorter than its 1.94-second period —
+so the emission decay depends on voice count: 4.2s for a few lines, 1.4s for a
+crowd. Verified by rendering the pair offline and counting two beat maxima, not
+by inferring them. Separately, the corona was found never to have translated at
+all — only its wiggle phase advanced — which is why the resting state read as
+wallpaper and why the strike response had nothing to differ from. And eleven
+tiles no longer end in an orphan: 4/4/3 at desktop, 3/3/3/2 at tablet, with the
+column count derived from the registry rather than typed anywhere.
 
 **v4.3.0 — Apollo, the eleventh scene.** An absorption spectrum you can play:
 a band of starlight with the lines missing from it, a corona streaming in from

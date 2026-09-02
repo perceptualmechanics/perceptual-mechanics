@@ -381,16 +381,16 @@
         </button>
       </li>
 
-      <!-- Forces the wrap point here (5 tiles above, 5 below, now that
-           Outside is the tenth tile) rather than leaving flex-wrap to
-           break wherever the viewport width happens to run out — see
-           styles/main.css's .preview-row-break comment. Moved from after
-           the 4th tile (theater) to after the 5th 2026-08-24; the scene
-           occupying that 5th slot has changed several times since (orbiter,
-           orrery, now butterfly as of 2026-09-01) but the break itself
-           just needs to stay after whichever tile is 5th, not tied to a
-           specific scene. -->
-      <li class="preview-row-break" aria-hidden="true"></li>
+      <!-- A hand-placed `.preview-row-break` used to sit here, forcing the
+           wrap after the 5th tile. It is gone as of 4.4.0, and the reason is
+           its own history: it was moved after the 4th tile, then after the
+           5th, and its comment had to keep explaining which scene currently
+           occupied that slot and that the break wasn't tied to it. That is a
+           layout decision re-made by hand every time the scene count changes,
+           which is the same shape as the nav-icon bug that clipped icons off
+           both edges four separate times. main.js now derives the column count
+           from the registry and inserts the breaks itself — see tileColumns()
+           there and #scene-previews in styles/main.css. -->
 
       <li class="preview-wrapper" data-scene="library">
         <button type="button" class="preview-container" id="preview-library"

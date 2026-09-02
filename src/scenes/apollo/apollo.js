@@ -97,6 +97,49 @@ export function createApollo(container, { preview = false } = {}) {
   const clock = createFrameClock();
   const uiClock = createFrameClock();
 
+  // ─── Two instruments, one set of lines ────────────────────────────────────
+  // Absorption and emission are the same wavelengths seen from opposite sides,
+  // so the element data does not change at all. What changes is what the light
+  // is doing, and that difference is physical rather than a colour inversion:
+  //
+  //   Absorption is light passing through and arriving depleted. Continuous,
+  //   sustained, something you interrupt. Bowed.
+  //   Emission is an excited gas releasing. Discrete, decaying — every photon
+  //   is an electron falling. Plucked.
+  //
+  // So absorption sustains and emission strikes, and the picture follows the
+  // same logic: in emission there is no starlight passing through, so there is
+  // no band and no streaming corona — a dark field with bright lines standing
+  // in it at their own colours, and whatever remains of the flow is local to
+  // the lines rather than travelling past them.
+  //
+  // `modeMix` is 0 in absorption and 1 in emission, eased rather than switched,
+  // so the change reads as the light going out rather than as a redraw. It runs
+  // on the UI clock, because it answers something the visitor did — the same
+  // reason the struck-line flash does.
+  let mode = 'absorption';
+  let modeMix = 0;
+  const MODE_FADE = 0.55; // seconds
+  // What is left of the streaming field in emission. Not zero: the gas is in a
+  // stellar atmosphere, not a vacuum jar, and a hard cut to black loses the
+  // sense that the two modes are the same scene.
+  const CORONA_IN_EMISSION = 0.14;
+  // Not a flat dimming. In emission what remains has to be LOCAL to the lines
+  // rather than streaming past them, so the residue keeps most of its
+  // brightness within about a band-height of the band and falls to the 14%
+  // floor away from it. The field stops being a river crossing the frame and
+  // becomes a haze around the source, which is the actual difference between
+  // light in transit and a gas that is glowing.
+  function coronaScale(fy) {
+    if (modeMix <= 0) return 1;
+    const cy = (bandY + bandH * 0.5) / Math.max(1, H);
+    const half = (bandH * 1.5) / Math.max(1, H);
+    const t = (fy - cy) / Math.max(1e-6, half);
+    const local = Math.exp(-t * t);
+    const inEmission = CORONA_IN_EMISSION + (1 - CORONA_IN_EMISSION) * local * 0.55;
+    return 1 - (1 - inEmission) * modeMix;
+  }
+
   const claim = claimContainer(container, { position: 'relative', overflow: 'hidden' });
   container.classList.add('apollo-scene');
 
@@ -177,23 +220,36 @@ export function createApollo(container, { preview = false } = {}) {
   // them against photographs, not derived.
   const ROLLOFF_EXPONENT = 0.38;
   const ROLLOFF_FLOOR = 0.05;
+  const EMISSION_EXPONENT = 0.22;
+  const EMISSION_FLOOR = 0.34;
 
   const continuumCanvas = document.createElement('canvas');
   const continuumCtx = continuumCanvas.getContext('2d');
   // Column -> wavelength -> colour is pure and expensive; hoisted out of the
   // per-pixel loop and kept for the hit-testing and the ruler as well.
   let colNm = null, colR = null, colG = null, colB = null;
+  // A second colour table for emission. The continuum's rolloff is right for a
+  // continuum — it is the eye's own falloff and it is what makes the band read
+  // as an object — but applied to a bright line it renders H-alpha at 25% and
+  // the deep red end of an emission spectrum is not that dim. A gentler curve
+  // over the same luminous-efficiency function: still visibly dimmer at the
+  // ends, because that is true, but present.
+  let emR = null, emG = null, emB = null;
 
   function buildContinuum() {
     continuumCanvas.width = bandW; continuumCanvas.height = bandH;
     colNm = new Float32Array(bandW);
     colR = new Float32Array(bandW); colG = new Float32Array(bandW); colB = new Float32Array(bandW);
+    emR = new Float32Array(bandW); emG = new Float32Array(bandW); emB = new Float32Array(bandW);
     for (let x = 0; x < bandW; x++) {
       const nm = BAND_LEFT_NM + (BAND_RIGHT_NM - BAND_LEFT_NM) * (x / Math.max(1, bandW - 1));
       colNm[x] = nm;
       const [r, g, b] = wavelengthToRGB(nm);
-      const v = ROLLOFF_FLOOR + (1 - ROLLOFF_FLOOR) * Math.pow(luminousEfficiency(nm), ROLLOFF_EXPONENT);
+      const V = luminousEfficiency(nm);
+      const v = ROLLOFF_FLOOR + (1 - ROLLOFF_FLOOR) * Math.pow(V, ROLLOFF_EXPONENT);
       colR[x] = r * v; colG[x] = g * v; colB[x] = b * v;
+      const e = EMISSION_FLOOR + (1 - EMISSION_FLOOR) * Math.pow(V, EMISSION_EXPONENT);
+      emR[x] = r * e; emG[x] = g * e; emB[x] = b * e;
     }
 
     const img = continuumCtx.createImageData(bandW, bandH);
@@ -248,6 +304,14 @@ export function createApollo(container, { preview = false } = {}) {
 
   const maskCanvas = document.createElement('canvas');
   const maskCtx = maskCanvas.getContext('2d');
+  // The emission strip. Same one-row-stretched-down-the-band trick as the
+  // absorption mask, and built from the SAME tau array — because 1 - exp(-tau)
+  // is how much of the light a column takes out in absorption and how brightly
+  // that column glows in emission. One quantity, two readings, which is the
+  // physical claim the whole mode switch rests on: these are the same lines
+  // seen from opposite sides.
+  const emitCanvas = document.createElement('canvas');
+  const emitCtx = emitCanvas.getContext('2d');
   let tau = null;
   let bandDirty = true;
 
@@ -297,6 +361,18 @@ export function createApollo(container, { preview = false } = {}) {
       m.data[x * 4 + 3] = Math.round(255 * (1 - T));
     }
     maskCtx.putImageData(m, 0, 0);
+
+    emitCanvas.width = bandW; emitCanvas.height = 1;
+    const e = emitCtx.createImageData(bandW, 1);
+    for (let x = 0; x < bandW; x++) {
+      const strength = 1 - Math.exp(-tau[x]);
+      const o = x * 4;
+      e.data[o]     = Math.min(255, emR[x] * strength);
+      e.data[o + 1] = Math.min(255, emG[x] * strength);
+      e.data[o + 2] = Math.min(255, emB[x] * strength);
+      e.data[o + 3] = 255;
+    }
+    emitCtx.putImageData(e, 0, 0);
     bandDirty = false;
   }
 
@@ -330,7 +406,10 @@ export function createApollo(container, { preview = false } = {}) {
         y: Math.random(),                                  // 0..1 of height
         // Drift rate in fractions of the frame width per second. A RATE, so
         // it is multiplied by dt; nothing here advances by a per-frame step.
-        speed: 0.05 + Math.random() * 0.13,
+        // 0.035-0.09 puts a strand's crossing time between eleven and
+        // twenty-nine seconds — slow enough to be coronal, fast enough that
+        // the eye catches it without being asked to look. See advance().
+        speed: 0.035 + Math.random() * 0.055,
         phase: Math.random() * Math.PI * 2,
         // Nearly straight, gently curving, slightly sloped. Two wrong
         // versions got here, and both are worth keeping written down because
@@ -363,32 +442,77 @@ export function createApollo(container, { preview = false } = {}) {
         // what turns the same maths into texture rather than into lines. The
         // 0.55 power biases the starts toward the right, where the light is
         // coming from: the field genuinely thins out as it crosses.
-        x0: 0.05 + Math.pow(Math.random(), 0.55) * 1.05,
+        x: 0.05 + Math.pow(Math.random(), 0.55) * 1.05,
         len: 0.10 + Math.random() * 0.26,
       });
     }
   }
 
-  // Disturbances: striking a line pushes the flow aside, locally and briefly.
-  // Small, per the brief — a full-screen effect would say the whole scene
-  // reacted, when what happened is that one wavelength was removed.
+  // ─── Drift ────────────────────────────────────────────────────────────────
+  // The strands TRANSLATE, right to left, and until this was written they did
+  // not. The first build advanced only each strand's wiggle phase and left its
+  // x fixed, under a variable called `speed` and a comment that said "right to
+  // left" — so the field vibrated in place at an amplitude of half a percent of
+  // the frame height and read, correctly, as static texture on the backdrop.
+  //
+  // That mattered more than a missing flourish, because it took the strike
+  // response down with it. A response only registers as a response if the
+  // resting state was legibly at rest; with nothing moving, a local
+  // displacement had nothing to differ FROM, and the one gesture that makes
+  // the corona the sounding medium rather than a background image was
+  // invisible. The fix is motion, not opacity.
+  //
+  // A rate against dt, and the wrap is a rate too — nothing here counts frames.
+  const SPAWN_MARGIN = 0.25;
+  function advanceFilaments(dt) {
+    for (const f of filaments) {
+      f.x -= f.speed * dt;
+      if (f.x < -f.len) f.x += 1 + f.len + SPAWN_MARGIN;
+    }
+  }
+
+  // ─── Disturbance: a wavefront, not a wobble ───────────────────────────────
+  // Striking a line disturbs the flow, and the disturbance TRAVELS. It starts
+  // at the struck line's own x and expands outward as a ring, so the medium is
+  // visibly carrying it — which is what the scene is about. The first version
+  // displaced everything within a fixed radius and oscillated it in time, which
+  // is a global effect wearing a local mask: every strand inside the circle
+  // moved at once, and nothing went anywhere.
+  //
+  // The ring's radius is `t * DISTURB_SPEED` — a rate — and the displacement
+  // is a Gaussian shell around it, so a strand is pushed as the front passes
+  // and settles once it has gone by. The sine is a function of distance from
+  // the front rather than of time, which is what makes the ripples move
+  // outward rather than blink.
   const disturbances = [];
-  const DISTURB_LIFE = 1.5;
+  const DISTURB_LIFE = 2.4;      // seconds — long enough to cross the frame
+  const DISTURB_SPEED = 0.42;    // fractions of the frame width per second
+  const DISTURB_SHELL = 0.055;   // half-width of the travelling front
 
   function disturbAt(px, py) {
     disturbances.push({ x: px / Math.max(1, W), y: py / Math.max(1, H), t: 0 });
-    if (disturbances.length > 12) disturbances.shift();
+    if (disturbances.length > 10) disturbances.shift();
   }
 
   function disturbanceOffset(fx, fy) {
+    if (!disturbances.length) return 0;
     let dy = 0;
+    // The field is measured in fractions of width and height, which are not the
+    // same distance — without this a ring in normalized space is an ellipse on
+    // screen, and a wavefront that is visibly taller than it is wide reads as a
+    // stretch rather than as a wave.
+    const aspect = H / Math.max(1, W);
     for (const d of disturbances) {
-      const ddx = fx - d.x, ddy = fy - d.y;
-      const r2 = ddx * ddx + ddy * ddy;
-      if (r2 > 0.045) continue;
-      const fall = Math.exp(-r2 * 90);
-      const age = 1 - d.t / DISTURB_LIFE;
-      dy += Math.sign(ddy || 1) * 0.06 * fall * age * Math.sin(d.t * 11);
+      const ddx = fx - d.x, ddy = (fy - d.y) * aspect;
+      const dist = Math.sqrt(ddx * ddx + ddy * ddy);
+      const radius = d.t * DISTURB_SPEED;
+      const off = (dist - radius) / DISTURB_SHELL;
+      if (off < -4 || off > 4) continue;
+      const shell = Math.exp(-0.5 * off * off);
+      // Fades with age AND with distance travelled: a front spreading over a
+      // larger circumference carries the same energy through more of it.
+      const fade = (1 - d.t / DISTURB_LIFE) / (1 + radius * 3.5);
+      dy += 0.075 * shell * fade * Math.sin(off * 2.4);
     }
     return dy;
   }
@@ -412,10 +536,39 @@ export function createApollo(container, { preview = false } = {}) {
   const xForNm = nm => bandX + ((nm - BAND_LEFT_NM) / (BAND_RIGHT_NM - BAND_LEFT_NM)) * bandW;
   const xForHz = hz => bandX + ((hz - HZ_MIN) / (HZ_MAX - HZ_MIN)) * bandW;
 
+  // ─── How long a note lasts, and why it differs by mode ────────────────────
+  // Absorption sustains: a long tone the visitor carves gaps into. Emission
+  // strikes: fast attack and a decay, because every photon is an electron
+  // falling and nothing about that is held.
+  //
+  // The emission decay is NOT constant, and the reason is a real constraint
+  // rather than a preference. The sodium doublet beats at 0.5154 Hz — a period
+  // of 1.94 seconds — and that beat is the best demonstration the sonification
+  // has. A decay short enough to feel plucked is shorter than one beat period,
+  // which would silence exactly the thing worth hearing. So the decay depends
+  // on how many voices are sounding: a few lines ring long enough for the beat
+  // to complete twice, and only a crowd decays fast. Sodium's six lines get 4.2
+  // seconds; iron's twelve get 1.4, which is what makes fifty lines a swarm
+  // rather than a wall of sustain.
+  //
+  // That is a mixing decision, stated as one, not dressed up as physics — real
+  // excited-state lifetimes are nanoseconds and give no anchor at audible
+  // scale, so there is nothing here to be faithful to.
+  const ABSORPTION_SUSTAIN = 5.5;
+  const EMISSION_RING = 4.2;      // seconds, few voices — two full sodium beats
+  const EMISSION_SWARM = 1.4;     // seconds, at the chord cap
+  const EMISSION_CROWD = 6;       // voices below which the ring is kept whole
+  function noteLength(voices) {
+    if (mode === 'absorption') return ABSORPTION_SUSTAIN;
+    const t = Math.max(0, Math.min(1, (voices - EMISSION_CROWD) / (CHORD_CAP - EMISSION_CROWD)));
+    return EMISSION_RING - t * (EMISSION_RING - EMISSION_SWARM);
+  }
+
   // Struck lines, for the flash on the band and the marker on the ruler. Each
-  // fades over the length of its own note, so what is lit is what is sounding.
+  // carries its OWN life rather than reading a shared constant, because two
+  // notes no longer last the same time — not across modes, and not across
+  // elements within emission. What is lit is what is sounding.
   const struck = [];
-  const STRUCK_LIFE = 5.5;
 
   // ─── Drawing ──────────────────────────────────────────────────────────────
   function drawCorona() {
@@ -427,8 +580,11 @@ export function createApollo(container, { preview = false } = {}) {
       // Right to left: the strand's phase advances so the pattern travels
       // toward the band and past it. The light is in transit; the band is
       // where it is sampled.
+      // The wiggle phase still advances — that is the strand's own internal
+      // shimmer — but the strand's POSITION now comes from f.x, which
+      // advance() moves. Both are rates; neither counts frames.
       const ph = f.phase + t * f.speed * 6.0;
-      const xRight = f.x0, xLeft = Math.max(0, f.x0 - f.len);
+      const xRight = f.x, xLeft = f.x - f.len;
       ctx.beginPath();
       for (let s = 0; s <= SEGMENTS; s++) {
         const u = s / SEGMENTS;                 // 0 at the strand's right end
@@ -448,7 +604,9 @@ export function createApollo(container, { preview = false } = {}) {
       // because light that has crossed the sampling plane has had something
       // taken out of it.
       const depth = 0.5 + 0.5 * Math.min(1, Math.max(0, (xRight + xLeft) * 0.5));
-      const a = f.alpha * depth;
+      // In emission there is no light in transit — the gas is the source — so
+      // the streaming field goes with the continuum, leaving only a residue.
+      const a = f.alpha * depth * coronaScale(f.y);
       const grad = ctx.createLinearGradient(xRight * W, 0, xLeft * W, 0);
       const warmR = 255, warmG = 236 - f.warm * 26, warmB = 198 - f.warm * 58;
       grad.addColorStop(0, `rgba(${warmR},${warmG},${warmB},0)`);
@@ -464,16 +622,47 @@ export function createApollo(container, { preview = false } = {}) {
 
   function drawBand() {
     if (bandDirty) buildBand();
-    ctx.drawImage(continuumCanvas, bandX, bandY);
     ctx.save();
     ctx.imageSmoothingEnabled = false;
-    ctx.drawImage(maskCanvas, 0, 0, bandW, 1, bandX, bandY, bandW, bandH);
+
+    // Absorption: the continuum, then Beer's law as one black-over-colour
+    // drawImage. Faded out by modeMix rather than switched off, so the two
+    // modes cross rather than cut.
+    if (modeMix < 1) {
+      ctx.globalAlpha = 1 - modeMix;
+      ctx.drawImage(continuumCanvas, bandX, bandY);
+      ctx.drawImage(maskCanvas, 0, 0, bandW, 1, bandX, bandY, bandW, bandH);
+    }
+
+    // Emission: bright lines standing in the dark, added rather than composited
+    // over, because that is what light does. Drawn twice — once at the band's
+    // own height for the line, and once taller and much fainter for the glow
+    // that spills past its edges. The gas is the source here, so it should not
+    // stop dead at a rectangle it has no reason to respect.
+    if (modeMix > 0) {
+      ctx.globalCompositeOperation = 'lighter';
+      // 0.32, not the 0.42 this started at: the taller bloom made the lines
+      // read as full-height bars and lost the band's own extent, which the
+      // wavelength scale underneath still refers to. Enough spill to say the
+      // gas is not respecting a rectangle, not so much that the rectangle
+      // stops existing.
+      const glow = Math.round(bandH * 0.32);
+      ctx.globalAlpha = modeMix * 0.30;
+      ctx.drawImage(emitCanvas, 0, 0, bandW, 1, bandX, bandY - glow, bandW, bandH + glow * 2);
+      ctx.globalAlpha = modeMix;
+      ctx.drawImage(emitCanvas, 0, 0, bandW, 1, bandX, bandY, bandW, bandH);
+    }
     ctx.restore();
 
     // A hairline top and bottom so the strip has an edge. Brass, like every
     // other rule in the scene.
+    // The band's edges. Faded in emission rather than dropped: with no band
+    // there, a full-width hairline top and bottom reads as a leftover frame
+    // around nothing — but removing them entirely leaves the lines floating
+    // with no relation to the nm scale under them. A third of the way down is
+    // enough to say "this is how far the band went" without drawing a box.
     ctx.save();
-    ctx.strokeStyle = 'rgba(201,174,116,0.30)';
+    ctx.strokeStyle = `rgba(201,174,116,${(0.30 * (1 - modeMix * 0.62)).toFixed(3)})`;
     ctx.lineWidth = Math.max(1, dpr() * 0.5);
     ctx.beginPath();
     ctx.moveTo(bandX, bandY - 0.5); ctx.lineTo(bandX + bandW, bandY - 0.5);
@@ -487,7 +676,7 @@ export function createApollo(container, { preview = false } = {}) {
     const r = dpr();
     ctx.save();
     for (const s of struck) {
-      const age = 1 - s.t / STRUCK_LIFE;
+      const age = 1 - s.t / s.life;
       if (age <= 0) continue;
       const x = xForNm(s.nm);
       // The flash is drawn as light ADDED at the line's own colour, which is
@@ -554,7 +743,7 @@ export function createApollo(container, { preview = false } = {}) {
     ctx.fillText('Hz', bandX + bandW + 4 * r, y + 9 * r);
 
     for (const s of struck) {
-      const age = 1 - s.t / STRUCK_LIFE;
+      const age = 1 - s.t / s.life;
       if (age <= 0) continue;
       const xb = xForNm(s.nm), xr = xForHz(wavelengthToHz(s.nm));
       // Starts below the nm labels, so a connector never crosses a number.
@@ -676,6 +865,12 @@ export function createApollo(container, { preview = false } = {}) {
     osc.type = 'sine';
     osc.frequency.value = hz;
     const env = audioCtx.createGain();
+    const life = noteLength(voices);
+    // Bowed versus plucked, and the only difference in the graph is the attack
+    // and the length. Same oscillator, same wavelength-to-frequency division,
+    // so a given line is the same pitch in both modes and a visitor learns it
+    // once.
+    const attack = mode === 'emission' ? 0.006 : 0.05;
     // Amplitude from the line's own relative intensity, divided down by how
     // many voices are sounding together so a fifty-line element and a
     // one-line element arrive at the ear at the same loudness. Without this,
@@ -683,17 +878,17 @@ export function createApollo(container, { preview = false } = {}) {
     // claim about the mixer rather than about iron.
     const amp = 0.16 * Math.pow(rel / 1000, 0.5) / Math.sqrt(Math.max(1, voices));
     env.gain.setValueAtTime(0, now);
-    env.gain.linearRampToValueAtTime(amp, now + 0.05);
-    env.gain.exponentialRampToValueAtTime(0.0001, now + STRUCK_LIFE);
+    env.gain.linearRampToValueAtTime(amp, now + attack);
+    env.gain.exponentialRampToValueAtTime(0.0001, now + life);
     osc.connect(env);
     env.connect(busGain);
     env.connect(wetGain);
     osc.start(now);
-    osc.stop(now + STRUCK_LIFE + 0.2);
+    osc.stop(now + life + 0.2);
   }
 
-  function markStruck(nm, el) {
-    struck.push({ nm, el, t: 0 });
+  function markStruck(nm, el, voices = 1) {
+    struck.push({ nm, el, t: 0, life: noteLength(voices) });
     if (struck.length > 64) struck.shift();
     const x = xForNm(nm);
     disturbAt(x, bandY + bandH * 0.5);
@@ -701,9 +896,32 @@ export function createApollo(container, { preview = false } = {}) {
 
   function srSay(text) { if (srLiveEl) srLiveEl.textContent = text; }
 
+  // ─── The mode switch ──────────────────────────────────────────────────────
+  // One control, and it names the SITUATION rather than the display: the light
+  // source is either behind the gas or is the gas. Two radios in a fieldset
+  // rather than a toggle button, because that is what a two-position choice is
+  // and because it lets the legend say what the two positions are choices
+  // about. Same reasoning as the rail: use the control that already means this.
+  //
+  // Fader state is untouched by the switch. Six elements in the light stay six
+  // elements in the light, so a mixture built in one mode can be heard in the
+  // other — which is most of the point of having both.
+  function setMode(next) {
+    if (next === mode) return;
+    mode = next;
+    // The band is rebuilt from the same tau either way (see buildBand), so
+    // nothing needs recomputing — only the blend needs to move.
+    if (hintEl) hintEl.textContent = mode === 'emission'
+      ? 'move a fader to add an element to the gas \u00a0\u00b7\u00a0 click a bright line to strike it'
+      : 'move a fader to put an element in the light \u00a0\u00b7\u00a0 click a dark line to hear it';
+    srSay(mode === 'emission'
+      ? 'The gas is the light now. The band is dark and the lines stand bright in it; striking one plucks it rather than sustaining it.'
+      : 'The light is behind the gas again. The band is lit and the lines are missing from it; striking one sounds a long tone.');
+  }
+
   function strikeLine(line) {
     playLine(line.nm, line.rel, 1);
-    markStruck(line.nm, line.el);
+    markStruck(line.nm, line.el, 1);
     const el = ELEMENTS.find(e => e.key === line.el);
     srSay(`${el ? el.name : line.el} ${line.nm.toFixed(3)} nanometres, ${wavelengthToHz(line.nm).toFixed(1)} hertz.`);
   }
@@ -721,7 +939,7 @@ export function createApollo(container, { preview = false } = {}) {
     }
     for (const [nm, rel] of lines) {
       playLine(nm, rel, lines.length);
-      markStruck(nm, el.key);
+      markStruck(nm, el.key, lines.length);
     }
     const total = visibleLines(el).length;
     srSay(`${el.name}: ${total} line${total === 1 ? '' : 's'} in the band, `
@@ -742,9 +960,39 @@ export function createApollo(container, { preview = false } = {}) {
     if (cell) cell.dataset.active = String(density[key] > 0.001);
   }
 
+  // The switch lives INSIDE the rail, spanning it, rather than floating
+  // somewhere near it: it is a control on the instrument, and on a phone there
+  // is no spare band of screen between the wavelength scale and the faders to
+  // put it in anyway.
+  function buildModeSwitch() {
+    const fs = document.createElement('fieldset');
+    fs.className = 'apollo-mode';
+    const legend = document.createElement('legend');
+    // Named for the screen reader and not drawn: the two options are legible as
+    // a pair, and a label over a two-position switch is a line of type that
+    // tells a sighted visitor what they can already see.
+    legend.textContent = 'The light source';
+    fs.appendChild(legend);
+    for (const [value, label] of [['absorption', 'Behind the gas'], ['emission', 'The gas itself']]) {
+      const wrap = document.createElement('label');
+      const input = document.createElement('input');
+      input.type = 'radio';
+      input.name = 'apollo-light-source';
+      input.value = value;
+      input.checked = value === mode;
+      input.addEventListener('change', () => { if (input.checked) setMode(value); });
+      const span = document.createElement('span');
+      span.textContent = label;
+      wrap.append(input, span);
+      fs.appendChild(wrap);
+    }
+    railEl.appendChild(fs);
+  }
+
   function buildRail() {
     railEl = document.createElement('div');
     railEl.className = 'apollo-rail';
+    buildModeSwitch();
     for (const el of ELEMENTS) {
       const count = visibleLines(el).length;
       const cell = document.createElement('div');
@@ -874,12 +1122,23 @@ export function createApollo(container, { preview = false } = {}) {
     // rather than one enormous one. The UI clock always ticks: a flash has to
     // be able to end, which is the bug Outside's touch pulse had when its
     // pulse was keyed to a clock that froze.
-    if (reduced) clock.resync(); else clock.tick();
+    let dt = 0;
+    if (reduced) clock.resync(); else dt = clock.tick();
     const udt = uiClock.tick();
+
+    // Drift is motion the scene imposes, so it stops under reduced motion. The
+    // mode crossfade is a response to something the visitor just did, so it
+    // runs on the UI clock and keeps working either way.
+    if (dt > 0) advanceFilaments(dt);
+    const target = mode === 'emission' ? 1 : 0;
+    if (modeMix !== target) {
+      const step = udt / MODE_FADE;
+      modeMix = target > modeMix ? Math.min(target, modeMix + step) : Math.max(target, modeMix - step);
+    }
 
     for (let i = struck.length - 1; i >= 0; i--) {
       struck[i].t += udt;
-      if (struck[i].t >= STRUCK_LIFE) struck.splice(i, 1);
+      if (struck[i].t >= struck[i].life) struck.splice(i, 1);
     }
     for (let i = disturbances.length - 1; i >= 0; i--) {
       disturbances[i].t += udt;

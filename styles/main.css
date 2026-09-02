@@ -374,13 +374,15 @@ html, body {
    that's a 36.3 x 56px target per icon against the old 34 x 38px; at 460px
    and up it reaches the full 44px in both axes. */
 #pm-nav {
-  /* Keep equal to the number of .nav-icon buttons in index.html. This is
-     the one value an added or removed scene has to change. Went to 11 for
-     Apollo on 2026-09-02; it was briefly 11 for Spectra earlier the same day
-     and went back to 10 when that scene was shelved, which is the check this
-     comment exists to make easy — the number tracks the icons in the nav, not
-     the scenes in the registry, and those two can differ for exactly as long
-     as it takes to notice. */
+  /* A FALLBACK as of 4.4.0, not the value. main.js's applyDerivedLayout()
+     sets --nav-count from the registry length on load, so an added scene now
+     changes no number in this file at all — which is the whole point, after
+     four separate production bugs caused by exactly this number not being
+     re-tuned when the scene count moved. What remains here is what the row
+     looks like in the moment before that line runs, and for anything reading
+     this stylesheet without executing the bundle. Keep it equal to the number
+     of .nav-icon buttons in index.html; if the two ever drift, prerender.js
+     fails the build and applyDerivedLayout() warns at runtime. */
   --nav-count: 11;
   --nav-pad: 0.5rem;
   /* The widest one icon's share of the row may grow to: 44px of icon plus
@@ -828,6 +830,19 @@ html, body {
      Outside's tile (2026-08-24) brought the count to ten, an even split
      — the break moved from after the 4th tile to after the 5th
      (index.html), giving a real 5-then-5 rather than 4-then-5/6. */
+  /* 4.4.0: the column count and the forced breaks are both derived from the
+     registry by main.js's applyDerivedLayout() — see tileColumns() there.
+     Eleven tiles at the old hand-placed 5-and-5 break gave 5/5/1, and a single
+     tile alone under two full rows reads as an afterthought rather than as the
+     newest scene. The rule now returns 4 for eleven (4/4/3) and 4 for twelve
+     (4/4/4) with no second decision to make.
+
+     Flex, not grid, and that is not inertia: an incomplete last grid row stays
+     left-aligned, so 4/4/3 would put three tiles hard against the left edge
+     under two centred rows. Flex rows each centre themselves, so the short row
+     centres for free. --tile-cols is here for anything that wants to read it;
+     the layout itself is driven by the break elements. */
+  --tile-cols: 4;
   list-style: none;
   margin: 0;
   display: flex;
@@ -878,13 +893,17 @@ html, body {
   height: 0;
   margin: 0;
   padding: 0;
-  /* Mobile-first (standing convention, see STANDARDS.md): off by default
-     (narrower viewports fall back to ordinary flex-wrap), turned on only
-     once there's room to actually enforce a deliberate 5-and-5 split —
-     five 240px tiles plus four gaps no longer reliably fits below 1200px. */
+  /* Off by default: below the threshold the row falls back to ordinary
+     flex-wrap, which is the right behaviour there — forcing four per row on a
+     700px browser produces 2+2 twice and looks like a mistake. The threshold
+     depends on the column count exactly as much as the breaks do, and a media
+     query cannot read a custom property, so main.js computes it and toggles
+     `.rows-forced` on #scene-previews. For eleven scenes that is 1192px; for a
+     count that wants five columns it would be 1480px, which is honest — five
+     large tiles need that width. */
   display: none;
 
-	@media (min-width: 1201px) {
+	#scene-previews.rows-forced & {
 		display: block;
 	}
 }
@@ -981,9 +1000,25 @@ html, body {
   contain: paint;
   clip-path: circle(50%);
 
+	/* 224px, not the 240px this tier carried until 4.4.0. Three tiles at 240
+	   need 784px including gaps and padding, which is just past the common
+	   768px tablet width — so eleven tiles wrapped to 2/2/2/2/2/1 there, the
+	   same orphan row the desktop layout was being fixed for, one tier down.
+	   At 224 three fit from 736px and the same eleven wrap to 3/3/3/2. The
+	   cost is 7% of tile diameter in a band between roughly 736 and 830px;
+	   the alternative was six rows with a single tile at the bottom. */
 	@media (min-width: 481px) {
-		width: 240px;
-		height: 240px;
+		width: 224px;
+		height: 224px;
+	}
+
+	/* Larger tiles arrive at exactly the width where the deliberate rows do —
+	   main.js's threshold IS the width at which `cols` of these fit across, so
+	   the two can't disagree. Scott asked for bigger tiles alongside 4/4/3, and
+	   four columns is what makes the room for them. */
+	#scene-previews.rows-forced & {
+		width: 272px;
+		height: 272px;
 	}
 }
 /* The actual fix: don't clip the canvas, cover its corners. A plain

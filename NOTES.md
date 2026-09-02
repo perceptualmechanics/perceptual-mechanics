@@ -587,6 +587,159 @@ described are unchanged.)
   worth trimming, orrery.js's texture generators and first-person rig are the
   two most self-contained chunks to split out first.
 
+## 4.4.0 (2026-09-02)
+
+Three things: a second instrument inside Apollo, a corona that was never
+actually moving, and eleven tiles that no longer end in an orphan.
+
+### Emission — the same lines from the other side
+
+Absorption and emission are the same wavelengths seen from opposite positions,
+so **the element data does not change at all**. What changes is what the light
+is doing, and that difference is physical rather than decorative:
+
+- Absorption is light passing through and arriving depleted. Continuous,
+  sustained, something you interrupt. Bowed.
+- Emission is an excited gas releasing. Discrete, decaying — every photon is an
+  electron falling. Plucked.
+
+So the band goes dark and the lines stand bright in it at their own colours;
+the streaming corona goes with it, because there is no light in transit when
+the gas *is* the source; and the note becomes a strike rather than a tone. One
+control switches it, and it names the situation rather than the display: the
+light source is either behind the gas or is the gas. Fader state is untouched
+by the switch, so a mixture built in one mode can be heard in the other.
+
+The picture is built from the **same tau array** as absorption. 1 - exp(-tau) is
+how much light a column takes out in absorption and how brightly it glows in
+emission — one quantity, two readings, which is the physical claim the whole
+mode rests on. In code that is a second one-pixel-tall strip built in the same
+loop and stretched down the band, drawn with `lighter` instead of over.
+
+**The sodium beat was the binding constraint, and it is a real one.** The D
+doublet beats at 0.5154 Hz — a 1.94-second period — and that beat is the best
+demonstration the sonification has. An emission decay short enough to feel
+plucked is *shorter than one beat period*, which would silence exactly the thing
+worth hearing. So the decay depends on how many voices are sounding: 4.2s up to
+six voices, falling to 1.4s at the twelve-voice cap. Sodium rings long enough
+for two full beats; iron's twelve decay fast, which is what makes fifty lines a
+swarm rather than a wall of sustain. **That is a mixing decision, stated as one**
+— real excited-state lifetimes are nanoseconds and give no anchor at audible
+scale, so there is nothing here to be faithful to.
+
+Iron in emission is worth the trip. Fifty lines — not 218, which is the total
+across all ten elements — concentrated in the blue and violet, and as decaying
+strikes they read as a swarm rather than the wall they are in absorption. It is
+the more playable version of the same element, which was the reason for
+including iron in the first place.
+
+### The corona was never moving
+
+The interaction was right and the resting state was not, and the cause turned
+out to be concrete rather than a matter of degree: **the strands did not
+translate.** The draw loop advanced each strand's wiggle phase and left its `x`
+fixed, under a variable called `speed` and a comment that said "right to left."
+So the field vibrated in place at an amplitude of half a percent of the frame
+height and read, correctly, as static texture on the backdrop.
+
+That took the strike response down with it. A response only registers as a
+response if the resting state was legibly at rest; with nothing moving, a local
+displacement had nothing to differ from.
+
+Two fixes, neither of them opacity:
+
+- **Real drift.** `f.x -= f.speed * dt`, wrapping. Measured after: the corona
+  pattern shifts **90px left per second** at 1280px, and cross-correlating the
+  strip against itself a second later finds the residual drops from 0.20 to
+  0.08 when de-shifted by exactly that. It is translating, not just changing.
+- **A wavefront, not a wobble.** The disturbance now starts at the struck
+  line's own x and expands as a ring at 0.42 of frame width per second, with a
+  Gaussian shell around the front, so a strand is pushed as the front passes and
+  settles once it has gone by. Measured with the drift frozen and the band rows
+  excluded: at 0.25s the change sits at r=0.16 with everything beyond untouched;
+  by 0.95s the **inner bins have returned to zero** and the peak is at r=0.34;
+  by 1.45s it is at r=0.51 and fading. An expanding annulus that empties behind
+  itself, which is the medium carrying it.
+
+### The gallery: 4 / 4 / 3, derived
+
+Eleven tiles rendered 5/5/1, with Apollo alone under the title, reading as an
+afterthought rather than as the newest scene. It is now 4/4/3 with 272px tiles,
+and the short last row centres itself.
+
+**Nothing about that is typed in.** `main.js`'s `applyDerivedLayout()` computes
+the column count from the registry length, inserts the row breaks itself, sets
+`--nav-count`, and computes the width at which forcing the rows is worth doing.
+Twelve scenes gives 4/4/4 out of the same rule with no second decision. The
+rule and its tie-breaks are stated where it lives: refuse a last row of one,
+then prefer the fullest last row, then the fewest columns because fewer columns
+means bigger tiles.
+
+Flex rather than grid, checked rather than assumed: an incomplete last grid row
+stays left-aligned, so 4/4/3 would put three tiles hard against the left edge
+under two centred rows.
+
+**A second orphan, found by measuring rather than by looking.** The desktop
+layout was the reported problem, but at 768px eleven tiles wrapped to
+2/2/2/2/2/1 — the same shape one tier down. Three tiles at 240px need 784px
+including gaps and padding, which is just past the common tablet width. The mid
+tier is 224px now and the same eleven wrap to 3/3/3/2. The cost is 7% of tile
+diameter between roughly 736 and 830px.
+
+**A new build gate.** The derived formulas are only correct while `index.html`
+carries exactly one nav icon and one tile per registered scene, so
+`scripts/prerender.js` now reads the page as text and counts them. A scene
+registered without its icon fails the build rather than shipping a nav row whose
+arithmetic is quietly one out. Made to fire before it was trusted: removing
+Apollo's icon produces `registered but has no nav icon in index.html: apollo`.
+
+### Verification
+
+- **Same pitch in both modes**, selected by wavelength rather than by "the two
+  loudest" — sodium also has a close pair at 568nm whose spacing is within 7% of
+  D's, so any proxy for "the doublet" that is not the actual wavelength can pick
+  the wrong pair and still look right. It did, on the first run. 588.995nm is
+  508.9898 Hz in both modes; 589.592nm is 508.4744 Hz in both.
+- **The beat survives the plucked envelope, rendered rather than inferred.** The
+  two emission notes were rendered through an `OfflineAudioContext` with the
+  actual envelope and the amplitude envelope counted: **2 beat maxima over the
+  4.2s note**, against 2.16 predicted from the frequency difference, with a
+  modulation depth of 1.44.
+- **Envelope by crowd:** sodium 4.2s at 6 voices, iron 1.4s at 12, absorption
+  5.5s for both. Attack 0.006s in emission against 0.05s in absorption.
+- **One audio context across a mode switch** (1 made, 0 closed, 1 live) and zero
+  orphans after leaving for another scene and clicking inside it.
+- **Frame-rate independence in both modes**, identical at 60 and 144fps at 1s
+  and 2s.
+- **Emission line contrast** measured off the rendered canvas against the actual
+  dark field between lines: the strong lines run 16.6–19.0:1. Faint lines sit
+  near the floor deliberately — that is the intensity mapping doing its job, and
+  the keyboard path reaches them regardless of how faint they are drawn.
+- **Gallery and nav at 320 / 360 / 375 / 390 / 414 / 768 / 780 / 1280 / 1440:**
+  rows 1×11, 3/3/3/2, 4/4/3; eleven icons inside the viewport at every width,
+  no overlap, minimum target still 27.6 × 44 at 320px.
+- **Eleven tiles** all still render, counters climbing 8 to 16.
+
+### The third invalid harness, reported because a failed method is a finding
+
+v4.3.0's frame-rate probe read the struck-line marker's brightness — and 4.4.0
+broke it, with 4.4.0's own change. The corona now MOVES behind that pixel and is
+randomly seeded per load, so two runs at the same frame rate differed by five
+units and a 60-vs-144 comparison meant nothing. Fixed by seeding `Math.random`
+and running under reduced motion, which freezes the drift and leaves the strike
+response running — a behaviour verified separately rather than hoped for.
+
+An intermediate diagnosis was wrong too, and worth recording because it was
+plausible: the difference was first attributed to the harness's own one-frame
+head start after the strike, which is `1/fps` long by construction. Aligning
+that reduced the gap from five units to one but did not close it, which is what
+said the real cause was elsewhere.
+
+The wavefront measurement failed once for the same family of reason — it found
+the peak change at a fixed radius at every time, because the struck-line flash
+is an order of magnitude brighter than a displaced filament and buried it.
+Excluding the band rows is what made the travelling ring visible.
+
 ## 4.3.0 (2026-09-02)
 
 **Apollo — the eleventh scene.** An absorption spectrum you can play: a band of

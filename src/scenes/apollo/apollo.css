@@ -253,3 +253,55 @@
 .apollo-ruler-toggle[aria-pressed="true"] {
   color: #f0e4c4; border-color: rgba(201, 174, 116, 0.55);
 }
+
+/* ─── The light-source switch ──────────────────────────────────────────────
+   A real <fieldset> with two radios, spanning the rail above the faders. A
+   two-position choice is what a radio group is, and the fieldset is what lets
+   the grouping be announced — which matters here because the two labels only
+   make sense as a pair. The legend is present for that and not drawn: "The
+   light source" over two buttons reading "Behind the gas" and "The gas itself"
+   is a line of type telling a sighted visitor what they can already see.
+
+   The native radio dot is hidden and the label itself becomes the control, so
+   the switch reads as an instrument's two-position selector rather than as a
+   form. `:focus-visible` is taken off the (hidden) input and drawn on the
+   label, so the keyboard ring lands on the thing that looks clickable. */
+.apollo-mode {
+  grid-column: 1 / -1;
+  display: flex; justify-content: center; gap: 0.25rem;
+  margin: 0 0 0.5rem; padding: 0; border: 0; min-width: 0;
+}
+.apollo-mode legend {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+}
+.apollo-mode label {
+  display: inline-flex; align-items: center;
+  padding: 0.28rem 0.7rem;
+  border: 1px solid rgba(201, 174, 116, 0.22);
+  border-radius: 999px;
+  color: var(--ap-brass-dim);
+  font-family: 'Electrolize', sans-serif;
+  font-size: 0.56rem; letter-spacing: 0.14em; text-transform: uppercase;
+  cursor: pointer;
+  transition: color .18s, border-color .18s, background .18s;
+
+	@media (min-width: 641px) {
+		font-size: 0.6rem; padding: 0.3rem 0.9rem;
+	}
+}
+.apollo-mode input {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+}
+.apollo-mode label:hover {
+  color: var(--ap-ink); border-color: rgba(201, 174, 116, 0.45);
+}
+.apollo-mode label:has(input:focus-visible) {
+  outline: 2px solid var(--ap-brass); outline-offset: 2px;
+}
+.apollo-mode label:has(input:checked) {
+  color: #f0e4c4;
+  border-color: rgba(201, 174, 116, 0.6);
+  background: rgba(201, 174, 116, 0.13);
+}

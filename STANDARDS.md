@@ -7,6 +7,14 @@ re-fixed from scratch each time someone (a person or an AI assistant)
 looks at this project fresh. NOTES.md has the dated changelog of what
 shipped when; this file has the standing rules those changes established.
 
+**`WORKING-PROTOCOL.md` is the companion to this file** and should be read
+alongside it. This file holds rules about the code; that one holds rules about
+how the two instances working on it get things wrong — the chat instance writes
+from documents, this side writes from source, and every correction over a
+two-day arc ran in that one direction. It carries the assumptions-block rule,
+the "stop rather than adapt" instruction, "state the ruler with the result",
+and "report the invalid harness, not just the working one".
+
 ## General principle
 
 Something that looks outdated isn't automatically wrong. The bar for
@@ -261,6 +269,47 @@ reasoning:
 Anything outside those two categories is a real flag, not a pass —
 audit it the way the CSS `!important` audit did in v3.9.15/v3.9.16
 (read the actual reason each one exists before deciding).
+
+### Layout that depends on the scene count is computed from the registry
+
+Added 4.4.0, and it is one rule with two applications rather than two rules.
+
+**The rule:** any number in the layout that has to change when a scene is added
+or removed is derived at runtime from `Object.keys(SCENES).length`, never typed
+into a stylesheet or positioned by hand in markup. `main.js`'s
+`applyDerivedLayout()` is where that happens, and `scripts/prerender.js` fails
+the build if `index.html`'s nav icons and landing tiles don't match the
+registry, so the derivation can't be quietly wrong about what it is deriving
+from.
+
+**Why it earned a rule, twice.** The nav-icon row was broken by an added scene
+four separate times — icons clipped off both edges of every phone, invisible
+with nothing else visibly wrong — and each fix was the same shape: re-tune a
+number against the count of the day. v4.2 fixed the *arithmetic* with a derived
+formula but left `--nav-count` in the stylesheet as a hand-maintained value, so
+the bug's last remaining foothold survived a fix aimed directly at it. The
+landing grid was worse: a `.preview-row-break` element hand-placed in the
+markup, moved after the 4th tile and then after the 5th, with a comment that
+had to keep saying which scene currently occupied that slot.
+
+**What the hardcoded version costs, since a prohibition without a reason invites
+a workaround.** It is not that the hardcoded version looks wrong — it looks
+exactly right, on the day it is written, at the width it is checked at. The cost
+is that it leaves the reason in place for the next scene to inherit, and the
+person who inherits it will be looking at a nav row that is one icon too wide
+with no indication of which of three files is lying.
+
+**Where CSS genuinely cannot do it, say so and put the derivation in JS.** A
+media query cannot read a custom property, so the width at which the deliberate
+row breaks are worth enforcing is computed in `applyDerivedLayout()` and applied
+as a class. That is not a workaround for a stylesheet limitation to be fixed
+later; it is the one part of this that is not expressible in CSS, and the
+comment at that line says which part and why.
+
+**And flex, not grid, for the tile rows** — checked rather than assumed. An
+incomplete last grid row stays left-aligned, so eleven tiles at four columns
+would put three hard against the left edge under two centred rows. Flex rows
+each centre themselves.
 
 ### Mobile-first, going forward — non-negotiable
 

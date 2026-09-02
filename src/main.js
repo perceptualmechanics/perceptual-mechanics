@@ -777,6 +777,97 @@ async function initPreviews() {
   syncPreviewPlayback();
 }
 
+// ─── Layout that depends on the scene count is computed, never typed ────────
+// The nav-icon row has been broken four separate times by a scene being added
+// and a number somewhere not being re-tuned to match — icons clipped off both
+// edges of every phone, invisible with nothing else visibly wrong. v4.2's
+// derived nav formula fixed the arithmetic but left `--nav-count: 11` sitting
+// in the stylesheet as a hand-maintained value, and the tile grid was worse
+// still: a `.preview-row-break` element hand-placed in index.html, moved after
+// the 4th tile and then after the 5th, with a comment that had to say which
+// scene currently sat in that slot.
+//
+// Both now come from one place — the length of the registry — so adding a
+// scene is a registry entry, a folder, an icon and a tile, and no layout
+// decision at all.
+const SCENE_COUNT = Object.keys(SCENES).length;
+
+// How many tiles per row. Not a formula anyone would derive from first
+// principles, so the rule is stated: try 3, 4 and 5 columns; refuse a last row
+// of one outright, then prefer the fullest last row, then the fewest columns
+// because fewer columns means bigger tiles.
+//
+//   10 -> 5  (5/5)     11 -> 4  (4/4/3)     12 -> 4  (4/4/4)
+//   13 -> 5  (5/5/3)   14 -> 5  (5/5/4)     15 -> 5  (5/5/5)
+//
+// An orphan row is the thing being avoided: eleven tiles at five columns is
+// 5/5/1, and the single tile under the pair of full rows reads as an
+// afterthought rather than as the newest scene. Twelve gives 4/4/4 out of the
+// same rule with no second decision to make, which is the point.
+function tileColumns(n) {
+  if (n <= 4) return Math.max(1, n);
+  let best = 4, bestScore = -Infinity;
+  for (let c = 3; c <= 5; c++) {
+    const last = n % c === 0 ? c : n % c;
+    const score = (last === 1 ? -100 : 0) + last * 10 - c;
+    if (score > bestScore) { bestScore = score; best = c; }
+  }
+  return best;
+}
+
+function applyDerivedLayout() {
+  const list = document.getElementById('scene-previews');
+  const nav = document.getElementById('pm-nav');
+  const tiles = list ? [...list.querySelectorAll('.preview-wrapper')] : [];
+  const icons = nav ? nav.querySelectorAll('.nav-icon').length : 0;
+
+  // The markup and the registry are two lists of the same scenes, and the
+  // formulas below are only correct while they agree. `scripts/prerender.js`
+  // asserts that at build time and fails the build; this is the runtime half,
+  // for the case where a deployed page and a deployed bundle disagree.
+  if (icons !== SCENE_COUNT || tiles.length !== SCENE_COUNT) {
+    console.warn(`landing layout: registry has ${SCENE_COUNT} scenes but the page has ${icons} nav icons and ${tiles.length} tiles — the derived nav and grid sizing assume all three agree`);
+  }
+
+  const cols = tileColumns(SCENE_COUNT);
+  if (nav) nav.style.setProperty('--nav-count', String(SCENE_COUNT));
+  if (list) list.style.setProperty('--tile-cols', String(cols));
+
+  // Explicit breaks rather than letting flex-wrap find the edge of the
+  // container: a zero-height 100%-wide flex item pushes everything after it
+  // onto a new line, and each resulting row centres itself, which is what gives
+  // the short last row of 4/4/3 a centred three instead of three tiles jammed
+  // left. A CSS grid cannot do that on its own — an incomplete last grid row
+  // stays left-aligned — which is why this is flex and not `grid-template-
+  // columns`, despite the latter being the obvious reach.
+  list?.querySelectorAll('.preview-row-break').forEach(el => el.remove());
+  for (let i = cols; i < tiles.length; i += cols) {
+    const br = document.createElement('li');
+    br.className = 'preview-row-break';
+    br.setAttribute('aria-hidden', 'true');
+    tiles[i].before(br);
+  }
+
+  // And the width at which the deliberate rows are worth enforcing is derived
+  // too, because it depends on the column count exactly as much as the breaks
+  // do. Forcing 4-per-row on a 700px browser produces 2+2 twice and a mess;
+  // below the threshold the row falls back to ordinary flex-wrap, which is
+  // what it should do. The stylesheet cannot express this — a media query
+  // cannot read a custom property — so the class is toggled here and
+  // `#scene-previews.rows-forced` does the rest. Tiles grow at the same
+  // moment, since the threshold is exactly the width at which the larger
+  // tile fits `cols` across.
+  if (list) {
+    const TILE_PX = 272, GAP_PX = 24, PAD_PX = 32;
+    const needed = cols * TILE_PX + (cols - 1) * GAP_PX + PAD_PX;
+    const mq = window.matchMedia(`(min-width: ${needed}px)`);
+    const sync = () => list.classList.toggle('rows-forced', mq.matches);
+    mq.addEventListener('change', sync);
+    sync();
+  }
+}
+applyDerivedLayout();
+
 initPreviews();
 
 // ─── Stop rendering what nobody is looking at ────────────────────────────

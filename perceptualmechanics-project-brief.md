@@ -1,6 +1,6 @@
 # perceptualmechanics — project brief
 
-*Prepared 2026-08-31, refreshed 2026-09-02, current as of **v4.3.0**. Written as a handoff/context document for a fresh chat — everything here should be enough to pick up work on this project without re-deriving it.*
+*Prepared 2026-08-31, refreshed 2026-09-02, current as of **v4.4.0**. Written as a handoff/context document for a fresh chat — everything here should be enough to pick up work on this project without re-deriving it.*
 
 > **A note on keeping this file honest.** The 2026-09-01 audit found this
 > brief fourteen minor versions stale: it still said "current as of
@@ -46,7 +46,7 @@ Static shell markup lives in `<name>.html`, imported as a raw string and parsed 
 9. **Harmonics** (9th scene; internally still named/keyed `harmonics` everywhere except the public URL slug — a deliberate, documented exception) — visualizes resonant connections across every other scene's content as a force-directed node graph with Kuramoto phase-sync animation and sonification.
 10. **Outside** (10th scene) — a generated lotus/flower (Gielis superformula geometry) mapping a five-part cosmology (Power Sources as petals, Folk Origins, Magi/Psi at center); breathes continuously, Fresnel-based petal translucency, five distinct per-petal chime timbres plus a Kumoi-scale ambient chime bed.
 
-11. **Apollo** (11th scene, v4.3.0) — a solar absorption spectrum you can play: a near-full-width band of starlight with the lines missing from it, a procedurally generated corona streaming in from the right, and ten elements on vertical faders that put their own lines into the light. Clicking a dark line sounds that wavelength as a pitch. Hydrogen is computed live from the Rydberg formula (with the reduced-mass correction and a vacuum-to-air conversion — which is what makes it land on the published values); the other nine elements are NIST strong-lines tables. **The only scene with no Three.js and no WebGL context** — see `apollo.js`'s header for the context-budget reasoning — and the only one whose content is measurement rather than writing.
+11. **Apollo** (11th scene, v4.3.0; emission mode v4.4.0) — a solar spectrum you can play, in two modes. **Absorption:** a near-full-width band of starlight with the lines missing from it, a procedurally generated corona streaming in from the right, and ten elements on vertical faders that put their own lines into the light. Clicking a dark line sounds that wavelength as a pitch. **Emission** (v4.4.0) is the same wavelengths from the other side — the element data is identical, the band goes dark, the same lines stand bright in it, the streaming corona drops to a local residue because the gas is now the source, and a note is struck rather than sustained. One control switches it and fader state persists across the switch. Hydrogen is computed live from the Rydberg formula (with the reduced-mass correction and a vacuum-to-air conversion — which is what makes it land on the published values); the other nine elements are NIST strong-lines tables. **The only scene with no Three.js and no WebGL context** — see `apollo.js`'s header for the context-budget reasoning — and the only one whose content is measurement rather than writing.
 
 A few earlier scenes (leaf, egg, prism, cycle, and older constellation/ground-glimpse/thread-follow mechanics) were built, shipped, and later **retired/shelved** over the project's history — the current registry above is the live set as of v4.3.0. **Spectra**, a twelfth candidate, is in the tree and builds but is deliberately unregistered (`src/scenes/spectra/SHELVED.md`); it is unrelated to Apollo despite the subject overlap.
 
@@ -117,7 +117,17 @@ This is the durable house-rules file (created v3.9.16) — **read it first** bef
   build's own gate hashes the emitted one, and asserts that hash appears in the
   policy on the same response. In the same pass, CSP reporting was removed
   rather than completed — see Known open items.
-- **4.3.0 (current, 2026-09-02): Apollo, the eleventh scene.** An absorption
+- **4.4.0 (current, 2026-09-02):** emission mode in Apollo — the same lines
+  from the opposite side, built from the same tau array, with the note becoming
+  a strike rather than a tone and the emission decay scaled by voice count so
+  the sodium beat survives it. The corona found never to have translated (only
+  its wiggle phase advanced), now drifting at a measured 90px/s with a
+  disturbance that propagates outward from the struck line as a ring. The
+  landing gallery to 4/4/3 with the column count, the row breaks, `--nav-count`
+  and the forcing threshold all derived from the registry length — plus a build
+  gate asserting `index.html`'s icons and tiles match it, made to fire before it
+  was trusted. `WORKING-PROTOCOL.md` added to the tree.
+- **4.3.0 (2026-09-02): Apollo, the eleventh scene.** An absorption
   spectrum you can play — a band of starlight with the lines missing from it, a
   procedurally generated corona streaming in from the right, ten elements on
   faders, and a click on a dark line sounding that wavelength as a pitch.

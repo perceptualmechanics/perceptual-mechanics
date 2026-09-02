@@ -738,6 +738,37 @@ export function prerender(outDir) {
       orphaned.length && `page built for a scene that is not in the registry: ${orphaned.join(', ')}`,
       staleExempt.length && `TEXT_EXEMPT names a scene that no longer exists: ${staleExempt.join(', ')}`,
     ].filter(Boolean);
+    // ─── The markup half of the same rule ───────────────────────────────────
+    // 4.4.0. The nav row's sizing and the landing grid's column count are both
+    // computed from the registry now (main.js's applyDerivedLayout), which
+    // means those formulas are only correct while index.html carries exactly
+    // one nav icon and exactly one tile per registered scene. That used to be
+    // maintained by hand in three places — a `--nav-count` in the stylesheet, a
+    // `.preview-row-break` positioned by counting tiles, and the markup itself
+    // — and the nav row was clipped off both edges of every phone four separate
+    // times because one of them was missed.
+    //
+    // Two of the three are gone. This is what keeps the third honest: the page
+    // is read as text and the icons and tiles are counted, so a scene added to
+    // the registry without its icon fails the build rather than shipping a nav
+    // row whose arithmetic is quietly one out.
+    {
+      const html = fs.readFileSync(path.join(import.meta.dirname, '..', 'index.html'), 'utf8');
+      const icons = (html.match(/class="nav-icon"/g) || []).length;
+      const iconScenes = [...html.matchAll(/class="nav-icon"[^>]*data-scene="([^"]+)"/g)].map(m => m[1]);
+      const tileScenes = [...html.matchAll(/id="preview-([a-z0-9-]+)"/g)].map(m => m[1]);
+      const reg = Object.keys(SCENES);
+      const missingIcon = reg.filter(k => !iconScenes.includes(k));
+      const missingTile = reg.filter(k => !tileScenes.includes(k));
+      const strayIcon = iconScenes.filter(k => !reg.includes(k));
+      const strayTile = tileScenes.filter(k => !reg.includes(k));
+      if (icons !== iconScenes.length) problems.push(`index.html has ${icons} .nav-icon buttons but only ${iconScenes.length} carry a data-scene — the derived nav sizing counts scenes, not buttons`);
+      if (missingIcon.length) problems.push(`registered but has no nav icon in index.html: ${missingIcon.join(', ')}`);
+      if (missingTile.length) problems.push(`registered but has no landing tile in index.html: ${missingTile.join(', ')}`);
+      if (strayIcon.length) problems.push(`nav icon in index.html for a scene that is not registered: ${strayIcon.join(', ')}`);
+      if (strayTile.length) problems.push(`landing tile in index.html for a scene that is not registered: ${strayTile.join(', ')}`);
+    }
+
     if (problems.length) {
       throw new Error(`prerender: scene/page mismatch —\n  ${problems.join('\n  ')}`);
     }
