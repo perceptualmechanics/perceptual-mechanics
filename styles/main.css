@@ -376,7 +376,7 @@ html, body {
 #pm-nav {
   /* Keep equal to the number of .nav-icon buttons in index.html. This is
      the one value an added or removed scene has to change. */
-  --nav-count: 10;
+  --nav-count: 11;
   --nav-pad: 0.5rem;
   /* The widest one icon's share of the row may grow to: 44px of icon plus
      the 2.5rem gap the desktop layout has always used. */

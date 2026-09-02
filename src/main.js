@@ -1,97 +1,24 @@
 import { initColophon }    from './components/colophon/colophon.js';
 import { anyPanelOpen, prefersReducedMotion } from './utils/sceneKit.js';
+import { SCENES } from './scenes/registry.js';
 
-// ─── Scene registry ──────────────────────────────────────────────────────────
-// Each entry's `load()` is a dynamic import() rather than a static top-of-
-// file import — Rollup code-splits each one into its own lazily-fetched
-// chunk instead of folding all ten scenes (plus main.js's own logic) into
-// one monolithic bundle. Before this (v3.9.17 and earlier), every scene's
-// full module was a static import here, so opening *any* scene — even just
-// rendering its landing-page preview thumbnail via initPreviews() below —
-// required all ten to already be parsed and evaluated, which is exactly
-// what tripped Rollup's "chunks larger than 500kB" warning (main chunk was
-// ~558kB gzipped ~208kB). `exportName` records which named export each
-// scene's module hands back (`createSphere`, `createharmonics` — note the
-// lowercase h, kept internal-only per harmonics.js's own header — etc.),
-// since dynamic import() resolves to the whole module namespace object,
-// not a single function the way the old static imports destructured
-// directly.
-//
-// This does NOT, by itself, shrink first-load bytes: initPreviews() still
-// needs every scene's real create() to render its thumbnail (no scene's
-// preview/full split has been done yet — see NOTES.md's open-items entry
-// for the follow-up), so a first visit still fetches all ten chunks, just
-// now as parallel per-scene requests instead of one blocking chunk. Real,
-// present-tense wins: (1) editing one scene no longer invalidates every
-// visitor's cached copy of the other nine on the next deploy; (2) chunks
-// land under Rollup's 500kB threshold individually; (3) this is the
-// infrastructure a future preview/full split plugs into for free — once a
-// scene's preview branch stops needing its full-mode code, only
-// initPreviews()'s call needs to change, not this registry or expandScene.
-const SCENES = {
-  sphere:    { load: () => import('./scenes/sphere/sphere.js'),       exportName: 'createSphere',
-               label: 'The Sphere — full screen experience. Press Escape to return.',
-               ariaLabel: 'The Sphere — interactive geodesic sphere with text fragments.' },
-  butterfly: { load: () => import('./scenes/butterfly/butterfly.js'), exportName: 'createButterfly',
-               label: 'Chaos Butterfly in Phase Space, 2026.',
-               // The one scene that wants a different backdrop than the
-               // shared #000811: its attractor is drawn on true black, and
-               // the faint blue of the default read as a wash behind it.
-               // Declared here rather than as a `.butterfly-bg` class named
-               // in both main.js and main.css (which is how it lived until
-               // 4.0) — one scene's name hardcoded into the shell twice is
-               // exactly the thing that gets missed when a scene is renamed
-               // or a second scene wants the same treatment.
-               overlayBg: '#000000',
-               ariaLabel: 'Chaos Butterfly in Phase Space, 2026 — Lorenz attractor. Drag to orbit, scroll to zoom.' },
-  scroll:    { load: () => import('./scenes/scroll/scroll.js'),       exportName: 'createScroll',
-               label: 'Selected Works — A Scroll of Found Writing.',
-               ariaLabel: 'Selected Works — a scroll of found writing, carved fragments, 2000 to the 2010s. Scroll to read.' },
-  theater:   { load: () => import('./scenes/theater/theater.js'),     exportName: 'createTheater',
-               label: 'The Theater — Now Playing.',
-               ariaLabel: 'The Theater — scenes from Truth and Beauty, Paul Revere, and You’ve Got a Friend in Satan, performed by ASCII actors. A different program each visit; click or use the controls to advance.' },
-  orbiter:   { load: () => import('./scenes/orbiter/orbiter.js'),     exportName: 'createOrbiter',
-               label: 'Orbiter — A p-Orbital, Satellites.',
-               ariaLabel: 'Orbiter — a hydrogen atom’s p-orbital rendered as a fuzzy probability cloud, with satellites in clean elliptical orbits around it. Drag to orbit.' },
-  orrery:    { load: () => import('./scenes/orrery/orrery.js'),       exportName: 'createOrrery',
-               label: 'The Orrery of Los Feliz.',
-               ariaLabel: 'The Orrery of Los Feliz — a found story, told through a 30-foot orrery: nine planets, their moons, an asteroid belt, in a warehouse you can walk around. Use the arrow keys or WASD to walk, click to look around, click the orrery to read.' },
-  library:   { load: () => import('./scenes/library/library.js'),     exportName: 'createLibrary',
-               label: 'The Library — once removed.',
-               ariaLabel: 'The Library — a real bookshelf, 107 books, films, and divination decks, rebuilt as a shelf you can turn in space. Drag to orbit, scroll to zoom, click a spine to read what it is.' },
-  // A small vessel travelling a glowing rail across a night wilderness, with
-  // ten stations along it, each holding a fragment of found text.
-  //
-  // Both this comment and the ariaLabel below described curved mirrors and a
-  // bouncing beam until 4.0 — a design the scene moved away from, leaving the
-  // description behind. That mattered more than a stale comment usually does:
-  // an ariaLabel is not decoration, it is the ONLY account of this scene a
-  // screen-reader visitor gets, and it was telling them to click a mirror in a
-  // scene with no mirrors in it. The wording now matches what the visible hint
-  // ("click a station to read") and the jump list ("Station N of 10") already
-  // say, so a sighted visitor and a screen-reader visitor are given the same
-  // word for the same object. (`BOUNCES` still names the data array inside
-  // beamline.text.js — harmless, since nobody reads a variable name out loud.)
-  beamline:  { load: () => import('./scenes/beamline/beamline.js'),   exportName: 'createBeamline',
-               label: 'Beamline.',
-               ariaLabel: 'Beamline — a small vessel travelling a glowing rail across a night wilderness, with ten stations along it, each holding a fragment of found text. Drag to orbit, scroll to zoom, click a station to read.' },
-  // Harmonics — ninth scene, Phase 3 (2026-08-16), renamed from "The
-  // harmonics" 2026-08-18 (user-facing name only — internal module/
-  // folder/class names stay `harmonics`, see harmonics.js's own header for
-  // why). Visualizes src/resonances.js's approved Layer 2 links; see
-  // harmonics.js's own header comment for the full picture.
-  harmonics: { load: () => import('./scenes/harmonics/harmonics.js'), exportName: 'createharmonics',
-               label: 'Harmonics.',
-               ariaLabel: 'Harmonics — resonant pieces across every other scene, laid out by how strongly they connect and pulsing in sync with whatever they resonate with. Drag to orbit, scroll to zoom, touch a node.' },
-  // Outside — tenth scene (2026-08-24), pivoted to a floral cosmology map
-  // round 3 (same day): a generated lotus mapping the five Power Sources
-  // (petals) and their Folk Origins, Magi/Psi as the center. The earlier
-  // 7-vs-11 OER/Apherion projection thesis this scene shipped with is
-  // fully retired — see outside.js's own header for the full picture.
-  outside:   { load: () => import('./scenes/outside/outside.js'),     exportName: 'createOutside',
-               label: 'Outside.',
-               ariaLabel: 'Outside — a generated lotus mapping the five Sources of Power as petals and their Folk Origins, Magi and Psi at the center. The flower breathes continuously on its own. Drag to orbit, scroll to zoom, touch a petal.' },
-};
+// The registry is deliberately import-free (see its header), so the loaders are
+// derived here from its keys rather than listed beside them. `import.meta.glob`
+// is Vite's own build-time directory read: it produces the same per-scene
+// dynamic imports the registry used to spell out, still lazy and still code-
+// split, but with no second list of eleven scene names to fall out of step with
+// the first. A scene whose folder and file don't match its registry key fails
+// on open with a named error rather than a bare undefined.
+const sceneModules = import.meta.glob('./scenes/*/*.js');
+function loadSceneModule(name) {
+  const id = `./scenes/${name}/${name}.js`;
+  const loader = sceneModules[id];
+  if (!loader) {
+    return Promise.reject(new Error(
+      `scene "${name}" is in the registry but ${id} does not exist — a scene's folder and entry file must both be named after its registry key`));
+  }
+  return loader();
+}
 
 // One in-flight/resolved promise per scene, shared by every caller
 // (initPreviews' thumbnail render, expandScene's full-mode open, and the
@@ -115,7 +42,7 @@ const sceneModulePromises = {};
 // caller already shares, rather than being repeated at each call site.
 function loadSceneCreate(name) {
   const entry = SCENES[name];
-  sceneModulePromises[name] ??= entry.load().catch(err => {
+  sceneModulePromises[name] ??= loadSceneModule(name).catch(err => {
     delete sceneModulePromises[name];
     throw err;
   });

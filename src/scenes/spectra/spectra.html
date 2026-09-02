@@ -1,0 +1,48 @@
+<!--
+  Spectra scene shell. Unlike most scenes here the chrome is NOT body-level:
+  every control is a real button that changes what the plate shows, so it all
+  mounts inside #experience-container where main.js's focus trap already looks.
+  `.pm-scene-chrome` is for chrome that has to live on document.body and would
+  otherwise be unreachable by Tab (see outside.html) — nothing here needs it.
+
+  The plate row and the emission/absorption switch are the scene's only
+  persistent controls, and both are stated as their current state rather than
+  as an instruction: the button reads "Emission" because that is what you are
+  looking at, and aria-pressed carries which of the three plates is loaded.
+-->
+<div class="spectra-head">
+	<p class="spectra-title" aria-hidden="true">Spectra</p>
+	<p class="spectra-hint" aria-hidden="true">a plate of voices &nbsp;&middot;&nbsp; click an exposure to read it &nbsp;&middot;&nbsp; up and down arrows walk the cast</p>
+</div>
+
+<div class="spectra-controls">
+	<div class="spectra-plates" role="group" aria-label="Which play to plate"></div>
+	<button type="button" class="spectra-mode" aria-label="Showing emission. Activate to show absorption.">Emission</button>
+</div>
+
+<!--
+  Exposure labels, one per row, written by spectra.js from the same band
+  rectangles the plate geometry uses. These are the scene's interaction
+  surface as well as its annotation — see buildRows() for why they are real
+  buttons rather than a hit test over the canvas.
+-->
+<ul class="spectra-rows"></ul>
+
+<!--
+  The wavelength scale. Written by spectra.js from FEATURES and the same X0/X1
+  the geometry uses, rather than typed here — a hand-written copy of seven
+  positions is a copy that drifts the first time a feature is added, and this
+  scene exists downstream of exactly that kind of drift. Printed once under the
+  plate rather than repeated per exposure, which is what makes the stack
+  readable across rows: every line at the same x is the same feature in every
+  voice.
+-->
+<ul class="spectra-scale" aria-hidden="true"></ul>
+
+<aside class="spectra-panel" aria-label="Speaker reading">
+	<button type="button" class="spectra-close" aria-label="Close this reading">&#215;</button>
+	<h2 tabindex="-1"></h2>
+	<div class="spectra-panel-body"></div>
+</aside>
+
+<div class="spectra-live sr-only" aria-live="polite"></div>
