@@ -16,6 +16,12 @@ something the next brief is written from.*
   the briefs) it goes there *as well*; this file is the index, and the
   last-resort home for facts with nowhere else to live.
 
+**This file is read in full before every brief.** That is the whole design
+constraint: if it stops being readable in one sitting, it has failed at its own
+job, and a corrections file nobody finishes is worse than none — it looks like
+diligence. Length is managed by *Retired* at the bottom rather than by leaving
+rows out.
+
 **Every row cites a source that can be checked in seconds.** A corrections file
 whose corrections are themselves unverified is the original problem with extra
 steps, so nothing goes in here from memory — each entry below was re-read from
@@ -43,15 +49,6 @@ becomes legible. The stale reason was propping up a sound decision.
 
 ---
 
-## Counts and measurements
-
-| Claim | What is true | Source |
-|---|---|---|
-| Iron has 218 lines in Apollo's band | **218 is the total across all ten elements.** Iron has **50**. Sodium has 6, calcium 38, hydrogen 7. | `ALL_LINES.length` and `visibleLines()` in `src/scenes/apollo/apollo.text.js` |
-| `sphere.js`'s geodesic has 320 faces at `detail = 2`, and each `+1` quadruples the count | **180 faces.** `PolyhedronGeometry` splits each of 20 base faces into `(detail+1)²`, not `4^detail`, so 2→3 is 1.78x rather than 4x. The wrong formula agrees at detail 0 and 1 — the two cases anyone checks by hand. | `src/scenes/sphere/sphere.js:103` · counted from `geo.attributes.position.count / 3` at three.js 185 |
-| The sodium doublet beats at 0.5165 Hz | **0.5154 Hz.** 0.5165 came from sorting sodium's lines by frequency, which selects the 568nm pair — whose spacing is within 7% of D's. Select the D lines by wavelength (588.995 / 589.592), never by "the two closest" or "the two loudest". | `wavelengthToHz` in `apollo.text.js`; the measurement is in `NOTES.md` 4.4.0 |
-| A 25-second sample is enough to characterise Apollo's ambient rate | It is not. 25s read **0.72 notes/s**; ten minutes read **0.560** against a configured 0.55. | `NOTES.md` 4.5.0 |
-
 ## Architecture
 
 | Claim | What is true | Source |
@@ -60,24 +57,62 @@ becomes legible. The stale reason was propping up a sound decision.
 | The scenes-sum assertion is unbuilt / needs implementing | **Shipped in v4.2.0**, and Apollo was its first live customer. It fails in three directions and there is now a second gate checking `index.html`'s nav icons and tiles against the registry. | `scripts/prerender.js`, `scene/page mismatch` |
 | `--nav-count` in `styles/main.css` is the value an added scene changes | **A fallback only, since v4.4.0.** `applyDerivedLayout()` in `main.js` sets it from `Object.keys(SCENES).length`; adding a scene changes no number in the stylesheet. | `styles/main.css:386` · `src/main.js`, `applyDerivedLayout` |
 | A mixture in the hash risks colliding with the `#scene/id` piece route | It cannot. `parseHash()` has always required `/^\d+$/` before treating a second segment as a piece id. What did need changing was `setHash()`, which rebuilt the hash from scene + piece id and erased a mixture on arrival. | `src/main.js:197` |
-| Apollo's corona drifts right to left | **It did not until v4.4.1.** The loop advanced each strand's wiggle phase and left its `x` fixed, under a variable named `speed` and a comment saying "right to left". It drifts now, measured at 90px/s at 1280px wide. | `src/scenes/apollo/apollo.js`, `f.x -= f.speed * dt` |
 
 ## Sources and methods that look right and are not
 
 | Claim | What is true | Source |
 |---|---|---|
-| A CSP report collector needs its domain in `connect-src` | It does not. CSP reports are sent out of band and are not subject to the policy. | `NOTES.md` 4.2.1 · `public/.htaccess` comment block |
-| Solar photospheric abundances are the right weights for Apollo's solar mixture | **They are published, sourceable and would be actively wrong** — helium second, calcium near nothing, when calcium's H and K are the deepest features in the visible solar spectrum. Abundance is not line strength. The ordering comes from the Fraunhofer table; the fader values are a stated ruler. | `SOLAR_MIXTURE` in `apollo.text.js` |
 | NIST relative intensities give absorption depth | They are **emission** intensities, used here as a line-strength proxy. The gap is measurable: magnesium's b1 is 70 against sodium D2's 1000, so at maximum fader magnesium still transmits 34.5% where the real sun's b triplet rivals the D lines. | header of `apollo.text.js` · `NOTES.md` 4.5.0 |
 | Fraunhofer catalogued exactly 574 lines | Sources differ — "over 570" and "some 700" both appear in reputable ones. Say "over 570" or give the source with the number. | `apollo.text.js`, `FRAUNHOFER` comment |
 
-## Status — where to look, and where not to
+## True when written, false now
+
+The category the table shape did not have. Not an error and not current: a fact
+with an expiry date, which is the kind most likely to be quoted correctly years
+later and be wrong anyway. Record the version it was true at.
 
 | Claim | What is true | Source |
 |---|---|---|
-| `punch-list-2026-09-01.md` lists what is currently open | It is a **dated snapshot** and its own status block says so. Several items were cited as open after the work had shipped. The maintained list is `perceptualmechanics-project-brief.md` → *Known open items*. The punch list is worth reading for the evidence attached to each finding, not for status. | `punch-list-2026-09-01.md` header |
-| Two `.htaccess` items are open; v4.0.1–4.0.3 are not deployed | Both `.htaccess` items were fixed in v4.0 with the reasoning in comments; 4.0.1–4.0.3 were deployed. | `public/.htaccess` · `NOTES.md` |
 | Apollo has no generative layer, so it needs no lookahead scheduler | **True until v4.5.0 and false after it.** Sunlight is a generative layer and uses `setInterval` with lookahead, never rAF. The v4.3.0 statement was correct when written — a good example of a fact with an expiry date. | `NOTES.md` 4.3.0 and 4.5.0 |
+
+---
+
+## Retired
+
+**A row earns retirement when the fact has been absorbed into a document the
+next session reads anyway** — the way the deploy's rsync flags belong in
+`public/.htaccess`'s own comment block and the punch list's status belongs in
+the project brief. Move it there, leave the one-line pointer below, and this
+file stays short enough to read.
+
+**If a row cannot find a home, that is the signal it belongs here permanently.**
+The Butterfly claim is the standing example: it is already in `NOTES.md` 4.1.3
+and in the project brief, and it came back three times anyway. It stays at the
+top of this file and does not retire.
+
+Retired 2026-09-02, on the first pass of this rule:
+
+- **Iron has 218 lines** → `WORKING-PROTOCOL.md`, first table row, with the
+  corrected count; and the chat brief's Apollo row now carries "218 across all
+  ten (iron 50, sodium 6)".
+- **`sphere.js`'s 320 faces at detail 2** → the code comment at
+  `src/scenes/sphere/sphere.js:103`, which shows the formula and the counted
+  values; and `WORKING-PROTOCOL.md`'s shared-lesson list.
+- **The sodium beat measured on the wrong pair** → `WORKING-PROTOCOL.md`'s
+  shared-lesson list, where it is stated as the method warning it actually is.
+- **Apollo's corona "drifts right to left"** → the same list, plus the code
+  comment at the drift itself.
+- **Photospheric abundances as line-strength weights** → the same list, where it
+  is the entry about a citation on a wrong answer.
+- **A 25-second sample characterises the ambient rate** → the same document's
+  closing observation on sample size.
+- **A CSP collector needs `connect-src`; two `.htaccess` items are open;
+  v4.0.1–4.0.3 undeployed; the punch list lists what is open** → all four are
+  rows in `WORKING-PROTOCOL.md`'s own table, and rule 2 there covers the punch
+  list directly.
+
+Nothing above is *less* true for having been retired. The pointer exists so a
+reader who half-remembers one of these knows where it went.
 
 ---
 

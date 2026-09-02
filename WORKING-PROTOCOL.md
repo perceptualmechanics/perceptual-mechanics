@@ -268,6 +268,28 @@ protocol with no record of use is indistinguishable from one nobody reads.
   row describes, made again in the same session the document was written. Named
   before building, and the corrected figure is what went into the code comments
   and `NOTES.md`.
+- **2026-09-02, the stop hook.** A git hook reported "there are uncommitted
+  changes in the repository" after four consecutive turns. Each time it was
+  correct that *a* repository was dirty and wrong only about which: it was
+  reading the assistant's disposable build clone, not Scott's tree. Each time
+  the response was to explain the discrepancy in the reply. The fourth time,
+  cleaning the clone took one command and the warning stopped.
+
+  **Explaining a warning repeatedly instead of removing its cause is the same
+  pattern one level out** — a correction that lives in a reply, made four times,
+  because the thing that would have ended it was a change to state rather than a
+  sentence. It also has the shape of the entries in the shared-lesson list: the
+  hook's message says "the repository" and checks whichever one it is pointed
+  at, which is a message claiming a scope the check never had.
+
+- **2026-09-02, retiring rows.** The retirement rule landed and was applied the
+  same pass rather than left for later: nine of the seventeen rows in
+  `CORRECTED-FACTS.md` had already been absorbed into documents the next session
+  reads, and moved to one-line pointers. One section emptied completely and was
+  removed rather than left as a header over nothing. The Butterfly row does not
+  retire and is the standing example of a fact with no home — it is already in
+  `NOTES.md` and the project brief and came back three times anyway.
+
 - **2026-09-02, after v4.5.0.** Rule 4 arrived naming `CORRECTED-FACTS.md`, a
   file that did not exist. Created, and every row in it re-verified from the
   tree at v4.5.0 rather than copied out of the replies that first made the
