@@ -156,6 +156,13 @@ Four separate mechanisms, one shape:
 - The deploy's `/text/` check fetched a page and asserted a status code, under
   a comment claiming it proved the CSP hash matched — **a comment claiming a
   scope the code never had.**
+- Apollo's corona had a per-strand `speed`, a comment reading "right to left,"
+  and an `x` that never changed. The code was correct at what it did — advance a
+  wiggle phase — and **the name and the comment claimed a scope it never had.**
+  The same shape as the `/text/` check, one file over, found four releases
+  later. Nothing failed; the resting state just quietly read as wallpaper, and
+  took the strike response down with it, because a response needs something to
+  differ from.
 
 > **A number that has an obvious explanation is the one you stop checking.**
 > `hell` at 481, in a play set in Hell.
@@ -164,6 +171,26 @@ And the corollary, which is the one that applies to this document:
 
 > **An audit's ruler is part of its result.** Say what was looked for as
 > prominently as what was found.
+
+### And one that is new, from 4.4.0
+
+**The failure mode is recursive: a fix can invalidate the instrument that
+verified it.** v4.3.0's frame-rate probe read a single pixel's brightness. 4.4.0
+made the corona behind that pixel *move*, and it is randomly seeded per page
+load — so the probe that had proved 4.3.0 correct started returning different
+answers for identical inputs, and would have reported a frame-rate coupling that
+did not exist.
+
+This is not the same as a stale document. A document goes wrong by standing
+still while the code moves; **a measurement goes wrong by measuring something
+the code has since started doing.** The instrument was right when it was
+written, was never edited, and became wrong anyway.
+
+What follows practically: **when a change alters what is on screen or what is
+audible, re-derive the probes that read the screen or the audio before trusting
+them — starting with a repeatability check against the change, not against the
+old code.** Two runs at the same frame rate differing from each other is what
+caught this, and it cost one run to ask.
 
 ---
 
@@ -194,6 +221,12 @@ protocol with no record of use is indistinguishable from one nobody reads.
   row describes, made again in the same session the document was written. Named
   before building, and the corrected figure is what went into the code comments
   and `NOTES.md`.
+- **2026-09-02, v4.4.1.** The percussiveness measurement states its own scope
+  in its output: it reproduces ONE voice offline from the numbers the page
+  schedules, without the compressor or the room, and the compressor is part of
+  why the transient survives. Said in the result rather than left to be assumed,
+  because a number labelled "measured" that quietly excludes half the signal
+  path is the first row of the table above.
 - **2026-09-02, v4.4.0.** Third invalid frame-rate harness, reported under rule
   4. v4.3.0's probe was contaminated by 4.4.0's own change: the corona now
   MOVES behind the sampled pixel, and it is randomly seeded per load, so two

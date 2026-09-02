@@ -1,6 +1,6 @@
 # perceptualmechanics — chat brief
 
-*Handoff for a fresh Claude chat. Current as of **v4.4.0**, 2026-09-02.*
+*Handoff for a fresh Claude chat. Current as of **v4.4.1**, 2026-09-02.*
 
 > **Read `WORKING-PROTOCOL.md` first.** It is in the repo and it is short. It
 > records the one failure mode this collaboration keeps producing — a number or
@@ -224,6 +224,16 @@ way — and nobody could tell, because a thumbnail that has never drawn looks
 exactly like one still loading. That indistinguishability was the actual
 finding, and the same release made the two states tell apart from the page
 itself.
+
+**v4.4.1 — the gas itself made percussive.** Emission shipped sounding like a
+tone that arrived quickly rather than a thing that was struck: 16.6% of the
+first second's energy was in the first 60ms. Each voice now opens with a 50ms
+noise burst band-passed at its own line's frequency — broadband at the moment of
+contact, which is what a strike is — with the filter's Q tied to the note's
+length, because a short-lived emission genuinely is spectrally broader. Plus a
+two-stage envelope and a compressor that was eating the transient it existed to
+protect against. Now 50.3% for sodium and 65.8% for iron, with the sodium beat
+intact.
 
 **v4.4.0 — Apollo gets a second instrument, and the gallery is 4/4/3.**
 Emission mode: the same wavelengths from the other side, so the element data is

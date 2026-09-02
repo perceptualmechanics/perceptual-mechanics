@@ -794,6 +794,7 @@ export function createApollo(container, { preview = false } = {}) {
   // hardware's own clock, and nothing about the sound is driven from the
   // render loop.
   let audioCtx = null, muteGain = null, busGain = null, comp = null, verb = null, wetGain = null;
+  let noiseBuf = null;
   let soundEnabled = false;
   let soundToggleEl = null, soundToggleLabelEl = null, srLiveEl = null;
 
@@ -817,7 +818,12 @@ export function createApollo(container, { preview = false } = {}) {
     // is the case it was sized for. The compressor is doing headroom work, not
     // colouring the sound.
     comp = audioCtx.createDynamicsCompressor();
-    comp.threshold.value = -14; comp.ratio.value = 6; comp.attack.value = 0.004; comp.release.value = 0.3;
+    // 10ms attack, not the 4ms this had. A compressor that clamps in four
+    // milliseconds eats the first thing a percussive note does, which is
+    // exactly the part that makes it read as struck rather than as faded in —
+    // the strike was being flattened by the thing protecting the headroom.
+    // Threshold drops to compensate so the sustained material is held the same.
+    comp.threshold.value = -16; comp.ratio.value = 6; comp.attack.value = 0.010; comp.release.value = 0.28;
     comp.connect(muteGain);
     busGain = audioCtx.createGain(); busGain.gain.value = 1;
     busGain.connect(comp);
@@ -827,9 +833,21 @@ export function createApollo(container, { preview = false } = {}) {
     verb = audioCtx.createConvolver();
     verb.buffer = makeImpulseResponse(audioCtx, 1.6, 2.6);
     verb.connect(comp);
-    wetGain = audioCtx.createGain(); wetGain.gain.value = 0.22;
+    wetGain = audioCtx.createGain(); wetGain.gain.value = wetForMode();
     wetGain.connect(verb);
+    // One second of noise, made once and shared by every strike. Each strike
+    // reads a random offset out of it, so twelve simultaneous transients are
+    // twelve different bursts rather than twelve copies of one.
+    noiseBuf = audioCtx.createBuffer(1, audioCtx.sampleRate, audioCtx.sampleRate);
+    const nd = noiseBuf.getChannelData(0);
+    for (let i = 0; i < nd.length; i++) nd[i] = Math.random() * 2 - 1;
   }
+
+  // Emission is drier. A 1.6-second tail behind a struck note is the thing that
+  // turns it back into a sustained one — the transient survives the compressor
+  // and then gets smeared by the room. Absorption keeps the wetter setting,
+  // where a long tone in a large space is the point.
+  const wetForMode = () => (mode === 'emission' ? 0.10 : 0.22);
 
   function setSoundEnabled(on) {
     // The same guard Outside and Harmonics carry, for the same bug:
@@ -853,6 +871,42 @@ export function createApollo(container, { preview = false } = {}) {
     }
   }
 
+  // ─── The strike transient ─────────────────────────────────────────────────
+  // A sine with a fast attack is still a tone that arrives quickly; it is not a
+  // struck thing. What makes a strike read as a strike is a broadband transient
+  // at the onset — the moment of contact is not pitched, the resonance that
+  // follows is.
+  //
+  // So: a very short burst of noise, band-passed at the line's own frequency.
+  // Broadband at the instant of the strike, centred on the wavelength being
+  // played, gone in fifty milliseconds. That keeps the rule the sine was
+  // protecting — no sustained energy at a frequency no line corresponds to —
+  // while giving the onset something to be.
+  //
+  // The filter's Q is tied to the note's own length, and that is not a knob: a
+  // short-lived emission IS spectrally broader, because time and bandwidth
+  // trade against each other. So the swarm's brief notes get a low Q and read
+  // as ticks, and the long ring gets a high Q and reads as pitched. The same
+  // parameter that makes iron percussive makes sodium singing.
+  const TRANSIENT = 0.05; // seconds
+  function strikeTransient(now, hz, amp, life) {
+    if (!noiseBuf) return;
+    const src = audioCtx.createBufferSource();
+    src.buffer = noiseBuf;
+    const bp = audioCtx.createBiquadFilter();
+    bp.type = 'bandpass';
+    bp.frequency.value = hz;
+    const t = (life - EMISSION_SWARM) / Math.max(1e-6, EMISSION_RING - EMISSION_SWARM);
+    bp.Q.value = 3 + 9 * Math.max(0, Math.min(1, t));
+    const g = audioCtx.createGain();
+    g.gain.setValueAtTime(amp * 2.2, now);
+    g.gain.exponentialRampToValueAtTime(0.0001, now + TRANSIENT);
+    src.connect(bp); bp.connect(g); g.connect(busGain);
+    // A random offset into the shared buffer, so simultaneous transients are
+    // not the identical waveform stacking into one louder copy of itself.
+    src.start(now, Math.random() * 0.9, TRANSIENT + 0.02);
+  }
+
   // One note: a sine at the line's own transposed frequency. Sine and not
   // something richer on purpose — harmonics of their own would put energy at
   // frequencies no line in the band corresponds to, and the beat between two
@@ -870,7 +924,7 @@ export function createApollo(container, { preview = false } = {}) {
     // and the length. Same oscillator, same wavelength-to-frequency division,
     // so a given line is the same pitch in both modes and a visitor learns it
     // once.
-    const attack = mode === 'emission' ? 0.006 : 0.05;
+    const attack = mode === 'emission' ? 0.002 : 0.05;
     // Amplitude from the line's own relative intensity, divided down by how
     // many voices are sounding together so a fifty-line element and a
     // one-line element arrive at the ear at the same loudness. Without this,
@@ -879,7 +933,23 @@ export function createApollo(container, { preview = false } = {}) {
     const amp = 0.16 * Math.pow(rel / 1000, 0.5) / Math.sqrt(Math.max(1, voices));
     env.gain.setValueAtTime(0, now);
     env.gain.linearRampToValueAtTime(amp, now + attack);
-    env.gain.exponentialRampToValueAtTime(0.0001, now + life);
+    if (mode === 'emission') {
+      // Two stages, and the first one is what percussion is. A struck thing
+      // loses most of its energy immediately and then rings quietly for a long
+      // time; a single exponential from peak to silence across four seconds is
+      // a note that fades, which is a different gesture. Down to 26% in 110ms,
+      // then the long tail.
+      //
+      // The tail has to stay long whatever this does, because the sodium
+      // doublet beats with a 1.94-second period and the beat is the best thing
+      // the sonification has. Quieter is fine — beating is a ratio between two
+      // tones and survives at any level. Shorter is not.
+      env.gain.exponentialRampToValueAtTime(amp * 0.26, now + 0.11);
+      env.gain.exponentialRampToValueAtTime(0.0001, now + life);
+      strikeTransient(now, hz, amp, life);
+    } else {
+      env.gain.exponentialRampToValueAtTime(0.0001, now + life);
+    }
     osc.connect(env);
     env.connect(busGain);
     env.connect(wetGain);
@@ -911,6 +981,11 @@ export function createApollo(container, { preview = false } = {}) {
     mode = next;
     // The band is rebuilt from the same tau either way (see buildBand), so
     // nothing needs recomputing — only the blend needs to move.
+    if (wetGain && audioCtx) {
+      const t = audioCtx.currentTime;
+      wetGain.gain.cancelScheduledValues(t);
+      wetGain.gain.linearRampToValueAtTime(wetForMode(), t + MODE_FADE);
+    }
     if (hintEl) hintEl.textContent = mode === 'emission'
       ? 'move a fader to add an element to the gas \u00a0\u00b7\u00a0 click a bright line to strike it'
       : 'move a fader to put an element in the light \u00a0\u00b7\u00a0 click a dark line to hear it';

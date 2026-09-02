@@ -587,6 +587,74 @@ described are unchanged.)
   worth trimming, orrery.js's texture generators and first-person rig are the
   two most self-contained chunks to split out first.
 
+## 4.4.1 (2026-09-02)
+
+**The gas itself, made percussive.** Emission shipped in 4.4.0 with a fast
+attack and a two-stage-less exponential, and Scott's first note on hearing it
+was that it still did not sound struck. He was right, and the measurement says
+why: **16.6% of the first second's energy was in the first 60 milliseconds**,
+which is a tone that arrives quickly, not a thing that was hit.
+
+Three changes, and one of them is the interesting one.
+
+**A strike transient.** A sine with a fast attack is still a pitched tone from
+the first sample. What makes a strike read as a strike is that the moment of
+contact is *not* pitched — it is broadband, and the resonance that follows is
+what carries the note. So each emission voice now opens with a 50ms burst of
+noise, band-passed at that line's own frequency: broadband at the instant of
+the strike, centred on the wavelength being played, gone before the tone has
+finished establishing itself. That keeps the rule the plain sine was protecting
+— no *sustained* energy at a frequency no line corresponds to — while giving
+the onset something to be.
+
+**The filter's Q is not a knob.** It is tied to the note's own length, because a
+short-lived emission genuinely is spectrally broader — time and bandwidth trade
+against each other. So the swarm's brief notes get Q=3 and read as ticks, and
+the long ring gets Q=12 and reads as pitched. The same parameter that makes iron
+percussive makes sodium singing, and it comes from the physics rather than from
+taste.
+
+**A two-stage envelope.** A struck thing loses most of its energy immediately
+and then rings quietly for a long time. One exponential from peak to silence
+across four seconds is a note that fades, which is a different gesture. Now:
+down to 26% in 110ms, then the long tail. The tail has to stay long whatever
+else happens, because the sodium doublet beats with a 1.94-second period —
+quieter is fine, since beating is a ratio between two tones and survives at any
+level, but shorter is not.
+
+**And the compressor was eating the strike.** Its 4ms attack clamped down on
+exactly the part that makes a note percussive; the thing protecting the headroom
+was flattening the transient it was there to protect against. 10ms attack now,
+with the threshold dropped from -14 to -16 so the sustained material is held the
+same. Emission also runs drier — wet send 0.22 to 0.10 — since a 1.6-second tail
+behind a struck note turns it back into a sustained one.
+
+### Measured
+
+One voice reproduced offline from the numbers the page actually schedules.
+**Stated scope: this is one voice, without the compressor and without the room,
+and the compressor is part of why the transient survives.**
+
+| | peak at | half by | tenth by | first 60ms of the first second's energy |
+|---|---|---|---|---|
+| 4.4.0 as shipped | 0.005s | 0.46s | 1.5s | 16.6% |
+| now — sodium, 6 voices | 0s | 0.06s | 0.865s | **50.3%** |
+| now — iron, 12 voices | 0s | 0.05s | 0.35s | **65.8%** |
+
+Time to half-amplitude fell 7.7x for sodium. Half the energy of the first second
+now lands in the first sixtieth of it, and two-thirds of it does for iron.
+
+**The beat still survives**, which was the constraint the whole envelope was
+designed around: the D pair rendered through the new voice gives **2 beat maxima
+over the 4.2s note**, modulation depth 1.25 (against 1.44 before — the tail is
+quieter, and the beat is a ratio, so it is still fully there).
+
+Scheduled envelopes, read off the live page rather than from the source:
+sodium's oscillator goes 0 to 0.0653 in 2ms, to 0.0170 at 110ms, to 0.0001 at
+4.2s, with a transient at 0.1437 decaying over 50ms; iron's twelve voices peak
+at 0.0327 and reach 0.0001 at 1.4s. Six oscillators and six transients for
+sodium, twelve and twelve for iron.
+
 ## 4.4.0 (2026-09-02)
 
 Three things: a second instrument inside Apollo, a corona that was never
