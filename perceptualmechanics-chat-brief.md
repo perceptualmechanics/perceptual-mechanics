@@ -1,6 +1,6 @@
 # perceptualmechanics — chat brief
 
-*Handoff for a fresh Claude chat. Current as of **v4.1.3**, 2026-09-02.*
+*Handoff for a fresh Claude chat. Current as of **v4.3.0**, 2026-09-02.*
 
 This is the **chat** brief, not the code brief. It assumes no file access, no
 repo, no terminal. Its companion, `perceptualmechanics-project-brief.md`, lives
@@ -11,10 +11,15 @@ in this repo and is written for a coding session.
 ## What the site is
 
 perceptualmechanics.com — Scott Jason Cohen's digital-art portfolio. A
-single-page, full-screen site built around **ten interactive scenes**, each a
+single-page, full-screen site built around **eleven interactive scenes**, each a
 small standalone piece combining generative visuals, curated writing and found
 text, and in most cases generative or triggered audio. Static: no backend, no
 database, everything client-rendered.
+
+Ten of the eleven publish Scott’s writing. The eleventh, **Apollo**, publishes
+physics — it is an instrument rather than a piece of writing, and the one scene
+whose content is a table of measurements. That distinction matters for the
+number below.
 
 The writing is the point. **36,886 words** of prose, poetry, scripts and catalog
 entries are published across the ten scenes, most of it drawn from two
@@ -32,7 +37,11 @@ are never rendered — 4.0.3 settled that private-means-not-rendered is a real
 distinction, and this number honours it. It excludes Scroll's presentation-table
 text, which is verbatim copies of phrases already counted in the body. Counting
 the withheld material too gives **37,955 authored**; the honest range is
-36,900–38,000 and the difference is entirely the Library. Measured 2026-09-02
+36,900–38,000 and the difference is entirely the Library. **Apollo does not move this figure
+and its /text/ page is not in it** — the scene publishes no writing of Scott’s,
+only wavelengths, and its page is documentation of an instrument. Said here so
+the next measurement neither adds it silently nor has to re-derive why it
+shouldn’t. Measured 2026-09-02
 from the content modules, one export per scene — see
 `spectra-measurement-2026-09-02.md` for why "one export" needs saying. The
 previous figure of "roughly 57,000" is superseded: 36,886 plus Scroll's
@@ -46,7 +55,7 @@ durable rules with the reasoning attached.
 
 ---
 
-## The ten scenes
+## The eleven scenes
 
 Counts read from the live content modules.
 
@@ -62,10 +71,11 @@ Counts read from the live content modules.
 | **Beamline** | A vessel travelling a glowing rail across a night wilderness; found text surfaces at each station | 10 stations |
 | **Harmonics** | Resonant connections across every other scene's content, as a force-directed graph with Kuramoto phase-sync and sonification | 64 approved resonances |
 | **Outside** | A generated lotus (Gielis superformula) mapping a five-part cosmology — Power Sources as petals, Folk Origins, Magi/Psi at centre | 5 power sources |
+| **Apollo** | A solar absorption spectrum you can play. Ten elements on faders put their lines into a band of starlight; clicking a dark line sounds its wavelength as a pitch | 10 elements, 218 lines |
 
 Earlier scenes — leaf, egg, prism, cycle, and some older constellation and
-ground-glimpse mechanics — were built, shipped, and retired. The ten above are
-the live set.
+ground-glimpse mechanics — were built, shipped, and retired. The eleven above
+are the live set.
 
 **They are not peers, and anything measured across "the corpus" is measuring
 Scroll unless it says otherwise.** The landing page shows ten equal tiles and
@@ -207,6 +217,17 @@ exactly like one still loading. That indistinguishability was the actual
 finding, and the same release made the two states tell apart from the page
 itself.
 
+**v4.3.0 — Apollo, the eleventh scene.** An absorption spectrum you can play:
+a band of starlight with the lines missing from it, a corona streaming in from
+the right, and ten elements on faders that put themselves into the light.
+Clicking a dark line sounds that wavelength as a pitch, so what you play is the
+absence. Hydrogen’s lines are computed live from the Rydberg formula and land
+on the published values exactly — 656.288 / 486.138 / 434.051 / 410.178, limit
+364.601 — which needs both the reduced-mass correction and a vacuum-to-air
+conversion to come out right. The other nine elements are NIST tables. The
+sodium doublet, which is the sonification’s whole claim, beats at a measured
+0.52 Hz. Nothing to do with the shelved Spectra; see the closed question below.
+
 **v4.2.1 (2026-09-02)** removed CSP reporting rather than completing it, and
 fixed a check that described itself as testing the thing it could not see. The
 deploy fetched a `/text/` page and read the status code, under a comment saying
@@ -217,8 +238,10 @@ asserts it against the policy on the same response. The reporting header was
 pointing at a URL that 404s; it is gone, with the reasoning in `.htaccess`.
 
 **v4.2.0 (2026-09-02)** taught the build to notice a scene with no `/text/`
-page. An eleventh scene was written to find that out and then shelved — see the
-eleventh-scene question below.
+page. A candidate eleventh scene was written to find that out and then shelved —
+see the closed eleventh-scene question below. (The scene that actually became
+the eleventh, Apollo, is a different piece of work and was this gate’s first
+live customer: registering it without a `/text/` page fails the build.)
 
 **v4.1.3 — Butterfly's thumbnail** now reaches a legible attractor in about a
 second rather than twenty-five. The tile had always run at half the full
@@ -264,9 +287,14 @@ empty — don't re-open this as a writing job.)*
   prerendered pages — but it is a content decision that could be revisited,
   not a technical constraint. That makes it a conversation rather than a
   build task.
-- **The eleventh scene**, whenever it comes — and one candidate has been taken
-  most of the way and put down, so start from that rather than from scratch.
-  **Spectra** would read each speaker in the Theater's three plays as a light
+- ~~**The eleventh scene**~~ — **closed 2026-09-02.** It is **Apollo**, shipped
+  in v4.3.0. It is *not* the Spectra candidate below and shares nothing with it
+  but the subject word; both are recorded here so neither gets proposed again as
+  the other. Apollo generates its own content from physics, which is also why it
+  is the first scene that adds no words to the corpus.
+
+  The candidate that was taken most of the way and put down, kept here so it is
+  neither lost nor re-derived: **Spectra** would read each speaker in the Theater's three plays as a light
   source: emission is what a voice produces, absorption is what its cast says
   that it never does. Two measurements and one build happened on 2026-09-02:
   - The **site-wide** version — each *scene* as a source — was measured and
@@ -282,12 +310,17 @@ empty — don't re-open this as a writing job.)*
     defect**. It worked. The code is in `src/scenes/spectra/` and
     `SHELVED.md` there says what it is and the three edits that bring it back.
 
-  So this is not an open question about whether the idea works. It is a decision
-  about whether the site wants an eleventh scene right now. The separate
-  content-sourcing question — The content-sourcing question — what
-  in `Holography.scriv`'s Research/Notes document is ready to be promoted — is
-  a conversation, not a build task, and it stays open whatever happens to
-  Spectra. One place to look, not two.
+  So Spectra is a working scene on a shelf, not an unanswered question. Bringing
+  it back is a decision about whether the site wants a *twelfth* scene, and
+  `SHELVED.md` lists the three edits it needs — one of which, `--nav-count`, is
+  now 11 for Apollo rather than 10, so a restore takes it to 12.
+
+- **What in `Holography.scriv`’s Research/Notes document is ready to be
+  promoted.** The content-sourcing question, and the one that is genuinely open.
+  It is a conversation rather than a build task, and it survived both the
+  Spectra shelving and the Apollo build untouched — Spectra measured writing
+  that already exists, and Apollo brought its content from outside the corpus
+  entirely. Neither one answered it. One place to look, not two.
 
 ---
 

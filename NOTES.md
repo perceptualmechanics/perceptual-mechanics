@@ -587,6 +587,258 @@ described are unchanged.)
   worth trimming, orrery.js's texture generators and first-person rig are the
   two most self-contained chunks to split out first.
 
+## 4.3.0 (2026-09-02)
+
+**Apollo — the eleventh scene.** An absorption spectrum you can play: a band of
+starlight across the middle of the frame with the lines missing from it, a
+procedurally generated corona streaming in from the right, and ten elements on
+faders that put themselves into the light. Clicking a dark line sounds that
+wavelength as a pitch.
+
+Absorption rather than emission, and that is the scene rather than a rendering
+choice. Emission is bright lines on black — easier to draw and much less
+interesting. Absorption is a full band of colour with the lines taken out of
+it, so clicking a gap and getting a tone means playing the absences. It is also
+what actually happens: Fraunhofer found these in sunlight in 1814 because the
+sun's own outer atmosphere absorbs on the way out.
+
+**Not the shelved Spectra.** That one measured this site's own writing, treated
+each speaker in Theater's three plays as a light source, and was built,
+verified and shelved the same day for focus rather than for a defect
+(`src/scenes/spectra/SHELVED.md`). Apollo shares the subject word and nothing
+else. Both are recorded here so neither gets re-proposed as the other.
+
+### What is computed and what is looked up
+
+Hydrogen is computed, live, from the Rydberg formula, and it lands on the
+published values exactly:
+
+| n | computed (air) | published |
+|---|---|---|
+| 3 | 656.288 nm | 656.28 |
+| 4 | 486.138 nm | 486.13 |
+| 5 | 434.051 nm | 434.05 |
+| 6 | 410.178 nm | 410.17 |
+| limit | 364.601 nm | 364.6 |
+
+Two things had to be right for that. The Rydberg constant needs the
+reduced-mass correction for a proton that is heavy but not infinite —
+1.096776e7 rather than CODATA's 1.097373e7 — and the vacuum wavelength the
+formula produces has to be converted to air, because every published table of
+visible lines is an air wavelength. About 0.2nm at H-alpha: not a rounding
+error, and exactly the size of the gap between agreeing with the textbook and
+missing it in the third figure. The alternative — quietly tuning a constant
+until the vacuum arithmetic lands on the air numbers — would produce the same
+four wavelengths from a fudged constant and break the moment anyone asked for a
+different series.
+
+Everything else is tabulated, from the NIST Handbook of Basic Atomic
+Spectroscopic Data (public domain, US Government work), retrieved 2026-09-02.
+Nine elements, every wavelength read off the strong-lines table for that
+element and divided by ten. On the first pass roughly half a dozen lines were
+written in from memory rather than from the table; they were checked, could not
+be found, and were dropped. That is recorded in the module header, because a
+table like this is exactly where a plausible wrong number survives forever —
+nothing downstream can tell.
+
+218 lines in the band across ten elements: H 7, He 18, Li 5, Ne 51, Na 6,
+Mg 9, Ca 38, Fe 50, Ba 26, Hg 8.
+
+### The sonification, and what it measures
+
+Wavelength to pitch is one division by one constant, 1e12. No scale, no
+quantization to the nearest note, no per-element tuning — so the intervals
+heard are the intervals seen. Stated in the code and on the `/text/` page,
+because a magic number in a sonification is where a listener is entitled to be
+suspicious.
+
+That puts the whole visible band between 400 Hz (750nm) and 789 Hz (380nm),
+which is a fact rather than a choice: 750/380 is 1.97, so the visible spectrum
+is almost exactly one octave wide. The instrument has one octave and cannot
+have more.
+
+**The sodium doublet measures 0.5154 Hz apart** — 588.995 and 589.592nm, which
+is 508.990 and 508.474 Hz. The brief predicted "a few Hz"; the honest number is
+half a hertz, a beat with a 1.94-second period. That reads as one note swelling
+and fading rather than as roughness, which is a slower demonstration than
+expected but still unmistakable over a 5.5-second note. Getting to a few Hz
+would mean a divisor near 1e11, which puts the band at 4–7.9 kHz — shrill, and
+it loses the octave. The divisor stays at 1e12 and the measured beat is
+reported rather than the predicted one.
+
+Twelve voices maximum per gesture, the same cap for every element, with each
+voice's amplitude divided by the square root of the count. Without that, iron
+is simply the loud one and "iron sounds like noise" would be a claim about the
+mixer rather than about iron.
+
+**No lookahead scheduler, deliberately.** Outside and Harmonics need one
+because they generate notes over time and a per-frame Bernoulli check stops
+being a Poisson process the moment rAF throttles. Apollo has no generative
+layer: it is silent until it is played, so every note is a response to a
+gesture that already happened and there is no window to schedule ahead. The
+principle still holds — every envelope breakpoint is scheduled against
+`audioCtx.currentTime`, and nothing about the sound is driven from the render
+loop.
+
+### Three visual decisions, each made by rendering it and looking
+
+**The colour.** Wavelength to RGB goes through the CIE 1931 colour-matching
+functions (Wyman, Sloan & Shirley's analytic fits) rather than a hue sweep — a
+hue wheel invents a magenta no wavelength produces and puts the brightness peak
+in the wrong place. But the textbook gamut handling was wrong here in two ways
+that only showed once a strip was rendered: adding the FULL white needed to
+bring an out-of-gamut colour back in put a visible pink through 620–680nm, and
+normalizing each column to its own brightest channel pinned everything to a
+gamut corner — 520nm and 546nm came out as the identical pure green. Six
+variants were drawn side by side as 1000-column strips and compared against
+photographs of real solar spectra. What shipped: 60% of the white, no
+per-column normalization, 6% uniform desaturation, and the eye's own luminous
+efficiency curve raised to a 0.38 power as the rolloff. That last one is the
+single biggest contributor to "reads as an object rather than a chart".
+
+**The grain.** First version had a column stripe at ~20px period and 7%
+amplitude crossed with row banding at 3.5% — which is not grain, it is a
+visible plaid. Raised the frequencies and cut the amplitudes to about a third.
+
+**The corona.** Two wrong versions, opposite mistakes, both kept in the code
+comments. Low frequency and large amplitude gave smooth full-width waves, and a
+hundred of those at mixed heights read as a contour map — a topographic diagram
+of nothing. Fixing that with high frequency and small amplitude produced
+zigzags: six cycles sampled at eighteen segments is three samples per cycle, so
+what rendered was the polyline rather than the curve. The lesson is that a
+strand's texture cannot come from its own vertices at that segment count. What
+works is density — 260 short, near-straight, overlapping strands at mixed
+slopes and low alpha, which is what a coronal image actually is. Each strand
+only has to be plausible on its own; none of them carries the look.
+
+### The pitch ruler
+
+Built as a prototype because the brief asked for one and asked for it to be
+looked at before committing. It earns its place, and it is off by default.
+
+It earns it because the two axes genuinely disagree. Pitch goes as 1/lambda, so
+hydrogen's series — which crowds toward the violet end of the band — SPREADS
+toward the treble end of the ruler. That is the reciprocal made visible and the
+band cannot show it. It is off by default because it is the one diagram in an
+otherwise object-like scene.
+
+The first placement put it 34px under the band, which is where the wavelength
+labels are, so every connector crossed a number on its way down and the two
+axes read as one tangle. Moved below the scale, connectors started under the
+label row, and the ruler given its own 400/500/600/700 Hz labels in the same
+grammar as the nm scale — without those it is a mystery second row of dots.
+
+### 2D canvas, not Three.js
+
+The first WebGL-free scene with a live preview tile, and the reason is the
+ceiling `manageRenderer` already documents: eight preview contexts alive
+permanently plus one per open scene, against a browser cap near sixteen, with
+the browser force-losing the OLDEST context when it runs out — which is the
+landing tiles. An eleventh WebGL scene is an eleventh permanent context, for a
+scene that draws a coloured strip, some strokes and some text. No geometry, no
+camera, no lighting. This is why the tile count could go to eleven without
+re-testing the context ceiling.
+
+Two consequences. A 2D canvas is not promoted to its own compositing layer, so
+it clips normally and needs no `mountClippedPreviewCanvas` — the canvas is
+appended directly in both modes, and there is no `data-blits`. The
+observability that counter exists for is kept as `data-frames` on the canvas,
+written on the same power-of-two crossings for the same reason.
+
+### Absorption is Beer's law, not a special case
+
+Optical depth from each line is a Gaussian in wavelength scaled by the fader's
+column density and the line's relative intensity; transmission is exp(-tau);
+taus from different elements ADD. So two elements overlapping in the same place
+go darker than either alone with no special case for it, and a fader is a
+continuous control over a real physical quantity rather than a brightness knob.
+
+Cheap, too: the band is a continuum image drawn once per resize, with a
+one-pixel-tall black mask at alpha = 1 - transmission stretched down it. Black
+over the continuum with source-over gives continuum x transmission exactly, for
+the price of one `drawImage`, and the stretch is in y only so no horizontal
+resampling can smear the sodium doublet. Line sigma is held under one column at
+full width for the same reason: the doublet is 2.3 columns apart at 1400
+columns, so 0.7 sigma leaves it visibly two.
+
+### Verification
+
+- **Balmer against published values** — exact to three decimals, all four lines
+  and the series limit, table above.
+- **NIST spot-check** — not three elements but all nine tabulated ones, every
+  line re-read against the strong-lines table for that element. Six unverifiable
+  lines dropped.
+- **Frame-rate independence** — measured with a virtual clock (`performance.now`
+  and `requestAnimationFrame` both overridden) at 60 and 144 fps. The probe is
+  the struck-line marker, whose brightness is a pure function of accumulated dt
+  with a known zero at the moment of the strike, so no part of it depends on
+  load timing or on any random seed. After 1.0s: 223 at both rates. After 2.5s:
+  179 at both rates. 2.4x the frames, identical state.
+
+  Worth recording that the FIRST harness was invalid and said so. It compared
+  the whole canvas byte-for-byte between rates, which requires a deterministic
+  seed — and two 60fps runs differed from each other, because real frames run
+  between seeding and installing the virtual clock, so `elapsed` starts
+  somewhere different every time. The repeatability check is what caught it. A
+  measurement that cannot reproduce itself is not evidence about anything else.
+- **Audio contexts** — one created, one closed, zero live, verified by
+  instrumenting the `AudioContext` constructor, then enabling sound, striking
+  two elements, leaving for Outside and then Butterfly, and clicking inside each
+  of them. That click is the specific trigger for the stale-listener bug 4.0
+  fixed in two other scenes.
+- **Eleven tiles** — all eleven render; Apollo's `data-frames` climbs 4 to 16
+  over two seconds. Its tile is complete on the first frame it paints rather
+  than converging: there is nothing to accumulate, and four elements are already
+  in the light.
+- **Nav icons at 320 / 360 / 375 / 390 / 414 / 768 / 780 / 1280** — all eleven
+  inside the viewport at every width, no overlap. `--nav-count` is 11.
+  **The eleventh icon costs 2.8px of horizontal tap target at 320px**: 27.6 x 44
+  where ten gave 30.4 x 44. Still above WCAG 2.5.8's 24px floor and the height
+  is unchanged, but it is the real cost and it is the number to check before a
+  twelfth.
+- **Reduced motion** — the corona is byte-identical 2.5 seconds apart, and
+  striking a line still changes the frame. The instrument stays playable;
+  only the thing moving on its own stops.
+- **Contrast, against composited backgrounds** — the rail is #0b1018 at 0.86
+  over the #05070c void, compositing to #0a0f16. Brass #c9ae74 8.96:1, dim brass
+  #a08a55 5.73:1, ink #d8cdb4 12.18:1. Computed before they were typed, which is
+  the direct lesson of the two Spectra colours that were designed by eye and
+  measured 2.39:1 and 3.58:1.
+- **Tab order** — ten fader/strike pairs, the ruler toggle, the jump list, the
+  sound toggle. Every control native; nothing needed a parallel keyboard path
+  invented for it.
+- **All four build gates** green, and the CSP style hash unchanged — the
+  `/text/` page uses only classes `PAGE_STYLE` already defines.
+
+### One thing found on the way past
+
+`package.json` said **4.1.0** and `package-lock.json` said **4.0.3**, with
+`NOTES.md` and both briefs saying 4.2.1 was current. So the manifest had been
+missed for five consecutive releases (4.1.1, 4.1.2, 4.1.3, 4.2.0, 4.2.1) and had
+also drifted out of step with its own lockfile — the same class of mismatch as
+the 1.2.3-vs-lockfile one recorded further down this file. Both are 4.3.0 now.
+Nothing consumed the value, which is exactly why nothing caught it: a version
+number that is wrong is worse than no version number, because it is read as
+current. Same reason the briefs get refreshed in the release that invalidates
+them.
+
+### The rail is native controls
+
+Every control is a real `<input type="range">` or a real `<button>`. A range
+input already IS a fader — arrow keys, Home/End, a role, a value, a focus ring,
+all correct for free — and drawing one on canvas would have meant reimplementing
+every one of those worse and then bolting a keyboard path onto the side. The
+jump list is therefore not over the elements, as the brief assumed it would need
+to be; it is over the individual lines in the band, which is the one thing a
+pointer can do that no control covers. Capped at the 24 strongest, because with
+every fader up there are 218 lines and 218 tab stops is a trap with good
+intentions. The label says it is a selection and how big.
+
+Five columns of faders on a phone and ten on anything wider: one row of ten at
+320px leaves each fader 30px including its gap, under the 44px this site holds
+itself to. The vertical range input's WIDTH is the axis a thumb has least of,
+and it went from 1.6rem to 2.4rem after measuring 25.6px on a 390px screen.
+
 ## 4.2.1 (2026-09-02)
 
 A check that claimed more than it tested, and a header that advertised a

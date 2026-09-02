@@ -28,6 +28,10 @@ import { libraryItems, cdRackItems } from '../src/scenes/library/library.text.js
 import { PIECES as theaterPieces } from '../src/scenes/theater/theater.text.js';
 import { ORRERY } from '../src/scenes/orrery/orrery.text.js';
 import { EPIGRAPH_PRIMARY, EPIGRAPH_SECONDARY, BOUNCES } from '../src/scenes/beamline/beamline.text.js';
+import {
+  ELEMENTS, ALL_LINES, BALMER_LIMIT, RYDBERG_H, AUDIO_DIVISOR, SOURCES as APOLLO_SOURCES,
+  VISIBLE_MIN, VISIBLE_MAX, wavelengthToHz, visibleLines, balmerSeries,
+} from '../src/scenes/apollo/apollo.text.js';
 import { SCENES, TEXT_EXEMPT } from '../src/scenes/registry.js';
 import { getOutboundLinks } from '../src/links.js';
 
@@ -468,6 +472,84 @@ ${BOUNCES.map((b, i) => `<h2 id="p${b.id}">Bounce ${i + 1}</h2>\n${pieceLink('be
   };
 }
 
+
+// ─── Apollo ─────────────────────────────────────────────────────────────────
+// The eleventh scene's page, and the first one whose content is a table of
+// measurements rather than a body of writing. It is still required, and the
+// scenes-sum assertion below is what makes that non-optional: Apollo publishes
+// real content — the element table, the wavelengths, the physics — and a scene
+// carrying real content with no crawlable page ships unfindable.
+//
+// Every number here is generated from apollo.text.js, the same module the
+// instrument imports. Not a copy of it: hydrogen's wavelengths are computed by
+// calling the same function the scene calls, and the pitch beside each line is
+// the same division. If the physics changes, this page changes with it or the
+// build fails; there is no third place holding a stale duplicate.
+function buildApollo() {
+  const hz = nm => wavelengthToHz(nm).toFixed(1);
+  const balmer = balmerSeries({ nMax: 16 });
+  const greek = ['alpha', 'beta', 'gamma', 'delta', 'epsilon', 'zeta', 'eta', 'theta'];
+
+  const balmerList = `<ul class="catalog">
+${balmer.map((l, i) => `<li><span class="t">${l.nm.toFixed(3)} nm</span>
+<span class="c">n = ${l.n} to 2${i < greek.length ? ` · H-${greek[i]}` : ''} · ${hz(l.nm)} Hz</span></li>`).join('\n')}
+</ul>`;
+
+  const elementList = `<ul class="catalog">
+${ELEMENTS.map(el => {
+    const ls = visibleLines(el);
+    const strongest = ls.slice().sort((a, b) => b[1] - a[1])[0];
+    return `<li><span class="t">${esc(el.name)} (${esc(el.symbol)})</span>
+<span class="c">${ls.length} line${ls.length === 1 ? '' : 's'} between ${VISIBLE_MIN} and ${VISIBLE_MAX} nm · strongest at ${strongest[0].toFixed(3)} nm, ${hz(strongest[0])} Hz${el.computed ? ' · computed, not tabulated' : ''}</span>
+<span class="n">${esc(el.character)}</span>
+<span class="e">${esc(el.note)}</span>
+<span class="e">${ls.map(([nm]) => nm.toFixed(3)).join(' · ')}</span></li>`;
+  }).join('\n')}
+</ul>`;
+
+  const body = `<article class="piece">
+<h2 id="the-mechanism">The mechanism</h2>
+<p>A star is hotter inside than out. The light leaving it starts as a continuous band — every wavelength at once, brightest in the yellow-green where the eye happens to be most sensitive — and then it has to cross the star's own outer atmosphere on the way out. Every element up there absorbs at its own exact set of wavelengths and at no others. So the light that arrives has holes in it, and the holes say what the star is made of.</p>
+<p>Joseph von Fraunhofer found them in sunlight in 1814 and labelled the strongest with letters. Some of those letters are still the names: the sodium <em>D</em> lines, calcium <em>H</em> and <em>K</em>, the magnesium <em>b</em> triplet. He did not know what any of them were. Nobody did for another forty-five years.</p>
+<p>Apollo is that mechanism with the controls exposed. Ten elements sit on faders; moving one puts that element in the light's path, and its lines appear in the band because it is now absorbing. Two or three together is how a star is actually read. Clicking a dark line sounds its wavelength as a pitch, which means the thing you play is the absence.</p>
+
+<h2 id="hydrogen">Hydrogen, computed</h2>
+<p>Hydrogen has one electron, and one electron is the case that has a closed-form answer. The Rydberg formula gives every line in the series exactly:</p>
+<p class="note">1/&lambda; = R (1/2&sup2; &minus; 1/n&sup2;), for n = 3, 4, 5, &hellip;</p>
+<p>with R = ${RYDBERG_H.toExponential(6)} per metre — the Rydberg constant with the correction for a proton that is heavy but not infinitely heavy, which is the difference between landing on the published wavelengths and missing them in the third figure. The formula gives a vacuum wavelength; every table of visible lines gives an air wavelength, because that is what a spectrograph on the ground measures, so the result is passed through the standard refraction formula. These are computed on page load, not typed in:</p>
+${balmerList}
+<p>The lines crowd tighter as n rises and converge on the series limit at ${BALMER_LIMIT.toFixed(3)} nm, just past the violet edge of the band. They do not stop there because anything runs out — infinitely many of them pile up in the last fraction of a nanometre, and past the limit the spectrum goes continuous. That convergence is the best thing the scene has to show, which is why it is calculated rather than listed.</p>
+<p>Everything else is looked up, and has to be. Sodium's doublet, iron's forest and helium's scatter come out of many-body quantum mechanics that nobody solves in closed form, in a browser or anywhere else. Deriving them would be work that does not show and would produce wrong numbers.</p>
+
+<h2 id="pitch">Wavelength as pitch</h2>
+<p>A wavelength has a real frequency: the speed of light divided by it. For the sodium D line that is about 509 trillion cycles a second, which is not a sound. Dividing by ${AUDIO_DIVISOR.toExponential(0)} is the entire mapping — no scale, no rounding to the nearest note, no tuning per element — so the intervals you hear are the intervals you see.</p>
+<p>That puts the whole visible band between ${wavelengthToHz(VISIBLE_MAX).toFixed(0)} Hz at the deep red end and ${wavelengthToHz(VISIBLE_MIN).toFixed(0)} Hz at the violet. Which is a fact about light rather than a choice: ${VISIBLE_MAX} divided by ${VISIBLE_MIN} is 1.97, so the visible spectrum is almost exactly one octave wide. The instrument has one octave and cannot have more.</p>
+<p>Shorter wavelength is higher frequency, so violet is treble and red is bass. Sodium is the case worth listening to: its two lines are 0.597 nm apart, which after the division is ${(wavelengthToHz(588.995) - wavelengthToHz(589.592)).toFixed(2)} Hz apart — and two tones half a hertz apart are not two notes, they are one note that swells and fades about every two seconds. The visible spacing is the harmonic relationship. Iron, at the other end, has fifty lines here and sounds like a wall.</p>
+
+<h2 id="elements">The ten elements</h2>
+<p>Curated for what they do to the band and to the sound, not for coverage. Most of the periodic table is inert here — the transition metals are indistinguishable forests and most of everything else has nothing in the visible range at all — so an element earns a fader by producing a distinct look or a distinct sound, and preferably both. ${ALL_LINES.length} lines in total.</p>
+${elementList}
+
+<h2 id="sources">Where the numbers come from</h2>
+<p class="note">${esc(APOLLO_SOURCES.nist)}</p>
+<p class="note">${esc(APOLLO_SOURCES.codata)}</p>
+<p class="note">${esc(APOLLO_SOURCES.edlen)}</p>
+<p class="note">${esc(APOLLO_SOURCES.cmf)}</p>
+<p>One honest note about the relative intensities. NIST publishes <em>emission</em> intensities — how bright a line is when the element is made to glow — and this scene draws absorption, how deep a line cuts when the element sits in front of something hotter. The two track each other closely, because both follow the same transition probabilities, but they are not the same quantity: a real absorption depth also depends on temperature, on ionization state, and on how much of the element is in the path. The intensities here are used as a line-strength proxy for an instrument, not as a photometric claim.</p>
+</article>`;
+
+  return {
+    slugPath: 'apollo',
+    title: 'Apollo',
+    description: 'An absorption spectrum you can play — the physics, the ten elements, and every wavelength with the pitch it sounds.',
+    sceneKey: 'apollo', sceneName: 'Apollo',
+    lede: `<p><strong>Apollo</strong> is a solar absorption spectrum you can play: a band of starlight with the lines missing from it, a corona streaming past, and ten elements on faders that put their own lines into the light. Clicking a dark line sounds its wavelength as a pitch.</p>
+<p>This page is the table underneath it — the physics, the ten elements, and every line with the frequency it plays.</p>`,
+    bodyHtml: body,
+    jsonLd: creativeWork('Apollo', 'An absorption spectrum you can play: the physics, the curated element set, and every wavelength with its pitch.', 'apollo'),
+  };
+}
+
 function buildLibrary() {
   // TWO fields are deliberately withheld here. Both were learned the hard
   // way; don't reinstate either without checking with Scott first.
@@ -628,6 +710,7 @@ export function prerender(outDir) {
   const pages = [
     buildScroll(), buildPoems(), buildFragments(),
     buildTheater(), buildOrrery(), buildBeamline(), buildLibrary(),
+    buildApollo(),
   ];
   const all = [buildIndex(pages), ...pages];
 

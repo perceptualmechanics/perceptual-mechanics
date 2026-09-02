@@ -1,0 +1,32 @@
+<!--
+  Apollo scene shell markup.
+
+  Two halves, and the split is deliberate. The title, hint and sound toggle are
+  body-level chrome, the same convention harmonics.html and outside.html use —
+  appended to document.body by apollo.js, marked `.pm-scene-chrome` so main.js's
+  focus trap can find them there (it otherwise only queries inside
+  #experience-container, which is how Outside's sound toggle spent a release
+  rendered, styled, focusable in principle and unreachable by Tab).
+
+  The instrument itself is NOT chrome and does not live on the body: the fader
+  rail mounts inside the scene container, because it is the scene. Every control
+  in it is a real <input type="range"> or a real <button>, not a canvas-drawn
+  knob with a parallel keyboard path bolted on afterwards. A range input is
+  already what a fader is — arrow keys, Home/End, a name, a value, and a role,
+  all for free and all correct — and building it out of pixels would have meant
+  reimplementing every one of those worse. The one thing a pointer can do that
+  no native control covers is strike an individual line in the band, and that is
+  what the jump list exists for (see createJumpList in apollo.js).
+
+  The rail's contents are built in JS from ELEMENTS in apollo.text.js rather
+  than written out here, for the reason the whole project keeps relearning:
+  a second list of the same ten things is a second list to fall out of step
+  with the first.
+-->
+<div class="apollo-title-row"><p class="apollo-title" aria-hidden="true">Apollo</p></div>
+<p class="apollo-hint" aria-hidden="true">move a fader to put an element in the light &nbsp;&middot;&nbsp; click a dark line to hear it</p>
+<button type="button" class="apollo-sound-toggle pm-scene-chrome" aria-pressed="false">
+  <span class="apollo-sound-toggle-dot" aria-hidden="true"></span>
+  <span class="apollo-sound-toggle-label">Sound off</span>
+</button>
+<div class="apollo-sr-live" aria-live="polite"></div>

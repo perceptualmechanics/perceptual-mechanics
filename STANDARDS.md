@@ -54,6 +54,26 @@ the lockfile it writes is correct and complete, and CI (Linux) is unaffected
 — but the Mac needs `npm ci` afterwards before anything will run locally.
 Treat "the sandbox ran npm install" as implying "run `npm ci` here next."
 
+**What the sandbox actually is, confirmed 2026-09-02.** The shell that mounts
+this folder is a Linux VM running on this Mac, not the Mac itself. That is the
+whole mechanism, and naming it explains a second symptom as well as the first:
+`npx vite` run from there fails immediately with `Cannot find module
+'@rolldown/binding-linux-arm64-gnu'` — the mirror image of the darwin error
+above, from the same one `node_modules` serving two platforms. So the assistant
+cannot start the dev server for this folder either, and asking it to is asking
+it to install Linux binaries here.
+
+**Two consequences that are easy to get wrong.** First: when a live look at
+`localhost:5173` is wanted, a person has to start `npm run dev` on the Mac. The
+assistant can drive the browser once it is up; it cannot bring it up. Second:
+that VM's `localhost` is not this Mac's `localhost`, verified by serving a
+probe page from it and failing to reach it from Chrome — so the assistant
+cannot work around the above by serving anything from the mounted shell either.
+What it can do without help is build and serve `dist/` inside its own container
+and drive a headless browser there, which is a real live look, on a different
+machine, and should be reported as such rather than as "verified in the
+browser".
+
 ### The assistant builds from its own checkout, not from this folder
 
 The repair above is `npm ci`; the actual fix is to stop two operating systems
@@ -531,13 +551,34 @@ tiles kept rendering at 60fps behind an opaque overlay alongside the open
 scene, and in a background tab. `main.js` now pauses them on expand, on
 `visibilitychange`, and per-tile via an `IntersectionObserver`.
 
-### Scenes load via dynamic `import()`, not a static top-of-file import
+### Scenes load via dynamic `import()`, and the registry lists names only
 
-As of v3.10.0, `main.js`'s `SCENES` registry holds a `load: () =>
-import('./scenes/<name>/<name>.js')` per scene, not a static
-`import { createX } from ...` at the top of the file — a new scene added
-to the registry should follow the same pattern, not revert to a static
-import. Static imports for all ten scenes were the direct cause of the
+**Updated 4.2.0 — the first paragraph of this rule was stale for one release
+and is corrected here rather than rewritten away, because the correction is the
+interesting part.** The rule as originally written said a new scene adds its own
+`load: () => import(...)` to the registry. That is no longer where loaders live,
+and following it now would break the build outright — see the registry file's
+own header. The mechanism it describes is right; the address is wrong.
+
+**The rule as it now stands:** `src/scenes/registry.js` holds names and metadata
+and **no imports of any kind**. `main.js` derives each scene's loader from those
+keys with `import.meta.glob('./scenes/*/*.js')`, which produces the same lazy,
+code-split per-scene dynamic imports and removes the second list of scene names.
+Adding a scene is one registry key plus a folder and entry file named after it;
+a mismatch fails on open with a named error rather than a bare `undefined`.
+
+**Why the registry must stay import-free**, since "a dynamic import is lazy, so
+it's harmless" is the reasonable-sounding thing that broke it: `vite.config.js`
+imports `scripts/prerender.js`, which imports the registry — and Vite bundles
+its own config, following dynamic imports statically as it goes. Keeping
+`load:` there pulled the entire scene graph, `?raw` templates and CSS
+side-effect imports included, into the config bundle, and the build died before
+it started.
+
+**The historical reasoning, unchanged and still the point of all this:**
+as of v3.10.0 scenes load by dynamic `import()` rather than a static
+`import { createX } from ...` at the top of `main.js` — a new scene should
+follow that pattern, not revert to a static import. Static imports for all ten scenes were the direct cause of the
 Rollup `chunks larger than 500kB` warning (every scene's code, whether
 needed yet or not, landed in one bundle); dynamic `import()` lets Rollup
 code-split each scene into its own chunk instead. See `main.js`'s own

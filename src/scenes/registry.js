@@ -16,33 +16,20 @@
 // keys by `import.meta.glob` rather than listed a second time.
 
 
-// ─── Scene registry ──────────────────────────────────────────────────────────
-// Each entry's `load()` is a dynamic import() rather than a static top-of-
-// file import — Rollup code-splits each one into its own lazily-fetched
-// chunk instead of folding all ten scenes (plus main.js's own logic) into
-// one monolithic bundle. Before this (v3.9.17 and earlier), every scene's
-// full module was a static import here, so opening *any* scene — even just
-// rendering its landing-page preview thumbnail via initPreviews() below —
-// required all ten to already be parsed and evaluated, which is exactly
-// what tripped Rollup's "chunks larger than 500kB" warning (main chunk was
-// ~558kB gzipped ~208kB). `exportName` records which named export each
-// scene's module hands back (`createSphere`, `createharmonics` — note the
-// lowercase h, kept internal-only per harmonics.js's own header — etc.),
-// since dynamic import() resolves to the whole module namespace object,
-// not a single function the way the old static imports destructured
-// directly.
-//
-// This does NOT, by itself, shrink first-load bytes: initPreviews() still
-// needs every scene's real create() to render its thumbnail (no scene's
-// preview/full split has been done yet — see NOTES.md's open-items entry
-// for the follow-up), so a first visit still fetches all ten chunks, just
-// now as parallel per-scene requests instead of one blocking chunk. Real,
-// present-tense wins: (1) editing one scene no longer invalidates every
-// visitor's cached copy of the other nine on the next deploy; (2) chunks
-// land under Rollup's 500kB threshold individually; (3) this is the
-// infrastructure a future preview/full split plugs into for free — once a
-// scene's preview branch stops needing its full-mode code, only
-// initPreviews()'s call needs to change, not this registry or expandScene.
+// ─── Why the loaders are not here ───────────────────────────────────────────
+// A long comment used to sit in this space explaining that each entry carried
+// a `load: () => import('./scenes/<name>/<name>.js')`, why that beat ten static
+// top-of-file imports (it did: static imports for every scene were the direct
+// cause of Rollup's "chunks larger than 500kB" warning, and code-splitting per
+// scene is what fixed it), and what it did and didn't buy. All of that is still
+// TRUE about the architecture and none of it is true about this file any more —
+// 4.2.0 moved the loaders to main.js and derives them from these keys with
+// `import.meta.glob`, for the reason in the header above. The full reasoning
+// lives in NOTES.md's 3.10.0 and 4.2.0 entries and in main.js's own comment at
+// `sceneModules`. Removed rather than left standing: a comment describing a
+// mechanism the file no longer has is how the next reader is told to look for
+// something that isn't there.
+
 export const SCENES = {
   sphere:    { exportName: 'createSphere',
                label: 'The Sphere — full screen experience. Press Escape to return.',
@@ -106,15 +93,26 @@ export const SCENES = {
   outside:   { exportName: 'createOutside',
                label: 'Outside.',
                ariaLabel: 'Outside — a generated lotus mapping the five Sources of Power as petals and their Folk Origins, Magi and Psi at the center. The flower breathes continuously on its own. Drag to orbit, scroll to zoom, touch a petal.' },
-  // The eleventh, and the first whose content is another scene's content: it
-  // measures Theater's dialogue rather than publishing any writing of its own.
-  // That is why its /text/ page carries the measurement and not the plays —
-  // see scripts/prerender.js, and the exempt map the scenes-sum assertion
-  // checks this registry against.
-  // Spectra is SHELVED, not deleted — see src/scenes/spectra/SHELVED.md. Its
-  // files are still in the tree and still build; it is simply not registered,
-  // so nothing loads it and nothing links to it. Restoring it is this entry
-  // plus the three edits that file lists.
+  // Apollo — eleventh scene (2026-09-02). An absorption spectrum you can play:
+  // a band of starlight with the lines missing from it, a procedurally
+  // generated corona streaming in from the right, and ten elements on faders
+  // that put themselves into the light. Clicking a gap sounds that wavelength
+  // as a pitch. Hydrogen's lines are computed from the Rydberg formula; the
+  // other nine elements are NIST tables. The only 2D-canvas WebGL-free scene
+  // with a live preview tile, deliberately — see apollo.js's own header for
+  // the context-budget reasoning.
+  //
+  // Not to be confused with the SHELVED Spectra, which shares the subject
+  // word and nothing else: that one measured this site's own writing, was
+  // built and measured and taken back out the same day (see
+  // src/scenes/spectra/SHELVED.md). Spectra's files are still in the tree and
+  // still build; it is simply not registered, so nothing loads it and nothing
+  // links to it. Restoring it is an entry here plus the three edits that file
+  // lists — one of which, `--nav-count`, is now 11 for Apollo rather than 10,
+  // so a restore would take it to 12.
+  apollo:    { exportName: 'createApollo',
+               label: 'Apollo — an absorption spectrum you can play.',
+               ariaLabel: 'Apollo — a solar absorption spectrum you can play. Ten elements on faders put their lines into a band of starlight; click a dark line to hear its wavelength as a pitch.' },
 
 };
 

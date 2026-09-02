@@ -264,12 +264,26 @@
       </svg>
     </button>
 
-    <!-- An eleventh icon and its landing tile lived here for one afternoon,
-         2026-09-02, and came out again when Spectra was shelved. Nothing needs
-         to be reconstructed to bring them back: the markup is in that commit,
-         and src/scenes/spectra/SHELVED.md lists it alongside the other two
-         edits. --nav-count in main.css is the third, and it is the one value an
-         added or removed icon changes. -->
+    <!-- Apollo. The icon is the scene: a band with lines taken out of it,
+         including one close pair — the sodium doublet is the whole reason the
+         sonification is worth listening to, and two strokes 1px apart at icon
+         size is as close as 24 units gets to saying so.
+
+         An earlier eleventh icon and tile lived here for one afternoon,
+         2026-09-02, and came out again when Spectra was shelved; the markup is
+         in that commit and src/scenes/spectra/SHELVED.md lists it alongside
+         the other two edits a restore needs. --nav-count in main.css is the
+         third, and it is the one value an added or removed icon changes. -->
+    <button type="button" class="nav-icon" data-scene="apollo" aria-label="Apollo — An Absorption Spectrum You Can Play" title="Apollo — An Absorption Spectrum You Can Play">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="2.6" y="8" width="18.8" height="8" rx="1"/>
+        <path d="M6.6 8.6V15.4"/>
+        <path d="M10.2 8.6V15.4"/>
+        <path d="M13.6 8.6V15.4"/>
+        <path d="M14.9 8.6V15.4"/>
+        <path d="M18.4 8.6V15.4"/>
+      </svg>
+    </button>
 
   </nav>
 
@@ -421,6 +435,20 @@
         <button type="button" class="preview-container" id="preview-outside"
              title="Outside"
              aria-label="Outside — a generated lotus mapping the five Sources of Power as petals and their Folk Origins, Magi and Psi at the center, breathing continuously. Press Enter to expand.">
+        </button>
+      </li>
+
+      <!-- Apollo: complete on the first frame it paints, unlike every other
+           tile here. There is nothing to accumulate — the band is drawn whole
+           and four elements are already in the light, so the 200px circle
+           shows a spectrum with visible absorption lines immediately rather
+           than converging toward one. Butterfly's thumbnail needing
+           twenty-five seconds to reach its subject (fixed in 4.1.3) is the
+           case this was designed against. -->
+      <li class="preview-wrapper" data-scene="apollo">
+        <button type="button" class="preview-container" id="preview-apollo"
+             title="Apollo — An Absorption Spectrum You Can Play"
+             aria-label="Apollo — a solar absorption spectrum you can play: a band of starlight with dark lines missing from it, and a corona streaming past. Press Enter to expand.">
         </button>
       </li>
 

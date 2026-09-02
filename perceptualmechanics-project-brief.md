@@ -1,6 +1,6 @@
 # perceptualmechanics — project brief
 
-*Prepared 2026-08-31, refreshed 2026-09-02, current as of **v4.0**. Written as a handoff/context document for a fresh chat — everything here should be enough to pick up work on this project without re-deriving it.*
+*Prepared 2026-08-31, refreshed 2026-09-02, current as of **v4.3.0**. Written as a handoff/context document for a fresh chat — everything here should be enough to pick up work on this project without re-deriving it.*
 
 > **A note on keeping this file honest.** The 2026-09-01 audit found this
 > brief fourteen minor versions stale: it still said "current as of
@@ -12,7 +12,7 @@
 
 ## What this is
 
-perceptualmechanics.com is Scott Cohen's personal digital-art portfolio: a single-page, full-screen WebGL/canvas site built around **10 interactive scenes**, each a small standalone piece combining generative visuals, curated writing/found text, and (in most scenes) generative or triggered audio. It's a static site (no backend, no database) — everything client-rendered, deployed as a plain `dist/` upload.
+perceptualmechanics.com is Scott Cohen's personal digital-art portfolio: a single-page, full-screen WebGL/canvas site built around **11 interactive scenes**, each a small standalone piece combining generative visuals, curated writing/found text, and (in most scenes) generative or triggered audio. It's a static site (no backend, no database) — everything client-rendered, deployed as a plain `dist/` upload.
 
 Collaborators: Scott (vision, writing, curation) and Claude (code, literary analysis, implementation) — this has been a long-running, deeply iterative collaboration, not a one-off build.
 
@@ -33,7 +33,7 @@ Static shell markup lives in `<name>.html`, imported as a raw string and parsed 
 
 `src/main.js` owns: hash-based deep linking (`#scene` or `#scene/pieceId`, with a small public-slug translation layer for the one scene — Harmonics — whose URL differs from its internal name), scene-swap transitions (crossfade via `#experience-overlay`'s opacity), modal focus containment while a scene is open (Tab-trapping, `aria-hidden` on the chrome), the shared fullscreen toggle, and a small easter egg (`pmGlimpse` — a 1-in-100 chance per hover that the tab title flickers to a one-word association for that scene). The scene registry itself moved to `src/scenes/registry.js` in 4.2.0 so that `scripts/prerender.js` can read it; `main.js` derives each scene's loader from its keys with `import.meta.glob` rather than listing them a second time.
 
-## The 10 scenes
+## The 11 scenes
 
 1. **Sphere** — interactive geodesic sphere with embedded text fragments.
 2. **Butterfly** — a Lorenz attractor ("Chaos Butterfly in Phase Space"), drag to orbit.
@@ -46,7 +46,9 @@ Static shell markup lives in `<name>.html`, imported as a raw string and parsed 
 9. **Harmonics** (9th scene; internally still named/keyed `harmonics` everywhere except the public URL slug — a deliberate, documented exception) — visualizes resonant connections across every other scene's content as a force-directed node graph with Kuramoto phase-sync animation and sonification.
 10. **Outside** (10th scene) — a generated lotus/flower (Gielis superformula geometry) mapping a five-part cosmology (Power Sources as petals, Folk Origins, Magi/Psi at center); breathes continuously, Fresnel-based petal translucency, five distinct per-petal chime timbres plus a Kumoi-scale ambient chime bed.
 
-A few earlier scenes (leaf, egg, prism, cycle, and older constellation/ground-glimpse/thread-follow mechanics) were built, shipped, and later **retired/shelved** over the project's history — the current registry above is the live set as of v4.0.3.
+11. **Apollo** (11th scene, v4.3.0) — a solar absorption spectrum you can play: a near-full-width band of starlight with the lines missing from it, a procedurally generated corona streaming in from the right, and ten elements on vertical faders that put their own lines into the light. Clicking a dark line sounds that wavelength as a pitch. Hydrogen is computed live from the Rydberg formula (with the reduced-mass correction and a vacuum-to-air conversion — which is what makes it land on the published values); the other nine elements are NIST strong-lines tables. **The only scene with no Three.js and no WebGL context** — see `apollo.js`'s header for the context-budget reasoning — and the only one whose content is measurement rather than writing.
+
+A few earlier scenes (leaf, egg, prism, cycle, and older constellation/ground-glimpse/thread-follow mechanics) were built, shipped, and later **retired/shelved** over the project's history — the current registry above is the live set as of v4.3.0. **Spectra**, a twelfth candidate, is in the tree and builds but is deliberately unregistered (`src/scenes/spectra/SHELVED.md`); it is unrelated to Apollo despite the subject overlap.
 
 ## Standing conventions (full detail in `STANDARDS.md`)
 
@@ -106,7 +108,7 @@ This is the durable house-rules file (created v3.9.16) — **read it first** bef
   eleventh scene itself — Spectra, a plate of dramatic voice — was built,
   verified, and shelved for focus rather than for a defect; see
   `src/scenes/spectra/SHELVED.md`.
-- **4.2.1 (current, 2026-09-02):** the deploy's `/text/` check made to test what
+- **4.2.1 (2026-09-02):** the deploy's `/text/` check made to test what
   its own comment claimed. It fetched the page and read the status code, under a
   comment saying it proved the served policy matched the hash those pages were
   built against; a blocked stylesheet still returns 200, so it proved nothing,
@@ -115,6 +117,18 @@ This is the durable house-rules file (created v3.9.16) — **read it first** bef
   build's own gate hashes the emitted one, and asserts that hash appears in the
   policy on the same response. In the same pass, CSP reporting was removed
   rather than completed — see Known open items.
+- **4.3.0 (current, 2026-09-02): Apollo, the eleventh scene.** An absorption
+  spectrum you can play — a band of starlight with the lines missing from it, a
+  procedurally generated corona streaming in from the right, ten elements on
+  faders, and a click on a dark line sounding that wavelength as a pitch.
+  Hydrogen computed live from the Rydberg formula and exact against the
+  published Balmer values; the other nine elements from NIST. First scene built
+  on a 2D canvas rather than Three.js, deliberately — an eleventh WebGL scene
+  would have been an eleventh permanent GL context against a browser cap near
+  sixteen. First live customer of 4.2.0's scenes-sum gate. `--nav-count` to 11,
+  measured at eight viewport widths. Full entry in `NOTES.md`, including the
+  three visual decisions that were made by rendering a version, looking at it,
+  and rejecting it.
 
 ## Keeping this file true
 

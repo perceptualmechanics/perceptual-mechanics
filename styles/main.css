@@ -375,8 +375,13 @@ html, body {
    and up it reaches the full 44px in both axes. */
 #pm-nav {
   /* Keep equal to the number of .nav-icon buttons in index.html. This is
-     the one value an added or removed scene has to change. */
-  --nav-count: 10;
+     the one value an added or removed scene has to change. Went to 11 for
+     Apollo on 2026-09-02; it was briefly 11 for Spectra earlier the same day
+     and went back to 10 when that scene was shelved, which is the check this
+     comment exists to make easy — the number tracks the icons in the nav, not
+     the scenes in the registry, and those two can differ for exactly as long
+     as it takes to notice. */
+  --nav-count: 11;
   --nav-pad: 0.5rem;
   /* The widest one icon's share of the row may grow to: 44px of icon plus
      the 2.5rem gap the desktop layout has always used. */
