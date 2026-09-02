@@ -74,6 +74,27 @@ and drive a headless browser there, which is a real live look, on a different
 machine, and should be reported as such rather than as "verified in the
 browser".
 
+### Git writes from the assistant's side leave a lock file behind
+
+Learned 2026-09-02, while committing v4.3.0. The mounted view of this folder is
+read/write but **deletion is denied**, and git's normal working method is to
+write `X.lock`, do the work, then unlink it. So every `git commit`, `git add` —
+and even a plain `git status`, which refreshes the index — succeeds and then
+prints `warning: unable to unlink .git/index.lock: Operation not permitted`,
+leaving a zero-byte lock file in place.
+
+That file is real, and the Mac sees it. The next git write on this machine will
+refuse with "Unable to create '.git/index.lock': File exists" until it is
+removed. Deleting it here is exactly the operation that isn't permitted, so the
+assistant's move is `mv` rather than `rm`: stale locks and the `tmp_obj_*` files
+the same restriction stranded in `.git/objects/` go to **`.git/_stale-tmp/`**,
+which git ignores. If that directory exists and has anything in it, this is why,
+and it is safe to delete from the Mac at any time.
+
+**The rule:** the assistant clears the lock after the last git command it runs,
+not before the first. Anything left behind is a trap for the next person to type
+`git commit` here, and the person who created it is the one who knows it exists.
+
 ### The assistant builds from its own checkout, not from this folder
 
 The repair above is `npm ci`; the actual fix is to stop two operating systems
