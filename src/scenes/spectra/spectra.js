@@ -76,13 +76,19 @@ const norm = (v, f) => Math.max(0, Math.min(1, (v - f.lo) / (f.hi - f.lo)));
 // Declared once and used by the geometry, the label row and the printed scale
 // alike: three places computing the same seven positions is three places for
 // them to drift apart, which is the whole failure mode this scene is about.
-const X0 = -0.58, X1 = 0.92;
+// The full scene reserves a left gutter for the exposure labels; the thumbnail
+// has no labels, so it uses the whole plate and centres. A tile that inherited
+// the gutter spent its left third on nothing and ran the last line off the
+// right edge.
+const AXIS = { full: [-0.58, 0.92], preview: [-0.84, 0.84] };
+let X0 = AXIS.full[0], X1 = AXIS.full[1];
 const featureX = i => X0 + (i / (FEATURES.length - 1)) * (X1 - X0);
 // As a CSS percentage of the container's width. Only correct because the camera
 // deliberately does not letterbox; see bindGuardedResize below.
 const featurePct = i => ((featureX(i) + 1) / 2) * 100;
 
 export function createSpectra(container, { preview = false, initialSpeaker = null } = {}) {
+  [X0, X1] = preview ? AXIS.preview : AXIS.full;
   const w0 = container.clientWidth || window.innerWidth;
   const h0 = container.clientHeight || window.innerHeight;
 
@@ -155,7 +161,8 @@ export function createSpectra(container, { preview = false, initialSpeaker = nul
     // wavelength scale. These are the two numbers that keep the plate clear of
     // its own chrome; the chrome is laid out in rem from the top, so they are
     // deliberately generous rather than tuned to one viewport.
-    const top = 0.34, bottom = -0.74;
+    // The thumbnail has no chrome to clear, so its stack fills the tile.
+    const top = preview ? 0.80 : 0.34, bottom = preview ? -0.80 : -0.74;
     const h = (top - bottom) / rows.length;
     bands = rows.map((s, i) => ({
       speaker: s,
@@ -205,7 +212,8 @@ export function createSpectra(container, { preview = false, initialSpeaker = nul
         // would make each play look like it had fewer characters than it has.
         for (let k = 0; k < 20; k++) {
           const x = X0 + (k / 19) * (X1 - X0);
-          quad(x, band.cy, 0.010, band.height * 0.005, 0.075, 0.075, 0.085);
+          quad(x, band.cy, 0.010, band.height * 0.005,
+               preview ? 0.05 : 0.075, preview ? 0.05 : 0.075, preview ? 0.055 : 0.085);
         }
         continue;
       }
@@ -235,8 +243,12 @@ export function createSpectra(container, { preview = false, initialSpeaker = nul
           // Brightness, width and — through the squared glow term — bloom now
           // move together, which is also how an actual exposure behaves: a
           // strong line is not just brighter, it spreads into the emulsion.
-          const a = 0.10 + n * 0.90;
-          glow(x, band.cy, 0.0011 + n * 0.0060, hh,
+          // The thumbnail is 240px and gets a glance, so its floor is lifted
+          // and its lines thickened: at the full scene's values a tile of thin
+          // faint lines reads as a tile that has not loaded, which is the
+          // mistake Butterfly's preview spent a release making.
+          const a = (preview ? 0.34 : 0.10) + n * (preview ? 0.66 : 0.90);
+          glow(x, band.cy, (preview ? 0.0032 : 0.0011) + n * (preview ? 0.0090 : 0.0060), hh,
                lightColor.r * a, lightColor.g * a, lightColor.b * a);
           const bloom = n * n;
           glow(x, band.cy, 0.004 + bloom * 0.030, hh * 0.96,

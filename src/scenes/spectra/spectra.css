@@ -183,7 +183,12 @@
 	font-family: Arapey, Georgia, "Iowan Old Style", serif;
 	font-size: 0.72rem;
 	letter-spacing: 0.05em;
-	color: #4e4a44;
+	/* 4.93:1 on this scene's black, measured. It was #4e4a44 — 2.39:1 and
+	   failing — because "greyed out" was designed as an appearance rather than
+	   measured as a contrast. These are not disabled controls, they are
+	   information: a cast member with too little dialogue to plate. The italic
+	   and the smaller size carry the demotion; the colour does not have to. */
+	color: #807a6e;
 	font-style: italic;
 
 	@media (min-width: 700px) {
@@ -228,7 +233,11 @@
 			font-size: 0.54rem;
 			letter-spacing: 0.14em;
 			text-transform: uppercase;
-			color: #6a645a;
+			/* 4.93:1 on black, measured against the plate's own ground rather
+				   than eyeballed — at #6a645a this axis was 3.58:1, which is a
+				   label nobody with low vision can read on the one piece of
+				   chrome that says what the lines mean. */
+				color: #807a6e;
 		}
 	}
 }
