@@ -300,9 +300,70 @@ Anything outside those two categories is a real flag, not a pass —
 audit it the way the CSS `!important` audit did in v3.9.15/v3.9.16
 (read the actual reason each one exists before deciding).
 
-### Layout that depends on the scene count is computed from the registry
+### Scenes do not persist state. Preferences may.
 
-Added 4.4.0, and it is one rule with two applications rather than two rules.
+Written down 4.5.0, when it was asked for the first time, so it is not
+re-derived the next time.
+
+**Scenes reset between visits, and that is a decision rather than a limitation
+to work around.** Ten of the eleven are encounters with writing rather than
+configurations — nobody wants to return to Scroll at the paragraph they left.
+`sceneKit`'s entire lifecycle layer exists to guarantee that leaving a scene
+leaves nothing behind, and persisted state would be the first thing deliberately
+surviving a dispose. Apollo is the only real candidate, being the only scene
+where you build something, and it is the clearest case against: the instrument's
+pleasure is starting from an empty band, and a second visit that opens inside an
+arrangement you made weeks ago and no longer remember is worse than one that
+does not.
+
+**A preference is a different category and may persist.** The sound toggle is
+the precedent (`bindPersistedSoundToggle`): it records what the visitor wants to
+be true of every scene, not what they were doing in one.
+
+**When state seems to want persisting, make it addressable instead.** Apollo
+encodes a mixture in the hash — `#apollo/ca95,h85,na80` — so an arrangement
+becomes a thing you can send someone. Arriving at it is deliberate rather than
+residual, it costs nothing when unused, and nothing survives a dispose. Two
+constraints that came out of building it: the encoding must round-trip exactly
+(a fader with 101 positions cannot be encoded in 11 and handed back), and
+arriving at a link must never start audio — audio needs a gesture anyway, and
+somebody else's arrangement should be silent until the visitor asks.
+
+### Layout that depends on something else's size is measured, not constant
+
+Added 4.4.0 as a rule about the scene count; widened 4.5.0, because the scene
+count turned out to be one input rather than the subject.
+
+**The rule:** any number in the layout that depends on something the stylesheet
+cannot see — how many scenes exist, how tall another element renders, how much
+vertical room is left — is measured or derived at runtime, never typed as a
+constant. Three instances in three days, all the same shape:
+
+- The **scene count**, derived at runtime from `Object.keys(SCENES).length` in
+  `applyDerivedLayout()`, never typed into a stylesheet or positioned by hand in
+  markup.
+- The **rail's height** in Apollo, asked of the DOM by `layout()`. Two constants
+  taken from a desktop window covered the wavelength scale and the bottom of the
+  band on every phone once the rail grew a row (4.4.2).
+- The **budget under the band**, which in 4.5.0 grew past what the space could
+  hold again the moment another control row appeared.
+
+**And where a constant genuinely cannot be avoided, the layout needs an
+invariant instead of a number.** 4.4.2 made the band shrink to fit with a floor;
+a floor cannot prevent an overlap when the available space is smaller than the
+floor plus everything below it. 4.5.0 replaced it with an order of yielding —
+the diagram goes first, then the floor gives way — so "nothing overlaps the
+rail" is guaranteed rather than true at the sizes that were checked. When a
+control cannot be honoured, it should say so on itself; a button reporting
+pressed while nothing appeared is a worse failure than the missing thing.
+
+**What the constant version costs**, since a prohibition without a reason
+invites a workaround: it is not that it looks wrong. It looks exactly right, on
+the day it is written, at the size it was checked at. The cost is that it leaves
+the reason in place for the next change to inherit, and the person who inherits
+it is looking at an overlap with no indication which of three files is lying.
+
+#### The scene-count case, in full
 
 **The rule:** any number in the layout that has to change when a scene is added
 or removed is derived at runtime from `Object.keys(SCENES).length`, never typed

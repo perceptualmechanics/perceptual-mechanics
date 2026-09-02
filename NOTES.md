@@ -587,6 +587,190 @@ described are unchanged.)
   worth trimming, orrery.js's texture generators and first-person rig are the
   two most self-contained chunks to split out first.
 
+## 4.5.0 (2026-09-02)
+
+Two things: Apollo gets an idle state, and an arrangement becomes something you
+can send someone. The second is the answer to "should scenes persist state,"
+and the answer is no.
+
+### Sunlight — the sun as an idle state
+
+The first thing on this site that plays without being touched. Every other
+scene sits still until a visitor does something. Turn on Sunlight and the
+instrument puts the sun's own composition in the light and lets its lines sound
+on their own.
+
+**The composition is sourced; the amounts are a ruler, and the difference is
+stated.** Once the three atmospheric oxygen bands are set aside — Earth's air,
+not the sun's — five elements own every remaining labelled line in the standard
+Fraunhofer table: calcium (K, H, g), iron (E, c, G, e), hydrogen (C, F, f, h),
+magnesium (b1, b2, b4) and sodium (D1, D2). That is the same five the brief
+named, arrived at independently, which is a reassuring coincidence rather than
+evidence.
+
+The fader positions are not sourced and the module says so. What a fader
+controls is column density *in this model* — Gaussian profiles, NIST intensities
+as a strength proxy, an arbitrary maximum optical depth — and no published
+quantity maps onto that. Solar equivalent widths would be the right physical
+input and no machine-readable table of them was reachable. **Photospheric
+abundances are available and would have been actively wrong**, which is the
+interesting part: they would put helium second and calcium near nothing, when
+calcium's H and K are the deepest features in the visible solar spectrum.
+Abundance is not line strength. So the ordering is sourced, the values were set
+to reproduce it, and each was checked by computing the optical depth it produces
+rather than by looking:
+
+| | fader | marquee line | peak tau | transmission |
+|---|---|---|---|---|
+| Calcium | 0.95 | K 393.4nm | 4.37 | 1.3% |
+| Hydrogen | 0.85 | C 656.3nm | 3.91 | 2.0% |
+| Sodium | 0.80 | D2 589.0nm | 3.68 | 2.5% |
+| Iron | 0.70 | e 438.4nm | 1.32 | 26.7%, across 50 lines |
+| Magnesium | 1.00 | b1 518.4nm | 1.07 | 34.5% |
+
+**And one honest failure, because it is measurable.** Magnesium cannot be made
+dark enough. Its b triplet is comparable in depth to sodium's D lines in the
+real sun; here NIST's *emission* intensity for b1 is 70 against sodium D2's
+1000, so at fader 1.00 — already the maximum — magnesium's strongest line still
+transmits 34.5%. That is v4.3.0's emission-versus-absorption caveat turning into
+a number. A per-element correction invented to make one line look right would
+have been worse: taste wearing the costume of data, in the one module whose
+whole claim is that its numbers came from somewhere.
+
+Helium sits at zero, and that is a fact rather than an omission worth writing
+down: it was found *in the sun* in 1868, twenty-seven years before anyone found
+it on Earth, and it is still not part of the sun's visible fingerprint. Its D3
+line belongs to the chromosphere, not the photospheric absorption spectrum this
+band draws. The element named after the sun is not in the sun's signature.
+
+### It is not a loop, and that is structural
+
+Arrivals are a Poisson process — exponential inter-arrival times — and each line
+is drawn independently, weighted by its own optical depth in the current
+mixture. There is no periodic component anywhere in it, so it cannot become
+audible as a loop. That is an argument about the construction; here is the
+measurement.
+
+**Ten minutes, 336 notes, collected from the live page** rather than simulated:
+
+- **Rate** 0.560 notes/s against a configured 0.55. Per-minute counts 30 30 31
+  42 32 23 31 37 46 34, sd 6.2 against the 5.8 a Poisson process predicts.
+- **Not a rhythm.** Inter-arrival sd/mean = 0.970 (an exponential distribution
+  gives exactly 1; a fixed rhythm gives 0). Kolmogorov–Smirnov distance from
+  Exp(mean) = 0.040 against a 5% critical value of 0.074 for n=335 — consistent
+  with exponential, cannot be rejected.
+- **Not a loop.** Longest repeated consecutive subsequence: 3 notes, once.
+  Independent weighted draws predict 0.134 such occurrences, so one is
+  unremarkable; a 4-note repeat would have been 0.002 expected and none
+  occurred. 89 distinct lines across 336 notes, zero immediate repeats (guarded
+  against). Gap autocorrelation at lags 1, 2, 3, 5, 10: all within ±0.06.
+- **Weighted by strength, tested rather than asserted.** Per-element share
+  against what the weighting predicts: Ca 61.0% vs 63.1, Fe 27.7 vs 24.6, H 6.0
+  vs 6.0, Na 2.7 vs 3.5, Mg 2.7 vs 2.8. Chi-square 2.21 on 4 df against a 5%
+  critical value of 9.49.
+- Nine of the ten marquee lines fell within 1.4 standard deviations of
+  expectation. One — Ca 610.3nm, 12 observed against 5.1 expected, z = +3.06 —
+  did not. With ten lines examined, at least one |z| > 3 arises by chance about
+  3% of the time, so this is mildly surprising rather than evidence of a defect,
+  and it is recorded rather than smoothed over. The one known bias runs the
+  other way: rejecting an immediate repeat redistributes mass away from the
+  highest-weighted lines, and Ca K, Ca H and Na D2 are indeed all on the low
+  side.
+
+Also worth recording: a 25-second sample of the same stream read 0.72 notes/s,
+which would have looked like a 30% rate error. Ten minutes read 0.560. The short
+sample was variance, and that is the argument for the long run rather than a
+listen.
+
+### The scheduler, and where it stops
+
+`setInterval` with a lookahead window, never requestAnimationFrame — Outside's
+pattern, which v4.3.0 correctly said Apollo had no generative layer to need. It
+does now. The wrinkle Outside does not have: ambient must run with the sound
+off, and in the preview tile, where there is no AudioContext at all. So the
+authoritative clock is the audio hardware's when a context exists and a plain
+monotonic count when it does not — one clock at a time, resynced at the moment
+it switches.
+
+Verified stopping, because a scheduler that outlives its scene is the v4.0
+defect exactly: ambient on gives 1 live interval; tab hidden gives 0 and no new
+notes over 2.5s; visible again resumes; leaving for Outside and then Butterfly
+and clicking inside each gives 0 intervals, no further notes, and 1 audio
+context made, 1 closed, 0 live.
+
+**The tile runs it.** Silently — there is no audio in a preview — so the
+landing page's Apollo thumbnail now shows the sun's spectrum with lines lighting
+up on their own. The tile was already complete on its first frame; this makes it
+alive, which is a different and better claim. **Not** because of Butterfly's
+thumbnail, which is what the brief offered as the reason and which was fixed in
+4.1.3.
+
+**Default off in the full scene**, built both ways and looked at. The pleasure
+of the scene is putting elements into the light, and opening mid-performance
+takes that away; Sunlight is a thing to find.
+
+### Shareable mixtures, and why scenes do not persist state
+
+The question was whether scenes should remember their state between visits. They
+should not, and this is not a technical limitation being worked around: ten of
+the eleven scenes are encounters with writing rather than configurations,
+`sceneKit`'s entire lifecycle layer exists to guarantee that leaving a scene
+leaves nothing behind, and a second visit that begins inside an arrangement made
+three weeks ago and forgotten is worse than beginning with an empty band. The
+sound toggle persists because a preference is a different category from a state.
+
+What persistence was reaching for, done better: `#apollo/ca95,h85,na80,fe70,mg100,sun`.
+An arrangement becomes something you can send. Arriving at it is deliberate
+rather than residual, it costs nothing when unused, and nothing survives a
+dispose.
+
+**The router needed less than expected and more than the brief thought.**
+`parseHash()` has always required the second segment to match `/^\d+$/` before
+treating it as a piece id, so a mixture could never have collided with the piece
+path. What it *did* hit was `setHash()`, which rebuilt the hash from scene plus
+piece id and so erased a mixture from the address bar the instant anyone arrived
+at a shared link. Both now carry a third value — a non-numeric second segment,
+passed to the scene as an opaque string and written back verbatim.
+
+Percent rather than the tenths the brief sketched: the fader has 101 positions
+and an encoding with 11 cannot give back what it was handed, and the round trip
+has to be exact.
+
+**The round trip found a real bug, and a worse one than a mismatch.** A link
+carrying `emission` put the scene in emission with the light-source switch still
+reading "Behind the gas" — because `setMode` had never touched the radio inputs,
+which were the only record of which mode was showing. Pressing the switch then
+did nothing at all, since `setMode` early-returns when the value already
+matches. A stuck state, not a display error, and only a round-trip test would
+have found it.
+
+Verified: a five-fader mixture with emission and the ruler, copied and opened in
+a **fresh browser profile**, comes back byte-identical, with the hash preserved
+and sound not autoplayed. Malformed links — unknown element, out-of-range value,
+truncated string, uppercase, a bare numeric segment — all open Apollo with no
+error, applying what they can. `#scroll/3`, `#nonsense` and bare `#apollo`
+unchanged.
+
+### A second overlap, found by measuring rather than by report
+
+4.5.0's control row made the rail taller, and 320x700 overlapped again — the
+class 4.4.2 had just fixed. Measuring found worse: **at 320x568 the band had
+zero pixels of room**, rail and all, with or without the ruler.
+
+4.4.2 made the band shrink to fit with a floor; what a floor cannot do is
+guarantee no overlap when the space is genuinely smaller than the floor plus
+everything under it. So the budget is now decided in order — the pitch ruler is
+a diagram and it yields first, saying so on its own control rather than
+reporting pressed while nothing appeared; then the band's floor gives way. An
+overlap is never the answer, and that is now an invariant rather than a set of
+numbers that happen to work at the sizes someone checked.
+
+Plus the one place in this scene that genuinely needs a **height** media query
+rather than a width one: the rail measured 277px on a phone, which is fine at
+780px tall and ruinous at 568. Under `max-height: 760px` it comes down to 197.
+Re-verified at eight sizes with ambient running and the ruler requested: all
+clear, with the ruler yielding only at 320x568.
+
 ## 4.4.2 (2026-09-02)
 
 Scott asked for one thing — "double-check the pitch ruler on mobile" — and the

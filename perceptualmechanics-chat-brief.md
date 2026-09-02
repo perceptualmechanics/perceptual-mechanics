@@ -1,6 +1,6 @@
 # perceptualmechanics — chat brief
 
-*Handoff for a fresh Claude chat. Current as of **v4.4.2**, 2026-09-02.*
+*Handoff for a fresh Claude chat. Current as of **v4.5.0**, 2026-09-02.*
 
 > **Read `WORKING-PROTOCOL.md` first.** It is in the repo and it is short. It
 > records the one failure mode this collaboration keeps producing — a number or
@@ -79,7 +79,7 @@ Counts read from the live content modules.
 | **Beamline** | A vessel travelling a glowing rail across a night wilderness; found text surfaces at each station | 10 stations |
 | **Harmonics** | Resonant connections across every other scene's content, as a force-directed graph with Kuramoto phase-sync and sonification | 64 approved resonances |
 | **Outside** | A generated lotus (Gielis superformula) mapping a five-part cosmology — Power Sources as petals, Folk Origins, Magi/Psi at centre | 5 power sources |
-| **Apollo** | A solar spectrum you can play, in two modes. Ten elements on faders; **absorption** puts their lines into a band of starlight as gaps you sound by clicking, **emission** darkens the band and stands the same lines in it bright, struck rather than sustained | 10 elements, 218 lines across all ten (iron 50, sodium 6) |
+| **Apollo** | A solar spectrum you can play, in two modes, with an idle state. **Sunlight** puts the sun’s own composition in the light and lets its lines sound on their own — the only scene here that plays untouched. A mixture can be shared as a link (`#apollo/ca95,h85,na80`). Ten elements on faders; **absorption** puts their lines into a band of starlight as gaps you sound by clicking, **emission** darkens the band and stands the same lines in it bright, struck rather than sustained | 10 elements, 218 lines across all ten (iron 50, sodium 6) |
 
 Earlier scenes — leaf, egg, prism, cycle, and some older constellation and
 ground-glimpse mechanics — were built, shipped, and retired. The eleven above
@@ -224,6 +224,18 @@ way — and nobody could tell, because a thumbnail that has never drawn looks
 exactly like one still loading. That indistinguishability was the actual
 finding, and the same release made the two states tell apart from the page
 itself.
+
+**v4.5.0 — Sunlight, and shareable mixtures.** Apollo gets an idle state, the
+first on the site: the sun's own composition, from the five elements that own
+every labelled line in the Fraunhofer table, with lines waking at their own
+intervals weighted by depth. Not a loop by construction — Poisson arrivals, no
+periodic component — and measured over ten minutes: 336 notes, sd/mean 0.970
+against an exponential's 1.000, chi-square 2.21 on the weighting, longest
+repeated run 3 notes where chance predicts 0.134. The composition is sourced
+from the Fraunhofer table; the fader amounts are explicitly a ruler, because
+abundances would have put helium second and calcium near nothing. **And the
+answer on persistence is no** — scenes reset, and what persistence was reaching
+for is a link that carries the mixture instead. See `STANDARDS.md`.
 
 **v4.4.2 — the rail had been covering the wavelength scale on every phone.**
 Asked to double-check the pitch ruler on mobile; found the ruler under the rail,

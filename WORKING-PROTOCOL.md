@@ -221,6 +221,27 @@ protocol with no record of use is indistinguishable from one nobody reads.
   row describes, made again in the same session the document was written. Named
   before building, and the corrected figure is what went into the code comments
   and `NOTES.md`.
+- **2026-09-02, v4.5.0.** **The Butterfly claim came back.** The ambient-mode
+  brief again gave "Butterfly's thumbnail takes twenty-five seconds… a live open
+  question" as a reason, three briefs after the same sentence was corrected at
+  the top of the Apollo build. The recurrence is the finding, not the error: the
+  correction lived in a reply, and a reply is not a document the next brief
+  reads. This is rule 1's table row happening to the correction rather than to
+  the original fact. Nothing depended on it — the argument for running ambient
+  in the preview tile stands on its own and is better without it — but a stale
+  reason attached to a sound decision is how a stale fact acquires a third life.
+  **The fix that would actually work is to state a corrected fact where the next
+  brief will read it**, which is what `NOTES.md` 4.1.3 and the project brief
+  already say and what a chat instance working from documents evidently does not
+  reach. Worth Scott's attention: this file is read by both instances, so the
+  correction is repeated here.
+- **2026-09-02, v4.5.0.** Two measurements that changed a design rather than
+  confirming it. Photospheric abundances were the obvious quantitative source
+  for the solar mixture and would have been actively wrong (helium second,
+  calcium near nothing) — abundance is not line strength, and the citation would
+  have made a wrong answer look sourced. And a 25-second sample of the ambient
+  stream read 0.72 notes/s against a configured 0.55; ten minutes read 0.560.
+  The short sample was variance and would have been reported as a rate error.
 - **2026-09-02, v4.4.2.** Scott asked for one thing — "double-check the pitch
   ruler on mobile" — and checking it found three, which is the argument for
   checking rather than reasoning. The ruler was drawn under the rail on phones,

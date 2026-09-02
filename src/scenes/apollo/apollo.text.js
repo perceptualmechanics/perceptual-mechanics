@@ -428,3 +428,102 @@ export const SOURCES = {
   edlen: 'Edlén (1966), the vacuum-to-air refraction formula adopted as the IAU standard.',
   codata: 'CODATA recommended value for the Rydberg constant, with the reduced-mass correction for hydrogen applied here.',
 };
+
+// ─── The sun's own mixture ──────────────────────────────────────────────────
+// Apollo's ambient mode plays the composition of sunlight, from the elements
+// already in the instrument. The instrument was built out of the sun; this is
+// it playing the thing it came from.
+//
+// WHICH ELEMENTS. Sourced, not chosen. The standard Fraunhofer table assigns
+// letters to the most prominent features of the solar spectrum, and once the
+// three atmospheric oxygen bands (A, B, a — absorbed by Earth's air, not the
+// sun's) are set aside, five elements own every remaining labelled line:
+//
+//   Calcium    K 393.4, H 396.8, g 422.7
+//   Iron       E 527.0, c 495.8, d 466.8, e 438.4, G 430.8
+//   Hydrogen   C 656.3, F 486.1, f 434.0, h 410.2
+//   Magnesium  b1-b4 516.7-518.4
+//   Sodium     D1 589.6, D2 589.0
+//
+// The other five elements in the instrument sit at zero, which is a fact about
+// the sun rather than an omission. Helium is the one worth naming: it was
+// found IN THE SUN in 1868, twenty-seven years before anyone found it on
+// Earth, and it is still not part of the sun's visible fingerprint — its D3
+// line at 587.6nm belongs to the chromosphere and to prominences, not to the
+// photospheric absorption spectrum this band draws. The element named after
+// the sun is not in the sun's visible signature.
+//
+// HOW MUCH OF EACH — and this is a ruler, not a measurement, so it is stated
+// as one. What the fader controls is column density in THIS model: Gaussian
+// line profiles, NIST relative intensities as a strength proxy, and an
+// arbitrary maximum optical depth. No published quantity maps onto that. Solar
+// equivalent widths would be the right physical input and no machine-readable
+// table of them was reachable; photospheric abundances are available and would
+// be actively WRONG here, because they would put helium second and calcium
+// near nothing, when calcium's H and K are the deepest features in the visible
+// solar spectrum. Abundance is not line strength.
+//
+// So: the ORDERING below is sourced from the Fraunhofer table above, and the
+// VALUES are set so the rendered band reproduces that ordering. Each was
+// checked by computing the peak optical depth it produces rather than by
+// looking at it:
+//
+//   Ca 0.95 -> tau 4.37 at K, 1.3% transmission   (deepest, as it should be)
+//   H  0.85 -> tau 3.91 at H-alpha, 2.0%
+//   Na 0.80 -> tau 3.68 at D2, 2.5%
+//   Fe 0.70 -> tau 1.32 at 438.4, 26.7%, across 50 lines — crowding, not depth
+//   Mg 1.00 -> tau 1.07 at b1, 34.5%
+//
+// AND ONE HONEST FAILURE, because it is the emission-versus-absorption caveat
+// in this file's header turning into a number. Magnesium cannot be made dark
+// enough. Its b triplet is comparable in depth to sodium's D lines in the real
+// solar spectrum, but NIST's EMISSION intensity for b1 is 70 against sodium
+// D2's 1000 — so at the maximum fader position magnesium's strongest line
+// still transmits 34.5%. The fader is already at 1.00 and there is nowhere
+// further to push it. This is the proxy being wrong in a specific, measurable
+// place, and the alternative — a per-element correction factor invented to
+// make one line look right — would be worse: it would be taste wearing the
+// costume of data, in the one module whose whole claim is that its numbers
+// came from somewhere.
+export const SOLAR_MIXTURE = { Ca: 0.95, H: 0.85, Na: 0.80, Fe: 0.70, Mg: 1.00 };
+
+// Fraunhofer's own letters, for the lines that carry them. He assigned these
+// in 1814 — mapping over 570 dark lines, the exact count differing by source —
+// with no idea what they were; Kirchhoff and Bunsen worked out that they were
+// elements forty-five years later. The letters outlived the ignorance: the
+// sodium D lines and the calcium H and K lines are still called that.
+//
+// EACH LETTER IS BOUND TO ITS ELEMENT, and that is not decoration. A first
+// version matched letters to wavelengths alone, and calcium promptly claimed
+// Fraunhofer G — which the table assigns to iron — because calcium happens to
+// have a line 0.016nm away from it. A letter is a fact about a feature in the
+// solar spectrum, not about a coordinate, and two elements can sit close enough
+// to swap one. (The G band is genuinely a blend of Fe, Ca and CH in the real
+// sun; the point stands anyway, because the table names iron and a lookup that
+// can hand a letter to whichever element is nearest will eventually hand one to
+// something the table never mentioned.)
+export const FRAUNHOFER = [
+  { letter: 'K',  nm: 393.366, el: 'Ca' },
+  { letter: 'H',  nm: 396.847, el: 'Ca' },
+  { letter: 'h',  nm: 410.178, el: 'H'  },
+  { letter: 'g',  nm: 422.673, el: 'Ca' },
+  { letter: 'G',  nm: 430.790, el: 'Fe' },
+  { letter: 'f',  nm: 434.051, el: 'H'  },
+  { letter: 'e',  nm: 438.354, el: 'Fe' },
+  { letter: 'F',  nm: 486.138, el: 'H'  },
+  { letter: 'c',  nm: 495.760, el: 'Fe' },
+  { letter: 'b4', nm: 516.732, el: 'Mg' },
+  { letter: 'b2', nm: 517.268, el: 'Mg' },
+  { letter: 'b1', nm: 518.360, el: 'Mg' },
+  { letter: 'E',  nm: 526.954, el: 'Fe' },
+  { letter: 'D2', nm: 588.995, el: 'Na' },
+  { letter: 'D1', nm: 589.592, el: 'Na' },
+  { letter: 'C',  nm: 656.288, el: 'H'  },
+];
+export function fraunhoferFor(nm, elKey = null) {
+  for (const f of FRAUNHOFER) {
+    if (elKey && f.el !== elKey) continue;
+    if (Math.abs(f.nm - nm) < 0.05) return f.letter;
+  }
+  return null;
+}

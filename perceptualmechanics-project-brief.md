@@ -1,6 +1,6 @@
 # perceptualmechanics — project brief
 
-*Prepared 2026-08-31, refreshed 2026-09-02, current as of **v4.4.2**. Written as a handoff/context document for a fresh chat — everything here should be enough to pick up work on this project without re-deriving it.*
+*Prepared 2026-08-31, refreshed 2026-09-02, current as of **v4.5.0**. Written as a handoff/context document for a fresh chat — everything here should be enough to pick up work on this project without re-deriving it.*
 
 > **A note on keeping this file honest.** The 2026-09-01 audit found this
 > brief fourteen minor versions stale: it still said "current as of
@@ -46,7 +46,7 @@ Static shell markup lives in `<name>.html`, imported as a raw string and parsed 
 9. **Harmonics** (9th scene; internally still named/keyed `harmonics` everywhere except the public URL slug — a deliberate, documented exception) — visualizes resonant connections across every other scene's content as a force-directed node graph with Kuramoto phase-sync animation and sonification.
 10. **Outside** (10th scene) — a generated lotus/flower (Gielis superformula geometry) mapping a five-part cosmology (Power Sources as petals, Folk Origins, Magi/Psi at center); breathes continuously, Fresnel-based petal translucency, five distinct per-petal chime timbres plus a Kumoi-scale ambient chime bed.
 
-11. **Apollo** (11th scene, v4.3.0; emission mode v4.4.0) — a solar spectrum you can play, in two modes. **Absorption:** a near-full-width band of starlight with the lines missing from it, a procedurally generated corona streaming in from the right, and ten elements on vertical faders that put their own lines into the light. Clicking a dark line sounds that wavelength as a pitch. **Emission** (v4.4.0) is the same wavelengths from the other side — the element data is identical, the band goes dark, the same lines stand bright in it, the streaming corona drops to a local residue because the gas is now the source, and a note is struck rather than sustained. One control switches it and fader state persists across the switch. Hydrogen is computed live from the Rydberg formula (with the reduced-mass correction and a vacuum-to-air conversion — which is what makes it land on the published values); the other nine elements are NIST strong-lines tables. **The only scene with no Three.js and no WebGL context** — see `apollo.js`'s header for the context-budget reasoning — and the only one whose content is measurement rather than writing.
+11. **Apollo** (11th scene, v4.3.0; emission mode v4.4.0) — a solar spectrum you can play, in two modes. **Absorption:** a near-full-width band of starlight with the lines missing from it, a procedurally generated corona streaming in from the right, and ten elements on vertical faders that put their own lines into the light. Clicking a dark line sounds that wavelength as a pitch. **Emission** (v4.4.0) is the same wavelengths from the other side — the element data is identical, the band goes dark, the same lines stand bright in it, the streaming corona drops to a local residue because the gas is now the source, and a note is struck rather than sustained. One control switches it and fader state persists across the switch. **Sunlight** (v4.5.0) is the scene's idle state and the only one on the site: it puts the sun's own composition in the light — the five elements that own every labelled line in the Fraunhofer table — and lets those lines sound on their own as a Poisson process weighted by optical depth. A mixture is shareable as a hash (`#apollo/ca95,h85,na80,sun`), which is the site's answer to scene-state persistence: scenes reset, arrangements are addressable. Hydrogen is computed live from the Rydberg formula (with the reduced-mass correction and a vacuum-to-air conversion — which is what makes it land on the published values); the other nine elements are NIST strong-lines tables. **The only scene with no Three.js and no WebGL context** — see `apollo.js`'s header for the context-budget reasoning — and the only one whose content is measurement rather than writing.
 
 A few earlier scenes (leaf, egg, prism, cycle, and older constellation/ground-glimpse/thread-follow mechanics) were built, shipped, and later **retired/shelved** over the project's history — the current registry above is the live set as of v4.3.0. **Spectra**, a twelfth candidate, is in the tree and builds but is deliberately unregistered (`src/scenes/spectra/SHELVED.md`); it is unrelated to Apollo despite the subject overlap.
 
@@ -117,7 +117,12 @@ This is the durable house-rules file (created v3.9.16) — **read it first** bef
   build's own gate hashes the emitted one, and asserts that hash appears in the
   policy on the same response. In the same pass, CSP reporting was removed
   rather than completed — see Known open items.
-- **4.4.2 (current, 2026-09-02):** Apollo's band, wavelength scale and pitch
+- **4.5.0 (current, 2026-09-02):** Apollo's Sunlight idle state and shareable
+  mixtures. Adds a third hash shape — `main.js`'s `parseHash`/`setHash` now
+  carry a non-numeric second segment through to the scene as an opaque string,
+  which the piece-id path never could have collided with but `setHash` used to
+  erase. `STANDARDS.md` gains the persistence rule and a widened layout rule.
+- **4.4.2 (2026-09-02):** Apollo's band, wavelength scale and pitch
   ruler were all being drawn under the fader rail on phones — two constants
   taken from a desktop window and never re-derived against a rail that grew a
   row in 4.4.0. Vertical layout now measured from the rail's real position;

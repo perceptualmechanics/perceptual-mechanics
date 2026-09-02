@@ -172,17 +172,34 @@ function navIconFor(sceneName) {
 const PUBLIC_SLUG = { harmonics: 'harmonics', outside: 'outside' }; // internal SCENES key -> URL slug
 const SLUG_TO_INTERNAL = Object.fromEntries(Object.entries(PUBLIC_SLUG).map(([k, v]) => [v, k]));
 
-// Returns { scene, pieceId } — pieceId is null when the hash only names a
-// scene (`#scroll`) or the piece segment isn't a valid positive integer.
+// Returns { scene, pieceId, arg }.
+//
+// `pieceId` is null when the hash only names a scene (`#scroll`) or the second
+// segment isn't a valid positive integer. `arg` is that second segment when it
+// is present and NOT a piece id — a third hash shape, added 4.5.0 so Apollo can
+// carry a mixture in a link (`#apollo/ca95,h85,na80`).
+//
+// The two shapes cannot be confused, and that is a property of the existing
+// code rather than something this had to add: the piece segment has always
+// required `/^\d+$/`, so anything non-numeric already fell through as "no
+// piece". What did have to change is setHash below, which used to rebuild the
+// hash from scene + pieceId alone and so erased a mixture from the address bar
+// the instant a visitor arrived at a shared link.
 function parseHash() {
   const raw = decodeURIComponent(location.hash.replace(/^#/, ''));
-  const [rawKey, pieceRaw] = raw.split('/');
+  const slash = raw.indexOf('/');
+  const rawKey = slash === -1 ? raw : raw.slice(0, slash);
+  const rest = slash === -1 ? undefined : raw.slice(slash + 1);
   const sceneKey = SLUG_TO_INTERNAL[rawKey] ?? rawKey;
   // hasOwn, not `key in SCENES` — `in` walks the prototype chain, so
   // /#toString would otherwise resolve to a "scene" and throw on .create.
   const scene = Object.hasOwn(SCENES, sceneKey) ? sceneKey : null;
-  const pieceId = pieceRaw !== undefined && /^\d+$/.test(pieceRaw) ? Number(pieceRaw) : null;
-  return { scene, pieceId: scene ? pieceId : null };
+  const isPiece = rest !== undefined && /^\d+$/.test(rest);
+  return {
+    scene,
+    pieceId: scene && isPiece ? Number(rest) : null,
+    arg: scene && rest !== undefined && !isPiece && rest !== '' ? rest : null,
+  };
 }
 
 // `push`: true for a real scene-to-scene navigation (adds a Back-able
@@ -192,10 +209,15 @@ function parseHash() {
 // cross-links doesn't leave ten dead entries between the visitor and the
 // Back button; Back still means "leave the scene," same as before this
 // piece-level hash existed at all.
-function setHash(sceneName, pieceId, { push = true } = {}) {
+function setHash(sceneName, pieceId, { push = true, arg = null } = {}) {
   syncingHash = true;
   const publicName = sceneName ? (PUBLIC_SLUG[sceneName] ?? sceneName) : sceneName;
-  const next = publicName ? (pieceId ? `${publicName}/${pieceId}` : publicName) : '';
+  // A piece id wins over an arg — they occupy the same segment, and no scene
+  // has both. `arg` is passed through verbatim rather than re-encoded: it is
+  // the scene's own string and the scene is what has to be able to read it
+  // back.
+  const suffix = pieceId ? `/${pieceId}` : (arg ? `/${arg}` : '');
+  const next = publicName ? `${publicName}${suffix}` : '';
   if (next) {
     if (push) {
       location.hash = next;
@@ -401,7 +423,7 @@ expReload?.addEventListener('click', () => location.reload());
 // (dispose-ing/creating on top of a transition already in flight).
 let transitioning = false;
 
-function expandScene(sceneName, triggerEl = null, pieceId = null) {
+function expandScene(sceneName, triggerEl = null, pieceId = null, sceneArg = null) {
   if (transitioning) return;
   // `!sceneLoadFailed` is what makes a retry possible: when the module
   // never arrived, activeScene still names this scene (the overlay is
@@ -413,6 +435,11 @@ function expandScene(sceneName, triggerEl = null, pieceId = null) {
     // cross-link that happens to land back on this scene) still needs to
     // open the new piece, just without tearing the scene down and
     // rebuilding it from scratch.
+    // A mixture arriving for the scene that is already open — a second shared
+    // link followed from the first, or an address-bar edit. Applied before the
+    // piece branch because they are different segments of the same slot and no
+    // scene has both.
+    if (sceneArg) { fullInstance?.applyArg?.(sceneArg); setHash(sceneName, null, { push: false, arg: sceneArg }); return; }
     if (pieceId) fullInstance?.openPieceById?.(pieceId);
     // ...and `#scene/id` edited back down to `#scene` has to mean "close
     // the piece," which is the whole point of a hash that addresses one.
@@ -451,7 +478,7 @@ function expandScene(sceneName, triggerEl = null, pieceId = null) {
     clearSceneLoadError();
     activeScene = sceneName;
     setActiveIcon(sceneName);
-    setHash(sceneName, pieceId);
+    setHash(sceneName, pieceId, { arg: sceneArg });
     rememberElsewhere(sceneName, pieceId);
 
     landing.style.display = 'none';
@@ -510,6 +537,15 @@ function expandScene(sceneName, triggerEl = null, pieceId = null) {
       fullInstance = create(expContainer, {
         preview: false,
         initialPieceId: pieceId,
+        // The third hash shape, handed to the scene as an opaque string. Only
+        // Apollo reads it today (a fader mixture); every other scene ignores an
+        // option it was not written to expect, which is why this is one extra
+        // property rather than a routing change.
+        initialArg: sceneArg,
+        // How a scene writes that string back. Explicit action only —
+        // replaceState so a fader drag can never fill the history with junk,
+        // and nothing calls this on its own.
+        onStateChange: str => setHash(sceneName, null, { push: false, arg: str || null }),
         // A piece opened *inside* the already-open scene (a fragment click, a
         // jump-list selection, a cross-link) updates the hash's piece segment
         // without pushing a new history entry — see setHash's own comment for
@@ -925,13 +961,13 @@ function dropUnknownHash() {
 }
 
 const initialHash = parseHash();
-if (initialHash.scene) expandScene(initialHash.scene, navIconFor(initialHash.scene), initialHash.pieceId);
+if (initialHash.scene) expandScene(initialHash.scene, navIconFor(initialHash.scene), initialHash.pieceId, initialHash.arg);
 else dropUnknownHash();
 
 window.addEventListener('hashchange', () => {
   if (syncingHash) return; // our own write, not a real navigation
-  const { scene, pieceId } = parseHash();
-  if (scene) expandScene(scene, navIconFor(scene), pieceId);
+  const { scene, pieceId, arg } = parseHash();
+  if (scene) expandScene(scene, navIconFor(scene), pieceId, arg);
   else { returnToGallery(); dropUnknownHash(); }
 });
 

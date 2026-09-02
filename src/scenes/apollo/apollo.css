@@ -317,3 +317,73 @@
   border-color: rgba(201, 174, 116, 0.6);
   background: rgba(201, 174, 116, 0.13);
 }
+
+/* ─── The control row above the faders ─────────────────────────────────────
+   Three things that say what the instrument is looking at rather than what it
+   is doing: the light-source switch, Sunlight, and the link. They wrap on a
+   phone rather than shrinking, because a control that has shrunk to fit is a
+   control nobody presses. */
+.apollo-mode-row {
+  grid-column: 1 / -1;
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: center;
+  gap: 0.3rem;
+  margin: 0 0 0.5rem;
+}
+.apollo-mode-row .apollo-mode { margin: 0; }
+
+.apollo-ambient,
+.apollo-copy {
+  background: none;
+  border: 1px solid rgba(201, 174, 116, 0.22);
+  border-radius: 999px;
+  padding: 0.28rem 0.7rem;
+  color: var(--ap-brass-dim);
+  font-family: 'Electrolize', sans-serif;
+  font-size: 0.56rem; letter-spacing: 0.14em; text-transform: uppercase;
+  cursor: pointer;
+  transition: color .18s, border-color .18s, background .18s;
+
+	@media (min-width: 641px) {
+		font-size: 0.6rem; padding: 0.3rem 0.9rem;
+	}
+}
+.apollo-ambient:hover, .apollo-ambient:focus-visible,
+.apollo-copy:hover, .apollo-copy:focus-visible {
+  color: var(--ap-ink); border-color: rgba(201, 174, 116, 0.45);
+}
+/* Sunlight lit while it runs — it is the one control here that keeps doing
+   something after it is pressed, and it should look like it. */
+.apollo-ambient[aria-pressed="true"] {
+  color: #f5e6bd;
+  border-color: rgba(224, 191, 118, 0.65);
+  background: rgba(201, 174, 116, 0.15);
+  box-shadow: 0 0 10px -2px rgba(224, 191, 118, 0.55);
+}
+
+/* ─── Short viewports ──────────────────────────────────────────────────────
+   The rail is three rows on a phone — the light-source row, then two rows of
+   five faders — and measured 277px tall, which is fine on a 780px screen and
+   ruinous on a 568px one: at 320x568 it left the band literally zero pixels to
+   occupy. Width was never the constraint here; height is, and this is the one
+   place in the scene that needs a height query rather than a width one.
+
+   apollo.js guarantees no overlap regardless (the pitch ruler yields first,
+   then the band's own floor). This is what keeps that guarantee from having to
+   fire on an ordinary small phone. */
+@media (max-height: 760px) {
+  .apollo-fader input[type="range"] { height: 2.5rem; }
+  .apollo-rail { padding: 0.4rem 0.4rem 0.3rem; gap: 0.2rem 0.1rem; bottom: 7.5rem; }
+  .apollo-mode-row { margin-bottom: 0.3rem; }
+  .apollo-mode label, .apollo-ambient, .apollo-copy { padding: 0.2rem 0.55rem; }
+  .apollo-fader-count { display: none; }
+}
+
+/* A pressed toggle that produced nothing is worse than the thing not
+   appearing, so the control says so rather than lying quietly. */
+.apollo-ruler-toggle.no-room {
+  color: var(--ap-brass-dim);
+  border-style: dashed;
+  border-color: rgba(201, 174, 116, 0.35);
+  background: none;
+  box-shadow: none;
+}

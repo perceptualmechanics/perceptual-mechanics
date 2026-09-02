@@ -4,8 +4,8 @@ import {
   createJumpList,
 } from '../../utils/sceneKit.js';
 import {
-  ELEMENTS, VISIBLE_MIN, VISIBLE_MAX, CHORD_CAP,
-  wavelengthToRGB, luminousEfficiency, wavelengthToHz, visibleLines,
+  ELEMENTS, ELEMENT_BY_KEY, VISIBLE_MIN, VISIBLE_MAX, CHORD_CAP, SOLAR_MIXTURE,
+  wavelengthToRGB, luminousEfficiency, wavelengthToHz, visibleLines, fraunhoferFor,
 } from './apollo.text.js';
 import apolloHtml from './apollo.html?raw';
 import './apollo.css';
@@ -85,7 +85,7 @@ const TAU_MAX = 4.6;
 // that iron's forest is a forest rather than four lines and a rumour.
 const RELATIVE_STRENGTH_EXPONENT = 0.55;
 
-export function createApollo(container, { preview = false } = {}) {
+export function createApollo(container, { preview = false, initialArg = null, onStateChange = null } = {}) {
   let disposed = false;
   const timers = trackTimers();
 
@@ -195,8 +195,6 @@ export function createApollo(container, { preview = false } = {}) {
       // constant that was correct at the width it was written at. So this asks
       // the DOM where the rail actually is.
       const scaleBlock = SCALE_BLOCK * r;
-      const rulerBlock = rulerOn ? RULER_BLOCK * r : 0;
-      const below = scaleBlock + rulerBlock;
 
       let floor = H - 8 * r;
       if (railEl) {
@@ -206,8 +204,27 @@ export function createApollo(container, { preview = false } = {}) {
       }
       const ceiling = Math.round(H * 0.17);  // clear of the hint, which wraps to two lines on a phone
 
+      // ─── The ruler gets room or it does not get drawn ──────────────────────
+      // 4.4.2 made the band shrink to fit above the rail, with a floor so it
+      // could never become a line. What that floor could not do is guarantee no
+      // overlap: when the space is genuinely smaller than the floor plus the
+      // scale plus the ruler, something has to give, and until now the thing
+      // that gave was the rule. Measured at 320x700 with 4.5.0's taller control
+      // row: 110px of usable band zone against 140px needed. At 320x568 —
+      // an older small phone — the zone is ZERO even without the ruler.
+      //
+      // So the budget is now decided against what exists, in order: the ruler
+      // is a diagram and it is what goes first; then the band's floor gives way
+      // rather than the band crossing the rail. An overlap is never the answer,
+      // and this is an invariant rather than a set of numbers that happen to
+      // work at the sizes someone checked.
+      const avail = floor - ceiling;
+      rulerFits = !rulerOn || (avail - scaleBlock - RULER_BLOCK * r >= BAND_MIN * r);
+      const below = scaleBlock + (rulerOn && rulerFits ? RULER_BLOCK * r : 0);
+      const minBand = Math.max(24 * r, Math.min(BAND_MIN * r, avail - below));
+
       let h = Math.round(Math.min(H * 0.22, 210 * r));
-      h = Math.max(Math.round(70 * r), Math.min(h, Math.round(floor - ceiling - below)));
+      h = Math.max(minBand, Math.min(h, Math.round(avail - below)));
       bandH = h;
 
       let y = Math.round(H * 0.40 - bandH / 2);
@@ -223,6 +240,10 @@ export function createApollo(container, { preview = false } = {}) {
   // layout() never reserved is exactly how this went wrong the first time.
   const SCALE_BLOCK = 24;
   const RULER_BLOCK = 46;
+  const BAND_MIN = 70;   // CSS px — the band's preferred floor
+  // Whether the ruler was actually given room this layout. Distinct from
+  // rulerOn: the visitor can ask for it on a screen that cannot hold it.
+  let rulerFits = true;
 
   // ─── The continuum ────────────────────────────────────────────────────────
   // Figured out first, because it decides whether this is an object or a
@@ -326,13 +347,19 @@ export function createApollo(container, { preview = false } = {}) {
   // which is what a fader is for and what a real column density does.
   const density = Object.fromEntries(ELEMENTS.map(e => [e.key, 0]));
   if (preview) {
-    // A first-visit answer for a 200px tile, and it is answered on frame one
-    // rather than accumulated: hydrogen for the wide Balmer spacing, calcium
-    // for the two black bars at the violet edge, sodium and magnesium for
-    // something in the middle. Butterfly's thumbnail needed twenty-five
-    // seconds to reach its subject before 4.1.3; this scene's has nothing to
-    // converge to, so the tile is complete the first time it paints.
-    density.H = 0.85; density.Ca = 0.45; density.Na = 0.80; density.Mg = 0.50;
+    // The tile shows THE SUN — the same five elements ambient mode plays, at
+    // the same fader positions (SOLAR_MIXTURE in apollo.text.js). It was a
+    // hand-picked four until 4.5.0, which was fine and arbitrary; the sun is
+    // neither.
+    //
+    // The tile is complete on the first frame it paints — there is nothing to
+    // converge to, so "what does this look like after three seconds" is
+    // answered at frame one. What 4.5.0 adds is that it is also ALIVE: ambient
+    // runs in the tile, silently, so lines light up on their own. That is a
+    // different claim from legibility and a better one, and it is the reason to
+    // do it — not the Butterfly thumbnail, which was fixed in 4.1.3 and reaches
+    // its subject in about a second.
+    for (const el of ELEMENTS) density[el.key] = SOLAR_MIXTURE[el.key] ?? 0;
   } else {
     // Sodium alone at the start. One element, two lines, and the doublet is
     // the thing the scene most wants a first-time visitor to look at twice.
@@ -738,7 +765,7 @@ export function createApollo(container, { preview = false } = {}) {
   }
 
   function drawRuler() {
-    if (!rulerOn || preview) return;
+    if (!rulerOn || !rulerFits || preview) return;
     const r = dpr();
     // Below the wavelength scale, not through it, and at the offset layout()
     // actually reserved rather than at a constant of its own. The first version
@@ -950,9 +977,9 @@ export function createApollo(container, { preview = false } = {}) {
   // something richer on purpose — harmonics of their own would put energy at
   // frequencies no line in the band corresponds to, and the beat between two
   // close lines is only clean between two pure tones.
-  function playLine(nm, rel, voices) {
+  function playLine(nm, rel, voices, when = null) {
     if (!audioCtx || !soundEnabled) return;
-    const now = audioCtx.currentTime;
+    const now = when === null ? audioCtx.currentTime : Math.max(when, audioCtx.currentTime);
     const hz = wavelengthToHz(nm);
     const osc = audioCtx.createOscillator();
     osc.type = 'sine';
@@ -1005,6 +1032,284 @@ export function createApollo(container, { preview = false } = {}) {
 
   function srSay(text) { if (srLiveEl) srLiveEl.textContent = text; }
 
+  // ─── A mixture in a link ──────────────────────────────────────────────────
+  // Scenes on this site do not persist state and should not: ten of the eleven
+  // are encounters with writing rather than configurations, sceneKit's whole
+  // lifecycle layer exists to guarantee that leaving a scene leaves nothing
+  // behind, and the second visit starting inside an arrangement you made three
+  // weeks ago and no longer remember is a worse experience than starting from
+  // an empty band. The sound toggle persists because a preference is a
+  // different category from a state.
+  //
+  // This is what persistence would have been reaching for, done better: an
+  // arrangement becomes a thing you can SEND someone. Arriving at it is
+  // deliberate rather than residual, it costs nothing when unused, and nothing
+  // survives a dispose.
+  //
+  // The grammar is comma-separated tokens: an element's symbol followed by its
+  // fader position as a whole percent (`ca95`), plus the bare words `emission`,
+  // `ruler` and `sun`. Percent rather than the tenths a first draft used, so a
+  // round trip is exact rather than nearly — the fader has 101 positions and an
+  // encoding with 11 cannot give back what it was handed. Symbols are one or
+  // two letters and digits follow, so `hg80` and `h80` cannot be confused.
+  const MIX_TOKEN = /^([a-z]{1,2})(\d{1,3})$/;
+  const SYMBOL_TO_KEY = Object.fromEntries(ELEMENTS.map(e => [e.symbol.toLowerCase(), e.key]));
+
+  function mixtureString() {
+    const parts = [];
+    for (const el of ELEMENTS) {
+      const pct = Math.round(density[el.key] * 100);
+      if (pct > 0) parts.push(el.symbol.toLowerCase() + pct);
+    }
+    if (mode === 'emission') parts.push('emission');
+    if (rulerOn) parts.push('ruler');
+    if (ambientOn) parts.push('sun');
+    return parts.join(',');
+  }
+
+  // Loads what it can and ignores the rest, always. An unknown element, a
+  // value out of range, a string truncated by a chat client that decided a
+  // comma ended the link — none of them is an error state, because the failure
+  // mode of a malformed link should be "Apollo opens" and never "Apollo does
+  // not". The only thing a bad token costs is itself.
+  function applyMixture(str) {
+    if (!str) return false;
+    let touched = false, wantEmission = false, wantRuler = false, wantSun = false;
+    const seen = new Set();
+    for (const tokRaw of String(str).split(',')) {
+      const tok = tokRaw.trim().toLowerCase();
+      if (!tok) continue;
+      if (tok === 'emission') { wantEmission = true; touched = true; continue; }
+      if (tok === 'absorption') { touched = true; continue; }
+      if (tok === 'ruler') { wantRuler = true; touched = true; continue; }
+      if (tok === 'sun') { wantSun = true; touched = true; continue; }
+      const m = MIX_TOKEN.exec(tok);
+      if (!m) continue;
+      const key = SYMBOL_TO_KEY[m[1]];
+      if (!key) continue;
+      seen.add(key);
+      setDensity(key, Math.max(0, Math.min(100, Number(m[2]))) / 100);
+      touched = true;
+    }
+    if (!touched) return false;
+    // Elements the link did not name are explicitly zeroed rather than left at
+    // whatever the scene opened with: a shared mixture is the whole mixture,
+    // and "everything in my arrangement plus whatever was already there" is not
+    // the thing that was sent.
+    for (const el of ELEMENTS) if (!seen.has(el.key)) setDensity(el.key, 0);
+    for (const el of ELEMENTS) syncFader(el.key);
+    // Set explicitly in both directions rather than only on the way in: for a
+    // link applied to an ALREADY OPEN Apollo, a mixture without `emission`
+    // means absorption, not "leave it wherever it was".
+    setMode(wantEmission ? 'emission' : 'absorption');
+    if (wantRuler !== rulerOn) toggleRuler();
+    // Sound is never started by a link. Audio needs a gesture anyway, and
+    // arriving at somebody's arrangement should be silent until the visitor
+    // asks for it — so `sun` restores the visual state and the scheduler, and
+    // the notes stay inaudible behind the mute until the sound toggle is used.
+    if (wantSun !== ambientOn) setAmbient(wantSun, { setMixture: false });
+    return true;
+  }
+
+  async function copyMixtureLink() {
+    const str = mixtureString();
+    onStateChange?.(str);
+    const url = location.href;
+    let ok = false;
+    try { await navigator.clipboard.writeText(url); ok = true; } catch { /* denied, or no permission — the address bar still has it */ }
+    if (copyLinkEl) {
+      copyLinkEl.textContent = ok ? 'Copied' : 'In the address bar';
+      timers.after(1800, () => { if (copyLinkEl) copyLinkEl.textContent = 'Copy link'; });
+    }
+    srSay(ok
+      ? 'Link copied. It carries the current mixture, the light source, and whether the pitch ruler is showing.'
+      : 'The link is in the address bar. It carries the current mixture, the light source, and whether the pitch ruler is showing.');
+  }
+
+  // ─── Ambient: the sun as an idle state ────────────────────────────────────
+  // The first thing on this site that plays without being touched. Every other
+  // scene sits still until a visitor does something; this one can be left
+  // running, and what it runs is the composition of sunlight from the elements
+  // already in the instrument — see SOLAR_MIXTURE in apollo.text.js for where
+  // those five came from and, more importantly, for what part of it is sourced
+  // and what part is a ruler.
+  //
+  // The sun is not a chord. It is continuously emitting, so this is not a
+  // sequence and not a loop: arrivals are a Poisson process — exponential
+  // inter-arrival times — and each line is drawn independently, weighted by its
+  // own optical depth in the current mixture. There is no period anywhere in
+  // it, which is the structural reason it cannot become audible as a loop
+  // rather than a claim that it did not in the minute someone listened.
+  //
+  // The constraint that keeps it from being a generative music toy: every
+  // sounding is a real line at its real pitch, chosen by real strength.
+  // Nothing is ever added because it sounds nice, and there is no scale, no
+  // quantization and no rhythm anywhere in this block.
+  //
+  // ─── One clock, and which one ─────────────────────────────────────────────
+  // A `setInterval`, never requestAnimationFrame: rAF throttles hard in a
+  // backgrounded tab, and a Poisson process approximated by a per-frame check
+  // stops being one exactly when the frames stop arriving. That is Outside's
+  // lookahead pattern (Chris Wilson, "A Tale of Two Clocks"), and v4.3.0 was
+  // right that Apollo had no generative layer to need it. It does now.
+  //
+  // The wrinkle Outside does not have: ambient must run with the sound off,
+  // and in the preview tile, where there is no AudioContext at all. So the
+  // authoritative clock is the audio hardware's when a context exists and a
+  // plain monotonic seconds count when it does not — one clock at a time,
+  // never both, resynced at the moment it switches, the same reseed Outside
+  // does when sound is turned back on. Notes are scheduled at exact times on
+  // it; the visual mark for each is queued at the same time and drained by the
+  // render loop, so what lights up is what is sounding.
+  const AMBIENT_RATE = 0.55;              // notes per second, mean
+  const AMBIENT_AHEAD = 1.2;              // seconds of lookahead per tick
+  const AMBIENT_TICK = 250;               // ms — under the first background-throttle tier
+  let ambientOn = false;
+  let ambientTimer = null;
+  let ambientNext = 0;
+  let ambientLastNm = null;
+  let ambientClockWasAudio = false;
+  const ambientPending = [];
+
+  const ambientNow = () => (audioCtx && audioCtx.state !== 'closed')
+    ? audioCtx.currentTime
+    : uiClock.elapsed;
+
+  // Every line of every element currently in the light, weighted by the
+  // optical depth it actually contributes — so calcium's H and K, which are the
+  // deepest features in the band, recur far more often than a faint iron line,
+  // and an element at a low fader is heard proportionally less. The weighting
+  // is the same expression buildBand() uses, not a second opinion about
+  // strength.
+  function ambientPool() {
+    const pool = [];
+    let total = 0;
+    for (const el of ELEMENTS) {
+      const d = density[el.key];
+      if (d <= 0.001) continue;
+      for (const [nm, rel] of visibleLines(el)) {
+        total += d * Math.pow(rel / 1000, RELATIVE_STRENGTH_EXPONENT);
+        pool.push({ nm, rel, el: el.key, cum: total });
+      }
+    }
+    return { pool, total };
+  }
+
+  function pickAmbientLine() {
+    const { pool, total } = ambientPool();
+    if (!pool.length) return null;
+    for (let attempt = 0; attempt < 5; attempt++) {
+      const r = Math.random() * total;
+      let lo = 0, hi = pool.length - 1;
+      while (lo < hi) { const mid = (lo + hi) >> 1; if (pool[mid].cum < r) lo = mid + 1; else hi = mid; }
+      const p = pool[lo];
+      // Not the same line twice running. A repeat is the one thing that reads
+      // as deliberate in an otherwise structureless stream.
+      if (p.nm !== ambientLastNm || pool.length === 1) { ambientLastNm = p.nm; return p; }
+    }
+    return pool[0];
+  }
+
+  function ambientTickFn() {
+    if (disposed || !ambientOn) return;
+    // The clock can change under this — sound gets turned on mid-run and the
+    // audio context appears. Reseed rather than carry a time from the old one,
+    // or the first tick after the switch reads a whole backlog as due.
+    const isAudio = !!(audioCtx && audioCtx.state !== 'closed');
+    if (isAudio !== ambientClockWasAudio) {
+      ambientClockWasAudio = isAudio;
+      ambientNext = ambientNow() + 0.25;
+      ambientPending.length = 0;
+    }
+    const now = ambientNow();
+    let guard = 0;
+    while (ambientNext < now + AMBIENT_AHEAD && guard++ < 64) {
+      const line = pickAmbientLine();
+      if (!line) { ambientNext = now + 1; break; }
+      playLine(line.nm, line.rel, 1, isAudio ? ambientNext : null);
+      ambientPending.push({ nm: line.nm, el: line.el, at: ambientNext });
+      // Exponential inter-arrival: the continuous-time form of "a small chance
+      // each moment", and what makes the stream independent of how often this
+      // tick happens to run.
+      ambientNext += -Math.log(1 - Math.random()) / AMBIENT_RATE;
+    }
+  }
+
+  function startAmbient() {
+    if (ambientTimer !== null || disposed) return;
+    ambientClockWasAudio = !!(audioCtx && audioCtx.state !== 'closed');
+    ambientNext = ambientNow() + 0.25;
+    ambientPending.length = 0;
+    ambientTickFn();
+    ambientTimer = setInterval(ambientTickFn, AMBIENT_TICK);
+  }
+  function stopAmbient() {
+    if (ambientTimer !== null) { clearInterval(ambientTimer); ambientTimer = null; }
+    ambientPending.length = 0;
+  }
+
+  // Drained from the render loop: a queued line lights up when its scheduled
+  // moment arrives, so the mark on the band is the note the ear is hearing
+  // rather than the note the scheduler queued a second ago.
+  function drainAmbient() {
+    if (!ambientPending.length) return;
+    const now = ambientNow();
+    while (ambientPending.length && ambientPending[0].at <= now) {
+      const e = ambientPending.shift();
+      markStruck(e.nm, e.el, 1);
+    }
+  }
+
+  // `setMixture` is false when a link turns ambient on, and that distinction is
+  // load-bearing rather than tidy. Pressing Sunlight means "put the sun in the
+  // light and let it play" — the composition is the mode. But a shared link
+  // already carries the exact faders it was made with, and someone who turned
+  // Sunlight on and then moved a fader has a mixture that is no longer the
+  // sun's; resetting it to pure solar on arrival would hand the recipient
+  // something other than what was sent. The link is authoritative about the
+  // faders, and `sun` in it means only that the scheduler is running.
+  function setAmbient(on, { setMixture = true } = {}) {
+    if (disposed) return;
+    ambientOn = on;
+    if (on) {
+      if (setMixture) {
+        for (const el of ELEMENTS) setDensity(el.key, SOLAR_MIXTURE[el.key] ?? 0);
+        for (const el of ELEMENTS) syncFader(el.key);
+      }
+      startAmbient();
+    } else {
+      stopAmbient();
+    }
+    if (ambientToggleEl) {
+      ambientToggleEl.setAttribute('aria-pressed', String(on));
+    }
+    if (!on) {
+      srSay('Sunlight off. The mixture stays where it is.');
+    } else if (setMixture) {
+      srSay('Sunlight. The five elements that own every labelled line in the solar spectrum are now in the light — calcium, iron, hydrogen, magnesium, sodium — and their lines are sounding on their own, weighted by depth. Move a fader or strike a line and it keeps going underneath.');
+    } else {
+      srSay('Sunlight. The lines of this mixture are sounding on their own, weighted by depth.');
+    }
+  }
+
+  function toggleRuler() {
+    rulerOn = !rulerOn;
+    rulerToggleEl?.setAttribute('aria-pressed', String(rulerOn));
+    // The ruler needs room reserved for it, so turning it on can shorten the
+    // band and lift it. Derived rather than animated: the alternative is a
+    // ruler drawn into space nothing allocated.
+    relayout();
+    srSay(rulerOn
+      ? (rulerFits
+        ? 'Pitch ruler shown: the same lines laid out by frequency instead of wavelength.'
+        : 'Pitch ruler requested, but there is no room for it at this window size. Turn the phone, or open a wider window.')
+      : 'Pitch ruler hidden.');
+    // Says so on the control too, not only to a screen reader: a button that
+    // reports pressed while nothing appeared is a worse failure than the
+    // missing ruler.
+    rulerToggleEl?.classList.toggle('no-room', rulerOn && !rulerFits);
+  }
+
   // ─── The mode switch ──────────────────────────────────────────────────────
   // One control, and it names the SITUATION rather than the display: the light
   // source is either behind the gas or is the gas. Two radios in a fieldset
@@ -1018,6 +1323,15 @@ export function createApollo(container, { preview = false } = {}) {
   function setMode(next) {
     if (next === mode) return;
     mode = next;
+    // Keep the control truthful, whatever moved the mode. The radios were the
+    // only record of which mode was showing, and setMode did not touch them —
+    // so a link carrying `emission` put the scene in emission with the switch
+    // still reading "Behind the gas", and pressing it then did nothing at all,
+    // because the guard above sees the value already matches. Not a display
+    // bug: a stuck state. Found by a round-trip test rather than by looking,
+    // which is the argument for the round-trip test.
+    const radio = document.querySelector(`.apollo-mode input[value="${mode}"]`);
+    if (radio && !radio.checked) radio.checked = true;
     // The band is rebuilt from the same tau either way (see buildBand), so
     // nothing needs recomputing — only the blend needs to move.
     if (wetGain && audioCtx) {
@@ -1061,7 +1375,7 @@ export function createApollo(container, { preview = false } = {}) {
   }
 
   // ─── Chrome and the rail ──────────────────────────────────────────────────
-  let titleRowEl = null, hintEl = null, rulerToggleEl = null, railEl = null;
+  let titleRowEl = null, hintEl = null, rulerToggleEl = null, railEl = null, ambientToggleEl = null, copyLinkEl = null;
   const faderInputs = {};
   const faderCells = {};
   let soundToggle = { dispose() {} };
@@ -1100,7 +1414,33 @@ export function createApollo(container, { preview = false } = {}) {
       wrap.append(input, span);
       fs.appendChild(wrap);
     }
-    railEl.appendChild(fs);
+
+    // Sunlight sits in the same row as the light-source switch because it is
+    // the same kind of control — it says what the instrument is looking at,
+    // not what it is doing. A <button> rather than a third radio: the mode is
+    // a choice between two exclusive situations, this is a thing you start.
+    const row = document.createElement('div');
+    row.className = 'apollo-mode-row';
+    row.appendChild(fs);
+
+    ambientToggleEl = document.createElement('button');
+    ambientToggleEl.type = 'button';
+    ambientToggleEl.className = 'apollo-ambient';
+    ambientToggleEl.setAttribute('aria-pressed', 'false');
+    ambientToggleEl.textContent = 'Sunlight';
+    ambientToggleEl.title = 'Put the sun\u2019s own composition in the light and let its lines sound on their own';
+    ambientToggleEl.addEventListener('click', () => setAmbient(!ambientOn));
+    row.appendChild(ambientToggleEl);
+
+    copyLinkEl = document.createElement('button');
+    copyLinkEl.type = 'button';
+    copyLinkEl.className = 'apollo-copy';
+    copyLinkEl.textContent = 'Copy link';
+    copyLinkEl.title = 'Copy a link to this exact mixture';
+    copyLinkEl.addEventListener('click', copyMixtureLink);
+    row.appendChild(copyLinkEl);
+
+    railEl.appendChild(row);
   }
 
   function buildRail() {
@@ -1250,6 +1590,7 @@ export function createApollo(container, { preview = false } = {}) {
       modeMix = target > modeMix ? Math.min(target, modeMix + step) : Math.max(target, modeMix - step);
     }
 
+    drainAmbient();
     for (let i = struck.length - 1; i >= 0; i--) {
       struck[i].t += udt;
       if (struck[i].t >= struck[i].life) struck.splice(i, 1);
@@ -1325,21 +1666,15 @@ export function createApollo(container, { preview = false } = {}) {
     rulerToggleEl.className = 'apollo-ruler-toggle';
     rulerToggleEl.setAttribute('aria-pressed', 'false');
     rulerToggleEl.textContent = 'Pitch ruler';
-    rulerToggleEl.addEventListener('click', () => {
-      rulerOn = !rulerOn;
-      rulerToggleEl.setAttribute('aria-pressed', String(rulerOn));
-      // The ruler needs room reserved for it, so turning it on can shorten the
-      // band and lift it. Derived rather than animated: the alternative is a
-      // ruler drawn into space nothing allocated.
-      relayout();
-      srSay(rulerOn
-        ? 'Pitch ruler shown: the same lines laid out by frequency instead of wavelength.'
-        : 'Pitch ruler hidden.');
-    });
+    rulerToggleEl.addEventListener('click', toggleRuler);
     container.appendChild(rulerToggleEl);
 
     canvas.addEventListener('click', onCanvasClick);
     rebuildJumpList();
+    // A mixture from the address bar, applied after the rail exists so the
+    // faders can be moved to match it. Bare `#apollo` passes null and nothing
+    // here runs, which is the "behaves exactly as it does today" case.
+    applyMixture(initialArg);
     // The rail exists now, so the band can be placed against where it actually
     // sits rather than against the bottom of the canvas.
     relayout();
@@ -1353,13 +1688,26 @@ export function createApollo(container, { preview = false } = {}) {
   const onVisibilityChange = () => {
     if (disposed) return;
     if (document.hidden) {
+      // The same decision Outside and Harmonics both landed on: an ambient
+      // layer audibly running out of a background tab, from a page whose only
+      // control is a button the visitor cannot see, is the kind of thing people
+      // hunt through twenty tabs to kill. Nothing is lost — suspend() freezes
+      // audioCtx.currentTime and startAmbient() reseeds against it on the way
+      // back, so there is no backlog to dump.
+      stopAmbient();
       if (audioCtx && audioCtx.state === 'running') audioCtx.suspend();
       return;
     }
     clock.resync(); uiClock.resync();
     if (soundEnabled && audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+    if (ambientOn && !paused) startAmbient();
   };
   document.addEventListener('visibilitychange', onVisibilityChange);
+
+  // The tile plays the sun on its own. No audio path exists in preview, so
+  // ambientNow() falls to the UI clock and the scheduler only ever queues
+  // visual marks — see its own comment for the one-clock rule.
+  if (preview) setAmbient(true);
 
   // Directly, not scheduled. main.js runs syncPreviewPlayback() the moment
   // initPreviews() resolves and that can setPaused(true), cancelling a queued
@@ -1369,19 +1717,32 @@ export function createApollo(container, { preview = false } = {}) {
   animate();
 
   return {
+    // A hash change that lands on Apollo while Apollo is already open — an
+    // address-bar edit, or a second shared link followed from the first. Same
+    // entry point the initial mount uses.
+    applyArg(str) { applyMixture(str); },
     setPaused(next) {
       if (next === paused) return;
       paused = next;
       if (paused) {
         if (animId !== null) { cancelAnimationFrame(animId); animId = null; }
+        // A scheduler that outlives what it belongs to is the v4.0 defect
+        // exactly. A paused tile is not rendering and must not be sounding or
+        // queueing either.
+        stopAmbient();
       } else {
         clock.resync(); uiClock.resync();
         if (animId === null) animate();
+        if (ambientOn) startAmbient();
       }
     },
     dispose() {
       disposed = true;
       if (animId !== null) cancelAnimationFrame(animId);
+      // First, alongside `disposed`: everything below assumes nothing is still
+      // being scheduled behind it.
+      ambientOn = false;
+      stopAmbient();
       timers.dispose();
       resize.dispose();
       reducedWatch.dispose();

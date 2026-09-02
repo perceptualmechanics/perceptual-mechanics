@@ -29,8 +29,9 @@ import { PIECES as theaterPieces } from '../src/scenes/theater/theater.text.js';
 import { ORRERY } from '../src/scenes/orrery/orrery.text.js';
 import { EPIGRAPH_PRIMARY, EPIGRAPH_SECONDARY, BOUNCES } from '../src/scenes/beamline/beamline.text.js';
 import {
-  ELEMENTS, ALL_LINES, BALMER_LIMIT, RYDBERG_H, AUDIO_DIVISOR, SOURCES as APOLLO_SOURCES,
-  VISIBLE_MIN, VISIBLE_MAX, wavelengthToHz, visibleLines, balmerSeries,
+  ELEMENTS, ELEMENT_BY_KEY, ALL_LINES, BALMER_LIMIT, RYDBERG_H, AUDIO_DIVISOR,
+  SOURCES as APOLLO_SOURCES, SOLAR_MIXTURE, FRAUNHOFER,
+  VISIBLE_MIN, VISIBLE_MAX, wavelengthToHz, visibleLines, balmerSeries, fraunhoferFor,
 } from '../src/scenes/apollo/apollo.text.js';
 import { SCENES, TEXT_EXEMPT } from '../src/scenes/registry.js';
 import { getOutboundLinks } from '../src/links.js';
@@ -495,6 +496,16 @@ ${balmer.map((l, i) => `<li><span class="t">${l.nm.toFixed(3)} nm</span>
 <span class="c">n = ${l.n} to 2${i < greek.length ? ` · H-${greek[i]}` : ''} · ${hz(l.nm)} Hz</span></li>`).join('\n')}
 </ul>`;
 
+  const solarList = `<ul class="catalog">
+${Object.entries(SOLAR_MIXTURE).sort((a, b) => b[1] - a[1]).map(([key, d]) => {
+    const el = ELEMENT_BY_KEY[key];
+    const letters = visibleLines(el).map(([nm]) => [nm, fraunhoferFor(nm, key)]).filter(([, L]) => L);
+    return `<li><span class="t">${esc(el.name)}</span>
+<span class="c">${Math.round(d * 100)}% in the light${letters.length ? ' · Fraunhofer ' + letters.map(([nm, L]) => `${esc(L)} ${nm.toFixed(1)}nm`).join(', ') : ''}</span>
+<span class="n">${esc(el.character)}</span></li>`;
+  }).join('\n')}
+</ul>`;
+
   const elementList = `<ul class="catalog">
 ${ELEMENTS.map(el => {
     const ls = visibleLines(el);
@@ -525,6 +536,14 @@ ${balmerList}
 <p>A wavelength has a real frequency: the speed of light divided by it. For the sodium D line that is about 509 trillion cycles a second, which is not a sound. Dividing by ${AUDIO_DIVISOR.toExponential(0)} is the entire mapping — no scale, no rounding to the nearest note, no tuning per element — so the intervals you hear are the intervals you see.</p>
 <p>That puts the whole visible band between ${wavelengthToHz(VISIBLE_MAX).toFixed(0)} Hz at the deep red end and ${wavelengthToHz(VISIBLE_MIN).toFixed(0)} Hz at the violet. Which is a fact about light rather than a choice: ${VISIBLE_MAX} divided by ${VISIBLE_MIN} is 1.97, so the visible spectrum is almost exactly one octave wide. The instrument has one octave and cannot have more.</p>
 <p>Shorter wavelength is higher frequency, so violet is treble and red is bass. Sodium is the case worth listening to: its two lines are 0.597 nm apart, which after the division is ${(wavelengthToHz(588.995) - wavelengthToHz(589.592)).toFixed(2)} Hz apart — and two tones half a hertz apart are not two notes, they are one note that swells and fades about every two seconds. The visible spacing is the harmonic relationship. Iron, at the other end, has fifty lines here and sounds like a wall.</p>
+
+<h2 id="sunlight">The sun, playing itself</h2>
+<p>Apollo has an idle state, which nothing else on this site has: every other scene sits still until it is touched. Turn on <strong>Sunlight</strong> and the instrument puts the sun's own composition in the light and lets its lines sound on their own — irregular, unsynchronised, each one weighted by how deep it actually is.</p>
+<p>The composition is not an even mix and not a taste. Once the three atmospheric oxygen bands are set aside — those are absorbed by Earth's air on the way in, not by the sun — five elements own every remaining labelled line in the standard Fraunhofer table:</p>
+${solarList}
+<p>The other five elements in the instrument sit at zero, which is a fact about the sun rather than an omission. <strong>Helium is the one worth naming.</strong> It was found <em>in the sun</em> in 1868, twenty-seven years before anyone found it on Earth, and it is still not part of the sun's visible fingerprint: its D3 line at 587.6nm belongs to the chromosphere and to prominences, not to the photospheric absorption spectrum this band draws. The element named after the sun is not in the sun's visible signature.</p>
+<p class="note">A note on how much of each, because a number in a table reads as measured. The ordering above is sourced — it is the Fraunhofer table. The fader positions are not: what a fader controls is column density in this particular model, with Gaussian line profiles and NIST intensities standing in for strength, and no published quantity maps onto that. Solar equivalent widths would be the right physical input and no machine-readable table of them was within reach. Photospheric abundances are available and would be actively wrong here, since they would put helium second and calcium near nothing, when calcium's H and K are the deepest features in the visible solar spectrum. Abundance is not line strength. So the values were set to reproduce the sourced ordering and each was checked by computing the optical depth it produces, rather than by looking at the result.</p>
+<p class="note">And one place where it does not come out right, said plainly because it is measurable. Magnesium's b triplet is comparable in depth to sodium's D lines in the real solar spectrum. Here it cannot be: NIST's <em>emission</em> intensity for b1 is 70 against sodium D2's 1000, so at the maximum fader position magnesium's strongest line still transmits about a third of the light passing through it. That is the emission-versus-absorption caveat further down this page turning into a specific number. Inventing a per-element correction to make one line look right would be worse — it would be taste wearing the costume of data.</p>
 
 <h2 id="elements">The ten elements</h2>
 <p>Curated for what they do to the band and to the sound, not for coverage. Most of the periodic table is inert here — the transition metals are indistinguishable forests and most of everything else has nothing in the visible range at all — so an element earns a fader by producing a distinct look or a distinct sound, and preferably both. ${ALL_LINES.length} lines in total.</p>
