@@ -81,15 +81,21 @@ This is the durable house-rules file (created v3.9.16) — **read it first** bef
   the site was allowed to build, and the CSS minifier pinned because the new
   default deleted three documented fallbacks.
 
-- **4.1.1–4.1.2 (current, 2026-09-02):** the landing page's ten thumbnails.
+- **4.1.1–4.1.3 (current, 2026-09-02):** the landing page's ten thumbnails.
   4.1.1 gave every scene a first frame before `create()` returns — Harmonics
   and Outside had only scheduled theirs, so a pause arriving before that
   callback left them having drawn nothing at all, which is what the blank-tile
   sighting was — and added `data-blits` to the clipped-preview canvases so
   "hasn't drawn yet" and "will never draw" stopped being the same observable.
   4.1.2 took frame-rate coupling out of Butterfly (both modes), Sphere and
-  Harmonics' twinkle, verified by measurement across 30/60/120/144 fps rather
-  than by looking.
+  Harmonics' twinkle, verified by measurement across 30/60/144 fps rather
+  than by looking. 4.1.3 then raised Butterfly's *thumbnail* rate from 120 to
+  400 points a second — preview only, one constant, full mode untouched — so
+  the tile reaches a legible attractor in about a second instead of
+  twenty-five. The suggested 5–8× starting point overshot: the Lorenz
+  silhouette reads from a few hundred points, so the faster candidate reached
+  steady state before anyone had finished looking and flattened the brightness
+  ramp on the way.
 
 
 ## Keeping this file true

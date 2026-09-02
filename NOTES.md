@@ -587,6 +587,69 @@ described are unchanged.)
   worth trimming, orrery.js's texture generators and first-person rig are the
   two most self-contained chunks to split out first.
 
+## 4.1.3 (2026-09-02)
+
+Butterfly's thumbnail reaches its subject in about a second instead of
+twenty-five. Preview only; the full scene's rate is untouched.
+
+**Why this was a real problem and not a preference.** The site's own standing
+rule is that client-rendered content is invisible content. A tile that reads as
+a single dim dot for the first twenty-five seconds is content nobody sees. The
+argument recorded against changing it — that a faster tile becomes a different
+animation from the piece it previews — turned out to rest on a false premise:
+the tile has *never* run at the scene's rate. `PPF` was `preview ? 2 : 4`, so
+the thumbnail has always been half speed, decided long before any of this. The
+question was never whether the two should differ. It was what the number should
+be, and 2 was never argued for. It was 4 halved because the tile is small.
+
+**One constant, and this time the assumption held.** After 4.1.2 the
+accumulation is wall-clock with a carried remainder and a clamped `dt`, and
+`PPF` had exactly one consumer left — the line deriving points-per-second. So
+the change is `PPS = preview ? 400 : 240` and nothing else. `PPF` itself is
+gone rather than left sitting there as a dead constant that no longer describes
+anything. Three briefs in a row on this scene assumed something false about it;
+this one didn't.
+
+**The arithmetic starting point overshot, which is worth recording.** The
+suggested range was a 5–8× increase, reasoning from a 3,000-point buffer that
+takes 25 seconds to fill. That reasoning assumes "recognisable" needs most of
+the buffer. Rendered at the tile's real 240px size, it doesn't: the Lorenz
+silhouette reads from a few hundred points, so both lobes are already
+unmistakable at **one second** at either candidate rate. What accumulates after
+that is density, not recognition.
+
+So 800/sec (6.7×) was rejected on two counts, both visible only by looking. It
+reaches steady state at 3.75s, leaving almost no visible drawing inside the
+window anyone actually watches. And it flattens the brightness ramp —
+`count/MAX_PTS` passes 0.8 by three seconds, so the fade-in stops reading as a
+fade-in, which would have been a second retune nobody asked for.
+
+**400/sec — 3.3×.** Legible inside a second, comfortably so by three, still
+visibly filling at five and ten, buffer full at 7.5s, ramp intact across the
+whole viewing window. `MAX_PTS` stays 3,000: this is a rate change, not a
+capacity change, and a denser attractor in the same buffer is the point.
+
+**Measured.** Frame-rate independence had to survive the rate change, since a
+rate edit is exactly what quietly reintroduces the coupling 4.1.2 removed.
+Container Chromium against the built site, virtual clock replacing `rAF` and
+`performance.now()` so frame pacing is exact rather than throttled, temporary
+point-count hook removed before committing:
+
+| | 1s | 3s | 6s |
+|---|---|---|---|
+| 30fps | 400 | 1200 | 2413 |
+| 120fps | 400 | 1200 | 2403 |
+
+Target 400/sec. Exact at one and three seconds, 0.4% apart at six.
+
+The visual judgements were made on rendered PNGs of the tile at its real 240px
+size — not zoomed, because an attractor that reads at 800px can be mush at 200
+— and then confirmed on Scott's hardware against the dev server at DPR 2: the
+landing tile is a clearly legible two-lobed attractor, and full-mode Butterfly
+draws correctly with its glow trails intact, which is the thing 4.1.2's
+back-reference fix put at risk. `data-blits`: all ten tiles 480×480 on a cold
+load, none at the 300×150 default. All four build gates pass.
+
 ## 4.1.2 (2026-09-02)
 
 Frame-rate coupling out of the last three places it was hiding. Scott's call

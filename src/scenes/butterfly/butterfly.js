@@ -134,7 +134,6 @@ export function createButterfly(container, { preview = false } = {}) {
   const SCALE     = preview ? 0.7 : 1.6;
   const MAX_PTS   = preview ? 3000 : 10000;
   const GLOW_PTS  = preview ? 0    : 300;   // trailing glow tail length
-  const PPF       = preview ? 2    : 4;
 
   // ─── Scene ──────────────────────────────────────────────────────────────────
   const scene = new THREE.Scene();
@@ -598,11 +597,24 @@ export function createButterfly(container, { preview = false } = {}) {
   let rotX=-1.52,rotY=0.0,rotZ=0.05;
   let t=0, animId = null;
   // Wall clock, so the attractor is drawn at the same speed on every display.
-  // PPF stays the tuned per-frame count and is converted here rather than
-  // re-derived: 2 points/frame at 60fps is 120 points/second, 4 is 240.
-  // STANDARDS.md, "multiply a rate tuned at 60fps by dt * 60".
+  //
+  // Full mode is the historical rate, converted rather than re-derived: it was
+  // 4 points per frame tuned at 60fps, so 240 per second. Unchanged, and it
+  // should stay that way — 4.1.2 preserved that look by construction and this
+  // is not a second bite at it.
+  //
+  // Preview is deliberately NOT the full rate halved any more. It used to be
+  // `preview ? 2 : 4` per frame, i.e. 120/second, which filled the 3,000-point
+  // buffer in twenty-five seconds — so for the first several seconds the tile
+  // read as a single dim dot, and a visitor gives a landing page a few seconds.
+  // A thumbnail that hasn't become its subject in that window isn't a
+  // thumbnail. The 2 was never argued for; it was the full rate halved because
+  // the tile is small. This number is argued for: it is set so the attractor's
+  // wings are legible at the tile's real 240px size within a few seconds, which
+  // is the only job the tile has. Full mode is untouched, and the two rates now
+  // differ on purpose rather than by inheritance.
   const clock = createFrameClock();
-  const PPS = PPF * 60;
+  const PPS = preview ? 400 : 240;
   // The fractional part has to survive the frame, not be rounded inside it.
   // 240 points/second does not divide evenly into a frame at any real refresh
   // rate, and rounding each frame independently would round the same way every

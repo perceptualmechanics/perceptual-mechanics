@@ -1,6 +1,6 @@
 # perceptualmechanics — chat brief
 
-*Handoff for a fresh Claude chat. Current as of **v4.1.2**, 2026-09-02.*
+*Handoff for a fresh Claude chat. Current as of **v4.1.3**, 2026-09-02.*
 
 This is the **chat** brief, not the code brief. It assumes no file access, no
 repo, no terminal. Its companion, `perceptualmechanics-project-brief.md`, lives
@@ -143,6 +143,13 @@ exactly like one still loading. That indistinguishability was the actual
 finding, and the same release made the two states tell apart from the page
 itself.
 
+**v4.1.3 — Butterfly's thumbnail** now reaches a legible attractor in about a
+second rather than twenty-five. The tile had always run at half the full
+scene's rate — a decision made long before any of this and never argued for —
+and at that rate it read as a single dim dot for longer than anyone looks at a
+landing page, which by the site's own rule is content nobody sees. Preview
+only; the full scene is untouched.
+
 **v4.1.2 — frame-rate coupling** out of Butterfly (both the thumbnail and the
 full scene), Sphere, and Harmonics' galaxy twinkle. The attractor had been
 drawing at the display's refresh rate: twice as fast on a 120Hz panel as on a
@@ -163,7 +170,13 @@ content fix as a possible second victim of the rename that produced `harmonicss`
 Scott confirmed 2026-09-02 that it is his own word, about a plucked string. Leave
 it. Also closed in 4.0.1: Sphere's per-label rotation, which had never reached the
 screen and now does — folded out of inversion and tapered so it can't snap. It
-ships. And closed in 4.0.3: the eight held Library notes. Scott rewrote all
+ships. Closed in 4.1.3: **why Butterfly's thumbnail draws faster than the
+scene it previews** — 400 points a second against the full scene's 240. It is
+deliberate. The tile is 240px and gets a few seconds of a visitor's attention;
+a preview that hasn't become its subject in that window has failed at its one
+job. The two rates have in fact always differed (the tile ran at half speed for
+years), so this changed the number rather than the principle. Don't "restore"
+it to match. And closed in 4.0.3: the eight held Library notes. Scott rewrote all
 eight, they were applied verbatim, the catalogue chatter moved to a private
 `catalog` field, the dated quote was deleted outright, and `NOTE_HOLD` is now
 empty — don't re-open this as a writing job.)*
@@ -174,19 +187,9 @@ empty — don't re-open this as a writing job.)*
   prerendered pages — but it is a content decision that could be revisited,
   not a technical constraint. That makes it a conversation rather than a
   build task.
-- **How fast should Butterfly's thumbnail become a butterfly?** It takes about
-  twenty-five seconds to resolve into a recognisable Lorenz shape — uniformly,
-  since 4.1.2, rather than somewhere between twelve and fifty depending on the
-  visitor's monitor. A visitor gives a landing page a few seconds, so for most
-  of them the tile is a dot. Raising the thumbnail's rate is a one-constant
-  change and would not touch the full scene. The argument against is that the
-  tile would then be a different animation from the piece it previews — the
-  thumbnail shows a trajectory being drawn, and that *is* the scene. A taste
-  call, and a good one for a chat: it is about what a preview is for, not
-  about code.
 - **The eleventh scene**, whenever it comes. The content-sourcing question — what
-  in `Holography.scriv` or `seeds.md` is ready to be promoted — is a
-  conversation, not a build task.
+  in `Holography.scriv`'s Research/Notes document is ready to be promoted — is
+  a conversation, not a build task. One place to look, not two.
 
 ---
 
@@ -230,15 +233,18 @@ half this corpus.
   reverse-chronological, very long.
 - **`Holography.scriv`** — the Scrivener project holding the books the
   published writing is drawn from. Outside the repo.
-- **`seeds.md`** — material not yet promoted into that project. Also outside
-  the repo.
-- **`The New.scriv`** — a second Scrivener project sitting alongside the
-  others. Its relationship to the site isn't recorded anywhere in this repo;
-  worth asking Scott rather than assuming it feeds the scenes.
+- **`seeds.md`** — retired 2026-08-10. Its three entries were folded into the
+  Research/Notes document inside `Holography.scriv` and removed; the empty file
+  was left in place in case a holding pen outside Scrivener was ever wanted
+  again. It is not in use, and the Research/Notes document is the canonical
+  intake.
+- **`The New.scriv`** — a separate Scrivener project. It does not feed the
+  scenes and is not part of either book project the site draws on. Listed only
+  so it isn't mistaken for a source; nothing on this site comes from it.
 
 ---
 
-*Written 2026-09-02 after the v4.0 release and kept current through v4.1.2, by
+*Written 2026-09-02 after the v4.0 release and kept current through v4.1.3, by
 the sessions that shipped them. Scene counts and content totals were read from the live modules
 rather than recalled. If this file and the repo disagree, the repo is right and
 this file is stale — refresh it alongside any release that changes the answers in
