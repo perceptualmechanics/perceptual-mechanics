@@ -111,9 +111,11 @@ export const SCENES = {
   // That is why its /text/ page carries the measurement and not the plays —
   // see scripts/prerender.js, and the exempt map the scenes-sum assertion
   // checks this registry against.
-  spectra:   { exportName: 'createSpectra',
-               label: 'Spectra — a plate of voices. Press Escape to return.',
-               ariaLabel: 'Spectra — every speaker in the Theater’s three plays read as a light source: the lines their dialogue emits, and the lines the rest of their cast has that they absorb. Click an exposure to read it, or use the up and down arrows.' },
+  // Spectra is SHELVED, not deleted — see src/scenes/spectra/SHELVED.md. Its
+  // files are still in the tree and still build; it is simply not registered,
+  // so nothing loads it and nothing links to it. Restoring it is this entry
+  // plus the three edits that file lists.
+
 };
 
 // ─── /text/ exemptions ──────────────────────────────────────────────────────

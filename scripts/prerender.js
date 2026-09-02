@@ -28,7 +28,6 @@ import { libraryItems, cdRackItems } from '../src/scenes/library/library.text.js
 import { PIECES as theaterPieces } from '../src/scenes/theater/theater.text.js';
 import { ORRERY } from '../src/scenes/orrery/orrery.text.js';
 import { EPIGRAPH_PRIMARY, EPIGRAPH_SECONDARY, BOUNCES } from '../src/scenes/beamline/beamline.text.js';
-import { measurePlays, FEATURES, SPEAKER_FLOOR } from '../src/scenes/spectra/spectra.data.js';
 import { SCENES, TEXT_EXEMPT } from '../src/scenes/registry.js';
 import { getOutboundLinks } from '../src/links.js';
 
@@ -623,85 +622,12 @@ ${pages.map(p => `  <li><a href="/text/${p.slugPath}/">${esc(p.title)}</a><span 
   };
 }
 
-// ─── Spectra ────────────────────────────────────────────────────────────────
-// The one page here whose content is not a scene's writing, because Spectra has
-// none: it measures Theater's dialogue and publishes no prose of its own.
-//
-// Three options were on the table and this is option two, stated so it isn't
-// re-litigated. It could have had NO page and sat in an exempt map beside
-// Butterfly and Harmonics, on the grounds that it publishes nothing new. It
-// could have had a page that merely indexes into Theater's. It has this one —
-// the measurement itself — because a spectrum's content genuinely IS the
-// measurement rather than the source text, and because those tables exist
-// nowhere else on the site or off it. A crawler that reads this page learns
-// something it cannot learn anywhere else, which is the test the //text/ rule
-// was written to satisfy.
-//
-// It also puts the rulers in public. After the week this project has had, a
-// page of numbers that does not say how they were measured is the thing being
-// avoided, not the thing being published.
-function buildSpectra() {
-  const plays = measurePlays();
-  const featureRow = s => FEATURES.map(f => `<td>${s.features[f.key]}${f.unit}</td>`).join('');
-  const table = play => `<h2 id="${play.key}">${esc(play.title)}</h2>
-${pieceLink('spectra', play.key, 'Spectra')}
-<p class="note">${play.cast.length} speakers carry ${SPEAKER_FLOOR} spoken words or more; ${play.speakers.length - play.cast.length} fall below the floor and are named after the table. ${play.spokenWords} spoken words in all, plus ${play.directionWords} in ${play.directionBeats} stage directions that have no speaker.</p>
-<table>
-<thead><tr><th scope="col">speaker</th><th scope="col">words</th><th scope="col">lines</th>${FEATURES.map(f => `<th scope="col">${esc(f.label)}${f.unit ? ' ' + f.unit : ''}</th>`).join('')}<th scope="col">absorbs</th></tr></thead>
-<tbody>
-${play.cast.map(s => `<tr><th scope="row">${esc(s.name)}</th><td>${s.words}</td><td>${s.lines}</td>${featureRow(s)}<td>${s.absorptionRate}%</td></tr>`).join('\n')}
-</tbody>
-</table>
-<p class="note">Below the ${SPEAKER_FLOOR}-word floor: ${play.speakers.filter(s => s.belowFloor).map(s => `${esc(s.name)} (${s.words})`).join(', ') || 'none'}. Shared vocabulary for this cast: ${play.shared.length} words.</p>`;
-
-  const body = `<article class="piece">
-${plays.map(table).join('\n')}
-<h2 id="method">How these were measured</h2>
-<p>Every figure above is computed from <code>theater.text.js</code> when the page
-is built, not copied from a previous run. The rulers, because a number without
-its method is not a measurement:</p>
-<ul>
-<li><strong>Source.</strong> The nested <code>PIECES</code> export only. Theater also
-publishes <code>BEATS</code>, a flat index over the same beats; counting both counts
-every word twice.</li>
-<li><strong>Speakers</strong> are scoped per play. Two different characters are named
-Paul, and merging them would merge a monologuist with a bar-stool interlocutor.</li>
-<li><strong>Dialogue</strong> is a beat's spoken text. Stage directions have no speaker
-and are excluded from every per-speaker figure, counted separately above.</li>
-<li><strong>The floor</strong> is ${SPEAKER_FLOOR} spoken words. Speakers below it are named
-rather than dropped — an excluded cast member is a fact about the play.</li>
-<li><strong>Sentences</strong> split after terminal punctuation, with ellipses and dashes
-left inside the sentence rather than ending it: a character trailing off has not
-finished three thoughts. Measured against two blunter rules first; the spread is
-under 0.2 for most speakers and 0.7 at the widest.</li>
-<li><strong>Shared vocabulary</strong> is every token three or more of a play's qualifying
-speakers use — no stopword list, no minimum word length. Read the absorption
-percentages for rank rather than as absolutes: the ordering held under every
-filter tried, the values moved by up to ten points.</li>
-<li><strong>Words per line</strong> divides by beat count, which is authored structure, so
-it is the one figure here that no ruler choice moves.</li>
-</ul>
-</article>`;
-
-  return {
-    slugPath: 'spectra',
-    title: 'Spectra',
-    description: 'Every speaker in the Theater’s three plays measured as a light source — the style lines their dialogue emits, and the cast vocabulary they absorb.',
-    sceneKey: 'spectra', sceneName: 'Spectra',
-    lede: `<p><strong>Spectra</strong> reads each speaker in the Theater’s three plays as a light source. Emission is what a voice produces; absorption is what the rest of its cast says that it never does. The same fingerprint from two positions.</p>
-<p>The scene draws those as a photographic plate. This page is the measurement behind it, with the rulers attached.</p>`,
-    bodyHtml: body,
-    jsonLd: creativeWork('Spectra', 'A measurement of dramatic voice across the Theater’s three plays.', 'spectra'),
-  };
-}
-
 // ─── Emit ───────────────────────────────────────────────────────────────────
 
 export function prerender(outDir) {
   const pages = [
     buildScroll(), buildPoems(), buildFragments(),
     buildTheater(), buildOrrery(), buildBeamline(), buildLibrary(),
-    buildSpectra(),
   ];
   const all = [buildIndex(pages), ...pages];
 
