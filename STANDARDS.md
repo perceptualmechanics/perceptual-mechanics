@@ -76,6 +76,19 @@ should write to it — not `npm install`, not `npm ci`, not `npm run build`
 
 ## Documentation
 
+### Measuring the corpus: name the export, not the module
+
+Lives in full in `perceptualmechanics-chat-brief.md` under "Rules the content
+follows", with the other two measurement rules it belongs beside — it is a rule
+about counting the writing rather than about writing code, so it is stated once
+there rather than twice. The short form, because a coding session is exactly who
+walks a module's exports: **`theater.text.js` and `scroll.text.js` each publish
+both a source and a derived index over the same text**, on purpose and for good
+reasons. Summing a module's namespace counts those words twice and produces a
+plausible number rather than an obviously wrong one. This cost a published
+measurement its two largest figures on 2026-09-02.
+
+
 ### An implementation brief closes by naming what it invalidates
 
 Standing rule, added 2026-09-02 at the request of the chat instance that

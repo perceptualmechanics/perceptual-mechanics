@@ -16,11 +16,27 @@ small standalone piece combining generative visuals, curated writing and found
 text, and in most cases generative or triggered audio. Static: no backend, no
 database, everything client-rendered.
 
-The writing is the point. Roughly **57,000 words** of prose, poetry, scripts and
-catalog entries are published across the ten scenes, most of it drawn from two
+The writing is the point. **36,886 words** of prose, poetry, scripts and catalog
+entries are published across the ten scenes, most of it drawn from two
 book projects that live outside the repo in a Scrivener file
 (`Holography.scriv`). The visuals
 are how the writing is encountered, not decoration around it.
+
+*The ruler for that number, because it is the most-quoted figure on the project
+and every previous version of it was measured differently.* Published means text
+a reader can actually encounter — in a scene or on a `/text/` page. It counts
+dialogue and **stage directions** (a reader reads them), titles, scene slugs and
+the Library's bibliographic entries and CD rack, each once. It excludes the
+Library's `catalog` field and its 47 withheld notes, which ship in the bundle but
+are never rendered — 4.0.3 settled that private-means-not-rendered is a real
+distinction, and this number honours it. It excludes Scroll's presentation-table
+text, which is verbatim copies of phrases already counted in the body. Counting
+the withheld material too gives **37,955 authored**; the honest range is
+36,900–38,000 and the difference is entirely the Library. Measured 2026-09-02
+from the content modules, one export per scene — see
+`spectra-measurement-2026-09-02.md` for why "one export" needs saying. The
+previous figure of "roughly 57,000" is superseded: 36,886 plus Scroll's
+double-counted 19,490 is 56,376, so it appears to have carried the same fault.
 
 The working relationship on the code side has been Scott (vision, writing,
 curation) and Claude (implementation, literary analysis) — a long-running
@@ -50,6 +66,26 @@ Counts read from the live content modules.
 Earlier scenes — leaf, egg, prism, cycle, and some older constellation and
 ground-glimpse mechanics — were built, shipped, and retired. The ten above are
 the live set.
+
+**They are not peers, and anything measured across "the corpus" is measuring
+Scroll unless it says otherwise.** The landing page shows ten equal tiles and
+every document here has described ten equal scenes; the published word counts do
+not agree:
+
+| scene | words | share | | scene | words | share |
+|---|---:|---:|---|---|---:|---:|
+| scroll | 19,621 | 53.2% | | beamline | 283 | 0.8% |
+| theater | 7,430 | 20.1% | | orrery | 263 | 0.7% |
+| sphere | 4,386 | 11.9% | | outside | 33 | 0.1% |
+| library | 3,007 | 8.2% | | butterfly | 12 | 0.0% |
+| orbiter | 1,851 | 5.0% | | harmonics | 0 | 0.0% |
+
+Scroll alone holds over half. Beamline, Orrery, Outside and Butterfly hold 591
+words between the four of them, and Harmonics has none at all — by design, since
+it is made of the other scenes' content. This is not a defect: a Lorenz attractor
+does not want prose, and the scenes were never meant to be equal. But it is a
+fact a session needs *before* it starts counting rather than after. The ruler is
+in `spectra-measurement-2026-09-02.md`.
 
 **Two cross-cutting layers.** *Links* (146 rows) are explicit editorial
 connections: a verbatim phrase already sitting in one piece's text becomes a live
@@ -94,6 +130,22 @@ survived, and "coupling in four scenes" was read as "there were four." An
 audit organised around symptoms is blind to whatever is uniformly wrong, so
 say what was looked for as prominently as what was found — the same rule as
 the one above, applied to a survey instead of a number.
+
+**Some modules export the same text twice, on purpose.** Any measurement that
+walks a module's exports must name which export it counted, because
+`theater.text.js` publishes both `PIECES` (nested) and `BEATS` (a flat index over
+the same beats), and `scroll.text.js` publishes twelve pieces individually *and*
+the assembled `scrollPieces`. Both derived exports are deliberate and load-bearing
+— `BEATS` exists so Harmonics can address a single beat. Counting the namespace
+counts the words twice, and because the duplication follows a *good*
+architectural decision the result is plausible rather than obviously wrong:
+25,328 and 39,111 both look like reasonable word counts for those scenes. Name
+the export, not the module. And note the tell that got missed — `hell` appearing
+481 times, in a play set in Hell. **A number that has an obvious explanation is
+the one you stop checking.** That is the same failure as `verify-links` comparing
+corrupt text against corrupt text, and as an audit organised around symptoms: a
+result that looks like what you expected, produced by something other than what
+you thought.
 
 **Report a measurement with its method.** Word counts, ratios and "N checks
 passed" are all method-dependent. Quoting a number from an earlier run after

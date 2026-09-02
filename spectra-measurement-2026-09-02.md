@@ -364,7 +364,7 @@ for text length in one direction and for brevity in the other).
    happened to find.
 
 2. **Sphere is broad-spectrum and Scroll is not.** 39 of 40 lines from 4,386
-   words against 36 from 39,111. That contrast is the one place the data behaved
+   words against 36 from 19,621. That contrast is the one place the data behaved
    like a spectrum instead of a word count, and it says something true about how
    the two scenes are built — a catalog of unrelated images against a small
    number of sustained pieces. It doesn't need a scene to say it, but it is worth
@@ -380,10 +380,12 @@ the ten scenes as peers. Numerically they are nothing like it, and that shapes
 anything measured across "the corpus" — including this measurement, and including
 any future one.
 
-The 57,000-word figure the chat brief quotes is measured a different way again
-(it predates this pass and likely counts library notes and catalog fields this
-ruler excludes). It should be re-derived with a stated method before it is
-repeated, rather than reconciled by guesswork against this one.
+The chat brief's 57,000-word figure was re-derived rather than reconciled, and
+now reads **36,886 published / 37,955 authored** with its ruler stated inline in
+that document. Its provenance turns out to be recoverable: 36,886 plus Scroll's
+19,490 individual-export words is 56,376 — "roughly 57,000." The old figure
+almost certainly carried the same Scroll double-count this document did, from a
+different direction.
 
 ---
 
