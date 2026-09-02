@@ -53,12 +53,31 @@ because the code didn't support them.
 >    on the same response. Worth reading that entry before re-proposing a
 >    collector: for this failure the check is strictly better, because it is
 >    pre-hoc and certain where a collector is post-hoc and probabilistic.
-> 3. **Library's shelf is still 535 draw calls** (down from 1,603). Going
->    further breaks per-mesh raycast, the hover scale bump and per-spine
->    emissive glow at once; it needs a hover mechanism designed first.
-> 4. **Library still builds 265 spine canvases in one synchronous task** at
->    scene open — ~4× cheaper in raster work now, still one long main-thread
->    block. Chunking it makes spines pop in, which is a taste decision.
+> 3. ~~**Library's shelf is still 535 draw calls**~~ **Closed 2026-09-02 as a
+>    bad trade, not a deferral.** 265 spines × 2 plus the case, down from 1,603
+>    (a BoxGeometry with a material array costs one call per group, and a box
+>    has six). Halving it again means merging all 265 into one geometry, which
+>    gives up per-mesh raycast, the hover scale bump and per-spine emissive
+>    glow *simultaneously* — every one of them operates on an individual mesh.
+>    Getting them back means GPU picking by ID colour plus instanced hover
+>    attributes: a different interaction architecture, in service of an
+>    optimisation with no reported symptom. Re-open it if a real device
+>    complains, not because the number looks large.
+> 4. ~~**Library still builds 265 spine canvases in one synchronous task**~~
+>    **Closed 2026-09-02 on a measurement.** Measured on Scott's machine
+>    against production: **294 ms, one long task.** A perceptible hitch, not a
+>    freeze, and already ~4× cheaper in raster work than it was
+>    (`SPINE_TEXTURE_SCALE`, 66 MB → 16.5 MB of texture). Chunking across
+>    frames trades that 294 ms for spines visibly popping in over about a
+>    second, on a scene whose whole effect is that a real shelf is simply
+>    there. Not worth the trade.
+>
+>    *A note on how that was measured, because the first number was wrong by
+>    19×.* A software-renderer container reported 5,570 ms for the same task.
+>    That reading was still useful — it establishes that this is ONE task and
+>    not many, which is the shape of the problem — but it cannot tell you
+>    whether a human notices, and quoting it would have made a 294 ms hitch
+>    look like a five-second freeze.
 > 5. **One Orrery navigation quirk**, kept deliberately: two rings' low arcs
 >    leave a 0.46-unit gap a 0.6-unit-wide visitor can be pinched into.
 >    Backing up frees you. Being unable to squeeze between two rings is
@@ -66,11 +85,24 @@ because the code didn't support them.
 > 6. **`catalog` is private only in the sense of not being rendered** — it
 >    ships inside the public JS bundle, as every note did before 4.0.2.
 > 7. **The `/text/` pages publish no Library notes** while the scene now shows
->    53. Deliberate, but now a decision awaiting Scott rather than a
->    consequence of the scene's behaviour.
-> 8. **`createJumpList` still takes a flat list**, so Library carries its own
+>    54. **Settled 2026-09-02, Scott — not awaiting anyone.** The archive stays
+>    a strict subset of the scene. The link-graph problem that drove 4.0.2 does
+>    not exist on prerendered pages, which carry no cross-links at all, so
+>    there is no half-link to repair and no reason the scene's rule should
+>    follow across; and the notes are not wanted public regardless. Reasoning
+>    in `scripts/prerender.js` beside the code. This entry was the last copy
+>    still reading "awaiting Scott".
+> 8. ~~**`createJumpList` still takes a flat list**, so Library carries its own
 >    grouped nav — the one place in 4.0 where a scene reimplements something
->    shared.
+>    shared.~~ **Withdrawn 2026-09-02: this entry was wrong.** It records a
+>    correct decision as a debt, which is worse than not recording it, because
+>    someone eventually pays it. This project's own rule is to extract a shared
+>    helper on the *third* instance. Library's grouped nav is the **first** —
+>    no other scene needs grouping, and none has asked. Generalising
+>    `createJumpList` for a single caller would be speculative generality of
+>    exactly the kind this project removes on sight. Library is a scene doing
+>    something no other scene needs yet, which is allowed. Revisit if a second
+>    grouped list ever appears; until then there is nothing owed here.
 >
 > Vite is no longer among these: v4.1.0 took the 6 → 8 upgrade. Everything
 > through **v4.1.0** is deployed and confirmed live (2026-09-02), by matching

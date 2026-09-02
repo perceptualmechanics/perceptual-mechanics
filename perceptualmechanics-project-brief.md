@@ -175,7 +175,15 @@ have been self-hosted for a while and only a comment still mentioned
 CSP, which now exists, enforces, and is down to `script-src 'self'` with
 no hashes at all.
 
-**Genuinely open:**
+**Genuinely open — and as of 2026-09-02 the honest answer is "almost
+nothing."** Most of what follows is here so it is not re-derived as owed: a
+decision recorded as a decision reads like an open item to anyone skimming, and
+this list has twice been read as a to-do after the work had shipped. Only the
+`catalog` bundling note below is an unresolved technical question, and nobody
+has asked for it. The genuinely open work on this project is editorial — an
+eleventh scene, and what in `Holography.scriv` is ready to be promoted — and
+that is Scott's rather than a coding session's.
+
 
 - **The three landing tiles reported blank on 2026-09-01 are all accounted
   for.** Harmonics and Outside were a first-frame race, fixed in 4.1.1 and
@@ -207,22 +215,28 @@ no hashes at all.
   note before 4.0.2. Getting them genuinely off the server means moving them
   out of the bundled module — a real architectural change nobody has asked
   for. Recorded so "private" isn't read as stronger than it is.
-- **`createJumpList` still takes a flat list.** Library needed grouping (265
-  stops, a WCAG 2.4.1 problem) and built its own grouped `<nav>` locally
-  rather than extending the shared helper. It is the one place in 4.0 where a
-  scene reimplements something shared instead of using it — exactly the drift
-  STANDARDS.md's third-scene rule exists to prevent. What it would need:
-  an optional `groups: [{label, items}]` shape, a `skipLabel` for a leading
-  bypass control, and a caller-supplied sort, with today's flat callers
-  unchanged.
-- **Library's shelf is still 535 draw calls** (down from 1,603). Merging
-  the 265 spines further breaks per-mesh raycast, the hover scale bump
-  and per-spine emissive glow simultaneously; it needs a hover mechanism
-  designed first, not a bigger merge.
-- **Library builds 265 spine canvases in one synchronous task** at scene
-  open — now ~4× cheaper in raster work, but still one long main-thread
-  block. Chunking it across frames would make spines pop in; that's a
-  taste decision, not a technical one.
+- **Not open, and previously mis-recorded: `createJumpList` takes a flat
+  list and that is fine.** Library needed grouping (265 stops, a WCAG 2.4.1
+  problem) and built its own grouped `<nav>`. This was listed as drift against
+  STANDARDS.md's third-scene rule — but that rule says extract on the *third*
+  instance, and Library's is the **first**. No other scene needs a grouped
+  jump list and none has asked for one. Generalising the shared helper for a
+  single caller is speculative generality, which this project removes on
+  sight. Recording it as debt was the error: a correct decision filed as
+  something owed gets paid eventually. Revisit only if a second grouped list
+  appears.
+- **Not open, and both closed on their merits 2026-09-02: Library's two
+  performance items.** The shelf's **535 draw calls** (265 spines × 2, down
+  from 1,603) can only be halved by merging every spine into one geometry,
+  which gives up per-mesh raycast, the hover scale bump and per-spine emissive
+  glow at once — recovering them means GPU picking plus instanced hover
+  attributes. That is a different interaction architecture serving an
+  optimisation with no reported symptom: a bad trade rather than a deferral.
+  And the **265 spine canvases** build in one task measured at **294 ms on
+  real hardware** against production — a hitch, not a freeze, and already ~4×
+  cheaper than it was. Chunking swaps it for spines popping in over about a
+  second, on a scene whose whole effect is that a shelf is simply there.
+  Re-open either if a real device complains.
 - **One Orrery navigation quirk** introduced by the collider fix and kept
   deliberately: two adjacent rings' low arcs leave a 0.46-unit gap, and a
   0.6-unit-wide visitor pressed into it can't strafe out sideways.
