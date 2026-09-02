@@ -239,9 +239,30 @@ empty — don't re-open this as a writing job.)*
   prerendered pages — but it is a content decision that could be revisited,
   not a technical constraint. That makes it a conversation rather than a
   build task.
-- **The eleventh scene**, whenever it comes. The content-sourcing question — what
+- **The eleventh scene**, whenever it comes — and one candidate has been taken
+  most of the way and put down, so start from that rather than from scratch.
+  **Spectra** would read each speaker in the Theater's three plays as a light
+  source: emission is what a voice produces, absorption is what its cast says
+  that it never does. Two measurements and one build happened on 2026-09-02:
+  - The **site-wide** version — each *scene* as a source — was measured and
+    **rejected on the numbers**. No element appeared in exactly one scene, none
+    appeared in nine or ten, five of ten scenes had almost no text, and emission
+    and absorption came out exact complements of a single quantity. Full working
+    in `spectra-measurement-2026-09-02.md`.
+  - The **dialogue-scoped** version — each *speaker* as a source — was measured
+    and **survived**: no two of the eighteen qualifying speakers share a style
+    profile, and absorption scoped to a cast is genuinely different information
+    from emission rather than its inverse.
+  - It was then **built, verified, and shelved for focus rather than for a
+    defect**. It worked. The code is in `src/scenes/spectra/` and
+    `SHELVED.md` there says what it is and the three edits that bring it back.
+
+  So this is not an open question about whether the idea works. It is a decision
+  about whether the site wants an eleventh scene right now. The separate
+  content-sourcing question — The content-sourcing question — what
   in `Holography.scriv`'s Research/Notes document is ready to be promoted — is
-  a conversation, not a build task. One place to look, not two.
+  a conversation, not a build task, and it stays open whatever happens to
+  Spectra. One place to look, not two.
 
 ---
 

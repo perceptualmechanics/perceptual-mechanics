@@ -587,6 +587,73 @@ described are unchanged.)
   worth trimming, orrery.js's texture generators and first-person rig are the
   two most self-contained chunks to split out first.
 
+## 4.2.0 (2026-09-02)
+
+The build learned to notice a scene with no way in. An eleventh scene was
+written to find that out, and then shelved.
+
+**The scenes-sum assertion**, proposed in the 2026-09-01 audit and unbuilt for a
+day because nothing made it concrete. `prerender.js` already asserted that the
+Library's type filters sum to its input — the right pattern, applied in exactly
+one place. It now applies one level up: every scene in the registry either
+builds a `/text/` page or is named in `TEXT_EXEMPT` with a written reason, and
+the build fails otherwise.
+
+It fails in three directions, not one, because all three have a way of going
+unnoticed: a scene with neither a page nor an exemption (how a scene ships
+unfindable), a page built for a scene that isn't registered (how the `/text/`
+index grows a dead entry), and an exemption naming a scene that no longer
+exists. Each was made to fire before the gate was trusted green, and each names
+the specific fault rather than saying "mismatch".
+
+**Which needed the registry out of `main.js`**, since Node can't import a module
+whose top-level code expects a DOM. `src/scenes/registry.js` now holds it — and
+holds it **with no imports at all**, which is load-bearing rather than tidy.
+The first version kept each entry's `load: () => import('./x/x.js')`, on the
+reasoning that a dynamic import is lazy and therefore harmless. Vite bundles its
+own config, the config imports `prerender.js`, and a bundler follows dynamic
+imports statically: the entire scene graph, `?raw` templates and CSS
+side-effect imports included, landed in the config bundle and the build died
+before it started. The loaders are derived in `main.js` by `import.meta.glob`
+from the registry's own keys instead, so eleven scene names are listed exactly
+once and a scene whose folder doesn't match its key fails on open with a named
+error rather than a bare `undefined`.
+
+**Spectra, built and shelved.** A comparison plate of dramatic voice: each
+speaker in Theater's three plays as a light source, emission against absorption,
+three cast-scoped plates. It works. Scott's call to shelve it was for focus, not
+for a defect, and `src/scenes/spectra/SHELVED.md` carries what it is, why the
+dialogue-scoped version survived a measurement the site-wide one failed, and the
+three edits that bring it back.
+
+Worth keeping from the day it took, because the code was never the expensive
+part. **No two of the eighteen qualifying speakers share a style profile** —
+where content vocabulary separated only twelve of them, and mostly by topic
+rather than voice. **Satan absorbs 59% of his own play's shared vocabulary on
+147 words, against Traci's 57% on 121** — not a size artifact; the character who
+speaks least like everyone else in the play is the Devil.
+
+Three things the build got wrong that only looking caught, all of which had
+passed green. Line intensity varied alpha and two pixels of width, and every
+line on the plate read as the same line. The absorption continuum reused the
+soft-ended line texture and became a smear that faded at both edges with its
+notches lost inside the falloff. And the plate hit-tested pointer coordinates
+against band rectangles, which worked for a mouse and gave a keyboard visitor a
+single tab stop with nothing to land on — the fix was real buttons, which is
+also how a plate is actually annotated.
+
+The eleventh nav icon was verified at 320 / 360 / 375 / 390 / 414 / 768 / 780 /
+1280 before it came out again: no clipping at any width, one row, the 3.5rem
+height intact, minimum icon 28px at 320px. `--nav-count` did exactly what its
+comment promised — one value changed and the arithmetic held. The fifth
+recurrence of that bug did not happen. That result is worth having on file
+whether or not this scene is the one that eventually spends it.
+
+**Also shelved with it: an intermediate `hidden: true` flag.** It worked, and it
+came out, because with the scene fully shelved nothing used it and this project
+doesn't carry mechanism with no user. The restore instructions do the same job
+in prose.
+
 ## 4.1.3 (2026-09-02)
 
 Butterfly's thumbnail reaches its subject in about a second instead of

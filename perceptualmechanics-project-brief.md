@@ -31,7 +31,7 @@ Every scene is a fully self-contained folder: `src/scenes/<name>/<name>.{js,css,
 
 Static shell markup lives in `<name>.html`, imported as a raw string and parsed into a real `DocumentFragment` via `parseHTML()`. Content (a scene's actual writing, per-item data) always lives in a `.text.js` module that both the scene *and* `scripts/prerender.js` import — never copied, never duplicated, so the live site and the crawlable `/text/` pages can't drift apart.
 
-`src/main.js` owns: the scene registry (`SCENES`), hash-based deep linking (`#scene` or `#scene/pieceId`, with a small public-slug translation layer for the one scene — Harmonics — whose URL differs from its internal name), scene-swap transitions (crossfade via `#experience-overlay`'s opacity), modal focus containment while a scene is open (Tab-trapping, `aria-hidden` on the chrome), the shared fullscreen toggle, and a small easter egg (`pmGlimpse` — a 1-in-100 chance per hover that the tab title flickers to a one-word association for that scene).
+`src/main.js` owns: hash-based deep linking (`#scene` or `#scene/pieceId`, with a small public-slug translation layer for the one scene — Harmonics — whose URL differs from its internal name), scene-swap transitions (crossfade via `#experience-overlay`'s opacity), modal focus containment while a scene is open (Tab-trapping, `aria-hidden` on the chrome), the shared fullscreen toggle, and a small easter egg (`pmGlimpse` — a 1-in-100 chance per hover that the tab title flickers to a one-word association for that scene). The scene registry itself moved to `src/scenes/registry.js` in 4.2.0 so that `scripts/prerender.js` can read it; `main.js` derives each scene's loader from its keys with `import.meta.glob` rather than listing them a second time.
 
 ## The 10 scenes
 
@@ -81,7 +81,7 @@ This is the durable house-rules file (created v3.9.16) — **read it first** bef
   the site was allowed to build, and the CSS minifier pinned because the new
   default deleted three documented fallbacks.
 
-- **4.1.1–4.1.3 (current, 2026-09-02):** the landing page's ten thumbnails.
+- **4.1.1–4.1.3 (2026-09-02):** the landing page's ten thumbnails.
   4.1.1 gave every scene a first frame before `create()` returns — Harmonics
   and Outside had only scheduled theirs, so a pause arriving before that
   callback left them having drawn nothing at all, which is what the blank-tile
@@ -97,6 +97,15 @@ This is the durable house-rules file (created v3.9.16) — **read it first** bef
   steady state before anyone had finished looking and flattened the brightness
   ramp on the way.
 
+- **4.2.0 (current, 2026-09-02):** the scenes-sum assertion from the 2026-09-01
+  audit, finally concrete because an eleventh scene was attempted. Every scene
+  either builds a `/text/` page or is named in `TEXT_EXEMPT` with a reason, and
+  the build fails in three directions rather than one. That needed the scene
+  registry out of `main.js` into an import-free `src/scenes/registry.js`, with
+  the loaders derived by `import.meta.glob` so scene names are listed once. The
+  eleventh scene itself — Spectra, a plate of dramatic voice — was built,
+  verified, and shelved for focus rather than for a defect; see
+  `src/scenes/spectra/SHELVED.md`.
 
 ## Keeping this file true
 
