@@ -99,9 +99,17 @@ the same restriction stranded in `.git/objects/` go to **`.git/_stale-tmp/`**,
 which git ignores. If that directory exists and has anything in it, this is why,
 and it is safe to delete from the Mac at any time.
 
-**The rule:** the assistant clears the lock after the last git command it runs,
-not before the first. Anything left behind is a trap for the next person to type
-`git commit` here, and the person who created it is the one who knows it exists.
+**The rule:** clear the lock **before every git write and again after the last
+one**. The first version of this rule said "after the last command" and was
+wrong within the hour — a `git status` run to check the tree left a lock, and
+the `git commit` that followed died with *"Unable to create index.lock: File
+exists. Another git process seems to be running."* Nothing else was running. It
+was the previous read.
+
+So: `mv .git/*.lock .git/_stale-tmp/` is the first thing in any command that
+ends in a git write, not only the last. And anything left behind at the end is a
+trap for the next person to type `git commit` here — the person who created it
+is the one who knows it exists.
 
 ### The assistant builds from its own checkout, not from this folder
 
