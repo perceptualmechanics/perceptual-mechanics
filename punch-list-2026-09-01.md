@@ -42,9 +42,17 @@ because the code didn't support them.
 > `perceptualmechanics-project-brief.md` under "Known open items" — if this
 > and that disagree, that one is right.
 >
-> 2. **The CSP report endpoint is a placeholder** that 404s. It needs a real
->    collector — and it is the thing that would have caught the two live CSP
->    bugs 4.0 fixed.
+> 2. ~~**The CSP report endpoint is a placeholder** that 404s.~~ **Closed
+>    2026-09-02 as a decision rather than a fix (v4.2.1): the directives were
+>    removed, not completed.** No server; Reporting-Endpoints is Chromium-only;
+>    and most CSP reports in practice are browser extensions, which is a poor
+>    thing to send a third party and a poor log to own. The reasoning is in
+>    `public/.htaccess`. What reporting was wanted for — the unstyled `/text/`
+>    pages — is now caught deterministically by the deploy, which hashes the
+>    `<style>` block out of the served bytes and asserts it against the policy
+>    on the same response. Worth reading that entry before re-proposing a
+>    collector: for this failure the check is strictly better, because it is
+>    pre-hoc and certain where a collector is post-hoc and probabilistic.
 > 3. **Library's shelf is still 535 draw calls** (down from 1,603). Going
 >    further breaks per-mesh raycast, the hover scale bump and per-spine
 >    emissive glow at once; it needs a hover mechanism designed first.

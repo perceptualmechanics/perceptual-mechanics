@@ -173,11 +173,74 @@ jobs:
               fail=1
             fi
           done
-          # The /text/ pages carry the inline <style> the CSP has to allowlist
-          # by hash. Fetching one proves the policy that ships is the policy
-          # those pages were hashed against.
           if ! curl -sSf -o /dev/null "https://perceptualmechanics.com/text/?cb=${GITHUB_SHA}"; then
             echo "::error::/text/ did not return 200"
             fail=1
           fi
           exit $fail
+
+      # ─── The /text/ style hash, checked against the live policy ──────────
+      # This replaces a check that claimed more than it did. The line above
+      # used to carry the comment "fetching one proves the policy that ships
+      # is the policy those pages were hashed against" — and it fetched the
+      # page and looked at the status code. A stylesheet blocked by CSP does
+      # not change the status code. The bug this was named for, eight /text/
+      # pages served unstyled from 3.12.1 until 4.0, returned 200 for months.
+      #
+      # So the comment was wrong while the code was fine, which is its own
+      # failure mode: a check's comment is a claim, and nothing verifies it.
+      # It is the fourth instance of one shape on this project — verify-links
+      # comparing corrupt text against corrupt text, an audit scoped by
+      # symptom, a corpus measurement that never said which export it counted,
+      # and now this. See the chat brief's content rules.
+      #
+      # What it does now, which is what that sentence always described:
+      # fetch the page, pull the <style> block out of the bytes that were
+      # actually served, hash it the same way vite.config.js's csp-style-hash
+      # gate hashes the emitted one, and assert that hash appears in the
+      # Content-Security-Policy header on that same response. Deterministic,
+      # needs no server, and it runs on every deploy rather than waiting for a
+      # visitor with the right browser to trip the violation.
+      #
+      # Reading the header from the /text/ response rather than from / is
+      # deliberate: it is the policy that actually governs that page, and a
+      # per-directory .htaccess could in principle make them differ.
+      - name: Verify the /text/ inline style is allowed by the live policy
+        run: |
+          set -euo pipefail
+          python3 - "$GITHUB_SHA" <<'PY'
+          import base64, hashlib, re, sys, urllib.request
+
+          url = f"https://perceptualmechanics.com/text/?cb={sys.argv[1]}"
+          with urllib.request.urlopen(url, timeout=30) as r:
+              body = r.read().decode("utf-8")
+              csp = r.headers.get("Content-Security-Policy", "")
+
+          if not csp:
+              print("::error::/text/ served no Content-Security-Policy header")
+              sys.exit(1)
+
+          # Same extraction as vite.config.js's verifyStyleHash: first block,
+          # non-greedy, and the bytes hashed are exactly what sits between the
+          # tags — leading and trailing newline included.
+          m = re.search(r"<style>([\s\S]*?)</style>", body)
+          if not m:
+              print("::error::/text/ served no inline <style> block. If page() deliberately stopped emitting one, this check and PAGE_STYLE_SHA256 both retire in the same change.")
+              sys.exit(1)
+
+          served = "sha256-" + base64.b64encode(
+              hashlib.sha256(m.group(1).encode("utf-8")).digest()).decode()
+
+          if served in csp:
+              print(f"ok: /text/ inline style {served} is allowed by the policy on its own response")
+              sys.exit(0)
+
+          allowed = re.findall(r"'(sha256-[A-Za-z0-9+/=]+)'", csp)
+          print("::error::the live policy does not allow the style the live page is serving — "
+                "the /text/ pages are rendering unstyled right now")
+          print(f"  served style hashes to: {served}")
+          print(f"  policy allows:          {allowed or '(no style hashes at all)'}")
+          print("  Fix: put the served value in PAGE_STYLE_SHA256 (scripts/prerender.js) and in "
+                "style-src in public/.htaccess, then redeploy. Both, or the archive stays unstyled.")
+          sys.exit(1)
+          PY

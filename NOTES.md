@@ -587,6 +587,72 @@ described are unchanged.)
   worth trimming, orrery.js's texture generators and first-person rig are the
   two most self-contained chunks to split out first.
 
+## 4.2.1 (2026-09-02)
+
+A check that claimed more than it tested, and a header that advertised a
+collector it didn't have. Both in the same pass because both are the same
+mistake: something that looks configured.
+
+**The deploy's `/text/` check.** It fetched the page and read the status code,
+under this comment:
+
+> The /text/ pages carry the inline `<style>` the CSP has to allowlist by hash.
+> Fetching one proves the policy that ships is the policy those pages were
+> hashed against.
+
+It proves no such thing. A stylesheet blocked by CSP does not change the status
+code — the bug that sentence was written about, eight `/text/` pages served
+unstyled from 3.12.1 until 4.0, returned 200 for months. **The code was fine.**
+It checks a status, correctly and on purpose. The comment claimed a scope the
+code never had, and nothing runs a comment.
+
+That is the fourth instance of one shape here, and the first where the failure
+is in the prose rather than the logic: `verify-links` comparing corrupt text
+against corrupt text, an audit organised by symptom, a corpus measurement that
+never said which export it counted, and now a check whose description outruns
+it. The rule is in the chat brief's content rules — **a check's comment is a
+claim, and it is the only part with no test.**
+
+It now does what the sentence always described: fetch `/text/`, pull the
+`<style>` block out of the bytes actually served, hash it exactly the way
+`vite.config.js`'s `csp-style-hash` gate hashes the emitted one, and assert that
+hash appears in the `Content-Security-Policy` header **on that same response**
+— the policy that actually governs the page, not the one on `/`. Verified
+against the built page before shipping: the extraction reproduces
+`PAGE_STYLE_SHA256` exactly, and one extra space inside the style block makes it
+fail. Deterministic, needs no server, and runs on every deploy.
+
+**CSP reporting: removed, not completed.** 4.0 added `report-to pm-csp` and a
+`Reporting-Endpoints` header pointing at `/_csp-reports`, a URL that does not
+exist and 404s every POST. Scott's call to delete both rather than stand up a
+collector, and the reasoning is written into `public/.htaccess` where the next
+person to consider this will find it:
+
+- **No server.** The only on-origin option was PHP on DreamHost shared hosting,
+  which makes "static, no backend" — the first line of both briefs — untrue.
+- **Chromium only.** `Reporting-Endpoints`/`report-to` is honoured by Chrome and
+  Edge; Firefox and Safari still take only the deprecated `report-uri`. Building
+  it buys reporting from some browsers and silence from the rest, which is a
+  blind spot shaped like a working system.
+- **Mostly extensions.** The large majority of CSP reports in practice are
+  browser extensions injecting into the page. On a third-party collector that is
+  a stream of what this site's visitors have installed leaving an origin that
+  self-hosts its fonts, runs no analytics and ships `script-src 'self'` with no
+  hashes at all. Owned locally it is a log that needs filtering before it can be
+  read, which is the same problem as any log nobody reads.
+- **And the specific failure is covered better.** A collector is post-hoc and
+  probabilistic — it waits for a visitor with the right browser to trip the
+  violation. The deploy check above is pre-hoc and certain.
+
+Two corrections worth recording. `connect-src` does **not** govern CSP reporting
+— reports are sent out of band and are not subject to the policy — so the
+"widening the CSP in order to report on the CSP" objection to a third-party
+collector was never real. And the two `.htaccess`-adjacent deploy items raised
+alongside this (`rsync -rlgoDzvc`, `ssh -vvv`) were already fixed in 4.0, with
+the reasoning in comments; they were cited from the punch list without checking
+the changelog, which is the second time in a day that document has been read as
+current when the work had shipped.
+
 ## 4.2.0 (2026-09-02)
 
 The build learned to notice a scene with no way in. An eleventh scene was

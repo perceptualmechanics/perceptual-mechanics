@@ -97,7 +97,7 @@ This is the durable house-rules file (created v3.9.16) — **read it first** bef
   steady state before anyone had finished looking and flattened the brightness
   ramp on the way.
 
-- **4.2.0 (current, 2026-09-02):** the scenes-sum assertion from the 2026-09-01
+- **4.2.0 (2026-09-02):** the scenes-sum assertion from the 2026-09-01
   audit, finally concrete because an eleventh scene was attempted. Every scene
   either builds a `/text/` page or is named in `TEXT_EXEMPT` with a reason, and
   the build fails in three directions rather than one. That needed the scene
@@ -106,6 +106,15 @@ This is the durable house-rules file (created v3.9.16) — **read it first** bef
   eleventh scene itself — Spectra, a plate of dramatic voice — was built,
   verified, and shelved for focus rather than for a defect; see
   `src/scenes/spectra/SHELVED.md`.
+- **4.2.1 (current, 2026-09-02):** the deploy's `/text/` check made to test what
+  its own comment claimed. It fetched the page and read the status code, under a
+  comment saying it proved the served policy matched the hash those pages were
+  built against; a blocked stylesheet still returns 200, so it proved nothing,
+  and the bug it was named for hid behind exactly that for months. It now pulls
+  the `<style>` block out of the bytes actually served, hashes it the way the
+  build's own gate hashes the emitted one, and asserts that hash appears in the
+  policy on the same response. In the same pass, CSP reporting was removed
+  rather than completed — see Known open items.
 
 ## Keeping this file true
 
@@ -178,11 +187,19 @@ no hashes at all.
   is the first thing to read: `0` never drew, `1` drew once and stopped, a
   number that climbs between two reads means the tile is fine and something
   else is wrong.
-- **The CSP report endpoint is a placeholder.** `report-to` and
-  `Reporting-Endpoints` are wired to a marked URL on this origin that
-  404s. It needs a real collector before it does anything — and it is
-  worth doing, because the two live CSP bugs 4.0 fixed are exactly what a
-  reporting endpoint catches.
+- **Settled 2026-09-02: there is no CSP reporting, and that is a decision.**
+  Not an open item any more. `report-to` and `Reporting-Endpoints` are removed
+  rather than wired up — a header advertising a collector that 404s is a
+  configured-looking nothing. Three reasons, in full in `public/.htaccess`:
+  there is no server, and the only on-origin option makes "static, no backend"
+  untrue; `Reporting-Endpoints` is Chromium-only, so building it buys reporting
+  from some browsers and silence from the rest, which is a blind spot shaped
+  like a working system; and in practice most CSP reports are browser
+  extensions, which on a third-party collector means a stream of what visitors
+  have installed leaving the origin. The specific failure it was wanted for —
+  the `/text/` pages unstyled from 3.12.1 — is covered deterministically
+  instead, by the deploy check in 4.2.1 below. Don't re-open this without a
+  reason that answers those three.
 - **A `catalog` field is private only in the sense of not being rendered.**
   It lives in `library.text.js`, which the scene imports, so the seven
   catalogue fragments still ship inside the public JS bundle and are

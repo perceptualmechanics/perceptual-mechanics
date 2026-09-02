@@ -131,6 +131,18 @@ audit organised around symptoms is blind to whatever is uniformly wrong, so
 say what was looked for as prominently as what was found — the same rule as
 the one above, applied to a survey instead of a number.
 
+**A check's comment is a claim, and nothing verifies it.** The fourth instance,
+2026-09-02, and the one that finally names the shape. The deploy workflow
+fetched a `/text/` page under a comment reading *"fetching one proves the policy
+that ships is the policy those pages were hashed against"* — and tested the
+status code. A stylesheet blocked by CSP does not change the status code; the
+bug that comment was written for served 200s for months. **The code was fine.**
+It does check a status, correctly. The comment claimed a scope the code never
+had, and comments are not run by anything. When reading a check, read what it
+executes rather than what it says it executes — and when writing one, the
+comment is the part most likely to be wrong, because it is the only part with
+no test.
+
 **Some modules export the same text twice, on purpose.** Any measurement that
 walks a module's exports must name which export it counted, because
 `theater.text.js` publishes both `PIECES` (nested) and `BEATS` (a flat index over
@@ -194,6 +206,19 @@ way — and nobody could tell, because a thumbnail that has never drawn looks
 exactly like one still loading. That indistinguishability was the actual
 finding, and the same release made the two states tell apart from the page
 itself.
+
+**v4.2.1 (2026-09-02)** removed CSP reporting rather than completing it, and
+fixed a check that described itself as testing the thing it could not see. The
+deploy fetched a `/text/` page and read the status code, under a comment saying
+that proved the served policy matched the hash those pages were built against —
+a blocked stylesheet still returns 200, which is how eight pages stayed unstyled
+for months. It now hashes the `<style>` block out of the served bytes and
+asserts it against the policy on the same response. The reporting header was
+pointing at a URL that 404s; it is gone, with the reasoning in `.htaccess`.
+
+**v4.2.0 (2026-09-02)** taught the build to notice a scene with no `/text/`
+page. An eleventh scene was written to find that out and then shelved — see the
+eleventh-scene question below.
 
 **v4.1.3 — Butterfly's thumbnail** now reaches a legible attractor in about a
 second rather than twenty-five. The tile had always run at half the full
