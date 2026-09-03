@@ -716,13 +716,21 @@ and it is reported as one:** the standard deviation of a Poisson count near 33
 is about 5.7, so 30 is half a sigma low and this measurement cannot distinguish
 0.50 from 0.55. The ten-minute run in 4.5.0 is the one that can.
 
-Unverified here and worth a live check: whether desktop Safari and Chrome
-actually keep the context running once we stop suspending it (WebKit removed
-visibility-based interruption of `AudioContext` on macOS in bug 231105, fixed
-March 2022, but that is a bug report and not a test), and iOS, where locked
+**Confirmed on the Mac, 2026-09-03: Scott locked the screen and Sunlight kept
+playing.** That is the half no harness here could reach, and it settles the
+desktop question the way WebKit bug 231105 predicted — the platform had already
+stopped interrupting `AudioContext` on visibility in March 2022, so our own
+`suspend()` was the entire reason the sound stopped. The bug report was
+evidence; the listen is the test. (Which browser was not recorded, so this is a
+claim about the Mac rather than about a named engine.)
+
+Still unverified, and expected to fail rather than pass: **iOS**, where locked
 audio needs a media element and `navigator.mediaSession` rather than bare Web
-Audio and is reported unreliable even then. **This release stops us from being
-the reason it goes silent. It does not make any platform keep it playing.**
+Audio, and is reported to break after about thirty seconds even with them. The
+release's own claim is unchanged by the desktop result and worth keeping exactly
+as narrow as it was: **this stops us from being the reason the sound goes
+silent. It does not make any platform keep it playing.** Desktop turned out to
+need nothing else. iOS is not desktop.
 
 ## 4.5.0 (2026-09-02)
 

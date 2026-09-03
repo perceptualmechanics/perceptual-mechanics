@@ -238,20 +238,22 @@ have been self-hosted for a while and only a comment still mentioned
 CSP, which now exists, enforces, and is down to `script-src 'self'` with
 no hashes at all.
 
-**Open as of 4.5.1 — whether any platform actually plays Sunlight through a
-screen lock.** The code no longer stops it; that half is verified. The platform
-half is not, and cannot be from a sandbox. Desktop is expected to work: WebKit
-removed visibility-based interruption of `AudioContext` on macOS in bug 231105
-(fixed March 2022), and Chrome exempts an audibly-playing hidden page from
-intensive throttling. **iOS is expected not to.** Locked-screen audio there
+**Settled on the desktop half in 4.5.1: the Mac plays Sunlight through a screen
+lock, confirmed by listening 2026-09-03.** Removing our own `suspend()` was all
+it needed — WebKit had stopped interrupting `AudioContext` on visibility in bug
+231105 (March 2022), and Chrome exempts an audibly-playing hidden page from
+intensive throttling. Not open; don't re-derive it.
+
+**Open: iOS.** Locked-screen audio there
 requires a media element the OS recognises as a session — an `<audio>` with
 `navigator.mediaSession` — which would mean routing Apollo's whole graph through
 a `MediaStreamAudioDestinationNode`, and the reports on that path describe it
 breaking after about thirty seconds of pause. Wake Lock is unsupported in iOS
 Safari (WebKit 254545). **The next step is a listen, not a change:** Apollo open
-with Sunlight and sound on, screen locked, on a Mac and on a phone. If desktop
-plays and iOS does not, that is the expected result and the media-element
-detour is a separate decision with its own costs, not a follow-up fix.
+with Sunlight and sound on, screen locked, on a phone. If it does not play, that
+is the expected result and the media-element detour is a separate decision with
+its own costs — a new sink for the whole audio graph, on a path reported to
+break after thirty seconds — not a follow-up fix owed on this release.
 
 **Genuinely open — and as of 2026-09-02 the honest answer is "almost
 nothing."** Most of what follows is here so it is not re-derived as owed: a
