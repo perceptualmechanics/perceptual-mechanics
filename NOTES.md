@@ -721,8 +721,20 @@ playing.** That is the half no harness here could reach, and it settles the
 desktop question the way WebKit bug 231105 predicted — the platform had already
 stopped interrupting `AudioContext` on visibility in March 2022, so our own
 `suspend()` was the entire reason the sound stopped. The bug report was
-evidence; the listen is the test. (Which browser was not recorded, so this is a
-claim about the Mac rather than about a named engine.)
+evidence; the listen is the test.
+
+**Both engines, confirmed 2026-09-03 — and they are not the same test.** Safari
+exercises the WebKit half: whether the platform still interrupts an
+`AudioContext` when the page stops being visible. It does not, so the context
+keeps producing sound. Chrome exercises a different half entirely, because
+Blink's question was never about the context but about the *scheduler* — an
+audibly-playing hidden page is exempt from intensive throttling and gets the
+standard once-per-second tier, which is exactly what `AMBIENT_AHEAD_HIDDEN =
+3.0` was widened to cover. A pass in Chrome is therefore evidence that the
+exemption applies in practice and that the widened lookahead is sufficient; a
+pass in Safari is evidence about the context. Neither would have implied the
+other, and it is worth knowing that the two green results are answering two
+questions.
 
 Still unverified, and expected to fail rather than pass: **iOS**, where locked
 audio needs a media element and `navigator.mediaSession` rather than bare Web

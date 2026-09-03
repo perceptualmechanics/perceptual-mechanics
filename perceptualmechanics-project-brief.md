@@ -239,7 +239,7 @@ CSP, which now exists, enforces, and is down to `script-src 'self'` with
 no hashes at all.
 
 **Settled on the desktop half in 4.5.1: the Mac plays Sunlight through a screen
-lock, confirmed by listening 2026-09-03.** Removing our own `suspend()` was all
+lock, confirmed by listening in both Chrome and Safari, 2026-09-03.** Removing our own `suspend()` was all
 it needed — WebKit had stopped interrupting `AudioContext` on visibility in bug
 231105 (March 2022), and Chrome exempts an audibly-playing hidden page from
 intensive throttling. Not open; don't re-derive it.
