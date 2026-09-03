@@ -1,4 +1,4 @@
-/* Psyshell scene styles (title, hint, readout, sound toggle), positioned on
+/* Psyshell scene styles (title, hint, ordinal, sound toggle), positioned on
    document.body — see harmonics.css's header for the z-index/stacking-context
    reasoning every scene with body-level chrome shares. psyshell.js owns
    creating and removing each element itself.
@@ -27,6 +27,71 @@
    on top, never the reverse. */
 
 .psyshell-title, .psyshell-hint {
+  position: fixed; pointer-events: none; z-index: 310;
+  font-family: 'Arapey', serif; transition: opacity 0.3s ease;
+}
+
+/* Title block at bottom-center, anchored to the shared --title-block-bottom
+   var like every other scene (site-wide consistency pass, 2026-08-25), so this
+   stays clear of #site-title's footer pill by construction. Full-width flex row
+   rather than left:50% + translateX(-50%) — see #site-title-row's comment in
+   styles/main.css for why self-centering by transform was replaced everywhere
+   in this codebase.
+
+   ─── The lockup follows the family, 4.6.1 ──────────────────────────────────
+   The first version of this file diverged from the site's title convention on
+   four counts and each one was a small invention rather than a decision: it set
+   sentence case where Apollo, Outside, Harmonics and Beamline all set
+   `text-transform: uppercase`; a fixed 1.5rem where they all use
+   `clamp(0.85rem, 2.5vw, 1.6rem)`; a fixed 0.22em of tracking where they use a
+   `--tracking` custom property that scales with the viewport; and it corrected
+   letter-spacing's trailing gap with `text-indent`, where every other scene
+   uses `margin-right: calc(-1 * var(--tracking))`.
+
+   The two do the same thing at one width and different things at every other,
+   which is the same shape as the constants 4.4.2 had to remove: an indent
+   shifts the text inside its box, a negative margin shrinks the box, and only
+   the second one lets the flex row centre it by its real ink. All four now
+   match, so a change to the family reaches this scene too.
+
+   The subhead is italic, which is the site's own subhead treatment (Orbiter,
+   Beamline) and the reason a real italic face is self-hosted rather than
+   synthesized — see styles/main.css's arapey-400italic. */
+.psyshell-title {
+  bottom: var(--title-block-bottom-mobile); left: 5vw; right: 5vw;
+  text-align: center; color: rgba(228, 244, 236, 0.88);
+  display: flex; flex-direction: column; align-items: center; gap: 0.25rem;
+
+	@media (min-width: 601px) {
+		bottom: var(--title-block-bottom); left: 0; right: 0;
+	}
+}
+.psyshell-title-name {
+  font-size: clamp(0.85rem, 2.5vw, 1.6rem);
+  --tracking: clamp(0.1em, 1vw, 0.4em);
+  letter-spacing: var(--tracking);
+  margin-right: calc(-1 * var(--tracking));
+  text-transform: uppercase;
+  text-shadow: 0 0 18px rgba(150, 255, 200, 0.28);
+}
+/* "flower magic" is doing the Union's own move — light, almost twee, entirely
+   accurate — so it stays small and unemphatic rather than becoming a second
+   title. It is set lower case in the markup and NOT uppercased here, which is
+   the point of it and matches Orbiter's own subhead ("sing, orbiter"). */
+.psyshell-title-sub {
+  font-size: 0.7rem;
+  --tracking: 0.08em;
+  letter-spacing: var(--tracking);
+  margin-right: calc(-1 * var(--tracking));
+  font-style: italic;
+  color: rgba(196, 226, 210, 0.72);
+
+	@media (min-width: 601px) {
+		font-size: 0.78rem;
+	}
+}
+
+.psyshell-hint {
   position: fixed; pointer-events: none; z-index: 310;
   font-family: 'Arapey', serif; transition: opacity 0.3s ease;
 }
@@ -77,34 +142,35 @@
   color: var(--hint-text-color);
 }
 
-/* ─── The readout ───────────────────────────────────────────────────────────
-   A touched petal IS a sentence, so the scene has to be able to show which one.
-   Top-left, opposite the hint, and it wraps at a measured width rather than a
-   guessed one: 34em is a little under the 80-character line the type scale
-   assumes, which at this size keeps the longest sentence in the corpus (358
-   words) from becoming a wall. It scrolls inside itself instead. */
-.psyshell-readout {
+/* ─── The ordinal ───────────────────────────────────────────────────────────
+   The only plain text the scene renders. Not a readout and deliberately not a
+   panel: a box in the corner makes the visitor someone reading a database,
+   and what this scene shows is a system running. The sentence itself goes up
+   the strand in the Union's notation instead.
+
+   Set in Electrolize rather than Arapey — the UI face, not the writing face —
+   because this is an instrument reading, not a piece of text. The source
+   attribution is gone with the panel: "SELECTED WORKS" is a citation, and the
+   site's posture is read the writing on its own. */
+.psyshell-ordinal {
   position: fixed; z-index: 311;
-  top: 4.5rem; left: 1.2rem; right: 1.2rem;
-  max-height: 34vh; overflow-y: auto;
-  padding: 0.7rem 0.9rem;
-  background: rgba(3, 20, 14, 0.72);
-  border: 1px solid rgba(150, 220, 190, 0.22);
-  border-radius: 4px;
-  font-family: 'Arapey', serif;
-  color: rgba(228, 244, 236, 0.9);
+  /* Bottom-right. Top-left was the first placement and it rendered underneath
+     #fullscreen-toggle, which is a fixed circle in that corner — found by
+     looking at a screenshot, not by reading the stylesheet, because nothing in
+     this file mentions that button. The four corners are spoken for: the hint
+     is top-right, the sound toggle bottom-left, the fullscreen control
+     top-left, and the title block bottom-centre. This sits right of the title
+     and below the hint. */
+  bottom: 5.7rem; right: 1.2rem; margin: 0;
+  font-family: 'Electrolize', sans-serif;
+  font-size: 0.68rem; letter-spacing: 0.22em;
+  color: rgba(168, 214, 192, 0.72);
+  pointer-events: none;
   transition: opacity 0.25s ease;
 
 	@media (min-width: 601px) {
-		right: auto; width: 34em; max-width: 42vw;
+		bottom: 3.2rem; right: 1.5rem; font-size: 0.74rem;
 	}
-}
-.psyshell-readout-text {
-  margin: 0; font-size: 0.9rem; line-height: 1.6;
-}
-.psyshell-readout-source {
-  margin: 0.5rem 0 0; font-size: 0.66rem; letter-spacing: 0.14em;
-  text-transform: uppercase; color: rgba(150, 200, 178, 0.72);
 }
 
 /* Same bottom-left placement and behaviour as every other scene's sound
@@ -146,5 +212,5 @@
    itself: a visitor who asked for no motion still gets the flower, still turns
    it by dragging, and still lights a petal by touching it. */
 @media (prefers-reduced-motion: reduce) {
-  .psyshell-title, .psyshell-hint, .psyshell-readout { transition: none; }
+  .psyshell-title, .psyshell-hint, .psyshell-ordinal { transition: none; }
 }

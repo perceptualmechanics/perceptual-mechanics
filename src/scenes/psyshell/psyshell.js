@@ -7,7 +7,7 @@ import {
 } from '../../utils/sceneKit.js';
 import './psyshell.css';
 import psyshellHtml from './psyshell.html?raw';
-import { BANDS, PETALS, PETAL_COUNT, TEXTS } from './psyshell.text.js';
+import { BANDS, PETALS, PETAL_COUNT, TEXTS, baseEDigits } from './psyshell.text.js';
 
 // ─── Psyshell — flower magic ────────────────────────────────────────────────
 //
@@ -130,6 +130,40 @@ const PROP_SHELL = 24;        // petals — the half-width of the travelling fro
 const PROP_REACH = 780;       // petals — the e-folding distance of the amplitude
 const PROP_LIFE = 3.4;        // seconds
 const MAX_DISTURBANCES = 5;
+
+// ─── The transmission ───────────────────────────────────────────────────────
+// A struck filament pulses its own ordinal along its length, in base e. See
+// psyshell.text.js for why base e and where the radix-economy argument comes
+// from; this is how it is rendered.
+//
+// **The digit rate is the propagation rate, so the transmission and the
+// disturbance are the same event rather than two effects that happen
+// together.** One digit lasts the time the travelling front takes to cross one
+// shell width — PROP_SHELL / PROP_SPEED_FWD, which is 55.8ms. Nothing here is
+// hand-tuned to look right; change the propagation and the transmission
+// changes with it.
+const DIGIT_TIME = PROP_SHELL / PROP_SPEED_FWD; // seconds
+// A digit d occupies τ·e^(d−1), so the three durations stand in the ratio
+// 1 : e : e² and never land on a grid. The base is both the radix and the time
+// base, which is the whole of the mapping — measure a segment, divide by τ,
+// take the natural log, add one.
+const digitDuration = d => DIGIT_TIME * Math.exp(d - 1);
+// Segments alternate lit and dark by place, most significant first, so the
+// boundaries ARE the digit boundaries and nothing in the train is filler.
+//
+// How fast the pattern runs outward along the strand. This one is a legibility
+// choice rather than a derivation, and it is stated as one: at this speed a
+// digit of average length occupies about a fifth of the ray, so several digits
+// of the train are on the strand at once and it reads as something travelling
+// rather than as a filament blinking.
+const WAVE_SPEED = 0.20 / DIGIT_TIME;  // ray-lengths per second
+const MAX_DIGITS = 16;                 // an ordinal of 1350 needs 11
+// The transmitting strand has to be the brightest thing on screen or the event
+// is invisible: it is one ray among 3,221, drawn additively over a flower whose
+// centre already clips to white. Set by rendering a strike into the dense
+// middle and into the sparse skirt and finding a value legible in both.
+const TRANSMIT_GAIN = 3.2;
+
 
 // ─── Audio ──────────────────────────────────────────────────────────────────
 // One soft strike at the touched petal, and nothing else. Outside chimes per
@@ -306,7 +340,13 @@ export function createPsyshell(container, { preview = false } = {}) {
     flower.instanceColor.needsUpdate = true;
   }
   writeColors();
-  scene.add(flower);
+
+  // Everything the flower is made of hangs off one group, so the lift below
+  // moves the object and not the camera. The camera has to stay aimed where it
+  // is: it is what the drag and the zoom operate on.
+  const bloom = new THREE.Group();
+  scene.add(bloom);
+  bloom.add(flower);
 
   // The dense centre. Small, warm and NOT white — the one place in the flower
   // that is not the corpus, so it is the one place with its own colour.
@@ -318,7 +358,163 @@ export function createPsyshell(container, { preview = false } = {}) {
     color: CORE_COLOR, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0.16,
   });
   const core = new THREE.Mesh(coreGeo, coreMat);
-  scene.add(core);
+  bloom.add(core);
+
+  // ─── The lift ─────────────────────────────────────────────────────────────
+  // 4.6.1. The title block sits bottom-centre in every scene on this site, and
+  // this flower filled the middle of the frame, so "Psyshell / flower magic"
+  // was rendering inside the rays.
+  //
+  // **Measured before deciding, and the premise it was raised on did not
+  // hold.** With the type hidden and the band the title occupies sampled
+  // directly, mean luminance behind the lockup reads: Beamline 0.311, Psyshell
+  // 0.121, Butterfly 0.058, Apollo 0.056, Outside 0.032, Harmonics 0.011. So
+  // Psyshell was the second-brightest rather than the only offender, and
+  // **Beamline is worse** — 2.6:1 against the title colour, under WCAG AA for
+  // large text, where Psyshell cleared it at 5.4:1. Nor was this the noisiest:
+  // Butterfly's local gradient is nearly five times higher.
+  //
+  // The lift ships anyway, because being twice the family's brightness behind
+  // the type is a fair reason on its own — but it is an aesthetic correction
+  // and not a contrast failure, and saying which it is matters. Beamline's is
+  // the real defect and is logged separately rather than fixed here.
+  //
+  // Full mode only: a preview tile has no title over it, and lifting inside the
+  // circular crop would put the skirt back outside it, which is the bug 4.6.0
+  // fixed.
+  const FLOWER_LIFT = preview ? 0 : 0.34;
+  bloom.position.y = FLOWER_LIFT;
+
+  // ─── Transmitters ─────────────────────────────────────────────────────────
+  // One short-lived object per struck filament, drawn over that filament's own
+  // ray with the digit train running outward along it. A separate mesh rather
+  // than a mode of the main InstancedMesh because instanceColor is one colour
+  // per petal and this needs a pattern ALONG the strand — the value at position
+  // x at time t is the digit that left the root at t − x/WAVE_SPEED, which is a
+  // travelling wave and cannot be expressed as a single per-instance number.
+  //
+  // At most MAX_DISTURBANCES of these exist, so the cost is five draw calls of
+  // 28 triangles. Only the struck filament transmits; its neighbours get the
+  // disturbance and no notation, because the sentence belongs to one petal.
+  const TRANSMIT_VERT = `
+    varying float vX;
+    void main() {
+      vX = position.x;
+      gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    }`;
+  const TRANSMIT_FRAG = `
+    uniform float uBounds[${MAX_DIGITS}];
+    uniform int uCount;
+    uniform float uTime;
+    uniform float uSpeed;
+    uniform vec3 uColor;
+    uniform float uGain;
+    varying float vX;
+    void main() {
+      // Emitted at the root, arriving here later — "amplification around the
+      // root, to properly sling it forward" is the whole geometry of this line.
+      float tp = uTime - vX / uSpeed;
+      float level = 0.0;
+      if (tp >= 0.0) {
+        for (int i = 0; i < ${MAX_DIGITS}; i++) {
+          if (i >= uCount) break;
+          if (tp < uBounds[i]) {
+            // Segments alternate lit and dark by place. The boundaries are the
+            // digit boundaries; there is no separator carrying no information.
+            level = mod(float(i), 2.0) < 0.5 ? 1.0 : 0.0;
+            break;
+          }
+        }
+      }
+      // The strand still reads as a fibre while it transmits: the geometry's
+      // own base-to-tip ramp is kept, softened so the near end is not dark.
+      float ramp = mix(0.4, 1.0, pow(vX, 1.6));
+      gl_FragColor = vec4(uColor * level * ramp * uGain * ${TRANSMIT_GAIN.toFixed(2)}, 1.0);
+    }`;
+
+  const transmitters = [];
+  for (let i = 0; i < MAX_DISTURBANCES; i++) {
+    const mat = new THREE.ShaderMaterial({
+      uniforms: {
+        uBounds: { value: new Float32Array(MAX_DIGITS) },
+        uCount: { value: 0 },
+        uTime: { value: 0 },
+        uSpeed: { value: WAVE_SPEED },
+        uColor: { value: new THREE.Color(0xdffff0) },
+        uGain: { value: 1.0 },
+      },
+      vertexShader: TRANSMIT_VERT,
+      fragmentShader: TRANSMIT_FRAG,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+      // depthTest OFF because a transmitter sits on exactly the same geometry
+      // as the petal it overlays: its fragments are coplanar with fragments
+      // already in the depth buffer, and a LESS test rejects them.
+      //
+      // **Said plainly because it would otherwise read as a fix: this was
+      // changed while chasing a bug and did not change the measurement.** The
+      // train really was running the whole way; the harness watching it had an
+      // invalid time axis. The line stays because coplanar additive overlay
+      // should not depth-test either way, not because it repaired anything.
+      depthTest: false,
+      transparent: true,
+    });
+    const mesh = new THREE.Mesh(rayGeo, mat);
+    mesh.renderOrder = 10;
+    mesh.frustumCulled = false;
+    mesh.visible = false;
+    bloom.add(mesh);
+    transmitters.push({ mesh, mat, active: false, t: 0, total: 0 });
+  }
+
+  // Build the cumulative boundary list for one ordinal and arm a transmitter on
+  // the struck petal's own ray.
+  const petalMatrix = new THREE.Matrix4();
+  function armTransmitter(index) {
+    const slot = transmitters.find(t => !t.active) || transmitters[0];
+    const ordinal = PETALS.orderInBand[index] + 1;
+    const { digits } = baseEDigits(ordinal);
+    const bounds = slot.mat.uniforms.uBounds.value;
+    let acc = 0;
+    const n = Math.min(digits.length, MAX_DIGITS);
+    for (let i = 0; i < n; i++) { acc += digitDuration(digits[i]); bounds[i] = acc; }
+    for (let i = n; i < MAX_DIGITS; i++) bounds[i] = acc;
+    slot.mat.uniforms.uCount.value = n;
+    slot.mat.uniforms.uTime.value = 0;
+    slot.mat.uniforms.uColor.value.copy(bandColor[PETALS.band[index]]);
+    // Under reduced motion nothing travels and nothing flashes: the strand
+    // simply lights for the length of the train and fades. The object is not
+    // stilled — it is still struck, still lit, still its band's colour — but a
+    // train of hard-edged flashes IS motion, and a visitor who asked for none
+    // should not be given the one thing in the scene that strobes.
+    slot.mat.uniforms.uSpeed.value = reduced ? 1e6 : WAVE_SPEED;
+    slot.mat.uniforms.uCount.value = reduced ? 1 : n;
+    if (reduced) bounds[0] = acc;
+    slot.total = acc + (reduced ? 0 : 1 / WAVE_SPEED);
+    slot.t = 0;
+    slot.active = true;
+    // Decomposed rather than copied into `mesh.matrix`. Assigning `.matrix`
+    // directly does not set `matrixWorldNeedsUpdate`, so the object keeps
+    // whatever world matrix it last had — the transmitter armed, ran its whole
+    // train, and drew nothing where the struck petal was. Decomposing leaves
+    // matrixAutoUpdate alone and lets the renderer compose it the normal way.
+    flower.getMatrixAt(index, petalMatrix);
+    petalMatrix.decompose(slot.mesh.position, slot.mesh.quaternion, slot.mesh.scale);
+    slot.mesh.visible = true;
+  }
+
+  function advanceTransmitters(dt) {
+    for (const s of transmitters) {
+      if (!s.active) continue;
+      s.t += dt;
+      if (s.t >= s.total) { s.active = false; s.mesh.visible = false; continue; }
+      s.mat.uniforms.uTime.value = s.t;
+      // A gentle fade over the last quarter, so the train ends rather than
+      // being cut off mid-strand.
+      const left = 1 - s.t / s.total;
+      s.mat.uniforms.uGain.value = left > 0.25 ? 1 : left / 0.25;
+    }
+  }
 
   // ─── Sound ────────────────────────────────────────────────────────────────
   let audioCtx = null, muteGain = null, busGain = null;
@@ -386,6 +582,7 @@ export function createPsyshell(container, { preview = false } = {}) {
   function disturb(index) {
     disturbances.push({ origin: index, t: 0 });
     if (disturbances.length > MAX_DISTURBANCES) disturbances.shift();
+    armTransmitter(index);
     strike(index);
   }
 
@@ -437,20 +634,24 @@ export function createPsyshell(container, { preview = false } = {}) {
   }
 
   // ─── Chrome ───────────────────────────────────────────────────────────────
-  let titleEl = null, hintEl = null, readoutEl = null, readoutTextEl = null,
-    readoutSourceEl = null, jumpList = null, soundToggle = null;
+  let titleEl = null, hintEl = null, ordinalEl = null, jumpList = null, soundToggle = null;
 
   const srSay = msg => { if (srLiveEl) srLiveEl.textContent = msg; };
 
+  // The ordinal is the one legible thing, and it is the same number the strand
+  // is transmitting — so the notation is checkable rather than decorative. The
+  // source attribution is deliberately absent: a citation line turns the scene
+  // into a database view, and the site's posture is read the writing on its
+  // own. The live region keeps all of it, because a visitor who cannot see the
+  // pulse must still get the content.
   function showPetal(index) {
     const band = BANDS[PETALS.band[index]];
-    if (readoutEl) {
-      readoutEl.hidden = false;
-      readoutTextEl.textContent = TEXTS[index];
-      readoutSourceEl.textContent =
-        `${band.label} · sentence ${PETALS.orderInBand[index] + 1} of ${band.count}`;
+    const n = PETALS.orderInBand[index] + 1;
+    if (ordinalEl) {
+      ordinalEl.hidden = false;
+      ordinalEl.textContent = `${n} / ${band.count}`;
     }
-    srSay(`${band.label}, sentence ${PETALS.orderInBand[index] + 1} of ${band.count}. ${TEXTS[index]}`);
+    srSay(`${band.label}, sentence ${n} of ${band.count}. ${TEXTS[index]}`);
   }
 
   const raycaster = new THREE.Raycaster();
@@ -460,7 +661,7 @@ export function createPsyshell(container, { preview = false } = {}) {
 
   function onClick(ev) {
     if (touchGuard?.consume()) return;
-    if (ev.target.closest?.('.pm-jumplist, .psyshell-sound-toggle, .psyshell-readout')) return;
+    if (ev.target.closest?.('.pm-jumplist, .psyshell-sound-toggle')) return;
     const rect = renderer.domElement.getBoundingClientRect();
     if (!rect.width || !rect.height) return;
     ndc.x = ((ev.clientX - rect.left) / rect.width) * 2 - 1;
@@ -477,13 +678,11 @@ export function createPsyshell(container, { preview = false } = {}) {
     const frag = parseHTML(psyshellHtml);
     titleEl = frag.querySelector('.psyshell-title');
     hintEl = frag.querySelector('.psyshell-hint');
-    readoutEl = frag.querySelector('.psyshell-readout');
-    readoutTextEl = frag.querySelector('.psyshell-readout-text');
-    readoutSourceEl = frag.querySelector('.psyshell-readout-source');
+    ordinalEl = frag.querySelector('.psyshell-ordinal');
     soundToggleEl = frag.querySelector('.psyshell-sound-toggle');
     soundLabelEl = frag.querySelector('.psyshell-sound-label');
     srLiveEl = frag.querySelector('.psyshell-sr-live');
-    document.body.append(titleEl, hintEl, readoutEl, soundToggleEl, srLiveEl);
+    document.body.append(titleEl, hintEl, ordinalEl, soundToggleEl, srLiveEl);
 
     soundToggle = bindPersistedSoundToggle(container, soundToggleEl, setSoundEnabled, 'psyshell');
 
@@ -533,20 +732,20 @@ export function createPsyshell(container, { preview = false } = {}) {
   }
 
   // ─── Layout ───────────────────────────────────────────────────────────────
-  // The readout is the one element whose room depends on something else's
-  // size: it sits under the hint, and the hint's height is whatever the font
-  // and the viewport make it. Measured, never assumed — the 4.4.2 lesson,
-  // which was two constants taken from a desktop window and never re-derived.
+  // The ordinal is the one element whose room depends on something else's size:
+  // it sits under the hint on narrow viewports, where the two would otherwise
+  // share a line. Measured, never assumed — the 4.4.2 lesson, which was two
+  // constants taken from a desktop window and never re-derived.
   function relayout() {
-    if (preview || !readoutEl || !hintEl) return;
-    const hintBox = hintEl.getBoundingClientRect();
-    const top = Math.max(hintBox.bottom + 12, 64);
-    readoutEl.style.top = `${Math.round(top)}px`;
-    // And what is left below it, so a long sentence scrolls inside the box
-    // rather than running under the title block.
-    const titleBox = titleEl ? titleEl.getBoundingClientRect() : null;
-    const floor = titleBox ? titleBox.top - 16 : window.innerHeight - 96;
-    readoutEl.style.maxHeight = `${Math.max(120, Math.round(floor - top))}px`;
+    if (preview || !ordinalEl || !titleEl) return;
+    // The ordinal sits right of the title block and must not ride over it when
+    // the title wraps at a narrow width. Measured against the title's actual
+    // box rather than assumed from a breakpoint — the 4.4.2 lesson, which was
+    // two constants taken from a desktop window and never re-derived.
+    const titleBox = titleEl.getBoundingClientRect();
+    const ordBox = ordinalEl.getBoundingClientRect();
+    const overlaps = ordBox.left < titleBox.right + 10 && ordBox.top < titleBox.bottom;
+    ordinalEl.style.bottom = overlaps ? `${Math.round(window.innerHeight - titleBox.top + 10)}px` : '';
   }
 
   resizeCtl = bindGuardedResize(container, (cw, ch) => {
@@ -578,6 +777,7 @@ export function createPsyshell(container, { preview = false } = {}) {
       camAz += IDLE_TURN * 1.6 * dt;
       placeCamera();
     }
+    advanceTransmitters(dt);
     if (disturbances.length) {
       advance(dt);
       writeColors();
@@ -626,7 +826,7 @@ export function createPsyshell(container, { preview = false } = {}) {
       soundToggle?.dispose();
       jumpList?.dispose();
       if (!preview) container.removeEventListener('click', onClick);
-      titleEl?.remove(); hintEl?.remove(); readoutEl?.remove();
+      titleEl?.remove(); hintEl?.remove(); ordinalEl?.remove();
       soundToggleEl?.remove(); srLiveEl?.remove();
       // Close AND null, in that order. The missing null is why Outside's
       // version of the stale-listener bug presented as an unclearable
@@ -641,6 +841,10 @@ export function createPsyshell(container, { preview = false } = {}) {
       soundEnabled = false;
       rayGeo.dispose();
       rayMat.dispose();
+      // Five ShaderMaterials, one per transmitter slot. They share rayGeo, which
+      // is disposed once above rather than five more times.
+      for (const t of transmitters) { t.mesh.visible = false; t.mat.dispose(); }
+      transmitters.length = 0;
       coreGeo.dispose();
       coreMat.dispose();
       flower.dispose();

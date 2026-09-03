@@ -160,6 +160,76 @@ export const PETALS = {
   orderInBand: Uint16Array.from(orderInBand),
 };
 
+// ─── The notation: base e ───────────────────────────────────────────────────
+// A struck filament transmits its own ordinal along its length, in base e.
+// Legible as transmission, never readable as text — which is the Union's
+// relationship to everything. English travelling up the strand would mean the
+// visitor is being addressed, and they are not.
+//
+// **Base e is not a gag.** Under the standard radix-economy cost model — the
+// cost of representing numbers is the radix times the number of digits, r·w —
+// the optimum is e, and 3 is the nearest integer and therefore almost always
+// the most economical integer radix. Ternary computers were built on exactly
+// this reasoning: the Setun, built at Moscow State University by Brusentsov's
+// group, about fifty machines between 1958 and 1965, eighteen trits.
+// (Brian Hayes, "Third Base", American Scientist, 2001.) Binary is a
+// compromise forced by transistors, and an entity optimising representation
+// rather than engineering uses the actual optimum rather than the nearest
+// buildable one.
+//
+// **State the cost model with the claim.** "Base e is the most efficient
+// radix" unqualified is exactly the kind of true-sounding sentence that gets
+// garbled on restatement — it is efficient under r·w, and other cost models
+// give other answers.
+//
+// The joke underneath, which does not go on the page: the most efficient
+// possible notation is unreadable, and Setun spent its own radix advantage by
+// storing each trit in two magnetic cores. That is history rather than
+// invention, and it is the Union in one line.
+//
+// Two properties of a non-integer radix earn their place here beyond the
+// argument:
+//   - **Representations are not unique.** The digit set {0,1,2} is larger than
+//     e, so a value generally has several valid encodings and none is
+//     canonical. No canon in a number system.
+//   - **Nothing lands on a grid.** Powers of e are irrational, so the digit
+//     durations never line up and the train has no visible beat — which is
+//     what makes it unlike every data-transmission cliché, all of which are
+//     square waves.
+export const RADIX = Math.E;
+export const DIGIT_SET = 3;          // {0, 1, 2}
+export const FRACTIONAL_PLACES = 3;  // where a non-terminating expansion is cut
+
+// Greedy expansion, most significant place first. Returns
+// { digits: [d], highest: K } for value = Σ d_k · e^k, k from K down to
+// −FRACTIONAL_PLACES. Greedy is a choice and not the only valid one — see the
+// non-uniqueness note above — so it is named rather than assumed.
+export function baseEDigits(value) {
+  if (!(value > 0)) return { digits: [0], highest: 0 };
+  let highest = Math.floor(Math.log(value) / Math.log(RADIX));
+  if (Math.pow(RADIX, highest + 1) <= value) highest += 1;
+  const digits = [];
+  let rem = value;
+  for (let k = highest; k >= -FRACTIONAL_PLACES; k--) {
+    const place = Math.pow(RADIX, k);
+    let d = Math.floor(rem / place);
+    if (d > DIGIT_SET - 1) d = DIGIT_SET - 1;
+    if (d < 0) d = 0;
+    digits.push(d);
+    rem -= d * place;
+  }
+  return { digits, highest };
+}
+
+// The value a decoder recovers from those digits — the round trip the /text/
+// page prints, and the reason the truncation error is stated rather than
+// hidden.
+export function decodeBaseE(digits, highest) {
+  let v = 0;
+  for (let i = 0; i < digits.length; i++) v += digits[i] * Math.pow(RADIX, highest - i);
+  return v;
+}
+
 // ─── The one assertion this file makes about itself ─────────────────────────
 // Petal count must equal sentence count exactly. An off-by-one here is
 // invisible and permanent: the flower would still look like a flower, the

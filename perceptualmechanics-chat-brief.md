@@ -101,7 +101,7 @@ Counts read from the live content modules.
 | **Harmonics** | Resonant connections across every other scene's content, as a force-directed graph with Kuramoto phase-sync and sonification | 64 approved resonances |
 | **Outside** | A generated lotus (Gielis superformula) mapping a five-part cosmology — Power Sources as petals, Folk Origins, Magi/Psi at centre | 5 power sources |
 | **Apollo** | A solar spectrum you can play, in two modes, with an idle state. **Sunlight** puts the sun’s own composition in the light and lets its lines sound on their own — the only scene here that plays untouched. A mixture can be shared as a link (`#apollo/ca95,h85,na80`). Ten elements on faders; **absorption** puts their lines into a band of starlight as gaps you sound by clicking, **emission** darkens the band and stands the same lines in it bright, struck rather than sustained | 10 elements, 218 lines across all ten (iron 50, sodium 6) |
-| **Psyshell** | *flower magic.* A white fibre-optic chrysanthemum made of the site's own writing: one petal per sentence, angle around the axis is position in reading order, petal length is sentence length, and the band is the scene it came from. Touching a petal reads it out and sends a disturbance along reading order — asymmetric, further toward later sentences than earlier ones | 3,221 sentences across 9 scenes, 34,790 words |
+| **Psyshell** | *flower magic.* A white fibre-optic chrysanthemum made of the site's own writing: one petal per sentence, angle around the axis is position in reading order, petal length is sentence length, and the band is the scene it came from. Touching a filament makes it **transmit its own ordinal along its length in base e** — unequal flashes, legible as transmission and never readable as text — and sends a disturbance along reading order, asymmetric, further toward later sentences than earlier ones. The only plain text is the ordinal | 3,221 sentences across 9 scenes, 34,790 words |
 
 Earlier scenes — leaf, egg, prism, cycle, and some older constellation and
 ground-glimpse mechanics — were built, shipped, and retired. The eleven above
@@ -216,6 +216,15 @@ on both sides of the check. Prose is not a namespace.
 Everything below is deployed and confirmed live. Four numbered releases landed
 on 2026-09-02, and they divide cleanly into one big one and the ones that came
 out of looking closely at what it left behind.
+
+**v4.6.1 — the panel goes, the filapixel transmits.** Psyshell's sentence
+readout is replaced by the strand pulsing its own ordinal in **base e** —
+optimal under the radix-economy cost model r·w, which is stated wherever the
+claim is because a bare "most efficient radix" garbles on restatement. Digit
+durations are τ·e^(d−1) with τ derived from the propagation's own front speed,
+so the transmission and the disturbance are one event. The title lockup now
+follows the site's family (caps, italic subhead, the shared tracking property
+and the negative-margin trailing-gap fix) after diverging on four counts.
 
 **v4.6.0 — Psyshell, the twelfth scene.** A white chrysanthemum whose 3,221
 petals are the site's 3,221 sentences: angle is reading order, length is

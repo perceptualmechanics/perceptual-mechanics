@@ -587,6 +587,193 @@ described are unchanged.)
   worth trimming, orrery.js's texture generators and first-person rig are the
   two most self-contained chunks to split out first.
 
+## 4.6.1 (2026-09-03)
+
+Psyshell's readout panel replaced by a transmission, the notation it transmits
+in, and the title lockup put back into the site's own family.
+
+### The panel goes. The filapixel transmits.
+
+A text box in the corner made the visitor someone reading a database. What the
+scene shows now is a system running: a struck filament pulses its own ordinal
+along its own length, in unequal flashes, and **it is legible as transmission
+and never readable as text.** That is not a limitation worked around — English
+travelling up the strand would mean the visitor was being addressed, and they
+are not.
+
+Rejected on the way, recorded so they do not come back: a text panel (a database
+viewer); the sentence drifting outward in screen space (readable, addresses the
+visitor, and a 358-word sentence is unmanageable); binary pulses (reads as
+computer, and the Union are a bureaucracy of dead informational objects rather
+than a machine).
+
+### Base e, with the cost model attached
+
+Not a gag. Under the standard radix-economy model — the cost of representing a
+number is the radix times the number of digits, r·w — the optimum is e, and 3
+being the nearest integer is almost always the most economical integer radix.
+Ternary machines were built on exactly that reasoning: the Setun, Moscow State
+University, about fifty machines between 1958 and 1965, eighteen trits. Binary
+is a compromise forced by transistors, and the Union has no transistors.
+
+**The cost model is stated wherever the claim is**, in `psyshell.text.js` and on
+`/text/psyshell/`, because "base e is the most efficient radix" unqualified is
+exactly the kind of true-sounding sentence that garbles on restatement. Source:
+Brian Hayes, "Third Base", *American Scientist*, 2001 — which also carries the
+joke that does not go on the page: Setun spent its own radix advantage storing
+each trit in two magnetic cores. The most efficient possible notation,
+implemented wastefully. That is history, not invention.
+
+Two properties of a non-integer radix earn their place beyond the argument.
+**Representations are not unique** — the digit set {0,1,2} is larger than e, so
+a value has several valid encodings and none is canonical. And **nothing lands
+on a grid**: powers of e are irrational, so the flashes never line up.
+
+### The scheme, and how to check it
+
+A digit *d* is one flash lasting τ·e^(d−1), so the three durations stand in the
+ratio 1 : e : e². Segments alternate lit and dark by place, most significant
+first, so the boundaries are the digit boundaries and **nothing in the train is
+filler**. Decode by measuring a segment, dividing by τ, taking the natural log
+and adding one.
+
+**τ is derived, not tuned.** It is `PROP_SHELL / PROP_SPEED_FWD` = 55.8ms — the
+time the disturbance's own travelling front takes to cross one shell width — so
+the transmission and the disturbance are the same event rather than two effects
+that coincide. Change the propagation and the transmission changes with it. The
+one chosen number is `WAVE_SPEED`, and it is stated as a legibility choice: at
+0.20/τ a digit of average length occupies about a fifth of the strand, so
+several digits are on it at once and it reads as something travelling.
+
+The value transmitted is the sentence's ordinal in its band — **the same number
+the one visible piece of text displays**, so the notation is checkable rather
+than decorative.
+
+Worked, and this is the decode the brief asked for. Orbiter's longest sentence
+is ordinal 94:
+
+    94 = 1·e⁴ + 1·e³ + 2·e² + 1·e¹ + 1·e⁰ + 2·e⁻¹ + 1·e⁻³   →   digits 11211201
+
+Durations at τ = 55.81ms: 55.8, 55.8, 151.7, 55.8, 55.8, 151.7, 20.5, 55.8 ms.
+Cumulative: 0.0558, 0.1116, 0.2633, 0.3191, 0.3749, 0.5266, 0.5471, 0.6029.
+**The boundaries read out of the running shader's uniforms were 0.0558, 0.1116,
+0.2633, 0.3192, 0.3750, 0.5267, 0.5472, 0.6030** — the hand computation to four
+decimal places. Recovered value 93.966 against 94; the 0.034 is the truncation
+after three fractional places, and it is printed on the `/text/` page rather
+than hidden.
+
+### What survives in plain text
+
+The ordinal, quiet, bottom-right: `94 / 115`. It is what makes a petal's angle
+mean position in reading order — without it the flower is a pretty object. The
+source attribution is gone with the panel: "SELECTED WORKS" is a citation, and
+the posture is read the writing on its own. **`sr-live` keeps everything**,
+including the sentence and its source, because the screen-reader path is
+navigation and not decoration.
+
+### Three real defects, and one fix that fixed nothing
+
+**The transmitter never reached the screen where the petal was.** It was
+positioned by assigning `mesh.matrix` directly with `matrixAutoUpdate = false`,
+which does not set `matrixWorldNeedsUpdate` — so the object kept whatever world
+matrix it last had. It armed, ran its whole train, and drew in the wrong place.
+Decomposing into position/quaternion/scale fixes it and leaves the renderer
+composing the matrix the normal way.
+
+**The ordinal rendered underneath `#fullscreen-toggle`.** Top-left is a fixed
+circle this scene's stylesheet does not mention, so nothing in the file said so.
+Found by looking at a screenshot. All four corners are spoken for — hint
+top-right, sound toggle bottom-left, fullscreen top-left, title bottom-centre —
+so it moved to bottom-right, right of the title and below the hint.
+
+**And one change kept although it repaired nothing.** `depthTest: false` on the
+transmitter was tried as a hypothesis — its fragments really are coplanar with
+the petal it overlays, which really would fail a LESS test — and the measurement
+did not move. It stays because coplanar additive overlay should not depth-test,
+and the comment says outright that it was not the cause. A comment claiming a
+fix it did not make is this project's own recurring failure with the sign
+flipped.
+
+### The third invalid harness in three releases
+
+The bug was not in the scene. A frame-difference probe sampled the page every
+90ms and reported the pulse "stopping after 0.2 seconds" — and `page.screenshot()`
+under swiftshader takes far longer than 90ms, so the frames arrived at times the
+harness did not know. **Its time axis was fiction while the shader's own uTime
+was the truth.** Logging the uniform alongside the wall clock is what showed it:
+uTime read 0.05, 0.40, 0.75 at nominal 0.09, 0.18, 0.27.
+
+Replaced with a probe that **commands** uTime and renders one frame per
+commanded value, so the time axis is exact by construction and screenshot
+latency cannot enter it. Under that probe the strand is lit at every value from
+0.02 to 0.80, peaking at 733 changed pixels at 0.28, and the lit run moves: at
+0.28 it is inner-to-middle with a dark segment in it, at 0.48 only two short
+segments remain near the tip. Looked at as well as measured.
+
+Frame-rate independence with the pulse running: 0.5s of elapsed time at 30, 60
+and 144fps gives transmitter uTime 0.5 and propagation peak petal 2970 at
+amplitude 0.650443 — identical at all three, to six decimals. Irrational digit
+durations are exactly what a per-frame constant would break, so this is the
+check that matters most here.
+
+One audio context per visit, closed on leave, exactly one more on return.
+Unchanged.
+
+### The lockup, and a premise that did not hold
+
+The brief's reason for lifting the flower was that every other scene leaves the
+lower third clear. Measured — the type hidden, the band the title occupies
+sampled directly — mean luminance behind the lockup reads:
+
+| scene | mean L | local gradient | contrast |
+|---|---:|---:|---:|
+| beamline | 0.311 | 0.0086 | 2.6:1 |
+| psyshell | 0.121 | 0.0079 | 5.4:1 |
+| butterfly | 0.058 | 0.0378 | 8.5:1 |
+| apollo | 0.056 | 0.0078 | 8.7:1 |
+| outside | 0.032 | 0.0002 | 11.3:1 |
+| harmonics | 0.011 | 0.0012 | 15.1:1 |
+
+**Beamline is worse than Psyshell on both counts** — 2.6× brighter behind its
+title and *below* WCAG AA for large text at 2.6:1, where Psyshell cleared it at
+5.4:1. And Psyshell is not the noisiest either: Butterfly's local gradient is
+nearly five times higher. So the premise is wrong twice, and Beamline is a real
+defect nobody had logged. It is in the project brief's open items rather than
+fixed here.
+
+The lift ships anyway, because being twice the family's brightness behind the
+type is a fair reason on its own — but it is an aesthetic correction and not a
+contrast failure, and which one it is matters. After it: mean L 0.121 → 0.111,
+contrast 5.4 → 5.7:1, and **local gradient 0.0079 → 0.0007**, which is the real
+change. The band is now smooth rather than crossed by rays.
+
+### The title lockup follows the family
+
+Scott's actual point, once he said it plainly: the title should be all caps with
+an italic subhead, like the rest of the site. Checked, and the convention is
+exact — Apollo, Outside, Harmonics and Beamline all set `text-transform:
+uppercase`, `clamp(0.85rem, 2.5vw, 1.6rem)`, a `--tracking` custom property that
+scales with the viewport, and `margin-right: calc(-1 * var(--tracking))` to
+cancel letter-spacing's trailing gap. Orbiter and Beamline both set their
+subheads italic, which is why a real italic Arapey face is self-hosted rather
+than synthesized.
+
+This file had diverged on four counts and every one was an invention rather than
+a decision: sentence case, a fixed 1.5rem, a fixed 0.22em of tracking, and
+`text-indent` instead of the negative margin. **The last is the one that
+mattered beyond taste** — an indent shifts text inside its box and a negative
+margin shrinks the box, so only the second lets the flex row centre the line by
+its real ink. They agree at one width and disagree at every other, which is the
+same shape as the constants 4.4.2 had to remove. All four now match, so a change
+to the family reaches this scene too.
+
+### Still open
+
+The hot patch on the far side of the dome still wants a real GPU rather than
+swiftshader. The 200px tile still reads as a dandelion clock rather than a
+chrysanthemum. **The tile clipping its own skirt was fixed in 4.6.0** and is
+carried in the brief's open list by mistake — `LOOK_Y` at `psyshell.js:210`.
+
 ## 4.6.0 (2026-09-03)
 
 **Psyshell, the twelfth scene.** A white chrysanthemum whose 3,221 petals are

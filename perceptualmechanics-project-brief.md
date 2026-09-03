@@ -117,7 +117,14 @@ This is the durable house-rules file (created v3.9.16) — **read it first** bef
   build's own gate hashes the emitted one, and asserts that hash appears in the
   policy on the same response. In the same pass, CSP reporting was removed
   rather than completed — see Known open items.
-- **4.6.0 (current, 2026-09-03): Psyshell, the twelfth scene.** A white
+- **4.6.1 (current, 2026-09-03): Psyshell transmits instead of reporting.** The
+  sentence readout panel is gone; a struck filament pulses its own ordinal along
+  its length in base e, legible as transmission and never readable as text. The
+  radix argument carries its cost model wherever it appears. Digit timing is
+  derived from the propagation's front speed rather than tuned. The one piece of
+  plain text is the ordinal; `sr-live` still carries the whole sentence and its
+  source. Title lockup brought back into the site's family.
+- **4.6.0 (2026-09-03): Psyshell, the twelfth scene.** A white
   chrysanthemum made of the site's own writing — 3,221 sentences, one petal
   each, angle by reading order, length by sentence length, band by source scene,
   with a touch that sends an asymmetric disturbance along the text. Adds
@@ -257,6 +264,20 @@ have been self-hosted for a while and only a comment still mentioned
 `fonts.gstatic`; the Rollup chunk-size warning, fixed back in 3.10.0; the
 CSP, which now exists, enforces, and is down to `script-src 'self'` with
 no hashes at all.
+
+**Open as of 4.6.1 — Beamline's title sits below WCAG AA against its own
+scene.** Found while measuring Psyshell's lockup, not while looking at Beamline.
+With the type hidden and the band the title occupies sampled directly, mean
+luminance behind it reads 0.311 — 2.6× the next brightest scene — putting the
+title at **2.6:1**, under the 3:1 minimum for large text. Every other scene
+clears it (Psyshell 5.4:1 before its lift, 5.7:1 after; Outside 11.3:1;
+Harmonics 15.1:1). Not fixed in 4.6.1 because it is a different scene and the
+fix is a judgement about Beamline's rail, not a number to change.
+
+**Closed, so it is not re-opened: Psyshell's tile clipping its own skirt.**
+Fixed in 4.6.0 by `LOOK_Y`, in the same pass that found it. It appeared in the
+4.6.1 brief's open list, carried over from the 4.6.0 report where it was named
+as a defect that had been repaired.
 
 **Open as of 4.6.0 — the nav has one slot left and it is used.** Twelve icons
 give a 25.3 × 44px tap target at 320px, measured off the rendered button. That

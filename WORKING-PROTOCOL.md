@@ -282,6 +282,38 @@ protocol with no record of use is indistinguishable from one nobody reads.
   hook's message says "the repository" and checks whichever one it is pointed
   at, which is a message claiming a scope the check never had.
 
+- **2026-09-03, v4.6.1.** **The third invalid harness in three releases, and
+  this one was the whole bug.** A frame-difference probe sampled the page every
+  90ms and reported that the transmission "stops after 0.2 seconds."
+  `page.screenshot()` under swiftshader takes far longer than 90ms, so the
+  frames arrived at times the harness did not know: its time axis was fiction
+  while the shader's own clock was the truth. Logging the uniform next to the
+  wall clock is what showed it — nominal 0.09/0.18/0.27 against actual
+  0.05/0.40/0.75.
+
+  What makes this worth writing down is what happened in between: **I changed
+  the code twice against a measurement that could not see what it claimed to.**
+  A `depthTest: false` went in on a plausible theory (the overlay really is
+  coplanar with the petal), the measurement did not move, and it would have
+  shipped with a comment claiming a fix it never made. It is kept — coplanar
+  additive overlay should not depth-test — and the comment now says outright
+  that it was not the cause. *A comment claiming a scope the code never had* is
+  this file's own recurring entry; this is that with the sign flipped, and the
+  thing that stops it is saying which changes were repairs and which were
+  guesses.
+
+  The replacement probe **commands** the shader clock and renders one frame per
+  commanded value, so the time axis is exact by construction and screenshot
+  latency cannot enter it.
+
+  Also this pass: two claims in the brief were measured and did not hold. "Every
+  other scene leaves the lower third clear" — **Beamline is worse than Psyshell
+  and is below WCAG AA**, which turns a request to fix one scene into an unlogged
+  defect in another. And "the tile clips its own skirt, that one is a defect" —
+  fixed in 4.6.0, in the pass that found it. **A fixed item restated as open is
+  rule 2's punch-list failure**, arriving from a report rather than from a
+  document, which is a route the rule did not cover.
+
 - **2026-09-03, v4.6.0, Psyshell.** The assumptions block did the most work it
   has done in this project so far, and every finding came from running something
   rather than reading something.

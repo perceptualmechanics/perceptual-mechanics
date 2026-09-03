@@ -38,6 +38,7 @@ import {
   WORDS_MAX, CLAMPED_PETALS, PETAL_MIN_FRACTION,
 } from '../src/scenes/psyshell/psyshell.text.js';
 import { SENTENCE_SPLIT } from '../src/utils/corpus.js';
+import { baseEDigits, decodeBaseE, FRACTIONAL_PLACES } from '../src/scenes/psyshell/psyshell.text.js';
 import { SCENES, TEXT_EXEMPT } from '../src/scenes/registry.js';
 import { getOutboundLinks } from '../src/links.js';
 
@@ -580,6 +581,19 @@ ${elementList}
 // place holding a stale count, which for a scene whose entire subject is a
 // count is the only arrangement worth having.
 function buildPsyshell() {
+  // The worked example is computed from the same functions the scene runs, so
+  // this page cannot print an encoding the flower does not transmit.
+  const WORKED = (() => {
+    const n = 94;
+    const { digits, highest } = baseEDigits(n);
+    const sum = decodeBaseE(digits, highest);
+    const terms = digits.map((d, i) => {
+      const k = highest - i;
+      return d === 0 ? null : `${d}&middot;e<sup>${k}</sup>`;
+    }).filter(Boolean).join(' + ');
+    return { n, digits: digits.join(''), highest, terms,
+      sum: sum.toFixed(3), err: (n - sum).toFixed(3) };
+  })();
   const bandList = `<ul class="catalog">
 ${PSY_BANDS.map(b => `<li><span class="t">${esc(b.label)}</span>
 <span class="c">${b.count} sentence${b.count === 1 ? '' : 's'} · ${b.words.toLocaleString('en-US')} words · ${b.arcDeg.toFixed(1)}° of the flower</span></li>`).join('\n')}
@@ -605,6 +619,16 @@ ${bandList}
 <h2 id="length">Length, and what the clamp costs</h2>
 <p>Sentences here run from one word to ${WORDS_MAX}, with a median of ${WORDS_MEDIAN}. Mapping that to petal length directly would give one ray twenty times the flower's radius, so length goes as the square root of the word count and is clamped at the 99th percentile, ${WORDS_CLAMP} words. ${CLAMPED_PETALS} petals of ${PETAL_COUNT.toLocaleString('en-US')} therefore sit at the rim together, and above that length the flower stops distinguishing.</p>
 <p>That is a real loss of information at the top end, said here rather than left to be discovered, and it is the price of the object still being a flower. A one-word sentence is still ${Math.round(PETAL_MIN_FRACTION * 100)}% of full reach, because a ray of nearly nothing is not a ray.</p>
+
+<h2 id="notation">The notation</h2>
+<p>A struck filament transmits its own ordinal along its length, in unequal flashes. It is legible as transmission and never readable as text, which is deliberate: text travelling up the strand would mean the reader was being addressed, and they are not.</p>
+<p>The notation is <strong>base e</strong>. Under the standard radix-economy cost model — where the cost of representing a number is the radix multiplied by the number of digits — the optimal base is e, and 3, being the nearest integer, is almost always the most economical integer radix. Ternary computers were built on exactly this reasoning: the Setun, at Moscow State University, about fifty machines between 1958 and 1965. Binary is a compromise forced by transistors.</p>
+<p class="note">The cost model matters and is stated with the claim, because "base e is the most efficient radix" on its own is the kind of true-sounding sentence that goes wrong on restatement. It is optimal under radix times width; other cost models give other answers. Source: Brian Hayes, "Third Base", <em>American Scientist</em>, 2001.</p>
+<p>Two properties of a non-integer radix earn their place beyond the argument. <strong>Representations are not unique</strong> — the digit set is larger than the base, so a value generally has several valid encodings and none is canonical. And <strong>nothing lands on a grid</strong>: powers of e are irrational, so the flashes never line up and the train has no beat, which is what makes it unlike every square-wave transmission cliché.</p>
+<p>A digit <em>d</em> is one flash lasting τ·e<sup>(d−1)</sup>, so the three durations stand in the ratio 1 : e : e². Segments alternate lit and dark by place, most significant first, so the boundaries are the digit boundaries and nothing in the train is filler. τ is not chosen: it is the time the disturbance's own travelling front takes to cross one shell width, so the transmission and the disturbance are the same event rather than two effects that coincide.</p>
+<p>Worked, so it can be checked. Sentence ${WORKED.n} of its band expands to:</p>
+<p class="note">${WORKED.n} = ${WORKED.terms} = ${WORKED.sum}</p>
+<p>which is the digit string <strong>${WORKED.digits}</strong>, most significant place e<sup>${WORKED.highest}</sup>, cut after ${FRACTIONAL_PLACES} fractional places. The expansion does not terminate, so the recovered value is ${WORKED.sum} against ${WORKED.n} — an error of ${WORKED.err}, which is the truncation and not a mistake.</p>
 
 <h2 id="touch">Amplification around the root</h2>
 <p>Touching a petal sends a disturbance outward along reading order — to the sentences adjacent in the text, then further, falling off with distance. It travels rather than simply brightening, and it is asymmetric: the front runs about two and a half times further toward later sentences than toward earlier ones.</p>
