@@ -27,7 +27,7 @@ whose corrections are themselves unverified is the original problem with extra
 steps, so nothing goes in here from memory — each entry below was re-read from
 the tree at the version named.
 
-**Verified against `v4.5.0`, 2026-09-02.**
+**Verified against `v4.5.1`, 2026-09-03.**
 
 ---
 
@@ -63,6 +63,7 @@ becomes legible. The stale reason was propping up a sound decision.
 | Claim | What is true | Source |
 |---|---|---|
 | NIST relative intensities give absorption depth | They are **emission** intensities, used here as a line-strength proxy. The gap is measurable: magnesium's b1 is 70 against sodium D2's 1000, so at maximum fader magnesium still transmits 34.5% where the real sun's b triplet rivals the D lines. | header of `apollo.text.js` · `NOTES.md` 4.5.0 |
+| A 250ms ambient tick is "under the first background-throttle tier", so a 1.2s lookahead covers a hidden tab | The tier that matters is not the one 250ms is under. A hidden page that is **audibly** playing is exempt from Chrome's intensive throttling and gets the **standard** tier, which is once per second — so the lookahead was covering a 1s worst case with 200ms to spare. Widened to 3.0s while hidden in 4.5.1. A page that is hidden and **silent** is not exempt at all and is throttled to once a minute; Chrome is explicit that a silent stream earns nothing. | Chrome's timer-throttling post, intensive-throttling conditions · `apollo.js`, `AMBIENT_AHEAD_HIDDEN` |
 | Fraunhofer catalogued exactly 574 lines | Sources differ — "over 570" and "some 700" both appear in reputable ones. Say "over 570" or give the source with the number. | `apollo.text.js`, `FRAUNHOFER` comment |
 
 ## True when written, false now
@@ -74,6 +75,8 @@ later and be wrong anyway. Record the version it was true at.
 | Claim | What is true | Source |
 |---|---|---|
 | Apollo has no generative layer, so it needs no lookahead scheduler | **True until v4.5.0 and false after it.** Sunlight is a generative layer and uses `setInterval` with lookahead, never rAF. The v4.3.0 statement was correct when written — a good example of a fact with an expiry date. | `NOTES.md` 4.3.0 and 4.5.0 |
+| Outside's lookahead scheduler exists so the pad keeps breathing in a background tab | **True from 3.9.5 until v4.0 and false after it.** v4.0 reversed it: `outside.js`'s visibility handler now stops the scheduler and suspends on hide. The 3.9.5 entry saying otherwise is still in `NOTES.md` and is where this keeps being read from. Worth knowing before proposing background audio: the decision has already been made both ways. | `NOTES.md` 3.9.5 vs `src/scenes/outside/outside.js`, `onVisibilityChange` |
+| Apollo suspends the AudioContext whenever the page is hidden, the same as Outside and Harmonics | **True at v4.5.0 and false after v4.5.1.** One condition is now exempt — sound on *and* Sunlight armed — bounded at ten minutes on the audio clock. Every other combination is unchanged, and Outside and Harmonics are unchanged. | `src/scenes/apollo/apollo.js`, `backgroundAudible()` · `NOTES.md` 4.5.1 |
 
 ---
 

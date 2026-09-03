@@ -8,11 +8,7 @@ looks at this project fresh. NOTES.md has the dated changelog of what
 shipped when; this file has the standing rules those changes established.
 
 **`WORKING-PROTOCOL.md` is the companion to this file** and should be read
-alongside it, and **`CORRECTED-FACTS.md` before writing any brief** — it is a
-short, source-cited index of claims that were made about this project and turned
-out to be wrong. It exists because the same false claim reached three
-consecutive briefs after being corrected in conversation three times: a reply is
-not a durable surface. This file holds rules about the code; that one holds rules about
+alongside it. This file holds rules about the code; that one holds rules about
 how the two instances working on it get things wrong — the chat instance writes
 from documents, this side writes from source, and every correction over a
 two-day arc ran in that one direction. It carries the assumptions-block rule,
@@ -332,6 +328,39 @@ constraints that came out of building it: the encoding must round-trip exactly
 (a fader with 101 positions cannot be encoded in 11 and handed back), and
 arriving at a link must never start audio — audio needs a gesture anyway, and
 somebody else's arrangement should be silent until the visitor asks.
+
+### Sound that outlives the page's visibility needs a gesture that meant it, and a bound
+
+Added 4.5.1, when the first exception to "suspend on hide" was made. The rule
+before it was unconditional and had been since v4.0, for a good reason: a page
+playing out of a tab whose only control the visitor cannot see is the thing
+people close twenty tabs to stop.
+
+**`document.hidden` cannot tell a locked phone from a forgotten tab.** It is the
+same event with the same fields, and there is no second API that separates them.
+Anything built on "detect the lock" is building on a signal that does not exist.
+
+**So the discriminator is the state the visitor left, not the transition.** Sound
+on *and* a generative layer armed is two deliberate acts, the second meaning
+"play on your own." A forgotten tab is not in that state, because sound needs a
+gesture. A scene whose ambient layer simply comes on with the sound has no such
+signal available and does not get the exception — which is why Outside and
+Harmonics still suspend unconditionally and Apollo does not.
+
+**It is bounded, because the discriminator is a guess about intent.** Ten
+minutes in Apollo. Being wrong then costs a visitor ten minutes of sound they
+did not want; an unbounded version costs them a page that never stops, which is
+the original problem restored. **The bound is measured on the audio clock and
+checked inside the scheduler's own tick**, not on a `setTimeout`: the tick's
+running is the sound, so a deadline read off it cannot outlive a frozen page,
+and the audio clock stops when the sound does, so the bound counts sound rather
+than wall time.
+
+**And check what stops running while hidden.** Two things nearly broke this
+silently — `main.js`'s own `visibilitychange` listener pauses the expanded scene
+*before* the scene's handler runs, so the predicate has to be consulted in both;
+and anything drained from the render loop is not being drained, so a queue that
+grows one entry per event empties as a single frame of hundreds.
 
 ### Layout that depends on something else's size is measured, not constant
 

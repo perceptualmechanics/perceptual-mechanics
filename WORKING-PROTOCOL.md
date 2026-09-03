@@ -282,6 +282,42 @@ protocol with no record of use is indistinguishable from one nobody reads.
   hook's message says "the repository" and checks whichever one it is pointed
   at, which is a message claiming a scope the check never had.
 
+- **2026-09-03, v4.5.1.** Scott asked how to make Apollo's Sunlight play
+  through a screen lock. The first useful finding was that the current
+  behaviour was a **decision, not a defect** — `apollo.js` suspends on hide on
+  purpose, with a comment saying why — so the answer was reported before any
+  code was written, because the request was to reverse a choice made two
+  releases earlier rather than to fix something broken. The second was that
+  `document.hidden` cannot distinguish a locked phone from a forgotten tab,
+  which is the actual obstacle and is not an API gap anyone can close.
+
+  Two things then came out of **reading source rather than reasoning about it**,
+  and both would have shipped silently. `main.js` has its own
+  `visibilitychange` listener that pauses the expanded scene, registered at
+  module load and therefore ahead of the scene's own — so the feature would
+  have built, passed every gate, and done nothing, because the pause arrives
+  first and stops the scheduler. And nothing drains the scene's visual queue
+  while hidden, so ten minutes of background audio would have returned as one
+  frame with ~330 lines flashing at once.
+
+  A third came out of **checking a number I had already stated in a reply**: I
+  had said the 1.2s lookahead "likely holds" against background throttling
+  because the 250ms tick is under the first tier. The tier that matters is the
+  clamp, not the tick — an exempt hidden page is checked once per second, so the
+  margin was 200ms. Row added to `CORRECTED-FACTS.md`; the constant is widened
+  while hidden.
+
+  The harness was **run against the pre-change code first**. All four
+  combinations scheduled zero notes while hidden before the change and only the
+  intended one after it, which is what makes the post-change numbers mean
+  anything — a probe that passes against both versions is measuring nothing.
+  Its ruler is stated with its result: it drives `document.hidden` and the
+  event, and reproduces none of Chrome's throttling, its audio exemption, or a
+  platform suspension. **It proves what our code does and says nothing about
+  what any platform does**, which is the whole shape of the answer: this release
+  stops us from being the reason the sound stops. It cannot make a phone keep
+  playing.
+
 - **2026-09-02, retiring rows.** The retirement rule landed and was applied the
   same pass rather than left for later: nine of the seventeen rows in
   `CORRECTED-FACTS.md` had already been absorbed into documents the next session

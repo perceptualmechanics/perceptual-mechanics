@@ -587,6 +587,143 @@ described are unchanged.)
   worth trimming, orrery.js's texture generators and first-person rig are the
   two most self-contained chunks to split out first.
 
+## 4.5.1 (2026-09-03)
+
+Sunlight keeps playing when the screen goes off. One scene, one condition, one
+bound — and a good deal of the work was establishing what the condition could
+honestly be.
+
+### The obstacle is not an API gap
+
+Scott asked how to make Sunlight play through a screen lock. The reflex is to
+go looking for the event that says "locked," and there isn't one: `hidden` on a
+locked phone and `hidden` on a tab someone opened this morning and forgot are
+the same event with the same fields. MDN's `visibilitychange` page does not
+mention screen lock among the transitions it covers at all, and notes that
+going hidden is the last thing a page can reliably observe. So the two
+behaviours everyone wants — plays in your pocket, silent in a tab you can't
+find — are in direct conflict under the only signal available, and no amount of
+listening harder resolves it.
+
+What resolves it is looking at a *different* signal: not the transition, but
+the state the visitor left the page in. To hear Sunlight in a pocket you must
+have turned sound on and armed Sunlight. Two deliberate acts, the second of
+which means "let this play on its own." A forgotten tab is not in that state,
+because sound requires a gesture and the visitor of a forgotten tab never made
+one. That predicate is `backgroundAudible()` in `apollo.js`, and every other
+combination keeps the v4.0 behaviour exactly: stop the scheduler, suspend the
+context.
+
+### The gate is also what makes it work
+
+The pleasing part, found by checking rather than by reasoning. Chrome exempts a
+hidden page from intensive throttling only while it "has made noises in the past
+30 seconds," and is explicit that a silent stream does not earn the exemption.
+With sound off, `muteGain` sits at zero — audible output is exactly nothing, the
+exemption would not apply, and the ambient `setInterval` would be throttled to
+once a minute. And with no `AudioContext` at all, `ambientNow()` falls back to
+the UI clock, which is ticked from a render loop a hidden page does not run: not
+"plays quietly," but "stops, holding a frozen clock." Requiring `soundEnabled`
+is not caution bolted onto the condition. It is the condition.
+
+Widened with it: `AMBIENT_AHEAD_HIDDEN = 3.0`. An exempt hidden page still gets
+the *standard* tier, which is once per second — four times the 250ms this
+scheduler asks for. A lookahead's job is to exceed the tick's worst case, and
+1.2s against a 1s clamp is a 200ms margin, which is not one. It costs nothing to
+widen while hidden: a visitor cannot move a fader they cannot see, so there is
+no mixture change for a longer queue to be stale about.
+
+### Two things reading the source caught that reasoning would not
+
+**`main.js` pauses the scene first.** It has its own `visibilitychange`
+listener that calls `fullInstance.setPaused(document.hidden)`, and it is
+registered at module load — ahead of any scene's. So on the way to hidden,
+Apollo's `setPaused(true)` arrives *before* Apollo's own handler, and its
+`stopAmbient()` would have killed the stream before the handler ever got to
+decide not to. The same predicate is now consulted in both places, so the order
+the two listeners run in cannot change the outcome. Had this been reasoned about
+rather than read, the feature would have built, passed a build, and done nothing.
+
+**Nothing drains the visual queue while hidden.** `drainAmbient()` runs from the
+render loop, which stops. Every scheduled note also queues a mark on the band,
+so ten minutes hidden would have accumulated ~330 entries and emptied them as a
+single frame with several hundred lines flashing at once. The tick now discards
+entries whose moment has already passed while hidden — a note that has already
+sounded has nothing left to light up. Measured over 60 seconds hidden: queue
+depth oscillates between 0 and 5 and does not trend.
+
+### Bounded, because the predicate is a guess about intent
+
+`BACKGROUND_GRACE = 600` seconds. A visitor who armed Sunlight and locked their
+phone gets what they asked for; a visitor who armed Sunlight, switched tabs and
+forgot gets ten minutes and then silence, which is the cost of being wrong and
+is survivable. The unbounded version is not — a page that plays indefinitely out
+of a tab nobody can find is the thing v4.0 was protecting against, and it would
+be back.
+
+The deadline is checked inside the ambient tick rather than on a `setTimeout`,
+for two reasons that are the same reason. The tick's continued running *is* the
+sound, so a deadline read off it cannot be enforced against a page that has
+already been frozen. And the clock underneath it is the audio hardware's, which
+stops when the sound does — so ten minutes means ten minutes of audio, not ten
+minutes of wall time that may have contained none.
+
+### Where this leaves Outside and Harmonics
+
+Unchanged, and the divergence is deliberate. Their ambient layers come on with
+the sound, so there is no second gesture that could mean "leave this playing,"
+and no state that separates a listener from a forgotten tab. Apollo has one
+because Sunlight is a separate button.
+
+Worth recording, because it is the same reversal running twice: **3.9.5 built
+Outside's lookahead scheduler specifically so the pad would keep breathing in a
+background tab** — the entry is still in this file and says so — **and v4.0
+reversed it four months later.** The decision Scott is asking to revisit was
+itself a reversal of a decision that wanted exactly this. That is not an
+argument either way; it is the reason to bound the new one rather than assume it
+settles.
+
+### Verification, and its ruler
+
+A Playwright harness drives the JavaScript-visible signal only: it overrides
+`document.hidden` and dispatches `visibilitychange`, which is what both
+`apollo.js` and `main.js` branch on. **It does not reproduce Chrome's timer
+throttling, the audio exemption from it, or a platform-initiated suspension** —
+none of those exist in a headless tab that is never really backgrounded. So the
+harness proves what our code does, and says nothing about what the platform
+does. The other half needs a real device and a real screen lock, and is Scott's
+to run.
+
+Run against the pre-change code first, as a control, because a probe that passes
+against both versions is measuring nothing — the recursive failure mode this
+project's working protocol names. Pre-change: all four combinations scheduled
+zero notes while hidden, context suspended. Post-change:
+
+| sound | Sunlight | notes while hidden (4s) | context | contexts total |
+|---|---|---|---|---|
+| on | on | 3 | running | 1 |
+| on | off | 0 | suspended | 1 |
+| off | on | 0 | none built | 0 |
+| off | off | 0 | none built | 0 |
+
+The grace period, tested with the constant temporarily at 8 seconds on an
+instrumented copy: notes accrue to t=6, the tick stops itself and suspends at
+t=9, the queue drains to zero rather than being abandoned full, and the return
+to visible restarts the scheduler and resumes the same context — still one
+context, no orphan. At the shipping 600 seconds, 60 seconds hidden scheduled 30
+notes, a rate of 0.50/s against a configured 0.55. **That is a 60-second sample
+and it is reported as one:** the standard deviation of a Poisson count near 33
+is about 5.7, so 30 is half a sigma low and this measurement cannot distinguish
+0.50 from 0.55. The ten-minute run in 4.5.0 is the one that can.
+
+Unverified here and worth a live check: whether desktop Safari and Chrome
+actually keep the context running once we stop suspending it (WebKit removed
+visibility-based interruption of `AudioContext` on macOS in bug 231105, fixed
+March 2022, but that is a bug report and not a test), and iOS, where locked
+audio needs a media element and `navigator.mediaSession` rather than bare Web
+Audio and is reported unreliable even then. **This release stops us from being
+the reason it goes silent. It does not make any platform keep it playing.**
+
 ## 4.5.0 (2026-09-02)
 
 Two things: Apollo gets an idle state, and an arrangement becomes something you

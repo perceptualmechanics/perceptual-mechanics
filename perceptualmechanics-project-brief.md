@@ -117,7 +117,17 @@ This is the durable house-rules file (created v3.9.16) — **read it first** bef
   build's own gate hashes the emitted one, and asserts that hash appears in the
   policy on the same response. In the same pass, CSP reporting was removed
   rather than completed — see Known open items.
-- **4.5.0 (current, 2026-09-02):** Apollo's Sunlight idle state and shareable
+- **4.5.1 (current, 2026-09-03):** Sunlight keeps playing into a hidden page,
+  under one condition and a bound. `document.hidden` cannot distinguish a locked
+  phone from a forgotten tab, so the discriminator is the state the visitor left
+  the page in — sound on *and* Sunlight armed, two deliberate acts — and it stops
+  itself after ten minutes measured on the audio clock. Every other combination
+  keeps v4.0's unconditional suspend, and Outside and Harmonics are unchanged,
+  because their ambient layers come on with the sound and have no second gesture
+  to read. `STANDARDS.md` gains the rule. **This stops the site from being the
+  reason the sound stops; it does not make any platform keep it playing** — see
+  Known open items.
+- **4.5.0 (2026-09-02):** Apollo's Sunlight idle state and shareable
   mixtures. Adds a third hash shape — `main.js`'s `parseHash`/`setHash` now
   carry a non-numeric second segment through to the scene as an opaque string,
   which the piece-id path never could have collided with but `setHash` used to
@@ -227,6 +237,21 @@ have been self-hosted for a while and only a comment still mentioned
 `fonts.gstatic`; the Rollup chunk-size warning, fixed back in 3.10.0; the
 CSP, which now exists, enforces, and is down to `script-src 'self'` with
 no hashes at all.
+
+**Open as of 4.5.1 — whether any platform actually plays Sunlight through a
+screen lock.** The code no longer stops it; that half is verified. The platform
+half is not, and cannot be from a sandbox. Desktop is expected to work: WebKit
+removed visibility-based interruption of `AudioContext` on macOS in bug 231105
+(fixed March 2022), and Chrome exempts an audibly-playing hidden page from
+intensive throttling. **iOS is expected not to.** Locked-screen audio there
+requires a media element the OS recognises as a session — an `<audio>` with
+`navigator.mediaSession` — which would mean routing Apollo's whole graph through
+a `MediaStreamAudioDestinationNode`, and the reports on that path describe it
+breaking after about thirty seconds of pause. Wake Lock is unsupported in iOS
+Safari (WebKit 254545). **The next step is a listen, not a change:** Apollo open
+with Sunlight and sound on, screen locked, on a Mac and on a phone. If desktop
+plays and iOS does not, that is the expected result and the media-element
+detour is a separate decision with its own costs, not a follow-up fix.
 
 **Genuinely open — and as of 2026-09-02 the honest answer is "almost
 nothing."** Most of what follows is here so it is not re-derived as owed: a

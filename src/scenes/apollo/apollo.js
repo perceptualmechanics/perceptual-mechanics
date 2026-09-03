@@ -1164,6 +1164,20 @@ export function createApollo(container, { preview = false, initialArg = null, on
   const AMBIENT_RATE = 0.55;              // notes per second, mean
   const AMBIENT_AHEAD = 1.2;              // seconds of lookahead per tick
   const AMBIENT_TICK = 250;               // ms — under the first background-throttle tier
+  // A hidden tab that is audibly playing is exempt from Chrome's intensive
+  // throttling and gets the standard tier instead, which is once per second —
+  // four times the interval this asks for. The lookahead's whole job is to
+  // exceed the tick's WORST case, and hidden the worst case is 1s, not 250ms;
+  // 1.2s of lookahead against a 1s tick is a 200ms margin, which is not one.
+  // So the window widens while hidden. It costs nothing: the visitor cannot
+  // move a fader they cannot see, so there is no mixture change for a longer
+  // queue to be stale about.
+  const AMBIENT_AHEAD_HIDDEN = 3.0;       // seconds
+  // How long Sunlight keeps playing into a hidden page. See the visibility
+  // handler for why this is bounded at all, and why it is measured on the
+  // audio clock rather than on wall time.
+  const BACKGROUND_GRACE = 600;           // seconds
+  let backgroundUntil = null;
   let ambientOn = false;
   let ambientTimer = null;
   let ambientNext = 0;
@@ -1212,6 +1226,17 @@ export function createApollo(container, { preview = false, initialArg = null, on
 
   function ambientTickFn() {
     if (disposed || !ambientOn) return;
+    // The grace period is checked here rather than on a setTimeout, and that is
+    // the point of putting it here: this tick is the thing whose continued
+    // running IS the sound, so a deadline read off it cannot be enforced
+    // against a page that has already been frozen. It also means the ten
+    // minutes are ten minutes of audio — the clock underneath is the hardware's
+    // and stops when the sound does — rather than ten minutes of wall time that
+    // may have contained no sound at all.
+    if (document.hidden && backgroundUntil !== null && ambientNow() >= backgroundUntil) {
+      endBackgroundAudio();
+      return;
+    }
     // The clock can change under this — sound gets turned on mid-run and the
     // audio context appears. Reseed rather than carry a time from the old one,
     // or the first tick after the switch reads a whole backlog as due.
@@ -1222,8 +1247,17 @@ export function createApollo(container, { preview = false, initialArg = null, on
       ambientPending.length = 0;
     }
     const now = ambientNow();
+    // Nothing is rendering while the page is hidden, so drainAmbient() is not
+    // running and the visual queue would otherwise grow by one entry per note
+    // and empty as a single burst of several hundred flashes on the way back —
+    // ten minutes at 0.55/s is 330 of them in one frame. A note that has
+    // already sounded has nothing left to light up.
+    if (document.hidden) {
+      while (ambientPending.length && ambientPending[0].at <= now) ambientPending.shift();
+    }
     let guard = 0;
-    while (ambientNext < now + AMBIENT_AHEAD && guard++ < 64) {
+    const ahead = document.hidden ? AMBIENT_AHEAD_HIDDEN : AMBIENT_AHEAD;
+    while (ambientNext < now + ahead && guard++ < 64) {
       const line = pickAmbientLine();
       if (!line) { ambientNext = now + 1; break; }
       playLine(line.nm, line.rel, 1, isAudio ? ambientNext : null);
@@ -1246,6 +1280,38 @@ export function createApollo(container, { preview = false, initialArg = null, on
   function stopAmbient() {
     if (ambientTimer !== null) { clearInterval(ambientTimer); ambientTimer = null; }
     ambientPending.length = 0;
+  }
+
+  // ─── The one case that keeps playing into a hidden page ───────────────────
+  // `document.hidden` cannot tell "the visitor locked their phone while
+  // listening" from "the visitor opened this in a tab three hours ago and
+  // forgot" — it is the same event with the same fields, which is the actual
+  // obstacle rather than a missing API. So the discriminator has to be
+  // something else, and the only honest one available is what the visitor did
+  // before the page went away: turned sound on, and armed Sunlight. Two
+  // deliberate acts, the second of which means "let this play on its own."
+  // Neither is the state a forgotten tab is in — a forgotten tab has sound off,
+  // because sound needs a gesture and the visitor never made one.
+  //
+  // The gate is also what earns the exemption that makes it work. Chrome
+  // exempts a hidden page from intensive throttling only while it "has made
+  // noises in the past 30 seconds," and is explicit that a silent stream does
+  // not count. With sound off, muteGain sits at zero — audible output is
+  // exactly nothing, the exemption would not apply, and this scheduler would be
+  // throttled to once a minute against a three-second lookahead. Requiring
+  // soundEnabled is not caution bolted onto the condition; it IS the condition.
+  //
+  // And there is a second reason the same flag has to be in here: with no
+  // AudioContext, ambientNow() falls back to uiClock, which is ticked from the
+  // render loop, which a hidden page does not run. Ambient without audio does
+  // not play quietly in the background — it stops, holding a frozen clock.
+  const backgroundAudible = () =>
+    !preview && soundEnabled && ambientOn && !!audioCtx && audioCtx.state !== 'closed';
+
+  function endBackgroundAudio() {
+    backgroundUntil = null;
+    stopAmbient();
+    if (audioCtx && audioCtx.state === 'running') audioCtx.suspend();
   }
 
   // Drained from the render loop: a queued line lights up when its scheduled
@@ -1681,23 +1747,38 @@ export function createApollo(container, { preview = false, initialArg = null, on
   }
 
   // Some engines suspend the AudioContext on backgrounding and expect an
-  // explicit resume. Nothing is generating sound here, so there is no
-  // scheduler to stop — but a note still ringing when the tab is hidden should
-  // stop being audible out of a background tab, the same decision Outside and
-  // Harmonics both landed on.
+  // explicit resume. Every hidden case but one stops the scheduler and
+  // suspends: an ambient layer audibly running out of a background tab, from a
+  // page whose only control is a button the visitor cannot see, is the kind of
+  // thing people hunt through twenty tabs to kill. Nothing is lost — suspend()
+  // freezes audioCtx.currentTime and startAmbient() reseeds against it on the
+  // way back, so there is no backlog to dump.
+  //
+  // The one exception is backgroundAudible() — see its comment for why that
+  // particular pair of flags is the discriminator. This is where Apollo stops
+  // matching Outside and Harmonics, which suspend unconditionally and should:
+  // their ambient layers come on with the sound, so there is no second gesture
+  // that could mean "leave this playing," and no state that separates a
+  // listener from a forgotten tab.
+  //
+  // It is bounded because the discriminator is a guess about intent, not a
+  // fact about it. A visitor who armed Sunlight and locked their phone gets
+  // what they asked for; a visitor who armed Sunlight, switched tabs and
+  // forgot gets ten minutes and then silence, which is the cost of being wrong
+  // and is survivable. An unbounded version is not: it is a page that plays
+  // indefinitely out of a tab nobody can find, which is the thing the original
+  // decision was protecting against.
   const onVisibilityChange = () => {
     if (disposed) return;
     if (document.hidden) {
-      // The same decision Outside and Harmonics both landed on: an ambient
-      // layer audibly running out of a background tab, from a page whose only
-      // control is a button the visitor cannot see, is the kind of thing people
-      // hunt through twenty tabs to kill. Nothing is lost — suspend() freezes
-      // audioCtx.currentTime and startAmbient() reseeds against it on the way
-      // back, so there is no backlog to dump.
-      stopAmbient();
-      if (audioCtx && audioCtx.state === 'running') audioCtx.suspend();
+      if (backgroundAudible()) {
+        backgroundUntil = ambientNow() + BACKGROUND_GRACE;
+        return;
+      }
+      endBackgroundAudio();
       return;
     }
+    backgroundUntil = null;
     clock.resync(); uiClock.resync();
     if (soundEnabled && audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
     if (ambientOn && !paused) startAmbient();
@@ -1729,7 +1810,16 @@ export function createApollo(container, { preview = false, initialArg = null, on
         // A scheduler that outlives what it belongs to is the v4.0 defect
         // exactly. A paused tile is not rendering and must not be sounding or
         // queueing either.
-        stopAmbient();
+        //
+        // The exception has to be repeated here, and finding out why is the
+        // reason this was read rather than reasoned about: main.js pauses the
+        // expanded scene from its OWN visibilitychange listener, registered at
+        // module load and therefore ahead of this scene's. So on the way to
+        // hidden, setPaused(true) arrives first and would stop the scheduler
+        // before the handler below ever got to decide not to. Same predicate,
+        // consulted twice, so the order the two listeners run in cannot change
+        // the outcome.
+        if (!(document.hidden && backgroundAudible())) stopAmbient();
       } else {
         clock.resync(); uiClock.resync();
         if (animId === null) animate();
