@@ -587,6 +587,98 @@ described are unchanged.)
   worth trimming, orrery.js's texture generators and first-person rig are the
   two most self-contained chunks to split out first.
 
+## 4.5.2 (2026-09-03)
+
+Apollo's struck voice made more piano-like. Chosen by listening, and the
+listening is what changed the question.
+
+### The band is less than one octave, and that settles it
+
+Scott asked for the gas to sound "a bit more piano-like." A piano's identity is
+its partial stack — a series climbing five or six octaves above the fundamental.
+The obvious rule-keeping move was to build that stack out of the element's
+*other* real lines, which would have kept "every sounding is a real line at its
+real pitch" intact and given the note a body.
+
+It cannot work, and the reason is arithmetic rather than policy. The band is
+380–750nm; through `AUDIO_DIVISOR` that is **788.9Hz down to 399.7Hz, a ratio of
+1.97**. Every spectral line of every element in this instrument lands inside a
+single octave. There is nothing above a line to be its overtone. Rendered and
+measured rather than argued: sounding a struck line alongside its element's
+three strongest other visible lines produced **5.4% of energy above 1.2kHz
+against 5.7% for the plain voice** — no upper energy at all. It is a cluster
+chord in the same octave, which is a different instrument, not a nearer piano.
+
+So the fork was real and was Scott's to take: the piano *gesture* with no new
+frequencies, or a genuine stretched-partial stack that puts sustained energy
+where no line is and rewrites the constraint. **He took the gesture, and
+emission only.** The rule is untouched and absorption stays bowed.
+
+### What that is, concretely
+
+Everything a piano has except its spectrum:
+
+- **Attack 2ms → 1ms.** A hammer does not take two milliseconds to arrive; at
+  2ms the onset was very slightly a fade.
+- **First decay stage steepened, 26% in 110ms → 18% in 80ms.** The prompt sound
+  of a struck string is brief and most of the note is the aftersound.
+- **Decay now falls with pitch**, `life × (550/hz)^0.9`, which is the piano's
+  own behaviour and here means **red lines ring longer than blue ones** — a real
+  statement about the band rather than a borrowed mannerism.
+- **The hammer moved below the note.** The noise burst is centred at 0.75× the
+  fundamental and shortened 50ms → 35ms. A piano's hammer noise is a knock with
+  its energy under the string; the string is what answers it. Centring the burst
+  on the pitch had the two in the wrong order.
+- **Hammer brightness tracks line strength.** A harder-struck key is a brighter
+  one, so a deep line gets a sharper, louder knock than a faint one.
+
+Measured on the same 26-second Sunlight stream, same seed, same sixteen notes:
+spectral centroid 661.5Hz → 804.5Hz, energy above 1.2kHz 2.56% → 5.74%. All of
+that is the transient. No oscillator sounds at any frequency that is not a line.
+
+### How it was chosen
+
+Six variants rendered offline through the **real** signal path — real line data
+imported from `apollo.text.js`, the actual `DynamicsCompressor` at its shipping
+settings and the actual convolution reverb, in an `OfflineAudioContext` — and
+sent as audio. One seeded note sequence shared by all six, so the only variable
+was timbre. One common gain, no per-file normalisation, because level
+differences between the candidates are part of what is being judged.
+
+This is the colour-strip method from 4.3.0 applied to sound: the earlier
+question was settled by rendering six versions of the band and looking, and
+"more piano-like" is exactly as unsettleable in prose. **It also produced the
+octave finding, which no amount of reasoning about the request had surfaced.**
+
+### What v4.4.1's rationale was worth keeping
+
+The hammer's Q was tied to note length, on a real argument: time and bandwidth
+trade against each other, so a short-lived note in a twelve-voice chord *is*
+spectrally broader and should get a lower Q. The new voice ties brightness to
+strength instead, which is the piano claim. Both are true and they are different
+claims, so Q now carries both — `(1.6 + 6v) × (0.25 + 0.75·ring)`, where the
+crowding factor is **1 at a whole ring**. That matters: it makes a single
+ambient note — every note in Sunlight — exactly the voice that was auditioned,
+and confines the broadening to the crowded strike it was always about.
+
+### Stated, because it was not auditioned
+
+The audition was the ambient stream, which is always one voice. **The
+twelve-voice chord is the case nobody listened to before this shipped**, and it
+did not move the way I first expected: rendered old against new, the crowded
+iron strike gets *brighter*, centroid 1417Hz → 1763Hz and energy above 1.2kHz
+12.1% → 21.6%. That is consistent rather than wrong — a lower Q on a bandpass is
+a wider band, so the crowd broadening 4.4.1 wanted reads as more high-frequency
+energy, and the raised hammer gain adds to it. But it is louder and splashier
+than before on the one gesture that was already the loudest, the clips went to
+Scott alongside this, and pulling the hammer gain back on crowded strikes is one
+term if it is too much.
+
+Also changed, quietly and on purpose: `markStruck` now passes the pitch too, so
+the visual mark keeps matching the note's length. That invariant predates this
+release; without the change a red line would still be sounding after its mark
+had gone.
+
 ## 4.5.1 (2026-09-03)
 
 Sunlight keeps playing when the screen goes off. One scene, one condition, one

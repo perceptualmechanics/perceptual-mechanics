@@ -27,7 +27,7 @@ whose corrections are themselves unverified is the original problem with extra
 steps, so nothing goes in here from memory — each entry below was re-read from
 the tree at the version named.
 
-**Verified against `v4.5.1`, 2026-09-03.**
+**Verified against `v4.5.2`, 2026-09-03.**
 
 ---
 
@@ -64,6 +64,7 @@ becomes legible. The stale reason was propping up a sound decision.
 |---|---|---|
 | NIST relative intensities give absorption depth | They are **emission** intensities, used here as a line-strength proxy. The gap is measurable: magnesium's b1 is 70 against sodium D2's 1000, so at maximum fader magnesium still transmits 34.5% where the real sun's b triplet rivals the D lines. | header of `apollo.text.js` · `NOTES.md` 4.5.0 |
 | A 250ms ambient tick is "under the first background-throttle tier", so a 1.2s lookahead covers a hidden tab | The tier that matters is not the one 250ms is under. A hidden page that is **audibly** playing is exempt from Chrome's intensive throttling and gets the **standard** tier, which is once per second — so the lookahead was covering a 1s worst case with 200ms to spare. Widened to 3.0s while hidden in 4.5.1. A page that is hidden and **silent** is not exempt at all and is throttled to once a minute; Chrome is explicit that a silent stream earns nothing. | Chrome's timer-throttling post, intensive-throttling conditions · `apollo.js`, `AMBIENT_AHEAD_HIDDEN` |
+| An element's other spectral lines can serve as a struck line's overtones, giving the voice a body without leaving the one-line-one-pitch rule | **They cannot, and the reason is arithmetic.** The band is 380–750nm, which through `AUDIO_DIVISOR` is 788.9–399.7Hz — a ratio of 1.97. **Every line of every element in this instrument is inside one octave**, so there is nothing above a line to be its overtone. Rendered and measured: a struck line plus its element's three strongest other visible lines put 5.4% of energy above 1.2kHz against 5.7% for the plain voice — no upper energy at all. It is a same-octave cluster, not a partial stack. Anything wanting a piano's or a bell's spectrum here must leave the rule; there is no version that keeps it. | `apollo.text.js` `VISIBLE_MIN`/`VISIBLE_MAX` and `wavelengthToHz` · `NOTES.md` 4.5.2 |
 | Fraunhofer catalogued exactly 574 lines | Sources differ — "over 570" and "some 700" both appear in reputable ones. Say "over 570" or give the source with the number. | `apollo.text.js`, `FRAUNHOFER` comment |
 
 ## True when written, false now

@@ -117,7 +117,17 @@ This is the durable house-rules file (created v3.9.16) — **read it first** bef
   build's own gate hashes the emitted one, and asserts that hash appears in the
   policy on the same response. In the same pass, CSP reporting was removed
   rather than completed — see Known open items.
-- **4.5.1 (current, 2026-09-03):** Sunlight keeps playing into a hidden page,
+- **4.5.2 (current, 2026-09-03):** Apollo's struck voice made more piano-like —
+  1ms attack, a steeper first decay stage, decay that falls with pitch so red
+  lines ring longer than blue, and a hammer moved below the note that brightens
+  with line strength. Chosen by rendering six candidates through the real signal
+  path and listening, which is the 4.3.0 colour-strip method applied to sound.
+  **It also established a fact worth not re-deriving: the whole band is less
+  than one octave (788.9–399.7Hz), so no element's lines can serve as another
+  line's overtones and a true piano spectrum is unavailable without leaving the
+  one-line-one-pitch rule.** The gesture was taken and the rule kept; absorption
+  stays bowed.
+- **4.5.1 (2026-09-03):** Sunlight keeps playing into a hidden page,
   under one condition and a bound. `document.hidden` cannot distinguish a locked
   phone from a forgotten tab, so the discriminator is the state the visitor left
   the page in — sound on *and* Sunlight armed, two deliberate acts — and it stops

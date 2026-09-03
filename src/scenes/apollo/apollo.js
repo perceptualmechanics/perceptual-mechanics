@@ -622,10 +622,43 @@ export function createApollo(container, { preview = false, initialArg = null, on
   const EMISSION_RING = 4.2;      // seconds, few voices — two full sodium beats
   const EMISSION_SWARM = 1.4;     // seconds, at the chord cap
   const EMISSION_CROWD = 6;       // voices below which the ring is kept whole
-  function noteLength(voices) {
+  // ─── The piano gesture, and only the gesture (4.5.2) ──────────────────────
+  // A piano is identified by its partial stack — a series climbing five or six
+  // octaves above the fundamental. That series is not available here, and not
+  // because of a rule: the visible band is 380–750nm, which through the audio
+  // divisor is 788.9Hz down to 399.7Hz, a ratio of 1.97. **Every spectral line
+  // of every element in this instrument lands inside a single octave.** There
+  // is nothing above a line to be its overtone. Sounding an element's other
+  // lines alongside it — tried, rendered, listened to — adds no upper energy at
+  // all (5.4% above 1.2kHz against 5.7% for this voice); it is a cluster chord
+  // in the same octave, which is a different instrument rather than a nearer
+  // piano.
+  //
+  // So what is taken from the piano is everything except its spectrum: the
+  // onset, the two-rate decay, the way decay falls with pitch, and a hammer
+  // that brightens when the key is hit harder. No frequency is present that was
+  // not present before, and the constraint the sine exists to protect — every
+  // sounding is a real line at its real pitch — is untouched.
+  const PIANO_PITCH_REF = 550;    // Hz, near the middle of the band
+  const PIANO_PITCH_TILT = 0.9;   // decay ∝ (ref/hz)^tilt
+
+  // How crowded the chord is: 0 while the ring is kept whole, 1 at the cap.
+  function crowdFraction(voices) {
+    return Math.max(0, Math.min(1, (voices - EMISSION_CROWD) / (CHORD_CAP - EMISSION_CROWD)));
+  }
+
+  // `hz` is optional so a caller that only wants the crowd-scaled length can
+  // ask for it. Pass it and the note also gets the piano's pitch tilt: a struck
+  // string loses its energy faster the shorter it is, so high notes die and low
+  // notes ring. Here that means **red lines ring longer than blue ones**, which
+  // is a real statement about the band rather than a borrowed mannerism.
+  // Absorption is deliberately excluded — it is bowed, not struck, and the
+  // contrast between the two modes is the thing that makes each legible.
+  function noteLength(voices, hz = null) {
     if (mode === 'absorption') return ABSORPTION_SUSTAIN;
-    const t = Math.max(0, Math.min(1, (voices - EMISSION_CROWD) / (CHORD_CAP - EMISSION_CROWD)));
-    return EMISSION_RING - t * (EMISSION_RING - EMISSION_SWARM);
+    const base = EMISSION_RING - crowdFraction(voices) * (EMISSION_RING - EMISSION_SWARM);
+    if (hz === null) return base;
+    return base * Math.pow(PIANO_PITCH_REF / hz, PIANO_PITCH_TILT);
   }
 
   // Struck lines, for the flash on the band and the marker on the ruler. Each
@@ -954,18 +987,32 @@ export function createApollo(container, { preview = false, initialArg = null, on
   // trade against each other. So the swarm's brief notes get a low Q and read
   // as ticks, and the long ring gets a high Q and reads as pitched. The same
   // parameter that makes iron percussive makes sodium singing.
-  const TRANSIENT = 0.05; // seconds
-  function strikeTransient(now, hz, amp, life) {
+  // 4.5.2 shortens this from 50ms to 35ms and moves its centre below the note.
+  // A piano's hammer noise is not centred on the string's pitch — it is a
+  // knock, with its energy under the fundamental, and the string is what
+  // answers it. Centring the burst at 0.75× puts the two in the right order.
+  const TRANSIENT = 0.035; // seconds
+  const HAMMER_CENTRE = 0.75;
+  // `ring` is 1 when the note is a whole ring and 0 at the chord cap; `v` is
+  // the line's own strength, 0..1. Two things set the hammer's brightness now,
+  // and they are different claims. **Strength is the new one and the piano
+  // one:** a harder-struck key is a brighter one, so a deep line gets a
+  // sharper, louder knock than a faint one. **Crowding is v4.4.1's, kept:**
+  // time and bandwidth trade against each other, so a short-lived note in a
+  // twelve-voice chord IS spectrally broader and gets a lower Q for it. The
+  // factor is 1 at a whole ring, so a single ambient note — every note in
+  // Sunlight — is exactly the voice that was auditioned, and the broadening
+  // only appears where it was always meant to, on a crowded strike.
+  function strikeTransient(now, hz, amp, ring, v) {
     if (!noiseBuf) return;
     const src = audioCtx.createBufferSource();
     src.buffer = noiseBuf;
     const bp = audioCtx.createBiquadFilter();
     bp.type = 'bandpass';
-    bp.frequency.value = hz;
-    const t = (life - EMISSION_SWARM) / Math.max(1e-6, EMISSION_RING - EMISSION_SWARM);
-    bp.Q.value = 3 + 9 * Math.max(0, Math.min(1, t));
+    bp.frequency.value = hz * HAMMER_CENTRE;
+    bp.Q.value = (1.6 + 6 * v) * (0.25 + 0.75 * ring);
     const g = audioCtx.createGain();
-    g.gain.setValueAtTime(amp * 2.2, now);
+    g.gain.setValueAtTime(amp * (2.6 + 1.8 * v), now);
     g.gain.exponentialRampToValueAtTime(0.0001, now + TRANSIENT);
     src.connect(bp); bp.connect(g); g.connect(busGain);
     // A random offset into the shared buffer, so simultaneous transients are
@@ -985,12 +1032,13 @@ export function createApollo(container, { preview = false, initialArg = null, on
     osc.type = 'sine';
     osc.frequency.value = hz;
     const env = audioCtx.createGain();
-    const life = noteLength(voices);
+    const life = noteLength(voices, hz);
     // Bowed versus plucked, and the only difference in the graph is the attack
     // and the length. Same oscillator, same wavelength-to-frequency division,
     // so a given line is the same pitch in both modes and a visitor learns it
-    // once.
-    const attack = mode === 'emission' ? 0.002 : 0.05;
+    // once. Emission's attack drops to 1ms in 4.5.2 — a hammer does not take
+    // two milliseconds to arrive, and at 2ms the onset was very slightly a fade.
+    const attack = mode === 'emission' ? 0.001 : 0.05;
     // Amplitude from the line's own relative intensity, divided down by how
     // many voices are sounding together so a fifty-line element and a
     // one-line element arrive at the ear at the same loudness. Without this,
@@ -1003,16 +1051,18 @@ export function createApollo(container, { preview = false, initialArg = null, on
       // Two stages, and the first one is what percussion is. A struck thing
       // loses most of its energy immediately and then rings quietly for a long
       // time; a single exponential from peak to silence across four seconds is
-      // a note that fades, which is a different gesture. Down to 26% in 110ms,
-      // then the long tail.
+      // a note that fades, which is a different gesture. **4.5.2 steepens the
+      // first stage from 26% in 110ms to 18% in 80ms**, which is the piano's
+      // own proportion: the prompt sound of a struck string is brief and most
+      // of the note is the aftersound.
       //
       // The tail has to stay long whatever this does, because the sodium
       // doublet beats with a 1.94-second period and the beat is the best thing
       // the sonification has. Quieter is fine — beating is a ratio between two
       // tones and survives at any level. Shorter is not.
-      env.gain.exponentialRampToValueAtTime(amp * 0.26, now + 0.11);
+      env.gain.exponentialRampToValueAtTime(amp * 0.18, now + 0.08);
       env.gain.exponentialRampToValueAtTime(0.0001, now + life);
-      strikeTransient(now, hz, amp, life);
+      strikeTransient(now, hz, amp, 1 - crowdFraction(voices), Math.pow(rel / 1000, 0.5));
     } else {
       env.gain.exponentialRampToValueAtTime(0.0001, now + life);
     }
@@ -1024,7 +1074,13 @@ export function createApollo(container, { preview = false, initialArg = null, on
   }
 
   function markStruck(nm, el, voices = 1) {
-    struck.push({ nm, el, t: 0, life: noteLength(voices) });
+    // The mark's length is the note's length — that invariant predates 4.5.2
+    // and is why `hz` is passed here too. Without it the pitch tilt would put
+    // the two out of step: a red line would still be sounding after its mark
+    // had gone and a blue one would light after it had stopped. It works with
+    // the sound off, since the pitch comes from the wavelength rather than from
+    // anything in the audio graph.
+    struck.push({ nm, el, t: 0, life: noteLength(voices, wavelengthToHz(nm)) });
     if (struck.length > 64) struck.shift();
     const x = xForNm(nm);
     disturbAt(x, bandY + bandH * 0.5);
