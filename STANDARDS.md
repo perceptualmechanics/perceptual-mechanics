@@ -338,6 +338,43 @@ constraints that came out of building it: the encoding must round-trip exactly
 arriving at a link must never start audio — audio needs a gesture anyway, and
 somebody else's arrangement should be silent until the visitor asks.
 
+### Content derived from more than one scene lives in one module, and declares its order
+
+Added 4.6.0, when Psyshell needed "every sentence on this site" and there was no
+such thing to import.
+
+**A rule that was measured belongs where a second consumer can reach it.** The
+sentence split Psyshell needs was chosen in `spectra.data.js` after three rules
+were compared — and Spectra is shelved, unregistered, deliberately outside the
+build. Importing from it would have pulled a shelved scene back into the bundle
+to reach one regex. The split moved to `src/utils/corpus.js`, Spectra keeps its
+own copy for the day it is unshelved, and neither file is now the other's
+dependency.
+
+**The reader declares each scene's order and fields explicitly.** Walking every
+named export of every `*.text.js` is the obvious implementation and it is wrong
+in two ways that do not show up in a diff:
+
+- It **double-counts**. `scroll.text.js` exports its twelve patches individually
+  *and* an ordered index over them. This is the same double-count
+  `spectra-measurement-2026-09-02.md` had to correct, arriving a second time in
+  a different consumer.
+- It **loses the order**. A module namespace object has its keys sorted
+  alphabetically by specification, so a walk visits scenes' pieces in
+  alphabetical order regardless of what they publish first. Any scene claiming
+  to render reading order would be rendering an alphabetisation.
+
+So `CORPUS_SOURCES` names, per scene, the one export carrying the order and the
+fields carrying the writing. It is a decision, it is short enough to argue with,
+and its exclusions are stated: Library is excerpts only because a cataloguing
+note is apparatus rather than writing, and two scenes are absent because they
+publish no sentences.
+
+**The module has no DOM, because the build imports it too.** `prerender.js`
+builds the `/text/` page from the same numbers the scene renders, which for a
+scene whose entire subject is a count is the only arrangement worth having —
+there is no third place holding a stale total.
+
 ### Sound that outlives the page's visibility needs a gesture that meant it, and a bound
 
 Added 4.5.1, when the first exception to "suspend on hide" was made. The rule

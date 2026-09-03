@@ -282,6 +282,49 @@ protocol with no record of use is indistinguishable from one nobody reads.
   hook's message says "the repository" and checks whichever one it is pointed
   at, which is a message claiming a scope the check never had.
 
+- **2026-09-03, v4.6.0, Psyshell.** The assumptions block did the most work it
+  has done in this project so far, and every finding came from running something
+  rather than reading something.
+
+  **Four claims in the brief were wrong.** The corpus is 3,221 sentences, not
+  2,000–2,500. Nine scenes contribute, not eleven — two publish no sentences at
+  all. The WebGPU versions were off in two of three places, and omitted that no
+  browser ships it on Linux, which matters for a project whose CI is Linux.
+  Outside is described in its own header as explicitly **not** a lotus in
+  silhouette, having been rendered and rejected as one. Four claims that were
+  cheap to check and would each have been built on.
+
+  **The one that changed the design was the distribution, not the total.** Two
+  scenes are 82% of the corpus. Equal arcs — chosen from a description — would
+  have left a third of the circumference nearly bare with one band holding a
+  single ray. Putting the three schemes on a table with real numbers reversed
+  the choice. **Offer a choice with the measurement already in it**, or the
+  choice is being made about a corpus nobody has looked at.
+
+  **And a correction to a correction.** Earlier the same day I reported "the
+  band is less than one octave" as a finding and wrote it into
+  `CORRECTED-FACTS.md` as one. It is not: Apollo's own `/text/` page has said it
+  since v4.3.0, on a page this session helped write. Only the consequence for
+  partials was new. That is this file's own failure mode from the other
+  direction — not a stale document restating itself, but a live document going
+  unread by the instance that wrote it. The row is corrected in place rather
+  than removed, because the wrong version is the useful half.
+
+  **Two renders were wrong and looking is what found them.** A shaving brush,
+  then a firework. The fixes were botanical (a skirt below the horizontal,
+  curved rays) and arithmetic (3,221 additive rays all starting at one radius
+  sum to a white hole, so the base level is set by the pile, not by one ray).
+  Neither was reachable by reasoning about the code. Third instance of the same
+  method in three releases — the colour strips at 4.3.0, the piano audition at
+  4.5.2, this.
+
+  **One invalid probe, reported.** A falloff test returned zeros and looked like
+  a broken amplitude envelope; it was sampling fixed distances at one instant
+  and missing the travelling shell entirely. The envelope was correct and
+  decomposes to three figures. **A probe that returns zeros is not evidence of
+  zero** — it is the same shape as the Report-Only CSP pass that found no
+  violations because the violating pages never loaded.
+
 - **2026-09-03, v4.5.1.** Scott asked how to make Apollo's Sunlight play
   through a screen lock. The first useful finding was that the current
   behaviour was a **decision, not a defect** — `apollo.js` suspends on hide on

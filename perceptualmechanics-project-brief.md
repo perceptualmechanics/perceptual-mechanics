@@ -12,7 +12,7 @@
 
 ## What this is
 
-perceptualmechanics.com is Scott Cohen's personal digital-art portfolio: a single-page, full-screen WebGL/canvas site built around **11 interactive scenes**, each a small standalone piece combining generative visuals, curated writing/found text, and (in most scenes) generative or triggered audio. It's a static site (no backend, no database) — everything client-rendered, deployed as a plain `dist/` upload.
+perceptualmechanics.com is Scott Cohen's personal digital-art portfolio: a single-page, full-screen WebGL/canvas site built around **12 interactive scenes**, each a small standalone piece combining generative visuals, curated writing/found text, and (in most scenes) generative or triggered audio. It's a static site (no backend, no database) — everything client-rendered, deployed as a plain `dist/` upload.
 
 Collaborators: Scott (vision, writing, curation) and Claude (code, literary analysis, implementation) — this has been a long-running, deeply iterative collaboration, not a one-off build.
 
@@ -117,7 +117,17 @@ This is the durable house-rules file (created v3.9.16) — **read it first** bef
   build's own gate hashes the emitted one, and asserts that hash appears in the
   policy on the same response. In the same pass, CSP reporting was removed
   rather than completed — see Known open items.
-- **4.5.2 (current, 2026-09-03):** Apollo's struck voice made more piano-like —
+- **4.6.0 (current, 2026-09-03): Psyshell, the twelfth scene.** A white
+  chrysanthemum made of the site's own writing — 3,221 sentences, one petal
+  each, angle by reading order, length by sentence length, band by source scene,
+  with a touch that sends an asymmetric disturbance along the text. Adds
+  `src/utils/corpus.js`, the first module that reads across scenes, and the
+  `STANDARDS.md` rule that goes with it. Four claims in the brief were measured
+  and corrected before building; the corpus's real distribution (two scenes are
+  82% of it) reversed the band-width decision from equal arcs to arc ∝ √petals.
+  **The nav is now full at twelve** — 25.3 × 44px at 320px, and a thirteenth
+  scene would fail WCAG AA at 23.4px.
+- **4.5.2 (2026-09-03):** Apollo's struck voice made more piano-like —
   1ms attack, a steeper first decay stage, decay that falls with pitch so red
   lines ring longer than blue, and a hammer moved below the note that brightens
   with line strength. Chosen by rendering six candidates through the real signal
@@ -247,6 +257,23 @@ have been self-hosted for a while and only a comment still mentioned
 `fonts.gstatic`; the Rollup chunk-size warning, fixed back in 3.10.0; the
 CSP, which now exists, enforces, and is down to `script-src 'self'` with
 no hashes at all.
+
+**Open as of 4.6.0 — the nav has one slot left and it is used.** Twelve icons
+give a 25.3 × 44px tap target at 320px, measured off the rendered button. That
+clears WCAG 2.5.8 AA (24px) by 1.3px and fails AAA, which it has done since
+eleven. **A thirteenth scene gives 23.4px and fails AA.** So this is not a
+warning any more, it is a precondition: a thirteenth scene needs the nav
+rethought in the same pass, not afterwards. The sizing itself is already derived
+from the registry and cannot overflow at any count — what runs out is the tap
+target, not the row.
+
+**Open as of 4.6.0 — Psyshell reads as a dandelion clock at 200px.** The rays
+and the seedpod are legible and it is plainly not Outside, which was the
+question the brief asked. But the silhouette at tile size is a fuzzy disc rather
+than a flower head. Recorded as a judgement to make rather than a defect to fix:
+the honest options are a denser, more radial-burst form or a colour departure,
+and both were rejected once already because the object is doing what the data
+says.
 
 **Settled on the desktop half in 4.5.1: the Mac plays Sunlight through a screen
 lock, confirmed by listening in both Chrome and Safari, 2026-09-03.** Removing our own `suspend()` was all

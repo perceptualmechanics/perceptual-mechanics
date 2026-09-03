@@ -113,6 +113,9 @@ export const SCENES = {
   apollo:    { exportName: 'createApollo',
                label: 'Apollo — an absorption spectrum you can play.',
                ariaLabel: 'Apollo — a solar absorption spectrum you can play. Ten elements on faders put their lines into a band of starlight; click a dark line to hear its wavelength as a pitch.' },
+  psyshell:  { exportName: 'createPsyshell',
+               label: 'Psyshell — flower magic.',
+               ariaLabel: 'Psyshell — a white chrysanthemum made of every sentence on this site, one petal each, arranged by reading order and sized by sentence length. Drag to turn; touch a petal to read it and send a disturbance through the text around it.' },
 
 };
 

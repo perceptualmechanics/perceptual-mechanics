@@ -28,21 +28,33 @@ in this repo and is written for a coding session.
 ## What the site is
 
 perceptualmechanics.com — Scott Jason Cohen's digital-art portfolio. A
-single-page, full-screen site built around **eleven interactive scenes**, each a
+single-page, full-screen site built around **twelve interactive scenes**, each a
 small standalone piece combining generative visuals, curated writing and found
 text, and in most cases generative or triggered audio. Static: no backend, no
 database, everything client-rendered.
 
-Ten of the eleven publish Scott’s writing. The eleventh, **Apollo**, publishes
-physics — it is an instrument rather than a piece of writing, and the one scene
-whose content is a table of measurements. That distinction matters for the
-number below.
+Ten of the twelve publish Scott’s writing. **Apollo** publishes physics — it is
+an instrument rather than a piece of writing, and the one scene whose content is
+a table of measurements. **Psyshell** publishes nothing of its own at all: it is
+made *of* the other scenes' sentences, one petal each. Both distinctions matter
+for the number below, and Psyshell is the first scene for which that number is
+not a fact about the site but the material the scene is built from.
 
 The writing is the point. **36,886 words** of prose, poetry, scripts and catalog
 entries are published across the ten scenes, most of it drawn from two
 book projects that live outside the repo in a Scrivener file
 (`Holography.scriv`). The visuals
 are how the writing is encountered, not decoration around it.
+
+**As of 4.6.0 that figure has a consumer.** Psyshell is built from the corpus
+rather than describing it, so there is now a second measured number beside it:
+**3,221 sentences, 34,790 words**, under a narrower ruler stated in
+`src/utils/corpus.js` and printed on `/text/psyshell/`. The two are not in
+conflict and neither supersedes the other — 36,886 counts every published string
+including Library's visible cataloguing notes, and 34,790 counts only the fields
+Psyshell treats as writing. **Quote either one with its ruler attached.** The
+gap between them is the answer to "is a note about a book's edition part of the
+site's writing," which is a real question with two defensible answers.
 
 *The ruler for that number, because it is the most-quoted figure on the project
 and every previous version of it was measured differently.* Published means text
@@ -72,7 +84,7 @@ durable rules with the reasoning attached.
 
 ---
 
-## The eleven scenes
+## The twelve scenes
 
 Counts read from the live content modules.
 
@@ -89,6 +101,7 @@ Counts read from the live content modules.
 | **Harmonics** | Resonant connections across every other scene's content, as a force-directed graph with Kuramoto phase-sync and sonification | 64 approved resonances |
 | **Outside** | A generated lotus (Gielis superformula) mapping a five-part cosmology — Power Sources as petals, Folk Origins, Magi/Psi at centre | 5 power sources |
 | **Apollo** | A solar spectrum you can play, in two modes, with an idle state. **Sunlight** puts the sun’s own composition in the light and lets its lines sound on their own — the only scene here that plays untouched. A mixture can be shared as a link (`#apollo/ca95,h85,na80`). Ten elements on faders; **absorption** puts their lines into a band of starlight as gaps you sound by clicking, **emission** darkens the band and stands the same lines in it bright, struck rather than sustained | 10 elements, 218 lines across all ten (iron 50, sodium 6) |
+| **Psyshell** | *flower magic.* A white fibre-optic chrysanthemum made of the site's own writing: one petal per sentence, angle around the axis is position in reading order, petal length is sentence length, and the band is the scene it came from. Touching a petal reads it out and sends a disturbance along reading order — asymmetric, further toward later sentences than earlier ones | 3,221 sentences across 9 scenes, 34,790 words |
 
 Earlier scenes — leaf, egg, prism, cycle, and some older constellation and
 ground-glimpse mechanics — were built, shipped, and retired. The eleven above
@@ -203,6 +216,27 @@ on both sides of the check. Prose is not a namespace.
 Everything below is deployed and confirmed live. Four numbered releases landed
 on 2026-09-02, and they divide cleanly into one big one and the ones that came
 out of looking closely at what it left behind.
+
+**v4.6.0 — Psyshell, the twelfth scene.** A white chrysanthemum whose 3,221
+petals are the site's 3,221 sentences: angle is reading order, length is
+sentence length, band is source scene, and touching one sends a disturbance
+along the text. Three claims in the brief it was built from were measured and
+found wrong before any code was written — the corpus is 3,221 sentences and not
+2,000–2,500, nine scenes contribute and not eleven, and two scenes publish no
+sentences at all — and the distribution reversed the band-width decision, since
+two scenes are 82% of the corpus and equal arcs would have left a third of the
+circumference bare. `src/utils/corpus.js` is new and shared. **The nav is now
+full**: twelve icons give a 25.3 × 44px tap target at 320px, and a thirteenth
+would give 23.4px and fail WCAG AA.
+
+**v4.5.2 — Apollo's struck voice made piano-like**, chosen by rendering six
+candidates through the real signal path and listening. It established a fact
+worth not re-deriving: the visible band is less than one octave, so no element's
+lines can serve as another's overtones.
+
+**v4.5.1 — Sunlight plays through a screen lock.** Confirmed by listening in
+both Chrome and Safari on a locked Mac. iOS is still open and still expected to
+fail, for a different reason.
 
 **v4.0 — the audit release.** An outside-in review produced 71 findings, eight
 of them live on the production site, and 4.0 closed all eight plus most of the

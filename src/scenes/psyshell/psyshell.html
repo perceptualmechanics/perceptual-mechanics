@@ -1,0 +1,35 @@
+<!--
+  Psyshell scene shell markup — full scene only.
+
+  The title block is static: "Psyshell" is the scene's name and "flower magic"
+  is its subtitle, both fixed rather than pulled from psyshell.text.js. That is
+  the difference from Beamline's block, whose two lines are found text out of
+  the archive and therefore belong to the content module.
+
+  aria-hidden stays on the hint alone, and the reasoning is Beamline's: "drag
+  to turn / scroll to zoom / touch a filapixel" is a pointer instruction, and
+  the jump list plus .psyshell-sr-live are how a keyboard or screen-reader
+  visitor actually reaches the bands and hears what was struck. The readout
+  below is NOT hidden — it carries the sentence a touched petal is made of,
+  which is the writing itself and the one thing on screen that is not an
+  instruction for a mouse.
+-->
+
+<div class="psyshell-title">
+  <span class="psyshell-title-name">Psyshell</span>
+  <span class="psyshell-title-sub">flower magic</span>
+</div>
+
+<p class="psyshell-hint" aria-hidden="true">drag to turn &nbsp;·&nbsp; scroll to zoom &nbsp;·&nbsp; touch a filapixel</p>
+
+<div class="psyshell-readout" hidden>
+  <p class="psyshell-readout-text"></p>
+  <p class="psyshell-readout-source"></p>
+</div>
+
+<button type="button" class="psyshell-sound-toggle" aria-pressed="false">
+  <span class="psyshell-sound-icon" aria-hidden="true">♪</span>
+  <span class="psyshell-sound-label">Sound off</span>
+</button>
+
+<div class="psyshell-sr-live" aria-live="polite"></div>

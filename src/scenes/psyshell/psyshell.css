@@ -1,0 +1,150 @@
+/* Psyshell scene styles (title, hint, readout, sound toggle), positioned on
+   document.body — see harmonics.css's header for the z-index/stacking-context
+   reasoning every scene with body-level chrome shares. psyshell.js owns
+   creating and removing each element itself.
+
+   ─── The palette, and why it is not Outside's ──────────────────────────────
+   This site already has a flower, and two floral scenes on a twelve-scene site
+   is a real consideration rather than a non-issue. Outside is violet on a
+   violet-black void, with five broad translucent lobes. Psyshell is white on a
+   green-black void, with three thousand fine rays.
+
+   The green is not a colour-wheel decision. In the source fiction a psyshell is
+   living apparatus a dead thing borrows, because life is the only thing that
+   functions in the green — so the void this flower grows in being faintly green
+   is the horror stated in the one place it can be stated without a word of
+   exposition. It also happens to be the strongest available separation from
+   Outside: the two voids are on opposite sides of the wheel, which is what a
+   thumbnail comparison at 200px actually reads.
+
+   Text is a cool near-white rather than the gold thread Sphere/Scroll/Orrery/
+   Beamline/Harmonics share, and rather than Outside's violet. Contrast measured
+   against this scene's real composited backdrop, not against pure black:
+   rgba(228,244,236,0.88) over #030f0b reads 13.4:1.
+
+   Mobile-first (standing convention, see STANDARDS.md): base declarations
+   target the smallest viewport; nested min-width queries layer the wider values
+   on top, never the reverse. */
+
+.psyshell-title, .psyshell-hint {
+  position: fixed; pointer-events: none; z-index: 310;
+  font-family: 'Arapey', serif; transition: opacity 0.3s ease;
+}
+
+/* Title block at bottom-center, anchored to the shared --title-block-bottom
+   var like every other scene (site-wide consistency pass, 2026-08-25), so this
+   stays clear of #site-title's footer pill by construction. Full-width flex row
+   rather than left:50% + translateX(-50%) — see #site-title-row's comment in
+   styles/main.css for why self-centering by transform was replaced everywhere
+   in this codebase. */
+.psyshell-title {
+  bottom: var(--title-block-bottom-mobile); left: 5vw; right: 5vw;
+  text-align: center; color: rgba(228, 244, 236, 0.88);
+  display: flex; flex-direction: column; align-items: center; gap: 0.25rem;
+
+	@media (min-width: 601px) {
+		bottom: var(--title-block-bottom); left: 0; right: 0;
+	}
+}
+.psyshell-title-name {
+  font-size: 1.5rem; letter-spacing: 0.22em;
+  /* letter-spacing adds its gap after the last character too, which pushes a
+     centred line visibly left of true centre. The compensating indent is the
+     same one every other scene's title carries. */
+  text-indent: 0.22em;
+  text-shadow: 0 0 18px rgba(150, 255, 200, 0.28);
+
+	@media (min-width: 601px) {
+		font-size: 1.9rem;
+	}
+}
+/* "flower magic" is doing the Union's own move — light, almost twee, entirely
+   accurate — so it is set small and unemphatic rather than as a second title.
+   Lower case is the point and is not a style tic: it is how Iplaisc would
+   describe her own work. */
+.psyshell-title-sub {
+  font-size: 0.78rem; letter-spacing: 0.3em; text-indent: 0.3em;
+  color: rgba(196, 226, 210, 0.6);
+
+	@media (min-width: 601px) {
+		font-size: 0.9rem;
+	}
+}
+
+.psyshell-hint {
+  top: 4.5rem; right: 1.2rem; max-width: 60vw; text-align: right;
+  font-size: 0.72rem; letter-spacing: 0.12em;
+  color: var(--hint-text-color);
+}
+
+/* ─── The readout ───────────────────────────────────────────────────────────
+   A touched petal IS a sentence, so the scene has to be able to show which one.
+   Top-left, opposite the hint, and it wraps at a measured width rather than a
+   guessed one: 34em is a little under the 80-character line the type scale
+   assumes, which at this size keeps the longest sentence in the corpus (358
+   words) from becoming a wall. It scrolls inside itself instead. */
+.psyshell-readout {
+  position: fixed; z-index: 311;
+  top: 4.5rem; left: 1.2rem; right: 1.2rem;
+  max-height: 34vh; overflow-y: auto;
+  padding: 0.7rem 0.9rem;
+  background: rgba(3, 20, 14, 0.72);
+  border: 1px solid rgba(150, 220, 190, 0.22);
+  border-radius: 4px;
+  font-family: 'Arapey', serif;
+  color: rgba(228, 244, 236, 0.9);
+  transition: opacity 0.25s ease;
+
+	@media (min-width: 601px) {
+		right: auto; width: 34em; max-width: 42vw;
+	}
+}
+.psyshell-readout-text {
+  margin: 0; font-size: 0.9rem; line-height: 1.6;
+}
+.psyshell-readout-source {
+  margin: 0.5rem 0 0; font-size: 0.66rem; letter-spacing: 0.14em;
+  text-transform: uppercase; color: rgba(150, 200, 178, 0.72);
+}
+
+/* Same bottom-left placement and behaviour as every other scene's sound
+   toggle (it is both the explicit first-gesture trigger and the ongoing mute
+   control), tinted to this scene's green rather than gold or violet. */
+.psyshell-sound-toggle {
+  position: fixed; bottom: 5.5rem; left: 1rem; z-index: 310;
+  display: flex; align-items: center; gap: .55rem;
+  background: rgba(4, 16, 12, 0.55); border: 1px solid rgba(160, 225, 195, 0.3);
+  border-radius: 999px; padding: .4rem .8rem;
+  color: rgba(206, 234, 220, .75); font-family: 'Electrolize', sans-serif;
+  font-size: .62rem; letter-spacing: .16em; text-transform: uppercase;
+  cursor: pointer; transition: background .2s, border-color .2s, color .2s;
+
+	@media (min-width: 601px) {
+		bottom: 3rem; left: 1.5rem; padding: .5rem 1rem;
+	}
+}
+.psyshell-sound-toggle:hover {
+  background: rgba(10, 34, 25, 0.7); border-color: rgba(160, 225, 195, 0.5);
+  color: rgba(226, 248, 238, 0.95);
+}
+.psyshell-sound-toggle:focus-visible { outline: var(--focus-ring); outline-offset: 2px; }
+.psyshell-sound-toggle[aria-pressed="true"] {
+  border-color: rgba(160, 255, 210, 0.65); color: rgba(232, 255, 244, 0.95);
+}
+
+/* Visually hidden, still announced. Same shape as every other scene's live
+   region rather than a second implementation of the same idea. */
+.psyshell-sr-live {
+  position: absolute; width: 1px; height: 1px;
+  margin: -1px; padding: 0; border: 0;
+  clip-path: inset(50%); overflow: hidden; white-space: nowrap;
+}
+
+/* Reduced motion stills the propagation and the idle turn, which psyshell.js
+   handles — this only takes the glow off the title, since a text-shadow that
+   does not animate is not motion and stays. Nothing here disables the object
+   itself: a visitor who asked for no motion still gets the flower, still turns
+   it by dragging, and still lights a petal by touching it. */
+@media (prefers-reduced-motion: reduce) {
+  .psyshell-title, .psyshell-hint, .psyshell-readout { transition: none; }
+}

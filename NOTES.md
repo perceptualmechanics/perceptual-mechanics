@@ -587,6 +587,196 @@ described are unchanged.)
   worth trimming, orrery.js's texture generators and first-person rig are the
   two most self-contained chunks to split out first.
 
+## 4.6.0 (2026-09-03)
+
+**Psyshell, the twelfth scene.** A white chrysanthemum whose 3,221 petals are
+the 3,221 sentences of this site.
+
+### What it claims
+
+Angle around the axis is position in reading order. Petal length is sentence
+length. The band is the scene the sentence came from. That is the whole of it,
+and the restraint is the point: this is the distinction from the shelved Spectra
+work, which claimed the corpus had a hidden spectral property and measured that
+it does not. Psyshell claims only that the text has a shape, which is trivially
+and verifiably true. The writing is the geometry.
+
+### The measurement came first, and it moved the design twice
+
+The brief assumed 2,000–2,500 sentences and eleven bands, each a contiguous arc.
+Measured, neither held.
+
+**3,221 petals, not 2,000–2,500.** Harvesting every published string gives 4,047
+units under the `prose` split; 508 of them are not sentences (four words or
+fewer, no terminal punctuation — Outside's power-source names, Library's
+cataloguing marginalia, Apollo's element labels) and the declared per-scene
+manifest excludes the rest.
+
+**Nine bands, not eleven.** Harmonics publishes no text of its own — it is in
+`TEXT_EXEMPT` for exactly that reason — and Outside publishes five power-source
+names and two origin labels, none of which are sentences. Two of the eleven have
+nothing to contribute, which is a fact about them rather than an omission.
+
+**And the arcs could not be equal.** Scroll and Theater are 82% of the corpus.
+Equal arcs give a density ratio of 1,382:1 and leave three consecutive 40°
+sectors holding 35 rays between them — a third of the circumference reading as a
+gap, with Butterfly's 40° wedge containing exactly one ray. Proportional arcs
+give uniform density and squeeze Butterfly to 0.1°, which is invisible.
+**Arc ∝ √petals** compresses the range to 37:1: every scene visible at 2.9° or
+wider, Scroll and Theater still taking 208° between them, so the lopsidedness is
+legible as density rather than erased. Scott chose equal arcs from a description
+and changed to the square root once the three schemes were on a table with real
+numbers in them — which is the argument for measuring before offering the
+choice, not after.
+
+### Reading order is declared, not inferred
+
+The obvious implementation is wrong twice, and both ways are invisible.
+
+It **double-counts**: `scroll.text.js` exports its twelve patches individually
+*and* `scrollPieces` as an ordered index over them — the same double-count
+`spectra-measurement-2026-09-02.md` had to correct. And it **loses the order**:
+a module namespace object has its keys sorted alphabetically by specification,
+so walking the exports visits Cartography before Iron Gods regardless of what
+the scene shows first. Psyshell's whole geometric claim is that angle is reading
+order, so the order cannot be an accident of alphabetisation. `CORPUS_SOURCES`
+names, per scene, the one export that carries the order and the fields that
+carry the writing.
+
+### `src/utils/corpus.js`, and why the split rule moved
+
+The sentence split was measured and chosen in `spectra.data.js` — and Spectra is
+shelved, unregistered, deliberately out of the build. A live scene importing
+from it would pull a shelved scene back into the bundle to reach one regex. So
+the rule moved to a shared module, where a second consumer can have it without
+resurrecting anything, and `STANDARDS.md` gains the rule that follows.
+
+Worth recording because the earlier work makes this look more contested than it
+is: across Theater's dialogue the three rules genuinely moved things (Horace
+6.3 → 7.0 → 6.6). Across the whole corpus they give 4,054 / 4,047 / 4,191 — a
+3.6% spread. The petal count moves by about one part in thirty if it is ever
+revisited.
+
+### Two renders that were wrong, and what fixed them
+
+**Render one was a shaving brush.** Elevation ran [0°, 74°] — every ray tilting
+up, nothing below the equator — so the object was a dome with a hard flat
+underside, and the centre was a solid white disc across the middle 40% with
+every ray in it lost. **Render two was a firework**: straight needle quads
+radiating from a point.
+
+Three corrections, all of them botany rather than taste. The longest rays now
+droop 22° *below* horizontal, which is what gives a chrysanthemum its skirt.
+Each ray curves along its own length, baked into the geometry over seven
+segments, because ray florets are not needles. And the base emission dropped
+from 0.34 to 0.022 — **because 3,221 rays all beginning at the same radius means
+the centre is the sum of three thousand overlaps**, so the level has to be set
+by what the pile sums to rather than by what one ray wants. The brightness ramp
+along each ray went to x^2.2 for the same reason: it keeps a ray's light in its
+outer third, where it has the sky to itself.
+
+A fourth came from the elevation exponent, and the corpus decided it. Half these
+sentences are between 4 and 14 words, so half the flower arrives inside a narrow
+slice of length, and a gentle curve mapped all of them to nearly the same
+elevation — which is what the white cap was. The exponent went to 2.6 to spend
+the elevation range on the crowded short end and compress the rare long one.
+
+**None of that was reasoned out.** Each one came from rendering the scene and
+looking at it, which is the colour-strip method from 4.3.0 and the piano
+audition from 4.5.2 applied a third time.
+
+### The tile clipped its own subject
+
+Found only by cropping the 200px tile and looking. The flower's visual centre is
+not the origin — the dome is 76° of elevation and the skirt only 22° — so aiming
+the camera at 0,0,0 puts the object high in frame, and inside the tile's
+circular crop it cut the skirt off at the bottom edge. At full screen the same
+error reads as framing rather than as damage. Fixed with a look-target above the
+origin, higher in preview than in the full scene.
+
+**On the Outside question**, asked in the brief and answered by looking: they do
+not read as siblings. Outside is a violet lotus with five broad translucent
+lobes and a gold seedpod on violet-black. Psyshell is a white-green radial burst
+on green-black. The honest second half of that observation is that Psyshell at
+200px reads as a dandelion clock rather than as a chrysanthemum — the rays and
+the seedpod are legible, the silhouette is a fuzzy disc. Reported rather than
+fixed, because it is a judgement about the object and not a defect.
+
+The void is green because in the source fiction life is the only thing that
+functions in the green, and a psyshell is living apparatus a dead thing borrows.
+It lands the horror without a word of exposition, and it is also the furthest
+available separation from Outside.
+
+### Tech, and what was deliberately not used
+
+One `InstancedMesh`, one draw call, ~90,000 triangles, CPU-side propagation on a
+`Float32Array`. 3,221 petals at 144fps is under half a million operations a
+second and Harmonics already integrates 76 coupled oscillators on the CPU.
+
+Recorded so it is not re-proposed: **WebGPU is genuinely available now** — but
+the versions in the brief were wrong in two of three places and the record
+should be right. Firefox is 141 on Windows and 145+ on macOS Tahoe 26 ARM64
+only; Chrome on Android needs 121+ with Qualcomm/ARM GPUs; and **no browser
+ships WebGPU on Linux at all**, which matters for a project whose CI is Linux.
+What would change the answer for this scene is a petal count above ~50,000 or
+neighbour coupling in more than one dimension. Neither applies.
+
+**Payload, stated because it is the largest of any scene.** Psyshell imports
+nine text modules, so opening it pulls 301KB raw / ~114KB gzipped of corpus on
+top of the shared Three.js chunk. They are separate chunks and shared with the
+scenes they belong to, so a visitor who has opened Scroll already has 108KB of
+it. Still the heaviest scene on the site, and the reason is that the scene is
+literally made of the writing.
+
+### The touch
+
+A disturbance travels along reading order — global reading order, so one that
+starts near the end of Scroll crosses into Theater. The corpus is one sequence;
+the bands record where its sentences came from, not a wall between them. It is
+asymmetric, which is "properly sling it forward" taken literally.
+
+### Verification, and one invalid probe
+
+Measured through a temporary probe on the scene's own `advance(dt)` and its real
+activation array, not from the screen — so it measures the model exactly and
+says nothing about whether the result is visible, which is judged by looking.
+
+**It travels.** Peak position 143 / 286 / 430 / 573 / 716 / 860 petals forward at
+even intervals — 428 per second measured against 430 configured — and 58 / 116 /
+175 backward, 174 against 175. Ratio 2.47.
+
+**Frame-rate independent.** One second of elapsed time at 30, 60 and 144fps gives
+front 430 forward, 175 back, peak amplitude 0.2871 — identical to four decimal
+places at all three rates. Driving `dt` directly is what makes this valid: it
+compares the same elapsed time cut two ways rather than hoping a headless tab
+will run at two refresh rates.
+
+**Reduced motion** holds the front at the origin and still lets activation rise
+and fall (0.81 → 0.65 → 0.50 over a second). The propagation is stilled; the
+object is not.
+
+**One probe was invalid and is reported under rule 4.** A falloff test sampled
+activation at fixed distances at one instant and returned zeros, which looked
+like the amplitude envelope failing. It was measuring the travelling shell
+instead: at t=0.5s the front is at +215 with a half-width of 24, so every sample
+point but one was outside it. The envelope is fine and decomposes exactly —
+at t=2.0s, `exp(-860/780) × (1 - 0.588)² = 0.0566` against 0.0563 measured. **A
+probe that returns zeros is not evidence of zero.**
+
+**One audio context per visit, closed on leave, zero orphans**: one context
+after playing, closed after leaving to Apollo and clicking inside it — the
+stale-listener path — and exactly one more on return. Petal count equals
+sentence count by an assertion that throws at import, so the build fails rather
+than the scene.
+
+**Twelve tiles, 4/4/4 at 1280px with no second decision**, 3/3/3/3 at 768 and
+780. Nav at twelve is **25.3 × 44px at 320px**, down from 27.6 at eleven,
+measured off the rendered button rather than derived: it clears WCAG 2.5.8 AA
+(24px) by 1.3px and fails AAA, as it already did at eleven. The row never
+overflows at any of the eight widths. **A thirteenth scene gives 23.4px and
+fails AA** — so twelve is the last scene this nav holds at 320px, and that is
+the answer to the question flagged three times.
+
 ## 4.5.2 (2026-09-03)
 
 Apollo's struck voice made more piano-like. Chosen by listening, and the

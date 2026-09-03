@@ -33,6 +33,11 @@ import {
   SOURCES as APOLLO_SOURCES, SOLAR_MIXTURE, FRAUNHOFER,
   VISIBLE_MIN, VISIBLE_MAX, wavelengthToHz, visibleLines, balmerSeries, fraunhoferFor,
 } from '../src/scenes/apollo/apollo.text.js';
+import {
+  BANDS as PSY_BANDS, PETAL_COUNT, CORPUS_WORDS, WORDS_MEDIAN, WORDS_CLAMP,
+  WORDS_MAX, CLAMPED_PETALS, PETAL_MIN_FRACTION,
+} from '../src/scenes/psyshell/psyshell.text.js';
+import { SENTENCE_SPLIT } from '../src/utils/corpus.js';
 import { SCENES, TEXT_EXEMPT } from '../src/scenes/registry.js';
 import { getOutboundLinks } from '../src/links.js';
 
@@ -569,6 +574,60 @@ ${elementList}
   };
 }
 
+// Psyshell's page is built from `psyshell.text.js` — the same module the scene
+// imports and the same three rulers — so a change to the corpus reader moves
+// the flower and this page together or fails the build. There is no third
+// place holding a stale count, which for a scene whose entire subject is a
+// count is the only arrangement worth having.
+function buildPsyshell() {
+  const bandList = `<ul class="catalog">
+${PSY_BANDS.map(b => `<li><span class="t">${esc(b.label)}</span>
+<span class="c">${b.count} sentence${b.count === 1 ? '' : 's'} · ${b.words.toLocaleString('en-US')} words · ${b.arcDeg.toFixed(1)}° of the flower</span></li>`).join('\n')}
+</ul>`;
+
+  const body = `<article class="piece">
+<h2 id="what-it-is">What it is</h2>
+<p>Every sentence on this site is one petal. There are ${PETAL_COUNT.toLocaleString('en-US')} of them, ${CORPUS_WORDS.toLocaleString('en-US')} words in all, and the flower is what they make when you arrange them by three rules and nothing else.</p>
+<p class="note">Angle around the axis is position in reading order. Petal length is sentence length. The band a petal sits in is the scene its sentence came from.</p>
+<p>Nothing is claimed here about the writing. This is the distinction from an earlier idea that was built, measured and shelved: that one claimed the corpus had a hidden spectral property, and the measurement said it does not. This one claims only that the text has a shape — a number of sentences, of certain lengths, in a certain order, from certain places — which is trivially and verifiably true. The writing is the geometry. A scene with long sentences reads as a broad soft arc; a terse one as a spiky sector.</p>
+<p>The name is for the output rather than the object. The chrysanthemum is the mechanism; a psyshell is what it produces.</p>
+
+<h2 id="bands">The nine bands</h2>
+<p>Two scenes are absent, and that is a fact about them rather than an omission. <strong>Harmonics</strong> publishes no writing of its own — it is a view of the connections between the other scenes, each of which has its own page. <strong>Outside</strong> publishes five power-source names and two origin labels, none of which are sentences.</p>
+${bandList}
+<p>Band width is not equal and not proportional. Two scenes are ${Math.round((PSY_BANDS[2].count + PSY_BANDS[3].count) / PETAL_COUNT * 100)}% of the corpus between them, so equal arcs would leave a third of the circumference nearly bare and proportional arcs would squeeze the smallest band below a tenth of a degree. Each band's arc is proportional to the <em>square root</em> of its sentence count, which compresses a 1,350-to-1 range into 37-to-1: every scene stays visible, and the lopsidedness is still legible as density rather than erased.</p>
+
+<h2 id="sentences">Where a sentence ends</h2>
+<p>Three rules were measured against each other before one was chosen. <em>Blunt</em> treats every full stop, question mark and exclamation mark as a boundary, so an ellipsis is three sentences. <em>Prose</em> treats neither an ellipsis nor an em-dash as a boundary. <em>Beatwise</em> treats an em-dash as a boundary, on the reasoning that a cut-off ends a unit of speech.</p>
+<p><strong>${esc(SENTENCE_SPLIT)}</strong> is what ships, because an interrupted or trailing line is one sentence: a writer trailing off has not finished three thoughts, they have not finished one. Across this corpus the three rules give 4,054, 4,047 and 4,191 units before filtering — a spread of 3.6%, which is small enough that the choice moves the petal count by about one part in thirty and no further.</p>
+<p>A unit has to be a sentence to be a petal. Four words or fewer with no terminal punctuation is not one — cataloguing marginalia, element labels, the names of things — and 508 such fragments are excluded. Petal length is sentence length here, so each of those would have become a stub at the rim: a claim about the writing that the writing did not make.</p>
+
+<h2 id="length">Length, and what the clamp costs</h2>
+<p>Sentences here run from one word to ${WORDS_MAX}, with a median of ${WORDS_MEDIAN}. Mapping that to petal length directly would give one ray twenty times the flower's radius, so length goes as the square root of the word count and is clamped at the 99th percentile, ${WORDS_CLAMP} words. ${CLAMPED_PETALS} petals of ${PETAL_COUNT.toLocaleString('en-US')} therefore sit at the rim together, and above that length the flower stops distinguishing.</p>
+<p>That is a real loss of information at the top end, said here rather than left to be discovered, and it is the price of the object still being a flower. A one-word sentence is still ${Math.round(PETAL_MIN_FRACTION * 100)}% of full reach, because a ray of nearly nothing is not a ray.</p>
+
+<h2 id="touch">Amplification around the root</h2>
+<p>Touching a petal sends a disturbance outward along reading order — to the sentences adjacent in the text, then further, falling off with distance. It travels rather than simply brightening, and it is asymmetric: the front runs about two and a half times further toward later sentences than toward earlier ones.</p>
+<p>Reading order is the whole corpus, not one band, so a disturbance that starts near the end of one scene crosses into the next. The corpus is one sequence; the bands record where its sentences came from, not a wall between them.</p>
+
+<h2 id="source">The source passage</h2>
+<p class="note">Iplaisc lifts herself up from the editbay and enters the workshop, punches in the text of <em>Strange Attractors: A Love Affair with Chaos</em>, begins the computation. The middle of the workbench revolves, glows, and a thousand light trails form, taking the shape of a white fiber-optic chrysanthemum, each filapixel a moment in time, demarcated in the code of the Union.</p>
+<p class="note">&mdash; Is there any effect you're looking for? &mdash; Tessier curve. &mdash; Hmm. It definitely appears to be capable, although it will need some amplification around the root here to properly sling it forward.</p>
+<p>The count is the one place the passage and the corpus disagree: it says a thousand light trails and there are ${PETAL_COUNT.toLocaleString('en-US')} sentences. That is not corrected. The corpus decides the count; the passage was written about a different text.</p>
+</article>`;
+
+  return {
+    slugPath: 'psyshell',
+    title: 'Psyshell',
+    description: `A white chrysanthemum made of every sentence on this site — ${PETAL_COUNT.toLocaleString('en-US')} petals, one each, arranged by reading order and sized by sentence length.`,
+    sceneKey: 'psyshell', sceneName: 'Psyshell',
+    lede: `<p><strong>Psyshell</strong> is a flower made of this site's own writing: ${PETAL_COUNT.toLocaleString('en-US')} sentences, one petal each, placed by reading order and sized by length. Touching one sends a disturbance through the text around it.</p>
+<p>This page is the measurement underneath it — the nine bands, the three rulers, and what each of them costs.</p>`,
+    bodyHtml: body,
+    jsonLd: creativeWork('Psyshell', `A chrysanthemum whose ${PETAL_COUNT} petals are the ${PETAL_COUNT} sentences of this site, arranged by reading order and sized by sentence length.`, 'psyshell'),
+  };
+}
+
 function buildLibrary() {
   // TWO fields are deliberately withheld here. Both were learned the hard
   // way; don't reinstate either without checking with Scott first.
@@ -729,7 +788,7 @@ export function prerender(outDir) {
   const pages = [
     buildScroll(), buildPoems(), buildFragments(),
     buildTheater(), buildOrrery(), buildBeamline(), buildLibrary(),
-    buildApollo(),
+    buildApollo(), buildPsyshell(),
   ];
   const all = [buildIndex(pages), ...pages];
 
