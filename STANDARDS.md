@@ -127,6 +127,15 @@ a clean clone builds and passes all four gates in about a second. Unpushed
 local work travels as a `git format-patch` and `git am`, not as a copied
 folder.
 
+**Leave that clone clean before ending a turn.** The build writes into it, and
+a dirty clone is what the stop hook reports — it says "the repository" and
+checks whichever one it is pointed at, so the warning is accurate about the
+state and silent about the location. It has now fired across two separate
+sessions with the same cause and the same first response, which was to explain
+it. `git checkout -- . && git clean -fd` in the clone is the whole fix and
+takes a second; explaining the discrepancy again is not one. This sentence
+exists because the correction had been living in a reply.
+
 This folder's `node_modules` belongs to the Mac. Nothing on the assistant side
 should write to it — not `npm install`, not `npm ci`, not `npm run build`
 (which runs the local `vite` binary out of it).
