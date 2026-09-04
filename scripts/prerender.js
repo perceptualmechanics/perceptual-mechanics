@@ -19,6 +19,7 @@
 // Third-party text is excluded by policy — see buildLibrary() below.
 
 import fs from 'fs';
+import { FIELD } from '../src/utils/sceneField.js';
 import path from 'path';
 
 import { scrollPieces } from '../src/scenes/scroll/scroll.text.js';
@@ -954,6 +955,25 @@ export function prerender(outDir) {
       if (missingTile.length) problems.push(`registered but has no landing tile in index.html: ${missingTile.join(', ')}`);
       if (strayIcon.length) problems.push(`nav icon in index.html for a scene that is not registered: ${strayIcon.join(', ')}`);
       if (strayTile.length) problems.push(`landing tile in index.html for a scene that is not registered: ${strayTile.join(', ')}`);
+
+      // ─── The field, 4.10.0 ────────────────────────────────────────────────
+      // The landing arrangement places each tile from a measured pair in
+      // src/utils/sceneField.js. A scene added to the registry with no
+      // measurement has no position, and main.js's own guard fails safe by
+      // abandoning the field and leaving the grid — correct at runtime, and
+      // exactly the kind of silent downgrade that ships unnoticed. So it
+      // fails HERE instead, where somebody is watching.
+      //
+      // Note what this cannot check: whether the numbers are still TRUE. They
+      // are measurements of rendered frames, and a scene reworked hard enough
+      // to change how busy it looks needs re-measuring, which no gate can
+      // detect. That is what SITE.md's field section is for.
+      const measured = FIELD.map(f => f.key);
+      const missingField = reg.filter(k => !measured.includes(k));
+      const strayField = measured.filter(k => !reg.includes(k));
+      if (missingField.length) problems.push(`registered but has no measured position in sceneField.js: ${missingField.join(', ')} — the landing field would fall back to the grid`);
+      if (strayField.length) problems.push(`sceneField.js measures a scene that is not registered: ${strayField.join(', ')}`);
+      if (new Set(measured).size !== measured.length) problems.push('sceneField.js lists a scene twice');
     }
 
     if (problems.length) {

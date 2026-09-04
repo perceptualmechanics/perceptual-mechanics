@@ -98,12 +98,67 @@ Scroll alone holds over half. Four scenes hold 591 words between them. This is
 not a defect — a Lorenz attractor does not want prose — but it is a fact a
 session needs before it starts counting rather than after.
 
+**The scenes with more writing are the stiller, smoother ones.** Measured
+2026-09-04 across the nine publishing scenes: word count against visual
+complexity is r = −0.862 (p = 0.003), and against motion r = −0.798 (p = 0.010).
+A scene you read holds still. This is a fact about the site regardless of what is
+built on it, and it came out of a measurement that failed at its stated purpose —
+an attempt to use Shannon entropy of the writing as an axis for the landing
+field, dropped because character-level entropy spans only 0.109 bits across the
+nine (the noise threshold was 0.1), because every whole-scene ruler turned out to
+be word count in disguise (conditional H₃ correlates +0.979 with log N), and
+because corrected to a matched sample it can place only eight of the twelve
+scenes. **Whenever an entropy figure for this corpus is quoted, quote the ruler
+and the correction with it** — see `CORRECTED-FACTS.md`.
+
 **Some modules export the same text twice, on purpose**, so any measurement that
 walks a module's exports must name **which export** it counted.
 `theater.text.js` publishes `PIECES` (nested) and `BEATS` (a flat index over the
 same beats, so Harmonics can address one beat); `scroll.text.js` publishes twelve
 pieces individually and the assembled `scrollPieces`. Counting the namespace
 counts the words twice and produces a plausible number.
+
+---
+
+## The landing page — the field
+
+The landing page is not a grid of twelve tiles. It is **one plane with twelve
+scenes on it, each at a position measured from its own rendered frames.** A grid
+asserts that all twelve are the same kind of thing, equally weighted and equally
+sized; that was true at five and is already slightly false at twelve.
+
+The two axes, both measured 2026-09-04 at v4.9.0 and stored with their rulers in
+`src/utils/sceneField.js`:
+
+| Axis | What it is | Range across the twelve |
+|---|---|---|
+| **x — spatial complexity** | Share of a frame's spectral power above a quarter of Nyquist, Hann-windowed, mean of twelve frames | 1.03 % (Sphere) to 60.5 % (Butterfly) |
+| **y — motion** | Mean absolute grayscale difference between frames 0.1 *scene*-seconds apart | 0.00016 (Library) to 0.0432 (Butterfly) |
+
+Both are placed on a log scale, because both span more than two orders of
+magnitude and a linear scale piles nine of the twelve into one corner.
+
+**The axes are independent, and that was the gate the whole idea had to clear**
+— Spearman +0.38 at p = 0.23. Complexity and motion are separate properties:
+Scroll is structurally busy and almost perfectly still; Sphere is the smoothest
+frame on the site and one of the most active.
+
+**Two departures from true position, both deliberate and both stated in the
+code.** Repulsion separates the one genuinely colliding pair (Orbiter and
+Apollo, 0.063 of the diagonal; the median pair distance is 0.403), so a repelled
+tile is not exactly where its measurements put it. And the tiles keep a small
+wander at rest — equilibrium is detailed balance, not stillness, and a static
+arrangement would make the box a chart with a metaphor stuck on it.
+
+**The field is a layout over the list, not a replacement for it.** The markup is
+the same `<ul>` of twelve `<li><button>` it has always been, so JavaScript off,
+a crawler, a screen reader, and the moment before the field initialises all get
+the grid — which is a correct index. `scripts/prerender.js` fails the build if a
+registered scene has no measured position.
+
+**A scene reworked hard enough to change how busy it looks needs re-measuring.**
+No gate can detect that; the numbers are measurements of frames, not
+derivations.
 
 ---
 

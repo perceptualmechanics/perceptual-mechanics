@@ -155,6 +155,56 @@ This folder's `node_modules` belongs to the Mac. Nothing on the assistant side
 should write to it — not `npm install`, not `npm ci`, not `npm run build`
 (which runs the local `vite` binary out of it).
 
+## Measuring a scene
+
+### Sample at scene-time, and drive the clock
+
+Learned across three releases of harnesses that each had to fail first, and now
+general enough to be a rule rather than a note in one file.
+
+**A harness that samples a running scene on wall-clock time measures its own
+latency.** Under the software rasterizer available in the assistant sandbox a
+single frame of Sphere costs about 570 ms; `page.screenshot()` costs another
+160 ms. A harness that asks for "a frame every 100 ms" gets whatever the machine
+managed, which is a different point in each scene's own cycle for each scene,
+and the comparison it then makes is between scenes sampled at different times.
+
+So take the clock away from the page:
+
+- `performance.now()` returns a counter the harness owns.
+- `requestAnimationFrame` **queues** the callback; it does not schedule it.
+- A frame happens only when the harness steps it, and the step advances the
+  counter by a fixed amount.
+- `Math.random` is seeded, so a scene that scatters points scatters the same
+  points on every run.
+- The mount path (dynamic import, the crossfade's `setTimeout`) keeps real
+  timers. Only the frame clock is virtual.
+
+Three things that were got wrong doing this and will be got wrong again:
+
+- **Step in chunks.** Stepping 180 frames inside one `evaluate()` blocked the
+  renderer long enough that Chromium closed the target. Fifteen per call, with
+  a yield between.
+- **Do not detect "mounted" by polling for a canvas, and do not break out of
+  the boot loop early.** Scroll has no canvas at all and reported "not mounted"
+  while rendering perfectly; worse, because the poll stepped a frame per
+  iteration, a scene that mounted late got *more* frames before warm-up than
+  one that mounted early, and came out 0.33 s further into its own cycle. That
+  is "same elapsed time for every scene" being violated by the instrument
+  rather than the subject. Use a **fixed** number of boot frames for every
+  scene.
+- **The landing's preview canvases keep their frame loops running behind an
+  open scene.** They are paused by the app but the loop still ticks, costing
+  about a quarter of every frame and contributing nothing to the image. Drop
+  their contexts before sampling.
+
+**And report the invalid attempts.** Three releases running, the finding came
+from a probe that failed first — the dt clamp that invalidated a frame-rate
+harness, the `?url` that emitted a worklet twice, the mount detector above. A
+harness quietly replaced is a measurement nobody can weigh.
+
+---
+
 ## Documentation
 
 ### The knowledge base is current; a brief is a missive

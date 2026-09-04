@@ -587,6 +587,133 @@ described are unchanged.)
   worth trimming, orrery.js's texture generators and first-person rig are the
   two most self-contained chunks to split out first.
 
+## 4.10.0 (2026-09-04)
+
+**The landing page becomes a field.** Twelve scenes on one plane, each at a
+position measured from its own rendered frames. The grid asserted that all
+twelve were the same kind of thing, equally weighted and equally sized; true at
+five, already slightly false at twelve, and a wall of circles at twenty.
+
+**Measured first, designed second, and the first axis died in the measuring.**
+The full report is in the session artifact; the short version, because these are
+the reasons that get re-proposed:
+
+- Shannon entropy of the writing was the proposed x-axis. Character-level spans
+  **0.109 bits** across the nine publishing scenes — the stated noise threshold
+  was 0.1. Every whole-scene ruler turned out to be word count (conditional H₃
+  correlates **+0.979** with log N). Corrected by rarefaction to a matched
+  250-word sample it survives and then places **eight of twelve**: Harmonics,
+  Outside and Psyshell publish no sentences, and Butterfly's six words carry no
+  estimate under any correction.
+- The gate the whole idea had to clear was whether the two axes disagree. They
+  do: nothing between any text ruler and any visual ruler reaches significance,
+  the strongest being ρ = −0.62 at p = 0.10.
+- **The failure produced a better fact than the axis would have.** Word *count*
+  predicts visual disorder at r = −0.862 (complexity) and −0.798 (motion). The
+  scenes with more writing are the stiller, smoother ones. A scene you read
+  holds still. In `SITE.md` now, true whether or not anything is built on it —
+  and the reason the length correction was load-bearing rather than fastidious,
+  since an uncorrected axis would have collapsed the field onto a diagonal and
+  the diagonal would have looked like a finding.
+
+**What shipped: spatial complexity × motion.** Both cover all twelve, both span
+more than two orders of magnitude (hf 1.03–60.5 %, mad 0.00016–0.0432), and they
+are independent of each other at ρ = +0.38, p = 0.23. Within each, the candidate
+rulers agree and collapse to one — hf against spectral slope is −0.87, the three
+motion measures agree at ≈ +0.90 — so there are two rulers here, not six. Both
+axes are log-scaled, which is a property of the measurements and not a
+presentational preference: on a linear scale nine of the twelve pile into one
+corner.
+
+**It is a layout over the list, not a replacement for it, and that is the whole
+design.** `index.html` is untouched. The same `<ul>` of twelve `<li><button>`
+gets `position: absolute` and a transform per tile, so JavaScript off, a
+crawler, a screen reader and the moment before the field initialises all get the
+grid — which is a correct index. Nothing about the no-JS fallback had to be
+written because nothing was replaced. Verified: real `<ul>`, twelve tiles, DOM
+order still the registry's, every tile named and focusable, the axis legend
+`aria-hidden` because the list underneath is the real navigation.
+
+**Sorted, then mixed.** The tiles start in a compact centred block — the grid,
+near enough, which is the low-entropy configuration — and diffuse out to their
+measured positions over 1.5s with a 260ms stagger. That is the two-gas
+demonstration run in the honest direction: the grid IS the sorted state, twelve
+things in rows ordered by nothing but the registry, and the measured plane is
+the mixed one. Nobody sorted it.
+
+**Three stated departures from true position.** All three are named in the code
+rather than left to look like derivations:
+
+1. *Repulsion.* One pair genuinely collides — Orbiter and Apollo at 0.063 of the
+   diagonal, against a median pair distance of 0.403. `relax()` separates them
+   with an anchored relaxation, and returns `maxShift` so the size of the lie is
+   a number rather than a comment.
+2. *The wander.* At rest the tiles keep a slow Lissajous drift of 3.5 % of a
+   tile. Equilibrium is detailed balance, not stillness — and a static
+   arrangement would make this a chart with a metaphor attached.
+3. *Anisotropy.* The plane is stretched to the container rather than letterboxed
+   square, so on a phone a step along x is worth fewer pixels than the same step
+   along y. Letterboxing was tried and rejected: it threw away a third of the
+   room on a laptop for a distance metric that was never metric — one axis is a
+   share of spectral power and the other a grayscale difference per unit time,
+   and no rate of exchange between them exists to preserve.
+
+**Four things went wrong and each was caught by a measurement rather than by
+reading the code.**
+
+- *`.rows-forced` beat the field on the cascade.* Its `.preview-container {
+  width: 272px }` has exactly the same specificity as the field's
+  `width: var(--tile)`, so source order decides — and Vite's minifier reorders
+  those two rules relative to the source. Desktop tiles came out 272px at 72 %
+  coverage, overlapping badly. Fixed by not putting the class on at all in field
+  mode, which is also what it means: there are no rows to force.
+- *The relaxation settled short.* The anchor and the push reach a standoff a few
+  pixels before the pair is actually separated — measured at 0–3px of clearance
+  where `minDist` asks for 8. A short separation-only tail fixes it exactly.
+- *Library sat behind the footer scrim on a phone.* The plane was sized from
+  `#landing`'s padding-bottom (4.5rem) while `#landing-bottom-fade` is 10rem —
+  the same mistake the scrim itself had fixed one release earlier. The field now
+  asks the page how much room its chrome takes.
+- *The calm was frame-counted, not timed.* The wander stops when a pointer
+  enters or a tile takes focus, eased over 0.25s — except the first version
+  eased by a fixed fraction per FRAME, which is 0.8s at 60fps and about fifteen
+  seconds at the 3fps the measurement sandbox manages. On any slow device "stops
+  when you point at it" would have quietly become "stops eventually." Caught
+  because the harness kept reporting movement a second after the pointer
+  arrived, with the pointer events provably firing.
+
+**The wander stops when somebody is aiming at it,** and that came out of a
+failure too: Playwright would not click a tile at all, because its actionability
+check waits for an element to hold still for two consecutive frames and a
+wandering tile never does. A human can hit a 155px circle drifting 5px, so this
+is not the same as broken — but a target that is never at rest is a real cost
+that falls hardest on whoever has the least steady hand, and an automated check
+that cannot click the site's own navigation is worth listening to. Note the
+ordering, which is why `page.click()` still cannot be used here and the harness
+uses `mouse.move` then `down`/`up`: Playwright waits for stillness *before* it
+moves the pointer, and the field stills *because* the pointer arrived.
+`prefers-reduced-motion` remains the mechanism for switching the motion off
+outright, and it arrives settled with no animation at all — verified.
+
+**Build gate, made to fail before it was trusted.** `prerender.js` now checks
+the registry against `sceneField.js` in both directions; removing Outside's row
+fails the build with the scene named. What it cannot check is whether the
+numbers are still *true* — they are measurements of frames, and a scene reworked
+hard enough to change how busy it looks needs re-measuring. `SITE.md` says so.
+
+**Measured after:** desktop 1440×820 — plane 1392×692, 155px tiles, 23.5 %
+coverage, closest pair 2px apart, nothing scrolls. Phone 390×844 — plane
+342×628, 78px tiles, 26.7 % coverage, every tile clear of the footer chrome.
+Resize re-places and every tile lands inside.
+
+**Files:** `src/utils/sceneField.js` (new — the measurements, their rulers, and
+the placing arithmetic; pure, no DOM), `src/main.js` (`initField`,
+`layoutField`, the settle loop, and `.rows-forced`'s new condition),
+`styles/main.css` (`.is-field`, the axis legend), `scripts/prerender.js` (the
+gate), `SITE.md` (the field, and the word-count correlation),
+`STANDARDS.md` ("Measuring a scene" — sample at scene-time, drive the clock),
+`CORRECTED-FACTS.md` (entropy figures need their ruler attached).
+
 ## 4.9.1 (2026-09-04)
 
 **The landing page on a phone.** Scott sent two screenshots from an iPhone.

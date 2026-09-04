@@ -59,6 +59,27 @@ becomes legible. The stale reason was propping up a sound decision.
 | `--nav-count` in `styles/main.css` is the value an added scene changes | **A fallback only, since v4.4.0.** `applyDerivedLayout()` in `main.js` sets it from `Object.keys(SCENES).length`; adding a scene changes no number in the stylesheet. | `styles/main.css:386` · `src/main.js`, `applyDerivedLayout` |
 | A mixture in the hash risks colliding with the `#scene/id` piece route | It cannot. `parseHash()` has always required `/^\d+$/` before treating a second segment as a piece id. What did need changing was `setHash()`, which rebuilt the hash from scene + piece id and erased a mixture on arrival. | `src/main.js:197` |
 
+## Numbers that need their ruler attached
+
+An entropy figure without its unit and its correction is not a fact, it is a
+number that sounds like one. These were all measured 2026-09-04 over the nine
+publishing scenes and every one of them has been true and misleading at once.
+
+| Claim | What is true | Source |
+|---|---|---|
+| "The scenes differ in textual entropy" | At the **character** level they differ by **0.109 bits** total (4.161–4.270). The stated threshold for calling a ruler noise was 0.1 bits. | `sceneField.js` header |
+| "Scroll has the highest entropy" (or any whole-scene ranking) | Every whole-scene ruler is **word count**: word-level r = +0.965 with log N, conditional H₂ +0.959, H₃ +0.979, gzip −0.857. The ranking is a ranking of length. | `sceneField.js` header |
+| An entropy figure quoted bare | Quote the **unit and the correction**: e.g. "6.77 bits per word, plugin estimate on 300 contiguous 250-word blocks, mean ± 0.14". Uncorrected whole-scene figures are not comparable between scenes. | `sceneField.js` header |
+| "Entropy places the scenes on the landing field" | It does not, and it was not shipped. It can place **eight of twelve** — Harmonics, Outside and Psyshell publish no sentences, and Butterfly's six words carry no estimate under any correction. The field's axes are visual complexity and motion. | `SITE.md`, "The landing page — the field" |
+| "The landing field's positions are exact" | Two stated departures: repulsion separates Orbiter/Apollo, and every tile keeps a small wander at rest. | `sceneField.js`, `relax()` |
+
+**Why this section exists rather than a footnote:** the useful finding from that
+measurement — that word count predicts visual stillness at r = −0.862 — is
+exactly the kind of sentence that gets restated without its ruler and becomes
+"the writing-heavy scenes are calmer" with no n, no p and no method.
+
+---
+
 ## Sources and methods that look right and are not
 
 | Claim | What is true | Source |

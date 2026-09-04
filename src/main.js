@@ -1,5 +1,7 @@
 import { initColophon }    from './components/colophon/colophon.js';
 import { anyPanelOpen, prefersReducedMotion } from './utils/sceneKit.js';
+import { COORDS, placeField } from './utils/sceneField.js';
+import { mulberry32 } from './utils/prng.js';
 import { SCENES } from './scenes/registry.js';
 
 // The registry is deliberately import-free (see its header), so the loaders are
@@ -902,14 +904,246 @@ function applyDerivedLayout() {
     const TILE_PX = 272, GAP_PX = 24, PAD_PX = 32;
     const needed = cols * TILE_PX + (cols - 1) * GAP_PX + PAD_PX;
     const mq = window.matchMedia(`(min-width: ${needed}px)`);
-    const sync = () => list.classList.toggle('rows-forced', mq.matches);
+    // `.rows-forced` means "hold the deliberate 4/4/4 rows", which is
+    // meaningless once the field is placing tiles individually — and worse
+    // than meaningless: its `.preview-container { width: 272px }` has exactly
+    // the same specificity as the field's own `width: var(--tile)`, so which
+    // one wins is decided by source order, and Vite's minifier reorders these
+    // two rules relative to the source. That is not a cascade to depend on.
+    // The class simply does not go on in field mode.
+    const sync = () => list.classList.toggle(
+      'rows-forced', mq.matches && !list.classList.contains('is-field'));
     mq.addEventListener('change', sync);
     sync();
   }
 }
 applyDerivedLayout();
 
+// ─── The field ───────────────────────────────────────────────────────────
+// The landing page's arrangement, 4.10.0. Every measurement and all the
+// placing arithmetic is in src/utils/sceneField.js; this is the part that
+// needs a DOM — measure the container, choose a tile size, write positions,
+// and run the settle.
+//
+// It is a LAYOUT OVER THE EXISTING LIST, not a replacement for it. Nothing
+// here creates, removes or reorders a tile: the same <ul> of twelve named
+// <li><button> stays exactly as index.html wrote it, so JavaScript off, a
+// crawler, a screen reader walking the list, and the moment before this
+// function runs all get the grid, which is a correct index. That is the whole
+// reason the field is applied as a class rather than rendered.
+//
+// ─── Sorted, then mixed ──────────────────────────────────────────────────
+// The tiles start where the grid put them and diffuse out to their measured
+// positions. That is the two-gas demonstration the arrangement is named for,
+// and it is the honest direction to run it: the grid IS the sorted state —
+// twelve things in rows, ordered by nothing but the registry — and the
+// measured plane is the mixed one. Nobody sorted the mixed state. They are
+// where their coordinates put them, and there are vastly more arrangements
+// like that than like a grid.
+//
+// At equilibrium the tiles keep a small wander. Physically that is the right
+// end state — equilibrium is detailed balance, not stillness — and it is also
+// the difference between a box and a chart: if the positions were static the
+// metaphor would be decoration. The wander is deterministic (mulberry32,
+// seeded per tile) so the field breathes the same way on every visit, and its
+// amplitude is stated below as what it is: a departure from true position, on
+// top of the one repulsion already makes.
+const FIELD_COVERAGE = 0.30;    // share of the plane the twelve tiles may fill
+const FIELD_TILE_MIN = 78, FIELD_TILE_MAX = 224;
+const FIELD_SETTLE_MS = 1500, FIELD_STAGGER_MS = 260;
+const FIELD_WANDER = 0.035;     // of a tile, peak — about 5px at 150px tiles
+const FIELD_WANDER_HZ = 0.055;
+
+let fieldState = null;
+
+function initField() {
+  const list = document.getElementById('scene-previews');
+  const landing = document.getElementById('landing');
+  if (!list || !landing) return;
+  const wrappers = new Map(
+    [...list.querySelectorAll('.preview-wrapper')].map(el => [el.dataset.scene, el]));
+  // Every registered scene must have a tile and a position, or the field is
+  // quietly incomplete. prerender.js gates the same pair at build time; this
+  // is the runtime half, for a deployed page and a deployed bundle that
+  // disagree — and it FAILS SAFE, leaving the grid rather than drawing a
+  // field with a hole in it.
+  if (COORDS.some(c => !wrappers.has(c.key)) || wrappers.size !== COORDS.length) {
+    console.warn(`field: ${COORDS.length} measured positions but ${wrappers.size} tiles — staying with the grid`);
+    return;
+  }
+
+  const axes = document.createElement('div');
+  axes.className = 'field-axes';
+  axes.setAttribute('aria-hidden', 'true');
+  axes.innerHTML =
+    '<span class="field-axis-x">spatial complexity →</span>' +
+    '<span class="field-axis-y">motion →</span>';
+  list.append(axes);
+  list.classList.add('is-field');
+  // applyDerivedLayout() ran first and may already have put it on; its own
+  // sync will not put it back while `is-field` is set (see the comment there).
+  list.classList.remove('rows-forced');
+
+  const rng = mulberry32(0x5eed);
+  const phases = COORDS.map(() => ({ a: rng() * Math.PI * 2, b: rng() * Math.PI * 2 }));
+
+  fieldState = { list, landing, wrappers, axes, phases, placed: null, t0: 0,
+                 settled: false, calm: false, calmK: 1 };
+
+  // ─── The wander stops when somebody is aiming at it ─────────────────────
+  // Found by a click failing rather than by thinking about it: Playwright
+  // refused to click a tile at all, because its actionability check waits for
+  // an element to hold still for two consecutive frames and a wandering tile
+  // never does. A human can hit a 155px circle drifting 5px, so this is not
+  // the same as broken — but "the target is never at rest" is a real cost,
+  // it falls hardest on whoever has the least steady hand, and an automated
+  // check that cannot click the site's own navigation is worth listening to.
+  //
+  // So the field breathes while nobody is touching it and holds still the
+  // moment a pointer enters or a tile takes focus. Eased rather than snapped,
+  // or the tile jumps under the cursor at the moment of aiming — which would
+  // be worse than the drift. `prefers-reduced-motion` remains the mechanism
+  // for switching it off outright.
+  const calm = v => { if (fieldState) fieldState.calm = v; };
+  list.addEventListener('pointerenter', () => calm(true));
+  list.addEventListener('pointerleave', () => calm(false));
+  list.addEventListener('focusin', () => calm(true));
+  list.addEventListener('focusout', () => calm(false));
+
+  layoutField();
+  window.addEventListener('resize', onFieldResize, { passive: true });
+  if (!prefersReducedMotion()) requestAnimationFrame(fieldFrame);
+}
+
+function layoutField() {
+  if (!fieldState) return;
+  const { list, landing, wrappers } = fieldState;
+  // The plane is what the container actually gives, measured — not derived
+  // from vw, which cannot see #landing's scrollbar and was already the cause
+  // of one wrong-by-four-pixels layout bug in this file's history.
+  const width = list.clientWidth;
+  const cs = getComputedStyle(landing);
+  // #landing-bottom-fade is a scrim for a grid that SCROLLS under the fixed
+  // footer chrome. The field does not scroll — it is sized to fit — so the
+  // plane has to end above the scrim rather than put a tile behind it. First
+  // version used #landing's own padding-bottom (4.5rem) and dropped Library
+  // half-under "READ THE WRITING ON ITS OWN" on a phone, which is the same
+  // mistake the scrim itself was fixing one release earlier. The page is asked
+  // how much room its chrome takes rather than told.
+  const fade = document.getElementById('landing-bottom-fade');
+  const scrim = fade && getComputedStyle(fade).display !== 'none'
+    ? fade.getBoundingClientRect().height : 0;
+  const bottom = Math.max(parseFloat(cs.paddingBottom), scrim);
+  const height = Math.max(260, landing.clientHeight - parseFloat(cs.paddingTop) - bottom);
+
+  // Tile size from area rather than from a breakpoint: twelve circles on a
+  // plane need room around them or the arrangement reads as a pile, and how
+  // much room there is depends on the container's real shape. Coverage, not
+  // width, is the thing being held constant across a phone and a laptop.
+  const tile = Math.round(Math.max(FIELD_TILE_MIN, Math.min(FIELD_TILE_MAX,
+    Math.sqrt(width * height * FIELD_COVERAGE / COORDS.length))));
+
+  const { points, maxShift } = placeField({ width, height, tile });
+  list.style.setProperty('--field-h', `${height}px`);
+  list.style.setProperty('--tile', `${tile}px`);
+  fieldState.placed = points;
+  fieldState.tile = tile;
+  fieldState.t0 = performance.now();
+  fieldState.settled = prefersReducedMotion();
+  // Reported, not hidden: the largest distance any tile sits from where its
+  // own measurements put it, in tile-widths, so the size of the departure is
+  // legible from the console rather than only from this comment.
+  fieldState.maxShift = maxShift;
+
+  // The sorted state: a compact centred block in registry order — the grid
+  // this replaces, near enough, and the low-entropy configuration the settle
+  // runs out of.
+  const cols = Math.max(1, Math.min(4, Math.floor(width / (tile * 0.62))));
+  const rows = Math.ceil(COORDS.length / cols);
+  const step = tile * 0.6;
+  points.forEach((p, i) => {
+    const c = i % cols, r = Math.floor(i / cols);
+    p.sx = width / 2 + (c - (cols - 1) / 2) * step;
+    p.sy = height / 2 + (r - (rows - 1) / 2) * step;
+  });
+
+  for (const p of points) writeTile(wrappers.get(p.key), p.sx, p.sy, tile);
+  if (fieldState.settled) for (const p of points) writeTile(wrappers.get(p.key), p.px, p.py, tile);
+}
+
+function writeTile(el, cx, cy, tile) {
+  if (!el) return;
+  el.style.setProperty('--fx', `${Math.round((cx - tile / 2) * 100) / 100}px`);
+  el.style.setProperty('--fy', `${Math.round((cy - tile / 2) * 100) / 100}px`);
+}
+
+// Cubic ease-out. The settle wants to arrive rather than coast: a visitor who
+// lands mid-settle has to be able to see where this is going, and three
+// seconds is the whole budget an index gets.
+const easeOut = t => 1 - Math.pow(1 - t, 3);
+
+function fieldFrame(now) {
+  if (!fieldState) return;
+  requestAnimationFrame(fieldFrame);
+  // Nothing to draw while a scene is open — #landing is display:none, and the
+  // same "don't render what nobody is looking at" rule the previews follow.
+  if (activeScene || document.hidden) return;
+  const { placed, wrappers, tile, phases } = fieldState;
+  if (!placed) return;
+  const elapsed = now - fieldState.t0;
+  // Time-based, not per-frame. The first version eased by a fixed 0.08 of the
+  // remaining distance each FRAME, which is about 0.8s to come to rest at
+  // 60fps and about fifteen seconds at the 3fps the software rasterizer in
+  // the measurement sandbox actually manages — so on any slow device the
+  // "stops when you point at it" promise quietly became "stops eventually".
+  // Caught because the harness kept reporting the tiles still moving a second
+  // after the pointer arrived, and the pointer events were provably firing.
+  // Same frame-rate-independence rule every scene's clock already follows.
+  const dt = Math.min(0.1, Math.max(0, (now - (fieldState.last ?? now)) / 1000));
+  fieldState.last = now;
+  fieldState.calmK += ((fieldState.calm ? 0 : 1) - fieldState.calmK)
+    * Math.min(1, dt / 0.25);
+  // Snap the last two percent to zero. An exponential ease never actually
+  // arrives, so the tile kept drifting by a fraction of a pixel forever and
+  // was still never at rest — which is the same failure as before, only
+  // smaller and harder to see. Playwright's "element is not stable" was still
+  // firing after the ease was added, which is how this was caught.
+  if (fieldState.calm && fieldState.calmK < 0.02) fieldState.calmK = 0;
+  const calmK = fieldState.calmK;
+  let allDone = true;
+  placed.forEach((p, i) => {
+    const t = Math.min(1, Math.max(0,
+      (elapsed - (i / placed.length) * FIELD_STAGGER_MS) / FIELD_SETTLE_MS));
+    if (t < 1) allDone = false;
+    const k = easeOut(t);
+    let cx = p.sx + (p.px - p.sx) * k;
+    let cy = p.sy + (p.py - p.sy) * k;
+    if (t >= 1) {
+      // Two incommensurable frequencies per axis, so the path is a slow
+      // Lissajous that never repeats on any interval a visitor would notice —
+      // wander, not a pulse.
+      const s = now / 1000 * Math.PI * 2 * FIELD_WANDER_HZ;
+      const amp = tile * FIELD_WANDER * calmK;
+      cx += Math.sin(s + phases[i].a) * amp;
+      cy += Math.sin(s * 1.37 + phases[i].b) * amp;
+    }
+    writeTile(wrappers.get(p.key), cx, cy, tile);
+  });
+  fieldState.settled = allDone;
+}
+
+let fieldResizeTimer = 0;
+function onFieldResize() {
+  clearTimeout(fieldResizeTimer);
+  // Re-placing on every resize event would re-run the settle animation on
+  // every pixel of a drag. Debounced, and the re-place keeps the tiles where
+  // they are by restarting from the new sorted state only when the size has
+  // actually stopped changing.
+  fieldResizeTimer = setTimeout(layoutField, 180);
+}
+
 initPreviews();
+initField();
 
 // ─── Stop rendering what nobody is looking at ────────────────────────────
 // A backgrounded tab already gets its requestAnimationFrame throttled hard

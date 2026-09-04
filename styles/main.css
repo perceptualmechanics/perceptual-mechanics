@@ -982,6 +982,112 @@ html, body {
    just look cramped or start wrapping unevenly again anyway. Moved from
    after the 4th tile (was 4-and-5) to after the 5th (2026-08-24, Outside
    brought the count to ten, an even split). */
+/* ─── The field ─────────────────────────────────────────────────────────────
+   4.10.0. The landing page stops being a grid of twelve things and becomes one
+   plane with twelve things on it, each at a position measured from its own
+   rendered frames (src/utils/sceneField.js holds the measurements and the
+   arithmetic; main.js does the placing).
+
+   THE MARKUP DOES NOT CHANGE, and that is the whole design of it. This is a
+   layout applied to the same <ul> of <li><button> that was here before, so
+   with JavaScript off — or in the moment before the field initialises, or to a
+   crawler — the page is still the grid, still a real list of twelve named
+   links in a stated order, still keyboard-reachable, still carrying every
+   tile's own title and aria-label. The index is the list; the field is an
+   arrangement drawn over it. Nothing about the fallback had to be written,
+   because nothing about the list was replaced.
+
+   Sizes come in as custom properties from main.js — --field-h and --tile —
+   because both depend on the container's measured size and on how much of the
+   plane twelve tiles are allowed to cover, which no media query can express. */
+#scene-previews.is-field {
+  position: relative;
+  display: block;
+  /* 3rem of the viewport is given back: 1.5rem each side, which is where the
+     vertical axis label stands and what keeps the leftmost tile off the edge
+     of a phone. The plane is what is left, and main.js measures it rather than
+     computing it — the number below is not repeated anywhere in JS. */
+  width: calc(100% - 3rem);
+  margin-inline: auto;
+  height: var(--field-h);
+  padding: 0;
+  /* A tile sits at an absolute position and would otherwise be free to
+     overflow the list's box during the settle; the box is sized to hold every
+     final position with the tile's own radius already subtracted (placeField's
+     `pad`), so this only ever clips a transient. */
+  overflow: visible;
+}
+#scene-previews.is-field .preview-wrapper {
+  position: absolute;
+  top: 0; left: 0;
+  flex: none;
+  /* translate3d rather than left/top: the settle animates this every frame on
+     twelve elements, and a transform is the one property that does not ask the
+     browser to redo layout for each of them. --fx/--fy are written by main.js
+     and are already the tile's CENTRE minus its own half-size. */
+  transform: translate3d(var(--fx), var(--fy), 0);
+}
+#scene-previews.is-field .preview-container {
+  width: var(--tile);
+  height: var(--tile);
+}
+#scene-previews.is-field .preview-row-break { display: none; }
+
+/* The two axes, named. Without them the field is an unexplained scatter and
+   "distance means something" is a claim only the source code makes. Dim, in
+   the instrument face rather than the writing face, and aria-hidden — the list
+   underneath is the real navigation and already announces every scene by name;
+   these are a legend for the arrangement, not content. */
+.field-axes {
+  position: absolute;
+  /* Reaches outside the plane on two sides — below it for the horizontal
+     label, left of it for the vertical one — into the margin
+     #scene-previews.is-field reserves. Labels inside the plane would sit under
+     whichever tile happened to land in that corner. */
+  inset: 0 0 -1.5rem -1.15rem;
+  pointer-events: none;
+  font-family: 'Electrolize', sans-serif;
+  font-size: 0.56rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.26);
+
+	@media (min-width: 601px) {
+		font-size: 0.62rem;
+	}
+}
+/* Right-aligned, not centred. Centred put it directly above #site-title's own
+   centred pill, about 20px apart, and the two read as a two-line caption
+   rather than as an axis and a wordmark. The arrow points at the increasing
+   end anyway, so the end of the axis is where the words belong. */
+.field-axis-x {
+  position: absolute;
+  right: 0; bottom: 0;
+  text-align: right;
+
+	/* .colophon-mark is a fixed 48px hare at right:1.5rem; bottom:1.5rem — the
+	   fifth piece of chrome in a corner this file does not otherwise mention,
+	   and the label landed straight on it. 4.6rem clears the button and its own
+	   margin. Only from 601px: below that the plane ends above the footer scrim
+	   (main.js subtracts it), which puts this label well clear of the hare
+	   already. */
+	@media (min-width: 601px) {
+		padding-right: 4.6rem;
+	}
+}
+/* writing-mode plus a half-turn, rather than rotate(-90deg) with a
+   transform-origin to work out: vertical-rl reads top-to-bottom, the 180
+   turns it to bottom-to-top, and the flex centring is then ordinary. */
+.field-axis-y {
+  position: absolute;
+  left: 0; top: 0; bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  white-space: nowrap;
+}
+
 .preview-row-break {
   flex-basis: 100%;
   width: 0;
