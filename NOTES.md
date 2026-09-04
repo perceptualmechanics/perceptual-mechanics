@@ -587,6 +587,88 @@ described are unchanged.)
   worth trimming, orrery.js's texture generators and first-person rig are the
   two most self-contained chunks to split out first.
 
+## 4.8.9 (2026-09-04)
+
+**Cleanup, optimisation, and a second kind of traffic.** The optimisation half
+changes no behaviour — the scene renders the same frame it did before, measured
+at mean luminance 13.023 against 13.024 — and pays for the addition twice over.
+
+### Cascades
+
+Traffic now comes in two kinds, chosen at random, about a third of it the new
+one. A **sweep** is a front crossing space, which is what something passing at
+that scale looks like. A **cascade** runs out from a node **along the fibres**,
+branching wherever they branch, at 13 strands a second.
+
+The cascade uses the mechanism that *failed* as a sweep two releases ago, for
+the thing it is actually right for. A front measured in strands arrives
+everywhere in a knot at once and reaches distant knots in the order the wiring
+says rather than the order the eye expects — wrong for something crossing space,
+exactly right for something running through a network. Same code, better
+question.
+
+It starts anywhere, the lens included: a cascade beginning inside the crystal
+and running out into the field is the same event as a read escaping, without
+anybody having asked. Both kinds use the same slice trick as everything else
+here — sorted once at creation, binary-searched per frame — so a cascade costs a
+few hundred nodes a frame rather than seven thousand.
+
+### Twice the frame rate, from two changes
+
+Measured on the same harness, same build, same viewport: **10.8 → 19.1 fps**
+before the cascades were added, and **17.3** with them
+under software rasterization, with the per-frame JavaScript callback at 0.7 ms
+median (1.1 ms at the 90th percentile). The renderer's own work is what is left,
+and this release does not touch it.
+
+**The level buffer is no longer uploaded when it has nothing to say.** The far
+half of the web is 20,868 floats. A read only reaches it one time in a hundred
+and traffic only touches it while a pulse is crossing, so re-uploading it sixty
+times a second was paying for silence. Each half now carries a flag set only
+when something actually raised a node's level, and the flag is sticky for one
+extra frame so the write that *clears* a half still reaches the GPU. That last
+part is the whole correctness argument and it is why the flags are not simply
+"is anything alive".
+
+**An ambient pulse touches a slice, not the field.** Its front is a plane
+crossing the volume, so every frame was a dot product for all 7,848 nodes to
+find the few hundred near the front. Each pulse now sorts every node's distance
+along its own direction once, at creation, and each frame binary-searches the
+band. Sorting eight thousand values once beats projecting them sixty times a
+second, and the arithmetic is identical.
+
+### A dead export made into a gate
+
+`ABSENT` in `psyshell.text.js` — the two scenes that publish nothing the corpus
+counts — was exported and read by nothing. `/text/psyshell/` names those two
+scenes in prose, so the fact existed in two places with no connection between
+them, which is the exact shape of a claim that goes quietly wrong.
+
+The build now derives the real list (a scene is absent from the corpus exactly
+when the corpus reader contributes nothing for it) and fails if `ABSENT`
+disagrees. **Made to fail before it was trusted**: changing `ABSENT` to one
+entry produces `ABSENT says [harmonics] but the corpus reader contributes
+nothing for [harmonics, outside]`. The one judgement inside it — that Psyshell
+itself is not "absent from the corpus" but the thing the corpus is read into —
+is named in the code rather than left as an unexplained exclusion.
+
+`FILAPIXEL_BASE` is removed. Nothing had read it since 4.8.1, when a strand's
+resting brightness became the strand's own attribute, and a constant nothing
+reads is a value the next person tries to tune.
+
+### Verified
+
+- Frame rate: 10.8 → 19.1 fps, three runs, same harness.
+- Frame-rate independence holds at 30 / 60 / 144: 13.92 / 13.49 / 13.45 px of
+  movement for the same four scene-seconds.
+- Rendered output unchanged (mean luminance 13.023 → 13.024, the difference
+  being the idle rotation between captures).
+- Chrome inside the viewport at 320 / 360 / 375 / 390 / 414 / 768 / 780 / 1280.
+- One AudioContext per visit, first closed and second running, one worklet node
+  per visit, zero underruns after the first second.
+- Both kinds of traffic fire and light the web: forced to cascade at every
+  event, mean luminance goes 9.3 → 12.0. Reads still report `n / 3221`.
+
 ## 4.8.8 (2026-09-04)
 
 **Closer still, and lower in the frame.** Two constants and one correction.

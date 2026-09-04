@@ -70,12 +70,14 @@ const FILAPIXEL_COLOR = 0xd8fff0;   // a strand inside the lens, and its junctio
 const WEB_FAR_COLOR = 0x8fb6d8;     // a strand out in the field
 
 // ─── Brightness ─────────────────────────────────────────────────────────────
+// (FILAPIXEL_BASE lived here until 4.8.9 and had not been read since 4.8.1,
+// when a strand's resting brightness became the strand's own `aBright`. A
+// constant nothing reads is a value the next person will try to tune.)
 // Re-derived by rendering and measuring peak luminance, the same way 4.7.0's
 // was: an object built of overlapping additive members has to be set by what
 // the pile sums to. This object is far smaller than either predecessor — 252
 // segments rather than 3,221 rays — so it can afford much more per member.
 const CRYSTAL_GAIN = 0.78;
-const FILAPIXEL_BASE = 0.30;
 const FILAPIXEL_PEAK = 3.2;
 // ─── The web's brightness, and why the junctions are not drawn ──────────────
 // Nothing in the field is a sprite, a disc or a marker. Every strand is drawn
@@ -203,6 +205,28 @@ const AMBIENT_MAX = 2;            // alive at once
 const AMBIENT_GAIN = 0.6;         // against a read's 1.0
 const AMBIENT_WIDTH = 3.2;        // world units — the front's half-width
 const AMBIENT_LIFE = 9.0;         // seconds to cross the whole field
+
+// ─── The other kind of traffic ─────────────────────────────────────────────
+// Every so often a pulse does not cross the field: it **cascades through the
+// fibres**, running out from a node along the strands and branching wherever
+// they branch.
+//
+// This is the mechanism that failed as a sweep, used for the thing it is
+// actually right for. A front measured in strands arrives everywhere in a knot
+// at once and reaches distant knots in the order the wiring says rather than
+// the order the eye expects — which is wrong for something crossing space and
+// exactly right for something running through a network. Same code, correct
+// question this time.
+//
+// It starts anywhere, the lens included: a cascade that begins inside the
+// crystal and runs out into the field is the same event as a read escaping,
+// minus anybody having asked.
+const CASCADE_ODDS = 0.35;     // share of traffic that cascades rather than sweeps
+const CASCADE_HOPS = 62;       // how far it is tracked
+const CASCADE_SPEED = 13;      // strands per second — slower than a read's 26
+const CASCADE_SHELL = 2.2;     // half-width of the front, in strands
+const CASCADE_GAIN = 0.55;
+const CASCADE_LIFE = 7.0;
 
 // ─── The transmission ───────────────────────────────────────────────────────
 // Unchanged from 4.6.1 and 4.7.0, deliberately: it decodes, it has a by-hand
@@ -854,7 +878,7 @@ export function createPsyshell(container, { preview = false } = {}) {
       for (let k = 0; k < tr.nodes.length; k++) {
         const lvl = digitLevel(tr, tr.t - tr.nodeX[k] / speed) * fade;
         const nd = tr.nodes[k];
-        if (lvl > levels[nd]) levels[nd] = lvl;
+        if (lvl > levels[nd]) { levels[nd] = lvl; nearLit = true; }
       }
       touched = true;
     }
@@ -909,13 +933,34 @@ export function createPsyshell(container, { preview = false } = {}) {
     const dir = [r * Math.cos(th), u * 0.45, r * Math.sin(th)];
     const m = Math.hypot(...dir) || 1;
     dir[0] /= m; dir[1] /= m; dir[2] /= m;
-    let lo = Infinity, hi = -Infinity;
+    // Every node's distance along that direction, sorted once. The front then
+    // only ever touches a slice of the field, found by binary search — a pulse
+    // costs a few hundred nodes a frame instead of all 7,848, and the sort is
+    // paid once per pulse rather than sixty times a second.
+    const proj = new Float32Array(web.total);
+    const order = new Uint32Array(web.total);
     for (let n = 0; n < web.total; n++) {
-      const d = web.pos[n * 3] * dir[0] + web.pos[n * 3 + 1] * dir[1] + web.pos[n * 3 + 2] * dir[2];
-      if (d < lo) lo = d;
-      if (d > hi) hi = d;
+      proj[n] = web.pos[n * 3] * dir[0] + web.pos[n * 3 + 1] * dir[1] + web.pos[n * 3 + 2] * dir[2];
+      order[n] = n;
     }
-    return { dir, from: lo - AMBIENT_WIDTH * 2, span: (hi - lo) + AMBIENT_WIDTH * 4, t: 0 };
+    const idx = Array.from(order).sort((a, b) => proj[a] - proj[b]);
+    const sorted = Uint32Array.from(idx);
+    const keys = new Float32Array(web.total);
+    for (let i = 0; i < web.total; i++) keys[i] = proj[sorted[i]];
+    const lo = keys[0], hi = keys[web.total - 1];
+    return { dir, sorted, keys, from: lo - AMBIENT_WIDTH * 2, span: (hi - lo) + AMBIENT_WIDTH * 4, t: 0 };
+  }
+
+  // A cascade: hop distances from a random node, sorted so a frame only walks
+  // the band the front is in — the same slice trick the sweep uses, because the
+  // whole point of both is that a pulse touches a little of the web at a time.
+  function newCascade() {
+    const origin = Math.floor(ambientRnd() * web.total);
+    const { dist, nodes } = hopsFrom(origin, CASCADE_HOPS);
+    const sorted = Uint32Array.from(Array.from(nodes).sort((a, b) => dist[a] - dist[b]));
+    const keys = new Float32Array(sorted.length);
+    for (let i = 0; i < sorted.length; i++) keys[i] = dist[sorted[i]];
+    return { cascade: true, sorted, keys, t: 0 };
   }
 
   function stepAmbient(dt) {
@@ -924,28 +969,53 @@ export function createPsyshell(container, { preview = false } = {}) {
     if (ambientIn <= 0) {
       ambientIn = AMBIENT_GAP[0] + (AMBIENT_GAP[1] - AMBIENT_GAP[0]) * ambientRnd();
       if (ambient.length >= AMBIENT_MAX) ambient.shift();
-      ambient.push(newAmbient());
+      ambient.push(ambientRnd() < CASCADE_ODDS ? newCascade() : newAmbient());
     }
     for (let i = ambient.length - 1; i >= 0; i--) {
       ambient[i].t += dt;
-      if (ambient[i].t >= AMBIENT_LIFE) ambient.splice(i, 1);
+      if (ambient[i].t >= (ambient[i].cascade ? CASCADE_LIFE : AMBIENT_LIFE)) ambient.splice(i, 1);
     }
     for (const a of ambient) {
+      if (a.cascade) {
+        const front = CASCADE_SPEED * a.t;
+        const fade = Math.max(0, 1 - a.t / CASCADE_LIFE);
+        const gain = CASCADE_GAIN * fade * fade;
+        const { keys, sorted } = a;
+        const near = front - CASCADE_SHELL * 5;
+        const farEdge = front + CASCADE_SHELL * 2.5;
+        let lo3 = 0, hi3 = keys.length;
+        while (lo3 < hi3) { const m = (lo3 + hi3) >> 1; if (keys[m] < near) lo3 = m + 1; else hi3 = m; }
+        for (let i = lo3; i < keys.length && keys[i] <= farEdge; i++) {
+          const n = sorted[i];
+          const s0 = (keys[i] - front) / CASCADE_SHELL;
+          const amp = (s0 > 0 ? Math.exp(-s0 * s0) : Math.exp(s0 * 0.7)) * gain;
+          if (amp > levels[n]) {
+            levels[n] = amp;
+            if (n >= FILAPIXEL_COUNT) farLit = true; else nearLit = true;
+          }
+        }
+        continue;
+      }
       const u = a.t / AMBIENT_LIFE;
       const front = a.from + a.span * u;
       // In and out at the ends, so a pulse arrives and leaves rather than
       // switching on at the edge of the frame.
       const fade = Math.sin(Math.PI * u);
       const gain = AMBIENT_GAIN * fade * fade;
-      const [dx, dy, dz] = a.dir;
-      for (let n = 0; n < web.total; n++) {
-        const d = web.pos[n * 3] * dx + web.pos[n * 3 + 1] * dy + web.pos[n * 3 + 2] * dz;
-        const s0 = (d - front) / AMBIENT_WIDTH;
-        if (s0 > 2.5 || s0 < -7) continue;
+      // The band the front can reach: 2.5 widths ahead of it, 7 behind.
+      const near = front - AMBIENT_WIDTH * 7;
+      const farEdge = front + AMBIENT_WIDTH * 2.5;
+      const { keys, sorted } = a;
+      let lo2 = 0, hi2 = keys.length;
+      while (lo2 < hi2) { const m = (lo2 + hi2) >> 1; if (keys[m] < near) lo2 = m + 1; else hi2 = m; }
+      for (let i = lo2; i < keys.length && keys[i] <= farEdge; i++) {
+        const n = sorted[i];
+        const s0 = (keys[i] - front) / AMBIENT_WIDTH;
         // A soft front with a longer tail behind it: something passing, not a
         // band sliding across.
         const amp = (s0 > 0 ? Math.exp(-s0 * s0) : Math.exp(s0 * 0.55)) * gain;
         if (amp > levels[n]) levels[n] = amp;
+        if (n >= FILAPIXEL_COUNT) farLit = true; else nearLit = true;
       }
     }
   }
@@ -989,7 +1059,10 @@ export function createPsyshell(container, { preview = false } = {}) {
           const shell = Math.exp(-s0 * s0);
           const wake = h > hopFront ? 0 : 0.35 * Math.exp(-(hopFront - h) / (HOP_SHELL * 6));
           const amp = Math.min(1, shell + wake) * Math.exp(-h / HOP_REACH) * hopFade * hopFade;
-          if (amp > levels[n]) levels[n] = amp;
+          if (amp > levels[n]) {
+            levels[n] = amp;
+            if (n >= FILAPIXEL_COUNT) farLit = true; else nearLit = true;
+          }
         }
       }
 
@@ -1012,7 +1085,7 @@ export function createPsyshell(container, { preview = false } = {}) {
         // arrival readable as an arrival.
         const wake = reduced || dist > front ? 0 : PROP_WAKE * Math.exp(-(front - dist) / PROP_RELAX);
         const amp = Math.min(1, shell + wake) * Math.exp(-dist / PROP_REACH) * fade;
-        if (amp > levels[i]) levels[i] = amp;
+        if (amp > levels[i]) { levels[i] = amp; nearLit = true; }
       }
     }
   }
@@ -1048,8 +1121,19 @@ export function createPsyshell(container, { preview = false } = {}) {
   // past whether or not anyone is here.
 
   let levelsDirty = false;
+  // Which half of the web has anything to say this frame. The far half is 20,868
+  // floats and is untouched most of the time — a read only reaches it one time
+  // in a hundred, and traffic only while a pulse is crossing — so uploading it
+  // unconditionally was paying for silence sixty times a second. The flags are
+  // sticky for one extra frame so the last write that clears a half still
+  // reaches the GPU.
+  let nearLit = false, farLit = false;
+  let nearWasLit = false, farWasLit = false;
   function writeLevels() {
-    for (const [mesh, nodeOf] of [[nearWeb, nearNodeOf], [farWeb, farNodeOf]]) {
+    const halves = [];
+    if (nearLit || nearWasLit) halves.push([nearWeb, nearNodeOf]);
+    if (farLit || farWasLit) halves.push([farWeb, farNodeOf]);
+    for (const [mesh, nodeOf] of halves) {
       const attr = mesh.geo.getAttribute('aLevel');
       const arr = attr.array;
       for (let v = 0; v < nodeOf.length; v++) {
@@ -1058,6 +1142,8 @@ export function createPsyshell(container, { preview = false } = {}) {
       }
       attr.needsUpdate = true;
     }
+    nearWasLit = nearLit; farWasLit = farLit;
+    nearLit = false; farLit = false;
   }
   writeLevels();
 

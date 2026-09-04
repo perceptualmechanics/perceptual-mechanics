@@ -34,7 +34,7 @@ import {
   VISIBLE_MIN, VISIBLE_MAX, wavelengthToHz, visibleLines, balmerSeries, fraunhoferFor,
 } from '../src/scenes/apollo/apollo.text.js';
 import {
-  SOURCES as PSY_SOURCES, FILAPIXEL_COUNT, PIECE_COUNT, CORPUS_WORDS,
+  SOURCES as PSY_SOURCES, FILAPIXEL_COUNT, PIECE_COUNT, CORPUS_WORDS, ABSENT as PSY_ABSENT,
   baseEDigits, decodeBaseE, FRACTIONAL_PLACES,
 } from '../src/scenes/psyshell/psyshell.text.js';
 import {
@@ -597,6 +597,25 @@ function buildPsyshell() {
     const terms = digits.map((d, i) => (d === 0 ? null : `${d}&middot;e<sup>${highest - i}</sup>`)).filter(Boolean).join(' + ');
     return { n, digits: digits.join(''), highest, terms, sum: sum.toFixed(3), err: (n - sum).toFixed(3) };
   })();
+
+  // Psyshell's page says in prose that two scenes are absent from the corpus and
+  // names them. `ABSENT` says the same in the content module. Rather than trust
+  // the two to stay in step — or hardcode the exceptions here, which is the
+  // same problem one layer down — the real list is DERIVED: a scene is absent
+  // from the corpus exactly when it contributes no sentences to it.
+  //
+  // This is what `ABSENT` is for. Before 4.8.9 it was exported and read by
+  // nothing, which is a fact waiting to drift.
+  {
+    const contributing = new Set(PSY_SOURCES.map(x => x.key));
+    // Psyshell is not "absent from the corpus": it is what the corpus is being
+    // read into. Excluding it is the one judgement in here and it is named.
+    const derived = Object.keys(SCENES).filter(k => k !== 'psyshell' && !contributing.has(k)).sort();
+    const declared = [...PSY_ABSENT].sort();
+    if (derived.join(',') !== declared.join(',')) {
+      throw new Error(`psyshell: ABSENT says [${declared.join(', ')}] but the corpus reader contributes nothing for [${derived.join(', ')}] — /text/psyshell/ names these scenes in prose, so one of them is now wrong`);
+    }
+  }
 
   const WEB = (() => {
     // Built here from the same two modules the scene builds it from, so this
