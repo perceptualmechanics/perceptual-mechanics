@@ -45,7 +45,7 @@ function session({ seconds = 300, seed, touching = false, flat = false }) {
   for (let i = 0; i < Math.round(seconds / DT); i++) {
     t += DT;
     decayReader(reader, DT);
-    stepCup(cup, DT, stepVisitor(visitor, cup, DT), touching ? stepWander(hand, DT, cup, MARKS, plaus) : null);
+    stepCup(cup, DT, stepVisitor(visitor, cup, DT), touching ? stepWander(hand, DT, cup, MARKS, plaus, visitor.grip) : null);
     clearDwellMemory(dwell, cup);
     const got = touching ? stepDwell(dwell, cup, MARKS, DT, scale) : null;
     if (got) {

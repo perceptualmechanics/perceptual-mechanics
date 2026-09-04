@@ -171,6 +171,27 @@ an independent table.
 **A method that failed is a finding.** It tells the next session what not to
 try.
 
+### 5. Applying a finding and improving the output are two claims
+
+Scott's wording, kept verbatim because it is better than the paraphrase:
+
+> **Applying a finding because it's what the literature measures happening, and
+> the output improving, are two separate claims — and only the second is a
+> result.**
+
+Earned on 4.11.10. Andersen et al. report that Ouija players predict better with
+each letter already spelled, so Medium's plausibility exponent became a curve
+instead of a constant — which is right on the merits regardless of effect size,
+because a constant is precisely what the finding says it should not be. The
+*result* is separate and much smaller: three points of rank correlation against
+English letter frequencies and one point of vowel share. Both were reported. The
+first is a design decision with a citation; only the second is evidence.
+
+The failure this guards against is quiet and flattering: a sourced change that
+happens to coincide with an improvement, written up as though the source caused
+it. See the third instance in the recursive section below, which is exactly how
+it nearly happened.
+
 ---
 
 ## The shared lesson these all point at
@@ -260,6 +281,29 @@ audible, re-derive the probes that read the screen or the audio before trusting
 them — starting with a repeatability check against the change, not against the
 old code.** Two runs at the same frame rate differing from each other is what
 caught this, and it cost one run to ask.
+
+### Third instance, and the first to produce a FALSE POSITIVE *(4.11.10)*
+
+Same family, new symptom. Medium's plausibility exponent was made a curve, and
+the first measurement of it showed eleven séances out of twelve opening with
+different letters where the last recorded measurement had two out of eight. Read
+as: the curve fixed the identical-openers problem.
+
+It did not. **The two measurements sat on either side of 4.11.9's grip-and-lean
+rework**, which is what actually fixed it — and a flat exponent in the current
+code opens eleven of twelve differently too. Caught by running the flat control
+*in the current code* rather than trusting a number recorded before it.
+
+The shape is the one this section already names — a measurement whose baseline
+moved — but the first two instances made a working thing look broken. This one
+made a change look better than it was, which is worse: nothing draws attention
+to a result you are pleased with.
+
+What follows practically: **a before-and-after is only a before-and-after if
+both halves ran against the same code.** A baseline recorded earlier in a
+session is a different experiment. Re-run the control, do not quote it — it
+costs one run, and the run is the difference between a design decision and a
+result.
 
 ---
 
@@ -521,3 +565,25 @@ protocol with no record of use is indistinguishable from one nobody reads.
   first version of the wavefront measurement was invalid too: it found the peak
   change at a fixed radius because the struck-line flash is an order of
   magnitude brighter than a displaced filament and buried it.
+- **2026-09-04, v4.11.9–.11.** Four defects in Medium, all found by Scott
+  *playing it* and none reachable from the benches, which were green throughout.
+  Two of the four were the same bug: "driving" was a per-frame boolean, so on a
+  trackpad every micro-movement of a resting finger flipped the visitor's hand
+  to full stiffness for one frame and released it — sixty times a second,
+  against another hand leaning the other way. It presented as the cup *fighting*
+  and as the other hand *jittering*, two symptoms of one cause, and the benches
+  could not see it because a bench's visitor is a function of time and never
+  jitters. **A stub that is smoother than a person will not reproduce a person's
+  bugs.** The stub is the scene's own `stepVisitor` now, so the thing measured
+  is the thing that ships.
+
+  The other two were the same shape one level out: the other hand was not
+  attached to the cup (drag it away and the hand stood there pressing on bare
+  card), and once attached by a hard clamp it juddered against the limit —
+  fixed by making the LEAN the thing that wanders rather than a position that
+  gets clamped. **The same object modelled twice, once as a position and once as
+  a constraint, is a jitter generator.**
+
+  And a fourth, reported here because it is the "recursive" section's third
+  instance and the first to produce a false positive — see above.
+

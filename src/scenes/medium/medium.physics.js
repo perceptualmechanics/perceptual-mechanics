@@ -218,6 +218,10 @@ export const STOP_DAMP = 9;
 // the hand piles up against the rim and stays there, which is a constant shove
 // in one direction rather than a hand.
 export const LEAN_SPRING = 26;
+// Extra damping on the other hand's lean, per second, at the visitor's full
+// grip. High enough that a held cup has a still hand on it rather than a
+// skating one, which is the whole point — see `stepWander`.
+export const BRACE = 26;
 // How hard the other hand leans back toward the board when the cup has been
 // dragged off it, per second squared per board unit of overshoot.
 export const EDGE_LEAN = 40;
@@ -621,8 +625,28 @@ export function createWander(seed = 0x5EA9CE, homeX = 0.5, homeY = 0.44) {
 // so it does not sit against the rim, and the field pull; the hand's position is
 // the cup plus that offset, always, and there is nothing to clamp because there
 // is nothing trying to escape.
-export function stepWander(w, dt, cup, letters, weightOf) {
+// `hold` is the visitor's grip, 0..1 — see BRACE below for why the other hand
+// needs to know it.
+export function stepWander(w, dt, cup, letters, weightOf, hold = 0) {
   const R = w.rnd;
+
+  // ─── A hand on a cup that will not move braces; it does not skate ─────────
+  // Click and hold, and the other hand went on wandering around the pinned cup,
+  // its fingertip sliding about on china that was not going anywhere. Scott saw
+  // it straight away and it is obviously wrong: two hands are on one object, and
+  // when one of them is holding that object still, the other is pressed against
+  // something fixed. It can push harder. It cannot slide.
+  //
+  // So the visitor's grip damps the other hand's lean — its impulses and its
+  // field pull both fade out as the visitor takes hold. At full grip the other
+  // hand is still, braced, transmitting force and going nowhere.
+  //
+  // It buys the scene's promise as well as the look. A driving visitor now gets
+  // pure mechanical resistance from the other hand and no steering at all,
+  // because the field is off while they are driving: the cup goes exactly where
+  // it is pushed, and nothing is quietly leaning it elsewhere.
+  const free = 1 - Math.min(1, hold);
+  const brace = BRACE * Math.min(1, hold);
 
   // ─── Bursts and pauses ────────────────────────────────────────────────────
   // Not a continuous drift, which was the first attempt: continuous jitter makes
@@ -641,11 +665,11 @@ export function stepWander(w, dt, cup, letters, weightOf) {
     // more bounded than Box-Muller, which can hand back a six-sigma kick that
     // reads as a twitch.
     const g = () => (R() + R() + R() - 1.5) * 2;
-    const k = WANDER_SIGMA * Math.sqrt(dt);
+    const k = WANDER_SIGMA * Math.sqrt(dt) * free;
     w.vx += g() * k; w.vy += g() * k;
   }
-  w.vx -= w.vx * WANDER_DAMP * dt;
-  w.vy -= w.vy * WANDER_DAMP * dt;
+  w.vx -= w.vx * (WANDER_DAMP + brace) * dt;
+  w.vy -= w.vy * (WANDER_DAMP + brace) * dt;
 
   // ─── The field ────────────────────────────────────────────────────────────
   // Every mark pulls at once, by plausibility and by nearness to the CUP — the
@@ -661,7 +685,7 @@ export function stepWander(w, dt, cup, letters, weightOf) {
       const wt = weightOf(l) * Math.exp(-d / FIELD_RANGE);
       gx += (dx / d) * wt; gy += (dy / d) * wt; gw += wt;
     }
-    if (gw > 0) { w.vx += (gx / gw) * FIELD_PULL * dt; w.vy += (gy / gw) * FIELD_PULL * dt; }
+    if (gw > 0) { w.vx += (gx / gw) * FIELD_PULL * free * dt; w.vy += (gy / gw) * FIELD_PULL * free * dt; }
   }
 
   // ─── The board's edges, felt through the lean ─────────────────────────────

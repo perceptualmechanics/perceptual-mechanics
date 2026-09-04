@@ -353,7 +353,7 @@ export function createMedium(container, { preview = false, initialArg = null, on
     // where it was, so letting go and touching again is a pause, not a reset.
     // Nothing here opens or closes: this is the still state, and there is one.
     const contact = visitor.down;
-    const partner = (contact && !reduced && hush <= 0) ? stepWander(hand, dt, cup, MARKS, plaus) : null;
+    const partner = (contact && !reduced && hush <= 0) ? stepWander(hand, dt, cup, MARKS, plaus, visitor.grip) : null;
     stepCup(cup, dt, stepVisitor(visitor, cup, dt), partner);
 
     // Dwell only counts while somebody is touching. A cup nobody has a hand on

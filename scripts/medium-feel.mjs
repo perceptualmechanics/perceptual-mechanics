@@ -43,7 +43,7 @@ const at = ch => MARKS.find(l => l.ch === ch);
     for (let i = 0; i < Math.round(150 / DT); i++) {
       decayReader(reader, DT);
       drive(i * DT, v);
-      stepCup(cup, DT, stepVisitor(v, cup, DT), stepWander(hand, DT, cup, LETTERS, plaus));
+      stepCup(cup, DT, stepVisitor(v, cup, DT), stepWander(hand, DT, cup, LETTERS, plaus, v.grip));
       clearDwellMemory(dwell, cup);
       const got = stepDwell(dwell, cup, LETTERS, DT,
         l => DWELL_RESIST + (DWELL_EASE - DWELL_RESIST) * plaus(l));
@@ -80,7 +80,7 @@ const at = ch => MARKS.find(l => l.ch === ch);
     // The tiny wobble is what a real hand pressing against something does and
     // is what keeps grip at 1; without it this would be testing a slack hand.
     v.x = 0.86 + Math.sin(t * 40) * 0.004; v.y = 0.44;
-    stepCup(cup, DT, stepVisitor(v, cup, DT), stepWander(hand, DT, cup, LETTERS, l => (l.ch.charCodeAt(0) % 7) / 6));
+    stepCup(cup, DT, stepVisitor(v, cup, DT), stepWander(hand, DT, cup, LETTERS, l => (l.ch.charCodeAt(0) % 7) / 6, v.grip));
     // Only once the cup has arrived: the first seconds are the journey, not a
     // measure of how far the partner can hold it off.
     if (t > 2) worst = Math.max(worst, Math.hypot(cup.x - v.x, cup.y - v.y));
@@ -117,7 +117,7 @@ const at = ch => MARKS.find(l => l.ch === ch);
     t += DT;
     decayReader(reader, DT);
     v.x = q.x + (q.x - cup.x) * 1.6; v.y = q.y + (q.y - cup.y) * 1.6;
-    stepCup(cup, DT, stepVisitor(v, cup, DT), stepWander(hand, DT, cup, LETTERS, plaus));
+    stepCup(cup, DT, stepVisitor(v, cup, DT), stepWander(hand, DT, cup, LETTERS, plaus, v.grip));
     clearDwellMemory(dwell, cup);
     got = stepDwell(dwell, cup, LETTERS, DT,
       l => DWELL_RESIST + (DWELL_EASE - DWELL_RESIST) * plaus(l));

@@ -18040,3 +18040,42 @@ prediction is sourced, and nothing it claims about motion is. The cup's mass,
 stiction, hold and coast were tuned by measuring this simulation against itself.
 That is the honest status and it should be visible on the page rather than
 inferable from its absence.
+
+## 4.11.11 (2026-09-04)
+
+**Click and hold, and the other hand went on skating around the pinned cup.**
+Scott saw it immediately and it is obviously wrong once said out loud: two hands
+are on one object, and when one of them is holding that object still, the other
+is pressed against something fixed. It can push harder. It cannot slide.
+
+The visitor's grip now damps the other hand's lean — both its impulses and its
+field pull fade out as the visitor takes hold (`BRACE`). At full grip the other
+hand is still, braced, transmitting force and going nowhere.
+
+**It buys the scene's promise as well as the look.** A driving visitor now gets
+pure mechanical resistance from the other hand and *no steering at all*, because
+the field is off while they are driving. The cup goes exactly where it is pushed
+and nothing is quietly leaning it elsewhere — which is what "the visitor wins
+outright" ought to have meant all along, and previously only meant in the sense
+that the leaning was too weak to matter.
+
+Nothing else moved: 0.12 marks/second resting, 35.1% vowels against a 26.1% flat
+control, visitor wins outright at 0.039 board units of standoff, Q lands in 1.17
+seconds.
+
+**Also added to `WORKING-PROTOCOL.md`**, on Scott's instruction, and both are
+his framings rather than mine:
+
+- A new rule: *applying a finding because it's what the literature measures
+  happening, and the output improving, are two separate claims — and only the
+  second is a result.* Verbatim.
+- A third instance in the recursive-failure section: **comparing across a change
+  that was in flight.** Same family as the frame-rate harness that read a moving
+  corona — a measurement whose baseline moved — but the first two made a working
+  thing look broken, and this one made a change look better than it was. Nothing
+  draws attention to a result you are pleased with. The practical rule: a
+  before-and-after is only a before-and-after if both halves ran against the same
+  code. Re-run the control, do not quote it.
+- And a log entry for this run, whose own lesson is that **a stub smoother than
+  a person will not reproduce a person's bugs.** Every one of the four defects
+  this afternoon was found by playing, with the benches green throughout.
