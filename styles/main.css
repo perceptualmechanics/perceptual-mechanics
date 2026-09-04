@@ -1222,6 +1222,41 @@ html, body {
   outline: var(--focus-ring);
   outline-offset: 4px;
 }
+/* ─── Why these are !important, since the rule carried no reason for years ──
+   Asked directly at 4.11.2 — "do we still need that !important CSS?" — and the
+   answer is yes for the sizing and "as insurance" for the radius. They are two
+   different things that happen to share a selector.
+
+   THE SIZING. three.js's WebGLRenderer.setSize() writes the size INLINE on the
+   canvas — every call sets `style.width`/`style.height` in px, and the live
+   attribute reads `display: block; width: 188px; height: 188px`. An inline
+   declaration can only be beaten by `!important`, and deleting this rule at
+   runtime was tried: the computed width immediately becomes the inline 188px.
+   So without it the canvas is sized by whatever three.js last thought the
+   container was, rather than by the container.
+
+   That distinction is exactly what kept 4.11.1's bug survivable. While the
+   resize helper watched only the window, a tile that gained its size without a
+   window resize left three.js holding a stale, wrong-aspect number forever —
+   and `100%` kept the canvas BOX correct anyway, so the symptom was a squashed
+   picture filling its tile rather than an oversized canvas hanging out of one.
+   A wrong-resolution image is a much better failure than a wrong-sized element,
+   and that is the property worth keeping: the box is right by construction, and
+   only the pixels can lag.
+
+   The way to retire them is `renderer.setSize(w, h, false)`, whose third
+   argument stops three.js writing inline styles at all — then plain CSS wins
+   with no !important anywhere. Not taken: it is a change to twelve scenes'
+   resize paths to remove two correct declarations, and it would hand the
+   canvas's size entirely to CSS at exactly the moment (mount, before layout)
+   when the missing CSS is the whole problem.
+
+   THE RADIUS is the vestigial one, kept knowingly. It was the third of three
+   attempts to clip the canvas into a circle (1.0.39), all of which Firefox
+   ignored — see .preview-container's own comment, and .preview-container::after
+   for what actually solved it by painting an opaque ring on top instead. It is
+   kept because it costs nothing and is the technically correct property in an
+   engine that does clip a WebGL canvas. It is insurance, not the fix. */
 .preview-container canvas {
   width: 100% !important;
   height: 100% !important;

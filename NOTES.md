@@ -587,6 +587,53 @@ described are unchanged.)
   worth trimming, orrery.js's texture generators and first-person rig are the
   two most self-contained chunks to split out first.
 
+## 4.11.2 (2026-09-04)
+
+**No behaviour change: an answer, written where the question gets asked.**
+Scott, after 4.11.1: *do we still need that `!important` CSS? There was a
+reason they didn't get purged, but does that still apply?*
+
+`.preview-container canvas` carried **no comment at all**, in a file where
+everything else is argued — which is the actual defect, and why the question had
+to be asked rather than read. It also turns out to hold two unrelated things
+under one selector.
+
+**The sizing `!important`s: still needed, and checked rather than assumed.**
+three.js's `setSize()` writes the size INLINE on the canvas — the live attribute
+reads `display: block; width: 188px; height: 188px` — and an inline declaration
+can only be beaten by `!important`. Deleting the rule at runtime and re-reading
+the computed style returns `188px`, the inline value. So without it the canvas is
+sized by whatever three.js last believed the container to be, rather than by the
+container.
+
+**And that is what kept 4.11.1's bug survivable**, which is the part worth
+recording. While `bindGuardedResize` watched only the window, a tile that gained
+its size without a window resize left three.js holding a stale, wrong-aspect
+number indefinitely — and `width: 100% !important` kept the canvas BOX correct
+regardless, so the symptom was a squashed picture filling its tile rather than
+an oversized canvas hanging out of one. A wrong-resolution image is a much
+better failure than a wrong-sized element. The box is right by construction and
+only the pixels can lag, which is the property to keep.
+
+**The way to retire them, named so it does not have to be rediscovered:**
+`renderer.setSize(w, h, false)` — the third argument stops three.js writing
+inline styles, after which plain CSS wins with no `!important` anywhere. Not
+taken. It is a change to twelve scenes' resize paths to remove two correct
+declarations, and it would hand the canvas's size entirely to CSS at exactly the
+moment — mount, before layout — when the missing CSS is the whole problem.
+
+**The `border-radius: 50%` is the vestigial one, and it is the one Scott was
+remembering.** It was the third of three attempts to clip the canvas into a
+circle (1.0.39); Firefox ignored all three, and `.preview-container::after`
+solved it by painting an opaque ring on top instead. All three were kept as
+"harmless, and each is still the technically correct fix for some other engine."
+That reason is thinner now than it was — it is insurance against a hypothetical
+engine rather than a fix for a real one — but it costs nothing and is the
+correct property, so it stays, now labelled as insurance rather than looking
+like part of the mechanism.
+
+**Files:** `styles/main.css`, comment only.
+
 ## 4.11.1 (2026-09-04)
 
 **The stretched preview thumbnail, found and fixed.** Scott photographed it on
