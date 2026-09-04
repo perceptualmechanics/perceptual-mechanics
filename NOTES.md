@@ -587,6 +587,56 @@ described are unchanged.)
   worth trimming, orrery.js's texture generators and first-person rig are the
   two most self-contained chunks to split out first.
 
+## 4.8.3 (2026-09-04)
+
+**It was a xylophone.** Scott listened to 4.8.2's burst and said so: "that's a
+xylophone or some other percussive instrument. A chime is like a bell hop's
+bell." He is right, and the code had written its own diagnosis a release
+earlier without noticing — the constants were introduced under the heading
+*"the ideal free bar"*, and **a free bar is a xylophone**. 1 : 2.76 : 5.40 :
+8.93 are the transverse modes of a bar free at both ends. The ratios were
+correct for the wrong object.
+
+The fix is the object, not the tuning.
+
+### A shell, not a bar
+
+- **Modes.** 1 : 1.63 : 2.13 : 2.87 : 3.71 : 5.03 — the region a small
+  hemispherical bell's modes sit in. Chosen to sit in that region rather than
+  measured off one particular bell, and the code says so rather than dressing it
+  as a citation. A bar's modes climb steeply and that steepness is exactly what
+  makes a glockenspiel dry.
+- **Every partial is a doublet, and that is the real signature.** No bell is
+  perfectly axisymmetric, so each mode splits into two frequencies a hair apart
+  and they beat. Measured in the shipped sound: the 994/996 Hz pair and the
+  1619/1623 Hz pair, beating at 1.7 to 9.4 Hz by design. A bar has nothing of
+  the kind, and its absence is most of why the burst read as percussion.
+- **It rings.** −20 dB at 0.59 s, −40 dB at 1.19 s, −60 dB at 1.82 s, where the
+  bar version was gone by 0.46 s. And it stays bright the whole way: spectral
+  centroid 1,864 Hz at 10 ms, 1,821 Hz at half a second, 2,278 Hz at a second
+  and a half.
+- **Three taps, not five**, spaced 85–155 ms. A bell holds for seconds and five
+  overlapping rings is a wash.
+- A quiet 4 ms noise transient under the onset: the plunger. A struck bell has a
+  hand in it.
+- The base pitch is lifted 2.35× off the scene's own 280–620 Hz mapping, because
+  a bell that size sounds about an octave and a fifth above where the bar was
+  struck.
+
+Attack 4 ms, peak 0.141. Everything else in the audio path is unchanged: one
+context per visit, the same worklet, the same dispose discipline, the same
+underrun accounting.
+
+**Not verified: I did not hear this one either.** A WAV of five readings
+rendered through the shipped processor went to Scott, as with the two before it.
+Two gestures have now been wrong in a row, and both times the correction came
+from the one person in the loop with ears. That is worth saying plainly rather
+than filing as a preference: **the measurements were all true and none of them
+would have caught either error.**
+
+`CORRECTED-FACTS.md` gains the row, because "1 : 2.76 : 5.40 : 8.93 is a bell"
+is exactly the kind of true-sounding thing that would have been restated.
+
 ## 4.8.2 (2026-09-04)
 
 **Rigour and tightening, not more ideas.** Four things, each one making a part

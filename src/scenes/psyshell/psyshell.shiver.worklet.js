@@ -24,16 +24,18 @@
 //   1. **Struck, not driven.** Each voice is additive sine partials with a
 //      1.5 ms attack and no excitation stage at all. There is nothing to ring
 //      up, so the onset is the onset.
-//   2. **Plural and discrete.** Five voices across about 150 ms, spaced
-//      irregularly, so they read as separate arrivals rather than as a chord or
-//      a flam. The spacing is drawn per note; there is no rate to learn.
-//   3. **Inharmonic.** Partials at 1, 2.76, 5.40, 8.93 and 13.34 — the ideal
-//      free-bar series that gives tubular bells and glockenspiels their metal.
-//      A harmonic stack would read as a tone.
-//   4. **Bright.** Upper partials are kept loud and dominate the first tenth of
-//      a second, which is where a chime's brightness lives; they decay faster
-//      than the fundamental, so the note darkens as it falls rather than
-//      staying glassy.
+//   2. **Plural and discrete.** Three taps across about a quarter of a second,
+//      spaced irregularly, so they read as separate arrivals rather than as a
+//      chord or a flam. The spacing is drawn per note; there is no rate to
+//      learn. Three rather than five because a bell rings for seconds and five
+//      overlapping rings is a wash.
+//   3. **A bell, not a bar.** Shell modes rather than the free-bar series, and
+//      every partial split into a beating doublet. See the constants below for
+//      what went wrong the first time and why the fix is the object rather than
+//      the tuning.
+//   4. **Bright, and it stays bright.** The second partial is the loudest, the
+//      way a small bell's strike tone sits above its fundamental, and the upper
+//      modes hold on for a second or more instead of dying at once.
 //   5. **It rises.** Each courier lands above the one before — a relay passing
 //      forward, and the same "delight rises rather than falls" decision the
 //      shiver was carrying.
@@ -46,34 +48,69 @@
 // device start, suspend, underrun — because only the third is a defect, and
 // counting them together reports an underrun nobody heard.
 
-// The ideal free bar. These ratios are what make a struck metal object sound
-// like metal rather than like a pitch, and they are measured constants rather
-// than a choice: 2.76, 5.40 and 8.93 are the classic transverse modes.
-const PARTIALS = [1, 2.76, 5.40, 8.93, 13.34];
-const PARTIAL_GAIN = [1.0, 0.78, 0.62, 0.46, 0.28];
-// Higher partials die faster, which is what makes a chime darken as it falls.
-const PARTIAL_T60 = [0.42, 0.30, 0.21, 0.15, 0.10];
+// ─── A bell, not a bar ──────────────────────────────────────────────────────
+// The first version of this used 1 : 2.76 : 5.40 : 8.93 — and those are the
+// transverse modes of an IDEAL FREE BAR, which is to say a xylophone. Scott
+// heard a xylophone, because that is what it was. The code even named it: "the
+// ideal free bar" was written down as the justification, and a free bar is not
+// a bell. **The ratios were correct for the wrong object.**
+//
+// What is wanted is a bell hop's bell: a small struck shell. Three things
+// separate one from a bar, and only the first is about ratios.
+//
+//   1. **Shell modes, not bar modes.** A bar's modes climb steeply (2.76, 5.40,
+//      8.93 of the fundamental) and are what make a xylophone dry and woody. A
+//      shell's sit much closer together, and the ones below are in the region a
+//      small hemispherical bell's do. They are chosen to sit in that region
+//      rather than measured off one particular bell, and that is said here
+//      rather than dressed up as a citation.
+//   2. **Every partial is a DOUBLET, and that is the actual signature.** A real
+//      bell is never perfectly axisymmetric, so each mode splits into two
+//      frequencies a hair apart and they beat — the shimmer or warble that says
+//      "bell" before anything else does. A bar has no such thing, and its
+//      absence is most of why the first version read as percussion.
+//   3. **It rings for seconds, not for a third of one.** A bar is damped by its
+//      own mounting and its overtones die almost at once. A shell holds on.
+const PARTIALS = [1, 1.63, 2.13, 2.87, 3.71, 5.03];
+const PARTIAL_GAIN = [0.85, 1.0, 0.72, 0.55, 0.36, 0.22];
+// Seconds to −60 dB per partial. Long, and long at the top too: a bell stays
+// bright as it fades, where a bar goes dull immediately.
+const PARTIAL_T60 = [2.4, 2.0, 1.5, 1.1, 0.8, 0.55];
+// Beat rates in Hz, one per partial — the two halves of each doublet are
+// detuned by this much. Different per mode, because a bell's asymmetries are
+// not one asymmetry.
+const PARTIAL_BEAT = [1.7, 2.9, 4.3, 5.6, 7.1, 9.4];
 
-const COURIERS = 5;
-const GAP = [0.022, 0.044];   // seconds between arrivals, drawn per note
-const STEP = 1.32;            // semitones each courier lands above the last
-const ATTACK = 0.0015;        // seconds — a strike, not a build
+// A bell hop's bell is small and high. The scene's own pitch mapping runs
+// 280–620 Hz, which is where the bar was struck; a shell that size sounds about
+// an octave and a fifth above it.
+const BELL_LIFT = 2.35;
+
+const COURIERS = 3;
+const GAP = [0.085, 0.155];   // seconds between taps, drawn per note
+const STEP = 1.6;             // semitones each courier lands above the last
+const ATTACK = 0.0012;        // seconds — a plunger, not a build
+const CLAPPER = 0.004;        // seconds of strike noise, quiet, at the very top
 
 class Chime {
   constructor(sr, hz, gain, delay, seed) {
     this.sr = sr;
-    this.hz = hz;
+    this.hz = hz * BELL_LIFT;
     this.gain = gain;
     this.t = -delay;
     this.done = false;
     let s = (seed >>> 0) || 1;
     const rnd = () => { s ^= s << 13; s >>>= 0; s ^= s >> 17; s ^= s << 5; s >>>= 0; return s / 4294967296; };
-    // Each courier is detuned by a hair, so five of them are five things rather
-    // than one thing five times.
-    this.detune = 1 + (rnd() - 0.5) * 0.012;
-    this.phase = new Float32Array(PARTIALS.length);
-    for (let i = 0; i < PARTIALS.length; i++) this.phase[i] = rnd() * Math.PI * 2;
-    this.life = PARTIAL_T60[0] * 1.7;
+    this.rnd = rnd;
+    // Two phases per partial: the doublet. They start together and drift apart,
+    // which is exactly what beating is.
+    this.phaseA = new Float32Array(PARTIALS.length);
+    this.phaseB = new Float32Array(PARTIALS.length);
+    for (let i = 0; i < PARTIALS.length; i++) {
+      this.phaseA[i] = rnd() * Math.PI * 2;
+      this.phaseB[i] = this.phaseA[i] + (rnd() - 0.5) * 0.4;
+    }
+    this.life = PARTIAL_T60[0] * 1.15;
   }
 
   render(out, n) {
@@ -84,17 +121,21 @@ class Chime {
       this.t += 1 / sr;
       if (t < 0) continue;
       if (t >= this.life) { this.done = true; return; }
-      // One shared attack across the partials — a strike excites the whole bar
-      // at once — and a decay per partial.
       const atk = 1 - Math.exp(-t / ATTACK);
       let v = 0;
       for (let k = 0; k < PARTIALS.length; k++) {
-        const f = this.hz * this.detune * PARTIALS[k];
+        const f = this.hz * PARTIALS[k];
         if (f > sr * 0.45) continue;
-        this.phase[k] += TAU * f / sr;
-        v += Math.sin(this.phase[k]) * PARTIAL_GAIN[k] * Math.exp(-t * 6.9 / PARTIAL_T60[k]);
+        const half = PARTIAL_BEAT[k] * 0.5;
+        this.phaseA[k] += TAU * (f - half) / sr;
+        this.phaseB[k] += TAU * (f + half) / sr;
+        const a = Math.exp(-t * 6.9 / PARTIAL_T60[k]) * PARTIAL_GAIN[k];
+        v += (Math.sin(this.phaseA[k]) + Math.sin(this.phaseB[k])) * 0.5 * a;
       }
-      out[i] += v * atk * this.gain * 0.42;
+      // The plunger. Four milliseconds of noise under the onset, quiet enough
+      // to be felt rather than heard — a struck bell has a hand in it.
+      if (t < CLAPPER) v += (this.rnd() * 2 - 1) * 0.30 * (1 - t / CLAPPER);
+      out[i] += v * atk * this.gain * 0.30;
     }
   }
 }
@@ -140,7 +181,7 @@ class ShiverProcessor extends AudioWorkletProcessor {
     const rnd = () => { s ^= s << 13; s >>>= 0; s ^= s >> 17; s ^= s << 5; s >>>= 0; return s / 4294967296; };
     let delay = 0;
     for (let i = 0; i < COURIERS; i++) {
-      if (this.voices.length >= 40) this.voices.shift();
+      if (this.voices.length >= 24) this.voices.shift();
       const f = hz * Math.pow(2, (i * STEP + (rnd() - 0.5) * 0.5) / 12);
       // The later couriers are quieter: a relay fades as it goes past.
       const g = gain * (1 - 0.11 * i);
