@@ -587,6 +587,84 @@ described are unchanged.)
   worth trimming, orrery.js's texture generators and first-person rig are the
   two most self-contained chunks to split out first.
 
+## 4.8.5 (2026-09-04)
+
+**The sound goes past you.** A rush, not a strike and not a ring: wind, made of
+metal. Four sounds in four releases, and this is the first one whose difference
+is in the **signal path** rather than in the tuning — the oscillator bank is
+gone entirely.
+
+`psyshell.shiver.worklet.js` is now `psyshell.rush.worklet.js`, renamed rather
+than re-commented: a file called shiver that produces a rush is the same defect
+as an ariaLabel describing a scene that no longer exists.
+
+### Four properties, each separable
+
+**Noise, not oscillators.** White noise through a filter whose centre falls as
+the pass goes by. That is what wind is. A tone with modulation on it is not
+wind however carefully the modulation is shaped, which is what the previous
+three versions kept rediscovering from different directions.
+
+**Metal is inharmonic resonance.** Six narrow state-variable resonators at
+1 : 1.58 : 2.31 : 3.07 : 4.19 : 5.63, Q from 38 to 70, excited by that noise
+rather than struck. Same mechanism as a bell or a struck sheet; no strike.
+
+**It passes, and this is the part every previous version had none of.** The
+pitch falls **11.7% (2.16 semitones)** across the note, and the fall is a
+`tanh` rather than a ramp — nearly flat approaching, steep at the crossing,
+nearly flat leaving, which is the actual shape of the Doppler ratio for a source
+crossing in front of a listener. The stereo image sweeps with it: measured
+**−8.7 dB** (left) at the start, **+1.3 dB** at the crossing, **+12.3 dB**
+(right) at the end. The node had to become stereo for this — it was mono, and a
+mono node cannot pass anybody.
+
+**A zephyr swells and goes.** `sin²(πt/T)`: exactly zero at both ends, peak at
+the middle, 370 ms from a tenth to nine tenths. There is no attack transient to
+remove and none can be reintroduced by retuning.
+
+Spectral flatness at mid-pass is **0.117** — a pure tone measures around 0.001
+and white noise 1.0 — which is the number that says "noise excited into
+resonance" rather than "tone".
+
+### Sound and light are one event
+
+The pass takes its **duration** from the transmission's own life — the same
+`acc + 1/WAVE_SPEED` the base-e train runs on — and its **direction** from where
+that strand points on screen, projected through the real camera so it still
+matches when the object is turned. Hearing it and seeing it are the same event
+rather than two things that start together.
+
+`armTransmitter()` returns its record for that reason, and `readAt()` reads
+`strike(index, armTransmitter(index))`: there has to be a transmission before
+there can be a sound about it.
+
+### Level, and a bug I made
+
+The bank peaked at **0.33** at the gain a struck voice used — a continuous sum
+of high-Q resonators is far louder than one strike at the same nominal level —
+so the bank has its own 0.20. Peak is now 0.132 / 0.147 across the two channels,
+where everything else on the site sits at about 0.15.
+
+**And a self-inflicted one worth recording.** The scripted rename of
+`shiverNode` → `rushNode` also replaced a comment block that happened to contain
+the three `let` declarations, so the scene threw `rushNode is not defined` on
+the first read. Nothing in the build caught it — it is a runtime path behind a
+sound toggle. What caught it was the audio harness asserting that a worklet node
+was *constructed*, which is now a rule in STANDARDS: keep that assertion, it is
+the only thing watching that path.
+
+### Verified
+
+- Envelope zero at both ends; no transient at either.
+- Pitch falls 11.7% with the steep part at the crossing; stereo sweeps 21 dB
+  across the pass.
+- Spectral flatness 0.117 at mid-pass.
+- One AudioContext per visit, first closed and second running; one worklet node
+  per visit; zero underruns after the first second; one device-start gap each.
+- Reads still land and still report `n / 3221`.
+
+**Not verified: I did not hear it.** Fourth WAV.
+
 ## 4.8.4 (2026-09-04)
 
 **One note.** Scott, on the three-tap version: "one single bright chime, one

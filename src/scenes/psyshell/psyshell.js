@@ -16,7 +16,7 @@ import { buildWeb } from './psyshell.web.js';
 // URL"; `?url` also works and emits the file twice — once raw and once
 // minified, with only the raw one referenced, which ships 2 kB nobody loads.
 // See the worklet's own header for what runs in there.
-const shiverWorkletUrl = new URL('./psyshell.shiver.worklet.js', import.meta.url).href;
+const rushWorkletUrl = new URL('./psyshell.rush.worklet.js', import.meta.url).href;
 
 // ─── Psyshell — the lens ────────────────────────────────────────────────────
 //
@@ -160,9 +160,10 @@ const MAX_DIGITS = 16;
 // than as light inside glass.
 const TRANSMIT_GAIN = 0.85;
 
-// The shiver's own length lives in the worklet, where the body's decay is; this
-// is only how loud a reading is on the bus. STRIKE_LIFE went with the envelope
-// it belonged to.
+// How loud a reading is on the bus, and nothing else. The sound's own length is
+// no longer a constant at all: a pass lasts exactly as long as the transmission
+// it belongs to, which the scene hands the worklet per reading. STRIKE_LIFE
+// went with the envelope it belonged to, three gestures ago.
 const STRIKE_GAIN = 0.16;
 
 export function createPsyshell(container, { preview = false } = {}) {
@@ -507,7 +508,7 @@ export function createPsyshell(container, { preview = false } = {}) {
     busGain.connect(muteGain);
     // Fetched as soon as there is a context, so the first reading is not the
     // one that waits for a network round trip.
-    loadShiver();
+    loadRush();
   }
 
   function setSoundEnabled(on) {
@@ -529,53 +530,80 @@ export function createPsyshell(container, { preview = false } = {}) {
     }
   }
 
-  // ─── The shiver ───────────────────────────────────────────────────────────
-  // Not a strike. A strike is an impact and this is a body responding, and the
-  // difference lives in the first forty milliseconds — which is why the sound
-  // moved to an AudioWorklet rather than being re-enveloped. The DSP and the
-  // reasoning are in `psyshell.shiver.worklet.js`; what is here is the graph,
-  // the pitch, and the dispose discipline.
+  // ─── The rush ─────────────────────────────────────────────────────────────
+  // Wind going past you, made of metal. The DSP and the reasoning are in
+  // `psyshell.rush.worklet.js`; what lives here is the graph, the pitch, and
+  // the two numbers that tie the sound to the light.
   //
-  // **The earlier note about the click stands and is not contradicted.** Scott
-  // liked the strike's click and asked for it to be left alone, and it was, for
-  // two releases. This release is not a fix of that sound; it is a different
-  // gesture, asked for as one.
+  // **The tie is the point of this half.** The pass lasts exactly as long as
+  // the transmission it belongs to, and it sweeps across the stereo image in
+  // the direction the front travels on screen — so hearing it and seeing it are
+  // one event rather than two things that happen at the same time.
   //
   // The pitch still comes from the filapixel's height in the object rather than
   // from the sentence: it is a property of where the lightpen is pointed.
-  let shiverNode = null;
-  let shiverReady = null;
-  let shiverFailed = false;
+  //
+  // (The old note about the strike's click is retired with the strike. Scott
+  // liked that click and it was left alone for two releases; three gestures
+  // later there is no envelope for it to be a defect in.)
+  let rushNode = null;
+  let rushReady = null;
+  let rushFailed = false;
 
-  function loadShiver() {
-    if (!audioCtx || shiverNode || shiverFailed) return shiverReady;
-    shiverReady = audioCtx.audioWorklet.addModule(shiverWorkletUrl).then(() => {
+  function loadRush() {
+    if (!audioCtx || rushNode || rushFailed) return rushReady;
+    rushReady = audioCtx.audioWorklet.addModule(rushWorkletUrl).then(() => {
       if (disposed || !audioCtx || audioCtx.state === 'closed') return;
-      shiverNode = new AudioWorkletNode(audioCtx, 'psyshell-shiver', {
-        numberOfInputs: 0, numberOfOutputs: 1, outputChannelCount: [1],
+      rushNode = new AudioWorkletNode(audioCtx, 'psyshell-rush', {
+        // Stereo, because the sound has to cross: a mono node cannot pass
+        // anybody. This is the one place the rush needed the graph to change.
+        numberOfInputs: 0, numberOfOutputs: 1, outputChannelCount: [2],
       });
-      shiverNode.connect(busGain);
+      rushNode.connect(busGain);
     }).catch(() => {
       // A worklet that will not load is not a reason for a silent scene to also
       // be a broken one: the scene keeps working, without the sound. Recorded
       // as a flag rather than swallowed, so the fallback is visible to anything
       // that asks.
-      shiverFailed = true;
+      rushFailed = true;
     });
-    return shiverReady;
+    return rushReady;
   }
 
-  function strike(index) {
+  // Where the transmission runs, in screen terms: the pass sweeps the way the
+  // light does. Projected through the real camera rather than guessed from the
+  // object's own axes, because what has to match is what the visitor sees, and
+  // the camera turns.
+  const projA = new THREE.Vector3(), projB = new THREE.Vector3();
+  function panForPath(index, path) {
+    if (!path || !path.length) return [-0.7, 0.7];
+    const tip = SEGMENTS[path[path.length - 1]].to;
+    projA.set(placed.pos[index * 3], placed.pos[index * 3 + 1], placed.pos[index * 3 + 2]);
+    projB.set(tip[0], tip[1], tip[2]);
+    lens.updateMatrixWorld();
+    projA.applyMatrix4(lens.matrixWorld).project(camera);
+    projB.applyMatrix4(lens.matrixWorld).project(camera);
+    // Widened to the edges: the strand is a couple of centimetres of screen and
+    // a pass that only moves that far does not read as passing at all. The
+    // DIRECTION is what carries the tie; the extent is what makes it audible.
+    const dir = projB.x >= projA.x ? 1 : -1;
+    return [-0.85 * dir, 0.85 * dir];
+  }
+
+  function strike(index, tr) {
     if (!audioCtx || !soundEnabled) return;
     const y = placed.pos[index * 3 + 1];
     const t = Math.max(0, Math.min(1, (y - BOUNDS.min[1]) / Math.max(1e-6, BOUNDS.max[1] - BOUNDS.min[1])));
     const hz = 620 * Math.pow(2, -1.15 * (1 - t));
+    // The transmission's own life, so the sound is over when the light is.
+    const dur = tr ? tr.life : 0.9;
+    const [panFrom, panTo] = panForPath(index, tr?.path);
     const send = () => {
-      if (disposed || !shiverNode || !soundEnabled) return;
-      shiverNode.port.postMessage({ type: 'shiver', hz, gain: STRIKE_GAIN });
+      if (disposed || !rushNode || !soundEnabled) return;
+      rushNode.port.postMessage({ type: 'rush', hz, gain: STRIKE_GAIN, dur, panFrom, panTo });
     };
-    if (shiverNode) send();
-    else loadShiver()?.then(send);
+    if (rushNode) send();
+    else loadRush()?.then(send);
   }
 
   // ─── The transmission, as light in the body ───────────────────────────────
@@ -645,11 +673,13 @@ export function createPsyshell(container, { preview = false } = {}) {
     const segX = path.map((_, i) => (startAt[i] + lengths[i] * 0.5) / totalLen);
 
     if (transmits.length >= MAX_READS) transmits.shift();
-    transmits.push({
+    const tr = {
       bounds, count: n, span: acc, path, segX,
       nodes: Uint16Array.from(nodes), nodeX: Float32Array.from(nodeX),
       t: 0, life: acc + (reduced ? 0 : 1 / WAVE_SPEED),
-    });
+    };
+    transmits.push(tr);
+    return tr;
   }
 
   // Which digit is sounding at time `tp`, and whether that digit is a lit one.
@@ -700,8 +730,9 @@ export function createPsyshell(container, { preview = false } = {}) {
   function readAt(index) {
     reads.push({ origin: index, t: 0 });
     if (reads.length > MAX_READS) reads.shift();
-    armTransmitter(index);
-    strike(index);
+    // The transmitter first: the rush takes its length and its direction from
+    // the transmission, so there has to be one before there is a sound.
+    strike(index, armTransmitter(index));
   }
 
   function advance(dt) {
@@ -968,10 +999,10 @@ export function createPsyshell(container, { preview = false } = {}) {
       // disconnect alone leaves the port's message channel referencing this
       // scene, which is exactly the shape of the stranded-context defect 4.0
       // fixed — a new node type is a new place for it to come back.
-      if (shiverNode) {
-        try { shiverNode.port.onmessage = null; shiverNode.port.close(); } catch { /* already gone */ }
-        try { shiverNode.disconnect(); } catch { /* already gone */ }
-        shiverNode = null;
+      if (rushNode) {
+        try { rushNode.port.onmessage = null; rushNode.port.close(); } catch { /* already gone */ }
+        try { rushNode.disconnect(); } catch { /* already gone */ }
+        rushNode = null;
       }
       transmits.length = 0;
       stemGeo.dispose(); nubGeo.dispose(); stemMat.dispose(); nubMat.dispose();

@@ -476,6 +476,14 @@ What ships with one:
 - **`performance` is not defined in every engine's worklet global.** Timing
   probes must degrade to inert rather than throw, and a reported zero from one
   means "not measurable here", not "free".
+- **A rename is not three renames.** Renaming a worklet touches the file, the
+  processor name in `registerProcessor`, and the `new URL(...)` beside it — and
+  a scripted rename across the scene file will happily also delete the node's
+  own declarations if they sit inside a comment block being replaced. That
+  happened; the scene threw `rushNode is not defined` on the first read, and
+  what caught it was the audio harness asserting that a node exists rather than
+  any build step. **The check that a worklet node was constructed is worth
+  keeping in the harness for that reason alone.**
 - **Dispose is three things, not one.** `port.onmessage = null`, `port.close()`,
   then `disconnect()` — and then the context's own close as before. A live port
   keeps a message channel referencing the scene that created it, which is the
