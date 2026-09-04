@@ -24,11 +24,12 @@
 //   1. **Struck, not driven.** Each voice is additive sine partials with a
 //      1.5 ms attack and no excitation stage at all. There is nothing to ring
 //      up, so the onset is the onset.
-//   2. **Plural and discrete.** Three taps across about a quarter of a second,
-//      spaced irregularly, so they read as separate arrivals rather than as a
-//      chord or a flam. The spacing is drawn per note; there is no rate to
-//      learn. Three rather than five because a bell rings for seconds and five
-//      overlapping rings is a wash.
+//   2. **One note.** Not a cascade, not a relay, not a burst — one bright
+//      chime, the way a bell on a counter is struck once. This went from five
+//      taps to three to one across three releases, and the direction was the
+//      same each time: a plural sound reads as a mechanism running, and what is
+//      wanted is a single arrival. A bell that rings for two seconds is already
+//      plural in time; it does not need help.
 //   3. **A bell, not a bar.** Shell modes rather than the free-bar series, and
 //      every partial split into a beating doublet. See the constants below for
 //      what went wrong the first time and why the fix is the object rather than
@@ -86,9 +87,9 @@ const PARTIAL_BEAT = [1.7, 2.9, 4.3, 5.6, 7.1, 9.4];
 // an octave and a fifth above it.
 const BELL_LIFT = 2.35;
 
-const COURIERS = 3;
-const GAP = [0.085, 0.155];   // seconds between taps, drawn per note
-const STEP = 1.6;             // semitones each courier lands above the last
+// One strike. GAP and STEP are gone with the cascade rather than left at zero:
+// a constant that exists only to be neutral is a place for a cascade to grow
+// back.
 const ATTACK = 0.0012;        // seconds — a plunger, not a build
 const CLAPPER = 0.004;        // seconds of strike noise, quiet, at the very top
 
@@ -158,10 +159,10 @@ class ShiverProcessor extends AudioWorkletProcessor {
     // offline at all. Every number in the release notes about this sound was
     // rendered through this path, which is the same processor the scene runs.
     const first = options?.processorOptions?.note;
-    if (first) this.burst(first.hz, first.gain);
+    if (first) this.strike(first.hz, first.gain);
     this.port.onmessage = e => {
       const d = e.data || {};
-      if (d.type === 'shiver') this.burst(d.hz, d.gain);
+      if (d.type === 'shiver') this.strike(d.hz, d.gain);
       else if (d.type === 'report') {
         this.port.postMessage({
           type: 'report', worstMs: this.worstMs, dropped: this.dropped,
@@ -175,19 +176,10 @@ class ShiverProcessor extends AudioWorkletProcessor {
   // One reading is one burst: five couriers, each landing above the one before,
   // at irregular intervals. Voices are capped rather than queued — a visitor
   // reading quickly should get a thickening, not a backlog.
-  burst(hz, gain) {
+  strike(hz, gain) {
     this.seed = (this.seed * 1664525 + 1013904223) >>> 0;
-    let s = this.seed || 1;
-    const rnd = () => { s ^= s << 13; s >>>= 0; s ^= s >> 17; s ^= s << 5; s >>>= 0; return s / 4294967296; };
-    let delay = 0;
-    for (let i = 0; i < COURIERS; i++) {
-      if (this.voices.length >= 24) this.voices.shift();
-      const f = hz * Math.pow(2, (i * STEP + (rnd() - 0.5) * 0.5) / 12);
-      // The later couriers are quieter: a relay fades as it goes past.
-      const g = gain * (1 - 0.11 * i);
-      this.voices.push(new Chime(sampleRate, f, g, delay, this.seed + i * 7919));
-      delay += GAP[0] + (GAP[1] - GAP[0]) * rnd();
-    }
+    if (this.voices.length >= 12) this.voices.shift();
+    this.voices.push(new Chime(sampleRate, hz, gain, 0, this.seed));
   }
 
   process(_inputs, outputs) {

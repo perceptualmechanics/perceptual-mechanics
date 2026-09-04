@@ -587,6 +587,33 @@ described are unchanged.)
   worth trimming, orrery.js's texture generators and first-person rig are the
   two most self-contained chunks to split out first.
 
+## 4.8.4 (2026-09-04)
+
+**One note.** Scott, on the three-tap version: "one single bright chime, one
+note, not a cascade, like a bell."
+
+The count went five &rarr; three &rarr; one across three releases and the
+direction was the same each time, which is worth naming rather than repeating: a
+plural sound reads as a mechanism running, and what a reading wants is a single
+arrival. **A bell that rings for two seconds is already plural in time** — it
+does not need help being eventful.
+
+`COURIERS`, `GAP` and `STEP` are removed rather than set to neutral values. A
+constant that exists only to be inert is where a cascade grows back.
+
+Everything else about the voice is 4.8.3's and unchanged: shell modes at
+1 : 1.63 : 2.13 : 2.87 : 3.71 : 5.03, every partial a beating doublet, the
+plunger transient, the 2.35&times; lift off the scene's pitch mapping. Measured
+on the single strike: attack 4 ms, peak 0.139, &minus;20 dB at 0.54 s, &minus;40
+at 1.21, &minus;60 at 1.88. Spectral centroid 1,862 Hz at 10 ms and 2,246 Hz at
+1.2 s — it stays bright the whole way down.
+
+Voices are still capped rather than queued, at twelve: a visitor reading quickly
+gets overlapping rings, which is what a bell struck again before it has stopped
+actually does.
+
+**Not verified: I did not hear it.** Third WAV, same as the two before.
+
 ## 4.8.3 (2026-09-04)
 
 **It was a xylophone.** Scott listened to 4.8.2's burst and said so: "that's a
