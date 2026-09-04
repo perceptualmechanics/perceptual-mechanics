@@ -7,7 +7,10 @@ import {
 } from '../../utils/sceneKit.js';
 import './psyshell.css';
 import psyshellHtml from './psyshell.html?raw';
-import { BANDS, PETALS, PETAL_COUNT, TEXTS, baseEDigits } from './psyshell.text.js';
+import {
+  LIMBS, STEMS, FILAMENTS, FILAMENT_COUNT, TEXTS, BOUNDS, pathDistance,
+  baseEDigits, TERMINAL_RADIUS_OUT,
+} from './psyshell.text.js';
 
 // ─── Psyshell — flower magic ────────────────────────────────────────────────
 //
@@ -27,23 +30,19 @@ import { BANDS, PETALS, PETAL_COUNT, TEXTS, baseEDigits } from './psyshell.text.
 // about the flower's shape is derived and where the three rulers are stated.
 // This file is the object and the touch.
 //
-// ─── Why a chrysanthemum, and why this many ─────────────────────────────────
-// Botanically the passage is right: hundreds of narrow ray florets radiating
-// from a dense centre is what a chrysanthemum is, and it is what the data
-// wants. The count is the one place the fiction and the corpus disagree — the
-// passage says a thousand light trails and the corpus has 3,221 sentences, so
-// the flower is three times denser than its own description. That is not
-// corrected. The corpus decides the count; the passage was written about a
-// different text.
+// ─── Why a branch, and what it fixed ────────────────────────────────────────
+// The blossom is gone and `psyshell.text.js` carries the full reason. The short
+// version is that it converged 3,221 rays on one origin, which is structurally
+// why the core clipped white and why the inner two-thirds of every ray was
+// lost — a sum taken at a point. Three passes of 4.6.0 went into staggering the
+// inner radius, dropping the base emission and steepening the brightness ramp,
+// and none of them addressed the cause.
 //
-// The density has a real consequence, stated here because it is the first
-// thing anyone will notice: at 3,221 rays the spacing around the rim is 0.11°,
-// which at any plausible screen size is under a pixel. A flat ring of them
-// would be a disc, not a flower. What separates them is elevation — see
-// ELEV_MAX — and additive blending, which lets a dense centre sum to light and
-// a sparse rim resolve into individual rays. The flower is legible because the
-// long sentences are rare, not because the rays were spaced out.
-
+// **A branch distributes the origin along an axis, so there is no single place
+// where three thousand things sum.** That is the fix; the rest of this file's
+// brightness arithmetic follows from it rather than fighting it. See
+// FILAMENT_BASE for the number that changed and by how much.
+//
 // ─── Palette ────────────────────────────────────────────────────────────────
 // The void is green because in the source fiction life is the only thing that
 // functions in the green, and a psyshell is living apparatus a dead thing
@@ -52,62 +51,33 @@ import { BANDS, PETALS, PETAL_COUNT, TEXTS, baseEDigits } from './psyshell.text.
 // violet-black — see psyshell.css's header for the thumbnail argument.
 const VOID_COLOR = 0x06231a;
 const CORE_COLOR = 0xffeec4;
-// Base emission of an untouched ray. This started at 0.34, which is what one
-// ray wants and what 3,221 additive rays cannot have: the first render was a
-// solid white disc across the middle 40% of the flower with every ray in it
-// lost. **3,221 rays all beginning at the same radius means the centre is the
-// sum of three thousand overlaps**, so the base has to be set by what the pile
-// sums to rather than by what one ray looks like. Rendered and looked at, not
-// reasoned about.
-const PETAL_BASE = 0.022;
-// What a fully activated petal reaches. Above 1 on purpose — additive blending
-// clips to white at the tip, which is what a struck fibre should do.
-const PETAL_PEAK = 1.9;
-// How far an activated petal moves toward white, on top of the brightness.
-// Its band's tint survives at rest and is overwhelmed at the strike.
-const PETAL_WHITEN = 0.75;
+// ─── Base emission, re-derived for the branch ──────────────────────────────
+// The blossom ended at 0.022 and that number was a symptom: with every ray
+// starting at one radius, the centre was the sum of three thousand overlaps and
+// the level had to be set by what the pile summed to rather than by what one
+// ray wanted. **The branch has no such pile.** Filapixels start at 3,221
+// different points along 119 branches, so the worst-case overlap is one
+// branch's worth — the largest branch is 382 filapixels (Scroll's longest
+// piece) and they are spread along its length rather than stacked at its base.
+//
+// Re-derived by rendering and measuring peak luminance rather than carried
+// over: 0.022 → 0.13, about six times brighter, with the frame's brightest
+// pixel below clipping. The measurement is in NOTES 4.7.0.
+const FILAMENT_BASE = 0.13;
+const FILAMENT_PEAK = 2.1;
+const FILAMENT_WHITEN = 0.75;
+// The structure is dimmer than what it carries: a branch is the conduit and
+// the filapixels are the signal, and inverting that reads as a diagram of a
+// tree rather than as something lit from within.
+const STEM_LEVEL = 0.30;
 
 // ─── Geometry ───────────────────────────────────────────────────────────────
-// Short sentences stand up, long ones lie over and then droop below the
-// horizontal. One number — the sentence's own length — sets how far a ray
-// reaches, how far it leans and how much it curves, which is how a real
-// chrysanthemum is built: the outer florets are the long ones and they fall
-// away under their own length. It is also the only thing that stops 3,221
-// coincident rays being a disc.
-//
-// The exponent is where the elevation range gets SPENT, and the corpus decides
-// where it should be. Half these sentences are between 4 and 14 words, so half
-// the flower arrives inside a narrow slice of length — and a gentle curve maps
-// all of them to nearly the same elevation, which is what produced the second
-// render's white cap. A steeper exponent spends the range on the crowded short
-// end and compresses the rare long one, which is the right way round: it gives
-// elevation to the petals there are thousands of.
-//
-// The droop is the correction the first render asked for. Elevation ran
-// [0°, 74°] — everything tilting UP and nothing below the equator — and the
-// result was a shaving brush: a dome with a hard flat underside. A
-// chrysanthemum has a skirt. Letting the longest rays go 22° below horizontal
-// is what turns the silhouette from a hemisphere into a flower, and it costs
-// one constant.
-const ELEV_TOP = 76 * Math.PI / 180;
-const ELEV_DROOP = -22 * Math.PI / 180;
-const ELEV_CURVE = 2.6;
-// Ray florets are not needles. Each ray curves downward along its own length —
-// baked into the geometry rather than applied per instance, so it is free —
-// which is what separates a chrysanthemum from a firework. The first render
-// was straight quads and read as an explosion.
-const RAY_CURVE = 0.16;
+// Every position, direction, length and radius comes from `psyshell.text.js`,
+// which derives them from the corpus by Murray's law and the golden angle.
+// Nothing about the form is decided here — this file places what that file
+// computed and lights it.
+const RAY_CURVE = 0.16;     // filapixels droop along their own length
 const RAY_SEGMENTS = 7;
-// The dense centre the passage describes: every ray starts here rather than at
-// the axis, so the middle is a solid glowing pad rather than a point where
-// three thousand triangles meet.
-const CORE_RADIUS = 0.13;
-const OUTER_RADIUS = 1.0;
-// Half-width of a ray at its base, in world units, tapering to a needle. Sized
-// against the rim spacing rather than picked: at 3,221 petals the rim step is
-// about 0.0017 world units, so a base this wide overlaps its neighbours near
-// the centre (which is what makes the pad) and separates as it goes out.
-const RAY_HALF_WIDTH = 0.0075;
 const RAY_TIP_FRACTION = 0.12;
 
 // ─── Propagation ────────────────────────────────────────────────────────────
@@ -124,10 +94,24 @@ const RAY_TIP_FRACTION = 0.12;
 // Reading order is GLOBAL, not per-band, so a disturbance that starts near the
 // end of Scroll crosses into Theater. The corpus is one sequence; the bands are
 // a fact about where its sentences came from, not a wall between them.
-const PROP_SPEED_FWD = 430;   // petals per second, toward later sentences
-const PROP_SPEED_BACK = 175;  // and toward earlier ones
-const PROP_SHELL = 24;        // petals — the half-width of the travelling front
-const PROP_REACH = 780;       // petals — the e-folding distance of the amplitude
+// **The distance is the path along the structure**, not a radius and not an
+// index gap: up to the parent, out to siblings, down other limbs. That is
+// `pathDistance()` in psyshell.text.js, exact in world units, which is why the
+// speeds below are world units per second and need no invented weights. It is
+// also a better claim than a spherical shell was — a Tessier curve slinging
+// forward along an actual path.
+//
+// The asymmetry is unchanged in principle: the front runs about two and a half
+// times further toward later sentences than toward earlier ones.
+//
+// **The numbers are chosen so that DIGIT_TIME is unchanged.** 0.24 / 4.3 =
+// 0.055814s, exactly what SHELL/SPEED gave in the blossom, so the transmission
+// decodes to the same digits and the same durations as 4.6.1 and the worked
+// example on the /text/ page did not have to be recomputed.
+const PROP_SPEED_FWD = 4.3;   // world units per second, toward later sentences
+const PROP_SPEED_BACK = 1.75; // and toward earlier ones
+const PROP_SHELL = 0.24;      // world units — the half-width of the front
+const PROP_REACH = 3.0;       // world units — the e-folding distance
 const PROP_LIFE = 3.4;        // seconds
 const MAX_DISTURBANCES = 5;
 
@@ -182,7 +166,7 @@ const TRANSMIT_GAIN = 3.2;
 const STRIKE_LIFE = 1.25;
 const STRIKE_GAIN = 0.16;
 
-function buildRayGeometry() {
+function buildRayGeometry(curve) {
   // Two perpendicular strips rather than one, so a ray catches the eye from any
   // camera angle instead of vanishing when it turns edge-on — it removes a
   // whole class of "half the flower disappeared when I dragged" that a single
@@ -193,7 +177,7 @@ function buildRayGeometry() {
   // Local space: the ray runs along +X from 0 to 1, curving down in Y as it
   // goes, and is scaled to its real length by the instance matrix.
   const halfW = x => 1 - (1 - RAY_TIP_FRACTION) * x;
-  const drop = x => -RAY_CURVE * x * x;
+  const drop = x => -curve * x * x;
   // The brightness ramp is the fix for the blown-out centre as much as the
   // base level is. A linear ramp still puts real light at the base, and the
   // base is where three thousand rays overlap; a steep power keeps almost all
@@ -228,27 +212,129 @@ export function createPsyshell(container, { preview = false } = {}) {
   scene.background = new THREE.Color(VOID_COLOR);
 
   const camera = new THREE.PerspectiveCamera(42, w / h, 0.05, 40);
-  // Spherical camera state. The default elevation looks down on the flower at
-  // about 34°, which is the angle at which a chrysanthemum reads as a radial
-  // burst rather than as a dome or a disc — checked by rendering, not chosen.
-  let camAz = 0.6, camEl = 0.60, camDist = preview ? 3.05 : 2.9;
-  const CAM_EL_MIN = 0.08, CAM_EL_MAX = 1.45;
-  const CAM_DIST_MIN = 1.5, CAM_DIST_MAX = 6.5;
-  // The flower's visual centre is not the origin. Its mass sits above the
-  // seedpod — the dome is 76° of elevation and the skirt only 22° — so aiming
-  // at 0,0,0 puts the object high in frame and, inside a preview tile's
-  // circular crop, cuts the skirt off at the bottom edge. Both numbers below
-  // came from cropping the tile and looking at it, which is the only way this
-  // kind of error shows up: at full screen it reads as framing, and only the
-  // 200px circle makes it a clipped subject.
-  const LOOK_Y = preview ? 0.13 : 0.08;
-  function placeCamera() {
-    camera.position.set(
-      camDist * Math.cos(camEl) * Math.sin(camAz),
-      LOOK_Y + camDist * Math.sin(camEl),
-      camDist * Math.cos(camEl) * Math.cos(camAz));
-    camera.lookAt(0, LOOK_Y, 0);
+  // ─── Framing: fit the frame, do not bleed off it ──────────────────────────
+  // The structure is built in natural units by `psyshell.text.js` and framed
+  // here. The camera distance is DERIVED from the bounding sphere that file
+  // reports and from the viewport's own aspect at every layout pass — never a
+  // constant, which is the 4.4.2 rule, and it has to be per-viewport because
+  // 320×568 and 1280×800 differ enough in aspect that one fitted distance
+  // cannot serve both.
+  //
+  // A sphere rather than a box, deliberately: the object turns, so a box fit
+  // would be correct at one rotation and bleed at another.
+  const FIT_MARGIN = 1.04;
+  const center = new THREE.Vector3(...BOUNDS.center);
+  let lookOffsetY = 0;
+  const target = new THREE.Vector3();
+  // ─── The box the chrome leaves ────────────────────────────────────────────
+  // Fitting to the whole viewport guarantees a collision, because the title
+  // block sits bottom-centre in every scene on this site and the branch is
+  // fitted to fill: its base arrived exactly where PSYSHELL is. 4.6.1 solved
+  // the blossom's version of this by lifting the object a constant, which was
+  // a number tuned at one window.
+  //
+  // This measures instead. `usableTop` and `usableBottom` are read from the
+  // hint and the title's own rendered boxes each layout pass, the height fit
+  // uses that band rather than the frame, and the camera aims below the
+  // object's centre by exactly the offset that puts the object in the middle
+  // of it. Both numbers move with the font, the viewport and the wrap.
+  let usableTop = 0, usableBottom = 1;
+  let camAz = 0.6, camEl = 0.34, camZoom = 1;
+  const CAM_EL_MIN = -0.35, CAM_EL_MAX = 1.30;
+  const ZOOM_MIN = 0.55, ZOOM_MAX = 2.4;
+  let camDist = 4;
+  // ─── Fitting, by projection ───────────────────────────────────────────────
+  // Two analytic fits were written before this one and both were wrong in the
+  // same way: the quantity that matters is where the object LANDS ON SCREEN,
+  // and that depends on the perspective divide and the camera's downward tilt
+  // together. Reconstructing it in closed form is reimplementing the renderer,
+  // badly — the second attempt put the branch's base 15px inside the title on
+  // three viewports while claiming to have centred it.
+  //
+  // So the object's own points are projected through the actual camera, at
+  // eight rotations because the visitor can drag to any of them, and the
+  // distance and the aim point are corrected from what comes back. Three
+  // passes converge. It runs at layout only.
+  const projV = new THREE.Vector3();
+  function projectedBox() {
+    const saveAz = camAz;
+    let minX = 1e9, maxX = -1e9, minY = 1e9, maxY = -1e9;
+    for (let k = 0; k < 8; k++) {
+      camAz = saveAz + k * Math.PI / 4;
+      placeCamera();
+      camera.updateMatrixWorld();
+      for (const p of BOUNDS.probes) {
+        projV.set(p[0], p[1], p[2]).project(camera);
+        if (projV.x < minX) minX = projV.x; if (projV.x > maxX) maxX = projV.x;
+        if (projV.y < minY) minY = projV.y; if (projV.y > maxY) maxY = projV.y;
+      }
+    }
+    camAz = saveAz;
+    placeCamera();
+    return { minX, maxX, minY, maxY };
   }
+
+  function fitCamera() {
+    const H = Math.max(1, container.clientHeight || window.innerHeight);
+    // The band in normalised device coordinates, where +1 is the top.
+    const bandTop = 1 - 2 * usableTop / H;
+    const bandBot = 1 - 2 * usableBottom / H;
+    const wantH = Math.max(0.2, bandTop - bandBot);
+    const wantMid = (bandTop + bandBot) / 2;
+    const vHalf = (camera.fov * Math.PI / 180) / 2;
+
+    // Reset each fit: the loop is a fixed point, and starting it from the
+    // previous viewport's answer is how a converging loop becomes a compounding
+    // one — the first version carried camDist across calls and ran away.
+    camDist = BOUNDS.radius * 3;
+    lookOffsetY = 0;
+    camera.updateProjectionMatrix();
+    placeCamera();
+
+    // Distance and aim point are solved ALTERNATELY, not together. Corrected
+    // in the same loop they fight: changing the distance changes how much
+    // world-height an NDC unit is worth, so the recentring is computed against
+    // a scale that is about to move, and the pair oscillates. The version that
+    // did that settled with the branch 44px above the band at every viewport.
+    const sizePass = () => {
+      const box = projectedBox();
+      if (!isFinite(box.maxY) || box.maxY <= box.minY) return;
+      const gotH = Math.max(1e-4, box.maxY - box.minY);
+      const gotW = Math.max(1e-4, box.maxX - box.minX);
+      camDist *= Math.max(gotH / wantH, gotW / 2.0);
+      placeCamera();
+    };
+    // At a fixed distance the map from aim point to projected centre is very
+    // nearly linear, so this converges in a couple of steps without damping.
+    const centrePass = () => {
+      const box = projectedBox();
+      if (!isFinite(box.maxY) || box.maxY <= box.minY) return;
+      const err = (box.maxY + box.minY) / 2 - wantMid;
+      // PLUS, not minus. The camera is placed relative to the aim point, so
+      // lowering the aim lowers the camera with it and the object — which has
+      // not moved — appears HIGHER. The sign is the opposite of the one a
+      // fixed camera would want, and getting it wrong sent the offset from
+      // −2.5 to −13.2 in two rounds with the object off the top of the frame.
+      lookOffsetY += err * camDist * Math.tan(vHalf);
+      placeCamera();
+    };
+    for (let round = 0; round < 5; round++) {
+      sizePass(); sizePass();
+      centrePass(); centrePass();
+    }
+    camDist = camDist * FIT_MARGIN / camZoom;
+    placeCamera();
+  }
+
+  function placeCamera() {
+    target.set(center.x, center.y + lookOffsetY, center.z);
+    camera.position.set(
+      target.x + camDist * Math.cos(camEl) * Math.sin(camAz),
+      target.y + camDist * Math.sin(camEl),
+      target.z + camDist * Math.cos(camEl) * Math.cos(camAz));
+    camera.lookAt(target);
+  }
+  fitCamera();
   placeCamera();
 
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
@@ -270,120 +356,127 @@ export function createPsyshell(container, { preview = false } = {}) {
   const clock = createFrameClock();
   let reduced = prefersReducedMotion();
 
-  // ─── The flower ───────────────────────────────────────────────────────────
-  const rayGeo = buildRayGeometry();
-  const rayMat = new THREE.MeshBasicMaterial({
+  // ─── The branch ───────────────────────────────────────────────────────────
+  const rayGeo = buildRayGeometry(RAY_CURVE);
+  // Structural members are straight. A branch that droops like a floret reads
+  // as a second layer of filapixels rather than as what carries them.
+  const stemGeo = buildRayGeometry(0);
+  const filMat = new THREE.MeshBasicMaterial({
     vertexColors: true,
     blending: THREE.AdditiveBlending,
-    // Additive with depth writing on produces holes: a near ray writes depth
-    // and the rays behind it stop contributing, which for an object made
-    // entirely of overlapping light is the whole effect thrown away.
+    // Additive with depth writing on produces holes: a near filament writes
+    // depth and everything behind it stops contributing, which for an object
+    // made entirely of overlapping light is the whole effect thrown away.
     depthWrite: false,
     transparent: true,
   });
-  const flower = new THREE.InstancedMesh(rayGeo, rayMat, PETAL_COUNT);
-  flower.instanceMatrix.setUsage(THREE.StaticDrawUsage);
-  flower.frustumCulled = false;
+  const stemMat = new THREE.MeshBasicMaterial({
+    vertexColors: true, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true,
+  });
 
-  // Per-band tint, computed once. HSL at low saturation: these are tints on
-  // white, not colours — see psyshell.text.js's BAND_SAT for why.
-  const bandColor = BANDS.map(b => new THREE.Color().setHSL(b.hue / 360, b.sat, b.light));
+  const filaments = new THREE.InstancedMesh(rayGeo, filMat, FILAMENT_COUNT);
+  filaments.instanceMatrix.setUsage(THREE.StaticDrawUsage);
+  filaments.frustumCulled = false;
+  const stems = new THREE.InstancedMesh(stemGeo, stemMat, STEMS.length);
+  stems.instanceMatrix.setUsage(THREE.StaticDrawUsage);
+  stems.frustumCulled = false;
 
+  // Per-limb tint. Now that a limb is a region of space rather than an arc of a
+  // disc, the bands have somewhere to be legible, so saturation goes up from
+  // the blossom's 0.17 — where it was invisible — to 0.24. Still tints on white:
+  // the passage says white fibre-optic, and nine saturated regions would be a
+  // pie chart wearing a branch.
+  const LIMB_SAT = 0.24, LIMB_LIGHT = 0.92;
+  const limbColor = LIMBS.map((l, i) =>
+    new THREE.Color().setHSL(((i * 137.507) % 360) / 360, LIMB_SAT, LIMB_LIGHT));
+  const STEM_COLOR = new THREE.Color(0xbfe8d4);
+
+  // ─── Placing what the data computed ───────────────────────────────────────
+  // A member runs from `from` along `dir` for `len`, with `radius` across. The
+  // ray geometry's local +X is its length and its local Y/Z are its width, so
+  // one compose() per instance does it.
   const dummy = new THREE.Matrix4();
   const q = new THREE.Quaternion();
-  const e = new THREE.Euler();
-  const scl = new THREE.Vector3();
-  const pos0 = new THREE.Vector3();
-
-  // Static transforms, written once. Length and elevation both come from the
-  // sentence's own word count (see the geometry note above); azimuth is its
-  // place in reading order.
-  const elevation = new Float32Array(PETAL_COUNT);
-  for (let i = 0; i < PETAL_COUNT; i++) {
-    const lenF = PETALS.length[i];
-    const t = Math.max(0, Math.min(1, (lenF - 0.36) / (1 - 0.36)));
-    const el = ELEV_DROOP + (ELEV_TOP - ELEV_DROOP) * Math.pow(1 - t, ELEV_CURVE);
-    elevation[i] = el;
-    const az = PETALS.angle[i];
-    const reach = CORE_RADIUS + lenF * (OUTER_RADIUS - CORE_RADIUS);
-    scl.set(reach, RAY_HALF_WIDTH, RAY_HALF_WIDTH);
-    e.set(0, az, el, 'YZX');
-    q.setFromEuler(e);
-    pos0.set(0, 0, 0);
-    dummy.compose(pos0, q, scl);
-    flower.setMatrixAt(i, dummy);
+  const vFrom = new THREE.Vector3(), vDir = new THREE.Vector3(), vScale = new THREE.Vector3();
+  const X_AXIS = new THREE.Vector3(1, 0, 0);
+  function placeMember(mesh, i, fx, fy, fz, dx, dy, dz, len, radius) {
+    vFrom.set(fx, fy, fz);
+    vDir.set(dx, dy, dz).normalize();
+    q.setFromUnitVectors(X_AXIS, vDir);
+    vScale.set(len, radius, radius);
+    dummy.compose(vFrom, q, vScale);
+    mesh.setMatrixAt(i, dummy);
   }
-  flower.instanceMatrix.needsUpdate = true;
 
-  // Activation, one float per petal, written by the propagation and read by
-  // the instance colour buffer. A plain array touched by the CPU — no GPGPU
-  // ping-pong, no WebGPU: 3,221 petals at 144fps is under half a million
-  // operations a second, and Harmonics already integrates 76 coupled
-  // oscillators on the CPU without trouble. WebGPU is genuinely available now
-  // and is a real option for a later scene; what would change the answer here
-  // is a petal count above ~50,000 or neighbour coupling in more than one
-  // dimension, and neither applies.
-  const activation = new Float32Array(PETAL_COUNT);
+  for (let i = 0; i < FILAMENT_COUNT; i++) {
+    const o = i * 3;
+    placeMember(filaments, i,
+      FILAMENTS.origin[o], FILAMENTS.origin[o + 1], FILAMENTS.origin[o + 2],
+      FILAMENTS.dir[o], FILAMENTS.dir[o + 1], FILAMENTS.dir[o + 2],
+      FILAMENTS.length[i], TERMINAL_RADIUS_OUT);
+  }
+  filaments.instanceMatrix.needsUpdate = true;
+
+  for (let i = 0; i < STEMS.length; i++) {
+    const s0 = STEMS[i];
+    const dx = s0.to[0] - s0.from[0], dy = s0.to[1] - s0.from[1], dz = s0.to[2] - s0.from[2];
+    const len = Math.hypot(dx, dy, dz) || 1e-6;
+    placeMember(stems, i, s0.from[0], s0.from[1], s0.from[2], dx, dy, dz, len, s0.radius);
+    stems.setColorAt(i, STEM_COLOR.clone().multiplyScalar(STEM_LEVEL));
+  }
+  stems.instanceMatrix.needsUpdate = true;
+  stems.instanceColor.needsUpdate = true;
+
+  // Distance from the trunk's base to each filapixel, along the structure. Used
+  // by the idle glint, which is the one thing in this scene that could not
+  // exist in the blossom: there was no axis for a travelling highlight to run
+  // along.
+  const pathTotal = new Float32Array(FILAMENT_COUNT);
+  let pathMax = 0;
+  for (let i = 0; i < FILAMENT_COUNT; i++) {
+    pathTotal[i] = FILAMENTS.pathL[i] + FILAMENTS.pathP[i] + FILAMENTS.pathA[i];
+    if (pathTotal[i] > pathMax) pathMax = pathTotal[i];
+  }
+
+  // ─── The idle ─────────────────────────────────────────────────────────────
+  // Apollo's corona drifts and Outside's lotus breathes; this sat still except
+  // for a slow turn, which read as a diagram rather than a thing. A glint runs
+  // up the structure — base to tip, in path length, the same coordinate the
+  // propagation uses — with a pause between passes so it is an event and not a
+  // metronome. Stopped under reduced motion along with everything else.
+  const GLINT_SPEED = 0.62;   // world units per second
+  const GLINT_WIDTH = 0.34;
+  const GLINT_AMP = 0.42;
+  const GLINT_GAP = 2.4;      // world units of dark between passes
+  let glintPos = -GLINT_GAP;
+
+  const activation = new Float32Array(FILAMENT_COUNT);
   const tint = new THREE.Color();
   function writeColors() {
-    for (let i = 0; i < PETAL_COUNT; i++) {
+    for (let i = 0; i < FILAMENT_COUNT; i++) {
       const a = activation[i];
-      const base = bandColor[PETALS.band[i]];
-      const level = PETAL_BASE + (PETAL_PEAK - PETAL_BASE) * a;
-      const wm = PETAL_WHITEN * a;
+      let level = FILAMENT_BASE + (FILAMENT_PEAK - FILAMENT_BASE) * a;
+      if (!reduced) {
+        const g = (pathTotal[i] - glintPos) / GLINT_WIDTH;
+        level += GLINT_AMP * Math.exp(-g * g);
+      }
+      const base = limbColor[FILAMENTS.limb[i]];
+      const wm = FILAMENT_WHITEN * a;
       tint.setRGB(
         (base.r * (1 - wm) + wm) * level,
         (base.g * (1 - wm) + wm) * level,
         (base.b * (1 - wm) + wm) * level);
-      flower.setColorAt(i, tint);
+      filaments.setColorAt(i, tint);
     }
-    flower.instanceColor.needsUpdate = true;
+    filaments.instanceColor.needsUpdate = true;
   }
-  writeColors();
 
-  // Everything the flower is made of hangs off one group, so the lift below
-  // moves the object and not the camera. The camera has to stay aimed where it
-  // is: it is what the drag and the zoom operate on.
+  // One group, so the idle turn moves the object and not the camera.
   const bloom = new THREE.Group();
   scene.add(bloom);
-  bloom.add(flower);
-
-  // The dense centre. Small, warm and NOT white — the one place in the flower
-  // that is not the corpus, so it is the one place with its own colour.
-  const coreGeo = new THREE.SphereGeometry(CORE_RADIUS * 0.62, 20, 14);
-  const coreMat = new THREE.MeshBasicMaterial({
-    // Dim, because it is adding on top of three thousand ray bases. At 0.55 it
-    // was part of what made the first render's white hole rather than a warm
-    // seedpod inside a flower.
-    color: CORE_COLOR, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0.16,
-  });
-  const core = new THREE.Mesh(coreGeo, coreMat);
-  bloom.add(core);
-
-  // ─── The lift ─────────────────────────────────────────────────────────────
-  // 4.6.1. The title block sits bottom-centre in every scene on this site, and
-  // this flower filled the middle of the frame, so "Psyshell / flower magic"
-  // was rendering inside the rays.
-  //
-  // **Measured before deciding, and the premise it was raised on did not
-  // hold.** With the type hidden and the band the title occupies sampled
-  // directly, mean luminance behind the lockup reads: Beamline 0.311, Psyshell
-  // 0.121, Butterfly 0.058, Apollo 0.056, Outside 0.032, Harmonics 0.011. So
-  // Psyshell was the second-brightest rather than the only offender, and
-  // **Beamline is worse** — 2.6:1 against the title colour, under WCAG AA for
-  // large text, where Psyshell cleared it at 5.4:1. Nor was this the noisiest:
-  // Butterfly's local gradient is nearly five times higher.
-  //
-  // The lift ships anyway, because being twice the family's brightness behind
-  // the type is a fair reason on its own — but it is an aesthetic correction
-  // and not a contrast failure, and saying which it is matters. Beamline's is
-  // the real defect and is logged separately rather than fixed here.
-  //
-  // Full mode only: a preview tile has no title over it, and lifting inside the
-  // circular crop would put the skirt back outside it, which is the bug 4.6.0
-  // fixed.
-  const FLOWER_LIFT = preview ? 0 : 0.34;
-  bloom.position.y = FLOWER_LIFT;
+  bloom.add(stems);
+  bloom.add(filaments);
+  writeColors();
 
   // ─── Transmitters ─────────────────────────────────────────────────────────
   // One short-lived object per struck filament, drawn over that filament's own
@@ -472,7 +565,7 @@ export function createPsyshell(container, { preview = false } = {}) {
   const petalMatrix = new THREE.Matrix4();
   function armTransmitter(index) {
     const slot = transmitters.find(t => !t.active) || transmitters[0];
-    const ordinal = PETALS.orderInBand[index] + 1;
+    const ordinal = FILAMENTS.orderInLimb[index] + 1;
     const { digits } = baseEDigits(ordinal);
     const bounds = slot.mat.uniforms.uBounds.value;
     let acc = 0;
@@ -481,7 +574,7 @@ export function createPsyshell(container, { preview = false } = {}) {
     for (let i = n; i < MAX_DIGITS; i++) bounds[i] = acc;
     slot.mat.uniforms.uCount.value = n;
     slot.mat.uniforms.uTime.value = 0;
-    slot.mat.uniforms.uColor.value.copy(bandColor[PETALS.band[index]]);
+    slot.mat.uniforms.uColor.value.copy(limbColor[FILAMENTS.limb[index]]);
     // Under reduced motion nothing travels and nothing flashes: the strand
     // simply lights for the length of the train and fades. The object is not
     // stilled — it is still struck, still lit, still its band's colour — but a
@@ -498,7 +591,7 @@ export function createPsyshell(container, { preview = false } = {}) {
     // whatever world matrix it last had — the transmitter armed, ran its whole
     // train, and drew nothing where the struck petal was. Decomposing leaves
     // matrixAutoUpdate alone and lets the renderer compose it the normal way.
-    flower.getMatrixAt(index, petalMatrix);
+    filaments.getMatrixAt(index, petalMatrix);
     petalMatrix.decompose(slot.mesh.position, slot.mesh.quaternion, slot.mesh.scale);
     slot.mesh.visible = true;
   }
@@ -561,8 +654,11 @@ export function createPsyshell(container, { preview = false } = {}) {
   function strike(index) {
     if (!audioCtx || !soundEnabled) return;
     const now = audioCtx.currentTime;
-    const lenF = PETALS.length[index];
-    const hz = 620 * Math.pow(2, -1.15 * (lenF - 0.36) / (1 - 0.36));
+    const lenF = FILAMENTS.length[index];
+    // Pitch from the filapixel's own visible property, its length, the same as
+    // in 4.6.0 — only the units changed with the form, so the map is rescaled
+    // to the branch's own FIL_MIN..FIL_MAX rather than the blossom's fractions.
+    const hz = 620 * Math.pow(2, -1.15 * Math.max(0, Math.min(1, (lenF - 0.030) / (0.125 - 0.030))));
     const osc = audioCtx.createOscillator();
     osc.type = 'sine';
     osc.frequency.value = hz;
@@ -593,43 +689,30 @@ export function createPsyshell(container, { preview = false } = {}) {
     }
     activation.fill(0);
     for (const d of disturbances) {
-      // Under reduced motion the front does not travel: the disturbance is the
-      // amplitude envelope alone, applied at once and fading. The object keeps
-      // its shape, the touch keeps its structural consequence, and nothing
-      // moves across the screen. That is what "still the propagation without
-      // stilling the object" has to mean for a scene whose whole subject is
-      // propagation.
       const decay = 1 - d.t / PROP_LIFE;
       const fade = decay * decay;
-      if (reduced) {
-        const lo = Math.max(0, d.origin - PROP_REACH * 1.2);
-        const hi = Math.min(PETAL_COUNT - 1, d.origin + PROP_REACH * 1.2);
-        for (let i = lo; i <= hi; i++) {
-          const dist = Math.abs(i - d.origin);
-          const amp = Math.exp(-dist / PROP_REACH) * fade;
-          if (amp > activation[i]) activation[i] = amp;
-        }
-        continue;
-      }
       const frontF = PROP_SPEED_FWD * d.t;
       const frontB = PROP_SPEED_BACK * d.t;
-      // Only the shell is touched, not the whole array — the same "an
-      // expanding ring, not a global brightness change" the corona's
-      // disturbance in Apollo 4.4.0 had to be corrected into.
-      const loB = Math.max(0, Math.floor(d.origin - frontB - 3 * PROP_SHELL));
-      const hiB = Math.min(PETAL_COUNT - 1, Math.ceil(d.origin - frontB + 3 * PROP_SHELL));
-      const loF = Math.max(0, Math.floor(d.origin + frontF - 3 * PROP_SHELL));
-      const hiF = Math.min(PETAL_COUNT - 1, Math.ceil(d.origin + frontF + 3 * PROP_SHELL));
-      const apply = (lo, hi, front) => {
-        for (let i = lo; i <= hi; i++) {
-          const dist = Math.abs(i - d.origin);
-          const s = (dist - front) / PROP_SHELL;
-          const amp = Math.exp(-s * s) * Math.exp(-dist / PROP_REACH) * fade;
-          if (amp > activation[i]) activation[i] = amp;
-        }
-      };
-      apply(loB, hiB, frontB);
-      apply(loF, hiF, frontF);
+      // Every filapixel is visited, which the blossom's index window avoided —
+      // and here it has to be, because tree distance is not monotonic in the
+      // reading index: the filapixel next to this one in the text may be on
+      // another limb entirely. 3,221 distances times at most five disturbances
+      // is ~16k path computations a frame, each a handful of array reads.
+      for (let i = 0; i < FILAMENT_COUNT; i++) {
+        const dist = pathDistance(i, d.origin);
+        // Direction is reading order, which is the index order: the front runs
+        // further toward later sentences than toward earlier ones.
+        const front = reduced ? 0 : (i >= d.origin ? frontF : frontB);
+        // Under reduced motion nothing travels: the disturbance is the
+        // amplitude envelope alone, applied at once and fading. The object is
+        // not stilled — it is still struck, still lit — but a front crossing
+        // the screen IS motion, and a visitor who asked for none should not get
+        // the one thing here that moves across it.
+        const s0 = reduced ? 0 : (dist - front) / PROP_SHELL;
+        const shell = reduced ? 1 : Math.exp(-s0 * s0);
+        const amp = shell * Math.exp(-dist / PROP_REACH) * fade;
+        if (amp > activation[i]) activation[i] = amp;
+      }
     }
   }
 
@@ -645,13 +728,13 @@ export function createPsyshell(container, { preview = false } = {}) {
   // own. The live region keeps all of it, because a visitor who cannot see the
   // pulse must still get the content.
   function showPetal(index) {
-    const band = BANDS[PETALS.band[index]];
-    const n = PETALS.orderInBand[index] + 1;
+    const limb = LIMBS[FILAMENTS.limb[index]];
+    const n = FILAMENTS.orderInLimb[index] + 1;
     if (ordinalEl) {
       ordinalEl.hidden = false;
-      ordinalEl.textContent = `${n} / ${band.count}`;
+      ordinalEl.textContent = `${n} / ${limb.count}`;
     }
-    srSay(`${band.label}, sentence ${n} of ${band.count}. ${TEXTS[index]}`);
+    srSay(`${limb.label}, sentence ${n} of ${limb.count}. ${TEXTS[index]}`);
   }
 
   const raycaster = new THREE.Raycaster();
@@ -667,7 +750,7 @@ export function createPsyshell(container, { preview = false } = {}) {
     ndc.x = ((ev.clientX - rect.left) / rect.width) * 2 - 1;
     ndc.y = -((ev.clientY - rect.top) / rect.height) * 2 + 1;
     raycaster.setFromCamera(ndc, camera);
-    const hits = raycaster.intersectObject(flower, false);
+    const hits = raycaster.intersectObject(filaments, false);
     if (!hits.length || hits[0].instanceId === undefined) return;
     const index = hits[0].instanceId;
     disturb(index);
@@ -686,23 +769,22 @@ export function createPsyshell(container, { preview = false } = {}) {
 
     soundToggle = bindPersistedSoundToggle(container, soundToggleEl, setSoundEnabled, 'psyshell');
 
-    // The jump list is over BANDS, not petals. Three thousand two hundred and
-    // twenty-one buttons is not an accessible alternative to a flower, it is a
-    // denial-of-service on a screen reader; nine named scenes is the same
+    // The jump list is over LIMBS, not filapixels. Three thousand two hundred
+    // and twenty-one buttons is not an accessible alternative to a branch, it is
+    // a denial-of-service on a screen reader; nine named scenes is the same
     // structure a sighted visitor actually navigates by.
     jumpList = createJumpList(container, {
-      label: 'Bands of the flower, by scene',
-      items: BANDS,
-      getLabel: b => `${b.label} — ${b.count}`,
-      onSelect: band => {
-        // Turn the flower so the band faces the camera, and strike its first
-        // sentence, so selecting a band does the same thing touching one does.
-        const mid = (band.startDeg + band.arcDeg / 2) * Math.PI / 180;
-        camAz = -mid;
+      label: 'Limbs of the branch, by scene',
+      items: LIMBS,
+      getLabel: l => `${l.label} — ${l.count}`,
+      onSelect: limb => {
+        // Turn the branch so the limb faces the camera, and strike its first
+        // filapixel, so selecting a limb does what touching one does.
+        camAz = -(limb.azimuth * Math.PI / 180);
         placeCamera();
         let first = 0;
-        for (let i = 0; i < PETAL_COUNT; i++) {
-          if (BANDS[PETALS.band[i]].key === band.key) { first = i; break; }
+        for (let i = 0; i < FILAMENT_COUNT; i++) {
+          if (LIMBS[FILAMENTS.limb[i]].key === limb.key) { first = i; break; }
         }
         disturb(first);
         showPetal(first);
@@ -719,7 +801,8 @@ export function createPsyshell(container, { preview = false } = {}) {
     });
     wheelZoom = bindWheelZoom(container, {
       onZoom: dy => {
-        camDist = Math.max(CAM_DIST_MIN, Math.min(CAM_DIST_MAX, camDist * (1 + dy * 0.0012)));
+        camZoom = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, camZoom * (1 - dy * 0.0012)));
+        fitCamera();
         placeCamera();
       },
     });
@@ -737,20 +820,42 @@ export function createPsyshell(container, { preview = false } = {}) {
   // share a line. Measured, never assumed — the 4.4.2 lesson, which was two
   // constants taken from a desktop window and never re-derived.
   function relayout() {
-    if (preview || !ordinalEl || !titleEl) return;
-    // The ordinal sits right of the title block and must not ride over it when
-    // the title wraps at a narrow width. Measured against the title's actual
-    // box rather than assumed from a breakpoint — the 4.4.2 lesson, which was
-    // two constants taken from a desktop window and never re-derived.
-    const titleBox = titleEl.getBoundingClientRect();
+    const H = container.clientHeight || window.innerHeight;
+    if (preview) { usableTop = 0; usableBottom = H; fitCamera(); placeCamera(); return; }
+    // Below the hint, above the title. Both are measured from what they
+    // actually rendered as, so a wrapped hint or a larger type scale moves the
+    // band rather than being discovered as an overlap later.
+    // **In the CONTAINER's coordinates, not the viewport's.** The hint and the
+    // title are fixed-position elements and their rects are viewport-relative;
+    // the canvas is the container, which starts below the nav — 56px down at
+    // every viewport this was measured at. Using one frame's numbers against
+    // the other's height put the branch exactly that far low, which read as a
+    // centring loop that would not converge. The loop had converged; it was
+    // solving the wrong band.
+    const rect = container.getBoundingClientRect();
+    const hintBox = hintEl ? hintEl.getBoundingClientRect() : null;
+    const titleBox = titleEl ? titleEl.getBoundingClientRect() : null;
+    usableTop = (hintBox ? hintBox.bottom + 10 : rect.top + 64) - rect.top;
+    usableBottom = (titleBox ? titleBox.top - 12 : rect.bottom - 96) - rect.top;
+    usableTop = Math.max(0, usableTop);
+    usableBottom = Math.min(H, usableBottom);
+    if (usableBottom - usableTop < H * 0.3) { usableTop = 0; usableBottom = H; }
+    fitCamera();
+    placeCamera();
+
+    if (!ordinalEl || !titleEl) return;
     const ordBox = ordinalEl.getBoundingClientRect();
-    const overlaps = ordBox.left < titleBox.right + 10 && ordBox.top < titleBox.bottom;
-    ordinalEl.style.bottom = overlaps ? `${Math.round(window.innerHeight - titleBox.top + 10)}px` : '';
+    const tBox = titleEl.getBoundingClientRect();
+    const overlaps = ordBox.left < tBox.right + 10 && ordBox.top < tBox.bottom;
+    ordinalEl.style.bottom = overlaps ? `${Math.round(window.innerHeight - tBox.top + 10)}px` : '';
   }
 
   resizeCtl = bindGuardedResize(container, (cw, ch) => {
     camera.aspect = cw / ch;
     camera.updateProjectionMatrix();
+    // Refit before placing: the aspect just changed, and the fit depends on it.
+    fitCamera();
+    placeCamera();
     renderer.setSize(cw, ch);
     relayout();
   });
@@ -761,8 +866,7 @@ export function createPsyshell(container, { preview = false } = {}) {
   // Idle turn. One autonomous motion in the whole scene, deliberately — the
   // flower is a thing on a workbench that revolves, and a second moving
   // element would be decoration. Stopped under reduced motion.
-  const IDLE_TURN = 0.045; // radians per second
-  let dirty = true;
+  const IDLE_TURN = 0.055; // radians per second
 
   function animate() {
     animId = requestAnimationFrame(animate);
@@ -778,22 +882,32 @@ export function createPsyshell(container, { preview = false } = {}) {
       placeCamera();
     }
     advanceTransmitters(dt);
-    if (disturbances.length) {
-      advance(dt);
-      writeColors();
-      dirty = true;
-    } else if (dirty) {
-      // One last write to clear the final frame's activation, then stop
-      // uploading 9,663 floats a frame to say nothing changed.
-      activation.fill(0);
-      writeColors();
-      dirty = false;
+    if (!reduced) {
+      // The glint runs base to tip and then pauses in the dark before the next
+      // pass, so it is an event rather than a metronome.
+      glintPos += GLINT_SPEED * dt;
+      if (glintPos > pathMax + GLINT_GAP) glintPos = -GLINT_GAP;
     }
+    if (disturbances.length) advance(dt);
+    // Written every frame now: the idle glint means there is no longer a state
+    // in which nothing about the colours changes. 3,221 instances is ~9,700
+    // floats a frame, which is the same order as the propagation already was
+    // and less than Harmonics' per-frame work.
+    writeColors();
     renderer.render(scene, camera);
     previewCanvas?.blit();
   }
 
   relayout();
+  // The band is measured from the title block's rendered box, and the title is
+  // set in a web font — so the first measurement happens against the fallback
+  // face and the band moves when Arapey arrives. Re-fit then. Without this the
+  // branch was fitted to a band that no longer existed by the time anyone saw
+  // it, which measured as a constant ~50px of downward drift at every viewport
+  // and read as "the centring is broken."
+  if (!preview && document.fonts?.ready) {
+    document.fonts.ready.then(() => { if (!disposed) relayout(); }).catch(() => {});
+  }
   // Directly, not scheduled. main.js runs syncPreviewPlayback() the moment
   // initPreviews() resolves and that can setPaused(true), cancelling a queued
   // first callback before it ever runs — which is exactly how Harmonics and
@@ -840,14 +954,15 @@ export function createPsyshell(container, { preview = false } = {}) {
       muteGain = busGain = null;
       soundEnabled = false;
       rayGeo.dispose();
-      rayMat.dispose();
+      filMat.dispose();
       // Five ShaderMaterials, one per transmitter slot. They share rayGeo, which
       // is disposed once above rather than five more times.
       for (const t of transmitters) { t.mesh.visible = false; t.mat.dispose(); }
       transmitters.length = 0;
-      coreGeo.dispose();
-      coreMat.dispose();
-      flower.dispose();
+      stemGeo.dispose();
+      stemMat.dispose();
+      filaments.dispose();
+      stems.dispose();
       previewCanvas?.dispose();
       // renderer.dispose() + forceContextLoss() + canvas removal in one call —
       // see manageRenderer for why a plain renderer.dispose() never frees the

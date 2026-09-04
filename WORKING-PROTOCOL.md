@@ -282,6 +282,47 @@ protocol with no record of use is indistinguishable from one nobody reads.
   hook's message says "the repository" and checks whichever one it is pointed
   at, which is a message claiming a scope the check never had.
 
+- **2026-09-03, v4.7.0, the branch.** **A brief named two files that did not
+  exist**, and asked for them to be marked rather than deleted. Both Psyshell
+  briefs had arrived as chat messages and were never written down. That is rule
+  4 exactly, and it is the second occurrence of a specific variant: **rule 4
+  itself arrived naming `CORRECTED-FACTS.md`, which also had to be created
+  before it could be used.** The pattern is a brief referring to a durable
+  surface that only ever existed in conversation. Both are files now, with
+  Scott's text unedited and a header saying what was superseded and what was
+  not — because the blossom was built, looked at and replaced for reasons, and
+  the reasons are the part that stops it being re-proposed.
+
+  **The framing work produced three wrong solutions in a row and the third was
+  the instructive one.** A bounding sphere fitted a tall narrow object badly. A
+  swept cylinder was the right hull and revealed a real fact — the object was
+  wider in sweep than it was tall, so a portrait viewport could never fill.
+  Then an attempt to solve distance and vertical offset in closed form put the
+  branch's base inside the title *while reporting that it had centred it*.
+  Reconstructing where an object lands on screen from the camera's parameters
+  is reimplementing the renderer badly; projecting the object's own points
+  through the actual camera is both shorter and correct.
+
+  Two bugs inside that, and **neither was found by reasoning**. The sign was
+  backwards, because the camera is placed relative to the aim point, so
+  lowering the aim raises the object. And the real one: **the hint and title
+  rects are viewport-relative while the canvas is the container, which starts
+  56px down.** Using one frame's numbers against the other's height put the
+  object exactly that far low, and I described the loop as "not converging"
+  when the log showed error 0.0000 — it had converged perfectly to the wrong
+  band. *A measurement in the wrong coordinate frame does not look like a
+  wrong measurement; it looks like a broken solver.*
+
+  **And the propagation probe needed scoping twice, both times because the
+  structure changed under it.** Measured across the whole branch the front
+  reads as noise, because across a limb boundary the global reading index and
+  the tree distance stop agreeing. Then the first mid-limb strike took the
+  limb's longest filament, which sat at ordinal 1178 of 1275 — near the end, so
+  the forward front left the limb inside one sample and read as zero. Both are
+  the recursive failure this file already names: **a fix can invalidate the
+  instrument that verified it**, and changing the geometry changed what
+  "distance from the origin" means.
+
 - **2026-09-03, v4.6.1.** **The third invalid harness in three releases, and
   this one was the whole bug.** A frame-difference probe sampled the page every
   90ms and reported that the transmission "stops after 0.2 seconds."

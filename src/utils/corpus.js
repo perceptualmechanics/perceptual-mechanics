@@ -85,34 +85,63 @@ export const isSentence = s => /[.!?]$/.test(s) || wordCount(s) > 4;
 // **outside** publishes only five power-source names and two origin labels,
 // none of which survive `isSentence`.
 //
-// Library is excerpts only. Its `note` field is editorial apparatus about the
+// Library is excerpts only, so a Library piece is one book's excerpt. Its
+// `note` field is editorial apparatus about the
 // book rather than writing the site is publishing, and `catalog` is private;
 // the earlier corpus measurement included visible notes and reached a larger
 // number, so the two rulers differ by design and this one is the narrower.
 export const CORPUS_SOURCES = [
-  { key: 'scroll', read: m => m.scrollPieces.flatMap(p => p.body) },
-  { key: 'theater', read: m => m.BEATS.map(b => b.text) },
-  { key: 'sphere', read: m => m.fragments.map(f => f.text) },
-  { key: 'library', read: m => m.libraryItems.map(i => i.excerpt) },
-  { key: 'orbiter', read: m => m.poems.flatMap(p => p.stanzas) },
-  { key: 'apollo', read: m => m.ELEMENTS.flatMap(e => [e.character, e.note]) },
-  { key: 'beamline', read: m => [m.EPIGRAPH_PRIMARY, m.EPIGRAPH_SECONDARY, ...m.BOUNCES.map(b => b.text)] },
-  { key: 'orrery', read: m => [m.ORRERY.note] },
-  { key: 'butterfly', read: m => [m.BUTTERFLY.text] },
+  { key: 'scroll', read: m => m.scrollPieces.map(p => p.body) },
+  // Theater's piece level is the SCENE, not the play: `BEATS` carries a
+  // sceneId and there are sixteen of them across three plays, which is the
+  // structure the reel itself advances through. Grouping by play would give
+  // three limbs of 400+ and lose the one real subdivision the data has.
+  { key: 'theater', read: m => {
+    const by = new Map();
+    for (const b of m.BEATS) {
+      if (!by.has(b.sceneId)) by.set(b.sceneId, []);
+      by.get(b.sceneId).push(b.text);
+    }
+    return [...by.values()];
+  } },
+  { key: 'sphere', read: m => m.fragments.map(f => [f.text]) },
+  { key: 'library', read: m => m.libraryItems.filter(i => i.excerpt).map(i => [i.excerpt]) },
+  { key: 'orbiter', read: m => m.poems.map(p => p.stanzas) },
+  { key: 'apollo', read: m => m.ELEMENTS.map(e => [e.character, e.note]) },
+  { key: 'beamline', read: m => [[m.EPIGRAPH_PRIMARY, m.EPIGRAPH_SECONDARY], ...m.BOUNCES.map(b => [b.text])] },
+  { key: 'orrery', read: m => [[m.ORRERY.note]] },
+  { key: 'butterfly', read: m => [[m.BUTTERFLY.text]] },
 ];
 
-// Returns [{ key, sentences: [string] }] in the order above, each scene's
-// sentences in the order that scene publishes them. Pure and deterministic:
-// the same modules always produce the same array, which is what lets the
-// build's /text/ page and the running scene agree without sharing a cache.
+// Returns [{ key, pieces: [[sentence]] }] in the order above, each scene's
+// pieces in the order that scene publishes them and each piece's sentences in
+// reading order. Pure and deterministic: the same modules always produce the
+// same array, which is what lets the build's /text/ page and the running scene
+// agree without sharing a cache.
+//
+// **The piece level is not decoration.** It is the middle rank of the real
+// hierarchy the corpus has — site, scene, piece, sentence — and 4.7.0 is built
+// on it: a limb's pieces are its branches, and a branch's sentences are its
+// filapixels. A flat list of sentences per scene, which is what this returned
+// until 4.7.0, threw that rank away and left a form with nothing to branch at.
+// An empty piece is dropped rather than kept as a stub: a piece with no
+// sentences in it is an artefact of the sentence filter, not a division the
+// writing makes.
 export function readCorpus(modules) {
   return CORPUS_SOURCES.map(({ key, read }) => {
     const mod = modules[key];
     if (!mod) throw new Error(`corpus: no module supplied for "${key}"`);
-    const sentences = read(mod)
-      .filter(v => typeof v === 'string' && v.trim())
-      .flatMap(splitSentences)
-      .filter(isSentence);
-    return { key, sentences };
+    const pieces = read(mod)
+      .map(fields => (Array.isArray(fields) ? fields : [fields])
+        .filter(v => typeof v === 'string' && v.trim())
+        .flatMap(splitSentences)
+        .filter(isSentence))
+      .filter(p => p.length > 0);
+    return { key, pieces };
   });
+}
+
+// The flat view, for anything that wants sentences without the hierarchy.
+export function flatSentences(corpus) {
+  return corpus.map(({ key, pieces }) => ({ key, sentences: pieces.flat() }));
 }

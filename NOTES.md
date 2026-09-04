@@ -587,6 +587,204 @@ described are unchanged.)
   worth trimming, orrery.js's texture generators and first-person rig are the
   two most self-contained chunks to split out first.
 
+## 4.7.0 (2026-09-03)
+
+**Psyshell becomes a branch.** A form change rather than a tuning pass: the
+blossom's problems were structural and the fixes for them were patches.
+
+Everything that worked is kept — the base-e transmission and its decode, one
+filapixel per sentence, the propagation, the ordinal, the sound. 3,221
+filapixels, unchanged and asserted.
+
+### Why the form changed
+
+The blossom converged 3,221 rays on one origin. **That is structurally why the
+core clipped white and why the inner two-thirds of every ray was lost** — a sum
+taken at a point cannot be fixed by staggering the inner radius, and three
+passes of 4.6.0 went into trying: base emission 0.34 → 0.022, a steeper
+brightness ramp, a skirt below the horizontal. None addressed the cause. The
+density that was paid for was not visible: three thousand rays went in and a
+viewer saw a bright core with a fringe.
+
+And the radial form threw away what the data is. Reading order is linear; a
+flower had to wrap it into an angle, and **that wrap is what forced the
+√contribution correction**, because equal arcs gave a 1,382:1 density ratio.
+
+A branch has an axis and a hierarchy, which is what the corpus has. The passage
+survives it: a fibre-optic spray from a stem is still a thousand light trails in
+which each filapixel is a moment in time, and still a flower's part.
+
+### The structure is the corpus, unmodified
+
+Site → scene → piece → sentence becomes trunk → limb → branch → filapixel.
+`src/utils/corpus.js` now returns **pieces**, not a flat list per scene — the
+middle rank was there all along and the blossom threw it away. Theater's piece
+level is its sixteen scene-ids rather than its three plays, because that is the
+subdivision the reel itself advances through.
+
+**119 branches, 9 limbs, 3,221 filapixels, 34,790 words.** Position along an
+axis is position in reading order, directly, with no wrapping. Scroll and
+Theater are the two thick limbs because they are 82% of the corpus; Butterfly is
+a spur because it is one sentence.
+
+### Murray's law, and which exponent
+
+Cecil Murray, 1926, the physiological principle of minimum work: in a branching
+transport network the parent radius cubed equals the sum of the daughters' radii
+cubed. It governs arteries, lungs and xylem.
+
+**Which exponent is not a detail, and it is stated wherever the claim appears.**
+α = 2 is Leonardo's rule, which preserves cross-sectional area; α = 3 is
+Murray's, which optimises flow. Real plants measure across the range rather than
+at one value — **vines closer to Murray, woody trees closer to da Vinci**. This
+ships α = 3, on the grounds that the object is a transport network rather than a
+tree, which means it is deliberately *not* the exponent a real woody branch
+would measure at. Source: the PNAS Nexus branch-thickness study, which also
+measures α from 1.5 to 2.8 across classic artworks.
+
+The consequence that makes it worth having: with every terminal filament the
+same radius, Murray reduces exactly to **radius ∝ (count)^(1/3)**. The trunk is
+14.77 terminal radii, Scroll's limb 11.05, Butterfly's 1.00. **The 1,382:1
+spread that broke the blossom's arcs becomes 11:1 in thickness, and it is the
+law that does it rather than a correction applied on top.** Asserted at import:
+every limb's radius cubed must equal the sum of its branches' cubed, or the
+build fails.
+
+### The golden angle
+
+137.5077640500378°, asserted to nine decimals at import. Successive children
+emerge that far around their parent, which does one concrete job: it distributes
+them so that no two align, which is what keeps 3,221 filapixels from occluding
+each other. Measured across the nine limbs: 137.5, 275.0, 52.5, 190.0, 327.5,
+105.0, 242.6, 20.1, 157.6 — every successive difference 137.5 mod 360.
+
+A precision note, because the standard citation is easy to over-apply: **Vogel's
+1979 model is the standard formulation of the sunflower head**, a spiral packing
+in a disc. The divergence angle used here for emergence around a stem is the
+older, general phyllotactic fact, not Vogel's disc model.
+
+### Base emission, re-derived rather than carried over
+
+0.022 → **0.13**, about six times brighter, and the reason is the whole argument
+for the form: filapixels now start at 3,221 different points along 119 branches,
+so the worst-case overlap is one branch's worth rather than the entire object.
+Measured on the render: **peak luminance 0.901 with zero pixels at clipping**,
+mean 0.115 across the object's region.
+
+### Framing: fitted by projection, and three attempts to get there
+
+"Fill the frame, do not bleed off it" turned out to be the hardest thing in the
+release, and the first two solutions were analytic and both wrong.
+
+**Attempt one fitted a bounding sphere.** The branch is tall and narrow, so its
+sphere is mostly empty and the object filled a third of the frame. **Attempt two
+fitted the cylinder the silhouette sweeps** — right hull, and it exposed that
+the object was *wider in sweep than it was tall*, so on a 320×568 portrait
+viewport the width constraint set the distance. Limbs were raised from 52° to
+26° off the trunk, which narrows the sweep and lengthens the object; that is a
+form change made for the frame and it is said so.
+
+**Attempt three tried to solve distance and vertical offset in closed form and
+put the branch's base 15px inside the title while claiming to have centred it.**
+The quantity that matters is where the object lands on screen, and that depends
+on the perspective divide and the camera's tilt together — reconstructing it
+analytically is reimplementing the renderer, badly.
+
+What ships projects the object's own points through the actual camera at eight
+rotations and reads the answer off, correcting distance and aim point in
+alternating passes. Two things had to be fixed inside it, both found by logging
+rather than reasoning:
+
+- **The sign.** The camera is placed *relative to the aim point*, so lowering
+  the aim lowers the camera and the object appears **higher** — the opposite of
+  what a fixed camera would want. Getting it backwards sent the offset from
+  −2.5 to −13.2 in two rounds with the object off the top of the frame.
+- **The coordinate frame, which was the real bug.** The hint and title are
+  fixed-position elements, so their rects are **viewport**-relative; the canvas
+  is the container, which starts 56px down, below the nav. Using one frame's
+  numbers against the other's height put the branch exactly that far low — and
+  the loop was reported as "not converging" when it had converged perfectly to
+  the wrong band. The log made it obvious: error 0.0000, projected box
+  −0.726…0.675, band −0.726…0.675.
+
+Measured at all eight viewports, no bleed anywhere, **77–91% of the band filled
+with clearance top and bottom**. The band is the space the chrome leaves, read
+from the hint and title's own boxes each layout pass — which is the 4.4.2 rule
+finally applied to the thing it was written for, rather than 4.6.1's lift by a
+constant.
+
+### The idle
+
+Apollo's corona drifts and Outside's lotus breathes; this sat still except for a
+slow turn. **A glint now runs up the structure**, base to tip, in path length —
+the same coordinate the propagation uses — with 2.4 units of dark between
+passes so it is an event rather than a metronome. It could not have existed in
+the blossom: there was no axis for a travelling highlight to run along.
+
+### Propagation follows the branching
+
+The disturbance travels **along the structure**: up to the parent, out to
+siblings, down other limbs. `pathDistance()` is the exact path length between
+two filapixels in world units, which is why the speeds are world units per
+second and need no invented weights — and it is a better claim than a spherical
+shell was.
+
+Measured, striking mid-limb in Theater and reading the shell's peak position:
+
+| t (s) | forward | backward |
+|---|---:|---:|
+| 0.15 | 0.633u | 0.249u |
+| 0.30 | 1.280u | 0.515u |
+| 0.45 | saturated | 0.778u |
+| 0.60 | — | 1.040u |
+
+**Forward 4.31 u/s against 4.3 configured; backward 1.758 against 1.75.** Both
+then saturate at 1.49u, which is that limb's own maximum reachable path — a fact
+about the structure, not a failure.
+
+**The probe needed scoping twice, and both are findings.** Measured over the
+whole branch, the front reads as noise: across a limb boundary the global
+reading index and the tree distance stop agreeing, because a filament one index
+earlier can be a whole trunk away. And the first mid-limb strike took the limb's
+*longest* filament, which in Theater sits at ordinal 1178 of 1275 — near the
+end, so the forward front left the limb inside one sample and read as zero. A
+front needs room on both sides of it.
+
+### The transmission is unchanged, and that was designed for
+
+`PROP_SHELL / PROP_SPEED_FWD` = 0.24 / 4.3 = 0.055814s, **exactly what the
+blossom's 24/430 gave**. So the digit durations, the boundaries and the worked
+example on the `/text/` page did not have to be recomputed. Verified: ordinal
+94, eight digits, boundaries 0.0558 0.1116 0.2633 0.3192 0.3750 0.5267 0.5472
+0.6030 — identical to 4.6.1's.
+
+Frame-rate independence with the pulse running: 0.5s of elapsed time at 30, 60
+and 144fps gives identical transmitter time and identical propagation peak, to
+six decimals. One audio context per visit, closed on leave, exactly one more on
+return.
+
+### Two open questions closed by looking
+
+**The 200px tile no longer reads as a dandelion clock.** It reads as a branch or
+a frond — vertical, feathered, plainly not Outside's lotus. The form change
+fixed what a colour or silhouette tweak was going to be asked to fix.
+
+**The hot patch on the far side of the dome is moot.** There is no dome.
+
+### The briefs that did not exist
+
+The closing section asked that `brief-psyshell.md` and
+`brief-psyshell-transmission.md` be marked as superseded rather than deleted.
+**Neither file existed** — both Psyshell briefs arrived as chat messages and
+were never written down. That is `WORKING-PROTOCOL.md` rule 4 exactly, and the
+second time a brief has named a file that had to be created before it could be
+used (rule 4 itself arrived naming `CORRECTED-FACTS.md`).
+
+Both are now files, with Scott's text unedited and a superseded header saying
+what was replaced, what was not, and why — because the blossom was built,
+looked at and replaced for reasons, and those reasons are what stop it being
+re-proposed.
+
 ## 4.6.1 (2026-09-03)
 
 Psyshell's readout panel replaced by a transmission, the notation it transmits

@@ -34,8 +34,9 @@ import {
   VISIBLE_MIN, VISIBLE_MAX, wavelengthToHz, visibleLines, balmerSeries, fraunhoferFor,
 } from '../src/scenes/apollo/apollo.text.js';
 import {
-  BANDS as PSY_BANDS, PETAL_COUNT, CORPUS_WORDS, WORDS_MEDIAN, WORDS_CLAMP,
-  WORDS_MAX, CLAMPED_PETALS, PETAL_MIN_FRACTION,
+  LIMBS as PSY_LIMBS, FILAMENT_COUNT, PIECE_COUNT, CORPUS_WORDS, WORDS_MEDIAN,
+  WORDS_CLAMP, WORDS_MAX, CLAMPED_FILAMENTS, MURRAY_EXPONENT, GOLDEN_ANGLE,
+  TRUNK_RADIUS, TERMINAL_RADIUS_OUT,
 } from '../src/scenes/psyshell/psyshell.text.js';
 import { SENTENCE_SPLIT } from '../src/utils/corpus.js';
 import { baseEDigits, decodeBaseE, FRACTIONAL_PLACES } from '../src/scenes/psyshell/psyshell.text.js';
@@ -581,74 +582,78 @@ ${elementList}
 // place holding a stale count, which for a scene whose entire subject is a
 // count is the only arrangement worth having.
 function buildPsyshell() {
-  // The worked example is computed from the same functions the scene runs, so
-  // this page cannot print an encoding the flower does not transmit.
+  // Computed from the same functions the scene runs, so this page cannot print
+  // an encoding the branch does not transmit.
   const WORKED = (() => {
     const n = 94;
     const { digits, highest } = baseEDigits(n);
     const sum = decodeBaseE(digits, highest);
-    const terms = digits.map((d, i) => {
-      const k = highest - i;
-      return d === 0 ? null : `${d}&middot;e<sup>${k}</sup>`;
-    }).filter(Boolean).join(' + ');
-    return { n, digits: digits.join(''), highest, terms,
-      sum: sum.toFixed(3), err: (n - sum).toFixed(3) };
+    const terms = digits.map((d, i) => (d === 0 ? null : `${d}&middot;e<sup>${highest - i}</sup>`)).filter(Boolean).join(' + ');
+    return { n, digits: digits.join(''), highest, terms, sum: sum.toFixed(3), err: (n - sum).toFixed(3) };
   })();
-  const bandList = `<ul class="catalog">
-${PSY_BANDS.map(b => `<li><span class="t">${esc(b.label)}</span>
-<span class="c">${b.count} sentence${b.count === 1 ? '' : 's'} · ${b.words.toLocaleString('en-US')} words · ${b.arcDeg.toFixed(1)}° of the flower</span></li>`).join('\n')}
+  const r0 = TERMINAL_RADIUS_OUT;
+  const limbList = `<ul class="catalog">
+${PSY_LIMBS.map(l => `<li><span class="t">${esc(l.label)}</span>
+<span class="c">${l.count} sentence${l.count === 1 ? '' : 's'} in ${l.pieces} piece${l.pieces === 1 ? '' : 's'} &middot; ${l.words.toLocaleString('en-US')} words &middot; radius ${(l.radius / r0).toFixed(2)} terminal radii &middot; ${l.azimuth.toFixed(1)}&deg; around the trunk</span></li>`).join('\n')}
 </ul>`;
 
   const body = `<article class="piece">
 <h2 id="what-it-is">What it is</h2>
-<p>Every sentence on this site is one petal. There are ${PETAL_COUNT.toLocaleString('en-US')} of them, ${CORPUS_WORDS.toLocaleString('en-US')} words in all, and the flower is what they make when you arrange them by three rules and nothing else.</p>
-<p class="note">Angle around the axis is position in reading order. Petal length is sentence length. The band a petal sits in is the scene its sentence came from.</p>
-<p>Nothing is claimed here about the writing. This is the distinction from an earlier idea that was built, measured and shelved: that one claimed the corpus had a hidden spectral property, and the measurement said it does not. This one claims only that the text has a shape — a number of sentences, of certain lengths, in a certain order, from certain places — which is trivially and verifiably true. The writing is the geometry. A scene with long sentences reads as a broad soft arc; a terse one as a spiky sector.</p>
-<p>The name is for the output rather than the object. The chrysanthemum is the mechanism; a psyshell is what it produces.</p>
+<p>Every sentence on this site is one filapixel &mdash; one fine lit filament on a branch. There are ${FILAMENT_COUNT.toLocaleString('en-US')} of them, ${CORPUS_WORDS.toLocaleString('en-US')} words in all, on ${PIECE_COUNT} branches and nine limbs.</p>
+<p class="note">The structure is the corpus, unmodified: site, scene, piece, sentence &mdash; trunk, limb, branch, filapixel. Position along an axis is position in reading order, directly, with no wrapping.</p>
+<p>Nothing is claimed here about the writing. This is the distinction from an earlier idea that was built, measured and shelved: that one claimed the corpus had a hidden spectral property, and the measurement said it does not. This one claims only that the text has a shape &mdash; a number of sentences, of certain lengths, in a certain order, grouped a certain way &mdash; which is trivially and verifiably true.</p>
+<p>Two scenes are absent, and that is a fact about them rather than an omission. <strong>Harmonics</strong> publishes no writing of its own &mdash; it is a view of the connections between the other scenes. <strong>Outside</strong> publishes five power-source names and two origin labels, none of which are sentences.</p>
 
-<h2 id="bands">The nine bands</h2>
-<p>Two scenes are absent, and that is a fact about them rather than an omission. <strong>Harmonics</strong> publishes no writing of its own — it is a view of the connections between the other scenes, each of which has its own page. <strong>Outside</strong> publishes five power-source names and two origin labels, none of which are sentences.</p>
-${bandList}
-<p>Band width is not equal and not proportional. Two scenes are ${Math.round((PSY_BANDS[2].count + PSY_BANDS[3].count) / PETAL_COUNT * 100)}% of the corpus between them, so equal arcs would leave a third of the circumference nearly bare and proportional arcs would squeeze the smallest band below a tenth of a degree. Each band's arc is proportional to the <em>square root</em> of its sentence count, which compresses a 1,350-to-1 range into 37-to-1: every scene stays visible, and the lopsidedness is still legible as density rather than erased.</p>
+<h2 id="limbs">The nine limbs</h2>
+${limbList}
+<p>Scroll and Theater are ${Math.round((PSY_LIMBS.find(l => l.key === 'scroll').count + PSY_LIMBS.find(l => l.key === 'theater').count) / FILAMENT_COUNT * 100)}% of the corpus between them, and on a branch that concentration is simply what the two thick limbs look like. Butterfly is a spur, because its entire published text is its own placard title: one sentence.</p>
+
+<h2 id="thickness">Thickness: Murray's law</h2>
+<p>Cecil Murray, 1926, the physiological principle of minimum work: in a branching transport network the parent radius cubed equals the sum of the daughters' radii cubed.</p>
+<p class="note">r<sub>parent</sub><sup>&alpha;</sup> = &Sigma; r<sub>daughter</sub><sup>&alpha;</sup>, with &alpha; = ${MURRAY_EXPONENT}</p>
+<p>It governs arteries, lungs and xylem. <strong>Which exponent is not a detail.</strong> &alpha; = 2 is Leonardo da Vinci's rule, which preserves total cross-sectional area; &alpha; = 3 is Murray's, which optimises flow. Real plants measure across that range rather than at one value &mdash; vines closer to Murray, woody trees closer to da Vinci. This is built at 3, on the grounds that the object is a transport network rather than a tree, which means it is deliberately not the exponent a real branch would measure at.</p>
+<p>One consequence: with every terminal filament the same radius, the law reduces exactly to radius proportional to the cube root of the number of filapixels carried. The trunk is ${(TRUNK_RADIUS / r0).toFixed(2)} terminal radii; Scroll's limb is ${(PSY_LIMBS.find(l => l.key === 'scroll').radius / r0).toFixed(2)}; Butterfly's is 1.</p>
+
+<h2 id="angle">Branch angle: the golden angle</h2>
+<p>Successive children emerge ${(GOLDEN_ANGLE * 180 / Math.PI).toFixed(4)}&deg; around their parent from the one before &mdash; the divergence angle of classical phyllotaxis, which is what determines emergence position in real plants. It does one concrete job here: it distributes children around an axis so that no two align, which is what keeps ${FILAMENT_COUNT.toLocaleString('en-US')} filapixels from occluding each other.</p>
+
+<h2 id="length">Length, and what the clamp costs</h2>
+<p>A filapixel's length is its sentence's length. Sentences here run from one word to ${WORDS_MAX}, with a median of ${WORDS_MEDIAN}, so length goes as the square root of the word count and is clamped at the 99th percentile, ${WORDS_CLAMP} words. ${CLAMPED_FILAMENTS} filapixels of ${FILAMENT_COUNT.toLocaleString('en-US')} therefore sit at full length together, and above that the branch stops distinguishing. Said here rather than left to be discovered.</p>
 
 <h2 id="sentences">Where a sentence ends</h2>
 <p>Three rules were measured against each other before one was chosen. <em>Blunt</em> treats every full stop, question mark and exclamation mark as a boundary, so an ellipsis is three sentences. <em>Prose</em> treats neither an ellipsis nor an em-dash as a boundary. <em>Beatwise</em> treats an em-dash as a boundary, on the reasoning that a cut-off ends a unit of speech.</p>
-<p><strong>${esc(SENTENCE_SPLIT)}</strong> is what ships, because an interrupted or trailing line is one sentence: a writer trailing off has not finished three thoughts, they have not finished one. Across this corpus the three rules give 4,054, 4,047 and 4,191 units before filtering — a spread of 3.6%, which is small enough that the choice moves the petal count by about one part in thirty and no further.</p>
-<p>A unit has to be a sentence to be a petal. Four words or fewer with no terminal punctuation is not one — cataloguing marginalia, element labels, the names of things — and 508 such fragments are excluded. Petal length is sentence length here, so each of those would have become a stub at the rim: a claim about the writing that the writing did not make.</p>
-
-<h2 id="length">Length, and what the clamp costs</h2>
-<p>Sentences here run from one word to ${WORDS_MAX}, with a median of ${WORDS_MEDIAN}. Mapping that to petal length directly would give one ray twenty times the flower's radius, so length goes as the square root of the word count and is clamped at the 99th percentile, ${WORDS_CLAMP} words. ${CLAMPED_PETALS} petals of ${PETAL_COUNT.toLocaleString('en-US')} therefore sit at the rim together, and above that length the flower stops distinguishing.</p>
-<p>That is a real loss of information at the top end, said here rather than left to be discovered, and it is the price of the object still being a flower. A one-word sentence is still ${Math.round(PETAL_MIN_FRACTION * 100)}% of full reach, because a ray of nearly nothing is not a ray.</p>
+<p><strong>${esc(SENTENCE_SPLIT)}</strong> is what ships, because an interrupted or trailing line is one sentence: a writer trailing off has not finished three thoughts, they have not finished one. Across this corpus the three rules give 4,054, 4,047 and 4,191 units before filtering &mdash; a spread of 3.6%, small enough that the choice moves the count by about one part in thirty.</p>
+<p>A unit has to be a sentence to be a filapixel. Four words or fewer with no terminal punctuation is not one &mdash; cataloguing marginalia, element labels, the names of things &mdash; and 508 such fragments are excluded.</p>
 
 <h2 id="notation">The notation</h2>
-<p>A struck filament transmits its own ordinal along its length, in unequal flashes. It is legible as transmission and never readable as text, which is deliberate: text travelling up the strand would mean the reader was being addressed, and they are not.</p>
-<p>The notation is <strong>base e</strong>. Under the standard radix-economy cost model — where the cost of representing a number is the radix multiplied by the number of digits — the optimal base is e, and 3, being the nearest integer, is almost always the most economical integer radix. Ternary computers were built on exactly this reasoning: the Setun, at Moscow State University, about fifty machines between 1958 and 1965. Binary is a compromise forced by transistors.</p>
+<p>A struck filapixel transmits its own ordinal along its length, in unequal flashes. It is legible as transmission and never readable as text, which is deliberate: text travelling up the filament would mean the reader was being addressed, and they are not.</p>
+<p>The notation is <strong>base e</strong>. Under the standard radix-economy cost model &mdash; where the cost of representing a number is the radix multiplied by the number of digits &mdash; the optimal base is e, and 3, being the nearest integer, is almost always the most economical integer radix. Ternary computers were built on exactly this reasoning: the Setun, at Moscow State University, about fifty machines between 1958 and 1965. Binary is a compromise forced by transistors.</p>
 <p class="note">The cost model matters and is stated with the claim, because "base e is the most efficient radix" on its own is the kind of true-sounding sentence that goes wrong on restatement. It is optimal under radix times width; other cost models give other answers. Source: Brian Hayes, "Third Base", <em>American Scientist</em>, 2001.</p>
-<p>Two properties of a non-integer radix earn their place beyond the argument. <strong>Representations are not unique</strong> — the digit set is larger than the base, so a value generally has several valid encodings and none is canonical. And <strong>nothing lands on a grid</strong>: powers of e are irrational, so the flashes never line up and the train has no beat, which is what makes it unlike every square-wave transmission cliché.</p>
-<p>A digit <em>d</em> is one flash lasting τ·e<sup>(d−1)</sup>, so the three durations stand in the ratio 1 : e : e². Segments alternate lit and dark by place, most significant first, so the boundaries are the digit boundaries and nothing in the train is filler. τ is not chosen: it is the time the disturbance's own travelling front takes to cross one shell width, so the transmission and the disturbance are the same event rather than two effects that coincide.</p>
-<p>Worked, so it can be checked. Sentence ${WORKED.n} of its band expands to:</p>
+<p>Two properties of a non-integer radix earn their place beyond the argument. <strong>Representations are not unique</strong> &mdash; the digit set is larger than the base, so a value generally has several valid encodings and none is canonical. And <strong>nothing lands on a grid</strong>: powers of e are irrational, so the flashes never line up and the train has no beat.</p>
+<p>A digit <em>d</em> is one flash lasting &tau;&middot;e<sup>(d&minus;1)</sup>, so the three durations stand in the ratio 1 : e : e&sup2;. Segments alternate lit and dark by place, most significant first, so the boundaries are the digit boundaries and nothing in the train is filler. &tau; is not chosen: it is the time the disturbance's own travelling front takes to cross one shell width, so the transmission and the disturbance are the same event.</p>
+<p>Worked, so it can be checked. Sentence ${WORKED.n} of its limb expands to:</p>
 <p class="note">${WORKED.n} = ${WORKED.terms} = ${WORKED.sum}</p>
-<p>which is the digit string <strong>${WORKED.digits}</strong>, most significant place e<sup>${WORKED.highest}</sup>, cut after ${FRACTIONAL_PLACES} fractional places. The expansion does not terminate, so the recovered value is ${WORKED.sum} against ${WORKED.n} — an error of ${WORKED.err}, which is the truncation and not a mistake.</p>
+<p>which is the digit string <strong>${WORKED.digits}</strong>, most significant place e<sup>${WORKED.highest}</sup>, cut after ${FRACTIONAL_PLACES} fractional places. The expansion does not terminate, so the recovered value is ${WORKED.sum} against ${WORKED.n} &mdash; an error of ${WORKED.err}, which is the truncation and not a mistake.</p>
 
 <h2 id="touch">Amplification around the root</h2>
-<p>Touching a petal sends a disturbance outward along reading order — to the sentences adjacent in the text, then further, falling off with distance. It travels rather than simply brightening, and it is asymmetric: the front runs about two and a half times further toward later sentences than toward earlier ones.</p>
-<p>Reading order is the whole corpus, not one band, so a disturbance that starts near the end of one scene crosses into the next. The corpus is one sequence; the bands record where its sentences came from, not a wall between them.</p>
+<p>Touching a filapixel sends a disturbance <em>along the structure</em> &mdash; up to its branch, out to its siblings, down other limbs &mdash; falling off with distance travelled. It is asymmetric: the front runs about two and a half times further toward later sentences than toward earlier ones.</p>
+<p>The distance is the real path length through the branch, in the same units the object is built in, which is why the front has a speed rather than a rate.</p>
 
 <h2 id="source">The source passage</h2>
 <p class="note">Iplaisc lifts herself up from the editbay and enters the workshop, punches in the text of <em>Strange Attractors: A Love Affair with Chaos</em>, begins the computation. The middle of the workbench revolves, glows, and a thousand light trails form, taking the shape of a white fiber-optic chrysanthemum, each filapixel a moment in time, demarcated in the code of the Union.</p>
 <p class="note">&mdash; Is there any effect you're looking for? &mdash; Tessier curve. &mdash; Hmm. It definitely appears to be capable, although it will need some amplification around the root here to properly sling it forward.</p>
-<p>The count is the one place the passage and the corpus disagree: it says a thousand light trails and there are ${PETAL_COUNT.toLocaleString('en-US')} sentences. That is not corrected. The corpus decides the count; the passage was written about a different text.</p>
+<p>The count is the one place the passage and the corpus disagree: it says a thousand light trails and there are ${FILAMENT_COUNT.toLocaleString('en-US')} sentences. That is not corrected. The corpus decides the count; the passage was written about a different text.</p>
 </article>`;
 
   return {
     slugPath: 'psyshell',
     title: 'Psyshell',
-    description: `A white chrysanthemum made of every sentence on this site — ${PETAL_COUNT.toLocaleString('en-US')} petals, one each, arranged by reading order and sized by sentence length.`,
+    description: `A branch made of every sentence on this site — ${FILAMENT_COUNT.toLocaleString('en-US')} filapixels, one each, placed by reading order and thickened by Murray's law.`,
     sceneKey: 'psyshell', sceneName: 'Psyshell',
-    lede: `<p><strong>Psyshell</strong> is a flower made of this site's own writing: ${PETAL_COUNT.toLocaleString('en-US')} sentences, one petal each, placed by reading order and sized by length. Touching one sends a disturbance through the text around it.</p>
-<p>This page is the measurement underneath it — the nine bands, the three rulers, and what each of them costs.</p>`,
+    lede: `<p><strong>Psyshell</strong> is a fibre-optic branch made of this site's own writing: ${FILAMENT_COUNT.toLocaleString('en-US')} sentences, one filapixel each, placed by reading order along a structure whose thickness is Murray's law and whose branch angles are the golden angle. Touching one sends a disturbance along the branch.</p>
+<p>This page is the measurement underneath it — the nine limbs, the laws, and what each of them costs.</p>`,
     bodyHtml: body,
-    jsonLd: creativeWork('Psyshell', `A chrysanthemum whose ${PETAL_COUNT} petals are the ${PETAL_COUNT} sentences of this site, arranged by reading order and sized by sentence length.`, 'psyshell'),
+    jsonLd: creativeWork('Psyshell', `A branch whose ${FILAMENT_COUNT} filapixels are the ${FILAMENT_COUNT} sentences of this site, placed by reading order and thickened by Murray's law.`, 'psyshell'),
   };
 }
 

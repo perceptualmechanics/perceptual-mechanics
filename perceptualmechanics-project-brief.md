@@ -117,7 +117,18 @@ This is the durable house-rules file (created v3.9.16) — **read it first** bef
   build's own gate hashes the emitted one, and asserts that hash appears in the
   policy on the same response. In the same pass, CSP reporting was removed
   rather than completed — see Known open items.
-- **4.6.1 (current, 2026-09-03): Psyshell transmits instead of reporting.** The
+- **4.7.0 (current, 2026-09-03): Psyshell becomes a branch.** Trunk, nine limbs,
+  119 branches, 3,221 filapixels — the corpus's own hierarchy, unmodified.
+  Thickness is Murray's law at α = 3 (stated, since real plants measure between
+  2 and 3), branch angles are the golden angle, and both are asserted at import.
+  The blossom's structural problem — three thousand rays summing at one point —
+  is gone rather than patched, and the base emission went 0.022 → 0.13 as a
+  result. The disturbance now travels along the structure rather than radially.
+  Framed by projecting the object through the real camera into the band the
+  chrome leaves: no bleed at eight viewports. The transmission is unchanged and
+  decodes identically. The two Psyshell briefs are now files in the repo, marked
+  superseded — they had never existed.
+- **4.6.1 (2026-09-03): Psyshell transmits instead of reporting.** The
   sentence readout panel is gone; a struck filament pulses its own ordinal along
   its length in base e, legible as transmission and never readable as text. The
   radix argument carries its cost model wherever it appears. Digit timing is
@@ -264,6 +275,11 @@ have been self-hosted for a while and only a comment still mentioned
 `fonts.gstatic`; the Rollup chunk-size warning, fixed back in 3.10.0; the
 CSP, which now exists, enforces, and is down to `script-src 'self'` with
 no hashes at all.
+
+**Closed in 4.7.0, so it is not re-opened.** The 200px tile no longer reads as a
+dandelion clock — it reads as a branch, and the form change did what a colour or
+silhouette tweak would have been asked to do. And the hot patch on the far side
+of the dome is moot: there is no dome.
 
 **Open as of 4.6.1 — Beamline's title sits below WCAG AA against its own
 scene.** Found while measuring Psyshell's lockup, not while looking at Beamline.
