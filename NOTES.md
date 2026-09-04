@@ -17984,3 +17984,59 @@ doing on its own rather than inside another scene's commit.
 **Still open:** the landing page's visual audit. And Scott's note that this could
 be very good on a touchscreen, where the finger IS the contact and there is no
 pointer-versus-hand distinction to model at all.
+
+## 4.11.10 (2026-09-04)
+
+**Scott went and got the numbers, and one of them was directly implementable.**
+Andersen et al. 2019 — 40 participants in 20 pairs at a Ouija convention, mobile
+eye-tracking, a normal 10-minute session against a "voluntary" condition where
+the pair were told to spell BALTIMORE.
+
+**The finding that changed the code: players get better at predicting with each
+letter spelled.** A message begins effectively random and becomes more
+predictable as the meaningful options narrow. That is not a metaphor for what
+`medium.lexicon.js` does, it is a description of it — and the exponent that
+controls how sharply plausibility is felt was a CONSTANT, which is the one thing
+the finding says it should not be. It is a curve now: `GAMMA_COLD` 0.20 at
+nothing spelled, `GAMMA_HOT` 0.85 by five characters of live context. One change
+covers both places English enters the scene, because `weightOf` feeds the field
+and the dwell alike.
+
+**What it bought, and what it did not.** Twelve seeds, ten minutes each,
+everything else identical:
+
+               Spearman vs English   vowel share   repeated 6-grams
+  flat 0.50           0.783             33.2%           0.6%
+  curve 0.20→0.85     0.813             34.5%           0.9%
+
+Three points of rank correlation and a point of vowel share. Real, modest, worth
+having. **And worth being precise about, because I nearly claimed more:** the
+first run with the curve showed 11 of 12 séances opening differently where the
+old measurement had 2 of 8, and it was tempting to read that as the curve fixing
+the identical-openers problem. It did not. A flat exponent in the *current* code
+opens eleven of twelve differently too — that was the grip and lean rework in
+4.11.9. Applying a finding because it is what the literature measures happening,
+and the output improving a little, are two separate claims and only the second is
+a result.
+
+**The finding that changed the writing rather than the code:** the combined gaze
+of the two players predicted the planchette about as well as one player who had
+been *told what to spell*. The prediction is real, it is as good as deliberate
+intention, and it lives in the pair. That is the scene's whole thesis, measured
+by somebody else, and it is now on `/text/medium/` in those terms.
+
+**The 38% figure is not usable and is not used.** Predictive eye movements were
+38% lower in the normal condition than in the voluntary one — but this scene has
+no voluntary condition, because nothing in it knows the word. Forcing that number
+into a constant would be a citation doing decoration.
+
+**And the gap is now written down where it belongs.** Two searches confirmed
+what Scott found: **there is no published account of how a planchette actually
+moves.** No speed distributions, no dwell times, no acceleration profiles. A
+camera-based tracking system for Ouija research was described in 2019, so the
+instrument exists and the kinematics do not appear to have been published. So
+`/text/medium/` now says, in its own section: everything this scene claims about
+prediction is sourced, and nothing it claims about motion is. The cup's mass,
+stiction, hold and coast were tuned by measuring this simulation against itself.
+That is the honest status and it should be visible on the page rather than
+inferable from its absence.

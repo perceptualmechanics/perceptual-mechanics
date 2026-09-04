@@ -1014,7 +1014,8 @@ ${runs.map(r => `<p class="slug">Seed ${r.seed} · ${r.taken} marks · ${r.rate.
 <p>People at a Ouija board really are moving the planchette and really do not know they are. That is a description rather than a debunking, and it is a hundred and seventy years old.</p>
 <p>William Carpenter named it in 1852: muscular movement directed by suggestion, independently of volition. Faraday settled it in 1853 with an apparatus rather than an argument — a table top built in two layers with an index between them, so that if the table pushed the hands the lower layer would move first, and if the hands pushed the table the upper one would. The upper one always moved first. His sitters were not lying. They watched the index and were astonished.</p>
 <p>The modern work is stranger than the debunking. Gauchou, Rensink and Fels put blindfolded sitters at a board and asked them factual questions they believed they did not know the answer to. Through the board they were right 65% of the time. Asked to say the answer out loud, the same people were right 50% — chance. The board was reading something out of them that speech could not.</p>
-<p>Andersen and colleagues eye-tracked real sessions and found that sitters predict the letter before the planchette reaches it, and that pairs predict better than either person alone. Which is the mechanism this scene is built on, stated in the literature’s own words: two people, neither of them deciding, jointly running a next-letter model.</p>
+<p>Andersen and colleagues put mobile eye-trackers on twenty pairs at a Ouija convention and found that sitters predict the letter before the planchette reaches it. The result that matters most here is not about either person: <strong>tracking the combined eye movements of the two players predicted where the planchette would land about as well as tracking one player who had been told what to spell.</strong> The prediction is real, it is as good as deliberate intention — and it lives in the pair rather than in either of them.</p>
+<p>They also found that players get better at predicting <em>with each letter spelled</em>: a message begins effectively random and becomes more predictable as the meaningful options narrow. That one is not a metaphor for what this scene does, it is a description of it, so it is in the code. The board’s certainty is a curve rather than a constant — nearly indifferent between letters at the start of a word, committed four or five letters in.</p>
 
 <h2 id="punctuation">The one mark that looks backward</h2>
 <p>Every letter is weighted by what could come next. The four punctuation marks are weighted by whether what has <em>already</em> been spelled is finished — a full stop is plausible exactly when the run of letters is itself a word, and unlikely at every other moment. That is the same model asked a different question, and it is what a phone keyboard is doing when it offers you a period.</p>
@@ -1030,6 +1031,10 @@ ${runs.map(r => `<p class="slug">Seed ${r.seed} · ${r.taken} marks · ${r.rate.
 <p>The board’s own letters, across two and a half hours of simulated sitting on twelve seeds, correlate with published English letter frequencies at <strong>Spearman 0.84</strong>, mean absolute error 2.2 percentage points. It is not English and it is not noise. With plausibility switched off — same hands, same seeds, every mark weighted the same — the vowel share falls from 31.6% to 23.9% against English’s 38.1%, and the tape stops containing words. Punctuation lands on about 6% of marks, which is roughly the rate English punctuates at, and it lands where it does because a full stop is plausible exactly when what has been spelled is already a word.</p>
 <p>The residual is the board’s geometry showing through. S, T and R come out at about twice their English rate and A and O at about two thirds, because the letters at the middle of the two arcs are nearest to everything and get more traffic — and widening the arcs, which is what makes the board look like a board, costs about two and a half points of vowel share for exactly that reason. Both were chased far enough to be sure: a spring pulling the other hand back toward the middle made the distribution markedly worse at every strength, and an intermediate arc width bought none of the vowels back. Correcting the rest would mean weighting letters by where they sit on the board, which is a thumb on the scale rather than a model of anything.</p>
 
+<h2 id="unmeasured">What nobody has measured</h2>
+<p>One thing this scene asserts without any external grounding, said plainly because the rest of the page is careful: <strong>there is no published account of how a planchette actually moves.</strong> No speed distributions, no dwell times, no acceleration profiles. A camera-based tracking system for Ouija research was built and described in 2019, so somebody has the instrument; the kinematics do not appear to have been published.</p>
+<p>Which means the cup's feel — the mass, the stiction, how long it holds before it breaks away, how far it coasts — was tuned by measuring this simulation against itself and reading the numbers, not by matching a real one. Everything on this page about prediction is sourced. Nothing on this page about motion is.</p>
+
 <h2 id="sources">Sources</h2>
 <ul class="sources">
 <li>${esc(MEDIUM_SOURCES.carpenter)}</li>
@@ -1037,6 +1042,7 @@ ${runs.map(r => `<p class="slug">Seed ${r.seed} · ${r.taken} marks · ${r.rate.
 <li>${esc(MEDIUM_SOURCES.gauchou)}</li>
 <li>${esc(MEDIUM_SOURCES.andersen)}</li>
 <li>${esc(MEDIUM_SOURCES.wordlist)}</li>
+<li>${esc(MEDIUM_SOURCES.kinematics)}</li>
 </ul>
 </article>`;
 
