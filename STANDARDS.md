@@ -120,12 +120,27 @@ machine it runs on — so whichever side installed last is the side that works,
 and the other one breaks. Alternating repairs is not a workflow.
 
 So: when a build or a gate run needs to happen on the assistant's side, it
-happens in a **separate clone** in the assistant's own container, with its own
-`npm ci`. The repo is public, the tracked tree is about 3.5 MB (`assets/` and
-`artifacts/` are ignored personal files and the build doesn't read them), and
-a clean clone builds and passes all four gates in about a second. Unpushed
-local work travels as a `git format-patch` and `git am`, not as a copied
-folder.
+happens in a **separate working copy** in the assistant's own container, with
+its own `npm ci`. The tracked tree is about 3.5 MB (`assets/` and `artifacts/`
+are ignored personal files and the build doesn't read them) and it builds and
+passes all four gates in about a second.
+
+**That copy has no `.git`, deliberately, and this is the second version of this
+rule.** The first said to use a clone and to move work with `git format-patch` /
+`git am`, which is right when the two sides share history. They do not: releases
+4.6.0 onward are committed on the Mac and unpushed, so a fresh clone's
+`origin/main` sits far behind the tree being copied into it, and the copy cannot
+be described in git terms at all. That produced a trap with no good side: a
+dirty tree trips the stop hook's uncommitted-changes check, and committing to
+quiet it produces local commits on `main` that trip its unpushed-commits check —
+**and those are the one thing that must never be pushed**, since pushing them
+would put Scott's unpushed work on the remote under an assistant's commit
+message and a history that matches nothing.
+
+With no `.git` there is no branch to be ahead of and nothing to reconcile. Work
+travels as files written to the Mac with the device bridge and committed there,
+which is what has actually been happening for every release since 4.6.0. The
+copy carries a `WORKING-COPY.md` saying so.
 
 **Leave that clone clean before ending a turn.** The build writes into it, and
 a dirty clone is what the stop hook reports — it says "the repository" and
