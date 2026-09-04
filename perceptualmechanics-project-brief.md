@@ -1,4 +1,19 @@
-# perceptualmechanics — project brief
+# perceptualmechanics — project brief (retired)
+
+> **This file is no longer maintained. `SITE.md` replaced it.**
+>
+> It was a brief pretending to be a knowledge base: dated, addressed to a fresh
+> session, describing what the site *is* — and going stale between releases,
+> which is exactly the failure `CORRECTED-FACTS.md` exists to catch, happening
+> to the document that described the whole project. Its durable content is in
+> `SITE.md` (what the site is, the corpus and its rulers, the twelve scenes,
+> what has been decided, the open items) and in `STANDARDS.md` (the rules).
+>
+> **Do not update this file, and do not quote it.** It is kept because a brief
+> is worth keeping for the reasoning behind a rejected alternative, so it is not
+> re-proposed. Everything below was true when written and much of it is not now.
+
+---
 
 *Prepared 2026-08-31, refreshed 2026-09-02, current as of **v4.5.0**. Written as a handoff/context document for a fresh chat — everything here should be enough to pick up work on this project without re-deriving it.*
 

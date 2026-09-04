@@ -587,6 +587,126 @@ described are unchanged.)
   worth trimming, orrery.js's texture generators and first-person rig are the
   two most self-contained chunks to split out first.
 
+## 4.8.0 (2026-09-04)
+
+**Psyshell becomes a lens.** Not a form change — 4.7.0 was that, and it did not
+work either. This is a rethink: the scene had no subject, and both previous
+versions supplied rigour where a subject was needed.
+
+The subject was in the manuscript the whole time. **A lens that should not have
+survived screening, and you are reading it.** Residue of taint let it through.
+Untgract pulls down a lightpen, reads the object, and it goes in a jar on the
+bottom shelf among thousands more.
+
+### What was actually wrong with the branch, and the blossom
+
+Both encoded the corpus in their geometry: petal angle was reading order, petal
+length was sentence length, limb thickness was Murray's law, branch angles were
+the golden angle. Every one of those is real, checkable, and was argued for at
+length on the /text/ page. **None of them was a reason.** A pretty object on a
+green field that makes a sound when clicked is not a scene, and a citation is
+not a subject.
+
+Both times the mapping was also the direct cause of the visual problems that
+followed: the blossom's 3,221 rays converging on one origin is why its core
+clipped white, and the branch's need to put reading order on an axis is what
+made it a herbarium specimen rather than a thing in a hand.
+
+### The subtraction
+
+`src/scenes/psyshell/psyshell.object.js` is new and **knows nothing about the
+corpus** — no count, no order, no lengths, no scenes. It builds a crystalline
+fractalanch from the manuscript's own description and nothing else: one beam
+that sweeps as it rises, tines leaving it irregularly, forking into lone tines,
+two-way forks and palmate fans, thickening toward the base, every branch ending
+in a blunt nub. 144 segments in four generations (9 / 18 / 39 / 78), 30 nubs, inside a
+sphere of radius 0.86 in the units the object is built in.
+
+**Its proportions are not derived from anything and are not presented as if they
+were.** They were chosen by rendering the object and looking at it. That is the
+honest description and it is a better reason than a citation would be here.
+
+`psyshell.text.js` keeps the corpus and loses the geometry. Filapixel positions
+are a seeded draw over the object's arc length — deterministic, because it is
+*this* lens rather than *a* lens, and carrying no information at all. The file
+says outright that this must not be re-connected, because it has now been tried
+twice.
+
+### What survives, deliberately
+
+The count (3,221 filapixels, 34,790 words, 9 scenes, 119 pieces, asserted at
+import). The sentences and their sources, for the jump list and the screen
+reader. The sound, untouched — an earlier note called the click an envelope
+defect; it is not a bug and it stays. And the **base-e transmission**, whose τ
+is still 0.055814s and whose eight digit boundaries for sentence 94
+(0.0558 0.1116 0.2633 0.3192 0.3750 0.5267 0.5472 0.6030) are unchanged across
+three forms.
+
+The ordinal is now **n of 3,221** rather than n of its limb. That is a change
+rather than a keep, and it is the right one: what the readout should say is how
+much is in here.
+
+### The propagation, and a constant that survived a form change
+
+The excitation is now **straight-line distance and symmetric**. The Tessier
+curve's forward asymmetry belonged to a form in which direction meant reading
+order, and nothing in a solid knows about reading order.
+
+`PROP_SPEED` and `PROP_SHELL` came from the branch, whose paths ran five units
+and more. The lens is 1.7 units across, so the front crossed the entire
+object in under half a second — **the scene's central gesture was invisible**, and it
+was invisible because a constant survived a form change that changed the thing
+it was scaled against. Found by capturing frames after a real click and finding
+the excitation already gone by the first one.
+
+Both are now scaled by the same factor (0.42), which is the point: τ = SHELL /
+SPEED is invariant under it, so the transmission is untouched. `PROP_REACH` is
+*not* scaled with them — it is measured against the object's size — and came
+down 1.6 → 0.9, because at 1.6 the whole object lit at once instead of
+something arriving from where you pointed.
+
+A **wake** is new: the material keeps 55% of the front's amplitude behind it and
+relaxes out of it over 0.8 units. With τ fixed, a slow front is necessarily a
+narrow front, so the front alone was one thin travelling band — measurable and
+not seen. Measured after: mean luminance over the object 9.4 at rest, 14.4 at
+t = 0.38s, 10.2 at 0.69s, back at 1.01s. **The time axis is real** — each frame
+carries the clock reading taken beside it, because `page.screenshot()` under
+swiftshader costs far more than the interval requested, which is the trap 4.6.1
+recorded.
+
+### The chrome
+
+The green field is gone with the flower it belonged to. The room is a warm
+near-black bench under a lamp; the crystal is cool where it catches the light
+and green where it does not, and **the green now survives only in the object's
+interior, where it means something** — it is the residue of taint.
+
+Subhead is "lens RE73415", and the hint is "point the lightpen".
+
+**A stylesheet bug found on the way:** `psyshell.css` has carried
+`.psyshell-title`, `.psyshell-title-name`, `.psyshell-title-sub` and
+`.psyshell-hint` **twice** since 4.6.1 — the corrected lockup first, the
+superseded one second, and the cascade used the second. The scene has been
+shipping a 1.9rem title with `text-indent` since the day the fix landed, with
+the fix's own comment sitting directly above the block overriding it. Two
+releases. Nothing rendered obviously wrong, which is exactly why it survived.
+
+### Verified
+
+- Object reads as an antler at full size and at 200px in the landing tile.
+- Read path driven through the real pointer, not a probe: ordinal reads
+  `n / 3221`, the live region gets the sentence and its source.
+- Eight digit boundaries recomputed from the shipped constants and identical.
+- Chrome inside the viewport with zero horizontal overflow at 320 / 360 / 375 /
+  390 / 414 / 768 / 780 / 1280.
+- One AudioContext per visit, the first closed on exit and the second running —
+  zero orphans.
+- Reduced motion: no travelling front, no idle turn, the object still reads and
+  still reports its ordinal.
+- Frame-rate independence by inspection rather than by driving dt: every
+  animated quantity here is advanced by the frame clock's dt, including the
+  transmitter's `uTime`. Said plainly because it is a weaker check than 4.7.0's.
+
 ## 4.7.0 (2026-09-03)
 
 **Psyshell becomes a branch.** A form change rather than a tuning pass: the

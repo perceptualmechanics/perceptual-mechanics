@@ -115,8 +115,16 @@ constraint survives contact with an easier path.
 
 ### 6. Every brief closes by naming what it invalidates
 
-Already a standing rule in `STANDARDS.md`. The specific claims, not "the briefs
+Already a standing rule in `STANDARDS.md`. The specific claims, not "the docs
 may need updating."
+
+**Amended: it names knowledge-base files and nothing else** — `SITE.md`,
+`STANDARDS.md`, `CORRECTED-FACTS.md`, this file, `NOTES.md`. Not other briefs.
+A brief is a missive: it cannot go stale, it is frequently not a file at all,
+and pointing one at another is how a fact ends up with no durable home. The
+companion rule is the important half: **if something in a brief is a thing a
+future session needs to know, it belongs in a knowledge-base file, and the brief
+says which one it went to.**
 
 ---
 
@@ -262,6 +270,20 @@ caught this, and it cost one run to ask.
 Kept because rule 4 says a method that failed is a finding, and because a
 protocol with no record of use is indistinguishable from one nobody reads.
 
+- **2026-09-04, v4.8.0.** Four corrections to the brief, reported before
+  building rather than adapted around. The brief said Psyshell "sits still until
+  touched (still true, and still open)" — false since 4.7.0, which added an idle
+  turn and a glint the day before. It said "keep the ordinal, n of 3,221" — that
+  is a change rather than a keep, because the shipped ordinal was n of its limb.
+  It described the two Psyshell briefs as files that do not exist in the repo —
+  they were created in 4.7.0. And it listed "the diagonal smear" among the render
+  failures, which was not one of them; the three were the shaving brush, the
+  firework, and 4.7.0's three failed camera fits. **Three of the four are the
+  same shape**: the brief was written from documents describing a version that
+  had already been superseded, which is the failure this file names, arriving
+  through the fastest-moving scene rather than through an old one. It is also
+  the direct argument for `SITE.md`: none of the four would have been available
+  to state wrongly if there had been one current surface to check.
 - **2026-09-02, v4.4.0.** The brief for emission mode stated "iron currently
   breaks the absorption instrument — 218 lines in the band." Iron has **50**;
   218 is the ten-element total, exactly the error this document's first table

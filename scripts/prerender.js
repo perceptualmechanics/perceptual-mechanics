@@ -34,12 +34,13 @@ import {
   VISIBLE_MIN, VISIBLE_MAX, wavelengthToHz, visibleLines, balmerSeries, fraunhoferFor,
 } from '../src/scenes/apollo/apollo.text.js';
 import {
-  LIMBS as PSY_LIMBS, FILAMENT_COUNT, PIECE_COUNT, CORPUS_WORDS, WORDS_MEDIAN,
-  WORDS_CLAMP, WORDS_MAX, CLAMPED_FILAMENTS, MURRAY_EXPONENT, GOLDEN_ANGLE,
-  TRUNK_RADIUS, TERMINAL_RADIUS_OUT,
+  SOURCES as PSY_SOURCES, FILAPIXEL_COUNT, PIECE_COUNT, CORPUS_WORDS,
+  baseEDigits, decodeBaseE, FRACTIONAL_PLACES,
 } from '../src/scenes/psyshell/psyshell.text.js';
+import {
+  LENS_ID, SEGMENTS as PSY_SEGMENTS, SEGMENT_COUNT, NUB_COUNT, BOUNDS as PSY_BOUNDS,
+} from '../src/scenes/psyshell/psyshell.object.js';
 import { SENTENCE_SPLIT } from '../src/utils/corpus.js';
-import { baseEDigits, decodeBaseE, FRACTIONAL_PLACES } from '../src/scenes/psyshell/psyshell.text.js';
 import { SCENES, TEXT_EXEMPT } from '../src/scenes/registry.js';
 import { getOutboundLinks } from '../src/links.js';
 
@@ -576,14 +577,17 @@ ${elementList}
   };
 }
 
-// Psyshell's page is built from `psyshell.text.js` — the same module the scene
-// imports and the same three rulers — so a change to the corpus reader moves
-// the flower and this page together or fails the build. There is no third
-// place holding a stale count, which for a scene whose entire subject is a
-// count is the only arrangement worth having.
+// Psyshell's page is built from `psyshell.text.js` AND `psyshell.object.js` —
+// the two modules the scene itself imports — and the important thing about them
+// is that they do not talk to each other. One knows the sentences and nothing
+// about the shape; the other knows the shape and nothing about the sentences.
+// That separation IS the 4.8.0 release, so a page built from both is the only
+// honest way to describe it: the numbers below come from the running object and
+// the running corpus, and the fact that neither derives from the other is
+// checkable here rather than asserted.
 function buildPsyshell() {
   // Computed from the same functions the scene runs, so this page cannot print
-  // an encoding the branch does not transmit.
+  // an encoding the lens does not transmit.
   const WORKED = (() => {
     const n = 94;
     const { digits, highest } = baseEDigits(n);
@@ -591,34 +595,32 @@ function buildPsyshell() {
     const terms = digits.map((d, i) => (d === 0 ? null : `${d}&middot;e<sup>${highest - i}</sup>`)).filter(Boolean).join(' + ');
     return { n, digits: digits.join(''), highest, terms, sum: sum.toFixed(3), err: (n - sum).toFixed(3) };
   })();
-  const r0 = TERMINAL_RADIUS_OUT;
-  const limbList = `<ul class="catalog">
-${PSY_LIMBS.map(l => `<li><span class="t">${esc(l.label)}</span>
-<span class="c">${l.count} sentence${l.count === 1 ? '' : 's'} in ${l.pieces} piece${l.pieces === 1 ? '' : 's'} &middot; ${l.words.toLocaleString('en-US')} words &middot; radius ${(l.radius / r0).toFixed(2)} terminal radii &middot; ${l.azimuth.toFixed(1)}&deg; around the trunk</span></li>`).join('\n')}
+
+  const byDepth = PSY_SEGMENTS.reduce((a, s) => { a[s.depth] = (a[s.depth] || 0) + 1; return a; }, []);
+  const WORDS = ['no', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine'];
+  const generations = `the beam ${byDepth[0]}, then ${byDepth.slice(1, -1).join(', ')} and ${byDepth[byDepth.length - 1]}`;
+
+  const sourceList = `<ul class="catalog">
+${PSY_SOURCES.map(s => `<li><span class="t">${esc(s.label)}</span>
+<span class="c">${s.count.toLocaleString('en-US')} sentence${s.count === 1 ? '' : 's'} in ${s.pieces} piece${s.pieces === 1 ? '' : 's'} &middot; ${s.words.toLocaleString('en-US')} words</span></li>`).join('\n')}
 </ul>`;
 
   const body = `<article class="piece">
 <h2 id="what-it-is">What it is</h2>
-<p>Every sentence on this site is one filapixel &mdash; one fine lit filament on a branch. There are ${FILAMENT_COUNT.toLocaleString('en-US')} of them, ${CORPUS_WORDS.toLocaleString('en-US')} words in all, on ${PIECE_COUNT} branches and nine limbs.</p>
-<p class="note">The structure is the corpus, unmodified: site, scene, piece, sentence &mdash; trunk, limb, branch, filapixel. Position along an axis is position in reading order, directly, with no wrapping.</p>
-<p>Nothing is claimed here about the writing. This is the distinction from an earlier idea that was built, measured and shelved: that one claimed the corpus had a hidden spectral property, and the measurement said it does not. This one claims only that the text has a shape &mdash; a number of sentences, of certain lengths, in a certain order, grouped a certain way &mdash; which is trivially and verifiably true.</p>
+<p>Lens <strong>${LENS_ID}</strong>, on a bench, under a lamp. It holds ${FILAPIXEL_COUNT.toLocaleString('en-US')} filapixels &mdash; one for every sentence of this site's writing, ${CORPUS_WORDS.toLocaleString('en-US')} words across ${PSY_SOURCES.length} scenes and ${PIECE_COUNT} pieces. A lightpen excites the material where you point it, and the object gives up what it holds in a notation that was not written for you.</p>
+<p class="note">It should not have survived screening. Residue of taint let it through, which is the green in the crystal's interior and the reason it is on the bench at all.</p>
+
+<h2 id="object">The object, and what it does not encode</h2>
+<p class="note">&hellip;opens it to reveal a crystalline fractalanch, two inches long, shaped like the antler of an imaginary animal, all branches and nubs.</p>
+<p>That sentence is the whole specification. The object is built from it and from nothing else: one beam that curves as it rises, tines leaving it at irregular heights, forking irregularly &mdash; sometimes a lone tine, sometimes a two-way fork, sometimes a flattened palmate fan of three or four &mdash; thickening toward the base, every branch ending in a blunt nub. ${SEGMENT_COUNT} segments in ${WORDS[byDepth.length] ?? byDepth.length} generations (${generations}) and ${NUB_COUNT} nubs, inside a sphere of radius ${PSY_BOUNDS.radius.toFixed(2)} in the units it is built in.</p>
+<p><strong>The proportions are not derived from anything, and are not presented as if they were.</strong> They were chosen by rendering the object and looking at it until it read as an antler. That is how they were arrived at, and saying so is worth more here than a citation would be.</p>
+<p><strong>Where a filapixel sits on the object encodes nothing.</strong> Not the sentence's order, not its length, not which scene it came from. Positions are a seeded draw over the object's arc length &mdash; deterministic, so it is the same lens on every visit, because it is <em>this</em> lens rather than <em>a</em> lens &mdash; and they carry no information at all.</p>
+<p>This is a subtraction, and it is the release. Two earlier versions of this scene mapped the corpus into the geometry: a chrysanthemum whose angle was reading order and whose petal length was sentence length, then a branch whose thickness was Murray's law and whose branch angles were the golden angle. Both were <em>rigour supplied where a subject was needed</em>. Every one of those mappings was real and checkable and none of them was a reason, and both times the result was a diagram rather than an object. A lens does not encode what it holds. It holds it.</p>
+
+<h2 id="sources">Where the sentences come from</h2>
+${sourceList}
 <p>Two scenes are absent, and that is a fact about them rather than an omission. <strong>Harmonics</strong> publishes no writing of its own &mdash; it is a view of the connections between the other scenes. <strong>Outside</strong> publishes five power-source names and two origin labels, none of which are sentences.</p>
-
-<h2 id="limbs">The nine limbs</h2>
-${limbList}
-<p>Scroll and Theater are ${Math.round((PSY_LIMBS.find(l => l.key === 'scroll').count + PSY_LIMBS.find(l => l.key === 'theater').count) / FILAMENT_COUNT * 100)}% of the corpus between them, and on a branch that concentration is simply what the two thick limbs look like. Butterfly is a spur, because its entire published text is its own placard title: one sentence.</p>
-
-<h2 id="thickness">Thickness: Murray's law</h2>
-<p>Cecil Murray, 1926, the physiological principle of minimum work: in a branching transport network the parent radius cubed equals the sum of the daughters' radii cubed.</p>
-<p class="note">r<sub>parent</sub><sup>&alpha;</sup> = &Sigma; r<sub>daughter</sub><sup>&alpha;</sup>, with &alpha; = ${MURRAY_EXPONENT}</p>
-<p>It governs arteries, lungs and xylem. <strong>Which exponent is not a detail.</strong> &alpha; = 2 is Leonardo da Vinci's rule, which preserves total cross-sectional area; &alpha; = 3 is Murray's, which optimises flow. Real plants measure across that range rather than at one value &mdash; vines closer to Murray, woody trees closer to da Vinci. This is built at 3, on the grounds that the object is a transport network rather than a tree, which means it is deliberately not the exponent a real branch would measure at.</p>
-<p>One consequence: with every terminal filament the same radius, the law reduces exactly to radius proportional to the cube root of the number of filapixels carried. The trunk is ${(TRUNK_RADIUS / r0).toFixed(2)} terminal radii; Scroll's limb is ${(PSY_LIMBS.find(l => l.key === 'scroll').radius / r0).toFixed(2)}; Butterfly's is 1.</p>
-
-<h2 id="angle">Branch angle: the golden angle</h2>
-<p>Successive children emerge ${(GOLDEN_ANGLE * 180 / Math.PI).toFixed(4)}&deg; around their parent from the one before &mdash; the divergence angle of classical phyllotaxis, which is what determines emergence position in real plants. It does one concrete job here: it distributes children around an axis so that no two align, which is what keeps ${FILAMENT_COUNT.toLocaleString('en-US')} filapixels from occluding each other.</p>
-
-<h2 id="length">Length, and what the clamp costs</h2>
-<p>A filapixel's length is its sentence's length. Sentences here run from one word to ${WORDS_MAX}, with a median of ${WORDS_MEDIAN}, so length goes as the square root of the word count and is clamped at the 99th percentile, ${WORDS_CLAMP} words. ${CLAMPED_FILAMENTS} filapixels of ${FILAMENT_COUNT.toLocaleString('en-US')} therefore sit at full length together, and above that the branch stops distinguishing. Said here rather than left to be discovered.</p>
+<p class="note">The piece column is still counted and still true, and it no longer divides anything in the object. It was the middle rank the branch was built on. It is left here because it is a real fact about the corpus, not because the geometry uses it.</p>
 
 <h2 id="sentences">Where a sentence ends</h2>
 <p>Three rules were measured against each other before one was chosen. <em>Blunt</em> treats every full stop, question mark and exclamation mark as a boundary, so an ellipsis is three sentences. <em>Prose</em> treats neither an ellipsis nor an em-dash as a boundary. <em>Beatwise</em> treats an em-dash as a boundary, on the reasoning that a cut-off ends a unit of speech.</p>
@@ -626,34 +628,33 @@ ${limbList}
 <p>A unit has to be a sentence to be a filapixel. Four words or fewer with no terminal punctuation is not one &mdash; cataloguing marginalia, element labels, the names of things &mdash; and 508 such fragments are excluded.</p>
 
 <h2 id="notation">The notation</h2>
-<p>A struck filapixel transmits its own ordinal along its length, in unequal flashes. It is legible as transmission and never readable as text, which is deliberate: text travelling up the filament would mean the reader was being addressed, and they are not.</p>
+<p>A read filapixel transmits its own ordinal along the crystal, in unequal flashes. It is legible as transmission and never readable as text, which is deliberate: text travelling up the object would mean the reader was being addressed, and they are not. They are looking at somebody else's record.</p>
 <p>The notation is <strong>base e</strong>. Under the standard radix-economy cost model &mdash; where the cost of representing a number is the radix multiplied by the number of digits &mdash; the optimal base is e, and 3, being the nearest integer, is almost always the most economical integer radix. Ternary computers were built on exactly this reasoning: the Setun, at Moscow State University, about fifty machines between 1958 and 1965. Binary is a compromise forced by transistors.</p>
 <p class="note">The cost model matters and is stated with the claim, because "base e is the most efficient radix" on its own is the kind of true-sounding sentence that goes wrong on restatement. It is optimal under radix times width; other cost models give other answers. Source: Brian Hayes, "Third Base", <em>American Scientist</em>, 2001.</p>
 <p>Two properties of a non-integer radix earn their place beyond the argument. <strong>Representations are not unique</strong> &mdash; the digit set is larger than the base, so a value generally has several valid encodings and none is canonical. And <strong>nothing lands on a grid</strong>: powers of e are irrational, so the flashes never line up and the train has no beat.</p>
-<p>A digit <em>d</em> is one flash lasting &tau;&middot;e<sup>(d&minus;1)</sup>, so the three durations stand in the ratio 1 : e : e&sup2;. Segments alternate lit and dark by place, most significant first, so the boundaries are the digit boundaries and nothing in the train is filler. &tau; is not chosen: it is the time the disturbance's own travelling front takes to cross one shell width, so the transmission and the disturbance are the same event.</p>
-<p>Worked, so it can be checked. Sentence ${WORKED.n} of its limb expands to:</p>
+<p>A digit <em>d</em> is one flash lasting &tau;&middot;e<sup>(d&minus;1)</sup>, so the three durations stand in the ratio 1 : e : e&sup2;. Segments alternate lit and dark by place, most significant first, so the boundaries are the digit boundaries and nothing in the train is filler. &tau; is not chosen: it is the time the excitation's own travelling front takes to cross one shell width, so the transmission and the disturbance are the same event.</p>
+<p>Worked, so it can be checked. Sentence ${WORKED.n} of ${FILAPIXEL_COUNT.toLocaleString('en-US')} expands to:</p>
 <p class="note">${WORKED.n} = ${WORKED.terms} = ${WORKED.sum}</p>
 <p>which is the digit string <strong>${WORKED.digits}</strong>, most significant place e<sup>${WORKED.highest}</sup>, cut after ${FRACTIONAL_PLACES} fractional places. The expansion does not terminate, so the recovered value is ${WORKED.sum} against ${WORKED.n} &mdash; an error of ${WORKED.err}, which is the truncation and not a mistake.</p>
+<p class="note">The ordinal is the sentence's place in the whole corpus, not within its scene. Earlier versions reported it within a limb, which was a fact about a structure the object no longer has.</p>
 
-<h2 id="touch">Amplification around the root</h2>
-<p>Touching a filapixel sends a disturbance <em>along the structure</em> &mdash; up to its branch, out to its siblings, down other limbs &mdash; falling off with distance travelled. It is asymmetric: the front runs about two and a half times further toward later sentences than toward earlier ones.</p>
-<p>The distance is the real path length through the branch, in the same units the object is built in, which is why the front has a speed rather than a rate.</p>
+<h2 id="reading">Reading it</h2>
+<p>Point the lightpen at the crystal and the excitation spreads outward from where it lands, falling off with distance and dying after a few seconds. <strong>Straight-line distance, and symmetric in every direction</strong> &mdash; a change from both earlier versions, and the honest one. Those propagated along the structure and ran further toward later sentences than earlier ones, because reading order was in the geometry. It is not any more, and a disturbance in a solid does not know about reading order.</p>
 
 <h2 id="source">The source passage</h2>
-<p class="note">Iplaisc lifts herself up from the editbay and enters the workshop, punches in the text of <em>Strange Attractors: A Love Affair with Chaos</em>, begins the computation. The middle of the workbench revolves, glows, and a thousand light trails form, taking the shape of a white fiber-optic chrysanthemum, each filapixel a moment in time, demarcated in the code of the Union.</p>
-<p class="note">&mdash; Is there any effect you're looking for? &mdash; Tessier curve. &mdash; Hmm. It definitely appears to be capable, although it will need some amplification around the root here to properly sling it forward.</p>
-<p>The count is the one place the passage and the corpus disagree: it says a thousand light trails and there are ${FILAMENT_COUNT.toLocaleString('en-US')} sentences. That is not corrected. The corpus decides the count; the passage was written about a different text.</p>
+<p class="note">"It was as we feared." "How did it get lost during screening?" &mdash; Untgract pulls down a lightpen, activates it, reads the object. A screen appears, reams of data. Then it goes in a jar on the bottom shelf, among thousands more, in various shapes.</p>
+<p>A different passage from the same manuscript &mdash; a workbench, a computation, "a white fiber-optic chrysanthemum, each filapixel a moment in time, demarcated in the code of the Union" &mdash; was the source for the two earlier forms. It is retired rather than quietly dropped: it gave this scene its word for a lit fragment of text, and it is where the count came from that the corpus then overruled.</p>
 </article>`;
 
   return {
     slugPath: 'psyshell',
     title: 'Psyshell',
-    description: `A branch made of every sentence on this site — ${FILAMENT_COUNT.toLocaleString('en-US')} filapixels, one each, placed by reading order and thickened by Murray's law.`,
+    description: `Lens ${LENS_ID} — a crystal antler holding ${FILAPIXEL_COUNT.toLocaleString('en-US')} filapixels, one for every sentence on this site, and the base-e notation it gives them up in.`,
     sceneKey: 'psyshell', sceneName: 'Psyshell',
-    lede: `<p><strong>Psyshell</strong> is a fibre-optic branch made of this site's own writing: ${FILAMENT_COUNT.toLocaleString('en-US')} sentences, one filapixel each, placed by reading order along a structure whose thickness is Murray's law and whose branch angles are the golden angle. Touching one sends a disturbance along the branch.</p>
-<p>This page is the measurement underneath it — the nine limbs, the laws, and what each of them costs.</p>`,
+    lede: `<p><strong>Psyshell</strong> is a lens on a workshop bench: a crystalline fractalanch, two inches long, holding ${FILAPIXEL_COUNT.toLocaleString('en-US')} filapixels &mdash; one for every sentence of this site's writing. A lightpen reads it, and it transmits in base e.</p>
+<p>This page is the measurement underneath it &mdash; where the sentences come from, how the object was built, and what its shape deliberately does not encode.</p>`,
     bodyHtml: body,
-    jsonLd: creativeWork('Psyshell', `A branch whose ${FILAMENT_COUNT} filapixels are the ${FILAMENT_COUNT} sentences of this site, placed by reading order and thickened by Murray's law.`, 'psyshell'),
+    jsonLd: creativeWork('Psyshell', `A crystal lens holding the ${FILAPIXEL_COUNT} sentences of this site as filapixels, read with a lightpen and transmitted in base e.`, 'psyshell'),
   };
 }
 

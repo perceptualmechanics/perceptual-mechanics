@@ -1,4 +1,22 @@
-# perceptualmechanics — chat brief
+# perceptualmechanics — chat brief (retired)
+
+> **This file is no longer maintained. `SITE.md` replaced it.**
+>
+> Everything a fresh chat needs about what the site is — the corpus and its two
+> rulers, the twelve scenes, what is real in each and what is a rendering, what
+> has been decided, what is open — is in `SITE.md`, which carries no date and no
+> version and is fixed in place when it is wrong. The rules the content follows
+> are in `STANDARDS.md`; the claims that were wrong and came back are in
+> `CORRECTED-FACTS.md`; how the two instances work together is in
+> `WORKING-PROTOCOL.md`.
+>
+> **Do not update this file, and do not quote it.** Kept for its reasoning, not
+> for its facts. The one section with no home elsewhere — "Working with this
+> from a chat", on what a chat can and cannot see, and the caution that half
+> this corpus is found text that was not composed to be improved — is worth
+> reading and is the only part of this file that has not been superseded.
+
+---
 
 *Handoff for a fresh Claude chat. Current as of **v4.5.0**, 2026-09-02.*
 

@@ -142,53 +142,112 @@ should write to it — not `npm install`, not `npm ci`, not `npm run build`
 
 ## Documentation
 
+### The knowledge base is current; a brief is a missive
+
+Five files carry what a future session needs, and none of them is dated except
+the one that is meant to be:
+
+- **`SITE.md`** — what the site is. The scenes, the corpus and its rulers, what
+  is real in each scene and what is a rendering, the short form of what has been
+  decided, and the maintained list of open items.
+- **`STANDARDS.md`** — how we build, with the reason attached to every rule,
+  because a prohibition without a reason invites a workaround.
+- **`CORRECTED-FACTS.md`** — claims that were made, turned out wrong, and came
+  back. Read in full before writing a brief.
+- **`WORKING-PROTOCOL.md`** — how the two instances work together, and the
+  failure mode that made it necessary. It keeps its own application log, which
+  is right: it is the one file that documents its own use.
+- **`NOTES.md`** — what shipped, dated by version, append-only. The only
+  legitimately historical file.
+
+**A brief is not one of these.** It is addressed, dated, about one piece of work,
+and dead on arrival. Nobody should read a brief again after its release ships.
+It is where thinking goes, and where the reasoning for a rejected alternative
+lives so it is not re-proposed. **A brief is never a source of truth about the
+project.**
+
+**The rule that follows from that: if something written in a brief is a thing a
+future session needs to know, it belongs in a knowledge-base file, and the brief
+says which file it went to.** Otherwise it dies with the release and somebody
+restates it wrong in a month. That is not hypothetical — it is why
+`CORRECTED-FACTS.md` exists, and it happened to the document that described the
+whole project.
+
+**Fix in place.** No correction notes, no superseded markers, no changelog
+inside a knowledge-base file. `NOTES.md` carries the history; the KB carries the
+present.
+
+**One rule per file.** If a fact is in two KB files, one of them is a pointer.
+Two copies drift, and the drift is invisible until they disagree.
+
+**Who owns what.** The coding instance owns accuracy: it reads source, it can
+verify, and it should correct KB files freely and say what it changed. The chat
+instance owns structure: it proposes what a file should contain and where a fact
+belongs, and cites rather than asserts when a fact came from a document.
+
 ### Measuring the corpus: name the export, not the module
 
-Lives in full in `perceptualmechanics-chat-brief.md` under "Rules the content
-follows", with the other two measurement rules it belongs beside — it is a rule
-about counting the writing rather than about writing code, so it is stated once
-there rather than twice. The short form, because a coding session is exactly who
-walks a module's exports: **`theater.text.js` and `scroll.text.js` each publish
-both a source and a derived index over the same text**, on purpose and for good
-reasons. Summing a module's namespace counts those words twice and produces a
-plausible number rather than an obviously wrong one. This cost a published
-measurement its two largest figures on 2026-09-02.
+The rule belongs to `SITE.md`, under "The corpus", with the other measurement
+rules. The short form, because a coding session is exactly who walks a module's
+exports: **`theater.text.js` and `scroll.text.js` each publish both a source and
+a derived index over the same text**, on purpose and for good reasons. Summing a
+module's namespace counts those words twice and produces a plausible number
+rather than an obviously wrong one. This cost a published measurement its two
+largest figures.
 
 
-### An implementation brief closes by naming what it invalidates
+### A brief closes by naming which knowledge-base files it makes untrue
 
-Standing rule, added 2026-09-02 at the request of the chat instance that
-reads these files. Any implementation brief, handoff, or write-up produced
-for this project ends by naming **which lines of
-`perceptualmechanics-project-brief.md` and
-`perceptualmechanics-chat-brief.md` the work it describes makes untrue.**
+Any brief, handoff or write-up produced for this project ends by naming **which
+knowledge-base files its work makes untrue, and what changed in each** — the
+specific claims, not "the docs may need updating", so the correction is a
+two-minute edit rather than a re-read.
 
-Not "the briefs may need updating" — the specific claims, so the correction
-is a two-minute edit rather than a re-read of both documents.
+**Name knowledge-base files and nothing else.** An earlier version of this rule
+had briefs invalidating other briefs, which was wrong twice over: briefs are
+messages rather than repo documents, so the reference frequently pointed at a
+file the other instance could not open; and a brief cannot go stale, because it
+was only ever true on the day it was sent.
 
-**Why it earned a rule.** The project brief sat fourteen minor versions
-stale before anyone noticed: it announced itself as "current as of v3.9.17",
-three of its six standing open items had been resolved and were still listed
-as open, and a fourth had flipped the other way. Separately, a 2026-09-02
-correction pass found the two briefs disagreeing with each other and with
-the data — one said the Library holds 147 items and the other 150 (the
-data says 150), and one still described Beamline as a sequence of curved
-mirrors, a design the scene left behind long enough ago that the same stale
-sentence had also reached `main.js`'s `ariaLabel`, where it was the only
-account of that scene a screen-reader visitor got.
+**Why it earned a rule.** The project brief sat fourteen minor versions stale
+before anyone noticed: it announced itself as current as of a version fourteen
+behind, three of its six standing open items had been resolved and were still
+listed as open, and a fourth had flipped the other way. Separately, a correction
+pass found the two briefs disagreeing with each other and with the data — one
+said the Library holds 147 items and the other 150 (the data says 150), and one
+still described Beamline as a sequence of curved mirrors, a design the scene left
+behind long enough ago that the same stale sentence had also reached `main.js`'s
+`ariaLabel`, where it was the only account of that scene a screen-reader visitor
+got.
 
-None of that is exotic. It is the ordinary fate of a document nobody is
-required to touch. A brief that is wrong is worse than no brief, because it
-is read as current — and these two exist precisely to stop work being
-re-derived or re-proposed, which is the thing they stop doing first when
-they drift.
+None of that is exotic. It is the ordinary fate of a document nobody is required
+to touch. A document that is wrong is worse than no document, because it is read
+as current.
 
-This is the only gate documentation here will ever have: there is no test
-that fails when a brief goes stale, and no build step can tell that a
-sentence stopped being true. Naming the invalidated lines at the end of the
-work that invalidated them is the one moment when someone reliably knows.
+This is the only gate documentation here will ever have: no test fails when a
+sentence stops being true, and no build step can tell. Naming the invalidated
+files at the end of the work that invalidated them is the one moment when
+someone reliably knows.
 
 ## CSS
+
+### One block per selector in a stylesheet — a second block is not an edit
+
+If a rule needs changing, change it where it is. Do not add a second block for
+the same selector further down the file.
+
+**What it cost.** `psyshell.css` carried `.psyshell-title`, `.psyshell-title-name`,
+`.psyshell-title-sub` and `.psyshell-hint` twice for two releases: the corrected
+title lockup first, the superseded version second, and the cascade used the
+second one. The scene shipped a fixed 1.9rem title with `text-indent` the whole
+time, while the fix's own comment — explaining at length why `text-indent` was
+wrong and `margin-right` was right — sat directly above the block overriding it.
+
+**Why it survived.** Nothing rendered obviously wrong. A duplicate block does not
+error, does not warn, and produces a page that looks approximately right, so the
+only thing that finds it is reading the file or measuring the rendered element
+against what the file says it should be. That makes it worth a rule rather than a
+habit.
 
 ### Centering: flexbox/grid by default, `left`/`top` + `transform` for coordinate-anchoring only
 
@@ -657,6 +716,29 @@ manufacturing findings to justify the pass — the honest result of a
 "look for dated patterns" sweep can be "didn't find any," and that's the
 useful thing to record here so a future pass doesn't have to redo this
 sweep from a standing start.
+
+### A constant scaled against the thing it measures is invalidated by a form change
+
+When a scene's form changes, every constant that was tuned against the old form
+is suspect, and the dangerous ones are those whose units are the object's own.
+
+**What it cost.** Psyshell's propagation ran at 4.3 world units a second with a
+front 0.24 units wide, tuned on a branch whose paths ran five units and more.
+The lens that replaced it is 1.7 units across, so the front crossed the entire
+object in under half a second and **the scene's central gesture was invisible** —
+no error, no warning, and the code was exactly as correct as it had been.
+
+**Two things follow.** When a form changes, list the constants whose units are
+the object's own and re-derive each one against the new object; and where a
+constant must be preserved through such a scaling (Psyshell's τ is a ratio of two
+of them, and the transmission's whole verified timing depends on it), scale the
+group together rather than retuning members individually, and say in the code
+which quantity the scaling is protecting.
+
+**And check it by looking.** This was found by capturing frames after a real
+click and finding the excitation already gone by the first one — with a real time
+axis, because `page.screenshot()` costs far more than the interval it is asked
+for.
 
 ### Scene lifecycle goes through `sceneKit`, not hand-rolled per scene
 

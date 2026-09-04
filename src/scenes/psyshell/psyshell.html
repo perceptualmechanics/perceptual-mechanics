@@ -1,35 +1,38 @@
 <!--
   Psyshell scene shell markup — full scene only.
 
-  The title block is static: "Psyshell" is the scene's name and "flower magic"
+  The title block is static: "Psyshell" is the scene's name and "lens RE73415"
   is its subtitle, both fixed rather than pulled from psyshell.text.js. That is
   the difference from Beamline's block, whose two lines are found text out of
-  the archive and therefore belong to the content module.
+  the archive and therefore belong to the content module. The identifier is the
+  one place the markup and psyshell.object.js's LENS_ID say the same thing
+  twice; it is two words in a subhead rather than a value anything computes
+  from, and interpolating it would mean this file stopped being static markup.
 
   aria-hidden stays on the hint alone, and the reasoning is Beamline's: "drag
-  to turn / scroll to zoom / touch a filapixel" is a pointer instruction, and
+  to turn / scroll to zoom / point the lightpen" is a pointer instruction, and
   the jump list plus .psyshell-sr-live are how a keyboard or screen-reader
-  visitor actually reaches the bands and hears what was struck.
+  visitor actually reaches the filapixels and hears what was read.
 
   There is no text readout. A panel in the corner would make the visitor
-  someone reading a database; what the scene shows is a system running. The
-  struck filament transmits its own sentence along its length in the Union's
-  own notation, which is legible as transmission and never readable as text —
-  see psyshell.js. The one piece of plain text is .psyshell-ordinal, and it is
-  what makes a petal's angle mean position in reading order. Without it the
-  flower is a pretty object.
+  someone reading a database; what the scene shows is somebody else's record
+  being read, in a notation that was not written for them. The filapixel
+  transmits its own ordinal through the crystal in the Union's notation, which
+  is legible as transmission and never readable as text — see psyshell.js. The
+  one piece of plain text is .psyshell-ordinal, and what it says is how many
+  sentences are in here and which one you just touched.
 
   .psyshell-sr-live keeps everything, including the sentence and its source:
   the screen-reader path is navigation, not decoration, and a visitor who
-  cannot see the pulse must still get the content.
+  cannot see the transmission must still get the content.
 -->
 
 <div class="psyshell-title">
   <span class="psyshell-title-name">Psyshell</span>
-  <span class="psyshell-title-sub">flower magic</span>
+  <span class="psyshell-title-sub">lens RE73415</span>
 </div>
 
-<p class="psyshell-hint" aria-hidden="true">drag to turn &nbsp;·&nbsp; scroll to zoom &nbsp;·&nbsp; touch a filapixel</p>
+<p class="psyshell-hint" aria-hidden="true">drag to turn &nbsp;·&nbsp; scroll to zoom &nbsp;·&nbsp; point the lightpen</p>
 
 <p class="psyshell-ordinal" hidden></p>
 

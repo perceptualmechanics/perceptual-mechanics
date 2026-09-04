@@ -3,28 +3,44 @@
    reasoning every scene with body-level chrome shares. psyshell.js owns
    creating and removing each element itself.
 
-   ─── The palette, and why it is not Outside's ──────────────────────────────
-   This site already has a flower, and two floral scenes on a twelve-scene site
-   is a real consideration rather than a non-issue. Outside is violet on a
-   violet-black void, with five broad translucent lobes. Psyshell is white on a
-   green-black void, with three thousand fine rays.
+   ─── The palette, and why the green went ───────────────────────────────────
+   Until 4.8.0 this scene was white on a green-black void, and the green was
+   argued for at length: a psyshell is living apparatus a dead thing borrows,
+   because life is the only thing that functions in the green. That was true of
+   the flower. It is not true of a lens on a bench under a lamp, and a scene-
+   wide green field that no longer describes the scene is decoration with a
+   footnote attached.
 
-   The green is not a colour-wheel decision. In the source fiction a psyshell is
-   living apparatus a dead thing borrows, because life is the only thing that
-   functions in the green — so the void this flower grows in being faintly green
-   is the horror stated in the one place it can be stated without a word of
-   exposition. It also happens to be the strongest available separation from
-   Outside: the two voids are on opposite sides of the wheel, which is what a
-   thumbnail comparison at 200px actually reads.
+   The green survives in the one place it means something — the crystal's own
+   interior, which is the residue of taint that let the lens through screening
+   and the reason it is on the bench at all (psyshell.js, CRYSTAL_DEEP). The
+   chrome is now cool near-white on the room's warm near-black, which is what a
+   lamp on a workbench actually gives you.
 
-   Text is a cool near-white rather than the gold thread Sphere/Scroll/Orrery/
-   Beamline/Harmonics share, and rather than Outside's violet. Contrast measured
-   against this scene's real composited backdrop, not against pure black:
-   rgba(228,244,236,0.88) over #030f0b reads 13.4:1.
+   Separation from Outside, which the green was also doing work for, now comes
+   from form rather than hue: a five-lobed violet lotus and a small crystal
+   antler on a lit bench do not read as the same thumbnail at 200px.
+
+   Contrast measured against this scene's real composited backdrop, not against
+   pure black: rgba(230, 242, 248, 0.9) over the room colour #0a0806 composites
+   to #d0dade and reads 13.9:1. The subhead, ordinal and toggle label are all
+   above 7:1 by the same measurement — checked rather than assumed, because
+   Beamline's title has sat below AA for three releases on the strength of an
+   assumption exactly like the one this sentence replaces.
 
    Mobile-first (standing convention, see STANDARDS.md): base declarations
    target the smallest viewport; nested min-width queries layer the wider values
-   on top, never the reverse. */
+   on top, never the reverse.
+
+   ─── One block per selector ────────────────────────────────────────────────
+   This file carried .psyshell-title, .psyshell-title-name, .psyshell-title-sub
+   and .psyshell-hint TWICE from 4.6.1 until 4.8.0 — the corrected lockup first
+   and the superseded one second, which is the one the cascade used. The scene
+   has been shipping a 1.9rem title with `text-indent` since the day the fix
+   landed, and the fix's own comment sat directly above the block overriding it.
+   Nothing rendered obviously wrong, which is why it survived two releases. If
+   a rule here needs changing, change it in place; a second block is not an
+   edit. */
 
 .psyshell-title, .psyshell-hint {
   position: fixed; pointer-events: none; z-index: 310;
@@ -51,15 +67,14 @@
    The two do the same thing at one width and different things at every other,
    which is the same shape as the constants 4.4.2 had to remove: an indent
    shifts the text inside its box, a negative margin shrinks the box, and only
-   the second one lets the flex row centre it by its real ink. All four now
-   match, so a change to the family reaches this scene too.
+   the second one lets the flex row centre it by its real ink.
 
    The subhead is italic, which is the site's own subhead treatment (Orbiter,
    Beamline) and the reason a real italic face is self-hosted rather than
    synthesized — see styles/main.css's arapey-400italic. */
 .psyshell-title {
   bottom: var(--title-block-bottom-mobile); left: 5vw; right: 5vw;
-  text-align: center; color: rgba(228, 244, 236, 0.88);
+  text-align: center; color: rgba(230, 242, 248, 0.9);
   display: flex; flex-direction: column; align-items: center; gap: 0.25rem;
 
 	@media (min-width: 601px) {
@@ -72,67 +87,24 @@
   letter-spacing: var(--tracking);
   margin-right: calc(-1 * var(--tracking));
   text-transform: uppercase;
-  text-shadow: 0 0 18px rgba(150, 255, 200, 0.28);
+  text-shadow: 0 0 18px rgba(150, 210, 255, 0.26);
 }
-/* "flower magic" is doing the Union's own move — light, almost twee, entirely
-   accurate — so it stays small and unemphatic rather than becoming a second
-   title. It is set lower case in the markup and NOT uppercased here, which is
-   the point of it and matches Orbiter's own subhead ("sing, orbiter"). */
+/* "lens RE73415" is a catalogue number, and the flatness of it is the point:
+   the thing on the bench is one item out of a jar of thousands, and the scene
+   says so in the two words under its own name rather than in a caption. It is
+   lower case and italic like every other subhead on this site, and it is NOT
+   uppercased here — the identifier's own capitals are the only capitals in it,
+   which is how it would be written on the jar. */
 .psyshell-title-sub {
   font-size: 0.7rem;
   --tracking: 0.08em;
   letter-spacing: var(--tracking);
   margin-right: calc(-1 * var(--tracking));
   font-style: italic;
-  color: rgba(196, 226, 210, 0.72);
+  color: rgba(198, 216, 226, 0.75);
 
 	@media (min-width: 601px) {
 		font-size: 0.78rem;
-	}
-}
-
-.psyshell-hint {
-  position: fixed; pointer-events: none; z-index: 310;
-  font-family: 'Arapey', serif; transition: opacity 0.3s ease;
-}
-
-/* Title block at bottom-center, anchored to the shared --title-block-bottom
-   var like every other scene (site-wide consistency pass, 2026-08-25), so this
-   stays clear of #site-title's footer pill by construction. Full-width flex row
-   rather than left:50% + translateX(-50%) — see #site-title-row's comment in
-   styles/main.css for why self-centering by transform was replaced everywhere
-   in this codebase. */
-.psyshell-title {
-  bottom: var(--title-block-bottom-mobile); left: 5vw; right: 5vw;
-  text-align: center; color: rgba(228, 244, 236, 0.88);
-  display: flex; flex-direction: column; align-items: center; gap: 0.25rem;
-
-	@media (min-width: 601px) {
-		bottom: var(--title-block-bottom); left: 0; right: 0;
-	}
-}
-.psyshell-title-name {
-  font-size: 1.5rem; letter-spacing: 0.22em;
-  /* letter-spacing adds its gap after the last character too, which pushes a
-     centred line visibly left of true centre. The compensating indent is the
-     same one every other scene's title carries. */
-  text-indent: 0.22em;
-  text-shadow: 0 0 18px rgba(150, 255, 200, 0.28);
-
-	@media (min-width: 601px) {
-		font-size: 1.9rem;
-	}
-}
-/* "flower magic" is doing the Union's own move — light, almost twee, entirely
-   accurate — so it is set small and unemphatic rather than as a second title.
-   Lower case is the point and is not a style tic: it is how Iplaisc would
-   describe her own work. */
-.psyshell-title-sub {
-  font-size: 0.78rem; letter-spacing: 0.3em; text-indent: 0.3em;
-  color: rgba(196, 226, 210, 0.6);
-
-	@media (min-width: 601px) {
-		font-size: 0.9rem;
 	}
 }
 
@@ -145,8 +117,8 @@
 /* ─── The ordinal ───────────────────────────────────────────────────────────
    The only plain text the scene renders. Not a readout and deliberately not a
    panel: a box in the corner makes the visitor someone reading a database,
-   and what this scene shows is a system running. The sentence itself goes up
-   the strand in the Union's notation instead.
+   and what this scene shows is somebody else's record being read. The sentence
+   itself goes through the crystal in the Union's notation instead.
 
    Set in Electrolize rather than Arapey — the UI face, not the writing face —
    because this is an instrument reading, not a piece of text. The source
@@ -164,7 +136,7 @@
   bottom: 5.7rem; right: 1.2rem; margin: 0;
   font-family: 'Electrolize', sans-serif;
   font-size: 0.68rem; letter-spacing: 0.22em;
-  color: rgba(168, 214, 192, 0.72);
+  color: rgba(196, 216, 228, 0.75);
   pointer-events: none;
   transition: opacity 0.25s ease;
 
@@ -175,13 +147,14 @@
 
 /* Same bottom-left placement and behaviour as every other scene's sound
    toggle (it is both the explicit first-gesture trigger and the ongoing mute
-   control), tinted to this scene's green rather than gold or violet. */
+   control), tinted to this scene's lamp-and-crystal palette rather than gold
+   or violet. */
 .psyshell-sound-toggle {
   position: fixed; bottom: 5.5rem; left: 1rem; z-index: 310;
   display: flex; align-items: center; gap: .55rem;
-  background: rgba(4, 16, 12, 0.55); border: 1px solid rgba(160, 225, 195, 0.3);
+  background: rgba(12, 10, 8, 0.58); border: 1px solid rgba(170, 205, 225, 0.3);
   border-radius: 999px; padding: .4rem .8rem;
-  color: rgba(206, 234, 220, .75); font-family: 'Electrolize', sans-serif;
+  color: rgba(212, 228, 238, .78); font-family: 'Electrolize', sans-serif;
   font-size: .62rem; letter-spacing: .16em; text-transform: uppercase;
   cursor: pointer; transition: background .2s, border-color .2s, color .2s;
 
@@ -190,12 +163,12 @@
 	}
 }
 .psyshell-sound-toggle:hover {
-  background: rgba(10, 34, 25, 0.7); border-color: rgba(160, 225, 195, 0.5);
-  color: rgba(226, 248, 238, 0.95);
+  background: rgba(26, 22, 18, 0.7); border-color: rgba(170, 205, 225, 0.5);
+  color: rgba(232, 244, 250, 0.95);
 }
 .psyshell-sound-toggle:focus-visible { outline: var(--focus-ring); outline-offset: 2px; }
 .psyshell-sound-toggle[aria-pressed="true"] {
-  border-color: rgba(160, 255, 210, 0.65); color: rgba(232, 255, 244, 0.95);
+  border-color: rgba(190, 226, 255, 0.65); color: rgba(238, 248, 255, 0.95);
 }
 
 /* Visually hidden, still announced. Same shape as every other scene's live
@@ -209,8 +182,8 @@
 /* Reduced motion stills the propagation and the idle turn, which psyshell.js
    handles — this only takes the glow off the title, since a text-shadow that
    does not animate is not motion and stays. Nothing here disables the object
-   itself: a visitor who asked for no motion still gets the flower, still turns
-   it by dragging, and still lights a petal by touching it. */
+   itself: a visitor who asked for no motion still gets the lens, still turns it
+   by dragging, and still reads a filapixel by pointing at one. */
 @media (prefers-reduced-motion: reduce) {
   .psyshell-title, .psyshell-hint, .psyshell-ordinal { transition: none; }
 }
