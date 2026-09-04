@@ -354,7 +354,7 @@ export function createMedium(container, { preview = false, initialArg = null, on
     // where it was, so letting go and touching again is a pause, not a reset.
     // Nothing here opens or closes: this is the still state, and there is one.
     const contact = visitor.down;
-    const partner = (contact && !reduced && hush <= 0) ? stepWander(hand, dt, MARKS, plaus) : null;
+    const partner = (contact && !reduced && hush <= 0) ? stepWander(hand, dt, cup, MARKS, plaus) : null;
     stepCup(cup, dt, stepVisitor(visitor, cup, dt), partner);
 
     // Dwell only counts while somebody is touching. A cup nobody has a hand on
@@ -651,7 +651,7 @@ export function createMedium(container, { preview = false, initialArg = null, on
     if (!reduced && hush <= 0 && hand.x != null) {
       drawFinger(bx(hand.x), by(hand.y), true, 0.92);
     }
-    if (visitor.down) drawFinger(bx(visitor.ax), by(visitor.ay), false, 1);
+    if (visitor.down) drawFinger(bx(visitor.px), by(visitor.py), false, 1);
     drawTape();
 
     frames++;
@@ -735,7 +735,17 @@ export function createMedium(container, { preview = false, initialArg = null, on
     clock.resync();
   });
 
-  const resize = bindGuardedResize(container, layout);
+  // ─── A paused scene still has to repaint when it is relaid out ────────────
+  // The landing tile is the case, and it is how this scene shipped a black
+  // circle on the landing page. A tile mounts, draws its first frame — often
+  // before the container has been laid out, so against a fallback size that is
+  // the whole window — and is then paused immediately, because main.js runs
+  // syncPreviewPlayback() as soon as the previews resolve and the tab may
+  // already be hidden. The ResizeObserver fires a moment later with the real
+  // 190px, layout() fixes every number, and nothing ever draws again.
+  //
+  // One frame, so a paused scene stays paused; it just stops being wrong.
+  const resize = bindGuardedResize(container, () => { layout(); if (paused) draw(); });
 
   // ─── Mount ────────────────────────────────────────────────────────────────
   // Chrome first, then layout: the board is fitted between the hint and the

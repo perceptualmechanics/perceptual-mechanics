@@ -114,6 +114,40 @@ export const CUP = {
 // that it can never win an argument. A visitor's spring at a comfortable
 // reach delivers several times this.
 export const PARTNER_FORCE = 1.9;
+
+// ─── A fingertip on a cup stays on the cup ──────────────────────────────────
+// The furthest either hand can be from the cup's centre, in board units. Both
+// hands are RESTING ON the object: if the cup moves, they move with it, and the
+// only freedom they have is to lean — to sit a little off centre and push.
+//
+// This was missing for a release and it showed the moment anybody dragged the
+// cup: the other hand's wander was a walk over the board in its own right, so
+// pulling the cup away left the hand standing where it was, fingertip on bare
+// card, pressing on nothing. Scott saw it in about four seconds.
+//
+// 0.075 is not a taste. A hand's spring reaches PARTNER_FORCE at
+// PARTNER_FORCE / CUP.handStiffness = 0.073 board units of offset and the force
+// is capped past that, so beyond this distance the extra offset does nothing at
+// all except look wrong. The same bound on the visitor caps their reachable
+// force at CUP.visitorStiffness * 0.075 = 5.9 — still three times what the
+// other hand can produce, so a driving visitor still wins outright — and it
+// means dragging feels like pushing an object rather than teleporting it,
+// because that is what it now is.
+export const LEAN_MAX = 0.075;
+
+// Keeps `hand` on `cup`, and kills the component of its velocity that was
+// carrying it away — otherwise it grinds against the limit instead of being
+// carried along. Returns the hand.
+export function holdOnCup(hand, cup) {
+  const dx = hand.x - cup.x, dy = hand.y - cup.y;
+  const d = Math.hypot(dx, dy);
+  if (d <= LEAN_MAX || d === 0) return hand;
+  hand.x = cup.x + (dx / d) * LEAN_MAX;
+  hand.y = cup.y + (dy / d) * LEAN_MAX;
+  const out = (hand.vx * dx + hand.vy * dy) / d;
+  if (out > 0) { hand.vx -= out * (dx / d); hand.vy -= out * (dy / d); }
+  return hand;
+}
 // A hand, not a cursor: a speed limit in board units per second, clamped in
 // `stepWander`. Without it a run of impulses in the same direction can produce
 // a swipe no wrist would make.
@@ -360,7 +394,9 @@ export const HAND_DRIFT = 0.013;
 export const DRIVE_EPS = 0.0015;
 
 export function createVisitor(x, y) {
-  return { x, y, ax: x, ay: y, t: 0, driving: false, down: false };
+  // `px`/`py` are where the fingertip ended up after being held on the cup —
+  // which is what the scene draws, so the finger is never seen off the china.
+  return { x, y, ax: x, ay: y, px: x, py: y, t: 0, driving: false, down: false };
 }
 
 // Where the visitor's fingertip actually is this frame — or null if they are not
@@ -376,10 +412,19 @@ export function stepVisitor(v, cup, dt) {
     v.ax += (cup.x - v.ax) * k;
     v.ay += (cup.y - v.ay) * k;
   }
-  return {
+  const p = {
     x: v.ax + Math.sin(v.t * 0.61) * HAND_DRIFT,
     y: v.ay + Math.cos(v.t * 0.43) * HAND_DRIFT,
+    vx: 0, vy: 0,
   };
+  // On the cup, like the other one. A visitor dragging faster than the cup can
+  // follow does not get to leave their fingertip out in front of it: they get
+  // the most a finger on a rim can give, which is LEAN_MAX of offset, and the
+  // cup comes along behind. `v.ax`/`v.ay` keep the raw anchor, so releasing and
+  // re-pressing is unaffected.
+  holdOnCup(p, cup);
+  v.px = p.x; v.py = p.y;
+  return p;
 }
 
 // ─── Dwell ──────────────────────────────────────────────────────────────────
@@ -490,7 +535,7 @@ export function createWander(seed = 0x5EA9CE, homeX = 0.5, homeY = 0.44) {
 // `letters` is the board — [{ch, x, y}] — and `weightOf(letter)` returns how
 // plausible that letter is right now, in 0..1. Pass `null` for `weightOf` and
 // the hand still moves; it just stops meaning anything.
-export function stepWander(w, dt, letters, weightOf) {
+export function stepWander(w, dt, cup, letters, weightOf) {
   const R = w.rnd;
 
   // ─── Bursts and pauses ────────────────────────────────────────────────────
@@ -552,5 +597,8 @@ export function stepWander(w, dt, letters, weightOf) {
   else if (w.x > B.x1) { w.x = B.x1; if (w.vx > 0) w.vx = -w.vx; }
   if (w.y < B.y0) { w.y = B.y0; if (w.vy < 0) w.vy = -w.vy; }
   else if (w.y > B.y1) { w.y = B.y1; if (w.vy > 0) w.vy = -w.vy; }
-  return w;
+
+  // Last, so it wins: the hand is on the cup, and everything above only decides
+  // which way it leans from there.
+  return holdOnCup(w, cup);
 }

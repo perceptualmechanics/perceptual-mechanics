@@ -17865,3 +17865,47 @@ against a 27.0% flat control (English is 38.1%). The visitor still wins outright
 when driving — 0.032 board units is the furthest the other hand ever holds the
 cup off a pushing finger, under one letter's spacing — and a visitor who parks on
 Q still gets a Q in 1.8 seconds.
+
+## 4.11.8 (2026-09-04)
+
+**Two bugs Scott found in the running scene inside a minute, both of the kind a
+bench cannot see.**
+
+**Neither hand was actually on the cup.** The other hand's wander was a walk over
+the board in its own right, so pulling the cup away left the hand standing where
+it was, fingertip on bare card, pressing on nothing. Both hands are RESTING ON an
+object: if the cup moves they move with it, and the only freedom either has is to
+lean. `holdOnCup` bounds both to `LEAN_MAX` from the cup's centre and kills the
+component of velocity carrying them away, and `stepWander` applies it last so it
+wins over everything else.
+
+0.075 is not taste. A hand's spring reaches `PARTNER_FORCE` at
+`PARTNER_FORCE / handStiffness` = 0.073 board units of offset and is capped past
+that, so beyond this distance the extra offset does nothing except look wrong.
+The same bound on the visitor caps their reachable force at 5.9 — still three
+times what the other hand can produce, so a driving visitor still wins outright
+(measured: 0.025 board units is the furthest the other hand ever holds the cup
+off a pushing finger) — and it means dragging feels like pushing an object,
+because that is now what it is.
+
+A detail falls out of it for free: `WANDER_BOUNDS` is applied to the other hand
+before `holdOnCup`, so when a visitor drags the cup down to GOODBYE — below the
+bounds — the other hand stays at the line and leans back. It doesn't like going
+down there, and nothing had to be written to say so.
+
+**The landing tile was a black circle.** A tile mounts, draws its first frame —
+often before the container has been laid out, so against a fallback size that is
+the whole window — and is then paused immediately, because `main.js` runs
+`syncPreviewPlayback()` as soon as the previews resolve and the tab may already
+be hidden. The ResizeObserver fires a moment later with the real 190px,
+`layout()` fixes every number, and nothing ever draws again. One frame on
+relayout while paused: the scene stays paused, it just stops being wrong.
+
+**Apollo has the same shape and is NOT fixed here** — `bindGuardedResize(container,
+relayout)` with no repaint. It presented once during this session as a black tile
+on the landing page and rendered correctly on the next load, which is what a race
+looks like. Left for its own pass rather than changed while working on a
+different scene, but it is the same one-line fix.
+
+**Still open:** the landing page's visual audit. Thirteen tiles render correctly
+now, and Medium's is much the palest thing on a page of dark circles.

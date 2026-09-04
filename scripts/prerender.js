@@ -980,7 +980,7 @@ function seance({ seed, minutes }) {
   let tape = '', taken = 0;
   for (let i = 0; i < Math.round((minutes * 60) / DT); i++) {
     decayReader(reader, DT);
-    stepCup(cup, DT, stepVisitor(visitor, cup, DT), stepWander(hand, DT, MARKS, plaus));
+    stepCup(cup, DT, stepVisitor(visitor, cup, DT), stepWander(hand, DT, cup, MARKS, plaus));
     clearDwellMemory(dwell, cup);
     const got = stepDwell(dwell, cup, MARKS, DT, scale);
     if (got) { tape = got.ch === 'GOODBYE' ? '' : tape + takeMark(reader, got); taken++; }
