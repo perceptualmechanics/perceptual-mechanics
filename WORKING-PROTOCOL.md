@@ -192,6 +192,49 @@ happens to coincide with an improvement, written up as though the source caused
 it. See the third instance in the recursive section below, which is exactly how
 it nearly happened.
 
+### 6. When somebody reports a FEEL, find the number that means their word
+
+Not the nearest number already to hand. That is the trap, and it is a
+comfortable one, because there is always a metric lying around.
+
+Three reports on Medium in one afternoon, each a thing Scott felt while playing
+that the model had no term for:
+
+- *"the second hand just stood there"* when he dragged the cup away — neither
+  hand was attached to the cup at all.
+- *"it feels more like resistance"* on a trackpad — "driving" was a per-frame
+  boolean, so every micro-movement of a resting finger flipped his hand to full
+  stiffness for one frame and released it.
+- *"so twitchy if I'm going slowly"* — and this is the one that names the rule.
+
+The number I had was **speed**, and speed said almost nothing: the fingertip
+travelled about as far under a slow drag as at rest. The number that means
+*twitchy* is **direction reversals per second** — how often the fingertip changes
+which way it is sliding. Measured: **4.2 resting, 4.3 under a slow deliberate
+drag.** The other hand was not responding to the visitor at all, which is exactly
+what a person means by that word about a hand.
+
+And the two rejected fixes are the more useful half of the finding:
+
+- **Heavier damping made it worse.** The obvious move, and backwards: damping
+  lowers the distance travelled and takes reversals *up*. A hand that moves less
+  and changes its mind more. Not predictable from the model — only from the
+  right ruler.
+- **Bracing the hand off tempo rather than off grip** measured 1.9 reversals,
+  the best number in the sweep, and cost thirteen points of rank correlation
+  because a permanently braced hand explores nothing and re-treads its own
+  letters. It sat in the build for an hour looking like a clear win. Rule 5's
+  failure, one release later: *it looked good because the thing it was degrading
+  was not the thing being watched.*
+
+> **A felt complaint is a measurement request in plain language. The work is
+> translating the word, not reaching for the metric you already have.**
+
+And the corollary, which is why this cannot be delegated to the benches: every
+one of the three was found by *playing*, with the benches green throughout. A
+bench's visitor is a function of time and never jitters. **A stub smoother than a
+person will not reproduce a person's bugs.**
+
 ---
 
 ## The shared lesson these all point at
@@ -232,6 +275,19 @@ And the corollary, which is the one that applies to this document:
 
 > **An audit's ruler is part of its result.** Say what was looked for as
 > prominently as what was found.
+
+And one from 4.11.13 that is a design principle rather than an audit one, kept
+in Scott's words because the phrasing is the content:
+
+> **Energy rather than direction — because direction would be a mirror and would
+> spell nothing. And the pointer is your private business. Neither hand can see
+> the other's intention; what they share is the object.**
+
+That is Medium's whole thesis written as a coupling term, and it is now literally
+how the code works: the other hand's activity scales with the smoothed speed of
+the CUP and never reads the pointer. **When a scene has a thesis, the test of
+whether it is really the scene's thesis is whether it appears in the physics or
+only in the prose.**
 
 And one about sample size, from the ambient scheduler:
 
