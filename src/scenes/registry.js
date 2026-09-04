@@ -116,7 +116,7 @@ export const SCENES = {
   // Psyshell — twelfth scene (2026-09-03). Rebuilt at 4.8.0: it was a
   // chrysanthemum, then a branch, and both encoded the corpus in their geometry
   // — petal angle was reading order, limb thickness was Murray's law. Neither
-  // had a subject. It is now a lens on a workshop bench: a crystal antler that
+  // had a subject. It is now a lens held in a web: a crystal antler that
   // holds the site's sentences without encoding them, read with a lightpen. The
   // label and ariaLabel below have been rewritten twice for that reason, and
   // both times the previous wording described a scene that no longer existed —
@@ -124,7 +124,7 @@ export const SCENES = {
   // so it is part of the form change rather than a follow-up to it.
   psyshell:  { exportName: 'createPsyshell',
                label: 'Psyshell — lens RE73415.',
-               ariaLabel: 'Psyshell — a small crystal antler on a workshop bench, holding every sentence on this site as a point of light inside it. Drag to turn it; point the lightpen at it to read one sentence and watch the crystal transmit its number.' },
+               ariaLabel: 'Psyshell — a small crystal antler suspended in a web of fine filaments, holding every sentence on this site inside it. The web and the object are one structure at two scales. Drag to turn it; point the lightpen at it to read one sentence and watch the light of its number travel through the crystal.' },
 
 };
 

@@ -1,140 +1,100 @@
-// ─── The shiver — an AudioWorkletProcessor ──────────────────────────────────
+// ─── The reading, as a burst of chimes — an AudioWorkletProcessor ───────────
 //
-// THIS FILE IS NOT BUNDLED. It is loaded by URL with
-// `audioWorklet.addModule()` and runs in the AudioWorkletGlobalScope, which is
-// a different global with no DOM, no window, and no module graph of this app.
-// It therefore imports nothing and must stay self-contained; `psyshell.js`
-// takes its URL through Vite's `?url` so the file is emitted as an asset
-// rather than inlined into a chunk. CSP: it is same-origin, so `script-src
-// 'self'` already covers it — a worklet module is fetched under script-src.
+// THIS FILE IS NOT BUNDLED. It is loaded by URL with `audioWorklet.addModule()`
+// and runs in the AudioWorkletGlobalScope, which is a different global with no
+// DOM, no window, and no module graph of this app. It therefore imports nothing
+// and must stay self-contained; `psyshell.js` takes its URL through
+// `new URL(..., import.meta.url)` so the file is emitted as an asset exactly
+// once. CSP: it is same-origin, so `script-src 'self'` already covers it — a
+// worklet module is fetched under script-src.
 //
-// ─── Why this is not an oscillator and a gain curve ─────────────────────────
-// The gesture was wrong, not the tuning. **A strike is an impact; a shiver is a
-// body responding**, and the difference is in the first forty milliseconds,
-// which is exactly the part a `GainNode` envelope cannot shape. The lens is a
-// neuron. A neuron does not ring, it fires, so what is wanted is conduction:
-// an excitation entering a resonant body and the body answering.
+// ─── What this is, and what it stopped being ────────────────────────────────
+// 4.8.1 built a shiver: one resonator ringing up over 20 ms under a shaped
+// noise burst. That was a careful answer to the wrong question. The ask is
+// **nerve couriers racing along the strands, like a bright chime** — fast,
+// discrete, plural, with a bell's attack — and a body ringing up slowly is the
+// opposite gesture. A ring-up says "something is responding". A chime says
+// "something arrived", and several of them say the thing that arrived was
+// carried.
 //
-// Three properties, and each one is a decision rather than a taste:
+// So: a small burst of struck voices. What survives from the shiver is the
+// judgement that inharmonic partials were right; the envelope and the count are
+// what change.
 //
-//   1. **The onset is not instantaneous.** It is not made non-instantaneous by
-//      an attack ramp either. A high-Q resonator RINGS UP over roughly Q/(π·f)
-//      seconds, so the build is the body's own response time. The excitation is
-//      a short shaped noise burst; the note you hear is what the resonator does
-//      with it.
-//   2. **The tremble is irregular.** One-pole-filtered white noise, not an LFO.
-//      A clean LFO is audible as a period and reads as a synthesiser; a
-//      listener should not be able to hear a rate. This is the property that
-//      carries "nerve".
-//   3. **The pitch rises.** A shiver of alarm falls; delight rises. The drift
-//      is +6% across the note (about one semitone), and a slightly inharmonic
-//      partial fades in on top of it, so it brightens as well as rises.
+//   1. **Struck, not driven.** Each voice is additive sine partials with a
+//      1.5 ms attack and no excitation stage at all. There is nothing to ring
+//      up, so the onset is the onset.
+//   2. **Plural and discrete.** Five voices across about 150 ms, spaced
+//      irregularly, so they read as separate arrivals rather than as a chord or
+//      a flam. The spacing is drawn per note; there is no rate to learn.
+//   3. **Inharmonic.** Partials at 1, 2.76, 5.40, 8.93 and 13.34 — the ideal
+//      free-bar series that gives tubular bells and glockenspiels their metal.
+//      A harmonic stack would read as a tone.
+//   4. **Bright.** Upper partials are kept loud and dominate the first tenth of
+//      a second, which is where a chime's brightness lives; they decay faster
+//      than the fundamental, so the note darkens as it falls rather than
+//      staying glassy.
+//   5. **It rises.** Each courier lands above the one before — a relay passing
+//      forward, and the same "delight rises rather than falls" decision the
+//      shiver was carrying.
 //
 // ─── Underrun accounting ────────────────────────────────────────────────────
 // A worklet runs in a hard-realtime thread: a slow `process()` produces a
-// dropout, not lag. This one reports two things back on its port — the worst
-// `process()` duration it has seen, and any discontinuity in `currentFrame`,
-// which advances by exactly one render quantum per call unless the thread
-// missed one. That is a real underrun detector rather than a promise that the
-// code is fast.
+// dropout, not lag. This one reports the worst `process()` duration it has seen
+// and any discontinuity in `currentFrame`, which advances by exactly one render
+// quantum per call unless the thread missed one. The gaps are classified —
+// device start, suspend, underrun — because only the third is a defect, and
+// counting them together reports an underrun nobody heard.
 
-const TAU = Math.PI * 2;
+// The ideal free bar. These ratios are what make a struck metal object sound
+// like metal rather than like a pitch, and they are measured constants rather
+// than a choice: 2.76, 5.40 and 8.93 are the classic transverse modes.
+const PARTIALS = [1, 2.76, 5.40, 8.93, 13.34];
+const PARTIAL_GAIN = [1.0, 0.78, 0.62, 0.46, 0.28];
+// Higher partials die faster, which is what makes a chime darken as it falls.
+const PARTIAL_T60 = [0.42, 0.30, 0.21, 0.15, 0.10];
 
-class Voice {
-  constructor(sr, hz, gain, seed) {
+const COURIERS = 5;
+const GAP = [0.022, 0.044];   // seconds between arrivals, drawn per note
+const STEP = 1.32;            // semitones each courier lands above the last
+const ATTACK = 0.0015;        // seconds — a strike, not a build
+
+class Chime {
+  constructor(sr, hz, gain, delay, seed) {
     this.sr = sr;
     this.hz = hz;
     this.gain = gain;
-    this.t = 0;
+    this.t = -delay;
     this.done = false;
-
-    // Excitation: a noise burst, shaped. Short, and NOT the note — it is what
-    // the body is hit with, and everything audible is the body's answer.
-    this.excAttack = 0.008;
-    this.excDecay = 0.075;
-
-    // The body. Two state-variable bandpasses: the fundamental, and a partial
-    // at 2.02× — deliberately not 2.0, because an exact octave fuses into the
-    // fundamental and stops reading as a second thing.
-    this.l1 = 0; this.b1 = 0;
-    this.l2 = 0; this.b2 = 0;
-
-    // Q rises across the note, so the body tightens as it responds: the ring-up
-    // is slower at the start (which is the build) and the tail is longer.
-    this.q0 = 34; this.q1 = 95;
-
-    // The tremble. One-pole lowpassed noise at about 7 Hz, twice, so the
-    // amplitude and the pitch wander independently — a body's two hands do not
-    // shake together.
-    this.n1 = 0; this.n2 = 0;
-    this.nCoef = Math.exp(-TAU * 7 / sr);
-    let s = seed >>> 0;
-    this.rand = () => {
-      s ^= s << 13; s >>>= 0; s ^= s >> 17; s ^= s << 5; s >>>= 0;
-      return s / 4294967296 * 2 - 1;
-    };
-
-    this.life = 1.5;
+    let s = (seed >>> 0) || 1;
+    const rnd = () => { s ^= s << 13; s >>>= 0; s ^= s >> 17; s ^= s << 5; s >>>= 0; return s / 4294967296; };
+    // Each courier is detuned by a hair, so five of them are five things rather
+    // than one thing five times.
+    this.detune = 1 + (rnd() - 0.5) * 0.012;
+    this.phase = new Float32Array(PARTIALS.length);
+    for (let i = 0; i < PARTIALS.length; i++) this.phase[i] = rnd() * Math.PI * 2;
+    this.life = PARTIAL_T60[0] * 1.7;
   }
 
   render(out, n) {
     const sr = this.sr;
+    const TAU = Math.PI * 2;
     for (let i = 0; i < n; i++) {
       const t = this.t;
-      if (t >= this.life) { this.done = true; return; }
-      const age = t / this.life;
-
-      // Excitation envelope: up in 8 ms, gone in about 80.
-      const exc = t < this.excAttack
-        ? t / this.excAttack
-        : Math.exp(-(t - this.excAttack) / this.excDecay);
-
-      // Two independent wanders, both irregular by construction.
-      this.n1 = this.n1 * this.nCoef + this.rand() * (1 - this.nCoef);
-      this.n2 = this.n2 * this.nCoef + this.rand() * (1 - this.nCoef);
-      const wobble = this.n1 * 6.2;   // amplitude, ±~18% after smoothing
-      const drift = this.n2 * 5.4;    // pitch, ±~1.5%
-
-      // Delight rises. The drift is against a fixed time rather than against
-      // `age`, and that is a correction rather than a preference: the note's
-      // audible part is the resonator's decay — about 0.6s — not the 1.5s the
-      // voice is allowed, so a rise spread over `age` had delivered a fifth of
-      // itself before the sound was gone. The coefficient is set from the
-      // MEASURED rise rather than from the number in it: a noise-excited
-      // resonator does not sit exactly on its tuning frequency, so 0.105 here
-      // comes out at about +6% of real, audible pitch across the note.
-      const f = this.hz * (1 + 0.105 * Math.min(1, t / 0.42)) * (1 + 0.015 * drift);
-      const q = this.q0 + (this.q1 - this.q0) * Math.min(1, age * 3);
-
-      const noise = this.rand() * exc;
-
-      const f1 = 2 * Math.sin(Math.PI * Math.min(0.45, f / sr));
-      const damp1 = 1 / q;
-      const h1 = noise - this.l1 - damp1 * this.b1;
-      this.b1 += f1 * h1;
-      this.l1 += f1 * this.b1;
-
-      const f2 = 2 * Math.sin(Math.PI * Math.min(0.45, f * 2.02 / sr));
-      const damp2 = 1 / (q * 0.7);
-      const h2 = noise - this.l2 - damp2 * this.b2;
-      this.b2 += f2 * h2;
-      this.l2 += f2 * this.b2;
-
-      // The partial fades IN, which is the brightening half of "delight".
-      // Later and stronger than the first version, for the same reason: it has
-      // to arrive while the note is still sounding to be heard arriving.
-      const partial = 0.8 * Math.max(0, Math.min(1, (t - 0.06) / 0.28));
-      const body = this.b1 + this.b2 * partial;
-
-      // The amplitude envelope has no attack of its own — the ring-up is the
-      // onset — and only a long fall, so nothing here can put a click back.
-      const fall = Math.pow(1 - age, 1.7);
-      // 1.1 rather than a round number: measured, so that a note at the
-      // scene's own gain peaks where the strike it replaces peaked (0.16) and
-      // the release is not suddenly louder than everything else on the site.
-      out[i] += body * fall * this.gain * (1 + 0.18 * wobble) * 1.1;
-
       this.t += 1 / sr;
+      if (t < 0) continue;
+      if (t >= this.life) { this.done = true; return; }
+      // One shared attack across the partials — a strike excites the whole bar
+      // at once — and a decay per partial.
+      const atk = 1 - Math.exp(-t / ATTACK);
+      let v = 0;
+      for (let k = 0; k < PARTIALS.length; k++) {
+        const f = this.hz * this.detune * PARTIALS[k];
+        if (f > sr * 0.45) continue;
+        this.phase[k] += TAU * f / sr;
+        v += Math.sin(this.phase[k]) * PARTIAL_GAIN[k] * Math.exp(-t * 6.9 / PARTIAL_T60[k]);
+      }
+      out[i] += v * atk * this.gain * 0.42;
     }
   }
 }
@@ -144,31 +104,49 @@ class ShiverProcessor extends AudioWorkletProcessor {
     super();
     this.voices = [];
     this.seed = 1;
+    this.lastFrame = -1;
+    this.worstMs = 0;
+    this.dropped = 0;
+    this.startupGaps = 0;
+    this.suspends = 0;
+    this.maxGap = 0;
+    this.maxGapAt = 0;
     // A note can also be given at construction. That exists for one reason and
     // it is worth stating: an OfflineAudioContext delivers port messages after
     // the render has finished, so a note posted to the port cannot be measured
     // offline at all. Every number in the release notes about this sound was
     // rendered through this path, which is the same processor the scene runs.
     const first = options?.processorOptions?.note;
-    if (first) this.voices.push(new Voice(sampleRate, first.hz, first.gain, 99991));
-    this.lastFrame = -1;
-    this.worstMs = 0;
-    this.dropped = 0;
-    this.suspends = 0;
-    this.startupGaps = 0;
-    this.maxGap = 0;
-    this.maxGapAt = 0;
+    if (first) this.burst(first.hz, first.gain);
     this.port.onmessage = e => {
       const d = e.data || {};
-      if (d.type === 'shiver') {
-        if (this.voices.length >= 8) this.voices.shift();
-        this.seed = (this.seed * 1664525 + 1013904223) >>> 0;
-        this.voices.push(new Voice(sampleRate, d.hz, d.gain, this.seed));
-      } else if (d.type === 'report') {
-        this.port.postMessage({ type: 'report', worstMs: this.worstMs, dropped: this.dropped, startupGaps: this.startupGaps, suspends: this.suspends,
-          maxGap: this.maxGap, maxGapAt: this.maxGapAt, frames: currentFrame });
+      if (d.type === 'shiver') this.burst(d.hz, d.gain);
+      else if (d.type === 'report') {
+        this.port.postMessage({
+          type: 'report', worstMs: this.worstMs, dropped: this.dropped,
+          startupGaps: this.startupGaps, suspends: this.suspends,
+          maxGap: this.maxGap, maxGapAt: this.maxGapAt, frames: currentFrame,
+        });
       }
     };
+  }
+
+  // One reading is one burst: five couriers, each landing above the one before,
+  // at irregular intervals. Voices are capped rather than queued — a visitor
+  // reading quickly should get a thickening, not a backlog.
+  burst(hz, gain) {
+    this.seed = (this.seed * 1664525 + 1013904223) >>> 0;
+    let s = this.seed || 1;
+    const rnd = () => { s ^= s << 13; s >>>= 0; s ^= s >> 17; s ^= s << 5; s >>>= 0; return s / 4294967296; };
+    let delay = 0;
+    for (let i = 0; i < COURIERS; i++) {
+      if (this.voices.length >= 40) this.voices.shift();
+      const f = hz * Math.pow(2, (i * STEP + (rnd() - 0.5) * 0.5) / 12);
+      // The later couriers are quieter: a relay fades as it goes past.
+      const g = gain * (1 - 0.11 * i);
+      this.voices.push(new Chime(sampleRate, f, g, delay, this.seed + i * 7919));
+      delay += GAP[0] + (GAP[1] - GAP[0]) * rnd();
+    }
   }
 
   process(_inputs, outputs) {
@@ -180,21 +158,11 @@ class ShiverProcessor extends AudioWorkletProcessor {
     const t0 = typeof performance !== 'undefined' && performance.now ? performance.now() : 0;
 
     // A render quantum is 128 frames, so `currentFrame` advances by exactly 128
-    // between calls unless the thread missed one. A LARGE jump is not a dropout
-    // though — it is the context having been suspended and resumed, which this
-    // scene does on every tab hide — so the two are counted separately. Without
-    // that split the first report after any suspend claims an underrun that
-    // nobody heard, which is the sort of number that gets quoted for a year.
+    // between calls unless the thread missed one.
     if (this.lastFrame >= 0) {
       const gap = currentFrame - this.lastFrame;
       if (gap > 128) {
         if (gap > this.maxGap) { this.maxGap = gap; this.maxGapAt = currentFrame; }
-        // Three kinds, kept apart because only one of them is a defect. A gap
-        // in the first second of a context's life is the audio device starting
-        // — measured at one per visit, about 67 ms, at roughly frame 6,800, and
-        // never again in eight seconds of rendering. A very large gap is a
-        // suspend, which this site does on every tab hide. What is left is an
-        // underrun: the thread missing a quantum while playing.
         if (currentFrame < sampleRate) this.startupGaps++;
         else if (gap < sampleRate * 0.25) this.dropped++;
         else this.suspends++;
@@ -209,7 +177,6 @@ class ShiverProcessor extends AudioWorkletProcessor {
       this.voices[v].render(out, out.length);
       if (this.voices[v].done) this.voices.splice(v, 1);
     }
-    // Copy to any further channels rather than rendering twice.
     for (let c = 1; c < outputs[0].length; c++) outputs[0][c].set(out);
 
     if (t0) {

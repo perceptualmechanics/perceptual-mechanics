@@ -587,6 +587,120 @@ described are unchanged.)
   worth trimming, orrery.js's texture generators and first-person rig are the
   two most self-contained chunks to split out first.
 
+## 4.8.2 (2026-09-04)
+
+**Rigour and tightening, not more ideas.** Four things, each one making a part
+of 4.8.1 do its job cleanly.
+
+### There is no room
+
+The bench is gone, and so is the floor and the lamp with it. **The lens is not
+sitting on a table** — it is in the deepest sanctum of the Surround, or in
+Untgract's workshop, and neither is a room with furniture in it.
+
+The bench came from wanting the object to read as held rather than displayed,
+which is the right thing to want and was the wrong way to get it: **what makes
+an object read as held is scale and framing, not furniture.** And a floor is
+opaque. In a release whose whole claim is that the field is everywhere, it cut
+the field off across the bottom of the frame — and once it wrote depth (which a
+surface must), its unlit corners were a black wedge occluding the web.
+
+The web is the ground now. Nothing else is.
+
+### One web, and it is checked
+
+4.8.1's field was faint and, more to the point, **separate**: knots started at a
+fixed inner radius with nothing between them and the object, so the lens sat in
+a hole in its own web and read as a lit thing in front of wallpaper. Three long
+bridge strands crossed the gap, and a jump across a void is not a connection.
+
+Two changes and a gate.
+
+**The approach.** Twenty-two filaments now run out from the object's own
+outermost nodes to the nearest knots — chains of nodes, spaced closely at the
+crystal and opening out with distance, so density falls off continuously instead
+of stepping. They are walks rather than lines: each step turns a little and then
+leans back toward where it is going, because the first version was a straight
+segment plus jitter and twenty-two of those read as a starburst.
+
+**One kd-tree over every node instead of two hash grids.** The grids were the
+seam's other half: a corpus node could not be joined to a field node however
+close it was, because they were in different indexes with different cell sizes.
+Density here spans three orders of magnitude, which is a kd-tree's problem and
+not a grid's.
+
+**And the gate, which is the part worth keeping.** A nearest-neighbour graph is
+*not connected* — over this point set it fell into **223 pieces, the largest
+holding 19.8% of the nodes**, and every render of it looked exactly as intended.
+The pieces are now joined Borůvka's way, each taking the shortest strand to any
+other, which adds 217 edges indistinguishable from the ones the neighbour pass
+found. `scripts/prerender.js` walks the finished graph from a filapixel inside
+the crystal and **fails the build if any node is unreachable**; the /text/ page
+prints what it found — every node reachable, the farthest 397 hops away, 34
+units out. The rule is now in STANDARDS: a structural claim gets measured, not
+described.
+
+Field brightness up from 0.22 to 0.34.
+
+### The white quadrilateral was the transmission
+
+Diagnosed rather than restyled, and the diagnosis is that it was not a missing
+material: **it was the base-e transmission**, correct in its timing and its
+digits, drawn as a flat ribbon of geometry built along the struck filament and
+painted `colour × level × 2.0` with no falloff across its width. A lit digit was
+therefore a flat untextured quad at full white — which is exactly what it looked
+like.
+
+The transmission is light moving inside the crystal, so that is what it is now,
+and it needs no geometry at all. The object already has two things that can be
+lit: the crystal's own segments (a per-instance `aLit` on the InstancedMesh) and
+the web's strands threading through them. A digit lights both where the front
+has reached. `buildPathGeometry`, the ribbon material and the five ribbon meshes
+are gone.
+
+Everything about the notation is untouched — same expansion, same durations,
+same τ = 0.055814 s, same eight boundaries for sentence 94.
+
+**One real bug found on the way:** the excitation and the transmission both
+write the same `levels` array, and whichever ran second wiped the first. The
+tick is now explicitly clear → excite → transmit → upload, and `advance()` no
+longer clears an array it does not own.
+
+### The sound is a chime, not a shiver
+
+4.8.1's shiver was a careful answer to the wrong question. The ask is **nerve
+couriers racing along the strands, like a bright chime** — fast, discrete,
+plural, with a bell's attack — and one resonator ringing up over 20 ms is the
+opposite gesture. A ring-up says something is responding; a chime says something
+arrived, and several say it was carried. What survives is the judgement that
+inharmonic partials were right; the envelope and the count are what change.
+
+One reading is now a burst of **five struck voices** across about 150 ms,
+irregularly spaced, each landing above the one before, and quieter as the relay
+passes. Measured through the shipped processor offline:
+
+- **Attack 4 ms** (10% to 90%), from a 1.5 ms exponential and no excitation
+  stage. There is nothing to ring up.
+- **Partials 1 : 2.76 : 5.40 : 8.93 : 13.34** — the ideal free bar, which is
+  what makes a struck metal object sound like metal rather than like a pitch.
+- **Bright, and darkening.** Upper partials are loud and die first: spectral
+  centroid **2,055 Hz at 10 ms, 929 Hz at 300 ms**.
+- **Rising**: first courier 454 Hz, last 574 Hz, +4.1 semitones across the burst.
+- Peak 0.167; audible length 0.46 s.
+
+**Not verified: I did not hear it.** A WAV of five readings rendered through the
+shipped processor went to Scott, as with the shiver.
+
+### Verified
+
+- No bench, no floor, no lamp; nothing in the scene reads as a surface.
+- The web is one connected graph, and the build fails if it is not.
+- The transmission draws no geometry of its own: `THREE.Points` went in 4.8.1,
+  the ribbon meshes go here, and nothing flat is left in the scene.
+- One AudioContext per visit, first closed, second running; one worklet node per
+  visit; zero underruns after the first second, one device-start gap per visit.
+- Digit boundaries recomputed from the shipped constants and unchanged.
+
 ## 4.8.1 (2026-09-04)
 
 **The background is the web, and the sound is a shiver.** Two changes to

@@ -231,6 +231,24 @@ someone reliably knows.
 
 ## CSS
 
+### A structural claim gets measured, not described
+
+If a scene's premise is a property of its data — connected, ordered, evenly
+covered, one component — then measure the property and fail the build when it is
+false. A sentence in a comment saying the thing is connected is not a check, and
+the reader of the /text/ page cannot tell the difference.
+
+**What it cost.** Psyshell's field and its object are meant to be one web that
+can be traced from inside the crystal to a far knot. A nearest-neighbour graph
+looks connected and is not: over this point set it fell into **223 pieces**, the
+largest holding a fifth of the nodes, while every render of it looked exactly as
+intended. Nothing on screen would ever have said otherwise. The build now walks
+the graph from a node inside the object and throws if any node is unreachable,
+and the /text/ page prints the hop count it found.
+
+The general form: **a claim about structure is cheap to check and invisible to
+looking.** Visual claims go to a screenshot; structural ones go to a gate.
+
 ### One block per selector in a stylesheet — a second block is not an edit
 
 If a rule needs changing, change it where it is. Do not add a second block for

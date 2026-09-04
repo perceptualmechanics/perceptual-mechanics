@@ -605,7 +605,32 @@ function buildPsyshell() {
     const w = buildWeb(placed.pos, FILAPIXEL_COUNT, { center: PSY_BOUNDS.center, radius: PSY_BOUNDS.radius });
     let minDeg = Infinity;
     for (const d of w.degree) if (d < minDeg) minDeg = d;
-    return { ...w, minDegree: minDeg };
+    // Breadth-first from a node inside the crystal, so the page's claim about
+    // being able to trace a strand out to the field is the measurement rather
+    // than a description of one.
+    const adj = new Map();
+    for (let e = 0; e < w.edges.length; e += 2) {
+      const a = w.edges[e], b = w.edges[e + 1];
+      if (!adj.has(a)) adj.set(a, []);
+      if (!adj.has(b)) adj.set(b, []);
+      adj.get(a).push(b); adj.get(b).push(a);
+    }
+    const dist = new Int32Array(w.total).fill(-1);
+    dist[0] = 0;
+    const queue = [0];
+    for (let h = 0; h < queue.length; h++) {
+      for (const v of adj.get(queue[h]) || []) if (dist[v] < 0) { dist[v] = dist[queue[h]] + 1; queue.push(v); }
+    }
+    let hops = 0, far = 0, unreachable = 0;
+    for (let i = 0; i < w.total; i++) {
+      if (dist[i] < 0) { unreachable++; continue; }
+      if (dist[i] > hops) {
+        hops = dist[i];
+        far = Math.hypot(w.pos[i * 3] - PSY_BOUNDS.center[0], w.pos[i * 3 + 1] - PSY_BOUNDS.center[1], w.pos[i * 3 + 2] - PSY_BOUNDS.center[2]);
+      }
+    }
+    if (unreachable) throw new Error(`psyshell: the web is not one web — ${unreachable} nodes cannot be reached from the crystal`);
+    return { ...w, minDegree: minDeg, hops, hopRadius: far.toFixed(0) };
   })();
 
   const byDepth = PSY_SEGMENTS.reduce((a, s) => { a[s.depth] = (a[s.depth] || 0) + 1; return a; }, []);
@@ -619,8 +644,8 @@ ${PSY_SOURCES.map(s => `<li><span class="t">${esc(s.label)}</span>
 
   const body = `<article class="piece">
 <h2 id="what-it-is">What it is</h2>
-<p>Lens <strong>${LENS_ID}</strong>, on a bench, under a lamp. It holds ${FILAPIXEL_COUNT.toLocaleString('en-US')} filapixels &mdash; one for every sentence of this site's writing, ${CORPUS_WORDS.toLocaleString('en-US')} words across ${PSY_SOURCES.length} scenes and ${PIECE_COUNT} pieces. A lightpen excites the material where you point it, and the object gives up what it holds in a notation that was not written for you.</p>
-<p class="note">It should not have survived screening. Residue of taint let it through, which is the green in the crystal's interior and the reason it is on the bench at all.</p>
+<p>Lens <strong>${LENS_ID}</strong>, held in a web. It holds ${FILAPIXEL_COUNT.toLocaleString('en-US')} filapixels &mdash; one for every sentence of this site's writing, ${CORPUS_WORDS.toLocaleString('en-US')} words across ${PSY_SOURCES.length} scenes and ${PIECE_COUNT} pieces. A lightpen excites the material where you point it, and the object gives up what it holds in a notation that was not written for you.</p>
+<p class="note">It should not have survived screening. Residue of taint let it through, which is the green in the crystal's interior and the reason it was pulled out and read at all.</p>
 
 <h2 id="object">The object, and what it does not encode</h2>
 <p class="note">&hellip;opens it to reveal a crystalline fractalanch, two inches long, shaped like the antler of an imaginary animal, all branches and nubs.</p>
@@ -632,6 +657,7 @@ ${PSY_SOURCES.map(s => `<li><span class="t">${esc(s.label)}</span>
 <h2 id="field">The field, and why it is not a sky</h2>
 <p>The lens is not in front of a backdrop. It is in a <strong>web</strong> &mdash; filaments across the whole frame, brighter where they cross &mdash; and the web is the same kind of object as the lens at a different magnification. The fractalanch is a fragment of the thing the field is.</p>
 <p>The form is one structure standing for two, and they are alike for a reason rather than by resemblance. <strong>The cosmic web and neural tissue converge</strong> because both are networks built by matter falling along gradients toward nodes, and the similarity has been measured and published rather than merely noticed. In neither is a node a point on black: a cluster sits where filaments meet, and the strands are as visible as the knot.</p>
+<p><strong>It is one web, and that is checked rather than asserted.</strong> A nearest-neighbour graph is not connected on its own &mdash; over this point set it falls into 223 pieces, the largest holding a fifth of the nodes &mdash; so the pieces are joined by taking, repeatedly, the shortest strand from each piece to any other. From a filapixel inside the crystal every node in the field is reachable along strands; the farthest is ${WEB.hops} hops away, ${WEB.hopRadius} units out. There is no seam between the object and the field because there is nowhere for one to be.</p>
 <p class="note">${WEB.nearCount.toLocaleString('en-US')} near nodes &mdash; the sentences &mdash; and ${WEB.farCount.toLocaleString('en-US')} in the field, in ${WEB.clusters} knots strung along filaments. ${WEB.edgeCount.toLocaleString('en-US')} strands. Node degree runs ${WEB.minDegree} to ${WEB.maxDegree}, mean ${WEB.meanDegree.toFixed(2)}; nothing is isolated.</p>
 <p><strong>A junction is bright because strands meet there, and that is arithmetic rather than styling.</strong> Every strand is drawn as two segments meeting at a dark midpoint, bright at each end, and the drawing is additive &mdash; so a node where <em>k</em> strands meet is <em>k</em> bright ends summing on the same pixels. Nothing chooses the brightness of a junction. It is what <em>k</em> ends come to.</p>
 <p>Nothing in the field is a disc, a sprite or a marker, and nothing in it reacts &mdash; not to the camera, not to being pointed at, not to the lens transmitting. The indifference is the point: it is what makes the lens's one response mean something.</p>
@@ -666,7 +692,7 @@ ${sourceList}
 <h2 id="reading">Reading it</h2>
 <p>Point the lightpen at the crystal and the excitation spreads outward from where it lands, falling off with distance and dying after a few seconds. <strong>Straight-line distance, and symmetric in every direction</strong> &mdash; a change from both earlier versions, and the honest one. Those propagated along the structure and ran further toward later sentences than earlier ones, because reading order was in the geometry. It is not any more, and a disturbance in a solid does not know about reading order.</p>
 
-<p>It also makes a sound, and the sound is a <strong>shiver</strong> rather than a strike. A strike is an impact; a shiver is a body responding, and the difference lives in the first forty milliseconds. What sounds is a resonant body excited by a short shaped burst &mdash; the onset is the body's own ring-up rather than an attack curve, measured at 20&nbsp;ms from a tenth to nine tenths of peak. There is a tremble in it, made of filtered noise rather than an oscillator, so it has no rate a listener could pick out. And it rises: about +7% across the note, a little over a semitone, with a second inharmonic partial fading in behind it. A shiver of alarm falls; this one is delight.</p>
+<p>It also makes a sound: a <strong>burst of chimes</strong>, five of them across about a sixth of a second, each landing a little above the one before. Nerve couriers racing along the strands. They are struck rather than driven &mdash; a 4&nbsp;ms attack, no build &mdash; and their partials are the ideal free bar's, 1 : 2.76 : 5.40 : 8.93 : 13.34, which is what makes a struck metal object sound like metal rather than like a pitch. The upper partials are loud and die first, so the burst is bright at its front and darkens as it falls: the spectral centroid runs 2,055&nbsp;Hz at ten milliseconds down to 929&nbsp;Hz at three hundred.</p>
 <p class="note">The lens is a neuron, and a neuron does not ring, it fires. The sound is conduction rather than percussion, which is why it is real-time DSP on the audio thread rather than a tone with a curve on its gain.</p>
 
 <h2 id="source">The source passage</h2>
@@ -679,7 +705,7 @@ ${sourceList}
     title: 'Psyshell',
     description: `Lens ${LENS_ID} — a crystal antler holding ${FILAPIXEL_COUNT.toLocaleString('en-US')} filapixels, one for every sentence on this site, and the base-e notation it gives them up in.`,
     sceneKey: 'psyshell', sceneName: 'Psyshell',
-    lede: `<p><strong>Psyshell</strong> is a lens on a workshop bench, in a web: a crystalline fractalanch, two inches long, holding ${FILAPIXEL_COUNT.toLocaleString('en-US')} filapixels &mdash; one for every sentence of this site's writing. A lightpen reads it, and it transmits in base e. The field around it is the same structure at a larger scale, and every point in it is arriving from outside time.</p>
+    lede: `<p><strong>Psyshell</strong> is a lens held in a web: a crystalline fractalanch, two inches long, holding ${FILAPIXEL_COUNT.toLocaleString('en-US')} filapixels &mdash; one for every sentence of this site's writing. A lightpen reads it, and it transmits in base e. The field around it is the same structure at a larger scale, and every point in it is arriving from outside time.</p>
 <p>This page is the measurement underneath it &mdash; where the sentences come from, how the object was built, and what its shape deliberately does not encode.</p>`,
     bodyHtml: body,
     jsonLd: creativeWork('Psyshell', `A crystal lens holding the ${FILAPIXEL_COUNT} sentences of this site as filapixels, read with a lightpen and transmitted in base e.`, 'psyshell'),

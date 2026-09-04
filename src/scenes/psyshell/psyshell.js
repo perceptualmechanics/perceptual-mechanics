@@ -50,18 +50,21 @@ const shiverWorkletUrl = new URL('./psyshell.shiver.worklet.js', import.meta.url
 // them.
 
 // ─── Palette ────────────────────────────────────────────────────────────────
-// The green field is gone with the flower it belonged to. This is a workshop
-// bench under a lamp: a near-black warm room, a small pool of light, and a
-// crystal that is cool where it catches the light and green where it does not.
+// The green field is gone with the flower it belonged to, and as of 4.8.2 so is
+// the warm room: there is no bench, no floor and no lamp, because the lens is
+// not on a table. What is left is the web, and a crystal that is cool where it
+// catches light and green where it does not.
 //
 // The green survives in exactly one place and means something there — in the
 // object's interior, which is the residue of taint that let it through
-// screening. It is the reason the lens is on the bench at all.
-const ROOM_COLOR = 0x0a0806;
+// screening. It is the reason the lens was pulled out and read at all.
+//
+// ROOM_COLOR is now just the ground the web is drawn on: near-black, very
+// slightly warm, so the field's cool strands have something to be cool against.
+const ROOM_COLOR = 0x07070a;
 const CRYSTAL_DEEP = 0x123a2c;   // the interior: taint, seen through the body
-const CRYSTAL_RIM = 0xbfe6ff;    // where an edge catches the lamp
+const CRYSTAL_RIM = 0xbfe6ff;    // where an edge catches the light
 const NUB_RIM = 0xe8f4ff;
-const BENCH_WARM = 0x3a2718;
 const FILAPIXEL_COLOR = 0xd8fff0;   // a strand inside the lens, and its junctions
 const WEB_FAR_COLOR = 0x8fb6d8;     // a strand out in the field
 
@@ -83,7 +86,7 @@ const FILAPIXEL_PEAK = 3.2;
 const STRAND_END = 1.0;    // brightness at a node end of a strand
 const STRAND_MID = 0.12;   // and at its dark midpoint
 const NEAR_GAIN = 0.42;    // the lens's own strands
-const FAR_GAIN = 0.22;     // the field's, which is far away and faint
+const FAR_GAIN = 0.34;     // the field's — raised in 4.8.2; it was wallpaper
 
 // ─── Reading ────────────────────────────────────────────────────────────────
 // Pointing the lightpen at the object excites the material locally, and the
@@ -150,11 +153,12 @@ const DIGIT_TIME = PROP_SHELL / PROP_SPEED;
 const digitDuration = d => DIGIT_TIME * Math.exp(d - 1);
 const WAVE_SPEED = 0.20 / DIGIT_TIME;  // path-lengths per second
 const MAX_DIGITS = 16;
-// Measured, not guessed: at 3.0 with a ribbon nine tenths of the segment's own
-// radius, the train rendered as a blown white bar across the tine — the digits
-// were there and the light was not light. Narrower and dimmer reads as a flash
-// travelling inside the crystal, which is what it is.
-const TRANSMIT_GAIN = 2.0;
+// How hard a lit digit drives the crystal's own body. The ribbon this replaced
+// needed 2.0 to read at all through its own flat shading; light in the body
+// needs far less, because it is added to a material that is already responding
+// to the eye — at 2.0 the struck tine went white-hot and read as a rod rather
+// than as light inside glass.
+const TRANSMIT_GAIN = 0.85;
 
 // The shiver's own length lives in the worklet, where the body's decay is; this
 // is only how loud a reading is on the bus. STRIKE_LIFE went with the envelope
@@ -276,50 +280,21 @@ export function createPsyshell(container, { preview = false } = {}) {
   let reduced = prefersReducedMotion();
   let disposed = false;
 
-  // ─── The bench ────────────────────────────────────────────────────────────
-  // The minimum that makes the object read as held and examined rather than
-  // displayed: a surface under it, and a pool of lamplight on that surface
-  // falling off into the dark. Not a diorama — one plane and one gradient.
-  // Without it the lens floated in nothing, which is what made both previous
-  // versions read as specimens.
+  // ─── No bench, and no room ────────────────────────────────────────────────
+  // There was a lit plate under the object and, before that, a plane fourteen
+  // units across. Both are gone. **The lens is not on a table**: it is in the
+  // deepest sanctum of the Surround, or in Untgract's workshop, and neither is
+  // a room with furniture in it.
   //
-  // Cut from 14 units square to 2.6 in 4.8.1. At 14 it was a wall across the
-  // bottom half of the frame and the field behind it could not be seen past its
-  // own horizon — which made "filaments across the whole frame" false in the
-  // half of the frame nearest the visitor. A bench with a visible far edge is
-  // also more a bench than an infinite plane is.
-  const benchGeo = new THREE.PlaneGeometry(2.6, 2.6);
-  const benchMat = new THREE.ShaderMaterial({
-    uniforms: { uWarm: { value: new THREE.Color(BENCH_WARM) }, uCentre: { value: new THREE.Vector2(0, 0) } },
-    vertexShader: `
-      varying vec2 vP;
-      void main() { vP = position.xy; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
-    fragmentShader: `
-      uniform vec3 uWarm; varying vec2 vP;
-      void main() {
-        float d = length(vP - vec2(0.15, -0.2));
-        // Two falloffs: a tight pool where the lamp actually lands, and a much
-        // wider one so the surface does not end in a visible circle.
-        // One pool and a floor, not a pool and a wide wash. The wash existed
-        // so the surface would not end in a visible circle when the plane was
-        // 14 units across; at 2.6 the plane IS the pool, and the wash only made
-        // the far corners a dark shape occluding the field behind them — a
-        // black wedge across the bottom of the frame, which is what a lit
-        // surface must not be.
-        float pool = exp(-d * d / 1.5) * 0.95 + 0.16;
-        gl_FragColor = vec4(uWarm * pool, 1.0);
-      }`,
-    // Writes depth, unlike every other material in this scene. It has to: the
-    // field is behind it now, and a bench you can see the sky through is not a
-    // surface. Rendered first (renderOrder −1) so it is in the depth buffer
-    // before a strand is tested against it.
-    depthWrite: true,
-  });
-  const bench = new THREE.Mesh(benchGeo, benchMat);
-  bench.rotation.x = -Math.PI / 2;
-  bench.position.y = BOUNDS.min[1] - 0.005;
-  bench.renderOrder = -1;
-  scene.add(bench);
+  // The bench came from wanting the object to read as held and examined rather
+  // than displayed, which is a real thing to want and was the wrong way to get
+  // it. **What makes an object read as held is scale and framing** — a wide
+  // lens close in, the object filling the frame, no horizon to measure it
+  // against — not a surface underneath it. And a floor is opaque: it cut the
+  // field off across the bottom of the frame, in a release whose whole claim is
+  // that the field is everywhere.
+  //
+  // The web is the ground now. Nothing else is.
 
   // ─── The crystal ──────────────────────────────────────────────────────────
   // Fresnel rather than refraction. A real transmissive material would be the
@@ -328,17 +303,20 @@ export function createPsyshell(container, { preview = false } = {}) {
   // fresnel over a dark interior reads as glass at this scale, and the interior
   // is where the green lives.
   const CRYSTAL_VERT = `
+    attribute float aLit;
     varying vec3 vNormalV;
     varying vec3 vViewV;
+    varying float vLit;
     void main() {
+      vLit = aLit;
       vec4 mv = modelViewMatrix * instanceMatrix * vec4(position, 1.0);
       vNormalV = normalize(normalMatrix * (mat3(instanceMatrix) * normal));
       vViewV = -mv.xyz;
       gl_Position = projectionMatrix * mv;
     }`;
   const CRYSTAL_FRAG = `
-    uniform vec3 uDeep; uniform vec3 uRim; uniform float uGain;
-    varying vec3 vNormalV; varying vec3 vViewV;
+    uniform vec3 uDeep; uniform vec3 uRim; uniform float uGain; uniform float uLitGain;
+    varying vec3 vNormalV; varying vec3 vViewV; varying float vLit;
     void main() {
       float f = 1.0 - clamp(dot(normalize(vNormalV), normalize(vViewV)), 0.0, 1.0);
       f = pow(f, 2.4);
@@ -346,13 +324,19 @@ export function createPsyshell(container, { preview = false } = {}) {
       // The constant term is the interior. It is not 0.0 and should not be:
       // the green under the surface is the residue of taint, and a body that
       // only exists at its edges is a wireframe.
-      gl_FragColor = vec4(col * (0.30 + 0.70 * f) * uGain, 1.0);
+      vec3 lit = col * (0.30 + 0.70 * f) * uGain;
+      // The transmission: the segment's own body carrying light, brightest
+      // where it is edge-on to the eye the way the rest of the crystal is, so
+      // it reads as the material glowing rather than as a surface laid over it.
+      lit += uRim * vLit * uLitGain * (0.35 + 0.65 * f);
+      gl_FragColor = vec4(lit, 1.0);
     }`;
   const makeCrystalMat = rim => new THREE.ShaderMaterial({
     uniforms: {
       uDeep: { value: new THREE.Color(CRYSTAL_DEEP) },
       uRim: { value: new THREE.Color(rim) },
       uGain: { value: CRYSTAL_GAIN },
+      uLitGain: { value: TRANSMIT_GAIN },
     },
     vertexShader: CRYSTAL_VERT,
     fragmentShader: CRYSTAL_FRAG,
@@ -363,6 +347,11 @@ export function createPsyshell(container, { preview = false } = {}) {
 
   const stemGeo = new THREE.CylinderGeometry(1, 1, 1, 6, 1, true);
   const nubGeo = new THREE.IcosahedronGeometry(1, 0);
+  // The nubs never transmit, but they share the crystal shader, and a shader
+  // that reads an attribute the geometry does not have gets zero on some
+  // drivers and garbage on others. One constant instanced attribute is cheaper
+  // than a second shader.
+  nubGeo.setAttribute('aLit', new THREE.InstancedBufferAttribute(new Float32Array(NUBS.length), 1));
   const stemMat = makeCrystalMat(CRYSTAL_RIM);
   const nubMat = makeCrystalMat(NUB_RIM);
   const stems = new THREE.InstancedMesh(stemGeo, stemMat, SEGMENTS.length);
@@ -483,7 +472,11 @@ export function createPsyshell(container, { preview = false } = {}) {
   const nearWeb = strandGeometry((a, b) => a < FILAPIXEL_COUNT || b < FILAPIXEL_COUNT);
   const farWeb = strandGeometry((a, b) => a >= FILAPIXEL_COUNT && b >= FILAPIXEL_COUNT);
   const nearMat = strandMat(FILAPIXEL_COLOR, NEAR_GAIN, FILAPIXEL_PEAK * 0.35);
-  const farMat = strandMat(WEB_FAR_COLOR, FAR_GAIN, 0);
+  // Fainter in the 200px tile, and that is a scale decision rather than a
+  // second opinion about the field: at tile size a far strand is thinner than a
+  // pixel, so the whole field aliases into a haze that competes with the object
+  // it is meant to be the background half of. The full scene keeps FAR_GAIN.
+  const farMat = strandMat(WEB_FAR_COLOR, preview ? FAR_GAIN * 0.45 : FAR_GAIN, 0);
   const nearLines = new THREE.LineSegments(nearWeb.geo, nearMat);
   const farLines = new THREE.LineSegments(farWeb.geo, farMat);
   nearLines.frustumCulled = false;
@@ -585,139 +578,121 @@ export function createPsyshell(container, { preview = false } = {}) {
     else loadShiver()?.then(send);
   }
 
-  // ─── Transmitters ─────────────────────────────────────────────────────────
-  // A reading runs outward from where the lightpen touched, along the branch it
-  // touched, to a tip. The geometry is built per reading because the path is —
-  // there are at most five of them and each is a ribbon of a few segments.
-  const TRANSMIT_VERT = `
-    attribute float aX;
-    varying float vX;
-    void main() { vX = aX; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`;
-  const TRANSMIT_FRAG = `
-    uniform float uBounds[${MAX_DIGITS}];
-    uniform int uCount; uniform float uTime; uniform float uSpeed;
-    uniform vec3 uColor; uniform float uGain;
-    varying float vX;
-    void main() {
-      // Emitted where the pen touched, arriving further along later.
-      float tp = uTime - vX / uSpeed;
-      float level = 0.0;
-      if (tp >= 0.0) {
-        for (int i = 0; i < ${MAX_DIGITS}; i++) {
-          if (i >= uCount) break;
-          if (tp < uBounds[i]) { level = mod(float(i), 2.0) < 0.5 ? 1.0 : 0.0; break; }
-        }
-      }
-      gl_FragColor = vec4(uColor * level * uGain * ${TRANSMIT_GAIN.toFixed(2)}, 1.0);
-    }`;
+  // ─── The transmission, as light in the body ───────────────────────────────
+  // Until 4.8.2 this was a RIBBON: a flat strip of geometry built along the
+  // struck filament, painted `colour × level × 2.0` with no falloff across its
+  // width. Scott's description of what that looked like on screen — "a flat
+  // untextured polygon flashing, reads like a missing material" — is exactly
+  // right, and the diagnosis is that it was not a missing material at all. It
+  // was the transmission, correct in its timing and its digits, drawn as a
+  // painted card standing in the object.
+  //
+  // The transmission is light moving INSIDE the crystal, so that is what it is
+  // now, and it needs no geometry of its own: the object already has two things
+  // that can be lit — the crystal's own segments, and the web's strands
+  // threading through them. A digit lights both, at the place the front has
+  // reached, and nothing flat is ever drawn.
+  //
+  // Everything about the notation is unchanged: same base-e expansion, same
+  // digit durations, same τ, same worked example on /text/.
 
-  const transmitters = [];
-  for (let i = 0; i < MAX_READS; i++) {
-    const mat = new THREE.ShaderMaterial({
-      uniforms: {
-        uBounds: { value: new Float32Array(MAX_DIGITS) },
-        uCount: { value: 0 },
-        uTime: { value: 0 },
-        uSpeed: { value: WAVE_SPEED },
-        uColor: { value: new THREE.Color(FILAPIXEL_COLOR) },
-        uGain: { value: 1 },
-      },
-      vertexShader: TRANSMIT_VERT,
-      fragmentShader: TRANSMIT_FRAG,
-      blending: THREE.AdditiveBlending,
-      depthWrite: false,
-      // Coplanar with the crystal it overlays, so a LESS depth test would
-      // reject it. Not the cause of any bug — said because 4.6.1's comment
-      // originally claimed it was.
-      depthTest: false,
-      transparent: true,
-    });
-    const mesh = new THREE.Mesh(new THREE.BufferGeometry(), mat);
-    mesh.renderOrder = 10;
-    mesh.frustumCulled = false;
-    mesh.visible = false;
-    lens.add(mesh);
-    transmitters.push({ mesh, mat, active: false, t: 0, total: 0 });
+  // Which filapixels sit on which segment of the object, so a transmission only
+  // touches the nodes on the path it runs along.
+  const nodesOfSegment = new Map();
+  for (let i = 0; i < FILAPIXEL_COUNT; i++) {
+    const seg = placed.seg[i];
+    if (!nodesOfSegment.has(seg)) nodesOfSegment.set(seg, []);
+    nodesOfSegment.get(seg).push(i);
   }
 
-  // A ribbon along the path, as two perpendicular strips so it reads from any
-  // angle, carrying normalised arc length in `aX`.
-  function buildPathGeometry(start, segIndices, width) {
-    const pts = [new THREE.Vector3(...start)];
-    for (const si of segIndices) pts.push(new THREE.Vector3(...SEGMENTS[si].to));
-    let total = 0;
-    const arc = [0];
-    for (let i = 1; i < pts.length; i++) { total += pts[i].distanceTo(pts[i - 1]); arc.push(total); }
-    if (total < 1e-5) return null;
+  // The crystal's segments carry their own lit level, one float per instance,
+  // so the body glows where the light is rather than a surface being added over
+  // it. Only the handful of instances on an active path are ever written.
+  const stemLit = new Float32Array(SEGMENTS.length);
+  stemGeo.setAttribute('aLit', new THREE.InstancedBufferAttribute(stemLit, 1));
 
-    const pos = [], ax = [], idx = [];
-    const dir = new THREE.Vector3(), u = new THREE.Vector3(), v = new THREE.Vector3();
-    const ref = new THREE.Vector3(0, 1, 0), ref2 = new THREE.Vector3(1, 0, 0);
-    const push = axis => {
-      const base = pos.length / 3;
-      for (let i = 0; i < pts.length; i++) {
-        const a = pts[Math.max(0, i - 1)], b = pts[Math.min(pts.length - 1, i + 1)];
-        dir.subVectors(b, a).normalize();
-        u.crossVectors(dir, Math.abs(dir.y) > 0.9 ? ref2 : ref).normalize();
-        v.crossVectors(dir, u).normalize();
-        const off = axis === 0 ? u : v;
-        pos.push(pts[i].x - off.x * width, pts[i].y - off.y * width, pts[i].z - off.z * width);
-        pos.push(pts[i].x + off.x * width, pts[i].y + off.y * width, pts[i].z + off.z * width);
-        ax.push(arc[i] / total, arc[i] / total);
-        if (i > 0) {
-          const o = base + (i - 1) * 2;
-          idx.push(o, o + 1, o + 2, o + 1, o + 3, o + 2);
-        }
-      }
-    };
-    push(0); push(1);
-    const g = new THREE.BufferGeometry();
-    g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
-    g.setAttribute('aX', new THREE.Float32BufferAttribute(ax, 1));
-    g.setIndex(idx);
-    return g;
-  }
-
+  const transmits = [];
   function armTransmitter(index) {
-    const slot = transmitters.find(t => !t.active) || transmitters[0];
-    // The ordinal is now the filapixel's place in the WHOLE corpus, not within
-    // its scene. That is what tells you the object holds all of it — n of 3,221
-    // rather than n of 1,350 — and it is the change the lens asks for.
-    const ordinal = index + 1;
-    const { digits } = baseEDigits(ordinal);
-    const bounds = slot.mat.uniforms.uBounds.value;
-    let acc = 0;
+    // The ordinal is the filapixel's place in the WHOLE corpus — n of 3,221 —
+    // which is what says how much the lens is holding.
+    const { digits } = baseEDigits(index + 1);
     const n = Math.min(digits.length, MAX_DIGITS);
+    const bounds = new Float32Array(n);
+    let acc = 0;
     for (let i = 0; i < n; i++) { acc += digitDuration(digits[i]); bounds[i] = acc; }
-    for (let i = n; i < MAX_DIGITS; i++) bounds[i] = acc;
-    slot.mat.uniforms.uCount.value = reduced ? 1 : n;
-    if (reduced) bounds[0] = acc;
-    slot.mat.uniforms.uSpeed.value = reduced ? 1e6 : WAVE_SPEED;
-    slot.mat.uniforms.uTime.value = 0;
-    slot.mat.uniforms.uGain.value = 1;
 
-    const seg = placed.seg[index];
-    const geo = buildPathGeometry(
-      [placed.pos[index * 3], placed.pos[index * 3 + 1], placed.pos[index * 3 + 2]],
-      pathToTip(seg), Math.max(0.004, SEGMENTS[seg].radius * 0.55));
-    if (!geo) return;
-    slot.mesh.geometry.dispose();
-    slot.mesh.geometry = geo;
-    slot.total = acc + (reduced ? 0 : 1 / WAVE_SPEED);
-    slot.t = 0;
-    slot.active = true;
-    slot.mesh.visible = true;
+    // The path, and where every node on it sits along that path. Arc length in
+    // the object's own units, then normalised, so the front's speed is in
+    // path-lengths per second exactly as the ribbon's was.
+    const path = pathToTip(placed.seg[index]);
+    const lengths = path.map(si => {
+      const sg = SEGMENTS[si];
+      return Math.hypot(sg.to[0] - sg.from[0], sg.to[1] - sg.from[1], sg.to[2] - sg.from[2]);
+    });
+    let totalLen = 0;
+    const startAt = [];
+    for (let i = 0; i < path.length; i++) { startAt.push(totalLen); totalLen += lengths[i]; }
+    if (totalLen <= 0) return;
+
+    const nodes = [];
+    const nodeX = [];
+    for (let i = 0; i < path.length; i++) {
+      for (const nd of nodesOfSegment.get(path[i]) || []) {
+        nodes.push(nd);
+        nodeX.push((startAt[i] + placed.at[nd] * lengths[i]) / totalLen);
+      }
+    }
+    const segX = path.map((_, i) => (startAt[i] + lengths[i] * 0.5) / totalLen);
+
+    if (transmits.length >= MAX_READS) transmits.shift();
+    transmits.push({
+      bounds, count: n, span: acc, path, segX,
+      nodes: Uint16Array.from(nodes), nodeX: Float32Array.from(nodeX),
+      t: 0, life: acc + (reduced ? 0 : 1 / WAVE_SPEED),
+    });
+  }
+
+  // Which digit is sounding at time `tp`, and whether that digit is a lit one.
+  // Segments alternate lit and dark by place, most significant first, so the
+  // boundaries are the digit boundaries and nothing in the train is filler.
+  function digitLevel(tr, tp) {
+    if (tp < 0) return 0;
+    for (let i = 0; i < tr.count; i++) {
+      if (tp < tr.bounds[i]) return (i % 2 === 0) ? 1 : 0;
+    }
+    return 0;
   }
 
   function advanceTransmitters(dt) {
-    for (const s of transmitters) {
-      if (!s.active) continue;
-      s.t += dt;
-      if (s.t >= s.total) { s.active = false; s.mesh.visible = false; continue; }
-      s.mat.uniforms.uTime.value = s.t;
-      const left = 1 - s.t / s.total;
-      s.mat.uniforms.uGain.value = left > 0.25 ? 1 : left / 0.25;
+    let touched = false;
+    for (let i = transmits.length - 1; i >= 0; i--) {
+      const tr = transmits[i];
+      // Clear what this transmission lit last frame before it moves, so a
+      // finished one leaves nothing behind.
+      for (const si of tr.path) stemLit[si] = 0;
+      tr.t += dt;
+      if (tr.t >= tr.life) { transmits.splice(i, 1); touched = true; continue; }
     }
+    for (const tr of transmits) {
+      const left = 1 - tr.t / tr.life;
+      const fade = left > 0.25 ? 1 : Math.max(0, left / 0.25);
+      const speed = reduced ? 1e6 : WAVE_SPEED;
+      for (let k = 0; k < tr.path.length; k++) {
+        const lvl = digitLevel(tr, tr.t - tr.segX[k] / speed) * fade;
+        if (lvl > stemLit[tr.path[k]]) stemLit[tr.path[k]] = lvl;
+      }
+      for (let k = 0; k < tr.nodes.length; k++) {
+        const lvl = digitLevel(tr, tr.t - tr.nodeX[k] / speed) * fade;
+        const nd = tr.nodes[k];
+        if (lvl > levels[nd]) levels[nd] = lvl;
+      }
+      touched = true;
+    }
+    if (touched) {
+      stemGeo.getAttribute('aLit').needsUpdate = true;
+      levelsDirty = true;
+    }
+    return touched;
   }
 
   // ─── The excitation ───────────────────────────────────────────────────────
@@ -734,7 +709,9 @@ export function createPsyshell(container, { preview = false } = {}) {
       reads[i].t += dt;
       if (reads[i].t >= PROP_LIFE) reads.splice(i, 1);
     }
-    for (let i = 0; i < FILAPIXEL_COUNT; i++) levels[i] = 0;
+    // The clearing is the caller's now, not this function's: the excitation and
+    // the transmission both write into `levels`, and whichever ran second used
+    // to wipe the other. Order in the tick: clear, excite, transmit, upload.
     for (const d of reads) {
       const decay = 1 - d.t / PROP_LIFE;
       const fade = decay * decay;
@@ -920,14 +897,21 @@ export function createPsyshell(container, { preview = false } = {}) {
       camAz += IDLE_TURN * (preview ? 1.5 : 1) * dt;
       placeCamera();
     }
-    advanceTransmitters(dt);
-    if (reads.length) { advance(dt); levelsDirty = true; }
-    else if (levelsDirty) { levels.fill(0); }
+    // Clear, excite, transmit, upload — in that order, because the excitation
+    // and the transmission both write the same array and the second one to run
+    // was wiping the first.
+    const active = reads.length > 0 || transmits.length > 0;
+    if (active || levelsDirty) levels.fill(0);
+    if (reads.length) advance(dt);
+    const transmitting = advanceTransmitters(dt);
     // Only when something changed. The near mesh's level attribute is ~17,000
     // floats and re-uploading it every frame to say "still nothing" is the
     // whole reason the field's indifference was worth splitting into its own
     // mesh; leaving the near half uploading anyway would have given that back.
-    if (levelsDirty) { writeLevels(); levelsDirty = reads.length > 0; }
+    if (active || levelsDirty) {
+      writeLevels();
+      levelsDirty = reads.length > 0 || transmitting;
+    }
     renderer.render(scene, camera);
     previewCanvas?.blit();
   }
@@ -989,12 +973,10 @@ export function createPsyshell(container, { preview = false } = {}) {
         try { shiverNode.disconnect(); } catch { /* already gone */ }
         shiverNode = null;
       }
-      for (const t of transmitters) { t.mesh.visible = false; t.mesh.geometry.dispose(); t.mat.dispose(); }
-      transmitters.length = 0;
+      transmits.length = 0;
       stemGeo.dispose(); nubGeo.dispose(); stemMat.dispose(); nubMat.dispose();
       stems.dispose(); nubs.dispose();
       nearWeb.geo.dispose(); farWeb.geo.dispose(); nearMat.dispose(); farMat.dispose();
-      benchGeo.dispose(); benchMat.dispose();
       previewCanvas?.dispose();
       managedRenderer.dispose();
       containerClaim?.restore();

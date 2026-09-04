@@ -51,7 +51,7 @@ import { mulberry32, hashSeed } from '../../utils/prng.js';
 // than as a fine mesh a long way off. Everything is far enough that nothing in
 // the field has a size on screen.
 export const FAR_CLUSTERS = 240;
-export const FAR_INNER = 9.0;    // world units — clear of the lens and the bench
+export const FAR_INNER = 5.0;    // world units — where the knots start
 export const FAR_OUTER = 33.0;
 const FAR_PER_CLUSTER = [6, 18];  // range
 const FAR_SIGMA = [0.35, 1.5];
@@ -62,61 +62,142 @@ const FAR_LINK_MAX = 15.0;   // world units — beyond this, two knots are not n
 // comes out near 2k − something rather than k.
 const NEAR_K = 2;
 const FAR_K = 3;
-const BRIDGES = 3;    // strands from the lens's outer nodes into the far field
+const APPROACHES = 22;   // filaments run out from the object into the field
 
-// A uniform hash grid, which is what makes this O(n) rather than O(n²). The
-// near set is 3,221 nodes packed into a 1.7-unit object and the far set is ~900
-// spread across 34 units, so they get their own grids at their own cell sizes
-// rather than sharing one.
-function knn(pos, from, count, k, cell) {
-  const grid = new Map();
-  const key = (x, y, z) => `${Math.floor(x / cell)},${Math.floor(y / cell)},${Math.floor(z / cell)}`;
-  for (let i = 0; i < count; i++) {
-    const n = from + i;
-    const kk = key(pos[n * 3], pos[n * 3 + 1], pos[n * 3 + 2]);
-    if (!grid.has(kk)) grid.set(kk, []);
-    grid.get(kk).push(n);
-  }
+// ─── Nearest neighbours, over one point set of wildly varying density ───────
+// A kd-tree rather than the hash grid this started with, and the reason is the
+// continuity requirement rather than speed. A grid needs a cell size, and this
+// set has none to choose: the corpus nodes sit 0.03 units apart inside a
+// 1.7-unit object and the far knots are tens of units across. With one grid the
+// dense end scans thousands of points per query and the sparse end finds an
+// empty cell; with two grids the two halves cannot see each other, which is
+// exactly the seam that made the field read as wallpaper behind a lit object.
+//
+// One tree over every node, so a strand can be found between any two things
+// that are actually near each other, whatever scale they belong to.
+function buildTree(pos, count) {
+  const idx = new Int32Array(count);
+  for (let i = 0; i < count; i++) idx[i] = i;
+  const nodes = [];
+  (function build(lo, hi, depth) {
+    if (lo >= hi) return -1;
+    const axis = depth % 3;
+    const mid = (lo + hi) >> 1;
+    // Quickselect on the axis, which is what makes this O(n log n) overall.
+    let l = lo, r = hi - 1;
+    while (l < r) {
+      const pivot = pos[idx[(l + r) >> 1] * 3 + axis];
+      let a = l, b = r;
+      while (a <= b) {
+        while (pos[idx[a] * 3 + axis] < pivot) a++;
+        while (pos[idx[b] * 3 + axis] > pivot) b--;
+        if (a <= b) { const t = idx[a]; idx[a] = idx[b]; idx[b] = t; a++; b--; }
+      }
+      if (mid <= b) r = b; else if (mid >= a) l = a; else break;
+    }
+    const self = nodes.length;
+    nodes.push({ point: idx[mid], axis, left: -1, right: -1 });
+    nodes[self].left = build(lo, mid, depth + 1);
+    nodes[self].right = build(mid + 1, hi, depth + 1);
+    return self;
+  })(0, count, 0);
+  return nodes;
+}
+
+function knnTree(pos, tree, root, self, k, best) {
+  for (let b = 0; b < k; b++) { best[b].d = Infinity; best[b].j = -1; }
+  const x = pos[self * 3], y = pos[self * 3 + 1], z = pos[self * 3 + 2];
+  (function visit(n) {
+    if (n < 0) return;
+    const node = tree[n];
+    const p = node.point;
+    if (p !== self) {
+      const dx = pos[p * 3] - x, dy = pos[p * 3 + 1] - y, dz = pos[p * 3 + 2] - z;
+      const d = dx * dx + dy * dy + dz * dz;
+      if (d < best[k - 1].d) {
+        let sIdx = k - 1;
+        while (sIdx > 0 && best[sIdx - 1].d > d) { best[sIdx].d = best[sIdx - 1].d; best[sIdx].j = best[sIdx - 1].j; sIdx--; }
+        best[sIdx].d = d; best[sIdx].j = p;
+      }
+    }
+    const a = node.axis;
+    const delta = (a === 0 ? x : a === 1 ? y : z) - pos[p * 3 + a];
+    const near = delta < 0 ? node.left : node.right;
+    const far = delta < 0 ? node.right : node.left;
+    visit(near);
+    if (delta * delta < best[k - 1].d) visit(far);
+  })(root);
+}
+
+// Symmetric k-nearest-neighbour edges over a slice of the point set.
+function knn(pos, tree, from, count, k, total) {
+  const best = [];
+  for (let b = 0; b < k; b++) best.push({ d: Infinity, j: -1 });
   const edges = [];
   const seen = new Set();
-  const best = new Array(k);
   for (let i = 0; i < count; i++) {
     const n = from + i;
-    const x = pos[n * 3], y = pos[n * 3 + 1], z = pos[n * 3 + 2];
-    const cx = Math.floor(x / cell), cy = Math.floor(y / cell), cz = Math.floor(z / cell);
-    for (let b = 0; b < k; b++) best[b] = { d: Infinity, j: -1 };
-    // Widen the search until something is found: a node alone in its cell and
-    // its 26 neighbours would otherwise get no strands at all, which is how an
-    // isolated dot survives a change made to remove isolated dots.
-    for (let ring = 1; ring <= 4; ring++) {
-      for (let gx = cx - ring; gx <= cx + ring; gx++)
-        for (let gy = cy - ring; gy <= cy + ring; gy++)
-          for (let gz = cz - ring; gz <= cz + ring; gz++) {
-            const bucket = grid.get(`${gx},${gy},${gz}`);
-            if (!bucket) continue;
-            for (const j of bucket) {
-              if (j === n) continue;
-              const dx = pos[j * 3] - x, dy = pos[j * 3 + 1] - y, dz = pos[j * 3 + 2] - z;
-              const d = dx * dx + dy * dy + dz * dz;
-              if (d >= best[k - 1].d) continue;
-              let s = k - 1;
-              while (s > 0 && best[s - 1].d > d) { best[s] = best[s - 1]; s--; }
-              best[s] = { d, j };
-            }
-          }
-      if (best[0].j >= 0) break;
-    }
+    knnTree(pos, tree, 0, n, k, best);
     for (let b = 0; b < k; b++) {
       const j = best[b].j;
       if (j < 0) continue;
       const a = Math.min(n, j), c = Math.max(n, j);
-      const id = a * 1e7 + c;
+      const id = a * total + c;
       if (seen.has(id)) continue;
       seen.add(id);
       edges.push(a, c);
     }
   }
   return edges;
+}
+
+// ─── Making it one web, which is the whole claim ────────────────────────────
+// A symmetric k-nearest-neighbour graph is NOT connected, and at k = 2 or 3 it
+// is nowhere near it: measured on this point set, plain kNN left 223 pieces,
+// the largest holding 19.8% of the nodes. A field in 223 pieces cannot be
+// traced from the crystal to a far knot, so "one structure at two
+// magnifications" would have been a sentence rather than something on screen.
+//
+// So the pieces are joined, Borůvka's way: every round, each remaining piece
+// finds the shortest strand from itself to any other piece and takes it. The
+// edges added are the shortest ones available, so they are indistinguishable
+// from the strands the neighbour pass found — this closes the graph rather than
+// decorating it.
+function connectComponents(pos, tree, edges, total) {
+  const parent = new Int32Array(total);
+  for (let i = 0; i < total; i++) parent[i] = i;
+  const find = a => { while (parent[a] !== a) { parent[a] = parent[parent[a]]; a = parent[a]; } return a; };
+  const union = (a, b) => { const ra = find(a), rb = find(b); if (ra === rb) return false; parent[ra] = rb; return true; };
+  for (let e = 0; e < edges.length; e += 2) union(edges[e], edges[e + 1]);
+
+  const K = 12;
+  const best = [];
+  for (let b = 0; b < K; b++) best.push({ d: Infinity, j: -1 });
+  const added = [];
+  for (let round = 0; round < 24; round++) {
+    const cheapest = new Map();   // component root → [d, a, b]
+    for (let n = 0; n < total; n++) {
+      const rn = find(n);
+      knnTree(pos, tree, 0, n, K, best);
+      for (let b = 0; b < K; b++) {
+        const j = best[b].j;
+        if (j < 0 || find(j) === rn) continue;
+        const cur = cheapest.get(rn);
+        if (!cur || best[b].d < cur[0]) cheapest.set(rn, [best[b].d, n, j]);
+        break;
+      }
+    }
+    if (!cheapest.size) break;
+    let joined = 0;
+    for (const [, [, a, b]] of cheapest) if (union(a, b)) { added.push(a, b); joined++; }
+    if (!joined) break;
+    // One component left: every node's root is the same.
+    const root = find(0);
+    let done = true;
+    for (let n = 1; n < total; n++) if (find(n) !== root) { done = false; break; }
+    if (done) break;
+  }
+  return added;
 }
 
 // The whole web, built from the lens's own filapixel positions plus a far
@@ -202,6 +283,78 @@ export function buildWeb(nearPos, nearCount, { center = [0, 0, 0], radius = 1 } 
     }
   }
 
+  // ─── The approach ─────────────────────────────────────────────────────────
+  // The seam this release exists to remove. Until 4.8.2 the field started at a
+  // fixed inner radius with nothing between it and the object, so the lens sat
+  // in a hole in the web and read as a lit thing in front of wallpaper. Three
+  // long bridge strands crossed the gap and that is not the same as being
+  // connected — a jump across a void reads as a drawn line, which is what it
+  // was.
+  //
+  // What crosses it now is **filament, on the same terms as every other
+  // filament**: chains of nodes running out from the object's own outermost
+  // nodes to the nearest knots, spaced closely at the object and opening out
+  // with distance, so the density falls off continuously instead of stepping.
+  // The strands then come out of the same nearest-neighbour pass as everything
+  // else, and a strand can be traced from inside the crystal to a far knot
+  // without a break, which is the claim the whole release makes.
+  {
+    const outer = [];
+    for (let i = 0; i < nearCount; i++) {
+      const dx = nearPos[i * 3] - center[0], dy = nearPos[i * 3 + 1] - center[1], dz = nearPos[i * 3 + 2] - center[2];
+      outer.push([dx * dx + dy * dy + dz * dz, i]);
+    }
+    outer.sort((a, b) => b[0] - a[0]);
+    const spread = Math.min(outer.length, 600);
+    for (let k = 0; k < APPROACHES; k++) {
+      const src = outer[Math.floor(k * spread / APPROACHES)][1];
+      const from = [nearPos[src * 3], nearPos[src * 3 + 1], nearPos[src * 3 + 2]];
+      // The nearest knot centre in roughly the direction the node already
+      // points away from the object's middle, so an approach leaves the lens
+      // rather than doubling back across it.
+      const away = [from[0] - center[0], from[1] - center[1], from[2] - center[2]];
+      const am = Math.hypot(...away) || 1;
+      let best = null, bestScore = -Infinity;
+      for (const c of centres) {
+        const v = [c[0] - from[0], c[1] - from[1], c[2] - from[2]];
+        const vm = Math.hypot(...v) || 1;
+        const align = (v[0] * away[0] + v[1] * away[1] + v[2] * away[2]) / (vm * am);
+        const score = align - vm / FAR_OUTER;
+        if (score > bestScore) { bestScore = score; best = c; }
+      }
+      if (!best) continue;
+      // A WALK toward the knot, not a line to it with noise on top. The first
+      // version was a straight segment plus jitter and twenty-two of those read
+      // as a starburst leaving the object — radial, evenly spread, drawn. A
+      // filament wanders: each step turns a little and then leans back toward
+      // where it is going, so the path arrives without ever having been aimed.
+      const total = Math.hypot(best[0] - from[0], best[1] - from[1], best[2] - from[2]);
+      let p = from.slice();
+      let dir = [(best[0] - p[0]) / total, (best[1] - p[1]) / total, (best[2] - p[2]) / total];
+      // Spacing opens out with distance: dense where it leaves the crystal,
+      // loose where it meets the field, so neither end has a visible join.
+      let step = 0.05;
+      for (let guard = 0; guard < 400; guard++) {
+        const rem = Math.hypot(best[0] - p[0], best[1] - p[1], best[2] - p[2]);
+        if (rem < step * 1.5) break;
+        const to = [(best[0] - p[0]) / rem, (best[1] - p[1]) / rem, (best[2] - p[2]) / rem];
+        // Wander grows with distance from the object: tight where it leaves,
+        // loose out in the field where a filament has room to be crooked.
+        const wander = 0.5 * Math.min(1, rem / total) + 0.12;
+        dir = [
+          dir[0] * 0.62 + to[0] * 0.38 + gauss() * wander * 0.35,
+          dir[1] * 0.62 + to[1] * 0.38 + gauss() * wander * 0.35,
+          dir[2] * 0.62 + to[2] * 0.38 + gauss() * wander * 0.35,
+        ];
+        const dm = Math.hypot(...dir) || 1;
+        dir = [dir[0] / dm, dir[1] / dm, dir[2] / dm];
+        p = [p[0] + dir[0] * step, p[1] + dir[1] * step, p[2] + dir[2] * step];
+        far.push(p[0], p[1], p[2]);
+        step *= 1.075;
+      }
+    }
+  }
+
   const farCount = far.length / 3;
 
   const total = nearCount + farCount;
@@ -209,42 +362,14 @@ export function buildWeb(nearPos, nearCount, { center = [0, 0, 0], radius = 1 } 
   pos.set(nearPos.subarray(0, nearCount * 3), 0);
   pos.set(far, nearCount * 3);
 
-  // Cell sizes: about the mean spacing of each set, which is what makes the
-  // 27-cell scan find neighbours on the first ring in the common case.
-  const nearCell = Math.max(1e-4, radius * 2 / Math.cbrt(nearCount) * 1.6);
-  const farCell = (FAR_OUTER * 2) / Math.cbrt(farCount) * 0.9;
-
-  const nearEdges = knn(pos, 0, nearCount, NEAR_K, nearCell);
-  const farEdges = knn(pos, nearCount, farCount, FAR_K, farCell);
-
-  // The lens is OF the web, not in it: a few strands leave its outermost nodes
-  // and run out to the field. Without them the object floats in a picture of a
-  // web, which is the composition this release exists to stop.
-  const bridges = [];
-  {
-    const order = [];
-    for (let i = 0; i < nearCount; i++) {
-      const dx = pos[i * 3] - center[0], dy = pos[i * 3 + 1] - center[1], dz = pos[i * 3 + 2] - center[2];
-      order.push([dx * dx + dy * dy + dz * dz, i]);
-    }
-    order.sort((a, b) => b[0] - a[0]);
-    // Spread across the outermost 400 nodes rather than taking the first few,
-    // which are all in the same place and gave a fan of parallel lines leaving
-    // one corner of the object — the one thing in the first render that read as
-    // drawn rather than found.
-    const spread = Math.min(order.length, 400);
-    for (let k = 0; k < BRIDGES && k < order.length; k++) {
-      const n = order[Math.floor(k * spread / BRIDGES)][1];
-      let bestD = Infinity, bestJ = -1;
-      for (let j = 0; j < farCount; j++) {
-        const m = nearCount + j;
-        const dx = pos[m * 3] - pos[n * 3], dy = pos[m * 3 + 1] - pos[n * 3 + 1], dz = pos[m * 3 + 2] - pos[n * 3 + 2];
-        const d = dx * dx + dy * dy + dz * dz;
-        if (d < bestD) { bestD = d; bestJ = m; }
-      }
-      if (bestJ >= 0) bridges.push(n, bestJ);
-    }
-  }
+  // ONE tree over every node, near and far together. Two separate searches is
+  // what made the seam possible in the first place: a corpus node could not see
+  // a field node however close it was, because they were in different indexes.
+  const tree = buildTree(pos, total);
+  const nearEdges = knn(pos, tree, 0, nearCount, NEAR_K, total);
+  const farEdges = knn(pos, tree, nearCount, farCount, FAR_K, total);
+  // What makes it ONE web rather than a few hundred of them.
+  const bridges = connectComponents(pos, tree, [...nearEdges, ...farEdges], total);
 
   const edges = Uint32Array.from([...nearEdges, ...farEdges, ...bridges]);
   const degree = new Uint16Array(total);
