@@ -56,7 +56,7 @@ const at = ch => MARKS.find(l => l.ch === ch);
   const a = say(() => {});
   const b = say((t, v) => {
     if (Math.floor(t * 0.5) % 2) return;
-    v.x = 0.5 + Math.sin(t * 1.7) * 0.22; v.y = 0.36 + Math.cos(t * 0.9) * 0.10; v.driving = true;
+    v.x = 0.5 + Math.sin(t * 1.7) * 0.22; v.y = 0.36 + Math.cos(t * 0.9) * 0.10;
   });
   console.log(`stored   same partner, same seed, visitor A: "${a}"`);
   console.log(`                                  visitor B: "${b}"`);
@@ -74,10 +74,12 @@ const at = ch => MARKS.find(l => l.ch === ch);
   let worst = 0, t = 0;
   for (let i = 0; i < Math.round(8 / DT); i++) {
     t += DT;
-    // Pulling and HOLDING, which for a driving visitor means restating the
-    // pointer every frame — a hand that stops moving goes slack by design, so
-    // "holds" has to mean "keeps pushing" or it is testing the wrong thing.
-    v.x = 0.86; v.y = 0.44; v.driving = true;
+    // Pulling and HOLDING. A hand that stops moving goes slack by design — grip
+    // decays — so "holds" has to mean "keeps pushing", and the honest way to
+    // say that is a pointer that keeps arriving rather than a flag that is set.
+    // The tiny wobble is what a real hand pressing against something does and
+    // is what keeps grip at 1; without it this would be testing a slack hand.
+    v.x = 0.86 + Math.sin(t * 40) * 0.004; v.y = 0.44;
     stepCup(cup, DT, stepVisitor(v, cup, DT), stepWander(hand, DT, cup, LETTERS, l => (l.ch.charCodeAt(0) % 7) / 6));
     // Only once the cup has arrived: the first seconds are the journey, not a
     // measure of how far the partner can hold it off.
@@ -114,7 +116,7 @@ const at = ch => MARKS.find(l => l.ch === ch);
   for (let i = 0; i < Math.round(20 / DT) && !got; i++) {
     t += DT;
     decayReader(reader, DT);
-    v.x = q.x + (q.x - cup.x) * 1.6; v.y = q.y + (q.y - cup.y) * 1.6; v.driving = true;
+    v.x = q.x + (q.x - cup.x) * 1.6; v.y = q.y + (q.y - cup.y) * 1.6;
     stepCup(cup, DT, stepVisitor(v, cup, DT), stepWander(hand, DT, cup, LETTERS, plaus));
     clearDwellMemory(dwell, cup);
     got = stepDwell(dwell, cup, LETTERS, DT,

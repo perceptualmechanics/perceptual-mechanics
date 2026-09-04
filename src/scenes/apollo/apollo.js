@@ -1758,6 +1758,12 @@ export function createApollo(container, { preview = false, initialArg = null, on
       if (disturbances[i].t >= DISTURB_LIFE) disturbances.splice(i, 1);
     }
 
+    paint();
+  }
+
+  // Pulled out of animate() so that a PAUSED scene can still be repainted —
+  // see the resize binding below for the black-tile race that needs it.
+  function paint() {
     ctx.fillStyle = '#05070c';
     ctx.fillRect(0, 0, W, H);
     drawCorona();
@@ -1798,7 +1804,21 @@ export function createApollo(container, { preview = false, initialArg = null, on
       bandDirty = true;
     }
   }
-  const resize = bindGuardedResize(container, relayout);
+  // ─── A paused scene still has to repaint when it is relaid out ────────────
+  // The landing tile is the case. A tile mounts, draws its first frame — often
+  // before the container has been laid out, so against the `|| window.innerWidth`
+  // fallback, which is the whole window — and is then paused immediately,
+  // because main.js runs syncPreviewPlayback() as soon as the previews resolve
+  // and the tab may already be hidden. The ResizeObserver fires a moment later
+  // with the real 190px, relayout() fixes every number, and nothing ever draws
+  // again: a black circle on the landing page, intermittently, depending on
+  // whether the observer beat the pause.
+  //
+  // Seen on 2026-09-04 while a thirteenth scene was being built, in a tab that
+  // happened to be hidden — which is what made it reproducible rather than a
+  // rumour. One frame, so a paused scene stays paused; it just stops being
+  // wrong.
+  const resize = bindGuardedResize(container, () => { relayout(); if (paused) paint(); });
 
   // ─── Mount ────────────────────────────────────────────────────────────────
   relayout();

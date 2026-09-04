@@ -3,7 +3,7 @@ import {
   createFrameClock, claimContainer,
 } from '../../utils/sceneKit.js';
 import {
-  DWELL_RADIUS, DWELL_EASE, DWELL_RESIST, DRIVE_EPS,
+  DWELL_RADIUS, DWELL_TIME, DWELL_EASE, DWELL_RESIST,
   createCup, stepCup, createWander, stepWander,
   createVisitor, stepVisitor,
   createDwell, stepDwell, clearDwellMemory,
@@ -325,7 +325,6 @@ export function createMedium(container, { preview = false, initialArg = null, on
       if (held.has('ArrowRight')) visitor.x += d;
       if (held.has('ArrowUp')) visitor.y -= d;
       if (held.has('ArrowDown')) visitor.y += d;
-      driving = true;
       // Bounded to the card, so a held key cannot walk the finger into the
       // margin and leave the cup stranded at the edge with nothing to do.
       visitor.x = Math.min(0.95, Math.max(0.05, visitor.x));
@@ -399,6 +398,12 @@ export function createMedium(container, { preview = false, initialArg = null, on
   // every engine, costs one measureText per character on a string that is never
   // longer than the tape, and cannot silently render un-tracked on the one
   // browser nobody tested in.
+  function measureTracked(str, track) {
+    let total = 0;
+    for (const ch of str) total += ctx2d.measureText(ch).width + track;
+    return Math.max(0, total - track);
+  }
+
   function fillTracked(str, cx, cy, track) {
     let total = 0;
     const widths = [];
@@ -467,8 +472,28 @@ export function createMedium(container, { preview = false, initialArg = null, on
   function drawMarks() {
     ctx2d.textAlign = 'center';
     ctx2d.textBaseline = 'middle';
+
+    // ─── The mark the cup is on, warming ──────────────────────────────────────
+    // The board had no way of saying "this one, maybe" — a letter went from
+    // ordinary to taken with nothing in between, so the only feedback was after
+    // the fact. This is the hover state the scene was missing, and it is not a
+    // decoration bolted on: it is the dwell timer, drawn. The mark under the cup
+    // warms in proportion to how much of its threshold has elapsed, so a
+    // plausible letter visibly comes on fast and an implausible one sits there
+    // barely glowing — which is the whole mechanism of the scene, made visible
+    // without a word of explanation.
+    //
+    // It also tells the truth when nothing is happening: let go, and the warming
+    // stops, because dwell does.
+    const cand = dwell.on;
+    const prog = cand && visitor.down
+      ? Math.min(1, dwell.held / Math.max(1e-6, DWELL_TIME * dwellScale(cand)))
+      : 0;
+
     for (const m of MARKS) {
-      const lit = flash && flash.mark === m ? 1 - flash.t / FLASH_TIME : 0;
+      const lit = flash && flash.mark === m
+        ? 1 - flash.t / FLASH_TIME
+        : (m === cand ? prog * 0.6 : 0);
       const word = m.kind === 'word';
       const track = word ? bs(0.010) : 0;
       // Punctuation is set LARGER than a letter, not smaller: a full stop is a
@@ -633,9 +658,19 @@ export function createMedium(container, { preview = false, initialArg = null, on
     // it was written at, and on a 390px phone it runs off both edges.
     const track = size * 0.34;
     const per = ctx2d.measureText('M').width + track;
-    const fits = Math.max(6, Math.floor((W * 0.92) / Math.max(1, per)));
-    ctx2d.fillStyle = 'rgba(214, 200, 176, 0.42)';
-    fillTracked(tape.slice(-fits), W / 2, tapeY, track);
+    // Ranged against the CARD, not the viewport: the tape is what the board has
+    // said, so it belongs under the board rather than under the page.
+    const room = bs(CARD.x1 - CARD.x0) * 0.98;
+    const fits = Math.max(6, Math.floor(room / Math.max(1, per)));
+    // ─── Right-aligned, and it grows leftward ──────────────────────────────
+    // Centred, the whole line shifted every time a letter landed, so the thing
+    // you were reading moved out from under you. Anchored at the right, the
+    // newest mark is always in the same place and the older ones slide away —
+    // which is what a tape does, and it is the end of a tape you read.
+    const shown = tape.slice(-fits);
+    const width = measureTracked(shown, track);
+    ctx2d.fillStyle = 'rgba(226, 214, 192, 0.78)';
+    fillTracked(shown, bx(CARD.x1) - width / 2, tapeY, track);
     ctx2d.restore();
   }
 
@@ -687,14 +722,14 @@ export function createMedium(container, { preview = false, initialArg = null, on
     if (Math.hypot(p.x - cup.x, p.y - cup.y) > PRESS_R) return;
     pointerId = e.pointerId;
     visitor.x = p.x; visitor.y = p.y; visitor.down = true;
-    visitor.ax = p.x; visitor.ay = p.y; visitor.driving = false;
+    visitor.sx = p.x; visitor.sy = p.y; visitor.ax = p.x; visitor.ay = p.y;
+    visitor.lx = p.x; visitor.ly = p.y; visitor.grip = 1;
     canvas.setPointerCapture?.(e.pointerId);
     e.preventDefault();
   }
   function onPointerMove(e) {
     if (preview || !visitor.down || e.pointerId !== pointerId) return;
     const p = pointFrom(e);
-    if (Math.hypot(p.x - visitor.x, p.y - visitor.y) > DRIVE_EPS) visitor.driving = true;
     visitor.x = p.x; visitor.y = p.y;
   }
   function onPointerUp(e) {
@@ -718,7 +753,9 @@ export function createMedium(container, { preview = false, initialArg = null, on
         // A keyboard visitor cannot aim before touching, so the finger arrives
         // on the cup — the equivalent of reaching out and finding it.
         visitor.x = cup.x; visitor.y = cup.y;
-        visitor.ax = cup.x; visitor.ay = cup.y; visitor.driving = false;
+        visitor.sx = cup.x; visitor.sy = cup.y;
+        visitor.ax = cup.x; visitor.ay = cup.y;
+        visitor.lx = cup.x; visitor.ly = cup.y; visitor.grip = 0;
       }
       visitor.down = !visitor.down;
       e.preventDefault();

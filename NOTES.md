@@ -17909,3 +17909,78 @@ different scene, but it is the same one-line fix.
 
 **Still open:** the landing page's visual audit. Thirteen tiles render correctly
 now, and Medium's is much the palest thing on a page of dark circles.
+
+## 4.11.9 (2026-09-04)
+
+**Scott played it on a trackpad and found the thing the benches could not: it
+felt like resistance rather than like two people's hands.** Three symptoms — the
+other hand jittering while he clicked, the cup fighting him, and the whole thing
+being awkward in a way he couldn't quite name — and two of the three turn out to
+be the same bug.
+
+**"Driving" was a per-frame boolean, and on a trackpad that is a disaster.** Any
+pointer movement at all set it, and it was cleared the next frame. Every
+micro-movement of a finger resting on a touchpad flipped the visitor's hand to
+FULL stiffness for one frame, snapped the anchor to the raw pointer, and released
+it again. Sixty times a second, against another hand leaning the other way. It
+read as the cup fighting because it was.
+
+Grip is a continuum now: a number between 0 and 1 driven by how fast the pointer
+is actually travelling, rising fast (22/s) and falling slow (3.4/s), the way a
+hand tightens and then stays tightened a moment after it stops. The anchor is a
+blend — slack on the cup at 0, the pointer at 1. Nothing about the scene's
+promise changes; a visitor who means it reaches grip 1 in a few frames and still
+wins outright. `DRIVE_SPEED` 0.22 board units/s is the speed that means grip 1.
+
+**And the drift fades out with grip.** A hand that is pushing is not drifting —
+the intention swamps it. Without that, a visitor holding the cup on Q got an R:
+their own four millimetres of involuntary wander, at full stiffness, was enough
+to let the other hand walk the cup half a letter over. Caught by the insist test,
+which is exactly what it is for.
+
+**The other hand's jitter was the clamp.** 4.11.8 wandered a position over the
+board and clamped it to within `LEAN_MAX` of the cup — the same thing on paper
+and completely different in the hand: the wander was constantly trying to leave
+and being yanked back, its velocity killed against the limit sixty times a
+second, and the fingertip visibly juddered on the china. **What wanders is the
+LEAN now**, not the hand. The offset gets the impulses, a spring back to centre
+(`LEAN_SPRING`) so it does not pile up against the rim, and the field pull; the
+hand is the cup plus that offset, always, and there is nothing to clamp because
+nothing is trying to escape. The board's edges are felt through the lean too
+(`EDGE_LEAN`), which keeps the GOODBYE behaviour without a special case.
+
+**Friction came down**, 0.9 → 0.72 kinetic and 1.55 → 1.25 static, because not
+all of it was the grip bug: felt on card glides, and the old numbers against a
+mass of 1.0 were dragging enough that the pair felt like they were arguing. The
+lurch survives — it is still a real branch — and the other hand's capped 1.9 now
+clears stiction with room, so the pair get moving *together* instead of the
+visitor having to break the cup free alone every time.
+
+**A visitor who is gripping can lean further onto the cup** (`LEAN_GRIP`, +0.085).
+A finger resting on a rim and a finger braced against one are not the same reach,
+and capping a driving visitor at a resting hand's lean is what made pushing feel
+like arguing rather than like moving something.
+
+**The board can say "this one, maybe" now.** There was no hover state: a mark
+went from ordinary to taken with nothing in between, so the only feedback was
+after the fact. The mark under the cup warms in proportion to how much of its
+dwell threshold has elapsed — which is the dwell timer, drawn. A plausible letter
+visibly comes on fast and an implausible one sits there barely glowing, so the
+scene's whole mechanism is visible without a word of explanation. It also tells
+the truth when nothing is happening: let go and the warming stops, because dwell
+does.
+
+**The tape is right-aligned against the card and brighter** (0.42 → 0.78 alpha).
+Centred, the whole line shifted every time a mark landed, so the thing you were
+reading moved out from under you. Anchored at the right, the newest mark is
+always in the same place and the older ones slide away, which is what a tape
+does.
+
+**Apollo's black-tile race is fixed** — the one 4.11.8 named and deliberately
+left. `paint()` is pulled out of `animate()` so a paused scene can be repainted,
+and the resize binding calls it. Same defect, same one line, and it was worth
+doing on its own rather than inside another scene's commit.
+
+**Still open:** the landing page's visual audit. And Scott's note that this could
+be very good on a touchscreen, where the finger IS the contact and there is no
+pointer-versus-hand distinction to model at all.

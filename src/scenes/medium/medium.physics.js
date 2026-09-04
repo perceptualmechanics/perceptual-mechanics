@@ -97,11 +97,19 @@ export const CUP = {
   // Kinetic friction: felt, board-on-felt. A planchette GLIDES; it does not
   // slide freely and it does not stick. This is the single most important
   // number in the file for how the thing feels.
-  kineticFriction: 0.9,
+  // Lowered from 0.9 on Scott's note that the cup read as resistance rather
+  // than as two hands working together. Most of that was the grip bug below,
+  // but not all of it: felt on card glides, and 0.9 against a mass of 1.0 was
+  // dragging enough that the pair felt like they were arguing.
+  kineticFriction: 0.72,
   // Stiction: the extra force needed to get it moving at all, and the reason
   // the first movement of a session is a lurch rather than a drift. Real, and
   // the thing everyone who has touched a board remembers.
-  staticFriction: 1.55,
+  // Lowered from 1.55 for the same reason, and it buys twice over: the lurch is
+  // still there (this is a real branch, not a damping term) and the other hand's
+  // capped 1.9 now clears it with room, so the pair get moving together instead
+  // of the visitor having to break the cup free on their own every time.
+  staticFriction: 1.25,
   // Below this speed the cup is treated as at rest, so stiction can re-arm.
   restSpeed: 0.012,
   maxSpeed: 2.2,
@@ -135,15 +143,22 @@ export const PARTNER_FORCE = 1.9;
 // because that is what it now is.
 export const LEAN_MAX = 0.075;
 
+// How much further onto the cup a hand that is actively pushing may be. A finger
+// resting on a rim and a finger braced against one are not the same reach, and
+// without the difference a driving visitor was capped at the same lean as a
+// hand doing nothing — which is what made pushing the cup feel like arguing
+// with it rather than moving it.
+export const LEAN_GRIP = 0.085;
+
 // Keeps `hand` on `cup`, and kills the component of its velocity that was
 // carrying it away — otherwise it grinds against the limit instead of being
 // carried along. Returns the hand.
-export function holdOnCup(hand, cup) {
+export function holdOnCup(hand, cup, max = LEAN_MAX) {
   const dx = hand.x - cup.x, dy = hand.y - cup.y;
   const d = Math.hypot(dx, dy);
-  if (d <= LEAN_MAX || d === 0) return hand;
-  hand.x = cup.x + (dx / d) * LEAN_MAX;
-  hand.y = cup.y + (dy / d) * LEAN_MAX;
+  if (d <= max || d === 0) return hand;
+  hand.x = cup.x + (dx / d) * max;
+  hand.y = cup.y + (dy / d) * max;
   const out = (hand.vx * dx + hand.vy * dy) / d;
   if (out > 0) { hand.vx -= out * (dx / d); hand.vy -= out * (dy / d); }
   return hand;
@@ -198,6 +213,14 @@ export const PAUSE_VAR = 0.7;
 // How fast the hand goes still when a burst ends, per second. High: the pause
 // is a stop, not a glide, and the cup's own stiction does the rest.
 export const STOP_DAMP = 9;
+
+// The lean's spring back to the cup's centre, per second squared. Without it
+// the hand piles up against the rim and stays there, which is a constant shove
+// in one direction rather than a hand.
+export const LEAN_SPRING = 26;
+// How hard the other hand leans back toward the board when the cup has been
+// dragged off it, per second squared per board unit of overshoot.
+export const EDGE_LEAN = 40;
 
 export const WANDER_SIGMA = 2.5;     // impulse strength, board units/s^1.5
 export const WANDER_DAMP = 2.0;      // how fast an impulse dies, per second
@@ -379,6 +402,25 @@ export function stepCup(cup, dt, visitor, partner) {
 // units away from. Press, stop, and nothing ever happens again.
 export const RELAX = 18;
 
+// ─── Grip is a continuum, and that was the whole problem ────────────────────
+// The first version made "driving" a per-frame boolean: any pointer movement at
+// all set it, and it was cleared the next frame. On a trackpad that is a
+// disaster and it is exactly what a trackpad feels like — every micro-movement
+// of a finger resting on a touchpad flipped the hand to FULL stiffness for one
+// frame, snapped the anchor to the raw pointer, and released it again. Sixty
+// times a second, against another hand that was leaning the other way. It read
+// as the cup fighting, because it was.
+//
+// So grip is a number between 0 and 1, driven by how fast the pointer is
+// actually travelling, and it rises quickly and falls slowly — the way a hand
+// tightens and then stays tightened for a moment after it stops. The anchor is
+// a blend: slack (on the cup) at 0, the pointer at 1. Nothing about the scene's
+// promise changes; a visitor who means it still reaches grip 1 in a few frames
+// and still wins outright.
+export const DRIVE_SPEED = 0.22;    // pointer speed, board units/s, that means grip 1
+export const GRIP_ATTACK = 22;      // per second, tightening
+export const GRIP_RELEASE = 3.4;    // per second, letting go — slower, on purpose
+
 // And a resting hand is never quite still even so. Physiological tremor is fast
 // and tiny; postural drift is slower and larger, and it is the one that matters
 // here — nobody holds a fingertip on a spot for thirty seconds and nobody
@@ -389,14 +431,19 @@ export const RELAX = 18;
 // its owner does not know about is the substrate this entire scene is about.
 export const HAND_DRIFT = 0.013;
 
-// How much pointer movement counts as driving rather than as the jitter of a
-// hand that is only resting there, in board units between frames.
-export const DRIVE_EPS = 0.0015;
+// Below this, pointer movement between frames is a hand resting on a trackpad
+// rather than a hand going anywhere, and does not count toward grip at all.
+export const DRIVE_EPS = 0.0008;
 
 export function createVisitor(x, y) {
-  // `px`/`py` are where the fingertip ended up after being held on the cup —
-  // which is what the scene draws, so the finger is never seen off the china.
-  return { x, y, ax: x, ay: y, px: x, py: y, t: 0, driving: false, down: false };
+  // `x`/`y` are the pointer. `sx`/`sy` are the slack point, which follows the
+  // cup. `ax`/`ay` are the blend of the two, by `grip`. `px`/`py` are where the
+  // fingertip ended up after being held on the cup — which is what the scene
+  // draws, so the finger is never seen off the china.
+  return {
+    x, y, sx: x, sy: y, ax: x, ay: y, px: x, py: y,
+    lx: x, ly: y, grip: 0, t: 0, down: false,
+  };
 }
 
 // Where the visitor's fingertip actually is this frame — or null if they are not
@@ -406,23 +453,47 @@ export function createVisitor(x, y) {
 export function stepVisitor(v, cup, dt) {
   if (!v.down) return null;
   v.t += dt;
-  if (v.driving) { v.ax = v.x; v.ay = v.y; v.driving = false; }
-  else {
-    const k = Math.min(1, RELAX * dt);
-    v.ax += (cup.x - v.ax) * k;
-    v.ay += (cup.y - v.ay) * k;
-  }
+
+  // How fast the pointer is travelling, in board units per second. Movement
+  // under DRIVE_EPS between frames is a finger resting on a trackpad and is
+  // discarded before it can become speed.
+  const mx = v.x - v.lx, my = v.y - v.ly;
+  const moved = Math.hypot(mx, my);
+  v.lx = v.x; v.ly = v.y;
+  const speed = moved > DRIVE_EPS && dt > 0 ? moved / dt : 0;
+
+  const want = Math.min(1, speed / DRIVE_SPEED);
+  const rate = want > v.grip ? GRIP_ATTACK : GRIP_RELEASE;
+  v.grip += (want - v.grip) * Math.min(1, rate * dt);
+
+  // The slack point rides the cup. Your arm is compliant, and when the cup moves
+  // your finger goes with it — you are not holding a point in space, you are
+  // touching an object.
+  const k = Math.min(1, RELAX * dt);
+  v.sx += (cup.x - v.sx) * k;
+  v.sy += (cup.y - v.sy) * k;
+
+  // And the anchor is wherever between the two the grip says. At rest it is on
+  // the cup and exerts almost nothing; driving, it is the pointer and exerts
+  // everything.
+  v.ax = v.sx + (v.x - v.sx) * v.grip;
+  v.ay = v.sy + (v.y - v.sy) * v.grip;
+
+  // The drift is what a RESTING hand does. A hand that is pushing is not
+  // drifting — the intention swamps it — so it fades out with grip. Without
+  // that, a visitor holding the cup on Q got an R: their own four millimetres
+  // of involuntary wander, at full stiffness, was enough to let the other hand
+  // walk the cup half a letter over.
+  const drift = HAND_DRIFT * (1 - v.grip);
   const p = {
-    x: v.ax + Math.sin(v.t * 0.61) * HAND_DRIFT,
-    y: v.ay + Math.cos(v.t * 0.43) * HAND_DRIFT,
+    x: v.ax + Math.sin(v.t * 0.61) * drift,
+    y: v.ay + Math.cos(v.t * 0.43) * drift,
     vx: 0, vy: 0,
   };
-  // On the cup, like the other one. A visitor dragging faster than the cup can
-  // follow does not get to leave their fingertip out in front of it: they get
-  // the most a finger on a rim can give, which is LEAN_MAX of offset, and the
-  // cup comes along behind. `v.ax`/`v.ay` keep the raw anchor, so releasing and
-  // re-pressing is unaffected.
-  holdOnCup(p, cup);
+  // On the cup, like the other one — but a hand that is gripping can be further
+  // onto it and push through, which is what LEAN_GRIP buys. A resting finger
+  // that could shove as hard as a driving one would not be resting.
+  holdOnCup(p, cup, LEAN_MAX + v.grip * LEAN_GRIP);
   v.px = p.x; v.py = p.y;
   return p;
 }
@@ -522,28 +593,43 @@ function mulberry32(a) {
 
 export function createWander(seed = 0x5EA9CE, homeX = 0.5, homeY = 0.44) {
   const rnd = mulberry32(seed);
-  // Start somewhere on the board rather than dead centre, or every session
-  // opens with the same letter — measured: eight runs out of eight began T.
   const S = WANDER_START;
   return {
+    // Where the hand is — recomputed every step as the cup plus the lean, and
+    // seeded here only so the cup has somewhere to start.
     x: S.x0 + rnd() * (S.x1 - S.x0), y: S.y0 + rnd() * (S.y1 - S.y0),
-    vx: 0, vy: 0, homeX, homeY,
+    // The lean: an offset from the cup's centre, and the only thing that
+    // actually wanders.
+    ox: 0, oy: 0, vx: 0, vy: 0,
+    homeX, homeY,
     moving: false, left: PAUSE_MIN + rnd() * PAUSE_VAR, rnd,
   };
 }
 
-// `letters` is the board — [{ch, x, y}] — and `weightOf(letter)` returns how
-// plausible that letter is right now, in 0..1. Pass `null` for `weightOf` and
-// the hand still moves; it just stops meaning anything.
+// `cup` is the cup, `letters` is the board — [{ch, x, y}] — and `weightOf(mark)`
+// returns how plausible that mark is right now, in 0..1. Pass `null` for
+// `weightOf` and the hand still moves; it just stops meaning anything.
+//
+// ─── What wanders is the LEAN, not the hand ─────────────────────────────────
+// The first version wandered a position over the board and then clamped it to
+// within LEAN_MAX of the cup, which is the same thing on paper and completely
+// different in the hand: the wander was constantly trying to leave and being
+// yanked back, its velocity killed against the limit sixty times a second, and
+// the fingertip visibly juddered on the china. Scott saw it immediately.
+//
+// So the state is the offset. It gets the impulses, a spring back toward centre
+// so it does not sit against the rim, and the field pull; the hand's position is
+// the cup plus that offset, always, and there is nothing to clamp because there
+// is nothing trying to escape.
 export function stepWander(w, dt, cup, letters, weightOf) {
   const R = w.rnd;
 
   // ─── Bursts and pauses ────────────────────────────────────────────────────
-  // Not an Ornstein-Uhlenbeck drift, which was the first attempt: continuous
-  // jitter makes the cup ooze along the arc of letters and take every one it
-  // crawls past, which measured as 20% of taken letters being alphabetically
-  // adjacent to the one before. Hands do not ooze. They go, and then they stop,
-  // and the stopping is what a board is read by.
+  // Not a continuous drift, which was the first attempt: continuous jitter makes
+  // the cup ooze along the arc and take every letter it crawls past, which
+  // measured as 20% of taken letters being alphabetically adjacent to the one
+  // before. Hands do not ooze. They go, and then they stop, and the stopping is
+  // what a board is read by.
   w.left -= dt;
   if (w.left <= 0) {
     w.moving = !w.moving;
@@ -556,28 +642,21 @@ export function stepWander(w, dt, cup, letters, weightOf) {
     // reads as a twitch.
     const g = () => (R() + R() + R() - 1.5) * 2;
     const k = WANDER_SIGMA * Math.sqrt(dt);
-    w.vx += g() * k - w.vx * WANDER_DAMP * dt - (w.x - w.homeX) * WANDER_CENTRE * dt;
-    w.vy += g() * k - w.vy * WANDER_DAMP * dt - (w.y - w.homeY) * WANDER_CENTRE * dt;
-
-  } else {
-    w.vx -= w.vx * STOP_DAMP * dt; w.vy -= w.vy * STOP_DAMP * dt;
+    w.vx += g() * k; w.vy += g() * k;
   }
+  w.vx -= w.vx * WANDER_DAMP * dt;
+  w.vy -= w.vy * WANDER_DAMP * dt;
 
   // ─── The field ────────────────────────────────────────────────────────────
-  // Every letter pulls at once, by plausibility and by nearness; the
-  // exponential falloff is what keeps it local, so the hand leans toward a
-  // plausible letter beside it rather than setting off across the board toward
-  // the best one in the alphabet.
-  //
-  // Outside the burst/pause branch on purpose. A lean does not switch off when
-  // a hand stops moving — that is the whole of what "finds it harder to leave"
-  // means — and it measured as the difference between 0.07 letters a second and
-  // 0.16, which is the difference between a board that says something in three
-  // minutes and one that does not.
+  // Every mark pulls at once, by plausibility and by nearness to the CUP — the
+  // hand leans toward things near the cup, because the cup is what it is
+  // touching. The exponential falloff is what keeps it local, so the hand leans
+  // toward a plausible letter beside it rather than setting off across the board
+  // toward the best one in the alphabet.
   if (weightOf && letters) {
     let gx = 0, gy = 0, gw = 0;
     for (const l of letters) {
-      const dx = l.x - w.x, dy = l.y - w.y;
+      const dx = l.x - cup.x, dy = l.y - cup.y;
       const d = Math.hypot(dx, dy) || 1e-6;
       const wt = weightOf(l) * Math.exp(-d / FIELD_RANGE);
       gx += (dx / d) * wt; gy += (dy / d) * wt; gw += wt;
@@ -585,20 +664,36 @@ export function stepWander(w, dt, cup, letters, weightOf) {
     if (gw > 0) { w.vx += (gx / gw) * FIELD_PULL * dt; w.vy += (gy / gw) * FIELD_PULL * dt; }
   }
 
+  // ─── The board's edges, felt through the lean ─────────────────────────────
+  // The other hand does not go outside WANDER_BOUNDS, so when the cup is
+  // outside them — which only a visitor can do, and GOODBYE is why they would —
+  // the lean is toward getting back inside. It reads as the other hand not
+  // wanting to be down there, and it is one term rather than a special case.
+  const B = WANDER_BOUNDS;
+  const back = (v, lo, hi) => (v < lo ? lo - v : v > hi ? hi - v : 0);
+  w.vx += back(cup.x, B.x0, B.x1) * EDGE_LEAN * dt;
+  w.vy += back(cup.y, B.y0, B.y1) * EDGE_LEAN * dt;
+
+  // A spring back to centre, so the lean does not simply pile up against the
+  // rim and stay there. This is what makes the hand's pressure come and go
+  // rather than being a constant shove in one direction.
+  w.vx -= w.ox * LEAN_SPRING * dt;
+  w.vy -= w.oy * LEAN_SPRING * dt;
+
   const sp = Math.hypot(w.vx, w.vy);
   if (sp > PARTNER_HAND_SPEED) { w.vx = (w.vx / sp) * PARTNER_HAND_SPEED; w.vy = (w.vy / sp) * PARTNER_HAND_SPEED; }
-  w.x += w.vx * dt; w.y += w.vy * dt;
+  w.ox += w.vx * dt; w.oy += w.vy * dt;
 
-  // The edges of the board. Reflecting rather than clamping, so the hand turns
-  // around instead of grinding along the boundary — a hand parked against an
-  // invisible wall is the tell that there is one.
-  const B = WANDER_BOUNDS;
-  if (w.x < B.x0) { w.x = B.x0; if (w.vx < 0) w.vx = -w.vx; }
-  else if (w.x > B.x1) { w.x = B.x1; if (w.vx > 0) w.vx = -w.vx; }
-  if (w.y < B.y0) { w.y = B.y0; if (w.vy < 0) w.vy = -w.vy; }
-  else if (w.y > B.y1) { w.y = B.y1; if (w.vy > 0) w.vy = -w.vy; }
+  // The rim. Reached rarely now that the spring exists, and softened rather than
+  // clamped: the outward velocity is removed, not reversed, so the hand settles
+  // against the edge of the cup instead of bouncing off it.
+  const od = Math.hypot(w.ox, w.oy);
+  if (od > LEAN_MAX) {
+    w.ox = (w.ox / od) * LEAN_MAX; w.oy = (w.oy / od) * LEAN_MAX;
+    const out = (w.vx * w.ox + w.vy * w.oy) / LEAN_MAX;
+    if (out > 0) { w.vx -= out * (w.ox / LEAN_MAX); w.vy -= out * (w.oy / LEAN_MAX); }
+  }
 
-  // Last, so it wins: the hand is on the cup, and everything above only decides
-  // which way it leans from there.
-  return holdOnCup(w, cup);
+  w.x = cup.x + w.ox; w.y = cup.y + w.oy;
+  return w;
 }
