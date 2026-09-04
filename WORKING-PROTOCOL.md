@@ -235,6 +235,38 @@ one of the three was found by *playing*, with the benches green throughout. A
 bench's visitor is a function of time and never jitters. **A stub smoother than a
 person will not reproduce a person's bugs.**
 
+### 7. Run the build before the commit, not before the deploy
+
+A check nobody runs is not a check.
+
+This project keeps its guards in a vite `closeBundle` hook, deliberately, so
+they fire on the command people actually run (`NOTES.md`, "Standing notes —
+build tooling": *hook the command people actually run, not the one the docs
+say to run*). `verify-links`, `verify-resonances`, `verify-landing`,
+`csp-style-hash` and the scenes-vs-pages check all live there.
+
+`vite dev` does not run `closeBundle`.
+
+4.11.6 added a rule to `PAGE_STYLE` and did not update the hash beside it or
+the one in `.htaccess`. `csp-style-hash` caught it correctly and failed the
+build — and then eight releases went in over four days without anybody
+invoking the build. The work had moved to a dev server at localhost:5173 and
+to node benches, both of which are better than a build for the questions they
+answer, and neither of which is a build.
+
+Nothing shipped, because nothing had been pushed either. That is luck, not
+process.
+
+> **A dev server and a bench answer "does it work?". Only the build answers
+> "is it publishable?". Both questions have to be asked before a commit, and
+> the second one is the one that gets skipped when the first one is going
+> well.**
+
+The tell to watch for: a stretch of work where every verification is a *live*
+one — a browser, a harness, a bench — and none of it produces build output.
+That is exactly when the guards are quietest and exactly when they are not
+running.
+
 ---
 
 ## The shared lesson these all point at
