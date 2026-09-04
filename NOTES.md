@@ -17641,3 +17641,153 @@ of a letter's spacing, about 1.4mm on a 30cm board. Recorded rather than fixed.
 **Still to come:** the scene itself — rendering, `medium.{js,css,html}`, the
 `/text/` page, registry entry, nav icon, landing tile, `ABSENT` — and the landing
 page's visual audit once a thirteenth preview tile exists.
+
+## 4.11.6 (2026-09-04)
+
+**Medium ships. Thirteenth scene.** A homemade Ouija board seen from above, an
+upside-down willowware teacup on it, and two pairs of fingertips: yours, and
+somebody else's. Press on the cup and your hand is on it; let go and it keeps
+going. Letters land and fill a tape along the bottom. `medium.{js,html,css}`,
+`medium.text.js`, a registry entry, a nav icon, a landing tile, `/text/medium/`.
+
+**2D canvas, for Apollo's reason.** A thirteenth WebGL scene would be a
+thirteenth permanent preview context against a browser cap near sixteen, and
+this draws a card, some lettering and a teacup. No geometry, no camera. It also
+clips normally in the round tile without the `mountClippedPreviewCanvas` blit.
+
+**No sound, and that is the one place this scene departs from its neighbours.**
+The subject is a resistance you feel through your fingertips, and the brief says
+a mimicked one "will feel wrong in a way nobody can name." A synthesised scrape
+is that mimicry one sense over — a sound effect standing in for the thing the
+physics is already doing honestly.
+
+**No controls at all.** Apollo has a rail of faders because an instrument has
+controls; this has none because a board has none. There is nothing to press but
+the cup. Contact is a real state rather than a drag: a press only puts a finger
+on the cup if it lands *on* the cup, and a press anywhere else on the board is a
+hand on the table, which does nothing and should. The arrow keys move the
+visitor's fingertip through the same spring, and space is the press — a keyboard
+visitor plays the same instrument at the same disadvantage against the same other
+hand, rather than being handed a letter picker. A jump list would have made the
+board a menu.
+
+**The hands are drawn as shadows.** Two reasons, and the practical one came
+first: a fingertip in any plausible skin tone is within a few percent of aged
+card, so it vanishes — the first version read as a smear of light rather than as
+a hand. The real reason is that a séance is lit low and from one side, and what
+you can see of somebody's hand across a board in that light *is* its shadow. It
+also means the scene does not have to pick a skin colour for a person it has
+deliberately declined to give a face. The other hand comes from the far edge and
+yours from your own; that is the entire account of who is sitting there.
+
+**The layout asks the DOM where the chrome is.** The card is pale and the chrome
+is not, so anything the chrome overlaps is chrome nobody can read. It measures
+the hint's bottom and the placard's top every relayout and fits the board between
+them — and the placard only lowers the floor when it sits under the MIDDLE of the
+viewport, because that is where the tape is written. On a desktop it is a narrow
+corner panel and does not; letting it set the floor anyway cost the board a third
+of its size to protect an empty corner. On a phone it is full width and does.
+Same family as Apollo's wavelength scale spending a release behind the fader rail
+because 66px had been measured once on a desktop.
+
+**GOODBYE is outside the other hand's reach and that is arithmetic, not a
+flourish.** The reach is a disc of `WANDER_REACH` about `BOARD_HOME`; YES and NO
+sit at 0.444 board units, just inside, and GOODBYE at 0.481, just outside. So the
+board can say yes and can say no, and only a visitor can take it to GOODBYE.
+Taking it clears the tape and stills the other hand for a moment, and then it
+starts again. Scott's rule shapes the whole scene: no beginning, no end, only a
+state. Nothing here opens, closes, resets, times out or congratulates. That is
+also why `WANDER_REACH` went 0.30 → 0.46 — at 0.30 it covered 28 of the 39 marks
+and the board could not say yes.
+
+**`/text/medium/` is a transcript, not writing.** The only page in `/text/` that
+is not something a person wrote: three séances of eight minutes each, run at
+build time by the same physics, lexicon and board the scene runs, with nobody
+touching the cup. That is why Medium is in `psyshell.text.js`'s `ABSENT` list and
+still has a page — it contributes nothing to the corpus because it has no fixed
+writing to contribute, and it still needs something crawlable. Three rather than
+one on purpose: one transcript is a take, and a take gets chosen. The first seed
+tried produced TSUNAMIBIAS three times in twelve minutes and the temptation to
+try another was immediate.
+
+**Four measurements changed the model this pass.**
+
+*The centring spring is zero.* It was 0.8, pulling the other hand back toward the
+middle of the letters, and it made the middle sticky: the letters at the centre
+of the two arcs are nearest to everything, so S, T and R came out at twice their
+English rate and A and O at two thirds. Swept against the board's own letter
+distribution: Spearman 0.796 / 0.762 / 0.815 / 0.830 at 0.8 / 0.4 / 0.15 / 0. The
+honest value is none at all. What keeps the hand on the board is the reach, which
+is a wall rather than a preference. The term is kept at 0 rather than deleted so
+the finding is not hidden.
+
+*Fatigue, and a thirty-second half-life.* A mark just taken is less plausible for
+a while. Added because the output was measurably worse without it — the field
+pulls toward a region, the region has a few letters in it, and the board loops.
+Ruler is the share of six-letter runs a séance has already produced once, over
+two and a half hours on twelve seeds: 14.4% at a 6s half-life, 12.5% at 15s, 5.9%
+at 30s, with Spearman and vowel share flat across all three. Repetition more than
+halves and nothing else moves.
+
+*The lexicon lost its acronyms.* One regex — a word with no vowel in it is not a
+word a hand reaches for — removes XHTML, SQL, PGP, RPM, DSL, GPS, FCC, TV, PDF
+and the rest of the web-scraped class the source list carries, which was the
+single most anachronistic thing this board could say. Y counts as a vowel, so BY,
+MY and WHY survive. 9,972 words → 9,624.
+
+*The visitor's spring is stiffer than the partner's.* 78 against 26, because the
+visitor is pressing and the partner is resting. Without it the partner could hold
+the cup 0.046 board units off the visitor's fingertip — nearly one letter's
+spacing — so parking on Q gave an R. Now 0.017, and Q lands in 1.78 seconds.
+
+**Two more changes on Scott's note, and both cost something worth writing down.**
+
+*The arcs are wider* — radius 0.45 and 0.40 against 0.36 and 0.30 — because a
+real board runs its letters nearly to the edge and that is what makes the shape
+read as a board rather than as a caption. The price is that A and O move away
+from where the cup spends its time: vowel share falls about two and a half
+points, 35.6% to 33.3% with nobody touching and 32.9% to 30.7% with a hand
+resting. An intermediate radius bought none of it back. Widening the arcs also
+forced `DWELL_RADIUS` down from 0.055 to 0.048 — the catchment IS the drawn cup,
+and 0.055 is a teacup wide enough to cover two letters at this spread. Swept:
+repeated six-grams 10.4% / 4.0% / 4.8% at 0.042 / 0.048 / 0.055.
+
+*Four punctuation marks* — `.` `,` `?` `!` — and they are the one thing on the
+board weighted by what has ALREADY been spelled rather than by what could come
+next. A full stop is plausible exactly when the live context is itself a whole
+word. Same model, different question, and it is what a phone keyboard does when
+it offers you a period. They land on about 6% of marks, which is roughly the rate
+English punctuates at, and the tape became readable the moment they existed.
+
+**Two things the browser caught that the bench could not.** The other hand's
+reach was a disc about `BOARD_HOME` and reached y = −0.08, so it wandered clean
+off the top of the card and sat there with the cup, above YES, on the black. It
+is a box now — `WANDER_BOUNDS`, whose floor at 0.83 is what puts punctuation
+inside the hand's reach and GOODBYE outside it, so the mechanism is one number
+rather than a special case. And the cup started at `BOARD_HOME`, which sits on
+top of S and T; since S and T are also the commonest first letters in English,
+the board opened with STRE in seven séances out of eight.
+
+**The published transcripts run with a hand on the cup.** They ran with nobody
+touching at first, and all three opened with the same six marks — a real property
+of the model rather than a bug (a board with one hand on it hovers) but the
+degenerate case, and publishing it as THE transcript would have meant publishing
+the least representative thing the scene does.
+
+**Where it stands.** 0.11 marks/second with a hand resting on it. 31.6% vowels
+against a 23.9% control with plausibility flat (English is 38.1%). The board's
+letters correlate with published English frequencies at Spearman 0.84, mean
+absolute error 2.18pp, over two and a half hours of simulated sitting on twelve
+seeds; repeated six-letter runs 4.7%. The residual is the board's geometry
+showing through, and correcting it would mean weighting letters by where they sit
+on the board, which is a thumb on the scale rather than a model of anything.
+
+**Verified headlessly rather than by description:** the scene rendered in
+Chromium at 1280×800 and 390×844 plus the 200px tile, screenshotted and looked
+at, and every layout and drawing fix above came out of looking at those. Not a
+substitute for the real build, which needs a machine this session cannot reach —
+`node_modules` here is macOS-native and the device shell is Linux.
+
+**Still open:** the landing page's visual audit now that there are thirteen
+tiles — "mix up the tiles some" — which was queued behind having a real
+thirteenth preview and now has one.

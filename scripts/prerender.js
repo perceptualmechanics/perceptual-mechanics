@@ -42,6 +42,16 @@ import {
   placeFilapixels,
 } from '../src/scenes/psyshell/psyshell.object.js';
 import { buildWeb } from '../src/scenes/psyshell/psyshell.web.js';
+import {
+  DWELL_EASE, DWELL_RESIST, DWELL_TIME, PARTNER_FORCE,
+  createCup, stepCup, createWander, stepWander, createDwell, stepDwell, clearDwellMemory,
+} from '../src/scenes/medium/medium.physics.js';
+import {
+  createReader, decayReader, weightOf, takeMark, lexiconSize,
+} from '../src/scenes/medium/medium.lexicon.js';
+import {
+  MARKS, BOARD_HOME, EPIGRAPH, SOURCES as MEDIUM_SOURCES,
+} from '../src/scenes/medium/medium.text.js';
 import { SENTENCE_SPLIT } from '../src/utils/corpus.js';
 import { SCENES, TEXT_EXEMPT } from '../src/scenes/registry.js';
 import { getOutboundLinks } from '../src/links.js';
@@ -203,6 +213,17 @@ export const PAGE_STYLE = `
   }
   p { margin: 0 0 1.15rem; }
   .script { margin: 1.6rem 0; font-family: 'Courier New', Courier, monospace; font-size: 0.92rem; line-height: 1.6; }
+  /* Medium's transcript. Tracked out and monospaced because it is a tape of
+     single marks rather than prose, and pre-wrapped rather than scrollable: the
+     lines are broken to a fixed length by the builder, so on a narrow screen
+     they should wrap like text instead of running off the side. */
+  pre.tape {
+    margin: 1.4rem 0; padding: 1rem 1.1rem;
+    background: #16130f; border: 1px solid #3a342b; border-radius: 3px;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 0.86rem; line-height: 2; letter-spacing: 0.22em;
+    color: #c4bcae; white-space: pre-wrap; overflow-wrap: anywhere;
+  }
   .script .slug { text-transform: uppercase; letter-spacing: 0.06em; color: #c4bcae; margin-bottom: 1rem; }
   .script .action { margin-bottom: 0.9rem; }
   .script .cue { margin: 0 0 0.15rem; padding-left: 5.5rem; text-transform: uppercase; letter-spacing: 0.08em; color: #c4bcae; }
@@ -911,6 +932,135 @@ ${cdRackItems.map(c => `  <li>
   };
 }
 
+// ─── Medium ─────────────────────────────────────────────────────────────────
+// The only page here that is not writing. Every other /text/ page publishes
+// text a person wrote; this one publishes a TRANSCRIPT, produced at build time
+// by the same three modules the scene runs — `medium.physics.js`,
+// `medium.lexicon.js` and the board in `medium.text.js` — with nobody touching
+// the cup. Same code, same board, no visitor.
+//
+// That is why Medium has a page at all despite being in psyshell.text.js's
+// ABSENT list: it contributes nothing to the corpus, because it has no fixed
+// writing to contribute, and it still needs something crawlable that says what
+// the scene is. A transcript is the honest form of that, and running it here
+// rather than pasting one in is the same rule every other page follows — the
+// page and the scene must not be able to disagree.
+//
+// It will say something different for you. That is stated on the page, because
+// a transcript published as though it were THE message would be exactly the
+// claim the scene is built to refuse.
+// THREE of them, and that is a decision about honesty rather than about length.
+// One transcript is a take, and a take gets chosen — the first seed tried here
+// produced TSUNAMIBIAS three times in twelve minutes and the temptation to try
+// another seed was immediate and obvious. Publishing three fixed seeds removes
+// the choice: whatever they say is what the page says, including the ones that
+// loop. The reader also gets the thing a single transcript cannot show, which
+// is how different two séances are.
+const SEANCE_SEEDS = [18531213, 18520417, 20120911];
+const SEANCE_MINUTES = 10;
+
+// ─── The visitor in these transcripts is TOUCHING ───────────────────────────
+// A slow aimless circle of about two centimetres on a thirty-centimetre board —
+// what a hand resting on a cup does whether or not its owner thinks it is doing
+// anything. It is not driving and it is not aiming.
+//
+// The first version of this page ran with nobody at the board at all, and the
+// result was a worse transcript for a reason worth recording: with only one
+// hand on it the cup settles into a basin and stays there, and all three
+// published séances opened with the same six marks. That is a real property of
+// the model rather than a bug — a board with one hand on it hovers — but it is
+// also the degenerate case, and publishing it as THE transcript would have been
+// publishing the least representative thing the scene does. A visitor's hand is
+// what a visitor will actually have.
+const restingHand = (t, cup) => ({
+  x: cup.x + Math.sin(t * 0.9) * 0.02,
+  y: cup.y + Math.cos(t * 0.7) * 0.02,
+});
+
+function seance({ seed, minutes }) {
+  const DT = 1 / 60;
+  const hand = createWander(seed, BOARD_HOME.x, BOARD_HOME.y);
+  const cup = createCup(hand.x, hand.y);
+  const dwell = createDwell();
+  const reader = createReader();
+  const plaus = m => weightOf(reader, m);
+  const scale = m => DWELL_RESIST + (DWELL_EASE - DWELL_RESIST) * plaus(m);
+  let tape = '', taken = 0, t = 0;
+  for (let i = 0; i < Math.round((minutes * 60) / DT); i++) {
+    t += DT;
+    decayReader(reader, DT);
+    stepCup(cup, DT, restingHand(t, cup), stepWander(hand, DT, MARKS, plaus));
+    clearDwellMemory(dwell, cup);
+    const got = stepDwell(dwell, cup, MARKS, DT, scale);
+    if (got) { tape = got.ch === 'GOODBYE' ? '' : tape + takeMark(reader, got); taken++; }
+  }
+  return { tape, taken, rate: taken / (minutes * 60) };
+}
+
+function buildMedium() {
+  const runs = SEANCE_SEEDS.map(seed => ({ seed, ...seance({ seed, minutes: SEANCE_MINUTES }) }));
+
+  // Broken into lines of a fixed length rather than into words. Choosing where
+  // the words are is what a sitter does afterwards, and the page must not do it
+  // for the reader — the whole subject is that the divisions are put in by the
+  // person reading.
+  const tape = (t) => `<pre class="tape">${(t.match(/.{1,42}/g) || []).map(l => esc(l.trim())).filter(Boolean).join('\n')}</pre>`;
+
+  const body = `<article class="piece">
+<h2 id="transcript">Three séances, ${SEANCE_MINUTES} minutes each</h2>
+<p>Run when this page was built, by the same code the scene runs — the cup, the two hands and the lexicon — with a visitor who is touching the cup and not driving it: a slow aimless circle about two centimetres across, which is what a hand resting on a cup does whether or not its owner thinks it is doing anything.</p>
+${runs.map(r => `<p class="slug">Seed ${r.seed} · ${r.taken} marks · ${r.rate.toFixed(2)} a second</p>\n${tape(r.tape)}`).join('\n')}
+<p class="note">It will not say any of this to you. The other hand’s wander is seeded and these three are fixed so that the page is the same page twice; the scene takes a new seed every visit, and the moment you put a finger on the cup you are in it. There is no message anywhere in the code to reproduce — see below.</p>
+
+<h2 id="mechanism">What is actually happening</h2>
+<p><strong>Nothing holds what the board is going to say.</strong> There is no queue, no script, no sentence in a variable, and the transcript above did not exist until it was spelled. The scene is three parts and none of them knows a word:</p>
+<p>The <strong>cup</strong> is a rigid body with mass, kinetic friction and stiction, pushed by two spring forces — a fingertip is a spring, not a handle. Stiction is a real branch rather than a large damping term, which is why the first movement is a lurch rather than a drift. The other hand’s force is capped at ${PARTNER_FORCE}, well under what a visitor pressing on it produces, so a visitor who wants to go somewhere else goes there every time. A board that fought back would be a puppet show; a real one is trivially overridden.</p>
+<p>The <strong>other hand</strong> wanders. It moves in bursts and then holds still, because that is what a hand does and because a continuously drifting cup crawls along the arc taking every letter it passes. It has no destination. What it has is a lean: it is drawn toward whichever letters near it would plausibly continue what has already been spelled — summed over every mark on the board at once, weighted by nearness and by plausibility. A gradient is not a target. No next letter is chosen anywhere, and which letter it was resolves only when the cup stops.</p>
+<p>A mark is taken by <strong>dwell</strong>, not by contact: the cup has to settle on a mark and stay there. How long depends on how plausible the mark is — ${(DWELL_TIME * DWELL_EASE).toFixed(2)} seconds for the likeliest letter and ${(DWELL_TIME * DWELL_RESIST).toFixed(1)} for one no English word wants. Both are finite, and that is the promise the scene makes: park the cup on Q and hold it there and you get a Q, in about two seconds. The board can be slow to agree. It can never refuse.</p>
+
+<h2 id="ideomotor">The ideomotor effect</h2>
+<p>People at a Ouija board really are moving the planchette and really do not know they are. That is a description rather than a debunking, and it is a hundred and seventy years old.</p>
+<p>William Carpenter named it in 1852: muscular movement directed by suggestion, independently of volition. Faraday settled it in 1853 with an apparatus rather than an argument — a table top built in two layers with an index between them, so that if the table pushed the hands the lower layer would move first, and if the hands pushed the table the upper one would. The upper one always moved first. His sitters were not lying. They watched the index and were astonished.</p>
+<p>The modern work is stranger than the debunking. Gauchou, Rensink and Fels put blindfolded sitters at a board and asked them factual questions they believed they did not know the answer to. Through the board they were right 65% of the time. Asked to say the answer out loud, the same people were right 50% — chance. The board was reading something out of them that speech could not.</p>
+<p>Andersen and colleagues eye-tracked real sessions and found that sitters predict the letter before the planchette reaches it, and that pairs predict better than either person alone. Which is the mechanism this scene is built on, stated in the literature’s own words: two people, neither of them deciding, jointly running a next-letter model.</p>
+
+<h2 id="punctuation">The one mark that looks backward</h2>
+<p>Every letter is weighted by what could come next. The four punctuation marks are weighted by whether what has <em>already</em> been spelled is finished — a full stop is plausible exactly when the run of letters is itself a word, and unlikely at every other moment. That is the same model asked a different question, and it is what a phone keyboard is doing when it offers you a period.</p>
+<p>It does not make the board decide where the words are. The letters still never do, and the tape is still something a reader divides. It makes the board able to guess, at about the rate English guesses, and be wrong.</p>
+
+<h2 id="lexicon">The lexicon, and why it is not this site</h2>
+<p>The board’s sense of what is plausible comes from ${lexiconSize().toLocaleString()} English words in frequency order — not a dictionary. That is modelling rather than economising: the words a person is primed for are exactly the frequent ones, and a full 264,000-word dictionary would make ZYGOTE as reachable as THE. Rarity is the signal.</p>
+<p>It is plain English rather than this site’s own writing, and that was measured rather than assumed. The site’s prose is statistically ordinary English — its letter distribution matches published frequencies at Spearman 0.989, mean absolute error 0.26 percentage points — so seeding the board with the site would have changed nothing about the output while making the board a ventriloquist for the page it sits on. The board is not a mouthpiece.</p>
+<p>Word frequency is damped: weight is rank to the power of −0.55 rather than −1. At the true Zipf slope the top hundred words swamp everything and the board reads like phone autocomplete, which is the one failure mode that would make this feel familiar instead of uncanny. Everybody has a phone; nobody has been haunted.</p>
+<p>There is no space bar and nothing decides that a word has ended. The board keeps the longest run of what it has spelled that English can still continue, and drops a character off the front when it runs dry — so HELLO falls back to LO, the next letters continue LOCAL, and the tape reads HELLOCAL. That is not a defect being tolerated. It is what real transcripts look like, and it is why people can read them: the divisions are put in by whoever is reading.</p>
+
+<h2 id="measured">What it measures</h2>
+<p>The board’s own letters, across two and a half hours of simulated sitting on twelve seeds, correlate with published English letter frequencies at <strong>Spearman 0.84</strong>, mean absolute error 2.2 percentage points. It is not English and it is not noise. With plausibility switched off — same hands, same seeds, every mark weighted the same — the vowel share falls from 31.6% to 23.9% against English’s 38.1%, and the tape stops containing words. Punctuation lands on about 6% of marks, which is roughly the rate English punctuates at, and it lands where it does because a full stop is plausible exactly when what has been spelled is already a word.</p>
+<p>The residual is the board’s geometry showing through. S, T and R come out at about twice their English rate and A and O at about two thirds, because the letters at the middle of the two arcs are nearest to everything and get more traffic — and widening the arcs, which is what makes the board look like a board, costs about two and a half points of vowel share for exactly that reason. Both were chased far enough to be sure: a spring pulling the other hand back toward the middle made the distribution markedly worse at every strength, and an intermediate arc width bought none of the vowels back. Correcting the rest would mean weighting letters by where they sit on the board, which is a thumb on the scale rather than a model of anything.</p>
+
+<h2 id="sources">Sources</h2>
+<ul class="sources">
+<li>${esc(MEDIUM_SOURCES.carpenter)}</li>
+<li>${esc(MEDIUM_SOURCES.faraday)}</li>
+<li>${esc(MEDIUM_SOURCES.gauchou)}</li>
+<li>${esc(MEDIUM_SOURCES.andersen)}</li>
+<li>${esc(MEDIUM_SOURCES.wordlist)}</li>
+</ul>
+</article>`;
+
+  return {
+    slugPath: 'medium',
+    title: 'Medium',
+    description: 'A Ouija board that can spell — a séance run at build time, and the physics and predictive text underneath it.',
+    sceneKey: 'medium', sceneName: 'Medium',
+    lede: `<p><strong>Medium</strong> is a homemade Ouija board seen from above, with an upside-down teacup on it and two pairs of fingertips: yours, and somebody else’s. Press on the cup and rest your hand, or let go and watch. Either way letters land.</p>
+<blockquote class="epigraph"><p>${esc(EPIGRAPH)}</p></blockquote>
+<p>This page is a transcript — one séance, run when the page was built, with nobody touching the cup — and the account of how it was produced.</p>`,
+    bodyHtml: body,
+    jsonLd: creativeWork('Medium', 'A Ouija board that can spell: a build-time transcript, the cup physics, and the predictive-text model underneath.', 'medium'),
+  };
+}
+
 // ─── Index ──────────────────────────────────────────────────────────────────
 
 function buildIndex(pages) {
@@ -946,7 +1096,7 @@ export function prerender(outDir) {
   const pages = [
     buildScroll(), buildPoems(), buildFragments(),
     buildTheater(), buildOrrery(), buildBeamline(), buildLibrary(),
-    buildApollo(), buildPsyshell(),
+    buildApollo(), buildPsyshell(), buildMedium(),
   ];
   const all = [buildIndex(pages), ...pages];
 

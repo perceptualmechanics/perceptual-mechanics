@@ -1,0 +1,31 @@
+<!--
+  Medium scene shell markup.
+
+  All of it is body-level chrome — the title, the hint, the placard and the
+  live region — because the scene itself is one canvas and has no controls.
+  That is unusual here and it is the point: Apollo has a rail of faders because
+  an instrument has controls, and this has none because a Ouija board has none.
+  There is nothing to press but the cup.
+
+  Marked `.pm-scene-chrome` so main.js's focus trap finds them on the body,
+  which it otherwise only queries inside #experience-container — the omission
+  that left Outside's sound toggle rendered, styled, focusable in principle and
+  unreachable by Tab for a release.
+
+  The placard carries the epigraph, and the epigraph's TEXT is not written here.
+  It comes from EPIGRAPH in medium.text.js, which is the same constant
+  /text/medium/ prints, because a sentence kept in two files is a sentence that
+  ends up saying two things.
+-->
+<div class="medium-title-row"><p class="medium-title" aria-hidden="true">Medium</p></div>
+<p class="medium-hint" aria-hidden="true">press on the cup and rest your hand &nbsp;&middot;&nbsp; let go and it keeps going</p>
+<aside class="medium-placard pm-scene-chrome" tabindex="0" aria-label="About this board">
+  <p class="medium-epigraph"></p>
+  <p class="medium-placard-note">
+    The other hand has nothing to say. It wanders, and it leans very slightly
+    toward letters that would continue what has already been spelled — never
+    toward one letter, always toward all of them at once. Nothing here holds a
+    message. <a href="/text/medium/">The transcript and the sources</a>.
+  </p>
+</aside>
+<div class="medium-sr-live" aria-live="polite"></div>

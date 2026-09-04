@@ -15,29 +15,18 @@ import {
   createCup, stepCup, createWander, stepWander,
   createDwell, stepDwell, clearDwellMemory,
 } from '../src/scenes/medium/medium.physics.js';
-import { letterWeights, createContext, advance } from '../src/scenes/medium/medium.lexicon.js';
+import { createReader, decayReader, weightOf, takeMark } from '../src/scenes/medium/medium.lexicon.js';
+import { MARKS, BOARD_HOME } from '../src/scenes/medium/medium.text.js';
 
 const DT = 1 / 60;
 const f = n => n.toFixed(4);
 
-// A plausible homemade board: two arcs of letters, digits under them.
-const LETTERS = (() => {
-  const out = [];
-  const A = 'ABCDEFGHIJKLM', B = 'NOPQRSTUVWXYZ';
-  A.split('').forEach((ch, i) => {
-    const t = (i / (A.length - 1) - 0.5) * 1.55;
-    out.push({ ch, x: 0.5 + Math.sin(t) * 0.36, y: 0.30 + (1 - Math.cos(t)) * 0.20 });
-  });
-  B.split('').forEach((ch, i) => {
-    const t = (i / (B.length - 1) - 0.5) * 1.42;
-    out.push({ ch, x: 0.5 + Math.sin(t) * 0.30, y: 0.47 + (1 - Math.cos(t)) * 0.16 });
-  });
-  '0123456789'.split('').forEach((ch, i) => {
-    out.push({ ch, x: 0.5 + (i / 9 - 0.5) * 0.52, y: 0.70 });
-  });
-  return out;
-})();
-const at = ch => LETTERS.find(l => l.ch === ch);
+// The real board — the same MARKS array medium.js draws and the physics is
+// handed at runtime. This file kept its own copy of the letter arcs until the
+// board moved out into medium.text.js, which meant the thing being measured was
+// not quite the thing that shipped.
+const LETTERS = MARKS;
+const at = ch => MARKS.find(l => l.ch === ch);
 
 // ─── 1. Is the sentence stored anywhere? ─────────────────────────────────────
 // The structural claim of the scene is that nothing holds what the board is
@@ -45,18 +34,19 @@ const at = ch => LETTERS.find(l => l.ch === ch);
 // different visitors. If a message were stored, both would say it.
 {
   const say = (visitor) => {
-    const cup = createCup(0.5, 0.44), hand = createWander(909, 0.5, 0.44), dwell = createDwell();
-    const ctx = createContext();
-    let bias = letterWeights(ctx.live);
-    const plaus = l => { const c = l.ch.charCodeAt(0) - 65; return (c < 0 || c > 25) ? 0.06 : Math.pow(bias[c], 0.5); };
+    const cup = createCup(BOARD_HOME.x, BOARD_HOME.y), hand = createWander(909, BOARD_HOME.x, BOARD_HOME.y), dwell = createDwell();
+    const reader = createReader();
+    const plaus = l => weightOf(reader, l);
+    let out = '';
     for (let i = 0; i < Math.round(150 / DT); i++) {
+      decayReader(reader, DT);
       stepCup(cup, DT, visitor(i * DT, cup), stepWander(hand, DT, LETTERS, plaus));
       clearDwellMemory(dwell, cup);
       const got = stepDwell(dwell, cup, LETTERS, DT,
         l => DWELL_RESIST + (DWELL_EASE - DWELL_RESIST) * plaus(l));
-      if (got) { advance(ctx, got.ch); bias = letterWeights(ctx.live); }
+      if (got) out += takeMark(reader, got);
     }
-    return ctx.text;
+    return out;
   };
   const a = say((t, c) => ({ x: c.x + Math.sin(t * 0.9) * 0.02, y: c.y + Math.cos(t * 0.7) * 0.02 }));
   const b = say((t, c) => ({ x: c.x + Math.sin(t * 1.7) * 0.03, y: c.y - Math.cos(t * 0.4) * 0.02 }));
@@ -70,8 +60,8 @@ const at = ch => LETTERS.find(l => l.ch === ch);
 // The visitor must win, completely — a board that fights back is a puppet show,
 // and a real one is trivially overridden.
 {
-  const cup = createCup(0.5, 0.44);
-  const hand = createWander(11, 0.5, 0.44);
+  const cup = createCup(BOARD_HOME.x, BOARD_HOME.y);
+  const hand = createWander(11, BOARD_HOME.x, BOARD_HOME.y);
   let worst = 0, t = 0;
   for (let i = 0; i < Math.round(8 / DT); i++) {
     t += DT;
@@ -103,13 +93,14 @@ const at = ch => LETTERS.find(l => l.ch === ch);
 {
   const q = at('Q');
   const cup = createCup(q.x, q.y);
-  const hand = createWander(3, 0.5, 0.44);
+  const hand = createWander(3, BOARD_HOME.x, BOARD_HOME.y);
   const dwell = createDwell();
-  const ctx = createContext();
-  let bias = letterWeights(ctx.live), t = 0, got = null;
-  const plaus = l => { const c = l.ch.charCodeAt(0) - 65; return (c < 0 || c > 25) ? 0.06 : Math.pow(bias[c], 0.5); };
+  const reader = createReader();
+  let t = 0, got = null;
+  const plaus = l => weightOf(reader, l);
   for (let i = 0; i < Math.round(20 / DT) && !got; i++) {
     t += DT;
+    decayReader(reader, DT);
     const vis = { x: q.x + (q.x - cup.x) * 1.6, y: q.y + (q.y - cup.y) * 1.6 };
     stepCup(cup, DT, vis, stepWander(hand, DT, LETTERS, plaus));
     clearDwellMemory(dwell, cup);

@@ -1,81 +1,55 @@
 // ─── medium: what the board actually spells ─────────────────────────────────
 // Run with `node scripts/medium-spell.mjs`. Not part of the build — the bench
 // for the one claim the scene cannot make in a comment: that a hand with no
-// destination, plus a bias that only affects how long a letter takes to land,
-// produces a tape that reads like English rather than like a keyboard smash.
+// destination produces a tape that reads like English rather than like a
+// keyboard smash.
 //
-// Nothing in here is the scene. It is the physics, the lexicon, a plausible
-// board geometry and a visitor who does what visitors do — and the output is
-// the honest answer to "so what does it say?".
+// Nothing in here is a copy of the scene. It is the real physics, the real
+// lexicon and the real board — `medium.text.js`'s MARKS, the same array
+// `medium.js` draws — with a visitor stubbed in. An earlier version of this
+// file kept its own copy of the letter arcs, which meant the thing being
+// measured was not quite the thing that shipped.
 import {
   DWELL_EASE, DWELL_RESIST,
   createCup, stepCup, createWander, stepWander,
   createDwell, stepDwell, clearDwellMemory,
 } from '../src/scenes/medium/medium.physics.js';
-import { letterWeights, createContext, advance, isWord, lexiconSize } from '../src/scenes/medium/medium.lexicon.js';
+import {
+  createReader, decayReader, weightOf, takeMark, readerHasWord, readerWord, lexiconSize,
+} from '../src/scenes/medium/medium.lexicon.js';
+import { MARKS, BOARD_HOME } from '../src/scenes/medium/medium.text.js';
 
 const DT = 1 / 60;
 
-// How sharply plausibility is felt. letterWeights returns a max-normalised row,
-// and most letters sit far below the maximum on any given prefix — so a linear
-// read would put nearly everything at DWELL_RESIST and the board would only
-// ever take the single likeliest letter. The exponent lifts the middle of the
-// row: at 0.5 a letter with a hundredth of the leader's weight still comes out
-// a tenth of the way from resist to ease.
-const GAMMA = 0.5;
-
-// A plausible homemade board: two arcs of letters, digits under them.
-const LETTERS = (() => {
-  const out = [];
-  const A = 'ABCDEFGHIJKLM', B = 'NOPQRSTUVWXYZ';
-  A.split('').forEach((ch, i) => {
-    const t = (i / (A.length - 1) - 0.5) * 1.55;
-    out.push({ ch, x: 0.5 + Math.sin(t) * 0.36, y: 0.30 + (1 - Math.cos(t)) * 0.20 });
-  });
-  B.split('').forEach((ch, i) => {
-    const t = (i / (B.length - 1) - 0.5) * 1.42;
-    out.push({ ch, x: 0.5 + Math.sin(t) * 0.30, y: 0.47 + (1 - Math.cos(t)) * 0.16 });
-  });
-  '0123456789'.split('').forEach((ch, i) => {
-    out.push({ ch, x: 0.5 + (i / 9 - 0.5) * 0.52, y: 0.70 });
-  });
-  return out;
-})();
-
 // ─── A session ──────────────────────────────────────────────────────────────
 // `visitor(t, cup)` returns the visitor's fingertip, or null if they are not
-// touching. Everything else is the scene as it will ship.
-function session({ seconds = 120, seed = 0x5EA9CE, visitor, gamma = GAMMA }) {
-  const cup = createCup(0.5, 0.44);
-  const hand = createWander(seed, 0.5, 0.44);
+// touching. `flat` is the control: it sends every mark to the same weight, so
+// the field becomes a uniform pull and the dwell threshold becomes a constant.
+// Everything else is the scene as it ships.
+function session({ seconds = 300, seed, visitor = null, flat = false }) {
+  const hand = createWander(seed, BOARD_HOME.x, BOARD_HOME.y);
+  const cup = createCup(hand.x, hand.y);
   const dwell = createDwell();
-  const ctx = createContext();
-  let bias = letterWeights(ctx.live);
-  // Digits are outside the model — no English word continues into a 7 — so they
-  // get a flat plausibility rather than a computed one. Low, because a board
-  // that drops numbers into the middle of words is noise.
-  const plaus = (l) => {
-    const c = l.ch.charCodeAt(0) - 65;
-    return (c < 0 || c > 25) ? 0.06 : Math.pow(bias[c], gamma);
-  };
-  const scale = (l) => DWELL_RESIST + (DWELL_EASE - DWELL_RESIST) * plaus(l);
+  const reader = createReader();
+  const plaus = flat ? () => 1 : (m) => weightOf(reader, m);
+  const scale = (m) => DWELL_RESIST + (DWELL_EASE - DWELL_RESIST) * plaus(m);
 
-  let t = 0, taken = 0;
-  const marks = [];
+  let t = 0, taken = 0, tape = '';
+  const words = [];
   for (let i = 0; i < Math.round(seconds / DT); i++) {
     t += DT;
-    const p = stepWander(hand, DT, LETTERS, plaus);
-    stepCup(cup, DT, visitor(t, cup), p);
+    decayReader(reader, DT);
+    stepCup(cup, DT, visitor ? visitor(t, cup) : null, stepWander(hand, DT, MARKS, plaus));
     clearDwellMemory(dwell, cup);
-    const got = stepDwell(dwell, cup, LETTERS, DT, scale);
+    const got = stepDwell(dwell, cup, MARKS, DT, scale);
     if (got) {
-      advance(ctx, got.ch);
-      bias = letterWeights(ctx.live);
+      const added = takeMark(reader, got);
+      tape = got.ch === 'GOODBYE' ? '' : tape + added;
       taken++;
-      if (isWord(ctx.live) && ctx.live.length >= 3) marks.push(ctx.live);
+      if (readerHasWord(reader)) words.push(readerWord(reader));
     }
   }
-  return { text: ctx.text, rate: taken / seconds, words: marks };
+  return { tape, rate: taken / seconds, words };
 }
 
 // The visitor most people are: touching, not driving. A slow aimless circle of
@@ -86,34 +60,43 @@ const resting = (t, cup) => ({
   y: cup.y + Math.cos(t * 0.7) * 0.02,
 });
 
-const show = (s) => s.replace(/(.{60})/g, '$1\n           ');
+const show = (s) => s.replace(/(.{58})/g, '$1\n           ');
+// Letters only. The tape also carries digits, punctuation and the spaces after
+// it, and counting those in the denominator quietly moved the number two points
+// the day punctuation was added — a ruler that changes when the thing being
+// measured gains a new part is not a ruler.
+const vowels = (s) => {
+  const letters = s.replace(/[^A-Z]/g, '');
+  return (letters.match(/[AEIOU]/g) || []).length / (letters.length || 1);
+};
 
 console.log(`lexicon  ${lexiconSize().toLocaleString()} words\n`);
 
-for (const seed of [0x5EA9CE, 7, 1031, 66613]) {
-  const r = session({ seconds: 180, seed, visitor: resting });
-  console.log(`seed ${String(seed).padStart(6)}  ${r.rate.toFixed(2)} letters/s`);
-  console.log(`           ${show(r.text)}`);
-  console.log(`           words passed through: ${r.words.slice(-14).join(' ') || '(none)'}\n`);
+for (const seed of [611853, 7, 1031, 66613]) {
+  const alone = session({ seconds: 240, seed });
+  const held = session({ seconds: 240, seed, visitor: resting });
+  console.log(`seed ${String(seed).padStart(6)}  nobody touching, ${alone.rate.toFixed(2)} letters/s`);
+  console.log(`           ${show(alone.tape)}`);
+  console.log(`           a hand resting on it, ${held.rate.toFixed(2)} letters/s`);
+  console.log(`           ${show(held.tape)}`);
+  console.log(`           words it passed through: ${held.words.slice(-12).join(' ') || '(none)'}\n`);
 }
 
-// ─── The control: does the bias do anything at all? ─────────────────────────
-// Same seed, same hand, same everything — with plausibility switched off by
-// flattening the exponent to zero, which sends every letter to DWELL_EASE. If
-// this reads the same as the run above, the lexicon is decoration.
+// ─── The control ────────────────────────────────────────────────────────────
+// Same hands, same seeds, plausibility flattened — the field becomes a uniform
+// pull toward the middle of the letters and every mark costs the same dwell. If
+// this reads like the runs above, the lexicon is decoration.
 {
-  const vowels = (s) => (s.match(/[AEIOU]/g) || []).length / (s.length || 1);
-  // Ten seeds, not one. A single 180-second tape is thirty letters long and its
-  // vowel share swings by fifteen points from seed to seed — reporting one of
+  // Ten seeds, not one. A single four-minute tape is forty letters long and its
+  // vowel share swings by fifteen points from seed to seed; reporting one of
   // them as the result was the first version of this and it was noise.
   const seeds = [7, 1031, 66613, 5, 99, 404, 8123, 31337, 2, 555];
-  const mean = (f) => seeds.reduce((a, s) => a + f(s), 0) / seeds.length;
-  const on = seeds.map(seed => session({ seconds: 300, seed, visitor: resting }));
-  const off = seeds.map(seed => session({ seconds: 300, seed, visitor: resting, gamma: 0 }));
-  console.log('control  same hands, same seeds, plausibility off:');
-  console.log(`           ${show(off[0].text)}`);
+  const on = seeds.map(seed => session({ seed, visitor: resting }));
+  const off = seeds.map(seed => session({ seed, visitor: resting, flat: true }));
   const avg = (rs, f) => rs.reduce((a, r) => a + f(r), 0) / rs.length;
+  console.log('control  same hands, same seeds, plausibility flat:');
+  console.log(`           ${show(off[0].tape.slice(0, 116))}`);
   console.log(`\n         over ${seeds.length} seeds x 300s`);
   console.log(`         letters/s    on ${avg(on, r => r.rate).toFixed(3)}   off ${avg(off, r => r.rate).toFixed(3)}`);
-  console.log(`         vowel share  on ${(100 * avg(on, r => vowels(r.text))).toFixed(1)}%  off ${(100 * avg(off, r => vowels(r.text))).toFixed(1)}%   (English is 38.1%)`);
+  console.log(`         vowel share  on ${(100 * avg(on, r => vowels(r.tape))).toFixed(1)}%  off ${(100 * avg(off, r => vowels(r.tape))).toFixed(1)}%   (English is 38.1%)`);
 }

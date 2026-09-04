@@ -125,7 +125,21 @@ export const PARTNER_HAND_SPEED = 0.6;
 // letter on the way somewhere else spells nothing, which is how a real board
 // behaves and is also what makes the visitor's own pauses the thing that
 // spells.
-export const DWELL_RADIUS = 0.05;
+// The catchment, and it is also the cup: CUP_R in medium.js is this times 1.06,
+// because a cup drawn smaller than its own catchment would take letters it was
+// visibly not on. So this number is both a rule and a size, and it was swept as
+// both when the arcs were widened and the letters ended up 0.051 apart:
+//
+//     radius   repeated 6-grams   Spearman vs English
+//      0.042         10.4%              0.822
+//      0.048          4.0%              0.837     <- here
+//      0.055          4.8%              0.856
+//
+// 0.048 rather than 0.055 because the cup has to be readable as sitting on ONE
+// letter, and 0.055 is a teacup wide enough to cover two of them at this
+// spread. 0.042 looks better still and measures much worse: too small a
+// catchment means the cup takes fewer distinct letters and loops more.
+export const DWELL_RADIUS = 0.048;
 export const DWELL_SPEED = 0.09;
 export const DWELL_TIME = 0.55;
 
@@ -153,8 +167,39 @@ export const STOP_DAMP = 9;
 
 export const WANDER_SIGMA = 2.5;     // impulse strength, board units/s^1.5
 export const WANDER_DAMP = 2.0;      // how fast an impulse dies, per second
-export const WANDER_CENTRE = 0.8;    // spring back toward the letters, per s^2
-export const WANDER_REACH = 0.30;    // how far from that centre it may get
+// A spring back toward the middle of the letters, and it is ZERO — the term is
+// kept because removing it would hide the finding. It was 0.8, and it made the
+// middle of the board sticky: the letters at the centre of the two arcs are
+// nearest to everything, so the hand spent its time there and S, T and R came
+// out at twice their English rate while A and O came out at two thirds. Sweeping
+// it against the board's own letter distribution measured 0.796 / 0.762 / 0.815
+// / 0.830 Spearman against published English frequencies at 0.8 / 0.4 / 0.15 /
+// 0, so the honest value is none at all. What keeps the hand on the board is
+// WANDER_BOUNDS below, which is a wall rather than a preference.
+export const WANDER_CENTRE = 0;
+// ─── Where the hand is allowed to be ────────────────────────────────────────
+// A box, not a disc, and the change was forced by looking at it: a disc of
+// radius 0.46 about BOARD_HOME reaches y = −0.08, so the other hand wandered
+// clean off the top edge of the card and sat there with the cup, above YES,
+// on the black. A board is a rectangle and a hand on it stays on it.
+//
+// The bounds are the card's lettering, with a margin — and the bottom edge is
+// doing real work. Punctuation sits at y 0.805 and GOODBYE at 0.885, so a floor
+// of 0.83 puts the four marks inside the other hand's reach and GOODBYE outside
+// it. That is the whole mechanism of "the board cannot say goodbye on its own",
+// and it is one number rather than a special case.
+export const WANDER_BOUNDS = { x0: 0.10, y0: 0.09, x1: 0.90, y1: 0.83 };
+
+// Where a session starts — anywhere among the letters, which is where a cup
+// gets left. This is not cosmetic. Starting it at BOARD_HOME, or in a small disc
+// around it, put the cup on top of S and T at the beginning of every session,
+// and since S and T are also the commonest first letters in English the board
+// opened with STRE in seven séances out of eight. A board that always says the
+// same thing first is a board with a script, which is the one thing this scene
+// must not have. Drawn over the lettering rather than over the whole board,
+// because a uniform draw parks a third of sessions in a corner against the
+// border, which reads as a bug rather than as a cup somebody put down.
+export const WANDER_START = { x0: 0.18, y0: 0.16, x1: 0.82, y1: 0.58 };
 
 // ─── The field ──────────────────────────────────────────────────────────────
 // How hard the hand leans toward plausible letters, and how far it can feel
@@ -172,9 +217,16 @@ export const WANDER_REACH = 0.30;    // how far from that centre it may get
 //
 // 12 rather than 26 because rate is not the only thing being bought: past this
 // the hand starts to look like it is going somewhere, and the whole illusion is
-// that it is not. FIELD_RANGE is the exponential falloff in board units — short
-// enough that the hand is drawn to a plausible letter beside it rather than to
-// the best one on the board, which is the difference between a drift and a
+// that it is not.
+//
+// FIELD_RANGE is the exponential falloff in board units — short enough that the
+// hand is drawn to a plausible letter beside it rather than to the best one on
+// the board, which is the difference between a drift and a destination. Swept
+// again after the arcs were widened, on the guess that a longer range would let
+// the hand feel the far ends of them: it does not, it makes everything worse.
+// 0.28 / 0.38 / 0.50 measured Spearman 0.809 / 0.733 / 0.685 against English
+// letter frequencies, with repeated six-grams going 5.2% / 7.2% / 6.0%. A wider
+// kernel averages the whole board into one direction, and one direction is a
 // destination.
 export const FIELD_PULL = 12;
 export const FIELD_RANGE = 0.28;
@@ -352,9 +404,9 @@ export function createWander(seed = 0x5EA9CE, homeX = 0.5, homeY = 0.44) {
   const rnd = mulberry32(seed);
   // Start somewhere on the board rather than dead centre, or every session
   // opens with the same letter — measured: eight runs out of eight began T.
-  const a = rnd() * Math.PI * 2, r = Math.sqrt(rnd()) * WANDER_REACH * 0.8;
+  const S = WANDER_START;
   return {
-    x: homeX + Math.cos(a) * r, y: homeY + Math.sin(a) * r,
+    x: S.x0 + rnd() * (S.x1 - S.x0), y: S.y0 + rnd() * (S.y1 - S.y0),
     vx: 0, vy: 0, homeX, homeY,
     moving: false, left: PAUSE_MIN + rnd() * PAUSE_VAR, rnd,
   };
@@ -417,15 +469,13 @@ export function stepWander(w, dt, letters, weightOf) {
   if (sp > PARTNER_HAND_SPEED) { w.vx = (w.vx / sp) * PARTNER_HAND_SPEED; w.vy = (w.vy / sp) * PARTNER_HAND_SPEED; }
   w.x += w.vx * dt; w.y += w.vy * dt;
 
-  // A hard edge, in case a run of impulses wins an argument with the spring.
-  // Reflecting rather than clamping, so the hand turns around instead of
-  // grinding along the boundary.
-  const dx = w.x - w.homeX, dy = w.y - w.homeY, d = Math.hypot(dx, dy);
-  if (d > WANDER_REACH) {
-    w.x = w.homeX + (dx / d) * WANDER_REACH;
-    w.y = w.homeY + (dy / d) * WANDER_REACH;
-    const dot = (w.vx * dx + w.vy * dy) / d;
-    if (dot > 0) { w.vx -= 2 * dot * (dx / d); w.vy -= 2 * dot * (dy / d); }
-  }
+  // The edges of the board. Reflecting rather than clamping, so the hand turns
+  // around instead of grinding along the boundary — a hand parked against an
+  // invisible wall is the tell that there is one.
+  const B = WANDER_BOUNDS;
+  if (w.x < B.x0) { w.x = B.x0; if (w.vx < 0) w.vx = -w.vx; }
+  else if (w.x > B.x1) { w.x = B.x1; if (w.vx > 0) w.vx = -w.vx; }
+  if (w.y < B.y0) { w.y = B.y0; if (w.vy < 0) w.vy = -w.vy; }
+  else if (w.y > B.y1) { w.y = B.y1; if (w.vy > 0) w.vy = -w.vy; }
   return w;
 }

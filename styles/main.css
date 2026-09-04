@@ -412,7 +412,7 @@ html, body {
      GAP, where before it also set the pre-script icon width, and a stale
      count there meant a momentarily clipped row. The failure mode of
      forgetting this now is a slightly wrong gap for one frame. */
-  --nav-count: 12;
+  --nav-count: 13;
   /* 1 while #fullscreen-toggle is in the row, 0 while the platform has no
      Fullscreen API and main.js leaves it `hidden`. Set from the same
      feature test that reveals it, so the row never reserves a slot for a

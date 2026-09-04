@@ -308,6 +308,21 @@
       </svg>
     </button>
 
+    <!-- Medium. A planchette silhouette: the rounded teardrop every board's
+         pointer has, with the sight-hole in it and a letter arc under it. Three
+         shapes, which is what survives at the 23.4px each icon gets once there
+         are thirteen of them at 320px — the arc is the half that says "board"
+         and the hole is the half that says "pointer", and neither reads alone.
+         The cup this scene actually draws is a teacup rather than a planchette;
+         a teacup from above is a circle, and a circle at this size is a dot. -->
+    <button type="button" class="nav-icon" data-scene="medium" aria-label="Medium — A Board That Can Spell" title="Medium — A Board That Can Spell">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 3.4c3.1 0 5.2 2 5.2 4.5 0 2.6-2 4.1-3.3 5.6-.8.9-1.2 1.7-1.9 1.7s-1.1-.8-1.9-1.7C8.8 12 6.8 10.5 6.8 7.9c0-2.5 2.1-4.5 5.2-4.5Z"/>
+        <circle cx="12" cy="8.1" r="1.9"/>
+        <path d="M3.4 18.2c2.6-1.6 5.5-2.4 8.6-2.4s6 .8 8.6 2.4"/>
+      </svg>
+    </button>
+
     <!-- Fullscreen toggle — persistent, site-wide, wired once here at the
          same shared-chrome level as #pm-nav/#site-title (main.js) rather
          than duplicated into each of the ten scenes' own body-level chrome,
@@ -491,6 +506,21 @@
         <button type="button" class="preview-container" id="preview-psyshell"
              title="Psyshell — lens RE73415"
              aria-label="Psyshell — a small crystal antler on a workshop bench, holding every sentence on this site as a point of light inside it. Press Enter to expand.">
+        </button>
+      </li>
+
+      <!-- Medium: alive on the first frame and legible before it is readable.
+           At 200px the twenty-six letters are about six pixels each and cannot
+           be read, which is fine and was the design — two arcs of lettering
+           with something white sitting on one of them is a Ouija board at any
+           size, and the cup drifting is what says it is running. The tile has
+           no visitor, so what it shows is the other hand working alone, which
+           is also the honest thumbnail for this scene. Seeded fixed (see
+           medium.js) so the same board comes back on every load. -->
+      <li class="preview-wrapper" data-scene="medium">
+        <button type="button" class="preview-container" id="preview-medium"
+             title="Medium — A Board That Can Spell"
+             aria-label="Medium — a homemade Ouija board seen from above with an upside-down teacup drifting across it, spelling on its own. Press Enter to expand.">
         </button>
       </li>
 

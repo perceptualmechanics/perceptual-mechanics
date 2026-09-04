@@ -80,10 +80,14 @@ export const FILAPIXEL_COUNT = TEXTS.length;
 export const PIECE_COUNT = SOURCES.reduce((a, s) => a + s.pieces, 0);
 export const CORPUS_WORDS = SOURCES.reduce((a, s) => a + s.words, 0);
 
-// Two scenes are absent and it is a fact about them rather than an omission:
-// Harmonics publishes no writing of its own, and Outside publishes five
-// power-source names and two origin labels, none of which are sentences.
-export const ABSENT = ['harmonics', 'outside'];
+// Three scenes are absent and it is a fact about them rather than an omission:
+// Harmonics publishes no writing of its own, Outside publishes five
+// power-source names and two origin labels, none of which are sentences, and
+// Medium publishes nothing FIXED at all — the letters on its tape are produced
+// while you watch, differently every time, so there is no sentence of the
+// site's for the crystal to hold. It has a /text/ page all the same, and that
+// page is a transcript rather than writing: one séance, run at build time.
+export const ABSENT = ['harmonics', 'medium', 'outside'];
 
 // ─── The assertion this file makes about itself ─────────────────────────────
 // Thrown at import time, so the build fails rather than the scene. An

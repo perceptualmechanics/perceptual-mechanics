@@ -182,6 +182,127 @@ export function isWord(context) {
   return i < words.length && words[i] === context;
 }
 
-// Exposed for the bench, so `scripts/medium-spell.mjs` can report the size of
+// ─── The reader ─────────────────────────────────────────────────────────────
+// One object that carries everything the board's plausibility depends on, so
+// the scene and the build cannot compute it differently. `medium.js` holds one
+// and `scripts/prerender.js` holds another, and both go through `weightOf`.
+//
+// Two things live in here that `letterWeights` alone does not have:
+//
+// **The marks that are not letters.** English has nothing to say about a 7 — no
+// word continues into one — so digits and the three words get a flat weight
+// rather than a computed one, low enough that a board dropping numbers into the
+// middle of a word stays the exception. GOODBYE is lower again: it sits outside
+// the other hand's reach anyway, and this makes sure a visitor merely drifting
+// past it does not trip it.
+//
+// **Fatigue.** A mark just taken is less plausible for a while, decaying with a
+// thirty-second half-life. This is not a knob bolted on to make the output look
+// nicer — it was added because the output was measurably worse without it, and
+// the half-life was chosen the same way.
+//
+// The failure it fixes: the field pulls the hand toward a region, the region has
+// a few letters in it, and the board loops. Without fatigue, three séances on
+// three unrelated seeds all produced TSUNAMIBIAS. The ruler is the share of
+// six-letter runs that a séance has already produced once, over two and a half
+// hours of simulated sitting on twelve seeds:
+//
+//     half-life    repeated 6-grams    Spearman vs English    vowels
+//        (none)              —                  —               —
+//         6 s             14.4%              0.782            37.3%
+//        15 s             12.5%              0.799            36.7%
+//        30 s              5.9%              0.774            36.1%
+//
+// Repetition more than halves and nothing else moves, so 30. It is also the true
+// thing to model: a hand does not reach twice for what it just reached for, and
+// a basin of attraction that nothing tires of is a property of a simulation
+// rather than of a séance.
+const FATIGUE_DEPTH = 0.6;
+const FATIGUE_HALFLIFE = 30;
+const FATIGUE_FLOOR = 0.02;
+
+// How sharply the plausibility curve is felt. `letterWeights` returns a row
+// scaled so the likeliest letter is 1, and on any given prefix most of the
+// other twenty-five sit far below that — so reading the row linearly would push
+// nearly everything to full resistance and the board would only ever take the
+// single best letter, which is a typewriter rather than a board. The exponent
+// lifts the middle: at 0.5 a letter with a hundredth of the leader's weight
+// still lands a tenth of the way from resist toward ease.
+const GAMMA = 0.5;
+const FLAT = { digit: 0.06, word: 0.04, goodbye: 0.02 };
+
+// ─── Punctuation is the one mark that looks BACKWARD ────────────────────────
+// Every letter is weighted by what could come next. A full stop is weighted by
+// whether what has already been spelled is finished — which is the same model
+// asked a different question, and is exactly what a phone keyboard is doing
+// when it offers you a period. So a punctuation mark carries its own relative
+// weight (roughly how often English uses it) and that weight is worth having
+// only when the live context is itself a whole word; the rest of the time it is
+// PUNCT_COLD, which is low but never zero, because a visitor who parks the cup
+// on a comma has to get a comma.
+//
+// This does not make the board decide where the words are — the letters still
+// never do, and the tape is still something the reader divides. It makes the
+// board able to guess, at about the rate English guesses, and be wrong.
+const PUNCT_WARM = 0.62;
+const PUNCT_COLD = 0.03;
+
+export function createReader() {
+  return { ctx: createContext(), row: letterWeights(''), tired: new Map() };
+}
+
+// Call once a frame, before `weightOf`.
+export function decayReader(r, dt) {
+  if (!r.tired.size) return;
+  const k = Math.pow(0.5, dt / FATIGUE_HALFLIFE);
+  for (const [ch, v] of r.tired) {
+    const next = v * k;
+    if (next < FATIGUE_FLOOR) r.tired.delete(ch); else r.tired.set(ch, next);
+  }
+}
+
+// `mark` is one of medium.text.js's MARKS: { ch, kind }. Returns 0..1.
+export function weightOf(r, mark) {
+  let w;
+  if (mark.kind === 'letter') {
+    w = Math.pow(r.row[mark.ch.charCodeAt(0) - 65], GAMMA);
+  } else if (mark.kind === 'punct') {
+    w = (mark.w ?? 0.5) * (isWord(r.ctx.live) && r.ctx.live.length >= 2 ? PUNCT_WARM : PUNCT_COLD);
+  } else {
+    w = mark.ch === 'GOODBYE' ? FLAT.goodbye : FLAT[mark.kind] ?? 0.05;
+  }
+  const t = r.tired.get(mark.ch);
+  if (t) w *= 1 - FATIGUE_DEPTH * t;
+  // Never zero. The dwell scale this feeds is bounded at both ends so that a
+  // visitor who parks the cup on Q gets a Q, and a zero here would quietly
+  // undo that promise from the other side.
+  return Math.max(0.002, w);
+}
+
+// Call when a mark is taken. Returns the text the board now shows, which for
+// GOODBYE is empty: taking it clears the tape. It is not an ending — nothing
+// stops — it is the one mark that wipes the slate.
+export function takeMark(r, mark) {
+  r.tired.set(mark.ch, 1);
+  if (mark.ch === 'GOODBYE') { r.ctx = createContext(); r.row = letterWeights(''); return ''; }
+  if (mark.kind === 'letter') { advance(r.ctx, mark.ch); r.row = letterWeights(r.ctx.live); return mark.ch; }
+  // A digit, a punctuation mark or YES/NO is not English and the context must
+  // not try to continue one, so the run of letters ends here the way it would
+  // for a sitter. Punctuation takes a space after it and none before, which is
+  // the one typographic convention the tape observes.
+  r.ctx = createContext();
+  r.row = letterWeights('');
+  if (mark.kind === 'punct') return `${mark.ch} `;
+  return mark.kind === 'digit' ? mark.ch : ` ${mark.ch} `;
+}
+
+// True while the live context is itself a whole word — the scene uses it for
+// nothing and the build's transcript page uses it to mark where words fell.
+export function readerHasWord(r) { return isWord(r.ctx.live) && r.ctx.live.length >= 3; }
+// True when a full stop would be plausible: the live context is a whole word.
+export function readerAtWordEnd(r) { return isWord(r.ctx.live) && r.ctx.live.length >= 2; }
+export function readerWord(r) { return r.ctx.live; }
+
+// Exposed for the benches, so `scripts/medium-spell.mjs` can report the size of
 // the thing it is sampling from without reaching into module internals.
 export function lexiconSize() { ensure(); return words.length; }

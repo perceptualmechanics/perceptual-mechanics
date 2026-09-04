@@ -125,6 +125,19 @@ export const SCENES = {
   psyshell:  { exportName: 'createPsyshell',
                label: 'Psyshell — lens RE73415.',
                ariaLabel: 'Psyshell — a small crystal antler suspended in a web of fine filaments, holding every sentence on this site inside it. The web and the object are one structure at two scales. Drag to turn it; point the lightpen at it to read one sentence and watch the light of its number travel through the crystal.' },
+  // Medium — thirteenth scene (2026-09-04). A homemade Ouija board seen from
+  // above, an upside-down teacup on it, and two pairs of fingertips. The
+  // second scene here with no sound at all and the only one with no controls:
+  // there is nothing to press but the cup.
+  //
+  // The label says "a board that can spell" rather than naming a message,
+  // because there is no message — the scene's whole structural claim is that
+  // nothing anywhere in it holds what the board is going to say. An ariaLabel
+  // promising a séance with a spirit would be describing a scene that was
+  // built and thrown away (see medium.physics.js's header for both of them).
+  medium:    { exportName: 'createMedium',
+               label: 'Medium — a board that can spell.',
+               ariaLabel: 'Medium — a homemade Ouija board seen from above, with an upside-down teacup on it and two pairs of fingertips: yours and somebody else\u2019s. Press on the cup and rest your hand, or let go and watch. Letters land on their own and fill a tape along the bottom.' },
 
 };
 

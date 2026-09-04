@@ -1,0 +1,157 @@
+/* Medium scene styles.
+
+   Palette. There are two materials on the screen and the chrome is neither of
+   them: the board is aged card and the cup is white china, both drawn on the
+   canvas, and everything in CSS here is the room around them. So the chrome is
+   the dimmest thing on the page — a cold near-black ground and one warm bone
+   ink — which puts every bit of contrast the scene has onto the card, where
+   the reading is done. The gold family this site uses for scenes about found
+   writing (Sphere, Scroll, Orrery, Beamline, Harmonics) would have been wrong
+   twice over: this scene's text is not found, it is produced while you watch,
+   and a gold placard beside a gold-brown board would have made the chrome
+   compete with the object.
+
+   Contrast, measured against the composited backgrounds rather than the
+   tokens, because those are two different numbers and only one is what a
+   reader sees. The placard is #0d0d10 at 0.94 alpha over the #0a0a0c ground,
+   compositing to #0d0d10. Against that:
+     --md-bone      #ded3c4   13.05:1
+     --md-bone-dim  #a99d8c    7.29:1
+   Both clear WCAG AA for body text with room, which matters because the
+   placard's note is small.
+
+   0.94 rather than the 0.72 this shipped with for one afternoon, and the
+   reason is specific to this scene: the thing behind the placard is not always
+   the void. The board is AGED CARD, and a 72%-opaque dark panel over pale card
+   composites to a mid grey that neither text colour clears. The scene's layout
+   now measures the placard and keeps the board above it, so the two should not
+   overlap at all — but "should not overlap" is a layout promise and this is the
+   colour that holds if a viewport ever breaks it.
+
+   Mobile-first (standing convention, see STANDARDS.md): base rules target the
+   smallest viewport; min-width queries layer wider-viewport values on top,
+   nested inside their own selector and indented with tabs. */
+
+.medium-scene {
+  --md-void: #0a0a0c;
+  --md-bone: #ded3c4;
+  --md-bone-dim: #a99d8c;
+  --md-panel: rgba(13, 13, 16, 0.94);
+  --md-hairline: rgba(222, 211, 196, 0.22);
+
+  /* The canvas is the whole scene and every interaction is a press on one
+     object, so a text cursor over it is a lie about what is draggable. Set on
+     the container rather than the canvas so it also covers the margin either
+     side of the board, where a press is a hand on the table — which is a real
+     thing to do here, and should look like it is allowed. */
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* ─── Title / hint ─────────────────────────────────────────────────────────
+   Body-level chrome, the same fixed-position grammar and z-index tier every
+   scene with body chrome uses (see harmonics.css's header for the stacking-
+   context reasoning). */
+.medium-title-row {
+  position: fixed;
+  bottom: 5.5rem; left: 6vw; right: 6vw;
+  display: flex; justify-content: center;
+  pointer-events: none; z-index: 310;
+
+	@media (min-width: 601px) {
+		left: 0; right: 0; bottom: 3rem;
+	}
+}
+.medium-title {
+  /* Trailing-gap centering handled the way every tracked-out title on this
+     site handles it — negative right margin equal to the tracking, so the
+     invisible gap after the last letter isn't centered along with the text.
+     See STANDARDS.md's centering rule. */
+  color: rgba(222, 211, 196, 0.85);
+  font-size: clamp(0.85rem, 2.5vw, 1.6rem);
+  --tracking: clamp(0.1em, 1vw, 0.4em);
+  letter-spacing: var(--tracking);
+  margin-right: calc(-1 * var(--tracking));
+  text-transform: uppercase;
+  text-align: center;
+  font-family: 'Arapey', serif;
+  white-space: nowrap;
+}
+.medium-hint {
+  position: fixed; top: 4.5rem; right: 1.2rem;
+  /* Two clauses rather than three short ones, so on a 390px screen it wraps
+     far enough left to reach the site's fullscreen toggle. A left bound as
+     well as a right offset, released at the first breakpoint where there is
+     room for it on one line — the same fix apollo.css's hint needed, for the
+     same reason. */
+  left: 4.5rem;
+  color: var(--hint-text-color);
+  font-size: 0.55rem; letter-spacing: 0.2em;
+  text-transform: uppercase; pointer-events: none;
+  text-align: right; z-index: 310; line-height: 1.8;
+  font-family: 'Arapey', serif;
+
+	@media (min-width: 601px) {
+		left: auto;
+	}
+}
+
+/* ─── The placard ──────────────────────────────────────────────────────────
+   The one piece of writing in the scene, and the only thing on the page that
+   answers the question the board raises. It is FOCUSABLE and always visible
+   rather than hidden behind a toggle: a visitor who cannot use a pointer is
+   reading it as the account of a scene they may not be able to play at length,
+   and putting it behind a button would have made the explanation the reward
+   for managing the interaction.
+
+   Bottom-left on a phone and it stays there — this scene has no sound toggle
+   and nothing else competes for the corner, which is exactly why the space is
+   free. */
+.medium-placard {
+  position: fixed; z-index: 310;
+  left: 1rem; right: 1rem; bottom: 8.5rem;
+  max-width: 22rem;
+  padding: 0.7rem 0.85rem;
+  background: var(--md-panel);
+  border: 1px solid var(--md-hairline);
+  border-radius: 0.3rem;
+  font-family: 'Arapey', serif;
+
+	@media (min-width: 601px) {
+		left: 1.5rem; right: auto; bottom: 3rem; width: 21rem;
+	}
+}
+.medium-placard:focus-visible {
+  outline: 1px solid rgba(222, 211, 196, 0.7);
+  outline-offset: 2px;
+}
+.medium-epigraph {
+  color: var(--md-bone);
+  font-size: 0.78rem; line-height: 1.5;
+  font-style: italic;
+  margin: 0 0 0.5rem;
+}
+.medium-placard-note {
+  color: var(--md-bone-dim);
+  font-size: 0.66rem; line-height: 1.6;
+  margin: 0;
+}
+.medium-placard-note a {
+  color: var(--md-bone);
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+}
+.medium-placard-note a:hover, .medium-placard-note a:focus-visible {
+  color: #fff;
+}
+
+/* ─── Screen-reader live region ────────────────────────────────────────────
+   Announces the letters as they land, batched — a region that fired on every
+   letter would read one character out loud every few seconds forever, which is
+   unusable. Visually hidden, the same off-screen-clip technique every other
+   scene's uses. */
+.medium-sr-live {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+}
