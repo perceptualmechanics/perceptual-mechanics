@@ -587,6 +587,45 @@ described are unchanged.)
   worth trimming, orrery.js's texture generators and first-person rig are the
   two most self-contained chunks to split out first.
 
+## 4.8.6 (2026-09-04)
+
+**A one-line guard, and how it was found.** Scott had the dev server up on his
+Mac, so the desktop app's own browser pane was pointed at it — the first time
+this scene has been looked at on real hardware rather than through a software
+rasterizer in a container. The scene rendered, a read landed, and the console
+carried a warning that has never appeared here:
+
+```
+preview "apollo" did not load — IndexSizeError:
+The source height is zero or not a number
+```
+
+**The mechanism is real.** Apollo's preview computes
+`bandH = Math.round(H * 0.34)` where `H` has a floor of 1 — and a third of 1
+rounds to zero. Apollo is the **only** scene that hands a computed height to
+`createImageData`, so it is the only one that would throw, and because the throw
+rejects `create()`, `previews[name]` is never set: the tile stays blank for the
+whole visit instead of recovering when the layout settles. That is the same
+class of failure 4.1.1 fixed for Harmonics and Outside, arriving by a different
+door.
+
+**The diagnosis is not.** It could not be reproduced: not at 800×450, not at a
+1px-tall viewport, not with a zero-height container, not with `display: none` —
+the tile's own CSS height and the `|| window.innerHeight` fallback each prevent
+it independently. The likeliest explanation is a browser pane with no layout at
+all at load, which is probably not reachable by a visitor.
+
+So the guard ships and the claim does not: `bandH` is clamped to 1, matching the
+clamp on `W` and `H` directly above it, and the comment says outright that the
+guard is certain and the cause is not. `CORRECTED-FACTS.md` carries the row,
+because "W and H are clamped so the band cannot be zero" is exactly the kind of
+nearly-true thing that gets restated.
+
+**Worth keeping from the session rather than the fix:** looking at the site on
+the machine it runs on found, in one page load, something six releases of
+container testing did not. The container is where the measurements are; it is
+not where the surprises are.
+
 ## 4.8.5 (2026-09-04)
 
 **The sound goes past you.** A rush, not a strike and not a ring: wind, made of

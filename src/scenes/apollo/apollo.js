@@ -175,7 +175,20 @@ export function createApollo(container, { preview = false, initialArg = null, on
       // the height — inside the circle at the horizontal midline, where the
       // chord is widest, so none of it is clipped away.
       bandX = 0; bandW = W;
-      bandH = Math.round(H * 0.34);
+      // Clamped for the same reason W and H are, one line up. `H` has a floor
+      // of 1, and a third of 1 rounds to ZERO — and this scene is the only one
+      // that hands a computed height to `createImageData`, which throws on a
+      // zero. That rejects `create()`, so the tile stays blank for the whole
+      // visit rather than recovering when the layout settles.
+      //
+      // Seen once, in the desktop app's browser pane, as
+      // `preview "apollo" did not load — IndexSizeError`. NOT reproduced: not
+      // at any viewport down to 1px tall, not with a zero-height container, not
+      // with a hidden one, because the tile's own CSS height and the
+      // `|| window.innerHeight` fallback both prevent it. The likeliest cause
+      // is a pane with no layout at all at load. Said plainly because the guard
+      // is certain and the diagnosis is not.
+      bandH = Math.max(1, Math.round(H * 0.34));
       bandY = Math.round(H * 0.5 - bandH / 2);
     } else {
       const pad = Math.round(Math.min(W * 0.06, 90 * r));
