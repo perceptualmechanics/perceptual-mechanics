@@ -587,6 +587,50 @@ described are unchanged.)
   worth trimming, orrery.js's texture generators and first-person rig are the
   two most self-contained chunks to split out first.
 
+## 4.10.3 (2026-09-04)
+
+**Apollo's light-source switch is named for the spectra, not the geometry.**
+"Behind the gas" and "The gas itself" become **"Absorption"** and
+**"Emission"** — Scott's call.
+
+The right one, and worth saying why rather than just recording it: these are
+the terms of art for exactly these two situations. Kirchhoff's laws — a
+continuous source seen *through* a cooler gas gives dark lines in a lit band,
+and the gas itself, excited and seen against the dark, gives bright lines in a
+dark band. The scene's own values have always been `absorption` and `emission`:
+in `setMode`, in the deep link's token, in every NOTES entry. This is the
+visible text catching up with what the code has called them since 4.4.0.
+
+**Nothing about state changed.** The radio values, the deep-link token
+(`#apollo/h50,emission`), the mode guard and the fader behaviour are all
+untouched — round-tripped after the change and the switch still comes up on
+Emission from a link, which is the bug 4.5.0 fixed and the thing most likely to
+break under a rename.
+
+**The plain-language version did not disappear**, which is what makes the rename
+safe rather than a loss. It moved to where a description belongs: the hint line
+("move a fader to add an element to the gas") and the screen-reader
+announcement ("The gas is the light now. The band is dark and the lines stand
+bright in it"). A visitor who does not know the words gets an instrument that
+shows what they mean, with the plain reading one line away.
+
+**One string a rename forgets: the invisible legend.** The fieldset's legend is
+`.sr-only` and read "The light source," which was right over two labels naming
+light sources and is wrong over two naming spectra — "The light source:
+absorption" is a category error, and one only a screen-reader user would ever
+have heard. Now "Spectrum".
+
+**Measured after:** labels fit on one rail row at 320, 390 and 1440 with no
+horizontal overflow (they are shorter than what they replaced, so this only
+ever loosened), radio state follows a click, the announcement still fires, and
+the deep-link round trip lands on Emission.
+
+**Files:** `src/scenes/apollo/apollo.js` (the two labels, the legend, and the
+mode-switch comment, which had explained the naming that just changed),
+`src/scenes/apollo/apollo.css` (the same explanation, quoted in its header).
+Historical entries in this file keep the old names — they are a record of what
+shipped when, not a description of the current scene.
+
 ## 4.10.2 (2026-09-04)
 
 **Two rows.** Twelve tiles as 6/6 instead of 4/4/4, which is what Scott asked

@@ -270,9 +270,13 @@
    A real <fieldset> with two radios, spanning the rail above the faders. A
    two-position choice is what a radio group is, and the fieldset is what lets
    the grouping be announced — which matters here because the two labels only
-   make sense as a pair. The legend is present for that and not drawn: "The
-   light source" over two buttons reading "Behind the gas" and "The gas itself"
-   is a line of type telling a sighted visitor what they can already see.
+   make sense as a pair. The legend is present for that and not drawn:
+   "Spectrum" over two buttons reading "Absorption" and "Emission" is a line of
+   type telling a sighted visitor what they can already see.
+
+   The labels were "Behind the gas" and "The gas itself" until 4.10.3 and are
+   shorter now, which only ever loosens this row — worth knowing if anything
+   here is ever tuned against their width.
 
    The native radio dot is hidden and the label itself becomes the control, so
    the switch reads as an instrument's two-position selector rather than as a

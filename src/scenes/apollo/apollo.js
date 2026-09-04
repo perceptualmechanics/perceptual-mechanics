@@ -1446,11 +1446,22 @@ export function createApollo(container, { preview = false, initialArg = null, on
   }
 
   // ─── The mode switch ──────────────────────────────────────────────────────
-  // One control, and it names the SITUATION rather than the display: the light
-  // source is either behind the gas or is the gas. Two radios in a fieldset
-  // rather than a toggle button, because that is what a two-position choice is
-  // and because it lets the legend say what the two positions are choices
-  // about. Same reasoning as the rail: use the control that already means this.
+  // One control naming the two situations Kirchhoff's laws distinguish: a
+  // continuous source seen THROUGH a cooler gas gives dark lines in a lit band
+  // (absorption), and the gas itself, excited and seen against the dark, gives
+  // bright lines in a dark band (emission). Two radios in a fieldset rather
+  // than a toggle button, because that is what a two-position choice is and
+  // because it lets the legend say what the two positions are choices about.
+  // Same reasoning as the rail: use the control that already means this.
+  //
+  // The labels were "Behind the gas" and "The gas itself" until 4.10.3 — the
+  // geometry described in plain language rather than named. Scott's call, and
+  // the right one: these are the terms of art for exactly these two
+  // situations, the scene's own values have always been `absorption` and
+  // `emission`, and a visitor who does not know the words learns them from an
+  // instrument that shows what they mean. The plain-language version did not
+  // disappear with the labels — it is what the hint line and the screen-reader
+  // announcement below say, which is where a description belongs anyway.
   //
   // Fader state is untouched by the switch. Six elements in the light stay six
   // elements in the light, so a mixture built in one mode can be heard in the
@@ -1461,7 +1472,7 @@ export function createApollo(container, { preview = false, initialArg = null, on
     // Keep the control truthful, whatever moved the mode. The radios were the
     // only record of which mode was showing, and setMode did not touch them —
     // so a link carrying `emission` put the scene in emission with the switch
-    // still reading "Behind the gas", and pressing it then did nothing at all,
+    // still reading absorption, and pressing it then did nothing at all,
     // because the guard above sees the value already matches. Not a display
     // bug: a stuck state. Found by a round-trip test rather than by looking,
     // which is the argument for the round-trip test.
@@ -1534,9 +1545,21 @@ export function createApollo(container, { preview = false, initialArg = null, on
     // Named for the screen reader and not drawn: the two options are legible as
     // a pair, and a label over a two-position switch is a line of type that
     // tells a sighted visitor what they can already see.
-    legend.textContent = 'The light source';
+    //
+    // "Spectrum" as of 4.10.3, where this read "The light source". That was
+    // the right name over "Behind the gas" / "The gas itself" — those labels
+    // named light sources. Over "Absorption" / "Emission" it is not: those
+    // name the two spectra, and "The light source: absorption" is the one
+    // announcement in this scene that would have come out sounding like a
+    // category error. A legend nobody can see is exactly the kind of string a
+    // rename forgets.
+    legend.textContent = 'Spectrum';
     fs.appendChild(legend);
-    for (const [value, label] of [['absorption', 'Behind the gas'], ['emission', 'The gas itself']]) {
+    // 4.10.3: "Absorption" / "Emission", where these read "Behind the gas" /
+    // "The gas itself". The values were already these words — this is the
+    // visible text catching up with what the scene has always called the two
+    // states internally, in `setMode`, in the deep link, and in NOTES.
+    for (const [value, label] of [['absorption', 'Absorption'], ['emission', 'Emission']]) {
       const wrap = document.createElement('label');
       const input = document.createElement('input');
       input.type = 'radio';
