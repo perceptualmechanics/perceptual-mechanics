@@ -17,40 +17,54 @@
 // description, not a debunking, and this file is built to be true to it.
 //
 // ─── Where the second hand comes from ───────────────────────────────────────
-// **The partner wants to spell something, and leans toward the next letter.**
+// **Nowhere. The partner has nothing to say.**
 //
-// This replaced an echo, and the replacement was Scott's call: the first
-// version made the partner the visitor's own hand delayed, which gave
-// withdrawal-mirroring and direction-change leading for free and was elegant
-// and measured and **could not spell**, by construction — an echo has no
-// intention, so nothing chooses a letter. Bolting a letter queue onto it would
-// have been the exact lie the brief warns about. It is recorded in NOTES 4.11.4
-// rather than left in the file.
+// Two versions were built and thrown away before that sentence was allowed to
+// stand. The first made the partner an echo of the visitor's own hand, delayed;
+// it gave withdrawal-mirroring and direction-change leading for free, and it
+// **could not spell**, by construction — an echo has no intention, so nothing
+// ever chooses a letter. The second gave the partner a message and had it lean
+// toward the next letter of it, which spelled beautifully and was a puppet
+// show: whatever the visitor did, the board said what it had been told to say.
+// Both are recorded in NOTES 4.11.4 rather than left in the file.
 //
-// So the partner has an intention, and the honest problem becomes: how does a
-// second hand steer the cup to a letter **without the visitor being able to
-// tell they were steered**? Three rules, and they are what make it true rather
-// than staged:
+// What is here instead is the ideomotor account taken literally, and it took
+// one more failed version to get there. The obvious reading of the effect —
+// that nobody aims, and the only thing English touches is how long a letter
+// takes to land — was built, measured, and does not work: 0.03 letters per
+// second and no words, for the reason set out at `stepWander`. A rule that can
+// only reject cannot make a sentence out of a random walk.
+//
+// So the partner's hand does move on purpose, in the one sense the literature
+// actually claims. It has no message, no plan and no next letter. It is drawn
+// toward whichever letters near it would plausibly continue what has already
+// been spelled — a gradient summed over the whole board at once, far too weak
+// to insist — and a letter lands when the cup comes to rest on one, sooner for
+// a plausible letter than an implausible one. Both halves of that come from
+// `medium.lexicon.js`, which is the only file in the scene that knows any
+// English, and neither half knows what it is spelling. **Nothing anywhere in
+// this scene holds the sentence.** It exists only on the tape, after the fact,
+// which is exactly the status a real transcript has.
+//
+// Three rules keep it honest:
 //
 //   1. **The partner leans; it never shoves.** Its force is capped at
-//      PARTNER_FORCE, which is far below what a visitor's hand produces when
-//      the visitor is actually pushing. A visitor who wants to go somewhere
-//      else goes there, every time. That is not a concession to usability — a
-//      real board is trivially overridden, and one that fights back is a
-//      puppet show.
+//      PARTNER_FORCE, far below what a visitor's hand produces when the visitor
+//      is actually pushing. A visitor who wants to go somewhere else goes
+//      there, every time. That is not a concession to usability — a real board
+//      is trivially overridden, and one that fights back is a puppet show.
 //   2. **It therefore only makes progress when the visitor is not pushing** —
 //      during hesitation, drift, the small aimless circling that is what people
 //      actually do at a board. Which is the ideomotor account exactly: the
 //      message emerges when nobody believes they are doing anything.
 //   3. **A letter is taken by DWELL, not by contact.** The cup has to settle
-//      near a letter for DWELL_TIME before it counts. Real boards work by
-//      coming to rest, and dwell is also what makes the visitor's own pauses
-//      the thing that spells — they stop, and a letter lands.
+//      near a letter before it counts. Real boards work by coming to rest, and
+//      dwell is also what makes the visitor's own pauses the thing that spells —
+//      they stop, and a letter lands.
 //
-// So the board can spell, and whether it does is genuinely up to the pair. A
-// visitor who drags it around gets nothing. A visitor who rests their hand and
-// lets it drift gets sentences. Neither of them can point at who did it, and
-// that remains true because it is true rather than because it is hidden.
+// No letter is ever impossible. The plausibility scale is bounded at both ends
+// (DWELL_EASE, DWELL_RESIST), so a visitor who parks the cup on Q gets a Q. If
+// the board could refuse a letter it would be steering, and it does not steer.
 
 // ─── Constants ──────────────────────────────────────────────────────────────
 // All in board units — the board is 1.0 wide — and all per second, so nothing
@@ -62,6 +76,13 @@ export const CUP = {
   // The fingertip is a spring, not a handle: a hand does not TELL the cup where
   // to be, it leans on it. Stiffness sets how hard you can lean.
   handStiffness: 26,
+  // The visitor's own spring, and it is stiffer than the partner's because the
+  // visitor is PRESSING and the partner is resting. Without the asymmetry the
+  // partner can hold the cup 0.046 board units off where the visitor is holding
+  // it — very nearly one letter's spacing — so a visitor who parks the cup on Q
+  // gets an R, which breaks the one promise the scene makes. At 78 the standoff
+  // is 0.024, comfortably inside a letter.
+  visitorStiffness: 78,
   // Damping on the spring, so a hand arriving fast does not launch the cup.
   // Back at 3.4 after an experiment that failed: it was lowered to 2.6 to make
   // the cup overshoot the hand it follows, and measuring across 3.4 / 2.6 /
@@ -93,13 +114,10 @@ export const CUP = {
 // that it can never win an argument. A visitor's spring at a comfortable
 // reach delivers several times this.
 export const PARTNER_FORCE = 1.9;
-// How fast the partner's own hand travels toward where it wants the cup to be.
-// A hand, not a cursor: this is a speed limit in board units per second.
-export const PARTNER_HAND_SPEED = 0.55;
-// The partner aims a little past the letter rather than at it, because a hand
-// resting on a cup pushes through a target rather than stopping on it. Also
-// what stops the cup parking exactly on centre and looking mechanical.
-export const PARTNER_OVERSHOOT = 0.035;
+// A hand, not a cursor: a speed limit in board units per second, clamped in
+// `stepWander`. Without it a run of impulses in the same direction can produce
+// a swipe no wrist would make.
+export const PARTNER_HAND_SPEED = 0.6;
 
 // ─── Taking a letter ────────────────────────────────────────────────────────
 // By dwell, not by contact. The cup must be within DWELL_RADIUS of a letter and
@@ -107,9 +125,59 @@ export const PARTNER_OVERSHOOT = 0.035;
 // letter on the way somewhere else spells nothing, which is how a real board
 // behaves and is also what makes the visitor's own pauses the thing that
 // spells.
-export const DWELL_RADIUS = 0.055;
+export const DWELL_RADIUS = 0.05;
 export const DWELL_SPEED = 0.09;
 export const DWELL_TIME = 0.55;
+
+// ─── How far plausibility is allowed to move that number ────────────────────
+// The multipliers on DWELL_TIME for the likeliest next letter and for one no
+// English word wants: 0.28s against 2.2s. Both finite, and that is the promise
+// the scene makes — a visitor who parks the cup on Q and holds it there gets a
+// Q, in a little over two seconds. The board can be slow to agree. It can
+// never refuse.
+export const DWELL_EASE = 0.5;
+export const DWELL_RESIST = 4.0;
+
+// ─── The partner's wander ───────────────────────────────────────────────────
+// Bursts of travel separated by stillness, because that is what a hand does and
+// because a continuously drifting cup crawls along the arc taking every letter
+// it passes. Times in seconds; each interval is its minimum plus a uniform draw
+// on its variance, so the rhythm never repeats.
+export const BURST_MIN = 0.2;
+export const BURST_VAR = 0.45;
+export const PAUSE_MIN = 0.3;
+export const PAUSE_VAR = 0.7;
+// How fast the hand goes still when a burst ends, per second. High: the pause
+// is a stop, not a glide, and the cup's own stiction does the rest.
+export const STOP_DAMP = 9;
+
+export const WANDER_SIGMA = 2.5;     // impulse strength, board units/s^1.5
+export const WANDER_DAMP = 2.0;      // how fast an impulse dies, per second
+export const WANDER_CENTRE = 0.8;    // spring back toward the letters, per s^2
+export const WANDER_REACH = 0.30;    // how far from that centre it may get
+
+// ─── The field ──────────────────────────────────────────────────────────────
+// How hard the hand leans toward plausible letters, and how far it can feel
+// them. FIELD_PULL is in board units per second squared, and it is the single
+// number that decides whether the board says anything. Measured over fifty
+// minutes of simulated sitting, ten seeds, with a visitor who is touching but
+// not driving:
+//
+//     pull    letters/s   vowel share
+//        0        0.045         22.9%      alphabet soup
+//        5        0.109         33.4%
+//       12        0.146         34.2%      <- here
+//       26        0.191         33.0%
+//                              (38.1%)     English
+//
+// 12 rather than 26 because rate is not the only thing being bought: past this
+// the hand starts to look like it is going somewhere, and the whole illusion is
+// that it is not. FIELD_RANGE is the exponential falloff in board units — short
+// enough that the hand is drawn to a plausible letter beside it rather than to
+// the best one on the board, which is the difference between a drift and a
+// destination.
+export const FIELD_PULL = 12;
+export const FIELD_RANGE = 0.28;
 
 export function createCup(x = 0.5, y = 0.62) {
   return { x, y, vx: 0, vy: 0, resting: true };
@@ -128,8 +196,8 @@ export function stepCup(cup, dt, visitor, partner) {
   let fx = 0, fy = 0, fvMag = 0, fpMag = 0;
 
   if (visitor) {
-    const sx = (visitor.x - cup.x) * CUP.handStiffness - cup.vx * CUP.handDamping;
-    const sy = (visitor.y - cup.y) * CUP.handStiffness - cup.vy * CUP.handDamping;
+    const sx = (visitor.x - cup.x) * CUP.visitorStiffness - cup.vx * CUP.handDamping;
+    const sy = (visitor.y - cup.y) * CUP.visitorStiffness - cup.vy * CUP.handDamping;
     fx += sx; fy += sy; fvMag = Math.hypot(sx, sy);
   }
   if (partner) {
@@ -187,30 +255,6 @@ export function stepCup(cup, dt, visitor, partner) {
   };
 }
 
-// ─── The partner's hand, moving toward what it wants to say ─────────────────
-// `hand` is mutated in place. `aim` is the board point the partner is currently
-// trying to bring the cup to — the next letter, pushed a little past centre.
-// Returns the hand, or null before the partner has joined.
-export function stepPartner(hand, aim, dt) {
-  if (!aim) return null;
-  if (hand.x == null) { hand.x = aim.x; hand.y = aim.y; return hand; }
-  const dx = aim.x - hand.x, dy = aim.y - hand.y;
-  const d = Math.hypot(dx, dy);
-  const step = PARTNER_HAND_SPEED * dt;
-  if (d <= step) { hand.x = aim.x; hand.y = aim.y; }
-  else { hand.x += (dx / d) * step; hand.y += (dy / d) * step; }
-  return hand;
-}
-
-// Where the partner puts its hand to bring the cup to `letter`: on the far side
-// of the letter from the cup, so the cup is pulled through rather than parked.
-export function aimFor(letter, cup) {
-  const dx = letter.x - cup.x, dy = letter.y - cup.y;
-  const d = Math.hypot(dx, dy) || 1;
-  return { x: letter.x + (dx / d) * PARTNER_OVERSHOOT,
-           y: letter.y + (dy / d) * PARTNER_OVERSHOOT };
-}
-
 // ─── Dwell ──────────────────────────────────────────────────────────────────
 // Call once per frame with the cup and the board's letters. Returns the letter
 // taken this frame, or null. Holds its own state, so a session is one instance.
@@ -218,7 +262,12 @@ export function createDwell() {
   return { on: null, held: 0, last: null };
 }
 
-export function stepDwell(d, cup, letters, dt) {
+// `scale` is optional and is where English enters the scene: given the letter
+// the cup is sitting on, it returns a multiplier on DWELL_TIME. Called every
+// frame rather than once on arrival, so that a letter which becomes plausible
+// while the cup is already resting on it can still land — the visitor's pause
+// and the board's priming are the same event.
+export function stepDwell(d, cup, letters, dt, scale) {
   const speed = Math.hypot(cup.vx, cup.vy);
   let near = null, best = DWELL_RADIUS;
   for (const l of letters) {
@@ -228,7 +277,8 @@ export function stepDwell(d, cup, letters, dt) {
   if (!near || speed > DWELL_SPEED) { d.on = near; d.held = 0; return null; }
   if (d.on !== near) { d.on = near; d.held = 0; }
   d.held += dt;
-  if (d.held >= DWELL_TIME) {
+  const need = DWELL_TIME * (scale ? scale(near) : 1);
+  if (d.held >= need) {
     d.held = 0;
     // The same letter cannot be taken twice without leaving it first, or a cup
     // that settles spells one character forever.
@@ -244,57 +294,138 @@ export function clearDwellMemory(d, cup) {
   if (d.last && Math.hypot(d.last.x - cup.x, d.last.y - cup.y) > DWELL_RADIUS * 2.2) d.last = null;
 }
 
-// ─── The speller ────────────────────────────────────────────────────────────
-// Owns what the partner is trying to say and turns it into an aim point each
-// frame. Separate from the physics so the scene can hand it any source of text
-// without the cup knowing anything about words.
+// ─── The partner's hand ─────────────────────────────────────────────────────
+// It has no message and no plan. What it has is a body: it moves in bursts and
+// then holds still, it is drawn toward whatever nearby letter is currently
+// plausible, and it is far too weak to insist on anything. Nothing in here
+// stores a word, a sentence or a destination, and a session started twice with
+// the same seed and a different visitor says different things.
 //
-// **It exists because of doubled letters.** A cup that settles on a letter must
-// leave before that letter can count again — otherwise a cup at rest spells one
-// character forever — and with the partner aiming at the same letter it never
-// leaves, so HELLO stalls permanently at HEL. Measured exactly that way before
-// this was written.
+// ─── Why there is a pull at all, when the design said there would not be ────
+// The first version of this had NO pull. The hand wandered at random and the
+// only thing English touched was how long a letter took to land — bias in the
+// stopping, never in the pulling, which is the cleanest possible statement of
+// the ideomotor account and is what the brief asked for.
 //
-// The fix is what a real sitter does: for a repeat, move off and come back. The
-// partner aims at a retreat point until the board has forgotten the letter,
-// then aims at it again. Nothing is faked — the cup really does travel away and
-// return, and the second L is really taken by dwell.
-export function createSpeller(text) {
-  return { text: text.toUpperCase(), i: 0, retreating: false };
+// It was built, and measured, and it does not work. Over 25 minutes of
+// simulated sitting across five seeds it took **0.03 to 0.06 letters per
+// second** — one letter a minute at the setting where the letters were any
+// good — with a vowel share of 20% against English's 38%, and it never
+// produced a word. The arithmetic is unforgiving and worth writing down: a
+// randomly wandering cup comes to rest near a letter about 0.6 times a second,
+// the letter it stops near is one of twenty-six, and a stopping rule can only
+// ever *reject*. Rejecting hard enough to get English costs a factor of twenty
+// in rate; rejecting gently enough to keep the rate gets alphabet soup. There
+// is no setting where both work, because a filter cannot manufacture the
+// opportunities it is filtering.
+//
+// So the real effect must include direction, and it does — that is what the
+// ideomotor literature describes. Faraday's sitters were not failing to stop;
+// their hands were travelling, in a direction they did not know they had
+// chosen. What is here is that, and only that:
+//
+//   **The hand drifts toward whichever letters near it would plausibly come
+//   next, without knowing what it is spelling.**
+//
+// A gradient is not a target. There is no next letter chosen anywhere in this
+// scene — FIELD_PULL is summed over every letter on the board at once, weighted
+// by nearness and by plausibility, so the hand leans into a *region* and the
+// board resolves which letter only when the cup stops. The sentence exists
+// nowhere until it has been spelled. That is the difference between this and
+// the puppet-show version, and it is a difference in the code rather than in
+// the description: there is no variable anywhere holding what the board is
+// going to say.
+//
+// `weightOf` is how English gets in, and it is a callback for a reason: this
+// file knows where the letters are and nothing else. Swap it for `() => 1` and
+// the hand wanders like a hand, with no idea that words exist.
+function mulberry32(a) {
+  return function () {
+    a |= 0; a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
 }
 
-// `taken` is the letter stepDwell just returned, or null.
-export function stepSpeller(sp, taken, cup, letterAt) {
-  if (taken && taken.ch === sp.text[sp.i]) {
-    sp.i++;
-    sp.retreating = sp.text[sp.i] === taken.ch;   // a repeat is coming
+export function createWander(seed = 0x5EA9CE, homeX = 0.5, homeY = 0.44) {
+  const rnd = mulberry32(seed);
+  // Start somewhere on the board rather than dead centre, or every session
+  // opens with the same letter — measured: eight runs out of eight began T.
+  const a = rnd() * Math.PI * 2, r = Math.sqrt(rnd()) * WANDER_REACH * 0.8;
+  return {
+    x: homeX + Math.cos(a) * r, y: homeY + Math.sin(a) * r,
+    vx: 0, vy: 0, homeX, homeY,
+    moving: false, left: PAUSE_MIN + rnd() * PAUSE_VAR, rnd,
+  };
+}
+
+// `letters` is the board — [{ch, x, y}] — and `weightOf(letter)` returns how
+// plausible that letter is right now, in 0..1. Pass `null` for `weightOf` and
+// the hand still moves; it just stops meaning anything.
+export function stepWander(w, dt, letters, weightOf) {
+  const R = w.rnd;
+
+  // ─── Bursts and pauses ────────────────────────────────────────────────────
+  // Not an Ornstein-Uhlenbeck drift, which was the first attempt: continuous
+  // jitter makes the cup ooze along the arc of letters and take every one it
+  // crawls past, which measured as 20% of taken letters being alphabetically
+  // adjacent to the one before. Hands do not ooze. They go, and then they stop,
+  // and the stopping is what a board is read by.
+  w.left -= dt;
+  if (w.left <= 0) {
+    w.moving = !w.moving;
+    w.left = w.moving ? BURST_MIN + R() * BURST_VAR : PAUSE_MIN + R() * PAUSE_VAR;
   }
-  const want = sp.text[sp.i];
-  if (!want) return null;                          // said everything it had
-  const target = letterAt(want);
-  if (!target) { sp.i++; return null; }            // a space, or an unmarked glyph
-  if (sp.retreating) {
-    // ─── Three distances, and they must not be the same number ─────────────
-    // The first version aimed the retreat at DWELL_RADIUS * 2.6 and ended it at
-    // * 2.2 — the same threshold clearDwellMemory uses. The cup stopped at
-    // 0.1210 board units from the letter and the threshold WAS 0.1210, so the
-    // strict `>` never fired and HELLO stalled at HEL forever, in a standoff
-    // exact to four decimal places. Friction is why: the cup never arrives at
-    // an aim point, it stops short of one.
-    //
-    // So the aim is placed well beyond both tests rather than just past them:
-    //   4.2  where the partner aims — far enough that stopping short still
-    //        clears everything below
-    //   2.6  where the retreat ends
-    //   2.2  where clearDwellMemory re-arms the letter (below this)
-    const away = DWELL_RADIUS * 4.2;
-    // Retreat outward from the board's centre, so the cup backs off the letter
-    // rather than crossing the board and taking something else on the way.
-    const dx = cup.x - 0.5, dy = cup.y - 0.5;
-    const d = Math.hypot(dx, dy) || 1;
-    const spot = { x: target.x + (dx / d) * away, y: target.y + (dy / d) * away };
-    if (Math.hypot(cup.x - target.x, cup.y - target.y) > DWELL_RADIUS * 2.6) sp.retreating = false;
-    return spot;
+
+  if (w.moving) {
+    // Sum of three uniforms, centred and scaled: unit variance, and cheaper and
+    // more bounded than Box-Muller, which can hand back a six-sigma kick that
+    // reads as a twitch.
+    const g = () => (R() + R() + R() - 1.5) * 2;
+    const k = WANDER_SIGMA * Math.sqrt(dt);
+    w.vx += g() * k - w.vx * WANDER_DAMP * dt - (w.x - w.homeX) * WANDER_CENTRE * dt;
+    w.vy += g() * k - w.vy * WANDER_DAMP * dt - (w.y - w.homeY) * WANDER_CENTRE * dt;
+
+  } else {
+    w.vx -= w.vx * STOP_DAMP * dt; w.vy -= w.vy * STOP_DAMP * dt;
   }
-  return aimFor(target, cup);
+
+  // ─── The field ────────────────────────────────────────────────────────────
+  // Every letter pulls at once, by plausibility and by nearness; the
+  // exponential falloff is what keeps it local, so the hand leans toward a
+  // plausible letter beside it rather than setting off across the board toward
+  // the best one in the alphabet.
+  //
+  // Outside the burst/pause branch on purpose. A lean does not switch off when
+  // a hand stops moving — that is the whole of what "finds it harder to leave"
+  // means — and it measured as the difference between 0.07 letters a second and
+  // 0.16, which is the difference between a board that says something in three
+  // minutes and one that does not.
+  if (weightOf && letters) {
+    let gx = 0, gy = 0, gw = 0;
+    for (const l of letters) {
+      const dx = l.x - w.x, dy = l.y - w.y;
+      const d = Math.hypot(dx, dy) || 1e-6;
+      const wt = weightOf(l) * Math.exp(-d / FIELD_RANGE);
+      gx += (dx / d) * wt; gy += (dy / d) * wt; gw += wt;
+    }
+    if (gw > 0) { w.vx += (gx / gw) * FIELD_PULL * dt; w.vy += (gy / gw) * FIELD_PULL * dt; }
+  }
+
+  const sp = Math.hypot(w.vx, w.vy);
+  if (sp > PARTNER_HAND_SPEED) { w.vx = (w.vx / sp) * PARTNER_HAND_SPEED; w.vy = (w.vy / sp) * PARTNER_HAND_SPEED; }
+  w.x += w.vx * dt; w.y += w.vy * dt;
+
+  // A hard edge, in case a run of impulses wins an argument with the spring.
+  // Reflecting rather than clamping, so the hand turns around instead of
+  // grinding along the boundary.
+  const dx = w.x - w.homeX, dy = w.y - w.homeY, d = Math.hypot(dx, dy);
+  if (d > WANDER_REACH) {
+    w.x = w.homeX + (dx / d) * WANDER_REACH;
+    w.y = w.homeY + (dy / d) * WANDER_REACH;
+    const dot = (w.vx * dx + w.vy * dy) / d;
+    if (dot > 0) { w.vx -= 2 * dot * (dx / d); w.vy -= 2 * dot * (dy / d); }
+  }
+  return w;
 }

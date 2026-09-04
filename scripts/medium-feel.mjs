@@ -11,9 +11,11 @@
 // puppet show are at the bottom: CAN it spell when the visitor lets it, and CAN
 // the visitor always override it. Both have to be yes.
 import {
-  CUP, PARTNER_FORCE, DWELL_TIME, createCup, stepCup, stepPartner, aimFor,
-  createDwell, stepDwell, clearDwellMemory, createSpeller, stepSpeller,
+  CUP, PARTNER_FORCE, DWELL_EASE, DWELL_RESIST,
+  createCup, stepCup, createWander, stepWander,
+  createDwell, stepDwell, clearDwellMemory,
 } from '../src/scenes/medium/medium.physics.js';
+import { letterWeights, createContext, advance } from '../src/scenes/medium/medium.lexicon.js';
 
 const DT = 1 / 60;
 const f = n => n.toFixed(4);
@@ -37,75 +39,84 @@ const LETTERS = (() => {
 })();
 const at = ch => LETTERS.find(l => l.ch === ch);
 
-// ─── 1. Can it spell, when the visitor rests their hand and lets it drift? ───
-// The visitor is present and touching but not driving: a slow aimless wander
-// with no destination, which is what people actually do at a board.
-//
-// "HELLO" rather than a word with no repeat, because doubled letters are the
-// case that breaks: a cup at rest on L cannot take L again without leaving, and
-// the first version of this stalled at "HEL" forever. createSpeller handles the
-// retreat, and this is the test that says whether it does.
+// ─── 1. Is the sentence stored anywhere? ─────────────────────────────────────
+// The structural claim of the scene is that nothing holds what the board is
+// going to say. So: the same partner, the same seed, the same board, two
+// different visitors. If a message were stored, both would say it.
 {
-  const want = 'HELLO';
-  const cup = createCup(0.5, 0.62);
-  const partner = { x: null, y: null };
-  const dwell = createDwell();
-  const sp = createSpeller(want);
-  let out = '', t = 0;
-  for (let i = 0; i < Math.round(60 / DT) && sp.i < want.length; i++) {
-    t += DT;
-    const vis = { x: cup.x + Math.sin(t * 0.9) * 0.02, y: cup.y + Math.cos(t * 0.7) * 0.02 };
-    const aim = stepSpeller(sp, null, cup, at);
-    const p = stepPartner(partner, aim, DT);
-    stepCup(cup, DT, vis, p);
-    clearDwellMemory(dwell, cup);
-    const got = stepDwell(dwell, cup, LETTERS, DT);
-    if (got) { out += got.ch; stepSpeller(sp, got, cup, at); }
-  }
-  console.log(`spell   passive visitor: spelled "${out}" (wanted "${want}") in ${f(t)}s`);
-  console.log(`        ${sp.i === want.length ? `finished — ${f(t / want.length)}s per letter` : 'DID NOT finish — the board cannot spell'}`);
+  const say = (visitor) => {
+    const cup = createCup(0.5, 0.44), hand = createWander(909, 0.5, 0.44), dwell = createDwell();
+    const ctx = createContext();
+    let bias = letterWeights(ctx.live);
+    const plaus = l => { const c = l.ch.charCodeAt(0) - 65; return (c < 0 || c > 25) ? 0.06 : Math.pow(bias[c], 0.5); };
+    for (let i = 0; i < Math.round(150 / DT); i++) {
+      stepCup(cup, DT, visitor(i * DT, cup), stepWander(hand, DT, LETTERS, plaus));
+      clearDwellMemory(dwell, cup);
+      const got = stepDwell(dwell, cup, LETTERS, DT,
+        l => DWELL_RESIST + (DWELL_EASE - DWELL_RESIST) * plaus(l));
+      if (got) { advance(ctx, got.ch); bias = letterWeights(ctx.live); }
+    }
+    return ctx.text;
+  };
+  const a = say((t, c) => ({ x: c.x + Math.sin(t * 0.9) * 0.02, y: c.y + Math.cos(t * 0.7) * 0.02 }));
+  const b = say((t, c) => ({ x: c.x + Math.sin(t * 1.7) * 0.03, y: c.y - Math.cos(t * 0.4) * 0.02 }));
+  console.log(`stored   same partner, same seed, visitor A: "${a}"`);
+  console.log(`                                  visitor B: "${b}"`);
+  console.log(`         ${a === b ? 'IDENTICAL — something is holding the message' : 'different — the sentence is not stored anywhere'}`);
 }
 
 // ─── 2. Can the visitor override it? ─────────────────────────────────────────
-// The partner tries to reach a letter on the left; the visitor pulls right and
-// holds. The visitor must win, completely — a board that fights back is a
-// puppet show, and a real one is trivially overridden.
+// The visitor pulls right and holds while the partner does whatever it does.
+// The visitor must win, completely — a board that fights back is a puppet show,
+// and a real one is trivially overridden.
 {
-  const cup = createCup(0.5, 0.62);
-  const partner = { x: null, y: null };
-  const target = at('A');
-  let t = 0, worst = 0;
-  for (let i = 0; i < Math.round(6 / DT); i++) {
+  const cup = createCup(0.5, 0.44);
+  const hand = createWander(11, 0.5, 0.44);
+  let worst = 0, t = 0;
+  for (let i = 0; i < Math.round(8 / DT); i++) {
     t += DT;
-    const vis = { x: 0.86, y: 0.62 };           // visitor pulls hard right, and holds
-    const p = stepPartner(partner, aimFor(target, cup), DT);
-    stepCup(cup, DT, vis, p);
-    worst = Math.max(worst, Math.hypot(cup.x - vis.x, cup.y - vis.y));
+    const vis = { x: 0.86, y: 0.44 };              // visitor pulls hard right, and holds
+    stepCup(cup, DT, vis, stepWander(hand, DT, LETTERS, l => (l.ch.charCodeAt(0) % 7) / 6));
+    // Only once the cup has arrived: the first seconds are the journey, not a
+    // measure of how far the partner can hold it off.
+    if (t > 2) worst = Math.max(worst, Math.hypot(cup.x - vis.x, cup.y - vis.y));
   }
-  console.log(`\noverride visitor holds at 0.860; partner pulls toward "${target.ch}" at ${f(target.x)}`);
-  console.log(`        cup ends at ${f(cup.x)}, ${f(cup.y)} — ${cup.x > 0.8 ? 'visitor wins outright' : 'PARTNER IS OVERPOWERING THE VISITOR'}`);
-  console.log(`        furthest the partner ever dragged it from the visitor's hand: ${f(worst)} board units`);
+  console.log(`\noverride visitor holds at 0.860; partner leans wherever it likes`);
+  console.log(`         cup ends at ${f(cup.x)}, ${f(cup.y)} — ${cup.x > 0.8 ? 'visitor wins outright' : 'PARTNER IS OVERPOWERING THE VISITOR'}`);
+  console.log(`         furthest the partner ever held it off the visitor's hand: ${f(worst)} board units`);
 }
 
-// ─── 3. Does a driving visitor spell by accident? ────────────────────────────
-// Someone sweeping the cup around should NOT produce letters — dwell is what
-// takes a letter, and a moving cup should take none.
+// ─── 3. Can a visitor spell a letter the board does not want? ────────────────
+// Q after nothing is about as implausible as English gets. The visitor holds
+// the cup on it. It has to land, and the time it takes is the promise the scene
+// makes: the board may be slow to agree, and it may never refuse.
+//
+// The visitor here is closed-loop — they aim past the letter by whatever the
+// error currently is — because that is what a person with their eyes open does,
+// and because an open-loop visitor cannot win against stiction. A cup at rest
+// stays at rest while the two hands are within CUP.staticFriction of each
+// other, which leaves the partner able to park it up to 0.044 board units off
+// the visitor's fingertip: more than half the gap between two letters. So a
+// visitor who sets their hand on Q once and never adjusts may well get an R,
+// and that is not a bug — it is what holding a planchette against somebody
+// else's hand is like. Correcting takes a moment and always works.
 {
-  const cup = createCup(0.5, 0.62);
-  const partner = { x: null, y: null };
+  const q = at('Q');
+  const cup = createCup(q.x, q.y);
+  const hand = createWander(3, 0.5, 0.44);
   const dwell = createDwell();
-  let out = '', t = 0;
-  for (let i = 0; i < Math.round(20 / DT); i++) {
+  const ctx = createContext();
+  let bias = letterWeights(ctx.live), t = 0, got = null;
+  const plaus = l => { const c = l.ch.charCodeAt(0) - 65; return (c < 0 || c > 25) ? 0.06 : Math.pow(bias[c], 0.5); };
+  for (let i = 0; i < Math.round(20 / DT) && !got; i++) {
     t += DT;
-    const vis = { x: 0.5 + Math.sin(t * 1.6) * 0.28, y: 0.5 + Math.cos(t * 1.1) * 0.18 };
-    const p = stepPartner(partner, aimFor(at('E'), cup), DT);
-    stepCup(cup, DT, vis, p);
+    const vis = { x: q.x + (q.x - cup.x) * 1.6, y: q.y + (q.y - cup.y) * 1.6 };
+    stepCup(cup, DT, vis, stepWander(hand, DT, LETTERS, plaus));
     clearDwellMemory(dwell, cup);
-    const got = stepDwell(dwell, cup, LETTERS, DT);
-    if (got) out += got.ch;
+    got = stepDwell(dwell, cup, LETTERS, DT,
+      l => DWELL_RESIST + (DWELL_EASE - DWELL_RESIST) * plaus(l));
   }
-  console.log(`\ndriving  20s of the visitor sweeping the cup around: spelled "${out}"`);
-  console.log(`        ${out.length <= 2 ? 'motion alone does not spell' : 'TOO CHATTY — a moving cup is taking letters'}`);
+  console.log(`\ninsist  visitor holds the cup on Q: ${got ? `took "${got.ch}" after ${f(t)}s` : 'NEVER LANDED — the board is refusing a letter'}`);
 }
 
 // ─── 4. The cup itself: start, stop, determinism, frame rate ─────────────────

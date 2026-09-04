@@ -17532,3 +17532,112 @@ happen without Scott deciding that's worth it.
 ## collaborators
 - scott jason cohen — vision, writing, curation
 - claude (anthropic) — code, literary analysis, implementation
+
+## 4.11.5 (2026-09-04)
+
+**Medium — the board learns English, and the partner stops having a message.**
+Still no scene: `medium.physics.js` is imported by nothing, and the two benches
+(`scripts/medium-feel.mjs`, `scripts/medium-spell.mjs`) are the only callers.
+New: `medium.lexicon.js` and its data file `medium.words.js`.
+
+**The design 4.11.4 shipped was a puppet show, and Scott named it before it was
+built too far.** A partner that leans toward the next letter of a message it
+already holds will spell that message whatever the visitor does. Everything else
+about it was right — the cap, the dwell, the retreat — but the sentence existed
+before the session did, and a scene about not knowing who is producing the
+message cannot have the message on file.
+
+**What replaced it is predictive text**, which was Scott's, and which is the
+better idea for a reason worth stating plainly: a phone keyboard and a
+half-conscious hand are running the same process, one in a language model and
+one in a nervous system. The scene is the collision of the two. Nothing anywhere
+in it holds a sentence — there is no variable to point at — and the bench proves
+it: same partner, same seed, two different visitors, two different tapes.
+
+**The lexicon is the ten thousand commonest English words, 24KB gzipped**, not a
+dictionary. Modelling rather than economising: the words a person is primed for
+are exactly the frequent ones, and a full 264k dictionary (360KB gzipped) would
+make ZYGOTE as reachable as THE. Frequency-ordered, front-coded, with ranks
+log-bucketed to one character each. Zipf weight is rank^-0.55 rather than
+rank^-1, because at the true slope the top hundred words swamp everything and
+the board reads like phone autocomplete — the one failure mode that would make
+this feel familiar instead of uncanny. Everybody has a phone; nobody has been
+haunted.
+
+**Plain English, not the site's own prose**, and that was measured rather than
+assumed: the site's letter distribution matches published English frequencies at
+Spearman 0.989, 0.26pp mean absolute error. Seeding the board with the site would
+have changed nothing about the output while making the board a ventriloquist for
+the page it sits on.
+
+**There is no space bar and the scene never decides a word has ended.** It keeps
+the longest suffix of what has been spelled that English can still continue, and
+drops a character off the front when it runs dry. Spell HELLO and the live
+context falls back to LO, so the tape reads HELLOCAL. That is not a defect being
+tolerated — it is what Ouija transcripts look like, and it is why people can read
+them.
+
+**The design that had to be abandoned, with the numbers that killed it.** The
+brief's own instinct, and mine, was that the bias belongs in the *stopping* and
+never in the pulling: the hand wanders at random, and the only thing English
+touches is how long a letter takes to land. It is the cleanest possible statement
+of the ideomotor account. It was built, measured, and does not work — **0.045
+letters per second and a 22.9% vowel share against English's 38.1%**, producing
+no words in fifty minutes of simulated sitting. The arithmetic is unforgiving: a
+randomly wandering cup rests near a letter about 0.6 times a second, the letter
+is one of twenty-six, and a stopping rule can only ever *reject*. Rejecting hard
+enough to get English costs a factor of twenty in rate; rejecting gently enough
+to keep the rate gets alphabet soup. **A filter cannot manufacture the
+opportunities it is filtering.**
+
+So the hand does move on purpose, in the one sense the literature actually
+claims — Faraday's sitters were not failing to stop, their hands were travelling
+in a direction they did not know they had chosen. `FIELD_PULL` sums a lean over
+every letter on the board at once, weighted by plausibility and nearness. A
+gradient is not a target: no next letter is chosen anywhere, and the board
+resolves which letter only when the cup stops.
+
+    pull    letters/s   vowel share
+       0        0.045         22.9%     alphabet soup
+       5        0.109         33.4%
+      12        0.146         34.2%     <- shipped
+      26        0.191         33.0%
+                             (38.1%)    English
+
+12 rather than 26 because past that the hand starts to look like it is going
+somewhere, and the whole illusion is that it is not.
+
+**What it says.** Three minutes of a visitor who is touching but not driving:
+"FREEDOMESTICKERSTSUNAMIBIASTRONOMYSTERYAN", "THETASKSTRESTOREDUCESTATESTSUO
+SCAREDUCEDARKNES", "TERRORISTSUNAMIBIASTQUVFREDER". 0.16 letters/second, 33%
+vowels against a 22.5% control with plausibility switched off.
+
+**Two fixes the benches forced.**
+
+The visitor needed a stiffer spring than the partner (78 against 26), because the
+visitor is pressing and the partner is resting. Without the asymmetry the partner
+could hold the cup 0.046 board units off the visitor's fingertip — very nearly
+one letter's spacing — so a visitor parking the cup on Q got an R, which breaks
+the one promise the scene makes. It is now 0.017, and Q lands in 1.78s.
+
+Stiction still means an *open-loop* visitor can be parked a letter over: a cup at
+rest stays at rest while the two hands are within `staticFriction` of each other,
+which leaves about 0.044 units of slack. A visitor with their eyes open corrects
+it in a moment and always wins. That is not a bug — it is what holding a
+planchette against somebody else's hand is like — and the bench's visitor is
+closed-loop for that reason.
+
+**The lexicon is screened.** Twenty-four sexual or profane words and SUICIDE are
+cut before ranking, so the field never leans toward them. Tone, not squeamishness:
+a board that spells DARKNESS is the scene and a board that spells PUSSY is a
+different and much stupider scene. KILL, MURDER, HELL, DAMN, DEAD are kept on
+purpose. Accidental collisions across word boundaries are still possible and are
+not preventable.
+
+**Frame-rate spread went from 0.0017 to 0.0046 board units across 30/60/144Hz**,
+the cost of the stiffer visitor spring in an explicit integrator. That is a tenth
+of a letter's spacing, about 1.4mm on a 30cm board. Recorded rather than fixed.
+
+**Still to come:** the scene itself — rendering, `medium.{js,css,html}`, the
+`/text/` page, registry entry, nav icon, landing tile, `ABSENT` — and the landing
+page's visual audit once a thirteenth preview tile exists.
