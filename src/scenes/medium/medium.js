@@ -728,7 +728,9 @@ export function createMedium(container, { preview = false, initialArg = null, on
   // the cup; a press anywhere else on the board is a hand on the table, and a
   // hand on the table does nothing. That is the rule that makes the cup an
   // object rather than a handle — you cannot teleport it, you can only lean.
-  const PRESS_R = CUP_R * 2.6;   // fingertips are wide and a phone is imprecise
+  // Fingertips are wide and a phone is imprecise. On a 370px board this is a
+  // 49px catchment for a 19px cup, which is about a thumb.
+  const PRESS_R = CUP_R * 2.6;
 
   let pointerId = null;
   function pointFrom(e) {
@@ -742,7 +744,7 @@ export function createMedium(container, { preview = false, initialArg = null, on
     pointerId = e.pointerId;
     visitor.x = p.x; visitor.y = p.y; visitor.down = true;
     visitor.sx = p.x; visitor.sy = p.y; visitor.ax = p.x; visitor.ay = p.y;
-    visitor.lx = p.x; visitor.ly = p.y; visitor.grip = 1;
+    visitor.fx = p.x; visitor.fy = p.y; visitor.lx = p.x; visitor.ly = p.y; visitor.grip = 1;
     canvas.setPointerCapture?.(e.pointerId);
     e.preventDefault();
   }
@@ -774,6 +776,7 @@ export function createMedium(container, { preview = false, initialArg = null, on
         visitor.x = cup.x; visitor.y = cup.y;
         visitor.sx = cup.x; visitor.sy = cup.y;
         visitor.ax = cup.x; visitor.ay = cup.y;
+        visitor.fx = cup.x; visitor.fy = cup.y;
         visitor.lx = cup.x; visitor.ly = cup.y; visitor.grip = 0;
       }
       visitor.down = !visitor.down;

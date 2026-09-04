@@ -64,30 +64,64 @@ const at = ch => MARKS.find(l => l.ch === ch);
 }
 
 // ─── 2. Can the visitor override it? ─────────────────────────────────────────
-// The visitor pulls right and holds while the partner does whatever it does.
-// The visitor must win, completely — a board that fights back is a puppet show,
-// and a real one is trivially overridden.
+// The visitor drags the cup hard to the right while the other hand leans
+// wherever it likes. During the drag and for a second after it, the visitor must
+// win completely — a board that fights back is a puppet show, and a real one is
+// trivially overridden.
+//
+// ─── What this test used to claim, and why it was wrong ─────────────────────
+// It used to hold the pointer at 0.860 for eight seconds and assert the cup was
+// still there at the end. It passed for weeks and it was testing a fiction: in
+// the input model a stationary pointer is a hand that has STOPPED PARTICIPATING,
+// and a hand that has stopped participating does not hold a planchette
+// anywhere — the other hand moves it and yours goes along, because that is what
+// resting on an object means. The old test kept the visitor's grip up with a
+// 40Hz wobble of four thousandths of a board, because grip used to be derived
+// from frame-to-frame movement and a wobble was the only lever. When the input
+// filter learned to tell jitter from motion — which it had to, for touchscreens,
+// where a still finger jitters by two pixels — the wobble correctly stopped
+// counting and this test correctly failed.
+//
+// So it asserts the thing that is actually promised: *while you are driving, you
+// win.* Test 2b below asserts the other half, which is not a defect but the
+// scene's whole thesis: stop participating and the other hand takes over.
 {
   const cup = createCup(BOARD_HOME.x, BOARD_HOME.y);
   const hand = createWander(11, BOARD_HOME.x, BOARD_HOME.y);
   const v = createVisitor(cup.x, cup.y); v.down = true;
   let worst = 0, t = 0;
-  for (let i = 0; i < Math.round(8 / DT); i++) {
+  for (let i = 0; i < Math.round(2.5 / DT); i++) {
     t += DT;
-    // Pulling and HOLDING. A hand that stops moving goes slack by design — grip
-    // decays — so "holds" has to mean "keeps pushing", and the honest way to
-    // say that is a pointer that keeps arriving rather than a flag that is set.
-    // The tiny wobble is what a real hand pressing against something does and
-    // is what keeps grip at 1; without it this would be testing a slack hand.
-    v.x = 0.86 + Math.sin(t * 40) * 0.004; v.y = 0.44;
+    // A real drag: half a second of travel to the right, then the visitor keeps
+    // their hand there and keeps meaning it, which is a pointer that arrived
+    // somewhere rather than one that is vibrating.
+    v.x = 0.5 + Math.min(1, t / 0.5) * 0.36; v.y = BOARD_HOME.y;
     stepCup(cup, DT, stepVisitor(v, cup, DT), stepWander(hand, DT, cup, LETTERS, l => (l.ch.charCodeAt(0) % 7) / 6, v.grip));
-    // Only once the cup has arrived: the first seconds are the journey, not a
-    // measure of how far the partner can hold it off.
-    if (t > 2) worst = Math.max(worst, Math.hypot(cup.x - v.x, cup.y - v.y));
+    if (t > 0.8) worst = Math.max(worst, Math.hypot(cup.x - v.x, cup.y - v.y));
   }
-  console.log(`\noverride visitor holds at 0.860; partner leans wherever it likes`);
+  console.log(`\noverride visitor drags to 0.860 and means it`);
   console.log(`         cup ends at ${f(cup.x)}, ${f(cup.y)} — ${cup.x > 0.8 ? 'visitor wins outright' : 'PARTNER IS OVERPOWERING THE VISITOR'}`);
   console.log(`         furthest the partner ever held it off the visitor's hand: ${f(worst)} board units`);
+}
+
+// ─── 2b. And a visitor who stops taking part loses the cup ───────────────────
+// Not a defect. It is the thesis: rest your hand and the other hand moves it,
+// which is the entire scene. Asserted rather than discovered, because the
+// previous version of test 2 asserted the opposite by accident.
+{
+  const cup = createCup(BOARD_HOME.x, BOARD_HOME.y);
+  const hand = createWander(11, BOARD_HOME.x, BOARD_HOME.y);
+  const v = createVisitor(cup.x, cup.y); v.down = true;
+  let t = 0, parked = 0;
+  for (let i = 0; i < Math.round(12 / DT); i++) {
+    t += DT;
+    v.x = 0.5 + Math.min(1, t / 0.5) * 0.36; v.y = BOARD_HOME.y;   // drag, then never touch it again
+    stepCup(cup, DT, stepVisitor(v, cup, DT), stepWander(hand, DT, cup, LETTERS, l => (l.ch.charCodeAt(0) % 7) / 6, v.grip));
+    if (Math.abs(t - 0.9) < DT) parked = cup.x;
+  }
+  const moved = Math.abs(cup.x - parked);
+  console.log(`\nletgo    visitor drags to 0.860 and then does nothing for 11s`);
+  console.log(`         cup drifted ${f(moved)} board units away — ${moved > 0.08 ? 'the other hand took over, as it should' : 'IT STAYED PUT — a resting hand is holding the cup'}`);
 }
 
 // ─── 3. Can a visitor spell a letter the board does not want? ────────────────

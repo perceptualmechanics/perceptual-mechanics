@@ -38,6 +38,12 @@
   touch-action: none;
   -webkit-user-select: none;
   user-select: none;
+  /* iOS: a long press on a canvas otherwise raises the callout menu and a
+     magnifier, both of which land on top of the board at exactly the moment
+     somebody is doing the one thing this scene asks for — pressing and keeping
+     their finger there. */
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
 /* ─── Title / hint ─────────────────────────────────────────────────────────

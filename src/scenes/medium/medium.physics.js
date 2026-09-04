@@ -474,7 +474,7 @@ export const RELAX = 18;
 // and still wins outright.
 export const DRIVE_SPEED = 0.22;    // pointer speed, board units/s, that means grip 1
 export const GRIP_ATTACK = 22;      // per second, tightening
-export const GRIP_RELEASE = 3.4;    // per second, letting go — slower, on purpose
+export const GRIP_RELEASE = 0.6;    // per second, letting go — slow, and see medium-feel's override test
 
 // And a resting hand is never quite still even so. Physiological tremor is fast
 // and tiny; postural drift is slower and larger, and it is the one that matters
@@ -486,9 +486,30 @@ export const GRIP_RELEASE = 3.4;    // per second, letting go — slower, on pur
 // its owner does not know about is the substrate this entire scene is about.
 export const HAND_DRIFT = 0.013;
 
-// Below this, pointer movement between frames is a hand resting on a trackpad
-// rather than a hand going anywhere, and does not count toward grip at all.
-export const DRIVE_EPS = 0.0008;
+// ─── The pointer is low-passed before its speed is taken ────────────────────
+// A frame-to-frame difference is not a speed, it is a speed plus whatever the
+// input device is doing, and on a touchscreen that second term is bigger than
+// the first. Touch coordinates jitter by a pixel or two while a finger is
+// perfectly still, which on a 370px board is about 0.005 board units a frame —
+// six times the threshold that was here, so a phone visitor resting a finger on
+// the cup registered 0.3 board units a second and pinned grip at 1. The board
+// would have been unable to spell for anybody on a phone, permanently, and no
+// bench would ever have said so.
+//
+// So the speed is taken from a smoothed copy of the pointer instead. Jitter is
+// zero-mean and cancels; real movement survives, delayed by about seventy
+// milliseconds, which nobody can feel. It fixes trackpads for the same reason
+// and by the same amount.
+// So the speed is not a frame-to-frame difference at all. Two filters: a fast
+// one that cleans the pointer, and a slow REFERENCE that trails it. For a hand
+// actually travelling, the distance the reference lags behind is proportional
+// to the speed — lag = v / REF_EASE — so the gap between them IS the velocity,
+// measured over a fifth of a second instead of over one frame. Zero-mean jitter
+// moves both filters together and the gap stays closed.
+export const POINTER_EASE = 14;    // per second, cleaning filter
+export const REF_EASE = 5;         // per second, the trailing reference
+// What is left after all that and still not motion.
+export const DRIVE_EPS = 0.004;
 
 export function createVisitor(x, y) {
   // `x`/`y` are the pointer. `sx`/`sy` are the slack point, which follows the
@@ -497,7 +518,7 @@ export function createVisitor(x, y) {
   // draws, so the finger is never seen off the china.
   return {
     x, y, sx: x, sy: y, ax: x, ay: y, px: x, py: y,
-    lx: x, ly: y, grip: 0, t: 0, down: false,
+    fx: x, fy: y, lx: x, ly: y, grip: 0, t: 0, down: false,
   };
 }
 
@@ -512,10 +533,14 @@ export function stepVisitor(v, cup, dt) {
   // How fast the pointer is travelling, in board units per second. Movement
   // under DRIVE_EPS between frames is a finger resting on a trackpad and is
   // discarded before it can become speed.
-  const mx = v.x - v.lx, my = v.y - v.ly;
-  const moved = Math.hypot(mx, my);
-  v.lx = v.x; v.ly = v.y;
-  const speed = moved > DRIVE_EPS && dt > 0 ? moved / dt : 0;
+  const fk = Math.min(1, POINTER_EASE * dt);
+  v.fx += (v.x - v.fx) * fk;
+  v.fy += (v.y - v.fy) * fk;
+  const rk = Math.min(1, REF_EASE * dt);
+  v.lx += (v.fx - v.lx) * rk;
+  v.ly += (v.fy - v.ly) * rk;
+  const lag = Math.hypot(v.fx - v.lx, v.fy - v.ly);
+  const speed = lag > DRIVE_EPS ? lag * REF_EASE : 0;
 
   const want = Math.min(1, speed / DRIVE_SPEED);
   const rate = want > v.grip ? GRIP_ATTACK : GRIP_RELEASE;

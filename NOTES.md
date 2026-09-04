@@ -18173,3 +18173,70 @@ more, because motion is its own permission.
 A third off the twitch for 1.6 points of rank correlation. Everything else held:
 0.14 marks/second resting, 33.2% vowels against a 25.0% flat control, visitor
 wins outright at 0.035 board units, Q lands in 1.17s.
+
+## 4.11.14 (2026-09-04)
+
+**Medium was completely unusable on a touchscreen, and no bench would ever have
+said so.** Found by going looking on Scott's note that this could be good on
+mobile, and it is the sharpest instance yet of the afternoon's own lesson.
+
+**A finger held perfectly still on a touchscreen jitters by a pixel or two.** On
+a 370px board that is about 0.005 board units per frame — six times the threshold
+that was there — so a phone visitor resting a finger on the cup registered 0.3
+board units a second, pinned `grip` at 1, and became a visitor permanently
+DRIVING. The other hand braced, the field switched off, and the board could not
+spell at all. Permanently, for everybody on a phone.
+
+Measured, resting finger, five seeds:
+
+    jitter    marks/s   mean grip        (before)      (after)
+      0px      0.143      0.000
+      1px      0.077      0.088    ->     0.143         0.000
+      2px      0.057      0.347    ->     0.143         0.000
+      4px      0.043      0.719    ->     0.102         0.080
+
+**A frame-to-frame difference is not a speed**, it is a speed plus whatever the
+input device is doing, and on touch the second term is bigger than the first. So
+speed is not measured that way any more. Two filters: a fast one that cleans the
+pointer, and a slow REFERENCE that trails it. For a hand actually travelling the
+reference lags by v / REF_EASE, so **the gap between the two filters is the
+velocity**, measured over a fifth of a second rather than over one frame.
+Zero-mean jitter moves both together and the gap stays shut. It fixes trackpads
+by the same mechanism and the same amount.
+
+Real drags still drive: grip passes 0.9 in 0.35s at 0.30 board units/s and in
+0.18s at 0.60.
+
+**And it broke a test that had been passing for weeks by testing a fiction.** The
+override test held the pointer at 0.860 for eight seconds and asserted the cup
+was still there — keeping grip up with a 40Hz wobble of four thousandths of a
+board, because grip used to be derived from frame-to-frame movement and a wobble
+was the only lever there was. Once the filter could tell jitter from motion the
+wobble correctly stopped counting, and the test correctly failed.
+
+The right response was to fix the test, and the check on that reasoning is that
+the model's new behaviour is not a compromise but the thesis: **in the input
+model a stationary pointer is a hand that has stopped participating, and a hand
+that has stopped participating does not hold a planchette anywhere.** The other
+hand moves it and yours goes along, because that is what resting on an object
+means. So there are two tests now:
+
+- `override` — while you are driving, you win. Cup ends at 0.840, the other hand
+  never holds it more than 0.028 board units off your finger.
+- `letgo` — drag it somewhere and then do nothing for eleven seconds, and it
+  drifts 0.33 board units away. **Asserted rather than discovered**, because the
+  old test asserted the opposite by accident.
+
+`GRIP_RELEASE` went 3.4 → 0.6 so a deliberate drag keeps its grip for a couple of
+seconds after the hand stops, which is what makes "park it on Q" work: Q lands in
+1.17s.
+
+Plus the small touch-surface things: `-webkit-touch-callout: none` and a
+transparent tap highlight, because on iOS a long press on a canvas raises the
+callout menu and a magnifier — both landing on the board at exactly the moment
+somebody is doing the one thing the scene asks for.
+
+**The pattern, for the record:** three felt complaints this afternoon were found
+by playing on a trackpad. This one was found by *reasoning about a device nobody
+had played on*, from Scott's aside that it might be good on mobile. Both routes
+were necessary and neither was the bench.
