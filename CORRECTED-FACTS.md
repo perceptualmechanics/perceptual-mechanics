@@ -39,6 +39,7 @@ brief is quoting a reply rather than the code.
 
 | Claim | What is true | Source |
 |---|---|---|
+| Sphere's stretched landing thumbnail on iOS is "not reproduced" | **Reproduced and fixed in 4.11.1.** A preview mounting before its stylesheet applies measures an unstyled `<button>` (no width, some height) and falls back to `window.innerWidth/innerHeight`, so the renderer is built at the phone's aspect and then squashed into a square tile. `bindGuardedResize` watched only the window, so the element gaining its real size corrected nothing. A `ResizeObserver` closes it. | `src/utils/sceneKit.js`, `NOTES.md` 4.11.1 |
 | Butterfly's landing thumbnail takes ~25 seconds to become a recognisable Lorenz shape, and this is "a live open question" | **Fixed in v4.1.3.** The preview accumulates at 400 points/sec against 240 in full mode and reaches the shape in about a second. Not open. | `src/scenes/butterfly/butterfly.js:617` — `const PPS = preview ? 400 : 240;` · `NOTES.md` 4.1.3 |
 
 **Why it recurs**, since that is the more useful fact: the correction was made in

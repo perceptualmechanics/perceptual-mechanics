@@ -85,6 +85,39 @@ export function bindWheelZoom(container, { onZoom, isBlocked } = {}) {
 // otherwise resize a renderer to 0 or fall back to window size for what's
 // actually a small preview tile. Also wires the orientationchange retry
 // (some mobile browsers fire resize before the new dimensions are settled).
+//
+// ─── 4.11.1: it watches the ELEMENT now, not only the window ────────────────
+// This listened to `window.resize` alone, and that is a real gap rather than a
+// tidiness point: **an element can change size without the window changing at
+// all.** Every scene's constructor opens with
+//
+//     const w = container.clientWidth  || window.innerWidth;
+//     const h = container.clientHeight || window.innerHeight;
+//
+// so a preview that mounts before its stylesheet has applied measures an
+// unstyled empty <button> — near-zero width, non-zero height from the UA's own
+// padding — and falls back to the WINDOW's dimensions for one or both axes.
+// The renderer is then built at the phone's aspect and the camera with it. CSS
+// arrives a moment later, the tile becomes a 171px square, and
+// `.preview-container canvas { width:100% !important; height:100% !important }`
+// squashes that portrait render into a square box.
+//
+// The result is a sphere drawn as a tall narrow ellipse, and **it never
+// recovered**, because the only thing that could re-measure it was a window
+// resize that never came. Rotating the phone fixed it; so did opening a scene
+// and coming back, because returnToGallery dispatches a synthetic resize. That
+// is why it looked intermittent and why it would not reproduce on a fast local
+// machine, where CSS is always applied before the module graph runs.
+//
+// Measured, on a 390x844 phone profile, mounting Sphere into a container that
+// is 0 wide with a real height: buffer 780x342, render aspect 2.281, displayed
+// in a 171px square — a 0.44 width-to-height ellipse. Giving the container its
+// real size afterwards left it at 2.281. Dispatching a window resize fixed it.
+//
+// A ResizeObserver closes it at the source: the element gaining its size IS
+// the signal. The window listeners stay — a devicePixelRatio change on a
+// display swap moves nothing about the element's box, and scenes re-apply
+// pixel ratio from this same callback.
 export function bindGuardedResize(container, onResize) {
   const handler = () => {
     const w = container.clientWidth, h = container.clientHeight;
@@ -94,11 +127,19 @@ export function bindGuardedResize(container, onResize) {
   const orientationHandler = () => setTimeout(handler, 100);
   window.addEventListener('resize', handler);
   window.addEventListener('orientationchange', orientationHandler);
+  // Guarded for environments without it (and for a container that is not an
+  // Element, which no caller does today but the helper should not assume).
+  let observer = null;
+  if (typeof ResizeObserver !== 'undefined' && container instanceof Element) {
+    observer = new ResizeObserver(handler);
+    observer.observe(container);
+  }
   return {
     trigger: handler,
     dispose() {
       window.removeEventListener('resize', handler);
       window.removeEventListener('orientationchange', orientationHandler);
+      observer?.disconnect();
     },
   };
 }

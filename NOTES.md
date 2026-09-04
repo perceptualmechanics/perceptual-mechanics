@@ -587,6 +587,76 @@ described are unchanged.)
   worth trimming, orrery.js's texture generators and first-person rig are the
   two most self-contained chunks to split out first.
 
+## 4.11.1 (2026-09-04)
+
+**The stretched preview thumbnail, found and fixed.** Scott photographed it on
+an iPhone two days ago — Sphere drawn as a tall narrow ellipse, which is not a
+sphere's silhouette at any camera angle. 4.9.1 recorded it as **not reproduced**
+rather than guessed at. It reproduces now, and the answer to Scott's question —
+*was that a consequence of the preview tile work?* — is **no**: both halves of
+the mechanism predate all of it.
+
+**The mechanism.** Every scene's constructor opens with
+
+    const w = container.clientWidth  || window.innerWidth;
+    const h = container.clientHeight || window.innerHeight;
+
+so a preview that mounts **before its stylesheet has applied** measures an
+unstyled empty `<button>` — near-zero width, non-zero height from the user
+agent's own padding — and falls back to the WINDOW's dimensions for one or both
+axes. The renderer's buffer and the camera are built at the phone's aspect. CSS
+arrives a moment later, the tile becomes a 171px square, and
+`.preview-container canvas { width:100% !important; height:100% !important }`
+squashes that portrait render into a square box.
+
+**And nothing ever corrected it**, which is the half that made it visible rather
+than a single bad frame: `bindGuardedResize` listened to `window.resize` and
+`orientationchange` only, and **an element can change size without the window
+changing at all.** The tile gaining its real size was not a signal anything
+watched.
+
+That also explains every way it behaved. Rotating the phone fixed it. Opening a
+scene and coming back fixed it, because `returnToGallery` dispatches a synthetic
+resize. And it would not reproduce on a fast local machine, where CSS is always
+applied before the module graph runs — which is why it took forcing the
+condition rather than waiting for it.
+
+**Measured, on a 390×844 phone profile**, mounting Sphere into containers that
+measure zero at mount:
+
+| container at mount | buffer | render aspect | shown in a 171px square |
+|---|---|---|---|
+| 0 × 171 | 780 × 342 | 2.281 | **0.44 — a tall narrow ellipse** |
+| 171 × 0 | 342 × 1688 | 0.203 | 4.94 — a wide flat one |
+| 0 × 0 | 780 × 1688 | 0.462 | 2.16 — wide |
+| 171 × 171 | 342 × 342 | 1.000 | correct |
+
+The first row is the photograph, and it is the case an unstyled `<button>`
+produces: no width, a little height. Giving the container its real size
+afterwards left the buffer at 2.281. Dispatching a window resize fixed it.
+
+**The fix is a ResizeObserver in `bindGuardedResize`**, which is one place and
+covers **all twelve scenes** that use it — the element gaining its size IS the
+signal, so the wrong aspect now self-corrects within a frame of layout instead
+of persisting until something unrelated happens. The window listeners stay: a
+`devicePixelRatio` change on a display swap moves nothing about the element's
+box, and scenes re-apply pixel ratio from this same callback.
+
+The eleven `clientWidth || window.innerWidth` fallbacks are left alone
+deliberately. They are still wrong for one frame, and now they are only wrong
+for one frame; changing eleven constructors to invent a square fallback would be
+eleven edits to paper over a race the observer already ends.
+
+**Verified:** the 0-width mount now goes 780×342 → 342×342 the moment the
+element is sized, and holds — checked for a settle loop, since the callback
+resizes a renderer whose canvas is inside the observed element (there is none;
+the `!important` CSS means the canvas box never changes and the container is
+never touched). Every live preview on the landing page reports a buffer aspect
+of exactly 1, no console errors, and the 4.11.0 above-the-fold measurements are
+unchanged across all seventeen viewport sizes.
+
+**Files:** `src/utils/sceneKit.js`.
+
 ## 4.11.0 (2026-09-04)
 
 **The landing page gets a requirement, and the layout becomes a consequence of
