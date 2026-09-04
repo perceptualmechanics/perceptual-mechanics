@@ -18117,3 +18117,59 @@ part of the change, and "I will have seen it, it is right there" is exactly the
 reasoning that leaves it standing.
 
 Found because somebody asked what a number meant.
+
+## 4.11.13 (2026-09-04)
+
+**"The second hand just gets so twitchy if I'm going slowly."** Scott's word, and
+it turns out to have a number: **direction reversals per second in the other
+hand's lean** — how often the fingertip changes which way it is sliding on the
+china. That is what twitchy means, and it is not the same as speed, which is why
+the obvious fix is the wrong one.
+
+**The control is the finding.** Eight seeds, five minutes each, with the scaling
+off entirely — which is how this shipped:
+
+                       reversals/s          Spearman
+                    resting  slow drag    vs English
+    no scaling        4.2       4.3          0.813
+    floor 0.34        3.0       3.2          0.805
+    floor 0.20        2.7       2.9          0.797
+
+**4.2 and 4.3.** The other hand's activity did not respond to the visitor *at
+all* — four direction changes a second whether they were resting or making one
+slow deliberate sweep. Scott felt a thing that was exactly true and the model had
+no term for it.
+
+**What replaced it is entrainment, and his framing was better than mine.** Two
+people moving one object match each other's ENERGY — not direction, which would
+be a mirror and would spell nothing. So the other hand's impulses scale with the
+smoothed speed of the CUP, not of the pointer: the pointer is the visitor's
+private business, and half the point of the scene is that neither hand can see
+the other's intention. What they share is the object.
+
+**And the rhythm stretches, which is most of what the word meant.** A hand doing
+six little bursts inside somebody's one slow three-second sweep reads as
+skittering however small each burst is — the mismatch a person notices is in
+tempo, not amplitude. A quiet pair gets intervals up to about 60% longer.
+
+**The floor is load-bearing.** At zero the pair deadlocks: nobody moves, so
+nobody moves. At 0.20 a still pair keeps enough energy for the other hand to
+break stiction alone, so the board *warms up* — still, then moving, then moving
+more, because motion is its own permission.
+
+**Two things tried and rejected, both measured:**
+
+- *Heavier damping on the lean.* The obvious fix, and it is backwards: 3.5 and
+  5.5 lower the distance the fingertip travels and take reversals UP, to 2.9 and
+  3.1, at 7 and 11 points of Spearman. Damping makes a hand that moves less and
+  changes its mind more.
+- *Driving the brace off tempo instead of off grip.* Calms it beautifully —
+  reversals to 1.9 — and costs 13 points, because a permanently braced hand
+  explores nothing and re-treads its own letters. That one was in the build for
+  an hour before the control caught it, and it is the same lesson as 4.11.10: it
+  looked like a win because the thing it degraded was not the thing being
+  watched.
+
+A third off the twitch for 1.6 points of rank correlation. Everything else held:
+0.14 marks/second resting, 33.2% vowels against a 25.0% flat control, visitor
+wins outright at 0.035 board units, Q lands in 1.17s.
