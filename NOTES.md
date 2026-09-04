@@ -587,6 +587,83 @@ described are unchanged.)
   worth trimming, orrery.js's texture generators and first-person rig are the
   two most self-contained chunks to split out first.
 
+## 4.11.0 (2026-09-04)
+
+**The landing page gets a requirement, and the layout becomes a consequence of
+it.** Scott: *all twelve tiles visible without scrolling on desktop, at a
+legible size — the layout is whatever satisfies that.*
+
+**Why that is better than the two rows it replaces, stated because the
+difference is the point.** "Two rows" was a preference, and 4.10.2 reached it by
+widening a scoring loop until 6/6 won — picking an answer and then justifying
+it. The requirement is measurable, so the row count stops being chosen at all.
+The available band is the viewport minus the chrome that is always there; inside
+it, for each candidate column count, the tile is capped by width one way and by
+height the other, and the arrangement that makes the tile largest wins:
+
+    rows      = ceil(n / cols)
+    by width  = (W - (cols-1)*gap - padding) / cols
+    by height = (H - (2*rows-2)*gap - padding) / rows
+    tile      = min(both, 272px cap);  reject below the 168px floor
+
+**The row count now moves with the window's SHAPE, not just its width**, which
+is the visible proof that it is derived: 1440×820 gives six columns in two rows
+at 214px, and 1160×800 gives four columns in three rows at 181px, because three
+rows beats two once the window is narrow enough. Neither was chosen. None of it
+could stay in CSS — no media query can express "twelve of these fit above the
+fold" — which is why the arithmetic is in JS and the stylesheet only spends the
+number it is handed.
+
+**The floor is sourced rather than picked.** 168px, because the phone layout has
+shipped 136px tiles since 4.9.1 and the previews are recognisable there, and a
+desktop is viewed from further away than a phone.
+
+**When the requirement cannot be met, the page stops claiming it can.** No
+arrangement above the floor means `.rows-forced` does not go on and the grid
+falls back to scrolling — the phone layout, and now also a short or narrow
+desktop window. That is the honest answer rather than shrinking tiles into
+decoration. **It is also the scaling threshold, and it announces itself**:
+twelve fit, sixteen probably fit smaller, twenty-four will not, and the moment
+they do not is a measurable event rather than a judgement call. That is when the
+index has to stop being a grid, which is what `sceneField.js` is shelved for.
+
+**The first version claimed a fit it did not have, and measuring caught it.**
+The page reported all twelve above the fold while `#landing` scrolled by 80px.
+Two terms missing from the vertical budget, neither obvious from reading the
+code:
+
+- the list's own vertical padding, which is not part of any tile; and
+- **`.preview-row-break` is a flex item**, so it occupies its own line and takes
+  a row-gap on *both* sides. Three rows of tiles is five flex lines and four
+  row-gaps, not three and two.
+
+Found by comparing the real `scrollHeight` against the layout that produced it,
+rather than by trusting the arithmetic to describe its own output. Worth keeping
+as the shape of the error: a formula that decides a layout cannot also be the
+thing that verifies it.
+
+**Measured after, seventeen viewport sizes.** Every case where the grid claims
+the requirement now satisfies it — `allVisible` true and zero vertical overflow
+at 1920×1080, 1920×800, 1600×900, 1440×900, 1440×820, 1440×700, 1440×600,
+1280×800, 1280×720, 1160×800, 1024×768 and 768×1024, with tiles from 170 to
+272px and arrangements of 6/6, 5/5/2, 4/4/4 and 3/3/3/3 chosen by the
+arithmetic. The four that fall back — 900×700, 601×800, 390×844, 320×720 —
+genuinely cannot hold twelve legible tiles above the fold, and scroll.
+
+**One behaviour change worth knowing**: the 601–900px desktop band now scrolls
+where it used to show 3/3/3/3, because at those sizes it cannot meet the
+requirement. That is the requirement working, not a regression, but it is a
+visible difference on a small laptop window.
+
+**`SITE.md` states the requirement** as the thing every future layout decision
+has to satisfy, which is where Scott asked for it and where a future session
+will look first.
+
+**Files:** `src/main.js` (the derivation replaces `tileColumns()` and the
+width-only media-query threshold; re-derived on resize, since the answer now
+depends on height), `styles/main.css` (the forced-row rules spend `--tile`
+instead of recomputing a percentage), `SITE.md`.
+
 ## 4.10.4 (2026-09-04)
 
 **A semantic HTML sweep, at Scott's request — "I'm always on the lookout for

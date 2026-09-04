@@ -1004,14 +1004,12 @@ html, body {
   height: 0;
   margin: 0;
   padding: 0;
-  /* Off by default: below the threshold the row falls back to ordinary
-     flex-wrap, which is the right behaviour there — forcing four per row on a
-     700px browser produces 2+2 twice and looks like a mistake. The threshold
-     depends on the column count exactly as much as the breaks do, and a media
-     query cannot read a custom property, so main.js computes it and toggles
-     `.rows-forced` on #scene-previews. For eleven scenes that is 1192px; for a
-     count that wants five columns it would be 1480px, which is honest — five
-     large tiles need that width. */
+  /* Off by default, and what turns it on is the requirement being MET rather
+     than a width being exceeded: main.js toggles `.rows-forced` when it can
+     fit every tile above the fold at a legible size, and leaves it off when it
+     cannot — on a phone, or once there are enough scenes that nothing fits.
+     Below it the row falls back to ordinary flex-wrap and the page scrolls,
+     which is the honest answer rather than shrinking tiles into decoration. */
   display: none;
 
 	#scene-previews.rows-forced & {
@@ -1110,16 +1108,19 @@ html, body {
 		flex: 0 0 auto;
 	}
 
-	/* The deliberate rows are sized HERE too, and for the same reason the phone
-	   columns are: a percentage on .preview-container resolves against THIS
-	   element, which shrink-wraps to its content, so `width: 100%` there is
-	   circular and collapses. It did — six columns came out as 17px tiles, one
-	   per row, at 1440px. A percentage on the wrapper resolves against
-	   #scene-previews, which is what the arithmetic is about.
-	   --tile-cols comes from applyDerivedLayout(); 1.5rem is the list's own gap
-	   at these widths. */
+	/* Inside the deliberate rows the column is an exact px width handed down
+	   from main.js, which derived it and the column count together from one
+	   requirement: all twelve tiles visible without scrolling. The arithmetic
+	   could not stay in CSS — the answer depends on the viewport's HEIGHT as
+	   well as its width, and no media query can express "twelve of these fit
+	   above the fold". This rule only spends the number.
+	   It was a percentage of the list until 4.11.0, which worked but made the
+	   width the only constraint; a percentage also has to resolve against
+	   something definite, which is why it lives on the wrapper and not on
+	   .preview-container (that shrink-wraps to its content, and a percentage
+	   there is circular — it collapsed to 17px tiles once). */
 	#scene-previews.rows-forced & {
-		flex: 0 0 calc((100% - (var(--tile-cols) - 1) * 1.5rem) / var(--tile-cols));
+		flex: 0 0 var(--tile);
 	}
 }
 
@@ -1184,18 +1185,13 @@ html, body {
 		height: 224px;
 	}
 
-	/* Inside the deliberate rows the tile is FITTED to the column count rather
-	   than fixed, as of 4.10.2. It was a flat 272px, which worked while
-	   --tile-cols was four and breaks the moment it is six: six 272px tiles
-	   need 1,784px, so on any ordinary laptop the row would have wrapped
-	   itself back to 5/5/2 and the two rows main.js just computed would never
-	   have appeared.
-	   The column width itself is on .preview-wrapper, where a percentage has
-	   something real to resolve against; this only fills the column it is
-	   handed, up to a 272px CAP so that past about 1,830px the tiles stop
-	   growing rather than becoming portholes. */
+	/* Fills the column .preview-wrapper was handed. The 272px cap that used to
+	   live here is TILE_MAX in main.js now, beside the rest of the arithmetic,
+	   so the tile still stops growing past about 1,830px rather than becoming a
+	   porthole — but the cap is applied where the size is decided rather than
+	   clamped after the fact. */
 	#scene-previews.rows-forced & {
-		width: min(100%, 272px);
+		width: 100%;
 		height: auto;
 		aspect-ratio: 1;
 	}

@@ -833,44 +833,87 @@ async function initPreviews() {
 // decision at all.
 const SCENE_COUNT = Object.keys(SCENES).length;
 
-// How many tiles per row. Not a formula anyone would derive from first
-// principles, so the rule is stated: try 3 to 6 columns; refuse a last row of
-// one outright, then prefer the fullest last row, then the fewest columns
-// because fewer columns means bigger tiles.
+// ─── The landing page's requirement ────────────────────────────────────────
+// **All twelve tiles visible without scrolling on a desktop, at a size you can
+// still recognise a scene from.** That is the requirement, and everything below
+// is arithmetic in service of it. Stated in SITE.md as the thing every future
+// layout decision has to satisfy.
 //
-//   10 -> 5  (5/5)     11 -> 6  (6/5)     12 -> 6  (6/6)
-//   13 -> 5  (5/5/3)   14 -> 5  (5/5/4)   15 -> 5  (5/5/5)
+// It replaces a row count, and the difference matters. "Two rows" was a
+// preference — 4.10.2 got there by widening a scoring loop until 6/6 won, which
+// is picking an answer and then justifying it. The requirement is measurable,
+// so the row count stops being chosen at all: it falls out.
 //
-// An orphan row is the thing being avoided: eleven tiles at five columns is
-// 5/5/1, and the single tile under the pair of full rows reads as an
-// afterthought rather than as the newest scene.
+// The measurement. The available band is the viewport minus the chrome that is
+// always there — #pm-nav at the top, and #landing's own bottom padding, which
+// is sized to clear the title lockup and the colophon mark. Inside that band,
+// for a candidate column count c, the tiles have to fit BOTH ways:
 //
-// ─── 4.10.2: the ceiling went from 5 to 6 ──────────────────────────────────
-// Scott, on twelve scenes: two rows. The rule already preferred the fullest
-// last row, and 6/6 wins that comparison outright against 4/4/4 — it was only
-// unreachable because the search stopped at five. So this is one number in the
-// loop bound, not a new rule, and the ordering it produces for every other
-// count follows from the rule that was already there.
+//     rows      = ceil(n / c)
+//     by width  = (W - (c-1)*gap - padding) / c
+//     by height = (H - (2*rows-2)*gap - padding) / rows
+//     tile      = min(those two, and a 272px cap)
 //
-// **The cost is real and is the price of two rows**: six across at 1440px
-// makes each tile about 215px where four across made it 272. That is the trade
-// being taken, and the trigger for revisiting it is the one Scott named —
-// when the tiles get too small to read. What happens then is `sceneField.js`,
-// shelved for exactly that moment.
-function tileColumns(n) {
-  if (n <= 4) return Math.max(1, n);
-  let best = 4, bestScore = -Infinity;
-  for (let c = 3; c <= 6; c++) {
-    const last = n % c === 0 ? c : n % c;
-    const score = (last === 1 ? -100 : 0) + last * 10 - c;
-    if (score > bestScore) { bestScore = score; best = c; }
+// Take the c that makes the tile largest. That is the whole rule, and it is why
+// the row count is now a consequence: at 1440x820 four columns in three rows
+// gives a 215px tile and six columns in two rows gives 209px, so the arithmetic
+// picks three rows; widen the same window to 1920 and six columns in two rows
+// gives 272px against three rows' 208px, so it picks two. Neither number was
+// chosen. The aspect ratio of the window chose them.
+//
+// ─── What happens when the requirement cannot be met ───────────────────────
+// If no column count reaches TILE_FLOOR, nothing fits legibly and the page
+// stops trying: it falls back to the phone layout, which scrolls, and that is
+// the honest answer rather than shrinking the tiles until they are decoration.
+//
+// **This is the scaling threshold, and it now announces itself.** Twelve fit.
+// Sixteen probably fit at a smaller tile. Twenty-four will not, and the moment
+// they do not is the moment `.rows-forced` stops going on — visible, measurable,
+// and not a judgement call. That is when the index has to become something
+// else, and `src/utils/sceneField.js` is shelved for exactly that.
+const TILE_MAX = 272;
+// The floor is a legibility claim and so it is sourced rather than picked: the
+// phone layout has shipped 136px tiles at 320px since 4.9.1 and the previews
+// are recognisable there, and a desktop is viewed from further away than a
+// phone. 168 is comfortably above that and is the value the 4.10.2 threshold
+// already used, so nothing about the desktop band changes by adopting it here.
+const TILE_FLOOR = 168;
+const TILE_GAP = 24;      // #scene-previews' gap at >=769px
+const LIST_PAD = 32;      // its own padding, both axes (1rem each side)
+
+function tileLayout(n, width, height) {
+  let best = null;
+  for (let cols = 1; cols <= n; cols++) {
+    const rows = Math.ceil(n / cols);
+    const byWidth = (width - (cols - 1) * TILE_GAP - LIST_PAD) / cols;
+    // The vertical budget has two terms that are easy to miss, and missing
+    // them made the first version of this claim a fit it did not have — the
+    // page reported "all twelve above the fold" while #landing scrolled by
+    // 80px. Both were found by measuring the real scrollHeight rather than by
+    // trusting the arithmetic that produced the layout.
+    //
+    //   - The list's own vertical padding, which is not part of any tile.
+    //   - A .preview-row-break is a flex ITEM, so it sits on its own line and
+    //     takes a row-gap on BOTH sides. Three rows of tiles is five flex
+    //     lines, not three, and four row-gaps rather than two.
+    const rowGaps = 2 * rows - 2;
+    const byHeight = (height - rowGaps * TILE_GAP - LIST_PAD) / rows;
+    const tile = Math.min(byWidth, byHeight, TILE_MAX);
+    if (tile < TILE_FLOOR) continue;
+    // Ties go to fewer rows. A tie means two arrangements show the tiles at the
+    // same size, and at the same size the shallower one puts more of the set in
+    // the eye at once — which is the requirement's own spirit.
+    if (!best || tile > best.tile + 0.5 || (Math.abs(tile - best.tile) <= 0.5 && rows < best.rows)) {
+      best = { cols, rows, tile: Math.floor(tile) };
+    }
   }
-  return best;
+  return best;   // null when nothing fits legibly
 }
 
 function applyDerivedLayout() {
   const list = document.getElementById('scene-previews');
   const nav = document.getElementById('pm-nav');
+  const landing = document.getElementById('landing');
   const tiles = list ? [...list.querySelectorAll('.preview-wrapper')] : [];
   const icons = nav ? nav.querySelectorAll('.nav-icon').length : 0;
 
@@ -881,52 +924,61 @@ function applyDerivedLayout() {
   if (icons !== SCENE_COUNT || tiles.length !== SCENE_COUNT) {
     console.warn(`landing layout: registry has ${SCENE_COUNT} scenes but the page has ${icons} nav icons and ${tiles.length} tiles — the derived nav and grid sizing assume all three agree`);
   }
-
-  const cols = tileColumns(SCENE_COUNT);
   if (nav) nav.style.setProperty('--nav-count', String(SCENE_COUNT));
-  if (list) list.style.setProperty('--tile-cols', String(cols));
+  if (!list || !landing) return;
+
+  // Below 601px the phone layout owns the page and scrolling is expected — a
+  // 390px screen cannot hold twelve legible tiles and never could. The
+  // requirement is a desktop requirement, and this is where it starts applying.
+  const desktop = window.matchMedia('(min-width: 601px)').matches;
+  const width = landing.clientWidth;
+  const cs = getComputedStyle(landing);
+  const height = landing.clientHeight
+    - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
+  // clientWidth/clientHeight EXCLUDE a scrollbar that is currently showing, so
+  // this measures conservatively: if a layout fits inside what is measured here
+  // while the page is scrolling, it also fits once the scrollbar goes away. The
+  // error only ever runs in the safe direction, which is why one pass is enough
+  // and there is no settle loop.
+  const fit = desktop ? tileLayout(SCENE_COUNT, width, height) : null;
+
+  list.classList.toggle('rows-forced', Boolean(fit));
+  if (fit) {
+    list.style.setProperty('--tile-cols', String(fit.cols));
+    list.style.setProperty('--tile', `${fit.tile}px`);
+  } else {
+    list.style.removeProperty('--tile');
+  }
 
   // Explicit breaks rather than letting flex-wrap find the edge of the
   // container: a zero-height 100%-wide flex item pushes everything after it
   // onto a new line, and each resulting row centres itself, which is what gives
-  // the short last row of 4/4/3 a centred three instead of three tiles jammed
-  // left. A CSS grid cannot do that on its own — an incomplete last grid row
-  // stays left-aligned — which is why this is flex and not `grid-template-
-  // columns`, despite the latter being the obvious reach.
-  list?.querySelectorAll('.preview-row-break').forEach(el => el.remove());
-  for (let i = cols; i < tiles.length; i += cols) {
-    const br = document.createElement('li');
-    br.className = 'preview-row-break';
-    br.setAttribute('aria-hidden', 'true');
-    tiles[i].before(br);
-  }
-
-  // And the width at which the deliberate rows are worth enforcing is derived
-  // too, because it depends on the column count exactly as much as the breaks
-  // do. Forcing 4-per-row on a 700px browser produces 2+2 twice and a mess;
-  // below the threshold the row falls back to ordinary flex-wrap, which is
-  // what it should do. The stylesheet cannot express this — a media query
-  // cannot read a custom property — so the class is toggled here and
-  // `#scene-previews.rows-forced` does the rest. Tiles grow at the same
-  // moment, since the threshold is exactly the width at which the larger
-  // tile fits `cols` across.
-  if (list) {
-    // The threshold is the width at which `cols` tiles fit at the SMALLEST
-    // size worth showing them at, not at the largest. Until 4.10.2 it was the
-    // largest (272px), which was fine while cols was four — 1,192px, an
-    // ordinary laptop — and absurd at six: 1,784px, so two rows would only
-    // ever have appeared on a very wide desktop and every laptop would have
-    // silently kept wrapping to 5/5/2. The forced tile is fitted rather than
-    // fixed now (see .preview-container's `.rows-forced` rule), so what this
-    // width has to guarantee is a floor on the tile, not a specific tile.
-    const MIN_TILE = 168, GAP_PX = 24, PAD_PX = 32;
-    const needed = cols * MIN_TILE + (cols - 1) * GAP_PX + PAD_PX;
-    const mq = window.matchMedia(`(min-width: ${needed}px)`);
-    const sync = () => list.classList.toggle('rows-forced', mq.matches);
-    mq.addEventListener('change', sync);
-    sync();
+  // a short last row a centred remainder instead of tiles jammed left. A CSS
+  // grid cannot do that on its own — an incomplete last grid row stays
+  // left-aligned — which is why this is flex and not `grid-template-columns`,
+  // despite the latter being the obvious reach.
+  list.querySelectorAll('.preview-row-break').forEach(el => el.remove());
+  if (fit) {
+    for (let i = fit.cols; i < tiles.length; i += fit.cols) {
+      const br = document.createElement('li');
+      br.className = 'preview-row-break';
+      br.setAttribute('aria-hidden', 'true');
+      tiles[i].before(br);
+    }
   }
 }
+
+// Re-derived on resize, because the answer depends on the window's HEIGHT now
+// and not only its width — a media query cannot express "twelve of these fit
+// above the fold", which is the reason this arithmetic lives in JS at all.
+// Debounced: the read is cheap but it writes custom properties that relayout
+// twelve tiles, and a drag fires this continuously.
+let layoutTimer = 0;
+window.addEventListener('resize', () => {
+  clearTimeout(layoutTimer);
+  layoutTimer = setTimeout(applyDerivedLayout, 120);
+}, { passive: true });
+
 applyDerivedLayout();
 
 initPreviews();

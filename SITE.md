@@ -122,34 +122,59 @@ counts the words twice and produces a plausible number.
 
 ## The landing page
 
-A grid of twelve circular tiles — two columns on a phone, three or four across
-on a tablet or small laptop, and two rows of six from about 1,160px up, each
-tile a live preview of its scene. It is a real
-`<ul>` of twelve `<li><button>` in a stated order, which is what makes it work
-with JavaScript off, for a crawler, and for a screen reader.
+### The requirement
 
-**The grid asserts that all twelve scenes are the same kind of thing**, equally
-weighted and equally sized. That is a real limitation and it is worth naming:
-true at five, already slightly false at twelve, and a wall of circles at twenty.
+**All twelve tiles visible without scrolling on a desktop, at a size you can
+still recognise a scene from.** That is the landing page's requirement, and
+every layout decision has to satisfy it.
 
-**It was replaced once and put back.** v4.10.0 shipped "the field" — twelve
-scenes on one plane, each at a position measured from its own rendered frames,
-settling out of a sorted block the way a two-gas box mixes. It worked. It was
-reverted at 4.10.1 because **the problem it solves is not here yet**: twelve
-tiles in two rows is fine, and the ceiling on scene count is the quality bar
-rather than the layout. Solve it when it hurts — which is also cheaper, because
-by then the actual constraint is known.
+It is a requirement rather than a preference because it is measurable, and the
+layout is a *consequence* of it rather than a choice made beside it. The
+available band is the viewport minus the chrome that is always there — the nav
+at the top, and the bottom padding that clears the title lockup and the colophon
+mark. Inside that band, for each candidate column count, the tile size is capped
+by the width one way and by the height the other; the arrangement that makes the
+tile largest wins, and **the row count falls out of that arithmetic rather than
+being picked.** `src/main.js`, "The landing page's requirement", holds the
+formula; nothing about it lives in a media query, because no media query can
+express "twelve of these fit above the fold".
 
-The measurements and the placing arithmetic are kept, shelved and out of the
-build, in `src/utils/sceneField.js` — the same status as `src/scenes/spectra/`.
-**The condition for unshelving is a thing you can look at: when the tiles get
-too small to read.** The revert was cheap, and will be again, because the field
-was a layout applied over this same list rather than a replacement for it — the
-markup never changed.
+The visible consequence is that the row count changes with the window's shape
+and not only its width. At 1440×820 six columns in two rows gives a 214px tile;
+at 1160×800 four columns in three rows gives 181px, which beats two rows there.
+Neither number was chosen.
 
-Two findings from that work outlived the feature and are recorded here rather
-than in the shelved file: the word-count correlation above, and the entropy
-negative result below.
+**The floor is 168px**, and it is a legibility claim rather than a taste one:
+the phone layout has shipped 136px tiles since 4.9.1 and the previews are
+recognisable at that size, and a desktop is viewed from further away than a
+phone.
+
+### When it cannot be met
+
+If no arrangement reaches the floor, the page stops trying and falls back to a
+scrolling grid — two columns on a phone. That is the honest answer rather than
+shrinking the tiles until they are decoration, and it is what a narrow or short
+desktop window gets too.
+
+**This is also the scaling threshold, and it now announces itself rather than
+having to be guessed at.** Twelve fit. Sixteen probably fit at a smaller tile.
+Twenty-four will not — and the moment they do not is the moment the grid stops
+being applied at all, which is visible and measurable rather than a judgement
+call. That is when the index has to become something other than a grid.
+
+`src/utils/sceneField.js` is shelved for exactly that moment: it holds a
+measured position for every scene, and the arrangement it describes — twelve
+scenes on a plane, placed by their own properties — is a landing page that does
+not run out of room. It shipped once, at 4.10.0, and was reverted a release
+later because the problem it solves had not arrived.
+
+### What the grid is
+
+A real `<ul>` of twelve `<li><button>` in a stated order, each tile a live
+preview of its scene. That markup is what makes the page work with JavaScript
+off, for a crawler, and for a screen reader — and it is what made the field a
+layout over the index rather than a replacement for it, and the revert a
+deletion rather than a rebuild.
 
 ### The entropy axis, and why it is a dead end
 
