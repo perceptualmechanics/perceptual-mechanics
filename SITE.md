@@ -123,7 +123,8 @@ counts the words twice and produces a plausible number.
 ## The landing page
 
 A grid of twelve circular tiles — two columns on a phone, three or four across
-as the viewport allows, each tile a live preview of its scene. It is a real
+on a tablet or small laptop, and two rows of six from about 1,160px up, each
+tile a live preview of its scene. It is a real
 `<ul>` of twelve `<li><button>` in a stated order, which is what makes it work
 with JavaScript off, for a crawler, and for a screen reader.
 

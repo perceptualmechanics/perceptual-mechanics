@@ -587,6 +587,74 @@ described are unchanged.)
   worth trimming, orrery.js's texture generators and first-person rig are the
   two most self-contained chunks to split out first.
 
+## 4.10.2 (2026-09-04)
+
+**Two rows.** Twelve tiles as 6/6 instead of 4/4/4, which is what Scott asked
+for and what 4.10.1 failed to deliver — that release reverted the field, which
+was implied, and stopped there, which was the actual instruction missed.
+
+**It is one number in a loop bound, not a new rule.** `tileColumns()` already
+preferred the fullest last row, and 6/6 wins that comparison outright against
+4/4/4 (last row 6, score 54, against last row 4, score 36). Six was simply
+unreachable because the search stopped at five. Extending it to six also moves
+eleven from 4/4/3 to 6/5, which follows from the rule that was already there
+rather than from a second decision.
+
+**The cost is the tile, and it is the price of two rows.** Six across at 1440px
+is a 215px tile where four across was 272. The trigger for revisiting is the one
+Scott named — when the tiles get too small to read — and what happens then is
+`sceneField.js`, shelved one release ago for exactly that moment.
+
+**Two things had to change for the rows to actually appear, and both were found
+by measuring rather than by reading.**
+
+- *The threshold was computed from the biggest tile, not the smallest.* The
+  width at which the deliberate rows switch on was `cols × 272px`, which is a
+  reasonable 1,192px at four columns and an absurd 1,784px at six — so two rows
+  would have appeared only on a very wide desktop while every laptop silently
+  wrapped to 5/5/2. What the threshold has to guarantee is a FLOOR on the tile,
+  not a specific tile: `cols × 168px`, which is 1,160px.
+- *Two percentages had nothing definite to resolve against.* The forced-row
+  column width started on `.preview-container`, whose parent `.preview-wrapper`
+  shrink-wraps to its content, so `width: 100%` there was circular — six columns
+  came out as **17px tiles, one per row, at 1440px**. Moving the column width up
+  to `.preview-wrapper` (where a percentage resolves against `#scene-previews`)
+  fixed the shape but not the size: the list itself is a flex item of a centring
+  `#landing` and was therefore *also* shrink-to-fit, so at 1920px it sized
+  itself to 1,012px instead of 1,888 and the tiles froze at 143px at every width
+  from 1160 up. Neither of those errors, so both need `width: 100%` above them
+  to be true. The list has it now.
+
+This is the same class of bug as 4.9.1's `43vw` being four pixels too wide at
+320px, and it is worth naming as a class: **a percentage is only as good as the
+definite width above it, and a shrink-to-fit ancestor is not one.** Both were
+caught by measuring tiles-per-row across a range of widths rather than by
+looking at one screenshot — at 1440 alone the 143px version looked deliberate.
+
+**Measured after** (twelve tiles, tile width in px, rows):
+
+```
+1920  272  [6,6]      1160  168  [6,6]      768  224  [3,3,3,3]
+1600  241  [6,6]      1152  224  [4,4,4]    600  200  [2,2,2,2,2,2]
+1440  215  [6,6]      1024  224  [4,4,4]    390  171  [2,2,2,2,2,2]
+1280  188  [6,6]       900  224  [3,3,3,3]  320  136  [2,2,2,2,2,2]
+```
+
+Every width square, inside the viewport, no horizontal scroll. The 168px floor
+lands exactly at the 1,160px threshold, which is the arithmetic agreeing with
+itself. **One honest discontinuity:** crossing 1,160px going wider takes the
+tile from 224 down to 168, because the row count changes at the same moment.
+It is a narrow band and the same shape the old threshold always had, but it is a
+place where a wider window gives smaller tiles, and that is worth knowing before
+somebody reports it as a bug.
+
+**Below 1,160px nothing changed**: 4/4/4 at 224px down to 1,024, 3/3/3/3 to 768,
+and the phone's two columns from 4.9.1 are untouched.
+
+**Files:** `src/main.js` (`tileColumns`'s loop bound, the threshold's
+`MIN_TILE`), `styles/main.css` (`#scene-previews` width, `.preview-wrapper`'s
+forced-row column, `.preview-container`'s forced-row fill and cap).
+
 ## 4.10.1 (2026-09-04)
 
 **The field is reverted. The landing page is a grid again.** Not because it

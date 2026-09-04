@@ -834,21 +834,33 @@ async function initPreviews() {
 const SCENE_COUNT = Object.keys(SCENES).length;
 
 // How many tiles per row. Not a formula anyone would derive from first
-// principles, so the rule is stated: try 3, 4 and 5 columns; refuse a last row
-// of one outright, then prefer the fullest last row, then the fewest columns
+// principles, so the rule is stated: try 3 to 6 columns; refuse a last row of
+// one outright, then prefer the fullest last row, then the fewest columns
 // because fewer columns means bigger tiles.
 //
-//   10 -> 5  (5/5)     11 -> 4  (4/4/3)     12 -> 4  (4/4/4)
-//   13 -> 5  (5/5/3)   14 -> 5  (5/5/4)     15 -> 5  (5/5/5)
+//   10 -> 5  (5/5)     11 -> 6  (6/5)     12 -> 6  (6/6)
+//   13 -> 5  (5/5/3)   14 -> 5  (5/5/4)   15 -> 5  (5/5/5)
 //
 // An orphan row is the thing being avoided: eleven tiles at five columns is
 // 5/5/1, and the single tile under the pair of full rows reads as an
-// afterthought rather than as the newest scene. Twelve gives 4/4/4 out of the
-// same rule with no second decision to make, which is the point.
+// afterthought rather than as the newest scene.
+//
+// ─── 4.10.2: the ceiling went from 5 to 6 ──────────────────────────────────
+// Scott, on twelve scenes: two rows. The rule already preferred the fullest
+// last row, and 6/6 wins that comparison outright against 4/4/4 — it was only
+// unreachable because the search stopped at five. So this is one number in the
+// loop bound, not a new rule, and the ordering it produces for every other
+// count follows from the rule that was already there.
+//
+// **The cost is real and is the price of two rows**: six across at 1440px
+// makes each tile about 215px where four across made it 272. That is the trade
+// being taken, and the trigger for revisiting it is the one Scott named —
+// when the tiles get too small to read. What happens then is `sceneField.js`,
+// shelved for exactly that moment.
 function tileColumns(n) {
   if (n <= 4) return Math.max(1, n);
   let best = 4, bestScore = -Infinity;
-  for (let c = 3; c <= 5; c++) {
+  for (let c = 3; c <= 6; c++) {
     const last = n % c === 0 ? c : n % c;
     const score = (last === 1 ? -100 : 0) + last * 10 - c;
     if (score > bestScore) { bestScore = score; best = c; }
@@ -899,8 +911,16 @@ function applyDerivedLayout() {
   // moment, since the threshold is exactly the width at which the larger
   // tile fits `cols` across.
   if (list) {
-    const TILE_PX = 272, GAP_PX = 24, PAD_PX = 32;
-    const needed = cols * TILE_PX + (cols - 1) * GAP_PX + PAD_PX;
+    // The threshold is the width at which `cols` tiles fit at the SMALLEST
+    // size worth showing them at, not at the largest. Until 4.10.2 it was the
+    // largest (272px), which was fine while cols was four — 1,192px, an
+    // ordinary laptop — and absurd at six: 1,784px, so two rows would only
+    // ever have appeared on a very wide desktop and every laptop would have
+    // silently kept wrapping to 5/5/2. The forced tile is fitted rather than
+    // fixed now (see .preview-container's `.rows-forced` rule), so what this
+    // width has to guarantee is a floor on the tile, not a specific tile.
+    const MIN_TILE = 168, GAP_PX = 24, PAD_PX = 32;
+    const needed = cols * MIN_TILE + (cols - 1) * GAP_PX + PAD_PX;
     const mq = window.matchMedia(`(min-width: ${needed}px)`);
     const sync = () => list.classList.toggle('rows-forced', mq.matches);
     mq.addEventListener('change', sync);

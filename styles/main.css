@@ -930,6 +930,15 @@ html, body {
   --tile-cols: 4;
   list-style: none;
   margin: 0;
+  /* Definite, as of 4.10.2, and it has to be. #landing is a centring flex
+     container, so without this the list is shrink-to-fit — and every
+     percentage inside it (the phone tier's two columns, the forced rows'
+     column width) then resolves against a width that was itself derived from
+     those percentages. It does not error; it lands on a fixed point, and the
+     fixed point is wrong. Measured at 1920px: the list sized itself to 1012px
+     instead of 1888, so six columns came out as 143px tiles that never grew
+     with the viewport. A percentage needs something definite above it. */
+  width: 100%;
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
@@ -1100,6 +1109,18 @@ html, body {
 	@media (min-width: 601px) {
 		flex: 0 0 auto;
 	}
+
+	/* The deliberate rows are sized HERE too, and for the same reason the phone
+	   columns are: a percentage on .preview-container resolves against THIS
+	   element, which shrink-wraps to its content, so `width: 100%` there is
+	   circular and collapses. It did — six columns came out as 17px tiles, one
+	   per row, at 1440px. A percentage on the wrapper resolves against
+	   #scene-previews, which is what the arithmetic is about.
+	   --tile-cols comes from applyDerivedLayout(); 1.5rem is the list's own gap
+	   at these widths. */
+	#scene-previews.rows-forced & {
+		flex: 0 0 calc((100% - (var(--tile-cols) - 1) * 1.5rem) / var(--tile-cols));
+	}
 }
 
 .preview-container {
@@ -1163,13 +1184,20 @@ html, body {
 		height: 224px;
 	}
 
-	/* Larger tiles arrive at exactly the width where the deliberate rows do —
-	   main.js's threshold IS the width at which `cols` of these fit across, so
-	   the two can't disagree. Scott asked for bigger tiles alongside 4/4/3, and
-	   four columns is what makes the room for them. */
+	/* Inside the deliberate rows the tile is FITTED to the column count rather
+	   than fixed, as of 4.10.2. It was a flat 272px, which worked while
+	   --tile-cols was four and breaks the moment it is six: six 272px tiles
+	   need 1,784px, so on any ordinary laptop the row would have wrapped
+	   itself back to 5/5/2 and the two rows main.js just computed would never
+	   have appeared.
+	   The column width itself is on .preview-wrapper, where a percentage has
+	   something real to resolve against; this only fills the column it is
+	   handed, up to a 272px CAP so that past about 1,830px the tiles stop
+	   growing rather than becoming portholes. */
 	#scene-previews.rows-forced & {
-		width: 272px;
-		height: 272px;
+		width: min(100%, 272px);
+		height: auto;
+		aspect-ratio: 1;
 	}
 }
 /* The actual fix: don't clip the canvas, cover its corners. A plain
