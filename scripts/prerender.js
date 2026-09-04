@@ -261,7 +261,7 @@ export const PAGE_STYLE = `
 // pm-prerender-text plugin's error prints the value to paste here and there
 // (it checks the emitted page and .htaccess, not just this constant, so a
 // stale copy in either place fails the build rather than the site).
-export const PAGE_STYLE_SHA256 = 'sha256-u4aECa69EnqE+gbnnsNuT/yC7BSrtrWhNgI8LAteat8=';
+export const PAGE_STYLE_SHA256 = 'sha256-2IEIosd7xcKSXoyHYxb5REbHYSLVf1PlVAauy+8tKts=';
 
 // ─── Page shell ─────────────────────────────────────────────────────────────
 // One self-contained template. Styles are inlined rather than shipped as a

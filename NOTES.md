@@ -18240,3 +18240,42 @@ somebody is doing the one thing the scene asks for.
 by playing on a trackpad. This one was found by *reasoning about a device nobody
 had played on*, from Scott's aside that it might be good on mobile. Both routes
 were necessary and neither was the bench.
+
+## 4.11.15 (2026-09-04)
+
+**`npx vite build` has been failing since 4.11.6, and every Medium release
+since has gone in unbuilt.** Found while running the build to verify the
+landing work — not by looking for it, which is the part worth recording.
+
+4.11.6 added `pre.tape` to `PAGE_STYLE` in `scripts/prerender.js` so Medium's
+transcript could be set as a tape, and did not update the two places that
+hash has to appear: `PAGE_STYLE_SHA256` right underneath it, and `style-src`
+in `public/.htaccess`. The `csp-style-hash` check caught it correctly and
+failed the build, exactly as it was written to:
+
+    emitted:  sha256-2IEIosd7xcKSXoyHYxb5REbHYSLVf1PlVAauy+8tKts=
+    declared: sha256-u4aECa69EnqE+gbnnsNuT/yC7BSrtrWhNgI8LAteat8=
+
+Both values updated; the build is green and the plugin now reports the hash
+matching all three places.
+
+**Nobody ran the build for eight releases.** Everything in 4.11.6–4.11.14 was
+verified — benches, Playwright, a real browser on the dev server — and the
+dev server does not run `closeBundle`, so none of it went anywhere near the
+one check that was failing. `vite dev` and `vite build` are two different
+programs and only one of them publishes.
+
+Two consequences, and the second is the one that matters:
+
+- Nothing was ever at risk on the live site, for two independent reasons.
+  `origin/main` is still at 4.11.2 — thirteen commits behind — so this never
+  reached CI at all; and if it had, the deploy runs the same build and would
+  have failed before rsync. **The guard worked.** It was written in 4.0
+  precisely so a stale hash fails the build rather than the site, and the only
+  reason it looked like it had not worked is that nothing invoked it.
+- **A check nobody runs is not a check.** `verify-links`,
+  `verify-resonances`, `verify-landing` and this one all live behind a
+  command that stopped being run the moment the work moved to a dev server
+  and a bench. That is a process defect, not a code defect, and the fix is in
+  `WORKING-PROTOCOL.md` rather than here: run the build before the commit,
+  not before the deploy.
