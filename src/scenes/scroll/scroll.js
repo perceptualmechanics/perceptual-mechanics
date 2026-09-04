@@ -359,10 +359,15 @@ export function createScroll(container, { preview = false, initialPieceId = null
     root = document.createElement('div');
     root.className = 'scroll-root';
 
-    scroll = document.createElement('div');
+    // <section>, not div+role="region". NOTES.md states the rule outright — "a
+    // <section> with its own aria-label or aria-labelledby already implies an
+    // accessible landmark region, so no explicit role='region' alongside it" —
+    // and Theater's equivalent (theater.html's .tab-screen) has complied since
+    // that pass. This was the holdout, and it is the shape the rule is about:
+    // a div wearing the role of an element that exists.
+    scroll = document.createElement('section');
     scroll.className = 'scroll-viewport';
     scroll.setAttribute('tabindex', '-1');
-    scroll.setAttribute('role', 'region');
     scroll.setAttribute('aria-label', 'A scroll of found writing, carved fragments, 2000 to the 2010s');
 
     scroll.appendChild(frag.querySelector('.scroll-ogham-panel'));

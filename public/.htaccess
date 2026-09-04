@@ -200,7 +200,7 @@ RewriteRule ^text/(.*/)?index\.html$ /text/%1 [L,R=301]
 # via a real header, not a <meta> tag, hence delivering this here rather than
 # in index.html.
 <IfModule mod_headers.c>
-  Header set Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'sha256-d0twYSj0NZ/Ct7lC+jDlJkrOgWCQWNuFC2UoM+NHawU='; font-src 'self'; img-src 'self' data: https://i.ytimg.com https://covers.openlibrary.org; connect-src 'self'; frame-src https://www.youtube-nocookie.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests"
+  Header set Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'sha256-u4aECa69EnqE+gbnnsNuT/yC7BSrtrWhNgI8LAteat8='; font-src 'self'; img-src 'self' data: https://i.ytimg.com https://covers.openlibrary.org; connect-src 'self'; frame-src https://www.youtube-nocookie.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests"
 </IfModule>
 
 # ─── The other security response headers, 2026-09-01 (4.0) ──────────────────

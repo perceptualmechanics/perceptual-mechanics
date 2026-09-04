@@ -32,10 +32,15 @@ import './colophon.css';
 import colophonHtml from './colophon.html?raw';
 import { BIBLIOGRAPHY } from './colophon.text.js';
 
+// One <dd> per entry, which a <dt> is allowed any number of. It used to be a
+// single <dd> with the entries joined by `<br><br>`, so a scene citing two
+// distinct sources — Orbiter does — published them as one run-on definition
+// whose separation existed only as visual whitespace. The blank line is now
+// `dd + dd` in the stylesheet, where a gap between two things belongs.
 function buildBibliographyHTML() {
   return BIBLIOGRAPHY.map(group => `
     <dt>${group.scene}</dt>
-    <dd>${group.entries.join('<br><br>')}</dd>
+    ${group.entries.map(entry => `<dd>${entry}</dd>`).join('')}
   `).join('');
 }
 

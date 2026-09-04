@@ -377,7 +377,14 @@
   background: #ddd6c2; z-index: 5; cursor: pointer; padding: 1rem;
   color: #221c14; border: none; width: 100%; font: inherit;
 }
-.tab-card h1 {
+/* The end card's three lines are spans, because .tab-card is a <button> and a
+   button's content model is phrasing content — see theater.js. They were <pre>,
+   <h1> and <p>, so these rules now have to supply the two things the
+   user-agent stylesheet used to give the <pre> for free (white-space and the
+   monospace family) and can drop the margin resets the other two needed. The
+   card is a flex column, so every child is blockified regardless of its tag and
+   nothing about the layout moved. */
+.tab-card .tab-end-title {
   font-family: 'Courier New', monospace; font-weight: bold;
   font-size: 1.5rem; margin: 0 0 0.3em; letter-spacing: 0.04em;
 
@@ -385,21 +392,22 @@
 		font-size: clamp(1.4rem, 6vw, 2.6rem);
 	}
 }
-.tab-card pre.tab-ascii-title {
+.tab-card .tab-ascii-title {
+  white-space: pre;
+  font-family: 'Courier New', monospace;
   font-size: 0.42rem; line-height: 1.15; margin: 0 0 0.6em; opacity: 0.75;
 
 	@media (min-width: 701px), (min-width: 481px) and (orientation: landscape) {
 		font-size: clamp(0.5rem, 1.6vw, 0.85rem);
 	}
 }
-.tab-card p {
-  font-size: 0.8rem; margin: 0.2em 0; opacity: 0.75; max-width: 480px;
+.tab-card .tab-tap {
+  margin: 1.2em 0 0; font-size: 0.85rem; opacity: 0.5; max-width: 480px;
 
 	@media (min-width: 701px), (min-width: 481px) and (orientation: landscape) {
 		font-size: clamp(0.85rem, 2.2vw, 1.05rem);
 	}
 }
-.tab-card .tab-tap { margin-top: 1.2em; font-size: 0.85rem; opacity: 0.5; }
 
 /* ── interstitial: a between-scenes theater bumper slide ── */
 .tab-interstitial {

@@ -66,6 +66,14 @@ export function createSphere(container, { preview = false, initialPieceId = null
     labelRenderer.domElement.style.left = '0';
     labelRenderer.domElement.style.pointerEvents = 'none';
     labelRenderer.domElement.style.zIndex = '1';
+    // The CSS2D layer holds 320 real text nodes, one per face, and each is a
+    // RANDOM 60-character window cut out of a fragment — mid-word at both ends,
+    // by design, because they are texture rather than reading. Unhidden, that
+    // is 320 truncated sentence fragments a screen reader walks through before
+    // reaching anything the scene actually offers. The WebGL canvas beside it
+    // was hidden from the start; this layer was not, only because it is created
+    // by three.js rather than by this file.
+    labelRenderer.domElement.setAttribute('aria-hidden', 'true');
     container.appendChild(labelRenderer.domElement);
   }
 

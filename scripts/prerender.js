@@ -175,9 +175,31 @@ export const PAGE_STYLE = `
     scroll-margin-top: 1rem;
   }
   .meta { color: #8c8377; font-size: 0.8rem; letter-spacing: 0.08em; margin: 0 0 1.3rem; }
+  /* .note is one look worn by two different things, and the markup now says
+     which is which. An editorial caveat in this site's own voice stays a
+     p.note; a passage quoted from outside the document — Beamline's
+     two found epigraphs, Psyshell's manuscript source — is a blockquote, and
+     picks up the same treatment from the shared selector below rather than a
+     second set of values. blockquote's user-agent margin has to go, since the
+     border-left is doing the setting-apart. */
   .note {
     color: #9c9384; font-size: 0.88rem; font-style: italic;
     border-left: 1px solid #3a342b; padding-left: 0.9rem; margin: 0 0 1.4rem;
+  }
+  blockquote.note, blockquote.epigraph {
+    color: #9c9384; font-size: 0.88rem; font-style: italic;
+    border-left: 1px solid #3a342b; padding-left: 0.9rem;
+    margin: 0 0 1.4rem;
+  }
+  blockquote.note p, blockquote.epigraph p { margin: 0 0 0.7rem; }
+  blockquote.note p:last-child, blockquote.epigraph p:last-child { margin-bottom: 0; }
+  /* A bibliography is a list of peers, and was four sibling paragraphs. The
+     markers are off because these are sources rather than steps, but the count
+     and the boundaries are now real to a screen reader. */
+  ul.sources { list-style: none; padding: 0; margin: 0 0 1.4rem; }
+  ul.sources li {
+    color: #9c9384; font-size: 0.88rem; font-style: italic;
+    border-left: 1px solid #3a342b; padding-left: 0.9rem; margin: 0 0 0.8rem;
   }
   p { margin: 0 0 1.15rem; }
   .script { margin: 1.6rem 0; font-family: 'Courier New', Courier, monospace; font-size: 0.92rem; line-height: 1.6; }
@@ -188,7 +210,11 @@ export const PAGE_STYLE = `
   .script .line { margin: 0 0 0.9rem; padding-left: 3rem; }
   ul.catalog { list-style: none; padding: 0; margin: 0 0 2.4rem; }
   ul.catalog li { border-bottom: 1px solid #1e1b17; padding: 0.85rem 0; }
-  ul.catalog .t { font-weight: 600; }
+  /* cite is the element for the title of a work, and this page is 261 of
+     them. Its user-agent italic is reset here rather than accepted: these rows
+     are already dense, and the visual weight that distinguishes a title from a
+     creator has been the 600 since the page was first built. */
+  ul.catalog .t { font-weight: 600; font-style: normal; }
   ul.catalog .c { color: #a89f92; }
   /* #837c70, not the #7d766b this started as: at 0.8rem this is normal-size
      text for WCAG purposes, and #7d766b measured 4.41:1 against the ground —
@@ -213,7 +239,7 @@ export const PAGE_STYLE = `
 // pm-prerender-text plugin's error prints the value to paste here and there
 // (it checks the emitted page and .htaccess, not just this constant, so a
 // stale copy in either place fails the build rather than the site).
-export const PAGE_STYLE_SHA256 = 'sha256-d0twYSj0NZ/Ct7lC+jDlJkrOgWCQWNuFC2UoM+NHawU=';
+export const PAGE_STYLE_SHA256 = 'sha256-u4aECa69EnqE+gbnnsNuT/yC7BSrtrWhNgI8LAteat8=';
 
 // ─── Page shell ─────────────────────────────────────────────────────────────
 // One self-contained template. Styles are inlined rather than shipped as a
@@ -223,6 +249,21 @@ export const PAGE_STYLE_SHA256 = 'sha256-d0twYSj0NZ/Ct7lC+jDlJkrOgWCQWNuFC2UoM+N
 // the colophon's gold for links — checked against WCAG AA at these sizes.
 function page({ slugPath, title, description, sceneKey, sceneName, lede, bodyHtml, jsonLd }) {
   const url = `${ORIGIN}/text/${slugPath ? slugPath + '/' : ''}`;
+  // Derived, not constant. Every page here was emitting og:type="article",
+  // including the /text/ index — whose own JSON-LD a few lines down correctly
+  // calls a CollectionPage. Two machine-readable claims about the same
+  // document, disagreeing. The index is the one page with no slugPath.
+  const ogType = slugPath ? 'article' : 'website';
+  // The skip link's target carries tabindex="-1", and that attribute is the
+  // whole mechanism: <main> is not focusable on its own, so without it the
+  // link moves the SCROLL position and leaves focus sitting on the link — the
+  // next Tab goes straight back into the header the reader just asked to skip.
+  // index.html fixed exactly this in the 2026-07-22 pass and the fix was never
+  // carried across to these ten pages, which are the ones a reader actually
+  // arrives at from a search result.
+  //
+  // Stated here rather than as an HTML comment in the template: build-time
+  // reasoning does not belong in ten shipped documents.
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -235,7 +276,7 @@ function page({ slugPath, title, description, sceneKey, sceneName, lede, bodyHtm
 <link rel="icon" href="/favicon.ico" sizes="any"/>
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png"/>
 <link rel="apple-touch-icon" href="/apple-touch-icon.png"/>
-<meta property="og:type" content="article"/>
+<meta property="og:type" content="${ogType}"/>
 <meta property="og:url" content="${url}"/>
 <meta property="og:title" content="${esc(title)} — perceptual mechanics"/>
 <meta property="og:description" content="${esc(description)}"/>
@@ -255,10 +296,10 @@ ${JSON.stringify(jsonLd, null, 2)}
 <div class="wrap">
 <header class="masthead">
   <a class="home" href="/">perceptual mechanics</a>
-  <h1>${esc(title)}</h1>
+  <h1 id="page-title">${esc(title)}</h1>
   <p class="kicker">${esc(description)}</p>
 </header>
-<main id="main">
+<main id="main" tabindex="-1">
 ${lede ? `<div class="lede">
 ${lede}
 ${sceneKey ? `<a class="enter" href="/#${sceneKey}">Open ${esc(sceneName)} →</a>` : ''}
@@ -438,7 +479,11 @@ ${scenesHtml}
 }
 
 function buildOrrery() {
-  const body = `<article class="piece">
+  // aria-labelledby rather than a bare <article>: this is the one page whose
+  // piece carries no heading of its own — it is a single untitled found text —
+  // so without a label it appears in an assistive tech's region list as an
+  // anonymous "article". The masthead h1 is the piece's name; point at it.
+  const body = `<article class="piece" aria-labelledby="page-title">
 <p class="meta">${esc(ORRERY.era)}</p>
 ${ORRERY.note.split(/\n\s*\n/).map(p => `<p>${lines(p.trim())}</p>`).join('\n')}
 </article>`;
@@ -467,8 +512,10 @@ function buildBeamline() {
   // consistent with; "p<id>" is the new one, used here and in
   // buildLibrary below.
   const body = `<article class="piece">
-<p class="note">${esc(EPIGRAPH_PRIMARY)}</p>
-<p class="note">${esc(EPIGRAPH_SECONDARY)}</p>
+<blockquote class="epigraph">
+<p>${esc(EPIGRAPH_PRIMARY)}</p>
+<p>${esc(EPIGRAPH_SECONDARY)}</p>
+</blockquote>
 ${BOUNCES.map((b, i) => `<h2 id="p${b.id}">Bounce ${i + 1}</h2>\n${pieceLink('beamline', b.id, 'Beamline')}\n<p>${lines(b.text)}</p>`).join('\n')}
 </article>`;
   return {
@@ -560,10 +607,12 @@ ${solarList}
 ${elementList}
 
 <h2 id="sources">Where the numbers come from</h2>
-<p class="note">${esc(APOLLO_SOURCES.nist)}</p>
-<p class="note">${esc(APOLLO_SOURCES.codata)}</p>
-<p class="note">${esc(APOLLO_SOURCES.edlen)}</p>
-<p class="note">${esc(APOLLO_SOURCES.cmf)}</p>
+<ul class="sources">
+<li>${esc(APOLLO_SOURCES.nist)}</li>
+<li>${esc(APOLLO_SOURCES.codata)}</li>
+<li>${esc(APOLLO_SOURCES.edlen)}</li>
+<li>${esc(APOLLO_SOURCES.cmf)}</li>
+</ul>
 <p>One honest note about the relative intensities. NIST publishes <em>emission</em> intensities — how bright a line is when the element is made to glow — and this scene draws absorption, how deep a line cuts when the element sits in front of something hotter. The two track each other closely, because both follow the same transition probabilities, but they are not the same quantity: a real absorption depth also depends on temperature, on ionization state, and on how much of the element is in the path. The intensities here are used as a line-strength proxy for an instrument, not as a photometric claim.</p>
 </article>`;
 
@@ -667,7 +716,7 @@ ${PSY_SOURCES.map(s => `<li><span class="t">${esc(s.label)}</span>
 <p class="note">It should not have survived screening. Residue of taint let it through, which is the green in the crystal's interior and the reason it was pulled out and read at all.</p>
 
 <h2 id="object">The object, and what it does not encode</h2>
-<p class="note">&hellip;opens it to reveal a crystalline fractalanch, two inches long, shaped like the antler of an imaginary animal, all branches and nubs.</p>
+<blockquote class="note"><p>&hellip;opens it to reveal a crystalline fractalanch, two inches long, shaped like the antler of an imaginary animal, all branches and nubs.</p></blockquote>
 <p>That sentence is the whole specification. The object is built from it and from nothing else: one beam that curves as it rises, tines leaving it at irregular heights, forking irregularly &mdash; sometimes a lone tine, sometimes a two-way fork, sometimes a flattened palmate fan of three or four &mdash; thickening toward the base, every branch ending in a blunt nub. ${SEGMENT_COUNT} segments in ${WORDS[byDepth.length] ?? byDepth.length} generations (${generations}) and ${NUB_COUNT} nubs, inside a sphere of radius ${PSY_BOUNDS.radius.toFixed(2)} in the units it is built in.</p>
 <p><strong>The proportions are not derived from anything, and are not presented as if they were.</strong> They were chosen by rendering the object and looking at it until it read as an antler. That is how they were arrived at, and saying so is worth more here than a citation would be.</p>
 <p><strong>Where a filapixel sits on the object encodes nothing.</strong> Not the sentence's order, not its length, not which scene it came from. Positions are a seeded draw over the object's arc length &mdash; deterministic, so it is the same lens on every visit, because it is <em>this</em> lens rather than <em>a</em> lens &mdash; and they carry no information at all.</p>
@@ -721,7 +770,7 @@ ${sourceList}
 <p class="note">The lens is a neuron, and a neuron does not ring, it fires. The sound is conduction rather than percussion, which is why it is real-time DSP on the audio thread rather than a tone with a curve on its gain.</p>
 
 <h2 id="source">The source passage</h2>
-<p class="note">"It was as we feared." "How did it get lost during screening?" &mdash; Untgract pulls down a lightpen, activates it, reads the object. A screen appears, reams of data. Then it goes in a jar on the bottom shelf, among thousands more, in various shapes.</p>
+<blockquote class="note"><p>"It was as we feared." "How did it get lost during screening?" &mdash; Untgract pulls down a lightpen, activates it, reads the object. A screen appears, reams of data. Then it goes in a jar on the bottom shelf, among thousands more, in various shapes.</p></blockquote>
 <p>A different passage from the same manuscript &mdash; a workbench, a computation, "a white fiber-optic chrysanthemum, each filapixel a moment in time, demarcated in the code of the Union" &mdash; was the source for the two earlier forms. It is retired rather than quietly dropped: it gave this scene its word for a lit fragment of text, and it is where the count came from that the corpus then overruled.</p>
 </article>`;
 
@@ -828,7 +877,7 @@ ${items.map(i => {
     // CD. Nothing in src/links.js or the live #library/<id> hash addresses
     // a CD today, so this only wires the space that's actually unambiguous.
     return `  <li id="p${i.id}">
-    <span class="t">${esc(i.title)}</span>${i.creator ? ` — <span class="c">${esc(i.creator)}</span>` : ''}
+    <cite class="t">${esc(i.title)}</cite>${i.creator ? ` — <span class="c">${esc(i.creator)}</span>` : ''}
     ${ed ? `<span class="e">${esc(ed)}</span>` : ''}
     ${pieceLink('library', i.id, 'the Library')}
   </li>`;
@@ -839,7 +888,7 @@ ${items.map(i => {
 <h2>Music</h2>
 <ul class="catalog">
 ${cdRackItems.map(c => `  <li>
-    <span class="t">${esc(c.album)}</span> — <span class="c">${esc(c.artist)}</span>
+    <cite class="t">${esc(c.album)}</cite> — <span class="c">${esc(c.artist)}</span>
     ${c.video ? `<span class="e">${esc(c.video)}</span>` : ''}
   </li>`).join('\n')}
 </ul>`;

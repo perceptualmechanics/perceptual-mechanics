@@ -587,6 +587,131 @@ described are unchanged.)
   worth trimming, orrery.js's texture generators and first-person rig are the
   two most self-contained chunks to split out first.
 
+## 4.10.4 (2026-09-04)
+
+**A semantic HTML sweep, at Scott's request — "I'm always on the lookout for
+too many unnecessary DIVs."** Audited `index.html`, all eleven scene modules,
+the colophon, and `prerender.js` (which generates the ten crawlable `/text/`
+pages), reading each generated element against what it actually contains and
+does rather than against its class name.
+
+**The headline is that the div count was already lean and the real defects were
+elsewhere.** `index.html` has seven divs and every one has an id and a written
+reason. The 2026-07-22 pass — which converted `role="list"`/`"listitem"`/
+`"button"` divs into real `ul`/`li`/`button` — held: **no `role=` attribute is
+set anywhere in the eleven scene JS files.** So most of this pass is not about
+divs.
+
+### The three real defects
+
+- **Sphere published 320 sentence fragments to screen readers.** The CSS2D
+  label layer holds one text node per face, each a *random 60-character window
+  cut mid-word* out of a fragment — texture, not reading. The WebGL canvas
+  beside it was hidden from the start; the label layer never was, only because
+  three.js creates it rather than `sphere.js`. A screen reader walked 320
+  truncated fragments before reaching anything the scene offers. One attribute.
+- **The skip link on all ten `/text/` pages went nowhere.** `<main>` is not
+  focusable on its own, so `Skip to the text` moved the scroll position and left
+  focus on the link — the next Tab went straight back into the header the reader
+  had just asked to skip. `index.html` fixed exactly this in 2026-07-22 and **the
+  fix was never carried across to the generated pages**, which are the ones a
+  reader actually arrives at from a search result.
+- **Theater put an `<h1>` inside a `<button>`.** Three problems in one line: a
+  `button`'s content model is *phrasing* content and `h1`/`pre`/`p` are all
+  flow, so the end card was three violations; `#experience-heading` is already
+  the page's `h1` while a scene is open, so this was a second one competing with
+  it; and the button carries an `aria-label`, which overrides the whole subtree,
+  so the heading was never announced at all. It contributed a phantom outline
+  entry and nothing else. All three children are spans now, with the stylesheet
+  supplying the `white-space` and monospace family the user-agent used to give
+  `<pre>` for free. Verified by building the card live and looking at it: byte
+  for byte the same picture, and zero flow descendants inside the button.
+
+### Divs that had a native element
+
+- **`scroll.js`: `div` + `role="region"` → `<section>`.** `NOTES.md` states the
+  rule outright — a `section` with its own `aria-label` already implies the
+  landmark — and Theater has complied since that pass. This was the holdout, and
+  it is exactly the shape Scott's question is about: a div wearing the role of an
+  element that exists.
+- **`colophon.js`: `<br><br>` faking list separation.** Each scene's sources
+  were one `<dd>` with entries joined by double breaks, so Orbiter's two distinct
+  bibliographic sources published as one run-on definition whose separation
+  existed only as whitespace. One `<dd>` per entry now (a `<dt>` is allowed any
+  number), with the blank line moved to `dd + dd` in CSS, where a gap between two
+  things belongs.
+
+### The crawlable pages, where semantics matter most
+
+- **261 work titles → `<cite>`** on the Library page (books, films, decks,
+  albums). The highest-density change on the site; `.t`'s weight-600 stays and
+  picks up a `font-style: normal` to reset `cite`'s user-agent italic.
+- **Apollo's four sources → a real `<ul>`.** A bibliography is the canonical
+  list of peers and was four sibling paragraphs, with nothing saying how many
+  there were or where one ended.
+- **Beamline's two epigraphs and Psyshell's two manuscript passages →
+  `<blockquote>`.** These are quoted from outside the document, which is the one
+  case blockquote exists for. Note what did NOT change: `.note` also carries
+  editorial caveats in the site's own voice, and those stay `<p class="note">` —
+  the class was doing two jobs and now the markup says which is which, while the
+  look stays identical.
+- **`og:type` is derived rather than constant.** Every page emitted
+  `article`, including the `/text/` index, whose own JSON-LD a few lines down
+  correctly calls a `CollectionPage` — two machine-readable claims about one
+  document, disagreeing. `website` for the index now.
+- **Orrery's `<article>` got a label.** It is the one page whose piece carries
+  no heading — a single untitled found text — so it appeared in an assistive
+  tech's region list as an anonymous "article". `aria-labelledby` now points at
+  the masthead `h1`.
+
+### Deliberately not done, with reasons
+
+Several audit findings would have traded one accessibility problem for another,
+and are recorded so they are not re-proposed:
+
+- **Psyshell's ordinal and Theater's progress counter → `<output>`.** `output`
+  carries an implicit `role="status"` — a polite live region — and both scenes
+  already run one (`.psyshell-sr-live`, `.tab-sr-live`) announcing the same
+  information. The change buys correct semantics and costs a double
+  announcement on every read.
+- **Harmonics' quote attribution → `figure`/`figcaption`.** Correct per spec
+  (attribution belongs outside the `blockquote`), but `figure`'s user-agent
+  margin lands inside a tuned flex column. Worth doing in a pass that can
+  re-verify that panel; not worth doing blind.
+- **Library's video and caption → `figure`/`figcaption`.** Breaks two `:empty`
+  selectors that hide the pair when a row has no video. The fix is real work,
+  the gain is modest, and the audit itself ranked it last.
+- **`<section>` per titled region on the Apollo and Psyshell pages.** The
+  biggest remaining structural improvement — every `h2` there already carries an
+  `id` because it is a deep-link target — but it is a restructure of the
+  crawlable documents rather than an element swap, and it deserves its own pass
+  and its own verification.
+- **`#experience-container`'s `role="main"` → a real `<main hidden>`.** The one
+  live case of a role doing a native element's job. The spec permits multiple
+  `main` when all but one are `hidden`, but `#landing` is hidden with
+  `display:none` from JS rather than the `hidden` attribute, so this needs the
+  show/hide path changed too — in the most-exercised code on the site. Flagged,
+  not attempted.
+
+**Verified after:** every one of the ten generated pages has exactly one `h1`,
+no heading-level skips, a focusable `main`, and balanced tags across sixteen
+element types; the live scenes show `SECTION` with no role and twelve patches
+for Scroll, an `aria-hidden` label layer for Sphere, zero `h1`s inside Theater,
+and six `dt` / seven `dd` / zero `br` in the colophon, with no console errors.
+
+**Two build gates fired during this and both were right.** The CSP style-hash
+gate caught the stylesheet change three times, which is the gate doing exactly
+its job — `PAGE_STYLE_SHA256` and `.htaccess`'s `style-src` are updated in
+lockstep. And a tag-balance check found my own prose: explanatory comments I had
+written into the emitted `<style>` and markup quoted tag names in angle
+brackets, which is harmless to a parser but makes every "count the tags" audit
+of the shipped page lie. Build-time reasoning now stays in the source; **zero
+HTML comments ship on the ten pages.**
+
+**Files:** `src/scenes/sphere/sphere.js`, `src/scenes/theater/theater.js` +
+`.css`, `src/scenes/scroll/scroll.js`, `src/components/colophon/colophon.js` +
+`.css`, `scripts/prerender.js`, `public/.htaccess`.
+
 ## 4.10.3 (2026-09-04)
 
 **Apollo's light-source switch is named for the spectra, not the geometry.**

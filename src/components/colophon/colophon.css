@@ -220,6 +220,11 @@
   margin: 0.3rem 0 0; padding-left: 0;
 }
 .colophon-bib dd + dt { margin-top: 1.3rem; }
+/* A scene may cite more than one source, and each is its own <dd> now rather
+   than `<br><br>` inside a single one. This restores the blank line that the
+   double break used to draw — same gap, but as spacing between two elements
+   rather than as two empty lines inside one. */
+.colophon-bib dd + dd { margin-top: 0.9rem; }
 
 /* These three were inline style=""; moved here so style-src can stay
    'self' with no inline exceptions (CSP hardening, 2026-09-01). */

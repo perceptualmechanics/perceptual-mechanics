@@ -547,10 +547,24 @@ export function createTheater(container, { preview = false } = {}) {
       endCard.type = 'button';
       endCard.className = 'tab-card';
       endCard.setAttribute('aria-label', 'The end. Press Enter to reshuffle the reel and start tonight’s next showing.');
+      // All three children are spans, and that is the content model rather
+      // than a preference: a <button>'s content model is PHRASING content, and
+      // <pre>, <h1> and <p> are all flow content, so the previous version was
+      // three violations in four lines. Nothing about the look depends on the
+      // old tags — .tab-card is a flex column, which blockifies every child
+      // whatever it is — so the CSS carries what the user-agent stylesheet used
+      // to (white-space and the monospace family for the ASCII block).
+      //
+      // The <h1> was the one that mattered beyond validity. index.html's
+      // #experience-heading is already the page's h1 while a scene is open, so
+      // this was a second one competing with it; and because the button carries
+      // an aria-label, the whole subtree is overridden and the heading was
+      // never announced at all. It contributed a phantom outline entry and
+      // nothing else.
       endCard.innerHTML = `
-        <pre class="tab-ascii-title" aria-hidden="true">-------------------------\n     F A D E   T O   B L A C K\n-------------------------</pre>
-        <h1>THE END</h1>
-        <p class="tab-tap">click for tonight’s next showing</p>
+        <span class="tab-ascii-title" aria-hidden="true">-------------------------\n     F A D E   T O   B L A C K\n-------------------------</span>
+        <span class="tab-end-title">THE END</span>
+        <span class="tab-tap">click for tonight’s next showing</span>
       `;
       // Native <button> already fires 'click' for both Enter and Space, so
       // no manual keydown handler is needed.
