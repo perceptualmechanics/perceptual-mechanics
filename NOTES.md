@@ -17791,3 +17791,77 @@ substitute for the real build, which needs a machine this session cannot reach �
 **Still open:** the landing page's visual audit now that there are thirteen
 tiles — "mix up the tiles some" — which was queued behind having a real
 thirteenth preview and now has one.
+
+## 4.11.7 (2026-09-04)
+
+**Medium: two hands or none, the placard gone, and a board shaped like a board.**
+All three on Scott's notes the same afternoon, and the first is a correction to
+something I got wrong rather than a change of mind.
+
+**The cup only moves while the visitor is touching it**, and the other hand
+freezes with it rather than drifting off a stationary cup. It shipped this
+morning spelling away to an empty room, and **nothing in the brief said it
+should**. The closest line was "if the user stops clicking and pulls back, the
+other hand mirrors — it has neither a beginning nor end, just a state," which is
+about session boundaries and about withdrawal, not about autonomous motion. The
+autonomous version came in sideways: the bench measured a PASSIVE visitor, I
+generalised to NO visitor to get a clean measurement, and then let the clean
+measurement become the design. A simplification made for a test escaping into
+the thing being tested — worth naming as a failure mode, because it does not
+look like a mistake from the inside.
+
+"No beginning and no end" survives intact and is better served: letting go is a
+pause, touching again is not a reset, and the still board is a state rather than
+an ending.
+
+**Resting is not the same as holding, and that had to go in the model.** A
+pointer held still is held perfectly still, which no hand is, and a perfectly
+still anchor is one the other hand cannot pull the cup more than 0.017 board
+units away from — press, stop, and the board stops with you forever. So while
+the visitor is in contact and not driving, the point their hand pulls from eases
+toward wherever the cup now is: your arm is compliant, and a finger on a
+planchette is touching an object rather than holding a point in space. The
+moment the pointer moves, the anchor snaps to it and they are driving, at full
+stiffness, and they win. One rule gives both halves of "press on the cup and rest
+your hand". `RELAX` swept against the board's output, ten seeds, five minutes
+each: 28.0% / 29.3% / 30.2% / **32.8%** / 30.3% / 31.7% vowel share at 2.6 / 5 /
+9 / 18 / 25 / 40. A stiff hand is a hand *holding* a cup, and the tape fills with
+junk.
+
+On top of that, `HAND_DRIFT`: about four millimetres of postural drift, two
+incommensurate frequencies. Not a usability patch dressed up as physics —
+involuntary movement its owner does not know about is what this entire scene is
+about, and leaving it out was the bug. `createVisitor`/`stepVisitor` live in
+`medium.physics.js` so the benches and the build model the visitor exactly rather
+than approximately; `scripts/medium-spell.mjs` now asserts that nobody touching
+spells nothing at all.
+
+Dwell is gated on contact too. Without it the board takes one mark the instant
+the scene mounts, off a cup that has never moved — the board reading an empty
+room.
+
+**The placard is gone.** It was a fixed panel in a corner that the layout had to
+measure and keep the board clear of, which cost the board a third of its size on
+every viewport. And a board with an explanation printed beside it is a board that
+has been explained: the scene is an experience of not being able to tell who is
+producing the message, and a paragraph in the corner giving the answer before you
+have had the experience is the wrong order. The writing is at `/text/medium/`.
+
+**The card is landscape, 1.30:1.** A real board is about 22 inches by 15. The
+square version was bounded by the viewport's height and left a third of the width
+black on both sides, with the letters smaller than they needed to be the whole
+time. Everything still lives in a 0..1 unit square mapped ISOTROPICALLY — a board
+unit is the same length in both axes, so the cup's drawn footprint still matches
+its catchment, which is the one thing not for trade. What changed is the content:
+the arcs run out to the edges, the rows pack closer, and the scene fits the
+`CARD` rectangle rather than the whole square.
+
+The round preview tile overfills on the longer axis now. Fitting the landscape
+card inside a circle left its straight top and bottom edges cutting two visible
+chords, which read as a photograph of a board rather than as a board.
+
+**Where it stands.** 0.14 marks/second with a hand resting on it, 30.4% vowels
+against a 27.0% flat control (English is 38.1%). The visitor still wins outright
+when driving — 0.032 board units is the furthest the other hand ever holds the
+cup off a pushing finger, under one letter's spacing — and a visitor who parks on
+Q still gets a Q in 1.8 seconds.

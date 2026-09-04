@@ -12,6 +12,7 @@
 import {
   DWELL_EASE, DWELL_RESIST,
   createCup, stepCup, createWander, stepWander,
+  createVisitor, stepVisitor,
   createDwell, stepDwell, clearDwellMemory,
 } from '../src/scenes/medium/medium.physics.js';
 import {
@@ -26,9 +27,14 @@ const DT = 1 / 60;
 // touching. `flat` is the control: it sends every mark to the same weight, so
 // the field becomes a uniform pull and the dwell threshold becomes a constant.
 // Everything else is the scene as it ships.
-function session({ seconds = 300, seed, visitor = null, flat = false }) {
+function session({ seconds = 300, seed, touching = false, flat = false }) {
   const hand = createWander(seed, BOARD_HOME.x, BOARD_HOME.y);
   const cup = createCup(hand.x, hand.y);
+  // The scene's own visitor, not an approximation of one: `stepVisitor` is what
+  // medium.js calls, so "a hand resting on it" here is exactly the hand a
+  // visitor has when they press and stop.
+  const visitor = createVisitor(cup.x, cup.y);
+  visitor.down = touching;
   const dwell = createDwell();
   const reader = createReader();
   const plaus = flat ? () => 1 : (m) => weightOf(reader, m);
@@ -39,9 +45,9 @@ function session({ seconds = 300, seed, visitor = null, flat = false }) {
   for (let i = 0; i < Math.round(seconds / DT); i++) {
     t += DT;
     decayReader(reader, DT);
-    stepCup(cup, DT, visitor ? visitor(t, cup) : null, stepWander(hand, DT, MARKS, plaus));
+    stepCup(cup, DT, stepVisitor(visitor, cup, DT), touching ? stepWander(hand, DT, MARKS, plaus) : null);
     clearDwellMemory(dwell, cup);
-    const got = stepDwell(dwell, cup, MARKS, DT, scale);
+    const got = touching ? stepDwell(dwell, cup, MARKS, DT, scale) : null;
     if (got) {
       const added = takeMark(reader, got);
       tape = got.ch === 'GOODBYE' ? '' : tape + added;
@@ -51,14 +57,6 @@ function session({ seconds = 300, seed, visitor = null, flat = false }) {
   }
   return { tape, rate: taken / seconds, words };
 }
-
-// The visitor most people are: touching, not driving. A slow aimless circle of
-// about two centimetres on a thirty-centimetre board, which is what a hand
-// resting on a cup does whether or not its owner thinks it is doing anything.
-const resting = (t, cup) => ({
-  x: cup.x + Math.sin(t * 0.9) * 0.02,
-  y: cup.y + Math.cos(t * 0.7) * 0.02,
-});
 
 const show = (s) => s.replace(/(.{58})/g, '$1\n           ');
 // Letters only. The tape also carries digits, punctuation and the spaces after
@@ -74,10 +72,9 @@ console.log(`lexicon  ${lexiconSize().toLocaleString()} words\n`);
 
 for (const seed of [611853, 7, 1031, 66613]) {
   const alone = session({ seconds: 240, seed });
-  const held = session({ seconds: 240, seed, visitor: resting });
-  console.log(`seed ${String(seed).padStart(6)}  nobody touching, ${alone.rate.toFixed(2)} letters/s`);
-  console.log(`           ${show(alone.tape)}`);
-  console.log(`           a hand resting on it, ${held.rate.toFixed(2)} letters/s`);
+  const held = session({ seconds: 240, seed, touching: true });
+  console.log(`seed ${String(seed).padStart(6)}  nobody touching: "${alone.tape}" (${alone.rate.toFixed(2)}/s) — must be empty`);
+  console.log(`           a hand resting on it, ${held.rate.toFixed(2)} marks/s`);
   console.log(`           ${show(held.tape)}`);
   console.log(`           words it passed through: ${held.words.slice(-12).join(' ') || '(none)'}\n`);
 }
@@ -91,8 +88,8 @@ for (const seed of [611853, 7, 1031, 66613]) {
   // vowel share swings by fifteen points from seed to seed; reporting one of
   // them as the result was the first version of this and it was noise.
   const seeds = [7, 1031, 66613, 5, 99, 404, 8123, 31337, 2, 555];
-  const on = seeds.map(seed => session({ seed, visitor: resting }));
-  const off = seeds.map(seed => session({ seed, visitor: resting, flat: true }));
+  const on = seeds.map(seed => session({ seed, touching: true }));
+  const off = seeds.map(seed => session({ seed, touching: true, flat: true }));
   const avg = (rs, f) => rs.reduce((a, r) => a + f(r), 0) / rs.length;
   console.log('control  same hands, same seeds, plausibility flat:');
   console.log(`           ${show(off[0].tape.slice(0, 116))}`);

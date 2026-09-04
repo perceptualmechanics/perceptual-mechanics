@@ -22,32 +22,56 @@ const ARC = (chars, spread, radius, cy, ry) =>
     return { ch, x: 0.5 + Math.sin(t) * radius, y: cy + (1 - Math.cos(t)) * ry, kind: 'letter' };
   });
 
-// Wide, and wider than the first version, which held both arcs inside the middle
-// two thirds of the card and left a margin of blank board either side that
-// nothing ever used. A real board runs its letters nearly to the edge — that is
-// what makes the shape read as a board rather than as a caption — and spreading
-// them also spreads the cup's travel, so a letter is a journey rather than a
-// nudge.
+// ─── The card ───────────────────────────────────────────────────────────────
+// A real Ouija board is about 22 inches by 15 — landscape, and markedly wider
+// than it is tall. The first version of this scene drew a square, which fitted
+// the screen badly in both directions at once: on any desktop the board was
+// bounded by the viewport's HEIGHT and left a third of the width black either
+// side, and the letters were smaller than they needed to be the whole time.
 //
-// It is not free, and the price was measured rather than waved at. Spreading the
-// arcs pushes A, O and the other end letters away from where the cup spends its
-// time, and the board's vowel share falls about two and a half points: 35.6% to
-// 33.3% with nobody touching, 32.9% to 30.7% with a hand resting on it, against
-// English's 38.1%. An intermediate radius bought none of it back. Two and a half
-// points for a board that looks like a board is the right trade; the number is
-// here so that nobody spends an afternoon rediscovering the cost.
+// Everything below still lives in a 0..1 unit square and the scene still maps
+// that square isotropically — a board unit is the same length in x as in y, so
+// the cup's drawn footprint and its catchment stay the same shape, which is the
+// one thing that must not be traded for a nicer aspect ratio. What changed is
+// the CONTENT: the arcs run out to the edges and the rows are packed closer, so
+// the used area is a wide band inside the square and the card is drawn around
+// that band rather than around the whole thing.
+export const CARD = { x0: 0.02, y0: 0.13, x1: 0.98, y1: 0.87 };
+
+// ─── The board ──────────────────────────────────────────────────────────────
+// A homemade one, not a Parker Brothers one: two arcs of letters, a row of
+// digits, punctuation under them, YES and NO in the upper corners, GOODBYE at
+// the foot. That is the arrangement every hand-made board has had since the
+// 1890s, and the reason it is worth copying exactly is that the shape does
+// work — the arcs put every letter roughly the same distance from the middle,
+// so no letter is cheaper to reach than any other, and a board where E sat
+// closer to centre than X would be a board with an opinion.
+//
+// Wide, and much wider than the first version, which held both arcs inside the
+// middle two thirds and left a margin of blank board either side that nothing
+// ever used. A real board runs its letters nearly to the edge — that is what
+// makes the shape read as a board rather than as a caption — and spreading them
+// also spreads the cup's travel, so a letter is a journey rather than a nudge.
+//
+// It is not free, and the price was measured rather than waved at. Spreading
+// the arcs pushes A, O and the other end letters away from where the cup spends
+// its time, and the board's vowel share falls about two and a half points:
+// 35.6% to 33.3% with nobody touching, 32.9% to 30.7% with a hand resting on it,
+// against English's 38.1%. An intermediate radius bought none of it back. Two
+// and a half points for a board that looks like a board is the right trade; the
+// number is here so nobody spends an afternoon rediscovering the cost.
 //
 // The letters stay closer together than twice DWELL_RADIUS at this spread —
-// 0.051 apart against a 0.048 catchment, so the discs overlap — which means the
-// arcs are continuous and there is no dead ground between two letters where the
-// cup catches nothing.
+// about 0.072 apart against a 0.048 catchment, so the discs overlap — which
+// means the arcs are continuous and there is no dead ground between two letters
+// where the cup catches nothing.
 export const LETTER_ARCS = [
-  ARC('ABCDEFGHIJKLM', 1.72, 0.45, 0.255, 0.22),
-  ARC('NOPQRSTUVWXYZ', 1.60, 0.40, 0.455, 0.18),
+  ARC('ABCDEFGHIJKLM', 1.90, 0.46, 0.245, 0.13),
+  ARC('NOPQRSTUVWXYZ', 1.78, 0.41, 0.440, 0.11),
 ];
 
 export const DIGITS = '0123456789'.split('').map((ch, i) => ({
-  ch, x: 0.5 + (i / 9 - 0.5) * 0.60, y: 0.715, kind: 'digit',
+  ch, x: 0.5 + (i / 9 - 0.5) * 0.62, y: 0.630, kind: 'digit',
 }));
 
 // ─── Punctuation ────────────────────────────────────────────────────────────
@@ -70,34 +94,28 @@ export const PUNCTUATION = [
   { ch: '.', w: 1.00 }, { ch: ',', w: 0.85 }, { ch: '?', w: 0.20 }, { ch: '!', w: 0.12 },
 ].map((m, i, all) => ({
   ...m, kind: 'punct',
-  x: 0.5 + (i / (all.length - 1) - 0.5) * 0.20, y: 0.805,
+  x: 0.5 + (i / (all.length - 1) - 0.5) * 0.22, y: 0.720,
 }));
 
 // ─── The three words ────────────────────────────────────────────────────────
 // YES and NO sit at the top corners, and GOODBYE at the foot — and the foot is
 // the interesting one. The other hand may only be inside WANDER_BOUNDS, whose
-// floor is y 0.83: punctuation at 0.805 is inside it, and GOODBYE at 0.885 is
+// floor is y 0.755: punctuation at 0.720 is inside it, and GOODBYE at 0.805 is
 // not. **The board cannot say goodbye on its own.** It can say yes, it can say
 // no, it can put a full stop on the end of a word; only a visitor can take it
 // to GOODBYE, and it takes a deliberate pull to do it.
 //
-// That is the reason GOODBYE sits at 0.885 rather than tucking up under the
-// digits — it has to be below a line that everything else is above.
-//
-// That is not a flourish. Scott's rule for the scene is that it has neither a
-// beginning nor an end, only a state, so nothing here may be an ending — the
-// board does not close, the partner does not leave, the tape is not torn off.
-// Taking GOODBYE clears what has been spelled and the other hand goes still for
-// a moment, and then it starts again, because it always does.
+// That is the reason GOODBYE sits low rather than tucking up under the
+// punctuation — it has to be below a line that everything else is above.
 export const WORDS = [
-  { ch: 'YES', x: 0.155, y: 0.125, kind: 'word' },
-  { ch: 'NO', x: 0.845, y: 0.125, kind: 'word' },
-  { ch: 'GOODBYE', x: 0.5, y: 0.885, kind: 'word' },
+  { ch: 'YES', x: 0.115, y: 0.185, kind: 'word' },
+  { ch: 'NO', x: 0.885, y: 0.185, kind: 'word' },
+  { ch: 'GOODBYE', x: 0.5, y: 0.805, kind: 'word' },
 ];
 
 // Everything the cup can stop on, in one flat list — which is the list the
 // physics takes and the only one it ever sees. The physics cannot tell a letter
-// from a digit from a word, and does not need to.
+// from a digit from a punctuation mark from a word, and does not need to.
 export const MARKS = [...LETTER_ARCS.flat(), ...DIGITS, ...PUNCTUATION, ...WORDS];
 
 // The centre of the letter field: where the cup rests when nothing has happened

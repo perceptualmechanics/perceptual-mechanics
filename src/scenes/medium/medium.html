@@ -1,31 +1,27 @@
 <!--
   Medium scene shell markup.
 
-  All of it is body-level chrome — the title, the hint, the placard and the
-  live region — because the scene itself is one canvas and has no controls.
-  That is unusual here and it is the point: Apollo has a rail of faders because
-  an instrument has controls, and this has none because a Ouija board has none.
-  There is nothing to press but the cup.
+  A title, a hint and a live region, and nothing else. That is unusual here and
+  it is the point: Apollo has a rail of faders because an instrument has
+  controls, and this has none because a Ouija board has none. There is nothing
+  to press but the cup.
+
+  A placard sat in this file for one afternoon — an epigraph, a paragraph about
+  where the other hand comes from, and a link to /text/medium/ — and it came out
+  again on Scott's note. Two reasons, and the second is the real one. It was a
+  fixed panel in a corner, and the scene's layout had to measure it and keep the
+  board clear of it, which cost the board a third of its size on every viewport.
+  And a board with an explanation printed beside it is a board that has been
+  explained: the whole scene is an experience of not being able to tell who is
+  producing the message, and a paragraph in the corner telling you the answer
+  before you have had the experience is the wrong order. The writing is at
+  /text/medium/, which is where the writing goes.
 
   Marked `.pm-scene-chrome` so main.js's focus trap finds them on the body,
   which it otherwise only queries inside #experience-container — the omission
   that left Outside's sound toggle rendered, styled, focusable in principle and
   unreachable by Tab for a release.
-
-  The placard carries the epigraph, and the epigraph's TEXT is not written here.
-  It comes from EPIGRAPH in medium.text.js, which is the same constant
-  /text/medium/ prints, because a sentence kept in two files is a sentence that
-  ends up saying two things.
 -->
 <div class="medium-title-row"><p class="medium-title" aria-hidden="true">Medium</p></div>
-<p class="medium-hint" aria-hidden="true">press on the cup and rest your hand &nbsp;&middot;&nbsp; let go and it keeps going</p>
-<aside class="medium-placard pm-scene-chrome" tabindex="0" aria-label="About this board">
-  <p class="medium-epigraph"></p>
-  <p class="medium-placard-note">
-    The other hand has nothing to say. It wanders, and it leans very slightly
-    toward letters that would continue what has already been spelled — never
-    toward one letter, always toward all of them at once. Nothing here holds a
-    message. <a href="/text/medium/">The transcript and the sources</a>.
-  </p>
-</aside>
+<p class="medium-hint" aria-hidden="true">press on the cup and rest your hand &nbsp;&middot;&nbsp; nothing moves until you do</p>
 <div class="medium-sr-live" aria-live="polite"></div>

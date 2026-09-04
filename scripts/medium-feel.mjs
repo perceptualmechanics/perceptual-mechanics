@@ -13,6 +13,7 @@
 import {
   CUP, PARTNER_FORCE, DWELL_EASE, DWELL_RESIST,
   createCup, stepCup, createWander, stepWander,
+  createVisitor, stepVisitor,
   createDwell, stepDwell, clearDwellMemory,
 } from '../src/scenes/medium/medium.physics.js';
 import { createReader, decayReader, weightOf, takeMark } from '../src/scenes/medium/medium.lexicon.js';
@@ -33,14 +34,16 @@ const at = ch => MARKS.find(l => l.ch === ch);
 // going to say. So: the same partner, the same seed, the same board, two
 // different visitors. If a message were stored, both would say it.
 {
-  const say = (visitor) => {
+  const say = (drive) => {
     const cup = createCup(BOARD_HOME.x, BOARD_HOME.y), hand = createWander(909, BOARD_HOME.x, BOARD_HOME.y), dwell = createDwell();
     const reader = createReader();
     const plaus = l => weightOf(reader, l);
+    const v = createVisitor(cup.x, cup.y); v.down = true;
     let out = '';
     for (let i = 0; i < Math.round(150 / DT); i++) {
       decayReader(reader, DT);
-      stepCup(cup, DT, visitor(i * DT, cup), stepWander(hand, DT, LETTERS, plaus));
+      drive(i * DT, v);
+      stepCup(cup, DT, stepVisitor(v, cup, DT), stepWander(hand, DT, LETTERS, plaus));
       clearDwellMemory(dwell, cup);
       const got = stepDwell(dwell, cup, LETTERS, DT,
         l => DWELL_RESIST + (DWELL_EASE - DWELL_RESIST) * plaus(l));
@@ -48,8 +51,13 @@ const at = ch => MARKS.find(l => l.ch === ch);
     }
     return out;
   };
-  const a = say((t, c) => ({ x: c.x + Math.sin(t * 0.9) * 0.02, y: c.y + Math.cos(t * 0.7) * 0.02 }));
-  const b = say((t, c) => ({ x: c.x + Math.sin(t * 1.7) * 0.03, y: c.y - Math.cos(t * 0.4) * 0.02 }));
+  // Visitor A rests. Visitor B nudges the cup every couple of seconds — the
+  // same board, the same other hand, the same seed, and a different person.
+  const a = say(() => {});
+  const b = say((t, v) => {
+    if (Math.floor(t * 0.5) % 2) return;
+    v.x = 0.5 + Math.sin(t * 1.7) * 0.22; v.y = 0.36 + Math.cos(t * 0.9) * 0.10; v.driving = true;
+  });
   console.log(`stored   same partner, same seed, visitor A: "${a}"`);
   console.log(`                                  visitor B: "${b}"`);
   console.log(`         ${a === b ? 'IDENTICAL — something is holding the message' : 'different — the sentence is not stored anywhere'}`);
@@ -62,14 +70,18 @@ const at = ch => MARKS.find(l => l.ch === ch);
 {
   const cup = createCup(BOARD_HOME.x, BOARD_HOME.y);
   const hand = createWander(11, BOARD_HOME.x, BOARD_HOME.y);
+  const v = createVisitor(cup.x, cup.y); v.down = true;
   let worst = 0, t = 0;
   for (let i = 0; i < Math.round(8 / DT); i++) {
     t += DT;
-    const vis = { x: 0.86, y: 0.44 };              // visitor pulls hard right, and holds
-    stepCup(cup, DT, vis, stepWander(hand, DT, LETTERS, l => (l.ch.charCodeAt(0) % 7) / 6));
+    // Pulling and HOLDING, which for a driving visitor means restating the
+    // pointer every frame — a hand that stops moving goes slack by design, so
+    // "holds" has to mean "keeps pushing" or it is testing the wrong thing.
+    v.x = 0.86; v.y = 0.44; v.driving = true;
+    stepCup(cup, DT, stepVisitor(v, cup, DT), stepWander(hand, DT, LETTERS, l => (l.ch.charCodeAt(0) % 7) / 6));
     // Only once the cup has arrived: the first seconds are the journey, not a
     // measure of how far the partner can hold it off.
-    if (t > 2) worst = Math.max(worst, Math.hypot(cup.x - vis.x, cup.y - vis.y));
+    if (t > 2) worst = Math.max(worst, Math.hypot(cup.x - v.x, cup.y - v.y));
   }
   console.log(`\noverride visitor holds at 0.860; partner leans wherever it likes`);
   console.log(`         cup ends at ${f(cup.x)}, ${f(cup.y)} — ${cup.x > 0.8 ? 'visitor wins outright' : 'PARTNER IS OVERPOWERING THE VISITOR'}`);
@@ -96,13 +108,14 @@ const at = ch => MARKS.find(l => l.ch === ch);
   const hand = createWander(3, BOARD_HOME.x, BOARD_HOME.y);
   const dwell = createDwell();
   const reader = createReader();
+  const v = createVisitor(q.x, q.y); v.down = true;
   let t = 0, got = null;
   const plaus = l => weightOf(reader, l);
   for (let i = 0; i < Math.round(20 / DT) && !got; i++) {
     t += DT;
     decayReader(reader, DT);
-    const vis = { x: q.x + (q.x - cup.x) * 1.6, y: q.y + (q.y - cup.y) * 1.6 };
-    stepCup(cup, DT, vis, stepWander(hand, DT, LETTERS, plaus));
+    v.x = q.x + (q.x - cup.x) * 1.6; v.y = q.y + (q.y - cup.y) * 1.6; v.driving = true;
+    stepCup(cup, DT, stepVisitor(v, cup, DT), stepWander(hand, DT, LETTERS, plaus));
     clearDwellMemory(dwell, cup);
     got = stepDwell(dwell, cup, LETTERS, DT,
       l => DWELL_RESIST + (DWELL_EASE - DWELL_RESIST) * plaus(l));

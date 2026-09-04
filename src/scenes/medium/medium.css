@@ -11,22 +11,14 @@
    and a gold placard beside a gold-brown board would have made the chrome
    compete with the object.
 
-   Contrast, measured against the composited backgrounds rather than the
-   tokens, because those are two different numbers and only one is what a
-   reader sees. The placard is #0d0d10 at 0.94 alpha over the #0a0a0c ground,
-   compositing to #0d0d10. Against that:
-     --md-bone      #ded3c4   13.05:1
-     --md-bone-dim  #a99d8c    7.29:1
-   Both clear WCAG AA for body text with room, which matters because the
-   placard's note is small.
-
-   0.94 rather than the 0.72 this shipped with for one afternoon, and the
-   reason is specific to this scene: the thing behind the placard is not always
-   the void. The board is AGED CARD, and a 72%-opaque dark panel over pale card
-   composites to a mid grey that neither text colour clears. The scene's layout
-   now measures the placard and keeps the board above it, so the two should not
-   overlap at all — but "should not overlap" is a layout promise and this is the
-   colour that holds if a viewport ever breaks it.
+   Contrast, measured against the composited background rather than against the
+   token, because those are two different numbers and only one is what a reader
+   sees. Against the #0a0a0c ground:
+     --md-bone      #ded3c4   13.09:1
+     --md-bone-dim  #a99d8c    7.31:1
+   Both clear WCAG AA with room. There is very little chrome left to apply them
+   to — a title and a hint — which is deliberate: see medium.html on why the
+   placard came out.
 
    Mobile-first (standing convention, see STANDARDS.md): base rules target the
    smallest viewport; min-width queries layer wider-viewport values on top,
@@ -36,7 +28,6 @@
   --md-void: #0a0a0c;
   --md-bone: #ded3c4;
   --md-bone-dim: #a99d8c;
-  --md-panel: rgba(13, 13, 16, 0.94);
   --md-hairline: rgba(222, 211, 196, 0.22);
 
   /* The canvas is the whole scene and every interaction is a press on one
@@ -95,55 +86,6 @@
 	@media (min-width: 601px) {
 		left: auto;
 	}
-}
-
-/* ─── The placard ──────────────────────────────────────────────────────────
-   The one piece of writing in the scene, and the only thing on the page that
-   answers the question the board raises. It is FOCUSABLE and always visible
-   rather than hidden behind a toggle: a visitor who cannot use a pointer is
-   reading it as the account of a scene they may not be able to play at length,
-   and putting it behind a button would have made the explanation the reward
-   for managing the interaction.
-
-   Bottom-left on a phone and it stays there — this scene has no sound toggle
-   and nothing else competes for the corner, which is exactly why the space is
-   free. */
-.medium-placard {
-  position: fixed; z-index: 310;
-  left: 1rem; right: 1rem; bottom: 8.5rem;
-  max-width: 22rem;
-  padding: 0.7rem 0.85rem;
-  background: var(--md-panel);
-  border: 1px solid var(--md-hairline);
-  border-radius: 0.3rem;
-  font-family: 'Arapey', serif;
-
-	@media (min-width: 601px) {
-		left: 1.5rem; right: auto; bottom: 3rem; width: 21rem;
-	}
-}
-.medium-placard:focus-visible {
-  outline: 1px solid rgba(222, 211, 196, 0.7);
-  outline-offset: 2px;
-}
-.medium-epigraph {
-  color: var(--md-bone);
-  font-size: 0.78rem; line-height: 1.5;
-  font-style: italic;
-  margin: 0 0 0.5rem;
-}
-.medium-placard-note {
-  color: var(--md-bone-dim);
-  font-size: 0.66rem; line-height: 1.6;
-  margin: 0;
-}
-.medium-placard-note a {
-  color: var(--md-bone);
-  text-decoration: underline;
-  text-underline-offset: 0.15em;
-}
-.medium-placard-note a:hover, .medium-placard-note a:focus-visible {
-  color: #fff;
 }
 
 /* ─── Screen-reader live region ────────────────────────────────────────────

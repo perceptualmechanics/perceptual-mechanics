@@ -137,7 +137,7 @@ export const SCENES = {
   // built and thrown away (see medium.physics.js's header for both of them).
   medium:    { exportName: 'createMedium',
                label: 'Medium — a board that can spell.',
-               ariaLabel: 'Medium — a homemade Ouija board seen from above, with an upside-down teacup on it and two pairs of fingertips: yours and somebody else\u2019s. Press on the cup and rest your hand, or let go and watch. Letters land on their own and fill a tape along the bottom.' },
+               ariaLabel: 'Medium — a homemade Ouija board seen from above, with an upside-down teacup on it and two pairs of fingertips: yours and somebody else\u2019s. Press on the cup and rest your hand; nothing moves until you do, and nothing moves once you let go. Letters land while you are touching it and fill a tape along the bottom.' },
 
 };
 

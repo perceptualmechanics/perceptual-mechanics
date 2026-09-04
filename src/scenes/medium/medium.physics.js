@@ -184,11 +184,11 @@ export const WANDER_CENTRE = 0;
 // on the black. A board is a rectangle and a hand on it stays on it.
 //
 // The bounds are the card's lettering, with a margin — and the bottom edge is
-// doing real work. Punctuation sits at y 0.805 and GOODBYE at 0.885, so a floor
-// of 0.83 puts the four marks inside the other hand's reach and GOODBYE outside
+// doing real work. Punctuation sits at y 0.720 and GOODBYE at 0.805, so a floor
+// of 0.755 puts the four marks inside the other hand's reach and GOODBYE outside
 // it. That is the whole mechanism of "the board cannot say goodbye on its own",
 // and it is one number rather than a special case.
-export const WANDER_BOUNDS = { x0: 0.10, y0: 0.09, x1: 0.90, y1: 0.83 };
+export const WANDER_BOUNDS = { x0: 0.07, y0: 0.15, x1: 0.93, y1: 0.755 };
 
 // Where a session starts — anywhere among the letters, which is where a cup
 // gets left. This is not cosmetic. Starting it at BOARD_HOME, or in a small disc
@@ -199,7 +199,7 @@ export const WANDER_BOUNDS = { x0: 0.10, y0: 0.09, x1: 0.90, y1: 0.83 };
 // must not have. Drawn over the lettering rather than over the whole board,
 // because a uniform draw parks a third of sessions in a corner against the
 // border, which reads as a bug rather than as a cup somebody put down.
-export const WANDER_START = { x0: 0.18, y0: 0.16, x1: 0.82, y1: 0.58 };
+export const WANDER_START = { x0: 0.16, y0: 0.21, x1: 0.84, y1: 0.52 };
 
 // ─── The field ──────────────────────────────────────────────────────────────
 // How hard the hand leans toward plausible letters, and how far it can feel
@@ -304,6 +304,81 @@ export function stepCup(cup, dt, visitor, partner) {
     leader: Math.abs(fvMag - fpMag) < 0.06 * Math.max(fvMag, fpMag, 1e-6)
       ? null : (fvMag > fpMag ? 'visitor' : 'partner'),
     applied,
+  };
+}
+
+// ─── The visitor's hand ─────────────────────────────────────────────────────
+// The distinction the whole scene turns on, and it is here rather than in the
+// renderer because it is physics and because the benches have to be able to
+// model the visitor exactly rather than approximately.
+//
+// A pointer is a position. A finger resting on a planchette is not: your arm is
+// compliant, and when the cup moves your finger goes with it — you are not
+// holding a point in space, you are touching an object. So while the visitor is
+// in contact and NOT driving, the point their hand pulls on eases toward
+// wherever the cup now is, at RELAX per second. The hand goes slack and the
+// other hand can walk the cup along. The moment they move the pointer, the
+// anchor snaps to it and they are driving: full stiffness, and they win.
+//
+// One rule produces both halves of "press on the cup and rest your hand" — rest
+// and it spells, push and it goes where you push it.
+//
+// 18 per second, which is a time constant of about 55 milliseconds and is what a
+// resting finger's compliance actually is. Swept against the board's output with
+// a hand on it, ten seeds, five minutes each:
+//
+//     RELAX     marks/s    vowel share
+//      2.6       0.123        28.0%
+//      5         0.142        29.3%
+//      9         0.155        30.2%
+//     18         0.155        32.8%     <- here
+//     25         0.148        30.3%
+//     40         0.149        31.7%
+//
+// A stiff hand is not a hand resting on a cup, it is a hand holding a cup, and
+// the board can be felt fighting it: the cup lingers, takes marginal letters and
+// the tape fills with junk.
+//
+// Without it a visitor who pressed and held perfectly still froze the board. A
+// pointer held still is held PERFECTLY still, which no hand is, and a perfectly
+// still anchor is one the other hand cannot pull the cup more than 0.017 board
+// units away from. Press, stop, and nothing ever happens again.
+export const RELAX = 18;
+
+// And a resting hand is never quite still even so. Physiological tremor is fast
+// and tiny; postural drift is slower and larger, and it is the one that matters
+// here — nobody holds a fingertip on a spot for thirty seconds and nobody
+// notices themselves failing to. About four millimetres on a thirty-centimetre
+// board, on two incommensurate frequencies so it never repeats.
+//
+// It is not a usability patch dressed up as physics. Involuntary movement that
+// its owner does not know about is the substrate this entire scene is about.
+export const HAND_DRIFT = 0.013;
+
+// How much pointer movement counts as driving rather than as the jitter of a
+// hand that is only resting there, in board units between frames.
+export const DRIVE_EPS = 0.0015;
+
+export function createVisitor(x, y) {
+  return { x, y, ax: x, ay: y, t: 0, driving: false, down: false };
+}
+
+// Where the visitor's fingertip actually is this frame — or null if they are not
+// touching, which the cup treats as no hand at all. `v.x`/`v.y` are where the
+// pointer is; `v.ax`/`v.ay` are where the hand is pulling from, and the two are
+// the same thing only while the visitor is driving.
+export function stepVisitor(v, cup, dt) {
+  if (!v.down) return null;
+  v.t += dt;
+  if (v.driving) { v.ax = v.x; v.ay = v.y; v.driving = false; }
+  else {
+    const k = Math.min(1, RELAX * dt);
+    v.ax += (cup.x - v.ax) * k;
+    v.ay += (cup.y - v.ay) * k;
+  }
+  return {
+    x: v.ax + Math.sin(v.t * 0.61) * HAND_DRIFT,
+    y: v.ay + Math.cos(v.t * 0.43) * HAND_DRIFT,
   };
 }
 

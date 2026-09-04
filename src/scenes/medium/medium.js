@@ -3,12 +3,13 @@ import {
   createFrameClock, claimContainer,
 } from '../../utils/sceneKit.js';
 import {
-  DWELL_RADIUS, DWELL_EASE, DWELL_RESIST,
+  DWELL_RADIUS, DWELL_EASE, DWELL_RESIST, DRIVE_EPS,
   createCup, stepCup, createWander, stepWander,
+  createVisitor, stepVisitor,
   createDwell, stepDwell, clearDwellMemory,
 } from './medium.physics.js';
 import { createReader, decayReader, weightOf, takeMark } from './medium.lexicon.js';
-import { LETTER_ARCS, MARKS, BOARD_HOME, EPIGRAPH } from './medium.text.js';
+import { LETTER_ARCS, MARKS, BOARD_HOME, CARD } from './medium.text.js';
 import mediumHtml from './medium.html?raw';
 import './medium.css';
 
@@ -34,13 +35,26 @@ import './medium.css';
 // is why a visitor who drives gets nothing and a visitor who rests gets
 // sentences.
 //
+// ─── Two hands, or none ────────────────────────────────────────────────────
+// **The cup does not move unless you are touching it.** Not a physical claim —
+// one hand can obviously shove a teacup — but the rule a séance runs on, and
+// Scott's. The other hand freezes with it rather than drifting off a stationary
+// cup, which would be a hand taking its finger off.
+//
+// This scene shipped its first afternoon with the board spelling away to an
+// empty room, and that was mine rather than the brief's: the bench measured a
+// PASSIVE visitor, I generalised to NO visitor to get a clean measurement, and
+// then let the clean measurement become the design. Recorded because it is a
+// specific way to go wrong — a simplification made for a test escaping into the
+// thing being tested.
+//
 // ─── No beginning and no end ───────────────────────────────────────────────
-// Scott's rule, and it shapes the whole scene: there is no session. The board
-// is already going when you arrive and does not stop when you let go. Nothing
-// here opens, closes, resets, times out, or congratulates. GOODBYE is on the
-// board because a board has one, it sits below the other hand's reach so only
-// a visitor can take it, and taking it clears the tape and stills the other
-// hand for a moment — and then it starts again, because it always does.
+// Scott's rule, and it survives the above intact: there is no session. Letting
+// go is a pause and touching again is not a reset; nothing here opens, closes,
+// times out or congratulates, and the still board is a state rather than an
+// ending. GOODBYE is on the board because a board has one, it sits below the
+// other hand's reach so only a visitor can take it, and taking it clears the
+// tape and stills the other hand for a moment — and then it goes on.
 //
 // ─── Why 2D canvas ─────────────────────────────────────────────────────────
 // The same reason Apollo is: a thirteenth WebGL scene would be a thirteenth
@@ -86,7 +100,7 @@ const TAPE_MAX = 96;
 
 export function createMedium(container, { preview = false, initialArg = null, onStateChange = null } = {}) {
   let disposed = false;
-  let titleEl = null, hintEl = null, placardEl = null;
+  let titleEl = null, hintEl = null;
 
   // Two clocks, the split Apollo and Outside use. `clock` is the motion clock
   // and it stops under reduced motion, which is what stills the other hand.
@@ -139,19 +153,25 @@ export function createMedium(container, { preview = false, initialArg = null, on
   // between them and pixels — nothing below computes a pixel position any
   // other way.
   //
-  // ─── The ceiling and the floor are ASKED FOR, not assumed ─────────────────
+  // ─── The ceiling is ASKED FOR, not assumed ────────────────────────────────
   // The card is pale and the chrome is not, so anything the chrome overlaps is
   // chrome nobody can read: the hint is white at 60% and disappears the moment
-  // it crosses the board, and a dark panel over aged card composites to a grey
-  // its own text does not clear. Reserving a fixed number of pixels top and
-  // bottom is exactly the mistake this project keeps relearning — Apollo's
-  // wavelength scale spent a release behind the fader rail because 66px had
-  // been measured once, on a desktop — so this asks the DOM where the hint
-  // actually ends and where the placard actually begins, on every relayout, and
-  // fits the board between them. On a phone the hint is two lines and the
-  // placard is five, and the board gets what is left.
+  // it crosses the board. Reserving a fixed number of pixels is exactly the
+  // mistake this project keeps relearning — Apollo's wavelength scale spent a
+  // release behind the fader rail because 66px had been measured once, on a
+  // desktop — so this asks the DOM where the hint actually ends, on every
+  // relayout, and fits the board under it. On a phone the hint is three lines.
+  //
+  // ─── And the card is what gets fitted, not the unit square ────────────────
+  // Everything is laid out in a 0..1 square and mapped isotropically, so that a
+  // board unit is the same length in both axes and the cup's drawn footprint
+  // matches its catchment. But the CONTENT only occupies a wide band inside
+  // that square — see CARD in medium.text.js — so fitting the square wastes the
+  // difference. Fitting the card is what lets the board be as wide as the
+  // viewport allows instead of as wide as it is tall.
   const TAPE_BAND = 54;              // CSS px reserved under the card for the tape
-  const TITLE_RESERVE = 104;         // CSS px for the title, if there is no placard to measure
+  const TITLE_RESERVE = 104;         // CSS px for the title at the foot of the page
+  const CARD_W = CARD.x1 - CARD.x0, CARD_H = CARD.y1 - CARD.y0;
   let W = 0, H = 0, side = 0, ox = 0, oy = 0, tapeY = 0;
 
   function layout() {
@@ -163,12 +183,16 @@ export function createMedium(container, { preview = false, initialArg = null, on
     canvas.width = W; canvas.height = H;
 
     if (preview) {
-      // Overfilled, because the tile is a circle cut out of a square and the
-      // board's corners are empty anyway. The arcs reach the edge and the
+      // Overfilled on the LONGER axis, so the card covers the whole circle. The
+      // card is landscape and the tile is round, so fitting it leaves the card's
+      // straight top and bottom edges cutting two visible chords across the
+      // circle — the tile reads as a photograph of a board with the background
+      // showing, rather than as a board. The arcs reach the edge and the
       // silhouette — two curves of lettering with something sitting on one of
-      // them — is what makes a 200px tile recognisable as a board.
-      side = Math.min(W, H) * 1.34;
-      ox = (W - side) / 2; oy = (H - side) / 2;
+      // them — is what makes a 200px tile recognisable at all.
+      side = Math.max(W / CARD_W, H / CARD_H) * 1.06;
+      ox = W / 2 - (CARD.x0 + CARD_W / 2) * side;
+      oy = H / 2 - (CARD.y0 + CARD_H / 2) * side;
       tapeY = 0;
       return;
     }
@@ -176,45 +200,25 @@ export function createMedium(container, { preview = false, initialArg = null, on
     const cb = container.getBoundingClientRect();
     const toDevice = (clientY) => (clientY - cb.top) * (H / Math.max(1, cb.height));
     let ceiling = 0;
-    let floor = H - TITLE_RESERVE * r;
     if (hintEl) {
       const hb = hintEl.getBoundingClientRect();
       if (hb.height) ceiling = Math.max(ceiling, toDevice(hb.bottom) + 14 * r);
     }
     const band = TAPE_BAND * r;
+    const floor = H - TITLE_RESERVE * r;
+    const availH = Math.max(1, floor - ceiling);
+    side = Math.max(1, Math.min((W * 0.97) / CARD_W, (availH - band) / CARD_H));
 
-    // ─── The placard only lowers the floor if it is in the way ──────────────
-    // It is a narrow panel in the bottom-left corner on a desktop and a
-    // full-width one on a phone, and those are two different situations. The
-    // test is whether it sits under the MIDDLE of the viewport, because that is
-    // where the tape is written and the tape is the thing that must not land on
-    // top of the placard's prose. On a desktop it does not, and letting it set
-    // the floor anyway cost the board a third of its size to protect an empty
-    // corner; on a phone it does, and the board has to give up the room.
-    let underCentre = false;
-    let pTop = H;
-    if (placardEl) {
-      const pb = placardEl.getBoundingClientRect();
-      if (pb.height) {
-        pTop = toDevice(pb.top);
-        const pLeft = (pb.left - cb.left) * (W / Math.max(1, cb.width));
-        const pRight = (pb.right - cb.left) * (W / Math.max(1, cb.width));
-        underCentre = pLeft < W / 2 && pRight > W / 2;
-      }
-    }
-    if (underCentre) floor = Math.min(floor, pTop - 14 * r);
-
-    const avail = Math.max(1, floor - band - ceiling);
-    side = Math.max(1, Math.min(W * 0.96, avail));
-    ox = (W - side) / 2;
-    oy = ceiling + (avail - side) / 2;
-
-    // Centred in the gap that is actually left, between the bottom of the CARD
-    // and the floor. Not `oy + side`: the card is inset inside the board's unit
-    // square, so the unit square's bottom edge is 4.5% of a board below the
-    // last thing anybody can see, and measuring from it put the tape inside the
-    // placard on a 390px phone.
-    tapeY = (oy + side * 0.955 + floor) / 2;
+    // The card and the tape are placed as ONE group and the group is centred,
+    // rather than the card being centred and the tape put halfway to the floor.
+    // On a phone the card is bounded by the width and does not use the height it
+    // is offered, and centring the two separately left the tape stranded a
+    // third of a screen below the board with nothing between them.
+    const cardH = CARD_H * side;
+    const top = ceiling + (availH - (cardH + band)) / 2;
+    ox = W / 2 - (CARD.x0 + CARD_W / 2) * side;
+    oy = top - CARD.y0 * side;
+    tapeY = top + cardH + band * 0.5;
   }
 
   const bx = (x) => ox + x * side;
@@ -238,7 +242,25 @@ export function createMedium(container, { preview = false, initialArg = null, on
   // dragging toy is in that distinction — you can move your hand around the
   // board all day without touching, and nothing happens, because nothing
   // should.
-  const visitor = { x: BOARD_HOME.x, y: BOARD_HOME.y + 0.18, down: false };
+  // The tile has a visitor and the scene does not, and that is the honest
+  // thumbnail rather than a cheat: a preview of a board with nobody at it is a
+  // photograph of a cup, and what the scene IS is a board with two hands on it.
+  // So the tile runs the visitor everyone actually is — touching, not driving, a
+  // slow aimless circle about two centimetres across, which is what a hand
+  // resting on a cup does whether or not its owner thinks it is doing anything.
+  // Same stub the build's transcript uses and the bench measures.
+  // `down` is contact: a finger resting on the cup, not a cursor hovering over
+  // the board. Everything that separates this scene from a dragging toy is in
+  // that distinction — you can move your hand around the board all day without
+  // touching, and nothing happens, because nothing should.
+  //
+  // The tile has a visitor and the scene does not start with one, and that is
+  // the honest thumbnail rather than a cheat: the scene does nothing at all
+  // until somebody is touching, and a preview of a board with nobody at it is a
+  // photograph of a cup. The tile's stand-in simply rests — `stepVisitor` does
+  // everything else, exactly as it does for a real one.
+  const visitor = createVisitor(BOARD_HOME.x, BOARD_HOME.y + 0.18);
+  visitor.down = preview;
 
   const plaus = (mark) => weightOf(reader, mark);
   const dwellScale = (mark) => DWELL_RESIST + (DWELL_EASE - DWELL_RESIST) * plaus(mark);
@@ -291,6 +313,7 @@ export function createMedium(container, { preview = false, initialArg = null, on
   function step(dt, udt) {
     if (hush > 0) hush = Math.max(0, hush - udt);
 
+
     // The arrow keys are a finger, not a cursor: they move the visitor's
     // fingertip and the cup follows it through the same spring everything else
     // goes through. Integrated here rather than in the key handler so a held
@@ -302,6 +325,7 @@ export function createMedium(container, { preview = false, initialArg = null, on
       if (held.has('ArrowRight')) visitor.x += d;
       if (held.has('ArrowUp')) visitor.y -= d;
       if (held.has('ArrowDown')) visitor.y += d;
+      driving = true;
       // Bounded to the card, so a held key cannot walk the finger into the
       // margin and leave the cup stranded at the edge with nothing to do.
       visitor.x = Math.min(0.95, Math.max(0.05, visitor.x));
@@ -315,12 +339,30 @@ export function createMedium(container, { preview = false, initialArg = null, on
     // moving on its own, which here is also the one thing that is unsettling,
     // and that is the point of the setting rather than a compromise with it.
     decayReader(reader, dt);
-    const partner = (reduced || hush > 0) ? null : stepWander(hand, dt, MARKS, plaus);
-    const vis = visitor.down ? { x: visitor.x, y: visitor.y } : null;
-    stepCup(cup, dt, vis, partner);
 
+    // ─── Two hands, or none ───────────────────────────────────────────────────
+    // The cup does not move unless the visitor is touching it. Not a physical
+    // claim — one hand could obviously shove a teacup — but the rule a séance
+    // actually runs on, and Scott's: nothing happens until everybody's hands are
+    // on it. It is also what makes the scene an instrument rather than an
+    // animation. A board that spelled away to an empty room would be a thing to
+    // watch; this one waits.
+    //
+    // The other hand freezes with it rather than going on wandering, because a
+    // fingertip that drifts off a stationary cup is a hand that has taken its
+    // finger off — the opposite of what is happening. It resumes from exactly
+    // where it was, so letting go and touching again is a pause, not a reset.
+    // Nothing here opens or closes: this is the still state, and there is one.
+    const contact = visitor.down;
+    const partner = (contact && !reduced && hush <= 0) ? stepWander(hand, dt, MARKS, plaus) : null;
+    stepCup(cup, dt, stepVisitor(visitor, cup, dt), partner);
+
+    // Dwell only counts while somebody is touching. A cup nobody has a hand on
+    // is not resting ON a letter, it is just sitting there — and without this
+    // the board takes one mark the moment the scene mounts, off a cup that has
+    // never moved, which is the board reading an empty room.
     clearDwellMemory(dwell, cup);
-    const got = stepDwell(dwell, cup, MARKS, dt, dwellScale);
+    const got = contact ? stepDwell(dwell, cup, MARKS, dt, dwellScale) : null;
     if (got) take(got);
 
     if (flash) { flash.t += udt; if (flash.t >= FLASH_TIME) flash = null; }
@@ -343,7 +385,10 @@ export function createMedium(container, { preview = false, initialArg = null, on
   // ─── Drawing ──────────────────────────────────────────────────────────────
   const INK = '#2b2119';
   const INK_SOFT = 'rgba(43, 33, 25, 0.55)';
-  const CARD = '#d9cdb4';
+  // Named CARD_FILL rather than CARD: the board's RECTANGLE is imported under
+  // that name, and a colour shadowing it inside this closure put the layout in a
+  // temporal dead zone that threw before the first frame.
+  const CARD_FILL = '#d9cdb4';
   const CARD_EDGE = '#b9a988';
   const VOID = '#0a0a0c';
 
@@ -388,15 +433,16 @@ export function createMedium(container, { preview = false, initialArg = null, on
     // The card. A rounded rectangle in aged paper, with a burnt edge that is
     // two strokes rather than a gradient — a gradient reads as a vignette and
     // this needs to read as an object with a border printed on it.
-    const x = bx(0.045), y = by(0.04), w = bs(0.91), h = bs(0.915);
-    const r = bs(0.035);
+    const x = bx(CARD.x0), y = by(CARD.y0);
+    const w = bs(CARD.x1 - CARD.x0), h = bs(CARD.y1 - CARD.y0);
+    const r = bs(0.028);
     cardPath(x, y, w, h, r);
-    ctx2d.fillStyle = CARD;
+    ctx2d.fillStyle = CARD_FILL;
     ctx2d.fill();
     ctx2d.lineWidth = Math.max(1, bs(0.004));
     ctx2d.strokeStyle = CARD_EDGE;
     ctx2d.stroke();
-    cardPath(x + bs(0.018), y + bs(0.018), w - bs(0.036), h - bs(0.036), r * 0.7);
+    cardPath(x + bs(0.014), y + bs(0.014), w - bs(0.028), h - bs(0.028), r * 0.7);
     ctx2d.lineWidth = Math.max(1, bs(0.0018));
     ctx2d.strokeStyle = 'rgba(43, 33, 25, 0.35)';
     ctx2d.stroke();
@@ -465,18 +511,21 @@ export function createMedium(container, { preview = false, initialArg = null, on
     // it puts the only bright thing on the screen on the china where it
     // belongs, and it means the scene does not have to pick a skin colour for
     // somebody it has deliberately declined to give a face.
-    const r = bs(0.036);
+    const r = bs(0.030);
     const dir = fromTop ? -1 : 1;
-    const reach = bs(0.20);
+    const reach = bs(0.105);
     ctx2d.save();
     ctx2d.globalAlpha = alpha;
     ctx2d.filter = `blur(${Math.max(1, bs(0.006))}px)`;
 
     // The finger behind the tip, and it is SHORT — a hand seen from directly
     // above a table is almost entirely foreshortened, so what shows is a
-    // fingertip and an inch of finger, not a column.
+    // fingertip and an inch of finger, not a column. Shortened again when the
+    // board went landscape: at a fifth of a board long, two of them stacked
+    // above and below the cup drew one continuous bar down the middle of the
+    // card, which is not a pair of hands.
     const g = ctx2d.createLinearGradient(px, py, px, py + dir * reach);
-    g.addColorStop(0, 'rgba(26, 20, 16, 0.38)');
+    g.addColorStop(0, 'rgba(26, 20, 16, 0.34)');
     g.addColorStop(1, 'rgba(26, 20, 16, 0)');
     ctx2d.fillStyle = g;
     ctx2d.beginPath();
@@ -602,7 +651,7 @@ export function createMedium(container, { preview = false, initialArg = null, on
     if (!reduced && hush <= 0 && hand.x != null) {
       drawFinger(bx(hand.x), by(hand.y), true, 0.92);
     }
-    if (visitor.down) drawFinger(bx(visitor.x), by(visitor.y), false, 1);
+    if (visitor.down) drawFinger(bx(visitor.ax), by(visitor.ay), false, 1);
     drawTape();
 
     frames++;
@@ -638,12 +687,14 @@ export function createMedium(container, { preview = false, initialArg = null, on
     if (Math.hypot(p.x - cup.x, p.y - cup.y) > PRESS_R) return;
     pointerId = e.pointerId;
     visitor.x = p.x; visitor.y = p.y; visitor.down = true;
+    visitor.ax = p.x; visitor.ay = p.y; visitor.driving = false;
     canvas.setPointerCapture?.(e.pointerId);
     e.preventDefault();
   }
   function onPointerMove(e) {
     if (preview || !visitor.down || e.pointerId !== pointerId) return;
     const p = pointFrom(e);
+    if (Math.hypot(p.x - visitor.x, p.y - visitor.y) > DRIVE_EPS) visitor.driving = true;
     visitor.x = p.x; visitor.y = p.y;
   }
   function onPointerUp(e) {
@@ -667,6 +718,7 @@ export function createMedium(container, { preview = false, initialArg = null, on
         // A keyboard visitor cannot aim before touching, so the finger arrives
         // on the cup — the equivalent of reaching out and finding it.
         visitor.x = cup.x; visitor.y = cup.y;
+        visitor.ax = cup.x; visitor.ay = cup.y; visitor.driving = false;
       }
       visitor.down = !visitor.down;
       e.preventDefault();
@@ -692,10 +744,8 @@ export function createMedium(container, { preview = false, initialArg = null, on
     const frag = parseHTML(mediumHtml);
     titleEl = frag.querySelector('.medium-title-row');
     hintEl = frag.querySelector('.medium-hint');
-    placardEl = frag.querySelector('.medium-placard');
     srLiveEl = frag.querySelector('.medium-sr-live');
-    placardEl.querySelector('.medium-epigraph').textContent = EPIGRAPH;
-    document.body.append(titleEl, hintEl, placardEl);
+    document.body.append(titleEl, hintEl);
     container.appendChild(srLiveEl);
 
     canvas.addEventListener('pointerdown', onPointerDown);
@@ -752,7 +802,7 @@ export function createMedium(container, { preview = false, initialArg = null, on
       container.removeEventListener('keyup', onKeyUp);
       container.removeEventListener('blur', onBlur);
       held.clear();
-      titleEl?.remove(); hintEl?.remove(); placardEl?.remove(); srLiveEl?.remove();
+      titleEl?.remove(); hintEl?.remove(); srLiveEl?.remove();
       srLiveEl = null;
       container.classList.remove('medium-scene');
       claim.restore();

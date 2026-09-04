@@ -44,7 +44,8 @@ import {
 import { buildWeb } from '../src/scenes/psyshell/psyshell.web.js';
 import {
   DWELL_EASE, DWELL_RESIST, DWELL_TIME, PARTNER_FORCE,
-  createCup, stepCup, createWander, stepWander, createDwell, stepDwell, clearDwellMemory,
+  createCup, stepCup, createWander, stepWander, createVisitor, stepVisitor,
+  createDwell, stepDwell, clearDwellMemory,
 } from '../src/scenes/medium/medium.physics.js';
 import {
   createReader, decayReader, weightOf, takeMark, lexiconSize,
@@ -959,23 +960,12 @@ ${cdRackItems.map(c => `  <li>
 const SEANCE_SEEDS = [18531213, 18520417, 20120911];
 const SEANCE_MINUTES = 10;
 
-// ─── The visitor in these transcripts is TOUCHING ───────────────────────────
-// A slow aimless circle of about two centimetres on a thirty-centimetre board —
-// what a hand resting on a cup does whether or not its owner thinks it is doing
-// anything. It is not driving and it is not aiming.
-//
-// The first version of this page ran with nobody at the board at all, and the
-// result was a worse transcript for a reason worth recording: with only one
-// hand on it the cup settles into a basin and stays there, and all three
-// published séances opened with the same six marks. That is a real property of
-// the model rather than a bug — a board with one hand on it hovers — but it is
-// also the degenerate case, and publishing it as THE transcript would have been
-// publishing the least representative thing the scene does. A visitor's hand is
-// what a visitor will actually have.
-const restingHand = (t, cup) => ({
-  x: cup.x + Math.sin(t * 0.9) * 0.02,
-  y: cup.y + Math.cos(t * 0.7) * 0.02,
-});
+// ─── The visitor in these transcripts is TOUCHING and not driving ───────────
+// `createVisitor` and `stepVisitor` are the scene's own, not an imitation of
+// them, so this is exactly the hand a visitor has when they press on the cup and
+// stop moving. That matters more than it sounds: nothing on the board moves at
+// all unless somebody is touching it, so a transcript run with no visitor would
+// not be a degenerate séance, it would be a blank page.
 
 function seance({ seed, minutes }) {
   const DT = 1 / 60;
@@ -983,13 +973,14 @@ function seance({ seed, minutes }) {
   const cup = createCup(hand.x, hand.y);
   const dwell = createDwell();
   const reader = createReader();
+  const visitor = createVisitor(cup.x, cup.y);
+  visitor.down = true;
   const plaus = m => weightOf(reader, m);
   const scale = m => DWELL_RESIST + (DWELL_EASE - DWELL_RESIST) * plaus(m);
-  let tape = '', taken = 0, t = 0;
+  let tape = '', taken = 0;
   for (let i = 0; i < Math.round((minutes * 60) / DT); i++) {
-    t += DT;
     decayReader(reader, DT);
-    stepCup(cup, DT, restingHand(t, cup), stepWander(hand, DT, MARKS, plaus));
+    stepCup(cup, DT, stepVisitor(visitor, cup, DT), stepWander(hand, DT, MARKS, plaus));
     clearDwellMemory(dwell, cup);
     const got = stepDwell(dwell, cup, MARKS, DT, scale);
     if (got) { tape = got.ch === 'GOODBYE' ? '' : tape + takeMark(reader, got); taken++; }
@@ -1008,13 +999,14 @@ function buildMedium() {
 
   const body = `<article class="piece">
 <h2 id="transcript">Three séances, ${SEANCE_MINUTES} minutes each</h2>
-<p>Run when this page was built, by the same code the scene runs — the cup, the two hands and the lexicon — with a visitor who is touching the cup and not driving it: a slow aimless circle about two centimetres across, which is what a hand resting on a cup does whether or not its owner thinks it is doing anything.</p>
+<p>Run when this page was built, by the same code the scene runs — the cup, the two hands and the lexicon — with a visitor who is touching the cup and not driving it. Nothing on the board moves at all unless somebody is touching it, so this is not a board talking to an empty room; it is the least anybody can do and still be at the board.</p>
 ${runs.map(r => `<p class="slug">Seed ${r.seed} · ${r.taken} marks · ${r.rate.toFixed(2)} a second</p>\n${tape(r.tape)}`).join('\n')}
 <p class="note">It will not say any of this to you. The other hand’s wander is seeded and these three are fixed so that the page is the same page twice; the scene takes a new seed every visit, and the moment you put a finger on the cup you are in it. There is no message anywhere in the code to reproduce — see below.</p>
 
 <h2 id="mechanism">What is actually happening</h2>
 <p><strong>Nothing holds what the board is going to say.</strong> There is no queue, no script, no sentence in a variable, and the transcript above did not exist until it was spelled. The scene is three parts and none of them knows a word:</p>
 <p>The <strong>cup</strong> is a rigid body with mass, kinetic friction and stiction, pushed by two spring forces — a fingertip is a spring, not a handle. Stiction is a real branch rather than a large damping term, which is why the first movement is a lurch rather than a drift. The other hand’s force is capped at ${PARTNER_FORCE}, well under what a visitor pressing on it produces, so a visitor who wants to go somewhere else goes there every time. A board that fought back would be a puppet show; a real one is trivially overridden.</p>
+<p><strong>Nothing moves unless you are touching the cup</strong>, and when you are only resting on it your hand goes slack: a finger on a planchette is not holding a point in space, it is touching an object, so where your hand pulls from slides toward wherever the cup now is. The moment you move, it snaps back to your finger and you are driving — full stiffness, and you win. One rule gives both halves of “press on the cup and rest your hand”.</p>
 <p>The <strong>other hand</strong> wanders. It moves in bursts and then holds still, because that is what a hand does and because a continuously drifting cup crawls along the arc taking every letter it passes. It has no destination. What it has is a lean: it is drawn toward whichever letters near it would plausibly continue what has already been spelled — summed over every mark on the board at once, weighted by nearness and by plausibility. A gradient is not a target. No next letter is chosen anywhere, and which letter it was resolves only when the cup stops.</p>
 <p>A mark is taken by <strong>dwell</strong>, not by contact: the cup has to settle on a mark and stay there. How long depends on how plausible the mark is — ${(DWELL_TIME * DWELL_EASE).toFixed(2)} seconds for the likeliest letter and ${(DWELL_TIME * DWELL_RESIST).toFixed(1)} for one no English word wants. Both are finite, and that is the promise the scene makes: park the cup on Q and hold it there and you get a Q, in about two seconds. The board can be slow to agree. It can never refuse.</p>
 
