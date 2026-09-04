@@ -9,6 +9,14 @@ import './psyshell.css';
 import psyshellHtml from './psyshell.html?raw';
 import { TEXTS, SOURCES, SOURCE_OF, FILAPIXEL_COUNT, baseEDigits } from './psyshell.text.js';
 import { SEGMENTS, NUBS, BOUNDS, LENS_ID, placeFilapixels, pathToTip } from './psyshell.object.js';
+import { buildWeb } from './psyshell.web.js';
+// The worklet runs in another global and must reach the audio thread as a
+// FILE, not as part of this chunk. `new URL(..., import.meta.url)` is the form
+// the bundler understands as "emit this as an asset and give me its hashed
+// URL"; `?url` also works and emits the file twice — once raw and once
+// minified, with only the raw one referenced, which ships 2 kB nobody loads.
+// See the worklet's own header for what runs in there.
+const shiverWorkletUrl = new URL('./psyshell.shiver.worklet.js', import.meta.url).href;
 
 // ─── Psyshell — the lens ────────────────────────────────────────────────────
 //
@@ -53,8 +61,9 @@ const ROOM_COLOR = 0x0a0806;
 const CRYSTAL_DEEP = 0x123a2c;   // the interior: taint, seen through the body
 const CRYSTAL_RIM = 0xbfe6ff;    // where an edge catches the lamp
 const NUB_RIM = 0xe8f4ff;
-const BENCH_WARM = 0x2a1d12;
-const FILAPIXEL_COLOR = 0xd8fff0;
+const BENCH_WARM = 0x3a2718;
+const FILAPIXEL_COLOR = 0xd8fff0;   // a strand inside the lens, and its junctions
+const WEB_FAR_COLOR = 0x8fb6d8;     // a strand out in the field
 
 // ─── Brightness ─────────────────────────────────────────────────────────────
 // Re-derived by rendering and measuring peak luminance, the same way 4.7.0's
@@ -64,7 +73,17 @@ const FILAPIXEL_COLOR = 0xd8fff0;
 const CRYSTAL_GAIN = 0.78;
 const FILAPIXEL_BASE = 0.30;
 const FILAPIXEL_PEAK = 3.2;
-const FILAPIXEL_SIZE = 2.1;
+// ─── The web's brightness, and why the junctions are not drawn ──────────────
+// Nothing in the field is a sprite, a disc or a marker. Every strand is drawn
+// as two line segments meeting at a dark midpoint, so a node with k strands is
+// k bright ends landing on the same pixels, additively. **The junction
+// brightening is not a value: it is what k overlapping ends come to**, which is
+// the one way to make "brightness follows strand count" true rather than
+// arranged. Degrees run 1 to 17 across this web, mean 3.04.
+const STRAND_END = 1.0;    // brightness at a node end of a strand
+const STRAND_MID = 0.12;   // and at its dark midpoint
+const NEAR_GAIN = 0.42;    // the lens's own strands
+const FAR_GAIN = 0.22;     // the field's, which is far away and faint
 
 // ─── Reading ────────────────────────────────────────────────────────────────
 // Pointing the lightpen at the object excites the material locally, and the
@@ -137,7 +156,9 @@ const MAX_DIGITS = 16;
 // travelling inside the crystal, which is what it is.
 const TRANSMIT_GAIN = 2.0;
 
-const STRIKE_LIFE = 1.25;
+// The shiver's own length lives in the worklet, where the body's decay is; this
+// is only how loud a reading is on the bus. STRIKE_LIFE went with the envelope
+// it belonged to.
 const STRIKE_GAIN = 0.16;
 
 export function createPsyshell(container, { preview = false } = {}) {
@@ -261,7 +282,13 @@ export function createPsyshell(container, { preview = false } = {}) {
   // falling off into the dark. Not a diorama — one plane and one gradient.
   // Without it the lens floated in nothing, which is what made both previous
   // versions read as specimens.
-  const benchGeo = new THREE.PlaneGeometry(14, 14);
+  //
+  // Cut from 14 units square to 2.6 in 4.8.1. At 14 it was a wall across the
+  // bottom half of the frame and the field behind it could not be seen past its
+  // own horizon — which made "filaments across the whole frame" false in the
+  // half of the frame nearest the visitor. A bench with a visible far edge is
+  // also more a bench than an infinite plane is.
+  const benchGeo = new THREE.PlaneGeometry(2.6, 2.6);
   const benchMat = new THREE.ShaderMaterial({
     uniforms: { uWarm: { value: new THREE.Color(BENCH_WARM) }, uCentre: { value: new THREE.Vector2(0, 0) } },
     vertexShader: `
@@ -273,10 +300,20 @@ export function createPsyshell(container, { preview = false } = {}) {
         float d = length(vP - vec2(0.15, -0.2));
         // Two falloffs: a tight pool where the lamp actually lands, and a much
         // wider one so the surface does not end in a visible circle.
-        float pool = exp(-d * d / 1.1) * 0.85 + exp(-d * d / 26.0) * 0.16;
+        // One pool and a floor, not a pool and a wide wash. The wash existed
+        // so the surface would not end in a visible circle when the plane was
+        // 14 units across; at 2.6 the plane IS the pool, and the wash only made
+        // the far corners a dark shape occluding the field behind them — a
+        // black wedge across the bottom of the frame, which is what a lit
+        // surface must not be.
+        float pool = exp(-d * d / 1.5) * 0.95 + 0.16;
         gl_FragColor = vec4(uWarm * pool, 1.0);
       }`,
-    depthWrite: false,
+    // Writes depth, unlike every other material in this scene. It has to: the
+    // field is behind it now, and a bench you can see the sky through is not a
+    // surface. Rendered first (renderOrder −1) so it is in the depth buffer
+    // before a strand is tested against it.
+    depthWrite: true,
   });
   const bench = new THREE.Mesh(benchGeo, benchMat);
   bench.rotation.x = -Math.PI / 2;
@@ -365,49 +402,101 @@ export function createPsyshell(container, { preview = false } = {}) {
     nubs.instanceMatrix.needsUpdate = true;
   }
 
-  // ─── The filapixels ───────────────────────────────────────────────────────
-  // 3,221 points inside the crystal, one per sentence. Points rather than
-  // geometry: at this scale a filapixel is a glint, and 3,221 of anything with
-  // faces is a bill this scene does not need to pay.
+  // ─── The web ──────────────────────────────────────────────────────────────
+  // One structure at two magnifications. The 3,221 filapixels are the near
+  // nodes — the sentences, where they always were, inside the crystal — and the
+  // far field is generated around them; strands connect both, and fourteen
+  // bridge strands run from the lens's outermost nodes out into the field, so
+  // the object is OF the web rather than posed in front of a picture of one.
+  //
+  // Two meshes rather than one, and the split is not cosmetic: the near half's
+  // brightness changes every frame while the lens is being read, and the far
+  // half never changes at all. Uploading the whole buffer each frame to animate
+  // the part that can move would be paying for the field's indifference.
   const placed = placeFilapixels(FILAPIXEL_COUNT);
-  const filGeo = new THREE.BufferGeometry();
-  filGeo.setAttribute('position', new THREE.BufferAttribute(placed.pos, 3));
-  const levels = new Float32Array(FILAPIXEL_COUNT).fill(FILAPIXEL_BASE);
-  filGeo.setAttribute('aLevel', new THREE.BufferAttribute(levels, 1));
-  const filMat = new THREE.ShaderMaterial({
-    uniforms: {
-      uColor: { value: new THREE.Color(FILAPIXEL_COLOR) },
-      uSize: { value: FILAPIXEL_SIZE },
-      uScale: { value: 1 },
-    },
+  const web = buildWeb(placed.pos, FILAPIXEL_COUNT, { center: BOUNDS.center, radius: BOUNDS.radius });
+
+  // The excitation, one value per sentence. It starts at zero rather than at a
+  // base level, because a strand's resting brightness is now the strand's own
+  // (aBright) and this array carries only what a read adds.
+  const levels = new Float32Array(FILAPIXEL_COUNT);
+
+  // Each strand becomes two segments meeting at a dark midpoint: four vertices,
+  // bright at the two node ends. See psyshell.web.js for why a junction is
+  // never drawn as a thing in its own right.
+  function strandGeometry(pick) {
+    let n = 0;
+    for (let e = 0; e < web.edges.length; e += 2) if (pick(web.edges[e], web.edges[e + 1])) n++;
+    const pos = new Float32Array(n * 4 * 3);
+    const bright = new Float32Array(n * 4);
+    const node = new Int32Array(n * 4).fill(-1);
+    let v = 0;
+    for (let e = 0; e < web.edges.length; e += 2) {
+      const a = web.edges[e], b = web.edges[e + 1];
+      if (!pick(a, b)) continue;
+      const ax = web.pos[a * 3], ay = web.pos[a * 3 + 1], az = web.pos[a * 3 + 2];
+      const bx = web.pos[b * 3], by = web.pos[b * 3 + 1], bz = web.pos[b * 3 + 2];
+      const mx = (ax + bx) / 2, my = (ay + by) / 2, mz = (az + bz) / 2;
+      const put = (x, y, z, br, nd) => {
+        pos[v * 3] = x; pos[v * 3 + 1] = y; pos[v * 3 + 2] = z;
+        bright[v] = br; node[v] = nd; v++;
+      };
+      // A bridge — one end in the lens, one in the field — is the faintest
+      // thing in the frame. It is there to say the object is OF the web; three
+      // bright lines leaving the object read as something drawn on top of the
+      // picture, which is what the first render of this release looked like.
+      const bridge = (a < FILAPIXEL_COUNT) !== (b < FILAPIXEL_COUNT);
+      const end = bridge ? STRAND_END * 0.22 : STRAND_END;
+      const mid = bridge ? STRAND_MID * 0.22 : STRAND_MID;
+      put(ax, ay, az, end, a < FILAPIXEL_COUNT ? a : -1);
+      put(mx, my, mz, mid, -1);
+      put(mx, my, mz, mid, -1);
+      put(bx, by, bz, end, b < FILAPIXEL_COUNT ? b : -1);
+    }
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    geo.setAttribute('aBright', new THREE.BufferAttribute(bright, 1));
+    geo.setAttribute('aLevel', new THREE.BufferAttribute(new Float32Array(n * 4), 1));
+    return { geo, node, vertexCount: n * 4, segments: n * 2 };
+  }
+
+  const strandMat = (color, gain, lit) => new THREE.ShaderMaterial({
+    uniforms: { uColor: { value: new THREE.Color(color) }, uGain: { value: gain }, uLit: { value: lit } },
     vertexShader: `
-      attribute float aLevel;
-      varying float vLevel;
-      uniform float uSize; uniform float uScale;
+      attribute float aBright; attribute float aLevel;
+      varying float vB; varying float vL;
       void main() {
-        vLevel = aLevel;
-        vec4 mv = modelViewMatrix * vec4(position, 1.0);
-        // Size attenuates with distance, so the glints stay the right size
-        // relative to the object when the visitor zooms in on it.
-        gl_PointSize = uSize * uScale * (0.6 + 0.9 * aLevel) / max(0.05, -mv.z);
-        gl_Position = projectionMatrix * mv;
+        vB = aBright; vL = aLevel;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
       }`,
     fragmentShader: `
-      uniform vec3 uColor; varying float vLevel;
+      uniform vec3 uColor; uniform float uGain; uniform float uLit;
+      varying float vB; varying float vL;
       void main() {
-        vec2 d = gl_PointCoord - 0.5;
-        float r = dot(d, d);
-        if (r > 0.25) discard;
-        float soft = 1.0 - smoothstep(0.0, 0.25, r);
-        gl_FragColor = vec4(uColor * vLevel * soft, 1.0);
+        gl_FragColor = vec4(uColor * (vB * uGain + vL * uLit), 1.0);
       }`,
     blending: THREE.AdditiveBlending,
     depthWrite: false,
     transparent: true,
   });
-  const filapixels = new THREE.Points(filGeo, filMat);
-  filapixels.frustumCulled = false;
-  lens.add(filapixels);
+
+  const nearWeb = strandGeometry((a, b) => a < FILAPIXEL_COUNT || b < FILAPIXEL_COUNT);
+  const farWeb = strandGeometry((a, b) => a >= FILAPIXEL_COUNT && b >= FILAPIXEL_COUNT);
+  const nearMat = strandMat(FILAPIXEL_COLOR, NEAR_GAIN, FILAPIXEL_PEAK * 0.35);
+  const farMat = strandMat(WEB_FAR_COLOR, FAR_GAIN, 0);
+  const nearLines = new THREE.LineSegments(nearWeb.geo, nearMat);
+  const farLines = new THREE.LineSegments(farWeb.geo, farMat);
+  nearLines.frustumCulled = false;
+  farLines.frustumCulled = false;
+  lens.add(nearLines);
+  // The far field is not in the lens group. It is not the object's
+  // surroundings — it is what the object is a fragment of, and it does not
+  // belong to it.
+  scene.add(farLines);
+
+  // Which near-mesh vertices belong to which sentence, so a read can be written
+  // into the strands leaving it without walking the whole buffer.
+  const nearNodeOf = nearWeb.node;
 
   // ─── Sound ────────────────────────────────────────────────────────────────
   let audioCtx = null, muteGain = null, busGain = null;
@@ -423,6 +512,9 @@ export function createPsyshell(container, { preview = false } = {}) {
     busGain = audioCtx.createGain();
     busGain.gain.value = 1;
     busGain.connect(muteGain);
+    // Fetched as soon as there is a context, so the first reading is not the
+    // one that waits for a network round trip.
+    loadShiver();
   }
 
   function setSoundEnabled(on) {
@@ -444,30 +536,53 @@ export function createPsyshell(container, { preview = false } = {}) {
     }
   }
 
-  // One soft strike per reading, and nothing else. Scott asked for the sound to
-  // be left exactly as it is — an earlier note called its click an envelope
-  // defect and he likes it, so it is not a bug and is not being fixed. The only
-  // change is what sets the pitch: length no longer means anything here, so it
-  // comes from the filapixel's height in the object, which is a property of
-  // where the lightpen is pointed rather than of the sentence.
+  // ─── The shiver ───────────────────────────────────────────────────────────
+  // Not a strike. A strike is an impact and this is a body responding, and the
+  // difference lives in the first forty milliseconds — which is why the sound
+  // moved to an AudioWorklet rather than being re-enveloped. The DSP and the
+  // reasoning are in `psyshell.shiver.worklet.js`; what is here is the graph,
+  // the pitch, and the dispose discipline.
+  //
+  // **The earlier note about the click stands and is not contradicted.** Scott
+  // liked the strike's click and asked for it to be left alone, and it was, for
+  // two releases. This release is not a fix of that sound; it is a different
+  // gesture, asked for as one.
+  //
+  // The pitch still comes from the filapixel's height in the object rather than
+  // from the sentence: it is a property of where the lightpen is pointed.
+  let shiverNode = null;
+  let shiverReady = null;
+  let shiverFailed = false;
+
+  function loadShiver() {
+    if (!audioCtx || shiverNode || shiverFailed) return shiverReady;
+    shiverReady = audioCtx.audioWorklet.addModule(shiverWorkletUrl).then(() => {
+      if (disposed || !audioCtx || audioCtx.state === 'closed') return;
+      shiverNode = new AudioWorkletNode(audioCtx, 'psyshell-shiver', {
+        numberOfInputs: 0, numberOfOutputs: 1, outputChannelCount: [1],
+      });
+      shiverNode.connect(busGain);
+    }).catch(() => {
+      // A worklet that will not load is not a reason for a silent scene to also
+      // be a broken one: the scene keeps working, without the sound. Recorded
+      // as a flag rather than swallowed, so the fallback is visible to anything
+      // that asks.
+      shiverFailed = true;
+    });
+    return shiverReady;
+  }
+
   function strike(index) {
     if (!audioCtx || !soundEnabled) return;
-    const now = audioCtx.currentTime;
     const y = placed.pos[index * 3 + 1];
     const t = Math.max(0, Math.min(1, (y - BOUNDS.min[1]) / Math.max(1e-6, BOUNDS.max[1] - BOUNDS.min[1])));
     const hz = 620 * Math.pow(2, -1.15 * (1 - t));
-    const osc = audioCtx.createOscillator();
-    osc.type = 'sine';
-    osc.frequency.value = hz;
-    const env = audioCtx.createGain();
-    env.gain.setValueAtTime(0, now);
-    env.gain.linearRampToValueAtTime(STRIKE_GAIN, now + 0.006);
-    env.gain.exponentialRampToValueAtTime(STRIKE_GAIN * 0.2, now + 0.09);
-    env.gain.exponentialRampToValueAtTime(0.0001, now + STRIKE_LIFE);
-    osc.connect(env);
-    env.connect(busGain);
-    osc.start(now);
-    osc.stop(now + STRIKE_LIFE + 0.1);
+    const send = () => {
+      if (disposed || !shiverNode || !soundEnabled) return;
+      shiverNode.port.postMessage({ type: 'shiver', hz, gain: STRIKE_GAIN });
+    };
+    if (shiverNode) send();
+    else loadShiver()?.then(send);
   }
 
   // ─── Transmitters ─────────────────────────────────────────────────────────
@@ -643,42 +758,33 @@ export function createPsyshell(container, { preview = false } = {}) {
     }
   }
 
-  // ─── The idle ─────────────────────────────────────────────────────────────
-  // Residue of taint: a slow, sparse glimmer among the filapixels. Not a
-  // metronome and not a wave — the object is not doing anything on purpose,
-  // it is simply not inert, which is exactly what got it through screening.
+  // ─── No idle, and that is the change ──────────────────────────────────────
+  // 4.8.0's filapixels glimmered in and out. That behaviour is gone, and the
+  // reason is the field rather than taste: **scintillation is caused by matter
+  // in the path.** A star twinkles because the atmosphere it is seen through is
+  // turbulent; nothing impedes light in a vacuum, and this field's whole claim
+  // is that nothing is in the way. (Two supporting facts, both real: an
+  // extended source such as a galaxy averages the distortion across its own
+  // angular size and does not twinkle even through air — which is why planets
+  // are steady and stars are not — and interstellar scintillation, which does
+  // exist, is a radio-wavelength effect of plasma rather than anything visible.)
   //
-  // 4.7.0 already gave this scene an idle (a glint running the branch's axis)
-  // and the brief carried "sits still until touched" forward from before that.
-  // This replaces the glint rather than adding to a scene that had none.
-  const SHIMMER_RATE = 0.55;    // how fast phases advance
-  const SHIMMER_SHARE = 0.06;   // fraction of filapixels glimmering at once
-  const shimmerPhase = new Float32Array(FILAPIXEL_COUNT);
-  const shimmerSpeed = new Float32Array(FILAPIXEL_COUNT);
-  {
-    // Seeded from the positions themselves, so the glimmer is a property of the
-    // lens rather than of when the page loaded.
-    for (let i = 0; i < FILAPIXEL_COUNT; i++) {
-      const p = placed.pos[i * 3] * 12.9898 + placed.pos[i * 3 + 1] * 78.233 + placed.pos[i * 3 + 2] * 37.719;
-      const f = Math.abs(Math.sin(p) * 43758.5453) % 1;
-      shimmerPhase[i] = f * Math.PI * 2;
-      shimmerSpeed[i] = 0.35 + f * 0.9;
-    }
-  }
-  let shimmerT = 0;
+  // The second reason is the better one for the near half, where a vacuum
+  // argument does not apply: the field must be indifferent — to the camera, to
+  // hover, to the lens transmitting — because that indifference is what makes
+  // the lens's one response mean something. A scene where everything is alive
+  // has nothing alive in it.
+  //
+  // So what moves is: the excitation when a filapixel is read, the transmission
+  // that follows it, and the camera's own slow turn. Nothing else.
 
+  let levelsDirty = false;
   function writeLevels() {
-    const attr = filGeo.getAttribute('aLevel');
-    for (let i = 0; i < FILAPIXEL_COUNT; i++) {
-      let v = FILAPIXEL_BASE + (FILAPIXEL_PEAK - FILAPIXEL_BASE) * levels[i];
-      if (!reduced) {
-        const s = Math.sin(shimmerPhase[i] + shimmerT * shimmerSpeed[i]);
-        // Only the top of each cycle shows, so a few are lit at a time rather
-        // than everything breathing together.
-        const lit = Math.max(0, s - (1 - 2 * SHIMMER_SHARE)) / (2 * SHIMMER_SHARE);
-        v += lit * 0.85;
-      }
-      attr.array[i] = v;
+    const attr = nearWeb.geo.getAttribute('aLevel');
+    const arr = attr.array;
+    for (let v = 0; v < nearNodeOf.length; v++) {
+      const n = nearNodeOf[v];
+      arr[v] = n < 0 ? 0 : levels[n];
     }
     attr.needsUpdate = true;
   }
@@ -797,10 +903,8 @@ export function createPsyshell(container, { preview = false } = {}) {
     camera.aspect = cw / ch;
     camera.updateProjectionMatrix();
     renderer.setSize(cw, ch);
-    filMat.uniforms.uScale.value = ch * (renderer.getPixelRatio ? renderer.getPixelRatio() : 1) / 640;
     relayout();
   });
-  filMat.uniforms.uScale.value = h / 640;
 
   // ─── Loop ─────────────────────────────────────────────────────────────────
   let animId = null;
@@ -815,13 +919,15 @@ export function createPsyshell(container, { preview = false } = {}) {
       // the light on it.
       camAz += IDLE_TURN * (preview ? 1.5 : 1) * dt;
       placeCamera();
-      shimmerT += SHIMMER_RATE * dt * Math.PI * 2;
     }
     advanceTransmitters(dt);
-    if (reads.length) advance(dt);
-    else if (levels[0] !== 0 || reads.length === 0) { /* levels already zeroed below */ }
-    if (!reads.length) levels.fill(0);
-    writeLevels();
+    if (reads.length) { advance(dt); levelsDirty = true; }
+    else if (levelsDirty) { levels.fill(0); }
+    // Only when something changed. The near mesh's level attribute is ~17,000
+    // floats and re-uploading it every frame to say "still nothing" is the
+    // whole reason the field's indifference was worth splitting into its own
+    // mesh; leaving the near half uploading anyway would have given that back.
+    if (levelsDirty) { writeLevels(); levelsDirty = reads.length > 0; }
     renderer.render(scene, camera);
     previewCanvas?.blit();
   }
@@ -874,11 +980,20 @@ export function createPsyshell(container, { preview = false } = {}) {
       }
       muteGain = busGain = null;
       soundEnabled = false;
+      // The worklet node keeps a live port and an audio-thread processor. A
+      // disconnect alone leaves the port's message channel referencing this
+      // scene, which is exactly the shape of the stranded-context defect 4.0
+      // fixed — a new node type is a new place for it to come back.
+      if (shiverNode) {
+        try { shiverNode.port.onmessage = null; shiverNode.port.close(); } catch { /* already gone */ }
+        try { shiverNode.disconnect(); } catch { /* already gone */ }
+        shiverNode = null;
+      }
       for (const t of transmitters) { t.mesh.visible = false; t.mesh.geometry.dispose(); t.mat.dispose(); }
       transmitters.length = 0;
       stemGeo.dispose(); nubGeo.dispose(); stemMat.dispose(); nubMat.dispose();
       stems.dispose(); nubs.dispose();
-      filGeo.dispose(); filMat.dispose();
+      nearWeb.geo.dispose(); farWeb.geo.dispose(); nearMat.dispose(); farMat.dispose();
       benchGeo.dispose(); benchMat.dispose();
       previewCanvas?.dispose();
       managedRenderer.dispose();

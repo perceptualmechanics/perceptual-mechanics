@@ -9,7 +9,12 @@ import { SCENES } from './scenes/registry.js';
 // split, but with no second list of eleven scene names to fall out of step with
 // the first. A scene whose folder and file don't match its registry key fails
 // on open with a named error rather than a bare undefined.
-const sceneModules = import.meta.glob('./scenes/*/*.js');
+// The negative pattern is load-bearing rather than tidy. A `*.worklet.js` in a
+// scene folder is not a module of this app at all — it is a file the audio
+// thread fetches by URL, and it is emitted as an asset. Left in the glob, the
+// bundler ALSO compiles it as a lazy scene chunk, so the same processor ships
+// twice: once raw and referenced, once minified and loaded by nothing.
+const sceneModules = import.meta.glob(['./scenes/*/*.js', '!./scenes/**/*.worklet.js']);
 function loadSceneModule(name) {
   const id = `./scenes/${name}/${name}.js`;
   const loader = sceneModules[id];

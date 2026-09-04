@@ -28,7 +28,7 @@ whose corrections are themselves unverified is the original problem with extra
 steps, so nothing goes in here from memory — each entry below was re-read from
 the tree at the version named.
 
-**Verified against `v4.8.0`.**
+**Verified against `v4.8.1`.**
 
 ---
 
@@ -76,6 +76,9 @@ becomes legible. The stale reason was propping up a sound decision.
 | Vogel's model is the standard formulation of phyllotactic emergence | Vogel (1979) is the standard formulation of the **sunflower head** — a spiral packing in a disc. The divergence angle for organs emerging around a **stem** is the older, general phyllotactic fact and is not Vogel's disc model. Both use 137.5°, which is why the citation slides; they are not the same claim. | `psyshell.text.js`, `GOLDEN_ANGLE` |
 | `brief-psyshell.md` and `brief-psyshell-transmission.md` can be marked as superseded | **Neither existed.** Both Psyshell briefs arrived as chat messages and were never written to files, so there was nothing to mark. Created in 4.7.0 with Scott's text unedited and a superseded header. **This is the second time a brief has named a file that had to be created first** — rule 4 itself arrived naming `CORRECTED-FACTS.md`. The pattern: a brief refers to a durable surface that only ever existed in conversation. **Superseded by the rule that replaced it:** a brief now names knowledge-base files and nothing else, because a brief cannot go stale and frequently is not a file at all. | `WORKING-PROTOCOL.md` rule 4 · `STANDARDS.md`, "A brief closes by naming which knowledge-base files it makes untrue" |
 | Fraunhofer catalogued exactly 574 lines | Sources differ — "over 570" and "some 700" both appear in reputable ones. Say "over 570" or give the source with the number. | `apollo.text.js`, `FRAUNHOFER` comment |
+| A photon experiences no time, so light from a distant galaxy arrives with nothing having elapsed for it | **True as a statement about the interval, and only as that.** A photon travels a null worldline: the spacetime interval between emission and absorption is zero, so no proper time elapses along the path. But **there is no valid inertial rest frame for a photon**, so "what the photon experiences" is not a well-formed quantity in relativity, and the loose form of the claim is the kind of true-sounding sentence that becomes false on restatement. State the interval, not the experience. | `/text/psyshell/`, "What the field is made of" · `src/scenes/psyshell/psyshell.js`, the idle comment |
+| Stars twinkle, so a field of distant points should scintillate | **Scintillation is caused by matter in the path** — atmospheric turbulence — and is therefore exactly wrong for a field whose claim is that nothing impedes the light. Two supporting facts: a planet does not twinkle because it is an extended source and averages the distortion across its own angular size, and interstellar scintillation, which is real, is a radio-wavelength plasma effect rather than anything visible. Psyshell's glimmer was removed in 4.8.1 for this reason. | `src/scenes/psyshell/psyshell.js`, "No idle, and that is the change" |
+| A CPU-throttling harness measures frame-rate independence | **Not below 20 fps it does not.** `sceneKit.createFrameClock` clamps dt at `maxDelta = 0.05`, so every rate a throttled headless browser could reach for Psyshell (20.4, 11.3, 8.3 fps) was at or below the clamp, and the harness measured the clamp working as designed — it read as a coupling and was not one. Drive the clock instead: replace `requestAnimationFrame` and `performance.now` after the scene mounts and run the same scene-seconds at 30, 60 and 144. | `src/utils/sceneKit.js:694` · `NOTES.md` 4.8.1 |
 
 ## True when written, false now
 

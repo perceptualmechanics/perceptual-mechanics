@@ -126,7 +126,7 @@ distinction is the first thing a session gets wrong.
 | **Harmonics** | Resonant connections across every other scene's content, as a force-directed graph with Kuramoto phase-sync and sonification | 64 approved resonances | The resonance rows are editorial judgements, approved individually. The layout and phase-sync are generated |
 | **Outside** | A generated lotus (Gielis superformula) mapping a five-part cosmology — Power Sources as petals, Folk Origins, Magi and Psi at the centre | 5 power sources | The superformula geometry is real; the cosmology is the fiction's |
 | **Apollo** | A solar spectrum you can play, in two modes with an idle state. Absorption puts ten elements' lines into a band of starlight as gaps you sound by clicking; emission darkens the band and stands the same lines in it bright, struck rather than sustained; **Sunlight** is the idle state and puts the sun's own composition in the light, letting its lines sound on their own | 10 elements, 218 lines (iron 50, sodium 6) | **Hydrogen is computed live from the Rydberg formula**, with the reduced-mass correction and a vacuum-to-air conversion, which is why it lands on the published values. The other nine are NIST strong-lines tables. The corona is procedural. The only scene with no Three.js and no WebGL context, and the only one whose content is measurement rather than writing |
-| **Psyshell** | *lens RE73415.* A small crystal antler on a workshop bench, holding every sentence on this site as a point of light inside it. A lightpen reads one, and the crystal transmits that sentence's ordinal through itself in **base e** — unequal flashes, legible as transmission and never readable as text | 3,221 sentences, 34,790 words | The corpus figures are real and asserted at import. **The object's shape encodes nothing** — positions are a seeded draw, and that is deliberate; see below |
+| **Psyshell** | *lens RE73415.* A small crystal antler on a lit bench, in a web that fills the frame, holding every sentence on this site inside it. A lightpen reads one, and the crystal transmits that sentence's ordinal through itself in **base e** — unequal flashes, legible as transmission and never readable as text. The reading sounds as a shiver: a resonant body excited by a burst, trembling irregularly, rising about a semitone | 3,221 sentences, 34,790 words | The corpus figures are real and asserted at import. **The object's shape encodes nothing** — positions are a seeded draw, deliberately; see below. **The field is not a backdrop**: the web is the same structure as the lens at a larger scale, its junctions are bright in proportion to how many strands meet there, and nothing in it reacts to anything. Every point in it is a thing arriving from outside time — a photon travels a null worldline, so no proper time elapses along it and the delay is entirely ours |
 
 Earlier scenes — leaf, egg, prism, cycle, and some older constellation and
 ground-glimpse mechanics — were built, shipped and retired. The twelve above are
@@ -198,6 +198,10 @@ Listed here so a session knows the answer exists rather than deriving it again.
   time, because the rename corrupted both sides of the check.
 - **Third-party text is excluded from the `/text/` pages by policy**, and the
   Library's opening passages from published books are not republished there.
+- **Nothing in Psyshell's field reacts, and nothing in it twinkles.** The
+  indifference is what makes the lens's one response mean something, and the
+  absence of scintillation is a fact about vacuum: twinkling is caused by matter
+  in the path. Do not add an idle to the field.
 - **Psyshell's geometry encodes nothing about the corpus.** Two versions mapped
   reading order and sentence length into the form, with real derivations behind
   both; both produced a diagram rather than an object, and every visual problem

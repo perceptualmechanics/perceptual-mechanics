@@ -39,7 +39,9 @@ import {
 } from '../src/scenes/psyshell/psyshell.text.js';
 import {
   LENS_ID, SEGMENTS as PSY_SEGMENTS, SEGMENT_COUNT, NUB_COUNT, BOUNDS as PSY_BOUNDS,
+  placeFilapixels,
 } from '../src/scenes/psyshell/psyshell.object.js';
+import { buildWeb } from '../src/scenes/psyshell/psyshell.web.js';
 import { SENTENCE_SPLIT } from '../src/utils/corpus.js';
 import { SCENES, TEXT_EXEMPT } from '../src/scenes/registry.js';
 import { getOutboundLinks } from '../src/links.js';
@@ -596,6 +598,16 @@ function buildPsyshell() {
     return { n, digits: digits.join(''), highest, terms, sum: sum.toFixed(3), err: (n - sum).toFixed(3) };
   })();
 
+  const WEB = (() => {
+    // Built here from the same two modules the scene builds it from, so this
+    // page cannot print a web the scene does not draw.
+    const placed = placeFilapixels(FILAPIXEL_COUNT);
+    const w = buildWeb(placed.pos, FILAPIXEL_COUNT, { center: PSY_BOUNDS.center, radius: PSY_BOUNDS.radius });
+    let minDeg = Infinity;
+    for (const d of w.degree) if (d < minDeg) minDeg = d;
+    return { ...w, minDegree: minDeg };
+  })();
+
   const byDepth = PSY_SEGMENTS.reduce((a, s) => { a[s.depth] = (a[s.depth] || 0) + 1; return a; }, []);
   const WORDS = ['no', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine'];
   const generations = `the beam ${byDepth[0]}, then ${byDepth.slice(1, -1).join(', ')} and ${byDepth[byDepth.length - 1]}`;
@@ -616,6 +628,19 @@ ${PSY_SOURCES.map(s => `<li><span class="t">${esc(s.label)}</span>
 <p><strong>The proportions are not derived from anything, and are not presented as if they were.</strong> They were chosen by rendering the object and looking at it until it read as an antler. That is how they were arrived at, and saying so is worth more here than a citation would be.</p>
 <p><strong>Where a filapixel sits on the object encodes nothing.</strong> Not the sentence's order, not its length, not which scene it came from. Positions are a seeded draw over the object's arc length &mdash; deterministic, so it is the same lens on every visit, because it is <em>this</em> lens rather than <em>a</em> lens &mdash; and they carry no information at all.</p>
 <p>This is a subtraction, and it is the release. Two earlier versions of this scene mapped the corpus into the geometry: a chrysanthemum whose angle was reading order and whose petal length was sentence length, then a branch whose thickness was Murray's law and whose branch angles were the golden angle. Both were <em>rigour supplied where a subject was needed</em>. Every one of those mappings was real and checkable and none of them was a reason, and both times the result was a diagram rather than an object. A lens does not encode what it holds. It holds it.</p>
+
+<h2 id="field">The field, and why it is not a sky</h2>
+<p>The lens is not in front of a backdrop. It is in a <strong>web</strong> &mdash; filaments across the whole frame, brighter where they cross &mdash; and the web is the same kind of object as the lens at a different magnification. The fractalanch is a fragment of the thing the field is.</p>
+<p>The form is one structure standing for two, and they are alike for a reason rather than by resemblance. <strong>The cosmic web and neural tissue converge</strong> because both are networks built by matter falling along gradients toward nodes, and the similarity has been measured and published rather than merely noticed. In neither is a node a point on black: a cluster sits where filaments meet, and the strands are as visible as the knot.</p>
+<p class="note">${WEB.nearCount.toLocaleString('en-US')} near nodes &mdash; the sentences &mdash; and ${WEB.farCount.toLocaleString('en-US')} in the field, in ${WEB.clusters} knots strung along filaments. ${WEB.edgeCount.toLocaleString('en-US')} strands. Node degree runs ${WEB.minDegree} to ${WEB.maxDegree}, mean ${WEB.meanDegree.toFixed(2)}; nothing is isolated.</p>
+<p><strong>A junction is bright because strands meet there, and that is arithmetic rather than styling.</strong> Every strand is drawn as two segments meeting at a dark midpoint, bright at each end, and the drawing is additive &mdash; so a node where <em>k</em> strands meet is <em>k</em> bright ends summing on the same pixels. Nothing chooses the brightness of a junction. It is what <em>k</em> ends come to.</p>
+<p>Nothing in the field is a disc, a sprite or a marker, and nothing in it reacts &mdash; not to the camera, not to being pointed at, not to the lens transmitting. The indifference is the point: it is what makes the lens's one response mean something.</p>
+
+<h2 id="arriving">What the field is made of</h2>
+<p>Every distant point is a thing arriving from outside time.</p>
+<p>A photon travels a <strong>null worldline</strong>: the spacetime interval between its emission and its absorption is zero, so no proper time elapses along it. The delay is entirely ours. It is a fact about being made of matter, in the forward stream, rather than a fact about the light.</p>
+<p class="note">Stated carefully, because the loose form of it &mdash; "photons experience no time" &mdash; is exactly the kind of true-sounding sentence that goes wrong on restatement. There is <em>no valid inertial rest frame for a photon</em>, so the precise claim is about the interval along a null path and not about anything a photon undergoes. What is being said here is the zero interval, and nothing more.</p>
+<p>Which is why <strong>nothing in this field twinkles</strong>. Scintillation is caused by matter in the path: a star twinkles because the atmosphere it is seen through is turbulent, and a planet does not, because it is an extended source and averages the distortion across its own angular size. In a vacuum nothing is in the way. The field's whole claim is that nothing is in the way.</p>
 
 <h2 id="sources">Where the sentences come from</h2>
 ${sourceList}
@@ -641,6 +666,9 @@ ${sourceList}
 <h2 id="reading">Reading it</h2>
 <p>Point the lightpen at the crystal and the excitation spreads outward from where it lands, falling off with distance and dying after a few seconds. <strong>Straight-line distance, and symmetric in every direction</strong> &mdash; a change from both earlier versions, and the honest one. Those propagated along the structure and ran further toward later sentences than earlier ones, because reading order was in the geometry. It is not any more, and a disturbance in a solid does not know about reading order.</p>
 
+<p>It also makes a sound, and the sound is a <strong>shiver</strong> rather than a strike. A strike is an impact; a shiver is a body responding, and the difference lives in the first forty milliseconds. What sounds is a resonant body excited by a short shaped burst &mdash; the onset is the body's own ring-up rather than an attack curve, measured at 20&nbsp;ms from a tenth to nine tenths of peak. There is a tremble in it, made of filtered noise rather than an oscillator, so it has no rate a listener could pick out. And it rises: about +7% across the note, a little over a semitone, with a second inharmonic partial fading in behind it. A shiver of alarm falls; this one is delight.</p>
+<p class="note">The lens is a neuron, and a neuron does not ring, it fires. The sound is conduction rather than percussion, which is why it is real-time DSP on the audio thread rather than a tone with a curve on its gain.</p>
+
 <h2 id="source">The source passage</h2>
 <p class="note">"It was as we feared." "How did it get lost during screening?" &mdash; Untgract pulls down a lightpen, activates it, reads the object. A screen appears, reams of data. Then it goes in a jar on the bottom shelf, among thousands more, in various shapes.</p>
 <p>A different passage from the same manuscript &mdash; a workbench, a computation, "a white fiber-optic chrysanthemum, each filapixel a moment in time, demarcated in the code of the Union" &mdash; was the source for the two earlier forms. It is retired rather than quietly dropped: it gave this scene its word for a lit fragment of text, and it is where the count came from that the corpus then overruled.</p>
@@ -651,7 +679,7 @@ ${sourceList}
     title: 'Psyshell',
     description: `Lens ${LENS_ID} — a crystal antler holding ${FILAPIXEL_COUNT.toLocaleString('en-US')} filapixels, one for every sentence on this site, and the base-e notation it gives them up in.`,
     sceneKey: 'psyshell', sceneName: 'Psyshell',
-    lede: `<p><strong>Psyshell</strong> is a lens on a workshop bench: a crystalline fractalanch, two inches long, holding ${FILAPIXEL_COUNT.toLocaleString('en-US')} filapixels &mdash; one for every sentence of this site's writing. A lightpen reads it, and it transmits in base e.</p>
+    lede: `<p><strong>Psyshell</strong> is a lens on a workshop bench, in a web: a crystalline fractalanch, two inches long, holding ${FILAPIXEL_COUNT.toLocaleString('en-US')} filapixels &mdash; one for every sentence of this site's writing. A lightpen reads it, and it transmits in base e. The field around it is the same structure at a larger scale, and every point in it is arriving from outside time.</p>
 <p>This page is the measurement underneath it &mdash; where the sentences come from, how the object was built, and what its shape deliberately does not encode.</p>`,
     bodyHtml: body,
     jsonLd: creativeWork('Psyshell', `A crystal lens holding the ${FILAPIXEL_COUNT} sentences of this site as filapixels, read with a lightpen and transmitted in base e.`, 'psyshell'),

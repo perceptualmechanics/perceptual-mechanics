@@ -587,6 +587,160 @@ described are unchanged.)
   worth trimming, orrery.js's texture generators and first-person rig are the
   two most self-contained chunks to split out first.
 
+## 4.8.1 (2026-09-04)
+
+**The background is the web, and the sound is a shiver.** Two changes to
+Psyshell that are the same change: the field behind the lens was a dark ground
+with round glints on it, and the glints were the affordance. Both of those were
+wrong, and for one reason — **a dot is not a node, and it has nowhere for a
+response to go.**
+
+### The web
+
+The field is now filaments across the whole frame, brighter where they cross,
+and the crossings are what the lightpen points at. It is **not a backdrop**: the
+web and the lens are the same kind of object at two magnifications, and the
+fractalanch is a fragment of the thing the field is.
+
+The form carries two subjects at once because they converge for a real reason —
+the cosmic web and neural tissue are both networks built by matter falling along
+gradients toward nodes, and the resemblance has been measured rather than
+noticed.
+
+`src/scenes/psyshell/psyshell.web.js` is new and pure. **The near nodes are the
+corpus** — the 3,221 filapixel positions, passed in rather than regenerated, so
+the web's dense region *is* the sentences. The far field is 3,739 nodes in 240
+knots, with **chains of nodes strung along the filaments between knots rather
+than a line drawn from knot to knot**: the first version drew the long link and
+it read as a rule across the frame, unmistakably annotated. Matter is strung
+along a filament, so the strands come out of the same nearest-neighbour pass as
+everything else. 11,863 strands, degree 2 to 9, mean 3.41, nothing isolated,
+built in about 100 ms.
+
+**Junction brightness is strand count, and it is arithmetic rather than
+styling.** Each strand is two segments meeting at a dark midpoint and bright at
+each end, drawn additively — so a node where *k* strands meet is *k* bright ends
+summing on the same pixels. Nothing chooses a junction's brightness.
+
+Three bridge strands run from the lens's outermost nodes into the field, at 22%
+of a normal strand's brightness. The first version had fourteen at full
+brightness, all leaving the same corner, and they read as a fan of lines drawn
+on top of the picture.
+
+**No circles anywhere.** `THREE.Points` is gone; nothing in the field is a
+sprite, a disc or a marker.
+
+### And nothing twinkles
+
+The glimmer 4.8.0 gave the filapixels is gone. The reason is the field rather
+than taste: **scintillation is caused by matter in the path**, and this field's
+whole claim is that nothing is in the way. (A planet does not twinkle even
+through air, because it is an extended source and averages the distortion across
+its own angular size; interstellar scintillation is real and is a radio-band
+plasma effect.)
+
+The second reason is the better one: the field must be indifferent — to the
+camera, to hover, to the lens transmitting — because that indifference is what
+makes the lens's one response mean anything. A scene where everything is alive
+has nothing alive in it.
+
+**What the field means, stated carefully.** Every distant point is a thing
+arriving from outside time: a photon travels a null worldline, so the interval
+between emission and absorption is zero and no proper time elapses along it. The
+delay is entirely ours. `/text/psyshell/` states it as the interval and **not**
+as an experience, because there is no valid inertial rest frame for a photon and
+the loose form of the claim goes false on restatement. `CORRECTED-FACTS.md`
+carries the careful form.
+
+### The bench
+
+Cut from 14 units square to 2.6, its wide falloff replaced by one pool plus a
+floor. At 14 it was a wall across the bottom of the frame that the field could
+not be seen past — and because it now writes depth (it has to; a bench you can
+see the sky through is not a surface), its unlit corners were a black wedge
+occluding the web. It is a small lit plate now.
+
+### The shiver
+
+The sound was a strike. **A strike is an impact; a shiver is a body
+responding**, and the difference is in the first forty milliseconds — which is
+the part a `GainNode` envelope cannot shape. The lens is a neuron, and a neuron
+does not ring, it fires.
+
+`psyshell.shiver.worklet.js` is the site's **first AudioWorklet**: real DSP on
+the audio thread. A shaped noise burst excites two state-variable bandpasses —
+the fundamental and a partial at 2.02×, deliberately not an exact octave — whose
+Q rises from 34 to 95 across the note.
+
+Measured by rendering the shipped processor through an `OfflineAudioContext`,
+not by re-implementing it:
+
+- **Onset 20 ms** from a tenth to nine tenths of peak, and it is not an attack
+  ramp: a high-Q resonator rings up over roughly Q/(πf), so the build is the
+  body's own response time.
+- **The tremble is filtered noise, not an LFO** — two independent one-pole
+  lowpasses at about 7 Hz, one on amplitude (±18%) and one on pitch (±1.5%).
+  Detrended envelope autocorrelation peaks at **0.30** across 2–40 Hz; an LFO
+  would sit near 1.0. There is no rate to hear.
+- **The pitch rises +6.9%, about 1.16 semitones**, across the note. A shiver of
+  alarm falls; delight rises. The coefficient in the code is 0.105 rather than
+  0.069 because a noise-excited resonator does not sit exactly on its tuning
+  frequency — **it is set from the measured rise, not from the number in it**.
+- A second inharmonic partial fades in behind it: partial-to-fundamental energy
+  0.39 → 0.75 between 0.05 s and 0.35 s. It brightens as well as rises.
+- Peak 0.146 at the scene's own gain, which is where the strike it replaces
+  peaked. Audible length 0.54 s to −60 dB.
+
+**What was not verified: I did not hear it.** The numbers above are measured and
+the gesture is not. A WAV of five readings rendered through the shipped
+processor went to Scott; that is the part that needs ears.
+
+The old note about the click stands and is not contradicted — Scott liked the
+strike's click and it was left alone for two releases. This is a different
+gesture, asked for as one, not a fix of that one.
+
+### Three things the worklet cost, all now in STANDARDS
+
+`?url` emitted the processor **twice**, raw and minified, with only the raw one
+referenced — 2 kB nobody loads. `new URL(..., import.meta.url)` emits it once.
+Separately, `main.js`'s `import.meta.glob('./scenes/*/*.js')` matched the
+worklet and compiled it a second time as a lazy scene chunk; the glob now
+carries a negative pattern, because a worklet is not a module of this app.
+And `performance` is undefined in `AudioWorkletGlobalScope` here, so the
+duration probe is inert and reports 0 — said in the code, because a zero that
+means "not measurable" is worse than no number.
+
+### Verified
+
+- **No circles in the field**, and nothing scintillates: `THREE.Points` and the
+  shimmer are both gone from the file.
+- **Junction brightness follows strand count** by construction — *k* additive
+  ends — with degrees 2 to 9 printed on `/text/psyshell/`.
+- **The field is indifferent**: it has no per-frame work at all, and its mesh's
+  level attribute is never written.
+- The filaments and the antler read as one visual family at a glance, checked by
+  rendering and looking, at full size and in the 200 px tile. The tile still
+  reads as the lens.
+- **Frame-rate independence at 30 / 60 / 144**: the same four scene-seconds move
+  the object 3.71 / 3.56 / 3.67 px. **The first harness for this was invalid and
+  is recorded as such** — CPU throttling could not get this scene above 20 fps
+  in the container, and `createFrameClock` clamps dt at 0.05, so all three of
+  its rates were at or below the clamp and it measured the clamp. The valid one
+  drives the clock: rAF and `performance.now` are replaced after the scene
+  mounts and the same scene-seconds are run at each rate.
+- **The cost, reported rather than waved at.** 23,726 line segments in 2 draw
+  calls, 47,452 vertices, ~237 k floats of static geometry, plus ~100 ms of
+  graph building at scene open. Frame rate under software rasterization in the
+  container went **44.6 → 20.1 fps**; that is a fill-rate number from a CPU
+  rasterizer and not a device number, and it is the honest one available here.
+  The near mesh's 17 k-float level attribute is only uploaded when a read is
+  live, which is why the field's indifference is worth its own mesh.
+- **One audio context per visit, zero orphans, with the worklet node in place**
+  — first closed, second running, one node per visit.
+- **No underruns.** Zero dropped quanta after the first second across 4.0 s and
+  7.8 s of rendering in two visits; one 67 ms gap per visit at context start,
+  which is the device starting and is counted separately.
+
 ## 4.8.0 (2026-09-04)
 
 **Psyshell becomes a lens.** Not a form change — 4.7.0 was that, and it did not

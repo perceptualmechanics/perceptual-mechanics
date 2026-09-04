@@ -434,6 +434,45 @@ builds the `/text/` page from the same numbers the scene renders, which for a
 scene whose entire subject is a count is the only arrangement worth having —
 there is no third place holding a stale total.
 
+### An AudioWorklet is a separate file, a separate global, and a third thing to dispose
+
+Three Web Audio scenes on this site were built with oscillators and gain
+envelopes, and that is the right tool for a tone with a shape on it. It is the
+wrong tool when the SHAPE OF THE EXCITATION is the point — a body responding to
+being touched, rather than a note being started — because a `GainNode` can only
+scale what a source already produces. That is when a worklet earns its cost.
+
+What ships with one:
+
+- **The processor is its own file and is not bundled.** It runs in
+  `AudioWorkletGlobalScope`, which has no DOM, no `window`, and none of this
+  app's module graph, so it imports nothing and stays self-contained. Its URL
+  comes from `new URL('./x.worklet.js', import.meta.url).href`, which the
+  bundler understands as "emit this as an asset". **`?url` also works and emits
+  the file twice** — once raw and referenced, once minified and loaded by
+  nothing.
+- **It must be excluded from `main.js`'s scene glob.** `import.meta.glob` over
+  `./scenes/*/*.js` matches a `*.worklet.js` sitting in a scene folder and
+  compiles it a second time as a lazy scene chunk. The glob carries a negative
+  pattern for that reason.
+- **`performance` is not defined in every engine's worklet global.** Timing
+  probes must degrade to inert rather than throw, and a reported zero from one
+  means "not measurable here", not "free".
+- **Dispose is three things, not one.** `port.onmessage = null`, `port.close()`,
+  then `disconnect()` — and then the context's own close as before. A live port
+  keeps a message channel referencing the scene that created it, which is the
+  same shape as the stranded-`AudioContext` defect 4.0 fixed. A new node type is
+  a new place for it to come back, and it is verified the same way: one context
+  per visit, the previous one closed, zero orphans, **with the node in place**.
+- **Report underruns, and classify them.** A worklet runs in a hard-realtime
+  thread, so slow code produces dropouts rather than lag. `currentFrame`
+  advances by exactly one render quantum per call; anything larger is a gap. A
+  gap in the first second of a context's life is the device starting, a very
+  large one is a suspend, and what is left is the only one that is a defect.
+  Counting all three together reports an underrun nobody heard.
+- **CSP:** a worklet module is fetched under `script-src`, and this one is
+  same-origin, so `'self'` already covers it. No policy change.
+
 ### Sound that outlives the page's visibility needs a gesture that meant it, and a bound
 
 Added 4.5.1, when the first exception to "suspend on hide" was made. The rule
