@@ -1111,6 +1111,13 @@ document.addEventListener('focusin', e => pmGlimpse(glimpseKeyFor(e.target)));
 const fsEnabled = document.fullscreenEnabled ?? document.webkitFullscreenEnabled ?? false;
 if (fsToggle && fsEnabled) {
   fsToggle.hidden = false;
+  // The toggle is a member of the nav row as of 4.9.0, so the row's own fit
+  // arithmetic has to know whether it is there. --nav-extra is the number of
+  // non-scene slots in the row, and it is set HERE rather than in the
+  // stylesheet because it is the same fact as `hidden = false` above: on a
+  // platform with no Fullscreen API the button is display:none and the row
+  // must not reserve a slot for it. See #pm-nav in styles/main.css.
+  pmNav?.style.setProperty('--nav-extra', '1');
 
   const FS_ICON_ENTER = '<path d="M8 3H4a1 1 0 0 0-1 1v4M16 3h4a1 1 0 0 1 1 1v4M8 21H4a1 1 0 0 1-1-1v-4M16 21h4a1 1 0 0 0 1-1v-4"/>';
   const FS_ICON_EXIT = '<path d="M4 9V5a1 1 0 0 1 1-1h4M20 9V5a1 1 0 0 0-1-1h-4M4 15v4a1 1 0 0 0 1 1h4M20 15v4a1 1 0 0 1-1 1h-4"/>';

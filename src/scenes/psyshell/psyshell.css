@@ -129,12 +129,17 @@
 .psyshell-ordinal {
   position: fixed; z-index: 311;
   /* Bottom-right. Top-left was the first placement and it rendered underneath
-     #fullscreen-toggle, which is a fixed circle in that corner — found by
-     looking at a screenshot, not by reading the stylesheet, because nothing in
-     this file mentions that button. The four corners are spoken for: the hint
-     is top-right, the sound toggle bottom-left, the fullscreen control
-     top-left, and the title block bottom-centre. This sits right of the title
-     and below the hint. */
+     #fullscreen-toggle, which was then a fixed circle in that corner — found
+     by looking at a screenshot, not by reading the stylesheet, because nothing
+     in this file mentions that button. The hint is top-right, the sound toggle
+     bottom-left, and the title block bottom-centre, so this sits right of the
+     title and below the hint.
+
+     4.9.0 moved the fullscreen control into the nav row, so top-left is free
+     again — and this stays where it is anyway. The corner was never the
+     reason: an instrument reading belongs near the title block it annotates,
+     and it has read that way for four releases. Recorded so the freed corner
+     doesn't look like an invitation. */
   bottom: 5.7rem; right: 1.2rem; margin: 0;
   font-family: 'Electrolize', sans-serif;
   font-size: 0.68rem; letter-spacing: 0.22em;

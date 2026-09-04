@@ -14,8 +14,9 @@
            styles both by class, per that file's own "classes for styling,
            ids reserved for real DOM uniqueness or an ARIA idref" note, and
            the only id in the whole component is #colophon-title.)
-      500  #pm-nav
-      400  #site-title / #fullscreen-toggle
+      500  #pm-nav (and #fullscreen-toggle, which is inside it as of 4.9.0
+           and so has no z-index of its own any more)
+      400  #site-title
       310  body-level scene overlays (title/hint/caption elements a scene
            appends to document.body — MUST be ≥310, see above)
       300  #experience-overlay
@@ -332,47 +333,66 @@ html, body {
 
    Every one of those fixes was the same shape — re-tune a number against
    the count of the day — which is why the same bug kept coming back. So
-   this version doesn't have a number to re-tune. `--nav-count` below is
-   the only thing an eleventh scene changes, and the sizing is derived from
-   it so that the row is arithmetically incapable of overflowing:
+   this version doesn't have a number to re-tune: `--nav-count` is the only
+   thing an eleventh scene changes, and everything else is derived from it.
 
-     slot      = min(84px, (100vw - 2*padding) / count)   per-icon share
-     icon size = min(44px, slot)                          never wider than its share
-     gap       = slot - icon size                         whatever the share has left over
+   ─── 4.9.0: the row scrolls, and that changes what is derived ─────────────
+   Until now the derivation guaranteed the row FITS, by shrinking the icons
+   until they did: icon size = min(44px, slot). The cost was stated in this
+   comment for three releases and never paid down — "10 x 44px is 440px, so
+   a single row of ten cannot give every icon a 44x44 target on a 375px
+   phone; that's arithmetic, not a choice" — and the arithmetic was right,
+   but the choice it was defending was not the only one on the table. The
+   comment weighed exactly two options, shrink and wrap to two rows, and
+   rejected the second because #pm-nav's 3.5rem height is load-bearing well
+   outside this file (#landing and #experience-overlay pad their tops by
+   exactly it; every scene stylesheet clears it with top:4.5rem).
 
-     total = count*icon + (count-1)*gap + 2*padding
-           = count*slot - gap + 2*padding
-           <= count*slot + 2*padding
-           <= 100vw                                       for ANY count.
+   There was a third: let the row SCROLL. Scott's, and it costs nothing the
+   other two cost. The bar stays exactly 3.5rem, so nothing downstream of
+   that constant moves. The icons stay a full 44 x 44 at every width, so the
+   touch-target debt this comment had been carrying is simply paid. What
+   changes is that on a narrow phone some icons are off-screen until you
+   push the row sideways, which is the ordinary behaviour of a tab strip and
+   is signalled the ordinary way — the row is cut mid-icon at the edge
+   rather than ending neatly.
 
-   Consequences worth knowing: above ~856px this reproduces the old desktop
-   look exactly (44px icons, 2.5rem gaps) — that's what the 84px slot cap
-   is for. Between there and ~460px the gap closes smoothly instead of the
-   row clipping, so there is no breakpoint left to have a dead zone at, and
-   the two media queries this pair used to carry are gone rather than
-   retuned. Below ~460px the icons themselves start shrinking, down to
-   30.4px at 320px.
+     slot      = min(84px, (100vw - 2*padding - rule) / units)
+     icon size = 44px                        fixed now, never derived down
+     gap       = max(0, slot - icon size)    closes to nothing, then scrolls
 
-   Why not flex-wrap to two rows, which would keep a full 44x44 target at
-   every width: #pm-nav's 3.5rem height is a load-bearing constant well
-   outside this file — #landing and #experience-overlay both pad their tops
-   by exactly it, and all ten scene stylesheets (owned elsewhere) position
-   their own hint text at top:4.5rem to clear it. A nav that grows to two
-   rows on phones puts a second row of icons through every one of those.
-   That's a coordinated change across files this pass doesn't own, not a
-   CSS tweak. Recorded here so the option isn't re-proposed as if it were
-   free.
+     row fits           <=>  slot >= 44px  <=>  100vw >= units*44 + rule + 2*padding
+     gap reaches 2.5rem <=>  slot  = 84px  <=>  100vw >= units*84 + rule + 2*padding
 
-   TOUCH TARGET. 10 x 44px is 440px, so a single row of ten cannot give
-   every icon a 44x44 target on a 320px or 375px phone — that's arithmetic,
-   not a choice. What IS available is taken: height is a full 44px at every
-   width (up from 38px), and .nav-icon::before extends the hit area
-   vertically to the nav bar's own full 3.5rem and horizontally across half
-   the gap on each side, so adjacent targets tile edge-to-edge with no dead
-   space between them and — deliberately — no overlap either, since
-   overlapping targets mean an edge tap opens the wrong scene. At 375px
-   that's a 36.3 x 56px target per icon against the old 34 x 38px; at 460px
-   and up it reaches the full 44px in both axes. */
+   `units` is --nav-count plus --nav-extra, and --nav-extra is 1 exactly when
+   #fullscreen-toggle is showing, because the toggle now lives in this row
+   (see its rule below) and takes a slot like anything else. main.js sets
+   both: the count from the registry, the extra from the same feature test
+   that reveals the button. `rule` is the extra separation before the
+   toggle, reserved here so the formula stays honest about the whole row.
+
+   Those two thresholds move with the scene count, which is the point — they
+   are consequences, not settings. With today's twelve scenes and the toggle
+   showing (units = 13) they are 612px and 1132px, and both were measured in
+   a browser rather than trusted from the algebra: at 612px the row's scroll
+   width is exactly its client width, at 611px it overflows, and the gap
+   reaches exactly 40px at 1132px. Above 1132px the row is what it has
+   always been — 44px icons, 2.5rem gaps, centred. Below 612px it scrolls
+   instead of shrinking its own touch targets.
+
+   There is still no breakpoint anywhere in this pair, and so still no dead
+   zone for the old bug to come back in.
+
+   Centering a row that may overflow: `justify-content: center` is the wrong
+   tool, because scrollable overflow only extends toward the END side — a
+   centred row that overflows puts its first icons at negative offsets that
+   no amount of scrolling can reach. That is the classic version of the very
+   bug listed in the log above, arrived at from a new direction. The two
+   ::before/::after spacers below are the fix: flex items that grow into
+   free space and collapse to zero when there is none, so the row is centred
+   while it fits and starts flush at the scroll origin the moment it
+   doesn't. `safe center` would also work in current browsers; spacers work
+   in all of them and need no feature query. */
 #pm-nav {
   /* A FALLBACK as of 4.4.0, not the value. main.js's applyDerivedLayout()
      sets --nav-count from the registry length on load, so an added scene now
@@ -381,16 +401,37 @@ html, body {
      re-tuned when the scene count moved. What remains here is what the row
      looks like in the moment before that line runs, and for anything reading
      this stylesheet without executing the bundle. Keep it equal to the number
-     of .nav-icon buttons in index.html; if the two ever drift, prerender.js
-     fails the build and applyDerivedLayout() warns at runtime. */
-  --nav-count: 11;
+     of .nav-icon buttons in index.html.
+
+     It had drifted: 11 while index.html has carried 12 icons since Psyshell
+     was added, and the two gates that were supposed to catch it don't watch
+     this number — prerender.js counts icons against the registry and
+     applyDerivedLayout() warns about the same pair, and neither reads the
+     stylesheet. So the drift was real but harmless, and it is worth saying
+     which: with 4.9.0's fixed icon size this value only sets the pre-script
+     GAP, where before it also set the pre-script icon width, and a stale
+     count there meant a momentarily clipped row. The failure mode of
+     forgetting this now is a slightly wrong gap for one frame. */
+  --nav-count: 12;
+  /* 1 while #fullscreen-toggle is in the row, 0 while the platform has no
+     Fullscreen API and main.js leaves it `hidden`. Set from the same
+     feature test that reveals it, so the row never reserves a slot for a
+     control that isn't there. */
+  --nav-extra: 0;
+  --nav-units: calc(var(--nav-count) + var(--nav-extra));
   --nav-pad: 0.5rem;
+  /* The separation between the last scene icon and the fullscreen toggle —
+     the one thing in this row that is a control rather than a destination.
+     Reserved in --nav-slot so the fit arithmetic accounts for it. */
+  --nav-rule: 1.5rem;
   /* The widest one icon's share of the row may grow to: 44px of icon plus
      the 2.5rem gap the desktop layout has always used. */
   --nav-slot-max: 84px;
   --nav-icon-max: 44px;
-  --nav-slot: min(var(--nav-slot-max), calc((100vw - 2 * var(--nav-pad)) / var(--nav-count)));
-  --nav-icon-size: min(var(--nav-icon-max), var(--nav-slot));
+  --nav-slot: min(var(--nav-slot-max), calc((100vw - 2 * var(--nav-pad) - var(--nav-rule)) / var(--nav-units)));
+  /* Fixed as of 4.9.0, not derived down — see the header. The row scrolls
+     rather than shrinking its own touch targets. */
+  --nav-icon-size: var(--nav-icon-max);
   --nav-gap: max(0px, calc(var(--nav-slot) - var(--nav-icon-size)));
 
   position: fixed;
@@ -398,15 +439,46 @@ html, body {
   height: 3.5rem;
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;   /* centring is the spacers' job — see header */
   gap: var(--nav-gap);
   padding-inline: var(--nav-pad);
+  /* The row may be wider than the viewport now. overflow-y: hidden keeps
+     .nav-icon::before's deliberate vertical overhang from turning into a
+     vertical scroller; the bar's own height is unchanged either way. */
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+  /* No visible scrollbar: a classic (non-overlay) one would eat several
+     pixels off a 3.5rem bar and draw a grey trough across the chrome. The
+     row is only scrollable at phone widths, where scrollbars are overlay
+     and gestural anyway. */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
   z-index: 500;
   background: rgba(0,0,0,0.55);
   border-bottom: 1px solid rgba(255,255,255,0.08);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
 }
+#pm-nav::-webkit-scrollbar { display: none; }
+/* The centring spacers. `flex: 1 0 0` — grow into free space, never shrink,
+   zero basis — so they split whatever the row doesn't use and vanish
+   entirely when it uses everything. Empty content, so they contribute
+   nothing but width, and aria-hidden by construction (a CSS pseudo-element
+   with empty content is not exposed).
+
+   The negative margins are load-bearing, not tidying. `gap` applies between
+   EVERY pair of flex items, so two spacers add two gaps the fit arithmetic
+   in the header never reserved — and the row would then overflow by exactly
+   one gap's width at every viewport where a gap exists at all, which is to
+   say it would scroll on desktop. Checked as arithmetic rather than by
+   looking: with the two extra gaps cancelled, row = 11*slot + 44 + rule
+   against an available 12*slot + rule, so it fits for every slot >= 44px,
+   which is every slot at which --nav-gap is non-zero. */
+#pm-nav::before, #pm-nav::after { content: ''; flex: 1 0 0; }
+#pm-nav::before { margin-inline-end: calc(-1 * var(--nav-gap)); }
+#pm-nav::after { margin-inline-start: calc(-1 * var(--nav-gap)); }
 
 .nav-icon {
   background: none;
@@ -668,57 +740,67 @@ html, body {
 #noscript-fallback a { color: #fff; }
 
 /* ─── Fullscreen toggle ─────────────────────────────────────────────────────── */
-/* Persistent, site-wide (see index.html's own comment at the button) —
-   placed at top: 4.5rem (clears #pm-nav, same landmark every scene's own
-   hint text clears) but on the LEFT rather than every scene's hint text's
-   own top-right slot (each scene's own -hint rule: top:4.5rem; right:1.2rem),
-   so this never overlaps it on any of the ten scenes or the landing page.
-   Neutral white/black palette matching #site-title's own scrim treatment
-   (not tinted to any one scene's accent) since this shows everywhere.
-   z-index 400, same tier as #site-title — both persistent, both need to
-   clear #experience-overlay's 300 (see the z-index scale comment at the
-   top of this file). */
-/* Mobile-first (standing convention, see STANDARDS.md): base targets the
-   smallest viewport (tighter top/left offset, 38px touch target); the
-   min-width:601px tier restores the original 44px target and wider
-   clearance once there's room for it. */
-#fullscreen-toggle {
-  position: fixed;
-  top: 4rem; left: 0.8rem;
-  z-index: 400;
-  display: flex; align-items: center; justify-content: center;
-  width: 38px; height: 38px;
-  border: 1px solid rgba(255,255,255,0.25);
-  border-radius: 50%;
-  background: rgba(0,0,0,0.4);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  color: rgba(255,255,255,0.6);
-  cursor: pointer;
-  transition: background 0.2s, border-color 0.2s, color 0.2s;
+/* Lives in the nav row as of 4.9.0. Until then it was a fixed 38/44px
+   circle at top-left, just under the bar, and the problem with that slot is
+   not that it collided with any one thing — it was checked against every
+   scene's hint text and cleared all of them — but that it was a floating
+   control sitting ON the scene, in the corner where the scenes that have a
+   reading panel put its heading. Sphere is where it shows worst: the circle
+   lands on the panel's rule and clips the first letter of the title. A
+   site-wide control that is always over somebody's content has no good
+   corner left to move to (the four are spoken for — hints top-right, sound
+   toggles bottom-left, titles bottom-centre, Psyshell's ordinal
+   bottom-right), so it stops floating instead and joins the chrome it
+   belongs with.
 
-	@media (min-width: 601px) {
-		top: 4.5rem; left: 1.2rem;
-		width: 44px; height: 44px; /* touch target, same guideline as .nav-icon */
-	}
+   Which is only possible because the row scrolls now: reserving a twelfth
+   slot in a row that was already exactly full at 375px would have pushed an
+   icon off the screen. The two changes are one change — see #pm-nav.
+
+   Styled as nav furniture rather than as a button: no circle, no scrim, no
+   blur, opacity 0.5 rising to 1, exactly matching .nav-icon. That 0.5 is
+   the measured value from .nav-icon's own comment — 5.3:1 against the bar's
+   near-black ground, past WCAG 1.4.11's 3:1 for a non-text control — and it
+   is reused here rather than re-derived because it is the same white glyph
+   on the same ground.
+
+   It is still not a scene, and the row is otherwise a scene switcher, so
+   the hairline before it says so. The separation is --nav-rule, reserved in
+   the fit arithmetic; the rule itself is drawn centred in that space. */
+#fullscreen-toggle {
+  flex: 0 0 auto;
+  position: relative;
+  display: flex; align-items: center; justify-content: center;
+  width: var(--nav-icon-max); height: var(--nav-icon-max);
+  margin-inline-start: var(--nav-rule);
+  padding: 0;
+  border: none;
+  background: none;
+  color: #fff;
+  opacity: 0.5;
+  cursor: pointer;
+  transition: opacity 0.25s, transform 0.2s;
 }
-#fullscreen-toggle:hover,
-#fullscreen-toggle:focus-visible {
-  background: rgba(255,255,255,0.12);
-  border-color: rgba(255,255,255,0.5);
-  color: rgba(255,255,255,0.95);
+#fullscreen-toggle::before {
+  content: '';
+  position: absolute;
+  /* Centred in the whole space before the button, which is the flex `gap`
+     plus --nav-rule — not in --nav-rule alone, or it would hug the button
+     on desktop where the gap is 2.5rem and sit nowhere near the middle. */
+  inset-inline-start: calc(-0.5 * (var(--nav-rule) + var(--nav-gap)));
+  top: 50%;
+  width: 1px; height: 18px;
+  margin-top: -9px;
+  background: rgba(255,255,255,0.18);
 }
+#fullscreen-toggle:hover { opacity: 1; transform: scale(1.12); }
 #fullscreen-toggle:focus-visible {
+  opacity: 1;
   outline: var(--focus-ring);
   outline-offset: 3px;
+  border-radius: 3px;
 }
-#fullscreen-toggle svg {
-  width: 16px; height: 16px; display: block;
-
-	@media (min-width: 601px) {
-		width: 18px; height: 18px;
-	}
-}
+#fullscreen-toggle svg { width: 20px; height: 20px; display: block; }
 /* The button's own `display: flex` above is an ID selector — higher
    specificity than the UA stylesheet's plain `[hidden] { display: none }`
    rule (an attribute selector, not !important per the HTML spec), so
@@ -729,6 +811,9 @@ html, body {
 #fullscreen-toggle[hidden] { display: none; }
 @media (prefers-reduced-motion: reduce) {
   #fullscreen-toggle { transition: none; }
+  /* It grew a hover scale when it became nav furniture, so it takes the
+     same suppression .nav-icon:hover already had. */
+  #fullscreen-toggle:hover { transform: none; }
 }
 
 /* ─── Landing ───────────────────────────────────────────────────────────────── */
@@ -1263,13 +1348,18 @@ html, body {
    block of top-level max-width overrides; every one of them now lives
    nested inside its own selector's rule instead (#scene-previews,
    .preview-row-break, .preview-container, #landing, #landing-bottom-fade,
-   #landing-textlink, #fullscreen-toggle, #fullscreen-toggle svg — see each
-   selector above), per the site-wide nesting convention. Nothing left to
-   declare at this point in the file.
+   #landing-textlink — see each selector above), per the site-wide nesting
+   convention. Nothing left to declare at this point in the file.
 
    #pm-nav and .nav-icon dropped OFF that list in 4.0: they no longer have
    responsive rules to nest, because they no longer have breakpoints. Their
    sizing is derived from --nav-count with min()/max() and scales
    continuously, which is what finally closed a bug that had recurred four
    times at four different pixel thresholds — see that rule's own comment.
-   A breakpoint you don't have can't develop a dead zone. */
+   A breakpoint you don't have can't develop a dead zone.
+
+   #fullscreen-toggle and #fullscreen-toggle svg dropped off it in 4.9.0 for
+   the same reason, from the other direction: they used to carry a
+   min-width:601px tier of their own (38px circle below it, 44px above),
+   and now that the control is a member of the nav row it takes the row's
+   own continuously-derived sizing and has no width of its own to switch. */

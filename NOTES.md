@@ -587,6 +587,123 @@ described are unchanged.)
   worth trimming, orrery.js's texture generators and first-person rig are the
   two most self-contained chunks to split out first.
 
+## 4.9.0 (2026-09-04)
+
+**The nav row scrolls, and the fullscreen control moves into it.** Two changes
+that are really one: the second is only possible because of the first.
+
+**The complaint.** Scott, looking at Sphere with a fragment open: the fullscreen
+icon should go somewhere less obtrusive. It sat at top-left as a fixed 38/44px
+circle, and the corner had been checked — it clears every scene's hint text,
+which all sit top-right — but clearing the other chrome is not the same as
+being out of the way. Sphere puts a reading panel down the left side, and the
+circle landed on the panel's heading rule and clipped the first letter of
+MATRICES. That is a floating control sitting on somebody's content, and the
+four corners of this site are spoken for (hints top-right, sound toggles
+bottom-left, titles bottom-centre, Psyshell's ordinal bottom-right), so there
+was no fifth corner to move it to. It stops floating instead.
+
+**Why it could not just move into the nav.** The row was already exactly full.
+`--nav-slot` guaranteed a fit by shrinking the icons until they fit — icon =
+min(44px, slot) — so at 375px twelve icons were 30px wide and consumed the
+whole width with nothing left over. Reserving a thirteenth slot would have
+pushed a scene off the screen, which is the bug that file has a five-entry log
+about.
+
+**Scott's solve: make the navbar scrollable.** The comment in `styles/main.css`
+had weighed exactly two options for three releases — shrink the icons, or wrap
+to two rows — and rejected the second because #pm-nav's 3.5rem height is
+load-bearing well outside that file (#landing and #experience-overlay pad their
+tops by it; every scene stylesheet clears it at top:4.5rem). Scrolling is the
+third, and it costs none of that. The bar stays 3.5rem, so nothing downstream
+moves. And it retires a debt the same comment had been carrying in the open:
+"10 x 44px is 440px, so a single row of ten cannot give every icon a 44x44
+target on a 375px phone — that's arithmetic, not a choice." The arithmetic was
+right; the choice it defended wasn't the only one. Icons are now a full 44 x 44
+at every width, up from 30.4px at 320px.
+
+**What is derived now.** The formula's job changed from "guarantee a fit" to
+"say where the fit ends":
+
+    slot      = min(84px, (100vw - 2*padding - rule) / units)
+    icon size = 44px                     fixed, no longer derived down
+    gap       = max(0, slot - icon size)
+
+    row fits           <=>  100vw >= units*44 + rule + 2*padding
+    gap reaches 2.5rem <=>  100vw >= units*84 + rule + 2*padding
+
+`units` is `--nav-count` plus `--nav-extra`, and `--nav-extra` is 1 exactly
+when #fullscreen-toggle is showing — set by main.js from the same feature test
+that reveals the button, because on a platform with no Fullscreen API (iOS
+Safari) the row must not reserve a slot for a control that is display:none.
+`rule` is the 1.5rem separation before the toggle, reserved in the formula so
+it stays honest about the whole row.
+
+**Measured, not trusted from the algebra.** With today's twelve scenes and the
+toggle showing (units = 13) the two thresholds are 612px and 1132px, and both
+land exactly there in a browser: at 612px the row's scrollWidth equals its
+clientWidth, at 611px it overflows, and the gap reaches exactly 40px at 1132px.
+Above 1132px the row is pixel-for-pixel what it always was. At 375px eight
+icons show and the ninth is cut mid-glyph at the edge, which is the scroll
+affordance; scrolling to the end puts the toggle's right edge at 367px in a
+375px viewport, i.e. flush against its own 8px padding, so the last item is
+fully reachable.
+
+**Two things that had to be gotten right rather than eyeballed.**
+
+- *Centring a row that may overflow.* `justify-content: center` is the wrong
+  tool: scrollable overflow only extends toward the end side, so a centred row
+  that overflows puts its first icons at negative offsets no scrolling can
+  reach — which is the exact bug in that file's log, arrived at from a new
+  direction. Fixed with two `flex: 1 0 0` pseudo-element spacers, which split
+  free space while there is any and collapse to zero when there isn't. `safe
+  center` would also work in current browsers; spacers work in all of them and
+  need no feature query.
+- *The spacers' negative margins.* `gap` applies between every pair of flex
+  items, so two spacers add two gaps the fit arithmetic never reserved, and the
+  row would have overflowed by exactly one gap at every width where a gap
+  exists — that is, it would have scrolled on desktop. Caught as arithmetic
+  before it was written, and the cancelling margins are checked in the same
+  terms: row = 11*slot + 44 + rule against an available 12*slot + rule, which
+  holds for every slot >= 44px.
+
+**The toggle is now nav furniture, not a button.** No circle, no scrim, no
+backdrop blur: a bare 20px glyph at opacity 0.5 rising to 1 on hover, matching
+.nav-icon exactly. The 0.5 is reused rather than re-derived — it is the value
+.nav-icon's own comment measured at 5.3:1 against the bar's ground, past WCAG
+1.4.11's 3:1 for a non-text control, and this is the same white glyph on the
+same ground. It is still not a scene, and the row is otherwise a scene
+switcher, so a 1px hairline sits in the reserved space before it. The hairline
+is drawn in CSS rather than marked up: it is a visual grouping cue, and a `<hr>`
+or `role="separator"` would announce a division of the navigation that does not
+exist.
+
+**Nothing downstream needed changing, and that was checked rather than
+assumed.** main.js's focus ring collects `.nav-icon`, `#site-title` and
+`#fullscreen-toggle` separately and sorts by document order, so the toggle
+simply lands after the icons where a keyboard visitor now expects it (and a
+focused off-screen icon scrolls itself into view, which is better than the
+row's previous behaviour of having no off-screen icons because they were all
+squeezed). prerender.js's nav gate counts `.nav-icon` against the registry —
+the toggle carries no `data-scene` and is not one — so moving it inside `<nav>`
+changes nothing there.
+
+**One stale number found on the way.** `--nav-count` in the stylesheet was 11
+while index.html has carried 12 icons since Psyshell shipped. Both gates that
+were supposed to catch that drift watch the markup against the registry, and
+neither reads the stylesheet. Harmless as it turned out — and now more
+harmless, because with a fixed icon size that fallback only sets the pre-script
+gap, where before it also set the pre-script icon width and a stale count meant
+a momentarily clipped row. Corrected to 12 and the changed failure mode
+recorded at the declaration.
+
+**Files:** `styles/main.css` (nav sizing, scroll, spacers, toggle restyled, the
+z-index scale and the responsive note updated), `index.html` (the button moved
+inside `<nav>`), `src/main.js` (`--nav-extra`), `psyshell.css` (a comment that
+described the old top-left circle as a live constraint — the corner is free
+now, the ordinal stays where it is anyway, and the note says why so the freed
+corner doesn't read as an invitation).
+
 ## 4.8.9 (2026-09-04)
 
 **Cleanup, optimisation, and a second kind of traffic.** The optimisation half
