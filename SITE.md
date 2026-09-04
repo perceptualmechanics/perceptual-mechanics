@@ -120,45 +120,57 @@ counts the words twice and produces a plausible number.
 
 ---
 
-## The landing page — the field
+## The landing page
 
-The landing page is not a grid of twelve tiles. It is **one plane with twelve
-scenes on it, each at a position measured from its own rendered frames.** A grid
-asserts that all twelve are the same kind of thing, equally weighted and equally
-sized; that was true at five and is already slightly false at twelve.
+A grid of twelve circular tiles — two columns on a phone, three or four across
+as the viewport allows, each tile a live preview of its scene. It is a real
+`<ul>` of twelve `<li><button>` in a stated order, which is what makes it work
+with JavaScript off, for a crawler, and for a screen reader.
 
-The two axes, both measured 2026-09-04 at v4.9.0 and stored with their rulers in
-`src/utils/sceneField.js`:
+**The grid asserts that all twelve scenes are the same kind of thing**, equally
+weighted and equally sized. That is a real limitation and it is worth naming:
+true at five, already slightly false at twelve, and a wall of circles at twenty.
 
-| Axis | What it is | Range across the twelve |
-|---|---|---|
-| **x — spatial complexity** | Share of a frame's spectral power above a quarter of Nyquist, Hann-windowed, mean of twelve frames | 1.03 % (Sphere) to 60.5 % (Butterfly) |
-| **y — motion** | Mean absolute grayscale difference between frames 0.1 *scene*-seconds apart | 0.00016 (Library) to 0.0432 (Butterfly) |
+**It was replaced once and put back.** v4.10.0 shipped "the field" — twelve
+scenes on one plane, each at a position measured from its own rendered frames,
+settling out of a sorted block the way a two-gas box mixes. It worked. It was
+reverted at 4.10.1 because **the problem it solves is not here yet**: twelve
+tiles in two rows is fine, and the ceiling on scene count is the quality bar
+rather than the layout. Solve it when it hurts — which is also cheaper, because
+by then the actual constraint is known.
 
-Both are placed on a log scale, because both span more than two orders of
-magnitude and a linear scale piles nine of the twelve into one corner.
+The measurements and the placing arithmetic are kept, shelved and out of the
+build, in `src/utils/sceneField.js` — the same status as `src/scenes/spectra/`.
+**The condition for unshelving is a thing you can look at: when the tiles get
+too small to read.** The revert was cheap, and will be again, because the field
+was a layout applied over this same list rather than a replacement for it — the
+markup never changed.
 
-**The axes are independent, and that was the gate the whole idea had to clear**
-— Spearman +0.38 at p = 0.23. Complexity and motion are separate properties:
-Scroll is structurally busy and almost perfectly still; Sphere is the smoothest
-frame on the site and one of the most active.
+Two findings from that work outlived the feature and are recorded here rather
+than in the shelved file: the word-count correlation above, and the entropy
+negative result below.
 
-**Two departures from true position, both deliberate and both stated in the
-code.** Repulsion separates the one genuinely colliding pair (Orbiter and
-Apollo, 0.063 of the diagonal; the median pair distance is 0.403), so a repelled
-tile is not exactly where its measurements put it. And the tiles keep a small
-wander at rest — equilibrium is detailed balance, not stillness, and a static
-arrangement would make the box a chart with a metaphor stuck on it.
+### The entropy axis, and why it is a dead end
 
-**The field is a layout over the list, not a replacement for it.** The markup is
-the same `<ul>` of twelve `<li><button>` it has always been, so JavaScript off,
-a crawler, a screen reader, and the moment before the field initialises all get
-the grid — which is a correct index. `scripts/prerender.js` fails the build if a
-registered scene has no measured position.
+Recorded so nobody tries it a second time. Shannon entropy of each scene's
+published writing was measured three ways as a candidate axis and dropped:
 
-**A scene reworked hard enough to change how busy it looks needs re-measuring.**
-No gate can detect that; the numbers are measurements of frames, not
-derivations.
+- **Character-level** spans **0.109 bits** across the nine publishing scenes
+  (4.161–4.270). The stated threshold for calling a ruler noise was 0.1.
+- **Every whole-scene ruler is word count in disguise.** Correlation with
+  log(word count): word-level +0.965, conditional H₂ +0.959, H₃ +0.979, gzip
+  −0.857.
+- **Corrected, it can place eight of twelve.** Rarefied to a common 250-word
+  sample it survives — spread 0.483 bits against a mean bootstrap SD of 0.102 —
+  but Harmonics, Outside and Psyshell publish no sentences, and Butterfly's six
+  words carry no estimate under any correction. That is a coverage failure, not
+  a convention problem.
+
+The visual rulers that replaced it, for the record: spatial complexity (share of
+spectral power above a quarter of Nyquist, 1.03 %–60.5 % across the twelve) and
+motion (mean absolute frame difference at 0.1 scene-seconds, 0.00016–0.0432).
+Independent of each other at ρ = +0.38, p = 0.23, and independent of every text
+ruler — which was the gate the idea had to clear, and did.
 
 ---
 

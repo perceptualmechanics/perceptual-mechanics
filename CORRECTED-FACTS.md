@@ -70,8 +70,8 @@ publishing scenes and every one of them has been true and misleading at once.
 | "The scenes differ in textual entropy" | At the **character** level they differ by **0.109 bits** total (4.161–4.270). The stated threshold for calling a ruler noise was 0.1 bits. | `sceneField.js` header |
 | "Scroll has the highest entropy" (or any whole-scene ranking) | Every whole-scene ruler is **word count**: word-level r = +0.965 with log N, conditional H₂ +0.959, H₃ +0.979, gzip −0.857. The ranking is a ranking of length. | `sceneField.js` header |
 | An entropy figure quoted bare | Quote the **unit and the correction**: e.g. "6.77 bits per word, plugin estimate on 300 contiguous 250-word blocks, mean ± 0.14". Uncorrected whole-scene figures are not comparable between scenes. | `sceneField.js` header |
-| "Entropy places the scenes on the landing field" | It does not, and it was not shipped. It can place **eight of twelve** — Harmonics, Outside and Psyshell publish no sentences, and Butterfly's six words carry no estimate under any correction. The field's axes are visual complexity and motion. | `SITE.md`, "The landing page — the field" |
-| "The landing field's positions are exact" | Two stated departures: repulsion separates Orbiter/Apollo, and every tile keeps a small wander at rest. | `sceneField.js`, `relax()` |
+| "Entropy places the scenes on the landing field" | It does not. It can place **eight of twelve** — Harmonics, Outside and Psyshell publish no sentences, and Butterfly's six words carry no estimate under any correction. | `SITE.md`, "The landing page" |
+| "The landing page is a measured field" | It was, for one release. **v4.10.0 shipped it and v4.10.1 reverted it** — the landing page is a grid, and the field is shelved out of the build in `src/utils/sceneField.js`. The measurements are still good; nothing renders them. | `SITE.md`, "The landing page" |
 
 **Why this section exists rather than a footnote:** the useful finding from that
 measurement — that word count predicts visual stillness at r = −0.862 — is

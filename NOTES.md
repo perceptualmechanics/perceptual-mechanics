@@ -587,6 +587,70 @@ described are unchanged.)
   worth trimming, orrery.js's texture generators and first-person rig are the
   two most self-contained chunks to split out first.
 
+## 4.10.1 (2026-09-04)
+
+**The field is reverted. The landing page is a grid again.** Not because it
+failed — it shipped, it worked, and every check in 4.10.0's entry passed — but
+because **the problem it solves is not here yet.** Twelve tiles in two rows is
+fine. Twenty would be a problem, and there are not twenty; the last two days
+established that the ceiling on scene count is the quality bar, not the layout.
+Solve it when it hurts, which is also cheaper, because by then the actual
+constraint is known.
+
+**The revert cost almost nothing, and that is a fact about how 4.10.0 was
+built.** The field was a layout applied over the existing list — absolute
+positioning and a transform on the same `<ul>` of twelve `<li><button>` that has
+always been there. So reverting is removing a transform rather than rebuilding a
+page: one block out of `main.js`, two rule groups out of `main.css`, one import
+and one gate out of `prerender.js`. `index.html` was never touched in either
+direction.
+
+**Shelved, not deleted.** `src/utils/sceneField.js` keeps the twelve measured
+pairs, the log transform, the anchored relaxation and the whole argument for the
+axes — with a header saying it is out of the build and why, the same status
+`src/scenes/spectra/` has. Nothing imports it, so Vite never sees it; confirmed
+absent from every bundle. Re-measuring costs about 54 minutes of harness time,
+so the numbers are kept rather than re-derived.
+
+**The condition for unshelving is a thing you can look at**, not a judgement
+call: *when the tiles get too small to read.*
+
+**The build gate came out with the feature.** A gate enforcing "every registered
+scene has a measured position" for a layout nothing renders is dead weight that
+looks load-bearing, which is precisely the failure mode `CORRECTED-FACTS.md`
+exists to catch. It goes back in with the import.
+
+**What the detour produced, and where it lives now** — the reason none of this
+was wasted:
+
+- **The word-count correlation.** Scenes with more writing are the stiller,
+  smoother ones: r = −0.862 against visual complexity, −0.798 against motion,
+  across the nine publishing scenes. A scene you read holds still. In `SITE.md`,
+  in the corpus section, true regardless of what the index looks like.
+- **A clean negative result on text entropy**, recorded so nobody tries it
+  again: character-level spans 0.109 bits against a 0.1-bit noise threshold,
+  every whole-scene ruler is word count in disguise (H₃ at +0.979 with log N),
+  and corrected properly it can place only eight of twelve — Butterfly's six
+  words being a coverage failure rather than a convention problem. In `SITE.md`
+  under "The landing page", with the misquotable versions in
+  `CORRECTED-FACTS.md`.
+- **The harness rule.** Sample at scene-time, drive the clock, use a fixed
+  number of boot frames, and report the invalid attempts. In `STANDARDS.md`
+  under "Measuring a scene" — general enough to outlive the thing it was
+  written for, which is the test for whether it belonged in STANDARDS at all.
+- **The index is a real list with a layout on top.** Worth keeping as a
+  property rather than an accident: it is what made the field's no-JS fallback
+  free, and it is what made this revert a deletion.
+
+**Verified after:** desktop 1440×820 back to 4/4/4 at 272px with `.rows-forced`
+and both row breaks live; phone 390×844 back to two columns × six rows at 171px;
+no field DOM, no console errors, `sceneField.js` in no bundle.
+
+**Files:** `src/main.js`, `styles/main.css`, `scripts/prerender.js` (field code
+removed; `.rows-forced`'s condition back to what it was),
+`src/utils/sceneField.js` (shelved in place), `SITE.md`, `CORRECTED-FACTS.md`.
+`STANDARDS.md` is untouched — the harness rule stands on its own.
+
 ## 4.10.0 (2026-09-04)
 
 **The landing page becomes a field.** Twelve scenes on one plane, each at a

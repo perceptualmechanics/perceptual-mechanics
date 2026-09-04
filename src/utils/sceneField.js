@@ -1,3 +1,35 @@
+// ─── SHELVED, 4.10.1 — nothing imports this file ───────────────────────────
+// Same status as `src/scenes/spectra/` and for the same kind of reason: this
+// is real, correct, measured work that is deliberately out of the build. It is
+// not imported by `src/main.js`, not imported by `scripts/prerender.js`, and
+// therefore not in any bundle — Vite never sees it.
+//
+// WHAT IT WAS. 4.10.0 replaced the landing grid with a field: twelve scenes on
+// one plane, each at a position measured from its own rendered frames, settling
+// out of a sorted block the way a two-gas box mixes. It shipped, it worked, and
+// it was reverted one release later — not because it failed but because the
+// problem it solved is not here yet. Twelve tiles in two rows is fine. Twenty
+// would be a problem, and the last two days established that the ceiling on
+// scene count is the quality bar, not the layout.
+//
+// WHEN TO UNSHELVE. When the tiles get too small to read — that is the
+// condition, and it is a thing you can look at rather than a judgement call.
+// The revert was cheap in the first place because the field was a layout over
+// the existing list rather than a replacement for it (the markup never
+// changed), so bringing it back is `git show v4.10.0` for main.js's field
+// block and main.css's `.is-field` rules, plus re-importing this file.
+//
+// WHAT IS STILL TRUE HERE. The measurements below and the reasoning in the
+// header that follows. Re-measuring costs about 54 minutes of harness time, so
+// the numbers are kept rather than re-derived. They describe the scenes as of
+// v4.9.0 — **a scene reworked hard enough to change how busy it looks needs
+// re-measuring**, and no gate can detect that, because these are measurements
+// of frames rather than derivations from the code.
+//
+// The two findings that outlived the feature are in the knowledge base, not
+// here: the word-count correlation is in SITE.md, and the entropy negative
+// result is in SITE.md and CORRECTED-FACTS.md.
+
 // ─── The field: where each scene sits, and why ──────────────────────────────
 // The landing page stops being a grid at 4.10.0. A grid asserts that all
 // twelve scenes are the same kind of thing, equally weighted and equally
@@ -5,10 +37,13 @@
 // file holds what replaces the assertion: two measured properties per scene,
 // and the arithmetic that turns them into a position.
 //
-// NO DOM AND NO THREE.JS IN THIS FILE. `scripts/prerender.js` imports it to
-// gate the measurements against the registry at build time, exactly as it does
-// for the corpus — a scene added without a position must fail the build rather
-// than quietly land at the origin.
+// NO DOM AND NO THREE.JS IN THIS FILE. While it shipped, `scripts/prerender.js`
+// imported it to gate the measurements against the registry at build time,
+// exactly as it does for the corpus — a scene added without a position failed
+// the build rather than quietly landing at the origin. That gate came out with
+// the feature: a build gate enforcing completeness for something nothing
+// renders is dead weight that looks load-bearing. It goes back in with the
+// import if this is ever unshelved.
 //
 // ─── What was measured, and with what ruler ─────────────────────────────────
 // Both axes come from rendered frames, sampled 2026-09-04 at v4.9.0. Every
