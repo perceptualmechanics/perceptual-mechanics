@@ -587,6 +587,70 @@ described are unchanged.)
   worth trimming, orrery.js's texture generators and first-person rig are the
   two most self-contained chunks to split out first.
 
+## 4.9.1 (2026-09-04)
+
+**The landing page on a phone.** Scott sent two screenshots from an iPhone.
+Three things in them, two fixed and one not reproduced.
+
+**One tile per row.** The base tier stacked the grid into a single column, so
+twelve scenes measured **2,856px of scrolling against an 844px viewport** —
+three and a half screens to read an index. That is the wall-of-circles problem
+the entropy-box brief describes, reached from the other direction: not too many
+tiles per row, but one. The row is the base now and the same twelve come to
+1,378px at 390px wide, and 1,168px at 320px. Under half, at every width.
+
+The two columns are declared on `.preview-wrapper` as `flex: 0 0 calc(50% -
+0.5rem)` — a share of the LIST — and not on the tile as a share of the
+viewport. The first attempt did use the viewport (`min(43vw, 200px)`) and it
+was wrong by four pixels at 320px: 43vw is 137.6, and two of those plus one
+1rem gap and the list's 2rem of padding come to 324 against a 320px viewport,
+so the narrowest phone silently fell back to one column while every other width
+worked. Caught by measuring tiles-per-row at ten widths rather than by looking
+at one. `calc(50% - 0.5rem)` is exact by construction — two of them plus the
+gap is 100% of the list's content box — and it also sees a classic scrollbar,
+which a vw unit cannot and which `#landing`'s own `overflow-y` can produce.
+
+**The tile-size tier moved 481px → 601px.** With a fitted tile below and a
+fixed 224px tile above, 481 was a cliff rather than a step: two 224px tiles
+plus the gap and padding need 496px, so the grid would have dropped from two
+columns back to one at exactly the width the tier began. 601 is where the two
+agree on two columns, and it is also where `#landing-bottom-fade` and
+`#landing-textlink` already change behaviour — the phone layout now ends at one
+width instead of three.
+
+**The footer scrim was a tint, not a scrim.** `#landing-bottom-fade` was 7rem
+tall ramping 0.9 → transparent, but `#landing-textlink` sits at bottom 5.2rem —
+74% of the way up that ramp, where the gradient has fallen to about 0.23. So
+"READ THE WRITING ON ITS OWN" was being read against whatever tile happened to
+be scrolled behind it, with nothing but a text-shadow in between, and over
+Library's bookshelf it was illegible. Now 10rem with the ramp held near-opaque
+through the band the chrome actually occupies (measured: the link occupies
+52–60% of the ramp at 390×844, `#site-title` 12–29%) and released above it.
+
+Verified by screenshotting the band twice, once with the scrim and once
+without, with the chrome itself hidden so the two shots differ only by the
+scrim — the first version of that measurement left the white text in both and
+inflated the ratio. Under the link, residual brightness went from 0.44 of the
+unscrimmed tile to **0.048**, and the brightest pixel behind the text from
+248/255 (a white book spine) to 13/255.
+
+**Not reproduced: the stretched preview.** In Scott's first screenshot the
+Sphere thumbnail is a tall ellipse rather than a circle, which cannot be a
+sphere's silhouette at any camera angle. Rendered at 320/360/375/390/414/480
+and it is a circle every time, so this is iOS Safari or a transient state
+during load, and it is recorded here rather than guessed at. What the numbers
+DO explain is the softness in that screenshot and not the shape: the preview
+renderers cap `devicePixelRatio` at 2 site-wide (a deliberate, documented
+decision — twelve live WebGL canvases on a phone is exactly the wrong place to
+spend fill rate), so on a DPR-3 iPhone a 200px tile is drawn at 400px and
+scaled up. The tiles are smaller now, which narrows the gap without changing
+the cap.
+
+**Files:** `styles/main.css` only — `#scene-previews` (row base, bottom padding
+that clears the scrim), `.preview-wrapper` (the two columns),
+`.preview-container` (fitted width, `aspect-ratio`, tier moved to 601),
+`#landing-bottom-fade` (height, stops, tier moved to 601).
+
 ## 4.9.0 (2026-09-04)
 
 **The nav row scrolls, and the fullscreen control moves into it.** Two changes

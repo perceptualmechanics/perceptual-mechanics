@@ -934,23 +934,33 @@ html, body {
   flex-wrap: wrap;
   justify-content: center;
   align-items: center;
-  /* Mobile-first (standing convention, see STANDARDS.md): base targets
-     the smallest viewport — a single stacked column, generous gap, extra
-     bottom padding so the last tile clears #landing-bottom-fade. Widens
-     back out in two tiers below as the viewport grows. */
-  flex-direction: column;
-  gap: 1.5rem;
-  padding: 1rem 1rem 3rem;
+  /* Mobile-first (standing convention, see STANDARDS.md).
+     ─── 4.9.1: two columns on a phone, not one ─────────────────────────────
+     The base tier stacked every tile into a single column, which at twelve
+     scenes measured 2,856px of scrolling against an 844px viewport — three
+     and a half screens to see an index. That is the "wall of circles nobody
+     scans" the entropy-box brief describes, arrived at by a different route:
+     not too many tiles per row, but one per row.
+     The row is the base now and the tile sizes itself from the viewport
+     (.preview-container), so two fit side by side from 320px up and the same
+     twelve tiles come to about 1,250px — under half. The extra bottom padding
+     lets the last row scroll clear of #landing-bottom-fade and the fixed
+     footer chrome inside it, which it could not do at 3rem. */
+  flex-direction: row;
+  gap: 1rem;
+  padding: 1rem 1rem 8rem;
 
-	@media (min-width: 481px) {
-		/* .preview-row-break already turns itself off at 1200px (see its own
-		   comment below), so #scene-previews is back to ordinary
-		   auto-wrapping flex-wrap by the time the min-width:769px tier
-		   applies — nothing further to override there beyond a tighter gap
-		   for the narrower viewport; tile size stays the same 240px as the
-		   desktop base. */
-		flex-direction: row;
-		gap: 1rem;
+	/* 601, not 481. The tier below sets a fixed 224px tile, and two of those
+	   plus the gap and padding need 496px — so at 481px exactly the grid would
+	   have dropped from two columns back to one, a cliff at the boundary
+	   rather than a step. 601 is where the fixed size and the fitted one agree
+	   on two columns, and it is also where #landing-bottom-fade and
+	   #landing-textlink already change behaviour, so the phone layout now ends
+	   at one width instead of two.
+
+	   .preview-row-break turns itself off below 1200px (see its own comment),
+	   so this is ordinary auto-wrapping flex-wrap until then. */
+	@media (min-width: 601px) {
 		padding: 1rem;
 	}
 
@@ -1021,16 +1031,42 @@ html, body {
    comment above), hidden once the min-width:481px tier switches
    #scene-previews back to a row and #landing's own padding-bottom
    already keeps the last row clear of the fixed footer on its own. */
+/* The ground the fixed footer chrome stands on while the grid scrolls under
+   it. Two numbers were wrong until 4.9.1, and the second one is why: the fade
+   was 7rem tall ramping from 0.9 to transparent, but #landing-textlink sits at
+   bottom:5.2rem — 74% of the way up a 7rem ramp, where the gradient has fallen
+   to about 0.23. "READ THE WRITING ON ITS OWN" was therefore being read
+   against whatever tile happened to be behind it, with nothing but a text-
+   shadow between them, and over Library's bookshelf it was simply illegible.
+   Found by looking at a phone screenshot, not by reading this file.
+   Now 10rem, with the ramp held near-opaque through the band the chrome
+   actually occupies and released above it. The stops are placed against
+   measured positions rather than guessed: at 390x844 the fade spans viewport
+   684-844, #landing-textlink occupies 52-60% of that ramp and #site-title
+   12-29%, so the hold runs to 62% and the fade proper gets the top 38%
+   (61px), which is still a soft edge. Checked by screenshotting the band with
+   the fade on and off and comparing luminance: the first attempt held 0.80
+   under the link, leaving a white Library spine at 51/255 against 140/255
+   text — about 2.6:1, which is not a scrim, it is a tint. */
 #landing-bottom-fade {
   display: block;
   position: fixed;
   left: 0; right: 0; bottom: 0;
-  height: 7rem;
+  height: 10rem;
   z-index: 50;
   pointer-events: none;
-  background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0) 100%);
+  background: linear-gradient(to top,
+    rgba(0,0,0,0.97) 0%,
+    rgba(0,0,0,0.95) 62%,
+    rgba(0,0,0,0.55) 80%,
+    rgba(0,0,0,0) 100%);
 
-	@media (min-width: 481px) {
+	/* 601 to match #landing-textlink, which moves to the bottom-left corner at
+	   exactly this width and no longer needs a scrim behind it, and
+	   #scene-previews, which stops needing the extra bottom padding there. The
+	   three used to disagree: the fade switched off at 481 while the link
+	   stayed centred over the grid until 601. */
+	@media (min-width: 601px) {
 		display: none;
 	}
 }
@@ -1041,6 +1077,22 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: center;
+
+  /* 4.9.1: the phone tier's two columns are declared HERE, as a share of the
+     list, and not on the tile as a share of the viewport. A vw-based tile was
+     the first attempt and it was wrong by four pixels at 320px — 43vw is
+     137.6, two of those plus one 1rem gap and the list's 2rem of padding come
+     to 324 against a 320px viewport, so the narrowest phone silently fell
+     back to a single column while every other width worked. vw also cannot
+     see a classic scrollbar, which #landing's own overflow-y can produce.
+     `calc(50% - 0.5rem)` is exact by construction instead: two of them plus
+     the 1rem gap is 100% of the list's content box, whatever that turns out
+     to be. */
+  flex: 0 0 calc(50% - 0.5rem);
+
+	@media (min-width: 601px) {
+		flex: 0 0 auto;
+	}
 }
 
 .preview-container {
@@ -1054,12 +1106,17 @@ html, body {
   border: none;
   font: inherit;
   display: block;
-  /* Mobile-first (standing convention, see STANDARDS.md): base targets
-     the smallest viewport (200px tile); the min-width:481px tier widens
-     back out to the desktop 240px size once #scene-previews itself has
-     switched back to a row (see its own min-width:481px tier above). */
-  width: 200px;
-  height: 200px;
+  /* Mobile-first (standing convention, see STANDARDS.md). Fitted rather than
+     fixed as of 4.9.1: the tile fills the column .preview-wrapper hands it
+     (see that rule for why the column is measured there and not here), up to
+     a 200px cap. The cap matters — without it a 600px phone in landscape
+     would draw two 290px tiles and lose the sense that these are thumbnails.
+     aspect-ratio rather than a matching height, because the width is now a
+     percentage and there is nothing for a height percentage to resolve
+     against. */
+  width: min(100%, 200px);
+  aspect-ratio: 1;
+  height: auto;
   cursor: pointer;
   border-radius: 50%;
   overflow: hidden;
@@ -1091,8 +1148,10 @@ html, body {
 	   same orphan row the desktop layout was being fixed for, one tier down.
 	   At 224 three fit from 736px and the same eleven wrap to 3/3/3/2. The
 	   cost is 7% of tile diameter in a band between roughly 736 and 830px;
-	   the alternative was six rows with a single tile at the bottom. */
-	@media (min-width: 481px) {
+	   the alternative was six rows with a single tile at the bottom.
+	   Moved from 481px to 601px at 4.9.1 — see #scene-previews' own tier for
+	   why the boundary was a cliff at 481. */
+	@media (min-width: 601px) {
 		width: 224px;
 		height: 224px;
 	}
