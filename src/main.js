@@ -900,14 +900,39 @@ function tileLayout(n, width, height) {
     const byHeight = (height - rowGaps * TILE_GAP - LIST_PAD) / rows;
     const tile = Math.min(byWidth, byHeight, TILE_MAX);
     if (tile < TILE_FLOOR) continue;
-    // Ties go to fewer rows. A tie means two arrangements show the tiles at the
-    // same size, and at the same size the shallower one puts more of the set in
-    // the eye at once — which is the requirement's own spirit.
-    if (!best || tile > best.tile + 0.5 || (Math.abs(tile - best.tile) <= 0.5 && rows < best.rows)) {
-      best = { cols, rows, tile: Math.floor(tile) };
-    }
+    // ─── Tie-breaks, in order, and only ever among ties ─────────────────────
+    // Tile size decides first and nothing below can overrule it — that is the
+    // requirement. But two arrangements often show the tiles at exactly the
+    // same size, and then these apply:
+    //
+    //   1. No orphan last row. A single tile under two full rows reads as an
+    //      afterthought rather than as the newest scene. That rule was
+    //      explicit in the scoring function 4.11.0 replaced, and dropping it
+    //      cost nothing at twelve scenes — twelve divides evenly into every
+    //      column count worth choosing — so its absence was invisible until a
+    //      THIRTEENTH scene was measured, where 1600x900 produced 6/6/1 and
+    //      5/5/3 at an identical 214px tile.
+    //   2. Then fewer rows, since at equal size the shallower arrangement puts
+    //      more of the set in the eye at once.
+    //
+    // Both are free by construction: they choose between arrangements the
+    // requirement has already declared equally good.
+    // `tile` is kept as the raw float here and floored only by the caller. The
+    // first version stored Math.floor(tile) and then compared the next
+    // candidate's float against it, so 214.67 beat a stored 214 by "more than
+    // half a pixel" and every tie was scored as an improvement — which is why
+    // the orphan rule below appeared to do nothing. The comparison and the
+    // stored value have to be the same quantity.
+    const orphan = n % cols === 1 && rows > 1;
+    if (!best) { best = { cols, rows, tile, orphan }; continue; }
+    const better =
+      tile > best.tile + 0.5 ? true :
+      tile < best.tile - 0.5 ? false :
+      best.orphan !== orphan ? !orphan :
+      rows < best.rows;
+    if (better) best = { cols, rows, tile, orphan };
   }
-  return best;   // null when nothing fits legibly
+  return best && { ...best, tile: Math.floor(best.tile) };   // null when nothing fits legibly
 }
 
 function applyDerivedLayout() {

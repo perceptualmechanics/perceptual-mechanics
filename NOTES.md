@@ -587,6 +587,68 @@ described are unchanged.)
   worth trimming, orrery.js's texture generators and first-person rig are the
   two most self-contained chunks to split out first.
 
+## 4.11.3 (2026-09-04)
+
+**Two tie-break bugs in the landing layout, found by measuring a thirteenth
+scene before building one.** Scott's brief for *Medium* names two layout costs
+and says both must be **measured rather than assumed** before the scene starts.
+Doing that surfaced a regression 4.11.0 had introduced and twelve scenes had
+hidden.
+
+**How it was measured.** A scratch thirteenth scene — registry entry, nav icon,
+landing tile, a stub module — built into the working copy and never committed,
+so the numbers come from the real arithmetic rather than from a re-implementation
+of it. Worth recording because it also exercised the build gates: the 4.8.9
+`ABSENT` gate fired immediately, correctly, because Psyshell's `/text/` page
+names the scenes that publish no writing in prose and a thirteenth silent scene
+makes that sentence wrong. **A new non-publishing scene is a two-file change,
+and the gate says so before anything ships.**
+
+**The orphan row came back.** The scoring function 4.11.0 replaced refused a
+last row of one outright — "a single tile under two full rows reads as an
+afterthought rather than as the newest scene". The rewrite optimises tile size
+and dropped that rule, which cost nothing at twelve because twelve divides
+evenly into every column count worth choosing. At thirteen it appears
+immediately: 1600×900 and 1440×900 both produced **6/6/1**, when 5/5/3 was
+available at an identical 214px tile.
+
+Restored as a tie-break rather than as a rule, which is the honest shape: tile
+size decides first and nothing can overrule it, and among arrangements the
+requirement has already declared equally good, prefer no orphan last row, then
+fewer rows. Free by construction.
+
+**And it did nothing at first, because of a second bug underneath it.** The
+candidate's tile size was stored as `Math.floor(tile)` and the next candidate's
+raw float compared against that stored integer — so 214.67 beat a stored 214 by
+"more than half a pixel" and **every tie was being scored as an improvement.**
+Not just the orphan rule: the "fewer rows" tie-break had never fired either. The
+comparison and the stored value have to be the same quantity; the floor moves to
+the caller.
+
+That is why the first fix measured as no change at all, which is the useful
+signal — a tie-break that changes nothing is either unnecessary or unreachable,
+and it is worth finding out which.
+
+**Measured after, at thirteen tiles**, every desktop width fitting above the
+fold with zero overflow: 1920×1080 5/5/3 at 272px, 1920×800 7/6 at 249, 1600×900
+and 1440×900 5/5/3 at 214 (was 6/6/1), 1440×820 5/5/3 at 188, 1440×700 7/6 at
+180, 1280×800 and 1160×800 5/5/3 at 181, 1024×768 5/5/3 at 170. 768×1024 and the
+phones fall back to scrolling, as the requirement says they should.
+
+**And at twelve**, unchanged everywhere except 1024×768, which moves from 5/5/2
+to **4/4/4** at the same 170px tile — the tie-break doing its job, since both
+are orphan-free at equal size and 4/4/4 is the more regular of the two.
+
+**The nav, which the brief flagged as the harder ceiling, has already been
+resolved and this confirms it.** The brief's figures — twelve icons at 25.3 ×
+44px on a 320px phone, clearing WCAG AA by 1.3px, with a thirteenth giving
+23.4px and failing — describe the row as it was **before 4.9.0 made it
+scrollable**. Measured now with thirteen icons: **44 × 44 at every width from
+320px up**, scrolling below 768px, with the last icon reachable at each. The
+ceiling the brief was written against no longer exists.
+
+**Files:** `src/main.js`.
+
 ## 4.11.2 (2026-09-04)
 
 **No behaviour change: an answer, written where the question gets asked.**
