@@ -18079,3 +18079,41 @@ his framings rather than mine:
 - And a log entry for this run, whose own lesson is that **a stub smoother than
   a person will not reproduce a person's bugs.** Every one of the four defects
   this afternoon was found by playing, with the benches green throughout.
+
+## 4.11.12 (2026-09-04)
+
+**Scott asked what the number in the URL is, and answering it found the comment
+that explains it had been wrong for three releases.**
+
+The number is the other hand's seed. `#medium/1368767146` brings back the same
+other hand — the same burst and pause rhythm, the same sequence of impulses, the
+same place on the board it started from. Every session takes a fresh one and
+writes it into the hash as it opens, so a séance is linkable while you are in it.
+
+What a link does *not* bring back is the message, and that is the whole scene
+rather than a limitation of the link. Measured, on one seed:
+
+    a hand resting on the cup     XBOXEDUCATION. USDAUGHTER, SST
+    a visitor who nudges it       SERROR
+    nobody touching it            (nothing — nothing moves)
+
+Identical only against an identical visitor, and against one it is exact. **Two
+people following the same link and both resting their hands get two similar
+séances, not one séance.** Which is the correct behaviour for a scene whose
+central claim is that the message is not stored anywhere to be carried.
+
+**The comment said the opposite.** It said the tape replays "only if nobody
+touches the cup" — true when the board ran on its own, and false since 4.11.7,
+where nobody touching the cup means nothing happens at all. So the one condition
+it named as reproducible is now the one that produces an empty tape.
+
+This is `WORKING-PROTOCOL.md`'s oldest failure mode — a document going wrong by
+standing still while the code moves — and it is worth logging because of where
+it happened: **not in a `.md` file at the other end of the repo, but in a comment
+four lines above the code that changed, written by the session that changed it.**
+Proximity is not protection. The rule that a correction goes into a file rather
+than a reply has a corollary: when a change contradicts a comment, the comment is
+part of the change, and "I will have seen it, it is right there" is exactly the
+reasoning that leaves it standing.
+
+Found because somebody asked what a number meant.

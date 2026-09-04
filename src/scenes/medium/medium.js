@@ -111,13 +111,32 @@ export function createMedium(container, { preview = false, initialArg = null, on
   let reduced = prefersReducedMotion();
 
   // ─── The seed ─────────────────────────────────────────────────────────────
-  // The other hand's wander is seeded, so a séance can be linked to:
-  // `#medium/8134` replays the same hand. It replays the same TAPE only if
-  // nobody touches the cup, which is the honest version of a shareable link
-  // here — the moment a visitor puts a finger down they are in it, and the
-  // board says something else. Stated rather than hidden, because a link that
-  // silently means something different for the person who follows it is worse
-  // than no link.
+  // The number in the address bar. The other hand's wander is seeded, so
+  // `#medium/1368767146` brings back THE SAME OTHER HAND — the same burst and
+  // pause rhythm, the same sequence of impulses, the same place on the board it
+  // started from. Every session gets a fresh one and writes it into the hash as
+  // it opens, so the séance you are in is always linkable while you are in it.
+  //
+  // **What it does not bring back is the message**, and the reason is the whole
+  // scene rather than a limitation of the link: the same seed and a hand resting
+  // on the cup spells XBOXEDUCATION. USDAUGHTER, SST; the same seed and a
+  // visitor who nudges it every couple of seconds spells SERROR; the same seed
+  // with nobody touching the cup spells nothing at all, because nothing moves.
+  // Identical only against an identical visitor — verified, and the "identical"
+  // is exact.
+  //
+  // So the link carries the conditions and not the result, which is the correct
+  // behaviour for a scene whose central claim is that the message is not stored
+  // anywhere to be carried. **Two people following the same link and both
+  // resting their hands get two similar séances and not one séance.**
+  //
+  // This comment said something else for three releases, and what it said was
+  // the opposite: that the tape replays "only if nobody touches the cup." That
+  // was true when the board ran on its own. Since 4.11.7 nobody touching the cup
+  // means nothing happens at all, so the one condition the old comment named as
+  // reproducible is now the one that produces an empty tape. A document going
+  // wrong by standing still while the code moves — in a comment, four lines from
+  // the code that moved.
   const parseSeed = (str) => {
     const n = Number.parseInt(String(str ?? '').replace(/[^0-9]/g, ''), 10);
     return Number.isFinite(n) && n > 0 ? n : null;
