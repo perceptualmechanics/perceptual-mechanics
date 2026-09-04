@@ -1983,16 +1983,52 @@ export function createBeamline(container, { preview = false, initialPieceId = nu
   // This lattice is a SEPARATE layer from the terrain mesh (its own
   // Points system, own fixed extent) — the wilderness edgeFalloff() above
   // only tapers terrain height, so it has no effect on this grid, which is
-  // why a tier would otherwise read as a hard-edged rectangle even though
-  // the terrain's own boundary dissolves smoothly. The same underlying idea
-  // is applied here instead to density/position/brightness: each tier's
-  // Game-of-Life SIMULATION still runs on its own full plain rectangular
-  // COLS×ROWS grid (the neighbor topology has to stay a real rectangle),
-  // but each point's RENDERED density/position/brightness is additionally
-  // shaped by that tier's own edgeFactor/eligible arrays, computed once at
-  // setup from the point's own distance from CAM_TARGET.
+  // why a tier that ends in open ground would read as a hard-edged rectangle
+  // even though the terrain's own boundary dissolves smoothly. The same
+  // underlying idea is applied here instead to density and brightness: the
+  // Game-of-Life SIMULATION still runs on a full plain rectangular COLS×ROWS
+  // grid (the neighbor topology has to stay a real rectangle), but each
+  // point's RENDERED density and brightness is additionally shaped by that
+  // tier's edgeFactor/eligible arrays, computed once at setup from its own
+  // distance from CAM_TARGET.
+  //
+  // `perimeter` — and ONLY ONE TIER HAS ONE. This is the correction 4.11.17
+  // made, and the reasoning is worth keeping because it is the kind of thing
+  // that survives a change it was invalidated by. The falloff was written
+  // when the growth patch was a SINGLE tier: it was the edge of the field,
+  // and without erosion it ended in a rectangle. Adding FAR made NEAR an
+  // interior tier and nobody went back. Measured: NEAR's own far corner sits
+  // at rNorm 0.662 in FAR's normalised space, and FAR does not begin to fade
+  // until 0.8 — so FAR is at FULL brightness and FULL density across every
+  // square unit of NEAR's footprint, its eroded rim included. NEAR was
+  // spending 22% of its cells permanently black and another 28% in a fade
+  // band — half the near lattice — to dissolve a boundary that the tier
+  // underneath it had already carried on past.
+  //
+  // So NEAR takes `perimeter: false` and runs at full density to its own
+  // rectangle, and FAR takes `perimeter: true` because FAR genuinely is
+  // where the field stops. What the erosion was quietly also doing — the
+  // rim-scaled positional jitter that made the outer band read as scattered
+  // growth rather than as a printed grid — is now CA_SCATTER, a constant
+  // applied to every cell of both tiers. It was never really about the
+  // boundary; it was the thing that made the growth look like growth, and it
+  // only lived at the rim because the rim was the only place anybody needed
+  // it. Neither the point count nor either per-frame loop changes: both run
+  // over cols×rows regardless, so this costs nothing.
   const GRID_CELL = 2600 / 236; // ≈11.02 — the real on-screen cell spacing the terrain's own grid texture produces — STRUCTURAL: this is measured to match the terrain grid texture, not a free spacing choice; changing it desyncs either tier from the ground pattern it's meant to sit on. FAR uses a clean multiple of this (3x), not an unrelated spacing, so its points still land on real terrain grid intersections, just every third one.
-  const CA_EDGE_START = 0.8; // fraction of a tier's own half-extent where its perimeter falloff begins — matches EDGE_FALLOFF_START's role for the terrain — TUNABLE, same effect as that constant: smaller = falloff band starts closer to center (more of the lattice looks "eroded"), closer to 1 = only the very outer rim fades. Shared by both tiers.
+  const CA_EDGE_START = 0.8; // fraction of a tier's own half-extent where its perimeter falloff begins — matches EDGE_FALLOFF_START's role for the terrain — TUNABLE, same effect as that constant: smaller = falloff band starts closer to center (more of the lattice looks "eroded"), closer to 1 = only the very outer rim fades. FAR ONLY, as of 4.11.17 — see `perimeter` in the header comment above for why NEAR no longer has an edge to dissolve.
+  // How far a point is displaced off its exact grid intersection, as a
+  // fraction of the ±1.1-cell maximum, everywhere and equally. This used to
+  // be `1 - edge`: zero in the middle of a tier and full at its rim, because
+  // its job was to break up a boundary rather than to describe the growth.
+  // 0.36 is the mean of what that produced across a tier — so the field now
+  // scatters everywhere by the amount its rim used to average, rather than
+  // being a crisp lattice in the middle and a smear at the edge. TUNABLE and
+  // purely a look: 0 is a printed grid snapped exactly to the terrain's own
+  // grid lines, 1 is a smear dense enough that the underlying lattice stops
+  // being readable at all. Scaled by each tier's own cellSize, so FAR's
+  // coarser lattice scatters proportionally, not absolutely.
+  const CA_SCATTER = 0.36;
   const CA_SEED_DENSITY = 0.28; // classic "random soup" density for interesting Life activity — TUNABLE, but not freely: Life is known to behave interestingly (a mix of die-off, stabilization, and sustained activity) around densities roughly in the 0.2-0.4 range; push it much lower and almost everything dies in a few generations, push it much higher and the grid tends to collapse into a static, over-crowded mess faster
   // Conway's Game of Life, the standard B3/S23 rule, spelled out here in
   // full — this IS the entire rule, nothing else governs how the pattern
@@ -2047,7 +2083,7 @@ export function createBeamline(container, { preview = false, initialPieceId = nu
   // generation step, nothing touches its color attribute on the frames in
   // between, which is what actually keeps FAR's steady per-frame cost low
   // regardless of how many points it has.
-  function createGrowthTier({ name, cols, rows, cellSize, stepInterval, ease, tex, colorRgb }) {
+  function createGrowthTier({ name, cols, rows, cellSize, stepInterval, ease, tex, colorRgb, perimeter }) {
     const rng = mulberry32(hashSeed(`beamline-growth-ca-${name}`));
     // Seeds in place rather than returning a new array — the reseed path
     // below refills the live buffer instead of orphaning it, and the rng
@@ -2068,23 +2104,32 @@ export function createBeamline(container, { preview = false, initialPieceId = nu
     const baseX = CAM_TARGET.x - (cols / 2) * cellSize;
     const baseZ = CAM_TARGET.z - (rows / 2) * cellSize;
     const halfW = (cols / 2) * cellSize, halfH = (rows / 2) * cellSize;
-    // Same elliptical extent-falloff as the original single-tier version
-    // (see the header comment above) — computed once here per tier against
-    // THAT tier's own half-extents, not a shared/global one.
+    // The elliptical extent-falloff, on the ONE tier that still has an
+    // outer edge to dissolve — see `perimeter` in the header comment above.
+    // Computed once here against THAT tier's own half-extents, not a
+    // shared/global one.
     for (let cy = 0; cy < rows; cy++) {
       for (let cx = 0; cx < cols; cx++) {
         const i = cy * cols + cx;
         const gx = baseX + cx * cellSize, gz = baseZ + cy * cellSize;
         const nx = (gx - CAM_TARGET.x) / halfW, nz = (gz - CAM_TARGET.z) / halfH;
         const rNorm = Math.sqrt(nx * nx + nz * nz);
-        const edge = rNorm <= CA_EDGE_START ? 1
+        const edge = !perimeter ? 1
+          : rNorm <= CA_EDGE_START ? 1
           : rNorm >= 1 ? 0
           : 1 - smoothstep01((rNorm - CA_EDGE_START) / (1 - CA_EDGE_START));
         edgeFactor[i] = edge;
-        eligible[i] = rng() < edge ? 1 : 0;
-        const jitterStrength = 1 - edge;
-        const wx = gx + (rng() - 0.5) * cellSize * 2.2 * jitterStrength;
-        const wz = gz + (rng() - 0.5) * cellSize * 2.2 * jitterStrength;
+        // Three draws, always, in this order, whether or not this tier has
+        // a perimeter — so a tier that keeps its edge and a tier that
+        // doesn't still get bit-for-bit the same Life soup out of the same
+        // seeded stream, and every generation that follows from it is the
+        // same board. That is what made the before/after renders of this
+        // change a controlled comparison rather than two different scenes,
+        // and it is worth keeping for the next one.
+        const rElig = rng(), rjx = rng(), rjz = rng();
+        eligible[i] = rElig < edge ? 1 : 0;
+        const wx = gx + (rjx - 0.5) * cellSize * 2.2 * CA_SCATTER;
+        const wz = gz + (rjz - 0.5) * cellSize * 2.2 * CA_SCATTER;
         positions[i * 3] = wx;
         positions[i * 3 + 1] = terrainHeight(wx, wz) + 0.35;
         positions[i * 3 + 2] = wz;
@@ -2191,8 +2236,10 @@ export function createBeamline(container, { preview = false, initialPieceId = nu
       // TUNABLE: lower stepInterval = the pattern visibly evolves faster;
       // this only paces how often stepGameOfLife() is CALLED for this
       // tier, it has no effect on the rule itself. ≈705×375 units at
-      // GRID_CELL spacing — unchanged from before this pass.
-      ease: true, tex: caGlowTex, colorRgb: [120, 220, 190],
+      // GRID_CELL spacing — unchanged from before this pass. Its whole
+      // rectangle is live now (perimeter: false); FAR runs at full strength
+      // underneath all of it, so there is no edge here to dissolve.
+      ease: true, tex: caGlowTex, colorRgb: [120, 220, 190], perimeter: false,
     });
     caFar = createGrowthTier({
       // 46×24 at 3x the cell spacing ≈1520×792 units (half-extents
@@ -2200,8 +2247,8 @@ export function createBeamline(container, { preview = false, initialPieceId = nu
       // FOG_DENSITY 0.0025 (see scene.fog above), blend = 1-exp(-(d·k)^2)
       // reaches ~97% by d≈750 along the wider (x) axis. Past that, this
       // tier's own points are already almost entirely fog-colored before
-      // its own edgeFactor/eligible erosion (same technique as NEAR, just
-      // computed against this tier's own larger half-extents) does
+      // its own edgeFactor/eligible erosion (the perimeter treatment, which
+      // as of 4.11.17 only this tier has) does
       // anything — the fog is doing the real hiding, same as the terrain's
       // own wilderness layer sitting "visible on the horizon, never
       // reachable." The shorter (z) axis reaches only ~63% blend at ITS
@@ -2213,7 +2260,7 @@ export function createBeamline(container, { preview = false, initialPieceId = nu
       // stepGameOfLife), just ticking less often. A generation this far
       // out changing every ~6.8s instead of ~1.7s is not something anyone
       // could track through this much haze regardless.
-      ease: false, tex: caGlowTex, colorRgb: [120, 220, 190],
+      ease: false, tex: caGlowTex, colorRgb: [120, 220, 190], perimeter: true,
     });
     root.add(caNear.points, caFar.points);
   }

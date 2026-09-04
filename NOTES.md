@@ -18376,3 +18376,71 @@ fails universally is the test.
 `package.json`'s `version` had also drifted — it stopped being bumped after
 4.11.4 while eleven releases went past it. Nothing reads it, which is why it
 was invisible, and it is caught up across these two commits.
+
+## 4.11.17 (2026-09-04)
+
+**Beamline's growth field was spending half its lattice hiding an edge that
+stopped being an edge two releases later.** Scott's note, and it was right:
+*"originally, there was a more random field on the edges, but now that the
+game of life spreads everywhere, it's unnecessary."*
+
+The elliptical perimeter falloff was written when the growth patch was a
+SINGLE tier. It was the edge of the field, and without erosion it ended in a
+hard rectangle — position jittered, density thinned, brightness faded to
+nothing by the rim. Then 2.3.2 added FAR, and nobody went back to the tier
+that was no longer on the outside.
+
+Measured, and this is what settles it rather than taste:
+
+    NEAR half-extent           353 x 187 units
+    FAR  half-extent           760 x 397 units
+    NEAR's far corner, in FAR's normalised space      rNorm 0.662
+    where FAR begins to fade                          rNorm 0.8
+
+**FAR is at full brightness and full density across every square unit of
+NEAR's footprint, its eroded rim included.** NEAR was spending 22% of its
+cells permanently black and another 28% in a fade band — half the near
+lattice — to dissolve a boundary the tier underneath it had already carried
+on past.
+
+So NEAR takes `perimeter: false` and runs at full density to its own
+rectangle; FAR keeps `perimeter: true`, because FAR genuinely is where the
+field stops.
+
+### The part that was not just deletion
+
+The erosion was three effects bundled together and only two of them were
+about the boundary. The third was **positional jitter, scaled by nearness to
+the rim** — and that was the only thing stopping the ground from reading as a
+printed grid. Cutting the erosion wholesale snapped the outer band into neat
+rows, which is a different scene, not a tidier one.
+
+It was never really about the boundary. It was the thing that made growth
+look like growth, and it only lived at the rim because the rim was the only
+place anybody needed it. So it comes out of the falloff and becomes
+`CA_SCATTER = 0.36`, applied to every cell of both tiers — **0.36 being the
+measured mean of what `1 - edge` used to produce across a tier**, so the field
+now scatters everywhere by the amount its rim used to average, rather than
+being crisp in the middle and a smear at the edge. Scaled by each tier's own
+`cellSize`, so FAR's coarser lattice scatters proportionally.
+
+Three renders at the same seed and the same frame decided it — as it ships,
+erosion off, and erosion off with the scatter kept — and the middle one is
+the one that showed why the naive version was wrong.
+
+### The control that made the comparison worth anything
+
+`createGrowthTier` draws its three random numbers — eligibility, jitter x,
+jitter z — **unconditionally and in the same order**, whether or not the tier
+has a perimeter, rather than skipping the draws it no longer needs. The rng
+stream is therefore identical, so the Life soup and every generation
+following from it is bit for bit the same board in all three renders. Without
+that, "before and after" would have been two different scenes and the
+comparison would have measured the seed as much as the change.
+
+Costs nothing: point count and both per-frame loops run over `cols × rows`
+either way. Total lit glow at the default camera is unchanged within 4%
+(19,143 → 19,239 lit pixels in the ground band) — the change is
+*distribution*, not brightness, which is also why it is most visible in the
+foreground and in the field's outer band rather than as a general
+brightening.
