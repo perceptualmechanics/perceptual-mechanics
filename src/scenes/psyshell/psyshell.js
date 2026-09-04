@@ -10,6 +10,7 @@ import psyshellHtml from './psyshell.html?raw';
 import { TEXTS, SOURCES, SOURCE_OF, FILAPIXEL_COUNT, baseEDigits } from './psyshell.text.js';
 import { SEGMENTS, NUBS, BOUNDS, LENS_ID, placeFilapixels, pathToTip } from './psyshell.object.js';
 import { buildWeb } from './psyshell.web.js';
+import { mulberry32, hashSeed } from '../../utils/prng.js';
 // The worklet runs in another global and must reach the audio thread as a
 // FILE, not as part of this chunk. `new URL(..., import.meta.url)` is the form
 // the bundler understands as "emit this as an asset and give me its hashed
@@ -139,6 +140,70 @@ const PROP_WAKE = 0.55;    // share of the front's amplitude kept behind it
 const PROP_RELAX = 0.8;    // world units — how far behind the front it persists
 const MAX_READS = 5;
 
+// ─── What leaves the object ────────────────────────────────────────────────
+// The excitation above is Euclidean and stays inside the crystal, which is
+// right for a disturbance in a solid. Out in the field there is no solid: there
+// are strands, and a strand is the only way anything gets from one knot to
+// another. So what travels out of the lens travels **along the graph**, in
+// hops, and the two are not a contradiction — each is the correct medium for
+// where it is.
+//
+// The field still does not respond to the visitor. It responds to nothing at
+// all. It CARRIES what the lens gives it, which is what being one structure
+// means, and it is the reason 4.8.2's connectivity gate was worth having.
+const HOP_SPEED = 26;      // strands per second the front crosses
+const HOP_REACH = 22;      // e-folding distance, in strands
+const HOP_MAX = 130;       // where a pulse is dropped rather than tracked further
+const HOP_SHELL = 2.6;     // half-width of the front, in strands
+const HOP_LIFE = 6.0;      // seconds — long, because 130 strands is a long way
+// **One reading in a hundred gets out.** The rest stay in the crystal, and that
+// is what makes the hundredth mean anything: a scene where every touch floods
+// the sky has no event in it. The site already keeps a one-in-a-hundred at this
+// exact odds — main.js's `pmGlimpse`, where a hover flickers the tab title to a
+// one-word association — so this is the house rate rather than a new invention.
+const ESCAPE_ODDS = 100;
+
+// ─── Traffic ───────────────────────────────────────────────────────────────
+// The web is a substrate, and things travel on it whether or not anybody is
+// reading the lens. Pulses cross the field on their own: not often, not
+// brightly, and never starting inside the object.
+//
+// **This does not contradict the field's indifference, and the distinction is
+// worth being exact about.** The field does not respond to the visitor — not to
+// the camera, not to hover, not to being looked at — and it does not
+// scintillate, because twinkling is caused by matter in the path and nothing is
+// in the way. Traffic is neither of those. It is the substrate carrying
+// something that has nothing to do with you, which is a colder fact than a
+// still field, not a warmer one.
+//
+// A pulse takes the same path a read's does — hop by hop along the strands —
+// because there is only one structure here and it conducts the same way at
+// every scale. Occasionally one crosses the lens, and it should: a branch of a
+// filament exists on both scales at once, and everything is connected even if
+// only by gravity.
+// **Traffic crosses space, not hops**, and that is a correction rather than a
+// preference. The first version sent an ambient pulse out along the strands the
+// way a read goes, and it did not read as anything: hop distance and screen
+// distance have nothing to do with each other out here, because a single hop
+// between two knots can be twenty units and a hop inside a knot can be a
+// tenth of one. A front measured in strands therefore arrives everywhere in a
+// cluster at once and nowhere in order. Measured: the field brightened as a
+// whole and no front was visible at any gain.
+//
+// So a pulse is a PLANE crossing the volume — a front sweeping through, lighting
+// whatever it passes, in a direction of its own. That is what something moving
+// across a field at this scale looks like, and it costs one dot product per
+// node rather than a graph walk.
+//
+// It crosses the lens too, when its direction takes it there. It should: a
+// branch of a filament exists on the informational and the galactic scale at
+// once, and everything is connected even if only by gravity.
+const AMBIENT_GAP = [3.0, 7.5];   // seconds between pulses, drawn each time
+const AMBIENT_MAX = 2;            // alive at once
+const AMBIENT_GAIN = 0.6;         // against a read's 1.0
+const AMBIENT_WIDTH = 3.2;        // world units — the front's half-width
+const AMBIENT_LIFE = 9.0;         // seconds to cross the whole field
+
 // ─── The transmission ───────────────────────────────────────────────────────
 // Unchanged from 4.6.1 and 4.7.0, deliberately: it decodes, it has a by-hand
 // verification, and its reasoning survives both form changes. A digit d is one
@@ -180,12 +245,23 @@ export function createPsyshell(container, { preview = false } = {}) {
   // sheet.
   const camera = new THREE.PerspectiveCamera(52, w / h, 0.02, 60);
 
+  // The fit puts the object inside the band the chrome leaves; this is the
+  // breathing room it gets inside that band. Left where it was — the framing
+  // change belongs in START_ZOOM, where it can be read as a decision about
+  // where a visit begins rather than as the fit being loosened.
   const FIT_MARGIN = 1.06;
   const center = new THREE.Vector3(...BOUNDS.center);
   let lookOffsetY = 0;
   const target = new THREE.Vector3();
   let usableTop = 0, usableBottom = 1;
   let camAz = 0.7, camEl = 0.24, camZoom = 1, camDist = 4;
+  // Where a visit begins, before anyone scrolls. The scene used to open with the
+  // object fitted politely inside the chrome band and reading as a specimen
+  // across a room; the lens is two inches of crystal and a wide lens close in
+  // only reads as close if the thing is actually close. 1.15 was chosen by rendering:
+  // 1.44 cropped the tips off entirely and 1.25 clipped the top tines against
+  // the nav, which costs the antler silhouette the whole object is read by.
+  const START_ZOOM = 1.15;
   const CAM_EL_MIN = -0.25, CAM_EL_MAX = 1.15;
   const ZOOM_MIN = 0.6, ZOOM_MAX = 2.6;
 
@@ -260,7 +336,7 @@ export function createPsyshell(container, { preview = false } = {}) {
       placeCamera();
     };
     for (let round = 0; round < 3; round++) { sizePass(); sizePass(); centrePass(); centrePass(); }
-    camDist = camDist * FIT_MARGIN / camZoom;
+    camDist = camDist * FIT_MARGIN / (camZoom * START_ZOOM);
     placeCamera();
   }
 
@@ -406,10 +482,11 @@ export function createPsyshell(container, { preview = false } = {}) {
   const placed = placeFilapixels(FILAPIXEL_COUNT);
   const web = buildWeb(placed.pos, FILAPIXEL_COUNT, { center: BOUNDS.center, radius: BOUNDS.radius });
 
-  // The excitation, one value per sentence. It starts at zero rather than at a
-  // base level, because a strand's resting brightness is now the strand's own
-  // (aBright) and this array carries only what a read adds.
-  const levels = new Float32Array(FILAPIXEL_COUNT);
+  // The excitation, one value per NODE — the whole web, not just the corpus.
+  // It starts at zero rather than at a base level, because a strand's resting
+  // brightness is its own (aBright) and this array carries only what a read
+  // adds.
+  const levels = new Float32Array(web.total);
 
   // Each strand becomes two segments meeting at a dark midpoint: four vertices,
   // bright at the two node ends. See psyshell.web.js for why a junction is
@@ -438,10 +515,13 @@ export function createPsyshell(container, { preview = false } = {}) {
       const bridge = (a < FILAPIXEL_COUNT) !== (b < FILAPIXEL_COUNT);
       const end = bridge ? STRAND_END * 0.22 : STRAND_END;
       const mid = bridge ? STRAND_MID * 0.22 : STRAND_MID;
-      put(ax, ay, az, end, a < FILAPIXEL_COUNT ? a : -1);
+      // Every vertex knows which node it belongs to, near or far. Until 4.8.7
+      // the far half's vertices carried −1, because the field could not light:
+      // it can now, when the lens gives it something to carry.
+      put(ax, ay, az, end, a);
       put(mx, my, mz, mid, -1);
       put(mx, my, mz, mid, -1);
-      put(bx, by, bz, end, b < FILAPIXEL_COUNT ? b : -1);
+      put(bx, by, bz, end, b);
     }
     const geo = new THREE.BufferGeometry();
     geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
@@ -477,7 +557,19 @@ export function createPsyshell(container, { preview = false } = {}) {
   // second opinion about the field: at tile size a far strand is thinner than a
   // pixel, so the whole field aliases into a haze that competes with the object
   // it is meant to be the background half of. The full scene keeps FAR_GAIN.
-  const farMat = strandMat(WEB_FAR_COLOR, preview ? FAR_GAIN * 0.45 : FAR_GAIN, 0);
+  // The far half lights too — at a third of the near half's response, because
+  // what reaches it is a long way from the lens and should read as something
+  // arriving rather than as the field answering.
+  //
+  // This third argument was ZERO for one release, and not on purpose: the edit
+  // that dimmed the field in the 200px tile rewrote this line and dropped the
+  // lit term with it. The field was receiving every pulse and rendering all of
+  // them at zero gain, which looks exactly like a feature that does not work.
+  // Same shape as the `rushNode` declarations a scripted rename ate — **a later
+  // edit silently undoing an earlier one is this file's recurring defect**, and
+  // both times what caught it was a probe that asked whether the value had
+  // arrived rather than whether the code looked right.
+  const farMat = strandMat(WEB_FAR_COLOR, preview ? FAR_GAIN * 0.45 : FAR_GAIN, FILAPIXEL_PEAK * 0.12);
   const nearLines = new THREE.LineSegments(nearWeb.geo, nearMat);
   const farLines = new THREE.LineSegments(farWeb.geo, farMat);
   nearLines.frustumCulled = false;
@@ -488,9 +580,35 @@ export function createPsyshell(container, { preview = false } = {}) {
   // belong to it.
   scene.add(farLines);
 
-  // Which near-mesh vertices belong to which sentence, so a read can be written
-  // into the strands leaving it without walking the whole buffer.
+  // Which vertices belong to which node, so a read can be written into the
+  // strands around it.
   const nearNodeOf = nearWeb.node;
+  const farNodeOf = farWeb.node;
+
+  // ─── The web as a medium ──────────────────────────────────────────────────
+  // Adjacency, built once. A read runs out of the lens along the strands, and
+  // it can only do that because 4.8.2 made the web one connected graph — the
+  // payoff for that work is here.
+  //
+  // **The field still does not react to the visitor.** Not to the camera, not
+  // to hover, not to being looked at; that indifference is what makes the
+  // lens's answer mean anything, and it is unchanged. What is new is that the
+  // field CARRIES what the lens gives it. A structure that is one structure
+  // does not stop at the object's edge.
+  const adjacency = (() => {
+    const count = new Uint16Array(web.total);
+    for (let e = 0; e < web.edges.length; e++) count[web.edges[e]]++;
+    const start = new Uint32Array(web.total + 1);
+    for (let i = 0; i < web.total; i++) start[i + 1] = start[i] + count[i];
+    const list = new Uint32Array(web.edges.length);
+    const fill = start.slice(0, web.total);
+    for (let e = 0; e < web.edges.length; e += 2) {
+      const a = web.edges[e], b = web.edges[e + 1];
+      list[fill[a]++] = b;
+      list[fill[b]++] = a;
+    }
+    return { start, list };
+  })();
 
   // ─── Sound ────────────────────────────────────────────────────────────────
   let audioCtx = null, muteGain = null, busGain = null;
@@ -727,8 +845,95 @@ export function createPsyshell(container, { preview = false } = {}) {
 
   // ─── The excitation ───────────────────────────────────────────────────────
   const reads = [];
+  // Hop distance from the struck node outward, computed once per reading. A
+  // breadth-first walk over ~7,800 nodes costs well under a millisecond, and it
+  // is the only thing that has to know the web's shape at read time.
+  const hopQueue = new Uint32Array(web.total);
+  function hopsFrom(origin, cap = HOP_MAX) {
+    const dist = new Int16Array(web.total).fill(-1);
+    const touched = [];
+    dist[origin] = 0;
+    hopQueue[0] = origin;
+    let head = 0, tail = 1;
+    while (head < tail) {
+      const u = hopQueue[head++];
+      const d = dist[u];
+      touched.push(u);
+      if (d >= cap) continue;
+      for (let k = adjacency.start[u]; k < adjacency.start[u + 1]; k++) {
+        const v = adjacency.list[k];
+        if (dist[v] >= 0) continue;
+        dist[v] = d + 1;
+        hopQueue[tail++] = v;
+      }
+    }
+    return { dist, nodes: Uint32Array.from(touched) };
+  }
+
+  // ─── The field's own traffic ──────────────────────────────────────────────
+  // Seeded from the lens's own catalogue number, so the sky is this lens's sky:
+  // the same pulses in the same order on every visit, which is what makes it a
+  // place rather than a screensaver.
+  const ambient = [];
+  const ambientRnd = mulberry32(hashSeed(LENS_ID + ':traffic'));
+  let ambientIn = 1.2;
+
+  function newAmbient() {
+    // A direction, and the span of the field along it, so the front can start
+    // just outside and finish just past the far side.
+    const u = ambientRnd() * 2 - 1;
+    const th = ambientRnd() * Math.PI * 2;
+    const r = Math.sqrt(Math.max(0, 1 - u * u));
+    const dir = [r * Math.cos(th), u * 0.45, r * Math.sin(th)];
+    const m = Math.hypot(...dir) || 1;
+    dir[0] /= m; dir[1] /= m; dir[2] /= m;
+    let lo = Infinity, hi = -Infinity;
+    for (let n = 0; n < web.total; n++) {
+      const d = web.pos[n * 3] * dir[0] + web.pos[n * 3 + 1] * dir[1] + web.pos[n * 3 + 2] * dir[2];
+      if (d < lo) lo = d;
+      if (d > hi) hi = d;
+    }
+    return { dir, from: lo - AMBIENT_WIDTH * 2, span: (hi - lo) + AMBIENT_WIDTH * 4, t: 0 };
+  }
+
+  function stepAmbient(dt) {
+    if (reduced) return;
+    ambientIn -= dt;
+    if (ambientIn <= 0) {
+      ambientIn = AMBIENT_GAP[0] + (AMBIENT_GAP[1] - AMBIENT_GAP[0]) * ambientRnd();
+      if (ambient.length >= AMBIENT_MAX) ambient.shift();
+      ambient.push(newAmbient());
+    }
+    for (let i = ambient.length - 1; i >= 0; i--) {
+      ambient[i].t += dt;
+      if (ambient[i].t >= AMBIENT_LIFE) ambient.splice(i, 1);
+    }
+    for (const a of ambient) {
+      const u = a.t / AMBIENT_LIFE;
+      const front = a.from + a.span * u;
+      // In and out at the ends, so a pulse arrives and leaves rather than
+      // switching on at the edge of the frame.
+      const fade = Math.sin(Math.PI * u);
+      const gain = AMBIENT_GAIN * fade * fade;
+      const [dx, dy, dz] = a.dir;
+      for (let n = 0; n < web.total; n++) {
+        const d = web.pos[n * 3] * dx + web.pos[n * 3 + 1] * dy + web.pos[n * 3 + 2] * dz;
+        const s0 = (d - front) / AMBIENT_WIDTH;
+        if (s0 > 2.5 || s0 < -7) continue;
+        // A soft front with a longer tail behind it: something passing, not a
+        // band sliding across.
+        const amp = (s0 > 0 ? Math.exp(-s0 * s0) : Math.exp(s0 * 0.55)) * gain;
+        if (amp > levels[n]) levels[n] = amp;
+      }
+    }
+  }
+
   function readAt(index) {
-    reads.push({ origin: index, t: 0 });
+    // Rolled per reading, not seeded: two visitors reading the same filapixel
+    // should not both get the rare one, and the same visitor reading it twice
+    // should not be told the answer is fixed.
+    const escapes = Math.floor(Math.random() * ESCAPE_ODDS) === 0;
+    reads.push({ origin: index, t: 0, hop: escapes ? hopsFrom(index) : null });
     if (reads.length > MAX_READS) reads.shift();
     // The transmitter first: the rush takes its length and its direction from
     // the transmission, so there has to be one before there is a sound.
@@ -738,12 +943,36 @@ export function createPsyshell(container, { preview = false } = {}) {
   function advance(dt) {
     for (let i = reads.length - 1; i >= 0; i--) {
       reads[i].t += dt;
-      if (reads[i].t >= PROP_LIFE) reads.splice(i, 1);
+      // A reading that got out outlives its own excitation: the front inside
+      // the crystal is finished in two seconds and what left along the strands
+      // is still going. One that did not is done when the crystal is.
+      if (reads[i].t >= (reads[i].hop ? HOP_LIFE : PROP_LIFE)) reads.splice(i, 1);
     }
     // The clearing is the caller's now, not this function's: the excitation and
     // the transmission both write into `levels`, and whichever ran second used
     // to wipe the other. Order in the tick: clear, excite, transmit, upload.
     for (const d of reads) {
+      // ── Out along the strands, into the field ──────────────────────────────
+      // Same shape as the excitation — a travelling front with a relaxing wake
+      // behind it — measured in strands rather than in world units, because out
+      // here the strands are the distance.
+      if (!reduced && d.hop) {
+        const hopFront = HOP_SPEED * d.t;
+        const hopFade = Math.max(0, 1 - d.t / HOP_LIFE);
+        const { dist, nodes } = d.hop;
+        for (let k = 0; k < nodes.length; k++) {
+          const n = nodes[k];
+          const h = dist[n];
+          const s0 = (h - hopFront) / HOP_SHELL;
+          const shell = Math.exp(-s0 * s0);
+          const wake = h > hopFront ? 0 : 0.35 * Math.exp(-(hopFront - h) / (HOP_SHELL * 6));
+          const amp = Math.min(1, shell + wake) * Math.exp(-h / HOP_REACH) * hopFade * hopFade;
+          if (amp > levels[n]) levels[n] = amp;
+        }
+      }
+
+      // ── And the Euclidean one, inside the crystal ─────────────────────────
+      if (d.t >= PROP_LIFE) continue;
       const decay = 1 - d.t / PROP_LIFE;
       const fade = decay * decay;
       const front = reduced ? 0 : PROP_SPEED * d.t;
@@ -778,23 +1007,35 @@ export function createPsyshell(container, { preview = false } = {}) {
   // exist, is a radio-wavelength effect of plasma rather than anything visible.)
   //
   // The second reason is the better one for the near half, where a vacuum
-  // argument does not apply: the field must be indifferent — to the camera, to
-  // hover, to the lens transmitting — because that indifference is what makes
-  // the lens's one response mean something. A scene where everything is alive
-  // has nothing alive in it.
+  // argument does not apply: the field must be indifferent **to the visitor** —
+  // to the camera, to hover, to being looked at — because that indifference is
+  // what makes the lens's one response mean something. A scene where everything
+  // is alive has nothing alive in it.
+  //
+  // 4.8.7 draws the line more exactly than "the field reacts to nothing" did.
+  // The field does not RESPOND; it CARRIES. A reading runs out of the crystal
+  // and along the strands into it. That is not the field noticing anybody — it
+  // is one structure conducting, which is the thing the connectivity gate
+  // exists to guarantee.
   //
   // So what moves is: the excitation when a filapixel is read, the transmission
-  // that follows it, and the camera's own slow turn. Nothing else.
+  // that follows it, the camera's own slow turn — and, from 4.8.7, the
+  // substrate's own traffic crossing the field. **Traffic is not scintillation
+  // and not a response.** A pulse crossing the web has nothing to do with the
+  // visitor, which is colder than a still field rather than warmer: things go
+  // past whether or not anyone is here.
 
   let levelsDirty = false;
   function writeLevels() {
-    const attr = nearWeb.geo.getAttribute('aLevel');
-    const arr = attr.array;
-    for (let v = 0; v < nearNodeOf.length; v++) {
-      const n = nearNodeOf[v];
-      arr[v] = n < 0 ? 0 : levels[n];
+    for (const [mesh, nodeOf] of [[nearWeb, nearNodeOf], [farWeb, farNodeOf]]) {
+      const attr = mesh.geo.getAttribute('aLevel');
+      const arr = attr.array;
+      for (let v = 0; v < nodeOf.length; v++) {
+        const n = nodeOf[v];
+        arr[v] = n < 0 ? 0 : levels[n];
+      }
+      attr.needsUpdate = true;
     }
-    attr.needsUpdate = true;
   }
   writeLevels();
 
@@ -931,9 +1172,10 @@ export function createPsyshell(container, { preview = false } = {}) {
     // Clear, excite, transmit, upload — in that order, because the excitation
     // and the transmission both write the same array and the second one to run
     // was wiping the first.
-    const active = reads.length > 0 || transmits.length > 0;
+    const active = reads.length > 0 || transmits.length > 0 || ambient.length > 0 || !reduced;
     if (active || levelsDirty) levels.fill(0);
     if (reads.length) advance(dt);
+    stepAmbient(dt);
     const transmitting = advanceTransmitters(dt);
     // Only when something changed. The near mesh's level attribute is ~17,000
     // floats and re-uploading it every frame to say "still nothing" is the
@@ -941,7 +1183,7 @@ export function createPsyshell(container, { preview = false } = {}) {
     // mesh; leaving the near half uploading anyway would have given that back.
     if (active || levelsDirty) {
       writeLevels();
-      levelsDirty = reads.length > 0 || transmitting;
+      levelsDirty = reads.length > 0 || transmitting || ambient.length > 0;
     }
     renderer.render(scene, camera);
     previewCanvas?.blit();

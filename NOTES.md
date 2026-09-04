@@ -587,6 +587,94 @@ described are unchanged.)
   worth trimming, orrery.js's texture generators and first-person rig are the
   two most self-contained chunks to split out first.
 
+## 4.8.7 (2026-09-04)
+
+**Closer in, and the field starts carrying.** Three things, all from looking at
+the scene running on Scott's own machine through the desktop app's browser pane.
+
+### The lens is closer
+
+A visit now opens at **`START_ZOOM = 1.25`** of the fit, rather than at the
+fit itself. The scene used to open with the object
+sitting politely inside the band the chrome leaves, reading as a specimen across
+a room; a wide lens close in only reads as close if the thing is actually close.
+Chosen by rendering: 1.44 cropped the tips off the top of the frame, and 1.25
+lets the top tines graze the nav, which is the price of it reading close.
+
+`FIT_MARGIN` is untouched at 1.06. The framing change belongs in a constant
+named for where a visit begins, not in the fit being quietly loosened.
+
+### The field carries a reading, one time in a hundred
+
+The excitation used to stop at the object's edge. Now it can leave: a
+breadth-first walk out from the struck node, a front travelling **along the
+strands** at 26 a second, dimming with an e-folding distance of 22 strands and
+reaching 130 before it is dropped.
+
+Inside the crystal the disturbance is still Euclidean, because a disturbance in
+a solid is. Out in the field it is measured in strands, because out there the
+strands are the only distance there is. Both are the correct medium for where
+they are, and this is the payoff for 4.8.2's connectivity gate: it is only
+possible to conduct across a graph that is actually one graph.
+
+**One reading in a hundred**, at Scott's asking, and the restraint is the point:
+a scene where every touch floods the sky has no event in it. The odds are the
+house rate — `main.js`'s `pmGlimpse` has flickered the tab title on a
+one-in-a-hundred hover since long before this scene existed. Rolled per reading
+with `Math.random`, deliberately not seeded: two visitors reading the same
+filapixel should not both get the rare one.
+
+Measured: centre of frame 17.7 → 19.7 at t = 0.46 s and back down, while the
+outer field goes 8.95 → 9.26 from t = 1.7 s onward. The read leaves, crosses,
+and arrives.
+
+### The substrate has traffic
+
+Pulses cross the field on their own now, every three to seven seconds, going
+somewhere that has nothing to do with the visitor.
+
+**This does not contradict the field's indifference and the distinction is worth
+being exact about.** The field still does not respond to you — not to the
+camera, not to hover, not to being looked at — and it still does not
+scintillate, because twinkling is caused by matter in the path. Traffic is
+neither. It is the substrate carrying something that is not about you, which is
+a colder fact than a still field rather than a warmer one.
+
+**They cross space, not hops, and that is a correction.** The first version sent
+ambient pulses out along the strands the way a read goes, and it read as
+nothing: hop distance and screen distance are unrelated out there, because one
+hop between knots can be twenty units and one inside a knot can be a tenth of
+one. A front measured in strands arrives everywhere in a cluster at once and
+nowhere in order — measured, at every gain up to 3.0, as the field brightening
+as a whole with no front visible. A pulse is now a plane sweeping through the
+volume, which is one dot product per node rather than a graph walk, and it
+crosses the lens when its direction takes it there. It should: a branch of a
+filament exists on the informational and the galactic scale at once.
+
+Measured with no clicks at all: the right half of the field rises 9.48 → 9.56
+and falls to 9.36 while the left half declines monotonically with the camera's
+drift. Something goes past.
+
+### The defect underneath, which is the second of its kind
+
+The far half of the web was receiving every pulse and rendering all of them at
+**zero gain**. Its material's lit term had been set in 4.8.7's first pass and
+then silently dropped by the *later* edit that dimmed the field in the 200px
+tile — that edit rewrote the whole line.
+
+This is the same shape as the `rushNode` declarations a scripted rename ate one
+release ago: **a later edit undoing an earlier one in the same file**. Both
+times the code looked right, and both times what found it was a probe asking
+whether the value had actually arrived — here, `window.__maxLevel` reporting 1.9
+while the screen showed nothing, which is a two-line answer to a question that
+had already cost three rounds of retuning something that was never the problem.
+
+### Cost
+
+Idle frame rate is unchanged at 17.6 fps under software rasterization — the
+ambient pass is one dot product per node over 7,848 nodes, and the level buffer
+was already being uploaded whenever anything is alive.
+
 ## 4.8.6 (2026-09-04)
 
 **A one-line guard, and how it was found.** Scott had the dev server up on his
