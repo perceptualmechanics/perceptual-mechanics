@@ -250,6 +250,7 @@ export function createPsyshell(container, { preview = false } = {}) {
   // change belongs in START_ZOOM, where it can be read as a decision about
   // where a visit begins rather than as the fit being loosened.
   const FIT_MARGIN = 1.06;
+  const START_DROP = 0.13;   // fraction of a half-height the object sits low by
   const center = new THREE.Vector3(...BOUNDS.center);
   let lookOffsetY = 0;
   const target = new THREE.Vector3();
@@ -258,10 +259,17 @@ export function createPsyshell(container, { preview = false } = {}) {
   // Where a visit begins, before anyone scrolls. The scene used to open with the
   // object fitted politely inside the chrome band and reading as a specimen
   // across a room; the lens is two inches of crystal and a wide lens close in
-  // only reads as close if the thing is actually close. 1.15 was chosen by rendering:
-  // 1.44 cropped the tips off entirely and 1.25 clipped the top tines against
-  // the nav, which costs the antler silhouette the whole object is read by.
-  const START_ZOOM = 1.15;
+  // only reads as close if the thing is actually close. Chosen by rendering, four times over:
+  // 1.15 still read as a specimen, 1.25 grazed the nav, 1.75 put the whole
+  // crown out of shot, and 1.55 is where the object **bleeds off the frame**
+  // without leaving it — the tines run out of the top, the body does not.
+  //
+  // The trade is deliberate and worth naming: past about 1.4 the antler
+  // silhouette stops being the thing you read the object by, and the material
+  // becomes it. That is the right trade for a thing you are holding close, and
+  // the wrong one for a thing you are identifying, which is why the 200px tile
+  // does not take this constant.
+  const START_ZOOM = 1.55;
   const CAM_EL_MIN = -0.25, CAM_EL_MAX = 1.15;
   const ZOOM_MIN = 0.6, ZOOM_MAX = 2.6;
 
@@ -336,7 +344,21 @@ export function createPsyshell(container, { preview = false } = {}) {
       placeCamera();
     };
     for (let round = 0; round < 3; round++) { sizePass(); sizePass(); centrePass(); centrePass(); }
-    camDist = camDist * FIT_MARGIN / (camZoom * START_ZOOM);
+    // The tile gets the fit and nothing else. A 200px thumbnail is read by
+    // silhouette — it is how a visitor picks this scene out of twelve — and the
+    // close framing deliberately gives the silhouette up. Written as a
+    // condition rather than as a comment claiming it, because the comment
+    // claiming it was here first and was false.
+    camDist = camDist * FIT_MARGIN / (camZoom * (preview ? 1 : START_ZOOM));
+    // Sits a little low in the frame rather than centred in the band, so the
+    // crown has somewhere to go when the zoom takes it off the top.
+    //
+    // The sign is the trap this file has already been caught by once: the
+    // camera is placed relative to the aim, so RAISING the aim lowers the
+    // object. START_DROP is written as what it does to the object, not as what
+    // it does to the aim, because the next person to change it will be looking
+    // at the object.
+    if (!preview) lookOffsetY += START_DROP * camDist * Math.tan(vHalf);
     placeCamera();
   }
 

@@ -587,6 +587,41 @@ described are unchanged.)
   worth trimming, orrery.js's texture generators and first-person rig are the
   two most self-contained chunks to split out first.
 
+## 4.8.8 (2026-09-04)
+
+**Closer still, and lower in the frame.** Two constants and one correction.
+
+`START_ZOOM` 1.15 → **1.55**, so the object bleeds off the top of the frame
+rather than sitting inside it. Chosen by rendering four values: 1.15 still read
+as a specimen, 1.25 grazed the nav, 1.75 put the whole crown out of shot, 1.55
+lets the tines run out of the top while the body stays. The trade is named in
+the code rather than left to be discovered — past about 1.4 the antler
+silhouette stops being what you read the object by and the material becomes it,
+which is right for something held close and wrong for something being
+identified. **The tile is therefore exempt from both constants** — and that had
+to be written as a condition, because the comment claiming it was there first
+and was false: the thumbnail had taken the close framing too, and lost the
+silhouette a visitor picks this scene out of twelve by.
+
+`START_DROP` is new at **0.13** of a half-height: the object sits a little low
+so the crown has somewhere to go. The sign is the trap this file has already
+been caught by once — the camera is placed relative to the aim, so *raising* the
+aim lowers the object — so the constant is written as what it does to the
+object, because the next person to change it will be looking at the object.
+
+### The correction
+
+**4.8.7 shipped `START_ZOOM = 1.15` and its release note said 1.25.** The change
+to 1.25 was written up, discussed, and never actually reached the file; a later
+edit that meant to raise it further matched nothing, which is how it was found —
+the render came back identical and the constant turned out to be a value nobody
+had chosen. The 4.8.7 entry is corrected in place with a note saying so.
+
+Worth keeping: **the render is what caught it.** Two edits in two releases have
+now silently failed to apply — a scripted rename ate three declarations, a later
+edit dropped an earlier one's argument — and in all three cases the code read
+correctly and the pixels did not. Looking is not a formality on this scene.
+
 ## 4.8.7 (2026-09-04)
 
 **Closer in, and the field starts carrying.** Three things, all from looking at
@@ -594,12 +629,13 @@ the scene running on Scott's own machine through the desktop app's browser pane.
 
 ### The lens is closer
 
-A visit now opens at **`START_ZOOM = 1.25`** of the fit, rather than at the
-fit itself. The scene used to open with the object
+A visit now opens at **`START_ZOOM = 1.15`** of the fit, rather than at the
+fit itself. *(This entry first said 1.25, which is the value the session
+intended and not the one the file carried — corrected in 4.8.8, where the
+discrepancy was found. The number that shipped in 4.8.7 was 1.15.)* The scene used to open with the object
 sitting politely inside the band the chrome leaves, reading as a specimen across
 a room; a wide lens close in only reads as close if the thing is actually close.
-Chosen by rendering: 1.44 cropped the tips off the top of the frame, and 1.25
-lets the top tines graze the nav, which is the price of it reading close.
+Chosen by rendering: 1.44 cropped the tips off the top of the frame.
 
 `FIT_MARGIN` is untouched at 1.06. The framing change belongs in a constant
 named for where a visit begins, not in the fit being quietly loosened.
