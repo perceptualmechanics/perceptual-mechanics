@@ -862,78 +862,7 @@ const SCENE_COUNT = Object.keys(SCENES).length;
 // chosen. The aspect ratio of the window chose them.
 //
 // ─── What happens when the requirement cannot be met ───────────────────────
-// If no column count reaches TILE_FLOOR, nothing fits legibly and the page
-// stops trying: it falls back to the phone layout, which scrolls, and that is
-// the honest answer rather than shrinking the tiles until they are decoration.
-//
-// **This is the scaling threshold, and it now announces itself.** Twelve fit.
-// Sixteen probably fit at a smaller tile. Twenty-four will not, and the moment
-// they do not is the moment `.rows-forced` stops going on — visible, measurable,
-// and not a judgement call. That is when the index has to become something
-// else, and `src/utils/sceneField.js` is shelved for exactly that.
-const TILE_MAX = 272;
-// The floor is a legibility claim and so it is sourced rather than picked: the
-// phone layout has shipped 136px tiles at 320px since 4.9.1 and the previews
-// are recognisable there, and a desktop is viewed from further away than a
-// phone. 168 is comfortably above that and is the value the 4.10.2 threshold
-// already used, so nothing about the desktop band changes by adopting it here.
-const TILE_FLOOR = 168;
-const TILE_GAP = 24;      // #scene-previews' gap at >=769px
-const LIST_PAD = 32;      // its own padding, both axes (1rem each side)
-
-function tileLayout(n, width, height) {
-  let best = null;
-  for (let cols = 1; cols <= n; cols++) {
-    const rows = Math.ceil(n / cols);
-    const byWidth = (width - (cols - 1) * TILE_GAP - LIST_PAD) / cols;
-    // The vertical budget has two terms that are easy to miss, and missing
-    // them made the first version of this claim a fit it did not have — the
-    // page reported "all twelve above the fold" while #landing scrolled by
-    // 80px. Both were found by measuring the real scrollHeight rather than by
-    // trusting the arithmetic that produced the layout.
-    //
-    //   - The list's own vertical padding, which is not part of any tile.
-    //   - A .preview-row-break is a flex ITEM, so it sits on its own line and
-    //     takes a row-gap on BOTH sides. Three rows of tiles is five flex
-    //     lines, not three, and four row-gaps rather than two.
-    const rowGaps = 2 * rows - 2;
-    const byHeight = (height - rowGaps * TILE_GAP - LIST_PAD) / rows;
-    const tile = Math.min(byWidth, byHeight, TILE_MAX);
-    if (tile < TILE_FLOOR) continue;
-    // ─── Tie-breaks, in order, and only ever among ties ─────────────────────
-    // Tile size decides first and nothing below can overrule it — that is the
-    // requirement. But two arrangements often show the tiles at exactly the
-    // same size, and then these apply:
-    //
-    //   1. No orphan last row. A single tile under two full rows reads as an
-    //      afterthought rather than as the newest scene. That rule was
-    //      explicit in the scoring function 4.11.0 replaced, and dropping it
-    //      cost nothing at twelve scenes — twelve divides evenly into every
-    //      column count worth choosing — so its absence was invisible until a
-    //      THIRTEENTH scene was measured, where 1600x900 produced 6/6/1 and
-    //      5/5/3 at an identical 214px tile.
-    //   2. Then fewer rows, since at equal size the shallower arrangement puts
-    //      more of the set in the eye at once.
-    //
-    // Both are free by construction: they choose between arrangements the
-    // requirement has already declared equally good.
-    // `tile` is kept as the raw float here and floored only by the caller. The
-    // first version stored Math.floor(tile) and then compared the next
-    // candidate's float against it, so 214.67 beat a stored 214 by "more than
-    // half a pixel" and every tie was scored as an improvement — which is why
-    // the orphan rule below appeared to do nothing. The comparison and the
-    // stored value have to be the same quantity.
-    const orphan = n % cols === 1 && rows > 1;
-    if (!best) { best = { cols, rows, tile, orphan }; continue; }
-    const better =
-      tile > best.tile + 0.5 ? true :
-      tile < best.tile - 0.5 ? false :
-      best.orphan !== orphan ? !orphan :
-      rows < best.rows;
-    if (better) best = { cols, rows, tile, orphan };
-  }
-  return best && { ...best, tile: Math.floor(best.tile) };   // null when nothing fits legibly
-}
+import { tileLayout, tileScale, tileNudge, MAX_TILE_SCALE } from './utils/tileLayout.js';
 
 function applyDerivedLayout() {
   const list = document.getElementById('scene-previews');
@@ -970,10 +899,28 @@ function applyDerivedLayout() {
   list.classList.toggle('rows-forced', Boolean(fit));
   if (fit) {
     list.style.setProperty('--tile-cols', String(fit.cols));
-    list.style.setProperty('--tile', `${fit.tile}px`);
+    // The base, for anything that wants it. Each wrapper gets its own size and
+    // offset below — the shared custom property is no longer the tile. The row
+    // height is the LARGEST tile the viewport allowed, so every row is the same
+    // height whatever lands in it.
+    list.style.setProperty('--tile', `${fit.base}px`);
+    list.style.setProperty('--tile-row', `${Math.round(fit.base * (1 + (MAX_TILE_SCALE - 1) * fit.v))}px`);
   } else {
     list.style.removeProperty('--tile');
   }
+  // Per-tile size and offset, in the registry's order, which is the markup's
+  // order because prerender.js fails the build when they disagree.
+  const keys = Object.keys(SCENES);
+  tiles.forEach((el, i) => {
+    const spec = SCENES[keys[i]];
+    if (!fit || !spec) {
+      el.style.removeProperty('--tile-self');
+      el.style.removeProperty('--tile-nudge');
+      return;
+    }
+    el.style.setProperty('--tile-self', `${Math.round(fit.base * tileScale(spec, fit))}px`);
+    el.style.setProperty('--tile-nudge', `${Math.round(fit.base * tileNudge(spec, fit))}px`);
+  });
 
   // Explicit breaks rather than letting flex-wrap find the edge of the
   // container: a zero-height 100%-wide flex item pushes everything after it

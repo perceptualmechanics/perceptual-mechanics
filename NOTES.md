@@ -18279,3 +18279,100 @@ Two consequences, and the second is the one that matters:
   and a bench. That is a process defect, not a code defect, and the fix is in
   `WORKING-PROTOCOL.md` rather than here: run the build before the commit,
   not before the deploy.
+
+## 4.11.16 (2026-09-04)
+
+**The landing page is thirteen circles of the same size in two tidy rows, and
+that is a contact sheet rather than a shelf.** Second half of "do both!" — the
+visual audit, alongside 4.11.14's touch work.
+
+The fix is small and the interesting part is what it cost to make it safe.
+Every scene in `registry.js` now carries a `tile` multiplier and a `nudge`
+vertical offset, and the landing page draws each preview at its own size and
+its own height inside the row. Sphere and Medium at 1.12, Library 1.10,
+Outside 1.08, Theater 1.06, Scroll 1.02; Butterfly at 0.90, Beamline 0.91,
+Orbiter 0.92, Psyshell 0.93, Harmonics 0.94, Apollo 0.97; Orrery alone stays
+at 1.00.
+
+**Assigned by looking, not by rule**, and the rule only came out afterwards
+when the assignments turned out to have one:
+
+- **Large** — the ones whose subject is a WHOLE OBJECT you read at a glance
+  and that gain from room: the sphere, the shelf, the lotus, the board.
+- **Small** — the ones that are essentially one bright figure on black, which
+  stay legible at any size because there is nothing to lose: the attractor,
+  the beamline's rail, the orbital.
+
+### The variation is spent from slack, so it can never cost a fit
+
+The landing requirement — every scene visible without scrolling, at a legible
+size — outranks the way the page looks, and a multiplier that makes the
+largest tile 12% bigger is a multiplier that can push a viewport off the
+bottom. So the variation is not a constant. `tileLayout` sweeps `v` from 1
+down to 0 in sixteen steps and takes the largest that still fits:
+
+    hi = 1 + (MAX_SCALE - 1) * v
+    lo = 1 - (1 - MIN_SCALE) * v
+
+At `v = 0` every tile is the same size and the layout is exactly what 4.11.0
+shipped. **The requirement always wins and the variation is a luxury bought
+with whatever is left over** — which is why the verifier can report `full on
+50 of 74, mean 0.80` rather than "on" or "off". Tight viewports get a little
+and roomy ones get all of it, and nothing has to be traded by hand.
+
+The stagger is paid the same way, out of the 24px row gap that was already
+there rather than out of row height. The first version budgeted the nudge
+into the height and **cost 1440x700 and 1024x700 their fits** — two viewports
+that had worked in 4.11.0. Caught by running the uniform control in the
+current code before believing the new numbers, which is rule 5's discipline
+applied prospectively for once rather than after a wrong claim.
+
+`TILE_FLOOR` went 168 → 152, and the change is smaller than it looks: the
+floor now applies to the SMALLEST tile in a varied set rather than to all of
+them, so 152 × the largest multiplier is above where 168 was. The 136px phone
+tiles that have shipped since 4.9.1 remain the sourced precedent underneath
+it.
+
+### The arithmetic moved so it could be tested
+
+`tileLayout` and its constants left `main.js` for `src/utils/tileLayout.js`,
+which imports only `registry.js`. **`main.js` is unimportable in Node** — it
+pulls CSS and bootstraps the DOM, so `node -e "import('./src/main.js')"` dies
+on `ERR_UNKNOWN_FILE_EXTENSION ".css"` before it reaches a single line of the
+layout. An unimportable requirement is an unverifiable one, and this one had
+been unverifiable since it was written.
+
+`scripts/verify-landing.mjs` sweeps 90 viewports (10 widths × 9 heights) and
+asserts, for all thirteen scenes:
+
+- the layout occupies no more height than it was given;
+- the stagger fits inside the row gap;
+- the smallest tile clears the floor and the largest clears the cap;
+- **a uniform grid that fits implies the varied one fits** — the control that
+  catches exactly the regression the first stagger caused;
+- the largest varied tile is no smaller than the uniform tile (1.5px rounding
+  tolerance).
+
+Result: `90 viewports, 74 with a legible fit, 16 that correctly decline`.
+
+This matters for one specific reason. **4.11.0 shipped a version of this
+requirement that reported "all twelve above the fold" while the page scrolled
+by 80 pixels**, and the only thing that caught it was measuring a real
+`scrollHeight` by hand in a browser. The claim has been made in a comment
+since then and checked by nobody. It is now checked by `node`.
+
+### Two errors, per the protocol
+
+**The nudge budgeted into row height**, above — caught by the control rather
+than by review.
+
+**The verifier's first assertion compared the BASE against the uniform
+tile**, and failed all 74 fitting viewports. The check was wrong and the
+layout was right: `base` is the number the multipliers are applied TO, and
+nothing on the page is ever drawn at it. A verifier that fails everything is
+not evidence of a broken layout; the first thing to suspect when a new test
+fails universally is the test.
+
+`package.json`'s `version` had also drifted — it stopped being bumped after
+4.11.4 while eleven releases went past it. Nothing reads it, which is why it
+was invisible, and it is caught up across these two commits.

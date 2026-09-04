@@ -1119,8 +1119,23 @@ html, body {
 	   something definite, which is why it lives on the wrapper and not on
 	   .preview-container (that shrink-wraps to its content, and a percentage
 	   there is circular — it collapsed to 17px tiles once). */
+	/* Each tile is its own size and sits at its own height inside the row —
+	   `--tile-self` and `--tile-nudge`, both written by main.js from the
+	   registry. Thirteen identical circles in two tidy rows is a contact
+	   sheet; this is a field of objects at different distances.
+
+	   The wrapper keeps the FULL row height (`--tile` plus the nudge span)
+	   and the tile is placed inside it, rather than the wrapper shrinking to
+	   its own tile. That is what keeps every row the same height whatever
+	   lands in it, so a tall tile and a low-nudged one in the same row do not
+	   drag their neighbours around. */
 	#scene-previews.rows-forced & {
-		flex: 0 0 var(--tile);
+		flex: 0 0 var(--tile-self, var(--tile));
+		height: var(--tile-row, var(--tile));
+		align-items: center;
+	}
+	#scene-previews.rows-forced & .preview-container {
+		transform: translateY(var(--tile-nudge, 0));
 	}
 }
 

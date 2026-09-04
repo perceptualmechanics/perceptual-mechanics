@@ -30,11 +30,38 @@
 // mechanism the file no longer has is how the next reader is told to look for
 // something that isn't there.
 
+// ─── `tile` — how big this scene's circle is on the landing page ────────────
+// A multiplier on the derived tile size, and the reason it is here rather than
+// in main.js is that it is a fact about the SCENE: whether its subject survives
+// being small. Thirteen identical circles in two tidy rows is a contact sheet;
+// what the page wants is a field of objects at different distances, which is
+// what a shelf of thirteen unrelated things actually looks like.
+//
+// Assigned by looking, not by rule, and the reasoning is per-scene:
+//
+//   Large   the ones whose subject is a WHOLE OBJECT you read at a glance and
+//           that gain from room — the sphere, the shelf, the lotus, the board.
+//   Middle  the ones that read as a scene or a field, where a little more or
+//           less changes nothing.
+//   Small   the ones that are essentially one bright figure on black, which
+//           stay legible at any size because there is nothing to lose — the
+//           attractor, the beamline's rail, the orbital.
+//
+// The layout arithmetic in main.js takes these as given and sizes so that the
+// LARGEST still fits the height budget and the SMALLEST still clears the
+// legibility floor, so the landing requirement holds by construction rather
+// than by hope. `scripts/verify-landing.mjs` proves it across a viewport
+// matrix, because "by construction" is a claim and this project tests those.
+//
+// Default is 1 when a scene does not say. `nudge` is a vertical offset in the
+// same units, which is what stops the two rows reading as two rows.
 export const SCENES = {
-  sphere:    { exportName: 'createSphere',
+  sphere:    { tile: 1.12, nudge: -0.045,
+               exportName: 'createSphere',
                label: 'The Sphere — full screen experience. Press Escape to return.',
                ariaLabel: 'The Sphere — interactive geodesic sphere with text fragments.' },
-  butterfly: { exportName: 'createButterfly',
+  butterfly: { tile: 0.90, nudge: 0.05,
+               exportName: 'createButterfly',
                label: 'Chaos Butterfly in Phase Space, 2026.',
                // The one scene that wants a different backdrop than the
                // shared #000811: its attractor is drawn on true black, and
@@ -46,19 +73,24 @@ export const SCENES = {
                // or a second scene wants the same treatment.
                overlayBg: '#000000',
                ariaLabel: 'Chaos Butterfly in Phase Space, 2026 — Lorenz attractor. Drag to orbit, scroll to zoom.' },
-  scroll:    { exportName: 'createScroll',
+  scroll:    { tile: 1.02, nudge: 0.03,
+               exportName: 'createScroll',
                label: 'Selected Works — A Scroll of Found Writing.',
                ariaLabel: 'Selected Works — a scroll of found writing, carved fragments, 2000 to the 2010s. Scroll to read.' },
-  theater:   { exportName: 'createTheater',
+  theater:   { tile: 1.06, nudge: -0.02,
+               exportName: 'createTheater',
                label: 'The Theater — Now Playing.',
                ariaLabel: 'The Theater — scenes from Truth and Beauty, Paul Revere, and You’ve Got a Friend in Satan, performed by ASCII actors. A different program each visit; click or use the controls to advance.' },
-  orbiter:   { exportName: 'createOrbiter',
+  orbiter:   { tile: 0.92, nudge: -0.05,
+               exportName: 'createOrbiter',
                label: 'Orbiter — A p-Orbital, Satellites.',
                ariaLabel: 'Orbiter — a hydrogen atom’s p-orbital rendered as a fuzzy probability cloud, with satellites in clean elliptical orbits around it. Drag to orbit.' },
-  orrery:    { exportName: 'createOrrery',
+  orrery:    { tile: 1.00, nudge: 0.04,
+               exportName: 'createOrrery',
                label: 'The Orrery of Los Feliz.',
                ariaLabel: 'The Orrery of Los Feliz — a found story, told through a 30-foot orrery: nine planets, their moons, an asteroid belt, in a warehouse you can walk around. Use the arrow keys or WASD to walk, click to look around, click the orrery to read.' },
-  library:   { exportName: 'createLibrary',
+  library:   { tile: 1.10, nudge: -0.03,
+               exportName: 'createLibrary',
                label: 'The Library — once removed.',
                ariaLabel: 'The Library — a real bookshelf, 107 books, films, and divination decks, rebuilt as a shelf you can turn in space. Drag to orbit, scroll to zoom, click a spine to read what it is.' },
   // A small vessel travelling a glowing rail across a night wilderness, with
@@ -74,7 +106,8 @@ export const SCENES = {
   // say, so a sighted visitor and a screen-reader visitor are given the same
   // word for the same object. (`BOUNCES` still names the data array inside
   // beamline.text.js — harmless, since nobody reads a variable name out loud.)
-  beamline:  { exportName: 'createBeamline',
+  beamline:  { tile: 0.91, nudge: 0.05,
+               exportName: 'createBeamline',
                label: 'Beamline.',
                ariaLabel: 'Beamline — a small vessel travelling a glowing rail across a night wilderness, with ten stations along it, each holding a fragment of found text. Drag to orbit, scroll to zoom, click a station to read.' },
   // Harmonics — ninth scene, Phase 3 (2026-08-16), renamed from "The
@@ -82,7 +115,8 @@ export const SCENES = {
   // folder/class names stay `harmonics`, see harmonics.js's own header for
   // why). Visualizes src/resonances.js's approved Layer 2 links; see
   // harmonics.js's own header comment for the full picture.
-  harmonics: { exportName: 'createharmonics',
+  harmonics: { tile: 0.94, nudge: -0.04,
+               exportName: 'createharmonics',
                label: 'Harmonics.',
                ariaLabel: 'Harmonics — resonant pieces across every other scene, laid out by how strongly they connect and pulsing in sync with whatever they resonate with. Drag to orbit, scroll to zoom, touch a node.' },
   // Outside — tenth scene (2026-08-24), pivoted to a floral cosmology map
@@ -90,7 +124,8 @@ export const SCENES = {
   // (petals) and their Folk Origins, Magi/Psi as the center. The earlier
   // 7-vs-11 OER/Apherion projection thesis this scene shipped with is
   // fully retired — see outside.js's own header for the full picture.
-  outside:   { exportName: 'createOutside',
+  outside:   { tile: 1.08, nudge: 0.025,
+               exportName: 'createOutside',
                label: 'Outside.',
                ariaLabel: 'Outside — a generated lotus mapping the five Sources of Power as petals and their Folk Origins, Magi and Psi at the center. The flower breathes continuously on its own. Drag to orbit, scroll to zoom, touch a petal.' },
   // Apollo — eleventh scene (2026-09-02). An absorption spectrum you can play:
@@ -110,7 +145,8 @@ export const SCENES = {
   // links to it. Restoring it is an entry here plus the three edits that file
   // lists — one of which, `--nav-count`, is now 11 for Apollo rather than 10,
   // so a restore would take it to 12.
-  apollo:    { exportName: 'createApollo',
+  apollo:    { tile: 0.97, nudge: -0.05,
+               exportName: 'createApollo',
                label: 'Apollo — an absorption spectrum you can play.',
                ariaLabel: 'Apollo — a solar absorption spectrum you can play. Ten elements on faders put their lines into a band of starlight; click a dark line to hear its wavelength as a pitch.' },
   // Psyshell — twelfth scene (2026-09-03). Rebuilt at 4.8.0: it was a
@@ -122,7 +158,8 @@ export const SCENES = {
   // both times the previous wording described a scene that no longer existed —
   // an ariaLabel is the only account of a scene a screen-reader visitor gets,
   // so it is part of the form change rather than a follow-up to it.
-  psyshell:  { exportName: 'createPsyshell',
+  psyshell:  { tile: 0.93, nudge: 0.04,
+               exportName: 'createPsyshell',
                label: 'Psyshell — lens RE73415.',
                ariaLabel: 'Psyshell — a small crystal antler suspended in a web of fine filaments, holding every sentence on this site inside it. The web and the object are one structure at two scales. Drag to turn it; point the lightpen at it to read one sentence and watch the light of its number travel through the crystal.' },
   // Medium — thirteenth scene (2026-09-04). A homemade Ouija board seen from
@@ -135,7 +172,8 @@ export const SCENES = {
   // nothing anywhere in it holds what the board is going to say. An ariaLabel
   // promising a séance with a spirit would be describing a scene that was
   // built and thrown away (see medium.physics.js's header for both of them).
-  medium:    { exportName: 'createMedium',
+  medium:    { tile: 1.12, nudge: -0.025,
+               exportName: 'createMedium',
                label: 'Medium — a board that can spell.',
                ariaLabel: 'Medium — a homemade Ouija board seen from above, with an upside-down teacup on it and two pairs of fingertips: yours and somebody else\u2019s. Press on the cup and rest your hand; nothing moves until you do, and nothing moves once you let go. Letters land while you are touching it and fill a tape along the bottom.' },
 
