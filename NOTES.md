@@ -587,6 +587,87 @@ described are unchanged.)
   worth trimming, orrery.js's texture generators and first-person rig are the
   two most self-contained chunks to split out first.
 
+## 4.11.4 (2026-09-04)
+
+**Medium — a Ouija board that can actually spell.** The physics only. Nothing is
+drawn, nothing is registered, no scene ships: `medium.physics.js` is pure and
+imported by nothing yet, and `scripts/medium-feel.mjs` measures it. Built in that
+order because the brief calls the resistance the whole experience and says a
+mimicked one "will feel wrong in a way nobody can name" — so it is named first,
+as numbers, before a pixel argues for it.
+
+**The second hand went through two complete designs in one sitting, and the
+first one is worth recording because it was good and still wrong.**
+
+*Version one: the partner was the visitor's own hand, delayed.* An echo. It gave
+withdrawal-mirroring for free — Scott's "if the user stops clicking and pulls
+back, the other hand mirrors" needs no exit logic, because that is what an echo
+does when the thing it echoes leaves — and it made "the visitor cannot tell who
+produced it" true rather than staged, since one of the two forces genuinely was
+them at a different time. It measured well and it was elegant.
+
+**It could not spell, by construction.** An echo has no intention, so nothing
+chooses a letter. Scott: *"our method here is 'do it the hard way', so let's do
+it the hard way. I don't want a mirroring, I want the board to be able to
+spell."* Right call — bolting a letter queue onto an echo would have been
+exactly the lie the brief warns about.
+
+*Version two, which is what exists:* **the partner wants to say something and
+leans toward the next letter.** Three rules make that honest instead of a puppet
+show, and all three are measured below:
+
+1. **It leans; it never shoves.** Its force is capped well below what a pushing
+   hand produces. A visitor who wants to go elsewhere goes there, every time.
+   Not a usability concession — a real board is trivially overridden, and one
+   that fights back is a puppet show.
+2. **So it only makes progress when the visitor is not pushing** — during the
+   hesitation and aimless drift that is what people actually do at a board.
+   Which is the ideomotor account exactly: the message emerges when nobody
+   believes they are doing anything.
+3. **A letter is taken by DWELL, not by contact.** The cup must settle near a
+   letter and stay under a speed threshold before it counts, so passing over a
+   letter spells nothing and the visitor's own pauses are what spell.
+
+### What the bench says
+
+```
+spell    passive visitor: spelled "HELLO" in 12.95s — 2.59s per letter
+override visitor holds at 0.860, partner pulls toward A at 0.248
+         cup ends at 0.821 — visitor wins outright
+driving  20s of sweeping the cup around: spelled ""   (motion alone does not spell)
+cup      hand lands, breaks away 0.183s later; coasts 0.367s after the hand stops
+         30 / 60 / 144Hz agree to 0.0017 board units
+```
+
+`PARTNER_FORCE` 1.9 comes from a sweep of force against both outcomes at once:
+below it the board is too slow to say anything, above it the partner starts
+dragging the cup out of a holding visitor's hand — 0.039 board units of drift at
+1.9, 0.079 at 3.0. It is the one constant the whole scene balances on.
+
+### Two bugs, and the second one is the good one
+
+**Doubled letters were impossible.** A cup at rest on a letter cannot take that
+letter again without leaving — otherwise a settled cup spells one character
+forever — and with the partner aiming at the same letter it never left. HELLO
+stalled at HEL, permanently. Fixed the way a real sitter does it: for a repeat,
+move off and come back. `createSpeller` owns that retreat, and the cup really
+does travel away and return rather than the second L being waved through.
+
+**And the retreat did not work either, for a reason worth keeping.** It aimed at
+`DWELL_RADIUS * 2.6` and ended at `* 2.2` — the same threshold that re-arms the
+letter. The cup stopped **0.1210** board units from the letter and the threshold
+**was 0.1210**, so a strict `>` never fired: a standoff exact to four decimal
+places. Friction is why, and it generalises — **the cup never arrives at an aim
+point, it stops short of one**, so any test placed exactly at an aim distance
+will sit on its own boundary forever. The three distances are now separated and
+each is labelled with what it is for.
+
+Found by instrumenting the run rather than by reading the code, which had looked
+correct twice.
+
+**Files:** `src/scenes/medium/medium.physics.js` (new, pure, imported by nothing
+yet), `scripts/medium-feel.mjs` (new, not part of the build).
+
 ## 4.11.3 (2026-09-04)
 
 **Two tie-break bugs in the landing layout, found by measuring a thirteenth
