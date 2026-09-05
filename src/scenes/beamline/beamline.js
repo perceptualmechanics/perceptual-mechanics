@@ -57,7 +57,7 @@ import { mulberry32, hashSeed } from '../../utils/prng.js';
 const ACCENT = 0x50C878;        // canonical — rail core, station glow, vessel light, terrain grid
 const ACCENT_HALO = 0x8ADAA4;   // lighter tint, same hue — rail halo, dust, shimmer
 const ACCENT_DEEP = 0x309A54;   // darker tint, same hue — vessel/station chassis fill
-const ACCENT_SHADOW = 0x1E6034; // darkest tint, same hue — unused directly here, kept for parity with the rest of the site's palette set
+const ACCENT_SHADOW = 0x1E6034; // darkest tint, same hue — the bottom stop of the terrain colour ramp (see buildTerrain), i.e. the valleys
 
 // Numeric hex -> the `rgba(r,g,b,` prefix the canvas 2D API wants, same shape
 // and same purpose as GOLD_ACCENT_CSS and HORIZON_CSS below: one value, two
@@ -823,8 +823,15 @@ function layoutSmallCaps(cx, str, { bigPx, smallPx, weight = 700, letterGap = 1,
   return cursorX - x;
 }
 
-function makeLabelTexture(bounceLabel, text) {
-  const maxTextWidth = 620;
+// `maxTextWidth` is the wrap width in canvas pixels, and it is a parameter
+// rather than the constant 620 it used to be because the card is drawn once
+// at a fixed canvas size and then scaled to a fixed ON-SCREEN size. At 620 it
+// came out about 524 CSS px wide on every device, which overflowed every
+// phone; making it fit by scaling the whole card down shrinks the type along
+// with it. Wrapping narrower keeps the type at the size it was designed for
+// and spends the room vertically instead, which a phone has and a phone does
+// not have horizontally. See LABEL_WRAP_MAX and labelWrapWidth() below.
+function makeLabelTexture(bounceLabel, text, maxTextWidth) {
   const gap = 14;
   const pad = 20; // margin so the stroke/glow isn't clipped at the canvas edge
 
@@ -852,6 +859,31 @@ function makeLabelTexture(bounceLabel, text) {
   c.width = w; c.height = h;
   const cx = c.getContext('2d');
   cx.textBaseline = 'top';
+
+  // A soft dark scrim under the text, and it is not decoration. The card is
+  // drawn in gold and near-white over whatever the camera happens to have
+  // behind it, and the outline stroke alone is enough over the night sky and
+  // nowhere near enough over the lit emerald terrain — which is most of the
+  // frame on a phone, where the card also has the least room to move. A
+  // radial fade rather than a panel: it darkens the ground the words sit on
+  // and has no edge of its own, so the caption still reads as text floating
+  // in the scene rather than as a UI element pasted over it.
+  // Drawn in a unit space scaled to the canvas, so the falloff is an ELLIPSE
+  // inscribed in it rather than a circle: this canvas is wide and short, and
+  // a circle of radius hypot/2 is still half-opaque where it crosses the long
+  // edges, which puts a straight visible seam down the middle of the terrain.
+  // Inscribed, the scrim reaches zero on every edge and has no border at all.
+  cx.save();
+  cx.translate(w / 2, h / 2);
+  cx.scale(w / 2, h / 2);
+  const scrim = cx.createRadialGradient(0, 0, 0, 0, 0, 1);
+  scrim.addColorStop(0, 'rgba(2,6,14,0.86)');
+  scrim.addColorStop(0.45, 'rgba(2,6,14,0.78)');
+  scrim.addColorStop(0.8, 'rgba(2,6,14,0.34)');
+  scrim.addColorStop(1, 'rgba(2,6,14,0)');
+  cx.fillStyle = scrim;
+  cx.fillRect(-1, -1, 2, 2);
+  cx.restore();
 
   // "STATION N OF M" ships in Orbitron, manual small-caps (see
   // layoutSmallCaps above) — the piece's HUD-chrome font, near-white like
@@ -978,7 +1010,11 @@ function buildTerminus(point, tangent) {
     cores.push(core);
   });
 
-  const glowTex = makeGlowTexture('rgba(150,195,255,');
+  // The visible halo of the ACCENT PointLight three lines down, so it takes
+  // the accent's own derived CSS form rather than a transcribed blue. This
+  // and the vessel's engine glow below were the two transcribed copies the
+  // emerald pass missed: it caught every hex and left the canvas strings.
+  const glowTex = makeGlowTexture(ACCENT_HALO_CSS);
   const glowMat = new THREE.SpriteMaterial({
     map: glowTex, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: 0.75,
   });
@@ -1065,7 +1101,9 @@ function buildVessel(ringPulseTex) {
   const ring = new THREE.Mesh(ringGeo, ringMat);
   ring.position.set(0, 0, -1.9); // mounted at the hull's rear, facing back along the direction of travel
 
-  const glowTex = makeGlowTexture('rgba(210,235,255,');
+  // The bloom of the engine ring immediately above, whose colour and
+  // emissive are both ACCENT — so this is ACCENT's own halo, not a blue one.
+  const glowTex = makeGlowTexture(ACCENT_HALO_CSS);
   const glowMat = new THREE.SpriteMaterial({
     map: glowTex, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: 0.85,
   });
@@ -1634,25 +1672,108 @@ export function createBeamline(container, { preview = false, initialPieceId = nu
   const TEXT_TARGET_PX = 27;
   const TEXT_SCALE_RATIO = TEXT_TARGET_PX / BODY_FONT_PX;
   let labelTex = null, labelAspect = 620 / 120, labelCanvasH = 120;
-  const labelMat = new THREE.SpriteMaterial({ transparent: true, depthWrite: false, depthTest: false });
+  // `fog: false`, and it is not a detail. scene.fog is a FogExp2 in
+  // HORIZON_COLOR, and a SpriteMaterial fogs by default — so this card, which
+  // carries the found text and is the only reason to click a station, was
+  // being blended toward the horizon by however far away that station was.
+  // The gold body text came out green, and the dark scrim behind it came out
+  // pale: at a mid-rail station the fog factor is high enough that the label
+  // read as terrain-coloured writing on terrain. Every other material in this
+  // scene that should ignore fog already says so; this one was missed, and it
+  // was the one with the words on it.
+  const labelMat = new THREE.SpriteMaterial({ transparent: true, depthWrite: false, depthTest: false, fog: false });
   const labelSprite = new THREE.Sprite(labelMat);
   labelSprite.visible = false;
   labelSprite.renderOrder = 10;
   root.add(labelSprite);
   let labelShownAt = -Infinity;
-  let viewportH = h; // kept in sync by the resize handler below
+  let viewportH = h, viewportW = w; // kept in sync by the resize handler below
+  // The label is a Sprite scaled so its body text lands at a fixed on-screen
+  // size, which keeps it readable at any camera distance — and, on its own,
+  // makes the whole card a fixed on-screen size too. That size is the canvas
+  // (up to 660 x N px) times TEXT_SCALE_RATIO, so about 524 CSS px wide
+  // whatever you are holding: it overflowed every phone in both directions,
+  // and the longest of the ten ran 567px tall on an 844px screen. A caption
+  // that runs off the edge of the screen is the one failure mode this scene
+  // cannot recover from, since the label is not scrollable and not
+  // dismissible except by picking another station.
+  //
+  // Two levers, in this order. Width is solved by WRAPPING narrower
+  // (labelWrapWidth below), which keeps the type at TEXT_TARGET_PX and spends
+  // the room vertically instead — a phone has vertical room and does not have
+  // horizontal room. Only height is solved by scaling, and only when a
+  // caption is long enough to need it: nine of the ten fit a 390x844 phone at
+  // full size once they wrap narrow, and the tenth (116 words) cannot be
+  // shown at 27px on a phone by any arrangement — 26 lines of it is taller
+  // than the screen — so that one, and only that one, shrinks.
+  const LABEL_MAX_VIEWPORT_W = 0.88;
+  const LABEL_MAX_VIEWPORT_H = 0.72;
+  const LABEL_WRAP_MAX = 620; // the width the card was designed at
+  const LABEL_WRAP_MIN = 260; // below this the wrap breaks short phrases badly
+  // The widest the body text may wrap so that the finished card lands inside
+  // LABEL_MAX_VIEWPORT_W without any scaling: on-screen width is
+  // (wrap + 2*pad) * TEXT_SCALE_RATIO, so invert that. 620 on any ordinary
+  // desktop, about 390 on a phone.
+  function labelWrapWidth() {
+    const fits = (viewportW * LABEL_MAX_VIEWPORT_W) / TEXT_SCALE_RATIO - 40;
+    return Math.round(Math.max(LABEL_WRAP_MIN, Math.min(LABEL_WRAP_MAX, fits)));
+  }
+  const LABEL_EDGE_PAD = 10;
+  const LABEL_TOP_INSET = 64;    // #pm-nav is 3.5rem tall
+  const LABEL_BOTTOM_INSET = 76; // #site-title's pill, plus its own bottom offset
+  // Where the card WANTS to be — beside its station. updateLabelScale writes
+  // labelSprite.position from this each frame, sliding it only as far as the
+  // viewport demands.
+  const labelAnchor = new THREE.Vector3();
   // Set by dispose() below. showLabel() is the one async function in this
   // scene, and the only thing standing between its continuation and a
   // torn-down scene — see the guard immediately after its await.
   let disposed = false;
 
+  // Scratch vectors, reused every frame rather than allocated in the loop.
+  const _labelNdc = new THREE.Vector3();
+  const _camRight = new THREE.Vector3();
+  const _camUp = new THREE.Vector3();
+
   function updateLabelScale() {
-    const dist = camera.position.distanceTo(labelSprite.position);
+    const dist = camera.position.distanceTo(labelAnchor);
     const fovRad = camera.fov * Math.PI / 180;
-    const targetPx = labelCanvasH * TEXT_SCALE_RATIO;
-    const k = targetPx * 2 * Math.tan(fovRad / 2) / viewportH;
-    const worldH = k * dist;
+    let targetPx = labelCanvasH * TEXT_SCALE_RATIO;
+    // Shrink, never grow: fit is at most 1, so a card that already fits is
+    // left at exactly the size the ratio asks for.
+    const fit = Math.min(
+      1,
+      (viewportW * LABEL_MAX_VIEWPORT_W) / (targetPx * labelAspect),
+      (viewportH * LABEL_MAX_VIEWPORT_H) / targetPx,
+    );
+    targetPx *= fit;
+    const worldPerPx = 2 * Math.tan(fovRad / 2) * dist / viewportH;
+    const worldH = targetPx * worldPerPx;
     labelSprite.scale.set(worldH * labelAspect, worldH, 1);
+
+    // Fitting the card is only half of it: the card is anchored beside the
+    // STATION, and a station can be anywhere, including hard against an edge.
+    // A card that fits and is anchored at x=340 on a 390px screen is still
+    // half off it. So the anchor is a preference and the viewport is the
+    // rule — the card slides along the camera's own right/up axes by however
+    // much of it is outside, which keeps it beside its station wherever
+    // there is room and pinned inside the frame where there isn't.
+    _labelNdc.copy(labelAnchor).project(camera);
+    const screenX = (_labelNdc.x * 0.5 + 0.5) * viewportW;
+    const screenY = (-_labelNdc.y * 0.5 + 0.5) * viewportH;
+    const halfW = targetPx * labelAspect / 2;
+    const halfH = targetPx / 2;
+    // The nav bar and the footer pill are the two things it must not sit
+    // under; both are shared chrome, so the insets are theirs, not this
+    // scene's.
+    const clamp = (v, lo, hi) => (lo > hi ? (lo + hi) / 2 : Math.min(hi, Math.max(lo, v)));
+    const dxPx = clamp(screenX, halfW + LABEL_EDGE_PAD, viewportW - halfW - LABEL_EDGE_PAD) - screenX;
+    const dyPx = clamp(screenY, halfH + LABEL_TOP_INSET, viewportH - halfH - LABEL_BOTTOM_INSET) - screenY;
+
+    camera.matrixWorld.extractBasis(_camRight, _camUp, _labelNdc);
+    labelSprite.position.copy(labelAnchor)
+      .addScaledVector(_camRight, dxPx * worldPerPx)
+      .addScaledVector(_camUp, -dyPx * worldPerPx);
   }
 
   async function showLabel(s) {
@@ -1677,14 +1798,14 @@ export function createBeamline(container, { preview = false, initialPieceId = nu
     labelTex?.dispose();
     const stationLabel = `Station ${s.stationIndex + 1} of ${stations.length}`;
     const text = BOUNCES[s.stationIndex]?.text ?? '';
-    const { tex, aspect, canvasH } = makeLabelTexture(stationLabel, text);
+    const { tex, aspect, canvasH } = makeLabelTexture(stationLabel, text, labelWrapWidth());
     labelTex = tex;
     labelAspect = aspect;
     labelCanvasH = canvasH;
     labelMat.map = labelTex;
     labelMat.opacity = 1;
     labelMat.needsUpdate = true;
-    labelSprite.position.copy(s.point)
+    labelAnchor.copy(s.point)
       .addScaledVector(s.lateral, LABEL_OFFSET)
       .add(new THREE.Vector3(0, LABEL_LIFT, 0));
     updateLabelScale();
@@ -1870,7 +1991,9 @@ export function createBeamline(container, { preview = false, initialPieceId = nu
   let gridBugs = null, gridBugsGeo = null, gridBugsMat = null, gridBugsTex = null;
   const gridBugState = [];
   if (!preview) {
-    gridBugsTex = makeGlowTexture('rgba(160,220,255,');
+    // Life on the terrain grid, and the grid is ACCENT. Was a transcribed
+    // blue, from the same pass that missed the two glows above.
+    gridBugsTex = makeGlowTexture(ACCENT_HALO_CSS);
     const N_BUGS = 14;
     const bugRng = mulberry32(hashSeed('beamline-grid-bugs'));
     const positions = new Float32Array(N_BUGS * 3);
@@ -1916,6 +2039,10 @@ export function createBeamline(container, { preview = false, initialPieceId = nu
   let skyMotes = null, skyMotesGeo = null, skyMotesMat = null, skyMotesTex = null;
   const skyMoteState = [];
   if (!preview) {
+    // Blue on purpose, unlike the three glows above: motes in the SKY, which
+    // is the cool night the piece sits in rather than a touchpoint of the
+    // piece — the same distinction the palette header draws for the sky
+    // gradient, the fog and the three scene lights.
     skyMotesTex = makeGlowTexture('rgba(200,220,255,');
     const N_MOTES = 10;
     const moteRng = mulberry32(hashSeed('beamline-sky-motes'));
@@ -2398,7 +2525,12 @@ export function createBeamline(container, { preview = false, initialPieceId = nu
     vessel.group.position.copy(vesselPos);
     vessel.group.quaternion.copy(vesselQuat.setFromUnitVectors(FORWARD_AXIS, vesselTangent));
     vesselLight.position.copy(vesselPos);
-    const flicker = 0.9 + Math.sin(tSec * 17) * 0.1;
+    // 17 rad/s is 2.71 Hz, and it sat outside the `if (!reduceMotion)` block
+    // that gates every other moving thing in this scene — so a visitor who
+    // asked for reduced motion still got the engine glow pulsing several
+    // times a second. Held at the pulse's own mean instead, which is the same
+    // average brightness without the flicker.
+    const flicker = reduceMotion ? 0.9 : 0.9 + Math.sin(tSec * 17) * 0.1;
     vessel.glowMat.opacity = flicker * 0.85;
 
     // Each station briefly brightens as the vessel actually arrives at its
@@ -2482,7 +2614,11 @@ export function createBeamline(container, { preview = false, initialPieceId = nu
     // devicePixelRatio with no other signal, so the cap is re-applied here.
     managedRenderer.applyPixelRatio();
     renderer.setSize(nw, nh);
-    viewportH = nh;
+    viewportH = nh; viewportW = nw;
+    // The wrap width is a function of the viewport, so a rotated phone needs
+    // the card redrawn, not just rescaled — otherwise it keeps the portrait
+    // wrap in landscape and stays needlessly tall.
+    if (labelSprite.visible && selectedStation) showLabel(selectedStation);
   });
 
   // main.js pauses every preview tile while a full scene is open, pauses any

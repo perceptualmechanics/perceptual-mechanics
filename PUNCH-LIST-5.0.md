@@ -70,10 +70,10 @@ Status: `[ ]` open · `[x]` fixed in 5.0 · `[-]` deliberately not doing
 - [x] `harmonics.js:422,453` — `scene.fog` and both lights affect nothing: every material is `Points`/`Sprite` and all seven set `fog: false`.
 
 ### Beamline
-- [ ] `beamline.js:1634` — station labels are sized so their **on-screen size is constant**, ~524 CSS px wide. All ten overflow a 390px phone; the longest is 567px tall on an 844px screen.
-- [ ] `beamline.js:981,1873,1919` — the emerald palette pass left three blue glow textures (214°, 202°, 213°) on the terminus, grid bugs and sky motes. The file header says the transcription problem was "resolved by fixing the code"; the fix reached the dust and not these.
-- [ ] `beamline.js:2401` — a 2.7 Hz glow flicker sits outside the `if (!reduceMotion)` block that gates everything else in the scene.
-- [ ] `beamline.js:60` — `ACCENT_SHADOW` documented "unused directly here"; it is the bottom stop of the terrain colour ramp.
+- [x] `beamline.js:1634` — station labels are sized so their **on-screen size is constant**, ~524 CSS px wide. All ten overflow a 390px phone; the longest is 567px tall on an 844px screen.
+- [x] `beamline.js:981,1873,1919` — the emerald palette pass left three blue glow textures (214°, 202°, 213°) on the terminus, grid bugs and sky motes. The file header says the transcription problem was "resolved by fixing the code"; the fix reached the dust and not these.
+- [x] `beamline.js:2401` — a 2.7 Hz glow flicker sits outside the `if (!reduceMotion)` block that gates everything else in the scene.
+- [x] `beamline.js:60` — `ACCENT_SHADOW` documented "unused directly here"; it is the bottom stop of the terrain colour ramp.
 
 ### Outside
 - [ ] `outside.js:137` — the seam texture is **flipped**: the gold root glow renders at the petal tip, and the veins converge at the tip instead of fanning from the root. `flipY` is never set and defaults true.
