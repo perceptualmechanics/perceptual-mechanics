@@ -71,7 +71,7 @@
     radial-gradient(ellipse at 30% 0%, rgba(70,110,180,0.25), transparent 60%),
     #05070d;
   border-left:1px solid rgba(120,170,255,0.18);
-  padding:4rem 1.5rem 2rem;transform:translateX(100%);
+  padding:2.2rem 1.5rem 2rem;transform:translateX(100%);
   /* transform alone moves the panel off-screen but leaves it rendered, so
      the ✕ stayed in the tab order the whole time the panel was closed —
      a keyboard visitor Tabbing across the sphere hit a "Close fragment
@@ -87,7 +87,7 @@
   font-family:'Electrolize',sans-serif;
 
 	@media (min-width: 701px) {
-		width: 33%; padding: 3rem 2.5rem;
+		width: 33%; padding: 1.4rem 2.5rem 3rem;
 	}
 }
 /* Enters from whichever side of the screen was actually clicked —
@@ -136,8 +136,6 @@
    regular weight — under the 24px "large text" allowance). .5 alpha
    measures 5.53:1 against the same background and is still visibly quiet.
    Same arithmetic as sceneKit.js's HINT_TEXT_COLOR comment. */
-.sphere-panel-close{position:absolute;top:1.5rem;right:1.5rem;background:none;border:none;color:rgba(255,255,255,.5);font-size:1.2rem;cursor:pointer;padding:.5rem;}
-.sphere-panel-close:hover{color:rgba(255,255,255,.9);}
 /* :hover was the only state this button had — a keyboard visitor had no way
    to see where focus was sitting. Matches the hover treatment plus a real
    ring, and :focus-visible rather than :focus so a mouse click doesn't

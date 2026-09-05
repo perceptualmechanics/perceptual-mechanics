@@ -522,10 +522,22 @@ export const HINT_TEXT_COLOR = 'rgba(255,255,255,0.6)';
 
 // ─── HTML escaping ──────────────────────────────────────────────────────────
 // Used by every scene that injects found text (poems, notes, spine titles)
-// into a read-more panel's innerHTML. Round-trips the string through a
-// detached element's textContent/innerHTML rather than a hand-rolled regex,
-// so it escapes quotes too — matters wherever the escaped string lands
-// inside an HTML attribute, not just element content.
+// into a read-more panel's innerHTML.
+//
+// ELEMENT CONTENT ONLY. The round trip through a detached element is text-node
+// serialisation, which per the HTML spec escapes exactly &, <, > and U+00A0 —
+// NOT quotes. All 24 call sites put the result between tags, which is what
+// this is safe for; putting it in an attribute would not be.
+//
+// It cannot simply be widened to cover quotes either, and the reason is worth
+// having here. scroll.js's rubric marking runs
+// `html.replace(escapeHtml(phrase), …)` over HTML that came back out of a
+// <template>, so the two escapers have to agree character for character; the
+// template's serialiser will never escape an apostrophe, and one rubric
+// phrase ("I'm flying. Finally.") contains one. Escaping quotes here would
+// stop that phrase matching, silently, with the paragraph still rendering.
+// An attribute-safe variant would have to be a second function, not a change
+// to this one.
 export function escapeHtml(s) {
   const div = document.createElement('div');
   div.textContent = s;

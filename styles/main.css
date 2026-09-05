@@ -995,13 +995,6 @@ html, body {
    just look cramped or start wrapping unevenly again anyway. Moved from
    after the 4th tile (was 4-and-5) to after the 5th (2026-08-24, Outside
    brought the count to ten, an even split). */
-.preview-row-break { display: none; }
-
-/* The two axes, named. Without them the field is an unexplained scatter and
-   "distance means something" is a claim only the source code makes. Dim, in
-   the instrument face rather than the writing face, and aria-hidden — the list
-   underneath is the real navigation and already announces every scene by name;
-   these are a legend for the arrangement, not content. */
 .preview-row-break {
   flex-basis: 100%;
   width: 0;
@@ -1024,6 +1017,40 @@ html, body {
 /* ("Read the writing on its own" was documented here as removed in 1.31.2.
    It came back in 4.0 — its rule and the full reasoning are further up this
    file, under #landing-textlink.) */
+
+/* ─── The panel close button, once ──────────────────────────────────────────
+   Five scenes open a side panel over the scene (sphere, orbiter, orrery,
+   library, harmonics) and each had its own hand-maintained copy of the same
+   ✕ — same glyph, same corner, same size — which is how five copies of the
+   same two bugs came to exist:
+
+   * `position: absolute` inside the panel, and the panel is the element with
+     the `overflow-y`. An absolutely-positioned child of a scroll container
+     scrolls away with the content, so on anything longer than the panel the
+     ✕ was gone by the time a reader wanted it, leaving Escape and a click
+     outside as the only ways back — neither of them signposted. `sticky`
+     keeps it pinned to the scrollport instead, and in flow, so it reserves
+     its own space at the top rather than sitting over the title.
+   * Contrast. Three of the five had been raised off 0.4 alpha one at a time,
+     each with its own measurement written next to it; harmonics never was.
+     0.62 white measures 7.74–7.77:1 over all five panel backgrounds
+     (#05070d, #060a07, #0d0a07, #0a0806) — one value covers every panel,
+     which is the point of it being one rule.
+
+   Each scene keeps its own `.<scene>-panel-close` class for the one thing
+   that is genuinely per-scene: the focus ring colour, which is drawn from
+   that scene's own palette. */
+.pm-panel-close {
+  position: sticky; top: 0; z-index: 2;
+  display: block; width: max-content;
+  margin: -1rem -0.6rem 0 auto;
+  background: none; border: none;
+  font-size: 1.2rem; line-height: 1;
+  color: rgba(255, 255, 255, 0.62);
+  cursor: pointer; padding: 0.5rem;
+}
+.pm-panel-close:hover,
+.pm-panel-close:focus-visible { color: rgba(255, 255, 255, 0.9); }
 
 /* ─── Bottom vignette (mobile column stack) ─────────────────────────────────
    Added 2026-08-03. Below 480px #scene-previews switches to

@@ -15,12 +15,12 @@
    separate block elsewhere in the file. */
 .butterfly-exp-label-row {
   position: fixed;
-  bottom: 5.5rem; left: 6vw; right: 6vw;
+  bottom: var(--title-block-bottom-mobile); left: 6vw; right: 6vw;
   display: flex; justify-content: center;
   pointer-events: none; z-index: 310;
 
 	@media (min-width: 601px) {
-		bottom: 3rem; left: 0; right: 0;
+		bottom: var(--title-block-bottom); left: 0; right: 0;
 	}
 }
 .butterfly-exp-label {

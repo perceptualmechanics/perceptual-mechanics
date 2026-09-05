@@ -48,16 +48,16 @@ Status: `[ ]` open · `[x]` fixed in 5.0 · `[-]` deliberately not doing
 - [x] `theater.html:23` — the screen's `aria-label` names two of the three plays; `friendInSatan` is 211 of 615 beats.
 
 ### Butterfly
-- [ ] `butterfly.css:23` — placard at `bottom: 3rem` instead of `var(--title-block-bottom)`. That leaves **~2.6px** above the footer pill — the exact geometry `main.css:183` records measuring and rejecting. `main.css`'s "every scene anchors to this value" is false.
+- [x] `butterfly.css:23` — placard at `bottom: 3rem` instead of `var(--title-block-bottom)`. That leaves **~2.6px** above the footer pill — the exact geometry `main.css:183` records measuring and rejecting. `main.css`'s "every scene anchors to this value" is false.
 
 ### Orbiter
-- [ ] `orbiter.css:151` — under reduced motion the poem link's animation is removed and **nothing replaces it**. Colour is inherited, no underline, no border, `cursor: default` — there is no cue at all. `sphere.css:167` documents this exact defect being fixed, and library and scroll both carry a static rule unconditionally.
-- [ ] `orbiter.css:84` + `orbiter.css:152` — the panel `✕` is `position: absolute` inside the scroll container, so it scrolls away on a long poem. Same in orrery.
-- [ ] `sceneKit.js:523` — `escapeHtml`'s comment claims it escapes quotes. It does not (text-node serialisation). Worse: the phrase is escaped and then matched against **decoded** text in `wireCrossLinks`, so a phrase containing `&`, `<` or `>` silently drops its link — and `verify-links` compares the raw pair, so it passes.
+- [x] `orbiter.css:151` — under reduced motion the poem link's animation is removed and **nothing replaces it**. Colour is inherited, no underline, no border, `cursor: default` — there is no cue at all. `sphere.css:167` documents this exact defect being fixed, and library and scroll both carry a static rule unconditionally.
+- [x] `orbiter.css:84` + `orbiter.css:152` — the panel `✕` is `position: absolute` inside the scroll container, so it scrolls away on a long poem. Same in orrery.
+- [x] `sceneKit.js:523` — `escapeHtml`'s comment claims it escapes quotes. It does not (text-node serialisation). Worse: the phrase is escaped and then matched against **decoded** text in `wireCrossLinks`, so a phrase containing `&`, `<` or `>` silently drops its link — and `verify-links` compares the raw pair, so it passes.
 
 ### Orrery
 - [ ] `orrery.js:2269,3650` — the poster hover highlight changes the rendered image by **0–4 of 255**. The emissive colour is `0x0c0a08`, so a 2.4× intensity bump is sub-visible. The crosshair is what everybody was actually confirming.
-- [ ] `orrery.css:110,131` — two rules set `text-align` on `.orrery-hint`; `center` is dead.
+- [x] `orrery.css:110,131` — two rules set `text-align` on `.orrery-hint`; `center` is dead.
 
 ### Harmonics
 - [ ] `harmonics.js:779` — the "pending" layer renders **zero points**; the comment says 42. The whole subsystem (`pickPendingAt`, `openPendingPanel`, the drift integration, `DRIFT_R`) is unreachable. The same file says so correctly 470 lines later.

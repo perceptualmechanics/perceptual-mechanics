@@ -8,6 +8,7 @@ import { verifyResonances } from './scripts/verify-resonances.mjs';
 import { verifyScrollMarks } from './scripts/verify-scroll-marks.mjs';
 import { verifyLanding } from './scripts/verify-landing.mjs';
 import { verifyAria } from './scripts/verify-aria.mjs';
+import { verifyCssInvariants } from './scripts/verify-css-invariants.mjs';
 
 // Vite 8 warns that `configLoader: 'native'` is planned to become the default.
 // Under that loader this config is handed to Node as real ESM instead of being
@@ -76,6 +77,26 @@ function verifyAriaPlugin() {
         this.error(`verify-aria: ${failures} check(s) failed — see above. A scene is described differently to a screen-reader visitor than to a sighted one.`);
       } else {
         console.log(`  ✓ verify-aria: every scene describes itself the same way three times`);
+      }
+    },
+  };
+}
+
+
+// And for two rules the stylesheets state about themselves in prose: that
+// every bottom-anchored scene title uses the shared safe zone, and that no
+// selector is declared twice over the same property.
+function verifyCssInvariantsPlugin() {
+  return {
+    name: 'pm-verify-css-invariants',
+    apply: 'build',
+    buildStart() {
+      const { ok, failures, log } = verifyCssInvariants();
+      log.forEach(line => console.log(line));
+      if (!ok) {
+        this.error(`verify-css-invariants: ${failures} problem(s) — see above.`);
+      } else {
+        console.log(`  ✓ verify-css-invariants: the safe zone holds and nothing is declared twice`);
       }
     },
   };
@@ -219,7 +240,7 @@ function verifyStyleHash(outDir, root) {
 }
 
 export default defineConfig({
-  plugins: [verifyLinksPlugin(), verifyResonancesPlugin(), verifyScrollMarksPlugin(), verifyLandingPlugin(), verifyAriaPlugin(), prerenderTextPages()],
+  plugins: [verifyLinksPlugin(), verifyResonancesPlugin(), verifyScrollMarksPlugin(), verifyLandingPlugin(), verifyAriaPlugin(), verifyCssInvariantsPlugin(), prerenderTextPages()],
   build: {
     // ─── CSS target: pinned, because Vite 8 quietly moved it ─────────────
     // Vite 8 (Rolldown) defaults to a newer browser baseline than Vite 6

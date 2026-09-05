@@ -63,7 +63,7 @@
 .orbiter-panel {
   position: absolute; top: 0; right: 0; width: 88%; height: 100%;
   background: #060a07; border-left: 1px solid rgba(160,255,200,0.15);
-  padding: 4rem 1.3rem 2rem; transform: translateX(100%);
+  padding: 2.2rem 1.3rem 2rem; transform: translateX(100%); /* top pad no longer has to clear an absolutely-placed ✕ — it sits in flow now */
   /* visibility, not just transform: a transform-only hide leaves the panel
      in the tab order, so Tab from the canvas landed on the ✕ of a panel
      sitting entirely off-screen — focus on something the visitor can't
@@ -86,7 +86,7 @@
   font-family: 'Arapey', serif;
 
 	@media (min-width: 701px) {
-		width: 38%; padding: 3rem 2rem;
+		width: 38%; padding: 1.4rem 2rem 3rem;
 	}
 }
 /* Enters from whichever side of the screen was actually clicked —
@@ -138,7 +138,7 @@
    and lights it up gold to invite the click. */
 @keyframes poem-glimmer {
   0%, 85%, 100% { color: inherit; text-shadow: none; }
-  92% { color: rgba(200,255,220,.35); text-shadow: 0 0 6px rgba(200,255,220,.15); }
+  92% { color: rgb(200,255,220); text-shadow: 0 0 7px rgba(200,255,220,.35); }
 }
 .poem-link {
   color: inherit; text-decoration: none; border-bottom: none; cursor: default;
@@ -148,21 +148,21 @@
   color: rgba(255,230,150,.95); cursor: pointer; animation: none;
   text-shadow: 0 0 12px rgba(255,230,150,.3);
 }
-@media (prefers-reduced-motion: reduce) { .poem-link { animation: none; } }
-.orbiter-panel-close {
-  position: absolute; top: 1.5rem; right: 1.5rem; background: none;
-  border: none; font-size: 1.2rem;
-  cursor: pointer; padding: .5rem; z-index: 2;
-  /* Was rgba(255,255,255,0.4), which composites over this panel's own
-     #060a07 background to about 3.8:1 — under WCAG's 4.5:1 minimum for
-     text this size. The 3:1 large-text allowance doesn't apply: it starts
-     at 18.66px bold or 24px normal, and 1.2rem here is neither. 0.62
-     measures ~7.8:1, matching the margin sceneKit's shared
-     HINT_TEXT_COLOR already keeps (0.6 white, ~7.4:1) rather than sitting
-     just over the line. */
-  color: rgba(255,255,255,0.62);
+/* Turning the glimmer off has to leave something behind. It is this link's
+   only visual affordance — colour inherited from the stanza around it, no
+   underline, no border, cursor:default — so `animation: none` on its own
+   left a sighted reduced-motion visitor with no cue that the text is
+   interactive and no cue where to hover to find out. (Keyboard and AT
+   visitors are fine either way: wireCrossLinks emits a real <a href>.) Same
+   static stand-in as .fragment-link in sphere.css: the glimmer's peak colour
+   held constant as a rule under the phrase, plus the pointer cursor. */
+@media (prefers-reduced-motion: reduce) {
+  .poem-link {
+    animation: none;
+    border-bottom: 1px dotted rgba(200,255,220,.55);
+    cursor: pointer;
+  }
 }
-.orbiter-panel-close:hover { color: rgba(255,255,255,0.9); }
 .orbiter-panel-close:focus-visible {
   /* :hover alone does nothing for a keyboard visitor, and this button is
      the first thing focus lands near once the panel opens. Same green

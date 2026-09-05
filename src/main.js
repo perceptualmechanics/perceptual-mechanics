@@ -1133,9 +1133,9 @@ const PM_GLIMPSE_WORDS = {
   beamline: 'emergence',
   harmonics: 'vibe',
   outside: 'bloom',
-  apollo: 'absorption',
-  psyshell: 'residue',
-  medium: 'suggestion',
+  apollo: 'lyre',
+  psyshell: 'lapel',
+  medium: 'typeface',
   title: 'secrets',
 };
 let pmGlimpseTimer = null;

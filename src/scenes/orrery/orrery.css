@@ -15,7 +15,7 @@
     radial-gradient(ellipse at 30% 0%, rgba(60,48,32,0.25), transparent 60%),
     #0d0a07;
   border-left: 1px solid rgba(220,200,180,0.15);
-  padding: 4rem 1.3rem 2rem; transform: translateX(100%);
+  padding: 2.2rem 1.3rem 2rem; transform: translateX(100%);
   /* `visibility: hidden` on the CLOSED panel is load-bearing, not belt-and-
      braces: translateX(100%) only moves the panel off-screen, it doesn't
      take anything inside it out of the tab order, so the ✕ button stayed
@@ -39,7 +39,7 @@
   font-family: 'Arapey', serif;
 
 	@media (min-width: 701px) {
-		width: 38%; padding: 3rem 2rem;
+		width: 38%; padding: 1.4rem 2rem 3rem;
 	}
 
 	@media (prefers-reduced-motion: reduce) {
@@ -76,21 +76,6 @@
   font-size: 0.98rem; line-height: 1.85; color: rgba(225,218,205,0.7);
   white-space: pre-line; margin: 0;
 }
-.orrery-panel-close {
-  /* Contrast, checked 2026-09-02 — the one control in this panel that
-     never got the arithmetic -era above did. At 1.2rem non-bold this is
-     "normal" text for WCAG purposes (the 3:1 large-text allowance needs
-     18.66px bold or 24px normal), so it needs 4.5:1. The old 0.4 alpha
-     composited over #0d0a07 measures 3.78:1 — a real AA failure, and
-     marginally worse still under the corner of the panel's own radial
-     gradient. 0.62 measures 7.7:1 on the flat background and 7.2:1 under
-     the gradient at full strength, both clear, while staying visibly
-     quieter than the 0.9 hover state. */
-  position: absolute; top: 1.5rem; right: 1.5rem; background: none;
-  border: none; color: rgba(255,255,255,0.62); font-size: 1.2rem;
-  cursor: pointer; padding: .5rem; z-index: 2;
-}
-.orrery-panel-close:hover { color: rgba(255,255,255,0.9); }
 /* :hover lifted this to 0.9 but keyboard focus did nothing at all, so the
    one visitor route that can't hover — the jump list, which is the only
    accessible way into this panel — got no focus affordance on its way back
@@ -107,9 +92,11 @@
      same as butterfly's own label/hint in main.js. Below 300 it's
      only visible during the overlay's ~0.6s fade-in, then gone once
      it's fully opaque. */
-  position: fixed; color: var(--hint-text-color);
-  text-transform: uppercase; pointer-events: none; text-align: center;
-  z-index: 310; font-family: 'Arapey', serif;
+  position: fixed; top: 4.5rem; right: 1.2rem;
+  color: var(--hint-text-color); font-family: 'Arapey', serif;
+  font-size: 0.55rem; letter-spacing: 0.2em; line-height: 1.8;
+  text-transform: uppercase; text-align: right;
+  pointer-events: none; z-index: 310;
   transition: opacity 0.3s ease;
 
 	@media (prefers-reduced-motion: reduce) {
@@ -128,11 +115,6 @@
 .orrery-title.panel-open, .orrery-hint.panel-open {
   opacity: 0;
 }
-.orrery-hint {
-  top: 4.5rem; right: 1.2rem; font-size: 0.55rem; letter-spacing: 0.2em;
-  line-height: 1.8; text-align: right;
-}
-
 /* ─── Micro-Myst ─────────────────────────────────────────────────
    Early-'90s CD-ROM adventure game atmosphere, not a literal Myst
    import: a soft vignette and a single faint grain pass. The texture
