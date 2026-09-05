@@ -210,8 +210,20 @@ export const BURST_MIN = 0.2;
 export const BURST_VAR = 0.45;
 export const PAUSE_MIN = 0.3;
 export const PAUSE_VAR = 0.7;
-// How fast the hand goes still when a burst ends, per second. High: the pause
-// is a stop, not a glide, and the cup's own stiction does the rest.
+// Extra damping on the other hand while it is between bursts, per second. High
+// on purpose: a pause is a stop, not a glide, and the cup's own stiction does
+// the rest. Without it a burst ends by coasting at WANDER_DAMP alone, which is
+// four and a half times slower, and a coasting hand crawls along the arc
+// taking every letter it passes.
+//
+// This constant was exported and then used nowhere — the damping line in
+// stepWander added WANDER_DAMP + brace and stopped there — so the comment
+// above credited it with a behaviour the code did not have. Wired in and
+// measured with the benches in scripts/: over ten seeds at 300s each, the
+// share of consecutive letters that are ARC-ADJACENT falls from 21.8% to
+// 18.7%, letters/s goes 0.140 -> 0.145 and vowel share is unchanged, and
+// medium-feel.mjs's two must-pass questions (the sentence is not stored; the
+// visitor always wins) both still hold.
 export const STOP_DAMP = 9;
 
 // The lean's spring back to the cup's centre, per second squared. Without it
@@ -356,13 +368,20 @@ export function createCup(x = 0.5, y = 0.62) {
 // Returns which force was larger this step, so the scene can draw the cup
 // leaning without the renderer having to re-derive the physics. It is reported
 // rather than displayed as a label: the visitor is never told who is leading.
+// Returns nothing, deliberately. It used to hand back
+// { moved, leader, applied } — `leader` being "who is leaning harder this
+// instant" — and all seven call sites, in the scene and in all three benches,
+// discarded it. The comment on `leader` described a consumer that has never
+// existed. Dropping it also drops the two Math.hypot calls that existed only
+// to compute it, sixty times a second: `applied` is used by the stiction
+// branch below and stays, `fvMag`/`fpMag` were not used by the physics at all.
 export function stepCup(cup, dt, visitor, partner) {
-  let fx = 0, fy = 0, fvMag = 0, fpMag = 0;
+  let fx = 0, fy = 0;
 
   if (visitor) {
     const sx = (visitor.x - cup.x) * CUP.visitorStiffness - cup.vx * CUP.handDamping;
     const sy = (visitor.y - cup.y) * CUP.visitorStiffness - cup.vy * CUP.handDamping;
-    fx += sx; fy += sy; fvMag = Math.hypot(sx, sy);
+    fx += sx; fy += sy;
   }
   if (partner) {
     let sx = (partner.x - cup.x) * CUP.handStiffness - cup.vx * CUP.handDamping;
@@ -372,7 +391,7 @@ export function stepCup(cup, dt, visitor, partner) {
     // the design: one of them can shove and one of them can only lean.
     const mag = Math.hypot(sx, sy);
     if (mag > PARTNER_FORCE) { sx = (sx / mag) * PARTNER_FORCE; sy = (sy / mag) * PARTNER_FORCE; }
-    fx += sx; fy += sy; fpMag = Math.min(mag, PARTNER_FORCE);
+    fx += sx; fy += sy;
   }
 
   const speed = Math.hypot(cup.vx, cup.vy);
@@ -384,7 +403,7 @@ export function stepCup(cup, dt, visitor, partner) {
   // goes — and a smooth approximation of it does not feel the same.
   if (cup.resting && applied < CUP.staticFriction) {
     cup.vx = 0; cup.vy = 0;
-    return { moved: false, leader: null, applied };
+    return;
   }
   cup.resting = false;
 
@@ -408,15 +427,6 @@ export function stepCup(cup, dt, visitor, partner) {
   }
 
   cup.x += cup.vx * dt; cup.y += cup.vy * dt;
-
-  return {
-    moved: true,
-    // Who is leaning harder this instant. Null while they are within a few
-    // percent, which is most of the time and is the point.
-    leader: Math.abs(fvMag - fpMag) < 0.06 * Math.max(fvMag, fpMag, 1e-6)
-      ? null : (fvMag > fpMag ? 'visitor' : 'partner'),
-    applied,
-  };
 }
 
 // ─── The visitor's hand ─────────────────────────────────────────────────────
@@ -761,8 +771,9 @@ export function stepWander(w, dt, cup, letters, weightOf, hold = 0) {
     const k = WANDER_SIGMA * Math.sqrt(dt) * energy;
     w.vx += g() * k; w.vy += g() * k;
   }
-  w.vx -= w.vx * (WANDER_DAMP + brace) * dt;
-  w.vy -= w.vy * (WANDER_DAMP + brace) * dt;
+  const stop = w.moving ? 0 : STOP_DAMP;
+  w.vx -= w.vx * (WANDER_DAMP + brace + stop) * dt;
+  w.vy -= w.vy * (WANDER_DAMP + brace + stop) * dt;
 
   // ─── The field ────────────────────────────────────────────────────────────
   // Every mark pulls at once, by plausibility and by nearness to the CUP — the

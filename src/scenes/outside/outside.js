@@ -177,6 +177,19 @@ function makeSeamVeinTexture() {
   const tex = new THREE.CanvasTexture(c);
   tex.wrapS = THREE.ClampToEdgeWrapping;
   tex.wrapT = THREE.ClampToEdgeWrapping;
+  // flipY defaults to TRUE on every three.js texture, which turned this one
+  // upside down on upload: the gold seam glow painted at canvas y=0 arrived
+  // at uv.y=1, so it rendered at the petal TIP, and the veins converged at
+  // the tip instead of fanning from the root. Which is the opposite of the
+  // whole idea — the seam is where flat petal geometry meets the spherical
+  // pod, and that is at the root.
+  tex.flipY = false;
+  // And the canvas is painted in sRGB. Without this it uploads as though its
+  // values were already linear, so every colour in it reads far brighter than
+  // painted — between 3.4x and 11.7x across this texture's range, worst on
+  // the darkest violets, which is most of its area. The base violet fill in
+  // here IS the petal's ambient emissive, so that was not a subtle error.
+  tex.colorSpace = THREE.SRGBColorSpace;
   return tex;
 }
 
@@ -1015,11 +1028,15 @@ export function createOutside(container, { preview = false, initialPieceId = nul
       if (soundToggleLabelEl) soundToggleLabelEl.textContent = on ? 'Sound on' : 'Sound off';
     }
   }
-  // Persisted, site-wide (shared with Harmonics) via one localStorage key —
-  // see bindPersistedSoundToggle's own comment in sceneKit.js for why this
-  // needs a deferred first-gesture activation rather than just re-reading
-  // the stored value at mount (browser autoplay policy) and how it avoids
-  // fighting an explicit click on the toggle itself.
+  // Persisted under this scene's OWN localStorage key — `pm-sound-enabled:
+  // outside`, not one shared with Harmonics. That is Scott's explicit call
+  // and sceneKit.js records it ("don't reintroduce a shared key"), so the
+  // "site-wide (shared with Harmonics)" this comment used to claim described
+  // a design that was deliberately reversed. The code was always right.
+  // See bindPersistedSoundToggle's own comment for why this needs a deferred
+  // first-gesture activation rather than just re-reading the stored value at
+  // mount (browser autoplay policy), and how it avoids fighting an explicit
+  // click on the toggle itself.
   const soundToggle = bindPersistedSoundToggle(container, soundToggleEl, setSoundEnabled, 'outside');
 
   // ─── Ambient chime voice — one generative note from the Kumoi pool

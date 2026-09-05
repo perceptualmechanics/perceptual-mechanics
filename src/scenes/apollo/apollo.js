@@ -276,19 +276,22 @@ export function createApollo(container, { preview = false, initialArg = null, on
   //    single biggest contributor to "reads as an object": a real spectrum is
   //    brilliant in the yellow-green and dim at both ends because the eye
   //    barely registers 400nm or 720nm, not because there is less light there.
-  //    Raised to a 0.30 power rather than used raw — the raw curve is 8% at
-  //    H-alpha, which would render the entire red half nearly black.
+  //    Raised to a fractional power rather than used raw (ROLLOFF_EXPONENT
+  //    below) — the raw curve is 8% at H-alpha, which would render the entire
+  //    red half nearly black.
   // 3. A fixed vertical stripe pattern, constant down each column. This is
   //    what a flat-field looks like on a real spectrograph: dust and figure on
   //    the slit, printed identically into every row.
   // 4. Per-pixel grain, and a vertical vignette so the strip has an edge
   //    rather than a border.
-  // Rolloff shape. The raw luminous-efficiency curve is 8% at H-alpha and
-  // 0.003% at 400nm, which would render most of the band black; raised to a
-  // 0.38 power with a 5% floor it keeps the eye's own falloff — the reason a
-  // real spectrum is brilliant in the yellow-green and dark at both ends —
-  // without throwing the ends away. Chosen by rendering strips and comparing
-  // them against photographs, not derived.
+  // Rolloff shape. The raw luminous-efficiency curve is 8.0% at H-alpha,
+  // 0.13% at 400nm and 0.004% at 750nm, which would render most of the band
+  // black; raised to ROLLOFF_EXPONENT with ROLLOFF_FLOOR it keeps the eye's
+  // own falloff — the reason a real spectrum is brilliant in the yellow-green
+  // and dark at both ends — without throwing the ends away. It leaves H-alpha
+  // at 41%, 400nm at 13% and 750nm at 7%. Chosen by rendering strips and
+  // comparing them against photographs, not derived — so the numbers here are
+  // consequences of the two constants below and go stale if either moves.
   const ROLLOFF_EXPONENT = 0.38;
   const ROLLOFF_FLOOR = 0.05;
   const EMISSION_EXPONENT = 0.22;
@@ -301,10 +304,11 @@ export function createApollo(container, { preview = false, initialArg = null, on
   let colNm = null, colR = null, colG = null, colB = null;
   // A second colour table for emission. The continuum's rolloff is right for a
   // continuum — it is the eye's own falloff and it is what makes the band read
-  // as an object — but applied to a bright line it renders H-alpha at 25% and
+  // as an object — but applied to a bright line it renders H-alpha at 41% and
   // the deep red end of an emission spectrum is not that dim. A gentler curve
-  // over the same luminous-efficiency function: still visibly dimmer at the
-  // ends, because that is true, but present.
+  // over the same luminous-efficiency function (EMISSION_EXPONENT/FLOOR below
+  // put H-alpha at 72%): still visibly dimmer at the ends, because that is
+  // true, but present.
   let emR = null, emG = null, emB = null;
 
   function buildContinuum() {
@@ -392,13 +396,33 @@ export function createApollo(container, { preview = false, initialArg = null, on
   let tau = null;
   let bandDirty = true;
 
-  // Line width in columns. Kept under one column at full width on purpose:
-  // the sodium doublet is 0.597nm apart, which is 2.3 columns at 1400 columns
-  // across 370nm, so a sigma of 0.7 leaves the pair 3.3 sigma apart and
-  // visibly two. A wider, prettier line would have merged the one feature the
-  // sonification's whole claim rests on.
+  // ─── Line width, and the one feature that sets it ────────────────────────
+  // The sodium D pair is 0.597nm apart, and apollo.text.js's note on it says
+  // the split "is the claim the sonification stands or falls on". So sigma
+  // tracks the pair rather than being chosen for looks: bandW/1400*0.7 is
+  // exactly (their separation in columns) / 3.2, at any width. A wider,
+  // prettier line would merge them.
+  //
+  // Below a certain width nothing can un-merge them, and it is worth being
+  // exact about where that is rather than implying the pair always resolves.
+  // The band spans 370nm, so 0.597nm is two columns only once bandW reaches
+  // about 1240 — under that the two peaks are less than two samples apart and
+  // land on the same column whatever sigma does. Measured on the real integer
+  // column grid: at 1400 columns the saddle between them is 32% below the
+  // peaks, at 1126 it is 23%, and at 1024 and below there is no saddle at all.
+  // `bandW` is DEVICE pixels, so a 2x phone is around 690 and a 1x laptop
+  // around 1130 — which is to say the doublet reads as one line on a phone,
+  // and there is no arrangement of this band that changes that.
+  //
+  // The floor exists so a line never gets narrower than the grid it is drawn
+  // on; at 0.35 the profile is still [0.13, 1, 0.13] rather than a hard
+  // single column. It was 0.55, which was above sigma's own value from about
+  // 1100 columns down — so on exactly the screens where the pair was hardest
+  // to separate, the line was also being drawn wider than the arithmetic
+  // asked for.
+  const LINE_SIGMA_FLOOR = 0.35;
   function lineSigma() {
-    return Math.max(0.55, (bandW / 1400) * 0.7);
+    return Math.max(LINE_SIGMA_FLOOR, (bandW / 1400) * 0.7);
   }
 
   function buildBand() {

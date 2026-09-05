@@ -402,7 +402,18 @@ export function createMedium(container, { preview = false, initialArg = null, on
 
   // ─── Drawing ──────────────────────────────────────────────────────────────
   const INK = '#2b2119';
-  const INK_SOFT = 'rgba(43, 33, 25, 0.55)';
+  // The board's second ink, for everything that is not a letter: the ten
+  // digits, the four punctuation marks, and YES / NO / GOODBYE. 17 of the 43
+  // marks, and on a phone they render around 12px.
+  //
+  // It was 0.55 alpha, which composites to 3.15:1 over CARD_FILL — a real AA
+  // failure on the surface the whole scene is about. medium.css measured the
+  // two chrome elements around the canvas and stopped there, which is the
+  // shape this kind of miss usually takes: the canvas is not a stylesheet, so
+  // nothing sweeping stylesheets was ever going to look at it. 0.72 measures
+  // 4.91:1 and still sits clearly behind the letters' own 10:1, which is the
+  // hierarchy the two inks exist for.
+  const INK_SOFT = 'rgba(43, 33, 25, 0.72)';
   // Named CARD_FILL rather than CARD: the board's RECTANGLE is imported under
   // that name, and a colour shadowing it inside this closure put the layout in a
   // temporal dead zone that threw before the first frame.

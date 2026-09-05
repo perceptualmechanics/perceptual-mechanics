@@ -76,24 +76,24 @@ Status: `[ ]` open · `[x]` fixed in 5.0 · `[-]` deliberately not doing
 - [x] `beamline.js:60` — `ACCENT_SHADOW` documented "unused directly here"; it is the bottom stop of the terrain colour ramp.
 
 ### Outside
-- [ ] `outside.js:137` — the seam texture is **flipped**: the gold root glow renders at the petal tip, and the veins converge at the tip instead of fanning from the root. `flipY` is never set and defaults true.
-- [ ] `outside.js:546` — the emissive map has no `colorSpace`, so it uploads raw and reads **3.4–11.7×** the flat emissive the comment says it reproduces.
-- [ ] `outside.js:1018` — the comment says the sound preference is one shared site-wide key; `sceneKit.js:270` records Scott's direct correction that it must be per-scene, and the code is per-scene.
+- [x] `outside.js:137` — the seam texture is **flipped**: the gold root glow renders at the petal tip, and the veins converge at the tip instead of fanning from the root. `flipY` is never set and defaults true.
+- [x] `outside.js:546` — the emissive map has no `colorSpace`, so it uploads raw and reads **3.4–11.7×** the flat emissive the comment says it reproduces.
+- [x] `outside.js:1018` — the comment says the sound preference is one shared site-wide key; `sceneKit.js:270` records Scott's direct correction that it must be per-scene, and the code is per-scene.
 
 ### Apollo
-- [ ] `apollo.js:395` — the **sodium doublet merges into one line** on every phone and every 1× laptop under ~1400 band columns. `lineSigma`'s floor pins σ at 0.55 while the separation keeps shrinking. The scene's own text calls this "the point of the whole instrument".
-- [ ] `apollo.js:279,287,305` — three numbers in the rolloff block are stale: exponent stated 0.30 (is 0.38), 400nm efficiency stated 0.003% (is 0.127%), H-alpha stated 25% (is 41.4%).
-- [ ] `main.css:1516` — `.pm-jumplist`'s `z-index: 320` cannot beat body-level chrome at 310, because it is inside `#experience-overlay` (`z-index: 300`), which **is** a stacking context. The comment says `position: fixed` escapes to the page root; it escapes the containing block, not the stacking context. Apollo's and Outside's hints paint over the focused jump-list label.
+- [x] `apollo.js:395` — the **sodium doublet merges into one line** on every phone and every 1× laptop under ~1400 band columns. `lineSigma`'s floor pins σ at 0.55 while the separation keeps shrinking. The scene's own text calls this "the point of the whole instrument".
+- [x] `apollo.js:279,287,305` — three numbers in the rolloff block are stale: exponent stated 0.30 (is 0.38), 400nm efficiency stated 0.003% (is 0.127%), H-alpha stated 25% (is 41.4%).
+- [x] `main.css:1516` — `.pm-jumplist`'s `z-index: 320` cannot beat body-level chrome at 310, because it is inside `#experience-overlay` (`z-index: 300`), which **is** a stacking context. The comment says `position: fixed` escapes to the page root; it escapes the containing block, not the stacking context. Apollo's and Outside's hints paint over the focused jump-list label.
 
 ### Psyshell
-- [ ] `psyshell.html:39` — the sound toggle is appended to `<body>` **without `.pm-scene-chrome`**, so it is outside the Tab ring entirely. This is verbatim the Outside bug `main.js:327` records as fixed.
-- [ ] `psyshell.js:1253` — the ordinal's collision guard measures a `display: none` element, so `overlaps` is always true and an inline `bottom` is always written. The authored bottom-right position has never rendered.
-- [ ] `psyshell.js:1259` — the resize handler never calls `applyPixelRatio()`. Nine other WebGL scenes do.
+- [x] `psyshell.html:39` — the sound toggle is appended to `<body>` **without `.pm-scene-chrome`**, so it is outside the Tab ring entirely. This is verbatim the Outside bug `main.js:327` records as fixed.
+- [x] `psyshell.js:1253` — the ordinal's collision guard measures a `display: none` element, so `overlaps` is always true and an inline `bottom` is always written. The authored bottom-right position has never rendered.
+- [x] `psyshell.js:1259` — the resize handler never calls `applyPixelRatio()`. Nine other WebGL scenes do.
 
 ### Medium
-- [ ] `medium.js:404` — `INK_SOFT` at **3.15:1** paints the digits, all four punctuation marks and YES/NO/GOODBYE — 17 of 43 marks, at ~12px on a phone. `medium.css:14` measured the two chrome elements and skipped the canvas, which is the surface the scene is about.
-- [ ] `medium.physics.js:213` — `STOP_DAMP = 9` is exported and never used. The burst-end stop the comment credits with fixing a measured 20% adjacent-letter rate is a 4.5× slower glide.
-- [ ] `medium.physics.js:412` — `stepCup` computes `leader`/`moved`/`applied` every frame; all seven call sites discard them. The comment names a consumer that does not exist.
+- [x] `medium.js:404` — `INK_SOFT` at **3.15:1** paints the digits, all four punctuation marks and YES/NO/GOODBYE — 17 of 43 marks, at ~12px on a phone. `medium.css:14` measured the two chrome elements and skipped the canvas, which is the surface the scene is about.
+- [x] `medium.physics.js:213` — `STOP_DAMP = 9` is exported and never used. The burst-end stop the comment credits with fixing a measured 20% adjacent-letter rate is a 4.5× slower glide.
+- [x] `medium.physics.js:412` — `stepCup` computes `leader`/`moved`/`applied` every frame; all seven call sites discard them. The comment names a consumer that does not exist.
 
 ---
 

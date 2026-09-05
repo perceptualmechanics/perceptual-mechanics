@@ -36,7 +36,13 @@
 
 <p class="psyshell-ordinal" hidden></p>
 
-<button type="button" class="psyshell-sound-toggle" aria-pressed="false">
+<!-- `.pm-scene-chrome` because psyshell.js appends this to document.body,
+     outside #experience-overlay. main.js's focus trap collects the overlay's
+     own focusables plus anything body-level carrying that marker — so without
+     it the only sound control in the scene sat outside the Tab ring
+     altogether, which is verbatim the Outside bug main.js:327 records as
+     already fixed. Apollo, Harmonics, Outside and Medium all carry it. -->
+<button type="button" class="psyshell-sound-toggle pm-scene-chrome" aria-pressed="false">
   <span class="psyshell-sound-icon" aria-hidden="true">♪</span>
   <span class="psyshell-sound-label">Sound off</span>
 </button>

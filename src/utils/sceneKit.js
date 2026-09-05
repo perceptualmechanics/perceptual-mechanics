@@ -483,7 +483,13 @@ export function createPanelCloser(panel, container, { closeBtn, onClose } = {}) 
 // label at a time rather than a wall of text.
 export function createJumpList(container, { label, items, getLabel, onSelect }) {
   const list = document.createElement('ul');
-  list.className = 'pm-jumplist';
+  // `.pm-scene-chrome` because the list mounts on <body> (see the append
+  // below): main.js's focus trap collects the overlay's own focusables plus
+  // anything body-level carrying that marker, so without it the list would be
+  // outside the Tab ring entirely — which would be the same defect as
+  // psyshell's sound toggle, in the helper whose entire purpose is keyboard
+  // access.
+  list.className = 'pm-jumplist pm-scene-chrome';
   list.setAttribute('aria-label', label);
   items.forEach((item, i) => {
     const li = document.createElement('li');
@@ -495,17 +501,33 @@ export function createJumpList(container, { label, items, getLabel, onSelect }) 
     list.appendChild(li);
   });
 
-  // The list mounts INSIDE the scene's container, so without this a click on
-  // one of its buttons bubbles on to the container's own canvas click handler
-  // — which sees an open panel and a raycast that hit nothing (a
-  // keyboard-activated click reports clientX/clientY 0,0) and closes the very
-  // panel the button just opened. The whole accessible path opened and shut in
-  // the same event. Found independently in library and orbiter during the 4.0
-  // pass, and it was latent in every scene that uses this helper, so the guard
-  // belongs here rather than in five separate click handlers.
+  // A click on one of these buttons must not reach the scene's own canvas
+  // click handler — that handler sees an open panel and a raycast that hit
+  // nothing (a keyboard-activated click reports clientX/clientY 0,0) and
+  // closes the very panel the button just opened. The whole accessible path
+  // opened and shut in the same event. Found independently in library and
+  // orbiter during the 4.0 pass, latent in every scene using this helper, so
+  // the guard is here rather than in five separate click handlers. It is kept
+  // even now that the list mounts on <body>, since `container` may still be
+  // an ancestor in some future arrangement and the cost is one line.
   list.addEventListener('click', e => e.stopPropagation());
 
-  container.appendChild(list);
+  // Mounted on <body>, NOT on the scene's container, and the reason is the
+  // one thing about z-index that is easy to state backwards.
+  // #experience-overlay is `position: fixed; z-index: 300`, which makes it a
+  // STACKING CONTEXT. `position: fixed` on a descendant escapes the
+  // containing block — which is what main.css's comment here said — but not
+  // the stacking context. So .pm-jumplist's z-index: 320 was being compared
+  // against its siblings inside the overlay, and could never beat the
+  // body-level scene chrome at 310: Apollo's and Outside's hints painted
+  // straight over the focused jump-list label, which is the one thing on
+  // screen at that moment and the only thing telling a keyboard visitor where
+  // they are. On <body> the 320 means what it says.
+  //
+  // This is the same shape as the KNOWN ISSUE recorded in harmonics.css —
+  // that one is a panel inside the scene wrapper losing to the same
+  // body-level chrome, and no z-index set on the panel can win it either.
+  document.body.appendChild(list);
   return { dispose() { list.remove(); } };
 }
 

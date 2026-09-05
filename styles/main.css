@@ -1540,11 +1540,18 @@ html, body {
    satellites, posters, spines) without a mouse. Same visually-hidden-until-
    focused idiom as .skip-link above: every button in a list shares this one
    fixed slot, so Tabbing through reveals one label at a time instead of a
-   wall of text sitting permanently on screen. z-index 320 for the same
-   reason hint/caption elements need >=310 (see the z-index scale comment at
-   the top of this file) — these buttons are position:fixed, which escapes
-   #experience-container's own stacking context straight to the page root,
-   same as any other position:fixed element appended inside a scene. */
+   wall of text sitting permanently on screen. z-index 320 for the same reason
+   hint/caption elements need >=310 (see the z-index scale comment at the top
+   of this file).
+
+   That 320 only means anything because sceneKit's createJumpList mounts the
+   list on <body>. It used to mount inside the scene's container, under
+   #experience-overlay, and this comment claimed `position: fixed` escaped
+   that element's stacking context "straight to the page root". It does not:
+   fixed positioning escapes the containing BLOCK, and a stacking context is a
+   different thing — #experience-overlay is `position: fixed; z-index: 300`,
+   so it is one, and everything inside it is sealed under 300 whatever
+   z-index it declares. The list lost to the body-level scene hints at 310. */
 .pm-jumplist {
   position: fixed;
   top: 0; left: 0;

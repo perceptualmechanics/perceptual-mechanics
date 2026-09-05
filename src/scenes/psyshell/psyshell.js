@@ -1156,6 +1156,10 @@ export function createPsyshell(container, { preview = false } = {}) {
     if (ordinalEl) {
       ordinalEl.hidden = false;
       ordinalEl.textContent = `${index + 1} / ${FILAPIXEL_COUNT}`;
+      // Now that it is on screen and has a real box, check it against the
+      // title — the first time this runs is the first time that question has
+      // a meaningful answer.
+      placeOrdinal();
     }
     // The live region keeps everything, including the sentence and where it
     // came from: a visitor who cannot see the pulse must still get the content,
@@ -1250,15 +1254,36 @@ export function createPsyshell(container, { preview = false } = {}) {
     if (usableBottom - usableTop < H * 0.3) { usableTop = 0; usableBottom = H; }
     fitCamera();
 
-    if (!ordinalEl) return;
+    placeOrdinal(titleBox);
+  }
+
+  // The ordinal ("3 / 108") sits bottom-right and is lifted only if it would
+  // run into the title block. The measurement is only meaningful while it is
+  // on screen: it starts `hidden`, and getBoundingClientRect on a
+  // display:none element is all zeros — so left(0) < titleBox.right + 10 and
+  // top(0) < titleBox.bottom were both trivially true, `overlaps` was always
+  // true, and an inline `bottom` was written before the element had ever been
+  // laid out. Its authored bottom-right position had therefore never
+  // rendered: by the time it was shown it already carried the override.
+  function placeOrdinal(titleBox) {
+    if (!ordinalEl || ordinalEl.hidden) return;
+    const box = titleBox ?? titleEl?.getBoundingClientRect();
+    if (!box) return;
     const ordBox = ordinalEl.getBoundingClientRect();
-    const overlaps = ordBox.left < titleBox.right + 10 && ordBox.top < titleBox.bottom;
-    ordinalEl.style.bottom = overlaps ? `${Math.round(window.innerHeight - titleBox.top + 10)}px` : '';
+    if (!ordBox.width && !ordBox.height) return;
+    const overlaps = ordBox.left < box.right + 10 && ordBox.top < box.bottom;
+    ordinalEl.style.bottom = overlaps ? `${Math.round(window.innerHeight - box.top + 10)}px` : '';
   }
 
   resizeCtl = bindGuardedResize(container, (cw, ch) => {
     camera.aspect = cw / ch;
     camera.updateProjectionMatrix();
+    // A window dragged between a Retina and a non-Retina display changes
+    // devicePixelRatio with no other signal, so the cap is re-applied here.
+    // Nine other WebGL scenes do this; this one did not, so a scene opened on
+    // one display and moved to the other kept the first display's ratio and
+    // rendered soft or over-sampled until it was reopened.
+    managedRenderer.applyPixelRatio();
     renderer.setSize(cw, ch);
     relayout();
   });
