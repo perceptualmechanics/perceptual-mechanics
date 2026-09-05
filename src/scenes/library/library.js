@@ -79,25 +79,43 @@ const PALETTE = [
 // not just thicker books.
 const BOX_PALETTE = ['#141428', '#1c1830', '#101018'];
 
-// Discs and CDs get their own narrow, near-monochrome palettes plus their
-// own texture treatment (see makeDiscSpineTexture/makeCdSpineTexture
-// below), so each material reads as a distinct physical object: matte
-// varied-color cloth binding for books, uniform glossy near-black plastic
-// cases for the Blu-rays (real disc shelves are famously almost all one
-// color, unlike a bookshelf), pale jewel-case paper for the CDs — rather
-// than all three sharing a single palette and reading as one thinner
-// smear of the same colors.
-// Both palettes shifted warm (design-notes pass follow-up, 2026-09-01) —
-// Scott's reaction to vividColor's warmer book spines was to want that
-// same warmth carried into the discs/CDs too, not just the books. Still
-// near-monochrome, still a materially distinct register from the books
-// (glossy near-black plastic / pale jewel-case paper) — DISC_PALETTE was
-// previously a cool blue-black (hue ~220-230°), now an umber/espresso
-// black (hue ~25-30°) so it reads warm at a glance instead of fighting
-// the shelf's own warm void/backdrop; CD_PALETTE moves from a neutral
-// off-white toward a warmer champagne/tan.
-const DISC_PALETTE = ['#160f0a', '#1a1108', '#170e08', '#140c0a'];
-const CD_PALETTE = ['#ecdcc0', '#e4cfa8', '#dcc59a', '#e8d3b0'];
+// Discs and CDs get their own palettes plus their own texture treatment
+// (makeDiscSpineTexture/makeCdSpineTexture below), so each material reads as
+// a distinct physical object rather than all three sharing one palette and
+// smearing together.
+//
+// Both were four near-identical values until 5.0 — DISC_PALETTE four umber
+// blacks a hue apart, CD_PALETTE four champagnes — on the argument that a
+// disc shelf is famously almost all one colour. The argument is true about
+// disc SPINES held in the hand and false about what it produces here, which
+// Scott put plainly looking at the shelf: "mix up the colors on the CDs."
+// 114 CDs at 43% of everything on the shelf, all within a few percent of the
+// same cream, is not a material register — it is a pale mass with the
+// books' colour scattered on top of it, and the same for the films in the
+// other direction.
+//
+// So both open up, without becoming the books. The rule that keeps them
+// distinct is no longer "one colour" but PROPORTION: a CD rack is the album
+// art's colour, which means saturated and various with real black and real
+// white in it; a disc shelf is mostly dark plastic with a minority of
+// bone-white spines, which is what a Criterion shelf actually looks like and
+// what stops 44 films reading as a hole in the shelf. Books stay matte cloth
+// (PALETTE above, warmed through vividColor); these two stay glossy.
+const DISC_PALETTE = [
+  '#141018', '#1a1108', '#12161e', '#1c1414', '#101820',
+  '#22252b', '#2a1f2e', '#3a2418', '#171a12',
+  // The Criterion end of the shelf. Deliberately a minority — roughly one in
+  // five — so they read as particular editions rather than as a second
+  // uniform.
+  '#e8e2d4', '#d8d2c2',
+];
+const CD_PALETTE = [
+  '#1a1a1e', '#2b2f3a', '#3a3f47',            // the black-spined majority of any rack
+  '#f2ece0', '#c4d0d6', '#a8b5bd',            // white, ice, silver
+  '#8c2f2a', '#b03a52', '#d96b3a', '#c9a227', // the loud ones
+  '#1f3d5c', '#2f5a44', '#6b3a5e', '#7a8b6b', // the quiet ones
+  '#5c4630', '#e0c9a0',                        // and the champagne the palette used to be, entirely
+];
 
 // Cheap deterministic string hash (djb2) — used so a given title always
 // gets the same simulated thickness/color/height on every visit, rather
@@ -324,18 +342,48 @@ function vividColor(hex) {
 // invisible at render size. It also quarters the canvas rasterization work in
 // the one long synchronous main-thread task that builds all 265 of these at
 // scene open. Set it back to 1 to compare directly.
-const SPINE_TEXTURE_SCALE = 0.5;
+// Per material as of 5.0, because one number could not be right for all
+// three — and the old one was right for a view the scene invites you to
+// leave.
+//
+// The 0.5 was reasoned against the DEFAULT framing: "roughly 20x140 CSS px on
+// screen... even on a devicePixelRatio-2 display that is ~40 device px across
+// a 112-px-wide texture, so the top mip level was never sampled anywhere near
+// 1:1." All true, and the hint under this scene says SCROLL TO ZOOM.
+// `recomputeZoomRange()` clamps minDist to 0.35 of the fit distance, so a
+// spine that is ~140 CSS px tall at rest is ~400 at full zoom, which on a
+// retina display is 800 device pixels against a 400-pixel texture. Magnified
+// two to one, which is exactly the mush Scott sent a screenshot of. **A
+// resolution budget computed for one camera distance was applied to a scene
+// with a zoom control.**
+//
+// So the scale now follows how closely each material is ever actually read:
+//
+//   books  1.0 — 800 design px is exactly the device height of a book spine
+//                at full zoom on a retina display. Nothing is magnified and
+//                nothing is wasted; this is the number the geometry asks for.
+//   discs  0.8 — big bold poster type, legible before it is sharp.
+//   CDs    0.5 — a jewel case is half a book's width and the type on it is
+//                tiny at any zoom. 114 of them, so this is also where the
+//                memory saving actually lives.
+//
+// The cost, computed rather than waved at: level-0 RGBA is 104 books x
+// 112x800 (37.3 MB) + 44 discs x 80x720 at 0.8 (6.5 MB) + 114 CDs x 72x640
+// at 0.5 (5.2 MB) = 49 MB, about 65 MB once three.js builds mipmaps, against
+// 17 MB and 23 MB before. It buys the one thing the scene is for: the text on
+// the object is readable when you go and look at it.
+const SPINE_TEXTURE_SCALE = { book: 1.0, disc: 0.8, cd: 0.5 };
 
 function makeSpineTexture(baseColor, title, creator, isBox) {
-  // Drawn at 112x800, rasterized at SPINE_TEXTURE_SCALE of it — see that
+  // Drawn at 112x800, rasterized at SPINE_TEXTURE_SCALE.book of it — see that
   // constant's own comment. W/H below are the design-space dimensions the
   // rest of this function works in; the context scale does the rest.
-  const W = 112, H = 800;
+  const W = 112, H = 800, SCALE = SPINE_TEXTURE_SCALE.book;
   const c = document.createElement('canvas');
-  c.width = Math.round(W * SPINE_TEXTURE_SCALE);
-  c.height = Math.round(H * SPINE_TEXTURE_SCALE);
+  c.width = Math.round(W * SCALE);
+  c.height = Math.round(H * SCALE);
   const cx = c.getContext('2d');
-  cx.scale(SPINE_TEXTURE_SCALE, SPINE_TEXTURE_SCALE);
+  cx.scale(SCALE, SCALE);
   cx.fillStyle = baseColor;
   cx.fillRect(0, 0, W, H);
 
@@ -465,15 +513,15 @@ function cubbyTop(row) { return TOTAL_H / 2 - FRAME_T - (row - 1) * (CUBBY_H + F
 // where the author's name is the whole point. The panel still shows
 // writer/producer in its detail lines when the catalog has them.
 function makeDiscSpineTexture(baseColor, title) {
-  // Drawn at 80x720, rasterized at SPINE_TEXTURE_SCALE of it — see that
+  // Drawn at 80x720, rasterized at SPINE_TEXTURE_SCALE.disc of it — see that
   // constant's own comment. W/H below are the design-space dimensions the
   // rest of this function works in; the context scale does the rest.
-  const W = 80, H = 720;
+  const W = 80, H = 720, SCALE = SPINE_TEXTURE_SCALE.disc;
   const c = document.createElement('canvas');
-  c.width = Math.round(W * SPINE_TEXTURE_SCALE);
-  c.height = Math.round(H * SPINE_TEXTURE_SCALE);
+  c.width = Math.round(W * SCALE);
+  c.height = Math.round(H * SCALE);
   const cx = c.getContext('2d');
-  cx.scale(SPINE_TEXTURE_SCALE, SPINE_TEXTURE_SCALE);
+  cx.scale(SCALE, SCALE);
   cx.fillStyle = baseColor;
   cx.fillRect(0, 0, W, H);
 
@@ -530,15 +578,15 @@ function makeDiscSpineTexture(baseColor, title) {
 // reflective disc itself, just visible through the spine — since a flat
 // pale card alone would read too much like a thin, blank book.
 function makeCdSpineTexture(baseColor, artist, album) {
-  // Drawn at 72x640, rasterized at SPINE_TEXTURE_SCALE of it — see that
+  // Drawn at 72x640, rasterized at SPINE_TEXTURE_SCALE.cd of it — see that
   // constant's own comment. W/H below are the design-space dimensions the
   // rest of this function works in; the context scale does the rest.
-  const W = 72, H = 640;
+  const W = 72, H = 640, SCALE = SPINE_TEXTURE_SCALE.cd;
   const c = document.createElement('canvas');
-  c.width = Math.round(W * SPINE_TEXTURE_SCALE);
-  c.height = Math.round(H * SPINE_TEXTURE_SCALE);
+  c.width = Math.round(W * SCALE);
+  c.height = Math.round(H * SCALE);
   const cx = c.getContext('2d');
-  cx.scale(SPINE_TEXTURE_SCALE, SPINE_TEXTURE_SCALE);
+  cx.scale(SCALE, SCALE);
   cx.fillStyle = baseColor;
   cx.fillRect(0, 0, W, H);
 
