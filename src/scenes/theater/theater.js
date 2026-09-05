@@ -362,17 +362,25 @@ class TheaterRenderer {
       + escapeHtml(asciiBubble(text, false, this.bubbleWidth));
   }
 
-  // A bubble is centred on its speaker (left:50% + translateX(-50%), which
-  // STANDARDS.md keeps for exactly this "anchor a decorative element at an
-  // offset inside its own positioned ancestor" job). The figures at the ends
-  // of a four-actor stage sit close enough to the edge that half a bubble's
-  // width lands outside .tab-root's overflow:hidden and gets shaved off —
-  // measured at 375px: 40px of monospace art gone, mid-glyph, with no way to
-  // scroll it back into view. So the centring is nudged, per bubble, by
-  // however much it overhangs. Written through .style.setProperty() rather
-  // than a style="" attribute for the same CSP reason as the preview's reel
-  // holes (see createTheater), and read back in one getBoundingClientRect
-  // per line — a few times a minute, not per frame.
+  // A bubble is placed relative to its SPEAKER — centred on them
+  // (left:50% + translateX(-50%), the "anchor a decorative element at an
+  // offset inside its own positioned ancestor" job STANDARDS.md keeps that
+  // pattern for) and grown upward from their head (bottom:100%). .tab-root
+  // clips with overflow:hidden, so a speaker near an edge sends part of the
+  // block outside it, and neither axis is safe:
+  //   * horizontally, the figures at the ends of a four-actor stage lose
+  //     40px of monospace art at 375px, shaved mid-glyph;
+  //   * vertically, the tallest speeches are taller than the headroom above
+  //     an actor — the longest is 343px against 313px at 375x667, and eleven
+  //     of the 736 beats clear 200px, so a shorter phone loses more of them.
+  // Nothing can scroll it back into view: the bubble is pointer-events:none
+  // and has no tabindex. So the placement is nudged per bubble by however
+  // much it overhangs.
+  //
+  // Written through .style.setProperty() rather than a style="" attribute for
+  // the same CSP reason as the preview's reel holes (see createTheater), and
+  // read back in one getBoundingClientRect per line — a few times a minute,
+  // not per frame.
   _placeBubble(bubble) {
     if (!this.clipEl) return;
     const bounds = this.clipEl.getBoundingClientRect();
@@ -385,6 +393,15 @@ class TheaterRenderer {
     // reads from its first character rather than its last.
     if (r.left + dx < bounds.left + margin) dx = (bounds.left + margin) - r.left;
     bubble.style.setProperty('--bubble-shift', `${Math.round(dx)}px`);
+
+    // Down only. A bubble that fits above its speaker is left exactly where
+    // it is — pulling short ones down would cover the actor for no reason.
+    // One that doesn't fit is pushed down until its first line is inside the
+    // frame, which does overlap the figure; a speech that is cut off at the
+    // top is unreadable, and one drawn over its speaker is merely crowded.
+    let dy = 0;
+    if (r.top < bounds.top + margin) dy = (bounds.top + margin) - r.top;
+    bubble.style.setProperty('--bubble-lift', `${Math.round(dy)}px`);
   }
 
   // bubbleWidthFor() used to be read once per line and never again, and the

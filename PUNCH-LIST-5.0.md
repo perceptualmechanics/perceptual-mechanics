@@ -39,12 +39,12 @@ Status: `[ ]` open · `[x]` fixed in 5.0 · `[-]` deliberately not doing
 - [x] `scroll.css:305` — `.scroll-patch-refs` at 9.9px measures 1.65–2.18:1 against the three patches that actually show it.
 
 ### Sphere
-- [ ] `sphere.js:356,419` — `panelContent.scrollTop = 0` targets the wrong element; `.sphere-panel` is the scroll container. Following a link inside a long fragment lands the reader mid-text.
-- [ ] `sphere.css:159` — `silk-glimmer` drops the link's alpha 0.78 → 0.28, so contrast falls **9.60:1 → 1.92:1**. The link's only affordance is a momentary near-disappearance.
+- [x] `sphere.js:356,419` — `panelContent.scrollTop = 0` targets the wrong element; `.sphere-panel` is the scroll container. Following a link inside a long fragment lands the reader mid-text.
+- [x] `sphere.css:159` — `silk-glimmer` drops the link's alpha 0.78 → 0.28, so contrast falls **9.60:1 → 1.92:1**. The link's only affordance is a momentary near-disappearance.
 
 ### Theater
-- [ ] `theater.js:376` — `_placeBubble` corrects horizontally only. The seven tallest bubbles run off the top of `.tab-root`'s `overflow: hidden`; the worst is ~349px tall at 375px wide. `theater.css:257` claims the clipping is fixed.
-- [ ] `Player.js:23` — `MAX_DUR = 10000` truncates 29 of 736 beats. The longest wants 35.1s at the comment's own stated reading rate.
+- [x] `theater.js:376` — `_placeBubble` corrects horizontally only. The seven tallest bubbles run off the top of `.tab-root`'s `overflow: hidden`; the worst is ~349px tall at 375px wide. `theater.css:257` claims the clipping is fixed.
+- [x] `Player.js:23` — `MAX_DUR = 10000` truncates 29 of 736 beats. The longest wants 35.1s at the comment's own stated reading rate.
 - [x] `theater.html:23` — the screen's `aria-label` names two of the three plays; `friendInSatan` is 211 of 615 beats.
 
 ### Butterfly

@@ -156,27 +156,33 @@
   font-size:.6rem;letter-spacing:.3em;color:rgba(180,200,255,.6);
   margin:2rem 0 0;text-transform:uppercase;
 }
+/* A cross-link's only affordance: it brightens for about a second in every
+   twelve, then goes back to reading as ordinary prose.
+
+   The peak is opaque on purpose. An alpha of .28 here composited to
+   (54,64,81) over the panel's #05070d — 1.92:1, where the prose it sits in
+   is 9.62:1 — so the "glimmer" was the phrase briefly going almost invisible.
+   It is 13.8:1 now, which is the direction the name always claimed. */
 @keyframes silk-glimmer{
   0%,85%,100%{color:inherit;text-shadow:none;}
-  92%{color:rgba(180,210,255,.28);text-shadow:0 0 6px rgba(180,210,255,.12);}
+  92%{color:rgb(190,215,255);text-shadow:0 0 7px rgba(190,215,255,.35);}
 }
 .fragment-link{
   color:inherit;text-decoration:none;border-bottom:none;cursor:default;
   transition:color .2s;animation:silk-glimmer 12s ease-in-out infinite;
 
-	/* The periodic glimmer is this link's ONLY visual affordance — no
-	   underline, no border, colour inherited from the surrounding prose,
-	   and cursor:default. Killing the animation and stopping there (what
-	   this block used to do) left a sighted reduced-motion visitor with
-	   nothing at all: not just no cue that the text is interactive, but no
-	   cue where to hover to find out. Keyboard and AT visitors are fine
-	   either way now that wireCrossLinks emits a real <a href>. So the
-	   static equivalent: a faint rule under the phrase, in the glimmer's
-	   own peak colour, held constant instead of pulsed — and a pointer
-	   cursor, since there is no glimmer left to tell them it is one. */
+	/* The glimmer is this link's ONLY visual affordance — no underline, no
+	   border, colour inherited from the prose around it, cursor:default. So
+	   turning the animation off has to leave something behind, or a sighted
+	   reduced-motion visitor gets no cue that the text is interactive and no
+	   cue where to hover to find out. (Keyboard and AT visitors are fine
+	   either way: wireCrossLinks emits a real <a href>.) The static
+	   equivalent is the glimmer's peak colour held constant as a rule under
+	   the phrase, plus the pointer cursor the glimmer would otherwise have
+	   stood in for. */
 	@media (prefers-reduced-motion: reduce) {
 		animation: none !important;
-		border-bottom: 1px dotted rgba(180,210,255,.45);
+		border-bottom: 1px dotted rgba(190,215,255,.55);
 		cursor: pointer;
 	}
 }

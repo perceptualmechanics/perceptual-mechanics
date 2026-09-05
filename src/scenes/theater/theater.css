@@ -232,13 +232,21 @@
 
 .tab-bubble {
   position: absolute; left: 50%; bottom: 100%; margin-bottom: 6px;
-  /* --bubble-shift is written per bubble by TheaterRenderer._placeBubble:
-     centring on a speaker who stands near the edge of the stage used to put
-     part of the cowsay block outside .tab-root's overflow:hidden, where it
-     was clipped mid-glyph (40px of it at 375px) with no way to bring it
-     back. Defaults to 0px, so the bubble is plainly centred until something
-     measures otherwise. */
-  transform: translateX(calc(-50% + var(--bubble-shift, 0px)));
+  /* Both offsets are written per bubble by TheaterRenderer._placeBubble, and
+     both correct the same thing: the bubble is placed relative to its
+     SPEAKER, and .tab-root clips with overflow:hidden.
+       --bubble-shift  a speaker standing near the edge of a four-actor stage
+                       put part of the cowsay block outside the frame, clipped
+                       mid-glyph (40px of it at 375px).
+       --bubble-lift   `bottom: 100%` grows the block upward from the actor's
+                       head, and the tallest speeches are taller than the
+                       headroom above one — 343px against 313px at 375x667,
+                       and the gap widens on a shorter phone.
+     Both default to 0px, so a bubble is plainly centred above its speaker
+     until something measures otherwise. One `transform`, two translations:
+     writing them as separate declarations would silently keep only the last.
+  */
+  transform: translate(calc(-50% + var(--bubble-shift, 0px)), var(--bubble-lift, 0px));
   white-space: pre; font-size: 0.54rem; line-height: 1.25;
   color: #221c14; background: #f4efe0; /* fully opaque — it floats over dark backgrounds too */
   box-shadow: 0 2px 8px rgba(0,0,0,0.45), 0 0 0 1px rgba(0,0,0,0.15);
@@ -254,7 +262,8 @@
      click target that advances the reel), the bubbles are aria-hidden with
      narration going through .tab-sr-live, and a focusable bubble would join
      main.js's focus trap for content a screen reader is deliberately not
-     being given. The real clipping is fixed by --bubble-shift above. */
+     being given. Clipping is corrected by --bubble-shift/--bubble-lift
+     above, which move the whole block rather than scrolling inside it. */
   pointer-events: none; max-width: 88vw;
   /* Floats above the actors and the caption, which is all this can promise:
      .tab-screen is an isolated stacking context (see its own comment), so

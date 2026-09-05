@@ -16,11 +16,21 @@
 //   onEnd()
 //   dispose()
 //
-// Pacing: read at human reading speed, not AI reading speed — the same
-// heuristic theater.js worked out by hand (clamp text.length*55ms to
-// 1900-10000ms), generalized here so any consumer gets it for free.
+// Pacing: a line is held for its length in characters times MS_PER_CHAR,
+// which at 55ms is about 220 words a minute — reading speed, not scanning
+// speed. The two clamps are for the ends of the range and nothing else.
+//
+// MIN_DUR keeps a one-word line ("Well.") on screen long enough to register.
+//
+// MAX_DUR is a guard against pathological input — a beat carrying a whole
+// paragraph by mistake — and NOT a pacing decision, which is what it had
+// quietly become at 10s: 29 of the Theater's 736 beats are long enough to
+// want more than that, and the longest wants 35.1s, so a fifth of a minute
+// of the longest speeches was being cut out from under the reader
+// mid-sentence. They are the lines that most need the time. A visitor who
+// wants to move faster clicks; one who doesn't cannot get the words back.
 const MIN_DUR = 1900;
-const MAX_DUR = 10000;
+const MAX_DUR = 40000;
 const MS_PER_CHAR = 55;
 const INTERMISSION_DUR = 4400;
 

@@ -353,7 +353,7 @@ export function createSphere(container, { preview = false, initialPieceId = null
           panelTitle.textContent = fragments[targetIdx].title;
           panelContent.innerHTML = renderFragmentHtml(fragments[targetIdx]);
           facetIdEl.textContent = withInboundNote(fragments[targetIdx].id, `Fragment ${targetIdx + 1} of ${fragments.length} · ${fragments[targetIdx].title}`);
-          panelContent.scrollTop = 0;
+          panel.scrollTop = 0; // .sphere-panel is the scroll container (overflow-y), not its content div
           panelContent.style.opacity = '1';
           panelTitle.style.opacity = '1';
           // Stagger glimmer delays + a11y attributes
@@ -416,7 +416,7 @@ export function createSphere(container, { preview = false, initialPieceId = null
           timers.after(500, () => {
             setPanelSide(panel, fromLeft);
             populate();
-            panelContent.scrollTop = 0;
+            panel.scrollTop = 0;
             panelContent.style.opacity = '1'; // guard against a same-side fade still in flight
             panelTitle.style.opacity = '1';
             panel.classList.add('open');
