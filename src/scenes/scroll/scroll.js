@@ -558,7 +558,16 @@ export function createScroll(container, { preview = false, initialPieceId = null
     if (!root || flameStop || disposed || prefersReducedMotion()) return;
     const flame = createFlame();
     let id = requestAnimationFrame(function tick(now) {
-      root.style.setProperty('--flame', flame.at(now / 1000).toFixed(4));
+      // Three properties, one element. Everything that answers to the candle
+      // — the ambient light's position and brightness, twelve patch washes,
+      // the swinging shadow under each curled edge, the intense passages'
+      // text glow — reads these off .scroll-root by inheritance, so this is
+      // the whole per-frame cost of the scene's lighting.
+      const f = flame.at(now / 1000);
+      const s = root.style;
+      s.setProperty('--flame', f.lum.toFixed(4));
+      s.setProperty('--flame-x', f.x.toFixed(4));
+      s.setProperty('--flame-y', f.y.toFixed(4));
       id = requestAnimationFrame(tick);
     });
     flameStop = () => cancelAnimationFrame(id);

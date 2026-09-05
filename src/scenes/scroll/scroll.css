@@ -23,38 +23,66 @@
      background — i.e. never. */
   isolation: isolate;
 }
-/* An unsteady candle off to the side, not a flat vignette. Negative z-index so
-   it sits behind the (non-positioned) scroll content and in front of the
-   background — see `isolation` above for why that works. */
+/* ─── The candle, and the room ─────────────────────────────────────────────
+   Two layers, and the split is the fix rather than a tidy-up.
+
+   These were one element: warm highlights and the room's dark corners in a
+   single background stack, with the flame's brightness applied to the whole
+   thing as opacity. That is a strobe by construction, and in two separate
+   ways. Dimming a layer that contains the SHADOWS lifts the shadows — so at
+   the bottom of every flicker the highlights fell and the dark corners rose
+   together, which is what a camera flash does and what no lamp has ever
+   done. And the light never moved, so the only thing the flame could express
+   was uniform brightness, which is the one channel a real candle expresses
+   least.
+
+   So: ::before is the candle's light, and it MOVES. ::after is the room, and
+   it does not. What a person actually sees by candlelight is the light
+   sliding — the pool of it leaning across the desk, highlights travelling,
+   shadows swinging — with brightness as a small second-order thing on top.
+   scroll.flame.js now drives position as its primary output and brightness at
+   a quarter of its old amplitude; this is the half that puts it on screen. */
 .scroll-root::before {
+  content: ''; position: absolute; z-index: -1; pointer-events: none;
+  /* Overscanned by 25% on every side so the layer can be translated without
+     ever dragging its own edge into view — the second gradient below is
+     still coloured where it meets the box edge, so a shift of a percent or
+     two on an inset:0 layer would walk a hard line across the parchment.
+     Every position and radius here is therefore stated in the OVERSCANNED
+     box's coordinates: a point at p% of the scene sits at (0.25 + p) / 1.5
+     of this box, and a radius shrinks by the same 1.5. The candle's pool,
+     nominally at 24% 18% of the scene, is 32.7% 28.7% here. */
+  inset: -25%;
+  background:
+    radial-gradient(circle at 32.7% 28.7%, rgba(255,214,150,0.85), rgba(255,196,120,0.4) 12%, transparent 28%),
+    radial-gradient(circle at 68.7% 60.7%, rgba(255,180,100,0.4), transparent 33.3%);
+  /* translate3d, not background-position: this is the compositor moving a
+     layer it has already painted, once, rather than the main thread
+     repainting two full-viewport radial gradients sixty times a second.
+     The multipliers were 1.5%/1.1% first, which was arithmetically defensible
+     and invisible: two frames 1.2s apart differed by a mean of 0.74 of 255,
+     comfortably under what anyone notices in a scene this dark. A gradient
+     with no edges in it has to move a long way before the movement reads —
+     a fact about smooth gradients rather than about candles. 4.5% of this
+     box is about 80px on a laptop: the pool of light crossing the desk
+     rather than breathing in place. */
+  transform: translate3d(calc(var(--flame-x, 0) * 4.5%), calc(var(--flame-y, 0) * 3%), 0);
+  opacity: var(--flame, 1);
+  will-change: transform;
+}
+/* The room. Its own darkness and its own weave, both of which are properties
+   of the desk rather than of the flame, so nothing here is animated and
+   nothing here is dimmed. Painted after ::before and therefore over it,
+   which is the right order: the corners of a room stay dark no matter what
+   the candle is doing, and the light lying on top of them is what changes. */
+.scroll-root::after {
   content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none;
   background:
-    radial-gradient(circle at 24% 18%, rgba(255,214,150,0.85), rgba(255,196,120,0.4) 18%, transparent 42%),
-    radial-gradient(circle at 78% 66%, rgba(255,180,100,0.4), transparent 50%),
     radial-gradient(ellipse at 18% 8%, rgba(0,0,0,0.45), transparent 48%),
     radial-gradient(ellipse at 84% 88%, rgba(0,0,0,0.6), transparent 55%),
     repeating-linear-gradient(38deg, rgba(0,0,0,0.045) 0 1px, transparent 1px 6px);
-  /* Driven from JS, not from keyframes. `--flame` is written on .scroll-root
-     once a frame by the candle in scroll.flame.js — a noise process sampled
-     at absolute elapsed time, so there is no period in it to find.
-
-     Every keyframe version of this was synthetic for one unavoidable reason:
-     a keyframe list is a loop. The one before this was six evenly spaced
-     stops eased across 4.2s, dipping to 0.60 — a 0.24Hz breathe, far slower
-     than a flame and far too smooth. Nothing about a candle is evenly spaced,
-     and nothing about one is that slow. The obvious repair is more stops at a
-     higher rate, and that is not enough: a fifteen-stop 1.7s cycle replays
-     its whole flicker GESTURE every 1.7 seconds, which is comfortably inside
-     the window the eye reads as rhythm. A flame has to actually be a noise
-     process. See scroll.flame.js for what the signal models.
-
-     Opacity and brightness both come off the one value, because a flame that
-     dims and a flame whose hot core cools are the same event. The fallback of
-     1 is what renders under prefers-reduced-motion, where nothing writes the
-     property at all — so this needs no reset in that block. */
-  opacity: var(--flame, 1);
-  filter: brightness(calc(0.72 + 0.28 * var(--flame, 1)));
 }
+
 .scroll-viewport {
   width: 100%;
   /* Was height:100% — see the footer-collision fix below for why that's
@@ -234,13 +262,22 @@
 
 /* The lifted edge. A patch is clipped to a ragged polygon and a filter's
    drop-shadow cannot survive that clip, so the shading is drawn INSIDE the
-   patch: a soft dark gradient hugging the top and left, which the clip keeps
-   and which reads as the sheet curling up off the table. */
+   patch: a soft dark gradient hugging the edges, which the clip keeps and
+   which reads as the sheet curling up off the table.
+
+   The two side gradients answer to the flame's lean, in opposite directions,
+   so the shadow under the curled edge swings as the candle leans instead of
+   being painted on. `max()` rather than a bare calc because --flame-x runs
+   to +/-1 and an alpha is not allowed to go negative — clamped here rather
+   than in the JS, so this rule is correct whatever writes the property. The
+   vertical pair stay put: they are the sheet lying on the desk, which the
+   candle's leaning does not change. */
 .scroll-patch::before {
   content: ''; position: absolute; inset: 0; z-index: 0; pointer-events: none;
   background:
     linear-gradient(to bottom, rgba(0,0,0,0.34) 0, transparent 14px),
-    linear-gradient(to right, rgba(0,0,0,0.26) 0, transparent 12px),
+    linear-gradient(to right, rgba(0,0,0, max(0, calc(0.26 + var(--flame-x, 0) * 0.13))) 0, transparent 12px),
+    linear-gradient(to left,  rgba(0,0,0, max(0, calc(0.07 - var(--flame-x, 0) * 0.13))) 0, transparent 12px),
     linear-gradient(to top, rgba(0,0,0,0.20) 0, transparent 10px);
 }
 
@@ -273,9 +310,20 @@
    for off-screen elements; there is nothing to tick now, and
    content-visibility: auto on .scroll-patch already skips the paint. */
 .scroll-patch::after {
-  content: ''; position: absolute; inset: 0; z-index: 2; pointer-events: none;
-  background: radial-gradient(ellipse at 26% 14%, rgba(255,205,140,0.22), transparent 58%);
+  content: ''; position: absolute; z-index: 2; pointer-events: none;
+  /* Overscanned for the same reason as the ambient layer, and by the same
+     arithmetic: 8% a side, so a point at p% of the patch is (0.08 + p) / 1.16
+     here and radii shrink by 1.16. The wash nominally at 26% 14% is 29.3%
+     19%. */
+  inset: -8%;
+  background: radial-gradient(ellipse at 29.3% 19%, rgba(255,205,140,0.22), transparent 50%);
   mix-blend-mode: screen;
+  /* The parchment catching the same flame as the room, and catching it in
+     the same direction — the wash slides across each sheet as the candle
+     leans, rather than every sheet brightening in place. Larger multiplier
+     than the ambient layer because a patch is a much smaller box, so the
+     same physical movement of the light is a larger fraction of it. */
+  transform: translate3d(calc(var(--flame-x, 0) * 5%), calc(var(--flame-y, 0) * 3.5%), 0);
   opacity: calc(1 - (1 - var(--flame, 1)) * var(--flame-gain, 1));
 }
 

@@ -12,6 +12,27 @@ is taken seriously and applied to every file at once. The single largest
 category is not broken code. It is **an effect that has never once rendered**,
 usually with a careful comment above it explaining how it works.
 
+**How to read this, added the day after it was written.** This is a RECORD, not
+a live list. Every item is closed as of `643bd34`; the checkboxes below are
+history, not state.
+
+That warning is here because it caught the two of us within a day. Scott read
+the document and named two findings as the nastiest of the lot — `sceneKit.js`'s
+escaped-phrase mismatch, and Apollo's sodium doublet — and both had been fixed
+hours earlier. His own note on it: *"that's me reading an audit as current state
+rather than as a record. Same error the audit is about."*
+
+It is exactly that error, and it is worth being precise about why, because the
+document invites it. Every finding here is written in the present tense — "the
+comment says 42 and it renders zero" — because that is the clearest way to state
+a defect. Present tense read later is a claim about now. A dated record of
+findings is a comment that was true when it was written, which is the one thing
+this whole release is about; the checkboxes are the only thing standing between
+this file and its own subject matter, and a checkbox is easy to skim past.
+
+So: check `git log` before acting on anything below, and if a finding here ever
+matters again, re-derive it rather than quoting it.
+
 Status: `[ ]` open · `[x]` fixed in 5.0 · `[-]` deliberately not doing
 
 ---

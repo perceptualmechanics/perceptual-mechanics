@@ -37,6 +37,7 @@ import { LINKS } from '../src/links.js';
 // agent's build) rather than producing the specific, explainable failure
 // check 4 below wants to produce. Same module instance either way.
 import * as linkStore from '../src/links.js';
+import { crossLinkPlan, applyCrossLinkPlan, ENTITY_RE, isSupportedEntity } from '../src/utils/crossLinkMatch.js';
 import { pathToFileURL } from 'node:url';
 
 // Returns { ok, failures, log } — `log` is every line this would otherwise
@@ -119,22 +120,31 @@ export function verifyLinks() {
 
 
   // ── 3. Phrase collisions within a render group ────────────────────────
-  // sceneKit.js's wireCrossLinks() wraps each link by doing a plain
-  // first-occurrence String.replace over HTML it has already replaced into
-  // for the earlier links in the same group. That makes two silent
-  // wrong-text failures possible, neither of which any check above would
-  // notice (every phrase in both cases still exists verbatim, so check 2
-  // passes and the build ships a link pointing at the wrong words):
+  // This block used to open with a paragraph describing what
+  // sceneKit.js's wireCrossLinks() "does" — "a plain first-occurrence
+  // String.replace over HTML it has already replaced into". That had not
+  // been true since the escaping fix rewrote it as a TreeWalker, and one of
+  // the two failure modes the paragraph guarded against had become
+  // structurally impossible in the meantime. Nothing failed, because nothing
+  // compared the description to the code. A gate that MODELS the thing
+  // instead of CALLING it drifts, and the drift is invisible by
+  // construction — which is a worse category than the stale comments this
+  // release's punch list is about, because it reads as verification.
+  //
+  // So it calls it now. src/utils/crossLinkMatch.js holds the matching,
+  // DOM-free so this file can run the real thing rather than an account of
+  // it, and wireCrossLinks is a thin wrapper over the same two functions.
+  // Check 3a below is the shipping code executed against the real corpus.
+  //
+  // The two hazards are still worth naming, because they are about author
+  // intent rather than mechanics and no execution can infer them:
   //
   //   * One phrase is a substring of another in the same group. Whichever
-  //     runs first eats text belonging to the other -- if the short one
-  //     goes first it consumes the long one's opening words, and if the
-  //     long one goes first the short one's replace then lands inside the
-  //     anchor markup that was just injected.
+  //     claims its text first takes words belonging to the other, and the
+  //     loser now silently fails to link at all rather than mis-rendering.
   //   * A phrase occurs more times in the source text than there are links
-  //     using it. First-occurrence replace silently picks occurrence #1;
-  //     if the author meant the second one, the link renders on the wrong
-  //     sentence and looks completely fine.
+  //     using it. The match takes occurrence #1; if the author meant the
+  //     second, the link renders on the wrong sentence and looks fine.
   //
   // There are zero of either today, but that's luck rather than design: 41
   // phrases are 12 characters or shorter and two are a bare em dash, so
@@ -181,11 +191,11 @@ export function verifyLinks() {
         if (pa === pb) {
           if (a < b) {
             collisions++;
-            fail(`${slot}: LINKS[${entries[a].i}] and LINKS[${entries[b].i}] use the identical phrase "${pa}" in the same render group — wireCrossLinks would wrap the same occurrence twice, nesting one anchor inside the other. Give them distinct phrases.`);
+            fail(`${slot}: LINKS[${entries[a].i}] and LINKS[${entries[b].i}] use the identical phrase "${pa}" in the same render group — both would claim the same words, so the second silently fails to link. Give them distinct phrases.`);
           }
         } else if (pb.includes(pa)) {
           collisions++;
-          fail(`${slot}: phrase "${pa}" (LINKS[${entries[a].i}]) is a substring of "${pb}" (LINKS[${entries[b].i}]) in the same render group — first-occurrence replace makes one of them land on the other's text. Lengthen the shorter phrase so neither contains the other.`);
+          fail(`${slot}: phrase "${pa}" (LINKS[${entries[a].i}]) is a substring of "${pb}" (LINKS[${entries[b].i}]) in the same render group — whichever matches first takes the other's words, and the loser silently fails to link. Lengthen the shorter phrase so neither contains the other.`);
         }
       }
     }
@@ -205,11 +215,100 @@ export function verifyLinks() {
       const actual = countOccurrences(text, phrase);
       if (actual !== expected) {
         collisions++;
-        fail(`${slot}: phrase "${phrase}" occurs ${actual} time(s) in the source text but ${expected} link(s) use it — first-occurrence replace can't tell which occurrence was meant. Extend the phrase until it appears exactly ${expected} time(s).`);
+        fail(`${slot}: phrase "${phrase}" occurs ${actual} time(s) in the source text but ${expected} link(s) use it — the match takes occurrence #1 and can't know which was meant. Extend the phrase until it appears exactly ${expected} time(s).`);
       }
     });
   });
   if (!collisions) ok(`phrase collisions: none across ${groups.size} render group(s) (no phrase contains another, every phrase occurs exactly as often as it is linked)`);
+
+  // ── 3a. The shipping matcher, run for real ────────────────────────────
+  // Not a model of wireCrossLinks: the same crossLinkPlan/applyCrossLinkPlan
+  // it calls, over every render group's actual text. A row that would not
+  // link at runtime fails the build here, whatever the reason — including
+  // reasons nobody has thought of yet, which is the whole point of running
+  // the code instead of describing it.
+  let planned = 0, unplaced = 0;
+  groups.forEach(entries => {
+    const f = entries[0].link.from;
+    const sceneEntry = scenes[f.scene];
+    const piece = findPiece(f.scene, f.id);
+    const fieldFn = sceneEntry?.fields?.[f.field];
+    if (!sceneEntry || !piece || !fieldFn) return;
+    const text = fieldFn(piece, f.index);
+    if (typeof text !== 'string') return;
+    const links = entries.map(e => e.link);
+    const plan = crossLinkPlan(text, links.map(l => l.phrase), 'x-link');
+    plan.forEach((hit, n) => {
+      planned++;
+      if (!hit) {
+        unplaced++;
+        fail(`${f.scene}#${f.id}.${f.field}: LINKS[${entries[n].i}] phrase "${links[n].phrase}" finds nowhere to land once the other links in its group have taken their text — this row would render as plain text with no error.`);
+      }
+    });
+  });
+  if (!unplaced) ok(`matcher: all ${planned} links find a distinct home when the real matcher is run over the real text`);
+
+  // ── 3b. The corpus stays inside what the matcher understands ──────────
+  // crossLinkMatch.js decodes a deliberately short list of entity forms
+  // rather than all 2231 HTML5 named references, and tokenizes assuming this
+  // corpus's markup (<p>, <em>, <i>, <br> — no comments, no <script>). Both
+  // are safe while they are ENFORCED and are the next finding the moment
+  // they are merely assumed, so they are enforced here.
+  const ALLOWED_TAGS = new Set(['p', 'em', 'i', 'br', 'strong', 'b', 'span']);
+  let badEntities = 0, badTags = 0;
+  groups.forEach(entries => {
+    const f = entries[0].link.from;
+    const fieldFn = scenes[f.scene]?.fields?.[f.field];
+    const piece = findPiece(f.scene, f.id);
+    const text = fieldFn && piece ? fieldFn(piece, f.index) : null;
+    if (typeof text !== 'string') return;
+    for (const m of text.matchAll(ENTITY_RE)) {
+      if (!isSupportedEntity(m[0])) {
+        badEntities++;
+        fail(`${f.scene}#${f.id}.${f.field}: contains "${m[0]}", an entity crossLinkMatch.js does not decode — it would be matched as literal text, so a phrase spanning it would silently not link.`);
+      }
+    }
+    for (const m of text.matchAll(/<\/?([a-zA-Z][\w-]*)/g)) {
+      if (!ALLOWED_TAGS.has(m[1].toLowerCase())) {
+        badTags++;
+        fail(`${f.scene}#${f.id}.${f.field}: contains <${m[1]}>, outside the markup crossLinkMatch.js's tokenizer is written for. Widen the tokenizer deliberately, or keep the field to ${[...ALLOWED_TAGS].join(', ')}.`);
+      }
+    }
+  });
+  if (!badEntities && !badTags) ok('corpus: every linkable field stays inside the entity set and markup the matcher handles');
+
+  // ── 3c. The escaping bug, with a test behind it ───────────────────────
+  // The bug that prompted all of this — escape the phrase, then match it
+  // against decoded text, so any phrase containing & < or > silently drops —
+  // is fixed, and ZERO of the corpus's phrases contain any of those
+  // characters. So nothing in the real text would fail if the escaping came
+  // back tomorrow: a passing gate that cannot fail is indistinguishable from
+  // no gate. This is a fixture rather than corpus content because the
+  // alternative is authoring an ampersand into a piece of Scott's writing to
+  // satisfy a checker, which is the tail wagging the dog.
+  const FIXTURE_HTML = '<p>Tom &amp; Jerry met a &lt;stranger&gt; at the fair, and Tom &amp; Jerry left.</p>';
+  const FIXTURE = [
+    { phrase: 'Tom & Jerry', to: { scene: 'sphere', id: 1 } },
+    { phrase: '<stranger>', to: { scene: 'scroll', id: 2 } },
+    { phrase: 'the fair', to: { scene: 'library', id: 3 } },
+  ];
+  const fplan = crossLinkPlan(FIXTURE_HTML, FIXTURE.map(l => l.phrase), 'x-link');
+  const fout = applyCrossLinkPlan(FIXTURE_HTML, FIXTURE, 'x-link', fplan);
+  const fixtureProblems = [];
+  fplan.forEach((hit, i) => { if (!hit) fixtureProblems.push(`phrase ${JSON.stringify(FIXTURE[i].phrase)} did not match`); });
+  // The first occurrence is claimed, the second is left alone, and the
+  // matched text is the ORIGINAL raw slice rather than a re-encoding.
+  if (!fout.includes('>Tom &amp; Jerry</a>')) fixtureProblems.push('the & phrase did not keep its source encoding inside the anchor');
+  if (!fout.includes('>&lt;stranger&gt;</a>')) fixtureProblems.push('the angle-bracket phrase did not keep its source encoding inside the anchor');
+  if (!/, and Tom &amp; Jerry left\.<\/p>$/.test(fout)) fixtureProblems.push('the second occurrence was not left untouched');
+  if ((fout.match(/<a /g) || []).length !== 3) fixtureProblems.push(`expected 3 anchors, got ${(fout.match(/<a /g) || []).length}`);
+  // Nothing outside the inserted tags may change by a single byte.
+  if (fout.replace(/<a [^>]*>|<\/a>/g, '') !== FIXTURE_HTML) fixtureProblems.push('text outside the inserted anchors was altered');
+  if (fixtureProblems.length) {
+    fixtureProblems.forEach(m => fail(`matcher fixture: ${m}`));
+  } else {
+    ok('matcher fixture: phrases containing & and < > link correctly, and nothing outside the anchors changes');
+  }
 
   // ── 4. Every link is authored into a field its scene actually renders ──
   // A link whose `from.field` names content the scene withholds is the

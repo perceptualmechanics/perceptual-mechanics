@@ -1,39 +1,65 @@
 // ─── The candle ────────────────────────────────────────────────────────────
-// A flame is not a loop. Every version of this before now was a CSS keyframe
-// list, and the last one was fifteen irregular stops across 1.7s at coprime
-// periods with a 4.1s brightness wander on top — which does not repeat as a
-// PAIR for 69.7s, but repeats the flicker gesture itself, identically, every
-// 1.7 seconds. 1.7s is comfortably inside the window the eye reads as rhythm,
-// so what it actually looked like was a machine with a slow wobble bolted on.
-// You cannot fix that by adding stops. Any keyframe list is periodic; that is
-// what a keyframe list is.
+// A flame is not a loop, and it is not a dimmer either. Both of those were
+// wrong here in turn, and the second mistake is the more interesting one.
 //
-// So this is a signal instead, sampled as a function of absolute elapsed time,
-// with no period at all. What it models:
+// Version one was a CSS keyframe list, which is periodic by construction: the
+// last of them replayed its whole flicker gesture every 1.7s, comfortably
+// inside the window an eye reads as rhythm. Version two replaced it with this
+// noise process, which fixed the repetition and still looked wrong — Scott:
+// *"the candle is just reading as a strobe... I think part of the problem is
+// that I feel like we should be seeing the light on the walls, with some
+// shadows, and the light itself would shift. Imagine the candle being on the
+// desk of the person reading this scroll."*
 //
-//   * The buoyancy flicker. A diffusion flame of candle scale oscillates
-//     because hot gas rising off the wick outruns the cold air feeding it and
-//     the interface between them goes unstable. The frequency scales as
-//     roughly 1/sqrt(burner width) and lands near 10-12Hz for a wick this
-//     size — which is why the 11.3Hz octave below carries a deliberately
-//     larger amplitude than the octaves either side of it. It is a noisy
-//     oscillator, not a tone: the phase slips continuously, which is exactly
-//     what an octave of value noise gives and a sine does not.
+// He was right, and the diagnosis is exact. Version two modelled the flame's
+// LUMINANCE over time and applied it as a uniform multiplier to one static
+// layer. Two things follow from that, and both of them are the strobe:
 //
-//   * The room. Draught, convection off the reader, the door being somewhere.
-//     Slow, large, and the reason a candle's brightness has a shape over ten
-//     seconds as well as over one. That is the lower octaves, amplitudes
-//     falling off roughly as 1/f.
+//   1. Uniform is the wrong axis. What you actually see across a room lit by
+//      a candle is not the room getting brighter and darker together — it is
+//      the light MOVING. The flame leans, the highlight slides, the shadows
+//      swing. Brightness modulation is the secondary channel and it was the
+//      only one being driven. So position is now the primary output and the
+//      brightness swing is a quarter of what it was.
+//
+//   2. That one layer carried the room's darkness as well as the candle's
+//      light, so dimming it lifted the shadows. A frame where the highlights
+//      fall and the dark corners rise at the same instant is a flash, not a
+//      flame. scroll.css now splits them: .scroll-root::before is the light
+//      and moves, ::after is the room and does not.
+//
+// So `at(t)` returns a position as well as a brightness, and they are
+// COUPLED rather than being two independent noises laid over each other — a
+// flame pushed sideways is stretched, and a stretched flame is dimmer. Two
+// uncorrelated channels is one of the reliable tells of an animation.
+//
+// What the signal models:
+//
+//   * The lean. The flame's own sway, slower and much larger than its
+//     flicker, and wider horizontally than vertically because a flame leans
+//     before it stretches. This is what moves the light.
+//
+//   * The buoyancy flicker. A candle-scale diffusion flame oscillates because
+//     hot gas off the wick outruns the cold air feeding it; the frequency
+//     scales as roughly 1/sqrt(wick width) and lands near 10-12Hz, which is
+//     why the 11.3Hz octave carries a deliberately larger amplitude than its
+//     neighbours. A noisy oscillator, not a tone — the phase slips
+//     continuously, which is what an octave of value noise gives and a sine
+//     does not.
+//
+//   * The room. Draught and convection: the low octaves, falling off roughly
+//     as 1/f, and the reason a candle has a shape over ten seconds as well as
+//     over one.
 //
 //   * Guttering. The rare moment air actually catches the flame: it ducks,
-//     flickers harder while it is down, and climbs back. Its own slow channel,
-//     thresholded near the top so only a few percent of it does anything —
-//     these have to arrive as isolated events, because a gutter that happens
-//     on a schedule is just another wobble.
+//     it is thrown sideways, it flickers harder while it is down, and it
+//     climbs back. Its own slow channel, thresholded near the top so only a
+//     few percent of it does anything — a gutter that arrives on a schedule
+//     is just another wobble.
 //
-// The flame is bounded above and not below, which is the asymmetry that makes
-// it read as fire rather than as tremble: fuel rate caps how bright it can
-// burn, nothing caps how far a draught can push it down.
+// Brightness is bounded above and not below, which is the asymmetry that
+// makes it read as fire rather than as tremble: fuel rate caps how bright it
+// can burn, nothing caps how far a draught pushes it down.
 
 // Value noise on an integer lattice: hash the two neighbours, smoothstep
 // between them. Deterministic in (t, seed), continuous, and defined for
@@ -54,21 +80,42 @@ const noise = (t, seed) => {
 };
 
 // [frequency in Hz, amplitude]. Falling roughly as 1/f, with the bump at
-// 11.3Hz that is the buoyancy instability. The frequencies are mutually
-// irrational-ish on purpose, but that is belt-and-braces: nothing here has a
-// period to align in the first place.
+// 11.3Hz that is the buoyancy instability. Amplitudes are well under half
+// what they were: this is now the secondary channel, and the total swing is
+// small enough that no single frame reads as a flash.
 const OCTAVES = [
-  [0.31, 0.115],
-  [0.83, 0.070],
-  [2.30, 0.045],
-  [6.10, 0.030],
-  [11.30, 0.052],
-  [19.70, 0.018],
+  [0.31, 0.052],
+  [0.83, 0.034],
+  [2.30, 0.022],
+  [6.10, 0.015],
+  [11.30, 0.026],
+  [19.70, 0.009],
 ];
+
+// The lean. Slower than the flicker and far larger — this is the channel that
+// actually carries the effect, so it gets the amplitude the brightness used
+// to waste. Horizontal is roughly twice vertical: a flame leans before it
+// stretches, and a vertical bob that matches the sideways sway reads as a
+// hovering blob rather than as a flame on a wick.
+// The last band in each is the flame's own flicker showing up as MOVEMENT
+// rather than only as brightness, and it is small on purpose. A candle's
+// high-frequency motion is mostly at the tip, so what it does to the pool of
+// light on a desk is shimmer its edge, not translate the whole pool — a large
+// amplitude here would read as the page vibrating. At the multipliers
+// scroll.css uses it works out around 3px, which is shimmer.
+const SWAY_X = [[0.37, 0.62], [0.93, 0.26], [2.10, 0.12], [9.70, 0.030]];
+const SWAY_Y = [[0.29, 0.30], [1.13, 0.15], [2.70, 0.07], [11.30, 0.022]];
+
+const sum = (bands, t, s, base) => {
+  let v = 0;
+  for (let i = 0; i < bands.length; i++) v += (noise(t * bands[i][0], s + base + i * 977) - 0.5) * bands[i][1];
+  return v;
+};
 
 /**
  * A candle. `seed` gives each mount its own flame; omit it for a random one.
- * Call `at(seconds)` for the flame's luminance, nominally 1 and dipping.
+ * `at(seconds)` returns `{ lum, x, y }` — brightness nominally 1 and dipping,
+ * and a lean in roughly [-1, 1] on each axis.
  */
 export function createFlame(seed = (Math.random() * 1e9) | 0) {
   const s = seed | 0;
@@ -80,27 +127,29 @@ export function createFlame(seed = (Math.random() * 1e9) | 0) {
       const g = noise(t * 0.23, s + 4400);
       const gutter = g > 0.9 ? ((g - 0.9) / 0.1) ** 2 : 0;
 
-      // A caught flame does not just dim, it thrashes. The flicker gains
-      // amplitude for as long as the gutter lasts.
+      // A caught flame does not just dim, it thrashes — and it is thrown.
       const agitation = 1 + gutter * 1.4;
 
-      let n = 0;
-      for (let i = 0; i < OCTAVES.length; i++) {
-        const [hz, amp] = OCTAVES[i];
-        // +1 per octave so the same lattice serves all of them without the
-        // channels correlating at t near 0.
-        n += (noise(t * hz, s + i * 977 + 1) - 0.5) * amp;
-      }
+      // The lean, and the gutter shoves it. Clamped to [-1, 1] so the CSS
+      // that multiplies these by a percentage has a bound it can rely on.
+      const drift = noise(t * 0.11, s + 8100) - 0.5;   // where the draught is coming from
+      const clamp = v => (v < -1 ? -1 : v > 1 ? 1 : v);
+      const x = clamp((sum(SWAY_X, t, s, 100) + drift * gutter * 2.6) * 2.0);
+      const y = clamp(sum(SWAY_Y, t, s, 300) * 2.0 - gutter * 0.55);
 
-      let v = 0.955 + n * 1.9 * agitation;
+      // Flicker, coupled to the lean: a flame pushed off vertical is
+      // stretched, and a stretched flame is dimmer. This is what keeps the
+      // two channels from reading as two unrelated animations played at once.
+      const lean = Math.hypot(x, y);
+      let v = 0.995 + sum(OCTAVES, t, s, 0) * 1.9 * agitation - lean * 0.055;
 
       // Bounded above: past its fuel rate the flame has nowhere to go, so
-      // excursions over 0.99 compress hard instead of clipping flat.
-      if (v > 0.99) v = 0.99 + (v - 0.99) * 0.35;
+      // excursions over 1 compress hard instead of clipping flat.
+      if (v > 1) v = 1 + (v - 1) * 0.3;
 
-      v -= gutter * 0.22;
+      v -= gutter * 0.14;
 
-      return v < 0.55 ? 0.55 : v > 1.03 ? 1.03 : v;
+      return { lum: v < 0.72 ? 0.72 : v > 1.02 ? 1.02 : v, x, y };
     },
   };
 }

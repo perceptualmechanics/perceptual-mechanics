@@ -593,6 +593,128 @@ described are unchanged.)
   worth trimming, orrery.js's texture generators and first-person rig are the
   two most self-contained chunks to split out first.
 
+## 5.0.1 (2026-09-05)
+
+**A gate that models the thing instead of calling it, and a candle that was a
+dimmer.** Both came out of Scott reading the 5.0 punch list rather than the
+site — the first from a finding he named as one of its nastiest, the second
+from looking at the scene the release had supposedly fixed.
+
+### The checker could not see the class of failure it existed to catch
+
+The 5.0 finding: `wireCrossLinks` escaped a link's phrase and then matched it
+against decoded text, so any phrase containing `&`, `<` or `>` silently failed
+to link — and `verify-links` compared the raw pair, so it passed. Scott's read
+of it: *"a checker that can't see the class of failure it exists to catch."*
+
+Checking it turned up the same shape one level down, which is the actual entry
+here. The bug is dead — there is no escaping left, the matcher walked text
+nodes and compared raw phrase to decoded data. But:
+
+- **Zero of the 65 phrases contain any of those characters.** The corpus never
+  exercised the fix. Nothing would have failed if the escaping came back.
+- **`verify-links` still did not call `wireCrossLinks`.** It re-implemented a
+  *model* of it, in `indexOf` and `countOccurrences` over raw text.
+- **The model had drifted.** Its comment described `wireCrossLinks` as doing
+  "a plain first-occurrence String.replace over HTML", which had not been true
+  since the rewrite, and one of the two failure modes it carefully guarded
+  against had become structurally impossible in the meantime. Nothing failed,
+  because nothing compared the description to the code.
+
+Scott named the category: *"those were comments describing code, and this is
+code describing code, which reads as verification."* It is worse than a stale
+comment for exactly that reason, and worse again because the drift is invisible
+by construction — there is no observer.
+
+**The fix is `derive, don't type` pointed at a checker: it should not describe
+an algorithm, it should run it.** `src/utils/crossLinkMatch.js` now holds the
+matching, DOM-free so a node build step can execute the real thing;
+`wireCrossLinks` is a thin wrapper over it. Two options were on the table and
+the extraction beat a DOM shim without much argument — a shim adds a dependency
+and *preserves* the possibility of divergence, where the extraction removes it.
+
+Three properties worth recording:
+
+- **Proven equivalent, not asserted.** The old TreeWalker implementation and
+  the new one were run side by side in a real browser over all 43 render groups
+  and 65 links. Byte-identical output, every group. That comparison is what
+  licensed the swap; it is not in the build (it needs both implementations) and
+  it is not meant to be.
+- **The output is the input plus two tags.** Matched text is emitted as the
+  *original raw slice*, never a re-encoding of the phrase, so nothing outside
+  the inserted `<a>`/`</a>` changes by a byte. The rule the original bug was
+  about, stated as a design: decode before matching, and never re-encode what
+  you did not decode.
+- **The narrow scopes are enforced rather than assumed.** The matcher decodes a
+  short list of entity forms and tokenizes for this corpus's markup (`p`, `em`,
+  `i`, `br`). Both are safe while enforced and are the next finding the moment
+  they are merely assumed, so `verify-links` fails the build on an entity or a
+  tag outside those sets.
+
+**And the gate can now fail.** A fixture exercises phrases containing `&` and
+`< >` through the shipping matcher. Put the escaping back and five assertions
+fire; break the entity table and three do. A fixture rather than corpus content
+because the alternative is authoring an ampersand into a piece of Scott's
+writing to satisfy a checker. Same family as the CSP audit that never opened a
+page outside the SPA: a passing gate that cannot fail is indistinguishable from
+no gate.
+
+`verify-links` is now seven checks. The one that matters most is the plainest:
+run the real matcher over the real text and fail if any row finds nowhere to
+land — including for reasons nobody has thought of yet, which is the entire
+point of running code instead of describing it.
+
+*(The counts gate then caught a number in a comment written for this entry —
+"all 65 rows", which collides with the phrasing `verify-counts` uses for
+resonance rows. It wanted "65 link rows". Working as intended.)*
+
+### The candle was a dimmer
+
+Scott, on the 5.0 rebuild: *"the candle is just reading as a strobe. I think
+part of the problem is that I feel like we should be seeing the light on the
+walls, with some shadows, and the light itself would shift. Imagine the candle
+being on the desk of the person reading this scroll."*
+
+Right, and the diagnosis is exact. 5.0 replaced a periodic keyframe list with a
+noise process, which fixed the repetition and left the real problem untouched:
+it modelled the flame's **luminance** and applied it as a uniform multiplier to
+one static layer. Two things follow, and both of them are the strobe.
+
+**Uniform is the wrong axis.** What you see in a room lit by a candle is not
+the room getting brighter and darker together — it is the light *moving*. The
+flame leans, the highlight slides, the shadows swing. Brightness is the
+secondary channel and it was the only one being driven. Position is now the
+primary output: `at(t)` returns a lean as well as a brightness, the two are
+**coupled** (a flame pushed sideways is stretched, and a stretched flame is
+dimmer) rather than being two independent noises laid over each other, which is
+one of the reliable tells of an animation. Measured, the inversion is undone —
+0.43 units of lean travel per second against 0.17 of brightness.
+
+**One layer carried the light and the room together**, so dimming it lifted the
+shadows. A frame where the highlights fall and the dark corners rise at the
+same instant is a flash. `.scroll-root::before` is now the candle's light and
+moves; `::after` is the room's own darkness and its weave, and does neither.
+
+The rest follows the light: each patch's warm wash slides with the same lean
+(one candle, one direction, rather than twelve sheets brightening in place),
+and the shading under each curled edge swings side to side with it — the two
+side gradients answer to `--flame-x` in opposite directions, measured at 0.16
+to 0.28 alpha against 0.055 to 0.17, a constant sum.
+
+**The first amounts were arithmetically defensible and invisible.** At
+1.5%/1.1% of the overscanned box, two frames 1.2s apart differed by a mean of
+0.74 of 255 — well under what anyone notices in a scene this dark. A gradient
+with no edges in it has to move a long way before the movement reads, which is
+a fact about smooth gradients rather than about candles. At 4.5%/3% it is about
+80px on a laptop. There is also a deliberately small high-frequency band in the
+sway now, around 3px: a candle's fast motion is at the tip, so what it does to
+a pool of light on a desk is shimmer its edge, not translate the pool, and a
+large amplitude there reads as the page vibrating.
+
+Everything still rides one `requestAnimationFrame` writing three custom
+properties on one element; median frame 25ms in a headless 960x600 capture with
+the whole scene painting.
+
 ## 5.0 (2026-09-05)
 
 **The audit, and four things Scott saw that it didn't.** 5.0 is two halves. The

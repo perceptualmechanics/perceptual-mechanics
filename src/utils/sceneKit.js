@@ -16,6 +16,8 @@
 // only owns "is a drag happening, and by how much," not the animation
 // policy, since that already differs from scene to scene (orrery has none
 // at all, by design; others resume after a pause).
+import { crossLinkPlan, applyCrossLinkPlan } from './crossLinkMatch.js';
+
 export function bindOrbitDrag(container, { onDragStart, onDrag, onDragEnd, sensitivity = 0.004 } = {}) {
   let dragging = false;
   let prev = { x: 0, y: 0 };
@@ -622,32 +624,19 @@ export function escapeHtml(s) {
 //      the data as a second line of defence.
 export function wireCrossLinks(html, links, linkClass) {
   if (!links?.length) return html;
-  const template = document.createElement('template');
-  template.innerHTML = html;
-
-  for (const l of links) {
-    const walker = document.createTreeWalker(template.content, NodeFilter.SHOW_TEXT);
-    let node, hit = null;
-    while ((node = walker.nextNode())) {
-      // Never nest one cross-link inside another's own text.
-      if (node.parentElement?.closest(`a.${linkClass}`)) continue;
-      const i = node.data.indexOf(l.phrase);
-      if (i !== -1) { hit = { node, i }; break; }
-    }
-    if (!hit) continue;
-
-    const tail = hit.node.splitText(hit.i);
-    tail.splitText(l.phrase.length);
-    const a = document.createElement('a');
-    a.className = linkClass;
-    a.href = `#${l.to.scene}/${l.to.id}`;
-    a.dataset.targetScene = l.to.scene;
-    a.dataset.targetId = String(l.to.id);
-    a.textContent = l.phrase;
-    tail.parentNode.replaceChild(a, tail);
-  }
-
-  return template.innerHTML;
+  // The matching itself lives in crossLinkMatch.js, DOM-free, because
+  // scripts/verify-links.mjs has to run the SAME code in node — see that
+  // file's header for the drift this closes. What used to be here was a
+  // TreeWalker over a <template>, which was correct and which no build gate
+  // could execute.
+  //
+  // Byte-for-byte identical output to that version on this corpus (checked
+  // both ways in a browser across all 65 link rows before the swap), and better
+  // behaved in one respect: it no longer round-trips the whole field through
+  // the parser's serializer, so the only difference between input and output
+  // is the inserted <a> and </a>.
+  const plan = crossLinkPlan(html, links.map(l => l.phrase), linkClass);
+  return applyCrossLinkPlan(html, links, linkClass, plan);
 }
 
 // ─── Inbound-reference note ─────────────────────────────────────────────────
