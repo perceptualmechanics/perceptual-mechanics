@@ -818,43 +818,28 @@ function buildLibrary() {
   // reader who went looking; a crawlable page is a different act, because it
   // publishes, caches, and attributes that text on this domain.
   //
-  // `note` was withheld here because the scene withheld it. THAT PREMISE
-  // CHANGED on 2026-09-02 (v4.0.2) and this page has deliberately not
-  // followed yet — read on before assuming it is simply out of date.
+  // `note` is no longer withheld here — it no longer exists. The catalog
+  // carried a note on 100 of its items from 2026-07-23 until 4.11.21, and a
+  // considerable apparatus grew around which of them this page and the scene
+  // were allowed to show. **None of them were Scott's writing, and he never
+  // asked for them.** They were removed at his call, along with the 81
+  // cross-links authored into them; src/links.js carries the full record.
   //
-  // The history first, because it is the reason the caution exists. The
-  // first version of this page (1.7.0, fixed same day in 1.7.1) published
-  // all 97 notes on the reasoning that they were the most genuinely
-  // original writing in the file — true, and beside the point. They also
-  // carried live editorial asides ("flag for Scott", "edition uncertain")
-  // and, in one case, a dated verbatim quote of Scott to Claude. The rule
-  // it cost: a field the scene doesn't display was withheld on purpose, and
-  // "is it good writing?" is the wrong question to ask about it.
+  // The history is kept because the rule it bought is still the rule. The
+  // first version of this page (1.7.0, fixed the same day in 1.7.1) published
+  // all 97 notes on the reasoning that they were the most genuinely original
+  // writing in the file. That reasoning was wrong twice over — they were not
+  // original to this project at all, and "is it good writing?" was the wrong
+  // question anyway. The right one is the one 1.7.1 settled on and 4.11.21
+  // vindicated: **a crawlable page publishes, caches and attributes text on
+  // this domain in a way an in-scene panel does not, so it takes a stricter
+  // test, and the test is not about quality.**
   //
-  // What is true now: library.js renders a note for the 54 items whose note
-  // is load-bearing in the link graph (see LIBRARY_NOTE_VISIBLE in
-  // src/links.js), and those notes were rewritten so the catalogue chatter
-  // moved to a private `catalog` field. So "the scene withholds it" is no
-  // longer a reason, and the honest position is that this page now shows
-  // LESS than the scene does.
-  //
-  // SETTLED 2026-09-02, Scott: the archive stays a strict subset of the
-  // scene, and these notes stay off it. Two reasons, and neither is
-  // "we haven't decided yet":
-  //
-  //   The link-graph problem that drove 4.0.2 does not exist here. A note
-  //   became visible in the scene because hiding it broke a live link —
-  //   the phrase had nothing to click, or a backlink pointed at nothing.
-  //   These pages carry no cross-links at all, so there is no half-link to
-  //   repair and no reason the scene's rule should follow across.
-  //
-  //   And the `excerpt` argument above applies unchanged: a crawlable page
-  //   publishes, caches and attributes text on this domain in a way an
-  //   in-scene panel does not. The notes are Scott's own critical writing
-  //   and are not wanted public regardless of what the scene does with
-  //   them.
-  //
-  // So this is a decision, not a lag. Don't "fix" the inconsistency.
+  // `excerpt` is still withheld here on exactly that test, and that has not
+  // changed: it holds opening passages from published books in copyrighted
+  // translations, shown one at a time in the scene to a reader who went
+  // looking, which is a different act from publishing them as a crawlable
+  // page.
   //
   // What's left is the plain bibliographic fact of the shelf, which is
   // exactly what the piece itself shows.

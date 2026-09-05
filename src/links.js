@@ -108,87 +108,6 @@ export const LINKS = [
   { from: { scene: 'library', id: 72, field: 'excerpt' }, phrase: 'A coin spins in the air', to: { scene: 'library', id: 49 } },
   { from: { scene: 'library', id: 40, field: 'scene' }, phrase: 'Origin of Love', to: { scene: 'library', id: 13 } },
   { from: { scene: 'library', id: 13, field: 'excerpt_from' }, phrase: 'Hedwig and the Angry Inch', to: { scene: 'library', id: 40 } },
-  { from: { scene: 'library', id: 63, field: 'note' }, phrase: 'The Tree of Life', to: { scene: 'library', id: 33 } },
-  { from: { scene: 'library', id: 63, field: 'note' }, phrase: 'Solaris', to: { scene: 'library', id: 53 } },
-  { from: { scene: 'library', id: 53, field: 'note' }, phrase: '2001: A Space Odyssey', to: { scene: 'library', id: 63 } },
-  { from: { scene: 'library', id: 53, field: 'note' }, phrase: 'The Tree of Life', to: { scene: 'library', id: 33 } },
-  { from: { scene: 'library', id: 33, field: 'note' }, phrase: '2001: A Space Odyssey', to: { scene: 'library', id: 63 } },
-  { from: { scene: 'library', id: 33, field: 'note' }, phrase: 'Solaris', to: { scene: 'library', id: 53 } },
-  { from: { scene: 'library', id: 31, field: 'note' }, phrase: 'Throne of Blood', to: { scene: 'library', id: 41 } },
-  { from: { scene: 'library', id: 31, field: 'note' }, phrase: 'Dreams', to: { scene: 'library', id: 44 } },
-  { from: { scene: 'library', id: 31, field: 'note' }, phrase: 'Ghost Dog: The Way of the Samurai', to: { scene: 'library', id: 54 } },
-  { from: { scene: 'library', id: 41, field: 'note' }, phrase: 'Seven Samurai', to: { scene: 'library', id: 31 } },
-  { from: { scene: 'library', id: 44, field: 'note' }, phrase: 'Seven Samurai', to: { scene: 'library', id: 31 } },
-  { from: { scene: 'library', id: 54, field: 'note' }, phrase: 'Seven Samurai', to: { scene: 'library', id: 31 } },
-  { from: { scene: 'library', id: 11, field: 'note' }, phrase: 'Ulysses', to: { scene: 'library', id: 85 } },
-  { from: { scene: 'library', id: 85, field: 'note' }, phrase: 'A Portrait of the Artist as a Young Man', to: { scene: 'library', id: 11 } },
-  { from: { scene: 'library', id: 85, field: 'note' }, phrase: 'Finnegans Wake', to: { scene: 'library', id: 89 } },
-  { from: { scene: 'library', id: 89, field: 'note' }, phrase: 'Gödel, Escher, Bach', to: { scene: 'library', id: 73 } },
-  { from: { scene: 'library', id: 73, field: 'note' }, phrase: 'Finnegans Wake', to: { scene: 'library', id: 89 } },
-  { from: { scene: 'library', id: 51, field: 'note' }, phrase: 'In Praise of Shadows', to: { scene: 'library', id: 75 } },
-  { from: { scene: 'library', id: 75, field: 'note' }, phrase: 'Tokyo Story', to: { scene: 'library', id: 51 } },
-  { from: { scene: 'library', id: 3, field: 'note' }, phrase: '1Q84', to: { scene: 'library', id: 86 } },
-  { from: { scene: 'library', id: 86, field: 'note' }, phrase: 'Água Viva', to: { scene: 'library', id: 3 } },
-  { from: { scene: 'library', id: 82, field: 'note' }, phrase: 'the Odyssey', to: { scene: 'library', id: 81 } },
-  { from: { scene: 'library', id: 82, field: 'note' }, phrase: 'the Iliad', to: { scene: 'library', id: 80 } },
-  { from: { scene: 'library', id: 82, field: 'note' }, phrase: 'The Divine Comedy', to: { scene: 'library', id: 91 } },
-  { from: { scene: 'library', id: 81, field: 'note' }, phrase: 'the Aeneid', to: { scene: 'library', id: 82 } },
-  { from: { scene: 'library', id: 80, field: 'note' }, phrase: 'the Aeneid', to: { scene: 'library', id: 82 } },
-  { from: { scene: 'library', id: 91, field: 'note' }, phrase: 'the Aeneid', to: { scene: 'library', id: 82 } },
-  { from: { scene: 'library', id: 108, field: 'note' }, phrase: 'Alchemy & Mysticism', to: { scene: 'library', id: 6 } },
-  { from: { scene: 'library', id: 6, field: 'note' }, phrase: 'The Changing Light at Sandover', to: { scene: 'library', id: 108 } },
-  { from: { scene: 'library', id: 109, field: 'note' }, phrase: 'The Lyrics', to: { scene: 'library', id: 103 } },
-  { from: { scene: 'library', id: 103, field: 'note' }, phrase: 'The Beatles Anthology', to: { scene: 'library', id: 109 } },
-  { from: { scene: 'library', id: 110, field: 'note' }, phrase: 'the Symposium', to: { scene: 'library', id: 13 } },
-  { from: { scene: 'library', id: 110, field: 'note' }, phrase: 'Hedwig', to: { scene: 'library', id: 40 } },
-  { from: { scene: 'library', id: 13, field: 'note' }, phrase: 'VALIS', to: { scene: 'library', id: 110 } },
-  { from: { scene: 'library', id: 40, field: 'note' }, phrase: 'VALIS', to: { scene: 'library', id: 110 } },
-  { from: { scene: 'library', id: 111, field: 'note' }, phrase: 'Lolita', to: { scene: 'library', id: 115 } },
-  { from: { scene: 'library', id: 115, field: 'note' }, phrase: 'Pale Fire', to: { scene: 'library', id: 111 } },
-  { from: { scene: 'library', id: 113, field: 'note' }, phrase: 'Revelation X', to: { scene: 'library', id: 114 } },
-  { from: { scene: 'library', id: 114, field: 'note' }, phrase: 'The Book of the SubGenius', to: { scene: 'library', id: 113 } },
-  { from: { scene: 'library', id: 116, field: 'note' }, phrase: 'Blood Treachery', to: { scene: 'library', id: 117 } },
-  { from: { scene: 'library', id: 116, field: 'note' }, phrase: 'The Spirit Ways', to: { scene: 'library', id: 118 } },
-  { from: { scene: 'library', id: 117, field: 'note' }, phrase: 'Mage: The Ascension', to: { scene: 'library', id: 116 } },
-  { from: { scene: 'library', id: 118, field: 'note' }, phrase: 'Mage: The Ascension', to: { scene: 'library', id: 116 } },
-  { from: { scene: 'library', id: 118, field: 'note' }, phrase: 'Blood Treachery', to: { scene: 'library', id: 117 } },
-  { from: { scene: 'library', id: 119, field: 'note' }, phrase: '2001: A Space Odyssey', to: { scene: 'library', id: 63 } },
-  { from: { scene: 'library', id: 119, field: 'note' }, phrase: 'Solaris', to: { scene: 'library', id: 53 } },
-  { from: { scene: 'library', id: 119, field: 'note' }, phrase: 'The Tree of Life', to: { scene: 'library', id: 33 } },
-  { from: { scene: 'library', id: 33, field: 'note' }, phrase: 'Prometheus Rising', to: { scene: 'library', id: 119 } },
-  { from: { scene: 'library', id: 120, field: 'note' }, phrase: 'Gravity’s Rainbow', to: { scene: 'library', id: 78 } },
-  { from: { scene: 'library', id: 120, field: 'note' }, phrase: 'Borges’s Collected Fictions', to: { scene: 'library', id: 79 } },
-  { from: { scene: 'library', id: 78, field: 'note' }, phrase: 'Everything Is Under Control', to: { scene: 'library', id: 120 } },
-  { from: { scene: 'library', id: 79, field: 'note' }, phrase: 'Everything Is Under Control', to: { scene: 'library', id: 120 } },
-  { from: { scene: 'library', id: 121, field: 'note' }, phrase: 'The Changing Light at Sandover', to: { scene: 'library', id: 108 } },
-  { from: { scene: 'library', id: 121, field: 'note' }, phrase: 'the Symposium', to: { scene: 'library', id: 13 } },
-  { from: { scene: 'library', id: 121, field: 'note' }, phrase: 'Everything Is Under Control', to: { scene: 'library', id: 120 } },
-  { from: { scene: 'library', id: 108, field: 'note' }, phrase: 'Daimonic Reality', to: { scene: 'library', id: 121 } },
-  { from: { scene: 'library', id: 13, field: 'note' }, phrase: 'Daimonic Reality', to: { scene: 'library', id: 121 } },
-  { from: { scene: 'library', id: 120, field: 'note' }, phrase: 'Daimonic Reality', to: { scene: 'library', id: 121 } },
-  { from: { scene: 'library', id: 122, field: 'note' }, phrase: '2001: A Space Odyssey', to: { scene: 'library', id: 63 } },
-  { from: { scene: 'library', id: 122, field: 'note' }, phrase: 'Solaris', to: { scene: 'library', id: 53 } },
-  { from: { scene: 'library', id: 122, field: 'note' }, phrase: 'The Tree of Life', to: { scene: 'library', id: 33 } },
-  { from: { scene: 'library', id: 33, field: 'note' }, phrase: 'Stories of Your Life and Others', to: { scene: 'library', id: 122 } },
-  { from: { scene: 'library', id: 125, field: 'note' }, phrase: 'The Changing Light at Sandover', to: { scene: 'library', id: 108 } },
-  { from: { scene: 'library', id: 128, field: 'note' }, phrase: 'Daimonic Reality', to: { scene: 'library', id: 121 } },
-  { from: { scene: 'library', id: 131, field: 'note' }, phrase: 'Daimonic Reality', to: { scene: 'library', id: 121 } },
-  { from: { scene: 'library', id: 129, field: 'note' }, phrase: 'Prometheus Rising', to: { scene: 'library', id: 119 } },
-  { from: { scene: 'library', id: 129, field: 'note' }, phrase: 'Everything Is Under Control', to: { scene: 'library', id: 120 } },
-  { from: { scene: 'library', id: 130, field: 'note' }, phrase: 'Gravity’s Rainbow', to: { scene: 'library', id: 78 } },
-  { from: { scene: 'library', id: 130, field: 'note' }, phrase: 'Borges’s Collected Fictions', to: { scene: 'library', id: 79 } },
-  { from: { scene: 'library', id: 130, field: 'note' }, phrase: 'Everything Is Under Control', to: { scene: 'library', id: 120 } },
-  { from: { scene: 'library', id: 133, field: 'note' }, phrase: 'Alchemy & Mysticism', to: { scene: 'library', id: 6 } },
-  { from: { scene: 'library', id: 139, field: 'note' }, phrase: 'Alchemy & Mysticism', to: { scene: 'library', id: 6 } },
-  { from: { scene: 'library', id: 134, field: 'note' }, phrase: 'Wooderson', to: { scene: 'library', id: 32 } },
-  { from: { scene: 'library', id: 134, field: 'note' }, phrase: 'Hedwig', to: { scene: 'library', id: 40 } },
-  { from: { scene: 'library', id: 137, field: 'note' }, phrase: 'The Book of the SubGenius', to: { scene: 'library', id: 113 } },
-  { from: { scene: 'library', id: 137, field: 'note' }, phrase: 'Everything Is Under Control', to: { scene: 'library', id: 120 } },
-  { from: { scene: 'library', id: 124, field: 'note' }, phrase: 'Alexander McQueen', to: { scene: 'library', id: 141 } },
-  { from: { scene: 'library', id: 141, field: 'note' }, phrase: 'Tord Boontje', to: { scene: 'library', id: 124 } },
-  { from: { scene: 'library', id: 142, field: 'note' }, phrase: 'Wiseguy', to: { scene: 'library', id: 140 } },
-  { from: { scene: 'library', id: 145, field: 'note' }, phrase: 'Hedwig', to: { scene: 'library', id: 40 } },
-  { from: { scene: 'library', id: 145, field: 'note' }, phrase: 'VALIS', to: { scene: 'library', id: 110 } },
 ];
 
 // ─── Which fields each scene actually puts on screen ───────────────────────
@@ -228,104 +147,54 @@ export const RENDERED_FIELDS = {
 };
 
 export const WITHHELD_FIELDS = {
-  // `note` is no longer flatly withheld — see CONDITIONAL_FIELDS below — but
-  // it stays declared here because an item outside the visible set genuinely
-  // is withheld, and a link authored into one of those needs to be reported
-  // rather than silently accepted.
+  // `catalog` is bibliographic bookkeeping — ISBNs of other printings, edition
+  // uncertainty, "flag for Scott". Real reference value to Scott, not something
+  // to publish and not something to throw away. Nothing renders it, nothing
+  // links from it, and it should stay that way.
   //
-  // `catalog` (added 2026-09-02) is the private half of what used to be one
-  // field. When notes went public for the items doing link work, seven of
-  // them turned out to be carrying bibliographic bookkeeping — ISBNs of other
-  // printings, edition uncertainty, "flag for Scott" — which is real
-  // reference value to Scott and not something to publish or to throw away.
-  // It moved here rather than being deleted. Nothing renders it, nothing
-  // links from it, and it should stay that way: this is the field that exists
-  // so the public note doesn't have to carry catalogue chatter.
-  library: new Set(['note', 'catalog']),
+  // `note` used to be listed here too and is simply gone from the data as of
+  // 4.11.21 — see the block below.
+  library: new Set(['catalog']),
 };
 
-// ─── Library notes: private by default, visible where they do link work ────
-// Scott's 2026-09-02 call, and it is narrower than "publish the notes". The
-// `note` field stays withheld exactly as decided on 2026-07-23. What changes
-// is that a note which is *structurally load-bearing in the link graph* is no
-// longer hidden — not because it is good writing, but because hiding it
-// breaks the graph. Two ways a note can be load-bearing, and both count:
+// ─── Library notes: gone, and why the conditional machinery stayed ─────────
+// From 2026-07-23 to 4.11.21 the library catalog carried a `note` on 100 of
+// its items, and a long apparatus grew up around which of them to show: a
+// derived visible set (a note that anchored a cross-link had to be displayed
+// or the link had nothing to click), a NOTE_HOLD list for notes that did link
+// work but were not publishable as written, and a build-time readiness scan
+// in verify-links.mjs.
 //
-//   SOURCE — the note's own text contains the phrase that jumps somewhere
-//   else. Hide the note and the phrase goes with it, so there is nothing to
-//   click and the link exists only in the data.
+// **None of those notes were Scott's, and he never asked for them.** They
+// were generated in an earlier cataloguing round, and 4.11.21 removed them at
+// his call along with the 81 links authored into them — 55% of the site's
+// entire link graph, which had been anchored in prose the author had not
+// written. 146 links became 65. The library keeps 4, anchored in a film's
+// `scene` caption and a book's `excerpt`/`excerpt_from`, which are content
+// rather than commentary.
 //
-//   TARGET — another piece links here, and what the reader came to read is
-//   the note. 4.0 suppressed the "Referenced from —" backlink for exactly
-//   these, on the grounds that it pointed at something invisible. That is no
-//   longer true once the note is shown, so the backlink comes back — for
-//   this set only.
+// The bibliographic half survived: 20 notes that were really edition
+// bookkeeping moved into `catalog`, which nothing displays.
 //
-// Derived from LINKS at module load, never hand-listed. A hand-maintained id
-// list would be a derived artifact somebody has to remember to update, which
-// is the failure mode NOTES.md's sitemap.xml entry exists to warn about: add
-// a link tomorrow and the note it lives in would stay invisible with nothing
-// reporting it.
-//
-// COUNTED, with the method stated, at v4.0.1 against src/links.js and
-// library.text.js:
-//   81  link rows authored with from.field === 'note'
-//   52  distinct items whose note is a SOURCE
-//   43  distinct items that are the TARGET of one of those rows
-//   54  the union — the set below
-//   53  of those 54 actually have a note (one target, #32 Dazed and
-//       Confused, has none; it still gains a backlink to #134, whose note IS
-//       now visible, so that reference is followable rather than dangling)
-//    2  are target-only, i.e. not themselves a source (#32 and #140 Wiseguy)
-//   47  notes stay private, unchanged and entirely absent from the scene
-// cdRackItems carry no notes at all (0 of 115), so the shared id space
-// between the two arrays cannot leak a note onto a CD spine — but callers
-// should still scope this test to library items, not ids alone.
-const libraryNoteRows = LINKS.filter(l => l.from.scene === 'library' && l.from.field === 'note');
-
-// ─── Held back: notes that do link work but are not publishable as written ──
-// Making notes visible surfaced something the decision was taken without:
-// some of them are still working notes, and one is private correspondence.
-// #124 opens with a dated verbatim quote of Scott correcting a cataloguing
-// error — addressed to Claude, about a bug in an earlier cataloguing round.
-// That is not criticism and was never written to be read by anyone else.
-//
-// This is the 1.7.0 incident's exact shape, and 1.7.0's own lesson is the one
-// that applies: "is this good?" is the wrong question, "does the site show
-// this?" is the right one — and the corollary is that turning a field ON
-// makes every word in it a publishing decision, not just the words you had in
-// mind. So these are held out of the visible set until they are trimmed. The
-// cost is that their links stay invisible, which is exactly where they were
-// before this change: no regression, just an unrealised gain.
-//
-// Each entry needs a reason, and removing one should follow trimming the note
-// rather than deciding the reason no longer matters. verify-links.mjs re-runs
-// the scan that found these on every build, so a new note of this kind cannot
-// join the visible set silently, and a note that has been cleaned up is
-// reported as ready to release.
-export const NOTE_HOLD = new Map([
-  // Empty as of 2026-09-02: all eight were rewritten and released. The
-  // mechanism stays because the hazard it caught is structural, not a
-  // one-off — any future link authored into a note brings that whole note
-  // to the surface with it, and verify-links.mjs's readiness scan will stop
-  // the build and point here. An entry is `[id, reason]`, and removing one
-  // should follow trimming the note rather than deciding the reason no
-  // longer matters.
-]);
-
-export const LIBRARY_NOTE_VISIBLE = new Set([
-  ...libraryNoteRows.map(l => l.from.id),                                  // sources
-  ...libraryNoteRows.filter(l => l.to.scene === 'library').map(l => l.to.id), // targets
-].filter(id => !NOTE_HOLD.has(id)));
+// What is deliberately kept is the CONDITIONAL_FIELDS mechanism below, now
+// empty. It exists because "does the site show this field?" stopped having
+// one answer for a whole field, and that can happen again to any scene; the
+// verifier still refuses a link authored into a field that is neither
+// rendered nor declared withheld. NOTE_HOLD and LIBRARY_NOTE_VISIBLE are gone
+// with the notes they governed — verify-links.mjs reads NOTE_HOLD through a
+// `?? new Map()` and its readiness scan iterates rows that no longer exist,
+// so both simply have nothing to do rather than breaking.
 
 // Fields a scene renders only for some items. Keyed the same way as
 // RENDERED_FIELDS, but the value is a predicate on the piece id rather than a
 // flat yes/no, because "does the site show this?" stopped having one answer
 // for the whole field.
 export const CONDITIONAL_FIELDS = {
-  library: {
-    note: id => LIBRARY_NOTE_VISIBLE.has(id),
-  },
+  // Empty since 4.11.21, when library's `note` — the only conditional field
+  // this project ever had — was removed from the data. Kept rather than
+  // deleted: see the block above, and note that isRenderedField() below still
+  // consults it, so a scene that needs per-item visibility again has a place
+  // to say so instead of inventing a second mechanism.
 };
 
 // True when the scene draws this field for this specific piece. `id` is

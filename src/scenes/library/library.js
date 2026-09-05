@@ -50,9 +50,9 @@ const TOTAL_H = ROWS * CUBBY_H + (ROWS + 1) * FRAME_T;
 // carries the full provenance note).
 //
 // No separate object, no separate camera, no switch: the CDs are just
-// more items in the same cubbies as the books and films — placeCdsInCubbies()
-// distributes them across the shelf's existing 8 cubbies, appended after
-// whatever books/films are already there, and buildItems() (below) renders
+// more items in the same cubbies as the books and films — dealIntoCubbies()
+// deals them across the shelf's 8 cubbies mixed in with everything else, and
+// buildItems() (below) renders
 // and sizes them like any other item, just thinner and shorter, with their
 // own texture (makeCdSpineTexture). They ride the exact same root group,
 // camera, drag/zoom, and raycast as every other spine on the shelf — nothing
@@ -587,82 +587,120 @@ function makeCdSpineTexture(baseColor, artist, album) {
   return new THREE.CanvasTexture(c);
 }
 
-// Distributes the 114 CDs across the same 8 cubbies the books/films already
-// live in (row-major reading order), in catalog order so the genre lanes
-// cdRack.js was built in mostly stay together within a cubby, appended
-// after whatever's already there (pos = existing max + 1, 2, 3...).
+// ─── Dealing the shelf ──────────────────────────────────────────────────────
+// Everything on the shelf — 104 books, 44 films, 2 divination decks and 114
+// CDs — is dealt fresh into the eight cubbies on every visit, mixed.
 //
-// Books and Blu-rays/CDs each group together within a cubby rather than
-// scattering — CDs append sequentially, and buildItems() below also pulls
-// the shelf's existing Blu-rays out of their photographed, interspersed
-// positions into that same trailing block, via a group-before-pos sort
-// instead of a straight pos sort.
-// Returns items already shaped like a libraryItems entry (type/title/creator/
-// row/col/pos/scene/youtube) so buildItems and the shared panel machinery
-// (populatePanel, in createLibrary below) can treat them identically to a
-// book or film — `scene`/`youtube` here point at a music video or live
-// performance instead of a film scene, but it's the same two fields.
-// Accepts the (already per-visit-shuffled, see reshuffleWithinType above)
-// CD list rather than always reading module-level cdRackItems directly, so
-// which album lands in which cubby/slot also changes on every page load —
-// the maxPos scan below still reads the fixed libraryItems row/col/pos,
-// which is fine: reshuffleWithinType only permutes *content* among a
-// cubby's existing slots, so the set of pos values already used in each
-// cubby is unchanged regardless of that day's shuffle.
-function placeCdsInCubbies(cdItems = cdRackItems) {
-  const maxPos = new Map();
-  libraryItems.forEach(it => {
-    const key = `${it.row}-${it.col}`;
-    maxPos.set(key, Math.max(maxPos.get(key) || 0, it.pos));
-  });
-
+// It did not used to be. `row`/`col`/`pos` in library.text.js were
+// photographed off Scott's real shelf and they used to decide placement, with
+// only the CONTENT permuted among a type's own slots. The trouble is that the
+// real shelf is sorted the way real shelves are: 43 of the 44 films sit in two
+// cubbies and books fill the other six, so two of the eight were a wall of
+// Criterion cases and the rest a wall of paperbacks. Interleaving within a
+// cubby (see below) cannot touch that — there is nothing in a films-only
+// cubby to interleave WITH. So the deal itself had to change.
+//
+// row/col/pos stay in the catalog. They are the record of a real object and
+// that is worth keeping; they are simply no longer what the scene reads for
+// placement. What the scene still derives from them is the SHAPE of the grid
+// — COLS/ROWS at the top of this file — because the shelf is a real 4x2 piece
+// of furniture whatever is standing in it.
+//
+// Each cubby gets the same PROPORTIONS as the shelf as a whole rather than
+// the same count of each type: deal each type round-robin from a shuffled
+// list, starting each type at a different cubby so the remainders do not all
+// land in the same place. 264 items over 8 cubbies is 33 apiece, which is
+// also tidier than what was there — the real shelf ran 29 to 46 items per
+// cubby, and since a cubby divides its width among whatever it holds, that
+// was a visible difference in spine width from one cubby to the next.
+//
+// Math.random, not hash01, like everything else in this section: hash01 keeps
+// a given item looking the same across reloads once you have found it, and
+// this does the opposite on purpose.
+function dealIntoCubbies(items, cds) {
   const cubbies = [];
   for (let row = 1; row <= COLS; row++) {
-    for (let col = 1; col <= ROWS; col++) cubbies.push({ row, col });
+    for (let col = 1; col <= ROWS; col++) cubbies.push({ row, col, items: [] });
   }
-
-  const perCubby = Math.ceil(cdItems.length / cubbies.length);
-  const placed = [];
-  cubbies.forEach(({ row, col }, i) => {
-    const key = `${row}-${col}`;
-    let pos = maxPos.get(key) || 0;
-    cdItems.slice(i * perCubby, (i + 1) * perCubby).forEach(cd => {
-      pos += 1;
-      placed.push({
-        id: `cd-${cd.id}`, type: 'cd', title: cd.album, creator: cd.artist,
-        artist: cd.artist, album: cd.album, row, col, pos,
-        scene: cd.video, youtube: cd.youtube,
-      });
-    });
+  const pools = [
+    shuffled(items.filter(it => it.type === 'book')),
+    shuffled(items.filter(it => isFilmType(it))),
+    shuffled(items.filter(it => it.type === 'divination_box')),
+    shuffled(cds).map(cd => ({
+      id: `cd-${cd.id}`, type: 'cd', title: cd.album, creator: cd.artist,
+      artist: cd.artist, album: cd.album, scene: cd.video, youtube: cd.youtube,
+    })),
+  ];
+  pools.forEach((pool, k) => {
+    // A different starting cubby per type. Deal every type from cubby 0 and
+    // the leftovers of all four land together in the first few cubbies, which
+    // is the lumpiness this function exists to remove.
+    const start = Math.floor(Math.random() * cubbies.length) + k;
+    pool.forEach((it, i) => cubbies[(start + i) % cubbies.length].items.push(it));
   });
-  return placed;
+  return cubbies;
 }
 
-// Books (plus the two divination boxes, which are book-shaped objects on
-// the shelf) are "the books"; Blu-rays and CDs are "the media." Sorting
-// by group before pos (see buildItems below) pulls the Blu-rays
-// out of their photographed, interspersed shelf order and puts the CDs
-// (already trailing per-cubby via placeCdsInCubbies above) alongside them,
-// into one contiguous block per cubby — each group keeps its own internal
-// order, only the two groups themselves stop interleaving.
-function shelfGroup(type) {
-  return type === 'bluray' || type === 'cd' ? 1 : 0;
+// ─── How a cubby is ordered ─────────────────────────────────────────────────
+// Until 4.11.21 this was `shelfGroup()`: books first, then one contiguous
+// block of Blu-rays and CDs at the end of every cubby. It was deliberate and
+// it was wrong about what a shelf looks like. Nobody's shelf sorts itself by
+// media; things land next to what they were being read with, and a Criterion
+// case ends up leaning against a paperback because that is where there was
+// room. Two of the eight cubbies were also a solid wall of film cases and the
+// rest a solid wall of paperbacks, so the eye got no reason to travel.
+//
+// What replaces it is not a straight shuffle. A uniform shuffle of a mixed
+// cubby produces runs of length 1 most of the time — which reads as static,
+// not as a shelf. Real shelves cluster: three or four of a kind together,
+// because they were bought together or shelved in one go. So each type's
+// items are broken into short RUNS first and the runs are shuffled, which
+// keeps the little groupings and mixes them.
+//
+// Run length is capped per TYPE rather than globally, and that is the part
+// that was got wrong on the first pass. A CD jewel case is drawn half a book's
+// width and noticeably shorter, so a run of four of them is a wide pale trough
+// in the skyline — and CDs are 43% of everything on the shelf, so at a shared
+// cap of four the troughs were the thing the eye landed on. Books are the
+// substrate and can run longest; films are the dark punctuation; CDs read best
+// as one or two at a time, which is also how they end up on a real shelf,
+// tucked into whatever gap there was.
+//
+// Within a type the length is skewed toward the middle by taking the smaller
+// of two draws. Per visit, like everything else in this section: Math.random,
+// not hash01, because the point is that the shelf is arranged differently
+// every time you come back.
+const RUN_MAX = { book: 4, bluray: 3, dvd: 3, divination_box: 1, cd: 2 };
+function interleaveCubby(items) {
+  const byType = new Map();
+  for (const it of items) {
+    if (!byType.has(it.type)) byType.set(it.type, []);
+    byType.get(it.type).push(it);
+  }
+  const runs = [];
+  for (const [type, list] of byType) {
+    const cap = RUN_MAX[type] ?? 3;
+    // Each type keeps its own internal order — the per-visit content
+    // reshuffle above has already decided that, and shuffling it twice would
+    // just be shuffling.
+    let i = 0;
+    while (i < list.length) {
+      const draw = () => 1 + Math.floor(Math.random() * cap);
+      const n = Math.min(draw(), draw());
+      runs.push(list.slice(i, i + n));
+      i += n;
+    }
+  }
+  return shuffled(runs).flat();
 }
 
-// ─── Per-visit reshuffle ────────────────────────────────────────────────────
-// The shelf reshuffles which item lands where on every visit, so it's not
-// always in the same arrangement. Every catalog entry's row/col/pos still
-// preserves the real shelf's photographed layout (library.text.js's own
-// header comment) — that's still the source of truth for which slots
-// exist and how many each cubby holds — but which item's content lands in
-// which slot is re-shuffled fresh on every page load, independently per
-// type (books,
-// films, and music each only shuffle among their own slots, so a book can
-// never land in a former CD's spot or vice versa). This deliberately uses
-// real per-load randomness (Math.random), not the deterministic hash01 used
-// everywhere else in this file — hash01 exists so a given item looks the
-// same across reloads once you've found it; this does the opposite, on
-// purpose, so the shelf itself feels different each visit.
+// ─── Per-visit randomness ───────────────────────────────────────────────────
+// The shelf is dealt fresh on every visit, so it is never twice in the same
+// arrangement — see dealIntoCubbies() above for what that means now that a
+// type is no longer confined to its own photographed slots. Deliberately real
+// per-load randomness (Math.random), not the deterministic hash01 used
+// everywhere else in this file — hash01 exists so a given item looks the same
+// across reloads once you have found it; this does the opposite, on purpose.
 function shuffled(arr) {
   const a = arr.slice();
   for (let i = a.length - 1; i > 0; i--) {
@@ -672,21 +710,12 @@ function shuffled(arr) {
   return a;
 }
 
-// Permutes item *content* among the row/col/pos slots already held by the
-// items matching `isType`, leaving every other item (and every slot's
-// row/col/pos itself) untouched. Two independent calls (books, then films)
-// keep the two pools from ever crossing into each other's slots.
-function reshuffleWithinType(items, isType) {
-  const slotIdx = [];
-  items.forEach((it, i) => { if (isType(it)) slotIdx.push(i); });
-  const slots = slotIdx.map(i => ({ row: items[i].row, col: items[i].col, pos: items[i].pos }));
-  const content = shuffled(slotIdx.map(i => items[i]));
-  const out = items.slice();
-  slotIdx.forEach((i, k) => {
-    out[i] = { ...content[k], ...slots[k] };
-  });
-  return out;
-}
+// `reshuffleWithinType()` stood here until 4.11.21. It permuted item CONTENT
+// among the row/col/pos slots the photographed shelf gave each type, which is
+// what a per-visit shuffle has to look like when placement is fixed and only
+// the occupant may change. dealIntoCubbies() above does the whole job now —
+// it decides the cubby as well as the order — so there are no fixed slots
+// left for anything to be permuted among.
 const isBookType = it => it.type === 'book' || it.type === 'divination_box';
 const isFilmType = it => it.type === 'dvd' || it.type === 'bluray';
 
@@ -1133,32 +1162,16 @@ function buildItems(preview) {
   const previewBox = preview ? new THREE.BoxGeometry(1, 1, 1) : null;
   const previewMats = new Map();
 
-  // Per-visit reshuffle (see reshuffleWithinType above): books and films
-  // each get their content re-permuted among their own existing slots, and
-  // the CD list is shuffled before it's distributed into cubbies — all
-  // fresh Math.random() per page load, so the shelf reads differently each
-  // visit instead of always matching the photographed layout exactly.
-  const shuffledLibrary = reshuffleWithinType(reshuffleWithinType(libraryItems, isBookType), isFilmType);
-  const shuffledCds = shuffled(cdRackItems);
-
-  // Group items by cubby so widths can be distributed to exactly fill
-  // each cubby's available width regardless of how many items landed
-  // there (6 on the low end, 25 on the high end, on the real shelf —
-  // now with the 114 CDs from placeCdsInCubbies() appended on top).
-  const byCubby = new Map();
-  [...shuffledLibrary, ...placeCdsInCubbies(shuffledCds)].forEach(it => {
-    const key = `${it.row}-${it.col}`;
-    if (!byCubby.has(key)) byCubby.set(key, []);
-    byCubby.get(key).push(it);
-  });
+  // One deal per visit (dealIntoCubbies above), so which cubby an item lands
+  // in changes every time as well as where in the cubby it stands.
+  const byCubby = dealIntoCubbies(libraryItems, cdRackItems);
 
   const padX = 0.06;
   const gap = 0.006;
   const floorGap = 0.025;
 
-  byCubby.forEach(items => {
-    items.sort((a, b) => shelfGroup(a.type) - shelfGroup(b.type) || a.pos - b.pos);
-    const { row, col } = items[0];
+  byCubby.forEach(({ row, col, items: dealt }) => {
+    const items = interleaveCubby(dealt);
     // Transposed for the vertical shelf: old row (1-2) now walks the new
     // 2-wide axis, old col (1-4) now walks the new 4-tall axis — a clean
     // 90-degree rotation of the same cubbies, item row/col values untouched.
@@ -1428,7 +1441,7 @@ export function createLibrary(container, { preview = false, initialPieceId = nul
   root.add(frame.group);
 
   // Books, films, divination decks, and now CDs — buildItems() places the
-  // CDs among them via placeCdsInCubbies() (see the CDs header comment
+  // CDs among them via dealIntoCubbies() (see the CDs header comment
   // above), all one shelf, one group, one everything below.
   const items = buildItems(preview);
   root.add(items.group);
@@ -1612,7 +1625,7 @@ export function createLibrary(container, { preview = false, initialPieceId = nul
   // and following a cross-link (navigateToItem, above) can populate the
   // same panel without duplicating this logic.
   function populatePanel(it) {
-    // CDs-on-shelf carry a string id ("cd-<n>", placeCdsInCubbies above) —
+    // CDs-on-shelf carry a string id ("cd-<n>", dealIntoCubbies above) —
     // deliberately disambiguated from libraryItems' plain numeric ids
     // since they share the same 1..N range in their own source arrays.
     // links.js and the #library/<id> hash only ever address the numeric
@@ -1629,7 +1642,6 @@ export function createLibrary(container, { preview = false, initialPieceId = nul
     // release_year/runtime/country; not every field applies to every
     // item). See library.text.js's header for how these were sourced.
     const detailsEl = panel.querySelector('.library-panel-details');
-    const noteEl = panel.querySelector('.library-panel-note');
     const excerptEl = panel.querySelector('.library-panel-excerpt');
     const excerptFromEl = panel.querySelector('.library-panel-excerpt-from');
     const coverEl = panel.querySelector('.library-panel-cover');
@@ -1641,12 +1653,26 @@ export function createLibrary(container, { preview = false, initialPieceId = nul
           getInboundLinks('library', it.id).map(l => libraryItems.find(i => i.id === l.from.id)?.title)
         ) ?? ''
       : '';
+    // One imprint line, then credits. Until 4.11.21 this was a stack of up to
+    // seven short paragraphs, and on a book — which has no video, no scene
+    // caption and, for most of the shelf, no excerpt — that stack WAS the
+    // panel: publisher, then page count, then a thirteen-digit ISBN, each on
+    // its own line. Three lines of inventory is what a catalogue record looks
+    // like, not what a shelf looks like.
+    //
+    // So the bibliographic facts join into one line and the ISBN comes out of
+    // the display entirely. It stays in the data: it is how the cover is
+    // looked up (Open Library keys on it), and it is the identifier that made
+    // the catalogue checkable in the first place. It is simply not something
+    // anybody opens a panel to read.
+    const facts = [];
+    if (it.publisher) facts.push(`${it.publisher}${it.publish_year ? `, ${it.publish_year}` : ''}`);
+    if (it.release_year) facts.push(String(it.release_year));
+    if (it.country) facts.push(it.country);
+    if (it.pages) facts.push(`${it.pages} pages`);
+    if (it.runtime_min) facts.push(`${it.runtime_min} min`);
     const lines = [];
-    if (it.publisher) lines.push(`${it.publisher}${it.publish_year ? `, ${it.publish_year}` : ''}`);
-    if (it.pages) lines.push(`${it.pages} pages`);
-    if (it.isbn13) lines.push(`ISBN ${it.isbn13}`);
-    if (it.release_year) lines.push(`${it.release_year}${it.country ? ` · ${it.country}` : ''}`);
-    if (it.runtime_min) lines.push(`${it.runtime_min} min`);
+    if (facts.length) lines.push(facts.join(' · '));
     if (it.writer) lines.push(`written by ${it.writer}`);
     if (it.producer) lines.push(`produced by ${it.producer}`);
     // Escaped at the join rather than field by field: publisher, writer and
@@ -1657,28 +1683,10 @@ export function createLibrary(container, { preview = false, initialPieceId = nul
     // header describes fields transcribed from real bibliographic sources.
     // One escape here covers every line the block can ever grow.
     detailsEl.innerHTML = lines.map(l => `<p>${escapeHtml(l)}</p>`).join('');
-    // Notes are private by default and shown only where the note is doing
-    // structural work in the link graph — Scott's 2026-09-02 call. The
-    // 2026-07-23 decision to withhold this field stands for the other 47
-    // notes; what changed is that hiding a note which CONTAINS a cross-link
-    // phrase, or which another piece links to, breaks the link rather than
-    // merely withholding some prose.
-    //
-    // The test lives in links.js (LIBRARY_NOTE_VISIBLE, derived from LINKS at
-    // module load) rather than as a list here, so adding a link tomorrow
-    // brings its note along automatically instead of silently authoring
-    // another invisible one. 54 items qualify, counted; see that file for the
-    // method and the two edge cases.
-    //
-    // Note the deliberate shape of the negative branch: `''`, the same empty
-    // string as before. An item outside the set renders no note text, no
-    // placeholder, no "hidden note" affordance — the paragraph is as empty as
-    // it has been since July, and a reader has no way to tell a withheld note
-    // from an item that simply never had one.
-    const showNote = isRenderedField('library', 'note', it.id);
-    noteEl.innerHTML = (showNote && it.note)
-      ? renderLinkedField(it.id, 'note', it.note)
-      : '';
+    // The `note` field is gone from the catalog as of 4.11.21 — see
+    // src/links.js's own block on what it was and why it went. Nothing here
+    // renders commentary any more; a panel shows what the object is, what it
+    // says, and what it is referenced by.
 
     // Content area, above the bibliographic details: a film gets its
     // pivotal scene embedded (not just linked), a CD gets a music video or

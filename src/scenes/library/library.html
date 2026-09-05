@@ -18,6 +18,10 @@
   aria-labelledby, which per spec has to resolve to an actual id, not a
   class. Every other panel part is styled and looked up purely by class.
 
+  There is no library-panel-note here any more: the catalog's `note` field
+  was removed wholesale in 4.11.21 (src/links.js records why), so the element
+  had nothing left to fill it.
+
   library-panel-refs is the inbound-reference note ("Referenced from X") —
   filled by library.js's populatePanel via sceneKit.js's formatInboundNote,
   same quiet-metadata convention as sphere's facet-id line and orbiter's
@@ -39,7 +43,6 @@
     <p class="library-panel-excerpt"></p>
     <p class="library-panel-excerpt-from"></p>
     <div class="library-panel-details"></div>
-    <p class="library-panel-note"></p>
     <p class="library-panel-refs"></p>
   </div>
 </aside>

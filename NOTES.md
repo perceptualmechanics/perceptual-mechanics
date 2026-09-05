@@ -18659,3 +18659,94 @@ stagger: scale 1.04 with the offset intact both ways.
 That is the third bug this week whose entire symptom was *an effect that was
 simply never there* — the focus ring, the hover glow, the hover scale. None
 of them look wrong when they are missing. They look like a design decision.
+
+## 4.11.21 (2026-09-05)
+
+**The Library's notes were never Scott's.** He said so when I recommended
+surfacing them: *"those notes weren't mine. they were chat's. i never asked
+for them."* Everything else in this release follows from that, plus a
+refinement pass on the shelf and the read panel.
+
+### 100 notes out, and 81 links with them
+
+The catalog carried a `note` on 100 of its 150 items, and a considerable
+apparatus had grown around which of them to show — a derived visible set, a
+`NOTE_HOLD` list for notes that did link work but were not publishable as
+written, a build-time readiness scan, a conditional-field predicate, and a
+withheld-fields declaration to keep the verifier honest about all of it.
+
+**81 of the site's 146 cross-links originated in one of those notes.** 55% of
+the link graph was anchored in prose the author had not written and had not
+asked for. The graph is 65 rows now. The Library keeps 4, anchored in a film's
+`scene` caption and a book's `excerpt`/`excerpt_from` — content rather than
+commentary.
+
+The cut was clean in one respect worth recording: **every one of the 85
+library links was library→library.** No other scene linked into the shelf and
+the shelf linked into no other scene, so removing them took nothing away from
+Sphere, Scroll or Orbiter, whose 61 links are untouched.
+
+One departure from "cull the lot", stated because it is a departure: 20 of the
+notes were really edition bookkeeping — *"several Penguin translations exist"*,
+*"flag for Scott"*, ISBNs of other printings. That is provenance about how
+reliable the catalog is, and deleting it would have made the data quietly less
+honest, so it moved into the existing `catalog` field, which nothing renders
+and nothing links from.
+
+Retired with the field: `LIBRARY_NOTE_VISIBLE`, `NOTE_HOLD`, verify-links's
+readiness scan, and the stale block in `prerender.js` explaining why the
+archive page withheld notes. `CONDITIONAL_FIELDS` stays, empty, with the
+reason — the mechanism is general and the next scene to need per-item
+visibility should not have to rediscover why it needs a check.
+
+**The lesson the readiness scan leaves behind**, since the code is gone: it
+scanned every note a cross-link was about to publish and failed the build on
+the marks of a working note. It found eight and was right about all eight. But
+it was never really a question about which notes were publishable. **A field
+nobody asked for is not made safe by scanning it.**
+
+### The shelf: everything mixed
+
+Two problems, and the first pass only solved one of them.
+
+`shelfGroup()` had sorted every cubby into books-then-media, a deliberate
+choice with a comment defending it. Replaced with runs: each type is broken
+into short runs and the runs are shuffled, because a uniform shuffle produces
+runs of length 1 and reads as static rather than as a shelf. **Run length is
+capped per type** — books 4, films 3, CDs 2 — which was the second pass. A CD
+case is half a book's width and noticeably shorter, and CDs are 43% of the
+shelf, so at a shared cap of four they pooled into wide pale troughs that were
+the first thing the eye found.
+
+The second problem was the deal itself, and it needed Scott's second answer
+(*"just mix up all the media types together"*) to fix. `row`/`col`/`pos` were
+photographed off the real shelf and used to decide placement, and the real
+shelf is sorted the way real shelves are: **43 of the 44 films sat in two
+cubbies**, books filled the other six. Interleaving cannot touch that — there
+is nothing in a films-only cubby to interleave with. So `dealIntoCubbies()`
+deals everything fresh per visit, each type round-robin from a shuffled list
+with a different starting cubby per type so the remainders do not pile up
+together.
+
+Result, measured: every cubby now holds 32–34 items — 13 books, 5–6 films,
+14–15 CDs — against a previous range of 29 to 46, which was also a visible
+difference in spine width from one cubby to the next, since a cubby divides
+its width among whatever it holds.
+
+row/col/pos stay in the catalog. They are the record of a real object. They
+are simply no longer what the scene reads for placement — only `COLS`/`ROWS`,
+the shape of the furniture, still comes from them.
+
+### The read panel
+
+- **The ISBN is out of the display.** It stays in the data: it is how the
+  cover is looked up. A thirteen-digit number on its own line is inventory.
+- **One imprint line instead of five.** Publisher, year, pages, country and
+  runtime join with middots; writer and producer stay as their own lines.
+  On a book — no video, no scene caption, and for 71% of the shelf no excerpt
+  — that stack of short paragraphs *was* the panel.
+- **The cover went from 42% of the panel to 26%.** At 42%, on a book with no
+  excerpt, it was not supporting the content; it was the content.
+- **The ten longest excerpts trimmed at sentence boundaries.** The range was
+  10–98 words and is now 10–43, median 27, so no book's panel is three times
+  another's.
