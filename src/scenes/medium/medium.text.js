@@ -16,11 +16,95 @@
 // letter roughly the same distance from the middle, so no letter is cheaper to
 // reach than any other, and a board where E sat closer to centre than X would
 // be a board with an opinion.
-const ARC = (chars, spread, radius, cy, ry) =>
-  chars.split('').map((ch, i) => {
-    const t = (i / (chars.length - 1) - 0.5) * spread;
+// One gap, everywhere. Every mark on this board sits this far from its
+// neighbour — letters, digits and punctuation alike — which is what makes the
+// board read as one object rather than as three rows that were each eyeballed
+// separately. It is also the number the catchment claim below is about.
+export const MARK_GAP = 0.069;
+
+// Arc length of the ellipse below between -s/2 and s/2. Simpson's rule on a
+// fine grid: the integrand is smooth, so this is exact to far more digits than
+// a board measured in hundredths could use.
+const arcLength = (s, radius, ry, n = 2048) => {
+  const speed = t => Math.hypot(radius * Math.cos(t), ry * Math.sin(t));
+  const h = s / n;
+  let sum = speed(-s / 2) + speed(s / 2);
+  for (let i = 1; i < n; i++) sum += speed(-s / 2 + i * h) * (i % 2 ? 4 : 2);
+  return (sum * h) / 3;
+};
+
+// An arc of letters at EQUAL SPACING — equal along the curve, which is the
+// only place spacing means anything to a reader or to the cup.
+//
+// This used to take a `spread` and step through it in equal ANGLE:
+// `t = (i/(n-1) - 0.5) * spread`. On a circle those are the same thing. These
+// arcs are not circles — they are flattened, ry/radius about 0.28 — and on a
+// flattened ellipse a step of equal angle covers a distance of
+// `dt * sqrt(radius^2 cos^2 t + ry^2 sin^2 t)`, which is largest in the middle
+// of the arc and smallest at its ends. So the letters bunched up towards A and
+// M and spread out around G: 0.0494 to 0.0725 within the first arc and 0.0433
+// to 0.0606 within the second, a 1.4-1.5x variation each. The digit and
+// punctuation rows are straight lines stepped evenly, so they were exactly
+// even the whole time, which is why the letters were the rows that looked odd.
+//
+// So the parameter is the gap, not the spread. Given a gap, solve for the
+// spread that makes the arc exactly (n-1) gaps long, then walk the curve
+// placing each letter where the accumulated length says it goes. Two
+// consequences worth having: the two arcs now have the same spacing as each
+// other (they did not — 0.0633 against 0.0538 for the same 13 letters), and
+// the number that governs the board is a distance somebody can compare to
+// DWELL_RADIUS rather than an angle nobody can.
+const ARC = (chars, gap, radius, cy, ry) => {
+  const n = chars.length;
+  const want = gap * (n - 1);
+
+  // The spread that makes the arc that long. Bisection rather than an
+  // algebraic inverse because the elliptic integral has none, and 60 halvings
+  // of [0, pi] lands well under floating-point noise.
+  // Half a turn is the ceiling: past pi the arc doubles back on itself and the
+  // letters start walking backwards along the board. Checked rather than
+  // clamped, because a bisection that runs into its own bound returns the
+  // bound, which looks like an answer — ask for a gap that cannot fit at this
+  // radius and you would get a silently squashed arc instead of a complaint.
+  // Caught by asking for one: at radius 0.37 this arc's thirteen letters no
+  // longer fit inside half a turn, and the search returned pi with a straight
+  // face.
+  if (arcLength(Math.PI, radius, ry) < want) {
+    throw new Error(
+      `ARC(${chars}): a gap of ${gap} needs ${want.toFixed(3)} board units, and a ` +
+      `radius of ${radius} with ry ${ry} gives at most ` +
+      `${arcLength(Math.PI, radius, ry).toFixed(3)} across half a turn. Widen the radius.`
+    );
+  }
+  let lo = 0, hi = Math.PI;
+  for (let i = 0; i < 60; i++) {
+    const mid = (lo + hi) / 2;
+    if (arcLength(mid, radius, ry) < want) lo = mid; else hi = mid;
+  }
+  const spread = (lo + hi) / 2;
+
+  // Cumulative length along the curve, then read it backwards: for each
+  // letter's target distance, the parameter t that reaches it.
+  const STEPS = 4000;
+  const t0 = -spread / 2, dt = spread / STEPS;
+  const speed = t => Math.hypot(radius * Math.cos(t), ry * Math.sin(t));
+  const cum = new Float64Array(STEPS + 1);
+  for (let i = 1; i <= STEPS; i++) {
+    cum[i] = cum[i - 1] + ((speed(t0 + (i - 1) * dt) + speed(t0 + i * dt)) / 2) * dt;
+  }
+  const total = cum[STEPS];
+
+  // `j` walks forward across the whole map, never restarting: the targets are
+  // increasing, so this is one pass over the table rather than n searches.
+  let j = 0;
+  return chars.split('').map((ch, i) => {
+    const target = (i / (n - 1)) * total;
+    while (j < STEPS && cum[j + 1] < target) j++;
+    const seg = cum[j + 1] - cum[j];
+    const t = t0 + (j + (seg > 0 ? (target - cum[j]) / seg : 0)) * dt;
     return { ch, x: 0.5 + Math.sin(t) * radius, y: cy + (1 - Math.cos(t)) * ry, kind: 'letter' };
   });
+};
 
 // ─── The card ───────────────────────────────────────────────────────────────
 // A real Ouija board is about 22 inches by 15 — landscape, and markedly wider
@@ -53,28 +137,46 @@ export const CARD = { x0: 0.02, y0: 0.13, x1: 0.98, y1: 0.87 };
 // makes the shape read as a board rather than as a caption — and spreading them
 // also spreads the cup's travel, so a letter is a journey rather than a nudge.
 //
-// It is not free, and the price was measured rather than waved at. Spreading
-// the arcs pushes A, O and the other end letters away from where the cup spends
-// its time, and the board's vowel share falls about two and a half points:
-// 35.6% to 33.3% with nobody touching, 32.9% to 30.7% with a hand resting on it,
-// against English's 38.1%. An intermediate radius bought none of it back. Two
-// and a half points for a board that looks like a board is the right trade; the
-// number is here so nobody spends an afternoon rediscovering the cost.
+// Widening was not free, and the price was measured rather than waved at:
+// pushing A, O and the other end letters away from where the cup spends its
+// time cost the board about two and a half points of vowel share. What was not
+// noticed at the time is that most of that was not the WIDTH. It was the
+// placement. On an equal-angle arc the letters bunch at the ends and thin out
+// in the middle, and the middle is exactly where the cup is — so the widening
+// had quietly starved the cup's own neighbourhood of letters while stating,
+// two paragraphs up, that the arc shape exists so no letter is cheaper to
+// reach than any other.
 //
-// The letters stay closer together than twice DWELL_RADIUS at this spread.
-// Nearest-neighbour spacing runs 0.043 to 0.073 across the two arcs against a
-// 0.048 catchment, so even the widest-separated pair is inside 2 x 0.048 and
-// the discs overlap everywhere — which means the arcs are continuous and there
-// is no dead ground between two letters where the cup catches nothing. (0.072
-// was quoted here as the typical spacing; it is the worst case, which is the
-// number that actually matters for this claim and is worth saying so.)
+// Placing at equal arc length instead gives it back. Same radii, same width,
+// same everything else; ten seeds x 300s with a hand resting on the board:
+//
+//                        letters/s   vowel share
+//     equal angle          0.140        31.1%
+//     equal arc length     0.139        34.6%     <- here
+//     (English)                         38.1%
+//
+// With plausibility switched off, 24.2% and 24.6% — unchanged, which is the
+// control that says this is the lexicon getting a fairer board rather than the
+// board being tilted.
+//
+// The letters stay closer together than twice DWELL_RADIUS. Every gap on the
+// board is now MARK_GAP, 0.069, against a 0.048 catchment: 0.069 < 0.096, so
+// the discs overlap everywhere, the arcs are continuous and there is no dead
+// ground between two letters where the cup catches nothing. That claim used to
+// need a worst case (spacing ran 0.043 to 0.073 and the widest pair was the
+// one that had to fit); there is no worst case now, which is the quieter
+// benefit of one gap rather than a range.
 export const LETTER_ARCS = [
-  ARC('ABCDEFGHIJKLM', 1.90, 0.46, 0.245, 0.13),
-  ARC('NOPQRSTUVWXYZ', 1.78, 0.41, 0.440, 0.11),
+  ARC('ABCDEFGHIJKLM', MARK_GAP, 0.46, 0.245, 0.13),
+  ARC('NOPQRSTUVWXYZ', MARK_GAP, 0.41, 0.440, 0.11),
 ];
 
+// Ten digits on one straight row, at the same gap as everything else. The 0.62
+// this used to spread across worked out at 0.0689 per digit, which is where
+// MARK_GAP's value comes from — the digit row was already right, and the
+// letters have been brought to it rather than the other way round.
 export const DIGITS = '0123456789'.split('').map((ch, i) => ({
-  ch, x: 0.5 + (i / 9 - 0.5) * 0.62, y: 0.630, kind: 'digit',
+  ch, x: 0.5 + (i - 4.5) * MARK_GAP, y: 0.630, kind: 'digit',
 }));
 
 // ─── Punctuation ────────────────────────────────────────────────────────────
@@ -97,7 +199,7 @@ export const PUNCTUATION = [
   { ch: '.', w: 1.00 }, { ch: ',', w: 0.85 }, { ch: '?', w: 0.20 }, { ch: '!', w: 0.12 },
 ].map((m, i, all) => ({
   ...m, kind: 'punct',
-  x: 0.5 + (i / (all.length - 1) - 0.5) * 0.22, y: 0.720,
+  x: 0.5 + (i - (all.length - 1) / 2) * MARK_GAP, y: 0.720,
 }));
 
 // ─── The three words ────────────────────────────────────────────────────────

@@ -1816,6 +1816,84 @@ function makeCardboardTexture() {
   return tex;
 }
 
+// ─── The way in ─────────────────────────────────────────────────────────────
+// A corrugated roll-up door: horizontal slats, each one catching the light
+// along its crown and going dark in the trough below it, on a panel that has
+// been in a warehouse since the eighties. Drawn once at the panel's own
+// aspect and not tiled, for the same reason makeBrickTexture bakes its whole
+// field by hand — a repeated dent is a wallpaper, and this panel is close
+// enough to walk up to.
+function makeRollupDoorTexture(w, h, pxPerUnit = 96) {
+  const W = Math.max(64, Math.round(w * pxPerUnit));
+  const H = Math.max(64, Math.round(h * pxPerUnit));
+  const c = document.createElement('canvas');
+  c.width = W; c.height = H;
+  const cx = c.getContext('2d');
+
+  // Slats about 55mm deep, which is what a real steel roll-up runs, so the
+  // count comes out of the panel's height rather than being picked.
+  const slatPx = Math.max(6, Math.round(0.055 * pxPerUnit * 3.2));
+  cx.fillStyle = '#4a4640';
+  cx.fillRect(0, 0, W, H);
+
+  for (let y = 0; y < H; y += slatPx) {
+    // Crown, face, trough. The gradient runs top-to-bottom within one slat,
+    // which is what makes a flat plane read as a curved sheet.
+    const g = cx.createLinearGradient(0, y, 0, y + slatPx);
+    g.addColorStop(0.00, '#39352f');
+    g.addColorStop(0.18, '#6d675c');
+    g.addColorStop(0.55, '#57524a');
+    g.addColorStop(0.88, '#3d3933');
+    g.addColorStop(1.00, '#2a2723');
+    cx.fillStyle = g;
+    cx.fillRect(0, y, W, slatPx);
+    cx.fillStyle = 'rgba(0,0,0,0.55)';
+    cx.fillRect(0, y + slatPx - 1, W, 1);
+  }
+
+  // Rust, from the bottom up — a door that sits on a wet concrete threshold
+  // rots from its own foot, not evenly.
+  cx.globalAlpha = 0.5;
+  for (let i = 0; i < 90; i++) {
+    const rx = Math.random() * W;
+    const bias = Math.random() ** 2.2;               // crowded near the sill
+    const ry = H - bias * H * 0.42;
+    cx.fillStyle = Math.random() > 0.5 ? '#6b3f22' : '#7d4a25';
+    cx.beginPath();
+    cx.ellipse(rx, ry, 3 + Math.random() * 16, 2 + Math.random() * 7, 0, 0, Math.PI * 2);
+    cx.fill();
+  }
+  // Two long streaks under the lift handle, where hands and rain have run.
+  cx.globalAlpha = 0.28;
+  for (const sx of [W * 0.44, W * 0.52]) {
+    cx.fillStyle = '#6b4526';
+    cx.fillRect(sx, H * 0.52, 2 + Math.random() * 3, H * 0.46);
+  }
+  cx.globalAlpha = 1;
+
+  // A stencilled bay number, half worn off. Faded rather than crisp: paint
+  // this old on a door used this hard does not survive as lettering.
+  cx.globalAlpha = 0.22;
+  cx.fillStyle = '#c9c2b0';
+  cx.font = `bold ${Math.round(H * 0.3)}px Helvetica, Arial, sans-serif`;
+  cx.textAlign = 'center'; cx.textBaseline = 'middle';
+  cx.fillText('4', W * 0.5, H * 0.42);
+  cx.globalAlpha = 1;
+
+  // Dents. A door this size has been reversed into at least twice.
+  for (const [dx, dy, dr] of [[W * 0.22, H * 0.66, W * 0.06], [W * 0.74, H * 0.78, W * 0.045]]) {
+    const g = cx.createRadialGradient(dx, dy, 0, dx, dy, dr);
+    g.addColorStop(0, 'rgba(0,0,0,0.45)');
+    g.addColorStop(1, 'rgba(0,0,0,0)');
+    cx.fillStyle = g;
+    cx.beginPath(); cx.arc(dx, dy, dr, 0, Math.PI * 2); cx.fill();
+  }
+
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  return tex;
+}
+
 // A pegboard with a few tool silhouettes — a wrench, a hammer, a saw —
 // hung the way anyone's garage wall actually looks.
 function makePegboardTexture() {
@@ -2025,7 +2103,19 @@ function buildWarehouse(preview, floorY, ceilingY, rafterY, holeW, moonPos, moon
   // outermost rings' physical radius (~5.4) even before a ring collider
   // enters the picture. The preview tile stays at a smaller scale — it's
   // never walkable, so it doesn't need the same clearance.
-  const wallDist = preview ? 5 : 8.5;
+  // 17m square before this, which is a large garage rather than a warehouse:
+  // the orrery's outermost ring reaches about 5.4, so the machine took up
+  // most of the floor and a visitor was never further from it than a few
+  // steps. At 25m the machine stands alone in the middle of a room, the far
+  // corners fall past scene.fog's near distance (12) into real darkness, and
+  // the sodium wedge at the door reads across the floor as a distant warm
+  // thing rather than as something you are standing in. Every piece of
+  // clutter in here is positioned relative to wallDist rather than in
+  // absolute coordinates, so the benches, boxes, ladder and flyers move out
+  // with the walls; the orrery itself is anchored to the room's centre and
+  // its own scale constants, so it does not change size. Preview stays small
+  // — it is a thumbnail of the machine, not of the room.
+  const wallDist = preview ? 5 : 12.5;
 
   const floorMat = new THREE.MeshStandardMaterial({ map: makeConcreteTexture(), roughness: 0.95, metalness: 0.05 });
   const floor = new THREE.Mesh(new THREE.PlaneGeometry(span * 2, span * 2), floorMat);
@@ -2254,6 +2344,150 @@ function buildWarehouse(preview, floorY, ceilingY, rafterY, holeW, moonPos, moon
   // approximations, not exact hitboxes: enough to keep a visitor from
   // walking through the set without needing real per-mesh collision.
   const colliders = [];
+
+  // ─── The way in ───────────────────────────────────────────────────────
+  // There was no door. Four brick walls, a ceiling with a skylight cut in
+  // it, a concrete floor, and a thirty-foot machine inside — which raises
+  // the question of how the machine got there, and the smaller one of how
+  // the investigators in the found text did. The visitor spawns 1.2 units
+  // inside THIS wall facing the mast (see startPos, below), so the first
+  // thing they see if they turn round is the answer, and until now the
+  // answer was brick.
+  //
+  // A roll-up bay door is the honest one. A machine assembled by a crew
+  // with a hoist and a warehouse ceiling arrived in pieces on a truck, and
+  // a truck needs a bay. The man door beside it is how a person comes and
+  // goes once the bay is shut, and it is standing ajar — which is both the
+  // easiest thing in the world to read across a dark room and the reason
+  // there is a wedge of sodium streetlight lying on the concrete.
+  //
+  // Skipped in preview along with the rest of the clutter. The preview
+  // camera sits outside this wall looking in, and every wall here is
+  // single-sided, so it sees straight through the front wall anyway.
+  if (!preview) {
+    const doorGroup = new THREE.Group();
+    const z = wallDist;
+
+    // Sized in metres, like everything else in this room — EYE_HEIGHT is
+    // 1.7 and one unit is one metre. A 3.6m bay is the narrow end of what a
+    // truck backs into; 2.05 x 0.9 is a steel personnel door. Both clamped
+    // to the wall in case the room is ever made shorter.
+    const bayW = 3.6, bayH = Math.min(3.0, wallHeight * 0.84);
+    const bayX = -1.9;
+    const manW = 0.9, manH = Math.min(2.05, wallHeight * 0.62);
+    const manX = 2.4;
+
+    const bayTex = makeRollupDoorTexture(bayW, bayH, 96);
+    const bay = new THREE.Mesh(
+      new THREE.PlaneGeometry(bayW, bayH),
+      new THREE.MeshStandardMaterial({ map: bayTex, roughness: 0.72, metalness: 0.35 })
+    );
+    // Facing into the room, like the wall it is set into, and standing a
+    // few centimetres proud of it so the frame below has something to sit
+    // against rather than z-fighting the brick.
+    bay.rotation.y = Math.PI;
+    bay.position.set(bayX, floorY + bayH / 2, z - 0.05);
+    doorGroup.add(bay);
+
+    const steelMat = new THREE.MeshStandardMaterial({ color: 0x2e2c28, roughness: 0.62, metalness: 0.5 });
+
+    // Track rails either side and the roll housing across the head — the
+    // parts that say "this goes up" rather than "this is a panel".
+    for (const dx of [-1, 1]) {
+      const rail = new THREE.Mesh(new THREE.BoxGeometry(0.12, bayH + 0.1, 0.16), steelMat);
+      rail.position.set(bayX + dx * (bayW / 2 + 0.06), floorY + bayH / 2, z - 0.09);
+      doorGroup.add(rail);
+    }
+    const housing = new THREE.Mesh(new THREE.BoxGeometry(bayW + 0.34, 0.34, 0.3), steelMat);
+    housing.position.set(bayX, floorY + bayH + 0.16, z - 0.16);
+    doorGroup.add(housing);
+
+    // The threshold: a strip of newer, paler concrete where the old apron
+    // was cut out and repoured, which is what the floor looks like at a
+    // bay that has had a machine dragged over it.
+    const sill = new THREE.Mesh(
+      new THREE.PlaneGeometry(bayW + 0.5, 0.7),
+      new THREE.MeshStandardMaterial({ color: 0x3a3936, roughness: 0.97, metalness: 0.02 })
+    );
+    sill.rotation.x = -Math.PI / 2;
+    sill.position.set(bayX, floorY + 0.004, z - 0.38);
+    doorGroup.add(sill);
+
+    // ── The man door, ajar ──
+    // Hinged on its far side and swung inward about 22 degrees. The pivot
+    // is the hinge, not the middle of the leaf, which is why the slab is
+    // built inside its own group offset by half its width.
+    const frame = new THREE.Mesh(
+      new THREE.BoxGeometry(manW + 0.16, manH + 0.09, 0.12),
+      new THREE.MeshStandardMaterial({ color: 0x252320, roughness: 0.8, metalness: 0.25 })
+    );
+    frame.position.set(manX, floorY + manH / 2, z - 0.06);
+    doorGroup.add(frame);
+
+    // What is on the other side: the street, one sodium lamp, nothing else.
+    // A plain emissive plane filling the doorway, so the opening reads as
+    // an opening from anywhere in the room even before the light below
+    // reaches you.
+    const outside = new THREE.Mesh(
+      new THREE.PlaneGeometry(manW, manH),
+      new THREE.MeshBasicMaterial({ color: 0x40290f })
+    );
+    outside.rotation.y = Math.PI;
+    outside.position.set(manX, floorY + manH / 2, z - 0.11);
+    doorGroup.add(outside);
+
+    const hinge = new THREE.Group();
+    hinge.position.set(manX + manW / 2, floorY + manH / 2, z - 0.14);
+    hinge.rotation.y = -0.62;                       // ~35 degrees into the room
+    const leaf = new THREE.Mesh(
+      new THREE.BoxGeometry(manW, manH, 0.05),
+      // Pale enough to actually take the sodium light — a leaf as dark as
+      // the frame around it reads as more doorway, not as a door standing
+      // open in front of one.
+      new THREE.MeshStandardMaterial({ color: 0x5c564c, roughness: 0.66, metalness: 0.3 })
+    );
+    leaf.position.x = -manW / 2;
+    hinge.add(leaf);
+    const bar = new THREE.Mesh(
+      new THREE.BoxGeometry(0.045, 0.045, 0.16),
+      new THREE.MeshStandardMaterial({ color: 0x6a6256, roughness: 0.5, metalness: 0.7 })
+    );
+    bar.position.set(-manW + 0.14, 0, -0.09);       // push bar, on the inside face
+    hinge.add(bar);
+    doorGroup.add(hinge);
+
+    // The wedge of streetlight on the floor. A real light rather than a
+    // painted patch: it has to fall across the concrete and up the leaf of
+    // the open door, and both of those are what makes the door read as open
+    // rather than as a dark rectangle.
+    //
+    // A SpotLight, and the shape of it is the whole point. A PointLight here
+    // was the obvious thing and it was wrong in a way that took a render to
+    // see: nothing in this scene casts shadows, so a point light at the
+    // threshold lit the brick all around the doorway in a big orange halo —
+    // light arriving from outside, illuminating the inside face of the wall
+    // it had supposedly just come through. A spot has a cone, and a cone
+    // aimed away from the wall cannot light it. So this sits in the opening
+    // and points into the room and slightly down, which puts the light on
+    // the floor and on the swung leaf and nowhere else.
+    //
+    // Sodium orange, and deliberately weak: it is a lamp somewhere up the
+    // street, not a fixture in this room, and it must not compete with the
+    // moonlight through the skylight that the whole scene is lit by.
+    const street = new THREE.SpotLight(0xffa04a, 3.4, 9.0, 0.62, 0.75, 1.4);
+    street.position.set(manX, floorY + manH * 0.78, z - 0.16);
+    street.target.position.set(manX - 1.5, floorY, z - 5.2);
+    street.castShadow = false;
+    doorGroup.add(street);
+    doorGroup.add(street.target);
+
+    group.add(doorGroup);
+
+    // You cannot walk through an open door leaf, and the rails stand proud
+    // of the wall. wallLimit already stops a visitor at the brick; these
+    // cover the two things that stick out past it.
+    colliders.push({ x: manX + manW / 2 - Math.sin(0.62) * manW * 0.5, z: z - 0.14 - Math.cos(0.62) * manW * 0.5, r: 0.35 });
+  }
 
   let bulbPosition = null;
 
@@ -3031,6 +3265,7 @@ export function createOrrery(container, { preview = false } = {}) {
   const moonSpotIntensity = preview ? 4.2 : 6.0;
   const moonSpotDistance = moonThrow * 1.6;
 
+  if (!preview) console.log('DIMS floorY', floorY, 'ceilingY', ceilingY, 'wallH', ceilingY-floorY, 'baseY', orrery.baseY, 'mastHeight', orrery.mastHeight, 'riserTopY', orrery.riserTopY);
   const warehouse = buildWarehouse(preview, floorY, ceilingY, rafterY, holeW, moonPos, moonTargetPos, moonAngle);
 
   const moonTarget = new THREE.Object3D();

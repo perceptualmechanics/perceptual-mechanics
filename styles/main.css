@@ -207,6 +207,34 @@
   --title-block-bottom: 4.5rem;
   --title-block-bottom-mobile: 6.5rem;
 
+  /* The TOP of that same band — the line a scene's own bottom chrome has to
+     stay above, as distinct from the line the title itself sits on.
+
+     --title-block-bottom only says where the title's baseline block starts;
+     it says nothing about the ~28px of title sitting on top of it, so a scene
+     that anchored its own centred control panel to "safely above the footer"
+     could clear #site-title's pill perfectly and still run straight through
+     the title text. Apollo did: its fader rail sat at 5.5rem, the title block
+     at 4.5rem + 28px, and the word APOLLO rendered across the bottom edge of
+     the console. Nothing announced it, in the way nothing ever announces
+     these — a title overlapping a panel by 12px still looks like a title.
+     The same hazard is already reasoned through for Scroll in
+     --footer-safe-zone below, where the fix was a hand-picked 7.5rem that
+     had to be revisited by hand when the title came and went. This is that
+     value with a name.
+
+     7rem = 4.5rem + a 1.6rem title's own line box + room for the 12-20px
+     text-shadow blur every title on this site carries. The mobile pair is
+     6.5rem + a 0.85rem line box + the same allowance.
+
+     The invariant: anything bottom-anchored AND horizontally centred anchors
+     to this, not to a number. Corner-anchored chrome (the sound toggle at
+     bottom-left, the pitch ruler at bottom-right) is beside the title rather
+     than under it and does not need it. scripts/verify-css-invariants.mjs
+     checks the first half of that sentence. */
+  --title-block-clear: 7rem;
+  --title-block-clear-mobile: 8rem;
+
   /* A different, larger safe zone for an actual SCROLLABLE content region
      (as opposed to fixed decorative title text above) — Scroll is the one
      scene whose own body text scrolls, full-width and horizontally

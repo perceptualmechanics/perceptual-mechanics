@@ -593,6 +593,196 @@ described are unchanged.)
   worth trimming, orrery.js's texture generators and first-person rig are the
   two most self-contained chunks to split out first.
 
+## 5.0 (2026-09-05)
+
+**The audit, and four things Scott saw that it didn't.** 5.0 is two halves. The
+first is `PUNCH-LIST-5.0.md` — ninety-four findings from eight parallel audits of
+the whole tree, worked through in four tiers and landed across nine commits
+(`4d63748` through `de7827b`). That file is the record; it is not repeated here.
+The second half is this entry: four things Scott noticed by looking at the site,
+after an audit that had read every line of it.
+
+**They are worth keeping together, because they have a shape.** Every one of them
+is a thing that is *there*, that renders, that no check could fail — a flicker
+that flickers, a title that is a title, letters that are letters, a warehouse
+that is a warehouse. The audit's whole method was reading assertions and testing
+them, and none of these four is an assertion. This is the class of defect that
+survives an audit by not being a claim.
+
+### The candle was a loop
+
+Scott: *"the candlelight in scroll seems more pulsey than candle flicker"*, and
+then, when the first repair was not enough: *"make sure the scroll's flicker
+actually has the random movement of an actual candle or flame, it looks too clean
+and synthetic right now."*
+
+The first repair was the wrong kind. The old keyframe was six evenly spaced stops
+eased across 4.2s dipping to 0.60 — a 0.24Hz breathe. Replacing it with fifteen
+irregular stops across 1.7s plus a 4.1s brightness wander at a coprime period
+measured much better (7.4 direction changes per second against 1.4) and still
+looked synthetic, for a reason no measurement of *rate* can catch: 1.7s is inside
+the window the eye reads as rhythm, and the whole flicker gesture was replaying
+identically inside it. The coprime second animation moves the envelope, not the
+gesture. **Any keyframe list is periodic. That is what a keyframe list is.**
+
+So the candle is a signal now — `src/scenes/scroll/scroll.flame.js`, sampled at
+absolute elapsed time, with no period at all. What it models:
+
+- **The buoyancy flicker.** A candle-scale diffusion flame oscillates because hot
+  gas off the wick outruns the cold air feeding it; the frequency scales as
+  roughly 1/sqrt(wick width) and lands near 10-12Hz. Hence the deliberately
+  larger amplitude on the 11.3Hz octave. It is a noisy oscillator and not a tone,
+  which is what an octave of value noise gives and a sine does not.
+- **The room** — draught and convection, the lower octaves, amplitudes falling
+  off roughly as 1/f.
+- **Guttering** — its own slow channel, thresholded near the top so only a few
+  percent of it does anything, because a gutter that arrives on a schedule is
+  just another wobble. The flame flickers harder while it is down.
+
+Bounded above and not below, which is the asymmetry that makes it read as fire
+rather than as tremble: fuel rate caps how bright it can burn, nothing caps how
+far a draught pushes it down. Measured over ten minutes: mean 0.947, median
+0.963, 1% of frames below 0.789, deepest gutter 0.609, ~12 direction changes per
+second, and the closest recurrence of any 3-second window is 0.0275 mean absolute
+difference away — a repeat would be zero.
+
+**It also got cheaper.** One `requestAnimationFrame` writing one custom property
+replaced thirteen infinite CSS animations. Every consumer — the root glow, the
+twelve patch glows, the intense passages' text shadow — is `var(--flame)` in
+`scroll.css` and follows for free. The `IntersectionObserver` that existed to
+pause off-screen patch animations is gone with the animations it was pausing, and
+so is `--glow-delay`: twelve patches were flickering out of phase with each other
+to look "not in unison", which is twelve light sources in a room lit by one
+candle. They duck together now, by different amounts (`--flame-gain` per patch),
+which is what actually differs between two surfaces catching the same flame.
+Under `prefers-reduced-motion` the loop never starts and every `var(--flame, 1)`
+falls back to a steady flame, so that block needs no resets at all.
+
+### The title band had a top, and nothing knew it
+
+Scott: *"check the title on apollo."* The word APOLLO was rendering across the
+bottom edge of the fader console.
+
+`--title-block-bottom` says where the title block *starts*. It says nothing about
+the ~28px of title sitting on top of it — so Apollo's rail, anchored at 5.5rem,
+cleared `#site-title`'s footer pill perfectly and ran straight through the title
+text above it. The hazard was already reasoned through in `main.css` for Scroll,
+where the fix at the time was a hand-picked 7.5rem that had to be revisited by
+hand when Scroll's title came and went.
+
+`--title-block-clear` / `-mobile` is that value with a name, and the rail anchors
+to it. Two related corrections came out of measuring rather than assuming:
+
+- A sweep of all thirteen scenes at two viewports found Apollo was the **only**
+  real collision. Harmonics and Outside looked like collisions against the title
+  *row*, which is full-width; against the title *text*, which is centred, they are
+  clear. The corner-anchored sound toggles sit beside the title, not under it.
+- The short-screen rule dropped the rail to 7.5rem to reclaim height, which on a
+  320x568 phone left **one pixel** between the panel and the title. That override
+  is gone; the panel gets its height back from the four declarations that are
+  actually about height. 9px of clearance there now.
+
+`scripts/verify-css-invariants.mjs` gained a fourth check for it: anything both
+bottom-anchored **and horizontally centred** must anchor to the variable. Centred
+is the whole qualifier and it is what keeps the check from crying wolf — only
+chrome sharing the title's horizontal middle can collide with it. Two false
+positives on the first run taught it two real things: a pseudo-element's `bottom`
+is measured against its originating element, not the viewport (Theater's
+`.tab-seat.occupied::after` is a dot under a seat), and an unregistered scene
+renders no title to collide with (Spectra is shelved).
+
+### The letters were evenly spaced in the wrong variable
+
+Scott: *"the spacing on the letters is a little odd, so just balance everything
+out."*
+
+`ARC` stepped through equal **angle**. On a circle that is equal spacing; these
+arcs are flattened, ry/radius about 0.28, and on a flattened ellipse an equal
+step of angle covers a distance of `dt * sqrt(r^2 cos^2 t + ry^2 sin^2 t)` —
+largest in the middle, smallest at the ends. So the letters bunched towards A and
+M and spread out around G: a 1.47x variation inside the first arc, 1.40x inside
+the second, and the two arcs 0.0633 against 0.0538 as each other. The digit and
+punctuation rows are straight lines stepped evenly and were exactly even the whole
+time, which is precisely why the letters were the rows that looked wrong.
+
+`ARC` now takes a **gap**, solves for the spread that makes the arc that many gaps
+long, and walks the curve placing each letter at equal arc length. `MARK_GAP` is
+0.069 and every mark on the board — letters, digits, punctuation — is now that far
+from its neighbour. Measured: 0.0685 to 0.0690 across the whole board, a ratio of
+1.008 against 1.47.
+
+**It bought back most of a cost the widening pass had recorded and misattributed.**
+Spreading the arcs was known to cost about two and a half points of vowel share.
+Most of that was not the width; it was the placement. The cup spends its time in
+the middle of the arcs, and equal-angle steps had thinned the letters exactly
+there — while the file, two paragraphs above, stated that the arc shape exists so
+no letter is cheaper to reach than any other. Ten seeds x 300s with a hand resting
+on the board:
+
+|                    | letters/s | vowel share |
+|--------------------|-----------|-------------|
+| equal angle        | 0.140     | 31.1%       |
+| equal arc length   | 0.139     | 34.6%       |
+| English            | —         | 38.1%       |
+
+With plausibility switched off: 24.2% and 24.6%, unchanged. That control is what
+says this is the lexicon getting a fairer board rather than the board being
+tilted. `medium-feel.mjs`'s two must-pass questions still hold — the sentence is
+not stored anywhere, and the visitor always wins outright.
+
+One guard added while sweeping radii for a possible inset on the second arc: the
+bisection that solves for spread runs on [0, pi], and asking for a gap that
+cannot fit at a given radius returned pi with a straight face. It throws now. The
+inset was not taken — matching arc lengths with a smaller radius means more
+curvature, and N and Z sag visibly for a 1.5% gain.
+
+### There was no way in
+
+Scott: *"just realized: there's no door in the orrery :D how do people get in and
+out?? :D"*
+
+Four brick walls, a ceiling with a skylight, a concrete floor, and a thirty-foot
+machine inside. The visitor spawns 1.2 units inside the front wall facing the
+mast, so the first thing they see if they turn round was, until now, brick.
+
+A **roll-up bay door** is the honest answer, and it answers the bigger question
+rather than the smaller one: a machine assembled by a crew with a hoist and a
+warehouse ceiling arrived in pieces on a truck, and a truck needs a bay. Slats
+drawn at the panel's own aspect and not tiled (same reasoning as
+`makeBrickTexture`), rust crowded up from the sill where a door actually rots,
+two dents, a half-worn stencilled bay number, track rails, a roll housing, and a
+strip of paler concrete at the threshold where the apron was cut out and
+repoured. Beside it a **steel man door, standing ajar** — how a person comes and
+goes once the bay is shut, and the easiest thing in the world to read across a
+dark room.
+
+**The light took two goes and the failure is the interesting part.** A PointLight
+at the threshold lit the brick all around the doorway in a large orange halo:
+nothing in this scene casts shadows, so light "arriving from outside" happily
+illuminated the inside face of the wall it had supposedly just come through. A
+`SpotLight` has a cone, and a cone aimed away from the wall cannot light it. So
+it sits in the opening pointing into the room and slightly down, and the sodium
+light falls on the floor and on the swung leaf and nowhere else.
+
+Scott, seeing the first render: *"feel free to expand the warehouse if necessary,
+like that might even be more atmospheric."* It was. `wallDist` 8.5 to 12.5 — 17m
+square to 25m. The orrery's outermost ring reaches about 5.4, so the machine had
+been taking up most of the floor and a visitor was never more than a few steps
+from it. At 25m it stands alone in a room, the far corners fall past
+`scene.fog`'s near distance into real darkness, and the sodium wedge reads as a
+distant warm thing rather than as something you are standing in. Every piece of
+clutter in the warehouse is positioned relative to `wallDist` rather than in
+absolute coordinates, so the benches, boxes, ladder, flyers and light fixtures
+moved out with the walls for free; the orrery is anchored to the room's centre
+and its own scale constants, so it did not change size.
+
+### Gates
+
+Seven build gates, all passing: `verify-links`, `verify-resonances`,
+`verify-scroll-marks`, `verify-landing`, `verify-aria`, `verify-css-invariants`
+(now four checks), `verify-counts`. 20/20 bardjs tests. Both Medium benches. All
+thirteen scenes mount with no console errors at 1280x800.
+
 ## 4.11.4 (2026-09-04)
 
 **Medium — a Ouija board that can actually spell.** The physics only. Nothing is

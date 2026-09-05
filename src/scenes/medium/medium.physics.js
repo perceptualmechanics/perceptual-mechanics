@@ -177,9 +177,11 @@ export const PARTNER_HAND_SPEED = 0.6;
 // The catchment, and it is also the cup: CUP_R in medium.js is this times 1.06,
 // because a cup drawn smaller than its own catchment would take letters it was
 // visibly not on. So this number is both a rule and a size, and it was swept as
-// both when the arcs were widened. The letters ended up 0.043 to 0.073 apart,
-// nearest-neighbour, median 0.057 — measured off LETTER_ARCS, not the single
-// 0.051 this line used to carry:
+// both when the arcs were widened. The letters were 0.043 to 0.073 apart then,
+// nearest-neighbour, median 0.057, measured off LETTER_ARCS rather than the
+// single 0.051 this line used to carry. They are a flat 0.069 now — see
+// MARK_GAP in medium.text.js — which sits inside that old range and just above
+// its median, so the sweep below still describes this board:
 //
 //     radius   repeated 6-grams   Spearman vs English
 //      0.042         10.4%              0.822
@@ -188,7 +190,9 @@ export const PARTNER_HAND_SPEED = 0.6;
 //
 // 0.048 rather than 0.055 because the cup has to be readable as sitting on ONE
 // letter, and 0.055 is a teacup wide enough to cover two of them at this
-// spread. 0.042 looks better still and measures much worse: too small a
+// spread — more clearly so now that the spacing is uniform: 2 x 0.055 is 0.110
+// against a 0.069 gap, so a cup that wide genuinely does span two letters
+// everywhere, where before it only did so at the tight end of the arcs. 0.042 looks better still and measures much worse: too small a
 // catchment means the cup takes fewer distinct letters and loops more.
 export const DWELL_RADIUS = 0.048;
 export const DWELL_SPEED = 0.09;

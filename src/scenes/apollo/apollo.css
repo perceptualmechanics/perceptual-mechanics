@@ -135,7 +135,7 @@
    actually land on. */
 .apollo-rail {
   position: absolute; z-index: 12;
-  left: 0.6rem; right: 0.6rem; bottom: 8.5rem;
+  left: 0.6rem; right: 0.6rem; bottom: var(--title-block-clear-mobile);
   display: grid; grid-template-columns: repeat(5, 1fr);
   gap: 0.35rem 0.1rem;
   padding: 0.55rem 0.4rem 0.4rem;
@@ -147,7 +147,11 @@
 
 	@media (min-width: 641px) {
 		left: 50%; right: auto; transform: translateX(-50%);
-		bottom: 5.5rem;
+		/* Centred and bottom-anchored, so it anchors to the top of the title
+		   band, not to the footer. At the 5.5rem it carried before, the word
+		   APOLLO rendered across this panel's bottom edge — see
+		   --title-block-clear in styles/main.css. */
+		bottom: var(--title-block-clear);
 		grid-template-columns: repeat(10, 1fr);
 		gap: 0 0.25rem;
 		padding: 0.7rem 0.9rem 0.55rem;
@@ -376,7 +380,13 @@
    fire on an ordinary small phone. */
 @media (max-height: 760px) {
   .apollo-fader input[type="range"] { height: 2.5rem; }
-  .apollo-rail { padding: 0.4rem 0.4rem 0.3rem; gap: 0.2rem 0.1rem; bottom: 7.5rem; }
+  /* `bottom` is deliberately NOT reclaimed here. It used to drop to 7.5rem
+     on a short screen, which on a 320x568 phone left one pixel between this
+     panel and the title above it — the same collision this rule's own
+     neighbours were added to avoid, arrived at from the other direction. The
+     panel gets its height back from the four declarations that are actually
+     about height; the floor is the floor. */
+  .apollo-rail { padding: 0.4rem 0.4rem 0.3rem; gap: 0.2rem 0.1rem; }
   .apollo-mode-row { margin-bottom: 0.3rem; }
   .apollo-mode label, .apollo-ambient, .apollo-copy { padding: 0.2rem 0.55rem; }
   .apollo-fader-count { display: none; }

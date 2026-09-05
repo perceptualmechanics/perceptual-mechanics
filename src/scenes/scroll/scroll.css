@@ -34,16 +34,26 @@
     radial-gradient(ellipse at 18% 8%, rgba(0,0,0,0.45), transparent 48%),
     radial-gradient(ellipse at 84% 88%, rgba(0,0,0,0.6), transparent 55%),
     repeating-linear-gradient(38deg, rgba(0,0,0,0.045) 0 1px, transparent 1px 6px);
-  animation: scroll-candlelight 4.2s ease-in-out infinite;
-}
-@keyframes scroll-candlelight {
-  0%, 100%  { opacity: 1; }
-  15%       { opacity: 0.62; }
-  30%       { opacity: 1; }
-  46%       { opacity: 0.7; }
-  58%       { opacity: 0.95; }
-  74%       { opacity: 0.6; }
-  88%       { opacity: 0.9; }
+  /* Driven from JS, not from keyframes. `--flame` is written on .scroll-root
+     once a frame by the candle in scroll.flame.js — a noise process sampled
+     at absolute elapsed time, so there is no period in it to find.
+
+     Every keyframe version of this was synthetic for one unavoidable reason:
+     a keyframe list is a loop. The one before this was six evenly spaced
+     stops eased across 4.2s, dipping to 0.60 — a 0.24Hz breathe, far slower
+     than a flame and far too smooth. Nothing about a candle is evenly spaced,
+     and nothing about one is that slow. The obvious repair is more stops at a
+     higher rate, and that is not enough: a fifteen-stop 1.7s cycle replays
+     its whole flicker GESTURE every 1.7 seconds, which is comfortably inside
+     the window the eye reads as rhythm. A flame has to actually be a noise
+     process. See scroll.flame.js for what the signal models.
+
+     Opacity and brightness both come off the one value, because a flame that
+     dims and a flame whose hot core cools are the same event. The fallback of
+     1 is what renders under prefers-reduced-motion, where nothing writes the
+     property at all — so this needs no reset in that block. */
+  opacity: var(--flame, 1);
+  filter: brightness(calc(0.72 + 0.28 * var(--flame, 1)));
 }
 .scroll-viewport {
   width: 100%;
@@ -239,42 +249,52 @@
 
 /* The ambient candlelight (.scroll-root::before) sits behind every patch, so
    on its own it only ever shows in the gaps between them — never while
-   actually reading one. This is the same light, painted again on top of
-   the parchment itself: a soft warm wash that pulses on the same rhythm,
-   screen-blended so it only ever adds light and never dims the text.
-   Each patch runs on its own negative delay so the whole scroll doesn't
-   flicker in unison — one candle, many patches catching it differently. */
+   actually reading one. This is the same light, painted again on top of the
+   parchment itself: a soft warm wash, screen-blended so it only ever adds
+   light and never dims the text.
+
+   The same `--flame` as the root glow, which is the correction here. This
+   used to run its own copy of the keyframes on a random negative delay per
+   patch, so that twelve patches were "not in step". But they are lit by ONE
+   candle in ONE room, and light does not reach one end of a table late —
+   twelve independent flickers is what reads as twelve light sources, and it
+   was half of why the old version looked synthetic. What actually differs
+   between two surfaces catching the same flame is how MUCH of the swing each
+   takes: how far it sits from the wick, and at what angle. So each patch
+   carries a gain (scroll.js sets it), and they all duck together by
+   different amounts.
+
+   The gain multiplies the DIP rather than the value, so a low-gain patch
+   sits calmly near full and a high-gain one swings hard, instead of the set
+   simply being lighter and darker than each other.
+
+   No IntersectionObserver any more either. That existed because each patch
+   ran its own infinite keyframe animation, which the browser keeps ticking
+   for off-screen elements; there is nothing to tick now, and
+   content-visibility: auto on .scroll-patch already skips the paint. */
 .scroll-patch::after {
   content: ''; position: absolute; inset: 0; z-index: 2; pointer-events: none;
   background: radial-gradient(ellipse at 26% 14%, rgba(255,205,140,0.22), transparent 58%);
   mix-blend-mode: screen;
-  animation: scroll-candlelight 4.2s ease-in-out infinite;
-  animation-delay: var(--glow-delay, 0s);
+  opacity: calc(1 - (1 - var(--flame, 1)) * var(--flame-gain, 1));
 }
-/* Toggled by the IntersectionObserver in scroll.js. content-visibility on
-   the patch itself already skips painting this glow while it's off screen,
-   but the animation is still ticked, and Safari before 17 has no
-   content-visibility at all — so the observer stops the keyframes outright
-   for the eleven-or-so patches nobody is looking at. Patches start without
-   this class — see scroll.js for why the observer adds it rather than
-   removing it. */
-.scroll-patch--offscreen::after { animation-play-state: paused; }
 
 /* Whole-scene pause, set by setPaused() (scroll.js) on this scene's own
    root — main.js calls it for every preview tile while a full scene is open
    and for everything on visibilitychange. display:none does not stop a CSS
-   animation, so without this the medallion's ember, the candlelight and
-   twelve patch glows all kept running behind an opaque overlay. Listed
-   selector by selector rather than as a blanket `*` so it's visible exactly
-   what this claims to stop. */
-.scroll-paused::before,
+   animation any more than it stops a rAF loop.
+
+   Shorter than it was, because most of what it used to hold is no longer an
+   animation: the candlelight, the twelve patch glows and the intense
+   passages' text glow are all `--flame` now, and setPaused() stops the frame
+   loop that writes it — which parks the flame wherever it was rather than
+   snapping it, and costs nothing per frame instead of animation-play-state's
+   twelve paused-but-still-composited layers. What is left here is the two
+   real keyframe animations this scene still runs. */
 .scroll-paused .scroll-preview-medallion,
-.scroll-paused .scroll-patch::after,
-.scroll-paused .scroll-script,
-.scroll-paused .scroll-intense--wide {
+.scroll-paused .scroll-script {
   animation-play-state: paused;
 }
-
 /* overflow: hidden is a real clearfix here, not decoration — without it, a
    patch whose Ogham float runs taller than its own body text (Cartography's
    opening line is one 441-character comma-spliced clause) never gets
@@ -407,11 +427,16 @@
    whisper" italic. */
 .scroll-intense--wide {
   letter-spacing: 0.2em; word-spacing: 0.12em;
-  animation: scroll-candle-text 3.6s ease-in-out infinite;
-}
-@keyframes scroll-candle-text {
-  0%, 100% { text-shadow: 1px 1px 0 rgba(255,240,210,0.1), -1px -1px 1px rgba(0,0,0,0.55); }
-  50%      { text-shadow: 0 0 7px rgba(255,210,140,0.28), 1px 1px 0 rgba(255,240,210,0.12), -1px -1px 1px rgba(0,0,0,0.5); }
+  /* The candlelit glow on the tracking, off the same `--flame` as the rest of
+     the room. It was a 3.6s ease-in-out text-shadow pulse of its own, which
+     is a third rhythm in a scene lit by one candle. The alpha is offset so
+     the glow is all but absent at the bottom of the flame's range and only
+     really arrives when the flame is up: 0.01 at flame 0.72, 0.20 at 1.03.
+     No animation, so nothing to pause and nothing to undo. */
+  text-shadow:
+    0 0 7px rgba(255, 210, 140, calc((var(--flame, 1) - 0.7) * 0.62)),
+    1px 1px 0 rgba(255,240,210,0.11),
+    -1px -1px 1px rgba(0,0,0,0.52);
 }
 .scroll-intense--tight {
   letter-spacing: -0.01em;
@@ -603,8 +628,11 @@
      Same hand-written-jitter rationale as the paragraph rule, same
      treatment. */
   .scroll-intense--tight .scroll-word { transform: none !important; }
+  /* The candle is a JS-driven custom property now, not an animation — under
+     reduced motion createFlame() is simply never started, --flame is never
+     written, and every `var(--flame, 1)` in this file resolves to its
+     fallback of a steady flame. Nothing to switch off here, and no
+     mid-sweep `filter`/`opacity` left needing a reset. .scroll-script's
+     flutter and the medallion's ember are still real keyframes. */
   .scroll-script { transform: rotate(var(--script-rot, 0deg)) !important; animation: none !important; }
-  .scroll-root::before { animation: none; opacity: 1; }
-  .scroll-patch::after { animation: none; }
-  .scroll-intense--wide { animation: none; }
 }

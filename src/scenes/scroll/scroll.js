@@ -83,6 +83,7 @@
 
 import { getOutboundLinks, getInboundLinks } from '../../links.js';
 import { escapeHtml, parseHTML, wireCrossLinks, prefersReducedMotion, claimContainer, trackTimers } from '../../utils/sceneKit.js';
+import { createFlame } from './scroll.flame.js';
 import { TONES, RUBRICS, INTENSITIES, OGHAM_LINES, OPENING_GROUP } from './scroll.marks.js';
 import scrollHtml from './scroll.html?raw';
 import './scroll.css';
@@ -325,7 +326,11 @@ export function createScroll(container, { preview = false, initialPieceId = null
   let root = null, scroll = null;
   let onLinkClick = null;
   let patchesRef = null, jumpToPatchRef = null;
-  let glowObserver = null;
+  // The candle: one flame for the whole scene, written to --flame on `root`
+  // once a frame. `flameStop` is the canceller, null whenever it is not
+  // running — which is before mount, while paused, under reduced motion, and
+  // after dispose.
+  let flameStop = null;
   // Records whatever position/overflow the shared #experience-container had
   // before this scene wrote its own, and hands back the restore() half —
   // see claimContainer's own comment in sceneKit.js for the bug that came
@@ -363,7 +368,13 @@ export function createScroll(container, { preview = false, initialPieceId = null
       article.className = `scroll-patch scroll-patch-tone-${patch.tone}`;
       article.id = patch.id;
       article.style.setProperty('--patch-clip', patchClipPath());
-      article.style.setProperty('--glow-delay', `${(Math.random() * -4.2).toFixed(2)}s`);
+      // How much of the candle's swing this patch takes — how far it sits
+      // from the wick and at what angle, in one number. This replaced a
+      // random negative animation-delay: the patches used to flicker out of
+      // phase with each other, which is twelve light sources rather than one
+      // room. They duck together now, by different amounts. 0.55 is a patch
+      // barely reached by the flame, 1.35 one square in front of it.
+      article.style.setProperty('--flame-gain', (0.55 + Math.random() * 0.8).toFixed(2));
       // In a custom property, not on `filter` directly, so .scroll-flash can
       // compose a pulse on top of it rather than replacing the whole chain.
       article.style.setProperty('--patch-aging', agingFilter(patch.tone));
@@ -460,6 +471,20 @@ export function createScroll(container, { preview = false, initialPieceId = null
 
     container.appendChild(root);
 
+    // Light the candle. One requestAnimationFrame writing one custom property:
+    // the root glow, all twelve patch glows and the intense passages' text
+    // glow are all `var(--flame)` in scroll.css, so they follow for free — and
+    // that is cheaper per frame than the thirteen infinite CSS animations this
+    // replaced, not more expensive.
+    //
+    // Sampled at absolute page time rather than at time-since-mount, so the
+    // flame does not restart from the same place on every visit; combined with
+    // createFlame()'s per-mount seed, no two openings of this scene are the
+    // same. A backgrounded tab stops delivering frames, which just means the
+    // next sample is further along the curve — the signal is a pure function
+    // of t, so there is no accumulated state to drift.
+    startFlame();
+
     // preventDefault, because this scene's own jump does something a plain
     // fragment navigation can't: it scrolls the patch into view inside
     // .scroll-viewport (its own scroll container, not the document) and
@@ -479,35 +504,8 @@ export function createScroll(container, { preview = false, initialPieceId = null
     };
     scroll.addEventListener('click', onLinkClick);
 
-    // Off-screen patches stop running their candlelight glow. .scroll-patch
-    // carries content-visibility: auto (scroll.css), which already skips
-    // layout and paint for anything off screen — but the ::after glow is a
-    // mix-blend-mode: screen layer on an infinite 4.2s keyframe, and its
-    // animation keeps being ticked regardless. Toggling animation-play-state
-    // from a real IntersectionObserver stops the twelve of them outright,
-    // and covers browsers without content-visibility (Safari before 17) too.
-    // rootMargin gives a patch a screen's warning so it is already at the
-    // right point in its cycle by the time it is actually visible.
-    //
-    // Patches start WITHOUT the class and the observer adds it, not the
-    // other way round. Pre-marking them all and letting the observer clear
-    // the visible one saves a frame of animation nobody sees — but it also
-    // means that anywhere the observer never reports (no IntersectionObserver
-    // at all; a callback the browser hasn't delivered yet; a page that is
-    // hidden, where the rendering steps this callback rides on don't run),
-    // the glow is off rather than on. Failing towards "glow on" is the right
-    // direction for an optimisation whose whole job is to change nothing
-    // visible.
-    if ('IntersectionObserver' in window) {
-      glowObserver = new IntersectionObserver(entries => {
-        for (const entry of entries) {
-          entry.target.classList.toggle('scroll-patch--offscreen', !entry.isIntersecting);
-        }
-      }, { root: scroll, rootMargin: '100% 0px' });
-      scroll.querySelectorAll('.scroll-patch').forEach(el => glowObserver.observe(el));
-    }
 
-    // Scrolls to and flashes a patch, reporting it as the "open" piece —
+  // Scrolls to and flashes a patch, reporting it as the "open" piece —
     // shared by onLinkClick above, the initial-load deep link below, and
     // openPieceById (returned below, for a same-scene hash edit). Scroll has
     // no open/closed panel state the way sphere/orbiter/library do (the
@@ -548,6 +546,30 @@ export function createScroll(container, { preview = false, initialPieceId = null
     timers.after(100, () => scroll.focus());
   });
 
+  // ── the candle ──
+  // See scroll.flame.js for the signal. Everything below is just the plumbing
+  // that gets it onto an element once a frame and stops it again.
+  function startFlame() {
+    // Nothing to light before the async text import has built `root`, nothing
+    // to relight if it is already burning, and nothing at all under reduced
+    // motion — where --flame is never written and every var(--flame, 1) in
+    // scroll.css falls back to a steady flame. That fallback is the whole
+    // reduced-motion story for this scene's light; scroll.css says so too.
+    if (!root || flameStop || disposed || prefersReducedMotion()) return;
+    const flame = createFlame();
+    let id = requestAnimationFrame(function tick(now) {
+      root.style.setProperty('--flame', flame.at(now / 1000).toFixed(4));
+      id = requestAnimationFrame(tick);
+    });
+    flameStop = () => cancelAnimationFrame(id);
+  }
+
+  function stopFlame() {
+    flameStop?.();
+    flameStop = null;
+  }
+
+
   return {
     // Same-scene deep link support (main.js's expandScene). fragmentsRef/
     // jumpToPatchRef are null until the dynamic import above resolves — a
@@ -568,11 +590,18 @@ export function createScroll(container, { preview = false, initialPieceId = null
     // rAF loop. One class, and .scroll-paused (scroll.css) holds every one
     // of them at animation-play-state: paused. Idempotent, because main.js
     // calls it on every sync rather than tracking what it has already told.
-    setPaused(paused) { root?.classList.toggle('scroll-paused', paused); },
+    setPaused(paused) {
+      root?.classList.toggle('scroll-paused', paused);
+      // Stopping the frame loop parks the flame at whatever value it last
+      // wrote, which is what a paused candle should look like, and costs
+      // nothing while paused. Idempotent both ways, because main.js calls
+      // this on every sync rather than tracking what it has already said.
+      if (paused) stopFlame(); else startFlame();
+    },
     dispose() {
       disposed = true;
       timers.dispose();
-      glowObserver?.disconnect();
+      stopFlame();
       if (scroll && onLinkClick) scroll.removeEventListener('click', onLinkClick);
       if (root) root.remove();
       claim.restore();
