@@ -1,6 +1,6 @@
 import { initColophon }    from './components/colophon/colophon.js';
 import { anyPanelOpen, prefersReducedMotion } from './utils/sceneKit.js';
-import { SCENES } from './scenes/registry.js';
+import { SCENES, sceneAria } from './scenes/registry.js';
 
 // The registry is deliberately import-free (see its header), so the loaders are
 // derived here from its keys rather than listed beside them. `import.meta.glob`
@@ -504,7 +504,8 @@ function expandScene(sceneName, triggerEl = null, pieceId = null, sceneArg = nul
     if (overlayBg) overlay.style.setProperty('--overlay-bg', overlayBg);
     else overlay.style.removeProperty('--overlay-bg');
     overlay.setAttribute('aria-hidden', 'false');
-    overlay.setAttribute('aria-label', SCENES[sceneName]?.ariaLabel ?? 'Full screen experience.');
+    const spec = SCENES[sceneName];
+    overlay.setAttribute('aria-label', spec ? sceneAria(spec) : 'Full screen experience.');
     // #landing owns the page's only <main> and its only <h1>, and
     // expandScene hides it — so from the moment a scene opened, a screen
     // reader navigating this page by landmark or by heading found exactly

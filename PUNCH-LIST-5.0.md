@@ -19,24 +19,24 @@ Status: `[ ]` open · `[x]` fixed in 5.0 · `[-]` deliberately not doing
 ## Tier 1 — a visitor meets this
 
 ### Shared chrome
-- [ ] `main.css:1563` — `.preview-container:hover { transform: none }` under reduced motion discards `--tile-nudge`; hovering a tile snaps it up to 11px, instantly (no transition under that media query). This is 4.11.16's bug, one rule further along, in the file that documents 4.11.16's bug.
-- [ ] `main.js:1121` — `PM_GLIMPSE_WORDS` has no entry for **apollo, psyshell, medium**. Six of the twenty-seven glimpse triggers roll a die that can never win.
-- [ ] `main.js:351` — `FOCUSABLE = 'button, a[href], [tabindex]'` cannot match `<input>`. Apollo mounts 12 real inputs inside the overlay. Latent today (the body-level toggle still sorts last), false as documented.
-- [ ] `main.css:379` — nav-row fit thresholds (612px / 1132px) were measured at twelve scenes. At thirteen the formula gives **656px / 1216px**. Between 612 and 655 the comment says it fits and it scrolls.
+- [x] `main.css:1563` — `.preview-container:hover { transform: none }` under reduced motion discards `--tile-nudge`; hovering a tile snaps it up to 11px, instantly (no transition under that media query). This is 4.11.16's bug, one rule further along, in the file that documents 4.11.16's bug.
+- [x] `main.js:1121` — `PM_GLIMPSE_WORDS` has no entry for **apollo, psyshell, medium**. Six of the twenty-seven glimpse triggers roll a die that can never win.
+- [x] `main.js:351` — `FOCUSABLE = 'button, a[href], [tabindex]'` cannot match `<input>`. Apollo mounts 12 real inputs inside the overlay. Latent today (the body-level toggle still sorts last), false as documented.
+- [x] `main.css:379` — nav-row fit thresholds (612px / 1132px) were measured at twelve scenes. At thirteen the formula gives **656px / 1216px**. Between 612 and 655 the comment says it fits and it scrolls.
 
 ### Published and indexed
-- [ ] `index.html:469` — Beamline's tile `aria-label` describes *curved mirrors and a bouncing beam*. The scene has no mirrors. `registry.js:99` documents this exact wording being fixed — the fix never reached the markup.
-- [ ] `index.html:508` — Psyshell's tile says *on a workshop bench*. `psyshell.js:55`: "there is no bench, no floor and no lamp."
-- [ ] `index.html:448` / `registry.js:95` — "107 books". Real: 104 books, 44 films, 2 decks, 115 CDs.
-- [ ] `prerender.js:546,548,551` — the **published** `/text/beamline/` description, lede and JSON-LD all describe the mirror design. This one is crawlable and in the sitemap.
-- [ ] `registry.js:99` — the claim that the registry `ariaLabel` is "the ONLY account a screen-reader visitor gets" is false: the landing tile carries a separate hand-maintained string and nothing compares them.
+- [x] `index.html:469` — Beamline's tile `aria-label` describes *curved mirrors and a bouncing beam*. The scene has no mirrors. `registry.js:99` documents this exact wording being fixed — the fix never reached the markup.
+- [x] `index.html:508` — Psyshell's tile says *on a workshop bench*. `psyshell.js:55`: "there is no bench, no floor and no lamp."
+- [x] `index.html:448` / `registry.js:95` — "107 books". Real: 104 books, 44 films, 2 decks, 115 CDs.
+- [x] `prerender.js:546,548,551` — the **published** `/text/beamline/` description, lede and JSON-LD all describe the mirror design. This one is crawlable and in the sitemap.
+- [x] `registry.js:99` — the claim that the registry `ariaLabel` is "the ONLY account a screen-reader visitor gets" is false: the landing tile carries a separate hand-maintained string and nothing compares them.
 
 ### Scroll
-- [ ] `scroll.js:274` — every ink stain is a **full-height vertical band**. `h` is computed as a fraction of `w` and written as a percentage `height`, which resolves against the containing block's height — 1,200 to 14,000px. `border-radius: 50%` and a radial gradient confirm a blob was intended.
-- [ ] `scroll.css:21` — the candlelight `::before` (`z-index: -1`) paints **behind `.scroll-root`'s own opaque background**, because `.scroll-root` is `position: relative` with no `z-index` and so is not a stacking context. The flicker the scene header describes has never been visible.
-- [ ] `scroll.js:264` — the patch `drop-shadow` is removed by the same element's `clip-path`. Same for `.scroll-flash`'s 2px inset ring, which is the only feedback a cross-link jump has.
-- [ ] `scroll.css:371` — `.scroll-ogham-line--wide` is unconditional; below 601px it *narrows* the column from ~310px to 220px, the opposite of its stated purpose.
-- [ ] `scroll.css:305` — `.scroll-patch-refs` at 9.9px measures 1.65–2.18:1 against the three patches that actually show it.
+- [x] `scroll.js:274` — every ink stain is a **full-height vertical band**. `h` is computed as a fraction of `w` and written as a percentage `height`, which resolves against the containing block's height — 1,200 to 14,000px. `border-radius: 50%` and a radial gradient confirm a blob was intended.
+- [x] `scroll.css:21` — the candlelight `::before` (`z-index: -1`) paints **behind `.scroll-root`'s own opaque background**, because `.scroll-root` is `position: relative` with no `z-index` and so is not a stacking context. The flicker the scene header describes has never been visible.
+- [x] `scroll.js:264` — the patch `drop-shadow` is removed by the same element's `clip-path`. Same for `.scroll-flash`'s 2px inset ring, which is the only feedback a cross-link jump has.
+- [x] `scroll.css:371` — `.scroll-ogham-line--wide` is unconditional; below 601px it *narrows* the column from ~310px to 220px, the opposite of its stated purpose.
+- [x] `scroll.css:305` — `.scroll-patch-refs` at 9.9px measures 1.65–2.18:1 against the three patches that actually show it.
 
 ### Sphere
 - [ ] `sphere.js:356,419` — `panelContent.scrollTop = 0` targets the wrong element; `.sphere-panel` is the scroll container. Following a link inside a long fragment lands the reader mid-text.
@@ -45,7 +45,7 @@ Status: `[ ]` open · `[x]` fixed in 5.0 · `[-]` deliberately not doing
 ### Theater
 - [ ] `theater.js:376` — `_placeBubble` corrects horizontally only. The seven tallest bubbles run off the top of `.tab-root`'s `overflow: hidden`; the worst is ~349px tall at 375px wide. `theater.css:257` claims the clipping is fixed.
 - [ ] `Player.js:23` — `MAX_DUR = 10000` truncates 29 of 736 beats. The longest wants 35.1s at the comment's own stated reading rate.
-- [ ] `theater.html:23` — the screen's `aria-label` names two of the three plays; `friendInSatan` is 211 of 615 beats.
+- [x] `theater.html:23` — the screen's `aria-label` names two of the three plays; `friendInSatan` is 211 of 615 beats.
 
 ### Butterfly
 - [ ] `butterfly.css:23` — placard at `bottom: 3rem` instead of `var(--title-block-bottom)`. That leaves **~2.6px** above the footer pill — the exact geometry `main.css:183` records measuring and rejecting. `main.css`'s "every scene anchors to this value" is false.

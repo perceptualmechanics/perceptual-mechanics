@@ -138,8 +138,9 @@ if (failures.length) {
   console.error(`\nlanding requirement VIOLATED in ${failures.length} of ${fits} fitting viewports:`);
   for (const f of failures) console.error(`  ${f}`);
   failed++;
+} else {
+  console.log(`ok: every fit occupies no more height than it was given, for all ${SCENE_COUNT} scenes`);
 }
-console.log(`ok: every fit occupies no more height than it was given, for all ${SCENE_COUNT} scenes`);
 
 // ─── And that the page's tiles can actually be matched to the registry ──────
 // The arithmetic above says how big each scene's tile should be. It says
@@ -170,8 +171,9 @@ console.log(`ok: every fit occupies no more height than it was given, for all ${
     console.error(`\nlanding tiles do not match the registry:`);
     for (const p of problems) console.error(`  ${p}`);
     failed++;
+  } else {
+    console.log(`ok: all ${ids.length} tiles in index.html resolve to a registry scene, and every scene has one`);
   }
-  console.log(`ok: all ${ids.length} tiles in index.html resolve to a registry scene, and every scene has one`);
 }
 
   return { ok: failed === 0, failures: failed, log };

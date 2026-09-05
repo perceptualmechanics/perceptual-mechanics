@@ -521,10 +521,8 @@ ${ORRERY.note.split(/\n\s*\n/).map(p => `<p>${lines(p.trim())}</p>`).join('\n')}
 }
 
 function buildBeamline() {
-  // Each bounce gets its own id="p<id>" + live deep-link now (added
-  // 2026-08-16) — it had neither before, since BOUNCES had no id field at
-  // all until this pass gave every scene's pieces one (see NOTES.md's
-  // "Linking & addressing" entry). "p" prefix, not the bare number: HTML5
+  // Each station gets its own id="p<id>" and a live deep-link.
+  // "p" prefix, not the bare number: HTML5
   // technically allows an id to start with a digit, but it isn't a valid
   // CSS identifier that way (`#7 { ... }` doesn't parse without escaping)
   // and reads oddly as a URL fragment on its own — unlike sphere/orbiter/
@@ -538,7 +536,7 @@ function buildBeamline() {
 <p>${esc(EPIGRAPH_PRIMARY)}</p>
 <p>${esc(EPIGRAPH_SECONDARY)}</p>
 </blockquote>
-${BOUNCES.map((b, i) => `<h2 id="p${b.id}">Bounce ${i + 1}</h2>\n${pieceLink('beamline', b.id, 'Beamline')}\n<p>${lines(b.text)}</p>`).join('\n')}
+${BOUNCES.map((b, i) => `<h2 id="p${b.id}">Station ${i + 1}</h2>\n${pieceLink('beamline', b.id, 'Beamline')}\n<p>${lines(b.text)}</p>`).join('\n')}
 </article>`;
   return {
     slugPath: 'beamline',

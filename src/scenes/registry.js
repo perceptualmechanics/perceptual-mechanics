@@ -59,7 +59,8 @@ export const SCENES = {
   sphere:    { tile: 1.12, nudge: -0.045,
                exportName: 'createSphere',
                label: 'The Sphere — full screen experience. Press Escape to return.',
-               ariaLabel: 'The Sphere — interactive geodesic sphere with text fragments.' },
+               blurb: 'The Sphere — an interactive geodesic sphere with text fragments.',
+               controls: 'Drag to orbit, click a facet to read.' },
   butterfly: { tile: 0.90, nudge: 0.05,
                exportName: 'createButterfly',
                label: 'Chaos Butterfly in Phase Space, 2026.',
@@ -72,44 +73,45 @@ export const SCENES = {
                // exactly the thing that gets missed when a scene is renamed
                // or a second scene wants the same treatment.
                overlayBg: '#000000',
-               ariaLabel: 'Chaos Butterfly in Phase Space, 2026 — Lorenz attractor. Drag to orbit, scroll to zoom.' },
+               blurb: 'Chaos Butterfly in Phase Space, 2026 — a Lorenz attractor visualization.',
+               controls: 'Drag to orbit, scroll to zoom.' },
   scroll:    { tile: 1.02, nudge: 0.03,
                exportName: 'createScroll',
                label: 'Selected Works — A Scroll of Found Writing.',
-               ariaLabel: 'Selected Works — a scroll of found writing, carved fragments, 2000 to the 2010s. Scroll to read.' },
+               blurb: 'Selected Works — a scroll of found writing, carved fragments, 2000 to 2012.',
+               controls: 'Scroll to read.' },
   theater:   { tile: 1.06, nudge: -0.02,
                exportName: 'createTheater',
                label: 'The Theater — Now Playing.',
-               ariaLabel: 'The Theater — scenes from Truth and Beauty, Paul Revere, and You’ve Got a Friend in Satan, performed by ASCII actors. A different program each visit; click or use the controls to advance.' },
+               blurb: 'The Theater — scenes from Truth and Beauty, Paul Revere, and You’ve Got a Friend in Satan, performed by ASCII actors.',
+               controls: 'A different program each visit; click or use the controls to advance.' },
   orbiter:   { tile: 0.92, nudge: -0.05,
                exportName: 'createOrbiter',
                label: 'Orbiter — A p-Orbital, Satellites.',
-               ariaLabel: 'Orbiter — a hydrogen atom’s p-orbital rendered as a fuzzy probability cloud, with satellites in clean elliptical orbits around it. Drag to orbit.' },
+               blurb: 'Orbiter — a hydrogen atom’s p-orbital rendered as a fuzzy probability cloud, with satellites in clean elliptical orbits around it.',
+               controls: 'Drag to orbit, click a satellite to read a poem, click the nucleus to look inside.' },
   orrery:    { tile: 1.00, nudge: 0.04,
                exportName: 'createOrrery',
                label: 'The Orrery of Los Feliz.',
-               ariaLabel: 'The Orrery of Los Feliz — a found story, told through a 30-foot orrery: nine planets, their moons, an asteroid belt, in a warehouse you can walk around. Use the arrow keys or WASD to walk, click to look around, click the orrery to read.' },
+               blurb: 'The Orrery of Los Feliz — a found story, told through a 30-foot orrery: nine planets, their moons, an asteroid belt, in a warehouse you can walk around.',
+               controls: 'Walk with the arrow keys or WASD, click to look around, click the control box or a flyer to read.' },
   library:   { tile: 1.10, nudge: -0.03,
                exportName: 'createLibrary',
                label: 'The Library — once removed.',
-               ariaLabel: 'The Library — a real bookshelf of books, films and divination decks, rebuilt as a shelf you can turn in space. Drag to orbit, scroll to zoom, click a spine to read what it is.' },
+               blurb: 'The Library — a real bookshelf of books, films and divination decks, rebuilt as a shelf you can turn in space.',
+               controls: 'Drag to orbit, scroll to zoom, click a spine to read what it is, click a CD to watch.' },
   // A small vessel travelling a glowing rail across a night wilderness, with
   // ten stations along it, each holding a fragment of found text.
   //
-  // Both this comment and the ariaLabel below described curved mirrors and a
-  // bouncing beam until 4.0 — a design the scene moved away from, leaving the
-  // description behind. That mattered more than a stale comment usually does:
-  // an ariaLabel is not decoration, it is the ONLY account of this scene a
-  // screen-reader visitor gets, and it was telling them to click a mirror in a
-  // scene with no mirrors in it. The wording now matches what the visible hint
-  // ("click a station to read") and the jump list ("Station N of 10") already
-  // say, so a sighted visitor and a screen-reader visitor are given the same
-  // word for the same object. (`BOUNCES` still names the data array inside
-  // beamline.text.js — harmless, since nobody reads a variable name out loud.)
+  // `BOUNCES` still names the data array inside beamline.text.js, from the
+  // scene's earlier mirror-and-bounce design — harmless, since nobody reads a
+  // variable name out loud, but the nav icon in index.html still draws that
+  // design and is not.
   beamline:  { tile: 0.91, nudge: 0.05,
                exportName: 'createBeamline',
                label: 'Beamline.',
-               ariaLabel: 'Beamline — a small vessel travelling a glowing rail across a night wilderness, with ten stations along it, each holding a fragment of found text. Drag to orbit, scroll to zoom, click a station to read.' },
+               blurb: 'Beamline — a small vessel travelling a glowing rail across a night wilderness, with ten stations along it, each holding a fragment of found text.',
+               controls: 'Drag to orbit, scroll to zoom, click a station to read.' },
   // Harmonics — ninth scene, Phase 3 (2026-08-16), renamed from "The
   // harmonics" 2026-08-18 (user-facing name only — internal module/
   // folder/class names stay `harmonics`, see harmonics.js's own header for
@@ -118,7 +120,8 @@ export const SCENES = {
   harmonics: { tile: 0.94, nudge: -0.04,
                exportName: 'createharmonics',
                label: 'Harmonics.',
-               ariaLabel: 'Harmonics — resonant pieces across every other scene, laid out by how strongly they connect and pulsing in sync with whatever they resonate with. Drag to orbit, scroll to zoom, touch a node.' },
+               blurb: 'Harmonics — resonant pieces across every other scene, laid out by how strongly they connect and pulsing in sync with whatever they resonate with.',
+               controls: 'Drag to orbit, scroll to zoom, touch a node.' },
   // Outside — tenth scene (2026-08-24), pivoted to a floral cosmology map
   // round 3 (same day): a generated lotus mapping the five Power Sources
   // (petals) and their Folk Origins, Magi/Psi as the center. The earlier
@@ -127,7 +130,8 @@ export const SCENES = {
   outside:   { tile: 1.08, nudge: 0.025,
                exportName: 'createOutside',
                label: 'Outside.',
-               ariaLabel: 'Outside — a generated lotus mapping the five Sources of Power as petals and their Folk Origins, Magi and Psi at the center. The flower breathes continuously on its own. Drag to orbit, scroll to zoom, touch a petal.' },
+               blurb: 'Outside — a generated lotus mapping the five Sources of Power as petals and their Folk Origins, Magi and Psi at the center, breathing continuously on its own.',
+               controls: 'Drag to orbit, scroll to zoom, touch a petal.' },
   // Apollo — eleventh scene (2026-09-02). An absorption spectrum you can play:
   // a band of starlight with the lines missing from it, a procedurally
   // generated corona streaming in from the right, and ten elements on faders
@@ -148,7 +152,8 @@ export const SCENES = {
   apollo:    { tile: 0.97, nudge: -0.05,
                exportName: 'createApollo',
                label: 'Apollo — an absorption spectrum you can play.',
-               ariaLabel: 'Apollo — a solar absorption spectrum you can play. Ten elements on faders put their lines into a band of starlight; click a dark line to hear its wavelength as a pitch.' },
+               blurb: 'Apollo — a solar absorption spectrum you can play: a band of starlight with dark lines missing from it, and a corona streaming past.',
+               controls: 'Move a fader to put an element into the light, click a dark line to hear its wavelength as a pitch.' },
   // Psyshell — twelfth scene (2026-09-03). Rebuilt at 4.8.0: it was a
   // chrysanthemum, then a branch, and both encoded the corpus in their geometry
   // — petal angle was reading order, limb thickness was Murray's law. Neither
@@ -161,7 +166,8 @@ export const SCENES = {
   psyshell:  { tile: 0.93, nudge: 0.04,
                exportName: 'createPsyshell',
                label: 'Psyshell — lens RE73415.',
-               ariaLabel: 'Psyshell — a small crystal antler suspended in a web of fine filaments, holding every sentence on this site inside it. The web and the object are one structure at two scales. Drag to turn it; point the lightpen at it to read one sentence and watch the light of its number travel through the crystal.' },
+               blurb: 'Psyshell — a small crystal antler suspended in a web of fine filaments, holding every sentence on this site as a point of light inside it. The web and the object are one structure at two scales.',
+               controls: 'Drag to turn it, scroll to zoom, point the lightpen at it to read one sentence and watch the light of its number travel through the crystal.' },
   // Medium — thirteenth scene (2026-09-04). A homemade Ouija board seen from
   // above, an upside-down teacup on it, and two pairs of fingertips. The
   // second scene here with no sound at all and the only one with no controls:
@@ -175,9 +181,32 @@ export const SCENES = {
   medium:    { tile: 1.12, nudge: -0.025,
                exportName: 'createMedium',
                label: 'Medium — a board that can spell.',
-               ariaLabel: 'Medium — a homemade Ouija board seen from above, with an upside-down teacup on it and two pairs of fingertips: yours and somebody else\u2019s. Press on the cup and rest your hand; nothing moves until you do, and nothing moves once you let go. Letters land while you are touching it and fill a tape along the bottom.' },
+               blurb: 'Medium — a homemade Ouija board seen from above, with an upside-down teacup on it and two pairs of fingertips: yours and somebody else’s.',
+               controls: 'Press on the cup and rest your hand; nothing moves until you do, and nothing moves once you let go. Letters land while you are touching it and fill a tape along the bottom.' },
 
 };
+
+
+// ─── Each scene's description, once ────────────────────────────────────
+//   blurb    — what the scene IS. No gestures in it.
+//   controls — how to work it.
+//
+// Two places need a description and they need different halves of it, which is
+// why this is split rather than one string. The scene overlay gets both (it can
+// be dragged); the landing tile gets the blurb and its own verb, because the
+// tile is a button that opens the scene and nothing else can be done to it.
+//
+// Kept as one source because the alternative was tried: index.html carried a
+// hand-written tile label and this file carried a hand-written ariaLabel, and
+// by 5.0 eleven of the thirteen pairs disagreed — on the scroll's date range,
+// on whether Orbiter's orbits are elliptical, on where Outside's flower
+// breathes. Neither string is wrong-looking on its own, which is exactly the
+// problem. index.html's markup is still hand-written (it is static, and the
+// CSP style hash is computed over it), so scripts/verify-aria.mjs asserts on
+// every build that each tile carries tileAria() verbatim, and that the
+// gestures each scene's own on-screen hint names all appear in `controls`.
+export const sceneAria = spec => `${spec.blurb} ${spec.controls}`;
+export const tileAria  = spec => `${spec.blurb} Press Enter to expand.`;
 
 // ─── /text/ exemptions ──────────────────────────────────────────────────────
 // A scene belongs here only if it publishes no writing of its own, and the

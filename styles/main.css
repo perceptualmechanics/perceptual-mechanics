@@ -377,13 +377,12 @@ html, body {
    toggle, reserved here so the formula stays honest about the whole row.
 
    Those two thresholds move with the scene count, which is the point — they
-   are consequences, not settings. With today's twelve scenes and the toggle
-   showing (units = 13) they are 612px and 1132px, and both were measured in
-   a browser rather than trusted from the algebra: at 612px the row's scroll
-   width is exactly its client width, at 611px it overflows, and the gap
-   reaches exactly 40px at 1132px. Above 1132px the row is what it has
-   always been — 44px icons, 2.5rem gaps, centred. Below 612px it scrolls
-   instead of shrinking its own touch targets.
+   are consequences, not settings, and nothing in this file stores them. Put
+   the current `units` into the two lines above to get them; at thirteen
+   scenes with the toggle showing (units = 14) that is 656px and 1216px.
+   Above the upper one the row is what it has always been — 44px icons,
+   2.5rem gaps, centred. Below the lower one it scrolls, rather than
+   shrinking its own touch targets.
 
    There is still no breakpoint anywhere in this pair, and so still no dead
    zone for the old bug to come back in.

@@ -7,6 +7,7 @@ import { verifyLinks } from './scripts/verify-links.mjs';
 import { verifyResonances } from './scripts/verify-resonances.mjs';
 import { verifyScrollMarks } from './scripts/verify-scroll-marks.mjs';
 import { verifyLanding } from './scripts/verify-landing.mjs';
+import { verifyAria } from './scripts/verify-aria.mjs';
 
 // Vite 8 warns that `configLoader: 'native'` is planned to become the default.
 // Under that loader this config is handed to Node as real ESM instead of being
@@ -54,6 +55,27 @@ function verifyLandingPlugin() {
         this.error(`verify-landing: ${failures} check(s) failed — see above. The landing page would not fit every scene above the fold at one or more viewports.`);
       } else {
         console.log(`  ✓ verify-landing: the landing requirement holds across the viewport matrix`);
+      }
+    },
+  };
+}
+
+
+// Same shape again, for the three descriptions every scene carries of itself —
+// the landing tile's aria-label, the overlay's, and the visible hint. All
+// three are invisible to the person writing them, which is why this is a build
+// step rather than a thing to remember.
+function verifyAriaPlugin() {
+  return {
+    name: 'pm-verify-aria',
+    apply: 'build',
+    buildStart() {
+      const { ok, failures, log } = verifyAria();
+      log.forEach(line => console.log(line));
+      if (!ok) {
+        this.error(`verify-aria: ${failures} check(s) failed — see above. A scene is described differently to a screen-reader visitor than to a sighted one.`);
+      } else {
+        console.log(`  ✓ verify-aria: every scene describes itself the same way three times`);
       }
     },
   };
@@ -197,7 +219,7 @@ function verifyStyleHash(outDir, root) {
 }
 
 export default defineConfig({
-  plugins: [verifyLinksPlugin(), verifyResonancesPlugin(), verifyScrollMarksPlugin(), verifyLandingPlugin(), prerenderTextPages()],
+  plugins: [verifyLinksPlugin(), verifyResonancesPlugin(), verifyScrollMarksPlugin(), verifyLandingPlugin(), verifyAriaPlugin(), prerenderTextPages()],
   build: {
     // ─── CSS target: pinned, because Vite 8 quietly moved it ─────────────
     // Vite 8 (Rolldown) defaults to a newer browser baseline than Vite 6
