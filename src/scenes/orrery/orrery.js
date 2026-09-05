@@ -830,9 +830,12 @@ function buildOrrery(preview, suspendTopY, rafterY) {
 
   // The orrery itself reads substantially bigger without growing the
   // warehouse around it. HW thickens the mast and hardware; SR widens the
-  // orbit rings (capped just inside the side walls — wallDist is 8.5 in full
-  // mode, 5 in the preview tile, see buildWarehouse); SS grows the planet bodies themselves, with no wall
-  // constraint. Mast height and every vertical anchor (baseY,
+  // orbit rings; SS grows the planet bodies themselves. None of these is
+  // bounded by the room: buildOrrery never receives wallDist, and the
+  // outermost ring is a hardcoded 3.7 * SR = 5.365 against a room half-width
+  // of 12.5. The comment that used to say the rings were "capped just inside
+  // the side walls" described a constraint that has never existed in this
+  // function. Mast height and every vertical anchor (baseY,
   // suspendTopY, rafterY, riserTopY) stay fixed — the room itself keeps
   // its own size regardless of these scale factors.
   const HW = 1.4, SR = 1.45, SS = 2.2;
@@ -1522,8 +1525,8 @@ function buildOrrery(preview, suspendTopY, rafterY) {
 }
 
 // ─── The warehouse — floor, a ceiling with a skylight cut into it, roof
-// trusses to hang the orrery from, a couple of corrugated walls with a few
-// taped-up show flyers, and a shaft of light falling through the hole the
+// trusses to hang the orrery from, four brick walls with a few taped-up show
+// flyers on two of them, and a shaft of light falling through the hole the
 // orrery's peak actually pokes through. ───────────────────────────────────
 function makeConcreteTexture() {
   const c = document.createElement('canvas');
@@ -1603,7 +1606,7 @@ function makeConcreteTexture() {
 //
 // Two things were wrong and both are fixed here:
 //   1. The walls were PlaneGeometry(span * 2, ...) = 40 units wide when the
-//      room is only wallDist * 2 ≈ 17 across. They spanned more than twice
+//      room was only wallDist * 2 across. They spanned more than twice
 //      the room, most of it behind the other walls where nothing could see
 //      it, and every one of those wasted units stretched the brick.
 //   2. The canvas had NON-SQUARE texels (19.2 px/unit across, 48.9 down),
@@ -2298,7 +2301,7 @@ function buildWarehouse(preview, floorY, ceilingY, rafterY, holeW, moonPos, moon
   // rather than uniform brick everywhere.
   //
   // Wall extent, 2026-09-02: these were PlaneGeometry(span * 2, ...) = 40
-  // units wide, more than twice the room's own 17-unit width — every unit
+  // units wide, more than twice the room's own width at the time — every unit
   // past wallDist sat behind one of the other three walls where nothing can
   // see it, while stretching the brick texture across it all the same (see
   // makeBrickTexture's own scale-correction comment). The four walls now
@@ -2414,37 +2417,51 @@ function buildWarehouse(preview, floorY, ceilingY, rafterY, holeW, moonPos, moon
     doorGroup.add(sill);
 
     // ── The man door, ajar ──
-    // Hinged on its far side and swung inward about 22 degrees. The pivot
-    // is the hinge, not the middle of the leaf, which is why the slab is
-    // built inside its own group offset by half its width.
-    const frame = new THREE.Mesh(
-      new THREE.BoxGeometry(manW + 0.16, manH + 0.09, 0.12),
-      new THREE.MeshStandardMaterial({ color: 0x252320, roughness: 0.8, metalness: 0.25 })
-    );
-    frame.position.set(manX, floorY + manH / 2, z - 0.06);
-    doorGroup.add(frame);
+    // A real frame with a hole in it: two jambs and a head, leaving the
+    // opening actually open. It was one solid BoxGeometry, which made the
+    // doorway a filled slab — and the emissive plane meant to be the street
+    // beyond sat INSIDE that slab, 1cm behind its front face. Painting that
+    // plane magenta changed zero pixels; hiding the box made 2,295 of them
+    // magenta. A doorway you cannot see through is a wall with trim.
+    const frameMat = new THREE.MeshStandardMaterial({ color: 0x252320, roughness: 0.8, metalness: 0.25 });
+    const jambW = 0.08, headH = 0.09;
+    for (const dx of [-1, 1]) {
+      const jamb = new THREE.Mesh(new THREE.BoxGeometry(jambW, manH + headH, 0.12), frameMat);
+      jamb.position.set(manX + dx * (manW / 2 + jambW / 2), floorY + (manH + headH) / 2, z - 0.06);
+      doorGroup.add(jamb);
+    }
+    const head = new THREE.Mesh(new THREE.BoxGeometry(manW + jambW * 2, headH, 0.12), frameMat);
+    head.position.set(manX, floorY + manH + headH / 2, z - 0.06);
+    doorGroup.add(head);
 
     // What is on the other side: the street, one sodium lamp, nothing else.
-    // A plain emissive plane filling the doorway, so the opening reads as
-    // an opening from anywhere in the room even before the light below
-    // reaches you.
+    // Bright, and brighter than it was, because it is now doing the work the
+    // SpotLight was wrongly credited with. Set slightly behind the wall plane
+    // so the jambs read as having depth.
     const outside = new THREE.Mesh(
       new THREE.PlaneGeometry(manW, manH),
-      new THREE.MeshBasicMaterial({ color: 0x40290f })
+      new THREE.MeshBasicMaterial({ color: 0x8a5a22 })
     );
     outside.rotation.y = Math.PI;
-    outside.position.set(manX, floorY + manH / 2, z - 0.11);
+    outside.position.set(manX, floorY + manH / 2, z - 0.02);
     doorGroup.add(outside);
 
+    // The pivot is the hinge, not the middle of the leaf, which is why the
+    // slab below is built inside this group offset by half its width.
     const hinge = new THREE.Group();
     hinge.position.set(manX + manW / 2, floorY + manH / 2, z - 0.14);
-    hinge.rotation.y = -0.62;                       // ~35 degrees into the room
+    hinge.rotation.y = -0.62;                       // 35.5 degrees into the room
     const leaf = new THREE.Mesh(
       new THREE.BoxGeometry(manW, manH, 0.05),
-      // Pale enough to actually take the sodium light — a leaf as dark as
-      // the frame around it reads as more doorway, not as a door standing
-      // open in front of one.
-      new THREE.MeshStandardMaterial({ color: 0x5c564c, roughness: 0.66, metalness: 0.3 })
+      // A SILHOUETTE, not a lit surface. This was pale on the theory that it
+      // would "take the sodium light"; it cannot. The door swings inward, so
+      // the face a visitor sees is the one turned away from the opening — its
+      // normal dots to -0.25 against the light direction, and measured, the
+      // spot puts 9 pixels on it. That is not a bug in the light, it is what
+      // an inward-swinging door with the street behind it does. So the leaf is
+      // dark on purpose now and the doorway behind it is bright, which is the
+      // shape the eye reads as a door standing open.
+      new THREE.MeshStandardMaterial({ color: 0x2b2822, roughness: 0.7, metalness: 0.3 })
     );
     leaf.position.x = -manW / 2;
     hinge.add(leaf);
@@ -2456,10 +2473,10 @@ function buildWarehouse(preview, floorY, ceilingY, rafterY, holeW, moonPos, moon
     hinge.add(bar);
     doorGroup.add(hinge);
 
-    // The wedge of streetlight on the floor. A real light rather than a
-    // painted patch: it has to fall across the concrete and up the leaf of
-    // the open door, and both of those are what makes the door read as open
-    // rather than as a dark rectangle.
+    // The wedge of streetlight on the floor — the floor, and nothing else.
+    // It was described as also lighting the leaf; it does not and cannot (see
+    // the leaf's own material). What it does do is measurable: peak 34 of 255
+    // across 32,781 pixels of concrete, all of it below the doorway.
     //
     // A SpotLight, and the shape of it is the whole point. A PointLight here
     // was the obvious thing and it was wrong in a way that took a render to
@@ -2486,7 +2503,11 @@ function buildWarehouse(preview, floorY, ceilingY, rafterY, holeW, moonPos, moon
     // You cannot walk through an open door leaf, and the rails stand proud
     // of the wall. wallLimit already stops a visitor at the brick; these
     // cover the two things that stick out past it.
-    colliders.push({ x: manX + manW / 2 - Math.sin(0.62) * manW * 0.5, z: z - 0.14 - Math.cos(0.62) * manW * 0.5, r: 0.35 });
+    // cos for x and sin for z, not the reverse: the leaf extends from the
+    // hinge along (-cos, -sin) at the swing angle. Swapped, this sat 0.148
+    // away from the real leaf centre — covered anyway at this angle by the
+    // 0.65 of collider+player radius, and wrong the moment the angle changes.
+    colliders.push({ x: manX + manW / 2 - Math.cos(0.62) * manW * 0.5, z: z - 0.14 - Math.sin(0.62) * manW * 0.5, r: 0.35 });
   }
 
   let bulbPosition = null;
@@ -3265,7 +3286,6 @@ export function createOrrery(container, { preview = false } = {}) {
   const moonSpotIntensity = preview ? 4.2 : 6.0;
   const moonSpotDistance = moonThrow * 1.6;
 
-  if (!preview) console.log('DIMS floorY', floorY, 'ceilingY', ceilingY, 'wallH', ceilingY-floorY, 'baseY', orrery.baseY, 'mastHeight', orrery.mastHeight, 'riserTopY', orrery.riserTopY);
   const warehouse = buildWarehouse(preview, floorY, ceilingY, rafterY, holeW, moonPos, moonTargetPos, moonAngle);
 
   const moonTarget = new THREE.Object3D();
@@ -3313,7 +3333,6 @@ export function createOrrery(container, { preview = false } = {}) {
   const shaftLen = moonThrow * 0.6; // stays well short of the floor — an accent, not a room-filling wedge
   const shaftGlowTex = makeDustMoteTexture();
   const shaftSpriteCount = 6;
-  const shaftSprites = [];
   for (let i = 0; i < shaftSpriteCount; i++) {
     const t = (i + 0.5) / shaftSpriteCount;
     const dist = shaftLen * t;
@@ -3327,7 +3346,6 @@ export function createOrrery(container, { preview = false } = {}) {
     sprite.position.copy(shaftOrigin).addScaledVector(shaftAxis, dist);
     sprite.scale.setScalar(coneR * 2.4);
     fixed.add(sprite);
-    shaftSprites.push(sprite);
   }
 
   // ─── Fluorescent tube fixtures — the mundane baseline. Ceiling-mounted
@@ -3385,7 +3403,6 @@ export function createOrrery(container, { preview = false } = {}) {
   const hangerGeo = hangerH > 0.001 ? new THREE.CylinderGeometry(0.012, 0.012, hangerH, 6) : null;
   const flangeGeo = new THREE.CylinderGeometry(0.05, 0.05, 0.02, 10);
   const tubeGeo = new THREE.CylinderGeometry(0.025, 0.025, 1.15, 8);
-  const fluorescentLights = [];
   fixtureSpots.forEach(({ x, z }) => {
     // Top plate + two long side walls + two end caps = an open-bottom
     // trough, so the tube sits recessed inside real sheet-metal rather
@@ -3426,7 +3443,6 @@ export function createOrrery(container, { preview = false } = {}) {
     const fLight = new THREE.PointLight(FLUORESCENT_COLOR, preview ? 0.25 : 0.32, preview ? 8 : 12, 2);
     fLight.position.set(x, fy - 0.15, z);
     fixed.add(fLight);
-    fluorescentLights.push(fLight);
   });
 
   // The work light lives at the hanging bulb prop if the garage clutter
@@ -3821,10 +3837,17 @@ export function createOrrery(container, { preview = false } = {}) {
       colliders: allColliders,
       wallLimit: warehouse.wallDist - PLAYER_RADIUS,
       eyeY: floorY + EYE_HEIGHT,
-      // Starting just inside the (new) front wall, already facing the
-      // machine — yaw 0 is the camera's default forward (-Z), which from
-      // this spot looks straight at the mast without any rotation needed.
-      startPos: new THREE.Vector3(0.8, 0, warehouse.wallDist - 1.2),
+      // Facing the machine — yaw 0 is the camera's default forward (-Z),
+      // which from this spot looks straight at the mast without any rotation.
+      //
+      // The distance from the wall is 4.5 rather than the 1.2 it was, and x is
+      // centred between the two doors rather than offset. At 1.2 the doors are
+      // off-frame: the man door's centre projected to sx -324 on a 960-wide
+      // frame and the bay's to sx 1825, so turning round at the spawn showed
+      // wall-to-wall brick — under a comment claiming the first thing a visitor
+      // sees on turning round is how they got in. The offset predates the doors
+      // and was never retuned when they were added.
+      startPos: new THREE.Vector3(0.3, 0, warehouse.wallDist - 4.5),
       startYaw: 0,
       isBlocked: e => panel && panel.contains(e.target),
       isPanelOpen: () => !!panel && panel.classList.contains('open'),

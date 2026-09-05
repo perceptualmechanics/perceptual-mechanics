@@ -670,10 +670,13 @@ html, body {
 
      * It EMERGES rather than appears. z-index:-1 puts each wisp behind
        #site-title's own background, which is rgba(0,0,0,0.65) rather than
-       opaque — so it reads at about a third of strength while it is still
-       behind the pill and at full strength once it clears the top edge.
-       There is no moment where it switches on. The mask fades the bottom out
-       as well, so it has no lower edge of its own either.
+       opaque, so while a wisp is still crossing the pill it reads at about a
+       third of strength and then at full strength once it clears the top
+       edge. That crossing is the first second or so of each wisp's rise, not
+       a state it sits in — measured, four of thirteen samples across the
+       cycle carry smoke inside the pill's own rows, which with two wisps half
+       a cycle apart is one emergence roughly every two and a half seconds.
+       The mask fades the bottom out as well, so it has no lower edge either.
 
      * It is a VOLUME rather than a disc. Five offset ellipses at falling
        alphas, so the blur has internal structure to work on and the result
@@ -693,7 +696,15 @@ html, body {
   /* Behind the pill's own translucent background — see "emerges" above. */
   z-index: -1;
   left: 50%;
-  bottom: 36%;
+  /* Negative, so the wisp's box genuinely straddles the pill's top edge. It
+     was 36% — which sounds like "inside the pill" and is not: 36% of a 26px
+     pill is 9px, the box is 78px tall, and scale(0.5) about its centre put the
+     whole visible wisp between 29px and 68px ABOVE the pill's bottom, i.e.
+     entirely clear of a pill that ends at 26px. Measured, the "emerging from
+     behind at a third strength" this rule claims was zero pixels inside the
+     pill for 92% of the cycle: z-index:-1 was true and had nothing to be
+     behind. */
+  bottom: -14%;
   width: 58px; height: 78px;
   pointer-events: none;
   opacity: 0;
@@ -714,7 +725,12 @@ html, body {
   animation: pm-smoke-a 5.2s ease-out infinite;
 }
 #site-title:hover::after {
-  animation: pm-smoke-b 5.2s ease-out 2.6s infinite;
+  /* NEGATIVE delay. At +2.6s with the default fill-mode the second wisp simply
+     does not exist for the first half of every hover, against a comment three
+     lines down claiming there is always one mid-rise — true only from the
+     third second onward, and most hovers are shorter than that. A negative
+     delay starts it already half way through its own cycle instead. */
+  animation: pm-smoke-b 5.2s ease-out -2.6s infinite;
 }
 /* Out to the left, back across to the right, out again — a lazy S, not a
    climb. Rotation is small; it is the drift reversing that reads as curl. */

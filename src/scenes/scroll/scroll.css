@@ -265,29 +265,33 @@
    patch: a soft dark gradient hugging the edges, which the clip keeps and
    which reads as the sheet curling up off the table.
 
-   The two side gradients answer to the flame's lean, in opposite directions,
-   so the shadow under the curled edge swings as the candle leans instead of
-   being painted on. `max()` rather than a bare calc because --flame-x runs
-   to +/-1 and an alpha is not allowed to go negative — clamped here rather
-   than in the JS, so this rule is correct whatever writes the property. The
-   vertical pair stay put: they are the sheet lying on the desk, which the
-   candle's leaning does not change. */
+   Static. 5.0.1 made the two side gradients answer to the flame's lean in
+   opposite directions, so the shadow would swing as the candle leaned. It
+   was measured afterwards and does not: peak 7 of 255 across the flame's
+   real range, with ZERO pixels above the threshold anyone can see. A 12px
+   band of black at about 0.2 alpha over mid-brown parchment cannot carry a
+   visible swing without an alpha excursion large enough to read as a strobe,
+   which is the problem the whole 5.0.2 candle rewrite existed to remove. The
+   surface is too small for the effect; removed rather than amplified. */
 .scroll-patch::before {
   content: ''; position: absolute; inset: 0; z-index: 0; pointer-events: none;
   background:
     linear-gradient(to bottom, rgba(0,0,0,0.34) 0, transparent 14px),
-    linear-gradient(to right, rgba(0,0,0, max(0, calc(0.26 + var(--flame-x, 0) * 0.13))) 0, transparent 12px),
-    linear-gradient(to left,  rgba(0,0,0, max(0, calc(0.07 - var(--flame-x, 0) * 0.13))) 0, transparent 12px),
+    linear-gradient(to right, rgba(0,0,0,0.26) 0, transparent 12px),
     linear-gradient(to top, rgba(0,0,0,0.20) 0, transparent 10px);
 }
 
 /* ink stains and worn patches, scattered per instance, behind the text */
 .scroll-stain { position: absolute; pointer-events: none; border-radius: 50%; z-index: 0; }
 
-/* The ambient candlelight (.scroll-root::before) sits behind every patch, so
-   on its own it only ever shows in the gaps between them — never while
-   actually reading one. This is the same light, painted again on top of the
-   parchment itself: a soft warm wash, screen-blended so it only ever adds
+/* The ambient candlelight (.scroll-root::before) sits behind every patch. On a
+   phone, where the patch column leaves 22px of margin a side, that means it is
+   mostly hidden while you are reading one — which is what this layer was added
+   for. On a laptop it is not hidden at all: measured with a patch filling the
+   screen and no seam in view, the ambient layer still covers about a third of
+   the viewport, nearly 70% of the side margins. So this is not the only place
+   the candle shows; it is the light painted again on top of the parchment
+   itself: a soft warm wash, screen-blended so it only ever adds
    light and never dims the text.
 
    The same `--flame` as the root glow, which is the correction here. This
@@ -311,19 +315,18 @@
    content-visibility: auto on .scroll-patch already skips the paint. */
 .scroll-patch::after {
   content: ''; position: absolute; z-index: 2; pointer-events: none;
-  /* Overscanned for the same reason as the ambient layer, and by the same
-     arithmetic: 8% a side, so a point at p% of the patch is (0.08 + p) / 1.16
-     here and radii shrink by 1.16. The wash nominally at 26% 14% is 29.3%
-     19%. */
-  inset: -8%;
-  background: radial-gradient(ellipse at 29.3% 19%, rgba(255,205,140,0.22), transparent 50%);
+  inset: 0;
+  background: radial-gradient(ellipse at 26% 14%, rgba(255,205,140,0.22), transparent 58%);
   mix-blend-mode: screen;
-  /* The parchment catching the same flame as the room, and catching it in
-     the same direction — the wash slides across each sheet as the candle
-     leans, rather than every sheet brightening in place. Larger multiplier
-     than the ambient layer because a patch is a much smaller box, so the
-     same physical movement of the light is a larger fraction of it. */
-  transform: translate3d(calc(var(--flame-x, 0) * 5%), calc(var(--flame-y, 0) * 3.5%), 0);
+  /* Brightness only. This carried a translate as well, on the same reasoning
+     as the ambient layer — one candle, one direction, the wash sliding across
+     each sheet rather than every sheet brightening in place. Measured, the
+     slide was peak 8 of 255 across 72 pixels: real, and under what anyone
+     sees. The ambient layer's movement is visible because it travels ~80px
+     across a full viewport; a patch is a fifth of that box and the same
+     percentage buys a fifth of the distance. Removed rather than amplified —
+     a wash sliding far enough to notice inside a single sheet stops reading
+     as one room's light and starts reading as the sheet moving. */
   opacity: calc(1 - (1 - var(--flame, 1)) * var(--flame-gain, 1));
 }
 

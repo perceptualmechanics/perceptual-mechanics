@@ -18,7 +18,7 @@ import {
 import {
   createReader, decayReader, weightOf, takeMark, readerHasWord, readerWord, lexiconSize,
 } from '../src/scenes/medium/medium.lexicon.js';
-import { MARKS, BOARD_HOME } from '../src/scenes/medium/medium.text.js';
+import { MARKS, BOARD_HOME, LETTER_ARCS, DIGITS, PUNCTUATION, WORDS, MARK_GAP } from '../src/scenes/medium/medium.text.js';
 
 const DT = 1 / 60;
 
@@ -27,8 +27,8 @@ const DT = 1 / 60;
 // touching. `flat` is the control: it sends every mark to the same weight, so
 // the field becomes a uniform pull and the dwell threshold becomes a constant.
 // Everything else is the scene as it ships.
-function session({ seconds = 300, seed, touching = false, flat = false }) {
-  const hand = createWander(seed);
+function session({ seconds = 300, seed, touching = false, flat = false, marks = MARKS, home = BOARD_HOME }) {
+  const hand = createWander(seed, home.x, home.y);
   const cup = createCup(hand.x, hand.y);
   // The scene's own visitor, not an approximation of one: `stepVisitor` is what
   // medium.js calls, so "a hand resting on it" here is exactly the hand a
@@ -45,9 +45,9 @@ function session({ seconds = 300, seed, touching = false, flat = false }) {
   for (let i = 0; i < Math.round(seconds / DT); i++) {
     t += DT;
     decayReader(reader, DT);
-    stepCup(cup, DT, stepVisitor(visitor, cup, DT), touching ? stepWander(hand, DT, cup, MARKS, plaus, visitor.grip) : null);
+    stepCup(cup, DT, stepVisitor(visitor, cup, DT), touching ? stepWander(hand, DT, cup, marks, plaus, visitor.grip) : null);
     clearDwellMemory(dwell, cup);
-    const got = touching ? stepDwell(dwell, cup, MARKS, DT, scale) : null;
+    const got = touching ? stepDwell(dwell, cup, marks, DT, scale) : null;
     if (got) {
       const added = takeMark(reader, got);
       tape = got.ch === 'GOODBYE' ? '' : tape + added;
@@ -96,4 +96,59 @@ for (const seed of [611853, 7, 1031, 66613]) {
   console.log(`\n         over ${seeds.length} seeds x 300s`);
   console.log(`         letters/s    on ${avg(on, r => r.rate).toFixed(3)}   off ${avg(off, r => r.rate).toFixed(3)}`);
   console.log(`         vowel share  on ${(100 * avg(on, r => vowels(r.tape))).toFixed(1)}%  off ${(100 * avg(off, r => vowels(r.tape))).toFixed(1)}%   (English is 38.1%)`);
+}
+
+// ─── The geometry control ───────────────────────────────────────────────────
+// 5.0 moved the letters from equal ANGLE to equal ARC LENGTH, and the claim
+// made for it was that a board where the middle of each arc is not thinned out
+// gives the lexicon a fairer field — vowels included — rather than tilting it.
+// That claim needs a before as well as an after, so the BEFORE is built here
+// rather than quoted from somewhere: the equal-angle placement this replaced,
+// reconstructed from the same radii and the same spreads, and run through the
+// same session() as everything else.
+//
+// It lives in the bench and not in a comment because a comparison nobody can
+// re-run is not evidence — see STANDARDS.md, "A measurement in a comment must
+// be re-runnable, or it must not be there". The first version of this WAS a
+// comment, with numbers from a scratch harness that was never committed, and
+// they did not reproduce.
+const EQUAL_ANGLE = (chars, spread, radius, cy, ry) =>
+  chars.split('').map((ch, i) => {
+    const t = (i / (chars.length - 1) - 0.5) * spread;
+    return { ch, x: 0.5 + Math.sin(t) * radius, y: cy + (1 - Math.cos(t)) * ry, kind: 'letter' };
+  });
+{
+  const oldLetters = [
+    ...EQUAL_ANGLE('ABCDEFGHIJKLM', 1.90, 0.46, 0.245, 0.13),
+    ...EQUAL_ANGLE('NOPQRSTUVWXYZ', 1.78, 0.41, 0.440, 0.11),
+  ];
+  const boardOf = (letters) => [...letters, ...DIGITS, ...PUNCTUATION, ...WORDS];
+  const homeOf = (letters) => ({
+    x: letters.reduce((a, l) => a + l.x, 0) / letters.length,
+    y: letters.reduce((a, l) => a + l.y, 0) / letters.length,
+  });
+  const seeds = [7, 1031, 66613, 5, 99, 404, 8123, 31337, 2, 555];
+  const avg = (rs, f) => rs.reduce((a, r) => a + f(r), 0) / rs.length;
+  const gap = (arr) => {
+    const g = [];
+    for (const arc of [arr.slice(0, 13), arr.slice(13)]) {
+      for (let i = 1; i < arc.length; i++) g.push(Math.hypot(arc[i].x - arc[i - 1].x, arc[i].y - arc[i - 1].y));
+    }
+    return [Math.min(...g), Math.max(...g)];
+  };
+  const rows = [
+    ['equal angle (before 5.0)', oldLetters],
+    ['equal arc length (now)  ', LETTER_ARCS.flat()],
+  ];
+  console.log('\ngeometry same hands, same seeds, letters placed two ways:');
+  for (const [name, letters] of rows) {
+    const marks = boardOf(letters), home = homeOf(letters);
+    const on = seeds.map(seed => session({ seed, touching: true, marks, home }));
+    const off = seeds.map(seed => session({ seed, touching: true, flat: true, marks, home }));
+    const [lo, hi] = gap(letters);
+    console.log(`         ${name}  spacing ${lo.toFixed(4)}-${hi.toFixed(4)} (ratio ${(hi / lo).toFixed(2)})`);
+    console.log(`           letters/s ${avg(on, r => r.rate).toFixed(3)}   vowel share ${(100 * avg(on, r => vowels(r.tape))).toFixed(1)}%`
+              + `   flat control ${(100 * avg(off, r => vowels(r.tape))).toFixed(1)}%`);
+  }
+  console.log(`         MARK_GAP is ${MARK_GAP}; English is 38.1% vowels.`);
 }

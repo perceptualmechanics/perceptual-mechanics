@@ -207,6 +207,45 @@ harness quietly replaced is a measurement nobody can weigh.
 
 ## Documentation
 
+### A measurement in a comment must be re-runnable, or it must not be there
+
+**Non-negotiable, added 6.0 at Scott's instruction after an audit found a comment
+quoting bench figures that the shipped bench does not print.**
+
+A number in a comment is a claim nobody can check. It was true the day it was
+written; it goes stale silently; and because it reads as evidence, it stops the
+next person measuring. This is the single largest source of drift in this
+codebase — two audits, 94 findings and then ~130, and the majority of both were
+this.
+
+So a measurement gets written down only if one of these is true:
+
+1. **A committed script prints it.** Then the comment cites the script rather
+   than the number: "run `scripts/medium-spell.mjs`", not "0.149 letters/s".
+   If the comparison the number makes is worth having, the script must be able
+   to make it — extend the script, do not paste the result.
+2. **A build gate derives and enforces it.** `verify-counts.mjs` does this for
+   counts: the number is computed from the data every build, so it cannot drift.
+   Anything countable belongs here rather than in prose.
+3. **The comment states the mechanism instead of the magnitude.** "The blur is
+   larger than the shape's bright core, so it flattens it" survives a retune;
+   "peak 21/255" does not.
+
+If none of the three applies, **delete the number**. A comment that explains
+what the code *is* cannot carry a stale measurement, because it never carried a
+measurement.
+
+**Two consequences worth stating, because both were violated:**
+
+- **A measurement taken with a scratch harness is not a measurement anyone else
+  has.** If the harness is worth trusting it is worth committing. If it is not
+  worth committing, its output is not worth quoting.
+- **"Measured live" and "confirmed" are not evidence, they are decoration.** They
+  make a claim harder to question and no more likely to be true. Do not write
+  them. The audit that found this class found three claims carrying exactly
+  those words that were false.
+
+
 ### The knowledge base is current; a brief is a missive
 
 Five files carry what a future session needs, and none of them is dated except

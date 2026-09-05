@@ -126,10 +126,17 @@ export const CARD = { x0: 0.02, y0: 0.13, x1: 0.98, y1: 0.87 };
 // A homemade one, not a Parker Brothers one: two arcs of letters, a row of
 // digits, punctuation under them, YES and NO in the upper corners, GOODBYE at
 // the foot. That is the arrangement every hand-made board has had since the
-// 1890s, and the reason it is worth copying exactly is that the shape does
-// work — the arcs put every letter roughly the same distance from the middle,
-// so no letter is cheaper to reach than any other, and a board where E sat
-// closer to centre than X would be a board with an opinion.
+// 1890s, and the reason it is worth copying exactly is that it is the shape a
+// homemade board has.
+//
+// It is NOT true that the arcs put every letter the same distance from the
+// middle — that claim stood here for several releases and is out by a factor of
+// six. Measured from BOARD_HOME, T is 0.071 away and N is 0.428; with
+// FIELD_RANGE at 0.28 an end letter's field weight is about a quarter of a
+// middle letter's, so E really is cheaper to reach than X. A flattened ellipse
+// is precisely the shape that is not equidistant, which is worth knowing before
+// anyone reaches for the arcs to fix a letter-frequency problem: they cannot,
+// and the vowel-share figures the bench prints are partly this.
 //
 // Wide, and much wider than the first version, which held both arcs inside the
 // middle two thirds and left a margin of blank board either side that nothing
@@ -137,35 +144,40 @@ export const CARD = { x0: 0.02, y0: 0.13, x1: 0.98, y1: 0.87 };
 // makes the shape read as a board rather than as a caption — and spreading them
 // also spreads the cup's travel, so a letter is a journey rather than a nudge.
 //
-// Widening was not free, and the price was measured rather than waved at:
-// pushing A, O and the other end letters away from where the cup spends its
-// time cost the board about two and a half points of vowel share. What was not
-// noticed at the time is that most of that was not the WIDTH. It was the
-// placement. On an equal-angle arc the letters bunch at the ends and thin out
-// in the middle, and the middle is exactly where the cup is — so the widening
-// had quietly starved the cup's own neighbourhood of letters while stating,
-// two paragraphs up, that the arc shape exists so no letter is cheaper to
-// reach than any other.
+// Widening was not free: pushing A, O and the other end letters away from where
+// the cup spends its time cost the board some vowel share. Equal-arc-length
+// placement was made partly on the theory that it would give that back — the
+// cup spends its time in the middle of the arcs, and equal-ANGLE steps thinned
+// the letters out exactly there, so evening them should have widened the
+// lexicon's choice where it actually chooses.
 //
-// Placing at equal arc length instead gives it back. Same radii, same width,
-// same everything else; ten seeds x 300s with a hand resting on the board:
+// **It mostly did not, and the correction matters more than the theory.** Run
+// `node scripts/medium-spell.mjs` — its geometry block builds the old
+// equal-angle board from these same radii and runs both through the same
+// session, so the comparison is re-runnable rather than remembered. What it
+// reports is that the letter RATE rises substantially (every letter equally
+// reachable, so the cup gets stuck less), while vowel share barely moves — and
+// the plausibility-off control moves further than the on condition does, which
+// means this is the board's mechanics changing and not the lexicon being handed
+// a fairer field. The version of this paragraph that shipped in 5.0 claimed a
+// three-and-a-half point vowel gain and cited a control that had not moved.
+// Both came from a scratch harness that was never committed, and neither
+// reproduces. The numbers are not repeated here for that reason; the bench
+// prints them.
 //
-//                        letters/s   vowel share
-//     equal angle          0.140        31.1%
-//     equal arc length     0.139        34.6%     <- here
-//     (English)                         38.1%
+// What survives, and is the real reason to keep the change: on a flattened
+// ellipse an equal step of ANGLE is not an equal step of DISTANCE, so the old
+// board had letters 1.68x further apart at the middle of each arc than at its
+// ends while stating two paragraphs above that the arc shape exists so no
+// letter is cheaper to reach than any other. Even spacing makes that sentence
+// true of the spacing, at least. (It is still not true of the DISTANCE FROM
+// THE MIDDLE — see the note on that claim below.)
 //
-// With plausibility switched off, 24.2% and 24.6% — unchanged, which is the
-// control that says this is the lexicon getting a fairer board rather than the
-// board being tilted.
-//
-// The letters stay closer together than twice DWELL_RADIUS. Every gap on the
-// board is now MARK_GAP, 0.069, against a 0.048 catchment: 0.069 < 0.096, so
-// the discs overlap everywhere, the arcs are continuous and there is no dead
-// ground between two letters where the cup catches nothing. That claim used to
-// need a worst case (spacing ran 0.043 to 0.073 and the widest pair was the
-// one that had to fit); there is no worst case now, which is the quieter
-// benefit of one gap rather than a range.
+// The letters stay closer together than twice DWELL_RADIUS. Every gap between
+// adjacent letters, digits and punctuation is MARK_GAP, 0.069, against a 0.048
+// catchment: 0.069 < 0.096, so those discs overlap and there is no dead ground
+// between two of them. YES, NO and GOODBYE are further out than that and have
+// dead ground around them, deliberately.
 export const LETTER_ARCS = [
   ARC('ABCDEFGHIJKLM', MARK_GAP, 0.46, 0.245, 0.13),
   ARC('NOPQRSTUVWXYZ', MARK_GAP, 0.41, 0.440, 0.11),
