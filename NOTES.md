@@ -593,6 +593,31 @@ described are unchanged.)
   worth trimming, orrery.js's texture generators and first-person rig are the
   two most self-contained chunks to split out first.
 
+## 5.0.3 (2026-09-05)
+
+**Smoke that emerges and curls.** Scott, once 5.0.2 made it visible enough to
+see what it actually was: *"make it less two puffs and more background
+emergence and curling."* Correct — the size fix exposed the real shape of it.
+Two discs, rising in straight lines, appearing out of nowhere just above the
+pill. Smoke does none of those three things.
+
+- **Emerges rather than appears.** `z-index: -1` puts each wisp behind
+  `#site-title`'s own background, which is `rgba(0,0,0,0.65)` and not opaque —
+  so it reads at about a third of strength while still behind the pill and at
+  full strength once it clears the top edge. No moment where it switches on.
+  The mask fades the bottom out too, so it has no lower edge of its own.
+- **A volume rather than a disc.** Five offset ellipses at falling alphas, so
+  the blur has internal structure to work on. One radial gradient blurred is a
+  dot at any size; five staggered ones is a column with filaments in it.
+- **Curls.** Lateral drift that reverses — out, back across, out again — with
+  small rotations, and blur growing 4px to 13px on the way up because smoke
+  disperses as it cools. The two wisps curl opposite ways half a cycle apart
+  on a 5.2s loop, so one is always mid-rise and the pair never reads as a pair.
+
+Measured the same way as 5.0.2: 58 of 255 across 776 pixels, against 21 of 255
+across 50 originally. Roughly three times the brightness and fifteen times the
+area. Reduced motion still removes it outright.
+
 ## 5.0.2 (2026-09-05)
 
 **Title centering, and smoke nobody could see.** Both from Scott looking at the

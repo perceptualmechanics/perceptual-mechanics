@@ -650,57 +650,89 @@ html, body {
 #site-title:hover { color: rgba(255,255,255,1); }
 #site-title:focus-visible { outline: var(--focus-ring); outline-offset: 4px; }
 
-/* Light translucent smoke curling up on hover.
-   Scott, 5.0.2: "I'm not seeing any smoke at all." It was rendering, and it
-   was invisible, which are different things — and the difference is the whole
-   finding. Frozen and stepped by hand through its own cycle, the old puff
-   peaked at 21 of 255 (8% brightness) on a blob about ten pixels across, for
-   a few hundred milliseconds. Below the threshold for noticing something that
-   small and that brief, especially with your eye on the text you are hovering.
+/* Smoke off the wordmark, on hover.
+   Two rewrites, and both notes are worth keeping because they are different
+   failures.
 
-   Nothing here was "wrong" in isolation. blur(2px) is a sensible smoke blur
-   and 10px is a sensible puff. Together they are not: the gradient already
-   faded to transparent at 70% of a 5px radius, so the bright core was about
-   three pixels wide, and a 2px blur across a 3px core flattens it. Measured
-   by removing only the blur, that cost 2.7x of the peak — a value correct on
-   its own with no effect at the size it was applied to.
+   5.0.2 — Scott: "I'm not seeing any smoke at all." It was rendering and it
+   was invisible, which are different things. Frozen and stepped by hand
+   through its own cycle, the puff peaked at 21 of 255 (8% brightness) on a
+   blob ten pixels across. Neither value was wrong alone: blur(2px) is a
+   sensible smoke blur and 10px is a sensible puff, but the gradient faded out
+   at 70% of a 5px radius, leaving a bright core three pixels wide, and a 2px
+   blur across a 3px core flattens it — 2.7x of the peak, measured by removing
+   only the blur.
 
-   The repair is size before brightness, because size is what the blur is
-   eating. 26px with a denser gradient and blur(3px) measures 77 of 255 (30%)
-   across a 23px blob — a visible wisp that is still a wisp. Scaled 0.7 at the
-   moment it is brightest, so what you actually see is about 18px. */
+   5.0.3 — Scott: "make it less two puffs and more background emergence and
+   curling." The size fix made it visible and made what it actually was
+   obvious: two discs, rising in straight lines, appearing out of nowhere just
+   above the pill. Smoke does none of those three things. So:
+
+     * It EMERGES rather than appears. z-index:-1 puts each wisp behind
+       #site-title's own background, which is rgba(0,0,0,0.65) rather than
+       opaque — so it reads at about a third of strength while it is still
+       behind the pill and at full strength once it clears the top edge.
+       There is no moment where it switches on. The mask fades the bottom out
+       as well, so it has no lower edge of its own either.
+
+     * It is a VOLUME rather than a disc. Five offset ellipses at falling
+       alphas, so the blur has internal structure to work on and the result
+       has filaments in it. One radial gradient blurred is a dot no matter how
+       big; five staggered ones is a column.
+
+     * It CURLS. The keyframes carry rotation and lateral drift that reverses
+       — out one way, back across, out again — instead of a straight climb,
+       and the blur grows from 4px to 13px on the way up, because smoke
+       disperses as it cools. The two wisps curl in opposite directions and
+       run half a cycle apart on a 5.2s loop, so there is always one of them
+       mid-rise. That is what stops it reading as a pair of anything. */
 #site-title::before,
 #site-title::after {
   content: '';
   position: absolute;
-  bottom: 90%; left: 50%;
-  width: 26px; height: 26px;
-  border-radius: 50%;
-  background: radial-gradient(circle,
-    rgba(255,255,255,0.9) 0%,
-    rgba(255,255,255,0.45) 35%,
-    rgba(255,255,255,0) 72%);
-  opacity: 0;
+  /* Behind the pill's own translucent background — see "emerges" above. */
+  z-index: -1;
+  left: 50%;
+  bottom: 36%;
+  width: 58px; height: 78px;
   pointer-events: none;
-  filter: blur(3px);
+  opacity: 0;
+  background:
+    radial-gradient(ellipse 34% 22% at 50% 84%, rgba(255,255,255,0.82), rgba(255,255,255,0) 70%),
+    radial-gradient(ellipse 26% 20% at 36% 62%, rgba(255,255,255,0.60), rgba(255,255,255,0) 72%),
+    radial-gradient(ellipse 24% 18% at 64% 46%, rgba(255,255,255,0.48), rgba(255,255,255,0) 74%),
+    radial-gradient(ellipse 20% 16% at 42% 26%, rgba(255,255,255,0.34), rgba(255,255,255,0) 76%),
+    radial-gradient(ellipse 16% 13% at 58% 10%, rgba(255,255,255,0.23), rgba(255,255,255,0) 78%);
+  /* No hard edge at either end: it thins into the pill below and into the
+     dark above. Prefixed first and always paired, per STANDARDS.md. */
+  -webkit-mask: linear-gradient(to top, transparent 0%, #000 26%, #000 64%, transparent 100%);
+  mask: linear-gradient(to top, transparent 0%, #000 26%, #000 64%, transparent 100%);
+  filter: blur(5px);
+  transform: translate(-50%, 12%) scale(0.5);
 }
-#site-title::before { transform: translate(-14px, 0) scale(0.6); }
-#site-title::after { transform: translate(8px, 0) scale(0.4); }
 #site-title:hover::before {
-  animation: pm-smoke-a 2.6s ease-out infinite;
+  animation: pm-smoke-a 5.2s ease-out infinite;
 }
 #site-title:hover::after {
-  animation: pm-smoke-b 2.6s ease-out 0.9s infinite;
+  animation: pm-smoke-b 5.2s ease-out 2.6s infinite;
 }
+/* Out to the left, back across to the right, out again — a lazy S, not a
+   climb. Rotation is small; it is the drift reversing that reads as curl. */
 @keyframes pm-smoke-a {
-  0%   { opacity: 0; transform: translate(-14px, 0) scale(0.5); }
-  15%  { opacity: 0.5; }
-  100% { opacity: 0; transform: translate(-22px, -32px) scale(1.8); filter: blur(5px); }
+  0%   { opacity: 0;    transform: translate(-50%, 12%)  rotate(-3deg)  scale(0.50); filter: blur(4px); }
+  14%  { opacity: 0.72; }
+  38%  {                transform: translate(-64%, -30%) rotate(-11deg) scale(0.84); filter: blur(6px); }
+  66%  { opacity: 0.40; transform: translate(-38%, -74%) rotate(7deg)   scale(1.16); filter: blur(9px); }
+  100% { opacity: 0;    transform: translate(-58%, -130%) rotate(-5deg) scale(1.62); filter: blur(13px); }
 }
+/* The same gesture mirrored and a little narrower, so the two read as one
+   column of smoke turning over rather than as a matched pair. */
 @keyframes pm-smoke-b {
-  0%   { opacity: 0; transform: translate(8px, 0) scale(0.35); }
-  15%  { opacity: 0.4; }
-  100% { opacity: 0; transform: translate(16px, -26px) scale(1.5); filter: blur(4px); }
+  0%   { opacity: 0;    transform: translate(-50%, 14%)  rotate(4deg)   scale(0.42); filter: blur(4px); }
+  14%  { opacity: 0.56; }
+  38%  {                transform: translate(-36%, -28%) rotate(10deg)  scale(0.74); filter: blur(6px); }
+  66%  { opacity: 0.32; transform: translate(-60%, -70%) rotate(-6deg)  scale(1.04); filter: blur(9px); }
+  100% { opacity: 0;    transform: translate(-44%, -124%) rotate(5deg)  scale(1.48); filter: blur(12px); }
 }
 @media (prefers-reduced-motion: reduce) {
   #site-title::before, #site-title::after { display: none; }
