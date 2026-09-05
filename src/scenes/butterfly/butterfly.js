@@ -763,7 +763,7 @@ export function createButterfly(container, { preview = false } = {}) {
       // SOFTENING, which softens but doesn't strictly bound the result.
       const MAX_DISP      = 4;  // hard cap on displacement
 
-      for (const { geo, posArr, restBase, vertexCount } of gridTiers) {
+      if (!reduceMotion) for (const { geo, posArr, restBase, vertexCount } of gridTiers) {
         for (let vi = 0; vi < vertexCount; vi++) {
           // Rest positions come out of the one shared Float32Array at this
           // tier's own offset — three reads out of a contiguous buffer,
@@ -805,7 +805,15 @@ export function createButterfly(container, { preview = false } = {}) {
       // frame: 220 sprites at 120fps is ~53,000 throwaway objects a second to
       // save writing three comparisons out twice. Unrolled below.
       const b = 70;
-      for (let i = 0; i < SPRITE_COUNT; i++) {
+      // reduceMotion re-checked at the point of consumption, like the jitter
+      // and the orbit above. This drift and the grid distortion below it were
+      // the two loops that never consulted it, and between them they are ~97%
+      // of everything that moves: measured under prefers-reduced-motion,
+      // 205,155 pixels — 26% of the viewport — changed by 8/255 or more every
+      // three seconds, against 9,232 for the trails alone. The comment on the
+      // flag says it is re-checked here 'so no code path can re-enable motion
+      // by forgetting about it'; these two were the code paths that forgot.
+      if (!reduceMotion) for (let i = 0; i < SPRITE_COUNT; i++) {
         const d = spriteData[i];
         d.vx+=(Math.random()-.5)*.001;d.vx*=.99;
         d.vy+=(Math.random()-.5)*.001;d.vy*=.99;

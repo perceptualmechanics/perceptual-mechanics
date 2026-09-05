@@ -362,7 +362,41 @@ function setActiveIcon(sceneName) {
 // Form controls are in the list because Apollo's rail is twelve of them —
 // ten range faders and two radios — mounted inside the overlay with no
 // tabindex of their own.
-const FOCUSABLE = 'button, a[href], input, select, textarea, [tabindex]';
+// `summary` is in the list because a <summary> inside <details> is focusable
+// by default with no tabindex of its own — Library's jump list has three, and
+// the Tab walk visited all three while the ring that decides the wrap points
+// did not contain any of them.
+const FOCUSABLE = 'button, a[href], input, select, textarea, summary, [tabindex]';
+
+// On screen, not merely in the DOM. Library's jump list is three collapsed
+// <details>, and their buttons were being collected: 265 of 283 elements in
+// the ring could not take focus, and because `last` was one of them, Shift+Tab
+// from the skip link called focus() on a dead node and went nowhere. A
+// keyboard visitor could not reach the end of the ring at all.
+//
+// It has to be checkVisibility(). The obvious test — getClientRects().length —
+// does NOT catch this: a button inside a closed <details> still reports a box
+// (measured: 1 rect, display block, visibility visible, contentVisibility
+// visible on every ancestor) and still refuses focus, because the browser hides
+// the contents through the details' internal slot rather than through anything
+// observable on the descendant. checkVisibility returns false for it correctly.
+//
+// The fallback is for Safari before 17.4, which has no checkVisibility: the
+// same two cheap CSS tests plus an explicit closed-<details> rule, since that
+// is the case the cheap tests miss. A <summary> is focusable while its details
+// is shut, so it is exempted.
+//
+// Cost is one call per candidate on each Tab. Measured on Library, the worst
+// page here, that is a fraction of a millisecond against a keystroke.
+const onScreen = (el) => {
+  if (typeof el.checkVisibility === 'function') {
+    return el.checkVisibility({ checkVisibilityCSS: true, contentVisibilityAuto: true });
+  }
+  if (el.getClientRects().length === 0) return false;
+  if (getComputedStyle(el).visibility === 'hidden') return false;
+  return !(el.closest('details:not([open])') && !el.closest('summary'));
+};
+
 function collect(root) {
   return Array.from(root.querySelectorAll(FOCUSABLE)).filter(el =>
     // tabIndex -1 is opt-out (expContainer itself, colophon's h2).
@@ -371,7 +405,8 @@ function collect(root) {
     // #fullscreen-toggle where the platform has no Fullscreen API) means
     // display:none, which is not focusable however it got there.
     !el.closest('[hidden]') &&
-    !el.disabled
+    !el.disabled &&
+    onScreen(el)
   );
 }
 function overlayFocusables() {
@@ -380,9 +415,9 @@ function overlayFocusables() {
   const sceneChrome = Array.from(document.querySelectorAll('.pm-scene-chrome'))
     .filter(el => !overlay.contains(el))
     .flatMap(el => (el.matches(FOCUSABLE) ? [el] : []).concat(collect(el)))
-    .filter(el => el.tabIndex !== -1 && !el.closest('[hidden]') && !el.disabled);
+    .filter(el => el.tabIndex !== -1 && !el.closest('[hidden]') && !el.disabled && onScreen(el));
   const siteChrome = [skipLink, ...document.querySelectorAll('.nav-icon'), siteTitle, fsToggle]
-    .filter(el => el && !el.hidden);
+    .filter(el => el && !el.hidden && onScreen(el));
   // A Set, not concat: `.pm-scene-chrome` on a control that is itself inside
   // another `.pm-scene-chrome` wrapper would otherwise appear twice and make
   // the wrap points stutter.
@@ -849,7 +884,7 @@ async function initPreviews() {
 const SCENE_COUNT = Object.keys(SCENES).length;
 
 // ─── The landing page's requirement ────────────────────────────────────────
-// **All twelve tiles visible without scrolling on a desktop, at a size you can
+// **All thirteen tiles visible without scrolling on a desktop, at a size you can
 // still recognise a scene from.** That is the requirement, and everything below
 // is arithmetic in service of it. Stated in SITE.md as the thing every future
 // layout decision has to satisfy.

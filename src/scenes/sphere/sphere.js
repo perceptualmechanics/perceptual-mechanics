@@ -731,17 +731,27 @@ export function createSphere(container, { preview = false, initialPieceId = null
   function animate() {
     animId = requestAnimationFrame(animate);
     const f = clock.tick() * 60;
-    lightAngle += 0.003 * f;
-
     if (autoRotate && !reduceMotion) {
       sphere.rotation.y += 0.0015 * f;
       sphere.rotation.x += 0.0003 * f;
       wire.rotation.copy(sphere.rotation);
     }
 
-    keyLight.position.set(Math.cos(lightAngle)*5, 3, Math.sin(lightAngle)*5);
-    rimLight.position.set(Math.cos(lightAngle+Math.PI)*4, Math.sin(lightAngle*.7)*2, Math.sin(lightAngle+Math.PI)*4);
-    fillLight.position.set(Math.sin(lightAngle*.5)*3, -3, Math.cos(lightAngle*.5)*3);
+    // The three lights orbit too, and they were outside the guard above — so
+    // under prefers-reduced-motion the sphere stopped turning and its shading
+    // kept sweeping across it: measured 101,604 pixels changing by 8/255 or
+    // more over four seconds with the labels hidden and nothing else moving.
+    // sceneKit's own note on the flag promises that scenes which spin or orbit
+    // continuously "skip their own autonomous motion", and a light on a circle
+    // is autonomous motion whatever it is attached to. They hold their opening
+    // positions now rather than being placed once and left at zero, so the
+    // still frame is the lighting the scene was composed with.
+    if (!reduceMotion) {
+      lightAngle += 0.003 * f;
+      keyLight.position.set(Math.cos(lightAngle)*5, 3, Math.sin(lightAngle)*5);
+      rimLight.position.set(Math.cos(lightAngle+Math.PI)*4, Math.sin(lightAngle*.7)*2, Math.sin(lightAngle+Math.PI)*4);
+      fillLight.position.set(Math.sin(lightAngle*.5)*3, -3, Math.cos(lightAngle*.5)*3);
+    }
 
     if (!preview && labelData.length) updateLabels();
 

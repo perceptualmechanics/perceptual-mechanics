@@ -301,6 +301,13 @@ class TheaterRenderer {
   onSceneChange(scene) {
     this.clearActors();
     this.slugEl.textContent = '[ ' + scene.slug + ' ]';
+    // ...and say it out loud. .tab-slug is aria-hidden (it is decorated with
+    // brackets), so writing it there alone meant a screen-reader visitor was
+    // never told the scene had changed — measured across the whole reel, 120
+    // advances produced 4 slug changes, 114 srLive writes, and zero of those
+    // writes carried a slug. Every other beat type already announces itself
+    // here; this was the one that only looked like it did.
+    this.srLive.textContent = scene.slug;
     this.interstitialEl.classList.remove('on');
   }
 

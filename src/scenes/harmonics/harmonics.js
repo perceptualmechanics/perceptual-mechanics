@@ -1319,7 +1319,12 @@ export function createharmonics(container, { preview = false, initialPieceId = n
       // createJumpList owns the markup, so relabelling reads its buttons back
       // out of the DOM in the order it appended them (one per item, same
       // order as `jumpItems`) rather than duplicating list construction here.
-      const btns = container.querySelectorAll('.pm-jumplist button');
+      // document, not container. createJumpList mounts the list on document.body
+// (sceneKit.js, with its own comment explaining the move), so querying the
+// scene container returned an empty NodeList and every one of these buttons
+// kept its pre-resolution label. The `if (!btn) return` below then swallowed
+// it silently, seventy-six times.
+const btns = document.querySelectorAll('.pm-jumplist button');
       jumpItems.forEach((item, i) => {
         const btn = btns[i];
         if (!btn) return;

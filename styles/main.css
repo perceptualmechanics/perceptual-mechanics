@@ -1269,6 +1269,7 @@ html, body {
 }
 
 .preview-container {
+  position: relative;   /* for :focus-visible::after above */
   /* Was <div role="button" tabindex="0"> with a manual keydown handler
      for Enter/Space in main.js. A real <button> gets that keyboard
      activation for free and needs none of ARIA's stand-in machinery —
@@ -1438,14 +1439,34 @@ html, body {
    The indicator is an INSET ring rather than an outline — see the rule's own
    comment. */
 .preview-container:focus-visible {
-  /* Drawn INSIDE the circle, not outside it. An outline at a 4px offset is
-     outside the mask and would be masked away — which is what `clip-path`
-     had been silently doing to it since 1.0.38. An inset box-shadow follows
-     the same border-radius, so it is a circle just within the tile's own
-     edge: fully inside the mask, and visible for the first time in a while.
-     The dark second ring is what keeps it legible on a tile that happens to
-     be pale at that radius, Medium's board being the obvious one. */
+  /* Drawn INSIDE the circle, not outside it: an outline at a 4px offset sits
+     outside the tile's mask and gets masked away, which is what `clip-path`
+     had been silently doing to it since 1.0.38.
+
+     But it has to be drawn ON A POSITIONED PSEUDO-ELEMENT, not as an inset
+     box-shadow on the container. A box-shadow — inset or not — paints in the
+     background stage, above the element's own background and BELOW its in-flow
+     descendants, and `.preview-container canvas` is an opaque child filling the
+     whole button. So the ring was painted every time and covered every time.
+     Measured before this fix: with the canvas present, ring-on against ring-off
+     was peak 38 of 255 across 334 pixels, and every one of those pixels sat at
+     radius 106.3-106.9 of a 107px tile — a sub-pixel leak at the rim where the
+     mask's antialiasing let it through. With the canvas hidden, 2,304 pixels.
+     It was drawing the whole ring behind the artwork.
+
+     These are the site's thirteen primary keyboard targets, so this is WCAG
+     2.4.11 and 1.4.11, not decoration. The dark second ring is what keeps it
+     legible on a tile that happens to be pale at that radius — Medium's board
+     being the obvious one. */
   outline: none;
+}
+.preview-container:focus-visible::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  border-radius: 50%;
+  pointer-events: none;
   box-shadow: inset 0 0 0 3px var(--focus-ring-color),
               inset 0 0 0 6px rgba(0, 0, 0, 0.55);
 }
