@@ -1607,6 +1607,40 @@ export function createLibrary(container, { preview = false, initialPieceId = nul
     return hits.length ? hits[0].object : null;
   }
 
+  // ─── Cover prefetch ─────────────────────────────────────────────────────
+  // Scott: "when I open a book, there's a pause between the imageload and the
+  // render." There was, and the reason is that the cover request did not start
+  // until the panel opened — `coverEl.src = ...` in populatePanel was the
+  // first anybody had asked for it, so the panel drew, sat empty, and then
+  // reflowed when the bytes arrived.
+  //
+  // Preloading all 103 covers on entry is the obvious answer and the wrong
+  // one: 103 requests to a third party for images almost none of which anybody
+  // will look at. But you cannot click a spine without pointing at it first,
+  // so hovering IS the prefetch signal, and it is already computed once a
+  // frame by the raycast below. One `new Image()` per newly-hovered spine, at
+  // most one request per cover per visit, and by the time the click lands the
+  // browser cache has it.
+  //
+  // Requesting the same size the panel actually draws matters as much as the
+  // timing. It asked Open Library for `-L`, their large size, and drew it at
+  // 26% of a panel — a few hundred pixels of image for about a hundred
+  // pixels of space. `-M` is the size that fits, retina included.
+  const coverSeen = new Set();
+  function coverUrl(it) {
+    return it?.isbn13 ? `https://covers.openlibrary.org/b/isbn/${it.isbn13}-M.jpg` : null;
+  }
+  function prefetchCover(it) {
+    const url = coverUrl(it);
+    if (!url || coverSeen.has(url)) return;
+    coverSeen.add(url);
+    const img = new Image();
+    // Nothing reads this Image again — it exists so the browser puts the
+    // bytes in its own cache, where the panel's <img> will find them.
+    img.decoding = 'async';
+    img.src = url;
+  }
+
   // Called once a frame from animate() — see the note above.
   function updateHover() {
     if (!pointerMoved || panel?.classList.contains('open')) return;
@@ -1615,7 +1649,10 @@ export function createLibrary(container, { preview = false, initialPieceId = nul
     if (hitMesh !== hovered) {
       if (hovered) setSpineHovered(hovered, false);
       hovered = hitMesh;
-      if (hovered) setSpineHovered(hovered, true);
+      if (hovered) {
+        setSpineHovered(hovered, true);
+        prefetchCover(hovered.userData.item);
+      }
     }
     claim?.setCursor(hovered ? 'pointer' : 'default');
   }
@@ -1712,11 +1749,21 @@ export function createLibrary(container, { preview = false, initialPieceId = nul
     excerptEl.innerHTML = it.excerpt ? `“${renderLinkedField(it.id, 'excerpt', it.excerpt)}”` : '';
     excerptFromEl.innerHTML = it.excerpt_from ? `— ${renderLinkedField(it.id, 'excerpt_from', it.excerpt_from)}` : '';
 
-    if (it.isbn13) {
+    // The cover is very likely already in cache (prefetchCover, above). When
+    // it is not — a keyboard visitor, a deep link straight to #library/<id>,
+    // a cold cache — it fades in over its own reserved box instead of
+    // appearing and shoving the text down. `hidden` still does the hiding on
+    // error, so a cover Open Library does not have leaves no gap.
+    const coverSrc = coverUrl(it);
+    if (coverSrc) {
       coverEl.hidden = false;
+      coverEl.classList.remove('loaded');
       coverEl.onerror = () => { coverEl.hidden = true; };
-      coverEl.src = `https://covers.openlibrary.org/b/isbn/${it.isbn13}-L.jpg`;
+      coverEl.onload = () => { coverEl.classList.add('loaded'); };
+      coverEl.src = coverSrc;
       coverEl.alt = `Cover of ${it.title}`;
+      // A cached image can finish before onload is attached in some engines.
+      if (coverEl.complete && coverEl.naturalWidth) coverEl.classList.add('loaded');
     } else {
       coverEl.hidden = true;
       coverEl.removeAttribute('src');

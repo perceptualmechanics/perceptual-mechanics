@@ -123,9 +123,24 @@
    what there was — a thumbnail doing the job of content. At 26% it is what it
    should have been: a reminder of the object, next to the words. */
 .library-panel-cover {
-  display: block; max-width: 26%; height: auto;
+  display: block; width: 26%; height: auto;
+  /* A book is taller than it is wide and Open Library's covers vary; 1/1.5 is
+     the common trade paperback proportion and it is close enough that the
+     reserved box and the arrived image differ by a few pixels rather than by
+     a paragraph. Reserving it at all is the point: the cover used to arrive
+     into a panel that had already laid itself out without it. */
+  aspect-ratio: 1 / 1.5;
+  object-fit: cover;
   float: left; margin: 0.2rem 1.1rem 0.6rem 0;
   border: 1px solid rgba(230,215,180,0.15);
+  opacity: 0; transition: opacity .35s ease;
+}
+.library-panel-cover.loaded { opacity: 1; }
+@media (prefers-reduced-motion: reduce) {
+  /* The fade is there to soften an arrival, not to be an effect. With motion
+     reduced the image simply appears — still into its reserved box, so there
+     is no reflow either way. */
+  .library-panel-cover { transition: none; }
 }
 .library-panel-cover[hidden] { display: none; }
 .library-panel-video {
