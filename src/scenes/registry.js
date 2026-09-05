@@ -92,7 +92,7 @@ export const SCENES = {
   library:   { tile: 1.10, nudge: -0.03,
                exportName: 'createLibrary',
                label: 'The Library — once removed.',
-               ariaLabel: 'The Library — a real bookshelf, 107 books, films, and divination decks, rebuilt as a shelf you can turn in space. Drag to orbit, scroll to zoom, click a spine to read what it is.' },
+               ariaLabel: 'The Library — a real bookshelf of books, films and divination decks, rebuilt as a shelf you can turn in space. Drag to orbit, scroll to zoom, click a spine to read what it is.' },
   // A small vessel travelling a glowing rail across a night wilderness, with
   // ten stations along it, each holding a fragment of found text.
   //

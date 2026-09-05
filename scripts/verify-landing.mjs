@@ -27,6 +27,14 @@ import { TILE_FLOOR } from '../src/utils/tileLayout.js';
 // Not from main.js: it imports CSS and boots against a DOM, so Node cannot load
 // it. That is precisely why the arithmetic was lifted into its own module — an
 // unimportable requirement is an unverifiable one.
+// Returns { ok, failures, log } — the shape vite.config.js's build plugins
+// take, so this runs on every build rather than only when somebody remembers.
+export function verifyLanding() {
+const log = [];
+const say = (...a) => log.push(a.join(' '));
+const console = { log: say, error: say };
+let failed = 0;
+
 const SCENE_COUNT = Object.keys(SCENES).length;
 const SCALES = Object.values(SCENES).map(s => s.tile ?? 1);
 const NUDGES = Object.values(SCENES).map(s => s.nudge ?? 0);
@@ -129,7 +137,7 @@ console.log(`landing: ${checked} viewports, ${fits} with a legible fit, ${none} 
 if (failures.length) {
   console.error(`\nlanding requirement VIOLATED in ${failures.length} of ${fits} fitting viewports:`);
   for (const f of failures) console.error(`  ${f}`);
-  process.exit(1);
+  failed++;
 }
 console.log(`ok: every fit occupies no more height than it was given, for all ${SCENE_COUNT} scenes`);
 
@@ -161,7 +169,18 @@ console.log(`ok: every fit occupies no more height than it was given, for all ${
   if (problems.length) {
     console.error(`\nlanding tiles do not match the registry:`);
     for (const p of problems) console.error(`  ${p}`);
-    process.exit(1);
+    failed++;
   }
   console.log(`ok: all ${ids.length} tiles in index.html resolve to a registry scene, and every scene has one`);
 }
+
+  return { ok: failed === 0, failures: failed, log };
+}
+
+// Also runnable on its own, for working on the layout without a full build.
+if (import.meta.url === `file://${process.argv[1]}`) {
+  const { ok, log } = verifyLanding();
+  log.forEach(line => console.log(line));
+  if (!ok) process.exit(1);
+}
+

@@ -1560,7 +1560,11 @@ html, body {
      leaving a CROSSFADE_MS pause where the fade used to be — see
      expandScene()/returnToGallery(). */
   #experience-overlay { transition: none; }
-  .preview-container:hover { transform: none; }
+  /* The hover scale, not the whole transform — `transform` also carries the
+     row stagger, and `transform: none` here would drop the tile by its nudge
+     the moment you point at it. .nav-icon below has no second term, so it can
+     zero the property directly. */
+  .preview-container:hover { --tile-hover: 1; }
   .nav-icon { transition: none; }
   .nav-icon:hover { transform: none; }
   #experience-loading { transition: none; }

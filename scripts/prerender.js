@@ -543,12 +543,15 @@ ${BOUNCES.map((b, i) => `<h2 id="p${b.id}">Bounce ${i + 1}</h2>\n${pieceLink('be
   return {
     slugPath: 'beamline',
     title: 'Beamline',
-    description: 'A staged sequence of mirrors, bouncing light and found text together — the piece staged in Beamline.',
+    // This page is indexed, so its description is the account of the scene a
+    // search engine gets. Keep it matching what the scene actually is: a rail,
+    // a vessel, ten stations.
+    description: 'A vessel travelling a glowing rail across a night wilderness, found text surfacing at ten stations along it — the piece staged in Beamline.',
     sceneKey: 'beamline', sceneName: 'Beamline',
-    lede: `<p>In <strong>Beamline</strong> a beam of light travels a staged path between curved mirrors, real reflection geometry bouncing it from one to the next; this text surfaces at each bounce point in turn.</p>
+    lede: `<p>In <strong>Beamline</strong> a small vessel travels a glowing rail across a night wilderness, and this text surfaces at each of the ten stations strung along it.</p>
 <p>Here it is as one continuous piece, epigraph first.</p>`,
     bodyHtml: body,
-    jsonLd: creativeWork('Beamline', 'Found text staged across a mirror bounce sequence.', 'beamline'),
+    jsonLd: creativeWork('Beamline', 'Found text staged across ten stations on a rail.', 'beamline'),
   };
 }
 

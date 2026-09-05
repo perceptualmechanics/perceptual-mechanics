@@ -6,6 +6,7 @@ import { prerender, PAGE_STYLE_SHA256 } from './scripts/prerender.js';
 import { verifyLinks } from './scripts/verify-links.mjs';
 import { verifyResonances } from './scripts/verify-resonances.mjs';
 import { verifyScrollMarks } from './scripts/verify-scroll-marks.mjs';
+import { verifyLanding } from './scripts/verify-landing.mjs';
 
 // Vite 8 warns that `configLoader: 'native'` is planned to become the default.
 // Under that loader this config is handed to Node as real ESM instead of being
@@ -33,6 +34,26 @@ function verifyLinksPlugin() {
         this.error(`verify-links: ${failures} check(s) failed — see above. Fix src/links.js or the scene .text.js file(s) it points at before building.`);
       } else {
         console.log(`  ✓ verify-links: all checks passed`);
+      }
+    },
+  };
+}
+
+// ─── Landing-page requirement ───────────────────────────────────────────────
+// Same shape as verifyLinksPlugin() above, for the requirement SITE.md states
+// about the landing page: every scene's tile visible without scrolling, at a
+// legible size.
+function verifyLandingPlugin() {
+  return {
+    name: 'pm-verify-landing',
+    apply: 'build',
+    buildStart() {
+      const { ok, failures, log } = verifyLanding();
+      log.forEach(line => console.log(line));
+      if (!ok) {
+        this.error(`verify-landing: ${failures} check(s) failed — see above. The landing page would not fit every scene above the fold at one or more viewports.`);
+      } else {
+        console.log(`  ✓ verify-landing: the landing requirement holds across the viewport matrix`);
       }
     },
   };
@@ -176,7 +197,7 @@ function verifyStyleHash(outDir, root) {
 }
 
 export default defineConfig({
-  plugins: [verifyLinksPlugin(), verifyResonancesPlugin(), verifyScrollMarksPlugin(), prerenderTextPages()],
+  plugins: [verifyLinksPlugin(), verifyResonancesPlugin(), verifyScrollMarksPlugin(), verifyLandingPlugin(), prerenderTextPages()],
   build: {
     // ─── CSS target: pinned, because Vite 8 quietly moved it ─────────────
     // Vite 8 (Rolldown) defaults to a newer browser baseline than Vite 6

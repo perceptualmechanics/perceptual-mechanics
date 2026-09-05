@@ -348,7 +348,10 @@ function setActiveIcon(sceneName) {
 // the middle of the visitor's actual path. Document order is already the
 // right story anyway: site chrome, then the scene, then the scene's own
 // body-level controls.
-const FOCUSABLE = 'button, a[href], [tabindex]';
+// Form controls are in the list because Apollo's rail is twelve of them —
+// ten range faders and two radios — mounted inside the overlay with no
+// tabindex of their own.
+const FOCUSABLE = 'button, a[href], input, select, textarea, [tabindex]';
 function collect(root) {
   return Array.from(root.querySelectorAll(FOCUSABLE)).filter(el =>
     // tabIndex -1 is opt-out (expContainer itself, colophon's h2).
@@ -1129,6 +1132,9 @@ const PM_GLIMPSE_WORDS = {
   beamline: 'emergence',
   harmonics: 'vibe',
   outside: 'bloom',
+  apollo: 'absorption',
+  psyshell: 'residue',
+  medium: 'suggestion',
   title: 'secrets',
 };
 let pmGlimpseTimer = null;

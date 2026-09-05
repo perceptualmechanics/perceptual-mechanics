@@ -1,6 +1,6 @@
 {
   "name": "perceptual-mechanics",
-  "version": "4.11.21",
+  "version": "4.11.4",
   "type": "module",
   "engines": {
     "node": ">=22.0.0"
@@ -15,7 +15,8 @@
     "preview": "vite preview",
     "verify-links": "node scripts/verify-links.mjs",
     "verify-resonances": "node scripts/verify-resonances.mjs",
-    "verify-scroll-marks": "node scripts/verify-scroll-marks.mjs"
+    "verify-scroll-marks": "node scripts/verify-scroll-marks.mjs",
+    "verify-landing": "node scripts/verify-landing.mjs"
   },
   "dependencies": {
     "bardjs": "*",
