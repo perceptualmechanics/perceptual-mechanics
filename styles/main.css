@@ -650,18 +650,39 @@ html, body {
 #site-title:hover { color: rgba(255,255,255,1); }
 #site-title:focus-visible { outline: var(--focus-ring); outline-offset: 4px; }
 
-/* Light translucent smoke curling up on hover */
+/* Light translucent smoke curling up on hover.
+   Scott, 5.0.2: "I'm not seeing any smoke at all." It was rendering, and it
+   was invisible, which are different things — and the difference is the whole
+   finding. Frozen and stepped by hand through its own cycle, the old puff
+   peaked at 21 of 255 (8% brightness) on a blob about ten pixels across, for
+   a few hundred milliseconds. Below the threshold for noticing something that
+   small and that brief, especially with your eye on the text you are hovering.
+
+   Nothing here was "wrong" in isolation. blur(2px) is a sensible smoke blur
+   and 10px is a sensible puff. Together they are not: the gradient already
+   faded to transparent at 70% of a 5px radius, so the bright core was about
+   three pixels wide, and a 2px blur across a 3px core flattens it. Measured
+   by removing only the blur, that cost 2.7x of the peak — a value correct on
+   its own with no effect at the size it was applied to.
+
+   The repair is size before brightness, because size is what the blur is
+   eating. 26px with a denser gradient and blur(3px) measures 77 of 255 (30%)
+   across a 23px blob — a visible wisp that is still a wisp. Scaled 0.7 at the
+   moment it is brightest, so what you actually see is about 18px. */
 #site-title::before,
 #site-title::after {
   content: '';
   position: absolute;
   bottom: 90%; left: 50%;
-  width: 10px; height: 10px;
+  width: 26px; height: 26px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0) 70%);
+  background: radial-gradient(circle,
+    rgba(255,255,255,0.9) 0%,
+    rgba(255,255,255,0.45) 35%,
+    rgba(255,255,255,0) 72%);
   opacity: 0;
   pointer-events: none;
-  filter: blur(2px);
+  filter: blur(3px);
 }
 #site-title::before { transform: translate(-14px, 0) scale(0.6); }
 #site-title::after { transform: translate(8px, 0) scale(0.4); }

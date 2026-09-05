@@ -593,6 +593,72 @@ described are unchanged.)
   worth trimming, orrery.js's texture generators and first-person rig are the
   two most self-contained chunks to split out first.
 
+## 5.0.2 (2026-09-05)
+
+**Title centering, and smoke nobody could see.** Both from Scott looking at the
+site rather than at a check.
+
+### Centering: nothing to fix, and a standard that credits the wrong mechanism
+
+Every bottom-anchored title measured by its GLYPH INK — screenshot with the
+title, screenshot with the glyphs set transparent, diff the two — rather than
+by its box, because the box is exactly what lies here. Offsets from viewport
+centre at 1440x900: site-title +0.0, orbiter +0.0, outside +0.0, orrery -0.5,
+medium -0.5, beamline -0.5, psyshell -0.5, harmonics -1.0, apollo -1.5. At
+390x844: +0.0, -0.5, -1.0. The sub-pixel residue is glyph side-bearing, not
+layout. Nothing needed touching.
+
+The footer pill is exact and its mechanism is now demonstrated rather than
+asserted: tracking 3.36px, glyphs sitting 1.68px inside their own box (half the
+tracking, the invisible trailing letter-space), landing at 720.0.
+
+**But STANDARDS.md credits the wrong mechanism.** It says flexbox "centers by
+margin box without ever needing to know the element's own width, which
+sidesteps the whole problem" — the problem being the trailing gap. It does not.
+Flexbox centres the margin box and that box still contains the gap, so flexbox
+alone lands exactly where `transform` did. Tested rather than argued: flexbox
+left untouched, Apollo's negative `margin-right` removed, and the title moved
+from -1.5px to -7.0px. Half the 10.24px tracking. The margin does all of that
+work. Dangerous in a specific way — someone applying the standard to a new
+title would use flexbox, skip the margin, and be 5px out with a document
+telling them they are fine.
+
+### The smoke was rendering and invisible, which are different things
+
+`#site-title::before/::after` are a hover flourish: two puffs curling up off
+the wordmark. Scott: *"I'm not seeing any smoke at all."*
+
+The first answer given was that it renders, with a measurement behind it. The
+measurement was wrong twice — a preview tile animating in the corner of the
+crop, counted as smoke, at 125 of 255 and then at 36. Fixed by freezing the
+world (rAF stubbed, every animation paused, hover colour pinned) and stepping
+the smoke by hand through its own cycle, which leaves the puff as the only
+thing that can differ between two frames.
+
+**True peak: 21 of 255, 8% brightness, on a blob ten pixels across, for a few
+hundred milliseconds.** Present in the DOM, present in the compositor, and
+under the threshold for a person to notice — the same distinction as 5.0.1's
+0.74/255, arrived at from the other side. "It renders" is not the claim worth
+making; "it can be seen" is.
+
+The cause is arithmetic and neither value is wrong alone. `blur(2px)` is a
+sensible smoke blur; `10px` is a sensible puff. Together they are not: the
+gradient faded to transparent at 70% of a 5px radius, leaving a bright core
+about three pixels wide, and a 2px blur across a 3px core flattens it.
+Measured by removing only the blur, that cost 2.7x of the peak.
+
+| variant | peak | px >= 8/255 | blob |
+|---|---|---|---|
+| as shipped | 19/255 (7.5%) | 24 | 41x27 |
+| blur removed | 51/255 (20%) | 32 | 7x7 |
+| 24px, blur unchanged | 41/255 (16%) | 206 | 19x19 |
+| shipped in 5.0.2 | 77/255 (30%) | 308 | 23x22 |
+
+Size before brightness, because size is what the blur was eating: 26px, a
+denser three-stop gradient, `blur(3px)`. It is scaled 0.7 at the moment it is
+brightest, so what is actually seen is about 18px — a visible wisp that is
+still a wisp. Reduced motion still removes it outright.
+
 ## 5.0.1 (2026-09-05)
 
 **A gate that models the thing instead of calling it, and a candle that was a
