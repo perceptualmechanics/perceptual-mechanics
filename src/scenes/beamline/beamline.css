@@ -43,6 +43,21 @@
   bottom: var(--title-block-bottom-mobile); left: 5vw; right: 5vw;
   text-align: center; color: rgba(215,250,230,0.88);
   display: flex; flex-direction: column; align-items: center; gap: 0.3rem;
+  /* A scrim, because this title does not sit on black. Every contrast figure
+     in this file was computed against the clear colour, and the rail passes
+     straight through the title block at the opening framing — measured there,
+     .beamline-title-main reads 1.02:1 and .beamline-title-sub 1.00:1 where the
+     tube crosses them. verify-css-invariants passes these because it checks
+     the BEST case ("against pure black, the most favourable ground there is")
+     and says so; the comments below read that as a guarantee it never made.
+     The scrim is PER LINE, not one shape behind the block. A single ellipse
+     was tried first and measured: it lifted the worst glyph-core pixel from
+     1.02:1 only to 2.21:1 at 1024 and 1.53:1 at 390, because a radial fade
+     centred on a full-width flex row is weakest exactly where the outermost
+     letters are. These three lines are flex items in a column with
+     align-items:center, so each already shrink-wraps its own text — giving
+     each one its own background makes the scrim track the glyphs instead of
+     approximating them. */
 
 	@media (min-width: 601px) {
 		/* The title/hint collision this used to guard against (title's 90vw
@@ -74,6 +89,9 @@
   text-transform: uppercase;
   /* ACCENT (0x50C878) — was rgba(0,102,255,0.45), the deleted accent. */
   text-shadow: 0 0 20px rgba(80,200,120,0.45), 0 1px 0 rgba(0,0,0,0.6);
+  background: rgba(3,9,6,0.82);
+  padding: 0.15em 0.6em;
+  border-radius: 0.4rem;
 }
 .beamline-title-main {
   display: block; font-size: clamp(0.85rem, 2.2vw, 1.25rem);
@@ -83,6 +101,9 @@
   font-style: italic;
   /* ACCENT (0x50C878) — was rgba(0,102,255,0.4), the deleted accent. */
   text-shadow: 0 0 16px rgba(80,200,120,0.4), 0 1px 0 rgba(0,0,0,0.6);
+  background: rgba(3,9,6,0.82);
+  padding: 0.18em 0.6em;
+  border-radius: 0.4rem;
 }
 .beamline-title-name, .beamline-title-main, .beamline-title-sub {
   /* Unconditional, not breakpoint-specific: nothing else in this file ever
@@ -97,21 +118,25 @@
   --tracking: 0.05em;
   letter-spacing: var(--tracking);
   margin-right: calc(-1 * var(--tracking));
-  /* 0.68 alpha (~5.5:1 against black) meets WCAG's 4.5:1 minimum for
-     text this small while keeping the tint. Re-picked for the emerald hue
-     at the same lightness as the rgba(150,190,255,0.68) it replaces, which
-     measured ~5.3:1 — so this is not a contrast regression traded for a
-     colour, it is very slightly better. */
+  /* The ratio this alpha reaches depends on the scrim above, not on the
+     clear colour: the arithmetic against black is an upper bound and the
+     rail is what it actually sits on. Kept at 0.68 for the tint; the scrim
+     is what makes it legible. */
   color: rgba(150,205,175,0.68);
+  background: rgba(3,9,6,0.82);
+  padding: 0.2em 0.6em;
+  border-radius: 0.35rem;
 }
 .beamline-hint {
   top: 4.5rem; right: 1.2rem; font-size: 0.7rem; letter-spacing: 0.18em;
   line-height: 1.8; text-align: right;
-  /* 0.72 alpha (~5.0:1 against black) meets WCAG's 4.5:1 minimum for
-     text this small; kept as its own literal rather than the shared
-     --hint-text-color constant since this scene's hint is tinted, not
-     white. Re-picked for the emerald hue at the same lightness as the
-     rgba(120,170,255,0.72) it replaces, which measured ~4.9:1. */
+  padding: 0.4rem 0.7rem;
+  border-radius: 0.5rem;
+  background: rgba(4,10,7,0.6);
+  /* Its own literal rather than the shared --hint-text-color, since this
+     scene's hint is tinted rather than white. Same caveat as the subtitle
+     above: an alpha's ratio against black is an upper bound, and this one
+     sits over terrain — hence the scrim below. */
   color: rgba(120,185,150,0.72);
   /* The hint reads as HUD chrome, not literary text, so it gets the
      piece's sci-fi tech font instead of the epigraph's serif.

@@ -301,10 +301,22 @@ function setTitleFont(cx, t, size) {
 function titleCase(text, t) {
   return t.upper ? text.toUpperCase() : text;
 }
+// WCAG relative luminance, from the sRGB bytes.
+//
+// It used to read THREE.Color's channels. THREE.ColorManagement is enabled, so
+// those are LINEAR-sRGB — a different quantity, systematically lower in the
+// midtones — and they were being compared against a perceptual 0.55 threshold.
+// Three palette values came out on the wrong side of it, and every spine using
+// them got the wrong ink: #b59b00 (8 books) at 2.18:1 where the other choice
+// gives 5.22, #c9a227 (7 CDs) at 1.94, #a8b5bd (2 CDs) at 1.70. Seventeen
+// spines, under a comment explaining that the whole point was that one fixed
+// cream read poorly on the lightest ones.
 function relLuminance(hex) {
-  const col = new THREE.Color(hex);
-  return 0.2126 * col.r + 0.7152 * col.g + 0.0722 * col.b;
+  const n = typeof hex === 'number' ? hex : parseInt(String(hex).replace('#', ''), 16);
+  const lin = (v) => { const s = v / 255; return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4; };
+  return 0.2126 * lin((n >> 16) & 255) + 0.7152 * lin((n >> 8) & 255) + 0.0722 * lin(n & 255);
 }
+const contrastRatio = (a, b) => (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
 
 // Real saturation/lightness boost, applied at the pixel level (baked into
 // the canvas texture itself, not a material-color multiply, which is what
@@ -463,11 +475,21 @@ function makeSpineTexture(baseColor, title, creator, isBox) {
     });
   }
 
-  // Contrast-aware ink: the palette runs from near-black to pale tan, so
-  // one fixed cream text color read poorly against the lightest spines.
-  const lum = relLuminance(baseColor);
-  const inkTitle = lum > 0.55 ? 'rgba(32,26,20,0.88)' : 'rgba(240,236,224,0.92)';
-  const inkCreator = lum > 0.55 ? 'rgba(32,26,20,0.6)' : 'rgba(240,236,224,0.62)';
+  // Contrast-aware ink: the palette runs from near-black to pale tan, so one
+  // fixed cream read poorly against the lightest spines.
+  //
+  // Chosen by COMPARING the two candidates rather than by testing the spine
+  // against a threshold. A threshold has to be picked, and a picked number is
+  // the thing that went wrong here — it was 0.55 against a luminance in the
+  // wrong colour space. Asking which of two inks actually contrasts more needs
+  // no constant and cannot drift: whatever the palette becomes, each spine
+  // gets whichever of these two reads better on it.
+  const DARK_INK = 0x201a14, CREAM_INK = 0xf0ece0;
+  const spineLum = relLuminance(baseColor);
+  const useDark = contrastRatio(spineLum, relLuminance(DARK_INK))
+                > contrastRatio(spineLum, relLuminance(CREAM_INK));
+  const inkTitle = useDark ? 'rgba(32,26,20,0.88)' : 'rgba(240,236,224,0.92)';
+  const inkCreator = useDark ? 'rgba(32,26,20,0.6)' : 'rgba(240,236,224,0.62)';
 
   const t = isBox ? BOX_TREATMENT : pickTreatment(BOOK_TREATMENTS, title);
 

@@ -280,6 +280,14 @@
      reused there. One colour, two shapes. */
   --focus-ring-color: rgba(255, 255, 255, 0.75);
   --focus-ring: 2px solid var(--focus-ring-color);
+  /* For controls that sit over arbitrary scene or tile content rather than
+     over their own dark chrome. A white ring cannot be made legible on a pale
+     ground by raising its alpha — over white it is 1.00:1 at any value, and
+     #site-title:focus-visible measured 1.02:1 over a bright tile because
+     `outline-offset: 4px` puts it outside the pill's own scrim. So the ring
+     carries a dark ring of its own, which is the trick .preview-container's
+     focus ring already used and the only one that works on both grounds. */
+  --focus-ring-outer: 0 0 0 2px var(--focus-ring-color), 0 0 0 5px rgba(0, 0, 0, 0.72);
 
   /* ─── Scene crossfade ───────────────────────────────────────────────────
      #experience-overlay's opacity transition, and the two setTimeout()s in
@@ -489,7 +497,15 @@ html, body {
   scrollbar-width: none;
   -ms-overflow-style: none;
   z-index: 500;
-  background: rgba(0,0,0,0.55);
+  /* 0.78, not 0.55. Over an open scene this bar has nothing behind it —
+     #experience-container starts at 56px, below the bar, on all thirteen — so
+     the near-black ground the icon contrast was computed against is real
+     there. On the LANDING page it is not: the tile grid scrolls under the bar,
+     and at 0.55 the blurred composite measured rgb(97,94,88) with Library's
+     shelf and Apollo's spectrum behind it, putting .nav-icon at 2.93:1 against
+     a 3:1 floor for a 1.3px stroke. The blur spreads bright tiles rather than
+     hiding them; only the alpha holds them down. */
+  background: rgba(0,0,0,0.78);
   border-bottom: 1px solid rgba(255,255,255,0.08);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
@@ -648,7 +664,7 @@ html, body {
   border-radius: 999px;
 }
 #site-title:hover { color: rgba(255,255,255,1); }
-#site-title:focus-visible { outline: var(--focus-ring); outline-offset: 4px; }
+#site-title:focus-visible { outline: none; box-shadow: var(--focus-ring-outer); }
 
 /* Smoke off the wordmark, on hover.
    Two rewrites, and both notes are worth keeping because they are different
@@ -813,7 +829,7 @@ html, body {
 	}
 }
 #landing-textlink:hover { color: rgba(255,255,255,0.9); }
-#landing-textlink:focus-visible { outline: var(--focus-ring); outline-offset: 4px; }
+#landing-textlink:focus-visible { outline: none; box-shadow: var(--focus-ring-outer); }
 
 /* ─── No-JavaScript fallback ────────────────────────────────────────────────── */
 /* Only ever rendered inside <noscript>, so it is never in the DOM when any
@@ -1207,13 +1223,25 @@ html, body {
     rgba(0,0,0,0.55) 80%,
     rgba(0,0,0,0) 100%);
 
-	/* 601 to match #landing-textlink, which moves to the bottom-left corner at
-	   exactly this width and no longer needs a scrim behind it, and
-	   #scene-previews, which stops needing the extra bottom padding there. The
-	   three used to disagree: the fade switched off at 481 while the link
-	   stayed centred over the grid until 601. */
+	/* Off only once the grid has STOPPED SCROLLING, not at a width.
+	   This was `@media (min-width: 601px) { display: none }`, on the reasoning
+	   that the link moves to the bottom-left corner there and "no longer needs
+	   a scrim behind it". It does: `.rows-forced` — the class main.js sets when
+	   every tile fits without scrolling — does not engage until about 1000px,
+	   so between 601 and 999 the fade was gone and tiles still scrolled under
+	   the link. Measured at 700x800 over eight scroll positions, the link
+	   composites to 1.09:1 against Apollo's spectrum tile. That is the exact
+	   failure the 4.9.1 note above records finding and fixing ("over Library's
+	   bookshelf it was simply illegible"); the fix went to the phone tier only.
+
+	   :has() rather than another breakpoint, because the condition is not a
+	   width — it is whether anything can scroll under this band, and only the
+	   class knows that. Below 601 there is no .rows-forced at all, so the
+	   selector cannot match and the fade stays, as before. */
 	@media (min-width: 601px) {
-		display: none;
+		#landing:has(#scene-previews.rows-forced) & {
+			display: none;
+		}
 	}
 }
 
