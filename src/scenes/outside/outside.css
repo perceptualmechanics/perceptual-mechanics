@@ -45,9 +45,6 @@
 	@media (min-width: 601px) {
 		white-space: nowrap;
 	}
-	@media (prefers-reduced-motion: reduce) {
-		transition: none;
-	}
 }
 .outside-hint {
   position: fixed; top: 4.5rem; right: 1.2rem;
@@ -56,10 +53,6 @@
   text-transform: uppercase; pointer-events: none;
   text-align: right; z-index: 310; line-height: 1.8;
   font-family: 'Arapey', serif;
-
-	@media (prefers-reduced-motion: reduce) {
-		transition: none;
-	}
 }
 
 /* ─── Sound toggle ─────────────────────────────────────────────────────────

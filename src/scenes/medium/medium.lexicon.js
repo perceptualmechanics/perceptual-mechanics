@@ -173,8 +173,12 @@ export function advance(ctx, ch) {
   return p;
 }
 
-// True if the live context is itself a whole word — used by the scene only to
-// decide when to let a word settle visibly on the tape, never to steer.
+// True if the live context is itself a whole word. Used in two places, and
+// only one of them is what this comment used to claim: readerHasWord below,
+// which decides when a word may settle visibly on the tape, and the
+// punctuation weight in weightOf above, which asks whether what has been
+// spelled is finished. The second one IS steering — that is the whole point of
+// PUNCT_WARM/PUNCT_COLD — so "never to steer" was false.
 export function isWord(context) {
   ensure();
   if (!context) return false;
@@ -332,10 +336,9 @@ export function takeMark(r, mark) {
 }
 
 // True while the live context is itself a whole word — the scene uses it for
-// nothing and the build's transcript page uses it to mark where words fell.
+// nothing, and scripts/medium-spell.mjs uses it to report where words fell.
 export function readerHasWord(r) { return isWord(r.ctx.live) && r.ctx.live.length >= 3; }
-// True when a full stop would be plausible: the live context is a whole word.
-export function readerAtWordEnd(r) { return isWord(r.ctx.live) && r.ctx.live.length >= 2; }
+
 export function readerWord(r) { return r.ctx.live; }
 
 // Exposed for the benches, so `scripts/medium-spell.mjs` can report the size of

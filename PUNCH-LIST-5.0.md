@@ -99,28 +99,37 @@ Status: `[ ]` open · `[x]` fixed in 5.0 · `[-]` deliberately not doing
 
 ## Tier 2 — dead, and documented as live
 
-- [ ] `harmonics.js` — `FOG_DENSITY`, `DRIFT_R`, `pendingVel`, the whole pending path.
-- [ ] `beamline.js` — `CYCLE_SECONDS` (zero references), the "ground glimpse" section header for a feature retired 2026-08-18, two unreachable default params, two exports nothing imports.
-- [ ] `sceneKit.js:521` — `HINT_TEXT_COLOR` exported, **zero importers**; two files call it the single source and one of them ("0.6 gets pure white to ~4.6:1", `main.css:177`) has the wrong number — it is 7.37:1.
-- [ ] `sceneKit.js:778` — `trackTimers.cancel` calls both `clearTimeout` and `cancelAnimationFrame` on one id; the two counters share a namespace.
-- [ ] `main.js:177` — `PUBLIC_SLUG` / `SLUG_TO_INTERNAL` are identity maps behind a 17-line comment describing a translation that cannot happen.
-- [ ] `main.css:999` — `.preview-row-break` declared twice; the first is fully overridden, and three claims around it (a 1200px breakpoint, a fixed 5th-tile break, "the two axes") describe machinery that does not exist.
-- [ ] `main.css:935` — `--tile-cols` written every layout pass, read by nobody.
-- [ ] `psyshell.js:401,244` — `trackTimers()` allocated and never used; `MAX_DIGITS = 16` can never bind.
-- [ ] `medium.physics.js:291,684` — `WANDER_CENTRE` documents a term not in the code; `homeX`/`homeY` written and never read.
-- [ ] `medium.lexicon.js:338,176,307` — `readerAtWordEnd` unimported; `isWord`'s comment wrong twice; an unreachable `??` fallback.
-- [ ] `orbiter.js:1162` — the jump-list guard is unreachable (`sceneKit.js:506` stops the click at the `<ul>`), and its comment claims it is the fix.
-- [ ] `orbiter.js:1300` — a `Math.max(0.5, …)` floor on a range whose minimum is 0.70.
-- [ ] `orbiter.js:695,304,503` — returned fields nothing reads.
-- [ ] `orrery.js:1483,1130,1093` — `direction: 1` is a constant; `dishGroup`/`jointBasePos` unread; a distance recomputed two lines after it was stored.
-- [ ] `apollo.js:834` — the closing octave tick can never be drawn (`HZ_MIN × 2 > HZ_MAX`).
-- [ ] `apollo.js:7`, `apollo.css:286` — two dead imports; a `grid-column` on a flex item.
-- [ ] `sphere.js:581`, `sphere.css:27` — `viewW`/`viewH` now unread; a `transform-origin` left from the removed tilt.
-- [ ] `theater.js:351`, `theater.css:529` — `currentLine.el` unread; `.tab-preview.paused` pauses an animation the element does not have.
-- [ ] `butterfly.css:42,54`, `outside.css:48,60`, `psyshell.css:194` — reduced-motion blocks cancelling transitions that are never declared.
-- [ ] `scroll.js:150`, `scroll.text.js:437`, `scroll.marks.js:62` — a dead em-dash branch whose justification is false; `SPACE_MARK` is U+0020, not the Ogham space mark it names; a comment duplicated from another file describing symbols that are not there.
+- [x] `harmonics.js` — `FOG_DENSITY`, `DRIFT_R`, `pendingVel`, the whole pending path.
+- [x] `beamline.js` — `CYCLE_SECONDS` (zero references), the "ground glimpse" section header for a feature retired 2026-08-18, two unreachable default params, two exports nothing imports.
+- [x] `sceneKit.js:521` — `HINT_TEXT_COLOR` exported, **zero importers**; two files call it the single source and one of them ("0.6 gets pure white to ~4.6:1", `main.css:177`) has the wrong number — it is 7.37:1.
+- [x] `sceneKit.js:778` — `trackTimers.cancel` calls both `clearTimeout` and `cancelAnimationFrame` on one id; the two counters share a namespace.
+- [x] `main.js:177` — `PUBLIC_SLUG` / `SLUG_TO_INTERNAL` are identity maps behind a 17-line comment describing a translation that cannot happen.
+- [x] `main.css:999` — `.preview-row-break` declared twice; the first is fully overridden, and three claims around it (a 1200px breakpoint, a fixed 5th-tile break, "the two axes") describe machinery that does not exist.
+- [x] `main.css:935` — `--tile-cols` written every layout pass, read by nobody.
+- [x] `psyshell.js:401,244` — `trackTimers()` allocated and never used; `MAX_DIGITS = 16` can never bind.
+- [x] `medium.physics.js:291,684` — `WANDER_CENTRE` documents a term not in the code; `homeX`/`homeY` written and never read.
+- [x] `medium.lexicon.js:338,176,307` — `readerAtWordEnd` unimported; `isWord`'s comment wrong twice; an unreachable `??` fallback.
+- [x] `orbiter.js:1162` — the jump-list guard is unreachable (`sceneKit.js:506` stops the click at the `<ul>`), and its comment claims it is the fix.
+- [x] `orbiter.js:1300` — a `Math.max(0.5, …)` floor on a range whose minimum is 0.70.
+- [x] `orbiter.js:695,304,503` — returned fields nothing reads.
+- [x] `orrery.js:1483,1130,1093` — `direction: 1` is a constant; `dishGroup`/`jointBasePos` unread; a distance recomputed two lines after it was stored.
+- [x] `apollo.js:834` — the closing octave tick can never be drawn (`HZ_MIN × 2 > HZ_MAX`).
+- [x] `apollo.js:7`, `apollo.css:286` — two dead imports; a `grid-column` on a flex item.
+- [x] `sphere.js:581`, `sphere.css:27` — `viewW`/`viewH` now unread; a `transform-origin` left from the removed tilt.
+- [x] `theater.js:351`, `theater.css:529` — `currentLine.el` unread; `.tab-preview.paused` pauses an animation the element does not have.
+- [x] `butterfly.css:42,54`, `outside.css:48,60`, `psyshell.css:194` — reduced-motion blocks cancelling transitions that are never declared.
+- [x] `scroll.js:150`, `scroll.text.js:437`, `scroll.marks.js:62` — a dead em-dash branch whose justification is false; `SPACE_MARK` is U+0020, not the Ogham space mark it names; a comment duplicated from another file describing symbols that are not there.
 
 ---
+
+
+**Three claims in this tier did not survive checking, and they are recorded here rather than quietly dropped — the list was written by reading, the same way the code was.**
+
+- `apollo.js:7` "two dead imports": all six of `ELEMENTS`, `ELEMENT_BY_KEY`, `CHORD_CAP`, `SOLAR_MIXTURE`, `visibleLines` and `fraunhoferFor` are used in apollo.js. No dead imports.
+- `apollo.css:286` "a `grid-column` on a flex item": `.apollo-rail` is `display: grid`. The declaration is correct.
+- `harmonics.js` "the whole pending path" as dead: it is data-conditional, not dead. `getPendingResonances()` returns nothing today, so `pendingList` is empty and everything downstream correctly does nothing. The comment asserting "the 42 rows" was the defect; the code was not.
+
+Two claims were also **undercounts**, in the same direction as everywhere else: the reduced-motion no-op blocks were four (butterfly x2, outside x2), and `.orrery-crosshair.active`'s block — which the sweep also flags — is NOT one, because its `transform: none` is the real content and deliberate.
 
 ## Tier 3 — counts and claims that the data outgrew
 

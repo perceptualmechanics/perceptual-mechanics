@@ -298,9 +298,10 @@ export const WANDER_DAMP = 2.0;      // how fast an impulse dies, per second
 // out at twice their English rate while A and O came out at two thirds. Sweeping
 // it against the board's own letter distribution measured 0.796 / 0.762 / 0.815
 // / 0.830 Spearman against published English frequencies at 0.8 / 0.4 / 0.15 /
-// 0, so the honest value is none at all. What keeps the hand on the board is
+// 0, so the honest value is none at all — and "none at all" is literally true:
+// there is no centring term in stepWander, rather than a WANDER_CENTRE constant
+// sitting at 0 and exported to nobody. What keeps the hand on the board is
 // WANDER_BOUNDS below, which is a wall rather than a preference.
-export const WANDER_CENTRE = 0;
 // ─── Where the hand is allowed to be ────────────────────────────────────────
 // A box, not a disc, and the change was forced by looking at it: a disc of
 // radius 0.46 about BOARD_HOME reaches y = −0.08, so the other hand wandered
@@ -681,7 +682,12 @@ function mulberry32(a) {
   };
 }
 
-export function createWander(seed = 0x5EA9CE, homeX = 0.5, homeY = 0.44) {
+// Takes a seed and nothing else. It used to take a home position too, stored as
+// homeX/homeY and read by nothing: the hand's starting point comes from
+// WANDER_START below, and where it goes after that is the cup plus the lean.
+// Every caller was passing BOARD_HOME to a pair of fields the physics never
+// looked at.
+export function createWander(seed = 0x5EA9CE) {
   const rnd = mulberry32(seed);
   const S = WANDER_START;
   return {
@@ -691,7 +697,6 @@ export function createWander(seed = 0x5EA9CE, homeX = 0.5, homeY = 0.44) {
     // The lean: an offset from the cup's centre, and the only thing that
     // actually wanders.
     ox: 0, oy: 0, vx: 0, vy: 0,
-    homeX, homeY,
     tempo: 0,
     moving: false, left: PAUSE_MIN + rnd() * PAUSE_VAR, rnd,
   };

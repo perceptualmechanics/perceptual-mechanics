@@ -348,7 +348,7 @@ class TheaterRenderer {
       this.timers.after(900, () => el.classList.remove('talking'));
     }
     this.bubbleWidth = bubbleWidthFor();
-    this.currentLine = { key, text, voice, el };
+    this.currentLine = { key, text, voice }; // no `el`: relayout() re-queries the bubble, and nothing else read it
     const bubble = document.createElement('div');
     bubble.className = 'tab-bubble';
     bubble.innerHTML = this._bubbleHtml(ch, text, voice);

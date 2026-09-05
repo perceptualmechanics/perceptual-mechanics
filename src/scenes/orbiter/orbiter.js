@@ -1148,18 +1148,6 @@ export function createOrbiter(container, { preview = false, initialPieceId = nul
       // any branch that could return early and leave the flag set for the
       // next click.
       if (touchGuard.consume()) return;
-      // The keyboard jump list is mounted inside `container` (sceneKit's
-      // createJumpList appends it there), so activating one of its buttons
-      // bubbles a click up to this handler — which, seeing a panel that is
-      // open and nothing hovered, read it as an empty-space click and
-      // closed the poem the button had opened one event earlier. That made
-      // the jump list, the only way a keyboard visitor can reach a poem at
-      // all, a no-op: panel opens, panel closes, nothing on screen. Found
-      // while verifying the touch guard above; the panel itself has had
-      // the equivalent guard all along (createPanelCloser stops clicks
-      // inside it), this is the same guard for the other piece of DOM this
-      // scene puts inside the container.
-      if (e.target.closest('.pm-jumplist')) return;
       // Resolve what's under this click at the click's own coordinates,
       // rather than trusting whatever the last mousemove left behind. A
       // touch tap's synthetic mousemove lands at the same point so this
@@ -1297,7 +1285,11 @@ export function createOrbiter(container, { preview = false, initialPieceId = nul
       // while it ran outside the guard there was no state in which this
       // scene was actually still.
       aurorae.phase += 0.012 * f;
-      aurorae.mat.opacity = Math.max(0.5, aurorae.baseOpacity + Math.sin(aurorae.phase) * 0.15);
+      // No floor. baseOpacity is 0.85 and the swing is +/-0.15, so the value
+      // lives in [0.70, 1.00] and the Math.max(0.5, ...) that used to wrap
+      // this could never bind — a guard against a state the arithmetic
+      // forbids, which reads as though the range were wider than it is.
+      aurorae.mat.opacity = aurorae.baseOpacity + Math.sin(aurorae.phase) * 0.15;
     }
 
     // ─── Nucleus reveal/collapse ────────────────────────────────────────

@@ -28,7 +28,7 @@ const DT = 1 / 60;
 // the field becomes a uniform pull and the dwell threshold becomes a constant.
 // Everything else is the scene as it ships.
 function session({ seconds = 300, seed, touching = false, flat = false }) {
-  const hand = createWander(seed, BOARD_HOME.x, BOARD_HOME.y);
+  const hand = createWander(seed);
   const cup = createCup(hand.x, hand.y);
   // The scene's own visitor, not an approximation of one: `stepVisitor` is what
   // medium.js calls, so "a hand resting on it" here is exactly the hand a

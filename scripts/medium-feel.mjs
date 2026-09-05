@@ -35,7 +35,7 @@ const at = ch => MARKS.find(l => l.ch === ch);
 // different visitors. If a message were stored, both would say it.
 {
   const say = (drive) => {
-    const cup = createCup(BOARD_HOME.x, BOARD_HOME.y), hand = createWander(909, BOARD_HOME.x, BOARD_HOME.y), dwell = createDwell();
+    const cup = createCup(BOARD_HOME.x, BOARD_HOME.y), hand = createWander(909), dwell = createDwell();
     const reader = createReader();
     const plaus = l => weightOf(reader, l);
     const v = createVisitor(cup.x, cup.y); v.down = true;
@@ -87,7 +87,7 @@ const at = ch => MARKS.find(l => l.ch === ch);
 // scene's whole thesis: stop participating and the other hand takes over.
 {
   const cup = createCup(BOARD_HOME.x, BOARD_HOME.y);
-  const hand = createWander(11, BOARD_HOME.x, BOARD_HOME.y);
+  const hand = createWander(11);
   const v = createVisitor(cup.x, cup.y); v.down = true;
   let worst = 0, t = 0;
   for (let i = 0; i < Math.round(2.5 / DT); i++) {
@@ -110,7 +110,7 @@ const at = ch => MARKS.find(l => l.ch === ch);
 // previous version of test 2 asserted the opposite by accident.
 {
   const cup = createCup(BOARD_HOME.x, BOARD_HOME.y);
-  const hand = createWander(11, BOARD_HOME.x, BOARD_HOME.y);
+  const hand = createWander(11);
   const v = createVisitor(cup.x, cup.y); v.down = true;
   let t = 0, parked = 0;
   for (let i = 0; i < Math.round(12 / DT); i++) {
@@ -141,7 +141,7 @@ const at = ch => MARKS.find(l => l.ch === ch);
 {
   const q = at('Q');
   const cup = createCup(q.x, q.y);
-  const hand = createWander(3, BOARD_HOME.x, BOARD_HOME.y);
+  const hand = createWander(3);
   const dwell = createDwell();
   const reader = createReader();
   const v = createVisitor(q.x, q.y); v.down = true;

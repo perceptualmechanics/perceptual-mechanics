@@ -251,7 +251,7 @@ export function createMedium(container, { preview = false, initialArg = null, on
   // would be. It also fixes something measurable: with the cup always starting
   // at the centre, every séance opened with the same two or three letters,
   // because the first thing that happens is always a stop near where it began.
-  let hand = createWander(seed, BOARD_HOME.x, BOARD_HOME.y);
+  let hand = createWander(seed);
   const cup = createCup(hand.x, hand.y);
   const dwell = createDwell();
   let reader = createReader();
@@ -854,7 +854,7 @@ export function createMedium(container, { preview = false, initialArg = null, on
       const next = parseSeed(str);
       if (!next || next === seed) return;
       seed = next;
-      hand = createWander(seed, BOARD_HOME.x, BOARD_HOME.y);
+      hand = createWander(seed);
       cup.x = hand.x; cup.y = hand.y; cup.vx = 0; cup.vy = 0; cup.resting = true;
       reader = createReader();
       tape = ''; flash = null; hush = 0;

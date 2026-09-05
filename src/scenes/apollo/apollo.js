@@ -849,17 +849,22 @@ export function createApollo(container, { preview = false, initialArg = null, on
     ctx.lineWidth = Math.max(1, r * 0.5);
     ctx.beginPath(); ctx.moveTo(bandX, y); ctx.lineTo(bandX + bandW, y); ctx.stroke();
 
-    // Twelve equal-tempered steps across the band's own span. The whole
-    // visible spectrum is 400Hz to 789Hz, which is a ratio of 1.97 — the
-    // visible spectrum is almost exactly one octave wide, and the ruler is
-    // where that stops being a sentence and becomes a picture.
+    // Equal-tempered semitones across the band's own span. 380–750nm is
+    // 789Hz down to 400Hz, a ratio of 1.974 — the visible spectrum is almost
+    // exactly one octave wide, and this ruler is where that stops being a
+    // sentence and becomes a picture.
+    //
+    // ALMOST is doing real work: 1.974 is 0.981 of an octave, so the twelfth
+    // semitone lands at 799Hz, past the violet end of the band. The loop used
+    // to run to 12 with a `break` and a `tall` flag for every multiple of 12,
+    // which meant the closing tick could never be drawn and the flag was only
+    // ever true at n=0. Eleven steps and one tall tick at the low end, which
+    // is what was actually rendering.
     ctx.fillStyle = 'rgba(201,174,116,0.5)';
     ctx.strokeStyle = 'rgba(201,174,116,0.28)';
-    for (let n = 0; n <= 12; n++) {
-      const hz = HZ_MIN * Math.pow(2, n / 12);
-      if (hz > HZ_MAX) break;
-      const x = xForHz(hz);
-      const tall = n % 12 === 0;
+    for (let n = 0; n <= 11; n++) {
+      const x = xForHz(HZ_MIN * Math.pow(2, n / 12));
+      const tall = n === 0;
       ctx.beginPath();
       ctx.moveTo(x, y - (tall ? 7 : 4) * r);
       ctx.lineTo(x, y + (tall ? 7 : 4) * r);

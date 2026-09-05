@@ -955,7 +955,7 @@ const SEANCE_MINUTES = 10;
 
 function seance({ seed, minutes }) {
   const DT = 1 / 60;
-  const hand = createWander(seed, BOARD_HOME.x, BOARD_HOME.y);
+  const hand = createWander(seed);
   const cup = createCup(hand.x, hand.y);
   const dwell = createDwell();
   const reader = createReader();

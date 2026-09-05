@@ -24,7 +24,6 @@
   white-space: normal;
   animation: wisp var(--duration, 6s) ease-in-out infinite;
   animation-delay: var(--delay, 0s);
-  transform-origin: center center;
 
 	/* 320 of these run `wisp` forever, each on its own 4–10s period — by a
 	   wide margin the largest source of continuous motion anywhere in this

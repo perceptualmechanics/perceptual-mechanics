@@ -533,13 +533,15 @@ export function createJumpList(container, { label, items, getLabel, onSelect }) 
 
 // ─── Shared hint-label color ────────────────────────────────────────────────
 // The color for every scene's top-right "drag to orbit · scroll to zoom"
-// style control-hint text (sphere, orbiter, orrery, library, and butterfly
-// via main.js). 0.6 alpha white measures ~7.4:1 contrast against a black
-// background at the ~8.8px size these hints use — well clear of WCAG's
-// 4.5:1 minimum for text that small (the 3:1 "large text" allowance only
-// applies at ~18.7px bold or larger). Centralized here so any future
-// adjustment is one edit instead of several; doesn't touch each scene's own
-// positioning, font, or responsive/collision-avoidance CSS — only the color.
+// control-hint text. 0.6 alpha white measures 7.37:1 against black at the
+// ~8.8px these hints use — well clear of WCAG's 4.5:1 for text that small (the
+// 3:1 "large text" allowance starts at ~18.7px bold).
+//
+// Kept for one honest reason and not the one it used to claim: NOTHING imports
+// it. Every scene reads --hint-text-color from styles/main.css, which is the
+// real single source, and this is a mirror of that value for any future
+// JS-side use — which is what the two comments pointing here should say, and
+// what main.css's own comment now does say.
 export const HINT_TEXT_COLOR = 'rgba(255,255,255,0.6)';
 
 // ─── HTML escaping ──────────────────────────────────────────────────────────
@@ -795,24 +797,37 @@ export function createFrameClock({ maxDelta = 0.05 } = {}) {
 // bookkeeping, so a scene's dispose() can drop everything still pending in
 // one call instead of naming each handle.
 export function trackTimers() {
-  const handles = new Set();
+  // Two sets, not one. setTimeout and requestAnimationFrame hand back ids from
+  // SEPARATE namespaces — both are small integers counting up from 1, and
+  // nothing stops a timeout and a frame request from sharing a number. A
+  // single set meant cancel(id) had to fire both cancellers blind, so
+  // cancelling a timeout could also kill an unrelated pending frame, and
+  // dispose() did it to every id it held. Rare, silent, and impossible to
+  // reproduce on purpose, which is the worst combination.
+  const timeouts = new Set();
+  const frames = new Set();
   return {
     after(ms, fn) {
-      const id = setTimeout(() => { handles.delete(id); fn(); }, ms);
-      handles.add(id);
+      const id = setTimeout(() => { timeouts.delete(id); fn(); }, ms);
+      timeouts.add(id);
       return id;
     },
     // For work that only needs to outlast the current frame — no magic
     // millisecond constant guessing at a CSS transition's duration.
     nextFrame(fn) {
-      const id = requestAnimationFrame(() => { handles.delete(id); fn(); });
-      handles.add(id);
+      const id = requestAnimationFrame(() => { frames.delete(id); fn(); });
+      frames.add(id);
       return id;
     },
-    cancel(id) { clearTimeout(id); cancelAnimationFrame(id); handles.delete(id); },
+    cancel(id) {
+      if (timeouts.delete(id)) { clearTimeout(id); return; }
+      if (frames.delete(id)) cancelAnimationFrame(id);
+    },
     dispose() {
-      for (const id of handles) { clearTimeout(id); cancelAnimationFrame(id); }
-      handles.clear();
+      for (const id of timeouts) clearTimeout(id);
+      for (const id of frames) cancelAnimationFrame(id);
+      timeouts.clear();
+      frames.clear();
     },
   };
 }

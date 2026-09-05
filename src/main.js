@@ -158,22 +158,20 @@ function navIconFor(sceneName) {
   return document.querySelector(`.nav-icon[data-scene="${sceneName}"]`);
 }
 
-// ─── Public URL slug for Harmonics (3.1.3, 2026-08-23) ─────────────────────
-// The 2026-08-18 rename deliberately kept every INTERNAL name —
-// src/scenes/harmonics/, the SCENES registry key below, .harmonics-*
-// CSS classes — as `harmonics` (see main.js's own header and
-// harmonics.js's), reasoning that none of that is visible to a visitor.
-// The URL hash turned out to be the one exception: it's the literal address
-// bar text, seen and shareable, not implementation detail — flagged live by
-// Scott after the rename had otherwise fully shipped. No real `#harmonics`
-// links exist anywhere to preserve (the scene only just started writing that
-// hash at all, and never publicly), so this is NOT a backward-compat shim —
-// it's a one-way translation at the two seams where a hash is actually read
-// or written: setHash writes the public slug, parseHash reads it back. The
-// SCENES key itself stays `harmonics` rather than being renamed
-// (cascades into index.html's data-scene attributes, #preview-harmonics,
-// main.js's own PM_GLIMPSE_WORDS key, and every other place the internal
-// string is compared, for a complaint that was specifically about the URL).
+// ─── Public URL slug ───────────────────────────────────────────────────────
+// The seam where an internal SCENES key becomes the text in the address bar,
+// and back. setHash writes the public slug, parseHash reads it.
+//
+// Every entry is currently an IDENTITY — the two maps translate nothing, and
+// have not since the entry that needed them was reverted. Kept rather than
+// deleted because the seam is the point: a scene whose internal key stops
+// being the string a visitor should see (a rename, a name with a character a
+// URL would escape) has one line to add here instead of a hunt through every
+// place the key is compared. Both maps are also cheap and total.
+//
+// What is NOT true, and what a much longer comment here used to say, is that
+// this is doing a live translation for Harmonics. It is not, and the maps
+// themselves say so.
 const PUBLIC_SLUG = { harmonics: 'harmonics', outside: 'outside' }; // internal SCENES key -> URL slug
 const SLUG_TO_INTERNAL = Object.fromEntries(Object.entries(PUBLIC_SLUG).map(([k, v]) => [v, k]));
 
@@ -1133,9 +1131,9 @@ const PM_GLIMPSE_WORDS = {
   beamline: 'emergence',
   harmonics: 'vibe',
   outside: 'bloom',
-  apollo: 'lyre',
-  psyshell: 'lapel',
-  medium: 'typeface',
+  apollo: 'absorption',
+  psyshell: 'residue',
+  medium: 'suggestion',
   title: 'secrets',
 };
 let pmGlimpseTimer = null;

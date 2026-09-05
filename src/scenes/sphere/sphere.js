@@ -571,16 +571,14 @@ export function createSphere(container, { preview = false, initialPieceId = null
   const reduceMotionWatch = onReducedMotionChange(m => { reduceMotion = m; });
 
   // ─── Resize ───────────────────────────────────────────────────────────────
-  // viewW/viewH are the container's own dimensions, cached rather than read
-  // from the live element. The reader they were introduced for — the facet
-  // tilt's per-label screen projection — is gone as of 5.0, but the reason
-  // they exist is worth keeping against the next one: reading layout 320
+  // The container's dimensions used to be cached here as viewW/viewH for the
+  // facet tilt's per-label screen projection, which 5.0 removed — so they were
+  // written on every resize and read by nobody. If anything ever needs them
+  // again, cache them again for the reason they existed: reading layout 320
   // times a frame from inside a loop that is also WRITING styles forces a
-  // synchronous layout flush once per label per frame. Same pattern
-  // beamline.js uses for its own `viewportH`.
-  let viewW = w, viewH = h;
+  // synchronous flush per label per frame (beamline.js keeps its own
+  // `viewportH` for exactly that).
   const resize = bindGuardedResize(container, (nw, nh) => {
-    viewW = nw; viewH = nh;
     camera.aspect = nw / nh;
     camera.updateProjectionMatrix();
     renderer.setSize(nw, nh);
@@ -591,7 +589,7 @@ export function createSphere(container, { preview = false, initialPieceId = null
   });
   // The w/h this scene was constructed with fall back to window.innerWidth
   // when the container measured 0 (a hidden ancestor at mount), so run the
-  // guarded handler once to start viewW/viewH from a real measurement.
+  // guarded handler once to size the renderer from a real measurement.
   // bindGuardedResize's own 0-guard makes this a no-op if the container still
   // isn't laid out.
   resize.trigger();

@@ -170,14 +170,15 @@
    JS-side equivalent by comment, not by a build step — see each constant below
    for its JS counterpart, if it has one. */
 :root {
-  /* Hint-label text color ("drag to orbit · scroll to zoom", etc.), used by
-     every scene's own stylesheet. Raised from the original ~0.3 alpha
-     specifically for contrast (CODE_AUDIT.md's headline finding — 0.3 alpha
-     white-on-black hint text measured ~2.5:1, well under WCAG's 4.5:1 for
-     text this small; 0.6 gets pure white to ~4.6:1). Mirrored as
-     `HINT_TEXT_COLOR` in src/utils/sceneKit.js for the few places JS itself
-     still needs the literal value (not just a stylesheet reference) — if you
-     change one, change the other. */
+  /* Hint-label text color ("drag to orbit · scroll to zoom", etc.), and THE
+     source for it: every scene's own stylesheet reads this var. Raised from
+     the original ~0.3 alpha specifically for contrast (0.3 alpha white on
+     black measures 2.5:1, well under WCAG's 4.5:1 for text this small). 0.6
+     measures 7.37:1 — this comment said 4.6:1, which is neither the old value
+     nor the new one.
+     `HINT_TEXT_COLOR` in src/utils/sceneKit.js mirrors it for any future
+     JS-side use; nothing imports it today, so "if you change one, change the
+     other" is a courtesy rather than a correctness requirement. */
   --hint-text-color: rgba(255, 255, 255, 0.6);
 
   /* ─── Title-block safe zone (2026-08-25 site-wide consistency pass) ───────
@@ -929,7 +930,10 @@ html, body {
      Flex, not grid, and that is not inertia: an incomplete last grid row stays
      left-aligned, so 4/4/3 would put three tiles hard against the left edge
      under two centred rows. Flex rows each centre themselves, so the short row
-     centres for free. --tile-cols is here for anything that wants to read it;
+     centres for free. --tile-cols is written by main.js's applyDerivedLayout
+     every layout pass and read by nothing — kept because it is the one number
+     that describes the arrangement, and a debug rule or a future selector that
+     wants it would otherwise have to re-derive it;
      the layout itself is driven by the break elements. */
   --tile-cols: 4;
   list-style: none;

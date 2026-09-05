@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import {
   bindOrbitDrag, bindWheelZoom, bindGuardedResize, prefersReducedMotion,
   createJumpList, bindTapVsDrag, mountClippedPreviewCanvas, parseHTML,
-  claimContainer, manageRenderer, createFrameClock, trackTimers,
+  claimContainer, manageRenderer, createFrameClock,
   bindPersistedSoundToggle, onReducedMotionChange,
 } from '../../utils/sceneKit.js';
 import './psyshell.css';
@@ -241,6 +241,10 @@ const CASCADE_LIFE = 7.0;
 const DIGIT_TIME = PROP_SHELL / PROP_SPEED;
 const digitDuration = d => DIGIT_TIME * Math.exp(d - 1);
 const WAVE_SPEED = 0.20 / DIGIT_TIME;  // path-lengths per second
+// Headroom on the transmission's length, not a limit that bites: at the
+// corpus's 3,244 filapixels the longest base-e digit string is 12, so this
+// never clamps today. It is here so a much larger corpus cannot hand the
+// transmitter an unbounded array to allocate per pulse.
 const MAX_DIGITS = 16;
 // How hard a lit digit drives the crystal's own body. The ribbon this replaced
 // needed 2.0 to read at all through its own flat shading; light in the body
@@ -398,7 +402,6 @@ export function createPsyshell(container, { preview = false } = {}) {
   if (!preview) container.appendChild(renderer.domElement);
 
   const containerClaim = !preview ? claimContainer(container, { cursor: 'crosshair' }) : null;
-  const timers = trackTimers();
   const clock = createFrameClock();
   let reduced = prefersReducedMotion();
   let disposed = false;
@@ -1350,7 +1353,6 @@ export function createPsyshell(container, { preview = false } = {}) {
       disposed = true;
       if (animId !== null) cancelAnimationFrame(animId);
       reads.length = 0;
-      timers.dispose();
       resizeCtl?.dispose();
       orbitDrag?.dispose();
       wheelZoom?.dispose();

@@ -122,7 +122,6 @@ const HORIZON_CSS = '#' + HORIZON_COLOR.toString(16).padStart(6, '0');
 // the ambient ecology) or rises up over the terrain's mounds, then
 // verified for terrain clearance and self-intersection.
 
-const CYCLE_SECONDS = 10; // preview tiles only — one full pulse loop
 
 // ─── Organic timing ──────────────────────────────────────────────────────
 // Shared by every ambient-life effect (grid shimmer, station idle glow,
@@ -1876,7 +1875,7 @@ export function createBeamline(container, { preview = false, initialPieceId = nu
     },
   }) : null;
 
-  // ─── Hover / click on stations (+ the ground glimpse, when active) ──────
+  // ─── Hover / click on stations ──────────────────────────────────────────
   let hoveredStation = null, selectedStation = null;
   const raycaster = new THREE.Raycaster();
   const pointerNdc = new THREE.Vector2();
