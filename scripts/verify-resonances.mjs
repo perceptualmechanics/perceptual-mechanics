@@ -27,6 +27,7 @@ import { PIECES as theaterPieces, BEATS as theaterBeats } from '../src/scenes/th
 import { ORRERY } from '../src/scenes/orrery/orrery.text.js';
 import { BUTTERFLY } from '../src/scenes/butterfly/butterfly.text.js';
 import { RESONANCES } from '../src/resonances.js';
+import { resolveEndpoint } from '../src/scenes/harmonics/harmonicsPieces.js';
 import { pathToFileURL } from 'node:url';
 
 const STATUSES = new Set(['pending', 'approved', 'rejected']);
@@ -121,6 +122,41 @@ export function verifyResonances() {
     ok(`resonances.js: all ${RESONANCES.length} rows resolve (${basisCounts.verbatim} verbatim, ${basisCounts.connotative} connotative; ${statusCounts.approved} approved, ${statusCounts.pending} pending, ${statusCounts.rejected} rejected)`);
   } else if (RESONANCES.length === 0) {
     ok('resonances.js: empty (no rows yet)');
+  }
+
+  // ─── Two numbers Harmonics is designed around, printed rather than typed ──
+  // Its panel's density design — stacked cards, per-card accent wash, the
+  // "N OF M" index — is for the hub case, and three comments in that scene
+  // named the hub and its depth by hand. They said sphere:14 with six. By 5.0
+  // it was scroll:11 with twelve, and nothing had noticed, because a panel
+  // designed for six still renders twelve; it just renders them the way six
+  // were meant to look. Printed here so the design has a current number to be
+  // checked against instead of a remembered one — along with how many
+  // endpoints resolve to no prose at all, which is what would draw an empty
+  // quote box in that panel.
+  {
+    const degree = new Map();
+    for (const r of RESONANCES) {
+      for (const ep of [r.a, r.b]) {
+        const key = `${ep.scene}:${ep.beatId !== undefined ? `b${ep.beatId}` : ep.id}`;
+        degree.set(key, (degree.get(key) ?? 0) + 1);
+      }
+    }
+    const ranked = [...degree.entries()].sort((a, b) => b[1] - a[1]);
+    if (ranked.length) {
+      ok(`resonances.js: ${degree.size} nodes; the hub is ${ranked[0][0]} with ${ranked[0][1]} connections (Harmonics' panel stacks that many cards)`);
+    }
+
+    const textless = new Set();
+    for (const r of RESONANCES) {
+      for (const ep of [r.a, r.b]) {
+        const resolved = resolveEndpoint(ep);
+        if (!resolved.rawText || !resolved.rawText.trim()) textless.add(resolved.title);
+      }
+    }
+    if (textless.size) {
+      ok(`resonances.js: ${textless.size} endpoint(s) carry no prose, so Harmonics shows their label alone — ${[...textless].join('; ')}`);
+    }
   }
 
   return { ok: failures === 0, failures, log };

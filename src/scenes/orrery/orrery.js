@@ -7,6 +7,15 @@ import orreryHtml from './orrery.html?raw';
 // published page can't drift.
 import { ORRERY } from './orrery.text.js';
 
+// The gig posters on the warehouse's back wall, at rest and under the
+// crosshair. Both were measured off the rendered frame rather than picked:
+// the resting value has to lift the paper off the brick without turning it
+// into a light source, and the hover value has to be visible across the room
+// at a glance — 19, 12 and 5 of 255 on the three channels, warm, matching the
+// sodium light the rest of the warehouse is lit by.
+const POSTER_EMISSIVE = 0x0c0a08;
+const POSTER_HOVER_EMISSIVE = 0x6b5230;
+
 // ─── The Orrery of Los Feliz ───────────────────────────────────────────────
 // A found short-short, full and unedited, undated. Investigators track a
 // mysterious 30-foot orrery — a moving model of the solar system, a working
@@ -2266,10 +2275,11 @@ function buildWarehouse(preview, floorY, ceilingY, rafterY, holeW, moonPos, moon
     posters.forEach(p => {
       const posterMat = new THREE.MeshStandardMaterial({
         map: makePosterTexture(p.band, p.sub), roughness: 0.85, metalness: 0,
-        // High base emissive intensity — these read as lit focal objects
-        // worth noticing across a dark room, Myst-style, not just legible
-        // once you're already standing in front of one.
-        emissive: 0x0c0a08, emissiveIntensity: 0.78,
+        // A little self-lit, so these read as focal objects worth crossing a
+        // dark room for rather than being legible only once you are standing
+        // in front of one. Near-black on purpose: it lifts the paper off the
+        // brick without making it a light source.
+        emissive: POSTER_EMISSIVE, emissiveIntensity: 0.78,
       });
       const poster = new THREE.Mesh(new THREE.PlaneGeometry(1.3 * p.scale, 1.82 * p.scale), posterMat);
       poster.position.set(p.x, p.y, p.z);
@@ -2279,7 +2289,7 @@ function buildWarehouse(preview, floorY, ceilingY, rafterY, holeW, moonPos, moon
       // clicking one "tunes in" a few bars of static-laden radio (see
       // playPosterRiff in createOrrery). Fits the found story's own
       // premise (a pirate radio investigation) better than a silent wall.
-      posterMeshes.push({ mesh: poster, band: p.band, baseEmissive: 0.78 });
+      posterMeshes.push({ mesh: poster, band: p.band });
     });
 
     // Pegboard with tools, on the side wall.
@@ -3647,9 +3657,18 @@ export function createOrrery(container, { preview = false } = {}) {
           ? warehouse.posters.find(p => p.mesh === posterHits[0].object)
           : null;
         if (newPosterHover !== hoveredPoster) {
-          if (hoveredPoster) hoveredPoster.mesh.material.emissiveIntensity = hoveredPoster.baseEmissive;
+          // The colour changes, not the intensity. This used to multiply
+          // emissiveIntensity by 2.4 and leave the emissive at POSTER_EMISSIVE
+          // — but that is (12, 10, 8), and 2.4x near-black is still near-black:
+          // measured off the rendered frame, the hovered poster moved by 0.7,
+          // 0.3 and 0.8 of 255 on its three channels. Nothing anyone could
+          // see. What people were reading as the hover response was the
+          // crosshair going active, one line below.
+          // POSTER_HOVER_EMISSIVE moves it by 19, 12, 5 — the poster plainly
+          // lights up, and stays a lit poster rather than becoming a lightbox.
+          if (hoveredPoster) hoveredPoster.mesh.material.emissive.setHex(POSTER_EMISSIVE);
           hoveredPoster = newPosterHover;
-          if (hoveredPoster) hoveredPoster.mesh.material.emissiveIntensity = hoveredPoster.baseEmissive * 2.4;
+          if (hoveredPoster) hoveredPoster.mesh.material.emissive.setHex(POSTER_HOVER_EMISSIVE);
         }
       }
       fp.crosshairEl.classList.toggle('active', hovered || !!hoveredPoster);

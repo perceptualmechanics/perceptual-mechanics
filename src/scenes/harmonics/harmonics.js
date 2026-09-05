@@ -324,7 +324,7 @@ export function createharmonics(container, { preview = false, initialPieceId = n
   const nodeMap = buildNodes(rows);
   const nodeList = Array.from(nodeMap.values());
   const { adj, edges } = buildAdjacency(nodeList, rows);
-  // Bumped 90/150 → 120/200 (3.1.1, 2026-08-23): approving all 42 pending
+  // Bumped 90/150 → 120/200: approving the last pending
   // resonances took node count from ~32 to ~61 at the old scale — k (ideal
   // edge length) shrinks as cbrt(n) with node count held fixed, so the old
   // scale alone would already read visibly tighter even before "spread
@@ -338,7 +338,6 @@ export function createharmonics(container, { preview = false, initialPieceId = n
   const CAM_MIN = Math.max(20, boundRadius * 0.45);
   const CAM_MAX = boundRadius * 3.0;
   const CAM_DEFAULT = boundRadius * 1.9;
-  const FOG_DENSITY = 1.55 / CAM_MAX;
   const STAR_R_MIN = CAM_MAX * 1.25;
   const STAR_R_MAX = CAM_MAX * 1.75;
   const GALAXY_R_MIN = STAR_R_MAX * 1.3;
@@ -416,10 +415,22 @@ export function createharmonics(container, { preview = false, initialPieceId = n
     adj[i].forEach(j => { boost[j] = Math.max(boost[j], 0.7); });
   }
 
+  // Nothing in this scene writes depth (every layer is transparent Points or
+  // a Sprite), so painting order is renderOrder alone. Named, because the
+  // dust layer only does its job — dimming what is behind it — if it is drawn
+  // after the nebula and before the nodes, and a bare 0/1 does not say that.
+  const LAYER_NEBULA = 0;
+  const LAYER_DUST = 1;
+  const LAYER_NODES = 2;
+
   const scene = new THREE.Scene();
   const BG_COLOR = 0x00010a;
   scene.background = new THREE.Color(BG_COLOR);
-  scene.fog = new THREE.FogExp2(BG_COLOR, FOG_DENSITY);
+  // No scene.fog either, for the same reason one layer at a time: all seven
+  // materials here set `fog: false`, individually and deliberately, because
+  // fogging an additive point layer grey is not what any of them want. A
+  // FogExp2 at 1.55/CAM_MAX was being built and attached anyway, affecting
+  // nothing.
 
   const camera = new THREE.PerspectiveCamera(46, w / h, 0.1, CAM_FAR);
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
@@ -450,10 +461,10 @@ export function createharmonics(container, { preview = false, initialPieceId = n
   // on #experience-container when it opens a scene, so this was a second
   // place to keep in agreement with no second effect.
 
-  scene.add(new THREE.AmbientLight(0x223355, 1.0));
-  const key = new THREE.DirectionalLight(0xaad4ff, 0.9);
-  key.position.set(4, 8, 3);
-  scene.add(key);
+  // No lights, and none are missing. Every object in this scene is Points or
+  // a Sprite, whose materials are unlit by definition — an AmbientLight and a
+  // DirectionalLight sat here and changed not one pixel, while reading as the
+  // scene's lighting design to anyone opening the file.
 
   // ─── Deep-field stars (punched up 3.1.2, second pass 3.2.0) ────────────────
   // 3.1.2 added per-star color variation via vertex colors instead of one
@@ -596,7 +607,7 @@ export function createharmonics(container, { preview = false, initialPieceId = n
     return { points, geo, mat, count: COUNT, baseColor };
   }
   const galaxy = buildGalaxy(GALAXY_R_MIN, GALAXY_R_MAX);
-  galaxy.points.renderOrder = 0;
+  galaxy.points.renderOrder = LAYER_NEBULA;
   scene.add(galaxy.points);
 
   // ─── Dust-lane occlusion layer (3.2.0, 2026-08-23) ─────────────────────────
@@ -615,9 +626,18 @@ export function createharmonics(container, { preview = false, initialPieceId = n
   // low-alpha, ordinary (not additive) blending, so each point DIMS
   // whatever it overlaps rather than adding to it. Every point is
   // filament-only (unlike the glow layer's mix of clumps + filaments) —
-  // dust wants to read as LANES, not blobs. `renderOrder` after the glow
-  // layer's own 0 makes this consistently sit "in front" for blending
-  // purposes; its own independent rotation (different axis/speed than the
+  // dust wants to read as LANES, not blobs.
+  //
+  // Render order, and this is the whole reason the layer needs one: nothing
+  // here writes depth, so what is "in front" for blending is source order,
+  // and a darkening layer has to come after the thing it darkens. The dust
+  // is meant to darken the NEBULA (galaxy.points, LAYER_NEBULA) and nothing
+  // else. It sat at 1 with the nodes left at the default 0, which put it in
+  // front of them too — every node the dust crossed was multiplied down by a
+  // 0.55-opacity dark point, in a scene whose entire subject is which nodes
+  // are lit. The nodes are explicitly above it now.
+  //
+  // Its own independent rotation (different axis/speed than the
   // glow layer's) is what actually sells depth as the camera orbits — two
   // layers turning at different rates is real parallax, not a static
   // camera-angle accident that only reads from one vantage point.
@@ -690,7 +710,7 @@ export function createharmonics(container, { preview = false, initialPieceId = n
       transparent: true, opacity: 0.55, depthWrite: false, sizeAttenuation: true, fog: false,
     });
     const points = new THREE.Points(geo, mat);
-    points.renderOrder = 1;
+    points.renderOrder = LAYER_DUST;
     points.rotation.x = -0.22;
     points.rotation.z = 0.4; // deliberately different tilt than galaxy.points' own — independent rotation axes read as real parallax, not two layers moving in lockstep
     return { points, geo, mat, tex: dustTex, count: COUNT };
@@ -741,6 +761,7 @@ export function createharmonics(container, { preview = false, initialPieceId = n
     blending: THREE.AdditiveBlending, sizeAttenuation: true, fog: false,
   });
   const nodePoints = new THREE.Points(nodeGeo, nodeMat);
+  nodePoints.renderOrder = LAYER_NODES;
 
   // Round 10.1: a soft corona layer, sharing the SAME position/color
   // buffers as the main dot above (a second Points object reading the
@@ -756,6 +777,7 @@ export function createharmonics(container, { preview = false, initialPieceId = n
     blending: THREE.AdditiveBlending, sizeAttenuation: true, fog: false,
   });
   const nodeHalo = new THREE.Points(nodeGeo, nodeHaloMat);
+  nodeHalo.renderOrder = LAYER_NODES;
   scene.add(nodeHalo);
   scene.add(nodePoints);
 
@@ -776,14 +798,22 @@ export function createharmonics(container, { preview = false, initialPieceId = n
   if (!preview) scene.add(hoverSprite);
   let hoverScale = 0;
 
-  // ─── Living atmosphere: pending (unreviewed) resonances (round 10) ──────
-  // An honest picture of the corpus's actual review state, not invented
-  // decoration: the 42 rows still sitting at status:'pending' name real
-  // pieces that MIGHT resonate but haven't been confirmed — rendered as
-  // faint, unlit, independently drifting points that pass through the
-  // volume rather than settling into the layout or joining the Kuramoto
-  // graph (adj/theta/omega above never see these; coupling them in would
-  // visually claim a synchronization that hasn't been reviewed/approved).
+  // ─── Living atmosphere: pending (unreviewed) resonances ─────────────────
+  // An honest picture of the corpus's review state, not invented decoration:
+  // a row still sitting at status:'pending' names two pieces that MIGHT
+  // resonate but have not been confirmed, and it is drawn as a faint, unlit,
+  // independently drifting point that passes through the volume rather than
+  // settling into the layout or joining the Kuramoto graph (adj/theta/omega
+  // above never see these; coupling them in would visually claim a
+  // synchronization nobody has approved).
+  //
+  // The corpus currently has NONE — every row is approved, so pendingList is
+  // empty and everything below it, this layer and pickPendingAt and
+  // openPendingPanel alike, correctly does nothing. That is a fact about the
+  // data and not about the code, which is why the count is not written down
+  // here: it was, as "the 42 rows still sitting at status:'pending'", and it
+  // had been zero for some time. scripts/verify-resonances.mjs reports the
+  // real number on every build.
   // Pieces already shown as a confirmed node are skipped here — that
   // piece already has a solid dot, a second faint one at a different
   // position would just read as a rendering glitch.
@@ -919,8 +949,12 @@ export function createharmonics(container, { preview = false, initialPieceId = n
   }
 
   // Every approved row this node participates in, paired with the OTHER
-  // endpoint — a node can carry more than one (sphere:14, the corpus's
-  // one real hub, currently carries 6 — see resonances.js).
+  // endpoint. A node can carry many: the panel's whole density design —
+  // stacked cards, per-card accent wash, the "N OF M" index — exists for the
+  // hub case. Which piece is the hub, and how deep it goes, is a fact about
+  // resonances.js and not one to write down here; it was written down, as
+  // "sphere:14 ... carries 6", and by 5.0 the hub was scroll:11 with twelve.
+  // scripts/verify-resonances.mjs prints the real pair on every build.
   function nodeResonances(nodeIndex) {
     const node = nodeList[nodeIndex];
     return rows
@@ -1008,11 +1042,21 @@ export function createharmonics(container, { preview = false, initialPieceId = n
 
         const pair = document.createElement('div');
         pair.className = 'harmonics-excerpt-pair';
-        const selfQ = document.createElement('blockquote');
-        selfQ.className = 'harmonics-excerpt';
-        selfQ.style.borderLeftColor = selfHex;
-        selfQ.style.setProperty('--q-accent', selfHex);
-        selfQ.innerHTML = `<span class="harmonics-excerpt-label">${escapeHtml(self.title)}</span>${escapeHtml(selfSnippet)}`;
+        // A quote box with nothing in it is a bordered empty rectangle with a
+        // title floating in it, which reads as a loading failure. Two of the
+        // 128 endpoints are library items whose data carries no prose at all —
+        // only bibliographic fields — so the label stands on its own there
+        // instead. scripts/verify-resonances.mjs counts them, so the gap is
+        // visible to whoever can fill it rather than to a reader.
+        const quoteBox = (hex, title, snippet) => {
+          const q = document.createElement('blockquote');
+          q.className = snippet ? 'harmonics-excerpt' : 'harmonics-excerpt harmonics-excerpt--bare';
+          q.style.borderLeftColor = hex;
+          q.style.setProperty('--q-accent', hex);
+          q.innerHTML = `<span class="harmonics-excerpt-label">${escapeHtml(title)}</span>${escapeHtml(snippet)}`;
+          return q;
+        };
+        const selfQ = quoteBox(selfHex, self.title, selfSnippet);
         // Decorative glyph binding the pair as one resonance, not two
         // unrelated quotes (see harmonics.css's own comment) — hidden
         // from assistive tech, which already gets the relationship from
@@ -1021,11 +1065,7 @@ export function createharmonics(container, { preview = false, initialPieceId = n
         glyph.className = 'harmonics-resonance-glyph';
         glyph.setAttribute('aria-hidden', 'true');
         glyph.textContent = '⟡';
-        const otherQ = document.createElement('blockquote');
-        otherQ.className = 'harmonics-excerpt';
-        otherQ.style.borderLeftColor = otherHex;
-        otherQ.style.setProperty('--q-accent', otherHex);
-        otherQ.innerHTML = `<span class="harmonics-excerpt-label">${escapeHtml(resolved.title)}</span>${escapeHtml(otherSnippet)}`;
+        const otherQ = quoteBox(otherHex, resolved.title, otherSnippet);
         pair.appendChild(selfQ);
         pair.appendChild(glyph);
         pair.appendChild(otherQ);

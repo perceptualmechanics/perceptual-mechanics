@@ -80,7 +80,9 @@
   /* This is a <p> — zero the UA default top/bottom margin so it still
      reads as a tight label line, not a paragraph. */
   font-size: 0.65rem; letter-spacing: 0.25em; text-transform: uppercase;
-  color: rgba(230,215,180,0.5); margin: 0 0 0.6rem;
+  /* 0.5 alpha cannot reach 4.5:1 over any dark ground — 4.0:1 even against
+     pure black. 0.72 measures 8.0:1 over this panel's #0a0806. */
+  color: rgba(230,215,180,0.72); margin: 0 0 0.6rem;
 }
 .library-panel-title {
   /* This is the panel's <h2>, matching its aria-labelledby target —
@@ -198,7 +200,8 @@
   outline: 1px solid rgba(230,180,95,.9); outline-offset: 1px;
 }
 .library-panel-excerpt-from {
-  margin: -1rem 0 1.4rem; color: rgba(220,210,195,0.5);
+  /* Same arithmetic as .library-panel-kind above: 0.5 tops out at 3.9:1. */
+  margin: -1rem 0 1.4rem; color: rgba(220,210,195,0.72);
   font-size: 0.78rem; font-style: italic; line-height: 1.6;
 }
 .library-panel-excerpt-from:empty { display: none; margin: 0; }
@@ -264,7 +267,11 @@
    warm parchment/gold palette instead of sphere's blue or orbiter's green. */
 @keyframes library-glimmer {
   0%, 85%, 100% { color: inherit; text-shadow: none; }
-  92% { color: rgba(225,175,90,.6); text-shadow: 0 0 6px rgba(225,175,90,.2); }
+  /* Opaque at the peak. At .6 the "glimmer" composited to 4.1:1 against the
+     panel while the prose around it is far brighter, so the cue that a phrase
+     is a link was the phrase briefly dimming. Same fix as sphere.css's
+     silk-glimmer and orbiter.css's poem-glimmer. */
+  92% { color: rgb(225,175,90); text-shadow: 0 0 7px rgba(225,175,90,.35); }
 }
 .library-link {
   color: inherit; text-decoration: none;

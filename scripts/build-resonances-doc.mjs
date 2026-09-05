@@ -40,7 +40,7 @@ import { PIECES as theaterPieces, BEATS as theaterBeats } from '../src/scenes/th
 import { ORRERY } from '../src/scenes/orrery/orrery.text.js';
 import { BUTTERFLY } from '../src/scenes/butterfly/butterfly.text.js';
 import { RESONANCES } from '../src/resonances.js';
-import { stripHtml, extractQuotes, snippetFor } from '../src/utils/resonanceExcerpts.js';
+import { stripHtml, extractQuotes, snippetFor, quoteMatched } from '../src/utils/resonanceExcerpts.js';
 import { writeFileSync } from 'fs';
 import { resolve, dirname } from 'path';
 import { fileURLToPath } from 'url';
@@ -102,8 +102,11 @@ function renderRow(r) {
   const quotes = extractQuotes(r.rationale);
   const a = resolveEndpoint(r.a);
   const b = resolveEndpoint(r.b);
-  const aSnippet = snippetFor(a.rawText, quotes);
-  const bSnippet = snippetFor(b.rawText, quotes);
+  // The apparatus belongs here, in the document a reviewer reads, and not in
+  // the scene — see quoteMatched()'s comment in resonanceExcerpts.js.
+  const unmatched = ' *(no rationale quote matched this piece — opening text shown instead)*';
+  const aSnippet = snippetFor(a.rawText, quotes) + (quoteMatched(a.rawText, quotes) ? '' : unmatched);
+  const bSnippet = snippetFor(b.rawText, quotes) + (quoteMatched(b.rawText, quotes) ? '' : unmatched);
   return `### ${r.id}. [${STATUS_LABEL[r.status]}]\n\n**${a.title}**\n> ${aSnippet}\n\n**${b.title}**\n> ${bSnippet}\n\n**Rationale:** ${r.rationale}\n`;
 }
 

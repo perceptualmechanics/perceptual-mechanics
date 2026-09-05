@@ -62,8 +62,14 @@ export function resolveEndpoint(ep) {
       return { title: `Scroll — "${p?.title ?? '?'}"`, pieceId: ep.id, rawText: p ? p.body.join(' ') : '' };
     }
     case 'library': {
+      // Fall through every field that carries prose, not just the two the
+      // shelf usually has. Four of the 128 endpoints resolved to an empty
+      // string once the library's `note` field was removed in 4.11, and an
+      // empty rawText renders as an empty bordered quote box in the panel.
+      // `catalog` is the note a book carries when it has no excerpt (why
+      // there is none, usually); `scene` is a film's described scene.
       const p = libraryItems.find(f => f.id === ep.id);
-      if (p) return { title: `Library — "${p.title}"`, pieceId: ep.id, rawText: [p.excerpt, p.note].filter(Boolean).join(' — ') || '' };
+      if (p) return { title: `Library — "${p.title}"`, pieceId: ep.id, rawText: [p.excerpt, p.note, p.scene, p.catalog].filter(Boolean).join(' — ') || '' };
       const cd = cdRackItems.find(f => f.id === ep.id);
       // No live deep-link into the CD rack sub-view yet — same caveat as
       // theater's beat addressing below.
@@ -85,8 +91,15 @@ export function resolveEndpoint(ep) {
         const speaker = b?.type === 'line' ? `${b.character}: ` : '';
         return { title: `Theater — ${b?.playTitle ?? '?'}, "${b?.sceneSlug ?? '?'}"`, pieceId: null, rawText: b ? `${speaker}${b.text}` : '' };
       }
+      // A scene-level endpoint, addressed by scene rather than by beat. Its
+      // text is its beats', joined — `rawText: ''` here would render an empty
+      // quote box the moment a resonance used one.
       const s = theaterPieces.flatMap(p => p.scenes).find(x => x.id === ep.id);
-      return { title: `Theater — scene "${s?.slug ?? '?'}"`, pieceId: null, rawText: '' };
+      const beats = s ? theaterBeats.filter(b => b.sceneSlug === s.slug && b.text) : [];
+      return {
+        title: `Theater — scene "${s?.slug ?? '?'}"`, pieceId: null,
+        rawText: beats.map(b => (b.type === 'line' ? `${b.character}: ` : '') + b.text).join(' ').trim(),
+      };
     }
     default:
       return { title: `${ep.scene} #${ep.id}`, pieceId: ep.id ?? null, rawText: '' };

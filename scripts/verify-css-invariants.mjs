@@ -2,10 +2,14 @@
 // Run with `node scripts/verify-css-invariants.mjs`, and on every build via
 // vite.config.js.
 //
-// Both checks here exist because a stylesheet asserted something in a comment
-// and nothing made it true. That is the failure mode this project keeps
-// hitting: prose that was accurate when written, relied on afterwards, and
-// wrong by then.
+// All three checks here exist because a stylesheet asserted something in a
+// comment and nothing made it true. That is the failure mode this project
+// keeps hitting: prose that was accurate when written, relied on afterwards,
+// and wrong by then.
+//
+//   1. Every bottom-anchored scene title uses the shared safe zone.
+//   2. No selector is declared twice over the same property.
+//   3. No translucent text colour is too faint to reach AA on any ground.
 import { readFileSync } from 'node:fs';
 import { readdirSync } from 'node:fs';
 
@@ -50,6 +54,13 @@ function ownDeclarations(body) {
     .map(d => d.slice(0, d.indexOf(':')).trim())
     .filter(p => p && !p.startsWith('--') && !/[\s\n]/.test(p));
 }
+
+
+// sRGB relative luminance, per WCAG.
+const relLuminance = ([r, g, b]) => {
+  const lin = c => { c /= 255; return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4; };
+  return 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b);
+};
 
 export function verifyCssInvariants() {
   const log = [];
@@ -119,11 +130,42 @@ export function verifyCssInvariants() {
     }
   }
 
+  // ── 3. Text colours that cannot reach AA whatever is behind them ──
+  // Every scene here paints on a dark ground, and a translucent text colour
+  // over a dark ground is at its brightest when the ground is pure black. So
+  // compositing the declared colour over black gives the BEST case, and if
+  // that is under 4.5:1 the real rendering is under it too — no knowledge of
+  // any particular panel's background needed, and no false alarms.
+  //
+  // Deliberately an upper bound rather than a real measurement: it will miss
+  // a 0.9-alpha colour that happens to sit on a light panel, and it will
+  // never wrongly accuse one. Seven declarations failed it when it was
+  // written, across harmonics, library and orbiter, three of which carried
+  // their own comment claiming a measurement.
+  const AA_SMALL = 4.5;
+  for (const [path, url] of sheets) {
+    const css = stripComments(readFileSync(url, 'utf8'));
+    for (const { sel, body } of topLevelRules(css)) {
+      for (const m of body.matchAll(/(?<![-\w])color:\s*rgba\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*([\d.]+)\s*\)/g)) {
+        const [r, g, b, a] = [+m[1], +m[2], +m[3], +m[4]];
+        // Over pure black, the composite is simply the colour times its alpha.
+        const best = (relLuminance([r * a, g * a, b * a]) + 0.05) / 0.05;
+        if (best < AA_SMALL) {
+          problems.push(
+            `${path}: ${sel.split('\n')[0].trim().slice(0, 60)} sets color: rgba(${r},${g},${b},${a}), ` +
+            `which reaches at most ${best.toFixed(2)}:1 — against pure black, the most favourable ground there is. ` +
+            `AA wants ${AA_SMALL}:1 for text under 24px.`
+          );
+        }
+      }
+    }
+  }
+
   if (problems.length) {
     say(`\ncss-invariants: ${problems.length} problem(s):`);
     for (const p of problems) say(`  ${p}`);
   } else {
-    say(`ok: all ${titleRules} bottom-anchored title rules use the shared safe zone, and no selector is declared twice over the same property`);
+    say(`ok: all ${titleRules} bottom-anchored title rules use the shared safe zone, no selector is declared twice over the same property, and every translucent text colour can reach AA`);
   }
   return { ok: problems.length === 0, failures: problems.length, log };
 }

@@ -5,7 +5,11 @@
    z-index:300) — appended to document.body, outside that overlay,
    same reasoning as orrery.js's hint/title fix. */
 .orbiter-title, .orbiter-hint {
-  position: fixed; color: rgba(255,255,255,0.35);
+  /* No colour here: both elements set their own below (.orbiter-title-sub
+     at 0.8, .orbiter-hint from --hint-text-color), so the 0.35 white this
+     rule used to carry never rendered anywhere — and would have measured
+     3.0:1 if it had. */
+  position: fixed;
   pointer-events: none; text-align: center; z-index: 310;
   font-family: 'Arapey', serif;
 }
@@ -125,7 +129,10 @@
    here, never toggles visibility, so an empty <p> needs to collapse to
    nothing on its own. */
 .orbiter-panel-refs {
-  font-size: .6rem; letter-spacing: .3em; color: rgba(200,255,220,.3);
+  /* 0.3 alpha tops out at 2.3:1 against pure black. 0.75 measures 9.5:1
+     over this panel's #060a07 — the same quiet-metadata treatment
+     sphere.css's .sphere-facet-id settled on, at a legible weight. */
+  font-size: .6rem; letter-spacing: .3em; color: rgba(200,255,220,.75);
   margin: 2rem 0 0; text-transform: uppercase;
 }
 .orbiter-panel-refs:empty { margin: 0; }

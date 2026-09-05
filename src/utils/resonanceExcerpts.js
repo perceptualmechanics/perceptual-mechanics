@@ -16,8 +16,9 @@
 // quote actually appears in that piece's text (full text if the piece is
 // short enough that there's no point windowing at all). If no quote from
 // the rationale matches a given endpoint's text, that's worth knowing too —
-// the fallback snippet says so plainly rather than silently passing off an
-// arbitrary opening excerpt as if it were the relevant part.
+// the excerpt falls back to the piece's opening — and quoteMatched() below
+// reports that, so the fact reaches the review doc and the build check
+// rather than the scene's own panel.
 //
 // Plain functions, no DOM/Node dependency either way — safe to import from
 // a Vite-bundled browser module (harmonicsPieces.js) or a bare `node`
@@ -87,13 +88,29 @@ function findQuoteWindow(rawText, quotes) {
   return null;
 }
 
+// True when a rationale's quoted language can actually be located in this
+// piece — i.e. when snippetFor is about to return a window centred on the
+// claim rather than an arbitrary opening excerpt.
+//
+// Separate from snippetFor because the two consumers want different things
+// from the same fact. It matters to whoever is REVIEWING the resonance —
+// a rationale claiming overlapping language that isn't there is the thing
+// review exists to catch — and not at all to somebody reading the scene, who
+// did not file the rationale and cannot act on it. So the build doc prints
+// it, scripts/verify-resonances.mjs counts it, and the scene shows the
+// excerpt on its own.
+//
+// The live panel used to append "(no rationale quote matched this piece —
+// showing opening text instead)" to the excerpt itself, in pull-quote
+// italics, for 10 of the 128 slots.
+export function quoteMatched(rawText, quotes) {
+  if (rawText.length <= FULL_TEXT_THRESHOLD) return true;
+  return findQuoteWindow(rawText, quotes) !== null;
+}
+
 export function snippetFor(rawText, quotes) {
   if (rawText.length <= FULL_TEXT_THRESHOLD) return rawText.trim();
   const windowed = findQuoteWindow(rawText, quotes);
   if (windowed) return windowed;
-  // No quote from the rationale matched this piece — say so plainly rather
-  // than quietly showing an arbitrary opening excerpt that might not relate
-  // to the claim at all.
-  const opening = rawText.slice(0, 300).replace(/\s+\S*$/, '');
-  return `${opening}… (no rationale quote matched this piece — showing opening text instead)`;
+  return rawText.slice(0, 300).replace(/\s+\S*$/, '') + '…';
 }

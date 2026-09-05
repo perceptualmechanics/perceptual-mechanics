@@ -46,9 +46,6 @@
 	@media (min-width: 601px) {
 		white-space: nowrap;
 	}
-	@media (prefers-reduced-motion: reduce) {
-		transition: none;
-	}
 }
 .harmonics-hint {
   position: fixed; top: 4.5rem; right: 1.2rem;
@@ -57,10 +54,6 @@
   text-transform: uppercase; pointer-events: none;
   text-align: right; z-index: 310; line-height: 1.8;
   font-family: 'Arapey', serif;
-
-	@media (prefers-reduced-motion: reduce) {
-		transition: none;
-	}
 }
 
 /* ─── Sound toggle (round 10, 2026-08-18) ────────────────────────────────
@@ -120,6 +113,16 @@
   padding: 2.2rem 1.5rem 2rem;
   transform: translateX(100%);
   transition: transform .5s cubic-bezier(.16,1,.3,1);
+
+	/* The largest motion in this scene, and the one that was unguarded: the
+	   two reduced-motion blocks in this file used to sit on .harmonics-title-row
+	   and .harmonics-hint, neither of which has a transition to turn off. The
+	   panel arrives instantly here instead, which is what a visitor who asked
+	   for less motion is asking for; nothing in harmonics.js waits on
+	   transitionend, so there is nothing downstream of the slide to break. */
+	@media (prefers-reduced-motion: reduce) {
+		transition: none;
+	}
   /* KNOWN ISSUE, not fixed here (3.0 QA pass, 2026-08-23): on short
      mobile viewports, round 10's side-by-side excerpts can make this
      panel tall enough that its own bottom content sits under the fixed
@@ -174,7 +177,10 @@
    is the only place that count is disclosed before scrolling the list. */
 .harmonics-panel-subtitle {
   font-size: .7rem; letter-spacing: .1em; text-transform: uppercase;
-  color: rgba(255,220,150,.5); margin: 0 0 1.4rem;
+  /* 0.5 alpha measured 4.27:1 over the panel's #05070d at 11.2px — under
+     AA. 0.72 measures 7.9:1 and still reads as the quiet line under the
+     title rather than a second heading. */
+  color: rgba(255,220,150,.72); margin: 0 0 1.4rem;
   border-bottom: 1px solid rgba(255,220,150,0.18); padding-bottom: 1.4rem;
 }
 /* Round 10: real side-by-side passages from both pieces' own text — see
@@ -187,9 +193,9 @@
    only ~33% of the viewport width (harmonics.css's own .harmonics-panel
    rule) to begin with; at that width two columns read cramped rather than
    giving each excerpt room to breathe, and with several resonance pairs
-   stacked in the same panel (sphere:14 carries 6), the side-by-side
-   layout compounded the density problem rather than helping it. Column,
-   always. */
+   stacked in the same panel — the corpus's hub carries twelve — the
+   side-by-side layout compounded the density problem rather than helping
+   it. Column, always. */
 .harmonics-excerpt-pair {
   display: flex; flex-direction: column; gap: 1rem; margin: 0 0 1rem;
 }
@@ -219,6 +225,15 @@
      an invented third color. Falls back to invisible if unset. */
   box-shadow: inset 10px 0 16px -14px var(--q-accent, transparent);
 }
+/* Two of the 128 endpoints are library items whose data carries no prose —
+   only bibliographic fields. Drawn as a normal excerpt they were a bordered
+   empty rectangle with a title floating in it, which reads as something that
+   failed to load. Without the box the label is just the label. */
+.harmonics-excerpt--bare {
+  padding: 0; border-left: 0; background: none; box-shadow: none;
+  flex: 0 1 auto;
+}
+.harmonics-excerpt--bare .harmonics-excerpt-label { margin-bottom: 0; }
 .harmonics-excerpt-label {
   display: block; margin-bottom: .4rem; font-style: normal;
   font-size: .6rem; letter-spacing: .12em; text-transform: uppercase;
@@ -246,8 +261,8 @@
 /* Design-notes pass follow-up (2026-09-01): a hairline rule between
    stacked entries read as one continuous flow, not N distinct
    resonances — exactly the "flatter than the rest of the site" gap the
-   original audit named, and the one that compounds worst at the corpus's
-   real max (sphere:14 "Quiver," 6 stacked pairs, #harmonics/1). Each
+   original audit named, and the one that compounds worst on the hub node,
+   whose stack runs to twelve. Each
    entry is now a real card: a faint background wash in that connection's
    OWN scene-accent color (`--entry-accent`, set inline in harmonics.js —
    same hex nodeResonances already resolves for the excerpt border, not
@@ -269,7 +284,8 @@
 .harmonics-entry-index {
   display: block; margin-bottom: .7rem;
   font-size: .58rem; letter-spacing: .18em; text-transform: uppercase;
-  color: rgba(255,232,190,.4);
+  /* 0.4 measured 3.3:1 at 9.3px. 0.7 is 8.3:1. */
+  color: rgba(255,232,190,.7);
 }
 /* Round 10: the button used to repeat the piece's title (the panel had
    no other way to show it) — now that title appears as the "other"

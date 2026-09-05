@@ -56,18 +56,18 @@ Status: `[ ]` open · `[x]` fixed in 5.0 · `[-]` deliberately not doing
 - [x] `sceneKit.js:523` — `escapeHtml`'s comment claims it escapes quotes. It does not (text-node serialisation). Worse: the phrase is escaped and then matched against **decoded** text in `wireCrossLinks`, so a phrase containing `&`, `<` or `>` silently drops its link — and `verify-links` compares the raw pair, so it passes.
 
 ### Orrery
-- [ ] `orrery.js:2269,3650` — the poster hover highlight changes the rendered image by **0–4 of 255**. The emissive colour is `0x0c0a08`, so a 2.4× intensity bump is sub-visible. The crosshair is what everybody was actually confirming.
+- [x] `orrery.js:2269,3650` — the poster hover highlight changes the rendered image by **0–4 of 255**. The emissive colour is `0x0c0a08`, so a 2.4× intensity bump is sub-visible. The crosshair is what everybody was actually confirming.
 - [x] `orrery.css:110,131` — two rules set `text-align` on `.orrery-hint`; `center` is dead.
 
 ### Harmonics
-- [ ] `harmonics.js:779` — the "pending" layer renders **zero points**; the comment says 42. The whole subsystem (`pickPendingAt`, `openPendingPanel`, the drift integration, `DRIFT_R`) is unreachable. The same file says so correctly 470 lines later.
-- [ ] `resonanceExcerpts.js:98` — **10 of 128** excerpt slots print reviewer apparatus into the panel: *"(no rationale quote matched this piece — showing opening text instead)"*, in pull-quote italics.
-- [ ] `harmonicsPieces.js:66` — **4 of 128** slots render as an empty bordered quote box; the documented fallback is unreachable for empty text because the length check short-circuits first.
-- [ ] `harmonics.js:922`, `harmonics.css:190,251`, `harmonics.html:13` — the panel's density design is calibrated against a 6-card maximum. The real maximum is **12** (`scroll:11`, "Projection"). Four comments, three of them the stated reason for a layout decision.
-- [ ] `harmonics.css:49,61` — the reduced-motion blocks are on the two elements with no transitions; the panel's 500ms slide, the largest motion in the scene, is unguarded.
-- [ ] `harmonics.css:273,177,229` — three panel colours measure **3.2:1** (9.3px), **4.2:1**, **3.7:1**. All fail AA; two carry explicit legibility claims.
-- [ ] `harmonics.js:694` — the dust layer's `renderOrder: 1` puts it **over** the nodes (which are 0), multiplying their brightness by ~0.45 where it covers them.
-- [ ] `harmonics.js:422,453` — `scene.fog` and both lights affect nothing: every material is `Points`/`Sprite` and all seven set `fog: false`.
+- [x] `harmonics.js:779` — the "pending" layer renders **zero points**; the comment says 42. The whole subsystem (`pickPendingAt`, `openPendingPanel`, the drift integration, `DRIFT_R`) is unreachable. The same file says so correctly 470 lines later.
+- [x] `resonanceExcerpts.js:98` — **10 of 128** excerpt slots print reviewer apparatus into the panel: *"(no rationale quote matched this piece — showing opening text instead)"*, in pull-quote italics.
+- [x] `harmonicsPieces.js:66` — **4 of 128** slots render as an empty bordered quote box; the documented fallback is unreachable for empty text because the length check short-circuits first.
+- [x] `harmonics.js:922`, `harmonics.css:190,251`, `harmonics.html:13` — the panel's density design is calibrated against a 6-card maximum. The real maximum is **12** (`scroll:11`, "Projection"). Four comments, three of them the stated reason for a layout decision.
+- [x] `harmonics.css:49,61` — the reduced-motion blocks are on the two elements with no transitions; the panel's 500ms slide, the largest motion in the scene, is unguarded.
+- [x] `harmonics.css:273,177,229` — three panel colours measure **3.2:1** (9.3px), **4.2:1**, **3.7:1**. All fail AA; two carry explicit legibility claims.
+- [x] `harmonics.js:694` — the dust layer's `renderOrder: 1` puts it **over** the nodes (which are 0), multiplying their brightness by ~0.45 where it covers them.
+- [x] `harmonics.js:422,453` — `scene.fog` and both lights affect nothing: every material is `Points`/`Sprite` and all seven set `fog: false`.
 
 ### Beamline
 - [ ] `beamline.js:1634` — station labels are sized so their **on-screen size is constant**, ~524 CSS px wide. All ten overflow a 390px phone; the longest is 567px tall on an 844px screen.
