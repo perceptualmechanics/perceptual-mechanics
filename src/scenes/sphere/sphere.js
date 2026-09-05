@@ -267,8 +267,6 @@ export function createSphere(container, { preview = false, initialPieceId = null
           const edge1 = new THREE.Vector3().subVectors(b, a);
           const edge2 = new THREE.Vector3().subVectors(c, a);
           const normal = new THREE.Vector3().crossVectors(edge1, edge2).normalize();
-          const toA = new THREE.Vector3().subVectors(a, center).normalize();
-          const upVec = toA.clone().addScaledVector(normal, -toA.dot(normal)).normalize();
           const div = document.createElement('div');
           div.className = 'face-label';
           div.textContent = randomExcerpt(fi);
@@ -280,7 +278,7 @@ export function createSphere(container, { preview = false, initialPieceId = null
           // sizedAt: the label-scale this div's fontSize/width/height were
           // last written at. -1 is a value `scale` can never take (it is
           // clamped to [0.5, 3.0]), so the first pass always writes.
-          labelData.push({ label, normal, upVec, div, sizedAt: -1, angle: 0 });
+          labelData.push({ label, normal, div, sizedAt: -1 });
         }
       }
 
@@ -573,13 +571,13 @@ export function createSphere(container, { preview = false, initialPieceId = null
   const reduceMotionWatch = onReducedMotionChange(m => { reduceMotion = m; });
 
   // ─── Resize ───────────────────────────────────────────────────────────────
-  // viewW/viewH are the container's own dimensions, cached here rather than
-  // read per label in projectToScreen() below. They only change on resize,
-  // and reading them 320 times a frame from inside a loop that is also
-  // WRITING styles is what made this scene expensive: a style write on label
-  // N followed by a layout read for label N+1 leaves the browser no choice
-  // but to flush a synchronous layout, once per label, every frame. Same
-  // pattern beamline.js already uses for its own `viewportH`.
+  // viewW/viewH are the container's own dimensions, cached rather than read
+  // from the live element. The reader they were introduced for — the facet
+  // tilt's per-label screen projection — is gone as of 5.0, but the reason
+  // they exist is worth keeping against the next one: reading layout 320
+  // times a frame from inside a loop that is also WRITING styles forces a
+  // synchronous layout flush once per label per frame. Same pattern
+  // beamline.js uses for its own `viewportH`.
   let viewW = w, viewH = h;
   const resize = bindGuardedResize(container, (nw, nh) => {
     viewW = nw; viewH = nh;
@@ -592,39 +590,25 @@ export function createSphere(container, { preview = false, initialPieceId = null
     if (labelRenderer) labelRenderer.setSize(nw, nh);
   });
   // The w/h this scene was constructed with fall back to window.innerWidth
-  // when the container measured 0 (a hidden ancestor at mount). That was
-  // self-correcting while projectToScreen read the live size every frame;
-  // now that it doesn't, run the guarded handler once so viewW/viewH start
-  // from a real measurement. bindGuardedResize's own 0-guard makes this a
-  // no-op if the container still isn't laid out.
+  // when the container measured 0 (a hidden ancestor at mount), so run the
+  // guarded handler once to start viewW/viewH from a real measurement.
+  // bindGuardedResize's own 0-guard makes this a no-op if the container still
+  // isn't laid out.
   resize.trigger();
 
   // ─── Animate ──────────────────────────────────────────────────────────────
   const cameraDir = new THREE.Vector3();
   const worldNormal = new THREE.Vector3();
-  const worldUp = new THREE.Vector3();
   const normalMatrix = new THREE.Matrix3();
-  // Two more of the same kind — the per-label center/tip the rotation math
-  // below needs in world space. Both used to be `.clone()`d fresh inside the
-  // loop, once per visible label per frame.
-  const centerWorld = new THREE.Vector3();
-  const tipWorld = new THREE.Vector3();
 
-  // Writes into `out` and reuses one scratch Vector3, rather than
-  // `vec3.clone().project(camera)` returning a fresh {x, y}: this is called
-  // twice per visible label per frame, so the old shape allocated a Vector3
-  // and an object literal ~1,600 times a second for values discarded in the
-  // same iteration.
-  const projVec = new THREE.Vector3();
-  const projCenter = { x: 0, y: 0 };
-  const projTip = { x: 0, y: 0 };
-  function projectToScreen(vec3, out) {
-    projVec.copy(vec3).project(camera);
-    out.x = ( projVec.x * 0.5 + 0.5) * viewW;
-    out.y = (-projVec.y * 0.5 + 0.5) * viewH;
-    return out;
-  }
-
+  // projectToScreen() and its scratch objects (projVec/projCenter/projTip,
+  // centerWorld/tipWorld, worldUp) lived here to serve the facet-label tilt
+  // and went with it in 5.0. They are worth a sentence because the allocation
+  // shape they were written to avoid is a real trap in this file: called twice
+  // per visible label per frame, `vec3.clone().project(camera)` returning a
+  // fresh object literal was allocating roughly 1,600 objects a second for
+  // values discarded in the same iteration. Anything new that projects
+  // per-label should reuse scratch the same way.
   // One per-frame pass over every label: backface test, opacity ramp,
   // size, and the screen-space rotation that keeps text upright against
   // the sphere's own surface. Its own function rather than inline in
@@ -644,7 +628,7 @@ export function createSphere(container, { preview = false, initialPieceId = null
     const scale = Math.max(0.5, Math.min(3.0, 3.8 / camDist));
 
     for (const entry of labelData) {
-      const { label, normal, upVec, div } = entry;
+      const { label, normal, div } = entry;
       // Backface visibility test: a label should only show on the side of
       // the sphere facing the camera. worldNormal is the face's outward
       // normal transformed into world space by the sphere's current
@@ -685,69 +669,42 @@ export function createSphere(container, { preview = false, initialPieceId = null
           div.style.height   = `${(52 * scale).toFixed(0)}px`;
           entry.sizedAt = scale;
         }
-        // Label rotation: to keep each label's text upright relative to
-        // the sphere's surface (not the screen) as the sphere spins, we
-        // project two nearby 3D points onto the 2D screen — the label's
-        // center, and a point offset slightly along its local "up"
-        // direction (upVec, the face's own tangent-plane up) — then use
-        // atan2 on the screen-space delta between them to recover the
-        // angle that direction makes on screen. atan2(dx, -dy) rather
-        // than atan2(dy, dx) is just this codebase's convention for
-        // measuring angle from screen-up instead of screen-right; the
-        // 180/Math.PI converts the result from radians to the degrees
-        // CSS rotate() expects.
+        // ─── The facet labels do not tilt, and that is a decision ──────────
+        // From here until 5.0 this block projected each facet's tangent-plane
+        // "up" to screen space and rotated the label to match, so the text sat
+        // inscribed on the facet rather than upright on the screen.
         //
-        // This math ran every frame from the day it was written and never
-        // reached the screen. CSS2DRenderer sets `element.style.transform`
-        // by plain assignment on every visible object every frame
-        // (CSS2DRenderer.js:238), and it runs AFTER updateLabels() in
-        // animate() — so writing a rotate() here was overwritten by the
-        // renderer's own translate a few microseconds later, every frame,
-        // for years. Measured before the fix: 0 of 167 labels carried a
-        // rotate(); all 167 carried only the translate.
+        // The full history, because it is unusually instructive and the code
+        // is gone:
         //
-        // The fix is ordering, not maths. The angle is stashed on the entry
-        // here and applied in applyLabelRotations() below, immediately after
-        // labelRenderer.render(), by APPENDING to what the renderer just
-        // wrote rather than replacing it — transform functions compose left
-        // to right, so `translate(-50%,-50%) translate(x,y) rotate(a)`
-        // positions the label and then spins it about its own centre, which
-        // is what was wanted. Appending is safe against accumulation
-        // precisely because the renderer assigns rather than appends.
-        centerWorld.copy(label.position).applyMatrix4(sphere.matrixWorld);
-        worldUp.copy(upVec).applyMatrix3(normalMatrix).normalize();
-        tipWorld.copy(centerWorld).addScaledVector(worldUp, 0.15);
-        const cs = projectToScreen(centerWorld, projCenter);
-        const ts = projectToScreen(tipWorld, projTip);
+        //   The maths was written when the scene was, and never once reached
+        //   the screen. CSS2DRenderer assigns `element.style.transform` for
+        //   every visible object on every render (CSS2DRenderer.js:238) and
+        //   runs AFTER updateLabels(), so the rotate() written here was
+        //   overwritten by the renderer's own translate a few microseconds
+        //   later, every frame, for years. Measured at 4.0: 0 of 167 labels
+        //   carried a rotate.
         //
-        // Two corrections, both found by looking at this on a real sphere
-        // rather than reasoning about it — which is the only way either one
-        // was ever going to surface.
+        //   4.0.1 fixed the ordering — stash the angle here, append it after
+        //   labelRenderer.render() — and two things immediately turned up
+        //   that only a live look could have found. Half the labels rendered
+        //   upside down, because a facet's tangent-plane up points wherever
+        //   the geometry sends it (raw angles -178 to +167). And folding at a
+        //   hard ±90 made near-vertical labels snap through 180 degrees as
+        //   the sphere carried them across the boundary: 24 snaps in four
+        //   seconds of ordinary rotation. Both were fixed properly, the
+        //   second by tapering with cos(angle) so the discontinuity is zero
+        //   at the fold rather than hidden.
         //
-        // First: the facet's tangent-plane "up" points wherever the geometry
-        // sends it, so the raw angle covers the full -180..180 and roughly
-        // half the labels rendered upside down. Measured live: -178 to +167.
-        // Adding 180 to anything past a quarter-turn folds those back.
+        //   And then Scott looked at the working version and preferred the
+        //   accident. Upright text on a turning sphere reads; text lying at
+        //   32 degrees on a facet is a nice idea about surfaces that costs
+        //   you the words.
         //
-        // Second, and the reason this isn't just a clamp: folding at a hard
-        // +-90 boundary means a label sitting near vertical SNAPS through 180
-        // degrees the instant the sphere carries it across the line. In four
-        // seconds of ordinary auto-rotation that fired 24 times, 18 of them
-        // on labels visible at real opacity — about six flicks a second,
-        // which reads as a fault in the page rather than an effect.
-        //
-        // So the tilt is tapered by cos(angle) instead of applied flat. That
-        // is zero exactly at +-90, which removes the discontinuity rather
-        // than hiding it — a label approaching vertical eases to horizontal
-        // and can no longer cross anything. It also puts the effect where it
-        // is worth having: facets turned toward the viewer, whose text is at
-        // full opacity and actually readable, keep most of their tilt, while
-        // facets near the silhouette — already fading out on the backface
-        // ramp, already unreadable — sit flat. Peak tilt lands near 32
-        // degrees, around a raw 49.
-        const raw = Math.atan2(ts.x - cs.x, -(ts.y - cs.y)) * (180/Math.PI);
-        const folded = raw > 90 ? raw - 180 : raw < -90 ? raw + 180 : raw;
-        entry.angle = folded * Math.cos(folded * Math.PI / 180);
+        // So it is removed rather than re-broken. Restoring the ordering bug
+        // would have left the same 20 lines of live maths in the file with
+        // nothing downstream of them, which is how the situation arose in the
+        // first place — and the next reader would have "fixed" it again.
       } else if (label.visible) {
         div.style.visibility = 'hidden';
         label.visible = false;
@@ -755,16 +712,12 @@ export function createSphere(container, { preview = false, initialPieceId = null
     }
   }
 
-  // The second half of the label-rotation pass. Separate from updateLabels()
-  // only because it has to run on the other side of labelRenderer.render();
-  // it does no maths, just applies the angle that pass already computed.
-  // Appending keeps the renderer's own positioning intact.
-  function applyLabelRotations() {
-    for (const entry of labelData) {
-      if (!entry.label.visible) continue;
-      entry.div.style.transform += ` rotate(${entry.angle.toFixed(1)}deg)`;
-    }
-  }
+  // applyLabelRotations() stood here and is gone with the tilt — see the block
+  // in updateLabels() above. animate() no longer calls anything after
+  // labelRenderer.render(), which is worth knowing if a future effect needs
+  // to run there: the reason that hook existed is that the renderer writes
+  // `transform` by assignment, so anything wanting to compose with its
+  // positioning has to come after it.
 
   let lightAngle = 0;
   let animId = 0;
@@ -795,11 +748,7 @@ export function createSphere(container, { preview = false, initialPieceId = null
     if (!preview && labelData.length) updateLabels();
 
     renderer.render(scene, camera);
-    if (labelRenderer) {
-      labelRenderer.render(scene, camera);
-      // Must follow the render — see the ordering note in updateLabels().
-      if (!preview && labelData.length) applyLabelRotations();
-    }
+    if (labelRenderer) labelRenderer.render(scene, camera);
   }
   animate();
 
