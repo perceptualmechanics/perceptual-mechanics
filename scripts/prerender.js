@@ -8,7 +8,7 @@
 // they remembered would never find it here.
 //
 // This emits a plain HTML page per body of work, built at deploy time from
-// the same modules the scenes import (src/text/*), so a page can't drift
+// the same modules the scenes import (each scene's own <scene>.text.js), so a page can't drift
 // from what the site shows. No client JS, no WebGL, no fonts required to
 // read it: the text is in the markup.
 //
@@ -121,7 +121,7 @@ function lines(text) {
 // point: the next CSS tweak fails the build instead of unstyling the
 // archive. Keep the shipped comments in here short for the same reason
 // every other byte of this block is deliberate — it is duplicated verbatim
-// into all eight pages, so the long-form reasoning lives up here, where it
+// into all eleven pages, so the long-form reasoning lives up here, where it
 // costs the reader of the archive nothing.
 //
 // The @font-face is new in 4.0 and fixes a second, quieter version of the
@@ -748,7 +748,7 @@ ${PSY_SOURCES.map(s => `<li><span class="t">${esc(s.label)}</span>
 <h2 id="field">The field, and why it is not a sky</h2>
 <p>The lens is not in front of a backdrop. It is in a <strong>web</strong> &mdash; filaments across the whole frame, brighter where they cross &mdash; and the web is the same kind of object as the lens at a different magnification. The fractalanch is a fragment of the thing the field is.</p>
 <p>The form is one structure standing for two, and they are alike for a reason rather than by resemblance. <strong>The cosmic web and neural tissue converge</strong> because both are networks built by matter falling along gradients toward nodes, and the similarity has been measured and published rather than merely noticed. In neither is a node a point on black: a cluster sits where filaments meet, and the strands are as visible as the knot.</p>
-<p><strong>It is one web, and that is checked rather than asserted.</strong> A nearest-neighbour graph is not connected on its own &mdash; over this point set it falls into 223 pieces, the largest holding a fifth of the nodes &mdash; so the pieces are joined by taking, repeatedly, the shortest strand from each piece to any other. From a filapixel inside the crystal every node in the field is reachable along strands; the farthest is ${WEB.hops} hops away, ${WEB.hopRadius} units out. There is no seam between the object and the field because there is nowhere for one to be.</p>
+<p><strong>It is one web, and that is checked rather than asserted.</strong> A nearest-neighbour graph is not connected on its own &mdash; over this point set it falls into ${WEB.knnPieces} pieces, the largest holding ${(WEB.knnLargestShare * 100).toFixed(0)}% of the nodes &mdash; so the pieces are joined by taking, repeatedly, the shortest strand from each piece to any other. From a filapixel inside the crystal every node in the field is reachable along strands; the farthest is ${WEB.hops} hops away, ${WEB.hopRadius} units out. There is no seam between the object and the field because there is nowhere for one to be.</p>
 <p class="note">${WEB.nearCount.toLocaleString('en-US')} near nodes &mdash; the sentences &mdash; and ${WEB.farCount.toLocaleString('en-US')} in the field, in ${WEB.clusters} knots strung along filaments. ${WEB.edgeCount.toLocaleString('en-US')} strands. Node degree runs ${WEB.minDegree} to ${WEB.maxDegree}, mean ${WEB.meanDegree.toFixed(2)}; nothing is isolated.</p>
 <p><strong>A junction is bright because strands meet there, and that is arithmetic rather than styling.</strong> Every strand is drawn as two segments meeting at a dark midpoint, bright at each end, and the drawing is additive &mdash; so a node where <em>k</em> strands meet is <em>k</em> bright ends summing on the same pixels. Nothing chooses the brightness of a junction. It is what <em>k</em> ends come to.</p>
 <p>Nothing in the field is a disc, a sprite or a marker, and <strong>nothing in it responds to you</strong> &mdash; not to the camera, not to being pointed at, not to being looked at. That indifference is the point: it is what makes the lens's one response mean something.</p>

@@ -177,7 +177,9 @@ export const PARTNER_HAND_SPEED = 0.6;
 // The catchment, and it is also the cup: CUP_R in medium.js is this times 1.06,
 // because a cup drawn smaller than its own catchment would take letters it was
 // visibly not on. So this number is both a rule and a size, and it was swept as
-// both when the arcs were widened and the letters ended up 0.051 apart:
+// both when the arcs were widened. The letters ended up 0.043 to 0.073 apart,
+// nearest-neighbour, median 0.057 — measured off LETTER_ARCS, not the single
+// 0.051 this line used to carry:
 //
 //     radius   repeated 6-grams   Spearman vs English
 //      0.042         10.4%              0.822

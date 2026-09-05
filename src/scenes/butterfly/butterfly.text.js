@@ -2,7 +2,7 @@
 // Every other found-text scene has body copy to address. Butterfly doesn't —
 // its only "found" text is its own placard line, "Chaos Butterfly in Phase
 // Space, 2026" (the fixed label in butterfly.html / the `label` string in
-// main.js's SCENES map). Broken out into its own module, id kept for
+// src/scenes/registry.js, which is where SCENES moved at 4.2.0). Broken out into its own module, id kept for
 // consistency with every other scene's addressing scheme (see NOTES.md's
 // Linking & Addressing entry), so the harmonics's Layer 2 discovery pass
 // can address it as a piece like any other scene's pieces, even though it's

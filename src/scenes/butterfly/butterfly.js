@@ -610,8 +610,11 @@ export function createButterfly(container, { preview = false } = {}) {
   // A thumbnail that hasn't become its subject in that window isn't a
   // thumbnail. The 2 was never argued for; it was the full rate halved because
   // the tile is small. This number is argued for: it is set so the attractor's
-  // wings are legible at the tile's real 240px size within a few seconds, which
-  // is the only job the tile has. Full mode is untouched, and the two rates now
+  // wings are legible at the size the tile actually gets within a few seconds,
+  // which is the only job the tile has. That size is NOT 240px, which this
+  // comment used to claim: TILE_MAX is 272 and butterfly's own `tile: 0.90` is
+  // the smallest multiplier in the registry, so across the whole viewport
+  // matrix its tile tops out at 218px. Full mode is untouched, and the two rates now
   // differ on purpose rather than by inheritance.
   const clock = createFrameClock();
   const PPS = preview ? 400 : 240;

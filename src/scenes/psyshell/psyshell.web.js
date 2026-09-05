@@ -34,7 +34,7 @@
 // come to. Degree is computed below from the edge list that ships.
 //
 // **The near nodes are the corpus.** They are the filapixel positions, passed
-// in rather than generated here, so the web's dense region IS the 3,221
+// in rather than generated here, so the web's dense region IS the 3,244
 // sentences and not a decorative approximation of them. The far nodes carry
 // nothing and respond to nothing.
 import { mulberry32, hashSeed } from '../../utils/prng.js';
@@ -153,8 +153,10 @@ function knn(pos, tree, from, count, k, total) {
 
 // ─── Making it one web, which is the whole claim ────────────────────────────
 // A symmetric k-nearest-neighbour graph is NOT connected, and at k = 2 or 3 it
-// is nowhere near it: measured on this point set, plain kNN left 223 pieces,
-// the largest holding 19.8% of the nodes. A field in 223 pieces cannot be
+// is nowhere near it: on this point set plain kNN leaves the graph in many
+// disconnected pieces (buildWeb returns the count as `knnPieces`, and the
+// largest piece's share as `knnLargestShare`, so nobody has to remember a
+// number that moves with the corpus). A field in that many pieces cannot be
 // traced from the crystal to a far knot, so "one structure at two
 // magnifications" would have been a sentence rather than something on screen.
 //
@@ -163,12 +165,25 @@ function knn(pos, tree, from, count, k, total) {
 // edges added are the shortest ones available, so they are indistinguishable
 // from the strands the neighbour pass found — this closes the graph rather than
 // decorating it.
-function connectComponents(pos, tree, edges, total) {
+function connectComponents(pos, tree, edges, total, stats) {
   const parent = new Int32Array(total);
   for (let i = 0; i < total; i++) parent[i] = i;
   const find = a => { while (parent[a] !== a) { parent[a] = parent[parent[a]]; a = parent[a]; } return a; };
   const union = (a, b) => { const ra = find(a), rb = find(b); if (ra === rb) return false; parent[ra] = rb; return true; };
   for (let e = 0; e < edges.length; e += 2) union(edges[e], edges[e + 1]);
+
+  // How badly disconnected the neighbour pass leaves it, measured here rather
+  // than written down. This scene's own comment, psyshell.web.js's header, the
+  // published /text/psyshell/ page and STANDARDS.md all quoted "223 pieces,
+  // the largest holding 19.8%" — a measurement taken at a corpus size the
+  // scene has since outgrown, in a section of STANDARDS.md titled "A
+  // structural claim gets measured, not described."
+  if (stats) {
+    const sizes = new Map();
+    for (let n = 0; n < total; n++) { const r = find(n); sizes.set(r, (sizes.get(r) ?? 0) + 1); }
+    stats.knnPieces = sizes.size;
+    stats.knnLargestShare = Math.max(...sizes.values()) / total;
+  }
 
   const K = 12;
   const best = [];
@@ -369,7 +384,8 @@ export function buildWeb(nearPos, nearCount, { center = [0, 0, 0], radius = 1 } 
   const nearEdges = knn(pos, tree, 0, nearCount, NEAR_K, total);
   const farEdges = knn(pos, tree, nearCount, farCount, FAR_K, total);
   // What makes it ONE web rather than a few hundred of them.
-  const bridges = connectComponents(pos, tree, [...nearEdges, ...farEdges], total);
+  const knnStats = {};
+  const bridges = connectComponents(pos, tree, [...nearEdges, ...farEdges], total, knnStats);
 
   const edges = Uint32Array.from([...nearEdges, ...farEdges, ...bridges]);
   const degree = new Uint16Array(total);
@@ -396,5 +412,10 @@ export function buildWeb(nearPos, nearCount, { center = [0, 0, 0], radius = 1 } 
     meanDegree: sumDeg / total,
     isolated,
     clusters: FAR_CLUSTERS,
+    // How many pieces the neighbour pass left before joining, and what share
+    // of the nodes the biggest one held — measured, so the page and the
+    // comments can print it rather than remember it.
+    knnPieces: knnStats.knnPieces,
+    knnLargestShare: knnStats.knnLargestShare,
   };
 }

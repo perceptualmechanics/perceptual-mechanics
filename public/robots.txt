@@ -1,5 +1,4 @@
 User-agent: *
 Allow: /
-Disallow: /packages/
 
 Sitemap: https://perceptualmechanics.com/sitemap.xml

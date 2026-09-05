@@ -61,7 +61,8 @@ Three edits, all of them in the commit that shelved it:
    `label`, `ariaLabel`). The loader comes from `import.meta.glob` in `main.js`,
    so there is no second list to touch.
 2. **`index.html`** — restore the nav icon and the `preview-spectra` tile.
-3. **`styles/main.css`** — `--nav-count: 10` back to `11`. That is the one value
+3. **`styles/main.css`** — `--nav-count` up by one. It is 13 as of Medium, so a
+   restore takes it to 14. That is the one value
    an added icon changes; the row's sizing is derived from it and was verified
    not to clip at 320 / 360 / 375 / 390 / 414 / 768 / 780 / 1280.
 

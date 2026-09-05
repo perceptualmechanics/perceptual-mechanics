@@ -9,6 +9,7 @@ import { verifyScrollMarks } from './scripts/verify-scroll-marks.mjs';
 import { verifyLanding } from './scripts/verify-landing.mjs';
 import { verifyAria } from './scripts/verify-aria.mjs';
 import { verifyCssInvariants } from './scripts/verify-css-invariants.mjs';
+import { verifyCounts } from './scripts/verify-counts.mjs';
 
 // Vite 8 warns that `configLoader: 'native'` is planned to become the default.
 // Under that loader this config is handed to Node as real ESM instead of being
@@ -97,6 +98,26 @@ function verifyCssInvariantsPlugin() {
         this.error(`verify-css-invariants: ${failures} problem(s) — see above.`);
       } else {
         console.log(`  ✓ verify-css-invariants: the safe zone holds and nothing is declared twice`);
+      }
+    },
+  };
+}
+
+
+// And for every number the tree states about itself that can be computed from
+// the data — the third tier of the 5.0 punch list was eighteen findings and
+// one disease.
+function verifyCountsPlugin() {
+  return {
+    name: 'pm-verify-counts',
+    apply: 'build',
+    buildStart() {
+      const { ok, failures, log } = verifyCounts();
+      log.forEach(line => console.log(line));
+      if (!ok) {
+        this.error(`verify-counts: ${failures} stated count(s) the data disagrees with — see above.`);
+      } else {
+        console.log(`  ✓ verify-counts: every stated count matches the data`);
       }
     },
   };
@@ -240,7 +261,7 @@ function verifyStyleHash(outDir, root) {
 }
 
 export default defineConfig({
-  plugins: [verifyLinksPlugin(), verifyResonancesPlugin(), verifyScrollMarksPlugin(), verifyLandingPlugin(), verifyAriaPlugin(), verifyCssInvariantsPlugin(), prerenderTextPages()],
+  plugins: [verifyLinksPlugin(), verifyResonancesPlugin(), verifyScrollMarksPlugin(), verifyLandingPlugin(), verifyAriaPlugin(), verifyCssInvariantsPlugin(), verifyCountsPlugin(), prerenderTextPages()],
   build: {
     // ─── CSS target: pinned, because Vite 8 quietly moved it ─────────────
     // Vite 8 (Rolldown) defaults to a newer browser baseline than Vite 6
@@ -302,7 +323,7 @@ export default defineConfig({
     // esbuild, hence the explicit devDependency.
     cssMinify: 'esbuild',
     cssTarget: ['chrome87', 'edge88', 'firefox78', 'safari14'],
-    // Superseded 2026-08-31 (v3.10.0): all ten scenes are now behind
+    // Superseded 2026-08-31 (v3.10.0): all thirteen scenes are now behind
     // dynamic import() in main.js's SCENES registry (see its own header
     // comment there), each landing in its own sub-500kB chunk. The one
     // chunk left that legitimately exceeds the default 500kB warning is
@@ -343,7 +364,7 @@ export default defineConfig({
       },
       output: {
         // three.js barely changes between deploys, while the app code
-        // (all ten scenes, main.js) changes on nearly every deploy.
+        // (all thirteen scenes, main.js) changes on nearly every deploy.
         // Without this, every scene chunk that imports 'three' would get
         // its own copy of it inlined (confirmed via build output -- no
         // per-scene chunk approaches three.js's size, so Rollup is

@@ -45,7 +45,7 @@ const rushWorkletUrl = new URL('./psyshell.rush.worklet.js', import.meta.url).hr
 // meant for you.
 //
 // It also fixes the geometry problem by making the object a sculpture rather
-// than a data structure. It does not have to encode 3,221 sentences in its
+// than a data structure. It does not have to encode 3,244 sentences in its
 // shape. It holds them. See `psyshell.object.js` — the object knows nothing
 // about the corpus, and `psyshell.text.js` says why nothing should re-connect
 // them.
@@ -76,7 +76,7 @@ const WEB_FAR_COLOR = 0x8fb6d8;     // a strand out in the field
 // Re-derived by rendering and measuring peak luminance, the same way 4.7.0's
 // was: an object built of overlapping additive members has to be set by what
 // the pile sums to. This object is far smaller than either predecessor — 252
-// segments rather than 3,221 rays — so it can afford much more per member.
+// segments rather than 3,244 rays — so it can afford much more per member.
 const CRYSTAL_GAIN = 0.78;
 const FILAPIXEL_PEAK = 3.2;
 // ─── The web's brightness, and why the junctions are not drawn ──────────────
@@ -85,7 +85,8 @@ const FILAPIXEL_PEAK = 3.2;
 // k bright ends landing on the same pixels, additively. **The junction
 // brightening is not a value: it is what k overlapping ends come to**, which is
 // the one way to make "brightness follows strand count" true rather than
-// arranged. Degrees run 1 to 17 across this web, mean 3.04.
+// arranged. Degrees run 2 to 9 across this web, mean 3.51 — buildWeb
+// returns minDegree/maxDegree/meanDegree, and /text/psyshell/ prints them.
 const STRAND_END = 1.0;    // brightness at a node end of a strand
 const STRAND_MID = 0.12;   // and at its dark midpoint
 const NEAR_GAIN = 0.42;    // the lens's own strands
@@ -518,7 +519,7 @@ export function createPsyshell(container, { preview = false } = {}) {
   }
 
   // ─── The web ──────────────────────────────────────────────────────────────
-  // One structure at two magnifications. The 3,221 filapixels are the near
+  // One structure at two magnifications. The 3,244 filapixels are the near
   // nodes — the sentences, where they always were, inside the crystal — and the
   // far field is generated around them; strands connect both, and fourteen
   // bridge strands run from the lens's outermost nodes out into the field, so
@@ -808,7 +809,7 @@ export function createPsyshell(container, { preview = false } = {}) {
 
   const transmits = [];
   function armTransmitter(index) {
-    // The ordinal is the filapixel's place in the WHOLE corpus — n of 3,221 —
+    // The ordinal is the filapixel's place in the WHOLE corpus — n of 3,244 —
     // which is what says how much the lens is holding.
     const { digits } = baseEDigits(index + 1);
     const n = Math.min(digits.length, MAX_DIGITS);
@@ -1124,8 +1125,8 @@ export function createPsyshell(container, { preview = false } = {}) {
   // past whether or not anyone is here.
 
   let levelsDirty = false;
-  // Which half of the web has anything to say this frame. The far half is 20,868
-  // floats and is untouched most of the time — a read only reaches it one time
+  // Which half of the web has anything to say this frame. The far half is the
+  // bigger of the two and is untouched most of the time — a read only reaches it one time
   // in a hundred, and traffic only while a pulse is crossing — so uploading it
   // unconditionally was paying for silence sixty times a second. The flags are
   // sticky for one extra frame so the last write that clears a half still
@@ -1215,7 +1216,7 @@ export function createPsyshell(container, { preview = false } = {}) {
 
     soundToggle = bindPersistedSoundToggle(container, soundToggleEl, setSoundEnabled, 'psyshell');
 
-    // Over the nine scenes the lens holds writing from, not over 3,221
+    // Over the nine scenes the lens holds writing from, not over 3,244
     // filapixels. Selecting one reads its first — which is the only ordered
     // access the object has, and it is a fact about the corpus rather than
     // about the geometry.

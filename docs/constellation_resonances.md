@@ -1,8 +1,8 @@
-# Constellation resonances — candidate review
+# harmonics resonances — candidate review
 
 Generated from `src/resonances.js` by `scripts/build-resonances-doc.mjs` — do not
 hand-edit this file, edit `RESONANCES` and regenerate instead. This is the
-durable, committed review document the Constellation's Layer 2 (cross-scene,
+durable, committed review document the harmonics's Layer 2 (cross-scene,
 connotative) links depend on: nothing here ships to the live scene until
 Scott has read the rationale for a given row and marked it `approved` in
 `src/resonances.js` (a `rejected` row stays in the data — kept, not deleted —
@@ -136,7 +136,7 @@ smaller, defensible list beats a large, noisy one.
 > Arboretum. Orrery. Aerial photographs. Off the wing. Carmen Chameleon. Sugar plum fairy. The ache and shape of things. Free flight, gliding over wheat fields. All the while catching up on my sleep.…
 
 **Orrery — "The Orrery of Los Feliz"**
-> We were tipped off by a news item coupled with the creditors’ lawsuits against Peter Hight, our synchronicity sensitives finding a common link between the two. The news item said that the FCC was investigating a pirate radio station somewhere in the Los Feliz area. It was buried in the local… (no rationale quote matched this piece — showing opening text instead)
+> We were tipped off by a news item coupled with the creditors’ lawsuits against Peter Hight, our synchronicity sensitives finding a common link between the two. The news item said that the FCC was investigating a pirate radio station somewhere in the Los Feliz area. It was buried in the local… *(no rationale quote matched this piece — opening text shown instead)*
 
 **Rationale:** "Wingspan"'s opening catalog ("Arboretum. Orrery. Aerial photographs...") names the Orrery directly, by name — nothing currently connects the two even though the reference is explicit, not inferred.
 
@@ -148,7 +148,7 @@ smaller, defensible list beats a large, noisy one.
 > Tonight, looking upwards after a slow holy day, the full moon peering straight down on me, and a ring like a supernova, like a solar system, like Ptolemy's sphere, like the iris of an eye and Selene Herself the glaring opalescent pupil, contracted from the incoming light and staring straight at me.
 
 **Orbiter — "Moon Song" (#6)**
-> Hello, Phoebe, Lady of Veils – / I'm on your level now. / Flooring flowing we will try to enjoy our stay / rarefied heights, into thin air amber-silver blood circle, stones clamoring for single touch from mother, / such a disconnection, it can only be determined – / who I am, without a masque,… (no rationale quote matched this piece — showing opening text instead)
+> Hello, Phoebe, Lady of Veils – / I'm on your level now. / Flooring flowing we will try to enjoy our stay / rarefied heights, into thin air amber-silver blood circle, stones clamoring for single touch from mother, / such a disconnection, it can only be determined – / who I am, without a masque,… *(no rationale quote matched this piece — opening text shown instead)*
 
 **Rationale:** Sphere's own piece titled "Orbiter" (id 12) is a moon poem — Selene, "like a solar system" — that happens to live outside the scene actually called Orbiter, while Orbiter's own "Moon Song" is the poem doing that scene's moon-work. Two moon poems, each carrying the other's name.
 
@@ -184,7 +184,7 @@ smaller, defensible list beats a large, noisy one.
 > …ld be. Say why, ask wherefore, and it's only because we are what we are at any given moment, and you can only start from that moment. The storms of sycophancy. Healing your shoulder by reinjuring it. Set it in the proper place. The body has to perform to help swath the soul. There is the full-on breath, the unimpeachable address, that startling revelation…
 
 **Scroll — "The Impossible Bliss of Self-Mutilation" (#5)**
-> You’re staring at me because you see what you wish you could be.  You can’t help it.  I used to be like you, worrying about what was mine, grabbing everything I could and guarding it like a dragon on top of the hoard.  But you hold on too tight, and you’ll lose it anyway, and it’ll hurt more.  You… (no rationale quote matched this piece — showing opening text instead)
+> You’re staring at me because you see what you wish you could be.  You can’t help it.  I used to be like you, worrying about what was mine, grabbing everything I could and guarding it like a dragon on top of the hoard.  But you hold on too tight, and you’ll lose it anyway, and it’ll hurt more.  You… *(no rationale quote matched this piece — opening text shown instead)*
 
 **Rationale:** "Everything's A Number"'s "healing your shoulder by reinjuring it... the body has to perform to help swath the soul" states plainly, in six words, the exact logic "The Impossible Bliss of Self-Mutilation" enacts at monologue length and full volume — pain deliberately chosen as the route to something like relief.
 
@@ -196,7 +196,7 @@ smaller, defensible list beats a large, noisy one.
 > satan: Silence, fool! Yes, I do apologize for Horace. He isn’t a very good worker. You see, what we at HellCo really do is help the living achieve their goals in life. Don’t think of it as damnation — think of it as your Final Promotion.
 
 **Scroll — "Iron Gods" (#1)**
-> How much of your life is an absolute lie? You think you're well-informed because you read every newspaper, watch the news, browse a million and one Web sites. And yet, every word that is spoken is a lie. Every sentence typed has been crafted and conformed to a very precise mindset. Every image has… (no rationale quote matched this piece — showing opening text instead)
+> How much of your life is an absolute lie? You think you're well-informed because you read every newspaper, watch the news, browse a million and one Web sites. And yet, every word that is spoken is a lie. Every sentence typed has been crafted and conformed to a very precise mindset. Every image has… *(no rationale quote matched this piece — opening text shown instead)*
 
 **Rationale:** Satan's pitch — "Don't think of it as damnation — think of it as your Final Promotion" — is "Iron Gods"' entire argument played for laughs instead of fury: both describe ordinary economic participation as a soul sold under a friendlier name, one as corporate-satire farce, the other dead serious.
 
@@ -220,7 +220,7 @@ smaller, defensible list beats a large, noisy one.
 > …ed cosmic objects were represented. Great bronze balls swirled around the center spike of steel and wood, painted a most royal purple. The pinnacle was in fact a miniature radio telescope, pointed straight up, and it was still on, receiving information from the heavens. What is most interesting about the orrery – apart from it having been built in the first place – is that the orbits of the planets are precisely and mathemati…
 
 **Library — "2001: A Space Odyssey" (#63)**
-> runtime varies by cut across sources (139-161 min); 149 is the commonly cited general-release figure. Its stargate sequence was built by visual-effects supervisor Douglas Trumbull, who came out of retirement decades later to build The Tree of Life’s creation sequence for Malick — and Tarkovsky’s Solaris was conceived partly as a rebuttal to this film’s coldness.
+> (no excerpt/note on this catalog entry)
 
 **Rationale:** The Orrery's found story — a homemade, 30-foot backyard solar system with "a miniature radio telescope, pointed straight up, and it was still on, receiving information from the heavens" — and 2001's stargate sequence (per the library's own note, a lineage running through Solaris and The Tree of Life) both stage the same gesture: a handmade instrument built to reach the cosmos, one in a warehouse, one on a soundstage.
 
@@ -232,7 +232,7 @@ smaller, defensible list beats a large, noisy one.
 > …our quirks and baggage and minds and heart the way they were that New Year's night. And while the equation itself can be massaged, simplified and expanded, the variables don't change. We have this answer because that is who we were then, and no amount of hope or wishful thinking can change that. And this is no loop, plugging the solution ba…
 
 **Library — "The Symposium" (#13)**
-> Each of us when separated, having one side only, like a flat fish, is but the indenture of a man, and he is always looking for his other half... human nature was originally one and we were a whole, and the desire and pursuit of the whole is called love. — Philip K. Dick’s VALIS reenacts this same… (no rationale quote matched this piece — showing opening text instead)
+> Each of us when separated, having one side only, like a flat fish, is but the indenture of a man, and he is always looking for his other half…
 
 **Rationale:** "Algebra"'s ex-relationship reduced to a solved equation whose "variables don't change... irrational and nonlinear" is the same shape as the Symposium's origin-of-love myth the library's own note cites — Aristophanes' split halves each permanently searching for the other. Both treat a particular love as a fixed structural fact rather than a feeling that could have gone differently.
 
@@ -330,7 +330,7 @@ Our investigation into Peter Hight is pending, but from all appearances he appea
 > …o, really, it's just that stupidly large. And everywhere, at every time, things happen. Some subtle and unnoticed, some grand and spectacular, most in between. I am the construct you project outward to try and tame the interplay of atoms and arguments. You extrapolate, construct, arrange. The mind, outraged at the blind injustice of pure existence, creates…
 
 **Library — "Pale Fire" (#111)**
-> I was the shadow of the waxwing slain / By the false azure in the windowpane; — first published 1962; a 999-line poem followed by a commentary whose annotator, not the poet, turns out to be the real subject — shelved beside Lolita, Nabokov’s other novel here.
+> I was the shadow of the waxwing slain / By the false azure in the windowpane;
 
 **Rationale:** "Thalia" describes itself as a mask that outlives its own telling — "I am the construct you project outward... I am the lie you tell yourselves to keep you sane" — the same structure the library's own note names in Pale Fire: "a 999-line poem followed by a commentary whose annotator, not the poet, turns out to be the real subject." Both pieces make the frame around a story the actual subject of the story.
 
@@ -342,7 +342,7 @@ Our investigation into Peter Hight is pending, but from all appearances he appea
 > …ou with carriages and bankers. The parker password. Enormous relief, oh my goodness, all this built-up thunderstorm cannot deign to keep us off the wrong path. This will be the way, this Slack, this zen. Oh, the curtains, oh the shield from the cruel sun, oh the double-edge, oh God your gift brings life and ends it and for that we are fearful and in awe. And t…
 
 **Library — "The Book of the SubGenius" (#113)**
-> the source scripture of “Slack” as a concept — the Church of the SubGenius’s central virtue, and almost certainly where that word entered Scott’s own private vocabulary for it. A second volume, Revelation X, sits beside it here.
+> Sometimes a book goes too far. Sometimes…is NOW.
 
 **Rationale:** "Starbought" names its own resolution outright — "This will be the way, this Slack, this zen" — capitalized exactly the way the library's own note identifies the word's source: The Book of the SubGenius, "the source scripture of 'Slack' as a concept... almost certainly where that word entered Scott's own private vocabulary for it." A single shared word, but a traceable one — the library note is effectively naming this poem's source.
 
@@ -390,7 +390,7 @@ Our investigation into Peter Hight is pending, but from all appearances he appea
 > There it was again: another quake deep within my core, rumbling to the surface, as those memories and moments and that sense of profound loss; how could she let that go? stands in confusion as the ground once more stabilizes, but I get the sense that any answer I receive will never be truly satisfying. And the world continues, since no one feels that quake but me.
 
 **Scroll — "Projection" (#11)**
-> A symphony. The pillars of the concert hall, wisping upwards like smoke, curved, sandblasted metal because the glare was too much for other buildings. There will be no mirrors in the desert; this is the sun's kingdom, and to amplify or reflect is pointless. Only refraction will do. Split the… (no rationale quote matched this piece — showing opening text instead)
+> A symphony. The pillars of the concert hall, wisping upwards like smoke, curved, sandblasted metal because the glare was too much for other buildings. There will be no mirrors in the desert; this is the sun's kingdom, and to amplify or reflect is pointless. Only refraction will do. Split the… *(no rationale quote matched this piece — opening text shown instead)*
 
 **Rationale:** Aftershock's "another quake deep within my core, rumbling to the surface... the ground once more stabilizes" is a metaphor; Projection's own account is the literal event underneath it — "I was going through my first earthquake in L.A... a second quake shook me while on the 32nd floor of a skyscraper days later, as I was thinking about moving back to Boston... You can't write these things; you can only recount them later." One piece supplies the image, the other supplies the real occasion for it. A separate close-reading pass landed on this same pair independently, describing it the same way: "real heartbreak reframed at cosmic scale... same coping mechanism, different scale."
 
@@ -426,7 +426,7 @@ Our investigation into Peter Hight is pending, but from all appearances he appea
 > …ations take our work And try to build a slaughterhouse! / Yes, soon, my friends, one maddened Serb Will send this world down into Dis! And our machines will be usurped To kill the hope within Man's breast!" / "What can we do?" the question raised. "We'll fight them!" "No, we're pacifists!" "Jump to the future!" says old H.G.…
 
 **Library — "The Planetary Omnibus" (#130)**
-> collects the complete Planetary — “archaeologists of the impossible” excavating a secret pulp-fiction history hidden under the 20th century, structurally close to Scott’s own “Lament for the Future Never Realized” (Tesla, Verne, Wells, and Edison conspiring to vanish before their inventions are weaponized) and to the pattern-finding cluster this shelf already has running through Gravity’s Rainbow, Borges’s Collected Fictions, and Everything Is Under Control.
+> (no excerpt/note on this catalog entry)
 
 **Rationale:** The library's own note names this poem directly: Planetary is "structurally close to Scott's own 'Lament for the Future Never Realized' (Tesla, Verne, Wells, and Edison conspiring to vanish before their inventions are weaponized)" — exactly Lament's own plot (Nikola, Wells, Verne and the assembled inventors resolving to disappear from public view rather than see their machines "usurped... to kill the hope within Man's breast"). Not an inferred echo; the library entry is already pointing at this specific poem.
 
@@ -438,7 +438,7 @@ Our investigation into Peter Hight is pending, but from all appearances he appea
 > Shades of recognition, Echoes telling me that this scene has been played before. Not deja vu, but a sense of an assumed role That I've stepped into once again. We might need a rewrite.
 
 **Library — "Gödel, Escher, Bach: An Eternal Golden Braid" (#73)**
-> 20th-anniversary edition. The self-referential “strange loop” this book spends 800 pages on is the same shape as the sentence Finnegans Wake leaves open at both ends.
+> Frederick the Great, King of Prussia, came to power in 1740.
 
 **Rationale:** The poem is explicitly about noticing you're caught inside a repeating structure — "Not deja vu, but a sense of an assumed role / That I've stepped into once again. / We might need a rewrite" — a plain-language description of the same shape Hofstadter spends 800 pages formalizing as a "strange loop," per the library's own note (already cited for Finnegans Wake's opening/closing sentence elsewhere on that shelf).
 
@@ -462,7 +462,7 @@ Our investigation into Peter Hight is pending, but from all appearances he appea
 > …ing medium…and the laser…no, wait, the light pours through me…and my psyche and mind and body are the medium…and the laser light is that which comes out of me. We're grasping our way towards an analogy, but jumping jesus…this could be something…and my third eye is the focusing mechanism – THE MIRROR – the fucking mirror isn't letting anything out
 
 **Library — "Neuromancer" (#127)**
-> first published 1984; coined “cyberspace” and describes the Matrix as “a global consensus-hallucination” — the word Scott’s own 2003 cosmology-in-progress (Storyline.doc) explicitly refused to reuse for “the Surround” (“I cannot use the word matrix anymore, fuck you very much, Wachowski Brothers”), even though Gibson, not the Wachowskis, got there first.
+> The sky above the port was the color of television, tuned to a dead channel.
 
 **Rationale:** Beamline's bounce 2 is drawn from Storyline.doc, dated 9/30–10/1/2003 (per beamline.text.js's own header) — the same document the library's Neuromancer note quotes directly: "I cannot use the word matrix anymore, fuck you very much, Wachowski Brothers," cited as evidence of "Scott's own 2003 cosmology-in-progress." Bounce 2's "we're grasping our way towards an analogy... the fucking mirror isn't letting anything out" is that same 2003 project in motion — reaching for original vocabulary (lasing medium, focusing mirror) rather than the borrowed word the library note says he'd already rejected.
 
@@ -474,7 +474,7 @@ Our investigation into Peter Hight is pending, but from all appearances he appea
 > …cessing machine. Now.  It’s the use you make this energy have that’s what’s important.  See what I mean?  Like, okay, your body contains a certain amount of energy.  No, fuck The Matrix, you’re not a battery for shitty robots.  What a waste of time that was, right?  I mean, let’s let Keanu figure that one out later, but humans as a power source when you have access to nuclear…
 
 **Library — "Neuromancer" (#127)**
-> first published 1984; coined “cyberspace” and describes the Matrix as “a global consensus-hallucination” — the word Scott’s own 2003 cosmology-in-progress (Storyline.doc) explicitly refused to reuse for “the Surround” (“I cannot use the word matrix anymore, fuck you very much, Wachowski Brothers”), even though Gibson, not the Wachowskis, got there first.
+> The sky above the port was the color of television, tuned to a dead channel.
 
 **Rationale:** fireCalamity's extended rant against The Matrix's physics — "No, fuck The Matrix, you're not a battery for shitty robots... it's all some sort of Gnostic bullshit about a world of lies and shit, but it's a shitty metaphor" — and the library's Neuromancer note, quoting a separate 2003 document's identical refusal ("I cannot use the word matrix anymore, fuck you very much, Wachowski Brothers"), are two different pieces from the same year independently reaching the same specific target for the same reason. A separate close-reading pass found this same pair independently, in the same terms.
 
@@ -486,7 +486,7 @@ Our investigation into Peter Hight is pending, but from all appearances he appea
 > …undstage, the live- action set you've seen a hundred thousand times and never recognized. Production costs are cheaper here. Oh, where was I? Yes, the project. The project, to write about what happened to me in L.A. Actually, stunningly easy to, if I wanted to get to the point: my heart got broken. Wait, hold on, not that simple. Surely not. It's odd, isn't it, that my re…
 
 **Library — "Angels in America: A Gay Fantasia on National Themes" (#112)**
-> Hello and good morning. I am Rabbi Isidor Chemelwitz of the Bronx Home for Aged Hebrews. — revised and complete edition, Millennium Approaches and Perestroika in one volume. Scott’s own The L.A. Project takes its epigraph from this play: “Not Physics but Ecstatics Makes the Engine Run.”
+> Hello and good morning. I am Rabbi Isidor Chemelwitz of the Bronx Home for Aged Hebrews.
 
 **Rationale:** The library's own note states this outright: "Scott's own The L.A. Project takes its epigraph from this play: 'Not Physics but Ecstatics Makes the Engine Run.'" Projection is explicitly that project, by its own account — "the project, to write about what happened to me in L.A." — and its entire argument is the epigraph's argument staged at essay length: physics and quantum vocabulary (double-slit experiment, Feynman diagrams, parallel universes) reached for again and again to describe something that was never actually about physics. Not an inferred echo — the library entry is naming this piece's own epigraph.
 
@@ -498,7 +498,7 @@ Our investigation into Peter Hight is pending, but from all appearances he appea
 > …wed by the ground someone set me free, okay? I start working. The evidence of some of that work still exists elsewhere on the Web. Most of it is inside me. For I'm seeking ekstasis. Waking up. Sun shines. Blue sky masks cold wind. A culmination. A confusion. A confirmation. And a clay mask slides off my face and shatters on the ground. So…
 
 **Library — "Angels in America: A Gay Fantasia on National Themes" (#112)**
-> Hello and good morning. I am Rabbi Isidor Chemelwitz of the Bronx Home for Aged Hebrews. — revised and complete edition, Millennium Approaches and Perestroika in one volume. Scott’s own The L.A. Project takes its epigraph from this play: “Not Physics but Ecstatics Makes the Engine Run.”
+> Hello and good morning. I am Rabbi Isidor Chemelwitz of the Bronx Home for Aged Hebrews.
 
 **Rationale:** A second, smaller echo of the same source: Flying's own word for what it's after — "I'm seeking ekstasis" — is the Greek root of the exact word the library note quotes from this play's epigraph, "Ecstatics." Below the mechanical scanner's threshold (a single shared root, not a phrase); found by direct reading.
 
@@ -510,7 +510,7 @@ Our investigation into Peter Hight is pending, but from all appearances he appea
 > …hells in his hand, and with a sharp slap, he cast them on the mat. He hunched over them, muttering, then looking up past me at - what? The air? Something else? An orisha? Then he tapped my hand. I revealed the stone. Yes or no. This went on for about ten minutes. After each "yes" he would make a note. Then he sat up and told me what it all meant in th…
 
 **Library — "Daimonic Reality: A Field Guide to the Otherworld" (#121)**
-> first published 1994 (Viking). Argues that daimons — fairies, apparitions, UFOs, visions — are neither literally real beings nor mere psychological projection, but a third category: real without being physical, disclosed through an imagination Harpur treats (via Henry Corbin’s mundus imaginalis) as a genuine perceptual faculty rather than…
+> (no excerpt/note on this catalog entry)
 
 **Rationale:** "Thoughts Of Death Abounds" narrates a Yoruba shell divination without ever settling whether it's superstition or something real — "An orisha? Then he tapped my hand... Death? It came up 7-9" — the narrator both performing the ritual in earnest and holding it at arm's length. That's precisely the position the library's Daimonic Reality note describes: daimons as "neither literally real beings nor mere psychological projection, but a third category," a question the essay dramatizes rather than answers.
 
@@ -522,7 +522,7 @@ Our investigation into Peter Hight is pending, but from all appearances he appea
 > …fr Foer and Dave Eggers: precociously brilliant and hopelessly earnest. Jeremy would be going to L.A. to talk to agents and producers about adapting his novel, Strange Attractors: A Love Affair with Chaos, the story of an semi-autistic mathematician and an English professor's romance. It had "prestige picture" written all over it. Of co…
 
 **Library — "Chaos: Making a New Science" (#25)**
-> earlier edition 9780140092509
+> The police in the small town of Los Alamos, New Mexico, worried briefly in 1974…
 
 **Rationale:** Projection is the piece that coins the site's own "strange attractors" vocabulary — "a chaos butterfly; a Lorenz attractor; two focal points around which events swirl" — and even titles its fictional bestseller after the term (Strange Attractors: A Love Affair with Chaos). Gleick's book is the real, nontechnical popularization of exactly that vocabulary sitting on Scott's own shelf — the reference the essay's metaphor is drawing on, not a coincidence of two pieces landing on the same word independently.
 
@@ -534,7 +534,7 @@ Our investigation into Peter Hight is pending, but from all appearances he appea
 > Chaos Butterfly in Phase Space, 2026
 
 **Library — "Chaos: Making a New Science" (#25)**
-> earlier edition 9780140092509
+> The police in the small town of Los Alamos, New Mexico, worried briefly in 1974…
 
 **Rationale:** Butterfly's whole found text is its own placard title, "Chaos Butterfly in Phase Space, 2026," already linked to Projection and Fractal for sharing that phrase (rows 18/21/22). Gleick's book is the nonfiction source underneath all three — the actual popular-science text that put "chaos," "phase space," and "the butterfly effect" into circulation as a single cluster of terms, making this the fourth and most literal node in that cluster rather than a fifth coincidence.
 
@@ -558,7 +558,7 @@ Our investigation into Peter Hight is pending, but from all appearances he appea
 > sadler: Ouija board.
 
 **Library — "The Changing Light at Sandover" (#108)**
-> AM I IN YR ROOM SO ARE ALL YR DEAD WHO HAVE NOT GONE INTO OTHER BODIES… NOW DO U UNDERSTAND WHAT HEAVEN IS IT IS THE SURROUND OF THE LIVING — a 560-page epic assembled from twenty-five years of Ouija-board transcripts. The epigraph on Blood Treachery, the Mage sourcebook Scott co-wrote, is drawn… (no rationale quote matched this piece — showing opening text instead)
+> AM I IN YR ROOM SO ARE ALL YR DEAD WHO HAVE NOT GONE INTO OTHER BODIES… NOW DO U UNDERSTAND WHAT HEAVEN IS IT IS THE SURROUND OF THE LIVING
 
 **Rationale:** Sadler's cast explains their absurd movie lore with a single deadpan line — "How do you all know this?" / "Ouija board." — the exact device Merrill spent twenty-five years of actual transcripts turning into a 560-page epic, per the library's own note. Same channeling apparatus, opposite register: one played for a laugh line, one taken seriously enough to become The Changing Light at Sandover. A separate close-reading pass landed on this same pair independently — worth noting since another new row below (Sadler's "Channeling." beat, also paired with this same SubGenius book) is a related but distinct find, not a restatement of this one.
 
@@ -570,7 +570,7 @@ Our investigation into Peter Hight is pending, but from all appearances he appea
 > As he picks it up, he notices the messenger’s sneakers have wings painted on the heels.
 
 **Library — "Trickster Makes This World: Mischief, Myth, and Art" (#132)**
-> Hermes, Loki, Coyote, and Legba as a single figure who exists to cross boundaries that are supposed to be uncrossable — the mythological job description for everything else on this shelf that won’t stay on one side of the membrane: the Surround, the Umbra, the chimerical, the daimonic.
+> The first story I have to tell is not exactly true…
 
 **Rationale:** The bicycle messenger who delivers Brian's letter is given one unmistakable detail — "he notices the messenger's sneakers have wings painted on the heels" — literal Hermes iconography attached to a minor background character. The library's own note on Hyde's book names Hermes specifically as "a single figure who exists to cross boundaries that are supposed to be uncrossable," exactly this messenger's narrative function: he's the one who crosses from a stranger at the door into the letter that reopens Brian and Kirstin's story.
 
@@ -582,7 +582,7 @@ Our investigation into Peter Hight is pending, but from all appearances he appea
 > satanvoice: Don’t even try to lie, Horace, you were talking to the audience.
 
 **Library — "The Squared Circle: Life, Death, and Professional Wrestling" (#137)**
-> a serious study of professional wrestling’s kayfabe — the collectively maintained fiction that scripted violence is real — as its own kind of belief technology, the same one The Book of the SubGenius runs as comedy and Everything Is Under Control runs as conspiracy.
+> In modern professional wrestling, the really compelling shows start with what they call a…
 
 **Rationale:** Satan's voice breaks the fourth wall to call it out directly — "Don't even try to lie, Horace, you were talking to the audience" — a play openly admitting its own performed reality mid-scene. The library's note on wrestling's kayfabe describes the same structure played straight: "the collectively maintained fiction that scripted violence is real... its own kind of belief technology." One names the fiction as a joke, the other studies it as a real social mechanism.
 
@@ -594,7 +594,7 @@ Our investigation into Peter Hight is pending, but from all appearances he appea
 > jeff: I want to be God Emperor of the planet.
 
 **Library — "Nobilis, Livre de Base" (#147)**
-> French translation of the tabletop RPG Nobilis, second edition; players anchor a Power — Death, the Sun, Entropy itself — into a human vessel and defend a plural, meaning-laden reality against the Excrucians, entities whose whole purpose is unmaking it into flat nothing. The clearest game-genre cousin yet to the Surround/Umbra/chimerical cluster: a system built entirely around a permeable membrane between the mundane and the numinous, and what it costs a person to stand at it.
+> (no excerpt/note on this catalog entry)
 
 **Rationale:** Alex and Jeff's drunk 3am bit — "I want to be God Emperor of the planet" / "And what does that make me?" / "Goddess Empress" — is played entirely for laughs, but it's structurally the same fantasy Nobilis builds an entire game around, per the library's note: "players anchor a Power — Death, the Sun, Entropy itself — into a human vessel." One is a joke two friends make up on a couch; the other is a whole rules system for taking the same joke seriously.
 
@@ -618,7 +618,7 @@ Our investigation into Peter Hight is pending, but from all appearances he appea
 > …it of all. Here in the Southland, we spend our days consumed with apocalypse. Here it is the easiest of all to consider just how the end might come about. Here we dig for fire. Here we keep watch on the fault lines and fractures, waiting for what will spit up through the cracks. Here we tend the flames, making sure nothing else comes…
 
 **Scroll — "The Calamity" (#8)**
-> You see, it starts like this.  What we are talking about is the release of energy.  All things have energy, yes?  All things are energy, if you want to split Einsteinian hairs about it, but all things have a temperature, correct?  We’ll take basic physics now and work our way to general relativity… (no rationale quote matched this piece — showing opening text instead)
+> You see, it starts like this.  What we are talking about is the release of energy.  All things have energy, yes?  All things are energy, if you want to split Einsteinian hairs about it, but all things have a temperature, correct?  We’ll take basic physics now and work our way to general relativity… *(no rationale quote matched this piece — opening text shown instead)*
 
 **Rationale:** Digression #1's abstract Southland apocalypse-dread — "we dig for fire... we keep watch on the fault lines and fractures, waiting for what will spit up through the cracks... we tend the flames" — and fireCalamity's literal wildfire, visible in the middle distance during a party while characters joke about it, are the same regional anxiety at two different removes: one mythologized into ritual language, one staged as background color nobody in the scene takes seriously enough.
 
@@ -654,7 +654,7 @@ Our investigation into Peter Hight is pending, but from all appearances he appea
 > Crimkranng off the sodden walls. Leadlined afterdisiacs rummuging underskin. The endless furry walls, the tunnel upwads. Lookiter skinny bones protuding from a white slip as she rung downgrou…
 
 **Library — "Finnegans Wake" (#89)**
-> …o exists — edition uncertain. Its opening line completes the sentence its own last line leaves hanging mid-thought — the same shape Douglas Hofstadter calls a “strange loop” in Gödel, Escher, Bach.
+> riverrun, past Eve and Adam’s, from swerve of shore to bend of bay, brings us by a commodius vicus of recirculation back to Howth Castle and Environs.
 
 **Rationale:** Joycean is a deliberate Wake-style portmanteau piece ("Crimkranng off the sodden walls... unbound and unhinged, careening like a bumper car") sitting in the same corpus as the library's own entry on the book it's imitating, whose note even names the specific formal device ("strange loop") this fragment is playing with rather than just referencing.
 
@@ -666,7 +666,7 @@ Our investigation into Peter Hight is pending, but from all appearances he appea
 > …ppropriate. A song — How your eyes light up the sky How I loved to tell you why You mean the world to me — keeps me moving past yearning and sorrow and regret. Here are harps, here are superstrings. Pluck at them both, send me vibrating, harmonics echoing at mathematically precise points. The higher the note, the higher the breath. Your breath and mine, swirling, searching for it. A song lost…
 
 **Scroll — "The Impossible Bliss of Self-Mutilation" (#5)**
-> You’re staring at me because you see what you wish you could be.  You can’t help it.  I used to be like you, worrying about what was mine, grabbing everything I could and guarding it like a dragon on top of the hoard.  But you hold on too tight, and you’ll lose it anyway, and it’ll hurt more.  You… (no rationale quote matched this piece — showing opening text instead)
+> You’re staring at me because you see what you wish you could be.  You can’t help it.  I used to be like you, worrying about what was mine, grabbing everything I could and guarding it like a dragon on top of the hoard.  But you hold on too tight, and you’ll lose it anyway, and it’ll hurt more.  You… *(no rationale quote matched this piece — opening text shown instead)*
 
 **Rationale:** Quiver's "Here are harps, here are superstrings. Pluck at them both, send me vibrating" — wanting to be played, surrendered to, tender — and Self-Mutilation's profane, escalating comedy of deliberate self-surrender are the same structural move at opposite registers: giving yourself over to something as its own kind of proof. Distinct from row 12 above (Everything's A Number, a different Sphere piece, paired with this same Self-Mutilation for a different reason — pain as a route to relief, not surrender as proof).
 
@@ -678,7 +678,7 @@ Our investigation into Peter Hight is pending, but from all appearances he appea
 > Their fingers, calloused and tired, Still glowed with a magnetic Pull nearly impossible to resist. The hall of mirrors, the floor show, The seeing eye did their best To polarize them, but it seems Physics has a heart all its own.
 
 **Scroll — "The Impossible Bliss of Self-Mutilation" (#5)**
-> You’re staring at me because you see what you wish you could be.  You can’t help it.  I used to be like you, worrying about what was mine, grabbing everything I could and guarding it like a dragon on top of the hoard.  But you hold on too tight, and you’ll lose it anyway, and it’ll hurt more.  You… (no rationale quote matched this piece — showing opening text instead)
+> You’re staring at me because you see what you wish you could be.  You can’t help it.  I used to be like you, worrying about what was mine, grabbing everything I could and guarding it like a dragon on top of the hoard.  But you hold on too tight, and you’ll lose it anyway, and it’ll hurt more.  You… *(no rationale quote matched this piece — opening text shown instead)*
 
 **Rationale:** The Lovers' "physics has a heart all its own" — control overtaken by something outside the self — against Self-Mutilation's deliberate self-surrender played as body horror: the same structural move as row 52 above, reached a second time from a different Orbiter poem. Worth reviewing both Sphere-Quiver and Orbiter-Lovers against Self-Mutilation together rather than picking one, since they're making a related but not identical claim.
 
@@ -687,7 +687,7 @@ Our investigation into Peter Hight is pending, but from all appearances he appea
 ### 54. [APPROVED]
 
 **Scroll — "Projection" (#11)**
-> A symphony. The pillars of the concert hall, wisping upwards like smoke, curved, sandblasted metal because the glare was too much for other buildings. There will be no mirrors in the desert; this is the sun's kingdom, and to amplify or reflect is pointless. Only refraction will do. Split the… (no rationale quote matched this piece — showing opening text instead)
+> A symphony. The pillars of the concert hall, wisping upwards like smoke, curved, sandblasted metal because the glare was too much for other buildings. There will be no mirrors in the desert; this is the sun's kingdom, and to amplify or reflect is pointless. Only refraction will do. Split the… *(no rationale quote matched this piece — opening text shown instead)*
 
 **Theater — You've Got a Friend in Satan, "INT. THE LIVING ROOM. NIGHT. (THE PITCH.)" (beat #603)**
 > horace: STOP IT! Now listen to me, you shit-for-brains do-nothing slacker toads!!! I’ve been sent here to ask you kindly for your souls, for which, in return, you will get ANYTHING you want! ANYTHING! Cars, jewelry, women, men, fame, fortune, ANYTHING!
@@ -702,7 +702,7 @@ Our investigation into Peter Hight is pending, but from all appearances he appea
 > sadler: Channeling.
 
 **Library — "The Book of the SubGenius" (#113)**
-> the source scripture of “Slack” as a concept — the Church of the SubGenius’s central virtue, and almost certainly where that word entered Scott’s own private vocabulary for it. A second volume, Revelation X, sits beside it here.
+> Sometimes a book goes too far. Sometimes…is NOW.
 
 **Rationale:** Sadler's single-word answer for how he knows an invented piece of movie lore — "Channeling." — right after swallowing a spoonful of marshmallow fluff "to honor our subject," is mock-devotion played as a bit. The library's own note calls the source of "Slack" real scripture for the Church of the SubGenius. Same register — absurd material handled with genuine devotional seriousness — landed on independently: a 2001 script and a 2026 shelf note.
 
@@ -738,7 +738,7 @@ Our investigation into Peter Hight is pending, but from all appearances he appea
 > Skittery across wavelines, turbulence, skipping off the atmosphere, bounce a red-hot discus shielding you from the rest of the currents. Treetop foam, detritus picked up and laid on seaside graves from the previous epoch. Windflow, art tunnel, cresting in a 2-D front stirred rapidly around cellbands, settling down in a dinnerplate where two months from now leaves will decorate the cracked concrete: the anticipation, the knowledge of what will be, the settling sun, the autumnal.
 
 **Scroll — "In The End It Falls Slowly Through The Aether" (#6)**
-> As the droplets descend down the texture of the leaf, coalescing at the downward point, anticipating the end of their stable lives, joining a hundred million molecules for the freefall drop, poised on the brink before the gravity of the situation overwhelms the surface tension, for that brief… (no rationale quote matched this piece — showing opening text instead)
+> As the droplets descend down the texture of the leaf, coalescing at the downward point, anticipating the end of their stable lives, joining a hundred million molecules for the freefall drop, poised on the brink before the gravity of the situation overwhelms the surface tension, for that brief… *(no rationale quote matched this piece — opening text shown instead)*
 
 **Rationale:** Current's impressionistic weather-as-mood ("skittery across wavelines, turbulence... the anticipation, the knowledge of what will be, the settling sun") and Cartography's explicit staged physics of a single raindrop's fall are the same vehicle — a real or quasi-real physical process — used to meditate on inevitability, one worked out in full mechanical detail, the other left as mood.
 
@@ -798,7 +798,7 @@ Our investigation into Peter Hight is pending, but from all appearances he appea
 > As the congregation rises, the doors Slide open; the rabbi raises up the Twin scrolls, dictated by God, from the ark. Uncovered, unrolled, the sacred letters Reveal themselves, the primeval sequence Coalescing into the stuff of life (Word and phrase manifesting character). The parashah read aloud, the message Replicates in the hearts of the gathered; The Sefer Torah is recoiled, restored.
 
 **Library — "The Changing Light at Sandover" (#108)**
-> AM I IN YR ROOM SO ARE ALL YR DEAD WHO HAVE NOT GONE INTO OTHER BODIES… NOW DO U UNDERSTAND WHAT HEAVEN IS IT IS THE SURROUND OF THE LIVING — a 560-page epic assembled from twenty-five years of Ouija-board transcripts. The epigraph on Blood Treachery, the Mage sourcebook Scott co-wrote, is drawn… (no rationale quote matched this piece — showing opening text instead)
+> AM I IN YR ROOM SO ARE ALL YR DEAD WHO HAVE NOT GONE INTO OTHER BODIES… NOW DO U UNDERSTAND WHAT HEAVEN IS IT IS THE SURROUND OF THE LIVING
 
 **Rationale:** Weaker, flagged as such: DNA's sacred genetic "sequence... Word and phrase manifesting character" and the library's note on Sandover's channeled scripture are both about revelation arriving pre-encoded in a text, but the echo is abstract — a real resonance in kind, not in any shared specific image, worth Scott's own read rather than a confident claim either way.
 

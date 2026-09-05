@@ -830,8 +830,8 @@ function buildOrrery(preview, suspendTopY, rafterY) {
 
   // The orrery itself reads substantially bigger without growing the
   // warehouse around it. HW thickens the mast and hardware; SR widens the
-  // orbit rings (capped just inside the side walls — wallDist is 6.5/5 in
-  // buildWarehouse); SS grows the planet bodies themselves, with no wall
+  // orbit rings (capped just inside the side walls — wallDist is 8.5 in full
+  // mode, 5 in the preview tile, see buildWarehouse); SS grows the planet bodies themselves, with no wall
   // constraint. Mast height and every vertical anchor (baseY,
   // suspendTopY, rafterY, riserTopY) stay fixed — the room itself keeps
   // its own size regardless of these scale factors.
@@ -1612,9 +1612,10 @@ function makeConcreteTexture() {
 //      completely different aspect ratio than it was drawn at.
 // So the canvas is now sized FROM the wall it will cover, at a fixed and
 // equal texel density on both axes, and the brick/mortar dimensions are
-// stated in real-world metres and converted once. Change BRICK_PX_PER_UNIT
-// to trade texture memory against crispness; change nothing else to keep
-// the masonry correct.
+// stated in real-world metres and converted once. Change makeBrickTexture's
+// `pxPerUnit` argument to trade texture memory against crispness; change
+// nothing else to keep the masonry correct. (This said BRICK_PX_PER_UNIT,
+// which is not and never was a constant in this file.)
 const BRICK_UNIT_W = 0.215, BRICK_UNIT_H = 0.065, BRICK_UNIT_MORTAR = 0.010; // metres — a standard modular brick and a 10mm joint
 function makeBrickTexture(wallW, wallH, pxPerUnit) {
   const W = Math.round(wallW * pxPerUnit), H = Math.round(wallH * pxPerUnit);
@@ -1663,7 +1664,7 @@ function makeBrickTexture(wallW, wallH, pxPerUnit) {
       cx.fillStyle = Math.random() > 0.5 ? '#3a2418' : '#40382a';
       // Expressed as fractions of the brick rather than the old absolute
       // 6-20px / 4-12px radii, which were tuned against the 30x14 brick this
-      // pass no longer draws — same look at any BRICK_PX_PER_UNIT.
+      // pass no longer draws — same look at any pxPerUnit.
       const bw = brickW * (0.2 + Math.random() * 0.47), bh = brickH * (0.29 + Math.random() * 0.57);
       cx.beginPath();
       cx.ellipse(x + Math.random() * brickW, y + Math.random() * brickH, bw, bh, Math.random() * Math.PI, 0, Math.PI * 2);
@@ -2922,8 +2923,9 @@ export function createOrrery(container, { preview = false } = {}) {
   // soft render-distance falloff of early-90s pre-rendered CG adventure
   // games (Myst, Return to Zork, The 7th Guest) doing the work honestly,
   // in the render itself, rather than an overlay standing in for it.
-  // Far distance kept well beyond the camera-to-orrery range (camera now
-  // sits at z 13.3/16.8) so the machine itself never fogs out — it had
+  // Far distance kept well beyond the camera-to-orrery range (the preview
+  // camera sits at z 13.3; the full scene's camera is the walkthrough's own,
+  // wherever the visitor has walked it to) so the machine itself never fogs out — it had
   // been eating into the enlarged orrery and washing out the preview tile
   // almost entirely.
   scene.fog = new THREE.Fog(0x0a0704, preview ? 9 : 12, preview ? 30 : 42);
@@ -3546,7 +3548,9 @@ export function createOrrery(container, { preview = false } = {}) {
     //   y < eyeY  ⟺  sinθ > (yOffset − eyeY) / (R sin tilt) = s0
     //
     // which for |s0| ≤ 1 is the arc θ ∈ (asin s0, π − asin s0); s0 > 1 means
-    // the ring never comes down at all (the four innermost rings), s0 < −1
+    // the ring never comes down at all — which is true of the inner rings at
+    // this geometry, and of however many of them the numbers make it true of;
+    // the code tests it per ring rather than assuming a count — s0 < −1
     // that the whole ring is low (doesn't happen at this geometry).
     const eyeYAbs = floorY + EYE_HEIGHT;
     const RING_COLLIDER_R = 0.15;

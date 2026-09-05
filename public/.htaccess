@@ -72,7 +72,7 @@ RewriteRule ^text/(.*/)?index\.html$ /text/%1 [L,R=301]
 # through a cache-buster"). `max-age=0, must-revalidate` still lets the
 # browser keep the copy — it just has to ask first, so an unchanged page
 # costs a 304 and a real deploy is never invisible. This also covers the
-# eight prerendered text pages, each served as <dir>/index.html.
+# eleven prerendered text pages, each served as <dir>/index.html.
 <IfModule mod_headers.c>
   <FilesMatch "\.(js|css|woff2)$">
     Header set Cache-Control "public, max-age=31536000, immutable"
@@ -96,7 +96,11 @@ RewriteRule ^text/(.*/)?index\.html$ /text/%1 [L,R=301]
 # real, both allowed explicitly below.
 #
 # script-src: 'self', and nothing else, as of 4.0. Zero eval()/new Function()
-# anywhere in the codebase, and now zero inline script of any kind.
+# anywhere in the codebase, and zero inline <script> — with one deliberate
+# exception, stated here because a flat "zero inline script of any kind" is
+# exactly the sentence that would make someone believe an exception impossible:
+# each prerendered /text/ page carries an application/ld+json block. That is
+# data, not executable script, and CSP's script-src does not apply to it.
 #
 # This directive used to carry 'unsafe-hashes' plus eleven 'sha256-' entries,
 # one per distinct pmGlimpse('<scene>') string in index.html's
@@ -112,11 +116,10 @@ RewriteRule ^text/(.*/)?index\.html$ /text/%1 [L,R=301]
 # widens what a hash match is allowed to be (event-handler attributes, not
 # just <script> bodies) for no remaining benefit.
 #
-# Note for the next reader: STANDARDS.md's "New interactive code always uses
-# addEventListener" section describes that eleven-hash list as a closed,
-# legacy-only set that stays fixed at eleven. As of 4.0 the set is empty and
-# that passage is history, not current state — the rule it states still
-# stands, and now has nothing left to grandfather. Adding an on*= attribute
+# (STANDARDS.md's "New interactive code always uses addEventListener" section
+# used to describe that eleven-hash list as a closed legacy set; it was
+# corrected in 4.0 and no longer needs the note that stood here.)
+# Adding an on*= attribute
 # again would mean re-introducing 'unsafe-hashes' *and* a hash here just to
 # keep the site working: friction placed here deliberately.
 #
@@ -132,7 +135,7 @@ RewriteRule ^text/(.*/)?index\.html$ /text/%1 [L,R=301]
 # scroll.html) moved into real CSS rules/classes.
 #
 # What that audit missed is that this domain serves pages that are not the
-# SPA. The eight prerendered pages under /text/ each carry one inline
+# SPA. The eleven prerendered pages under /text/ each carry one inline
 # <style> and link no stylesheet at all, on purpose: scripts/prerender.js's
 # page() builds them to render fully even if every other asset on the domain
 # is unreachable. 'self' does not cover an inline block, so from the moment
@@ -239,9 +242,16 @@ RewriteRule ^text/(.*/)?index\.html$ /text/%1 [L,R=301]
 # stating it means the site doesn't depend on that default.
 #
 # Permissions-Policy denies the powerful features this site genuinely never
-# uses. fullscreen=(self) is the one exception and it is load-bearing:
-# main.js drives the Fullscreen API for the expanded scene view, and
-# `fullscreen=()` would silently disable it. Don't tidy that entry away.
+# uses. `fullscreen` is the one exception and it is load-bearing twice over,
+# so don't tidy either half of it away:
+#   * `self` — main.js drives the Fullscreen API for the expanded scene view,
+#     and `fullscreen=()` would silently disable it.
+#   * the youtube-nocookie origin — library.js's video embed sets
+#     `allowFullscreen` on its iframe, and a cross-origin frame cannot use a
+#     feature the top document has not DELEGATED to it. `fullscreen=(self)`
+#     alone allows this document and no frame inside it, so the embed's
+#     fullscreen button was inert. It is the same single origin already named
+#     in frame-src above, which is the narrowest form this can take.
 #
 # X-Frame-Options: DENY is the legacy twin of the CSP's frame-ancestors
 # 'none' above. Kept alongside it rather than treated as redundant: the two
@@ -296,7 +306,7 @@ RewriteRule ^text/(.*/)?index\.html$ /text/%1 [L,R=301]
   Header always set Strict-Transport-Security "max-age=31536000"
   Header always set X-Content-Type-Options "nosniff"
   Header always set Referrer-Policy "strict-origin-when-cross-origin"
-  Header always set Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(), usb=(), fullscreen=(self)"
+  Header always set Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(), usb=(), fullscreen=(self \"https://www.youtube-nocookie.com\")"
   Header always set X-Frame-Options "DENY"
   Header always set Cross-Origin-Opener-Policy "same-origin"
 </IfModule>

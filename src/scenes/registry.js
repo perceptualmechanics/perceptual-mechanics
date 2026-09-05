@@ -217,5 +217,5 @@ export const tileAria  = spec => `${spec.blurb} Press Enter to expand.`;
 export const TEXT_EXEMPT = {
   butterfly: 'Its entire found text is its own placard title, which the landing page already carries.',
   harmonics: 'It publishes no text of its own — it is a view of the connections between other scenes, each of which has its own page.',
-  outside:   'Five power-source names and two origin labels, all of which are visible on the landing tile.',
+  outside:   'Its text is 19 proper names — five Sources of Power, their Folk Origins, Magi and Psi — laid out as a diagram rather than written as prose. There is no passage to publish, only labels on a flower.',
 };

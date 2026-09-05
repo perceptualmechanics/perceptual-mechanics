@@ -1,5 +1,5 @@
 // ─── Psyshell — what the lens holds ─────────────────────────────────────────
-// Lens RE73415, recovered from the lower pools. It holds 3,221 filapixels: one
+// Lens RE73415, recovered from the lower pools. It holds 3,244 filapixels: one
 // for every sentence of this site's writing.
 //
 // NO DOM AND NO THREE.JS IN THIS FILE. `scripts/prerender.js` imports it to

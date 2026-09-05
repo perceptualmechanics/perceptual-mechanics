@@ -61,10 +61,13 @@ export const CARD = { x0: 0.02, y0: 0.13, x1: 0.98, y1: 0.87 };
 // and a half points for a board that looks like a board is the right trade; the
 // number is here so nobody spends an afternoon rediscovering the cost.
 //
-// The letters stay closer together than twice DWELL_RADIUS at this spread —
-// about 0.072 apart against a 0.048 catchment, so the discs overlap — which
-// means the arcs are continuous and there is no dead ground between two letters
-// where the cup catches nothing.
+// The letters stay closer together than twice DWELL_RADIUS at this spread.
+// Nearest-neighbour spacing runs 0.043 to 0.073 across the two arcs against a
+// 0.048 catchment, so even the widest-separated pair is inside 2 x 0.048 and
+// the discs overlap everywhere — which means the arcs are continuous and there
+// is no dead ground between two letters where the cup catches nothing. (0.072
+// was quoted here as the typical spacing; it is the worst case, which is the
+// number that actually matters for this claim and is worth saying so.)
 export const LETTER_ARCS = [
   ARC('ABCDEFGHIJKLM', 1.90, 0.46, 0.245, 0.13),
   ARC('NOPQRSTUVWXYZ', 1.78, 0.41, 0.440, 0.11),

@@ -467,11 +467,12 @@ export function createPanelCloser(panel, container, { closeBtn, onClose } = {}) 
 }
 
 // ─── Keyboard jump list ─────────────────────────────────────────────────────
-// sphere, orbiter, orrery, and library all raycast their interactive 3D objects
-// (facets, satellites, posters, spines) — real, readable content a mouse or
-// touch visitor reaches by hovering and clicking, but that a keyboard-only
-// visitor has no way to reach otherwise: nothing simulates "point at a
-// facet" from a keyboard. This builds the accessible way in — a real
+// Nine scenes raycast interactive objects — facets, satellites, posters,
+// spines, stations, nodes, petals, filapixels, faders — real, readable content
+// a mouse or touch visitor reaches by hovering and clicking, and that a
+// keyboard-only visitor has no way to reach otherwise: nothing simulates
+// "point at a facet" from a keyboard. (The list used to name four, and one of
+// the four had stopped using this.) This builds the accessible way in — a real
 // list of real `<button>`s, one per selectable item, that call the exact
 // same select-and-open function the mouse click already does (each scene
 // passes that in as `onSelect`; this owns none of the panel/selection logic

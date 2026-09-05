@@ -89,7 +89,7 @@ const BOX_PALETTE = ['#141428', '#1c1830', '#101018'];
 // disc shelf is famously almost all one colour. The argument is true about
 // disc SPINES held in the hand and false about what it produces here, which
 // Scott put plainly looking at the shelf: "mix up the colors on the CDs."
-// 114 CDs at 43% of everything on the shelf, all within a few percent of the
+// 115 CDs at 43% of everything on the shelf, all within a few percent of the
 // same cream, is not a material register — it is a pale mass with the
 // books' colour scattered on top of it, and the same for the films in the
 // other direction.
@@ -368,7 +368,7 @@ function vividColor(hex) {
 //                memory saving actually lives.
 //
 // The cost, computed rather than waved at: level-0 RGBA is 104 books x
-// 112x800 (37.3 MB) + 44 discs x 80x720 at 0.8 (6.5 MB) + 114 CDs x 72x640
+// 112x800 (37.3 MB) + 44 discs x 80x720 at 0.8 (6.5 MB) + 115 CDs x 72x640
 // at 0.5 (5.2 MB) = 49 MB, about 65 MB once three.js builds mipmaps, against
 // 17 MB and 23 MB before. It buys the one thing the scene is for: the text on
 // the object is readable when you go and look at it.
@@ -1906,8 +1906,15 @@ export function createLibrary(container, { preview = false, initialPieceId = nul
     });
     nav.appendChild(skip);
 
+    // "Books & decks", not "Books": isBookType is book OR divination_box, so
+    // this group is 104 books and the two divination decks, and the summary
+    // prints its own real length beside the label. They share a group because
+    // they share a shelf — the decks stand among the books in the real one —
+    // but a visitor scanning for "Books — 106" and finding a tarot deck in it
+    // is being told something slightly untrue by a control whose only job is
+    // to say what is inside it.
     const GROUPS = [
-      { label: 'Books', match: it => isBookType(it) },
+      { label: 'Books & decks', match: it => isBookType(it) },
       { label: 'Films', match: it => isFilmType(it) },
       { label: 'Music', match: it => it.type === 'cd' },
     ];

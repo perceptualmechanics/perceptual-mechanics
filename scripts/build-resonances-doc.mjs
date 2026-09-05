@@ -1,5 +1,5 @@
 // ─── Build the harmonics resonances review document ────────────────────
-// Generates docs/harmonics_resonances.md FROM src/resonances.js — the
+// Generates docs/constellation_resonances.md FROM src/resonances.js — the
 // doc is a rendering of that data, not a second copy of it, so the two
 // can't drift out of sync the way the historical (never-committed)
 // library_resonances.md apparently did. Run after any change to
@@ -175,6 +175,11 @@ ${renderSection(verbatimRows)}
 ${renderSection(connotativeRows)}
 `;
 
-const outPath = resolve(__dirname, '../docs/harmonics_resonances.md');
+// The file in the tree is docs/constellation_resonances.md, from before the
+// 2026-08-18 rename. This script pointed at docs/harmonics_resonances.md, so
+// running it would have written a SECOND document and orphaned the committed
+// one — whose own header says "do not hand-edit, regenerate instead". The
+// document keeps its name; only the internal names moved.
+const outPath = resolve(__dirname, '../docs/constellation_resonances.md');
 writeFileSync(outPath, doc);
 console.log(`Wrote ${outPath} (${RESONANCES.length} rows: ${basisCounts.verbatim} verbatim, ${basisCounts.connotative} connotative; ${counts.approved} approved, ${counts.pending} pending, ${counts.rejected} rejected)`);

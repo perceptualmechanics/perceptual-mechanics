@@ -254,7 +254,7 @@
   opacity: 0; transition: opacity 0.25s ease;
   /* No overflow-x here on purpose. It used to say `overflow-x: auto`, which
      was unreachable by any input — pointer-events:none, no tabindex, so no
-     wheel, no touch drag, no keyboard — and, measured across all 404 bubbles
+     wheel, no touch drag, no keyboard — and, measured across all 736 bubbles
      in the reel at 375px, never had anything to scroll either: the widest
      bubble is 179px against an 88vw (330px) cap, so scrollWidth never
      exceeded clientWidth once. Dropping it rather than making the bubble

@@ -26,7 +26,7 @@ disagree.
 ## What the site is
 
 perceptualmechanics.com is Scott Jason Cohen's digital-art portfolio: a
-single-page, full-screen site built around **twelve interactive scenes**, each a
+single-page, full-screen site built around **thirteen interactive scenes**, each a
 small standalone piece combining generative visuals, curated writing and found
 text, and in most cases generative or triggered audio. It is static — no
 backend, no database, everything client-rendered, deployed as a plain `dist/`
@@ -62,7 +62,7 @@ that scene publishes wavelengths, not writing. Counting the withheld material
 as well gives **37,955 authored**; the honest range is 36,900–38,000 and the
 difference is entirely the Library.
 
-**3,221 sentences, 34,790 words, in 119 pieces across 9 scenes.** The narrower
+**3,244 sentences, 34,806 words, in 157 pieces across 9 scenes.** The narrower
 ruler, defined in `src/utils/corpus.js` and printed on `/text/psyshell/`. This
 is the figure Psyshell is built from rather than a figure about the site. It
 counts only the fields that reader treats as writing — Library excerpts but not
@@ -78,10 +78,11 @@ were measured against it; across the whole corpus the three give 4,054 / 4,047 /
 four words or fewer with no terminal punctuation is not one, which excludes 508
 fragments of cataloguing marginalia and element labels.
 
-**Two scenes publish nothing of their own, and that is a fact about them rather
-than an omission.** Harmonics is a view of the connections between other scenes.
-Outside publishes five power-source names and two origin labels, none of which
-are sentences. Both are named in `TEXT_EXEMPT` with that reason.
+**Three scenes publish nothing of their own, and that is a fact about them
+rather than an omission.** Harmonics is a view of the connections between other
+scenes. Outside's text is nineteen proper names laid out as a diagram, not
+prose. Butterfly's entire found text is its own placard title, which the landing
+page already carries. All three are named in `TEXT_EXEMPT` with that reason.
 
 **The scenes are not peers, and anything measured across "the corpus" is
 measuring Scroll unless it says otherwise.**
@@ -124,8 +125,9 @@ counts the words twice and produces a plausible number.
 
 ### The requirement
 
-**All twelve tiles visible without scrolling on a desktop, at a size you can
-still recognise a scene from.** That is the landing page's requirement, and
+**Every scene's tile visible without scrolling on a desktop, at a size you can
+still recognise a scene from.** Every, not a number: the count is the registry's
+and the arithmetic reads it, so a fourteenth scene changes nothing here. That is the landing page's requirement, and
 every layout decision has to satisfy it.
 
 It is a requirement rather than a preference because it is measurable, and the
@@ -135,9 +137,10 @@ at the top, and the bottom padding that clears the title lockup and the colophon
 mark. Inside that band, for each candidate column count, the tile size is capped
 by the width one way and by the height the other; the arrangement that makes the
 tile largest wins, and **the row count falls out of that arithmetic rather than
-being picked.** `src/main.js`, "The landing page's requirement", holds the
-formula; nothing about it lives in a media query, because no media query can
-express "twelve of these fit above the fold".
+being picked.** `src/utils/tileLayout.js` holds the formula, and
+`scripts/verify-landing.mjs` checks it against a matrix of viewports on every
+build rather than leaving it to somebody opening the page at the right size; nothing about it lives in a media query, because no media query can
+express "all of these fit above the fold".
 
 The visible consequence is that the row count changes with the window's shape
 and not only its width. At 1440×820 six columns in two rows gives a 214px tile;
@@ -163,14 +166,14 @@ being applied at all, which is visible and measurable rather than a judgement
 call. That is when the index has to become something other than a grid.
 
 `src/utils/sceneField.js` is shelved for exactly that moment: it holds a
-measured position for every scene, and the arrangement it describes — twelve
-scenes on a plane, placed by their own properties — is a landing page that does
+measured position for every scene, and the arrangement it describes — every
+scene on a plane, placed by its own properties — is a landing page that does
 not run out of room. It shipped once, at 4.10.0, and was reverted a release
 later because the problem it solves had not arrived.
 
 ### What the grid is
 
-A real `<ul>` of twelve `<li><button>` in a stated order, each tile a live
+A real `<ul>` of one `<li><button>` per scene, in a stated order, each tile a live
 preview of its scene. That markup is what makes the page work with JavaScript
 off, for a crawler, and for a screen reader — and it is what made the field a
 layout over the index rather than a replacement for it, and the revert a
@@ -200,7 +203,7 @@ ruler — which was the gate the idea had to clear, and did.
 
 ---
 
-## The twelve scenes
+## The thirteen scenes
 
 Counts are read from the live content modules. "Real" and "rendered" are
 separated because several of these scenes are built on actual data and the
@@ -210,28 +213,28 @@ distinction is the first thing a session gets wrong.
 |---|---|---|---|
 | **Sphere** | An interactive geodesic sphere with text fragments in its faces | 25 fragments | The geodesic subdivision is real geometry; the fragments are Scott's found text |
 | **Butterfly** | A Lorenz attractor, "Chaos Butterfly in Phase Space" | a title, essentially | The attractor is integrated live from the Lorenz equations. Its only text is its own placard title |
-| **Scroll** | "Selected Works" — a scroll of found writing and carved fragments | 12 pieces, 314 paragraphs | All writing; the scroll is presentation |
+| **Scroll** | "Selected Works" — a scroll of found writing and carved fragments | 12 pieces, 292 paragraphs | All writing; the scroll is presentation |
 | **Theater** | ASCII actors performing scenes from three plays, with a silhouetted house audience. A different program each visit | 3 plays, 16 scenes, 736 beats | The scripts are real; the actors and staging are generated. The piece level is the **scene id**, not the play |
 | **Orbiter** | A hydrogen p-orbital as a probability cloud, with satellites in elliptical orbits | 14 poems | The cloud is sampled from the orbital's probability density; the satellite orbits are decorative |
 | **Orrery** | "The Orrery of Los Feliz" — a found story told through a 30-foot walkable orrery. WASD, not orbit-drag | 1 found account | The orrery is a described object rebuilt to scale; the account is found text |
-| **Library** | A real bookshelf rebuilt as a shelf you can turn and read spines from | 150 items + 115 CD-rack items; 30 carry excerpts, 100 carry notes | The shelf is Scott's actual shelf. Excerpts are third-party text and are handled under the copyright rule below |
+| **Library** | A real bookshelf rebuilt as a shelf you can turn and read spines from | 150 items + 115 CD-rack items; 68 carry excerpts, 41 carry a `catalog` note | The shelf is Scott's actual shelf. Excerpts are third-party text and are handled under the copyright rule below |
 | **Beamline** | A vessel travelling a glowing rail across a night wilderness, with ten stations along it | 10 stations | The rail and vessel are generated; each station holds a fragment of found text |
 | **Harmonics** | Resonant connections across every other scene's content, as a force-directed graph with Kuramoto phase-sync and sonification | 64 approved resonances | The resonance rows are editorial judgements, approved individually. The layout and phase-sync are generated |
 | **Outside** | A generated lotus (Gielis superformula) mapping a five-part cosmology — Power Sources as petals, Folk Origins, Magi and Psi at the centre | 5 power sources | The superformula geometry is real; the cosmology is the fiction's |
 | **Apollo** | A solar spectrum you can play, in two modes with an idle state. Absorption puts ten elements' lines into a band of starlight as gaps you sound by clicking; emission darkens the band and stands the same lines in it bright, struck rather than sustained; **Sunlight** is the idle state and puts the sun's own composition in the light, letting its lines sound on their own | 10 elements, 218 lines (iron 50, sodium 6) | **Hydrogen is computed live from the Rydberg formula**, with the reduced-mass correction and a vacuum-to-air conversion, which is why it lands on the published values. The other nine are NIST strong-lines tables. The corona is procedural. The only scene with no Three.js and no WebGL context, and the only one whose content is measurement rather than writing |
-| **Psyshell** | *lens RE73415.* A small crystal antler suspended in a web that fills the frame — no floor, no room; the web is the ground. It holds every sentence on this site. A lightpen reads one, and the light of that sentence's ordinal travels through the crystal's own body in **base e** — unequal flashes, legible as transmission and never readable as text. The reading sounds as a rush going past &mdash; noise through a moving filter into inharmonic resonators, pitch falling through the crossing, sweeping across the stereo image, and lasting exactly as long as the transmission it belongs to | 3,221 sentences, 34,790 words | The corpus figures are real and asserted at import. **The object's shape encodes nothing** — positions are a seeded draw, deliberately; see below. **The field is not a backdrop**: the web is the same structure as the lens at a larger scale, its junctions are bright in proportion to how many strands meet there, and it is **one connected graph** (checked at build: every node reachable from a filapixel inside the crystal). It responds to the visitor in no way at all — not to the camera, not to hover — but it **carries** and it has **traffic**: one reading in a hundred escapes the crystal and runs out along the strands, and pulses cross the field on their own every few seconds, sometimes through the lens. Every point in it is a thing arriving from outside time — a photon travels a null worldline, so no proper time elapses along it and the delay is entirely ours |
+| **Psyshell** | *lens RE73415.* A small crystal antler suspended in a web that fills the frame — no floor, no room; the web is the ground. It holds every sentence on this site. A lightpen reads one, and the light of that sentence's ordinal travels through the crystal's own body in **base e** — unequal flashes, legible as transmission and never readable as text. The reading sounds as a rush going past &mdash; noise through a moving filter into inharmonic resonators, pitch falling through the crossing, sweeping across the stereo image, and lasting exactly as long as the transmission it belongs to | 3,244 sentences, 34,806 words | The corpus figures are real and asserted at import. **The object's shape encodes nothing** — positions are a seeded draw, deliberately; see below. **The field is not a backdrop**: the web is the same structure as the lens at a larger scale, its junctions are bright in proportion to how many strands meet there, and it is **one connected graph** (checked at build: every node reachable from a filapixel inside the crystal). It responds to the visitor in no way at all — not to the camera, not to hover — but it **carries** and it has **traffic**: one reading in a hundred escapes the crystal and runs out along the strands, and pulses cross the field on their own every few seconds, sometimes through the lens. Every point in it is a thing arriving from outside time — a photon travels a null worldline, so no proper time elapses along it and the delay is entirely ours |
 
 Earlier scenes — leaf, egg, prism, cycle, and some older constellation and
-ground-glimpse mechanics — were built, shipped and retired. The twelve above are
-the live set.
+ground-glimpse mechanics — were built, shipped and retired. The thirteen above
+are the live set.
 
-**Spectra** is a thirteenth candidate that is in the tree, builds, and is
+**Spectra** is a further candidate that is in the tree, builds, and is
 deliberately unregistered. It reads each speaker in the Theater's plays as a
 light source. It was built, verified, and shelved for focus rather than for a
-defect; `src/scenes/spectra/SHELVED.md` says what it is and the three edits that
+defect; `src/scenes/spectra/SHELVED.md` says what it is and the four edits that
 bring it back. It shares nothing with Apollo but the subject word.
 
-**Two cross-cutting layers.** *Links* (146 rows) are explicit editorial
+**Two cross-cutting layers.** *Links* (65 rows) are explicit editorial
 connections: a verbatim phrase already sitting in one piece's text becomes a live
 jump to another piece, addressed `{scene, id}` on both ends, with the target
 saying "Referenced from —" back. *Resonances* (64 approved rows) are the looser
@@ -255,13 +258,28 @@ shape of the thing.
   `vite.config.js` imports `scripts/prerender.js`, which imports the registry,
   and a bundler follows dynamic imports statically. Scene loaders live in
   `main.js`, derived from the registry's keys with `import.meta.glob`.
-- **`scripts/prerender.js`** generates a static `/text/<scene>/` page for every
-  scene from the same content modules the scenes render from.
-- **The build fails rather than warns.** Gates that run on every build: every
-  scene has a `/text/` page or a stated exemption, in three directions; every
-  link and every resonance resolves to a real piece; `index.html`'s nav icons and
-  landing tiles match the registry's length; and the `/text/` pages' inline style
-  block hashes to the value the CSP allows.
+- **`scripts/prerender.js`** generates a static `/text/<scene>/` page from the
+  same content modules the scenes render from, for every scene that publishes
+  writing — ten of the thirteen, plus an index; the other three are named in
+  `TEXT_EXEMPT` with a reason.
+- **The build fails rather than warns.** Gates that run on every build:
+  - every scene has a `/text/` page or a stated exemption, in three directions;
+  - every link and every resonance resolves to a real piece;
+  - the landing requirement holds across a matrix of viewport sizes
+    (`verify-landing`);
+  - every scene describes itself the same way in all three places it is
+    described — landing tile, scene overlay, on-screen hint (`verify-aria`);
+  - every bottom-anchored title uses the shared safe zone, no selector is
+    declared twice over one property, and no translucent text colour is too
+    faint to reach AA on any ground (`verify-css-invariants`);
+  - every count the tree states about itself matches the data it is counting
+    (`verify-counts`);
+  - Scroll's typesetting phrases still occur where they say they do;
+  - and the `/text/` pages' inline style block hashes to the value the CSP
+    allows.
+
+  The last four were added at 5.0, and each of them is a sentence this file or
+  a source comment used to assert instead.
 
 ---
 
@@ -317,12 +335,15 @@ this list has twice been read as a to-do after the work had shipped.
   **2.6:1**, under the 3:1 minimum for large text. Every other scene clears it.
   The fix is a judgement about Beamline's rail, not a number to change. Logged
   three times; still open.
-- **The nav is full at twelve, and a thirteenth scene is a precondition rather
-  than a warning.** Twelve icons give a 25.3 × 44px tap target at 320px, which
-  clears WCAG 2.5.8 AA (24px) by 1.3px and fails AAA. A thirteenth gives 23.4px
-  and fails AA. The sizing is derived from the registry and cannot overflow at
-  any count — what runs out is the tap target, not the row. A thirteenth scene
-  needs the nav rethought in the same pass.
+- ~~**The nav is full at twelve.**~~ Settled, and by a change that had already
+  shipped when this item was last written. It described icons shrinking to fit,
+  which is what the row used to do: twelve gave a 25.3 × 44px tap target at
+  320px and a thirteenth would have given 23.4px, under WCAG 2.5.8 AA. 4.9.0
+  stopped deriving the icon size down and let the ROW SCROLL instead — Scott's
+  call — so the icons are a full 44 × 44 at every width. Measured at 320px with
+  thirteen scenes: 44 × 44, and the row scrolls (656px of content in a 320px
+  viewport), which is the ordinary behaviour of a tab strip. What runs out now
+  is horizontal room, and running out of it costs nothing.
 - **iOS locked-screen audio is untested and probably unsupported.** The desktop
   half is settled: the Mac plays Apollo's Sunlight through a screen lock, in both
   Chrome and Safari. iOS would require routing the whole audio graph through a
@@ -332,7 +353,8 @@ this list has twice been read as a to-do after the work had shipped.
 - **The `catalog` field is private only in the sense of not being rendered.** It
   lives in a module the scene imports, so it ships inside the public bundle.
   Getting it genuinely off the server means moving it out of the bundled module.
-  Nobody has asked for this.
+  Nobody has asked for this. (41 of the 150 library items carry one; the `note`
+  field this item used to name alongside it was removed at 4.11.)
 - **One Orrery navigation quirk, kept deliberately.** Two adjacent rings' low
   arcs leave a 0.46-unit gap, and a 0.6-unit-wide visitor pressed into it cannot
   strafe out sideways; backing up frees you. Being unable to squeeze between two
@@ -353,8 +375,12 @@ this list has twice been read as a to-do after the work had shipped.
   corrected form and a source for each. Read before writing a brief.
 - **`WORKING-PROTOCOL.md`** — how the chat instance and the coding instance work
   together, and the failure mode that made it necessary.
-- **`NOTES.md`** — the dated changelog. The one legitimately historical file:
-  append-only, reverse-chronological, very long.
+- **`NOTES.md`** — the dated changelog: the standing sections, and every release
+  from 4.9.0 on. Append-only, reverse-chronological.
+- **`NOTES.archive.md`** — the same changelog for 1.0 through 4.8.9, split off at
+  5.0 when the working file passed 17,500 lines. Both are legitimately
+  historical, and neither is a source of facts about the site as it stands: read
+  them for why a decision was made and which alternative was already rejected.
 - **`Holography.scriv`** — the Scrivener project holding the books the published
   writing is drawn from. Outside the repo. `The New.scriv` is a separate project
   that does **not** feed the scenes; listed only so it is not mistaken for a

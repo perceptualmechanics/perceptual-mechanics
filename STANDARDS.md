@@ -305,11 +305,17 @@ the reader of the /text/ page cannot tell the difference.
 
 **What it cost.** Psyshell's field and its object are meant to be one web that
 can be traced from inside the crystal to a far knot. A nearest-neighbour graph
-looks connected and is not: over this point set it fell into **223 pieces**, the
-largest holding a fifth of the nodes, while every render of it looked exactly as
-intended. Nothing on screen would ever have said otherwise. The build now walks
-the graph from a node inside the object and throws if any node is unreachable,
-and the /text/ page prints the hop count it found.
+looks connected and is not: over this point set it falls into **hundreds of
+pieces**, the largest holding about a fifth of the nodes, while every render of
+it looks exactly as intended. Nothing on screen would ever say otherwise. The
+build now walks the graph from a node inside the object and throws if any node
+is unreachable, and the /text/ page prints the hop count it found.
+
+This passage used to name the figure — "223 pieces, the largest holding a
+fifth" — which was right when it was written and wrong by 5.0, in a section
+called "a structural claim gets measured, not described". buildWeb returns
+`knnPieces` and `knnLargestShare` now, and the /text/ page prints those, so the
+number is measured in the one place that can measure it.
 
 The general form: **a claim about structure is cheap to check and invisible to
 looking.** Visual claims go to a screenshot; structural ones go to a gate.
@@ -926,7 +932,7 @@ another reason should be moved onto them while it's open:
 
   But it is not the operative cause, because it does not explain Sphere.
   `lightAngle += 0.003` is a plain rate in exactly the syntax being searched
-  for, in a file the audit read in full (its stated method: all ten scenes
+  for, in a file the audit read in full (its stated method: all thirteen scenes
   read in full, 22,626 lines). It survived anyway.
 
   What actually happened is visible in finding 16's own table, whose column
@@ -1030,7 +1036,7 @@ it started.
 **The historical reasoning, unchanged and still the point of all this:**
 as of v3.10.0 scenes load by dynamic `import()` rather than a static
 `import { createX } from ...` at the top of `main.js` — a new scene should
-follow that pattern, not revert to a static import. Static imports for all ten scenes were the direct cause of the
+follow that pattern, not revert to a static import. Static imports for all thirteen scenes were the direct cause of the
 Rollup `chunks larger than 500kB` warning (every scene's code, whether
 needed yet or not, landed in one bundle); dynamic `import()` lets Rollup
 code-split each scene into its own chunk instead. See `main.js`'s own

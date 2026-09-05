@@ -9,12 +9,25 @@ import { SCENES, sceneAria } from './scenes/registry.js';
 // split, but with no second list of eleven scene names to fall out of step with
 // the first. A scene whose folder and file don't match its registry key fails
 // on open with a named error rather than a bare undefined.
-// The negative pattern is load-bearing rather than tidy. A `*.worklet.js` in a
-// scene folder is not a module of this app at all — it is a file the audio
-// thread fetches by URL, and it is emitted as an asset. Left in the glob, the
-// bundler ALSO compiles it as a lazy scene chunk, so the same processor ships
-// twice: once raw and referenced, once minified and loaded by nothing.
-const sceneModules = import.meta.glob(['./scenes/*/*.js', '!./scenes/**/*.worklet.js']);
+// The negative patterns are load-bearing rather than tidy.
+//
+// A `*.worklet.js` in a scene folder is not a module of this app at all — it is
+// a file the audio thread fetches by URL, and it is emitted as an asset. Left
+// in the glob, the bundler ALSO compiles it as a lazy scene chunk, so the same
+// processor ships twice: once raw and referenced, once minified and loaded by
+// nothing.
+//
+// `spectra` is the SHELVED scene (see src/scenes/spectra/SHELVED.md). It is not
+// in the registry, so nothing can ever open it — but a glob does not read the
+// registry, so every deploy was carrying three chunks of it that no code path
+// can reach. Excluded here rather than by deleting the folder, because the
+// folder is the shelf: SHELVED.md's restore procedure is "add a registry entry
+// and make these three edits", and this line is now one of the three.
+const sceneModules = import.meta.glob([
+  './scenes/*/*.js',
+  '!./scenes/**/*.worklet.js',
+  '!./scenes/spectra/*.js',
+]);
 function loadSceneModule(name) {
   const id = `./scenes/${name}/${name}.js`;
   const loader = sceneModules[id];

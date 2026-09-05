@@ -102,10 +102,16 @@ export function createMedium(container, { preview = false, initialArg = null, on
   let disposed = false;
   let titleEl = null, hintEl = null;
 
-  // Two clocks, the split Apollo and Outside use. `clock` is the motion clock
-  // and it stops under reduced motion, which is what stills the other hand.
-  // `uiClock` always runs, because the letter flash is a response to something
-  // that happened and a flash that cannot end is a mark stuck on the board.
+  // Two clocks, the split Apollo and Outside use. `uiClock` always runs,
+  // because the letter flash is a response to something that happened and a
+  // flash that cannot end is a mark stuck on the board. `clock` is the motion
+  // clock, and under reduced motion it simply is not ticked — the loop takes
+  // its dt from uiClock instead.
+  //
+  // Not ticking it is not what stills the other hand, which this comment used
+  // to say. Time keeps advancing either way; what stills the hand is the
+  // `!reduced` guard on stepWander in step(), which is the thing that decides
+  // whether the hand leans at all.
   const clock = createFrameClock();
   const uiClock = createFrameClock();
   let reduced = prefersReducedMotion();

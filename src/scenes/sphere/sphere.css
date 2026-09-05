@@ -25,14 +25,14 @@
   animation: wisp var(--duration, 6s) ease-in-out infinite;
   animation-delay: var(--delay, 0s);
 
-	/* 320 of these run `wisp` forever, each on its own 4–10s period — by a
+	/* 180 of these run `wisp` forever, each on its own 4–10s period — by a
 	   wide margin the largest source of continuous motion anywhere in this
 	   scene, and until v4.0 the one thing in this file with no
 	   reduced-motion escape at all (the block at the bottom covered
 	   .fragment-link only, and styles/main.css's three blocks don't reach
 	   in here). `animation: none` alone would be wrong: the element has no
 	   opacity of its own, so dropping the animation would leave every label
-	   at opacity 1 — 320 hard white excerpts instead of a faint drift.
+	   at opacity 1 — 180 hard white excerpts instead of a faint drift.
 	   --base-opacity is the value sphere.js already writes per frame from
 	   the face's angle to the camera, i.e. the animation's own peak, so
 	   holding it steady keeps the fade-in-around-the-silhouette read and

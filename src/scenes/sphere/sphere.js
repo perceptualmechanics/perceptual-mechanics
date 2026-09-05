@@ -66,10 +66,10 @@ export function createSphere(container, { preview = false, initialPieceId = null
     labelRenderer.domElement.style.left = '0';
     labelRenderer.domElement.style.pointerEvents = 'none';
     labelRenderer.domElement.style.zIndex = '1';
-    // The CSS2D layer holds 320 real text nodes, one per face, and each is a
+    // The CSS2D layer holds 180 real text nodes, one per face, and each is a
     // RANDOM 60-character window cut out of a fragment — mid-word at both ends,
     // by design, because they are texture rather than reading. Unhidden, that
-    // is 320 truncated sentence fragments a screen reader walks through before
+    // is 180 truncated sentence fragments a screen reader walks through before
     // reaching anything the scene actually offers. The WebGL canvas beside it
     // was hidden from the start; this layer was not, only because it is created
     // by three.js rather than by this file.
@@ -477,9 +477,9 @@ export function createSphere(container, { preview = false, initialPieceId = null
         mouse.y = -((e.clientY - rect.top)  / rect.height) * 2 + 1;
         raycaster.setFromCamera(mouse, camera);
         // `false` — Raycaster.intersectObject's `recursive` argument defaults
-        // to true, and every one of the 320 CSS2DObject labels is a child of
+        // to true, and every one of the 180 CSS2DObject labels is a child of
         // `sphere` (sphere.add(label), in the label loop above). Their
-        // raycast() is a no-op, but walking 320 children of a mesh whose own
+        // raycast() is a no-op, but walking 180 children of a mesh whose own
         // geometry is the only thing that can ever be hit isn't free on an
         // unthrottled mousemove.
         const hits = raycaster.intersectObject(sphere, false);
@@ -574,7 +574,7 @@ export function createSphere(container, { preview = false, initialPieceId = null
   // The container's dimensions used to be cached here as viewW/viewH for the
   // facet tilt's per-label screen projection, which 5.0 removed — so they were
   // written on every resize and read by nobody. If anything ever needs them
-  // again, cache them again for the reason they existed: reading layout 320
+  // again, cache them again for the reason they existed: reading layout 180
   // times a frame from inside a loop that is also WRITING styles forces a
   // synchronous flush per label per frame (beamline.js keeps its own
   // `viewportH` for exactly that).
@@ -611,7 +611,7 @@ export function createSphere(container, { preview = false, initialPieceId = null
   // size, and the screen-space rotation that keeps text upright against
   // the sphere's own surface. Its own function rather than inline in
   // animate() so the cost of this pass can be timed on its own — it is by
-  // far the most expensive thing this scene does per frame (320 labels).
+  // far the most expensive thing this scene does per frame (180 labels).
   function updateLabels() {
     // Label distance-scaling: real inverse relationship (scale ∝ 1/camDist)
     // so labels keep a roughly constant apparent size as the camera zooms,

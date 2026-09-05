@@ -65,7 +65,7 @@ jobs:
 
       # packages/bardjs is a workspace, not a toy: src/scenes/theater/theater.js
       # imports Player, compileLegacyScript, shuffle and asciiBubble from it,
-      # which makes it the Theater scene's whole timing engine. Its 16
+      # which makes it the Theater scene's whole timing engine. Its 20
       # node --test tests existed and passed all along but nothing ever ran
       # them in CI, so a regression there shipped silently. The root
       # `npm test` fans out to every workspace that declares one

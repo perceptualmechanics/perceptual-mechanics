@@ -133,36 +133,45 @@ Two claims were also **undercounts**, in the same direction as everywhere else: 
 
 ## Tier 3 — counts and claims that the data outgrew
 
-- [ ] Sphere says **320 labels** in five places and `sphere.css:29`; it is **180**. Three optimisations cite the wrong figure as their justification.
-- [ ] Harmonics says 61 nodes / 122 oscillators / a 22-row corpus; it is **76 / 152 / 64**. Two line citations have drifted.
-- [ ] Psyshell says 252 segments (144), degree 1–17 mean 3.04 (2–9, mean 3.51), fourteen bridge strands (70), 20,868 floats (37,156), 3,221 filapixels (3,244) — and the site's own `/text/psyshell/` page already prints the right numbers.
-- [ ] `prerender.js:750` publishes "**223 pieces**"; the current answer is **218**, largest 22.0% not 19.8%. Also in `psyshell.web.js:156` and `STANDARDS.md:308`, in a section titled "A structural claim gets measured, not described".
-- [ ] Theater says "all 404 bubbles"; the reel has **614**. 404 is the two-play count from before `friendInSatan`.
-- [ ] Orrery — `BRICK_PX_PER_UNIT` does not exist; `wallDist is 6.5/5` is 8.5/5; "camera at z 16.8" describes a camera the walkthrough removed; "the four innermost rings" is five.
-- [ ] Butterfly — `PPS = 400` justified by "the tile's real 240px size"; the tile caps at 224 and butterfly's `tile: 0.90` makes it the smallest on the page (max measured 218px).
-- [ ] Medium — `DWELL_RADIUS` reasoned against "0.051 apart" while `medium.text.js` says 0.072; real spread is 0.043–0.073, and the drawn cup is wider than the tightest gap. `BOARD_HOME`'s comment is false on both claims. `LEAN_MAX`'s force ceiling is 12.5, not 5.9. The reduced-motion clock comment is backwards. A duplicated comment block whose first copy describes a tile stub that does not exist.
-- [ ] "Ten scenes" survives in `index.html:47,106,328`, `vite.config.js:241,282`, `sceneField.js`, `sceneKit.js:203`, `main.js:964`, `STANDARDS.md` ×4, `.htaccess:87`. "Twelve" survives in `main.js:837,885`.
-- [ ] "Eight prerendered pages" in `.htaccess:74,135` and `prerender.js:109,124`; it is eleven.
-- [ ] `registry.js:191` — Outside's `TEXT_EXEMPT` reason is wrong on both halves: it names 7 strings (there are 21) and says they are visible on the landing tile (they are not; they exist only in full-scene mode).
-- [ ] `sceneKit.js:470` — `createJumpList`'s comment names four scenes; **nine** use it, and one of the four named does not.
-- [ ] `deploy.yml:69` — "16 node --test tests"; there are 20.
-- [ ] `.htaccess:98` — "zero inline script of any kind"; there is one `application/ld+json` block per page. CSP-safe, but the sentence is why someone would believe it impossible.
-- [ ] `.htaccess:115` — a "note for the next reader" pointing at a `STANDARDS.md` passage that was fixed in 4.0.
-- [ ] `prerender.js:11` — "src/text/*" does not exist.
-- [ ] `butterfly.text.js:4` — "main.js's SCENES map"; it moved to `registry.js` in 4.2.0.
-- [ ] `SHELVED.md:64` — the Spectra restore procedure says to set `--nav-count` back to 11. It is 13; a restore makes it 14.
+- [x] Sphere says **320 labels** in five places and `sphere.css:29`; it is **180**. Three optimisations cite the wrong figure as their justification.
+- [x] Harmonics says 61 nodes / 122 oscillators / a 22-row corpus; it is **76 / 152 / 64**. Two line citations have drifted.
+- [x] Psyshell says 252 segments (144), degree 1–17 mean 3.04 (2–9, mean 3.51), fourteen bridge strands (70), 20,868 floats (37,156), 3,221 filapixels (3,244) — and the site's own `/text/psyshell/` page already prints the right numbers.
+- [x] `prerender.js:750` publishes "**223 pieces**"; the current answer is **218**, largest 22.0% not 19.8%. Also in `psyshell.web.js:156` and `STANDARDS.md:308`, in a section titled "A structural claim gets measured, not described".
+- [x] Theater says "all 404 bubbles"; the reel has **614**. 404 is the two-play count from before `friendInSatan`.
+- [x] Orrery — `BRICK_PX_PER_UNIT` does not exist; `wallDist is 6.5/5` is 8.5/5; "camera at z 16.8" describes a camera the walkthrough removed; "the four innermost rings" is five.
+- [x] Butterfly — `PPS = 400` justified by "the tile's real 240px size"; the tile caps at 224 and butterfly's `tile: 0.90` makes it the smallest on the page (max measured 218px).
+- [x] Medium — `DWELL_RADIUS` reasoned against "0.051 apart" while `medium.text.js` says 0.072; real spread is 0.043–0.073, and the drawn cup is wider than the tightest gap. `BOARD_HOME`'s comment is false on both claims. `LEAN_MAX`'s force ceiling is 12.5, not 5.9. The reduced-motion clock comment is backwards. A duplicated comment block whose first copy describes a tile stub that does not exist.
+- [x] "Ten scenes" survives in `index.html:47,106,328`, `vite.config.js:241,282`, `sceneField.js`, `sceneKit.js:203`, `main.js:964`, `STANDARDS.md` ×4, `.htaccess:87`. "Twelve" survives in `main.js:837,885`.
+- [x] "Eight prerendered pages" in `.htaccess:74,135` and `prerender.js:109,124`; it is eleven.
+- [x] `registry.js:191` — Outside's `TEXT_EXEMPT` reason is wrong on both halves: it names 7 strings (there are 21) and says they are visible on the landing tile (they are not; they exist only in full-scene mode).
+- [x] `sceneKit.js:470` — `createJumpList`'s comment names four scenes; **nine** use it, and one of the four named does not.
+- [x] `deploy.yml:69` — "16 node --test tests"; there are 20.
+- [x] `.htaccess:98` — "zero inline script of any kind"; there is one `application/ld+json` block per page. CSP-safe, but the sentence is why someone would believe it impossible.
+- [x] `.htaccess:115` — a "note for the next reader" pointing at a `STANDARDS.md` passage that was fixed in 4.0.
+- [x] `prerender.js:11` — "src/text/*" does not exist.
+- [x] `butterfly.text.js:4` — "main.js's SCENES map"; it moved to `registry.js` in 4.2.0.
+- [x] `SHELVED.md:64` — the Spectra restore procedure says to set `--nav-count` back to 11. It is 13; a restore makes it 14.
 
 ---
 
+
+**Four more claims did not survive checking**, all in this tier, all in the same direction as Tier 2's three:
+
+- Medium's `LEAN_MAX` "force ceiling is 12.5, not 5.9": it is 5.85. `CUP.visitorStiffness` is 78 and `LEAN_MAX` is 0.075, so the comment's own arithmetic is exact, and its "three times what the other hand can produce" is 3.08.
+- Medium's `BOARD_HOME` comment "false on both claims": it says the value is derived as the mean of the two arcs, and it is — the export computes exactly that.
+- Apollo's "two dead imports" and "grid-column on a flex item" (recorded in Tier 2).
+
+What the audit was right about, and could only have been right about by reading, was every case where a comment *asserted* something. What it was wrong about was every case where the answer needed a measurement — which is the same failure the findings themselves describe, one level up.
+
 ## Tier 4 — build, deploy, docs
 
-- [ ] **`scripts/verify-landing.mjs` runs nowhere.** Not in `package.json`, not in `vite.config.js`, not in CI. Three source files cite it as the thing that *proves* the landing requirement. It needs the `export function` shape the other three verifiers have before it can hook `buildStart`.
-- [ ] `build-resonances-doc.mjs` writes `docs/harmonics_resonances.md`; the file in the tree is `docs/constellation_resonances.md` (pre-rename), whose own header says "do not hand-edit — generated by this script". Running it produces a second file and orphans the first.
-- [ ] The shelved Spectra scene **ships in every deploy** — `main.js:17`'s glob matches it, and `dist/` carries three chunks nothing can reach.
-- [ ] `.htaccess:299` — `Permissions-Policy: fullscreen=(self)` does not delegate to the cross-origin YouTube embed that asks for it (`library.js:198`). Either the header or the `allowFullscreen` is the half to change.
-- [ ] `robots.txt:3` — disallows `/packages/`, which stopped shipping in 4.0.
-- [ ] **SITE.md is a release behind**: "the twelve scenes" with no Medium row, "all twelve tiles" as the landing requirement, Library "30 excerpts / 100 notes" (68 excerpts, and the note field no longer exists), "Links (146 rows)" (65), psyshell corpus figures a release stale, and "a page for every scene" (10 of 13, 3 exempt).
-- [ ] **NOTES.md archival.** 18,000+ lines. Scott's call at 5.0: move the version-by-version history into an archive and leave the standing rules, the current state and the recent releases in the working file.
+- [x] **`scripts/verify-landing.mjs` runs nowhere.** Not in `package.json`, not in `vite.config.js`, not in CI. Three source files cite it as the thing that *proves* the landing requirement. It needs the `export function` shape the other three verifiers have before it can hook `buildStart`.
+- [x] `build-resonances-doc.mjs` writes `docs/harmonics_resonances.md`; the file in the tree is `docs/constellation_resonances.md` (pre-rename), whose own header says "do not hand-edit — generated by this script". Running it produces a second file and orphans the first.
+- [x] The shelved Spectra scene **ships in every deploy** — `main.js:17`'s glob matches it, and `dist/` carries three chunks nothing can reach.
+- [x] `.htaccess:299` — `Permissions-Policy: fullscreen=(self)` does not delegate to the cross-origin YouTube embed that asks for it (`library.js:198`). Either the header or the `allowFullscreen` is the half to change.
+- [x] `robots.txt:3` — disallows `/packages/`, which stopped shipping in 4.0.
+- [x] **SITE.md is a release behind**: "the twelve scenes" with no Medium row, "all twelve tiles" as the landing requirement, Library "30 excerpts / 100 notes" (68 excerpts, and the note field no longer exists), "Links (146 rows)" (65), psyshell corpus figures a release stale, and "a page for every scene" (10 of 13, 3 exempt).
+- [x] **NOTES.md archival.** 18,000+ lines. Scott's call at 5.0: move the version-by-version history into an archive and leave the standing rules, the current state and the recent releases in the working file.
 
 ---
 
