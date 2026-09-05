@@ -2062,7 +2062,14 @@ export function createBeamline(container, { preview = false, initialPieceId = nu
     skyMotesGeo = new THREE.BufferGeometry();
     skyMotesGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
     skyMotesMat = new THREE.PointsMaterial({
-      size: 5.5, map: skyMotesTex, color: ACCENT_HALO, transparent: true, opacity: 0.5,
+      // color WHITE, not ACCENT_HALO. A PointsMaterial multiplies its map by
+      // its color, so tinting the material green cancelled the deliberately
+      // blue texture above and these rendered rgb(120,198,159) — the same
+      // emerald as everything else, with the one intentional exception in the
+      // palette silently removed. White lets the map's own rgba(200,220,255)
+      // through at rgb(222,232,248). This file already names this exact bug
+      // for the dust twenty lines up and fixes it there the same way.
+      size: 5.5, map: skyMotesTex, color: 0xffffff, transparent: true, opacity: 0.5,
       depthWrite: false, sizeAttenuation: true, blending: THREE.AdditiveBlending,
     });
     skyMotes = new THREE.Points(skyMotesGeo, skyMotesMat);

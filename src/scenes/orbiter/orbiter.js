@@ -90,6 +90,15 @@ function makeNucleusTexture() {
     cx.fill();
   }
   const tex = new THREE.CanvasTexture(c);
+  // A canvas is painted in sRGB, and a CanvasTexture defaults to no colour
+  // space at all — so every colour in it uploads as if it were linear and
+  // reads far brighter than it was painted. Measured here: 2,477 pixels
+  // change by 8/255 or more over a 3,543-pixel nucleus when this is set, the
+  // painted dark rim (#7a4520) being the worst of it. outside.js documents
+  // this failure at length and beamline, orrery and spectra all set the flag;
+  // this file's header asserts every texture in it is a canvas gradient drawn
+  // at load, which is exactly the case that needs it.
+  tex.colorSpace = THREE.SRGBColorSpace;
   return tex;
 }
 
@@ -516,7 +525,13 @@ function buildNucleusDetail(preview) {
 // (a small box, at real orbital distance from the camera) even though
 // they're tiny — this stays glow-only, same as library.js's spines,
 // not an alpha effect.
-function addRimGlow(material, colorHex, power = 2.4, glow = 0.05) {
+// `glow` at 0.05 was twenty times under the visibility floor: measured on the
+// satellites, the whole Fresnel term contributed peak 8/255 across 3 pixels,
+// against 973 pixels for the bodies themselves. The shader compiles and runs —
+// the same patch at 1.0 gives peak 103/255 across 326 — so this was a real
+// effect at an amplitude nothing could see. 0.45 is where it reads as a rim
+// without competing with the cloud.
+function addRimGlow(material, colorHex, power = 2.4, glow = 0.45) {
   material.onBeforeCompile = shader => {
     shader.uniforms.pmRimColor = { value: new THREE.Color(colorHex) };
     shader.uniforms.pmRimPower = { value: power };
@@ -673,6 +688,12 @@ function buildSatellites(preview) {
     // the p-orbital cloud, the one shape actually telling this scene's
     // story.
     const ringMat = new THREE.MeshBasicMaterial({
+      // depthWrite OFF. The cloud's points are depth-tested, so a 5-10%
+      // opaque ring crossing in front of them was writing depth and ERASING
+      // the particles behind it outright rather than diluting them — the
+      // opposite of what the paragraph above says these are kept faint to
+      // avoid. Measured: 237 pixels, peak 135/255, change when it is off.
+      depthWrite: false,
       color: 0xffe08a, transparent: true, opacity: 0.045 + Math.random() * 0.065, // TUNABLE: each ring's opacity lands between 0.045 and 0.11. Raise both numbers together to make orbit paths more visible overall; widen the gap between them for more variation ring-to-ring.
     });
     const ring = new THREE.Mesh(ringGeo, ringMat);

@@ -502,7 +502,15 @@ export function createOutside(container, { preview = false, initialPieceId = nul
     const sp = Math.sin(cfg.polar), cp = Math.cos(cfg.polar);
     mesh.position.set(cfg.r * sp * Math.sin(cfg.az), cfg.r * cp, cfg.r * sp * Math.cos(cfg.az));
     scene.add(mesh);
-    return { mesh, geo, mat, tex, base, noise: makeSimplex2D(cfg.seed), driftSpeed: 0.02 + Math.random() * 0.01 };
+    return { mesh, geo, mat, tex, base, noise: makeSimplex2D(cfg.seed), // 0.02 advanced the noise input by less than 1.0 in thirty-five seconds, so
+    // the "2D simplex noise sampled per-vertex over time" this file calls "the
+    // entire effect" measured peak 2/255 with zero pixels over threshold: the
+    // displacement was real, static-scale, and never arrived. The distinction
+    // the comment draws — noise reads as air movement, a sine reads as
+    // mechanical waving — needs the noise to actually move through its own
+    // field, which at this scale means a full unit of input every few seconds
+    // rather than every half-minute.
+    driftSpeed: 0.28 + Math.random() * 0.14 };
   });
 
   // ═══ THE FLOWER ═══════════════════════════════════════════════════════
@@ -561,7 +569,20 @@ export function createOutside(container, { preview = false, initialPieceId = nul
     const mat = new THREE.MeshStandardMaterial({
       vertexColors: true, side: THREE.DoubleSide, roughness: 0.55, metalness: 0.06,
       transparent: true, depthWrite: false,
-      emissive: new THREE.Color(0xffffff), emissiveIntensity: 1, emissiveMap: seamVeinTex,
+      // A WHITE emissive at full intensity over the whole petal is a white
+      // wash, and it landed on top of the round-5 palette work below without
+      // that work being re-measured. Rendered, the per-petal saturation span
+      // it was chosen to create had collapsed to about a tenth of what the
+      // PETAL_SAT table asks for, and PETAL_SAT's own annotation — Michael
+      // desaturated, Emmanuel deepest — inverted on screen. Removing the map
+      // entirely restores most of the span, so the map is the cause; but the
+      // map is also what blends the seam, which is the job it was added for.
+      //
+      // So: warm rather than white, and a third of the intensity. It still
+      // lifts the seam and the root; it no longer paints over the hue the
+      // vertex colours carry. (Fog compresses the rest, and that one is
+      // physics — a petal further away IS less saturated.)
+      emissive: new THREE.Color(0xffd9a8), emissiveIntensity: 0.34, emissiveMap: seamVeinTex,
     });
     mat.onBeforeCompile = shader => {
       shader.uniforms.fresnelPower = { value: 2.3 };
