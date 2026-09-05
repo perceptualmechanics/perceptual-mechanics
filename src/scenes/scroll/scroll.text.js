@@ -434,7 +434,13 @@ const OGHAM_MAP = {
   Z: 'ᚎ', // Straif
 };
 
-const SPACE_MARK = ' '; // OGHAM SPACE MARK — traditional word-divider
+// U+1680 OGHAM SPACE MARK, not an ordinary space. In Noto Sans Ogham every
+// letter carries a segment of the stemline across its top, and U+1680 is a
+// bare segment of that stem with no notches — so the line runs unbroken from
+// end to end and the words read as gaps in the notching, which is how Ogham
+// actually divides them. A plain U+0020 has no outline at all, and put a hole
+// in the stemline at every word.
+const SPACE_MARK = ' ';
 
 // Letters map, whitespace collapses to a single word-space mark, everything
 // else (punctuation, digits, quote marks) is silently dropped — Ogham
@@ -454,7 +460,7 @@ export function toOgham(str) {
       }
     }
   }
-  return out.replace(new RegExp(SPACE_MARK + '$'), '');
+  return out.endsWith(SPACE_MARK) ? out.slice(0, -SPACE_MARK.length) : out;
 }
 
 // ─── The Scroll: the twelve pieces, in order ───────────────────────────────

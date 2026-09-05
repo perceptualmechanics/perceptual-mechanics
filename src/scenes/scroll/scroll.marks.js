@@ -1,17 +1,16 @@
 // ─── The scroll's presentation tables ──────────────────────────────────────
-// Five lookup tables, all of them keyed off the `key` strings scroll.text.js
-// gives its twelve pieces, all of them presentation rather than content —
-// which is why they were never in scroll.text.js and aren't now. What
-// changed in v4.0 is only WHERE they live: they used to sit at module scope
-// in scroll.js, which imports './scroll.css' and './scroll.html?raw' and so
-// can only ever be loaded by Vite. That put them permanently out of reach of
-// a plain `node` verification script, and these are exactly the tables that
-// most need one — RUBRICS and INTENSITIES carry verbatim copies of phrases
-// from the prose AND hard-coded paragraph indices, with nothing checking
-// either. scripts/verify-scroll-marks.mjs is that check, and this file is
-// what makes it possible to write: pure data, no DOM, no Vite-only imports,
-// importable from the browser bundle and from a bare node process alike —
-// the same shape scroll.text.js already has, for the same reason.
+// Five lookup tables, keyed off the `key` strings scroll.text.js gives its
+// twelve pieces. Presentation, not content — which is why they are not in
+// scroll.text.js.
+//
+// They live in their own file, separate from scroll.js, so that they stay
+// importable: scroll.js pulls in './scroll.css' and './scroll.html?raw' and
+// can only be loaded by Vite, whereas this is pure data — no DOM, no
+// Vite-only imports — and so loads from the browser bundle and from a bare
+// `node` process alike. That is what lets scripts/verify-scroll-marks.mjs
+// exist, and these are the tables that most need one: RUBRICS and
+// INTENSITIES carry verbatim copies of phrases from the prose AND hard-coded
+// paragraph indices, with nothing else checking either.
 //
 // The silent-failure modes this file's own verifier exists to catch:
 //   * A phrase drifts by a character (a curly apostrophe, a corrected typo)
@@ -58,15 +57,6 @@ export const INTENSITIES = [
   { patch: 'projection',     para: 18, phrase: 'the earth fissuring and swallowing me whole', mode: 'tight' },
   { patch: 'projection',     para: 38, phrase: 'swirling upwards and out, like smoke over hills refracting the endless yellow light', mode: 'wide' },
 ];
-
-// A verbatim scene, pulled out of its home paragraph and set in real
-// screenplay format — rendered after the given paragraph index (post-split,
-// i.e. the index the scene's *lead-in* paragraph has once it's isolated
-// from the script content that used to trail it).
-// Derived from scroll.text.js rather than restated here, so the scroll and
-// the published /text/scroll/ page insert the scene at the same place.
-// Also moved inside createScroll's dynamic import (see buildPatches()) —
-// same reason as PATCHES above.
 
 // How many opening sentences of each patch's first paragraph get set as an
 // Ogham line in the margin — computed from the real paragraph text itself

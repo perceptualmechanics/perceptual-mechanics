@@ -87,38 +87,22 @@ import { TONES, RUBRICS, INTENSITIES, OGHAM_LINES, OPENING_GROUP } from './scrol
 import scrollHtml from './scroll.html?raw';
 import './scroll.css';
 
-// PATCHES (built from scrollPieces) moved inside createScroll's dynamic
-// import below — scrollPieces is full-mode-only content now (v3.10.3), not
-// available at module scope. See buildPatches().
-
 const MOTIF_CYCLE = ['spiral', 'chevron', 'cupring', 'dots'];
 
-// Phrases already present in the raw text that get wired as live
-// cross-links used to live in a LINKS array here, keyed by `patch` (the
-// piece's own key string) + paragraph index. Migrated into the shared
-// src/links.js store — { scene: 'scroll', id: pieceId, field: 'body',
-// index: para } — alongside every other scene's, using the same numeric
-// id scrollPieces entries carry now instead of the patch key. RUBRICS,
-// INTENSITIES, and SCRIPT_INSERTS are a different concern
-// (styling/typesetting, not links) and were untouched by that migration.
-// They now live in ./scroll.marks.js — see that file's header for why
-// they moved out of this one, and scripts/verify-scroll-marks.mjs for
-// what now checks them.
+// Where the scroll's four kinds of annotation come from:
+//   * Cross-links — the shared src/links.js store, addressed
+//     { scene: 'scroll', id: pieceId, field: 'body', index: para }.
+//   * RUBRICS / INTENSITIES / TONES / OGHAM_LINES — ./scroll.marks.js.
+//     Typesetting, not links, and kept as plain data so
+//     scripts/verify-scroll-marks.mjs can import them under bare node.
+//   * SCRIPT_INSERTS — derived from scroll.text.js, so the scroll and the
+//     published /text/scroll/ page set the screenplay scene in the same place.
+//   * The prose itself — scroll.text.js, loaded by dynamic import inside
+//     createScroll (full mode only), which is why PATCHES and SCRIPT_INSERTS
+//     are built in buildPatches() rather than at module scope.
 
-// A verbatim scene, pulled out of its home paragraph and set in real
-// screenplay format — rendered after the given paragraph index (post-split,
-// i.e. the index the scene's *lead-in* paragraph has once it's isolated
-// from the script content that used to trail it).
-// Derived from scroll.text.js rather than restated here, so the scroll and
-// the published /text/scroll/ page insert the scene at the same place.
-// Also moved inside createScroll's dynamic import (see buildPatches()) —
-// same reason as PATCHES above.
-
-// Builds PATCHES and SCRIPT_INSERTS from a resolved scrollPieces module —
-// pulled out into its own function so createScroll's dynamic import (full
-// mode only, v3.10.3) can call it once scroll.text.js actually resolves,
-// rather than these being computed unconditionally at module scope the way
-// they were when scrollPieces was a static top-of-file import.
+// Builds PATCHES and SCRIPT_INSERTS from a resolved scrollPieces module.
+// Called once, after createScroll's dynamic import settles.
 function buildPatches(scrollPieces) {
   const PATCHES = scrollPieces.map(p => ({
     key: p.key,
@@ -147,16 +131,13 @@ function applyDeferredStyles(root) {
   });
 }
 
+// The first `count` sentences of a paragraph, for the Ogham margin line.
+// Cartography's opening paragraph is one long comma-spliced clause with no
+// terminal punctuation at all ("...until there's no more time and —"), so it
+// matches nothing and falls through to the whole paragraph — which is why its
+// margin column is widened (see .scroll-ogham-line--wide).
 function firstSentences(text, count) {
-  // Em dash counts as a sentence boundary here alongside .!? — cartography's
-  // opening paragraph is one long comma-spliced clause building to an em
-  // dash with no terminal punctuation at all ("...until there's no more
-  // time and —"), so without this the fallback below (`|| [text]`) would
-  // hand the Ogham margin line the ENTIRE paragraph instead of one clause.
-  // Checked against every other piece's opening paragraph first (none
-  // contain an em dash before their own first real sentence-ending
-  // punctuation), so this only ever changes cartography's own output.
-  const matches = text.match(/[^.!?—]*[.!?—]+/g) || [text];
+  const matches = text.match(/[^.!?]*[.!?]+/g) || [text];
   return matches.slice(0, count).join(' ').trim();
 }
 
@@ -192,13 +173,12 @@ function renderScriptBlock(elements) {
 }
 
 // Both marks below run String.replace over HTML that wireCrossLinks has
-// already been through — and as of v4.0 that means over a string
-// wireCrossLinks re-serialized out of a <template>, not the one it was
-// handed. The round trip is stable for the text this scene produces
-// (escapeHtml escapes &, <, > and U+00A0; the HTML serializer escapes
-// exactly those again coming back out), so an escaped phrase still matches
-// — but "still matches" is now a property of two separate pieces of code
-// agreeing, which is precisely why scripts/verify-scroll-marks.mjs exists:
+// already re-serialized out of a <template>, not the string it was handed.
+// The round trip is stable for the text this scene produces (escapeHtml
+// escapes &, <, > and U+00A0; the HTML serializer escapes exactly those
+// again coming back out), so an escaped phrase still matches — but "still
+// matches" is a property of two separate pieces of code agreeing, which is
+// why scripts/verify-scroll-marks.mjs exists:
 // it asserts every RUBRICS/INTENSITIES phrase occurs exactly once in the
 // paragraph it names, and that no cross-link phrase overlaps one (an anchor
 // injected into the middle of a rubric phrase would split it across element
@@ -261,9 +241,12 @@ function agingFilter(tone) {
   const brightness = 1 - tone * 0.018 + j() * 0.05;
   const sepia = Math.max(0, 0.06 + tone * 0.03 + j() * 0.05);
   const saturate = 1 - tone * 0.025 + j() * 0.06;
-  // drop-shadow (unlike box-shadow) follows the clipped ragged silhouette,
-  // so the torn edge reads as a physical, lifted piece of hide.
-  return `contrast(${contrast.toFixed(2)}) brightness(${brightness.toFixed(2)}) sepia(${sepia.toFixed(2)}) saturate(${saturate.toFixed(2)}) drop-shadow(0 3px 4px rgba(0,0,0,0.4))`;
+  // No drop-shadow. It was here to make the torn edge read as a lifted piece
+  // of hide, and it could not: `filter` is applied before `clip-path`, so the
+  // patch's own ragged clip removed the shadow it was supposed to follow. The
+  // lift is done by .scroll-patch::before in scroll.css instead — a soft dark
+  // band inside the clip, which the clip therefore keeps.
+  return `contrast(${contrast.toFixed(2)}) brightness(${brightness.toFixed(2)}) sepia(${sepia.toFixed(2)}) saturate(${saturate.toFixed(2)})`;
 }
 
 const STAIN_BLENDS = ['multiply', 'multiply', 'multiply', 'soft-light'];
@@ -271,8 +254,12 @@ function buildStain() {
   const el = document.createElement('div');
   el.className = 'scroll-stain';
   el.setAttribute('aria-hidden', 'true');
-  const w = 9 + Math.random() * 24;
-  const h = w * (0.55 + Math.random() * 0.7);
+  const w = 9 + Math.random() * 24;   // % of the patch's width
+  // Height comes from `aspect-ratio`, not from a percentage. A percentage
+  // height resolves against the CONTAINING BLOCK's height, and a patch runs
+  // 1,500 to 10,000px tall — so a stain asking for 90% got a nine-thousand
+  // pixel vertical smear instead of a blob a tenth as wide as the column.
+  const hw = 0.55 + Math.random() * 0.7;
   const left = Math.random() * (100 - w);
   const top = 4 + Math.random() * 78;
   const rot = (Math.random() * 50 - 25).toFixed(1);
@@ -280,7 +267,7 @@ function buildStain() {
   const opacity = (0.1 + Math.random() * 0.24).toFixed(2);
   const dark = blend === 'multiply';
   const blur = (0.6 + Math.random() * 2.2).toFixed(1);
-  el.style.cssText = `left:${left.toFixed(1)}%; top:${top.toFixed(1)}%; width:${w.toFixed(1)}%; height:${(h / w * 100).toFixed(1)}%;` +
+  el.style.cssText = `left:${left.toFixed(1)}%; top:${top.toFixed(1)}%; width:${w.toFixed(1)}%; aspect-ratio:${(1 / hw).toFixed(3)};` +
     `transform: rotate(${rot}deg); mix-blend-mode: ${blend}; opacity: ${opacity}; filter: blur(${blur}px);` +
     `background: radial-gradient(circle, ${dark ? 'rgba(18,12,5,0.95)' : 'rgba(255,246,224,0.65)'} 0%, transparent 70%);`;
   return el;
@@ -344,10 +331,9 @@ export function createScroll(container, { preview = false, initialPieceId = null
   // see claimContainer's own comment in sceneKit.js for the bug that came
   // of seven scenes writing and one putting anything back.
   const claim = claimContainer(container);
-  // The flash-highlight's own 1.4s wind-down and the post-mount focus
-  // hand-off, tracked so dispose() drops both — a pending scroll.focus()
-  // firing after teardown pulls focus out of whatever scene replaced this
-  // one, the same way sphere's side-flip timer used to.
+  // The flash-highlight's 1.4s wind-down and the post-mount focus hand-off,
+  // tracked so dispose() drops both — a pending scroll.focus() firing after
+  // teardown pulls focus out of whatever scene replaced this one.
   const timers = trackTimers();
 
   import('./scroll.text.js').then(({ scrollPieces, toOgham }) => {
@@ -378,7 +364,9 @@ export function createScroll(container, { preview = false, initialPieceId = null
       article.id = patch.id;
       article.style.setProperty('--patch-clip', patchClipPath());
       article.style.setProperty('--glow-delay', `${(Math.random() * -4.2).toFixed(2)}s`);
-      article.style.filter = agingFilter(patch.tone);
+      // In a custom property, not on `filter` directly, so .scroll-flash can
+      // compose a pulse on top of it rather than replacing the whole chain.
+      article.style.setProperty('--patch-aging', agingFilter(patch.tone));
 
       const stainCount = 2 + Math.floor(Math.random() * 2);
       for (let s = 0; s < stainCount; s++) {
@@ -475,12 +463,10 @@ export function createScroll(container, { preview = false, initialPieceId = null
     // preventDefault, because this scene's own jump does something a plain
     // fragment navigation can't: it scrolls the patch into view inside
     // .scroll-viewport (its own scroll container, not the document) and
-    // flashes it. There is no keydown twin of this any more — wireCrossLinks
-    // emits a real <a href="#scene/id"> as of v4.0, and that URL shape is
-    // exactly what main.js's hash router parses, so Enter is handled by the
-    // anchor itself and comes back round through openPieceById() below. The
-    // hand-rolled Enter/Space handler that used to sit here existed only
-    // because an href-less <a> isn't activatable.
+    // flashes it. Click only, deliberately: wireCrossLinks emits a real
+    // <a href="#scene/id">, which is the URL shape main.js's hash router
+    // parses, so Enter is handled by the anchor itself and arrives back here
+    // through openPieceById() below.
     onLinkClick = e => {
       const link = e.target.closest('.scroll-link');
       if (!link) return;
@@ -509,9 +495,8 @@ export function createScroll(container, { preview = false, initialPieceId = null
     // means that anywhere the observer never reports (no IntersectionObserver
     // at all; a callback the browser hasn't delivered yet; a page that is
     // hidden, where the rendering steps this callback rides on don't run),
-    // the glow is off rather than on. This way the failure mode is the
-    // behaviour that shipped before this optimisation existed, which is the
-    // right direction for something whose whole job is to change nothing
+    // the glow is off rather than on. Failing towards "glow on" is the right
+    // direction for an optimisation whose whole job is to change nothing
     // visible.
     if ('IntersectionObserver' in window) {
       glowObserver = new IntersectionObserver(entries => {
