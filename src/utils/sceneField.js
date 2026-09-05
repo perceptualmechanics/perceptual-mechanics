@@ -31,8 +31,8 @@
 // result is in SITE.md and CORRECTED-FACTS.md.
 
 // ─── The field: where each scene sits, and why ──────────────────────────────
-// The landing page stops being a grid at 4.10.0. A grid asserts that all
-// twelve scenes are the same kind of thing, equally weighted and equally
+// The landing page stops being a grid at 4.10.0. A grid asserts that the twelve scenes measured at the time
+// (medium, the thirteenth, was never measured — see the note below) are the same kind of thing, equally weighted and equally
 // sized; that was true at five and is already slightly false at twelve. This
 // file holds what replaces the assertion: two measured properties per scene,
 // and the arithmetic that turns them into a position.

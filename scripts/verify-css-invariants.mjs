@@ -2,7 +2,7 @@
 // Run with `node scripts/verify-css-invariants.mjs`, and on every build via
 // vite.config.js.
 //
-// All three checks here exist because a stylesheet asserted something in a
+// All four checks here exist because a stylesheet asserted something in a
 // comment and nothing made it true. That is the failure mode this project
 // keeps hitting: prose that was accurate when written, relied on afterwards,
 // and wrong by then.
@@ -14,6 +14,7 @@
 import { readFileSync } from 'node:fs';
 import { readdirSync } from 'node:fs';
 import { SCENES } from '../src/scenes/registry.js';
+import { pathToFileURL } from 'node:url';
 
 const ROOT = new URL('../', import.meta.url);
 
@@ -164,8 +165,14 @@ export function verifyCssInvariants() {
   // never wrongly accuse one. Seven declarations failed it when it was
   // written, across harmonics, library and orbiter, three of which carried
   // their own comment claiming a measurement.
+  // styles/main.css included, not just the scene stylesheets. The pass line
+  // says "every translucent text colour can reach AA" and this loop iterated
+  // sceneStylesheets() only — main.css was appended for check 2 and not for
+  // this one. Nothing in it fails today, so this was a latent overstatement
+  // rather than a live miss, which is the kind that becomes a live miss the
+  // next time somebody adds a colour to the shared layer.
   const AA_SMALL = 4.5;
-  for (const [path, url] of sheets) {
+  for (const [path, url] of sheets.concat([['styles/main.css', new URL('styles/main.css', ROOT)]])) {
     const css = stripComments(readFileSync(url, 'utf8'));
     for (const { sel, body } of topLevelRules(css)) {
       for (const m of body.matchAll(/(?<![-\w])color:\s*rgba\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*([\d.]+)\s*\)/g)) {
@@ -266,7 +273,15 @@ export function verifyCssInvariants() {
   return { ok: problems.length === 0, failures: problems.length, log };
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+// pathToFileURL, not a template literal. `file://${process.argv[1]}` does not
+// percent-encode, so from any path containing a space the comparison is false,
+// the CLI branch never runs, and the script exits 0 having verified nothing —
+// which for a verification script is the worst available failure mode. Two
+// other verifiers here already carry that paragraph and do it correctly; these
+// four were written later and did the thing it forbids. Proved by copying the
+// tree under a directory with a space and injecting a real failure: no output,
+// exit 0.
+if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   const { ok, log } = verifyCssInvariants();
   log.forEach(l => console.log(l));
   if (!ok) process.exit(1);

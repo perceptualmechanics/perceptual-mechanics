@@ -22,7 +22,9 @@
 import { readFileSync } from 'node:fs';
 import { tileLayout, tileLayoutHeight, nudgeScale, tileScale, tileNudge, TILE_GAP, TILE_MAX } from '../src/utils/tileLayout.js';
 import { SCENES } from '../src/scenes/registry.js';
-import { TILE_FLOOR } from '../src/utils/tileLayout.js';
+import { TILE_FLOOR, LIST_PAD } from '../src/utils/tileLayout.js';
+import { pathToFileURL } from 'node:url';
+const ROOT = new URL('../', import.meta.url);
 
 // Not from main.js: it imports CSS and boots against a DOM, so Node cannot load
 // it. That is precisely why the arithmetic was lifted into its own module — an
@@ -36,9 +38,50 @@ const console = { log: say, error: say };
 let failed = 0;
 
 const SCENE_COUNT = Object.keys(SCENES).length;
+
+// ─── The second source ──────────────────────────────────────────────────────
+// TILE_GAP and LIST_PAD are JS constants DESCRIBING CSS — "#scene-previews'
+// gap at >=769px", "its own padding, both axes". So the CSS is where they can
+// be checked against something that is not themselves, and this reads them
+// back out of it.
+//
+// This is the repair for a check that could not fail. The height assertion
+// below compared `tileLayoutHeight(fit)` against the height `tileLayout` had
+// budgeted, and both are built from the same three terms in the same module —
+// `used <= h` was algebra, not a result. Measured across the whole matrix, the
+// largest `used - h` was -0.025px against a threshold of +0.5. Worse, the
+// specific bug it was written for (4.11.0: the list's padding and the double
+// row gap missing from the budget) passes silently when the omission is shared,
+// which it is when one module owns both sides. Dropping the row-gap term from
+// budget AND accounting: still green. From the budget alone: 35 failures.
+//
+// Reading the CSS gives it something to disagree with. Change the stylesheet
+// without changing the constant, or the constant without the stylesheet, and
+// this fires — which is the drift that actually happens.
+function cssTileMetrics() {
+  const css = readFileSync(new URL('styles/main.css', ROOT), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+  const start = css.indexOf('#scene-previews {');
+  if (start === -1) return { error: 'no #scene-previews rule in styles/main.css' };
+  let depth = 0, end = start;
+  for (; end < css.length; end++) {
+    if (css[end] === '{') depth++;
+    else if (css[end] === '}' && --depth === 0) break;
+  }
+  const body = css.slice(start, end + 1);
+  const rem = (v) => Math.round(parseFloat(v) * 16);
+  // The tier this gate models is the desktop one: >=769px for the gap,
+  // >=601px for the padding. Take the LAST declaration of each, which is the
+  // innermost tier's.
+  const gaps = [...body.matchAll(/(?:^|[\s;{])gap:\s*([\d.]+)rem/g)].map(m => rem(m[1]));
+  const pads = [...body.matchAll(/(?:^|[\s;{])padding:\s*([\d.]+)rem\b(?!\s+[\d.])/g)].map(m => rem(m[1]));
+  return { gap: gaps.length ? gaps[gaps.length - 1] : null,
+           pad: pads.length ? pads[pads.length - 1] * 2 : null };
+}
+
 const SCALES = Object.values(SCENES).map(s => s.tile ?? 1);
 const NUDGES = Object.values(SCENES).map(s => s.nudge ?? 0);
 const MIN_SCALE = Math.min(...SCALES);
+const MAX_SCALE = Math.max(...SCALES);
 const NUDGE_SPAN = Math.max(...NUDGES) - Math.min(...NUDGES);
 
 // Real desktop viewports, and the awkward ones on purpose: short laptops in
@@ -47,22 +90,36 @@ const NUDGE_SPAN = Math.max(...NUDGES) - Math.min(...NUDGES);
 const WIDTHS = [601, 768, 900, 1024, 1280, 1440, 1600, 1920, 2560, 3440];
 const HEIGHTS = [400, 500, 600, 700, 768, 800, 900, 1080, 1440];
 
-// The old uniform arithmetic, kept here as the control rather than imported,
-// so that a change to tileLayout cannot quietly change what it is compared
-// against.
+// The old uniform arithmetic, kept here as the control rather than imported —
+// and now using the STYLESHEET's gap and padding rather than tileLayout's
+// constants for them, which is what makes it a control. It previously imported
+// three of its four numbers from the module it was controlling, so a change to
+// any of them moved both sides identically: the one scenario the sentence
+// claimed to exclude.
 function uniformBase(w, h) {
   let best = 0;
   for (let cols = 1; cols <= SCENE_COUNT; cols++) {
     const rows = Math.ceil(SCENE_COUNT / cols);
-    const t = Math.min((w - (cols - 1) * TILE_GAP - 32) / cols,
-                       (h - (2 * rows - 2) * TILE_GAP - 32) / rows, TILE_MAX);
+    const t = Math.min((w - (cols - 1) * cssGap - cssPad) / cols,
+                       (h - (2 * rows - 2) * cssGap - cssPad) / rows, TILE_MAX);
     if (t >= TILE_FLOOR) best = Math.max(best, Math.floor(t));
   }
   return best;
 }
 
+const metrics = cssTileMetrics();
+const cssGap = metrics.gap ?? TILE_GAP;
+const cssPad = metrics.pad ?? LIST_PAD;
+
 let checked = 0, fits = 0, none = 0;
 const failures = [];
+
+if (metrics.error) {
+  failures.push(`could not read #scene-previews out of styles/main.css (${metrics.error}) — this check has no second source without it`);
+} else {
+  if (metrics.gap !== TILE_GAP) failures.push(`tileLayout.js says TILE_GAP is ${TILE_GAP}px; styles/main.css gives #scene-previews a ${metrics.gap}px gap`);
+  if (metrics.pad !== LIST_PAD) failures.push(`tileLayout.js says LIST_PAD is ${LIST_PAD}px; styles/main.css gives #scene-previews ${metrics.pad}px of padding across both axes`);
+}
 
 for (const w of WIDTHS) {
   for (const h of HEIGHTS) {
@@ -79,9 +136,12 @@ for (const w of WIDTHS) {
       continue;
     }
     fits++;
-    const used = tileLayoutHeight(fit);
+    // Accounted from the CSS's own numbers, not the module's. Same shape as
+    // tileLayoutHeight, different source for every term that has one.
+    const hi = 1 + (MAX_SCALE - 1) * fit.v;
+    const used = fit.rows * fit.base * hi + (2 * fit.rows - 2) * cssGap + cssPad;
     if (used > h + 0.5) {
-      failures.push(`${w}x${h}: chose ${fit.cols}x${fit.rows} at base ${fit.base}px, which occupies ${used.toFixed(1)}px of ${h}px`);
+      failures.push(`${w}x${h}: chose ${fit.cols}x${fit.rows} at base ${fit.base}px, which occupies ${used.toFixed(1)}px of ${h}px measured with the stylesheet's own gap (${cssGap}px) and padding (${cssPad}px)`);
     }
     // The stagger is spent out of the row gap rather than budgeted for, so the
     // thing that has to hold is that it fits in the gap. If it ever does not,
@@ -180,7 +240,15 @@ if (failures.length) {
 }
 
 // Also runnable on its own, for working on the layout without a full build.
-if (import.meta.url === `file://${process.argv[1]}`) {
+// pathToFileURL, not a template literal. `file://${process.argv[1]}` does not
+// percent-encode, so from any path containing a space the comparison is false,
+// the CLI branch never runs, and the script exits 0 having verified nothing —
+// which for a verification script is the worst available failure mode. Two
+// other verifiers here already carry that paragraph and do it correctly; these
+// four were written later and did the thing it forbids. Proved by copying the
+// tree under a directory with a space and injecting a real failure: no output,
+// exit 0.
+if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   const { ok, log } = verifyLanding();
   log.forEach(line => console.log(line));
   if (!ok) process.exit(1);

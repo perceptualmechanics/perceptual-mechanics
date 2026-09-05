@@ -24,6 +24,7 @@
 //      screen-reader visitor is not.
 import { readFileSync, existsSync } from 'node:fs';
 import { SCENES, tileAria } from '../src/scenes/registry.js';
+import { pathToFileURL } from 'node:url';
 
 // The gestures this site actually has. Anything not on this list is prose.
 const GESTURES = ['drag', 'scroll', 'click', 'touch', 'press', 'point', 'walk', 'move', 'tap'];
@@ -106,7 +107,15 @@ export function verifyAria() {
   return { ok: problems.length === 0, failures: problems.length, log };
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+// pathToFileURL, not a template literal. `file://${process.argv[1]}` does not
+// percent-encode, so from any path containing a space the comparison is false,
+// the CLI branch never runs, and the script exits 0 having verified nothing —
+// which for a verification script is the worst available failure mode. Two
+// other verifiers here already carry that paragraph and do it correctly; these
+// four were written later and did the thing it forbids. Proved by copying the
+// tree under a directory with a space and injecting a real failure: no output,
+// exit 0.
+if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   const { ok, log } = verifyAria();
   log.forEach(l => console.log(l));
   if (!ok) process.exit(1);

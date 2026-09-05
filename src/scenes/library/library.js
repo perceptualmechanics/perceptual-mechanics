@@ -45,7 +45,7 @@ const TOTAL_H = ROWS * CUBBY_H + (ROWS + 1) * FRAME_T;
 
 // ─── CDs ────────────────────────────────────────────────────────────────────
 // Invented wholesale, not catalogued off a real photo like the shelf
-// (Scott doesn't own any of these anymore) — 114 albums, 55 artists,
+// (Scott doesn't own any of these anymore) — 115 albums, 58 artists,
 // hand-dictated rather than filler (library.text.js's CD-rack section
 // carries the full provenance note).
 //
@@ -376,7 +376,7 @@ function vividColor(hex) {
 //                nothing is wasted; this is the number the geometry asks for.
 //   discs  0.8 — big bold poster type, legible before it is sharp.
 //   CDs    0.5 — a jewel case is half a book's width and the type on it is
-//                tiny at any zoom. 114 of them, so this is also where the
+//                tiny at any zoom. 115 of them, so this is also where the
 //                memory saving actually lives.
 //
 // The cost, computed rather than waved at: level-0 RGBA is 104 books x
@@ -658,7 +658,7 @@ function makeCdSpineTexture(baseColor, artist, album) {
 }
 
 // ─── Dealing the shelf ──────────────────────────────────────────────────────
-// Everything on the shelf — 104 books, 44 films, 2 divination decks and 114
+// Everything on the shelf — 104 books, 44 films, 2 divination decks and 115
 // CDs — is dealt fresh into the eight cubbies on every visit, mixed.
 //
 // It did not used to be. `row`/`col`/`pos` in library.text.js were
@@ -679,7 +679,7 @@ function makeCdSpineTexture(baseColor, artist, album) {
 // Each cubby gets the same PROPORTIONS as the shelf as a whole rather than
 // the same count of each type: deal each type round-robin from a shuffled
 // list, starting each type at a different cubby so the remainders do not all
-// land in the same place. 264 items over 8 cubbies is 33 apiece, which is
+// land in the same place. 265 items over 8 cubbies is 33 apiece, which is
 // also tidier than what was there — the real shelf ran 29 to 46 items per
 // cubby, and since a cubby divides its width among whatever it holds, that
 // was a visible difference in spine width from one cubby to the next.
@@ -1226,7 +1226,7 @@ function buildItems(preview) {
   // Preview tiles are ~200px across on the landing page, where a spine is a
   // sub-pixel sliver of flat colour: nothing there needs its own geometry or
   // its own material. One unit cube scaled per item replaces 265 separate
-  // BoxGeometries, and one material per distinct palette colour (~20 of them)
+  // BoxGeometries, and one material per distinct palette colour (41 of them)
   // replaces 265 MeshStandardMaterials. The tile renders identically — this
   // is purely the cost of building it.
   const previewBox = preview ? new THREE.BoxGeometry(1, 1, 1) : null;
@@ -1684,7 +1684,7 @@ export function createLibrary(container, { preview = false, initialPieceId = nul
   // first anybody had asked for it, so the panel drew, sat empty, and then
   // reflowed when the bytes arrived.
   //
-  // Preloading all 103 covers on entry is the obvious answer and the wrong
+  // Preloading all 105 covers on entry is the obvious answer and the wrong
   // one: 103 requests to a third party for images almost none of which anybody
   // will look at. But you cannot click a spine without pointing at it first,
   // so hovering IS the prefetch signal, and it is already computed once a

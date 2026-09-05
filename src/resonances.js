@@ -86,8 +86,8 @@
 // Scott on 2026-08-16 (docs/harmonics_resonances.md, "i'm good with
 // all of these"). Rows 21–22 were added the same day after Scott pointed
 // out that Butterfly has found text too (its own placard title), and
-// approved separately ("approved, fold them in") once he'd read them. All
-// 22 rows are now 'approved'; a future discovery pass adding more rows
+// approved separately ("approved, fold them in") once he'd read them. Every
+// row here is now 'approved'; a future discovery pass adding more rows
 // still starts them at 'pending', same as every round so far.
 
 export const RESONANCES = [

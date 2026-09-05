@@ -28,6 +28,7 @@ import { LINKS } from '../src/links.js';
 import { BEATS as theaterBeats } from '../src/scenes/theater/theater.text.js';
 import { FILAPIXEL_COUNT } from '../src/scenes/psyshell/psyshell.text.js';
 import { libraryItems, cdRackItems } from '../src/scenes/library/library.text.js';
+import { pathToFileURL } from 'node:url';
 
 const ROOT = new URL('../', import.meta.url);
 
@@ -171,6 +172,30 @@ const quotedSpans = (text) => {
   return spans;
 };
 
+// Runs of consecutive comment lines, joined into one logical line with their
+// markers stripped, each tagged with the physical line it starts on. Handles
+// the `//` and `#` forms this tree uses; a `/* */` block's interior lines have
+// no marker and join on their own.
+function commentBlocks(lines) {
+  const out = [];
+  let buf = null;
+  const isComment = (l) => /^\s*(\/\/|#|\*)/.test(l);
+  lines.forEach((l, i) => {
+    if (isComment(l)) {
+      const body = l.replace(/^\s*(\/\/+|#+|\*)\s?/, '');
+      if (buf) { buf.text += ' ' + body; buf.lines++; } else { buf = { start: i, text: body, lines: 1 }; }
+    } else if (buf) { out.push(buf); buf = null; }
+  });
+  if (buf) out.push(buf);
+  // Only the multi-line ones are new information; single-line comments are
+  // already covered by the physical pass, and re-reporting them would double
+  // every finding.
+  // Only the runs longer than one line are new information — a single-line
+  // comment is already covered by the physical pass, and re-reporting it
+  // would double every finding.
+  return out.filter(b => b.lines > 1);
+}
+
 export function verifyCounts() {
   const log = [];
   const say = (...a) => log.push(a.join(' '));
@@ -178,6 +203,8 @@ export function verifyCounts() {
   const files = [...ROOTS.flatMap(r => walk(r)), ...FILES.filter(f => !SKIP_FILE.test(f))];
 
   let checked = 0;
+  // One physical line can appear in both views; report each claim once.
+  const seen = new Set();
   for (const rel of files) {
     let text;
     try { text = readFileSync(new URL(rel, ROOT), 'utf8'); } catch { continue; }
@@ -187,12 +214,25 @@ export function verifyCounts() {
         const re = new RegExp(phrase.source, 'gi');
         // Most claims sit on one line. A few (a wrapped YAML comment) do not,
         // and those say so; for them the whole file is one "line".
-        const units = claim.multiline
-          ? [text]
-          : lines;
-        units.forEach((line, i) => {
-          const quotes = quotedSpans(line);
-          for (const m of line.matchAll(re)) {
+        // Physical lines, PLUS each run of consecutive comment lines joined
+        // into one. A claim that wraps — "all\n// ten scenes" in .htaccess,
+        // "All\n// 22 rows" in resonances.js, "…decks and 114\n// CDs" in
+        // library.js — matched nothing, because every phrase was matched
+        // against one line at a time. Three real stale counts hid behind that,
+        // and all three were found by an audit rather than by the gate whose
+        // whole job they are.
+        //
+        // The `multiline` flag existed for exactly this and was set on one row
+        // out of eleven, which is the shape of the problem: an escape hatch
+        // that has to be remembered per claim is one nobody remembers. Every
+        // claim gets both views now and the flag is gone.
+        const units = [
+          ...lines.map((text, i) => ({ text, line: i + 1 })),
+          ...commentBlocks(lines).map(b => ({ text: b.text, line: b.start + 1 })),
+        ];
+        for (const unit of units) {
+          const quotes = quotedSpans(unit.text);
+          for (const m of unit.text.matchAll(re)) {
             if (quotes.some(([a, b]) => m.index >= a && m.index < b)) continue;
             // The slot has to hold a number and nothing else. A phrase whose
             // slot caught a word ("all other scenes") or a comment marker
@@ -203,11 +243,13 @@ export function verifyCounts() {
             if (!Number.isFinite(n)) continue;
             checked++;
             if (n !== claim.value) {
-              const where = claim.multiline ? rel : `${rel}:${i + 1}`;
-              problems.push(`${where} says "${m[0].trim().replace(/\s+/g, ' ')}" — ${claim.name} is ${claim.value}`);
+              const key = `${rel}:${unit.line}:${claim.name}:${n}`;
+              if (seen.has(key)) continue;
+              seen.add(key);
+              problems.push(`${rel}:${unit.line} says "${m[0].trim().replace(/\s+/g, ' ')}" — ${claim.name} is ${claim.value}`);
             }
           }
-        });
+        }
       }
     }
   }
@@ -221,7 +263,15 @@ export function verifyCounts() {
   return { ok: problems.length === 0, failures: problems.length, log };
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+// pathToFileURL, not a template literal. `file://${process.argv[1]}` does not
+// percent-encode, so from any path containing a space the comparison is false,
+// the CLI branch never runs, and the script exits 0 having verified nothing —
+// which for a verification script is the worst available failure mode. Two
+// other verifiers here already carry that paragraph and do it correctly; these
+// four were written later and did the thing it forbids. Proved by copying the
+// tree under a directory with a space and injecting a real failure: no output,
+// exit 0.
+if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   const { ok, log } = verifyCounts();
   log.forEach(l => console.log(l));
   if (!ok) process.exit(1);

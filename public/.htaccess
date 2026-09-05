@@ -83,8 +83,9 @@ RewriteRule ^text/(.*/)?index\.html$ /text/%1 [L,R=301]
 </IfModule>
 
 # Content Security Policy, 2026-09-01. Shipped Report-Only first (v3.12.0),
-# then switched to enforcing here after a fully clean Report-Only pass: all
-# ten scenes opened via real pointer clicks, all 11 pmGlimpse hash-allowlisted
+# then switched to enforcing here after a fully clean Report-Only pass: every scene that existed then
+# (ten of the current thirteen — apollo, psyshell and medium landed later and
+# have never been through a Report-Only pass of their own) opened via real pointer clicks, all 11 pmGlimpse hash-allowlisted
 # handlers hovered, and Library's video facade + iframe + Open Library cover
 # image all exercised — zero policy violations in the console the entire
 # time. Enforcing now means a real violation actually blocks the resource,
