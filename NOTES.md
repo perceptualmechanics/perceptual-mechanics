@@ -18444,3 +18444,76 @@ either way. Total lit glow at the default camera is unchanged within 4%
 *distribution*, not brightness, which is also why it is most visible in the
 foreground and in the field's outer band rather than as a general
 brightening.
+
+## 4.11.18 (2026-09-05)
+
+**Twelve of the thirteen tiles were wearing another scene's size.** Shipped in
+4.11.16, live on the site, and found only because Scott asked about something
+else — a few square previews in Firefox — and checking that meant reading the
+real page's real numbers.
+
+`applyDerivedLayout()` walked the tiles in document order and the registry in
+its own order:
+
+    registry   sphere, butterfly, scroll, theater, orbiter, orrery, library, …
+    index.html sphere, scroll, orrery, orbiter, butterfly, library, harmonics, …
+
+Library wore Orrery's 1.00. Harmonics wore Library's 1.10. Theater wore
+Harmonics' 0.94. Only Sphere (first in both) and Beamline (eighth in both by
+coincidence) were right.
+
+Now looked up by the tile's own `preview-<key>` id, which is the same string
+the registry keys by and cannot drift from it.
+
+### The comment was the bug
+
+The line above it read: *"in the registry's order, which is the markup's order
+because prerender.js fails the build when they disagree."* **Nothing checks
+that.** What prerender.js checks is that the two hold the same SET — every
+scene has an icon, a tile and a page — which is a different claim, and one
+that stays true however the markup is ordered. I wrote a guarantee into a
+comment, attributed it to a check that exists, and then relied on it.
+
+That is worse than an unchecked assumption, because the next reader has no
+reason to doubt it. **A comment that names a specific check as the reason
+something holds should be treated as a claim about that check, and verified
+against it.**
+
+### Why it shipped
+
+A page of thirteen circles at thirteen assorted sizes looks exactly as
+intended whichever circle gets which size. The bug's entire output is
+plausible — there is no wrong-looking state to notice, only a different
+arrangement of the right-looking one. Which is also why the verifier could
+pass: `verify-landing.mjs` checks that the SIZES fit, and every size in the
+set was still being used.
+
+So it now also checks that the page's tiles and the registry's scenes resolve
+to each other — a set comparison against the real `index.html`, not an
+ordering one, since ordering is no longer what the code depends on and an
+ordering check would go stale the first time somebody rearranged the markup
+for a good reason. Verified end to end as well, in a real browser at
+1512x789: every tile's `--tile-self / --tile` ratio now matches its own
+registry `tile`, all thirteen.
+
+### Still open: the squares in Firefox
+
+Not fixed here, and not yet understood, so it is not being guessed at. What is
+established:
+
+- Three tiles show square in Scott's Firefox — Orrery, Library, Harmonics —
+  and sampling his screenshot, their corners carry the scene's own colour
+  (Orrery `9,7,19`, Library `17,13,9`) where Sphere's are `0,0,0`. So the
+  `.preview-container::after` corner mask is not covering those tiles.
+- It is not the WebGL/2D split the CSS comment assumes: Orrery and Harmonics
+  are 2D canvases, Library is WebGL, and Sphere — WebGL — looks fine.
+- The likelier reading is that every tile is uncovered and only these three
+  show it, because they are the three whose scene draws something other than
+  black into its corners.
+- Removing the container's own clipping in Chrome (`clip-path`, `contain`,
+  `overflow`, `border-radius`) leaves most tiles perfect circles on the mask
+  alone — but not those same three, which suggests the mask is failing in
+  Chrome too and clipping has been hiding it.
+
+That last point is the one worth chasing, and it wants a Firefox to settle
+rather than a theory.

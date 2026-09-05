@@ -908,11 +908,31 @@ function applyDerivedLayout() {
   } else {
     list.style.removeProperty('--tile');
   }
-  // Per-tile size and offset, in the registry's order, which is the markup's
-  // order because prerender.js fails the build when they disagree.
-  const keys = Object.keys(SCENES);
-  tiles.forEach((el, i) => {
-    const spec = SCENES[keys[i]];
+  // Per-tile size and offset, looked up by the tile's OWN id rather than by
+  // its position in the list.
+  //
+  // 4.11.16 shipped `SCENES[Object.keys(SCENES)[i]]` here, with a comment
+  // asserting that the markup's order is the registry's order because
+  // prerender.js fails the build when they disagree. **The assertion was
+  // false and nothing checks it.** What prerender.js checks is that the two
+  // hold the same SET — every scene has an icon, a tile and a page — which
+  // is a different claim, and one that stays true no matter how the markup
+  // is ordered. The registry runs sphere, butterfly, scroll, theater… and
+  // index.html runs sphere, scroll, orrery, orbiter…, so every tile but the
+  // first was drawn at another scene's size and offset: Library wore
+  // Orrery's 1.00, Harmonics wore Library's 1.10, Theater wore Harmonics'
+  // 0.94. It shipped and it was live, because a page of thirteen circles at
+  // thirteen assorted sizes looks exactly as intended whichever circle gets
+  // which size — the bug's whole output is plausible.
+  //
+  // The id is on the button inside each wrapper (`preview-<key>`), which is
+  // the same string the registry keys by, so this cannot drift.
+  tiles.forEach((el) => {
+    const key = el.querySelector('[id^="preview-"]')?.id.slice('preview-'.length);
+    const spec = key ? SCENES[key] : null;
+    if (fit && !spec) {
+      console.warn(`landing layout: tile "${key || '(no id)'}" has no registry entry — it will draw at the base size`);
+    }
     if (!fit || !spec) {
       el.style.removeProperty('--tile-self');
       el.style.removeProperty('--tile-nudge');

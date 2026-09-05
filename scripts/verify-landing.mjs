@@ -19,6 +19,7 @@
 // using the same tileLayout the page uses, and its own accounting of what it
 // occupies. It cannot catch a CSS rule that disagrees with the arithmetic; it
 // can catch the arithmetic disagreeing with itself, which is what happened.
+import { readFileSync } from 'node:fs';
 import { tileLayout, tileLayoutHeight, nudgeScale, tileScale, tileNudge, TILE_GAP, TILE_MAX } from '../src/utils/tileLayout.js';
 import { SCENES } from '../src/scenes/registry.js';
 import { TILE_FLOOR } from '../src/utils/tileLayout.js';
@@ -131,3 +132,36 @@ if (failures.length) {
   process.exit(1);
 }
 console.log(`ok: every fit occupies no more height than it was given, for all ${SCENE_COUNT} scenes`);
+
+// ─── And that the page's tiles can actually be matched to the registry ──────
+// The arithmetic above says how big each scene's tile should be. It says
+// nothing about whether the right scene gets it, and 4.11.16 shipped a version
+// where twelve of the thirteen did not: main.js walked the tiles in document
+// order and the registry in its own order, and the two are not the same order.
+// The output was thirteen circles at thirteen assorted sizes, which is what it
+// looks like when it is working — so nothing about the page announced it.
+//
+// main.js now looks each tile up by its own `preview-<key>` id, which cannot
+// drift. What can still drift is the SET: a tile with no registry entry, or a
+// scene with no tile. So the check is a set comparison against the real
+// index.html, not an ordering one — an ordering check would have gone stale
+// the moment somebody rearranged the markup for a good reason.
+{
+  const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+  const ids = [...html.matchAll(/id="preview-([a-z0-9-]+)"/g)].map(m => m[1]);
+  const keys = Object.keys(SCENES);
+  const orphanTiles = ids.filter(id => !keys.includes(id));
+  const tilelessScenes = keys.filter(k => !ids.includes(k));
+  const dupes = ids.filter((id, i) => ids.indexOf(id) !== i);
+  const problems = [
+    ...orphanTiles.map(id => `index.html has a tile #preview-${id} with no registry entry`),
+    ...tilelessScenes.map(k => `registry scene "${k}" has no #preview-${k} tile in index.html`),
+    ...dupes.map(id => `#preview-${id} appears more than once in index.html`),
+  ];
+  if (problems.length) {
+    console.error(`\nlanding tiles do not match the registry:`);
+    for (const p of problems) console.error(`  ${p}`);
+    process.exit(1);
+  }
+  console.log(`ok: all ${ids.length} tiles in index.html resolve to a registry scene, and every scene has one`);
+}
