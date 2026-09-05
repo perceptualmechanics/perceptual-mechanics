@@ -18602,3 +18602,60 @@ opened there, screenshotted back — because the whole failure is engine
 behaviour that Chrome cannot reproduce and no bench can model. Every previous
 attempt at this bug was diagnosed from a description of what Firefox did.
 That is how "harmless" got written next to the three properties causing it.
+
+## 4.11.20 (2026-09-05)
+
+**The hover glow, which has never once been drawn, and a second `transform`
+that has been quietly cancelling the first since 4.11.16.** Both found by
+Scott asking to see what the glow looked like — which turned out to require
+building it, because there was nothing to look at.
+
+### The glow
+
+`box-shadow: 0 0 40px rgba(255,255,255,0.08)` on `.preview-container:hover`
+has been in the file since 1.0.x and has been invisible since 1.0.38: an
+outer box-shadow is painted outside the element's circle, and the tile has
+been clipped or masked to that circle the whole time. 4.11.19 changed which
+mechanism does the masking but not that fact.
+
+So it moves to where it can be seen — the wrapper, as a `::before` sitting
+**behind** the tile, same width, same 1.04 hover scale, same stagger offset,
+so it rings the circle exactly and cannot wash over the artwork. It has to be
+a separate element for the same reason the focus ring had to move inside:
+nothing the masked element paints can escape the mask.
+
+Alpha **0.16**, not the authored 0.08, chosen by rendering all of it — off,
+0.08, 0.16, 0.28 — against a dark tile (Sphere), a warm one (Library) and a
+pale one (Medium), and looking. At today's tile sizes 0.08 is not perceptible
+on any of the three, which is a fair guess at why nobody noticed it had died.
+
+Two cheaper approaches were tried first and both fail on the pale tiles,
+which is exactly where the scene set is now widest:
+
+- an **inset rim glow** is invisible on Medium and Library, because those
+  tiles are already brighter than the glow;
+- a **`brightness()` filter** — which does survive the mask, since filters
+  are applied before it — blows Medium's board out to near-white while barely
+  moving Sphere.
+
+### The transform that was cancelling the other one
+
+`transform` is a single property, and two rules setting it do not add up: the
+second replaces the first. 4.11.16 put the row stagger on the tile in a
+`#scene-previews.rows-forced .preview-wrapper .preview-container` rule, and
+`:hover` was setting `scale(1.04)` in a rule with lower specificity — so on
+**every desktop viewport, the hover scale did nothing at all.** Not subtly
+wrong: absent.
+
+It is one composed line now, on the base rule, spending two variables:
+
+    transform: translateY(var(--tile-nudge, 0)) scale(var(--tile-hover, 1));
+
+with `:hover` setting `--tile-hover: 1.04`. Neither can silence the other
+again, because there is only one declaration. Verified by reading the actual
+composited matrix while hovering, on tiles with a positive and a negative
+stagger: scale 1.04 with the offset intact both ways.
+
+That is the third bug this week whose entire symptom was *an effect that was
+simply never there* — the focus ring, the hover glow, the hover scale. None
+of them look wrong when they are missing. They look like a design decision.

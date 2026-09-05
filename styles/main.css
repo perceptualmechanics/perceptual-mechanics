@@ -1139,9 +1139,6 @@ html, body {
 		height: var(--tile-row, var(--tile));
 		align-items: center;
 	}
-	#scene-previews.rows-forced & .preview-container {
-		transform: translateY(var(--tile-nudge, 0));
-	}
 }
 
 .preview-container {
@@ -1169,6 +1166,15 @@ html, body {
   cursor: pointer;
   border-radius: 50%;
   position: relative;
+  /* ONE transform, composed from two custom properties, because `transform`
+     is a single property and two rules setting it do not add up — the second
+     replaces the first. 4.11.16 put the row stagger on this element in a
+     `#scene-previews.rows-forced …` rule while `:hover` was setting
+     `scale(1.04)` in a rule with lower specificity, so on every desktop
+     viewport the hover scale silently did nothing at all. Now the nudge and
+     the hover live in variables and this line is the only place either is
+     spent. */
+  transform: translateY(var(--tile-nudge, 0)) scale(var(--tile-hover, 1));
   transition: transform 0.3s ease, box-shadow 0.3s ease;
   /* Scott: "the standalone images are square, but on hover, there's a
      circle mask being applied to them for a split second." Three attempts
@@ -1264,20 +1270,46 @@ html, body {
    nothing left to do, and an opaque square is a liability the moment
    anything wants to paint outside the circle. */
 .preview-container:hover {
-  transform: scale(1.04);
-  box-shadow: 0 0 40px rgba(255,255,255,0.08);
+  --tile-hover: 1.04;
+}
+/* The hover glow, which lived on the line above as
+   `box-shadow: 0 0 40px rgba(255,255,255,0.08)` from 1.0.x until 4.11.20 and
+   never once appeared: an outer box-shadow is painted outside the circle, and
+   the tile has been clipped or masked to that circle the whole time. It is
+   drawn here instead, by the wrapper, BEHIND the tile — same size, same hover
+   scale, so it rings the circle exactly and cannot wash over the artwork.
+   It has to be a separate element for the same reason the ring had to move:
+   nothing the masked element paints can escape the mask.
+
+   Alpha 0.16 rather than the authored 0.08. Both were rendered against a dark
+   tile, a warm one and a pale one; at these tile sizes 0.08 is not
+   perceptible on any of them, which is a fair guess at why nobody noticed it
+   had stopped working. Two alternatives that need no extra element were tried
+   and neither survives the pale tiles: an inset rim glow is invisible on
+   Medium and Library, which are already brighter than it, and a
+   `brightness()` filter — which does survive the mask — blows Medium's board
+   out while barely moving Sphere.
+
+   Scoped to `.rows-forced` because `--tile-self` is the tile's own width and
+   only exists there; below that breakpoint the page is the scrolling phone
+   layout, where there is no hover to style. */
+#scene-previews.rows-forced .preview-wrapper { position: relative; }
+#scene-previews.rows-forced .preview-wrapper:has(.preview-container:hover)::before {
+  content: '';
+  position: absolute;
+  left: 50%; top: 50%;
+  width: var(--tile-self, var(--tile)); aspect-ratio: 1;
+  transform: translate(-50%, -50%) translateY(var(--tile-nudge, 0)) scale(1.04);
+  border-radius: 50%;
+  pointer-events: none;
+  box-shadow: 0 0 40px 3px rgba(255, 255, 255, 0.16);
 }
 /* :focus-visible — see .nav-icon's own note. A 240px circle keeping a ring
    after a mouse click is the most conspicuous version of that problem on
    this page.
 
-   The ring is drawn on the WRAPPER rather than on the button, because the
-   button is masked to a circle and a ring at a 4px offset lies outside that
-   circle — on the button it would be masked away, which is what `clip-path`
-   had been doing to it, unnoticed, since 1.0.38. `:has()` puts it on the
-   parent while :focus-visible still decides, so the keyboard-only behaviour
-   is unchanged; `border-radius` and the matching size come from the tile so
-   the ring is a circle around the circle. */
+   The indicator is an INSET ring rather than an outline — see the rule's own
+   comment. */
 .preview-container:focus-visible {
   /* Drawn INSIDE the circle, not outside it. An outline at a 4px offset is
      outside the mask and would be masked away — which is what `clip-path`
