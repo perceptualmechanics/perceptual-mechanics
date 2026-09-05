@@ -245,7 +245,12 @@
      Offset stays per-selector: it depends on the shape being ringed (a
      circular 240px tile wants more room than a 22px glyph), which is a real
      difference, unlike the colour. */
-  --focus-ring: 2px solid rgba(255, 255, 255, 0.75);
+  /* Split into a colour of its own at 4.11.19: the preview tiles draw their
+     focus indicator as an inset box-shadow rather than an outline (see
+     .preview-container:focus-visible for why), and a shorthand cannot be
+     reused there. One colour, two shapes. */
+  --focus-ring-color: rgba(255, 255, 255, 0.75);
+  --focus-ring: 2px solid var(--focus-ring-color);
 
   /* ─── Scene crossfade ───────────────────────────────────────────────────
      #experience-overlay's opacity transition, and the two setTimeout()s in
@@ -1163,7 +1168,6 @@ html, body {
   height: auto;
   cursor: pointer;
   border-radius: 50%;
-  overflow: hidden;
   position: relative;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
   /* Scott: "the standalone images are square, but on hover, there's a
@@ -1181,10 +1185,51 @@ html, body {
      clip the canvas. `.preview-container::after` below paints an opaque
      black ring on TOP of the canvas instead — ordinary 2D background
      compositing on a plain div, nothing WebGL-related for Firefox to
-     opt out of. Kept all three prior properties anyway: harmless, and
-     each is still the technically "correct" fix for some other engine. */
-  contain: paint;
-  clip-path: circle(50%);
+     opt out of.
+
+     **And then all three were kept anyway, on the grounds that they were
+     harmless. They were not: they were the bug.** Measured in Firefox at
+     4.11.19, with a page of flat-filled canvases and one variable changed at
+     a time (2D canvas and WebGL, seven strategies each):
+
+       as shipped, clip + ::after mask ....  2D circle   WebGL SQUARE
+       ::after mask, no clipping .........   2D circle   WebGL circle
+       clipping, no mask .................   2D circle   WebGL SQUARE
+       CSS mask-image, no clipping .......   2D circle   WebGL circle
+
+     A clip on this element clips its OWN ::after too — that is what a clip
+     is — so `clip-path`/`contain: paint`/`overflow: hidden` were deleting
+     precisely the corners the mask exists to paint. In Chrome that costs
+     nothing, because Chrome then clips the canvas as well and the tile comes
+     out round either way. In Firefox the canvas survives the clip and the
+     mask does not, so the corners were bare. It looked fixed for four years
+     because it only shows on a scene that draws something other than black
+     into its corners, and for a long time none did — Orrery, Library and
+     Harmonics are the three that eventually did, and Scott saw them.
+
+     The fix is the fourth row of that table, and it replaces four
+     mechanisms with one: `mask-image`, which Firefox honours on a WebGL
+     canvas even though it ignores every box-clipping property. So the
+     `::after` overlay goes too — a mask that actually masks does not need
+     an opaque black square painted over the corners to fake it.
+
+     Why not simply drop the clipping and keep the ::after (the second row,
+     which also measures clean)? Because that mask is an opaque black
+     SQUARE with a hole in it, and once nothing clips the element the square
+     starts covering things drawn outside the circle. Measured, both in
+     Chrome: the :focus-visible ring came back as four disconnected arcs
+     with its diagonals eaten, and hovering lit a black square with a broken
+     halo around it. `mask-image` has no such square — outside the circle is
+     transparent, not black.
+
+     What it does mask away is the element's own outline and box-shadow,
+     which is exactly what `clip-path` was already doing, so nothing changes
+     visually anywhere. It does mean `.preview-container:hover`'s
+     `box-shadow` has been a dead declaration since 1.0.38 and still is; and
+     the focus ring, which must not be dead, moves to the wrapper below —
+     outside the masked element, where it can actually be seen. */
+  -webkit-mask-image: radial-gradient(circle closest-side, #000 99.5%, transparent 100%);
+  mask-image: radial-gradient(circle closest-side, #000 99.5%, transparent 100%);
 
 	/* 224px, not the 240px this tier carried until 4.4.0. Three tiles at 240
 	   need 784px including gaps and padding, which is just past the common
@@ -1211,31 +1256,39 @@ html, body {
 		aspect-ratio: 1;
 	}
 }
-/* The actual fix: don't clip the canvas, cover its corners. A plain
-   painted overlay is immune to whatever Firefox-WebGL-compositing quirk
-   defeated three different clip mechanisms above, because it isn't
-   clipping anything — it's just a normal div background sitting in front
-   of the canvas. `closest-side` sizes the transparent center exactly to
-   the inscribed circle of this always-square container, so the hard edge
-   lands exactly where border-radius:50% would have cut it. */
-.preview-container::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: 2;
-  pointer-events: none;
-  background: radial-gradient(circle closest-side, transparent 100%, #000 100%);
-}
+/* The ::after corner overlay that stood here from 1.0.40 to 4.11.19 is gone.
+   It was a black square with a circular hole, painted over the canvas to
+   fake a clip — a reasonable answer when the only alternatives were clip
+   properties Firefox ignored on a canvas. `mask-image` above is not a fake:
+   it is a real clip that Firefox does honour on a canvas, so the overlay has
+   nothing left to do, and an opaque square is a liability the moment
+   anything wants to paint outside the circle. */
 .preview-container:hover {
   transform: scale(1.04);
   box-shadow: 0 0 40px rgba(255,255,255,0.08);
 }
 /* :focus-visible — see .nav-icon's own note. A 240px circle keeping a ring
    after a mouse click is the most conspicuous version of that problem on
-   this page. */
+   this page.
+
+   The ring is drawn on the WRAPPER rather than on the button, because the
+   button is masked to a circle and a ring at a 4px offset lies outside that
+   circle — on the button it would be masked away, which is what `clip-path`
+   had been doing to it, unnoticed, since 1.0.38. `:has()` puts it on the
+   parent while :focus-visible still decides, so the keyboard-only behaviour
+   is unchanged; `border-radius` and the matching size come from the tile so
+   the ring is a circle around the circle. */
 .preview-container:focus-visible {
-  outline: var(--focus-ring);
-  outline-offset: 4px;
+  /* Drawn INSIDE the circle, not outside it. An outline at a 4px offset is
+     outside the mask and would be masked away — which is what `clip-path`
+     had been silently doing to it since 1.0.38. An inset box-shadow follows
+     the same border-radius, so it is a circle just within the tile's own
+     edge: fully inside the mask, and visible for the first time in a while.
+     The dark second ring is what keeps it legible on a tile that happens to
+     be pale at that radius, Medium's board being the obvious one. */
+  outline: none;
+  box-shadow: inset 0 0 0 3px var(--focus-ring-color),
+              inset 0 0 0 6px rgba(0, 0, 0, 0.55);
 }
 /* ─── Why these are !important, since the rule carried no reason for years ──
    Asked directly at 4.11.2 — "do we still need that !important CSS?" — and the

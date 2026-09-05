@@ -18517,3 +18517,88 @@ established:
 
 That last point is the one worth chasing, and it wants a Firefox to settle
 rather than a theory.
+
+## 4.11.19 (2026-09-05)
+
+**The three CSS properties kept in 1.0.39 "because they were harmless" were
+the bug.** Scott, on Firefox: *"seeing a few squares, is that intentional?"*
+Orrery, Library and Harmonics were square. They had been for four years.
+
+### What the tile was doing
+
+Three attempts at clipping the canvas into a circle failed in Firefox
+(`contain: paint`, `clip-path: circle(50%)`, `border-radius` on the canvas),
+and 1.0.40 solved it a fourth way: `.preview-container::after`, an opaque
+black square with a circular hole, painted on top. The three clip properties
+were left in place, documented as harmless insurance and "still the
+technically correct fix for some other engine."
+
+**A clip on an element clips its own `::after` too.** That is what a clip is.
+So `clip-path`/`contain: paint`/`overflow: hidden` were deleting precisely the
+corners the mask existed to paint. In Chrome that costs nothing, because
+Chrome then clips the canvas as well and the tile comes out round either way.
+In Firefox the canvas survives the clip and the mask does not — so the corners
+were bare, and had been since the day the "fix" landed.
+
+It looked fixed because it only shows on a scene that draws something other
+than black into its corners, and for years none did. Orrery (navy), Library
+(warm brown) and Harmonics eventually did.
+
+### Measured rather than reasoned
+
+A page of flat-filled canvases in Scott's Firefox, one variable changed at a
+time, 2D canvas and WebGL side by side. Eight strategies; the four that
+matter:
+
+    as shipped: clip + ::after mask ......  2D circle   WebGL SQUARE
+    ::after mask, no clipping ............  2D circle   WebGL circle
+    clipping, mask removed ...............  2D circle   WebGL SQUARE
+    CSS mask-image, no clipping ..........  2D circle   WebGL circle
+
+Which also corrects the old comment's diagnosis: it is not that Firefox
+ignores clipping on a WebGL canvas *generally*. It ignores the box-clipping
+properties there, and honours `mask-image` on the same element. That
+distinction is the whole fix.
+
+### The fix, and why not the obvious one
+
+`mask-image: radial-gradient(circle closest-side, #000 99.5%, transparent
+100%)` on the container, and the `::after` overlay, `clip-path`, `contain`
+and `overflow: hidden` all come out. Four mechanisms replaced by one, and the
+one is a real clip rather than a square painted to look like one.
+
+The obvious alternative — keep the `::after` and just drop the clipping, the
+second row above, which measures equally clean — was tried and rejected on
+what it did to everything else. That mask is an **opaque black square**, and
+once nothing clips the element the square starts covering things drawn
+outside the circle. Measured in Chrome: the `:focus-visible` ring came back as
+four disconnected arcs with its diagonals eaten, and hovering lit a black
+square with a broken halo inside it. `mask-image` has no square — outside the
+circle is transparent.
+
+### Two things the clip had been eating, unnoticed
+
+- **The focus ring.** `outline` at a 4px offset is outside the circle, so
+  `clip-path` had been removing it since 1.0.38 — a keyboard visitor on the
+  landing page has had no visible focus indicator on any tile for that whole
+  time, and nothing said so. It is now an **inset** ring: two rings of
+  `box-shadow`, white inside dark, following the same `border-radius`, drawn
+  just within the tile's edge where the mask keeps it. Verified by tabbing to
+  it in a real browser — seventeen tabs from the top of the page — rather
+  than by reading the rule.
+- **The hover glow.** `box-shadow: 0 0 40px` on `:hover` has been a dead
+  declaration for the same reason and still is, because `mask-image` masks it
+  the same way `clip-path` did. Recorded rather than fixed: making it visible
+  is a change to how the page behaves, not a bug fix, and it should be
+  somebody's decision rather than a side effect of this one.
+
+`--focus-ring` also split into `--focus-ring-color` plus the shorthand, since
+a shorthand cannot be reused inside a `box-shadow`. One colour, two shapes.
+
+### Note on method
+
+This was settled by driving Scott's own Firefox — the test page written here,
+opened there, screenshotted back — because the whole failure is engine
+behaviour that Chrome cannot reproduce and no bench can model. Every previous
+attempt at this bug was diagnosed from a description of what Firefox did.
+That is how "harmless" got written next to the three properties causing it.
