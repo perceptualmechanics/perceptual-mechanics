@@ -171,102 +171,6 @@ an independent table.
 **A method that failed is a finding.** It tells the next session what not to
 try.
 
-### 5. Applying a finding and improving the output are two claims
-
-Scott's wording, kept verbatim because it is better than the paraphrase:
-
-> **Applying a finding because it's what the literature measures happening, and
-> the output improving, are two separate claims — and only the second is a
-> result.**
-
-Earned on 4.11.10. Andersen et al. report that Ouija players predict better with
-each letter already spelled, so Medium's plausibility exponent became a curve
-instead of a constant — which is right on the merits regardless of effect size,
-because a constant is precisely what the finding says it should not be. The
-*result* is separate and much smaller: three points of rank correlation against
-English letter frequencies and one point of vowel share. Both were reported. The
-first is a design decision with a citation; only the second is evidence.
-
-The failure this guards against is quiet and flattering: a sourced change that
-happens to coincide with an improvement, written up as though the source caused
-it. See the third instance in the recursive section below, which is exactly how
-it nearly happened.
-
-### 6. When somebody reports a FEEL, find the number that means their word
-
-Not the nearest number already to hand. That is the trap, and it is a
-comfortable one, because there is always a metric lying around.
-
-Three reports on Medium in one afternoon, each a thing Scott felt while playing
-that the model had no term for:
-
-- *"the second hand just stood there"* when he dragged the cup away — neither
-  hand was attached to the cup at all.
-- *"it feels more like resistance"* on a trackpad — "driving" was a per-frame
-  boolean, so every micro-movement of a resting finger flipped his hand to full
-  stiffness for one frame and released it.
-- *"so twitchy if I'm going slowly"* — and this is the one that names the rule.
-
-The number I had was **speed**, and speed said almost nothing: the fingertip
-travelled about as far under a slow drag as at rest. The number that means
-*twitchy* is **direction reversals per second** — how often the fingertip changes
-which way it is sliding. Measured: **4.2 resting, 4.3 under a slow deliberate
-drag.** The other hand was not responding to the visitor at all, which is exactly
-what a person means by that word about a hand.
-
-And the two rejected fixes are the more useful half of the finding:
-
-- **Heavier damping made it worse.** The obvious move, and backwards: damping
-  lowers the distance travelled and takes reversals *up*. A hand that moves less
-  and changes its mind more. Not predictable from the model — only from the
-  right ruler.
-- **Bracing the hand off tempo rather than off grip** measured 1.9 reversals,
-  the best number in the sweep, and cost thirteen points of rank correlation
-  because a permanently braced hand explores nothing and re-treads its own
-  letters. It sat in the build for an hour looking like a clear win. Rule 5's
-  failure, one release later: *it looked good because the thing it was degrading
-  was not the thing being watched.*
-
-> **A felt complaint is a measurement request in plain language. The work is
-> translating the word, not reaching for the metric you already have.**
-
-And the corollary, which is why this cannot be delegated to the benches: every
-one of the three was found by *playing*, with the benches green throughout. A
-bench's visitor is a function of time and never jitters. **A stub smoother than a
-person will not reproduce a person's bugs.**
-
-### 7. Run the build before the commit, not before the deploy
-
-A check nobody runs is not a check.
-
-This project keeps its guards in a vite `closeBundle` hook, deliberately, so
-they fire on the command people actually run (`NOTES.md`, "Standing notes —
-build tooling": *hook the command people actually run, not the one the docs
-say to run*). `verify-links`, `verify-resonances`, `verify-landing`,
-`csp-style-hash` and the scenes-vs-pages check all live there.
-
-`vite dev` does not run `closeBundle`.
-
-4.11.6 added a rule to `PAGE_STYLE` and did not update the hash beside it or
-the one in `.htaccess`. `csp-style-hash` caught it correctly and failed the
-build — and then eight releases went in over four days without anybody
-invoking the build. The work had moved to a dev server at localhost:5173 and
-to node benches, both of which are better than a build for the questions they
-answer, and neither of which is a build.
-
-Nothing shipped, because nothing had been pushed either. That is luck, not
-process.
-
-> **A dev server and a bench answer "does it work?". Only the build answers
-> "is it publishable?". Both questions have to be asked before a commit, and
-> the second one is the one that gets skipped when the first one is going
-> well.**
-
-The tell to watch for: a stretch of work where every verification is a *live*
-one — a browser, a harness, a bench — and none of it produces build output.
-That is exactly when the guards are quietest and exactly when they are not
-running.
-
 ---
 
 ## The shared lesson these all point at
@@ -307,19 +211,6 @@ And the corollary, which is the one that applies to this document:
 
 > **An audit's ruler is part of its result.** Say what was looked for as
 > prominently as what was found.
-
-And one from 4.11.13 that is a design principle rather than an audit one, kept
-in Scott's words because the phrasing is the content:
-
-> **Energy rather than direction — because direction would be a mirror and would
-> spell nothing. And the pointer is your private business. Neither hand can see
-> the other's intention; what they share is the object.**
-
-That is Medium's whole thesis written as a coupling term, and it is now literally
-how the code works: the other hand's activity scales with the smoothed speed of
-the CUP and never reads the pointer. **When a scene has a thesis, the test of
-whether it is really the scene's thesis is whether it appears in the physics or
-only in the prose.**
 
 And one about sample size, from the ambient scheduler:
 
@@ -370,30 +261,50 @@ them — starting with a repeatability check against the change, not against the
 old code.** Two runs at the same frame rate differing from each other is what
 caught this, and it cost one run to ask.
 
-### Third instance, and the first to produce a FALSE POSITIVE *(4.11.10)*
-
-Same family, new symptom. Medium's plausibility exponent was made a curve, and
-the first measurement of it showed eleven séances out of twelve opening with
-different letters where the last recorded measurement had two out of eight. Read
-as: the curve fixed the identical-openers problem.
-
-It did not. **The two measurements sat on either side of 4.11.9's grip-and-lean
-rework**, which is what actually fixed it — and a flat exponent in the current
-code opens eleven of twelve differently too. Caught by running the flat control
-*in the current code* rather than trusting a number recorded before it.
-
-The shape is the one this section already names — a measurement whose baseline
-moved — but the first two instances made a working thing look broken. This one
-made a change look better than it was, which is worse: nothing draws attention
-to a result you are pleased with.
-
-What follows practically: **a before-and-after is only a before-and-after if
-both halves ran against the same code.** A baseline recorded earlier in a
-session is a different experiment. Re-run the control, do not quote it — it
-costs one run, and the run is the difference between a design decision and a
-result.
+---
 
 ---
+
+## How to write the brief *(added by Cowork)*
+
+Everything above this line is about how to check work. This is about how to
+start it, and it came out of Scott's own note at the end of 5.0.1.
+
+**Bug reports get you fixes; situations get you diagnoses.**
+
+The evidence is the 5.0 candle, twice. The brief the first time was a defect —
+"the candlelight seems more pulsey than candle flicker" — and it produced a
+tuning: more stops, a higher rate, coprime periods. Measurably better and still
+wrong. The brief the second time was a situation — *"imagine the candle being
+on the desk of the person reading this scroll and cast the light and the
+movement and the shadows accordingly"* — and it produced a diagnosis in
+minutes: the layer being dimmed was carrying the room's darkness as well as the
+candle's light, so every flicker lifted the shadows and the highlights
+together, which is a camera flash and not a lamp.
+
+Nothing about the second brief was more specific than the first. It was less
+specific. What it did was describe **what the thing is**, and that is the part
+that matters, because:
+
+> You cannot tune your way out of a wrong model, and only a description of the
+> situation puts the model next to something that is not itself.
+
+A defect report is stated in the model's own terms, so it can only ever move a
+parameter. A situation is stated in the world's terms, and comparing a model to
+the world is the only operation that can find the model wrong.
+
+This holds across the briefs that produced the best work on this site, and it is
+the thing they have in common rather than length or detail: a lens someone is
+reading, a rush of metal wind, a homemade board on a table between two people's
+hands, a candle on the desk of the person reading the scroll. Every one of them
+describes a thing rather than a fault.
+
+**Practically, in both directions.** When Scott is briefing: describe the
+situation, and let the defect be inferred. When Cowork is stuck tuning — a
+third round of adjusting amplitudes, thresholds or timings without the thing
+getting right — that is the signal to stop and ask what the situation actually
+is, because rounds one and two have already established that the parameter is
+not where the problem lives.
 
 ---
 
@@ -653,25 +564,3 @@ protocol with no record of use is indistinguishable from one nobody reads.
   first version of the wavefront measurement was invalid too: it found the peak
   change at a fixed radius because the struck-line flash is an order of
   magnitude brighter than a displaced filament and buried it.
-- **2026-09-04, v4.11.9–.11.** Four defects in Medium, all found by Scott
-  *playing it* and none reachable from the benches, which were green throughout.
-  Two of the four were the same bug: "driving" was a per-frame boolean, so on a
-  trackpad every micro-movement of a resting finger flipped the visitor's hand
-  to full stiffness for one frame and released it — sixty times a second,
-  against another hand leaning the other way. It presented as the cup *fighting*
-  and as the other hand *jittering*, two symptoms of one cause, and the benches
-  could not see it because a bench's visitor is a function of time and never
-  jitters. **A stub that is smoother than a person will not reproduce a person's
-  bugs.** The stub is the scene's own `stepVisitor` now, so the thing measured
-  is the thing that ships.
-
-  The other two were the same shape one level out: the other hand was not
-  attached to the cup (drag it away and the hand stood there pressing on bare
-  card), and once attached by a hard clamp it juddered against the limit —
-  fixed by making the LEAN the thing that wanders rather than a position that
-  gets clamped. **The same object modelled twice, once as a position and once as
-  a constraint, is a jitter generator.**
-
-  And a fourth, reported here because it is the "recursive" section's third
-  instance and the first to produce a false positive — see above.
-
