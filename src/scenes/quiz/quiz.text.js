@@ -472,3 +472,78 @@ export function score(responses) {
 // response space in `scripts/quiz-wheel.mjs`; exported here so the /text/ page
 // can list them without re-deriving.
 export const REACHABLE = PHASES.filter(p => p.n !== 1 && p.n !== 15).map(p => p.n);
+
+// ─── The report, built once and rendered twice ──────────────────────────────
+// **This is here rather than in quiz.js so that every outcome can be checked
+// without a browser.** The Cardinal Phases shipped for four releases with the
+// Faculty rectangle collapsed and the report saying nothing about it, and the
+// only reason it was ever seen is that Scott took the quiz and drew Phase 22.
+// A report assembled inside a DOM renderer can only be inspected by rendering
+// it, which means the outcomes that get inspected are the ones somebody
+// happens to draw.
+//
+// So the report is DATA. `rows` are segments — plain text and emphasised text
+// — which quiz.js turns into markup and `scripts/quiz-wheel.mjs` walks for all
+// twenty-eight phases on every build. One assembly, two readers, and the
+// second one runs whether anyone is looking or not.
+const T = (s) => ({ t: 'text', s: String(s) });
+const B = (s) => ({ t: 'strong', s: String(s) });
+
+export function report(result) {
+  const n = result.n;
+  const p = PHASE_BY_N[n];
+  const q = quarterOf(n);
+  const tri = triadOf(n);
+  const mn = maskPhase(n), cn = creativeMindPhase(n), bn = bodyOfFatePhase(n);
+  const rows = [];
+  const row = (label, ...segs) => rows.push({ label, segs });
+
+  row('Number', B(n), T(' of 28'));
+  if (q) row('Quarter', B(q.name), T(' \u00a0 element ' + q.element + ' \u00a0 ' + q.dominant + ' dominates'));
+  else row('Quarter', B('None'), T(' — a phase of crisis, on the boundary between quarters'));
+  if (tri) row('Triad', T('the '), B(tri.role), T(` of the ${tri.set === 1 ? 'first' : 'second'} triad — phases ${tri.phases.join(', ')}`));
+  else row('Triad', B('None'), T(' — outside the quarters that the triads divide'));
+  row('Tincture', B(tinctureOf(n)));
+
+  // A Faculty is attributed to the phase it is DRAWN FROM and described by
+  // what it does here. Conflating the two is the easiest mistake in the system.
+  const faculty = (label, from, spec, bare) => {
+    const segs = [T(`drawn from phase ${from}, ${PHASE_BY_N[from].will}`)];
+    if (spec) segs.push(T(' \u00a0\u00b7\u00a0 '), B(bare ? spec : spec.t));
+    row(label, ...segs);
+  };
+  faculty('Will', n, null);
+  faculty('Mask', mn, p.mask);
+  faculty('Creative Mind', cn, p.cm);
+  faculty('Body of Fate', bn, p.bf, true);
+
+  // The rectangle collapses at the Cardinal Phases and nowhere else — Yeats
+  // puts the exception in a parenthesis and the report says it out loud,
+  // because on the page it otherwise reads as the report repeating itself.
+  const corners = [...new Set([n, mn, cn, bn])].sort((a, b) => a - b);
+  if (corners.length < 4) {
+    row('The rectangle', B('Collapsed'), T(` — the four Faculties fall on ${corners.join(' and ')} rather than on four phases`));
+  }
+  if (p.mask && p.cm) row('The failure', B(p.mask.f), T(', and then '), B(p.cm.f));
+  row('Symbol', T(p.symbol));
+  if (p.who.length) row('Others here', T(p.who.join(' \u00a0\u00b7\u00a0 ')));
+  if (p.attributed.length) row('Placed here by others', T(p.attributed.join(' \u00a0\u00b7\u00a0 ')));
+
+  const closers = [];
+  if (result.displaced) {
+    closers.push([`You came to rest at Phase ${result.raw}, where there is no human life.`,
+                  'The wheel has set you down at the first phase that can hold one.']);
+  }
+  closers.push(n === 22 || n === 8
+    ? ['You are at a phase of crisis.', 'The wheel does not hold still here, and neither will you.']
+    : ['This is your place on the wheel.', 'It was not chosen and it cannot be refused.']);
+
+  return {
+    n, name: p.will, rows, closers,
+    citeUrl: `https://www.yeatsvision.com/Ph${n}.html`,
+    // One flat sentence for a screen reader, ahead of the capitals.
+    announcement: `You are Phase ${n} of 28. ${p.will}. `
+      + (q ? `${q.name}, element ${q.element}, ${q.dominant} dominates.` : 'A phase of crisis, outside the quarters.')
+      + ` Your mask is drawn from phase ${mn}, your creative mind from phase ${cn}, your body of fate from phase ${bn}.`,
+  };
+}

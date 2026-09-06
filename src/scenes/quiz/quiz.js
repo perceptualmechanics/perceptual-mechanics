@@ -4,8 +4,7 @@ import {
 } from '../../utils/sceneKit.js';
 import {
   PHASES, PHASE_BY_N, ITEMS, CHOICES, PREAMBLE, score,
-  maskPhase, creativeMindPhase, bodyOfFatePhase, quarterOf, tinctureOf, triadOf,
-  CARDINAL,
+  report, CARDINAL,
 } from './quiz.text.js';
 import quizHtml from './quiz.html?raw';
 import './quiz.css';
@@ -411,102 +410,31 @@ export function createQuiz(container, { preview = false } = {}) {
     'TWENTY-THREE', 'TWENTY-FOUR', 'TWENTY-FIVE', 'TWENTY-SIX', 'TWENTY-SEVEN',
     'TWENTY-EIGHT'];
 
-  function row(dt, dd) { return `<dt>${escapeHtml(dt)}</dt><dd>${dd}</dd>`; }
-
-  function facultyRow(label, n, spec, which) {
-    const p = PHASE_BY_N[n];
-    const head = `drawn from phase ${n}, ${escapeHtml(p.will)}`;
-    if (!spec) return row(label, head);
-    // Only the TRUE form here. Both forms on every Faculty line printed the
-    // failure four times over and then again in its own row, which is how a
-    // report stops sounding like a judgment and starts sounding like a table.
-    const forms = which === 'bf' ? `<b>${escapeHtml(spec)}</b>` : `<b>${escapeHtml(spec.t)}</b>`;
-    return row(label, `${head} &nbsp;·&nbsp; ${forms}`);
-  }
+  // **This function only renders. It decides nothing.** Everything the report
+  // says is assembled by `report()` in quiz.text.js, which has no DOM and so
+  // can be walked for all twenty-eight phases by the build — see
+  // `scripts/quiz-wheel.mjs`. The Cardinal Phases shipped for four releases
+  // with a defect nobody could have found except by drawing one, and this is
+  // the structural answer to that: the outcomes that get checked are no longer
+  // the outcomes somebody happens to draw.
+  const seg = (segs) => segs
+    .map(x => (x.t === 'strong' ? `<b>${escapeHtml(x.s)}</b>` : escapeHtml(x.s)))
+    .join('');
 
   function renderVerdict(result) {
-    const p = result.phase;
-    const q = quarterOf(p.n);
-    const tri = triadOf(p.n);
-    const mn = maskPhase(p.n), cn = creativeMindPhase(p.n), bn = bodyOfFatePhase(p.n);
-    vNumber.textContent = `Phase ${roman[p.n]}`;
-    vName.textContent = p.will;
-
-    // The Faculties are read off THIS phase's row, not off the phase they are
-    // drawn from. Yeats attributes a Faculty to the phase it comes from and
-    // describes it by what it does here, and conflating the two is the single
-    // easiest mistake to make in the whole system.
-    //
-    // The TRUE forms sit on their Faculty's own line and the FALSE forms are
-    // gathered into one row of their own, because the brief asks for the
-    // characteristic failure stated as cosmic law and a failure stated twice
-    // in two places is stated weakly.
-    const parts = [
-      row('Number', `<b>${p.n}</b> of 28`),
-      q ? row('Quarter', `<b>${escapeHtml(q.name)}</b> &nbsp; element ${escapeHtml(q.element)} &nbsp; ${escapeHtml(q.dominant)} dominates`)
-        : row('Quarter', '<b>None</b> — a phase of crisis, on the boundary between quarters'),
-      tri ? row('Triad', `the <b>${escapeHtml(tri.role)}</b> of the ${tri.set === 1 ? 'first' : 'second'} triad — phases ${tri.phases.join(', ')}`)
-          : row('Triad', '<b>None</b> — outside the quarters that the triads divide'),
-      row('Tincture', `<b>${escapeHtml(tinctureOf(p.n))}</b>`),
-      facultyRow('Will', p.n, null),
-      facultyRow('Mask', mn, p.mask, 'mask'),
-      facultyRow('Creative Mind', cn, p.cm, 'cm'),
-      facultyRow('Body of Fate', bn, p.bf, 'bf'),
-    ];
-    // **At a Cardinal Phase the rectangle collapses, and the report says so.**
-    // The four Faculties normally sit at the corners of a rectangle — four
-    // distinct phases — and `Wheel.html` states the exception in a
-    // parenthesis: "except for the Cardinal Phases". At 22 the Will and the
-    // Body of Fate are both at 22 and the Mask and Creative Mind are both at
-    // 8; at 8 it is the same pair the other way round; at 1 and 15 the
-    // rectangle is the axis itself. Which reads, on the page, as the report
-    // repeating itself — so it is named rather than left to look like one.
-    const corners = new Set([p.n, mn, cn, bn]);
-    if (corners.size < 4) {
-      parts.push(row('The rectangle', `<b>Collapsed</b> — the four Faculties fall on ${[...corners].sort((a, b) => a - b).join(' and ')} rather than on four phases`));
-    }
-    if (p.mask && p.cm) {
-      parts.push(row('The failure',
-        `<b>${escapeHtml(p.mask.f)}</b>, and then <b>${escapeHtml(p.cm.f)}</b>`));
-    }
-    parts.push(row('Symbol', escapeHtml(p.symbol)));
-    if (p.who.length) parts.push(row('Others here', p.who.map(escapeHtml).join(' &nbsp;·&nbsp; ')));
-    if (p.attributed.length) parts.push(row('Placed here by others', p.attributed.map(escapeHtml).join(' &nbsp;·&nbsp; ')));
-    vSheet.innerHTML = parts.join('');
-
-    // The displacement is announced rather than hidden. The instrument is
-    // allowed to land on Phase 1 or Phase 15 and then says out loud that it
-    // has, because a system with opinions about where a life cannot be is more
-    // interesting than one that quietly rounds you off the poles.
-    const closers = [];
-    if (result.displaced) {
-      closers.push(`You came to rest at Phase ${roman[result.raw]}, where there is no human life. The wheel has set you down at the first phase that can hold one.`);
-    }
-    // Broken after the first sentence rather than left to wrap wherever the
-    // measure runs out. The first line is the statement and the second is the
-    // sentence on it, and a line break is the only thing that makes a reader
-    // pause between them.
-    closers.push(p.n === 22 || p.n === 8
-      ? ['You are at a phase of crisis.', 'The wheel does not hold still here, and neither will you.']
-      : ['This is your place on the wheel.', 'It was not chosen and it cannot be refused.']);
-    vClose.innerHTML = closers
-      .map(c => (Array.isArray(c) ? c : [c]).map(line => `<span>${escapeHtml(line)}</span>`).join('<br>'))
+    const r = report(result);
+    vNumber.textContent = `Phase ${roman[r.n]}`;
+    vName.textContent = r.name;
+    vSheet.innerHTML = r.rows
+      .map(row => `<dt>${escapeHtml(row.label)}</dt><dd>${seg(row.segs)}</dd>`)
+      .join('');
+    vClose.innerHTML = r.closers
+      .map(lines => lines.map(l => `<span>${escapeHtml(l)}</span>`).join('<br>'))
       .join('<br>');
-
-    // Deep-linked to the phase, because Mann publishes a page per phase and
-    // this scene is built on his organisation of the material. It costs
-    // nothing and it is the courtesy owed. The phase the visitor is sent to is
-    // the one they were placed at, not the one the placement first landed on —
-    // there is no page for a phase nobody lives at.
     citeEl.innerHTML = `W. B. Yeats, <cite>A Vision</cite> (1937)`
       + ` &nbsp;·&nbsp; Neil Mann, `
-      + `<a href="https://www.yeatsvision.com/Ph${p.n}.html" target="_blank" rel="noopener noreferrer">yeatsvision.com</a>`;
-
-    // One flat sentence for a screen reader, before the capitals arrive. The
-    // sheet that follows is a real <dl> and reads correctly on its own; this
-    // is the headline, so the announcement is not eleven terms deep before it
-    // says what happened.
-    srLive.textContent = `You are Phase ${p.n} of 28. ${p.will}. ${q ? `${q.name}, element ${q.element}, ${q.dominant} dominates.` : 'A phase of crisis, outside the quarters.'} Your mask is drawn from phase ${mn}, your creative mind from phase ${cn}, your body of fate from phase ${bn}.`;
+      + `<a href="${r.citeUrl}" target="_blank" rel="noopener noreferrer">yeatsvision.com</a>`;
+    srLive.textContent = r.announcement;
   }
 
   let verdictTimer = null;

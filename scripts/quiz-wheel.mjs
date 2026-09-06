@@ -13,7 +13,7 @@
 // file would only be checking that arithmetic is arithmetic.
 import { PHASES, PHASE_BY_N, ITEMS, CHOICES, REACHABLE, QUARTERS, CARDINAL,
          maskPhase, creativeMindPhase, bodyOfFatePhase, quarterOf, tinctureOf,
-         triadOf, place } from '../src/scenes/quiz/quiz.text.js';
+         triadOf, place, report } from '../src/scenes/quiz/quiz.text.js';
 
 // yeatsvision.com/Wheel.html, "These eight configurations or groups, six of
 // four and the two pairs of Cardinal Phases, are set out in the table below."
@@ -144,6 +144,53 @@ export function verifyQuizWheel() {
       seen.set(k, p.n);
     }
     if (!bad) ok('the twenty-four habitable phases fall into eight triads of power, code and belief, and the four Cardinal Phases into none');
+  }
+
+  // ── 5c. Every report, for every phase, on every build ─────────────────
+  // The reason this check exists, stated plainly: the Cardinal Phases shipped
+  // for four releases with the Faculty rectangle collapsed and the report
+  // saying nothing about it, and it was found because Scott took the quiz and
+  // drew Phase 22. Twenty-six outcomes and one pair of eyes is not coverage.
+  //
+  // `report()` has no DOM, so all twenty-eight can be built here in a
+  // millisecond and inspected — which is the whole reason the assembly was
+  // moved out of the renderer.
+  {
+    const want = ['Number', 'Quarter', 'Triad', 'Tincture', 'Will', 'Mask', 'Creative Mind', 'Body of Fate', 'Symbol'];
+    let bad = 0;
+    for (const p of PHASES) {
+      const habitable = !(p.n === 1 || p.n === 15);
+      const r = report({ n: p.n, raw: p.n, displaced: false });
+      const labels = r.rows.map(x => x.label);
+      for (const w of want) if (!labels.includes(w)) { fail(`phase ${p.n}'s report has no "${w}" row`); bad++; }
+      if (new Set(labels).size !== labels.length) { fail(`phase ${p.n}'s report repeats a row label`); bad++; }
+      for (const row of r.rows) {
+        const text = row.segs.map(x => x.s).join('').trim();
+        if (!text) { fail(`phase ${p.n}: the "${row.label}" row is empty`); bad++; }
+        if (/undefined|null|NaN|\[object/.test(text)) { fail(`phase ${p.n}: the "${row.label}" row reads "${text}"`); bad++; }
+      }
+      // The collapse row appears at exactly the four Cardinal Phases, because
+      // that is exactly where the rectangle degenerates.
+      const collapsed = labels.includes('The rectangle');
+      if (collapsed !== CARDINAL.includes(p.n)) {
+        fail(`phase ${p.n} ${collapsed ? 'reports' : 'does not report'} a collapsed rectangle, and it is ${CARDINAL.includes(p.n) ? '' : 'not '}a Cardinal Phase`);
+        bad++;
+      }
+      if (habitable !== labels.includes('The failure')) { fail(`phase ${p.n}: characteristic failure ${habitable ? 'missing' : 'present at an uninhabitable phase'}`); bad++; }
+      if (!r.name) { fail(`phase ${p.n}'s report has no name`); bad++; }
+      if (!r.citeUrl.endsWith(`Ph${p.n}.html`)) { fail(`phase ${p.n} cites ${r.citeUrl}`); bad++; }
+      if (!r.announcement.startsWith(`You are Phase ${p.n} of 28.`)) { fail(`phase ${p.n}'s screen-reader line opens "${r.announcement.slice(0, 40)}"`); bad++; }
+      if (!r.closers.length || r.closers.some(c => c.some(l => !l.trim()))) { fail(`phase ${p.n} has an empty closing line`); bad++; }
+    }
+    // And the displacement branch, which only two phases can reach.
+    for (const raw of [1, 15]) {
+      const r = report({ n: raw === 1 ? 2 : 16, raw, displaced: true });
+      if (!r.closers.some(c => c.join(' ').includes(`Phase ${raw}, where there is no human life`))) {
+        fail(`a visitor displaced from Phase ${raw} is not told so`);
+        bad++;
+      }
+    }
+    if (!bad) ok(`all 28 reports build complete, with the rectangle named at exactly the four Cardinal Phases and both displacement branches reachable`);
   }
 
   // ── 6. Every phase resolves ───────────────────────────────────────────

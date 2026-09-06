@@ -2363,3 +2363,35 @@ The closing line now breaks after its first sentence rather than wrapping
 wherever the measure runs out. The first line is the statement, the second is
 the sentence on it, and a line break is the only thing that makes a reader
 pause between them.
+
+### 6.4.0 — every outcome is checked, not the ones somebody happens to draw
+
+Scott, on finding the collapsed-rectangle defect by taking the quiz: *"I
+wouldn't even know how to do a thorough QA on every outcome."* Neither did the
+build. Twenty-six reachable phases, and the only ones ever looked at were the
+ones the test answers produced — the Cardinal branch shipped through four
+releases unexamined.
+
+Two things, and the second is the one that lasts.
+
+**A browser sweep, run once.** Every reachable phase, driven through the real
+form with real answers at 1512x733, 1440x900, 1280x720 and 390x844: 104
+renders, checking the name against the registry, empty values, overflow, the
+citation's deep link and the displacement message. All clean. It is not
+committed, because it needs a browser harness this repo does not ship and a
+check nobody runs is not a check.
+
+**The report became data.** `report()` lives in quiz.text.js now, has no DOM,
+and returns rows as segments; quiz.js turns them into markup and decides
+nothing. Which means `scripts/quiz-wheel.mjs` builds all twenty-eight reports
+on every build and walks them: every expected row present, no empty or
+`undefined` values, no repeated labels, the collapse row at exactly the four
+Cardinal Phases, the characteristic failure at exactly the twenty-six
+habitable ones, the citation deep-linked to the right phase, the
+screen-reader line opening correctly, and both displacement branches
+reachable.
+
+The renderer's own comment says why it decides nothing, because that is the
+property worth protecting: a report assembled inside a DOM renderer can only
+be inspected by rendering it, and then the outcomes that get inspected are the
+outcomes somebody happens to draw.
