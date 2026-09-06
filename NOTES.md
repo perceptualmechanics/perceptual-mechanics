@@ -2160,3 +2160,28 @@ count, and verify-counts now knows the difference.
 verify-counts also learned `(?<n>…)`: "104 books, 44 films" is two claims in one
 sentence, and a row can now say which slot it is about instead of always
 reading group 1. 51 checked counts before this release, 64 now.
+
+### 6.0.3 — Apollo's mixture table, deleted and replaced with a bench
+
+`SOLAR_MIXTURE`'s comment carried five rows of peak optical depth and
+transmission, introduced with "checked by computing the peak optical depth it
+produces rather than by looking at it." All five were wrong. Recomputing them
+through `buildBand()`'s own accumulation at 1400 columns gives Ca 8.50 (not
+4.37), H 3.49 (3.91), Na 3.50 (3.68), Fe 2.69 (1.32), Mg 1.11 (1.07); calcium's
+deepest feature is at 445.6nm, not at K.
+
+Worse than the five numbers is what they implied. They were computed at one
+width and read as a property of the model. `lineSigma()` has a floor at 0.35,
+so above about 700 device columns sigma and every line separation scale
+together and the profile keeps its shape, while below it sigma stops shrinking
+and neighbouring lines pile in. The ordering changes: at 1400 it is
+Ca > Na > H > Fe > Mg, at 1126 Ca > H > Fe > Na > Mg, at 686 — a 2x phone —
+Ca > Na > Fe > H > Mg, hydrogen's peak having jumped from H-alpha at 656nm to
+H-gamma at 434nm.
+
+`scripts/apollo-mixture.mjs` prints the table at any width. The comment cites
+it and states no figures of its own except the one it can defend: calcium is
+deepest at every width the bench prints, which is what the Fraunhofer table
+actually asks of the ordering.
+
+That closes Tier 3 of the 6.0 punch list.

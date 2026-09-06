@@ -464,27 +464,39 @@ export const SOURCES = {
 // solar spectrum. Abundance is not line strength.
 //
 // So: the ORDERING below is sourced from the Fraunhofer table above, and the
-// VALUES are set so the rendered band reproduces that ordering. Each was
-// checked by computing the peak optical depth it produces rather than by
-// looking at it:
+// VALUES are set so the rendered band reproduces that ordering.
 //
-//   Ca 0.95 -> tau 4.37 at K, 1.3% transmission   (deepest, as it should be)
-//   H  0.85 -> tau 3.91 at H-alpha, 2.0%
-//   Na 0.80 -> tau 3.68 at D2, 2.5%
-//   Fe 0.70 -> tau 1.32 at 438.4, 26.7%, across 50 lines — crowding, not depth
-//   Mg 1.00 -> tau 1.07 at b1, 34.5%
+//   node scripts/apollo-mixture.mjs [bandW ...]
+//
+// prints each element's peak optical depth, the wavelength it lands on and its
+// transmission, using buildBand()'s own accumulation. Run it rather than
+// trusting a number here — a five-row table of exactly those figures sat in
+// this comment for three releases and every row of it was wrong, because it
+// was computed once, by hand, and then outlived the code it described.
+//
+// **The ordering is not the same at every width, and the old table's real
+// mistake was implying it was.** `lineSigma()` has a floor. Above about 700
+// device columns sigma is proportional to bandW and so is every separation, so
+// the profile keeps its shape and the ordering holds; below the floor sigma
+// stops shrinking while the lines keep converging, neighbouring lines pile
+// into each other, and elements trade places. Hydrogen is the one that moves:
+// at desktop widths its peak is H-alpha at 656nm, and at 686 columns — a 2x
+// phone — the crowded blue end wins instead, its peak jumps to H-gamma at
+// 434nm and hydrogen falls behind iron. Calcium is deepest at every width the
+// bench prints, which is the part of the ordering the Fraunhofer table
+// actually asks for.
 //
 // AND ONE HONEST FAILURE, because it is the emission-versus-absorption caveat
 // in this file's header turning into a number. Magnesium cannot be made dark
 // enough. Its b triplet is comparable in depth to sodium's D lines in the real
 // solar spectrum, but NIST's EMISSION intensity for b1 is 70 against sodium
-// D2's 1000 — so at the maximum fader position magnesium's strongest line
-// still transmits 34.5%. The fader is already at 1.00 and there is nowhere
-// further to push it. This is the proxy being wrong in a specific, measurable
-// place, and the alternative — a per-element correction factor invented to
-// make one line look right — would be worse: it would be taste wearing the
-// costume of data, in the one module whose whole claim is that its numbers
-// came from somewhere.
+// D2's 1000 — so at the maximum fader position magnesium is still the
+// shallowest element in the band, at every width the bench prints. The fader
+// is already at 1.00 and there is nowhere further to push it. This is the
+// proxy being wrong in a specific, measurable place, and the alternative — a
+// per-element correction factor invented to make one line look right — would
+// be worse: it would be taste wearing the costume of data, in the one module
+// whose whole claim is that its numbers came from somewhere.
 export const SOLAR_MIXTURE = { Ca: 0.95, H: 0.85, Na: 0.80, Fe: 0.70, Mg: 1.00 };
 
 // Fraunhofer's own letters, for the lines that carry them. He assigned these
