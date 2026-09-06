@@ -2,7 +2,8 @@
 // NO DOM AND NO RENDERING IN THIS FILE. The scene draws what this produces;
 // this decides what happens. Pure and deterministic, so the feel of the cup can
 // be MEASURED — time to start, time to stop, overshoot, who is leading — rather
-// than judged from a description. `medium.physics.test.js` drives it headless.
+// than judged from a description. `scripts/medium-feel.mjs` and
+// `scripts/medium-spell.mjs` drive it headless.
 //
 // ─── What this is a simulation of ───────────────────────────────────────────
 // A willowware teacup upside-down on a homemade board, with two people's
@@ -77,11 +78,15 @@ export const CUP = {
   // to be, it leans on it. Stiffness sets how hard you can lean.
   handStiffness: 26,
   // The visitor's own spring, and it is stiffer than the partner's because the
-  // visitor is PRESSING and the partner is resting. Without the asymmetry the
-  // partner can hold the cup 0.046 board units off where the visitor is holding
-  // it — very nearly one letter's spacing — so a visitor who parks the cup on Q
-  // gets an R, which breaks the one promise the scene makes. At 78 the standoff
-  // is 0.024, comfortably inside a letter.
+  // visitor is PRESSING and the partner is resting. The asymmetry is what keeps
+  // a held cup on the letter it is being held on: the partner's capped lean can
+  // pull the cup off the visitor's hand by that force divided by THIS number, so
+  // the stiffer the visitor's spring the smaller the standoff. Level the two and
+  // the standoff grows toward a mark's spacing (MARK_GAP, medium.text.js), and a
+  // visitor who parks the cup on Q gets an R — which breaks the one promise the
+  // scene makes. `scripts/medium-feel.mjs` drags the cup and prints the largest
+  // standoff the partner actually achieves; that is the figure to re-read after
+  // any change here, rather than a number written down in this comment.
   visitorStiffness: 78,
   // Damping on the spring, so a hand arriving fast does not launch the cup.
   // Back at 3.4 after an experiment that failed: it was lowered to 2.6 to make
@@ -134,13 +139,15 @@ export const PARTNER_FORCE = 1.9;
 // card, pressing on nothing. Scott saw it in about four seconds.
 //
 // 0.075 is not a taste. A hand's spring reaches PARTNER_FORCE at
-// PARTNER_FORCE / CUP.handStiffness = 0.073 board units of offset and the force
-// is capped past that, so beyond this distance the extra offset does nothing at
-// all except look wrong. The same bound on the visitor caps their reachable
-// force at CUP.visitorStiffness * 0.075 = 5.9 — still three times what the
-// other hand can produce, so a driving visitor still wins outright — and it
-// means dragging feels like pushing an object rather than teleporting it,
-// because that is what it now is.
+// PARTNER_FORCE / CUP.handStiffness board units of offset and the force is
+// capped past that, so beyond this distance the extra offset does nothing at
+// all except look wrong. The visitor is bounded too, but by a longer reach —
+// `stepVisitor` passes LEAN_MAX + grip * LEAN_GRIP, so a hand that is actually
+// pushing gets more of it — and their spring is the stiffer one. Both terms run
+// the visitor's way, so the force a driving visitor can put through the cup is a
+// multiple of the partner's cap and a driving visitor still wins outright. What
+// the bound buys is that dragging feels like pushing an object rather than
+// teleporting it, because that is what it now is.
 export const LEAN_MAX = 0.075;
 
 // How much further onto the cup a hand that is actively pushing may be. A finger
@@ -177,33 +184,28 @@ export const PARTNER_HAND_SPEED = 0.6;
 // The catchment, and it is also the cup: CUP_R in medium.js is this times 1.06,
 // because a cup drawn smaller than its own catchment would take letters it was
 // visibly not on. So this number is both a rule and a size, and it was swept as
-// both when the arcs were widened. The letters were 0.043 to 0.073 apart then,
-// nearest-neighbour, median 0.057, measured off LETTER_ARCS rather than the
-// single 0.051 this line used to carry. They are a flat 0.069 now — see
-// MARK_GAP in medium.text.js — which sits inside that old range and just above
-// its median, so the sweep below still describes this board:
+// both when the arcs were widened. That sweep — repeated six-grams and rank
+// correlation against English letter frequencies, across three radii — was run
+// once from a scratch harness, and nothing committed here reproduces it, so its
+// figures are not written down.
 //
-//     radius   repeated 6-grams   Spearman vs English
-//      0.042         10.4%              0.822
-//      0.048          4.0%              0.837     <- here
-//      0.055          4.8%              0.856
-//
-// 0.048 rather than 0.055 because the cup has to be readable as sitting on ONE
-// letter, and 0.055 is a teacup wide enough to cover two of them at this
-// spread — more clearly so now that the spacing is uniform: 2 x 0.055 is 0.110
-// against a 0.069 gap, so a cup that wide genuinely does span two letters
-// everywhere, where before it only did so at the tight end of the arcs. 0.042 looks better still and measures much worse: too small a
-// catchment means the cup takes fewer distinct letters and loops more.
+// The trade it settled is the thing to hold on to if this is ever retuned.
+// Wider, and the teacup is broad enough to read as sitting on the mark NEXT to
+// the one it takes — the marks are a flat MARK_GAP apart now (medium.text.js),
+// so that ambiguity would be uniform across the board rather than confined to
+// the tight end of the old arcs. Narrower looks better still and measures much
+// worse: too small a catchment takes fewer distinct letters and loops over its
+// own path. This value is the legible end of the range that still spells.
 export const DWELL_RADIUS = 0.048;
 export const DWELL_SPEED = 0.09;
 export const DWELL_TIME = 0.55;
 
 // ─── How far plausibility is allowed to move that number ────────────────────
 // The multipliers on DWELL_TIME for the likeliest next letter and for one no
-// English word wants: 0.28s against 2.2s. Both finite, and that is the promise
-// the scene makes — a visitor who parks the cup on Q and holds it there gets a
-// Q, in a little over two seconds. The board can be slow to agree. It can
-// never refuse.
+// English word wants. Both finite, and that is the promise the scene makes — a
+// visitor who parks the cup on Q and holds it there gets a Q. The `insist` test
+// in `scripts/medium-feel.mjs` does exactly that and prints how long it took.
+// The board can be slow to agree. It can never refuse.
 export const DWELL_EASE = 0.5;
 export const DWELL_RESIST = 4.0;
 
@@ -259,35 +261,28 @@ export const BRACE = 26;
 // energy, which is enough for the other hand to break stiction on its own. What
 // that produces is a board that warms up: still at first, then moving, then
 // moving more, because motion is its own permission.
-// ─── Measured, because "twitchy" turns out to have a number ─────────────────
+// ─── "Twitchy" turns out to have a ruler ────────────────────────────────────
 // The ruler is DIRECTION REVERSALS PER SECOND in the other hand's lean: how
 // often the fingertip changes which way it is sliding on the china. That is
 // what the word means, and it is not the same as speed — heavy damping lowers
 // the distance travelled and RAISES the reversals, which is why the obvious fix
 // was the wrong one.
 //
-// Eight seeds, five minutes each, against a control with the scaling switched
-// off entirely (energy pinned at 1, which is how this shipped):
+// The sweep that set these three constants ran that ruler over eight seeds
+// against a control with the scaling switched off entirely (energy pinned at 1,
+// which is how this shipped once). It was a scratch harness; nothing committed
+// here reproduces it, so its figures are not written down. The finding was the
+// control, and it is structural rather than numerical: with no scaling, the
+// other hand reversed direction at the same rate whether the visitor was resting
+// or making one slow deliberate sweep. Its activity did not respond to the
+// visitor AT ALL, which is exactly what Scott reported feeling.
 //
-//                       reversals/s          Spearman
-//                    resting  slow drag    vs English
-//   no scaling         4.2       4.3          0.813
-//   floor 0.34         3.0       3.2          0.805
-//   floor 0.20         2.7       2.9          0.797
-//
-// The control is the finding: **4.2 and 4.3.** The other hand's activity did not
-// respond to the visitor at all — four direction changes a second whether the
-// visitor was resting or making one slow deliberate sweep. That is precisely
-// what Scott reported feeling, and it was not subtle once there was a number
-// for it.
-//
-// 0.20 for a third off the twitch at 1.6 points of rank correlation. Cheap.
-//
-// Two things this is NOT, both tried: heavier damping on the lean (3.5 and 5.5
-// lower the slide and take reversals UP to 2.9 and 3.1, and cost 7 and 11 points
-// of Spearman), and driving the brace off tempo instead of off grip (calms it
-// beautifully — reversals to 1.9 — and costs 13 points, because a permanently
-// braced hand explores nothing and re-treads its own letters).
+// Two things this is NOT, both tried and both worse. Heavier damping on the
+// lean: it lowers the slide and takes reversals UP, for the reason above, and
+// costs rank correlation against English. Driving the brace off tempo instead of
+// off grip: it calms the hand beautifully and costs much more of that
+// correlation, because a permanently braced hand explores nothing and re-treads
+// its own letters.
 export const TEMPO_FULL = 0.30;    // cup speed, board units/s, that means full energy
 export const TEMPO_FLOOR = 0.20;   // what a motionless pair keeps
 export const TEMPO_EASE = 1.7;     // per second — how fast the other hand matches
@@ -354,11 +349,10 @@ export const WANDER_START = { x0: 0.16, y0: 0.21, x1: 0.84, y1: 0.52 };
 // hand is drawn to a plausible letter beside it rather than to the best one on
 // the board, which is the difference between a drift and a destination. Swept
 // again after the arcs were widened, on the guess that a longer range would let
-// the hand feel the far ends of them: it does not, it makes everything worse.
-// 0.28 / 0.38 / 0.50 measured Spearman 0.809 / 0.733 / 0.685 against English
-// letter frequencies, with repeated six-grams going 5.2% / 7.2% / 6.0%. A wider
-// kernel averages the whole board into one direction, and one direction is a
-// destination.
+// the hand feel the far ends of them: it does not, it makes everything worse,
+// and the mechanism is why — a wider kernel averages the whole board into one
+// direction, and one direction is a destination. (That sweep was a scratch
+// harness too, so its figures are not written down here either.)
 export const FIELD_PULL = 12;
 export const FIELD_RANGE = 0.28;
 
@@ -372,9 +366,6 @@ export function createCup(x = 0.5, y = 0.62) {
 // on the cup, which is the ordinary state before the visitor touches it and
 // again whenever they let go.
 //
-// Returns which force was larger this step, so the scene can draw the cup
-// leaning without the renderer having to re-derive the physics. It is reported
-// rather than displayed as a label: the visitor is never told who is leading.
 // Returns nothing, deliberately. It used to hand back
 // { moved, leader, applied } — `leader` being "who is leaning harder this
 // instant" — and all seven call sites, in the scene and in all three benches,
