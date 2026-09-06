@@ -2277,3 +2277,61 @@ requirements and dropped *nothing signals what is coming* entirely, with no
 marker where it had been. At build time the sentence was not available to be
 consulted. Not overlooked — absent. Which means the rule cannot be satisfied by
 either instance recalling a conversation, and the enforcement has to be a file.
+
+### 6.2.0 — Quiz measures Yeats's Faculties, not two axes invented here
+
+The brief names the two scales. It quotes *A Vision* naming them: "Will and Mask
+are the will and its object, or the Is and the Ought; Creative Mind and Body of
+Fate are thought and its object, or the Knower and the Known." 6.1.0 measured
+antithetical-against-primary and waxing-against-waning instead — a defensible
+pair of axes, invented here, and not the ones the system supplies. The scene's
+whole claim is that the mapping is honest, so this was not a detail.
+
+**Now:** whichever pair you answer more strongly on decides which Faculty
+dominates and so which quarter you are in — Will to the First, Mask to the
+Second, Creative Mind to the Third, Body of Fate to the Fourth, which is Yeats's
+own arrangement. The other scale places you inside that quarter, running from
+the phase of crisis that opens it through its six phases. One Faculty is
+measured and his geometry supplies the other three, which is the unearned
+authority the scene is about, arrived at by his arithmetic.
+
+**Phase 1 and Phase 15 are now reachable on purpose.** The instrument may land
+on them and the report says so — *you came to rest at a phase where there is no
+human life, and the wheel has set you down at the first one that can hold one* —
+which the brief asked for and 6.1.0 did by silent exclusion. Still twenty-six
+outcomes. Dead centre on both pairs returns Phase 22 with no dominant Faculty
+named, because reporting a dominant Faculty for somebody who scored zero on
+both scales would be the one lie in the instrument.
+
+**The Triads are in, and Cowork had told Scott they were not a thing.** They
+are: the Faculty rectangles (1-15, 2-14-16-28, …) and the Triads are two
+different structures and both are Yeats's. AV B 92-93 — excluding the four
+phases of crisis, each quarter is two sets of three running power, code, belief.
+Derived from position, so nothing is written down, and the gate asserts the
+eight triads cover the twenty-four habitable phases once each.
+
+**The symbols are restated rather than transcribed**, which was the one place in
+this scene where the brief's copyright rule bit: names, attributions and
+structure are free, and a sentence out of an edited scholarly edition is not.
+It also fixes what Scott caught — "SATYR (GOAT LEGGS)" is a manuscript spelling,
+and an editorial query in square brackets is the sound of a footnote in a report
+whose whole job is to sound certain. The image is Yeats's; the wording is ours;
+where the manuscript is illegible the report says so rather than guessing.
+
+**The landing tile draws a questionnaire.** Rows of statements with a row of
+pips under each, one filled. The wheel was the obvious choice and the wrong one:
+this scene's name is the plainest label available because a visitor has to see
+*Quiz* and know exactly what a quiz is, and a tile of turning gyres promises
+mystery — the one thing the scene must not promise.
+
+Both gyres turn during the form again, and brighter. 6.1.1 held the second one
+back, which was over-correction: the brief asks for them to be ambient and then
+become the answer, and something that arrives at the end cannot have been what
+you were looking at all along. Only the rim of twenty-eight marks waits, because
+a count gives the system away. The first alpha was 0.30 — a value that rendered
+and could not be seen through the scrim, which is the same "renders" against
+"visible" confusion this project keeps paying for.
+
+**`BRIEF-quiz.md` is now Scott's actual brief** rather than Cowork's
+reconstruction of it. The reconstruction was written from a context that had
+already lost the brief's most important line, and it read as authoritative.

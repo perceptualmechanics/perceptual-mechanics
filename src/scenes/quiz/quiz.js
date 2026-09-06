@@ -4,7 +4,8 @@ import {
 } from '../../utils/sceneKit.js';
 import {
   PHASES, PHASE_BY_N, ITEMS, CHOICES, PREAMBLE, score,
-  maskPhase, creativeMindPhase, bodyOfFatePhase, quarterOf, tinctureOf, CARDINAL,
+  maskPhase, creativeMindPhase, bodyOfFatePhase, quarterOf, tinctureOf, triadOf,
+  CARDINAL,
 } from './quiz.text.js';
 import quizHtml from './quiz.html?raw';
 import './quiz.css';
@@ -288,9 +289,67 @@ export function createQuiz(container, { preview = false } = {}) {
     }
   }
 
+  // ─── The tile ───────────────────────────────────────────────────────────
+  // **The landing tile draws a questionnaire, not the wheel.** The wheel was
+  // the obvious choice and the wrong one: this scene's whole name is the
+  // plainest label available — every other scene here reaches, and Quiz
+  // reaches for nothing, because a visitor has to see it in the nav and know
+  // exactly what a quiz is. A tile of turning gyres promises mystery, which is
+  // the one thing the scene must not promise, and the reveal is over before
+  // anyone clicks.
+  //
+  // So: rows of statements and a row of pips under each, one filled. Legible
+  // as a form at 170px, tells nothing, and is the register — a plain
+  // instrument built by somebody with no sense of humour.
+  //
+  // Deterministic per tile rather than animated. A form is not a moving thing,
+  // and a tile that fidgets to prove it is alive is a tile lying about what
+  // opening it is like.
+  function drawTile() {
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    // Painted, not cleared: the scrims are removed in preview, so a
+    // transparent canvas would show the landing page through the tile.
+    ctx.fillStyle = 'rgb(4,4,8)';
+    ctx.fillRect(0, 0, W, H);
+    const rows = 4, pips = 5;
+    const pad = W * 0.17;
+    const inner = W - pad * 2;
+    const rowH = (H - pad * 2) / rows;
+    // A fixed pattern, not random: the same tile every visit, like every other
+    // preview here.
+    const answered = [3, 1, 4, 2];
+    const lens = [0.96, 0.72, 0.88, 0.6];
+    for (let r = 0; r < rows; r++) {
+      const y = pad + rowH * r + rowH * 0.22;
+      ctx.fillStyle = 'rgba(232,228,220,0.78)';
+      ctx.fillRect(pad, y, inner * lens[r], Math.max(2, H / 90));
+      if (lens[r] > 0.9) {
+        ctx.fillStyle = 'rgba(232,228,220,0.46)';
+        ctx.fillRect(pad, y + H / 42, inner * 0.42, Math.max(2, H / 90));
+      }
+      const py = y + rowH * 0.52;
+      const step = inner / (pips - 1);
+      const rad = Math.max(2.2, W / 52);
+      for (let i = 0; i < pips; i++) {
+        const cxp = pad + step * i;
+        ctx.beginPath();
+        ctx.arc(cxp, py, rad, 0, Math.PI * 2);
+        if (i === answered[r]) {
+          ctx.fillStyle = 'rgba(226,206,150,0.92)';
+          ctx.fill();
+        } else {
+          ctx.strokeStyle = 'rgba(226,222,214,0.42)';
+          ctx.lineWidth = Math.max(1, W / 220);
+          ctx.stroke();
+        }
+      }
+    }
+  }
+
   function frame() {
     animId = null;
     if (disposed || paused) return;
+    if (preview) { drawTile(); return; }
     const dt = clock.tick();
     const t = clock.elapsed;
 
@@ -322,12 +381,19 @@ export function createQuiz(container, { preview = false } = {}) {
     // the driven value is over 1, which a canvas clamps per stroke but which
     // still reads brighter once the two gyres and the rim overlap in
     // 'lighter'. The whirl is the one moment this scene raises its voice.
-    const a = 0.30 + whirl * 1.05;
+    // 0.30 was a number that rendered and could not be seen — the same
+    // "renders" against "visible" confusion this project keeps paying for.
+    // Measured on a real display at the form's scrim: 0.30 under 0.88 of
+    // scrim is nothing at all.
+    const a = 0.62 + whirl * 0.85;
     drawGyre(gyrePoints(spin, 1), t, scale, cx, cyy, `rgba(196,206,232,${a})`);
-    if (revealed) {
-      drawGyre(gyrePoints(spin, -1), t, scale, cx, cyy, `rgba(226,196,150,${a})`);
-      drawWheel(t, scale, cx, cyy, 0.22 + whirl * 0.5);
-    }
+    drawGyre(gyrePoints(spin, -1), t, scale, cx, cyy, `rgba(226,196,150,${a})`);
+    // Only the RIM waits. Both gyres turn from the start — the brief asks for
+    // them to read as ambient and then become the answer, and something that
+    // arrives at the end cannot have been what you were looking at all along.
+    // A rim of exactly twenty-eight marks is a different kind of tell: it is
+    // countable, and one count gives the whole system away.
+    if (revealed) drawWheel(t, scale, cx, cyy, 0.22 + whirl * 0.5);
 
     ctx.globalCompositeOperation = 'source-over';
     if (!reduced) animId = requestAnimationFrame(frame);
@@ -346,15 +412,17 @@ export function createQuiz(container, { preview = false } = {}) {
     const p = PHASE_BY_N[n];
     const head = `drawn from phase ${n}, ${escapeHtml(p.will)}`;
     if (!spec) return row(label, head);
-    const forms = which === 'bf'
-      ? `<b>${escapeHtml(spec)}</b>`
-      : `true: <b>${escapeHtml(spec.t)}</b> &nbsp; false: <b>${escapeHtml(spec.f)}</b>`;
-    return row(label, `${head}<br>${forms}`);
+    // Only the TRUE form here. Both forms on every Faculty line printed the
+    // failure four times over and then again in its own row, which is how a
+    // report stops sounding like a judgment and starts sounding like a table.
+    const forms = which === 'bf' ? `<b>${escapeHtml(spec)}</b>` : `<b>${escapeHtml(spec.t)}</b>`;
+    return row(label, `${head} &nbsp;·&nbsp; ${forms}`);
   }
 
   function renderVerdict(result) {
     const p = result.phase;
     const q = quarterOf(p.n);
+    const tri = triadOf(p.n);
     const mn = maskPhase(p.n), cn = creativeMindPhase(p.n), bn = bodyOfFatePhase(p.n);
     vNumber.textContent = `Phase ${roman[p.n]}`;
     vName.textContent = p.will;
@@ -363,30 +431,50 @@ export function createQuiz(container, { preview = false } = {}) {
     // drawn from. Yeats attributes a Faculty to the phase it comes from and
     // describes it by what it does here, and conflating the two is the single
     // easiest mistake to make in the whole system.
+    //
+    // The TRUE forms sit on their Faculty's own line and the FALSE forms are
+    // gathered into one row of their own, because the brief asks for the
+    // characteristic failure stated as cosmic law and a failure stated twice
+    // in two places is stated weakly.
     const parts = [
       row('Number', `<b>${p.n}</b> of 28`),
       q ? row('Quarter', `<b>${escapeHtml(q.name)}</b> &nbsp; element ${escapeHtml(q.element)} &nbsp; ${escapeHtml(q.dominant)} dominates`)
-        : row('Quarter', `<b>None.</b> A Cardinal Phase, on the boundary between quarters`),
+        : row('Quarter', '<b>None.</b> A phase of crisis, on the boundary between quarters, where no Faculty dominates'),
+      tri ? row('Triad', `the <b>${escapeHtml(tri.role)}</b> of the ${tri.set === 1 ? 'first' : 'second'} triad — phases ${tri.phases.join(', ')}`)
+          : row('Triad', '<b>None.</b> The triads divide the quarters, and this phase is outside them'),
       row('Tincture', `<b>${escapeHtml(tinctureOf(p.n))}</b>`),
       facultyRow('Will', p.n, null),
       facultyRow('Mask', mn, p.mask, 'mask'),
       facultyRow('Creative Mind', cn, p.cm, 'cm'),
       facultyRow('Body of Fate', bn, p.bf, 'bf'),
-      row('Symbol', escapeHtml(p.symbol)),
     ];
+    if (p.mask && p.cm) {
+      parts.push(row('The failure',
+        `<b>${escapeHtml(p.mask.f)}</b>, and then <b>${escapeHtml(p.cm.f)}</b>`));
+    }
+    parts.push(row('Symbol', escapeHtml(p.symbol)));
     if (p.who.length) parts.push(row('Others here', p.who.map(escapeHtml).join(' &nbsp;·&nbsp; ')));
     if (p.attributed.length) parts.push(row('Placed here by others', p.attributed.map(escapeHtml).join(' &nbsp;·&nbsp; ')));
     vSheet.innerHTML = parts.join('');
 
-    vClose.textContent = p.n === 22 || p.n === 8
+    // The displacement is announced rather than hidden. The instrument is
+    // allowed to land on Phase 1 or Phase 15 and then says out loud that it
+    // has, because a system with opinions about where a life cannot be is more
+    // interesting than one that quietly rounds you off the poles.
+    const closers = [];
+    if (result.displaced) {
+      closers.push(`You came to rest at Phase ${roman[result.raw]}, where there is no human life. The wheel has set you down at the first phase that can hold one.`);
+    }
+    closers.push(p.n === 22 || p.n === 8
       ? 'You are at a phase of crisis. The wheel does not hold still here, and neither will you.'
-      : 'This is your place on the wheel. It was not chosen and it cannot be refused.';
+      : 'This is your place on the wheel. It was not chosen and it cannot be refused.');
+    vClose.innerHTML = closers.map(c => `<span>${escapeHtml(c)}</span>`).join('<br>');
 
     // One flat sentence for a screen reader, before the capitals arrive. The
     // sheet that follows is a real <dl> and reads correctly on its own; this
     // is the headline, so the announcement is not eleven terms deep before it
     // says what happened.
-    srLive.textContent = `Phase ${p.n} of 28. ${p.will}. ${q ? `${q.name}, element ${q.element}.` : 'A Cardinal Phase, outside the quarters.'} Your mask is drawn from phase ${mn}, your creative mind from phase ${cn}, your body of fate from phase ${bn}.`;
+    srLive.textContent = `Phase ${p.n} of 28. ${p.will}. ${q ? `${q.name}, element ${q.element}, ${q.dominant} dominates.` : 'A phase of crisis, outside the quarters.'} Your mask is drawn from phase ${mn}, your creative mind from phase ${cn}, your body of fate from phase ${bn}.`;
   }
 
   let verdictTimer = null;
@@ -455,7 +543,10 @@ export function createQuiz(container, { preview = false } = {}) {
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.fillStyle = 'rgb(4,4,8)';
     ctx.fillRect(0, 0, W, H);
-    if (reduced) frame();
+    // The tile draws once and holds, so it has to redraw when the box it is
+    // drawn into changes. A preview that paints at the wrong size and never
+    // repaints is the blank-tile bug this project has shipped twice.
+    if (reduced || preview) frame();
   });
 
   const reducedWatch = onReducedMotionChange((next) => {

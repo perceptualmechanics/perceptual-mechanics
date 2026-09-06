@@ -55,7 +55,8 @@ import {
 } from '../src/scenes/medium/medium.text.js';
 import {
   PHASES, PHASE_BY_N, ITEMS, CHOICES, QUARTERS, CARDINAL,
-  maskPhase, creativeMindPhase, bodyOfFatePhase, quarterOf, tinctureOf, REACHABLE,
+  maskPhase, creativeMindPhase, bodyOfFatePhase, quarterOf, tinctureOf, triadOf,
+  REACHABLE,
 } from '../src/scenes/quiz/quiz.text.js';
 import { SENTENCE_SPLIT } from '../src/utils/corpus.js';
 import { SCENES, TEXT_EXEMPT } from '../src/scenes/registry.js';
@@ -1073,9 +1074,12 @@ function buildQuiz() {
   const phaseSection = (p) => {
     const q = quarterOf(p.n);
     const habitable = p.n !== 1 && p.n !== 15;
+    const tri = triadOf(p.n);
     const rows = [
       ['Quarter', q ? `${esc(q.name)} — element ${esc(q.element)}, ${esc(q.dominant)} dominates`
                     : 'None. A Cardinal Phase, on the boundary between quarters.'],
+      ['Triad', tri ? `the <strong>${esc(tri.role)}</strong> of the ${tri.set === 1 ? 'first' : 'second'} triad — phases ${tri.phases.join(', ')}`
+                    : 'None. The triads divide the quarters; a Cardinal Phase is outside them.'],
       ['Tincture', esc(tinctureOf(p.n))],
       ['Mask', fac(maskPhase(p.n), p.mask, 'mask')],
       ['Creative Mind', fac(creativeMindPhase(p.n), p.cm, 'cm')],
@@ -1096,13 +1100,17 @@ ${rows.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${v}</dd>`).join('\n')}
 <p>The four sit at fixed positions relative to one another, so only the Will has to be found. The other three are arithmetic on a twenty-eight-phase circle: the Mask is diametrically opposite, at <strong>Will + 14</strong>; the Creative Mind is the Will reflected across the Phase 1 – Phase 15 axis, at <strong>30 − Will</strong>; the Body of Fate faces the Creative Mind, at <strong>16 − Will</strong>. Every number below is computed from those three lines and from nothing else.</p>
 <p>The four <strong>Cardinal Phases</strong> — ${CARDINAL.join(', ')} — fall on the boundaries and belong to no Quarter. Phases 1 and 15 are not incarnations at all, which leaves <strong>${REACHABLE.length}</strong> phases a person can be born at.</p>
 
+<h2>The Triads</h2>
+<p>A second grouping, and not the same as the Faculty rectangles above. Excluding the four phases of crisis, each quarter is six phases, or two sets of three: the first phase of each set is a manifestation of <strong>power</strong>, the second of a <strong>code</strong> or arrangement of powers, and the third of a <strong>belief</strong> — a submission to some quality which becomes power in the next set (AV B 92–93). Eight triads over twenty-four phases; the Cardinal Phases belong to none.</p>
+
 <h2>The Quarters</h2>
 <dl>
 ${QUARTERS.map(q => `<dt>${esc(q.name)}</dt><dd>Phases ${q.phases[0]}–${q.phases[q.phases.length - 1]}. Element ${esc(q.element)}. ${esc(q.dominant)} dominates.</dd>`).join('\n')}
 </dl>
 
 <h2>The questions</h2>
-<p>The scene asks these sixteen and scores them on two axes: whether you are <em>antithetical</em> (the self you make) or <em>primary</em> (the world you are given), and whether you are <em>waxing</em> toward the full or <em>waning</em> away from it. Half the items on each axis are worded in each direction, so agreeing with everything does not move you.</p>
+<p>The scene asks these sixteen and scores them on Yeats’s own two pairs of opposites: <strong>Will against Mask</strong>, the Is and the Ought — whether you act out of what you already are or toward what you mean to become — and <strong>Creative Mind against Body of Fate</strong>, the Knower and the Known — whether you understand a situation by thinking it through or by what it does to you. Half the items on each scale are worded in each direction, so agreeing with everything does not move you.</p>
+<p>Whichever pair you answer more strongly on decides which Faculty dominates, and so which quarter you are in. The other scale places you inside it, from the phase of crisis that opens the quarter through its six phases. One Faculty is measured; Yeats’s geometry supplies the other three.</p>
 <ol>
 ${ITEMS.map(i => `<li>${esc(i.text)}</li>`).join('\n')}
 </ol>
@@ -1115,7 +1123,7 @@ ${PHASES.map(phaseSection).join('\n\n')}
 <ul>
 <li>W. B. Yeats, <cite>A Vision</cite> — the phases, the Faculties and their designations.</li>
 <li>Neil Mann, <a href="https://www.yeatsvision.com/">yeatsvision.com</a> — the per-phase Faculty tables, the Quarters and their elements, the eight groups, and the tincture crossings. Read 2026-09-06.</li>
-<li>The symbols are as recorded in the Yeats papers (YVP 3 400–01), reproduced with their own spelling.</li>
+<li>The symbols are restated from the record in the Yeats papers (YVP 3 400–01). The image is Yeats’s; the wording here is not his, and where the manuscript is illegible this page says so rather than guessing.</li>
 </ul>
 </article>`;
 

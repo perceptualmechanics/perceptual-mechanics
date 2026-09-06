@@ -13,7 +13,7 @@
 // file would only be checking that arithmetic is arithmetic.
 import { PHASES, PHASE_BY_N, ITEMS, CHOICES, REACHABLE, QUARTERS, CARDINAL,
          maskPhase, creativeMindPhase, bodyOfFatePhase, quarterOf, tinctureOf,
-         place } from '../src/scenes/quiz/quiz.text.js';
+         triadOf, place } from '../src/scenes/quiz/quiz.text.js';
 
 // yeatsvision.com/Wheel.html, "These eight configurations or groups, six of
 // four and the two pairs of Cardinal Phases, are set out in the table below."
@@ -87,6 +87,10 @@ export function verifyQuizWheel() {
     if (pos !== neg) fail(`scale "${s}" is keyed ${pos} positive against ${neg} negative — an acquiescent visitor drifts`);
     if (items.length % 2) fail(`scale "${s}" has ${items.length} items, which cannot key evenly`);
   }
+  const want = ['will_mask', 'mind_fate'];
+  if (scales.slice().sort().join(',') !== want.slice().sort().join(',')) {
+    fail(`the instrument measures [${scales}] — A Vision states the Faculties as Will:Mask and Creative Mind:Body of Fate, and those are the two scales`);
+  } else ok('the two scales are Yeats\'s own Faculty pairs, not axes invented here');
   const sizes = [...new Set(scales.map(s => ITEMS.filter(i => i.scale === s).length))];
   if (sizes.length !== 1) fail(`the scales have different item counts (${sizes}) — the two axes would not weigh the same`);
   else ok(`${scales.length} scales, ${sizes[0]} items each, keyed ${sizes[0] / 2} and ${sizes[0] / 2}`);
@@ -96,16 +100,51 @@ export function verifyQuizWheel() {
   // ── 5. What the scoring can return ────────────────────────────────────
   // The result depends only on the two normalised sums, so sweeping every
   // reachable sum sweeps the whole 5^16 response space without visiting it.
-  const n = ITEMS.filter(i => i.scale === 'tincture').length * 2;
-  const hit = new Set();
-  for (let a = -n; a <= n; a++) for (let b = -n; b <= n; b++) hit.add(place(a / n, b / n));
+  const n = ITEMS.filter(i => i.scale === 'will_mask').length * 2;
+  const hit = new Set(), rawHit = new Set(), quarters = new Set();
+  for (let a = -n; a <= n; a++) {
+    for (let b = -n; b <= n; b++) {
+      const r = place(a / n, b / n);
+      hit.add(r.n); rawHit.add(r.raw);
+      if (r.quarter) quarters.add(r.quarter);
+    }
+  }
   const got = [...hit].sort((x, y) => x - y);
-  if (hit.has(1) || hit.has(15)) fail(`the scoring can place a visitor at ${[...hit].filter(x => x === 1 || x === 15)} — there is no human life at the full or the dark`);
+  if (hit.has(1) || hit.has(15)) fail(`the scoring returns ${[...hit].filter(x => x === 1 || x === 15)} — there is no human life at the full or the dark`);
   if (got.join(',') !== [...REACHABLE].sort((x, y) => x - y).join(',')) {
-    fail(`the scoring reaches [${got}] but REACHABLE says [${REACHABLE}]`);
+    fail(`the scoring reaches [${got}] but REACHABLE says [${[...REACHABLE].sort((x, y) => x - y)}]`);
   } else ok(`the scoring reaches ${got.length} phases — every one but 1 and 15, the twenty-six cradles`);
-  if (place(0, 0) !== 22) fail(`a visitor exactly in the middle lands at phase ${place(0, 0)}, not at the balance between ambition and contemplation`);
-  else ok('a visitor who ties on both scales lands at Phase 22');
+  // The poles have to be REACHABLE as raw placements, or the report's line
+  // about being set down at the first phase that can hold a life is a branch
+  // nothing ever takes.
+  if (!rawHit.has(1) || !rawHit.has(15)) fail('the placement can never land on Phase 1 or Phase 15, so the displacement the report announces cannot happen');
+  else ok('the placement can land on both uninhabitable phases, and the report says so when it does');
+  if (quarters.size !== 4) fail(`the scoring only ever reaches quarters [${[...quarters]}] — a Faculty that can never dominate is a scale that does nothing`);
+  else ok('all four quarters are reachable, so each Faculty can dominate');
+  if (place(0, 0).n !== 22 || place(0, 0).dominant !== null) {
+    fail(`a visitor exactly in the middle gets phase ${place(0, 0).n} with dominant ${place(0, 0).dominant} — at dead centre no Faculty dominates`);
+  } else ok('a visitor who ties on both pairs lands at Phase 22 with no dominant Faculty');
+
+  // ── 5b. The Triads ────────────────────────────────────────────────────
+  // AV B 92-93: excluding the four phases of crisis, each quarter is six
+  // phases, or two sets of three, running power, code, belief. Derived from
+  // position here, so what is checked is that the derivation covers every
+  // habitable phase exactly once and leaves the Cardinal Phases out.
+  {
+    let bad = 0;
+    const seen = new Map();
+    for (const p of PHASES) {
+      const t = triadOf(p.n);
+      if (CARDINAL.includes(p.n)) { if (t) { fail(`Cardinal Phase ${p.n} has a triad`); bad++; } continue; }
+      if (!t) { fail(`phase ${p.n} is in a quarter but has no triad`); bad++; continue; }
+      if (!['power', 'code', 'belief'].includes(t.role)) { fail(`phase ${p.n} has triad role "${t.role}"`); bad++; }
+      if (t.phases.length !== 3) { fail(`phase ${p.n}'s triad has ${t.phases.length} phases`); bad++; }
+      const k = `${t.phases.join('-')}:${t.role}`;
+      if (seen.has(k)) { fail(`phases ${seen.get(k)} and ${p.n} are both the ${t.role} of triad ${t.phases.join('-')}`); bad++; }
+      seen.set(k, p.n);
+    }
+    if (!bad) ok('the twenty-four habitable phases fall into eight triads of power, code and belief, and the four Cardinal Phases into none');
+  }
 
   // ── 6. Every phase resolves ───────────────────────────────────────────
   let unresolved = 0;
