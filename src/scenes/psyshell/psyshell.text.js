@@ -1,5 +1,5 @@
 // ─── Psyshell — what the lens holds ─────────────────────────────────────────
-// Lens RE73415, recovered from the lower pools. It holds 3,244 filapixels: one
+// Lens RE73415, recovered from the lower pools. It holds 3,268 filapixels: one
 // for every sentence of this site's writing.
 //
 // NO DOM AND NO THREE.JS IN THIS FILE. `scripts/prerender.js` imports it to
@@ -37,12 +37,13 @@ import * as apollo from '../apollo/apollo.text.js';
 import * as beamline from '../beamline/beamline.text.js';
 import * as orrery from '../orrery/orrery.text.js';
 import * as butterfly from '../butterfly/butterfly.text.js';
+import * as quiz from '../quiz/quiz.text.js';
 
-const MODULES = { scroll, theater, sphere, library, orbiter, apollo, beamline, orrery, butterfly };
+const MODULES = { scroll, theater, sphere, library, orbiter, apollo, beamline, orrery, butterfly, quiz };
 
-const ORDER = ['sphere', 'butterfly', 'scroll', 'theater', 'orbiter', 'orrery', 'library', 'beamline', 'apollo'];
+const ORDER = ['sphere', 'butterfly', 'scroll', 'theater', 'orbiter', 'orrery', 'library', 'beamline', 'apollo', 'quiz'];
 const LABELS = {
-  sphere: 'The Sphere', butterfly: 'Chaos Butterfly', scroll: 'Selected Works',
+  sphere: 'The Sphere', butterfly: 'Chaos Butterfly', scroll: 'Selected Works', quiz: 'Quiz',
   theater: 'The Theater', orbiter: 'Orbiter', orrery: 'The Orrery of Los Feliz',
   library: 'The Library', beamline: 'Beamline', apollo: 'Apollo',
 };

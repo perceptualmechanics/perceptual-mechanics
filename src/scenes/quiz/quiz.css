@@ -1,0 +1,275 @@
+/* ─── Quiz ───────────────────────────────────────────────────────────────────
+   Two states, one container, and the whole design is the contrast between
+   them. Answering is quiet: a plain column of questions on a near-black
+   ground, the wheel turning behind a scrim so it never competes with the text.
+   The verdict is not quiet. It fills the frame, it is set in capitals, and it
+   arrives after the gyres have whirled — see quiz.js for the timing.
+
+   The scrim is not decoration and it is not a taste call. The gyres cross the
+   text column at every angle and at varying density; a fixed text colour that
+   passes contrast over the darkest part of a spiral fails over the brightest.
+   A scrim fixes the ground the text is measured against, which is what makes
+   the contrast figure in STANDARDS.md a fact about this scene rather than a
+   fact about one frame of it. */
+
+.quiz-canvas {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  display: block;
+}
+
+/* The ground the text is read against. `--quiz-scrim` is animated by quiz.js:
+   heavy while the form is up, gone once the verdict takes the frame, because
+   at that point the big type IS the contrast and the gyres are the subject. */
+.quiz-scrim {
+  position: absolute; inset: 0;
+  pointer-events: none;
+  /* Fast, because the whirl peaks at about 400ms and a scrim still fading at
+     900ms is a scrim that dims the loudest frame of the scene. */
+  transition: opacity 480ms ease;
+}
+/* Answering: near-uniform dark. The question column runs the whole height of
+   the frame, so a vignette would leave question one and question sixteen on a
+   different ground from question eight, and a contrast figure that depends on
+   how far you have scrolled is not a contrast figure. */
+.quiz-scrim--flat {
+  opacity: 1;
+  background:
+    radial-gradient(150% 130% at 50% 46%, rgba(4, 4, 8, 0.88) 0%,
+                                          rgba(4, 4, 8, 0.86) 60%,
+                                          rgba(4, 4, 8, 0.80) 100%);
+}
+/* The verdict: an oval behind the type and nothing at the corners, so the
+   gyres are at full strength where there is no text and the sheet still has a
+   fixed ground under it. This is the scrim decision — the alternative was
+   picking a text colour that survives a spiral crossing it, and no single
+   colour does, because a spiral crossing text is bright in some frames and
+   absent in others. */
+.quiz-scrim--oval {
+  opacity: 0;
+  background:
+    radial-gradient(62% 74% at 50% 48%, rgba(4, 4, 8, 0.90) 0%,
+                                        rgba(4, 4, 8, 0.86) 46%,
+                                        rgba(4, 4, 8, 0.52) 76%,
+                                        rgba(4, 4, 8, 0) 100%);
+}
+.quiz-scrim[data-verdict='true'].quiz-scrim--flat { opacity: 0; }
+.quiz-scrim[data-verdict='true'].quiz-scrim--oval { opacity: 1; }
+
+/* The scene title goes in the site's shared bottom band, the same place every
+   other scene's does — see apollo.css and STANDARDS.md's centering rule. A
+   first version put it at top: 0, which on this site means underneath #pm-nav:
+   the bar is 3.5rem tall and the title rendered behind it, invisible in every
+   screenshot and present in the DOM, which is the worst of both. */
+.quiz-title-row {
+  position: fixed;
+  bottom: var(--title-block-bottom-mobile); left: 6vw; right: 6vw;
+  display: flex; justify-content: center;
+  pointer-events: none; z-index: 310;
+}
+@media (min-width: 601px) {
+  .quiz-title-row { left: 0; right: 0; bottom: var(--title-block-bottom); }
+}
+.quiz-title {
+  margin: 0;
+  color: rgba(216, 205, 180, 0.85);
+  font-size: clamp(0.85rem, 2.5vw, 1.6rem);
+  /* Negative right margin equal to the tracking, so the invisible gap after
+     the last letter is not centred along with the text. STANDARDS.md. */
+  --tracking: clamp(0.1em, 1vw, 0.4em);
+  letter-spacing: var(--tracking);
+  margin-right: calc(-1 * var(--tracking));
+  text-transform: uppercase; text-align: center;
+  font-family: 'Arapey', serif;
+}
+/* Under the title rather than along the bottom, which every other scene here
+   does — because every other scene's frame is empty at the bottom and this
+   one's is a scrolling form. A hint pinned to the bottom of a scroll container
+   sits on top of question fourteen. It also keeps this rule out of the
+   bottom-anchored-and-centred case verify-css-invariants.mjs guards: the site's
+   own scene title renders in that band, and a hint there renders across it. */
+.quiz-hint {
+  position: fixed; left: 4.5rem; right: 4.5rem; top: 4.2rem;
+  z-index: 310; pointer-events: none;
+  margin: 0; text-align: center;
+  font-size: 0.72rem; letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.6);
+  transition: opacity 400ms ease;
+}
+.quiz-hint[data-hidden='true'] { opacity: 0; }
+
+/* ─── The form ─────────────────────────────────────────────────────────────
+   A single scrolling column. It scrolls rather than paginating because a
+   sixteen-item instrument that shows you one question at a time hides its own
+   length, and a visitor who cannot see how much is left is a visitor who
+   abandons it in the middle. */
+.quiz-form {
+  position: absolute; inset: 0;
+  overflow-y: auto; overscroll-behavior: contain;
+  /* Clears #pm-nav (3.5rem) plus the hint at the top, and the site's
+     shared title band at the bottom — a scrolling column that ends level
+     with the viewport ends underneath the scene title. */
+  padding: 6.2rem 1rem var(--title-block-clear-mobile, 8rem);
+  display: flex; flex-direction: column; align-items: center;
+  transition: opacity 520ms ease, transform 520ms ease;
+}
+.quiz-form[data-leaving='true'] { opacity: 0; transform: translateY(-1.5rem); pointer-events: none; }
+
+.quiz-preamble {
+  max-width: 34rem; margin: 0 0 2rem;
+  font-size: 0.95rem; line-height: 1.62;
+  color: rgba(232, 228, 220, 0.82);
+}
+
+.quiz-items { list-style: none; margin: 0; padding: 0; max-width: 34rem; width: 100%; }
+.quiz-item { margin: 0 0 1.9rem; }
+.quiz-item fieldset { border: 0; margin: 0; padding: 0; }
+.quiz-item legend {
+  padding: 0 0 0.7rem;
+  font-size: 1.02rem; line-height: 1.5;
+  color: rgba(240, 237, 230, 0.94);
+}
+.quiz-item legend .quiz-item-n {
+  display: inline-block; min-width: 2.1em;
+  /* 0.42 here reached 3.95:1 and verify-css-invariants.mjs failed it. The
+     number wants to be quieter than the question and it does not want to be
+     under AA to get there: white at alpha a over black passes 4.5:1 from
+     a = 0.456, so this is the first tenth above that. */
+  color: rgba(255, 255, 255, 0.52);
+  font-variant-numeric: tabular-nums;
+}
+
+/* The five choices as a rail. Each is a real radio with a real label; the
+   input is visually replaced by the pip rather than hidden, so it keeps its
+   focus ring and its hit area. */
+.quiz-choices { display: flex; gap: 0.35rem; flex-wrap: wrap; }
+.quiz-choice { flex: 1 1 5.6rem; min-width: 4.4rem; position: relative; }
+.quiz-choice input {
+  position: absolute; inset: 0; margin: 0;
+  width: 100%; height: 100%; opacity: 0; cursor: pointer;
+}
+.quiz-choice span {
+  display: block; padding: 0.5rem 0.4rem;
+  border: 1px solid rgba(255, 255, 255, 0.16); border-radius: 3px;
+  text-align: center; font-size: 0.74rem; line-height: 1.25;
+  color: rgba(226, 222, 214, 0.72);
+  transition: border-color 160ms ease, color 160ms ease, background-color 160ms ease;
+}
+.quiz-choice input:hover + span { border-color: rgba(255, 255, 255, 0.34); color: rgba(240, 237, 230, 0.9); }
+.quiz-choice input:checked + span {
+  border-color: rgba(226, 206, 150, 0.85);
+  background: rgba(226, 206, 150, 0.14);
+  color: rgb(244, 236, 216);
+}
+/* The ring goes on the pip, not on the transparent input sitting over it. */
+.quiz-choice input:focus-visible + span {
+  outline: none;
+  box-shadow: var(--focus-ring-outer, 0 0 0 2px #f0d68c, 0 0 0 5px rgba(0, 0, 0, 0.72));
+}
+
+.quiz-actions {
+  max-width: 34rem; width: 100%;
+  display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;
+  margin-top: 0.5rem;
+}
+.quiz-remaining { margin: 0; font-size: 0.78rem; color: rgba(255, 255, 255, 0.5); }
+.quiz-submit, .quiz-again {
+  font: inherit; font-size: 0.86rem; letter-spacing: 0.09em; text-transform: uppercase;
+  padding: 0.62rem 1.3rem; cursor: pointer;
+  background: transparent; color: rgba(240, 237, 230, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.32); border-radius: 2px;
+  transition: border-color 160ms ease, background-color 160ms ease;
+}
+.quiz-submit:hover, .quiz-again:hover { border-color: rgba(226, 206, 150, 0.8); background: rgba(226, 206, 150, 0.1); }
+.quiz-submit[disabled] { opacity: 0.4; cursor: not-allowed; }
+
+/* ─── The verdict ──────────────────────────────────────────────────────────
+   Capitals, and the size is the point. `clamp` rather than a media query so
+   the number scales continuously with the frame it is thrown into. */
+.quiz-verdict {
+  position: absolute; inset: 0;
+  overflow-y: auto; overscroll-behavior: contain;
+  padding: 3.8rem 1.2rem var(--title-block-clear-mobile, 8rem);
+  display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
+  text-align: center;
+  text-transform: uppercase;
+  opacity: 0;
+  transition: opacity 700ms ease;
+}
+.quiz-verdict[data-shown='true'] { opacity: 1; }
+/* Centred vertically in the space the padding leaves — which is the frame
+   minus the nav at the top and the site's title band at the bottom — WITHOUT
+   `justify-content: center`, because that clips the top of a flex column the
+   moment its content is taller than the box and there is no scrolling back to
+   it. Auto margins on the first and last children do the same centring and
+   collapse to zero when the content overflows. Same reasoning main.css gives
+   for preferring spacers over `safe center`. */
+.quiz-verdict > :first-child { margin-top: auto; }
+.quiz-verdict > :last-child { margin-bottom: auto; }
+
+/* **`display: flex` beats the user agent's `[hidden] { display: none }`.**
+   Without these two rules the hidden verdict — `position: absolute; inset: 0`
+   — sits over the whole form as an invisible sheet and eats every click, so
+   not one radio button can be pressed. It was caught by rendering the page and
+   trying to click one, and by nothing else: the panel is invisible, the form
+   looks right in a screenshot, and a keyboard visitor never notices because
+   Tab and Space do not go through the hit-testing this breaks. Any rule here
+   that sets `display` on an element that is ever `hidden` needs its own line
+   like these two. */
+.quiz-verdict[hidden] { display: none; }
+.quiz-form[hidden] { display: none; }
+
+.quiz-verdict-number {
+  margin: 0; font-weight: 700;
+  /* vh in the middle term, not just vw. The headline is meant to be the
+     loudest thing on the site and a short laptop is exactly where that goes
+     wrong: at 1512x733 a vw-only clamp gave 91px of type and pushed the
+     Body of Fate under the scene title. Tall screens still get the full
+     6.2rem; a 733px frame gets 73px and the whole verdict fits without
+     scrolling, which is the point of a verdict. */
+  font-size: clamp(2.2rem, min(9.5vw, 10vh), 6.2rem); line-height: 0.92;
+  letter-spacing: 0.02em;
+  color: rgb(246, 240, 224);
+  text-shadow: 0 0 40px rgba(226, 206, 150, 0.35);
+}
+.quiz-verdict-name {
+  margin: 0.4rem 0 1rem; font-weight: 500;
+  font-size: clamp(1rem, 3.4vw, 2rem); line-height: 1.15;
+  letter-spacing: 0.11em;
+  color: rgba(226, 206, 150, 0.96);
+}
+.quiz-verdict-sheet {
+  margin: 0 0 1.05rem; max-width: 40rem; width: 100%;
+  display: grid; grid-template-columns: minmax(7rem, auto) 1fr;
+  gap: 0.3rem 1.2rem; text-align: left;
+  font-size: clamp(0.7rem, 1.5vw, 0.86rem); line-height: 1.34;
+}
+.quiz-verdict-sheet dt { letter-spacing: 0.1em; color: rgba(255, 255, 255, 0.46); }
+.quiz-verdict-sheet dd { margin: 0; letter-spacing: 0.045em; color: rgba(242, 238, 230, 0.94); }
+.quiz-verdict-sheet dd b { font-weight: 600; color: rgb(246, 240, 224); }
+.quiz-verdict-close {
+  margin: 0 0 0.95rem; max-width: 34rem;
+  font-size: clamp(0.78rem, 1.9vw, 1.02rem); line-height: 1.42; letter-spacing: 0.1em;
+  color: rgba(226, 206, 150, 0.9);
+}
+
+@media (min-width: 601px) {
+  .quiz-form { padding-bottom: var(--title-block-clear, 7rem); }
+  .quiz-verdict { padding-bottom: var(--title-block-clear, 7rem); }
+}
+
+@media (max-width: 600px) {
+  .quiz-form, .quiz-verdict { padding-left: 0.85rem; padding-right: 0.85rem; }
+  .quiz-hint { left: 1rem; right: 1rem; }
+  .quiz-choice { flex-basis: 100%; }
+  .quiz-choice span { text-align: left; padding-left: 0.75rem; }
+  .quiz-verdict-sheet { grid-template-columns: 1fr; gap: 0.2rem 0; }
+  .quiz-verdict-sheet dt { margin-top: 0.7rem; }
+}
+
+/* Reduced motion: the whirl is the one thing here that could not be made
+   gentler and still be itself, so it is not made gentler — it is not run.
+   quiz.js cuts straight to the verdict and the wheel holds still. */
+@media (prefers-reduced-motion: reduce) {
+  .quiz-form, .quiz-scrim, .quiz-verdict { transition-duration: 1ms; }
+}

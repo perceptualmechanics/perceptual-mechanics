@@ -136,7 +136,7 @@ RewriteRule ^text/(.*/)?index\.html$ /text/%1 [L,R=301]
 # scroll.html) moved into real CSS rules/classes.
 #
 # What that audit missed is that this domain serves pages that are not the
-# SPA. The eleven prerendered pages under /text/ each carry one inline
+# SPA. The twelve prerendered pages under /text/ each carry one inline
 # <style> and link no stylesheet at all, on purpose: scripts/prerender.js's
 # page() builds them to render fully even if every other asset on the domain
 # is unreachable. 'self' does not cover an inline block, so from the moment

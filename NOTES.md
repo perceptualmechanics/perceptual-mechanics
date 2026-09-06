@@ -2185,3 +2185,57 @@ deepest at every width the bench prints, which is what the Fraunhofer table
 actually asks of the ordering.
 
 That closes Tier 3 of the 6.0 punch list.
+
+### 6.1.0 — Quiz, the fourteenth scene
+
+Yeats's Wheel of the twenty-eight incarnations, sixteen questions, and a
+verdict. Two halves with a deliberate join between them: the form is quiet,
+sincere and plain, and then it is gone, the gyres whirl into the full frame and
+the judgment lands in capitals. The system is treated as literally true and the
+scene never winks.
+
+**The data derives rather than lists.** Yeats fixes the four Faculties relative
+to one another, so only the Will has to be found: Mask is Will + 14, Creative
+Mind 30 − Will, Body of Fate 16 − Will, on a 28-phase circle. No phase carries
+its own Faculty numbers. `scripts/quiz-wheel.mjs` checks that those three lines
+reproduce the eight groups *A Vision* publishes — 1-15, 2-14-16-28, 3-13-17-27,
+4-12-18-26, 5-11-19-25, 6-10-20-24, 7-9-21-23, 8-22 — which is the check worth
+having, because a derivation is always self-consistent and consistency was
+never the question.
+
+**Two scales, eight items each, keyed four and four.** Six would have split
+four and three and left an acquiescence drift in the result, invisible and
+unarguable. The proof that the keying works is a live one: answering "strongly
+agree" to all sixteen returns Phase 22, dead centre, because the reversed items
+cancel the rest.
+
+**Twenty-six reachable phases.** There is no human life at the full or at the
+dark, so the scoring walks 2–14 on the waxing side and 16–28 on the waning, and
+1 and 15 cannot be returned. Thirteen a side is twenty-six, which is the number
+Yeats gives for the cradles a man must needs be rocked in. That was not
+arranged; it is what excluding the two poles leaves. A visitor who ties on both
+scales lands at Phase 22, the balance between ambition and contemplation, and
+that too is arithmetic rather than a special case.
+
+Three things were caught by rendering the page and by nothing else:
+
+  * `display: flex` beats the user agent's `[hidden] { display: none }`, so the
+    hidden verdict sat over the whole form as an invisible sheet and ate every
+    click. Not one radio button could be pressed. Invisible in a screenshot,
+    and a keyboard visitor would never have noticed.
+  * The gyres' cone axis ran across the screen, which is a correct projection
+    of a gyre and looks like a sine wave. The axis has to point at the viewer.
+  * The scrims were left on the landing tile, where there is no text to
+    protect, and took it down to a smudge — the curves all present, all
+    correct, and nobody able to see them.
+
+Quiz publishes two pieces into the corpus — the preamble and the instrument —
+and not the Wheel, because the phase names and Faculties are Yeats's vocabulary
+and the lens holds this site's writing. 3,244 filapixels to 3,268. Every count
+that moved was found by `verify-counts`, and `scripts/corpus-figures.mjs` now
+prints SITE.md's own figures rather than leaving them typed in by hand.
+
+The eighth gate is `verify-quiz-wheel`. The headroom line now forecasts a
+FIFTEENTH scene, and it says one would start costing tile size at 1440x500 and
+several other real viewports — which is the release before the release that
+would have found out the hard way.

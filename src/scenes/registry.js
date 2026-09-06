@@ -183,6 +183,28 @@ export const SCENES = {
                label: 'Medium — a board that can spell.',
                blurb: 'Medium — a homemade Ouija board seen from above, with an upside-down teacup on it and two pairs of fingertips: yours and somebody else’s.',
                controls: 'Press on the cup and rest your hand; nothing moves until you do, and nothing moves once you let go. Letters land while you are touching it and fill a tape along the bottom.' },
+  // Quiz — fourteenth scene (2026-09-06). Yeats's Wheel of the twenty-eight
+  // incarnations, and sixteen questions that put you on it. The only scene
+  // here that asks the visitor for anything before it will show them
+  // something, and the only one whose output is about them.
+  //
+  // `tile` 1.04 and `nudge` 0.02 are both INSIDE the range the other thirteen
+  // already span, and that is deliberate rather than timid: `MAX_TILE_SCALE`
+  // and the minimum are what `src/utils/tileLayout.js` sizes its column and
+  // row allowances against, so a fourteenth scene outside the range would
+  // change the arithmetic for all fourteen. `scripts/verify-landing.mjs` had
+  // already reported that scene 14 costs nothing at any real viewport; adding
+  // it inside the range is what keeps that report true of THIS scene.
+  //
+  // The label says "where you are on it" rather than naming a phase, because
+  // the scene does not have one until somebody answers. An ariaLabel that
+  // named a phase would be describing one visitor's result as though it were
+  // the scene.
+  quiz:      { tile: 1.04, nudge: 0.02,
+               exportName: 'createQuiz',
+               label: 'Quiz — the wheel of the twenty-eight, and where you are on it.',
+               blurb: 'Quiz — W. B. Yeats held that every soul is born at one of twenty-eight phases of the moon, and that the phase decides what you want, what you can make, and what will be done to you regardless. Two turning gyres, sixteen questions, and a verdict.',
+               controls: 'Answer all sixteen and press the button. The gyres take the frame and the wheel tells you your phase, your Quarter, and all four of your Faculties.' },
 
 };
 

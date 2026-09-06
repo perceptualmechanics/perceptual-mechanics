@@ -1,0 +1,46 @@
+<!--
+  Quiz scene shell markup.
+
+  The form is REAL and it is written here rather than drawn, for the reason
+  apollo.html gives about its faders: a radio group already has a name, a
+  value, a role, arrow-key navigation and a label association, and rebuilding
+  any of that on a canvas means rebuilding all of it worse. The sixteen
+  fieldsets are generated in quiz.js from ITEMS — one list, not two — but the
+  shell around them is here, static, and correct before a line of JS runs.
+
+  Two states share this markup and only one is ever visible: #quiz-form while
+  you are answering, #quiz-verdict after. The verdict is not built at submit
+  time and inserted; it is filled and unhidden, so a screen reader is never
+  asked to follow a subtree that appeared under it mid-announcement.
+-->
+<div class="quiz-title-row"><p class="quiz-title" aria-hidden="true">Quiz</p></div>
+<p class="quiz-hint" aria-hidden="true">sixteen questions &nbsp;&middot;&nbsp; answer honestly &nbsp;&middot;&nbsp; the wheel does the rest</p>
+
+<canvas class="quiz-canvas" aria-hidden="true"></canvas>
+<!-- Two scrims, crossfaded, because the two states want different shapes of
+     dark and a CSS gradient cannot be transitioned. The flat one is the ground
+     the form is read against; the oval is the ground the verdict is read
+     against, and it leaves the corners clear so the gyres blaze there. -->
+<div class="quiz-scrim quiz-scrim--flat" aria-hidden="true"></div>
+<div class="quiz-scrim quiz-scrim--oval" aria-hidden="true"></div>
+
+<form class="quiz-form" novalidate>
+  <!-- Filled from PREAMBLE in quiz.text.js rather than written here, so the
+       scene, the /text/ page and the corpus all read one copy. -->
+  <p class="quiz-preamble"></p>
+  <ol class="quiz-items"></ol>
+  <div class="quiz-actions">
+    <p class="quiz-remaining" aria-live="polite"></p>
+    <button type="submit" class="quiz-submit">Read the wheel</button>
+  </div>
+</form>
+
+<section class="quiz-verdict" hidden aria-labelledby="quiz-verdict-heading">
+  <p class="quiz-verdict-number" aria-hidden="true"></p>
+  <h2 class="quiz-verdict-name" id="quiz-verdict-heading"></h2>
+  <dl class="quiz-verdict-sheet"></dl>
+  <p class="quiz-verdict-close"></p>
+  <button type="button" class="quiz-again">Answer again</button>
+</section>
+
+<div class="quiz-sr-live" aria-live="polite"></div>

@@ -10,6 +10,7 @@ import { verifyLanding } from './scripts/verify-landing.mjs';
 import { verifyAria } from './scripts/verify-aria.mjs';
 import { verifyCssInvariants } from './scripts/verify-css-invariants.mjs';
 import { verifyCounts } from './scripts/verify-counts.mjs';
+import { verifyQuizWheel } from './scripts/quiz-wheel.mjs';
 
 // Vite 8 warns that `configLoader: 'native'` is planned to become the default.
 // Under that loader this config is handed to Node as real ESM instead of being
@@ -107,6 +108,27 @@ function verifyCssInvariantsPlugin() {
 // And for every number the tree states about itself that can be computed from
 // the data — the third tier of the 5.0 punch list was eighteen findings and
 // one disease.
+// Quiz's Wheel. The one gate here whose second source is a book rather than
+// another file in this tree: quiz.text.js derives every phase's Faculties from
+// three formulas, and this checks that the derivation reproduces the eight
+// groups A Vision publishes. A derivation is always self-consistent, so
+// consistency is not the thing worth checking.
+function verifyQuizWheelPlugin() {
+  return {
+    name: 'pm-verify-quiz-wheel',
+    apply: 'build',
+    buildStart() {
+      const { ok, failures, log } = verifyQuizWheel();
+      if (!ok) {
+        log.forEach(line => console.log(line));
+        this.error(`quiz-wheel: ${failures} check(s) failed — see above. The Wheel, the instrument or the scoring disagrees with A Vision.`);
+      } else {
+        console.log(`  \u2713 verify-quiz-wheel: the Wheel derives A Vision's own groups, and the scoring reaches the twenty-six cradles`);
+      }
+    },
+  };
+}
+
 function verifyCountsPlugin() {
   return {
     name: 'pm-verify-counts',
@@ -261,7 +283,7 @@ function verifyStyleHash(outDir, root) {
 }
 
 export default defineConfig({
-  plugins: [verifyLinksPlugin(), verifyResonancesPlugin(), verifyScrollMarksPlugin(), verifyLandingPlugin(), verifyAriaPlugin(), verifyCssInvariantsPlugin(), verifyCountsPlugin(), prerenderTextPages()],
+  plugins: [verifyLinksPlugin(), verifyResonancesPlugin(), verifyScrollMarksPlugin(), verifyLandingPlugin(), verifyAriaPlugin(), verifyCssInvariantsPlugin(), verifyCountsPlugin(), verifyQuizWheelPlugin(), prerenderTextPages()],
   build: {
     // ─── CSS target: pinned, because Vite 8 quietly moved it ─────────────
     // Vite 8 (Rolldown) defaults to a newer browser baseline than Vite 6
@@ -323,7 +345,7 @@ export default defineConfig({
     // esbuild, hence the explicit devDependency.
     cssMinify: 'esbuild',
     cssTarget: ['chrome87', 'edge88', 'firefox78', 'safari14'],
-    // Superseded 2026-08-31 (v3.10.0): all thirteen scenes are now behind
+    // Superseded 2026-08-31 (v3.10.0): all fourteen scenes are now behind
     // dynamic import() in main.js's SCENES registry (see its own header
     // comment there), each landing in its own sub-500kB chunk. The one
     // chunk left that legitimately exceeds the default 500kB warning is
@@ -364,7 +386,7 @@ export default defineConfig({
       },
       output: {
         // three.js barely changes between deploys, while the app code
-        // (all thirteen scenes, main.js) changes on nearly every deploy.
+        // (all fourteen scenes, main.js) changes on nearly every deploy.
         // Without this, every scene chunk that imports 'three' would get
         // its own copy of it inlined (confirmed via build output -- no
         // per-scene chunk approaches three.js's size, so Rollup is

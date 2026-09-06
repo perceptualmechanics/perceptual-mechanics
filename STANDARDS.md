@@ -989,7 +989,7 @@ another reason should be moved onto them while it's open:
 
   But it is not the operative cause, because it does not explain Sphere.
   `lightAngle += 0.003` is a plain rate in exactly the syntax being searched
-  for, in a file the audit read in full (its stated method: all thirteen scenes
+  for, in a file the audit read in full (its stated method: all fourteen scenes
   read in full, 22,626 lines). It survived anyway.
 
   What actually happened is visible in finding 16's own table, whose column
@@ -1093,7 +1093,7 @@ it started.
 **The historical reasoning, unchanged and still the point of all this:**
 as of v3.10.0 scenes load by dynamic `import()` rather than a static
 `import { createX } from ...` at the top of `main.js` — a new scene should
-follow that pattern, not revert to a static import. Static imports for all thirteen scenes were the direct cause of the
+follow that pattern, not revert to a static import. Static imports for all fourteen scenes were the direct cause of the
 Rollup `chunks larger than 500kB` warning (every scene's code, whether
 needed yet or not, landed in one bundle); dynamic `import()` lets Rollup
 code-split each scene into its own chunk instead. See `main.js`'s own

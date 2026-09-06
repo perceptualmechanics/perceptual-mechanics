@@ -53,6 +53,10 @@ import {
 import {
   MARKS, BOARD_HOME, EPIGRAPH, SOURCES as MEDIUM_SOURCES,
 } from '../src/scenes/medium/medium.text.js';
+import {
+  PHASES, PHASE_BY_N, ITEMS, CHOICES, QUARTERS, CARDINAL,
+  maskPhase, creativeMindPhase, bodyOfFatePhase, quarterOf, tinctureOf, REACHABLE,
+} from '../src/scenes/quiz/quiz.text.js';
 import { SENTENCE_SPLIT } from '../src/utils/corpus.js';
 import { SCENES, TEXT_EXEMPT } from '../src/scenes/registry.js';
 import { getOutboundLinks } from '../src/links.js';
@@ -121,7 +125,7 @@ function lines(text) {
 // point: the next CSS tweak fails the build instead of unstyling the
 // archive. Keep the shipped comments in here short for the same reason
 // every other byte of this block is deliberate — it is duplicated verbatim
-// into all eleven pages, so the long-form reasoning lives up here, where it
+// into all twelve pages, so the long-form reasoning lives up here, where it
 // costs the reader of the archive nothing.
 //
 // The @font-face is new in 4.0 and fixes a second, quieter version of the
@@ -1045,6 +1049,88 @@ ${runs.map(r => `<p class="slug">Seed ${r.seed} · ${r.taken} marks · ${r.rate.
   };
 }
 
+// ─── Quiz ───────────────────────────────────────────────────────────────────
+// The scene needs sixteen answers before it will tell you anything, which is
+// exactly the wrong shape for a crawler, a reader with scripting off, or
+// anybody who wants the material rather than the verdict. So this page is not
+// a transcript of one result — it is the whole Wheel, all twenty-eight phases
+// with every Faculty resolved, and the sixteen questions written out.
+//
+// Every number on it is derived at build time from quiz.text.js by the same
+// three formulas the scene uses, so the page cannot drift from the scene: if
+// Mask stops being Will + 14 they both change together or the gate in
+// scripts/quiz-wheel.mjs fails first.
+function buildQuiz() {
+  const fac = (n, spec, kind) => {
+    const p = PHASE_BY_N[n];
+    const head = `<a href="#phase-${n}">Phase ${n}</a>, ${esc(p.will)}`;
+    if (!spec) return head;
+    return kind === 'bf'
+      ? `${head} — ${esc(spec)}`
+      : `${head} — true: ${esc(spec.t)}; false: ${esc(spec.f)}`;
+  };
+
+  const phaseSection = (p) => {
+    const q = quarterOf(p.n);
+    const habitable = p.n !== 1 && p.n !== 15;
+    const rows = [
+      ['Quarter', q ? `${esc(q.name)} — element ${esc(q.element)}, ${esc(q.dominant)} dominates`
+                    : 'None. A Cardinal Phase, on the boundary between quarters.'],
+      ['Tincture', esc(tinctureOf(p.n))],
+      ['Mask', fac(maskPhase(p.n), p.mask, 'mask')],
+      ['Creative Mind', fac(creativeMindPhase(p.n), p.cm, 'cm')],
+      ['Body of Fate', fac(bodyOfFatePhase(p.n), p.bf, 'bf')],
+      ['Symbol', esc(p.symbol)],
+    ];
+    if (p.who.length) rows.push(['Yeats names here', p.who.map(esc).join(', ')]);
+    if (p.attributed.length) rows.push(['Placed here by others', p.attributed.map(esc).join(', ')]);
+    return `<h3 id="phase-${p.n}">Phase ${p.n} — ${esc(p.will)}</h3>
+${habitable ? '' : '<p><em>Not an incarnation. There is no human life at the full or at the dark, and the scene cannot place anyone here.</em></p>\n'}<dl>
+${rows.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${v}</dd>`).join('\n')}
+</dl>`;
+  };
+
+  const body = `<article>
+<h2>The Wheel</h2>
+<p>W. B. Yeats set out the system in <cite>A Vision</cite>: twenty-eight phases of the moon, and every soul born at one of them. The phase fixes four Faculties — the <strong>Will</strong>, the <strong>Mask</strong> it reaches for, the <strong>Creative Mind</strong> it thinks with, and the <strong>Body of Fate</strong> that is done to it regardless.</p>
+<p>The four sit at fixed positions relative to one another, so only the Will has to be found. The other three are arithmetic on a twenty-eight-phase circle: the Mask is diametrically opposite, at <strong>Will + 14</strong>; the Creative Mind is the Will reflected across the Phase 1 – Phase 15 axis, at <strong>30 − Will</strong>; the Body of Fate faces the Creative Mind, at <strong>16 − Will</strong>. Every number below is computed from those three lines and from nothing else.</p>
+<p>The four <strong>Cardinal Phases</strong> — ${CARDINAL.join(', ')} — fall on the boundaries and belong to no Quarter. Phases 1 and 15 are not incarnations at all, which leaves <strong>${REACHABLE.length}</strong> phases a person can be born at.</p>
+
+<h2>The Quarters</h2>
+<dl>
+${QUARTERS.map(q => `<dt>${esc(q.name)}</dt><dd>Phases ${q.phases[0]}–${q.phases[q.phases.length - 1]}. Element ${esc(q.element)}. ${esc(q.dominant)} dominates.</dd>`).join('\n')}
+</dl>
+
+<h2>The questions</h2>
+<p>The scene asks these sixteen and scores them on two axes: whether you are <em>antithetical</em> (the self you make) or <em>primary</em> (the world you are given), and whether you are <em>waxing</em> toward the full or <em>waning</em> away from it. Half the items on each axis are worded in each direction, so agreeing with everything does not move you.</p>
+<ol>
+${ITEMS.map(i => `<li>${esc(i.text)}</li>`).join('\n')}
+</ol>
+<p>Each is answered on five points: ${CHOICES.map(c => esc(c.label)).join(', ')}.</p>
+
+<h2>The twenty-eight phases</h2>
+${PHASES.map(phaseSection).join('\n\n')}
+
+<h2>Sources</h2>
+<ul>
+<li>W. B. Yeats, <cite>A Vision</cite> — the phases, the Faculties and their designations.</li>
+<li>Neil Mann, <a href="https://www.yeatsvision.com/">yeatsvision.com</a> — the per-phase Faculty tables, the Quarters and their elements, the eight groups, and the tincture crossings. Read 2026-09-06.</li>
+<li>The symbols are as recorded in the Yeats papers (YVP 3 400–01), reproduced with their own spelling.</li>
+</ul>
+</article>`;
+
+  return {
+    slugPath: 'quiz',
+    title: 'Quiz',
+    description: 'Yeats’s Wheel of the twenty-eight incarnations — every phase, every Faculty, and the sixteen questions that place you on it.',
+    sceneKey: 'quiz', sceneName: 'Quiz',
+    lede: `<p><strong>Quiz</strong> asks sixteen questions and then tells you which of Yeats’s twenty-eight phases of the moon you were born at, what your Quarter and element are, and what all four of your Faculties will be.</p>
+<p>This page is the whole Wheel rather than one result: every phase, with its Faculties resolved, and the questions written out.</p>`,
+    bodyHtml: body,
+    jsonLd: creativeWork('Quiz', 'Yeats’s Wheel of the twenty-eight incarnations: every phase, every Faculty, and the sixteen questions that place a reader on it.', 'quiz'),
+  };
+}
+
 // ─── Index ──────────────────────────────────────────────────────────────────
 
 function buildIndex(pages) {
@@ -1080,7 +1166,7 @@ export function prerender(outDir) {
   const pages = [
     buildScroll(), buildPoems(), buildFragments(),
     buildTheater(), buildOrrery(), buildBeamline(), buildLibrary(),
-    buildApollo(), buildPsyshell(), buildMedium(),
+    buildApollo(), buildPsyshell(), buildMedium(), buildQuiz(),
   ];
   const all = [buildIndex(pages), ...pages];
 

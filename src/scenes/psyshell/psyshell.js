@@ -45,7 +45,7 @@ const rushWorkletUrl = new URL('./psyshell.rush.worklet.js', import.meta.url).hr
 // meant for you.
 //
 // It also fixes the geometry problem by making the object a sculpture rather
-// than a data structure. It does not have to encode 3,244 sentences in its
+// than a data structure. It does not have to encode the corpus's sentences in its
 // shape. It holds them. See `psyshell.object.js` — the object knows nothing
 // about the corpus, and `psyshell.text.js` says why nothing should re-connect
 // them.
@@ -253,7 +253,8 @@ const DIGIT_TIME = PROP_SHELL / PROP_SPEED;
 const digitDuration = d => DIGIT_TIME * Math.exp(d - 1);
 const WAVE_SPEED = 0.20 / DIGIT_TIME;  // path-lengths per second
 // Headroom on the transmission's length, not a limit that bites: at the
-// corpus's 3,244 filapixels the longest base-e digit string is 12, so this
+// corpus's current size the longest base-e digit string is 12 (recomputed
+// 2026-09-06, when Quiz took the corpus past 3,200), so this
 // never clamps today. It is here so a much larger corpus cannot hand the
 // transmitter an unbounded array to allocate per pulse.
 const MAX_DIGITS = 16;
@@ -530,7 +531,7 @@ export function createPsyshell(container, { preview = false } = {}) {
   }
 
   // ─── The web ──────────────────────────────────────────────────────────────
-  // One structure at two magnifications. The 3,244 filapixels are the near
+  // One structure at two magnifications. The filapixels are the near
   // nodes — the sentences, where they always were, inside the crystal — and the
   // far field is generated around them; strands connect both, and bridge
   // strands run from the lens's outermost nodes out into the field, so the
@@ -822,7 +823,8 @@ export function createPsyshell(container, { preview = false } = {}) {
 
   const transmits = [];
   function armTransmitter(index) {
-    // The ordinal is the filapixel's place in the WHOLE corpus — n of 3,244 —
+    // The ordinal is the filapixel's place in the WHOLE corpus — n of
+    // FILAPIXEL_COUNT —
     // which is what says how much the lens is holding.
     const { digits } = baseEDigits(index + 1);
     const n = Math.min(digits.length, MAX_DIGITS);
@@ -1231,7 +1233,7 @@ export function createPsyshell(container, { preview = false } = {}) {
 
     soundToggle = bindPersistedSoundToggle(container, soundToggleEl, setSoundEnabled, 'psyshell');
 
-    // Over the nine scenes the lens holds writing from, not over 3,244
+    // Over the scenes the lens holds writing from, not over every
     // filapixels. Selecting one reads its first — which is the only ordered
     // access the object has, and it is a fact about the corpus rather than
     // about the geometry.
@@ -1276,7 +1278,8 @@ export function createPsyshell(container, { preview = false } = {}) {
     placeOrdinal(titleBox);
   }
 
-  // The ordinal ("3 / 3,244" — the corpus size, see FILAPIXEL_COUNT; this
+  // The ordinal ("3 / 3,268" — the corpus size, see FILAPIXEL_COUNT, which
+  // is what this actually reads; the literal here is an example only; this
   // example read "3 / 108" from a corpus two releases old) sits bottom-right
   // and is lifted only if it would
   // run into the title block. The measurement is only meaningful while it is

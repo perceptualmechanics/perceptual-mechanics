@@ -111,6 +111,14 @@ export const CORPUS_SOURCES = [
   { key: 'beamline', read: m => [[m.EPIGRAPH_PRIMARY, m.EPIGRAPH_SECONDARY], ...m.BOUNCES.map(b => [b.text])] },
   { key: 'orrery', read: m => [[m.ORRERY.note]] },
   { key: 'butterfly', read: m => [[m.BUTTERFLY.text]] },
+  // Quiz publishes two pieces and not sixteen. The instrument is one thing —
+  // the items are keyed against each other and half of them are worded
+  // backwards on purpose, so an item read alone is not what was written. The
+  // preamble is the other. What Quiz does NOT contribute is the Wheel itself:
+  // the phase names, the Faculties and the symbols are Yeats's designations,
+  // and a lens holding "every sentence of this site's writing" does not hold
+  // somebody else's vocabulary.
+  { key: 'quiz', read: m => [m.PREAMBLE, m.ITEMS.map(i => i.text)] },
 ];
 
 // Returns [{ key, pieces: [[sentence]] }] in the order above, each scene's

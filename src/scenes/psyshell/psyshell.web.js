@@ -34,7 +34,7 @@
 // come to. Degree is computed below from the edge list that ships.
 //
 // **The near nodes are the corpus.** They are the filapixel positions, passed
-// in rather than generated here, so the web's dense region IS the 3,244
+// in rather than generated here, so the web's dense region IS the corpus's
 // sentences and not a decorative approximation of them. The far nodes carry
 // nothing and respond to nothing.
 import { mulberry32, hashSeed } from '../../utils/prng.js';
