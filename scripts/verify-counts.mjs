@@ -26,6 +26,8 @@ import { SCENES, TEXT_EXEMPT } from '../src/scenes/registry.js';
 import { RESONANCES } from '../src/resonances.js';
 import { LINKS } from '../src/links.js';
 import { BEATS as theaterBeats } from '../src/scenes/theater/theater.text.js';
+import { BOUNCES } from '../src/scenes/beamline/beamline.text.js';
+import { FIELD } from '../src/utils/sceneField.js';
 import { FILAPIXEL_COUNT } from '../src/scenes/psyshell/psyshell.text.js';
 import { libraryItems, cdRackItems } from '../src/scenes/library/library.text.js';
 import { pathToFileURL } from 'node:url';
@@ -134,6 +136,49 @@ const CLAIMS = [
     phrases: [/(\S+) CDs\b(?! (?:in the rack|it))/],
   },
   {
+    // NOT the scene count. sceneField.js is shelved at twelve measured scenes
+    // while the registry has moved on, and its prose is about its own array —
+    // "all twelve", "nine of the twelve". Pointing those at SCENES would have
+    // demanded a rewrite of a correct file every time a scene is added, which
+    // is how a shelved file acquires wrong numbers.
+    name: "sceneField's measured scenes",
+    value: FIELD.length,
+    phrases: [/all (\S+) measured scenes\b/, /(\S+) of the (?<n>\S+) measured scenes\b/],
+  },
+  {
+    // Two numbers out of one array, because the file states both and they are
+    // not the same claim: a bounce is a mirror, a passage is a source text,
+    // and most passages take two bounces. The header used to add them up by
+    // hand and got both wrong — see beamline.text.js's own note.
+    name: "the Beamline's fragments",
+    value: BOUNCES.length,
+    // NOT /(\S+) bounces/: "split across two bounces at their own natural
+    // pauses" is correct English about a pair, and the first run of this row
+    // flagged three of them. Total phrasings only, same rule as `scenes`.
+    phrases: [/(\S+) fragments total\b/, /all (\S+) bounces\b/, /(\S+) station waypoints\b/],
+  },
+  {
+    name: "the Beamline's found passages",
+    value: new Set(BOUNCES.map(b => b.passage)).size,
+    phrases: [/(\S+) found passages\b/],
+  },
+  {
+    name: 'library films',
+    value: libraryItems.filter(i => i.type === 'bluray').length,
+    // Same subset caveat: "two films by the same director" is not the shelf.
+    phrases: [/(\S+) books,? (?<n>\S+) films\b/, /all (\S+) films\b/],
+  },
+  {
+    name: 'library divination decks',
+    value: libraryItems.filter(i => i.type === 'divination_box').length,
+    phrases: [/(\S+) divination decks\b/],
+  },
+  {
+    name: 'library CD artists',
+    value: new Set(cdRackItems.map(c => c.artist)).size,
+    phrases: [/(\S+) albums,? (?<n>\S+) artists\b/, /all (\S+) artists\b/],
+  },
+  {
     name: 'library books',
     value: libraryItems.filter(i => i.type === 'book').length,
     // Same subset caveat as `scenes`: "two books sharing one palette colour"
@@ -238,7 +283,12 @@ export function verifyCounts() {
             // slot caught a word ("all other scenes") or a comment marker
             // ("// CDs") is prose, not a claim — and `Number('')` is 0, so
             // this has to be checked before any coercion rather than after.
-            const raw = String(m[1]).toLowerCase().replace(/[.,;:]+$/, '');
+            // The slot is group 1 by default, because most phrases have one.
+            // A phrase that states two counts in one breath — "104 books, 44
+            // films", "115 albums, 58 artists" — names the one it is about
+            // with `(?<n>…)`, so the same sentence can be a row for each of
+            // them without either row reading the other's number.
+            const raw = String(m.groups?.n ?? m[1]).toLowerCase().replace(/[.,;:]+$/, '');
             const n = /^\d[\d,]*$/.test(raw) ? Number(raw.replace(/,/g, '')) : NUMBER_WORDS[raw];
             if (!Number.isFinite(n)) continue;
             checked++;

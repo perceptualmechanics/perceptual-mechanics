@@ -2130,3 +2130,33 @@ costs nothing anywhere real, and costs tile size only at 2560x400 and
 The stale counts in that file went with it. "All thirteen visible without
 scrolling" is now "every scene in the registry", because the count is `SCENES`
 and writing it down a second time is how it drifts.
+
+### 6.0.2 — the counts that could be derived, derived
+
+Tier 3 of the 6.0 punch list was a list of stated counts to correct one at a
+time. Most of them turned out to be already correct — harmonics' 76 nodes, 152
+oscillators, 228 per frame, 2,850 pairs; library's 104 books, 44 films, 115 CDs,
+58 artists, 8 cubbies; psyshell's 144; resonances' 64 — either fixed in an
+earlier batch or never wrong, which is the false-positive class this audit
+already knows it produces.
+
+Three were real, and all three are now checked rather than corrected:
+
+`links.js` labelled its library section `(85)` above four rows, and quoted that
+85 back three paragraphs later as though it described the file. `verify-links`
+now reads the `// ── scene (n) ──` headers out of the source and counts the
+rows whose `from` names that scene.
+
+`beamline.text.js` said "Six found passages (nine fragments total)" over seven
+passages and ten fragments. The grouping only existed in the per-bounce
+comments, so there was nothing to derive it from — it is a `passage` field now,
+and verify-counts computes both numbers off `BOUNCES`.
+
+`sceneField.js` named "medium, the thirteenth" as the one scene its field had
+not measured, which is a sentence that needs rewriting every time a scene is
+added. Its twelves are `FIELD.length` — a different quantity from the scene
+count, and verify-counts now knows the difference.
+
+verify-counts also learned `(?<n>…)`: "104 books, 44 films" is two claims in one
+sentence, and a row can now say which slot it is about instead of always
+reading group 1. 51 checked counts before this release, 64 now.

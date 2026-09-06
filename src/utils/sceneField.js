@@ -31,11 +31,20 @@
 // result is in SITE.md and CORRECTED-FACTS.md.
 
 // ─── The field: where each scene sits, and why ──────────────────────────────
-// The landing page stops being a grid at 4.10.0. A grid asserts that the twelve scenes measured at the time
-// (medium, the thirteenth, was never measured — see the note below) are the same kind of thing, equally weighted and equally
-// sized; that was true at five and is already slightly false at twelve. This
+// The landing page stops being a grid at 4.10.0. A grid asserts that every
+// scene is the same kind of thing, equally weighted and equally sized; that
+// was true at five and was already slightly false when this was written. This
 // file holds what replaces the assertion: two measured properties per scene,
 // and the arithmetic that turns them into a position.
+//
+// **`FIELD` below is the twelve scenes that were measured, and the registry
+// has grown since.** Which ones are missing is not written down here — it is
+// `FIELD` against `SCENES`, and any scene added after 4.10.0 has to be run
+// through the harness before this could ship. The numbers in the paragraphs
+// below are all `FIELD`'s twelve, and `scripts/verify-counts.mjs` checks them
+// against `FIELD.length` rather than against the scene count, because those
+// are two different quantities and conflating them is what shelved the note
+// that used to sit here naming a single missing scene by name.
 //
 // NO DOM AND NO THREE.JS IN THIS FILE. While it shipped, `scripts/prerender.js`
 // imported it to gate the measurements against the registry at build time,
@@ -90,7 +99,8 @@
 //
 // ─── Why the two axes are allowed to share a plane ──────────────────────────
 // They are independent, which was the gate the whole idea had to clear:
-// Spearman +0.38 at p = 0.23 between hf and mad across all twelve. Complexity
+// Spearman +0.38 at p = 0.23 between hf and mad across all twelve measured
+// scenes. Complexity
 // and motion are separate properties and the scenes prove it — Scroll is
 // structurally busy and almost perfectly still, Sphere is the smoothest frame
 // on the site and one of the most active. Within each property the candidate
@@ -114,7 +124,8 @@ export const FIELD = [
 
 // Both rulers span more than two orders of magnitude (hf 1.03 to 60.5, mad
 // 0.00016 to 0.0432), so both are placed on a log scale. On a linear scale
-// nine of the twelve would pile into the bottom-left tenth of the plane and
+// nine of the twelve measured scenes would pile into the bottom-left tenth
+// of the plane and
 // the arrangement would say nothing — which is a property of the measurements,
 // not a presentational preference, and is why the transform is named here
 // rather than applied silently at draw time.

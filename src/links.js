@@ -103,7 +103,7 @@ export const LINKS = [
   { from: { scene: 'scroll', id: 11, field: 'body', index: 2 }, phrase: 'pilgrimage to Hell', to: { scene: 'scroll', id: 10 } },
   { from: { scene: 'scroll', id: 4, field: 'body', index: 44 }, phrase: 'projection', to: { scene: 'scroll', id: 11 } },
 
-  // ── library (85) ──
+  // ── library (4) ──
   { from: { scene: 'library', id: 49, field: 'scene' }, phrase: 'coin toss', to: { scene: 'library', id: 72 } },
   { from: { scene: 'library', id: 72, field: 'excerpt' }, phrase: 'A coin spins in the air', to: { scene: 'library', id: 49 } },
   { from: { scene: 'library', id: 40, field: 'scene' }, phrase: 'Origin of Love', to: { scene: 'library', id: 13 } },
@@ -114,8 +114,11 @@ export const LINKS = [
 // A link is only half a link if the field it is authored into never gets
 // rendered. That was live in v3.16.2 and it looked like this: library.js
 // deliberately withholds each item's `note` (Scott's call, 2026-07-23 —
-// "I'm not sure I want it there yet"), but 81 of the library's 85 rows below
-// are authored into `note`. So the outbound half rendered nowhere, while
+// "I'm not sure I want it there yet"), but 81 of the library's 85 rows THEN
+// were authored into `note`. Those 81 are gone — the four that remain are the
+// ones authored into rendered fields, which is why the header above reads 4
+// and this paragraph reads 85: one is the file, the other is the history.
+// So the outbound half rendered nowhere, while
 // getInboundLinks() — which never knew about fields — happily kept printing
 // the other end. Throne of Blood's panel said "REFERENCED FROM SEVEN
 // SAMURAI"; Seven Samurai's panel had nothing to click. 45 library items

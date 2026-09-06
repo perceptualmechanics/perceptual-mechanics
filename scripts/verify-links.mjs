@@ -30,6 +30,7 @@ import { BOUNCES } from '../src/scenes/beamline/beamline.text.js';
 import { libraryItems, cdRackItems } from '../src/scenes/library/library.text.js';
 import { PIECES as theaterPieces } from '../src/scenes/theater/theater.text.js';
 import { ORRERY } from '../src/scenes/orrery/orrery.text.js';
+import { readFileSync } from 'node:fs';
 import { LINKS } from '../src/links.js';
 // Namespace import as well as the named one above, deliberately: a named
 // `import { RENDERED_FIELDS }` of an export that doesn't exist yet is a
@@ -117,6 +118,34 @@ export function verifyLinks() {
     checked++;
   });
   if (checked === LINKS.length) ok(`links.js: all ${LINKS.length} rows resolve (source field + verbatim phrase + target)`);
+
+  // ── 2b. The section headers in links.js count their own sections ──────
+  // `// ── library (85) ──` sat above four rows for two releases. Nothing
+  // read that number, which is exactly why nobody noticed: it was a label on
+  // a section whose contents had been cut by 81, and the only reader was a
+  // person scrolling past. A count nobody can check is a count that gets
+  // cited — the 6.0 audit found this one being quoted three paragraphs later
+  // as though it described the file.
+  //
+  // The headers stay, because they are how you navigate the array. They are
+  // just derived now: this reads them out of the source and counts the rows
+  // whose `from` names that scene.
+  {
+    const src = readFileSync(new URL('../src/links.js', import.meta.url), 'utf8');
+    const actual = {};
+    for (const l of LINKS) actual[l.from.scene] = (actual[l.from.scene] ?? 0) + 1;
+    const headers = [...src.matchAll(/^\s*\/\/ ── (\S+) \((\d+)\) ──/gm)];
+    if (!headers.length) {
+      log.push('note: no `// ── scene (n) ──` section headers found in links.js — nothing to check');
+    } else {
+      let bad = 0;
+      for (const [, scene, stated] of headers) {
+        const real = actual[scene] ?? 0;
+        if (Number(stated) !== real) { bad++; fail(`links.js: the "${scene}" section header says ${stated}, but ${real} row(s) have \`from.scene\` "${scene}"`); }
+      }
+      if (!bad) ok(`links.js: all ${headers.length} section headers match their sections`);
+    }
+  }
 
 
   // ── 3. Phrase collisions within a render group ────────────────────────

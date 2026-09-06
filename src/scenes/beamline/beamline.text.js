@@ -14,13 +14,20 @@ export const EPIGRAPH_PRIMARY = 'The body is the prism of the dream.';
 // primary epigraph, the way Orrery layers a title line with a subtitle.
 export const EPIGRAPH_SECONDARY = 'life has to go somewhere';
 
-// Six found passages (nine fragments total), staged one fragment per
-// mirror across ten bounces. Most passages are split across two bounces at
+// One fragment per mirror. Most passages are split across two bounces at
 // their own natural pauses, so each bounce reveals the next real fragment
 // rather than the whole passage sitting static on one mirror; the
 // electron-beam and laser/mirror passages each stay a single, undivided
 // bounce, since the line that names each phenomenon most directly (e.g.
 // "THE MIRROR") is the payoff, and splitting it would blunt it.
+//
+// **`passage` is why there are no totals in this paragraph.** Which bounces
+// belong to which passage used to live only in the per-bounce comments below,
+// and this header used to add them up for you: "Six found passages (nine
+// fragments total)". There are ten fragments and seven passages, and both
+// numbers had been wrong long enough to be quoted elsewhere. The grouping is
+// a field now, so `scripts/verify-counts.mjs` derives both from the array and
+// this comment does not have to.
 //
 // Placement: bounce 0 is the mirror closest to the beam's literal origin
 // point, which is why the electron-beam passage sits there. The rest are
@@ -31,6 +38,7 @@ export const EPIGRAPH_SECONDARY = 'life has to go somewhere';
 export const BOUNCES = [
   {
     id: 1,
+    passage: 'electron-beam',
     // Electron/CD passage — written 2008, no relationship to this piece,
     // genuine electron-beam-physics language ("channel of electrons,
     // glowing orange-red"). Single bounce, closest to the source.
@@ -38,6 +46,7 @@ export const BOUNCES = [
   },
   {
     id: 2,
+    passage: 'laser-mirror',
     // Find #1 — Storyline.doc, entry dated 9/30–10/1/2003, confirmed
     // identical across the original file and two independently-dated
     // backup copies. Single, undivided bounce — "THE MIRROR" is the
@@ -46,6 +55,7 @@ export const BOUNCES = [
   },
   {
     id: 3,
+    passage: 'crystal-refractor',
     // Find #2a — Storyline.doc, ~9/29–30/2003, same cross-copy
     // verification as Find #1. A separate diary entry from 2b below, not
     // joined or ellipsis-bridged (that would be new writing the source
@@ -54,37 +64,44 @@ export const BOUNCES = [
   },
   {
     id: 4,
+    passage: 'lenses',
     // Find #2b — Storyline.doc, same week as 2a, same verification.
     text: 'I was just thinking, "I need focus," and suddenly I pictured lenses at my feet and at the top of my head (especially at my feet, though), and now things are definitely coming back into focus! How odd! Just saying the word evoked the image which affected the body.',
   },
   {
     id: 5,
+    passage: 'harps-superstrings',
     // Harps/superstrings, part one.
     text: 'Here are harps, here are superstrings.',
   },
   {
     id: 6,
+    passage: 'harps-superstrings',
     // Harps/superstrings, part two — same passage as part one.
     text: "Pluck at them both, send me vibrating, harmonics echoing at mathematically precise points... my own bow waits to be bent.",
   },
   {
     id: 7,
+    passage: 'lightning-tetrahedrons',
     // Lightning tetrahedrons, part one.
     text: 'Microscopic lightning tetrahedrons shimmering in air for half a second and then phasing out...',
   },
   {
     id: 8,
+    passage: 'lightning-tetrahedrons',
     // Lightning tetrahedrons, part two — split at the same ellipsis pause
     // the source text already has.
     text: 'union of heaven and earth, union of thought and action, union of spark and fusion, the blend, the soul and psyche, the divine fire.',
   },
   {
     id: 9,
+    passage: 'prisms',
     // Seven-colored/prisms, part one.
     text: 'Seven-colored, prisms, starlight...',
   },
   {
     id: 10,
+    passage: 'prisms',
     // Seven-colored/prisms, part two.
     text: 'Vibrating at a different frequency. Harmonics, tuning.',
   },
