@@ -50,6 +50,34 @@ is a liability the moment the measurement is not re-runnable from the tree.
 
 ---
 
+## A false-positive class this audit produced, found while fixing it
+
+Four of the Harmonics findings — the phase-coherence claim, the sonification
+chord, the dt-scaled rotation, and the sound toggle colliding with the panel —
+are not in the tree and were already correct when the audit ran. Searching for
+the strings the findings quote returns nothing.
+
+What happened is specific and worth naming, because it will happen again. Each
+of those comments had ALREADY been corrected, in the form this codebase
+prefers: *"an earlier version of this note claimed something the mapping cannot
+deliver. It said separate clusters land on DIFFERENT harmonics..."* An agent
+reading for drift found the false claim, quoted it, and reported it — without
+carrying the sentence that retracts it two lines up.
+
+**The audit mistook a correction for the error it corrects.** That is the exact
+mirror of the punch-list-as-state error in this document's own header: there,
+a past-tense record read as a present claim; here, a quoted-and-retracted claim
+read as a live one. Both are the same underlying thing — prose about a claim
+being taken for the claim.
+
+Practically: this is why "verify before fixing" is in the method and not
+optional. Every finding below was measured by the agent that filed it, and four
+of them are still wrong, because measuring the CODE does not tell you what the
+COMMENT currently says. Check that the quoted string is actually in the file
+before acting on any entry here.
+
+---
+
 ## Tier 1 — a visitor meets this
 
 ### Keyboard and screen-reader access

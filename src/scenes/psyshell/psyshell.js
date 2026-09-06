@@ -60,8 +60,11 @@ const rushWorkletUrl = new URL('./psyshell.rush.worklet.js', import.meta.url).hr
 // object's interior, which is the residue of taint that let it through
 // screening. It is the reason the lens was pulled out and read at all.
 //
-// ROOM_COLOR is now just the ground the web is drawn on: near-black, very
-// slightly warm, so the field's cool strands have something to be cool against.
+// ROOM_COLOR is now just the ground the web is drawn on: near-black, and very
+// slightly COOL — 0x07070a has more blue than red. It was described here as
+// warm, which would have made it the wrong ground for the reason given: the
+// field's strands are cool, and what they read against is a ground that is
+// darker than they are, not one of an opposing hue.
 const ROOM_COLOR = 0x07070a;
 const CRYSTAL_DEEP = 0x123a2c;   // the interior: taint, seen through the body
 const CRYSTAL_RIM = 0xbfe6ff;    // where an edge catches the light
@@ -75,8 +78,13 @@ const WEB_FAR_COLOR = 0x8fb6d8;     // a strand out in the field
 // constant nothing reads is a value the next person will try to tune.)
 // Re-derived by rendering and measuring peak luminance, the same way 4.7.0's
 // was: an object built of overlapping additive members has to be set by what
-// the pile sums to. This object is far smaller than either predecessor — 252
-// segments rather than 3,244 rays — so it can afford much more per member.
+// the pile sums to. This object is far smaller than either predecessor —
+// SEGMENT_COUNT plus NUB_COUNT members rather than one per filapixel — so it
+// can afford much more per member. Both are exported from psyshell.object.js
+// and derived from the arrays themselves; the figure written here was 252
+// against a real 144, and it is the stated derivation for CRYSTAL_GAIN and
+// FILAPIXEL_PEAK below, which is exactly the kind of number that should not
+// be retyped.
 const CRYSTAL_GAIN = 0.78;
 const FILAPIXEL_PEAK = 3.2;
 // ─── The web's brightness, and why the junctions are not drawn ──────────────
@@ -86,7 +94,9 @@ const FILAPIXEL_PEAK = 3.2;
 // brightening is not a value: it is what k overlapping ends come to**, which is
 // the one way to make "brightness follows strand count" true rather than
 // arranged. Degrees run 2 to 9 across this web, mean 3.51 — buildWeb
-// returns minDegree/maxDegree/meanDegree, and /text/psyshell/ prints them.
+// returns maxDegree/meanDegree; scripts/prerender.js computes minDegree
+// itself, and /text/psyshell/ prints all three. The numbers were right; the
+// attribution was not.
 const STRAND_END = 1.0;    // brightness at a node end of a strand
 const STRAND_MID = 0.12;   // and at its dark midpoint
 const NEAR_GAIN = 0.42;    // the lens's own strands
@@ -426,7 +436,8 @@ export function createPsyshell(container, { preview = false } = {}) {
   // ─── The crystal ──────────────────────────────────────────────────────────
   // Fresnel rather than refraction. A real transmissive material would be the
   // right answer and the wrong cost — MeshPhysicalMaterial with transmission on
-  // 250 instances is a screen-sized render target per frame. An edge-lit
+  // SEGMENT_COUNT + NUB_COUNT instances is a screen-sized render target per
+  // frame — the comment said 250 against a real 174. An edge-lit
   // fresnel over a dark interior reads as glass at this scale, and the interior
   // is where the green lives.
   const CRYSTAL_VERT = `
@@ -521,9 +532,11 @@ export function createPsyshell(container, { preview = false } = {}) {
   // ─── The web ──────────────────────────────────────────────────────────────
   // One structure at two magnifications. The 3,244 filapixels are the near
   // nodes — the sentences, where they always were, inside the crystal — and the
-  // far field is generated around them; strands connect both, and fourteen
-  // bridge strands run from the lens's outermost nodes out into the field, so
-  // the object is OF the web rather than posed in front of a picture of one.
+  // far field is generated around them; strands connect both, and bridge
+  // strands run from the lens's outermost nodes out into the field, so the
+  // object is OF the web rather than posed in front of a picture of one. (The
+  // count was written here as fourteen and is not — buildWeb decides it from
+  // the point set, and /text/psyshell/ prints the strand total it arrives at.)
   //
   // Two meshes rather than one, and the split is not cosmetic: the near half's
   // brightness changes every frame while the lens is being read, and the far
@@ -939,7 +952,9 @@ export function createPsyshell(container, { preview = false } = {}) {
     dir[0] /= m; dir[1] /= m; dir[2] /= m;
     // Every node's distance along that direction, sorted once. The front then
     // only ever touches a slice of the field, found by binary search — a pulse
-    // costs a few hundred nodes a frame instead of all 7,848, and the sort is
+    // costs a few hundred nodes a frame instead of every node in the web
+    // (/text/psyshell/ prints the total; it was written here as 7,848 and the
+    // web builds 7,866), and the sort is
     // paid once per pulse rather than sixty times a second.
     const proj = new Float32Array(web.total);
     const order = new Uint32Array(web.total);
@@ -1261,7 +1276,9 @@ export function createPsyshell(container, { preview = false } = {}) {
     placeOrdinal(titleBox);
   }
 
-  // The ordinal ("3 / 108") sits bottom-right and is lifted only if it would
+  // The ordinal ("3 / 3,244" — the corpus size, see FILAPIXEL_COUNT; this
+  // example read "3 / 108" from a corpus two releases old) sits bottom-right
+  // and is lifted only if it would
   // run into the title block. The measurement is only meaningful while it is
   // on screen: it starts `hidden`, and getBoundingClientRect on a
   // display:none element is all zeros — so left(0) < titleBox.right + 10 and

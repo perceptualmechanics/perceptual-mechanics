@@ -23,12 +23,19 @@
    from form rather than hue: a five-lobed violet lotus and a small crystal
    antler on a lit bench do not read as the same thumbnail at 200px.
 
-   Contrast measured against this scene's real composited backdrop, not against
-   pure black: rgba(230, 242, 248, 0.9) over the room colour #0a0806 composites
-   to #d0dade and reads 13.9:1. The subhead, ordinal and toggle label are all
-   above 7:1 by the same measurement — checked rather than assumed, because
-   Beamline's title has sat below AA for three releases on the strength of an
-   assumption exactly like the one this sentence replaces.
+   Contrast is against this scene's real composited backdrop rather than pure
+   black — which is the right instinct, and this paragraph still got the
+   backdrop wrong: it named #0a0806, and ROOM_COLOR is 0x07070a. The ratio it
+   quoted was computed against a colour the scene does not use.
+
+   The figures are not restated here, because nothing in the tree recomputes
+   them and a ratio in a comment is the thing this release is about.
+   verify-css-invariants checks every translucent colour in this file against
+   its most favourable possible ground and fails the build below AA, which is
+   a real floor rather than a remembered measurement; what it cannot do is
+   know the actual backdrop, so if these colours or ROOM_COLOR change, measure
+   again rather than trusting this paragraph. Beamline's title sat below AA
+   for three releases on exactly the assumption this one made.
 
    Mobile-first (standing convention, see STANDARDS.md): base declarations
    target the smallest viewport; nested min-width queries layer the wider values
