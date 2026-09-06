@@ -444,15 +444,27 @@ export function createQuiz(container, { preview = false } = {}) {
     const parts = [
       row('Number', `<b>${p.n}</b> of 28`),
       q ? row('Quarter', `<b>${escapeHtml(q.name)}</b> &nbsp; element ${escapeHtml(q.element)} &nbsp; ${escapeHtml(q.dominant)} dominates`)
-        : row('Quarter', '<b>None.</b> A phase of crisis, on the boundary between quarters, where no Faculty dominates'),
+        : row('Quarter', '<b>None</b> — a phase of crisis, on the boundary between quarters'),
       tri ? row('Triad', `the <b>${escapeHtml(tri.role)}</b> of the ${tri.set === 1 ? 'first' : 'second'} triad — phases ${tri.phases.join(', ')}`)
-          : row('Triad', '<b>None.</b> The triads divide the quarters, and this phase is outside them'),
+          : row('Triad', '<b>None</b> — outside the quarters that the triads divide'),
       row('Tincture', `<b>${escapeHtml(tinctureOf(p.n))}</b>`),
       facultyRow('Will', p.n, null),
       facultyRow('Mask', mn, p.mask, 'mask'),
       facultyRow('Creative Mind', cn, p.cm, 'cm'),
       facultyRow('Body of Fate', bn, p.bf, 'bf'),
     ];
+    // **At a Cardinal Phase the rectangle collapses, and the report says so.**
+    // The four Faculties normally sit at the corners of a rectangle — four
+    // distinct phases — and `Wheel.html` states the exception in a
+    // parenthesis: "except for the Cardinal Phases". At 22 the Will and the
+    // Body of Fate are both at 22 and the Mask and Creative Mind are both at
+    // 8; at 8 it is the same pair the other way round; at 1 and 15 the
+    // rectangle is the axis itself. Which reads, on the page, as the report
+    // repeating itself — so it is named rather than left to look like one.
+    const corners = new Set([p.n, mn, cn, bn]);
+    if (corners.size < 4) {
+      parts.push(row('The rectangle', `<b>Collapsed</b> — the four Faculties fall on ${[...corners].sort((a, b) => a - b).join(' and ')} rather than on four phases`));
+    }
     if (p.mask && p.cm) {
       parts.push(row('The failure',
         `<b>${escapeHtml(p.mask.f)}</b>, and then <b>${escapeHtml(p.cm.f)}</b>`));

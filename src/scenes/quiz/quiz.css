@@ -48,7 +48,7 @@
 .quiz-scrim--oval {
   opacity: 0;
   background:
-    radial-gradient(62% 74% at 50% 48%, rgba(4, 4, 8, 0.90) 0%,
+    radial-gradient(68% 74% at 50% 48%, rgba(4, 4, 8, 0.90) 0%,
                                         rgba(4, 4, 8, 0.86) 46%,
                                         rgba(4, 4, 8, 0.52) 76%,
                                         rgba(4, 4, 8, 0) 100%);
@@ -301,7 +301,12 @@
   color: rgba(226, 206, 150, 0.96);
 }
 .quiz-verdict-sheet {
-  margin: 0 0 0.75rem; max-width: 50rem; width: 100%;
+  /* 50rem fitted the ordinary phases and not the Cardinal ones: 22 and 8 are
+     named "Balance between ambition and contemplation" and "War between
+     individuality and race", and a report that repeats one of those on four
+     Faculty lines wraps four times. Sized against the worst case rather than
+     the common one. */
+  margin: 0 0 0.75rem; max-width: 55rem; width: 100%;
   display: grid; grid-template-columns: minmax(6rem, max-content) 1fr;
   gap: 0.18rem 1.15rem; text-align: left;
   font-size: clamp(0.75rem, 1.55vw, 0.91rem); line-height: 1.3;
