@@ -194,6 +194,44 @@ console.log(`landing: ${checked} viewports, ${fits} with a legible fit, ${none} 
   const full = vs.filter(v => v > 0.99).length;
   console.log(`         variation: full on ${full} of ${fits}, mean ${(vs.reduce((a, b) => a + b, 0) / vs.length).toFixed(2)} — it is spent from slack, so tight viewports get less`);
 }
+// ─── Headroom: what the NEXT scene would cost, before anyone writes it ──────
+// Not a gate. The requirement is about the scenes that exist, and a fourteenth
+// scene failing to fit is not a defect in a thirteen-scene site. It is a
+// FORECAST, and it is here because the alternative shipped for three releases:
+// tileLayout.js used to guess in a comment — "Twelve fit. Sixteen probably fit
+// at a smaller tile. Twenty-four will not" — which is exactly the shape of
+// number nobody can re-run. This prints the real one every build.
+//
+// Two things can go wrong at n+1 and they are different: the layout can lose a
+// viewport outright, or it can keep it at a smaller tile. Both are reported,
+// because the second is the one that arrives first and quietly.
+{
+  const drawnOf = (f) => f.base * (1 + (MAX_SCALE - 1) * f.v);
+  const lost = [], shrunk = [];
+  let held = 0;
+  for (const w of WIDTHS) {
+    for (const h of HEIGHTS) {
+      const now = tileLayout(SCENE_COUNT, w, h);
+      if (!now) continue;
+      const next = tileLayout(SCENE_COUNT + 1, w, h);
+      if (!next) { lost.push(`${w}x${h}`); continue; }
+      const d0 = drawnOf(now), d1 = drawnOf(next);
+      // Same 1.5px rounding tolerance as the uniform-grid control above, and
+      // for the same reason: base is floored before the multiplier is applied.
+      if (d1 < d0 - 1.5) shrunk.push(`${w}x${h} ${d0.toFixed(0)}→${d1.toFixed(0)}px`);
+      else held++;
+    }
+  }
+  const n = SCENE_COUNT + 1;
+  if (!lost.length && !shrunk.length) {
+    console.log(`         headroom: scene ${n} costs nothing — all ${held} fitting viewports hold their arrangement and their tile size`);
+  } else {
+    console.log(`         headroom: scene ${n} holds ${held} of ${fits} viewports; loses ${lost.length}, shrinks ${shrunk.length}`);
+    if (lost.length) console.log(`                   no fit at: ${lost.join(', ')}`);
+    if (shrunk.length) console.log(`                   smaller at: ${shrunk.join(', ')}`);
+  }
+}
+
 if (failures.length) {
   console.error(`\nlanding requirement VIOLATED in ${failures.length} of ${fits} fitting viewports:`);
   for (const f of failures) console.error(`  ${f}`);

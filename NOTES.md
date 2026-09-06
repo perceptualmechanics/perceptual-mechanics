@@ -2106,3 +2106,27 @@ on stay here.
 That file is history and is worth reading for exactly one thing — why a decision
 was made, and which alternative was already tried and rejected. It is not worth
 reading for a fact: every count and every path in it was true on its own date.
+
+### 6.0.1 — the landing's headroom, and a tie-break that compared two units
+
+`tileLayout`'s tie-break ranked candidates by `base`, which is not a size
+anything draws: the largest tile is `base * hi`, and `hi` belongs to the
+candidate, because each one carries whatever variation it could afford. So two
+candidates were compared in different units, and inside the half-pixel window
+the "fewer rows" rule could hand back the arrangement with the *smaller* drawn
+tile — the one thing the ordering says cannot happen. Comparing
+`Math.floor(base) * hi` instead: 2,532 viewports of a 1.67M sweep get a larger
+tile, none get a smaller one, none lose a fit.
+
+`verify-landing.mjs` gained a headroom line. It is a forecast, not a gate — a
+fourteenth scene failing to fit is not a defect in a thirteen-scene site — and
+it exists because `tileLayout.js` had been guessing in a comment since 4.11:
+"Twelve fit. Sixteen probably fit at a smaller tile. Twenty-four will not."
+Nobody could re-run that. The build now prints the real answer every time, and
+it found three cases a hand sweep had missed: at thirteen scenes the fourteenth
+costs nothing anywhere real, and costs tile size only at 2560x400 and
+3440x400/500 — windows wider than a desk and 400px tall.
+
+The stale counts in that file went with it. "All thirteen visible without
+scrolling" is now "every scene in the registry", because the count is `SCENES`
+and writing it down a second time is how it drifts.

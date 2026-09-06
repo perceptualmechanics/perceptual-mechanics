@@ -15,11 +15,15 @@ import { SCENES } from '../scenes/registry.js';
 // stops trying: it falls back to the phone layout, which scrolls, and that is
 // the honest answer rather than shrinking the tiles until they are decoration.
 //
-// **This is the scaling threshold, and it now announces itself.** Twelve fit.
-// Sixteen probably fit at a smaller tile. Twenty-four will not, and the moment
-// they do not is the moment `.rows-forced` stops going on — visible, measurable,
-// and not a judgement call. That is when the index has to become something
-// else, and `src/utils/sceneField.js` is shelved for exactly that.
+// **This is the scaling threshold, and it announces itself rather than being
+// estimated.** An earlier version of this comment guessed here — twelve fit,
+// sixteen probably, twenty-four not — and a guess in a comment is a number
+// nobody can re-run. `scripts/verify-landing.mjs` now sweeps the matrix at the
+// registry's count AND at one more, and prints what the next scene would cost,
+// so the release before the one that stops fitting is the release that says so.
+// The moment nothing fits is the moment `.rows-forced` stops going on: visible,
+// measurable, and not a judgement call. That is when the index has to become
+// something else, and `src/utils/sceneField.js` is shelved for exactly that.
 export const TILE_MAX = 272;
 // The floor is a legibility claim and so it is sourced rather than picked: the
 // phone layout has shipped 136px tiles at 320px since 4.9.1 and the previews
@@ -51,12 +55,14 @@ export const LIST_PAD = 32;      // its own padding, both axes (1rem each side)
 //   - the SMALLEST tile has to stay legible, so the floor is checked against
 //     `base * minScale` rather than against the base.
 //
-// Which is the whole change. Nothing about the requirement moves: all thirteen
-// visible without scrolling, at a size you can read. It is simply no longer the
-// same size for all thirteen. `scripts/verify-landing.mjs` sweeps a viewport
-// matrix and asserts it, because the last time this arithmetic was changed it
-// claimed a fit it did not have by 80 pixels, and a claim like that should not
-// be checkable only by opening a browser and squinting.
+// Which is the whole change. Nothing about the requirement moves: every scene
+// in the registry visible without scrolling, at a size you can read. It is
+// simply no longer the same size for all of them. The count is not written
+// down here — it is `SCENES` above, and `scripts/verify-landing.mjs` sweeps a
+// viewport matrix at whatever that is and asserts the requirement, because the
+// last time this arithmetic was changed it claimed a fit it did not have by 80
+// pixels, and a claim like that should not be checkable only by opening a
+// browser and squinting.
 const TILE_SCALES = Object.values(SCENES).map(s => s.tile ?? 1);
 const TILE_NUDGES = Object.values(SCENES).map(s => s.nudge ?? 0);
 export const MAX_TILE_SCALE = Math.max(...TILE_SCALES);
@@ -99,8 +105,8 @@ export function nudgeScale(base) {
 //
 // On a large screen `v` is 1 and the tiles range 0.90 to 1.12. On a 1024px
 // window it lands somewhere in between and the field is subtler. On a laptop
-// too small for thirteen legible tiles it is a uniform grid again, and then the
-// page gives up and scrolls, which it always did.
+// too small for the whole set at a legible size it is a uniform grid again,
+// and then the page gives up and scrolls, which it always did.
 const V_STEPS = 16;
 
 export function tileLayout(n, width, height) {
@@ -141,17 +147,37 @@ export function tileLayout(n, width, height) {
       // set in the eye at once. And variation last of all, which is what makes
       // it a luxury: it never buys a smaller tile.
       //
-      // `base` is kept as a raw float and floored only at the end. An earlier
-      // version stored Math.floor(base) and compared the next candidate's float
-      // against it, so 214.67 beat a stored 214 by "more than half a pixel" and
-      // every tie scored as an improvement — which is why the orphan rule
-      // appeared to do nothing.
+      // **What is compared is the tile the page draws, not `base`.** `base` is
+      // not a size anything has: the largest tile is `base * hi`, and `hi` is a
+      // property of the candidate, because each candidate carries whatever `v`
+      // it could afford. So comparing `base` across candidates compares two
+      // numbers measured in different units, and inside the half-pixel window
+      // the rows rule below could then hand the arrangement with the SMALLER
+      // drawn tile — which is the one thing this ordering says cannot happen.
+      // The quantity that decides is `Math.floor(base) * hi`, which is exactly
+      // what `tileScale` returns for the largest multiplier once `base` has been
+      // floored — the same pixels the browser lays out.
+      //
+      // Note that it is also the honest way to state the requirement, because
+      // `base * hi` reduces to `min(wBudget/cols, hBudget/rows, TILE_MAX)`: the
+      // drawn size of the biggest tile depends on the ARRANGEMENT alone, and `v`
+      // cannot buy or cost a pixel of it. Variation being free is arithmetic
+      // here rather than a promise, and `scripts/verify-landing.mjs` asserts the
+      // consequence against a uniform grid computed at the same viewport.
+      //
+      // `base` is still kept as a raw float and floored only at the end. An
+      // earlier version stored Math.floor(base) and compared the next
+      // candidate's float against it, so 214.67 beat a stored 214 by "more than
+      // half a pixel" and every tie scored as an improvement — which is why the
+      // orphan rule appeared to do nothing. Flooring BOTH sides, as `drawn`
+      // does, is the fix for that; flooring one of them was the bug.
       const orphan = n % cols === 1 && rows > 1;
-      const cand = { cols, rows, base, orphan, v };
+      const drawn = Math.floor(base) * hi;
+      const cand = { cols, rows, base, orphan, v, drawn };
       if (!best) { best = cand; break; }
       const better =
-        base > best.base + 0.5 ? true :
-        base < best.base - 0.5 ? false :
+        drawn > best.drawn + 0.5 ? true :
+        drawn < best.drawn - 0.5 ? false :
         best.orphan !== orphan ? !orphan :
         rows !== best.rows ? rows < best.rows :
         v > best.v;
