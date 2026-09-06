@@ -2335,3 +2335,31 @@ and could not be seen through the scrim, which is the same "renders" against
 **`BRIEF-quiz.md` is now Scott's actual brief** rather than Cowork's
 reconstruction of it. The reconstruction was written from a context that had
 already lost the brief's most important line, and it read as authoritative.
+
+### 6.3.0 — the verdict stands, and the way out is a citation
+
+ANSWER AGAIN is gone. It was the scene arguing with itself: *it cannot be
+refused*, followed by an invitation to refuse it. And the instrument is
+deterministic, so the button was either a lie or a loop — same answers, same
+phase. A visitor who wants to answer again leaves and comes back, and gets a
+fresh instrument because state does not persist. The scene does not offer it.
+
+In its place, a citation, deep-linked to the phase:
+
+    W. B. Yeats, A Vision (1937) · Neil Mann, yeatsvision.com
+
+Mann publishes a page per phase, so Phase Twenty links to `/Ph20.html`. It
+costs nothing and it is the courtesy owed — the whole structure of this scene
+is his organisation of the material. The `/text/` page carries the same link
+under each of the twenty-eight phase sections.
+
+Typographic and quiet, and the comment beside the rule says why: no border, no
+uppercase, no hover that lifts. Anything reading as a call to action becomes
+the new ANSWER AGAIN. It is a footnote — the line saying where the judgment
+came from, under the judgment — and it is the only forward path the scene
+offers. You have been told what you are; here is the man who decided it.
+
+The closing line now breaks after its first sentence rather than wrapping
+wherever the measure runs out. The first line is the statement, the second is
+the sentence on it, and a line break is the only thing that makes a reader
+pause between them.

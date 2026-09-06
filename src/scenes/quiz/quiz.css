@@ -186,14 +186,45 @@
   margin-top: 0.5rem;
 }
 .quiz-remaining { margin: 0; font-size: 0.78rem; color: rgba(255, 255, 255, 0.5); }
-.quiz-submit, .quiz-again {
+/* ─── The citation ─────────────────────────────────────────────────────────
+   Not a button, and the rule for this rule is that it must not become one.
+   No border, no uppercase, no letter-spacing that reads as a control, no
+   hover that lifts. It is a footnote: the line that tells you where the
+   judgment came from, sitting under the judgment.
+
+   The link inside it is the only forward path the scene offers, which is why
+   it is the last thing on the page and not framed by a sentence. */
+.quiz-cite {
+  margin: 0; max-width: 47rem;
+  text-transform: none; letter-spacing: 0.01em;
+  font-size: clamp(0.68rem, 1.3vw, 0.8rem); line-height: 1.5;
+  color: rgba(232, 228, 220, 0.62);
+}
+.quiz-cite cite { font-style: italic; }
+.quiz-cite a {
+  color: rgba(232, 228, 220, 0.62);
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+  text-decoration-color: rgba(232, 228, 220, 0.3);
+  transition: color 160ms ease, text-decoration-color 160ms ease;
+}
+.quiz-cite a:hover {
+  color: rgb(240, 236, 228);
+  text-decoration-color: rgba(226, 206, 150, 0.75);
+}
+.quiz-cite a:focus-visible {
+  outline: none; border-radius: 2px;
+  box-shadow: var(--focus-ring-outer, 0 0 0 2px #f0d68c, 0 0 0 5px rgba(0, 0, 0, 0.72));
+}
+
+.quiz-submit {
   font: inherit; font-size: 0.86rem; letter-spacing: 0.09em; text-transform: uppercase;
   padding: 0.55rem 1.3rem; cursor: pointer;
   background: transparent; color: rgba(240, 237, 230, 0.92);
   border: 1px solid rgba(255, 255, 255, 0.32); border-radius: 2px;
   transition: border-color 160ms ease, background-color 160ms ease;
 }
-.quiz-submit:hover, .quiz-again:hover { border-color: rgba(226, 206, 150, 0.8); background: rgba(226, 206, 150, 0.1); }
+.quiz-submit:hover { border-color: rgba(226, 206, 150, 0.8); background: rgba(226, 206, 150, 0.1); }
 .quiz-submit[disabled] { opacity: 0.4; cursor: not-allowed; }
 
 /* ─── The verdict ──────────────────────────────────────────────────────────
@@ -265,10 +296,9 @@
 .quiz-verdict-sheet dd { margin: 0; letter-spacing: 0.045em; color: rgba(242, 238, 230, 0.94); }
 .quiz-verdict-sheet dd b { font-weight: 600; color: rgb(246, 240, 224); }
 .quiz-verdict-close span { display: inline-block; }
-.quiz-again { margin-top: 0.1rem; }
 .quiz-verdict-close {
-  margin: 0 0 0.8rem; max-width: 47rem;
-  font-size: clamp(0.78rem, 1.9vw, 1.02rem); line-height: 1.42; letter-spacing: 0.1em;
+  margin: 0 0 1.5rem; max-width: 47rem;
+  font-size: clamp(0.78rem, 1.9vw, 1.02rem); line-height: 1.55; letter-spacing: 0.1em;
   color: rgba(226, 206, 150, 0.9);
 }
 

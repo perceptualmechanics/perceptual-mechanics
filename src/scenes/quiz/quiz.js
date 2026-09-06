@@ -149,7 +149,7 @@ export function createQuiz(container, { preview = false } = {}) {
   const vName = frag.querySelector('.quiz-verdict-name');
   const vSheet = frag.querySelector('.quiz-verdict-sheet');
   const vClose = frag.querySelector('.quiz-verdict-close');
-  const againBtn = frag.querySelector('.quiz-again');
+  const citeEl = frag.querySelector('.quiz-cite');
   const srLive = frag.querySelector('.quiz-sr-live');
 
   // The tile is the wheel and nothing else: a form at 170px would be a form
@@ -465,10 +465,25 @@ export function createQuiz(container, { preview = false } = {}) {
     if (result.displaced) {
       closers.push(`You came to rest at Phase ${roman[result.raw]}, where there is no human life. The wheel has set you down at the first phase that can hold one.`);
     }
+    // Broken after the first sentence rather than left to wrap wherever the
+    // measure runs out. The first line is the statement and the second is the
+    // sentence on it, and a line break is the only thing that makes a reader
+    // pause between them.
     closers.push(p.n === 22 || p.n === 8
-      ? 'You are at a phase of crisis. The wheel does not hold still here, and neither will you.'
-      : 'This is your place on the wheel. It was not chosen and it cannot be refused.');
-    vClose.innerHTML = closers.map(c => `<span>${escapeHtml(c)}</span>`).join('<br>');
+      ? ['You are at a phase of crisis.', 'The wheel does not hold still here, and neither will you.']
+      : ['This is your place on the wheel.', 'It was not chosen and it cannot be refused.']);
+    vClose.innerHTML = closers
+      .map(c => (Array.isArray(c) ? c : [c]).map(line => `<span>${escapeHtml(line)}</span>`).join('<br>'))
+      .join('<br>');
+
+    // Deep-linked to the phase, because Mann publishes a page per phase and
+    // this scene is built on his organisation of the material. It costs
+    // nothing and it is the courtesy owed. The phase the visitor is sent to is
+    // the one they were placed at, not the one the placement first landed on —
+    // there is no page for a phase nobody lives at.
+    citeEl.innerHTML = `W. B. Yeats, <cite>A Vision</cite> (1937)`
+      + ` &nbsp;·&nbsp; Neil Mann, `
+      + `<a href="https://www.yeatsvision.com/Ph${p.n}.html" target="_blank" rel="noopener noreferrer">yeatsvision.com</a>`;
 
     // One flat sentence for a screen reader, before the capitals arrive. The
     // sheet that follows is a real <dl> and reads correctly on its own; this
@@ -508,26 +523,9 @@ export function createQuiz(container, { preview = false } = {}) {
     if (reduced) { spin += 2.2; frame(); }
   }
 
-  function again() {
-    responses.clear();
-    itemList.querySelectorAll('input[type="radio"]').forEach(el => { el.checked = false; });
-    updateRemaining();
-    verdict.dataset.shown = 'false';
-    verdict.hidden = true;
-    form.hidden = false;
-    form.dataset.leaving = 'false';
-    hintEl?.removeAttribute('data-hidden');
-    scrimEls.forEach(el => { delete el.dataset.verdict; });
-    markN = null; whirlTarget = 0; revealed = false;
-    srLive.textContent = 'The form is blank again.';
-    form.scrollTop = 0;
-    form.querySelector('input')?.focus?.();
-  }
-
   if (!preview) {
     buildForm();
     form.addEventListener('submit', submit);
-    againBtn.addEventListener('click', again);
     vName.tabIndex = -1;
   }
 
@@ -571,7 +569,6 @@ export function createQuiz(container, { preview = false } = {}) {
       resize.dispose();
       reducedWatch.dispose();
       form?.removeEventListener('submit', submit);
-      againBtn?.removeEventListener('click', again);
       responses.clear();
       claim.restore();
       container.innerHTML = '';

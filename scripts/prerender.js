@@ -1088,7 +1088,11 @@ function buildQuiz() {
     ];
     if (p.who.length) rows.push(['Yeats names here', p.who.map(esc).join(', ')]);
     if (p.attributed.length) rows.push(['Placed here by others', p.attributed.map(esc).join(', ')]);
+    // Deep-linked to Mann's page for this phase — the same courtesy the scene
+    // pays at the end of a verdict, and the same reason: this page is built on
+    // his organisation of the material.
     return `<h3 id="phase-${p.n}">Phase ${p.n} — ${esc(p.will)}</h3>
+<p class="src"><a href="https://www.yeatsvision.com/Ph${p.n}.html" rel="noopener noreferrer">yeatsvision.com/Ph${p.n}</a></p>
 ${habitable ? '' : '<p><em>Not an incarnation. There is no human life at the full or at the dark, and the scene cannot place anyone here.</em></p>\n'}<dl>
 ${rows.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${v}</dd>`).join('\n')}
 </dl>`;
