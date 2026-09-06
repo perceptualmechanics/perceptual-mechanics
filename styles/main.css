@@ -8,18 +8,17 @@
    0.6s fade-in transition, then gets permanently covered once the overlay
    reaches full opacity. The fix is always the same: give it z-index ≥ 310.
      9999  .skip-link            (focus-only, must beat everything)
-     9000  .colophon-backdrop / .colophon-panel (a true modal dialog, not
-           scoped to any one scene — sits above the nav on purpose. Written
-           here as #ids until 4.0, which was simply wrong: colophon.css
-           styles both by class, per that file's own "classes for styling,
-           ids reserved for real DOM uniqueness or an ARIA idref" note, and
-           the only id in the whole component is #colophon-title.)
+     9500  #noscript-fallback    (the page with no JS at all)
       500  #pm-nav (and #fullscreen-toggle, which is inside it as of 4.9.0
            and so has no z-index of its own any more)
       400  #site-title
+      320  .pm-jumplist          (body-level, so it needs to clear the
+           overlay itself rather than sit inside it — see its own comment)
       310  body-level scene overlays (title/hint/caption elements a scene
            appends to document.body — MUST be ≥310, see above)
       300  #experience-overlay
+       60  #landing-textlink     (over the fade below it)
+       50  #landing-bottom-fade
        60  #colophon-mark        (the hare button, fixed within #landing —
            #landing is display:none while a scene is open, per main.js, so
            this needs no visibility logic of its own; z-index only has to
@@ -27,7 +26,11 @@
    Anything else (in-container panels, vignettes, grain overlays, etc.) is
    scoped inside its own scene's #experience-container and uses small
    single/double-digit z-indices relative to THAT container's own stacking
-   context — those never need to clear 300, only each other. */
+   context — those never need to clear 300, only each other.
+
+   This table lists what is in THIS file. colophon.css owns its own modal
+   pair and states their values there; a row for them here was a fourth copy
+   of a number nobody was reconciling, and it had drifted. */
 
 /* ─── Self-hosted fonts (2026-08-31) ────────────────────────────────────────── */
 /* Replaces the Google Fonts CDN <link> that used to live in index.html's
@@ -1088,8 +1091,8 @@ html, body {
 	   #landing-textlink already change behaviour, so the phone layout now ends
 	   at one width instead of two.
 
-	   .preview-row-break turns itself off below 1200px (see its own comment),
-	   so this is ordinary auto-wrapping flex-wrap until then. */
+	   .preview-row-break only exists from 769px up (see its own comment), so
+	   this is ordinary auto-wrapping flex-wrap below that. */
 	@media (min-width: 601px) {
 		padding: 1rem;
 	}
@@ -1105,13 +1108,16 @@ html, body {
    100%-wide flex item pushes everything after it onto a new line — the
    standard CSS technique for an explicit break inside a wrapping flex
    row. `aria-hidden` and no content: it carries no information, it's
-   layout-only. Turned off below 1200px (falls back to ordinary flex-wrap)
-   since five 240px tiles plus four gaps no longer reliably fits a
-   narrower browser — a deliberate 5-and-5 split is only worth enforcing
-   where it can actually render as one, not forced at a width where it'd
-   just look cramped or start wrapping unevenly again anyway. Moved from
-   after the 4th tile (was 4-and-5) to after the 5th (2026-08-24, Outside
-   brought the count to ten, an even split). */
+   layout-only. Turned on at the min-width:769px tier and absent below it,
+   where the page falls back to ordinary flex-wrap — an explicit split is
+   only worth enforcing at a width where it can actually render as one.
+
+   The width in this paragraph used to be 1200px, which is not a breakpoint
+   this file has; the rule keys off 769. The rest of it described a
+   ten-scene, 5-and-5 page and a 240px tile, none of which survives — tiles
+   are sized by tileLayout.js now and the count is whatever the registry
+   holds. Where the breaks fall is the markup's business (index.html), not
+   this rule's. */
 .preview-row-break {
   flex-basis: 100%;
   width: 0;
@@ -1170,8 +1176,11 @@ html, body {
 .pm-panel-close:focus-visible { color: rgba(255, 255, 255, 0.9); }
 
 /* ─── Bottom vignette (mobile column stack) ─────────────────────────────────
-   Added 2026-08-03. Below 480px #scene-previews switches to
-   flex-direction:column (see the 480px rule further down) and the resulting
+   Added 2026-08-03. #scene-previews is flex-direction:row at every width —
+   it has never had a column tier, and the "480px rule further down" this
+   used to send readers to does not exist either; the file's real
+   breakpoints are 481, 601 and 769. What is true is that the narrowest tier
+   wraps to a single column of tiles because only one fits, and the
    column runs taller than the viewport, scrolling inside #landing. #site-
    title is position:fixed, so it doesn't scroll with it — at nearly every
    scroll position except full-top and full-rest-at-bottom, whatever tile
@@ -1181,7 +1190,7 @@ html, body {
    that edge to black before it reaches the words, sitting above the plain
    in-flow tiles but below the fixed text (z-index scale at the top of this
    file). pointer-events:none so it never blocks a tap on a tile poking up
-   into it. Hidden above 480px on purpose — at those widths the grid only
+   into it. Hidden above 481px on purpose — at those widths the grid only
    ever wraps 1-2 rows, and #landing's own padding-bottom already keeps the
    last row clear of the fixed footer, so there's nothing for this to fix
    there. #landing-textlink shares this band deliberately as of 4.0 — it

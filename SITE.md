@@ -147,7 +147,9 @@ and not only its width. At 1440×820 six columns in two rows gives a 214px tile;
 at 1160×800 four columns in three rows gives 181px, which beats two rows there.
 Neither number was chosen.
 
-**The floor is 168px**, and it is a legibility claim rather than a taste one:
+**The floor is `TILE_FLOOR` in `src/utils/tileLayout.js`** — 152px at the time
+of writing, and stated there rather than here so there is one place to change
+it. It is a legibility claim rather than a taste one:
 the phone layout has shipped 136px tiles since 4.9.1 and the previews are
 recognisable at that size, and a desktop is viewed from further away than a
 phone.

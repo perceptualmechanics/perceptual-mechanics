@@ -175,7 +175,7 @@ try.
 
 ## The shared lesson these all point at
 
-Four separate mechanisms, one shape:
+8 separate mechanisms, one shape:
 
 - `verify-links` passed because the same rename corrupted both sides —
   **corrupt compared against corrupt.**

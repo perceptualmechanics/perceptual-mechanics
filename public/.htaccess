@@ -53,7 +53,7 @@ RewriteRule ^text/(.*/)?index\.html$ /text/%1 [L,R=301]
 # max-age=2592000 (30 days, measured in production, no `immutable`). This is
 # load-bearing rather than cosmetic: vite.config.js's
 # `manualChunks: { three: ['three'] }` exists so a returning visitor keeps
-# their cached ~565kB copy of three.js across deploys that don't touch it,
+# their cached copy of three.js across deploys that don't touch it,
 # and that reasoning only pays off if a cache header actually tells the
 # browser to keep it.
 #
@@ -222,10 +222,11 @@ RewriteRule ^text/(.*/)?index\.html$ /text/%1 [L,R=301]
 # response where HSTS matters most: the plain-http request that gets
 # redirected is the one a future visitor should never have to make again.
 #
-# HSTS starts at 300 seconds ON PURPOSE and is meant to be ramped. Confirm
-# nothing on the domain breaks over https-only, then raise it to 31536000
-# (one year) — that ramp is the whole reason for the small number, so
-# leaving it at 300 forever would be its own kind of failure. Two things are
+# HSTS started at 300 seconds on purpose and was RAMPED on 2026-09-02, on
+# evidence — see the header block's own note further down. It has sent
+# max-age=31536000 since. This paragraph described the pre-ramp state in the
+# present tense for four days afterwards, which is the failure this file's
+# neighbour warns about. Two things are
 # deliberately absent and should stay absent unless someone re-derives the
 # decision: `preload`, because submitting to the preload list is effectively
 # irreversible and bakes the policy into browser binaries; and

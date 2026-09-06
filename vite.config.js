@@ -327,7 +327,7 @@ export default defineConfig({
     // dynamic import() in main.js's SCENES registry (see its own header
     // comment there), each landing in its own sub-500kB chunk. The one
     // chunk left that legitimately exceeds the default 500kB warning is
-    // three.js's own vendor chunk below (~565kB) — a real, understood,
+    // three.js's own vendor chunk below (the build prints its size) — a real, understood,
     // irreducible cost (it's one third-party library, not our code, and
     // splitting scenes further can't shrink it), not the "every scene's
     // code bundled together" problem this warning used to be flagging.
@@ -371,7 +371,7 @@ export default defineConfig({
         // correctly deduplicating it here rather than duplicating it
         // per dynamic-import chunk), and every deploy would invalidate a
         // returning visitor's cached copy of three.js too, forcing a
-        // full ~565kB re-download for a one-line CSS tweak. This chunk
+        // full re-download of the three.js chunk for a one-line CSS tweak. This chunk
         // keeps its own cache hit across deploys that don't touch
         // three.js itself.
         // Vite 8 swapped Rollup for Rolldown, which takes manualChunks only

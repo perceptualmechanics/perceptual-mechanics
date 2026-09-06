@@ -123,7 +123,10 @@ So: when a build or a gate run needs to happen on the assistant's side, it
 happens in a **separate working copy** in the assistant's own container, with
 its own `npm ci`. The tracked tree is about 3.5 MB (`assets/` and `artifacts/`
 are ignored personal files and the build doesn't read them) and it builds and
-passes all four gates in about a second.
+passes every gate in the build. There are seven of them and they are not
+free — `npx vite build` runs them all; running them standalone takes a few
+seconds, most of it verify-counts walking the tree. Do not quote a duration
+here: it is a number that changes with the corpus and nothing re-derives it.
 
 **That copy has no `.git`, deliberately, and this is the second version of this
 rule.** The first said to use a clone and to move work with `git format-patch` /
@@ -387,9 +390,24 @@ Y-axis/both-axis equivalent) for this. This was a real, shipped bug: see
 [[feedback_no_transform_centering_use_flexbox]] in project memory —
 letter-spacing adds a trailing gap after the last character, which a
 self-width-measuring `transform` centers along with the invisible gap,
-visibly off-centering tracked-out titles. Flexbox centers by margin box
-without ever needing to know the element's own width, which sidesteps
-the whole problem. Fixed site-wide in v3.9.13/v3.9.14.
+visibly off-centering tracked-out titles.
+
+**Flexbox does not fix that, and this passage used to say it did.** Flexbox
+centers the MARGIN BOX, and the margin box still contains the trailing gap —
+so on its own it lands exactly where the `transform` did. What cancels the gap
+is `margin-right: calc(-1 * var(--tracking))`, which every tracked-out title
+here also carries, and which is doing all of that work. Measured by removing
+only the margin and leaving the flex centering untouched: Apollo's title moved
+from 1.5px off centre to 7.0px, half its 10.24px tracking. `#site-title`'s own
+comment has always described this correctly; this section credited the wrong
+mechanism, which is the dangerous direction — someone applying the standard to
+a new title would use flexbox, skip the margin, and be five pixels out with a
+document telling them they were fine.
+
+What flexbox IS for here is the other half: it centers without needing to know
+the element's own width, so there is no self-measurement to get wrong and no
+subpixel rounding of a width that changes with the font. Use both. Fixed
+site-wide in v3.9.13/v3.9.14; the margin half predates it.
 
 `left`/`top` + `transform: translate(...)` is still the *correct* tool —
 not a legacy leftover — for two different jobs:
@@ -554,7 +572,7 @@ in two ways that do not show up in a diff:
 So `CORPUS_SOURCES` names, per scene, the one export carrying the order and the
 fields carrying the writing. It is a decision, it is short enough to argue with,
 and its exclusions are stated: Library is excerpts only because a cataloguing
-note is apparatus rather than writing, and two scenes are absent because they
+note is apparatus rather than writing, and several scenes are absent because they
 publish no sentences.
 
 **The module has no DOM, because the build imports it too.** `prerender.js`
