@@ -1278,7 +1278,7 @@ export function createPsyshell(container, { preview = false } = {}) {
     placeOrdinal(titleBox);
   }
 
-  // The ordinal ("3 / 3,268" — the corpus size, see FILAPIXEL_COUNT, which
+  // The ordinal ("3 / 3,264" — the corpus size, see FILAPIXEL_COUNT, which
   // is what this actually reads; the literal here is an example only; this
   // example read "3 / 108" from a corpus two releases old) sits bottom-right
   // and is lifted only if it would

@@ -20,6 +20,20 @@ import './quiz.css';
 // itself is a quiz in a magazine, and Yeats did not think he was writing one.
 // The visitor is trusted to know what century they are in.
 //
+// ─── NOTHING SIGNALS WHAT IS COMING ────────────────────────────────────────
+// The hardest rule here and the one that broke first. Until the form is
+// submitted, no part of this scene may name Yeats, the Wheel, the phases, or
+// the number twenty-eight — not the preamble, not the items, not the hint, not
+// the registry blurb that becomes the tile's aria-label, and not the picture.
+// The first build spent all of it in a four-line preamble and then a second
+// gyre and a rim of twenty-eight marks turned behind the questions.
+//
+// Every one of those was written by somebody who already knew the ending and
+// was enjoying it, which is the failure mode this rule exists for. The checks
+// are in three places because there are three ways to leak: quiz.text.js's
+// PREAMBLE and ITEMS comments, `revealed` below for the picture, and
+// registry.js's entry for the landing page.
+//
 // ─── The two halves, and the join between them ─────────────────────────────
 // Answering is quiet. Plain column, plain type, the wheel turning behind a
 // scrim, nothing shouting. Then the form goes, the gyres come off their leash
@@ -205,6 +219,21 @@ export function createQuiz(container, { preview = false } = {}) {
   let spin = 0, whirl = 0, whirlTarget = 0, whirlV = 0;
   let markN = null;            // the phase to light, once there is one
   let markPulse = 0;
+  // **Nothing on screen may name the ending before the ending.** Two
+  // interpenetrating cones ARE the diagram in `A Vision`, and a rim of exactly
+  // twenty-eight marks is the answer with the working shown — a visitor who
+  // would recognise either has been told what this is while they are still on
+  // question three, which is the one thing the scene cannot afford. So while
+  // the form is up there is ONE gyre and no rim: a turning form, unreadable as
+  // anything in particular. The second cone and the twenty-eight arrive with
+  // the whirl, which is the moment the piece stops pretending.
+  //
+  // In the preview tile `revealed` starts true, and that is not an
+  // inconsistency: a tile is the scene's face on the landing page, the way
+  // every other tile is, and a visitor looking at it has not started anything
+  // to be spoiled. What must not leak is anything a person sees while
+  // ANSWERING.
+  let revealed = preview;
 
   const clock = createFrameClock();
 
@@ -295,8 +324,10 @@ export function createQuiz(container, { preview = false } = {}) {
     // 'lighter'. The whirl is the one moment this scene raises its voice.
     const a = 0.30 + whirl * 1.05;
     drawGyre(gyrePoints(spin, 1), t, scale, cx, cyy, `rgba(196,206,232,${a})`);
-    drawGyre(gyrePoints(spin, -1), t, scale, cx, cyy, `rgba(226,196,150,${a})`);
-    drawWheel(t, scale, cx, cyy, 0.22 + whirl * 0.5);
+    if (revealed) {
+      drawGyre(gyrePoints(spin, -1), t, scale, cx, cyy, `rgba(226,196,150,${a})`);
+      drawWheel(t, scale, cx, cyy, 0.22 + whirl * 0.5);
+    }
 
     ctx.globalCompositeOperation = 'source-over';
     if (!reduced) animId = requestAnimationFrame(frame);
@@ -366,6 +397,7 @@ export function createQuiz(container, { preview = false } = {}) {
     renderVerdict(result);
     markN = result.n;
     markPulse = 1;
+    revealed = true;
 
     form.dataset.leaving = 'true';
     hintEl?.setAttribute('data-hidden', 'true');
@@ -398,7 +430,7 @@ export function createQuiz(container, { preview = false } = {}) {
     form.dataset.leaving = 'false';
     hintEl?.removeAttribute('data-hidden');
     scrimEls.forEach(el => { delete el.dataset.verdict; });
-    markN = null; whirlTarget = 0;
+    markN = null; whirlTarget = 0; revealed = false;
     srLive.textContent = 'The form is blank again.';
     form.scrollTop = 0;
     form.querySelector('input')?.focus?.();

@@ -331,14 +331,13 @@
       </svg>
     </button>
 
-    <!-- Quiz — the Wheel, and the double gyre inside it. Two shapes, which is
-         the budget at the 23.4px each icon gets once there are fourteen of
-         them at 320px: a circle for the wheel of the twenty-eight, and a
-         bowtie for the two interpenetrating cones seen from the side, which is
-         how Yeats draws them and how the scene draws them. Twenty-eight ticks
-         on the rim is what this icon wants and cannot have — at this size they
-         are a grey ring, and a grey ring is the shape of nothing. -->
-    <button type="button" class="nav-icon" data-scene="quiz" aria-label="Quiz — The Wheel Of The Twenty-Eight" title="Quiz — The Wheel Of The Twenty-Eight">
+    <!-- Quiz. Two shapes, which is the budget at the 23.4px each icon gets once
+         there are fourteen of them at 320px: a circle and a bowtie inside it.
+         It is not labelled as what it is, and at this size it reads as a mark
+         rather than as a diagram — which is the right side of the scene's rule
+         about not signalling what is coming (see quiz.js). Twenty-eight ticks
+         on the rim would be both the tell and, at this size, a grey ring. -->
+    <button type="button" class="nav-icon" data-scene="quiz" aria-label="Quiz — Sixteen Questions, And Then A Judgment" title="Quiz — Sixteen Questions, And Then A Judgment">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
         <circle cx="12" cy="12" r="8.6"/>
         <path d="M6.9 6.9 17.1 6.9 6.9 17.1 17.1 17.1Z"/>
@@ -548,15 +547,18 @@
         </button>
       </li>
 
-      <!-- Quiz. The tile shows the wheel and the two gyres turning and NOT the
-           form: sixteen questions rendered at 170px is sixteen questions
-           nobody can read, and a preview that shows unreadable text advertises
-           the scene as unreadable. What the tile carries is the object the
-           scene is about. -->
+      <!-- Quiz. The tile turns rather than showing the form: sixteen questions
+           rendered at 170px is sixteen questions nobody can read, and a preview
+           of unreadable text advertises the scene as unreadable.
+
+           The label here does NOT name what the scene turns out to be — see
+           registry.js's entry for why, and quiz.js for the rule. The three
+           descriptions have to agree (verify-aria checks it), so all three
+           withhold the same thing. -->
       <li class="preview-wrapper" data-scene="quiz">
         <button type="button" class="preview-container" id="preview-quiz"
-             title="Quiz — The Wheel Of The Twenty-Eight"
-             aria-label="Quiz — W. B. Yeats held that every soul is born at one of twenty-eight phases of the moon, and that the phase decides what you want, what you can make, and what will be done to you regardless. Two turning gyres, sixteen questions, and a verdict. Press Enter to expand.">
+             title="Quiz — Sixteen Questions, And Then A Judgment"
+             aria-label="Quiz — a short questionnaire of the ordinary kind, and then a verdict about you delivered at some volume by a system that did not ask, does not hedge, and is not taking questions. Press Enter to expand.">
         </button>
       </li>
 

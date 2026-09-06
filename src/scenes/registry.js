@@ -196,15 +196,25 @@ export const SCENES = {
   // already reported that scene 14 costs nothing at any real viewport; adding
   // it inside the range is what keeps that report true of THIS scene.
   //
-  // The label says "where you are on it" rather than naming a phase, because
-  // the scene does not have one until somebody answers. An ariaLabel that
-  // named a phase would be describing one visitor's result as though it were
-  // the scene.
+  // **These three strings are the landing page's copy of the leak.** The first
+  // version of them named Yeats, named the twenty-eight phases and named the
+  // Wheel — on the tile's aria-label, which a screen-reader visitor hears
+  // BEFORE they open the scene, and in the overlay, which everyone reads
+  // before they answer anything. The scene's own rule is that nothing signals
+  // what is coming (see quiz.js), and a rule that stops at the scene boundary
+  // is not a rule.
+  //
+  // So they describe the shape and withhold the subject: sixteen questions, a
+  // verdict, and a promise about the tone of it. That is an honest account of
+  // what the scene is — it is not a coy one, and it is not less informative
+  // than the others here. A visitor who wants the material before the
+  // experience has `/text/quiz/`, which carries the whole Wheel, because a
+  // reader who has chosen the reference over the piece has chosen.
   quiz:      { tile: 1.04, nudge: 0.02,
                exportName: 'createQuiz',
-               label: 'Quiz — the wheel of the twenty-eight, and where you are on it.',
-               blurb: 'Quiz — W. B. Yeats held that every soul is born at one of twenty-eight phases of the moon, and that the phase decides what you want, what you can make, and what will be done to you regardless. Two turning gyres, sixteen questions, and a verdict.',
-               controls: 'Answer all sixteen and press the button. The gyres take the frame and the wheel tells you your phase, your Quarter, and all four of your Faculties.' },
+               label: 'Quiz — sixteen questions, and then a judgment.',
+               blurb: 'Quiz — a short questionnaire of the ordinary kind, and then a verdict about you delivered at some volume by a system that did not ask, does not hedge, and is not taking questions.',
+               controls: 'Answer all sixteen and press the button. Everything after that happens on its own.' },
 
 };
 

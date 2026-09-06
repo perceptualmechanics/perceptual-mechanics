@@ -114,6 +114,19 @@
   transition: opacity 520ms ease, transform 520ms ease;
 }
 .quiz-form[data-leaving='true'] { opacity: 0; transform: translateY(-1.5rem); pointer-events: none; }
+/* The site's scene title is `position: fixed` in a band at the bottom, so a
+   full-height scrolling column runs underneath it at every scroll position —
+   not only at the ends, which is what the padding covers. Question four sat
+   across "PERCEPTUAL MECHANICS" and both were unreadable. A mask fades the
+   column out before it reaches the band, which fixes the collision and also
+   says there is more below, which a hard edge does not. */
+.quiz-form {
+  /* Gone by 4rem from the bottom, not merely dimmer there: the scene title's
+     own block sits at --title-block-bottom (4.5rem), so anything still legible
+     below that crosses it. */
+  -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 9rem), transparent calc(100% - 4rem));
+          mask-image: linear-gradient(to bottom, #000 calc(100% - 9rem), transparent calc(100% - 4rem));
+}
 
 .quiz-preamble {
   max-width: 34rem; margin: 0 0 2rem;

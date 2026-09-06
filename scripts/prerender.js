@@ -1125,7 +1125,7 @@ ${PHASES.map(phaseSection).join('\n\n')}
     description: 'Yeats’s Wheel of the twenty-eight incarnations — every phase, every Faculty, and the sixteen questions that place you on it.',
     sceneKey: 'quiz', sceneName: 'Quiz',
     lede: `<p><strong>Quiz</strong> asks sixteen questions and then tells you which of Yeats’s twenty-eight phases of the moon you were born at, what your Quarter and element are, and what all four of your Faculties will be.</p>
-<p>This page is the whole Wheel rather than one result: every phase, with its Faculties resolved, and the questions written out.</p>`,
+<p>This page is the whole Wheel rather than one result: every phase, with its Faculties resolved, and the questions written out. <em>The scene withholds all of it until you have answered — if you would rather meet it there, go there first.</em></p>`,
     bodyHtml: body,
     jsonLd: creativeWork('Quiz', 'Yeats’s Wheel of the twenty-eight incarnations: every phase, every Faculty, and the sixteen questions that place a reader on it.', 'quiz'),
   };

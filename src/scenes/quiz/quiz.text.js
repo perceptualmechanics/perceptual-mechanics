@@ -258,14 +258,26 @@ export const PHASE_BY_N = Object.fromEntries(PHASES.map(p => [p.n, p]));
 
 
 // ─── What the visitor is told before they start ─────────────────────────────
+// **Nothing.** This is the load-bearing constraint of the whole scene and the
+// first thing that broke: the first version of this paragraph named Yeats,
+// named the twenty-eight phases, named the Wheel, and mentioned that two of
+// them could not be yours. Every one of those is the ending. A visitor who
+// reads that answers sixteen questions knowing what shape the answer will be,
+// and the verdict lands on ground already prepared for it.
+//
+// So the preamble says what a questionnaire says: how long, and answer
+// honestly. No author, no system, no wheel, no phases, no count of anything
+// but the questions. The scene is a personality quiz until the moment it is
+// not, and it has to be a convincing one.
+//
 // Here rather than in quiz.html for two reasons. The /text/ page needs it —
-// that page is the scene for anybody without JavaScript, and a form with no
-// preamble is a form with no subject. And `src/utils/corpus.js` reads it: these
-// are sentences this site publishes, so they are sentences the Psyshell holds,
-// and text that lives only in a markup file is text the lens cannot see.
+// that page is the scene for anybody without JavaScript. And
+// `src/utils/corpus.js` reads it: these are sentences this site publishes, so
+// they are sentences the Psyshell holds, and text that lives only in a markup
+// file is text the lens cannot see.
 export const PREAMBLE = [
-  'W. B. Yeats held that every soul is born at one of twenty-eight phases of the moon, and that the phase decides the shape of a life: what you want, what you can make, and what will be done to you regardless.',
-  'These sixteen questions place you on his Wheel. There is no human life at the full or at the dark, so two of the phases cannot be yours.',
+  'Sixteen questions. It takes about three minutes.',
+  'Answer honestly rather than carefully. There are no better or worse answers here.',
 ];
 
 // ─── The instrument ─────────────────────────────────────────────────────────
@@ -283,9 +295,14 @@ export const PREAMBLE = [
 // evenly, and `scripts/quiz-wheel.mjs` asserts the split rather than trusting
 // this paragraph.
 //
-// The prose is written for this scene. Yeats's designations are quoted in the
-// verdict because they are the system's own vocabulary; the questions are not
-// his and do not pretend to be.
+// **The items are deliberately flat, and flatness is a requirement rather than
+// a limit on the writing.** The first set read like the scene: "What I want
+// most, I had to invent. It was not waiting for me." That is a good sentence
+// and it is a tell — nobody writes that on a personality quiz, so a reader
+// with an ear knows something is coming before question two, and the ending is
+// spent. Every item here is meant to be indistinguishable from a magazine
+// instrument. If a line in this list starts sounding like Yeats, or like this
+// site, it is wrong however well it reads.
 export const SCALES = {
   // + is antithetical (the self it makes), - is primary (the world it is given)
   tincture: { key: 'tincture', pole: '+antithetical / -primary' },
@@ -294,24 +311,23 @@ export const SCALES = {
 };
 
 export const ITEMS = [
-  { id: 1,  scale: 'tincture', key:  1, text: 'What I want most, I had to invent. It was not waiting for me.' },
-  { id: 2,  scale: 'half',     key:  1, text: 'I am still finding out what I am capable of.' },
-  { id: 3,  scale: 'tincture', key: -1, text: 'The best parts of my life arrived through circumstance rather than through anything I chose.' },
-  { id: 4,  scale: 'half',     key: -1, text: 'I have already been the thing I was going to be. Now I am spending it.' },
-  { id: 5,  scale: 'tincture', key:  1, text: 'I would rather be exact and difficult than agreeable.' },
-  { id: 6,  scale: 'half',     key:  1, text: 'I take the harder of two options fairly often, largely to find out whether I can.' },
-  { id: 7,  scale: 'tincture', key: -1, text: 'I take my measure from the people around me, and that seems right to me.' },
-  { id: 8,  scale: 'half',     key: -1, text: 'I choose work by how much it is needed, not by how much it costs me.' },
-  { id: 9,  scale: 'tincture', key:  1, text: 'There is a version of myself I am deliberately building, and I know what it looks like.' },
-  { id: 10, scale: 'half',     key:  1, text: 'My appetites have grown larger with age, not smaller.' },
-  { id: 11, scale: 'tincture', key: -1, text: 'I trust what everyone can see over what only I can see.' },
-  { id: 12, scale: 'half',     key: -1, text: 'More and more of what I do is for people who will never know I did it.' },
-  { id: 13, scale: 'tincture', key:  1, text: 'I care more about the shape of a thing than about what it is for.' },
-  { id: 14, scale: 'half',     key:  1, text: 'I am still gathering. I have not begun to spend.' },
-  { id: 15, scale: 'tincture', key: -1, text: 'Being useful matters to me more than being unlike anybody else.' },
-  { id: 16, scale: 'half',     key: -1, text: 'I am giving things away faster than I take them in.' },
+  { id: 1,  scale: 'tincture', key:  1, text: 'I would rather do something my own way than the way it is usually done.' },
+  { id: 2,  scale: 'half',     key:  1, text: 'I am still finding out what I am good at.' },
+  { id: 3,  scale: 'tincture', key: -1, text: 'Most of the good things in my life came about by circumstance rather than by planning.' },
+  { id: 4,  scale: 'half',     key: -1, text: 'I would rather be good at what I already do than start something I would be bad at.' },
+  { id: 5,  scale: 'tincture', key:  1, text: 'I would rather be right than agreeable.' },
+  { id: 6,  scale: 'half',     key:  1, text: 'I take on tasks that are harder than the ones I have done before.' },
+  { id: 7,  scale: 'tincture', key: -1, text: 'I check my opinions against what the people around me think.' },
+  { id: 8,  scale: 'half',     key: -1, text: 'I choose work by how much it is needed rather than by how interesting it is.' },
+  { id: 9,  scale: 'tincture', key:  1, text: 'I have a clear picture of the kind of person I am trying to become.' },
+  { id: 10, scale: 'half',     key:  1, text: 'I want more from the next ten years than I wanted from the last ten.' },
+  { id: 11, scale: 'tincture', key: -1, text: 'I trust general agreement more than my own impression.' },
+  { id: 12, scale: 'half',     key: -1, text: 'A lot of what I do now is for other people rather than for myself.' },
+  { id: 13, scale: 'tincture', key:  1, text: 'I care more about how a job is done than about what it is for.' },
+  { id: 14, scale: 'half',     key:  1, text: 'I am building things up rather than winding things down.' },
+  { id: 15, scale: 'tincture', key: -1, text: 'Being useful matters more to me than being different from other people.' },
+  { id: 16, scale: 'half',     key: -1, text: 'I am letting go of more than I am taking on.' },
 ];
-
 // Five points and a real middle. A forced four-point scale would remove the
 // exact centre from the SCALE and not from the RESULT — the sums can still
 // land on zero — so it would buy nothing except the pretence that nobody is

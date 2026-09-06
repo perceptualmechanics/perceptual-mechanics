@@ -2239,3 +2239,41 @@ The eighth gate is `verify-quiz-wheel`. The headroom line now forecasts a
 FIFTEENTH scene, and it says one would start costing tile size at 1440x500 and
 several other real viewports — which is the release before the release that
 would have found out the hard way.
+
+### 6.1.1 — Quiz spent its own ending, in four places
+
+The brief for this scene says *nothing signals what is coming* and *no
+self-awareness anywhere*. 6.1.0 broke that rule four times before question one,
+and the build and the review both passed it:
+
+  * the preamble named Yeats, named the twenty-eight phases, named the Wheel,
+    and said two of them could not be yours;
+  * the items read as this site's prose — "What I want most, I had to invent.
+    It was not waiting for me." is a good sentence and a tell, because nobody
+    writes that on a personality quiz;
+  * `registry.js` repeated the whole premise, which is the landing tile's
+    aria-label, so a screen-reader visitor got the ending before opening the
+    scene;
+  * two interpenetrating cones and a rim of exactly twenty-eight marks turned
+    behind the questions, which is the diagram in `A Vision` with the working
+    shown.
+
+Fixed: the preamble says how long it takes and to answer honestly; every item
+is survey-flat and is meant to stay that way; the registry entry describes the
+shape and withholds the subject; and the second gyre and the rim are held
+behind a `revealed` flag until submit. The tile keeps both gyres, because a
+tile is the scene's face and a visitor looking at one has not started anything.
+
+Rewriting the items moved the corpus, 3,268 to 3,264.
+
+**`WORKING-PROTOCOL.md` gains rule 7, Scott's:** re-read the governing brief
+before assessing a build, item by item, and do it before praise as well as
+before criticism. Two things underneath it are Cowork's and worse than the rule
+assumes. A brief that lives only in chat has no path, so "consult the brief"
+has no object — `BRIEF-quiz.md` is the first one written to the repo, after the
+fact, which is the wrong order. And this session was compacted partway through:
+the summary that replaced the transcript kept the brief's structural
+requirements and dropped *nothing signals what is coming* entirely, with no
+marker where it had been. At build time the sentence was not available to be
+consulted. Not overlooked — absent. Which means the rule cannot be satisfied by
+either instance recalling a conversation, and the enforcement has to be a file.

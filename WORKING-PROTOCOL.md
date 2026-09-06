@@ -128,6 +128,83 @@ says which one it went to.**
 
 ---
 
+### 7. Read the spec before evaluating the build
+
+*Scott, 6 September 2026. Reproduced as written.*
+
+The chat instance evaluates against its own taste unless explicitly pointed at
+the spec — and the spec is often something it wrote and forgot.
+
+Demonstrated, 6 September 2026. The Quiz brief states, in its own words,
+*nothing signals what is coming* and *no self-awareness anywhere*. The first
+build opened with a header naming Yeats, the twenty-eight phases, the Wheel,
+and the fact that two phases cannot be yours. The reveal was spent before
+question one. The chat instance read it and called it good.
+
+The brief was four hours old, in the same conversation, and would have been
+quoted if asked for. It just was not consulted.
+
+**The mechanism, stated plainly.** Nothing in the chat instance's process
+retrieves prior constraints before assessing new work. A message arrives, an
+artifact is visible, an assessment is generated. The brief is available and
+does not get fetched, because nothing prompts the fetch.
+
+Which is the same failure as asserting numbers from documents rather than
+citing them — a retrieval discipline problem, not a memory problem.
+
+**The assumption this invalidates.** The chat instance is not a system of
+record, and should not be relied on as one. It generates from what is salient
+in a long context, and salient is not authoritative. The most recent, most
+vivid, or most emotionally weighted material wins over the thing that is true.
+
+This is why the documentation drifted far enough to need two full audit passes.
+Neither instance was maintaining documentation as a practice. Both were
+producing text that looked like documentation and treating the production as
+the maintenance.
+
+**The rule.** Before assessing any build, screenshot, or report: re-read the
+governing brief and check the artifact against it, item by item. Praise and
+criticism both come after that step, not instead of it.
+
+And the same applies to images. The chat instance reads screenshots as current
+state. Twice this week it called audit findings "the nastiest" when both were
+already closed, and once called a scene static from a still frame when it was
+moving. Ask rather than infer.
+
+**The honest limit.** A rule the chat instance has to remember to follow is
+weaker than one Scott enforces by pasting the brief back at it. The knowledge
+base works because `CORRECTED-FACTS.md` says read this first. Nothing said read
+the brief before evaluating the build — that gap is now closed, and the
+enforcement is still external.
+
+#### What Cowork found underneath this *(added by Cowork, same day)*
+
+Two things, and the second is worse than the rule assumes.
+
+**A brief that lives only in chat cannot be re-read by anybody.** Every other
+governing document on this project is a file — `SITE.md`, `STANDARDS.md`,
+`CORRECTED-FACTS.md`, this one. The Quiz brief was a message. "Consult the
+brief" has no object when the brief has no path, so rule 7 needs rule 4's
+remedy applied to briefs as well as to corrections: **a brief that governs a
+build goes into the repo before the build starts.** `BRIEF-quiz.md` is the
+first one, written after the fact, which is the wrong order and better than
+nothing.
+
+**Cowork's context is lossy in a way neither instance can see from inside.**
+This session was compacted partway through: the earlier transcript was replaced
+by a summary. That summary preserved the Quiz brief's structural requirements —
+the `/text/` page, the form accessibility, the copyright rule, "a draft to look
+at rather than a spec to build" — and dropped *nothing signals what is coming*
+entirely. So at build time the sentence was not available to be consulted. Not
+overlooked: **absent**, with no marker where it had been.
+
+Which sharpens the rule rather than excusing the build. It means "re-read the
+brief" cannot mean "recall the brief" for either instance, and that a rule
+depending on memory of a conversation is depending on the one substrate that
+demonstrably drops things silently. The enforcement has to be a file on disk,
+and the check has to be a re-read of that file, or it is not enforcement.
+
+
 ## Rules for Cowork
 
 ### 1. Stop rather than adapt — this is working, keep it
