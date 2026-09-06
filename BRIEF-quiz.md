@@ -69,8 +69,22 @@ twenty-eight marks turned behind the questions. All four are fixed, and the
 reasoning is in the files rather than here: `quiz.text.js` for the preamble and
 the items, `quiz.js` for the picture, `registry.js` for the landing copy.
 
+## Settled after the fact
+
+**The single gyre behind the form stays.** Scott, 6 September 2026, on whether
+it is still a tell to somebody who would recognise the shape: *"if someone gets
+it, kudos to them. They're a Yeats scholar and a weirdo."* The rule is about
+not telling the ordinary visitor what is coming, not about defeating a
+specialist. One truncated cone with no rim is not the diagram; two cones and
+twenty-eight marks are, and those wait for the whirl.
+
+Recorded here rather than left in the conversation, which is the whole point of
+`WORKING-PROTOCOL.md` rule 7: a decision with no path cannot be consulted, and
+the next session asking "should the background be quieter?" would have no way
+to know it was already asked and answered.
+
 ## What is still open
 
-- Whether the reconstruction above matches what Scott actually wrote.
-- Whether the single gyre behind the form is still a tell to somebody who would
-  know the diagram.
+- Whether the reconstruction above matches what Scott actually wrote. It was
+  built from a context that had already lost the brief's most important line,
+  so it is the least trustworthy part of this file.
