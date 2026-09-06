@@ -2395,3 +2395,33 @@ The renderer's own comment says why it decides nothing, because that is the
 property worth protecting: a report assembled inside a DOM renderer can only
 be inspected by rendering it, and then the outcomes that get inspected are the
 outcomes somebody happens to draw.
+
+### 6.5.0 — a phase has an address
+
+Sharing, and it needed no share button. A phase is a PIECE — the same way a
+fragment is a piece of Sphere and a bounce is a piece of Beamline — so it uses
+the piece route the site has had since 3.x: the verdict lands and the address
+bar reads `#quiz/22`. `onPieceChange` does it, `push: false`, so nothing goes
+between the visitor and the Back button.
+
+The report states the address as one more row, in the same voice as the symbol
+beside it. Not a button, not a dialog, no "copied!" — the ANSWER AGAIN problem
+would have come straight back if the scene asked anybody for a favour. It says
+where you are and the visitor takes it or does not.
+
+**A shared link is a different arrival and the scene says so.** Somebody
+following `#quiz/13` was sent, not measured, so the report drops "You are", the
+address row goes (they are already at it), and the closing line is about
+whoever sent it: *This is somebody's place on the wheel. It was not chosen and
+it could not be refused.* The screen-reader line drops "You are" with it.
+
+Which is also the one place this scene may legitimately invite anybody to do
+anything — they have been told nothing about themselves, and sixteen questions
+are the only way to be — so that view, and only that view, carries a button.
+
+Two things the round trip caught. Following a link to another phase is a
+same-document navigation, so the form is never rebuilt: taking the quiz from a
+shared view handed you a completed form with a live submit button until
+`startQuiz` learned to clear `responses` as well as the view. And `#quiz/1`,
+`#quiz/15`, `#quiz/99` and `#quiz/0` all fall through to the questions rather
+than opening anything — there is no page for a phase nobody lives at.

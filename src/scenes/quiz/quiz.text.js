@@ -489,7 +489,7 @@ export const REACHABLE = PHASES.filter(p => p.n !== 1 && p.n !== 15).map(p => p.
 const T = (s) => ({ t: 'text', s: String(s) });
 const B = (s) => ({ t: 'strong', s: String(s) });
 
-export function report(result) {
+export function report(result, { shared = false, origin = '' } = {}) {
   const n = result.n;
   const p = PHASE_BY_N[n];
   const q = quarterOf(n);
@@ -526,6 +526,12 @@ export function report(result) {
   }
   if (p.mask && p.cm) row('The failure', B(p.mask.f), T(', and then '), B(p.cm.f));
   row('Symbol', T(p.symbol));
+  // **The address is a fact in the report, not a call to action.** Stated as
+  // flatly as the symbol beside it, in the same voice, and the visitor takes
+  // it or does not. The scene will not ask them to share anything; a button
+  // that did would be the ANSWER AGAIN problem again, and the register does
+  // not survive being asked for a favour.
+  if (!shared) row('Address', T(`${origin.replace(/^https?:\/\//, '') || 'perceptualmechanics.com'}/#quiz/${n}`));
   if (p.who.length) row('Others here', T(p.who.join(' \u00a0\u00b7\u00a0 ')));
   if (p.attributed.length) row('Placed here by others', T(p.attributed.join(' \u00a0\u00b7\u00a0 ')));
 
@@ -534,15 +540,25 @@ export function report(result) {
     closers.push([`You came to rest at Phase ${result.raw}, where there is no human life.`,
                   'The wheel has set you down at the first phase that can hold one.']);
   }
-  closers.push(n === 22 || n === 8
-    ? ['You are at a phase of crisis.', 'The wheel does not hold still here, and neither will you.']
-    : ['This is your place on the wheel.', 'It was not chosen and it cannot be refused.']);
+  // A visitor who followed a link was sent, not measured, so the report does
+  // not tell them anything about themselves. It tells them about whoever sent
+  // it, and then offers the only thing that could tell them about themselves.
+  if (shared) {
+    closers.push(n === 22 || n === 8
+      ? ['This is somebody\u2019s place on the wheel, and it is a phase of crisis.', 'The wheel does not hold still there.']
+      : ['This is somebody\u2019s place on the wheel.', 'It was not chosen and it could not be refused.']);
+  } else {
+    closers.push(n === 22 || n === 8
+      ? ['You are at a phase of crisis.', 'The wheel does not hold still here, and neither will you.']
+      : ['This is your place on the wheel.', 'It was not chosen and it cannot be refused.']);
+  }
 
   return {
     n, name: p.will, rows, closers,
     citeUrl: `https://www.yeatsvision.com/Ph${n}.html`,
     // One flat sentence for a screen reader, ahead of the capitals.
-    announcement: `You are Phase ${n} of 28. ${p.will}. `
+    shared,
+    announcement: `${shared ? 'Phase' : 'You are Phase'} ${n} of 28. ${p.will}. `
       + (q ? `${q.name}, element ${q.element}, ${q.dominant} dominates.` : 'A phase of crisis, outside the quarters.')
       + ` Your mask is drawn from phase ${mn}, your creative mind from phase ${cn}, your body of fate from phase ${bn}.`,
   };

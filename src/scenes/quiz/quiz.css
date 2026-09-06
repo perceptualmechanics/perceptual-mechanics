@@ -217,14 +217,16 @@
   box-shadow: var(--focus-ring-outer, 0 0 0 2px #f0d68c, 0 0 0 5px rgba(0, 0, 0, 0.72));
 }
 
-.quiz-submit {
+.quiz-take { margin-top: 1.15rem; }
+.quiz-take[hidden] { display: none; }
+.quiz-submit, .quiz-take {
   font: inherit; font-size: 0.86rem; letter-spacing: 0.09em; text-transform: uppercase;
   padding: 0.55rem 1.3rem; cursor: pointer;
   background: transparent; color: rgba(240, 237, 230, 0.92);
   border: 1px solid rgba(255, 255, 255, 0.32); border-radius: 2px;
   transition: border-color 160ms ease, background-color 160ms ease;
 }
-.quiz-submit:hover { border-color: rgba(226, 206, 150, 0.8); background: rgba(226, 206, 150, 0.1); }
+.quiz-submit:hover, .quiz-take:hover { border-color: rgba(226, 206, 150, 0.8); background: rgba(226, 206, 150, 0.1); }
 .quiz-submit[disabled] { opacity: 0.4; cursor: not-allowed; }
 
 /* ─── The verdict ──────────────────────────────────────────────────────────
@@ -272,6 +274,7 @@
    the page. Tracked out, so it carries the negative right margin the site's
    centering rule requires: flexbox centres the margin box, and the margin box
    contains the invisible gap after the last letter. */
+.quiz-verdict-lede[hidden] { display: none; }
 .quiz-verdict-lede {
   margin: 0 0 0.25rem;
   --tracking: 0.34em;

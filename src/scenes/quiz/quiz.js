@@ -52,6 +52,21 @@ import './quiz.css';
 // what they need is trails, additive compositing and enormous type on top,
 // and a 2D context does all three natively.
 //
+// ─── Sharing is an address, not a button ───────────────────────────────────
+// A phase is a PIECE, the same way a fragment is a piece of Sphere and a
+// bounce is a piece of Beamline, so it uses the piece route the site already
+// has: the verdict lands and the address bar reads `#quiz/22`. Nothing is
+// generated, nothing is copied, no dialog opens. The report states the address
+// as one more fact about where you are, in the same voice it states your
+// symbol, and a visitor either takes it or does not.
+//
+// **A shared link is a different arrival and the scene says so.** Somebody
+// following `#quiz/22` was not measured — they were sent — so the report drops
+// "You are", and its closing line is about whoever sent it rather than about
+// them. That is also the one place this scene may legitimately invite anybody
+// to do anything: they have been told nothing about themselves yet, and the
+// sixteen questions are the only way to be.
+//
 // ─── State does not persist, deliberately ──────────────────────────────────
 // No localStorage, no hash argument, nothing carried between visits. Leaving
 // the scene and coming back gives you a blank form, and re-answering can give
@@ -132,7 +147,7 @@ function gyrePoints(spin, dir) {
   return out;
 }
 
-export function createQuiz(container, { preview = false } = {}) {
+export function createQuiz(container, { preview = false, initialPieceId = null, onPieceChange = null } = {}) {
   const claim = claimContainer(container, { overflow: 'hidden' });
   const frag = parseHTML(quizHtml);
   const canvas = frag.querySelector('.quiz-canvas');
@@ -149,6 +164,8 @@ export function createQuiz(container, { preview = false } = {}) {
   const vSheet = frag.querySelector('.quiz-verdict-sheet');
   const vClose = frag.querySelector('.quiz-verdict-close');
   const citeEl = frag.querySelector('.quiz-cite');
+  const ledeEl = frag.querySelector('.quiz-verdict-lede');
+  const takeBtn = frag.querySelector('.quiz-take');
   const srLive = frag.querySelector('.quiz-sr-live');
 
   // The tile is the wheel and nothing else: a form at 170px would be a form
@@ -421,8 +438,9 @@ export function createQuiz(container, { preview = false } = {}) {
     .map(x => (x.t === 'strong' ? `<b>${escapeHtml(x.s)}</b>` : escapeHtml(x.s)))
     .join('');
 
-  function renderVerdict(result) {
-    const r = report(result);
+  function renderVerdict(result, { shared = false } = {}) {
+    const r = report(result, { shared, origin: location.origin });
+    ledeEl.hidden = shared;
     vNumber.textContent = `Phase ${roman[r.n]}`;
     vName.textContent = r.name;
     vSheet.innerHTML = r.rows
@@ -435,6 +453,44 @@ export function createQuiz(container, { preview = false } = {}) {
       + ` &nbsp;·&nbsp; Neil Mann, `
       + `<a href="${r.citeUrl}" target="_blank" rel="noopener noreferrer">yeatsvision.com</a>`;
     srLive.textContent = r.announcement;
+    takeBtn.hidden = !shared;
+  }
+
+  // Arriving at somebody else's phase, or at your own from a reload. No whirl
+  // and no delay: the whirl is the moment the quiz becomes the wheel, and
+  // there was no quiz.
+  function showPhase(n, { shared = true } = {}) {
+    if (!PHASE_BY_N[n] || n === 1 || n === 15) return false;
+    renderVerdict({ n, raw: n, displaced: false }, { shared });
+    markN = n; markPulse = 1; revealed = true;
+    whirl = 0.42; whirlTarget = 0.42;
+    scrimEls.forEach(el => { el.dataset.verdict = 'true'; });
+    form.hidden = true;
+    hintEl?.setAttribute('data-hidden', 'true');
+    verdict.hidden = false;
+    requestAnimationFrame(() => { verdict.dataset.shown = 'true'; });
+    return true;
+  }
+
+  function startQuiz() {
+    // **Clear the answers, not just the view.** Following a link to somebody
+    // else's phase is a same-document navigation — the form is never rebuilt,
+    // so anything answered before is still checked and still in `responses`.
+    // Without this the offer hands you a completed form and a submit button
+    // that is already live, which is the opposite of what it says it does.
+    responses.clear();
+    itemList.querySelectorAll('input[type="radio"]').forEach(el => { el.checked = false; });
+    updateRemaining();
+    verdict.dataset.shown = 'false';
+    verdict.hidden = true;
+    form.hidden = false;
+    form.dataset.leaving = 'false';
+    hintEl?.removeAttribute('data-hidden');
+    scrimEls.forEach(el => { delete el.dataset.verdict; });
+    markN = null; revealed = false; whirlTarget = 0;
+    onPieceChange?.(null);
+    form.scrollTop = 0;
+    form.querySelector('input')?.focus?.();
   }
 
   let verdictTimer = null;
@@ -464,6 +520,9 @@ export function createQuiz(container, { preview = false } = {}) {
       requestAnimationFrame(() => { verdict.dataset.shown = 'true'; });
       verdict.querySelector('.quiz-verdict-name')?.focus?.();
       whirlTarget = 0.42;
+      // The address bar becomes the share. `push: false` upstream, so this
+      // does not put a history entry between the visitor and Back.
+      onPieceChange?.(result.n);
     }, delay);
     if (reduced) { spin += 2.2; frame(); }
   }
@@ -471,7 +530,9 @@ export function createQuiz(container, { preview = false } = {}) {
   if (!preview) {
     buildForm();
     form.addEventListener('submit', submit);
+    takeBtn.addEventListener('click', startQuiz);
     vName.tabIndex = -1;
+    if (initialPieceId) showPhase(Number(initialPieceId));
   }
 
   const resize = bindGuardedResize(container, () => {
@@ -501,6 +562,9 @@ export function createQuiz(container, { preview = false } = {}) {
   if (!reduced) frame(); else frame();
 
   return {
+    // A phase is this scene's piece. `#quiz/22` lands here, and so does a
+    // cross-link or a hash edit while the scene is already open.
+    openPieceById(id) { showPhase(Number(id)); },
     setPaused(next) {
       if (next === paused) return;
       paused = next;
@@ -514,6 +578,7 @@ export function createQuiz(container, { preview = false } = {}) {
       resize.dispose();
       reducedWatch.dispose();
       form?.removeEventListener('submit', submit);
+      takeBtn?.removeEventListener('click', startQuiz);
       responses.clear();
       claim.restore();
       container.innerHTML = '';
