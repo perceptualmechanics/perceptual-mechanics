@@ -267,6 +267,20 @@
 .quiz-verdict[hidden] { display: none; }
 .quiz-form[hidden] { display: none; }
 
+/* Quieter than the number by a long way — it is the address, not the
+   judgment, and if it competes the number stops being the loudest thing on
+   the page. Tracked out, so it carries the negative right margin the site's
+   centering rule requires: flexbox centres the margin box, and the margin box
+   contains the invisible gap after the last letter. */
+.quiz-verdict-lede {
+  margin: 0 0 0.25rem;
+  --tracking: 0.34em;
+  letter-spacing: var(--tracking);
+  margin-right: calc(-1 * var(--tracking));
+  font-size: clamp(0.78rem, 1.75vw, 1.05rem);
+  font-weight: 400; line-height: 1.1;
+  color: rgba(232, 228, 220, 0.72);
+}
 .quiz-verdict-number {
   margin: 0; font-weight: 700;
   /* vh in the middle term, not just vw. The headline is meant to be the

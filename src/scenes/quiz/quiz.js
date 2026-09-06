@@ -494,7 +494,7 @@ export function createQuiz(container, { preview = false } = {}) {
     // sheet that follows is a real <dl> and reads correctly on its own; this
     // is the headline, so the announcement is not eleven terms deep before it
     // says what happened.
-    srLive.textContent = `Phase ${p.n} of 28. ${p.will}. ${q ? `${q.name}, element ${q.element}, ${q.dominant} dominates.` : 'A phase of crisis, outside the quarters.'} Your mask is drawn from phase ${mn}, your creative mind from phase ${cn}, your body of fate from phase ${bn}.`;
+    srLive.textContent = `You are Phase ${p.n} of 28. ${p.will}. ${q ? `${q.name}, element ${q.element}, ${q.dominant} dominates.` : 'A phase of crisis, outside the quarters.'} Your mask is drawn from phase ${mn}, your creative mind from phase ${cn}, your body of fate from phase ${bn}.`;
   }
 
   let verdictTimer = null;
