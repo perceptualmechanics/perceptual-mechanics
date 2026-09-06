@@ -51,6 +51,19 @@ becomes legible. The stale reason was propping up a sound decision.
 
 ---
 
+## Structures presented as sourced
+
+*Added 6.2. The rows here are not stale numbers — they are structures that read
+as coming from somewhere and did not. `STANDARDS.md`, "A structure that reads as
+sourced must be reproducible from the source", is the rule; this is the index.*
+
+| Claim | What is true | Source |
+|---|---|---|
+| Quiz scores on antithetical↔primary and waxing↔waning | **Those axes were invented in the build.** *A Vision* states the Faculties as two pairs of opposites and the brief quoted it: Will:Mask is the Is and the Ought, Creative Mind:Body of Fate the Knower and the Known. Those are the two scales. Fixed 6.2.0. | `src/scenes/quiz/quiz.text.js`, `SCALES` · `BRIEF-quiz.md` |
+| The phases group in rectangles of four, not triads — the brief is wrong | **Both exist and they are different structures.** The rectangles (1-15, 2-14-16-28, …) say where a phase draws its Faculties from. The Triads say what it does inside its quarter: two sets of three per quarter, running power, code, belief (AV B 92-93). Cowork asserted the correction from one page of the source and did not read the other. | `src/scenes/quiz/quiz.text.js`, `triadOf` · yeatsvision.com `Twelvefold.html#Triads` |
+| Medium's vowel-frequency table is measured | **Nothing measured it.** Replaced with a pointer to the bench that does. | `src/scenes/medium/medium.text.js` |
+
+
 ## Architecture
 
 | Claim | What is true | Source |

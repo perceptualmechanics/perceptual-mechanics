@@ -249,6 +249,47 @@ measurement.
   those words that were false.
 
 
+### A structure that reads as sourced must be reproducible from the source
+
+**Non-negotiable, added 6.2 after the Quiz scales. The sibling of the
+measurement rule above, and the more dangerous of the two.**
+
+A measurement that is wrong is usually wrong by a number. A *structure* that is
+wrong is wrong by being somebody else's, and it looks correct from every angle
+except the one nobody checks — whether the source actually says it.
+
+Two instances, and they are the same defect:
+
+- `medium.text.js` carried a table of vowel frequencies presented as measured.
+  Nothing measured them. It read as sourced and was not.
+- `quiz.text.js` scored its instrument on antithetical-against-primary and
+  waxing-against-waning. Those are defensible axes and they are not Yeats's.
+  The brief quoted *A Vision* naming the actual pairs — Will:Mask, the Is and
+  the Ought; Creative Mind:Body of Fate, the Knower and the Known — and the
+  build substituted its own, in the one scene whose entire claim is that the
+  mapping is honest.
+
+Neither was a lie anybody told. Both are what happens when a plausible
+structure is easier to reach for than a real one, and the prose around it is
+written by somebody who believes it.
+
+**The rule.** If a comment, a report or a page says a structure comes from a
+source, the tree must be able to reproduce that structure FROM the source's own
+published form. Not check itself against itself — a derivation is always
+self-consistent, and self-consistency is never the question.
+
+**The technique, which already exists here.** `scripts/quiz-wheel.mjs` types
+out the eight Faculty groups exactly as `A Vision` publishes them, as a literal,
+and then asserts that the three formulas the scene actually uses reproduce
+them. The published table is the second source; the formulas are the claim; the
+gate is the join. Same shape as `verify-landing.mjs` parsing the stylesheet
+rather than importing `tileLayout`'s own constants, and for the same reason.
+
+Where no second source can be typed out — where the structure is a judgement
+rather than a table — say so in the comment, name whose judgement it is, and do
+not describe it as sourced. "Two scales, because that is the shape of the data"
+is honest. "Two scales, which is Yeats's own structure" had better be his.
+
 ### The knowledge base is current; a brief is a missive
 
 Five files carry what a future session needs, and none of them is dated except
