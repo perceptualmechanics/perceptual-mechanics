@@ -35,9 +35,9 @@
 .quiz-scrim--flat {
   opacity: 1;
   background:
-    radial-gradient(150% 130% at 50% 46%, rgba(4, 4, 8, 0.80) 0%,
-                                          rgba(4, 4, 8, 0.78) 60%,
-                                          rgba(4, 4, 8, 0.72) 100%);
+    radial-gradient(150% 130% at 50% 46%, rgba(4, 4, 8, 0.85) 0%,
+                                          rgba(4, 4, 8, 0.83) 60%,
+                                          rgba(4, 4, 8, 0.77) 100%);
 }
 /* The verdict: an oval behind the type and nothing at the corners, so the
    gyres are at full strength where there is no text and the sheet still has a

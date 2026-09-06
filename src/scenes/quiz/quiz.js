@@ -374,18 +374,23 @@ export function createQuiz(container, { preview = false } = {}) {
     // pushes it past the edges — the gyres are supposed to arrive, not appear.
     const scale = Math.min(W, H) * (0.40 + whirl * 0.42);
     ctx.globalCompositeOperation = 'lighter';
-    ctx.lineWidth = Math.max(1, Math.min(W, H) / 620) * (1 + whirl * 0.9);
+    // Thinner at rest for the same reason and to the same peak: two gyres at
+    // 4.25 turns cross each other a great many times, and at rest it is the
+    // number of crossings rather than their brightness that reads as busy.
+    ctx.lineWidth = Math.max(1, Math.min(W, H) / 780) * (1 + whirl * 1.35);
     ctx.lineJoin = 'round';
 
-    // The peak is meant to be loud. 0.30 at rest is a texture behind a form;
-    // the driven value is over 1, which a canvas clamps per stroke but which
-    // still reads brighter once the two gyres and the rim overlap in
-    // 'lighter'. The whirl is the one moment this scene raises its voice.
-    // 0.30 was a number that rendered and could not be seen — the same
-    // "renders" against "visible" confusion this project keeps paying for.
-    // Measured on a real display at the form's scrim: 0.30 under 0.88 of
-    // scrim is nothing at all.
-    const a = 0.62 + whirl * 0.85;
+    // Twice tuned by looking, in both directions. 0.30 was a number that
+    // rendered and could not be seen — the "renders" against "visible"
+    // confusion this project keeps paying for — and 0.62 was legible and busy
+    // behind sixteen questions. 0.42 is where it sits: present, and not
+    // competing with the text it is behind.
+    //
+    // The peak is untouched, which is why the multiplier goes up as the base
+    // comes down. Over 1 is deliberate: a canvas clamps per stroke, but the
+    // two gyres and the rim overlap in 'lighter', and the whirl is the one
+    // moment this scene raises its voice.
+    const a = 0.42 + whirl * 1.05;
     drawGyre(gyrePoints(spin, 1), t, scale, cx, cyy, `rgba(196,206,232,${a})`);
     drawGyre(gyrePoints(spin, -1), t, scale, cx, cyy, `rgba(226,196,150,${a})`);
     // Only the RIM waits. Both gyres turn from the start — the brief asks for
