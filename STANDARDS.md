@@ -278,12 +278,26 @@ source, the tree must be able to reproduce that structure FROM the source's own
 published form. Not check itself against itself — a derivation is always
 self-consistent, and self-consistency is never the question.
 
-**The technique, which already exists here.** `scripts/quiz-wheel.mjs` types
-out the eight Faculty groups exactly as `A Vision` publishes them, as a literal,
-and then asserts that the three formulas the scene actually uses reproduce
-them. The published table is the second source; the formulas are the claim; the
-gate is the join. Same shape as `verify-landing.mjs` parsing the stylesheet
-rather than importing `tileLayout`'s own constants, and for the same reason.
+**The technique, and it is the better half of the rule: don't describe the
+source, join against it.** Scott's formulation, 6.2, and it is what the three
+gates in this tree that get this right are all doing at different levels:
+
+- `scripts/quiz-wheel.mjs` types out the eight Faculty groups exactly as
+  `A Vision` publishes them, as a literal, and asserts that the three formulas
+  the scene actually uses reproduce them. Published table as second source,
+  formulas as claim, gate as the join.
+- `scripts/verify-landing.mjs` parses `#scene-previews`' gap and padding out of
+  the stylesheet rather than importing `tileLayout`'s own constants. It
+  previously imported three of its four numbers from the module it was
+  controlling, so a change to any of them moved both sides identically — the
+  one scenario the check claimed to exclude.
+- `scripts/verify-links.mjs` runs the REAL matcher over the REAL text rather
+  than describing what the matcher would do. A link that resolves in principle
+  and finds nowhere to land once the other links in its group have taken their
+  text renders as plain text with no error, and only running it finds that.
+
+Three levels, one move. A derivation is always self-consistent, and
+self-consistency is never the question.
 
 Where no second source can be typed out — where the structure is a judgement
 rather than a table — say so in the comment, name whose judgement it is, and do
