@@ -593,6 +593,159 @@ described are unchanged.)
   worth trimming, orrery.js's texture generators and first-person rig are the
   two most self-contained chunks to split out first.
 
+## 6.0 (2026-09-06)
+
+**The audit that had to run rather than read.** Scott: *"go through the code
+and challenge every claim the comments make. if they're wrong, delete 'em. I'm
+sick of this."*
+
+5.0 had already done this — ninety-four findings — and had recorded its own
+weakness afterwards: it was right about every case where a comment ASSERTED
+something checkable by reading, and wrong about all seven where the answer
+needed a MEASUREMENT. So 6.0 was designed against that. Ten parallel agents,
+each with a browser, a freeze recipe and one instruction: execute it, do not
+reason about it. Findings marked VERIFIED or HYPOTHESIS; almost all VERIFIED.
+Roughly 130 of them, in `PUNCH-LIST-6.0.md`.
+
+### The rule the whole release exists to produce
+
+`STANDARDS.md` now carries it as non-negotiable:
+
+> **A measurement in a comment must be re-runnable, or it must not be there.**
+> A committed script prints it and the comment cites the script; or a build gate
+> derives and enforces it; or the comment states the MECHANISM instead of the
+> magnitude. If none applies, delete the number.
+
+Two corollaries, both of which had been violated the day before it was written:
+a measurement taken with a scratch harness is not one anyone else has, and
+*"measured live"* is decoration rather than evidence — the audit found three
+claims carrying exactly those words that were false.
+
+### The most useful section is the one about the same day's work
+
+Five of the worst findings were in code written hours earlier, by the same
+process that produced the list. Scroll's "swinging" edge shadow did not
+measurably swing (peak 7/255, zero pixels over threshold) and its sliding patch
+wash did not slide; both were removed rather than amplified, because a 12px band
+at 0.2 alpha cannot swing visibly without the excursion reading as a strobe —
+the thing the candle rewrite existed to remove. The smoke's "emergence from
+behind the pill" was zero pixels inside the pill for 92% of its cycle. The
+Orrery's man-door opening rendered zero pixels, sealed inside its own frame box.
+And turning round at the Orrery spawn showed only brick, both doors off-frame,
+under a comment saying the first thing a visitor sees on turning round is how
+they got in.
+
+Worst, and exactly the sin: `medium.text.js` carried a table of measured numbers
+as the evidence for 5.0's geometry change, quoted as though it came from
+`scripts/medium-spell.mjs`. It came from an uncommitted scratch harness and does
+not reproduce. The bench now BUILDS the old equal-angle board and runs both
+through the same session, so the comparison is re-runnable — and it contradicts
+the claim: vowel share 33.6% to 34.0%, not 31.1% to 34.6%, and the
+plausibility-off control moves further than the on condition does, which breaks
+the "the lexicon getting a fairer board rather than the board being tilted"
+argument outright. What survives is the letter rate, up 13%.
+
+### And the audit demonstrated its own subject, in the other direction
+
+Four Harmonics findings are false. Searching for the strings they quote returns
+nothing: each of those comments had already been corrected, in this codebase's
+usual form — *"an earlier version of this note claimed something the mapping
+cannot deliver. It said..."* — and an agent reading for drift quoted the
+retracted claim without the sentence retracting it. **The audit mistook a
+correction for the error it corrects.**
+
+That is the mirror of the punch-list-as-record warning in the document's own
+header. There, past tense read as a present claim; here, a quoted-and-retracted
+claim read as a live one. Both are prose ABOUT a claim being taken FOR the
+claim — and it is a caution about the house style itself, because a comment that
+scrupulously documents having been wrong contains its own false claim as a
+quotation.
+
+The countermeasure already in `WORKING-PROTOCOL.md` kills both: *comments should
+explain what the code is, not the history of how it got there.* A comment with
+no history in it has no retracted claim to be misread. The knowledge survives if
+stated forward — not "it used to say the clusters land on different harmonics",
+but "locking pulls every component's rate into the middle of the window, so the
+steady state is a broad unison".
+
+### The gates that could not fail
+
+The worst tier, because a passing gate that cannot fail is indistinguishable
+from no gate.
+
+- **`verify-landing`'s headline assertion** compared `tileLayoutHeight(fit)`
+  against the budget inside `tileLayout` — two expressions built from the same
+  three terms in one module. Largest measured overshoot across the whole matrix:
+  **-0.025px** against a +0.5 threshold. The 4.11.0 bug it was written for passes
+  silently whenever the omission is shared, which it always is when one module
+  owns both sides. `TILE_GAP` and `LIST_PAD` are constants DESCRIBING CSS, so the
+  stylesheet is a second source that is not itself: it reads `#scene-previews`'
+  gap and padding out of `main.css`, asserts the constants match, and accounts
+  from the CSS values. Four break tests now fire where three previously did
+  nothing — including the shared-omission case that used to pass.
+- **Four verifiers** used `` `file://${process.argv[1]}` ``, which does not
+  percent-encode, so from any path containing a space the CLI branch never ran
+  and the script exited 0 having verified nothing. Two other verifiers in the
+  same directory carry a paragraph forbidding exactly that.
+- **`verify-counts`** matched one physical line at a time, so any claim that
+  wrapped was invisible; the `multiline` escape hatch existed for it and was set
+  on one row of eleven. Every claim now also gets a joined-comment view. It
+  immediately found four stale counts that had been hiding, one of which no audit
+  had reported. Checked counts went from 27 to 51.
+
+### Tier 1, in one paragraph each
+
+**The tile focus ring had never rendered** — a box-shadow paints below in-flow
+descendants and an opaque canvas fills the button; the 334 surviving pixels were
+a sub-pixel leak at the mask's rim. Redrawn on a positioned pseudo-element:
+149/255 across 4,066 pixels. **Library's focus trap** collected 265 unfocusable
+elements of 283, so Shift+Tab from the skip link called `focus()` on a dead node
+and went nowhere; `getClientRects()` does not catch a button inside a closed
+`<details>` (it reports a box and refuses focus) — `checkVisibility()` does.
+**Harmonics' 76 jump-list buttons** all read "Piece N" because the relabeller
+queried the scene container and the list mounts on `document.body`. **Theater**
+never announced scene changes. **Butterfly** ignored reduced motion for 26% of
+the viewport; **Sphere's** three orbiting lights swept the shading across a
+stopped sphere.
+
+Contrast: five failures, every one with correct arithmetic against a background
+the text does not sit on. The landing link measured **1.09:1** in a 400px band
+of viewports where the fade had switched off at a width while the grid kept
+scrolling; the nav icons **2.93:1** over the tile grid; Beamline's title
+**1.00:1** where the rail crosses it; Library's ink backwards on 17 spines
+because `THREE.Color`'s channels are linear-sRGB and were compared against a
+perceptual threshold. Library's ink is now chosen by comparing the two candidate
+inks, so there is no constant left to be wrong.
+
+Effects painted and never seen: Beamline's deliberately blue sky motes cancelled
+by a green material colour (the same file names and fixes that bug twenty lines
+earlier for the dust); Orbiter's rim glow twenty times under the visibility
+floor; its nucleus texture in the wrong colour space; its "kept faint so they do
+not dilute the cloud" orbit rings writing depth and erasing it outright;
+Outside's per-petal saturation collapsed to a tenth by a white emissive map
+added after the palette work; and Outside's curtain billow — *"that distinction
+is the entire effect"* — advancing its noise input by less than 1.0 in
+thirty-five seconds.
+
+### The wordmark's smoke, third attempt
+
+Scott: *"I just wanted an emerging background to the letters that looked like
+smoke but then retreated on mouseoff."*
+
+Two mechanics. It is a **transition, not an animation**: a keyframe animation
+bound to `:hover` does not reverse, it stops existing when the cursor leaves, so
+the previous version vanished on a frame. A transition runs backwards for free
+and the directions can be timed apart — ~0.6s ease-out in, ~1.2s ease-in out,
+and that asymmetry is most of why it reads as retreating. And it sits **between
+the pill and the letters**: `isolation: isolate` makes `#site-title` a stacking
+context, so a `z-index: -1` pseudo-element paints after the element's background
+and before its inline content. Without it the negative z-index resolves against
+an ancestor and the haze goes behind the whole pill, which is where the previous
+two versions lived.
+
+Measured: blooms to 103/255 across 12,653 pixels, and returns to exactly the
+rest pixels about 1.7s after mouseoff.
+
 ## 5.0.3 (2026-09-05)
 
 **Smoke that emerges and curls.** Scott, once 5.0.2 made it visible enough to

@@ -623,6 +623,9 @@ html, body {
      the nearest positioned ancestor, which has to stay #site-title
      itself rather than falling through to #site-title-row. */
   position: relative;
+  /* Makes this a stacking context, so the ::before/::after haze can paint
+     between the pill's own background and the letters — see their note. */
+  isolation: isolate;
   /* --tracking/margin-right: cancels letter-spacing's trailing gap so
      #site-title-row's justify-content:center lands on the visible glyphs
      rather than the gap-inflated box — see #site-title-row's comment
@@ -669,105 +672,99 @@ html, body {
 #site-title:hover { color: rgba(255,255,255,1); }
 #site-title:focus-visible { outline: none; box-shadow: var(--focus-ring-outer); }
 
-/* Smoke off the wordmark, on hover.
-   Two rewrites, and both notes are worth keeping because they are different
-   failures.
+/* Smoke behind the wordmark, on hover.
+   Scott: "I just wanted an emerging background to the letters that looked like
+   smoke but then retreated on mouseoff."
 
-   5.0.2 — Scott: "I'm not seeing any smoke at all." It was rendering and it
-   was invisible, which are different things. Frozen and stepped by hand
-   through its own cycle, the puff peaked at 21 of 255 (8% brightness) on a
-   blob ten pixels across. Neither value was wrong alone: blur(2px) is a
-   sensible smoke blur and 10px is a sensible puff, but the gradient faded out
-   at 70% of a 5px radius, leaving a bright core three pixels wide, and a 2px
-   blur across a 3px core flattens it — 2.7x of the peak, measured by removing
-   only the blur.
+   Three attempts, and each failed differently, which is why all three are worth
+   one line. 5.0.2: two 10px puffs, rendering at 8% brightness — present and
+   invisible. 5.0.3: bigger, curling, rising — visible, and the wrong thing,
+   because it was two objects travelling past the wordmark rather than a ground
+   for it. This one is a haze that blooms behind the letters and draws back.
 
-   5.0.3 — Scott: "make it less two puffs and more background emergence and
-   curling." The size fix made it visible and made what it actually was
-   obvious: two discs, rising in straight lines, appearing out of nowhere just
-   above the pill. Smoke does none of those three things. So:
+   Two mechanics carry it.
 
-     * It EMERGES rather than appears. z-index:-1 puts each wisp behind
-       #site-title's own background, which is rgba(0,0,0,0.65) rather than
-       opaque, so while a wisp is still crossing the pill it reads at about a
-       third of strength and then at full strength once it clears the top
-       edge. That crossing is the first second or so of each wisp's rise, not
-       a state it sits in — measured, four of thirteen samples across the
-       cycle carry smoke inside the pill's own rows, which with two wisps half
-       a cycle apart is one emergence roughly every two and a half seconds.
-       The mask fades the bottom out as well, so it has no lower edge either.
+   IT IS A TRANSITION, NOT AN ANIMATION, and that is what "retreats on mouseoff"
+   requires. A keyframe animation is bound to :hover and simply stops existing
+   when the cursor leaves — the smoke vanished on a frame. A transition runs in
+   reverse for free, and the two directions can be timed separately: the rule
+   below sets the LEAVE timing (longer, ease-in, so it draws back slowly) and
+   the :hover rule sets the ENTER timing (shorter, ease-out, so it arrives).
+   That asymmetry is most of why it reads as smoke rather than as a fade.
 
-     * It is a VOLUME rather than a disc. Five offset ellipses at falling
-       alphas, so the blur has internal structure to work on and the result
-       has filaments in it. One radial gradient blurred is a dot no matter how
-       big; five staggered ones is a column.
+   IT SITS BETWEEN THE PILL AND THE LETTERS. `isolation: isolate` on
+   #site-title makes it a stacking context, so a `z-index: -1` pseudo-element
+   paints after the element's own background and before its inline content —
+   above the black pill, behind the text. Without the isolate, the negative
+   z-index resolves against an ancestor and the haze goes behind the pill
+   instead, which is where the previous version lived and why it had to leak
+   through 0.35 of alpha to be seen at all. Same trick, and the same reasoning,
+   as .scroll-root's own note in scroll.css.
 
-     * It CURLS. The keyframes carry rotation and lateral drift that reverses
-       — out one way, back across, out again — instead of a straight climb,
-       and the blur grows from 4px to 13px on the way up, because smoke
-       disperses as it cools. The two wisps curl in opposite directions and
-       run half a cycle apart on a 5.2s loop, so there is always one of them
-       mid-rise. That is what stops it reading as a pair of anything. */
+   Five offset ellipses rather than one, so the blur has structure to work on —
+   one gradient blurred is a smudge at any size — and a soft elliptical mask so
+   the field has no edge of its own anywhere. */
 #site-title::before,
 #site-title::after {
   content: '';
   position: absolute;
-  /* Behind the pill's own translucent background — see "emerges" above. */
   z-index: -1;
-  left: 50%;
-  /* Negative, so the wisp's box genuinely straddles the pill's top edge. It
-     was 36% — which sounds like "inside the pill" and is not: 36% of a 26px
-     pill is 9px, the box is 78px tall, and scale(0.5) about its centre put the
-     whole visible wisp between 29px and 68px ABOVE the pill's bottom, i.e.
-     entirely clear of a pill that ends at 26px. Measured, the "emerging from
-     behind at a third strength" this rule claims was zero pixels inside the
-     pill for 92% of the cycle: z-index:-1 was true and had nothing to be
-     behind. */
-  bottom: -14%;
-  width: 58px; height: 78px;
+  left: 50%; top: 50%;
   pointer-events: none;
   opacity: 0;
-  background:
-    radial-gradient(ellipse 34% 22% at 50% 84%, rgba(255,255,255,0.82), rgba(255,255,255,0) 70%),
-    radial-gradient(ellipse 26% 20% at 36% 62%, rgba(255,255,255,0.60), rgba(255,255,255,0) 72%),
-    radial-gradient(ellipse 24% 18% at 64% 46%, rgba(255,255,255,0.48), rgba(255,255,255,0) 74%),
-    radial-gradient(ellipse 20% 16% at 42% 26%, rgba(255,255,255,0.34), rgba(255,255,255,0) 76%),
-    radial-gradient(ellipse 16% 13% at 58% 10%, rgba(255,255,255,0.23), rgba(255,255,255,0) 78%);
-  /* No hard edge at either end: it thins into the pill below and into the
-     dark above. Prefixed first and always paired, per STANDARDS.md. */
-  -webkit-mask: linear-gradient(to top, transparent 0%, #000 26%, #000 64%, transparent 100%);
-  mask: linear-gradient(to top, transparent 0%, #000 26%, #000 64%, transparent 100%);
+  /* The LEAVE transition. Slower than the arrival, and ease-in so it lets go
+     gradually rather than dropping away from full. */
+  transition: opacity 1150ms ease-in, transform 1350ms ease-in, filter 1150ms ease-in;
+}
+#site-title::before {
+  width: 138%; height: 340%;
+  transform: translate(-50%, -50%) scale(0.74);
   filter: blur(5px);
-  transform: translate(-50%, 12%) scale(0.5);
+  /* Lobes of deliberately UNEQUAL size, alpha and height, and spread across
+     the vertical as well as the horizontal. An earlier set was five similar
+     ellipses in a row, which blurs to an even bar — a glow, not smoke. What
+     makes a soft field read as smoke is that its density is lumpy: some of
+     these are half the height of their neighbour and a third the strength. */
+  background:
+    radial-gradient(ellipse 17% 52% at 17% 62%, rgba(228,236,255,0.50), rgba(228,236,255,0) 66%),
+    radial-gradient(ellipse 27% 30% at 33% 34%, rgba(240,244,255,0.30), rgba(240,244,255,0) 74%),
+    radial-gradient(ellipse 14% 46% at 47% 58%, rgba(244,247,255,0.46), rgba(244,247,255,0) 68%),
+    radial-gradient(ellipse 24% 26% at 61% 36%, rgba(226,234,252,0.24), rgba(226,234,252,0) 76%),
+    radial-gradient(ellipse 19% 50% at 74% 60%, rgba(236,240,255,0.38), rgba(236,240,255,0) 68%),
+    radial-gradient(ellipse 13% 30% at 88% 44%, rgba(232,238,255,0.22), rgba(232,238,255,0) 78%),
+    radial-gradient(ellipse 50% 22% at 50% 52%, rgba(230,237,255,0.16), rgba(230,237,255,0) 80%);
+  -webkit-mask: radial-gradient(ellipse 56% 44% at 50% 50%, #000 26%, transparent 80%);
+  mask: radial-gradient(ellipse 56% 44% at 50% 50%, #000 26%, transparent 80%);
 }
-#site-title:hover::before {
-  animation: pm-smoke-a 5.2s ease-out infinite;
+/* A wider, fainter second layer on its own timing, so the haze has depth and
+   the two edges never arrive together. */
+#site-title::after {
+  width: 176%; height: 460%;
+  transform: translate(-50%, -50%) scale(0.62);
+  filter: blur(13px);
+  background:
+    radial-gradient(ellipse 34% 40% at 30% 48%, rgba(222,232,252,0.22), rgba(222,232,252,0) 72%),
+    radial-gradient(ellipse 30% 36% at 72% 54%, rgba(232,238,255,0.19), rgba(232,238,255,0) 74%),
+    radial-gradient(ellipse 52% 28% at 50% 50%, rgba(226,234,255,0.15), rgba(226,234,255,0) 78%);
+  -webkit-mask: radial-gradient(ellipse 54% 42% at 50% 50%, #000 20%, transparent 82%);
+  mask: radial-gradient(ellipse 54% 42% at 50% 50%, #000 20%, transparent 82%);
+  transition: opacity 1400ms ease-in, transform 1600ms ease-in, filter 1400ms ease-in;
 }
-#site-title:hover::after {
-  /* NEGATIVE delay. At +2.6s with the default fill-mode the second wisp simply
-     does not exist for the first half of every hover, against a comment three
-     lines down claiming there is always one mid-rise — true only from the
-     third second onward, and most hovers are shorter than that. A negative
-     delay starts it already half way through its own cycle instead. */
-  animation: pm-smoke-b 5.2s ease-out -2.6s infinite;
+/* The ENTER transition, and the arrival state. Focus as well as hover — a
+   keyboard visitor reaching this control should get the same thing. */
+#site-title:hover::before,
+#site-title:focus-visible::before {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+  filter: blur(7px);
+  transition: opacity 620ms ease-out, transform 820ms cubic-bezier(0.16, 0.7, 0.3, 1), filter 820ms ease-out;
 }
-/* Out to the left, back across to the right, out again — a lazy S, not a
-   climb. Rotation is small; it is the drift reversing that reads as curl. */
-@keyframes pm-smoke-a {
-  0%   { opacity: 0;    transform: translate(-50%, 12%)  rotate(-3deg)  scale(0.50); filter: blur(4px); }
-  14%  { opacity: 0.72; }
-  38%  {                transform: translate(-64%, -30%) rotate(-11deg) scale(0.84); filter: blur(6px); }
-  66%  { opacity: 0.40; transform: translate(-38%, -74%) rotate(7deg)   scale(1.16); filter: blur(9px); }
-  100% { opacity: 0;    transform: translate(-58%, -130%) rotate(-5deg) scale(1.62); filter: blur(13px); }
-}
-/* The same gesture mirrored and a little narrower, so the two read as one
-   column of smoke turning over rather than as a matched pair. */
-@keyframes pm-smoke-b {
-  0%   { opacity: 0;    transform: translate(-50%, 14%)  rotate(4deg)   scale(0.42); filter: blur(4px); }
-  14%  { opacity: 0.56; }
-  38%  {                transform: translate(-36%, -28%) rotate(10deg)  scale(0.74); filter: blur(6px); }
-  66%  { opacity: 0.32; transform: translate(-60%, -70%) rotate(-6deg)  scale(1.04); filter: blur(9px); }
-  100% { opacity: 0;    transform: translate(-44%, -124%) rotate(5deg)  scale(1.48); filter: blur(12px); }
+#site-title:hover::after,
+#site-title:focus-visible::after {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+  filter: blur(16px);
+  transition: opacity 880ms ease-out, transform 1120ms cubic-bezier(0.16, 0.7, 0.3, 1), filter 1120ms ease-out;
 }
 @media (prefers-reduced-motion: reduce) {
   #site-title::before, #site-title::after { display: none; }
