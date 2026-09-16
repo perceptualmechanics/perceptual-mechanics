@@ -73,7 +73,7 @@ export const SCENES = {
 
 
 export const sceneAria = spec => `${spec.blurb} ${spec.controls}`;
-export const tileAria  = spec => `${spec.blurb} Press Enter to expand.`;
+export const tileAria  = spec => `${spec.blurb}`;
 
 export const TEXT_EXEMPT = {
   butterfly: 'Its entire found text is its own placard title, which the landing page already carries.',
