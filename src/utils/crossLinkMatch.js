@@ -1,48 +1,6 @@
-// ─── Where a cross-link's phrase actually lands ─────────────────────────────
-// NO DOM. That is the entire reason this file exists, and it is worth being
-// blunt about why.
-//
-// `wireCrossLinks` (sceneKit.js) turns a links.js row into an anchor by
-// finding its phrase in a piece's own text. `scripts/verify-links.mjs` is the
-// build gate that promises every row will find its phrase. Those are the same
-// question, and until now they were two different answers: the runtime walked
-// a real parsed document, and the gate ran `indexOf` over the raw HTML string
-// and a prose description of what the runtime "does". A gate that MODELS the
-// thing instead of CALLING it drifts, and the drift is invisible by
-// construction, because nothing compares the model to the implementation.
-//
-// It had already drifted. verify-links still described wireCrossLinks as
-// doing "a plain first-occurrence String.replace over HTML", which it had not
-// done since the rewrite that fixed the escaping bug — and one of the two
-// failure modes it carefully guarded against had become structurally
-// impossible in the meantime. Nothing failed. Nothing could have.
-//
-// So the matching lives here, once, DOM-free, and both sides call it. This is
-// `derive, don't type` (STANDARDS.md) pointed at a checker: a gate should not
-// describe an algorithm, it should run it.
-//
-// ─── The rule the original bug was about ───────────────────────────────────
-// DECODE BEFORE MATCHING, and never re-encode what you did not decode.
-//
-// The bug this replaced escaped the phrase and then matched it against
-// decoded text, so any phrase containing & < or > silently failed to link.
-// Here, text is decoded once, phrases are matched against the decoded form,
-// and the OUTPUT reuses the original raw slice rather than re-encoding the
-// phrase — so a matched span is byte-identical to what was there before,
-// and the only thing that changes anywhere in the document is the insertion
-// of an <a> and a </a>.
 
-// The entity forms this understands. Deliberately a short list rather than a
-// full HTML5 named-character-reference table (there are 2231 of those, and
-// shipping them to a browser to link a phrase would be absurd). The corpus
-// today contains ZERO entities of any kind, so this is untested by the real
-// text — which is why verify-links asserts that every linkable field stays
-// inside this set instead of trusting that it does. A narrow scope that is
-// enforced is safe; a narrow scope that is assumed is the next finding.
 const NAMED = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ' };
 
-// Anything shaped like an entity, supported or not — the gate uses this to
-// find the ones this file would silently pass through as literal text.
 export const ENTITY_RE = /&(#x[0-9a-fA-F]+|#\d+|[a-zA-Z][a-zA-Z0-9]*);/g;
 
 export const isSupportedEntity = (s) => {
@@ -51,10 +9,6 @@ export const isSupportedEntity = (s) => {
   return m[2] !== undefined || m[3] !== undefined || m[4] in NAMED;
 };
 
-// Decode a run of text, and keep a map from each decoded character back to
-// where it started in the raw string. The map is what lets the output splice
-// anchors in without re-encoding anything: a decoded span [a, b) is exactly
-// the raw span [map[a], map[b]).
 function decodeRun(raw) {
   let decoded = '';
   const map = [];
@@ -75,7 +29,6 @@ function decodeRun(raw) {
           ch = NAMED[body];
         }
         if (ch !== null) {
-          // One decoded character standing for the whole raw entity.
           for (const c of ch) { decoded += c; map.push(i); }
           i = m.index + m[0].length;
           continue;
@@ -88,16 +41,6 @@ function decodeRun(raw) {
   return { decoded, map };
 }
 
-// Split HTML into markup and text runs. Deliberately narrow: this corpus is
-// <p>, <em>, <i> and <br> with no comments, no CDATA, no <script> and no
-// <style>, and this is not trying to be an HTML parser. verify-links asserts
-// the corpus stays that way, for the same reason as the entity set above.
-//
-// `linkClass` matters because text already inside one of these anchors is not
-// available to a later phrase — which is exactly what the DOM version got
-// from `node.parentElement.closest('a.' + linkClass)`. Source text carries no
-// anchors today; the ones this has to skip are the ones a previous link in
-// the same pass just created.
 export function tokenize(html, linkClass) {
   const segs = [];
   const tagRe = /<\/?([a-zA-Z][\w-]*)((?:"[^"]*"|'[^']*'|[^>])*)>/g;
@@ -135,9 +78,6 @@ export function tokenize(html, linkClass) {
  */
 export function crossLinkPlan(html, phrases, linkClass) {
   const segs = tokenize(html, linkClass);
-  // Free ranges per text segment, in document order. A claim splits one range
-  // into the part before it and the part after, which is precisely the pair of
-  // text nodes splitText leaves either side of the new anchor.
   const free = segs.map(s => (s.kind === 'text' && s.linkable ? [[0, s.decoded.length]] : []));
 
   return phrases.map((phrase) => {
@@ -173,7 +113,6 @@ const escapeAttr = (s) => String(s)
  */
 export function applyCrossLinkPlan(html, links, linkClass, plan) {
   const segs = tokenize(html, linkClass);
-  // Claims grouped by segment, ascending, so one pass emits each segment.
   const bySeg = new Map();
   plan.forEach((hit, i) => {
     if (!hit) return;

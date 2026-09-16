@@ -1,45 +1,27 @@
-// ─── bard.js demo content ───────────────────────────────────────────────────
-// Dummy/test material for exercising the engine end to end: eight scenes,
-// each a short adaptation of a moment from a different classic play. These
-// are original condensed adaptations (paraphrased for the translated/prose
-// sources; lightly trimmed direct text for the two English-language public-
-// domain originals, Shakespeare and Wilde) — written to be short bard.js
-// scenes, not full reproductions of any script.
-//
-// One shared cast map, since a single DomRenderer instance covers the whole
-// script — every character across all eight plays needs a unique key.
 
 export const CAST = {
-  // The Oresteia (Aeschylus)
   clytemnestra: { name: 'Clytemnestra', color: '#b83b5e' },
   agamemnon:    { name: 'Agamemnon',    color: '#c9a227' },
 
-  // Medea (Euripides)
   medea: { name: 'Medea', color: '#8e44ad' },
   jason: { name: 'Jason', color: '#3a6b8a' },
 
-  // Lysistrata (Aristophanes)
   lysistrata: { name: 'Lysistrata', color: '#d68910' },
   kalonike:   { name: 'Kalonike',   color: '#16a085' },
 
-  // As You Like It (Shakespeare)
   jaques: { name: 'Jaques', color: '#6b7a8f' },
 
-  // Macbeth (Shakespeare)
   witch1:  { name: 'First Witch',  color: '#4a4a68' },
   witch2:  { name: 'Second Witch', color: '#4a4a68' },
   witch3:  { name: 'Third Witch',  color: '#4a4a68' },
   macbeth: { name: 'Macbeth',      color: '#7a1f2b' },
 
-  // Candide (after Voltaire)
   pangloss: { name: 'Pangloss', color: '#2e7d32' },
   candide:  { name: 'Candide',  color: '#5b8c5a' },
 
-  // The Misanthrope (after Molière)
   alceste:  { name: 'Alceste',  color: '#8b3a3a' },
   philinte: { name: 'Philinte', color: '#3a5a8b' },
 
-  // The Importance of Being Earnest (Wilde)
   jack:     { name: 'Jack Worthing',        color: '#1a5276' },
   algernon: { name: 'Algernon Moncrieff',   color: '#7d6608' },
 };

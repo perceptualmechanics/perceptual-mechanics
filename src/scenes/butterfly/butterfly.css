@@ -1,18 +1,4 @@
-/* Butterfly scene styles (label + hint overlay, positioned on document.body
-   rather than inside the scene's own container -- see butterfly.html's
-   header comment for the z-index/stacking-context reasoning). butterfly.js
-   owns creating/removing .butterfly-exp-label and .butterfly-hint itself,
-   same as every other scene's hint/caption/title. */
 
-/* Same flex-wrapper centering approach as .harmonics-title-row — see
-   #site-title-row's fuller comment in styles/main.css. */
-/* Mobile-first (standing convention, see NOTES.md/STANDARDS.md): base
-   declarations target the smallest viewport by default; each nested
-   min-width query layers the wider-viewport values on top, never the
-   reverse. Native CSS nesting (Baseline widely available as of June
-   2026 — Chrome 120+, Firefox 117+, Safari 17.2+) keeps each selector's
-   responsive behavior next to its base rule instead of split into a
-   separate block elsewhere in the file. */
 .butterfly-exp-label-row {
   position: fixed;
   bottom: var(--title-block-bottom-mobile); left: 6vw; right: 6vw;
@@ -24,8 +10,6 @@
 	}
 }
 .butterfly-exp-label {
-  /* Same letter-spacing-trailing-gap centering fix as harmonics-title —
-     see that rule's fuller comment in harmonics.css. */
   color: rgba(255,255,255,0.85);
   font-size: clamp(0.85rem, 2.5vw, 1.6rem);
   --tracking: clamp(0.1em, 1vw, 0.4em);

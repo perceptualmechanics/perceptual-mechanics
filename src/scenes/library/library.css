@@ -200,7 +200,7 @@
   outline: 1px solid rgba(230,180,95,.9); outline-offset: 1px;
 }
 .library-panel-excerpt-from {
-  /* Same arithmetic as .library-panel-kind above: 0.5 tops out at 3.9:1. */
+  
   margin: -1rem 0 1.4rem; color: rgba(220,210,195,0.72);
   font-size: 0.78rem; font-style: italic; line-height: 1.6;
 }

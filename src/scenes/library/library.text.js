@@ -1,50 +1,3 @@
-// One scene, one text file. The two catalogs below stay clearly separated
-// (real bookshelf vs. invented CD collection) by their own header comments
-// and a section divider.
-//
-// The real bookshelf, cataloged from a photo of Scott's own shelf, scanned
-// for every distinct book, film, and divination deck on it. See the
-// library scene (library.js, this folder) for how this becomes a 3D shelf
-// you can look around and click into.
-//
-// row/col/pos preserve the real shelf's layout — a 4x2 Kallax-style cube
-// shelf, row 1 on top — and pos is left-to-right order within that cubby,
-// so the scene lays these out in the same order they actually sit in
-// Scott's apartment.
-//
-// Every isbn13/publisher/publish_year/pages/translator/editor field below
-// was looked up (Open Library, publisher pages, WorldCat-adjacent
-// bookseller listings), not guessed — and where a specific edition
-// couldn't be pinned down from the spine alone (a title with several
-// active printings, or an ambiguous translation), that's recorded in a
-// `note` field rather than silently picking one. release_year/
-// runtime_min/country on the film entries were looked up the same way;
-// ISBN doesn't apply to films, so those keep their Criterion spine
-// numbers (in `creator`) as their identifier instead.
-//
-// The read panel surfaces writer/producer credits on every film, a short
-// excerpt for as many books as possible, and a YouTube link to one
-// pivotal, non-spoiling scene per film.
-//   - `writer` / `producer` on every bluray entry, researched the same
-//     way as the rest of the filmographic data.
-//   - `youtube` (a link) + `scene` (what it shows) on every film — picked
-//     for being a genuinely pivotal/iconic moment that doesn't give away
-//     the ending, preferring official studio/Movieclips-style uploads
-//     where one exists. For films with no individual non-spoiler scene
-//     clip on YouTube (a handful of harder-to-clip arthouse titles), the
-//     link points at the film's own trailer instead, which is non-spoiler
-//     by definition — the standing rule for any film added to this shelf
-//     in the future. Links can rot; that's an accepted tradeoff for
-//     linking out to real footage instead of hosting/reproducing it here.
-//   - `excerpt` on books/decks where a short, fair-use-scale quotation
-//     exists to give (mostly opening lines, matched to the specific
-//     translation on the shelf where translation matters). Deliberately
-//     NOT added to art/photography/reference books (the Taschen volumes,
-//     Japanese Woodblock Prints, Book of Symbols, Art of Atari, the French
-//     Laundry cookbooks, Expanding Universe) or to the tarot/alchemy decks
-//     — there's no natural "excerpt" for those. Also deliberately skipped
-//     for The Lyrics (McCartney) — reproducing song lyrics, even briefly,
-//     is a firmer copyright line than a novel's opening sentence.
 export const libraryItems = [
   { id: 1, type: 'book', title: 'Beowulf', creator: 'trans. Seamus Heaney', row: 1, col: 1, pos: 0, isbn13: '9780393330106', publisher: 'W. W. Norton & Company', translator: 'Seamus Heaney', excerpt: 'So. The Spear-Danes in days gone by and the kings who ruled them had courage and greatness. We have heard of those princes’ heroic campaigns.', catalog: 'Norton standalone paperback edition; Norton Critical Edition variant is 9780393938371' },
   { id: 2, type: 'book', title: 'Shinto: The Kami Way', creator: 'Sokyo Ono', row: 1, col: 1, pos: 1, isbn13: '9780804819602', publisher: 'Tuttle Publishing', publish_year: 1994, catalog: 'multiple Tuttle printings exist; also 9780804805254 (1989)', excerpt: 'From time immemorial the Japanese people have believed in and worshipped kami' },
@@ -154,10 +107,6 @@ export const libraryItems = [
   { id: 106, type: 'book', title: 'The French Laundry, Per Se', creator: 'Thomas Keller (Artisan)', row: 2, col: 4, pos: 5, isbn13: '9781579658496', publisher: 'Artisan', publish_year: 2020, pages: 400, full_title: 'The French Laundry, Per Se' },
   { id: 107, type: 'book', title: 'Expanding Universe: Photographs from the Hubble Space Telescope', creator: 'Taschen', row: 2, col: 4, pos: 6, isbn13: '9783836549226', publisher: 'TASCHEN', pages: 260, creator_full: 'essay by Owen Edwards, interview with Zoltan Levay', catalog: '25th-anniversary edition; a 30th-anniversary edition with new images also exists — edition uncertain' },
 
-  // These books were added from ISBNs Scott provided directly rather than
-  // read off a shelf photo, so row/col/pos below are arbitrary (spread
-  // across the existing book cubbies, never the film-only cubbies), not a
-  // record of where these physically sit.
   { id: 108, type: 'book', title: 'The Changing Light at Sandover', creator: 'James Merrill', row: 2, col: 1, pos: 100, isbn13: '9780679410836', publisher: 'Knopf', publish_year: 1992, pages: 560, excerpt: 'AM I IN YR ROOM SO ARE ALL YR DEAD WHO HAVE NOT GONE INTO OTHER BODIES… NOW DO U UNDERSTAND WHAT HEAVEN IS IT IS THE SURROUND OF THE LIVING' },
   { id: 109, type: 'book', title: 'The Beatles Anthology', creator: 'The Beatles', row: 2, col: 4, pos: 100, isbn13: '9780811826846', publisher: 'Chronicle Books', publish_year: 2000, pages: 368,  },
   { id: 110, type: 'book', title: 'VALIS', creator: 'Philip K. Dick', row: 1, col: 1, pos: 100, isbn13: '9780547572413', publisher: 'Mariner Books', publish_year: 2011, pages: 271, excerpt: 'Horselover Fat’s nervous breakdown began the day he got the phone call from Gloria asking if he had any Nembutals.' },
@@ -172,13 +121,9 @@ export const libraryItems = [
   { id: 119, type: 'book', title: 'Prometheus Rising', creator: 'Robert Anton Wilson', row: 1, col: 1, pos: 101, isbn13: '9780692710609', publisher: 'Hilaritas Press', publish_year: 2016, pages: 321, excerpt: 'William James, father of American psychology, tells of meeting an old lady who…', catalog: 'excerpt verified against the 1997 New Falcon printing rather than the Hilaritas edition on the shelf; same text' },
   { id: 120, type: 'book', title: 'Everything Is Under Control: Conspiracies, Cults, and Cover-Ups', creator: 'Robert Anton Wilson', row: 1, col: 2, pos: 101, isbn13: '9780061984310', publisher: 'HarperCollins', publish_year: 2009, pages: 456, excerpt: 'A random telephone survey of 800 American adults in September 1996 found that 74 percent…' },
 
-  // Same randomized-placement rule as the batch above — not from a shelf
-  // photo, so row/col/pos are arbitrary.
   { id: 121, type: 'book', title: 'Daimonic Reality: A Field Guide to the Otherworld', creator: 'Patrick Harpur', row: 1, col: 2, pos: 102, isbn13: '9780937663097', publisher: 'Pine Winds Press', publish_year: 2003, pages: 329, catalog: 'no excerpt: no accessible full text — the Internet Archive copy is lend-only' },
   { id: 122, type: 'book', title: 'Stories of Your Life and Others', creator: 'Ted Chiang', row: 1, col: 1, pos: 102, isbn13: '9781101972120', publisher: 'Vintage Books', publish_year: 2016, pages: 285, excerpt: 'Were the tower to be laid down across the plain of Shinar…' },
 
-  // Same rule as above: row/col/pos below are arbitrary, spread across
-  // the existing book-only cubbies, not a record of physical placement.
   { id: 123, type: 'book', title: 'The Glass Bead Game', creator: 'Hermann Hesse', row: 1, col: 1, pos: 103, isbn13: '9780312278496', publisher: 'Picador USA', publish_year: 2002, pages: 558, excerpt: 'It is our intention to preserve in these pages what scant biographical material…' },
   { id: 124, type: 'book', title: 'Tord Boontje', creator: 'Martina Margetts (ed.)', row: 2, col: 4, pos: 103, isbn13: '9780847829293', publisher: 'Rizzoli', publish_year: 2007, pages: 240,  },
   { id: 125, type: 'book', title: 'Collected Poems', creator: 'James Merrill', row: 2, col: 1, pos: 102, isbn13: '9780375411397', publisher: 'Knopf', publish_year: 2001, pages: 885, excerpt: 'Black on flat water past the jonquil lawns' },
@@ -205,51 +150,14 @@ export const libraryItems = [
   { id: 146, type: 'book', title: 'Snake ’n’ Bacon’s Cartoon Cabaret', creator: 'Michael Kupperman', row: 1, col: 1, pos: 106, isbn13: '9780380807901', publisher: 'HarperCollins', publish_year: 2000,  },
   { id: 147, type: 'book', title: 'Nobilis, Livre de Base', creator: 'Jenna Katerin Moran (French edition)', row: 2, col: 3, pos: 105, isbn13: '9782970031406', publisher: 'Black Book Éditions',  },
 
-  // Same rule as the other ISBN-only batches above: these three came from
-  // ISBNs Scott provided directly (2026-09-01), not a shelf photo, so
-  // row/col/pos below are arbitrary — spread across existing book cubbies,
-  // never the film-only ones. No `excerpt` on any of the three: unlike the
-  // rest of this catalog (mostly public-domain classics or short passages
-  // already confirmed against a specific print edition), these are all
-  // still-in-copyright 20th-century children's books, and a search-sourced
-  // quote wasn't confirmed precisely enough against this specific edition's
-  // text to print with the same confidence the rest of the shelf's excerpts
-  // carry — same standing not-guessed rule as everywhere else in this file,
-  // applied to the excerpt field this time instead of the ISBN.
   { id: 148, type: 'book', title: 'Mrs. Piggle-Wiggle', creator: 'Betty MacDonald', row: 1, col: 1, pos: 107, isbn13: '9780064401487', publisher: 'HarperCollins', publish_year: 2007, pages: 144, catalog: 'first published 1947; this specific ISBN edition is illustrated by Alexandra Boiger (earlier printings were illustrated by Hilary Knight — illustrator intentionally not treated as settled beyond this edition\'s own credited artist).; no excerpt: chapter one is ‘Mrs. Piggle-Wiggle, Herself’ but its first line is not findable online' },
   { id: 149, type: 'book', title: 'Pippi Longstocking', creator: 'Astrid Lindgren', row: 1, col: 2, pos: 108, isbn13: '9780142402498', publisher: 'Puffin Books (Puffin Modern Classics)', publish_year: 2005, pages: 160, translator: 'Florence Lamborn', excerpt: 'Way out at the end of a tiny little town was an old overgrown garden…', catalog: 'excerpt matches the standard English text but the source did not name Lamborn as translator' },
   { id: 150, type: 'book', title: 'Encyclopedia Brown, Boy Detective', creator: 'Donald J. Sobol', row: 2, col: 2, pos: 106, isbn13: '9780142408889', publisher: 'Puffin Books', publish_year: 2007, pages: 96, excerpt: 'Mr. and Mrs. Brown had one child.', catalog: 'excerpt from a secondary source rather than a scan of the 1963 edition' },
 ];
 
-// ─────────────────────────────────────────────────────────────────────────
 
-// CD rack catalog — perceptualmechanics.com library scene.
-//
-// Unlike the bookshelf above, this collection is NOT catalogued
-// from a real physical shelf. Scott doesn't own any of these CDs anymore; this
-// is an invented-but-plausible "collection I wish I still had" built up together,
-// album by album, across a long conversation. Every entry below was explicitly
-// requested, accepted, or left unobjected-to by Scott during that dictation —
-// nothing here is filler invented unilaterally.
-//
-// Per the site's hard convention (see library.js header, this folder), there is no
-// real cover art anywhere in this scene — CD spines are canvas-drawn schematic
-// textures only, artist/album as plain text.
-//
-// CDs open the same #library-panel every book and film already uses.
-// Each entry below carries `video` (a short description of what the clip
-// shows — mirrors `scene` on the film entries in library.js) and
-// `youtube` (a real, verified video URL: an official music video where
-// one exists, otherwise a genuine live performance of a song from that
-// specific album — never a generic "best of" or an unrelated song). Every
-// URL below was pulled from an actual web search result, never
-// fabricated — for a handful of older/scene-less tracks (ambient pieces,
-// some jazz, some Krautrock) no traditional "video" exists, so the
-// closest genuine real thing (a live performance, an official audio
-// upload, or a documented archival video) was used instead.
 
 export const cdRackItems = [
-  // --- The Beatles (A Hard Day's Night onward) ---
   { id: 1, artist: 'The Beatles', album: "A Hard Day's Night", video: 'the title track, official music video', youtube: 'https://www.youtube.com/watch?v=70QfHtKdh_0' },
   { id: 2, artist: 'The Beatles', album: 'Beatles for Sale', video: '"Eight Days a Week," official music video', youtube: 'https://www.youtube.com/watch?v=kle2xHhRHg4' },
   { id: 3, artist: 'The Beatles', album: 'Help!', video: '"Help!," official remastered video', youtube: 'https://www.youtube.com/watch?v=CaBaWvLbJXY' },
@@ -262,7 +170,6 @@ export const cdRackItems = [
   { id: 10, artist: 'The Beatles', album: 'Abbey Road', video: '"Here Comes the Sun," official music video', youtube: 'https://www.youtube.com/watch?v=KQetemT1sWc' },
   { id: 11, artist: 'The Beatles', album: 'Let It Be', video: '"Let It Be," official music video', youtube: 'https://www.youtube.com/watch?v=5WywXZ_G0EI' },
 
-  // --- Led Zeppelin (full catalog) ---
   { id: 12, artist: 'Led Zeppelin', album: 'Led Zeppelin', video: '"Communication Breakdown," live at the Royal Albert Hall, 1970', youtube: 'https://www.youtube.com/watch?v=KqF3J8DpEb4' },
   { id: 13, artist: 'Led Zeppelin', album: 'Led Zeppelin II', video: '"Whole Lotta Love," official music video', youtube: 'https://www.youtube.com/watch?v=HQmmM_qwG4k' },
   { id: 14, artist: 'Led Zeppelin', album: 'Led Zeppelin III', video: '"Immigrant Song," live 1972, official video', youtube: 'https://www.youtube.com/watch?v=RlNhD0oS5pk' },
@@ -273,34 +180,28 @@ export const cdRackItems = [
   { id: 19, artist: 'Led Zeppelin', album: 'In Through the Out Door', video: '"In the Evening," 1990 remaster', youtube: 'https://www.youtube.com/watch?v=bJSJavz1AOM' },
   { id: 20, artist: 'Led Zeppelin', album: 'Coda', video: '"Bonzo\'s Montreux," remastered', youtube: 'https://www.youtube.com/watch?v=C-l6dCBbW9w' },
 
-  // --- Classic rock additions ---
   { id: 21, artist: 'Pink Floyd', album: 'The Dark Side of the Moon', video: '"Money," official music video', youtube: 'https://www.youtube.com/watch?v=-0kcet4aPpQ' },
   { id: 22, artist: 'The Who', album: "Who's Next", video: '"Baba O\'Riley," 1971 official video', youtube: 'https://www.youtube.com/watch?v=_8_Pf144Qmg' },
   { id: 23, artist: 'Cream', album: 'Disraeli Gears', video: '"Sunshine of Your Love," official video (HD)', youtube: 'https://www.youtube.com/watch?v=HbqQL0J_Vr0' },
 
-  // --- Wilco lane ---
   { id: 24, artist: 'Wilco', album: 'Being There', video: '"Outtasite (Outta Mind)," official video — the band skydiving mid-song', youtube: 'https://www.youtube.com/watch?v=VLfYMgp_97s' },
   { id: 25, artist: 'Wilco', album: 'Summerteeth', video: '"Can\'t Stand It"', youtube: 'https://www.youtube.com/watch?v=pPqQ2AWShqc' },
   { id: 26, artist: 'Wilco', album: 'Yankee Hotel Foxtrot', video: '"I Am Trying to Break Your Heart"', youtube: 'https://www.youtube.com/watch?v=zlxH9-TYseY' },
   { id: 27, artist: 'Wilco', album: 'A Ghost Is Born', video: '"Spiders (Kidsmoke)"', youtube: 'https://www.youtube.com/watch?v=Yk541WmcoSg' },
 
-  // --- R.E.M. lane ---
   { id: 28, artist: 'R.E.M.', album: 'Murmur', video: '"Radio Free Europe," the band\'s original 1983 video', youtube: 'https://www.youtube.com/watch?v=Ac0oaXhz1u8' },
   { id: 29, artist: 'R.E.M.', album: 'Document', video: '"The One I Love," official music video', youtube: 'https://www.youtube.com/watch?v=j7oQEPfe-O8' },
   { id: 30, artist: 'R.E.M.', album: 'Automatic for the People', video: '"Everybody Hurts," official HD music video', youtube: 'https://www.youtube.com/watch?v=5rOiW_xY-kc' },
   { id: 31, artist: 'R.E.M.', album: 'New Adventures in Hi-Fi', video: '"E-Bow the Letter," official video, featuring Patti Smith', youtube: 'https://www.youtube.com/watch?v=5cnIQHJ169s' },
 
-  // --- Pixies (everything) ---
   { id: 32, artist: 'Pixies', album: 'Come On Pilgrim', video: '"Caribou," live performance', youtube: 'https://www.youtube.com/watch?v=55-Z10Wpvjk' },
   { id: 33, artist: 'Pixies', album: 'Surfer Rosa', video: '"Gigantic," live at VPRO Studios, 1988', youtube: 'https://www.youtube.com/watch?v=pDoQuFPGdjQ' },
   { id: 34, artist: 'Pixies', album: 'Doolittle', video: '"Here Comes Your Man," official music video', youtube: 'https://www.youtube.com/watch?v=tPgf_btTFlc' },
   { id: 35, artist: 'Pixies', album: 'Bossanova', video: '"Velouria," official music video', youtube: 'https://www.youtube.com/watch?v=nc0Mv4Iyxvc' },
   { id: 36, artist: 'Pixies', album: 'Trompe le Monde', video: '"Alec Eiffel," official music video', youtube: 'https://www.youtube.com/watch?v=rsMLjaloyvI' },
 
-  // --- For Squirrels ---
   { id: 37, artist: 'For Squirrels', album: 'Example', video: '"Mighty K.C.," official music video', youtube: 'https://www.youtube.com/watch?v=yBbl3RpgNN4' },
 
-  // --- Minimalism ---
   { id: 38, artist: 'Steve Reich', album: 'Music for 18 Musicians', video: 'full performance by eighth blackbird', youtube: 'https://www.youtube.com/watch?v=ZXJWO2FQ16c' },
   { id: 39, artist: 'John Adams', album: 'Harmonielehre', video: '"Short Ride in a Fast Machine," official score video', youtube: 'https://www.youtube.com/watch?v=qwa42YhCT2E' },
   { id: 40, artist: 'John Adams', album: 'Nixon in China', video: '"News Has a Kind of Mystery," live at the Met, 2011', youtube: 'https://www.youtube.com/watch?v=F54z2VUhXDc' },
@@ -310,7 +211,6 @@ export const cdRackItems = [
   { id: 44, artist: 'John Adams', album: 'Naive and Sentimental Music', video: 'LA Philharmonic, Esa-Pekka Salonen conducting', youtube: 'https://www.youtube.com/watch?v=1WtV7XJckBU' },
   { id: 45, artist: 'John Adams', album: 'The Dharma at Big Sur', video: 'Tracy Silverman, electric violin, live 2014', youtube: 'https://www.youtube.com/watch?v=d0JE7YaZf5Y' },
 
-  // --- Electronic lane ---
   { id: 46, artist: 'Aphex Twin', album: 'Selected Ambient Works 85-92', video: '"Xtal," opening track', youtube: 'https://www.youtube.com/watch?v=Xw5AiRVqfqk' },
   { id: 47, artist: 'Aphex Twin', album: 'Selected Ambient Works Volume II', video: '"Blue Calx"', youtube: 'https://www.youtube.com/watch?v=2BhaRfkADKk' },
   { id: 48, artist: 'Aphex Twin', album: 'Richard D. James Album', video: '"Girl/Boy Song"', youtube: 'https://www.youtube.com/watch?v=WX562jnoRo0' },
@@ -320,14 +220,12 @@ export const cdRackItems = [
   { id: 52, artist: 'Underworld', album: 'Beaucoup Fish', video: '"King of Snake," official music video', youtube: 'https://www.youtube.com/watch?v=_43N5XxXths' },
   { id: 53, artist: 'Underworld', album: 'Everything, Everything', video: '"Two Months Off," music video', youtube: 'https://www.youtube.com/watch?v=bSUb-Rx-37A' },
 
-  // --- Hip-hop ---
   { id: 54, artist: 'Madvillain', album: 'Madvillainy', video: '"All Caps," official animated video', youtube: 'https://www.youtube.com/watch?v=QYZJyHEdmq4' },
   { id: 55, artist: 'Beastie Boys', album: 'Licensed to Ill', video: '"(You Gotta) Fight for Your Right (To Party)," official video', youtube: 'https://www.youtube.com/watch?v=eBShN8qT4lk' },
   { id: 56, artist: 'Beastie Boys', album: "Paul's Boutique", video: '"Hey Ladies," music video', youtube: 'https://www.youtube.com/watch?v=AKiVlU2zKdY' },
   { id: 57, artist: 'Beastie Boys', album: 'Check Your Head', video: '"So What\'cha Want," music video', youtube: 'https://www.youtube.com/watch?v=LEslUnPBUpI' },
   { id: 58, artist: 'Beastie Boys', album: 'Ill Communication', video: '"Sabotage," official video, directed by Spike Jonze', youtube: 'https://www.youtube.com/watch?v=z5rRZdiu1UE' },
 
-  // --- Grunge / alt ---
   { id: 59, artist: 'Nirvana', album: 'Bleach', video: '"About a Girl"', youtube: 'https://www.youtube.com/watch?v=AjrlWA2yWtU' },
   { id: 60, artist: 'Nirvana', album: 'Nevermind', video: '"Smells Like Teen Spirit," official music video', youtube: 'https://www.youtube.com/watch?v=hTWKbfoikeg' },
   { id: 61, artist: 'Nirvana', album: 'In Utero', video: '"Heart-Shaped Box," directed by Anton Corbijn', youtube: 'https://www.youtube.com/watch?v=8eGY-4OALgM' },
@@ -337,12 +235,10 @@ export const cdRackItems = [
   { id: 65, artist: 'Meat Puppets', album: 'Meat Puppets II', video: '"Plateau," live at WFUV', youtube: 'https://www.youtube.com/watch?v=_-xLsGOekk8' },
   { id: 66, artist: 'Smashing Pumpkins', album: 'Gish', video: '"I Am One," official music video', youtube: 'https://www.youtube.com/watch?v=Pi6RJmUNBbw' },
 
-  // --- Shoegaze / Manchester ---
   { id: 67, artist: 'My Bloody Valentine', album: 'Loveless', video: '"Only Shallow," official music video', youtube: 'https://www.youtube.com/watch?v=FyYMzEplnfU' },
   { id: 68, artist: 'Ride', album: 'Nowhere', video: '"Vapour Trail," music video', youtube: 'https://www.youtube.com/watch?v=pVhNi5cU8mo' },
   { id: 69, artist: 'The Stone Roses', album: 'The Stone Roses', video: '"She Bangs the Drums," official video', youtube: 'https://www.youtube.com/watch?v=wD6Pq0bSMPo' },
 
-  // --- Jazz ---
   { id: 70, artist: 'Miles Davis', album: 'Kind of Blue', video: '"So What," live in 1959 with John Coltrane', youtube: 'https://www.youtube.com/watch?v=6w4FI0Jq0lI' },
   { id: 71, artist: 'Miles Davis', album: 'In a Silent Way', video: 'live performance, Paris 1991', youtube: 'https://www.youtube.com/watch?v=H47xNRBZcDM' },
   { id: 72, artist: 'John Coltrane', album: 'A Love Supreme', video: 'the only complete live performance of the suite, Antibes, 1965', youtube: 'https://www.youtube.com/watch?v=RlrQZc3h13E' },
@@ -351,7 +247,6 @@ export const cdRackItems = [
   { id: 75, artist: 'Mahavishnu Orchestra', album: 'The Inner Mounting Flame', video: 'full album, opening with "Meeting of the Spirits"', youtube: 'https://www.youtube.com/watch?v=5ofh_S52Uks' },
   { id: 76, artist: 'Weather Report', album: 'Heavy Weather', video: '"Birdland"', youtube: 'https://www.youtube.com/watch?v=rI87xvv-OJE' },
 
-  // --- Post-rock / trip-hop / other ---
   { id: 77, artist: 'Tortoise', album: 'TNT', video: 'the album performed live in full, 21st-anniversary set', youtube: 'https://www.youtube.com/watch?v=EwJf5fw57Yo' },
   { id: 78, artist: 'Massive Attack', album: 'Mezzanine', video: '"Teardrop," official music video', youtube: 'https://www.youtube.com/watch?v=u7K72X4eo_s' },
   { id: 79, artist: 'Tricky', album: 'Maxinquaye', video: '"Overcome," official music video', youtube: 'https://www.youtube.com/watch?v=ViHiOopNTlc' },
@@ -364,7 +259,6 @@ export const cdRackItems = [
   { id: 86, artist: 'The Police', album: 'Synchronicity', video: '"Every Breath You Take," official music video', youtube: 'https://www.youtube.com/watch?v=OMOGaugKpzs' },
   { id: 87, artist: 'The Police', album: 'Ghost in the Machine', video: '"Spirits in the Material World," official music video', youtube: 'https://www.youtube.com/watch?v=BHOevX4DlGk' },
 
-  // --- Prog / Britpop / art-pop ---
   { id: 88, artist: 'King Crimson', album: 'Red', video: '"Starless"', youtube: 'https://www.youtube.com/watch?v=OfR6_V91fG8' },
   { id: 89, artist: 'Genesis', album: 'Duke', video: '"Turn It On Again," official music video', youtube: 'https://www.youtube.com/watch?v=8OIkw9kJ0u4' },
   { id: 90, artist: 'XTC', album: 'Skylarking', video: '"Dear God," official music video', youtube: 'https://www.youtube.com/watch?v=p554R-Jq43A' },
@@ -377,7 +271,6 @@ export const cdRackItems = [
   { id: 97, artist: 'Beck', album: 'Odelay', video: '"Where It\'s At," official music video', youtube: 'https://www.youtube.com/watch?v=EPfmNxKLDG4' },
   { id: 98, artist: 'Beck', album: 'Midnite Vultures', video: '"Mixed Bizness," official music video', youtube: 'https://www.youtube.com/watch?v=OdqKQRhi6qU' },
 
-  // --- Ambient / downtempo / krautrock (round added late) ---
   { id: 99, artist: 'Brian Eno', album: 'Music for Airports', video: '"1/1," opening movement', youtube: 'https://www.youtube.com/watch?v=LKZ3fGR2SDY' },
   { id: 100, artist: 'Brian Eno', album: 'Another Green World', video: '"St. Elmo\'s Fire," featuring Robert Fripp', youtube: 'https://www.youtube.com/watch?v=B807CcVxW9U' },
   { id: 101, artist: 'BT', album: 'If the Stars Are Eternal So Are You and I', video: '"13 Angels on My Broken Windowsill," official video', youtube: 'https://www.youtube.com/watch?v=Rrj74AZ0l5Q' },
@@ -393,7 +286,6 @@ export const cdRackItems = [
   { id: 111, artist: 'DJ Shadow', album: 'Endtroducing.....', video: '"Midnight in a Perfect World," official music video', youtube: 'https://www.youtube.com/watch?v=mSEj9eUq5YU' },
   { id: 112, artist: 'Kruder & Dorfmeister', album: 'The K&D Sessions', video: '"High Noon," official music video', youtube: 'https://www.youtube.com/watch?v=-hxZ0fcsGzw' },
 
-  // --- Last confirmed round ---
   { id: 113, artist: 'Lush', album: 'Gala', video: '"Sweetness and Light," official music video', youtube: 'https://www.youtube.com/watch?v=u7cqkpy4QrQ' },
   { id: 114, artist: 'Built to Spill', album: 'Keep It Like a Secret', video: '"Carry the Zero," the band\'s best-known song', youtube: 'https://www.youtube.com/watch?v=MEeolUZeW9M' },
   { id: 115, artist: 'The Beach Boys', album: 'Pet Sounds', video: '"God Only Knows," the band\'s best song', youtube: 'https://www.youtube.com/watch?v=M0lj3WX_5ps' },

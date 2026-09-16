@@ -1,14 +1,3 @@
-// ─── medium: what the board actually spells ─────────────────────────────────
-// Run with `node scripts/medium-spell.mjs`. Not part of the build — the bench
-// for the one claim the scene cannot make in a comment: that a hand with no
-// destination produces a tape that reads like English rather than like a
-// keyboard smash.
-//
-// Nothing in here is a copy of the scene. It is the real physics, the real
-// lexicon and the real board — `medium.text.js`'s MARKS, the same array
-// `medium.js` draws — with a visitor stubbed in. An earlier version of this
-// file kept its own copy of the letter arcs, which meant the thing being
-// measured was not quite the thing that shipped.
 import {
   DWELL_EASE, DWELL_RESIST,
   createCup, stepCup, createWander, stepWander,
@@ -22,17 +11,9 @@ import { MARKS, BOARD_HOME, LETTER_ARCS, DIGITS, PUNCTUATION, WORDS, MARK_GAP } 
 
 const DT = 1 / 60;
 
-// ─── A session ──────────────────────────────────────────────────────────────
-// `visitor(t, cup)` returns the visitor's fingertip, or null if they are not
-// touching. `flat` is the control: it sends every mark to the same weight, so
-// the field becomes a uniform pull and the dwell threshold becomes a constant.
-// Everything else is the scene as it ships.
 function session({ seconds = 300, seed, touching = false, flat = false, marks = MARKS, home = BOARD_HOME }) {
   const hand = createWander(seed, home.x, home.y);
   const cup = createCup(hand.x, hand.y);
-  // The scene's own visitor, not an approximation of one: `stepVisitor` is what
-  // medium.js calls, so "a hand resting on it" here is exactly the hand a
-  // visitor has when they press and stop.
   const visitor = createVisitor(cup.x, cup.y);
   visitor.down = touching;
   const dwell = createDwell();
@@ -59,10 +40,6 @@ function session({ seconds = 300, seed, touching = false, flat = false, marks = 
 }
 
 const show = (s) => s.replace(/(.{58})/g, '$1\n           ');
-// Letters only. The tape also carries digits, punctuation and the spaces after
-// it, and counting those in the denominator quietly moved the number two points
-// the day punctuation was added — a ruler that changes when the thing being
-// measured gains a new part is not a ruler.
 const vowels = (s) => {
   const letters = s.replace(/[^A-Z]/g, '');
   return (letters.match(/[AEIOU]/g) || []).length / (letters.length || 1);
@@ -79,14 +56,7 @@ for (const seed of [611853, 7, 1031, 66613]) {
   console.log(`           words it passed through: ${held.words.slice(-12).join(' ') || '(none)'}\n`);
 }
 
-// ─── The control ────────────────────────────────────────────────────────────
-// Same hands, same seeds, plausibility flattened — the field becomes a uniform
-// pull toward the middle of the letters and every mark costs the same dwell. If
-// this reads like the runs above, the lexicon is decoration.
 {
-  // Ten seeds, not one. A single four-minute tape is forty letters long and its
-  // vowel share swings by fifteen points from seed to seed; reporting one of
-  // them as the result was the first version of this and it was noise.
   const seeds = [7, 1031, 66613, 5, 99, 404, 8123, 31337, 2, 555];
   const on = seeds.map(seed => session({ seed, touching: true }));
   const off = seeds.map(seed => session({ seed, touching: true, flat: true }));
@@ -98,20 +68,6 @@ for (const seed of [611853, 7, 1031, 66613]) {
   console.log(`         vowel share  on ${(100 * avg(on, r => vowels(r.tape))).toFixed(1)}%  off ${(100 * avg(off, r => vowels(r.tape))).toFixed(1)}%   (English is 38.1%)`);
 }
 
-// ─── The geometry control ───────────────────────────────────────────────────
-// 5.0 moved the letters from equal ANGLE to equal ARC LENGTH, and the claim
-// made for it was that a board where the middle of each arc is not thinned out
-// gives the lexicon a fairer field — vowels included — rather than tilting it.
-// That claim needs a before as well as an after, so the BEFORE is built here
-// rather than quoted from somewhere: the equal-angle placement this replaced,
-// reconstructed from the same radii and the same spreads, and run through the
-// same session() as everything else.
-//
-// It lives in the bench and not in a comment because a comparison nobody can
-// re-run is not evidence — see STANDARDS.md, "A measurement in a comment must
-// be re-runnable, or it must not be there". The first version of this WAS a
-// comment, with numbers from a scratch harness that was never committed, and
-// they did not reproduce.
 const EQUAL_ANGLE = (chars, spread, radius, cy, ry) =>
   chars.split('').map((ch, i) => {
     const t = (i / (chars.length - 1) - 0.5) * spread;

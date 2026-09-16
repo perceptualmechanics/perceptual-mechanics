@@ -10,47 +10,10 @@ import {
 import './orbiter.css';
 import orbiterHtml from './orbiter.html?raw';
 
-// ─── Poem cross-links ───────────────────────────────────────────────────────
-// POEM_LINKS used to live here, keyed by poem title + stanza index since
-// orbiter.text.js entries didn't carry an id yet. Now every poem has one
-// (orbiter.text.js), and the links themselves moved into the shared
-// src/links.js store — { scene: 'orbiter', id, field: 'stanzas', index }
-// — alongside every other scene's. A few of these pairs turned out to
-// already share a source — Moon Song and Raise a Glass are parts 9 and 11
-// of the same unpublished cycle, thirty-six.doc (see orbiter.text.js's
-// header comment) — which is presumably why the vocabulary echoes at all;
-// the DNA/Apocrypha and DNA/Haiku pairs, by contrast, are two completely
-// unrelated source documents landing on the same word independently.
 
-// ─── Orbiter: p-orbital, Satellites ────────────────────────────────────────
-// A hydrogen atom's p-orbital — the actual shape an electron's wavefunction
-// takes in that state, rendered as a fuzzy probability cloud rather than a
-// solid mesh. A p-orbital is two lobes on opposite sides of a center, split
-// by a flat nodal plane where the electron's presence-probability is
-// exactly zero — a dumbbell silhouette, recognizable without a label. The
-// two lobes are built in buildOrbitalCloud below; the green/violet color
-// split stands for wavefunction phase — the two lobes of a real p-orbital
-// carry opposite sign, and that's genuinely what the color difference is
-// showing.
-//
-// The satellites (buildSatellites, below) sweep clean, deterministic,
-// tilted elliptical orbits — precise classical paths through and around a
-// cloud that has no precise path at all, the same word ("orbit") doing two
-// completely different kinds of work at two different scales in the same
-// frame. Kept deliberately crisp against the cloud's own deliberate
-// fuzziness — that contrast is the point, not something to soften.
-//
-// No textures fetched over the network — every texture on this site,
-// including the small nucleus below, is a canvas gradient drawn at load
-// time, not an image asset.
 
 const NUCLEUS_RADIUS = 0.16;
 
-// ─── One uniform pair -> two independent standard normals (Box-Muller) ─────
-// Used by buildSatellites below to draw a genuinely uniform random direction
-// on the sphere. See the comment at its call site for why a per-axis uniform
-// draw isn't one, and why this file carried that bug documented-but-unfixed
-// until v4.0.
 function gaussianPair() {
   const u = 1 - Math.random(); // (0,1] rather than [0,1) — Math.log(0) is -Infinity
   const v = Math.random();
@@ -58,12 +21,6 @@ function gaussianPair() {
   return [r * Math.cos(2 * Math.PI * v), r * Math.sin(2 * Math.PI * v)];
 }
 
-// ─── Nucleus ────────────────────────────────────────────────────────────────
-// A hydrogen atom's nucleus is a single proton, not a textured planet: one
-// small, simple, bright canvas texture — a hot, mottled plasma-like core
-// rather than a flat sphere, just enough surface interest to read as an
-// energetic point rather than an inert ball, small enough that the
-// p-orbital cloud around it is unmistakably the visual subject.
 function makeNucleusTexture() {
   const c = document.createElement('canvas');
   c.width = 256; c.height = 256;
@@ -75,8 +32,6 @@ function makeNucleusTexture() {
   g.addColorStop(1,    '#7a4520');
   cx.fillStyle = g;
   cx.fillRect(0, 0, 256, 256);
-  // A handful of soft mottled patches so the core reads as roiling plasma
-  // rather than a flat gradient ball.
   for (let i = 0; i < 18; i++) {
     const x = Math.random() * 256, y = Math.random() * 256;
     const r = 14 + Math.random() * 34;
@@ -90,49 +45,10 @@ function makeNucleusTexture() {
     cx.fill();
   }
   const tex = new THREE.CanvasTexture(c);
-  // A canvas is painted in sRGB, and a CanvasTexture defaults to no colour
-  // space at all — so every colour in it uploads as if it were linear and
-  // reads far brighter than it was painted. Measured here: 2,477 pixels
-  // change by 8/255 or more over a 3,543-pixel nucleus when this is set, the
-  // painted dark rim (#7a4520) being the worst of it. outside.js documents
-  // this failure at length and beamline, orrery and spectra all set the flag;
-  // this file's header asserts every texture in it is a canvas gradient drawn
-  // at load, which is exactly the case that needs it.
   tex.colorSpace = THREE.SRGBColorSpace;
   return tex;
 }
 
-// ─── p-orbital probability cloud ───────────────────────────────────────────
-// A genuinely fuzzy particle-density cloud — no solid mesh, no hard edge
-// anywhere — built from actual rejection sampling against the real
-// 2p-orbital probability density, |psi|^2 ∝ r^2 * e^(-r/a0) * cos^2(theta):
-//   - r^2 * e^(-r/a0) genuinely peaks at r = 2*a0 (basic calculus: the
-//     r^2 growth wins for small r, the exponential decay wins for large
-//     r, so the product rises then falls) — a real bulge-then-taper along
-//     the lobe's own length, not an approximation of one.
-//   - cos^2(theta), with theta measured from the lobe's own axis, is
-//     exactly zero at theta = 90° (the nodal plane through the nucleus)
-//     and maximal along the axis — this is what actually produces the
-//     two-lobe dumbbell in the real wavefunction, not a separate "two
-//     poles" placement decision.
-//   - Sampled with theta spanning the FULL 0..180° range in one pass
-//     (cos^2 is symmetric, so this naturally produces both lobes from a
-//     single distribution) and then, for exact rather than merely
-//     statistical mirror symmetry, only the upper half is actually
-//     sampled — the lower lobe is built as a precise reflection (y -> -y)
-//     of the upper one, particle for particle. That guarantees identical
-//     particle count and identical vertical extent between the two
-//     lobes, which is what true mirror symmetry requires; a naive
-//     full-range sample of this same distribution would only give equal
-//     counts on average, not a particle-for-particle match.
-// a0 (A0 below) is a tuning constant, not the real Bohr radius — chosen
-// (see check_porbital3.mjs/check_porbital4.mjs in the working notes) so
-// the bulk of the sampled cloud sits comfortably inside the satellites'
-// own inner orbit radius (1.35), with only its naturally fading tail
-// occasionally reaching past it — verified numerically: less than 2% of
-// particles fall beyond r=1.35 at a0=0.175, and the r-histogram rises
-// from near-zero, peaks around r=2*a0, and tapers back down, confirming
-// the bulge is real and not just visually assumed.
 function makePOrbitalDotTexture() {
   const c = document.createElement('canvas');
   c.width = 32; c.height = 32;
@@ -148,88 +64,25 @@ function makePOrbitalDotTexture() {
 
 function buildOrbitalCloud(preview) {
   const count = preview ? 900 : 2800;
-  // ─── What each constant here controls ──────────────────────────────────
-  // count: TUNABLE. More points = a denser-looking cloud, same shape. No
-  //   effect on the underlying math at all — it's just how many times
-  //   sampleUpperLobePoint() below gets called.
-  // A0: TUNABLE (this is the whole "size dial" for the orbital). It's the
-  //   single length-scale in the density formula r^2*e^(-r/A0) — the
-  //   distance along a lobe where the probability density actually peaks
-  //   is exactly r=2*A0 (see the comment above this function for the
-  //   calculus). Raise A0 and the whole dumbbell gets longer/fatter and
-  //   the peak-brightness band slides outward with it; lower it and the
-  //   cloud shrinks toward the nucleus. It is deliberately NOT the real
-  //   Bohr radius (~0.53 Angstrom in atomic units) — this is a picked
-  //   visual scale, chosen so the cloud sits inside the satellites' inner
-  //   orbit radius (1.35 below), not a physical constant.
   const A0 = 0.175;
-  // R_MAX and F_MAX are STRUCTURAL, not independent knobs — both are
-  // *derived from* A0 by the rejection-sampling math itself (see
-  // sampleUpperLobePoint below), not separate aesthetic choices. If A0
-  // changes, these formulas already track it correctly on their own;
-  // don't hand-edit R_MAX/F_MAX to a different multiple without redoing
-  // the math they're based on, or the sampler below silently produces a
-  // truncated or mis-normalized cloud instead of erroring.
   const R_MAX = A0 * 9; // truncation radius: e^(-9) ≈ 0.0001, so cutting the proposal distribution off here throws away a negligible sliver of the true (infinite-tailed) distribution rather than biasing it
   const F_MAX = 4 * A0 * A0 * Math.exp(-2); // the true peak of r^2*e^(-r/A0)*cos^2(theta): the radial factor peaks at r=2*A0 (value (2A0)^2*e^-2), the angular factor cos^2(theta) peaks at 1 when theta=0 (right on the lobe's axis) — multiplying the two peak values together bounds the *whole* 2D density, which is exactly what the rejection test below needs
 
   const positions = new Float32Array(count * 3);
   const colors = new Float32Array(count * 3);
-  // Undisturbed envelope position for each particle — animate() adds a
-  // small per-particle sinusoidal drift on top of this each frame rather
-  // than mutating it directly, so the underlying teardrop shape never
-  // erodes or random-walks away from what was actually sampled.
   const base = new Float32Array(count * 3);
   const drift = [];
 
-  // These two hues stand for wavefunction phase rather than being an
-  // arbitrary color choice: the teal-green lobe is the orbital's +phase
-  // lobe, the violet lobe is -phase.
   const colorPos = new THREE.Color(0x78ffb4);
   const colorNeg = new THREE.Color(0xc978ff);
 
-  // Rejection-sample one point in the UPPER lobe only (theta measured from
-  // the +Y axis, u = cos(theta) confined to [0,1] here) — the lower lobe
-  // is built below as an exact mirror of this one, not sampled
-  // independently, so the two lobes match particle-for-particle rather
-  // than merely "on average."
-  // ─── Rejection sampling, term by term ──────────────────────────────────
-  // Rejection sampling is a general technique for drawing samples from a
-  // distribution you can *evaluate* (compute a density for) but can't
-  // easily invert into a formula: repeatedly propose a random candidate
-  // point plus a random "keep it?" threshold, and keep the candidate only
-  // if it clears that threshold. Do this enough times and the surviving
-  // points are distributed exactly like the target density, not the
-  // (uniform) proposal distribution you drew candidates from.
   function sampleUpperLobePoint() {
     let r, u, weight;
     do {
-      // Propose a candidate (r, u): r uniform over [0, R_MAX] (candidate
-      // distance from the nucleus), u = cos(theta) uniform over [0, 1]
-      // (candidate angle off the lobe's own axis, upper half only — see
-      // the "why only the upper half" note above this function). This is
-      // a UNIFORM proposal — it does not yet look like a p-orbital at
-      // all; the accept/reject step below is what sculpts it into one.
       r = Math.random() * R_MAX;
       u = Math.random();
-      // The actual (unnormalized) p-orbital density at this candidate
-      // point: r^2 * e^(-r/A0) is the radial part (probability of being
-      // at distance r from the nucleus — rises then falls, peaking at
-      // r=2*A0), u*u is cos^2(theta), the angular part (probability of
-      // being at angle theta off-axis — maximal on-axis at theta=0/u=1,
-      // zero at the equator/nodal-plane at theta=90°/u=0). Multiplying
-      // them combines "how far out" and "how on-axis" into one weight:
-      // a point far out AND on-axis scores high, a point far out but
-      // near the equator scores low even though it's the same distance.
       weight = r * r * Math.exp(-r / A0) * u * u;
     } while (Math.random() * F_MAX >= weight);
-    // Accept/reject test: draw a random height up to the known ceiling
-    // F_MAX and keep the candidate only if the real density at this point
-    // clears that height. A point near the true density's peak (weight
-    // close to F_MAX) almost always survives; a point far from the peak
-    // (weight close to 0) almost always gets rejected and the loop tries
-    // again. The net effect, after many draws, is exactly the r^2*e^(-r/
-    // A0)*cos^2(theta) distribution — not an approximation of its shape.
     const phi = Math.random() * Math.PI * 2; // azimuth: uniform all the way around the lobe's axis — a p-orbital has no preferred direction to spin the dumbbell around, only along it, so this angle carries no shaping information, just spreads points evenly around the tube
     const y = r * u; // height along the lobe's axis = distance * cos(theta) — plain spherical-to-Cartesian, u already IS cos(theta) so no trig call is even needed here
     const perpR = r * Math.sqrt(Math.max(0, 1 - u * u)); // distance from the axis = distance * sin(theta), via sin^2+cos^2=1 (Math.max guards a tiny negative under sqrt from floating-point error when u rounds to exactly 1)
@@ -239,25 +92,6 @@ function buildOrbitalCloud(preview) {
   const half = count / 2;
   for (let i = 0; i < half; i++) {
     const p = sampleUpperLobePoint();
-    // Density-based brightness — particles near the true probability peak
-    // (r near 2*A0, close to the lobe's own axis) read hotter than ones
-    // out toward the fading tail, on top of what sheer overlap density
-    // under additive blending already does for free.
-    //
-    // Note: this recomputes the RADIAL factor only (p.r*p.r*Math.exp(-p.r/
-    // A0), divided by its own peak value 4*A0*A0*Math.exp(-2) — the same
-    // expression F_MAX above already computes for the angular-inclusive
-    // ceiling) — it does NOT reuse the angular cos^2(theta) term, so two
-    // particles at the same radius get the same brightness regardless of
-    // how close to the nodal plane they are, even though a real orbital's
-    // density does fall off angularly too. In practice most surviving
-    // samples near the equator (u near 0) were already heavily filtered
-    // out by the rejection test above, so this is a minor simplification,
-    // not a visible error.
-    // TUNABLE: 0.35 (the floor) and 0.65 (the range) below control how
-    // washed-out the dimmest particles look vs. how much hotter the
-    // brightest ones get — raising the floor makes the whole cloud read
-    // more uniformly bright and less "peaked."
     const dens = 0.35 + 0.65 * Math.min(1, (p.r * p.r * Math.exp(-p.r / A0)) / (4 * A0 * A0 * Math.exp(-2)));
 
     [1, -1].forEach(lobeSign => {
@@ -269,15 +103,6 @@ function buildOrbitalCloud(preview) {
       const col = lobeSign > 0 ? colorPos : colorNeg;
       colors[idx * 3] = col.r * dens; colors[idx * 3 + 1] = col.g * dens; colors[idx * 3 + 2] = col.b * dens;
 
-      // Slow drift/shimmer per particle, not a static point cloud: a fixed
-      // random direction (normalized) each particle nudges along, at its
-      // own phase and speed, so the swarm reads as gently alive rather
-      // than frozen — closer to butterfly.js's per-particle damped-
-      // velocity drift in spirit, though the underlying math here is
-      // simpler since there's no physical simulation to run, just an
-      // oscillation. Each mirrored pair gets its OWN independent drift
-      // (not mirrored motion) — only the static shape is a mirror image;
-      // synced motion between the two lobes would look mechanical.
       let dx = Math.random() * 2 - 1, dy = Math.random() * 2 - 1, dz = Math.random() * 2 - 1;
       const dl = Math.hypot(dx, dy, dz) || 1;
       dx /= dl; dy /= dl; dz /= dl;
@@ -316,38 +141,6 @@ function buildOrbitalCloud(preview) {
   };
 }
 
-// ─── Nucleus internal detail (click to reveal) ─────────────────────────────
-// Click the nucleus (same affordance as a satellite: cursor changes, it
-// brightens on hover) and it resolves into internal structure instead of
-// staying an inert dot; click again to collapse it back. Built lazily, on
-// first click only — nothing here costs anything while the nucleus sits
-// collapsed.
-//
-// Color confinement, and why there's no membrane here: individual quarks
-// and gluons are never observable in isolation at any achievable energy —
-// there is no boundary a shimmer could plausibly be "peeking through,"
-// because there's no surface there at all. What's actually happening
-// inside a proton or neutron is a constant, ongoing exchange of color
-// charge between its three bound (valence) quarks, with no point where
-// that exchange stops and something solid begins. So: no membrane, no
-// boundary anywhere. Each nucleon (proton or neutron) is rendered as its
-// own small, soft particle cloud — same "no hard edge" logic already
-// used for the p-orbital lobes above, just isotropic rather than lobed,
-// since a nucleon has no directional structure the way an orbital does —
-// with three brighter points inside standing for its three valence
-// quarks (uud for a proton, udd for a neutron — the count and the
-// confinement behavior are what matters here, not distinguishing flavor
-// visually), connected by a continuously pulsing shimmer rather than a
-// static wireframe triangle, so the exchange reads as restless and
-// ongoing rather than a solved, finished shape.
-//
-// Genuine scale compromise, on top of one already in this scene: the
-// visible nucleus is already vastly oversized relative to the electron
-// cloud around it (a true-to-scale atom would render it as a single
-// invisible point). This adds nucleon/quark-level detail on top of that
-// existing compromise — deliberately not an attempt to make the relative
-// sizes here "make sense." It's a reward for clicking, not another real
-// zoom level of the same model.
 function makeNucleonDotTexture(rgb) {
   const c = document.createElement('canvas');
   c.width = 24; c.height = 24;
@@ -364,31 +157,8 @@ function makeNucleonDotTexture(rgb) {
 function buildNucleusDetail(preview) {
   const group = new THREE.Group();
 
-  // Four nucleons in a small tetrahedral cluster — two protons, two
-  // neutrons (a helium-4-shaped cluster, not a literal hydrogen nucleus;
-  // see the scale-compromise note above) — the smallest arrangement that
-  // actually reads as "a cluster" rather than just "a pair." Offsets are a
-  // regular tetrahedron's own vertex directions, scaled to sit just
-  // outside the old plain sphere's radius.
-  // NUCLEON_R (nucleon cloud size) and SPREAD (distance from center) are
-  // both TUNABLE, both as fractions of NUCLEUS_RADIUS so they scale
-  // together automatically if that changes. Raise SPREAD to open the
-  // cluster out more (reads as looser/less bound); raise NUCLEON_R to
-  // make the individual nucleon clouds overlap more (reads as a single
-  // fuzzy blob instead of four distinct ones).
   const NUCLEON_R = NUCLEUS_RADIUS * 0.62;
   const SPREAD = NUCLEUS_RADIUS * 0.5;
-  // Four vertex directions of a regular tetrahedron: these are four
-  // alternating corners of a cube (same parity of sign flips — an even
-  // number of minus signs in each triple, i.e. (+++), (+--), (-+-),
-  // (--+)) — a standard construction, STRUCTURAL. Any four cube corners
-  // with mixed/inconsistent parity would NOT be equidistant from each
-  // other, so this specific sign pattern isn't an arbitrary pick among
-  // the cube's 8 corners; it's the one grouping of 4 that's actually
-  // tetrahedral. .normalize() shrinks each to length 1 (a direction, not
-  // yet a position), then .multiplyScalar(SPREAD) scales all four out to
-  // the same distance from center — so the four nucleons sit at the
-  // vertices of a regular tetrahedron of "radius" SPREAD.
   const offsets = [
     new THREE.Vector3(1, 1, 1), new THREE.Vector3(1, -1, -1),
     new THREE.Vector3(-1, 1, -1), new THREE.Vector3(-1, -1, 1),
@@ -403,47 +173,9 @@ function buildNucleusDetail(preview) {
   offsets.forEach((offset, ni) => {
     const rgb = kinds[ni] === 'proton' ? PROTON_RGB : NEUTRON_RGB;
 
-    // The nucleon's own soft cloud — isotropic radial falloff (no angular
-    // dependence needed the way the p-orbital's cos^2(theta) term
-    // required; a nucleon has no comparable directional structure to get
-    // right). Cube-rooting a min-of-two-uniforms draw biases samples
-    // toward the center while keeping a continuous, no-hard-edge falloff
-    // toward the surface — same spirit as the orbital cloud's own
-    // density-by-construction approach, just isotropic instead of lobed.
     const positions = new Float32Array(particleCount * 3);
     for (let i = 0; i < particleCount; i++) {
-      // rad: distance from this nucleon's own center, built from two
-      // independent tricks stacked together — STRUCTURAL as written (the
-      // exponents/counts below are what make each trick actually do its
-      // job; see the two bullets), though the overall NUCLEON_R scale is
-      // tunable above.
-      //   1. Math.cbrt(u) for a single uniform u in [0,1]: converts a
-      //      uniform 1D random number into a radius that's uniform BY
-      //      VOLUME inside a solid ball. A sphere's volume grows with
-      //      r^3, so for a truly volume-uniform fill, P(radius <= r) must
-      //      equal r^3 (in units where the outer radius is 1) — inverting
-      //      that CDF is exactly cube-rooting a uniform variable. Without
-      //      this, sampling rad = NUCLEON_R * u directly (no cbrt) would
-      //      pack points toward the CENTER, since a thin shell near r=0
-      //      encloses far less volume than an equally-thin shell near the
-      //      surface, yet a plain linear u would give both shells equal
-      //      point counts.
-      //   2. Math.min(rand(), rand()) instead of one rand(): taking the
-      //      smaller of two independent uniform draws skews the result
-      //      toward 0 — this is what actually produces the "denser core,
-      //      soft falloff toward the edge" look (a plain single-cbrt draw
-      //      alone would be uniform-by-volume, i.e. flat density, no
-      //      falloff at all). The two tricks compose: min-of-two shapes
-      //      the density profile, cbrt converts that shaped 1D value into
-      //      a volumetrically-correct 3D radius.
       const rad = NUCLEON_R * Math.cbrt(Math.min(Math.random(), Math.random()));
-      // theta/phi: a uniformly random DIRECTION (not weighted toward the
-      // poles) — same inverse-CDF trick as the star field below
-      // (acos(2u-1) rather than a plain uniform angle), needed here
-      // because a nucleon's own cloud has no preferred axis the way the
-      // p-orbital lobes do (isotropic, not lobed) — see the star-field
-      // comment further down in this file for why a plain `Math.random()
-      // * Math.PI` would be wrong here.
       const theta = Math.acos(2 * Math.random() - 1);
       const phi = Math.random() * Math.PI * 2;
       positions[i * 3]     = offset.x + rad * Math.sin(theta) * Math.cos(phi);
@@ -461,9 +193,6 @@ function buildNucleusDetail(preview) {
     const points = new THREE.Points(geo, mat);
     group.add(points);
 
-    // Three valence quarks, in their own small triangle inside the
-    // nucleon's cloud — jittered continuously in animate() rather than
-    // sitting rigid, since "restless" is the whole point.
     const quarkR = NUCLEON_R * 0.4;
     const quarkAngles = [0, (Math.PI * 2) / 3, (Math.PI * 4) / 3];
     const quarks = quarkAngles.map(a => {
@@ -477,9 +206,6 @@ function buildNucleusDetail(preview) {
       );
       mesh.position.copy(base);
       group.add(mesh);
-      // Same fixed-direction/own-phase drift pattern as the orbital
-      // cloud's own particles above — a quark never actually sits still,
-      // "restless" is the point, not a static wireframe vertex.
       let jx = Math.random() * 2 - 1, jy = Math.random() * 2 - 1, jz = Math.random() * 2 - 1;
       const jl = Math.hypot(jx, jy, jz) || 1;
       jx /= jl; jy /= jl; jz /= jl;
@@ -492,11 +218,6 @@ function buildNucleusDetail(preview) {
       };
     });
 
-    // Gluon-exchange shimmer — three thin additive lines, one per pair of
-    // this nucleon's own quarks, each pulsing on its own independent phase
-    // so the exchange reads as continuous and ongoing rather than a
-    // static wireframe triangle. No membrane, no boundary rendered — just
-    // the exchange itself, same reasoning as the header comment above.
     const shimmerPairs = [[0, 1], [1, 2], [2, 0]];
     const shimmerLines = shimmerPairs.map(([a, b]) => {
       const lineGeo = new THREE.BufferGeometry().setFromPoints([quarks[a].base, quarks[b].base]);
@@ -515,22 +236,6 @@ function buildNucleusDetail(preview) {
   return { group, nucleons };
 }
 
-// ─── Rim light on satellite bodies (design-notes pass, 2026-09-01) ─────────
-// Same patch-the-compiled-shader Fresnel technique as outside.js's petals
-// and library.js's book spines (see either file's own header comment for
-// the full mechanics) — onBeforeCompile injects a real Fresnel term (view
-// direction vs. surface normal) into whatever shader three.js already
-// compiles for the material, adding a glow at silhouette edges without a
-// heavier custom ShaderMaterial. Satellites carry real silhouette edges
-// (a small box, at real orbital distance from the camera) even though
-// they're tiny — this stays glow-only, same as library.js's spines,
-// not an alpha effect.
-// `glow` at 0.05 was twenty times under the visibility floor: measured on the
-// satellites, the whole Fresnel term contributed peak 8/255 across 3 pixels,
-// against 973 pixels for the bodies themselves. The shader compiles and runs —
-// the same patch at 1.0 gives peak 103/255 across 326 — so this was a real
-// effect at an amplitude nothing could see. 0.45 is where it reads as a rim
-// without competing with the cloud.
 function addRimGlow(material, colorHex, power = 2.4, glow = 0.45) {
   material.onBeforeCompile = shader => {
     shader.uniforms.pmRimColor = { value: new THREE.Color(colorHex) };
@@ -551,37 +256,11 @@ function addRimGlow(material, colorHex, power = 2.4, glow = 0.45) {
   };
 }
 
-// ─── Satellites ─────────────────────────────────────────────────────────────
-// Same tilted-pivot orbit trick as the orrery in orrery.js: rotate the pivot,
-// the body (attached at a fixed radius on the pivot) sweeps a real orbit.
-// Each satellite carries one of Scott's poems (orbiter.text.js) and is
-// clickable, same mechanism as the geodesic sphere's facet-to-fragment
-// links in sphere.js — a raycast hit opens a text panel. A small emissive
-// beacon and a generous invisible hit-sphere (the visible body is tiny)
-// make them findable/clickable at this scale.
 function buildSatellites(preview) {
   const group = new THREE.Group();
-  // Full count matches poems.length exactly, turning the offset trick below
-  // into a full bijection — every poem gets exactly one satellite, every
-  // load. Preview stays modest; it's a 320px tile with no click-through
-  // anyway.
   const count = preview ? 6 : poems.length;
   const sats = [];
-  // A random per-load offset means a different rotation of the full poem
-  // set each visit, rather than a fixed 1:1 index mapping — fits the
-  // site's own found-by-chance logic (the colophon's own hidden mark and
-  // bibliography) better.
   const poemOffset = Math.floor(Math.random() * poems.length);
-  // Was a flat MeshBasicMaterial in near-white grey (0xe8e4d8) — unlit,
-  // and no real color of its own, which is exactly what the audit flagged:
-  // saturation "carried entirely by the particle clouds," the satellite
-  // geometry itself contributing none. Real MeshStandardMaterial now, with
-  // its own warm-gold hue (matching the orbit rings' own established
-  // 0xffe08a accent below, not a new color introduced for this) — a real
-  // emissive base keeps that gold reading true regardless of the scene's
-  // green-tinted key/ambient light mix (same reasoning as the nucleus
-  // material just above), while still responding to real lighting rather
-  // than sitting flat. Rim glow (addRimGlow, same family) added on top.
   const bodyMat = new THREE.MeshStandardMaterial({
     color: 0xffd89a, emissive: 0xffd89a, emissiveIntensity: 0.4, roughness: 0.5, metalness: 0.15,
   });
@@ -590,8 +269,6 @@ function buildSatellites(preview) {
     color: 0x3f6fb0, transparent: true, opacity: 0.9, side: THREE.DoubleSide,
   });
   const hitMat = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false });
-  // Identical for every satellite, so built once here rather than per-loop
-  // like bodyMat/panelMat already are.
   const coreGeo = new THREE.BoxGeometry(0.026, 0.026, 0.026);
   const panelGeo = new THREE.PlaneGeometry(0.09, 0.026);
 
@@ -599,62 +276,9 @@ function buildSatellites(preview) {
     const radius = 1.35 + Math.random() * 0.85; // TUNABLE: orbit radii land between 1.35 and 2.2 units out. Raising the floor (1.35) pushes every satellite farther from the cloud; raising the range (0.85) spreads them across a wider band. 1.35 isn't arbitrary though — it's the same floor A0 above was tuned against, so the orbital cloud's tail stays mostly inside it; push it down much further and satellites start passing through the cloud itself.
 
     const pivot = new THREE.Object3D();
-    // Each satellite's orbital plane tilts independently, the way a real
-    // population (launched at different times, into different
-    // mission-specific inclinations) actually would, rather than
-    // clustering near a shared tilt: the pivot's orientation is built from
-    // a random point on the unit sphere, used as the orbit's own normal.
-    //
-    // This used to draw x/y/z each uniformly from [-1,1] and normalize the
-    // result, which is NOT a uniform random direction on the sphere — it's
-    // biased toward the cube's corner directions (like (1,1,1)) over its
-    // face-center directions (like (1,0,0)), because a cube has
-    // proportionally more volume tucked into its corner regions than a
-    // sphere does, and normalizing just projects that lopsided volume
-    // straight onto the sphere's surface (confirmed numerically: bucketing
-    // 500k samples by their largest axis component shows visible
-    // over-sampling of corner-ish directions). An octant-based check
-    // (counting samples by which of the 8 sign-octants they land in) can't
-    // catch it, since the bias is symmetric across octant boundaries.
-    //
-    // The file carried that as a documented open item — bug named, fix
-    // written down, deliberately not applied on the grounds that ~14
-    // satellites make it subtle. Measured before closing it, over 500k
-    // samples each: with the old per-axis draw, 35.8% of orbit normals
-    // landed within 20 degrees of one of the eight cube-corner directions
-    // and only 10.4% within 20 degrees of an axis direction; with Gaussian
-    // components it's 24.1% and 18.0%, which are exactly the solid-angle
-    // fractions those caps cover on a sphere (8 and 6 caps of 20 degrees).
-    // So the bias was real and about 1.5x, not marginal — but it lived in
-    // the ensemble, not in any one frame.
-    //
-    // Closed in v4.0, and what made it safe to close is that there is no
-    // tuned composition to protect here: every orbit's radius, tilt, node,
-    // direction and speed is re-drawn at random on every single load, so
-    // "the way it looks" was never one arrangement, only a distribution.
-    // Checked against several loads before and after at the same viewport
-    // — the satellite band reads the same, a scatter of tilted rings at
-    // mixed inclinations, which is what a 1.5x reweighting between two
-    // families of tilt directions looks like at fourteen draws.
-    //
-    // Three independent standard-normal (Gaussian) components, normalized:
-    // the multivariate normal is itself rotationally symmetric, so no
-    // direction is favored. Box-Muller (gaussianPair, top of file) yields
-    // two normals per call, so a 3-vector is two calls with one value
-    // spare.
     const [gx, gy] = gaussianPair();
     const [gz] = gaussianPair();
     const normal = new THREE.Vector3(gx, gy, gz).normalize();
-    // setFromUnitVectors(a, b) builds the quaternion (a compact
-    // rotation representation) that rotates vector `a` onto vector `b` —
-    // here, whatever rotation carries "straight up" (0,1,0) onto this
-    // satellite's own random `normal`. Applying that rotation to the
-    // pivot means the pivot's local Y axis now points along `normal`;
-    // since the satellite's `body` is attached to the pivot offset along
-    // X (see `body.position.x = radius` below) and the pivot spins around
-    // its own Y each frame (see animate()), the body sweeps a circle
-    // whose plane is perpendicular to `normal` — i.e., `normal` becomes
-    // that orbit's normal vector, exactly as advertised.
     pivot.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), normal);
     pivot.rotateZ(Math.random() * Math.PI * 2); // free ascending-node spin around that normal — without this, every orbit's own "reference longitude" would be correlated with how `normal` itself was constructed, instead of independently random
     group.add(pivot);
@@ -664,35 +288,16 @@ function buildSatellites(preview) {
     const p1 = new THREE.Mesh(panelGeo, panelMat); p1.position.x =  0.06;
     const p2 = new THREE.Mesh(panelGeo, panelMat); p2.position.x = -0.06;
     body.add(p1, p2);
-    // A small glowing beacon — reads as "this one's alive/clickable"
-    // against the tiny grey box. Its own material instance (not shared)
-    // so hovering one satellite doesn't light up every satellite's beacon.
     const beaconMat = new THREE.MeshBasicMaterial({ color: 0x9fffc8 });
     const beacon = new THREE.Mesh(new THREE.SphereGeometry(0.012, 8, 8), beaconMat);
     body.add(beacon);
-    // Invisible, generous hit target — the visible parts are too small to
-    // reliably click/hover on their own.
     const hit = new THREE.Mesh(new THREE.SphereGeometry(0.16, 8, 8), hitMat);
     body.add(hit);
     body.position.x = radius;
     pivot.add(body);
 
-    // Faint orbit ring, so the path is visible even when the satellite itself
-    // is a single small point.
     const ringGeo = new THREE.TorusGeometry(radius, 0.002, 6, 64);
-    // Opacity varied per ring — a real satellite population's paths
-    // wouldn't all read with equal prominence; some fainter, some a little
-    // more distinct, reads as messier/richer rather than a uniform stack
-    // of identical rings. Kept faint overall since these are perfectly
-    // circular by nature and would otherwise compete with — and dilute —
-    // the p-orbital cloud, the one shape actually telling this scene's
-    // story.
     const ringMat = new THREE.MeshBasicMaterial({
-      // depthWrite OFF. The cloud's points are depth-tested, so a 5-10%
-      // opaque ring crossing in front of them was writing depth and ERASING
-      // the particles behind it outright rather than diluting them — the
-      // opposite of what the paragraph above says these are kept faint to
-      // avoid. Measured: 237 pixels, peak 135/255, change when it is off.
       depthWrite: false,
       color: 0xffe08a, transparent: true, opacity: 0.045 + Math.random() * 0.065, // TUNABLE: each ring's opacity lands between 0.045 and 0.11. Raise both numbers together to make orbit paths more visible overall; widen the gap between them for more variation ring-to-ring.
     });
@@ -702,11 +307,6 @@ function buildSatellites(preview) {
 
     sats.push({
       pivot, body, hit, beacon, beaconMat,
-      // TUNABLE: magnitude 0.09-0.23 controls orbital speed (raise for a
-      // faster sweep); the separate 50/50 sign flip is what gives some
-      // satellites clockwise and others counter-clockwise motion — remove
-      // the `* (Math.random() < 0.5 ? 1 : -1)` and every satellite would
-      // orbit the same direction.
       speed: (0.09 + Math.random() * 0.14) * (Math.random() < 0.5 ? 1 : -1),
       ringMat, ringGeo,
       poemIndex: (i + poemOffset) % poems.length,
@@ -726,61 +326,23 @@ export function createOrbiter(container, { preview = false, initialPieceId = nul
   camera.lookAt(0, 0, 0);
 
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-  // setPixelRatio(window.devicePixelRatio) used to be called raw here, with
-  // no cap: on a DPR-3 phone that renders nine times the fragments of DPR-1,
-  // which this scene feels more than most (2800 additive-blended sprites,
-  // every one of them overdraw). manageRenderer caps it at 2 and brings two
-  // things this scene never had — a real context release on dispose
-  // (THREE's own renderer.dispose() does not free the GL context) and a
-  // webglcontextlost handler, without which a lost context leaves a black
-  // canvas with the rAF loop still burning CPU behind it.
   let contextLost = false;
   const managedRenderer = manageRenderer(renderer, {
     onLost: () => {
-      // Nothing here can repaint a context that's gone; stop the loop
-      // rather than spin it, and leave rebuilding to the next scene mount.
       contextLost = true;
       cancelAnimationFrame(animId);
       animId = null;
     },
   });
   renderer.setSize(w, h);
-  // Void tint (design-notes pass, 2026-09-01): was flat 0x000000, the same
-  // page-fallback black every under-treated scene defaults to. This
-  // scene's own established colors are the p-orbital cloud's teal-green/
-  // violet phase split (buildOrbitalCloud, above) — a very dark
-  // violet-black leans toward the cloud's own -phase lobe without
-  // fighting the green-tinted key/ambient lights below, the same
-  // "pick a hue this scene already owns" approach Outside's own violet
-  // void took.
   renderer.setClearColor(0x0a0714, 1);
   renderer.domElement.setAttribute('aria-hidden', 'true');
   container.appendChild(renderer.domElement);
 
-  // #experience-container is shared: main.js empties it between scenes but
-  // never replaces the node, so every inline style written onto it here
-  // outlives this scene. claimContainer records what was on it first and
-  // hands back the restore() that kept getting forgotten — the hover cursor
-  // below goes through claim.setCursor() for exactly that reason.
-  //
-  // No longer set here: `container.tabIndex = -1`. main.js sets
-  // tabindex="-1" on the container itself immediately after create()
-  // returns (that's what gives panelCloser's container.focus() somewhere
-  // real to land when the panel closes), so this was the second of two
-  // writes saying the same thing.
   const claim = !preview ? claimContainer(container) : null;
 
-  // Deferred work — the auto-rotate resume, the panel's side-flip reopen,
-  // the focus-after-open, the cross-link fade — all goes through one
-  // tracked set so dispose() can drop whatever's still pending in a single
-  // call instead of naming five handles. See each call site for what its
-  // own timer was doing wrong untracked.
   const timers = trackTimers();
 
-  // Set by anything that changes what's on screen without time moving
-  // forward: a drag, a hover, the nucleus reveal, a resize, a live
-  // reduced-motion flip. See the render call at the bottom of animate()
-  // for why a scene that is genuinely static stops drawing entirely.
   let needsRender = true;
 
   const root = new THREE.Group();
@@ -794,24 +356,11 @@ export function createOrbiter(container, { preview = false, initialPieceId = nul
   rim.position.set(-4, -2, -3);
   scene.add(rim);
 
-  // ─── Deep-field stars ───────────────────────────────────────────────────
   const starCount = preview ? 250 : 700; // TUNABLE: pure density, no shape effect
   const starPos = new Float32Array(starCount * 3);
   for (let i = 0; i < starCount; i++) {
     const r = 20 + Math.random() * 20; // TUNABLE shell: stars land at a random distance between 20 and 40 units out — raise either number to push the whole field farther out or thicken/thin the shell
     const theta = Math.random() * Math.PI * 2; // azimuth around the vertical axis — uniform is correct here, every azimuth is equivalent by symmetry
-    // phi (polar angle from the +Y axis) is deliberately NOT
-    // `Math.random() * Math.PI` — that would bunch stars up near the
-    // poles, because lines of constant phi near a pole trace out much
-    // smaller circles (less actual surface area) than ones near the
-    // equator, yet a plain uniform phi would hand them equal numbers of
-    // points regardless. acos(2u-1) for a uniform u in [0,1] is the
-    // correct inverse-CDF fix, same fix the nucleon cloud above uses —
-    // two call sites in this file needing a uniform random direction. The
-    // satellite pivot's own `normal` above was the third and the only one
-    // that got it wrong; as of v4.0 it draws Gaussian components instead
-    // (see that comment), so all three are correct now by three different
-    // standard constructions, each right for the shape it's sampling.
     const phi = Math.acos(2 * Math.random() - 1);
     starPos[i * 3]     = r * Math.sin(phi) * Math.cos(theta);
     starPos[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta);
@@ -823,16 +372,8 @@ export function createOrbiter(container, { preview = false, initialPieceId = nul
   const starField = new THREE.Points(starGeo, starMat);
   scene.add(starField);
 
-  // ─── Nucleus ────────────────────────────────────────────────────────────
-  // A single small, bright, plasma-textured core standing in for the
-  // proton at the center of a hydrogen atom — no continents, no cloud
-  // shell, nothing planet-like. Kept deliberately small so the p-orbital
-  // cloud around it (below) is unmistakably the thing the scene is about.
   const nucleusTex = makeNucleusTexture();
   const geo = new THREE.SphereGeometry(NUCLEUS_RADIUS, preview ? 24 : 40, preview ? 24 : 40);
-  // transparent:true (opacity itself stays 1 until someone actually
-  // clicks) so this can fade out in favor of the internal detail below
-  // without needing a material swap.
   const NUCLEUS_BASE_EMISSIVE = 0.55;
   const mat = new THREE.MeshStandardMaterial({
     map: nucleusTex,
@@ -844,40 +385,21 @@ export function createOrbiter(container, { preview = false, initialPieceId = nul
   const earth = new THREE.Mesh(geo, mat);
   root.add(earth);
 
-  // Invisible, generous hit target for the nucleus — same "the visible
-  // body is small, the click target isn't" pattern the satellites already
-  // use just below, not a new interaction language. Full scene only
-  // (preview never has click-through).
   const nucleusHitMat = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false });
   const nucleusHit = new THREE.Mesh(new THREE.SphereGeometry(NUCLEUS_RADIUS * 1.7, 12, 12), nucleusHitMat);
   root.add(nucleusHit);
 
-  // Nucleus internal detail — built lazily on first click by
-  // toggleNucleusDetail() further down, not here; see buildNucleusDetail's
-  // own header comment for why.
   let nucleusDetail = null;
   let nucleusRevealed = false;
   let nucleusRevealT = 0; // 0 = fully collapsed (plain sphere), 1 = fully revealed (internal detail), eased in animate()
 
-  // ─── p-orbital cloud + satellites ───────────────────────────────────────
   const aurorae = buildOrbitalCloud(preview);
   root.add(aurorae.group);
 
   const satellites = buildSatellites(preview);
   root.add(satellites.group);
 
-  // ─── Caption + hint + poem panel (full only) ────────────────────────────
   let title = null, hint = null, panel = null, panelTitle = null, panelContent = null, panelRefs = null, panelCloser = null, jumpList = null;
-  // Static shell markup (subtitle text, hint text, panel skeleton) lives
-  // in orbiter.html, parsed via parseHTML below. Title/hint/panel/
-  // poem-link styles live in orbiter.css, imported above. Site-wide title
-  // consistency pass (2026-08-25) briefly promoted "sing, orbiter"
-  // (Richard Kenney) to a subtitle beneath a new "ORBITER" title; per
-  // Scott's same-day follow-up, only the subtitle stays — .orbiter-title
-  // is still the wrapper's class/mount point, just with one line inside
-  // it now instead of two. The epigraph stays uncredited in-scene either
-  // way — full attribution lives in the colophon's bibliography, same as
-  // every poem's source line below.
   if (!preview) {
     const shell = parseHTML(orbiterHtml);
     title = shell.querySelector('.orbiter-title');
@@ -886,13 +408,6 @@ export function createOrbiter(container, { preview = false, initialPieceId = nul
     document.body.appendChild(title);
     document.body.appendChild(hint);
 
-    // `container.style.position = 'relative'` and `overflow = 'hidden'`
-    // used to be written here, right before this append. They were already
-    // no-ops — styles/main.css declares exactly those two on
-    // #experience-container — but they were inline styles on the shared
-    // element that nothing ever took off again, which is a latent trap the
-    // day that stylesheet changes. claimContainer above owns both now,
-    // restore included.
     container.appendChild(panel);
     panelTitle   = panel.querySelector('.orbiter-panel-title');
     panelContent = panel.querySelector('.orbiter-panel-content');
@@ -903,37 +418,13 @@ export function createOrbiter(container, { preview = false, initialPieceId = nul
       onClose: () => { selectedSat = null; },
     });
 
-    // v4.0: sceneKit's wireCrossLinks emits real <a href="#orbiter/<id>">
-    // anchors now, not role="link" tabindex="0" divs-in-spirit — so the
-    // Enter/Space keydown handler that used to sit alongside this one is
-    // gone. Enter on a link fires a click natively and lands right here;
-    // Space on a link was always a semantic mismatch (that's a button's
-    // key, and this is a link).
     panelContent.addEventListener('click', e => {
       const link = e.target.closest('.poem-link');
       if (!link) return;
-      // stopPropagation, not preventDefault: this click must not reach the
-      // container's own click handler underneath the panel (which would
-      // read it as an empty-space click and close the panel out from under
-      // the navigation), but the anchor's own default is wanted — it is
-      // what keeps middle-click, open-in-new-tab and copy-link working.
-      // Following it costs nothing: navigateToPoem reports the new piece
-      // through onPieceChange first, and that is what writes #orbiter/<id>
-      // into the URL, so by the time the browser follows the href it is
-      // already the current URL and no navigation happens. Same call as
-      // sphere.js's .fragment-link handler, for the same reason.
       e.stopPropagation();
       navigateToPoem(link);
     });
 
-    // Keyboard equivalent for "point at a satellite" — satellites are
-    // otherwise raycast-only, which would leave a keyboard-only visitor
-    // able to orbit the scene but never read a poem. One button per
-    // satellite, calling the exact same selectedSat-then-openPoem() beat
-    // the mouse click below already does. The nucleus is a second
-    // raycast-only interaction, so it gets a button in this exact same
-    // list rather than a separate mechanism — one more <li> in the same
-    // jump list, not new UI chrome.
     const NUCLEUS_JUMP_ITEM = {};
     jumpList = createJumpList(container, {
       label: 'Read a poem from one of the satellites, or look inside the nucleus',
@@ -946,33 +437,13 @@ export function createOrbiter(container, { preview = false, initialPieceId = nul
     });
   }
 
-  // ─── Satellite hover/click → poem panel, same raycast pattern as the
-  // orrery's control box and sphere's facets. ───────────────────────────
   const raycaster = new THREE.Raycaster();
   const mouse = new THREE.Vector2();
   let hoveredSat = null, selectedSat = null, hoveredNucleus = false;
-  // Named so dispose() can remove them — container is the shared
-  // #experience-container element every scene reuses (main.js only clears
-  // its innerHTML between scenes, never replaces the node), so a listener
-  // bound directly to it and never removed keeps firing after this scene
-  // is gone, reading stale closures against a disposed scene.
   let onContainerMouseMove = null, onContainerPointerLeave = null, onContainerClick = null;
-  // A touch-drag to orbit ends in a synthetic mousemove + click at the
-  // release point — indistinguishable from a deliberate tap without this.
-  // Orbiter was one of only two raycast scenes missing the guard entirely
-  // (orrery, outside, sphere, harmonics and beamline all already consume
-  // it first thing in their own click handlers); see onContainerClick.
   const touchGuard = !preview ? bindTapVsDrag(container) : null;
-  // Built once, not rebuilt per pointer-move — this was a spread plus a
-  // .map over every satellite on each individual mousemove event, for a
-  // list that never changes after buildSatellites returned.
   const hitTargets = preview ? null : [...satellites.sats.map(s => s.hit), nucleusHit];
 
-  // A stanza can carry more than one live link (DNA's single stanza has
-  // two), so this walks every link getOutboundLinks() returns for that
-  // stanza rather than stopping at the first match the way scroll.js's
-  // per-paragraph LINKS/RUBRICS/INTENSITIES lookups do — those never
-  // needed more than one hit per paragraph, this does.
   function renderStanza(poemId, index, text) {
     const html = escapeHtml(text);
     const links = getOutboundLinks('orbiter', poemId, 'stanzas', index)
@@ -985,40 +456,22 @@ export function createOrbiter(container, { preview = false, initialPieceId = nul
       .map((st, i) => `<p>${renderStanza(poem.id, i, st)}</p>`)
       .join('');
     panelContent.scrollTop = 0;
-    // Inbound half of a links.js relationship — see sceneKit.js's
-    // formatInboundNote and sphere.js's matching withInboundNote for why
-    // this exists: without it, a poem that's only ever a link's target
-    // (Lament for the Future Never Realized, for instance) never shows any
-    // sign of the connection unless a reader happens to click through from
-    // the other poem first.
     if (panelRefs) {
       panelRefs.textContent = formatInboundNote(
         getInboundLinks('orbiter', poem.id).map(l => poems.find(p => p.id === l.from.id)?.title)
       ) ?? '';
     }
-    // Stagger glimmer delays + a11y attributes, same treatment as sphere's
-    // fragment-links on open/navigate.
     panelContent.querySelectorAll('.poem-link').forEach(link => {
       const delay = (Math.random() * 12).toFixed(1);
       const duration = (9 + Math.random() * 7).toFixed(1);
       link.style.animationDelay = `-${delay}s`;
       link.style.animationDuration = `${duration}s`;
-      // No role="link"/tabindex="0" written here any more: wireCrossLinks
-      // builds these as real anchors with a real href as of v4.0, so the
-      // link role is implicit and the tab order is native. The aria-label
-      // stays — the phrase itself is the poem's own words, which say
-      // nothing about where following it goes.
       const targetPoem = link.dataset.targetScene === 'orbiter'
         ? poems.find(p => p.id === Number(link.dataset.targetId))
         : null;
       link.setAttribute('aria-label', `Follow the echo to: ${targetPoem ? targetPoem.title : 'related poem'}`);
     });
   }
-  // fromLeft: which side of the container the triggering click landed on
-  // (undefined for keyboard/deep-link callers with no click position — see
-  // sceneKit.js's setPanelSide/clickedLeftHalf, same pattern as sphere.js's
-  // openFragment and library.js's openItem/onContainerClick). Added
-  // 2026-09-01 — this panel used to be fixed-right only.
   function openPoem(sat, { fromLeft } = {}) {
     const poem = poems[sat.poemIndex];
     if (!panel || !poem) return;
@@ -1028,12 +481,6 @@ export function createOrbiter(container, { preview = false, initialPieceId = nul
     const sideMismatch = fromLeft !== undefined && panel.classList.contains('from-left') !== fromLeft;
 
     if (wasOpen && sideMismatch) {
-      // Crossing to the other side of an already-open panel: close first,
-      // then reopen anchored to the new side once the close transition
-      // finishes — same 500ms beat as .orbiter-panel's own close
-      // transition (transform .5s, orbiter.css), matching sphere.js's
-      // openFragment/library.js's openItem so a side change always
-      // visibly relocates the panel rather than teleporting it.
       panel.classList.remove('open');
       timers.after(500, () => {
         setPanelSide(panel, fromLeft);
@@ -1050,24 +497,8 @@ export function createOrbiter(container, { preview = false, initialPieceId = nul
     panel.classList.add('open');
     focusPanelTitle();
   }
-  // Focus can't land on the title until the browser has applied the class
-  // that makes the panel visible, so this waits — but only for a frame,
-  // which is all it ever needed. It was two bare `setTimeout(..., 50)`
-  // calls: the behaviour was the right one (Harmonics still has no focus
-  // move at all when its panel opens), the 50 was a guess at how long a
-  // frame is, and neither handle was cancellable if the scene was torn
-  // down in between.
   function focusPanelTitle() { timers.nextFrame(() => panelTitle.focus()); }
-  // Poem link navigation — follow the threads (click + keyboard), same
-  // fade-out/swap-content/fade-in beat as sphere's navigateToFragment.
-  // Deliberately doesn't touch selectedSat/the satellite the panel was
-  // opened from — sphere's own navigateToFragment leaves the clicked
-  // facet's highlight alone too, same precedent.
   function navigateToPoem(link) {
-    // Same not-yet-cross-scene note as library.js's navigateToItem: every
-    // link in the shared store currently targets 'orbiter' itself, so this
-    // is a no-op guard against a future cross-scene target rather than a
-    // real branch today.
     if (link.dataset.targetScene !== 'orbiter') return;
     const targetIdx = poems.findIndex(p => p.id === Number(link.dataset.targetId));
     if (targetIdx === -1) return;
@@ -1076,10 +507,6 @@ export function createOrbiter(container, { preview = false, initialPieceId = nul
     panelTitle.style.transition = 'opacity .18s';
     panelContent.style.opacity = '0';
     panelTitle.style.opacity = '0';
-    // Tracked: 180ms matches the opacity transition set two lines up, and
-    // an untracked copy of this could still fire — repopulating the panel
-    // and calling onPieceChange, i.e. rewriting location.hash — after the
-    // scene it belongs to had been disposed and replaced.
     timers.after(180, () => {
       renderPoemInto(poems[targetIdx]);
       panelContent.style.opacity = '1';
@@ -1087,11 +514,6 @@ export function createOrbiter(container, { preview = false, initialPieceId = nul
     });
   }
 
-  // Deep-link entry/re-entry — resolves a poem id to its satellite (same
-  // selectedSat + openPoem beat a real click/jump-list selection uses, so
-  // the 3D highlight matches what the panel shows) and opens it. A no-op
-  // if the scene has no panel yet (preview) or the id doesn't resolve to
-  // any satellite's poemIndex.
   function openPoemById(id) {
     const poemIdx = poems.findIndex(p => p.id === id);
     const sat = poemIdx !== -1 && satellites.sats.find(s => s.poemIndex === poemIdx);
@@ -1099,12 +521,6 @@ export function createOrbiter(container, { preview = false, initialPieceId = nul
   }
   if (!preview && initialPieceId !== null) openPoemById(initialPieceId);
 
-  // Toggles the nucleus between its plain collapsed sphere and its
-  // internal proton/neutron/quark detail — see buildNucleusDetail's own
-  // header comment for what that detail actually is. Lazily builds the
-  // detail group on the first call only; every call after that just
-  // flips nucleusRevealed, and animate() eases nucleusRevealT toward
-  // whichever state that's currently set to.
   function toggleNucleusDetail() {
     if (!nucleusDetail) {
       nucleusDetail = buildNucleusDetail(preview);
@@ -1114,9 +530,6 @@ export function createOrbiter(container, { preview = false, initialPieceId = nul
   }
 
   if (!preview) {
-    // Applying the hover is split out from finding it so that pointerleave
-    // and the click handler can both reach it — three callers, one place
-    // that decides what "hovered" looks like.
     const applyHover = (hitSat, hitNucleus) => {
       if (hitSat !== hoveredSat) {
         if (hoveredSat) hoveredSat.beaconMat.color.setHex(0x9fffc8);
@@ -1126,8 +539,6 @@ export function createOrbiter(container, { preview = false, initialPieceId = nul
       }
       if (hitNucleus !== hoveredNucleus) {
         hoveredNucleus = hitNucleus;
-        // Brightens on hover — same idiom the orrery's own poster hover
-        // already uses (emissiveIntensity bump), not a new one.
         mat.emissiveIntensity = hoveredNucleus ? NUCLEUS_BASE_EMISSIVE * 1.8 : NUCLEUS_BASE_EMISSIVE;
         needsRender = true;
       }
@@ -1138,47 +549,16 @@ export function createOrbiter(container, { preview = false, initialPieceId = nul
       mouse.x =  ((clientX - rect.left) / rect.width)  * 2 - 1;
       mouse.y = -((clientY - rect.top)  / rect.height) * 2 + 1;
       raycaster.setFromCamera(mouse, camera);
-      // One combined raycast against satellites' hit spheres and the
-      // nucleus's own hit sphere — intersectObjects already returns hits
-      // sorted nearest-first, so whichever of the two is actually closer
-      // to the camera wins if they ever overlapped (they don't in
-      // practice: the nucleus sits at the very center, satellites orbit
-      // no closer than radius 1.35).
       const hit = raycaster.intersectObjects(hitTargets)[0]?.object;
       applyHover(hit ? satellites.sats.find(s => s.hit === hit) ?? null : null, hit === nucleusHit);
     };
     onContainerMouseMove = e => pickAt(e.clientX, e.clientY);
     container.addEventListener('mousemove', onContainerMouseMove);
-    // Hover used to survive the pointer leaving the container altogether:
-    // move the mouse off the canvas and up onto the nav, and the last
-    // satellite's beacon stayed lit white with the cursor stuck on
-    // `pointer`. That's the visible half. The second-order half is
-    // specific to this scene: onContainerClick below branches on
-    // hoveredSat/hoveredNucleus, so a click after re-entering the
-    // container somewhere else could act on the target you'd left behind,
-    // for the one event before a mousemove corrected it. outside.js's
-    // onPointerLeave is the pattern this follows.
     onContainerPointerLeave = () => applyHover(null, false);
     container.addEventListener('pointerleave', onContainerPointerLeave);
     onContainerClick = e => {
-      // The trailing click at the end of a touch-drag. Without this guard,
-      // releasing an orbit gesture over a satellite opened that poem, and
-      // releasing over empty space with a panel open closed it — every
-      // orbit gesture on a phone was a potential accidental navigation.
-      // consume() reads and clears in one step, so it goes first, before
-      // any branch that could return early and leave the flag set for the
-      // next click.
       if (touchGuard.consume()) return;
-      // Resolve what's under this click at the click's own coordinates,
-      // rather than trusting whatever the last mousemove left behind. A
-      // touch tap's synthetic mousemove lands at the same point so this
-      // changes nothing there; what it does buy is that the branches below
-      // are provably about the thing under the pointer now.
       pickAt(e.clientX, e.clientY);
-      // Only close the panel on an actual empty-space click — hoveredSat
-      // and hoveredNucleus are live regardless of panel state, so a click
-      // that lands on either one toggles that target instead of also (or
-      // instead) closing the panel.
       if (panel.classList.contains('open') && !hoveredSat && !hoveredNucleus) {
         panelCloser.close();
         return;
@@ -1192,7 +572,6 @@ export function createOrbiter(container, { preview = false, initialPieceId = nul
     container.addEventListener('click', onContainerClick);
   }
 
-  // ─── Drag to orbit (mouse + touch, via sceneKit) ────────────────────────
   let autoRotate = true;
   let resumeRotateTimer = null;
   const orbitDrag = bindOrbitDrag(container, {
@@ -1203,53 +582,13 @@ export function createOrbiter(container, { preview = false, initialPieceId = nul
       needsRender = true; // the drag is the only thing moving under reduced motion
     },
     onDragEnd: () => {
-      // Cancelled before re-arming: two quick drags in a row used to leave
-      // two pending 2500ms timers, and the older one turned auto-rotate
-      // back on partway through the second pause — the scene starting to
-      // drift again while the visitor was still settling it. Tracked as
-      // well as cancelled, so a drag right before a scene switch doesn't
-      // leave a timer writing to a disposed scene's closure.
       timers.cancel(resumeRotateTimer);
       resumeRotateTimer = timers.after(2500, () => { autoRotate = true; });
     },
   });
 
-  // ─── Animate ──────────────────────────────────────────────────────────────
-  // requestAnimationFrame fires at the display's refresh rate, not at 60Hz,
-  // and every rate in this loop was written as a fixed per-frame constant —
-  // so the whole scene ran at double speed on a 120Hz display and half
-  // speed at 30fps. Measured here before the fix, on a 71Hz display: the
-  // satellites swept 0.713 rad/s per unit of `speed` where the value they
-  // were tuned to is 0.60, and the auto-rotate ran 0.0356 rad/s against a
-  // tuned 0.03 — everything uniformly fps/60 too fast. Re-measured after,
-  // over 1207 consecutive frames on the same machine running at 120Hz:
-  // 0.6003 and 0.03002, i.e. the 60fps-tuned rates at twice the frame
-  // rate. Harmonics, Outside and Orrery already derived a clamped dt from
-  // performance.now(); this is sceneKit's extraction of that, and orbiter
-  // was the outlier.
-  //
-  // `f` below (dt * 60) is the conversion: a constant tuned per-frame at
-  // 60fps multiplied by `f` means the same thing at any refresh rate, and
-  // is exactly the old value when dt is 1/60. No rate in here was
-  // re-derived — every one is the number that was already there.
   const clock = createFrameClock();
 
-  // Reduced motion gates every autonomous motion below: nucleus spin,
-  // orbital-cloud precession + particle drift, satellite orbits, orbiter
-  // auto-rotate, the quark jitter and gluon-shimmer pulse — and, as of
-  // v4.0, the whole-cloud brightness breathe, which used to sit outside
-  // this guard even though its own comment calls it "the whole cloud's
-  // brightness breathes gently," i.e. autonomous decorative motion by this
-  // file's own definition. While it was outside, a visitor who asked for
-  // stillness still got a scene that never held still. Drag-to-orbit stays
-  // available regardless — that's motion the visitor asks for, not motion
-  // imposed on them.
-  //
-  // `let` and a live subscription, not a one-shot `const`: sampling the
-  // media query once at mount meant someone who turned the OS setting on
-  // while the scene was already open kept the motion until they navigated
-  // away. Orbiter can flip this per-frame for free — nothing here is baked
-  // into geometry at build time.
   let reduceMotion = prefersReducedMotion();
   const reduceMotionWatch = onReducedMotionChange(v => {
     reduceMotion = v;
@@ -1266,18 +605,8 @@ export function createOrbiter(container, { preview = false, initialPieceId = nul
     const f = dt * 60; // one "60fps frame" of time, so a per-frame constant stays itself
 
     if (!reduceMotion) {
-      // `t` only advances while motion is actually running, so turning
-      // reduced motion back off resumes the drift where it stopped instead
-      // of teleporting every particle to wherever it would have got to in
-      // the meantime (outside.js gates its own `elapsed` the same way).
       t += 0.01 * f;
       earth.rotation.y = t * (preview ? 0.06 : 0.03);
-      // Slow precession of the whole p-orbital cloud, distinct from the
-      // nucleus's own spin and the satellites' independent orbits — keeps
-      // the dumbbell shape from ever settling into one static silhouette.
-      // TUNABLE: 0.008 is the precession rate — raise it to spin the
-      // whole dumbbell visibly faster (0 would freeze it, matching only
-      // the per-particle drift above for any sense of motion).
       aurorae.group.rotation.y = t * 0.008;
       satellites.sats.forEach(s => {
         s.pivot.rotation.y += s.speed * 0.01 * f;
@@ -1286,9 +615,6 @@ export function createOrbiter(container, { preview = false, initialPieceId = nul
         root.rotation.y += (preview ? 0.0015 : 0.0005) * f;
       }
 
-      // Per-particle drift/shimmer — each point nudges along its own fixed
-      // direction on its own sine wave, so the cloud reads as gently alive
-      // rather than a static point cloud.
       for (let i = 0; i < aurorae.count; i++) {
         const d = aurorae.drift[i];
         const s = Math.sin(t * d.speed + d.phase) * d.amp;
@@ -1299,49 +625,18 @@ export function createOrbiter(container, { preview = false, initialPieceId = nul
       }
       cloudPosAttr.needsUpdate = true;
 
-      // A slow overall shimmer on top of the per-particle drift — the whole
-      // cloud's brightness breathes gently. Inside the reduced-motion guard
-      // as of v4.0 (see the guard's own comment): it is autonomous
-      // decorative motion exactly like the drift it sits on top of, and
-      // while it ran outside the guard there was no state in which this
-      // scene was actually still.
       aurorae.phase += 0.012 * f;
-      // No floor. baseOpacity is 0.85 and the swing is +/-0.15, so the value
-      // lives in [0.70, 1.00] and the Math.max(0.5, ...) that used to wrap
-      // this could never bind — a guard against a state the arithmetic
-      // forbids, which reads as though the range were wider than it is.
       aurorae.mat.opacity = aurorae.baseOpacity + Math.sin(aurorae.phase) * 0.15;
     }
 
-    // ─── Nucleus reveal/collapse ────────────────────────────────────────
-    // The fade itself is a direct response to a click (toggleNucleusDetail
-    // above flips nucleusRevealed; this eases toward whichever state that
-    // now is) — same as the poem panel's own slide transition, so it runs
-    // regardless of reduced motion. Only the continuous quark jitter/
-    // shimmer pulse further down is autonomous decorative motion, gated
-    // the same way the orbital cloud's own drift is above.
-    //
-    // The ease is frame-rate independent the same way everything above is,
-    // but it can't just be multiplied by `f`: an exponential approach
-    // compounds, so `* 0.08` per frame converged twice as fast at 120Hz.
-    // 1 - (1 - 0.08)^(dt*60) is that same curve sampled in real time —
-    // identical at 60fps, unchanged in shape everywhere else.
     const revealTarget = nucleusRevealed ? 1 : 0;
     if (nucleusRevealT !== revealTarget) {
       const gap = revealTarget - nucleusRevealT;
-      // Snapped once it's close enough to see no difference, because an
-      // exponential ease never actually arrives — and "arrived" has to be
-      // a state the dirty flag below can reach, or the scene never stops
-      // redrawing after a single click on the nucleus.
       nucleusRevealT = Math.abs(gap) < 0.0005 ? revealTarget : nucleusRevealT + gap * (1 - Math.pow(1 - 0.08, f));
       mat.opacity = 1 - nucleusRevealT;
       earth.visible = nucleusRevealT < 0.995;
       needsRender = true;
     }
-    // Skipped entirely on a still frame: with the reveal settled and
-    // reduced motion on, every write in here would set the value it
-    // already holds — including three per-frame buffer uploads for the
-    // shimmer lines' endpoints.
     if (nucleusDetail && (needsRender || !reduceMotion)) {
       nucleusDetail.group.visible = nucleusRevealT > 0.005;
       if (nucleusDetail.group.visible) {
@@ -1361,13 +656,8 @@ export function createOrbiter(container, { preview = false, initialPieceId = nul
           });
           n.shimmerLines.forEach(l => {
             if (!reduceMotion) l.phase += 0.03 * l.speed * f;
-            // Ongoing exchange, not a fixed glow — oscillates between a
-            // dim and a bright state on its own independent phase, same
-            // "never resolving into something more solid" the header
-            // comment on buildNucleusDetail calls for.
             const pulse = 0.3 + 0.55 * (0.5 + 0.5 * Math.sin(l.phase));
             l.mat.opacity = pulse * nucleusRevealT;
-            // Endpoints follow the (possibly jittering) quarks each frame.
             const qa = n.quarks[l.a], qb = n.quarks[l.b];
             const posAttr = l.geo.attributes.position;
             posAttr.setXYZ(0, qa.mesh.position.x, qa.mesh.position.y, qa.mesh.position.z);
@@ -1378,13 +668,6 @@ export function createOrbiter(container, { preview = false, initialPieceId = nul
       }
     }
 
-    // With the reduced-motion guard covering every autonomous motion in
-    // this loop, a still scene really is still — the same pixels, frame
-    // after frame. Skipping the draw is what that guard buys: no 2800-
-    // sprite additive pass every 8ms for a picture nobody is changing.
-    // Everything that alters the image without advancing time (drag,
-    // hover, the nucleus reveal, resize, a live reduced-motion flip) sets
-    // needsRender itself.
     if (!reduceMotion || needsRender) {
       renderer.render(scene, camera);
       needsRender = false;
@@ -1392,11 +675,6 @@ export function createOrbiter(container, { preview = false, initialPieceId = nul
   }
   animate();
 
-  // main.js pauses preview tiles while a full scene is open, and pauses on
-  // visibilitychange. Pausing stops the rAF loop outright rather than
-  // running one that renders nothing; resync() on the way back so the
-  // first frame after the pause isn't one long dt (clamped, but still a
-  // visible lurch) covering the entire time the scene was away.
   let paused = false;
   function setPaused(p) {
     if (p === paused || contextLost) return;
@@ -1415,16 +693,11 @@ export function createOrbiter(container, { preview = false, initialPieceId = nul
     camera.aspect = w / h;
     camera.updateProjectionMatrix();
     renderer.setSize(w, h);
-    // A window dragged between a Retina and a non-Retina display changes
-    // devicePixelRatio with no signal of its own — this resize is the only
-    // notice there is.
     managedRenderer.applyPixelRatio();
     needsRender = true; // a resized drawing buffer is blank until something draws into it
   });
 
   return {
-    // Same-scene deep link support (main.js's expandScene) — see
-    // openPoemById above.
     openPieceById: openPoemById,
     setPaused,
     dispose() {
@@ -1438,26 +711,12 @@ export function createOrbiter(container, { preview = false, initialPieceId = nul
       if (onContainerMouseMove) container.removeEventListener('mousemove', onContainerMouseMove);
       if (onContainerPointerLeave) container.removeEventListener('pointerleave', onContainerPointerLeave);
       if (onContainerClick) container.removeEventListener('click', onContainerClick);
-      // This was a hand-written list of every geometry, material and
-      // texture in the scene, and it was genuinely complete — including
-      // the lazily-built nucleusDetail behind its `if (nucleusDetail)`.
-      // It goes through the shared helper anyway: the helper walks the
-      // scene root, so nothing added later can escape it by not being
-      // named, and it clears all 22 texture slots rather than the single
-      // `.map` a hand-written list remembers. `scene`, not `root` —
-      // starField is added straight to the scene, and was the one object
-      // here that a root-only traversal would have missed.
       disposeSceneGraph(scene);
-      // renderer.dispose() + forceContextLoss() + canvas.remove(), in the
-      // order that actually releases the GL context — THREE's own
-      // dispose() tears down caches and leaves the context alive.
       managedRenderer.dispose();
       if (title) title.remove();
       if (hint) hint.remove();
       if (panel) panel.remove();
       jumpList?.dispose();
-      // Puts back whatever was on the shared container before this scene
-      // claimed it — position, overflow, and the hover cursor.
       claim?.restore();
     }
   };

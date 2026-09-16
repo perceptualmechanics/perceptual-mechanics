@@ -1,69 +1,10 @@
-// ─── Medium — how plausible the next letter is ──────────────────────────────
-// NO DOM, NO RENDERING, NO PHYSICS. Given what the board has spelled so far,
-// this says how strongly each of the twenty-six letters wants to be next. It is
-// the only thing in the scene that knows English.
-//
-// ─── Why this exists ────────────────────────────────────────────────────────
-// The ideomotor account (Carpenter 1852; Faraday 1853; Gauchou, Rensink & Fels
-// 2012) is that nobody is choosing the letters and yet words come out. The
-// reason words come out is that a person who has just watched the cup take
-// T, H, E is *primed*, below the level of decision, for letters that continue
-// something spellable. They do not aim at the E. They just find it slightly
-// harder to leave.
-//
-// This module is consulted in exactly two places, and it is worth being precise
-// about them because the difference between this scene and a puppet show is
-// entirely in what it is NOT asked:
-//
-//   1. `stepWander` asks how plausible each letter on the board is, all
-//      twenty-six at once, and leans the partner's hand into the weighted sum.
-//      It never asks which letter is best and is never told one.
-//   2. `stepDwell` asks how plausible the letter under the cup is, and takes
-//      longer over an implausible one — 2.2 seconds against 0.28.
-//
-// Neither call names a next letter, and nothing in the scene stores a word.
-// The bias in the second is bounded at both ends on purpose: a visitor who
-// parks the cup on Q and holds it there gets a Q. The board can be slow to
-// agree; it can never refuse.
-//
-// This is a predictive-text model, and saying so is the point rather than an
-// embarrassment: phone keyboards and half-conscious hands are running the same
-// process, one in a language model and one in a nervous system. The scene is
-// the collision of the two.
-//
-// ─── Why a shallow list, and why not the site's own words ───────────────────
-// The lexicon is the ten thousand commonest English words, not a dictionary.
-// That is modelling rather than economising: the words a person is primed for
-// are exactly the frequent ones, and a full 264k dictionary (360KB gzipped)
-// would make ZYGOTE as reachable as THE. Rarity is the signal.
-//
-// It is plain English, not this site's prose, and that was measured rather than
-// assumed. The site's own text is statistically ordinary English — its letter
-// distribution matches published frequencies at Spearman 0.989, mean absolute
-// error 0.26 percentage points — so seeding the board with the site would have
-// changed nothing about the output while making the board a ventriloquist for
-// the page it sits on. The board is not a mouthpiece. It spells English.
 
 import { BODY, RANKS } from './medium.words.js';
 
-// ─── Damping the top of the frequency curve ─────────────────────────────────
-// Zipf weight is rank^-ZIPF. At 1.0 the true Zipf slope, the top hundred words
-// swamp everything and the board reads like phone autocomplete — which is the
-// one failure mode that would make this feel familiar rather than uncanny.
-// Everybody has a phone; nobody has been haunted. Lowering the exponent
-// flattens the curve so the hand reaches further down the list: at 0.55 the
-// commonest word is 148x the weight of the ten-thousandth rather than 10,000x.
-// Tuned by reading `node scripts/medium-spell.mjs` output, not by argument.
 const ZIPF = 0.55;
 
-// Every letter stays possible. This is the floor added to each of the twenty-
-// six weights, as a fraction of the row's total, so the dwell scale is finite
-// even for a letter no English word wants — the visitor can always spell
-// nonsense by holding the cup still, and must be able to.
 const FLOOR = 0.02;
 
-// The longest context the board carries. Longer prefixes are more confident
-// and more boring; this is also the ceiling on the backoff walk below.
 const MAX_CONTEXT = 12;
 
 const A = 97;
@@ -73,14 +14,10 @@ let weight = null;     // Float64Array, parallel: Zipf weight of each word
 
 function ensure() {
   if (words) return;
-  // Front-coded: one delimiter char (shared-prefix length + 48) then the tail.
-  // Tails are lowercase only, so the next non-letter starts the next entry.
   const body = BODY.replace(/\n/g, '');
   const ranks = RANKS.replace(/\n/g, '');
   words = new Array(ranks.length);
   weight = new Float64Array(ranks.length);
-  // The rank bucket is round(log2(rank) * 1.5), so rank ~ 2^(b/1.5) and the
-  // weight is a pure function of the bucket. Twenty-one of them; precompute.
   const byBucket = new Float64Array(64);
   for (let b = 0; b < 64; b++) byBucket[b] = Math.pow(Math.pow(2, b / 1.5), -ZIPF);
   let prev = '', n = 0;
@@ -95,17 +32,12 @@ function ensure() {
   }
 }
 
-// First index whose word is >= p. Plain lower bound on a sorted array.
 function lower(p) {
   let lo = 0, hi = words.length;
   while (lo < hi) { const m = (lo + hi) >> 1; if (words[m] < p) lo = m + 1; else hi = m; }
   return lo;
 }
 
-// The [lo, hi) span of words beginning with `p`. The upper end is the lower
-// bound of the prefix with its last character bumped by one — which is why
-// the lexicon is restricted to a-z: 'z' + 1 is '{', and it sorts after every
-// tail this list can contain.
 function span(p) {
   if (!p) return [0, words.length];
   const lo = lower(p);
@@ -113,10 +45,6 @@ function span(p) {
   return [lo, hi];
 }
 
-// ─── The one thing this module is for ───────────────────────────────────────
-// Returns a Float32Array(26), scaled so the likeliest next letter is exactly 1
-// and every other letter is its share of that. `context` is the live prefix
-// from `advance` below, lowercase.
 export function letterWeights(context) {
   ensure();
   const out = new Float32Array(26);
@@ -137,19 +65,6 @@ export function letterWeights(context) {
   return out;
 }
 
-// ─── Carrying the context ───────────────────────────────────────────────────
-// A Ouija board does not have a space bar, and no real transcript arrives
-// pre-divided into words — the sitters do that afterwards, and arguing about
-// where the breaks go is half of what the sitters do. So this never decides
-// that a word has ended. It keeps the LONGEST SUFFIX of what has been spelled
-// that still has English continuing out of it, and drops a character off the
-// front when it runs dry.
-//
-// The output is therefore a continuous stream that is word-like everywhere and
-// a word almost nowhere: spell HELLO and the live context falls back to LO, so
-// the next letters continue LOCAL or LONG, and the tape reads HELLOCAL. That
-// is not a defect being tolerated. It is what Ouija transcripts actually look
-// like, and it is the reason people can read them.
 export function createContext() {
   return { text: '', live: '' };
 }
@@ -160,8 +75,6 @@ export function advance(ctx, ch) {
   if (c < 'a' || c > 'z') { ctx.text += ch; ctx.live = ''; return ctx.live; }
   ctx.text += ch;
   let p = (ctx.live + c).slice(-MAX_CONTEXT);
-  // Walk down from the longest suffix to the shortest, stopping at the first
-  // one English can continue. The empty prefix always can, so this terminates.
   while (p) {
     const [lo, hi] = span(p);
     let live = false;
@@ -173,12 +86,6 @@ export function advance(ctx, ch) {
   return p;
 }
 
-// True if the live context is itself a whole word. Used in two places, and
-// only one of them is what this comment used to claim: readerHasWord below,
-// which decides when a word may settle visibly on the tape, and the
-// punctuation weight in weightOf above, which asks whether what has been
-// spelled is finished. The second one IS steering — that is the whole point of
-// PUNCT_WARM/PUNCT_COLD — so "never to steer" was false.
 export function isWord(context) {
   ensure();
   if (!context) return false;
@@ -186,80 +93,10 @@ export function isWord(context) {
   return i < words.length && words[i] === context;
 }
 
-// ─── The reader ─────────────────────────────────────────────────────────────
-// One object that carries everything the board's plausibility depends on, so
-// the scene and the build cannot compute it differently. `medium.js` holds one
-// and `scripts/prerender.js` holds another, and both go through `weightOf`.
-//
-// Two things live in here that `letterWeights` alone does not have:
-//
-// **The marks that are not letters.** English has nothing to say about a 7 — no
-// word continues into one — so digits and the three words get a flat weight
-// rather than a computed one, low enough that a board dropping numbers into the
-// middle of a word stays the exception. GOODBYE is lower again: it sits outside
-// the other hand's reach anyway, and this makes sure a visitor merely drifting
-// past it does not trip it.
-//
-// **Fatigue.** A mark just taken is less plausible for a while, decaying with a
-// thirty-second half-life. This is not a knob bolted on to make the output look
-// nicer — it was added because the output was measurably worse without it, and
-// the half-life was chosen the same way.
-//
-// The failure it fixes: the field pulls the hand toward a region, the region has
-// a few letters in it, and the board loops. Without fatigue, three séances on
-// three unrelated seeds all produced TSUNAMIBIAS. The ruler is the share of
-// six-letter runs that a séance has already produced once, over two and a half
-// hours of simulated sitting on twelve seeds:
-//
-//     half-life    repeated 6-grams    Spearman vs English    vowels
-//        (none)              —                  —               —
-//         6 s             14.4%              0.782            37.3%
-//        15 s             12.5%              0.799            36.7%
-//        30 s              5.9%              0.774            36.1%
-//
-// Repetition more than halves and nothing else moves, so 30. It is also the true
-// thing to model: a hand does not reach twice for what it just reached for, and
-// a basin of attraction that nothing tires of is a property of a simulation
-// rather than of a séance.
 const FATIGUE_DEPTH = 0.6;
 const FATIGUE_HALFLIFE = 30;
 const FATIGUE_FLOOR = 0.02;
 
-// ─── How sharply plausibility is felt, and why it CHANGES ───────────────────
-// `letterWeights` returns a row scaled so the likeliest letter is 1, and on any
-// given prefix most of the other twenty-five sit far below that — so reading the
-// row linearly would push nearly everything to full resistance and the board
-// would only ever take the single best letter, which is a typewriter rather than
-// a board. The exponent lifts the middle: at 0.5 a letter with a hundredth of
-// the leader's weight still lands a tenth of the way from resist toward ease.
-//
-// It was a constant, and it should not have been. Andersen et al. (2019) —
-// mobile eye-tracking of twenty pairs at a Ouija convention — report that
-// **players get better at predicting the planchette with each letter spelled**:
-// a message begins effectively random and becomes more predictable as the
-// meaningful options narrow. That is not a metaphor for what this module does,
-// it is a description of it, and it is measurable in their data rather than
-// asserted.
-//
-// So the exponent rises with how much live context there is. At nothing spelled
-// the board is nearly indifferent between letters; four or five in and it is
-// committed. GAMMA_COLD is the indifference and GAMMA_HOT the commitment.
-//
-// ─── What it actually bought, measured against a flat exponent ──────────────
-// Twelve seeds, ten minutes each, everything else identical:
-//
-//                       Spearman vs English    vowel share    repeated 6-grams
-//   flat 0.50                 0.783               33.2%             0.6%
-//   curve 0.20 -> 0.85        0.813               34.5%             0.9%
-//
-// Three points of rank correlation and a point of vowel share. Real, modest,
-// and worth having — and worth being precise about, because the curve LOOKED
-// like it also fixed the séances that all opened with the same four letters,
-// and it did not. That was the grip and lean rework in 4.11.9; a flat exponent
-// in the current code opens eleven séances out of twelve differently too. The
-// finding was applied because it is what the literature measures happening, and
-// the output improved a little. Those are two separate claims and only the
-// second is a result.
 const GAMMA_COLD = 0.20;
 const GAMMA_HOT = 0.85;
 const GAMMA_FULL = 5;      // characters of context at which it is fully committed
@@ -270,19 +107,6 @@ function gammaFor(context) {
 }
 const FLAT = { digit: 0.06, word: 0.04, goodbye: 0.02 };
 
-// ─── Punctuation is the one mark that looks BACKWARD ────────────────────────
-// Every letter is weighted by what could come next. A full stop is weighted by
-// whether what has already been spelled is finished — which is the same model
-// asked a different question, and is exactly what a phone keyboard is doing
-// when it offers you a period. So a punctuation mark carries its own relative
-// weight (roughly how often English uses it) and that weight is worth having
-// only when the live context is itself a whole word; the rest of the time it is
-// PUNCT_COLD, which is low but never zero, because a visitor who parks the cup
-// on a comma has to get a comma.
-//
-// This does not make the board decide where the words are — the letters still
-// never do, and the tape is still something the reader divides. It makes the
-// board able to guess, at about the rate English guesses, and be wrong.
 const PUNCT_WARM = 0.62;
 const PUNCT_COLD = 0.03;
 
@@ -290,7 +114,6 @@ export function createReader() {
   return { ctx: createContext(), row: letterWeights(''), tired: new Map() };
 }
 
-// Call once a frame, before `weightOf`.
 export function decayReader(r, dt) {
   if (!r.tired.size) return;
   const k = Math.pow(0.5, dt / FATIGUE_HALFLIFE);
@@ -300,7 +123,6 @@ export function decayReader(r, dt) {
   }
 }
 
-// `mark` is one of medium.text.js's MARKS: { ch, kind }. Returns 0..1.
 export function weightOf(r, mark) {
   let w;
   if (mark.kind === 'letter') {
@@ -312,35 +134,21 @@ export function weightOf(r, mark) {
   }
   const t = r.tired.get(mark.ch);
   if (t) w *= 1 - FATIGUE_DEPTH * t;
-  // Never zero. The dwell scale this feeds is bounded at both ends so that a
-  // visitor who parks the cup on Q gets a Q, and a zero here would quietly
-  // undo that promise from the other side.
   return Math.max(0.002, w);
 }
 
-// Call when a mark is taken. Returns the text the board now shows, which for
-// GOODBYE is empty: taking it clears the tape. It is not an ending — nothing
-// stops — it is the one mark that wipes the slate.
 export function takeMark(r, mark) {
   r.tired.set(mark.ch, 1);
   if (mark.ch === 'GOODBYE') { r.ctx = createContext(); r.row = letterWeights(''); return ''; }
   if (mark.kind === 'letter') { advance(r.ctx, mark.ch); r.row = letterWeights(r.ctx.live); return mark.ch; }
-  // A digit, a punctuation mark or YES/NO is not English and the context must
-  // not try to continue one, so the run of letters ends here the way it would
-  // for a sitter. Punctuation takes a space after it and none before, which is
-  // the one typographic convention the tape observes.
   r.ctx = createContext();
   r.row = letterWeights('');
   if (mark.kind === 'punct') return `${mark.ch} `;
   return mark.kind === 'digit' ? mark.ch : ` ${mark.ch} `;
 }
 
-// True while the live context is itself a whole word — the scene uses it for
-// nothing, and scripts/medium-spell.mjs uses it to report where words fell.
 export function readerHasWord(r) { return isWord(r.ctx.live) && r.ctx.live.length >= 3; }
 
 export function readerWord(r) { return r.ctx.live; }
 
-// Exposed for the benches, so `scripts/medium-spell.mjs` can report the size of
-// the thing it is sampling from without reaching into module internals.
 export function lexiconSize() { ensure(); return words.length; }

@@ -2,75 +2,13 @@ import * as THREE from 'three';
 import { bindOrbitDrag, bindWheelZoom, bindGuardedResize, prefersReducedMotion, onReducedMotionChange, createPanelCloser, createJumpList, mountClippedPreviewCanvas, bindTapVsDrag, parseHTML, claimContainer, disposeSceneGraph, manageRenderer, createFrameClock, trackTimers } from '../../utils/sceneKit.js';
 import './orrery.css';
 import orreryHtml from './orrery.html?raw';
-// The found story lives alongside this scene (orrery.text.js) — shared with
-// the prerender step that builds /text/orrery/, so the placard and the
-// published page can't drift.
 import { ORRERY } from './orrery.text.js';
 
-// The gig posters on the warehouse's back wall, at rest and under the
-// crosshair. Both were measured off the rendered frame rather than picked:
-// the resting value has to lift the paper off the brick without turning it
-// into a light source, and the hover value has to be visible across the room
-// at a glance — 19, 12 and 5 of 255 on the three channels, warm, matching the
-// sodium light the rest of the warehouse is lit by.
 const POSTER_EMISSIVE = 0x0c0a08;
 const POSTER_HOVER_EMISSIVE = 0x6b5230;
 
-// ─── The Orrery of Los Feliz ───────────────────────────────────────────────
-// A found short-short, full and unedited, undated. Investigators track a
-// mysterious 30-foot orrery — a moving model of the solar system, a working
-// radio telescope at its peak — to a warehouse in Los Feliz.
-//
-// The scene grounds this as junk-metal, Survival Research Labs-style
-// construction rather than a free-floating sci-fi prop: the whole
-// mechanism hangs from chains bolted to the roof trusses rather than
-// standing on the floor (a machine installed by a crew who had a hoist
-// and a warehouse ceiling, not a foundation crew), the walls carry a few
-// taped-up early-90s show flyers (Nirvana, R.E.M., For Squirrels — dating
-// the space itself, not just the machine), and the nine bodies are the
-// actual planets: correct order, roughly-correct relative sizes and
-// orbital spacing (compressed with a square root so Mercury and Pluto
-// both fit on screen), their real notable moons, Saturn's rings, and the
-// asteroid belt sitting where it actually does — between Mars and
-// Jupiter, not stuck out past Pluto. The "few other unidentified cosmic
-// objects" from the text read as what's left after naming nine real
-// planets: the odd stuff further out, past Pluto.
 
 
-// Real planets, in order. `au` (semi-major axis, real units) drives orbital
-// spacing; `relDiameter` (Earth = 1) drives body size. Both are compressed
-// with a square root before being mapped to screen units — used at real
-// scale, Mercury and Pluto can't share a small scene at all.
-// Colors match a print Scott owns — a minimalist "The Solar System" poster,
-// flat bold color per planet against dark slate green. Applied here as a
-// spray-paint job over bronze bodies (see makeSprayPaintTexture) rather than
-// the poster's own clean flat fills — junk-metal orrery, not a print. That
-// paint job is decades old by the time a visitor sees it, per the found
-// text ("great bronze balls... painted a most royal purple," found still
-// hanging, mid-motion, in a warehouse) — see the "Planet-body aging" block
-// above buildAgedPlanetGeometry for the worn-paint/patina/seam-grime pass
-// built on top of this base texture.
-// ─── Real solar-system data vs. deliberate visual compression ───────────
-// `au` here is the real semi-major axis (average orbital distance from
-// the sun) of each planet in astronomical units (1 AU = Earth's own
-// distance from the sun) — genuine solar-system data, STRUCTURAL, not
-// invented or stylized for this scene. Same for `relDiameter` (each
-// planet's real diameter relative to Earth's). What IS a deliberate
-// visual choice, applied later where these values get used (see the
-// sqrtAU/sqrtDia compression below), is how those real ratios get
-// squeezed down to fit one small room — the underlying numbers
-// themselves are just the actual solar system.
-// e (orbital eccentricity) and m0Deg (mean anomaly at the J2000.0 epoch,
-// in degrees) are real values — JPL/Meeus low-precision elements, mean
-// anomaly derived as M0 = L - ϖ (mean longitude minus longitude of
-// perihelion) at J2000. Used by buildOrrery's Keplerian orbit math (see
-// keplerOrbitPosition) — real eccentricities kept as-is rather than
-// exaggerated for legibility (see that comment for the reasoning): most
-// planets' orbits really are nearly circular, and that's worth showing
-// honestly rather than papering over; Mercury and Pluto (also,
-// conveniently, the innermost and outermost rings) are eccentric enough
-// in reality to read clearly at a glance, which is real physics doing the
-// work of visual variety on its own, not something added for effect.
 const PLANET_DATA = [
   { name: 'Mercury', color: 0xe0447a, au: 0.39, relDiameter: 0.38, moons: [], e: 0.2056, m0Deg: 174.79 },
   { name: 'Venus',   color: 0x9974c9, au: 0.72, relDiameter: 0.95, moons: [], e: 0.0068, m0Deg: 50.45 },
@@ -83,10 +21,6 @@ const PLANET_DATA = [
   { name: 'Pluto',   color: 0xd9d0ba, au: 39.5, relDiameter: 0.18, moons: [{ relSize: 0.5 }], e: 0.2488, m0Deg: 14.86 },
 ];
 
-// ─── Weathered-metal textures — canvas, not image assets, same rule as
-// every other texture on this site. Base steel/rust, an optional pass of
-// chipped royal-purple paint (the mast only — "painted a most royal
-// purple"), and a bronze variant for the planets ("great bronze balls").
 function makeMetalTexture({ base, rust, highlight, paint }) {
   const c = document.createElement('canvas');
   c.width = 128; c.height = 128;
@@ -132,18 +66,6 @@ function makeMetalTexture({ base, rust, highlight, paint }) {
   return tex;
 }
 
-// `steelMaterial` used to live here. Deleted 2026-09-02: it had no callers
-// left at all — the brass/copper restoration pass (see below) replaced every
-// structural surface it used to cover, and nothing was ever pointed back at
-// it afterward.
-//
-// Preview gating, 2026-09-02: every one of these factories used to build the
-// canvas texture unconditionally and then throw it away again on the
-// `preview ? null : tex` line — a full 128x128 canvas plus a CanvasTexture
-// orphaned per call, four calls per tile, ten tiles on the landing page. The
-// preview branch never wanted the map in the first place (it uses the flat
-// `color` fallback), so the honest fix is to not generate it, not to
-// generate it and discard it.
 function paintedMastMaterial(preview) {
   const tex = preview ? null : makeMetalTexture({ base: '#39322b', rust: '#241e18', highlight: '#6d5c48', paint: '#5b3a72' });
   tex?.repeat.set(1, 3);
@@ -154,22 +76,6 @@ function bronzeMaterial() {
   return new THREE.MeshStandardMaterial({ map: tex, roughness: 0.4, metalness: 0.85 });
 }
 
-// ─── Brass/copper restoration (design-notes pass, 2026-09-01, confirmed
-// as the original creative direction, not a new idea) — the orrery's
-// structural framework was always meant to read as brass (the bones of
-// the machine, warm and golden where worn, dark and tarnished in
-// recessed detail) with the more delicate arm mechanisms in copper (real
-// verdigris at joints and seams where moisture collects), not the
-// generic gunmetal steel it had drifted to. Reuses makeMetalTexture's
-// existing highlight/blotch mechanism — the "rust" parameter is really
-// just "localized oxidation," so it doubles as brass tarnish or copper
-// verdigris depending on the colors handed in, no new texture generator
-// needed. Metal reads as metal through edge highlights and specular
-// response, not diffuse color alone, so both materials get a real
-// Fresnel rim-light pass (addMetalRim, mirroring library.js's
-// addSpineRim / orbiter.js's addRimGlow) rather than shipping color
-// alone — flagged in the brief as a critical technical requirement, not
-// optional polish.
 function addMetalRim(material, colorHex, power = 2.3, glow = 0.07) {
   material.onBeforeCompile = shader => {
     shader.uniforms.pmRimColor = { value: new THREE.Color(colorHex) };
@@ -204,21 +110,6 @@ function copperMaterial(preview, repeat = 2) {
   return mat;
 }
 
-// A rattle-can paint job over a rust primer — not a clean flat fill, built
-// from hundreds of tiny semi-transparent dabs so coverage is uneven (denser
-// center, thinner and speckled toward the edge, same way a real spray can
-// lays down color), plus a couple of gravity-drip streaks and a scatter of
-// fine dark grit on top. Used for the planets — the print Scott's palette
-// comes from uses flat vector fills; this is the same colors, but as if
-// someone actually painted scrap-metal balls with them.
-// Returns { canvas, ctx } rather than a THREE.CanvasTexture. Its only two
-// callers want different things: the preview planet path wants a real
-// texture (makeSprayPaintTexture below wraps this), while
-// makeAgedPlanetTextures wants nothing but the pixels — it reads them
-// straight back out with getImageData and composites its own maps on top.
-// Handing that second caller a CanvasTexture meant constructing and then
-// orphaning one per planet, nine per full-mode visit, none of which was
-// ever uploaded, bound, or disposed.
 function drawSprayPaint(hex) {
   const c = document.createElement('canvas');
   c.width = 128; c.height = 128;
@@ -227,21 +118,12 @@ function drawSprayPaint(hex) {
   const rgb = `${Math.round(col.r * 255)},${Math.round(col.g * 255)},${Math.round(col.b * 255)}`;
   const light = `${Math.min(255, Math.round(col.r * 255 + 60))},${Math.min(255, Math.round(col.g * 255 + 60))},${Math.min(255, Math.round(col.b * 255 + 60))}`;
 
-  // Rust primer showing through at the very edges only — the base coat
-  // below covers most of the ball, this just gives the rim something to
-  // peek through.
   cx.fillStyle = '#332a22';
   cx.fillRect(0, 0, 128, 128);
 
-  // Solid-ish base coat first, so the planet's actual color reads clearly
-  // even from a distance — then the speckle passes on top add the
-  // hand-sprayed unevenness without erasing the color itself.
   cx.fillStyle = `rgba(${rgb},0.92)`;
   cx.fillRect(0, 0, 128, 128);
 
-  // Layered dabs, weighted toward the center of each "spray pass" so
-  // coverage builds up unevenly — some lighter (thinner-coat) patches,
-  // some darker/primer patches — rather than a flat, uniform fill.
   const passes = 6;
   for (let p = 0; p < passes; p++) {
     const cx0 = 20 + Math.random() * 88, cy0 = 20 + Math.random() * 88;
@@ -261,7 +143,6 @@ function drawSprayPaint(hex) {
     }
   }
 
-  // A couple of gravity drips.
   cx.strokeStyle = `rgba(${rgb},0.6)`;
   for (let i = 0; i < 3; i++) {
     const x = 20 + Math.random() * 88;
@@ -274,8 +155,6 @@ function drawSprayPaint(hex) {
     cx.stroke();
   }
 
-  // Fine grit, dark speckle on top — kept light so it reads as texture,
-  // not as a haze that dulls the color back down.
   cx.globalAlpha = 0.18;
   for (let i = 0; i < 70; i++) {
     cx.fillStyle = Math.random() > 0.5 ? '#000000' : '#1a1a1a';
@@ -289,35 +168,6 @@ function makeSprayPaintTexture(hex) {
   return new THREE.CanvasTexture(drawSprayPaint(hex).canvas);
 }
 
-// ─── Planet-body aging: seamless 3D noise shared by geometry + texture ──
-// "De-pristine the planets": the found text calls these "great bronze
-// balls," painted, hanging in a warehouse for decades — the flat spray-
-// paint job above reads as freshly made, not as a machine that's sat
-// mostly still, occasionally bumped and handled, for that long. Patina,
-// worn paint over bronze, irregular geometry, and seam grime should read
-// as ONE material story rather than four separate effects layered on
-// top of each other, so all four below share a single height field: a
-// raised/exposed point on an object handled over decades wears its
-// paint down to bare bronze and burnishes shiny in the process; a
-// recessed/sheltered point never gets touched, so its paint survives but
-// dust and tarnish settle into it instead. Both are opposite readings of
-// the SAME field, not two unrelated noise sources — so the color,
-// roughness, metalness, and emissive maps below, and the mesh
-// displacement itself (buildAgedPlanetGeometry), all agree with each
-// other about which points on the sphere are "high" and which are "low."
-//
-// That field has to be genuinely seamless across the whole sphere,
-// including the UV wrap and both poles — a flat 2D (u,v) noise lookup
-// creases visibly at u=0/u=1 and pinches at the poles. Feeding each
-// point's own 3D unit direction into the noise instead sidesteps that
-// entirely, since there's no wraparound edge in 3D space to begin with.
-// Same deterministic lattice-hash value-noise technique as beamline.js's
-// WILDERNESS_NOISE (own seeded hash, not Math.random, so a single seed
-// reproduces an identical field wherever it's sampled again), extended
-// from 2 dimensions to 3, with the same avalanche-mixing recipe
-// (XOR-shift, multiply, XOR-shift) and structural constants as
-// beamline.js's hash2, plus one more large odd multiplier for the third
-// input.
 function hash3(ix, iy, iz, seed) {
   let h = (ix * 374761393 + iy * 668265263 + iz * 2147483647 + seed * 2246822519) | 0;
   h = (h ^ (h >>> 13)) | 0;
@@ -326,8 +176,6 @@ function hash3(ix, iy, iz, seed) {
   return h / 4294967296;
 }
 function smoothstep01(t) { return t * t * (3 - 2 * t); }
-// Trilinear interpolation between the 8 lattice-cell corners surrounding
-// (x, y, z) — the 3D generalization of beamline.js's valueNoise2D.
 function valueNoise3D(x, y, z, seed) {
   const ix = Math.floor(x), iy = Math.floor(y), iz = Math.floor(z);
   const fx = smoothstep01(x - ix), fy = smoothstep01(y - iy), fz = smoothstep01(z - iz);
@@ -340,10 +188,6 @@ function valueNoise3D(x, y, z, seed) {
   const y0 = x00 + (x10 - x00) * fy, y1 = x01 + (x11 - x01) * fy;
   return y0 + (y1 - y0) * fz;
 }
-// Fractal Brownian motion — same octave-stacking as beamline.js's fbm:
-// stack several frequencies of valueNoise3D so the result has broad
-// blotchy shape (low-frequency, high-amplitude early octaves) with
-// finer variation layered on top, instead of looking uniformly smooth.
 function fbm3(x, y, z, seed, octaves = 4) {
   let sum = 0, amp = 0.5, freq = 1, norm = 0;
   for (let o = 0; o < octaves; o++) {
@@ -357,38 +201,7 @@ function fbm3(x, y, z, seed, octaves = 4) {
 function clamp01(x) { return x < 0 ? 0 : x > 1 ? 1 : x; }
 function remap01(x, lo, hi) { return clamp01((x - lo) / (hi - lo)); }
 
-// `organicPulse` (and the golden-ratio PHI constant it was built on) used
-// to sit here. Deleted 2026-09-02: it drove the telescope dish's traveling
-// light pulse, and that pulse was itself removed in "Round 3" of the dish
-// work (see the webMat comment in buildOrrery, which records why the glow
-// cycle went away) — leaving a documented, carefully-reasoned function with
-// zero callers for several versions. Nothing else in the file wants a
-// non-repeating scalar; the receiving effect is real modal physics now.
 
-// ─── Real Keplerian orbital motion for the orrery's planets and moons ───
-// (2.2.22). The orrery never stopped running — nobody was there to see
-// it, but time kept passing — so a visit should show wherever the real
-// mechanism has actually gotten to by now, not a reshuffled arrangement.
-// That requires position to be a function of actual wall-clock time
-// (Date.now(), real milliseconds since the Unix epoch), never
-// performance.now() or any per-frame accumulated value: session time
-// resets on every reload, so a position keyed to it would always start
-// from the same configuration and the bug would be invisible within any
-// single test session — it would only ever show up across genuinely
-// separate visits, exactly the kind of mistake this is easy to make and
-// hard to catch. orreryNowMs() is the one place that decision gets made;
-// everything else in this section takes a `nowMs` parameter rather than
-// calling Date.now() itself, so there's exactly one seam to check.
-//
-// __orreryTimeOverrideMs lets testing fast-forward or jump to an
-// arbitrary date without waiting for real time to pass (set it from the
-// console, e.g. `window.__orreryTimeOverrideMs = Date.now() + 86400000*30`
-// to preview 30 days out) — the verification method this feature
-// explicitly needs, since reloading twice in a row barely moves real time
-// at all. Left in permanently (not stripped before shipping): harmless
-// when unset, useful for real debugging later, and it's the only way
-// anyone can practically confirm the elliptical shape or long-term
-// configuration changes without waiting for actual months to pass.
 function orreryNowMs() {
   return (typeof window !== 'undefined' && typeof window.__orreryTimeOverrideMs === 'number')
     ? window.__orreryTimeOverrideMs
@@ -396,16 +209,6 @@ function orreryNowMs() {
 }
 
 const J2000_EPOCH_MS = Date.UTC(2000, 0, 1, 12, 0, 0); // J2000.0 — the standard epoch PLANET_DATA's m0Deg values are anchored to
-// TUNABLE: real orbital periods span ~0.24 years (Mercury) to ~248 years
-// (Pluto) — direct real time would make Mercury take 88 real days per
-// orbit and Pluto effectively motionless for any viewing session. One
-// global multiplier compresses this onto a human-watchable timescale
-// without disturbing Kepler's third law at all (uniform scaling preserves
-// ratios exactly, so T^2 ∝ a^3 stays exactly true in compressed time too)
-// — 250 real seconds per "visual year" lands Mercury's orbit around a
-// minute (close to this scene's earlier hand-tuned pacing) while Pluto's
-// takes several real hours, the same roughly 1030x real ratio between
-// them, not a stylized approximation of it.
 const SECONDS_PER_VISUAL_YEAR = 250;
 
 function normalizeAngle(a) {
@@ -413,25 +216,8 @@ function normalizeAngle(a) {
   return ((a % twoPi) + twoPi) % twoPi;
 }
 
-// Real seconds elapsed since the J2000 epoch — the same wall clock
-// keplerOrbitPosition already works from, pulled out on its own for the few
-// pieces of the machine that turn at a constant rate rather than solving an
-// orbit (the asteroid belt, the unidentified objects past Pluto, and their
-// tumble). Those three used to advance by a fixed amount PER FRAME, which
-// made them the only parts of the mechanism whose speed depended on the
-// visitor's refresh rate: on a 120Hz display the belt ran at exactly 2x
-// while the planets — correctly wall-clock driven — did not, so the belt
-// visibly outran the Mars/Jupiter speeds its own rate was averaged from.
-// Driving them from this instead fixes that and, as a bonus, gives them the
-// same "the orrery never stopped, reloading doesn't reset it" property the
-// planets already had.
 function secondsSinceEpoch(nowMs) { return (nowMs - J2000_EPOCH_MS) / 1000; }
 
-// Solves Kepler's equation M = E - e*sin(E) for the eccentric anomaly E
-// via Newton's method (starting guess E0 = M, per the standard textbook
-// approach — converges in a handful of iterations for realistic orbital
-// eccentricities; 6 iterations here is a safety margin over the 3-5 that
-// are typically sufficient, still trivially cheap).
 function solveEccentricAnomaly(M, e) {
   let E = M;
   for (let i = 0; i < 6; i++) {
@@ -440,79 +226,25 @@ function solveEccentricAnomaly(M, e) {
   return E;
 }
 
-// A single shared function for both planets (real au/e/m0Deg data) and
-// moons (small fixed illustrative e, deterministic spread of m0 — see the
-// moon-building comment in buildOrrery for why no real per-moon data is
-// used) — the physics is identical at either scale, which is exactly the
-// "same math, applied recursively" the brief asked for. `orbit.a` and
-// `orbit.screenRadius` can be in any consistent units (real AU for
-// planets, already-compressed screen units for moons): what actually
-// drives the returned screen radius is the dimensionless ratio
-// rReal/orbit.a, which is scale-invariant by construction.
-//
-// Returns { rScreen, angle }: angle is the true anomaly (0 at perihelion,
-// increasing in the direction of real orbital motion), and rScreen is the
-// body's current screen-space distance from its orbit's center — this is
-// what makes the motion genuinely elliptical rather than a circular
-// approximation: rScreen oscillates between orbit.screenRadius*(1-e) and
-// orbit.screenRadius*(1+e) over one full period, exactly the same
-// fractional variation the real orbit has, applied to the (sqrt-
-// compressed, for planets) baseline radius already established elsewhere
-// in this file for unrelated spacing reasons.
 function keplerOrbitPosition(orbit, nowMs) {
   const visualYears = (nowMs - J2000_EPOCH_MS) / 1000 / SECONDS_PER_VISUAL_YEAR;
   const M = normalizeAngle(orbit.m0 + (2 * Math.PI * visualYears) / orbit.periodYears);
   const E = solveEccentricAnomaly(M, orbit.e);
-  // x = a(cosE - e), y = a*sqrt(1-e^2)*sinE — the orbital-plane position
-  // this form gives directly (no separate true-anomaly trig-branch
-  // handling needed); rReal = distance from the focus = a(1 - e*cosE),
-  // and atan2 of the same two components gives the true anomaly for the
-  // angle. This automatically satisfies Kepler's second law (equal areas
-  // in equal times — faster near perihelion, slower near aphelion): that
-  // speed variation isn't authored anywhere, it falls straight out of
-  // solving the equation.
   const rReal = orbit.a * (1 - orbit.e * Math.cos(E));
   const angle = Math.atan2(Math.sqrt(1 - orbit.e * orbit.e) * Math.sin(E), Math.cos(E) - orbit.e);
   return { rScreen: orbit.screenRadius * (rReal / orbit.a), angle };
 }
 
-// Positions a body (already time-varying via keplerOrbitPosition) within
-// its own orbit's local X/Z plane, and rotates it to match — replicating
-// exactly what the old "rotate a fixed-offset pivot every frame" approach
-// produced (the mounting arm, built along local -X, always pointing back
-// toward the orbit's own center), just computed directly instead of
-// accumulated: bodyGroup.rotation.y = angle applied to a
-// (rScreen, 0, 0)-relative offset is mathematically identical to the old
-// parent-pivot-rotation scheme, with the rotation moved from parent to
-// self so it can be set fresh from the clock every frame rather than
-// integrated.
 function applyKeplerPosition(mesh, orbit, nowMs) {
   const { rScreen, angle } = keplerOrbitPosition(orbit, nowMs);
   mesh.position.set(rScreen * Math.cos(angle), 0, -rScreen * Math.sin(angle));
   mesh.rotation.y = angle;
 }
 
-// Moons have no real per-body orbital-element data at this scale, so their
-// Kepler inputs are fixed, deliberately-illustrative constants rather than
-// sourced values (see the moons.map comment in buildOrrery for the full
-// reasoning): a small, gently-visible eccentricity; a real-time period for
-// the innermost moon of each planet that further moons then scale up from
-// via T ∝ r^1.5 (Kepler's third law, applied recursively); and a
-// deterministic (not random) per-moon initial phase spread by the golden
-// angle, so multiple moons around one planet never land in a repeating or
-// coincidentally-aligned arrangement.
 const MOON_E = 0.06;
 const MOON_PERIOD_BASE_SECONDS = 6;
 const MOON_GOLDEN_ANGLE = 2.399963229; // radians, ~137.5°
 
-// (u, v) -> the point on the unit sphere that (u, v) addresses. Used
-// identically by buildAgedPlanetGeometry and makeAgedPlanetTextures
-// below so a texture pixel and a geometry vertex at the same (u, v)
-// always land on the exact same physical point on the body — the whole
-// wear/patina/grime system depends on that agreement holding exactly,
-// not approximately, which is also why this scene hand-builds the
-// sphere geometry below rather than trusting THREE.SphereGeometry's own
-// (unverified-from-here) UV layout to match.
 function sphericalDir(u, v, out) {
   const theta = u * Math.PI * 2, phi = v * Math.PI;
   const s = Math.sin(phi);
@@ -525,14 +257,6 @@ function sphericalDir(u, v, out) {
 const AGE_FREQ_H = 2.4;       // TUNABLE: roughly how many broad wear/patina blotches wrap the sphere
 const AGE_FREQ_EDGE = 8;      // TUNABLE: finer noise that roughens the wear/grime boundary into an organic chip/tarnish edge instead of a smooth gradient ring
 const AGE_EDGE_JITTER = 0.08; // TUNABLE: how far AGE_FREQ_EDGE can locally shift the wear/grime threshold
-// fbm3 at these settings empirically lands around mean 0.5, std ~0.11 (see
-// verify_planet_aging.mjs, run once during development, not part of the
-// repo) — NOT a uniform 0..1 spread, so these bands are calibrated against
-// that actual distribution rather than guessed against the theoretical
-// range: WEAR/GRIME both start around the ~85th/15th percentile and reach
-// full effect around the ~98th/2nd, so only a minority of each body's
-// surface (its highest and lowest points) ever shows real wear or grime —
-// "aged, not decayed," per the brief's own ceiling.
 const WEAR_LO = 0.58, WEAR_HI = 0.74;   // TUNABLE: band of the height field that transitions from intact paint to bare, burnished bronze
 const GRIME_LO = 0.58, GRIME_HI = 0.74; // TUNABLE: band of (1 - height) that transitions from clean to patinated/grimy — same band as WEAR_LO/HI by design: fbm3's own spread is close to symmetric around 0.5
 const AGE_DISPLACE_AMT = 0.07;          // TUNABLE: fraction of radius the surface bulges/dimples by — kept modest, "aged, not decayed"
@@ -540,13 +264,6 @@ const SEAM_DIR = new THREE.Vector3(-1, 0, 0); // every planet's mounting arm att
 const SEAM_DOT_LO = 0.55;               // TUNABLE: angular reach (as a dot-product threshold) of the grime smudge around SEAM_DIR
 const AGE_SEGMENTS_W = 28, AGE_SEGMENTS_H = 20; // resolution for the hand-built planet geometry below — enough to carry the displacement as real bumps rather than a faceted lump, still trivial at nine bodies
 
-// A UV sphere built by hand (rather than THREE.SphereGeometry) so its UV
-// layout is known exactly instead of assumed — see sphericalDir above
-// for why that guarantee matters here. Standard grid-of-quads
-// construction: a (segH+1) x (segW+1) vertex grid, each quad split into
-// two triangles, computeVertexNormals afterward so the displaced
-// surface still shades correctly (a perfect sphere's own analytic
-// normals are no longer right once vertices have moved).
 function buildAgedPlanetGeometry(radius, seedH) {
   const positions = [], uvs = [];
   const dir = new THREE.Vector3();
@@ -578,17 +295,6 @@ function buildAgedPlanetGeometry(radius, seedH) {
   return geo;
 }
 
-// Builds the color/roughness/metalness/emissive canvas maps for one
-// planet body, all four sampled together in a single pass over the same
-// per-pixel field so they stay consistent with each other and with
-// buildAgedPlanetGeometry's displacement (same seedH, same sphericalDir,
-// same AGE_FREQ_H). W/H match drawSprayPaint's own canvas size,
-// whose output is reused here as the "paint as originally applied"
-// layer — this pass adds decades of aging on top of that existing
-// texture, it doesn't replace it. `texture.flipY = false` on every
-// output canvas is what keeps a canvas pixel at (u, v) and a geometry
-// vertex at UV (u, v) addressing the same point; THREE's default flipY
-// would otherwise vertically mirror the mapping between them.
 function makeAgedPlanetTextures(hex, seedH) {
   const W = 128, H = 128;
   const paintData = drawSprayPaint(hex).ctx.getImageData(0, 0, W, H).data;
@@ -603,28 +309,12 @@ function makeAgedPlanetTextures(hex, seedH) {
   const metalImg = metalCx.createImageData(W, H), emisImg = emisCx.createImageData(W, H);
 
   const col = new THREE.Color(hex);
-  // Matches bronzeMaterial's own base/highlight tones, so an exposed
-  // patch of "bronze" here reads as the same metal the moons are cast
-  // from elsewhere in the scene, not an unrelated color invented just
-  // for this effect.
   const bronze = { r: 138, g: 100, b: 56 };
   const burnish = { r: 214, g: 178, b: 122 }; // the shine a handled/rubbed high point picks up
-  // Dark, desaturated tarnish rather than green verdigris, on purpose —
-  // verdigris needs sustained rain/moisture exposure, and this machine
-  // has hung indoors, mostly undisturbed, for decades, which tarnishes
-  // bronze toward soot-brown/black rather than green.
   const tarnish = { r: 27, g: 21, b: 15 };
 
   const dir = new THREE.Vector3();
   for (let py = 0; py < H; py++) {
-    // Pixel CENTRES, not pixel corners: a texture sample at UV (u,v) reads
-    // the texel whose centre is at ((px+0.5)/W, (py+0.5)/H), so addressing
-    // it as px/W here would offset the whole aging field by half a texel
-    // against the geometry displacement built from the same (u,v). Half a
-    // texel is small, but the block comment above sphericalDir is explicit
-    // that this agreement has to hold exactly, not approximately — that is
-    // the entire reason this file hand-builds its sphere geometry instead
-    // of trusting THREE.SphereGeometry's UV layout.
     const v = (py + 0.5) / H;
     for (let px = 0; px < W; px++) {
       const u = (px + 0.5) / W;
@@ -649,12 +339,6 @@ function makeAgedPlanetTextures(hex, seedH) {
       const seamShadow = 1 - seamAmt * 0.55;
       colorImg.data[i] = r * seamShadow; colorImg.data[i + 1] = g * seamShadow; colorImg.data[i + 2] = b * seamShadow; colorImg.data[i + 3] = 255;
 
-      // Roughness/metalness follow the same wear-vs-grime logic a
-      // real-time PBR wear map would use: intact paint is matte and
-      // non-metallic; bronze bared by wear is shinier and metallic,
-      // brightest right at the burnished high points; grimy recesses are
-      // duller, and slightly less reflectively metallic under a film of
-      // dust, than whatever's underneath.
       let rough = lerp(0.78, 0.3, wearAmt);
       rough = lerp(rough, 0.92, grimeAmt);
       rough = lerp(rough, Math.min(0.97, rough + 0.15), seamAmt);
@@ -666,13 +350,6 @@ function makeAgedPlanetTextures(hex, seedH) {
       const metalByte = Math.round(clamp01(metal) * 255);
       metalImg.data[i] = metalImg.data[i + 1] = metalImg.data[i + 2] = metalByte; metalImg.data[i + 3] = 255;
 
-      // The scene's structure key light relies on a flat emissive tint
-      // (see bodyMat below) to keep planet bodies legibly colored
-      // without out-competing the ring/mast structure for attention —
-      // that tint should follow the paint, not the bronze, so it fades
-      // out exactly where the paint itself has worn away or gone under
-      // grime, instead of uniformly glowing the original color straight
-      // through the new wear/patina.
       const emisAmt = clamp01(1 - wearAmt - grimeAmt * 0.6);
       emisImg.data[i] = col.r * 255 * emisAmt;
       emisImg.data[i + 1] = col.g * 255 * emisAmt;
@@ -689,38 +366,15 @@ function makeAgedPlanetTextures(hex, seedH) {
   return { map: asTexture(colorC), roughnessMap: asTexture(roughC), metalnessMap: asTexture(metalC), emissiveMap: asTexture(emisC) };
 }
 
-// Bright polished brass — the brief's "small bright fittings at contact
-// points, where wear polishes through tarnish to bright metal," a
-// natural fit for bolts/rivets specifically since they're exactly the
-// points that get handled/wrenched most. Was a near-black BOLT_TONE
-// before the brass/copper restoration pass.
 const BOLT_TONE = 0xe6c878;
 
-// ─── First-person walkthrough tuning ─────────────────────────────────────
-// Arrow-key movement, mouse-look, and collision — a Myst-like walkthrough
-// feel. ────
 const PLAYER_RADIUS = 0.3;
 const EYE_HEIGHT = 1.7;          // above floorY — happens to land almost
-                                 // exactly at the control hub's own height
-                                 // (see hub.position in buildOrrery) and
-                                 // below the suspended rings, both by
-                                 // design rather than coincidence: it's
-                                 // the height a visitor would actually
-                                 // look the machine in the eye at.
 const WALK_SPEED = 2.6;         // units/sec, full speed
 const MOVE_ACCEL = 14;          // how briskly velocity eases to target
 const LOOK_SENS_MOUSE = 0.0022; // pointer-lock's raw, unscaled movementX/Y
 const PITCH_LIMIT = 1.3;        // ~74°, keeps the view from flipping over
 
-// One ring's worth of bolt heads, as a single InstancedMesh. Was 16
-// individually-added Meshes per ring, x9 rings = 144 draw calls, and worse,
-// each CALL built its own SphereGeometry and its own MeshStandardMaterial
-// (with its own onBeforeCompile rim shader, so nine separately-compiled
-// programs for nine identical materials) — the bolt radius only ever varies
-// by the `preview` flag, so all nine calls within one scene were asking for
-// the exact same pair. The geometry/material are now built once by the
-// caller and handed in, and the 16 per ring become 16 instance matrices:
-// 9 draw calls instead of 144, one shader program instead of nine.
 const _boltMatrix = new THREE.Matrix4();
 function addBolts(parent, geo, mat, count, ringGeoRadius) {
   const bolts = new THREE.InstancedMesh(geo, mat, count);
@@ -734,24 +388,6 @@ function addBolts(parent, geo, mat, count, ringGeoRadius) {
   return bolts;
 }
 
-// A welded brace (or a chain link) between two arbitrary points — used both
-// for the ring-to-mast braces and the ceiling-to-mast suspension chains.
-// heightSegments defaults to 1 (just the two end rings), which is enough
-// for every current caller — all static, never individually deformed.
-// Left tunable rather than hardcoded because of a real lesson from 2.2.17:
-// a strut with no vertices along its own length can't be bent by anything
-// that displaces individual vertices, only by a transform on the whole
-// mesh or its parent (see NOTES.md 2.2.17/2.2.18) — worth remembering
-// before any future effect tries per-vertex strut deformation again.
-// `sharedGeo`, when passed, must be a cylinder of exactly this from/to
-// distance and thickness — the caller has already established that several
-// struts are identical and wants one geometry between them (see the dish
-// lattice's geoCache in buildOrrery: 54 struts, only 4 distinct
-// length/thickness pairs among them, because the three segments of every
-// spoke are equal by construction and each cross-bracing ring's chords are
-// all the same length). Passing a mismatched geometry would silently
-// mis-size the strut, so this stays opt-in per call site rather than a
-// module-level cache keyed by rounded floats.
 function addStrut(parent, from, to, thickness, mat, heightSegments = 1, sharedGeo = null) {
   const mid = from.clone().add(to).multiplyScalar(0.5);
   const dist = from.distanceTo(to);
@@ -765,17 +401,6 @@ function addStrut(parent, from, to, thickness, mat, heightSegments = 1, sharedGe
 
 function lerp(a, b, t) { return a + (b - a) * t; }
 
-// Classic cyclic Jacobi eigenvalue algorithm for a real symmetric matrix —
-// used once, at load, to find the telescope lattice's own natural
-// vibration modes (see the receiving-effect comment in buildOrrery). Not a
-// general-purpose numerical library import: this is ~30 lines of a
-// textbook algorithm, appropriate for the small (27x27) matrix it runs on
-// exactly once, and it keeps the physics fully inspectable in this file
-// rather than behind a dependency. Repeatedly zeroes the largest
-// off-diagonal pair via a rotation until the matrix is (numerically)
-// diagonal; the accumulated rotations are the eigenvectors, the final
-// diagonal is the eigenvalues. Returns both sorted ascending (so index 0
-// is always the lowest-frequency mode).
 function jacobiEigenSymmetric(matrix, n, maxSweeps = 100) {
   const A = matrix.map(row => row.slice());
   const V = Array.from({ length: n }, (_, i) => Array.from({ length: n }, (_, j) => (i === j ? 1 : 0)));
@@ -817,40 +442,18 @@ function jacobiEigenSymmetric(matrix, n, maxSweeps = 100) {
 
 function buildOrrery(preview, suspendTopY, rafterY) {
   const group = new THREE.Group();
-  // Brass for the main structural framework — the bones of the machine,
-  // warm/golden where worn, dark/tarnished in recessed detail. Copper
-  // (thinner members, real verdigris at joints/seams) is reserved for
-  // the more delicate per-planet mounting arms below. Both replace the
-  // generic gunmetal steel this used to be — confirmed as a restoration
-  // of the original creative direction, not a new idea.
   const brassMat = brassMaterial(preview);
   const copperMat = copperMaterial(preview);
   const mastMat = paintedMastMaterial(preview);
   const bronzeMat = bronzeMaterial();
 
-  // The orrery itself reads substantially bigger without growing the
-  // warehouse around it. HW thickens the mast and hardware; SR widens the
-  // orbit rings; SS grows the planet bodies themselves. None of these is
-  // bounded by the room: buildOrrery never receives wallDist, and the
-  // outermost ring is a hardcoded 3.7 * SR = 5.365 against a room half-width
-  // of 12.5. The comment that used to say the rings were "capped just inside
-  // the side walls" described a constraint that has never existed in this
-  // function. Mast height and every vertical anchor (baseY,
-  // suspendTopY, rafterY, riserTopY) stay fixed — the room itself keeps
-  // its own size regardless of these scale factors.
   const HW = 1.4, SR = 1.45, SS = 2.2;
 
-  // One geometry and one material for every bolt head in the scene — see
-  // addBolts. The radius is the same for all nine rings (it only varies by
-  // the preview flag), so there is nothing per-ring to vary.
   const boltRadius = (preview ? 0.012 : 0.015) * HW;
   const boltGeo = new THREE.SphereGeometry(boltRadius, 6, 6);
   const boltMat = new THREE.MeshStandardMaterial({ color: BOLT_TONE, roughness: 0.3, metalness: 0.9 });
   addMetalRim(boltMat, 0xfff0c0, 2.0, 0.09);
 
-  // ─── The mast — steel and wood, painted royal purple, hanging from the
-  // suspension collar at the top rather than rooted in a floor: a core
-  // shaft plus riveted collar flanges with diagonal cross-braces. ────────
   const mastHeight = preview ? 3.2 : 4.4;
   const baseY = suspendTopY - mastHeight;
   const coreGeo = new THREE.CylinderGeometry((preview ? 0.05 : 0.06) * HW, (preview ? 0.09 : 0.11) * HW, mastHeight, 8);
@@ -880,8 +483,6 @@ function buildOrrery(preview, suspendTopY, rafterY) {
     prevCollarY = y;
   }
 
-  // ─── Suspension — four chains fanning from the top collar up to anchor
-  // points near the roof trusses. What actually holds the thing up. ───────
   const anchorSpread = preview ? 0.75 : 1.0;
   [[1, 0], [-1, 0], [0, 1], [0, -1]].forEach(([dx, dz]) => {
     const from = new THREE.Vector3(dx * (preview ? 0.11 : 0.14) * HW, suspendTopY, dz * (preview ? 0.11 : 0.14) * HW);
@@ -889,9 +490,6 @@ function buildOrrery(preview, suspendTopY, rafterY) {
     addStrut(group, from, to, (preview ? 0.012 : 0.015) * HW, brassMat);
   });
 
-  // A bolted control box near the bottom of the mast — the actual
-  // click/hover target, with one small amber indicator lamp lit, the kind
-  // of after-the-fact gauge box a scrap-built machine would have bolted on.
   const hubHalf = (preview ? 0.16 : 0.2) * HW;
   const hubGeo = new THREE.BoxGeometry((preview ? 0.22 : 0.28) * HW, (preview ? 0.16 : 0.2) * HW, (preview ? 0.16 : 0.2) * HW);
   const hubMat = new THREE.MeshStandardMaterial({ color: 0x2c2620, roughness: 0.7, metalness: 0.4 });
@@ -904,69 +502,12 @@ function buildOrrery(preview, suspendTopY, rafterY) {
   lamp.position.set(0, hubHalf * 0.6, hubHalf * 0.6);
   hub.add(lamp);
 
-  // ─── The radio telescope — "still on, receiving information from the
-  // heavens." A riser from the suspension collar continues the mast upward,
-  // through the roof, to a bronze lattice antenna. Riser height tuned so
-  // this whole assembly clears the ceiling by a wide, unmistakable margin
-  // (was clearing it by as little as 0.05-0.1 units before — technically
-  // "poking out," but not legibly so): the found story's own text says it
-  // plainly ("about 30 feet high, the peak poking out of the warehouse
-  // skylights"), so the peak should read as clearly above the roofline,
-  // surrounded by the sky/star field beyond it, not just barely grazing
-  // the hole.
-  //
-  // Round 2 of this element — two things were actually wrong with the
-  // first version, both caught from ground-camera screenshots: a filled
-  // solid dish read as flat and unbraced up close (no visible structure to
-  // it), and the "receiving" effect wasn't legible as its own deliberate
-  // thing next to the skylight's own pre-existing, unrelated ambient light
-  // (originally a decorative beam mesh in buildWarehouse, unrelated to this
-  // telescope; that mesh was later removed entirely — see the moonlight
-  // rebuild comment at the moonSpot call site — and the real light now
-  // actually illuminates this lattice directly). Both are addressed by rebuilding
-  // the dish as an actual open lattice — a bronze web of radial spokes and
-  // cross-bracing rings, apex down, rim up, same cone silhouette as
-  // before — rather than a filled surface: the lattice itself IS the
-  // visible structure (no separate "add supports" step), and it gives the
-  // receiving pulse below somewhere concrete to travel along.
-  //
-  // Worth being explicit about what IS and ISN'T designed here: this
-  // object is found, not engineered by Peter Hight — its web shape is
-  // just what it already was when found, not a mesh dish deliberately
-  // optimized for wind load or reception the way a real one would be. It
-  // happens to work as a receiver; nobody designed it to — a strange found
-  // shape, not good engineering. That's also why it gets its own material
-  // below instead of reusing bronzeMaterial() or the planet-body aging
-  // system (see makeAgedPlanetTextures/buildAgedPlanetGeometry): every
-  // other bronze surface on this sculpture is deliberately weathered, but
-  // this one — sitting at the single most weather-exposed point on the
-  // whole piece, poking through the roof itself — stays clean and bright.
-  // Not an inconsistency; a second unexplained detail sitting alongside
-  // "still on, receiving," same as that line: this hasn't aged the way
-  // everything below it has.
   const riserTopY = suspendTopY + (preview ? 1.0 : 1.35);
   addStrut(group, new THREE.Vector3(0, suspendTopY, 0), new THREE.Vector3(0, riserTopY, 0), (preview ? 0.03 : 0.04) * HW, mastMat);
   const dishGroup = new THREE.Group();
   dishGroup.position.y = riserTopY;
   const dishR = (preview ? 0.34 : 0.44) * HW, dishH = (preview ? 0.24 : 0.32) * HW;
-  // Apex (the web's own center/hub — where the receiving pulse below
-  // actually converges) at -dishH/2, rim at +dishH/2: the same cone this
-  // assembly used before, just realized as a lattice of struts along that
-  // cone's surface instead of a filled mesh over it.
   const apexY = -dishH / 2, rimY = dishH / 2;
-  // Round 3: the dish's own weirdness is now purely material, not
-  // animated. Earlier passes tried to sell "still on" with a traveling
-  // light pulse along the web's threads — it didn't land (flagged
-  // directly: "it isn't working"). Static contrast carries this better —
-  // this is the one clean, untarnished piece of bronze in a room full of
-  // deliberately weathered ones (see the aging system below, and the
-  // planet-body patina above it), full stop, no glow cycle. One shared,
-  // unanimated material for every strut in the web — no more per-segment
-  // .clone()s, since nothing needs to light independently anymore.
-  // emissiveIntensity trimmed slightly (0.5 -> 0.38, 2.2.18) — still the
-  // one clean, bright, unweathered surface on the piece per the comment
-  // above, just eased back a touch after reading as a bit too contrasted
-  // against the rest of the scene.
   const webMat = new THREE.MeshStandardMaterial({
     color: 0xd9a862, emissive: 0xffb35c, emissiveIntensity: 0.38, roughness: 0.28, metalness: 0.9,
   });
@@ -977,61 +518,6 @@ function buildOrrery(preview, suspendTopY, rafterY) {
     return { x: Math.cos(a), z: Math.sin(a) };
   });
 
-  // ─── The receiving effect, round 5: real coupled-oscillator physics on
-  // the lattice's own actual connectivity, not an authored waveform.
-  //
-  // Rounds 1-2 (particle beam, then a lensing patch) failed because this
-  // scene already has visual vocabulary for "a small round-ish or
-  // irregular thing near the hub" (the planets, the asteroid belt), so any
-  // new mesh there gets sorted into that category regardless of shape —
-  // whatever moves has to be the lattice's own existing geometry, not a
-  // new object. Round 3 (2.2.14-2.2.18) displaced each strut's own
-  // vertices independently, which (once 2.2.17 fixed the bug that had
-  // kept it motionless) read as "everything's wobbling," not a resonant
-  // object — an incoherent tangle of unrelated local motion is how cloth
-  // moves, not a bronze lattice welded solid at every joint. Round 4
-  // (2.2.19) fixed THAT by replacing per-vertex motion with one rigid
-  // "wine glass" ovalizing transform on the whole dish — correct in kind
-  // (coherent, anchored, rigid), but hand-authored: one shape, one
-  // frequency, no relationship to which point actually got struck or how
-  // far a disturbance is from there.
-  //
-  // This round replaces the hand-authored transform with the real thing:
-  // every joint where struts actually meet is treated as a point mass,
-  // every strut between two joints as a spring, and the whole lattice's
-  // motion is the genuine solution to that system — standard textbook
-  // mass-spring-damper network physics, the discrete version of how a
-  // bell or a crystal actually rings when struck:
-  //   m·ẍᵢ = −Σⱼ kᵢⱼ(xᵢ−xⱼ) − γ·ẋᵢ,  summed over every joint j that i is
-  // actually connected to by a real strut (M·ẍ + C·ẋ + K·x = F(t) in
-  // matrix form). This is NOT the closed-form phonon dispersion relation a
-  // perfectly regular, evenly-repeating lattice would have (ω =
-  // 2√(k/m)·|sin(ka/2)| for the simplest 1D chain) — that only applies to
-  // a regular repeating structure, and this mesh, built from real strut
-  // connectivity rather than a uniform grid, isn't one. The general
-  // eigenmode approach below is the right fit for the geometry that
-  // actually exists here, not a shortcut reached for by mistake.
-  //
-  // 28 joints: the apex/hub (pinned, see below) plus 3 rings of 9 points
-  // each, at the same radii/heights the old cross-bracing rings used. Each
-  // spoke, previously one continuous strut from apex straight to rim, is
-  // now built as 3 shorter collinear struts (apex-ring1, ring1-ring2,
-  // ring2-ring3/rim) so the RENDERED geometry has an actual joint
-  // everywhere the physics says one exists — visually identical at rest,
-  // but every strut endpoint is now a real dynamical point the physics can
-  // move, rather than needing interior vertices on one long strut (the
-  // 2.2.17 bug class doesn't apply here: nothing ever touches a strut's
-  // own geometry after it's built, only its position/rotation/scale,
-  // recomputed from its two joints' live positions the same way addStrut
-  // itself computes them once).
-  //
-  // The apex is pinned — excluded as a free variable, always zero
-  // displacement — because it's rigidly welded to the mast, a much
-  // stiffer assembly than this web: physically the lattice's boundary
-  // condition, not one more joint that vibrates. This also removes the
-  // trivial rigid-body zero-mode an unanchored graph's Laplacian would
-  // otherwise have, and keeps the hub visually anchored the way 2.2.19's
-  // rigid transform did.
   const N_RING = WEB_SPOKES, N_LEVELS = WEB_RINGS, N_JOINTS = N_RING * N_LEVELS; // 27 free joints
   const jointIdx = (level, i) => level * N_RING + i; // level 0..2 = ring 1..3 (rim), i = spoke index
   const jointBasePos = [];
@@ -1043,19 +529,10 @@ function buildOrrery(preview, suspendTopY, rafterY) {
     }
   }
   const apexBasePos = new THREE.Vector3(0, apexY, 0);
-  // Spring stiffness: a real rod's axial stiffness scales with its
-  // cross-section, so the ratio between the circumferential and radial
-  // strut THICKNESSES already committed to below (0.008 vs 0.012 at full
-  // scale) is reused directly as a relative-stiffness proxy, rather than
-  // inventing an unrelated number — simplified (true stiffness would use
-  // area and real beam bending, not just a thickness ratio), but grounded
-  // in a value this file already chose for an unrelated reason, not
-  // picked to make the animation look a particular way.
   const K_RADIAL = 1;
   const K_CIRCUM = (preview ? 0.006 : 0.008) / (preview ? 0.009 : 0.012);
   const K = Array.from({ length: N_JOINTS }, () => new Array(N_JOINTS).fill(0));
   function addSpring(a, b, k) {
-    // a/b: a free-joint index (0..N_JOINTS-1), or -1 for the pinned apex.
     if (a >= 0) K[a][a] += k;
     if (b >= 0) K[b][b] += k;
     if (a >= 0 && b >= 0) { K[a][b] -= k; K[b][a] -= k; }
@@ -1070,28 +547,9 @@ function buildOrrery(preview, suspendTopY, rafterY) {
       addSpring(jointIdx(level, i), jointIdx(level, (i + 1) % N_RING), K_CIRCUM);
     }
   }
-  // Solved once, here, at scene build — the lattice's topology never
-  // changes at runtime, so its eigenmodes don't either. animate() below
-  // only ever evaluates a closed-form sum over these fixed modes every
-  // frame; nothing gets re-solved live.
   const modes = jacobiEigenSymmetric(K, N_JOINTS);
 
-  // The actual strut meshes: 27 radial segments (3 per spoke, per the
-  // joint layout above) + 27 circumferential (unchanged in count from
-  // before — still literally the cross-bracing rings). Each is recorded
-  // with which two joints it connects (a jointBasePos index, or -1 for
-  // the pinned apex) and its own built length, so animate() can
-  // reposition/reorient/rescale it from the joints' live physics
-  // positions every frame.
   const ringStruts = []; // { mesh, jointA, jointB, baseFrom, baseTo, builtLen }
-  // 54 struts, but only four distinct (length, thickness) pairs among them,
-  // and that isn't a coincidence to be discovered by measurement: the three
-  // segments of every spoke are equal because the rings are evenly spaced
-  // along the cone, and each cross-bracing ring's nine chords are equal
-  // because its nine joints are evenly spaced around it. Keying the cache on
-  // the built length lets the construction below stay written the obvious
-  // way (from-point, to-point) while still handing addStrut one geometry per
-  // distinct pair instead of 54 near-duplicates.
   const strutGeoCache = new Map();
   function addRingStrut(fromPos, toPos, jointA, jointB, thickness) {
     const len = fromPos.distanceTo(toPos);
@@ -1116,72 +574,22 @@ function buildOrrery(preview, suspendTopY, rafterY) {
       addRingStrut(jointBasePos[jointIdx(level, i)], jointBasePos[jointIdx(level, (i + 1) % N_RING)], jointIdx(level, i), jointIdx(level, (i + 1) % N_RING), thickness);
     }
   }
-  // The web's own physical center — where every spoke actually meets, and
-  // (see above) the lattice's one pinned/anchored joint. Solid and
-  // unanimated, same webMat as the rest of the structure; it never moves,
-  // which is now a literal boundary condition of the physics rather than
-  // an approximation of one.
   const webHub = new THREE.Mesh(new THREE.SphereGeometry((preview ? 0.028 : 0.036) * HW, 10, 10), webMat);
   webHub.position.y = apexY;
   dishGroup.add(webHub);
 
-  // Baseline hum: a few of the lattice's own lowest, real natural modes,
-  // driven continuously and gently rather than left silent between strike
-  // events (the "solar system's own ongoing gravitational hum" from the
-  // original brief) — captured here as a fixed random per-mode, per-axis
-  // phase so the modes don't all peak in sync, same "random phase chosen
-  // once at build, only ever read from in animate()" pattern as the
-  // ripplers this replaced.
   const BASELINE_MODE_COUNT = 2; // TUNABLE: how many of the lowest modes hum continuously
   const basePhase = Array.from({ length: BASELINE_MODE_COUNT }, () => [Math.random(), Math.random(), Math.random()].map(r => r * Math.PI * 2));
-  // Named `gravLens` until 2026-09-02 — a fossil from the abandoned
-  // gravitational-lensing round (see the round-by-round history above),
-  // which was two rounds gone by the time this object existed. It holds the
-  // dish lattice's mass-spring eigenmode data and the strut records animate()
-  // drives from them; nothing about it is a lens.
   const dishPhysics = { dishGroup, jointBasePos, modes, ringStruts, nJoints: N_JOINTS, basePhase };
   group.add(dishGroup);
 
-  // ─── The nine real planets — order, relative size, and orbital spacing
-  // all pulled from the actual solar system (compressed with a square root
-  // so Mercury and Pluto both fit), close to coplanar and braced back to
-  // the mast so it reads as one welded machine, not nine floating rings. ──
   const planets = preview ? PLANET_DATA.slice(0, 5) : PLANET_DATA;
-  // Real AU ratios span roughly 100x (Mercury 0.39 to Pluto 39.5) — mapped
-  // directly onto a small room, Mercury's ring would sit almost on top of
-  // the mast while the outer planets would need to be impossibly far out,
-  // or the inner planets would bunch into visual noise. Math.sqrt is the
-  // actual compression: it shrinks large values proportionally MORE than
-  // small ones (sqrt(39.5)≈6.28 is only ~9x sqrt(0.39)≈0.62, not 100x),
-  // while still preserving the correct ORDER and relative spacing rank —
-  // Mercury is still closest, Pluto still farthest, everything in between
-  // still lands in the right relative position, just with the extremes
-  // pulled in toward the middle. This is a real, if simplified, technique
-  // (softer than a log-scale, gentler than linear) — not an approximation
-  // of the real distances so much as a deliberate, legible re-projection
-  // of their real ORDER onto a room-sized budget.
   const sqrtAU = planets.map(p => Math.sqrt(p.au));
-  // auMin/auMax normalize the compressed values to a 0..1 range (below,
-  // (sqrtAU[i]-auMin)/(auMax-auMin)), which lerp (linear interpolation)
-  // then maps onto the actual innerR..outerR screen-space band — same
-  // "normalize then lerp into a target range" pattern used again just
-  // below for planet size, and common throughout this file wherever a
-  // real-world value needs to become a screen distance.
   const auMin = Math.min(...sqrtAU), auMax = Math.max(...sqrtAU);
-  // Same sqrt-compression idea, independently applied to planet SIZE
-  // (relDiameter spans an even wider real range — Jupiter is roughly 28x
-  // Pluto's diameter) so the smallest and largest bodies both stay
-  // visible and comparable at room scale, same reasoning as the orbital
-  // spacing above.
   const sqrtDia = planets.map(p => Math.sqrt(p.relDiameter));
   const diaMin = Math.min(...sqrtDia), diaMax = Math.max(...sqrtDia);
   const innerR = (preview ? 0.55 : 0.6) * SR, outerR = (preview ? 2.1 : 3.7) * SR; // TUNABLE screen-space band the compressed orbits get mapped into — widen the gap for more visual separation between rings
   const minSize = (preview ? 0.018 : 0.024) * SS, maxSize = (preview ? 0.065 : 0.09) * SS; // TUNABLE screen-space band for compressed planet sizes, same idea
-  // Read wall-clock time exactly once for the whole build, so every body's
-  // initial (pre-first-frame) position reflects the same instant — matters
-  // for reduced-motion visitors, who never reach the animate() loop's own
-  // per-frame orreryNowMs() call, and for the very first rendered frame
-  // before animate() has run at all.
   const buildNowMs = orreryNowMs();
 
   const orbits = [];
@@ -1189,10 +597,6 @@ function buildOrrery(preview, suspendTopY, rafterY) {
   const TILT_JITTER = 0.03;
   const ringYBase = baseY + mastHeight * 0.3;
   const radii = [];
-  // Real radius/yOffset/tilt per ring, for createOrrery to work out where
-  // (if anywhere) each ring's tilted low edge actually dips down to the
-  // walkthrough's eye height — see the collision comment near the bottom
-  // of createOrrery for the geometry.
   const ringInfo = [];
 
   planets.forEach((planet, i) => {
@@ -1203,12 +607,6 @@ function buildOrrery(preview, suspendTopY, rafterY) {
     const yOffset = ringYBase + i * (preview ? 0.06 : 0.05);
     ringInfo.push({ radius, yOffset, tilt });
 
-    // Tube thickness is deliberately generous: the rings/mast are the
-    // orrery's own namesake mechanism and should be the most
-    // confidently-read structure in the room, not out-competed for
-    // attention by the small planet bodies riding them. Doesn't change
-    // radius/tilt (the collision math in createOrrery keys off those, not
-    // tube thickness).
     const ringGeo = new THREE.TorusGeometry(radius, (preview ? 0.011 : 0.014) * HW, 6, 20);
     const ring = new THREE.Mesh(ringGeo, brassMat);
     ring.rotation.x = Math.PI / 2 + tilt;
@@ -1216,7 +614,6 @@ function buildOrrery(preview, suspendTopY, rafterY) {
     group.add(ring);
     addBolts(ring, boltGeo, boltMat, 16, radius);
 
-    // Two struts per ring, bracing it back to the mast.
     [0, Math.PI].forEach(angle => {
       const from = new THREE.Vector3(0, yOffset, 0);
       const to = new THREE.Vector3(Math.cos(angle) * radius * 0.94, yOffset, Math.sin(angle) * radius * 0.94);
@@ -1228,33 +625,9 @@ function buildOrrery(preview, suspendTopY, rafterY) {
     pivot.position.y = yOffset;
     group.add(pivot);
 
-    // bodyGroup no longer sits at a fixed local offset with its PARENT
-    // pivot rotating every frame — see the "Real Keplerian orbital motion"
-    // comment block above orreryNowMs. It's positioned directly, every frame, by
-    // applyKeplerPosition below; pivot now only ever carries the fixed
-    // ring tilt.
     const bodyGroup = new THREE.Group();
     pivot.add(bodyGroup);
-    // seedH fixes ONE aging field for this body — see the "Planet-body
-    // aging" block above buildAgedPlanetGeometry — reused for both its
-    // displaced geometry and every map on its material, so the bumps,
-    // the worn paint, the patina, and the seam grime all agree with each
-    // other about where on this particular ball is "high" and "low."
-    // Freshly randomized per body per page load, same as every other
-    // procedural texture in this file (makeSprayPaintTexture,
-    // makeMetalTexture) — no two visits render the same wear pattern.
     const seedH = Math.floor(Math.random() * 1e6);
-    // Preview tiles skip the whole aging system. It is by a wide margin the
-    // most expensive thing this file does at mount — per planet, ~800K
-    // hash3 calls across buildAgedPlanetGeometry's 29x21 displaced vertex
-    // grid and makeAgedPlanetTextures' four 128x128 maps, plus a full
-    // getImageData readback — and it ran unconditionally for five planets
-    // on every one of the ten landing-page tiles, where each planet is a
-    // handful of screen pixels and not one of the wear, patina, seam-grime
-    // or displacement details it buys is resolvable. A plain sphere wearing
-    // the un-aged spray-paint coat reads identically at tile size; the
-    // aging is a full-mode detail, where the visitor can walk up to a
-    // planet and actually look at it.
     let bodyGeo, bodyMat;
     if (preview) {
       bodyGeo = new THREE.SphereGeometry(size, 16, 12);
@@ -1265,14 +638,6 @@ function buildOrrery(preview, suspendTopY, rafterY) {
     } else {
       bodyGeo = buildAgedPlanetGeometry(size, seedH);
       const agedMaps = makeAgedPlanetTextures(planet.color, seedH);
-      // emissive is white (not planet.color) because the actual color now
-      // lives in agedMaps.emissiveMap itself, already weighted by wear —
-      // see the comment on that map inside makeAgedPlanetTextures.
-      // Intensity kept at the same 0.17 as before this pass: moderate
-      // rather than bright, so — together with the dedicated structure key
-      // light (see createOrrery) — the planet bodies still read as
-      // secondary to the ring/mast structure holding them, not more
-      // prominent than it.
       bodyMat = new THREE.MeshStandardMaterial({
         map: agedMaps.map,
         roughnessMap: agedMaps.roughnessMap, roughness: 1,
@@ -1283,10 +648,6 @@ function buildOrrery(preview, suspendTopY, rafterY) {
     const body = new THREE.Mesh(bodyGeo, bodyMat);
     bodyGroup.add(body);
 
-    // A short mounting arm — the ball rides a bracket on the ring. Always
-    // along local -X, which is exactly what SEAM_DIR (above,
-    // makeAgedPlanetTextures) assumes when it darkens the body's own
-    // surface with grime right where this arm actually meets it.
     const armGeo = new THREE.CylinderGeometry(0.006 * HW, 0.006 * HW, (preview ? 0.03 : 0.04) * HW, 5);
     const arm = new THREE.Mesh(armGeo, copperMat);
     arm.rotation.z = Math.PI / 2;
@@ -1303,25 +664,6 @@ function buildOrrery(preview, suspendTopY, rafterY) {
       bodyGroup.add(satRing);
     }
 
-    // Moons now get the same real Kepler treatment as planets (see the
-    // "Real Keplerian orbital motion" comment block above orreryNowMs)
-    // applied recursively: each moon's
-    // orbit is computed around bodyGroup's own current (moving) position,
-    // simply by being a child of bodyGroup — no separate system needed,
-    // exactly as specified. There's no real per-moon orbital-element data
-    // at this level of a solar-system overview the way there is for the
-    // planets themselves, so eccentricity and initial phase are fixed,
-    // deliberately-documented illustrative choices rather than sourced
-    // values: MOON_E is a small constant (a gentle, visible-but-not-wild
-    // ellipse) and each moon's initial mean anomaly is spread by the
-    // golden angle (~137.5°) per index — deterministic and non-repeating
-    // across moons, not random, so it's still "same visit, same
-    // configuration" like everything else here. Each moon's PERIOD still
-    // obeys Kepler's third law relative to its own orbital radius
-    // (T ∝ r^1.5), so a moon further from its planet genuinely moves
-    // slower than one closer in, the same relationship the planets have
-    // to the sun — just anchored to MOON_PERIOD_BASE_SECONDS (the
-    // innermost moon's real-time period) instead of Earth's.
     const moons = planet.moons.map((moon, mi) => {
       const moonPivot = new THREE.Object3D();
       bodyGroup.add(moonPivot);
@@ -1345,27 +687,6 @@ function buildOrrery(preview, suspendTopY, rafterY) {
       return { pivot: moonPivot, orbit: moonOrbit };
     });
 
-    // Real Kepler orbital elements, sourced from J2000.0 low-precision
-    // planetary elements (see the PLANET_DATA comment for the source and
-    // the deliberate real-vs-exaggerated-eccentricity decision). `a` reuses
-    // the same planet.au already used for the ring's screen-space radius
-    // above — one number, not two slightly-different copies of the same
-    // fact. `periodYears` is derived from `a` via Kepler's third law
-    // (T² ∝ a³, so T = a^1.5 when a is in AU and T is in years — the
-    // standard solar-mass-normalized convention where Earth's own period
-    // is exactly 1 at a = 1 AU) rather than being independently authored,
-    // per the brief. `screenRadius` is the already-computed, compressed
-    // ring radius — keplerOrbitPosition works in a dimensionless
-    // rReal/a ratio, so it scales cleanly onto the compressed screen
-    // geometry without needing real AU distances on screen.
-    //
-    // `speed` is kept, still in the OLD unit convention (radians per frame
-    // at 60fps, divided by 0.01) purely for the asteroid belt's existing
-    // `(orbits[marsIdx].speed + orbits[jupiterIdx].speed) / 2` averaging
-    // below, which is out of scope for this pass — but it's now the real
-    // mean angular velocity derived from periodYears, not a hand-tuned
-    // legibility compromise, so the belt inherits genuine physics too as a
-    // side effect.
     const periodYears = Math.pow(planet.au, 1.5);
     const meanAngularVelocity = (2 * Math.PI) / (periodYears * SECONDS_PER_VISUAL_YEAR);
     const orbitRecord = {
@@ -1383,8 +704,6 @@ function buildOrrery(preview, suspendTopY, rafterY) {
     orbits.push(orbitRecord);
   });
 
-  // ─── The asteroid belt — scrap and debris, sitting where it actually
-  // does: between Mars and Jupiter, not out past everything else. ─────────
   const marsIdx = planets.findIndex(p => p.name === 'Mars');
   const jupiterIdx = planets.findIndex(p => p.name === 'Jupiter');
   let belt = null;
@@ -1393,85 +712,37 @@ function buildOrrery(preview, suspendTopY, rafterY) {
     const beltY = ringYBase + ((marsIdx + jupiterIdx) / 2) * (preview ? 0.06 : 0.05);
     const beltGroup = new THREE.Group();
     beltGroup.position.y = beltY;
-    // Every ring in this scene (see ring.rotation.x above, per planet) is
-    // tilted, each by its own independently-jittered amount — the belt sat
-    // perfectly flat instead, which reads as floating out of plane with
-    // the tilted structure around it rather than as one more ring of the
-    // same machine. Splits the difference between its two neighbors'
-    // actual tilts (Mars, Jupiter) rather than inventing an unrelated
-    // value of its own.
     beltGroup.rotation.x = (ringInfo[marsIdx].tilt + ringInfo[jupiterIdx].tilt) / 2;
     group.add(beltGroup);
-    // A touch of warm emissive on top of the dark scrap color — pure
-    // diffuse-only 0x554433 chunks this small read as nearly black
-    // against the room's own dark curtain backdrop under this scene's
-    // deliberately sparse lighting (checked live: at normal viewing
-    // distance they were effectively invisible), losing the "a scatter
-    // of debris, distinct from the smooth painted planets" the found
-    // text calls for. The glow is faint and doesn't change the belt's
-    // actual color, just keeps it from vanishing into the dark.
     const debrisMat = new THREE.MeshStandardMaterial({ color: 0x554433, emissive: 0x3a2c1c, emissiveIntensity: 0.35, roughness: 0.85, metalness: 0.3 });
     const debrisGeo = new THREE.IcosahedronGeometry(1, 0);
     const beltCount = preview ? 14 : 34;
     const beltSpread = (radii[jupiterIdx] - radii[marsIdx]) * 0.35;
     for (let i = 0; i < beltCount; i++) {
-      // Polar placement: uniform random angle `a` around the ring, and a
-      // radius `r` drawn uniformly around beltRadius (not uniform-by-AREA,
-      // which would need r ∝ sqrt(random()) — this scatters slightly denser
-      // near the belt's mean radius than a true uniform-disc fill would,
-      // but for a few dozen decorative chunks the difference isn't visible).
-      // This is placement, not a physical asteroid-distribution model.
       const a = Math.random() * Math.PI * 2;
       const r = beltRadius + (Math.random() - 0.5) * beltSpread;
       const chunk = new THREE.Mesh(debrisGeo, debrisMat);
-      // Slightly larger floor than before (was 0.01/0.014*HW) — same
-      // legibility issue as the emissive bump above: too small to read
-      // as a "scatter of debris" at normal viewing distance, easy to
-      // mistake for visual noise or miss entirely.
       const s = ((preview ? 0.014 : 0.019) + Math.random() * (preview ? 0.012 : 0.015)) * HW;
       chunk.scale.setScalar(s);
       chunk.position.set(Math.cos(a) * r, (Math.random() - 0.5) * 0.06, Math.sin(a) * r);
       chunk.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI);
       beltGroup.add(chunk);
     }
-    // Parented to beltGroup, in ITS local space (from beltGroup's own
-    // origin, no beltY offset — already carried by beltGroup.position.y)
-    // rather than to `group` in world space, so these braces automatically
-    // inherit the same tilt the chunks above just got, instead of bracing
-    // a tilted disk from an untilted anchor.
     [0, Math.PI / 2].forEach(angle => {
       const from = new THREE.Vector3(0, 0, 0);
       const to = new THREE.Vector3(Math.cos(angle) * beltRadius * 0.96, 0, Math.sin(angle) * beltRadius * 0.96);
       addStrut(beltGroup, from, to, (preview ? 0.006 : 0.008) * HW, brassMat);
     });
-    // Static before this pass — every other ring/orbit in the room
-    // continuously drifts (see orbits.forEach in animate()) except this
-    // one, which read as inert/disconnected from the rest of the machine.
-    // Speed splits the difference between Mars's and Jupiter's own orbital
-    // speeds, same reasoning as the tilt above — debris between them
-    // moving at a rate between theirs, not an arbitrary new number.
-    // `speed` was in the old per-frame unit convention (applied as
-    // `rotation.y += speed * 0.01` once per frame, i.e. speed * 0.6 rad/s at
-    // 60fps). Converted here, once, into a real angular velocity in rad/s so
-    // animate() can evaluate a closed form off the wall clock instead — see
-    // secondsSinceEpoch. The number itself is unchanged: this is still the
-    // mean of Mars's and Jupiter's own real mean angular velocities.
     const beltSpeed = (orbits[marsIdx].speed + orbits[jupiterIdx].speed) / 2;
     belt = { group: beltGroup, omega: beltSpeed * 0.6 };
     beltGroup.rotation.y = normalizeAngle(belt.omega * secondsSinceEpoch(buildNowMs));
   }
 
-  // ─── "A few other unidentified cosmic objects" — past Pluto, welded on
-  // cantilevered booms, each tumbling on its own slow spin. ────────────────
   const unknowns = [];
   const lastRadius = radii[radii.length - 1];
   const lastY = ringYBase + (planets.length - 1) * (preview ? 0.06 : 0.05);
   const unknownMat = new THREE.MeshStandardMaterial({ color: 0x5a4d3a, roughness: 0.7, metalness: 0.5 });
   const unknownCount = preview ? 1 : 2;
-  // Built to match unknownCount, not unconditionally: preview only ever
-  // attaches the first of these, so the OctahedronGeometry was constructed,
-  // never parented to anything, and therefore never reached by dispose()'s
-  // scene-graph walk either — allocated and then stranded, once per tile.
   const unknownGeos = [new THREE.IcosahedronGeometry((preview ? 0.05 : 0.07) * HW, 0)];
   if (unknownCount > 1) unknownGeos.push(new THREE.OctahedronGeometry((preview ? 0.045 : 0.06) * HW, 0));
   for (let i = 0; i < unknownCount; i++) {
@@ -1487,11 +758,6 @@ function buildOrrery(preview, suspendTopY, rafterY) {
     const from = new THREE.Vector3(0, y, 0);
     const to = new THREE.Vector3(Math.cos(angle) * radius * 0.9, y, Math.sin(angle) * radius * 0.9);
     addStrut(group, from, to, (preview ? 0.006 : 0.008) * HW, brassMat);
-    // Same per-frame -> rad/s conversion as the belt above (x0.6 for the old
-    // `+= speed * 0.01` at 60fps, x0.6/x0.42 for the two tumble axes' own
-    // `+= spin * 0.01` / `* 0.007`). `direction` is kept here, unlike the
-    // identically-named dead field the planets' orbitRecord carried: this
-    // one is genuinely read.
     const u = {
       pivot, mesh,
       direction: 1,
@@ -1508,26 +774,14 @@ function buildOrrery(preview, suspendTopY, rafterY) {
     unknowns.push(u);
   }
 
-  // A single generous circle covers the mast trunk and the control hub
-  // bolted to its side — the rings/struts/suspension chains all sit well
-  // above eye height (see EYE_HEIGHT's comment), so nothing else down here
-  // needs its own collider.
   const colliders = [{ x: 0, z: 0, r: 0.6 }];
 
-  // riserTopY/dishR/dishH exposed so createOrrery can position the real
-  // moonlight SpotLight relative to the antenna's actual built geometry
-  // (rebuild, 2026-09-01) instead of an independently-guessed coordinate —
-  // see the moonlight setup below buildWarehouse's call site.
   return {
     group, hitTarget: hub, lampMat, orbits, unknowns, dishPhysics, belt, baseY, mastHeight, colliders, ringInfo,
     riserTopY, dishR, dishH,
   };
 }
 
-// ─── The warehouse — floor, a ceiling with a skylight cut into it, roof
-// trusses to hang the orrery from, four brick walls with a few taped-up show
-// flyers on two of them, and a shaft of light falling through the hole the
-// orrery's peak actually pokes through. ───────────────────────────────────
 function makeConcreteTexture() {
   const c = document.createElement('canvas');
   c.width = 128; c.height = 128;
@@ -1544,10 +798,6 @@ function makeConcreteTexture() {
   }
   cx.globalAlpha = 1;
 
-  // Real wear — a light pass (keeping the floor's base grey), rather
-  // than a redesign: a couple of dark oil-stain blotches with soft
-  // falloff, plus a faint worn traffic-path streak where feet would
-  // actually cross most.
   [[34, 96, 22], [88, 40, 15]].forEach(([sx, sy, sr]) => {
     const stain = cx.createRadialGradient(sx, sy, 0, sx, sy, sr);
     stain.addColorStop(0, 'rgba(10,9,8,0.55)');
@@ -1573,52 +823,6 @@ function makeConcreteTexture() {
   return tex;
 }
 
-// Warm real brick, running-bond coursing with real mortar lines — the
-// brief's confirmed direction, replacing the corrugated-metal siding
-// above. Per-brick color variance and soot/weathering blotches do the
-// "real weathering" ask; a couple of institutional cream paint patches
-// with small flaked-off spots do the "peeling paint revealing brick
-// underneath" ask, rather than uniform brick texture everywhere.
-// Brick correction pass, 2026-09-01: the paint patches used to live
-// inside the same small 128x128 tile that GPU-repeats across the wall
-// (tex.repeat 6x2.5) — which meant the exact same patch, at the exact
-// same size and spot, printed 15 times across every wall on a visible
-// grid. No amount of jaggedness fixes that; it reads as tiled because it
-// *is* tiled. Fixed by baking the whole repeated brick field by hand
-// into one much larger canvas (same per-brick loop, just run across a
-// bigger area) and drawing the paint patches once, directly, in that
-// canvas's absolute coordinates — then setting repeat back to (1,1) so
-// nothing GPU-tiles at all. The brick pattern itself is still allowed to
-// look regular (real coursing is periodic); only the peeling paint,
-// which shouldn't be, stops being GPU-repeated.
-//
-// ─── Brick SCALE correction, 2026-09-02 ────────────────────────────────
-// That pass fixed the tiling and left a worse problem in place: nothing
-// tied the canvas's pixel grid to the wall's actual size in world units,
-// so the bricks came out enormous. 768x320 texels of 30x14-pixel bricks,
-// stretched across a 40 x 6.55-unit wall at repeat(1,1), put one brick at
-// 1.56 x 0.29 world units. EYE_HEIGHT is 1.7, i.e. one unit is one metre,
-// so that is a metre-and-a-half brick at 5.4:1 — roughly seven times
-// oversize and nearly twice as elongated as real running bond (~3.4:1).
-// It read as horizontal siding, which is exactly the corrugated look the
-// 2026-09-01 direction set out to replace; the siding had been removed and
-// then accidentally re-drawn in brick colors.
-//
-// Two things were wrong and both are fixed here:
-//   1. The walls were PlaneGeometry(span * 2, ...) = 40 units wide when the
-//      room was only wallDist * 2 across. They spanned more than twice
-//      the room, most of it behind the other walls where nothing could see
-//      it, and every one of those wasted units stretched the brick.
-//   2. The canvas had NON-SQUARE texels (19.2 px/unit across, 48.9 down),
-//      which is the entire source of the 5.4:1 elongation — a brick drawn
-//      at a perfectly reasonable 30x14 pixels lands on the wall at a
-//      completely different aspect ratio than it was drawn at.
-// So the canvas is now sized FROM the wall it will cover, at a fixed and
-// equal texel density on both axes, and the brick/mortar dimensions are
-// stated in real-world metres and converted once. Change makeBrickTexture's
-// `pxPerUnit` argument to trade texture memory against crispness; change
-// nothing else to keep the masonry correct. (This said BRICK_PX_PER_UNIT,
-// which is not and never was a constant in this file.)
 const BRICK_UNIT_W = 0.215, BRICK_UNIT_H = 0.065, BRICK_UNIT_MORTAR = 0.010; // metres — a standard modular brick and a 10mm joint
 function makeBrickTexture(wallW, wallH, pxPerUnit) {
   const W = Math.round(wallW * pxPerUnit), H = Math.round(wallH * pxPerUnit);
@@ -1626,12 +830,9 @@ function makeBrickTexture(wallW, wallH, pxPerUnit) {
   c.width = W; c.height = H;
   const cx = c.getContext('2d');
 
-  // Mortar base.
   cx.fillStyle = '#8c8474';
   cx.fillRect(0, 0, W, H);
 
-  // Rounded to whole pixels so the mortar joints stay crisp lines rather
-  // than antialiased smears at a fractional offset.
   const brickW = Math.max(4, Math.round(BRICK_UNIT_W * pxPerUnit));
   const brickH = Math.max(2, Math.round(BRICK_UNIT_H * pxPerUnit));
   const mortar = Math.max(1, Math.round(BRICK_UNIT_MORTAR * pxPerUnit));
@@ -1643,14 +844,6 @@ function makeBrickTexture(wallW, wallH, pxPerUnit) {
       const base = brickBases[Math.floor(Math.random() * brickBases.length)];
       cx.fillStyle = base;
       cx.fillRect(x, y, brickW, brickH);
-      // Brick depth pass, 2026-09-02: the swatch-per-brick above still
-      // read as a small closed palette repeating across the wall rather
-      // than real unit-to-unit variation — real brick has continuous
-      // redder/browner drift plus the occasional dark overfired unit, not
-      // five fixed colors. A full-brick low-alpha tint jitter layered on
-      // top of the swatch gives every brick its own shade without needing
-      // real color math, and a rare much-darker overlay stands in for an
-      // overfired brick.
       cx.globalAlpha = 0.14 + Math.random() * 0.22;
       cx.fillStyle = Math.random() > 0.5 ? '#b5502e' : '#5c3018';
       cx.fillRect(x, y, brickW, brickH);
@@ -1661,13 +854,8 @@ function makeBrickTexture(wallW, wallH, pxPerUnit) {
         cx.fillRect(x, y, brickW, brickH);
         cx.globalAlpha = 1;
       }
-      // Per-brick weathering — soot/damp blotches, alpha-blended so the
-      // base color still reads through.
       cx.globalAlpha = 0.22 + Math.random() * 0.2;
       cx.fillStyle = Math.random() > 0.5 ? '#3a2418' : '#40382a';
-      // Expressed as fractions of the brick rather than the old absolute
-      // 6-20px / 4-12px radii, which were tuned against the 30x14 brick this
-      // pass no longer draws — same look at any pxPerUnit.
       const bw = brickW * (0.2 + Math.random() * 0.47), bh = brickH * (0.29 + Math.random() * 0.57);
       cx.beginPath();
       cx.ellipse(x + Math.random() * brickW, y + Math.random() * brickH, bw, bh, Math.random() * Math.PI, 0, Math.PI * 2);
@@ -1677,14 +865,6 @@ function makeBrickTexture(wallW, wallH, pxPerUnit) {
     row++;
   }
 
-  // Vertical water-staining, 2026-09-02 — runoff streaks from a roofline,
-  // ledge, or pipe overhead, a strong "old building" cue by itself. Each
-  // streak starts near the top of the canvas (V=1, the wall's ceiling
-  // edge — see the flipY note on floor-level clusters below) at a random
-  // x, meanders slightly as it descends rather than running dead
-  // straight, and fades out partway down instead of reaching the floor —
-  // real runoff staining tapers off, it doesn't uniformly saturate the
-  // whole wall height.
   const streakCount = 3 + Math.floor(Math.random() * 3);
   for (let s = 0; s < streakCount; s++) {
     let sx = Math.random() * W;
@@ -1695,8 +875,6 @@ function makeBrickTexture(wallW, wallH, pxPerUnit) {
       const t = i / steps;
       const y = startY + t * runLength;
       sx += (Math.random() - 0.5) * 0.033 * pxPerUnit;
-      // Runoff streak width in world units (~8-13cm, tapering), converted —
-      // was a fixed pixel count tied to the old canvas resolution.
       const width = Math.max(1, (0.078 + Math.random() * 0.055 - t * 0.044) * pxPerUnit);
       const alpha = (0.14 + Math.random() * 0.08) * (1 - t * 0.75);
       cx.globalAlpha = Math.max(0, alpha);
@@ -1708,13 +886,6 @@ function makeBrickTexture(wallW, wallH, pxPerUnit) {
   }
   cx.globalAlpha = 1;
 
-  // Efflorescence, 2026-09-02 — pale mineral bloom low on the wall where
-  // ground moisture wicks up through old masonry over years. Distinct
-  // from the paint-patch clusters below: powdery, pale, low-contrast, and
-  // hugging the whole bottom band of the wall rather than one isolated
-  // corner. Canvas y near H is the wall's floor edge (the existing
-  // "bottom-left corner, damp/floor-level" paint cluster below already
-  // relies on this same mapping).
   const effloY0 = H * 0.88;
   const effloBlobs = 14 + Math.floor(Math.random() * 10);
   for (let i = 0; i < effloBlobs; i++) {
@@ -1729,9 +900,6 @@ function makeBrickTexture(wallW, wallH, pxPerUnit) {
   }
   cx.globalAlpha = 1;
 
-  // A torn, irregular paint-patch silhouette — two frequencies of jitter
-  // (a handful of big lobes plus fine sawtooth on top of them) so the
-  // outline reads as flaked/torn rather than a smooth rounded blob.
   function tornPatch(x, y, r) {
     cx.beginPath();
     const spikes = 22;
@@ -1746,16 +914,6 @@ function makeBrickTexture(wallW, wallH, pxPerUnit) {
     cx.closePath();
   }
 
-  // Institutional cream-beige paint, peeling in real clusters near
-  // corners/moisture-prone areas rather than spread evenly — most of the
-  // wall stays plain aged brick, this is the occasional exception, not a
-  // uniform overlay. Each cluster is one dominant patch plus a couple of
-  // smaller satellite flakes nearby, so patch size varies for real
-  // rather than repeating at one scale.
-  // Radii in world units (metres) rather than canvas pixels, same reasoning
-  // as the brick dimensions: at the old 768px width these were 4.1/2.5/1.8
-  // units across a 40-unit wall, which is an eight-metre paint patch. On the
-  // 17-unit wall, at a real size, they read as actual peeling patches.
   const clusters = [
     { cx: W * 0.08, cy: H * 0.85, r: 0.95 * pxPerUnit },  // bottom-left corner, damp/floor-level
     { cx: W * 0.06, cy: H * 0.12, r: 0.58 * pxPerUnit },  // top-left corner, roof-leak adjacent
@@ -1778,8 +936,6 @@ function makeBrickTexture(wallW, wallH, pxPerUnit) {
       cx.fill();
       cx.globalAlpha = 1;
 
-      // Small flaked-off spots inside the patch, revealing brick tone
-      // underneath rather than a clean uniform paint field.
       const flakes = 3 + Math.floor(Math.random() * 4);
       for (let i = 0; i < flakes; i++) {
         const fx = x + (Math.random() - 0.5) * pr * 1.3;
@@ -1819,13 +975,6 @@ function makeCardboardTexture() {
   return tex;
 }
 
-// ─── The way in ─────────────────────────────────────────────────────────────
-// A corrugated roll-up door: horizontal slats, each one catching the light
-// along its crown and going dark in the trough below it, on a panel that has
-// been in a warehouse since the eighties. Drawn once at the panel's own
-// aspect and not tiled, for the same reason makeBrickTexture bakes its whole
-// field by hand — a repeated dent is a wallpaper, and this panel is close
-// enough to walk up to.
 function makeRollupDoorTexture(w, h, pxPerUnit = 96) {
   const W = Math.max(64, Math.round(w * pxPerUnit));
   const H = Math.max(64, Math.round(h * pxPerUnit));
@@ -1833,15 +982,11 @@ function makeRollupDoorTexture(w, h, pxPerUnit = 96) {
   c.width = W; c.height = H;
   const cx = c.getContext('2d');
 
-  // Slats about 55mm deep, which is what a real steel roll-up runs, so the
-  // count comes out of the panel's height rather than being picked.
   const slatPx = Math.max(6, Math.round(0.055 * pxPerUnit * 3.2));
   cx.fillStyle = '#4a4640';
   cx.fillRect(0, 0, W, H);
 
   for (let y = 0; y < H; y += slatPx) {
-    // Crown, face, trough. The gradient runs top-to-bottom within one slat,
-    // which is what makes a flat plane read as a curved sheet.
     const g = cx.createLinearGradient(0, y, 0, y + slatPx);
     g.addColorStop(0.00, '#39352f');
     g.addColorStop(0.18, '#6d675c');
@@ -1854,8 +999,6 @@ function makeRollupDoorTexture(w, h, pxPerUnit = 96) {
     cx.fillRect(0, y + slatPx - 1, W, 1);
   }
 
-  // Rust, from the bottom up — a door that sits on a wet concrete threshold
-  // rots from its own foot, not evenly.
   cx.globalAlpha = 0.5;
   for (let i = 0; i < 90; i++) {
     const rx = Math.random() * W;
@@ -1866,7 +1009,6 @@ function makeRollupDoorTexture(w, h, pxPerUnit = 96) {
     cx.ellipse(rx, ry, 3 + Math.random() * 16, 2 + Math.random() * 7, 0, 0, Math.PI * 2);
     cx.fill();
   }
-  // Two long streaks under the lift handle, where hands and rain have run.
   cx.globalAlpha = 0.28;
   for (const sx of [W * 0.44, W * 0.52]) {
     cx.fillStyle = '#6b4526';
@@ -1874,8 +1016,6 @@ function makeRollupDoorTexture(w, h, pxPerUnit = 96) {
   }
   cx.globalAlpha = 1;
 
-  // A stencilled bay number, half worn off. Faded rather than crisp: paint
-  // this old on a door used this hard does not survive as lettering.
   cx.globalAlpha = 0.22;
   cx.fillStyle = '#c9c2b0';
   cx.font = `bold ${Math.round(H * 0.3)}px Helvetica, Arial, sans-serif`;
@@ -1883,7 +1023,6 @@ function makeRollupDoorTexture(w, h, pxPerUnit = 96) {
   cx.fillText('4', W * 0.5, H * 0.42);
   cx.globalAlpha = 1;
 
-  // Dents. A door this size has been reversed into at least twice.
   for (const [dx, dy, dr] of [[W * 0.22, H * 0.66, W * 0.06], [W * 0.74, H * 0.78, W * 0.045]]) {
     const g = cx.createRadialGradient(dx, dy, 0, dx, dy, dr);
     g.addColorStop(0, 'rgba(0,0,0,0.45)');
@@ -1897,8 +1036,6 @@ function makeRollupDoorTexture(w, h, pxPerUnit = 96) {
   return tex;
 }
 
-// A pegboard with a few tool silhouettes — a wrench, a hammer, a saw —
-// hung the way anyone's garage wall actually looks.
 function makePegboardTexture() {
   const c = document.createElement('canvas');
   c.width = 200; c.height = 260;
@@ -1916,7 +1053,6 @@ function makePegboardTexture() {
   cx.strokeStyle = '#1c1a16';
   cx.fillStyle = '#232019';
 
-  // Wrench.
   cx.save();
   cx.translate(50, 70);
   cx.rotate(-0.4);
@@ -1926,7 +1062,6 @@ function makePegboardTexture() {
   cx.beginPath(); cx.arc(32, 0, 7, 0, Math.PI * 2); cx.fill();
   cx.restore();
 
-  // Hammer.
   cx.save();
   cx.translate(140, 90);
   cx.rotate(0.3);
@@ -1934,7 +1069,6 @@ function makePegboardTexture() {
   cx.fillRect(-20, -22, 40, 16);
   cx.restore();
 
-  // Hand saw.
   cx.save();
   cx.translate(90, 175);
   cx.rotate(-0.15);
@@ -1948,17 +1082,6 @@ function makePegboardTexture() {
   return tex;
 }
 
-// A taped-up early-90s show flyer — xeroxed, high-contrast, a little
-// water-stained. Band names only (no logos/artwork reproduced) — enough to
-// date the room without borrowing anyone's actual design.
-// These are a good, specific "what IS this thing" hook — the found-object
-// mixtape/flyer detail is exactly the kind of thing that sells the room
-// as a real place someone lived in. Legibility from across the room comes
-// down to two things: the physical plane size (handled at the call site,
-// in buildWarehouse) and how much contrast survives getting minified from
-// this canvas resolution down to a few dozen screen pixels — the band
-// name's contrast is pushed high (pure black on a lightened paper stock,
-// thicker outline) specifically so it still reads at a distance.
 function makePosterTexture(band, sub) {
   const c = document.createElement('canvas');
   c.width = 260; c.height = 364;
@@ -1966,7 +1089,6 @@ function makePosterTexture(band, sub) {
   cx.fillStyle = '#d8d2ba';
   cx.fillRect(0, 0, 260, 364);
 
-  // Xerox speckle.
   cx.globalAlpha = 0.5;
   for (let i = 0; i < 340; i++) {
     cx.fillStyle = Math.random() > 0.5 ? '#00000022' : '#ffffff22';
@@ -1997,7 +1119,6 @@ function makePosterTexture(band, sub) {
   cx.font = '15px Georgia, serif';
   cx.fillText('$5 AT THE DOOR', 130, 273);
 
-  // A faint water stain.
   const grad = cx.createRadialGradient(208, 299, 5, 208, 299, 65);
   grad.addColorStop(0, 'rgba(90,70,40,0.28)');
   grad.addColorStop(1, 'rgba(90,70,40,0)');
@@ -2006,16 +1127,10 @@ function makePosterTexture(band, sub) {
   cx.arc(208, 299, 65, 0, Math.PI * 2);
   cx.fill();
 
-  // Tape marks at the top corners.
   cx.fillStyle = 'rgba(220,215,200,0.55)';
   cx.fillRect(8, 3, 44, 18);
   cx.fillRect(208, 3, 44, 18);
 
-  // Age pass (light touch, per the brief — real weathering elsewhere in
-  // the room means these can no longer read as flat-clean): an overall
-  // yellowing wash, heavier at the edges the way old paper actually
-  // yellows first, plus a soft curl shadow down one side where the
-  // corner has lifted off the wall.
   const yellow = cx.createRadialGradient(130, 182, 40, 130, 182, 230);
   yellow.addColorStop(0, 'rgba(150,110,50,0.08)');
   yellow.addColorStop(1, 'rgba(120,85,35,0.32)');
@@ -2032,18 +1147,7 @@ function makePosterTexture(band, sub) {
   return tex;
 }
 
-// ─── Poster audio ───────────────────────────────────────────────────────────
-// Clicking a poster plays a short MIDI-style riff evocative of that band —
-// see orreryAudio.js's own header for the full reasoning (why original
-// synthesis, not real recordings) and what it plays. Split into its own
-// module (v3.10.2) since it's genuinely self-contained (no closures over
-// this file's scene/camera/renderer state) and full-mode-only — dynamic-
-// imported below only once full mode sets up, not statically here, so the
-// preview tile's module never pulls in synthesis code it can't reach.
 
-// A small soft round sprite for the dust-mote particle system below —
-// same "canvas gradient, no image asset" rule as every other texture on
-// this site.
 function makeDustMoteTexture() {
   const c = document.createElement('canvas');
   c.width = 16; c.height = 16;
@@ -2057,10 +1161,6 @@ function makeDustMoteTexture() {
   return new THREE.CanvasTexture(c);
 }
 
-// Worn wood grain — a light touch for the bench, ladder, and stacked
-// lumber, so they read as handled/aged wood rather than flat color now
-// that the brick/metal around them carries real weathering. Same
-// canvas-generator convention as every other texture in this file.
 function makeWoodTexture(base, dark) {
   const c = document.createElement('canvas');
   c.width = 64; c.height = 64;
@@ -2091,33 +1191,9 @@ function makeWoodTexture(base, dark) {
   return tex;
 }
 
-// moonPos/moonTargetPos/moonAngle: the real moonlight SpotLight's own
-// position, aim point, and cone half-angle, computed by createOrrery
-// BEFORE this function runs (from the antenna's actual built geometry —
-// see buildOrrery's riserTopY/dishR/dishH) and passed in here so the dust
-// motes below can be derived directly from the same light, rather than
-// authored as an independent shape that has to be kept in sync by hand.
-// Architectural rebuild, 2026-09-01 — see the moonlight comment at the
-// call site for the full reasoning.
 function buildWarehouse(preview, floorY, ceilingY, rafterY, holeW, moonPos, moonTargetPos, moonAngle) {
   const group = new THREE.Group();
   const span = preview ? 14 : 20;
-  // Full-mode wall distance leaves real walking corridor beyond the
-  // outermost rings' physical radius (~5.4) even before a ring collider
-  // enters the picture. The preview tile stays at a smaller scale — it's
-  // never walkable, so it doesn't need the same clearance.
-  // 17m square before this, which is a large garage rather than a warehouse:
-  // the orrery's outermost ring reaches about 5.4, so the machine took up
-  // most of the floor and a visitor was never further from it than a few
-  // steps. At 25m the machine stands alone in the middle of a room, the far
-  // corners fall past scene.fog's near distance (12) into real darkness, and
-  // the sodium wedge at the door reads across the floor as a distant warm
-  // thing rather than as something you are standing in. Every piece of
-  // clutter in here is positioned relative to wallDist rather than in
-  // absolute coordinates, so the benches, boxes, ladder and flyers move out
-  // with the walls; the orrery itself is anchored to the room's centre and
-  // its own scale constants, so it does not change size. Preview stays small
-  // — it is a thumbnail of the machine, not of the room.
   const wallDist = preview ? 5 : 12.5;
 
   const floorMat = new THREE.MeshStandardMaterial({ map: makeConcreteTexture(), roughness: 0.95, metalness: 0.05 });
@@ -2126,14 +1202,6 @@ function buildWarehouse(preview, floorY, ceilingY, rafterY, holeW, moonPos, moon
   floor.position.y = floorY;
   group.add(floor);
 
-  // Ceiling with a rectangular skylight hole, sized to what the mast
-  // actually pokes through, plus a second, smaller skylight panel off to
-  // one side — real warehouses almost never have just one skylight panel,
-  // and the second opening gives the second angled beam below somewhere
-  // to actually originate from, rather than a shaft of light with no
-  // visible source. holeW is passed in now (was a local const here) so
-  // the caller can use the exact same value when positioning the real
-  // moonlight SpotLight, rather than two independently-maintained copies.
   const holeH = holeW;
   const hole2W = holeW * 0.55, hole2H = holeH * 0.55;
   const hole2X = span * 0.22, hole2Z = -span * 0.16;
@@ -2163,8 +1231,6 @@ function buildWarehouse(preview, floorY, ceilingY, rafterY, holeW, moonPos, moon
   ceiling.position.y = ceilingY;
   group.add(ceiling);
 
-  // Roof trusses — a crossed pair spanning near the skylight, offset so
-  // they don't cover the hole. What the suspension chains actually bolt to.
   const trussMat = new THREE.MeshStandardMaterial({ map: makeMetalTexture({ base: '#2a2620', rust: '#191510', highlight: '#544838' }), roughness: 0.85, metalness: 0.5 });
   const trussLen = preview ? 6 : 8;
   const trussA = new THREE.Mesh(new THREE.BoxGeometry(trussLen, preview ? 0.07 : 0.09, preview ? 0.07 : 0.09), trussMat);
@@ -2173,74 +1239,22 @@ function buildWarehouse(preview, floorY, ceilingY, rafterY, holeW, moonPos, moon
   const trussB = new THREE.Mesh(new THREE.BoxGeometry(preview ? 0.07 : 0.09, preview ? 0.07 : 0.09, trussLen), trussMat);
   trussB.position.set(0, rafterY, 0);
   group.add(trussB);
-  // Cross-braces down to the walls, just for texture — a truss doesn't
-  // float on its own.
   [[-1, 0], [1, 0], [0, -1], [0, 1]].forEach(([dx, dz]) => {
     const from = new THREE.Vector3(dx * trussLen / 2, rafterY, dz * trussLen / 2);
     const to = new THREE.Vector3(dx * trussLen / 2, ceilingY - (preview ? 0.5 : 0.7), dz * trussLen / 2);
     addStrut(group, from, to, preview ? 0.02 : 0.026, trussMat);
   });
 
-  // ─── Skylight shaft — architectural rebuild, 2026-09-01 ────────────────
-  // Four rounds (v3.14.0-v3.14.3) each patched an independently-authored
-  // translucent "beam" mesh's position/shape, and each failed live
-  // inspection — the antenna sat unlit right next to a "beam" supposedly
-  // passing through it, because the mesh was never actually connected to
-  // any light source: scenery standing next to one, not the light itself.
-  // Patching its coordinates again was never going to fully fix that. This
-  // pass removes the mesh entirely. There is no `beam`/`beamCap` object
-  // anymore — the real moonlight `SpotLight` (constructed in createOrrery,
-  // just after this function returns, positioned above the antenna and
-  // aimed down through this exact hole) does that work directly: it lights
-  // the antenna lattice on the way in for free, lights the orrery
-  // mechanism below with real falloff, and leaves nothing to independently
-  // desync from the hole's actual position, because there's only one
-  // object now, not a light in one place and a decorative stand-in nearby.
-  // The second skylight hole above stays as real ceiling geometry (this is
-  // a two-skylight room) but gets no beam of its own — one dramatic light,
-  // one shaft, per Scott's original spec; it stays unlit, same as the rest
-  // of the fluorescent-baseline room.
 
-  // ─── Dust motes ─────────────────────────────────────────────────────────
-  // A real light source alone won't automatically render a visible shaft
-  // through dusty air (true of most real-time renderers generally, not a
-  // limitation being introduced here) — visible dust is still the cheapest,
-  // most legible way to sell "there is a huge volume of air in this room."
-  // What changed: the motes' spawn volume is now computed directly from
-  // moonPos/moonTargetPos/moonAngle — the SAME numbers used to build the
-  // actual SpotLight at the call site — rather than an independent set of
-  // authored coordinates (the old motePositions array) that had to be kept
-  // in sync with the light by hand. If the light moves, this moves with
-  // it, because it's derived, not placed. Sampled along the light's own
-  // axis from just above the ceiling (the antenna's own rim height, so the
-  // dust visibly connects to the lit lattice above the hole) down to the
-  // floor, with each mote's radius-from-axis bounded by the light's actual
-  // cone at that depth — biased toward the axis (rr uses a squared random,
-  // not a uniform one) so the visible dust reads as a coherent shaft
-  // rather than a uniformly-filled wide cone at the greater distances
-  // near the floor, where the true cone radius has grown quite wide.
   const axis = new THREE.Vector3().subVectors(moonTargetPos, moonPos).normalize();
   const arbitrary = Math.abs(axis.y) > 0.9 ? new THREE.Vector3(1, 0, 0) : new THREE.Vector3(0, 1, 0);
   const perpA = new THREE.Vector3().crossVectors(axis, arbitrary).normalize();
   const perpB = new THREE.Vector3().crossVectors(axis, perpA).normalize();
   const tAt = y => (y - moonPos.y) / axis.y; // distance along the axis where the ray's height equals y
-  // Density bump, 2026-09-02: a small increase (was 90/210) so the shaft
-  // reads as continuous with the new soft volumetric enhancement added at
-  // the call site below, rather than the mote layer and the shaft feeling
-  // like two separate things at different densities.
   const moteCount = preview ? 105 : 240;
   const motePos = new Float32Array(moteCount * 3);
   const moteBase = new Float32Array(moteCount * 3);
   const moteDrift = [];
-  // Top bound of the dust's own vertical wrap range — deliberately above
-  // ceilingY (a fraction of the remaining gap up to the light itself, which
-  // lands roughly at the antenna's rim height) rather than stopping exactly
-  // at the ceiling, so the dust reads continuous with the antenna's own lit
-  // lattice, not a separate column that happens to start just below it.
-  // Passed through the shared per-mote `span` field the animate loop
-  // already reads (see the dust-animation comment near that loop) — each
-  // mote wraps within floorY..moteWrapTopY, not the ceiling-only range the
-  // old floorY..ceilingY span used.
   const moteWrapTopY = ceilingY + (moonPos.y - ceilingY) * 0.4;
   const nearT = tAt(moteWrapTopY);
   const farT = tAt(floorY);
@@ -2259,25 +1273,11 @@ function buildWarehouse(preview, floorY, ceilingY, rafterY, holeW, moonPos, moon
     moteBase[k * 3] = p.x; moteBase[k * 3 + 1] = p.y; moteBase[k * 3 + 2] = p.z;
     motePos[k * 3] = p.x; motePos[k * 3 + 1] = p.y; motePos[k * 3 + 2] = p.z;
     moteDrift.push({
-      // Slow upward drift (dust rising on thermals) plus a little
-      // independent side-to-side wander — each mote loops back to its
-      // own start height once it drifts past moteWrapTopY, via modulo in
-      // the animate loop rather than a hard reset that would pop.
       riseSpeed: 0.02 + Math.random() * 0.035,
       wobbleAmp: 0.02 + Math.random() * 0.03,
       wobbleSpeed: 0.2 + Math.random() * 0.3,
       phase: Math.random() * Math.PI * 2,
       span: moteSpan,
-      // The mote's position within the CONE — a bearing around the light's
-      // axis and a fraction of the cone's radius at whatever depth it
-      // currently sits — rather than a fixed world-space x/z. Spawning
-      // sampled the cone correctly at each depth, but the animation then
-      // wrapped only y and left x/z alone, so within a minute or two every
-      // mote that started wide and low had risen to the top still holding
-      // its wide radius, and the shaft relaxed from a cone into a cylinder.
-      // Keeping these two normalized coordinates lets the loop recompute
-      // x/z from the cone's true radius at the mote's live height, so a
-      // mote that rises stays inside the light the whole way up.
       ang,
       radFrac,
     });
@@ -2293,27 +1293,8 @@ function buildWarehouse(preview, floorY, ceilingY, rafterY, holeW, moonPos, moon
   const dustMotes = new THREE.Points(moteGeo, moteMat);
   group.add(dustMotes);
 
-  // Warm brick walls, back and to one side, pulled in closer than the
-  // floor/ceiling extent so the flyers taped to them actually read at a
-  // legible size. Replaces the old dark corrugated-metal siding —
-  // confirmed direction: warm red-orange-brown, real mortar lines, real
-  // weathering, with a couple of peeling institutional-paint patches
-  // rather than uniform brick everywhere.
-  //
-  // Wall extent, 2026-09-02: these were PlaneGeometry(span * 2, ...) = 40
-  // units wide, more than twice the room's own width at the time — every unit
-  // past wallDist sat behind one of the other three walls where nothing can
-  // see it, while stretching the brick texture across it all the same (see
-  // makeBrickTexture's own scale-correction comment). The four walls now
-  // span the room and no further. The small overlap past the corner is
-  // deliberate: at exactly wallDist * 2 the four planes meet edge-to-edge on
-  // a shared line, which is where a hairline seam shows up.
   const wallHeight = ceilingY - floorY;
   const wallW = wallDist * 2 + 0.3;
-  // Texel density in both axes, deliberately equal — non-square texels were
-  // the source of the old elongated-brick bug. Preview tiles get a much
-  // coarser field: the walls are a few dozen pixels there and never walked
-  // up to, so full brick resolution is pure mount cost.
   const wallMat = new THREE.MeshStandardMaterial({
     map: makeBrickTexture(wallW, wallHeight, preview ? 48 : 96),
     roughness: 0.92, metalness: 0.02,
@@ -2327,12 +1308,6 @@ function buildWarehouse(preview, floorY, ceilingY, rafterY, holeW, moonPos, moon
   sideWall.position.set(-wallDist, (ceilingY + floorY) / 2, 0);
   group.add(sideWall);
 
-  // Since a visitor can walk around inside the room, all four sides need
-  // real walls, or "wandering around" would let you walk straight out
-  // into the starfield beyond. Same texture, undecorated — the flyers/pegboard/
-  // clutter stay on the original two walls; these just keep the room a
-  // room. Normals face inward (rotation chosen the same way the two walls
-  // above already do: pointing back toward the room's center).
   const frontWall = new THREE.Mesh(wallGeo, wallMat);
   frontWall.rotation.y = Math.PI;
   frontWall.position.set(0, (ceilingY + floorY) / 2, wallDist);
@@ -2342,39 +1317,12 @@ function buildWarehouse(preview, floorY, ceilingY, rafterY, holeW, moonPos, moon
   farSideWall.position.set(wallDist, (ceilingY + floorY) / 2, 0);
   group.add(farSideWall);
 
-  // Floor-level colliders for the first-person walkthrough (full mode
-  // only — preview never walks around, so this stays empty there). Circle
-  // approximations, not exact hitboxes: enough to keep a visitor from
-  // walking through the set without needing real per-mesh collision.
   const colliders = [];
 
-  // ─── The way in ───────────────────────────────────────────────────────
-  // There was no door. Four brick walls, a ceiling with a skylight cut in
-  // it, a concrete floor, and a thirty-foot machine inside — which raises
-  // the question of how the machine got there, and the smaller one of how
-  // the investigators in the found text did. The visitor spawns 1.2 units
-  // inside THIS wall facing the mast (see startPos, below), so the first
-  // thing they see if they turn round is the answer, and until now the
-  // answer was brick.
-  //
-  // A roll-up bay door is the honest one. A machine assembled by a crew
-  // with a hoist and a warehouse ceiling arrived in pieces on a truck, and
-  // a truck needs a bay. The man door beside it is how a person comes and
-  // goes once the bay is shut, and it is standing ajar — which is both the
-  // easiest thing in the world to read across a dark room and the reason
-  // there is a wedge of sodium streetlight lying on the concrete.
-  //
-  // Skipped in preview along with the rest of the clutter. The preview
-  // camera sits outside this wall looking in, and every wall here is
-  // single-sided, so it sees straight through the front wall anyway.
   if (!preview) {
     const doorGroup = new THREE.Group();
     const z = wallDist;
 
-    // Sized in metres, like everything else in this room — EYE_HEIGHT is
-    // 1.7 and one unit is one metre. A 3.6m bay is the narrow end of what a
-    // truck backs into; 2.05 x 0.9 is a steel personnel door. Both clamped
-    // to the wall in case the room is ever made shorter.
     const bayW = 3.6, bayH = Math.min(3.0, wallHeight * 0.84);
     const bayX = -1.9;
     const manW = 0.9, manH = Math.min(2.05, wallHeight * 0.62);
@@ -2385,17 +1333,12 @@ function buildWarehouse(preview, floorY, ceilingY, rafterY, holeW, moonPos, moon
       new THREE.PlaneGeometry(bayW, bayH),
       new THREE.MeshStandardMaterial({ map: bayTex, roughness: 0.72, metalness: 0.35 })
     );
-    // Facing into the room, like the wall it is set into, and standing a
-    // few centimetres proud of it so the frame below has something to sit
-    // against rather than z-fighting the brick.
     bay.rotation.y = Math.PI;
     bay.position.set(bayX, floorY + bayH / 2, z - 0.05);
     doorGroup.add(bay);
 
     const steelMat = new THREE.MeshStandardMaterial({ color: 0x2e2c28, roughness: 0.62, metalness: 0.5 });
 
-    // Track rails either side and the roll housing across the head — the
-    // parts that say "this goes up" rather than "this is a panel".
     for (const dx of [-1, 1]) {
       const rail = new THREE.Mesh(new THREE.BoxGeometry(0.12, bayH + 0.1, 0.16), steelMat);
       rail.position.set(bayX + dx * (bayW / 2 + 0.06), floorY + bayH / 2, z - 0.09);
@@ -2405,9 +1348,6 @@ function buildWarehouse(preview, floorY, ceilingY, rafterY, holeW, moonPos, moon
     housing.position.set(bayX, floorY + bayH + 0.16, z - 0.16);
     doorGroup.add(housing);
 
-    // The threshold: a strip of newer, paler concrete where the old apron
-    // was cut out and repoured, which is what the floor looks like at a
-    // bay that has had a machine dragged over it.
     const sill = new THREE.Mesh(
       new THREE.PlaneGeometry(bayW + 0.5, 0.7),
       new THREE.MeshStandardMaterial({ color: 0x3a3936, roughness: 0.97, metalness: 0.02 })
@@ -2416,13 +1356,6 @@ function buildWarehouse(preview, floorY, ceilingY, rafterY, holeW, moonPos, moon
     sill.position.set(bayX, floorY + 0.004, z - 0.38);
     doorGroup.add(sill);
 
-    // ── The man door, ajar ──
-    // A real frame with a hole in it: two jambs and a head, leaving the
-    // opening actually open. It was one solid BoxGeometry, which made the
-    // doorway a filled slab — and the emissive plane meant to be the street
-    // beyond sat INSIDE that slab, 1cm behind its front face. Painting that
-    // plane magenta changed zero pixels; hiding the box made 2,295 of them
-    // magenta. A doorway you cannot see through is a wall with trim.
     const frameMat = new THREE.MeshStandardMaterial({ color: 0x252320, roughness: 0.8, metalness: 0.25 });
     const jambW = 0.08, headH = 0.09;
     for (const dx of [-1, 1]) {
@@ -2434,10 +1367,6 @@ function buildWarehouse(preview, floorY, ceilingY, rafterY, holeW, moonPos, moon
     head.position.set(manX, floorY + manH + headH / 2, z - 0.06);
     doorGroup.add(head);
 
-    // What is on the other side: the street, one sodium lamp, nothing else.
-    // Bright, and brighter than it was, because it is now doing the work the
-    // SpotLight was wrongly credited with. Set slightly behind the wall plane
-    // so the jambs read as having depth.
     const outside = new THREE.Mesh(
       new THREE.PlaneGeometry(manW, manH),
       new THREE.MeshBasicMaterial({ color: 0x8a5a22 })
@@ -2446,21 +1375,11 @@ function buildWarehouse(preview, floorY, ceilingY, rafterY, holeW, moonPos, moon
     outside.position.set(manX, floorY + manH / 2, z - 0.02);
     doorGroup.add(outside);
 
-    // The pivot is the hinge, not the middle of the leaf, which is why the
-    // slab below is built inside this group offset by half its width.
     const hinge = new THREE.Group();
     hinge.position.set(manX + manW / 2, floorY + manH / 2, z - 0.14);
     hinge.rotation.y = -0.62;                       // 35.5 degrees into the room
     const leaf = new THREE.Mesh(
       new THREE.BoxGeometry(manW, manH, 0.05),
-      // A SILHOUETTE, not a lit surface. This was pale on the theory that it
-      // would "take the sodium light"; it cannot. The door swings inward, so
-      // the face a visitor sees is the one turned away from the opening — its
-      // normal dots to -0.25 against the light direction, and measured, the
-      // spot puts 9 pixels on it. That is not a bug in the light, it is what
-      // an inward-swinging door with the street behind it does. So the leaf is
-      // dark on purpose now and the doorway behind it is bright, which is the
-      // shape the eye reads as a door standing open.
       new THREE.MeshStandardMaterial({ color: 0x2b2822, roughness: 0.7, metalness: 0.3 })
     );
     leaf.position.x = -manW / 2;
@@ -2473,24 +1392,6 @@ function buildWarehouse(preview, floorY, ceilingY, rafterY, holeW, moonPos, moon
     hinge.add(bar);
     doorGroup.add(hinge);
 
-    // The wedge of streetlight on the floor — the floor, and nothing else.
-    // It was described as also lighting the leaf; it does not and cannot (see
-    // the leaf's own material). What it does do is measurable: peak 34 of 255
-    // across 32,781 pixels of concrete, all of it below the doorway.
-    //
-    // A SpotLight, and the shape of it is the whole point. A PointLight here
-    // was the obvious thing and it was wrong in a way that took a render to
-    // see: nothing in this scene casts shadows, so a point light at the
-    // threshold lit the brick all around the doorway in a big orange halo —
-    // light arriving from outside, illuminating the inside face of the wall
-    // it had supposedly just come through. A spot has a cone, and a cone
-    // aimed away from the wall cannot light it. So this sits in the opening
-    // and points into the room and slightly down, which puts the light on
-    // the floor and on the swung leaf and nowhere else.
-    //
-    // Sodium orange, and deliberately weak: it is a lamp somewhere up the
-    // street, not a fixture in this room, and it must not compete with the
-    // moonlight through the skylight that the whole scene is lit by.
     const street = new THREE.SpotLight(0xffa04a, 3.4, 9.0, 0.62, 0.75, 1.4);
     street.position.set(manX, floorY + manH * 0.78, z - 0.16);
     street.target.position.set(manX - 1.5, floorY, z - 5.2);
@@ -2500,28 +1401,14 @@ function buildWarehouse(preview, floorY, ceilingY, rafterY, holeW, moonPos, moon
 
     group.add(doorGroup);
 
-    // You cannot walk through an open door leaf, and the rails stand proud
-    // of the wall. wallLimit already stops a visitor at the brick; these
-    // cover the two things that stick out past it.
-    // cos for x and sin for z, not the reverse: the leaf extends from the
-    // hinge along (-cos, -sin) at the swing angle. Swapped, this sat 0.148
-    // away from the real leaf centre — covered anyway at this angle by the
-    // 0.65 of collider+player radius, and wrong the moment the angle changes.
     colliders.push({ x: manX + manW / 2 - Math.cos(0.62) * manW * 0.5, z: z - 0.14 - Math.sin(0.62) * manW * 0.5, r: 0.35 });
   }
 
   let bulbPosition = null;
 
-  // ─── A ramshackle garage's worth of clutter, plus a few taped-up early-
-  // '90s show flyers spaced the way a real wall of flyers actually looks —
-  // overlapping, crooked, different sizes, added over time, not evenly
-  // gridded. Skipped in preview for performance. ──────────────────────────
   const posterMeshes = [];
   if (!preview) {
     const baseY = floorY + wallHeight * 0.34;
-    // Sized and spaced so all four posters read at normal viewing
-    // distance without walking up close, with enough gap between them
-    // that the larger planes don't lap over each other.
     const posters = [
       { band: 'Nirvana', sub: 'Live — All Ages', x: -2.75, y: baseY + 0.2, rot: -0.09, scale: 1.08, z: -wallDist + 0.03 },
       { band: 'R.E.M.', sub: 'Live — Doors 8pm', x: -0.75, y: baseY - 0.34, rot: 0.05, scale: 0.86, z: -wallDist + 0.025 },
@@ -2531,31 +1418,21 @@ function buildWarehouse(preview, floorY, ceilingY, rafterY, holeW, moonPos, moon
     posters.forEach(p => {
       const posterMat = new THREE.MeshStandardMaterial({
         map: makePosterTexture(p.band, p.sub), roughness: 0.85, metalness: 0,
-        // A little self-lit, so these read as focal objects worth crossing a
-        // dark room for rather than being legible only once you are standing
-        // in front of one. Near-black on purpose: it lifts the paper off the
-        // brick without making it a light source.
         emissive: POSTER_EMISSIVE, emissiveIntensity: 0.78,
       });
       const poster = new THREE.Mesh(new THREE.PlaneGeometry(1.3 * p.scale, 1.82 * p.scale), posterMat);
       poster.position.set(p.x, p.y, p.z);
       poster.rotation.z = p.rot;
       group.add(poster);
-      // Tracked so the scene can raycast these separately from the hub —
-      // clicking one "tunes in" a few bars of static-laden radio (see
-      // playPosterRiff in createOrrery). Fits the found story's own
-      // premise (a pirate radio investigation) better than a silent wall.
       posterMeshes.push({ mesh: poster, band: p.band });
     });
 
-    // Pegboard with tools, on the side wall.
     const pegboardMat = new THREE.MeshStandardMaterial({ map: makePegboardTexture(), roughness: 0.9, metalness: 0 });
     const pegboard = new THREE.Mesh(new THREE.PlaneGeometry(1.5, 1.9), pegboardMat);
     pegboard.rotation.y = Math.PI / 2;
     pegboard.position.set(-wallDist + 0.03, floorY + wallHeight * 0.5, 2.6);
     group.add(pegboard);
 
-    // A stack of cardboard boxes, in the back corner.
     const cardboardMat = new THREE.MeshStandardMaterial({ map: makeCardboardTexture(), roughness: 0.95, metalness: 0 });
     const boxSizes = [[0.55, 0.4, 0.45], [0.42, 0.35, 0.4], [0.48, 0.3, 0.3]];
     let stackY = floorY;
@@ -2569,7 +1446,6 @@ function buildWarehouse(preview, floorY, ceilingY, rafterY, holeW, moonPos, moon
     });
     colliders.push({ x: -wallDist + 1.22, z: -wallDist + 0.85, r: 0.45 });
 
-    // An old tire, leaning against the back wall.
     const tireMat = new THREE.MeshStandardMaterial({ color: 0x18161a, roughness: 0.85, metalness: 0.1 });
     const tire = new THREE.Mesh(new THREE.TorusGeometry(0.32, 0.11, 10, 20), tireMat);
     tire.rotation.x = Math.PI / 2 + 0.28;
@@ -2577,8 +1453,6 @@ function buildWarehouse(preview, floorY, ceilingY, rafterY, holeW, moonPos, moon
     group.add(tire);
     colliders.push({ x: 2.9, z: -wallDist + 0.35, r: 0.42 });
 
-    // A workbench along the side wall, a little clutter on top, and a bare
-    // bulb hanging over it on a cord from the roof truss.
     const woodMat = new THREE.MeshStandardMaterial({ map: makeWoodTexture('#5a4530', '#2c2013'), roughness: 0.85, metalness: 0 });
     const benchHeight = floorY + 0.55;
     const bench = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.05, 1.6), woodMat);
@@ -2598,16 +1472,9 @@ function buildWarehouse(preview, floorY, ceilingY, rafterY, holeW, moonPos, moon
       group.add(clutter);
     });
 
-    // ─── A few inert mechanical details — micro-Myst objects you'd poke
-    // at without being told what they do. None of these are wired to
-    // anything; they're not meant to be understood, just found, the way a
-    // real workshop accumulates fittings whose original purpose outlived
-    // whoever installed them. ──────────────────
     const detailMat = new THREE.MeshStandardMaterial({ color: 0x2e2a24, roughness: 0.65, metalness: 0.55 });
     const detailAccentMat = new THREE.MeshStandardMaterial({ color: 0x8a2a1f, roughness: 0.45, metalness: 0.3 });
 
-    // A wall-mounted gauge above the pegboard, needle frozen at whatever
-    // it was last reading — a different angle every time the scene loads.
     const gaugeFaceMat = new THREE.MeshStandardMaterial({ color: 0xc9bfa0, roughness: 0.6, metalness: 0.1 });
     const gaugeGroup = new THREE.Group();
     const gaugeHousing = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.09, 0.025, 16), detailMat);
@@ -2624,8 +1491,6 @@ function buildWarehouse(preview, floorY, ceilingY, rafterY, holeW, moonPos, moon
     gaugeGroup.position.set(-wallDist + 0.045, floorY + wallHeight * 0.5 + 0.75, 2.2);
     group.add(gaugeGroup);
 
-    // An idle toggle lever bolted to the front edge of the workbench,
-    // thrown to some mid-position and going nowhere.
     const leverBase = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.03, 0.05), detailMat);
     leverBase.position.set(-wallDist + 0.4 + 0.14, benchHeight + 0.04, -2.0);
     group.add(leverBase);
@@ -2637,8 +1502,6 @@ function buildWarehouse(preview, floorY, ceilingY, rafterY, holeW, moonPos, moon
     leverKnob.position.y = 0.12;
     leverArm.add(leverKnob);
 
-    // A valve wheel on a pipe stub, low on the same wall, half-forgotten
-    // — sitting at whatever angle it was last turned to.
     const pipeStub = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.16, 8), detailMat);
     pipeStub.rotation.z = Math.PI / 2;
     pipeStub.position.set(-wallDist + 0.08, floorY + 0.5, 0.6);
@@ -2656,12 +1519,7 @@ function buildWarehouse(preview, floorY, ceilingY, rafterY, holeW, moonPos, moon
     wheelGroup.position.set(-wallDist + 0.16, floorY + 0.5, 0.6);
     group.add(wheelGroup);
 
-    // ─── More clutter — a second corner and the space between it and the
-    // first are filled out too, reusing the existing texture/material
-    // helpers so nothing new gets pulled into the bundle. ───────────────────────────────────────────
 
-    // A second stack of crates, opposite corner from the first, different
-    // sizes and offsets so the two piles don't read as copy-pasted.
     const boxSizes2 = [[0.5, 0.45, 0.5], [0.38, 0.3, 0.42], [0.3, 0.28, 0.3], [0.44, 0.22, 0.36]];
     let stackY2 = floorY;
     boxSizes2.forEach((size, i) => {
@@ -2674,7 +1532,6 @@ function buildWarehouse(preview, floorY, ceilingY, rafterY, holeW, moonPos, moon
     });
     colliders.push({ x: wallDist - 1.4, z: -wallDist + 1.1, r: 0.5 });
 
-    // A couple of oil drums, grouped near the back wall.
     const drumMat = new THREE.MeshStandardMaterial({ color: 0x3a2a1a, roughness: 0.75, metalness: 0.4 });
     [[1.6, -wallDist + 0.45, 0.2], [2.05, -wallDist + 0.4, 0.6]].forEach(([x, z, rotOffset]) => {
       const drum = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.28, 0.72, 14), drumMat);
@@ -2684,8 +1541,6 @@ function buildWarehouse(preview, floorY, ceilingY, rafterY, holeW, moonPos, moon
       colliders.push({ x, z, r: 0.35 });
     });
 
-    // A ladder leaning against the back wall, off-center from everything
-    // else.
     const ladderMat = new THREE.MeshStandardMaterial({ map: makeWoodTexture('#6b5a3c', '#332818'), roughness: 0.8, metalness: 0.1 });
     const ladderGroup = new THREE.Group();
     const railLen = 2.2;
@@ -2705,7 +1560,6 @@ function buildWarehouse(preview, floorY, ceilingY, rafterY, holeW, moonPos, moon
     group.add(ladderGroup);
     colliders.push({ x: -3.4, z: -wallDist + 0.5, r: 0.3 });
 
-    // Loose lumber, stacked at a slight angle near the second crate pile.
     const plankMat = new THREE.MeshStandardMaterial({ map: makeWoodTexture('#4a3c28', '#241a0e'), roughness: 0.9, metalness: 0 });
     for (let i = 0; i < 4; i++) {
       const plank = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.05, 0.14), plankMat);
@@ -2715,8 +1569,6 @@ function buildWarehouse(preview, floorY, ceilingY, rafterY, holeW, moonPos, moon
       group.add(plank);
     }
 
-    // Coiled cable on the floor near the workbench — loose torus segments
-    // rather than one perfect ring, so it reads as slack coil.
     const cableMat = new THREE.MeshStandardMaterial({ color: 0x161616, roughness: 0.7, metalness: 0.1 });
     for (let i = 0; i < 3; i++) {
       const loop = new THREE.Mesh(new THREE.TorusGeometry(0.22 - i * 0.03, 0.018, 6, 16), cableMat);
@@ -2725,8 +1577,6 @@ function buildWarehouse(preview, floorY, ceilingY, rafterY, holeW, moonPos, moon
       group.add(loop);
     }
 
-    // A stool at the workbench, pushed slightly out as though someone
-    // just stood up.
     const stoolMat = new THREE.MeshStandardMaterial({ color: 0x2c2c2c, roughness: 0.7, metalness: 0.3 });
     const stoolSeat = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.16, 0.03, 12), stoolMat);
     stoolSeat.position.set(-wallDist + 0.9, floorY + 0.42, -1.3);
@@ -2745,8 +1595,6 @@ function buildWarehouse(preview, floorY, ceilingY, rafterY, holeW, moonPos, moon
       group.add(leg);
     }
 
-    // A couple of loose flyers that missed the wall, curled on the floor —
-    // reusing the same poster-texture generator with two more band names.
     [[1.1, -wallDist + 0.9, 0.3, 'Fugazi'], [1.6, -wallDist + 1.4, -0.2, 'Pavement']].forEach(([x, z, rot, band]) => {
       const fallenMat = new THREE.MeshStandardMaterial({
         map: makePosterTexture(band, 'Live — Doors 9pm'),
@@ -2759,9 +1607,6 @@ function buildWarehouse(preview, floorY, ceilingY, rafterY, holeW, moonPos, moon
       group.add(fallen);
     });
 
-    // A couple of idle chains hanging from the truss, well clear of the
-    // orrery's own suspension near the center — leftover rigging a working
-    // space just accumulates and never takes down.
     const chainMat = new THREE.MeshStandardMaterial({ color: 0x201d18, roughness: 0.6, metalness: 0.7 });
     [[-2.6, 0.6], [2.4, -0.4]].forEach(([x, z]) => {
       addStrut(group, new THREE.Vector3(x, rafterY - 0.03, z), new THREE.Vector3(x, floorY + 1.4, z), 0.008, chainMat);
@@ -2780,37 +1625,11 @@ function buildWarehouse(preview, floorY, ceilingY, rafterY, holeW, moonPos, moon
     group, bulbPosition, posters: posterMeshes, colliders, wallDist,
     dust: {
       geo: moteGeo, mat: moteMat, tex: moteTex, base: moteBase, drift: moteDrift, count: moteCount,
-      // The light's own frame, handed out so the animate loop can rebuild
-      // each mote's x/z from its cone coordinates every frame — same
-      // vectors used to spawn them, not a second copy to keep in sync.
       origin: moonPos.clone(), axis, perpA, perpB, tanAngle: moteTanAngle,
     },
   };
 }
 
-// ─── First-person rig ──────────────────────────────────────────────────────
-// Scott: "have first-person camera movement in orrery, like someone's
-// wandering around with arrow keys... with mouse-look and collision...
-// feel like a Myst level." Full scene only — the preview tile keeps its
-// old drag-orbits-the-room illusion (see createOrrery's interaction
-// section), since a thumbnail-sized tile isn't somewhere anyone's going to
-// walk around. Here, the room stays fixed in world space and the camera
-// actually moves through it.
-//
-// Mouse-look has two input paths feeding the same yaw/pitch state:
-// pointer-lock (desktop, click once to engage — raw movementX/Y) and
-// plain drag (mouse-down-and-drag, or touch — works without a lock,
-// everywhere pointer lock doesn't, e.g. mobile). Both use the same sign
-// convention — drag/move right turns the view right — standard "mouse-
-// look," matching three.js's own PointerLockControls. This deliberately
-// does NOT match the sitewide drag-to-orbit convention used elsewhere
-// (sphere/orbiter/butterfly/the orrery preview tile, where dragging right
-// rotates the OBJECT rather than the view): those scenes are rotating a
-// thing you're looking at from outside; this one is you, inside the room,
-// turning your head. Different enough mechanics that matching the old
-// convention would be a coincidence, not a consistency win — the two
-// look/drag paths within this one first-person rig matching each other
-// matters more than either one matching a different kind of scene.
 function createFirstPersonRig({ container, camera, renderer, colliders, wallLimit, eyeY, startPos, startYaw, isBlocked, isPanelOpen, crosshair, prompt, padEl }) {
   let yaw = startYaw, pitch = 0;
   camera.rotation.order = 'YXZ';
@@ -2823,32 +1642,13 @@ function createFirstPersonRig({ container, camera, renderer, colliders, wallLimi
   const moveDir = new THREE.Vector2();
   const canvasEl = renderer.domElement;
 
-  // Held-key / held-button state — keyboard and the on-screen touch d-pad
-  // (mobile, no keyboard to hold WASD/arrows on) both just flip these same
-  // four flags, so the movement math below never has to know which input
-  // it came from.
   const move = { forward: false, back: false, left: false, right: false };
 
   let locked = false;
   const canLock = typeof canvasEl.requestPointerLock === 'function';
 
-  // ─── Crosshair ──────────────────────────────────────────────────────────
-  // Once the pointer's locked there's no visible OS cursor to hover things
-  // with — and even before locking, drag-to-look already decouples the
-  // literal cursor position from where the camera's actually pointed. So
-  // the scene always raycasts from screen-center now (see animate() in
-  // createOrrery), locked or not; this dot is what that point actually is,
-  // and the OS cursor itself is hidden the whole time in full mode (see
-  // createOrrery's claimContainer call). Markup itself (.orrery-
-  // crosshair/-lock-prompt/-walkpad) lives in orrery.html, parsed once in
-  // createOrrery and handed down here so both consumers share one fragment.
   container.appendChild(crosshair);
 
-  // ─── "click to look around" prompt — pointer lock can only ever be
-  // requested from a real user gesture, never automatically, so this
-  // stays up until the first click (or just fades out on touch, where
-  // there's no lock to request — drag-to-look already works there without
-  // it).
   prompt.textContent = canLock ? 'click to look around' : 'drag to look around';
   container.appendChild(prompt);
   let promptFadeTimer = null;
@@ -2857,10 +1657,6 @@ function createFirstPersonRig({ container, camera, renderer, colliders, wallLimi
     promptFadeTimer = setTimeout(() => prompt.classList.add('hidden'), 2400);
   }
 
-  // ─── On-screen walk buttons — coarse-pointer (touch) devices only;
-  // there's no keyboard there to hold WASD/arrows on. Only appended (and
-  // wired up) when actually needed; otherwise padEl is left in the
-  // detached fragment and simply garbage-collected. ──────────────────────
   const isCoarse = typeof window.matchMedia === 'function' && window.matchMedia('(pointer: coarse)').matches;
   if (isCoarse) {
     container.appendChild(padEl);
@@ -2872,13 +1668,6 @@ function createFirstPersonRig({ container, camera, renderer, colliders, wallLimi
       el.addEventListener('pointerup', off);
       el.addEventListener('pointerleave', off);
       el.addEventListener('pointercancel', off);
-      // These are real <button>s in the tab order (they stopped being
-      // inside an aria-hidden container on 2026-09-02 — see orrery.html),
-      // and a control that announces itself as a button has to work like
-      // one: a pointerdown-only binding leaves Enter/Space doing nothing,
-      // which trades a WCAG 4.1.2 failure for a 2.1.1 one. Coarse-pointer
-      // devices include touch laptops with real keyboards, which is the
-      // exact case that made the old aria-hidden wrong in the first place.
       const keyOn = e => {
         if (e.key !== 'Enter' && e.key !== ' ') return;
         e.preventDefault(); // Space would otherwise scroll the page under the scene
@@ -2896,7 +1685,6 @@ function createFirstPersonRig({ container, camera, renderer, colliders, wallLimi
     bind('.wp-right', 'right');
   }
 
-  // ─── Keyboard ───────────────────────────────────────────────────────────
   const KEY_MAP = {
     KeyW: 'forward', ArrowUp: 'forward',
     KeyS: 'back',    ArrowDown: 'back',
@@ -2907,16 +1695,6 @@ function createFirstPersonRig({ container, camera, renderer, colliders, wallLimi
   const onKeyDown = e => {
     const flag = KEY_MAP[e.code];
     if (!flag) return;
-    // The read-more panel owns the arrow keys while it is open. This handler
-    // is on `window` and preventDefault()s all four arrows unconditionally,
-    // which meant the panel — overflow-y scrollable, holding the entire
-    // found story, and the ONLY place openPanel() ever sends focus — could
-    // not be scrolled from the keyboard at all. That made the jump list, the
-    // one accessible route into the text, a route into text you then can't
-    // read past the first screenful, while the camera walked around behind
-    // the panel instead. Movement flags are cleared here as well as at the
-    // moment the panel opens (see clearMovement's other caller), so a key
-    // that was already held down when the panel opened can't stick.
     if (isPanelOpen?.()) { clearMovement(); return; }
     move[flag] = true;
     e.preventDefault(); // arrows shouldn't also scroll the page underneath
@@ -2929,21 +1707,11 @@ function createFirstPersonRig({ container, camera, renderer, colliders, wallLimi
   };
   window.addEventListener('keydown', onKeyDown);
   window.addEventListener('keyup', onKeyUp);
-  // If focus leaves the window mid-stride (alt-tab, devtools) a key can
-  // get stuck "down" forever, since its keyup never reaches here — drop
-  // all movement the moment the window blurs.
   const onBlur = () => { clearMovement(); };
   window.addEventListener('blur', onBlur);
 
-  // ─── Mouse-look ─────────────────────────────────────────────────────────
   const onPointerLockChange = () => {
     locked = document.pointerLockElement === canvasEl;
-    // Simple toggle, on purpose: tryEngage genuinely re-engages on any
-    // click while unlocked (see below), so a visible "click to look
-    // around" is a real, working invitation every time you're unlocked —
-    // including right after closing the read-more panel (releaseLock(),
-    // below), which is exactly when a visitor most needs the reminder
-    // that clicking gets them back into look-around mode.
     prompt.classList.toggle('hidden', locked);
   };
   document.addEventListener('pointerlockchange', onPointerLockChange);
@@ -2959,63 +1727,26 @@ function createFirstPersonRig({ container, camera, renderer, colliders, wallLimi
   const orbitDrag = bindOrbitDrag(container, {
     onDrag: (dx, dy) => {
       if (locked) return; // pointer-lock's own mousemove above already owns this
-      // Same sign as the pointer-lock path above: dx is positive for a
-      // rightward drag (bindOrbitDrag's own convention), so this matches
-      // "drag/move right, view turns right" in both input paths.
       yaw -= dx;
       pitch -= dy;
       pitch = Math.max(-PITCH_LIMIT, Math.min(PITCH_LIMIT, pitch));
     },
   });
 
-  // Click/tap engages pointer lock (desktop) instead of acting on whatever's
-  // under the crosshair — returns true when it consumed the event that way,
-  // so the scene's own click handler can bail out early rather than also
-  // opening a panel the visitor didn't mean to open. Not just a first-click
-  // gate: any click while unlocked re-engages, which matters once
-  // releaseLock() (below) has been used — the click that follows closing
-  // the read-more panel should resume look-around, not be treated as a
-  // fresh "select whatever's under the crosshair" click.
   function tryEngage(e) {
     if (isBlocked?.(e)) return false;
     if (!canLock || locked) return false;
     prompt.classList.add('hidden');
-    // Chrome 113+ returns a Promise here, and it REJECTS in contexts that
-    // aren't allowed to lock the pointer at all — an embedded/preview frame
-    // most commonly (caught live in the 4.0 pass's browser pane:
-    // "WrongDocumentError: The root document of this element is not valid
-    // for pointer lock", four uncaught rejections per click). Nothing needs
-    // to happen when it fails: drag-to-look is already the fallback path
-    // and works without any lock. Swallow it rather than leaving an
-    // unhandled rejection in the console of anyone embedding the site.
     canvasEl.requestPointerLock()?.catch?.(() => {});
     return true;
   }
   const onPromptClick = e => { tryEngage(e); };
   prompt.addEventListener('click', onPromptClick);
 
-  // Pointer lock routes every mouse event exclusively to the element that
-  // holds it (the canvas) — a sibling DOM element, like the read-more
-  // panel's own close button or the keyboard jump list, never receives a
-  // real click while locked, no matter where the invisible OS cursor
-  // conceptually is. createOrrery calls this from openPanel() so the
-  // panel becomes clickable the moment it opens; tryEngage (above)
-  // re-engages on the click that follows closing it.
   function releaseLock() {
     if (document.pointerLockElement === canvasEl) document.exitPointerLock();
   }
 
-  // ─── Movement + collision ───────────────────────────────────────────────
-  // Circle-vs-circle push-out against every collider, plus a hard clamp to
-  // the four walls — enough fidelity for "don't walk through the set,"
-  // not a full physics engine. Two passes so overlapping colliders (e.g.
-  // a corner where two crate piles are close) both get to push.
-  // Accumulated push direction from the last resolveCollisions call, so
-  // update() can take the component of velocity that's driving into the
-  // obstacle back out again. Without that, holding W against a crate kept
-  // integrating velocity toward the crate every frame — the push-out
-  // cancelled the POSITION but never the velocity, so it built up behind the
-  // wall and released as a lurch the instant the visitor turned away.
   const _pushN = new THREE.Vector2();
   function resolveCollisions(x, z) {
     _pushN.set(0, 0);
@@ -3033,18 +1764,12 @@ function createFirstPersonRig({ container, camera, renderer, colliders, wallLimi
         }
       }
     }
-    // The four walls are a hard clamp rather than a push-out, so their
-    // "normal" is just the axis that got clamped.
     const cx = Math.max(-wallLimit, Math.min(wallLimit, x));
     const cz = Math.max(-wallLimit, Math.min(wallLimit, z));
     if (cx !== x) _pushN.x += cx - x;
     if (cz !== z) _pushN.y += cz - z;
     return { x: cx, z: cz };
   }
-  // Removes whatever part of `velocity` points into the surface just
-  // collided with, leaving the tangential part — so walking into a wall at
-  // an angle still slides along it, which is what the push-out was already
-  // doing to the position.
   function projectVelocityOntoTangent() {
     if (_pushN.lengthSq() < 1e-12) return;
     _pushN.normalize();
@@ -3058,8 +1783,6 @@ function createFirstPersonRig({ container, camera, renderer, colliders, wallLimi
   function update(dt) {
     camera.rotation.set(pitch, yaw, 0);
 
-    // Forward/right in the horizontal plane only — looking up or down
-    // shouldn't change walking speed or fly you into the floor/ceiling.
     camera.getWorldDirection(forward3);
     forward3.y = 0;
     if (forward3.lengthSq() < 1e-6) forward3.set(0, 0, -1); else forward3.normalize();
@@ -3110,128 +1833,40 @@ export function createOrrery(container, { preview = false } = {}) {
   const w = container.clientWidth  || window.innerWidth;
   const h = container.clientHeight || window.innerHeight;
 
-  // Every deferred callback this scene schedules goes through here so
-  // dispose() can drop whatever is still pending in one call — see
-  // openPanel's focus hand-off, the one site in this file that wasn't
-  // already tracked.
   const timers = trackTimers();
 
   const scene    = new THREE.Scene();
   const camera   = new THREE.PerspectiveCamera(54, w / h, 0.1, 500);
-  // Preview tile: same fixed, pulled-back establishing shot as before —
-  // it never got the first-person treatment (see the interaction section
-  // below), so this framing is untouched. Full scene: the camera's actual
-  // starting transform is set by createFirstPersonRig() further down,
-  // since it now lives inside the walkable room rather than at a distant
-  // vantage point outside it.
   if (preview) {
     camera.position.set(1.1, 0.3, 13.3);
     camera.lookAt(0, -0.15, 0);
   }
 
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-  // Forward-declared so manageRenderer's context-lost handler below can stop
-  // the loop; assigned by animate() itself further down.
   let animId = null;
-  // manageRenderer caps devicePixelRatio at 2. This is the heaviest scene on
-  // the site and it was the one asking the GPU for an uncapped ratio: on a
-  // DPR-3 phone that is nine times the fragments of a DPR-1 render, for a
-  // difference nothing can resolve. It also owns real context release on
-  // dispose (THREE's renderer.dispose() does not free the GL context) and a
-  // webglcontextlost handler, which this scene had neither of.
   const managedRenderer = manageRenderer(renderer, {
     onLost: () => { cancelAnimationFrame(animId); animId = null; },
   });
   renderer.setSize(w, h);
-  // A touch of warmth over pure black (0x030303 before) — the fog is doing
-  // real atmospheric-haze work now that the compressed-video overlay isn't
-  // around to fake it, so it reads closer to a lamp-lit room's own dim
-  // ambient color than a void.
   renderer.setClearColor(0x0a0704, 1);
   renderer.domElement.setAttribute('aria-hidden', 'true');
-  // Preview tiles: never append the WebGL canvas itself — see
-  // mountClippedPreviewCanvas's own comment in sceneKit.js (Scott
-  // confirmed this scene has the same Firefox square-tile bug the fix was
-  // originally written for). Full scene is unaffected (no circular tile
-  // there), so it keeps the plain direct append it always had.
   const clippedPreview = preview ? mountClippedPreviewCanvas(container, renderer) : null;
   if (!preview) container.appendChild(renderer.domElement);
 
-  // `container` is the single shared #experience-container: main.js empties
-  // it between scenes but never replaces the node, so every inline style
-  // written here outlives this scene unless something puts it back. Nothing
-  // did — most visibly `cursor: none` (set below for the crosshair-only
-  // aiming this scene uses), which followed the visitor into Theater,
-  // Scroll, Butterfly and Outside, none of which touch cursor themselves,
-  // and left them with no mouse pointer at all. claimContainer records the
-  // prior values and hands back the restore() that dispose() now calls.
-  // tabIndex -1 is part of the same claim: it makes the container
-  // programmatically focusable so closing the panel (✕, outside click, or
-  // Escape) has somewhere real to send focus back to, rather than leaving it
-  // on a now-hidden close button or nowhere at all.
   const claim = preview ? null : claimContainer(container, {
     position: 'relative', overflow: 'hidden', cursor: 'none', tabIndex: -1,
   });
 
-  // Fog matched to the clear color so only genuinely distant geometry
-  // (far wall corners, stars beyond the skylight) softens into haze — the
-  // soft render-distance falloff of early-90s pre-rendered CG adventure
-  // games (Myst, Return to Zork, The 7th Guest) doing the work honestly,
-  // in the render itself, rather than an overlay standing in for it.
-  // Far distance kept well beyond the camera-to-orrery range (the preview
-  // camera sits at z 13.3; the full scene's camera is the walkthrough's own,
-  // wherever the visitor has walked it to) so the machine itself never fogs out — it had
-  // been eating into the enlarged orrery and washing out the preview tile
-  // almost entirely.
   scene.fog = new THREE.Fog(0x0a0704, preview ? 9 : 12, preview ? 30 : 42);
 
-  // ─── Lighting — design-notes correction pass, 2026-09-01: the room's
-  // baseline light is now mundane fluorescent (flat, cool-white with a
-  // faint green cast, minimal shadow — nobody chose this for ambiance,
-  // they just needed to see), with exactly one dramatic exception: real
-  // moonlight through the skylight, added further below once the orrery's
-  // own height is known. The old warm ambient accent is gone — warmth
-  // lives only in the small practical lamps (the workbench bulb, the
-  // control-box indicator), not in the room's general fill. ─────────────
-  // Fill-light correction, 2026-09-02: the two active dramatic sources
-  // (moonbeam, fluorescents) are correctly localized and restrained now,
-  // but that left everything past their reach — the far walls, the floor
-  // in the middle distance, the already-built set dressing (boxes, ladder,
-  // posters, stools, the control box, the orrery's own farther-orbiting
-  // pieces) — going flat and vacant in wide shots. None of that geometry
-  // was missing, it just had nothing dim reflected light to catch: real
-  // rooms have some ambient bounce even away from their main sources.
-  // Raised, not added — same two lights as before, just enough intensity
-  // that geometry stays dimly legible at middle distance without
-  // introducing a third dramatic light or competing with the moonbeam/
-  // fluorescents for visual attention. Verify live: this should read as
-  // "the room has walls and floor," not as its own visible light source.
   const hemiLight = new THREE.HemisphereLight(0x64778a, 0x14100c, 1.3);
   scene.add(hemiLight);
   const ambientLight = new THREE.AmbientLight(0x3f4d47, 0.55);
   scene.add(ambientLight);
 
-  // Everything below that isn't part of the orrery mechanism or the
-  // warehouse shell — the moonbeam's glow sprites, the fluorescent fixture
-  // housings, the star field — used to be added straight to `scene`. That
-  // put them outside both of dispose()'s hand-written traversals (which only
-  // ever walked orrery.group and warehouse.group), so their geometry,
-  // materials and textures were never freed at all: six sprites with six
-  // SpriteMaterials, three fixtures of eight meshes each, and a Points
-  // object, per full-mode visit. They live here instead, and dispose() now
-  // walks the whole scene graph once with disposeSceneGraph rather than two
-  // partial hand-kept lists — a group can't be forgotten if nothing has to
-  // remember it. Deliberately NOT `root`: root is the group the preview
-  // tile's drag rotates, and these are all fixed in world space (the star
-  // field in particular has to stay put under the ceiling's real skylight
-  // hole for the occlusion to work — see the parallax note below).
   const fixed = new THREE.Group();
   scene.add(fixed);
 
-  // ─── Warehouse vertical layout — decided here, then handed down: the
-  // ceiling and roof truss height are fixed first, and the orrery hangs
-  // from a suspension point below the truss, with clear air beneath it
-  // before the floor. ───────────────────────────────────────────────────
   const ceilingY  = preview ? 2.5 : 3.3;
   const rafterY   = ceilingY - (preview ? 0.35 : 0.45);
   const suspendTopY = rafterY - (preview ? 0.3 : 0.4);
@@ -3239,39 +1874,6 @@ export function createOrrery(container, { preview = false } = {}) {
 
   const floorY = orrery.baseY - (preview ? 0.9 : 1.3);
 
-  // ─── Moonlight — architectural rebuild, 2026-09-01. ─────────────────────
-  // Four rounds (v3.14.0-v3.14.3) each patched an independently-positioned
-  // decorative "beam" mesh's coordinates, and each failed live inspection —
-  // the antenna sat unlit right next to a "beam" that was never actually
-  // connected to any light, just scenery placed near one. That pattern
-  // itself was the signal that the architecture, not the coordinates, was
-  // wrong. This pass removes the decorative mesh entirely and moves the
-  // real SpotLight (already doing the illumination/specular work) to sit
-  // physically above the antenna, aimed down through the skylight hole:
-  //   - Lights the antenna/skylight crown for free — it now sits exactly
-  //     where real light would rake across it on the way in, not as a
-  //     separate step or a separate mesh to position.
-  //   - Lights the orrery mechanism below with real falloff, not an
-  //     approximated cone shape trying to fake what a real light does.
-  //   - Removes the recurring anchor-point bug structurally: there's only
-  //     one object now (the real light), not a light in one place and an
-  //     independently-positioned fake beam representing it nearby.
-  // Position derived from the antenna's own built geometry (orrery.riserTopY/
-  // dishR/dishH — see buildOrrery's return) rather than a guessed
-  // coordinate: the light sits above the dish rim by a margin scaled to the
-  // dish's own radius (moonGap), so it comfortably rakes across the lattice
-  // at close range regardless of preview/full scale, then continues down
-  // through the hole to the ring assembly partway up the mast — the same
-  // target as before, so the orrery's restored brass/copper still sits
-  // inside the one light strong and directional enough to raise real
-  // specular highlights. Cool silvery-blue rather than true daylight color —
-  // moonlight reads cooler than its actual temperature because human night
-  // vision shifts toward blue at low light (the Purkinje effect).
-  //
-  // Computed here, before buildWarehouse, because buildWarehouse's own dust
-  // motes are now derived from this exact position/target/angle too (see
-  // its own comment) — one set of numbers, not two independently-authored
-  // ones that have to be kept in sync by hand.
   const holeW = preview ? 0.7 : 0.9; // the ceiling's actual skylight-hole half-width, square
   const moonGap = orrery.dishR * 3.25; // clearance above the dish rim — see reasoning above
   const moonPos = new THREE.Vector3(
@@ -3279,9 +1881,6 @@ export function createOrrery(container, { preview = false } = {}) {
   );
   const moonTargetPos = new THREE.Vector3(0, orrery.baseY + orrery.mastHeight * 0.32, 0);
   const moonAngle = 0.35, moonPenumbra = 0.45, moonDecay = 1.0;
-  // Distance/intensity both scale with the light's now-longer throw (it
-  // sits well above the antenna rather than just above the ceiling) —
-  // verify live, not by this arithmetic alone, per Scott's explicit ask.
   const moonThrow = moonPos.y - floorY;
   const moonSpotIntensity = preview ? 4.2 : 6.0;
   const moonSpotDistance = moonThrow * 1.6;
@@ -3299,35 +1898,6 @@ export function createOrrery(container, { preview = false } = {}) {
   moonSpot.target = moonTarget;
   scene.add(moonSpot);
 
-  // ─── Moonlight shaft — subtle atmospheric re-add, 2026-09-02. ───────────
-  // The decorative beam mesh removed in v3.15.0 wasn't wrong because a
-  // visible shaft existed — it was wrong because it was an independently-
-  // positioned mesh with its own hardcoded coordinates, free to drift out
-  // of sync with the real light (exactly the failure four patch rounds
-  // couldn't fix). This re-add stays on the safe side of that lesson by
-  // never authoring a coordinate of its own: every vertex below is built
-  // directly from moonSpot.position and moonSpot.target.position — the
-  // same live properties the renderer itself reads to compute the actual
-  // illumination cone — not from a copy of moonPos/moonTargetPos. The
-  // light is static in this scene (nothing in animate() ever moves it),
-  // so computing this once, right here, from the light's own live
-  // transform is equivalent to recomputing it every frame; if the light
-  // is ever animated, this block needs to move into the animate loop with
-  // it, same as the dust motes above would.
-  //
-  // Kept deliberately subtle per Scott's brief, and built to actually be
-  // soft rather than just low-opacity: a solid cone mesh's silhouette is
-  // still a hard geometric edge no matter how transparent its material
-  // is, which is exactly the "dominant graphic wedge" the brief warned
-  // against. Using camera-facing THREE.Sprite billboards instead — the
-  // same reusable radial-gradient texture the dust motes already use
-  // (makeDustMoteTexture, a true per-pixel alpha falloff, no hard
-  // boundary in any direction) — sidesteps that failure mode entirely:
-  // there is no silhouette to soften because a sprite has no edges, just
-  // gradient. A handful of them, sized to the light's own true cone
-  // radius at their depth and spaced along its axis, read as a soft glow
-  // riding the same dust already in the air rather than a separate
-  // graphic object competing with it.
   const shaftOrigin = moonSpot.position.clone();
   const shaftAxis = new THREE.Vector3().subVectors(moonSpot.target.position, shaftOrigin).normalize();
   const shaftLen = moonThrow * 0.6; // stays well short of the floor — an accent, not a room-filling wedge
@@ -3348,36 +1918,6 @@ export function createOrrery(container, { preview = false } = {}) {
     fixed.add(sprite);
   }
 
-  // ─── Fluorescent tube fixtures — the mundane baseline. Ceiling-mounted
-  // shop-light housings, spaced away from both skylight holes and the
-  // truss cross so they don't compete with the one dramatic source above.
-  // Flat, diffuse, low-intensity, spread across several fixtures rather
-  // than one strong point — the point is that these should look boring,
-  // not that the room should go dark without them. ───────────────────────
-  //
-  // Housing rebuild, 2026-09-02: the original fixture was a single flat
-  // box sitting above the tube — read as a bare glowing bar with no real
-  // fixture around it. Same principle the moonbeam rebuild established
-  // (v3.15.0): light should trace back to real geometry, not float. Built
-  // a real open-bottom reflector-trough housing (a top plate plus two
-  // long side walls and two end caps — the classic cheap shop-light
-  // shape) with the tube nested inside it, plus a visible hanger rod and
-  // ceiling flange so the fixture actually reads as bolted to the rafter
-  // rather than floating at the ceiling.
-  // Brightness rebalance, 2026-09-02: these fixtures are supposed to read
-  // as the mundane baseline — the unglamorous "someone bolted a shop
-  // light in" fixture — with the moonbeam doing all the dramatic work.
-  // They were winning attention they shouldn't in any shot containing
-  // both. Turns out lowering the point light's intensity number alone
-  // barely moved the needle (confirmed live, isolating each contributor
-  // in turn): the tube's own base color was a near-white 0xf4fbf6 — close
-  // to full reflectance — so it read as a hot, hard-edged highlight against
-  // the dark room regardless of how dim the light illuminating it was.
-  // Toning the tube's own material down to a dimmer, slightly warm-gray
-  // (alongside the emissive/point-light cuts below) is what actually fixed
-  // it. Verify live from a composition with both a fixture and the
-  // moonbeam in frame — the moonbeam should unambiguously read as the
-  // dominant element.
   const FLUORESCENT_COLOR = 0xdcefe2;
   const fixtureHousingMat = new THREE.MeshStandardMaterial({ color: 0x232420, roughness: 0.6, metalness: 0.5 });
   const fixtureTubeMat = new THREE.MeshStandardMaterial({
@@ -3390,10 +1930,6 @@ export function createOrrery(container, { preview = false } = {}) {
     { x: -wd * 0.15, z: -wd * 0.55 },
   ];
   const housingW = 1.3, housingD = 0.22, housingWallH = 0.11, plateT = 0.03;
-  // All three fixtures are identical, so every part geometry is built once
-  // out here rather than once per fixture inside the loop below — the side
-  // walls and end caps were each being constructed three times over, and the
-  // top plate, hanger, flange and tube likewise.
   const fy = rafterY - (preview ? 0.08 : 0.12);
   const topPlateGeo = new THREE.BoxGeometry(housingW, plateT, housingD);
   const sideWallGeo = new THREE.BoxGeometry(housingW, housingWallH, 0.02);
@@ -3404,9 +1940,6 @@ export function createOrrery(container, { preview = false } = {}) {
   const flangeGeo = new THREE.CylinderGeometry(0.05, 0.05, 0.02, 10);
   const tubeGeo = new THREE.CylinderGeometry(0.025, 0.025, 1.15, 8);
   fixtureSpots.forEach(({ x, z }) => {
-    // Top plate + two long side walls + two end caps = an open-bottom
-    // trough, so the tube sits recessed inside real sheet-metal rather
-    // than next to an unconnected box.
     const topPlate = new THREE.Mesh(topPlateGeo, fixtureHousingMat);
     topPlate.position.set(x, fy + housingWallH / 2, z);
     fixed.add(topPlate);
@@ -3423,9 +1956,6 @@ export function createOrrery(container, { preview = false } = {}) {
     endR.position.set(x + housingW / 2, fy, z);
     fixed.add(endR);
 
-    // Visible mounting: a thin hanger rod spanning the real gap up to the
-    // rafter, plus a small flange flush against it — the actual
-    // attachment point, not an implied one.
     if (hangerGeo) {
       const hanger = new THREE.Mesh(hangerGeo, fixtureHousingMat);
       hanger.position.set(x, hangerTop + hangerH / 2, z);
@@ -3445,39 +1975,11 @@ export function createOrrery(container, { preview = false } = {}) {
     fixed.add(fLight);
   });
 
-  // The work light lives at the hanging bulb prop if the garage clutter
-  // pass built one (full mode only); otherwise a plain accent near the
-  // machine, same as before — a small warm practical lamp, not the
-  // room's dramatic source, so it stays untouched by the lighting
-  // correction above.
   const workLight = new THREE.PointLight(0xffaa55, 0.9, preview ? 9 : 13);
   if (warehouse.bulbPosition) workLight.position.copy(warehouse.bulbPosition);
   else workLight.position.set(1.2, -0.6, 1.4);
   scene.add(workLight);
 
-  // Sparse sky beyond the skylight — only really visible through the hole
-  // and at the frame edges, not an all-encompassing backdrop.
-  //
-  // Parallax fix, 2026-09-02 (corrected same day — see below): first pass
-  // recentered this field on the camera's position every frame, which
-  // does cancel parallax but broke occlusion — the real ceiling mesh is
-  // fixed in world space with a small hole cut into it, so a star field
-  // that instead follows the camera around drifts out from under that
-  // fixed geometry and starts rendering unoccluded wherever it happens to
-  // land, i.e. scattered across the frame well outside the hole (caught
-  // live by Scott: "are those stars peeking through the roof, or dust
-  // motes?" — they were neither, they were a leak). Reverted that in
-  // animate() — the field is static in world space again, still centered
-  // on the room's own origin like the fixed ceiling geometry above it, so
-  // occlusion through the real hole keeps working the way it always did.
-  // Parallax is instead suppressed the ordinary way: pushed 4x farther out
-  // in both the horizontal spread and the vertical extent (with 6x the star
-  // count, so the sky doesn't thin out as it grows) — enough that a few
-  // metres of room-scale camera movement is a small fraction of the distance
-  // to any star — with `sizeAttenuation: false` (fixed screen-space size in
-  // pixels, not world units) so the far-pushed points don't also shrink into
-  // invisibility. (This comment said "10x" until 2026-09-02; the code has
-  // said 4x and 6x since the change landed.)
   const starCount = (preview ? 140 : 320) * 6;
   const starSpreadXZ = (preview ? 18 : 28) * 4;
   const starSpreadY = (preview ? 4 : 6) * 4;
@@ -3491,12 +1993,6 @@ export function createOrrery(container, { preview = false } = {}) {
   starGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
   const starMat = new THREE.PointsMaterial({
     color: 0xddeeff, size: preview ? 1.3 : 1.6, transparent: true, opacity: 0.55, sizeAttenuation: false,
-    // scene.fog's far distance is 42 and this field now reaches ±56 with a
-    // vertical extent to match, so a real share of these 1920 points sat
-    // beyond the fog's far plane and rendered as flat fog colour — stars
-    // fogged out by the haze of a room they are supposed to be outside of.
-    // The shaft sprites above already set this; the awareness existed, the
-    // star field just never got it.
     fog: false,
   });
   const starField = new THREE.Points(starGeo, starMat);
@@ -3507,12 +2003,7 @@ export function createOrrery(container, { preview = false } = {}) {
   root.add(orrery.group);
   root.add(warehouse.group);
 
-  // ─── Panel + window-chrome styling ───────────────────────────────────────
-  // Panel/hint/title/crosshair/walkpad markup+styles live in
-  // orrery.html and orrery.css — no runtime element construction or style
-  // injection needed now that both are real files, pulled in via parseHTML.
 
-  // ─── Panel (full only) ────────────────────────────────────────────────────
   let panel = null, panelTitle = null, panelEra = null, panelNote = null, panelCloser = null, jumpList = null;
   let hint = null, vignette = null, grain = null, title = null;
   let shell = null, crosshairEl = null, lockPromptEl = null, walkpadEl = null;
@@ -3531,70 +2022,26 @@ export function createOrrery(container, { preview = false } = {}) {
     container.appendChild(grain);
     document.body.appendChild(title);
 
-    // The ambient title and the panel's own heading both show ORRERY.name
-    // (orrery.text.js) — real data, set here rather than baked into
-    // orrery.html, same convention as library.js's per-item panel text.
     title.querySelector('.orrery-title-main').textContent = ORRERY.name;
 
-    // role/aria-modal/aria-labelledby live directly on .orrery-panel in
-    // orrery.html. The ✦ bullet + era/provenance line here is deliberate,
-    // not an inconsistency with orbiter.js's Haiku panel or sphere.js's
-    // Digression panel, which have neither: this scene's whole panel is
-    // ONE found artifact (a real short-short someone else wrote, author
-    // and provenance unknown — see the colophon's Bibliography), so it
-    // gets real attribution, the same way library.js's per-item panel
-    // shows creator/publisher/year for its found books and films. Orbiter/
-    // Sphere's panels cycle through many of Scott's own WRITTEN pieces —
-    // his own authorship is already stated once in the colophon, so
-    // there's no per-item provenance to show, and no bullet either.
-    // Found gets attribution; written doesn't. Site-wide rule, not a gap.
     panelTitle = panel.querySelector('.orrery-panel-title');
     panelEra   = panel.querySelector('.orrery-panel-era');
     panelNote  = panel.querySelector('.orrery-panel-note');
     panelTitle.textContent = `✦ ${ORRERY.name}`;
     panelEra.textContent = ORRERY.era;
-    // textContent, not innerHTML. ORRERY.note is a plain template literal
-    // rendered by `white-space: pre-line` (orrery.css), and this scene wires
-    // no cross-links into it the way sphere/orbiter/library do — so innerHTML
-    // bought nothing and opened a path where an `&` or a `<` appearing in the
-    // found text would silently change meaning, or vanish, rather than being
-    // shown as written. This is transcribed source material; it should render
-    // exactly as it is stored.
     panelNote.textContent = ORRERY.note;
-    // position/overflow/cursor are all claimed (and restored on dispose) up
-    // at claimContainer. The cursor half is why: in full mode the OS cursor
-    // is hidden the whole time — hover/click targeting always raycasts from
-    // screen-center (see createFirstPersonRig's crosshair), so a wandering
-    // system arrow would just be a visual mismatch with what's actually
-    // being aimed at.
     container.appendChild(panel);
 
-    // Close callback shared by the close button, Escape, and an outside
-    // click (via createPanelCloser/panelCloser.close() below): resets
-    // `selected` and re-syncs emphasis to whatever's actually hovered right
-    // now, not just unconditionally off — matters because the crosshair can
-    // still be resting on the control box the instant the panel closes.
     panelCloser = createPanelCloser(panel, container, {
       closeBtn: panel.querySelector('.orrery-panel-close'),
       onClose: () => {
         hideAmbient(false);
         selected = false;
         setEmphasis(hovered);
-        // Undo openPanel()'s cursor reveal — back to crosshair-only aiming
-        // once the panel's gone. Pointer lock itself isn't re-requested
-        // here (browsers only grant it from a direct user gesture); the
-        // next real click on the canvas re-engages it via fp.tryEngage.
         claim.setCursor('none');
       },
     });
 
-    // Keyboard equivalent for "look at the control box" or "look at a
-    // flyer" — the control box and the flyers are otherwise raycast-only,
-    // aimed via the first-person crosshair. One button for the found
-    // story, one per flyer (each plays its own riff directly, same as
-    // playPosterRiff(band) below the click
-    // handler already does), so a keyboard-only visitor can read and listen
-    // without ever having to aim.
     jumpList = createJumpList(container, {
       label: 'Read the found story, or tune in a flyer on the wall',
       items: [{ kind: 'panel' }, ...warehouse.posters.map(p => ({ kind: 'poster', band: p.band }))],
@@ -3607,24 +2054,8 @@ export function createOrrery(container, { preview = false } = {}) {
 
     document.body.appendChild(hint);
 
-    // The measured title/hint collision-avoidance that used to live here
-    // (checkTitleHintCollision, resize-rechecked) existed only because the
-    // title used to sit at the top of frame, close enough to the
-    // top-right hint to actually overlap at some widths — confirmed live
-    // at 1512px, not a mobile-only edge case. Site-wide title consistency
-    // pass (2026-08-25) moved the title to bottom-center, matching every
-    // other scene (see NOTES.md's title-block entry); title and hint no
-    // longer share any vertical band at any width, so the whole
-    // measure-and-reposition mechanism is dead code now, removed rather
-    // than left behind unused. Also dropped: the two-line subtitle (title-
-    // sub) and .orrery-caption entirely — Scott's explicit call, title
-    // only from here on.
   }
 
-  // ─── Interaction ─────────────────────────────────────────────────────────
-  // Hover/click targeting always raycasts from screen-center now (the
-  // first-person crosshair), not literal mouse position — see animate()
-  // below and createFirstPersonRig's own comment for why.
   const raycaster = new THREE.Raycaster();
   let hovered = false, selected = false;
   let fp = null;
@@ -3634,12 +2065,6 @@ export function createOrrery(container, { preview = false } = {}) {
     orrery.hitTarget.scale.setScalar(on ? 1.4 : 1.0);
   }
 
-  // The ambient title/hint are fixed to document.body at
-  // z-index:310, specifically so they clear #experience-overlay's own
-  // z-index:300 (see the CSS comments above). .orrery-panel lives inside
-  // that overlay and can never out-rank a body-level sibling no matter its
-  // own z-index — so once the panel's open, fade the ambient labels out
-  // instead; they're redundant once the panel has its own title showing.
   function hideAmbient(hidden) {
     title.classList.toggle('panel-open', hidden);
     hint.classList.toggle('panel-open', hidden);
@@ -3648,53 +2073,16 @@ export function createOrrery(container, { preview = false } = {}) {
   function openPanel() {
     panel.classList.add('open');
     hideAmbient(true);
-    // Release pointer lock so the panel's own buttons (close, jump list)
-    // become clickable — see releaseLock()'s own comment in
-    // createFirstPersonRig for why they otherwise can't be. fp.tryEngage
-    // (already wired into every click path) re-engages on whatever click
-    // follows the panel closing. The OS cursor is CSS-hidden the rest of
-    // the time (crosshair-based aiming, see the claimContainer call at
-    // scene setup) — restore it too, or the panel would be clickable
-    // but the visitor still couldn't see where to click.
     fp?.releaseLock();
     claim.setCursor('');
-    // Drop any movement key that was held down at the moment the panel
-    // opened. The rig's own key handlers stand down while the panel is open
-    // (so the arrows can scroll the story instead of walking the camera),
-    // which means a key already held gets no further events to clear it.
     fp?.clearMovement();
-    // Was an untracked `setTimeout(..., 50)` — 50ms being an unexplained
-    // guess at a CSS transition — which fired against a detached <h2> if the
-    // visitor left the scene in that window. One frame is both the right
-    // amount of time (the panel's `visibility` flips to visible with the
-    // .open class, and focus only needs that style recalc to have happened,
-    // not the half-second slide) and tracked, so dispose() drops it.
     timers.nextFrame(() => panelTitle.focus());
   }
 
-  // ─── Poster audio (dynamic import, full-mode only) ─────────────────────
-  // orreryAudio.js's own createPosterAudio() owns the actual synthesis and
-  // its AudioContext lifecycle now — this just caches the one dynamic
-  // import() so every playPosterRiff() call (jump list, click handler)
-  // shares it rather than re-fetching. Cache the promise that resolves to
-  // the CREATED INSTANCE, not the raw import() promise — a lesson from a
-  // real bug caught during Harmonics' equivalent split (v3.10.1): storing
-  // an already-`.then()`-mapped promise back into the same variable a
-  // loader function also reads/writes double-wraps it. Keeping it to one
-  // assignment, in one place, side-steps that class of bug entirely.
   let posterAudioPromise = null;
   function loadPosterAudio() {
     return (posterAudioPromise ??= import('./orreryAudio.js').then(m => m.createPosterAudio()));
   }
-  // Warmed here (full-mode setup) rather than deferred to the first click,
-  // same reasoning as Harmonics' loadResolveEndpoint(): the common case
-  // (open the scene, click a poster a moment later) usually finds it
-  // already resolved. Guarded: this whole function body runs for both
-  // preview and full (it's defined at outer scope, not inside the
-  // `if (!preview)` panel-setup block above), but posters only exist in
-  // full mode — the warm-up call itself must not fire for preview, or the
-  // preview tile would end up requesting orreryAudio.js exactly like the
-  // static import this replaced.
   if (!preview) loadPosterAudio();
 
   async function playPosterRiff(band) {
@@ -3704,34 +2092,15 @@ export function createOrrery(container, { preview = false } = {}) {
 
   let hoveredPoster = null;
 
-  // Named so dispose() can remove them — container is the shared
-  // #experience-container element every scene reuses (main.js only clears
-  // its innerHTML between scenes, it never replaces the node itself), so
-  // any listener bound directly to it and never removed keeps firing
-  // after the scene it belongs to is gone. That's exactly what Scott hit:
-  // clicking on the orbiter scene played an orrery poster's audio riff,
-  // because this click handler — bound here, on that same shared
-  // container — was still attached and its closure still had a hovered
-  // poster reference from before the switch.
   let onContainerClick;
   let touchGuard;
 
   if (!preview) {
-    // Tap-vs-drag distinction still matters in first-person mode — a
-    // touch-drag to look around shouldn't also register as a click on
-    // whatever the crosshair happened to end up over.
     touchGuard = bindTapVsDrag(container);
     onContainerClick = e => {
       if (touchGuard.consume()) return;
-      // First click/tap just engages mouse-look (desktop pointer lock);
-      // it doesn't also act on whatever's under the crosshair.
       if (fp.tryEngage(e)) return;
       if (panel.classList.contains('open')) {
-        // Only close on an actual empty-space click, letting a poster hit
-        // still play whether the panel is open or not — hovered/
-        // hoveredPoster are both updated every frame from the crosshair
-        // regardless of panel state (see the animate() loop), so they're
-        // already current here.
         if (hoveredPoster) { playPosterRiff(hoveredPoster.band); return; }
         if (!panel.contains(e.target)) panelCloser.close();
         return;
@@ -3745,25 +2114,12 @@ export function createOrrery(container, { preview = false } = {}) {
     container.addEventListener('click', onContainerClick);
   }
 
-  // ─── Camera control ──────────────────────────────────────────────────────
-  // Reduced motion: the continuous orbital rotation below (planets/
-  // unknowns) is exactly the kind of autonomous, never-stopping motion
-  // prefers-reduced-motion is for — walking/mouse-look/drag-to-orbit all
-  // stay available regardless, since that's motion the visitor asks for,
-  // not motion imposed on them.
-  // Read once here, then kept current: a visitor who turns the OS setting on
-  // while the scene is already open used to keep getting the motion until
-  // they navigated away. Everything this flag gates is evaluated fresh
-  // in animate() from a closed form, so flipping it at runtime costs nothing.
   let reduceMotion = prefersReducedMotion();
   const reduceMotionSub = onReducedMotionChange(v => { reduceMotion = v; });
 
   let orbitDrag = null, wheelZoom = null, targetRotationY = root.rotation.y;
 
   if (preview) {
-    // Preview tile: drag nudges a target angle, animate() eases root's
-    // rotation toward it, no camera movement at all. See the first-person
-    // rig above for what full mode does instead.
     orbitDrag = bindOrbitDrag(container, {
       onDrag: dx => { targetRotationY += dx; },
     });
@@ -3773,42 +2129,8 @@ export function createOrrery(container, { preview = false } = {}) {
       },
     });
   } else {
-    // ─── Ring-dip colliders ───────────────────────────────────────────
-    // Each ring is a torus tilted by `tilt` about the X axis (see the
-    // ring.rotation.x = π/2 + tilt in buildOrrery). Most of a tilted ring
-    // stays well overhead — only the low side of the biggest rings ever
-    // dips down near eye height at all, at two points (mirrored across
-    // x=0). Solving the tilted-torus parametric equation
-    // (x,y,z) = (R cosθ, yOffset − R sinθ sin(tilt), R sinθ cos(tilt))
-    // for the θ where y = eyeY gives exactly those two points — everyone
-    // else on the ring is either above or below that height and never
-    // actually blocks a walking visitor at eye level.
-    // The torus solve itself was right; its premise wasn't. It found the two
-    // θ where the ring crosses eye height EXACTLY and put a collider at each,
-    // as though eye height were the only height that matters. Everything
-    // between those two crossings is the part of the ring that has dipped
-    // BELOW eye level — which is not clearance, it is the ring passing
-    // through the visitor's head, chest and legs. With floorY -3.25, eye
-    // height -1.55 and tilt ≈0.52, four rings cross eye height and Pluto's
-    // descends to y = -2.90, a third of a metre off the floor, sweeping a
-    // wide arc through walkable space that two r=0.22 dots did nothing to
-    // guard. So: solve for the θ RANGE where the ring is below eye level and
-    // sample small circles along the whole arc.
-    //
-    //   (x, y, z) = (R cosθ, yOffset − R sinθ sin(tilt), R sinθ cos(tilt))
-    //   y < eyeY  ⟺  sinθ > (yOffset − eyeY) / (R sin tilt) = s0
-    //
-    // which for |s0| ≤ 1 is the arc θ ∈ (asin s0, π − asin s0); s0 > 1 means
-    // the ring never comes down at all — which is true of the inner rings at
-    // this geometry, and of however many of them the numbers make it true of;
-    // the code tests it per ring rather than assuming a count — s0 < −1
-    // that the whole ring is low (doesn't happen at this geometry).
     const eyeYAbs = floorY + EYE_HEIGHT;
     const RING_COLLIDER_R = 0.15;
-    // Centre spacing along the arc has to stay under 2 * (r + PLAYER_RADIUS)
-    // = 0.9, or the visitor fits between two adjacent circles and walks
-    // through the ring anyway. 0.55 leaves real margin without turning one
-    // ring into a hundred colliders.
     const RING_SAMPLE_SPACING = 0.55;
     const ringDipColliders = [];
     orrery.ringInfo.forEach(({ radius, yOffset, tilt }) => {
@@ -3837,16 +2159,6 @@ export function createOrrery(container, { preview = false } = {}) {
       colliders: allColliders,
       wallLimit: warehouse.wallDist - PLAYER_RADIUS,
       eyeY: floorY + EYE_HEIGHT,
-      // Facing the machine — yaw 0 is the camera's default forward (-Z),
-      // which from this spot looks straight at the mast without any rotation.
-      //
-      // The distance from the wall is 4.5 rather than the 1.2 it was, and x is
-      // centred between the two doors rather than offset. At 1.2 the doors are
-      // off-frame: the man door's centre projected to sx -324 on a 960-wide
-      // frame and the bay's to sx 1825, so turning round at the spawn showed
-      // wall-to-wall brick — under a comment claiming the first thing a visitor
-      // sees on turning round is how they got in. The offset predates the doors
-      // and was never retuned when they were added.
       startPos: new THREE.Vector3(0.3, 0, warehouse.wallDist - 4.5),
       startYaw: 0,
       isBlocked: e => panel && panel.contains(e.target),
@@ -3855,31 +2167,13 @@ export function createOrrery(container, { preview = false } = {}) {
     });
   }
 
-  // Reusable scratch objects for the telescope's per-frame modal physics
-  // (see the ripple-driver comment inside animate() below) — allocated
-  // once here rather than per-frame, so 54 struts' worth of vector math
-  // every frame doesn't churn the garbage collector.
   const _jointDisp = Array.from({ length: orrery.dishPhysics.nJoints }, () => new THREE.Vector3());
   const _qRing = [[], [], []]; // [axis][mode] scratch — this frame's modal amplitude, baseline + ring combined
   const _scratchFrom = new THREE.Vector3(), _scratchTo = new THREE.Vector3(), _scratchMid = new THREE.Vector3(), _scratchDir = new THREE.Vector3();
   const _UP = new THREE.Vector3(0, 1, 0);
-  // The two per-frame allocations the rest of this loop was already careful
-  // to avoid: the raycaster's screen-space point (always screen-centre, so
-  // it never changes) and the poster mesh list (rebuilt from
-  // warehouse.posters by .map() on every single frame, for four meshes that
-  // are fixed for the life of the scene).
   const _screenCentre = { x: 0, y: 0 };
   const _posterMeshes = preview ? [] : warehouse.posters.map(p => p.mesh);
 
-  // ─── Animate ──────────────────────────────────────────────────────────────
-  // `t` used to be a module-of-this-function accumulator advanced by a flat
-  // `t += 0.001` every frame, which made everything keyed to it — the dust,
-  // the control-box idle pulse — run at exactly double speed on a 120Hz
-  // display while the planets, correctly driven from wall-clock time, did
-  // not. createFrameClock gives real elapsed seconds instead (clamped, so a
-  // backgrounded tab resumes rather than teleporting the walk on its first
-  // frame back). T_PER_SECOND is what the old constant worked out to at
-  // 60fps, so every rate hand-tuned against it is preserved exactly.
   const clock = createFrameClock();
   const T_PER_SECOND = 0.06;
   let paused = false;
@@ -3889,23 +2183,11 @@ export function createOrrery(container, { preview = false } = {}) {
     const t = clock.elapsed * T_PER_SECOND;
 
     if (preview) {
-      // Ease the tile's rotation toward wherever the last drag left the
-      // target, rather than jumping straight there. Reduced-motion
-      // visitors get direct 1:1 tracking instead (no lingering post-drag
-      // motion they didn't ask for).
-      // Exponential ease, framed in real seconds — the same
-      // `1 - exp(-rate * dt)` idiom createFirstPersonRig's MOVE_ACCEL uses,
-      // and for the same reason: the old flat `* 0.07` per frame settled
-      // twice as fast on a 120Hz display as on a 60Hz one. 4.35 is the decay
-      // rate that reproduces 0.07-per-frame at 60fps exactly.
       const previewEase = 1 - Math.exp(-4.35 * dt);
       root.rotation.y = reduceMotion ? targetRotationY : root.rotation.y + (targetRotationY - root.rotation.y) * previewEase;
     } else {
       fp.update(dt);
 
-      // Hover/click targeting — always from screen-center (the crosshair),
-      // every frame, regardless of whether the pointer is locked or the
-      // visitor has ever touched the mouse at all. See createFirstPersonRig.
       raycaster.setFromCamera(_screenCentre, camera);
       const hits = raycaster.intersectObject(orrery.hitTarget);
       const newHover = hits.length > 0;
@@ -3919,15 +2201,6 @@ export function createOrrery(container, { preview = false } = {}) {
           ? warehouse.posters.find(p => p.mesh === posterHits[0].object)
           : null;
         if (newPosterHover !== hoveredPoster) {
-          // The colour changes, not the intensity. This used to multiply
-          // emissiveIntensity by 2.4 and leave the emissive at POSTER_EMISSIVE
-          // — but that is (12, 10, 8), and 2.4x near-black is still near-black:
-          // measured off the rendered frame, the hovered poster moved by 0.7,
-          // 0.3 and 0.8 of 255 on its three channels. Nothing anyone could
-          // see. What people were reading as the hover response was the
-          // crosshair going active, one line below.
-          // POSTER_HOVER_EMISSIVE moves it by 19, 12, 5 — the poster plainly
-          // lights up, and stays a lit poster rather than becoming a lightbox.
           if (hoveredPoster) hoveredPoster.mesh.material.emissive.setHex(POSTER_EMISSIVE);
           hoveredPoster = newPosterHover;
           if (hoveredPoster) hoveredPoster.mesh.material.emissive.setHex(POSTER_HOVER_EMISSIVE);
@@ -3937,73 +2210,19 @@ export function createOrrery(container, { preview = false } = {}) {
     }
 
     if (!reduceMotion) {
-      // Real Kepler motion (2.2.22): each planet's position is a
-      // deterministic function of real wall-clock time (orreryNowMs, which
-      // reads Date.now() unless window.__orreryTimeOverrideMs is set for
-      // testing — see orreryNowMs's own comment), not an
-      // accumulated per-frame rotation. The orrery keeps running whether
-      // or not anyone's watching; reloading the page doesn't reset it,
-      // and two visits at genuinely different real moments show genuinely
-      // different configurations. One orreryNowMs() call per frame keeps
-      // every body in the scene reading the same instant, then
-      // applyKeplerPosition solves Kepler's equation fresh for each body
-      // (bodyGroup for planets, moonPivot for moons — a moon's own orbit
-      // is computed around its parent bodyGroup's current, already-moving
-      // position simply because it's a child of it, no separate system
-      // needed).
       const nowMs = orreryNowMs();
       orrery.orbits.forEach(o => {
         applyKeplerPosition(o.bodyGroup, o, nowMs);
         o.moons.forEach(m => { applyKeplerPosition(m.pivot, m.orbit, nowMs); });
       });
-      // The asteroid belt drifts the same way every planet ring does —
-      // rotating the whole (already-tilted, see buildOrrery) beltGroup
-      // around its own local Y axis. Set from the same wall clock the
-      // planets read, not accumulated per frame: it used to advance by a
-      // flat `speed * 0.01` each frame, so on a 120Hz display it ran at
-      // exactly 2x while the Mars and Jupiter orbits its own rate is
-      // averaged from did not — the belt visibly outran the two rings it
-      // sits between. Same closed form also means a reload no longer
-      // resets it to zero while the planets carry on from where they are.
       const epochSec = secondsSinceEpoch(nowMs);
       if (orrery.belt) orrery.belt.group.rotation.y = normalizeAngle(orrery.belt.omega * epochSec);
-      // The "unidentified cosmic objects" past Pluto get the same orbit
-      // treatment plus their own independent tumble (mesh.rotation.x/y
-      // advancing at different rates than the orbit itself, and than each
-      // other) — spin and orbit are two unrelated rotations layered on the
-      // same object, which is why they read as tumbling debris rather than
-      // planets. TUNABLE: omegaSpinX/omegaSpinY's ratio (0.6 vs 0.42 of the
-      // same per-object `spin`) controls how "tumbly" vs. simply-spinning
-      // each object looks.
       orrery.unknowns.forEach(u => {
         u.pivot.rotation.y = normalizeAngle(u.omegaOrbit * u.direction * epochSec);
         u.mesh.rotation.x = normalizeAngle(u.omegaSpinX * epochSec);
         u.mesh.rotation.y = normalizeAngle(u.omegaSpinY * epochSec);
       });
 
-      // Dust motes drifting up through the skylight shaft. Each one wraps
-      // from the top of the shaft back to its own start height near the
-      // floor once it rises past the top — a real jump when it happens, not
-      // a fade, but with 240 motes (105 in preview) at independent
-      // phases/speeds no two wrap in the same frame, so across the whole
-      // swarm it reads as continuous drift rather than any single visible
-      // reset (checked numerically: one mote's own wrap is a ~7.6-unit jump
-      // — moteSpan, since the 2026-09-01 moonlight rebuild raised the wrap
-      // ceiling to the antenna's rim — once per multi-minute cycle, not
-      // something a visitor is likely watching for). `t` is the orrery's own
-      // slow orbital clock, so it's rescaled back up locally for the mote
-      // math rather than reusing riseSpeed/wobbleSpeed constants tuned
-      // against a different rate.
-      //
-      // x/z are RECOMPUTED from the light's cone at each mote's live height,
-      // not carried over from its spawn point. Spawning sampled the cone
-      // correctly at every depth; the animation then advanced only y, so
-      // motes that started wide and low kept their wide radius all the way
-      // to the top and the shaft relaxed from a cone into a cylinder within
-      // a minute or two of watching it. Each mote's stored bearing (`ang`)
-      // and radius fraction (`radFrac`) are the cone-relative coordinates
-      // that survive the rise; the same perpA/perpB basis that placed them
-      // is reused here rather than recomputed.
       const dust = warehouse.dust;
       const dustAttr = dust.geo.attributes.position;
       const dustClock = t * 60;
@@ -4014,8 +2233,6 @@ export function createOrrery(container, { preview = false } = {}) {
         const startFrac = dust.base[i3 + 1] - floorY; // 0..span, this mote's own start height
         const risenFrac = (startFrac + dustClock * d.riseSpeed) % d.span;
         const y = floorY + risenFrac;
-        // Distance along the light's own axis at which the cone is at this
-        // height, and the cone's radius there.
         const along = (y - dOrigin.y) / dAxis.y;
         const rr = d.radFrac * Math.max(0.02, along * dTan);
         const ox = Math.cos(d.ang) * rr, oz = Math.sin(d.ang) * rr;
@@ -4026,32 +2243,6 @@ export function createOrrery(container, { preview = false } = {}) {
       }
       dustAttr.needsUpdate = true;
 
-      // The radio telescope's receiving effect — see the "round 5: real
-      // coupled-oscillator physics" comment on dishPhysics in buildOrrery.
-      // Two closed-form sums, evaluated fresh every frame from the modes
-      // solved once at build (nothing here re-solves anything live):
-      //
-      //  1. Baseline (continuous, "solar system's own gravitational hum")
-      //     — the lattice's own lowest `BASELINE_MODE_COUNT` natural modes,
-      //     each driven as a simple ongoing sinusoid at that mode's own
-      //     real frequency, small and fixed-amplitude, never decaying.
-      //  2. Ring (occasional struck event) — an impulse applied at one
-      //     joint, decomposed onto EVERY mode (an impulse excites every
-      //     mode in proportion to how much that mode "lives" at the
-      //     struck point), each then ringing at its own frequency and
-      //     decaying at its own rate: x(t) = Σₙ Aₙ·e^(−γₙt)·sin(ωₙt). Which
-      //     joint gets struck, and from which direction, is a deterministic
-      //     hash of the event index (hash3, already used elsewhere in this
-      //     file for planet aging) — not Math.random() per frame, so it's
-      //     reproducible and varies strike to strike without any runtime
-      //     state to drift.
-      //
-      // realSeconds, not t: t is the orrery's own slow orbital clock
-      // (~0.06 per real second) but a scheduled "every 34 seconds" event
-      // needs to mean actual seconds a visitor experiences. performance.now()
-      // gives that directly, frame-rate independent — and raw rather than the
-      // frame clock's own `elapsed`, which is deliberately clamped per frame
-      // and so drifts behind real time across a long backgrounded stretch.
       const realSeconds = performance.now() / 1000;
       const RING_PERIOD = 34;   // TUNABLE: real seconds between struck events
       const RING_WINDOW = 6;    // TUNABLE: wide enough for every mode's own decay to die out (shorter than earlier rounds' 9s — see NOTES.md 2.2.20, the real modal decay settles faster)
@@ -4066,26 +2257,12 @@ export function createOrrery(container, { preview = false } = {}) {
       const eventIndex = Math.floor(realSeconds / RING_PERIOD);
       const strikeSeed = 91711; // arbitrary fixed seed, just needs to differ from other hash3 callers in this file
       const strikeJoint = Math.floor(hash3(eventIndex, 0, 0, strikeSeed) * nJoints);
-      // A mostly-horizontal strike direction (real events here are struck
-      // from "outside," roughly along the dish's own X/Z plane) with a
-      // small vertical component for variety — one unit vector per event,
-      // reused for all 3 axes' impulse strength below.
       const strikeTheta = hash3(eventIndex, 1, 0, strikeSeed) * Math.PI * 2;
       const strikeVertical = (hash3(eventIndex, 2, 0, strikeSeed) - 0.5) * 0.5;
       const impulseDir = [Math.cos(strikeTheta), strikeVertical, Math.sin(strikeTheta)];
       const tSinceStrike = realSeconds - eventIndex * RING_PERIOD;
       const ringActive = tSinceStrike >= 0 && tSinceStrike < RING_WINDOW;
 
-      // qTotal[axis][mode]: this frame's scalar modal amplitude, summed
-      // from baseline + ring, before being projected back onto the 27
-      // joints via each mode's own eigenvector.
-      // Between strikes only the BASELINE_MODE_COUNT humming modes carry any
-      // amplitude at all — every other q is identically zero, and so is its
-      // contribution to the projection below. Bounding both loops by that
-      // turns the quiet stretch (28 of every 34 seconds) from a 27x27x3
-      // matrix-vector product into a 2x27x3 one, for exactly the same
-      // output. The full 27 modes still run for the 6 seconds a strike is
-      // ringing.
       const activeModes = ringActive ? nJoints : orrery.dishPhysics.basePhase.length;
       for (let axis = 0; axis < 3; axis++) {
         for (let n = 0; n < activeModes; n++) {
@@ -4109,9 +2286,6 @@ export function createOrrery(container, { preview = false } = {}) {
           _qRing[axis][n] = q;
         }
       }
-      // Project modal amplitudes back onto physical joint displacement —
-      // one 27x27 matrix-vector product per axis, cheap (~2000 multiply-
-      // adds total, once a frame).
       for (let j = 0; j < nJoints; j++) {
         let dx = 0, dy = 0, dz = 0;
         for (let n = 0; n < activeModes; n++) {
@@ -4122,13 +2296,6 @@ export function createOrrery(container, { preview = false } = {}) {
         }
         _jointDisp[j].set(dx, dy, dz);
       }
-      // Reposition every strut from its two joints' live displaced
-      // positions — the exact same position/quaternion math addStrut()
-      // itself used once at construction, just re-run every frame instead
-      // of once. builtLen/current-length ratio rescales along the strut's
-      // own axis too, so a strut whose two joints happen to move slightly
-      // farther apart or closer together doesn't visibly detach from
-      // either end.
       orrery.dishPhysics.ringStruts.forEach(rs => {
         _scratchFrom.copy(rs.baseFrom);
         if (rs.jointA >= 0) _scratchFrom.add(_jointDisp[rs.jointA]);
@@ -4144,13 +2311,6 @@ export function createOrrery(container, { preview = false } = {}) {
         rs.mesh.scale.y = dist / rs.builtLen;
       });
 
-      // The control box's idle breathing pulse. This sat just OUTSIDE the
-      // reduced-motion guard until 2026-09-02 — one closing brace too late —
-      // so it kept running for exactly the visitors who asked for no
-      // autonomous motion, and it runs in preview mode too (nothing there
-      // ever sets hovered/selected), which meant every landing-page tile
-      // pulsed under reduced motion as well. Inside the guard now; the flat
-      // scale reduced-motion visitors see instead is set once at setup.
       if (!hovered && !selected) {
         orrery.hitTarget.scale.setScalar(1.0 + Math.sin(t * 8) * 0.03);
       }
@@ -4159,8 +2319,6 @@ export function createOrrery(container, { preview = false } = {}) {
     renderer.render(scene, camera);
     clippedPreview?.blit();
   }
-  // The one flat, unbreathing size a reduced-motion visitor sees, set once
-  // rather than left to whatever the loop last wrote.
   if (reduceMotion) orrery.hitTarget.scale.setScalar(1.0);
   animate();
 
@@ -4168,18 +2326,10 @@ export function createOrrery(container, { preview = false } = {}) {
     camera.aspect = w / h;
     camera.updateProjectionMatrix();
     renderer.setSize(w, h);
-    // A window dragged between a Retina and a non-Retina display changes
-    // devicePixelRatio with no signal other than this resize.
     managedRenderer.applyPixelRatio();
   });
 
   return {
-    // main.js pauses preview tiles while a full scene is open, and every
-    // scene on visibilitychange. Cancelling the rAF outright (rather than
-    // early-returning inside it) is what actually stops the work: ten idle
-    // tiles otherwise keep ten callbacks scheduled per frame forever.
-    // resync() on the way back is why the first frame after a pause isn't
-    // one enormous dt that teleports the walk through a wall.
     setPaused(next) {
       const want = !!next;
       if (want === paused) return;
@@ -4209,30 +2359,13 @@ export function createOrrery(container, { preview = false } = {}) {
       }
       if (posterAudioPromise) posterAudioPromise.then(pa => pa.dispose());
       clippedPreview?.dispose();
-      // One walk of the whole scene graph, from the scene root rather than
-      // from two hand-kept groups. The old pair of traversals covered
-      // orrery.group and warehouse.group only — so the moonbeam sprites, the
-      // fluorescent fixtures and the star field, all added straight to
-      // `scene`, were never freed — and each one disposed `material.map`
-      // alone, which meant the planets' roughnessMap, metalnessMap and
-      // emissiveMap leaked as well: 27 canvas textures per full-mode visit.
-      // disposeSceneGraph covers every texture slot and can't miss an object,
-      // because nothing has to remember to add it to a list.
       disposeSceneGraph(scene);
-      // renderer.dispose() + forceContextLoss() + canvas removal. THREE's own
-      // dispose() tears down caches but does NOT release the GL context, and
-      // this site holds eight preview contexts permanently against a browser
-      // cap around sixteen — orphaning one per scene switch is what made
-      // landing tiles go black mid-session.
       managedRenderer.dispose();
       if (panel) panel.remove();
       if (hint) hint.remove();
       if (vignette) vignette.remove();
       if (grain) grain.remove();
       if (title) title.remove();
-      // Puts back whatever position/overflow/cursor/tabindex the shared
-      // #experience-container had before this scene claimed it — without
-      // this, `cursor: none` followed the visitor into the next scene.
       claim?.restore();
     }
   };

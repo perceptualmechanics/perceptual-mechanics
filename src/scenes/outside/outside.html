@@ -1,25 +1,3 @@
-<!--
-  outside scene shell markup — title/hint/sound-toggle fixed on
-  document.body, same convention every scene with body-level chrome
-  shares (see harmonics.html's own header). That's all there is: round 2
-  (2026-08-24) removed the account-label element and the read-more panel
-  entirely — this scene is a pure visual object, closer to Butterfly's
-  register than Harmonics', and nothing in it displays a word once it's
-  running. Round 3, same day: the projection diagram this chrome
-  originally sat over was fully replaced by a generated flower (see
-  outside.js's own round-3 header note), but the no-text/no-panel rule
-  itself didn't change, so none of this markup needed to. Touching the
-  flower triggers a real traveling pulse across its surface instead
-  (outside.js's triggerPulse), not a panel.
-
-  v4.0: `.pm-scene-chrome` on the sound toggle. outside.js appends that button
-  to document.body (same body-level chrome convention as the title and hint),
-  but main.js's focus trap only ever queried inside #experience-container — so
-  the toggle was rendered, styled, focusable in principle and completely
-  unreachable by Tab while the scene was open. The trap now also collects
-  `.pm-scene-chrome`; this class is how it finds it. Same fix in
-  harmonics.html.
--->
 <div class="outside-title-row"><p class="outside-title" aria-hidden="true">Outside</p></div>
 <p class="outside-hint" aria-hidden="true">drag to orbit &nbsp;&middot;&nbsp; scroll to zoom &nbsp;&middot;&nbsp; touch a petal</p>
 <button type="button" class="outside-sound-toggle pm-scene-chrome" aria-pressed="false">

@@ -1,32 +1,7 @@
-// ─── The three accounts of a scene, checked against each other ──────────────
-// Run with `node scripts/verify-aria.mjs`, and on every build via
-// vite.config.js.
-//
-// Every scene describes itself three times: the landing tile's `aria-label` in
-// index.html, the scene overlay's, and the visible hint line inside the
-// scene's own template. Only a screen-reader visitor hears the first two, and
-// nobody at all is shown a diff between them, so drift here is silent by
-// construction — which is how eleven of the thirteen pairs came to disagree
-// by 5.0, on the scroll's date range, on whether Orbiter's orbits are
-// elliptical, on where Outside's flower breathes.
-//
-// registry.js now holds one description per scene, split into `blurb` and
-// `controls`, and derives both aria-labels from it. This checks the two things
-// that derivation cannot enforce on its own:
-//
-//   1. index.html's tile labels really are tileAria(). They are hand-written
-//      markup — the file is static and the CSP style hash is computed over it —
-//      so nothing but a check keeps them honest.
-//   2. Every gesture a scene's visible hint names also appears in `controls`.
-//      Not a wording comparison, which would fail on the first rephrase: a set
-//      comparison over the gesture verbs, which catches the failure that
-//      matters — the sighted visitor being told about an interaction the
-//      screen-reader visitor is not.
 import { readFileSync, existsSync } from 'node:fs';
 import { SCENES, tileAria } from '../src/scenes/registry.js';
 import { pathToFileURL } from 'node:url';
 
-// The gestures this site actually has. Anything not on this list is prose.
 const GESTURES = ['drag', 'scroll', 'click', 'touch', 'press', 'point', 'walk', 'move', 'tap'];
 
 const gesturesIn = (text) => new Set(
@@ -42,7 +17,6 @@ export function verifyAria() {
   const unescape = s => s.replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&amp;/g, '&');
 
   for (const [key, spec] of Object.entries(SCENES)) {
-    // ── 1. The landing tile ──
     const m = html.match(new RegExp(`id="preview-${key}"[\\s\\S]{0,400}?aria-label="(.*?)"`));
     if (!m) {
       problems.push(`#preview-${key} has no aria-label in index.html`);
@@ -58,10 +32,6 @@ export function verifyAria() {
       }
     }
 
-    // ── 2. The scene's own visible hint ──
-    // Not every scene has one: Scroll and Theater are read and watched rather
-    // than manipulated. A missing hint is not a failure; a hint naming a
-    // gesture `controls` does not is.
     const tplUrl = new URL(`../src/scenes/${key}/${key}.html`, import.meta.url);
     if (!existsSync(tplUrl)) continue;
     const tpl = readFileSync(tplUrl, 'utf8');
@@ -79,16 +49,6 @@ export function verifyAria() {
     }
   }
 
-  // ── 3. The split itself ──
-  // A `blurb` that has drifted into giving instructions is the split coming
-  // undone: the landing tile would start telling people to drag something
-  // that, as a tile, cannot be dragged.
-  //
-  // Imperative position only — a gesture word opening a sentence or a clause.
-  // The same words appear innocently as nouns and relative clauses all over
-  // these descriptions ("a SCROLL of found writing", "a warehouse you can WALK
-  // around", "as a POINT of light"), and flagging those would make the check
-  // something to route around rather than obey.
   const imperative = new RegExp(`(?:^|[.;,]\\s+)(${GESTURES.join('|')})\\b`, 'gi');
   for (const [key, spec] of Object.entries(SCENES)) {
     const stray = [...spec.blurb.matchAll(imperative)].map(m => m[1].toLowerCase());
@@ -107,14 +67,6 @@ export function verifyAria() {
   return { ok: problems.length === 0, failures: problems.length, log };
 }
 
-// pathToFileURL, not a template literal. `file://${process.argv[1]}` does not
-// percent-encode, so from any path containing a space the comparison is false,
-// the CLI branch never runs, and the script exits 0 having verified nothing —
-// which for a verification script is the worst available failure mode. Two
-// other verifiers here already carry that paragraph and do it correctly; these
-// four were written later and did the thing it forbids. Proved by copying the
-// tree under a directory with a space and injecting a real failure: no output,
-// exit 0.
 if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   const { ok, log } = verifyAria();
   log.forEach(l => console.log(l));

@@ -1,51 +1,4 @@
-// ─── Apollo — the physics and the element table ─────────────────────────────
-// Eleventh scene (2026-09-02). An absorption spectrum you can play: a band of
-// starlight with the lines missing from it, and clicking a gap sounds that
-// wavelength as a pitch.
-//
-// This module is the scene's content, and it is also what `scripts/prerender.js`
-// imports to build /text/apollo/. That is why it is a plain data-and-maths
-// module with no DOM, no THREE, and no CSS import — Node has to be able to run
-// it. Same rule `theater.text.js` and the rest follow.
-//
-// ─── What is computed and what is looked up, and why the line is where it is ─
-// Hydrogen is COMPUTED, from the Rydberg formula, all the way to the series
-// limit. Everything else is TABULATED, from NIST.
-//
-// That split is not laziness on the tabulated side. Hydrogen has one electron
-// and its energy levels fall out of a closed-form expression a browser
-// evaluates in nanoseconds; the Balmer convergence — lines crowding tighter
-// and tighter toward the ultraviolet until they pile up at 364.6nm and stop —
-// is this scene's best gesture, and it should be real rather than a list of
-// four numbers someone typed. Sodium's doublet, iron's forest and helium's
-// scatter come out of many-body quantum mechanics that nobody solves in a
-// browser, or anywhere else, in closed form. Deriving them would be effort
-// that does not show AND would produce wrong numbers. So they are looked up,
-// from the people whose job is to measure them.
-//
-// ─── Sources ────────────────────────────────────────────────────────────────
-// Tabulated wavelengths and relative intensities: NIST Handbook of Basic
-// Atomic Spectroscopic Data (J. E. Sansonetti and W. C. Martin), strong-lines
-// tables, https://physics.nist.gov/PhysRefData/Handbook/ — US Government work,
-// public domain. Air wavelengths in Angstroms there; nanometres here, divided
-// by ten and nothing else. Values retrieved 2026-09-02.
-//
-// One honesty note about `rel`. NIST's relative intensities are EMISSION
-// intensities — how bright a line is when the element is made to glow — and
-// this scene draws ABSORPTION, how deep a line cuts when the element sits in
-// front of a hotter source. Those correlate strongly (both track the same
-// transition probabilities) but they are not the same quantity, and a real
-// absorption depth also depends on temperature, ionization state and how much
-// of the element is in the path. `rel` is used here as a line-strength proxy
-// for a visual instrument, not as a photometric claim. Said once, here, rather
-// than implied by silence.
-//
-// Colour-matching functions: Wyman, Sloan & Shirley (2013), "Simple Analytic
-// Approximations to the CIE XYZ Color Matching Functions", Journal of Computer
-// Graphics Techniques 2(2). Vacuum-to-air refraction: Edlen (1966), the IAU
-// standard form.
 
-// ─── Constants ──────────────────────────────────────────────────────────────
 export const VISIBLE_MIN = 380; // nm — the band's left edge (violet)
 export const VISIBLE_MAX = 750; // nm — the band's right edge (deep red)
 
@@ -53,29 +6,8 @@ export const C_LIGHT = 2.99792458e8;            // m/s, exact by definition
 export const RYDBERG_INF = 1.0973731568160e7;   // m^-1, CODATA — infinite nuclear mass
 export const ELECTRON_PROTON_MASS_RATIO = 1 / 1836.15267343;
 
-// The Rydberg constant for hydrogen specifically. R_inf assumes a nucleus of
-// infinite mass; a real proton recoils, and the reduced-mass correction is the
-// difference between landing on the published Balmer wavelengths and missing
-// them in the third significant figure. Small correction, visible result.
 export const RYDBERG_H = RYDBERG_INF / (1 + ELECTRON_PROTON_MASS_RATIO);
 
-// ─── Vacuum to air ──────────────────────────────────────────────────────────
-// The Rydberg formula gives a VACUUM wavelength. Every published table of
-// visible-range spectral lines — NIST's included, and the 656.3 / 486.1 /
-// 434.0 / 410.2 everyone learns Balmer by — gives an AIR wavelength, because
-// that is what a spectrograph on the ground measures. Air's refractive index
-// is about 1.00028 across the visible, so the two differ by roughly 0.2nm at
-// H-alpha: not a rounding error, and exactly the size of the gap between a
-// computed series that agrees with the textbook and one that doesn't.
-//
-// Getting this right is what lets hydrogen be genuinely computed. The
-// alternative — quietly using a Rydberg constant tuned to make the vacuum
-// arithmetic land on the air numbers — would produce the same four wavelengths
-// from a fudged constant, and would break the moment anyone asked for a
-// different series or a hydrogenic ion.
-//
-// Edlen (1966), the form adopted as the IAU standard. sigma is the vacuum
-// wavenumber in inverse micrometres.
 export function vacuumToAir(nmVacuum) {
   const sigma = 1e3 / nmVacuum;
   const s2 = sigma * sigma;
@@ -83,36 +15,15 @@ export function vacuumToAir(nmVacuum) {
   return nmVacuum / n;
 }
 
-// ─── The Rydberg formula ────────────────────────────────────────────────────
-//   1/lambda = R * Z^2 * (1/m^2 - 1/n^2)
-// m = 2 is the Balmer series (the one in the visible range); n = 3, 4, 5, ...
-// Z^2 is why hydrogenic ions come free from the same function: He+ (Z=2) and
-// Li2+ (Z=3) have one electron each and scale exactly, which is a real and
-// slightly astonishing fact rather than an approximation. Not exposed in the
-// instrument — neither is present in a stellar photosphere in any quantity
-// that would show — but the function takes Z because writing it without would
-// be pretending the formula is narrower than it is.
 export function rydbergLine({ m = 2, n, Z = 1, R = RYDBERG_H }) {
   const invLambdaMetres = R * Z * Z * (1 / (m * m) - 1 / (n * n));
   return vacuumToAir(1e9 / invLambdaMetres);
 }
 
-// The series limit: n -> infinity, so the 1/n^2 term vanishes and the whole
-// series converges on a single wavelength. The lines do not stop at the limit
-// because anything runs out; they pile up against it, infinitely many of them
-// in the last fraction of a nanometre, and the continuum takes over past it.
 export function seriesLimit({ m = 2, Z = 1, R = RYDBERG_H }) {
   return vacuumToAir(1e9 * (m * m) / (R * Z * Z));
 }
 
-// Balmer as far as the eye and the band go. nMax is where to stop drawing, not
-// where the series stops — by n = 12 the lines are inside a nanometre of each
-// other and a screen cannot separate them, which is the convergence made
-// visible rather than a truncation hidden.
-//
-// `rel` falls off with n because it genuinely does: the transition probability
-// drops roughly as n^-3, so H-alpha dominates and the ultraviolet members are
-// faint. Modelled rather than tabulated, and labelled as modelled.
 export function balmerSeries({ nMax = 14, Z = 1 } = {}) {
   const out = [];
   for (let n = 3; n <= nMax; n++) {
@@ -125,46 +36,11 @@ export function balmerSeries({ nMax = 14, Z = 1 } = {}) {
 
 export const BALMER_LIMIT = seriesLimit({ m: 2, Z: 1 });
 
-// ─── Wavelength to pitch ────────────────────────────────────────────────────
-// A wavelength has a real frequency: c / lambda. For 589nm that is 5.09e14 Hz,
-// which is not a sound. Dividing by a single constant is the whole mapping —
-// no scale, no quantization, no per-element tuning — so the pitch relationships
-// you hear ARE the wavelength relationships you see.
-//
-// The divisor is 1e12, stated here because a magic number in a sonification is
-// the place a listener is entitled to be suspicious. It puts the visible band
-// at 400 Hz (750nm, deep red) to 789 Hz (380nm, violet) — which is a fact
-// about light, not a choice: 750 / 380 is 1.97, so the visible spectrum is
-// almost exactly one octave wide. The whole instrument lives inside it.
-//
-// Shorter wavelength is higher frequency, so violet is treble and red is bass,
-// with no inversion anywhere in the code. That ordering is the one thing in the
-// mapping that should feel obvious the first time it is heard.
 export const AUDIO_DIVISOR = 1e12;
 export function wavelengthToHz(nm) {
   return (C_LIGHT / (nm * 1e-9)) / AUDIO_DIVISOR;
 }
 
-// ─── Wavelength to colour ───────────────────────────────────────────────────
-// The obvious cheap version is a hue sweep: map 380-750nm onto hue 270-0 and
-// hand it to hsl(). It is wrong in a way that shows. A hue wheel spends equal
-// angle on every hue, so it gives cyan and magenta the same width as green,
-// and the real spectrum has no magenta in it at all — magenta is what the eye
-// invents when it sees red and blue together, and there is no single
-// wavelength that produces it. A hue sweep also puts the brightness peak in
-// the wrong place: the eye is most sensitive around 555nm, so a real spectrum
-// is brilliant in the yellow-green and falls off toward both ends, which is
-// the thing that makes a photographed spectrum look like an object.
-//
-// So: the actual route through colour science. Wavelength -> CIE XYZ via the
-// 1931 colour-matching functions -> linear sRGB -> gamma. The colour-matching
-// functions are the measured answer to "what does a human see at this
-// wavelength", and the multi-lobe Gaussian fits below (Wyman, Sloan & Shirley
-// 2013) reproduce the tabulated curves to well under a perceptible difference
-// while staying eight lines of arithmetic.
-//
-// Each lobe is an asymmetric Gaussian: a different sigma either side of the
-// peak, which is how these curves actually look.
 function lobe(x, mu, sigma1, sigma2) {
   const t = (x - mu) * (x < mu ? 1 / sigma1 : 1 / sigma2);
   return Math.exp(-0.5 * t * t);
@@ -180,36 +56,6 @@ export function cieXYZ(nm) {
   return [x, y, z];
 }
 
-// XYZ -> linear sRGB (sRGB primaries, D65 white). Single-wavelength colours sit
-// on the outer boundary of the visible gamut and most of them are OUTSIDE what
-// an sRGB display can produce — a real limit rather than a bug, and the reason
-// a photograph of a spectrum never looks as saturated as the thing itself. The
-// textbook handling is to desaturate toward white by exactly the amount needed
-// to bring every channel non-negative, then normalize so the brightest channel
-// is 1.
-//
-// Both halves of that were tried first and both are wrong HERE, which was only
-// visible once a strip was rendered and looked at. Six variants were drawn side
-// by side as 1000-column strips and compared against photographs of real solar
-// spectra; the numbers below are the one that won, and the two it beat are
-// worth recording because they are the defaults:
-//
-//   Adding the FULL white (1.0) put a visible pink through 620-680nm. That is
-//   not a rounding artefact, it is the desaturation working as designed —
-//   moving a deep red toward D65 white adds blue — and it is still wrong,
-//   because there is no pink anywhere in a spectrum and a viewer knows it. At
-//   0.60 the red end stays red and the residual out-of-gamut error clips
-//   instead, the way film clips.
-//
-//   Normalizing each column to its own brightest channel pinned every colour to
-//   a gamut corner: 520nm and 546nm came out as the identical pure green, and
-//   the blue-to-green transition became a hard step. Dropping the per-column
-//   normalization is what keeps 26nm of green distinguishable.
-//
-// A further 6% desaturation is applied on top, uniformly. That is not colour
-// science, it is atmosphere: a spectrum photographed through any real optics
-// scatters slightly, and the fully saturated version reads as a hue wheel no
-// matter how it was computed.
 const GAMUT_WHITE = 0.60;
 const SCATTER_DESATURATION = 0.06;
 export function wavelengthToRGB(nm, { intensity = 1 } = {}) {
@@ -234,40 +80,12 @@ export function wavelengthToRGB(nm, { intensity = 1 } = {}) {
   return [enc(r), enc(g), enc(b)];
 }
 
-// Photopic luminous efficiency, normalized to 1 at its peak. This is the ybar
-// curve on its own — the eye's own brightness response — and it is what gives
-// the band its rolloff: the violet and deep-red ends of a real spectrum are
-// dim because the eye barely registers them, not because there is less light
-// there. Multiplying the continuum by this is a one-line change that does more
-// for "reads as an object" than any amount of added grain.
 const YBAR_PEAK = 0.99818; // this fit's own maximum, at 554.2nm — swept at 0.1nm
 export function luminousEfficiency(nm) {
   const [, y] = cieXYZ(nm);
   return Math.min(1, y / YBAR_PEAK);
 }
 
-// ─── The elements ───────────────────────────────────────────────────────────
-// Ten, curated for what they do to the band and to the sound, not for
-// coverage. Most of the periodic table is inert here: the transition metals
-// are indistinguishable forests, and most of everything else has nothing at
-// all in the visible range. A control surface full of dead elements would be a
-// barcode, so this is the ruthless version — an element earns a fader by
-// producing either a distinct visual or a distinct sound, and preferably both.
-//
-// `lines` are [air wavelength in nm, NIST relative intensity]. EVERY tabulated
-// value here was read off the NIST strong-lines table for that element and
-// divided by ten; nothing is filled in from memory, and lines that could not
-// be found in the table were dropped rather than kept on a hunch. Half a dozen
-// were dropped that way on the first pass, which is the reason this note
-// exists — a table like this is exactly where a plausible wrong number
-// survives forever, because nothing downstream can tell.
-//
-// Ordered by atomic number, which is the one ordering that is a fact rather
-// than an opinion; the sparse-to-dense story the instrument is actually about
-// is told in the prose rather than smuggled into the layout.
-//
-// `character` is what that element does as an instrument. Those are claims
-// about the data — countable, checkable — not decoration on it.
 
 const H_LINES = balmerSeries({ nMax: 16 }).map(l => [Number(l.nm.toFixed(3)), l.rel]);
 
@@ -400,26 +218,16 @@ export const ELEMENTS = [
   },
 ];
 
-// ─── Derived ────────────────────────────────────────────────────────────────
 export const ELEMENT_BY_KEY = Object.fromEntries(ELEMENTS.map(e => [e.key, e]));
 
 export function visibleLines(el) {
   return el.lines.filter(([nm]) => nm >= VISIBLE_MIN && nm <= VISIBLE_MAX);
 }
 
-// Every line in the band, flattened, with its element and its pitch — the
-// array the scene hit-tests against and the /text/ page tabulates. Built once,
-// here, so the instrument and the crawlable page cannot drift apart: the page
-// is generated from the same array the instrument plays.
 export const ALL_LINES = ELEMENTS.flatMap(el =>
   visibleLines(el).map(([nm, rel]) => ({ el: el.key, nm, rel, hz: wavelengthToHz(nm) }))
 ).sort((a, b) => a.nm - b.nm);
 
-// The scene caps how many lines one gesture can sound. Iron would otherwise
-// start fifty oscillators from a single press, which is both a bad noise and a
-// real load; twelve is enough for iron to read as a cluster and for helium to
-// read as a chord, and it is the same cap for every element, so the comparison
-// between them stays honest.
 export const CHORD_CAP = 12;
 
 export const SOURCES = {
@@ -429,91 +237,8 @@ export const SOURCES = {
   codata: 'CODATA recommended value for the Rydberg constant, with the reduced-mass correction for hydrogen applied here.',
 };
 
-// ─── The sun's own mixture ──────────────────────────────────────────────────
-// Apollo's ambient mode plays the composition of sunlight, from the elements
-// already in the instrument. The instrument was built out of the sun; this is
-// it playing the thing it came from.
-//
-// WHICH ELEMENTS. Sourced, not chosen. The standard Fraunhofer table assigns
-// letters to the most prominent features of the solar spectrum, and once the
-// three atmospheric oxygen bands (A, B, a — absorbed by Earth's air, not the
-// sun's) are set aside, five elements own every remaining labelled line:
-//
-//   Calcium    K 393.4, H 396.8, g 422.7
-//   Iron       E 527.0, c 495.8, d 466.8, e 438.4, G 430.8
-//   Hydrogen   C 656.3, F 486.1, f 434.0, h 410.2
-//   Magnesium  b1-b4 516.7-518.4
-//   Sodium     D1 589.6, D2 589.0
-//
-// The other five elements in the instrument sit at zero, which is a fact about
-// the sun rather than an omission. Helium is the one worth naming: it was
-// found IN THE SUN in 1868, twenty-seven years before anyone found it on
-// Earth, and it is still not part of the sun's visible fingerprint — its D3
-// line at 587.6nm belongs to the chromosphere and to prominences, not to the
-// photospheric absorption spectrum this band draws. The element named after
-// the sun is not in the sun's visible signature.
-//
-// HOW MUCH OF EACH — and this is a ruler, not a measurement, so it is stated
-// as one. What the fader controls is column density in THIS model: Gaussian
-// line profiles, NIST relative intensities as a strength proxy, and an
-// arbitrary maximum optical depth. No published quantity maps onto that. Solar
-// equivalent widths would be the right physical input and no machine-readable
-// table of them was reachable; photospheric abundances are available and would
-// be actively WRONG here, because they would put helium second and calcium
-// near nothing, when calcium's H and K are the deepest features in the visible
-// solar spectrum. Abundance is not line strength.
-//
-// So: the ORDERING below is sourced from the Fraunhofer table above, and the
-// VALUES are set so the rendered band reproduces that ordering.
-//
-//   node scripts/apollo-mixture.mjs [bandW ...]
-//
-// prints each element's peak optical depth, the wavelength it lands on and its
-// transmission, using buildBand()'s own accumulation. Run it rather than
-// trusting a number here — a five-row table of exactly those figures sat in
-// this comment for three releases and every row of it was wrong, because it
-// was computed once, by hand, and then outlived the code it described.
-//
-// **The ordering is not the same at every width, and the old table's real
-// mistake was implying it was.** `lineSigma()` has a floor. Above about 700
-// device columns sigma is proportional to bandW and so is every separation, so
-// the profile keeps its shape and the ordering holds; below the floor sigma
-// stops shrinking while the lines keep converging, neighbouring lines pile
-// into each other, and elements trade places. Hydrogen is the one that moves:
-// at desktop widths its peak is H-alpha at 656nm, and at 686 columns — a 2x
-// phone — the crowded blue end wins instead, its peak jumps to H-gamma at
-// 434nm and hydrogen falls behind iron. Calcium is deepest at every width the
-// bench prints, which is the part of the ordering the Fraunhofer table
-// actually asks for.
-//
-// AND ONE HONEST FAILURE, because it is the emission-versus-absorption caveat
-// in this file's header turning into a number. Magnesium cannot be made dark
-// enough. Its b triplet is comparable in depth to sodium's D lines in the real
-// solar spectrum, but NIST's EMISSION intensity for b1 is 70 against sodium
-// D2's 1000 — so at the maximum fader position magnesium is still the
-// shallowest element in the band, at every width the bench prints. The fader
-// is already at 1.00 and there is nowhere further to push it. This is the
-// proxy being wrong in a specific, measurable place, and the alternative — a
-// per-element correction factor invented to make one line look right — would
-// be worse: it would be taste wearing the costume of data, in the one module
-// whose whole claim is that its numbers came from somewhere.
 export const SOLAR_MIXTURE = { Ca: 0.95, H: 0.85, Na: 0.80, Fe: 0.70, Mg: 1.00 };
 
-// Fraunhofer's own letters, for the lines that carry them. He assigned these
-// in 1814 — mapping over 570 dark lines, the exact count differing by source —
-// with no idea what they were; Kirchhoff and Bunsen worked out that they were
-// elements forty-five years later. The letters outlived the ignorance: the
-// sodium D lines and the calcium H and K lines are still called that.
-//
-// EACH LETTER IS BOUND TO ITS ELEMENT, and that is not decoration. A first
-// version matched letters to wavelengths alone, and calcium promptly claimed
-// Fraunhofer G — which the table assigns to iron — because calcium happens to
-// have a line 0.016nm away from it. A letter is a fact about a feature in the
-// solar spectrum, not about a coordinate, and two elements can sit close enough
-// to swap one. (The G band is genuinely a blend of Fe, Ca and CH in the real
-// sun; the point stands anyway, because the table names iron and a lookup that
-// can hand a letter to whichever element is nearest will eventually hand one to
-// something the table never mentioned.)
 export const FRAUNHOFER = [
   { letter: 'K',  nm: 393.366, el: 'Ca' },
   { letter: 'H',  nm: 396.847, el: 'Ca' },

@@ -87,7 +87,7 @@
   letter-spacing: var(--tracking);
   margin-right: calc(-1 * var(--tracking));
   text-transform: uppercase;
-  /* ACCENT (0x50C878) — was rgba(0,102,255,0.45), the deleted accent. */
+  
   text-shadow: 0 0 20px rgba(80,200,120,0.45), 0 1px 0 rgba(0,0,0,0.6);
   background: rgba(3,9,6,0.82);
   padding: 0.15em 0.6em;
@@ -99,7 +99,7 @@
   letter-spacing: var(--tracking);
   margin-right: calc(-1 * var(--tracking));
   font-style: italic;
-  /* ACCENT (0x50C878) — was rgba(0,102,255,0.4), the deleted accent. */
+  
   text-shadow: 0 0 16px rgba(80,200,120,0.4), 0 1px 0 rgba(0,0,0,0.6);
   background: rgba(3,9,6,0.82);
   padding: 0.18em 0.6em;

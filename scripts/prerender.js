@@ -1,22 +1,3 @@
-// ─── Prerender: the written work as real, crawlable pages ──────────────────
-// Added 2026-07-29. Every scene on this site renders its text client-side,
-// and only after a click — main.js's expandScene() is what builds the DOM,
-// so nothing but the nav labels and the meta description existed in the
-// served HTML. Crawlers execute JavaScript but don't click, which meant none
-// of Scott's actual writing — the scroll, the poems, the fragments, the
-// scripts, the found pieces — was indexed anywhere. Someone searching a line
-// they remembered would never find it here.
-//
-// This emits a plain HTML page per body of work, built at deploy time from
-// the same modules the scenes import (each scene's own <scene>.text.js), so a page can't drift
-// from what the site shows. No client JS, no WebGL, no fonts required to
-// read it: the text is in the markup.
-//
-// Framing is deliberate and consistent: each page leads with a link into the
-// scene the writing belongs to, and says plainly that the piece is the real
-// way to encounter it. The page is the archive; the scene is the work.
-//
-// Third-party text is excluded by policy — see buildLibrary() below.
 
 import fs from 'fs';
 import path from 'path';
@@ -65,7 +46,6 @@ import { getOutboundLinks } from '../src/links.js';
 const ORIGIN = 'https://perceptualmechanics.com';
 const AUTHOR = 'Scott Jason Cohen';
 
-// ─── Helpers ────────────────────────────────────────────────────────────────
 
 function esc(s) {
   return String(s)
@@ -80,69 +60,14 @@ function slug(s) {
     .replace(/^-+|-+$/g, '');
 }
 
-// A small "open this exact piece in the live scene" link, placed right
-// under a piece's own heading. Added 2026-08-16 alongside the live
-// experience's own #scene/id deep-linking (main.js) — before that, this
-// page's per-piece slug anchors (id="${slug(title)}" below) had nothing on
-// the live-scene side to resolve to; a reader following one from outside
-// the site could get to this page's own section but never into the actual
-// scene at that specific piece, only its default state. No new CSS class:
-// this inherits the page's own `a { color: #d9b13f }` rule already
-// defined in page()'s <style>, same as every other link on the page.
 function pieceLink(sceneKey, id, sceneName) {
   return `<p class="meta"><a href="/#${sceneKey}/${id}">Open in ${esc(sceneName)} →</a></p>`;
 }
 
-// Poems and prose arrive as raw strings with real newlines inside them.
-// Paragraph breaks are already the array boundary; a newline *within* an
-// entry is a deliberate line break (verse especially), so it survives as
-// <br> rather than being collapsed the way HTML would collapse it.
 function lines(text) {
   return esc(text).replace(/\n/g, '<br>\n');
 }
 
-// ─── Page styles ───────────────────────────────────────────────────────────
-// Hoisted out of page() into its own constant for one reason: public/
-// .htaccess's CSP allowlists this exact block by SHA-256 hash, and a hash is
-// a derived artifact — precisely the kind this project's standing rules say
-// not to maintain by hand. Keeping the style text and its hash adjacent, and
-// exporting both, lets vite.config.js's pm-prerender-text plugin re-derive
-// the hash from the page it actually emitted and fail the build on drift.
-//
-// It failed the other way once, silently: from v3.12.1 (CSP switched from
-// Report-Only to enforcing) until v4.0, style-src was 'self' with no hash
-// and no nonce, so the browser dropped the only stylesheet all eight /text/
-// pages have. document.styleSheets.length === 0 in production the entire
-// time — black-on-white Times at full window width, the archive unstyled,
-// nothing in any log. The Report-Only pass that cleared the policy was a
-// thorough audit of the SPA at / and never opened a page outside it. The
-// enforcing policy also had no report-uri/report-to, so there was no channel
-// for the violation to arrive on either; both halves of that are fixed in
-// 4.0 (see .htaccess's CSP comment).
-//
-// The bytes hashed are exactly what sits between <style> and </style> in
-// page() — which is exactly this template literal, leading and trailing
-// newline included. One space changed in here changes the hash. That is the
-// point: the next CSS tweak fails the build instead of unstyling the
-// archive. Keep the shipped comments in here short for the same reason
-// every other byte of this block is deliberate — it is duplicated verbatim
-// into all twelve pages, so the long-form reasoning lives up here, where it
-// costs the reader of the archive nothing.
-//
-// The @font-face is new in 4.0 and fixes a second, quieter version of the
-// same class of bug: these pages have declared `font-family: 'Arapey'`
-// since they shipped (2026-07-29) while loading no font and linking no
-// stylesheet, so every one of them silently rendered in the Georgia
-// fallback — declared intent and actual result disagreeing with nothing
-// anywhere to notice. The face is already self-hosted under /fonts/ (see
-// styles/main.css's "Self-hosted fonts" block) and font-src 'self' already
-// allows it, so matching the intent costs no policy change and one 8.8 kB
-// request. Roman only, deliberately: the italic face is another 9.5 kB to
-// serve two quiet elements (.note, ul.catalog .n), and a synthesized
-// oblique is the right trade on a page whose whole promise is that it
-// loads instantly and renders even if every other asset on the domain is
-// unreachable. font-display: swap so the text is readable before the font
-// arrives, matching main.css.
 export const PAGE_STYLE = `
   :root { color-scheme: dark; }
   /* Self-hosted, the same face styles/main.css loads; font-src 'self'
@@ -260,37 +185,11 @@ export const PAGE_STYLE = `
   @media (max-width: 600px) { .wrap { padding: 1.75rem 1.05rem 4rem; } h1 { font-size: 1.6rem; } }
 `;
 
-// SHA-256 of PAGE_STYLE, base64-encoded, in the exact form CSP's style-src
-// wants. This same string must appear in style-src in public/.htaccess.
-// Don't compute it by hand: change the CSS, run `npx vite build`, and the
-// pm-prerender-text plugin's error prints the value to paste here and there
-// (it checks the emitted page and .htaccess, not just this constant, so a
-// stale copy in either place fails the build rather than the site).
 export const PAGE_STYLE_SHA256 = 'sha256-2IEIosd7xcKSXoyHYxb5REbHYSLVf1PlVAauy+8tKts=';
 
-// ─── Page shell ─────────────────────────────────────────────────────────────
-// One self-contained template. Styles are inlined rather than shipped as a
-// shared stylesheet: these pages are meant to survive on their own, load
-// instantly, and render fully even if every other asset on the domain is
-// unreachable. Colors are the site's own — near-black ground, warm bone text,
-// the colophon's gold for links — checked against WCAG AA at these sizes.
 function page({ slugPath, title, description, sceneKey, sceneName, lede, bodyHtml, jsonLd }) {
   const url = `${ORIGIN}/text/${slugPath ? slugPath + '/' : ''}`;
-  // Derived, not constant. Every page here was emitting og:type="article",
-  // including the /text/ index — whose own JSON-LD a few lines down correctly
-  // calls a CollectionPage. Two machine-readable claims about the same
-  // document, disagreeing. The index is the one page with no slugPath.
   const ogType = slugPath ? 'article' : 'website';
-  // The skip link's target carries tabindex="-1", and that attribute is the
-  // whole mechanism: <main> is not focusable on its own, so without it the
-  // link moves the SCROLL position and leaves focus sitting on the link — the
-  // next Tab goes straight back into the header the reader just asked to skip.
-  // index.html fixed exactly this in the 2026-07-22 pass and the fix was never
-  // carried across to these ten pages, which are the ones a reader actually
-  // arrives at from a search result.
-  //
-  // Stated here rather than as an HTML comment in the template: build-time
-  // reasoning does not belong in ten shipped documents.
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -360,7 +259,6 @@ function creativeWork(title, description, slugPath, partTitles = []) {
   return ld;
 }
 
-// ─── Sections ───────────────────────────────────────────────────────────────
 
 function renderScript(scriptLines) {
   const out = scriptLines.map(l => {
@@ -425,14 +323,6 @@ ${p.stanzas.map(s => `<p>${lines(s)}</p>`).join('\n')}
 }
 
 function buildFragments() {
-  // The fragments' cross-links used to be hand-typed straight into the
-  // fragment's own HTML (`<a class="fragment-link" data-target="Wingspan">`),
-  // so this function used to just rewrite that attribute into an ordinary
-  // in-page anchor. Since the 2026-08-16 linking pass those links live in
-  // src/links.js instead (getOutboundLinks), same as every other scene's —
-  // this now wires them the same way sphere.js does at runtime, just
-  // targeting an in-page `#slug` anchor instead of a live-panel data
-  // attribute, since every fragment is on this one page.
   const body = fragments.map(f => {
     let html = f.text;
     getOutboundLinks('sphere', f.id, 'text').forEach(l => {
@@ -460,11 +350,6 @@ ${html}
 }
 
 function buildTheater() {
-  // theater.text.js organizes its three plays as separate pieces (2026-08-08)
-  // — grouped here the same way library.js groups books/films/decks: an
-  // <h2> per piece (its title and date), with each scene inside it still
-  // getting its own <article class="piece"> (now headed <h3>, since the
-  // piece itself now owns the <h2> level).
   const body = theaterPieces.map(piece => {
     const scenesHtml = piece.scenes.map(sc => {
       const beats = sc.beats.map(b => {
@@ -506,10 +391,6 @@ ${scenesHtml}
 }
 
 function buildOrrery() {
-  // aria-labelledby rather than a bare <article>: this is the one page whose
-  // piece carries no heading of its own — it is a single untitled found text —
-  // so without a label it appears in an assistive tech's region list as an
-  // anonymous "article". The masthead h1 is the piece's name; point at it.
   const body = `<article class="piece" aria-labelledby="page-title">
 <p class="meta">${esc(ORRERY.era)}</p>
 ${ORRERY.note.split(/\n\s*\n/).map(p => `<p>${lines(p.trim())}</p>`).join('\n')}
@@ -526,16 +407,6 @@ ${ORRERY.note.split(/\n\s*\n/).map(p => `<p>${lines(p.trim())}</p>`).join('\n')}
 }
 
 function buildBeamline() {
-  // Each station gets its own id="p<id>" and a live deep-link.
-  // "p" prefix, not the bare number: HTML5
-  // technically allows an id to start with a digit, but it isn't a valid
-  // CSS identifier that way (`#7 { ... }` doesn't parse without escaping)
-  // and reads oddly as a URL fragment on its own — unlike sphere/orbiter/
-  // scroll above, which already had title-derived slug ids before this
-  // pass and keep them unchanged, beamline never had per-piece ids on this
-  // page at all, so there's no existing convention here to stay
-  // consistent with; "p<id>" is the new one, used here and in
-  // buildLibrary below.
   const body = `<article class="piece">
 <blockquote class="epigraph">
 <p>${esc(EPIGRAPH_PRIMARY)}</p>
@@ -546,9 +417,6 @@ ${BOUNCES.map((b, i) => `<h2 id="p${b.id}">Station ${i + 1}</h2>\n${pieceLink('b
   return {
     slugPath: 'beamline',
     title: 'Beamline',
-    // This page is indexed, so its description is the account of the scene a
-    // search engine gets. Keep it matching what the scene actually is: a rail,
-    // a vessel, ten stations.
     description: 'A vessel travelling a glowing rail across a night wilderness, found text surfacing at ten stations along it — the piece staged in Beamline.',
     sceneKey: 'beamline', sceneName: 'Beamline',
     lede: `<p>In <strong>Beamline</strong> a small vessel travels a glowing rail across a night wilderness, and this text surfaces at each of the ten stations strung along it.</p>
@@ -559,18 +427,6 @@ ${BOUNCES.map((b, i) => `<h2 id="p${b.id}">Station ${i + 1}</h2>\n${pieceLink('b
 }
 
 
-// ─── Apollo ─────────────────────────────────────────────────────────────────
-// The eleventh scene's page, and the first one whose content is a table of
-// measurements rather than a body of writing. It is still required, and the
-// scenes-sum assertion below is what makes that non-optional: Apollo publishes
-// real content — the element table, the wavelengths, the physics — and a scene
-// carrying real content with no crawlable page ships unfindable.
-//
-// Every number here is generated from apollo.text.js, the same module the
-// instrument imports. Not a copy of it: hydrogen's wavelengths are computed by
-// calling the same function the scene calls, and the pitch beside each line is
-// the same division. If the physics changes, this page changes with it or the
-// build fails; there is no third place holding a stale duplicate.
 function buildApollo() {
   const hz = nm => wavelengthToHz(nm).toFixed(1);
   const balmer = balmerSeries({ nMax: 16 });
@@ -656,17 +512,7 @@ ${elementList}
   };
 }
 
-// Psyshell's page is built from `psyshell.text.js` AND `psyshell.object.js` —
-// the two modules the scene itself imports — and the important thing about them
-// is that they do not talk to each other. One knows the sentences and nothing
-// about the shape; the other knows the shape and nothing about the sentences.
-// That separation IS the 4.8.0 release, so a page built from both is the only
-// honest way to describe it: the numbers below come from the running object and
-// the running corpus, and the fact that neither derives from the other is
-// checkable here rather than asserted.
 function buildPsyshell() {
-  // Computed from the same functions the scene runs, so this page cannot print
-  // an encoding the lens does not transmit.
   const WORKED = (() => {
     const n = 94;
     const { digits, highest } = baseEDigits(n);
@@ -675,18 +521,8 @@ function buildPsyshell() {
     return { n, digits: digits.join(''), highest, terms, sum: sum.toFixed(3), err: (n - sum).toFixed(3) };
   })();
 
-  // Psyshell's page says in prose that two scenes are absent from the corpus and
-  // names them. `ABSENT` says the same in the content module. Rather than trust
-  // the two to stay in step — or hardcode the exceptions here, which is the
-  // same problem one layer down — the real list is DERIVED: a scene is absent
-  // from the corpus exactly when it contributes no sentences to it.
-  //
-  // This is what `ABSENT` is for. Before 4.8.9 it was exported and read by
-  // nothing, which is a fact waiting to drift.
   {
     const contributing = new Set(PSY_SOURCES.map(x => x.key));
-    // Psyshell is not "absent from the corpus": it is what the corpus is being
-    // read into. Excluding it is the one judgement in here and it is named.
     const derived = Object.keys(SCENES).filter(k => k !== 'psyshell' && !contributing.has(k)).sort();
     const declared = [...PSY_ABSENT].sort();
     if (derived.join(',') !== declared.join(',')) {
@@ -695,15 +531,10 @@ function buildPsyshell() {
   }
 
   const WEB = (() => {
-    // Built here from the same two modules the scene builds it from, so this
-    // page cannot print a web the scene does not draw.
     const placed = placeFilapixels(FILAPIXEL_COUNT);
     const w = buildWeb(placed.pos, FILAPIXEL_COUNT, { center: PSY_BOUNDS.center, radius: PSY_BOUNDS.radius });
     let minDeg = Infinity;
     for (const d of w.degree) if (d < minDeg) minDeg = d;
-    // Breadth-first from a node inside the crystal, so the page's claim about
-    // being able to trace a strand out to the field is the measurement rather
-    // than a description of one.
     const adj = new Map();
     for (let e = 0; e < w.edges.length; e += 2) {
       const a = w.edges[e], b = w.edges[e + 1];
@@ -815,45 +646,6 @@ ${sourceList}
 }
 
 function buildLibrary() {
-  // TWO fields are deliberately withheld here. Both were learned the hard
-  // way; don't reinstate either without checking with Scott first.
-  //
-  // `excerpt` holds opening passages from published books in copyrighted
-  // translations — Heaney's Beowulf, the Penguin Classics editions, and so
-  // on. Those stay inside the scene, where they're shown one at a time to a
-  // reader who went looking; a crawlable page is a different act, because it
-  // publishes, caches, and attributes that text on this domain.
-  //
-  // `note` is no longer withheld here — it no longer exists. The catalog
-  // carried a note on 100 of its items from 2026-07-23 until 4.11.21, and a
-  // considerable apparatus grew around which of them this page and the scene
-  // were allowed to show. **None of them were Scott's writing, and he never
-  // asked for them.** They were removed at his call, along with the 81
-  // cross-links authored into them; src/links.js carries the full record.
-  //
-  // The history is kept because the rule it bought is still the rule. The
-  // first version of this page (1.7.0, fixed the same day in 1.7.1) published
-  // all 97 notes on the reasoning that they were the most genuinely original
-  // writing in the file. That reasoning was wrong twice over — they were not
-  // original to this project at all, and "is it good writing?" was the wrong
-  // question anyway. The right one is the one 1.7.1 settled on and 4.11.21
-  // vindicated: **a crawlable page publishes, caches and attributes text on
-  // this domain in a way an in-scene panel does not, so it takes a stricter
-  // test, and the test is not about quality.**
-  //
-  // `excerpt` is still withheld here on exactly that test, and that has not
-  // changed: it holds opening passages from published books in copyrighted
-  // translations, shown one at a time in the scene to a reader who went
-  // looking, which is a different act from publishing them as a crawlable
-  // page.
-  //
-  // What's left is the plain bibliographic fact of the shelf, which is
-  // exactly what the piece itself shows.
-  // Type strings must match src/scenes/library/library.text.js exactly. 'divination_box' was
-  // written here as 'box' in 1.7.0, which silently dropped both decks from the
-  // page for a day while the lede went on advertising them — a filter that
-  // matches nothing looks identical to a category that's empty. Asserted below
-  // rather than trusted: every item must land in exactly one section.
   const byType = [
     ['Books', libraryItems.filter(i => i.type === 'book')],
     ['Films', libraryItems.filter(i => i.type === 'dvd' || i.type === 'bluray')],
@@ -875,20 +667,6 @@ function buildLibrary() {
 ${items.map(i => {
     const ed = [i.publisher, i.publish_year, i.translator ? `trans. ${i.translator}` : null]
       .filter(Boolean).join(' · ');
-    // Five entries have no creator at all — anonymous or compiled works
-    // (Gilgamesh, the Bhagavad Gita, Buddhist Scriptures, the Homeric Hymns,
-    // the Maya Deren collection). The em-dash is part of the title-creator
-    // join, so it only belongs here when there's something on the other side
-    // of it; otherwise the line ends on a dangling dash.
-    // id="p<id>" + a live deep-link (added 2026-08-16, same as every other
-    // scene — see buildBeamline's comment above for the "p" prefix). Not
-    // added to the Music/cds list below: cdRackItems' own ids reuse the
-    // same 1..N range as libraryItems' ids (they're separate arrays,
-    // always kept apart at runtime by library.js's "cd-<n>" string-id
-    // convention — see that file's populatePanel comment), so a bare
-    // numeric id here would be ambiguous between a book/film/deck and a
-    // CD. Nothing in src/links.js or the live #library/<id> hash addresses
-    // a CD today, so this only wires the space that's actually unambiguous.
     return `  <li id="p${i.id}">
     <cite class="t">${esc(i.title)}</cite>${i.creator ? ` — <span class="c">${esc(i.creator)}</span>` : ''}
     ${ed ? `<span class="e">${esc(ed)}</span>` : ''}
@@ -909,10 +687,6 @@ ${cdRackItems.map(c => `  <li>
   return {
     slugPath: 'library',
     title: 'The Library',
-    // Counts derived, not typed: the site's older copy says "107 books", which
-    // is the shelf's own long-standing figure and doesn't match this catalogue
-    // (101 books, 44 films, 2 decks, 114 albums). Rather than restate a number
-    // that can go stale or contradict the data, let the data say it.
     description: `A real bookshelf, catalogued — ${libraryItems.filter(i => i.type === 'book').length} books, `
       + `${libraryItems.filter(i => i.type === 'dvd' || i.type === 'bluray').length} films, `
       + `${cdRackItems.length} albums and ${libraryItems.filter(i => i.type === 'divination_box').length} divination decks.`,
@@ -924,39 +698,9 @@ ${cdRackItems.map(c => `  <li>
   };
 }
 
-// ─── Medium ─────────────────────────────────────────────────────────────────
-// The only page here that is not writing. Every other /text/ page publishes
-// text a person wrote; this one publishes a TRANSCRIPT, produced at build time
-// by the same three modules the scene runs — `medium.physics.js`,
-// `medium.lexicon.js` and the board in `medium.text.js` — with nobody touching
-// the cup. Same code, same board, no visitor.
-//
-// That is why Medium has a page at all despite being in psyshell.text.js's
-// ABSENT list: it contributes nothing to the corpus, because it has no fixed
-// writing to contribute, and it still needs something crawlable that says what
-// the scene is. A transcript is the honest form of that, and running it here
-// rather than pasting one in is the same rule every other page follows — the
-// page and the scene must not be able to disagree.
-//
-// It will say something different for you. That is stated on the page, because
-// a transcript published as though it were THE message would be exactly the
-// claim the scene is built to refuse.
-// THREE of them, and that is a decision about honesty rather than about length.
-// One transcript is a take, and a take gets chosen — the first seed tried here
-// produced TSUNAMIBIAS three times in twelve minutes and the temptation to try
-// another seed was immediate and obvious. Publishing three fixed seeds removes
-// the choice: whatever they say is what the page says, including the ones that
-// loop. The reader also gets the thing a single transcript cannot show, which
-// is how different two séances are.
 const SEANCE_SEEDS = [18531213, 18520417, 20120911];
 const SEANCE_MINUTES = 10;
 
-// ─── The visitor in these transcripts is TOUCHING and not driving ───────────
-// `createVisitor` and `stepVisitor` are the scene's own, not an imitation of
-// them, so this is exactly the hand a visitor has when they press on the cup and
-// stop moving. That matters more than it sounds: nothing on the board moves at
-// all unless somebody is touching it, so a transcript run with no visitor would
-// not be a degenerate séance, it would be a blank page.
 
 function seance({ seed, minutes }) {
   const DT = 1 / 60;
@@ -982,10 +726,6 @@ function seance({ seed, minutes }) {
 function buildMedium() {
   const runs = SEANCE_SEEDS.map(seed => ({ seed, ...seance({ seed, minutes: SEANCE_MINUTES }) }));
 
-  // Broken into lines of a fixed length rather than into words. Choosing where
-  // the words are is what a sitter does afterwards, and the page must not do it
-  // for the reader — the whole subject is that the divisions are put in by the
-  // person reading.
   const tape = (t) => `<pre class="tape">${(t.match(/.{1,42}/g) || []).map(l => esc(l.trim())).filter(Boolean).join('\n')}</pre>`;
 
   const body = `<article class="piece">
@@ -1050,17 +790,6 @@ ${runs.map(r => `<p class="slug">Seed ${r.seed} · ${r.taken} marks · ${r.rate.
   };
 }
 
-// ─── Quiz ───────────────────────────────────────────────────────────────────
-// The scene needs sixteen answers before it will tell you anything, which is
-// exactly the wrong shape for a crawler, a reader with scripting off, or
-// anybody who wants the material rather than the verdict. So this page is not
-// a transcript of one result — it is the whole Wheel, all twenty-eight phases
-// with every Faculty resolved, and the sixteen questions written out.
-//
-// Every number on it is derived at build time from quiz.text.js by the same
-// three formulas the scene uses, so the page cannot drift from the scene: if
-// Mask stops being Will + 14 they both change together or the gate in
-// scripts/quiz-wheel.mjs fails first.
 function buildQuiz() {
   const fac = (n, spec, kind) => {
     const p = PHASE_BY_N[n];
@@ -1088,9 +817,6 @@ function buildQuiz() {
     ];
     if (p.who.length) rows.push(['Yeats names here', p.who.map(esc).join(', ')]);
     if (p.attributed.length) rows.push(['Placed here by others', p.attributed.map(esc).join(', ')]);
-    // Deep-linked to Mann's page for this phase — the same courtesy the scene
-    // pays at the end of a verdict, and the same reason: this page is built on
-    // his organisation of the material.
     return `<h3 id="phase-${p.n}">Phase ${p.n} — ${esc(p.will)}</h3>
 <p class="src"><a href="https://www.yeatsvision.com/Ph${p.n}.html" rel="noopener noreferrer">yeatsvision.com/Ph${p.n}</a></p>
 ${habitable ? '' : '<p><em>Not an incarnation. There is no human life at the full or at the dark, and the scene cannot place anyone here.</em></p>\n'}<dl>
@@ -1143,7 +869,6 @@ ${PHASES.map(phaseSection).join('\n\n')}
   };
 }
 
-// ─── Index ──────────────────────────────────────────────────────────────────
 
 function buildIndex(pages) {
   const body = `<nav class="index" aria-label="The writing">
@@ -1172,7 +897,6 @@ ${pages.map(p => `  <li><a href="/text/${p.slugPath}/">${esc(p.title)}</a><span 
   };
 }
 
-// ─── Emit ───────────────────────────────────────────────────────────────────
 
 export function prerender(outDir) {
   const pages = [
@@ -1182,19 +906,6 @@ export function prerender(outDir) {
   ];
   const all = [buildIndex(pages), ...pages];
 
-  // ─── The scenes-sum assertion ─────────────────────────────────────────────
-  // Proposed in the 2026-09-01 punch list and unimplemented until an eleventh
-  // scene made it concrete. Every scene in the registry must either build a
-  // page here or be named in TEXT_EXEMPT with a reason. Both directions are
-  // checked, because both have failed in this project's history: a scene
-  // shipping with no crawlable page is how a scene ships unfindable, and a page
-  // for a scene that no longer exists is how the /text/ index grows a dead
-  // entry nobody notices.
-  //
-  // This is the one place prerender.js's own good pattern — derive the list,
-  // don't maintain it — was applied once and not generalised. It is generalised
-  // now, and it fails the build rather than warning, because a warning in a
-  // build that prints thirty lines of green is a warning nobody reads.
   {
     const built = new Set(pages.map(p => p.sceneKey).filter(Boolean));
     const registry = Object.keys(SCENES);
@@ -1206,20 +917,6 @@ export function prerender(outDir) {
       orphaned.length && `page built for a scene that is not in the registry: ${orphaned.join(', ')}`,
       staleExempt.length && `TEXT_EXEMPT names a scene that no longer exists: ${staleExempt.join(', ')}`,
     ].filter(Boolean);
-    // ─── The markup half of the same rule ───────────────────────────────────
-    // 4.4.0. The nav row's sizing and the landing grid's column count are both
-    // computed from the registry now (main.js's applyDerivedLayout), which
-    // means those formulas are only correct while index.html carries exactly
-    // one nav icon and exactly one tile per registered scene. That used to be
-    // maintained by hand in three places — a `--nav-count` in the stylesheet, a
-    // `.preview-row-break` positioned by counting tiles, and the markup itself
-    // — and the nav row was clipped off both edges of every phone four separate
-    // times because one of them was missed.
-    //
-    // Two of the three are gone. This is what keeps the third honest: the page
-    // is read as text and the icons and tiles are counted, so a scene added to
-    // the registry without its icon fails the build rather than shipping a nav
-    // row whose arithmetic is quietly one out.
     {
       const html = fs.readFileSync(path.join(import.meta.dirname, '..', 'index.html'), 'utf8');
       const icons = (html.match(/class="nav-icon"/g) || []).length;
@@ -1249,9 +946,6 @@ export function prerender(outDir) {
     fs.writeFileSync(path.join(dir, 'index.html'), page(p));
   }
 
-  // Sitemap is generated from the same list, not maintained by hand — the
-  // old one listed a single URL and would have gone stale the moment a page
-  // was added or renamed here.
   const urls = [
     { loc: `${ORIGIN}/`, priority: '1.0', changefreq: 'weekly' },
     ...all.map(p => ({

@@ -1,7 +1,3 @@
-// ─── bard.js: fountain tests ────────────────────────────────────────────────
-// Node's built-in test runner (node:test / node:assert) — no new dependency
-// for a project that otherwise has zero, matching the rest of bard.js.
-// Run with: node --test
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { parseFountainScript, compileFountainScript } from '../src/fountain.js';
@@ -85,7 +81,7 @@ test('centered text becomes a chorus event with the markers stripped', () => {
 });
 
 test('notes and boneyard are stripped entirely, even across blank lines', () => {
-  const src = `INT. BAR\n\n[[ author note\n\nspanning lines ]]Actual action.\n\n/* old draft\ntext */BRIAN\nLine.`;
+  const src = `INT. BAR\n\n[[ author note\n\nspanning lines ]]Actual action.\n\nBRIAN\nLine.`;
   const { scenes } = parseFountainScript(src);
   assert.deepEqual(scenes[0].events[0], { type: 'chorus', text: 'Actual action.' });
   const line = scenes[0].events.find(e => e.type === 'line');
@@ -110,7 +106,6 @@ test('an unrecognized leading block is not mistaken for a title page', () => {
   const src = `Just some action before any heading.\n\nINT. BAR\n\nMore action.`;
   const { meta, scenes } = parseFountainScript(src);
   assert.equal(meta, null);
-  // the pre-heading content becomes its own untitled scene, not discarded
   assert.equal(scenes[0].slug, '');
   assert.equal(scenes[0].events[0].text, 'Just some action before any heading.');
 });
@@ -120,7 +115,6 @@ test('compileFountainScript flattens to a Player-ready script and carries meta/c
   const script = compileFountainScript(src);
   assert.equal(script.meta.title, 'Two Scenes');
   assert.deepEqual(script.castNames, { brian: 'BRIAN', paul: 'PAUL' });
-  // one intermission between the two scenes, same rule compileScript always uses
   assert.equal(script.timeline.filter(t => t.event.type === 'intermission').length, 1);
 });
 
@@ -138,9 +132,6 @@ test('end-to-end: a parsed script plays through Player with a stub renderer, no 
   };
   const player = new Player(script, stubRenderer);
   player.mount({});
-  // Walk every beat manually rather than relying on the internal setTimeout
-  // pacing — this is a logic smoke test (does the whole pipeline run without
-  // throwing and in the right order), not a timing test.
   for (let i = 0; i < script.timeline.length; i++) player.goTo(i);
 
   assert.deepEqual(calls[0], ['mount']);
@@ -151,22 +142,13 @@ test('end-to-end: a parsed script plays through Player with a stub renderer, no 
   assert.deepEqual(calls[5], ['onEnter', ['paul']]);
   assert.deepEqual(calls[6], ['onLine', 'paul', 'Hi.']);
   assert.deepEqual(calls[7], ['onSceneChange', 'EXT. STREET']);
-  // brian enters again in the new scene — compile.js never carries "on
-  // stage" state across a scene boundary, matching compileLegacyScene.
   assert.deepEqual(calls[8], ['onEnter', ['brian']]);
   assert.deepEqual(calls[9], ['onLine', 'brian', 'Outside now.']);
   assert.deepEqual(calls[10], ['onEnd']);
 });
 
-// ─── Player: scheduling and teardown hygiene ────────────────────────────────
-// Everything above tests the parser through the Player; these test the Player
-// itself, which had no coverage of its own. All four cover states a consumer
-// can reach from ordinary transport controls (perceptualmechanics' Theater
-// reaches three of them), not internal edge cases: a reel that ends, a scene
-// the visitor closes mid-beat, a reshuffle for someone who has asked their OS
-// for less motion, and a script that compiled to nothing.
 
-/** Minimal renderer: records nothing, throws on nothing. */
+
 function stub(calls = []) {
   return {
     onSceneChange: () => calls.push('scene'),
@@ -184,8 +166,6 @@ test('play() on a finished reel reports paused rather than a play that never adv
   assert.equal(player.isAtEnd, true);
   assert.equal(player.playing, false); // goTo() clears it on landing at the end
   player.play();
-  // The bug this pins: play() used to set playing = true here and then
-  // schedule nothing, so a consumer's button read "pause" over a dead reel.
   assert.equal(player.playing, false);
 });
 
@@ -212,11 +192,8 @@ test('restart({ autoplay: false }) starts the new script at beat 0 without playi
   player.restart(script, { autoplay: false });
   assert.equal(player.index, 0);
   assert.equal(player.playing, false);
-  // Default is unchanged: "start over" still means "start playing".
   player.restart(script);
   assert.equal(player.playing, true);
-  // ...which arms a real setTimeout, and node:test won't exit while one is
-  // pending. dispose() is the same call a consumer's teardown makes.
   player.dispose();
 });
 

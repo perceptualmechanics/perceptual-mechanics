@@ -1,35 +1,3 @@
-// ─── Build the harmonics resonances review document ────────────────────
-// Generates docs/constellation_resonances.md FROM src/resonances.js — the
-// doc is a rendering of that data, not a second copy of it, so the two
-// can't drift out of sync the way the historical (never-committed)
-// library_resonances.md apparently did. Run after any change to
-// RESONANCES: `node scripts/build-resonances-doc.mjs`.
-//
-// This is the durable, committed artifact Scott actually reads: every
-// candidate resonance the discovery pass proposed, both pieces' real
-// text (not just their ids), the rationale, and current status. Marking
-// a row approved or rejected happens in src/resonances.js itself (this
-// script only reads that file) — regenerate the doc after any status
-// change so the committed copy stays current.
-//
-// Quoting rule (fixed after round-1 review flagged several rationales as
-// unverifiable from the doc itself): a rationale that claims specific
-// overlapping language is only checkable if the doc actually shows that
-// language. So instead of always truncating from the start of a piece,
-// this pulls every quoted span out of the rationale and, for each
-// endpoint, shows a window CENTERED on whichever quote actually appears
-// in that piece's text (full text if the piece is short enough that
-// there's no point windowing at all). If no quote from the rationale
-// matches a given endpoint's text, that's worth knowing too — the
-// fallback snippet is clearly labeled as such rather than silently
-// passing off an arbitrary opening excerpt as if it were the relevant
-// part.
-//
-// 2026-08-18: the windowing functions themselves (stripHtml, extractQuotes,
-// snippetFor) moved into src/utils/resonanceExcerpts.js — Harmonics' own
-// live payoff panel needs the exact same logic to show real side-by-side
-// passages, not a second reimplementation that could quietly drift from
-// what this doc shows.
 
 import { fragments } from '../src/scenes/sphere/sphere.text.js';
 import { poems } from '../src/scenes/orbiter/orbiter.text.js';
@@ -47,8 +15,6 @@ import { fileURLToPath } from 'url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-// Returns { title, rawText } for one resonance endpoint — the raw text is
-// windowed into a snippet later, once we know which quotes to look for.
 function resolveEndpoint(ep) {
   switch (ep.scene) {
     case 'sphere': {
@@ -102,8 +68,6 @@ function renderRow(r) {
   const quotes = extractQuotes(r.rationale);
   const a = resolveEndpoint(r.a);
   const b = resolveEndpoint(r.b);
-  // The apparatus belongs here, in the document a reviewer reads, and not in
-  // the scene — see quoteMatched()'s comment in resonanceExcerpts.js.
   const unmatched = ' *(no rationale quote matched this piece — opening text shown instead)*';
   const aSnippet = snippetFor(a.rawText, quotes) + (quoteMatched(a.rawText, quotes) ? '' : unmatched);
   const bSnippet = snippetFor(b.rawText, quotes) + (quoteMatched(b.rawText, quotes) ? '' : unmatched);
@@ -175,11 +139,6 @@ ${renderSection(verbatimRows)}
 ${renderSection(connotativeRows)}
 `;
 
-// The file in the tree is docs/constellation_resonances.md, from before the
-// 2026-08-18 rename. This script pointed at docs/harmonics_resonances.md, so
-// running it would have written a SECOND document and orphaned the committed
-// one — whose own header says "do not hand-edit, regenerate instead". The
-// document keeps its name; only the internal names moved.
 const outPath = resolve(__dirname, '../docs/constellation_resonances.md');
 writeFileSync(outPath, doc);
 console.log(`Wrote ${outPath} (${RESONANCES.length} rows: ${basisCounts.verbatim} verbatim, ${basisCounts.connotative} connotative; ${counts.approved} approved, ${counts.pending} pending, ${counts.rejected} rejected)`);

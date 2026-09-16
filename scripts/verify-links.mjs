@@ -1,27 +1,3 @@
-// ─── Verify links: repeatable check for the shared link store ─────────────
-// Two things it checks, both load-bearing and both silent failures
-// otherwise:
-//
-//   1. Every scene's pieces carry a stable, unique-within-that-scene `id`
-//      (the addressing scheme src/links.js's `{ scene, id }` pairs depend
-//      on — see NOTES.md's "Linking & addressing" entry).
-//   2. Every row in src/links.js resolves: `from` names a real piece with
-//      the named field (and index, where the field is array-valued), the
-//      `phrase` exists verbatim in that field's actual text, and `to`
-//      names a real piece.
-//
-// This replaces a verification pass that used to be run by hand, once, and
-// thrown away (see NOTES.md — the library-links round that grew
-// LIBRARY_LINKS from 31 to 56 was checked this exact way but the check
-// itself was never committed).
-//
-// Exported as a function, not just a CLI script, so vite.config.js can run
-// it as a real build plugin (buildStart) — per this file's own standing
-// rule (NOTES.md, "Hook the command people actually run, not the one the
-// docs say to run": verification here is almost always a bare
-// `npx vite build`, which skips anything only wired as an npm
-// pre-lifecycle script). `npm run verify-links` (below) stays as a fast,
-// standalone way to run just this check while editing.
 
 import { fragments } from '../src/scenes/sphere/sphere.text.js';
 import { poems } from '../src/scenes/orbiter/orbiter.text.js';
@@ -32,25 +8,16 @@ import { PIECES as theaterPieces } from '../src/scenes/theater/theater.text.js';
 import { ORRERY } from '../src/scenes/orrery/orrery.text.js';
 import { readFileSync } from 'node:fs';
 import { LINKS } from '../src/links.js';
-// Namespace import as well as the named one above, deliberately: a named
-// `import { RENDERED_FIELDS }` of an export that doesn't exist yet is a
-// link-time SyntaxError that takes down the whole build (and every other
-// agent's build) rather than producing the specific, explainable failure
-// check 4 below wants to produce. Same module instance either way.
 import * as linkStore from '../src/links.js';
 import { crossLinkPlan, applyCrossLinkPlan, ENTITY_RE, isSupportedEntity } from '../src/utils/crossLinkMatch.js';
 import { pathToFileURL } from 'node:url';
 
-// Returns { ok, failures, log } — `log` is every line this would otherwise
-// print, collected instead of written directly so a caller (the CLI
-// wrapper below, or the vite plugin) decides how/whether to show it.
 export function verifyLinks() {
   const log = [];
   let failures = 0;
   const fail = msg => { failures++; log.push(`FAIL: ${msg}`); };
   const ok = msg => log.push(`ok: ${msg}`);
 
-  // ── 1. Per-scene id uniqueness ────────────────────────────────────────
   function checkIds(label, items) {
     const ids = items.map(i => i.id);
     const missing = items.filter(i => i.id === undefined).length;
@@ -70,10 +37,6 @@ export function verifyLinks() {
   if (ORRERY.id === undefined) fail('orrery: ORRERY has no id');
   else ok('orrery: id present');
 
-  // library items and cdRackItems are separate id namespaces sharing one
-  // scene name — nothing in LINKS references a cd today, so this doesn't
-  // break the checks below, but it's a real asymmetry with every other
-  // scene (see NOTES.md) worth flagging every run rather than only once.
   const libraryItemIds = new Set(libraryItems.map(i => i.id));
   const cdIds = new Set(cdRackItems.map(i => i.id));
   const sharedIds = [...libraryItemIds].filter(id => cdIds.has(id));
@@ -81,7 +44,6 @@ export function verifyLinks() {
     log.push(`note: library items and cdRackItems share ${sharedIds.length} id value(s) — harmless today (no link targets a cd), but a { scene: 'library', id } pair is ambiguous between the two arrays. Flagged, not failed.`);
   }
 
-  // ── 2. Every LINKS row resolves ───────────────────────────────────────
   const scenes = {
     sphere: { items: fragments, fields: { text: it => it.text } },
     orbiter: { items: poems, fields: { stanzas: (it, index) => it.stanzas?.[index] } },
@@ -119,17 +81,6 @@ export function verifyLinks() {
   });
   if (checked === LINKS.length) ok(`links.js: all ${LINKS.length} rows resolve (source field + verbatim phrase + target)`);
 
-  // ── 2b. The section headers in links.js count their own sections ──────
-  // `// ── library (85) ──` sat above four rows for two releases. Nothing
-  // read that number, which is exactly why nobody noticed: it was a label on
-  // a section whose contents had been cut by 81, and the only reader was a
-  // person scrolling past. A count nobody can check is a count that gets
-  // cited — the 6.0 audit found this one being quoted three paragraphs later
-  // as though it described the file.
-  //
-  // The headers stay, because they are how you navigate the array. They are
-  // just derived now: this reads them out of the source and counts the rows
-  // whose `from` names that scene.
   {
     const src = readFileSync(new URL('../src/links.js', import.meta.url), 'utf8');
     const actual = {};
@@ -148,44 +99,6 @@ export function verifyLinks() {
   }
 
 
-  // ── 3. Phrase collisions within a render group ────────────────────────
-  // This block used to open with a paragraph describing what
-  // sceneKit.js's wireCrossLinks() "does" — "a plain first-occurrence
-  // String.replace over HTML it has already replaced into". That had not
-  // been true since the escaping fix rewrote it as a TreeWalker, and one of
-  // the two failure modes the paragraph guarded against had become
-  // structurally impossible in the meantime. Nothing failed, because nothing
-  // compared the description to the code. A gate that MODELS the thing
-  // instead of CALLING it drifts, and the drift is invisible by
-  // construction — which is a worse category than the stale comments this
-  // release's punch list is about, because it reads as verification.
-  //
-  // So it calls it now. src/utils/crossLinkMatch.js holds the matching,
-  // DOM-free so this file can run the real thing rather than an account of
-  // it, and wireCrossLinks is a thin wrapper over the same two functions.
-  // Check 3a below is the shipping code executed against the real corpus.
-  //
-  // The two hazards are still worth naming, because they are about author
-  // intent rather than mechanics and no execution can infer them:
-  //
-  //   * One phrase is a substring of another in the same group. Whichever
-  //     claims its text first takes words belonging to the other, and the
-  //     loser now silently fails to link at all rather than mis-rendering.
-  //   * A phrase occurs more times in the source text than there are links
-  //     using it. The match takes occurrence #1; if the author meant the
-  //     second, the link renders on the wrong sentence and looks fine.
-  //
-  // There are zero of either today, but that's luck rather than design: 41
-  // phrases are 12 characters or shorter and two are a bare em dash, so
-  // the next short phrase added is one coincidence away from breaking a
-  // neighbour. This check turns the accident into a guarantee.
-  //
-  // The group key includes `index`, not just { scene, id, field }: that is
-  // exactly what getOutboundLinks(scene, id, field, index) filters on and
-  // therefore exactly the set of links wireCrossLinks() is handed for one
-  // string. Two links in different stanzas of the same poem are replaced
-  // against two different strings and cannot collide, so keying without
-  // the index would fail builds over pairs that are actually fine.
   function countOccurrences(haystack, needle) {
     if (!needle) return 0;
     let n = 0;
@@ -229,8 +142,6 @@ export function verifyLinks() {
       }
     }
 
-    // Occurrence counts, for the groups whose source text resolves (any
-    // that don't have already been failed by check 2 above).
     const sceneEntry = scenes[f.scene];
     const piece = findPiece(f.scene, f.id);
     const fieldFn = sceneEntry?.fields?.[f.field];
@@ -250,12 +161,6 @@ export function verifyLinks() {
   });
   if (!collisions) ok(`phrase collisions: none across ${groups.size} render group(s) (no phrase contains another, every phrase occurs exactly as often as it is linked)`);
 
-  // ── 3a. The shipping matcher, run for real ────────────────────────────
-  // Not a model of wireCrossLinks: the same crossLinkPlan/applyCrossLinkPlan
-  // it calls, over every render group's actual text. A row that would not
-  // link at runtime fails the build here, whatever the reason — including
-  // reasons nobody has thought of yet, which is the whole point of running
-  // the code instead of describing it.
   let planned = 0, unplaced = 0;
   groups.forEach(entries => {
     const f = entries[0].link.from;
@@ -277,12 +182,6 @@ export function verifyLinks() {
   });
   if (!unplaced) ok(`matcher: all ${planned} links find a distinct home when the real matcher is run over the real text`);
 
-  // ── 3b. The corpus stays inside what the matcher understands ──────────
-  // crossLinkMatch.js decodes a deliberately short list of entity forms
-  // rather than all 2231 HTML5 named references, and tokenizes assuming this
-  // corpus's markup (<p>, <em>, <i>, <br> — no comments, no <script>). Both
-  // are safe while they are ENFORCED and are the next finding the moment
-  // they are merely assumed, so they are enforced here.
   const ALLOWED_TAGS = new Set(['p', 'em', 'i', 'br', 'strong', 'b', 'span']);
   let badEntities = 0, badTags = 0;
   groups.forEach(entries => {
@@ -306,15 +205,6 @@ export function verifyLinks() {
   });
   if (!badEntities && !badTags) ok('corpus: every linkable field stays inside the entity set and markup the matcher handles');
 
-  // ── 3c. The escaping bug, with a test behind it ───────────────────────
-  // The bug that prompted all of this — escape the phrase, then match it
-  // against decoded text, so any phrase containing & < or > silently drops —
-  // is fixed, and ZERO of the corpus's phrases contain any of those
-  // characters. So nothing in the real text would fail if the escaping came
-  // back tomorrow: a passing gate that cannot fail is indistinguishable from
-  // no gate. This is a fixture rather than corpus content because the
-  // alternative is authoring an ampersand into a piece of Scott's writing to
-  // satisfy a checker, which is the tail wagging the dog.
   const FIXTURE_HTML = '<p>Tom &amp; Jerry met a &lt;stranger&gt; at the fair, and Tom &amp; Jerry left.</p>';
   const FIXTURE = [
     { phrase: 'Tom & Jerry', to: { scene: 'sphere', id: 1 } },
@@ -325,13 +215,10 @@ export function verifyLinks() {
   const fout = applyCrossLinkPlan(FIXTURE_HTML, FIXTURE, 'x-link', fplan);
   const fixtureProblems = [];
   fplan.forEach((hit, i) => { if (!hit) fixtureProblems.push(`phrase ${JSON.stringify(FIXTURE[i].phrase)} did not match`); });
-  // The first occurrence is claimed, the second is left alone, and the
-  // matched text is the ORIGINAL raw slice rather than a re-encoding.
   if (!fout.includes('>Tom &amp; Jerry</a>')) fixtureProblems.push('the & phrase did not keep its source encoding inside the anchor');
   if (!fout.includes('>&lt;stranger&gt;</a>')) fixtureProblems.push('the angle-bracket phrase did not keep its source encoding inside the anchor');
   if (!/, and Tom &amp; Jerry left\.<\/p>$/.test(fout)) fixtureProblems.push('the second occurrence was not left untouched');
   if ((fout.match(/<a /g) || []).length !== 3) fixtureProblems.push(`expected 3 anchors, got ${(fout.match(/<a /g) || []).length}`);
-  // Nothing outside the inserted tags may change by a single byte.
   if (fout.replace(/<a [^>]*>|<\/a>/g, '') !== FIXTURE_HTML) fixtureProblems.push('text outside the inserted anchors was altered');
   if (fixtureProblems.length) {
     fixtureProblems.forEach(m => fail(`matcher fixture: ${m}`));
@@ -339,23 +226,6 @@ export function verifyLinks() {
     ok('matcher fixture: phrases containing & and < > link correctly, and nothing outside the anchors changes');
   }
 
-  // ── 4. Every link is authored into a field its scene actually renders ──
-  // A link whose `from.field` names content the scene withholds is the
-  // worst kind of half-broken: verify checks 1-3 all pass (the piece is
-  // real, the field is real, the phrase is verbatim), getInboundLinks()
-  // reports it on the target side, so the target piece really does say
-  // "Referenced from X" — but the source side has no clickable phrase
-  // anywhere, because the text holding it is never put on screen. The
-  // relationship exists in one direction only, and nothing errors.
-  //
-  // This is a live bug, not a hypothetical: 81 of Library's 85 links are
-  // authored into `note`, a field the Library scene does not display.
-  //
-  // RENDERED_FIELDS (src/links.js) is the scene -> displayed-fields map
-  // that makes this checkable. It is required, never optional: silently
-  // skipping this check when the map is missing would restore exactly the
-  // silent half-existence it exists to catch, so a missing map is a hard
-  // stop rather than a degraded pass.
   const RENDERED_FIELDS = linkStore.RENDERED_FIELDS;
   if (!RENDERED_FIELDS) {
     throw new Error(
@@ -369,8 +239,6 @@ export function verifyLinks() {
     );
   }
 
-  // Accepts a Set, an array, or a plain object of field -> truthy, so this
-  // doesn't break over which container src/links.js picked.
   function rendersField(rendered, field) {
     if (rendered instanceof Set) return rendered.has(field);
     if (Array.isArray(rendered)) return rendered.includes(field);
@@ -384,28 +252,10 @@ export function verifyLinks() {
     return [];
   }
 
-  // Two different states, deliberately kept apart. A field that appears in
-  // NEITHER map is an error — a typo, or a field somebody added to the data
-  // and never wired to anything. A field listed in WITHHELD_FIELDS is a
-  // stated editorial decision (library's `note`, withheld 2026-07-23), so it
-  // gets counted and reported rather than failing the build. Collapsing the
-  // two would mean either failing on 81 rows that are deliberately the way
-  // they are, or staying silent about a genuine mistake; the whole point of
-  // the second map is that "we chose this" and "we mistyped this" stop
-  // looking identical to the verifier.
-  //
-  // Since v4.0 getInboundLinks() also filters on RENDERED_FIELDS, so a link
-  // from a withheld field is now invisible from BOTH ends rather than
-  // dangling from one. That is what makes reporting sufficient here.
   const WITHHELD_FIELDS = linkStore.WITHHELD_FIELDS ?? {};
   let unknownFields = 0;
   const withheldRows = [];
 
-  // isRenderedField() takes the piece id since v4.0.2, because "does the
-  // scene show this field?" stopped having one answer for the whole field:
-  // library renders a note only for the items whose note is load-bearing in
-  // the link graph. Asking it per row, id included, is the only way this
-  // check reflects what a visitor actually sees.
   const conditionalRows = [];
   LINKS.forEach((l, i) => {
     const rendered = RENDERED_FIELDS[l.from.scene];
@@ -414,16 +264,13 @@ export function verifyLinks() {
       fail(`LINKS[${i}]: RENDERED_FIELDS has no entry for scene "${l.from.scene}" — add one (even an empty set) so it's a stated decision rather than an omission.`);
       return;
     }
-    // Unconditionally rendered.
     if (rendersField(rendered, l.from.field)) return;
 
-    // Conditionally rendered, and this particular piece qualifies.
     if (linkStore.isRenderedField(l.from.scene, l.from.field, l.from.id)) {
       conditionalRows.push(l);
       return;
     }
 
-    // Declared withheld, and not rescued by a condition. Reported, not failed.
     if (rendersField(WITHHELD_FIELDS[l.from.scene], l.from.field)) {
       withheldRows.push(l);
       return;
@@ -432,16 +279,6 @@ export function verifyLinks() {
     fail(`LINKS[${i}] (${l.from.scene}#${l.from.id} -> ${l.to.scene}#${l.to.id}): "${l.from.field}" is neither in RENDERED_FIELDS.${l.from.scene} (${renderedFieldNames(rendered).join(', ') || 'nothing'}) nor declared in WITHHELD_FIELDS.${l.from.scene}, and no conditional rule covers piece #${l.from.id}. Either the field name is wrong, or the scene gained a field nobody declared. A link into an undeclared field passes every other check in this file while being invisible on the source side.`);
   });
 
-  // The invariant that makes conditional visibility safe. Every row authored
-  // into a conditional field MUST have its source piece covered by that
-  // condition — otherwise the link is invisible on the source side, which is
-  // the whole failure this feature exists to prevent, quietly reintroduced.
-  // No scene has a conditional field as of 4.11.21 — library's `note`, the
-  // only one there has ever been, went with the notes themselves — so this
-  // loop has nothing to iterate. It stays because the invariant is about the
-  // mechanism, not about that field: the next scene to want per-item
-  // visibility gets the check for free rather than rediscovering why it needs
-  // one.
   const CONDITIONAL_FIELDS = linkStore.CONDITIONAL_FIELDS ?? {};
   let uncovered = 0;
   LINKS.forEach((l, i) => {
@@ -455,22 +292,6 @@ export function verifyLinks() {
     ok(`conditional fields: ${conditionalRows.length} row(s) render from a conditional field, all covered`);
   }
 
-  // ── 5. Nothing unpublishable rides along when a field is switched on ──
-  // This scanned every library `note` that a cross-link was about to publish,
-  // looking for the marks of a working note — "flag for Scott", a bare ISBN,
-  // a dated quote — and failed the build rather than let one go out. It found
-  // eight, and it was right about all eight.
-  //
-  // It is gone with the field, and the lesson it was built from is the one to
-  // carry forward rather than the code: **turning a field on publishes every
-  // word in it, not just the words you had in mind.** The check to write is
-  // the one for whatever field gets switched on next; there is no way to
-  // write it in advance, because the marks of "not meant to be read" are
-  // specific to what the field was being used for.
-  //
-  // The deeper version, learned the hard way in 4.11.21: it was never really
-  // a question about which notes were publishable. None of them should have
-  // been there. A field nobody asked for is not made safe by scanning it.
 
   if (!unknownFields) {
     ok(`rendered fields: all ${LINKS.length} rows link from a field that is either rendered or explicitly declared withheld`);
@@ -488,19 +309,6 @@ export function verifyLinks() {
   return { ok: failures === 0, failures, log };
 }
 
-// ─── CLI entry point ────────────────────────────────────────────────────────
-// Only runs when this file is executed directly (`node scripts/verify-links.mjs`
-// / `npm run verify-links`), not when vite.config.js imports verifyLinks().
-// pathToFileURL(), not a `file://` + argv[1] template. Building the URL by
-// concatenation gets the escaping wrong for any path containing a space or
-// a non-ASCII character (both need percent-encoding in a file URL), so the
-// two strings never match and the guard is simply false -- the script
-// exits 0 having verified nothing at all, which for a verification script
-// is the worst available failure mode: a silent pass. This repo lives
-// under a path with no space today, but "nobody will ever check this out
-// into ~/My Projects/" is not a guarantee worth resting a build gate on.
-// pathToFileURL does the encoding the same way import.meta.url already
-// did, so the two are comparable for any path.
 if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   const { ok, failures, log } = verifyLinks();
   log.forEach(line => console.log(line));

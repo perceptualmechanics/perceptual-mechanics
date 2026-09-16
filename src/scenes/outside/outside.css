@@ -1,24 +1,3 @@
-/* outside scene styles (title + hint + sound-toggle, positioned on
-   document.body — see harmonics.css's own header for the z-index/
-   stacking-context reasoning every scene with body-level chrome
-   shares). outside.js owns creating/removing each element itself.
-   Accent color is a cool violet rather than the gold family Sphere/
-   Scroll/Orrery/Beamline/Harmonics share — this scene isn't one more
-   piece in that accent thread, it gets its own, and round 3's lotus
-   palette (violet petals, gold center) only reinforces that choice.
-
-   Round 2 (2026-08-24): removed .outside-account-label and the entire
-   .outside-panel block — this scene is a pure visual object, no text
-   of any kind once it's running. Round 3, same day: the panel-removal
-   and no-text rules both carry straight through the full pivot from a
-   projection diagram to a generated flower (see outside.js's own
-   round-3 header note) — nothing here needed to change. */
-
-/* Same flex-wrapper centering approach as .harmonics-title-row — see
-   #site-title-row's fuller comment in styles/main.css. */
-/* Mobile-first (standing convention, see NOTES.md/STANDARDS.md): base rule
-   below targets the smallest viewport by default; the min-width query
-   layers the wider-viewport values on top, never the reverse. */
 .outside-title-row {
   position: fixed;
   bottom: var(--title-block-bottom-mobile); left: 6vw; right: 6vw;
@@ -30,8 +9,6 @@
 	}
 }
 .outside-title {
-  /* Same letter-spacing-trailing-gap centering fix as harmonics-title —
-     see that rule's fuller comment in harmonics.css. */
   color: rgba(215,200,255,0.85);
   font-size: clamp(0.85rem, 2.5vw, 1.6rem);
   --tracking: clamp(0.1em, 1vw, 0.4em);
@@ -55,10 +32,6 @@
   font-family: 'Arapey', serif;
 }
 
-/* ─── Sound toggle ─────────────────────────────────────────────────────────
-   Same bottom-left placement/behavior as harmonics-sound-toggle (the
-   explicit first-gesture trigger AND ongoing mute control), tinted to
-   this scene's own violet rather than gold. */
 .outside-sound-toggle {
   position: fixed; bottom: 5.5rem; left: 1rem; z-index: 310;
   display: flex; align-items: center; gap: .55rem;
@@ -85,11 +58,6 @@
   background: #cba7ff; box-shadow: 0 0 8px 2px rgba(200,170,255,0.7);
 }
 
-/* ─── Screen-reader live region ────────────────────────────────────────────
-   Announces which petal's chime was just triggered via the keyboard jump
-   list (outside.js) — visually hidden, same off-screen-clip technique as
-   beamline-sr-live. The jump list itself is styled globally (.pm-jumplist
-   in main.css), no scene-specific CSS needed for it. */
 .outside-sr-live {
   position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
   overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;

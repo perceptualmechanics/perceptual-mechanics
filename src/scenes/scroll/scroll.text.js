@@ -1,33 +1,3 @@
-// ─── Raw source texts for the scroll ──────────────────────────────────────
-// Full, unedited texts (Scott's own writing, 2000-2012), chunked into natural
-// reading paragraphs. Holography is the one deliberate exception: a complete,
-// self-contained opening movement excerpted from a much longer chapter (see
-// scroll.js header comment for why).
-//
-// fireVigil and fireCalamity are also excerpts, not the full source document:
-// Fire.doc (Nov 2003) opens with a word-association litany ("Fire. Burn.
-// Sun. Light...") that's reserved for the elements/fire livestream project
-// instead, then runs directly into these two embedded fictional scenes —
-// a dialogue between a dying man and Debbie about death and religion, and a
-// party scene (a roommate's physics/Matrix rant giving way to Edward and
-// Maria's flirtation, a wildfire visible in the middle distance) — which are
-// reproduced here in full, unedited, exactly as they run in the source.
-//
-// crocodilePhotograph is undated but later than everything else on the scroll
-// (PlayStation, Call of Duty, "man cave" as an unremarked-on term) — a
-// complete, self-contained dark-comedy short story, recovered from a modern
-// Pages/IWA file via protobuf text-run extraction. Full text, nothing cut.
-//
-// pygmalion is a complete personal essay, internally dated to the events of
-// May 2000 (an early online personal ad, a woman calling herself "Jane" who
-// turns out to have spent eight years impersonating her own friend Melissa —
-// borrowed hobbies, borrowed biography, a fabricated Southern accent).
-// Recovered from an old Windows profile backup ("possible forcefed.txt", a
-// draft later polished into "Pygmalion.doc" — the title used here). Full
-// text, unedited.
-//
-// This file holds the scroll's whole text layer: raw bodies, Ogham
-// transliteration, and the piece list that ties them together.
 
 export const flying = [
   `One time, I was on a plane by myself. I was leaving everything I knew, everyone I loved, everywhere I had been, to try and stake my claim. To get my career, my passion, and my life going. I looked out the scratchy Plexiglass window. I saw the sea of clouds below me. I saw the horizon, infinite and daring. I looked down at the green and brown earth. And a wave of vertigo overcame me. I grabbed the armrests tightly, squeezing my eyes shut, trying to make the world stop spinning...no good.`,
@@ -90,11 +60,6 @@ export const selfMutilation = [
   `Fuck them.`,
 ];
 
-// cartography is "In The End It Falls Slowly Through The Aether" — a single
-// raindrop's entire life told through real physics, one paragraph per stage
-// of the fall. Recovered from Cartography.doc (archive/Writing archive);
-// OLE metadata on the source file gives create_time 2002-03-11 and
-// last_saved_time 2003-04-19, hence the '2002–2003' date below.
 export const cartography = [
   `As the droplets descend down the texture of the leaf, coalescing at the downward point, anticipating the end of their stable lives, joining a hundred million molecules for the freefall drop, poised on the brink before the gravity of the situation overwhelms the surface tension, for that brief instant every Mickey Mouse molecule knowing what is to come, feeling the onward surge as the weight increases, ever steadier, until there's no more time and —`,
   `the pull downward begins, the drop falls from the leaf, which recoils upwards in release, and it is angels in a ball as they're pulled ever downward, freefall, guts flying, screaming, and everyone wants to fly apart but that surface tension pulls them in, forcing them to stick together, and together they fall, bound by forces outside their control —`,
@@ -204,12 +169,6 @@ export const projection = [
   `Besides, I'm terrible with endings. I warned you. After a few years, I got back in touch with L.A.X. She had gotten married, then divorced; it sounds like she went through hell and back. It disarmed me; my intention was no longer what it once was. Sadler is doing really well; I just saw pictures of his wedding on Facebook. Things change irrevocably; we exit cycles. What's left, after all that time, is an equation, running outside me now, its own other world, of two strange attractors caught in a loop, one that I can look at from afar and remember its pull, swirling upwards and out, like smoke over hills refracting the endless yellow light.`,
 ];
 
-// A verbatim scene from the middle of Projection (originally run into the
-// surrounding prose as one continuous paragraph), reformatted here into its
-// component screenplay elements — scene heading, action, character, dialogue,
-// parenthetical — so it can be rendered in standard Hollywood script format.
-// Not a single word added, removed, or reworded; only line breaks and the
-// slug/character/action/parenthetical labeling are new.
 export const projectionScript = [
   { type: 'slug', text: 'EXT. - PATIO - NIGHT' },
   { type: 'action', text: 'A large pool, behind a huge house in Malibu, overlooks the Pacific Ocean. The patio is crowded with people, mostly in their 20s and 30s, with the distinctive mien of film industry inflecting their every word and gesture. At the far side of the pool, SCOTT and ALI, an attractive African-American woman, chat.' },
@@ -393,17 +352,6 @@ export const pygmalion = [
   `And the instant messengers will stay off for a while, I think.  I think that will do just fine.`,
 ];
 
-// ─── Ogham transliteration ─────────────────────────────────────────────────
-// A letter-for-letter cipher from the Latin alphabet into Ogham Unicode
-// (U+1680–U+169A), not a claim of scholarly Old Irish orthography. The 20
-// core letters (A B C D E F G H I L M N O P Q R S T U Z) use their real,
-// well-attested traditional sound values. The historical Ogham alphabet has
-// no letters for J K V W X Y — English simply has six more letters than Old
-// Irish did — so those six are assigned to Ogham's five "forfeda" (the
-// later-added supplementary letters, originally diphthongs/rare sounds) plus
-// Ngeadal, as a stylized modern adaptation. X→Eamhancholl is itself a fairly
-// common convention; the other five are this project's own reasonable
-// choice, not a documented historical mapping.
 
 const OGHAM_MAP = {
   A: 'ᚐ', // Ailm
@@ -434,18 +382,8 @@ const OGHAM_MAP = {
   Z: 'ᚎ', // Straif
 };
 
-// U+1680 OGHAM SPACE MARK, not an ordinary space. In Noto Sans Ogham every
-// letter carries a segment of the stemline across its top, and U+1680 is a
-// bare segment of that stem with no notches — so the line runs unbroken from
-// end to end and the words read as gaps in the notching, which is how Ogham
-// actually divides them. A plain U+0020 has no outline at all, and put a hole
-// in the stemline at every word.
 const SPACE_MARK = ' ';
 
-// Letters map, whitespace collapses to a single word-space mark, everything
-// else (punctuation, digits, quote marks) is silently dropped — Ogham
-// inscriptions didn't carry Latin punctuation, so this reads as an honest
-// transliteration rather than a broken one full of missing-glyph gaps.
 export function toOgham(str) {
   let out = '';
   let lastWasSpace = true; // suppress a leading space mark
@@ -463,26 +401,6 @@ export function toOgham(str) {
   return out.endsWith(SPACE_MARK) ? out.slice(0, -SPACE_MARK.length) : out;
 }
 
-// ─── The Scroll: the twelve pieces, in order ───────────────────────────────
-// The scroll itself shows these deliberately bare — no titles, no sources, no
-// dates, no glosses (see scenes/scroll.js's header for why: it's meant to
-// read as something found, not published). That's a decision about the
-// *scroll*, not about the writing, and it doesn't survive contact with a
-// crawlable page: a reader arriving from a search result needs to know what
-// they've landed on, and a page with no headings is unusable with a screen
-// reader besides.
-//
-// So the titles and dates live here — not invented for the occasion, but the
-// real ones, traceable to the source documents in the archive (Fire.doc for
-// The Vigil and The Calamity, Pygmalion.doc, and so on). The scene ignores
-// `title` and `date` entirely and renders only `body`; the prerender step
-// that builds /text/scroll/ uses all three.
-//
-// Order is chronological, oldest first — the same order the scroll lashes its
-// patches together in, oldest and most soot-stained at the top.
-//
-// `excerpt` marks the three pieces that aren't the complete source document,
-// so the published page can say so plainly rather than implying a full text.
 
 export const scrollPieces = [
   { id: 1, key: 'iron',           title: 'Iron Gods',                              date: 'c. 2000',            body: ironGods },
@@ -499,10 +417,6 @@ export const scrollPieces = [
   { id: 10, key: 'holography',     title: 'Holography',                             date: '2009–2012',          body: holography,
     excerpt: 'One complete, self-contained movement — Jeremy Constantilios’s flight into and landing in Los Angeles — excerpted from a chapter running to roughly 10,500 words, ending at a natural scene break.' },
   { id: 11, key: 'projection',     title: 'Projection',                             date: '2009–2012',          body: projection,
-    // The one island of screenplay formatting on an otherwise all-prose
-    // scroll: a scene the narrator is recounting, so it's set as a real
-    // script rather than folded into a running paragraph. Not a word of it
-    // changed — only the line breaks are new.
     script: { after: 23, lines: projectionScript } },
   { id: 12, key: 'crocodile',      title: 'The Crocodile Photograph',               date: 'undated, later',     body: crocodilePhotograph },
 ];

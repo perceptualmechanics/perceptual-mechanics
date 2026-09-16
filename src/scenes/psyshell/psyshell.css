@@ -1,86 +1,9 @@
-/* Psyshell scene styles (title, hint, ordinal, sound toggle), positioned on
-   document.body — see harmonics.css's header for the z-index/stacking-context
-   reasoning every scene with body-level chrome shares. psyshell.js owns
-   creating and removing each element itself.
-
-   ─── The palette, and why the green went ───────────────────────────────────
-   Until 4.8.0 this scene was white on a green-black void, and the green was
-   argued for at length: a psyshell is living apparatus a dead thing borrows,
-   because life is the only thing that functions in the green. That was true of
-   the flower. It is not true of a lens held in a web, and a scene-
-   wide green field that no longer describes the scene is decoration with a
-   footnote attached.
-
-   The green survives in the one place it means something — the crystal's own
-   interior, which is the residue of taint that let the lens through screening
-   and the reason it was pulled out and read at all (psyshell.js, CRYSTAL_DEEP).
-   The chrome is cool near-white on the near-black the web is drawn against.
-   There is no bench and no lamp as of 4.8.2 — see psyshell.js, "No bench, and
-   no room": what makes an object read as held is scale and framing, and a floor
-   is opaque in a scene whose claim is that the field is everywhere.
-
-   Separation from Outside, which the green was also doing work for, now comes
-   from form rather than hue: a five-lobed violet lotus and a small crystal
-   antler on a lit bench do not read as the same thumbnail at 200px.
-
-   Contrast is against this scene's real composited backdrop rather than pure
-   black — which is the right instinct, and this paragraph still got the
-   backdrop wrong: it named #0a0806, and ROOM_COLOR is 0x07070a. The ratio it
-   quoted was computed against a colour the scene does not use.
-
-   The figures are not restated here, because nothing in the tree recomputes
-   them and a ratio in a comment is the thing this release is about.
-   verify-css-invariants checks every translucent colour in this file against
-   its most favourable possible ground and fails the build below AA, which is
-   a real floor rather than a remembered measurement; what it cannot do is
-   know the actual backdrop, so if these colours or ROOM_COLOR change, measure
-   again rather than trusting this paragraph. Beamline's title sat below AA
-   for three releases on exactly the assumption this one made.
-
-   Mobile-first (standing convention, see STANDARDS.md): base declarations
-   target the smallest viewport; nested min-width queries layer the wider values
-   on top, never the reverse.
-
-   ─── One block per selector ────────────────────────────────────────────────
-   This file carried .psyshell-title, .psyshell-title-name, .psyshell-title-sub
-   and .psyshell-hint TWICE from 4.6.1 until 4.8.0 — the corrected lockup first
-   and the superseded one second, which is the one the cascade used. The scene
-   has been shipping a 1.9rem title with `text-indent` since the day the fix
-   landed, and the fix's own comment sat directly above the block overriding it.
-   Nothing rendered obviously wrong, which is why it survived two releases. If
-   a rule here needs changing, change it in place; a second block is not an
-   edit. */
 
 .psyshell-title, .psyshell-hint {
   position: fixed; pointer-events: none; z-index: 310;
   font-family: 'Arapey', serif; transition: opacity 0.3s ease;
 }
 
-/* Title block at bottom-center, anchored to the shared --title-block-bottom
-   var like every other scene (site-wide consistency pass, 2026-08-25), so this
-   stays clear of #site-title's footer pill by construction. Full-width flex row
-   rather than left:50% + translateX(-50%) — see #site-title-row's comment in
-   styles/main.css for why self-centering by transform was replaced everywhere
-   in this codebase.
-
-   ─── The lockup follows the family, 4.6.1 ──────────────────────────────────
-   The first version of this file diverged from the site's title convention on
-   four counts and each one was a small invention rather than a decision: it set
-   sentence case where Apollo, Outside, Harmonics and Beamline all set
-   `text-transform: uppercase`; a fixed 1.5rem where they all use
-   `clamp(0.85rem, 2.5vw, 1.6rem)`; a fixed 0.22em of tracking where they use a
-   `--tracking` custom property that scales with the viewport; and it corrected
-   letter-spacing's trailing gap with `text-indent`, where every other scene
-   uses `margin-right: calc(-1 * var(--tracking))`.
-
-   The two do the same thing at one width and different things at every other,
-   which is the same shape as the constants 4.4.2 had to remove: an indent
-   shifts the text inside its box, a negative margin shrinks the box, and only
-   the second one lets the flex row centre it by its real ink.
-
-   The subhead is italic, which is the site's own subhead treatment (Orbiter,
-   Beamline) and the reason a real italic face is self-hosted rather than
-   synthesized — see styles/main.css's arapey-400italic. */
 .psyshell-title {
   bottom: var(--title-block-bottom-mobile); left: 5vw; right: 5vw;
   text-align: center; color: rgba(230, 242, 248, 0.9);
@@ -98,12 +21,6 @@
   text-transform: uppercase;
   text-shadow: 0 0 18px rgba(150, 210, 255, 0.26);
 }
-/* "lens RE73415" is a catalogue number, and the flatness of it is the point:
-   the thing on the bench is one item out of a jar of thousands, and the scene
-   says so in the two words under its own name rather than in a caption. It is
-   lower case and italic like every other subhead on this site, and it is NOT
-   uppercased here — the identifier's own capitals are the only capitals in it,
-   which is how it would be written on the jar. */
 .psyshell-title-sub {
   font-size: 0.7rem;
   --tracking: 0.08em;
@@ -123,30 +40,8 @@
   color: var(--hint-text-color);
 }
 
-/* ─── The ordinal ───────────────────────────────────────────────────────────
-   The only plain text the scene renders. Not a readout and deliberately not a
-   panel: a box in the corner makes the visitor someone reading a database,
-   and what this scene shows is somebody else's record being read. The sentence
-   itself goes through the crystal in the Union's notation instead.
-
-   Set in Electrolize rather than Arapey — the UI face, not the writing face —
-   because this is an instrument reading, not a piece of text. The source
-   attribution is gone with the panel: "SELECTED WORKS" is a citation, and the
-   site's posture is read the writing on its own. */
 .psyshell-ordinal {
   position: fixed; z-index: 311;
-  /* Bottom-right. Top-left was the first placement and it rendered underneath
-     #fullscreen-toggle, which was then a fixed circle in that corner — found
-     by looking at a screenshot, not by reading the stylesheet, because nothing
-     in this file mentions that button. The hint is top-right, the sound toggle
-     bottom-left, and the title block bottom-centre, so this sits right of the
-     title and below the hint.
-
-     4.9.0 moved the fullscreen control into the nav row, so top-left is free
-     again — and this stays where it is anyway. The corner was never the
-     reason: an instrument reading belongs near the title block it annotates,
-     and it has read that way for four releases. Recorded so the freed corner
-     doesn't look like an invitation. */
   bottom: 5.7rem; right: 1.2rem; margin: 0;
   font-family: 'Electrolize', sans-serif;
   font-size: 0.68rem; letter-spacing: 0.22em;
@@ -159,10 +54,6 @@
 	}
 }
 
-/* Same bottom-left placement and behaviour as every other scene's sound
-   toggle (it is both the explicit first-gesture trigger and the ongoing mute
-   control), tinted to this scene's lamp-and-crystal palette rather than gold
-   or violet. */
 .psyshell-sound-toggle {
   position: fixed; bottom: 5.5rem; left: 1rem; z-index: 310;
   display: flex; align-items: center; gap: .55rem;
@@ -185,19 +76,12 @@
   border-color: rgba(190, 226, 255, 0.65); color: rgba(238, 248, 255, 0.95);
 }
 
-/* Visually hidden, still announced. Same shape as every other scene's live
-   region rather than a second implementation of the same idea. */
 .psyshell-sr-live {
   position: absolute; width: 1px; height: 1px;
   margin: -1px; padding: 0; border: 0;
   clip-path: inset(50%); overflow: hidden; white-space: nowrap;
 }
 
-/* Reduced motion stills the propagation and the idle turn, which psyshell.js
-   handles — this only takes the glow off the title, since a text-shadow that
-   does not animate is not motion and stays. Nothing here disables the object
-   itself: a visitor who asked for no motion still gets the lens, still turns it
-   by dragging, and still reads a filapixel by pointing at one. */
 @media (prefers-reduced-motion: reduce) {
   .psyshell-title, .psyshell-hint, .psyshell-ordinal { transition: none; }
 }

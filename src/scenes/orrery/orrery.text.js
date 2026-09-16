@@ -1,12 +1,5 @@
-// ─── The Orrery of Los Feliz: the found story ──────────────────────────────
-// The placard text the scene's read-more panel shows, colocated alongside
-// orrery.js/css/html so the prerender step that builds /text/orrery/
-// reads the same source the scene does.
 
 export const ORRERY = {
-  // The orrery is one placard, one piece — id kept for consistency with
-  // every other scene's addressing scheme (see NOTES.md's Linking &
-  // Addressing entry), not because there's more than one thing to number.
   id: 1,
   name: 'The Orrery of Los Feliz',
   era: 'found · undated',

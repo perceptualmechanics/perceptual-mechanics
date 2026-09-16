@@ -1,110 +1,5 @@
-// ─── Resonances: cross-scene, connotative links (Layer 2) ──────────────────
-// This is deliberately a SEPARATE store from src/links.js, not an extension
-// of it. links.js (Layer 1) is verbatim phrase-matched, one-directional
-// (from carries the actual phrase, to is just an id), and scoped to
-// relationships Scott hand-authored while writing each piece. This file
-// (Layer 2) is discovered, not authored — thematic/associative connection
-// between two pieces of found or written text, not necessarily sharing a
-// phrase, discovered by a full-corpus reasoning pass rather than written in
-// at piece-creation time. It exists to feed the harmonics scene.
-//
-// A row here is symmetric — two pieces evoke each other, neither is a
-// "source" the way links.js's `from` is — and carries a `rationale`
-// instead of a matched `phrase`, since there's no single verbatim
-// substring to check most of these against. The rationale is what makes a
-// discovered link legible and reviewable at all; see
-// docs/harmonics_resonances.md for the actual candidate list, the
-// verified quoted text behind each rationale, and review status.
-//
-// `basis` — added after round 1 review — separates two genuinely different
-// KINDS of claim this file makes, which get verified and reviewed
-// differently:
-//   'verbatim'    — two spans of text are mechanically, provably the same
-//                    (or the same with only punctuation/whitespace
-//                    differences) found passage appearing in two different
-//                    pieces. Not a judgment call — checked by
-//                    scripts/find-verbatim-overlaps.mjs (word-shingle
-//                    matching across the whole corpus), same category of
-//                    certainty as verify-links.mjs checking a phrase
-//                    exists. These rows don't need a close read to
-//                    confirm; they need Scott to decide whether he *wants*
-//                    the connection shown, since the fact of it isn't in
-//                    question.
-//   'connotative' — genuine thematic/imagistic/associative resonance with
-//                    no shared source text, where the rationale is doing
-//                    real interpretive work and is the only thing that
-//                    makes the claim checkable at all. These need an
-//                    actual read, not just a glance.
-//
-// `status` is the real review gate, not decoration:
-//   'pending'  — proposed by the discovery pass, not yet reviewed.
-//   'approved' — Scott read the rationale (or, for verbatim rows, decided
-//                he wants the connection shown) and confirmed it. Only
-//                these should ever be read by the harmonics scene.
-//   'rejected' — Scott read it and said no. Kept (not deleted) so the
-//                discovery pass's full output stays auditable — a rejected
-//                row is a record that this pair was considered and turned
-//                down, not a gap that looks unconsidered.
-//
-// Endpoints use the same { scene, id } shape links.js already established,
-// with one addition: theater endpoints carry `beatId` instead of `id`,
-// addressing one specific beat (a line of dialogue or a stage direction)
-// rather than a whole 16-scene-granularity piece. That's a genuinely
-// different, disjoint id space from theater's own scene-level `id`
-// (1..16, what links.js/verify-links.mjs already use) — see
-// theater.text.js's own header for why the two never collide. Every other
-// scene keeps using plain { scene, id } exactly as links.js does; only
-// theater needs the extra field, because it's the one scene whose pieces
-// (16 scenes covering 736 individual beats) are coarser than the unit a
-// resonance actually wants to point at.
-//
-// Standing exclusions for any discovery pass, mechanical or manual — real
-// mistakes a past pass actually made, not hypothetical ones:
-//   - SAME-SOURCE-DOCUMENT SPLITS. Two pieces that are excerpts of the
-//     SAME underlying document (e.g. scroll's Holography and Projection,
-//     both drawn from one ~10,500-word chapter per scroll.text.js's own
-//     header) aren't a discovered echo — they're one text that got cut
-//     into two pieces. A pass should recognize this from each piece's own
-//     sourcing comment before proposing a row, not rely on a human
-//     reviewer to catch it after the fact.
-//   - SAME-SCENE PAIRS. This file is Layer 2 — CROSS-scene links, by
-//     design (see the top of this header). A same-scene connotative echo
-//     (e.g. two Sphere fragments resonating with each other) is real, but
-//     it isn't this file's job: links.js/Layer 1 already covers in-scene
-//     linking, on a "Referenced from X" model. A round-3 pass surfaced
-//     three same-scene candidates (Sphere's Matrices/In The Flesh and
-//     Stolnaphase/Starbought, Scroll's Pygmalion/Identity Theft) and they
-//     were excluded here for exactly this reason — genuinely additive
-//     material if the site ever wants a same-scene connotative layer, but
-//     that's a scope decision for Scott to make deliberately, not
-//     something a discovery pass should fold in by default.
-//
-// This file feeds the harmonics scene (src/scenes/harmonics/),
-// shipped since v2.5.0 — only 'approved' rows are ever rendered there
-// (see getApprovedResonances below), so a 'pending' row added here has no
-// live effect until Scott reviews and approves it. Rows 1–20 were reviewed and approved by
-// Scott on 2026-08-16 (docs/harmonics_resonances.md, "i'm good with
-// all of these"). Rows 21–22 were added the same day after Scott pointed
-// out that Butterfly has found text too (its own placard title), and
-// approved separately ("approved, fold them in") once he'd read them. Every
-// row here is now 'approved'; a future discovery pass adding more rows
-// still starts them at 'pending', same as every round so far.
 
 export const RESONANCES = [
-  // ── VERBATIM: mechanically confirmed shared found text ──────────────────
-  // Every row below was found or confirmed by scripts/find-verbatim-
-  // overlaps.mjs (word-shingle matching, K=5, 6-word minimum reported
-  // span — see that script's own header) except #5, a 4-word overlap
-  // ("seven colored prisms starlight") one word short of the script's
-  // threshold but confirmed by direct reading; included because it's the
-  // same passage family as #3/#4/#6 below, not a separate claim. The
-  // script also surfaced 12 other exact-overlap pairs, all intra-scene
-  // (library-note cross-references and theater's own intentional
-  // callback lines within a single play) — real, but not harmonics
-  // material: they're the site's existing internal annotation/callback
-  // style working as designed, not a cross-piece discovery. Full script
-  // output is reproducible by running `node
-  // scripts/find-verbatim-overlaps.mjs`.
   {
     id: 1,
     basis: 'verbatim',
@@ -162,7 +57,6 @@ export const RESONANCES = [
     status: 'approved',
   },
 
-  // ── CONNOTATIVE: genuine thematic/associative resonance, no shared text ─
   {
     id: 8,
     basis: 'connotative',
@@ -267,12 +161,6 @@ export const RESONANCES = [
     rationale: 'Deliberate inversion, not similarity: Horace was "trained as an artist. Modern sculpture. I was good" before Hell reduced him to paperwork, while the Orrery\'s builder — "an unlikely candidate to construct such a thing. A dropout of community college" — produced an untrained masterpiece. Two sculptors, opposite relationships between training and output.',
     status: 'approved',
   },
-  // ── Added after the 2.4.2 approval round: Butterfly was pointed out as
-  // having found text after all — not body copy like the other six, but
-  // its own placard title, "Chaos Butterfly in Phase Space, 2026"
-  // (src/scenes/butterfly/butterfly.text.js). That title turns out to be a
-  // near-verbatim echo of the exact phrase two already-approved pieces use
-  // (row 18's own Sphere/Scroll pairing). Reviewed and approved 2026-08-16.
   {
     id: 21,
     basis: 'connotative',
@@ -290,22 +178,6 @@ export const RESONANCES = [
     status: 'approved',
   },
 
-  // ── Round 3 discovery pass (2026-08-17): expanded resonance discovery ───
-  // Scott's own instruction for this round: the first pass's high approval
-  // rate (22/22) is evidence it was too conservative, not that the corpus
-  // is thin, and "quality over coverage, small defensible list" is
-  // explicitly retired as a governing instruction — the review gate below
-  // (his own read of each row) is the real quality control, not list
-  // length. Run as three separate targeted passes across the full corpus
-  // (all 8 found-text scenes, read in full for this round) rather than one
-  // holistic read: shared vocabulary/imagery beyond the mechanical
-  // exact-phrase scanner, emotional/thematic shape independent of shared
-  // words, and structural/documentary echoes (direct naming, shared
-  // source documents, library notes that already cite a piece by name —
-  // row 17's Projection/Truth and Beauty pairing is the existing model for
-  // this last category). Deliberately left large and uneven rather than
-  // pre-filtered for defensibility, per instruction; every row below is
-  // 'pending', additive only — rows 1–22 above are untouched.
   {
     id: 23,
     basis: 'connotative',
@@ -499,19 +371,6 @@ export const RESONANCES = [
     status: 'approved',
   },
 
-  // ── Second discovery pass (2026-08-18): a separate close read of the
-  // full corpus, run independently of the round-3 pass above (same
-  // instruction — no pre-filtering for defensibility, weaker candidates
-  // flagged rather than cut). Five of that pass's candidates turned out
-  // to be the same pair as an existing row above (28, 29, 36, 42, 43) —
-  // each of those rationales was appended with a one-line note rather
-  // than duplicated into a new row, since two independent passes landing
-  // on the same connection is itself worth recording. Three more (Sphere
-  // Matrices/In The Flesh, Sphere Stolnaphase/Starbought, Scroll
-  // Pygmalion/Identity Theft) were same-scene pairs, excluded per the
-  // standing exclusion documented at the top of this file. What follows
-  // is everything else from that pass: genuinely new, cross-scene,
-  // non-duplicate candidates.
   {
     id: 47,
     basis: 'connotative',
@@ -658,31 +517,11 @@ export const RESONANCES = [
   },
 ];
 
-// ─── Query helpers ──────────────────────────────────────────────────────────
-// Same shape as links.js's getOutboundLinks/getInboundLinks, for the two
-// consumers Phase 3 actually has: the harmonics scene itself (needs
-// every approved row, full stop) and each found-text scene's own panel
-// code (needs "does the piece I'm currently showing participate in any
-// approved resonance" — the thread-follow entry point).
 
-// Every row the harmonics scene should render as a strand. Only
-// 'approved' — 'pending'/'rejected' rows exist for the review record, not
-// for display.
 export function getApprovedResonances() {
   return RESONANCES.filter(r => r.status === 'approved');
 }
 
-// Round 10 (2026-08-18): Harmonics' "living atmosphere" — faint, unlit,
-// independently drifting points representing the pieces named in rows
-// still awaiting review. Deliberately NOT the same query as approved rows:
-// this is an honest picture of the system's actual current state (more
-// connections found than confirmed, some always still in motion), not
-// decoration invented for its own sake — see harmonics.js's own
-// comment where this is consumed for how these render (never Kuramoto-
-// coupled, no full payoff panel). 'rejected' rows are excluded on purpose:
-// Scott already looked at those and said no, so surfacing them again,
-// even faintly, would contradict a real decision rather than just show
-// an in-progress one.
 export function getPendingResonances() {
   return RESONANCES.filter(r => r.status === 'pending');
 }
@@ -693,10 +532,6 @@ function endpointMatches(ep, scene, id, beatId) {
   return ep.id === id;
 }
 
-// Approved rows where the given piece is either endpoint — what a scene's
-// panel checks to decide whether to show a thread-follow filament next to
-// whatever's currently open. `beatId` only matters for theater; every
-// other scene passes just (scene, id).
 export function getResonancesForPiece(scene, id, beatId) {
   return RESONANCES.filter(r =>
     r.status === 'approved' &&

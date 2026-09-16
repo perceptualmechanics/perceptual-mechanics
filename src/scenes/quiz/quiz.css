@@ -174,7 +174,7 @@
   background: rgba(226, 206, 150, 0.14);
   color: rgb(244, 236, 216);
 }
-/* The ring goes on the pip, not on the transparent input sitting over it. */
+
 .quiz-choice input:focus-visible + span {
   outline: none;
   box-shadow: var(--focus-ring-outer, 0 0 0 2px #f0d68c, 0 0 0 5px rgba(0, 0, 0, 0.72));

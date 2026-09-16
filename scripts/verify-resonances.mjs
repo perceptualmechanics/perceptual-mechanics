@@ -1,22 +1,3 @@
-// ─── Verify resonances: repeatable check for the Layer 2 (harmonics)
-// link store ─────────────────────────────────────────────────────────────
-// Same discipline as verify-links.mjs, for src/resonances.js instead of
-// src/links.js. Checks, per row:
-//
-//   1. Both endpoints (`a`, `b`) resolve to a real piece — for theater,
-//      via `beatId` into theater.text.js's BEATS, for every other scene
-//      via the normal { scene, id } pair.
-//   2. `a` and `b` aren't the same piece (a resonance needs two things).
-//   3. No duplicate unordered pair — { a, b } and { a: b, b: a } both
-//      count as the same row already existing.
-//   4. `status` is one of 'pending' | 'approved' | 'rejected'.
-//   5. `rationale` is a real, non-empty string — a resonance with no
-//      stated reason isn't reviewable, so it isn't valid.
-//
-// Exported as a function, same reason as verify-links.mjs: vite.config.js
-// can run it as a build plugin, and `npm run verify-resonances` gives a
-// fast standalone check while editing docs/harmonics_resonances.md or
-// src/resonances.js by hand.
 
 import { fragments } from '../src/scenes/sphere/sphere.text.js';
 import { poems } from '../src/scenes/orbiter/orbiter.text.js';
@@ -33,10 +14,6 @@ import { pathToFileURL } from 'node:url';
 const STATUSES = new Set(['pending', 'approved', 'rejected']);
 const BASES = new Set(['verbatim', 'connotative']);
 
-// Per-scene id resolvers, one function each: (endpoint) => piece | undefined.
-// Deliberately separate from verify-links.mjs's `scenes` map rather than
-// shared — that map is keyed for phrase-field lookups Layer 1 needs and
-// Layer 2 doesn't have; this one just needs "does this address resolve."
 const RESOLVERS = {
   sphere: ep => fragments.find(it => it.id === ep.id),
   orbiter: ep => poems.find(it => it.id === ep.id),
@@ -45,11 +22,6 @@ const RESOLVERS = {
   orrery: ep => (ORRERY.id === ep.id ? ORRERY : undefined),
   butterfly: ep => (BUTTERFLY.id === ep.id ? BUTTERFLY : undefined),
   library: ep => libraryItems.find(it => it.id === ep.id) ?? cdRackItems.find(it => it.id === ep.id),
-  // Theater is the one scene where a Layer 2 endpoint should carry beatId,
-  // not id — see resonances.js's own header. Still accepts a bare `id`
-  // (whole-scene granularity) so a row isn't forced to invent false
-  // precision if that's ever genuinely what's meant, but the discovery
-  // pass should be reaching for beatId in essentially every real row.
   theater: ep => {
     if (ep.beatId !== undefined) return theaterBeats.find(b => b.id === ep.beatId);
     return theaterPieces.flatMap(p => p.scenes).find(s => s.id === ep.id);
@@ -124,16 +96,6 @@ export function verifyResonances() {
     ok('resonances.js: empty (no rows yet)');
   }
 
-  // ─── Two numbers Harmonics is designed around, printed rather than typed ──
-  // Its panel's density design — stacked cards, per-card accent wash, the
-  // "N OF M" index — is for the hub case, and three comments in that scene
-  // named the hub and its depth by hand. They said sphere:14 with six. By 5.0
-  // it was scroll:11 with twelve, and nothing had noticed, because a panel
-  // designed for six still renders twelve; it just renders them the way six
-  // were meant to look. Printed here so the design has a current number to be
-  // checked against instead of a remembered one — along with how many
-  // endpoints resolve to no prose at all, which is what would draw an empty
-  // quote box in that panel.
   {
     const degree = new Map();
     for (const r of RESONANCES) {
@@ -162,17 +124,6 @@ export function verifyResonances() {
   return { ok: failures === 0, failures, log };
 }
 
-// ─── CLI entry point ────────────────────────────────────────────────────────
-// pathToFileURL(), not a `file://` + argv[1] template. Building the URL by
-// concatenation gets the escaping wrong for any path containing a space or
-// a non-ASCII character (both need percent-encoding in a file URL), so the
-// two strings never match and the guard is simply false -- the script
-// exits 0 having verified nothing at all, which for a verification script
-// is the worst available failure mode: a silent pass. This repo lives
-// under a path with no space today, but "nobody will ever check this out
-// into ~/My Projects/" is not a guarantee worth resting a build gate on.
-// pathToFileURL does the encoding the same way import.meta.url already
-// did, so the two are comparable for any path.
 if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   const { ok, failures, log } = verifyResonances();
   log.forEach(line => console.log(line));

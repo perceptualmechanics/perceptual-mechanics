@@ -1,6 +1,3 @@
-// ─── Colophon bibliography ──────────────────────────────────────────────────
-// Centralizes where the text in every scene actually comes from, one entry
-// per scene, rendered into the colophon panel's Bibliography section.
 
 export const BIBLIOGRAPHY = [
   {
@@ -41,6 +38,3 @@ export const BIBLIOGRAPHY = [
     ],
   },
 ];
-// The Golden Hare's found line lives in colophon.html's "The mark" section,
-// credited there next to the hare mark it's named after, rather than as a
-// separate bibliography entry here.

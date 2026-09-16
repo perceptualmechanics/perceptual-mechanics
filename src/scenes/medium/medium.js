@@ -13,143 +13,27 @@ import { LETTER_ARCS, MARKS, BOARD_HOME, CARD } from './medium.text.js';
 import mediumHtml from './medium.html?raw';
 import './medium.css';
 
-// ─── Medium — a Ouija board that can spell ─────────────────────────────────
-// Thirteenth scene, 2026-09-04. A homemade board seen from above, an
-// upside-down willowware teacup on it, and two pairs of fingertips: yours, and
-// somebody else's. Press and the cup follows your finger. Let go and it keeps
-// moving. Either way letters land, and the tape at the bottom fills up.
-//
-// This file DRAWS. It decides nothing. `medium.physics.js` is the cup and the
-// two hands and is pure; `medium.lexicon.js` is the only thing that knows any
-// English; `medium.text.js` is the board's geometry and is shared with the
-// build, so /text/medium/ and this scene cannot lay the board out differently.
-// The reasoning for all three lives in those files and is not repeated here.
-//
-// ─── The one thing worth restating ─────────────────────────────────────────
-// **Nothing holds what the board is going to say.** There is no queue, no
-// script, no sentence in a variable. The other hand wanders and leans toward
-// letters that would plausibly continue what has already been spelled — all
-// twenty-six at once, weighted, never one chosen — and a letter lands when the
-// cup comes to rest on it. What comes out is genuinely produced by the pair,
-// which is what the ideomotor literature says happens at a real board, and it
-// is why a visitor who drives gets nothing and a visitor who rests gets
-// sentences.
-//
-// ─── Two hands, or none ────────────────────────────────────────────────────
-// **The cup does not move unless you are touching it.** Not a physical claim —
-// one hand can obviously shove a teacup — but the rule a séance runs on, and
-// Scott's. The other hand freezes with it rather than drifting off a stationary
-// cup, which would be a hand taking its finger off.
-//
-// This scene shipped its first afternoon with the board spelling away to an
-// empty room, and that was mine rather than the brief's: the bench measured a
-// PASSIVE visitor, I generalised to NO visitor to get a clean measurement, and
-// then let the clean measurement become the design. Recorded because it is a
-// specific way to go wrong — a simplification made for a test escaping into the
-// thing being tested.
-//
-// ─── No beginning and no end ───────────────────────────────────────────────
-// Scott's rule, and it survives the above intact: there is no session. Letting
-// go is a pause and touching again is not a reset; nothing here opens, closes,
-// times out or congratulates, and the still board is a state rather than an
-// ending. GOODBYE is on the board because a board has one, it sits below the
-// other hand's reach so only a visitor can take it, and taking it clears the
-// tape and stills the other hand for a moment — and then it goes on.
-//
-// ─── Why 2D canvas ─────────────────────────────────────────────────────────
-// The same reason Apollo is: a thirteenth WebGL scene would be a thirteenth
-// permanent preview context against a browser cap near sixteen, and this scene
-// draws a card, some lettering and a teacup. There is no geometry and no
-// camera. A 2D context does all of it, stays off the WebGL budget, and clips
-// normally in the round tile without the mountClippedPreviewCanvas blit.
-//
-// ─── No sound ──────────────────────────────────────────────────────────────
-// Deliberate, and the one place this scene departs from its neighbours. The
-// subject is a resistance you feel through your fingertips, and the brief says
-// a mimicked one "will feel wrong in a way nobody can name." A synthesised
-// scrape is exactly that mimicry, one sense over: it would be a sound effect
-// standing in for the thing the physics is already doing honestly. The cup is
-// silent, which is also what a cup on felt very nearly is.
-//
-// ─── Frame-rate independence ───────────────────────────────────────────────
-// createFrameClock, and every rate in the physics is per-second and integrated
-// against dt there. This file adds three of its own — the letter flash, the
-// GOODBYE hush and the handle's ease toward its heading — and all three are
-// accumulators against dt rather than per-frame decrements. No loop here
-// decides how many things to do this frame; every one is a traversal of a
-// fixed population (the marks, the two arcs, the tape's visible tail), which
-// is the kind STANDARDS.md calls fine.
 
-// The teacup, in board units. Sized against DWELL_RADIUS on purpose: the cup's
-// rim is what a visitor aims, so the thing they can see has to be the thing the
-// dwell test is using. A cup drawn smaller than its own catchment would take
-// letters it was visibly not on.
 const CUP_R = DWELL_RADIUS * 1.06;
 
-// How long a taken mark stays lit under the cup, in seconds. Long enough to
-// read through the china, short enough that two letters in a row do not smear.
 const FLASH_TIME = 1.25;
 
-// How long the other hand rests after GOODBYE. Not an ending — see the header.
 const HUSH_TIME = 2.6;
 
-// The tape keeps this many characters. It is a tape, not a transcript: the
-// early part scrolls off, the way it would if somebody were writing it down on
-// a strip of paper and you were reading the near end.
 const TAPE_MAX = 96;
 
 export function createMedium(container, { preview = false, initialArg = null, onStateChange = null } = {}) {
   let disposed = false;
   let titleEl = null, hintEl = null;
 
-  // Two clocks, the split Apollo and Outside use. `uiClock` always runs,
-  // because the letter flash is a response to something that happened and a
-  // flash that cannot end is a mark stuck on the board. `clock` is the motion
-  // clock, and under reduced motion it simply is not ticked — the loop takes
-  // its dt from uiClock instead.
-  //
-  // Not ticking it is not what stills the other hand, which this comment used
-  // to say. Time keeps advancing either way; what stills the hand is the
-  // `!reduced` guard on stepWander in step(), which is the thing that decides
-  // whether the hand leans at all.
   const clock = createFrameClock();
   const uiClock = createFrameClock();
   let reduced = prefersReducedMotion();
 
-  // ─── The seed ─────────────────────────────────────────────────────────────
-  // The number in the address bar. The other hand's wander is seeded, so
-  // `#medium/1368767146` brings back THE SAME OTHER HAND — the same burst and
-  // pause rhythm, the same sequence of impulses, the same place on the board it
-  // started from. Every session gets a fresh one and writes it into the hash as
-  // it opens, so the séance you are in is always linkable while you are in it.
-  //
-  // **What it does not bring back is the message**, and the reason is the whole
-  // scene rather than a limitation of the link: the same seed and a hand resting
-  // on the cup spells XBOXEDUCATION. USDAUGHTER, SST; the same seed and a
-  // visitor who nudges it every couple of seconds spells SERROR; the same seed
-  // with nobody touching the cup spells nothing at all, because nothing moves.
-  // Identical only against an identical visitor — verified, and the "identical"
-  // is exact.
-  //
-  // So the link carries the conditions and not the result, which is the correct
-  // behaviour for a scene whose central claim is that the message is not stored
-  // anywhere to be carried. **Two people following the same link and both
-  // resting their hands get two similar séances and not one séance.**
-  //
-  // This comment said something else for three releases, and what it said was
-  // the opposite: that the tape replays "only if nobody touches the cup." That
-  // was true when the board ran on its own. Since 4.11.7 nobody touching the cup
-  // means nothing happens at all, so the one condition the old comment named as
-  // reproducible is now the one that produces an empty tape. A document going
-  // wrong by standing still while the code moves — in a comment, four lines from
-  // the code that moved.
   const parseSeed = (str) => {
     const n = Number.parseInt(String(str ?? '').replace(/[^0-9]/g, ''), 10);
     return Number.isFinite(n) && n > 0 ? n : null;
   };
-  // A fixed seed in the tile so the thumbnail is the same board every load and
-  // can be looked at twice; a fresh one in the scene, because a séance that
-  // said the same thing to everybody would be a recording.
   const freshSeed = () => (((Date.now() ^ Math.floor(Math.random() * 0x7fffffff)) & 0x7fffffff) || 1);
   let seed = preview ? 611853 : (parseSeed(initialArg) ?? freshSeed());
 
@@ -169,31 +53,8 @@ export function createMedium(container, { preview = false, initialArg = null, on
   container.appendChild(canvas);
   const ctx2d = canvas.getContext('2d', { alpha: false });
 
-  // Capped at 2, the same cap manageRenderer applies to every WebGL scene here.
   const dpr = () => Math.min(2, window.devicePixelRatio || 1);
 
-  // ─── Layout ───────────────────────────────────────────────────────────────
-  // The board is a square object on a table, so it is fitted as a square and
-  // centred. Board coordinates are 0..1 and `bx`/`by` are the only mapping
-  // between them and pixels — nothing below computes a pixel position any
-  // other way.
-  //
-  // ─── The ceiling is ASKED FOR, not assumed ────────────────────────────────
-  // The card is pale and the chrome is not, so anything the chrome overlaps is
-  // chrome nobody can read: the hint is white at 60% and disappears the moment
-  // it crosses the board. Reserving a fixed number of pixels is exactly the
-  // mistake this project keeps relearning — Apollo's wavelength scale spent a
-  // release behind the fader rail because 66px had been measured once, on a
-  // desktop — so this asks the DOM where the hint actually ends, on every
-  // relayout, and fits the board under it. On a phone the hint is three lines.
-  //
-  // ─── And the card is what gets fitted, not the unit square ────────────────
-  // Everything is laid out in a 0..1 square and mapped isotropically, so that a
-  // board unit is the same length in both axes and the cup's drawn footprint
-  // matches its catchment. But the CONTENT only occupies a wide band inside
-  // that square — see CARD in medium.text.js — so fitting the square wastes the
-  // difference. Fitting the card is what lets the board be as wide as the
-  // viewport allows instead of as wide as it is tall.
   const TAPE_BAND = 54;              // CSS px reserved under the card for the tape
   const TITLE_RESERVE = 104;         // CSS px for the title at the foot of the page
   const CARD_W = CARD.x1 - CARD.x0, CARD_H = CARD.y1 - CARD.y0;
@@ -208,13 +69,6 @@ export function createMedium(container, { preview = false, initialArg = null, on
     canvas.width = W; canvas.height = H;
 
     if (preview) {
-      // Overfilled on the LONGER axis, so the card covers the whole circle. The
-      // card is landscape and the tile is round, so fitting it leaves the card's
-      // straight top and bottom edges cutting two visible chords across the
-      // circle — the tile reads as a photograph of a board with the background
-      // showing, rather than as a board. The arcs reach the edge and the
-      // silhouette — two curves of lettering with something sitting on one of
-      // them — is what makes a 200px tile recognisable at all.
       side = Math.max(W / CARD_W, H / CARD_H) * 1.06;
       ox = W / 2 - (CARD.x0 + CARD_W / 2) * side;
       oy = H / 2 - (CARD.y0 + CARD_H / 2) * side;
@@ -234,11 +88,6 @@ export function createMedium(container, { preview = false, initialArg = null, on
     const availH = Math.max(1, floor - ceiling);
     side = Math.max(1, Math.min((W * 0.97) / CARD_W, (availH - band) / CARD_H));
 
-    // The card and the tape are placed as ONE group and the group is centred,
-    // rather than the card being centred and the tape put halfway to the floor.
-    // On a phone the card is bounded by the width and does not use the height it
-    // is offered, and centring the two separately left the tape stranded a
-    // third of a screen below the board with nothing between them.
     const cardH = CARD_H * side;
     const top = ceiling + (availH - (cardH + band)) / 2;
     ox = W / 2 - (CARD.x0 + CARD_W / 2) * side;
@@ -251,46 +100,17 @@ export function createMedium(container, { preview = false, initialArg = null, on
   const bs = (v) => v * side;                     // a board-space length, in pixels
   const toBoard = (px, py) => ({ x: (px - ox) / side, y: (py - oy) / side });
 
-  // ─── The pair ─────────────────────────────────────────────────────────────
-  // The other hand first, and the cup starts UNDER it rather than at the middle
-  // of the board — which is where a cup with somebody's fingers already on it
-  // would be. It also fixes something measurable: with the cup always starting
-  // at the centre, every séance opened with the same two or three letters,
-  // because the first thing that happens is always a stop near where it began.
   let hand = createWander(seed);
   const cup = createCup(hand.x, hand.y);
   const dwell = createDwell();
   let reader = createReader();
 
-  // The visitor. `down` is contact: a finger resting on the cup, not a cursor
-  // hovering over the board. Everything that separates this scene from a
-  // dragging toy is in that distinction — you can move your hand around the
-  // board all day without touching, and nothing happens, because nothing
-  // should.
-  // The tile has a visitor and the scene does not, and that is the honest
-  // thumbnail rather than a cheat: a preview of a board with nobody at it is a
-  // photograph of a cup, and what the scene IS is a board with two hands on it.
-  // So the tile runs the visitor everyone actually is — touching, not driving, a
-  // slow aimless circle about two centimetres across, which is what a hand
-  // resting on a cup does whether or not its owner thinks it is doing anything.
-  // Same stub the build's transcript uses and the bench measures.
-  // `down` is contact: a finger resting on the cup, not a cursor hovering over
-  // the board. Everything that separates this scene from a dragging toy is in
-  // that distinction — you can move your hand around the board all day without
-  // touching, and nothing happens, because nothing should.
-  //
-  // The tile has a visitor and the scene does not start with one, and that is
-  // the honest thumbnail rather than a cheat: the scene does nothing at all
-  // until somebody is touching, and a preview of a board with nobody at it is a
-  // photograph of a cup. The tile's stand-in simply rests — `stepVisitor` does
-  // everything else, exactly as it does for a real one.
   const visitor = createVisitor(BOARD_HOME.x, BOARD_HOME.y + 0.18);
   visitor.down = preview;
 
   const plaus = (mark) => weightOf(reader, mark);
   const dwellScale = (mark) => DWELL_RESIST + (DWELL_EASE - DWELL_RESIST) * plaus(mark);
 
-  // ─── The tape ─────────────────────────────────────────────────────────────
   let tape = '';
   let flash = null;            // { mark, t } — the mark lit under the cup
   let hush = 0;                // seconds of stillness left after GOODBYE
@@ -299,17 +119,10 @@ export function createMedium(container, { preview = false, initialArg = null, on
   let srClock = 0;
   let frames = 0;
 
-  // Board units per second while an arrow key is held. Slower than the other
-  // hand's top speed, because a finger that outran the cup would be dragging a
-  // handle rather than leaning on a cup.
   const KEY_SPEED = 0.55;
   const held = new Set();
 
   function take(mark) {
-    // The reader owns what the board knows: the live context, the fatigue, and
-    // what a taken mark adds to the tape. GOODBYE returns an empty string and
-    // clears its own context, which is why this can be four lines rather than a
-    // switch that the build would then have to reimplement.
     const added = takeMark(reader, mark);
     tape = mark.ch === 'GOODBYE' ? '' : (tape + added);
     if (mark.ch === 'GOODBYE') hush = HUSH_TIME;
@@ -318,11 +131,6 @@ export function createMedium(container, { preview = false, initialArg = null, on
     srPending += mark.kind === 'letter' ? mark.ch : ` ${mark.ch} `;
   }
 
-  // ─── Announcing ───────────────────────────────────────────────────────────
-  // Batched, because a live region that fires on every letter reads a single
-  // character out loud every few seconds forever, which is unusable. This says
-  // what has accumulated, at a pace somebody can follow, and only when there is
-  // something new.
   const SR_EVERY = 3.4;
   let srLiveEl = null;
   function announce(udt) {
@@ -334,57 +142,26 @@ export function createMedium(container, { preview = false, initialArg = null, on
     srPending = '';
   }
 
-  // ─── One step ─────────────────────────────────────────────────────────────
   function step(dt, udt) {
     if (hush > 0) hush = Math.max(0, hush - udt);
 
 
-    // The arrow keys are a finger, not a cursor: they move the visitor's
-    // fingertip and the cup follows it through the same spring everything else
-    // goes through. Integrated here rather than in the key handler so a held
-    // key travels at a rate per second instead of per keydown repeat, which is
-    // an OS setting and not a frame rate.
     if (held.size) {
       const d = KEY_SPEED * dt;
       if (held.has('ArrowLeft')) visitor.x -= d;
       if (held.has('ArrowRight')) visitor.x += d;
       if (held.has('ArrowUp')) visitor.y -= d;
       if (held.has('ArrowDown')) visitor.y += d;
-      // Bounded to the card, so a held key cannot walk the finger into the
-      // margin and leave the cup stranded at the edge with nothing to do.
       visitor.x = Math.min(0.95, Math.max(0.05, visitor.x));
       visitor.y = Math.min(0.95, Math.max(0.05, visitor.y));
     }
 
-    // Reduced motion stills the other hand and nothing else. The cup still
-    // moves when the visitor moves it, letters are still taken, the tape still
-    // fills — those are responses to something the visitor did, which is the
-    // category prefers-reduced-motion is not about. What stops is the one thing
-    // moving on its own, which here is also the one thing that is unsettling,
-    // and that is the point of the setting rather than a compromise with it.
     decayReader(reader, dt);
 
-    // ─── Two hands, or none ───────────────────────────────────────────────────
-    // The cup does not move unless the visitor is touching it. Not a physical
-    // claim — one hand could obviously shove a teacup — but the rule a séance
-    // actually runs on, and Scott's: nothing happens until everybody's hands are
-    // on it. It is also what makes the scene an instrument rather than an
-    // animation. A board that spelled away to an empty room would be a thing to
-    // watch; this one waits.
-    //
-    // The other hand freezes with it rather than going on wandering, because a
-    // fingertip that drifts off a stationary cup is a hand that has taken its
-    // finger off — the opposite of what is happening. It resumes from exactly
-    // where it was, so letting go and touching again is a pause, not a reset.
-    // Nothing here opens or closes: this is the still state, and there is one.
     const contact = visitor.down;
     const partner = (contact && !reduced && hush <= 0) ? stepWander(hand, dt, cup, MARKS, plaus, visitor.grip) : null;
     stepCup(cup, dt, stepVisitor(visitor, cup, dt), partner);
 
-    // Dwell only counts while somebody is touching. A cup nobody has a hand on
-    // is not resting ON a letter, it is just sitting there — and without this
-    // the board takes one mark the moment the scene mounts, off a cup that has
-    // never moved, which is the board reading an empty room.
     clearDwellMemory(dwell, cup);
     const got = contact ? stepDwell(dwell, cup, MARKS, dt, dwellScale) : null;
     if (got) take(got);
@@ -392,10 +169,6 @@ export function createMedium(container, { preview = false, initialArg = null, on
     if (flash) { flash.t += udt; if (flash.t >= FLASH_TIME) flash = null; }
     announce(udt);
 
-    // The handle turns to trail the cup's motion, easing rather than snapping,
-    // and holds its last heading when the cup stops. A handle that pointed
-    // instantaneously at the velocity would spin on the spot every time the cup
-    // came to rest, which is the one moment the scene most needs to be still.
     const sp = Math.hypot(cup.vx, cup.vy);
     if (sp > 0.02) {
       const want = Math.atan2(cup.vy, cup.vx) + Math.PI;   // trailing, not leading
@@ -406,34 +179,12 @@ export function createMedium(container, { preview = false, initialArg = null, on
     }
   }
 
-  // ─── Drawing ──────────────────────────────────────────────────────────────
   const INK = '#2b2119';
-  // The board's second ink, for everything that is not a letter: the ten
-  // digits, the four punctuation marks, and YES / NO / GOODBYE. 17 of the 43
-  // marks, and on a phone they render around 12px.
-  //
-  // It was 0.55 alpha, which composites to 3.15:1 over CARD_FILL — a real AA
-  // failure on the surface the whole scene is about. medium.css measured the
-  // two chrome elements around the canvas and stopped there, which is the
-  // shape this kind of miss usually takes: the canvas is not a stylesheet, so
-  // nothing sweeping stylesheets was ever going to look at it. 0.72 measures
-  // 4.91:1 and still sits clearly behind the letters' own 10:1, which is the
-  // hierarchy the two inks exist for.
   const INK_SOFT = 'rgba(43, 33, 25, 0.72)';
-  // Named CARD_FILL rather than CARD: the board's RECTANGLE is imported under
-  // that name, and a colour shadowing it inside this closure put the layout in a
-  // temporal dead zone that threw before the first frame.
   const CARD_FILL = '#d9cdb4';
   const CARD_EDGE = '#b9a988';
   const VOID = '#0a0a0c';
 
-  // ─── Letter-spaced text, by hand ──────────────────────────────────────────
-  // `ctx.letterSpacing` is the obvious way and is not available everywhere this
-  // site is read — it landed in Firefox long after Chrome, and this project's
-  // screenshots come from Firefox. Measuring and placing each glyph works in
-  // every engine, costs one measureText per character on a string that is never
-  // longer than the tape, and cannot silently render un-tracked on the one
-  // browser nobody tested in.
   function measureTracked(str, track) {
     let total = 0;
     for (const ch of str) total += ctx2d.measureText(ch).width + track;
@@ -453,8 +204,6 @@ export function createMedium(container, { preview = false, initialArg = null, on
     }
   }
 
-  // roundRect is recent enough that a board on an older phone would throw
-  // rather than lose a corner radius, which is a blank scene for a rounding.
   function cardPath(x, y, w, h, r) {
     ctx2d.beginPath();
     if (ctx2d.roundRect) { ctx2d.roundRect(x, y, w, h, r); return; }
@@ -471,9 +220,6 @@ export function createMedium(container, { preview = false, initialArg = null, on
   }
 
   function drawCard() {
-    // The card. A rounded rectangle in aged paper, with a burnt edge that is
-    // two strokes rather than a gradient — a gradient reads as a vignette and
-    // this needs to read as an object with a border printed on it.
     const x = bx(CARD.x0), y = by(CARD.y0);
     const w = bs(CARD.x1 - CARD.x0), h = bs(CARD.y1 - CARD.y0);
     const r = bs(0.028);
@@ -490,9 +236,6 @@ export function createMedium(container, { preview = false, initialArg = null, on
   }
 
   function drawArcRules() {
-    // A hairline under each arc of letters, the way a hand-drawn board has a
-    // pencil line the letters were set on. Drawn from the letters themselves,
-    // so it cannot disagree with them.
     ctx2d.lineWidth = Math.max(1, bs(0.0015));
     ctx2d.strokeStyle = 'rgba(43, 33, 25, 0.22)';
     for (const arc of LETTER_ARCS) {
@@ -509,18 +252,6 @@ export function createMedium(container, { preview = false, initialArg = null, on
     ctx2d.textAlign = 'center';
     ctx2d.textBaseline = 'middle';
 
-    // ─── The mark the cup is on, warming ──────────────────────────────────────
-    // The board had no way of saying "this one, maybe" — a letter went from
-    // ordinary to taken with nothing in between, so the only feedback was after
-    // the fact. This is the hover state the scene was missing, and it is not a
-    // decoration bolted on: it is the dwell timer, drawn. The mark under the cup
-    // warms in proportion to how much of its threshold has elapsed, so a
-    // plausible letter visibly comes on fast and an implausible one sits there
-    // barely glowing — which is the whole mechanism of the scene, made visible
-    // without a word of explanation.
-    //
-    // It also tells the truth when nothing is happening: let go, and the warming
-    // stops, because dwell does.
     const cand = dwell.on;
     const prog = cand && visitor.down
       ? Math.min(1, dwell.held / Math.max(1e-6, DWELL_TIME * dwellScale(cand)))
@@ -532,16 +263,10 @@ export function createMedium(container, { preview = false, initialArg = null, on
         : (m === cand ? prog * 0.6 : 0);
       const word = m.kind === 'word';
       const track = word ? bs(0.010) : 0;
-      // Punctuation is set LARGER than a letter, not smaller: a full stop is a
-      // dot, and a dot set at the size of an A on a board this wide is a speck
-      // of dust on the card. The glyph is small even when the type is not.
       ctx2d.font = word
         ? `${Math.round(bs(0.030))}px Arapey, Georgia, serif`
         : markFont(m.kind === 'digit' ? 0.78 : m.kind === 'punct' ? 1.35 : 1);
       if (lit > 0) {
-        // The taken mark burns through the china rather than being circled.
-        // A ring around a letter under a translucent cup is two shapes saying
-        // the same thing; this is the one the cup was drawn translucent for.
         ctx2d.save();
         ctx2d.shadowColor = `rgba(196, 122, 58, ${0.85 * lit})`;
         ctx2d.shadowBlur = bs(0.05) * lit;
@@ -556,22 +281,6 @@ export function createMedium(container, { preview = false, initialArg = null, on
   }
 
   function drawFinger(px, py, fromTop, alpha) {
-    // ─── The hands are shadows ────────────────────────────────────────────────
-    // Not drawn as skin, and that is a decision rather than a shortcut. Two of
-    // them, in order:
-    //
-    // The practical one: a fingertip painted in any plausible skin tone is
-    // within a few percent of the aged card it sits on, so it disappears. The
-    // first version was, and it read as a smear of light on the board rather
-    // than as a hand — the one thing in the scene that has to be legible at a
-    // glance, illegible.
-    //
-    // The real one: a séance is lit from one side and low, and what you can
-    // actually see of the other person's hand across a board in that light is
-    // its shadow. Drawing the hands as shadows is what the scene looks like,
-    // it puts the only bright thing on the screen on the china where it
-    // belongs, and it means the scene does not have to pick a skin colour for
-    // somebody it has deliberately declined to give a face.
     const r = bs(0.030);
     const dir = fromTop ? -1 : 1;
     const reach = bs(0.105);
@@ -579,12 +288,6 @@ export function createMedium(container, { preview = false, initialArg = null, on
     ctx2d.globalAlpha = alpha;
     ctx2d.filter = `blur(${Math.max(1, bs(0.006))}px)`;
 
-    // The finger behind the tip, and it is SHORT — a hand seen from directly
-    // above a table is almost entirely foreshortened, so what shows is a
-    // fingertip and an inch of finger, not a column. Shortened again when the
-    // board went landscape: at a fifth of a board long, two of them stacked
-    // above and below the cup drew one continuous bar down the middle of the
-    // card, which is not a pair of hands.
     const g = ctx2d.createLinearGradient(px, py, px, py + dir * reach);
     g.addColorStop(0, 'rgba(26, 20, 16, 0.34)');
     g.addColorStop(1, 'rgba(26, 20, 16, 0)');
@@ -597,14 +300,8 @@ export function createMedium(container, { preview = false, initialArg = null, on
     ctx2d.closePath();
     ctx2d.fill();
 
-    // The tip, darker than the finger, because it is where the hand is actually
-    // touching and a shadow is densest where the thing casting it is closest.
     ctx2d.beginPath();
     ctx2d.ellipse(px, py, r * 0.88, r * 1.06, 0, 0, Math.PI * 2);
-    // Light enough to read the letter through, which matters because the tip
-    // sits on the cup and the cup is standing on the letter it just took. A
-    // denser shadow is more convincing and hides the one thing the scene is
-    // for.
     ctx2d.fillStyle = 'rgba(22, 17, 13, 0.42)';
     ctx2d.fill();
     ctx2d.restore();
@@ -613,9 +310,6 @@ export function createMedium(container, { preview = false, initialArg = null, on
   function drawCup() {
     const px = bx(cup.x), py = by(cup.y), r = bs(CUP_R);
 
-    // Shadow, offset toward the bottom of the board: one light source, high and
-    // behind the visitor, which is where a room's light is when you are sitting
-    // at a table with your back to it.
     ctx2d.save();
     ctx2d.globalAlpha = 0.40;
     ctx2d.filter = `blur(${Math.max(1, bs(0.010))}px)`;
@@ -625,13 +319,6 @@ export function createMedium(container, { preview = false, initialArg = null, on
     ctx2d.fill();
     ctx2d.restore();
 
-    // ─── The handle ───────────────────────────────────────────────────────────
-    // A C, with a real gap in it, sitting against the rim rather than beside it.
-    // The first version was a thick arc centred nearly a radius away from the
-    // cup, which drew a second complete circle: at the size this renders, a
-    // teacup with two rings reads as a pair of spectacles. So the arc is tight,
-    // its centre sits ON the rim, and it is stroked in the same china as the
-    // body so it reads as part of the object.
     ctx2d.save();
     ctx2d.translate(px, py);
     ctx2d.rotate(handleAngle);
@@ -646,15 +333,6 @@ export function createMedium(container, { preview = false, initialArg = null, on
     ctx2d.stroke();
     ctx2d.restore();
 
-    // The body. Upside down, so what you are looking at is the foot ring and
-    // the underside of the base — and it is translucent because the letter it
-    // is standing on has to be readable through it. A cup that hid its own
-    // answer would be a cup you had to move off the board to read.
-    // Opaque enough to be the brightest thing on the board and translucent
-    // enough to read the letter through — 0.62 rather than the 0.42 it shipped
-    // with for an afternoon, which put white china on pale card at a contrast
-    // the cup lost. The cup has to be findable at a glance; it is the only
-    // thing on the screen anybody touches.
     ctx2d.beginPath();
     ctx2d.arc(px, py, r, 0, Math.PI * 2);
     ctx2d.fillStyle = 'rgba(250, 250, 247, 0.62)';
@@ -662,19 +340,12 @@ export function createMedium(container, { preview = false, initialArg = null, on
     ctx2d.lineWidth = Math.max(1, bs(0.0055));
     ctx2d.strokeStyle = 'rgba(255, 255, 253, 0.98)';
     ctx2d.stroke();
-    // One specular arc, upper left, from the same light that casts the shadow
-    // down and right. It is what makes the disc read as glazed rather than as a
-    // hole cut in the board.
     ctx2d.beginPath();
     ctx2d.arc(px, py, r * 0.88, Math.PI * 1.06, Math.PI * 1.62);
     ctx2d.lineWidth = Math.max(1, bs(0.006));
     ctx2d.strokeStyle = 'rgba(255, 255, 255, 0.85)';
     ctx2d.stroke();
 
-    // One willow-blue band just inside the rim, and nothing else. Willowware is
-    // the pattern every one of these stories has a cup of, and one band is what
-    // survives at 40 pixels — the foot ring that used to be here made three
-    // concentric circles out of an object that should read as one.
     ctx2d.beginPath();
     ctx2d.arc(px, py, r * 0.80, 0, Math.PI * 2);
     ctx2d.lineWidth = Math.max(1, bs(0.0026));
@@ -689,20 +360,10 @@ export function createMedium(container, { preview = false, initialArg = null, on
     ctx2d.textBaseline = 'middle';
     const size = Math.max(9 * dpr(), Math.min(bs(0.030), 22 * dpr()));
     ctx2d.font = `${Math.round(size)}px Arapey, Georgia, serif`;
-    // How much of the tape fits is measured rather than assumed. A fixed
-    // character count is the nav-icon bug one layer down: correct at the width
-    // it was written at, and on a 390px phone it runs off both edges.
     const track = size * 0.34;
     const per = ctx2d.measureText('M').width + track;
-    // Ranged against the CARD, not the viewport: the tape is what the board has
-    // said, so it belongs under the board rather than under the page.
     const room = bs(CARD.x1 - CARD.x0) * 0.98;
     const fits = Math.max(6, Math.floor(room / Math.max(1, per)));
-    // ─── Right-aligned, and it grows leftward ──────────────────────────────
-    // Centred, the whole line shifted every time a letter landed, so the thing
-    // you were reading moved out from under you. Anchored at the right, the
-    // newest mark is always in the same place and the older ones slide away —
-    // which is what a tape does, and it is the end of a tape you read.
     const shown = tape.slice(-fits);
     const width = measureTracked(shown, track);
     ctx2d.fillStyle = 'rgba(226, 214, 192, 0.78)';
@@ -717,8 +378,6 @@ export function createMedium(container, { preview = false, initialArg = null, on
     drawArcRules();
     drawMarks();
     drawCup();
-    // Fingers on top of the cup, and the other hand first so yours is the one
-    // over it — you are the nearer of the two.
     if (!reduced && hush <= 0 && hand.x != null) {
       drawFinger(bx(hand.x), by(hand.y), true, 0.92);
     }
@@ -729,7 +388,6 @@ export function createMedium(container, { preview = false, initialArg = null, on
     if ((frames & (frames - 1)) === 0) canvas.dataset.frames = String(frames);
   }
 
-  // ─── The loop ─────────────────────────────────────────────────────────────
   let animId = null, paused = false;
   function animate() {
     animId = requestAnimationFrame(animate);
@@ -740,13 +398,6 @@ export function createMedium(container, { preview = false, initialArg = null, on
     draw();
   }
 
-  // ─── Input ────────────────────────────────────────────────────────────────
-  // Contact, not dragging. A press only puts a finger on the cup if it lands on
-  // the cup; a press anywhere else on the board is a hand on the table, and a
-  // hand on the table does nothing. That is the rule that makes the cup an
-  // object rather than a handle — you cannot teleport it, you can only lean.
-  // Fingertips are wide and a phone is imprecise. On a 370px board this is a
-  // 49px catchment for a 19px cup, which is about a thumb.
   const PRESS_R = CUP_R * 2.6;
 
   let pointerId = null;
@@ -777,19 +428,10 @@ export function createMedium(container, { preview = false, initialArg = null, on
     canvas.releasePointerCapture?.(e.pointerId);
   }
 
-  // ─── Keyboard ─────────────────────────────────────────────────────────────
-  // The arrow keys are a finger, not a cursor: they move the visitor's
-  // fingertip, and the cup follows it through the same spring everything else
-  // goes through. Space is the press. A keyboard visitor is therefore playing
-  // the same instrument at the same disadvantage against the same other hand,
-  // rather than being handed a letter picker — which is what a jump list would
-  // have been, and would have made the board a menu.
   function onKeyDown(e) {
     if (preview) return;
     if (e.key === ' ' || e.key === 'Enter') {
       if (!visitor.down) {
-        // A keyboard visitor cannot aim before touching, so the finger arrives
-        // on the cup — the equivalent of reaching out and finding it.
         visitor.x = cup.x; visitor.y = cup.y;
         visitor.sx = cup.x; visitor.sy = cup.y;
         visitor.ax = cup.x; visitor.ay = cup.y;
@@ -805,27 +447,13 @@ export function createMedium(container, { preview = false, initialArg = null, on
   function onKeyUp(e) { held.delete(e.key); }
   function onBlur() { held.clear(); }
 
-  // ─── Reduced motion ───────────────────────────────────────────────────────
   const reducedWatch = onReducedMotionChange(next => {
     reduced = next;
     clock.resync();
   });
 
-  // ─── A paused scene still has to repaint when it is relaid out ────────────
-  // The landing tile is the case, and it is how this scene shipped a black
-  // circle on the landing page. A tile mounts, draws its first frame — often
-  // before the container has been laid out, so against a fallback size that is
-  // the whole window — and is then paused immediately, because main.js runs
-  // syncPreviewPlayback() as soon as the previews resolve and the tab may
-  // already be hidden. The ResizeObserver fires a moment later with the real
-  // 190px, layout() fixes every number, and nothing ever draws again.
-  //
-  // One frame, so a paused scene stays paused; it just stops being wrong.
   const resize = bindGuardedResize(container, () => { layout(); if (paused) draw(); });
 
-  // ─── Mount ────────────────────────────────────────────────────────────────
-  // Chrome first, then layout: the board is fitted between the hint and the
-  // placard, and neither can be measured before it is in the document.
   if (!preview) {
     const frag = parseHTML(mediumHtml);
     titleEl = frag.querySelector('.medium-title-row');
@@ -846,16 +474,9 @@ export function createMedium(container, { preview = false, initialArg = null, on
 
   layout();
 
-  // Directly, not scheduled. main.js runs syncPreviewPlayback() the moment
-  // initPreviews() resolves and that can setPaused(true), cancelling a queued
-  // first callback before it ever runs — which is how Harmonics and Outside
-  // shipped tiles that had drawn nothing at all (4.1.1).
   animate();
 
   return {
-    // A hash change that lands on Medium while Medium is already open. A new
-    // seed is a new hand: the tape is cleared and the other hand starts over,
-    // because a seed that only half applied would be a link that lied.
     applyArg(str) {
       const next = parseSeed(str);
       if (!next || next === seed) return;

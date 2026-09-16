@@ -1,7 +1,7 @@
 /* Sphere scene styles, imported as a plain side-effect import from
    sphere.js (`import './sphere.css'`). */
 
-/* ─── Fragment face labels ───────────────────────────────────────────────── */
+
 @keyframes wisp {
   0%   { opacity: var(--base-opacity, 0); }
   30%  { opacity: calc(var(--base-opacity, 0.12) * 0.3); }
@@ -43,7 +43,7 @@
 	}
 }
 
-/* ─── Fragment reading panel ─────────────────────────────────────────────── */
+
 /* Matches the sitewide panel language shared with orbiter/orrery: a
    near-black background with a faint radial tint keyed to the scene's own
    palette, and blue kept only as a low-alpha accent (border, scrollbar,

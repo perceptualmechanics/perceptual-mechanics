@@ -10,126 +10,25 @@ import {
 import apolloHtml from './apollo.html?raw';
 import './apollo.css';
 
-// ─── Apollo — an absorption spectrum you can play ──────────────────────────
-// Eleventh scene, 2026-09-02. A near-full-width band of starlight with the
-// lines missing from it, a corona streaming toward the viewer from the right,
-// and ten faders that put elements into the light. Clicking a gap sounds that
-// wavelength as a pitch.
-//
-// Absorption rather than emission, and that is the whole scene. Emission is
-// bright lines on black: easier to draw, and much less interesting. Absorption
-// is a full band of colour with the lines taken OUT of it, so clicking a gap
-// and getting a tone means playing the absences. It is also what actually
-// happens — Fraunhofer found these in sunlight in 1814 because the sun's own
-// outer atmosphere absorbs on the way out. The scene is that mechanism,
-// animated: light on the right, the sampling plane in the middle, and what is
-// left when it arrives.
-//
-// Nothing to do with the Spectra scene shelved earlier the same day. That one
-// measured this site's own writing and treated the pieces as sources; it was
-// built, measured, and taken back out (see src/scenes/spectra/SHELVED.md).
-// This shares the subject and none of the design. Both are recorded so neither
-// gets re-proposed.
-//
-// ─── Why 2D canvas and not Three.js ────────────────────────────────────────
-// Every other WebGL scene here goes through manageRenderer, and its own
-// comment in sceneKit.js explains the ceiling this scene would have walked
-// into: eight preview contexts alive permanently plus one per open scene,
-// against a browser cap near sixteen, with the browser force-losing the OLDEST
-// context when it runs out — which is the landing tiles. An eleventh WebGL
-// scene is an eleventh permanent context. That is a real cost for no benefit
-// here: this scene draws a coloured strip, some strokes, and text. There is no
-// geometry, no camera, no lighting. A 2D context does all of it, adds nothing
-// to the WebGL budget, and is the reason the tile count could go to eleven
-// without re-testing the context ceiling.
-//
-// The consequence for the preview tile is worth stating too. The clipped-blit
-// workaround (mountClippedPreviewCanvas) exists because Firefox promotes heavy
-// WebGL canvases to a compositing layer that ignores CSS clipping; a 2D canvas
-// is not promoted and clips normally, so this scene appends its canvas
-// directly in both modes. It therefore has no `data-blits` — but it keeps the
-// observability that counter was added for, as `data-frames` on the canvas,
-// written on the same power-of-two crossings for the same reason (see the
-// blit counter's own comment: a fixed cadence sits on "1" for half a minute on
-// a slow machine, which reads exactly like the failure it exists to rule out).
-//
-// ─── Frame-rate independence ───────────────────────────────────────────────
-// createFrameClock, and no fixed per-frame constant anywhere — INCLUDING
-// counts. Butterfly's PPF survived two audit sweeps because it was a count
-// rather than a rate, and STANDARDS.md now says so in as many words.
-//
-// So, stated rather than implied, because "no counts here" is the kind of
-// claim that is only worth anything if someone checked: this scene contains
-// three accumulators and no per-frame counts at all. The corona's drift
-// (`t * f.speed`), the struck-line fade (`s.t += udt`) and the disturbance
-// decay (`d.t += udt`) are all rates against dt. Every loop in the draw path
-// is a traversal of a fixed population — the filaments, the elements, the
-// lines of one element — which STANDARDS.md's own wording calls the fine
-// kind. Nothing decides how many things to do this frame, so there is nothing
-// that would need a carry. If a later change introduces one, it needs the
-// carry, not a round.
 
 const BAND_LEFT_NM = VISIBLE_MIN;
 const BAND_RIGHT_NM = VISIBLE_MAX;
 
-// Optical depth at a fader's maximum for the strongest possible line. Beer's
-// law does the rest: transmission is exp(-tau), taus from different elements
-// ADD, and that is why two elements overlapping in the same place go darker
-// than either alone without any special case for it. 4.6 puts a full-strength
-// line at 1% transmission — black to the eye, but never a hard clamp.
 const TAU_MAX = 4.6;
 
-// Relative intensities span three orders of magnitude, and a linear map would
-// render everything except the resonance lines invisible. The 0.55 power keeps
-// the ordering exactly (it is monotonic) while compressing the range enough
-// that iron's forest is a forest rather than four lines and a rumour.
 const RELATIVE_STRENGTH_EXPONENT = 0.55;
 
 export function createApollo(container, { preview = false, initialArg = null, onStateChange = null } = {}) {
   let disposed = false;
   const timers = trackTimers();
 
-  // Two clocks, the same split Outside uses and for the same reason. `clock`
-  // is the motion clock and it stops under reduced motion, which is what
-  // freezes the corona. Struck-line flashes need a clock that always runs,
-  // because a flash that cannot end is a bright mark stuck on the band
-  // forever — the exact bug Outside's touch pulse had.
   const clock = createFrameClock();
   const uiClock = createFrameClock();
 
-  // ─── Two instruments, one set of lines ────────────────────────────────────
-  // Absorption and emission are the same wavelengths seen from opposite sides,
-  // so the element data does not change at all. What changes is what the light
-  // is doing, and that difference is physical rather than a colour inversion:
-  //
-  //   Absorption is light passing through and arriving depleted. Continuous,
-  //   sustained, something you interrupt. Bowed.
-  //   Emission is an excited gas releasing. Discrete, decaying — every photon
-  //   is an electron falling. Plucked.
-  //
-  // So absorption sustains and emission strikes, and the picture follows the
-  // same logic: in emission there is no starlight passing through, so there is
-  // no band and no streaming corona — a dark field with bright lines standing
-  // in it at their own colours, and whatever remains of the flow is local to
-  // the lines rather than travelling past them.
-  //
-  // `modeMix` is 0 in absorption and 1 in emission, eased rather than switched,
-  // so the change reads as the light going out rather than as a redraw. It runs
-  // on the UI clock, because it answers something the visitor did — the same
-  // reason the struck-line flash does.
   let mode = 'absorption';
   let modeMix = 0;
   const MODE_FADE = 0.55; // seconds
-  // What is left of the streaming field in emission. Not zero: the gas is in a
-  // stellar atmosphere, not a vacuum jar, and a hard cut to black loses the
-  // sense that the two modes are the same scene.
   const CORONA_IN_EMISSION = 0.14;
-  // Not a flat dimming. In emission what remains has to be LOCAL to the lines
-  // rather than streaming past them, so the residue keeps most of its
-  // brightness within about a band-height of the band and falls to the 14%
-  // floor away from it. The field stops being a river crossing the frame and
-  // becomes a haze around the source, which is the actual difference between
-  // light in transit and a gas that is glowing.
   function coronaScale(fy) {
     if (modeMix <= 0) return 1;
     const cy = (bandY + bandH * 0.5) / Math.max(1, H);
@@ -152,13 +51,8 @@ export function createApollo(container, { preview = false, initialArg = null, on
   container.appendChild(canvas);
   const ctx = canvas.getContext('2d', { alpha: false });
 
-  // Device pixel ratio capped at 2, the same cap manageRenderer applies to
-  // every WebGL scene here. An uncapped DPR-3 phone would be filling nine
-  // times the pixels this was tuned against, and the continuum build is a
-  // per-pixel loop.
   const dpr = () => Math.min(2, window.devicePixelRatio || 1);
 
-  // ─── Layout ───────────────────────────────────────────────────────────────
   let W = 0, H = 0;
   let bandX = 0, bandY = 0, bandW = 0, bandH = 0;
 
@@ -171,42 +65,13 @@ export function createApollo(container, { preview = false, initialArg = null, on
     canvas.width = W; canvas.height = H;
 
     if (preview) {
-      // A 200px circular tile. The band runs edge to edge and takes a third of
-      // the height — inside the circle at the horizontal midline, where the
-      // chord is widest, so none of it is clipped away.
       bandX = 0; bandW = W;
-      // Clamped for the same reason W and H are, one line up. `H` has a floor
-      // of 1, and a third of 1 rounds to ZERO — and this scene is the only one
-      // that hands a computed height to `createImageData`, which throws on a
-      // zero. That rejects `create()`, so the tile stays blank for the whole
-      // visit rather than recovering when the layout settles.
-      //
-      // Seen once, in the desktop app's browser pane, as
-      // `preview "apollo" did not load — IndexSizeError`. NOT reproduced: not
-      // at any viewport down to 1px tall, not with a zero-height container, not
-      // with a hidden one, because the tile's own CSS height and the
-      // `|| window.innerHeight` fallback both prevent it. The likeliest cause
-      // is a pane with no layout at all at load. Said plainly because the guard
-      // is certain and the diagnosis is not.
       bandH = Math.max(1, Math.round(H * 0.34));
       bandY = Math.round(H * 0.5 - bandH / 2);
     } else {
       const pad = Math.round(Math.min(W * 0.06, 90 * r));
       bandX = pad; bandW = Math.max(1, W - pad * 2);
 
-      // ─── Everything below the band is measured, not assumed ────────────────
-      // This was `bandY = H * 0.40 - bandH/2`, with the pitch ruler drawn a
-      // flat 66px under the band. Both numbers came from a desktop window and
-      // neither was ever re-derived. On a 390px phone the rail is two rows of
-      // faders tall — and taller again once 4.4.0 put the light-source switch
-      // inside it — so it rose far enough to cover the wavelength scale, the
-      // bottom of the band, and the pitch ruler entirely. Nothing errored. The
-      // scale was simply behind an opaque panel, on every phone, from the
-      // moment the switch shipped.
-      //
-      // Same shape as the nav-icon count and the tile grid, one layer down: a
-      // constant that was correct at the width it was written at. So this asks
-      // the DOM where the rail actually is.
       const scaleBlock = SCALE_BLOCK * r;
 
       let floor = H - 8 * r;
@@ -217,20 +82,6 @@ export function createApollo(container, { preview = false, initialArg = null, on
       }
       const ceiling = Math.round(H * 0.17);  // clear of the hint, which wraps to two lines on a phone
 
-      // ─── The ruler gets room or it does not get drawn ──────────────────────
-      // 4.4.2 made the band shrink to fit above the rail, with a floor so it
-      // could never become a line. What that floor could not do is guarantee no
-      // overlap: when the space is genuinely smaller than the floor plus the
-      // scale plus the ruler, something has to give, and until now the thing
-      // that gave was the rule. Measured at 320x700 with 4.5.0's taller control
-      // row: 110px of usable band zone against 140px needed. At 320x568 —
-      // an older small phone — the zone is ZERO even without the ruler.
-      //
-      // So the budget is now decided against what exists, in order: the ruler
-      // is a diagram and it is what goes first; then the band's floor gives way
-      // rather than the band crossing the rail. An overlap is never the answer,
-      // and this is an invariant rather than a set of numbers that happen to
-      // work at the sizes someone checked.
       const avail = floor - ceiling;
       rulerFits = !rulerOn || (avail - scaleBlock - RULER_BLOCK * r >= BAND_MIN * r);
       const below = scaleBlock + (rulerOn && rulerFits ? RULER_BLOCK * r : 0);
@@ -246,52 +97,11 @@ export function createApollo(container, { preview = false, initialArg = null, on
     }
   }
 
-  // Vertical budget under the band, in CSS pixels before the DPR multiply.
-  // SCALE_BLOCK is the nm tick row plus its labels; RULER_BLOCK is the gap down
-  // to the pitch ruler plus its axis and Hz labels. Named because layout() and
-  // drawRuler() both have to agree about them — a ruler drawn at an offset
-  // layout() never reserved is exactly how this went wrong the first time.
   const SCALE_BLOCK = 24;
   const RULER_BLOCK = 46;
   const BAND_MIN = 70;   // CSS px — the band's preferred floor
-  // Whether the ruler was actually given room this layout. Distinct from
-  // rulerOn: the visitor can ask for it on a screen that cannot hold it.
   let rulerFits = true;
 
-  // ─── The continuum ────────────────────────────────────────────────────────
-  // Figured out first, because it decides whether this is an object or a
-  // diagram. A CSS gradient with black bars over it is a chart. A real
-  // spectrum photographed as a strip has grain, uneven intensity across the
-  // band, rolloff at both ends, and vertical structure from the slit — and
-  // when the lines cut into THAT, they read as absences in a thing rather
-  // than as rectangles on a diagram.
-  //
-  // Four ingredients, in order of how much each one does:
-  //
-  // 1. Colour from the CIE colour-matching functions, not a hue sweep. See
-  //    wavelengthToRGB's comment in apollo.text.js — a hue wheel invents a
-  //    magenta that no wavelength produces and puts the brightness peak in
-  //    the wrong place.
-  // 2. Rolloff from the eye's own luminous efficiency curve. This is the
-  //    single biggest contributor to "reads as an object": a real spectrum is
-  //    brilliant in the yellow-green and dim at both ends because the eye
-  //    barely registers 400nm or 720nm, not because there is less light there.
-  //    Raised to a fractional power rather than used raw (ROLLOFF_EXPONENT
-  //    below) — the raw curve is 8% at H-alpha, which would render the entire
-  //    red half nearly black.
-  // 3. A fixed vertical stripe pattern, constant down each column. This is
-  //    what a flat-field looks like on a real spectrograph: dust and figure on
-  //    the slit, printed identically into every row.
-  // 4. Per-pixel grain, and a vertical vignette so the strip has an edge
-  //    rather than a border.
-  // Rolloff shape. The raw luminous-efficiency curve is 8.0% at H-alpha,
-  // 0.13% at 400nm and 0.004% at 750nm, which would render most of the band
-  // black; raised to ROLLOFF_EXPONENT with ROLLOFF_FLOOR it keeps the eye's
-  // own falloff — the reason a real spectrum is brilliant in the yellow-green
-  // and dark at both ends — without throwing the ends away. It leaves H-alpha
-  // at 41%, 400nm at 13% and 750nm at 7%. Chosen by rendering strips and
-  // comparing them against photographs, not derived — so the numbers here are
-  // consequences of the two constants below and go stale if either moves.
   const ROLLOFF_EXPONENT = 0.38;
   const ROLLOFF_FLOOR = 0.05;
   const EMISSION_EXPONENT = 0.22;
@@ -299,16 +109,7 @@ export function createApollo(container, { preview = false, initialArg = null, on
 
   const continuumCanvas = document.createElement('canvas');
   const continuumCtx = continuumCanvas.getContext('2d');
-  // Column -> wavelength -> colour is pure and expensive; hoisted out of the
-  // per-pixel loop and kept for the hit-testing and the ruler as well.
   let colNm = null, colR = null, colG = null, colB = null;
-  // A second colour table for emission. The continuum's rolloff is right for a
-  // continuum — it is the eye's own falloff and it is what makes the band read
-  // as an object — but applied to a bright line it renders H-alpha at 41% and
-  // the deep red end of an emission spectrum is not that dim. A gentler curve
-  // over the same luminous-efficiency function (EMISSION_EXPONENT/FLOOR below
-  // put H-alpha at 72%): still visibly dimmer at the ends, because that is
-  // true, but present.
   let emR = null, emG = null, emB = null;
 
   function buildContinuum() {
@@ -329,8 +130,6 @@ export function createApollo(container, { preview = false, initialArg = null, on
 
     const img = continuumCtx.createImageData(bandW, bandH);
     const data = img.data;
-    // Column stripe: three superposed periods so it does not read as a ruled
-    // pattern. Same value for every row of a column, which is the point.
     const stripe = new Float32Array(bandW);
     for (let x = 0; x < bandW; x++) {
       stripe[x] = 1
@@ -341,7 +140,6 @@ export function createApollo(container, { preview = false, initialArg = null, on
     for (let y = 0; y < bandH; y++) {
       const ny = bandH <= 1 ? 0 : (y / (bandH - 1)) * 2 - 1;   // -1 .. 1
       const vignette = 1 - 0.30 * Math.pow(Math.abs(ny), 2.4);
-      // Slow horizontal banding — the emulsion, not the optics.
       const band = 1 + 0.012 * Math.sin(y * 0.77 + 0.9) + 0.008 * Math.sin(y * 0.13);
       const rowScale = vignette * band;
       let o = y * bandW * 4;
@@ -357,69 +155,20 @@ export function createApollo(container, { preview = false, initialArg = null, on
     continuumCtx.putImageData(img, 0, 0);
   }
 
-  // ─── Absorption ───────────────────────────────────────────────────────────
-  // Column density per element, 0 to 1 — literally how much of it is in the
-  // light's path. Not a mode switch and not a checkbox: more of an element
-  // deepens its lines toward black and less leaves them faint, continuously,
-  // which is what a fader is for and what a real column density does.
   const density = Object.fromEntries(ELEMENTS.map(e => [e.key, 0]));
   if (preview) {
-    // The tile shows THE SUN — the same five elements ambient mode plays, at
-    // the same fader positions (SOLAR_MIXTURE in apollo.text.js). It was a
-    // hand-picked four until 4.5.0, which was fine and arbitrary; the sun is
-    // neither.
-    //
-    // The tile is complete on the first frame it paints — there is nothing to
-    // converge to, so "what does this look like after three seconds" is
-    // answered at frame one. What 4.5.0 adds is that it is also ALIVE: ambient
-    // runs in the tile, silently, so lines light up on their own. That is a
-    // different claim from legibility and a better one, and it is the reason to
-    // do it — not the Butterfly thumbnail, which was fixed in 4.1.3 and reaches
-    // its subject in about a second.
     for (const el of ELEMENTS) density[el.key] = SOLAR_MIXTURE[el.key] ?? 0;
   } else {
-    // Sodium alone at the start. One element, two lines, and the doublet is
-    // the thing the scene most wants a first-time visitor to look at twice.
     density.Na = 0.7;
   }
 
   const maskCanvas = document.createElement('canvas');
   const maskCtx = maskCanvas.getContext('2d');
-  // The emission strip. Same one-row-stretched-down-the-band trick as the
-  // absorption mask, and built from the SAME tau array — because 1 - exp(-tau)
-  // is how much of the light a column takes out in absorption and how brightly
-  // that column glows in emission. One quantity, two readings, which is the
-  // physical claim the whole mode switch rests on: these are the same lines
-  // seen from opposite sides.
   const emitCanvas = document.createElement('canvas');
   const emitCtx = emitCanvas.getContext('2d');
   let tau = null;
   let bandDirty = true;
 
-  // ─── Line width, and the one feature that sets it ────────────────────────
-  // The sodium D pair is 0.597nm apart, and apollo.text.js's note on it says
-  // the split "is the claim the sonification stands or falls on". So sigma
-  // tracks the pair rather than being chosen for looks: bandW/1400*0.7 is
-  // exactly (their separation in columns) / 3.2, at any width. A wider,
-  // prettier line would merge them.
-  //
-  // Below a certain width nothing can un-merge them, and it is worth being
-  // exact about where that is rather than implying the pair always resolves.
-  // The band spans 370nm, so 0.597nm is two columns only once bandW reaches
-  // about 1240 — under that the two peaks are less than two samples apart and
-  // land on the same column whatever sigma does. Measured on the real integer
-  // column grid: at 1400 columns the saddle between them is 32% below the
-  // peaks, at 1126 it is 23%, and at 1024 and below there is no saddle at all.
-  // `bandW` is DEVICE pixels, so a 2x phone is around 690 and a 1x laptop
-  // around 1130 — which is to say the doublet reads as one line on a phone,
-  // and there is no arrangement of this band that changes that.
-  //
-  // The floor exists so a line never gets narrower than the grid it is drawn
-  // on; at 0.35 the profile is still [0.13, 1, 0.13] rather than a hard
-  // single column. It was 0.55, which was above sigma's own value from about
-  // 1100 columns down — so on exactly the screens where the pair was hardest
-  // to separate, the line was also being drawn wider than the arithmetic
-  // asked for.
   const LINE_SIGMA_FLOOR = 0.35;
   function lineSigma() {
     return Math.max(LINE_SIGMA_FLOOR, (bandW / 1400) * 0.7);
@@ -450,11 +199,6 @@ export function createApollo(container, { preview = false, initialArg = null, on
       }
     }
 
-    // One row of black at alpha = 1 - transmission, stretched down the band.
-    // Source-over black over the continuum gives result = continuum * (1-alpha)
-    // = continuum * transmission, which is Beer's law exactly, for the price of
-    // one drawImage. The stretch is in y only, so no horizontal resampling can
-    // smear the doublet.
     maskCanvas.width = bandW; maskCanvas.height = 1;
     const m = maskCtx.createImageData(bandW, 1);
     for (let x = 0; x < bandW; x++) {
@@ -483,18 +227,6 @@ export function createApollo(container, { preview = false, initialArg = null, on
     rebuildJumpList();
   }
 
-  // ─── The corona ───────────────────────────────────────────────────────────
-  // Procedural, not footage. Parker Solar Probe imagery is public domain and
-  // it would have been a large asset on a site that just cut a 2.9MB PNG to
-  // 30KB — and, more to the point, a video loop cannot react when a line is
-  // struck. Generated flow can.
-  //
-  // Real coronal imagery is filamentary and unevenly bright, with structure at
-  // several scales: broad streamers with fine texture inside them. Closer to
-  // grain than to smoke, and nothing like a field of discrete dots. So: long
-  // strands, each a sum of three sine terms at different spatial frequencies,
-  // drawn as tapered polylines with additive blending, in a few brightness
-  // classes so some read as bright streamers and most as texture between them.
   const FILAMENT_COUNT = preview ? 60 : 260;
   const SEGMENTS = preview ? 8 : 14;
   const filaments = [];
@@ -505,31 +237,8 @@ export function createApollo(container, { preview = false, initialArg = null, on
       const bright = Math.random() < 0.14;
       filaments.push({
         y: Math.random(),                                  // 0..1 of height
-        // Drift rate in fractions of the frame width per second. A RATE, so
-        // it is multiplied by dt; nothing here advances by a per-frame step.
-        // 0.035-0.09 puts a strand's crossing time between eleven and
-        // twenty-nine seconds — slow enough to be coronal, fast enough that
-        // the eye catches it without being asked to look. See advance().
         speed: 0.035 + Math.random() * 0.055,
         phase: Math.random() * Math.PI * 2,
-        // Nearly straight, gently curving, slightly sloped. Two wrong
-        // versions got here, and both are worth keeping written down because
-        // they are opposite mistakes:
-        //
-        //   Low frequency and large amplitude (k1 near 2, a1 up at 0.075) gave
-        //   smooth full-width waves, and a hundred of those at mixed heights
-        //   read as a contour map — a topographic diagram of nothing.
-        //
-        //   High frequency and small amplitude (k1 near 6) fixed the contours
-        //   and produced ZIGZAGS: six cycles sampled at eighteen segments is
-        //   three samples per cycle, so what rendered was the polyline, not
-        //   the curve. The lesson is that a strand's texture cannot come from
-        //   its own vertices at this segment count.
-        //
-        // So the texture comes from DENSITY instead — 260 short, near-straight,
-        // overlapping strands at mixed slopes and low alpha, which is what a
-        // coronal image actually is. Each strand only has to be plausible on
-        // its own; none of them carries the look.
         k1: 0.8 + Math.random() * 1.4,
         k2: 2.5 + Math.random() * 2.5,
         a1: 0.002 + Math.random() * 0.008,
@@ -538,32 +247,12 @@ export function createApollo(container, { preview = false, initialArg = null, on
         width: bright ? 1.2 + Math.random() * 1.0 : 0.4 + Math.random() * 0.7,
         alpha: bright ? 0.19 + Math.random() * 0.13 : 0.048 + Math.random() * 0.075,
         warm: Math.random(),
-        // Each strand covers only a short part of the width, starting
-        // somewhere of its own — overlapping short spans at mixed lengths is
-        // what turns the same maths into texture rather than into lines. The
-        // 0.55 power biases the starts toward the right, where the light is
-        // coming from: the field genuinely thins out as it crosses.
         x: 0.05 + Math.pow(Math.random(), 0.55) * 1.05,
         len: 0.10 + Math.random() * 0.26,
       });
     }
   }
 
-  // ─── Drift ────────────────────────────────────────────────────────────────
-  // The strands TRANSLATE, right to left, and until this was written they did
-  // not. The first build advanced only each strand's wiggle phase and left its
-  // x fixed, under a variable called `speed` and a comment that said "right to
-  // left" — so the field vibrated in place at an amplitude of half a percent of
-  // the frame height and read, correctly, as static texture on the backdrop.
-  //
-  // That mattered more than a missing flourish, because it took the strike
-  // response down with it. A response only registers as a response if the
-  // resting state was legibly at rest; with nothing moving, a local
-  // displacement had nothing to differ FROM, and the one gesture that makes
-  // the corona the sounding medium rather than a background image was
-  // invisible. The fix is motion, not opacity.
-  //
-  // A rate against dt, and the wrap is a rate too — nothing here counts frames.
   const SPAWN_MARGIN = 0.25;
   function advanceFilaments(dt) {
     for (const f of filaments) {
@@ -572,19 +261,6 @@ export function createApollo(container, { preview = false, initialArg = null, on
     }
   }
 
-  // ─── Disturbance: a wavefront, not a wobble ───────────────────────────────
-  // Striking a line disturbs the flow, and the disturbance TRAVELS. It starts
-  // at the struck line's own x and expands outward as a ring, so the medium is
-  // visibly carrying it — which is what the scene is about. The first version
-  // displaced everything within a fixed radius and oscillated it in time, which
-  // is a global effect wearing a local mask: every strand inside the circle
-  // moved at once, and nothing went anywhere.
-  //
-  // The ring's radius is `t * DISTURB_SPEED` — a rate — and the displacement
-  // is a Gaussian shell around it, so a strand is pushed as the front passes
-  // and settles once it has gone by. The sine is a function of distance from
-  // the front rather than of time, which is what makes the ripples move
-  // outward rather than blink.
   const disturbances = [];
   const DISTURB_LIFE = 2.4;      // seconds — long enough to cross the frame
   const DISTURB_SPEED = 0.42;    // fractions of the frame width per second
@@ -598,10 +274,6 @@ export function createApollo(container, { preview = false, initialArg = null, on
   function disturbanceOffset(fx, fy) {
     if (!disturbances.length) return 0;
     let dy = 0;
-    // The field is measured in fractions of width and height, which are not the
-    // same distance — without this a ring in normalized space is an ellipse on
-    // screen, and a wavefront that is visibly taller than it is wide reads as a
-    // stretch rather than as a wave.
     const aspect = H / Math.max(1, W);
     for (const d of disturbances) {
       const ddx = fx - d.x, ddy = (fy - d.y) * aspect;
@@ -610,87 +282,29 @@ export function createApollo(container, { preview = false, initialArg = null, on
       const off = (dist - radius) / DISTURB_SHELL;
       if (off < -4 || off > 4) continue;
       const shell = Math.exp(-0.5 * off * off);
-      // Fades with age AND with distance travelled: a front spreading over a
-      // larger circumference carries the same energy through more of it.
       const fade = (1 - d.t / DISTURB_LIFE) / (1 + radius * 3.5);
       dy += 0.075 * shell * fade * Math.sin(off * 2.4);
     }
     return dy;
   }
 
-  // ─── The pitch ruler ──────────────────────────────────────────────────────
-  // A prototype the brief asked for and asked to be looked at before
-  // committing: the same lines shown a second time, laid out by pitch instead
-  // of by wavelength. It earns its place because the two axes are genuinely
-  // different — pitch goes as 1/lambda, so a set of lines evenly spaced in the
-  // band is unevenly spaced on the ruler, and the hydrogen series that crowds
-  // toward the violet end of the band SPREADS toward the treble end of the
-  // ruler. That is the reciprocal made visible, and it is not something the
-  // band can show on its own.
-  //
-  // Off by default and toggleable, because it is the one element here that is
-  // a diagram rather than an object, and a visitor who only wants to play the
-  // instrument should not have to look at it.
   let rulerOn = false;
   const HZ_MIN = wavelengthToHz(BAND_RIGHT_NM);
   const HZ_MAX = wavelengthToHz(BAND_LEFT_NM);
   const xForNm = nm => bandX + ((nm - BAND_LEFT_NM) / (BAND_RIGHT_NM - BAND_LEFT_NM)) * bandW;
   const xForHz = hz => bandX + ((hz - HZ_MIN) / (HZ_MAX - HZ_MIN)) * bandW;
 
-  // ─── How long a note lasts, and why it differs by mode ────────────────────
-  // Absorption sustains: a long tone the visitor carves gaps into. Emission
-  // strikes: fast attack and a decay, because every photon is an electron
-  // falling and nothing about that is held.
-  //
-  // The emission decay is NOT constant, and the reason is a real constraint
-  // rather than a preference. The sodium doublet beats at 0.5154 Hz — a period
-  // of 1.94 seconds — and that beat is the best demonstration the sonification
-  // has. A decay short enough to feel plucked is shorter than one beat period,
-  // which would silence exactly the thing worth hearing. So the decay depends
-  // on how many voices are sounding: a few lines ring long enough for the beat
-  // to complete twice, and only a crowd decays fast. Sodium's six lines get 4.2
-  // seconds; iron's twelve get 1.4, which is what makes fifty lines a swarm
-  // rather than a wall of sustain.
-  //
-  // That is a mixing decision, stated as one, not dressed up as physics — real
-  // excited-state lifetimes are nanoseconds and give no anchor at audible
-  // scale, so there is nothing here to be faithful to.
   const ABSORPTION_SUSTAIN = 5.5;
   const EMISSION_RING = 4.2;      // seconds, few voices — two full sodium beats
   const EMISSION_SWARM = 1.4;     // seconds, at the chord cap
   const EMISSION_CROWD = 6;       // voices below which the ring is kept whole
-  // ─── The piano gesture, and only the gesture (4.5.2) ──────────────────────
-  // A piano is identified by its partial stack — a series climbing five or six
-  // octaves above the fundamental. That series is not available here, and not
-  // because of a rule: the visible band is 380–750nm, which through the audio
-  // divisor is 788.9Hz down to 399.7Hz, a ratio of 1.97. **Every spectral line
-  // of every element in this instrument lands inside a single octave.** There
-  // is nothing above a line to be its overtone. Sounding an element's other
-  // lines alongside it — tried, rendered, listened to — adds no upper energy at
-  // all (5.4% above 1.2kHz against 5.7% for this voice); it is a cluster chord
-  // in the same octave, which is a different instrument rather than a nearer
-  // piano.
-  //
-  // So what is taken from the piano is everything except its spectrum: the
-  // onset, the two-rate decay, the way decay falls with pitch, and a hammer
-  // that brightens when the key is hit harder. No frequency is present that was
-  // not present before, and the constraint the sine exists to protect — every
-  // sounding is a real line at its real pitch — is untouched.
   const PIANO_PITCH_REF = 550;    // Hz, near the middle of the band
   const PIANO_PITCH_TILT = 0.9;   // decay ∝ (ref/hz)^tilt
 
-  // How crowded the chord is: 0 while the ring is kept whole, 1 at the cap.
   function crowdFraction(voices) {
     return Math.max(0, Math.min(1, (voices - EMISSION_CROWD) / (CHORD_CAP - EMISSION_CROWD)));
   }
 
-  // `hz` is optional so a caller that only wants the crowd-scaled length can
-  // ask for it. Pass it and the note also gets the piano's pitch tilt: a struck
-  // string loses its energy faster the shorter it is, so high notes die and low
-  // notes ring. Here that means **red lines ring longer than blue ones**, which
-  // is a real statement about the band rather than a borrowed mannerism.
-  // Absorption is deliberately excluded — it is bowed, not struck, and the
-  // contrast between the two modes is the thing that makes each legible.
   function noteLength(voices, hz = null) {
     if (mode === 'absorption') return ABSORPTION_SUSTAIN;
     const base = EMISSION_RING - crowdFraction(voices) * (EMISSION_RING - EMISSION_SWARM);
@@ -698,25 +312,14 @@ export function createApollo(container, { preview = false, initialArg = null, on
     return base * Math.pow(PIANO_PITCH_REF / hz, PIANO_PITCH_TILT);
   }
 
-  // Struck lines, for the flash on the band and the marker on the ruler. Each
-  // carries its OWN life rather than reading a shared constant, because two
-  // notes no longer last the same time — not across modes, and not across
-  // elements within emission. What is lit is what is sounding.
   const struck = [];
 
-  // ─── Drawing ──────────────────────────────────────────────────────────────
   function drawCorona() {
     ctx.save();
     ctx.globalCompositeOperation = 'lighter';
     ctx.lineCap = 'round';
     const t = clock.elapsed;
     for (const f of filaments) {
-      // Right to left: the strand's phase advances so the pattern travels
-      // toward the band and past it. The light is in transit; the band is
-      // where it is sampled.
-      // The wiggle phase still advances — that is the strand's own internal
-      // shimmer — but the strand's POSITION now comes from f.x, which
-      // advance() moves. Both are rates; neither counts frames.
       const ph = f.phase + t * f.speed * 6.0;
       const xRight = f.x, xLeft = f.x - f.len;
       ctx.beginPath();
@@ -731,15 +334,7 @@ export function createApollo(container, { preview = false, initialArg = null, on
         const px = fx * W, py = fy * H;
         if (s === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
       }
-      // Two things at once. Along the strand: fade in and out at both ends, so
-      // it has no visible start or stop — a hard-ended stroke reads as a drawn
-      // line, and this is meant to read as something the eye resolves out of
-      // grain. Across the frame: dimmer the further left the strand sits,
-      // because light that has crossed the sampling plane has had something
-      // taken out of it.
       const depth = 0.5 + 0.5 * Math.min(1, Math.max(0, (xRight + xLeft) * 0.5));
-      // In emission there is no light in transit — the gas is the source — so
-      // the streaming field goes with the continuum, leaving only a residue.
       const a = f.alpha * depth * coronaScale(f.y);
       const grad = ctx.createLinearGradient(xRight * W, 0, xLeft * W, 0);
       const warmR = 255, warmG = 236 - f.warm * 26, warmB = 198 - f.warm * 58;
@@ -759,27 +354,14 @@ export function createApollo(container, { preview = false, initialArg = null, on
     ctx.save();
     ctx.imageSmoothingEnabled = false;
 
-    // Absorption: the continuum, then Beer's law as one black-over-colour
-    // drawImage. Faded out by modeMix rather than switched off, so the two
-    // modes cross rather than cut.
     if (modeMix < 1) {
       ctx.globalAlpha = 1 - modeMix;
       ctx.drawImage(continuumCanvas, bandX, bandY);
       ctx.drawImage(maskCanvas, 0, 0, bandW, 1, bandX, bandY, bandW, bandH);
     }
 
-    // Emission: bright lines standing in the dark, added rather than composited
-    // over, because that is what light does. Drawn twice — once at the band's
-    // own height for the line, and once taller and much fainter for the glow
-    // that spills past its edges. The gas is the source here, so it should not
-    // stop dead at a rectangle it has no reason to respect.
     if (modeMix > 0) {
       ctx.globalCompositeOperation = 'lighter';
-      // 0.32, not the 0.42 this started at: the taller bloom made the lines
-      // read as full-height bars and lost the band's own extent, which the
-      // wavelength scale underneath still refers to. Enough spill to say the
-      // gas is not respecting a rectangle, not so much that the rectangle
-      // stops existing.
       const glow = Math.round(bandH * 0.32);
       ctx.globalAlpha = modeMix * 0.30;
       ctx.drawImage(emitCanvas, 0, 0, bandW, 1, bandX, bandY - glow, bandW, bandH + glow * 2);
@@ -788,13 +370,6 @@ export function createApollo(container, { preview = false, initialArg = null, on
     }
     ctx.restore();
 
-    // A hairline top and bottom so the strip has an edge. Brass, like every
-    // other rule in the scene.
-    // The band's edges. Faded in emission rather than dropped: with no band
-    // there, a full-width hairline top and bottom reads as a leftover frame
-    // around nothing — but removing them entirely leaves the lines floating
-    // with no relation to the nm scale under them. A third of the way down is
-    // enough to say "this is how far the band went" without drawing a box.
     ctx.save();
     ctx.strokeStyle = `rgba(201,174,116,${(0.30 * (1 - modeMix * 0.62)).toFixed(3)})`;
     ctx.lineWidth = Math.max(1, dpr() * 0.5);
@@ -813,9 +388,6 @@ export function createApollo(container, { preview = false, initialArg = null, on
       const age = 1 - s.t / s.life;
       if (age <= 0) continue;
       const x = xForNm(s.nm);
-      // The flash is drawn as light ADDED at the line's own colour, which is
-      // the honest gesture: sounding an absence briefly gives back what was
-      // taken out of it.
       ctx.globalCompositeOperation = 'lighter';
       const [cr, cg, cb] = wavelengthToRGB(s.nm);
       const g = ctx.createLinearGradient(0, bandY, 0, bandY + bandH);
@@ -837,29 +409,12 @@ export function createApollo(container, { preview = false, initialArg = null, on
   function drawRuler() {
     if (!rulerOn || !rulerFits || preview) return;
     const r = dpr();
-    // Below the wavelength scale, not through it, and at the offset layout()
-    // actually reserved rather than at a constant of its own. The first version
-    // put the ruler 34px under the band, which is where the nm labels are, so
-    // every connector crossed a number on the way down; the second used a flat
-    // 66px, which on a phone put it underneath the rail. Both were right at the
-    // window they were written at.
     const y = bandY + bandH + (SCALE_BLOCK + 22) * r;
     ctx.save();
     ctx.strokeStyle = 'rgba(201,174,116,0.35)';
     ctx.lineWidth = Math.max(1, r * 0.5);
     ctx.beginPath(); ctx.moveTo(bandX, y); ctx.lineTo(bandX + bandW, y); ctx.stroke();
 
-    // Equal-tempered semitones across the band's own span. 380–750nm is
-    // 789Hz down to 400Hz, a ratio of 1.974 — the visible spectrum is almost
-    // exactly one octave wide, and this ruler is where that stops being a
-    // sentence and becomes a picture.
-    //
-    // ALMOST is doing real work: 1.974 is 0.981 of an octave, so the twelfth
-    // semitone lands at 799Hz, past the violet end of the band. The loop used
-    // to run to 12 with a `break` and a `tall` flag for every multiple of 12,
-    // which meant the closing tick could never be drawn and the flag was only
-    // ever true at n=0. Eleven steps and one tall tick at the low end, which
-    // is what was actually rendering.
     ctx.fillStyle = 'rgba(201,174,116,0.5)';
     ctx.strokeStyle = 'rgba(201,174,116,0.28)';
     for (let n = 0; n <= 11; n++) {
@@ -871,8 +426,6 @@ export function createApollo(container, { preview = false, initialArg = null, on
       ctx.stroke();
     }
 
-    // The axis says what it is, in the same grammar as the nm scale above it.
-    // Without this the lower row is a mystery second set of dots.
     ctx.font = `${Math.round(9 * r)}px Electrolize, sans-serif`;
     ctx.textBaseline = 'top';
     ctx.textAlign = 'center';
@@ -887,7 +440,6 @@ export function createApollo(container, { preview = false, initialArg = null, on
       const age = 1 - s.t / s.life;
       if (age <= 0) continue;
       const xb = xForNm(s.nm), xr = xForHz(wavelengthToHz(s.nm));
-      // Starts below the nm labels, so a connector never crosses a number.
       ctx.strokeStyle = `rgba(201,174,116,${0.22 * age})`;
       ctx.beginPath();
       ctx.moveTo(xb, bandY + bandH + SCALE_BLOCK * r);
@@ -917,23 +469,6 @@ export function createApollo(container, { preview = false, initialArg = null, on
     ctx.restore();
   }
 
-  // ─── Audio ────────────────────────────────────────────────────────────────
-  // Wavelength to pitch is one division by one constant — see AUDIO_DIVISOR in
-  // apollo.text.js. No scale, no quantization, no per-element tuning, so the
-  // intervals heard are the intervals seen.
-  //
-  // On the lookahead scheduler this project's other two audio scenes use:
-  // there is deliberately none here, and that is not a shortcut past a house
-  // rule. Outside and Harmonics need it because they GENERATE notes over time,
-  // and a per-frame Bernoulli check on requestAnimationFrame stops being a
-  // Poisson process the moment the tab is backgrounded and rAF throttles.
-  // Apollo has no generative layer at all: it is an instrument and it is
-  // silent until it is played, so every note here is a response to a gesture
-  // that just happened. There is no window to schedule ahead. The principle
-  // the scheduler exists to protect is still followed — every envelope
-  // breakpoint below is scheduled against audioCtx.currentTime, the audio
-  // hardware's own clock, and nothing about the sound is driven from the
-  // render loop.
   let audioCtx = null, muteGain = null, busGain = null, comp = null, verb = null, wetGain = null;
   let noiseBuf = null;
   let soundEnabled = false;
@@ -955,48 +490,24 @@ export function createApollo(container, { preview = false, initialArg = null, on
     audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     muteGain = audioCtx.createGain(); muteGain.gain.value = 0;
     muteGain.connect(audioCtx.destination);
-    // Twelve sine oscillators at once is a real chance of clipping, and iron
-    // is the case it was sized for. The compressor is doing headroom work, not
-    // colouring the sound.
     comp = audioCtx.createDynamicsCompressor();
-    // 10ms attack, not the 4ms this had. A compressor that clamps in four
-    // milliseconds eats the first thing a percussive note does, which is
-    // exactly the part that makes it read as struck rather than as faded in —
-    // the strike was being flattened by the thing protecting the headroom.
-    // Threshold drops to compensate so the sustained material is held the same.
     comp.threshold.value = -16; comp.ratio.value = 6; comp.attack.value = 0.010; comp.release.value = 0.28;
     comp.connect(muteGain);
     busGain = audioCtx.createGain(); busGain.gain.value = 1;
     busGain.connect(comp);
-    // A short synthesized room rather than an anechoic click. Modest wet — a
-    // long tail would smear the sodium beat, which is the one thing here that
-    // has to stay legible.
     verb = audioCtx.createConvolver();
     verb.buffer = makeImpulseResponse(audioCtx, 1.6, 2.6);
     verb.connect(comp);
     wetGain = audioCtx.createGain(); wetGain.gain.value = wetForMode();
     wetGain.connect(verb);
-    // One second of noise, made once and shared by every strike. Each strike
-    // reads a random offset out of it, so twelve simultaneous transients are
-    // twelve different bursts rather than twelve copies of one.
     noiseBuf = audioCtx.createBuffer(1, audioCtx.sampleRate, audioCtx.sampleRate);
     const nd = noiseBuf.getChannelData(0);
     for (let i = 0; i < nd.length; i++) nd[i] = Math.random() * 2 - 1;
   }
 
-  // Emission is drier. A 1.6-second tail behind a struck note is the thing that
-  // turns it back into a sustained one — the transient survives the compressor
-  // and then gets smeared by the room. Absorption keeps the wetter setting,
-  // where a long tone in a large space is the point.
   const wetForMode = () => (mode === 'emission' ? 0.10 : 0.22);
 
   function setSoundEnabled(on) {
-    // The same guard Outside and Harmonics carry, for the same bug:
-    // bindPersistedSoundToggle leaves a first-gesture listener on the shared
-    // #experience-container, which main.js empties but never replaces, so a
-    // pointer-down inside a LATER scene used to call straight back into a
-    // torn-down one. The helper's dispose() closes that path; this makes a
-    // stale call a no-op from any other route as well.
     if (disposed) return;
     soundEnabled = on;
     if (on) buildAudioGraph();
@@ -1012,39 +523,8 @@ export function createApollo(container, { preview = false, initialArg = null, on
     }
   }
 
-  // ─── The strike transient ─────────────────────────────────────────────────
-  // A sine with a fast attack is still a tone that arrives quickly; it is not a
-  // struck thing. What makes a strike read as a strike is a broadband transient
-  // at the onset — the moment of contact is not pitched, the resonance that
-  // follows is.
-  //
-  // So: a very short burst of noise, band-passed at the line's own frequency.
-  // Broadband at the instant of the strike, centred on the wavelength being
-  // played, gone in fifty milliseconds. That keeps the rule the sine was
-  // protecting — no sustained energy at a frequency no line corresponds to —
-  // while giving the onset something to be.
-  //
-  // The filter's Q is tied to the note's own length, and that is not a knob: a
-  // short-lived emission IS spectrally broader, because time and bandwidth
-  // trade against each other. So the swarm's brief notes get a low Q and read
-  // as ticks, and the long ring gets a high Q and reads as pitched. The same
-  // parameter that makes iron percussive makes sodium singing.
-  // 4.5.2 shortens this from 50ms to 35ms and moves its centre below the note.
-  // A piano's hammer noise is not centred on the string's pitch — it is a
-  // knock, with its energy under the fundamental, and the string is what
-  // answers it. Centring the burst at 0.75× puts the two in the right order.
   const TRANSIENT = 0.035; // seconds
   const HAMMER_CENTRE = 0.75;
-  // `ring` is 1 when the note is a whole ring and 0 at the chord cap; `v` is
-  // the line's own strength, 0..1. Two things set the hammer's brightness now,
-  // and they are different claims. **Strength is the new one and the piano
-  // one:** a harder-struck key is a brighter one, so a deep line gets a
-  // sharper, louder knock than a faint one. **Crowding is v4.4.1's, kept:**
-  // time and bandwidth trade against each other, so a short-lived note in a
-  // twelve-voice chord IS spectrally broader and gets a lower Q for it. The
-  // factor is 1 at a whole ring, so a single ambient note — every note in
-  // Sunlight — is exactly the voice that was auditioned, and the broadening
-  // only appears where it was always meant to, on a crowded strike.
   function strikeTransient(now, hz, amp, ring, v) {
     if (!noiseBuf) return;
     const src = audioCtx.createBufferSource();
@@ -1057,15 +537,9 @@ export function createApollo(container, { preview = false, initialArg = null, on
     g.gain.setValueAtTime(amp * (2.6 + 1.8 * v), now);
     g.gain.exponentialRampToValueAtTime(0.0001, now + TRANSIENT);
     src.connect(bp); bp.connect(g); g.connect(busGain);
-    // A random offset into the shared buffer, so simultaneous transients are
-    // not the identical waveform stacking into one louder copy of itself.
     src.start(now, Math.random() * 0.9, TRANSIENT + 0.02);
   }
 
-  // One note: a sine at the line's own transposed frequency. Sine and not
-  // something richer on purpose — harmonics of their own would put energy at
-  // frequencies no line in the band corresponds to, and the beat between two
-  // close lines is only clean between two pure tones.
   function playLine(nm, rel, voices, when = null) {
     if (!audioCtx || !soundEnabled) return;
     const now = when === null ? audioCtx.currentTime : Math.max(when, audioCtx.currentTime);
@@ -1075,33 +549,11 @@ export function createApollo(container, { preview = false, initialArg = null, on
     osc.frequency.value = hz;
     const env = audioCtx.createGain();
     const life = noteLength(voices, hz);
-    // Bowed versus plucked, and the only difference in the graph is the attack
-    // and the length. Same oscillator, same wavelength-to-frequency division,
-    // so a given line is the same pitch in both modes and a visitor learns it
-    // once. Emission's attack drops to 1ms in 4.5.2 — a hammer does not take
-    // two milliseconds to arrive, and at 2ms the onset was very slightly a fade.
     const attack = mode === 'emission' ? 0.001 : 0.05;
-    // Amplitude from the line's own relative intensity, divided down by how
-    // many voices are sounding together so a fifty-line element and a
-    // one-line element arrive at the ear at the same loudness. Without this,
-    // iron is simply the loud one, and "iron sounds like noise" would be a
-    // claim about the mixer rather than about iron.
     const amp = 0.16 * Math.pow(rel / 1000, 0.5) / Math.sqrt(Math.max(1, voices));
     env.gain.setValueAtTime(0, now);
     env.gain.linearRampToValueAtTime(amp, now + attack);
     if (mode === 'emission') {
-      // Two stages, and the first one is what percussion is. A struck thing
-      // loses most of its energy immediately and then rings quietly for a long
-      // time; a single exponential from peak to silence across four seconds is
-      // a note that fades, which is a different gesture. **4.5.2 steepens the
-      // first stage from 26% in 110ms to 18% in 80ms**, which is the piano's
-      // own proportion: the prompt sound of a struck string is brief and most
-      // of the note is the aftersound.
-      //
-      // The tail has to stay long whatever this does, because the sodium
-      // doublet beats with a 1.94-second period and the beat is the best thing
-      // the sonification has. Quieter is fine — beating is a ratio between two
-      // tones and survives at any level. Shorter is not.
       env.gain.exponentialRampToValueAtTime(amp * 0.18, now + 0.08);
       env.gain.exponentialRampToValueAtTime(0.0001, now + life);
       strikeTransient(now, hz, amp, 1 - crowdFraction(voices), Math.pow(rel / 1000, 0.5));
@@ -1116,12 +568,6 @@ export function createApollo(container, { preview = false, initialArg = null, on
   }
 
   function markStruck(nm, el, voices = 1) {
-    // The mark's length is the note's length — that invariant predates 4.5.2
-    // and is why `hz` is passed here too. Without it the pitch tilt would put
-    // the two out of step: a red line would still be sounding after its mark
-    // had gone and a blue one would light after it had stopped. It works with
-    // the sound off, since the pitch comes from the wavelength rather than from
-    // anything in the audio graph.
     struck.push({ nm, el, t: 0, life: noteLength(voices, wavelengthToHz(nm)) });
     if (struck.length > 64) struck.shift();
     const x = xForNm(nm);
@@ -1130,26 +576,6 @@ export function createApollo(container, { preview = false, initialArg = null, on
 
   function srSay(text) { if (srLiveEl) srLiveEl.textContent = text; }
 
-  // ─── A mixture in a link ──────────────────────────────────────────────────
-  // Scenes on this site do not persist state and should not: ten of the eleven
-  // are encounters with writing rather than configurations, sceneKit's whole
-  // lifecycle layer exists to guarantee that leaving a scene leaves nothing
-  // behind, and the second visit starting inside an arrangement you made three
-  // weeks ago and no longer remember is a worse experience than starting from
-  // an empty band. The sound toggle persists because a preference is a
-  // different category from a state.
-  //
-  // This is what persistence would have been reaching for, done better: an
-  // arrangement becomes a thing you can SEND someone. Arriving at it is
-  // deliberate rather than residual, it costs nothing when unused, and nothing
-  // survives a dispose.
-  //
-  // The grammar is comma-separated tokens: an element's symbol followed by its
-  // fader position as a whole percent (`ca95`), plus the bare words `emission`,
-  // `ruler` and `sun`. Percent rather than the tenths a first draft used, so a
-  // round trip is exact rather than nearly — the fader has 101 positions and an
-  // encoding with 11 cannot give back what it was handed. Symbols are one or
-  // two letters and digits follow, so `hg80` and `h80` cannot be confused.
   const MIX_TOKEN = /^([a-z]{1,2})(\d{1,3})$/;
   const SYMBOL_TO_KEY = Object.fromEntries(ELEMENTS.map(e => [e.symbol.toLowerCase(), e.key]));
 
@@ -1165,11 +591,6 @@ export function createApollo(container, { preview = false, initialArg = null, on
     return parts.join(',');
   }
 
-  // Loads what it can and ignores the rest, always. An unknown element, a
-  // value out of range, a string truncated by a chat client that decided a
-  // comma ended the link — none of them is an error state, because the failure
-  // mode of a malformed link should be "Apollo opens" and never "Apollo does
-  // not". The only thing a bad token costs is itself.
   function applyMixture(str) {
     if (!str) return false;
     let touched = false, wantEmission = false, wantRuler = false, wantSun = false;
@@ -1190,21 +611,10 @@ export function createApollo(container, { preview = false, initialArg = null, on
       touched = true;
     }
     if (!touched) return false;
-    // Elements the link did not name are explicitly zeroed rather than left at
-    // whatever the scene opened with: a shared mixture is the whole mixture,
-    // and "everything in my arrangement plus whatever was already there" is not
-    // the thing that was sent.
     for (const el of ELEMENTS) if (!seen.has(el.key)) setDensity(el.key, 0);
     for (const el of ELEMENTS) syncFader(el.key);
-    // Set explicitly in both directions rather than only on the way in: for a
-    // link applied to an ALREADY OPEN Apollo, a mixture without `emission`
-    // means absorption, not "leave it wherever it was".
     setMode(wantEmission ? 'emission' : 'absorption');
     if (wantRuler !== rulerOn) toggleRuler();
-    // Sound is never started by a link. Audio needs a gesture anyway, and
-    // arriving at somebody's arrangement should be silent until the visitor
-    // asks for it — so `sun` restores the visual state and the scheduler, and
-    // the notes stay inaudible behind the mute until the sound toggle is used.
     if (wantSun !== ambientOn) setAmbient(wantSun, { setMixture: false });
     return true;
   }
@@ -1214,7 +624,7 @@ export function createApollo(container, { preview = false, initialArg = null, on
     onStateChange?.(str);
     const url = location.href;
     let ok = false;
-    try { await navigator.clipboard.writeText(url); ok = true; } catch { /* denied, or no permission — the address bar still has it */ }
+    try { await navigator.clipboard.writeText(url); ok = true; } catch {  }
     if (copyLinkEl) {
       copyLinkEl.textContent = ok ? 'Copied' : 'In the address bar';
       timers.after(1800, () => { if (copyLinkEl) copyLinkEl.textContent = 'Copy link'; });
@@ -1224,56 +634,10 @@ export function createApollo(container, { preview = false, initialArg = null, on
       : 'The link is in the address bar. It carries the current mixture, the light source, and whether the pitch ruler is showing.');
   }
 
-  // ─── Ambient: the sun as an idle state ────────────────────────────────────
-  // The first thing on this site that plays without being touched. Every other
-  // scene sits still until a visitor does something; this one can be left
-  // running, and what it runs is the composition of sunlight from the elements
-  // already in the instrument — see SOLAR_MIXTURE in apollo.text.js for where
-  // those five came from and, more importantly, for what part of it is sourced
-  // and what part is a ruler.
-  //
-  // The sun is not a chord. It is continuously emitting, so this is not a
-  // sequence and not a loop: arrivals are a Poisson process — exponential
-  // inter-arrival times — and each line is drawn independently, weighted by its
-  // own optical depth in the current mixture. There is no period anywhere in
-  // it, which is the structural reason it cannot become audible as a loop
-  // rather than a claim that it did not in the minute someone listened.
-  //
-  // The constraint that keeps it from being a generative music toy: every
-  // sounding is a real line at its real pitch, chosen by real strength.
-  // Nothing is ever added because it sounds nice, and there is no scale, no
-  // quantization and no rhythm anywhere in this block.
-  //
-  // ─── One clock, and which one ─────────────────────────────────────────────
-  // A `setInterval`, never requestAnimationFrame: rAF throttles hard in a
-  // backgrounded tab, and a Poisson process approximated by a per-frame check
-  // stops being one exactly when the frames stop arriving. That is Outside's
-  // lookahead pattern (Chris Wilson, "A Tale of Two Clocks"), and v4.3.0 was
-  // right that Apollo had no generative layer to need it. It does now.
-  //
-  // The wrinkle Outside does not have: ambient must run with the sound off,
-  // and in the preview tile, where there is no AudioContext at all. So the
-  // authoritative clock is the audio hardware's when a context exists and a
-  // plain monotonic seconds count when it does not — one clock at a time,
-  // never both, resynced at the moment it switches, the same reseed Outside
-  // does when sound is turned back on. Notes are scheduled at exact times on
-  // it; the visual mark for each is queued at the same time and drained by the
-  // render loop, so what lights up is what is sounding.
   const AMBIENT_RATE = 0.55;              // notes per second, mean
   const AMBIENT_AHEAD = 1.2;              // seconds of lookahead per tick
   const AMBIENT_TICK = 250;               // ms — under the first background-throttle tier
-  // A hidden tab that is audibly playing is exempt from Chrome's intensive
-  // throttling and gets the standard tier instead, which is once per second —
-  // four times the interval this asks for. The lookahead's whole job is to
-  // exceed the tick's WORST case, and hidden the worst case is 1s, not 250ms;
-  // 1.2s of lookahead against a 1s tick is a 200ms margin, which is not one.
-  // So the window widens while hidden. It costs nothing: the visitor cannot
-  // move a fader they cannot see, so there is no mixture change for a longer
-  // queue to be stale about.
   const AMBIENT_AHEAD_HIDDEN = 3.0;       // seconds
-  // How long Sunlight keeps playing into a hidden page. See the visibility
-  // handler for why this is bounded at all, and why it is measured on the
-  // audio clock rather than on wall time.
   const BACKGROUND_GRACE = 600;           // seconds
   let backgroundUntil = null;
   let ambientOn = false;
@@ -1287,12 +651,6 @@ export function createApollo(container, { preview = false, initialArg = null, on
     ? audioCtx.currentTime
     : uiClock.elapsed;
 
-  // Every line of every element currently in the light, weighted by the
-  // optical depth it actually contributes — so calcium's H and K, which are the
-  // deepest features in the band, recur far more often than a faint iron line,
-  // and an element at a low fader is heard proportionally less. The weighting
-  // is the same expression buildBand() uses, not a second opinion about
-  // strength.
   function ambientPool() {
     const pool = [];
     let total = 0;
@@ -1315,8 +673,6 @@ export function createApollo(container, { preview = false, initialArg = null, on
       let lo = 0, hi = pool.length - 1;
       while (lo < hi) { const mid = (lo + hi) >> 1; if (pool[mid].cum < r) lo = mid + 1; else hi = mid; }
       const p = pool[lo];
-      // Not the same line twice running. A repeat is the one thing that reads
-      // as deliberate in an otherwise structureless stream.
       if (p.nm !== ambientLastNm || pool.length === 1) { ambientLastNm = p.nm; return p; }
     }
     return pool[0];
@@ -1324,20 +680,10 @@ export function createApollo(container, { preview = false, initialArg = null, on
 
   function ambientTickFn() {
     if (disposed || !ambientOn) return;
-    // The grace period is checked here rather than on a setTimeout, and that is
-    // the point of putting it here: this tick is the thing whose continued
-    // running IS the sound, so a deadline read off it cannot be enforced
-    // against a page that has already been frozen. It also means the ten
-    // minutes are ten minutes of audio — the clock underneath is the hardware's
-    // and stops when the sound does — rather than ten minutes of wall time that
-    // may have contained no sound at all.
     if (document.hidden && backgroundUntil !== null && ambientNow() >= backgroundUntil) {
       endBackgroundAudio();
       return;
     }
-    // The clock can change under this — sound gets turned on mid-run and the
-    // audio context appears. Reseed rather than carry a time from the old one,
-    // or the first tick after the switch reads a whole backlog as due.
     const isAudio = !!(audioCtx && audioCtx.state !== 'closed');
     if (isAudio !== ambientClockWasAudio) {
       ambientClockWasAudio = isAudio;
@@ -1345,11 +691,6 @@ export function createApollo(container, { preview = false, initialArg = null, on
       ambientPending.length = 0;
     }
     const now = ambientNow();
-    // Nothing is rendering while the page is hidden, so drainAmbient() is not
-    // running and the visual queue would otherwise grow by one entry per note
-    // and empty as a single burst of several hundred flashes on the way back —
-    // ten minutes at 0.55/s is 330 of them in one frame. A note that has
-    // already sounded has nothing left to light up.
     if (document.hidden) {
       while (ambientPending.length && ambientPending[0].at <= now) ambientPending.shift();
     }
@@ -1360,9 +701,6 @@ export function createApollo(container, { preview = false, initialArg = null, on
       if (!line) { ambientNext = now + 1; break; }
       playLine(line.nm, line.rel, 1, isAudio ? ambientNext : null);
       ambientPending.push({ nm: line.nm, el: line.el, at: ambientNext });
-      // Exponential inter-arrival: the continuous-time form of "a small chance
-      // each moment", and what makes the stream independent of how often this
-      // tick happens to run.
       ambientNext += -Math.log(1 - Math.random()) / AMBIENT_RATE;
     }
   }
@@ -1380,29 +718,6 @@ export function createApollo(container, { preview = false, initialArg = null, on
     ambientPending.length = 0;
   }
 
-  // ─── The one case that keeps playing into a hidden page ───────────────────
-  // `document.hidden` cannot tell "the visitor locked their phone while
-  // listening" from "the visitor opened this in a tab three hours ago and
-  // forgot" — it is the same event with the same fields, which is the actual
-  // obstacle rather than a missing API. So the discriminator has to be
-  // something else, and the only honest one available is what the visitor did
-  // before the page went away: turned sound on, and armed Sunlight. Two
-  // deliberate acts, the second of which means "let this play on its own."
-  // Neither is the state a forgotten tab is in — a forgotten tab has sound off,
-  // because sound needs a gesture and the visitor never made one.
-  //
-  // The gate is also what earns the exemption that makes it work. Chrome
-  // exempts a hidden page from intensive throttling only while it "has made
-  // noises in the past 30 seconds," and is explicit that a silent stream does
-  // not count. With sound off, muteGain sits at zero — audible output is
-  // exactly nothing, the exemption would not apply, and this scheduler would be
-  // throttled to once a minute against a three-second lookahead. Requiring
-  // soundEnabled is not caution bolted onto the condition; it IS the condition.
-  //
-  // And there is a second reason the same flag has to be in here: with no
-  // AudioContext, ambientNow() falls back to uiClock, which is ticked from the
-  // render loop, which a hidden page does not run. Ambient without audio does
-  // not play quietly in the background — it stops, holding a frozen clock.
   const backgroundAudible = () =>
     !preview && soundEnabled && ambientOn && !!audioCtx && audioCtx.state !== 'closed';
 
@@ -1412,9 +727,6 @@ export function createApollo(container, { preview = false, initialArg = null, on
     if (audioCtx && audioCtx.state === 'running') audioCtx.suspend();
   }
 
-  // Drained from the render loop: a queued line lights up when its scheduled
-  // moment arrives, so the mark on the band is the note the ear is hearing
-  // rather than the note the scheduler queued a second ago.
   function drainAmbient() {
     if (!ambientPending.length) return;
     const now = ambientNow();
@@ -1424,14 +736,6 @@ export function createApollo(container, { preview = false, initialArg = null, on
     }
   }
 
-  // `setMixture` is false when a link turns ambient on, and that distinction is
-  // load-bearing rather than tidy. Pressing Sunlight means "put the sun in the
-  // light and let it play" — the composition is the mode. But a shared link
-  // already carries the exact faders it was made with, and someone who turned
-  // Sunlight on and then moved a fader has a mixture that is no longer the
-  // sun's; resetting it to pure solar on arrival would hand the recipient
-  // something other than what was sent. The link is authoritative about the
-  // faders, and `sun` in it means only that the scheduler is running.
   function setAmbient(on, { setMixture = true } = {}) {
     if (disposed) return;
     ambientOn = on;
@@ -1459,56 +763,20 @@ export function createApollo(container, { preview = false, initialArg = null, on
   function toggleRuler() {
     rulerOn = !rulerOn;
     rulerToggleEl?.setAttribute('aria-pressed', String(rulerOn));
-    // The ruler needs room reserved for it, so turning it on can shorten the
-    // band and lift it. Derived rather than animated: the alternative is a
-    // ruler drawn into space nothing allocated.
     relayout();
     srSay(rulerOn
       ? (rulerFits
         ? 'Pitch ruler shown: the same lines laid out by frequency instead of wavelength.'
         : 'Pitch ruler requested, but there is no room for it at this window size. Turn the phone, or open a wider window.')
       : 'Pitch ruler hidden.');
-    // Says so on the control too, not only to a screen reader: a button that
-    // reports pressed while nothing appeared is a worse failure than the
-    // missing ruler.
     rulerToggleEl?.classList.toggle('no-room', rulerOn && !rulerFits);
   }
 
-  // ─── The mode switch ──────────────────────────────────────────────────────
-  // One control naming the two situations Kirchhoff's laws distinguish: a
-  // continuous source seen THROUGH a cooler gas gives dark lines in a lit band
-  // (absorption), and the gas itself, excited and seen against the dark, gives
-  // bright lines in a dark band (emission). Two radios in a fieldset rather
-  // than a toggle button, because that is what a two-position choice is and
-  // because it lets the legend say what the two positions are choices about.
-  // Same reasoning as the rail: use the control that already means this.
-  //
-  // The labels were "Behind the gas" and "The gas itself" until 4.10.3 — the
-  // geometry described in plain language rather than named. Scott's call, and
-  // the right one: these are the terms of art for exactly these two
-  // situations, the scene's own values have always been `absorption` and
-  // `emission`, and a visitor who does not know the words learns them from an
-  // instrument that shows what they mean. The plain-language version did not
-  // disappear with the labels — it is what the hint line and the screen-reader
-  // announcement below say, which is where a description belongs anyway.
-  //
-  // Fader state is untouched by the switch. Six elements in the light stay six
-  // elements in the light, so a mixture built in one mode can be heard in the
-  // other — which is most of the point of having both.
   function setMode(next) {
     if (next === mode) return;
     mode = next;
-    // Keep the control truthful, whatever moved the mode. The radios were the
-    // only record of which mode was showing, and setMode did not touch them —
-    // so a link carrying `emission` put the scene in emission with the switch
-    // still reading absorption, and pressing it then did nothing at all,
-    // because the guard above sees the value already matches. Not a display
-    // bug: a stuck state. Found by a round-trip test rather than by looking,
-    // which is the argument for the round-trip test.
     const radio = document.querySelector(`.apollo-mode input[value="${mode}"]`);
     if (radio && !radio.checked) radio.checked = true;
-    // The band is rebuilt from the same tau either way (see buildBand), so
-    // nothing needs recomputing — only the blend needs to move.
     if (wetGain && audioCtx) {
       const t = audioCtx.currentTime;
       wetGain.gain.cancelScheduledValues(t);
@@ -1535,8 +803,6 @@ export function createApollo(container, { preview = false, initialArg = null, on
       .sort((a, b) => b[1] - a[1])
       .slice(0, CHORD_CAP);
     if (density[el.key] <= 0.001) {
-      // Pressing an element puts it in the light. Cause and effect, not a mode
-      // switch: the lines appear in the band BECAUSE it is now absorbing.
       setDensity(el.key, 0.7);
       syncFader(el.key);
     }
@@ -1549,7 +815,6 @@ export function createApollo(container, { preview = false, initialArg = null, on
       + `${lines.length === total ? 'all' : `the strongest ${lines.length}`} sounding. ${el.character}`);
   }
 
-  // ─── Chrome and the rail ──────────────────────────────────────────────────
   let titleRowEl = null, hintEl = null, rulerToggleEl = null, railEl = null, ambientToggleEl = null, copyLinkEl = null;
   const faderInputs = {};
   const faderCells = {};
@@ -1563,31 +828,12 @@ export function createApollo(container, { preview = false, initialArg = null, on
     if (cell) cell.dataset.active = String(density[key] > 0.001);
   }
 
-  // The switch lives INSIDE the rail, spanning it, rather than floating
-  // somewhere near it: it is a control on the instrument, and on a phone there
-  // is no spare band of screen between the wavelength scale and the faders to
-  // put it in anyway.
   function buildModeSwitch() {
     const fs = document.createElement('fieldset');
     fs.className = 'apollo-mode';
     const legend = document.createElement('legend');
-    // Named for the screen reader and not drawn: the two options are legible as
-    // a pair, and a label over a two-position switch is a line of type that
-    // tells a sighted visitor what they can already see.
-    //
-    // "Spectrum" as of 4.10.3, where this read "The light source". That was
-    // the right name over "Behind the gas" / "The gas itself" — those labels
-    // named light sources. Over "Absorption" / "Emission" it is not: those
-    // name the two spectra, and "The light source: absorption" is the one
-    // announcement in this scene that would have come out sounding like a
-    // category error. A legend nobody can see is exactly the kind of string a
-    // rename forgets.
     legend.textContent = 'Spectrum';
     fs.appendChild(legend);
-    // 4.10.3: "Absorption" / "Emission", where these read "Behind the gas" /
-    // "The gas itself". The values were already these words — this is the
-    // visible text catching up with what the scene has always called the two
-    // states internally, in `setMode`, in the deep link, and in NOTES.
     for (const [value, label] of [['absorption', 'Absorption'], ['emission', 'Emission']]) {
       const wrap = document.createElement('label');
       const input = document.createElement('input');
@@ -1602,10 +848,6 @@ export function createApollo(container, { preview = false, initialArg = null, on
       fs.appendChild(wrap);
     }
 
-    // Sunlight sits in the same row as the light-source switch because it is
-    // the same kind of control — it says what the instrument is looking at,
-    // not what it is doing. A <button> rather than a third radio: the mode is
-    // a choice between two exclusive situations, this is a thing you start.
     const row = document.createElement('div');
     row.className = 'apollo-mode-row';
     row.appendChild(fs);
@@ -1644,16 +886,11 @@ export function createApollo(container, { preview = false, initialArg = null, on
       input.type = 'range';
       input.min = '0'; input.max = '100'; input.step = '1';
       input.value = String(Math.round(density[el.key] * 100));
-      // A range input announces its own role and value; what it cannot know is
-      // what the value MEANS. Column density is the real quantity, so that is
-      // what the label says.
       input.setAttribute('aria-label', `${el.name} in the light — column density`);
       input.addEventListener('input', () => {
         setDensity(el.key, Number(input.value) / 100);
         cell.dataset.active = String(density[el.key] > 0.001);
       });
-      // Announced on release rather than on every step, so dragging a fader
-      // does not read out a hundred values.
       input.addEventListener('change', () => {
         const pct = Math.round(density[el.key] * 100);
         srSay(pct === 0
@@ -1682,23 +919,6 @@ export function createApollo(container, { preview = false, initialArg = null, on
     container.appendChild(railEl);
   }
 
-  // ─── The keyboard path to an individual line ──────────────────────────────
-  // The rail is native controls, so every element is already reachable: Tab to
-  // a fader, arrow keys to change how much of it is in the light, Tab to its
-  // symbol and Enter to sound it. Nothing there needed a parallel keyboard
-  // path invented for it, which is most of why the rail is made of real inputs
-  // rather than drawn knobs.
-  //
-  // The one thing a pointer can do that no control covers is strike a single
-  // line inside the band. That is what this is: the same select-and-sound
-  // function the click handler calls, over the lines actually in the band
-  // right now, rebuilt whenever the active set changes.
-  //
-  // Capped at 24. With every fader up there are 218 lines, and 218 tab stops
-  // is not an accessible path, it is a trap with good intentions. The cap
-  // takes the strongest, which are the ones a sighted visitor can see to aim
-  // at; the aria-label says the list is a selection and how big it is, so
-  // nobody is told they are getting all of them.
   const JUMP_CAP = 24;
   function activeLines() {
     const out = [];
@@ -1727,10 +947,6 @@ export function createApollo(container, { preview = false, initialArg = null, on
     });
   }
 
-  // ─── Pointer ──────────────────────────────────────────────────────────────
-  // No orbit drag and no raycast in this scene, so no bindTapVsDrag: there is
-  // no camera gesture whose trailing click needs filtering. A click on the
-  // canvas is always a click on the canvas.
   function onCanvasClick(e) {
     const rect = canvas.getBoundingClientRect();
     const r = dpr();
@@ -1749,7 +965,6 @@ export function createApollo(container, { preview = false, initialArg = null, on
     if (best) strikeLine(best);
   }
 
-  // ─── Loop ─────────────────────────────────────────────────────────────────
   let animId = null;
   let paused = false;
   let reduced = prefersReducedMotion();
@@ -1757,19 +972,10 @@ export function createApollo(container, { preview = false, initialArg = null, on
 
   function animate() {
     animId = requestAnimationFrame(animate);
-    // Under reduced motion the MOTION clock is resynced rather than ticked, so
-    // `elapsed` does not advance and the corona holds still — and so the first
-    // frame after the visitor turns reduced motion back off is an ordinary dt
-    // rather than one enormous one. The UI clock always ticks: a flash has to
-    // be able to end, which is the bug Outside's touch pulse had when its
-    // pulse was keyed to a clock that froze.
     let dt = 0;
     if (reduced) clock.resync(); else dt = clock.tick();
     const udt = uiClock.tick();
 
-    // Drift is motion the scene imposes, so it stops under reduced motion. The
-    // mode crossfade is a response to something the visitor just did, so it
-    // runs on the UI clock and keeps working either way.
     if (dt > 0) advanceFilaments(dt);
     const target = mode === 'emission' ? 1 : 0;
     if (modeMix !== target) {
@@ -1790,8 +996,6 @@ export function createApollo(container, { preview = false, initialArg = null, on
     paint();
   }
 
-  // Pulled out of animate() so that a PAUSED scene can still be repainted —
-  // see the resize binding below for the black-tile race that needs it.
   function paint() {
     ctx.fillStyle = '#05070c';
     ctx.fillRect(0, 0, W, H);
@@ -1801,29 +1005,15 @@ export function createApollo(container, { preview = false, initialArg = null, on
     drawRuler();
     drawScale();
 
-    // Same power-of-two cadence, and the same reason, as data-blits: from any
-    // console, `document.querySelector('#preview-apollo canvas').dataset.frames`
-    // distinguishes "never drew" from "drew once and stopped" from "fine".
     frames++;
     if ((frames & (frames - 1)) === 0) canvas.dataset.frames = String(frames);
   }
 
-  // ─── Reduced motion ───────────────────────────────────────────────────────
-  // Stills the corona and nothing else. The instrument stays entirely
-  // playable: faders move, lines can be struck, notes sound, the flash and the
-  // ruler marker still appear — those are responses to something the visitor
-  // did, which is the category `prefers-reduced-motion` is not about. What
-  // stops is the one thing moving on its own.
   const reducedWatch = onReducedMotionChange(next => {
     reduced = next;
     clock.resync();
   });
 
-  // ─── Relayout ─────────────────────────────────────────────────────────────
-  // buildContinuum() is a per-pixel loop over the whole band, so it runs only
-  // when the band's SIZE changed — not on every relayout, and there are now
-  // several: a resize, the rail appearing, and turning the pitch ruler on or
-  // off, which changes how much room the band is allowed.
   let lastBandW = 0, lastBandH = 0;
   function relayout() {
     layout();
@@ -1833,23 +1023,8 @@ export function createApollo(container, { preview = false, initialArg = null, on
       bandDirty = true;
     }
   }
-  // ─── A paused scene still has to repaint when it is relaid out ────────────
-  // The landing tile is the case. A tile mounts, draws its first frame — often
-  // before the container has been laid out, so against the `|| window.innerWidth`
-  // fallback, which is the whole window — and is then paused immediately,
-  // because main.js runs syncPreviewPlayback() as soon as the previews resolve
-  // and the tab may already be hidden. The ResizeObserver fires a moment later
-  // with the real 190px, relayout() fixes every number, and nothing ever draws
-  // again: a black circle on the landing page, intermittently, depending on
-  // whether the observer beat the pause.
-  //
-  // Seen on 2026-09-04 while a thirteenth scene was being built, in a tab that
-  // happened to be hidden — which is what made it reproducible rather than a
-  // rumour. One frame, so a paused scene stays paused; it just stops being
-  // wrong.
   const resize = bindGuardedResize(container, () => { relayout(); if (paused) paint(); });
 
-  // ─── Mount ────────────────────────────────────────────────────────────────
   relayout();
   seedFilaments();
   buildBand();
@@ -1878,37 +1053,10 @@ export function createApollo(container, { preview = false, initialArg = null, on
 
     canvas.addEventListener('click', onCanvasClick);
     rebuildJumpList();
-    // A mixture from the address bar, applied after the rail exists so the
-    // faders can be moved to match it. Bare `#apollo` passes null and nothing
-    // here runs, which is the "behaves exactly as it does today" case.
     applyMixture(initialArg);
-    // The rail exists now, so the band can be placed against where it actually
-    // sits rather than against the bottom of the canvas.
     relayout();
   }
 
-  // Some engines suspend the AudioContext on backgrounding and expect an
-  // explicit resume. Every hidden case but one stops the scheduler and
-  // suspends: an ambient layer audibly running out of a background tab, from a
-  // page whose only control is a button the visitor cannot see, is the kind of
-  // thing people hunt through twenty tabs to kill. Nothing is lost — suspend()
-  // freezes audioCtx.currentTime and startAmbient() reseeds against it on the
-  // way back, so there is no backlog to dump.
-  //
-  // The one exception is backgroundAudible() — see its comment for why that
-  // particular pair of flags is the discriminator. This is where Apollo stops
-  // matching Outside and Harmonics, which suspend unconditionally and should:
-  // their ambient layers come on with the sound, so there is no second gesture
-  // that could mean "leave this playing," and no state that separates a
-  // listener from a forgotten tab.
-  //
-  // It is bounded because the discriminator is a guess about intent, not a
-  // fact about it. A visitor who armed Sunlight and locked their phone gets
-  // what they asked for; a visitor who armed Sunlight, switched tabs and
-  // forgot gets ten minutes and then silence, which is the cost of being wrong
-  // and is survivable. An unbounded version is not: it is a page that plays
-  // indefinitely out of a tab nobody can find, which is the thing the original
-  // decision was protecting against.
   const onVisibilityChange = () => {
     if (disposed) return;
     if (document.hidden) {
@@ -1926,40 +1074,17 @@ export function createApollo(container, { preview = false, initialArg = null, on
   };
   document.addEventListener('visibilitychange', onVisibilityChange);
 
-  // The tile plays the sun on its own. No audio path exists in preview, so
-  // ambientNow() falls to the UI clock and the scheduler only ever queues
-  // visual marks — see its own comment for the one-clock rule.
   if (preview) setAmbient(true);
 
-  // Directly, not scheduled. main.js runs syncPreviewPlayback() the moment
-  // initPreviews() resolves and that can setPaused(true), cancelling a queued
-  // first callback before it ever runs — which is exactly how Harmonics and
-  // Outside shipped tiles that had drawn nothing at all (4.1.1). A new scene is
-  // where that would recur, so: call it.
   animate();
 
   return {
-    // A hash change that lands on Apollo while Apollo is already open — an
-    // address-bar edit, or a second shared link followed from the first. Same
-    // entry point the initial mount uses.
     applyArg(str) { applyMixture(str); },
     setPaused(next) {
       if (next === paused) return;
       paused = next;
       if (paused) {
         if (animId !== null) { cancelAnimationFrame(animId); animId = null; }
-        // A scheduler that outlives what it belongs to is the v4.0 defect
-        // exactly. A paused tile is not rendering and must not be sounding or
-        // queueing either.
-        //
-        // The exception has to be repeated here, and finding out why is the
-        // reason this was read rather than reasoned about: main.js pauses the
-        // expanded scene from its OWN visibilitychange listener, registered at
-        // module load and therefore ahead of this scene's. So on the way to
-        // hidden, setPaused(true) arrives first and would stop the scheduler
-        // before the handler below ever got to decide not to. Same predicate,
-        // consulted twice, so the order the two listeners run in cannot change
-        // the outcome.
         if (!(document.hidden && backgroundAudible())) stopAmbient();
       } else {
         clock.resync(); uiClock.resync();
@@ -1970,8 +1095,6 @@ export function createApollo(container, { preview = false, initialArg = null, on
     dispose() {
       disposed = true;
       if (animId !== null) cancelAnimationFrame(animId);
-      // First, alongside `disposed`: everything below assumes nothing is still
-      // being scheduled behind it.
       ambientOn = false;
       stopAmbient();
       timers.dispose();
@@ -1981,11 +1104,6 @@ export function createApollo(container, { preview = false, initialArg = null, on
       document.removeEventListener('visibilitychange', onVisibilityChange);
       soundToggle.dispose();
       jumpList?.dispose();
-      // Close AND null, in that order. The missing null is precisely why
-      // Outside's version of the stale-listener bug presented as an
-      // unclearable setInterval instead of a stack of orphaned contexts; both
-      // dispose paths in this project are the same shape now, and this one is
-      // built that way from the start rather than corrected into it.
       if (audioCtx) {
         audioCtx.close().catch(() => {});
         audioCtx = null;

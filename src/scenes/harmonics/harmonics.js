@@ -11,78 +11,7 @@ import { extractQuotes, snippetFor } from '../../utils/resonanceExcerpts.js';
 import harmonicsHtml from './harmonics.html?raw';
 import './harmonics.css';
 
-// ─── The harmonics ──────────────────────────────────────────────────────
-// The ninth scene, and the only one with no found text of its own — it
-// visualizes src/resonances.js's Layer 2 (cross-scene, connotative links),
-// approved rows only.
-//
-// Round 2 (2026-08-16) reversed the original "purely atmospheric, no
-// panel" design: touching a piece opens a real read-more panel naming
-// what it resonates with and showing the resonance's own reviewed
-// rationale, with a jump link to jump straight there.
-//
-// Round 5 (2026-08-18) removed the spider entirely, brightened the
-// visuals, and added a real logarithmic-spiral galactic backdrop.
-//
-// Round 7 (2026-08-18) replaced arbitrary node placement with a real
-// Fruchterman-Reingold force-directed layout (see layoutForceDirected
-// below) and gave the camera a full external orbit instead of an
-// "underneath a canopy" constraint.
-//
-// Round 8 (2026-08-18) — dropped drawn connection lines entirely. A
-// harmonics shape drawn with lines only reads correctly from one
-// vantage; once the camera could orbit freely (round 7), that's exactly
-// why this kept looking like ball-and-stick molecules rather than a
-// harmonics. Fixed by making resonance a TEMPORAL signal instead of
-// a spatial one: every node is a Kuramoto oscillator (see the Kuramoto
-// section below) — the same coupled-oscillator physics behind the
-// Orrery's resonator chime, extended here from one struck object ringing
-// to many objects influencing each other's rhythm over time. Nodes that
-// share an approved resonance pull each other's phase together; run
-// forward, connected clusters spontaneously lock into a shared pulse,
-// visibly breathing together from ANY angle — no single "correct"
-// vantage required, which is the actual fix, not a stylistic swap. The
-// force-directed layout stays (connected pieces already sitting closer
-// together is a good complementary signal), just without lines drawn on
-// top of it. Clicking a node now shows everything IT currently
-// resonates with (possibly more than one piece), since there's no
-// longer a single line to click.
-//
-// Round 9 (2026-08-18) renamed this scene "Harmonics" everywhere
-// user-facing (title, nav tooltip, colophon) — this module, its folder,
-// and every internal identifier (class prefixes, `harmonics.js`
-// itself, `createharmonics`) deliberately kept the old name; a full
-// internal rename was flagged as optional/lower-priority and skipped as
-// out of scope for this round. Same round resolved round 7's "flagged,
-// not decided" ground-glimpse tension below by retiring both in-scene
-// entry points entirely (ground-glimpse and thread-follow) now that a
-// normal nav icon + landing preview tile cover discovery — see
-// src/utils/harmonicsEntry.js's own removal and main.js/beamline.js/
-// orrery.js's dispose cleanup for what that took.
-//
-// Round 10 (2026-08-18) — four real additions, all keyed off data already
-// in the system rather than decoration: (1) a hover halo/brighten on
-// nodes (previously only the cursor changed); (2) the payoff panel now
-// shows real side-by-side excerpts from both pieces' own text (via
-// harmonicsPieces.js's resolveEndpoint + resonanceExcerpts.js's
-// snippetFor) — the reviewed rationale still picks which quoted span
-// each excerpt centers on, but isn't printed in the panel itself;
-// (3) sonification — every
-// node's live Kuramoto phase/frequency, already computed each frame for
-// the visual pulse, is now ALSO the input to a real Web Audio voice per
-// node (harmonic-series pitch mapping, phase-driven gain), gated behind
-// an explicit sound toggle since autoplay needs a real gesture; (4) a
-// second, unlit Points cloud rendering the corpus's PENDING (not yet
-// approved) resonances as faint independent drift, never Kuramoto-
-// coupled — an honest picture of the system's actual review state, not
-// invented atmosphere. The nebula backdrop's two named colors also
-// shifted toward a real two-channel Hubble palette (H-alpha core, O-III
-// arms) — see buildGalaxy below.
 
-// ─── Per-scene accent colors ────────────────────────────────────────────────
-// Each scene's own already-established signature color, used for a
-// node's own dot color — pulled from each scene's own dominant
-// material/light/glow color, not invented here.
 const SCENE_ACCENT = {
   sphere:    0xffdc78, // sphere.css .fragment-link hover/focus gold
   orbiter:   0x78ffb4, // orbiter.js's "+phase" particle-cloud green — "the italic/green identity that's orbiter's own"
@@ -94,12 +23,6 @@ const SCENE_ACCENT = {
   butterfly: 0xff9e1f, // median of butterfly.js's warm gold-to-red-orange trajectory palette
 };
 
-// A small string hash (xmur3-family, not cryptographic — just needs to be
-// stable and evenly spread) so every piece's node position AND Kuramoto
-// natural frequency/initial phase are the same every load/build, without
-// persisting anything. Two different resonance rows that share an
-// endpoint must resolve to the exact same node, which is why this is
-// keyed by piece identity, not by row.
 function hashStr01(s) {
   let h = 1779033703 ^ s.length;
   for (let i = 0; i < s.length; i++) {
@@ -118,14 +41,6 @@ function pieceKey(ep) {
     : `${ep.scene}:${ep.id}`;
 }
 
-// One node per unique piece touched by an approved row — no other piece
-// in the corpus becomes a node at all, so there's nothing isolated/dim to
-// contrast against; every dot on screen participates in at least one
-// resonance by construction. `endpoint` keeps the raw {scene,id[,beatId]}
-// shape so resolveEndpointTitle can resolve this node's OWN title later
-// (the panel now needs that — round 7 only ever needed the other side's
-// title). Position is a placeholder here; the real work happens in
-// layoutForceDirected below.
 function buildNodes(rows) {
   const nodes = new Map();
   rows.forEach(r => {
@@ -138,10 +53,6 @@ function buildNodes(rows) {
   return nodes;
 }
 
-// Adjacency list (node index -> [neighbor indices]) built once from the
-// approved rows — shared by both the force-directed layout's attraction
-// step and the Kuramoto coupling below, since both need to walk the same
-// real resonance graph, not a different derived structure each.
 function buildAdjacency(nodeList, rows) {
   const idx = new Map(nodeList.map((nd, i) => [nd.key, i]));
   const adj = nodeList.map(() => []);
@@ -157,25 +68,6 @@ function buildAdjacency(nodeList, rows) {
   return { adj, edges };
 }
 
-// ─── Real force-directed layout ─────────────────────────────────────────────
-// Fruchterman-Reingold — repulsion between every pair of nodes (F=k²/d),
-// attraction between nodes sharing an approved resonance (F=d²/k), run to
-// equilibrium under a linear cooling schedule. Extended to 3D directly.
-// A mild gravity term (nodes pulled toward the centroid each step,
-// proportional to their own distance from it) is the one addition beyond
-// textbook FR — this graph is sparse and far from fully connected (64
-// approved rows, ~61 nodes as of 3.1.0's full pending-approval, many small
-// islands), and without it,
-// disconnected components have no attractive force acting on them at all
-// and drift apart under pure repulsion without bound (confirmed
-// empirically in a throwaway test script — see NOTES.md's round-7 entry
-// for the actual numbers). With it, loosely-connected clusters still land
-// clearly apart from the rest — the desired "periphery" read — just not
-// at unbounded distance.
-//
-// Deterministic: initial positions seed from hashStr01, and the
-// relaxation itself has no randomness, so the same approved-rows set
-// always settles into the same shape on every load/build.
 function layoutForceDirected(nodeList, edges, scale) {
   const n = nodeList.length;
   if (n === 0) return;
@@ -240,32 +132,9 @@ function layoutForceDirected(nodeList, edges, scale) {
   nodeList.forEach(nd => nd.pos.sub(centroid));
 }
 
-// ─── Layout memoization (v4.0) ──────────────────────────────────────────────
-// The relaxation above is 400 iterations of an O(n²) repulsion pass. Counted
-// live 2026-09-01 against the real corpus — 64 approved rows, 76 unique nodes
-// (the audit that flagged this said ~61; it has grown since, which is the
-// point) — that is 400 × 2,850 pairs = ~1,140,000 vector subtract/length/scale
-// sequences plus 25,600 edge passes, synchronously on the main thread, with
-// nothing yielding — and main.js's initPreviews() instantiates every scene
-// with {preview:true} on first page load, so the landing page paid the whole
-// relaxation before it could paint, concurrently with nine other scenes'
-// setup. The full scene then paid it again on every open, at the same
-// ITERATIONS and the same n (only GRAPH_SCALE differs, 120 vs 200).
-//
-// It is fully deterministic — initial positions seed from hashStr01 and the
-// relaxation itself has no randomness, which the header above already states
-// as a design property — so identical inputs always settle into an identical
-// shape and the result is trivially cacheable. Keyed by everything that can
-// change it: the scale, and the node/edge sets themselves (approving a row
-// has to invalidate this, and 42 rows were approved in one go once already —
-// see GRAPH_SCALE's own note below). The cost grows quadratically with the
-// corpus, so this gets more valuable over time, not less.
 const layoutCache = new Map();
 
 function layoutSignature(nodeList, edges, scale) {
-  // Hashed rather than stored raw: the graph identity has to be in the key,
-  // but the joined key/wiring strings are multi-kilobyte and the Map is
-  // module-level (it outlives every mount).
   const keys = nodeList.map(nd => nd.key).join(',');
   const wiring = edges.map(([a, b]) => a + '-' + b).join(',');
   return `${scale}|${nodeList.length}|${edges.length}|${hashStr01(keys)}|${hashStr01(wiring)}`;
@@ -286,8 +155,6 @@ function layoutForceDirectedCached(nodeList, edges, scale) {
   layoutCache.set(sig, settled);
 }
 
-// A soft round dot, reused for every node marker — same "canvas gradient,
-// no image asset" convention as every other scene's own glow textures.
 function makeDotTexture() {
   const c = document.createElement('canvas');
   c.width = 32; c.height = 32;
@@ -305,31 +172,13 @@ export function createharmonics(container, { preview = false, initialPieceId = n
   const w = container.clientWidth || window.innerWidth;
   const h = container.clientHeight || window.innerHeight;
 
-  // Set as the very first thing dispose() does. Every async continuation and
-  // every deferred callback below checks it before touching scene state —
-  // the headline v4.0 bug was exactly a torn-down scene still being driven
-  // from outside itself (see setSoundEnabled and dispose() below, and
-  // bindPersistedSoundToggle's own comment in sceneKit.js).
   let disposed = false;
-  // Every setTimeout in this file goes through here so dispose() can drop
-  // whatever is still pending in one call — see trackTimers' own comment for
-  // the Library incident that motivated it.
   const timers = trackTimers();
 
-  // ─── Graph first — everything else (camera bounds, fog density, where
-  // the star field/galaxy backdrop sit) derives from the layout's own
-  // actual resulting scale, computed here before any of that downstream
-  // setup runs.
   const rows = getApprovedResonances();
   const nodeMap = buildNodes(rows);
   const nodeList = Array.from(nodeMap.values());
   const { adj, edges } = buildAdjacency(nodeList, rows);
-  // Bumped 90/150 → 120/200: approving the last pending
-  // resonances took node count from ~32 to ~61 at the old scale — k (ideal
-  // edge length) shrinks as cbrt(n) with node count held fixed, so the old
-  // scale alone would already read visibly tighter even before "spread
-  // them apart more" per Scott's own direct feedback live. ~33% up covers
-  // both the node-count growth and gives real added breathing room.
   const GRAPH_SCALE = preview ? 120 : 200;
   layoutForceDirectedCached(nodeList, edges, GRAPH_SCALE);
   let boundRadius = 1;
@@ -345,53 +194,9 @@ export function createharmonics(container, { preview = false, initialPieceId = n
   const CAM_FAR = Math.max(2000, GALAXY_R_MAX * 1.3);
   const SCALE_FACTOR = CAM_MAX / (preview ? 140 : 260);
 
-  // ─── Kuramoto phase coupling ──────────────────────────────────────────────
-  // Round 8: resonance as synchronization, not lines. Every node is a
-  // coupled oscillator — phase θᵢ(t), natural frequency ωᵢ — with:
-  //   dθᵢ/dt = ωᵢ + K · Σⱼ sin(θⱼ − θᵢ)
-  // summed over j = this node's ACTUAL approved-resonance neighbors
-  // (the same `adj` adjacency the layout above uses), not a mean-field
-  // model where every node influences every other node — structurally
-  // faithful to the real graph, same principle as the layout itself.
-  // Node brightness is a function of its own current phase; visually,
-  // nodes sharing enough coupled structure spontaneously lock into a
-  // shared pulse (frequency AND roughly-shared phase), while nodes in a
-  // different, uncoupled part of the graph settle into their OWN shared
-  // rhythm at a different rate — real emergence, not a scripted cue.
-  //
-  // Frequencies/initial phases are seeded by hashStr01 (not live
-  // randomness) for the same reason node position is: reproducible
-  // behavior, not a different show every load. The frequency spread is
-  // real (±0.06 Hz around a 0.2 Hz base) — non-uniform enough that any
-  // observed lock is a genuine consequence of coupling overcoming a real
-  // mismatch, not two nodes coincidentally starting at the same rate.
-  // K was tuned by simulating the actual approved-rows graph in a
-  // throwaway script before writing this (see NOTES.md's round-8 entry
-  // for the numbers): at K=2π·0.15 rad/s, every multi-node cluster in
-  // the current data reaches ~0.97–1.00 phase coherence within ~5
-  // simulated seconds and holds it indefinitely, while separate
-  // clusters — never coupled to each other at all, since Kuramoto
-  // coupling only sums over real graph neighbors — settle at distinct
-  // collective rates. The 22-row corpus happens to have no fully
-  // isolated (zero-edge) node right now (every node exists only because
-  // it's in ≥1 approved row), so the visible contrast today is
-  // cluster-vs-cluster rather than synced-vs-totally-isolated; a future
-  // approved row that leaves some piece with only a not-yet-approved
-  // connection would introduce a genuinely drifting node without any
-  // change to this code.
   const KURAMOTO_BASE_HZ = 0.2;
   const KURAMOTO_SPREAD_HZ = 0.06;
   const KURAMOTO_K = 2 * Math.PI * 0.15;
-  //
-  // v4.0: these four are typed arrays rather than plain ones, and the
-  // adjacency is flattened into CSR (compressed sparse row) alongside them.
-  // The integration loop in animate() used to run `theta.slice()` — a fresh
-  // n-element array allocated every frame — and `adj[i].forEach(j => ...)`,
-  // which builds a fresh closure over coupling/theta/i per node per frame:
-  // ~4,560 a second at the corpus's current 76 nodes. The graph never changes
-  // after mount, so
-  // flattening it once here makes the hot loop two indexed `for`s over
-  // contiguous memory with no allocation at all.
   const N = nodeList.length;
   const omega = new Float64Array(N);
   const theta = new Float64Array(N);
@@ -401,10 +206,6 @@ export function createharmonics(container, { preview = false, initialPieceId = n
     omega[i] = 2 * Math.PI * (KURAMOTO_BASE_HZ + (hashStr01(n.key + ':freq') * 2 - 1) * KURAMOTO_SPREAD_HZ);
     theta[i] = hashStr01(n.key + ':phase0') * Math.PI * 2;
   });
-  // adjStart[i]..adjStart[i+1] indexes this node's neighbours inside adjIdx —
-  // the exact same graph `adj` holds, just laid out for the hot loop. `adj`
-  // itself stays: triggerBoost below walks it once per click, where a plain
-  // array reads better and costs nothing.
   const adjStart = new Int32Array(N + 1);
   for (let i = 0; i < N; i++) adjStart[i + 1] = adjStart[i] + adj[i].length;
   const adjIdx = new Int32Array(adjStart[N]);
@@ -415,10 +216,6 @@ export function createharmonics(container, { preview = false, initialPieceId = n
     adj[i].forEach(j => { boost[j] = Math.max(boost[j], 0.7); });
   }
 
-  // Nothing in this scene writes depth (every layer is transparent Points or
-  // a Sprite), so painting order is renderOrder alone. Named, because the
-  // dust layer only does its job — dimming what is behind it — if it is drawn
-  // after the nebula and before the nodes, and a bare 0/1 does not say that.
   const LAYER_NEBULA = 0;
   const LAYER_DUST = 1;
   const LAYER_NODES = 2;
@@ -426,55 +223,17 @@ export function createharmonics(container, { preview = false, initialPieceId = n
   const scene = new THREE.Scene();
   const BG_COLOR = 0x00010a;
   scene.background = new THREE.Color(BG_COLOR);
-  // No scene.fog either, for the same reason one layer at a time: all seven
-  // materials here set `fog: false`, individually and deliberately, because
-  // fogging an additive point layer grey is not what any of them want. A
-  // FogExp2 at 1.55/CAM_MAX was being built and attached anyway, affecting
-  // nothing.
 
   const camera = new THREE.PerspectiveCamera(46, w / h, 0.1, CAM_FAR);
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-  // Pixel ratio through manageRenderer rather than raw window.devicePixelRatio
-  // (v4.0). This scene is the site's heaviest overdraw case by some distance —
-  // 1,600 stars, 5,000 additive galaxy points, 2,200 deliberately large soft
-  // dust sprites, 61 nodes and 61 haloes, every one of them transparent with
-  // depthWrite:false — so on a DPR-3 phone uncapped meant nine times the
-  // fragments of the DPR-1 case the look was tuned against. manageRenderer
-  // also owns the real GL-context release and the webglcontextlost handler;
-  // see its own comment in sceneKit.js for why renderer.dispose() alone
-  // isn't enough.
   const managedRenderer = manageRenderer(renderer);
   renderer.setSize(w, h);
   renderer.setClearColor(0x000000, 1);
   renderer.domElement.setAttribute('aria-hidden', 'true');
-  // Preview tiles: never append the WebGL canvas itself — see
-  // mountClippedPreviewCanvas's own comment in sceneKit.js. A heavy WebGL
-  // canvas gets promoted to its own GPU compositing layer in Firefox and
-  // ignores the tile's clip-path/border-radius entirely, so the preview
-  // renders as a square instead of the circle every other tile shows
-  // (already hit and fixed this way for orrery and beamline). Full scene
-  // is unaffected (no circular tile there), so it keeps the plain direct
-  // append it always had.
   const clippedPreview = preview ? mountClippedPreviewCanvas(container, renderer) : null;
   if (!preview) container.appendChild(renderer.domElement);
-  // No `container.tabIndex = -1` here: main.js:359 already sets tabindex="-1"
-  // on #experience-container when it opens a scene, so this was a second
-  // place to keep in agreement with no second effect.
 
-  // No lights, and none are missing. Every object in this scene is Points or
-  // a Sprite, whose materials are unlit by definition — an AmbientLight and a
-  // DirectionalLight sat here and changed not one pixel, while reading as the
-  // scene's lighting design to anyone opening the file.
 
-  // ─── Deep-field stars (punched up 3.1.2, second pass 3.2.0) ────────────────
-  // 3.1.2 added per-star color variation via vertex colors instead of one
-  // flat tint applied to every point — weighted toward cool blue-white
-  // (majority of real naked-eye stars), white, and an occasional warm gold
-  // outlier, each further scaled by its own random brightness. This pass
-  // (3.2.0, alongside the dust-lane layer above) is purely density/
-  // brightness: count and opacity nudged up again so this layer still
-  // holds up as a backdrop behind ~61 nodes, the field it was actually
-  // balanced against when 3.1.2 shipped having been ~32.
   const starCount = preview ? 550 : 1600;
   const starPos = new Float32Array(starCount * 3);
   const starCol = new Float32Array(starCount * 3);
@@ -504,22 +263,6 @@ export function createharmonics(container, { preview = false, initialPieceId = n
   const starField = new THREE.Points(starGeo, starMat);
   scene.add(starField);
 
-  // ─── Nebular backdrop (round 5, corrected round 6, rescaled round 7,
-  // recolored round 10, restructured round 10.1) ───────────────────────────
-  // Rounds 5-10 used a clean logarithmic-spiral disc — mathematically
-  // tidy, but that's exactly what read wrong live: "a constrained
-  // geometric band," not the chaotic pull of real gravitational
-  // structure. Round 10.1 replaces the single spiral-arm equation with a
-  // scatter of independent clumps (real nebulae/star-forming regions
-  // don't share one clean curve) connected by sparse, wispy filaments —
-  // the "cosmic web" read of matter pulled between mass concentrations
-  // rather than orbiting one center. Each clump gets its OWN random
-  // H-alpha/O-III bias, so some read warmer and some cooler, the way
-  // real Hubble composites show different emission lines dominating
-  // different regions of the same nebula, not one uniform core-to-edge
-  // gradient. Volume is genuinely 3D (not flattened to a thin disc)
-  // specifically so it can never again present as a flat ring/band from
-  // some angle.
   function buildGalaxy(R_MIN, R_MAX) {
     const COUNT = preview ? 1700 : 5000;
     const CLUSTER_COUNT = preview ? 6 : 14;
@@ -527,17 +270,10 @@ export function createharmonics(container, { preview = false, initialPieceId = n
     const coreColor = new THREE.Color(0xff3d5c); // H-alpha — warm hydrogen emission
     const armColor = new THREE.Color(0x3fb8ff); // O-III — cool oxygen emission
 
-    // Cheap approximate-Gaussian via a sum of uniforms (central limit
-    // theorem) — real clumps taper toward their edges rather than
-    // having the hard-edged look a uniform sphere/cube fill would give.
     function gauss() {
       return (Math.random() + Math.random() + Math.random() - 1.5) / 1.5;
     }
 
-    // Real gravitational clumps, scattered through a genuine 3D volume
-    // between R_MIN and R_MAX — no shared curve/equation ties them
-    // together, which is precisely what makes this read as chaotic
-    // structure rather than a diagram of one.
     const clusters = [];
     for (let k = 0; k < CLUSTER_COUNT; k++) {
       const r = R_MIN + Math.random() * (R_MAX - R_MIN);
@@ -561,8 +297,6 @@ export function createharmonics(container, { preview = false, initialPieceId = n
     for (let i = 0; i < COUNT; i++) {
       let x, y, z, blend;
       if (clusters.length >= 2 && Math.random() < FILAMENT_FRACTION) {
-        // A wisp strung between two DIFFERENT clumps, with real jitter
-        // off the straight line between them — mutual pull, not orbit.
         const a = clusters[(Math.random() * clusters.length) | 0];
         let b = clusters[(Math.random() * clusters.length) | 0];
         for (let tries = 0; b === a && tries < 5; tries++) b = clusters[(Math.random() * clusters.length) | 0];
@@ -590,9 +324,6 @@ export function createharmonics(container, { preview = false, initialPieceId = n
     geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
     geo.setAttribute('color', new THREE.BufferAttribute(col, 3));
     const mat = new THREE.PointsMaterial({
-      // Opacity trimmed from 0.7 — with the halo added to the real
-      // resonance nodes above, the backdrop reads better a little
-      // further back, so foreground/background stay clearly distinct.
       size: (preview ? 1.5 : 2.0) * SCALE_FACTOR, vertexColors: true, transparent: true,
       opacity: 0.55, depthWrite: false, sizeAttenuation: true, fog: false,
       blending: THREE.AdditiveBlending,
@@ -600,9 +331,6 @@ export function createharmonics(container, { preview = false, initialPieceId = n
     const points = new THREE.Points(geo, mat);
     points.rotation.x = 0.3;
     points.rotation.z = 0.15;
-    // A snapshot of the tuned base colors, kept separate from `col` (the
-    // live buffer) — round 10.1's twinkle below writes brightened values
-    // into `col` and needs the original to fade back to.
     const baseColor = col.slice();
     return { points, geo, mat, count: COUNT, baseColor };
   }
@@ -610,37 +338,6 @@ export function createharmonics(container, { preview = false, initialPieceId = n
   galaxy.points.renderOrder = LAYER_NEBULA;
   scene.add(galaxy.points);
 
-  // ─── Dust-lane occlusion layer (3.2.0, 2026-08-23) ─────────────────────────
-  // The glow clusters above are pure emission — every point in that layer
-  // is the same kind of soft additive light, which tops out at "pretty
-  // haze": nothing in it can read as solid or foregrounded, because
-  // nothing in it is doing anything but adding brightness. Real deep-field
-  // images (Orion, the Pillars, Carina) get most of their sense of depth
-  // from dust LANES blocking light behind them, not from the gas that
-  // glows — extinction, not emission. Flagged after 3.1.0/3.1.1 nearly
-  // doubled node count and gave the field more room: the backdrop hadn't
-  // grown to match, and a denser node field made the flat, uniformly-lit
-  // haze read as even flatter by comparison.
-  //
-  // Same sprite/Points approach as buildGalaxy, just inverted intent: dark,
-  // low-alpha, ordinary (not additive) blending, so each point DIMS
-  // whatever it overlaps rather than adding to it. Every point is
-  // filament-only (unlike the glow layer's mix of clumps + filaments) —
-  // dust wants to read as LANES, not blobs.
-  //
-  // Render order, and this is the whole reason the layer needs one: nothing
-  // here writes depth, so what is "in front" for blending is source order,
-  // and a darkening layer has to come after the thing it darkens. The dust
-  // is meant to darken the NEBULA (galaxy.points, LAYER_NEBULA) and nothing
-  // else. It sat at 1 with the nodes left at the default 0, which put it in
-  // front of them too — every node the dust crossed was multiplied down by a
-  // 0.55-opacity dark point, in a scene whose entire subject is which nodes
-  // are lit. The nodes are explicitly above it now.
-  //
-  // Its own independent rotation (different axis/speed than the
-  // glow layer's) is what actually sells depth as the camera orbits — two
-  // layers turning at different rates is real parallax, not a static
-  // camera-angle accident that only reads from one vantage point.
   function buildDustLanes(R_MIN, R_MAX) {
     const COUNT = preview ? 700 : 2200;
     const LANE_COUNT = preview ? 6 : 14;
@@ -650,9 +347,6 @@ export function createharmonics(container, { preview = false, initialPieceId = n
       return (Math.random() + Math.random() + Math.random() - 1.5) / 1.5;
     }
 
-    // Anchor points a lane threads between. Reused pairwise (like the glow
-    // layer's filament fraction) but ALL of it, not a fraction — this
-    // layer has no round-clump mode at all.
     const anchors = [];
     for (let k = 0; k < LANE_COUNT; k++) {
       const r = R_MIN + Math.random() * (R_MAX - R_MIN);
@@ -684,28 +378,8 @@ export function createharmonics(container, { preview = false, initialPieceId = n
     const geo = new THREE.BufferGeometry();
     geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
     geo.setAttribute('color', new THREE.BufferAttribute(col, 3));
-    // The glow layer above has no `map` either — bare PointsMaterial
-    // renders hard-edged squares, which thousands of dense, additively-
-    // blended points smooth into a haze without anyone noticing. This
-    // layer is sparser AND non-additive, so a hard square edge would
-    // actually show — needs its own soft radial-gradient sprite (same
-    // technique as makeDotTexture(), used for node dots) so each point
-    // reads as a soft smudge fading at the edges, not a tiny dark tile.
     const dustTex = makeDotTexture();
     const mat = new THREE.PointsMaterial({
-      // MUCH bigger than the glow points, and not a small bump — live-
-      // tuned after an initial guess (5.6×SCALE_FACTOR, matching roughly
-      // 2.8× a glow point) turned out completely invisible in a frozen
-      // dust-on/dust-off A/B at default camera distance: the glow layer's
-      // apparent size comes almost entirely from 5000 densely-overlapping
-      // ADDITIVE points compounding, not from any single point being
-      // large, so a sparse non-additive layer needs real per-point size to
-      // read as anything at all. ~28× SCALE_FACTOR is what actually shows
-      // up as soft dark smudges rather than nothing. No `blending`
-      // override: PointsMaterial defaults to THREE.NormalBlending, which
-      // is the entire point here — AdditiveBlending (the glow layer's
-      // choice) can only ever brighten, never darken, so it was never an
-      // option for this layer.
       size: (preview ? 21 : 28) * SCALE_FACTOR, map: dustTex, vertexColors: true,
       transparent: true, opacity: 0.55, depthWrite: false, sizeAttenuation: true, fog: false,
     });
@@ -718,31 +392,11 @@ export function createharmonics(container, { preview = false, initialPieceId = n
   const dustLanes = buildDustLanes(GALAXY_R_MIN, GALAXY_R_MAX);
   scene.add(dustLanes.points);
 
-  // ─── Galaxy twinkle (round 10.1) ─────────────────────────────────────────
-  // The backdrop was flagged as reading like a frozen diagram — a static
-  // ring of dots — rather than something alive. Two cheap, real fixes,
-  // neither touching the tuned spiral structure/palette: a slow constant
-  // rotation (so it visibly turns rather than sitting frozen), and a
-  // genuinely stochastic twinkle — a handful of random points per frame
-  // get a brief, randomly-sized brightness kick that decays back to their
-  // tuned base color. Only the currently-decaying points are touched each
-  // frame (tracked in `galaxyActive`), not the full 5000-point buffer, so
-  // this stays cheap regardless of corpus size.
   const galaxyColAttr = galaxy.geo.attributes.color;
   const galaxyActive = new Map(); // index -> current boost, decaying toward 0
-  // Candidates offered per *second*, not per frame — not all land, see below.
-  // This was `preview ? 2 : 10` per frame, which made the galaxy sparkle twice
-  // as densely at 120Hz as at 60. The asymmetry is why nothing caught it: the
-  // decay below was already dt-scaled and correct, so only the spawn rate was
-  // coupled, and at 60fps the two agree exactly. Tuned values converted, not
-  // re-derived.
   const GALAXY_TWINKLE_KICKS_PER_SEC = (preview ? 2 : 10) * 60;
   const GALAXY_TWINKLE_DECAY = 2.0; // roughly half a second to fade back to base
 
-  // ─── Nodes — the sole on-screen carrier of resonance now that lines are
-  // gone. Color is each node's own scene accent; brightness is driven
-  // every frame by its live Kuramoto phase (see the animate loop below),
-  // not a decorative shimmer. ────────────────────────────────────────────
   const dotTex = makeDotTexture();
   const nodeGeo = new THREE.BufferGeometry();
   const nodePos = new Float32Array(nodeList.length * 3);
@@ -763,14 +417,6 @@ export function createharmonics(container, { preview = false, initialPieceId = n
   const nodePoints = new THREE.Points(nodeGeo, nodeMat);
   nodePoints.renderOrder = LAYER_NODES;
 
-  // Round 10.1: a soft corona layer, sharing the SAME position/color
-  // buffers as the main dot above (a second Points object reading the
-  // same nodeGeo — no extra per-frame work, it just rides along on
-  // whatever the Kuramoto brightness loop already writes into that
-  // color attribute) — bigger, dimmer, additive. This is what separates
-  // a node from the now much livelier nebula backdrop: nodes read as
-  // small glowing bodies with real presence, not just another colored
-  // point in the field.
   const nodeHaloMat = new THREE.PointsMaterial({
     size: (preview ? 8 : 10) * SCALE_FACTOR, map: dotTex, vertexColors: true,
     transparent: true, opacity: 0.32, depthWrite: false,
@@ -781,15 +427,6 @@ export function createharmonics(container, { preview = false, initialPieceId = n
   scene.add(nodeHalo);
   scene.add(nodePoints);
 
-  // ─── Hover halo (round 10) ─────────────────────────────────────────────
-  // A single reusable sprite, repositioned onto whichever node is
-  // currently hovered and eased in/out — gives a real "grows and
-  // brightens" response beyond the cursor-style change that was the only
-  // hover feedback through round 9. Per-node point SIZE isn't
-  // individually controllable on a shared PointsMaterial without a custom
-  // shader, so the "scale" half of the brief is this halo; the
-  // "brighten" half rides on the existing per-node color buffer in
-  // animate() below.
   const hoverSprite = new THREE.Sprite(new THREE.SpriteMaterial({
     map: dotTex, color: 0xffffff, transparent: true, opacity: 0,
     blending: THREE.AdditiveBlending, depthWrite: false, fog: false,
@@ -798,25 +435,6 @@ export function createharmonics(container, { preview = false, initialPieceId = n
   if (!preview) scene.add(hoverSprite);
   let hoverScale = 0;
 
-  // ─── Living atmosphere: pending (unreviewed) resonances ─────────────────
-  // An honest picture of the corpus's review state, not invented decoration:
-  // a row still sitting at status:'pending' names two pieces that MIGHT
-  // resonate but have not been confirmed, and it is drawn as a faint, unlit,
-  // independently drifting point that passes through the volume rather than
-  // settling into the layout or joining the Kuramoto graph (adj/theta/omega
-  // above never see these; coupling them in would visually claim a
-  // synchronization nobody has approved).
-  //
-  // The corpus currently has NONE — every row is approved, so pendingList is
-  // empty and everything below it, this layer and pickPendingAt and
-  // openPendingPanel alike, correctly does nothing. That is a fact about the
-  // data and not about the code, which is why the count is not written down
-  // here: it was, as "the 42 rows still sitting at status:'pending'", and it
-  // had been zero for some time. scripts/verify-resonances.mjs reports the
-  // real number on every build.
-  // Pieces already shown as a confirmed node are skipped here — that
-  // piece already has a solid dot, a second faint one at a different
-  // position would just read as a rendering glitch.
   let pendingList = [];
   let pendingPoints = null, pendingGeo = null, pendingMat = null;
   let pendingVel = [];
@@ -843,8 +461,6 @@ export function createharmonics(container, { preview = false, initialPieceId = n
           hashStr01(p.key + ':dz') * 2 - 1,
         ).multiplyScalar(DRIFT_R * (0.2 + hashStr01(p.key + ':r') * 0.8));
         pPos[i * 3] = v.x; pPos[i * 3 + 1] = v.y; pPos[i * 3 + 2] = v.z;
-        // Desaturated toward gray and dimmed — "unlit," clearly secondary
-        // to the confirmed nodes' own saturated, brightness-pulsing color.
         pc.setHex(SCENE_ACCENT[p.scene] ?? 0xffffff).lerp(new THREE.Color(0x888899), 0.55).multiplyScalar(0.4);
         pCol[i * 3] = pc.r; pCol[i * 3 + 1] = pc.g; pCol[i * 3 + 2] = pc.b;
         const speed = DRIFT_R * (0.006 + hashStr01(p.key + ':speed') * 0.01);
@@ -868,7 +484,6 @@ export function createharmonics(container, { preview = false, initialPieceId = n
     }
   }
 
-  // ─── Camera: full external orbit ─────────────────────────────────────────
   const PIVOT = new THREE.Vector3(0, 0, 0);
   let camDist = CAM_DEFAULT;
   let theta0 = Math.random() * Math.PI * 2;
@@ -886,47 +501,15 @@ export function createharmonics(container, { preview = false, initialPieceId = n
   }
   updateCamera();
 
-  // ─── Cross-scene piece resolution (full only, dynamic import) ────────────
-  // harmonicsPieces.js's resolveEndpoint() statically imports every OTHER
-  // scene's full .text.js content (~280kB combined, confirmed via
-  // v3.10.0's build output: that's exactly why sphere.text/scroll.text/
-  // library.text/theater.text each got split into their own shared chunk
-  // — they're reachable from both their own scene's chunk and this one).
-  // That's real, correct weight for the one scene whose whole premise is
-  // synthesizing across every other scene — but only once a visitor
-  // actually opens a piece's panel, not just to draw the landing-tile
-  // graph shape. buildNodes()/buildAdjacency()/layoutForceDirected()
-  // above never call resolveEndpoint — they only need resonances.js's own
-  // {scene,id} pairs, which carry no cross-scene text at all — so the
-  // preview's graph positions are already exactly right without this.
-  // Dynamic import() here (not a static one at the top of the file, which
-  // is what this scene had through v3.10.0) means harmonicsPieces.js
-  // never loads for preview mode at all, and only loads in full mode once
-  // openNodePanel/openPendingPanel actually need it, not merely because
-  // the scene mounted. Started here (full-mode setup) rather than
-  // deferred all the way to the click itself, so the common case — open
-  // the scene, then click a node a moment later — usually has it already
-  // resolved by the time a click needs it.
   let resolveEndpointPromise = null;
   function loadResolveEndpoint() {
     return (resolveEndpointPromise ??= import('./harmonicsPieces.js')).then(m => m.resolveEndpoint);
   }
 
-  // ─── Title/hint chrome + resonance panel (full only) ─────────────────────
   let titleEl = null, hintEl = null, panel = null, panelCloser = null;
   let panelTitleEl = null, panelSubtitleEl = null, panelResonancesEl = null;
   let soundToggleEl = null, soundToggleLabelEl = null;
   if (!preview) {
-    // Fire-and-forget: warms resolveEndpointPromise's cache now so the
-    // common case (click a node a moment after the scene opens) usually
-    // finds it already resolved. Discard the return value here rather
-    // than assigning it to resolveEndpointPromise directly — that promise
-    // already resolves to the extracted resolveEndpoint FUNCTION (via the
-    // `.then(m => m.resolveEndpoint)` inside loadResolveEndpoint()), not
-    // to the raw module namespace loadResolveEndpoint()'s own caching
-    // expects to store — assigning it here would make every later call
-    // try to read `.resolveEndpoint` off the function itself instead of
-    // off the module.
     loadResolveEndpoint();
     const frag = parseHTML(harmonicsHtml);
     titleEl = frag.querySelector('.harmonics-title-row');
@@ -948,13 +531,6 @@ export function createharmonics(container, { preview = false, initialPieceId = n
     });
   }
 
-  // Every approved row this node participates in, paired with the OTHER
-  // endpoint. A node can carry many: the panel's whole density design —
-  // stacked cards, per-card accent wash, the "N OF M" index — exists for the
-  // hub case. Which piece is the hub, and how deep it goes, is a fact about
-  // resonances.js and not one to write down here; it was written down, as
-  // "sphere:14 ... carries 6", and by 5.0 the hub was scroll:11 with twelve.
-  // scripts/verify-resonances.mjs prints the real pair on every build.
   function nodeResonances(nodeIndex) {
     const node = nodeList[nodeIndex];
     return rows
@@ -962,39 +538,6 @@ export function createharmonics(container, { preview = false, initialPieceId = n
       .map(row => ({ row, other: pieceKey(row.a) === node.key ? row.b : row.a }));
   }
 
-  // Round 8's real click payoff, reworked round 10: since there's no
-  // single line to touch anymore, clicking a node shows everything IT
-  // currently resonates with — one entry per approved row. Through round
-  // 9 that entry was just the reviewed rationale; round 10 makes the
-  // ECHO itself visible — real side-by-side excerpts from both pieces'
-  // own text (same windowing logic build-resonances-doc.mjs uses, via
-  // resonanceExcerpts.js, so the live scene never shows a different
-  // window than the reviewed doc did) — the rationale text itself isn't
-  // printed (round 10.1 removed the caption paragraph that used to carry
-  // it), but still drives which quoted span each excerpt centers on.
-  // `self`'s excerpt is recomputed per-connection (not cached) because
-  // different rationales can quote different spans of the SAME piece.
-  // `{ fromLeft }` follows the same side-adaptable-panel convention as
-  // Sphere/Library/Orbiter (see sceneKit.js's setPanelSide/clickedLeftHalf
-  // header comment) — the panel docks on whichever side WASN'T clicked, so
-  // it doesn't open underneath the reader's own hand. Content is resolved
-  // (async — loadResolveEndpoint/resolveEndpoint) before the open/side
-  // decision runs, since none of that touches panel DOM classes; `populate`
-  // is a plain closure so it can be called either immediately or after the
-  // close/wait/reopen dance below, without resolving twice.
-  //
-  // v4.0 — focus on open. Opening a role="dialog" without moving focus into
-  // it leaves a keyboard or screen-reader visitor standing on the (now
-  // invisible) jump-list button behind the panel: no announcement that
-  // anything happened, and nothing to do but blind-Tab until they find it.
-  // harmonics.html:41 has carried `tabindex="-1"` on
-  // .harmonics-panel-title since it was written, specifically so focus could
-  // land there — nothing ever called focus() on it, so the attribute was
-  // dead. Orbiter has the identical panel skeleton and does this correctly in
-  // both branches (orbiter.js:920, :929); this is that, same 50ms beat, which
-  // lets the slide-in start before focus lands rather than announcing a panel
-  // that's still off-screen. createPanelCloser already returns focus to
-  // `container` on close — only the entry half was missing.
   function focusPanelTitle() {
     if (disposed || !panelTitleEl) return;
     panelTitleEl.focus();
@@ -1004,9 +547,6 @@ export function createharmonics(container, { preview = false, initialPieceId = n
     if (!panel) return;
     const node = nodeList[nodeIndex];
     const resolveEndpoint = await loadResolveEndpoint();
-    // The import can settle after the visitor has already left this scene —
-    // populate() would then write into a detached panel (and, before the
-    // focus move above existed, do nothing visible at all).
     if (disposed) return;
     const self = resolveEndpoint(node.endpoint);
     const selfHex = `#${(SCENE_ACCENT[node.scene] ?? 0xffffff).toString(16).padStart(6, '0')}`;
@@ -1025,14 +565,8 @@ export function createharmonics(container, { preview = false, initialPieceId = n
 
         const entry = document.createElement('div');
         entry.className = 'harmonics-resonance-entry';
-        // Card background/glow accent (see harmonics.css's own comment) —
-        // the connection's OTHER scene color, same hex already resolved
-        // for the excerpt border just below, not a separate palette.
         entry.style.setProperty('--entry-accent', otherHex);
 
-        // "2 OF 6" — only worth printing once there's more than one card
-        // to locate within; a single-connection node has nothing to
-        // number against (design-notes pass follow-up, 2026-09-01).
         if (conns.length > 1) {
           const indexEl = document.createElement('span');
           indexEl.className = 'harmonics-entry-index';
@@ -1042,12 +576,6 @@ export function createharmonics(container, { preview = false, initialPieceId = n
 
         const pair = document.createElement('div');
         pair.className = 'harmonics-excerpt-pair';
-        // A quote box with nothing in it is a bordered empty rectangle with a
-        // title floating in it, which reads as a loading failure. Two of the
-        // 128 endpoints are library items whose data carries no prose at all —
-        // only bibliographic fields — so the label stands on its own there
-        // instead. scripts/verify-resonances.mjs counts them, so the gap is
-        // visible to whoever can fill it rather than to a reader.
         const quoteBox = (hex, title, snippet) => {
           const q = document.createElement('blockquote');
           q.className = snippet ? 'harmonics-excerpt' : 'harmonics-excerpt harmonics-excerpt--bare';
@@ -1057,10 +585,6 @@ export function createharmonics(container, { preview = false, initialPieceId = n
           return q;
         };
         const selfQ = quoteBox(selfHex, self.title, selfSnippet);
-        // Decorative glyph binding the pair as one resonance, not two
-        // unrelated quotes (see harmonics.css's own comment) — hidden
-        // from assistive tech, which already gets the relationship from
-        // the panel subtitle and each excerpt's own title label.
         const glyph = document.createElement('div');
         glyph.className = 'harmonics-resonance-glyph';
         glyph.setAttribute('aria-hidden', 'true');
@@ -1074,12 +598,6 @@ export function createharmonics(container, { preview = false, initialPieceId = n
         const btn = document.createElement('button');
         btn.type = 'button';
         btn.className = 'harmonics-endpoint-link';
-        // Visible text now names the actual target (matches the aria-label
-        // below) rather than the generic "Open this piece →" every button
-        // used to share — with several resonance pairs stacked in one panel,
-        // identical labels gave a sighted reader no way to tell which button
-        // opened which piece without tracing back to that pair's own card
-        // header. Design-notes pass, 2026-09-01.
         btn.textContent = `Open ${resolved.title} →`;
         btn.setAttribute('aria-label', `Open ${resolved.title}`);
         btn.addEventListener('click', e => {
@@ -1095,9 +613,6 @@ export function createharmonics(container, { preview = false, initialPieceId = n
     const wasOpen = panel.classList.contains('open');
     const sideMismatch = fromLeft !== undefined && panel.classList.contains('from-left') !== fromLeft;
     if (wasOpen && sideMismatch) {
-      // Crossing to the other side of an already-open panel: close first,
-      // then reopen anchored to the new side once the close transition
-      // finishes — same pattern as sphere.js/orbiter.js's own panels.
       panel.classList.remove('open');
       timers.after(500, () => {
         setPanelSide(panel, fromLeft);
@@ -1113,10 +628,6 @@ export function createharmonics(container, { preview = false, initialPieceId = n
     timers.after(50, focusPanelTitle);
   }
 
-  // Round 10's living atmosphere: touching a pending point gets, at most,
-  // a small honest acknowledgment — not the full payoff treatment, since
-  // this connection hasn't been reviewed/approved yet. Same fromLeft
-  // side-adaptation as openNodePanel above.
   async function openPendingPanel(pendingIndex, { fromLeft } = {}) {
     if (!panel) return;
     const p = pendingList[pendingIndex];
@@ -1148,13 +659,6 @@ export function createharmonics(container, { preview = false, initialPieceId = n
     timers.after(50, focusPanelTitle);
   }
 
-  // Thread-follow deep link: `initialPieceId` (main.js's generic piece-id
-  // hash slot, reused here as a resonance row's own `id`) names the
-  // resonance this scene should arrive already oriented at. Orients the
-  // camera at the midpoint between its two nodes (no strand to target
-  // anymore, just the two positions) and opens the panel for one side of
-  // it — main.js has no notion of which endpoint the visitor was
-  // reading, so this deterministically picks row.a's node.
   let followedNodeIndex = -1;
   if (!preview && initialPieceId !== null) {
     const row = rows.find(r => r.id === initialPieceId);
@@ -1172,12 +676,7 @@ export function createharmonics(container, { preview = false, initialPieceId = n
     }
   }
 
-  // ─── Drag to orbit + wheel zoom ──────────────────────────────────────────
   let autoRotate = true;
-  // Tracked and single-shot (v4.0): two quick drags used to leave two pending
-  // untracked timers, and the first to fire re-enabled auto-rotate three
-  // seconds after the FIRST drag ended rather than the last — the camera
-  // started drifting under a hand that was still working.
   let autoRotateTimer = null;
   const touchGuard = !preview ? bindTapVsDrag(container) : null;
   const orbitDrag = !preview ? bindOrbitDrag(container, {
@@ -1199,16 +698,7 @@ export function createharmonics(container, { preview = false, initialPieceId = n
     },
   }) : null;
 
-  // ─── Touch a node ─────────────────────────────────────────────────────────
-  // `pickNodeAt` raycasts against the node Points object directly — a
-  // generous world-unit threshold (Raycaster.params.Points.threshold)
-  // stands in for the old dedicated hit-mesh now that there's nothing
-  // else to click.
   const raycaster = new THREE.Raycaster();
-  // No threshold assignment here (removed v4.0): pickNodeAt and pickPendingAt
-  // each set their own — deliberately different radii, see pickPendingAt's own
-  // comment — immediately before every use, so a constructor-time value was
-  // overwritten before it could ever apply to anything.
   const pointerNdc = new THREE.Vector2();
   let hoveredIdx = -1;
   let onMove = null, onClick = null, onLeave = null;
@@ -1221,10 +711,6 @@ export function createharmonics(container, { preview = false, initialPieceId = n
     const hits = raycaster.intersectObject(nodePoints);
     return hits.length ? hits[0].index : -1;
   }
-  // Pending-atmosphere points get their own, slightly smaller pick radius
-  // — they're meant to be secondary, not equally easy to hit as a real
-  // confirmed node. Reuses the same Raycaster/pointerNdc since picks
-  // never happen mid-frame against both objects at once.
   function pickPendingAt(clientX, clientY) {
     if (!pendingPoints) return -1;
     const rect = container.getBoundingClientRect();
@@ -1244,12 +730,6 @@ export function createharmonics(container, { preview = false, initialPieceId = n
       }
     };
     container.addEventListener('mousemove', onMove);
-    // v4.0: moving the cursor off the canvas entirely — onto the nav, onto
-    // the sound toggle, out of the window — never cleared the hover, so the
-    // node stayed brightened with its halo drawn and container.style.cursor
-    // stuck at 'pointer' with nothing under the pointer to justify it.
-    // Outside already handles this correctly (outside.js's onPointerLeave);
-    // same fix, same event.
     onLeave = () => {
       if (hoveredIdx === -1) return;
       hoveredIdx = -1;
@@ -1275,29 +755,6 @@ export function createharmonics(container, { preview = false, initialPieceId = n
     container.addEventListener('click', onClick);
   }
 
-  // Keyboard equivalent — nodes are otherwise raycast-only.
-  //
-  // v4.0 fixes two things here.
-  //
-  // (1) Labels used to read "Piece 1" … "Piece 61", defended in this comment
-  // as "the panel discloses identity once open." Sixty-one buttons that all
-  // read the same is not a list anyone can navigate, and the defence stopped
-  // being necessary the moment the scene started warming loadResolveEndpoint()
-  // at mount (see the fire-and-forget call in the chrome block above) — the
-  // real titles land a moment later at zero extra cost, and
-  // resolveEndpoint(node.endpoint).title is literally the same string the
-  // panel prints. So the numbered labels stay only as the pre-resolution
-  // fallback, and get replaced in place once the promise settles.
-  //
-  // (2) Pending points had no non-mouse trigger AT ALL: pickPendingAt is a
-  // mouse path only and this list covered `nodeList` alone, so
-  // openPendingPanel was unreachable from a keyboard. They're folded into
-  // this same list rather than given a second one — one list, one Tab stop,
-  // and the "— pending review" suffix carries exactly the distinction the
-  // panel's own subtitle makes. The corpus happens to have zero pending rows
-  // right now (all 42 were approved in one go, see GRAPH_SCALE's note above),
-  // so today this adds nothing to the rendered list; writing it data-driven
-  // means the next pending row is reachable without another pass.
   let jumpList = null;
   const jumpItems = [
     ...nodeList.map((node, i) => ({ node, index: i, pending: false })),
@@ -1316,14 +773,6 @@ export function createharmonics(container, { preview = false, initialPieceId = n
     });
     loadResolveEndpoint().then(resolveEndpoint => {
       if (disposed || !jumpList) return;
-      // createJumpList owns the markup, so relabelling reads its buttons back
-      // out of the DOM in the order it appended them (one per item, same
-      // order as `jumpItems`) rather than duplicating list construction here.
-      // document, not container. createJumpList mounts the list on document.body
-// (sceneKit.js, with its own comment explaining the move), so querying the
-// scene container returned an empty NodeList and every one of these buttons
-// kept its pre-resolution label. The `if (!btn) return` below then swallowed
-// it silently, seventy-six times.
 const btns = document.querySelectorAll('.pm-jumplist button');
       jumpItems.forEach((item, i) => {
         const btn = btns[i];
@@ -1331,7 +780,7 @@ const btns = document.querySelectorAll('.pm-jumplist button');
         const { title } = resolveEndpoint(item.node.endpoint);
         btn.textContent = item.pending ? `${title} — pending review` : title;
       });
-    }).catch(() => { /* resolver failed to load — the numbered fallback labels above stand */ });
+    }).catch(() => {  });
   }
 
   if (followedNodeIndex !== -1) {
@@ -1339,50 +788,11 @@ const btns = document.querySelectorAll('.pm-jumplist button');
     openNodePanel(followedNodeIndex, { fromLeft: false });
   }
 
-  // ─── Sonification (round 10) ─────────────────────────────────────────────
-  // Maps the Kuramoto model's own already-running data to sound, rather
-  // than building a second parallel system: pitch comes from each node's
-  // live EFFECTIVE frequency (dθ/dt — omega plus its current coupling
-  // term, i.e. what its phase is actually doing right now, not its
-  // static natural rate), and volume comes from the exact same
-  // pulse=0.5+0.5·sin(θ) formula already driving its visual brightness,
-  // further attenuated by the node's own real distance from the camera
-  // (see the distFactor in the animate() loop below) — nodes farther
-  // from wherever the visitor is currently looking read as quieter.
-  // Pitch snaps to the nearest step of a real harmonic series
-  // (FUNDAMENTAL_HZ × integer) rather than an arbitrary scale — nodes
-  // whose effective frequency has actually converged (Kuramoto lock) land
-  // on the exact same harmonic, i.e. true unison, while nodes in a
-  // different, un-locked part of the graph land on a different harmonic
-  // of the SAME fundamental — still acoustically related (real overtone
-  // physics), but audibly less resolved than unison. This is why pitch
-  // uses the LIVE effective frequency and not the static omega array:
-  // omega values differ by construction (that's the whole point of the
-  // frequency spread), but dθ/dt genuinely converges under coupling, so
-  // only the live value reflects a real lock.
-  //
-  // Gated entirely behind an explicit user gesture (the sound toggle
-  // below) — browsers block autoplay, and dozens of oscillators
-  // constantly running would be an odd thing to start on load anyway.
-  // The audio graph itself (AudioContext, one Oscillator+Gain per node,
-  // into a shared master Gain) is built lazily on first enable, following
-  // orrery.js's own getAudioCtx() convention. Per-voice gain is
-  // pre-scaled by 1/sqrt(n) — the simpler of the two gain-management
-  // options the brief allowed — so adding more nodes to the corpus over
-  // time doesn't make the chord louder overall, just denser.
   const FUNDAMENTAL_HZ = 55; // A1 — low enough that the 3rd–9th harmonics used below land in a comfortable mid-range
   const HARMONIC_MIN = 3, HARMONIC_MAX = 9;
   const EFF_HZ_MIN = KURAMOTO_BASE_HZ - KURAMOTO_SPREAD_HZ * 1.5;
   const EFF_HZ_MAX = KURAMOTO_BASE_HZ + KURAMOTO_SPREAD_HZ * 1.5;
   const VOICE_SCALE = nodeList.length ? 1 / Math.sqrt(nodeList.length) : 0;
-  // Live-tuned by ear across several passes: the original 0.5 master
-  // gain read far louder/harsher than the per-voice math suggested (~32
-  // continuous sine voices summing additively); 0.05 was too quiet;
-  // 0.375 and then 0.3 were closer but still asked to come down again.
-  // The per-voice gain curve just below was narrowed alongside it each
-  // time too — texture, not just level — and its gain glide (the last
-  // argument to setTargetAtTime) was slowed slightly for a softer
-  // attack on every harmonic change.
   const MASTER_TARGET_GAIN = 0.16;
   let audioCtx = null, masterGain = null, compressor = null, reverb = null, reverbGain = null, voices = null; // voices: [{osc, osc2, gain}] parallel to nodeList
   let soundEnabled = false;
@@ -1393,13 +803,6 @@ const btns = document.querySelectorAll('.pm-jumplist button');
     return FUNDAMENTAL_HZ * harmonic;
   }
 
-  // A short burst of white noise shaped by an exponential decay — a
-  // standard way to synthesize a convolution-reverb impulse response
-  // without loading an audio asset. This is what turns the voices from
-  // "oscillators in a browser tab" into something with real room/space
-  // around it — asked for explicitly as a "spa/singing bells" ambience,
-  // and a sine tone with nowhere to decay into doesn't read that way no
-  // matter how quiet it is.
   function makeReverbImpulse(ctx, duration = 3.2, decay = 2.6) {
     const rate = ctx.sampleRate;
     const length = Math.floor(rate * duration);
@@ -1418,19 +821,13 @@ const btns = document.querySelectorAll('.pm-jumplist button');
     audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     masterGain = audioCtx.createGain();
     masterGain.gain.value = 0;
-    // A soft limiter on the summed signal — insurance against the moment
-    // several voices happen to peak together, on top of (not instead of)
-    // the lower MASTER_TARGET_GAIN/per-voice gain above.
     compressor = audioCtx.createDynamicsCompressor();
     compressor.threshold.value = -28;
     compressor.knee.value = 18;
     compressor.ratio.value = 8;
     compressor.attack.value = 0.02;
     compressor.release.value = 0.3;
-    // Dry path straight to the limiter/destination...
     masterGain.connect(compressor);
-    // ...and a parallel wet path through the synthesized reverb, mixed
-    // back in at a fixed level. Both sum into the same compressor.
     reverb = audioCtx.createConvolver();
     reverb.buffer = makeReverbImpulse(audioCtx);
     reverbGain = audioCtx.createGain();
@@ -1444,11 +841,6 @@ const btns = document.querySelectorAll('.pm-jumplist button');
       const osc = audioCtx.createOscillator();
       osc.type = 'sine';
       osc.frequency.value = baseFreq;
-      // A second voice, detuned a handful of cents sharp (random per
-      // node, so the shimmer isn't identical across every voice) and
-      // summed into the SAME gain — two sines a few cents apart beat
-      // slowly against each other, which is most of what makes a
-      // singing bowl sound like a singing bowl rather than a plain tone.
       const osc2 = audioCtx.createOscillator();
       osc2.type = 'sine';
       osc2.frequency.value = baseFreq;
@@ -1465,19 +857,6 @@ const btns = document.querySelectorAll('.pm-jumplist button');
   }
 
   function setSoundEnabled(on) {
-    // v4.0, the second belt on the headline bug. bindPersistedSoundToggle
-    // used to leave a `pointerdown` listener on the shared
-    // #experience-container — which main.js only ever empties, never
-    // replaces — so one pointer-down inside ANY later scene called straight
-    // into here from a scene that no longer existed, built a brand-new
-    // AudioContext (dispose() nulls audioCtx, so buildAudioGraph's own
-    // `if (audioCtx) return` guard couldn't stop it) and started 152
-    // oscillators (two per node, at the corpus's current 76) plus a convolver
-    // that nothing could ever close. Four
-    // orphaned running contexts were reproduced against Chrome's ~6-per-page
-    // cap. The helper now returns a dispose() and this scene calls it (see
-    // soundToggle below), which is the real fix; this guard makes a stale
-    // call from any other route a no-op too.
     if (disposed) return;
     soundEnabled = on;
     if (on) buildAudioGraph();
@@ -1493,42 +872,14 @@ const btns = document.querySelectorAll('.pm-jumplist button');
     }
   }
 
-  // Persisted, site-wide (shared with Outside) via one localStorage key —
-  // see bindPersistedSoundToggle's own comment in sceneKit.js for why this
-  // needs a deferred first-gesture activation rather than just re-reading
-  // the stored value at mount (browser autoplay policy) and how it avoids
-  // fighting an explicit click on the toggle itself.
   const soundToggle = bindPersistedSoundToggle(container, soundToggleEl, setSoundEnabled, 'harmonics');
 
-  // ─── Tab visibility (v4.0) ───────────────────────────────────────────────
-  // This scene's entire sonification is driven from animate(), and animate()
-  // is requestAnimationFrame — which stalls when the tab backgrounds. Through
-  // v3.16.2 that meant every setTargetAtTime simply stopped being issued
-  // while all 152 oscillators held their last target: a static chord droning
-  // out of a hidden tab, with the toggle that would stop it unreachable.
-  //
-  // Outside hit the same hazard from the other side and solved it with a
-  // setInterval lookahead scheduler keyed to audioCtx.currentTime (see
-  // outside.js:944-976 for the full writeup). That is the right fix for
-  // discrete scheduled events; this scene is one continuous drone with no
-  // events to schedule ahead, so the cheap correct answer is the opposite —
-  // stop the audio clock rather than try to keep feeding it. Suspending also
-  // fixes the desync the dt clamp caused: with both the simulation and the
-  // audio stopped, they resume in agreement instead of the audible pitch
-  // relationships quietly drifting away from the visible ones.
-  //
-  // The resume half doubles as the mobile-Safari fix Outside already carries:
-  // some engines auto-suspend an AudioContext on backgrounding and expect an
-  // explicit resume() once visible again, which setSoundEnabled's own resume
-  // never covers because it only runs on an actual toggle click.
   const onVisibilityChange = () => {
     if (disposed) return;
     if (document.hidden) {
       if (audioCtx && audioCtx.state === 'running') audioCtx.suspend();
       return;
     }
-    // First frame back would otherwise arrive as one long dt — clamped to
-    // 0.05s, but still a visible jump in every node's phase.
     clock.resync();
     if (soundEnabled && audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
   };
@@ -1536,31 +887,6 @@ const btns = document.querySelectorAll('.pm-jumplist button');
 
   const reduceMotion = prefersReducedMotion();
 
-  // ─── Reduced motion: settle the oscillators once, then hold ──────────────
-  // v4.0. The `if (!reduceMotion)` block in animate() gates camera
-  // auto-rotate, both backdrop rotations, the twinkle and the pending drift —
-  // but it closed before the Kuramoto integration and before the node
-  // brightness loop, so all 76 nodes kept their 0.2Hz pulse regardless. That
-  // pulse is not decoration to leave running: this file's own header calls it
-  // "visibly breathing together" and describes it as THE carrier of the
-  // scene's meaning, which is exactly why a continuous full-screen luminance
-  // oscillation is the wrong thing to hand a visitor who asked for none.
-  //
-  // Freezing theta at its seeded initial phases would stop the motion but
-  // would also throw away the one thing the model exists to show. So the
-  // simulation is run to settlement here instead — once, at mount, ~15
-  // simulated seconds against the round-8 tuning note's own measurement that
-  // every multi-node cluster reaches ~0.97-1.00 coherence within ~5 — and
-  // then held. A reduced-motion visitor gets the locked state as a still
-  // image: each cluster at its own shared brightness, exactly the structure
-  // the animation is there to reveal, just not moving. animate() then skips
-  // both the per-frame integration and the per-frame colour upload entirely
-  // (see its own note), so this is cheaper as well as calmer.
-  //
-  // `boost` and `hoverMult` still apply on top: those are visitor-initiated,
-  // and the hover-halo block below already establishes that convention for
-  // this scene (round 10's brighten-on-hover stays under reduced motion, only
-  // the ease is skipped).
   if (reduceMotion && N) {
     const SETTLE_DT = 0.05;
     const SETTLE_STEPS = Math.round(15 / SETTLE_DT);
@@ -1576,23 +902,14 @@ const btns = document.querySelectorAll('.pm-jumplist button');
     }
   }
 
-  // ─── Animate ──────────────────────────────────────────────────────────────
   const clock = createFrameClock();
   let twinkleCarry = 0;
   let animId = null;
   let paused = false;
 
-  // Under reduced motion `theta` is held still (settled once at mount above),
-  // so the only things that can change a node's colour between frames are the
-  // two visitor-initiated multipliers — `boost`, decaying after a click, and
-  // `hoverMult`. These track whether either is still in flight, so the
-  // whole-corpus colour loop and its attribute upload can both be skipped once
-  // they've come to rest rather than rewriting a bit-identical buffer 60×/s.
   let paintedHoverIdx = -2; // -2 = nothing painted yet; -1 is a real "no hover"
   let painted = false;
 
-  // Sonification bookkeeping — see the audio block at the bottom of animate()
-  // for why each of these exists.
   const lastFreq = new Float64Array(N).fill(-1);
   const GAIN_UPDATE_INTERVAL = 0.05; // seconds — ~20Hz
   let gainAccum = GAIN_UPDATE_INTERVAL;
@@ -1606,24 +923,9 @@ const btns = document.querySelectorAll('.pm-jumplist button');
         theta0 += preview ? 0.0018 : 0.0006;
         updateCamera();
       }
-      // Galaxy: a slow constant turn — cheap (no attribute writes, just
-      // the Points object's own rotation) but it's what actually reads
-      // as "alive" rather than a frozen diagram, at any zoom/angle.
       galaxy.points.rotation.y += dt * 0.012;
-      // Dust lanes turn at a genuinely different rate than the glow layer
-      // (not just a different starting tilt) — that's what makes the
-      // depth read as the camera orbits over time, not just from a lucky
-      // single angle. Slightly slower and reversed, so the two layers
-      // visibly drift apart rather than appearing to co-rotate.
       dustLanes.points.rotation.y -= dt * 0.008;
 
-      // Stochastic twinkle: offer a few random candidates each frame,
-      // let roughly half actually land (keeps it sparse/irregular rather
-      // than a metronomic per-frame sparkle), then decay every currently
-      // -active point back toward its tuned base color.
-      // Same carry as Butterfly's trail advance: the fractional part survives
-      // the frame instead of being rounded inside it, so the count is exact
-      // over an interval rather than merely close per frame.
       twinkleCarry += GALAXY_TWINKLE_KICKS_PER_SEC * dt;
       const kicks = Math.floor(twinkleCarry);
       twinkleCarry -= kicks;
@@ -1649,15 +951,6 @@ const btns = document.querySelectorAll('.pm-jumplist button');
       }
     }
 
-    // Kuramoto integration — explicit Euler, stable at this K/dt scale
-    // (K·dt stays well under 1 even at the 0.05s frame cap). Coupling
-    // sums only over each node's real adjacency, not every other node.
-    // `effHz` captures dθ/dt itself (before it's folded into theta) —
-    // sonification's pitch input, see the audio section above.
-    // v4.0: allocation-free — CSR adjacency (adjStart/adjIdx) and a reused
-    // thetaNext, replacing a per-frame theta.slice() and a per-node closure.
-    // Skipped entirely under reduced motion: theta was settled once at mount
-    // and deliberately holds there (see the settle loop above).
     if (!reduceMotion) {
       for (let i = 0; i < N; i++) {
         let coupling = 0;
@@ -1669,14 +962,6 @@ const btns = document.querySelectorAll('.pm-jumplist button');
       theta.set(thetaNext);
     }
 
-    // Hover halo: eases toward/away from the hovered node's own position
-    // and accent color; visible: false when fully faded avoids drawing an
-    // invisible sprite every frame for nothing. Under reduced motion, the
-    // brighten-on-hover feedback (round 10's actual accessibility-relevant
-    // request) stays — only the growing/fading EASE is skipped, jumping
-    // straight to its target instead, matching main.css's own
-    // `.nav-icon:hover { transform: none }` convention of disabling the
-    // animated transition, not the state change itself.
     const targetHoverScale = hoveredIdx !== -1 ? 1 : 0;
     hoverScale = reduceMotion ? targetHoverScale : hoverScale + (targetHoverScale - hoverScale) * Math.min(1, dt * 10);
     if (hoveredIdx !== -1 && hoverScale > 0.01) {
@@ -1690,17 +975,6 @@ const btns = document.querySelectorAll('.pm-jumplist button');
       hoverSprite.visible = false;
     }
 
-    // Brightness: a genuine function of each node's own current phase,
-    // not a decorative shimmer — this IS the resonance signal now.
-    // `boost` (click emphasis) and a hover brighten both ride on top,
-    // multiplicatively, and neither adds new geometry.
-    //
-    // v4.0: under reduced motion the phase term is constant, so this whole
-    // loop plus the colour-attribute upload runs only while a click boost is
-    // still decaying or the hover has just moved — otherwise it would be
-    // recomputing an identical buffer every frame to produce an identical
-    // image. (Under normal motion nothing changes: the phase moves every
-    // frame, so every frame genuinely needs the write.)
     let boostActive = false;
     for (let i = 0; i < N; i++) { if (boost[i] > 0) { boostActive = true; break; } }
     if (!reduceMotion || !painted || boostActive || hoveredIdx !== paintedHoverIdx) {
@@ -1718,12 +992,6 @@ const btns = document.querySelectorAll('.pm-jumplist button');
       painted = true;
     }
 
-    // Living atmosphere: independent linear drift, wrapped back into the
-    // volume from a fresh random point/velocity on exit — "appearing and
-    // passing" rather than a bounce or a settle. Skipped entirely under
-    // reduced motion — continuous, unprompted background drift is one of
-    // the canonical cases prefers-reduced-motion exists for; the points
-    // themselves stay visible and clickable, just static.
     if (pendingPoints && !reduceMotion) {
       const pPosAttr = pendingGeo.attributes.position;
       for (let i = 0; i < pendingList.length; i++) {
@@ -1745,37 +1013,6 @@ const btns = document.querySelectorAll('.pm-jumplist button');
       pPosAttr.needsUpdate = true;
     }
 
-    // Sonification: only touches the audio graph once it actually exists
-    // (built lazily on the first real user gesture — see setSoundEnabled
-    // above). setTargetAtTime glides both pitch and gain rather than
-    // stepping instantly, avoiding zipper noise on every harmonic jump.
-    // Round 10.1: added a distance falloff — a node's own real distance
-    // from the camera, not a stand-in like graph position, since the
-    // camera is what's actually "listening" and free-orbits independent
-    // of the layout. Normalized against CAM_MIN/CAM_MAX (the scene's own
-    // zoom bounds), so it responds to both zoom AND orbit position, with
-    // a floor rather than a hard cutoff — a far node goes quiet, not
-    // silent, since it's still part of the chord.
-    //
-    // v4.0, three gates on a block that was scheduling 3 AudioParam events per
-    // node per frame — 228 at the corpus's current 76 nodes, ~13,700 a second:
-    //
-    // (1) `soundEnabled`. This variable was assigned in two places and read in
-    // nowhere at all — the guard here was `if (audioCtx && voices)`. Muting
-    // only ramps masterGain to 0; the context, the 122 oscillators and the
-    // convolver all stay alive, so once a visitor had EVER enabled sound this
-    // loop ran forever at full cost with the toggle reading "Sound off."
-    //
-    // (2) `!document.hidden`. The context is suspended while the tab is
-    // hidden (see onVisibilityChange above), so currentTime isn't advancing
-    // and every event would pile onto the same instant.
-    //
-    // (3) Rate. pitchForEffHz snaps to one of 7 integer harmonics, so
-    // targetFreq genuinely changes only every few seconds — `lastFreq` skips
-    // both frequency ramps until it actually moves. And the gain ramps run at
-    // ~20Hz rather than per-frame: a 0.35s time constant cannot resolve
-    // 120Hz updates, so the ~100 extra events/s per voice were inaudible by
-    // construction.
     if (soundEnabled && audioCtx && voices && !document.hidden) {
       const now2 = audioCtx.currentTime;
       const DIST_FLOOR = 0.12;
@@ -1783,11 +1020,6 @@ const btns = document.querySelectorAll('.pm-jumplist button');
       const writeGain = gainAccum >= GAIN_UPDATE_INTERVAL;
       if (writeGain) gainAccum = 0;
       for (let i = 0; i < N; i++) {
-        // Slower time constants than earlier passes — a singing bowl
-        // swells and settles, it doesn't step. Both detuned oscillators
-        // glide to the same target frequency so the pair keeps beating
-        // at a consistent, gentle rate through a harmonic change rather
-        // than snapping in and out of sync.
         const targetFreq = pitchForEffHz(effHz[i]);
         if (targetFreq !== lastFreq[i]) {
           lastFreq[i] = targetFreq;
@@ -1806,32 +1038,16 @@ const btns = document.querySelectorAll('.pm-jumplist button');
     renderer.render(scene, camera);
     clippedPreview?.blit();
   }
-  // Called directly, not scheduled — the tile must own a first frame before
-  // this function returns. See the note on the same call in orrery.js: a
-  // preview whose only frame is a queued rAF callback can be paused out of
-  // existence by syncPreviewPlayback() before that callback ever runs, and
-  // then it has never drawn at all. orrery, beamline and sphere have always
-  // done it this way; harmonics and outside did not, and they are exactly the
-  // two tiles reported blank on 2026-09-01. animate() schedules the next
-  // frame itself, so this both draws frame 0 and starts the loop.
   animate();
 
   const resize = bindGuardedResize(container, (nw, nh) => {
     camera.aspect = nw / nh;
     camera.updateProjectionMatrix();
     renderer.setSize(nw, nh);
-    // A window dragged between a Retina and a non-Retina display changes
-    // devicePixelRatio with no other signal — see manageRenderer's own note.
     managedRenderer.applyPixelRatio();
   });
 
   return {
-    // main.js pauses preview tiles while a full scene is open, and on
-    // visibilitychange. Stopping the rAF loop is the whole point — a paused
-    // tile shouldn't be integrating 76 coupled oscillators and rendering
-    // ~9,000 transparent points behind an opaque overlay — so the clock has to be
-    // resynced on the way back in, or the first frame home arrives as one
-    // clamped-but-still-visible 50ms jump.
     setPaused(next) {
       if (disposed || paused === next) return;
       paused = next;
@@ -1844,9 +1060,6 @@ const btns = document.querySelectorAll('.pm-jumplist button');
       }
     },
     dispose() {
-      // First, not last: every deferred callback below (panel population
-      // after an await, the jump-list relabel, a tracked timer that already
-      // fired) reads this before touching scene state.
       disposed = true;
       if (animId !== null) cancelAnimationFrame(animId);
       timers.dispose();
@@ -1856,8 +1069,6 @@ const btns = document.querySelectorAll('.pm-jumplist button');
       touchGuard?.dispose();
       jumpList?.dispose();
       panelCloser?.dispose();
-      // The headline v4.0 leak: this listener used to have no way off the
-      // shared #experience-container at all. See setSoundEnabled above.
       soundToggle.dispose();
       document.removeEventListener('visibilitychange', onVisibilityChange);
       if (onMove) container.removeEventListener('mousemove', onMove);
@@ -1875,8 +1086,8 @@ const btns = document.querySelectorAll('.pm-jumplist button');
 
       if (voices) {
         voices.forEach(v => {
-          try { v.osc.stop(); } catch { /* already stopped */ }
-          try { v.osc2.stop(); } catch { /* already stopped */ }
+          try { v.osc.stop(); } catch {  }
+          try { v.osc2.stop(); } catch {  }
           v.osc.disconnect(); v.osc2.disconnect(); v.gain.disconnect();
         });
       }
@@ -1884,13 +1095,6 @@ const btns = document.querySelectorAll('.pm-jumplist button');
       compressor?.disconnect();
       reverb?.disconnect();
       reverbGain?.disconnect();
-      // Close AND null, in that order, and null every node hanging off it.
-      // Outside's dispose() does exactly the same thing for exactly this
-      // reason: the two scenes carried the same stale-listener bug and
-      // produced two completely different symptoms purely because one nulled
-      // its context and the other didn't (Harmonics rebuilt a fresh graph;
-      // Outside re-armed an unclearable setInterval against a closed one).
-      // Symmetric teardown is what stops that class of divergence.
       if (audioCtx) { audioCtx.close(); audioCtx = null; }
       masterGain = compressor = reverb = reverbGain = voices = null;
       soundEnabled = false;

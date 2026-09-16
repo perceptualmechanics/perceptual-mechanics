@@ -1,20 +1,3 @@
-// ─── bard.js: DomRenderer ───────────────────────────────────────────────────
-// The reference renderer for the amphitheater. It draws exactly the root
-// vocabulary and nothing else: a stage actors enter and exit, masks (a
-// fixed ASCII figure per named pose — not naturalistic animation, a mask
-// literally is a fixed face), a cowsay-style speech bubble per line, and a
-// caption line for the chorus. No camera, no blocking coordinates, no set
-// changes beyond what onSceneChange clears — those are for a renderer (or a
-// version of this one) built for the "modern amenities" layer.
-//
-// Everything about how a *specific* production looks — the curtain, an
-// audience silhouette, a marquee frame, playback controls, an interstitial
-// card between plays, an end card — is staging, not the amphitheater
-// itself, and deliberately lives in the consuming site instead of here.
-// This renderer only needs one thing from the consumer to run: a `cast`
-// map of key -> { name, color, tag, masks }, where `masks` is itself a map
-// of mask-name -> a 3-line ASCII array (an `idle` mask is required, others
-// are optional and fall back to idle).
 
 import { asciiBubble } from '../text.js';
 
@@ -138,11 +121,6 @@ export class DomRenderer {
     });
   }
 
-  // Only one line is ever "current" at a time — clear every bubble on stage,
-  // not just the speaking actor's own, or a previous speaker's bubble is
-  // left behind indefinitely (nothing else ever removes it) and overlaps
-  // whoever speaks next. Ported from theater.js's TheaterRenderer, which
-  // already had this right.
   clearBubbles() {
     this.stage.querySelectorAll('.bard-bubble').forEach(b => b.remove());
     Object.values(this.actorEls).forEach(el => el.classList.remove('talking'));

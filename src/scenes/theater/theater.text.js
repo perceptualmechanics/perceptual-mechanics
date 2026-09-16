@@ -1,38 +1,3 @@
-// ─── The Theater: script content ───────────────────────────────────────────
-// Organized by piece — Truth and Beauty (2001), Paul Revere (c. 2009), and
-// You've Got a Friend in Satan (1996) — each with its own cast and scene
-// list, matching how the site organizes every other collection of
-// separate pieces.
-//
-// theater.js still wants one shuffled reel and one flat character lookup
-// across all three plays for its repertory-house conceit — it derives both
-// from PIECES with a couple of Object.assign/flatMap calls rather than this
-// file doing that flattening itself, so PIECES stays the one source of
-// truth and the "flatten for a specific renderer's needs" logic lives next
-// to the renderer that needs it.
-//
-// All dialogue is verbatim. See scenes/theater.js's own header for the
-// provenance of each script (Truth and Beauty checked line-by-line against
-// Scott's authoritative PDF; Paul Revere and You've Got a Friend in Satan
-// OCR'd from scans and spot-checked, not yet cross-checked against a second
-// source).
-//
-// Every beat now carries its own `id` too, added 2026-08-16 for the
-// harmonics's Layer 2 (cross-scene resonance) addressing — a flat
-// sequence, 1..736, assigned mechanically in existing file order by a
-// script that only ever inserted `id: N, ` immediately after each beat's
-// opening brace (verified line-by-line against the pre-edit file: zero
-// characters of any beat's actual content changed, only the new field was
-// added). This is a DIFFERENT id space from each scene's own `id` (1..16,
-// used by Layer 1/links.js and unchanged by this) — a beat's id and its
-// parent scene's id are never the same number space, so `{ scene:
-// 'theater', id: 7 }` (Layer 1, whole scene 7) and beat id 7 (Layer 2, one
-// specific line, could be in any scene) don't collide because Layer 2
-// addressing for theater always carries both fields — see BEATS below and
-// its own header for why. Reasoning for going this granular at all, after
-// an earlier pass proposed staying at scene-level only: a resonance is
-// between two specific pieces of text, not "somewhere in this scene" — see
-// NOTES.md's harmonics entry.
 
 export const PIECES = [
   {
@@ -938,22 +903,6 @@ export const PIECES = [
   },
 ];
 
-// Flat, resolvable list of every beat, built from PIECES rather than
-// hand-maintained — same "derive it, don't duplicate it" reasoning as
-// theater.js's own SCENES = PIECES.flatMap(p => p.scenes). One entry per
-// beat: { id, sceneId, playKey, playTitle, sceneSlug, type, text,
-// character? }. `type` is 'chorus' (a stage direction, from beat.a) or
-// 'line' (dialogue, from beat.c/beat.t) — the same two shapes
-// compileLegacyScene already recognizes, just surfaced here instead of
-// compiled away, since a `line` event's speaker is real context for
-// judging whether a beat resonates with something elsewhere. `character`
-// is the raw cast key (e.g. 'brian'), not the display name — look it up in
-// the beat's own play's `characters` map if a display name is needed.
-//
-// This is what the harmonics's discovery pass and any future
-// Layer-2-aware UI should read from, rather than re-flattening PIECES
-// themselves — one place that knows how a beat's id maps back to its play
-// and scene.
 export const BEATS = PIECES.flatMap(piece =>
   piece.scenes.flatMap(scene =>
     scene.beats.map(beat => ({

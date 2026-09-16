@@ -6,19 +6,12 @@
   <meta name="author" content="Scott Jason Cohen"/>
   <meta name="description" content="Perceptual Mechanics — a digital art project by Scott Jason Cohen. Interactive visualizations of chaos, language, and phase space."/>
   <link rel="canonical" href="https://perceptualmechanics.com/"/>
-
-  <!-- Favicon: "PM" monogram, white on black, echoing #site-title's own
-       treatment -- swapped in 2026-07-23 for the earlier hare-silhouette
-       version (Scott: "never mind, make it the letters PM like from the
-       title"). Reads cleanly at 32px/180px; any two-letter mark this
-       small softens a bit at 16px, which is why every size still gets
-       its own explicit <link> instead of relying on one image alone. -->
   <link rel="icon" href="/favicon.ico" sizes="any"/>
   <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png"/>
   <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"/>
   <link rel="apple-touch-icon" href="/apple-touch-icon.png"/>
 
-  <!-- Open Graph / social preview -->
+  
   <meta property="og:type" content="website"/>
   <meta property="og:url" content="https://perceptualmechanics.com/"/>
   <meta property="og:title" content="perceptual mechanics"/>
@@ -26,12 +19,6 @@
   <meta property="og:image" content="https://perceptualmechanics.com/social-card.png"/>
   <meta property="og:image:width" content="1200"/>
   <meta property="og:image:height" content="630"/>
-  <!-- og:image:alt is the alt text for the card image itself, read out by
-       screen readers on the platforms that render these (and by nothing
-       else) -- the card was the one image on the site with no alt text of
-       any kind. og:site_name and og:locale round the card out: without the
-       former, a shared link's attribution line falls back to whatever the
-       platform guesses from the bare domain. -->
   <meta property="og:image:alt" content="The words &quot;perceptual mechanics&quot; in white on black."/>
   <meta property="og:site_name" content="perceptual mechanics"/>
   <meta property="og:locale" content="en_US"/>
@@ -39,16 +26,6 @@
   <meta name="twitter:title" content="perceptual mechanics"/>
   <meta name="twitter:description" content="Perceptual Mechanics — a digital art project by Scott Jason Cohen. Interactive visualizations of chaos, language, and phase space."/>
   <meta name="twitter:image" content="https://perceptualmechanics.com/social-card.png"/>
-
-  <!-- Structured data. `keywords` here is schema.org's actual, still-live
-       equivalent of the old <meta name="keywords"> tag -- that one's been
-       ignored by Google since 2009 (Bing doesn't weight it either), but
-       this property genuinely feeds crawlers' topic understanding. Terms
-       below are pulled straight from the site's own ten live scenes
-       (Outside, 2026-08-24, was the tenth -- this comment said nine until
-       4.0, which is the kind of count that quietly goes stale every time
-       the nav-icon math does; see main.css's #pm-nav rule for the other
-       place a scene count is load-bearing). -->
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -70,13 +47,6 @@
   }
   </script>
 
-  <!-- Fonts: self-hosted as of 2026-08-31 (was Google Fonts CDN — see
-       styles/main.css's "Self-hosted fonts" block for the full rationale
-       and the dead-weight-family audit). Electrolize is preloaded here
-       because it's the only font visible above-the-fold (#site-title on
-       #landing, inherited via body's font-family) — this is where the
-       actual LCP win comes from; every other family still loads on demand
-       exactly as it did from the CDN, just from this origin instead. -->
   <link rel="preload" href="/fonts/electrolize-400.woff2" as="font" type="font/woff2" crossorigin>
   <title>perceptual mechanics</title>
   <meta name="theme-color" content="#000000"/>
@@ -86,14 +56,6 @@
 
   <a href="#landing" class="skip-link">Skip to main content</a>
 
-  <!-- Every piece on this site is drawn live in a canvas, so with scripting
-       off the page was genuinely blank: no message, no content, no way on.
-       That was a three-line gap rather than a hard problem, because the
-       site already ships a full plain-text version of every piece under
-       /text/ (the prerender step, 1.7.0) — so the fallback isn't a stub
-       apology, it's a real route to the actual writing. Plain <a> and <p>
-       only: whatever turned scripting off may well be a text browser, a
-       reader mode, or a crawler. -->
   <noscript>
     <div id="noscript-fallback">
       <p><strong>perceptual mechanics</strong></p>
@@ -103,28 +65,9 @@
     </div>
   </noscript>
 
-  <!-- Persistent nav bar — all ten live scenes. The icon count is not
-       decoration: #pm-nav sizes itself from a `--nav-count` custom property
-       in styles/main.css that must be kept equal to the number of buttons
-       below. See that rule's comment for why (four separate production
-       regressions of icons clipped off both edges). -->
   <nav id="pm-nav" aria-label="Perceptual Mechanics navigation">
-
-    <!-- Every nav icon's aria-label is now its title text, not a one-word
-         name. It used to be aria-label="Sphere" alongside
-         title="The Sphere — Interconnected Text Fragments", and aria-label
-         WINS over title for an accessible name — so a screen-reader user
-         got "Sphere" while a mouse user hovering the same button got the
-         real, useful one. Strictly backwards. The preview tiles below
-         already had this right (short title for the tooltip, fuller
-         aria-label for the name); the icons match them now.
-         No inline onmouseover/onfocus here any more either — the status-bar
-         glimpse is wired from main.js off the data-scene these buttons
-         already carry. See main.js's pmGlimpse comment for why that also
-         fixed the easter egg firing four times per hover. -->
-
-    <!-- Sphere: geodesic / icosahedron outline -->
-    <button type="button" class="nav-icon" data-scene="sphere" aria-label="The Sphere — Interconnected Text Fragments" title="The Sphere — Interconnected Text Fragments">
+    
+    <button type="button" class="nav-icon" data-scene="sphere" aria-label="sphere">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
         <circle cx="12" cy="12" r="9"/>
         <ellipse cx="12" cy="12" rx="9" ry="4"/>
@@ -132,9 +75,8 @@
         <path d="M3 9h18M3 15h18"/>
       </svg>
     </button>
-
-    <!-- Scroll: Ogham letter Sail, four strokes off a stemline -->
-    <button type="button" class="nav-icon" data-scene="scroll" aria-label="Selected Works — A Scroll of Found Writing" title="Selected Works — A Scroll of Found Writing">
+    
+    <button type="button" class="nav-icon" data-scene="scroll" aria-label="scroll">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
         <line x1="6" y1="2.5" x2="6" y2="21.5"/>
         <line x1="6" y1="5.5" x2="19" y2="5.5"/>
@@ -144,11 +86,7 @@
       </svg>
     </button>
 
-    <!-- Orrery: sun and concentric orbit rings, hung from a mast — was
-         three shells rotated around a shared center, which reads as an
-         atom (electron orbits), not an orrery (planets in one plane).
-         Scott, 2026-07-17: "it's an atom now, not a solar system." -->
-    <button type="button" class="nav-icon" data-scene="orrery" aria-label="The Orrery of Los Feliz" title="The Orrery of Los Feliz">
+    <button type="button" class="nav-icon" data-scene="orrery" aria-label="orrery">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
         <line x1="12" y1="12" x2="12" y2="2.5"/>
         <ellipse cx="12" cy="13" rx="9.5" ry="3.4"/>
@@ -161,8 +99,7 @@
       </svg>
     </button>
 
-    <!-- Orbiter -->
-    <button type="button" class="nav-icon" data-scene="orbiter" aria-label="Orbiter — A p-Orbital, Satellites" title="Orbiter — A p-Orbital, Satellites">
+    <button type="button" class="nav-icon" data-scene="orbiter" aria-label="orbiter">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
         <circle cx="12" cy="12" r="6"/>
         <path d="M12 3 C18 6 18 18 12 21"/>
@@ -171,8 +108,7 @@
       </svg>
     </button>
 
-    <!-- Butterfly: Lorenz / figure-8 attractor shape -->
-    <button type="button" class="nav-icon" data-scene="butterfly" aria-label="Chaos Butterfly in Phase Space, 2026" title="Chaos Butterfly in Phase Space, 2026">
+    <button type="button" class="nav-icon" data-scene="butterfly" aria-label="butterfly">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
         <path d="M12 12 C8 6, 2 6, 3 12 C4 18, 10 17, 12 12"/>
         <path d="M12 12 C16 6, 22 6, 21 12 C20 18, 14 17, 12 12"/>
@@ -180,12 +116,7 @@
       </svg>
     </button>
 
-    <!-- Library: a 4x2 cube-shelf grid, spines as short verticals.
-         Re-enabled 2026-07-23 -- see main.js's own comment at the import
-         for why (a close-read of the catalog turned up real cross-title
-         resonances, now wired in as clickable links, worth being able to
-         click through). -->
-    <button type="button" class="nav-icon" data-scene="library" aria-label="The Library — once removed" title="The Library — once removed">
+    <button type="button" class="nav-icon" data-scene="library" aria-label="library">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
         <rect x="2.5" y="3" width="19" height="18" rx="0.6"/>
         <line x1="12" y1="3" x2="12" y2="21"/>
@@ -202,18 +133,7 @@
       </svg>
     </button>
 
-    <!-- Harmonics (src/scenes/harmonics/ — internal name kept, see
-         that file's own header for why) — 2026-08-16 launched with no
-         nav icon or preview tile, reachable only via two in-scene entry
-         points (ground glimpse, thread-follow filament). Restored here
-         2026-08-18 alongside retiring both of those entry points: normal
-         nav/preview now covers discovery, so the earlier "reachable only
-         by chance" design no longer serves a purpose distinct from what
-         every other scene already gets. Nodes pulsing in shared rhythm,
-         drawn as small pulse rings — a deliberately different motif from
-         Orrery's concentric ellipses (those share one center around a
-         mast; these are separate sources, each pulsing on its own). -->
-    <button type="button" class="nav-icon" data-scene="harmonics" aria-label="Harmonics" title="Harmonics">
+    <button type="button" class="nav-icon" data-scene="harmonics" aria-label="harmonics">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
         <circle cx="7" cy="8" r="1" fill="currentColor" stroke="none"/>
         <circle cx="17" cy="7.5" r="1" fill="currentColor" stroke="none"/>
@@ -224,17 +144,7 @@
       </svg>
     </button>
 
-    <!-- Beamline: the rail, three of its stations as ticks across it, and the
-         vessel as the one solid mass. It replaces a zigzag between two mirror
-         strokes, which drew the bouncing-beam design the scene left behind at
-         4.0 — the ariaLabel was corrected then and the icon was not, which is
-         the same defect one layer quieter.
-         Ticks rather than dots on the line: at the 25.3px this icon gets on a
-         320px phone, dots sitting ON a stroke merge into it and the whole
-         thing reads as one thick squiggle. Crossing it is what makes them
-         separable, and the filled vessel is the only mass, so the silhouette
-         still says "something is travelling this" at icon size. -->
-    <button type="button" class="nav-icon" data-scene="beamline" aria-label="Beamline" title="Beamline">
+    <button type="button" class="nav-icon" data-scene="beamline" aria-label="beamline">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
         <path d="M2 17.5 C8 19 14 6 22 6.5"/>
         <path d="M4.64 15.02 L6.59 18.74"/>
@@ -244,8 +154,7 @@
       </svg>
     </button>
 
-    <!-- Theater: film camera -->
-    <button type="button" class="nav-icon" data-scene="theater" aria-label="The Theater — Now Playing" title="The Theater — Now Playing">
+    <button type="button" class="nav-icon" data-scene="theater" aria-label="theater">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
         <rect x="3" y="7" width="12" height="10" rx="1"/>
         <path d="M15 10.2 L21 7.5 V16.5 L15 13.8"/>
@@ -254,14 +163,7 @@
       </svg>
     </button>
 
-    <!-- Outside (src/scenes/outside/) — tenth scene, pivoted round 3
-         (2026-08-24) to a floral cosmology map. Icon is a real five-petal
-         flower (five simple teardrop petals at 72-degree intervals, a
-         small center dot for the seedpod/Magi-Psi) — the same five-fold
-         layout the scene itself generates, simplified to read at icon
-         size, replacing the earlier 9-gon-plus-axis that echoed the now-
-         retired projection thesis. -->
-    <button type="button" class="nav-icon" data-scene="outside" aria-label="Outside" title="Outside">
+    <button type="button" class="nav-icon" data-scene="outside" aria-label="outside">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
         <path d="M12,12 C9.96,9.14 6.22,10.57 5.20,12.00 C6.22,13.43 9.96,14.86 12,12 Z"/>
         <path d="M12,12 C8.65,13.06 8.86,17.06 9.90,18.47 C11.57,17.94 14.09,14.82 12,12 Z"/>
@@ -272,17 +174,7 @@
       </svg>
     </button>
 
-    <!-- Apollo. The icon is the scene: a band with lines taken out of it,
-         including one close pair — the sodium doublet is the whole reason the
-         sonification is worth listening to, and two strokes 1px apart at icon
-         size is as close as 24 units gets to saying so.
-
-         An earlier eleventh icon and tile lived here for one afternoon,
-         2026-09-02, and came out again when Spectra was shelved; the markup is
-         in that commit and src/scenes/spectra/SHELVED.md lists it alongside
-         the other two edits a restore needs. --nav-count in main.css is the
-         third, and it is the one value an added or removed icon changes. -->
-    <button type="button" class="nav-icon" data-scene="apollo" aria-label="Apollo — An Absorption Spectrum You Can Play" title="Apollo — An Absorption Spectrum You Can Play">
+    <button type="button" class="nav-icon" data-scene="apollo" aria-label="apollo">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
         <rect x="2.6" y="8" width="18.8" height="8" rx="1"/>
         <path d="M6.6 8.6V15.4"/>
@@ -293,16 +185,7 @@
       </svg>
     </button>
 
-    <!-- Psyshell. A forked antler: one beam sweeping up from a thick base,
-         three tines off it, a blunt nub at each tip. It replaces a twelve-ray
-         asterisk that drew the flower this scene was for two releases ago; an
-         icon that still shows the old form is the same defect as an ariaLabel
-         that describes it, only quieter.
-         Four strokes and three dots is the most that stays separable at the
-         25.3px this icon gets at 320px — the nubs are dots rather than circles
-         for that reason, and the beam's curve is what makes the silhouette read
-         as an antler rather than as a twig at that size. -->
-    <button type="button" class="nav-icon" data-scene="psyshell" aria-label="Psyshell — lens RE73415" title="Psyshell — lens RE73415">
+    <button type="button" class="nav-icon" data-scene="psyshell" aria-label="psyshell">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.15" stroke-linecap="round">
         <path d="M8.6 21.4C8.9 16.6 9.8 13.2 12.1 10.2"/>
         <path d="M10.4 15.6 6.2 12.1"/>
@@ -316,14 +199,7 @@
       </svg>
     </button>
 
-    <!-- Medium. A planchette silhouette: the rounded teardrop every board's
-         pointer has, with the sight-hole in it and a letter arc under it. Three
-         shapes, which is what survives at the 23.4px each icon gets once there
-         are thirteen of them at 320px — the arc is the half that says "board"
-         and the hole is the half that says "pointer", and neither reads alone.
-         The cup this scene actually draws is a teacup rather than a planchette;
-         a teacup from above is a circle, and a circle at this size is a dot. -->
-    <button type="button" class="nav-icon" data-scene="medium" aria-label="Medium — A Board That Can Spell" title="Medium — A Board That Can Spell">
+    <button type="button" class="nav-icon" data-scene="medium" aria-label="medium">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M12 3.4c3.1 0 5.2 2 5.2 4.5 0 2.6-2 4.1-3.3 5.6-.8.9-1.2 1.7-1.9 1.7s-1.1-.8-1.9-1.7C8.8 12 6.8 10.5 6.8 7.9c0-2.5 2.1-4.5 5.2-4.5Z"/>
         <circle cx="12" cy="8.1" r="1.9"/>
@@ -331,42 +207,14 @@
       </svg>
     </button>
 
-    <!-- Quiz. Two shapes, which is the budget at the 23.4px each icon gets once
-         there are fourteen of them at 320px: a circle and a bowtie inside it.
-         It is not labelled as what it is, and at this size it reads as a mark
-         rather than as a diagram — which is the right side of the scene's rule
-         about not signalling what is coming (see quiz.js). Twenty-eight ticks
-         on the rim would be both the tell and, at this size, a grey ring. -->
-    <button type="button" class="nav-icon" data-scene="quiz" aria-label="Quiz — Sixteen Questions, And Then A Judgment" title="Quiz — Sixteen Questions, And Then A Judgment">
+    <button type="button" class="nav-icon" data-scene="quiz" aria-label="quiz">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
         <circle cx="12" cy="12" r="8.6"/>
         <path d="M6.9 6.9 17.1 6.9 6.9 17.1 17.1 17.1Z"/>
       </svg>
     </button>
 
-    <!-- Fullscreen toggle — persistent, site-wide, wired once here at the
-         same shared-chrome level as #pm-nav/#site-title (main.js) rather
-         than duplicated into each of the ten scenes' own body-level chrome,
-         the way the sound toggle currently is (only 2 of 10 scenes have
-         one, so there's no truly site-wide sound-toggle slot to actually
-         match). Standard Fullscreen API, applied to the whole page
-         (documentElement), not just the open scene's own canvas. Starts
-         `hidden` and main.js only reveals it if the Fullscreen API is
-         actually present — iOS Safari has no element/document fullscreen
-         outside a <video>, a real platform ceiling, not a bug to paper over
-         with a dead button.
-
-         INSIDE the nav as of 4.9.0, where it used to be a floating circle
-         at top-left over the open scene. It is the last child of this row
-         and not a .nav-icon, deliberately: the icons are destinations and
-         carry data-scene, this is a control and carries none, and both
-         main.js's own queries and prerender.js's nav-count gate select on
-         `.nav-icon` — so a control living here changes neither. The
-         hairline separating it is drawn in CSS, not marked up, because it
-         is a visual grouping cue and not a semantic boundary; a <hr> or a
-         role="separator" here would announce a division of the navigation
-         that doesn't exist. -->
-    <button type="button" id="fullscreen-toggle" aria-pressed="false" aria-label="Enter fullscreen" title="Fullscreen" hidden>
+    <button type="button" id="fullscreen-toggle" aria-pressed="false" aria-label="Enter fullscreen" hidden>
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
         <path d="M8 3H4a1 1 0 0 0-1 1v4M16 3h4a1 1 0 0 1 1 1v4M8 21H4a1 1 0 0 1-1-1v-4M16 21h4a1 1 0 0 0 1-1v-4"/>
       </svg>
@@ -374,278 +222,111 @@
 
   </nav>
 
-  <!-- Site title — bottom center, links back to gallery. Semantic pass,
-       2026-07-22: was <a href="#" role="button"> — it never actually
-       navigated anywhere (main.js's click handler always preventDefault()s
-       and calls returnToGallery() itself), so a real <button> is what
-       this always semantically was. -->
-  <!-- #site-title-row is a plain, non-semantic positioning wrapper (styles/main.css) —
-       #site-title itself stays the real interactive element, unaffected for a11y/click. -->
-  <div id="site-title-row">
+  <footer id="site-title-row">
     <button type="button" id="site-title" aria-label="Return to gallery" data-glimpse="title">perceptual mechanics</button>
-  </div>
+  </footer>
 
-  <!-- Landing -->
-  <!-- tabindex="-1": <main> is not focusable on its own, so the skip link
-       above moved only the scroll position and left focus sitting on the
-       link itself — the next Tab went straight back into the nav the
-       visitor had just asked to skip. -1 makes it a programmatic focus
-       target without adding it to the tab order. main.js's own handler
-       decides at click time whether "main content" means this or the open
-       scene's container. -->
   <main id="landing" tabindex="-1">
-    <!-- a11y audit, 2026-07-22: the page had zero headings anywhere —
-         screen-reader users navigating by heading had nothing to land on.
-         Visually hidden (.sr-only, styles/main.css) rather than a visible
-         h1, since a second on-screen title would duplicate #site-title
-         and clash with the deliberately minimal landing design. -->
     <h1 class="sr-only">Perceptual Mechanics — an interactive art gallery by Scott Jason Cohen</h1>
-    <!-- Semantic pass, 2026-07-22: was <div role="list">/<div role="listitem">
-         /<div role="button" tabindex="0"> with a manual keydown handler for
-         Enter/Space in main.js. Real <ul>/<li>/<button> need none of that
-         ARIA stand-in machinery — a <button> gets Enter/Space activation
-         built in, so main.js's keydown listener was removed along with it
-         (see main.js's own comment at the click handler). "Press Enter to
-         expand" stays in each aria-label; still accurate, keyboard users
-         still need to know it's actionable, just via native semantics now
-         instead of an ARIA role announcing it. -->
     <ul id="scene-previews" aria-label="Interactive art pieces">
-
-      <!-- Design pass, 2026-07-17: added a `title` to every tile, matching
-           its nav-icon counterpart's own title text — the icons already had
-           a native hover tooltip, the preview circles never did, so mousing
-           over a silent WebGL loop gave a sighted visitor no idea what it
-           was before clicking. Doesn't touch layout or visuals, screen
-           readers already had the fuller aria-label. -->
       <li class="preview-wrapper" data-scene="sphere">
         <button type="button" class="preview-container" id="preview-sphere"
-             title="The Sphere — Interconnected Text Fragments"
-             aria-label="The Sphere — an interactive geodesic sphere with text fragments. Press Enter to expand.">
+             aria-label="sphere">
         </button>
       </li>
 
       <li class="preview-wrapper" data-scene="scroll">
         <button type="button" class="preview-container" id="preview-scroll"
-             title="Selected Works — A Scroll of Found Writing"
-             aria-label="Selected Works — a scroll of found writing, carved fragments, 2000 to 2012. Press Enter to expand.">
+             aria-label="scroll">
         </button>
       </li>
 
       <li class="preview-wrapper" data-scene="orrery">
         <button type="button" class="preview-container" id="preview-orrery"
-             title="The Orrery of Los Feliz"
-             aria-label="The Orrery of Los Feliz — a found story, told through a 30-foot orrery: nine planets, their moons, an asteroid belt, in a warehouse you can walk around. Press Enter to expand.">
+             aria-label="orrery">
         </button>
       </li>
 
       <li class="preview-wrapper" data-scene="orbiter">
         <button type="button" class="preview-container" id="preview-orbiter"
-             title="Orbiter — A p-Orbital, Satellites"
-             aria-label="Orbiter — a hydrogen atom’s p-orbital rendered as a fuzzy probability cloud, with satellites in clean elliptical orbits around it. Press Enter to expand.">
+             aria-label="orbiter">
         </button>
       </li>
 
       <li class="preview-wrapper" data-scene="butterfly">
         <button type="button" class="preview-container" id="preview-butterfly"
-             title="Chaos Butterfly in Phase Space, 2026"
-             aria-label="Chaos Butterfly in Phase Space, 2026 — a Lorenz attractor visualization. Press Enter to expand.">
+             aria-label="butterfly">
         </button>
       </li>
 
-      <!-- A hand-placed `.preview-row-break` used to sit here, forcing the
-           wrap after the 5th tile. It is gone as of 4.4.0, and the reason is
-           its own history: it was moved after the 4th tile, then after the
-           5th, and its comment had to keep explaining which scene currently
-           occupied that slot and that the break wasn't tied to it. That is a
-           layout decision re-made by hand every time the scene count changes,
-           which is the same shape as the nav-icon bug that clipped icons off
-           both edges four separate times. main.js now derives the column count
-           from the registry and inserts the breaks itself — see tileColumns()
-           there and #scene-previews in styles/main.css. -->
-
-      <li class="preview-wrapper" data-scene="library">
+       <li class="preview-wrapper" data-scene="library">
         <button type="button" class="preview-container" id="preview-library"
-             title="The Library — once removed"
-             aria-label="The Library — a real bookshelf of books, films and divination decks, rebuilt as a shelf you can turn in space. Press Enter to expand.">
+             aria-label="library">
         </button>
       </li>
 
-      <!-- Harmonics: a genuinely live preview, same as every other tile
-           here (each one is a real, continuously-running mini scene
-           instance, never a static image) — the resonance graph's
-           Kuramoto phase sync runs unconditionally regardless of
-           `preview`, so this tile shows real, currently-converging
-           pulsing the whole time it's on screen, not a frame chosen to
-           stand in for motion it can't show. -->
       <li class="preview-wrapper" data-scene="harmonics">
         <button type="button" class="preview-container" id="preview-harmonics"
-             title="Harmonics"
-             aria-label="Harmonics — resonant pieces across every other scene, laid out by how strongly they connect and pulsing in sync with whatever they resonate with. Press Enter to expand.">
+             aria-label="harmonics">
         </button>
       </li>
 
       <li class="preview-wrapper" data-scene="beamline">
         <button type="button" class="preview-container" id="preview-beamline"
-             title="Beamline"
-             aria-label="Beamline — a small vessel travelling a glowing rail across a night wilderness, with ten stations along it, each holding a fragment of found text. Press Enter to expand.">
+             aria-label="beamline">
         </button>
       </li>
 
       <li class="preview-wrapper" data-scene="theater">
         <button type="button" class="preview-container" id="preview-theater"
-             title="The Theater — Now Playing"
-             aria-label="The Theater — scenes from Truth and Beauty, Paul Revere, and You’ve Got a Friend in Satan, performed by ASCII actors. Press Enter to expand.">
+             aria-label="theater">
         </button>
       </li>
 
-      <!-- Outside: a genuinely live preview, same as every other tile —
-           the breathing cycle runs unconditionally regardless of
-           `preview`, so this tile shows the real flower gently breathing
-           the whole time it's on screen. -->
       <li class="preview-wrapper" data-scene="outside">
         <button type="button" class="preview-container" id="preview-outside"
-             title="Outside"
-             aria-label="Outside — a generated lotus mapping the five Sources of Power as petals and their Folk Origins, Magi and Psi at the center, breathing continuously on its own. Press Enter to expand.">
+             aria-label="outside">
         </button>
       </li>
 
-      <!-- Apollo: complete on the first frame it paints, unlike every other
-           tile here. There is nothing to accumulate — the band is drawn whole
-           and four elements are already in the light, so the 200px circle
-           shows a spectrum with visible absorption lines immediately rather
-           than converging toward one. Butterfly's thumbnail needing
-           twenty-five seconds to reach its subject (fixed in 4.1.3) is the
-           case this was designed against. -->
       <li class="preview-wrapper" data-scene="apollo">
         <button type="button" class="preview-container" id="preview-apollo"
-             title="Apollo — An Absorption Spectrum You Can Play"
-             aria-label="Apollo — a solar absorption spectrum you can play: a band of starlight with dark lines missing from it, and a corona streaming past. Press Enter to expand.">
+             aria-label="apollo">
         </button>
       </li>
 
       <li class="preview-wrapper" data-scene="psyshell">
         <button type="button" class="preview-container" id="preview-psyshell"
-             title="Psyshell — lens RE73415"
-             aria-label="Psyshell — a small crystal antler suspended in a web of fine filaments, holding every sentence on this site as a point of light inside it. The web and the object are one structure at two scales. Press Enter to expand.">
+             aria-label="psyshell">
         </button>
       </li>
 
-      <!-- Medium: alive on the first frame and legible before it is readable.
-           At 200px the twenty-six letters are about six pixels each and cannot
-           be read, which is fine and was the design — two arcs of lettering
-           with something white sitting on one of them is a Ouija board at any
-           size, and the cup drifting is what says it is running. The tile has
-           tile runs a scripted resting hand — a visitor touching the cup and
-           not driving it — because the scene itself does nothing at all until
-           somebody is touching, and a preview of a board with nobody at it is a
-           photograph of a cup. Seeded fixed (see medium.js) so the same board
-           comes back on every load. -->
       <li class="preview-wrapper" data-scene="medium">
         <button type="button" class="preview-container" id="preview-medium"
-             title="Medium — A Board That Can Spell"
-             aria-label="Medium — a homemade Ouija board seen from above, with an upside-down teacup on it and two pairs of fingertips: yours and somebody else’s. Press Enter to expand.">
+             aria-label="medium">
         </button>
       </li>
 
-      <!-- Quiz. The tile turns rather than showing the form: sixteen questions
-           rendered at 170px is sixteen questions nobody can read, and a preview
-           of unreadable text advertises the scene as unreadable.
-
-           The label here does NOT name what the scene turns out to be — see
-           registry.js's entry for why, and quiz.js for the rule. The three
-           descriptions have to agree (verify-aria checks it), so all three
-           withhold the same thing. -->
       <li class="preview-wrapper" data-scene="quiz">
         <button type="button" class="preview-container" id="preview-quiz"
-             title="Quiz — Sixteen Questions, And Then A Judgment"
-             aria-label="Quiz — a short questionnaire of the ordinary kind, and then a verdict about you delivered at some volume by a system that did not ask, does not hedge, and is not taking questions. Press Enter to expand.">
+             aria-label="quiz.">
         </button>
       </li>
 
     </ul>
 
-    <!-- "Read the writing on its own" (1.7.0's /text/ prerender work) used to
-         live here as its own persistent bottom-left link — moved into the
-         colophon dialog as of 1.31.2, alongside the bibliography it belongs
-         next to (see src/components/colophon.js), on both desktop and
-         mobile. Partly undone in 4.0, for a reason the 1.31.2 move didn't
-         weigh: the colophon copy is injected by JS, so no crawler and no
-         scripting-off reader ever saw the link at all. #landing-textlink
-         above is back as static markup, positioned above #site-title rather
-         than beside it so it doesn't recreate the crowding below. It was never a mobile-only problem (crowded against
-         #site-title/tiles at narrow widths, see the vignette below), just
-         most visible there; the landing page didn't need a second
-         persistent fixed-position link once the colophon already exists
-         as the place for exactly this kind of "the actual machinery lives
-         here" content. -->
-
-    <!-- The site's one high-authority page linked to /text/ exactly nowhere
-         in its served HTML: the only link lives inside the colophon, which
-         is a ?raw fragment injected by JS into a display:none modal, so
-         `dist/index.html` contained zero occurrences of href="/text/". Eight
-         pages of the site's best writing, prerendered and in the sitemap,
-         got no internal link equity from the page that has all of it. This
-         is that link, static and crawlable.
-         It is deliberately NOT the fixed bottom-left #landing-textlink that
-         was removed in 1.31.2 for crowding — that one collided with
-         #site-title at narrow widths. This sits above the title rather than
-         beside it (see styles/main.css) and is a child of #landing, so it
-         hides with the rest of the landing chrome when a scene opens,
-         exactly like #landing-bottom-fade below. -->
     <a id="landing-textlink" href="/text/">read the writing on its own</a>
 
-    <!-- Mobile bottom vignette, added 2026-08-03: on narrow viewports the
-         preview grid becomes a single scrollable column taller than the
-         viewport (see styles/main.css), so whichever tile lands at the
-         bottom of the screen sits directly under the fixed #site-title at
-         almost any scroll position — a real overlap, not an edge case.
-         Purely decorative, aria-hidden; a sibling of the other fixed footer
-         elements so it hides with them via #landing's own display:none in
-         expandScene(). #landing-textlink is back as of 4.0 (see above) and
-         deliberately sits inside this fade's band, where the gradient is
-         what gives its small text a dark ground to read against. -->
     <div id="landing-bottom-fade" aria-hidden="true"></div>
   </main>
 
-  <!-- Full screen experience overlay — no close button; nav is the navigation.
-
-       aria-modal="true" was removed in 4.0. It asserts that everything
-       outside this element is inert, and that has never been true here by
-       design: #pm-nav (z-index 500) and #site-title-row (400) both sit
-       ABOVE this overlay (300) and stay visible and clickable the whole
-       time a scene is open — that is what "nav is the navigation" means,
-       and on a touch device those two are the ONLY way out, since there is
-       no Escape key to press. Keeping the attribute meant main.js had to
-       keep hiding real, on-screen controls from assistive tech to make the
-       claim honest, which is the a11y bug it was supposed to prevent. See
-       main.js's focus-containment comment for the full reasoning. -->
-  <div id="experience-overlay"
+    <div id="experience-overlay"
        role="dialog"
        aria-label="Full screen art experience"
        aria-hidden="true">
-    <!-- Filled from SCENES[name].label by main.js. #landing owns the page's
-         only other <h1> and is display:none while a scene is open, so
-         exactly one of the two is ever in the AT tree. -->
     <h1 id="experience-heading" class="sr-only"></h1>
-    <!-- role="main": with #landing hidden, a screen reader navigating this
-         page by landmark found only NAV and a hidden MAIN. Static rather
-         than toggled from JS — the overlay's own aria-hidden already takes
-         this whole subtree out of the AT tree whenever a scene isn't open,
-         so the document never exposes two mains at once. -->
-    <div id="experience-container" role="main"></div>
-    <!-- Shown only while a scene's module is still being fetched (main.js's
-         expandScene, .pm-loading class) — a cold click against a chunk
-         nothing prefetched yet. Purely decorative (the overlay's own
-         aria-label already describes what's opening), so aria-hidden. -->
+     <div id="experience-container" role="main"></div>
     <div id="experience-loading" aria-hidden="true"></div>
-    <!-- ...and this is what's shown when it never arrives. The site's first
-         error state of any kind: before 4.0 a rejected import() left the
-         spinner turning forever and every control on the page dead (see
-         main.js's showSceneLoadError). role="alert" so the swap from
-         spinner to message is actually announced rather than silently
-         replacing a decorative element. `hidden`, not a class, so its
-         Reload button is genuinely out of the tab order until there is
-         something to reload. -->
     <div id="experience-error" role="alert" hidden>
       <p class="experience-error-line">This piece didn’t load.</p>
       <p class="experience-error-line experience-error-fix">Reloading the page will bring it back.</p>

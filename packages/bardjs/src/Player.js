@@ -1,34 +1,3 @@
-// ─── bard.js: Player ────────────────────────────────────────────────────────
-// Walks a compiled { scenes, timeline } script one event at a time and
-// calls the matching method on a renderer. This is the entire "engine": it
-// knows nothing about DOM, canvas, WebGL, cowsay bubbles, or ASCII figures —
-// that's all the renderer's job. It only knows how to hold a position in a
-// flat list of events and move forward, backward, or on a timer.
-//
-// Renderer contract (all optional — Player checks before calling):
-//   mount(container)
-//   onSceneChange(scene, sceneIndex)
-//   onChorus(text)
-//   onEnter(keys)
-//   onExit(keys)
-//   onLine(key, text, { mask, voice, silent })
-//   onIntermission()
-//   onEnd()
-//   dispose()
-//
-// Pacing: a line is held for its length in characters times MS_PER_CHAR,
-// which at 55ms is about 220 words a minute — reading speed, not scanning
-// speed. The two clamps are for the ends of the range and nothing else.
-//
-// MIN_DUR keeps a one-word line ("Well.") on screen long enough to register.
-//
-// MAX_DUR is a guard against pathological input — a beat carrying a whole
-// paragraph by mistake — and NOT a pacing decision, which is what it had
-// quietly become at 10s: 29 of the Theater's 736 beats are long enough to
-// want more than that, and the longest wants 35.1s, so a fifth of a minute
-// of the longest speeches was being cut out from under the reader
-// mid-sentence. They are the lines that most need the time. A visitor who
-// wants to move faster clicks; one who doesn't cannot get the words back.
 const MIN_DUR = 1900;
 const MAX_DUR = 40000;
 const MS_PER_CHAR = 55;
@@ -48,14 +17,6 @@ export class Player {
     this.curSceneIndex = -1;
     this.playing = false;
     this._timer = null;
-    // Once disposed, a Player stays disposed. clearTimeout alone isn't
-    // enough: the consuming scene's transport controls, its click-to-advance
-    // handler and any deferred work of its own all still hold a reference to
-    // this object after teardown, and every one of them could re-arm the
-    // timer against a renderer whose DOM is already detached. perceptual-
-    // mechanics' Theater hit exactly this shape of bug from the other side
-    // (its own end-card timeout firing post-dispose) before it started
-    // tracking its handles.
     this._disposed = false;
   }
 
@@ -74,19 +35,11 @@ export class Player {
 
   play() {
     if (this._disposed || !this.length) return this;
-    // Pressing play on a finished reel used to set playing = true and then
-    // schedule nothing (_scheduleNext bails at the end), leaving the caller's
-    // button reading "pause" over a player that would never advance again.
-    // There's nothing to play; say so, and let the consumer decide whether
-    // that means restart().
     if (this.isAtEnd && this.index >= 0) {
       this.playing = false;
       return this;
     }
     this.playing = true;
-    // A fresh (or just-restarted) player has no current event yet — start
-    // at the beginning rather than trying to schedule a beat that doesn't
-    // exist. goTo(0) will call _scheduleNext() itself once playing is true.
     if (this.index < 0) return this.goTo(0);
     this._scheduleNext();
     return this;
@@ -131,11 +84,6 @@ export class Player {
   goTo(newIndex) {
     if (this._disposed) return this;
     clearTimeout(this._timer);
-    // An empty timeline has no index 0 to land on; without this the clamp
-    // below computes 0 anyway and the destructure throws on undefined. A
-    // script that compiled to nothing is a legitimate input (an empty
-    // fountain file, a filter that matched no scenes) — it should sit there,
-    // not blow up the consumer's mount.
     if (!this.length) return this;
     const clamped = Math.max(0, Math.min(this.length - 1, newIndex));
     this.index = clamped;
@@ -186,9 +134,6 @@ export class Player {
         this.renderer.onIntermission?.();
         break;
       default:
-        // Forward-compatible with future event types (camera, blocking,
-        // sound) a later layer might add — an engine built only for Greek
-        // theater shouldn't hard-fail on a beat type it doesn't recognize.
         this.renderer.onUnknownEvent?.(event);
     }
   }

@@ -1,26 +1,4 @@
-<!--
-  Colophon shell markup: the fixed hare mark, the modal backdrop, and the
-  panel's full content. Only .colophon-bib starts empty — the bibliography
-  is real data (colophon.text.js), filled in via buildBibliographyHTML()
-  after mount. Everything else here is copy that never changes.
-
-  colophon-title keeps a real id — it's the target of the panel's
-  aria-labelledby, which per spec has to resolve to an actual id, not a
-  class. Every other part is styled and looked up purely by class.
--->
-
 <button type="button" class="colophon-mark" aria-label="Colophon, bibliography, and feedback" aria-haspopup="dialog">
-  <!--
-    The mark renders at 36x31 CSS px; the shipped asset is 150x129 (4x, so
-    it stays crisp at DPR 3). WebP first, PNG fallback second — the PNG is
-    also what colophon.css uses as the gleam's alpha mask, so it has to
-    keep existing at this exact path regardless of WebP support.
-
-    width/height are the asset's real pixel dimensions, present only so the
-    browser knows the aspect ratio before the bytes land and reserves the
-    box; CSS (.colophon-mark img: width 78%, height auto) still decides the
-    rendered size. No loading="lazy" — this is above the fold and 13 kB.
-  -->
   <picture>
     <source srcset="/hare-colophon.webp" type="image/webp" />
     <img src="/hare-colophon.png" alt="" width="150" height="129" decoding="async" />

@@ -43,7 +43,7 @@
 	}
 }
 
-/* ── curtain, ASCII swags ── */
+
 .tab-curtain {
   width: 100%; max-width: 900px; text-align: center;
   color: #6b1f1f; font-size: 0.42rem;
@@ -56,7 +56,7 @@
 	}
 }
 
-/* ── the screen ── */
+
 .tab-screen-frame {
   position: relative; width: 100%; max-width: 900px; flex: 0 0 auto;
   margin: 0.2rem 0 0.4rem;
@@ -107,7 +107,7 @@
   background:
     repeating-linear-gradient(0deg, rgba(0,0,0,0.05) 0 1px, transparent 1px 3px),
     radial-gradient(ellipse at 50% 40%, #f2ede0 0%, #ddd6c2 75%, #c9c1a8 100%);
-  border-radius: 3px; overflow: visible; /* dialogue floats over the screen rather than being clipped by it */
+  border-radius: 3px; overflow: visible; 
   display: flex; flex-direction: column;
   animation: screen-flicker 4s steps(2) infinite;
 
@@ -131,7 +131,7 @@
      it's declared after tier one, it always wins where both apply — same
      "later, more specific wins" cascade the original file relied on with
      max-width, just inverted. */
-  aspect-ratio: 1 / 1; /* a proper widescreen picture, not a tower of headspace, at the WIDEST tier below */
+  aspect-ratio: 1 / 1; 
   min-height: 300px;
   max-height: 62vh;
 
@@ -248,7 +248,7 @@
   */
   transform: translate(calc(-50% + var(--bubble-shift, 0px)), var(--bubble-lift, 0px));
   white-space: pre; font-size: 0.54rem; line-height: 1.25;
-  color: #221c14; background: #f4efe0; /* fully opaque — it floats over dark backgrounds too */
+  color: #221c14; background: #f4efe0; 
   box-shadow: 0 2px 8px rgba(0,0,0,0.45), 0 0 0 1px rgba(0,0,0,0.15);
   padding: 2px 4px; border-radius: 3px;
   opacity: 0; transition: opacity 0.25s ease;
@@ -324,7 +324,7 @@
   padding: 0 0.6rem;
   pointer-events: none; z-index: 3;
   bottom: 4px; height: 24px;
-  gap: 9px; /* the aisles */
+  gap: 9px; 
 
 	@media (min-width: 701px), (min-width: 481px) and (orientation: landscape) {
 		gap: clamp(14px, 5vw, 34px);
@@ -363,7 +363,7 @@
   content: ''; position: absolute; left: 50%; bottom: -2px; transform: translateX(-50%);
   width: 78%; height: 60%; background: #030201; border-radius: 50% 50% 8% 8%;
 }
-/* the two silhouettes down front who won't stop talking through the movie */
+
 .tab-seat.host {
   opacity: 1;
   filter: drop-shadow(0 0 5px rgba(232,184,75,0.4));
@@ -379,7 +379,7 @@
   width: 18%; aspect-ratio: 1; background: #030201; border-radius: 50%;
 }
 
-/* ── end card ── */
+
 .tab-card {
   position: absolute; inset: 0; display: flex; flex-direction: column;
   align-items: center; justify-content: center; text-align: center;
@@ -418,7 +418,7 @@
 	}
 }
 
-/* ── interstitial: a between-scenes theater bumper slide ── */
+
 .tab-interstitial {
   position: absolute; inset: 0; z-index: 6;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -451,7 +451,7 @@
 	}
 }
 
-/* ── transport controls ── */
+
 .tab-controls {
   flex: 0 0 auto; display: flex; align-items: center; justify-content: center;
   font-size: 0.88rem;
@@ -513,14 +513,14 @@
    comments for the two selectors with more than one overlapping tier.
    Nothing left to declare at this point in the file. */
 
-/* ── preview: a rotating black & white film reel ── */
+
 .tab-preview {
   width: 100%; height: 100%; position: relative; overflow: hidden;
   background: radial-gradient(ellipse at 50% 35%, #2a2a2a 0%, #0d0d0d 70%, #020202 100%);
   display: flex; align-items: center; justify-content: center;
 }
 .tab-preview::before {
-  /* faint scratched-film-stock grain */
+  
   content: ''; position: absolute; inset: 0; z-index: 2; pointer-events: none;
   background-image:
     repeating-linear-gradient(115deg, rgba(255,255,255,0.06) 0 1px, transparent 1px 38px),
@@ -549,7 +549,7 @@
 .film-reel {
   position: relative; z-index: 1;
   width: min(58%, 150px); aspect-ratio: 1;
-  border-radius: 49% 51% 50% 50% / 51% 49% 51% 49%; /* a hair off true-round — well-worn, not machined */
+  border-radius: 49% 51% 50% 50% / 51% 49% 51% 49%; 
   background: #161616;
   border: clamp(3px, 2.4%, 7px) solid #5c5c5c;
   box-shadow: 0 0 16px rgba(255,255,255,0.14), inset 0 0 14px rgba(0,0,0,0.7);

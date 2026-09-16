@@ -1,76 +1,5 @@
-/* ─── z-index scale ─────────────────────────────────────────────────────────── */
-/* The site's stacking order, in one place, so the next scene added doesn't
-   quietly reopen a bug that's already bitten three scenes (orrery, orbiter,
-   leaf): any element appended straight to document.body — a scene's own
-   title/hint/caption, not something inside #experience-container — sits in
-   the SAME stacking context as #experience-overlay. If that element's
-   z-index is below the overlay's, it's only visible during the overlay's
-   0.6s fade-in transition, then gets permanently covered once the overlay
-   reaches full opacity. The fix is always the same: give it z-index ≥ 310.
-     9999  .skip-link            (focus-only, must beat everything)
-     9500  #noscript-fallback    (the page with no JS at all)
-      500  #pm-nav (and #fullscreen-toggle, which is inside it as of 4.9.0
-           and so has no z-index of its own any more)
-      400  #site-title
-      320  .pm-jumplist          (body-level, so it needs to clear the
-           overlay itself rather than sit inside it — see its own comment)
-      310  body-level scene overlays (title/hint/caption elements a scene
-           appends to document.body — MUST be ≥310, see above)
-      300  #experience-overlay
-       60  #landing-textlink     (over the fade below it)
-       50  #landing-bottom-fade
-       60  #colophon-mark        (the hare button, fixed within #landing —
-           #landing is display:none while a scene is open, per main.js, so
-           this needs no visibility logic of its own; z-index only has to
-           clear the plain in-flow preview grid, not the overlay)
-   Anything else (in-container panels, vignettes, grain overlays, etc.) is
-   scoped inside its own scene's #experience-container and uses small
-   single/double-digit z-indices relative to THAT container's own stacking
-   context — those never need to clear 300, only each other.
 
-   This table lists what is in THIS file. colophon.css owns its own modal
-   pair and states their values there; a row for them here was a fourth copy
-   of a number nobody was reconciling, and it had drifted. */
 
-/* ─── Self-hosted fonts (2026-08-31) ────────────────────────────────────────── */
-/* Replaces the Google Fonts CDN <link> that used to live in index.html's
-   <head>. Two reasons, not one: the extra third-party round-trip cost real
-   LCP (font discovery couldn't start until index.html's own <head> parsed
-   AND a separate origin resolved/connected/responded), and every visitor's
-   IP went to Google just to render text. Self-hosting also removes a
-   third-party origin the site would otherwise have to allowlist once CSP
-   lands (STANDARDS.md's open items).
-
-   Audited against actual usage first (NOTES.md, 3.11.0) rather than
-   self-hosting the CDN link's full request as-is — that link asked for 10
-   families; 3 (Cormorant Garamond, Patrick Hand, Coda) turned out to be
-   dead weight from the retired `leaf` scene (folded into scroll.js
-   2026-08-07) with zero live references anywhere in the current codebase,
-   so they're dropped entirely rather than carried forward. Each file below
-   is Google's own per-script subset (the same "latin"/"latin-ext"/"ogham"
-   split their CDN already serves char-range-gated via unicode-range) — real
-   file-size reduction, not just a relocation, and it preserves the same
-   progressive-load behavior a visitor already got from the CDN. Sourced via
-   the Fontsource project's published rebuild of the same Google Fonts
-   sources (fonts.gstatic.com itself isn't reachable from this build
-   environment's network egress); byte sizes and glyph coverage match.
-
-   Only the weight/style combinations actually referenced somewhere in this
-   codebase are included — Orbitron 400/900 and Cinzel/Arapey/Courier Prime's
-   unused style combos from the old CDN request are gone. One correction
-   made in the process: beamline.css/beamline.js style Orbitron at
-   font-weight:600, but the old CDN link only ever requested 400/700/900 —
-   600 was never actually downloaded, so the browser has been synthesizing
-   a faux-bold for that HUD text the whole time. Fixed here by requesting
-   the real 600 weight instead of carrying the bug forward.
-
-   font-display: swap set explicitly on every rule — Google's CDN link set
-   this at the URL level (?display=swap), so leaving it unset here would
-   silently revert to the browser default (font-display: auto, which
-   behaves like FOIT — invisible text until load — in several browsers).
-   Electrolize is preloaded from index.html (the only font visible
-   above-the-fold, on #landing's #site-title pill); everything else loads
-   on demand same as before. */
 @font-face {
   font-family: 'Electrolize';
   font-style: normal;
@@ -125,10 +54,6 @@
   font-style: normal;
   font-weight: 400;
   font-display: swap;
-  /* Ogham-block subset only (U+1680-169C) — every use of this family on the
-     site renders actual Ogham script (scroll.js's transliteration line),
-     never Latin text, so the "latin"/"latin-ext" subsets Google also
-     publishes for this family would be pure dead weight here. */
   src: url('/fonts/noto-sans-ogham-400.woff2') format('woff2');
 }
 @font-face {
@@ -150,14 +75,7 @@
   font-style: normal;
   font-weight: 400;
   font-display: swap;
-  /* Google only ever published a "latin" subset for Arapey (confirmed live,
-     3.11.0 audit) — no latin-ext variant exists for this family regardless
-     of host, so the handful of Latin Extended-A characters in library.text.js
-     (e.g. "Jun'ichirō Tanizaki") already fell back to the browser's default
-     serif under the old CDN link too. Self-hosting the same "latin" subset
-     changes nothing about that — pre-existing content/font-coverage gap,
-     not a migration regression. */
-  src: url('/fonts/arapey-400.woff2') format('woff2');
+   src: url('/fonts/arapey-400.woff2') format('woff2');
 }
 @font-face {
   font-family: 'Arapey';
@@ -167,143 +85,25 @@
   src: url('/fonts/arapey-400italic.woff2') format('woff2');
 }
 
-/* ─── Shared custom properties ──────────────────────────────────────────────── */
-/* Values referenced from more than one scene's stylesheet (styles/scenes/*.css)
-   live here so there's exactly one place to change them. Kept in sync with any
-   JS-side equivalent by comment, not by a build step — see each constant below
-   for its JS counterpart, if it has one. */
 :root {
-  /* Hint-label text color ("drag to orbit · scroll to zoom", etc.), and THE
-     source for it: every scene's own stylesheet reads this var. Raised from
-     the original ~0.3 alpha specifically for contrast (0.3 alpha white on
-     black measures 2.5:1, well under WCAG's 4.5:1 for text this small). 0.6
-     measures 7.37:1 — this comment said 4.6:1, which is neither the old value
-     nor the new one.
-     `HINT_TEXT_COLOR` in src/utils/sceneKit.js mirrors it for any future
-     JS-side use; nothing imports it today, so "if you change one, change the
-     other" is a courtesy rather than a correctness requirement. */
   --hint-text-color: rgba(255, 255, 255, 0.6);
 
-  /* ─── Title-block safe zone (2026-08-25 site-wide consistency pass) ───────
-     The single source of truth for how close a scene's own bottom-center
-     title/subtitle text is allowed to sit to #site-title's fixed footer
-     pill (main.css, bottom:1.2rem) — every scene that positions a title
-     there (see "Per-scene folder structure" in NOTES.md) anchors to this
-     value instead of a separately-eyeballed bottom offset, so a new
-     subtitle line added to any scene is safe by construction rather than
-     needing its own collision check. Scenes gaining a subtitle stack it
-     ABOVE this anchor (title higher, subtitle at the anchor), so the
-     block's bottom edge never moves closer to the footer than this value,
-     no matter how many lines it grows to.
-
-     Was 3rem initially — measured live (getBoundingClientRect on Beamline's
-     3-line block, whose subtitle sits fully within #site-title's pill
-     width) and found only ~3px of real clearance between the title block's
-     bottom edge and the pill's top edge at that value: 3rem exactly
-     matches the gap down to #site-title's own bottom(1.2rem) + height
-     (~1.64rem) ≈ 2.84rem, leaving a razor-thin margin that every title's
-     own text-shadow blur (12–20px) blows straight through, regardless of
-     scene — it just wasn't visually obvious until a subtitle line's text
-     landed entirely under the pill's horizontal footprint. Raised to 4.5rem
-     for ~27px of real clearance, comfortably outside any of this site's
-     text-shadow blur radii. */
   --title-block-bottom: 4.5rem;
   --title-block-bottom-mobile: 6.5rem;
 
-  /* The TOP of that same band — the line a scene's own bottom chrome has to
-     stay above, as distinct from the line the title itself sits on.
-
-     --title-block-bottom only says where the title's baseline block starts;
-     it says nothing about the ~28px of title sitting on top of it, so a scene
-     that anchored its own centred control panel to "safely above the footer"
-     could clear #site-title's pill perfectly and still run straight through
-     the title text. Apollo did: its fader rail sat at 5.5rem, the title block
-     at 4.5rem + 28px, and the word APOLLO rendered across the bottom edge of
-     the console. Nothing announced it, in the way nothing ever announces
-     these — a title overlapping a panel by 12px still looks like a title.
-     The same hazard is already reasoned through for Scroll in
-     --footer-safe-zone below, where the fix was a hand-picked 7.5rem that
-     had to be revisited by hand when the title came and went. This is that
-     value with a name.
-
-     7rem = 4.5rem + a 1.6rem title's own line box + room for the 12-20px
-     text-shadow blur every title on this site carries. The mobile pair is
-     6.5rem + a 0.85rem line box + the same allowance.
-
-     The invariant: anything bottom-anchored AND horizontally centred anchors
-     to this, not to a number. Corner-anchored chrome (the sound toggle at
-     bottom-left, the pitch ruler at bottom-right) is beside the title rather
-     than under it and does not need it. scripts/verify-css-invariants.mjs
-     checks the first half of that sentence. */
   --title-block-clear: 7rem;
   --title-block-clear-mobile: 8rem;
 
-  /* A different, larger safe zone for an actual SCROLLABLE content region
-     (as opposed to fixed decorative title text above) — Scroll is the one
-     scene whose own body text scrolls, full-width and horizontally
-     centered, directly under #site-title's own horizontally-centered
-     pill. Padding at the end of the scrollable content doesn't help here
-     (it only protects the last few lines); the scrollable viewport's own
-     box has to stop short of this band instead, so real paragraph text
-     can never render underneath the footer at ANY scroll position, not
-     just the top/bottom. See scroll.css's own .scroll-viewport rule.
-
-     Briefly raised from 4.5rem to 7.5rem when Scroll gained its own
-     bottom-center .scroll-title (site-wide title pass, 2026-08-25): that
-     title was ALSO position:fixed chrome sitting in this same bottom
-     band, above the footer pill, so while it existed the boundary
-     scrolling text had to clear was the title's top edge, not the
-     footer's (caught live: 4.5rem only cleared the footer, and body text
-     was scrolling straight through the title text above it). The title
-     was removed again the same day (Scroll's own "no titles" design,
-     see scroll.js's file header) — back to 4.5rem now that this only
-     needs to clear #site-title's own footer pill. If a future pass ever
-     gives Scroll its own title back, revisit this value together with
-     --title-block-bottom rather than assuming 4.5rem alone still
-     suffices. */
   --footer-safe-zone: 4.5rem;
 
-  /* ─── Focus ring ────────────────────────────────────────────────────────
-     One ring, everywhere. There were four different outline colours across
-     this file and colophon.css — rgba(255,255,255,0.4) on #site-title, 0.5
-     on .nav-icon and #fullscreen-toggle, 0.6 on .preview-container and
-     .colophon-mark — with no reason stated anywhere for any of them being
-     different from the others. They read as four independent guesses,
-     because that is what they were. 0.75 is the value all of them now
-     share: against this site's black it measures 11.4:1, comfortably past
-     WCAG 2.2's 3:1 for a focus indicator, where the old 0.4 managed 3.7:1
-     and the 0.5 5.3:1 — passing, but with nothing left over for the
-     brighter scene backdrops some of these controls sit on top of.
-     Offset stays per-selector: it depends on the shape being ringed (a
-     circular 240px tile wants more room than a 22px glyph), which is a real
-     difference, unlike the colour. */
-  /* Split into a colour of its own at 4.11.19: the preview tiles draw their
-     focus indicator as an inset box-shadow rather than an outline (see
-     .preview-container:focus-visible for why), and a shorthand cannot be
-     reused there. One colour, two shapes. */
   --focus-ring-color: rgba(255, 255, 255, 0.75);
   --focus-ring: 2px solid var(--focus-ring-color);
-  /* For controls that sit over arbitrary scene or tile content rather than
-     over their own dark chrome. A white ring cannot be made legible on a pale
-     ground by raising its alpha — over white it is 1.00:1 at any value, and
-     #site-title:focus-visible measured 1.02:1 over a bright tile because
-     `outline-offset: 4px` puts it outside the pill's own scrim. So the ring
-     carries a dark ring of its own, which is the trick .preview-container's
-     focus ring already used and the only one that works on both grounds. */
   --focus-ring-outer: 0 0 0 2px var(--focus-ring-color), 0 0 0 5px rgba(0, 0, 0, 0.72);
 
-  /* ─── Scene crossfade ───────────────────────────────────────────────────
-     #experience-overlay's opacity transition, and the two setTimeout()s in
-     main.js that wait for it to finish before tearing the old scene down.
-     Those have to agree exactly: a JS timer shorter than the transition
-     disposes the outgoing scene mid-fade (its canvas blanks in view), a
-     longer one leaves a dead pause on a black screen. They used to agree by
-     three separately-maintained 600s. main.js reads this property at load
-     (CROSSFADE_MS) so the stylesheet stays the one place it's set. */
   --scene-crossfade: 600ms;
 }
 
-/* ─── Reset & base ──────────────────────────────────────────────────────────── */
+
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 html, body {
@@ -314,15 +114,7 @@ html, body {
   overflow: hidden;
 }
 
-/* ─── Screen-reader-only utility ────────────────────────────────────────────── */
-/* Standard clip-based visually-hidden pattern — content is present and
-   announced by assistive tech, but takes no visual space and doesn't
-   affect this site's deliberately chrome-free look. Added for #landing's
-   h1 (a11y audit, 2026-07-22): the page had zero headings anywhere,
-   which is a real gap for screen-reader users navigating by heading —
-   but a visible "Perceptual Mechanics" h1 would duplicate the bottom-
-   center site-title link and clash with the intentionally minimal
-   landing design, so it's sighted-invisible instead. */
+
 .sr-only {
   position: absolute;
   width: 1px; height: 1px;
@@ -333,7 +125,6 @@ html, body {
   border: 0;
 }
 
-/* ─── Skip link ─────────────────────────────────────────────────────────────── */
 .skip-link {
   position: fixed; top: -100%; left: 1rem;
   background: #fff; color: #000;
@@ -343,140 +134,16 @@ html, body {
 }
 .skip-link:focus { top: 0; }
 
-/* ─── Nav bar ───────────────────────────────────────────────────────────────── */
-/* THE ICON-COUNT MATH, ONCE, AS ARITHMETIC THE BROWSER DOES.
-   Read this before touching #pm-nav or .nav-icon. This is the single place
-   in the codebase with a documented history of breaking silently, and it
-   has now broken in production four separate times.
 
-   The failure mode, every time: #pm-nav has no wrap and no scroll and is
-   justify-content:center, so the moment (icons x icon width) + (gaps x gap
-   width) exceeds the viewport, the row overflows off BOTH edges evenly and
-   the outermost icons are simply gone — no scrollbar, no clipping
-   artifact, nothing else visibly wrong on the page. It looks like the site
-   was designed with eight icons.
-
-   The four occurrences:
-     2026-08-04  count went 7 -> 8; needed a 38px touch-target override to fit.
-                 That override then came in and out twice more as the count
-                 moved again.
-     2026-08-23  3.0 QA caught a dead zone between the 480px and desktop
-                 tiers: at 500px wide, Sphere and Butterfly sat off the left
-                 edge and Beamline and Harmonics off the right, all four
-                 unreachable.
-     2026-08-24  count went 9 -> 10 with Outside; the arithmetic was re-run
-                 by hand and happened to still clear.
-     2026-09-01  (this pass) measured live and still failing at the two most
-                 common phone widths: at 375x812 the first icon's left edge
-                 was at -8px and the last icon's right edge at 383px — 8px
-                 clipped off each end on every 375px iPhone. At 320x720 it
-                 was 35px each side, putting Sphere and Outside entirely
-                 off-screen. And a second, previously unnoticed dead zone
-                 sat at the TOP of the desktop tier: 10 x 44px + 9 x 2.5rem
-                 needs 800px, but that tier started at 769px, so 769-800px
-                 clipped too.
-
-   Every one of those fixes was the same shape — re-tune a number against
-   the count of the day — which is why the same bug kept coming back. So
-   this version doesn't have a number to re-tune: `--nav-count` is the only
-   thing an eleventh scene changes, and everything else is derived from it.
-
-   ─── 4.9.0: the row scrolls, and that changes what is derived ─────────────
-   Until now the derivation guaranteed the row FITS, by shrinking the icons
-   until they did: icon size = min(44px, slot). The cost was stated in this
-   comment for three releases and never paid down — "10 x 44px is 440px, so
-   a single row of ten cannot give every icon a 44x44 target on a 375px
-   phone; that's arithmetic, not a choice" — and the arithmetic was right,
-   but the choice it was defending was not the only one on the table. The
-   comment weighed exactly two options, shrink and wrap to two rows, and
-   rejected the second because #pm-nav's 3.5rem height is load-bearing well
-   outside this file (#landing and #experience-overlay pad their tops by
-   exactly it; every scene stylesheet clears it with top:4.5rem).
-
-   There was a third: let the row SCROLL. Scott's, and it costs nothing the
-   other two cost. The bar stays exactly 3.5rem, so nothing downstream of
-   that constant moves. The icons stay a full 44 x 44 at every width, so the
-   touch-target debt this comment had been carrying is simply paid. What
-   changes is that on a narrow phone some icons are off-screen until you
-   push the row sideways, which is the ordinary behaviour of a tab strip and
-   is signalled the ordinary way — the row is cut mid-icon at the edge
-   rather than ending neatly.
-
-     slot      = min(84px, (100vw - 2*padding - rule) / units)
-     icon size = 44px                        fixed now, never derived down
-     gap       = max(0, slot - icon size)    closes to nothing, then scrolls
-
-     row fits           <=>  slot >= 44px  <=>  100vw >= units*44 + rule + 2*padding
-     gap reaches 2.5rem <=>  slot  = 84px  <=>  100vw >= units*84 + rule + 2*padding
-
-   `units` is --nav-count plus --nav-extra, and --nav-extra is 1 exactly when
-   #fullscreen-toggle is showing, because the toggle now lives in this row
-   (see its rule below) and takes a slot like anything else. main.js sets
-   both: the count from the registry, the extra from the same feature test
-   that reveals the button. `rule` is the extra separation before the
-   toggle, reserved here so the formula stays honest about the whole row.
-
-   Those two thresholds move with the scene count, which is the point — they
-   are consequences, not settings, and nothing in this file stores them. Put
-   the current `units` into the two lines above to get them, with
-   `rule + 2*padding` = 40px, which is the only term in either line that is
-   not `units`; at fourteen scenes with the toggle showing (units = 15) that
-   is 700px and 1300px.
-   Above the upper one the row is what it has always been — 44px icons,
-   2.5rem gaps, centred. Below the lower one it scrolls, rather than
-   shrinking its own touch targets.
-
-   There is still no breakpoint anywhere in this pair, and so still no dead
-   zone for the old bug to come back in.
-
-   Centering a row that may overflow: `justify-content: center` is the wrong
-   tool, because scrollable overflow only extends toward the END side — a
-   centred row that overflows puts its first icons at negative offsets that
-   no amount of scrolling can reach. That is the classic version of the very
-   bug listed in the log above, arrived at from a new direction. The two
-   ::before/::after spacers below are the fix: flex items that grow into
-   free space and collapse to zero when there is none, so the row is centred
-   while it fits and starts flush at the scroll origin the moment it
-   doesn't. `safe center` would also work in current browsers; spacers work
-   in all of them and need no feature query. */
 #pm-nav {
-  /* A FALLBACK as of 4.4.0, not the value. main.js's applyDerivedLayout()
-     sets --nav-count from the registry length on load, so an added scene now
-     changes no number in this file at all — which is the whole point, after
-     four separate production bugs caused by exactly this number not being
-     re-tuned when the scene count moved. What remains here is what the row
-     looks like in the moment before that line runs, and for anything reading
-     this stylesheet without executing the bundle. Keep it equal to the number
-     of .nav-icon buttons in index.html.
-
-     It had drifted: 11 while index.html has carried 12 icons since Psyshell
-     was added, and the two gates that were supposed to catch it don't watch
-     this number — prerender.js counts icons against the registry and
-     applyDerivedLayout() warns about the same pair, and neither reads the
-     stylesheet. So the drift was real but harmless, and it is worth saying
-     which: with 4.9.0's fixed icon size this value only sets the pre-script
-     GAP, where before it also set the pre-script icon width, and a stale
-     count there meant a momentarily clipped row. The failure mode of
-     forgetting this now is a slightly wrong gap for one frame. */
   --nav-count: 14;
-  /* 1 while #fullscreen-toggle is in the row, 0 while the platform has no
-     Fullscreen API and main.js leaves it `hidden`. Set from the same
-     feature test that reveals it, so the row never reserves a slot for a
-     control that isn't there. */
   --nav-extra: 0;
   --nav-units: calc(var(--nav-count) + var(--nav-extra));
   --nav-pad: 0.5rem;
-  /* The separation between the last scene icon and the fullscreen toggle —
-     the one thing in this row that is a control rather than a destination.
-     Reserved in --nav-slot so the fit arithmetic accounts for it. */
   --nav-rule: 1.5rem;
-  /* The widest one icon's share of the row may grow to: 44px of icon plus
-     the 2.5rem gap the desktop layout has always used. */
   --nav-slot-max: 84px;
   --nav-icon-max: 44px;
   --nav-slot: min(var(--nav-slot-max), calc((100vw - 2 * var(--nav-pad) - var(--nav-rule)) / var(--nav-units)));
-  /* Fixed as of 4.9.0, not derived down — see the header. The row scrolls
-     rather than shrinking its own touch targets. */
   --nav-icon-size: var(--nav-icon-max);
   --nav-gap: max(0px, calc(var(--nav-slot) - var(--nav-icon-size)));
 
@@ -485,51 +152,22 @@ html, body {
   height: 3.5rem;
   display: flex;
   align-items: center;
-  justify-content: flex-start;   /* centring is the spacers' job — see header */
+  justify-content: flex-start;   
   gap: var(--nav-gap);
   padding-inline: var(--nav-pad);
-  /* The row may be wider than the viewport now. overflow-y: hidden keeps
-     .nav-icon::before's deliberate vertical overhang from turning into a
-     vertical scroller; the bar's own height is unchanged either way. */
   overflow-x: auto;
   overflow-y: hidden;
   overscroll-behavior-x: contain;
   -webkit-overflow-scrolling: touch;
-  /* No visible scrollbar: a classic (non-overlay) one would eat several
-     pixels off a 3.5rem bar and draw a grey trough across the chrome. The
-     row is only scrollable at phone widths, where scrollbars are overlay
-     and gestural anyway. */
   scrollbar-width: none;
   -ms-overflow-style: none;
   z-index: 500;
-  /* 0.78, not 0.55. Over an open scene this bar has nothing behind it —
-     #experience-container starts at 56px, below the bar, on all thirteen — so
-     the near-black ground the icon contrast was computed against is real
-     there. On the LANDING page it is not: the tile grid scrolls under the bar,
-     and at 0.55 the blurred composite measured rgb(97,94,88) with Library's
-     shelf and Apollo's spectrum behind it, putting .nav-icon at 2.93:1 against
-     a 3:1 floor for a 1.3px stroke. The blur spreads bright tiles rather than
-     hiding them; only the alpha holds them down. */
   background: rgba(0,0,0,0.78);
   border-bottom: 1px solid rgba(255,255,255,0.08);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
 }
 #pm-nav::-webkit-scrollbar { display: none; }
-/* The centring spacers. `flex: 1 0 0` — grow into free space, never shrink,
-   zero basis — so they split whatever the row doesn't use and vanish
-   entirely when it uses everything. Empty content, so they contribute
-   nothing but width, and aria-hidden by construction (a CSS pseudo-element
-   with empty content is not exposed).
-
-   The negative margins are load-bearing, not tidying. `gap` applies between
-   EVERY pair of flex items, so two spacers add two gaps the fit arithmetic
-   in the header never reserved — and the row would then overflow by exactly
-   one gap's width at every viewport where a gap exists at all, which is to
-   say it would scroll on desktop. Checked as arithmetic rather than by
-   looking: with the two extra gaps cancelled, row = 11*slot + 44 + rule
-   against an available 12*slot + rule, so it fits for every slot >= 44px,
-   which is every slot at which --nav-gap is non-zero. */
 #pm-nav::before, #pm-nav::after { content: ''; flex: 1 0 0; }
 #pm-nav::before { margin-inline-end: calc(-1 * var(--nav-gap)); }
 #pm-nav::after { margin-inline-start: calc(-1 * var(--nav-gap)); }
@@ -539,9 +177,6 @@ html, body {
   border: none;
   padding: 0;
   cursor: pointer;
-  /* No shrinking, no growing: the width above is already each icon's exact
-     share of the row, and letting flex renegotiate it would put the
-     overflow guarantee back in the browser's hands. */
   flex: 0 0 auto;
   width: var(--nav-icon-size);
   height: var(--nav-icon-max);
@@ -549,21 +184,10 @@ html, body {
   align-items: center;
   justify-content: center;
   position: relative;
-  /* Was 0.35, which measured EXACTLY 3.00:1 against the nav's near-black
-     ground — the bare floor WCAG 1.4.11 asks of a non-text control, with
-     nothing to spare, on a 1.3px stroke. 0.5 measures 5.3:1 and is still
-     visibly dimmer than the 1.0 the active and hovered states use, so the
-     "which one am I in" signal these icons carry is untouched. */
   opacity: 0.5;
   transition: opacity 0.25s, transform 0.2s;
   color: #fff;
 }
-/* The tap target, larger than the drawn icon and independent of it. Fills
-   the nav bar's full height (44px + 2 x 0.375rem = 3.5rem) and reaches
-   halfway into the gap on each side — so the targets tile with no dead
-   space and no overlap, whatever --nav-count makes the gap. Transparent, so
-   it changes nothing visually; a transparent background is still
-   hit-tested, unlike visibility:hidden. */
 .nav-icon::before {
   content: '';
   position: absolute;
@@ -572,12 +196,6 @@ html, body {
 }
 .nav-icon:hover { opacity: 1; transform: scale(1.12); }
 .nav-icon.active { opacity: 1; }
-/* :focus-visible, not :focus — a mouse click on a nav icon left a ring
-   sitting on it afterwards, which on a page this bare read as a rendering
-   fault rather than a focus indicator. The reveal-on-focus controls
-   (.skip-link, .pm-jumplist button) deliberately keep plain :focus: they
-   are invisible until focused, so they must respond to programmatic focus
-   too, which :focus-visible does not guarantee. */
 .nav-icon:focus-visible {
   outline: var(--focus-ring);
   outline-offset: 3px;
@@ -585,23 +203,7 @@ html, body {
 }
 .nav-icon svg { width: 22px; height: 22px; display: block; }
 
-/* ─── Site title ────────────────────────────────────────────────────────────── */
-/* Centers #site-title without needing to know its own width — the
-   previous approach (position:fixed;left:50%;transform:translateX(-50%))
-   also had to compensate for letter-spacing's trailing gap (Chrome adds
-   that gap after the LAST character too, not just between characters,
-   inflating the box translateX(-50%) centers) with extra transform math.
-   Flexbox does both jobs at once: justify-content:center centers
-   #site-title (a normal, content-sized flex item — its own pill
-   shape/padding/click target are untouched) using its MARGIN box, so a
-   plain negative margin-right on #site-title itself (see below) cancels
-   the trailing gap with no transform calc needed. This wrapper exists
-   purely for that positioning; it's not semantic and not interactive
-   (pointer-events:none — #site-title re-enables its own), so it's
-   invisible to assistive tech and doesn't intercept clicks meant for
-   whatever's underneath. Standing convention as of 2026-08-26 (see
-   NOTES.md): no more left:50%+translateX(-50%) centering anywhere in
-   this codebase — an ancestor flex/grid container instead. */
+
 #site-title-row {
   position: fixed;
   bottom: 1.2rem; left: 0; right: 0;
@@ -610,34 +212,16 @@ html, body {
   z-index: 400;
 }
 #site-title {
-  /* Semantic pass, 2026-07-22: was <a href="#" role="button">. It never
-     navigated anywhere (the click handler always preventDefault()'d and
-     called returnToGallery() itself) — a real <button> is what it always
-     semantically was, so main.js/index.html switched it to one, and this
-     rule picks up the two resets a real button element needs that an
-     anchor never did: no default border, and inherit the page's own font
-     rather than the browser's default UI font. */
   border: none;
   font-family: inherit;
-  /* Still needs to be a positioned element (just not position:fixed
-     anymore, #site-title-row above owns that) — its own ::before/::after
-     smoke-on-hover pseudo-elements are position:absolute and anchor to
-     the nearest positioned ancestor, which has to stay #site-title
-     itself rather than falling through to #site-title-row. */
   position: relative;
-  /* Makes this a stacking context, so the ::before/::after haze can paint
-     between the pill's own background and the letters — see their note. */
   isolation: isolate;
-  /* --tracking/margin-right: cancels letter-spacing's trailing gap so
-     #site-title-row's justify-content:center lands on the visible glyphs
-     rather than the gap-inflated box — see #site-title-row's comment
-     above for the full reasoning. */
   --tracking: 0.3em;
   letter-spacing: var(--tracking);
   margin-right: calc(-1 * var(--tracking));
   font-size: 0.7rem;
   text-transform: uppercase;
-  /* 0.82, was 0.5 — see the scrim comment below for the measurement. */
+  
   color: rgba(255,255,255,0.82);
   pointer-events: auto;
   white-space: nowrap;
@@ -645,28 +229,6 @@ html, body {
   transition: color 0.2s, background 0.2s;
   cursor: pointer;
   text-shadow: 0 1px 5px rgba(0,0,0,0.75);
-  /* A blurred text-shadow alone assumed every scene sat on a dark-ish
-     backdrop — true everywhere except leaf's new bright daytime sky, where
-     the title nearly vanished into the pale cream near the horizon (Scott:
-     "totally getting lost against the palette"). The fix at the time was a
-     0.4-alpha scrim, and the comment here claimed that made the title
-     "scene-brightness-agnostic."
-
-     CORRECTION, 4.0 — it did not, and the arithmetic was never done. A
-     0.4-alpha black scrim over a white scene composites to #999, not to
-     anything dark; 0.5-alpha white text over #999 composites to #ccc; #ccc
-     on #999 is 1.77:1. That is the worst contrast anywhere on this site,
-     on its one permanently-visible piece of text, and the comment
-     asserting the opposite is exactly why nobody re-checked it. An alpha
-     scrim can never be brightness-agnostic on its own — it's a blend, so
-     whatever is behind it always comes through in proportion.
-
-     What actually holds: enough scrim that the composite stays dark
-     regardless, and enough text alpha that the text stays bright.
-     Measured (WCAG relative luminance, against each real composited
-     ground): 5.3:1 over a pure-white scene — the worst case, and the one
-     that used to be 1.77:1 — 13.8:1 over black, ~11:1 over mid-grey. The
-     text is 11.2px, so 4.5:1 is the bar it has to clear, not 3:1. */
   background: rgba(0,0,0,0.65);
   padding: 0.4rem 1rem;
   border-radius: 999px;
@@ -674,38 +236,6 @@ html, body {
 #site-title:hover { color: rgba(255,255,255,1); }
 #site-title:focus-visible { outline: none; box-shadow: var(--focus-ring-outer); }
 
-/* Smoke behind the wordmark, on hover.
-   Scott: "I just wanted an emerging background to the letters that looked like
-   smoke but then retreated on mouseoff."
-
-   Three attempts, and each failed differently, which is why all three are worth
-   one line. 5.0.2: two 10px puffs, rendering at 8% brightness — present and
-   invisible. 5.0.3: bigger, curling, rising — visible, and the wrong thing,
-   because it was two objects travelling past the wordmark rather than a ground
-   for it. This one is a haze that blooms behind the letters and draws back.
-
-   Two mechanics carry it.
-
-   IT IS A TRANSITION, NOT AN ANIMATION, and that is what "retreats on mouseoff"
-   requires. A keyframe animation is bound to :hover and simply stops existing
-   when the cursor leaves — the smoke vanished on a frame. A transition runs in
-   reverse for free, and the two directions can be timed separately: the rule
-   below sets the LEAVE timing (longer, ease-in, so it draws back slowly) and
-   the :hover rule sets the ENTER timing (shorter, ease-out, so it arrives).
-   That asymmetry is most of why it reads as smoke rather than as a fade.
-
-   IT SITS BETWEEN THE PILL AND THE LETTERS. `isolation: isolate` on
-   #site-title makes it a stacking context, so a `z-index: -1` pseudo-element
-   paints after the element's own background and before its inline content —
-   above the black pill, behind the text. Without the isolate, the negative
-   z-index resolves against an ancestor and the haze goes behind the pill
-   instead, which is where the previous version lived and why it had to leak
-   through 0.35 of alpha to be seen at all. Same trick, and the same reasoning,
-   as .scroll-root's own note in scroll.css.
-
-   Five offset ellipses rather than one, so the blur has structure to work on —
-   one gradient blurred is a smudge at any size — and a soft elliptical mask so
-   the field has no edge of its own anywhere. */
 #site-title::before,
 #site-title::after {
   content: '';
@@ -714,19 +244,12 @@ html, body {
   left: 50%; top: 50%;
   pointer-events: none;
   opacity: 0;
-  /* The LEAVE transition. Slower than the arrival, and ease-in so it lets go
-     gradually rather than dropping away from full. */
   transition: opacity 1150ms ease-in, transform 1350ms ease-in, filter 1150ms ease-in;
 }
 #site-title::before {
   width: 138%; height: 340%;
   transform: translate(-50%, -50%) scale(0.74);
   filter: blur(5px);
-  /* Lobes of deliberately UNEQUAL size, alpha and height, and spread across
-     the vertical as well as the horizontal. An earlier set was five similar
-     ellipses in a row, which blurs to an even bar — a glow, not smoke. What
-     makes a soft field read as smoke is that its density is lumpy: some of
-     these are half the height of their neighbour and a third the strength. */
   background:
     radial-gradient(ellipse 17% 52% at 17% 62%, rgba(228,236,255,0.50), rgba(228,236,255,0) 66%),
     radial-gradient(ellipse 27% 30% at 33% 34%, rgba(240,244,255,0.30), rgba(240,244,255,0) 74%),
@@ -738,8 +261,6 @@ html, body {
   -webkit-mask: radial-gradient(ellipse 56% 44% at 50% 50%, #000 26%, transparent 80%);
   mask: radial-gradient(ellipse 56% 44% at 50% 50%, #000 26%, transparent 80%);
 }
-/* A wider, fainter second layer on its own timing, so the haze has depth and
-   the two edges never arrive together. */
 #site-title::after {
   width: 176%; height: 460%;
   transform: translate(-50%, -50%) scale(0.62);
@@ -752,8 +273,6 @@ html, body {
   mask: radial-gradient(ellipse 54% 42% at 50% 50%, #000 20%, transparent 82%);
   transition: opacity 1400ms ease-in, transform 1600ms ease-in, filter 1400ms ease-in;
 }
-/* The ENTER transition, and the arrival state. Focus as well as hover — a
-   keyboard visitor reaching this control should get the same thing. */
 #site-title:hover::before,
 #site-title:focus-visible::before {
   opacity: 1;
@@ -772,41 +291,9 @@ html, body {
   #site-title::before, #site-title::after { display: none; }
 }
 
-/* ─── "Read the writing on its own" ─────────────────────────────────────────── */
-/* Back in the served HTML as of 4.0 (see index.html's own comment at the
-   element for why the 1.31.2 removal is partly undone). A fixed-position
-   child of #landing, exactly like #landing-bottom-fade below — out of
-   #landing's flex row so it can't disturb the preview grid's layout, and
-   hidden along with everything else on the landing page by the
-   display:none expandScene() sets on #landing, so it needs no visibility
-   logic of its own.
 
-   Mobile-first: on a phone it sits ABOVE the centered #site-title pill
-   rather than beside it, which is what made the old bottom-left version
-   unlivable at narrow widths (it collided with the pill, the immediate
-   trigger for removing it in 1.31.2). It lands inside
-   #landing-bottom-fade's gradient band on purpose — that fade is what
-   gives small text a dark ground to read against there. From 601px up
-   there's real room at the bottom-left, and it moves there so it isn't
-   stacked on the title.
-
-   0.55 alpha, not the 0.35 the old link used: at this size it's body text
-   as far as WCAG is concerned, and 0.35 white on black is 3.0:1. 0.55
-   measures 6.3:1. */
 #landing-textlink {
   position: fixed;
-  /* left:0/right:0 + width:fit-content + margin-inline:auto — the box
-     shrink-wraps to the words and centers itself between those two insets.
-     It was `left:0; right:0; text-align:center` on a full-width block,
-     which centered the text just as well but left an invisible,
-     viewport-wide link band across the page: measured live at 320x720, a
-     tap anywhere in that 11px-tall strip navigated to /text/, and the box
-     geometrically overlapped .colophon-mark's 48px button in the corner.
-     Per STANDARDS.md this is auto-margin centering inside a positioned
-     inset, not left:50% + translateX(-50%) self-measuring — the box never
-     has to know its own width, so letter-spacing's trailing gap can't
-     throw it the way it once threw #site-title (and at 0.18em of a 9.6px
-     font the residual would be under a pixel here regardless). */
   bottom: 5.2rem; left: 0; right: 0;
   width: fit-content;
   margin-inline: auto;
@@ -820,9 +307,6 @@ html, body {
   transition: color 0.2s;
 
 	@media (min-width: 601px) {
-		/* Real room at the bottom-left from here up, well clear of both the
-		   centered title and the colophon mark, so it goes back to the corner
-		   the pre-1.31.2 version used. */
 		bottom: 1.6rem; left: 1.5rem; right: auto;
 		margin-inline: 0;
 	}
@@ -833,12 +317,7 @@ html, body {
 #landing-textlink:hover { color: rgba(255,255,255,0.9); }
 #landing-textlink:focus-visible { outline: none; box-shadow: var(--focus-ring-outer); }
 
-/* ─── No-JavaScript fallback ────────────────────────────────────────────────── */
-/* Only ever rendered inside <noscript>, so it is never in the DOM when any
-   of the rest of this file's machinery is running. html/body are
-   overflow:hidden site-wide for the full-screen scene experience, which
-   would otherwise crop this off the page entirely — hence the fixed,
-   full-viewport box with its own scroll. */
+
 #noscript-fallback {
   position: fixed;
   inset: 0;
@@ -859,34 +338,7 @@ html, body {
 #noscript-fallback p { max-width: 34rem; }
 #noscript-fallback a { color: #fff; }
 
-/* ─── Fullscreen toggle ─────────────────────────────────────────────────────── */
-/* Lives in the nav row as of 4.9.0. Until then it was a fixed 38/44px
-   circle at top-left, just under the bar, and the problem with that slot is
-   not that it collided with any one thing — it was checked against every
-   scene's hint text and cleared all of them — but that it was a floating
-   control sitting ON the scene, in the corner where the scenes that have a
-   reading panel put its heading. Sphere is where it shows worst: the circle
-   lands on the panel's rule and clips the first letter of the title. A
-   site-wide control that is always over somebody's content has no good
-   corner left to move to (the four are spoken for — hints top-right, sound
-   toggles bottom-left, titles bottom-centre, Psyshell's ordinal
-   bottom-right), so it stops floating instead and joins the chrome it
-   belongs with.
 
-   Which is only possible because the row scrolls now: reserving a twelfth
-   slot in a row that was already exactly full at 375px would have pushed an
-   icon off the screen. The two changes are one change — see #pm-nav.
-
-   Styled as nav furniture rather than as a button: no circle, no scrim, no
-   blur, opacity 0.5 rising to 1, exactly matching .nav-icon. That 0.5 is
-   the measured value from .nav-icon's own comment — 5.3:1 against the bar's
-   near-black ground, past WCAG 1.4.11's 3:1 for a non-text control — and it
-   is reused here rather than re-derived because it is the same white glyph
-   on the same ground.
-
-   It is still not a scene, and the row is otherwise a scene switcher, so
-   the hairline before it says so. The separation is --nav-rule, reserved in
-   the fit arithmetic; the rule itself is drawn centred in that space. */
 #fullscreen-toggle {
   flex: 0 0 auto;
   position: relative;
@@ -904,9 +356,6 @@ html, body {
 #fullscreen-toggle::before {
   content: '';
   position: absolute;
-  /* Centred in the whole space before the button, which is the flex `gap`
-     plus --nav-rule — not in --nav-rule alone, or it would hug the button
-     on desktop where the gap is 2.5rem and sit nowhere near the middle. */
   inset-inline-start: calc(-0.5 * (var(--nav-rule) + var(--nav-gap)));
   top: 50%;
   width: 1px; height: 18px;
@@ -921,89 +370,23 @@ html, body {
   border-radius: 3px;
 }
 #fullscreen-toggle svg { width: 20px; height: 20px; display: block; }
-/* The button's own `display: flex` above is an ID selector — higher
-   specificity than the UA stylesheet's plain `[hidden] { display: none }`
-   rule (an attribute selector, not !important per the HTML spec), so
-   without this override an ID rule setting `display` would win and the
-   `hidden` attribute main.js sets for unsupported browsers would silently
-   stop hiding anything. Caught by checking this against how `hidden`
-   actually cascades, not assumed. */
 #fullscreen-toggle[hidden] { display: none; }
 @media (prefers-reduced-motion: reduce) {
   #fullscreen-toggle { transition: none; }
-  /* It grew a hover scale when it became nav furniture, so it takes the
-     same suppression .nav-icon:hover already had. */
   #fullscreen-toggle:hover { transform: none; }
 }
 
-/* ─── Landing ───────────────────────────────────────────────────────────────── */
+
 #landing {
   width: 100%; height: 100%;
   display: flex;
-  /* Mobile-first (standing convention, see STANDARDS.md): base targets
-     the smallest viewport, where the preview grid stacks into a single
-     column (see #scene-previews below) that's always taller than the
-     viewport. align-items:flex-start plus the scroll context below means
-     the natural "start at the top, scroll down" gesture reaches every
-     tile — center would otherwise vertically center that overflow and
-     require scrolling both up AND down from a mid-list starting
-     position. justify-content stays center — it's the main-axis
-     (horizontal) property once the min-width:481px tier switches
-     #scene-previews back to a row, unrelated to this vertical-start fix. */
   align-items: flex-start;
   justify-content: center;
-  padding-top: 3.5rem;    /* clear nav (#pm-nav's own height) */
-  /* Same idea at the bottom: on any window short enough that the two-row
-     preview grid doesn't fully fit with room to spare, flex centering
-     alone let the second row's tiles sit flush against — or under — the
-     fixed #site-title (bottom:1.2rem, centered) and #colophon-mark
-     (bottom:1.5rem, 48px tall, right-aligned). Whichever tile lands at
-     dead center of that row (leaf, at typical desktop widths, since the
-     7 tiles wrap 4-then-3) took the title text right across it. 4.5rem
-     clears both fixed elements' full footprint with room to spare. */
+  padding-top: 3.5rem;    
   padding-bottom: 4.5rem;
-  /* html/body are overflow:hidden site-wide (the full-screen scene
-     experience needs that), so #landing owns its own scroll context. On
-     narrow viewports the preview grid stacks into a column taller than
-     the viewport (see #scene-previews' own min-width:481px tier below)
-     — without this, everything past the first couple of tiles would be
-     simply unreachable, no scrollbar, no way to get to it. */
   overflow-y: auto;
 
 	@media (min-width: 481px) {
-		/* 2026-08-18: plain `center` clips the TOP of the grid whenever its
-		   content is taller than #landing's available height — align-items:
-		   center on a scrollable flex container centers overflow symmetrically
-		   above and below, and scrollTop can't go negative, so the portion that
-		   overflowed off the top is simply unreachable no matter how far you
-		   scroll. Caught live once Harmonics' tile brought the desktop grid
-		   (styles/main.css, #scene-previews) to a fixed 3 rows — three 320px
-		   rows (1056px incl. gaps) routinely exceeds a laptop's actual available
-		   height (viewport minus this nav clearance and the bottom padding
-		   below), which two rows never did at typical desktop widths, so this
-		   bug existed in the CSS the whole time but had no way to actually
-		   trigger before. `safe center` is the real, general fix: center when
-		   it fits, fall back to flex-start (no clipping) the moment it doesn't,
-		   rather than special-casing another width where it happens to overflow.
-		   Plain `center` stays as the fallback for browsers that don't parse
-		   `safe` (Safari below 16.4, Chrome below 115) — losing the keyword
-		   should cost those browsers the overflow protection, not centering
-		   altogether.
-
-		   Expressed with @supports rather than as two declarations in a row.
-		   The two-declaration idiom — invalid value invalidates just that
-		   declaration, last valid one wins — is correct CSS and worked for
-		   years here, but it only survives a minifier naive enough to leave
-		   both in place. Vite 8's is not: the v4.1.0 upgrade found it had
-		   silently deleted the `center` fallback and shipped `safe center`
-		   alone, which on Safari 15 drops the declaration entirely and leaves
-		   the landing grid uncentered. Nothing failed; it was found by
-		   diffing declaration counts between the two builds.
-
-		   @supports states the same intent in a form no minifier can collapse,
-		   because it cannot know which browsers will parse the query. If
-		   another duplicate-declaration fallback is ever added here, it needs
-		   the same treatment for the same reason. */
 		align-items: center;
 
 		@supports (align-items: safe center) {
@@ -1013,85 +396,18 @@ html, body {
 }
 
 #scene-previews {
-  /* Semantic pass, 2026-07-22: was a plain <div role="list">. A real <ul>
-     needs its own default list chrome reset (marker + the browser's
-     default margin/indent) — padding was already explicit here, covering
-     the default padding-inline-start these rules would otherwise add.
-
-     2026-08-18, twice: first switched flex-wrap → a fixed 3×3 CSS grid
-     when Harmonics' tile brought the count to nine (flex-wrap's own
-     automatic wrapping had no way to know nine divides evenly, so it
-     wrapped wherever the container's actual width happened to run out).
-     Scott's own follow-up preferred a 4-then-5 split over the square —
-     a CSS grid can't do two different column counts on two different
-     rows on its own, so this went back to flex-wrap, but now with an
-     explicit forced line break (`.preview-row-break` below) between the
-     4th and 5th tile instead of leaving the wrap point to chance, same
-     "a chosen layout, not an emergent one" reasoning as the grid attempt.
-     Tile size dropped 320px → 240px so five actually fit one row at
-     ordinary desktop widths instead of silently wrapping to 4/1 or
-     3/2 on a narrower browser — see .preview-row-break's own comment for
-     where this stops being enforced.
-     Outside's tile (2026-08-24) brought the count to ten, an even split
-     — the break moved from after the 4th tile to after the 5th
-     (index.html), giving a real 5-then-5 rather than 4-then-5/6. */
-  /* 4.4.0: the column count and the forced breaks are both derived from the
-     registry by main.js's applyDerivedLayout() — see tileColumns() there.
-     Eleven tiles at the old hand-placed 5-and-5 break gave 5/5/1, and a single
-     tile alone under two full rows reads as an afterthought rather than as the
-     newest scene. The rule now returns 4 for eleven (4/4/3) and 4 for twelve
-     (4/4/4) with no second decision to make.
-
-     Flex, not grid, and that is not inertia: an incomplete last grid row stays
-     left-aligned, so 4/4/3 would put three tiles hard against the left edge
-     under two centred rows. Flex rows each centre themselves, so the short row
-     centres for free. --tile-cols is written by main.js's applyDerivedLayout
-     every layout pass and read by nothing — kept because it is the one number
-     that describes the arrangement, and a debug rule or a future selector that
-     wants it would otherwise have to re-derive it;
-     the layout itself is driven by the break elements. */
   --tile-cols: 4;
   list-style: none;
   margin: 0;
-  /* Definite, as of 4.10.2, and it has to be. #landing is a centring flex
-     container, so without this the list is shrink-to-fit — and every
-     percentage inside it (the phone tier's two columns, the forced rows'
-     column width) then resolves against a width that was itself derived from
-     those percentages. It does not error; it lands on a fixed point, and the
-     fixed point is wrong. Measured at 1920px: the list sized itself to 1012px
-     instead of 1888, so six columns came out as 143px tiles that never grew
-     with the viewport. A percentage needs something definite above it. */
   width: 100%;
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
   align-items: center;
-  /* Mobile-first (standing convention, see STANDARDS.md).
-     ─── 4.9.1: two columns on a phone, not one ─────────────────────────────
-     The base tier stacked every tile into a single column, which at twelve
-     scenes measured 2,856px of scrolling against an 844px viewport — three
-     and a half screens to see an index. That is the "wall of circles nobody
-     scans" the entropy-box brief describes, arrived at by a different route:
-     not too many tiles per row, but one per row.
-     The row is the base now and the tile sizes itself from the viewport
-     (.preview-container), so two fit side by side from 320px up and the same
-     twelve tiles come to about 1,250px — under half. The extra bottom padding
-     lets the last row scroll clear of #landing-bottom-fade and the fixed
-     footer chrome inside it, which it could not do at 3rem. */
   flex-direction: row;
   gap: 1rem;
   padding: 1rem 1rem 8rem;
 
-	/* 601, not 481. The tier below sets a fixed 224px tile, and two of those
-	   plus the gap and padding need 496px — so at 481px exactly the grid would
-	   have dropped from two columns back to one, a cliff at the boundary
-	   rather than a step. 601 is where the fixed size and the fitted one agree
-	   on two columns, and it is also where #landing-bottom-fade and
-	   #landing-textlink already change behaviour, so the phone layout now ends
-	   at one width instead of two.
-
-	   .preview-row-break only exists from 769px up (see its own comment), so
-	   this is ordinary auto-wrapping flex-wrap below that. */
 	@media (min-width: 601px) {
 		padding: 1rem;
 	}
@@ -1101,34 +417,12 @@ html, body {
 	}
 }
 
-/* Forces the wrap point between the 5th and 6th preview tile (see
-   #scene-previews' own comment) rather than leaving flex-wrap to break
-   wherever the container's width happens to run out. A zero-height,
-   100%-wide flex item pushes everything after it onto a new line — the
-   standard CSS technique for an explicit break inside a wrapping flex
-   row. `aria-hidden` and no content: it carries no information, it's
-   layout-only. Turned on at the min-width:769px tier and absent below it,
-   where the page falls back to ordinary flex-wrap — an explicit split is
-   only worth enforcing at a width where it can actually render as one.
-
-   The width in this paragraph used to be 1200px, which is not a breakpoint
-   this file has; the rule keys off 769. The rest of it described a
-   ten-scene, 5-and-5 page and a 240px tile, none of which survives — tiles
-   are sized by tileLayout.js now and the count is whatever the registry
-   holds. Where the breaks fall is the markup's business (index.html), not
-   this rule's. */
 .preview-row-break {
   flex-basis: 100%;
   width: 0;
   height: 0;
   margin: 0;
   padding: 0;
-  /* Off by default, and what turns it on is the requirement being MET rather
-     than a width being exceeded: main.js toggles `.rows-forced` when it can
-     fit every tile above the fold at a legible size, and leaves it off when it
-     cannot — on a phone, or once there are enough scenes that nothing fits.
-     Below it the row falls back to ordinary flex-wrap and the page scrolls,
-     which is the honest answer rather than shrinking tiles into decoration. */
   display: none;
 
 	#scene-previews.rows-forced & {
@@ -1136,32 +430,7 @@ html, body {
 	}
 }
 
-/* ("Read the writing on its own" was documented here as removed in 1.31.2.
-   It came back in 4.0 — its rule and the full reasoning are further up this
-   file, under #landing-textlink.) */
 
-/* ─── The panel close button, once ──────────────────────────────────────────
-   Five scenes open a side panel over the scene (sphere, orbiter, orrery,
-   library, harmonics) and each had its own hand-maintained copy of the same
-   ✕ — same glyph, same corner, same size — which is how five copies of the
-   same two bugs came to exist:
-
-   * `position: absolute` inside the panel, and the panel is the element with
-     the `overflow-y`. An absolutely-positioned child of a scroll container
-     scrolls away with the content, so on anything longer than the panel the
-     ✕ was gone by the time a reader wanted it, leaving Escape and a click
-     outside as the only ways back — neither of them signposted. `sticky`
-     keeps it pinned to the scrollport instead, and in flow, so it reserves
-     its own space at the top rather than sitting over the title.
-   * Contrast. Three of the five had been raised off 0.4 alpha one at a time,
-     each with its own measurement written next to it; harmonics never was.
-     0.62 white measures 7.74–7.77:1 over all five panel backgrounds
-     (#05070d, #060a07, #0d0a07, #0a0806) — one value covers every panel,
-     which is the point of it being one rule.
-
-   Each scene keeps its own `.<scene>-panel-close` class for the one thing
-   that is genuinely per-scene: the focus ring colour, which is drawn from
-   that scene's own palette. */
 .pm-panel-close {
   position: sticky; top: 0; z-index: 2;
   display: block; width: max-content;
@@ -1174,50 +443,6 @@ html, body {
 .pm-panel-close:hover,
 .pm-panel-close:focus-visible { color: rgba(255, 255, 255, 0.9); }
 
-/* ─── Bottom vignette (mobile column stack) ─────────────────────────────────
-   Added 2026-08-03. #scene-previews is flex-direction:row at every width —
-   it has never had a column tier, and the "480px rule further down" this
-   used to send readers to does not exist either; the file's real
-   breakpoints are 481, 601 and 769. What is true is that the narrowest tier
-   wraps to a single column of tiles because only one fits, and the
-   column runs taller than the viewport, scrolling inside #landing. #site-
-   title is position:fixed, so it doesn't scroll with it — at nearly every
-   scroll position except full-top and full-rest-at-bottom, whatever tile
-   happens to be at the screen's bottom edge sits directly under that fixed
-   text, cutting through it. A soft gradient (not a hard bar, to stay
-   consistent with the rest of this page's quiet, text-only footer) fades
-   that edge to black before it reaches the words, sitting above the plain
-   in-flow tiles but below the fixed text (z-index scale at the top of this
-   file). pointer-events:none so it never blocks a tap on a tile poking up
-   into it. Hidden above 481px on purpose — at those widths the grid only
-   ever wraps 1-2 rows, and #landing's own padding-bottom already keeps the
-   last row clear of the fixed footer, so there's nothing for this to fix
-   there. #landing-textlink shares this band deliberately as of 4.0 — it
-   sits at bottom:5.2rem on phones, using this gradient as the dark ground
-   its small text reads against, and clearing both #site-title below it and
-   .colophon-mark's 48px button in the corner. */
-/* Mobile-first (standing convention, see STANDARDS.md): shown by default
-   (base targets the smallest viewport, where it's needed — see the
-   comment above), hidden once the min-width:481px tier switches
-   #scene-previews back to a row and #landing's own padding-bottom
-   already keeps the last row clear of the fixed footer on its own. */
-/* The ground the fixed footer chrome stands on while the grid scrolls under
-   it. Two numbers were wrong until 4.9.1, and the second one is why: the fade
-   was 7rem tall ramping from 0.9 to transparent, but #landing-textlink sits at
-   bottom:5.2rem — 74% of the way up a 7rem ramp, where the gradient has fallen
-   to about 0.23. "READ THE WRITING ON ITS OWN" was therefore being read
-   against whatever tile happened to be behind it, with nothing but a text-
-   shadow between them, and over Library's bookshelf it was simply illegible.
-   Found by looking at a phone screenshot, not by reading this file.
-   Now 10rem, with the ramp held near-opaque through the band the chrome
-   actually occupies and released above it. The stops are placed against
-   measured positions rather than guessed: at 390x844 the fade spans viewport
-   684-844, #landing-textlink occupies 52-60% of that ramp and #site-title
-   12-29%, so the hold runs to 62% and the fade proper gets the top 38%
-   (61px), which is still a soft edge. Checked by screenshotting the band with
-   the fade on and off and comparing luminance: the first attempt held 0.80
-   under the link, leaving a white Library spine at 51/255 against 140/255
-   text — about 2.6:1, which is not a scrim, it is a tint. */
 #landing-bottom-fade {
   display: block;
   position: fixed;
@@ -1231,21 +456,6 @@ html, body {
     rgba(0,0,0,0.55) 80%,
     rgba(0,0,0,0) 100%);
 
-	/* Off only once the grid has STOPPED SCROLLING, not at a width.
-	   This was `@media (min-width: 601px) { display: none }`, on the reasoning
-	   that the link moves to the bottom-left corner there and "no longer needs
-	   a scrim behind it". It does: `.rows-forced` — the class main.js sets when
-	   every tile fits without scrolling — does not engage until about 1000px,
-	   so between 601 and 999 the fade was gone and tiles still scrolled under
-	   the link. Measured at 700x800 over eight scroll positions, the link
-	   composites to 1.09:1 against Apollo's spectrum tile. That is the exact
-	   failure the 4.9.1 note above records finding and fixing ("over Library's
-	   bookshelf it was simply illegible"); the fix went to the phone tier only.
-
-	   :has() rather than another breakpoint, because the condition is not a
-	   width — it is whether anything can scroll under this band, and only the
-	   class knows that. Below 601 there is no .rows-forced at all, so the
-	   selector cannot match and the fade stays, as before. */
 	@media (min-width: 601px) {
 		#landing:has(#scene-previews.rows-forced) & {
 			display: none;
@@ -1254,49 +464,16 @@ html, body {
 }
 
 .preview-wrapper {
-  /* Was <div role="listitem">, now a real <li> — li has no default
-     margin/padding of its own to reset (only the parent list does). */
   display: flex;
   align-items: center;
   justify-content: center;
 
-  /* 4.9.1: the phone tier's two columns are declared HERE, as a share of the
-     list, and not on the tile as a share of the viewport. A vw-based tile was
-     the first attempt and it was wrong by four pixels at 320px — 43vw is
-     137.6, two of those plus one 1rem gap and the list's 2rem of padding come
-     to 324 against a 320px viewport, so the narrowest phone silently fell
-     back to a single column while every other width worked. vw also cannot
-     see a classic scrollbar, which #landing's own overflow-y can produce.
-     `calc(50% - 0.5rem)` is exact by construction instead: two of them plus
-     the 1rem gap is 100% of the list's content box, whatever that turns out
-     to be. */
   flex: 0 0 calc(50% - 0.5rem);
 
 	@media (min-width: 601px) {
 		flex: 0 0 auto;
 	}
 
-	/* Inside the deliberate rows the column is an exact px width handed down
-	   from main.js, which derived it and the column count together from one
-	   requirement: all twelve tiles visible without scrolling. The arithmetic
-	   could not stay in CSS — the answer depends on the viewport's HEIGHT as
-	   well as its width, and no media query can express "twelve of these fit
-	   above the fold". This rule only spends the number.
-	   It was a percentage of the list until 4.11.0, which worked but made the
-	   width the only constraint; a percentage also has to resolve against
-	   something definite, which is why it lives on the wrapper and not on
-	   .preview-container (that shrink-wraps to its content, and a percentage
-	   there is circular — it collapsed to 17px tiles once). */
-	/* Each tile is its own size and sits at its own height inside the row —
-	   `--tile-self` and `--tile-nudge`, both written by main.js from the
-	   registry. Thirteen identical circles in two tidy rows is a contact
-	   sheet; this is a field of objects at different distances.
-
-	   The wrapper keeps the FULL row height (`--tile` plus the nudge span)
-	   and the tile is placed inside it, rather than the wrapper shrinking to
-	   its own tile. That is what keeps every row the same height whatever
-	   lands in it, so a tall tile and a low-nudged one in the same row do not
-	   drag their neighbours around. */
 	#scene-previews.rows-forced & {
 		flex: 0 0 var(--tile-self, var(--tile));
 		height: var(--tile-row, var(--tile));
@@ -1305,158 +482,36 @@ html, body {
 }
 
 .preview-container {
-  position: relative;   /* for :focus-visible::after above */
-  /* Was <div role="button" tabindex="0"> with a manual keydown handler
-     for Enter/Space in main.js. A real <button> gets that keyboard
-     activation for free and needs none of ARIA's stand-in machinery —
-     these three properties are the button-chrome reset a native <button>
-     needs that the old div never did (no default border/background, and
-     inherit the page's font rather than the browser's UI font). */
+  position: relative;   
   background: none;
   border: none;
   font: inherit;
   display: block;
-  /* Mobile-first (standing convention, see STANDARDS.md). Fitted rather than
-     fixed as of 4.9.1: the tile fills the column .preview-wrapper hands it
-     (see that rule for why the column is measured there and not here), up to
-     a 200px cap. The cap matters — without it a 600px phone in landscape
-     would draw two 290px tiles and lose the sense that these are thumbnails.
-     aspect-ratio rather than a matching height, because the width is now a
-     percentage and there is nothing for a height percentage to resolve
-     against. */
   width: min(100%, 200px);
   aspect-ratio: 1;
   height: auto;
   cursor: pointer;
   border-radius: 50%;
   position: relative;
-  /* ONE transform, composed from two custom properties, because `transform`
-     is a single property and two rules setting it do not add up — the second
-     replaces the first. 4.11.16 put the row stagger on this element in a
-     `#scene-previews.rows-forced …` rule while `:hover` was setting
-     `scale(1.04)` in a rule with lower specificity, so on every desktop
-     viewport the hover scale silently did nothing at all. Now the nudge and
-     the hover live in variables and this line is the only place either is
-     spent. */
   transform: translateY(var(--tile-nudge, 0)) scale(var(--tile-hover, 1));
   transition: transform 0.3s ease, box-shadow 0.3s ease;
-  /* Scott: "the standalone images are square, but on hover, there's a
-     circle mask being applied to them for a split second." Three attempts
-     at CLIPPING the canvas all failed in Firefox specifically (Safari's
-     fine every time): `contain: paint` on the container (1.0.36),
-     `clip-path: circle(50%)` on the container (1.0.38), and `border-
-     radius: 50%` on the canvas element itself (1.0.39) — Scott confirmed
-     the tile is STILL square after all three. That's a strong signal this
-     isn't an ancestor-vs-child layering problem at all (each attempt tried
-     a different element/mechanism and every one failed the same way) — it
-     reads like Firefox's WebGL canvas simply doesn't participate in CSS
-     box-clipping (border-radius/clip-path/overflow), full stop, regardless
-     of which element in the chain owns the property. So: stop trying to
-     clip the canvas. `.preview-container::after` below paints an opaque
-     black ring on TOP of the canvas instead — ordinary 2D background
-     compositing on a plain div, nothing WebGL-related for Firefox to
-     opt out of.
-
-     **And then all three were kept anyway, on the grounds that they were
-     harmless. They were not: they were the bug.** Measured in Firefox at
-     4.11.19, with a page of flat-filled canvases and one variable changed at
-     a time (2D canvas and WebGL, seven strategies each):
-
-       as shipped, clip + ::after mask ....  2D circle   WebGL SQUARE
-       ::after mask, no clipping .........   2D circle   WebGL circle
-       clipping, no mask .................   2D circle   WebGL SQUARE
-       CSS mask-image, no clipping .......   2D circle   WebGL circle
-
-     A clip on this element clips its OWN ::after too — that is what a clip
-     is — so `clip-path`/`contain: paint`/`overflow: hidden` were deleting
-     precisely the corners the mask exists to paint. In Chrome that costs
-     nothing, because Chrome then clips the canvas as well and the tile comes
-     out round either way. In Firefox the canvas survives the clip and the
-     mask does not, so the corners were bare. It looked fixed for four years
-     because it only shows on a scene that draws something other than black
-     into its corners, and for a long time none did — Orrery, Library and
-     Harmonics are the three that eventually did, and Scott saw them.
-
-     The fix is the fourth row of that table, and it replaces four
-     mechanisms with one: `mask-image`, which Firefox honours on a WebGL
-     canvas even though it ignores every box-clipping property. So the
-     `::after` overlay goes too — a mask that actually masks does not need
-     an opaque black square painted over the corners to fake it.
-
-     Why not simply drop the clipping and keep the ::after (the second row,
-     which also measures clean)? Because that mask is an opaque black
-     SQUARE with a hole in it, and once nothing clips the element the square
-     starts covering things drawn outside the circle. Measured, both in
-     Chrome: the :focus-visible ring came back as four disconnected arcs
-     with its diagonals eaten, and hovering lit a black square with a broken
-     halo around it. `mask-image` has no such square — outside the circle is
-     transparent, not black.
-
-     What it does mask away is the element's own outline and box-shadow,
-     which is exactly what `clip-path` was already doing, so nothing changes
-     visually anywhere. It does mean `.preview-container:hover`'s
-     `box-shadow` has been a dead declaration since 1.0.38 and still is; and
-     the focus ring, which must not be dead, moves to the wrapper below —
-     outside the masked element, where it can actually be seen. */
   -webkit-mask-image: radial-gradient(circle closest-side, #000 99.5%, transparent 100%);
   mask-image: radial-gradient(circle closest-side, #000 99.5%, transparent 100%);
 
-	/* 224px, not the 240px this tier carried until 4.4.0. Three tiles at 240
-	   need 784px including gaps and padding, which is just past the common
-	   768px tablet width — so eleven tiles wrapped to 2/2/2/2/2/1 there, the
-	   same orphan row the desktop layout was being fixed for, one tier down.
-	   At 224 three fit from 736px and the same eleven wrap to 3/3/3/2. The
-	   cost is 7% of tile diameter in a band between roughly 736 and 830px;
-	   the alternative was six rows with a single tile at the bottom.
-	   Moved from 481px to 601px at 4.9.1 — see #scene-previews' own tier for
-	   why the boundary was a cliff at 481. */
 	@media (min-width: 601px) {
 		width: 224px;
 		height: 224px;
 	}
 
-	/* Fills the column .preview-wrapper was handed. The 272px cap that used to
-	   live here is TILE_MAX in main.js now, beside the rest of the arithmetic,
-	   so the tile still stops growing past about 1,830px rather than becoming a
-	   porthole — but the cap is applied where the size is decided rather than
-	   clamped after the fact. */
 	#scene-previews.rows-forced & {
 		width: 100%;
 		height: auto;
 		aspect-ratio: 1;
 	}
 }
-/* The ::after corner overlay that stood here from 1.0.40 to 4.11.19 is gone.
-   It was a black square with a circular hole, painted over the canvas to
-   fake a clip — a reasonable answer when the only alternatives were clip
-   properties Firefox ignored on a canvas. `mask-image` above is not a fake:
-   it is a real clip that Firefox does honour on a canvas, so the overlay has
-   nothing left to do, and an opaque square is a liability the moment
-   anything wants to paint outside the circle. */
 .preview-container:hover {
   --tile-hover: 1.04;
 }
-/* The hover glow, which lived on the line above as
-   `box-shadow: 0 0 40px rgba(255,255,255,0.08)` from 1.0.x until 4.11.20 and
-   never once appeared: an outer box-shadow is painted outside the circle, and
-   the tile has been clipped or masked to that circle the whole time. It is
-   drawn here instead, by the wrapper, BEHIND the tile — same size, same hover
-   scale, so it rings the circle exactly and cannot wash over the artwork.
-   It has to be a separate element for the same reason the ring had to move:
-   nothing the masked element paints can escape the mask.
-
-   Alpha 0.16 rather than the authored 0.08. Both were rendered against a dark
-   tile, a warm one and a pale one; at these tile sizes 0.08 is not
-   perceptible on any of them, which is a fair guess at why nobody noticed it
-   had stopped working. Two alternatives that need no extra element were tried
-   and neither survives the pale tiles: an inset rim glow is invisible on
-   Medium and Library, which are already brighter than it, and a
-   `brightness()` filter — which does survive the mask — blows Medium's board
-   out while barely moving Sphere.
-
-   Scoped to `.rows-forced` because `--tile-self` is the tile's own width and
-   only exists there; below that breakpoint the page is the scrolling phone
-   layout, where there is no hover to style. */
 #scene-previews.rows-forced .preview-wrapper { position: relative; }
 #scene-previews.rows-forced .preview-wrapper:has(.preview-container:hover)::before {
   content: '';
@@ -1468,32 +523,7 @@ html, body {
   pointer-events: none;
   box-shadow: 0 0 40px 3px rgba(255, 255, 255, 0.16);
 }
-/* :focus-visible — see .nav-icon's own note. A 240px circle keeping a ring
-   after a mouse click is the most conspicuous version of that problem on
-   this page.
-
-   The indicator is an INSET ring rather than an outline — see the rule's own
-   comment. */
 .preview-container:focus-visible {
-  /* Drawn INSIDE the circle, not outside it: an outline at a 4px offset sits
-     outside the tile's mask and gets masked away, which is what `clip-path`
-     had been silently doing to it since 1.0.38.
-
-     But it has to be drawn ON A POSITIONED PSEUDO-ELEMENT, not as an inset
-     box-shadow on the container. A box-shadow — inset or not — paints in the
-     background stage, above the element's own background and BELOW its in-flow
-     descendants, and `.preview-container canvas` is an opaque child filling the
-     whole button. So the ring was painted every time and covered every time.
-     Measured before this fix: with the canvas present, ring-on against ring-off
-     was peak 38 of 255 across 334 pixels, and every one of those pixels sat at
-     radius 106.3-106.9 of a 107px tile — a sub-pixel leak at the rim where the
-     mask's antialiasing let it through. With the canvas hidden, 2,304 pixels.
-     It was drawing the whole ring behind the artwork.
-
-     These are the site's thirteen primary keyboard targets, so this is WCAG
-     2.4.11 and 1.4.11, not decoration. The dark second ring is what keeps it
-     legible on a tile that happens to be pale at that radius — Medium's board
-     being the obvious one. */
   outline: none;
 }
 .preview-container:focus-visible::after {
@@ -1506,65 +536,23 @@ html, body {
   box-shadow: inset 0 0 0 3px var(--focus-ring-color),
               inset 0 0 0 6px rgba(0, 0, 0, 0.55);
 }
-/* ─── Why these are !important, since the rule carried no reason for years ──
-   Asked directly at 4.11.2 — "do we still need that !important CSS?" — and the
-   answer is yes for the sizing and "as insurance" for the radius. They are two
-   different things that happen to share a selector.
-
-   THE SIZING. three.js's WebGLRenderer.setSize() writes the size INLINE on the
-   canvas — every call sets `style.width`/`style.height` in px, and the live
-   attribute reads `display: block; width: 188px; height: 188px`. An inline
-   declaration can only be beaten by `!important`, and deleting this rule at
-   runtime was tried: the computed width immediately becomes the inline 188px.
-   So without it the canvas is sized by whatever three.js last thought the
-   container was, rather than by the container.
-
-   That distinction is exactly what kept 4.11.1's bug survivable. While the
-   resize helper watched only the window, a tile that gained its size without a
-   window resize left three.js holding a stale, wrong-aspect number forever —
-   and `100%` kept the canvas BOX correct anyway, so the symptom was a squashed
-   picture filling its tile rather than an oversized canvas hanging out of one.
-   A wrong-resolution image is a much better failure than a wrong-sized element,
-   and that is the property worth keeping: the box is right by construction, and
-   only the pixels can lag.
-
-   The way to retire them is `renderer.setSize(w, h, false)`, whose third
-   argument stops three.js writing inline styles at all — then plain CSS wins
-   with no !important anywhere. Not taken: it is a change to twelve scenes'
-   resize paths to remove two correct declarations, and it would hand the
-   canvas's size entirely to CSS at exactly the moment (mount, before layout)
-   when the missing CSS is the whole problem.
-
-   THE RADIUS is the vestigial one, kept knowingly. It was the third of three
-   attempts to clip the canvas into a circle (1.0.39), all of which Firefox
-   ignored — see .preview-container's own comment, and .preview-container::after
-   for what actually solved it by painting an opaque ring on top instead. It is
-   kept because it costs nothing and is the technically correct property in an
-   engine that does clip a WebGL canvas. It is insurance, not the fix. */
 .preview-container canvas {
   width: 100% !important;
   height: 100% !important;
   border-radius: 50%;
 }
 
-/* ─── Experience overlay ────────────────────────────────────────────────────── */
+
 #experience-overlay {
   position: fixed;
   inset: 0;
-  /* The fallback IS the default backdrop; --overlay-bg is set by main.js
-     only for a scene whose registry entry declares an `overlayBg` (today,
-     Butterfly's true black). This replaced a `.butterfly-bg` class that
-     named one scene in this file and again in main.js — two places to
-     remember, and no way for a second scene to want the same thing without
-     inventing a third. `data-scene` is on the overlay too if some future
-     rule genuinely needs to match a scene by name from CSS. */
   background: var(--overlay-bg, #000811);
   z-index: 300;
   opacity: 0;
   pointer-events: none;
-  /* Duration shared with main.js's CROSSFADE_MS — see :root. */
+  
   transition: opacity var(--scene-crossfade) ease;
-  padding-top: 3.5rem; /* clear nav */
+  padding-top: 3.5rem; 
 }
 #experience-overlay.active {
   opacity: 1;
@@ -1582,13 +570,7 @@ html, body {
   inset: 0;
 }
 
-/* ─── Scene-load spinner ─────────────────────────────────────────────────────── */
-/* main.js's expandScene() adds .pm-loading to #experience-overlay only when a
-   scene's dynamic import() hasn't resolved within 150ms of the click — the
-   overwhelming common case (module already warmed by initPreviews() or a
-   hover/touch prefetch) never adds it at all, so this never flashes on a
-   cache hit. Pure CSS animation, no JS render loop, per STANDARDS.md's
-   minimize-JS rule. */
+
 #experience-loading {
   position: absolute;
   inset: 0;
@@ -1614,34 +596,10 @@ html, body {
 @keyframes pm-spin {
   to { transform: rotate(360deg); }
 }
-/* A scene that failed to load has stopped loading — the spinner has to go,
-   or the page claims to still be working while the message beside it says
-   it isn't. */
 #experience-overlay.pm-load-error #experience-loading { opacity: 0; }
-/* And stop it actually spinning, not just spinning invisibly — an
-   opacity:0 element with a running animation still keeps a compositor
-   animation alive for as long as the error is on screen, which on the one
-   code path where something has already gone wrong is the last place to
-   leave a loop running. */
 #experience-overlay.pm-load-error #experience-loading::before { animation: none; }
 
-/* ─── Scene-load error ──────────────────────────────────────────────────────── */
-/* The first error state this site has ever had, so it's worth saying what
-   it is trying to look like: nothing. Same font as everything else
-   (inherited from body), same restrained white-on-near-black, same quiet
-   uppercase tracking as #site-title for the one line of interface text
-   (the button). No red, no icon, no box, no border — an alert dialog would
-   be a much louder object than the thing it's reporting on, which is one
-   piece out of ten failing to arrive. It reads as a caption, because that
-   is what it is. */
-/* `display: flex` on an id selector beats the user-agent stylesheet's
-   `[hidden] { display: none }` on specificity, so `expError.hidden = true`
-   in main.js did nothing and the error caption rendered on top of every
-   scene, always. Same shape as the `#fullscreen-toggle[hidden]` override a
-   few rules up, and the same reason it exists: any rule that sets `display`
-   from an id has to restate the hidden case itself. Two agents lost real
-   time to this one during the 4.0 pass, chasing load failures that weren't
-   happening. */
+
 #experience-error[hidden] { display: none; }
 
 #experience-error {
@@ -1692,24 +650,7 @@ html, body {
   outline-offset: 3px;
 }
 
-/* ─── Keyboard jump lists ───────────────────────────────────────────────────── */
-/* Built by sceneKit.js's createJumpList() for sphere/orbiter/orrery/library — an
-   accessible way to reach each scene's raycast-only 3D objects (facets,
-   satellites, posters, spines) without a mouse. Same visually-hidden-until-
-   focused idiom as .skip-link above: every button in a list shares this one
-   fixed slot, so Tabbing through reveals one label at a time instead of a
-   wall of text sitting permanently on screen. z-index 320 for the same reason
-   hint/caption elements need >=310 (see the z-index scale comment at the top
-   of this file).
 
-   That 320 only means anything because sceneKit's createJumpList mounts the
-   list on <body>. It used to mount inside the scene's container, under
-   #experience-overlay, and this comment claimed `position: fixed` escaped
-   that element's stacking context "straight to the page root". It does not:
-   fixed positioning escapes the containing BLOCK, and a stacking context is a
-   different thing — #experience-overlay is `position: fixed; z-index: 300`,
-   so it is one, and everything inside it is sealed under 300 whatever
-   z-index it declares. The list lost to the body-level scene hints at 310. */
 .pm-jumplist {
   position: fixed;
   top: 0; left: 0;
@@ -1729,32 +670,17 @@ html, body {
   cursor: pointer;
 }
 .pm-jumplist button:focus {
-  top: 3.5rem; /* clear #pm-nav, same landmark #site-title's own CSS clears */
+  top: 3.5rem; 
   outline: 2px solid #000;
   outline-offset: -2px;
 }
 
-/* ─── Focus styles ──────────────────────────────────────────────────────────── */
-/* #experience-close's rule lived here until 4.0, styling an element that
-   appears nowhere else in the repository — index.html's overlay comment
-   says so outright ("no close button; nav is the navigation"), so it was
-   presumably left behind by a close button that was designed and then cut.
-   Every live focus style is now nested in its own selector's rule above and
-   shares the one --focus-ring (see :root), so there is nothing left to
-   declare in this section. */
 
-/* ─── Reduced motion ────────────────────────────────────────────────────────── */
+
+
 @media (prefers-reduced-motion: reduce) {
   .preview-container { transition: none; }
-  /* main.js checks prefersReducedMotion() at both ends of a scene
-     transition and skips the wait entirely when this is on, rather than
-     leaving a CROSSFADE_MS pause where the fade used to be — see
-     expandScene()/returnToGallery(). */
   #experience-overlay { transition: none; }
-  /* The hover scale, not the whole transform — `transform` also carries the
-     row stagger, and `transform: none` here would drop the tile by its nudge
-     the moment you point at it. .nav-icon below has no second term, so it can
-     zero the property directly. */
   .preview-container:hover { --tile-hover: 1; }
   .nav-icon { transition: none; }
   .nav-icon:hover { transform: none; }
@@ -1762,24 +688,4 @@ html, body {
   #experience-loading::before { animation: none; opacity: 0.7; }
 }
 
-/* ─── Responsive ────────────────────────────────────────────────────────────── */
-/* Mobile-first as of the theater.css/main.css follow-up pass (see
-   STANDARDS.md) — this file's responsive rules used to live here as a
-   block of top-level max-width overrides; every one of them now lives
-   nested inside its own selector's rule instead (#scene-previews,
-   .preview-row-break, .preview-container, #landing, #landing-bottom-fade,
-   #landing-textlink — see each selector above), per the site-wide nesting
-   convention. Nothing left to declare at this point in the file.
 
-   #pm-nav and .nav-icon dropped OFF that list in 4.0: they no longer have
-   responsive rules to nest, because they no longer have breakpoints. Their
-   sizing is derived from --nav-count with min()/max() and scales
-   continuously, which is what finally closed a bug that had recurred four
-   times at four different pixel thresholds — see that rule's own comment.
-   A breakpoint you don't have can't develop a dead zone.
-
-   #fullscreen-toggle and #fullscreen-toggle svg dropped off it in 4.9.0 for
-   the same reason, from the other direction: they used to carry a
-   min-width:601px tier of their own (38px circle below it, 44px above),
-   and now that the control is a member of the nav row it takes the row's
-   own continuously-derived sizing and has no width of its own to switch. */

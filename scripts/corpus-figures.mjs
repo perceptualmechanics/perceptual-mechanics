@@ -1,22 +1,3 @@
-// ─── The corpus, counted rather than remembered ────────────────────────────
-//   node scripts/corpus-figures.mjs
-//
-// SITE.md carries the site's own figures about itself — sentences, words,
-// pieces, and each scene's share — and until 6.0.4 they were measured once by
-// hand and typed in. They were correct on the day and then Quiz added a scene
-// and every one of them was wrong at the same instant, silently, in the
-// document a session reads before it starts counting.
-//
-// This prints them. It is a BENCH and not a gate: the narrow figures are
-// asserted at import inside psyshell.text.js and checked by verify-counts, so
-// a gate here would be a third copy of a check that already fails the build.
-// What SITE.md needs is not another assertion, it is a command to run.
-//
-// Note which ruler this is. It is the NARROW one: `src/utils/corpus.js`, the
-// fields that reader treats as writing, which is what Psyshell is built from.
-// SITE.md's wider "published words" figure counts material this reader never
-// sees (the Library's bibliographic entries, scene slugs, stage directions) and
-// is not computed here — see SITE.md, which states both with their rulers.
 import { readCorpus, flatSentences, wordCount } from '../src/utils/corpus.js';
 import { SCENES } from '../src/scenes/registry.js';
 import * as scroll from '../src/scenes/scroll/scroll.text.js';

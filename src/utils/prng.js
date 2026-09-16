@@ -1,14 +1,4 @@
-// ─── Seeded PRNG ────────────────────────────────────────────────────────────
-// Small, deterministic random-number helpers shared by every scene that
-// needs "the same random sequence every load" rather than genuine
-// randomness — grid-bug wander paths and sky motes in beamline.js, for
-// instance. Pure math, no THREE.js, no DOM — runs identically in Node and
-// in the browser.
 
-// mulberry32 — small, fast, and (this is the only property that matters
-// here) perfectly reproducible: the same seed produces the same sequence on
-// every machine, every build, forever. Not cryptographic; doesn't need to
-// be.
 export function mulberry32(seed) {
   let a = seed >>> 0;
   return function rng() {
@@ -19,8 +9,6 @@ export function mulberry32(seed) {
   };
 }
 
-// A stable 32-bit hash (FNV-1a) turning a salt string into a PRNG seed —
-// deterministic across every machine and every run.
 export function hashSeed(str) {
   let h = 2166136261 >>> 0;
   for (let i = 0; i < str.length; i++) {

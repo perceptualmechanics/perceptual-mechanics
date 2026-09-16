@@ -8,7 +8,7 @@
 
 .colophon-mark {
   position: fixed; right: 1.5rem; bottom: 1.5rem;
-  /* Same ~44px touch-target reasoning as .nav-icon in main.css. */
+  
   width: 48px; height: 48px; min-width: 44px; min-height: 44px;
   display: flex; align-items: center; justify-content: center;
   background: rgba(10,8,6,0.35); border: 1px solid rgba(220,190,140,0.25);
@@ -190,7 +190,7 @@
   color: rgba(238,225,205,0.85); margin-bottom: 0.3rem; font-weight: normal;
 }
 .colophon-panel .colophon-sub {
-  /* A <p> — margin reset to zero the UA default top margin. */
+  
   /* 0.4 measured 2.98:1 on the panel ground — under the 3:1 floor that even
      large text gets, and this is 0.8rem italic, so the real bar is 4.5:1.
      Three separate lines use this class (the "perceptual mechanics"

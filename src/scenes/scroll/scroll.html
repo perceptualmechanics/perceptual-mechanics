@@ -1,15 +1,4 @@
-<!--
-  Scroll scene shell markup. Most of this scene's actual content (the twelve
-  patches of text, their stains, their ragged clip-paths) is generated per
-  instance from data in scroll.text.js -- genuinely dynamic, so it stays
-  JS-built, not faked into a static template here. What IS static -- never
-  changes shape, no per-instance randomization -- lives in this file:
-  the preview tile, the opening Ogham mark, and the hidden SVG filter defs
-  every patch's CSS filter references.
--->
 
-<!-- Preview tile (landing-page thumbnail): dark, cracked stone medallion,
-     the Ogham letter Sail carved into it. Used only when { preview: true }. -->
 <div class="scroll-preview" aria-hidden="true">
   <div class="scroll-preview-medallion">
     <div class="scroll-crack scroll-crack-main"></div>
@@ -25,9 +14,6 @@
   <div class="scroll-grain"></div>
 </div>
 
-<!-- Opening mark (full scene only): the same Ogham Sail glyph, standing
-     alone at the very top of the scroll -- the only mark on it besides the
-     words themselves. -->
 <div class="scroll-ogham-panel" aria-hidden="true">
   <div class="scroll-ogham" aria-hidden="true">
     <span class="ogham-stem"></span>
@@ -38,16 +24,7 @@
   </div>
 </div>
 
-<!-- This scene briefly gained a bottom-center title in the 2026-08-25
-     site-wide title consistency pass; removed again same day per Scott's
-     call -- no title chrome here, consistent with this scene's own
-     stated "no titles" design (see scroll.js's file header). -->
 
-<!-- Hidden SVG filter defs: feTurbulence/feDisplacementMap for grain and
-     hand-wobble, referenced from scroll.css via filter: url(#id). Needed in
-     both preview and full mode, since scroll.css uses these filters in
-     both -- mounted once, globally, on document.body (guarded in scroll.js
-     against double-injection across repeat scene visits). -->
 <div id="scroll-svg-defs">
   <svg width="0" height="0" aria-hidden="true" focusable="false">
     <defs>
