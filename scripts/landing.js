@@ -28,10 +28,19 @@ export function previewTilesHtml() {
 export const NAV_MARKER = '<!--scene-nav-->';
 export const TILES_MARKER = '<!--scene-tiles-->';
 
+// A marker sits indented on a line of its own, so replacing the marker alone
+// leaves that indentation in front of the first generated element while every
+// later one starts at its own indent. Take the line's leading whitespace with
+// the marker. The replacement is a function so a `$&` in the markup is literal.
+const markerLine = (marker) =>
+  new RegExp(`^[ \\t]*${marker.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\\\$&')}`, 'm');
+
 export function injectLanding(html) {
   const missing = [NAV_MARKER, TILES_MARKER].filter(m => !html.includes(m));
   if (missing.length) {
     throw new Error(`index.html is missing ${missing.join(' and ')} — the landing markup has nowhere to go`);
   }
-  return html.replace(NAV_MARKER, navIconsHtml()).replace(TILES_MARKER, previewTilesHtml());
+  return html
+    .replace(markerLine(NAV_MARKER), () => navIconsHtml())
+    .replace(markerLine(TILES_MARKER), () => previewTilesHtml());
 }

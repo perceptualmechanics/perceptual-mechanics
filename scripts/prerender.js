@@ -944,6 +944,18 @@ export function prerender(outDir) {
       const nTiles = (generated.match(/class="preview-wrapper"/g) || []).length;
       const n = Object.keys(SCENES).length;
       if (nIcons !== n || nTiles !== n) problems.push(`the registry has ${n} scenes but generates ${nIcons} nav icons and ${nTiles} tiles`);
+      // The generated block was once compared against the markup it replaced
+      // and found identical, while the shipped page was not — so the marker's
+      // own indentation survived in front of the block's first element and
+      // nothing noticed. Checked on the injected document for that reason.
+      for (const [what, re] of [['nav icon', /class="nav-icon"/], ['tile', /class="preview-wrapper"/]]) {
+        const indents = new Set(generated.split('\n')
+          .filter(l => re.test(l))
+          .map(l => l.match(/^[ \t]*/)[0].length));
+        if (indents.size > 1) {
+          problems.push(`the generated ${what}s land at ${[...indents].sort((a, b) => a - b).join(' and ')} spaces of indent in index.html; they are one block and should share one`);
+        }
+      }
     }
 
     if (problems.length) {
