@@ -1,5 +1,6 @@
 
 import { crossLinkPlan, applyCrossLinkPlan } from './crossLinkMatch.js';
+import { SCENES } from '../scenes/registry.js';
 
 export function bindOrbitDrag(container, { onDragStart, onDrag, onDragEnd, sensitivity = 0.004 } = {}) {
   let dragging = false;
@@ -278,6 +279,26 @@ export function setPanelSide(panel, fromLeft) {
 
 export function clickedLeftHalf(e, rect) {
   return (e.clientX - rect.left) < rect.width / 2;
+}
+
+// The scene chrome that is identical wherever it appears: a hint line, and a
+// live region for the scenes that declare `srLive`. The hint text lives in the
+// registry beside `controls`, which verify-aria cross-checks it against.
+//
+// Not the title or the sound toggle: those look repeated and are not. Four
+// title shapes and two toggle shapes across the nine scenes that have them,
+// each with CSS bound to its own children — generating those would mean
+// normalising the nine first.
+//
+// A scene marks where its chrome goes with `<!--chrome-->`.
+export function sceneTemplate(key, html) {
+  const spec = SCENES[key];
+  if (!spec) throw new Error(`sceneTemplate: "${key}" is not a registered scene`);
+  if (!html.includes('<!--chrome-->')) return html;
+  const parts = [];
+  if (spec.hint) parts.push(`<p class="${key}-hint" aria-hidden="true">${spec.hint}</p>`);
+  if (spec.srLive) parts.push(`<div class="${key}-sr-live" aria-live="polite"></div>`);
+  return html.replace('<!--chrome-->', parts.join('\n'));
 }
 
 export function parseHTML(html) {

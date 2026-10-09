@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import {
   bindOrbitDrag, bindWheelZoom, bindGuardedResize, prefersReducedMotion, parseHTML,
-  claimContainer, manageRenderer, trackTimers, createFrameClock,
+  claimContainer, manageRenderer, trackTimers, createFrameClock, sceneTemplate,
 } from '../../utils/sceneKit.js';
 import butterflyHtml from './butterfly.html?raw';
 import './butterfly.css';
@@ -74,7 +74,7 @@ export function createButterfly(container, { preview = false } = {}) {
 
   let expLabel = null, hint = null;
   if (!preview) {
-    const frag = parseHTML(butterflyHtml);
+    const frag = parseHTML(sceneTemplate('butterfly', butterflyHtml));
     expLabel = frag.querySelector('.butterfly-exp-label-row');
     hint = frag.querySelector('.butterfly-hint');
     document.body.appendChild(expLabel);

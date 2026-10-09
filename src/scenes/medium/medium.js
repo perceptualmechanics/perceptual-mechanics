@@ -1,6 +1,6 @@
 import {
   bindGuardedResize, prefersReducedMotion, onReducedMotionChange, parseHTML,
-  createFrameClock, claimContainer,
+  createFrameClock, claimContainer, sceneTemplate,
 } from '../../utils/sceneKit.js';
 import {
   DWELL_RADIUS, DWELL_TIME, DWELL_EASE, DWELL_RESIST,
@@ -455,7 +455,7 @@ export function createMedium(container, { preview = false, initialArg = null, on
   const resize = bindGuardedResize(container, () => { layout(); if (paused) draw(); });
 
   if (!preview) {
-    const frag = parseHTML(mediumHtml);
+    const frag = parseHTML(sceneTemplate('medium', mediumHtml));
     titleEl = frag.querySelector('.medium-title-row');
     hintEl = frag.querySelector('.medium-hint');
     srLiveEl = frag.querySelector('.medium-sr-live');

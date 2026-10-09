@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { tileLayout, tileLayoutHeight, nudgeScale, tileScale, tileNudge, TILE_GAP, TILE_MAX } from '../src/utils/tileLayout.js';
+import { previewTilesHtml } from './landing.js';
 import { SCENES } from '../src/scenes/registry.js';
 import { TILE_FLOOR, LIST_PAD } from '../src/utils/tileLayout.js';
 import { pathToFileURL } from 'node:url';
@@ -141,23 +142,25 @@ if (failures.length) {
 }
 
 {
-  const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
-  const ids = [...html.matchAll(/id="preview-([a-z0-9-]+)"/g)].map(m => m[1]);
+  // The tiles are generated from the registry, so matching them against it
+  // answers itself. What is worth asking is whether the generator emits the ids
+  // the rest of the site addresses, in the order the page lays them out:
+  // main.js looks tiles up by `preview-<key>`, and a change to that template
+  // would silently hand every tile another scene's size.
+  const ids = [...previewTilesHtml().matchAll(/id="preview-([a-z0-9-]+)"/g)].map(m => m[1]);
   const keys = Object.keys(SCENES);
-  const orphanTiles = ids.filter(id => !keys.includes(id));
-  const tilelessScenes = keys.filter(k => !ids.includes(k));
+  const problems = [];
+  if (ids.join(',') !== keys.join(',')) {
+    problems.push(`the generated tiles are [${ids.join(', ')}] but the registry is [${keys.join(', ')}]`);
+  }
   const dupes = ids.filter((id, i) => ids.indexOf(id) !== i);
-  const problems = [
-    ...orphanTiles.map(id => `index.html has a tile #preview-${id} with no registry entry`),
-    ...tilelessScenes.map(k => `registry scene "${k}" has no #preview-${k} tile in index.html`),
-    ...dupes.map(id => `#preview-${id} appears more than once in index.html`),
-  ];
+  for (const id of dupes) problems.push(`#preview-${id} is generated more than once`);
   if (problems.length) {
-    console.error(`\nlanding tiles do not match the registry:`);
+    console.error(`\nthe generated tiles do not match the registry:`);
     for (const p of problems) console.error(`  ${p}`);
     failed++;
   } else {
-    console.log(`ok: all ${ids.length} tiles in index.html resolve to a registry scene, and every scene has one`);
+    console.log(`ok: all ${ids.length} generated tiles carry their registry key as #preview-<key>, in registry order`);
   }
 }
 

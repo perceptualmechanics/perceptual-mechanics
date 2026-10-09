@@ -3,7 +3,7 @@ import {
   bindOrbitDrag, bindWheelZoom, bindGuardedResize, prefersReducedMotion,
   createJumpList, bindTapVsDrag, mountClippedPreviewCanvas, parseHTML,
   bindEscapeClose, claimContainer, manageRenderer, createFrameClock, trackTimers,
-  registerTransientOverlay,
+  registerTransientOverlay, sceneTemplate,
 } from '../../utils/sceneKit.js';
 import './beamline.css';
 import beamlineHtml from './beamline.html?raw';
@@ -776,7 +776,7 @@ export function createBeamline(container, { preview = false, initialPieceId = nu
 
 
   if (!preview) {
-    const shell = parseHTML(beamlineHtml);
+    const shell = parseHTML(sceneTemplate('beamline', beamlineHtml));
     title = shell.querySelector('.beamline-title');
     title.querySelector('.beamline-title-main').textContent = EPIGRAPH_PRIMARY;
     title.querySelector('.beamline-title-sub').textContent = EPIGRAPH_SECONDARY;

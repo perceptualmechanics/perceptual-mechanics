@@ -10,9 +10,23 @@ import { verifyLanding } from './scripts/verify-landing.mjs';
 import { verifyAria } from './scripts/verify-aria.mjs';
 import { verifyCssInvariants } from './scripts/verify-css-invariants.mjs';
 import { verifyCounts } from './scripts/verify-counts.mjs';
+import { injectLanding } from './scripts/landing.js';
 import { verifyQuizWheel } from './scripts/quiz-wheel.mjs';
 
 const HERE = import.meta.dirname;
+
+// Fills index.html's two markers from the registry, in dev and in build alike,
+// so the shipped HTML is complete for a crawler and for a reader with
+// scripting off. Doing it in main.js would leave both empty.
+function landingMarkupPlugin() {
+  return {
+    name: 'pm-landing-markup',
+    transformIndexHtml: {
+      order: 'pre',
+      handler: (html) => injectLanding(html),
+    },
+  };
+}
 
 function verifyLinksPlugin() {
   return {
@@ -196,7 +210,7 @@ function verifyStyleHash(outDir, root) {
 }
 
 export default defineConfig({
-  plugins: [verifyLinksPlugin(), verifyResonancesPlugin(), verifyScrollMarksPlugin(), verifyLandingPlugin(), verifyAriaPlugin(), verifyCssInvariantsPlugin(), verifyCountsPlugin(), verifyQuizWheelPlugin(), prerenderTextPages()],
+  plugins: [landingMarkupPlugin(), verifyLinksPlugin(), verifyResonancesPlugin(), verifyScrollMarksPlugin(), verifyLandingPlugin(), verifyAriaPlugin(), verifyCssInvariantsPlugin(), verifyCountsPlugin(), verifyQuizWheelPlugin(), prerenderTextPages()],
   build: {
     cssMinify: 'esbuild',
     cssTarget: ['chrome87', 'edge88', 'firefox78', 'safari14'],

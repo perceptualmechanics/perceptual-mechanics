@@ -1,5 +1,7 @@
 import * as THREE from 'three';
-import { bindOrbitDrag, bindWheelZoom, bindGuardedResize, prefersReducedMotion, onReducedMotionChange, createPanelCloser, createJumpList, mountClippedPreviewCanvas, bindTapVsDrag, parseHTML, claimContainer, disposeSceneGraph, manageRenderer, createFrameClock, trackTimers } from '../../utils/sceneKit.js';
+import { bindOrbitDrag, bindWheelZoom, bindGuardedResize, prefersReducedMotion, onReducedMotionChange, createPanelCloser, createJumpList, mountClippedPreviewCanvas, bindTapVsDrag, parseHTML, claimContainer, disposeSceneGraph, manageRenderer, createFrameClock, trackTimers,
+  sceneTemplate,
+} from '../../utils/sceneKit.js';
 import './orrery.css';
 import orreryHtml from './orrery.html?raw';
 import { ORRERY } from './orrery.text.js';
@@ -2008,7 +2010,7 @@ export function createOrrery(container, { preview = false } = {}) {
   let hint = null, vignette = null, grain = null, title = null;
   let shell = null, crosshairEl = null, lockPromptEl = null, walkpadEl = null;
   if (!preview) {
-    shell = parseHTML(orreryHtml);
+    shell = parseHTML(sceneTemplate('orrery', orreryHtml));
     vignette = shell.querySelector('.orrery-vignette');
     grain = shell.querySelector('.orrery-grain');
     title = shell.querySelector('.orrery-title');

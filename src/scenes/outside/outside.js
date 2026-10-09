@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import {
   bindOrbitDrag, bindWheelZoom, bindGuardedResize, bindTapVsDrag,
   prefersReducedMotion, parseHTML, mountClippedPreviewCanvas, createJumpList,
-  bindPersistedSoundToggle, manageRenderer, createFrameClock, trackTimers,
+  bindPersistedSoundToggle, manageRenderer, createFrameClock, trackTimers, sceneTemplate,
 } from '../../utils/sceneKit.js';
 import { POWER_SOURCES, CENTER_ORIGINS, NEWEST_ORIGINS } from './outside.text.js';
 import outsideHtml from './outside.html?raw';
@@ -442,7 +442,7 @@ export function createOutside(container, { preview = false, initialPieceId = nul
   let titleEl = null, hintEl = null, soundToggleEl = null, soundToggleLabelEl = null;
   let srLiveEl = null;
   if (!preview) {
-    const frag = parseHTML(outsideHtml);
+    const frag = parseHTML(sceneTemplate('outside', outsideHtml));
     titleEl = frag.querySelector('.outside-title-row');
     hintEl = frag.querySelector('.outside-hint');
     document.body.appendChild(titleEl);

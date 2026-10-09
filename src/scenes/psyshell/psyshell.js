@@ -3,7 +3,7 @@ import {
   bindOrbitDrag, bindWheelZoom, bindGuardedResize, prefersReducedMotion,
   createJumpList, bindTapVsDrag, mountClippedPreviewCanvas, parseHTML,
   claimContainer, manageRenderer, createFrameClock,
-  bindPersistedSoundToggle, onReducedMotionChange,
+  bindPersistedSoundToggle, onReducedMotionChange, sceneTemplate,
 } from '../../utils/sceneKit.js';
 import './psyshell.css';
 import psyshellHtml from './psyshell.html?raw';
@@ -717,7 +717,7 @@ export function createPsyshell(container, { preview = false } = {}) {
   }
 
   if (!preview) {
-    const frag = parseHTML(psyshellHtml);
+    const frag = parseHTML(sceneTemplate('psyshell', psyshellHtml));
     titleEl = frag.querySelector('.psyshell-title');
     hintEl = frag.querySelector('.psyshell-hint');
     ordinalEl = frag.querySelector('.psyshell-ordinal');

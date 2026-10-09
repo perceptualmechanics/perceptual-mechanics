@@ -5,7 +5,7 @@ import {
   bindOrbitDrag, bindGuardedResize, bindTapVsDrag, prefersReducedMotion,
   onReducedMotionChange, createPanelCloser, createJumpList, escapeHtml,
   parseHTML, wireCrossLinks, formatInboundNote, setPanelSide, clickedLeftHalf,
-  claimContainer, createFrameClock, trackTimers, manageRenderer, disposeSceneGraph,
+  claimContainer, createFrameClock, trackTimers, manageRenderer, disposeSceneGraph, sceneTemplate,
 } from '../../utils/sceneKit.js';
 import './orbiter.css';
 import orbiterHtml from './orbiter.html?raw';
@@ -401,7 +401,7 @@ export function createOrbiter(container, { preview = false, initialPieceId = nul
 
   let title = null, hint = null, panel = null, panelTitle = null, panelContent = null, panelRefs = null, panelCloser = null, jumpList = null;
   if (!preview) {
-    const shell = parseHTML(orbiterHtml);
+    const shell = parseHTML(sceneTemplate('orbiter', orbiterHtml));
     title = shell.querySelector('.orbiter-title');
     hint = shell.querySelector('.orbiter-hint');
     panel = shell.querySelector('.orbiter-panel');

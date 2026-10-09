@@ -1,5 +1,5 @@
-import { readFileSync, existsSync } from 'node:fs';
 import { SCENES, tileAria } from '../src/scenes/registry.js';
+import { previewTilesHtml } from './landing.js';
 import { pathToFileURL } from 'node:url';
 
 const GESTURES = ['drag', 'scroll', 'click', 'touch', 'press', 'point', 'walk', 'move', 'tap'];
@@ -13,31 +13,33 @@ export function verifyAria() {
   const say = (...a) => log.push(a.join(' '));
   const problems = [];
 
-  const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+  // Reads what the build emits, not index.html, which no longer holds the
+  // tiles. Not a tautology: it exercises the escaping, and an aria string
+  // carrying a quote would break the attribute rather than the build.
+  const html = previewTilesHtml();
   const unescape = s => s.replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&amp;/g, '&');
 
   for (const [key, spec] of Object.entries(SCENES)) {
     const m = html.match(new RegExp(`id="preview-${key}"[\\s\\S]{0,400}?aria-label="(.*?)"`));
     if (!m) {
-      problems.push(`#preview-${key} has no aria-label in index.html`);
+      problems.push(`#preview-${key} has no aria-label in the generated tiles`);
     } else {
       const got = unescape(m[1]);
       const want = tileAria(spec);
       if (got !== want) {
         problems.push(
           `#preview-${key}'s aria-label is not the one registry.js derives.\n` +
-          `      in index.html: ${got}\n` +
+          `      generated: ${got}\n` +
           `      tileAria():    ${want}`
         );
       }
     }
 
-    const tplUrl = new URL(`../src/scenes/${key}/${key}.html`, import.meta.url);
-    if (!existsSync(tplUrl)) continue;
-    const tpl = readFileSync(tplUrl, 'utf8');
-    const hint = tpl.match(new RegExp(`class="${key}-hint"[^>]*>([^<]*)`));
-    if (!hint) continue;
-    const hintText = hint[1].replace(/&nbsp;|&middot;|&[a-z]+;/g, ' ');
+    // The hint is a registry field now. This used to scrape the template and
+    // `continue` on finding nothing — which, once the templates stopped
+    // carrying hints, skipped every scene and passed on an empty loop.
+    if (!spec.hint) continue;
+    const hintText = spec.hint.replace(/&nbsp;|&middot;|&[a-z]+;/g, ' ');
     const missing = [...gesturesIn(hintText)].filter(v => !gesturesIn(spec.controls).has(v));
     if (missing.length) {
       problems.push(

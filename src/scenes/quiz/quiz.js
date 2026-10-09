@@ -1,6 +1,6 @@
 import {
   bindGuardedResize, prefersReducedMotion, onReducedMotionChange,
-  createFrameClock, claimContainer, parseHTML, escapeHtml,
+  createFrameClock, claimContainer, parseHTML, escapeHtml, sceneTemplate,
 } from '../../utils/sceneKit.js';
 import {
   PHASES, PHASE_BY_N, ITEMS, CHOICES, PREAMBLE, score,
@@ -54,7 +54,7 @@ function gyrePoints(spin, dir) {
 
 export function createQuiz(container, { preview = false, initialPieceId = null, onPieceChange = null } = {}) {
   const claim = claimContainer(container, { overflow: 'hidden' });
-  const frag = parseHTML(quizHtml);
+  const frag = parseHTML(sceneTemplate('quiz', quizHtml));
   const canvas = frag.querySelector('.quiz-canvas');
   const scrimEls = [...frag.querySelectorAll('.quiz-scrim')];
   const titleRow = frag.querySelector('.quiz-title-row');

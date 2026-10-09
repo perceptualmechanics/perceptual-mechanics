@@ -1,7 +1,7 @@
 import {
   bindGuardedResize, prefersReducedMotion, onReducedMotionChange, parseHTML,
   createFrameClock, trackTimers, claimContainer, bindPersistedSoundToggle,
-  createJumpList,
+  createJumpList, sceneTemplate,
 } from '../../utils/sceneKit.js';
 import {
   ELEMENTS, ELEMENT_BY_KEY, VISIBLE_MIN, VISIBLE_MAX, CHORD_CAP, SOLAR_MIXTURE,
@@ -1030,7 +1030,7 @@ export function createApollo(container, { preview = false, initialArg = null, on
   buildBand();
 
   if (!preview) {
-    const frag = parseHTML(apolloHtml);
+    const frag = parseHTML(sceneTemplate('apollo', apolloHtml));
     titleRowEl = frag.querySelector('.apollo-title-row');
     hintEl = frag.querySelector('.apollo-hint');
     soundToggleEl = frag.querySelector('.apollo-sound-toggle');

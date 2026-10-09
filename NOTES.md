@@ -2425,3 +2425,30 @@ shared view handed you a completed form with a live submit button until
 `startQuiz` learned to clear `responses` as well as the view. And `#quiz/1`,
 `#quiz/15`, `#quiz/99` and `#quiz/0` all fall through to the questions rather
 than opening anything — there is no page for a phase nobody lives at.
+
+### 7.0.0 — the landing is generated, not written
+
+`index.html` no longer holds scene markup. The fourteen nav icons and fourteen
+preview tiles are generated at build time from `SCENES`, injected at
+`<!--scene-nav-->` and `<!--scene-tiles-->` by a `transformIndexHtml` plugin
+that runs in dev and in build. 339 lines to 112.
+
+The generated markup was proved byte-identical to the hand-written original
+except in two places where the original was wrong: a trailing space in the nav,
+and a seven-space indent on the library tile. Both had been there long enough
+to look deliberate.
+
+Each icon now lives in the registry as the whole `<svg>` element, and the hint
+line with it. Twelve templates mark where their chrome goes with
+`<!--chrome-->`; `sceneTemplate()` fills in the hint and, for the six that
+declare `srLive`, the live region. The registry is in display order now, which
+makes it the only place that order is written down — the landing, the previews
+and the nav all read it from there.
+
+**A gate had gone quiet.** `verify-aria`'s hint check scraped each scene's
+template and `continue`d when it found nothing. The moment the templates
+stopped carrying hints, that skipped all twelve scenes and the gate passed on
+an empty loop — green, and checking nothing. It reads `spec.hint` now, and it
+was made to fail before it was trusted again. Two other checks in the same pass
+were tautologies against the file they were derived from; both now join against
+a second copy of the data.

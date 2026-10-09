@@ -41,6 +41,7 @@ import {
 } from '../src/scenes/quiz/quiz.text.js';
 import { SENTENCE_SPLIT } from '../src/utils/corpus.js';
 import { SCENES, TEXT_EXEMPT } from '../src/scenes/registry.js';
+import { injectLanding } from './landing.js';
 import { getOutboundLinks } from '../src/links.js';
 
 const ORIGIN = 'https://perceptualmechanics.com';
@@ -918,20 +919,31 @@ export function prerender(outDir) {
       staleExempt.length && `TEXT_EXEMPT names a scene that no longer exists: ${staleExempt.join(', ')}`,
     ].filter(Boolean);
     {
-      const html = fs.readFileSync(path.join(import.meta.dirname, '..', 'index.html'), 'utf8');
-      const icons = (html.match(/class="nav-icon"/g) || []).length;
-      const iconScenes = [...html.matchAll(/class="nav-icon"[^>]*data-scene="([^"]+)"/g)].map(m => m[1]);
-      const tileScenes = [...html.matchAll(/id="preview-([a-z0-9-]+)"/g)].map(m => m[1]);
-      const reg = Object.keys(SCENES);
-      const missingIcon = reg.filter(k => !iconScenes.includes(k));
-      const missingTile = reg.filter(k => !tileScenes.includes(k));
-      const strayIcon = iconScenes.filter(k => !reg.includes(k));
-      const strayTile = tileScenes.filter(k => !reg.includes(k));
-      if (icons !== iconScenes.length) problems.push(`index.html has ${icons} .nav-icon buttons but only ${iconScenes.length} carry a data-scene — the derived nav sizing counts scenes, not buttons`);
-      if (missingIcon.length) problems.push(`registered but has no nav icon in index.html: ${missingIcon.join(', ')}`);
-      if (missingTile.length) problems.push(`registered but has no landing tile in index.html: ${missingTile.join(', ')}`);
-      if (strayIcon.length) problems.push(`nav icon in index.html for a scene that is not registered: ${strayIcon.join(', ')}`);
-      if (strayTile.length) problems.push(`landing tile in index.html for a scene that is not registered: ${strayTile.join(', ')}`);
+      // index.html no longer holds the markup, so what is worth checking is
+      // that the registry can produce it and that nobody has put a second copy
+      // back by hand.
+      const src = fs.readFileSync(path.join(import.meta.dirname, '..', 'index.html'), 'utf8');
+      for (const marker of ['<!--scene-nav-->', '<!--scene-tiles-->']) {
+        if (!src.includes(marker)) problems.push(`index.html has no ${marker} — the generated landing markup has nowhere to go`);
+      }
+      if (/class="nav-icon"|class="preview-wrapper"/.test(src)) {
+        problems.push('index.html contains hand-written nav or tile markup — it is generated from the registry, so a second copy will be the one that drifts');
+      }
+      // Exactly one well-formed <svg> per scene: a missing or malformed one
+      // reaches the page as an empty button rather than as an error.
+      for (const [key, spec] of Object.entries(SCENES)) {
+        const svg = typeof spec.icon === 'string' ? spec.icon.trim() : '';
+        const opens = (svg.match(/<svg[\s>]/g) || []).length;
+        const closes = (svg.match(/<\/svg>/g) || []).length;
+        if (!svg) problems.push(`${key} has no icon in the registry — its nav button would render empty`);
+        else if (opens !== 1 || closes !== 1) problems.push(`${key}'s icon holds ${opens} <svg> opening and ${closes} closing tags; it must be exactly one element`);
+        else if (!svg.startsWith('<svg') || !svg.endsWith('</svg>')) problems.push(`${key}'s icon has markup outside its <svg> element`);
+      }
+      const generated = injectLanding(src);
+      const nIcons = (generated.match(/class="nav-icon"/g) || []).length;
+      const nTiles = (generated.match(/class="preview-wrapper"/g) || []).length;
+      const n = Object.keys(SCENES).length;
+      if (nIcons !== n || nTiles !== n) problems.push(`the registry has ${n} scenes but generates ${nIcons} nav icons and ${nTiles} tiles`);
     }
 
     if (problems.length) {

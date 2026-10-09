@@ -1,7 +1,9 @@
 import * as THREE from 'three';
 import { CSS2DRenderer, CSS2DObject } from 'three/examples/jsm/renderers/CSS2DRenderer.js';
 import { getOutboundLinks, getInboundLinks } from '../../links.js';
-import { bindOrbitDrag, bindWheelZoom, bindGuardedResize, prefersReducedMotion, onReducedMotionChange, createPanelCloser, createJumpList, bindTapVsDrag, parseHTML, wireCrossLinks, formatInboundNote, setPanelSide, clickedLeftHalf, claimContainer, manageRenderer, trackTimers, createFrameClock } from '../../utils/sceneKit.js';
+import { bindOrbitDrag, bindWheelZoom, bindGuardedResize, prefersReducedMotion, onReducedMotionChange, createPanelCloser, createJumpList, bindTapVsDrag, parseHTML, wireCrossLinks, formatInboundNote, setPanelSide, clickedLeftHalf, claimContainer, manageRenderer, trackTimers, createFrameClock,
+  sceneTemplate,
+} from '../../utils/sceneKit.js';
 import { stripHtml } from '../../utils/resonanceExcerpts.js';
 import sphereHtml from './sphere.html?raw';
 import './sphere.css';
@@ -156,7 +158,7 @@ export function createSphere(container, { preview = false, initialPieceId = null
         }
       }
 
-      const frag = parseHTML(sphereHtml);
+      const frag = parseHTML(sceneTemplate('sphere', sphereHtml));
       hint = frag.querySelector('.sphere-hint');
       document.body.appendChild(hint);
 

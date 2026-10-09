@@ -3,7 +3,7 @@ import {
   bindOrbitDrag, bindWheelZoom, bindGuardedResize, bindTapVsDrag,
   prefersReducedMotion, parseHTML, createJumpList, createPanelCloser, escapeHtml,
   mountClippedPreviewCanvas, bindPersistedSoundToggle, setPanelSide, clickedLeftHalf,
-  manageRenderer, createFrameClock, trackTimers,
+  manageRenderer, createFrameClock, trackTimers, sceneTemplate,
 } from '../../utils/sceneKit.js';
 import { getApprovedResonances, getPendingResonances } from '../../resonances.js';
 import { navigateToPiece } from '../../utils/harmonicsEntry.js';
@@ -511,7 +511,7 @@ export function createharmonics(container, { preview = false, initialPieceId = n
   let soundToggleEl = null, soundToggleLabelEl = null;
   if (!preview) {
     loadResolveEndpoint();
-    const frag = parseHTML(harmonicsHtml);
+    const frag = parseHTML(sceneTemplate('harmonics', harmonicsHtml));
     titleEl = frag.querySelector('.harmonics-title-row');
     hintEl = frag.querySelector('.harmonics-hint');
     document.body.appendChild(titleEl);
