@@ -1,0 +1,314 @@
+# Canonical-host enforcement, 2026-07-28. The site's own <link rel="canonical">
+# (index.html) has always pointed at https://perceptualmechanics.com/, but
+# nothing server-side ever enforced it — http://, https://www., and
+# /index.html all served the exact same page with no redirect. Google Search
+# Console's own "Page indexing" report flagged the result: four URLs bucketed
+# under "Alternate page with proper canonical tag" (Scott, 2026-07-28
+# screenshot). Not a broken-site bug -- the canonical tag was already doing
+# its job, keeping duplicates out of the index -- but relying on it alone
+# means any links pointing at a non-canonical variant never consolidate
+# their SEO weight onto the real URL, and Google keeps re-crawling
+# duplicates instead of just following a redirect once. Real 301s fix both.
+#
+# Combines the https + apex-domain checks into one rule so http://www...
+# takes a single hop straight to the canonical URL, not two.
+RewriteEngine On
+
+RewriteCond %{HTTPS} off [OR]
+RewriteCond %{HTTP_HOST} ^www\.perceptualmechanics\.com$ [NC]
+RewriteRule ^(.*)$ https://perceptualmechanics.com/$1 [L,R=301]
+
+# /index.html -> / (THE_REQUEST, not the rewritten path, so this can't loop
+# against Vite's own module-script reference to /src/main.js etc.)
+RewriteCond %{THE_REQUEST} \s/+index\.html[?\s]
+RewriteRule ^index\.html$ / [L,R=301]
+
+# Same intent, for the static text pages added 2026-07-29: each one is served
+# as <dir>/index.html, so /text/scroll/index.html and /text/scroll/ are the
+# same page at two URLs — exactly the duplicate the rule above exists to
+# collapse. Deliberately kept as its own rule scoped to ^text/ rather than
+# generalizing the proven root rule to match any directory: a mistake in an
+# untestable Apache regex that only touches /text/ costs a few new pages,
+# whereas the same mistake in the root rule could loop the homepage itself.
+# %1 is the captured sub-path ('scroll/', or empty for /text/index.html).
+RewriteCond %{THE_REQUEST} \s/+text/(([^\s?]*/)?)index\.html[?\s]
+RewriteRule ^text/(.*/)?index\.html$ /text/%1 [L,R=301]
+
+# Cache-Control. Fonts got this treatment 2026-08-31; the hashed bundles and
+# HTML joined them 2026-09-01 (4.0), and the two rules that both matched
+# .woff2 were reconciled into the one below at the same time. What used to be
+# here was a woff2-only `Header set Cache-Control` *plus* a mod_expires
+# `ExpiresByType font/woff2` — two directives computing the same header on
+# the same response for the same reason. mod_headers wins that race outright
+# (`Header set` replaces whatever mod_expires produced), so the mod_expires
+# half was doing nothing except waiting for someone to edit one of them and
+# not the other. Dropped. Losing its `Expires` header with it costs nothing:
+# Cache-Control's max-age takes precedence over Expires everywhere.
+#
+# js/css — `immutable`, one year. Vite content-hashes these filenames
+# (dist/assets/<name>.<hash>.js), so changed content is a different URL by
+# construction and a cached copy can never be stale; it is the textbook case
+# for `immutable`, which additionally suppresses the revalidation a plain
+# max-age still does on reload. DreamHost's own default here was
+# max-age=2592000 (30 days, measured in production, no `immutable`). This is
+# load-bearing rather than cosmetic: vite.config.js's
+# `manualChunks: { three: ['three'] }` exists so a returning visitor keeps
+# their cached copy of three.js across deploys that don't touch it,
+# and that reasoning only pays off if a cache header actually tells the
+# browser to keep it.
+#
+# woff2 — same year, same `immutable`, guaranteed a different way. These are
+# the faces that used to come from (and be cached by) Google's CDN; see
+# styles/main.css's "Self-hosted fonts" block. They aren't content-hashed,
+# but a font swap means a new filename here by this repo's own convention,
+# never an overwrite, which gives the same guarantee.
+#
+# html — the exact opposite, and it has already bitten once. index.html is
+# not content-hashed; it is the file that *names* the hashed assets, so a
+# cached copy pins a visitor to the previous deploy's entire asset graph.
+# DreamHost served max-age=600 (measured), and the first fetch of the
+# homepage after the 1.7.0 deploy came back stale, missing a link that a
+# `?cb=1` cache-buster returned immediately (NOTES.md, "Verify a deploy
+# through a cache-buster"). `max-age=0, must-revalidate` still lets the
+# browser keep the copy — it just has to ask first, so an unchanged page
+# costs a 304 and a real deploy is never invisible. This also covers the
+# eleven prerendered text pages, each served as <dir>/index.html.
+<IfModule mod_headers.c>
+  <FilesMatch "\.(js|css|woff2)$">
+    Header set Cache-Control "public, max-age=31536000, immutable"
+  </FilesMatch>
+  <FilesMatch "\.html$">
+    Header set Cache-Control "public, max-age=0, must-revalidate"
+  </FilesMatch>
+</IfModule>
+
+# Content Security Policy, 2026-09-01. Shipped Report-Only first (v3.12.0),
+# then switched to enforcing here after a fully clean Report-Only pass: every scene that existed then
+# (ten of the current thirteen — apollo, psyshell and medium landed later and
+# have never been through a Report-Only pass of their own) opened via real pointer clicks, all 11 pmGlimpse hash-allowlisted
+# handlers hovered, and Library's video facade + iframe + Open Library cover
+# image all exercised — zero policy violations in the console the entire
+# time. Enforcing now means a real violation actually blocks the resource,
+# not just logs it.
+#
+# Full external-origin audit before writing this (don't assume, confirm):
+# self-hosted fonts left the site with almost no external origins, except
+# library.js's YouTube embed/thumbnail and Open Library cover images — both
+# real, both allowed explicitly below.
+#
+# script-src: 'self', and nothing else, as of 4.0. Zero eval()/new Function()
+# anywhere in the codebase, and zero inline <script> — with one deliberate
+# exception, stated here because a flat "zero inline script of any kind" is
+# exactly the sentence that would make someone believe an exception impossible:
+# each prerendered /text/ page carries an application/ld+json block. That is
+# data, not executable script, and CSP's script-src does not apply to it.
+#
+# This directive used to carry 'unsafe-hashes' plus eleven 'sha256-' entries,
+# one per distinct pmGlimpse('<scene>') string in index.html's
+# onmouseover/onfocus attributes — the last inline event handlers left on the
+# site, kept working by exact hash rather than by relaxing the directive with
+# 'unsafe-inline'. 4.0 retired all 42 of those attributes (21 elements, 11
+# distinct strings: ten nav icons, ten preview tiles, #site-title) in favour
+# of the delegated addEventListener wiring every other interactive element on
+# the site already used. That ended the inline-handler era, so the eleven
+# hashes and 'unsafe-hashes' with them are dead allowlist entries — removed
+# here in the same release rather than left behind, because an entry nothing
+# needs is an entry nobody re-examines, and 'unsafe-hashes' in particular
+# widens what a hash match is allowed to be (event-handler attributes, not
+# just <script> bodies) for no remaining benefit.
+#
+# (STANDARDS.md's "New interactive code always uses addEventListener" section
+# used to describe that eleven-hash list as a closed legacy set; it was
+# corrected in 4.0 and no longer needs the note that stood here.)
+# Adding an on*= attribute
+# again would mean re-introducing 'unsafe-hashes' *and* a hash here just to
+# keep the site working: friction placed here deliberately.
+#
+# style-src: 'self' plus exactly one hash, added in 4.0 to fix a shipping bug
+# this policy caused. The 3.12.0 audit behind the original 'self'-with-no-
+# exceptions line is still accurate as far as it goes: theater.js's reel-hole
+# and scroll.js's hand-lettered-jitter effects used to bake Math.random()
+# values into style="" attributes (unbounded, not hash-allowlistable) and
+# were refactored to apply them via .style.setProperty()/.style.cssText after
+# DOM insertion instead — a JS property assignment, which style-src never
+# restricts, same category as the WebGL-overlay-positioning pattern used
+# elsewhere — and the few static style="" attributes left (colophon.html,
+# scroll.html) moved into real CSS rules/classes.
+#
+# What that audit missed is that this domain serves pages that are not the
+# SPA. The twelve prerendered pages under /text/ each carry one inline
+# <style> and link no stylesheet at all, on purpose: scripts/prerender.js's
+# page() builds them to render fully even if every other asset on the domain
+# is unreachable. 'self' does not cover an inline block, so from the moment
+# this policy went enforcing (3.12.1) until 4.0, the browser dropped it on
+# every one of them — document.styleSheets.length === 0, the whole text
+# archive served as black-on-white Times at full window width, in production,
+# for the entire time. The Report-Only pass that cleared this policy was a
+# genuinely thorough audit of the SPA at /; it just never opened a page
+# outside it.
+#
+# The hash below is that block, and it is NOT hand-maintained — do not edit
+# it by hand and do not "fix" a mismatch by loosening the directive. `npx
+# vite build` re-derives it from the page it has just written and fails the
+# build unless three things agree: the emitted /text/index.html, the
+# PAGE_STYLE_SHA256 constant declared beside the style text in
+# scripts/prerender.js, and this line. Change that CSS, run the build, paste
+# the value the error prints. See vite.config.js's verifyStyleHash().
+#
+# NO REPORTING DIRECTIVE, AND THAT IS A DECISION — 2026-09-02, Scott's call.
+# 4.0 added `report-to pm-csp` and a `Reporting-Endpoints` header pointing at
+# /_csp-reports, a URL on this host that does not exist and 404s every POST.
+# The intent was to record the intent. Both are removed now, because a header
+# advertising a reporting endpoint that isn't there is a configured-looking
+# nothing, and this project has learned four separate times that a check which
+# appears to work is more dangerous than an absent one.
+#
+# The reasoning, since it is the durable part and the outcome is one deleted
+# line:
+#
+#   NO SERVER. Everything here is static; a collector is by definition
+#   something that receives POSTs. The only on-origin option was a PHP endpoint
+#   on DreamHost shared hosting, which makes "static, no backend" — the first
+#   line of both briefs — untrue in a narrow but real sense.
+#
+#   CHROMIUM ONLY. Reporting-Endpoints/report-to is honoured by Chrome and
+#   Edge; Firefox and Safari still only take the deprecated `report-uri`.
+#   Building this buys reporting from some browsers and silence from the rest,
+#   which is a blind spot shaped like a working system. Covering the rest means
+#   maintaining a deprecated directive alongside its replacement.
+#
+#   MOSTLY EXTENSIONS. In practice the large majority of CSP reports are
+#   browser extensions injecting into the page, not site faults. On a
+#   third-party collector that is a stream of what this site's visitors have
+#   installed leaving the origin — worse than the page URLs it would also
+#   carry, and a poor trade for a site that self-hosts its fonts, runs no
+#   analytics and ships `script-src 'self'` with no hashes at all. Owned
+#   locally it is a log that has to be filtered before it can be read, which is
+#   the same problem as any log nobody reads.
+#
+#   AND THE SPECIFIC FAILURE IS ALREADY COVERED. What reporting was wanted for
+#   was the /text/ pages rendering unstyled from 3.12.1 to 4.0. The deploy
+#   workflow now fetches a /text/ page, hashes the <style> block out of the
+#   bytes actually served, and asserts that hash appears in the policy on that
+#   same response. Deterministic and pre-hoc, where a collector is probabilistic
+#   and post-hoc — it needs a visitor with the right browser to trip the
+#   violation before anyone hears about it. For this failure the check is
+#   strictly better than the collector would have been.
+#
+# If a collector is ever wanted, it needs `report-to` here, a matching
+# `Reporting-Endpoints` header with the same group name, and — for Firefox and
+# Safari — `report-uri` alongside them.
+#
+# frame-ancestors 'none': this site is never meant to be embedded in a frame
+# on any page, including its own (Scott's call, 2026-09-01) — only enforceable
+# via a real header, not a <meta> tag, hence delivering this here rather than
+# in index.html.
+<IfModule mod_headers.c>
+  Header set Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'sha256-2IEIosd7xcKSXoyHYxb5REbHYSLVf1PlVAauy+8tKts='; font-src 'self'; img-src 'self' data: https://i.ytimg.com https://covers.openlibrary.org; connect-src 'self'; frame-src https://www.youtube-nocookie.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests"
+</IfModule>
+
+# ─── The other security response headers, 2026-09-01 (4.0) ──────────────────
+# Until this release the CSP above was the only security header this file
+# set: fetched live, the site sent no Strict-Transport-Security, no
+# X-Content-Type-Options, no Referrer-Policy, no Permissions-Policy, no
+# X-Frame-Options and no Cross-Origin-Opener-Policy. Each one below is one
+# line, and each is written out with its reasoning because the reasoning is
+# the part that decays.
+#
+# `always` on every one of them is load-bearing, not boilerplate. Without
+# it, mod_headers only sets a header on a successful (2xx) response and
+# drops it on everything else — including the 301s this very file generates
+# at the top for http://, www., and /index.html. That is exactly the
+# response where HSTS matters most: the plain-http request that gets
+# redirected is the one a future visitor should never have to make again.
+#
+# HSTS started at 300 seconds on purpose and was RAMPED on 2026-09-02, on
+# evidence — see the header block's own note further down. It has sent
+# max-age=31536000 since. This paragraph described the pre-ramp state in the
+# present tense for four days afterwards, which is the failure this file's
+# neighbour warns about. Two things are
+# deliberately absent and should stay absent unless someone re-derives the
+# decision: `preload`, because submitting to the preload list is effectively
+# irreversible and bakes the policy into browser binaries; and
+# `includeSubDomains`, because this is DreamHost shared hosting and any
+# future subdomain that isn't serving HTTPS would simply go dark, with no
+# way to reach it to fix it.
+#
+# X-Content-Type-Options: nosniff — stop content-type sniffing. Cheap, and
+# it matters here specifically because this site serves a lot of static
+# files of assorted types out of one document root.
+#
+# Referrer-Policy: strict-origin-when-cross-origin — send the full URL
+# same-origin, only the origin cross-origin, and nothing at all when
+# downgrading to http. Matches what modern browsers already default to;
+# stating it means the site doesn't depend on that default.
+#
+# Permissions-Policy denies the powerful features this site genuinely never
+# uses. `fullscreen` is the one exception and it is load-bearing twice over,
+# so don't tidy either half of it away:
+#   * `self` — main.js drives the Fullscreen API for the expanded scene view,
+#     and `fullscreen=()` would silently disable it.
+#   * the youtube-nocookie origin — library.js's video embed sets
+#     `allowFullscreen` on its iframe, and a cross-origin frame cannot use a
+#     feature the top document has not DELEGATED to it. `fullscreen=(self)`
+#     alone allows this document and no frame inside it, so the embed's
+#     fullscreen button was inert. It is the same single origin already named
+#     in frame-src above, which is the narrowest form this can take.
+#
+# X-Frame-Options: DENY is the legacy twin of the CSP's frame-ancestors
+# 'none' above. Kept alongside it rather than treated as redundant: the two
+# are read by different code paths in some browsers and by a good deal of
+# scanning/compliance tooling, and DENY says the same thing frame-ancestors
+# already says, so they cannot drift into disagreeing.
+#
+# Cross-Origin-Opener-Policy: same-origin — this site opens no cross-origin
+# windows and wants its own browsing-context group.
+#
+# DELIBERATELY NOT ADDED: Cross-Origin-Embedder-Policy. `require-corp` would
+# break three things the CSP above explicitly allows on purpose — the
+# youtube-nocookie iframe, the i.ytimg.com thumbnails and the
+# covers.openlibrary.org cover images in the Library scene — because none of
+# those third parties serve CORP/CORS headers for them. Its one real payoff
+# is unlocking SharedArrayBuffer and precise timers, which nothing here uses
+# or plans to. It is not an oversight; please don't add it as one.
+#
+# HSTS RAMP — read this before changing the number below.
+#
+# 300 seconds is a deliberate first value, not a placeholder someone forgot
+# to finish. Everything HSTS could break here has already been checked
+# against the live site (2026-09-02): http:// has 301'd to https:// site-wide
+# since 2026-07-28 and still does, the homepage loads 34 resources with zero
+# over http, the certificate is valid, and includeSubDomains is omitted, so
+# www and any future subdomain are untouched by this header entirely.
+#
+# That leaves exactly one thing the short window is guarding, and it is the
+# one thing that cannot be tested from anywhere but production: whether
+# DreamHost's Apache applies this file at all — mod_headers present,
+# .htaccess read, the override allowed. If it does not, the cost of finding
+# out is five minutes rather than a year.
+#
+# RAMPED 2026-09-02, on evidence rather than on schedule. v4.0 deployed and
+# the live site was fetched: it returned `strict-transport-security:
+# max-age=300` along with nosniff and the cleaned `script-src 'self'`. That
+# is the proof the short window existed to get — DreamHost does read this
+# file, mod_headers is present, and `always` survives the 301s. With that
+# answered there is nothing left for a small max-age to protect against, so
+# this is now a year.
+#
+# The deploy workflow keeps checking. `.github/workflows/deploy.yml`'s
+# "Verify live security headers" step fetches the live site after every
+# rsync and fails the run if any of these headers stops being served, which
+# matters more now than it did at 300 seconds: a year-long pin plus a
+# silently-dropped header is the combination that would hurt.
+#
+# Still NOT to be added, at any max-age: `preload`. Submission to the
+# browser preload list is effectively irreversible on a human timescale and
+# is not undone by lowering or removing this header.
+<IfModule mod_headers.c>
+  Header always set Strict-Transport-Security "max-age=31536000"
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+  Header always set Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(), usb=(), fullscreen=(self \"https://www.youtube-nocookie.com\")"
+  Header always set X-Frame-Options "DENY"
+  Header always set Cross-Origin-Opener-Policy "same-origin"
+</IfModule>
