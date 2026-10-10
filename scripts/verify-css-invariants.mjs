@@ -117,28 +117,133 @@ export function verifyCssInvariants() {
   // letter-spacing is added after the LAST character as well as between them,
   // so a tracked run is one tracking wider than its glyphs and anything that
   // centres it — or pads it evenly — sits half a tracking off. The house fix is
-  // --tracking feeding both the spacing and its compensation, so the two cannot
-  // drift apart. Measured in a browser, all 12 scene titles come out at exactly
-  // 0.00px; this is what keeps the thirteenth from shipping at half a tracking.
+  // --tracking feeding both the spacing and its compensation.
   //
-  // Either compensation counts: a negative right margin (for a box the parent
-  // centres) or a right padding that subtracts the tracking back (for a pill
-  // whose own padding is what has to look even).
+  // This follows the SELECTOR, not the rule, and that took three tries to get
+  // right. Asking whether the compensation appeared anywhere in the rule passed
+  // .apollo-ambient, whose own nested @media put the tracking straight back on
+  // the right. Asking per context inside the rule still passed it, because a
+  // THIRD rule — `@media (max-height: 760px) { .apollo-mode label, .apollo-ambient,
+  // .apollo-copy { padding: … } }` — reaches the same pills from elsewhere in the
+  // file. A browser measured both at half a tracking off while the gate was green.
+  // So: every rule anywhere that sets a horizontal padding or a right margin on a
+  // tracked selector has to answer for itself.
+  const COMPENSATES_MARGIN = /margin-right:\s*calc\(\s*-1\s*\*\s*var\(--tracking\)\s*\)/;
+  const COMPENSATES_PADDING = /calc\([^;]*(?:-\s*var\(--tracking\)|var\(--tracking\)\s*\+)[^;]*\)/;
+  const SETS_PADDING = /(?:^|[\s;{])padding(?:-right|-left)?:[^;]+;/g;
+  const SETS_MARGIN = /(?:^|[\s;{])margin(?:-right)?:[^;]+;/g;
+  // `.a:hover`, `.a::after` and `.a` are the same box as far as padding goes.
+  const bare = sel => sel.replace(/::?[a-z-]+(\([^)]*\))?/gi, '').replace(/\s+/g, ' ').trim();
+  const lastOf = (body, re) => { let m, last = null; re.lastIndex = 0; while ((m = re.exec(body))) last = m[0]; return last; };
+
+  // Every (condition, selector, declarations) in the file, at any nesting depth.
+  function flatten(css, condition, selectors, out) {
+    let i = 0;
+    while (i < css.length) {
+      const open = css.indexOf('{', i);
+      if (open === -1) break;
+      let depth = 1, j = open + 1;
+      for (; j < css.length && depth > 0; j++) {
+        if (css[j] === '{') depth++;
+        else if (css[j] === '}') depth--;
+      }
+      const head = css.slice(i, open).trim();
+      const body = css.slice(open + 1, j - 1);
+      if (head.startsWith('@')) {
+        // at-rule: same selectors if we are inside a rule, fresh ones if not
+        if (/^@(media|supports|layer|container)\b/.test(head)) flatten(body, head, selectors, out);
+      } else if (head) {
+        const sels = selectors
+          ? selectors                                     // nested rule: not handled, and none exist
+          : head.split(',').map(x => x.trim().replace(/\s+/g, ' '));
+        out.push({ condition, selectors: sels, body: body.replace(/@[^{]*\{[\s\S]*?\n\s*\}/g, '') });
+        // nested at-rules inside this rule keep this rule's selectors
+        const inner = /@[^{]*\{/g;
+        let a;
+        while ((a = inner.exec(body))) {
+          let d = 1, k = inner.lastIndex;
+          for (; k < body.length && d > 0; k++) {
+            if (body[k] === '{') d++;
+            else if (body[k] === '}') d--;
+          }
+          out.push({ condition: body.slice(a.index, inner.lastIndex - 1).trim(), selectors: sels, body: body.slice(inner.lastIndex, k - 1) });
+          inner.lastIndex = k;
+        }
+      }
+      i = j;
+    }
+    return out;
+  }
+
+  for (const [path, url] of sheets.concat([['styles/main.css', new URL('styles/main.css', ROOT)]])) {
+    const css = stripComments(readFileSync(url, 'utf8'));
+    const entries = flatten(css, '', null, []);
+    const tracked = new Set();
+    for (const e of entries) {
+      if (!/letter-spacing:\s*var\(--tracking\)/.test(e.body)) continue;
+      for (const sel of e.selectors) tracked.add(bare(sel));
+    }
+    trackedRules += tracked.size;
+    const compensatedSomewhere = new Set();
+    for (const e of entries) {
+      const hits = e.selectors.filter(sel => tracked.has(bare(sel)));
+      if (!hits.length) continue;
+      const pad = lastOf(e.body, SETS_PADDING), mar = lastOf(e.body, SETS_MARGIN);
+      if (!pad && !mar) continue;
+      const ok = (mar && COMPENSATES_MARGIN.test(mar)) || (pad && COMPENSATES_PADDING.test(pad));
+      const where = e.condition ? ` — inside ${e.condition}` : '';
+      if (ok) { for (const sel of hits) compensatedSomewhere.add(bare(sel)); continue; }
+      problems.push(
+        `${path}: ${hits[0].slice(0, 48)}${where} sets its horizontal padding or right margin on text tracked ` +
+        `with var(--tracking), and puts the tracking straight back. It is added after the last character too, ` +
+        `so the text sits half a tracking left of where it looks like it should. ` +
+        `Use margin-right: calc(-1 * var(--tracking)), or take the tracking off the right padding.`
+      );
+    }
+    for (const sel of tracked) {
+      if (!compensatedSomewhere.has(sel)) {
+        problems.push(
+          `${path}: ${sel.slice(0, 48)} tracks its text with var(--tracking) but never gives the tracking back. ` +
+          `Add margin-right: calc(-1 * var(--tracking)), or take the tracking off the right padding.`
+        );
+      }
+    }
+  }
+
+  // The check above only sees rules that already reach for --tracking. A rule
+  // that centres tracked text WITHOUT the idiom is half a tracking off and
+  // nothing names it, so it is caught here and sent to the idiom rather than
+  // patched in place — that is what keeps the spacing and its compensation
+  // from drifting apart later. It reads text-align, so it does not see a pill
+  // whose text is not centred but whose padding still has to look even; those
+  // are found by measuring, and the idiom is what keeps them fixed.
+  const TRACKING_EXEMPT = {
+    '.tab-curtain': 'a repeating rule of box-drawing characters, wider than its own box and clipped; aria-hidden decoration with no line-end a reader can see',
+  };
+  const exemptSeen = new Set();
   for (const [path, url] of sheets.concat([['styles/main.css', new URL('styles/main.css', ROOT)]])) {
     const css = stripComments(readFileSync(url, 'utf8'));
     for (const { sel, body } of topLevelRules(css)) {
-      if (!/letter-spacing:\s*var\(--tracking\)/.test(body)) continue;
-      const negMargin = /margin-right:\s*calc\(\s*-1\s*\*\s*var\(--tracking\)\s*\)/.test(body);
-      const padBack = /padding(-right)?:[^;]*calc\([^;]*-\s*var\(--tracking\)[^;]*\)/.test(body);
-      if (!negMargin && !padBack) {
-        problems.push(
-          `${path}: ${sel.split('\n')[0].trim().slice(0, 60)} tracks its text with var(--tracking) ` +
-          `but gives none of it back. The tracking is added after the last character too, so the text ` +
-          `sits half a tracking left of where it looks like it should. Add ` +
-          `margin-right: calc(-1 * var(--tracking)), or take the tracking off the right padding.`
-        );
-      }
-      trackedRules++;
+      const m = body.match(/(?:^|[\s;{])letter-spacing:\s*([^;]+);/);
+      if (!m) continue;
+      const value = m[1].trim();
+      if (/var\(--tracking\)/.test(value)) continue;
+      if (value === 'normal' || parseFloat(value) === 0) continue;
+      if (!/text-align:\s*center/.test(body)) continue;
+      const names = sel.split(',').map(x => x.trim().split('\n').pop().trim());
+      const exempt = names.find(n => n in TRACKING_EXEMPT);
+      if (exempt) { exemptSeen.add(exempt); continue; }
+      problems.push(
+        `${path}: ${names[0].slice(0, 54)} centres its text and tracks it at ${value}, ` +
+        `but the tracking is added after the last character too, so the line sits half of it ` +
+        `to the left. Give it a --tracking and hand the tracking back — negative right margin, ` +
+        `or off the right padding.`
+      );
+    }
+  }
+  for (const name of Object.keys(TRACKING_EXEMPT)) {
+    if (!exemptSeen.has(name)) {
+      problems.push(`TRACKING_EXEMPT names ${name}, which no longer centres tracked text — drop the exemption with the rule.`);
     }
   }
 
@@ -207,7 +312,7 @@ export function verifyCssInvariants() {
     say(`\ncss-invariants: ${problems.length} problem(s):`);
     for (const p of problems) say(`  ${p}`);
   } else {
-    say(`ok: all ${titleRules} bottom-anchored title rules use the shared safe zone, ${centredRules} centred bottom panel(s) clear it, all ${trackedRules} tracked rules give the trailing tracking back, no selector is declared twice over the same property, and every translucent text colour can reach AA`);
+    say(`ok: all ${titleRules} bottom-anchored title rules use the shared safe zone, ${centredRules} centred bottom panel(s) clear it, all ${trackedRules} tracked rules give the trailing tracking back (${Object.keys(TRACKING_EXEMPT).length} centred rule exempt with a stated reason), no selector is declared twice over the same property, and every translucent text colour can reach AA`);
   }
   return { ok: problems.length === 0, failures: problems.length, log };
 }

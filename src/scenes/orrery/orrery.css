@@ -230,8 +230,12 @@
   position: absolute; bottom: 8rem; right: 1.4rem;
   z-index: 7; background: rgba(10,7,4,0.4); color: rgba(220,207,190,0.6);
   border: 1px solid rgba(220,200,180,0.2); border-radius: 1.4rem;
-  padding: 0.45rem 0.95rem; font-family: 'Arapey', serif;
-  font-size: 0.68rem; letter-spacing: 0.06em; cursor: pointer;
+  --tracking: 0.06em;
+  /* The tracking lands after the last character too, so the right side
+     gives it back and the text sits where it looks centred. */
+  padding: 0.45rem calc(0.95rem - var(--tracking)) 0.45rem 0.95rem;
+  font-family: 'Arapey', serif;
+  font-size: 0.68rem; letter-spacing: var(--tracking); cursor: pointer;
   /* Zero-delay visibility here (the VISIBLE state) so re-showing the
      prompt is immediate; the delayed half lives on .hidden below. Same
      discrete-property idiom, and same reason, as .orrery-panel above. */

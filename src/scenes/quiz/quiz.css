@@ -91,8 +91,12 @@
 .quiz-hint {
   position: fixed; left: 4.5rem; right: 4.5rem; top: 4.2rem;
   z-index: 310; pointer-events: none;
+  --tracking: 0.08em;
   margin: 0; text-align: center;
-  font-size: 0.72rem; letter-spacing: 0.08em;
+  /* The tracking lands after the last character too, so the box reaches one
+     tracking further right and the centred line sits where it looks centred. */
+  margin-right: calc(-1 * var(--tracking));
+  font-size: 0.72rem; letter-spacing: var(--tracking);
   color: rgba(255, 255, 255, 0.6);
   transition: opacity 400ms ease;
 }
@@ -220,8 +224,11 @@
 .quiz-take { margin-top: 1.15rem; }
 .quiz-take[hidden] { display: none; }
 .quiz-submit, .quiz-take {
-  font: inherit; font-size: 0.86rem; letter-spacing: 0.09em; text-transform: uppercase;
-  padding: 0.55rem 1.3rem; cursor: pointer;
+  --tracking: 0.09em;
+  font: inherit; font-size: 0.86rem; letter-spacing: var(--tracking); text-transform: uppercase;
+  /* The tracking lands after the last character too, so the right side
+     gives it back and the text sits where it looks centred. */
+  padding: 0.55rem calc(1.3rem - var(--tracking)) 0.55rem 1.3rem; cursor: pointer;
   background: transparent; color: rgba(240, 237, 230, 0.92);
   border: 1px solid rgba(255, 255, 255, 0.32); border-radius: 2px;
   transition: border-color 160ms ease, background-color 160ms ease;

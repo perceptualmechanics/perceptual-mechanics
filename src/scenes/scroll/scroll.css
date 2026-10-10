@@ -596,8 +596,13 @@
 	}
 }
 .scroll-script-character {
+  --tracking: 0.03em;
   text-align: center; text-transform: uppercase; font-weight: 700;
-  letter-spacing: 0.03em; margin: 0 0 0.15rem;
+  letter-spacing: var(--tracking);
+  margin: 0 0 0.15rem;
+  /* The tracking lands after the last character too, so the box reaches one
+     tracking further right and the centred line sits where it looks centred. */
+  margin-right: calc(-1 * var(--tracking));
 }
 .scroll-script-paren {
   text-align: center; font-style: italic; font-size: 0.85em;

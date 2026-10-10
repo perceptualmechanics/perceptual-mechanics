@@ -2510,3 +2510,39 @@ in a way that reads as right: combining `margin-left: +s` with
 tracking in a real browser: uncompensated lands 5px left, that pair lands 5px
 **right** — the same error, mirrored. `margin-right: -s` alone lands at 0, and
 so do `text-indent: s` and `padding-left: s`.
+
+### 7.1.2 — the rest of the tracking, and a gate that follows the selector
+
+Everything centred and tracked now gives the trailing tracking back: the quiz
+hint and submit, Apollo's ambient, copy, ruler and element strikes and its mode
+labels, Orrery's lock prompt, Theater's slugline, the screenplay character
+cues, Harmonics' endpoint link. Fifteen rules, all on `--tracking` so the
+spacing and its compensation cannot drift apart. Measured across all fourteen
+scenes: sixty-five centred tracked elements, **worst remaining offset 0.00px**.
+
+Two forms, because the boxes differ. A box a parent centres takes
+`margin-right: calc(-1 * var(--tracking))`. A pill whose own padding has to
+look even takes the tracking off its right padding instead — measured, Apollo's
+mode label now runs padding-left 8.800px against padding-right 7.456px, a
+difference of 1.344px, which is exactly its letter-spacing.
+
+**The gate took three tries, and the browser caught it out twice.** Asking
+whether a rule compensated anywhere passed `.apollo-ambient`, whose own nested
+`@media` sets `padding: 0.3rem 0.9rem` and puts the tracking straight back.
+Asking per context inside the rule still passed it, because a third rule —
+`@media (max-height: 760px) { .apollo-mode label, .apollo-ambient, .apollo-copy
+{ padding: … } }` — reaches the same pills from elsewhere in the file. Both
+times the gate was green and a measurement in a real browser said half a
+tracking off.
+
+So it follows the selector now, not the rule: every declaration anywhere in a
+stylesheet that sets a horizontal padding or a right margin on a selector whose
+text is tracked has to answer for itself. Four branches, each proved to fail
+before being trusted — the base rule, a nested `@media`, a separate rule
+elsewhere in the file, and a new centred rule that never adopts the idiom at
+all. `.tab-curtain` is exempt with its reason recorded, and the exemption is
+checked for going stale.
+
+The lesson is the one this project keeps relearning. A check written against
+the shape of the bug you just fixed passes the next instance of it. The browser
+was the second instrument both times, and it was the one that was right.

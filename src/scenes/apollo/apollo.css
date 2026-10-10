@@ -136,10 +136,13 @@
 
 .apollo-strike {
   background: none; border: 1px solid transparent; border-radius: 0.2rem;
-  padding: 0.15rem 0.3rem; min-width: 2rem;
+  --tracking: 0.06em;
+  /* The tracking lands after the last character too, so the right side
+     gives it back and the text sits where it looks centred. */
+  padding: 0.15rem calc(0.3rem - var(--tracking)) 0.15rem 0.3rem; min-width: 2rem;
   color: var(--ap-brass);
   font-family: 'Electrolize', sans-serif;
-  font-size: 0.78rem; letter-spacing: 0.06em;
+  font-size: 0.78rem; letter-spacing: var(--tracking);
   cursor: pointer;
   transition: color .18s, border-color .18s, background .18s;
 }
@@ -165,10 +168,14 @@
   right: 0.8rem; bottom: 5.6rem;
   background: rgba(11, 16, 24, 0.6);
   border: 1px solid rgba(201, 174, 116, 0.3);
-  border-radius: 999px; padding: 0.3rem 0.7rem;
+  border-radius: 999px;
+  --tracking: 0.14em;
+  /* The tracking lands after the last character too, so the right side
+     gives it back and the text sits where it looks centred. */
+  padding: 0.3rem calc(0.7rem - var(--tracking)) 0.3rem 0.7rem;
   color: rgba(216, 205, 180, 0.8);
   font-family: 'Electrolize', sans-serif;
-  font-size: 0.55rem; letter-spacing: 0.14em; text-transform: uppercase;
+  font-size: 0.55rem; letter-spacing: var(--tracking); text-transform: uppercase;
   cursor: pointer;
   transition: background .2s, border-color .2s, color .2s;
 
@@ -195,17 +202,21 @@
 }
 .apollo-mode label {
   display: inline-flex; align-items: center;
-  padding: 0.28rem 0.7rem;
+  --tracking: 0.14em;
+  /* The tracking lands after the last character too, so the right side
+     gives it back and the pill reads even. */
+  padding: 0.28rem calc(0.7rem - var(--tracking)) 0.28rem 0.7rem;
   border: 1px solid rgba(201, 174, 116, 0.22);
   border-radius: 999px;
   color: var(--ap-brass-dim);
   font-family: 'Electrolize', sans-serif;
-  font-size: 0.56rem; letter-spacing: 0.14em; text-transform: uppercase;
+  font-size: 0.56rem; letter-spacing: var(--tracking); text-transform: uppercase;
   cursor: pointer;
   transition: color .18s, border-color .18s, background .18s;
 
 	@media (min-width: 641px) {
-		font-size: 0.6rem; padding: 0.3rem 0.9rem;
+		font-size: 0.6rem;
+		padding: 0.3rem calc(0.9rem - var(--tracking)) 0.3rem 0.9rem;
 	}
 }
 .apollo-mode input {
@@ -237,15 +248,19 @@
   background: none;
   border: 1px solid rgba(201, 174, 116, 0.22);
   border-radius: 999px;
-  padding: 0.28rem 0.7rem;
+  --tracking: 0.14em;
+  /* The tracking lands after the last character too, so the right side
+     gives it back and the text sits where it looks centred. */
+  padding: 0.28rem calc(0.7rem - var(--tracking)) 0.28rem 0.7rem;
   color: var(--ap-brass-dim);
   font-family: 'Electrolize', sans-serif;
-  font-size: 0.56rem; letter-spacing: 0.14em; text-transform: uppercase;
+  font-size: 0.56rem; letter-spacing: var(--tracking); text-transform: uppercase;
   cursor: pointer;
   transition: color .18s, border-color .18s, background .18s;
 
 	@media (min-width: 641px) {
-		font-size: 0.6rem; padding: 0.3rem 0.9rem;
+		font-size: 0.6rem;
+		padding: 0.3rem calc(0.9rem - var(--tracking)) 0.3rem 0.9rem;
 	}
 }
 .apollo-ambient:hover, .apollo-ambient:focus-visible,
@@ -263,7 +278,11 @@
   .apollo-fader input[type="range"] { height: 2.5rem; }
   .apollo-rail { padding: 0.4rem 0.4rem 0.3rem; gap: 0.2rem 0.1rem; }
   .apollo-mode-row { margin-bottom: 0.3rem; }
-  .apollo-mode label, .apollo-ambient, .apollo-copy { padding: 0.2rem 0.55rem; }
+  /* Still gives the tracking back: this is a third rule reaching the same
+     pills, and a plain padding here would put it straight back on. */
+  .apollo-mode label, .apollo-ambient, .apollo-copy {
+    padding: 0.2rem calc(0.55rem - var(--tracking)) 0.2rem 0.55rem;
+  }
   .apollo-fader-count { display: none; }
 }
 
