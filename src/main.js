@@ -347,7 +347,7 @@ async function initPreviews() {
 
 const SCENE_COUNT = Object.keys(SCENES).length;
 
-import { tileLayout, tileScale, tileNudge, MAX_TILE_SCALE } from './utils/tileLayout.js';
+import { tileLayout, tileScale, tileNudge, tileDrift, MAX_TILE_SCALE } from './utils/tileLayout.js';
 
 function applyDerivedLayout() {
   const list = document.getElementById('scene-previews');
@@ -382,6 +382,14 @@ function applyDerivedLayout() {
     const spec = key ? SCENES[key] : null;
     if (fit && !spec) {
       console.warn(`landing layout: tile "${key || '(no id)'}" has no registry entry — it will draw at the base size`);
+    }
+    // The drift is a transform, so it does not depend on the fit and does not
+    // feed back into it. Both layouts get it; a tile with no key does not,
+    // since the seed is the key.
+    if (key) {
+      const d = tileDrift(key);
+      el.style.setProperty('--tile-drift-x', `${d.x}px`);
+      el.style.setProperty('--tile-drift-y', `${d.y}px`);
     }
     if (!fit || !spec) {
       el.style.removeProperty('--tile-self');

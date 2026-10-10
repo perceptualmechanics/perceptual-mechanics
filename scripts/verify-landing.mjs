@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs';
-import { tileLayout, tileLayoutHeight, nudgeScale, tileScale, tileNudge, TILE_GAP, TILE_MAX } from '../src/utils/tileLayout.js';
+import { tileLayout, tileLayoutHeight, nudgeScale, tileScale, tileNudge, tileDrift, driftClearance, DRIFT, TILE_GAP, TILE_MAX } from '../src/utils/tileLayout.js';
 import { previewTilesHtml } from './landing.js';
 import { SCENES } from '../src/scenes/registry.js';
 import { TILE_FLOOR, LIST_PAD } from '../src/utils/tileLayout.js';
@@ -139,6 +139,40 @@ if (failures.length) {
   failed++;
 } else {
   console.log(`ok: every fit occupies no more height than it was given, for all ${SCENE_COUNT} scenes`);
+}
+
+{
+  // The drift is a transform, so no fit is re-run when it moves a tile and
+  // nothing downstream would notice a tile landing on its neighbour. What
+  // holds it apart is arithmetic, so the arithmetic is what gets checked:
+  // every scene's own displacement, against the clearance the gap allows.
+  const { amp, across, down } = driftClearance(TILE_GAP);
+  const problems = [];
+  if (across <= 0) {
+    problems.push(`two tiles in a row can drift ${(2 * amp).toFixed(1)}px at each other across a ${TILE_GAP}px gap — they would touch`);
+  }
+  if (down <= 0) {
+    problems.push(`two tiles in a column can close ${(TILE_GAP + 2 * amp).toFixed(1)}px of their ${2 * TILE_GAP}px gap once the registry's nudge is spent — they would touch`);
+  }
+  let worst = 0, worstKey = null;
+  for (const key of Object.keys(SCENES)) {
+    const a = tileDrift(key, TILE_GAP);
+    const b = tileDrift(key, TILE_GAP);
+    if (a.x !== b.x || a.y !== b.y) problems.push(`${key}'s drift is not the same twice — the seed is not the key`);
+    const r = Math.hypot(a.x, a.y);
+    if (r > amp + 1) problems.push(`${key} drifts ${r.toFixed(1)}px, past the ${amp.toFixed(1)}px the gap allows`);
+    if (r > worst) { worst = r; worstKey = key; }
+  }
+  if (new Set(Object.keys(SCENES).map(k => JSON.stringify(tileDrift(k, TILE_GAP)))).size < 2) {
+    problems.push('every scene drifts to the same place — the seed is not varying');
+  }
+  if (problems.length) {
+    console.error(`\ndrift: ${problems.length} problem(s):`);
+    for (const p of problems) console.error(`  ${p}`);
+    failed++;
+  } else {
+    console.log(`ok: drift is seeded per scene and bounded at ${amp.toFixed(1)}px (${DRIFT} of the gap) — furthest is ${worstKey} at ${worst.toFixed(1)}px, leaving ${across.toFixed(1)}px across and ${down.toFixed(1)}px down`);
+  }
 }
 
 {

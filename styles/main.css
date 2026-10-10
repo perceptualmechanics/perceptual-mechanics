@@ -415,6 +415,14 @@ html, body {
 	@media (min-width: 769px) {
 		gap: 1.5rem;
 	}
+
+	/* No fit, so the grid scrolls and there is width going spare: let each row
+	   reach the edges instead of sitting in a centred block. Four per row with
+	   two left over means the last pair lands between the columns above rather
+	   than under them, which is the point — the grid should not read as ruled. */
+	&:not(.rows-forced) {
+		justify-content: space-evenly;
+	}
 }
 
 .preview-row-break {
@@ -467,6 +475,10 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: center;
+
+  /* Set per tile from the registry key in main.js. A transform, so a tile
+     leans off its slot without the slot moving and without the fit changing. */
+  transform: translate(var(--tile-drift-x, 0px), var(--tile-drift-y, 0px));
 
   flex: 0 0 calc(50% - 0.5rem);
 

@@ -2452,3 +2452,28 @@ an empty loop — green, and checking nothing. It reads `spec.hint` now, and it
 was made to fail before it was trusted again. Two other checks in the same pass
 were tautologies against the file they were derived from; both now join against
 a second copy of the data.
+
+### 7.1.0 — the grid stops reading as ruled
+
+Below the fit, the landing has always fallen back to fixed 200px tiles in a
+scrolling column — four, four, four, two — and sat them in a centred block with
+a hundred and ten pixels of dead margin either side. The rows reach the edges
+now: `space-evenly` on `#scene-previews:not(.rows-forced)`. Four across puts
+columns at .14, .38, .62 and .86 of the width; two across puts them at .30 and
+.70, so the last pair lands *between* the columns above rather than under them.
+That is the arrangement, not a rounding error.
+
+**Every tile sits a little off its slot.** `tileDrift(key)` seeds `mulberry32`
+with the scene's own key, picks an angle and a radius with a square root so the
+disc fills evenly, and hands back a displacement of at most 6.7px. It is set as
+a custom property and spent as a transform on the wrapper, so the slot does not
+move, the fit does not change, and nothing has to be re-measured. Seeded on the
+key means the same arrangement on every load and on every machine: a loose
+hand, not motion.
+
+The number that keeps it safe is `DRIFT`, a fraction of the gap. Two tiles in a
+row close at most `2 × DRIFT × gap` of the 24px between them; two in a column
+also carry the registry's nudge, whose span `nudgeScale` already holds to one
+gap, against 48px of row spacing. At 0.28 both axes keep 10.6px. verify-landing
+does that arithmetic rather than trusting this paragraph — raising DRIFT to 0.6
+fails it on both axes, and a seed that is not the key fails it too.
