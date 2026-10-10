@@ -36,13 +36,19 @@
   position: fixed; bottom: 5.5rem; left: 1rem; z-index: 310;
   display: flex; align-items: center; gap: .55rem;
   background: rgba(8,5,15,0.55); border: 1px solid rgba(200,170,255,0.3);
-  border-radius: 999px; padding: .4rem .8rem;
+  border-radius: 999px;
+  --tracking: .16em;
+  /* The tracking lands after the last letter as well as between them,
+     so the right padding gives it back; otherwise the pill reads a
+     sixth of an em heavier on the right than on the left. */
+  padding: .4rem calc(.8rem - var(--tracking)) .4rem .8rem;
   color: rgba(220,200,255,.75); font-family: 'Electrolize', sans-serif;
-  font-size: .62rem; letter-spacing: .16em; text-transform: uppercase;
+  font-size: .62rem; letter-spacing: var(--tracking); text-transform: uppercase;
   cursor: pointer; transition: background .2s, border-color .2s, color .2s;
 
 	@media (min-width: 601px) {
-		bottom: 3rem; left: 1.5rem; padding: .5rem 1rem;
+		bottom: 3rem; left: 1.5rem;
+		padding: .5rem calc(1rem - var(--tracking)) .5rem 1rem;
 	}
 }
 .outside-sound-toggle:hover, .outside-sound-toggle:focus-visible {

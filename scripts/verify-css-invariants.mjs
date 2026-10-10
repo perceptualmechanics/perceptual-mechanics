@@ -71,6 +71,7 @@ export function verifyCssInvariants() {
 
   const TITLE_SELECTOR = /-(title|title-row|label-row)\b/;
   let titleRules = 0;
+  let trackedRules = 0;
   for (const [path, url] of sheets) {
     const css = stripComments(readFileSync(url, 'utf8'));
     for (const { sel, body } of topLevelRules(css)) {
@@ -110,6 +111,34 @@ export function verifyCssInvariants() {
       } else {
         bySelector.set(key, new Set(props));
       }
+    }
+  }
+
+  // letter-spacing is added after the LAST character as well as between them,
+  // so a tracked run is one tracking wider than its glyphs and anything that
+  // centres it — or pads it evenly — sits half a tracking off. The house fix is
+  // --tracking feeding both the spacing and its compensation, so the two cannot
+  // drift apart. Measured in a browser, all 12 scene titles come out at exactly
+  // 0.00px; this is what keeps the thirteenth from shipping at half a tracking.
+  //
+  // Either compensation counts: a negative right margin (for a box the parent
+  // centres) or a right padding that subtracts the tracking back (for a pill
+  // whose own padding is what has to look even).
+  for (const [path, url] of sheets.concat([['styles/main.css', new URL('styles/main.css', ROOT)]])) {
+    const css = stripComments(readFileSync(url, 'utf8'));
+    for (const { sel, body } of topLevelRules(css)) {
+      if (!/letter-spacing:\s*var\(--tracking\)/.test(body)) continue;
+      const negMargin = /margin-right:\s*calc\(\s*-1\s*\*\s*var\(--tracking\)\s*\)/.test(body);
+      const padBack = /padding(-right)?:[^;]*calc\([^;]*-\s*var\(--tracking\)[^;]*\)/.test(body);
+      if (!negMargin && !padBack) {
+        problems.push(
+          `${path}: ${sel.split('\n')[0].trim().slice(0, 60)} tracks its text with var(--tracking) ` +
+          `but gives none of it back. The tracking is added after the last character too, so the text ` +
+          `sits half a tracking left of where it looks like it should. Add ` +
+          `margin-right: calc(-1 * var(--tracking)), or take the tracking off the right padding.`
+        );
+      }
+      trackedRules++;
     }
   }
 
@@ -178,7 +207,7 @@ export function verifyCssInvariants() {
     say(`\ncss-invariants: ${problems.length} problem(s):`);
     for (const p of problems) say(`  ${p}`);
   } else {
-    say(`ok: all ${titleRules} bottom-anchored title rules use the shared safe zone, ${centredRules} centred bottom panel(s) clear it, no selector is declared twice over the same property, and every translucent text colour can reach AA`);
+    say(`ok: all ${titleRules} bottom-anchored title rules use the shared safe zone, ${centredRules} centred bottom panel(s) clear it, all ${trackedRules} tracked rules give the trailing tracking back, no selector is declared twice over the same property, and every translucent text colour can reach AA`);
   }
   return { ok: problems.length === 0, failures: problems.length, log };
 }

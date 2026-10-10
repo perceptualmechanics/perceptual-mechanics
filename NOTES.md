@@ -2477,3 +2477,36 @@ also carry the registry's nudge, whose span `nudgeScale` already holds to one
 gap, against 48px of row spacing. At 0.28 both axes keep 10.6px. verify-landing
 does that arithmetic rather than trusting this paragraph — raising DRIFT to 0.6
 fails it on both axes, and a seed that is not the key fails it too.
+
+### 7.1.1 — what the tracking owes back
+
+`letter-spacing` is added after the last character as well as between them, so
+a tracked run is one tracking wider than its glyphs and anything that centres
+it sits half a tracking left of where it looks like it should.
+
+The scene titles were already right. All twelve that carry tracking use
+`--tracking` feeding both the spacing and a matching negative right margin, and
+measured in a browser — first glyph's left edge to last glyph's right edge,
+minus the trailing advance, against the margin box — every one of them comes
+out at **0.00px**. Two instruments agreed: a static pass over the stylesheets
+found the compensation present at all fifteen sites.
+
+What was off was the four sound pills, where the tracking made the right
+padding read a sixth of an em tighter than the left. They give it back through
+the padding now, which is the right form for a box whose own padding is what
+has to look even, rather than one a parent centres. Measured: 16.00px left,
+15.99px right, on all four.
+
+**And nothing was stopping the thirteenth title from skipping it.**
+verify-css-invariants now requires that any rule tracking its text with
+`var(--tracking)` gives the tracking back — by negative right margin or by
+padding, since the two shapes need different forms. Dropping the margin from
+`.medium-title` fails it; dropping the padding compensation from
+`.apollo-sound-toggle` fails it too.
+
+One correction worth recording, since the advice that prompted this was wrong
+in a way that reads as right: combining `margin-left: +s` with
+`margin-right: -s` does not balance a centred tracked run. Measured at 10px of
+tracking in a real browser: uncompensated lands 5px left, that pair lands 5px
+**right** — the same error, mirrored. `margin-right: -s` alone lands at 0, and
+so do `text-indent: s` and `padding-left: s`.
