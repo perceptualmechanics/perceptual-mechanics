@@ -2600,3 +2600,90 @@ worklet shipped twice. `_htaccess.txt` was a second, tracked copy of
 `public/.htaccess` and is gone. The nav no longer blurs a live canvas every
 frame for an effect its 78% background hid; it is 86% now. vite 8.3.4, three
 0.186.1, and `.nvmrc` says 24.
+
+### 7.3.0 — the workbench keeps the hours
+
+The first piece of the workbench. Each nav icon now has an alchemical sigil
+under it, brought forward on hover and focus. The scene whose planet rules the
+current hour is lit in the nav and on the landing, and one line above the text
+link says which hour it is and where it was reckoned from. The grid, the fit and
+the previews are untouched.
+
+**The hours are computed, not looked up.** `bench.sky.js` carries NOAA's solar
+equations (after Meeus) and finds sunrise and sunset for any place and day. It is
+held to the US Naval Observatory's published times at nine fixtures: Los Feliz at
+both solstices and an equinox, Quito, Sydney, Reykjavík, London, and Tromsø in
+polar night and polar day. Worst disagreement is 0.49 min, which is USNO's own
+rounding to the minute, so the gate allows one. The planetary day starts at
+sunrise. Daylight and night each take twelve unequal hours, the first hour goes
+to the day's ruler, and each hour after to the next planet in Chaldean order. The
+weekday is taken by local mean solar time at the place, so a visitor's device
+clock cannot move it.
+
+The hours follow the browser's clock. A timer is set for the exact end of each
+hour, but that timer can fire late. Hidden tabs throttle it, and on macOS the
+clock it runs on can stop while the machine sleeps, so a laptop woken with the
+page showing would keep a stale hour. So the page also re-checks on focus, on a
+back/forward-cache restore and once a minute while visible. Each check is one
+comparison and re-renders only if the hour on screen is not the hour it is now,
+which also catches a clock set back. Tested in headless Chrome:
+- moving the clock within the hour changes nothing;
+- moving it past the boundary with no event shows the next hour within 62s,
+  through the minute check alone;
+- the same after a focus event shows it at once;
+- setting it back shows the previous hour.
+
+**Location is asked for once, and only when pressed.** Nothing prompts on load.
+If the browser already holds the permission, the position is read silently; if
+it is still to be asked, the line offers "use your sky". Declined, or never
+asked, the hours are reckoned over the principal city of the visitor's time zone,
+from IANA's `zone.tab` (2026e, vendored). `backward` resolves the legacy names
+browsers still report: Asia/Calcutta is Kolkata. Etc/UTC has no city and gets
+equal hours from 06:00, and so does polar day or night, and the line says which.
+Coordinates stay in memory and nothing touches the network.
+Permissions-Policy moves from `geolocation=()` to `geolocation=(self)`.
+
+**Ripley is read off the page.** The gates come from the Preface of the
+*Compound* as Ashmole printed it in 1652, pp. 127–128, transcribed from the
+Internet Archive scan's page images, not its OCR. The OCR had "Cjiatjon" and
+"UHultypljcatpn"; the page has *Cybatyon* and *Multyplycatyon*. It also has
+*Dyssolution* for the second gate, which the modernised transcriptions online
+give as Solution. `parseGates()` takes each gate from the line carrying
+Ripley's ordinal; "then *Recapytulatyon*" shares the twelfth line without one,
+which is how he keeps it outside the twelve. The count is checked against his
+own "In number Twelve" on p. 127. Modern spellings are derived, y for i and
+nothing else, across all twelve. Phase 1 holds the gates and gates them; the
+vessel that uses them is phase 2.
+
+**The sigils.** The symbols are Unicode's, checked by code point and name
+against a vendored excerpt of `UnicodeData.txt`, and drawn as SVG in the nav's
+own line rather than set from a font, which iOS would turn into emoji. Each
+drawing was compared against Unicode's code charts. That caught a moon facing
+the wrong way: the first draft was U+263E, the last quarter. Which scene carries
+which sigil is Scott's assignment, and the data and the generator say so. The
+seven planets go to orrery (Sun), quiz (Moon), medium (Mercury), harmonics
+(Venus), apollo (Mars), orbiter (Jupiter) and library (Saturn). The other seven
+take air, fire, earth, water, salt, sulphur and quintessence. Sphere was to have
+carried antimony, until the chart showed Unicode's antimony-ore glyph is not the
+globe and cross; that one is U+2641, EARTH. It carries quintessence instead, the
+substance of Aristotle's celestial spheres.
+
+`verify-bench` holds all of it. It checks:
+- the week against the Chaldean order;
+- the gates against both pages;
+- the sigils against the registry and Unicode;
+- the sky against USNO;
+- that the 24 hours tile sunrise to sunrise;
+- 28 renderings of the hour line;
+- the zone fallback, including the legacy aliases;
+- the policy.
+
+Twenty-one corrupted copies of its data were each shown to fail first. One of
+them crashed the gate instead of failing it, a polar fixture handed a sunrise,
+and that was fixed before it was trusted. Two existing gates earned their keep
+on the way in: verify-css-invariants refused the centred, tracked hour line
+until it gave its tracking back.
+
+The sigil drawings and Ripley's text are resolved at build time and never ship
+in the page's script. The landing's main chunk grows by 3.5 KB gzipped, which is
+the solar arithmetic it actually runs.

@@ -1,0 +1,86 @@
+{
+ "source": "US Naval Observatory, Astronomical Applications Department, Sun and Moon data for one day (API v4.0.1), https://aa.usno.navy.mil/api/rstt/oneday. Fetched 2026-10-11 with tz=0, so every time is UTC and an event belongs to the UTC date it falls on. null = the sun did not rise or did not set that UTC day.",
+ "fixtures": [
+  {
+   "place": "Los Feliz, Los Angeles",
+   "lat": 34.1064,
+   "lon": -118.287,
+   "date": "2026-06-21",
+   "rise": "12:42",
+   "set": "03:08",
+   "url": "https://aa.usno.navy.mil/api/rstt/oneday?date=2026-06-21&coords=34.1064,-118.287&tz=0"
+  },
+  {
+   "place": "Los Feliz, Los Angeles",
+   "lat": 34.1064,
+   "lon": -118.287,
+   "date": "2026-12-21",
+   "rise": "14:55",
+   "set": "00:47",
+   "url": "https://aa.usno.navy.mil/api/rstt/oneday?date=2026-12-21&coords=34.1064,-118.287&tz=0"
+  },
+  {
+   "place": "Los Feliz, Los Angeles",
+   "lat": 34.1064,
+   "lon": -118.287,
+   "date": "2026-03-20",
+   "rise": "13:57",
+   "set": "02:04",
+   "url": "https://aa.usno.navy.mil/api/rstt/oneday?date=2026-03-20&coords=34.1064,-118.287&tz=0"
+  },
+  {
+   "place": "Quito",
+   "lat": -0.1807,
+   "lon": -78.4678,
+   "date": "2026-03-20",
+   "rise": "11:18",
+   "set": "23:24",
+   "url": "https://aa.usno.navy.mil/api/rstt/oneday?date=2026-03-20&coords=-0.1807,-78.4678&tz=0"
+  },
+  {
+   "place": "Sydney",
+   "lat": -33.8688,
+   "lon": 151.2093,
+   "date": "2026-07-01",
+   "rise": "21:01",
+   "set": "06:57",
+   "url": "https://aa.usno.navy.mil/api/rstt/oneday?date=2026-07-01&coords=-33.8688,151.2093&tz=0"
+  },
+  {
+   "place": "Reykjavik",
+   "lat": 64.1466,
+   "lon": -21.9426,
+   "date": "2026-06-21",
+   "rise": "02:55",
+   "set": "00:04",
+   "url": "https://aa.usno.navy.mil/api/rstt/oneday?date=2026-06-21&coords=64.1466,-21.9426&tz=0"
+  },
+  {
+   "place": "Tromso",
+   "lat": 69.6492,
+   "lon": 18.9553,
+   "date": "2026-12-21",
+   "rise": null,
+   "set": null,
+   "url": "https://aa.usno.navy.mil/api/rstt/oneday?date=2026-12-21&coords=69.6492,18.9553&tz=0"
+  },
+  {
+   "place": "Tromso",
+   "lat": 69.6492,
+   "lon": 18.9553,
+   "date": "2026-06-21",
+   "rise": null,
+   "set": null,
+   "url": "https://aa.usno.navy.mil/api/rstt/oneday?date=2026-06-21&coords=69.6492,18.9553&tz=0"
+  },
+  {
+   "place": "London",
+   "lat": 51.5074,
+   "lon": -0.1278,
+   "date": "2026-10-11",
+   "rise": "06:18",
+   "set": "17:16",
+   "url": "https://aa.usno.navy.mil/api/rstt/oneday?date=2026-10-11&coords=51.5074,-0.1278&tz=0"
+  }
+ ]
+}

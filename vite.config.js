@@ -12,6 +12,7 @@ import { verifyCssInvariants } from './scripts/verify-css-invariants.mjs';
 import { verifyCounts } from './scripts/verify-counts.mjs';
 import { injectLanding } from './scripts/landing.js';
 import { verifyQuizWheel } from './scripts/quiz-wheel.mjs';
+import { verifyBench } from './scripts/verify-bench.mjs';
 
 const HERE = import.meta.dirname;
 
@@ -127,6 +128,22 @@ function verifyCountsPlugin() {
   };
 }
 
+function verifyBenchPlugin() {
+  return {
+    name: 'pm-verify-bench',
+    apply: 'build',
+    buildStart() {
+      const { ok, failures, log } = verifyBench();
+      log.forEach(line => console.log(line));
+      if (!ok) {
+        this.error(`verify-bench: ${failures} problem(s) — see above. The workbench says something its sources do not.`);
+      } else {
+        console.log('  ✓ verify-bench: the hours, the gates and the sigils hold to their sources');
+      }
+    },
+  };
+}
+
 function verifyScrollMarksPlugin() {
   return {
     name: 'pm-verify-scroll-marks',
@@ -210,7 +227,7 @@ function verifyStyleHash(outDir, root) {
 }
 
 export default defineConfig({
-  plugins: [landingMarkupPlugin(), verifyLinksPlugin(), verifyResonancesPlugin(), verifyScrollMarksPlugin(), verifyLandingPlugin(), verifyAriaPlugin(), verifyCssInvariantsPlugin(), verifyCountsPlugin(), verifyQuizWheelPlugin(), prerenderTextPages()],
+  plugins: [landingMarkupPlugin(), verifyLinksPlugin(), verifyResonancesPlugin(), verifyScrollMarksPlugin(), verifyLandingPlugin(), verifyAriaPlugin(), verifyCssInvariantsPlugin(), verifyCountsPlugin(), verifyQuizWheelPlugin(), verifyBenchPlugin(), prerenderTextPages()],
   build: {
     cssMinify: 'esbuild',
     cssTarget: ['chrome87', 'edge88', 'firefox78', 'safari14'],

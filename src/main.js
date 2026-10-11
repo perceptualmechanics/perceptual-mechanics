@@ -1,4 +1,5 @@
 import { initColophon }    from './components/colophon/colophon.js';
+import { initBench }       from './bench/bench.landing.js';
 import { anyPanelOpen, prefersReducedMotion } from './utils/sceneKit.js';
 import { SCENES, sceneAria } from './scenes/registry.js';
 
@@ -495,6 +496,7 @@ window.addEventListener('pm:navigate', e => {
 });
 
 initColophon();
+initBench();
 
 const PM_GLIMPSE_WORDS = {
   sphere: 'zen archery',

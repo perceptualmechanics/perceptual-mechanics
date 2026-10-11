@@ -1,0 +1,16 @@
+# Excerpt of UnicodeData.txt, Unicode 18.0, https://www.unicode.org/Public/UCD/latest/ucd/UnicodeData.txt,
+# fetched 2026-10-11: the lines for the workbench's sigils, unmodified.
+2609;SUN;So;0;ON;;;;;N;;;;;
+263D;FIRST QUARTER MOON;So;0;ON;;;;;N;;;;;
+263F;MERCURY;So;0;ON;;;;;N;;;;;
+2640;FEMALE SIGN;So;0;ON;;;;;N;;;;;
+2642;MALE SIGN;So;0;ON;;;;;N;;;;;
+2643;JUPITER;So;0;ON;;;;;N;;;;;
+2644;SATURN;So;0;ON;;;;;N;;;;;
+1F700;ALCHEMICAL SYMBOL FOR QUINTESSENCE;So;0;ON;;;;;N;;;;;
+1F701;ALCHEMICAL SYMBOL FOR AIR;So;0;ON;;;;;N;;;;;
+1F702;ALCHEMICAL SYMBOL FOR FIRE;So;0;ON;;;;;N;;;;;
+1F703;ALCHEMICAL SYMBOL FOR EARTH;So;0;ON;;;;;N;;;;;
+1F704;ALCHEMICAL SYMBOL FOR WATER;So;0;ON;;;;;N;;;;;
+1F70D;ALCHEMICAL SYMBOL FOR SULFUR;So;0;ON;;;;;N;;;;;
+1F714;ALCHEMICAL SYMBOL FOR SALT;So;0;ON;;;;;N;;;;;

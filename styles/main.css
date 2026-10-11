@@ -200,6 +200,20 @@ html, body {
   border-radius: 3px;
 }
 .nav-icon svg { width: 22px; height: 22px; display: block; }
+/* The scene's sigil on the workbench sits over its icon and takes its place on
+   hover and focus. */
+.nav-icon .nav-scene,
+.nav-icon .nav-sigil { transition: opacity 0.25s; }
+.nav-icon .nav-sigil { position: absolute; inset: 0; margin: auto; opacity: 0; }
+.nav-icon:focus-visible .nav-scene { opacity: 0; }
+.nav-icon:focus-visible .nav-sigil { opacity: 1; }
+/* A touch screen keeps :hover after a tap, which would strand a sigil. */
+@media (hover: hover) {
+  .nav-icon:hover .nav-scene { opacity: 0; }
+  .nav-icon:hover .nav-sigil { opacity: 1; }
+}
+/* The scene whose planet rules the current hour. */
+.nav-icon.is-hour { opacity: 1; filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.45)); }
 
 
 #site-title-row {
@@ -317,6 +331,50 @@ html, body {
 }
 #landing-textlink:hover { color: rgba(255,255,255,0.9); }
 #landing-textlink:focus-visible { outline: none; box-shadow: var(--focus-ring-outer); }
+
+/* The planetary hour, one line above the text link. Prerendered empty and
+   hidden, so filling it in never moves anything. */
+#bench-hour {
+  position: fixed;
+  bottom: 6.9rem; left: 1rem; right: 1rem;
+  z-index: 60;
+  text-align: center;
+  text-wrap: balance;
+  font-size: 0.6rem;
+  --tracking: 0.08em;
+  letter-spacing: var(--tracking);
+  /* The tracking lands after the last character too; the right side gives it
+     back so a centred line sits where it looks centred. */
+  margin-block: 0;
+  margin-right: calc(-1 * var(--tracking));
+  line-height: 1.6;
+  color: rgba(255,255,255,0.55);
+  text-shadow: 0 1px 5px rgba(0,0,0,0.85);
+
+	@media (min-width: 601px) {
+		bottom: 2.9rem; left: 1.5rem; right: auto;
+		text-align: left;
+	}
+}
+#bench-sky {
+  background: none;
+  border: 0;
+  padding: 0 0.25rem;
+  min-height: 24px;
+  font: inherit;
+  letter-spacing: inherit;
+  color: rgba(255,255,255,0.75);
+  text-decoration: underline;
+  text-decoration-color: rgba(255,255,255,0.35);
+  text-underline-offset: 0.2em;
+  cursor: pointer;
+}
+#bench-sky:hover { color: rgba(255,255,255,0.95); }
+#bench-sky:focus-visible { outline: none; box-shadow: var(--focus-ring-outer); border-radius: 2px; }
+
+/* The tile whose planet rules the hour. A drop shadow on the wrapper follows the
+   tile's circular mask in both layouts, where a box shadow on the tile is clipped. */
+.preview-wrapper.is-hour { filter: drop-shadow(0 0 18px rgba(255, 255, 255, 0.14)); }
 
 
 #noscript-fallback {
@@ -697,6 +755,7 @@ html, body {
   .preview-container:hover { --tile-hover: 1; }
   .nav-icon { transition: none; }
   .nav-icon:hover { transform: none; }
+  .nav-icon .nav-scene, .nav-icon .nav-sigil { transition: none; }
   #experience-loading { transition: none; }
   #experience-loading::before { animation: none; opacity: 0.7; }
 }

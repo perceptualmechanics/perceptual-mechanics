@@ -250,6 +250,10 @@ RewriteRule ^text/(.*/)?index\.html$ /text/%1 [L,R=301]
 #     alone allows this document and no frame inside it, so the embed's
 #     fullscreen button was inert. It is the same single origin already named
 #     in frame-src above, which is the narrowest form this can take.
+# `geolocation=(self)` is the second exception (7.3.0): the landing's
+# planetary hours read the visitor's position, only after they press "use your
+# sky", and only this document may ask. No frame is delegated it.
+# verify-bench fails if it is widened.
 #
 # X-Frame-Options: DENY is the legacy twin of the CSP's frame-ancestors
 # 'none' above. Kept alongside it rather than treated as redundant: the two
@@ -304,7 +308,7 @@ RewriteRule ^text/(.*/)?index\.html$ /text/%1 [L,R=301]
   Header always set Strict-Transport-Security "max-age=31536000"
   Header always set X-Content-Type-Options "nosniff"
   Header always set Referrer-Policy "strict-origin-when-cross-origin"
-  Header always set Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(), usb=(), fullscreen=(self \"https://www.youtube-nocookie.com\")"
+  Header always set Permissions-Policy "camera=(), microphone=(), geolocation=(self), payment=(), usb=(), fullscreen=(self \"https://www.youtube-nocookie.com\")"
   Header always set X-Frame-Options "DENY"
   Header always set Cross-Origin-Opener-Policy "same-origin"
 </IfModule>
