@@ -133,8 +133,7 @@
    fine for a UI component's own boundary (WCAG 1.4.11), short of the 4.5:1
    this actually needs, since the ✕ is a text glyph at 1.2rem (19.2px,
    regular weight — under the 24px "large text" allowance). .5 alpha
-   measures 5.53:1 against the same background and is still visibly quiet.
-   Same arithmetic as sceneKit.js's HINT_TEXT_COLOR comment. */
+   measures 5.53:1 against the same background and is still visibly quiet. */
 /* :hover was the only state this button had — a keyboard visitor had no way
    to see where focus was sitting. Matches the hover treatment plus a real
    ring, and :focus-visible rather than :focus so a mouse click doesn't
@@ -147,9 +146,7 @@
      the formatInboundNote "Referenced from …" cross-reference. At .3 alpha
      it composited to (57.5, 64.9, 85.6) over the panel's #05070d — 1.98:1,
      where WCAG AA wants 4.5:1 at .6rem. .6 alpha measures 4.76:1 against
-     the same background. Same arithmetic sceneKit.js's HINT_TEXT_COLOR
-     comment does deliberately for the scene hints; this one had simply
-     never been checked. */
+     the same background. */
   font-size:.6rem;letter-spacing:.3em;color:rgba(180,200,255,.6);
   margin:2rem 0 0;text-transform:uppercase;
 }

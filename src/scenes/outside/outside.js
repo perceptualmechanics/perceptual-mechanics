@@ -3,6 +3,7 @@ import {
   bindOrbitDrag, bindWheelZoom, bindGuardedResize, bindTapVsDrag,
   prefersReducedMotion, parseHTML, mountClippedPreviewCanvas, createJumpList,
   bindPersistedSoundToggle, manageRenderer, createFrameClock, trackTimers, sceneTemplate,
+  sceneChromeRoot,
 } from '../../utils/sceneKit.js';
 import { POWER_SOURCES, CENTER_ORIGINS, NEWEST_ORIGINS } from './outside.text.js';
 import outsideHtml from './outside.html?raw';
@@ -158,7 +159,7 @@ export function createOutside(container, { preview = false, initialPieceId = nul
   updateCameraPosition();
 
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-  const managedRenderer = manageRenderer(renderer);
+  const managedRenderer = manageRenderer(renderer, { preview });
   renderer.setSize(w0, h0);
   renderer.setClearColor(0x000000, 1);
   renderer.domElement.setAttribute('aria-hidden', 'true');
@@ -445,11 +446,11 @@ export function createOutside(container, { preview = false, initialPieceId = nul
     const frag = parseHTML(sceneTemplate('outside', outsideHtml));
     titleEl = frag.querySelector('.outside-title-row');
     hintEl = frag.querySelector('.outside-hint');
-    document.body.appendChild(titleEl);
-    document.body.appendChild(hintEl);
+    sceneChromeRoot().appendChild(titleEl);
+    sceneChromeRoot().appendChild(hintEl);
     soundToggleEl = frag.querySelector('.outside-sound-toggle');
     soundToggleLabelEl = soundToggleEl.querySelector('.outside-sound-toggle-label');
-    document.body.appendChild(soundToggleEl);
+    sceneChromeRoot().appendChild(soundToggleEl);
     srLiveEl = frag.querySelector('.outside-sr-live');
     container.appendChild(srLiveEl);
   }

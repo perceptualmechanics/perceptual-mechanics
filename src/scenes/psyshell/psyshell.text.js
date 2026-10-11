@@ -1,4 +1,5 @@
 import { readCorpus, flatSentences, wordCount } from '../../utils/corpus.js';
+import { FILAPIXEL_COUNT as STATED_COUNT } from './psyshell.count.js';
 import * as scroll from '../scroll/scroll.text.js';
 import * as theater from '../theater/theater.text.js';
 import * as sphere from '../sphere/sphere.text.js';
@@ -48,31 +49,9 @@ export const ABSENT = ['harmonics', 'medium', 'outside'];
   if (summed !== FILAPIXEL_COUNT || SOURCE_OF.length !== FILAPIXEL_COUNT) {
     throw new Error(`psyshell: filapixel count disagrees with sentence count — sources sum to ${summed}, texts ${FILAPIXEL_COUNT}, sources ${SOURCE_OF.length}`);
   }
-}
-export const RADIX = Math.E;
-export const DIGIT_SET = 3;          // {0, 1, 2}
-export const FRACTIONAL_PLACES = 3;  // where a non-terminating expansion is cut
-
-export function baseEDigits(value) {
-  if (!(value > 0)) return { digits: [0], highest: 0 };
-  let highest = Math.floor(Math.log(value) / Math.log(RADIX));
-  if (Math.pow(RADIX, highest + 1) <= value) highest += 1;
-  const digits = [];
-  let rem = value;
-  for (let k = highest; k >= -FRACTIONAL_PLACES; k--) {
-    const place = Math.pow(RADIX, k);
-    let d = Math.floor(rem / place);
-    if (d > DIGIT_SET - 1) d = DIGIT_SET - 1;
-    if (d < 0) d = 0;
-    digits.push(d);
-    rem -= d * place;
+  if (STATED_COUNT !== FILAPIXEL_COUNT) {
+    throw new Error(`psyshell: psyshell.count.js says ${STATED_COUNT} filapixels but the corpus has ${FILAPIXEL_COUNT} sentences — set FILAPIXEL_COUNT in psyshell.count.js to ${FILAPIXEL_COUNT}`);
   }
-  return { digits, highest };
 }
-
-export function decodeBaseE(digits, highest) {
-  let v = 0;
-  for (let i = 0; i < digits.length; i++) v += digits[i] * Math.pow(RADIX, highest - i);
-  return v;
-}
+export { RADIX, DIGIT_SET, FRACTIONAL_PLACES, baseEDigits, decodeBaseE } from './psyshell.digits.js';
 

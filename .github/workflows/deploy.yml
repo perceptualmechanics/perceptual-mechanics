@@ -43,13 +43,13 @@ jobs:
       # against the production server. The trailing comment records which
       # release each SHA is, since a bare hash is unreadable -- update both
       # together (`git ls-remote --tags https://github.com/actions/<name>`)
-      # when bumping. Pinned 2026-09-01; both SHAs are what the v4 tag
-      # resolved to at that time, so this changed nothing about what runs.
+      # when bumping. Last bumped 2026-10-11, v4.4.0 -> v7; nothing in the
+      # v5-v7 release notes touches the inputs this job uses.
       - name: Checkout
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Set up Node
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           # Node 20's security support window ended 2026-04-30 (checked
           # against endoflife.date, 2026-08-25) -- was still pinned here
@@ -92,28 +92,16 @@ jobs:
           mkdir -p ~/.ssh
           echo "${{ secrets.DREAMHOST_SSH_KEY }}" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
-          # ssh-keyscan can fail on a transient DNS/connectivity blip, and
-          # this step runs under `bash -e`, so that alone was enough to
-          # kill the whole deploy before rsync ever ran (2026-07-23 --
-          # traced from a live site that kept serving stale content after
-          # a push). Every downstream step already sets
-          # StrictHostKeyChecking=no, so known_hosts here was never
-          # load-bearing -- safe to make this non-fatal, same as the SSH
-          # connection test below already is.
-          ssh-keyscan -H pdx1-shared-a1-46.dreamhost.com >> ~/.ssh/known_hosts || true
-
-      - name: Test SSH connection
-        run: |
-          # -v, not -vvv: level 3 dumps full key-exchange and
-          # authentication negotiation detail into a build log that is
-          # public on this repo. -v is enough to tell "connected" from
-          # "auth failed", which is all this step is for.
-          ssh -v -i ~/.ssh/deploy_key \
-            -o IdentitiesOnly=yes \
-            -o IdentityAgent=none \
-            -o StrictHostKeyChecking=no \
-            -o BatchMode=yes \
-            copper_prism@pdx1-shared-a1-46.dreamhost.com "echo connected" || true
+          # The server's host key is pinned rather than fetched with
+          # ssh-keyscan on every run. Scanning at deploy time trusts whatever
+          # answers on that name, and with StrictHostKeyChecking=no the job
+          # would hand the production key's session to an impostor without a
+          # word. It is a public key, so it is safe in a public repo.
+          # Fingerprint SHA256:WNPenzow9Z0aI0IhsOk260VNf8qtz0qhgCHZ591cqLk,
+          # matching Scott's own known_hosts (2026-10-11). If DreamHost
+          # rotates it, rsync fails with "Host key verification failed":
+          # re-check the new key and replace this line.
+          echo "pdx1-shared-a1-46.dreamhost.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHvz1WV+dN2kbTqFTIgQI8YSVeYA9ZLLnRK69CT/1hW5" >> ~/.ssh/known_hosts
 
       - name: Deploy via rsync
         run: |
@@ -126,7 +114,7 @@ jobs:
           # instead lets the default size+mtime quick check do that work,
           # and adds -p (permissions) so a mode change actually propagates.
           rsync -rlptDzv --delete \
-            -e "ssh -i ~/.ssh/deploy_key -o IdentitiesOnly=yes -o IdentityAgent=none -o StrictHostKeyChecking=no" \
+            -e "ssh -i ~/.ssh/deploy_key -o IdentitiesOnly=yes -o IdentityAgent=none -o StrictHostKeyChecking=yes -o BatchMode=yes" \
             dist/ \
             copper_prism@pdx1-shared-a1-46.dreamhost.com:/home/copper_prism/perceptualmechanics.com
 

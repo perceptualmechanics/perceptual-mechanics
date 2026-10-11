@@ -1,6 +1,7 @@
 import {
   bindGuardedResize, prefersReducedMotion, onReducedMotionChange, parseHTML,
   createFrameClock, claimContainer, sceneTemplate,
+  sceneChromeRoot,
 } from '../../utils/sceneKit.js';
 import {
   DWELL_RADIUS, DWELL_TIME, DWELL_EASE, DWELL_RESIST,
@@ -459,7 +460,7 @@ export function createMedium(container, { preview = false, initialArg = null, on
     titleEl = frag.querySelector('.medium-title-row');
     hintEl = frag.querySelector('.medium-hint');
     srLiveEl = frag.querySelector('.medium-sr-live');
-    document.body.append(titleEl, hintEl);
+    sceneChromeRoot().append(titleEl, hintEl);
     container.appendChild(srLiveEl);
 
     canvas.addEventListener('pointerdown', onPointerDown);

@@ -7,15 +7,16 @@ files, which are now the source of truth for that material going forward. See "p
 below for where things live.
 
 Coding standards (centering technique, vendor-prefix policy, `!important`
-policy, mobile-first convention, and the reasoning behind each) live in
-`STANDARDS.md`, not here — check that file first before any future
-"modernize the code" pass. This file stays a dated changelog of what
+policy, mobile-first convention, and the reasoning behind each) lived in
+`STANDARDS.md`, deleted in 4193f28 — `git show 4193f28^:STANDARDS.md` to
+read it before any future "modernize the code" pass. This file stays a dated changelog of what
 shipped when.
 
 **Split at 5.0.** This file had reached 17,500 lines, which put the standing
 sections below — the part that is actually read before doing work — under
-sixteen thousand lines of dated entries. Everything from 1.0 through 4.8.9 now
-lives in `NOTES.archive.md`; the standing sections and 4.9.0 onward stay here.
+sixteen thousand lines of dated entries. Everything from 1.0 through 4.8.9
+moved to `NOTES.archive.md`, deleted in 4193f28 (`git show
+4193f28^:NOTES.archive.md`); the standing sections and 4.9.0 onward stay here.
 When this gets long again, the next block moves across the same way.
 
 ## Standing process — periodic best-practices review
@@ -2100,7 +2101,8 @@ corner doesn't read as an invitation).
 ## Older releases — 4.8.9 and back
 
 Moved to **`NOTES.archive.md`** at 5.0: 1.0 (2026-07-17) through 4.8.9, sixteen
-thousand lines of it. The standing sections above and every release from 4.9.0
+thousand lines of it. That file was deleted in 4193f28 and survives in git
+history (`git show 4193f28^:NOTES.archive.md`). The standing sections above and every release from 4.9.0
 on stay here.
 
 That file is history and is worth reading for exactly one thing — why a decision
@@ -2546,3 +2548,55 @@ checked for going stale.
 The lesson is the one this project keeps relearning. A check written against
 the shape of the bug you just fixed passes the next instance of it. The browser
 was the second instrument both times, and it was the one that was right.
+
+### 7.2.0 — the landing stops paying for what it isn't showing
+
+**The landing was downloading the whole site.** Every chunk loaded on first
+paint: fourteen scenes, three.js, and every scene's text. Scroll, Theater and
+Sphere had each been written to keep their text out of preview mode. Psyshell
+undid all three, because `psyshell.js` imported `psyshell.text.js`, which
+imports every other scene's text to build its corpus. The preview needs one
+number from it: the 3264 sentences that set how many filapixels it lays out.
+
+That number lives in `psyshell.count.js` now, and the base-e arithmetic, which
+never touched text, lives in `psyshell.digits.js`. Full mode imports the corpus
+when the scene opens. `psyshell.text.js` throws if the stated count and the
+corpus disagree, and prerender imports it, so the build fails before the two
+can drift. About 80 KB gzipped of text no longer loads with the landing.
+
+**Previews start when they come within a screen of view.** On desktop every
+tile is above the fold, so nothing changes there. On a phone the column below
+the fold costs nothing until it is scrolled toward: 22 script requests on load
+instead of 39. A deep link such as `#butterfly` no longer builds fourteen
+previews behind the open scene; they start when the gallery comes back. Preview
+renderers cap at 1.5× pixel ratio (`PREVIEW_MAX_PIXEL_RATIO` in sceneKit.js),
+which takes about 44% of the pixels out of nine WebGL tiles drawing at once.
+
+**Two panels were still there when closed.** Library and Harmonics hid their
+panels with a transform alone, so a closed panel kept its close button and
+links in the tab order and the accessibility tree. They take the delayed-
+visibility pattern Orbiter, Orrery and Sphere already had.
+
+**Scene chrome has a landmark.** Titles, hints, toggles and jump lists were
+appended to `<body>`, outside every landmark, which is how Beamline's epigraph
+went missing for anyone navigating by region. They go into `#scene-chrome`
+now. main.js names it by the overlay's heading while a scene is open and
+unnames it on the way out, so it is a landmark only while it has something in
+it. The wrapper makes no stacking context, so nothing moved.
+
+Smaller: the five panels were `<aside role="dialog">`, a role `aside` may not
+take, and are `<div>`s. Each open scene sets its own `document.title`. The
+landing's text link and Apollo's strikes, pills and ruler toggle reach 24px
+targets. Library's links get the focus ring the rest of the site has. The
+colophon said ten experiences, and `verify-counts` now holds "N small
+experiences" to the registry. axe reports nothing on the landing, all fourteen
+scenes or the `/text/` pages.
+
+Housekeeping: the deploy pins DreamHost's ed25519 host key and refuses a
+mismatch, instead of trusting whatever answers `ssh-keyscan` and then turning
+host-key checking off. checkout and setup-node move to v7. The worklet
+exclusion in `main.js`'s glob was missing its `/*/` and never matched, so the
+worklet shipped twice. `_htaccess.txt` was a second, tracked copy of
+`public/.htaccess` and is gone. The nav no longer blurs a live canvas every
+frame for an effect its 78% background hid; it is 86% now. vite 8.3.4, three
+0.186.1, and `.nvmrc` says 24.

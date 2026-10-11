@@ -228,6 +228,12 @@ export function createPanelCloser(panel, container, { closeBtn, onClose } = {}) 
   };
 }
 
+// Titles, hints, toggles and jump lists a scene pins over itself. main.js names
+// it by the overlay's heading while a scene is open, which makes it a landmark.
+export function sceneChromeRoot() {
+  return document.getElementById('scene-chrome') ?? document.body;
+}
+
 export function createJumpList(container, { label, items, getLabel, onSelect }) {
   const list = document.createElement('ul');
   list.className = 'pm-jumplist pm-scene-chrome';
@@ -244,11 +250,9 @@ export function createJumpList(container, { label, items, getLabel, onSelect }) 
 
   list.addEventListener('click', e => e.stopPropagation());
 
-  document.body.appendChild(list);
+  sceneChromeRoot().appendChild(list);
   return { dispose() { list.remove(); } };
 }
-
-export const HINT_TEXT_COLOR = 'rgba(255,255,255,0.6)';
 
 export function escapeHtml(s) {
   const div = document.createElement('div');
@@ -408,10 +412,14 @@ export function disposeSceneGraph(root) {
   root.clear?.();
 }
 
-export function manageRenderer(renderer, { maxPixelRatio = 2, onLost } = {}) {
+// A landing tile is under 450 CSS pixels and up to nine of them draw at once.
+const PREVIEW_MAX_PIXEL_RATIO = 1.5;
+
+export function manageRenderer(renderer, { maxPixelRatio = 2, preview = false, onLost } = {}) {
   const canvas = renderer.domElement;
+  const cap = preview ? Math.min(maxPixelRatio, PREVIEW_MAX_PIXEL_RATIO) : maxPixelRatio;
   const applyPixelRatio = () =>
-    renderer.setPixelRatio(Math.min(maxPixelRatio, window.devicePixelRatio || 1));
+    renderer.setPixelRatio(Math.min(cap, window.devicePixelRatio || 1));
   applyPixelRatio();
 
   const onContextLost = e => {

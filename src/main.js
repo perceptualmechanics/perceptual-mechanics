@@ -4,8 +4,7 @@ import { SCENES, sceneAria } from './scenes/registry.js';
 
 const sceneModules = import.meta.glob([
   './scenes/*/*.js',
-  '!./scenes*.worklet.js',
-  '!./scenes/spectra/*.js',
+  '!./scenes/*/*.worklet.js',
 ]);
 function loadSceneModule(name) {
   const id = `./scenes/${name}/${name}.js`;
@@ -48,6 +47,16 @@ function syncPreviewPlayback() {
 }
 
 let syncingHash = false;
+
+// Each open scene is its own page to a visitor, so it gets its own title.
+const SITE_TITLE = document.title;
+let pageTitle = SITE_TITLE;
+let pmGlimpseTimer = null;
+function setPageTitle(title) {
+  pageTitle = title;
+  clearTimeout(pmGlimpseTimer);
+  document.title = title;
+}
 
 function rememberElsewhere(sceneName, pieceId) {
   if (!sceneName || sceneName === 'harmonics' || pieceId == null) return;
@@ -106,6 +115,7 @@ const titleRow     = document.getElementById('site-title-row');
 const pmNav        = document.getElementById('pm-nav');
 const fsToggle     = document.getElementById('fullscreen-toggle');
 const skipLink     = document.querySelector('.skip-link');
+const chromeRoot   = document.getElementById('scene-chrome');
 
 const CROSSFADE_MS = (() => {
   const raw = getComputedStyle(document.documentElement)
@@ -191,6 +201,7 @@ function expandScene(sceneName, triggerEl = null, pieceId = null, sceneArg = nul
     setActiveIcon(sceneName);
     setHash(sceneName, pieceId, { arg: sceneArg });
     rememberElsewhere(sceneName, pieceId);
+    setPageTitle(`${SCENES[sceneName]?.label ?? sceneName} — ${SITE_TITLE}`);
 
     landing.style.display = 'none';
     syncPreviewPlayback();
@@ -203,6 +214,7 @@ function expandScene(sceneName, triggerEl = null, pieceId = null, sceneArg = nul
     const spec = SCENES[sceneName];
     overlay.setAttribute('aria-label', spec ? sceneAria(spec) : 'Full screen experience.');
     if (expHeading) expHeading.textContent = SCENES[sceneName]?.label ?? 'Full screen experience.';
+    chromeRoot?.setAttribute('aria-labelledby', 'experience-heading');
 
     let loadingShown = false;
     const loadingTimer = setTimeout(() => {
@@ -257,12 +269,14 @@ function returnToGallery() {
   overlay.setAttribute('aria-hidden', 'true');
   clearSceneLoadError();
   setHash(null);
+  setPageTitle(SITE_TITLE);
 
   function finish() {
     if (fullInstance) { fullInstance.dispose(); fullInstance = null; expContainer.innerHTML = ''; }
     delete overlay.dataset.scene;
     overlay.style.removeProperty('--overlay-bg');
     if (expHeading) expHeading.textContent = '';
+    chromeRoot?.removeAttribute('aria-labelledby');
     activeScene = null;
     setActiveIcon(null);
     landing.style.display = '';
@@ -329,20 +343,38 @@ const previewVisibility = 'IntersectionObserver' in window
     }, { rootMargin: '100% 0px' })
   : null;
 
-async function initPreviews() {
+// A preview is created the first time its tile comes within a screen of view.
+// On desktop every tile is above the fold, so all of them start at once; on a
+// phone the column below the fold costs nothing until it is scrolled toward.
+async function createPreview(name, el) {
+  try {
+    const create = await loadSceneCreate(name);
+    previews[name] = create(el, { preview: true });
+    previewVisibility?.observe(el);
+  } catch (err) {
+    console.warn(`preview "${name}" did not load`, err);
+  }
+  syncPreviewPlayback();
+}
+
+function initPreviews() {
   const entries = Object.keys(SCENES)
     .map(name => [name, document.getElementById(`preview-${name}`)])
     .filter(([, el]) => el);
 
-  const results = await Promise.allSettled(entries.map(async ([name, el]) => {
-    const create = await loadSceneCreate(name);
-    previews[name] = create(el, { preview: true });
-    previewVisibility?.observe(el);
-  }));
-  for (const [i, r] of results.entries()) {
-    if (r.status === 'rejected') console.warn(`preview "${entries[i][0]}" did not load`, r.reason);
+  if (!('IntersectionObserver' in window)) {
+    for (const [name, el] of entries) createPreview(name, el);
+    return;
   }
-  syncPreviewPlayback();
+  const nameOf = new Map(entries.map(([name, el]) => [el, name]));
+  const creator = new IntersectionObserver(observed => {
+    for (const entry of observed) {
+      if (!entry.isIntersecting) continue;
+      creator.unobserve(entry.target);
+      createPreview(nameOf.get(entry.target), entry.target);
+    }
+  }, { rootMargin: '100% 0px' });
+  for (const [, el] of entries) creator.observe(el);
 }
 
 const SCENE_COUNT = Object.keys(SCENES).length;
@@ -464,7 +496,6 @@ window.addEventListener('pm:navigate', e => {
 
 initColophon();
 
-const PM_ORIGINAL_TITLE = document.title;
 const PM_GLIMPSE_WORDS = {
   sphere: 'zen archery',
   butterfly: 'complexity',
@@ -481,7 +512,6 @@ const PM_GLIMPSE_WORDS = {
   medium: 'deux',
   title: 'secrets',
 };
-let pmGlimpseTimer = null;
 function pmGlimpse(key) {
   if (!key) return;
   if (Math.random() >= 0.01) return;
@@ -489,7 +519,7 @@ function pmGlimpse(key) {
   if (!word) return;
   document.title = word;
   clearTimeout(pmGlimpseTimer);
-  pmGlimpseTimer = setTimeout(() => { document.title = PM_ORIGINAL_TITLE; }, 1100);
+  pmGlimpseTimer = setTimeout(() => { document.title = pageTitle; }, 1100);
 }
 
 function glimpseKeyFor(node) {

@@ -2,6 +2,7 @@ import {
   bindGuardedResize, prefersReducedMotion, onReducedMotionChange, parseHTML,
   createFrameClock, trackTimers, claimContainer, bindPersistedSoundToggle,
   createJumpList, sceneTemplate,
+  sceneChromeRoot,
 } from '../../utils/sceneKit.js';
 import {
   ELEMENTS, ELEMENT_BY_KEY, VISIBLE_MIN, VISIBLE_MAX, CHORD_CAP, SOLAR_MIXTURE,
@@ -1036,7 +1037,7 @@ export function createApollo(container, { preview = false, initialArg = null, on
     soundToggleEl = frag.querySelector('.apollo-sound-toggle');
     soundToggleLabelEl = soundToggleEl.querySelector('.apollo-sound-toggle-label');
     srLiveEl = frag.querySelector('.apollo-sr-live');
-    document.body.append(titleRowEl, hintEl, soundToggleEl);
+    sceneChromeRoot().append(titleRowEl, hintEl, soundToggleEl);
     container.appendChild(srLiveEl);
 
     soundToggle = bindPersistedSoundToggle(container, soundToggleEl, setSoundEnabled, 'apollo');

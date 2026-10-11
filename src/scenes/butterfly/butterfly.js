@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import {
   bindOrbitDrag, bindWheelZoom, bindGuardedResize, prefersReducedMotion, parseHTML,
   claimContainer, manageRenderer, trackTimers, createFrameClock, sceneTemplate,
+  sceneChromeRoot,
 } from '../../utils/sceneKit.js';
 import butterflyHtml from './butterfly.html?raw';
 import './butterfly.css';
@@ -59,7 +60,7 @@ export function createButterfly(container, { preview = false } = {}) {
   camera.lookAt(0, preview ? 5 : 0, 0);
 
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-  const managedRenderer = manageRenderer(renderer);
+  const managedRenderer = manageRenderer(renderer, { preview });
   renderer.setSize(w, h);
   renderer.setClearColor(0x000000, 0);
   renderer.domElement.setAttribute('aria-hidden', 'true');
@@ -77,8 +78,8 @@ export function createButterfly(container, { preview = false } = {}) {
     const frag = parseHTML(sceneTemplate('butterfly', butterflyHtml));
     expLabel = frag.querySelector('.butterfly-exp-label-row');
     hint = frag.querySelector('.butterfly-hint');
-    document.body.appendChild(expLabel);
-    document.body.appendChild(hint);
+    sceneChromeRoot().appendChild(expLabel);
+    sceneChromeRoot().appendChild(hint);
   }
 
   const center = findCenter(SCALE);

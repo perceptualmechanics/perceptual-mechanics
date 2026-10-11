@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { bindOrbitDrag, bindWheelZoom, bindGuardedResize, prefersReducedMotion, onReducedMotionChange, createPanelCloser, createJumpList, mountClippedPreviewCanvas, bindTapVsDrag, parseHTML, claimContainer, disposeSceneGraph, manageRenderer, createFrameClock, trackTimers,
   sceneTemplate,
+  sceneChromeRoot,
 } from '../../utils/sceneKit.js';
 import './orrery.css';
 import orreryHtml from './orrery.html?raw';
@@ -1847,6 +1848,7 @@ export function createOrrery(container, { preview = false } = {}) {
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
   let animId = null;
   const managedRenderer = manageRenderer(renderer, {
+    preview,
     onLost: () => { cancelAnimationFrame(animId); animId = null; },
   });
   renderer.setSize(w, h);
@@ -2022,7 +2024,7 @@ export function createOrrery(container, { preview = false } = {}) {
 
     container.appendChild(vignette);
     container.appendChild(grain);
-    document.body.appendChild(title);
+    sceneChromeRoot().appendChild(title);
 
     title.querySelector('.orrery-title-main').textContent = ORRERY.name;
 
@@ -2054,7 +2056,7 @@ export function createOrrery(container, { preview = false } = {}) {
       },
     });
 
-    document.body.appendChild(hint);
+    sceneChromeRoot().appendChild(hint);
 
   }
 

@@ -3,6 +3,7 @@ import { libraryItems, cdRackItems } from './library.text.js';
 import { getOutboundLinks, getInboundLinks, isRenderedField } from '../../links.js';
 import {
   bindOrbitDrag, bindWheelZoom, bindGuardedResize, bindTapVsDrag, prefersReducedMotion, onReducedMotionChange, createPanelCloser, escapeHtml, parseHTML, wireCrossLinks, formatInboundNote, setPanelSide, clickedLeftHalf, claimContainer, disposeSceneGraph, manageRenderer, createFrameClock, trackTimers, sceneTemplate,
+  sceneChromeRoot,
 } from '../../utils/sceneKit.js';
 import './library.css';
 import libraryHtml from './library.html?raw';
@@ -850,6 +851,7 @@ export function createLibrary(container, { preview = false, initialPieceId = nul
   renderer.domElement.setAttribute('aria-hidden', 'true');
   container.appendChild(renderer.domElement);
   const managed = manageRenderer(renderer, {
+    preview,
     onLost: () => { cancelAnimationFrame(animId); animId = null; },
   });
 
@@ -882,7 +884,7 @@ export function createLibrary(container, { preview = false, initialPieceId = nul
     const shell = parseHTML(sceneTemplate('library', libraryHtml));
     hint = shell.querySelector('.library-hint');
     panel = shell.querySelector('.library-panel');
-    document.body.appendChild(hint);
+    sceneChromeRoot().appendChild(hint);
 
     container.appendChild(panel);
     panelTitle = panel.querySelector('.library-panel-title');

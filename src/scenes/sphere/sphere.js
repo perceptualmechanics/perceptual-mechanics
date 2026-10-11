@@ -3,6 +3,7 @@ import { CSS2DRenderer, CSS2DObject } from 'three/examples/jsm/renderers/CSS2DRe
 import { getOutboundLinks, getInboundLinks } from '../../links.js';
 import { bindOrbitDrag, bindWheelZoom, bindGuardedResize, prefersReducedMotion, onReducedMotionChange, createPanelCloser, createJumpList, bindTapVsDrag, parseHTML, wireCrossLinks, formatInboundNote, setPanelSide, clickedLeftHalf, claimContainer, manageRenderer, trackTimers, createFrameClock,
   sceneTemplate,
+  sceneChromeRoot,
 } from '../../utils/sceneKit.js';
 import { stripHtml } from '../../utils/resonanceExcerpts.js';
 import sphereHtml from './sphere.html?raw';
@@ -18,6 +19,7 @@ export function createSphere(container, { preview = false, initialPieceId = null
 
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
   const managedRenderer = manageRenderer(renderer, {
+    preview,
     onLost: () => { cancelAnimationFrame(animId); animId = 0; },
   });
   renderer.setSize(w, h);
@@ -160,7 +162,7 @@ export function createSphere(container, { preview = false, initialPieceId = null
 
       const frag = parseHTML(sceneTemplate('sphere', sphereHtml));
       hint = frag.querySelector('.sphere-hint');
-      document.body.appendChild(hint);
+      sceneChromeRoot().appendChild(hint);
 
       panel = frag.querySelector('.sphere-panel');
       container.appendChild(panel);

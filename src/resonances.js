@@ -526,15 +526,3 @@ export function getPendingResonances() {
   return RESONANCES.filter(r => r.status === 'pending');
 }
 
-function endpointMatches(ep, scene, id, beatId) {
-  if (ep.scene !== scene) return false;
-  if (scene === 'theater') return beatId !== undefined && ep.beatId === beatId;
-  return ep.id === id;
-}
-
-export function getResonancesForPiece(scene, id, beatId) {
-  return RESONANCES.filter(r =>
-    r.status === 'approved' &&
-    (endpointMatches(r.a, scene, id, beatId) || endpointMatches(r.b, scene, id, beatId))
-  );
-}

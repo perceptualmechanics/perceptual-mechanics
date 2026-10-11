@@ -4,6 +4,7 @@ import {
   prefersReducedMotion, parseHTML, createJumpList, createPanelCloser, escapeHtml,
   mountClippedPreviewCanvas, bindPersistedSoundToggle, setPanelSide, clickedLeftHalf,
   manageRenderer, createFrameClock, trackTimers, sceneTemplate,
+  sceneChromeRoot,
 } from '../../utils/sceneKit.js';
 import { getApprovedResonances, getPendingResonances } from '../../resonances.js';
 import { navigateToPiece } from '../../utils/harmonicsEntry.js';
@@ -226,7 +227,7 @@ export function createharmonics(container, { preview = false, initialPieceId = n
 
   const camera = new THREE.PerspectiveCamera(46, w / h, 0.1, CAM_FAR);
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-  const managedRenderer = manageRenderer(renderer);
+  const managedRenderer = manageRenderer(renderer, { preview });
   renderer.setSize(w, h);
   renderer.setClearColor(0x000000, 1);
   renderer.domElement.setAttribute('aria-hidden', 'true');
@@ -514,12 +515,12 @@ export function createharmonics(container, { preview = false, initialPieceId = n
     const frag = parseHTML(sceneTemplate('harmonics', harmonicsHtml));
     titleEl = frag.querySelector('.harmonics-title-row');
     hintEl = frag.querySelector('.harmonics-hint');
-    document.body.appendChild(titleEl);
-    document.body.appendChild(hintEl);
+    sceneChromeRoot().appendChild(titleEl);
+    sceneChromeRoot().appendChild(hintEl);
 
     soundToggleEl = frag.querySelector('.harmonics-sound-toggle');
     soundToggleLabelEl = soundToggleEl.querySelector('.harmonics-sound-toggle-label');
-    document.body.appendChild(soundToggleEl);
+    sceneChromeRoot().appendChild(soundToggleEl);
 
     panel = frag.querySelector('.harmonics-panel');
     container.appendChild(panel);

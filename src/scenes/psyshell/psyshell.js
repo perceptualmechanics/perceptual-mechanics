@@ -4,10 +4,12 @@ import {
   createJumpList, bindTapVsDrag, mountClippedPreviewCanvas, parseHTML,
   claimContainer, manageRenderer, createFrameClock,
   bindPersistedSoundToggle, onReducedMotionChange, sceneTemplate,
+  sceneChromeRoot,
 } from '../../utils/sceneKit.js';
 import './psyshell.css';
 import psyshellHtml from './psyshell.html?raw';
-import { TEXTS, SOURCES, SOURCE_OF, FILAPIXEL_COUNT, baseEDigits } from './psyshell.text.js';
+import { FILAPIXEL_COUNT } from './psyshell.count.js';
+import { baseEDigits } from './psyshell.digits.js';
 import { SEGMENTS, NUBS, BOUNDS, LENS_ID, placeFilapixels, pathToTip } from './psyshell.object.js';
 import { buildWeb } from './psyshell.web.js';
 import { mulberry32, hashSeed } from '../../utils/prng.js';
@@ -148,7 +150,7 @@ export function createPsyshell(container, { preview = false } = {}) {
   }
 
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
-  const managedRenderer = manageRenderer(renderer);
+  const managedRenderer = manageRenderer(renderer, { preview });
   renderer.setSize(w, h);
   renderer.domElement.setAttribute('aria-hidden', 'true');
   renderer.domElement.style.width = '100%';
@@ -674,16 +676,18 @@ export function createPsyshell(container, { preview = false } = {}) {
   writeLevels();
 
   let titleEl = null, hintEl = null, ordinalEl = null, jumpList = null, soundToggle = null;
+  let corpus = null;
   const srSay = msg => { if (srLiveEl) srLiveEl.textContent = msg; };
 
   function showRead(index) {
-    const src = SOURCES[SOURCE_OF[index]];
     if (ordinalEl) {
       ordinalEl.hidden = false;
       ordinalEl.textContent = `${index + 1} / ${FILAPIXEL_COUNT}`;
       placeOrdinal();
     }
-    srSay(`Filapixel ${index + 1} of ${FILAPIXEL_COUNT}, from ${src.label}. ${TEXTS[index]}`);
+    if (!corpus) { srSay(`Filapixel ${index + 1} of ${FILAPIXEL_COUNT}.`); return; }
+    const src = corpus.SOURCES[corpus.SOURCE_OF[index]];
+    srSay(`Filapixel ${index + 1} of ${FILAPIXEL_COUNT}, from ${src.label}. ${corpus.TEXTS[index]}`);
   }
 
   const raycaster = new THREE.Raycaster();
@@ -724,15 +728,19 @@ export function createPsyshell(container, { preview = false } = {}) {
     soundToggleEl = frag.querySelector('.psyshell-sound-toggle');
     soundLabelEl = frag.querySelector('.psyshell-sound-label');
     srLiveEl = frag.querySelector('.psyshell-sr-live');
-    document.body.append(titleEl, hintEl, ordinalEl, soundToggleEl, srLiveEl);
+    sceneChromeRoot().append(titleEl, hintEl, ordinalEl, soundToggleEl, srLiveEl);
 
     soundToggle = bindPersistedSoundToggle(container, soundToggleEl, setSoundEnabled, 'psyshell');
 
-    jumpList = createJumpList(container, {
-      label: 'What the lens holds, by scene',
-      items: SOURCES,
-      getLabel: s => `${s.label} — ${s.count}`,
-      onSelect: src => { readAt(src.first); showRead(src.first); },
+    import('./psyshell.text.js').then(m => {
+      if (disposed) return;
+      corpus = m;
+      jumpList = createJumpList(container, {
+        label: 'What the lens holds, by scene',
+        items: m.SOURCES,
+        getLabel: s => `${s.label} — ${s.count}`,
+        onSelect: src => { readAt(src.first); showRead(src.first); },
+      });
     });
 
     touchGuard = bindTapVsDrag(container);

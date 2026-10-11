@@ -140,6 +140,7 @@
   /* The tracking lands after the last character too, so the right side
      gives it back and the text sits where it looks centred. */
   padding: 0.15rem calc(0.3rem - var(--tracking)) 0.15rem 0.3rem; min-width: 2rem;
+  min-height: 24px; /* WCAG 2.5.8: the strikes sit edge to edge */
   color: var(--ap-brass);
   font-family: 'Electrolize', sans-serif;
   font-size: 0.78rem; letter-spacing: var(--tracking);
@@ -173,6 +174,7 @@
   /* The tracking lands after the last character too, so the right side
      gives it back and the text sits where it looks centred. */
   padding: 0.3rem calc(0.7rem - var(--tracking)) 0.3rem 0.7rem;
+  min-height: 24px; /* WCAG 2.5.8 */
   color: rgba(216, 205, 180, 0.8);
   font-family: 'Electrolize', sans-serif;
   font-size: 0.55rem; letter-spacing: var(--tracking); text-transform: uppercase;
@@ -252,6 +254,7 @@
   /* The tracking lands after the last character too, so the right side
      gives it back and the text sits where it looks centred. */
   padding: 0.28rem calc(0.7rem - var(--tracking)) 0.28rem 0.7rem;
+  min-height: 24px; /* WCAG 2.5.8 */
   color: var(--ap-brass-dim);
   font-family: 'Electrolize', sans-serif;
   font-size: 0.56rem; letter-spacing: var(--tracking); text-transform: uppercase;

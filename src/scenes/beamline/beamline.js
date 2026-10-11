@@ -4,6 +4,7 @@ import {
   createJumpList, bindTapVsDrag, mountClippedPreviewCanvas, parseHTML,
   bindEscapeClose, claimContainer, manageRenderer, createFrameClock, trackTimers,
   registerTransientOverlay, sceneTemplate,
+  sceneChromeRoot,
 } from '../../utils/sceneKit.js';
 import './beamline.css';
 import beamlineHtml from './beamline.html?raw';
@@ -645,7 +646,7 @@ export function createBeamline(container, { preview = false, initialPieceId = nu
   updateCamera();
 
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-  const managedRenderer = manageRenderer(renderer);
+  const managedRenderer = manageRenderer(renderer, { preview });
   renderer.setSize(w, h);
   renderer.setClearColor(0x00020a, 1);
   renderer.domElement.setAttribute('aria-hidden', 'true');
@@ -780,10 +781,10 @@ export function createBeamline(container, { preview = false, initialPieceId = nu
     title = shell.querySelector('.beamline-title');
     title.querySelector('.beamline-title-main').textContent = EPIGRAPH_PRIMARY;
     title.querySelector('.beamline-title-sub').textContent = EPIGRAPH_SECONDARY;
-    document.body.appendChild(title);
+    sceneChromeRoot().appendChild(title);
 
     hint = shell.querySelector('.beamline-hint');
-    document.body.appendChild(hint);
+    sceneChromeRoot().appendChild(hint);
 
     srLive = shell.querySelector('.beamline-sr-live');
     container.appendChild(srLive);

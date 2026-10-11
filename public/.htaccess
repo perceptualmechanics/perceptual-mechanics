@@ -116,10 +116,6 @@ RewriteRule ^text/(.*/)?index\.html$ /text/%1 [L,R=301]
 # needs is an entry nobody re-examines, and 'unsafe-hashes' in particular
 # widens what a hash match is allowed to be (event-handler attributes, not
 # just <script> bodies) for no remaining benefit.
-#
-# (STANDARDS.md's "New interactive code always uses addEventListener" section
-# used to describe that eleven-hash list as a closed legacy set; it was
-# corrected in 4.0 and no longer needs the note that stood here.)
 # Adding an on*= attribute
 # again would mean re-introducing 'unsafe-hashes' *and* a hash here just to
 # keep the site working: friction placed here deliberately.

@@ -36,6 +36,7 @@ const CLAIMS = [
     phrases: [
       /all (\S+) scenes\b/, /(\S+) scenes on (?:this|the) site\b/,
       /(\S+) scenes total\b/, /(\S+) scenes in the registry\b/, /every one of the (\S+) scenes\b/,
+      /(\S+) small experiences\b/,
       /site's (\S+) scenes\b/, /(\S+) scenes now\b/, /now (\S+) scenes\b/,
     ],
   },
@@ -128,7 +129,7 @@ const CLAIMS = [
 
 
 const ROOTS = ['src', 'scripts', 'styles', 'packages', 'docs', '.github'];
-const FILES = ['index.html', 'vite.config.js', 'public/.htaccess', 'STANDARDS.md', 'SITE.md', 'WORKING-PROTOCOL.md', 'README.md'];
+const FILES = ['index.html', 'vite.config.js', 'public/.htaccess', 'README.md'];
 const EXT = /\.(js|mjs|css|html|md|yml|yaml|txt|htaccess)$|(^|\/)\.htaccess$/;
 const SKIP_FILE = /(^|\/)(NOTES|CHANGELOG|CORRECTED-FACTS|WORKING-COPY)[\w.-]*\.md$|\.archive\.md$|(^|\/)node_modules(\/|$)|(^|\/)dist(\/|$)|(^|\/)PUNCH-LIST-5\.0\.md$|(^|\/)NOTES-/;
 

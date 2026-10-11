@@ -6,6 +6,7 @@ import {
   onReducedMotionChange, createPanelCloser, createJumpList, escapeHtml,
   parseHTML, wireCrossLinks, formatInboundNote, setPanelSide, clickedLeftHalf,
   claimContainer, createFrameClock, trackTimers, manageRenderer, disposeSceneGraph, sceneTemplate,
+  sceneChromeRoot,
 } from '../../utils/sceneKit.js';
 import './orbiter.css';
 import orbiterHtml from './orbiter.html?raw';
@@ -328,6 +329,7 @@ export function createOrbiter(container, { preview = false, initialPieceId = nul
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
   let contextLost = false;
   const managedRenderer = manageRenderer(renderer, {
+    preview,
     onLost: () => {
       contextLost = true;
       cancelAnimationFrame(animId);
@@ -405,8 +407,8 @@ export function createOrbiter(container, { preview = false, initialPieceId = nul
     title = shell.querySelector('.orbiter-title');
     hint = shell.querySelector('.orbiter-hint');
     panel = shell.querySelector('.orbiter-panel');
-    document.body.appendChild(title);
-    document.body.appendChild(hint);
+    sceneChromeRoot().appendChild(title);
+    sceneChromeRoot().appendChild(hint);
 
     container.appendChild(panel);
     panelTitle   = panel.querySelector('.orbiter-panel-title');
