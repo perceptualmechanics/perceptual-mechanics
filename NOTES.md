@@ -2660,7 +2660,8 @@ against a vendored excerpt of `UnicodeData.txt`, and drawn as SVG in the nav's
 own line rather than set from a font, which iOS would turn into emoji. Each
 drawing was compared against Unicode's code charts. That caught a moon facing
 the wrong way: the first draft was U+263E, the last quarter. Which scene carries
-which sigil is Scott's assignment, and the data and the generator say so. The
+which sigil is authored, not traditional, and the data and the generator mark
+it as authored. The
 seven planets go to orrery (Sun), quiz (Moon), medium (Mercury), harmonics
 (Venus), apollo (Mars), orbiter (Jupiter) and library (Saturn). The other seven
 take air, fire, earth, water, salt, sulphur and quintessence. Sphere was to have
@@ -2687,3 +2688,14 @@ until it gave its tracking back.
 The sigil drawings and Ripley's text are resolved at build time and never ship
 in the page's script. The landing's main chunk grows by 3.5 KB gzipped, which is
 the solar arithmetic it actually runs.
+
+### 7.3.1 — the workbench is the hours and the sigils
+
+The workbench stops here: the planetary hour on the landing, the ruling scene
+lit, and each scene's alchemical sigil on hover. That is all it is meant to be.
+
+Ripley's twelve gates came out of `bench.text.js`, and their checks out of
+`verify-bench`. They were data no visitor ever saw, kept for a vessel that will
+not be built. The Ripley vessel (7.4.0) stays unmerged on `release/7.4.0`.
+Nothing on the page changes. The 17 remaining corrupted copies of the gate's
+data each still fail.

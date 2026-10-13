@@ -16,8 +16,6 @@ export function benchData() {
     CHALDEAN: text.CHALDEAN,
     WEEKDAY_RULERS: text.WEEKDAY_RULERS,
     PLANETS: text.PLANETS,
-    ripleyOrder: text.RIPLEY.order.lines,
-    ripleyDivision: text.RIPLEY.division.lines,
     SIGILS: text.SIGILS,
     ASSIGNMENTS: text.ASSIGNMENTS,
     SIGIL_PATHS,
@@ -53,17 +51,6 @@ export function verifyBench(d = benchData()) {
   }
   if (d.CHALDEAN === text.CHALDEAN && sky.dayRuler(3) !== d.WEEKDAY_RULERS[3]) fail('bench.sky.js dayRuler() disagrees with the week');
 
-  // Ripley: twelve gates, numbered by his own ordinals, the count his own.
-  let gates = [];
-  try { gates = text.parseGates(d.ripleyOrder); } catch (e) { fail(e.message); }
-  const stated = text.statedGateCount(d.ripleyDivision);
-  if (stated === null) fail('p. 127 no longer states how many chapters Ripley divides the work into');
-  if (gates.length !== stated) fail(`p. 128 yields ${gates.length} gates, but p. 127 says "In number ${stated}"`);
-  const ns = gates.map(g => g.n);
-  if (ns.join() !== Array.from({ length: gates.length }, (_, i) => i + 1).join()) fail(`the gates are numbered ${ns.join(',')}, not 1..${gates.length} once each`);
-  if (gates.some(g => /recapytulatyon/i.test(g.spelling))) fail('Recapytulatyon was counted as a gate; Ripley keeps it outside the twelve');
-  if (gates.some(g => /y/.test(g.name))) fail('a gate kept a y through modernSpelling()');
-
   // Sigils: the assignment covers the registry exactly, no sigil twice, every
   // planet once, every code point and name as Unicode has it, every sigil drawn.
   const assigned = Object.entries(d.ASSIGNMENTS);
@@ -89,8 +76,8 @@ export function verifyBench(d = benchData()) {
     if (!a.why?.trim()) fail(`${scene}'s assignment gives no reason`);
   }
   const landingProse = d.landingSource.replace(/\n\s*\/\/\s*/g, ' ');
-  if (!/Scott's assignment/.test(d.authorship ?? '')) fail("bench.text.js SIGIL_AUTHORSHIP no longer says the sigils are Scott's assignment");
-  if (!/Scott's assignment/.test(landingProse)) fail("scripts/landing.js no longer says the sigils it draws are Scott's assignment");
+  if (!/authored for this site/.test(d.authorship ?? '')) fail('bench.text.js SIGIL_AUTHORSHIP no longer says the sigils are authored for this site');
+  if (!/authored for this site/.test(landingProse)) fail('scripts/landing.js no longer says the sigils it draws are authored for this site');
 
   // The sky, against the US Naval Observatory. Its times are rounded to the
   // minute, so a minute either way is the tightest honest tolerance.
@@ -178,7 +165,7 @@ export function verifyBench(d = benchData()) {
     log.push(`\nbench: ${problems.length} problem(s):`);
     for (const p of problems) log.push(`  ${p}`);
   } else {
-    log.push(`ok: the week falls out of the Chaldean order; p. 128 gives Ripley's ${gates.length} gates and p. 127 agrees; ${assigned.length} sigils, each planet once, all as Unicode names them; sunrise and sunset within ${worst.toFixed(2)} min of USNO at ${d.usno.length} fixtures; ${tables} days of hours tile sunrise to sunrise; ${lines} hour lines; ${zones.size} zones; geolocation=(self)`);
+    log.push(`ok: the week falls out of the Chaldean order; ${assigned.length} sigils, each planet once, all as Unicode names them; sunrise and sunset within ${worst.toFixed(2)} min of USNO at ${d.usno.length} fixtures; ${tables} days of hours tile sunrise to sunrise; ${lines} hour lines; ${zones.size} zones; geolocation=(self)`);
   }
   return { ok: problems.length === 0, failures: problems.length, log };
 }

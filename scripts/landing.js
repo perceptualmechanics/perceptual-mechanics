@@ -14,8 +14,8 @@ const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;')
 //
 // Each button carries the scene's icon and, layered over it, its sigil on the
 // workbench, which hover and focus bring forward. Which sigil a scene carries is
-// Scott's assignment (bench.text.js); it is resolved here, at build time, so the
-// drawings never ship in the page's script.
+// authored for this site (bench.text.js), not a tradition's; it is resolved here,
+// at build time, so the drawings never ship in the page's script.
 const withClass = (svg, cls) => svg.replace('<svg ', `<svg class="${cls}" `);
 
 export function navIconsHtml() {

@@ -138,7 +138,7 @@ function verifyBenchPlugin() {
       if (!ok) {
         this.error(`verify-bench: ${failures} problem(s) — see above. The workbench says something its sources do not.`);
       } else {
-        console.log('  ✓ verify-bench: the hours, the gates and the sigils hold to their sources');
+        console.log('  ✓ verify-bench: the hours and the sigils hold to their sources');
       }
     },
   };
