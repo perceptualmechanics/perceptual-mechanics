@@ -2,8 +2,8 @@
  "provenance": {
   "source": "Euphonia.md",
   "master": "~/Documents/euphonia/Euphonia.md",
-  "sha256": "89d7c500a82626e1a99ffe94b6ceb42245e9aaa0c2d79fda952d3928f338c5e1",
-  "modified": "2026-11-01T07:12:57-05:00",
+  "sha256": "6b941da3db08ad433557dd21930bccf940f23fdd8b8412cdf1366241431f04c6",
+  "modified": "2026-11-01T07:28:52-05:00",
   "exporter": "class-kit/site_export.py",
   "exporter_version": 3,
   "rules": {
@@ -516,12 +516,6 @@
    ]
   },
   {
-   "where": "Danae · level 5 feature",
-   "reasons": [
-    "the creature type used as prose (the book says fae)"
-   ]
-  },
-  {
    "where": "Danae · level 9 feature",
    "reasons": [
     "bracket",
@@ -533,12 +527,6 @@
    "reasons": [
     "bracket",
     "names a placeholder"
-   ]
-  },
-  {
-   "where": "Danae · blurb",
-   "reasons": [
-    "the creature type used as prose (the book says fae)"
    ]
   },
   {
@@ -586,18 +574,6 @@
    "where": "Danae · Crossing · Level 3: Doors",
    "reasons": [
     "names a placeholder"
-   ]
-  },
-  {
-   "where": "Danae · Shaping · Level 3: Stones",
-   "reasons": [
-    "the creature type used as prose (the book says fae)"
-   ]
-  },
-  {
-   "where": "Danae · Shaping · Level 3: Quick Weaving",
-   "reasons": [
-    "the creature type used as prose (the book says fae)"
    ]
   }
  ],
@@ -4954,7 +4930,7 @@
   },
   {
    "name": "Danae",
-   "blurb": "",
+   "blurb": "Cha full caster. The fae, and the Hidden’s courts.",
    "traits": [
     {
      "trait": "Primary Ability",
@@ -5079,7 +5055,7 @@
      {
       "Level": "5",
       "Proficiency Bonus": "+3",
-      "Class Features": "The First Cycles",
+      "Class Features": "Fae Weaving, The First Cycles",
       "Warps": "5",
       "Cantrips": "4",
       "Prepared Spells": "9",
@@ -5385,6 +5361,11 @@
      "level": 4,
      "name": "Ability Score Improvement",
      "text": "You gain the Ability Score Improvement feat or another feat of your choice for which you qualify. You gain this feature again at Danae levels 8, 12, and 16."
+    },
+    {
+     "level": 5,
+     "name": "Fae Weaving",
+     "text": "The Wyrd flows through your hands, granting you what you might need in a given moment.\n\nWhenever you finish a Long Rest, you can weave fae material into the world with a tool you have proficiency with from the Danae's tool list or your subclass's tool. You create up to a number of nonmagical objects equal to your Proficiency Bonus. Each must be something that tool could make, Medium or smaller, not a consumable (food, a potion, an oil, a poison, or the like) and not ammunition, and worth no more than 10 GP × your Danae level. The objects are real and work as the real thing, but anyone who handles one feels that it is strange. They come undone when you next finish a Long Rest or when you use this feature again.\n\n**Fairy Gold.** The objects are fairy gold: any of them turns to dross when it changes hands for value, and none can be used as a Material component that has a cost."
     },
     {
      "level": 5,
@@ -5770,6 +5751,16 @@
          ]
         }
        ]
+      },
+      {
+       "level": 3,
+       "name": "Stones",
+       "text": "Your warps can be stones. A stone turns its Cube into solid ground, a wall (Total Cover), or a bridge, or opens a 10-foot-deep pit beneath its space. It is real, not an illusion; it has AC 15 and 30 Hit Points per 5-foot Cube. You can't make a stone that would leave a creature with no unoccupied space it could reach. Anything precious made this way is fairy gold (see Fae Weaving) and can't be made permanent."
+      },
+      {
+       "level": 3,
+       "name": "Quick Weaving",
+       "text": "As a Bonus Action, you can expend a warp to weave one object as Fae Weaving describes, without waiting for a rest and even before you have that feature. It lasts for 1 minute."
       },
       {
        "level": 6,

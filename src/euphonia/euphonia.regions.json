@@ -2,8 +2,8 @@
  "provenance": {
   "source": "Euphonia.md",
   "master": "~/Documents/euphonia/Euphonia.md",
-  "sha256": "89d7c500a82626e1a99ffe94b6ceb42245e9aaa0c2d79fda952d3928f338c5e1",
-  "modified": "2026-11-01T07:12:57-05:00",
+  "sha256": "6b941da3db08ad433557dd21930bccf940f23fdd8b8412cdf1366241431f04c6",
+  "modified": "2026-11-01T07:28:52-05:00",
   "exporter": "class-kit/site_export.py",
   "exporter_version": 3,
   "rules": {
@@ -48,12 +48,6 @@
    "where": "The Ottomans and the Islamic West · Playing Here · item 5",
    "reasons": [
     "names a placeholder"
-   ]
-  },
-  {
-   "where": "West Africa · The Hidden Here · item 7",
-   "reasons": [
-    "banned word 4 of the rules"
    ]
   },
   {
@@ -288,7 +282,7 @@
     },
     {
      "heading": "The Hidden Here",
-     "text": "Nearly all of this is 19th- and 20th-century record of living belief; the 17th-century record is European traders calling everything \"fetish.\"\n\n- **The bori spirits** (Hausa). Spirits of families, places, animals and rocks, sorted into twelve \"houses\" and handled by the *bori* possession cult, mostly women, led in some kingdoms by a chief priestess, the **Inna**. Muslim Hausa call them *aljannu*, jinn. They aren't jinn: they're Hidden that took the jinn's name (Scott).\n- **The aziza** (Fon). Little people of anthills and silk-cotton trees who give hunters good magic and are said to have taught people fire. The winged aziza of later fantasy rests on one late source.\n- **The mmoatia** (Akan). Forest little people about a foot high, with backward feet and whistling speech, who teach herbal medicine to priests (unverified). Sasabonsam, who hooks travelers from the trees, is more ogre than fae.\n- **The egbere** (Yoruba). Short, weeping night-walkers of the woods; whoever takes an egbere's little mat grows rich.\n- **The iroko's spirit** (Yoruba). Whoever sees the Iroko-man face to face goes mad and soon dies, and a felled iroko must be prayed over.\n- **The water.** Benin's Olokun and the Yoruba river orisha are gods, not Hidden. Water spirits of wealth and seduction are old here; the name Mami Wata isn't recorded until 1775.\n- **The owners of the land.** Every forest, river and rock has owners, and an earth priest bargains with them: the Mossi *tengasoba*, the Yoruba and Edo groves, the Poro forest. This is the region's village edge, and the Hidden Killers watch it. The Wild Hunt rides here too.\n\n> **Further in:** the aziza, the mmoatia and the egbere all give something a person can use: luck, medicine, wealth. Here the Hidden teach professions."
+     "text": "Nearly all of this is 19th- and 20th-century record of living belief; the 17th-century record is European traders calling everything \"fetish.\"\n\n- **The bori spirits** (Hausa). Spirits of families, places, animals and rocks, sorted into twelve \"houses\" and handled by the *bori* possession cult, mostly women, led in some kingdoms by a chief priestess, the **Inna**. Muslim Hausa call them *aljannu*, jinn. They aren't jinn: they're Hidden that took the jinn's name (Scott).\n- **The aziza** (Fon). Little people of anthills and silk-cotton trees who give hunters good magic and are said to have taught people fire. The winged aziza of later fantasy rests on one late source.\n- **The mmoatia** (Akan). Forest little people about a foot high, with backward feet and whistling speech, who teach herbal medicine to priests (unverified). Sasabonsam, who hooks travelers from the trees, is more ogre than fae.\n- **The egbere** (Yoruba). Short, weeping night-walkers of the woods; whoever takes an egbere's little mat grows rich.\n- **The iroko's spirit** (Yoruba). Whoever sees the Iroko-man face to face goes mad and soon dies, and a felled iroko must be prayed over.\n- **The abiku** (Yoruba; the Igbo *ogbanje*). Children who belong to a company in the spirit world and die to go back to it, unless rites hold them: the stolen-child story with the causation reversed. The belief is bound up with real child deaths and real grief; handle it with weight.\n- **The water.** Benin's Olokun and the Yoruba river orisha are gods, not Hidden. Water spirits of wealth and seduction are old here; the name Mami Wata isn't recorded until 1775.\n- **The owners of the land.** Every forest, river and rock has owners, and an earth priest bargains with them: the Mossi *tengasoba*, the Yoruba and Edo groves, the Poro forest. This is the region's village edge, and the Hidden Killers watch it. The Wild Hunt rides here too.\n\n> **Further in:** the aziza, the mmoatia and the egbere all give something a person can use: luck, medicine, wealth. Here the Hidden teach professions."
     },
     {
      "heading": "What's Happening in 1668",
