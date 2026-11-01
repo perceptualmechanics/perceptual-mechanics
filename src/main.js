@@ -157,7 +157,7 @@ function overlayFocusables() {
     .filter(el => !overlay.contains(el))
     .flatMap(el => (el.matches(FOCUSABLE) ? [el] : []).concat(collect(el)))
     .filter(el => el.tabIndex !== -1 && !el.closest('[hidden]') && !el.disabled && onScreen(el));
-  const siteChrome = [skipLink, ...document.querySelectorAll('.nav-icon'), siteTitle, fsToggle]
+  const siteChrome = [skipLink, ...document.querySelectorAll('.nav-icon, .nav-tool'), siteTitle]
     .filter(el => el && !el.hidden && onScreen(el));
   return [...new Set([...collect(overlay), ...sceneChrome, ...siteChrome])]
     .sort((a, b) =>
