@@ -539,7 +539,7 @@ document.addEventListener('focusin', e => pmGlimpse(glimpseKeyFor(e.target)));
 const fsEnabled = document.fullscreenEnabled ?? document.webkitFullscreenEnabled ?? false;
 if (fsToggle && fsEnabled) {
   fsToggle.hidden = false;
-  pmNav?.style.setProperty('--nav-extra', '1');
+  pmNav?.style.setProperty('--nav-extra', String(pmNav.querySelectorAll('.nav-tool:not([hidden])').length));
 
   const FS_ICON_ENTER = '<path d="M8 3H4a1 1 0 0 0-1 1v4M16 3h4a1 1 0 0 1 1 1v4M8 21H4a1 1 0 0 1-1-1v-4M16 21h4a1 1 0 0 0 1-1v-4"/>';
   const FS_ICON_EXIT = '<path d="M4 9V5a1 1 0 0 1 1-1h4M20 9V5a1 1 0 0 0-1-1h-4M4 15v4a1 1 0 0 0 1 1h4M20 15v4a1 1 0 0 1-1 1h-4"/>';

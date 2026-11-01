@@ -69,7 +69,15 @@
     
     <!--scene-nav-->
 
-    <button type="button" id="fullscreen-toggle" aria-pressed="false" aria-label="Enter fullscreen" hidden>
+    <a id="euphonia-link" class="nav-tool" href="/euphonia/" aria-label="Euphonia">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M12 2.5 20.5 7.25v9.5L12 21.5l-8.5-4.75v-9.5z"/>
+        <path d="M12 7l5 8.5H7z"/>
+        <path d="M12 2.5V7M3.5 7.25 12 7l8.5.25M3.5 7.25 7 15.5M20.5 7.25 17 15.5M3.5 16.75 7 15.5M20.5 16.75 17 15.5M12 21.5 7 15.5M12 21.5l5-6"/>
+      </svg>
+    </a>
+
+    <button type="button" id="fullscreen-toggle" class="nav-tool" aria-pressed="false" aria-label="Enter fullscreen" hidden>
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
         <path d="M8 3H4a1 1 0 0 0-1 1v4M16 3h4a1 1 0 0 1 1 1v4M8 21H4a1 1 0 0 1-1-1v-4M16 21h4a1 1 0 0 0 1-1v-4"/>
       </svg>
@@ -88,7 +96,7 @@
 
     </ul>
 
-    <a id="landing-textlink" href="/text/">read the writing on its own</a>
+    <p id="landing-links"><a id="landing-textlink" href="/text/">read the writing on its own</a><span aria-hidden="true"> · </span><a id="landing-euphonia" href="/euphonia/">euphonia</a></p>
 
     <p id="bench-hour" hidden><span id="bench-hour-text"></span> <button type="button" id="bench-sky" hidden>use your sky</button></p>
 

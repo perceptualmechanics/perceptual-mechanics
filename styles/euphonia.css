@@ -1,0 +1,26 @@
+/* What /euphonia/ adds to the reading pages' styles/page.css. */
+
+section { margin: 0 0 3rem; }
+section > h2 { font-size: 1.34rem; margin: 0 0 0.6rem; font-weight: 600; line-height: 1.3; }
+
+/* The licences are carried in full, so the footer's notices are set as
+   small sections of their own. */
+footer.legal section { margin: 0; }
+footer.legal h2 {
+  font-size: 0.85rem; font-weight: 600; letter-spacing: 0.08em;
+  text-transform: uppercase; margin: 1.6rem 0 0.5rem; color: #9c9384;
+}
+footer.legal .draft { font-style: italic; }
+footer.legal p { overflow-wrap: anywhere; }
+/* page.css takes the underline off footer links, which are only ever a line
+   of their own there; the licences' addresses sit inside sentences, where
+   colour alone wouldn't mark them. */
+footer.legal section a { text-decoration: underline; }
+
+/* Printed, it's a document: dark ink on the page, nothing to navigate. */
+@media print {
+  body { background: #fff; color: #000; }
+  a, footer, footer.legal h2, .kicker, .note, .meta, ul.catalog .n, ul.catalog .e { color: #000; }
+  .skip-link, header.masthead a.home, footer.legal > p:first-child { display: none; }
+  ul.catalog li, header.masthead, footer { border-color: #999; }
+}

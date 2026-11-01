@@ -1,7 +1,9 @@
 import { createHash } from 'node:crypto';
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { homedir } from 'node:os';
+import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
+import { plain } from '../src/euphonia/euphonia.markdown.js';
 
 const ROOT = new URL('../', import.meta.url);
 const read = rel => readFileSync(new URL(rel, ROOT), 'utf8');
@@ -12,9 +14,14 @@ const FILES = ['classes', 'regions', 'adventures', 'legal'];
 // type. The one copy is euphonia.rules.json. The exporter (class-kit/site_export.py)
 // reads it from this folder and records it in each file's provenance; this gate
 // refuses an export made under rules the file no longer holds.
-export function euphoniaData() {
+export function euphoniaFiles() {
   const d = Object.fromEntries(FILES.map(f => [f, JSON.parse(read(`src/euphonia/euphonia.${f}.json`))]));
   d.rules = JSON.parse(read('src/euphonia/euphonia.rules.json'));
+  return d;
+}
+
+export function euphoniaData() {
+  const d = euphoniaFiles();
   // The master is on Scott's machine and nowhere else, the deploy included.
   const path = d.classes.provenance?.master?.replace(/^~(?=\/)/, homedir());
   d.master = path && existsSync(path) ? { path, sha256: createHash('sha256').update(readFileSync(path)).digest('hex') } : null;
@@ -110,6 +117,46 @@ export function verifyEuphonia(d = euphoniaData()) {
     log.push(`ok: one export (${prov[0].sha256.slice(0, 12)}…, exporter v${prov[0].exporter_version}) under this gate's rules; ${checked} strings clean; ${n('classes')} classes, ${n('regions')} regions (draft), ${n('adventures')} games; the ORC Notice is ${legal.orc_notice_status === 'draft' ? `a draft with ${legal.orc_open_slots.length} open slots` : 'final'}`);
   }
   return { ok: problemsFound.length === 0, failures: problemsFound.length, log, warnings };
+}
+
+// What a reader gets of a built page's footer: its text, entities decoded,
+// whitespace as it reads.
+function footerText(html) {
+  const m = [...html.matchAll(/<footer\b([^>]*)>([\s\S]*?)<\/footer>/g)].find(f => /class="legal"/.test(f[1]));
+  if (!m) return null;
+  if (/\b(hidden|aria-hidden)\b/.test(m[1])) return null;
+  // Inline tags join their words as a reader sees them; block tags separate.
+  return m[2].replace(/<\/?(?:a|em|strong)\b[^>]*>/g, '').replace(/<[^>]*>/g, ' ')
+    .replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&')
+    .replace(/\s+/g, ' ');
+}
+
+// Every built Euphonia page carries the copyright line, the ORC Notice and the
+// SRD 5.2.1 attribution in its own text, so they reach a reader with scripting
+// off and survive printing. Run on the build's output, not the template.
+export function verifyEuphoniaPages(outDir, legal = euphoniaFiles().legal.data) {
+  const log = [];
+  const problemsFound = [];
+  const dir = join(outDir, 'euphonia');
+  const pages = existsSync(dir) ? readdirSync(dir, { recursive: true }).filter(f => f.endsWith('.html')) : [];
+  if (!pages.length) problemsFound.push(`no Euphonia pages were built under ${dir}`);
+  const owed = [
+    ['the copyright line', legal.copyright],
+    ...legal.orc_notice.map((p, i) => [`ORC Notice paragraph ${i + 1}`, plain(p)]),
+    ['the SRD 5.2.1 attribution', legal.srd_attribution],
+  ].map(([what, text]) => [what, text.replace(/\s+/g, ' ')]);
+  for (const page of pages) {
+    const text = footerText(readFileSync(join(dir, page), 'utf8'));
+    if (text === null) { problemsFound.push(`euphonia/${page}: no visible <footer class="legal">`); continue; }
+    for (const [what, want] of owed) if (!text.includes(want)) problemsFound.push(`euphonia/${page}: the footer doesn't carry ${what} as written`);
+  }
+  if (problemsFound.length) {
+    log.push(`\neuphonia pages: ${problemsFound.length} problem(s):`);
+    for (const p of problemsFound) log.push(`  ${p}`);
+  } else {
+    log.push(`ok: all ${pages.length} Euphonia page(s) carry the copyright line, the ORC Notice (${legal.orc_notice.length} paragraphs) and the SRD 5.2.1 attribution in their footer`);
+  }
+  return { ok: problemsFound.length === 0, failures: problemsFound.length, log };
 }
 
 if (import.meta.url === pathToFileURL(process.argv[1]).href) {

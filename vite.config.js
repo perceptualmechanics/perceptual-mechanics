@@ -13,7 +13,8 @@ import { verifyCounts } from './scripts/verify-counts.mjs';
 import { injectLanding } from './scripts/landing.js';
 import { verifyQuizWheel } from './scripts/quiz-wheel.mjs';
 import { verifyBench } from './scripts/verify-bench.mjs';
-import { verifyEuphonia } from './scripts/verify-euphonia.mjs';
+import { verifyEuphonia, verifyEuphoniaPages } from './scripts/verify-euphonia.mjs';
+import { injectEuphonia } from './scripts/euphonia-page.js';
 
 const HERE = import.meta.dirname;
 
@@ -25,7 +26,7 @@ function landingMarkupPlugin() {
     name: 'pm-landing-markup',
     transformIndexHtml: {
       order: 'pre',
-      handler: (html) => injectLanding(html),
+      handler: (html, { filename }) => filename === resolve(HERE, 'index.html') ? injectLanding(html) : html,
     },
   };
 }
@@ -145,10 +146,38 @@ function verifyBenchPlugin() {
   };
 }
 
+// Fills euphonia/index.html from the vendored export, as landingMarkupPlugin
+// fills the landing.
+function euphoniaMarkupPlugin() {
+  return {
+    name: 'pm-euphonia-markup',
+    transformIndexHtml: {
+      order: 'pre',
+      handler: (html, { filename }) => filename === resolve(HERE, 'euphonia/index.html') ? injectEuphonia(html) : html,
+    },
+  };
+}
+
 function verifyEuphoniaPlugin() {
+  let outDir = resolve(HERE, 'dist');
+  let failed = false;
   return {
     name: 'pm-verify-euphonia',
     apply: 'build',
+    configResolved(config) {
+      outDir = resolve(config.root, config.build.outDir);
+    },
+    // Rolldown closes a failed build too, with nothing written; its own error
+    // is the one to see.
+    buildEnd(error) {
+      failed = Boolean(error);
+    },
+    closeBundle() {
+      if (failed) return;
+      const { ok, failures, log } = verifyEuphoniaPages(outDir);
+      log.forEach(line => console.log(line));
+      if (!ok) this.error(`verify-euphonia: ${failures} page problem(s) — see above. Every Euphonia page owes its footer the copyright line, the ORC Notice and the SRD 5.2.1 attribution.`);
+    },
     buildStart() {
       const { ok, failures, log, warnings } = verifyEuphonia();
       log.forEach(line => console.log(line));
@@ -245,7 +274,7 @@ function verifyStyleHash(outDir, root) {
 }
 
 export default defineConfig({
-  plugins: [landingMarkupPlugin(), verifyLinksPlugin(), verifyResonancesPlugin(), verifyScrollMarksPlugin(), verifyLandingPlugin(), verifyAriaPlugin(), verifyCssInvariantsPlugin(), verifyCountsPlugin(), verifyQuizWheelPlugin(), verifyBenchPlugin(), verifyEuphoniaPlugin(), prerenderTextPages()],
+  plugins: [landingMarkupPlugin(), euphoniaMarkupPlugin(), verifyLinksPlugin(), verifyResonancesPlugin(), verifyScrollMarksPlugin(), verifyLandingPlugin(), verifyAriaPlugin(), verifyCssInvariantsPlugin(), verifyCountsPlugin(), verifyQuizWheelPlugin(), verifyBenchPlugin(), verifyEuphoniaPlugin(), prerenderTextPages()],
   build: {
     cssMinify: 'esbuild',
     cssTarget: ['chrome87', 'edge88', 'firefox78', 'safari14'],
@@ -253,6 +282,7 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main:     resolve(HERE, 'index.html'),
+        euphonia: resolve(HERE, 'euphonia/index.html'),
       },
       output: {
         manualChunks(id) {

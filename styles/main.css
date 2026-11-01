@@ -137,7 +137,9 @@ html, body {
 
 #pm-nav {
   --nav-count: 14;
-  --nav-extra: 0;
+  /* The tools shown without scripting: the Euphonia link. main.js recounts
+     once it knows whether fullscreen is offered. */
+  --nav-extra: 1;
   --nav-units: calc(var(--nav-count) + var(--nav-extra));
   --nav-pad: 0.5rem;
   --nav-rule: 1.5rem;
@@ -304,33 +306,40 @@ html, body {
 }
 
 
-#landing-textlink {
+#landing-links {
   position: fixed;
-  /* The padding makes a 24px target of a 12px line (WCAG 2.5.8); bottom
-     gives it back so the text stays where it was. */
-  padding-block: 0.375rem;
   bottom: calc(5.2rem - 0.375rem); left: 0; right: 0;
   width: fit-content;
-  margin-inline: auto;
+  margin: 0 auto;
   z-index: 60;
   font-size: 0.6rem;
+  /* On the line, not the links, so the separator is tracked like the words
+     and sits evenly between them. */
   letter-spacing: 0.18em;
-  text-transform: uppercase;
   color: rgba(255,255,255,0.55);
-  text-decoration: none;
   text-shadow: 0 1px 5px rgba(0,0,0,0.85);
-  transition: color 0.2s;
 
 	@media (min-width: 601px) {
 		bottom: calc(1.6rem - 0.375rem); left: 1.5rem; right: auto;
 		margin-inline: 0;
 	}
+}
+#landing-textlink, #landing-euphonia {
+  /* The padding makes a 24px target of a 12px line (WCAG 2.5.8); the
+     line's bottom gives it back so the text stays where it was. */
+  display: inline-block;
+  padding-block: 0.375rem;
+  text-transform: uppercase;
+  color: inherit;
+  text-decoration: none;
+  transition: color 0.2s;
+
 	@media (prefers-reduced-motion: reduce) {
 		transition: none;
 	}
 }
-#landing-textlink:hover { color: rgba(255,255,255,0.9); }
-#landing-textlink:focus-visible { outline: none; box-shadow: var(--focus-ring-outer); }
+#landing-textlink:hover, #landing-euphonia:hover { color: rgba(255,255,255,0.9); }
+#landing-textlink:focus-visible, #landing-euphonia:focus-visible { outline: none; box-shadow: var(--focus-ring-outer); }
 
 /* The planetary hour, one line above the text link. Prerendered empty and
    hidden, so filling it in never moves anything. */
@@ -398,12 +407,13 @@ html, body {
 #noscript-fallback a { color: #fff; }
 
 
-#fullscreen-toggle {
+/* The tools after the scenes (Euphonia, and fullscreen where the browser
+   allows it), set off from them by a rule before the first. */
+.nav-tool {
   flex: 0 0 auto;
   position: relative;
   display: flex; align-items: center; justify-content: center;
   width: var(--nav-icon-max); height: var(--nav-icon-max);
-  margin-inline-start: var(--nav-rule);
   padding: 0;
   border: none;
   background: none;
@@ -412,7 +422,8 @@ html, body {
   cursor: pointer;
   transition: opacity 0.25s, transform 0.2s;
 }
-#fullscreen-toggle::before {
+.nav-icon + .nav-tool { margin-inline-start: var(--nav-rule); }
+.nav-icon + .nav-tool::before {
   content: '';
   position: absolute;
   inset-inline-start: calc(-0.5 * (var(--nav-rule) + var(--nav-gap)));
@@ -421,18 +432,18 @@ html, body {
   margin-top: -9px;
   background: rgba(255,255,255,0.18);
 }
-#fullscreen-toggle:hover { opacity: 1; transform: scale(1.12); }
-#fullscreen-toggle:focus-visible {
+.nav-tool:hover { opacity: 1; transform: scale(1.12); }
+.nav-tool:focus-visible {
   opacity: 1;
   outline: var(--focus-ring);
   outline-offset: 3px;
   border-radius: 3px;
 }
-#fullscreen-toggle svg { width: 20px; height: 20px; display: block; }
+.nav-tool svg { width: 20px; height: 20px; display: block; }
 #fullscreen-toggle[hidden] { display: none; }
 @media (prefers-reduced-motion: reduce) {
-  #fullscreen-toggle { transition: none; }
-  #fullscreen-toggle:hover { transform: none; }
+  .nav-tool { transition: none; }
+  .nav-tool:hover { transform: none; }
 }
 
 

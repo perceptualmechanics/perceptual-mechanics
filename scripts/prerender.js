@@ -69,122 +69,9 @@ function lines(text) {
   return esc(text).replace(/\n/g, '<br>\n');
 }
 
-export const PAGE_STYLE = `
-  :root { color-scheme: dark; }
-  /* Self-hosted, the same face styles/main.css loads; font-src 'self'
-     already allows it. Roman only — see this constant's own comment
-     above for why, and for what this block was missing until 4.0. */
-  @font-face { font-family: 'Arapey'; font-style: normal; font-weight: 400;
-    font-display: swap; src: url('/fonts/arapey-400.woff2') format('woff2'); }
-  * { box-sizing: border-box; }
-  body {
-    margin: 0; background: #0a0a0a; color: #ded9d0;
-    font-family: 'Arapey', Georgia, 'Iowan Old Style', serif;
-    font-size: 1.06rem; line-height: 1.72;
-    -webkit-text-size-adjust: 100%;
-  }
-  .skip-link {
-    position: absolute; left: -9999px; top: 0; background: #c9a227; color: #0a0a0a;
-    padding: 0.6rem 1rem; z-index: 10; text-decoration: none;
-  }
-  .skip-link:focus { left: 0; }
-  .wrap { max-width: 40rem; margin: 0 auto; padding: 2.5rem 1.25rem 5rem; }
-  a { color: #d9b13f; }
-  a:hover, a:focus { color: #f0cf6a; }
-  header.masthead { border-bottom: 1px solid #2a2620; padding-bottom: 1.4rem; margin-bottom: 2rem; }
-  header.masthead a.home {
-    font-family: 'Arapey', serif; letter-spacing: 0.34em; text-transform: uppercase;
-    font-size: 0.66rem; color: #8c8377; text-decoration: none;
-  }
-  header.masthead a.home:hover, header.masthead a.home:focus { color: #d9b13f; }
-  h1 { font-size: 1.9rem; line-height: 1.25; margin: 1.1rem 0 0.3rem; font-weight: 600; }
-  .kicker { color: #8c8377; font-size: 0.86rem; margin: 0; }
-  .lede {
-    border-left: 2px solid #4a4034; padding: 0.9rem 0 0.9rem 1.1rem; margin: 2rem 0 2.6rem;
-    color: #b8b0a4; font-size: 0.98rem;
-  }
-  .lede p { margin: 0 0 0.7rem; }
-  .lede p:last-child { margin-bottom: 0; }
-  .enter {
-    display: inline-block; margin-top: 0.4rem; font-size: 0.82rem;
-    letter-spacing: 0.16em; text-transform: uppercase; text-decoration: none;
-    border: 1px solid #6b5a37; padding: 0.55rem 1rem; color: #d9b13f;
-  }
-  .enter:hover, .enter:focus { background: #1a160f; border-color: #d9b13f; }
-  article.piece { margin: 0 0 4rem; }
-  article.piece > h2 {
-    font-size: 1.34rem; margin: 0 0 0.15rem; font-weight: 600; line-height: 1.3;
-    scroll-margin-top: 1rem;
-  }
-  .meta { color: #8c8377; font-size: 0.8rem; letter-spacing: 0.08em; margin: 0 0 1.3rem; }
-  /* .note is one look worn by two different things, and the markup now says
-     which is which. An editorial caveat in this site's own voice stays a
-     p.note; a passage quoted from outside the document — Beamline's
-     two found epigraphs, Psyshell's manuscript source — is a blockquote, and
-     picks up the same treatment from the shared selector below rather than a
-     second set of values. blockquote's user-agent margin has to go, since the
-     border-left is doing the setting-apart. */
-  .note {
-    color: #9c9384; font-size: 0.88rem; font-style: italic;
-    border-left: 1px solid #3a342b; padding-left: 0.9rem; margin: 0 0 1.4rem;
-  }
-  blockquote.note, blockquote.epigraph {
-    color: #9c9384; font-size: 0.88rem; font-style: italic;
-    border-left: 1px solid #3a342b; padding-left: 0.9rem;
-    margin: 0 0 1.4rem;
-  }
-  blockquote.note p, blockquote.epigraph p { margin: 0 0 0.7rem; }
-  blockquote.note p:last-child, blockquote.epigraph p:last-child { margin-bottom: 0; }
-  /* A bibliography is a list of peers, and was four sibling paragraphs. The
-     markers are off because these are sources rather than steps, but the count
-     and the boundaries are now real to a screen reader. */
-  ul.sources { list-style: none; padding: 0; margin: 0 0 1.4rem; }
-  ul.sources li {
-    color: #9c9384; font-size: 0.88rem; font-style: italic;
-    border-left: 1px solid #3a342b; padding-left: 0.9rem; margin: 0 0 0.8rem;
-  }
-  p { margin: 0 0 1.15rem; }
-  .script { margin: 1.6rem 0; font-family: 'Courier New', Courier, monospace; font-size: 0.92rem; line-height: 1.6; }
-  /* Medium's transcript. Tracked out and monospaced because it is a tape of
-     single marks rather than prose, and pre-wrapped rather than scrollable: the
-     lines are broken to a fixed length by the builder, so on a narrow screen
-     they should wrap like text instead of running off the side. */
-  pre.tape {
-    margin: 1.4rem 0; padding: 1rem 1.1rem;
-    background: #16130f; border: 1px solid #3a342b; border-radius: 3px;
-    font-family: 'Courier New', Courier, monospace;
-    font-size: 0.86rem; line-height: 2; letter-spacing: 0.22em;
-    color: #c4bcae; white-space: pre-wrap; overflow-wrap: anywhere;
-  }
-  .script .slug { text-transform: uppercase; letter-spacing: 0.06em; color: #c4bcae; margin-bottom: 1rem; }
-  .script .action { margin-bottom: 0.9rem; }
-  .script .cue { margin: 0 0 0.15rem; padding-left: 5.5rem; text-transform: uppercase; letter-spacing: 0.08em; color: #c4bcae; }
-  .script .paren { margin: 0 0 0.1rem; padding-left: 4.5rem; color: #9c9384; }
-  .script .line { margin: 0 0 0.9rem; padding-left: 3rem; }
-  ul.catalog { list-style: none; padding: 0; margin: 0 0 2.4rem; }
-  ul.catalog li { border-bottom: 1px solid #1e1b17; padding: 0.85rem 0; }
-  /* cite is the element for the title of a work, and this page is 261 of
-     them. Its user-agent italic is reset here rather than accepted: these rows
-     are already dense, and the visual weight that distinguishes a title from a
-     creator has been the 600 since the page was first built. */
-  ul.catalog .t { font-weight: 600; font-style: normal; }
-  ul.catalog .c { color: #a89f92; }
-  /* #837c70, not the #7d766b this started as: at 0.8rem this is normal-size
-     text for WCAG purposes, and #7d766b measured 4.41:1 against the ground —
-     under AA's 4.5:1. Raised just far enough to clear it (4.79:1) while
-     staying the quietest line in the entry. Same call as the orrery panel's
-     era line in 1.6.0. */
-  ul.catalog .e { display: block; color: #837c70; font-size: 0.8rem; margin-top: 0.15rem; }
-  ul.catalog .n { display: block; color: #9c9384; font-size: 0.88rem; font-style: italic; margin-top: 0.4rem; }
-  nav.index ul { list-style: none; padding: 0; }
-  nav.index li { border-bottom: 1px solid #1e1b17; padding: 1rem 0; }
-  nav.index a { font-size: 1.15rem; text-decoration: none; }
-  nav.index a:hover, nav.index a:focus { text-decoration: underline; }
-  nav.index .d { display: block; color: #8c8377; font-size: 0.9rem; margin-top: 0.25rem; }
-  footer { border-top: 1px solid #2a2620; margin-top: 3rem; padding-top: 1.4rem; color: #837c70; font-size: 0.85rem; }
-  footer a { text-decoration: none; }
-  @media (max-width: 600px) { .wrap { padding: 1.75rem 1.05rem 4rem; } h1 { font-size: 1.6rem; } }
-`;
+// The reading pages' one stylesheet, inlined into each /text/ page (its hash is
+// in .htaccess's style-src) and linked by /euphonia/, so the two can't drift.
+export const PAGE_STYLE = fs.readFileSync(new URL('../styles/page.css', import.meta.url), 'utf8');
 
 export const PAGE_STYLE_SHA256 = 'sha256-2IEIosd7xcKSXoyHYxb5REbHYSLVf1PlVAauy+8tKts=';
 
@@ -977,6 +864,7 @@ export function prerender(outDir) {
       priority: p.slugPath ? '0.8' : '0.9',
       changefreq: 'monthly',
     })),
+    { loc: `${ORIGIN}/euphonia/`, priority: '0.9', changefreq: 'monthly' },
   ];
   const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">

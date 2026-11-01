@@ -34,6 +34,11 @@ RewriteRule ^index\.html$ / [L,R=301]
 RewriteCond %{THE_REQUEST} \s/+text/(([^\s?]*/)?)index\.html[?\s]
 RewriteRule ^text/(.*/)?index\.html$ /text/%1 [L,R=301]
 
+# And for /euphonia/ (2026-11-01), a Vite page served the same way, scoped to
+# ^euphonia/ for the same reason.
+RewriteCond %{THE_REQUEST} \s/+euphonia/(([^\s?]*/)?)index\.html[?\s]
+RewriteRule ^euphonia/(.*/)?index\.html$ /euphonia/%1 [L,R=301]
+
 # Cache-Control. Fonts got this treatment 2026-08-31; the hashed bundles and
 # HTML joined them 2026-09-01 (4.0), and the two rules that both matched
 # .woff2 were reconciled into the one below at the same time. What used to be
