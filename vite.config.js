@@ -150,10 +150,11 @@ function verifyEuphoniaPlugin() {
     name: 'pm-verify-euphonia',
     apply: 'build',
     buildStart() {
-      const { ok, failures, log } = verifyEuphonia();
+      const { ok, failures, log, warnings } = verifyEuphonia();
       log.forEach(line => console.log(line));
+      warnings.forEach(w => this.warn(w));
       if (!ok) {
-        this.error(`verify-euphonia: ${failures} problem(s) — see above. Euphonia's vendored text carries something that must not be published; re-export from the master with class-kit/site_export.py.`);
+        this.error(`verify-euphonia: ${failures} problem(s) — see above. Euphonia's vendored text carries something that must not be published; re-export from the master with npm run euphonia:refresh.`);
       } else {
         console.log('  ✓ verify-euphonia: one clean export of the master, under the site\'s rules');
       }

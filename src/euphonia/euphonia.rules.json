@@ -1,0 +1,17 @@
+{
+ "banned": [
+  "eladrin",
+  "Feywild",
+  "Shadowfell",
+  "changeling",
+  "genasi",
+  "Seelie",
+  "Unseelie",
+  "Imbas",
+  "Dungeons & Dragons",
+  "D&D"
+ ],
+ "banned_because": "Someone else's names, kept out of everything Euphonia publishes (Appendix E; setting/ip-review.md).",
+ "fey_type": "\\bFey(?=\\s+(?:creatures?\\b|among the creature types))|(?<=\\*)Fey(?=\\.\\*)",
+ "fey_type_because": "\"Fey\" survives only as the creature type; the setting's prose says \"fae\" (Book Two, What's Different)."
+}

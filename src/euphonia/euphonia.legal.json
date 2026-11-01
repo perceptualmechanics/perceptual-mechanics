@@ -1,10 +1,11 @@
 {
  "provenance": {
   "source": "Euphonia.md",
-  "sha256": "866f67b257a0f1ba143240151db9cae954319f497208196b118dc50838d010f2",
-  "modified": "2026-10-28T06:55:31-04:00",
+  "master": "~/Documents/euphonia/Euphonia.md",
+  "sha256": "89d7c500a82626e1a99ffe94b6ceb42245e9aaa0c2d79fda952d3928f338c5e1",
+  "modified": "2026-11-01T07:12:57-05:00",
   "exporter": "class-kit/site_export.py",
-  "exporter_version": 2,
+  "exporter_version": 3,
   "rules": {
    "banned": [
     "eladrin",
@@ -18,7 +19,9 @@
     "Dungeons & Dragons",
     "D&D"
    ],
-   "fey_type": "\\bFey(?=\\s+(?:creatures?\\b|among the creature types))|(?<=\\*)Fey(?=\\.\\*)"
+   "banned_because": "Someone else's names, kept out of everything Euphonia publishes (Appendix E; setting/ip-review.md).",
+   "fey_type": "\\bFey(?=\\s+(?:creatures?\\b|among the creature types))|(?<=\\*)Fey(?=\\.\\*)",
+   "fey_type_because": "\"Fey\" survives only as the creature type; the setting's prose says \"fae\" (Book Two, What's Different)."
   }
  },
  "withheld": [],

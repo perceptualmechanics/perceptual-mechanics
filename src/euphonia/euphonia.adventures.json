@@ -1,10 +1,11 @@
 {
  "provenance": {
   "source": "Euphonia.md",
-  "sha256": "866f67b257a0f1ba143240151db9cae954319f497208196b118dc50838d010f2",
-  "modified": "2026-10-28T06:55:31-04:00",
+  "master": "~/Documents/euphonia/Euphonia.md",
+  "sha256": "89d7c500a82626e1a99ffe94b6ceb42245e9aaa0c2d79fda952d3928f338c5e1",
+  "modified": "2026-11-01T07:12:57-05:00",
   "exporter": "class-kit/site_export.py",
-  "exporter_version": 2,
+  "exporter_version": 3,
   "rules": {
    "banned": [
     "eladrin",
@@ -18,7 +19,9 @@
     "Dungeons & Dragons",
     "D&D"
    ],
-   "fey_type": "\\bFey(?=\\s+(?:creatures?\\b|among the creature types))|(?<=\\*)Fey(?=\\.\\*)"
+   "banned_because": "Someone else's names, kept out of everything Euphonia publishes (Appendix E; setting/ip-review.md).",
+   "fey_type": "\\bFey(?=\\s+(?:creatures?\\b|among the creature types))|(?<=\\*)Fey(?=\\.\\*)",
+   "fey_type_because": "\"Fey\" survives only as the creature type; the setting's prose says \"fae\" (Book Two, What's Different)."
   }
  },
  "withheld": [
@@ -37,6 +40,47 @@
  ],
  "data": [
   {
+   "title": "Intrigue in the Courts of Europe",
+   "open": "A game of ministers, spies, and the war over who may use magic.",
+   "notes": [
+    "Every court has a minister of magic, and a court's read on magic follows who controls its church. Crowns that own their churches absorb magic (France, England); Church-run states regulate it (Spain, Rome); where authority is weak, the witch hunts burn (the Empire, Sweden).",
+    "The crime is unlicensed magic, so a license is a weapon.",
+    "Shewstones carry the crowned heads' conversations, and the Spymaster's Club has them.",
+    "The players: the Agitators (the Ordo Seclorum, \"until every crown is shattered\"), the anti-monarchists, the Invisible College and the Children of the Emerald Tablet in the courts and the schools, against the natural philosophers.",
+    "The Counsellor's home ground: the Spymaster, the Marshal, the Factor and the Gamester all move through the ruling milieu. One is a middle-aged French halfling with his own chair at a Versailles gaming table.",
+    "The red alert: every court's intelligence says Mutapa is about to vault the magical gap. A Mutapan artificer in London who has taken an apprentice suddenly becomes something else entirely.",
+    "**It's an intelligence operation.** Give all these scheming people scrying and the whole game is espionage. *Scrying* works better the better the link (a likeness, a letter, a glove, a lock of hair), so court portraits and the miniatures exchanged in marriage negotiations are intelligence assets and a portrait painter is a security risk; the counters (*Nondetection*, *Mind Blank*, lead-lined rooms) are state secrets. The spymasters are the game's secret heroes.",
+    "**The gate sighting.** Foreign watchers, scrying on the Archbishop of Toledo, saw him open a gate to New Granada for an escort round an empty space: the Queen Regent, warded by *Nondetection*, is the hole in the picture. The absence is the tell. Opening a gate at all is news: it means Spain's primate is an archmage of the highest rank, or Spain has a standing circle on another continent.",
+    "**Freelancers for Mutapa** (Scott, 2026-11-01): the party can work for a crown or be hired by Mutapa; the Mutapan game at the top is half of the introductory arc.",
+    "**Mutapa's spymaster** matters more than anyone's now, because the Chocó's platina is the one thing that could break the monopoly. The spymaster may be brilliant and still have a thinner service than less brilliant Counsellors elsewhere; Mutapa's scrying lags the old states'.",
+    "1668 at court: Versailles's Grand Divertissement royal; Spain recognizes Portugal; Sweden's witch panic begins."
+   ],
+   "undecided": [
+    "Which court the game starts in, and the stakes of its first season."
+   ],
+   "regions": []
+  },
+  {
+   "title": "The Venice Job",
+   "open": "The big heist.",
+   "notes": [
+    "Venice is a whole city as a dungeon: canals, rooftops, palaces and archives.",
+    "A golem walks the Jewish ghetto's streets after dark.",
+    "A Danae of the Crossing racing across the rooftops is on the cover.",
+    "In 1668 Venice is losing Candia, which falls to the Ottomans in 1669. The Republic is desperate, and desperate states make mistakes.",
+    "**A good, solid intro heist.** The target isn't the most expensive thing in the world, but it's going on the market very soon and will command a hefty fee: why not take it and keep the money? The ghetto's golem is one of the encounters on the way.",
+    "**More than a safecracking job** (Scott, 2026-11-01): a real delve, monsters in the dark under the city, on the way to the Toledo File.",
+    "**Venice's underground is wet and shallow**: the city stands on pilings in a lagoon, so its dungeon is the flooded crypt under San Zaccaria, the well-cisterns under every campo, the *Pozzi* (the \"wells,\" the Doge's lowest cells), and the lagoon islands, the plague hospital of the Lazzaretto and its graves among them.",
+    "**The deep delve is Toledo's**: the Cave of Hercules, a Roman-era vault under the old city. Legend says Hercules sealed an enchanted tower there; King Roderic broke it open against every warning, found a cloth painted with Arab horsemen, and lost Spain the same year. Toledo also had Europe's reputation as the school of necromancy. A file kept at the bottom of a sealed pagan vault, under the city of the Inquisition."
+   ],
+   "undecided": [
+    "The target, the crew, and who else wants it."
+   ],
+   "regions": [
+    "Central and Eastern Europe"
+   ]
+  },
+  {
    "title": "A Chinese Dungeon Crawl",
    "open": "The classic delve, Chinese style.",
    "notes": [
@@ -53,36 +97,16 @@
    ]
   },
   {
-   "title": "Intrigue in the Courts of Europe",
-   "open": "A game of ministers, spies, and the war over who may use magic.",
-   "notes": [
-    "Every court has a minister of magic, and a court's read on magic follows who controls its church. Crowns that own their churches absorb magic (France, England); Church-run states regulate it (Spain, Rome); where authority is weak, the witch hunts burn (the Empire, Sweden).",
-    "The crime is unlicensed magic, so a license is a weapon.",
-    "Shewstones carry the crowned heads' conversations, and the Spymaster's Club has them.",
-    "The players: the Agitators (the Ordo Seclorum, \"until every crown is shattered\"), the anti-monarchists, the Invisible College, and the Children of the Emerald Tablet in the courts and the schools, against the natural philosophers.",
-    "The Counsellor's home ground: the Spymaster, the Marshal, the Factor and the Gamester all move through the ruling milieu. One is a middle-aged French halfling with his own chair at a Versailles gaming table.",
-    "The red alert: every court's intelligence says Mutapa is about to vault the magical gap. A Mutapan artificer in London who has taken an apprentice suddenly becomes something else entirely.",
-    "**It's an intelligence operation.** Give all these scheming people scrying and the whole game is espionage. *Scrying* works better the better the link (a likeness, a letter, a glove, a lock of hair), so court portraits and the miniatures exchanged in marriage negotiations are intelligence assets and a portrait painter is a security risk; the counters (*Nondetection*, *Mind Blank*, lead-lined rooms) are state secrets. The spymasters are the game's secret heroes.",
-    "**The gate sighting.** Foreign watchers, scrying on the Archbishop of Toledo, saw him open a gate to New Granada for an escort round an empty space: the Queen Regent, warded by *Nondetection*, is the hole in the picture. The absence is the tell. Opening a gate at all is news: it means Spain's primate is an archmage of the highest rank, or Spain has a standing circle on another continent.",
-    "**Mutapa's spymaster** matters more than anyone's now, because the Chocó's platina is the one thing that could break the monopoly. The spymaster may be brilliant and still have a thinner service than less brilliant Counsellors elsewhere; Mutapa's scrying lags the old states'.",
-    "1668 at court: Versailles's Grand Divertissement royal; Spain recognizes Portugal; Sweden's witch panic begins."
-   ],
-   "undecided": [
-    "Which court the game starts in, and the stakes of its first season."
-   ],
-   "regions": []
-  },
-  {
    "title": "The Andean War",
    "open": "A gritty three-sided war.",
    "notes": [
-    "Three sides: the Inca, the Spanish, and the people trying to profit off both. The setting's *Wages of Fear* mercenary game.",
+    "Three sides: the Inca, the Spanish and the people trying to profit off both. The setting's *Wages of Fear* mercenary game.",
     "South America is the grittiest active setting in the book: the place to go for amoral soldier-of-fortune play.",
     "The Inca hold the high ground and Spain the coast and lowlands. Potosí, Spain's silver mountain, is the contested frontier.",
-    "Nobody knows whether the kingdom breaks, Spain breaks, or the line settles into a real border.",
+    "Nobody knows whether the kingdom breaks, Spain breaks or the line settles into a real border.",
     "It runs the whole tonal range: play the Andeans defending their home nobly, or play it gritty.",
     "The Inca state was itself an empire built on conquest, and the Cañari and Chachapoya fought beside Spain against it.",
-    "What's at stake: silver, mercury, guano, cinchona, and the huacas that rose.",
+    "What's at stake: silver, mercury, guano, cinchona and the huacas that rose.",
     "**The Chocó is a frontier Spain hasn't secured,** and its own peoples have been resisting for decades. If it's easy to take, England and France need only a fleet. Everyone involves themselves at once."
    ],
    "undecided": [
@@ -93,34 +117,17 @@
    ]
   },
   {
-   "title": "The Venice Job",
-   "open": "The big heist.",
-   "notes": [
-    "Venice is a whole city as a dungeon: canals, rooftops, palaces, and archives.",
-    "A golem walks the Jewish ghetto's streets after dark.",
-    "A Danae of the Crossing racing across the rooftops is on the cover.",
-    "In 1668 Venice is losing Candia, which falls to the Ottomans in 1669. The Republic is desperate, and desperate states make mistakes.",
-    "**A good, solid intro heist.** The target isn't the most expensive thing in the world, but it's going on the market very soon and will command a hefty fee: why not take it and keep the money? The ghetto's golem is one of the encounters on the way."
-   ],
-   "undecided": [
-    "The target, the crew, and who else wants it."
-   ],
-   "regions": [
-    "Central and Eastern Europe"
-   ]
-  },
-  {
    "title": "The Monsoon Road: Trading the Indian Ocean Coast",
    "open": "What it's like to be a tradesperson working the coast from Mutapa to the Mughals to China, and beyond.",
    "notes": [
-    "The players are traders, not soldiers or delvers: a ship, a cargo, and a living to make on the monsoon winds. The game is the voyage, the ports, the deals, and what's worth more two harbors on.",
+    "The players are traders, not soldiers or delvers: a ship, a cargo and a living to make on the monsoon winds. The game is the voyage, the ports, the deals and what's worth more two harbors on.",
     "**Mutapa's coast** is the start. Mutapa holds Sofala, the plateau's gold port, and the Cape, the gate every European fleet must pass. Gold is priced by the *mithqal*; the House of the Bird banks it. Up the coast, the Swahili city-states (Kilwa, Mombasa, Malindi) each picked a foreign patron, and the Portuguese hold Fort Jesus at Mombasa.",
     "**The Mughal coast.** Gujarati merchants finance the trade by *hundi*, and Surat is the great port. The English, the Dutch and, newly, the French have their factories there. Shivaji's Marathas sacked Surat in 1664, and in 1668 the English East India Company takes over Bombay. Aurangzeb's court regulates magic.",
     "**The straits.** The Dutch took Malacca from Portugal in 1641 and rule from Batavia. Europeans hold fortified ports and depend on local rulers' permission for nearly everything else.",
     "**China.** The Portuguese trade through Macau. Koxinga drove the Dutch from Taiwan in 1662, and his heirs hold it against the Qing, who have cleared their own southern coast to starve them out.",
     "**Beyond:** the Pacific and Pohnpei, the civilization druids and clerics built.",
-    "**What the voyage brings in** (Scott, 2026-10-25): piracy; the Great Game's newfound zeal for platinum; the Wisdom civilizations' ways of building; the Portuguese; Arabia; the Indian seacoast; and Southeast Asia.\n  - **Arabia:** Oman's imams took Muscat from the Portuguese in 1650 and now raid Portuguese posts down the Swahili coast.\n  - **The Portuguese** hold a string of forts from Mozambique and Mombasa to Goa and Macau, and are losing ground to the Dutch, the Omanis and, here, Mutapa.\n  - **Southeast Asia:** Aceh nearly took Malacca in 1629; Ayutthaya, Mataram and the Dutch at Batavia all trade and fight.\n  - **Wisdom-built places:** Pohnpei, and other civilizations that build with spells instead of brick.\n  - **The deep:** the deepest, least explored parts of the Indian Ocean are home to the Hidden, who have built their own undersea civilization there.\n  - **The platinum rush:** every power's agents are on this road now, looking for Mutapan metal and Mutapan secrets.",
-    "What a trader carries: Mutapan devices and platinum, which every power wants and nobody else can make; the strange metal Europe is scrambling for; shewstones, if anyone dares."
+    "**What the voyage brings in** (Scott, 2026-10-25): piracy; the Great Game's newfound zeal for platinum; the Wisdom civilizations' ways of building; the Portuguese; Arabia; the Indian seacoast; and Southeast Asia.\n  - **Arabia:** Oman's imams took Muscat from the Portuguese in 1650 and now raid Portuguese posts down the Swahili coast.\n  - **The Portuguese** hold a string of forts from Mozambique and Mombasa to Goa and Macau, and are losing ground to the Dutch, the Omanis and, here, Mutapa.\n  - **Southeast Asia:** Aceh nearly took Malacca in 1629; Ayutthaya, Mataram and the Dutch at Batavia all trade and fight.\n  - **Wisdom-built places:** civilizations like Pohnpei's that build with spells instead of brick.\n  - **The deep:** the deepest, least explored parts of the Indian Ocean are home to the Hidden, who have built their own undersea civilization there.\n  - **The platinum rush:** every power's agents are on this road now, looking for Mutapan metal and Mutapan secrets.",
+    "What a trader carries: Mutapan devices, which every power wants and nobody else can make; platinum, the strange metal Europe is scrambling for; shewstones, if anyone dares."
    ],
    "undecided": [
     "The crew, the ship, and the first cargo.",
@@ -137,7 +144,7 @@
    "open": "The frontier game, on the border between the villages and the Hidden.",
    "notes": [
     "**Setting-agnostic** (Scott, 2026-10-26): the border of civilization is a universal problem. It doesn't matter what continent it's on; every society has villages on the outskirts and a Hidden past them.",
-    "**Three ways to play it:**\n  - **The Hunt:** an entirely Hidden party. The Bordermarch Barbarians, the Mortal Hunters, the Hidden Bards, the Danae, and the paladins (the Dreamwarden) who ride out to raid.\n  - **The resisters:** the Hidden Killers, the Faebreakers, the priests of the Hidden Domain, and whoever else stands between the village and the Hunt.\n  - **The villagers:** the people who just live in the towns and villages on the outskirts, and have to get through it.",
+    "**Three ways to play it:**\n  - **The Hunt:** an entirely Hidden party. The Bordermarch Barbarians, the Mortal Hunters, the Hidden Bards, the Danae and the paladins (the Dreamwarden) who ride out to raid.\n  - **The resisters:** the Hidden Killers, the Faebreakers, the priests of the Hidden Domain and whoever else stands between the village and the Hunt.\n  - **The villagers:** the people who just live in the towns and villages on the outskirts, and have to get through it.",
     "The Wild Hunt is why the precautions exist: sudden raids out of the Bordermarches are really dangerous.",
     "**The Hunt grows deadlier as it grows stronger** (Scott, 2026-10-26). A prepared village beats a young Hunt: at low level the villagers win about 6 fights in 10, and on their own warded ground far more. By 14th level the riders win about 3 in 4. That's the shape: a 14th-level Hunt is a fae duke out hunting with his company, more or less (or whatever the Hidden's great lords are called on that border). It's serious business, and something that powerful doesn't come through on an ordinary night. When one does, the day matters to the Hidden: an open night, a quarter day, a debt come due. On ordinary ground the priest can call the taken back; on thin ground, they're gone.",
     "**A twist:** the border can be on the new, almost suburban edges of Mutapa's fast-growing cities, where modern artifice meets southern Africa's own Hidden: the water spirits who take people under the pools and send some back as healers, the tiny people of the grass."

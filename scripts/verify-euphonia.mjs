@@ -1,31 +1,38 @@
-import { readFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
+import { existsSync, readFileSync } from 'node:fs';
+import { homedir } from 'node:os';
 import { pathToFileURL } from 'node:url';
 
 const ROOT = new URL('../', import.meta.url);
 const read = rel => readFileSync(new URL(rel, ROOT), 'utf8');
 const FILES = ['classes', 'regions', 'adventures', 'legal'];
 
-// What may never reach a Euphonia page: draft brackets, braced names awaiting
-// replacement, and other people's names. The exporter (class-kit/site_export.py)
-// applies the same rules and writes them into each file's provenance; this gate
-// is their authority on the site, and refuses an export made under any other.
-export const BANNED = ['eladrin', 'Feywild', 'Shadowfell', 'changeling', 'genasi', 'Seelie', 'Unseelie', 'Imbas', 'Dungeons & Dragons', 'D&D'];
-// "Fey" survives only as the creature type; the setting's prose says "fae".
-export const FEY_TYPE = /\bFey(?=\s+(?:creatures?\b|among the creature types))|(?<=\*)Fey(?=\.\*)/g;
-
+// What may never reach a Euphonia page, besides draft brackets and braced names
+// awaiting replacement: other people's names, and "Fey" outside the creature
+// type. The one copy is euphonia.rules.json. The exporter (class-kit/site_export.py)
+// reads it from this folder and records it in each file's provenance; this gate
+// refuses an export made under rules the file no longer holds.
 export function euphoniaData() {
-  return Object.fromEntries(FILES.map(f => [f, JSON.parse(read(`src/euphonia/euphonia.${f}.json`))]));
+  const d = Object.fromEntries(FILES.map(f => [f, JSON.parse(read(`src/euphonia/euphonia.${f}.json`))]));
+  d.rules = JSON.parse(read('src/euphonia/euphonia.rules.json'));
+  // The master is on Scott's machine and nowhere else, the deploy included.
+  const path = d.classes.provenance?.master?.replace(/^~(?=\/)/, homedir());
+  d.master = path && existsSync(path) ? { path, sha256: createHash('sha256').update(readFileSync(path)).digest('hex') } : null;
+  return d;
 }
 
 const escape = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-export function problems(text) {
+export function problems(text, rules) {
   const out = [];
   if (/[[\]]/.test(text)) out.push('a bracket');
   if (/[{}]/.test(text)) out.push('a brace');
-  BANNED.forEach((w, i) => { if (new RegExp(`(?<!\\w)${escape(w)}(?!\\w)`, 'i').test(text)) out.push(`banned word ${i + 1}`); });
-  if (/\bfey\b/i.test(text.replace(FEY_TYPE, ''))) out.push('the creature type used as prose');
+  rules.banned.forEach((w, i) => { if (new RegExp(`(?<!\\w)${escape(w)}(?!\\w)`, 'i').test(text)) out.push(`banned word ${i + 1}`); });
+  if (/\bfey\b/i.test(text.replace(new RegExp(rules.fey_type, 'g'), ''))) out.push('the creature type used as prose');
   return out;
 }
+
+// Key order is the exporter's business; what the rules say is the gate's.
+const canonical = o => JSON.stringify(o, (k, v) => v && typeof v === 'object' && !Array.isArray(v) ? Object.fromEntries(Object.entries(v).sort()) : v);
 
 function* strings(o) {
   if (typeof o === 'string') yield o;
@@ -35,6 +42,7 @@ function* strings(o) {
 
 export function verifyEuphonia(d = euphoniaData()) {
   const log = [];
+  const warnings = [];
   const problemsFound = [];
   const fail = m => problemsFound.push(m);
 
@@ -43,18 +51,30 @@ export function verifyEuphonia(d = euphoniaData()) {
   FILES.forEach((f, i) => {
     const p = prov[i];
     if (!/^[0-9a-f]{64}$/.test(p?.sha256 ?? '')) fail(`euphonia.${f}.json: no SHA-256 of the master in its provenance`);
+    if (typeof p?.master !== 'string' || !p.master.endsWith('/Euphonia.md')) fail(`euphonia.${f}.json: provenance doesn't say where the master was read`);
     if (p?.exporter !== 'class-kit/site_export.py' || !Number.isInteger(p?.exporter_version)) fail(`euphonia.${f}.json: provenance doesn't name the exporter and its version`);
     if (p?.sha256 !== prov[0]?.sha256 || p?.exporter_version !== prov[0]?.exporter_version) fail(`euphonia.${f}.json: from a different export than euphonia.classes.json; refresh all four together`);
-    if (JSON.stringify(p?.rules?.banned) !== JSON.stringify(BANNED)) fail(`euphonia.${f}.json: exported under a different banned list than this gate's`);
-    if (p?.rules?.fey_type !== FEY_TYPE.source) fail(`euphonia.${f}.json: exported under a different creature-type rule than this gate's`);
+    if (canonical(p?.rules) !== canonical(d.rules)) fail(`euphonia.${f}.json: exported under different rules than euphonia.rules.json holds; run npm run euphonia:refresh`);
   });
+  const rulesFailures = problemsFound.length;
+  if (!Array.isArray(d.rules.banned) || !d.rules.banned.length || !d.rules.banned.every(w => typeof w === 'string' && w)) fail('euphonia.rules.json: "banned" is not a list of names');
+  try { new RegExp(d.rules.fey_type); } catch { fail('euphonia.rules.json: "fey_type" is not a pattern'); }
+  const rulesHold = problemsFound.length === rulesFailures;
 
-  // Nothing forbidden in what's shown, or in the record of what was withheld.
+  // Whether the master has moved on since this export. A warning, not a failure:
+  // a build in the middle of an edit is fine, and the deploy can't see the master.
+  if (typeof prov[0]?.master === 'string') {
+    if (!d.master) log.push(`euphonia: the master (${prov[0].master}) isn't on this machine, so whether it changed since the export isn't checked`);
+    else if (d.master.sha256 !== prov[0].sha256) warnings.push(`Euphonia.md has changed since this export (${prov[0].sha256?.slice(0, 12)}… → ${d.master.sha256.slice(0, 12)}…); run npm run euphonia:refresh to bring the site up to it`);
+  }
+
+  // Nothing forbidden in what's shown, or in the record of what was withheld,
+  // once there are rules to check it by.
   let checked = 0;
-  for (const f of FILES) {
+  for (const f of rulesHold ? FILES : []) {
     for (const s of strings([d[f].data, d[f].withheld])) {
       checked++;
-      const why = problems(s);
+      const why = problems(s, d.rules);
       if (why.length) fail(`euphonia.${f}.json: ${why.join(', ')} in "${s.slice(0, 80)}"`);
     }
   }
@@ -89,11 +109,12 @@ export function verifyEuphonia(d = euphoniaData()) {
     const n = k => d[k].data.length;
     log.push(`ok: one export (${prov[0].sha256.slice(0, 12)}…, exporter v${prov[0].exporter_version}) under this gate's rules; ${checked} strings clean; ${n('classes')} classes, ${n('regions')} regions (draft), ${n('adventures')} games; the ORC Notice is ${legal.orc_notice_status === 'draft' ? `a draft with ${legal.orc_open_slots.length} open slots` : 'final'}`);
   }
-  return { ok: problemsFound.length === 0, failures: problemsFound.length, log };
+  return { ok: problemsFound.length === 0, failures: problemsFound.length, log, warnings };
 }
 
 if (import.meta.url === pathToFileURL(process.argv[1]).href) {
-  const { ok, log } = verifyEuphonia();
+  const { ok, log, warnings } = verifyEuphonia();
   log.forEach(l => console.log(l));
+  warnings.forEach(w => console.warn(`warning: ${w}`));
   if (!ok) process.exit(1);
 }

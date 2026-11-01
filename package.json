@@ -18,7 +18,8 @@
     "verify-scroll-marks": "node scripts/verify-scroll-marks.mjs",
     "verify-landing": "node scripts/verify-landing.mjs",
     "verify-bench": "node scripts/verify-bench.mjs",
-    "verify-euphonia": "node scripts/verify-euphonia.mjs"
+    "verify-euphonia": "node scripts/verify-euphonia.mjs",
+    "euphonia:refresh": "python3 \"${CLASS_KIT:-$HOME/Documents/class-kit}/site_export.py\" src/euphonia && node scripts/verify-euphonia.mjs"
   },
   "dependencies": {
     "bardjs": "*",
