@@ -2,10 +2,10 @@
  "provenance": {
   "source": "Euphonia.md",
   "master": "~/Documents/euphonia/Euphonia.md",
-  "sha256": "68bcbf6cee435e8a1c33025b3c8b7b39c1ec6ea0d2d8eff962450c663517b463",
-  "modified": "2026-11-01T13:36:16-05:00",
+  "sha256": "f780dd205188523531301c0f12beb660507011fa2e34b833490fcf1b17ccfdc9",
+  "modified": "2026-11-01T15:00:45-05:00",
   "exporter": "class-kit/site_export.py",
-  "exporter_version": 4,
+  "exporter_version": 5,
   "rules": {
    "banned": [
     "eladrin",
@@ -30,8 +30,8 @@
   "orc_notice": [
    "This product is licensed under the ORC License located at the Library of Congress at TX 9-307-067 and available online at various locations including paizo.com/orclicense and others. All warranties are disclaimed as set forth therein.",
    "**Attribution.** This product is based on the following Licensed Material: *Euphonia*, © 2026 Scott Cohen. It also includes material from the *System Reference Document 5.2.1* by Wizards of the Coast LLC, licensed under CC-BY-4.0 (attribution below). If you use our Licensed Material in your own published works, please credit us as follows: *Euphonia*, © 2026 Scott Cohen, https://perceptualmechanics.com/euphonia/.",
-   "**Reserved Material.** Reserved Material elements in this product include, but may not be limited to: the name *Euphonia*, its logo and trade dress; the cover figures and other named characters of this work; Lanternhall; all flavor text, vignettes and other narrative passages of this work; and all elements designated as Reserved Material under the ORC License.",
-   "**Expressly Designated Licensed Material.** The following elements are owned by the Licensor and would otherwise constitute Reserved Material and are hereby designated as Licensed Material: the Principles; the Hidden, the Hidden Realm, the tide, the Wild Hunt and the Hidden Killers; the Plenum and its structures; the names and rules of every class, subclass, spell and magic item in *Euphonia: The Classes*; and the State of the World chapters and the research they rest on."
+   "**Reserved Material.** Reserved Material elements in this product are only these: the name *Euphonia*, its logo and trade dress; the cover figures and the named characters this work invents, including the great artificer, Simbarashe Moyo, and Mutapa's spymaster, Shiri; the name Lanternhall; and flavor text, meaning the vignettes and in-character passages that open chapters, classes, subclasses and features, and the flavor passages within them (in print, the passages set apart as flavor). The setting's explanatory prose is not flavor text. Rules text that mentions a reserved name is Licensed Material, with the name replaced in any work that uses it. Real historical people, places and institutions are not Reserved Material.",
+   "**Expressly Designated Licensed Material.** The following elements are owned by the Licensor and would otherwise constitute Reserved Material and are hereby designated as Licensed Material: everything in *Euphonia: The Setting*, *Euphonia: The Classes* and *Euphonia: Life on the Border* that is not Reserved Material above, including the rules, classes, subclasses, spells, magic items and backgrounds and their names; the Principles; the setting's explanatory prose; the State of the World chapters; the institutions and factions; and the research they rest on."
   ],
   "orc_notice_status": "draft",
   "orc_open_slots": [],

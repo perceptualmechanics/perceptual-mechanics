@@ -58,6 +58,14 @@ export function darkRegion(sun, dusk, lon0) {
   return { line: false, cx, cy, r: Math.sqrt(cx * cx + cy * cy + (nz + s) / a), inside: a > 0 };
 }
 
+// The cap of angular radius rho degrees around a point, as a circle on the
+// page: the complement of darkRegion's P·C < cos(rho). Null when the cap holds
+// the projection's far pole, where its outline would bound everything else.
+export function capCircle(center, rho, lon0) {
+  const g = darkRegion(center, 90 - rho, lon0);
+  return g.line || g.inside ? null : { cx: g.cx, cy: g.cy, r: g.r };
+}
+
 // Sutherland–Hodgman against one meridian; keep is +1 for lon >= m, -1 for <=.
 function clipSide(ring, m, keep) {
   const out = [], inside = p => keep * (p[0] - m) >= 0;

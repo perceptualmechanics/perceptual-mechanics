@@ -1,5 +1,5 @@
 {
-  "about": "Which calendar each polity kept in 1668, each with its source. Authored from the sources below; the seats' coordinates are vendored separately from Natural Earth (euphonia.seats.json). The Safavids and the Mughals are wanted and withheld: no source in hand says which calendar their governments kept in 1668.",
+  "about": "Which calendar each polity kept in 1668, each with its source. Authored from the sources below; each seat is a [place, country] the build looks up in Natural Earth's populated places (euphonia.gazetteer.json). The Safavids and the Mughals are wanted and withheld: no source in hand says which calendar their governments kept in 1668.",
   "sources": {
     "adoption": {
       "title": "Adoption of the Gregorian calendar",

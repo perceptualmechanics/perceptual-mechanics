@@ -1,5 +1,6 @@
 import { euphoniaFiles } from './verify-euphonia.mjs';
-import { inline } from '../src/euphonia/euphonia.markdown.js';
+import { inline, blocks } from '../src/euphonia/euphonia.markdown.js';
+import { slug } from '../src/euphonia/euphonia.places.js';
 import { worldData, fixturesData, calendarsData } from './verify-euphonia-map.mjs';
 
 const esc = s => String(s)
@@ -73,7 +74,10 @@ ${catalog(classes.data.map(c => `<li><span class="t">${esc(c.name)}</span><span 
 </section>
 <section aria-labelledby="world">
 <h2 id="world">The State of the World</h2>
-${regions.status === 'draft' ? '<p class="note">A draft: these chapters were written by Claude, for Scott to rewrite, keep or cut.</p>\n' : ''}${catalog(regions.data.map(r => `<li><span class="t">${esc(r.name)}</span></li>`))}
+${regions.status === 'draft' ? '<p class="note">A draft: these chapters were written by Claude, for Scott to rewrite, keep or cut.</p>\n' : ''}${regions.data.map(r => `<details class="region" id="${slug(r.name)}">
+<summary>${esc(r.name)}</summary>
+${r.sections.map(sec => `<h3>${esc(sec.heading)}</h3>\n${blocks(sec.text)}`).join('\n')}
+</details>`).join('\n')}
 </section>
 <section aria-labelledby="games">
 <h2 id="games">Adventures and Hooks</h2>

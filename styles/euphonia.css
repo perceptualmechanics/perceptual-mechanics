@@ -70,7 +70,19 @@ footer.legal section a { text-decoration: underline; }
 .map-sun .dot { fill: #f0cf6a; stroke: none; }
 .map-sun[hidden] { display: none; }
 .map-rim { fill: none; stroke: #8c7a55; stroke-width: 1.5; }
+.map-glow-core { stop-color: #d9b13f; stop-opacity: 0.22; }
+.map-glow-edge { stop-color: #d9b13f; stop-opacity: 0; }
+.map-region text { fill: #ded9d0; paint-order: stroke; stroke: #0a0a0a; stroke-width: 3px; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
+.map-region:hover text, .map-region:focus-visible text { fill: #f0cf6a; text-decoration: underline; }
+.map-region:focus-visible { outline: 2px solid #f0cf6a; outline-offset: 2px; }
 .map-name { fill: #8c8377; font-size: 0.055px; letter-spacing: 0.2em; text-transform: uppercase; }
+
+/* The regions' chapters, one disclosure each. */
+details.region { border-top: 1px solid #2a2620; padding: 0.5rem 0; }
+details.region > summary { cursor: pointer; font-weight: 600; }
+details.region h3 { font-size: 1rem; margin: 1.2rem 0 0.4rem; color: #b8b0a4; }
+details.region blockquote { margin: 0.8rem 0; padding-left: 1rem; border-left: 2px solid #4a4034; color: #b8b0a4; }
+details.region:target > summary, details.region[open] > summary { color: #d9b13f; }
 
 /* Printed, it's a document: dark ink on the page, nothing to navigate. */
 @media print {

@@ -2,10 +2,10 @@
  "provenance": {
   "source": "Euphonia.md",
   "master": "~/Documents/euphonia/Euphonia.md",
-  "sha256": "68bcbf6cee435e8a1c33025b3c8b7b39c1ec6ea0d2d8eff962450c663517b463",
-  "modified": "2026-11-01T13:36:16-05:00",
+  "sha256": "f780dd205188523531301c0f12beb660507011fa2e34b833490fcf1b17ccfdc9",
+  "modified": "2026-11-01T15:00:45-05:00",
   "exporter": "class-kit/site_export.py",
-  "exporter_version": 4,
+  "exporter_version": 5,
   "rules": {
    "banned": [
     "eladrin",
@@ -70,6 +70,13 @@
   {
    "where": "Revelator · Mount Olympus · introduction",
    "reasons": [
+    "names a placeholder"
+   ]
+  },
+  {
+   "where": "Danae · level 2 feature",
+   "reasons": [
+    "bracket",
     "names a placeholder"
    ]
   },
@@ -348,7 +355,7 @@
     {
      "level": 11,
      "name": "Cold Read",
-     "text": "When you roll Initiative, you can Observe one creature you can see (no action required).\n\n**Your Read.** From now on, you read one creature at a time, and it takes the full weight of what you see. Whenever you Observe one or more creatures you can see, you can make one of them your **read**. It stays your read until you make another creature your read, it drops to 0 Hit Points, or it stops being Observed. Observing a creature you can't see doesn't change your read. Exploit adds its full dice when the attack hits your read, and half as many dice (round up) when it hits any other Observed creature. When you take the Magic action to cast a spell, Exploit adds half as many dice (round up) against every creature, your read included, until the start of your next turn."
+     "text": "When you roll Initiative, you can Observe one creature you can see (no action required).\n\n**Your Read.** From now on, you read one creature at a time, and it takes the full weight of what you see. Whenever you Observe one or more creatures you can see, you can make one of them your **read**. It stays your read until you make another creature your read, it drops to 0 Hit Points, or it stops being Observed. Observing a creature you can't see doesn't change your read. Exploit adds its full dice when the attack hits your read, and half as many dice (round up) when it hits any other Observed creature. When you cast a spell (with any action, Bonus Action or Reaction), Exploit adds half as many dice (round up) against every creature, your read included, until the start of your next turn."
     },
     {
      "level": 13,
@@ -562,7 +569,7 @@
       {
        "level": 3,
        "name": "Street Fighting",
-       "text": "You don't fight fair. When you use Exploit, you can roll one fewer of its dice to play one of the following tricks on the creature the attack hit:\n\n- *Sand.* Sand in its eyes, a kick to the knee, its own cloak over its head. It has Disadvantage on the next attack roll it makes before the end of its next turn.\n- *Lift.* If the creature is within 5 feet of you, you take one object it's carrying that weighs no more than 1 pound and that it isn't holding or wearing: a purse, a key, a letter, a vial from its belt."
+       "text": "You don't fight fair. When you use Exploit, you can roll one fewer of its dice to play one of the following tricks on the creature the attack hit:\n\n- *Sand.* Sand in its eyes, a kick to the knee, its own cloak over its head. It has Disadvantage on the next attack roll it makes before the end of its next turn.\n- *Lift.* If the creature is within 5 feet of you, you take one object it's carrying that weighs no more than 1 pound and that it isn't holding (a purse, a key, a letter, a vial from its belt)."
       },
       {
        "level": 6,
@@ -587,7 +594,7 @@
       {
        "level": 14,
        "name": "Fall Guy",
-       "text": "Someone else always takes the fall. When you use Anticipate and the attack misses, you can make the blow land on someone else: one creature of your choice other than the attacker, within the attacker's reach (or within 5 feet of the target, for a ranged attack), takes the attack's damage as if the attack had hit it. You can use this feature a number of times equal to your Proficiency Bonus, and you regain all expended uses when you finish a Long Rest."
+       "text": "Someone else always takes the fall. When you use Anticipate and the attack misses, you can make the blow land on someone else: one creature of your choice other than the attacker or the target, within the attacker's reach (or within 5 feet of the target, for a ranged attack), takes the attack's damage as if the attack had hit it. You can use this feature a number of times equal to your Proficiency Bonus, and you regain all expended uses when you finish a Long Rest."
       },
       {
        "level": 14,
@@ -669,7 +676,7 @@
       {
        "level": 3,
        "name": "Human Behavior",
-       "text": "When you Observe a creature that can speak, you can learn one of the following instead of one of Observe's usual facts: whom it answers to, what it values most, whether it is hiding something right now (not what), what it is most afraid of losing, or its price: what it would take to buy its cooperation for a day (some creatures have none, and the DM tells you so). You learn it from what can be seen: dress, posture, habit, the company it keeps. This is the one exception to Observe's rule against feelings: you read what a creature values and fears from how it lives, never from what it is thinking."
+       "text": "When you Observe a creature that can speak, you can learn one of the following instead of one of Observe's usual facts: whom it answers to, what it values most, whether it is hiding something right now (not what), what it is most afraid of losing, or its price: what it would take to buy its cooperation for a day (some creatures have none, and the DM tells you so). You learn it from what can be seen: dress, posture, habit, the company it keeps. This is an exception to Observe's rule against feelings: you read what a creature values and fears from how it lives, never from what it is thinking."
       },
       {
        "level": 6,
@@ -1055,7 +1062,7 @@
     {
      "level": 1,
      "name": "Tinker",
-     "text": "With Tinker's Tools and 1 minute of work, you can mend a single break or tear in a nonmagical object you touch, as the *Mending* cantrip does, or build a Tiny clockwork trinket that does one simple thing (ticks, chimes at a set hour, walks in a line, plays a few bars of music). A trinket stops working after 8 hours. You can have a number of trinkets equal to your Proficiency Bonus at a time; if you build another, your oldest stops working.\n\n*Retuning.* You can hear when a device has drifted. With Tinker's Tools and 10 minutes of work, you can retune a Mutapan curiosity (a self-lighting lamp, a stove, a pump, any small work that has fallen out of calibration) so it works as new. Abroad, where no one else can, this is worth something: the owner of a drifting lamp is usually rich, often grateful, and sometimes talkative, and a retuning can get you through a door that a letter of introduction wouldn't."
+     "text": "With Tinker's Tools and 1 minute of work, you can mend a single break or tear in a nonmagical object you touch, as the *Mending* cantrip does, or build a Tiny clockwork trinket that does one simple thing (ticks, chimes at a set hour, walks in a line, plays a few bars of music). A trinket stops working after 8 hours. You can have a number of trinkets equal to your Proficiency Bonus at a time; if you build another, your oldest stops working.\n\n*Retuning.* You can hear when a device has drifted. With Tinker's Tools and 10 minutes of work, you can retune a Mutapan curiosity (a self-lighting lamp, a stove, a pump, any small work that has fallen out of calibration) so it works as new. Anyone a Mhizha has taught can do the same in an hour; no one else can do it at all. Abroad, where no one else can, this is worth something: the owner of a drifting lamp is usually rich, often grateful, and sometimes talkative, and a retuning can get you through a door that a letter of introduction wouldn't."
     },
     {
      "level": 2,
@@ -1183,7 +1190,7 @@
       {
        "level": 10,
        "name": "Improved Models",
-       "text": "*Infiltrator:* once per Long Rest, as a Bonus Action, you have the Invisible condition until the start of your next turn. *Guardian:* you can't be moved against your will or given the Prone condition while you wear the suit, and your Reaction can protect an ally within 10 feet of you.\n\n*Sealed Seams.* While you wear the suit, you're comfortable in extreme heat and extreme cold, and you automatically succeed on saving throws against Exhaustion from them."
+       "text": "*Infiltrator:* once per Long Rest, as a Bonus Action, you have the Invisible condition until the start of your next turn. *Guardian:* you can't be moved against your will or given the Prone condition while you wear the suit, and your Reaction can protect an ally within 10 feet of you.\n\n*Sealed Seams (Level 10).* While you wear the suit, you're comfortable in extreme heat and extreme cold, and you automatically succeed on saving throws against Exhaustion from them."
       },
       {
        "level": 14,
@@ -1251,12 +1258,12 @@
       {
        "level": 6,
        "name": "Albedo",
-       "text": "You purify what you have broken down. Your Salt elixir also ends the Poisoned condition and one disease on the drinker. You have Resistance to Poison damage, and you can purify food and drink you touch as the *Purify Food and Drink* spell does (no action required).\n\n*Green Salt.* You know how to make the field dressing Mutapa's farms run on. During downtime, with Alchemist's Supplies, a week of work, and materials worth, you can dress a farm's fields so that its next harvest is a good one, whatever else the season does short of drought, flood, or locusts. What that's worth to the farm's owner is for the DM, but in a lean year it's worth a great deal, and a village that's eaten through a famine on your dressing remembers you."
+       "text": "You purify what you have broken down. Your Salt elixir also ends the Poisoned condition and one disease on the drinker. You have Resistance to Poison damage, and you can purify food and drink you touch as the *Purify Food and Drink* spell does (no action required).\n\n*Green Salt (Level 6).* You know how to make the field dressing Mutapa's farms run on. During downtime, with Alchemist's Supplies, a week of work, and materials worth 50 GP, you can dress a farm's fields so that its next harvest is a good one, whatever else the season does short of drought, flood, or locusts. What that's worth to the farm's owner is for the DM, but in a lean year it's worth a great deal, and a village that's eaten through a famine on your dressing remembers you."
       },
       {
        "level": 10,
        "name": "Citrinitas",
-       "text": "The Work wakes. Your Salt elixir restores 3d8 Hit Points plus your Intelligence modifier. In addition, when you make your elixirs, you can combine any two of them into a single draught, which grants both effects when it's drunk.\n\n*A Drop on the Tongue.* You can identify a potion, poison, or drug by tasting a drop of it over 1 minute. You learn what it is and what it does, and you suffer none of its effects from the taste."
+       "text": "The Work wakes. Your Salt elixir restores 3d8 Hit Points plus your Intelligence modifier. In addition, when you make your elixirs, you can combine any two of them into a single draught, which grants both effects when it's drunk.\n\n*A Drop on the Tongue (Level 10).* You can identify a potion, poison, or drug by tasting a drop of it over 1 minute. You learn what it is and what it does, and you suffer none of its effects from the taste."
       },
       {
        "level": 14,
@@ -1314,12 +1321,12 @@
       {
        "level": 6,
        "name": "Field Repairs",
-       "text": "When you finish a Short Rest, your construct regains Hit Points equal to half its Hit Point maximum, unless it has stopped working.\n\n*Sentry.* Your construct doesn't sleep. While you rest, it can keep watch; if it sees or hears a creature it doesn't know within 60 feet of itself, it wakes you with a chime only you can hear."
+       "text": "When you finish a Short Rest, your construct regains Hit Points equal to half its Hit Point maximum, unless it has stopped working.\n\n*Sentry (Level 6).* Your construct doesn't sleep. While you rest, it can keep watch; if it sees or hears a creature it doesn't know within 60 feet of itself, it wakes you with a chime only you can hear."
       },
       {
        "level": 10,
        "name": "Improved Construct",
-       "text": "Your construct's Strike deals 2d8 Force damage plus your Intelligence modifier.\n\n*Errand.* You can send your construct on an errand to a place or person within 1 mile of you that you describe to it: to carry an object or a sealed message there, wait for an answer if you tell it to, and come back. It takes the route you'd take. It can't speak, and anyone who's met a Constructor knows to put the answer in writing."
+       "text": "Your construct's Strike deals 2d8 Force damage plus your Intelligence modifier.\n\n*Errand (Level 10).* You can send your construct on an errand to a place or person within 1 mile of you that you describe to it: to carry an object or a sealed message there, wait for an answer if you tell it to, and come back. It takes the route you'd take. It can't speak, and anyone who's met a Constructor knows to put the answer in writing."
       },
       {
        "level": 14,
@@ -1382,17 +1389,17 @@
       {
        "level": 6,
        "name": "Forward Observer",
-       "text": "As a Bonus Action, you can look through your turret until the start of your next turn, seeing and hearing what it would. While you do, you can't see or hear with your own eyes and ears, and you can fire the Arc Gun as if you were standing in the turret's space.\n\n*Watch.* When you set down your turret out of a fight, you can set it to watch instead of fire. While it watches, it doesn't attack and lasts for 8 hours instead of 1, but if a creature you didn't designate when you set it down comes within 60 feet of it, it sounds a chime that you hear if you're within 1 mile of it."
+       "text": "As a Bonus Action, you can look through your turret until the start of your next turn, seeing and hearing what it would. While you do, you can't see or hear with your own eyes and ears, and you can fire the Arc Gun as if you were standing in the turret's space.\n\n*Watch (Level 6).* When you set down your turret out of a fight, you can set it to watch instead of fire. While it watches, it doesn't attack and lasts for 8 hours instead of 1, but if a creature you didn't designate when you set it down comes within 60 feet of it, it sounds a chime that you hear if you're within 1 mile of it."
       },
       {
        "level": 10,
        "name": "Shells",
-       "text": "When you would fire the Arc Gun, you can fire a shell instead. Each creature in a 10-foot-radius Sphere centered on a point you can see within 120 feet of yourself makes a Dexterity saving throw against your spell save DC. On a failed save, a creature takes Force damage equal to the Arc Gun's dice plus your Intelligence modifier; on a successful save, it takes half as much damage. You can fire two shells, and you regain both when you finish a Long Rest.\n\n*Signal Shell.* Out of a fight, you can fire a shell that does no damage and isn't expended: it bursts as a light and a sound seen and heard for miles, in a color and pattern you choose. Fired in a code you've agreed in advance, it carries a short message."
+       "text": "When you would fire the Arc Gun, you can fire a shell instead. Each creature in a 10-foot-radius Sphere centered on a point you can see within 120 feet of yourself makes a Dexterity saving throw against your spell save DC. On a failed save, a creature takes Force damage equal to the Arc Gun's dice plus your Intelligence modifier; on a successful save, it takes half as much damage. You can fire two shells, and you regain both when you finish a Long Rest.\n\n*Signal Shell (Level 10).* Out of a fight, you can fire a shell that does no damage and isn't expended: it bursts as a light and a sound seen and heard for miles, in a color and pattern you choose. Fired in a code you've agreed in advance, it carries a short message."
       },
       {
        "level": 14,
        "name": "Bulwark",
-       "text": "While within 10 feet of your turret, you and your allies have a +2 bonus to Armor Class against ranged attack rolls.\n\n*Siegecraft.* With 1 hour to study a fortification, you learn its weakest point, roughly how long it would hold against an assault or a siege, and what it would take to make it hold longer. You have Advantage on any ability check to plan, build, or break a fortification."
+       "text": "While within 10 feet of your turret, you and your allies have a +2 bonus to Armor Class against ranged attack rolls.\n\n*Siegecraft (Level 14).* With 1 hour to study a fortification, you learn its weakest point, roughly how long it would hold against an assault or a siege, and what it would take to make it hold longer. You have Advantage on any ability check to plan, build, or break a fortification."
       }
      ]
     },
@@ -1455,12 +1462,12 @@
       {
        "level": 6,
        "name": "Survey",
-       "text": "You can spend 10 minutes mapping your surroundings. The map shows every secret door, hidden passage, and trap within 60 feet of you that isn't hidden by magic, and you learn the general nature of each trap.\n\n*Route.* When you plan a journey between two places on your map, you know how long it will take at each travel pace, the safest route and the fastest (rarely the same), and every danger the map has recorded on the way: a ford that floods, a pass that closes, a valley where cattle die."
+       "text": "You can spend 10 minutes mapping your surroundings. The map shows every secret door, hidden passage, and trap within 60 feet of you that isn't hidden by magic, and you learn the general nature of each trap.\n\n*Route (Level 6).* When you plan a journey between two places on your map, you know how long it will take at each travel pace, the safest route and the fastest (rarely the same), and every danger the map has recorded on the way: a ford that floods, a pass that closes, a valley where cattle die."
       },
       {
        "level": 10,
        "name": "Wide Fold",
-       "text": "When you use Fold Space, you can teleport two willing creatures instead of one, and each can teleport up to 30 feet.\n\n*Longitude.* You always know exactly where you are on the face of the world, latitude and longitude both, and the true time where you stand. A ship you navigate can't become lost except by magic."
+       "text": "When you use Fold Space, you can teleport two willing creatures instead of one, and each can teleport up to 30 feet.\n\n*Longitude (Level 10).* You always know exactly where you are on the face of the world, latitude and longitude both, and the true time where you stand. A ship you navigate can't become lost except by magic."
       },
       {
        "level": 14,
@@ -1815,7 +1822,7 @@
     },
     {
      "trait": "Starting Equipment",
-     "value": "*Choose A or B:* (A) Leather Armor, Light Crossbow, 20 Bolts, Bolt Case, Dagger, Scholar's Pack, the two tools you chose, and 10 GP; or (B) 150 GP"
+     "value": "*Choose A or B:* (A) Leather Armor, Light Crossbow, 20 Bolts, Crossbow Bolt Case, Dagger, Scholar's Pack, the two tools you chose, and 10 GP; or (B) 150 GP"
     }
    ],
    "table": {
@@ -1978,7 +1985,7 @@
     {
      "level": 1,
      "name": "Ballistics",
-     "text": "You shoot where the arithmetic says.\n\nWhen you make an attack roll with a crossbow or a firearm, you can use your Intelligence modifier instead of your Dexterity modifier for the attack and damage rolls.\n\n**Calculated Shot.** Once per turn, when you hit a creature you're studying with an attack roll using a crossbow or a firearm, the attack deals the extra damage shown in the Calculated Shot column of the Natural Philosopher Features table. The extra damage is the same type as the weapon's."
+     "text": "You shoot where the arithmetic says.\n\nWhen you make an attack roll with a crossbow or a firearm, you can use your Intelligence modifier instead of your Dexterity modifier for the attack and damage rolls. A firearm is a Pistol, a Musket, or a period firearm such as the pocket pistol (*The Setting*, Characters, Equipment and Firearms); the stonebow is a crossbow.\n\n**Calculated Shot.** Once per turn, when you hit a creature you're studying with an attack roll using a crossbow or a firearm, the attack deals the extra damage shown in the Calculated Shot column of the Natural Philosopher Features table. The extra damage is the same type as the weapon's."
     },
     {
      "level": 2,
@@ -2074,7 +2081,7 @@
       {
        "level": 3,
        "name": "Gunnery",
-       "text": "You are proficient with siege equipment such as ballistae, cannons, and mangonels; use your DM's rules for siege equipment (the 2014 *Dungeon Master's Guide* has a set). When you aim one, it uses your Intelligence modifier for its attack rolls, and its attacks ignore Half Cover and Three-Quarters Cover."
+       "text": "You are proficient with siege equipment such as ballistae, cannons, and mangonels; use your DM's rules for siege equipment (the 2014 *Dungeon Master's Guide* has a set; *The Setting*'s Arms and Armies covers what a siege is like in 1668). When you aim one, it uses your Intelligence modifier for its attack rolls, and its attacks ignore Half Cover and Three-Quarters Cover."
       },
       {
        "level": 3,
@@ -2310,7 +2317,7 @@
     },
     {
      "trait": "Hit Point Die",
-     "value": "d8 per Physician level"
+     "value": "D8 per Physician level"
     },
     {
      "trait": "Saving Throw Proficiencies",
@@ -2702,7 +2709,7 @@
     {
      "level": 1,
      "name": "Spellcasting",
-     "text": "You have learned to reproduce, through study, the restorative magic that priests attribute to their gods. See the *Player's Handbook* for the rules on spellcasting. The information below details how you use those rules with Physician spells, which appear in the Physician spell list later in the class's description.\n\n**Cantrips.** You know three Physician cantrips of your choice. Whenever you gain a Physician level, you can replace one of your cantrips from this feature with another Physician cantrip of your choice. When you reach Physician levels 4 and 10, you learn another Physician cantrip of your choice, as shown in the Cantrips column of the Physician Features table.\n\n**Spellbook.** Your spellbook is a casebook as much as a grimoire: the spells you have learned, and the notes on what they did. It contains six level 1 Physician spells of your choice to start. If you also have Wizard levels, your Physician and Wizard spells can share one spellbook; each class prepares only its own spells.\n\n**Spell Slots.** The Physician Features table shows how many spell slots you have to cast your level 1+ spells. You regain all expended slots when you finish a Long Rest.\n\n**Prepared Spells of Level 1+.** You prepare the list of level 1+ spells that are available for you to cast with this feature. To do so, choose a number of spells from your spellbook equal to the number in the Prepared Spells column of the Physician Features table. The chosen spells must be of a level for which you have spell slots.\n\nIf another Physician feature gives you spells that you always have prepared, those spells don't count against the number of spells you can prepare with this feature, but those spells otherwise count as Physician spells for you.\n\n**Changing Your Prepared Spells.** Whenever you finish a Long Rest, you can change your list of prepared spells, replacing any of the spells there with spells from your spellbook.\n\n**Spellcasting Ability.** Intelligence is your spellcasting ability for your Physician spells.\n\n**Spellcasting Focus.** You can use an Arcane Focus or your spellbook as a Spellcasting Focus for your Physician spells.\n\n**Ritual Adept.** You can cast any Physician spell as a Ritual if that spell has the Ritual tag and the spell is in your spellbook. You needn't have the spell prepared, but you must read from the book to cast a spell in this way.\n\n**Undead.** If one of your Physician spells would make a creature it kills rise as Undead (as *Finger of Death* does), it doesn't rise; its body is destroyed instead.\n\n**Expanding Your Spellbook.** Each time you gain a Physician level after 1, you can add two Physician spells of your choice to your spellbook for free. Each of these spells must be of a level for which you have spell slots. On your adventures, you might find other spells that you can add to your spellbook (see the \"Your Spellbook\" sidebar).\n\n> **Your Spellbook**\n>\n> The spells you add as you gain levels represent your own research. You can also find spells on your adventures — on a scroll, in another caster's spellbook, or in a temple's records. **You can copy any spell that appears on the Physician spell list into your spellbook, whichever class the scroll or book was written for.** Copying a spell into your book takes 2 hours and costs 50 GP for each level of the spell. Copying a spell out of your book into another takes 1 hour and costs 10 GP per spell level."
+     "text": "You have learned to reproduce, through study, the restorative magic that priests attribute to their gods. See the *Player's Handbook* for the rules on spellcasting. The information below details how you use those rules with Physician spells, which appear in the Physician spell list later in the class's description.\n\n**Cantrips.** You know three Physician cantrips of your choice. Whenever you gain a Physician level, you can replace one of your cantrips from this feature with another Physician cantrip of your choice. When you reach Physician levels 4 and 10, you learn another Physician cantrip of your choice, as shown in the Cantrips column of the Physician Features table.\n\n**Spellbook.** Your spellbook is a casebook as much as a grimoire: the spells you have learned, and the notes on what they did. It contains six level 1 Physician spells of your choice to start. If you also have Wizard levels, your Physician and Wizard spells can share one spellbook; each class prepares only its own spells.\n\n**Spell Slots.** The Physician Features table shows how many spell slots you have to cast your level 1+ spells. You regain all expended slots when you finish a Long Rest.\n\n**Prepared Spells of Level 1+.** You prepare the list of level 1+ spells that are available for you to cast with this feature. To do so, choose a number of spells from your spellbook equal to the number in the Prepared Spells column of the Physician Features table. The chosen spells must be of a level for which you have spell slots.\n\nIf another Physician feature gives you spells that you always have prepared, those spells don't count against the number of spells you can prepare with this feature, but those spells otherwise count as Physician spells for you.\n\n**Changing Your Prepared Spells.** Whenever you finish a Long Rest, you can change your list of prepared spells, replacing any of the spells there with spells from your spellbook.\n\n**Spellcasting Ability.** Intelligence is your spellcasting ability for your Physician spells.\n\n**Spellcasting Focus.** You can use an Arcane Focus or your spellbook as a Spellcasting Focus for your Physician spells.\n\n**Ritual Adept.** You can cast any Physician spell as a Ritual if that spell has the Ritual tag and the spell is in your spellbook. You needn't have the spell prepared, but you must read from the book to cast a spell in this way.\n\n**Undead.** If one of your Physician spells would make a creature it kills rise as Undead (as *Finger of Death* does), it doesn't rise; its body is destroyed instead.\n\n**Expanding Your Spellbook.** Each time you gain a Physician level after 1, you can add two Physician spells of your choice to your spellbook for free. Each of these spells must be of a level for which you have spell slots. On your adventures, you might find other spells that you can add to your spellbook (see the \"Your Spellbook\" sidebar).\n\n> **Your Spellbook**\n>\n> The spells you add as you gain levels represent your own research. You can also find spells on your adventures: on a scroll, in another caster's spellbook, or in a temple's records. **You can copy any spell that appears on the Physician spell list into your spellbook, whichever class the scroll or book was written for.** Copying a spell into your book takes 2 hours and costs 50 GP for each level of the spell. Copying a spell out of your book into another takes 1 hour and costs 10 GP per spell level."
     },
     {
      "level": 1,
@@ -2712,12 +2719,12 @@
     {
      "level": 1,
      "name": "Healing Prowess",
-     "text": "Your training lets you mend the body without a spell. You have a number of **Prowess Dice** equal to the Proficiency Bonus shown for your Physician level in the Physician Features table. A Prowess Die is a d6. It becomes a d8 at Physician level 5, a d10 at level 11, and a d12 at level 17.\n\nAs a Bonus Action, you can touch yourself or another creature and expend one Prowess Die. That creature regains a number of Hit Points equal to the number rolled plus your Intelligence modifier.\n\nYou regain all expended Prowess Dice when you finish a Long Rest, and one expended Prowess Die when you finish a Short Rest. From level 5, Steady Hands sets how many a Short Rest returns (see the table).\n\n| Physician Level | Prowess Die | Regained on a Short Rest |\n|---|---|---|\n| 1–4 | d6 | 1 |\n| 5–10 | d8 | All |\n| 11–16 | d10 | Half your maximum (round up) |\n| 17–20 | d12 | 1 |"
+     "text": "Your training lets you mend the body without a spell. You have a number of **Prowess Dice** equal to the Proficiency Bonus shown for your Physician level in the Physician Features table. A Prowess Die is a d6. It becomes a d8 at Physician level 5, a d10 at level 11, and a d12 at level 17.\n\nAs a Bonus Action, you can touch yourself or another creature and expend one Prowess Die. That creature regains a number of Hit Points equal to the number rolled plus your Intelligence modifier.\n\nYou regain all expended Prowess Dice when you finish a Long Rest, and one expended Prowess Die when you finish a Short Rest. From level 5, Steady Hands sets how many a Short Rest returns (see the table).\n\n| Physician Level | Prowess Die | Regained on a Short Rest |\n|---|---|---|\n| 1–4 | d6 | 1 |\n| 5–10 | d8 | All |\n| 11–16 | d10 | Half your maximum (round up) |\n| 17–20 | d12 | 1 |\n\nThe Short Rest return peaks in the middle levels, when Prowess Dice carry most of a Physician's healing, and tapers once the die is large and higher-level spells take over the work."
     },
     {
      "level": 1,
      "name": "Diagnosis",
-     "text": "You learn to read a body at a glance. As a Bonus Action, choose one creature you can see within 30 feet of yourself.\n\nIf the creature is willing, you diagnose it automatically. You learn its current Hit Points and Hit Point maximum, every condition affecting it, whether it is diseased, has the Poisoned condition, or is under a curse, and the ability in which it has the lowest saving throw bonus.\n\nOtherwise, make an Intelligence (Medicine) check. The DC equals 10 plus half the creature's Challenge Rating (round down), or 10 plus half its level if it has no Challenge Rating. On a success, you learn the following:\n\n- Whether the creature is **unharmed**, **injured** (below its Hit Point maximum), **Bloodied** (at or below half its Hit Point maximum), or **near death** (at or below a quarter).\n- Every condition affecting it, and whether it is diseased, has the Poisoned condition, or is under a curse.\n- Whether it has Resistance, Immunity, or Vulnerability to Necrotic or Poison damage, and whether it has Immunity to disease.\n- The ability in which it has the lowest saving throw bonus.\n\nIf two or more abilities tie for the lowest bonus, the DM chooses which you learn.\n\nOn a failure, you learn nothing, and you can't attempt to diagnose that creature again until you finish a Short or Long Rest.\n\nA creature you diagnose — automatically, or with a successful check — becomes your **patient** until you diagnose another creature or finish a Long Rest. When you restore Hit Points to your patient with a Physician feature or a Physician spell, you can reroll any 1s on the healing dice. You must use the new rolls."
+     "text": "You learn to read a body at a glance. As a Bonus Action, choose one creature you can see within 30 feet of yourself.\n\nIf the creature is willing, you diagnose it automatically. You learn its current Hit Points and Hit Point maximum, every condition affecting it, whether it is diseased, has the Poisoned condition, or is under a curse, and the ability in which it has the lowest saving throw bonus.\n\nOtherwise, make an Intelligence (Medicine) check. The DC equals 10 plus half the creature's Challenge Rating (round down), or 10 plus half its level if it has no Challenge Rating. On a success, you learn the following:\n\n- Whether the creature is **unharmed**, **injured** (below its Hit Point maximum), **Bloodied** (at or below half its Hit Point maximum), or **near death** (at or below a quarter).\n- Every condition affecting it, and whether it is diseased, has the Poisoned condition, or is under a curse.\n- Whether it has Resistance, Immunity, or Vulnerability to Necrotic or Poison damage, and whether it has Immunity to disease.\n- The ability in which it has the lowest saving throw bonus.\n\nIf two or more abilities tie for the lowest bonus, the DM chooses which you learn.\n\nOn a failure, you learn nothing, and you can't attempt to diagnose that creature again until you finish a Short or Long Rest.\n\nA creature you diagnose, automatically or with a successful check, becomes your **patient** until you diagnose another creature or finish a Long Rest. When you restore Hit Points to your patient with a Physician feature or a Physician spell, you can reroll any 1s on the healing dice. You must use the new rolls."
     },
     {
      "level": 2,
@@ -2747,7 +2754,7 @@
     {
      "level": 7,
      "name": "Vitals",
-     "text": "Once on each of your turns when you use Healing Prowess on your patient, you can use Diagnosis on a different creature as part of the same Bonus Action — or as part of the same attack, if a feature lets you use Healing Prowess without spending a Bonus Action. This doesn't change your patient.\n\nYou also have Advantage on saving throws against disease and against the Poisoned condition."
+     "text": "Once on each of your turns when you use Healing Prowess on your patient, you can use Diagnosis on a different creature as part of the same Bonus Action, or as part of the same attack if a feature lets you use Healing Prowess without spending a Bonus Action. This doesn't change your patient.\n\nYou also have Advantage on saving throws against disease and against the Poisoned condition."
     },
     {
      "level": 11,
@@ -2772,7 +2779,7 @@
     {
      "level": 20,
      "name": "Attending Physician",
-     "text": "When you roll Initiative, you regain one expended Prowess Die.\n\nIn addition, when a creature you can see within 30 feet of yourself would die — by failing its third Death Saving Throw, by taking damage that reduces it to 0 Hit Points with remaining damage equal to or exceeding its Hit Point maximum, or by an effect that kills it outright — you can take a Reaction to prevent its death. The creature instead drops to 0 Hit Points and is Stable, and it then regains Hit Points equal to one roll of your Prowess Die plus your Intelligence modifier (no die is expended). Once you use this Reaction, you can't use it again until you finish a Long Rest.\n\n---"
+     "text": "When you roll Initiative, you regain one expended Prowess Die.\n\nIn addition, when a creature you can see within 30 feet of yourself would die (by failing its third Death Saving Throw, by taking damage that reduces it to 0 Hit Points with remaining damage equal to or exceeding its Hit Point maximum, or by an effect that kills it outright), you can take a Reaction to prevent its death. The creature instead drops to 0 Hit Points and is Stable, and it then regains Hit Points equal to one roll of your Prowess Die plus your Intelligence modifier (no die is expended). Once you use this Reaction, you can't use it again until you finish a Long Rest.\n\n---"
     }
    ],
    "subclasses": [
@@ -2788,7 +2795,7 @@
       {
        "level": 3,
        "name": "Under the Knife",
-       "text": "When you hit a creature with your Saw in melee, you can use your Healing Prowess as part of the same attack, without spending a Bonus Action. You expend a Prowess Die as normal. The creature you heal must be within 10 feet of you. If the creature you hit is Large or smaller, you can push it 10 feet away from you, or it must succeed on a Strength saving throw against your spell save DC or have the Prone condition.\n\nYou can use Healing Prowess this way once on each of your turns, and if you do, you can't use Healing Prowess again until the start of your next turn."
+       "text": "When you hit a creature with your Saw in melee, you can use your Healing Prowess as part of the same attack, without spending a Bonus Action. You expend a Prowess Die as normal. The creature you heal must be within 10 feet of you. When you do, if the creature you hit is Large or smaller, you can push it 10 feet away from you, or it must succeed on a Strength saving throw against your spell save DC or have the Prone condition.\n\nYou can use Healing Prowess this way once on each of your turns, and if you do, you can't use Healing Prowess again until the start of your next turn."
       },
       {
        "level": 3,
@@ -2803,7 +2810,7 @@
       {
        "level": 6,
        "name": "Field Hospital",
-       "text": "When you cast a Physician spell with a range of Self that creates an Emanation or other area centered on you — such as *Aura of Vitality*, *Aura of Life*, *Aura of Purity*, *Antilife Shell*, or *Circle of Power* — the area's radius increases by 10 feet. When a creature regains Hit Points from such a spell that you are concentrating on, it regains additional Hit Points equal to your Intelligence modifier. A creature can benefit from this additional healing once per turn.\n\nIn addition, while you are concentrating on such a spell, you can use Healing Prowess on any creature in its area, rather than only a creature you touch."
+       "text": "When you cast a Physician spell with a range of Self that creates an Emanation or other area centered on you (such as *Aura of Vitality*, *Aura of Life*, *Aura of Purity*, *Antilife Shell*, or *Circle of Power*), the area's radius increases by 10 feet. When a creature regains Hit Points from such a spell that you are concentrating on, it regains additional Hit Points equal to your Intelligence modifier. A creature can benefit from this additional healing once per turn.\n\nIn addition, while you are concentrating on such a spell, you can use Healing Prowess on any creature in its area, rather than only a creature you touch."
       },
       {
        "level": 10,
@@ -2819,7 +2826,7 @@
     },
     {
      "name": "Combat Medic",
-     "lead": "You traded raw magical healing for martial versatility, and became a lifesaver in combat zones. Your arrows and knives can heal your allies or cripple your enemies, and when a friend goes down, your next shot is already in the air.",
+     "lead": "You traded raw magical healing for martial versatility, and you go where the wounded are: the breach, the boarding party, the ambush on the caravan road. Your arrows and knives can heal your allies or cripple your enemies, and when a friend goes down, your next shot is already in the air.",
      "features": [
       {
        "level": 3,
@@ -2932,7 +2939,7 @@
       {
        "level": 3,
        "name": "The Font Opens",
-       "text": "You find the Font: the same source of life that clerics receive from their gods and druids from nature. There is only one, but you have found it inside your own body rather than outside it, and you draw on it from there. It gives you a second way to pay for your magic.\n\n**Draw on the Font.** You keep your spell slots and cast with them as normal. In addition, when you cast a Physician spell of level 1 through 5, you can draw on the Font instead, up to a total number of spell levels equal to your Physician level between Long Rests: you spend a number of Hit Point Dice equal to the spell's level instead of expending a spell slot. Only Hit Point Dice you gained from Physician levels can be spent this way. Hit Point Dice spent this way are expended without being rolled and don't restore Hit Points. While you have this feature, a Long Rest restores only half your total Hit Point Dice (minimum of one), not all of them. If you cast the spell with a higher-level slot's effect, you spend Hit Point Dice equal to the level at which you cast it, which can be no higher than the highest level of spell slot you have. You can't draw on the Font to cast a spell of level 6 or higher. Drawing on the Font counts as expending a spell slot for the rule that you can expend only one spell slot to cast a spell on a turn.\n\n> **The Cost Shows**\n>\n> A day of heavy casting is followed by thinner days, and the character won't feel it until they try to rest. As the DM, show the cost before then — fatigue, unsteady hands, a drawn face. A Physician who has spent half their Hit Point Dice by noon should look like it.\n\n**Symbiosis.** Drawing on the Font changes what your body needs and what it can survive. You gain the following as you reach the listed Physician levels:\n\n- **Level 5.** You add *Fly* to your spellbook. It counts as a Physician spell for you and doesn't count against the spells you add to your spellbook when you gain a level.\n- **Level 9.** You stop aging, and you can't be aged magically.\n- **Level 13.** You no longer need to eat, drink, or breathe.\n- **Level 17.** When you drop to 0 Hit Points, you are automatically Stable, and you don't make Death Saving Throws. Damage still causes Death Saving Throw failures; you become Stable again after each one."
+       "text": "You find the Font: the same source of life that clerics receive from their gods and druids from nature. There is only one, but you have found it inside your own body rather than outside it, and you draw on it from there. It gives you a second way to pay for your magic.\n\n**Draw on the Font.** You keep your spell slots and cast with them as normal. In addition, when you cast a Physician spell of level 1 through 5, you can draw on the Font instead, up to a total number of spell levels equal to your Physician level between Long Rests: you spend a number of Hit Point Dice equal to the spell's level instead of expending a spell slot. Only Hit Point Dice you gained from Physician levels can be spent this way. Hit Point Dice spent this way are expended without being rolled and don't restore Hit Points. While you have this feature, a Long Rest restores only half your total Hit Point Dice (minimum of one), not all of them. If you cast the spell with a higher-level slot's effect, you spend Hit Point Dice equal to the level at which you cast it, which can be no higher than the highest level of spell slot you have. You can't draw on the Font to cast a spell of level 6 or higher. Drawing on the Font counts as expending a spell slot for the rule that you can expend only one spell slot to cast a spell on a turn.\n\n> **The Cost Shows**\n>\n> A day of heavy casting is followed by thinner days, and the character won't feel it until they try to rest. As the DM, show the cost before then: fatigue, unsteady hands, a drawn face. A Physician who has spent half their Hit Point Dice by noon should look like it.\n\n**Symbiosis.** Drawing on the Font changes what your body needs and what it can survive. You gain the following as you reach the listed Physician levels:\n\n- **Level 5.** You add *Fly* to your spellbook. It counts as a Physician spell for you and doesn't count against the spells you add to your spellbook when you gain a level.\n- **Level 9.** You stop aging, and you can't be aged magically.\n- **Level 13.** You no longer need to eat, drink, or breathe.\n- **Level 17.** When you drop to 0 Hit Points, you are automatically Stable, and you don't make Death Saving Throws. Damage still causes Death Saving Throw failures; you become Stable again after each one."
       },
       {
        "level": 3,
@@ -2942,7 +2949,7 @@
       {
        "level": 3,
        "name": "Attuned Energy",
-       "text": "Choose a damage type: Cold, Fire, Lightning, Psychic, or Radiant. This is your **attuned energy** — the form your own vitality takes when you push it outward. Fire is your metabolism let loose: the vital heat every living body burns to stay alive. Lightning is the signal that runs your nerves, let out. Cold is the slowed heart and the held breath, and rime spreading outward. Radiant is sunlight, and everything caught in it is being told to grow. Psychic is the will that moves your flesh, sent to move something else: a column of Wrong.\n\nA Physician's harm is Necrotic. Yours no longer has to be. When you cast a Physician spell that deals Necrotic damage, you can have it deal your attuned damage type instead; the spell is otherwise unchanged, and what anyone watching sees is your energy, not the spell's.\n\nYou also work in your energy directly. Choose one cantrip that deals your attuned damage type, from the Bard, Cleric, Druid, Physician, Sorcerer, Warlock, or Wizard spell list. It counts as a Physician cantrip for you and doesn't count against the number of cantrips you know. In addition, add to your spellbook one spell of each level from 1 through 5 that deals your attuned damage type, chosen from those spell lists; you add each spell when you reach a Physician level at which you can cast it. These spells count as Physician spells for you and don't count against the spells you add to your spellbook when you gain a level. If no spell of a given level deals your attuned damage type, you can instead choose an additional spell of any lower level that does.\n\n> **Suggested Attunements**\n>\n> These are working sets: a cantrip, then one spell per level from 1 to 5. You aren't bound to them. Any spell that deals your energy, from those seven spell lists, is a legal pick.\n>\n> **Fire.** *Fire Bolt* — then *Burning Hands · Scorching Ray · Fireball · Wall of Fire · Flame Strike.*\n>\n> **Cold.** *Ray of Frost*, which also drops the target's Speed — then *Armor of Agathys · Dragon's Breath · Cold Storage · Ice Storm · Cone of Cold.* (Take *Ice Knife* at level 1 instead if you want something to throw.)\n>\n> **Lightning.** *Shocking Grasp*, which keeps the target from making Opportunity Attacks — then *Witch Bolt · Convulsion · Lightning Bolt · Call Lightning · Defibrillation.* (No level 4 spell in the *Player's Handbook* deals Lightning, so *Call Lightning* is the level 4 pick. *Arc*, printed after the new Physician spells, is another level 3 choice: a Bonus Action teleport instead of the line.)\n>\n> **Radiant.** *Sacred Flame*, which ignores cover — then *Guiding Bolt · Moonbeam · Spirit Guardians · Guardian of Faith · Flame Strike.*\n>\n> **Psychic.** *Mind Sliver*, which takes a d4 off the target's next save — then *Dissonant Whispers · Mind Spike · Hysteria · Phantasmal Killer · Synaptic Static.*"
+       "text": "Choose a damage type: Cold, Fire, Lightning, Psychic, or Radiant. This is your **attuned energy**: the form your own vitality takes when you push it outward. Fire is your metabolism let loose: the vital heat every living body burns to stay alive. Lightning is the signal that runs your nerves, let out. Cold is the slowed heart and the held breath, and rime spreading outward. Radiant is sunlight, and everything caught in it is being told to grow. Psychic is the will that moves your flesh, sent to move something else: a column of wrong.\n\nA Physician's harm is Necrotic. Yours no longer has to be. When you cast a Physician spell that deals Necrotic damage, you can have it deal your attuned damage type instead; the spell is otherwise unchanged, and what anyone watching sees is your energy, not the spell's.\n\nYou also work in your energy directly. Choose one cantrip that deals your attuned damage type, from the Bard, Cleric, Druid, Physician, Sorcerer, Warlock, or Wizard spell list. It counts as a Physician cantrip for you and doesn't count against the number of cantrips you know. In addition, add to your spellbook one spell of each level from 1 through 5 that deals your attuned damage type, chosen from those spell lists; you add each spell when you reach a Physician level at which you can cast it. These spells count as Physician spells for you and don't count against the spells you add to your spellbook when you gain a level. If no spell of a given level deals your attuned damage type, you can instead choose an additional spell of any lower level that does.\n\n> **Suggested Attunements**\n>\n> These are working sets: a cantrip, then one spell per level from 1 to 5. You aren't bound to them. Any spell that deals your energy, from those seven spell lists, is a legal pick.\n>\n> **Fire.** *Fire Bolt*, then *Burning Hands · Scorching Ray · Fireball · Wall of Fire · Flame Strike.*\n>\n> **Cold.** *Ray of Frost*, which also drops the target's Speed, then *Armor of Agathys · Dragon's Breath · Cold Storage · Ice Storm · Cone of Cold.* (Take *Ice Knife* at level 1 instead if you want something to throw.)\n>\n> **Lightning.** *Shocking Grasp*, which keeps the target from making Opportunity Attacks, then *Witch Bolt · Convulsion · Lightning Bolt · Call Lightning · Defibrillation.* (No level 4 spell in the *Player's Handbook* deals Lightning, so *Call Lightning* is the level 4 pick. *Arc*, printed with the Physician's spells under A Spell from Another List, is another level 3 choice: a Bonus Action teleport instead of the line.)\n>\n> **Radiant.** *Sacred Flame*, which ignores cover, then *Guiding Bolt · Moonbeam · Spirit Guardians · Guardian of Faith · Flame Strike.*\n>\n> **Psychic.** *Mind Sliver*, which takes a d4 off the target's next save, then *Dissonant Whispers · Mind Spike · Hysteria · Phantasmal Killer · Synaptic Static.*"
       },
       {
        "level": 6,
@@ -2973,7 +2980,7 @@
       {
        "level": 3,
        "name": "Reading the Nerves",
-       "text": "You learn to read the body's wiring. When you use Diagnosis on a creature — automatically, or with a successful check — you also learn whether any effect on its mind, such as a charm, a fear, a compulsion, or a voice, is the creature's own, the work of a spell or similar magical effect, or the influence of another creature; if the source is a creature you can see, you learn which one.\n\nAdd the following to your Treatment table:\n\n| Treatment | DC |\n|---|---|\n| End the Charmed or Frightened condition | 12 |\n| End the Stunned condition | 15 |\n\nYou also gain proficiency in the Insight skill if you don't already have it, and you learn the *Mind Sliver* cantrip, which counts as a Physician cantrip for you and doesn't count against the number of cantrips you know.\n\n**Neurologist Spells.** When you reach a Physician level specified in the Neurologist Spells table, you thereafter always have the listed spells prepared. Each counts as a Physician spell for you and is added to your spellbook.\n\n| Physician Level | Spells |\n|---|---|\n| 3 | *Dissonant Whispers*, *Mind Spike* |\n| 5 | *Hypnotic Pattern*, *Tiny Hut* |\n| 7 | *Compulsion*, *Phantasmal Killer* |\n| 9 | *Dominate Person*, *Modify Memory* |"
+       "text": "You learn to read the body's wiring. When you use Diagnosis on a creature, automatically or with a successful check, you also learn whether any effect on its mind, such as a charm, a fear, a compulsion, or a voice, is the creature's own, the work of a spell or similar magical effect, or the influence of another creature; if the source is a creature you can see, you learn which one.\n\nAdd the following to your Treatment table:\n\n| Treatment | DC |\n|---|---|\n| End the Charmed or Frightened condition | 12 |\n| End the Stunned condition | 15 |\n\nYou also gain proficiency in the Insight skill if you don't already have it, and you learn the *Mind Sliver* cantrip, which counts as a Physician cantrip for you and doesn't count against the number of cantrips you know.\n\n**Neurologist Spells.** When you reach a Physician level specified in the Neurologist Spells table, you thereafter always have the listed spells prepared. Each counts as a Physician spell for you and is added to your spellbook.\n\n| Physician Level | Spells |\n|---|---|\n| 3 | *Dissonant Whispers*, *Mind Spike* |\n| 5 | *Hypnotic Pattern*, *Tiny Hut* |\n| 7 | *Compulsion*, *Phantasmal Killer* |\n| 9 | *Dominate Person*, *Modify Memory* |"
       },
       {
        "level": 3,
@@ -3065,17 +3072,17 @@
       {
        "level": 6,
        "name": "The Sharpest Cut",
-       "text": "As a Bonus Action, you can send your instrument to hover at a point you can see within 60 feet of yourself, where it stays until you send it again, recall it as a Bonus Action, or have the Unconscious condition. It returns to you if it is ever more than 60 feet from you, and it can't be targeted by attacks, spells, or other effects.\n\nWhile it hovers there, your incisions originate from the instrument rather than from you, and you can use Healing Prowess on any creature within 10 feet of it rather than only a creature you touch.\n\nThe hovering instrument can also do anything your *Mage Hand* could do — manipulate an object, open a door or a container, carry up to 10 pounds — using a Bonus Action, without your having to cast the spell."
+       "text": "As a Bonus Action, you can send your instrument to hover at a point you can see within 60 feet of yourself, where it stays until you send it again, recall it as a Bonus Action, or have the Unconscious condition. It returns to you if it is ever more than 60 feet from you, and it can't be targeted by attacks, spells, or other effects.\n\nWhile it hovers there, your incisions originate from the instrument rather than from you, and you can use Healing Prowess on any creature within 10 feet of it rather than only a creature you touch.\n\nThe hovering instrument can also do anything your *Mage Hand* could do (manipulate an object, open a door or a container, carry up to 10 pounds) using a Bonus Action, without your having to cast the spell."
       },
       {
        "level": 10,
-       "name": "Carbolic Field",
+       "name": "The Sealed Table",
        "text": "You add *Telekinesis* and *Resilient Sphere* to your spellbook. They count as Physician spells for you and are always prepared; they don't count against the number of spells you can prepare.\n\nYou also learn to seal the table. When you cast *Resilient Sphere*, you can choose to have it enclose you and one willing creature within 5 feet of you together, as though the two of you were a single Large creature. While you are enclosed together, you can perform Treatment on that creature and use Healing Prowess on it as normal; nothing else passes through the sphere in either direction, as the spell describes.\n\nIn addition, you can perform Treatment on your patient while it is within 10 feet of your hovering instrument, rather than only within your reach."
       },
       {
        "level": 14,
        "name": "Theatre Closed",
-       "text": "When a creature within 10 feet of you — or within 10 feet of your hovering instrument — would be reduced to 0 Hit Points, you can take a Reaction to declare the theatre closed. Choose the point the triggering creature was within 10 feet of, you or the instrument. Until the start of your next turn, each creature within 10 feet of that point that you choose when you take the Reaction, including the triggering creature, can't be reduced below 1 Hit Point. Once you use this feature, you can't use it again until you finish a Long Rest."
+       "text": "When a creature within 10 feet of you, or within 10 feet of your hovering instrument, would be reduced to 0 Hit Points, you can take a Reaction to declare the theatre closed. Choose the point the triggering creature was within 10 feet of, you or the instrument. Until the start of your next turn, each creature within 10 feet of that point that you choose when you take the Reaction, including the triggering creature, can't be reduced below 1 Hit Point. Once you use this feature, you can't use it again until you finish a Long Rest."
       }
      ]
     }
@@ -3631,7 +3638,7 @@
      {
       "Level": "2",
       "Proficiency Bonus": "+2",
-      "Class Features": "The Border, Ethereal Stride, Fighting Style, Visiting Spirit",
+      "Class Features": "The Border Ethereal, Ethereal Stride, Fighting Style, Visiting Spirit",
       "Planar Strike": "1d12",
       "Revelations": "3",
       "Prepared Spells": "3",
@@ -3886,7 +3893,7 @@
     {
      "level": 1,
      "name": "Vistas",
-     "text": "*Your glimpse of the greater cosmology awakened something within you, something you can now share with others.*\n\n**Favor.** Each Revelation you know grants you its plane's Favor once between rests: you call on the Favor to open a vista. Your pathway's level 3 Revelation is the plane you know best, and it grants its Favor twice. Some features let a plane grant its Favor more often, but no plane grants it more than three times between rests. When a feature lets you **regain a Favor**, choose a plane that has already granted its Favor: it can grant it once more. You regain every Favor when you finish a Short or Long Rest. Most Favors open a vista; a few features, such as Ethereal Stride, call on a Favor without opening one.\n\n**Opening a Vista.** As a Bonus Action, you call on the Favor of a Revelation you know and open a vista at a point you can see within 30 feet of yourself, and **let in an Influence**: choose one creature you can see within 30 feet of the vista (it can be you). That Revelation's Influence takes effect on it. From Revelator level 2, a vista can call a spirit instead (Visiting Spirit).\n\n**Your Open Vista.** A vista stays open for 1 minute, until you open another one, until you dismiss it (no action required), or until you have the Incapacitated condition. Your open vista is the one you opened most recently that is still open; it sets the damage of your Planar Strike.\n\nWhen a vista or its Influence calls for a saving throw, the DC equals your spell save DC. Whenever a Revelator feature uses your spell save DC or spell attack modifier, it means the ones you use for Revelator spells.\n\n> **Tracking Favors**\n>\n> Give each plane you know a box, and two for your earth end and walked planes (more from Arete or items, never more than three). Tick a box when a plane grants its Favor. Regaining a Favor erases a tick; a Short or Long Rest erases them all.\n\n**Revelations.** Revelations are the planes you know. Each gives one Spirit Aspect and one Influence. Some are granted by your features; you choose others from the planes your training has reached. The full set is in the Cosmography later in the class's description. Whenever you finish a Long Rest, you can replace one Revelation you chose with another you're eligible for. Revelations granted by features can't be replaced."
+     "text": "*Your glimpse of the greater cosmology awakened something within you, something you can now share with others.*\n\n**Favor.** Each Revelation you know grants you its plane's Favor once between rests: you call on the Favor to open a vista. Your pathway's level 3 Revelation is the plane you know best, and it grants its Favor twice. Some features let a plane grant its Favor more often, but no plane grants it more than three times between rests. When a feature lets you **regain a Favor**, choose a plane that has already granted its Favor: it can grant it once more. You regain every Favor when you finish a Short or Long Rest. Most Favors open a vista; a few features, such as Ethereal Stride, call on a Favor without opening one.\n\n**Opening a Vista.** As a Bonus Action, you call on the Favor of a Revelation you know and open a vista at a point you can see within 30 feet of yourself, and **let in an Influence**: choose one creature you can see within 30 feet of the vista (it can be you). That Revelation's Influence takes effect on it. From Revelator level 2, a vista can call a spirit instead (Visiting Spirit).\n\n**Your Open Vista.** A vista stays open for 1 minute, until you open another one, until you dismiss it (no action required), or until you have the Incapacitated condition. Your open vista is the one you opened most recently that is still open; it sets the damage of your Planar Strike.\n\nWhen a vista or its Influence calls for a saving throw, the DC equals your spell save DC. Whenever a Revelator feature uses your spell save DC or spell attack modifier, it means the ones you use for Revelator spells.\n\n> **Tracking Favors**\n>\n> Give each plane you know a box, and two for your earth end (more from walked planes at 9th level, Mount Olympus's Arete, or items, never more than three). Tick a box when a plane grants its Favor. Regaining a Favor erases a tick; a Short or Long Rest erases them all.\n\n**Revelations.** Revelations are the planes you know. Each gives one Spirit Aspect and one Influence. Some are granted by your features; you choose others from the planes your training has reached. The full set is in the Cosmography later in the class's description. Whenever you finish a Long Rest, you can replace one Revelation you chose with another you're eligible for. Revelations granted by features can't be replaced."
     },
     {
      "level": 1,
@@ -3905,7 +3912,7 @@
     },
     {
      "level": 2,
-     "name": "The Border",
+     "name": "The Border Ethereal",
      "text": "*You branch out into the tangible spirit of all things, the Ethereal Plane.*\n\nYou know the Revelation of the Border Ethereal.\n\n**Veilsight.** You can see into the Border Ethereal within 60 feet of yourself, and you can speak with spirits and ghosts as if you shared a language."
     },
     {
@@ -3936,7 +3943,7 @@
     {
      "level": 5,
      "name": "The Near Planes",
-     "text": "*Your soul expands to encompass the energetic planar sources.*\n\nYou learn one Revelation of your choice from the near tier of the Cosmography: Positive Energy, Negative Energy, the Deep Ethereal, or the Elemental Planes."
+     "text": "*Your soul expands to encompass the energetic planar sources.*\n\nYou learn one Revelation of your choice from the Cosmography's near planes: Positive Energy, Negative Energy, the Deep Ethereal, or the Elemental Planes."
     },
     {
      "level": 6,
@@ -3956,7 +3963,7 @@
     {
      "level": 9,
      "name": "Soul's Journey",
-     "text": "*Your soul never forgets your travels, for better and for worse.*\n\nA Revelation you know is **walked** once you have been to that plane in the body, spent at least a Long Rest there, and come back. It doesn't matter how you got there or why: by portal, by another's spell, by being taken, by walking in for the name of it, or by waking up there. The plane doesn't care what brought you, only that you stayed, and what it does to those who stay is the lesson (see \"What the Walk Costs\"). A plane you walked before you knew its Revelation is walked the moment you learn it.\n\nA walked plane knows you: it grants its Favor twice between rests, as your pathway's earth end does. Walking the earth end itself adds nothing.\n\n**The Hard Roads.** Seven planes on the Wheel are walked by almost no one: Pandemonium, Tartarus, Asphodel, Gehenna, Acheron, Cocytus, and the Seven Gates. Walking one leaves a mark, whether or not you know its Revelation yet, and you keep it for the rest of your life:\n\n- **Pandemonium.** The winds are quiet in you. You have Resistance to Psychic damage, and you can't have the Deafened condition.\n- **Tartarus.** Nothing holds you. You have Advantage on saving throws and ability checks made to avoid or end the Grappled, Restrained, and Paralyzed conditions, and you automatically succeed on checks made to escape a *Maze*. *Imprisonment* can't hold you for longer than 1 minute.\n- **Asphodel.** Nothing drains you. You have Advantage on saving throws to avoid or end the Charmed condition, and your Hit Point maximum can't be reduced.\n- **Gehenna.** Nothing is owed. You have Resistance to Fire damage, and effects that would reduce or prevent the Hit Points you regain don't apply to you.\n- **Acheron.** The press doesn't take you. You have Advantage on saving throws made to maintain Concentration, and no spell or effect can make you attack a creature you choose not to.\n- **Cocytus.** The cold doesn't take you. You have Resistance to Cold damage, and Advantage on saving throws against the spells and effects of Fiends.\n- **The Seven Gates.** No door surprises you. You know where a portal leads before you step through it, and you have Advantage on saving throws against being teleported or moved to another plane against your will.\n\n> **What the Walk Costs**\n>\n> Walking a plane means facing what it does to visitors, and the DM decides what that was. The planes chapter of the Dungeon Master's Guide is the model, each plane bringing the dangers that belong to its place on the Wheel: the winds of Pandemonium that wear at the mind, Tartarus that holds what it takes, the gray of Asphodel that drains the will to leave, Gehenna's grudging fire, Acheron's endless war, the cruelty of the Nine Circles and the corruption of the Abyss; and on the brighter roads, the joy of Elysium and Svarga's revel that make visitors forget to go home, Eden's wild hunt, and Limbo, which takes the shape a mind gives it. A plane isn't walked by a Revelator who was teleported in and out between breaths. The marks aren't worth the trip on their own, and they aren't meant to be: a Revelator who goes to Gehenna for the mark should get the whole of Gehenna."
+     "text": "*Your soul never forgets your travels, for better and for worse.*\n\nA Revelation you know is **walked** once you have been to that plane in the body, spent at least a Long Rest there, and come back. It doesn't matter how you got there or why: by portal, by another's spell, by being taken, by walking in for the name of it, or by waking up there. The plane doesn't care what brought you, only that you stayed, and what it does to those who stay is the lesson (see \"What the Walk Costs\"). A plane you walked before you knew its Revelation is walked the moment you learn it.\n\nA walked plane knows you: it grants its Favor twice between rests, as your pathway's earth end does. Walking the earth end itself adds nothing.\n\n**The Hard Roads.** Seven planes on the Wheel are walked by almost no one: Pandemonium, Tartarus, Asphodel, Gehenna, Acheron, Cocytus, and the Seven Gates. Walking one leaves a mark, whether or not you know its Revelation yet, and you keep it for the rest of your life:\n\n- **Pandemonium.** The winds are quiet in you. You have Resistance to Psychic damage, and you can't have the Deafened condition.\n- **Tartarus.** Nothing holds you. You have Advantage on saving throws and ability checks made to avoid or end the Grappled, Restrained, and Paralyzed conditions, and you automatically succeed on checks made to escape a *Maze*. *Imprisonment* can't hold you for longer than 1 minute.\n- **Asphodel.** Nothing drains you. You have Advantage on saving throws to avoid or end the Charmed condition, and your Hit Point maximum can't be reduced.\n- **Gehenna.** Nothing is owed. You have Resistance to Fire damage, and effects that would reduce or prevent the Hit Points you regain don't apply to you.\n- **Acheron.** The press doesn't take you. You have Advantage on saving throws made to maintain Concentration, and no spell or effect can make you attack a creature you choose not to.\n- **Cocytus.** The cold doesn't take you. You have Resistance to Cold damage, and Advantage on saving throws against the spells and effects of Fiends.\n- **The Seven Gates.** No door surprises you. You know where a portal leads before you step through it, and you have Advantage on saving throws against being teleported or moved to another plane against your will.\n\n> **What the Walk Costs**\n>\n> Walking a plane means facing what it does to visitors, and the DM decides what that was. The planes chapter of the Dungeon Master's Guide is the model, each plane bringing the dangers that belong to its place on the Wheel: the winds of Pandemonium that wear at the mind, Tartarus that holds what it takes, the gray of Asphodel that drains the will to leave, Gehenna's grudging fire, Acheron's endless war, the cruelty of the Nine Circles and the corruption of the Abyss; and on the brighter roads, the joy of Elysium and Svarga's revel that make visitors forget to go home, Eden's garden, where every beast still answers to the name it was given, and Limbo, which takes the shape a mind gives it. A plane isn't walked by a Revelator who was teleported in and out between breaths. The marks aren't worth the trip on their own, and they aren't meant to be: a Revelator who goes to Gehenna for the mark should get the whole of Gehenna."
     },
     {
      "level": 10,
@@ -3966,7 +3973,7 @@
     {
      "level": 13,
      "name": "The Circuit",
-     "text": "*You understand the shape of the world.*\n\nYou learn one Revelation of your choice from the Cosmography's Near Tier, Circuit at Level 7, Borderlands, or Dominions. It can be a plane another pathway grants at level 7. The planes the pathways reach at level 15 are beyond you until The Circuit Made Whole. The Circuit is the only way to learn:\n\n- **The Borderlands:** the planes in the shadow of the Dominions: Arcadia and the House of Song on either side of the Seven Heavens, Gehenna beside the Nine Circles, Pandemonium beside the Abyss. The roads pass through them (the Styx rises in Pandemonium and runs past Gehenna, and the Path of Judgment crosses Arcadia on its way down from the House of Song), but no pathway stops there. By now you know the roads through them anyway.\n- **The Dominions' Quiet Corners:** the Sphere of the Moon, Cocytus, and the Seven Gates."
+     "text": "*You understand the shape of the world.*\n\nYou learn one Revelation of your choice from the Cosmography's Near Planes, Circuit at Level 7, Borderlands, or Dominions. It can be a plane another pathway grants at level 7. The planes the pathways reach at level 15 are beyond you until The Circuit Made Whole. The Circuit is the only way to learn:\n\n- **The Borderlands:** the planes in the shadow of the Dominions: Arcadia and the House of Song on either side of the Seven Heavens, Gehenna beside the Nine Circles, Pandemonium beside the Abyss. The roads pass through them (the Styx rises in Pandemonium and runs past Gehenna, and the Path of Judgment crosses Arcadia on its way down from the House of Song), but no pathway stops there. By now you know the roads through them anyway.\n- **The Dominions' Quiet Corners:** the Sphere of the Moon, Cocytus, and the Seven Gates."
     },
     {
      "level": 14,
@@ -3991,7 +3998,7 @@
     {
      "level": 20,
      "name": "The Circuit Made Whole",
-     "text": "*You understand why the world is the shape that it is.*\n\nYou gain the following benefits.\n\n**Every Revelation.** You know every Revelation in the Cosmography. You can call on any plane's Favor, but on no more than nine different planes between rests. Your earth end still grants its Favor twice, and Arete still works.\n\n**Old Acquaintance.** You can use Reach Beyond twice per Long Rest.\n\n**Favor in the Moment.** When you roll Initiative, you regain up to two Favors.\n\n**Spirit of Totality.** When you call a spirit, you can call the Spirit of Totality instead: a spirit of no one plane, sent by all of them together. It is still your one spirit (with The Fare, it counts as both of your spirits), and it uses the Visiting Spirit stat block. It counts as every creature type, and it understands and speaks every language, but it has no Aspect's traits. When you command it, it uses the commands of two different Spirit Aspects of your choice; a command that needs a trait it lacks (such as an element or its light) can't be chosen. While it's with you, each time you hit with your Planar Strike you can choose its damage type from any plane's.\n\n**Walked Whole.** The hard roads add up. For every two hard roads you have walked, Favor in the Moment regains one more Favor. If you have walked all seven, you also have Advantage on the Constitution saving throw for the Strain of Reach Beyond."
+     "text": "*You understand why the world is the shape that it is.*\n\nYou gain the following benefits.\n\n**Every Revelation.** You know every Revelation in the Cosmography. You can call on any plane's Favor, but on no more than nine different planes between rests. Your earth end still grants its Favor twice, and Arete, if you have it, still works.\n\n**Old Acquaintance.** You can use Reach Beyond twice per Long Rest.\n\n**Favor in the Moment.** When you roll Initiative, you regain up to two Favors.\n\n**Spirit of Totality.** When you call a spirit, you can call the Spirit of Totality instead: a spirit of no one plane, sent by all of them together. It is still your one spirit (with The Fare, it counts as both of your spirits), and it uses the Visiting Spirit stat block. It counts as every creature type, and it understands and speaks every language, but it has no Aspect's traits. When you command it, it uses the commands of two different Spirit Aspects of your choice; a command that needs a trait it lacks (such as an element or its light) can't be chosen. While it's with you, each time you hit with your Planar Strike you can choose its damage type from any plane's.\n\n**Walked Whole.** The hard roads add up. For every two hard roads you have walked, Favor in the Moment regains one more Favor. If you have walked all seven, you also have Advantage on the Constitution saving throw for the Strain of Reach Beyond."
     }
    ],
    "subclasses": [
@@ -4002,7 +4009,7 @@
       {
        "level": 3,
        "name": "Path of Judgment Spells",
-       "text": "When you reach a Revelator level specified in the Path of Judgment Spells table, you thereafter always have the listed spell prepared.\n\n| Revelator Level | Spell |\n|---|---|\n| 3 | Compelled Duel |\n| 5 | Zone of Truth |\n| 9 | Slow |\n| 13 | Stoneskin |\n| 17 | Geas |",
+       "text": "When you reach a Revelator level specified in the Path of Judgment Spells table, you thereafter always have the listed spell prepared.\n\n| Revelator Level | Spell |\n|---|---|\n| 3 | *Compelled Duel* |\n| 5 | *Zone of Truth* |\n| 9 | *Slow* |\n| 13 | *Stoneskin* |\n| 17 | *Geas* |",
        "spells": [
         {
          "level": 3,
@@ -4095,7 +4102,7 @@
       {
        "level": 3,
        "name": "Oceanus Spells",
-       "text": "When you reach a Revelator level specified in the Oceanus Spells table, you thereafter always have the listed spell prepared.\n\n| Revelator Level | Spell |\n|---|---|\n| 3 | Bless |\n| 5 | Aid |\n| 9 | Mass Healing Word |\n| 13 | Control Water |\n| 17 | Mass Cure Wounds |",
+       "text": "When you reach a Revelator level specified in the Oceanus Spells table, you thereafter always have the listed spell prepared.\n\n| Revelator Level | Spell |\n|---|---|\n| 3 | *Bless* |\n| 5 | *Aid* |\n| 9 | *Mass Healing Word* |\n| 13 | *Control Water* |\n| 17 | *Mass Cure Wounds* |",
        "spells": [
         {
          "level": 3,
@@ -4198,7 +4205,7 @@
       {
        "level": 3,
        "name": "Olympus Spells",
-       "text": "When you reach a Revelator level specified in the Olympus Spells table, you thereafter always have the listed spell prepared.\n\n| Revelator Level | Spell |\n|---|---|\n| 3 | Guiding Bolt |\n| 5 | Enhance Ability |\n| 9 | Haste |\n| 13 | Fabricate |\n| 17 | Legend Lore |",
+       "text": "When you reach a Revelator level specified in the Olympus Spells table, you thereafter always have the listed spell prepared.\n\n| Revelator Level | Spell |\n|---|---|\n| 3 | *Guiding Bolt* |\n| 5 | *Enhance Ability* |\n| 9 | *Haste* |\n| 13 | *Fabricate* |\n| 17 | *Legend Lore* |",
        "spells": [
         {
          "level": 3,
@@ -4306,7 +4313,7 @@
       {
        "level": 3,
        "name": "Styx Spells",
-       "text": "When you reach a Revelator level specified in the Styx Spells table, you thereafter always have the listed spell prepared.\n\n| Revelator Level | Spell |\n|---|---|\n| 3 | Bane |\n| 5 | Blindness/Deafness |\n| 9 | Feign Death |\n| 13 | Confusion |\n| 17 | Modify Memory |",
+       "text": "When you reach a Revelator level specified in the Styx Spells table, you thereafter always have the listed spell prepared.\n\n| Revelator Level | Spell |\n|---|---|\n| 3 | *Bane* |\n| 5 | *Blindness/Deafness* |\n| 9 | *Feign Death* |\n| 13 | *Confusion* |\n| 17 | *Modify Memory* |",
        "spells": [
         {
          "level": 3,
@@ -4394,12 +4401,12 @@
     },
     {
      "name": "Yggdrasil",
-     "lead": "*Fight Beside the Spirits You Call*\n\nThe World Ash rises from the wells of Asphodel, and its branches reach through Valhalla, Limbo, and Eden. Revelators of Yggdrasil leap into the gleeful fray beside the warrior souls they summon.",
+     "lead": "*Fight With the Dead at Your Back*\n\nThe World Ash rises from the wells of Asphodel, and its branches reach through Valhalla, Limbo, and Eden. Revelators of Yggdrasil leap into the gleeful fray with the warrior souls they summon urging them on.",
      "features": [
       {
        "level": 3,
        "name": "Yggdrasil Spells",
-       "text": "When you reach a Revelator level specified in the Yggdrasil Spells table, you thereafter always have the listed spell prepared.\n\n| Revelator Level | Spell |\n|---|---|\n| 3 | Heroism |\n| 5 | Magic Weapon |\n| 9 | Crusader's Mantle |\n| 13 | Grasping Vine |\n| 17 | Tree Stride |",
+       "text": "When you reach a Revelator level specified in the Yggdrasil Spells table, you thereafter always have the listed spell prepared.\n\n| Revelator Level | Spell |\n|---|---|\n| 3 | *Heroism* |\n| 5 | *Magic Weapon* |\n| 9 | *Crusader's Mantle* |\n| 13 | *Grasping Vine* |\n| 17 | *Tree Stride* |",
        "spells": [
         {
          "level": 3,
@@ -4828,7 +4835,7 @@
      {
       "Level": "2",
       "Proficiency Bonus": "+2",
-      "Class Features": "The Court, Denial, Flee",
+      "Class Features": "Denial, Flee",
       "Warps": "4",
       "Cantrips": "3",
       "Prepared Spells": "5",
@@ -5154,22 +5161,17 @@
     {
      "level": 1,
      "name": "Spellcasting",
-     "text": "Danae learn their spells through dream. Each night, the Hidden communicates with them deep in their unconscious, and when they awake, they know what magic to prepare.\n\n**Cantrips.** You know three cantrips of your choice from the Danae spell list. Whenever you finish a Long Rest, you can replace one of your cantrips with another cantrip of your choice from the Danae spell list. When you reach Danae levels 4 and 10, you learn another cantrip of your choice from the Danae spell list, as shown in the Cantrips column of the Danae Features table.\n\n**Spell Slots.** The Danae Features table shows how many spell slots you have to cast your level 1+ spells. You regain all expended slots when you finish a Long Rest.\n\n**Prepared Spells of Level 1+.** You prepare the list of level 1+ spells that are available for you to cast with this feature. To start, choose four level 1 spells from the Danae spell list. The number of spells on your list increases as you gain Danae levels, as shown in the Prepared Spells column of the Danae Features table. Whenever that number increases, choose additional spells from the Danae spell list until the number of spells on your list matches the number in the table. The chosen spells must be of a level for which you have spell slots.\n\nIf another Danae feature gives you spells that you always have prepared, those spells don't count against the number of spells you can prepare with this feature, but those spells otherwise count as Danae spells for you.\n\n**Changing Your Prepared Spells.** Whenever you finish a Long Rest, you can change your list of prepared spells, replacing any of the spells there with other Danae spells for which you have spell slots.\n\n**Spellcasting Ability.** Charisma is your spellcasting ability for your Danae spells.\n\n**Spellcasting Focus.** You can use an Arcane Focus, or any tool from the Danae's tool list or your subclass's tool that you have proficiency with, as a Spellcasting Focus for your Danae spells: the work of your hands is where the Wyrd comes through."
+     "text": "Danae learn their spells through dream. Each night, the Hidden communicates with them deep in their unconscious, and when they awake, they know what magic to prepare.\n\n**Cantrips.** You know three cantrips of your choice from the Danae spell list. Whenever you finish a Long Rest, you can replace one of your cantrips with another cantrip of your choice from the Danae spell list. When you reach Danae levels 4 and 10, you learn another cantrip of your choice from the Danae spell list, as shown in the Cantrips column of the Danae Features table.\n\n**Spell Slots.** The Danae Features table shows how many spell slots you have to cast your level 1+ spells. You regain all expended slots when you finish a Long Rest.\n\n**Prepared Spells of Level 1+.** You prepare the list of level 1+ spells that are available for you to cast with this feature. To start, choose four level 1 spells from the Danae spell list. The number of spells on your list increases as you gain Danae levels, as shown in the Prepared Spells column of the Danae Features table. Whenever that number increases, choose additional spells from the Danae spell list until the number of spells on your list matches the number in the table. The chosen spells must be of a level for which you have spell slots.\n\nIf another Danae feature gives you spells that you always have prepared, those spells don't count against the number of spells you can prepare with this feature, but those spells otherwise count as Danae spells for you.\n\n**Changing Your Prepared Spells.** Whenever you finish a Long Rest, you can change your list of prepared spells, replacing any of the spells there with other Danae spells for which you have spell slots.\n\n**Spellcasting Ability.** Charisma is your spellcasting ability for your Danae spells.\n\n**Spellcasting Focus.** You can use an Arcane Focus, or any tool from the Danae's tool list or your subclass's tool that you have proficiency with, as a Spellcasting Focus for your Danae spells: the work of your hands is where the Wyrd, the Hidden's weaving of what comes to pass, comes through."
     },
     {
      "level": 1,
      "name": "The Sight",
-     "text": "You see the Hidden's layer over the world. You can see thresholds between planes within 30 feet of yourself (a threshold is a fixed place where the Material Plane touches another plane, such as the Hidden; the DM decides where they lie), and you know when a creature or an object you can see is under an illusion or a shape-changing effect, or has the Fey creature type. You also gain proficiency in the Insight and Perception skills (if you already have proficiency in either, choose another skill from the Danae's skill list)."
+     "text": "You see the Hidden's layer over the world. You can see thresholds between worlds within 30 feet of yourself (a threshold is a fixed place where the settled world touches another realm, such as the Hidden; the DM decides where they lie), and you know when a creature or an object you can see is under an illusion or a shape-changing effect, or has the Fey creature type. You also gain proficiency in the Insight and Perception skills (if you already have proficiency in either, choose another skill from the Danae's skill list), and you know Sylvan, the Hidden's own speech."
     },
     {
      "level": 1,
      "name": "Warps",
-     "text": "Once you see the true shape of reality, you gain the ability to manipulate its space.\n\nAs a Bonus Action, you warp an unoccupied 5-foot Cube you can see within 60 feet of yourself into one of the shapes below. The warp lasts for 1 minute, until you dismiss it (no action required), or until you unravel it. You can make a number of warps equal to the number in the Warps column of the Danae Features table, and you regain all expended warps when you finish a Short or Long Rest. A warp that is still in place when you finish the rest (a readied lot, say, or a stave) stays expended until it ends. Warps don't require Concentration, and they don't choose sides: a warp affects every creature alike, unless its season says otherwise. Warps can't overlap: no part of a warp's space can be part of another warp's space. A warp is a visible thing: a creature that can see its space can tell that the space is wrong, though not what the warp does until it's inside. When a warp calls for a saving throw, the DC equals your spell save DC.\n\n- **Stretch.** Every foot of movement inside the warp costs 2 extra feet. This doesn't stack with Difficult Terrain: inside a Stretch, each foot costs 3 feet either way.\n- **Gate.** Your Gates are linked in a chain, in the order you made them; the last leads back to the first. A Gate must rest on a surface. A creature that enters a Gate steps out of the next one in the chain, in its space or the nearest unoccupied space to it. This costs no movement and doesn't trigger the Gate it arrives in. A creature can pass through your Gates only once per turn. If a Gate ends, the chain closes around the gap: the Gate before it leads to the Gate after it. A lone Gate leads nowhere.\n\n**Unraveling.** Some features let you unravel a warp. To unravel a warp, you either end one of your warps that is in place or expend one you haven't used yet; either way, the feature takes effect. A feature that tells you to expend a warp uses one you haven't used yet.\n\n**Magic and Travel.** Warps are magical effects: *Detect Magic* reveals them, and *Dispel Magic* ends one as if it were a level 1 spell. Passing through a Gate, or any warp that moves a creature from one space to another, is teleportation.\n\n**Arriving by Teleport.** A creature teleported into a warp's space enters the warp, just as if it had walked in, but a Gate it arrives in doesn't send it on. If nothing in that space would hold a creature standing (the warp hangs in the air or over a drop), the creature instead arrives in the nearest unoccupied space where it can stand, and it doesn't enter the warp. A creature passing through a pair of Doors follows the Doors' own rules instead."
-    },
-    {
-     "level": 2,
-     "name": "The Court",
-     "text": "You gravitate, in one fashion or another, to one half of the Hidden's year. Choose the light half or the dark half. The light half's seasons are spring and summer; the dark half's, autumn and winter.\n\n**Seasons.** You learn your half's two seasons. When you make a warp, you can give it one season you know. A creature that enters a seasoned warp for the first time on a turn, or starts its turn there, is subject to its season, making any saving throw against your spell save DC. A creature is subject to the season of only one of your warps per turn: the first that takes it.\n\n| Half | Season | Effect |\n|---|---|---|\n| Light | **Spring** | *Strength saving throw.* On a failed save, you move the creature up to 15 feet horizontally in a direction of your choice. A willing creature can instead teleport up to 15 feet to an unoccupied space it can see. |\n| Light | **Summer** | The creature takes 1d6 Fire damage. Creatures you choose when you make the warp are immune. The damage increases by 1d6 when you reach Danae levels 5 (2d6), 11 (3d6), and 17 (4d6). |\n| Dark | **Autumn** | *Wisdom saving throw.* On a failed save, choose one: the creature has the Charmed condition, with you as the charmer, until the start of its next turn, or it has Disadvantage on the next saving throw it makes before the end of your next turn. |\n| Dark | **Winter** | *Constitution saving throw.* On a failed save, the creature's Speed is 0 and it can't take Reactions until the start of its next turn. A creature that fails this save can't be affected by the same warp's winter again. |"
+     "text": "Once you see the true shape of reality, you gain the ability to manipulate its space.\n\nAs a Bonus Action, you warp an unoccupied 5-foot Cube you can see within 60 feet of yourself into one of the shapes below. The warp lasts for 1 minute, until you dismiss it (no action required), or until you unravel it. You can make a number of warps equal to the number in the Warps column of the Danae Features table, and you regain all expended warps when you finish a Short or Long Rest. A warp that is still in place when you finish the rest (a readied lot, say, or a stave) stays expended until it ends. Warps don't require Concentration, and they don't choose sides: a warp affects every creature alike, unless its season says otherwise. Warps can't overlap: no part of a warp's space can be part of another warp's space. A warp is a visible thing: a creature that can see its space can tell that the space is wrong, though not what the warp does until it's inside. When a warp calls for a saving throw, the DC equals your spell save DC.\n\n- **Stretch.** Every foot of movement inside the warp costs 2 extra feet. This doesn't stack with Difficult Terrain: inside a Stretch, each foot costs 3 feet either way.\n- **Gate.** Your Gates are linked in a chain, in the order you made them; the last leads back to the first. A Gate must rest on a surface. A creature that enters a Gate steps out of the next one in the chain, in its space or the nearest unoccupied space to it. This costs no movement and doesn't trigger the Gate it arrives in. A creature can pass through your Gates only once per turn. If a Gate ends, the chain closes around the gap: the Gate before it leads to the Gate after it. A lone Gate leads nowhere.\n\n**Unraveling.** Some features let you unravel a warp. To unravel a warp, you either end one of your warps that is in place or expend one you haven't used yet; either way, the feature takes effect. A feature that tells you to expend a warp uses one you haven't used yet.\n\n**Magic and Travel.** Warps are magical effects: *Detect Magic* reveals them, and *Dispel Magic* ends one as if it were a level 1 spell. Passing through a Gate, or any warp that moves a creature from one space to another, is teleportation.\n\n**Arriving by Teleport.** A creature teleported into a warp's space enters the warp, just as if it had walked in, but a Gate it arrives in doesn't send it on. If nothing in that space would hold a creature standing (the warp hangs in the air or over a drop), the creature instead arrives in the nearest unoccupied space where it can stand, and it doesn't enter the warp. A creature passing through a pair of Doors (a Crossing Danae's warp; see Crossing) follows the Doors' own rules instead."
     },
     {
      "level": 2,
@@ -5184,7 +5186,7 @@
     {
      "level": 3,
      "name": "Danae Subclass",
-     "text": "Your prime modality manifests: you gain a Danae subclass of your choice — Binding, Changing, Crossing, Naming, or Shaping. A subclass is a specialization that grants you features at certain Danae levels. For the rest of your career, you gain each of your subclass's features that are of your Danae level or lower."
+     "text": "Your prime modality manifests: you gain a Danae subclass of your choice: Binding, Changing, Crossing, Naming, or Shaping. A subclass is a specialization that grants you features at certain Danae levels. For the rest of your career, you gain each of your subclass's features that are of your Danae level or lower."
     },
     {
      "level": 4,
@@ -5204,7 +5206,7 @@
     {
      "level": 7,
      "name": "Reading the Season",
-     "text": "The Hidden settles in you, and you begin to see people the way it does: as weather. As a Bonus Action, choose a creature you can see within 30 feet of yourself. The DM tells you its temper, which is always one of the four seasons, and what lies under it: spring (hope, curiosity, a beginning), summer (passion, anger, confidence), autumn (longing, regret, decline), or winter (fear, grief, resolve). For 1 hour, you have Advantage on Wisdom (Insight) checks against it, and on Charisma (Deception, Intimidation, or Persuasion) checks against it that play to its temper."
+     "text": "The Hidden settles in you, and you begin to see people the way it does: as weather. As a Bonus Action, or as part of rolling Initiative, choose a number of creatures you can see within 30 feet of yourself, up to your Charisma modifier (minimum of one). The DM tells you each one's temper, which is always one of the four seasons, and what lies under it: spring (hope, curiosity, a beginning), summer (passion, anger, confidence), autumn (longing, regret, decline), or winter (fear, grief, resolve). For 1 hour, you have Advantage on Wisdom (Insight) checks against each of them, and on Charisma (Deception, Intimidation, or Persuasion) checks against them that play to their tempers."
     },
     {
      "level": 7,
@@ -5259,7 +5261,7 @@
     {
      "level": 18,
      "name": "Second Sight",
-     "text": "The Sight opens all the way. You have Truesight with a range of 60 feet. When you use Reading the Season, you can read any number of creatures you can see within 30 feet of yourself, not just one."
+     "text": "The Sight opens all the way. You have Truesight with a range of 60 feet. When you use Reading the Season, you can read any number of creatures you can see within 60 feet of yourself."
     },
     {
      "level": 19,
@@ -5317,22 +5319,22 @@
       {
        "level": 3,
        "name": "Courtly Grace",
-       "text": "You carry yourself as the most elevated of fae nobles. You gain proficiency in one of the following skills of your choice: Deception, Intimidation, Performance, or Persuasion. You have Advantage on Charisma checks you make against a creature you've knotted."
+       "text": "You carry yourself as the most elevated of fae nobles. You gain proficiency in one of the following skills of your choice: Deception, Intimidation, Performance, or Persuasion. You have Advantage on Charisma checks you make against a creature that is knotted by you."
       },
       {
        "level": 3,
        "name": "Knots",
-       "text": "Your warps can be knots. As a Bonus Action, you tie a creature you can see within 60 feet of yourself to another creature or to a fixed point within 30 feet of it (the ground, a tree, a door), and speak a geis into the knot. Each unwilling creature you tie makes a Wisdom saving throw against your spell save DC; if any succeeds, no knot is tied, though the warp is still expended. A geis binds each unwilling creature in the knot; a willing creature is tied but not bound. An unwilling knotted creature repeats the save at the end of each of its turns, and the knot comes undone on a success. While knotted, it has Disadvantage on saving throws against your seasons. Choose the geis:\n\n- **Stay.** It can't willingly move more than 30 feet from what it's tied to.\n- **Spare.** It can't willingly target what it's tied to with an attack or a harmful effect.\n- **Heed.** It has Disadvantage on attack rolls against anything but what it's tied to.\n\n*Breaking a Geis.* A knotted creature can choose to break its geis when it is about to do what the geis forbids: to walk away, to strike, to turn. If it does, it first takes Psychic damage equal to 2d8 plus your Charisma modifier, and the knot comes undone; then, if it can still act, it does what it chose. The damage increases to 3d8 at Danae level 10 and 4d8 at level 14."
+       "text": "Your warps can be knots. As a Bonus Action, you tie a creature you can see within 60 feet of yourself to another creature or to a fixed point within 30 feet of it (the ground, a tree, a door), and speak a geis into the knot. Each unwilling creature you tie makes a Wisdom saving throw against your spell save DC; if any succeeds, no knot is tied, though the warp is still expended. A geis binds each unwilling creature in the knot; a willing creature is tied but not bound. An unwilling knotted creature repeats the save at the end of each of its turns, and the knot comes undone on a success. While knotted, it has Disadvantage on saving throws against your seasons. Choose the geis:\n\n- **Stay.** It can't willingly move more than 30 feet from what it's tied to.\n- **Spare.** It can't willingly target what it's tied to with an attack or a harmful effect.\n- **Heed.** It has Disadvantage on attack rolls against anything but what it's tied to. When it attacks something else, it can break the geis instead of taking the Disadvantage.\n\n*Breaking a Geis.* A knotted creature can choose to break its geis when it is about to do what the geis forbids: to walk away, to strike, to turn. If it does, it first takes Psychic damage equal to 2d8 plus your Charisma modifier, and the knot comes undone; then, if it can still act, it does what it chose. The damage increases to 3d8 at Danae level 10 and 4d8 at level 14."
       },
       {
        "level": 3,
        "name": "Kind Words",
-       "text": "Your words echo with the terrible grace of the Fair.\n\nAs a Bonus Action, choose a creature you've knotted that can hear and understand you, and speak to it. It makes a Wisdom saving throw against your spell save DC. On a failed save, it has your choice of the Frightened or Charmed condition, with you as the source, until the end of its next turn. At the start of any of its turns, the creature can defy you (no action required): it takes the same Psychic damage as breaking a geis, and then the condition ends.\n\nYou can win the same argument only once: a creature affected by your Kind Words can't be affected by them again until you finish a Short or Long Rest."
+       "text": "Your words echo with the terrible grace of the Fair.\n\nAs a Bonus Action, choose a creature that is knotted by you and that can hear and understand you, and speak to it. It makes a Wisdom saving throw against your spell save DC. On a failed save, it has your choice of the Frightened or Charmed condition, with you as the source, until the end of its next turn. At the start of any of its turns, the creature can defy you (no action required): it takes the same Psychic damage as breaking a geis, and then the condition ends.\n\nYou can win the same argument only once: a creature affected by your Kind Words can't be affected by them again until you finish a Short or Long Rest."
       },
       {
        "level": 6,
        "name": "Heartstrings",
-       "text": "Creatures have Disadvantage on saving throws against your Kind Words. When your Kind Words succeed against a creature knotted to another creature, the other is affected too, without a saving throw."
+       "text": "Creatures have Disadvantage on saving throws against your Kind Words. When your Kind Words succeed against a creature knotted to another creature, you can choose to have the other affected too, without a saving throw."
       },
       {
        "level": 6,
@@ -5508,7 +5510,7 @@
       {
        "level": 10,
        "name": "Liminality",
-       "text": "Your Gates and Doors work through effects that block teleportation or planar travel, other than an *Antimagic Field*. Creatures that pass through them don't trigger *Alarm*, *Glyph of Warding*, or similar warding magic. And you need no invitations: effects that keep out creatures who haven't been invited don't stop you."
+       "text": "Your Gates and Doors work through effects that block teleportation or planar travel in a place (a ward, a circle, a hallowed or forbidden area), other than an *Antimagic Field*. An effect that stops a particular creature from teleporting (Cold Iron, Name It, the Iron Bell, a Faebreaker's grip) still stops that creature. Creatures that pass through them don't trigger *Alarm*, *Glyph of Warding*, or similar warding magic. And you need no invitations: effects that keep out creatures who haven't been invited don't stop you."
       },
       {
        "level": 14,

@@ -14,7 +14,7 @@ import { injectLanding } from './scripts/landing.js';
 import { verifyQuizWheel } from './scripts/quiz-wheel.mjs';
 import { verifyBench } from './scripts/verify-bench.mjs';
 import { verifyEuphonia, verifyEuphoniaPages } from './scripts/verify-euphonia.mjs';
-import { verifyEuphoniaMap } from './scripts/verify-euphonia-map.mjs';
+import { verifyEuphoniaMap, placesData } from './scripts/verify-euphonia-map.mjs';
 import { injectEuphonia } from './scripts/euphonia-page.js';
 
 const HERE = import.meta.dirname;
@@ -192,6 +192,22 @@ function verifyEuphoniaPlugin() {
   };
 }
 
+// The map's places, looked up in the vendored gazetteer at build time, so the
+// page carries coordinates for its seats and regions and never the gazetteer.
+const PLACES_ID = 'virtual:euphonia-places';
+function euphoniaPlacesPlugin() {
+  return {
+    name: 'pm-euphonia-places',
+    resolveId: id => (id === PLACES_ID ? `\0${PLACES_ID}` : null),
+    load(id) {
+      if (id !== `\0${PLACES_ID}`) return null;
+      const { seats, regions, errors } = placesData();
+      if (errors.length) this.error(`euphonia places: ${errors.join('; ')}`);
+      return `export default ${JSON.stringify({ seats, regions })};`;
+    },
+  };
+}
+
 function verifyEuphoniaMapPlugin() {
   return {
     name: 'pm-verify-euphonia-map',
@@ -291,7 +307,7 @@ function verifyStyleHash(outDir, root) {
 }
 
 export default defineConfig({
-  plugins: [landingMarkupPlugin(), euphoniaMarkupPlugin(), verifyLinksPlugin(), verifyResonancesPlugin(), verifyScrollMarksPlugin(), verifyLandingPlugin(), verifyAriaPlugin(), verifyCssInvariantsPlugin(), verifyCountsPlugin(), verifyQuizWheelPlugin(), verifyBenchPlugin(), verifyEuphoniaPlugin(), verifyEuphoniaMapPlugin(), prerenderTextPages()],
+  plugins: [landingMarkupPlugin(), euphoniaMarkupPlugin(), euphoniaPlacesPlugin(), verifyLinksPlugin(), verifyResonancesPlugin(), verifyScrollMarksPlugin(), verifyLandingPlugin(), verifyAriaPlugin(), verifyCssInvariantsPlugin(), verifyCountsPlugin(), verifyQuizWheelPlugin(), verifyBenchPlugin(), verifyEuphoniaPlugin(), verifyEuphoniaMapPlugin(), prerenderTextPages()],
   build: {
     cssMinify: 'esbuild',
     cssTarget: ['chrome87', 'edge88', 'firefox78', 'safari14'],

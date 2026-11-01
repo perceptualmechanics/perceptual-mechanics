@@ -2,17 +2,22 @@
 // coasts, with the night where it was at the chosen instant.
 import worldUrl from './euphonia.world.json?url';
 import {
-  HEMISPHERES, DUSKS, project, subsolar, darkRegion,
+  HEMISPHERES, DUSKS, project, subsolar, darkRegion, capCircle, local,
   ringsIn, linesIn, coastOf, graticule, parallel,
 } from './euphonia.projection.js';
 import { moonAt } from './euphonia.moon.js';
 import { datesAt } from './euphonia.calendars.js';
 import { tideAt, hiddenAt } from './euphonia.tide.js';
 import calendars from './euphonia.calendars.json';
-import seats from './euphonia.seats.json';
+import places from 'virtual:euphonia-places';
 
 const NS = 'http://www.w3.org/2000/svg';
 const GRATICULE_STEP = 30;
+// The discs' viewBox: the unit disc with room for the rim and the name above.
+const VIEW_BOX = [-1.08, -1.2, 2.16, 2.28];
+const VIEW_WIDTH = VIEW_BOX[2];
+// The regions' names, in rem: the size of the page's notes.
+const LABEL_REM = 0.85;
 // Unit-disc coordinates; four places is a twentieth of a pixel at the
 // largest the discs are drawn.
 const fmt = v => v.toFixed(4);
@@ -100,9 +105,27 @@ function darkPath(g) {
   return `M${fmt(A[0])},${fmt(-A[1])}${edge}${rim}Z`;
 }
 
-function hemisphere(h, world, parent) {
-  const svg = el('svg', { viewBox: '-1.08 -1.2 2.16 2.28', 'aria-hidden': 'true', focusable: 'false' }, parent);
-  el('text', { class: 'map-name', x: 0, y: -1.1, 'text-anchor': 'middle' }, svg).textContent = h.name;
+const RAD = Math.PI / 180;
+const unit = ({ lat, lon }) => [Math.cos(lat * RAD) * Math.cos(lon * RAD), Math.cos(lat * RAD) * Math.sin(lon * RAD), Math.sin(lat * RAD)];
+const apart = (a, b) => Math.acos(Math.min(1, unit(a).reduce((s, v, i) => s + v * unit(b)[i], 0))) / RAD;
+
+// A region as the book places it: a glow round each of its places, each
+// reaching halfway to the place's nearest neighbour in the region so the
+// glows meet and the region reads as one; its name at the places' mean.
+const regionShapes = places.regions.map(r => {
+  const glows = r.places.map(p => ({ ...p, rho: Math.min(...r.places.filter(q => q !== p).map(q => apart(p, q))) / 2 }));
+  const [x, y, z] = r.places.map(unit).reduce((a, v) => a.map((s, i) => s + v[i]));
+  return { ...r, glows, centre: { lat: Math.atan2(z, Math.hypot(x, y)) / RAD, lon: Math.atan2(y, x) / RAD } };
+});
+
+function hemisphere(h, i, world, parent) {
+  const svg = el('svg', { viewBox: VIEW_BOX.join(' '), role: 'group', 'aria-labelledby': `map-name-${i}` }, parent);
+  el('text', { class: 'map-name', id: `map-name-${i}`, x: 0, y: -1.1, 'text-anchor': 'middle' }, svg).textContent = h.name;
+  const defs = el('defs', {}, svg);
+  el('path', { d: RIM }, el('clipPath', { id: `map-disc-${i}` }, defs));
+  const glow = el('radialGradient', { id: `map-glow-${i}` }, defs);
+  el('stop', { offset: 0, class: 'map-glow-core' }, glow);
+  el('stop', { offset: 1, class: 'map-glow-edge' }, glow);
   el('path', { class: 'map-sea', d: RIM }, svg);
   el('path', { class: 'map-graticule', d: pathOf(graticule(h.lon0, GRATICULE_STEP), h.lon0, false) }, svg);
   const circles = el('path', { class: 'map-circles' }, svg);
@@ -112,11 +135,28 @@ function hemisphere(h, world, parent) {
   el('path', { class: 'map-lake', d: pathOf(ringsIn(world.lakes, h.lon0), h.lon0, true) }, svg);
   el('path', { class: 'map-lake historic', d: pathOf(ringsIn(world.historic.flatMap(l => l.parts), h.lon0), h.lon0, true) }, svg);
   const dark = DUSKS.map(() => el('path', { class: 'map-night', 'fill-rule': 'evenodd' }, svg));
+  // The book's regions, above the night: they're where the book places them at
+  // every hour.
+  const glows = el('g', { class: 'map-regions', 'clip-path': `url(#map-disc-${i})` }, svg);
+  for (const r of regionShapes) for (const p of r.glows) {
+    const c = capCircle(p, p.rho, h.lon0);
+    if (c) el('circle', { cx: fmt(c.cx), cy: fmt(-c.cy), r: fmt(c.r), fill: `url(#map-glow-${i})` }, glows);
+  }
   const sun = el('g', { class: 'map-sun' }, svg);
   el('circle', { r: 0.03 }, sun);
   el('circle', { class: 'dot', r: 0.007 }, sun);
   el('path', { class: 'map-rim', d: RIM }, svg);
-  return { ...h, circles, dark, sun };
+  // Each region's name, on the hemisphere that faces its places' mean, links
+  // to its chapter below the map.
+  const labels = [];
+  for (const r of regionShapes) {
+    if (local(r.centre.lon, r.centre.lat, h.lon0)[2] > 0) continue;
+    const [X, Y] = project(r.centre.lon, r.centre.lat, h.lon0);
+    const text = el('text', { x: fmt(X), y: fmt(-Y), 'data-y': fmt(-Y), 'text-anchor': 'middle' }, el('a', { class: 'map-region', href: `#${r.id}` }, svg));
+    text.textContent = r.name;
+    labels.push(text);
+  }
+  return { ...h, svg, circles, dark, sun, labels };
 }
 
 // The moon's face on a unit disc: the lit limb is a half circle and the
@@ -131,13 +171,44 @@ function facePath(lit, waxing) {
   return `${limb}A${fmt(rx)},1 0 0 ${lit < 0.5 ? crescentSweep : 1 - crescentSweep} 0,-1Z`;
 }
 
+// Labels whose places' means fall close together would print over each
+// other. Top to bottom, each that overlaps one already placed moves down by
+// the measured overlap, so they stack without being placed by hand.
+function separate(labels) {
+  const placed = [];
+  for (const text of [...labels].sort((a, b) => a.getBBox().y - b.getBBox().y)) {
+    for (const other of placed) {
+      const a = text.getBBox(), b = other.getBBox();
+      const overlap = Math.min(a.x + a.width, b.x + b.width) > Math.max(a.x, b.x) && Math.min(a.y + a.height, b.y + b.height) - Math.max(a.y, b.y);
+      if (overlap > 0) text.setAttribute('y', fmt(Number(text.getAttribute('y')) + overlap));
+    }
+    placed.push(text);
+  }
+}
+
 const two = n => String(n).padStart(2, '0');
 const degrees = (v, pos, neg) => `${Math.abs(v).toFixed(1)}° ${v >= 0 ? pos : neg}`;
 
 export async function initMap(figure) {
   const world = await (await fetch(worldUrl)).json();
   const holder = figure.querySelector('.map-hemispheres');
-  const hemis = HEMISPHERES.map(h => hemisphere(h, world, holder));
+  const hemis = HEMISPHERES.map((h, i) => hemisphere(h, i, world, holder));
+  // The names keep the page's small type size however large the discs are
+  // drawn, so they are set in map units from each disc's drawn width, and
+  // stacked again whenever that changes.
+  const fit = () => {
+    const rem = parseFloat(getComputedStyle(document.documentElement).fontSize);
+    for (const h of hemis) {
+      const pxPerUnit = h.svg.getBoundingClientRect().width / VIEW_WIDTH;
+      if (!pxPerUnit) continue;
+      for (const t of h.labels) {
+        t.setAttribute('font-size', fmt(LABEL_REM * rem / pxPerUnit));
+        t.setAttribute('y', t.dataset.y);
+      }
+      separate(h.labels);
+    }
+  };
+  new ResizeObserver(fit).observe(holder);
   const form = figure.querySelector('form');
   const date = form.elements.date, time = form.elements.time;
   const shown = form.querySelector('output'), readout = figure.querySelector('.map-readout');
@@ -165,7 +236,7 @@ export async function initMap(figure) {
     const tide = tideAt(instant);
     const tropicDark = sun.lat >= 0 ? 'south' : 'north';
     tideLine.textContent = `In Euphonia, Scott Cohen's setting (not history), the Hidden are at the ${tide}: the moon is ${tide === 'flood' ? 'waxing' : 'waning'}. Between the tropics the dark half lies ${tropicDark} of the equator, where the sun isn't.`;
-    datesBody.replaceChildren(...datesAt(instant, calendars, seats.seats, (p, seat) => hiddenText(hiddenAt(instant, p, seat))).map(r => {
+    datesBody.replaceChildren(...datesAt(instant, calendars, places.seats, (p, seat) => hiddenText(hiddenAt(instant, p, seat))).map(r => {
       const tr = document.createElement('tr');
       for (const text of [r.calendar, r.date, r.also, r.polities.join(', ')]) tr.insertCell().textContent = text;
       return tr;
@@ -193,5 +264,16 @@ export async function initMap(figure) {
   tideLine.hidden = false;
 }
 
+// A region's name on the map opens its chapter, as does a link to it.
+function openRegion(id) {
+  const chapter = id ? document.getElementById(id) : null;
+  if (chapter?.matches('details.region')) chapter.open = true;
+}
+addEventListener('hashchange', () => openRegion(location.hash.slice(1)));
+openRegion(location.hash.slice(1));
+
 const figure = document.getElementById('map-figure');
-if (figure) initMap(figure);
+if (figure) {
+  figure.addEventListener('click', e => openRegion(e.target.closest('a.map-region')?.getAttribute('href').slice(1)));
+  initMap(figure);
+}

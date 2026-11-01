@@ -2,10 +2,10 @@
  "provenance": {
   "source": "Euphonia.md",
   "master": "~/Documents/euphonia/Euphonia.md",
-  "sha256": "68bcbf6cee435e8a1c33025b3c8b7b39c1ec6ea0d2d8eff962450c663517b463",
-  "modified": "2026-11-01T13:36:16-05:00",
+  "sha256": "f780dd205188523531301c0f12beb660507011fa2e34b833490fcf1b17ccfdc9",
+  "modified": "2026-11-01T15:00:45-05:00",
   "exporter": "class-kit/site_export.py",
-  "exporter_version": 4,
+  "exporter_version": 5,
   "rules": {
    "banned": [
     "eladrin",
@@ -26,7 +26,7 @@
  },
  "withheld": [],
  "data": {
-  "tide": "**The Tide.** The Hidden wax and wane with the moon. They're **at the flood** while the moon waxes, from the new moon to the full: strong, present, and near. They're **at the ebb** while it wanes: faint, hungry, and farther off. The **dark half** of the year, from Samhain to Beltane, is the Wild Hunt's raiding season, and the Hunt rides hardest at the flood; south of the equator the halves are reversed, and the tropics follow their hemisphere's sun. Samhain and Beltane are the **open nights**, when the door between the Hidden and the real stands open. The DM says when these times are, and can rule that the tide runs differently at a place of power.",
+  "tide": "**The Tide.** The Hidden wax and wane with the moon. They're **at the flood** while the moon waxes, from the new moon to the full: strong, present, and near. They're **at the ebb** while it wanes: faint, hungry, and farther off. The **dark half** of the year, from Samhain to Beltane, is the Wild Hunt's raiding season, and the Hunt rides hardest at the flood. Summer raids happen, but rarely. South of the equator the halves are reversed, and the tropics follow their hemisphere's sun. Samhain and Beltane are the **open nights**, when the door between the Hidden and the real stands open. The DM says when these times are, and can rule that the tide runs differently at a place of power.",
   "where": "Book Three: Life on the Border, Introduction, The Hidden, in the rules"
  }
 }

@@ -6,6 +6,7 @@ import * as projection from '../src/euphonia/euphonia.projection.js';
 import * as lunar from '../src/euphonia/euphonia.moon.js';
 import * as calendar from '../src/euphonia/euphonia.calendars.js';
 import * as hidden from '../src/euphonia/euphonia.tide.js';
+import { resolvePlaces } from '../src/euphonia/euphonia.places.js';
 import { solarEvents } from '../src/bench/bench.sky.js';
 
 const RAD = Math.PI / 180;
@@ -16,7 +17,10 @@ const vendored = name => () =>
 export const worldData = vendored('world');
 export const fixturesData = vendored('fixtures');
 export const calendarsData = vendored('calendars');
-export const seatsData = vendored('seats');
+export const gazetteerData = vendored('gazetteer');
+// The seats and the regions' places, looked up in the gazetteer.
+export const placesData = () =>
+  resolvePlaces({ gazetteer: gazetteerData(), regions: vendored('regions')().data, calendars: calendarsData() });
 
 // The sun's place against JPL Horizons. NOAA calls its approximations "very
 // good" only from 1800, so 1668 is held to an ephemeris instead. Measured
@@ -33,6 +37,9 @@ const PHASE_TOLERANCE_MIN = 1;
 // hundredth holds both.
 const LIT_TOLERANCE = 0.005;
 const LIT_AT = { new: 0, 'first quarter': 0.5, full: 1, 'last quarter': 0.5 };
+// The book's own floor: the setting chat's note asks four to eight places a
+// region, enough to show its reach.
+const MIN_PLACES = 4;
 
 // Spherical area of a lon/lat ring in steradians (Chamberlain & Duquette,
 // "Some algorithms for polygons on a sphere", JPL 2007), signed by winding.
@@ -59,7 +66,7 @@ function duskCircle(sun, dusk) {
   });
 }
 
-export function verifyEuphoniaMap({ world = worldData(), fixtures = fixturesData(), calendars = calendarsData(), seats = seatsData(), geo = projection, moon = lunar, cal = calendar, tide = hidden } = {}) {
+export function verifyEuphoniaMap({ world = worldData(), fixtures = fixturesData(), calendars = calendarsData(), gazetteer = gazetteerData(), regions = vendored('regions')().data, geo = projection, moon = lunar, cal = calendar, tide = hidden } = {}) {
   const problems = [];
   const fail = m => problems.push(m);
 
@@ -121,17 +128,26 @@ export function verifyEuphoniaMap({ world = worldData(), fixtures = fixturesData
     if (phase === 'full' && after.waxing) { fail(`a minute after the full moon of ${utc} the moon is still waxing`); break; }
   }
 
+  // The places: every calendar's seat and every region's place, found in the
+  // gazetteer exactly once; and each region naming enough places to show
+  // where it reaches.
+  if (!/Natural Earth/.test(gazetteer.provenance?.source ?? '') || !/^[0-9a-f]{64}$/.test(gazetteer.provenance?.sha256 ?? '')) fail('euphonia.gazetteer.json: no Natural Earth provenance');
+  const resolved = resolvePlaces({ gazetteer, regions, calendars });
+  for (const e of resolved.errors) fail(`a place the map can't find: ${e}`);
+  for (const r of regions) if (!(r.places?.length >= MIN_PLACES)) fail(`${r.name} names ${r.places?.length ?? 0} places; the map needs ${MIN_PLACES} to show where a region reaches`);
+  const seats = { seats: resolved.seats };
+  const regionPlaces = resolved.regions.reduce((n, r) => n + r.places.length, 0);
+
   // The calendars. Each polity's has a source that says so, and a seat
-  // Natural Earth places.
+  // the gazetteer places.
   let placed = true;
   for (const p of calendars.polities ?? []) {
     const c = calendars.calendars?.[p.calendar];
     if (!c) { placed = false; fail(`${p.name} keeps a calendar the data doesn't define: ${p.calendar}`); }
     if (!calendars.sources?.[p.source]?.url || !p.says) fail(`${p.name}'s calendar cites no source, or doesn't say what the source says`);
-    if (!seats.seats?.[p.seat?.[0]]) { placed = false; fail(`${p.name}'s seat, ${p.seat?.[0]}, isn't among Natural Earth's places`); }
+    if (seats.seats[p.seat?.[0]]?.error) placed = false;
   }
   for (const [id, c] of Object.entries(calendars.calendars ?? {})) if (!calendars.sources?.[c.source]?.url) fail(`the ${id} calendar cites no source`);
-  if (!/Natural Earth/.test(seats.provenance?.source ?? '') || !/^[0-9a-f]{64}$/.test(seats.provenance?.sha256 ?? '')) fail('euphonia.seats.json: no Natural Earth provenance');
 
   // The arithmetic, against Fourmilab's converter: the same day number, and
   // the same Julian and Hijri dates, for each Gregorian date it was asked.
@@ -282,7 +298,7 @@ export function verifyEuphoniaMap({ world = worldData(), fixtures = fixturesData
 
   const log = problems.length
     ? [`\neuphonia map: ${problems.length} problem(s):`, ...problems.map(p => `  ${p}`)]
-    : [`ok: ${points} Natural Earth points under their provenance; the sun within ${sunWorst.toFixed(4)}° of Horizons at ${sunRows.length} instants; ${computed.length} moon phases within ${phaseWorst.toFixed(2)} min of Espenak, lit within ${litWorst.toFixed(4)}; ${calendars.polities.length} polities' calendars cited and seated, ${conversions.length} Fourmilab conversions and ${calendarDays} days against ICU; the Tide turning at ${eves} eves and ${tropicChecks} tropical readings; the hemispheres show all ${(whole / (4 * Math.PI) * 100).toFixed(1)}% of the globe that is land, once; ${circles} dusk circles drawn where the sky darkens`];
+    : [`ok: ${points} Natural Earth points under their provenance; the sun within ${sunWorst.toFixed(4)}° of Horizons at ${sunRows.length} instants; ${computed.length} moon phases within ${phaseWorst.toFixed(2)} min of Espenak, lit within ${litWorst.toFixed(4)}; ${regionPlaces} places in ${regions.length} regions and ${calendars.polities.length} seats, each found once in Natural Earth; ${calendars.polities.length} polities' calendars cited, ${conversions.length} Fourmilab conversions and ${calendarDays} days against ICU; the Tide turning at ${eves} eves and ${tropicChecks} tropical readings; the hemispheres show all ${(whole / (4 * Math.PI) * 100).toFixed(1)}% of the globe that is land, once; ${circles} dusk circles drawn where the sky darkens`];
   return { ok: problems.length === 0, failures: problems.length, log };
 }
 
