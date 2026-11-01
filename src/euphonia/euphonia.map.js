@@ -5,6 +5,7 @@ import {
   HEMISPHERES, DUSKS, project, subsolar, darkRegion,
   ringsIn, linesIn, coastOf, graticule, parallel,
 } from './euphonia.projection.js';
+import { moonAt } from './euphonia.moon.js';
 
 const NS = 'http://www.w3.org/2000/svg';
 const GRATICULE_STEP = 30;
@@ -114,6 +115,18 @@ function hemisphere(h, world, parent) {
   return { ...h, circles, dark, sun };
 }
 
+// The moon's face on a unit disc: the lit limb is a half circle and the
+// terminator half an ellipse whose width is |1 − 2·lit|, bulging toward the
+// lit limb while a crescent and away from it once gibbous. Drawn as seen from
+// the north, lit on the right while waxing. At this size Chrome's looseness
+// with half-circle arcs is under a hundredth of a pixel.
+function facePath(lit, waxing) {
+  const rx = Math.abs(1 - 2 * lit);
+  const limb = `M0,-1A1,1 0 0 ${waxing ? 1 : 0} 0,1`;
+  const crescentSweep = waxing ? 0 : 1;
+  return `${limb}A${fmt(rx)},1 0 0 ${lit < 0.5 ? crescentSweep : 1 - crescentSweep} 0,-1Z`;
+}
+
 const two = n => String(n).padStart(2, '0');
 const degrees = (v, pos, neg) => `${Math.abs(v).toFixed(1)}° ${v >= 0 ? pos : neg}`;
 
@@ -124,6 +137,9 @@ export async function initMap(figure) {
   const form = figure.querySelector('form');
   const date = form.elements.date, time = form.elements.time;
   const shown = form.querySelector('output'), readout = figure.querySelector('.map-readout');
+  const moonLine = figure.querySelector('.map-moon'), moonLit = moonLine.querySelector('.lit'), moonText = moonLine.querySelector('span');
+  const day = ms => new Date(ms).toLocaleDateString('en-GB', { timeZone: 'UTC', day: 'numeric', month: 'long' });
+  const clock = ms => { const d = new Date(ms); return `${two(d.getUTCHours())}:${two(d.getUTCMinutes())}`; };
 
   // Today's month and day in the year that runs from Samhain 1668.
   const now = new Date();
@@ -133,7 +149,11 @@ export async function initMap(figure) {
   function draw() {
     const [y, m, d] = date.value.split('-').map(Number);
     const minutes = Number(time.value);
-    const sun = subsolar(Date.UTC(y, m - 1, d) + minutes * 60000);
+    const instant = Date.UTC(y, m - 1, d) + minutes * 60000;
+    const sun = subsolar(instant);
+    const moon = moonAt(instant);
+    moonLit.setAttribute('d', facePath(moon.lit, moon.waxing));
+    moonText.textContent = `The moon is ${moon.waxing ? 'waxing' : 'waning'}, ${moon.age.toFixed(1)} days from new and ${Math.round(moon.lit * 100)}% lit; the ${moon.next.phase} moon is on ${day(moon.next.ms)} at ${clock(moon.next.ms)} UT.`;
     for (const h of hemis) {
       DUSKS.forEach((dusk, k) => h.dark[k].setAttribute('d', darkPath(darkRegion(sun, dusk, h.lon0))));
       const eps = sun.obliquity;
@@ -150,6 +170,7 @@ export async function initMap(figure) {
   time.addEventListener('input', draw);
   draw();
   form.hidden = false;
+  moonLine.hidden = false;
 }
 
 const figure = document.getElementById('map-figure');

@@ -3,6 +3,7 @@
 import { readFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 import * as projection from '../src/euphonia/euphonia.projection.js';
+import * as lunar from '../src/euphonia/euphonia.moon.js';
 
 const RAD = Math.PI / 180;
 const DAY_MS = 86400000;
@@ -17,6 +18,16 @@ export const fixturesData = vendored('fixtures');
 // worst: 0.0116° in longitude, 0.0017° in declination. 0.02° is a quarter of
 // a pixel at the rim, where a 1440px-wide page spends 13 pixels a degree.
 const SUN_TOLERANCE = 0.02;
+// The phases against Espenak, who gives them to the minute. New and full
+// agree within his rounding; quarters stray up to 0.94 min either way. A
+// minute is a fifth of the map's 5-minute time step.
+const PHASE_TOLERANCE_MIN = 1;
+// At a quarter the Moon is 90° of longitude from the Sun, which leaves it
+// lit 0.0013 over a half because the Sun is 389 lunar distances away, not
+// infinitely far; (48.4)'s phase angle adds at most 0.0011 here. Half a
+// hundredth holds both.
+const LIT_TOLERANCE = 0.005;
+const LIT_AT = { new: 0, 'first quarter': 0.5, full: 1, 'last quarter': 0.5 };
 
 // Spherical area of a lon/lat ring in steradians (Chamberlain & Duquette,
 // "Some algorithms for polygons on a sphere", JPL 2007), signed by winding.
@@ -43,7 +54,7 @@ function duskCircle(sun, dusk) {
   });
 }
 
-export function verifyEuphoniaMap({ world = worldData(), fixtures = fixturesData(), geo = projection } = {}) {
+export function verifyEuphoniaMap({ world = worldData(), fixtures = fixturesData(), geo = projection, moon = lunar } = {}) {
   const problems = [];
   const fail = m => problems.push(m);
 
@@ -80,6 +91,29 @@ export function verifyEuphoniaMap({ world = worldData(), fixtures = fixturesData
     const off = Math.max(dLon, Math.abs(s.lat - dec));
     if (!(off <= SUN_TOLERANCE)) { fail(`the sun at ${utc} stands ${off.toFixed(4)}° from where Horizons puts it`); break; }
     sunWorst = Math.max(sunWorst, off);
+  }
+
+  // The moon's phases, against Espenak's catalogue: the same phases in the
+  // same order, each within a minute; the face lit as each phase means it;
+  // waxing from new to full, waning from full to new.
+  const phaseRows = fixtures.moon?.rows ?? [];
+  if (!/Espenak/.test(fixtures.moon?.source ?? '') || !fixtures.moon?.acknowledgment || phaseRows.length < 48) fail('euphonia.fixtures.json: no year of Espenak\'s phases, or no acknowledgment to show with them');
+  const computed = phaseRows.length ? moon.phases(Date.parse(phaseRows[0][0]) - 60 * 60000, Date.parse(phaseRows.at(-1)[0]) + 60 * 60000) : [];
+  if (computed.length !== phaseRows.length) fail(`the moon has ${computed.length} phases where Espenak has ${phaseRows.length}`);
+  let phaseWorst = 0, litWorst = 0;
+  for (const [i, [utc, phase]] of phaseRows.entries()) {
+    const c = computed[i];
+    if (!c) break;
+    const off = Math.abs(c.ms - Date.parse(utc)) / 60000;
+    if (c.phase !== phase || !(off <= PHASE_TOLERANCE_MIN)) { fail(`Espenak's ${phase} at ${utc}: the map has a ${c.phase} ${off.toFixed(2)} min away`); break; }
+    phaseWorst = Math.max(phaseWorst, off);
+    const at = moon.moonAt(c.ms);
+    const litOff = Math.abs(at.lit - LIT_AT[phase]);
+    if (!(litOff <= LIT_TOLERANCE)) { fail(`at the ${phase} of ${utc} the moon is ${at.lit.toFixed(4)} lit`); break; }
+    litWorst = Math.max(litWorst, litOff);
+    const after = moon.moonAt(c.ms + 60000);
+    if (phase === 'new' && !(after.waxing && after.age < 0.01)) { fail(`a minute after the new moon of ${utc} the moon is ${after.waxing ? '' : 'not '}waxing, ${after.age.toFixed(2)} days old`); break; }
+    if (phase === 'full' && after.waxing) { fail(`a minute after the full moon of ${utc} the moon is still waxing`); break; }
   }
 
   // The projection: the centre at the middle, the hemisphere's edge on the rim.
@@ -129,7 +163,7 @@ export function verifyEuphoniaMap({ world = worldData(), fixtures = fixturesData
 
   const log = problems.length
     ? [`\neuphonia map: ${problems.length} problem(s):`, ...problems.map(p => `  ${p}`)]
-    : [`ok: ${points} Natural Earth points under their provenance; the sun within ${sunWorst.toFixed(4)}° of Horizons at ${sunRows.length} instants; the hemispheres show all ${(whole / (4 * Math.PI) * 100).toFixed(1)}% of the globe that is land, once; ${circles} dusk circles drawn where the sky darkens`];
+    : [`ok: ${points} Natural Earth points under their provenance; the sun within ${sunWorst.toFixed(4)}° of Horizons at ${sunRows.length} instants; ${computed.length} moon phases within ${phaseWorst.toFixed(2)} min of Espenak, lit within ${litWorst.toFixed(4)}; the hemispheres show all ${(whole / (4 * Math.PI) * 100).toFixed(1)}% of the globe that is land, once; ${circles} dusk circles drawn where the sky darkens`];
   return { ok: problems.length === 0, failures: problems.length, log };
 }
 

@@ -41,6 +41,11 @@ footer.legal section a { text-decoration: underline; }
 .map-hemispheres svg { display: block; width: 100%; height: auto; }
 .map figcaption { max-width: 37.5rem; margin: 1rem auto 0; }
 .map figcaption .note { font-size: 0.85rem; }
+.map-moon { display: flex; gap: 0.7rem; align-items: center; }
+.map-moon[hidden] { display: none; }
+.map-moon svg { flex: none; width: 1.6rem; height: 1.6rem; }
+.map-moon .face { fill: #15130f; stroke: #6b5a37; stroke-width: 0.06; }
+.map-moon .lit { fill: #ded9d0; }
 /* Strokes are in screen pixels whatever size the disc is drawn. */
 .map svg path { vector-effect: non-scaling-stroke; }
 .map-sea { fill: #0f1418; }
