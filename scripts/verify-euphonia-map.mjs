@@ -7,8 +7,16 @@ import * as projection from '../src/euphonia/euphonia.projection.js';
 const RAD = Math.PI / 180;
 const DAY_MS = 86400000;
 
-export const worldData = () =>
-  JSON.parse(readFileSync(new URL('../src/euphonia/euphonia.world.json', import.meta.url), 'utf8'));
+const vendored = name => () =>
+  JSON.parse(readFileSync(new URL(`../src/euphonia/euphonia.${name}.json`, import.meta.url), 'utf8'));
+export const worldData = vendored('world');
+export const fixturesData = vendored('fixtures');
+
+// The sun's place against JPL Horizons. NOAA calls its approximations "very
+// good" only from 1800, so 1668 is held to an ephemeris instead. Measured
+// worst: 0.0116° in longitude, 0.0017° in declination. 0.02° is a quarter of
+// a pixel at the rim, where a 1440px-wide page spends 13 pixels a degree.
+const SUN_TOLERANCE = 0.02;
 
 // Spherical area of a lon/lat ring in steradians (Chamberlain & Duquette,
 // "Some algorithms for polygons on a sphere", JPL 2007), signed by winding.
@@ -35,7 +43,7 @@ function duskCircle(sun, dusk) {
   });
 }
 
-export function verifyEuphoniaMap({ world = worldData(), geo = projection } = {}) {
+export function verifyEuphoniaMap({ world = worldData(), fixtures = fixturesData(), geo = projection } = {}) {
   const problems = [];
   const fail = m => problems.push(m);
 
@@ -59,6 +67,19 @@ export function verifyEuphoniaMap({ world = worldData(), geo = projection } = {}
       points++;
       if (!(x >= -180 && x <= 180 && y >= -90 && y <= 90)) { fail(`euphonia.world.json: ${layer} has a point at ${x}, ${y}`); break; }
     }
+  }
+
+  // The sun overhead, against Horizons: the subsolar longitude is the Sun's
+  // apparent right ascension less Greenwich's apparent sidereal time.
+  const sunRows = fixtures.sun?.rows ?? [];
+  if (!/Horizons/.test(fixtures.sun?.source ?? '') || sunRows.length < 100) fail('euphonia.fixtures.json: no year of Horizons positions for the sun');
+  let sunWorst = 0;
+  for (const [utc, ra, dec, sidereal] of sunRows) {
+    const s = geo.subsolar(Date.parse(utc));
+    const dLon = Math.abs((s.lon - (ra - 15 * sidereal) + 900) % 360 - 180);
+    const off = Math.max(dLon, Math.abs(s.lat - dec));
+    if (!(off <= SUN_TOLERANCE)) { fail(`the sun at ${utc} stands ${off.toFixed(4)}° from where Horizons puts it`); break; }
+    sunWorst = Math.max(sunWorst, off);
   }
 
   // The projection: the centre at the middle, the hemisphere's edge on the rim.
@@ -108,7 +129,7 @@ export function verifyEuphoniaMap({ world = worldData(), geo = projection } = {}
 
   const log = problems.length
     ? [`\neuphonia map: ${problems.length} problem(s):`, ...problems.map(p => `  ${p}`)]
-    : [`ok: ${points} Natural Earth points under their provenance; the hemispheres show all ${(whole / (4 * Math.PI) * 100).toFixed(1)}% of the globe that is land, once; ${circles} dusk circles drawn where the sky darkens`];
+    : [`ok: ${points} Natural Earth points under their provenance; the sun within ${sunWorst.toFixed(4)}° of Horizons at ${sunRows.length} instants; the hemispheres show all ${(whole / (4 * Math.PI) * 100).toFixed(1)}% of the globe that is land, once; ${circles} dusk circles drawn where the sky darkens`];
   return { ok: problems.length === 0, failures: problems.length, log };
 }
 
