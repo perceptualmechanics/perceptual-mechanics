@@ -6,7 +6,7 @@ const RAD = Math.PI / 180;
 const DAY_MS = 86400000;
 const JD_UNIX = 2440587.5;
 const J2000 = 2451545;
-const SYNODIC = 29.530588861;
+export const SYNODIC = 29.530588861;
 const sin = d => Math.sin(d * RAD), cos = d => Math.cos(d * RAD);
 
 // ΔT, dynamical time less universal time, in seconds: Espenak and Meeus's

@@ -39,8 +39,11 @@ footer.legal section a { text-decoration: underline; }
 }
 .map-controls input[type=range] { width: 12rem; max-width: 50vw; accent-color: #d9b13f; vertical-align: middle; }
 .map-controls output { font-variant-numeric: tabular-nums; }
-.map-reset { font: inherit; color: #d9b13f; background: none; border: 1px solid #6b5a37; padding: 0.2rem 0.7rem; cursor: pointer; }
-.map-reset:hover, .map-reset:focus-visible { border-color: #d9b13f; }
+.map-controls button, .map-controls select {
+  font: inherit; color: #d9b13f; background: #15130f; border: 1px solid #6b5a37; padding: 0.2rem 0.7rem; cursor: pointer;
+}
+.map-controls button:hover, .map-controls button:focus-visible, .map-controls select:focus-visible { border-color: #d9b13f; }
+.map-controls button[aria-pressed="true"] { background: #2a2416; }
 .map-hemispheres { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; min-height: 0; }
 @media (orientation: portrait) { .map-hemispheres { grid-template-columns: 1fr; grid-template-rows: 1fr 1fr; } }
 .map-cell { container-type: size; min-height: 0; display: grid; place-items: center; }

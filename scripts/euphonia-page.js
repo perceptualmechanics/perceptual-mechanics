@@ -1,6 +1,7 @@
 import { euphoniaFiles } from './verify-euphonia.mjs';
 import { inline, blocks } from '../src/euphonia/euphonia.markdown.js';
 import { slug } from '../src/euphonia/euphonia.places.js';
+import { SYNODIC } from '../src/euphonia/euphonia.moon.js';
 import { worldData, fixturesData, calendarsData } from './verify-euphonia-map.mjs';
 
 const esc = s => String(s)
@@ -42,12 +43,18 @@ function mapStage() {
   return `<form class="map-controls" hidden>
 <label>Date (Gregorian) <input name="date" type="date" min="1668-11-01" max="1669-11-01" required></label>
 <label>Time, UT <input name="time" type="range" min="0" max="1439" step="5"> <output name="shown" for="time"></output></label>
+<button type="button" name="play" aria-pressed="false">Play</button>
+<label>Speed <select name="rate">
+<option value="3600">an hour a second</option>
+<option value="86400" selected>a day a second</option>
+<option value="${SYNODIC * 86400}">a moon a second</option>
+</select></label>
 <button type="button" class="map-reset" hidden>Whole world</button>
 </form>
 <div class="map-hemispheres">
 ${discs}
 </div>
-<p class="map-help" id="map-help">Drag a hemisphere, or focus it and use the arrow keys, to turn the world; the wheel, a pinch, or + and − zoom; 0 shows the whole world again. A region's name zooms to it.</p>
+<p class="map-help" id="map-help">Drag a hemisphere, or focus it and use the arrow keys, to turn the world; the wheel, a pinch, or + and − zoom; 0 shows the whole world again. A region's name zooms to it. Play runs time on; on a hemisphere, space plays and pauses, [ and ] step an hour, { and } a day.</p>
 <noscript><p class="map-help">The map is drawn in the page by script; the text below describes it.</p></noscript>`;
 }
 

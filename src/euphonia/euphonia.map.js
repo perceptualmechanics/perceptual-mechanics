@@ -13,9 +13,18 @@ import { datesAt } from './euphonia.calendars.js';
 import { tideAt, hiddenAt } from './euphonia.tide.js';
 import calendars from './euphonia.calendars.json';
 import places from 'virtual:euphonia-places';
-import { prefersReducedMotion } from '../utils/sceneKit.js';
+import { prefersReducedMotion, createFrameClock } from '../utils/sceneKit.js';
 
 const RAD = Math.PI / 180;
+const DAY_MS = 86400000;
+const HOUR_MS = 3600000;
+// While time plays, the words under the map catch up four times a second:
+// the dates table and the moon cost more than a frame, and nobody reads
+// faster.
+const READOUT_MS = 250;
+// Under reduced motion, play steps once a second by the chosen rate instead
+// of running.
+const STEP_MS = 1000;
 // Where the two hemispheres meet, 20°W and 160°E, until the reader turns them.
 const SPLIT = HEMISPHERES[0].lon0 + 90;
 // The site's renderers stop at 2x; past it the canvases grow for nothing.
@@ -43,22 +52,29 @@ const apart = (a, b) => Math.acos(Math.min(1, unit(a).reduce((s, v, i) => s + v 
 const regions = places.regions.map(r => {
   const glows = r.places.map(p => ({ ...p, rho: Math.min(...r.places.filter(q => q !== p).map(q => apart(p, q))) / 2 }));
   const [x, y, z] = r.places.map(unit).reduce((a, v) => a.map((s, i) => s + v[i]));
-  return { ...r, glows, centre: { lat: Math.atan2(z, Math.hypot(x, y)) / RAD, lon: Math.atan2(y, x) / RAD } };
+  const centre = { lat: Math.atan2(z, Math.hypot(x, y)) / RAD, lon: Math.atan2(y, x) / RAD };
+  return { ...r, glows, centre, spread: Math.max(...r.places.map(p => apart(p, centre))) };
 });
 
-// Names whose places' means fall close together would print over each other.
-// Top to bottom, each that overlaps one already placed moves down by the
-// overlap, so they stack without being placed by hand. Boxes are centred on
-// (x, y), with each name's size measured once per size of the page's type;
-// reading the layout back each frame would lay out the whole page each time.
-function separate(boxes) {
+// Where names would print over each other, the larger region's goes first
+// (its places spread furthest), and each after it tries its own spot, then
+// just below or just above the name in its way, moving at most its own
+// height; a name that fits none of them, or would cross the disc's edge,
+// isn't drawn at this size. Zooming in makes room, and every region's
+// chapter is in the list below the map. Boxes are centred on (x, y), with
+// each name measured once per type size: reading the layout back each frame
+// would lay out the whole page each time.
+function place(boxes, centre, radius) {
   const placed = [];
-  for (const b of [...boxes].sort((a, c) => a.y - c.y)) {
-    for (const o of placed) {
-      const overlap = Math.abs(b.x - o.x) < (b.w + o.w) / 2 && (o.h + b.h) / 2 - (b.y - o.y);
-      if (overlap > 0) b.y += overlap;
-    }
-    placed.push(b);
+  const blockerOf = b => placed.find(o => Math.abs(b.x - o.x) < (b.w + o.w) / 2 && Math.abs(b.y - o.y) < (b.h + o.h) / 2);
+  const inside = b => [[-1, -1], [1, -1], [-1, 1], [1, 1]].every(([sx, sy]) =>
+    Math.hypot(b.x + sx * b.w / 2 - centre, b.y + sy * b.h / 2 - centre) <= radius);
+  for (const b of [...boxes].sort((a, c) => c.spread - a.spread)) {
+    const blocker = blockerOf(b);
+    const tries = blocker ? [1, -1].map(side => blocker.y + side * (blocker.h + b.h) / 2) : [b.y];
+    const y = tries.find(t => Math.abs(t - b.anchorY) <= b.h && !blockerOf({ ...b, y: t }) && inside({ ...b, y: t }));
+    b.shown = y !== undefined;
+    if (b.shown) { b.y = y; placed.push(b); }
   }
 }
 
@@ -113,14 +129,24 @@ export async function initMap(stage) {
   const day = ms => new Date(ms).toLocaleDateString('en-GB', { timeZone: 'UTC', day: 'numeric', month: 'long' });
   const clock = ms => { const d = new Date(ms); return `${two(d.getUTCHours())}:${two(d.getUTCMinutes())}`; };
 
-  // Today's month and day in the year that runs from Samhain 1668.
-  const now = new Date();
-  date.value = `${now.getMonth() >= 10 ? 1668 : 1669}-${two(now.getMonth() + 1)}-${two(now.getDate())}`;
-  time.value = now.getUTCHours() * 60 + now.getUTCMinutes();
-  const instantOf = () => {
+  // The instant the map holds, which the date field and the slider show.
+  // The year runs from Samhain 1668 to the end of Samhain 1669, as the date
+  // field allows, and time that plays past its end comes round again.
+  const yearStart = Date.parse(`${date.min}T00:00Z`), yearEnd = Date.parse(`${date.max}T00:00Z`) + DAY_MS;
+  let instant;
+  function setInstant(ms) {
+    instant = yearStart + ((ms - yearStart) % (yearEnd - yearStart) + (yearEnd - yearStart)) % (yearEnd - yearStart);
+    const at = new Date(instant);
+    date.value = at.toISOString().slice(0, 10);
+    time.value = at.getUTCHours() * 60 + at.getUTCMinutes();
+  }
+  const fromInputs = () => {
     const [y, m, d] = date.value.split('-').map(Number);
-    return Date.UTC(y, m - 1, d) + Number(time.value) * 60000;
+    instant = Date.UTC(y, m - 1, d) + Number(time.value) * 60000;
   };
+  // It opens on today's month and day in that year, at this moment's UT.
+  const now = new Date();
+  setInstant(Date.UTC(now.getMonth() >= 10 ? 1668 : 1669, now.getMonth(), now.getDate(), now.getUTCHours(), now.getUTCMinutes()));
 
   // Each disc's labels: one button per region, on the disc that faces the
   // region's places' mean.
@@ -144,7 +170,6 @@ export async function initMap(stage) {
 
   function render() {
     frame = 0;
-    const instant = instantOf();
     const sun = subsolar(instant);
     for (const [i, d] of discs.entries()) {
       if (!d.size) continue;
@@ -170,20 +195,18 @@ export async function initMap(stage) {
     const boxes = [];
     regions.forEach((r, k) => {
       const [x, y] = toScreen(v, ...project(r.centre.lon, r.centre.lat, d.lon0));
-      const shown = local(r.centre.lon, r.centre.lat, d.lon0)[2] <= 0 && x >= 0 && y >= 0 && x <= v.size && y <= v.size;
-      if (shown) boxes.push({ k, x, y, ...d.labelSizes[k] });
+      if (local(r.centre.lon, r.centre.lat, d.lon0)[2] <= 0) boxes.push({ k, x, y, anchorY: y, spread: r.spread, ...d.labelSizes[k] });
       else d.buttons[k].hidden = true;
     });
-    separate(boxes);
-    for (const { k, x, y } of boxes) {
+    place(boxes, v.size / 2, v.R);
+    for (const { k, x, y, shown } of boxes) {
       const b = d.buttons[k];
-      b.hidden = false;
-      b.style.transform = `translate(${x}px, ${y}px) translate(-50%, -50%)`;
+      b.hidden = !shown;
+      if (shown) b.style.transform = `translate(${x}px, ${y}px) translate(-50%, -50%)`;
     }
   }
 
-  function draw() {
-    const instant = instantOf();
+  function readouts() {
     const sun = subsolar(instant);
     const moon = moonAt(instant);
     const tide = tideAt(instant);
@@ -196,11 +219,35 @@ export async function initMap(stage) {
     }));
     moonLit.setAttribute('d', facePath(moon.lit, moon.waxing));
     moonText.textContent = `The moon is ${moon.waxing ? 'waxing' : 'waning'}, ${moon.age.toFixed(1)} days from new and ${Math.round(moon.lit * 100)}% lit; the ${moon.next.phase} moon is on ${day(moon.next.ms)} at ${clock(moon.next.ms)} UT.`;
-    const minutes = Number(time.value);
-    shown.value = `${two(Math.floor(minutes / 60))}:${two(minutes % 60)}`;
-    readout.textContent = `${date.valueAsDate.toLocaleDateString('en-GB', { timeZone: 'UTC', day: 'numeric', month: 'long', year: 'numeric' })} (Gregorian), ${shown.value} UT: the sun stands overhead at ${degrees(sun.lat, 'N', 'S')}, ${degrees(sun.lon, 'E', 'W')}. The night side is shaded, darker through each twilight.`;
+    shown.value = clock(instant);
+    readout.textContent = `${new Date(instant).toLocaleDateString('en-GB', { timeZone: 'UTC', day: 'numeric', month: 'long', year: 'numeric' })} (Gregorian), ${shown.value} UT: the sun stands overhead at ${degrees(sun.lat, 'N', 'S')}, ${degrees(sun.lon, 'E', 'W')}. The night side is shaded, darker through each twilight.`;
+  }
+  function draw() { readouts(); redraw(); }
+
+  // Play: the instant runs on at the chosen rate (seconds of 1668 a second),
+  // through the scenes' frame clock, which caps a step so a tab come back
+  // from the background doesn't leap the year. Under reduced motion it steps.
+  const play = form.elements.play, rate = form.elements.rate;
+  const clockFrame = createFrameClock();
+  let playing = false, ticking = 0, stepping = 0, readAt = 0;
+  function advance(ms) {
+    setInstant(instant + ms);
+    const t = performance.now();
+    if (t - readAt >= READOUT_MS) { readouts(); readAt = t; }
     redraw();
   }
+  const tick = () => { advance(clockFrame.tick() * 1000 * Number(rate.value)); ticking = requestAnimationFrame(tick); };
+  function setPlaying(on) {
+    playing = on;
+    play.textContent = on ? 'Pause' : 'Play';
+    play.setAttribute('aria-pressed', String(on));
+    cancelAnimationFrame(ticking); clearInterval(stepping);
+    if (on && prefersReducedMotion()) stepping = setInterval(() => advance(STEP_MS * Number(rate.value)), STEP_MS);
+    else if (on) { clockFrame.resync(); ticking = requestAnimationFrame(tick); }
+    else readouts();
+  }
+  play.addEventListener('click', () => setPlaying(!playing));
+  rate.addEventListener('change', () => { if (playing) setPlaying(true); });
 
   // Sizes in device pixels, from each disc's drawn size; the names keep the
   // page's small type size whatever the disc's.
@@ -302,9 +349,11 @@ export async function initMap(stage) {
     const lift = e => { pointers.delete(e.pointerId); pinch = 0; };
     d.canvas.addEventListener('pointerup', lift);
     d.canvas.addEventListener('pointercancel', lift);
-    d.canvas.addEventListener('wheel', e => {
+    // The wheel zooms wherever it is over the disc, a region's name included.
+    d.cell.addEventListener('wheel', e => {
       e.preventDefault();
-      zoomAt(d, 2 ** (-e.deltaY / WHEEL_DOUBLING), e.offsetX, e.offsetY);
+      const r = d.canvas.getBoundingClientRect();
+      zoomAt(d, 2 ** (-e.deltaY / WHEEL_DOUBLING), e.clientX - r.left, e.clientY - r.top);
     }, { passive: false });
     d.cell.addEventListener('keydown', e => {
       if (e.target !== d.cell) return;
@@ -315,6 +364,9 @@ export async function initMap(stage) {
         '+': () => zoomAt(d, KEY_ZOOM, d.cssSize / 2, d.cssSize / 2), '=': () => zoomAt(d, KEY_ZOOM, d.cssSize / 2, d.cssSize / 2),
         '-': () => zoomAt(d, 1 / KEY_ZOOM, d.cssSize / 2, d.cssSize / 2),
         0: resetView,
+        ' ': () => setPlaying(!playing),
+        '[': () => advance(-HOUR_MS), ']': () => advance(HOUR_MS),
+        '{': () => advance(-DAY_MS), '}': () => advance(DAY_MS),
       };
       if (!keys[e.key]) return;
       e.preventDefault();
@@ -329,8 +381,8 @@ export async function initMap(stage) {
   }
   reset.addEventListener('click', resetView);
 
-  date.addEventListener('input', () => { if (date.value) draw(); });
-  time.addEventListener('input', draw);
+  date.addEventListener('input', () => { if (date.value) { fromInputs(); draw(); } });
+  time.addEventListener('input', () => { fromInputs(); draw(); });
   draw();
   form.hidden = false;
   moonLine.hidden = false;
