@@ -14,6 +14,7 @@ import { injectLanding } from './scripts/landing.js';
 import { verifyQuizWheel } from './scripts/quiz-wheel.mjs';
 import { verifyBench } from './scripts/verify-bench.mjs';
 import { verifyEuphonia, verifyEuphoniaPages } from './scripts/verify-euphonia.mjs';
+import { verifyEuphoniaMap } from './scripts/verify-euphonia-map.mjs';
 import { injectEuphonia } from './scripts/euphonia-page.js';
 
 const HERE = import.meta.dirname;
@@ -191,6 +192,22 @@ function verifyEuphoniaPlugin() {
   };
 }
 
+function verifyEuphoniaMapPlugin() {
+  return {
+    name: 'pm-verify-euphonia-map',
+    apply: 'build',
+    buildStart() {
+      const { ok, failures, log } = verifyEuphoniaMap();
+      log.forEach(line => console.log(line));
+      if (!ok) {
+        this.error(`verify-euphonia-map: ${failures} problem(s) — see above. The map of 1668 draws something its sources don't hold.`);
+      } else {
+        console.log('  ✓ verify-euphonia-map: the coasts hold to Natural Earth and the night to the sphere');
+      }
+    },
+  };
+}
+
 function verifyScrollMarksPlugin() {
   return {
     name: 'pm-verify-scroll-marks',
@@ -274,7 +291,7 @@ function verifyStyleHash(outDir, root) {
 }
 
 export default defineConfig({
-  plugins: [landingMarkupPlugin(), euphoniaMarkupPlugin(), verifyLinksPlugin(), verifyResonancesPlugin(), verifyScrollMarksPlugin(), verifyLandingPlugin(), verifyAriaPlugin(), verifyCssInvariantsPlugin(), verifyCountsPlugin(), verifyQuizWheelPlugin(), verifyBenchPlugin(), verifyEuphoniaPlugin(), prerenderTextPages()],
+  plugins: [landingMarkupPlugin(), euphoniaMarkupPlugin(), verifyLinksPlugin(), verifyResonancesPlugin(), verifyScrollMarksPlugin(), verifyLandingPlugin(), verifyAriaPlugin(), verifyCssInvariantsPlugin(), verifyCountsPlugin(), verifyQuizWheelPlugin(), verifyBenchPlugin(), verifyEuphoniaPlugin(), verifyEuphoniaMapPlugin(), prerenderTextPages()],
   build: {
     cssMinify: 'esbuild',
     cssTarget: ['chrome87', 'edge88', 'firefox78', 'safari14'],

@@ -13,7 +13,8 @@ const ZENITH = 90.833;
 
 const julianCentury = ms => (ms / DAY_MS + 2440587.5 - 2451545) / 36525;
 
-// Declination (degrees) and the equation of time (minutes) at an instant.
+// Declination and obliquity (degrees) and the equation of time (minutes) at an
+// instant.
 export function solarParams(ms) {
   const T = julianCentury(ms);
   const L0 = (280.46646 + T * (36000.76983 + T * 0.0003032)) % 360;
@@ -34,7 +35,7 @@ export function solarParams(ms) {
     + 4 * e * y * Math.sin(M * RAD) * Math.cos(2 * L0 * RAD)
     - 0.5 * y * y * Math.sin(4 * L0 * RAD)
     - 1.25 * e * e * Math.sin(2 * M * RAD));
-  return { decl, eqTime };
+  return { decl, eqTime, obliquity };
 }
 
 // The rise or set nearest the solar noon of the UTC day starting at dayMs, or
