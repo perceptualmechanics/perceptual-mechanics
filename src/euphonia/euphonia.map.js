@@ -204,44 +204,112 @@ export async function initMap(stage) {
   for (const d of discs) d.labels.append(d.tip);
   for (const d of discs) d.tip.setAttribute('aria-hidden', 'true');
 
-  // A region's chapter, in the scenes' panel: the chapter from the list below
-  // the map, its focus on its title, and back to the name it came from on
-  // closing, by Escape or the ✕.
+  // The scenes' panel, beside the map, for a region's chapter or a picked
+  // place: the place's facts first, then its region's chapter, opened where
+  // the chapter names the place. It takes focus on opening and gives it back
+  // to what opened it on closing, by Escape or the ✕.
   const panel = stage.querySelector('.map-panel');
   const panelTitle = panel.querySelector('.map-panel-title'), panelContent = panel.querySelector('.map-panel-content');
-  const panelPlaces = panel.querySelector('.map-panel-places');
-  let opener = null, openDisc = 0;
+  const panelPlaces = panel.querySelector('.map-panel-places'), panelRegion = panel.querySelector('.map-panel-region');
+  const pickSection = panel.querySelector('.map-panel-pick'), pickFacts = panel.querySelector('.map-panel-facts');
+  const mentionLine = panel.querySelector('.map-panel-mention');
+  const nearby = panel.querySelector('.map-panel-nearby'), readNearby = panel.querySelector('.map-panel-read');
+  const status = stage.querySelector('.map-status');
+  let opener = null, openDisc = 0, pick = null, nearest = null;
   createPanelCloser(panel, { focus: () => opener?.focus() }, {
     closeBtn: panel.querySelector('.map-panel-close'),
-    onClose: () => { chosen = null; light(); },
+    onClose: () => { chosen = null; pick = null; status.textContent = ''; light(); },
   });
   panel.querySelector('.map-panel-zoom').addEventListener('click', () => zoomToRegion(openDisc, chosen));
-  function openChapter(i, r, button) {
-    const chapter = document.getElementById(r.id);
-    opener = button; openDisc = i; chosen = r;
-    // From the side away from the disc the name was on, over the other disc.
+  readNearby.addEventListener('click', () => {
+    showRegion(nearest.region);
+    nearby.hidden = true;
+    jumpTo(nearest.place);
+  });
+
+  function openPanel(i, button) {
+    opener = button; openDisc = i;
+    // From the side away from the disc it was opened from, over the other.
     const fromLeft = i === 1;
     if (panel.classList.contains('from-left') !== fromLeft) setPanelSide(panel, fromLeft);
-    panelTitle.textContent = r.name;
-    panelContent.replaceChildren(...[...chapter.children].filter(c => c.tagName !== 'SUMMARY').map(c => c.cloneNode(true)));
-    // Its places, each lighting on the map under the pointer or focus, and
-    // picked when chosen.
-    panelPlaces.replaceChildren(...r.glows.map(g => {
-      const li = document.createElement('li'), b = document.createElement('button');
-      b.type = 'button';
-      b.textContent = placeName(g);
-      b.addEventListener('pointerenter', () => hover(r, g));
-      b.addEventListener('focus', () => hover(r, g));
-      b.addEventListener('pointerleave', () => hover(null));
-      b.addEventListener('blur', () => hover(null));
-      b.addEventListener('click', () => pickPoint({ lat: g.lat, lon: g.lon }));
-      li.append(b);
-      return li;
-    }));
     panel.scrollTop = 0;
     panel.classList.add('open');
+  }
+  function showRegion(r) {
+    if (chosen !== r) {
+      chosen = r;
+      panelContent.replaceChildren(...[...document.getElementById(r.id).children].filter(c => c.tagName !== 'SUMMARY').map(c => c.cloneNode(true)));
+      // Its places, each lighting on the map under the pointer or focus, and
+      // taking the reader to where the chapter names it.
+      panelPlaces.replaceChildren(...r.glows.map(g => {
+        const li = document.createElement('li'), b = document.createElement('button');
+        b.type = 'button';
+        b.textContent = placeName(g);
+        b.addEventListener('pointerenter', () => hover(r, g));
+        b.addEventListener('focus', () => hover(r, g));
+        b.addEventListener('pointerleave', () => hover(null));
+        b.addEventListener('blur', () => hover(null));
+        b.addEventListener('click', () => jumpTo(g));
+        li.append(b);
+        return li;
+      }));
+    }
+    panelTitle.textContent = r.name;
+    panelRegion.hidden = false;
     light();
+  }
+  // A region's name opens its chapter at the start.
+  function openChapter(i, r, button) {
+    pick = null;
+    pickSection.hidden = true;
+    showRegion(r);
+    clearMention();
+    openPanel(i, button);
+    redraw();
     requestAnimationFrame(() => panelTitle.focus());
+  }
+
+  // Where the chapter names a place, by the book's name or the modern one,
+  // accents aside ("Nojpeten" finds "Nojpetén"): marked, scrolled to, and
+  // focused, so reading goes on from there. Where it doesn't, the panel says so.
+  const fold = t => t.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  function findName(names) {
+    for (const name of names) {
+      const re = new RegExp(`(?<![\\p{L}])${fold(name).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?![\\p{L}])`, 'u');
+      const walker = document.createTreeWalker(panelContent, NodeFilter.SHOW_TEXT);
+      for (let node; (node = walker.nextNode());) {
+        // Folding can shorten the text, so each folded character keeps the
+        // index of the one it came from.
+        let folded = '';
+        const from = [];
+        for (let k = 0; k < node.data.length; k++) for (const ch of fold(node.data[k])) { folded += ch; from.push(k); }
+        const m = re.exec(folded);
+        if (m) return { node, start: from[m.index], end: from[m.index + m[0].length - 1] + 1 };
+      }
+    }
+    return null;
+  }
+  function clearMention() {
+    for (const m of panelContent.querySelectorAll('mark.map-mention')) m.replaceWith(...m.childNodes);
+    panelContent.normalize();
+    mentionLine.textContent = '';
+  }
+  function jumpTo(place) {
+    clearMention();
+    const hit = findName([place.name, place.modern]);
+    if (!hit) {
+      mentionLine.textContent = `${chosen.name}'s chapter doesn't name ${place.name}; it begins below.`;
+      return null;
+    }
+    const range = document.createRange();
+    range.setStart(hit.node, hit.start); range.setEnd(hit.node, hit.end);
+    const mark = Object.assign(document.createElement('mark'), { className: 'map-mention', tabIndex: -1 });
+    range.surroundContents(mark);
+    requestAnimationFrame(() => {
+      mark.scrollIntoView({ block: 'center', behavior: prefersReducedMotion() ? 'auto' : 'smooth' });
+      mark.focus({ preventScroll: true });
+    });
+    return mark;
   }
 
   const view = d => ({ lon0: d.lon0, zoom: d.zoom, vx: d.vx, vy: d.vy, size: d.size, R: d.size / 2 * DISC_FILL });
@@ -294,40 +362,33 @@ export async function initMap(stage) {
     }
   }
 
-  // The picked place: its card, kept up to date as time runs, and a line
-  // for screen readers when a place is picked.
-  let pick = null;
-  const pickCard = stage.querySelector('.map-pick'), pickFacts = pickCard.querySelector('.map-pick-facts');
-  const pickActions = pickCard.querySelector('.map-pick-actions'), pickOpen = pickCard.querySelector('.map-pick-open');
-  const status = stage.querySelector('.map-status');
-  let pickRegion = null, pickDisc = 0;
-  // The card sits in a corner of the other disc's cell, so the picked place
-  // stays in sight: over the western disc for a place picked on the eastern,
-  // over the upper for one picked on the lower.
-  function placeCard() {
-    const stageBox = stage.getBoundingClientRect(), cell = discs[1 - pickDisc].cell.getBoundingClientRect();
-    // Within the stage's padding, however narrow the cell: a phone's discs
-    // are narrower than the card.
-    const pad = parseFloat(getComputedStyle(stage).paddingLeft);
-    pickCard.style.maxHeight = `${cell.height}px`;
-    pickCard.style.left = `${Math.max(pad, Math.min(cell.left - stageBox.left, stageBox.width - pad - pickCard.offsetWidth))}px`;
-    pickCard.style.top = `${cell.bottom - stageBox.top - pickCard.offsetHeight}px`;
-  }
-  // A picked place: on the disc it was picked on, or else the disc that faces it.
+  // A picked place: its facts at the top of the panel, kept up to date as
+  // time runs; inside a region's glow, the region's chapter under them,
+  // opened where it names the place; outside every glow, the nearest named
+  // place offered instead. A line for screen readers says what was picked.
   function pickPoint(at, i = discs.findIndex((d, k) => local(at.lon, at.lat, lon0Of(k))[2] <= 0)) {
-    pick = at; pickDisc = Math.max(0, i);
-    pickCard.hidden = false;
-    pickCard.querySelector('.map-pick-title').textContent = 'The place you picked';
-    status.textContent = `Picked ${degrees(at.lat, 'N', 'S')}, ${degrees(at.lon, 'E', 'W')}.`;
+    pick = at;
+    const hit = placeAt(at);
+    pickSection.hidden = false;
     readouts();
+    clearMention();
+    if (hit) {
+      showRegion(hit.region);
+      nearby.hidden = true;
+    } else {
+      panelTitle.textContent = 'A place on the map';
+      panelRegion.hidden = true;
+      chosen = null;
+      light();
+      nearby.hidden = false;
+      readNearby.textContent = `Read about ${placeName(nearest.place)}, in ${nearest.region.name}`;
+    }
+    openPanel(Math.max(0, i), discs[Math.max(0, i)].cell);
+    const mark = hit && jumpTo(hit.place);
+    status.textContent = `Picked ${degrees(at.lat, 'N', 'S')}, ${degrees(at.lon, 'E', 'W')}${hit ? `, in ${hit.region.name}${mark ? `; its chapter opens where it names ${hit.place.name}` : ''}` : ''}.`;
+    if (!mark) requestAnimationFrame(() => panelTitle.focus());
     redraw();
   }
-  pickCard.querySelector('.map-pick-close').addEventListener('click', () => { pick = null; pickCard.hidden = true; status.textContent = ''; redraw(); });
-  pickOpen.addEventListener('click', () => {
-    const i = discs.findIndex((d, k) => local(pick.lon, pick.lat, lon0Of(k))[2] <= 0);
-    const button = discs[i].buttons[regions.indexOf(pickRegion)];
-    openChapter(i, pickRegion, button.hidden ? pickOpen : button);
-  });
   // A time of day by the sun at a longitude: true solar time, from the
   // longitude and the equation of time.
   const sunClock = (ms, lon) => {
@@ -346,13 +407,11 @@ export async function initMap(stage) {
     const sunDay = rise || set
       ? `${rise ? `rises ${sunClock(rise.t, at.lon)}` : 'already up'}, ${set ? `sets ${sunClock(set.t, at.lon)}` : 'up past midnight'}`
       : 90 - Math.abs(at.lat - sun.lat) > 0 ? "doesn't set today" : "doesn't rise today";
-    let nearest = null;
+    nearest = null;
     for (const r of regions) for (const g of r.glows) {
       const deg = apart(g, at);
       if (!nearest || deg < nearest.deg) nearest = { region: r, place: g, deg };
     }
-    const hit = placeAt(at);
-    pickRegion = hit?.region ?? null;
     const half = hiddenAt(instant, null, at).half;
     return [
       ['Where', `${degrees(at.lat, 'N', 'S')}, ${degrees(at.lon, 'E', 'W')}, ${onLand(world.land, at.lat, at.lon) ? 'on land' : 'at sea'} (Natural Earth's modern coasts)`],
@@ -369,9 +428,6 @@ export async function initMap(stage) {
         dt.textContent = term; dd.textContent = text;
         return [dt, dd];
       }));
-      pickActions.hidden = !pickRegion;
-      if (pickRegion) pickOpen.textContent = `Open ${pickRegion.name}'s chapter`;
-      placeCard();
     }
     const sun = subsolar(instant);
     const moon = moonAt(instant);
@@ -432,7 +488,6 @@ export async function initMap(stage) {
       d.baseKey = '';
       clampZoom(d);
     }
-    if (pick) placeCard();
     redraw();
   }).observe(stage.querySelector('.map-hemispheres'));
 

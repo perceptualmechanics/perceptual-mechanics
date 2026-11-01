@@ -79,23 +79,21 @@ footer.legal section a { text-decoration: underline; }
   pointer-events: none;
 }
 .map-status { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
-/* The picked place: a card over the corner of the map. */
-.map-pick {
-  position: absolute; z-index: 9; max-width: min(22rem, calc(100% - 2.5rem)); overflow-y: auto; box-sizing: border-box;
-  background: #0d0b08; border: 1px solid #4a4034; padding: 0.8rem 1rem 0.9rem; font-size: 0.9rem;
-}
-.map-pick[hidden] { display: none; }
-.map-pick-title { font-size: 0.85rem; letter-spacing: 0.08em; text-transform: uppercase; color: #9c9384; margin: 0 1.6rem 0.5rem 0; font-weight: 600; }
-.map-pick-title:focus { outline: none; }
-.map-pick-close { position: absolute; top: 0.3rem; right: 0.4rem; background: none; border: 0; color: #b8b0a4; font: inherit; font-size: 1.1rem; cursor: pointer; padding: 0.3rem; }
-.map-pick-close:hover, .map-pick-close:focus-visible { color: #f0cf6a; }
-.map-pick-facts { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 0.25rem 0.8rem; }
-.map-pick-facts dt { color: #8c8377; }
-.map-pick-facts dd { margin: 0; }
-.map-pick-actions { margin: 0.7rem 0 0; }
-.map-pick-actions[hidden] { display: none; }
-.map-pick-open { font: inherit; font-size: 0.9rem; color: #d9b13f; background: #15130f; border: 1px solid #6b5a37; padding: 0.2rem 0.7rem; cursor: pointer; }
-.map-pick-open:hover, .map-pick-open:focus-visible { border-color: #d9b13f; }
+/* A picked place, at the top of the panel; where its chapter names it, the
+   name is marked, and the mark holds focus while reading goes on from it. */
+.map-panel-pick { margin: 0 0 1.4rem; padding-bottom: 1rem; border-bottom: 1px solid #2a2620; }
+.map-panel-pick[hidden], .map-panel-region[hidden], .map-panel-nearby[hidden] { display: none; }
+.map-panel-pick h3 { font-size: 0.85rem; letter-spacing: 0.08em; text-transform: uppercase; color: #9c9384; margin: 0 0 0.5rem; font-weight: 600; }
+.map-panel-facts { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 0.25rem 0.8rem; font-size: 0.92rem; }
+.map-panel-facts dt { color: #8c8377; }
+.map-panel-facts dd { margin: 0; }
+.map-panel-mention { color: #8c8377; font-size: 0.85rem; margin: 0.6rem 0 0; }
+.map-panel-mention:empty { display: none; }
+.map-panel-nearby { margin: 0.8rem 0 0; }
+.map-panel-read { font: inherit; font-size: 0.9rem; color: #d9b13f; background: #15130f; border: 1px solid #6b5a37; padding: 0.2rem 0.7rem; cursor: pointer; }
+.map-panel-read:hover, .map-panel-read:focus-visible { border-color: #d9b13f; }
+mark.map-mention { background: #4a3c17; color: #f6e7b8; padding: 0 0.1em; }
+mark.map-mention:focus { outline: 1px solid #d9b13f; outline-offset: 1px; }
 .map-panel-places { list-style: none; padding: 0; margin: 0 0 1rem; display: flex; flex-wrap: wrap; gap: 0.3rem 0.9rem; }
 .map-panel-places button { font: inherit; font-size: 0.92rem; color: #ded9d0; background: none; border: 0; padding: 0.1rem 0; cursor: pointer; text-decoration: underline dotted #6b5a37; text-underline-offset: 3px; }
 .map-panel-places button:hover, .map-panel-places button:focus-visible { color: #f0cf6a; }
