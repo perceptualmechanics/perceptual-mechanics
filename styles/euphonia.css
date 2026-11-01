@@ -26,7 +26,8 @@ footer.legal section a { text-decoration: underline; }
 .map-stage {
   --map-sea: #0f1418; --map-graticule: #3a352c; --map-circles: #6b5a37; --map-land: #2b261e;
   --map-coast: #8c7a55; --map-river: #3b4a52; --map-historic: #d9b13f; --map-night: rgba(0, 0, 0, 0.32);
-  --map-glow: rgba(217, 177, 63, 0.22); --map-sun: #f0cf6a; --map-rim: #8c7a55;
+  --map-glow: rgba(217, 177, 63, 0.22); --map-glow-lit: rgba(240, 207, 106, 0.55); --map-sun: #f0cf6a; --map-rim: #8c7a55;
+  position: relative; overflow: hidden;
   height: 100svh; min-height: 30rem; display: grid; grid-template-rows: auto auto minmax(0, 1fr) auto;
   gap: 0.6rem; padding: 1.2rem 1.25rem 0.8rem; box-sizing: border-box;
 }
@@ -64,7 +65,43 @@ footer.legal section a { text-decoration: underline; }
 .map-region[hidden] { display: none; }
 .map-region:hover, .map-region:focus-visible { color: #f0cf6a; text-decoration: underline; }
 .map-region:focus-visible { outline: 2px solid #f0cf6a; outline-offset: 1px; }
+.map-region.is-lit { color: #f0cf6a; }
 .map-help { margin: 0; color: #8c8377; font-size: 0.8rem; }
+
+/* A region's chapter, beside the map: the scenes' panel. It slides in from
+   the side away from the disc its name was on. Closed, it is hidden, not only
+   moved: visibility switches after the slide, with no fade, so a closed
+   panel leaves the tab order and an opening one can take focus at once. */
+.map-panel {
+  position: absolute; top: 0; right: 0; width: 88%; height: 100%; box-sizing: border-box; z-index: 10;
+  background: #0d0b08; border-left: 1px solid #4a4034; padding: 1.4rem 1.3rem 3rem;
+  overflow-y: auto; scrollbar-width: thin; scrollbar-color: #4a4034 #0d0b08;
+  transform: translateX(100%); visibility: hidden;
+  transition: transform .5s cubic-bezier(.16, 1, .3, 1), visibility 0s linear .5s;
+
+	@media (min-width: 701px) {
+		width: 38%; padding: 1.4rem 2rem 3rem;
+	}
+}
+.map-panel.from-left { left: 0; right: auto; border-left: 0; border-right: 1px solid #4a4034; transform: translateX(-100%); }
+.map-panel.no-transition { transition: none !important; }
+.map-panel.open { transform: translateX(0); visibility: visible; transition: transform .5s cubic-bezier(.16, 1, .3, 1), visibility 0s; }
+@media (prefers-reduced-motion: reduce) { .map-panel, .map-panel.open { transition: visibility 0s; } }
+.map-panel-close {
+  position: sticky; top: 0; z-index: 2; display: block; width: max-content; margin: -0.6rem -0.6rem 0 auto;
+  background: none; border: 0; font: inherit; font-size: 1.2rem; line-height: 1; color: #b8b0a4; cursor: pointer; padding: 0.5rem;
+}
+.map-panel-close:hover, .map-panel-close:focus-visible { color: #f0cf6a; }
+.map-panel-close:focus-visible { outline: 1px solid #d9b13f; outline-offset: 1px; }
+.map-panel-title { font-size: 1.34rem; font-weight: 600; margin: 0 0 0.3rem; color: #d9b13f; }
+.map-panel-title:focus { outline: none; }
+.map-panel-note { color: #8c8377; font-size: 0.8rem; margin: 0 0 0.8rem; }
+.map-panel-zoom {
+  font: inherit; font-size: 0.9rem; color: #d9b13f; background: #15130f; border: 1px solid #6b5a37; padding: 0.2rem 0.7rem; cursor: pointer;
+}
+.map-panel-zoom:hover, .map-panel-zoom:focus-visible { border-color: #d9b13f; }
+.map-panel-content h3 { font-size: 1rem; margin: 1.2rem 0 0.4rem; color: #b8b0a4; }
+.map-panel-content blockquote { margin: 0.8rem 0; padding-left: 1rem; border-left: 2px solid #4a4034; color: #b8b0a4; }
 
 .map-caption { padding-top: 2.5rem; }
 .map-caption .note { font-size: 0.85rem; }

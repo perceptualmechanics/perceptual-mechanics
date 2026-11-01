@@ -35,6 +35,17 @@ export function project(lon, lat, lon0) {
   return [x / (1 - z), y / (1 - z)];
 }
 
+// The point of the globe at (X, Y) on the disc, or null off the disc: the
+// projection run backwards, P = (2X, 2Y, |X|² − 1) / (|X|² + 1) in the
+// hemisphere's frame.
+export function unproject(X, Y, lon0) {
+  const q = X * X + Y * Y;
+  if (q > 1) return null;
+  const x = 2 * X / (q + 1), y = 2 * Y / (q + 1), z = (q - 1) / (q + 1);
+  const lon = lon0 + Math.atan2(x, -z) / RAD;
+  return { lat: Math.asin(Math.max(-1, Math.min(1, y))) / RAD, lon: ((lon + 540) % 360) - 180 };
+}
+
 // The sun overhead: its declination, and the meridian where true solar time
 // is noon. ms is a UT instant.
 export function subsolar(ms) {

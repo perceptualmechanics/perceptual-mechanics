@@ -3,7 +3,7 @@
 // book places them. Drag or the arrow keys turn the world under the discs;
 // the wheel, a pinch or the keys zoom; a region's name zooms to it.
 import worldUrl from './euphonia.world.json?url';
-import { HEMISPHERES, project, local, subsolar } from './euphonia.projection.js';
+import { HEMISPHERES, project, unproject, local, subsolar } from './euphonia.projection.js';
 import {
   DISC_FILL, toScreen, fromScreen, projectWorld, prepareWorld, palette,
   drawBase, drawSky, maxZoom,
@@ -13,7 +13,7 @@ import { datesAt } from './euphonia.calendars.js';
 import { tideAt, hiddenAt } from './euphonia.tide.js';
 import calendars from './euphonia.calendars.json';
 import places from 'virtual:euphonia-places';
-import { prefersReducedMotion, createFrameClock } from '../utils/sceneKit.js';
+import { prefersReducedMotion, createFrameClock, createPanelCloser, setPanelSide } from '../utils/sceneKit.js';
 
 const RAD = Math.PI / 180;
 const DAY_MS = 86400000;
@@ -156,10 +156,56 @@ export async function initMap(stage) {
       b.type = 'button';
       b.className = 'map-region';
       b.textContent = r.name;
-      b.addEventListener('click', () => zoomToRegion(i, r));
+      b.addEventListener('click', () => openChapter(i, r, b));
+      b.addEventListener('pointerenter', () => hover(r));
+      b.addEventListener('pointerleave', () => hover(null));
+      b.addEventListener('focus', () => hover(r));
+      b.addEventListener('blur', () => hover(null));
       d.labels.append(b);
       return b;
     });
+  }
+
+  // A region lights while its name or its glow is under the pointer or
+  // focused, and while its chapter is open.
+  let hovered = null, chosen = null;
+  function light() {
+    for (const r of regions) r.lit = r === hovered || r === chosen;
+    for (const d of discs) d.buttons.forEach((b, k) => b.classList.toggle('is-lit', regions[k].lit));
+    redraw();
+  }
+  function hover(r) { if (hovered !== r) { hovered = r; light(); } }
+  // The region whose glow holds a point of the disc: the place whose cap
+  // holds it, of any region's.
+  function regionAt(d, x, y) {
+    const at = unproject(...fromScreen(cssView(d), x, y), d.lon0);
+    if (!at) return null;
+    return regions.find(r => r.glows.some(g => apart(g, at) <= g.rho)) ?? null;
+  }
+
+  // A region's chapter, in the scenes' panel: the chapter from the list below
+  // the map, its focus on its title, and back to the name it came from on
+  // closing, by Escape or the ✕.
+  const panel = stage.querySelector('.map-panel');
+  const panelTitle = panel.querySelector('.map-panel-title'), panelContent = panel.querySelector('.map-panel-content');
+  let opener = null, openDisc = 0;
+  createPanelCloser(panel, { focus: () => opener?.focus() }, {
+    closeBtn: panel.querySelector('.map-panel-close'),
+    onClose: () => { chosen = null; light(); },
+  });
+  panel.querySelector('.map-panel-zoom').addEventListener('click', () => zoomToRegion(openDisc, chosen));
+  function openChapter(i, r, button) {
+    const chapter = document.getElementById(r.id);
+    opener = button; openDisc = i; chosen = r;
+    // From the side away from the disc the name was on, over the other disc.
+    const fromLeft = i === 1;
+    if (panel.classList.contains('from-left') !== fromLeft) setPanelSide(panel, fromLeft);
+    panelTitle.textContent = r.name;
+    panelContent.replaceChildren(...[...chapter.children].filter(c => c.tagName !== 'SUMMARY').map(c => c.cloneNode(true)));
+    panel.scrollTop = 0;
+    panel.classList.add('open');
+    light();
+    requestAnimationFrame(() => panelTitle.focus());
   }
 
   const view = d => ({ lon0: d.lon0, zoom: d.zoom, vx: d.vx, vy: d.vy, size: d.size, R: d.size / 2 * DISC_FILL });
@@ -331,7 +377,7 @@ export async function initMap(stage) {
     });
     d.canvas.addEventListener('pointermove', e => {
       const last = pointers.get(e.pointerId);
-      if (!last) return;
+      if (!last) { hover(regionAt(d, e.offsetX, e.offsetY)); return; }
       const next = [e.offsetX, e.offsetY];
       if (pointers.size === 2) {
         const [a, b] = [...pointers.values()];
@@ -347,6 +393,7 @@ export async function initMap(stage) {
       }
     });
     const lift = e => { pointers.delete(e.pointerId); pinch = 0; };
+    d.canvas.addEventListener('pointerleave', () => { if (!pointers.size) hover(null); });
     d.canvas.addEventListener('pointerup', lift);
     d.canvas.addEventListener('pointercancel', lift);
     // The wheel zooms wherever it is over the disc, a region's name included.

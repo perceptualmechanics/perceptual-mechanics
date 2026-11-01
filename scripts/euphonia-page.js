@@ -27,6 +27,10 @@ ${legal.orc_notice_status === 'draft' ? `    <p class="draft">A draft${slots ? `
 </footer>`;
 }
 
+// The State of the World is Claude's draft of Scott's setting, shown as one
+// (Scott, 2026-10-28), wherever a chapter is shown.
+const DRAFT_NOTE = 'A draft: these chapters were written by Claude, for Scott to rewrite, keep or cut.';
+
 function catalog(items) {
   return `<ul class="catalog">\n${items.join('\n')}\n</ul>`;
 }
@@ -34,7 +38,7 @@ function catalog(items) {
 // The map's stage: it fills the screen, under the page's title. Its controls
 // and discs wait for the script that draws them; without it, the stage says
 // so and the caption below still describes the map.
-function mapStage() {
+function mapStage(regions) {
   const discs = ['Occidens', 'Oriens'].map((name, i) => `<div class="map-cell"><div class="map-disc" tabindex="0" role="group" aria-label="${name}, the ${i ? 'eastern' : 'western'} hemisphere" aria-describedby="map-help">
 <p class="map-name" aria-hidden="true">${name}</p>
 <canvas aria-hidden="true"></canvas>
@@ -54,7 +58,13 @@ function mapStage() {
 <div class="map-hemispheres">
 ${discs}
 </div>
-<p class="map-help" id="map-help">Drag a hemisphere, or focus it and use the arrow keys, to turn the world; the wheel, a pinch, or + and − zoom; 0 shows the whole world again. A region's name zooms to it. Play runs time on; on a hemisphere, space plays and pauses, [ and ] step an hour, { and } a day.</p>
+<div class="map-panel" role="dialog" aria-modal="false" aria-labelledby="map-panel-title">
+<button type="button" class="map-panel-close" aria-label="Close panel">&#10005;</button>
+<h2 id="map-panel-title" class="map-panel-title" tabindex="-1"></h2>
+${regions.status === 'draft' ? `<p class="map-panel-note">${DRAFT_NOTE}</p>\n` : ''}<p><button type="button" class="map-panel-zoom">Zoom to it</button></p>
+<div class="map-panel-content"></div>
+</div>
+<p class="map-help" id="map-help">Drag a hemisphere, or focus it and use the arrow keys, to turn the world; the wheel, a pinch, or + and − zoom; 0 shows the whole world again. A region's name opens its chapter beside the map. Play runs time on; on a hemisphere, space plays and pauses, [ and ] step an hour, { and } a day.</p>
 <noscript><p class="map-help">The map is drawn in the page by script; the text below describes it.</p></noscript>`;
 }
 
@@ -93,7 +103,7 @@ ${catalog(classes.data.map(c => `<li><span class="t">${esc(c.name)}</span><span 
 </section>
 <section aria-labelledby="world">
 <h2 id="world">The State of the World</h2>
-${regions.status === 'draft' ? '<p class="note">A draft: these chapters were written by Claude, for Scott to rewrite, keep or cut.</p>\n' : ''}${regions.data.map(r => `<details class="region" id="${slug(r.name)}">
+${regions.status === 'draft' ? `<p class="note">${DRAFT_NOTE}</p>\n` : ''}${regions.data.map(r => `<details class="region" id="${slug(r.name)}">
 <summary>${esc(r.name)}</summary>
 ${r.sections.map(sec => `<h3>${esc(sec.heading)}</h3>\n${blocks(sec.text)}`).join('\n')}
 </details>`).join('\n')}
@@ -111,7 +121,7 @@ export function injectEuphonia(html, d = euphoniaFiles(), world = worldData(), f
   const missing = MARKERS.filter(m => !html.includes(m));
   if (missing.length) throw new Error(`euphonia/index.html is missing ${missing.join(' and ')}: the page has nowhere to go`);
   return html
-    .replace('<!--euphonia-map-->', mapStage())
+    .replace('<!--euphonia-map-->', mapStage(d.regions))
     .replace('<!--euphonia-body-->', body(d, world, fixtures, calendars))
     .replace('<!--euphonia-footer-->', euphoniaFooter(d.legal.data));
 }

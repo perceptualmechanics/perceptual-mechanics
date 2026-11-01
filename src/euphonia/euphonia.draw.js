@@ -132,7 +132,7 @@ function trace(ctx, view, lines, close) {
 export function palette(el) {
   const css = getComputedStyle(el);
   const v = name => css.getPropertyValue(`--map-${name}`).trim();
-  return Object.fromEntries(['sea', 'graticule', 'circles', 'land', 'coast', 'river', 'lake', 'historic', 'night', 'glow', 'sun', 'rim']
+  return Object.fromEntries(['sea', 'graticule', 'circles', 'land', 'coast', 'river', 'lake', 'historic', 'night', 'glow', 'glow-lit', 'sun', 'rim']
     .map(n => [n, v(n)]));
 }
 
@@ -175,7 +175,7 @@ export function drawSky(ctx, view, { sun, regions }, colors, dpr) {
     if (!c) continue;
     const [x, y] = toScreen(view, c.cx, c.cy), rr = c.r * view.R * view.zoom;
     const g = ctx.createRadialGradient(x, y, 0, x, y, rr);
-    g.addColorStop(0, r.lit ? colors.sun : colors.glow);
+    g.addColorStop(0, r.lit ? colors['glow-lit'] : colors.glow);
     g.addColorStop(1, 'transparent');
     ctx.fillStyle = g;
     ctx.beginPath(); ctx.arc(x, y, rr, 0, 2 * Math.PI); ctx.fill();
