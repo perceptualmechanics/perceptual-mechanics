@@ -173,6 +173,11 @@ function verifyEuphoniaPlugin() {
     buildEnd(error) {
       failed = Boolean(error);
     },
+    // A build can also fail later, while its chunks are rendered (an import
+    // that names an export no module has); that error is the one to see too.
+    renderError() {
+      failed = true;
+    },
     closeBundle() {
       if (failed) return;
       const { ok, failures, log } = verifyEuphoniaPages(outDir);

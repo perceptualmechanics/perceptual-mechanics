@@ -7,7 +7,7 @@ import { HEMISPHERES, project, unproject, local, subsolar, onLand } from './euph
 import { solarParams, solarEvents } from '../bench/bench.sky.js';
 import {
   DISC_FILL, toScreen, fromScreen, projectWorld, prepareWorld, palette,
-  drawBase, drawSky, maxZoom,
+  drawFills, drawLines, drawNight, drawMarks, maxZoom,
 } from './euphonia.draw.js';
 import { moonAt } from './euphonia.moon.js';
 import { datesAt } from './euphonia.calendars.js';
@@ -108,7 +108,7 @@ function disc(stage, i, h) {
   const canvas = cell.querySelector('canvas');
   return {
     name: h.name, cell, canvas, ctx: canvas.getContext('2d'),
-    base: document.createElement('canvas'),
+    fills: document.createElement('canvas'), lines: document.createElement('canvas'),
     labels: cell.querySelector('.map-labels'),
     tip: Object.assign(document.createElement('span'), { className: 'map-place', hidden: true }),
     zoom: 1, vx: 0, vy: 0, size: 0, cssSize: 0, dpr: 1, projected: null, baseKey: '',
@@ -328,13 +328,16 @@ export async function initMap(stage) {
       const v = view(d);
       const key = `${d.lon0}|${d.zoom}|${d.vx}|${d.vy}|${d.size}`;
       if (key !== d.baseKey) {
-        d.base.width = d.base.height = d.size;
-        drawBase(d.base.getContext('2d'), v, d.projected, colors, d.dpr);
+        d.fills.width = d.fills.height = d.lines.width = d.lines.height = d.size;
+        drawFills(d.fills.getContext('2d'), v, d.projected, colors);
+        drawLines(d.lines.getContext('2d'), v, d.projected, colors, d.dpr);
         d.baseKey = key;
       }
       d.ctx.clearRect(0, 0, d.size, d.size);
-      d.ctx.drawImage(d.base, 0, 0);
-      drawSky(d.ctx, v, { sun, regions, hoverPlace, pick }, colors, d.dpr);
+      d.ctx.drawImage(d.fills, 0, 0);
+      drawNight(d.ctx, v, sun, colors);
+      d.ctx.drawImage(d.lines, 0, 0);
+      drawMarks(d.ctx, v, { sun, regions, hoverPlace, pick }, colors, d.dpr);
       placeLabels(d);
     }
     reset.hidden = discs.every(d => d.zoom === 1) && split === SPLIT;

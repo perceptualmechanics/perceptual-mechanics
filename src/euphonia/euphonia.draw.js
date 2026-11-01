@@ -136,32 +136,57 @@ export function palette(el) {
     .map(n => [n, v(n)]));
 }
 
-// The layers that change only with the view: sea, graticule, land, coast,
-// rivers and lakes. dpr scales line widths, which are in CSS pixels.
-export function drawBase(ctx, view, projected, colors, dpr) {
+// The layers that change only with the view, in two: the fills (sea, land,
+// lakes), which the night darkens, and the lines (graticule, coasts, rivers,
+// lakes' shores), drawn over the night so the world's shape stays legible in
+// the dark: at full night the coast had fallen to 1.42:1 against the sea,
+// under the 3:1 a graphic needs. dpr scales line widths, which are in CSS
+// pixels.
+export function drawFills(ctx, view, projected, colors) {
   ctx.clearRect(0, 0, view.size, view.size);
   ctx.save();
   clipToDisc(ctx, view);
   ctx.fillStyle = colors.sea; ctx.fillRect(0, 0, view.size, view.size);
+  trace(ctx, view, projected.land, true); ctx.fillStyle = colors.land; ctx.fill('evenodd');
+  ctx.fillStyle = colors.sea;
+  trace(ctx, view, projected.lakes, true); ctx.fill();
+  trace(ctx, view, projected.historic, true); ctx.fill();
+  ctx.restore();
+}
+export function drawLines(ctx, view, projected, colors, dpr) {
+  ctx.clearRect(0, 0, view.size, view.size);
+  ctx.save();
+  clipToDisc(ctx, view);
   ctx.lineJoin = 'round';
   trace(ctx, view, projected.graticule, false); ctx.strokeStyle = colors.graticule; ctx.lineWidth = 0.5 * dpr; ctx.stroke();
-  trace(ctx, view, projected.land, true); ctx.fillStyle = colors.land; ctx.fill('evenodd');
   trace(ctx, view, projected.coast, false); ctx.strokeStyle = colors.coast; ctx.lineWidth = 0.7 * dpr; ctx.stroke();
   trace(ctx, view, projected.rivers, false); ctx.strokeStyle = colors.river; ctx.lineWidth = 0.7 * dpr; ctx.stroke();
-  trace(ctx, view, projected.lakes, true); ctx.fillStyle = colors.sea; ctx.fill(); ctx.strokeStyle = colors.circles; ctx.lineWidth = 0.5 * dpr; ctx.stroke();
-  trace(ctx, view, projected.historic, true); ctx.fill(); ctx.setLineDash([3 * dpr, 2 * dpr]); ctx.strokeStyle = colors.historic; ctx.stroke(); ctx.setLineDash([]);
+  trace(ctx, view, projected.lakes, true); ctx.strokeStyle = colors.circles; ctx.lineWidth = 0.5 * dpr; ctx.stroke();
+  trace(ctx, view, projected.historic, true); ctx.setLineDash([3 * dpr, 2 * dpr]); ctx.strokeStyle = colors.historic; ctx.stroke(); ctx.setLineDash([]);
   ctx.restore();
 }
 
-// The layers that change with time: the tropics and polar circles, the
-// night's four steps, the book's regions, the sun, and the rim over all.
+// The night's four steps, between the fills and the lines.
+export function drawNight(ctx, view, sun, colors) {
+  const pen = screenPen(ctx, view);
+  ctx.save();
+  clipToDisc(ctx, view);
+  ctx.fillStyle = colors.night;
+  for (const dusk of DUSKS) {
+    ctx.beginPath(); darkShape(pen, darkRegion(sun, dusk, view.lon0)); ctx.fill('evenodd');
+  }
+  ctx.restore();
+}
+
 // A mark at a point of the globe, if this hemisphere faces it: the canvas
 // position, or null.
 function facing(view, { lat, lon }) {
   return local(lon, lat, view.lon0)[2] <= 0 ? toScreen(view, ...project(lon, lat, view.lon0)) : null;
 }
 
-export function drawSky(ctx, view, { sun, regions, hoverPlace, pick }, colors, dpr) {
+// Over the lines: the tropics and polar circles, the book's regions and
+// their places, the picked place, the sun, and the rim over all.
+export function drawMarks(ctx, view, { sun, regions, hoverPlace, pick }, colors, dpr) {
   const pen = screenPen(ctx, view);
   ctx.save();
   clipToDisc(ctx, view);
@@ -170,12 +195,7 @@ export function drawSky(ctx, view, { sun, regions, hoverPlace, pick }, colors, d
   ctx.beginPath();
   for (const line of circles) line.forEach(([lon, lat], i) => pen[i ? 'lineTo' : 'moveTo'](...project(lon, lat, view.lon0)));
   ctx.strokeStyle = colors.circles; ctx.lineWidth = 0.7 * dpr; ctx.stroke();
-  ctx.fillStyle = colors.night;
-  for (const dusk of DUSKS) {
-    ctx.beginPath(); darkShape(pen, darkRegion(sun, dusk, view.lon0)); ctx.fill('evenodd');
-  }
-  // The book's regions, above the night: they're where the book places them
-  // at every hour.
+  // The book's regions: they're where the book places them at every hour.
   for (const r of regions) for (const p of r.glows) {
     const c = capCircle(p, p.rho, view.lon0);
     if (!c) continue;
