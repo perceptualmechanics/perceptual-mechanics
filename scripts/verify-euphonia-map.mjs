@@ -4,6 +4,8 @@ import { readFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 import * as projection from '../src/euphonia/euphonia.projection.js';
 import * as lunar from '../src/euphonia/euphonia.moon.js';
+import * as calendar from '../src/euphonia/euphonia.calendars.js';
+import { solarEvents } from '../src/bench/bench.sky.js';
 
 const RAD = Math.PI / 180;
 const DAY_MS = 86400000;
@@ -12,6 +14,8 @@ const vendored = name => () =>
   JSON.parse(readFileSync(new URL(`../src/euphonia/euphonia.${name}.json`, import.meta.url), 'utf8'));
 export const worldData = vendored('world');
 export const fixturesData = vendored('fixtures');
+export const calendarsData = vendored('calendars');
+export const seatsData = vendored('seats');
 
 // The sun's place against JPL Horizons. NOAA calls its approximations "very
 // good" only from 1800, so 1668 is held to an ephemeris instead. Measured
@@ -54,7 +58,7 @@ function duskCircle(sun, dusk) {
   });
 }
 
-export function verifyEuphoniaMap({ world = worldData(), fixtures = fixturesData(), geo = projection, moon = lunar } = {}) {
+export function verifyEuphoniaMap({ world = worldData(), fixtures = fixturesData(), calendars = calendarsData(), seats = seatsData(), geo = projection, moon = lunar, cal = calendar } = {}) {
   const problems = [];
   const fail = m => problems.push(m);
 
@@ -116,6 +120,72 @@ export function verifyEuphoniaMap({ world = worldData(), fixtures = fixturesData
     if (phase === 'full' && after.waxing) { fail(`a minute after the full moon of ${utc} the moon is still waxing`); break; }
   }
 
+  // The calendars. Each polity's has a source that says so, and a seat
+  // Natural Earth places.
+  let placed = true;
+  for (const p of calendars.polities ?? []) {
+    const c = calendars.calendars?.[p.calendar];
+    if (!c) { placed = false; fail(`${p.name} keeps a calendar the data doesn't define: ${p.calendar}`); }
+    if (!calendars.sources?.[p.source]?.url || !p.says) fail(`${p.name}'s calendar cites no source, or doesn't say what the source says`);
+    if (!seats.seats?.[p.seat?.[0]]) { placed = false; fail(`${p.name}'s seat, ${p.seat?.[0]}, isn't among Natural Earth's places`); }
+  }
+  for (const [id, c] of Object.entries(calendars.calendars ?? {})) if (!calendars.sources?.[c.source]?.url) fail(`the ${id} calendar cites no source`);
+  if (!/Natural Earth/.test(seats.provenance?.source ?? '') || !/^[0-9a-f]{64}$/.test(seats.provenance?.sha256 ?? '')) fail('euphonia.seats.json: no Natural Earth provenance');
+
+  // The arithmetic, against Fourmilab's converter: the same day number, and
+  // the same Julian and Hijri dates, for each Gregorian date it was asked.
+  const conversions = fixtures.calendars?.rows ?? [];
+  if (!/fourmilab/.test(fixtures.calendars?.url ?? '') || conversions.length < 24) fail('euphonia.fixtures.json: no year of Fourmilab conversions');
+  const same = (a, { y, m, d }) => a.join() === [y, m, d].join();
+  for (const [greg, jdMidnight, jul, hij] of conversions) {
+    const jdn = cal.jdnFromGregorian(...greg);
+    if (jdn !== jdMidnight + 0.5 || !same(greg, cal.gregorianFromJdn(jdn)) || !same(jul, cal.julianFromJdn(jdn)) || cal.jdnFromJulian(...jul) !== jdn || !same(hij, cal.hijriFromJdn(jdn))) {
+      fail(`Fourmilab dates ${greg.join('-')} (Gregorian) as JD ${jdMidnight}, ${jul.join('-')} (Julian), ${hij.join('-')} (Hijri); the map doesn't`);
+      break;
+    }
+  }
+  // Every day of the year: the Julian ten days behind, each calendar round-
+  // tripping, and the Hijri date as ICU's islamic-civil gives it.
+  const icu = new Intl.DateTimeFormat('en-u-ca-islamic-civil-nu-latn', { timeZone: 'UTC', year: 'numeric', month: 'numeric', day: 'numeric' });
+  if (icu.resolvedOptions().calendar !== 'islamic-civil') fail(`this Node's ICU has no islamic-civil calendar (it gave ${icu.resolvedOptions().calendar}), so nothing checks the Hijri dates day by day`);
+  // 1079–1080 AH are years 29 and 30 of their cycle, where every tabular
+  // scheme agrees; 1065–1066 AH (1654–56) are years 15 and 16, where the
+  // scheme the page names, leap in 16 and not 15, shows itself.
+  const SCHEME_YEARS = [cal.jdnFromGregorian(1654, 10, 1), cal.jdnFromGregorian(1656, 9, 1)];
+  const days = [];
+  for (let jdn = cal.jdnFromGregorian(1668, 11, 1); jdn <= cal.jdnFromGregorian(1669, 11, 1); jdn++) days.push(jdn);
+  for (let jdn = SCHEME_YEARS[0]; jdn <= SCHEME_YEARS[1]; jdn++) days.push(jdn);
+  let calendarDays = 0;
+  for (const jdn of days) {
+    const g = cal.gregorianFromJdn(jdn), j = cal.julianFromJdn(jdn), h = cal.hijriFromJdn(jdn);
+    const parts = Object.fromEntries(icu.formatToParts(new Date((jdn - 2440587.5) * DAY_MS)).map(p => [p.type, Number(p.value)]));
+    const problem = cal.jdnFromGregorian(g.y, g.m, g.d) !== jdn ? 'the Gregorian date doesn\'t come back to its day'
+      : cal.jdnFromJulian(j.y, j.m, j.d) !== jdn ? 'the Julian date doesn\'t come back to its day'
+      : cal.jdnFromJulian(g.y, g.m, g.d) !== jdn + 10 ? 'the Julian date isn\'t ten days behind'
+      : !same([parts.year, parts.month, parts.day], h) ? `ICU dates it ${parts.year}-${parts.month}-${parts.day} (Hijri), the map ${h.y}-${h.m}-${h.d}` : null;
+    if (problem) { fail(`${g.y}-${g.m}-${g.d}: ${problem}`); break; }
+    calendarDays++;
+  }
+  // The brief's equivalence, the years from Creation turning on 1 September,
+  // England's year on Lady Day, and the Hijri day beginning at sunset.
+  if (cal.jdnFromJulian(1668, 11, 1) !== cal.jdnFromGregorian(1668, 11, 11)) fail('1 November 1668 (Julian) isn\'t 11 November (Gregorian)');
+  if (cal.annoMundi({ y: 1669, m: 8 }) !== 7177 || cal.annoMundi({ y: 1669, m: 9 }) !== 7178) fail('the years from Creation don\'t turn on 1 September');
+  const datedIn = (ms, name) => cal.datesAt(ms, calendars, seats.seats).find(r => r.polities.includes(name))?.date;
+  // These date each polity by its calendar at its seat, so they wait until
+  // every polity has both.
+  const london = placed && calendars.polities?.find(p => p.year_starts);
+  if (london) {
+    const at = (y, m, d) => Date.UTC(y, m - 1, d, 12) + 10 * DAY_MS;
+    if (!/24 March 1668\/9$/.test(datedIn(at(1669, 3, 24), london.name) ?? '') || !/25 March 1669$/.test(datedIn(at(1669, 3, 25), london.name) ?? '')) fail(`${london.name}'s year doesn't turn on 25 March`);
+  }
+  const ottoman = placed && calendars.polities?.find(p => p.calendar === 'hijri-tabular');
+  if (ottoman) {
+    const { lat, lon } = seats.seats[ottoman.seat[0]];
+    const set = solarEvents(Date.UTC(1669, 2, 1), Date.UTC(1669, 2, 2), lat, lon).find(e => e.kind === 'set').t;
+    const before = datedIn(set - 60000, ottoman.name), after = datedIn(set + 60000, ottoman.name);
+    if (!before || before === after || parseInt(after) !== parseInt(before) + 1) fail(`at ${ottoman.seat[0]} the Hijri day doesn't turn at sunset (${before} → ${after})`);
+  }
+
   // The projection: the centre at the middle, the hemisphere's edge on the rim.
   for (const h of geo.HEMISPHERES) {
     const [cx, cy] = geo.project(h.lon0, 0, h.lon0);
@@ -163,7 +233,7 @@ export function verifyEuphoniaMap({ world = worldData(), fixtures = fixturesData
 
   const log = problems.length
     ? [`\neuphonia map: ${problems.length} problem(s):`, ...problems.map(p => `  ${p}`)]
-    : [`ok: ${points} Natural Earth points under their provenance; the sun within ${sunWorst.toFixed(4)}° of Horizons at ${sunRows.length} instants; ${computed.length} moon phases within ${phaseWorst.toFixed(2)} min of Espenak, lit within ${litWorst.toFixed(4)}; the hemispheres show all ${(whole / (4 * Math.PI) * 100).toFixed(1)}% of the globe that is land, once; ${circles} dusk circles drawn where the sky darkens`];
+    : [`ok: ${points} Natural Earth points under their provenance; the sun within ${sunWorst.toFixed(4)}° of Horizons at ${sunRows.length} instants; ${computed.length} moon phases within ${phaseWorst.toFixed(2)} min of Espenak, lit within ${litWorst.toFixed(4)}; ${calendars.polities.length} polities' calendars cited and seated, ${conversions.length} Fourmilab conversions and ${calendarDays} days against ICU; the hemispheres show all ${(whole / (4 * Math.PI) * 100).toFixed(1)}% of the globe that is land, once; ${circles} dusk circles drawn where the sky darkens`];
   return { ok: problems.length === 0, failures: problems.length, log };
 }
 

@@ -23,7 +23,7 @@ const RIVER_RANK = 5;
 const TOLERANCE = 0.03;
 const PLACES = 2;
 
-function readDbf(buf) {
+export function readDbf(buf) {
   const n = buf.readUInt32LE(4), hlen = buf.readUInt16LE(8), rlen = buf.readUInt16LE(10);
   const fields = [];
   for (let p = 32; buf[p] !== 0x0d; p += 32) {

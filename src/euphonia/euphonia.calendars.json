@@ -1,0 +1,78 @@
+{
+  "about": "Which calendar each polity kept in 1668, each with its source. Authored from the sources below; the seats' coordinates are vendored separately from Natural Earth (euphonia.seats.json). The Safavids and the Mughals are wanted and withheld: no source in hand says which calendar their governments kept in 1668.",
+  "sources": {
+    "adoption": {
+      "title": "Adoption of the Gregorian calendar",
+      "url": "https://en.wikipedia.org/w/index.php?oldid=1377458140",
+      "retrieved": "2026-11-01"
+    },
+    "newstyle": {
+      "title": "Calendar (New Style) Act 1750",
+      "url": "https://en.wikipedia.org/w/index.php?oldid=1381810314",
+      "retrieved": "2026-11-01"
+    },
+    "byzantine": {
+      "title": "Byzantine calendar",
+      "url": "https://en.wikipedia.org/w/index.php?oldid=1382568104",
+      "retrieved": "2026-11-01"
+    },
+    "rumi": {
+      "title": "Rumi calendar",
+      "url": "https://en.wikipedia.org/w/index.php?oldid=1360941523",
+      "retrieved": "2026-11-01"
+    },
+    "tabular": {
+      "title": "Tabular Islamic calendar",
+      "url": "https://en.wikipedia.org/w/index.php?oldid=1379885725",
+      "retrieved": "2026-11-01"
+    }
+  },
+  "calendars": {
+    "gregorian": {
+      "name": "Gregorian",
+      "source": "adoption",
+      "says": "Thursday, 4 October 1582 was succeeded by Friday, 15 October 1582, with 10 dates between omitted."
+    },
+    "julian": {
+      "name": "Julian",
+      "source": "adoption",
+      "says": "Polities that did not change calendars until the 18th century had by then observed 1700 as an additional leap year"
+    },
+    "anno-mundi": {
+      "name": "Julian, years from Creation",
+      "source": "byzantine",
+      "says": "the year started on 1 September and the year number used an Anno Mundi epoch"
+    },
+    "hijri-tabular": {
+      "name": "Hijri, tabular",
+      "source": "tabular",
+      "says": "the leap years are year number 2, 5, 7, 10, 13, 16, 18, 21, 24, 26 and 29 of the 30-year cycle"
+    }
+  },
+  "polities": [
+    { "name": "Spain", "seat": ["Madrid", "Spain"], "calendar": "gregorian", "source": "adoption",
+      "says": "Spain–Portugal and its European and overseas possessions were first to adopt the Gregorian Calendar" },
+    { "name": "Portugal", "seat": ["Lisbon", "Portugal"], "calendar": "gregorian", "source": "adoption",
+      "says": "Spain–Portugal and its European and overseas possessions were first to adopt the Gregorian Calendar" },
+    { "name": "the Papal States", "seat": ["Rome", "Italy"], "calendar": "gregorian", "source": "adoption",
+      "says": "In these territories, Poland–Lithuania (ruled by Anna Jagiellon), and the Papal States, the Gregorian Calendar was implemented on the date that the bull prescribed" },
+    { "name": "France", "seat": ["Paris", "France"], "calendar": "gregorian", "source": "adoption",
+      "says": "France adopted the new calendar with Sunday, 9 December 1582 being succeeded by Monday, 20 December 1582." },
+    { "name": "the Habsburg lands", "seat": ["Vienna", "Austria"], "calendar": "gregorian", "source": "adoption",
+      "says": "Catholic polities such as the Catholic states of the Holy Roman Empire ... were first to adopt the Gregorian Calendar" },
+    { "name": "Poland–Lithuania", "seat": ["Warsaw", "Poland"], "calendar": "gregorian", "source": "adoption",
+      "says": "In these territories, Poland–Lithuania (ruled by Anna Jagiellon), and the Papal States, the Gregorian Calendar was implemented on the date that the bull prescribed" },
+    { "name": "England", "seat": ["London", "United Kingdom"], "calendar": "julian", "source": "newstyle", "year_starts": [3, 25],
+      "says": "the English legal year ... had for centuries begun on 25 March, or Lady Day." },
+    { "name": "Denmark–Norway", "seat": ["København", "Denmark"], "calendar": "julian", "source": "adoption",
+      "says": "In 1700, through Ole Rømer's influence, Denmark–Norway adopted the solar portion of the Gregorian calendar" },
+    { "name": "Sweden", "seat": ["Stockholm", "Sweden"], "calendar": "julian", "source": "adoption",
+      "says": "Sweden started to make the change from the Julian calendar and towards the Gregorian calendar in 1700" },
+    { "name": "Brandenburg", "seat": ["Berlin", "Germany"], "calendar": "julian", "source": "adoption",
+      "says": "Brandenburg-Pomerania and other Protestant estates of the Holy Roman Empire. Sunday, 18 February 1700, was followed by Monday, 1 March 1700." },
+    { "name": "Muscovy", "seat": ["Moscow", "Russia"], "calendar": "anno-mundi", "source": "byzantine",
+      "says": "it was used in Russia from c. 988 to 1700." },
+    { "name": "the Ottoman Empire", "seat": ["Istanbul", "Turkey"], "calendar": "hijri-tabular", "source": "rumi",
+      "says": "In the Islamic state of the Ottoman Empire, the religious Islamic calendar (a lunar calendar) was in use." }
+  ]
+}

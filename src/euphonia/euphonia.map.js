@@ -6,6 +6,9 @@ import {
   ringsIn, linesIn, coastOf, graticule, parallel,
 } from './euphonia.projection.js';
 import { moonAt } from './euphonia.moon.js';
+import { datesAt } from './euphonia.calendars.js';
+import calendars from './euphonia.calendars.json';
+import seats from './euphonia.seats.json';
 
 const NS = 'http://www.w3.org/2000/svg';
 const GRATICULE_STEP = 30;
@@ -138,6 +141,7 @@ export async function initMap(figure) {
   const date = form.elements.date, time = form.elements.time;
   const shown = form.querySelector('output'), readout = figure.querySelector('.map-readout');
   const moonLine = figure.querySelector('.map-moon'), moonLit = moonLine.querySelector('.lit'), moonText = moonLine.querySelector('span');
+  const datesTable = figure.querySelector('.map-dates'), datesBody = datesTable.tBodies[0];
   const day = ms => new Date(ms).toLocaleDateString('en-GB', { timeZone: 'UTC', day: 'numeric', month: 'long' });
   const clock = ms => { const d = new Date(ms); return `${two(d.getUTCHours())}:${two(d.getUTCMinutes())}`; };
 
@@ -152,6 +156,11 @@ export async function initMap(figure) {
     const instant = Date.UTC(y, m - 1, d) + minutes * 60000;
     const sun = subsolar(instant);
     const moon = moonAt(instant);
+    datesBody.replaceChildren(...datesAt(instant, calendars, seats.seats).map(r => {
+      const tr = document.createElement('tr');
+      for (const text of [r.calendar, r.date, r.polities.join(', ')]) tr.insertCell().textContent = text;
+      return tr;
+    }));
     moonLit.setAttribute('d', facePath(moon.lit, moon.waxing));
     moonText.textContent = `The moon is ${moon.waxing ? 'waxing' : 'waning'}, ${moon.age.toFixed(1)} days from new and ${Math.round(moon.lit * 100)}% lit; the ${moon.next.phase} moon is on ${day(moon.next.ms)} at ${clock(moon.next.ms)} UT.`;
     for (const h of hemis) {
@@ -171,6 +180,7 @@ export async function initMap(figure) {
   draw();
   form.hidden = false;
   moonLine.hidden = false;
+  datesTable.hidden = false;
 }
 
 const figure = document.getElementById('map-figure');
