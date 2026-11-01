@@ -1,0 +1,29 @@
+{
+ "provenance": {
+  "source": "NOAA National Geophysical Data Center, ETOPO5 (1988), public domain",
+  "url": "https://www.ngdc.noaa.gov/mgg/global/relief/ETOPO5/TOPO/ETOPO5/ETOPO5.DAT",
+  "sha256": "471d3dd534144aa9a6551fe3e76320a06a45dade6fd8d45f7d6ad981d59f93c3",
+  "fetched": "2026-11-01",
+  "note": "Five-minute resolution over the oceans, the U.S.A., western Europe, Japan and Australia; as coarse as one degree in data-deficient parts of Asia, South America, northern Canada and Africa. Superseded by later grids; enough for this map's scale.",
+  "reduced": "3×3 means of five-minute cells"
+ },
+ "layout": {
+  "rows": 720,
+  "cols": 1440,
+  "step": 0.25,
+  "lat0": 89.875,
+  "lon0": 0.125,
+  "encoding": "int8-sqrt",
+  "scale": 127,
+  "extreme": 9464
+ },
+ "range": {
+  "min": -9464,
+  "max": 6375
+ },
+ "shading": {
+  "steepest_percentile": 99,
+  "steepest_slope": 0.036970394596044655,
+  "exaggeration": 27.048669913493075
+ }
+}

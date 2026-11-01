@@ -2,7 +2,7 @@ import { euphoniaFiles } from './verify-euphonia.mjs';
 import { inline, blocks } from '../src/euphonia/euphonia.markdown.js';
 import { slug } from '../src/euphonia/euphonia.places.js';
 import { SYNODIC } from '../src/euphonia/euphonia.moon.js';
-import { worldData, fixturesData, calendarsData } from './verify-euphonia-map.mjs';
+import { worldData, fixturesData, calendarsData, reliefData, rosesData } from './verify-euphonia-map.mjs';
 
 const esc = s => String(s)
   .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
@@ -81,7 +81,7 @@ ${regions.status === 'draft' ? `<p class="map-panel-note">${DRAFT_NOTE}</p>\n` :
 
 // The map's caption, under the stage: what it shows at the chosen moment,
 // the rule it reads and where everything comes from.
-function mapCaption(world, fixtures, calendars, hidden) {
+function mapCaption(world, fixtures, calendars, hidden, relief = reliefData()) {
   const cited = Object.values(calendars.sources).map(s => `<a href="${esc(s.url)}">${esc(s.title)}</a>`).join(', ');
   const lakes = world.historic.map(l => `${esc(l.name)} (${esc(l.date)})`).join(', ');
   const versions = [...new Set(world.provenance.files.map(f => f.version))].join(' and ');
@@ -101,6 +101,7 @@ function mapCaption(world, fixtures, calendars, hidden) {
 <p class="by">How the map reads it, where the rule says the DM decides (Scott, 1 November 2026): an open night is the eve, from sunset on 31 October or 30 April to the next sunrise, in each place's own calendar; the halves of the year turn at those sunsets; between the tropics it is the dark half in whichever hemisphere the sun isn't overhead. Where a place's calendar has no 31 October, its half and open nights are as the DM says. The moon, the sun and the dates the rule reads are computed; the rule is Scott's.</p>
 </blockquote>
 <p class="note">Coasts, lakes and rivers are Natural Earth's (public domain, versions ${esc(versions)}), and modern. Natural Earth has no outlines from 1668; where it has older ones, the map draws them dashed, each with its own date: ${lakes}. The regions glow round the places each chapter names, looked up in Natural Earth's populated places.</p>
+<p class="note">Relief and ocean depths are ${esc(relief.provenance.source)}, averaged to a quarter degree; its detail is ${esc(relief.provenance.note.split(';')[0].replace(/^Five-minute resolution/, 'five-minute'))}, and coarser elsewhere. The land is lit from the northwest, its slopes steepened ${relief.shading.exaggeration.toFixed(0)} times, so the steepest hundredth of them shade as 45°; the sea is banded at Natural Earth's bathymetric depths. The wind roses stand at the ${rosesData().roses.length} points of open sea farthest from the coasts this map draws.</p>
 <p class="note">The sun's place is NOAA's, checked against JPL Horizons; the moon's phases are checked against Espenak's catalogue. ${esc(fixtures.moon.acknowledgment)} The moon is drawn as it looked from north of the tropics; south of them it is mirrored.</p>
 <p class="note">Each date is the one its seat's sundials gave at that moment, and the Hijri day begins at the seat's sunset. The Hijri dates are tabular (the 30-year cycle, from the civil epoch); months begun by sighting the new moon could differ by a day. Which calendar each polity kept: ${cited} (Wikipedia). The Safavids' and the Mughals' are not shown yet: no source in hand says which calendar their governments kept in 1668.</p>
 </section>`;

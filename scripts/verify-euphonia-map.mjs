@@ -11,12 +11,15 @@ import { solarEvents } from '../src/bench/bench.sky.js';
 
 const RAD = Math.PI / 180;
 const DAY_MS = 86400000;
+const EARTH_KM = 6371;
 
 const vendored = name => () =>
   JSON.parse(readFileSync(new URL(`../src/euphonia/euphonia.${name}.json`, import.meta.url), 'utf8'));
 export const worldData = vendored('world');
 export const fixturesData = vendored('fixtures');
 export const calendarsData = vendored('calendars');
+export const reliefData = () => ({ ...vendored('relief')(), bytes: new Int8Array(readFileSync(new URL('../src/euphonia/euphonia.relief.bin', import.meta.url)).buffer.slice(0)) });
+export const rosesData = vendored('roses');
 export const gazetteerData = vendored('gazetteer');
 // The seats and the regions' places, looked up in the gazetteer.
 export const placesData = () =>
@@ -66,7 +69,7 @@ function duskCircle(sun, dusk) {
   });
 }
 
-export function verifyEuphoniaMap({ world = worldData(), fixtures = fixturesData(), calendars = calendarsData(), gazetteer = gazetteerData(), regions = vendored('regions')().data, geo = projection, moon = lunar, cal = calendar, tide = hidden } = {}) {
+export function verifyEuphoniaMap({ world = worldData(), fixtures = fixturesData(), calendars = calendarsData(), gazetteer = gazetteerData(), regions = vendored('regions')().data, relief = reliefData(), roses = rosesData(), geo = projection, moon = lunar, cal = calendar, tide = hidden } = {}) {
   const problems = [];
   const fail = m => problems.push(m);
 
@@ -285,6 +288,66 @@ export function verifyEuphoniaMap({ world = worldData(), fixtures = fixturesData
   for (const [name, lat, lon, land] of KNOWN) {
     if (geo.onLand(world.land ?? [], lat, lon) !== land) fail(`the map puts ${name} ${land ? 'at sea' : 'on land'}`);
   }
+  // The relief: ETOPO5 under its provenance, laid out as it says, deep
+  // where the sea is deepest and high where the land is highest; and its
+  // hillshading's exaggeration the one its own land slopes give.
+  const L = relief.layout ?? {};
+  if (!/ETOPO5/.test(relief.provenance?.source ?? '') || !/^[0-9a-f]{64}$/.test(relief.provenance?.sha256 ?? '')) fail('euphonia.relief.json: no ETOPO5 provenance');
+  if (relief.bytes.length !== L.rows * L.cols) fail(`euphonia.relief.bin has ${relief.bytes.length} cells where its layout says ${L.rows}×${L.cols}`);
+  const height = i => { const b = relief.bytes[i]; return b * Math.abs(b) * L.extreme / (L.scale * L.scale); };
+  const at = (lat, lon) => height(Math.round((L.lat0 - lat) / L.step) * L.cols + Math.round(((lon - L.lon0) % 360 + 360) % 360 / L.step) % L.cols);
+  const RELIEF_KNOWN = [['the Everest cell', 27.99, 86.93, 5000, 9000], ['the Mariana Trench', 11.35, 142.2, -11000, -7500],
+    ['the Tibetan plateau', 32, 90, 4000, 6000], ['the mid-Atlantic', 0, -30, -5000, -3000], ['the North Sea', 56, 3, -200, 0]];
+  for (const [name, lat, lon, lo, hi] of RELIEF_KNOWN) {
+    const h = at(lat, lon);
+    if (!(h >= lo && h <= hi)) fail(`the relief puts ${name} at ${Math.round(h)} m, outside ${lo}…${hi}`);
+  }
+  {
+    const METRES_PER_DEGREE = 6371000 * RAD, slopes = [];
+    for (let r = 1; r < L.rows - 1; r++) {
+      const dy = 2 * L.step * METRES_PER_DEGREE, dx = dy * Math.cos((L.lat0 - r * L.step) * RAD);
+      for (let c = 0; c < L.cols; c++) {
+        if (height(r * L.cols + c) <= 0) continue;
+        const e = height(r * L.cols + (c + 1) % L.cols) - height(r * L.cols + (c + L.cols - 1) % L.cols);
+        const n = height((r - 1) * L.cols + c) - height((r + 1) * L.cols + c);
+        slopes.push(Math.hypot(e / dx, n / dy));
+      }
+    }
+    slopes.sort((a, b) => a - b);
+    const steepest = slopes[Math.floor(slopes.length * relief.shading.steepest_percentile / 100)];
+    if (!(Math.abs(relief.shading.exaggeration * steepest - 1) < 1e-9)) fail(`the hillshading's exaggeration is ${relief.shading.exaggeration}, but the grid's steepest land slopes give ${1 / steepest}`);
+  }
+
+  // The wind roses: each at sea, as far from the map's coasts as its file
+  // says, and farther than every step a tenth of a degree around it.
+  const coastUnits = (world.land ?? []).flat().map(([lon, lat]) => [Math.cos(lat * RAD) * Math.cos(lon * RAD), Math.cos(lat * RAD) * Math.sin(lon * RAD), Math.sin(lat * RAD)]);
+  const toCoast = (lat, lon) => {
+    const p = [Math.cos(lat * RAD) * Math.cos(lon * RAD), Math.cos(lat * RAD) * Math.sin(lon * RAD), Math.sin(lat * RAD)];
+    let best = -1;
+    for (const c of coastUnits) { const d = p[0] * c[0] + p[1] * c[1] + p[2] * c[2]; if (d > best) best = d; }
+    return Math.acos(Math.min(1, best)) / RAD;
+  };
+  for (const r of roses.roses ?? []) {
+    const here = toCoast(r.lat, r.lon);
+    if (geo.onLand(world.land ?? [], r.lat, r.lon)) fail(`a wind rose stands on land at ${r.lat}, ${r.lon}`);
+    if (Math.abs(here * RAD * EARTH_KM - r.nearest_coast_km) > 5) fail(`the rose at ${r.lat}, ${r.lon} is ${Math.round(here * RAD * EARTH_KM)} km from the coast, not the ${r.nearest_coast_km} its file says`);
+    for (const [a, b] of [[0.1, 0], [-0.1, 0], [0, 0.1], [0, -0.1]]) {
+      if (toCoast(r.lat + a, r.lon + b) > here + 1e-9) { fail(`the rose at ${r.lat}, ${r.lon} isn't the farthest point from land around it`); break; }
+    }
+  }
+  if ((roses.roses ?? []).length < 1) fail('euphonia.roses.json: no roses');
+
+  // Rhumb lines keep their bearing: due east keeps its latitude, due north
+  // its longitude, and between any two points of one at 45°, Δλ = Δψ.
+  const merc = lat => Math.log(Math.tan(Math.PI / 4 + lat * RAD / 2));
+  const east = geo.rhumb(-30, 10, 90, 40, 1), north = geo.rhumb(-30, 10, 0, 40, 1), diagonal = geo.rhumb(-30, 10, 45, 40, 1);
+  const rhumbOff = [
+    ...east.map(([, lat]) => Math.abs(lat + 30)),
+    ...north.map(([lon]) => Math.abs(lon - 10)),
+    ...diagonal.slice(1).map(([lon, lat], i) => Math.abs((lon - diagonal[i][0]) * RAD - (merc(lat) - merc(diagonal[i][1])))),
+  ];
+  if (!(Math.max(...rhumbOff) < 1e-9) || east.length < 40) fail(`a rhumb line strays from its bearing by ${Math.max(...rhumbOff)}`);
+
   if (Math.abs(geo.HEMISPHERES[1].lon0 - geo.HEMISPHERES[0].lon0) !== 180) fail('the two hemispheres don\'t cover the globe between them');
 
   // Clipping: the land the two hemispheres show is all the land, once.
@@ -321,7 +384,7 @@ export function verifyEuphoniaMap({ world = worldData(), fixtures = fixturesData
 
   const log = problems.length
     ? [`\neuphonia map: ${problems.length} problem(s):`, ...problems.map(p => `  ${p}`)]
-    : [`ok: ${points} Natural Earth points under their provenance; the sun within ${sunWorst.toFixed(4)}° of Horizons at ${sunRows.length} instants; ${computed.length} moon phases within ${phaseWorst.toFixed(2)} min of Espenak, lit within ${litWorst.toFixed(4)}; ${regionPlaces} places in ${regions.length} regions and ${calendars.polities.length} seats, each found once in Natural Earth; ${calendars.polities.length} polities' calendars cited, ${conversions.length} Fourmilab conversions and ${calendarDays} days against ICU; the Tide turning at ${eves} eves and ${tropicChecks} tropical readings; the hemispheres show all ${(whole / (4 * Math.PI) * 100).toFixed(1)}% of the globe that is land, once; ${roundTrips} points projected and back; land and sea right at ${KNOWN.length} known points; ${circles} dusk circles drawn where the sky darkens`];
+    : [`ok: ${points} Natural Earth points under their provenance; the sun within ${sunWorst.toFixed(4)}° of Horizons at ${sunRows.length} instants; ${computed.length} moon phases within ${phaseWorst.toFixed(2)} min of Espenak, lit within ${litWorst.toFixed(4)}; ${regionPlaces} places in ${regions.length} regions and ${calendars.polities.length} seats, each found once in Natural Earth; ${calendars.polities.length} polities' calendars cited, ${conversions.length} Fourmilab conversions and ${calendarDays} days against ICU; the Tide turning at ${eves} eves and ${tropicChecks} tropical readings; the hemispheres show all ${(whole / (4 * Math.PI) * 100).toFixed(1)}% of the globe that is land, once; ${roundTrips} points projected and back; land and sea right at ${KNOWN.length} known points; the relief right at ${RELIEF_KNOWN.length} known places, its shading's exaggeration its slopes'; ${roses.roses.length} wind roses at their poles; rhumb lines on their bearings; ${circles} dusk circles drawn where the sky darkens`];
   return { ok: problems.length === 0, failures: problems.length, log };
 }
 

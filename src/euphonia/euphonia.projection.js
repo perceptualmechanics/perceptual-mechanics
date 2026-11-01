@@ -60,6 +60,25 @@ export function onLand(land, lat, lon) {
   return inside;
 }
 
+// A rhumb line: the course that keeps one compass bearing, as a sailor held
+// it, from a point, every `step` degrees of its length. Its longitude follows
+// from the Mercator latitude ψ = ln tan(45° + φ/2): Δλ = Δψ·tan(bearing),
+// or along a parallel, distance over cos φ. It stops short of the poles,
+// which it would circle for ever.
+const RHUMB_LIMIT = 85;
+const mercator = lat => Math.log(Math.tan(Math.PI / 4 + lat * RAD / 2));
+export function rhumb(lat0, lon0, bearing, length, step) {
+  const b = bearing * RAD, points = [];
+  for (let s = 0; s <= length + 1e-9; s += step) {
+    const lat = lat0 + s * Math.cos(b);
+    if (Math.abs(lat) > RHUMB_LIMIT) break;
+    const dpsi = mercator(lat) - mercator(lat0);
+    const q = Math.abs(lat - lat0) > 1e-9 ? (lat - lat0) * RAD / dpsi : Math.cos(lat0 * RAD);
+    points.push([lon0 + s * Math.sin(b) / q, lat]);
+  }
+  return points;
+}
+
 // The sun overhead: its declination, and the meridian where true solar time
 // is noon. ms is a UT instant.
 export function subsolar(ms) {

@@ -3,6 +3,9 @@
 // book places them. Drag or the arrow keys turn the world under the discs;
 // the wheel, a pinch or the keys zoom; a region's name zooms to it.
 import worldUrl from './euphonia.world.json?url';
+import reliefUrl from './euphonia.relief.bin?url';
+import { createRelief } from './euphonia.relief.js';
+import roseData from './euphonia.roses.json';
 import { HEMISPHERES, project, unproject, local, subsolar, onLand } from './euphonia.projection.js';
 import { solarParams, solarEvents } from '../bench/bench.sky.js';
 import {
@@ -46,6 +49,9 @@ const ZOOM_MS = 450;
 const TAP_SLOP = 4;
 // The Earth's mean radius in kilometres (IUGG), for distances to places.
 const EARTH_KM = 6371;
+// The tropics' and polar circles' names sit this many degrees of longitude in
+// from a disc's western rim, as the period's maps lettered them.
+const CIRCLE_NAME_IN = 84;
 // The regions' names, in rem: the size of the page's notes.
 const LABEL_REM = 0.85;
 
@@ -116,10 +122,17 @@ function disc(stage, i, h) {
 }
 
 export async function initMap(stage) {
-  const world = prepareWorld(await (await fetch(worldUrl)).json());
+  const world = prepareWorld(await (await fetch(worldUrl)).json(), roseData.roses);
   const tolerance = world.provenance.tolerance_deg;
   const colors = palette(stage);
   const discs = HEMISPHERES.map((h, i) => disc(stage, i, h));
+  // The relief arrives after the coasts and joins them when it does.
+  let relief = null;
+  fetch(reliefUrl).then(r => r.arrayBuffer()).then(bytes => {
+    relief = createRelief(bytes, colors);
+    for (const d of discs) d.baseKey = '';
+    redraw();
+  });
   let split = SPLIT;
   const lon0Of = i => ((split - 90 + 180 * i) % 360 + 540) % 360 - 180;
 
@@ -202,6 +215,15 @@ export async function initMap(stage) {
   }
   const pointAt = (d, x, y) => unproject(...fromScreen(cssView(d), x, y), d.lon0);
   for (const d of discs) d.labels.append(d.tip);
+  // The circles' names, lettered on the map: placed with the regions' names,
+  // giving way to them where the two would print over each other.
+  const circleNames = ['Equator', 'Tropic of Cancer', 'Tropic of Capricorn', 'Arctic Circle', 'Antarctic Circle'];
+  for (const d of discs) d.circleNames = circleNames.map(name => {
+    const span = Object.assign(document.createElement('span'), { className: 'map-circle-name', textContent: name });
+    span.setAttribute('aria-hidden', 'true');
+    d.labels.append(span);
+    return span;
+  });
   for (const d of discs) d.tip.setAttribute('aria-hidden', 'true');
 
   // The scenes' panel, beside the map, for a region's chapter or a picked
@@ -329,7 +351,7 @@ export async function initMap(stage) {
       const key = `${d.lon0}|${d.zoom}|${d.vx}|${d.vy}|${d.size}`;
       if (key !== d.baseKey) {
         d.fills.width = d.fills.height = d.lines.width = d.lines.height = d.size;
-        drawFills(d.fills.getContext('2d'), v, d.projected, colors);
+        drawFills(d.fills.getContext('2d'), v, d.projected, colors, d.dpr, relief);
         drawLines(d.lines.getContext('2d'), v, d.projected, colors, d.dpr);
         d.baseKey = key;
       }
@@ -357,9 +379,17 @@ export async function initMap(stage) {
       if (local(r.centre.lon, r.centre.lat, d.lon0)[2] <= 0) boxes.push({ k, x, y, anchorY: y, spread: r.spread, ...d.labelSizes[k] });
       else d.buttons[k].hidden = true;
     });
+    // The circles' names, only on the whole disc, left-aligned just above
+    // their lines; below every region's name in priority.
+    const eps = subsolar(instant).obliquity;
+    [0, eps, -eps, 90 - eps, eps - 90].forEach((lat, k) => {
+      if (d.zoom !== 1) { d.circleNames[k].hidden = true; return; }
+      const [x, y] = toScreen(v, ...project(d.lon0 - CIRCLE_NAME_IN, lat, d.lon0)), { w, h } = d.circleSizes[k];
+      boxes.push({ circle: k, x: x + w / 2, y: y - h / 2, anchorY: y - h / 2, spread: -1, w, h });
+    });
     place(boxes, v.size / 2, v.R);
-    for (const { k, x, y, shown } of boxes) {
-      const b = d.buttons[k];
+    for (const { k, circle, x, y, shown } of boxes) {
+      const b = circle === undefined ? d.buttons[k] : d.circleNames[circle];
       b.hidden = !shown;
       if (shown) b.style.transform = `translate(${x}px, ${y}px) translate(-50%, -50%)`;
     }
@@ -484,10 +514,9 @@ export async function initMap(stage) {
       d.size = Math.round(d.cssSize * d.dpr);
       d.canvas.width = d.canvas.height = d.size;
       d.labels.style.fontSize = `${LABEL_REM * rem}px`;
-      d.labelSizes = d.buttons.map(b => {
-        b.hidden = false;
-        return { w: b.offsetWidth, h: b.offsetHeight };
-      });
+      const measure = b => { b.hidden = false; return { w: b.offsetWidth, h: b.offsetHeight }; };
+      d.labelSizes = d.buttons.map(measure);
+      d.circleSizes = d.circleNames.map(measure);
       d.baseKey = '';
       clampZoom(d);
     }

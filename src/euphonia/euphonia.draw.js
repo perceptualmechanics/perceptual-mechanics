@@ -4,7 +4,7 @@
 // point of the unit disc at the canvas's centre.
 import {
   project, local, ringsIn, linesIn, coastOf, graticule, parallel,
-  darkRegion, capCircle, DUSKS,
+  darkRegion, capCircle, DUSKS, rhumb,
 } from './euphonia.projection.js';
 
 const RAD = Math.PI / 180;
@@ -99,6 +99,14 @@ export function darkShape(pen, g) {
 // The world's layers projected for one centre meridian, as flat lists of
 // unit-disc coordinates. Turning the world reprojects; zooming and panning
 // only redraw these.
+// The wind roses, at the poles of inaccessibility euphonia.roses.json found:
+// the 32 points of the compass as rhumb lines, as the period's charts drew
+// them, reaching ROSE_REACH degrees, the cardinal and half-cardinal points
+// apart from the rest.
+const ROSE_POINTS = 32, ROSE_REACH = 30, ROSE_STEP = 1;
+const roseLines = r => Array.from({ length: ROSE_POINTS }, (_, k) =>
+  ({ main: k % (ROSE_POINTS / 8) === 0, line: rhumb(r.lat, r.lon, k * 360 / ROSE_POINTS, ROSE_REACH, ROSE_STEP) }));
+
 export function projectWorld(world, lon0) {
   const flat = lines => lines.map(line => {
     const xy = new Float64Array(line.length * 2);
@@ -113,10 +121,16 @@ export function projectWorld(world, lon0) {
     rivers: flat(linesIn(world.rivers, lon0)),
     lakes: flat(ringsIn(world.lakes, lon0)),
     historic: flat(ringsIn(world.historic.flatMap(l => l.parts), lon0)),
+    roseMain: flat(linesIn(world.roses.flatMap(r => r.lines.filter(l => l.main).map(l => l.line)), lon0)),
+    roseRest: flat(linesIn(world.roses.flatMap(r => r.lines.filter(l => !l.main).map(l => l.line)), lon0)),
+    roseCentres: world.roses.filter(r => local(r.lon, r.lat, lon0)[2] <= 0).map(r => project(r.lon, r.lat, lon0)),
   };
 }
-// The world with its coast taken once from the land's rings.
-export const prepareWorld = world => ({ ...world, coast: world.land.flatMap(coastOf) });
+// The world with its coast taken once from the land's rings, and the wind
+// roses with their rhumb lines.
+export const prepareWorld = (world, roses) => ({
+  ...world, coast: world.land.flatMap(coastOf), roses: roses.map(r => ({ ...r, lines: roseLines(r) })),
+});
 
 function trace(ctx, view, lines, close) {
   ctx.beginPath();
@@ -132,7 +146,8 @@ function trace(ctx, view, lines, close) {
 export function palette(el) {
   const css = getComputedStyle(el);
   const v = name => css.getPropertyValue(`--map-${name}`).trim();
-  return Object.fromEntries(['sea', 'graticule', 'circles', 'land', 'coast', 'river', 'lake', 'historic', 'night', 'glow', 'glow-lit', 'sun', 'rim']
+  return Object.fromEntries(['sea', 'graticule', 'circles', 'land', 'coast', 'river', 'lake', 'historic', 'night', 'glow', 'glow-lit', 'sun', 'rim',
+    'waterline', 'relief-shelf', 'relief-abyss', 'relief-land', 'relief-lit', 'relief-shade', 'rhumb', 'rose']
     .map(n => [n, v(n)]));
 }
 
@@ -142,12 +157,46 @@ export function palette(el) {
 // the dark: at full night the coast had fallen to 1.42:1 against the sea,
 // under the 3:1 a graphic needs. dpr scales line widths, which are in CSS
 // pixels.
-export function drawFills(ctx, view, projected, colors) {
+// Water-lining, as the period's engravers drew the sea: lines following every
+// coast outward, each a gap further than the last from the one before (1, 2,
+// 3… gaps), fainter as they go. Each is an exact offset of the coast, cut as
+// the rim of a stroke one line-width narrower than the stroke under it.
+const WATERLINES = 5, WATERLINE_GAP = 1.5, WATERLINE_WIDTH = 0.6;
+let waterCanvas = null;
+function waterLines(view, projected, colors, dpr) {
+  waterCanvas ??= document.createElement('canvas');
+  if (waterCanvas.width !== view.size) waterCanvas.width = waterCanvas.height = view.size;
+  const ctx = waterCanvas.getContext('2d');
+  ctx.clearRect(0, 0, view.size, view.size);
+  ctx.lineJoin = ctx.lineCap = 'round';
+  trace(ctx, view, projected.coast, false);
+  for (let k = WATERLINES; k >= 1; k--) {
+    const offset = WATERLINE_GAP * k * (k + 1) / 2 * dpr;
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.globalAlpha = 1 - (k - 1) / WATERLINES;
+    ctx.strokeStyle = colors.waterline; ctx.lineWidth = 2 * offset; ctx.stroke();
+    ctx.globalCompositeOperation = 'destination-out';
+    ctx.globalAlpha = 1;
+    ctx.lineWidth = 2 * offset - 2 * WATERLINE_WIDTH * dpr; ctx.stroke();
+  }
+  ctx.globalCompositeOperation = 'source-over';
+  return waterCanvas;
+}
+
+// relief, when the page has it, draws the sea's depths or the land's relief
+// for this view (euphonia.relief.js); without it, the fills are flat.
+export function drawFills(ctx, view, projected, colors, dpr, relief) {
   ctx.clearRect(0, 0, view.size, view.size);
   ctx.save();
   clipToDisc(ctx, view);
-  ctx.fillStyle = colors.sea; ctx.fillRect(0, 0, view.size, view.size);
-  trace(ctx, view, projected.land, true); ctx.fillStyle = colors.land; ctx.fill('evenodd');
+  if (relief) ctx.drawImage(relief(view, 'sea'), 0, 0);
+  else { ctx.fillStyle = colors.sea; ctx.fillRect(0, 0, view.size, view.size); }
+  ctx.drawImage(waterLines(view, projected, colors, dpr), 0, 0);
+  ctx.save();
+  trace(ctx, view, projected.land, true); ctx.clip('evenodd');
+  if (relief) ctx.drawImage(relief(view, 'land'), 0, 0);
+  else { ctx.fillStyle = colors.land; ctx.fillRect(0, 0, view.size, view.size); }
+  ctx.restore();
   ctx.fillStyle = colors.sea;
   trace(ctx, view, projected.lakes, true); ctx.fill();
   trace(ctx, view, projected.historic, true); ctx.fill();
@@ -163,8 +212,23 @@ export function drawLines(ctx, view, projected, colors, dpr) {
   trace(ctx, view, projected.rivers, false); ctx.strokeStyle = colors.river; ctx.lineWidth = 0.7 * dpr; ctx.stroke();
   trace(ctx, view, projected.lakes, true); ctx.strokeStyle = colors.circles; ctx.lineWidth = 0.5 * dpr; ctx.stroke();
   trace(ctx, view, projected.historic, true); ctx.setLineDash([3 * dpr, 2 * dpr]); ctx.strokeStyle = colors.historic; ctx.stroke(); ctx.setLineDash([]);
+  // The roses' rhumb lines, and at each pole an eight-pointed star.
+  trace(ctx, view, projected.roseRest, false); ctx.strokeStyle = colors.rhumb; ctx.lineWidth = 0.4 * dpr; ctx.stroke();
+  trace(ctx, view, projected.roseMain, false); ctx.lineWidth = 0.8 * dpr; ctx.stroke();
+  ctx.fillStyle = colors.rose;
+  for (const [X, Y] of projected.roseCentres) {
+    const [x, y] = toScreen(view, X, Y), long = ROSE_STAR * dpr, short = long * 0.3;
+    ctx.beginPath();
+    for (let k = 0; k < 16; k++) {
+      const a = k * Math.PI / 8, r = k % 4 === 0 ? long : k % 2 === 0 ? long * 0.6 : short;
+      ctx[k ? 'lineTo' : 'moveTo'](x + r * Math.sin(a), y - r * Math.cos(a));
+    }
+    ctx.closePath(); ctx.fill();
+  }
   ctx.restore();
 }
+// A rose's star, its longest points, in CSS pixels.
+const ROSE_STAR = 11;
 
 // The night's four steps, between the fills and the lines.
 export function drawNight(ctx, view, sun, colors) {
@@ -235,7 +299,22 @@ export function drawMarks(ctx, view, { sun, regions, hoverPlace, pick }, colors,
   ctx.restore();
   ctx.beginPath(); ctx.arc(view.size / 2, view.size / 2, view.R, 0, 2 * Math.PI);
   ctx.strokeStyle = colors.rim; ctx.lineWidth = 1.5 * dpr; ctx.stroke();
+  // The rim graduated in degrees of latitude, in alternating ten-degree
+  // bands as the period's frames were: on a hemisphere's rim, the angle from
+  // its centre is the latitude itself (east rim) or its supplement (west).
+  if (view.zoom === 1) {
+    const c = view.size / 2, inner = view.R + RIM_GAP * dpr, outer = inner + RIM_BAND * dpr;
+    ctx.fillStyle = colors.rim;
+    for (let lat = -90; lat < 90; lat += 20) for (const side of [0, Math.PI]) {
+      const a = side === 0 ? -lat * RAD : Math.PI + lat * RAD, b = side === 0 ? -(lat + 10) * RAD : Math.PI + (lat + 10) * RAD;
+      ctx.beginPath(); ctx.arc(c, c, outer, a, b, side === 0); ctx.arc(c, c, inner, b, a, side !== 0); ctx.closePath(); ctx.fill();
+    }
+    ctx.lineWidth = 0.6 * dpr;
+    ctx.beginPath(); ctx.arc(c, c, outer, 0, 2 * Math.PI); ctx.stroke();
+  }
 }
+// The degree band just outside the rim, in CSS pixels.
+const RIM_GAP = 2, RIM_BAND = 4;
 
 // The zoom past which the coasts' simplification would show: its tolerance,
 // at the rim's scale (where stereographic spends a disc radius per radian),

@@ -26,6 +26,9 @@ footer.legal section a { text-decoration: underline; }
 .map-stage {
   --map-sea: #0f1418; --map-graticule: #3a352c; --map-circles: #6b5a37; --map-land: #2b261e;
   --map-coast: #8c7a55; --map-river: #3b4a52; --map-historic: #d9b13f; --map-night: rgba(0, 0, 0, 0.32);
+  --map-waterline: #4a6170; --map-relief-shelf: #1d2c35; --map-relief-abyss: #070b0e;
+  --map-relief-land: #2b261e; --map-relief-lit: #574c38; --map-relief-shade: #110e0a;
+  --map-rhumb: rgba(140, 122, 85, 0.35); --map-rose: #8c7a55;
   --map-glow: rgba(217, 177, 63, 0.22); --map-glow-lit: rgba(240, 207, 106, 0.55); --map-sun: #f0cf6a; --map-rim: #8c7a55;
   position: relative; overflow: hidden;
   height: 100svh; min-height: 30rem; display: grid; grid-template-rows: auto auto minmax(0, 1fr) auto;
@@ -66,6 +69,11 @@ footer.legal section a { text-decoration: underline; }
 .map-region:hover, .map-region:focus-visible { color: #f0cf6a; text-decoration: underline; }
 .map-region:focus-visible { outline: 2px solid #f0cf6a; outline-offset: 1px; }
 .map-region.is-lit { color: #f0cf6a; }
+.map-circle-name {
+  position: absolute; top: 0; left: 0; pointer-events: none; white-space: nowrap;
+  color: #8c7a55; font-style: italic; font-size: 0.7rem; text-shadow: 0 0 3px #0a0a0a, 0 0 3px #0a0a0a;
+}
+.map-circle-name[hidden] { display: none; }
 /* A place's name beside its ring while the pointer or focus is on it. */
 .map-place {
   position: absolute; top: 0; left: 0; pointer-events: none; white-space: nowrap;

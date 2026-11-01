@@ -1,0 +1,20 @@
+{
+ "method": "Poles of inaccessibility of the land the map draws (Natural Earth's, in euphonia.world.json, without islands too small to show): the 3 sea points farthest from any coast vertex, at least 60° apart, found on a 1° grid and refined by 0.1° steps.",
+ "roses": [
+  {
+   "lat": -48.4,
+   "lon": -139.3,
+   "nearest_coast_km": 2831
+  },
+  {
+   "lat": -28,
+   "lon": 85.9,
+   "nearest_coast_km": 2689
+  },
+  {
+   "lat": -38.5,
+   "lon": -9.4,
+   "nearest_coast_km": 2521
+  }
+ ]
+}
