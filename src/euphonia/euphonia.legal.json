@@ -2,8 +2,8 @@
  "provenance": {
   "source": "Euphonia.md",
   "master": "~/Documents/euphonia/Euphonia.md",
-  "sha256": "f780dd205188523531301c0f12beb660507011fa2e34b833490fcf1b17ccfdc9",
-  "modified": "2026-11-01T15:00:45-05:00",
+  "sha256": "0080f00882eba13e162f5b7fe56678199a98a9e5e4fb0048f65d05d2d400216b",
+  "modified": "2026-11-01T17:40:07-05:00",
   "exporter": "class-kit/site_export.py",
   "exporter_version": 5,
   "rules": {
@@ -30,7 +30,7 @@
   "orc_notice": [
    "This product is licensed under the ORC License located at the Library of Congress at TX 9-307-067 and available online at various locations including paizo.com/orclicense and others. All warranties are disclaimed as set forth therein.",
    "**Attribution.** This product is based on the following Licensed Material: *Euphonia*, © 2026 Scott Cohen. It also includes material from the *System Reference Document 5.2.1* by Wizards of the Coast LLC, licensed under CC-BY-4.0 (attribution below). If you use our Licensed Material in your own published works, please credit us as follows: *Euphonia*, © 2026 Scott Cohen, https://perceptualmechanics.com/euphonia/.",
-   "**Reserved Material.** Reserved Material elements in this product are only these: the name *Euphonia*, its logo and trade dress; the cover figures and the named characters this work invents, including the great artificer, Simbarashe Moyo, and Mutapa's spymaster, Shiri; the name Lanternhall; and flavor text, meaning the vignettes and in-character passages that open chapters, classes, subclasses and features, and the flavor passages within them (in print, the passages set apart as flavor). The setting's explanatory prose is not flavor text. Rules text that mentions a reserved name is Licensed Material, with the name replaced in any work that uses it. Real historical people, places and institutions are not Reserved Material.",
+   "**Reserved Material.** Reserved Material elements in this product are only these: the name *Euphonia*, its logo, trade dress and cover art; the named characters on the covers and their character sheets, and the other named characters this work invents, including the great artificer, Simbarashe Moyo, and Mutapa's spymaster, Shiri; the name Lanternhall; and flavor text, meaning the vignettes that open chapters, classes and subclasses; in-character passages, such as the quotations attributed to a speaker; and the descriptive sentences that open a feature before its rules begin, in any edition. The archetypes the covers show are not Reserved Material. The setting's explanatory prose, the Further in boxes and any sentence that states a rule are not flavor text. Rules text that mentions a reserved name is Licensed Material, with the name replaced in any work that uses it. Real historical people, places and institutions are not Reserved Material.",
    "**Expressly Designated Licensed Material.** The following elements are owned by the Licensor and would otherwise constitute Reserved Material and are hereby designated as Licensed Material: everything in *Euphonia: The Setting*, *Euphonia: The Classes* and *Euphonia: Life on the Border* that is not Reserved Material above, including the rules, classes, subclasses, spells, magic items and backgrounds and their names; the Principles; the setting's explanatory prose; the State of the World chapters; the institutions and factions; and the research they rest on."
   ],
   "orc_notice_status": "draft",

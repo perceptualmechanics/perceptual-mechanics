@@ -2,8 +2,8 @@
  "provenance": {
   "source": "Euphonia.md",
   "master": "~/Documents/euphonia/Euphonia.md",
-  "sha256": "f780dd205188523531301c0f12beb660507011fa2e34b833490fcf1b17ccfdc9",
-  "modified": "2026-11-01T15:00:45-05:00",
+  "sha256": "0080f00882eba13e162f5b7fe56678199a98a9e5e4fb0048f65d05d2d400216b",
+  "modified": "2026-11-01T17:40:07-05:00",
   "exporter": "class-kit/site_export.py",
   "exporter_version": 5,
   "rules": {
@@ -355,7 +355,7 @@
     {
      "level": 11,
      "name": "Cold Read",
-     "text": "When you roll Initiative, you can Observe one creature you can see (no action required).\n\n**Your Read.** From now on, you read one creature at a time, and it takes the full weight of what you see. Whenever you Observe one or more creatures you can see, you can make one of them your **read**. It stays your read until you make another creature your read, it drops to 0 Hit Points, or it stops being Observed. Observing a creature you can't see doesn't change your read. Exploit adds its full dice when the attack hits your read, and half as many dice (round up) when it hits any other Observed creature. When you cast a spell (with any action, Bonus Action or Reaction), Exploit adds half as many dice (round up) against every creature, your read included, until the start of your next turn."
+     "text": "When you roll Initiative, you can Observe one creature you can see (no action required).\n\n**Your Read.** From now on, you read one creature at a time, and it takes the full weight of what you see. Whenever you Observe one or more creatures you can see, you can make one of them your **read**. It stays your read until you make another creature your read, it drops to 0 Hit Points, or it stops being Observed. Observing a creature you can't see (as a Spymaster can) doesn't change your read. Exploit adds its full dice when the attack hits your read, and half as many dice (round up) when it hits any other Observed creature. When you cast a spell (with any action, Bonus Action or Reaction), Exploit adds half as many dice (round up) against every creature, your read included, until the start of your next turn."
     },
     {
      "level": 13,
@@ -396,7 +396,7 @@
       {
        "level": 3,
        "name": "Letters of Credit",
-       "text": "You are a factor of a house: a bank, a merchant company, or a guild, which you and the DM choose together. You gain proficiency in the Persuasion skill and with Calligrapher's Supplies; if you already have either, choose another skill or tool. In any settlement where your house has standing (the DM decides where; most towns and cities), you can deposit coin and valuables with it and draw them out again in any other settlement where it has standing, so your wealth travels as a letter instead of a wagon.\n\nThe houses are many, and none of them runs the world alone. Some that were at work around 1668:\n\n| House | Where | Known for |\n|---|---|---|\n| The Genoese bankers | Genoa, and the court at Madrid | Lending to the Spanish crown against its silver fleets (the *asentistas*) |\n| The Bank of Amsterdam | Amsterdam (the *Wisselbank*, 1609) | The exchange bank of Europe's trade; its bank money was trusted further than coin |\n| Stockholms Banco, and the Riksbank | Stockholm | Europe's first banknotes (1661); the bank failed, and the Estates founded the Riksbank in its place in 1668 |\n| The goldsmith-bankers | London (Lombard Street) | Holding merchants' deposits and lending to Charles II |\n| The court factors | The German courts | Supplying and financing princes and their armies (the *Hoffaktoren*) |\n| The sarrafs | Istanbul and the Ottoman cities | Changing, lending, and remitting money for the court and its tax-farmers |\n| The Armenian merchants of New Julfa | Isfahan, and from London to Manila | A trading network run on partnership contracts and letters |\n| The Gujarati financiers | Surat, and the Indian Ocean | Moving money by the *hundi*, a bill of exchange honored from Mughal India to the Persian Gulf; Virji Vora of Surat lent to the East India Companies |\n| The House of the Bird | Mutapa's court, Sofala, and the Cape | A royal treasury that learned credit from the Swahili and Gujarati merchants it hosts, and banks platinum's wealth as paper |"
+       "text": "You are a factor of a house: a bank, a merchant company, or a guild, which you and the DM choose together. You gain proficiency in the Persuasion skill and with Calligrapher's Supplies; if you already have either, choose another skill or tool. In any settlement where your house has standing (the DM decides where; most towns and cities), you can deposit coin and valuables with it and draw them out again in any other settlement where it has standing, so your wealth travels as a letter instead of a wagon.\n\nSome houses at work around 1668:\n\n| House | Where | Known for |\n|---|---|---|\n| The Genoese bankers | Genoa, and the court at Madrid | Lending to the Spanish crown against its silver fleets (the *asentistas*) |\n| The Bank of Amsterdam | Amsterdam (the *Wisselbank*, 1609) | The exchange bank of Europe's trade; its bank money was trusted further than coin |\n| Stockholms Banco, and the Riksbank | Stockholm | Europe's first banknotes (1661); the bank failed, and the Estates founded the Riksbank in its place in 1668 |\n| The goldsmith-bankers | London (Lombard Street) | Holding merchants' deposits and lending to Charles II |\n| The court factors | The German courts | Supplying and financing princes and their armies (the *Hoffaktoren*) |\n| The sarrafs | Istanbul and the Ottoman cities | Changing, lending, and remitting money for the court and its tax-farmers |\n| The Armenian merchants of New Julfa | Isfahan, and from London to Manila | A trading network run on partnership contracts and letters |\n| The Gujarati financiers | Surat, and the Indian Ocean | Moving money by the *hundi*, a bill of exchange honored from Mughal India to the Persian Gulf; Virji Vora of Surat lent to the East India Companies |\n| The House of the Bird | Mutapa's court, Sofala, and the Cape | A royal treasury that learned credit from the Swahili and Gujarati merchants it hosts, and banks platinum's wealth as paper |"
       },
       {
        "level": 3,
@@ -406,7 +406,7 @@
       {
        "level": 3,
        "name": "Everyone Has a Price",
-       "text": "As a Magic action, you make an offer to an Observed creature within 60 feet of you that can hear and understand you and is fighting for pay or plunder: a mercenary, a bandit, a hired guard, or any creature the DM judges is there for gain. It makes a Wisdom saving throw (DC 8 plus your Intelligence modifier and Proficiency Bonus). On a failed save, it takes the deal: it stops fighting and leaves, or stands aside if it can't leave, and it does nothing against you or your allies for the next hour unless one of you harms it. While any of its allies are still fighting you, it repeats the saving throw at the end of each of its turns; on a success, the deal is off and it rejoins the fight, and you owe it nothing. You owe it its price, 25 GP times its Challenge Rating (minimum 10 GP), paid within a day; a creature you don't pay remembers. You can use this feature a number of times equal to your Proficiency Bonus (maximum of three), and you regain all expended uses when you finish a Long Rest."
+       "text": "As an action (not the Magic action), you make an offer to an Observed creature within 60 feet of you that can hear and understand you and is fighting for pay or plunder: a mercenary, a bandit, a hired guard, or any creature the DM judges is there for gain. It makes a Wisdom saving throw (DC 8 plus your Intelligence modifier and Proficiency Bonus). On a failed save, it takes the deal: it stops fighting and leaves, or stands aside if it can't leave, and it does nothing against you or your allies for the next hour unless one of you harms it. While any of its allies are still fighting you, it repeats the saving throw at the end of each of its turns; on a success, the deal is off and it rejoins the fight, and you owe it nothing. You owe it its price, 25 GP times its Challenge Rating (minimum 10 GP), paid within a day; a creature you don't pay remembers. You can use this feature a number of times equal to your Proficiency Bonus (maximum of three), and you regain all expended uses when you finish a Long Rest."
       },
       {
        "level": 6,
@@ -508,7 +508,7 @@
       {
        "level": 3,
        "name": "The Wound",
-       "text": "When you use Exploit and the target can hear and understand you, the extra damage can be Psychic damage instead: you tell it the one thing it can't bear to hear."
+       "text": "When you use Exploit and the target can hear and understand you, the extra damage can be Psychic damage instead: you tell it what it can't bear to hear."
       },
       {
        "level": 3,
@@ -523,7 +523,7 @@
       {
        "level": 6,
        "name": "Vivisection",
-       "text": "As a Magic action, you can take an Observed creature apart out loud. Choose an Observed creature within 30 feet of you that can hear and understand you. It makes a Wisdom saving throw (DC 8 plus your Intelligence modifier and Proficiency Bonus). On a failed save, it takes Psychic damage equal to the total of a number of computation dice equal to half your Proficiency Bonus (round up), and it can't take Reactions until the start of its next turn. Nothing happens on a successful save, but the use is still expended. This isn't magic. You can use this feature a number of times equal to your Proficiency Bonus, and you regain all expended uses when you finish a Short or Long Rest."
+       "text": "As an action (not the Magic action), you can take an Observed creature apart out loud. Choose an Observed creature within 30 feet of you that can hear and understand you. It makes a Wisdom saving throw (DC 8 plus your Intelligence modifier and Proficiency Bonus). On a failed save, it takes Psychic damage equal to the total of a number of computation dice equal to half your Proficiency Bonus (round up), and it can't take Reactions until the start of its next turn. Nothing happens on a successful save, but the use is still expended. This isn't magic. You can use this feature a number of times equal to your Proficiency Bonus, and you regain all expended uses when you finish a Short or Long Rest."
       },
       {
        "level": 6,
@@ -676,7 +676,7 @@
       {
        "level": 3,
        "name": "Human Behavior",
-       "text": "When you Observe a creature that can speak, you can learn one of the following instead of one of Observe's usual facts: whom it answers to, what it values most, whether it is hiding something right now (not what), what it is most afraid of losing, or its price: what it would take to buy its cooperation for a day (some creatures have none, and the DM tells you so). You learn it from what can be seen: dress, posture, habit, the company it keeps. This is an exception to Observe's rule against feelings: you read what a creature values and fears from how it lives, never from what it is thinking."
+       "text": "When you Observe a creature that can speak, you can learn one of the following instead of one of Observe's usual facts: whom it answers to, what it values most, whether it is hiding something right now (not what), what it is most afraid of losing, or its price: what it would take to buy its cooperation for a day (some creatures have none, and the DM tells you so). This is an exception to Observe's rule against feelings: you read what a creature values and fears from how it lives (dress, posture, habit, the company it keeps), never from what it is thinking."
       },
       {
        "level": 6,
@@ -706,7 +706,7 @@
       {
        "level": 14,
        "name": "The Club",
-       "text": "You can run your Network without leaving your chair. The Club keeps shewstones (Sending Stones, in the rules), the rarest of things, and you have the use of them. When you spend a favor, you can call on an asset in any settlement where you have ever declared one, anywhere in the world: the message goes by sending stone to the Club's agent there, and the answer reaches you within 1 day."
+       "text": "You can run your Network without leaving your chair. The Club keeps a few pairs of shewstones (Sending Stones, in the rules; *The Setting*, The World in 1668, Shewstones), the rarest of things, and you have the use of them. (The Club itself is in *The Setting*, The World in 1668, The Spymaster's Club.) When you spend a favor, you can call on an asset in any settlement where you have ever declared one, anywhere in the world: the message goes by shewstone to the Club's agent there, and the answer reaches you within 1 day."
       }
      ]
     }
@@ -1062,7 +1062,7 @@
     {
      "level": 1,
      "name": "Tinker",
-     "text": "With Tinker's Tools and 1 minute of work, you can mend a single break or tear in a nonmagical object you touch, as the *Mending* cantrip does, or build a Tiny clockwork trinket that does one simple thing (ticks, chimes at a set hour, walks in a line, plays a few bars of music). A trinket stops working after 8 hours. You can have a number of trinkets equal to your Proficiency Bonus at a time; if you build another, your oldest stops working.\n\n*Retuning.* You can hear when a device has drifted. With Tinker's Tools and 10 minutes of work, you can retune a Mutapan curiosity (a self-lighting lamp, a stove, a pump, any small work that has fallen out of calibration) so it works as new. Anyone a Mhizha has taught can do the same in an hour; no one else can do it at all. Abroad, where no one else can, this is worth something: the owner of a drifting lamp is usually rich, often grateful, and sometimes talkative, and a retuning can get you through a door that a letter of introduction wouldn't."
+     "text": "With Tinker's Tools and 1 minute of work, you can mend a single break or tear in a nonmagical object you touch, as the *Mending* cantrip does, or build a Tiny clockwork trinket that does one simple thing (ticks, chimes at a set hour, walks in a line, plays a few bars of music). A trinket stops working after 8 hours. You can have a number of trinkets equal to your Proficiency Bonus at a time; if you build another, your oldest stops working.\n\n*Retuning.* You can hear when a device has drifted. With Tinker's Tools and 10 minutes of work, you can retune a Mutapan curiosity (a self-lighting lamp, a stove, a pump, any small work that has fallen out of calibration) so it works as new. Anyone a Mhizha has taught can do the same in an hour; no one else can do it at all. Abroad, this pays: the owner of a drifting lamp is usually rich, often grateful, and sometimes talkative, and a retuning can get you through a door that a letter of introduction wouldn't."
     },
     {
      "level": 2,
@@ -1185,7 +1185,7 @@
       {
        "level": 6,
        "name": "Suit Systems",
-       "text": "Releasing Kinetic Charge now deals an extra 1d6 Force damage (2d6 if the suit is an Infiltrator). In addition, you gain the following benefits:\n\n- *Built-In Curiosity.* When you build devices, you can also build one Mutapan curiosity into the suit, and change it whenever you build devices again:. It works only for you while you wear the suit, and it's lost or destroyed only if the suit is.\n- *Model Systems.* *Infiltrator:* you have a Climb Speed equal to your Speed, and when you fall, you take no damage and can move horizontally up to twice the distance you fall. *Guardian:* when you use the Guardian's Reaction to protect an ally within 5 feet of you, you can swap places with it, as long as you're both willing."
+       "text": "Kinetic Charge's extra Force damage increases by 1d6 (2d6 if the suit is an Infiltrator). In addition, you gain the following benefits:\n\n- *Built-In Curiosity.* When you build devices, you can also build one Mutapan curiosity into the suit, and change it whenever you build devices again:. It works only for you while you wear the suit, and it's lost or destroyed only if the suit is.\n- *Model Systems.* *Infiltrator:* you have a Climb Speed equal to your Speed, and when you fall, you take no damage and can move horizontally up to twice the distance you fall. *Guardian:* when you use the Guardian's Reaction to protect an ally within 5 feet of you, you can swap places with it, as long as you're both willing."
       },
       {
        "level": 10,
@@ -1258,7 +1258,7 @@
       {
        "level": 6,
        "name": "Albedo",
-       "text": "You purify what you have broken down. Your Salt elixir also ends the Poisoned condition and one disease on the drinker. You have Resistance to Poison damage, and you can purify food and drink you touch as the *Purify Food and Drink* spell does (no action required).\n\n*Green Salt (Level 6).* You know how to make the field dressing Mutapa's farms run on. During downtime, with Alchemist's Supplies, a week of work, and materials worth 50 GP, you can dress a farm's fields so that its next harvest is a good one, whatever else the season does short of drought, flood, or locusts. What that's worth to the farm's owner is for the DM, but in a lean year it's worth a great deal, and a village that's eaten through a famine on your dressing remembers you."
+       "text": "You purify what you have broken down. Your Salt elixir also ends the Poisoned condition and one disease on the drinker. You have Resistance to Poison damage, and you can purify food and drink you touch as the *Purify Food and Drink* spell does (no action required).\n\n*Green Salt (Level 6).* You know how to make the field dressing Mutapa's farms run on. During downtime, with Alchemist's Supplies, a week of work, and materials worth 50 GP, you can dress a farm's fields so that its next harvest is a good one, whatever else the season does short of drought, flood, or locusts. What that's worth to the farm's owner is for the DM; in a lean year, a great deal, and a village that's eaten through a famine on your dressing remembers you."
       },
       {
        "level": 10,
@@ -1452,7 +1452,7 @@
       {
        "level": 3,
        "name": "The Map",
-       "text": "You gain proficiency with Cartographer's Tools; if you already have it, choose another type of Artisan's Tools. You carry a map that draws itself: it shows any place you have spent 10 minutes in, you can't become lost except by magic, and it is your Spellcasting Focus.\n\n*Fair Copy.* With Cartographer's Tools and 10 minutes of work, you can copy any map, chart, or plan you've seen, from memory, and you can tell at a glance whether a map is accurate, out of date, or a deliberate lie.\n\n*Fold Space.* As a Bonus Action, you fold the map: a willing creature you can see within 30 feet of yourself teleports up to 15 feet to an unoccupied space you can see. You can do this a number of times equal to your Proficiency Bonus, and you regain all expended uses when you finish a Long Rest."
+       "text": "You gain proficiency with Cartographer's Tools; if you already have it, choose another type of Artisan's Tools. You carry a map that draws itself: it shows any place you have spent 10 minutes in, you can't become lost except by magic, and it is your Spellcasting Focus.\n\n*Fair Copy.* With Cartographer's Tools and 10 minutes of work, you can copy any map, chart, or plan you've seen, from memory, and you can tell at a glance whether a map is accurate, out of date, or a deliberate lie.\n\n*Fold Space.* As a Bonus Action, you fold the map: a willing creature (it can be you) you can see within 30 feet of yourself teleports up to 15 feet to an unoccupied space you can see. You can do this a number of times equal to your Proficiency Bonus, and you regain all expended uses when you finish a Long Rest."
       },
       {
        "level": 3,
@@ -1513,276 +1513,6 @@
      },
      {
       "name": "Spare the Dying",
-      "new": false
-     }
-    ],
-    "1": [
-     {
-      "name": "Alarm",
-      "new": false
-     },
-     {
-      "name": "Cure Wounds",
-      "new": false
-     },
-     {
-      "name": "Detect Magic",
-      "new": false
-     },
-     {
-      "name": "Disguise Self",
-      "new": false
-     },
-     {
-      "name": "Expeditious Retreat",
-      "new": false
-     },
-     {
-      "name": "Faerie Fire",
-      "new": false
-     },
-     {
-      "name": "False Life",
-      "new": false
-     },
-     {
-      "name": "Feather Fall",
-      "new": false
-     },
-     {
-      "name": "Floating Disk",
-      "new": false
-     },
-     {
-      "name": "Identify",
-      "new": false
-     },
-     {
-      "name": "Jump",
-      "new": false
-     },
-     {
-      "name": "Longstrider",
-      "new": false
-     },
-     {
-      "name": "Purify Food and Drink",
-      "new": false
-     },
-     {
-      "name": "Sanctuary",
-      "new": false
-     },
-     {
-      "name": "Thunderwave",
-      "new": false
-     },
-     {
-      "name": "Unseen Servant",
-      "new": false
-     }
-    ],
-    "2": [
-     {
-      "name": "Acid Arrow",
-      "new": false
-     },
-     {
-      "name": "Aid",
-      "new": false
-     },
-     {
-      "name": "Alter Self",
-      "new": false
-     },
-     {
-      "name": "Arcane Lock",
-      "new": false
-     },
-     {
-      "name": "Blur",
-      "new": false
-     },
-     {
-      "name": "Continual Flame",
-      "new": false
-     },
-     {
-      "name": "Darkvision",
-      "new": false
-     },
-     {
-      "name": "Enhance Ability",
-      "new": false
-     },
-     {
-      "name": "Enlarge/Reduce",
-      "new": false
-     },
-     {
-      "name": "Heat Metal",
-      "new": false
-     },
-     {
-      "name": "Invisibility",
-      "new": false
-     },
-     {
-      "name": "Knock",
-      "new": false
-     },
-     {
-      "name": "Lesser Restoration",
-      "new": false
-     },
-     {
-      "name": "Levitate",
-      "new": false
-     },
-     {
-      "name": "Locate Object",
-      "new": false
-     },
-     {
-      "name": "Magic Mouth",
-      "new": false
-     },
-     {
-      "name": "Magic Weapon",
-      "new": false
-     },
-     {
-      "name": "Rope Trick",
-      "new": false
-     },
-     {
-      "name": "See Invisibility",
-      "new": false
-     },
-     {
-      "name": "Spider Climb",
-      "new": false
-     },
-     {
-      "name": "Web",
-      "new": false
-     }
-    ],
-    "3": [
-     {
-      "name": "Blink",
-      "new": false
-     },
-     {
-      "name": "Dispel Magic",
-      "new": false
-     },
-     {
-      "name": "Fly",
-      "new": false
-     },
-     {
-      "name": "Gaseous Form",
-      "new": false
-     },
-     {
-      "name": "Glyph of Warding",
-      "new": false
-     },
-     {
-      "name": "Haste",
-      "new": false
-     },
-     {
-      "name": "Lightning Bolt",
-      "new": false
-     },
-     {
-      "name": "Protection from Energy",
-      "new": false
-     },
-     {
-      "name": "Revivify",
-      "new": false
-     },
-     {
-      "name": "Tiny Hut",
-      "new": false
-     },
-     {
-      "name": "Water Breathing",
-      "new": false
-     },
-     {
-      "name": "Water Walk",
-      "new": false
-     }
-    ],
-    "4": [
-     {
-      "name": "Arcane Eye",
-      "new": false
-     },
-     {
-      "name": "Fabricate",
-      "new": false
-     },
-     {
-      "name": "Faithful Hound",
-      "new": false
-     },
-     {
-      "name": "Fire Shield",
-      "new": false
-     },
-     {
-      "name": "Freedom of Movement",
-      "new": false
-     },
-     {
-      "name": "Resilient Sphere",
-      "new": false
-     },
-     {
-      "name": "Secret Chest",
-      "new": false
-     },
-     {
-      "name": "Stone Shape",
-      "new": false
-     },
-     {
-      "name": "Stoneskin",
-      "new": false
-     }
-    ],
-    "5": [
-     {
-      "name": "Animate Objects",
-      "new": false
-     },
-     {
-      "name": "Arcane Hand",
-      "new": false
-     },
-     {
-      "name": "Creation",
-      "new": false
-     },
-     {
-      "name": "Greater Restoration",
-      "new": false
-     },
-     {
-      "name": "Passwall",
-      "new": false
-     },
-     {
-      "name": "Telekinesis",
-      "new": false
-     },
-     {
-      "name": "Wall of Stone",
       "new": false
      }
     ]
@@ -1980,12 +1710,12 @@
     {
      "level": 1,
      "name": "Natural Philosophy",
-     "text": "You know the world by measuring it.\n\n**Study.** As a Bonus Action, or over 1 minute outside combat, you study a creature, an object, or a feature of the environment that you can see within 60 feet of yourself. You can be studying one creature and one object or feature at a time; studying another replaces the earlier one of the same kind. A creature stays studied for 1 minute, and an object or feature until you finish a Short or Long Rest. When you study something, you learn one of the following of your choice:\n\n- *A creature:* its Armor Class, which of its saving throws has the lowest bonus, one damage Resistance, Immunity, or Vulnerability it has (the DM chooses if it has several, and tells you if it has none), or whether it is Bloodied.\n- *An object or a feature:* what it's made of, roughly how old it is, how it was made, or where it's weakest.\n\nYou learn only what can be seen, heard, or measured. Study never tells you what a creature thinks or feels.\n\n**Measure.** You can judge, by eye and with the instruments you carry, the distance to anything you can see, its height, its weight, and its temperature, to within a tenth, and the time of day to within a few minutes."
+     "text": "You know the world by measuring it.\n\n**Study.** As a Bonus Action, or over 1 minute outside combat, you study a creature, an object, or a feature of the environment that you can see within 60 feet of yourself. You can be studying one creature and one object or feature at a time; studying another replaces the earlier one of the same kind. A creature stays studied for 1 minute, and an object or feature until you finish a Short or Long Rest. This isn't the Study action, and it needs no check. When you study something, you learn one of the following of your choice:\n\n- *A creature:* its Armor Class, which of its saving throws has the lowest bonus, one damage Resistance, Immunity, or Vulnerability it has (the DM chooses if it has several, and tells you if it has none), or whether it is Bloodied.\n- *An object or a feature:* what it's made of, roughly how old it is, how it was made, or where it's weakest.\n\nYou learn only what can be seen, heard, or measured. Study never tells you what a creature thinks or feels.\n\n**Measure.** You can judge, by eye and with the instruments you carry, the distance to anything you can see, its height, its weight, and its temperature, to within a tenth, and the time of day to within a few minutes."
     },
     {
      "level": 1,
      "name": "Ballistics",
-     "text": "You shoot where the arithmetic says.\n\nWhen you make an attack roll with a crossbow or a firearm, you can use your Intelligence modifier instead of your Dexterity modifier for the attack and damage rolls. A firearm is a Pistol, a Musket, or a period firearm such as the pocket pistol (*The Setting*, Characters, Equipment and Firearms); the stonebow is a crossbow.\n\n**Calculated Shot.** Once per turn, when you hit a creature you're studying with an attack roll using a crossbow or a firearm, the attack deals the extra damage shown in the Calculated Shot column of the Natural Philosopher Features table. The extra damage is the same type as the weapon's."
+     "text": "When you make an attack roll with a crossbow or a firearm, you can use your Intelligence modifier instead of your Dexterity modifier for the attack and damage rolls. A firearm is a Pistol, a Musket, or a period firearm such as the pocket pistol (*The Setting*, Characters, Equipment and Firearms); the stonebow is a crossbow.\n\n**Calculated Shot.** Once per turn, when you hit a creature you're studying with an attack roll using a crossbow or a firearm, the attack deals the extra damage shown in the Calculated Shot column of the Natural Philosopher Features table. The extra damage is the same type as the weapon's."
     },
     {
      "level": 2,
@@ -2000,7 +1730,7 @@
     {
      "level": 2,
      "name": "Instruments",
-     "text": "Choose two of your tool proficiencies, or one tool and the Investigation skill. You have Expertise with them."
+     "text": "Choose two of your tool proficiencies, or one tool and the Investigation skill, gaining proficiency in Investigation first if you lack it. You have Expertise with them."
     },
     {
      "level": 2,
@@ -2045,7 +1775,7 @@
     {
      "level": 15,
      "name": "Explosion",
-     "text": "You bring the reaction with you. As a Utilize action, you set off an explosion centered on a point you can see within 60 feet of yourself; it needs no feature you're studying. Each creature of your choice in a 20-foot-radius Sphere centered on that point makes a Dexterity saving throw against your Mechanism's save DC. On a failed save, a creature takes Fire damage equal to twice the number of dice in the Mechanism column of the Natural Philosopher Features table (12d8 at level 15) and has the Prone condition. On a successful save, it takes half as much damage only. Flammable objects in the area that aren't being worn or carried catch fire. Once you use this feature, you can't use it again until you finish a Long Rest."
+     "text": "You bring the reaction with you. As a Utilize action, you set off an explosion centered on a point you can see within 60 feet of yourself; it needs no feature you're studying. Each creature of your choice in a 20-foot-radius Sphere centered on that point makes a Dexterity saving throw against your Mechanism's save DC. On a failed save, a creature takes Fire damage of twice the Mechanism column's dice in the Natural Philosopher Features table (12d8 at level 15) and has the Prone condition. On a successful save, it takes half as much damage only. Flammable objects in the area that aren't being worn or carried catch fire. Once you use this feature, you can't use it again until you finish a Long Rest."
     },
     {
      "level": 17,
@@ -2081,7 +1811,7 @@
       {
        "level": 3,
        "name": "Gunnery",
-       "text": "You are proficient with siege equipment such as ballistae, cannons, and mangonels; use your DM's rules for siege equipment (the 2014 *Dungeon Master's Guide* has a set; *The Setting*'s Arms and Armies covers what a siege is like in 1668). When you aim one, it uses your Intelligence modifier for its attack rolls, and its attacks ignore Half Cover and Three-Quarters Cover."
+       "text": "You are proficient with siege equipment such as ballistae, cannons, and mangonels; use your DM's rules for siege equipment (the 2024 core books have none; the 2014 *Dungeon Master's Guide*'s work, but they aren't in SRD 5.2.1; *The Setting*'s Arms and Armies covers what a siege is like in 1668). When you aim one, it uses your Intelligence modifier for its attack rolls, and its attacks ignore Half Cover and Three-Quarters Cover."
       },
       {
        "level": 3,
@@ -2709,7 +2439,7 @@
     {
      "level": 1,
      "name": "Spellcasting",
-     "text": "You have learned to reproduce, through study, the restorative magic that priests attribute to their gods. See the *Player's Handbook* for the rules on spellcasting. The information below details how you use those rules with Physician spells, which appear in the Physician spell list later in the class's description.\n\n**Cantrips.** You know three Physician cantrips of your choice. Whenever you gain a Physician level, you can replace one of your cantrips from this feature with another Physician cantrip of your choice. When you reach Physician levels 4 and 10, you learn another Physician cantrip of your choice, as shown in the Cantrips column of the Physician Features table.\n\n**Spellbook.** Your spellbook is a casebook as much as a grimoire: the spells you have learned, and the notes on what they did. It contains six level 1 Physician spells of your choice to start. If you also have Wizard levels, your Physician and Wizard spells can share one spellbook; each class prepares only its own spells.\n\n**Spell Slots.** The Physician Features table shows how many spell slots you have to cast your level 1+ spells. You regain all expended slots when you finish a Long Rest.\n\n**Prepared Spells of Level 1+.** You prepare the list of level 1+ spells that are available for you to cast with this feature. To do so, choose a number of spells from your spellbook equal to the number in the Prepared Spells column of the Physician Features table. The chosen spells must be of a level for which you have spell slots.\n\nIf another Physician feature gives you spells that you always have prepared, those spells don't count against the number of spells you can prepare with this feature, but those spells otherwise count as Physician spells for you.\n\n**Changing Your Prepared Spells.** Whenever you finish a Long Rest, you can change your list of prepared spells, replacing any of the spells there with spells from your spellbook.\n\n**Spellcasting Ability.** Intelligence is your spellcasting ability for your Physician spells.\n\n**Spellcasting Focus.** You can use an Arcane Focus or your spellbook as a Spellcasting Focus for your Physician spells.\n\n**Ritual Adept.** You can cast any Physician spell as a Ritual if that spell has the Ritual tag and the spell is in your spellbook. You needn't have the spell prepared, but you must read from the book to cast a spell in this way.\n\n**Undead.** If one of your Physician spells would make a creature it kills rise as Undead (as *Finger of Death* does), it doesn't rise; its body is destroyed instead.\n\n**Expanding Your Spellbook.** Each time you gain a Physician level after 1, you can add two Physician spells of your choice to your spellbook for free. Each of these spells must be of a level for which you have spell slots. On your adventures, you might find other spells that you can add to your spellbook (see the \"Your Spellbook\" sidebar).\n\n> **Your Spellbook**\n>\n> The spells you add as you gain levels represent your own research. You can also find spells on your adventures: on a scroll, in another caster's spellbook, or in a temple's records. **You can copy any spell that appears on the Physician spell list into your spellbook, whichever class the scroll or book was written for.** Copying a spell into your book takes 2 hours and costs 50 GP for each level of the spell. Copying a spell out of your book into another takes 1 hour and costs 10 GP per spell level."
+     "text": "See the *Player's Handbook* for the rules on spellcasting. The information below details how you use those rules with Physician spells, which appear in the Physician spell list later in the class's description.\n\n**Cantrips.** You know three Physician cantrips of your choice. Whenever you gain a Physician level, you can replace one of your cantrips from this feature with another Physician cantrip of your choice. When you reach Physician levels 4 and 10, you learn another Physician cantrip of your choice, as shown in the Cantrips column of the Physician Features table.\n\n**Spellbook.** Your spellbook is a casebook as much as a grimoire: the spells you have learned, and the notes on what they did. It contains six level 1 Physician spells of your choice to start. If you also have Wizard levels, your Physician and Wizard spells can share one spellbook; each class prepares only its own spells.\n\n**Spell Slots.** The Physician Features table shows how many spell slots you have to cast your level 1+ spells. You regain all expended slots when you finish a Long Rest.\n\n**Prepared Spells of Level 1+.** You prepare the list of level 1+ spells that are available for you to cast with this feature. To do so, choose a number of spells from your spellbook equal to the number in the Prepared Spells column of the Physician Features table. The chosen spells must be of a level for which you have spell slots.\n\nIf another Physician feature gives you spells that you always have prepared, those spells don't count against the number of spells you can prepare with this feature, but those spells otherwise count as Physician spells for you.\n\n**Changing Your Prepared Spells.** Whenever you finish a Long Rest, you can change your list of prepared spells, replacing any of the spells there with spells from your spellbook.\n\n**Spellcasting Ability.** Intelligence is your spellcasting ability for your Physician spells.\n\n**Spellcasting Focus.** You can use an Arcane Focus or your spellbook as a Spellcasting Focus for your Physician spells.\n\n**Ritual Adept.** You can cast any Physician spell as a Ritual if that spell has the Ritual tag and the spell is in your spellbook. You needn't have the spell prepared, but you must read from the book to cast a spell in this way.\n\n**Undead.** If one of your Physician spells would make a creature it kills rise as Undead (as *Finger of Death* does), it doesn't rise; its body is destroyed instead.\n\n**Expanding Your Spellbook.** Each time you gain a Physician level after 1, you can add two Physician spells of your choice to your spellbook for free. Each of these spells must be of a level for which you have spell slots. On your adventures, you might find other spells that you can add to your spellbook (see the \"Your Spellbook\" sidebar).\n\n> **Your Spellbook**\n>\n> The spells you add as you gain levels represent your own research. You can also find spells on your adventures: on a scroll, in another caster's spellbook, or in a temple's records. **You can copy any spell that appears on the Physician spell list into your spellbook, whichever class the scroll or book was written for.** Copying a spell into your book takes 2 hours and costs 50 GP for each level of the spell. Copying a spell out of your book into another takes 1 hour and costs 10 GP per spell level."
     },
     {
      "level": 1,
@@ -2729,7 +2459,7 @@
     {
      "level": 2,
      "name": "Treatment",
-     "text": "You can end an affliction with skill rather than magic. As a Utilize action, you can expend one use of a Healer's Kit and make an Intelligence (Medicine) check to treat your patient, who must be within your reach. The DC depends on what you are treating:\n\n| Treatment | DC |\n|---|---|\n| End the Poisoned condition | 10 |\n| End the Blinded or Deafened condition (if not permanent) | 12 |\n| Cure one disease | 13 |\n| End the Paralyzed condition | 15 |\n| Remove one level of Exhaustion (once per creature per Long Rest) | 15 |\n\nA disease you cure with Treatment is beaten the slow way: medicine, not magic. The creature can't catch that disease again.\n\nOn a success, the chosen effect ends; if a spell or other ongoing effect imposed the condition, that effect ends on the creature. Either way, the use of the Healer's Kit is spent, and you can't attempt the same treatment on that creature again until it finishes a Short or Long Rest."
+     "text": "You can end an affliction with skill rather than magic. As a Utilize action, you can expend one use of a Healer's Kit and make an Intelligence (Medicine) check to treat your patient, who must be within your reach. The DC depends on what you are treating:\n\n| Treatment | DC |\n|---|---|\n| End the Poisoned condition | 10 |\n| End the Blinded or Deafened condition (if not permanent) | 12 |\n| Cure one disease | 13 |\n| End the Paralyzed condition | 15 |\n| Remove one level of Exhaustion (once per creature per Long Rest) | 15 |\n\nA disease you cure with Treatment is beaten the slow way, and the creature can't catch that disease again.\n\nOn a success, the chosen effect ends; if a spell or other ongoing effect imposed the condition, that effect ends on the creature. Either way, the use of the Healer's Kit is spent, and you can't attempt the same treatment on that creature again until it finishes a Short or Long Rest."
     },
     {
      "level": 3,
@@ -2769,7 +2499,7 @@
     {
      "level": 18,
      "name": "Standing Orders",
-     "text": "Once on each of your turns, when you take the Magic action to cast a Physician spell of level 1 or higher, you can also take one Bonus Action granted by a Physician feature as part of that action, without spending your Bonus Action. This can be Healing Prowess on a creature you touch, but not through an option your subclass adds to it (such as Vital Stream's range, Rip Life, Reflex, Miasma, Under the Knife, or a medicated shot). A feature that only expends a Prowess Die, such as Ill Wish, Blood Price, the Bellows, or Stimulant, is allowed, and so is Exchange, which spends a Hit Point Die. You can't use this to cast a spell."
+     "text": "Once on each of your turns, when you take the Magic action to cast a Physician spell of level 1 or higher, you can also take one Bonus Action granted by a Physician feature as part of that action, without spending your Bonus Action. This can be Healing Prowess on a creature you touch, but not through an option your subclass adds to it (such as Vital Stream's range, Rip Life, Reflex, Miasma, either subclass's Under the Knife (Chirurgeon or Surgeon), or a medicated shot). A feature that only expends a Prowess Die, such as Ill Wish, Blood Price, the Bellows, or Stimulant, is allowed, and so is Exchange, which spends a Hit Point Die. You can't use this to cast a spell."
     },
     {
      "level": 19,
@@ -2800,7 +2530,7 @@
       {
        "level": 3,
        "name": "Amputation",
-       "text": "You learn to take a limb, which you can do to an enemy or for a patient.\n\n*In a fight.* When you hit a creature with your Saw in melee, you can expend one Prowess Die to take a limb instead of using Under the Knife on that hit. This counts as your use of Under the Knife for the turn: you can't do both on the same turn, and you can't use Healing Prowess again until the start of your next turn. The creature must succeed on a Constitution saving throw against your spell save DC or have the limb you chose crippled. On a Critical Hit, it fails automatically. If you take an arm, the creature drops whatever it was holding in that hand and has Disadvantage on attack rolls it makes with that limb (if its attacks don't name a limb, the DM chooses which of them use it); if you take a leg, its Speed is halved and it has the Prone condition. These effects last for 1 minute; the creature repeats the saving throw at the end of each of its turns, ending them on a success. Only a limb taken on a table is gone for good. A creature that has Immunity to Slashing damage, or that has no such limb, is unaffected. Once a creature fails this saving throw, you can't take a limb this way again until you finish a Short or Long Rest; on a successful save the Prowess Die is still expended.\n\n*On a table.* Outside combat, you can spend 1 minute removing a limb from a creature within your reach that is willing, or that has the Incapacitated condition and isn't hostile to you. No check is required. One disease, poison, curse, or other ongoing effect confined to that limb ends; whether an effect is so confined is the DM's judgment. The creature takes 2d10 damage that can't be reduced or prevented, gains one level of Exhaustion, and loses the limb until it is restored by *Regenerate* or comparable magic. A creature that has lost an arm can hold only one object at a time and can't wield anything that needs two hands, including a Shield. A creature that has lost a leg has its Speed halved and needs a cane or crutch to move unless it has a prosthetic leg; it falls Prone after it takes the Dash action, and it has Disadvantage on Dexterity checks made to keep its balance."
+       "text": "You learn to take a limb, which you can do to an enemy or for a patient.\n\n*In a fight.* When you hit a creature with your Saw in melee, you can expend one Prowess Die to take a limb instead of using Under the Knife on that hit. This counts as your use of Under the Knife for the turn: you can't do both on the same turn, and you can't use Healing Prowess again until the start of your next turn. The creature must succeed on a Constitution saving throw against your spell save DC or have the limb you chose crippled. On a Critical Hit, it fails automatically. If you take an arm, the creature drops whatever it was holding in that hand and has Disadvantage on attack rolls it makes with that limb (if its attacks don't name a limb, the DM chooses which of them use it); if you take a leg, its Speed is halved and it has the Prone condition. These effects last for 1 minute; the creature repeats the saving throw at the end of each of its turns, ending them on a success. Only a limb taken on a table is gone for good. A creature that has Immunity to Slashing damage, or that has no such limb, is unaffected. Once a creature fails this saving throw, you can't take a limb this way again until you finish a Short or Long Rest; on a successful save the Prowess Die is still expended.\n\n*On a table.* Outside combat, you can spend 1 minute removing a limb from a creature within your reach that is willing, or that has the Incapacitated condition and isn't hostile to you. No check is required. One disease, poison, curse, or other ongoing effect confined to that limb ends; whether an effect is so confined is the DM's judgment. The creature takes 2d10 Slashing damage that can't be reduced or prevented, gains one level of Exhaustion, and loses the limb until it is restored by *Regenerate* or comparable magic. A creature that has lost an arm can hold only one object at a time and can't wield anything that needs two hands, including a Shield. A creature that has lost a leg has its Speed halved and needs a cane or crutch to move unless it has a prosthetic leg; it falls Prone after it takes the Dash action, and it has Disadvantage on Dexterity checks made to keep its balance."
       },
       {
        "level": 6,
@@ -2867,7 +2597,7 @@
     },
     {
      "name": "Doctor",
-     "lead": "If a stranger pictures a Physician, they picture a Doctor. Your dedication to the healing arts is second to none. Mastering your Arcane Focus to link allies in vitalizing chains, you heal and bolster them during combat, swiftly blinking to one of them in case someone decides you make a good target.",
+     "lead": "If a stranger pictures a Physician, they picture a Doctor. Your dedication to the healing arts is second to none. You link your patients in chains of vital current, heal and bolster them in the middle of a fight, and step through the air to whichever of them needs you when someone decides you make a good target.",
      "features": [
       {
        "level": 3,
@@ -2898,7 +2628,7 @@
     },
     {
      "name": "Hedge Witch",
-     "lead": "You learned the old ways of healing from a relative, a village healer, or someone else who knew that life costs life. Drawing on the pain you and your allies receive, you understand that life is a brutal exchange, and you pay the price freely.",
+     "lead": "You learned the old ways of healing from a relative, a village healer, or someone else who knew that life costs life. You draw on the pain you and your allies receive, and you pay the price freely.",
      "features": [
       {
        "level": 3,
@@ -2934,7 +2664,7 @@
     },
     {
      "name": "Immortalist",
-     "lead": "Instead of using your magic on others, you turned it on yourself, to see how far you could go. Your magic harnesses your own vital energy and transforms it into the forces of nature, allowing you to both heal your allies and destroy your enemies. The only true limit to your power is your own body.\n\n*For a Jekyll-and-Hyde campaign, see the optional rule The Monster Within, later in this class description.*",
+     "lead": "Instead of using your magic on others, you turned it on yourself, to see how far you could go. Now it draws on your vital energy and turns it into the forces of nature. The only true limit to your power is your own body.\n\n*For a Jekyll-and-Hyde campaign, see the optional rule The Monster Within, later in this class description.*",
      "features": [
       {
        "level": 3,
@@ -2949,12 +2679,12 @@
       {
        "level": 3,
        "name": "Attuned Energy",
-       "text": "Choose a damage type: Cold, Fire, Lightning, Psychic, or Radiant. This is your **attuned energy**: the form your own vitality takes when you push it outward. Fire is your metabolism let loose: the vital heat every living body burns to stay alive. Lightning is the signal that runs your nerves, let out. Cold is the slowed heart and the held breath, and rime spreading outward. Radiant is sunlight, and everything caught in it is being told to grow. Psychic is the will that moves your flesh, sent to move something else: a column of wrong.\n\nA Physician's harm is Necrotic. Yours no longer has to be. When you cast a Physician spell that deals Necrotic damage, you can have it deal your attuned damage type instead; the spell is otherwise unchanged, and what anyone watching sees is your energy, not the spell's.\n\nYou also work in your energy directly. Choose one cantrip that deals your attuned damage type, from the Bard, Cleric, Druid, Physician, Sorcerer, Warlock, or Wizard spell list. It counts as a Physician cantrip for you and doesn't count against the number of cantrips you know. In addition, add to your spellbook one spell of each level from 1 through 5 that deals your attuned damage type, chosen from those spell lists; you add each spell when you reach a Physician level at which you can cast it. These spells count as Physician spells for you and don't count against the spells you add to your spellbook when you gain a level. If no spell of a given level deals your attuned damage type, you can instead choose an additional spell of any lower level that does.\n\n> **Suggested Attunements**\n>\n> These are working sets: a cantrip, then one spell per level from 1 to 5. You aren't bound to them. Any spell that deals your energy, from those seven spell lists, is a legal pick.\n>\n> **Fire.** *Fire Bolt*, then *Burning Hands · Scorching Ray · Fireball · Wall of Fire · Flame Strike.*\n>\n> **Cold.** *Ray of Frost*, which also drops the target's Speed, then *Armor of Agathys · Dragon's Breath · Cold Storage · Ice Storm · Cone of Cold.* (Take *Ice Knife* at level 1 instead if you want something to throw.)\n>\n> **Lightning.** *Shocking Grasp*, which keeps the target from making Opportunity Attacks, then *Witch Bolt · Convulsion · Lightning Bolt · Call Lightning · Defibrillation.* (No level 4 spell in the *Player's Handbook* deals Lightning, so *Call Lightning* is the level 4 pick. *Arc*, printed with the Physician's spells under A Spell from Another List, is another level 3 choice: a Bonus Action teleport instead of the line.)\n>\n> **Radiant.** *Sacred Flame*, which ignores cover, then *Guiding Bolt · Moonbeam · Spirit Guardians · Guardian of Faith · Flame Strike.*\n>\n> **Psychic.** *Mind Sliver*, which takes a d4 off the target's next save, then *Dissonant Whispers · Mind Spike · Hysteria · Phantasmal Killer · Synaptic Static.*"
+       "text": "Choose a damage type: Cold, Fire, Lightning, Psychic, or Radiant. This is your **attuned energy**: the form your own vitality takes when you push it outward. Fire is your metabolism let loose, the vital heat every living body burns to stay alive. Lightning is the signal that runs your nerves. Cold is the slowed heart and the held breath, and the rime that follows. Radiant is sunlight, and everything caught in it is being told to grow. Psychic is the will that moves your flesh, sent to move something else: a column of wrong.\n\nA Physician's harm is Necrotic. Yours no longer has to be. When you cast a Physician spell that deals Necrotic damage, you can have it deal your attuned damage type instead; the spell is otherwise unchanged, and what anyone watching sees is your energy, not the spell's.\n\nYou also work in your energy directly. Choose one cantrip that deals your attuned damage type, from the Bard, Cleric, Druid, Physician, Sorcerer, Warlock, or Wizard spell list. It counts as a Physician cantrip for you and doesn't count against the number of cantrips you know. In addition, add to your spellbook one spell of each level from 1 through 5 that deals your attuned damage type, chosen from those spell lists; you add each spell when you reach a Physician level at which you can cast it. These spells count as Physician spells for you and don't count against the spells you add to your spellbook when you gain a level. If no spell of a given level deals your attuned damage type, you can instead choose an additional spell of any lower level that does.\n\n> **Suggested Attunements**\n>\n> These are working sets: a cantrip, then one spell per level from 1 to 5. You aren't bound to them. Any spell that deals your energy, from those seven spell lists, is a legal pick.\n>\n> **Fire.** *Fire Bolt*, then *Burning Hands · Scorching Ray · Fireball · Wall of Fire · Flame Strike.*\n>\n> **Cold.** *Ray of Frost*, which also drops the target's Speed, then *Armor of Agathys · Dragon's Breath · Cold Storage · Ice Storm · Cone of Cold.* (Take *Ice Knife* at level 1 instead if you want something to throw.)\n>\n> **Lightning.** *Shocking Grasp*, which keeps the target from making Opportunity Attacks, then *Witch Bolt · Convulsion · Lightning Bolt · Call Lightning · Defibrillation.* (No level 4 spell in the *Player's Handbook* deals Lightning, so *Call Lightning* is the level 4 pick. *Arc*, a new Sorcerer and Wizard spell in the Spells appendix at the back of this book, is another level 3 choice: a Bonus Action teleport instead of the line.)\n>\n> **Radiant.** *Sacred Flame*, which ignores cover, then *Guiding Bolt · Moonbeam · Spirit Guardians · Guardian of Faith · Flame Strike.*\n>\n> **Psychic.** *Mind Sliver*, which takes a d4 off the target's next save, then *Dissonant Whispers · Mind Spike · Hysteria · Phantasmal Killer · Synaptic Static.*"
       },
       {
        "level": 6,
        "name": "Life-Fused Casting",
-       "text": "When you cast a level 1+ spell that deals your attuned damage type, or use a Bonus Action to deal damage with such a spell you are concentrating on, you can expend one Prowess Die as part of that action and choose one of the following:\n\n- One target of the spell takes extra damage of your attuned type equal to the number rolled.\n- One creature you can see within 30 feet of yourself regains Hit Points equal to the number rolled plus your Intelligence modifier.\n\nThe energy is your own; you can't use Life-Fused Casting on a spell cast from an item's charges."
+       "text": "When you cast a level 1+ spell that deals your attuned damage type, or use a Bonus Action to deal damage with such a spell you are concentrating on, you can expend one Prowess Die as part of that action and choose one of the following:\n\n- One target of the spell takes extra damage of your attuned type equal to the number rolled.\n- One creature you can see within 30 feet of yourself regains Hit Points equal to the number rolled plus your Intelligence modifier.\n\nYou can't use Life-Fused Casting on a spell cast from an item's charges."
       },
       {
        "level": 6,
@@ -2975,7 +2705,7 @@
     },
     {
      "name": "Neurologist",
-     "lead": "Your strange medicine focuses on the nerves, and thus the mind. Practitioners of the least understood of the medical disciplines, Neurologists hone their arcane talents on the electrical network that rules all living things, offering solace to allies and torment to enemies.",
+     "lead": "Your medicine works on the nerves, and through them on the mind. Thomas Willis gave the discipline its name in Oxford four years ago, and it's still the least understood of them. Neurologists work on the current that runs through every living body, offering solace to allies and torment to enemies.",
      "features": [
       {
        "level": 3,
@@ -3021,7 +2751,7 @@
       {
        "level": 3,
        "name": "Bill of Health",
-       "text": "You know the quarantine law and practice of any port, city, or border you're in: how long it holds arrivals, what passes it accepts, and how its cordon is kept. Health boards, harbor masters, and quarantine officers recognize you as one of theirs. You can issue a bill of health for a person or a ship you've examined and found clean, and those officers will honor it. (Forging one is a different matter, and not this feature.)"
+       "text": "You know the quarantine law and practice of any port, city, or border you're in: how long it holds arrivals, what passes it accepts, and how its cordon is kept. Health boards, harbor masters, and quarantine officers recognize you as one of theirs. You can issue a bill of health for a person or a ship you've examined and found clean, and those officers will honor it. (Forging one is outside this feature.)"
       },
       {
        "level": 3,
@@ -3135,436 +2865,6 @@
      },
      {
       "name": "Toll the Dead",
-      "new": false
-     }
-    ],
-    "1": [
-     {
-      "name": "Alarm",
-      "new": false
-     },
-     {
-      "name": "Comprehend Languages",
-      "new": false
-     },
-     {
-      "name": "Cure Wounds",
-      "new": false
-     },
-     {
-      "name": "Detect Magic",
-      "new": false
-     },
-     {
-      "name": "Detect Poison and Disease",
-      "new": false
-     },
-     {
-      "name": "False Life",
-      "new": false
-     },
-     {
-      "name": "Feather Fall",
-      "new": false
-     },
-     {
-      "name": "Healing Word",
-      "new": false
-     },
-     {
-      "name": "Identify",
-      "new": false
-     },
-     {
-      "name": "Inflict Wounds",
-      "new": false
-     },
-     {
-      "name": "Jump",
-      "new": false
-     },
-     {
-      "name": "Longstrider",
-      "new": false
-     },
-     {
-      "name": "Mage Armor",
-      "new": false
-     },
-     {
-      "name": "Protection from Evil and Good",
-      "new": false
-     },
-     {
-      "name": "Purify Food and Drink",
-      "new": false
-     },
-     {
-      "name": "Ray of Sickness",
-      "new": false
-     },
-     {
-      "name": "Sanctuary",
-      "new": false
-     },
-     {
-      "name": "Shield of Faith",
-      "new": false
-     },
-     {
-      "name": "Sleep",
-      "new": false
-     }
-    ],
-    "2": [
-     {
-      "name": "Aid",
-      "new": false
-     },
-     {
-      "name": "Alter Self",
-      "new": false
-     },
-     {
-      "name": "Ambulance",
-      "new": true
-     },
-     {
-      "name": "Anaesthesia",
-      "new": true
-     },
-     {
-      "name": "Arcane Vigor",
-      "new": false
-     },
-     {
-      "name": "Blindness/Deafness",
-      "new": false
-     },
-     {
-      "name": "Calm Emotions",
-      "new": false
-     },
-     {
-      "name": "Convulsion",
-      "new": true
-     },
-     {
-      "name": "Darkvision",
-      "new": false
-     },
-     {
-      "name": "Enhance Ability",
-      "new": false
-     },
-     {
-      "name": "Enlarge/Reduce",
-      "new": false
-     },
-     {
-      "name": "Gentle Repose",
-      "new": false
-     },
-     {
-      "name": "Hold Person",
-      "new": false
-     },
-     {
-      "name": "Lesser Restoration",
-      "new": false
-     },
-     {
-      "name": "Prayer of Healing",
-      "new": false
-     },
-     {
-      "name": "Protection from Poison",
-      "new": false
-     },
-     {
-      "name": "Ray of Enfeeblement",
-      "new": false
-     },
-     {
-      "name": "See Invisibility",
-      "new": false
-     },
-     {
-      "name": "Shatter",
-      "new": false
-     },
-     {
-      "name": "Spider Climb",
-      "new": false
-     },
-     {
-      "name": "Warding Bond",
-      "new": false
-     },
-     {
-      "name": "Zone of Truth",
-      "new": false
-     }
-    ],
-    "3": [
-     {
-      "name": "Aura of Vitality",
-      "new": false
-     },
-     {
-      "name": "Beacon of Hope",
-      "new": false
-     },
-     {
-      "name": "Bestow Curse",
-      "new": false
-     },
-     {
-      "name": "Cold Storage",
-      "new": true
-     },
-     {
-      "name": "Crusader's Mantle",
-      "new": false
-     },
-     {
-      "name": "Dispel Magic",
-      "new": false
-     },
-     {
-      "name": "Feign Death",
-      "new": false
-     },
-     {
-      "name": "Haste",
-      "new": false
-     },
-     {
-      "name": "Hysteria",
-      "new": true
-     },
-     {
-      "name": "Mass Healing Word",
-      "new": false
-     },
-     {
-      "name": "Protection from Energy",
-      "new": false
-     },
-     {
-      "name": "Remove Curse",
-      "new": false
-     },
-     {
-      "name": "Revivify",
-      "new": false
-     },
-     {
-      "name": "Slow",
-      "new": false
-     },
-     {
-      "name": "Speak with Dead",
-      "new": false
-     },
-     {
-      "name": "Stinking Cloud",
-      "new": false
-     },
-     {
-      "name": "Vampiric Touch",
-      "new": false
-     },
-     {
-      "name": "Water Breathing",
-      "new": false
-     }
-    ],
-    "4": [
-     {
-      "name": "Aura of Life",
-      "new": false
-     },
-     {
-      "name": "Aura of Purity",
-      "new": false
-     },
-     {
-      "name": "Blight",
-      "new": false
-     },
-     {
-      "name": "Confusion",
-      "new": false
-     },
-     {
-      "name": "Death Ward",
-      "new": false
-     },
-     {
-      "name": "Fire Shield",
-      "new": false
-     },
-     {
-      "name": "Freedom of Movement",
-      "new": false
-     },
-     {
-      "name": "Resilient Sphere",
-      "new": false
-     },
-     {
-      "name": "Stoneskin",
-      "new": false
-     },
-     {
-      "name": "Vitriolic Sphere",
-      "new": false
-     }
-    ],
-    "5": [
-     {
-      "name": "Antilife Shell",
-      "new": false
-     },
-     {
-      "name": "Circle of Power",
-      "new": false
-     },
-     {
-      "name": "Cloudkill",
-      "new": false
-     },
-     {
-      "name": "Contagion",
-      "new": false
-     },
-     {
-      "name": "Defibrillation",
-      "new": true
-     },
-     {
-      "name": "Destructive Wave",
-      "new": false
-     },
-     {
-      "name": "Greater Restoration",
-      "new": false
-     },
-     {
-      "name": "Hold Monster",
-      "new": false
-     },
-     {
-      "name": "Insect Plague",
-      "new": false
-     },
-     {
-      "name": "Mass Cure Wounds",
-      "new": false
-     },
-     {
-      "name": "Raise Dead",
-      "new": false
-     }
-    ],
-    "6": [
-     {
-      "name": "Circle of Death",
-      "new": false
-     },
-     {
-      "name": "Eyebite",
-      "new": false
-     },
-     {
-      "name": "Flesh to Stone",
-      "new": false
-     },
-     {
-      "name": "Globe of Invulnerability",
-      "new": false
-     },
-     {
-      "name": "Harm",
-      "new": false
-     },
-     {
-      "name": "Heal",
-      "new": false
-     },
-     {
-      "name": "Heroes' Feast",
-      "new": false
-     },
-     {
-      "name": "True Seeing",
-      "new": false
-     },
-     {
-      "name": "Word of Recall",
-      "new": false
-     }
-    ],
-    "7": [
-     {
-      "name": "Divine Word",
-      "new": false
-     },
-     {
-      "name": "Finger of Death",
-      "new": false
-     },
-     {
-      "name": "Regenerate",
-      "new": false
-     },
-     {
-      "name": "Resurrection",
-      "new": false
-     },
-     {
-      "name": "Sequester",
-      "new": false
-     }
-    ],
-    "8": [
-     {
-      "name": "Antimagic Field",
-      "new": false
-     },
-     {
-      "name": "Befuddlement",
-      "new": false
-     },
-     {
-      "name": "Incendiary Cloud",
-      "new": false
-     },
-     {
-      "name": "Mind Blank",
-      "new": false
-     },
-     {
-      "name": "Power Word Stun",
-      "new": false
-     },
-     {
-      "name": "Second Breath",
-      "new": true
-     }
-    ],
-    "9": [
-     {
-      "name": "Astral Projection",
-      "new": false
-     },
-     {
-      "name": "Mass Heal",
-      "new": false
-     },
-     {
-      "name": "Power Word Heal",
       "new": false
      }
     ]
@@ -3928,7 +3228,7 @@
     {
      "level": 2,
      "name": "Visiting Spirit",
-     "text": "When you open a vista, you can **call a spirit** instead of letting in an Influence. A spirit of that plane steps through into an unoccupied space at or next to the vista. It uses the Visiting Spirit stat block, with that Revelation's Spirit Aspect. A spirit doesn't wander off: it stays until one of the things below sends it home.\n\nYou can have one spirit at a time, and it doesn't require Concentration. It stays for 1 hour, until it drops to 0 Hit Points, until you call another spirit, until you dismiss it (no action required), or until you have the Incapacitated condition. If a spirit you called drops to 0 Hit Points, the spirits are a little wary of you: you can't call any spirit again until you finish a Short or Long Rest.\n\n**A Guest, Not a Soldier.** The spirit is an ally to you and your companions, but it doesn't fight: it can't make attack rolls, and it doesn't deal damage. In combat, it shares your Initiative count, but it takes its turn immediately after yours. You decide its movement, its Reaction, and its action; on its turn it can take the Dash, Disengage, Dodge, Help, Hide, Search, or Utilize action.\n\n**Commanding the Spirit.** You command the spirit with a Bonus Action, and the vista that calls it also commands it; letting in an Influence doesn't. When commanded, the spirit uses its Aspect's power at once, as part of your Bonus Action, and then takes no action on its turn.\n\n**Speaking Across.** While the spirit is within 100 feet of you, you can communicate with it telepathically. As a Bonus Action, you can see through its eyes and hear what it hears until the start of your next turn, gaining any special senses it has.\n\n> **Visiting Spirit**\n>\n> *Small or Medium creature (your choice) of the type its Spirit Aspect names, Neutral*\n>\n> **AC** 12 + your Wisdom modifier\n>\n> **HP** 5 + your Revelator level\n>\n> **Speed** 30 ft.\n>\n> | STR | DEX | CON | INT | WIS | CHA |\n> |---|---|---|---|---|---|\n> | 10 | 14 | 10 | 10 | 12 | 10 |\n>\n> **Saving Throws** use your saving throw bonuses\n>\n> **Senses** Darkvision 60 ft.; Passive Perception 11\n>\n> **Languages** understands the languages you know\n>\n> ***Aspect.*** It gains the Spirit Aspect of the Revelation that called it, including its creature type. Effects that depend on creature type, such as *Protection from Evil and Good* or *Banishment*, treat the spirit as that type. When an Aspect calls for a saving throw, the DC equals your spell save DC.\n\n> **For the DM: The Spirit Is a Guide**\n>\n> A Visiting Spirit helps, scouts, and carries; it doesn't fight, and it isn't there to take hits for the party. Play it like a familiar: enemies swat it when it's in their way or when it's obviously helping, and otherwise ignore it."
+     "text": "When you open a vista, you can **call a spirit** instead of letting in an Influence. A spirit of that plane steps through into an unoccupied space at or next to the vista. It uses the Visiting Spirit stat block, with that Revelation's Spirit Aspect.\n\nYou can have one spirit at a time, and it doesn't require Concentration. It stays for 1 hour, until it drops to 0 Hit Points, until you call another spirit, until you dismiss it (no action required), or until you have the Incapacitated condition. If a spirit you called drops to 0 Hit Points, you can't call any spirit again until you finish a Short or Long Rest.\n\n**A Guest, Not a Soldier.** The spirit is an ally to you and your companions, but it doesn't fight: it can't make attack rolls, and it doesn't deal damage. In combat, it shares your Initiative count, but it takes its turn immediately after yours. You decide its movement, its Reaction, and its action; on its turn it can take the Dash, Disengage, Dodge, Help, Hide, Search, or Utilize action.\n\n**Commanding the Spirit.** You command the spirit with a Bonus Action, and the vista that calls it also commands it; letting in an Influence doesn't. When commanded, the spirit uses its Aspect's power at once, as part of your Bonus Action, and then takes no action on its turn.\n\n**Speaking Across.** While the spirit is within 100 feet of you, you can communicate with it telepathically. As a Bonus Action, you can see through its eyes and hear what it hears until the start of your next turn, gaining any special senses it has.\n\n> **Visiting Spirit**\n>\n> *Small or Medium creature (your choice) of the type its Spirit Aspect names, Neutral*\n>\n> **AC** 12 + your Wisdom modifier\n>\n> **HP** 5 + your Revelator level\n>\n> **Speed** 30 ft.\n>\n> | STR | DEX | CON | INT | WIS | CHA |\n> |---|---|---|---|---|---|\n> | 10 | 14 | 10 | 10 | 12 | 10 |\n>\n> **Saving Throws** use your saving throw bonuses\n>\n> **Senses** Darkvision 60 ft.; Passive Perception 11\n>\n> **Languages** understands the languages you know\n>\n> ***Aspect.*** It gains the Spirit Aspect of the Revelation that called it, including its creature type. Effects that depend on creature type, such as *Protection from Evil and Good* or *Banishment*, treat the spirit as that type. When an Aspect calls for a saving throw, the DC equals your spell save DC.\n\n> **For the DM: The Spirit Is a Guide**\n>\n> A Visiting Spirit helps, scouts, and carries, and it isn't there to take hits for the party. Play it like a familiar: enemies swat it when it's in their way or when it's obviously helping, and otherwise ignore it."
     },
     {
      "level": 3,
@@ -3958,17 +3258,17 @@
     {
      "level": 9,
      "name": "Reach Beyond",
-     "text": "*You can push through to the deepest, most well-guarded parts of reality, if you're brave enough.*\n\nOnce per Long Rest, as a Bonus Action, you can open a vista without calling on a Favor, reaching instead for any Revelation in the Cosmography that you don't know; every plane the Cosmography lists is within reach. You can do this even when every plane's Favor is spent. You can also reach past the Cosmography, toward what it leaves out: a single layer or realm, such as the efreet's city in the Plane of Fire or a god's hall in Valhalla; a ruler and their court, such as an archfey, Yama with his scribe, the Jade Emperor in his palace, the lord of the deepest circle of the Nine, or a demon lord in their layer; or what lies between and beyond, such as the dead gods adrift in the Astral, the crossroads of the Middle World, or the Far Realm. When you do, the vista calls a spirit or lets in an Influence, and the DM decides what comes through from that place's nature: an Aspect or an Influence of about the same power as the Cosmography's.\n\n**The Strain.** The further you reach, the more passes through you, and the body you left behind has to bear it. Reaching a plane in the Cosmography costs you nothing more than its Attention. Reaching past the Cosmography forces you to make a Constitution saving throw: DC 15 for a particular layer or realm, or DC 20 for a god, a ruler, or the Far Realm. On a failed save, you take 6d6 Psychic damage (10d6 against DC 20); on a successful save, you take half as much damage only. If you fail the DC 20 save, you also have the Incapacitated condition until you finish a Short or Long Rest, as your spirit takes the long way home. Either way, the vista opens; you get what you reached for, and the vista and whatever came through it stay despite that Incapacitated condition.\n\n**Attention.** A power of that plane notices you, and you have its Attention. The DM decides what the power guards and what it wants from you; it might call in a favor, pay you a visit, set you a test, or name a debt. Powers act from their nature, not from malice, but not necessarily kindly. The plane takes its due: the next time you finish a Short or Long Rest, one plane you called on (the DM's choice) doesn't regain its Favor until you finish your next rest. If you gained Attention more than once since your last rest, that many planes stay spent. While you have a power's Attention, using Reach Beyond on its plane again deepens the relationship rather than drawing new Attention."
+     "text": "*You can push through to the deepest, most well-guarded parts of reality, if you're brave enough.*\n\nOnce per Long Rest, as a Bonus Action, you can open a vista without calling on a Favor, reaching instead for any Revelation in the Cosmography that you don't know. You can do this even when every plane's Favor is spent. You can also reach past the Cosmography, toward what it leaves out: a single layer or realm, such as the efreet's city in the Plane of Fire or a god's hall in Valhalla; a ruler and their court, such as an archfey, Yama with his scribe, the Jade Emperor in his palace, the lord of the deepest circle of the Nine, or a demon lord in their layer; or what lies between and beyond, such as the dead gods adrift in the Astral, the crossroads of the Middle World, or the Far Realm. When you do, the vista calls a spirit or lets in an Influence, and the DM decides what comes through from that place's nature: an Aspect or an Influence of about the same power as the Cosmography's.\n\n**The Strain.** The further you reach, the more passes through you, and the body you left behind has to bear it. Reaching a plane in the Cosmography costs you nothing more than its Attention. Reaching past the Cosmography forces you to make a Constitution saving throw: DC 15 for a particular layer or realm, or DC 20 for a god, a ruler, or the Far Realm. On a failed save, you take 6d6 Psychic damage (10d6 against DC 20); on a successful save, you take half as much damage only. If you fail the DC 20 save, you also have the Incapacitated condition until you finish a Short or Long Rest, as your spirit takes the long way home. Either way, the vista opens; you get what you reached for, and the vista and whatever came through it stay despite that Incapacitated condition.\n\n**Attention.** A power of that plane notices you, and you have its Attention. The DM decides what the power guards and what it wants from you; it might call in a favor, pay you a visit, set you a test, or name a debt. Powers act from their nature, not from malice, but not necessarily kindly. The plane takes its due: the next time you finish a Short or Long Rest, one plane you called on (the DM's choice) doesn't regain its Favor until you finish your next rest. If you gained Attention more than once since your last rest, that many planes stay spent. While you have a power's Attention, using Reach Beyond on its plane again deepens the relationship rather than drawing new Attention."
     },
     {
      "level": 9,
      "name": "Soul's Journey",
-     "text": "*Your soul never forgets your travels, for better and for worse.*\n\nA Revelation you know is **walked** once you have been to that plane in the body, spent at least a Long Rest there, and come back. It doesn't matter how you got there or why: by portal, by another's spell, by being taken, by walking in for the name of it, or by waking up there. The plane doesn't care what brought you, only that you stayed, and what it does to those who stay is the lesson (see \"What the Walk Costs\"). A plane you walked before you knew its Revelation is walked the moment you learn it.\n\nA walked plane knows you: it grants its Favor twice between rests, as your pathway's earth end does. Walking the earth end itself adds nothing.\n\n**The Hard Roads.** Seven planes on the Wheel are walked by almost no one: Pandemonium, Tartarus, Asphodel, Gehenna, Acheron, Cocytus, and the Seven Gates. Walking one leaves a mark, whether or not you know its Revelation yet, and you keep it for the rest of your life:\n\n- **Pandemonium.** The winds are quiet in you. You have Resistance to Psychic damage, and you can't have the Deafened condition.\n- **Tartarus.** Nothing holds you. You have Advantage on saving throws and ability checks made to avoid or end the Grappled, Restrained, and Paralyzed conditions, and you automatically succeed on checks made to escape a *Maze*. *Imprisonment* can't hold you for longer than 1 minute.\n- **Asphodel.** Nothing drains you. You have Advantage on saving throws to avoid or end the Charmed condition, and your Hit Point maximum can't be reduced.\n- **Gehenna.** Nothing is owed. You have Resistance to Fire damage, and effects that would reduce or prevent the Hit Points you regain don't apply to you.\n- **Acheron.** The press doesn't take you. You have Advantage on saving throws made to maintain Concentration, and no spell or effect can make you attack a creature you choose not to.\n- **Cocytus.** The cold doesn't take you. You have Resistance to Cold damage, and Advantage on saving throws against the spells and effects of Fiends.\n- **The Seven Gates.** No door surprises you. You know where a portal leads before you step through it, and you have Advantage on saving throws against being teleported or moved to another plane against your will.\n\n> **What the Walk Costs**\n>\n> Walking a plane means facing what it does to visitors, and the DM decides what that was. The planes chapter of the Dungeon Master's Guide is the model, each plane bringing the dangers that belong to its place on the Wheel: the winds of Pandemonium that wear at the mind, Tartarus that holds what it takes, the gray of Asphodel that drains the will to leave, Gehenna's grudging fire, Acheron's endless war, the cruelty of the Nine Circles and the corruption of the Abyss; and on the brighter roads, the joy of Elysium and Svarga's revel that make visitors forget to go home, Eden's garden, where every beast still answers to the name it was given, and Limbo, which takes the shape a mind gives it. A plane isn't walked by a Revelator who was teleported in and out between breaths. The marks aren't worth the trip on their own, and they aren't meant to be: a Revelator who goes to Gehenna for the mark should get the whole of Gehenna."
+     "text": "*Your soul never forgets your travels, for better and for worse.*\n\nA Revelation you know is **walked** once you have been to that plane in the body, spent at least a Long Rest there, and come back. How you got there doesn't matter: by portal, by another's spell, by being taken, by walking in for the name of it, or by waking up there. The plane cares only that you stayed, and what it does to those who stay is the lesson (see \"What the Walk Costs\"). A plane you walked before you knew its Revelation is walked the moment you learn it.\n\nA walked plane knows you: it grants its Favor twice between rests, as your pathway's earth end does. Walking the earth end itself adds nothing.\n\n**The Hard Roads.** Seven planes on the Wheel are walked by almost no one: Pandemonium, Tartarus, Asphodel, Gehenna, Acheron, Cocytus, and the Seven Gates. Walking one leaves a mark, whether or not you know its Revelation yet, and you keep it for the rest of your life:\n\n- **Pandemonium.** The winds are quiet in you. You have Resistance to Psychic damage, and you can't have the Deafened condition.\n- **Tartarus.** Nothing holds you. You have Advantage on saving throws and ability checks made to avoid or end the Grappled, Restrained, and Paralyzed conditions, and you automatically succeed on checks made to escape a *Maze*. *Imprisonment* can't hold you for longer than 1 minute.\n- **Asphodel.** Nothing drains you. You have Advantage on saving throws to avoid or end the Charmed condition, and your Hit Point maximum can't be reduced.\n- **Gehenna.** Nothing is owed. You have Resistance to Fire damage, and effects that would reduce or prevent the Hit Points you regain don't apply to you.\n- **Acheron.** The press doesn't take you. You have Advantage on saving throws made to maintain Concentration, and no spell or effect can make you attack a creature you choose not to.\n- **Cocytus.** The cold doesn't take you. You have Resistance to Cold damage, and Advantage on saving throws against the spells and effects of Fiends.\n- **The Seven Gates.** No door surprises you. You know where a portal leads before you step through it, and you have Advantage on saving throws against being teleported or moved to another plane against your will.\n\n> **What the Walk Costs**\n>\n> Walking a plane means facing what it does to visitors, and the DM decides what that was. The planes chapter of the Dungeon Master's Guide is the model, each plane bringing the dangers that belong to its place on the Wheel: the winds of Pandemonium that wear at the mind, Tartarus that holds what it takes, the gray of Asphodel that drains the will to leave, Gehenna's grudging fire, Acheron's endless war, the cruelty of the Nine Circles and the corruption of the Abyss; and on the brighter roads, the joy of Elysium and Svarga's revel that make visitors forget to go home, Eden's garden, where every beast still answers to the name it was given, and Limbo, which takes the shape a mind gives it. A plane isn't walked by a Revelator who was teleported in and out between breaths. The marks aren't worth the trip on their own, and they aren't meant to be: a Revelator who goes to Gehenna for the mark should get the whole of Gehenna."
     },
     {
      "level": 10,
      "name": "Wider Vistas",
-     "text": "When you let in an Influence, you can choose a second creature you can see within 30 feet of the vista, or yourself (a willing one, if the Influence would help it). The Influence affects both creatures."
+     "text": "When you let in an Influence, you can choose a second creature (it can be you) you can see within 30 feet of the vista. The Influence affects both creatures."
     },
     {
      "level": 13,
@@ -4004,7 +3304,7 @@
    "subclasses": [
     {
      "name": "The Path of Judgment",
-     "lead": "*Endure What You Are Commanded to Endure*\n\nA long stretch of paved road, better kept in some places than others. It comes down from the House of Song's workshops, through Arcadia's orchards and the gears of the Celestial Bureaucracy, and ends at a bridge over the Styx in Acheron. On the far bank, the road becomes the field. Every other road on the Wheel runs out toward chaos; this one runs the other way. Revelators of the Path of Judgment know the road is the first act of resistance to chaos, and they tramp it down.",
+     "lead": "*Endure What You Are Commanded to Endure*\n\nA long stretch of paved road, better kept in some places than others. It comes down from the House of Song's workshops, through Arcadia's orchards and the gears of the Celestial Bureaucracy, and ends at a bridge over the Styx in Acheron. On the far bank, the road becomes the field. Every other road wanders; this one runs straight. Revelators of the Path of Judgment know the road is the first act of resistance to chaos, and they tramp it down.",
      "features": [
       {
        "level": 3,
@@ -4308,7 +3608,7 @@
     },
     {
      "name": "The Styx",
-     "lead": "*Carry Whoever Pays the Fare*\n\nThe Styx is the river under the world. In myth it flows beneath the earth, around the land of the dead; on the Wheel it rises in Pandemonium's howling caverns and runs down through the Lower Planes. Every cave that goes deep enough eventually finds its banks. Revelators of the Styx ferry souls across its placid surface to aid them.",
+     "lead": "*Carry Whoever Pays the Fare*\n\nIn myth the Styx is the river under the world, circling the land of the dead; on the Wheel it rises in Pandemonium's howling caverns and runs down through the Lower Planes. Revelators of the Styx ferry souls across its placid surface to aid them.",
      "features": [
       {
        "level": 3,
@@ -4564,196 +3864,6 @@
      },
      {
       "name": "True Strike",
-      "new": false
-     }
-    ],
-    "1": [
-     {
-      "name": "Alarm",
-      "new": false
-     },
-     {
-      "name": "Comprehend Languages",
-      "new": false
-     },
-     {
-      "name": "Cure Wounds",
-      "new": false
-     },
-     {
-      "name": "Detect Evil and Good",
-      "new": false
-     },
-     {
-      "name": "Detect Magic",
-      "new": false
-     },
-     {
-      "name": "Faerie Fire",
-      "new": false
-     },
-     {
-      "name": "Find Familiar",
-      "new": false
-     },
-     {
-      "name": "Fog Cloud",
-      "new": false
-     },
-     {
-      "name": "Healing Word",
-      "new": false
-     },
-     {
-      "name": "Protection from Evil and Good",
-      "new": false
-     },
-     {
-      "name": "Sanctuary",
-      "new": false
-     },
-     {
-      "name": "Speak with Animals",
-      "new": false
-     }
-    ],
-    "2": [
-     {
-      "name": "Augury",
-      "new": false
-     },
-     {
-      "name": "Gentle Repose",
-      "new": false
-     },
-     {
-      "name": "Lesser Restoration",
-      "new": false
-     },
-     {
-      "name": "Locate Object",
-      "new": false
-     },
-     {
-      "name": "Misty Step",
-      "new": false
-     },
-     {
-      "name": "Pass without Trace",
-      "new": false
-     },
-     {
-      "name": "Prayer of Healing",
-      "new": false
-     },
-     {
-      "name": "See Invisibility",
-      "new": false
-     },
-     {
-      "name": "Silence",
-      "new": false
-     },
-     {
-      "name": "Warding Bond",
-      "new": false
-     }
-    ],
-    "3": [
-     {
-      "name": "Blink",
-      "new": false
-     },
-     {
-      "name": "Clairvoyance",
-      "new": false
-     },
-     {
-      "name": "Dispel Magic",
-      "new": false
-     },
-     {
-      "name": "Magic Circle",
-      "new": false
-     },
-     {
-      "name": "Nondetection",
-      "new": false
-     },
-     {
-      "name": "Protection from Energy",
-      "new": false
-     },
-     {
-      "name": "Remove Curse",
-      "new": false
-     },
-     {
-      "name": "Revivify",
-      "new": false
-     },
-     {
-      "name": "Speak with Dead",
-      "new": false
-     },
-     {
-      "name": "Tongues",
-      "new": false
-     }
-    ],
-    "4": [
-     {
-      "name": "Banishment",
-      "new": false
-     },
-     {
-      "name": "Death Ward",
-      "new": false
-     },
-     {
-      "name": "Dimension Door",
-      "new": false
-     },
-     {
-      "name": "Divination",
-      "new": false
-     },
-     {
-      "name": "Freedom of Movement",
-      "new": false
-     },
-     {
-      "name": "Locate Creature",
-      "new": false
-     }
-    ],
-    "5": [
-     {
-      "name": "Commune",
-      "new": false
-     },
-     {
-      "name": "Contact Other Plane",
-      "new": false
-     },
-     {
-      "name": "Dispel Evil and Good",
-      "new": false
-     },
-     {
-      "name": "Greater Restoration",
-      "new": false
-     },
-     {
-      "name": "Planar Binding",
-      "new": false
-     },
-     {
-      "name": "Scrying",
-      "new": false
-     },
-     {
-      "name": "Teleportation Circle",
       "new": false
      }
     ]
@@ -5201,12 +4311,12 @@
     {
      "level": 5,
      "name": "The First Cycles",
-     "text": "Your warps can be 5-foot or 10-foot Cubes, and you learn two more shapes:\n\n- **Tilt.** You choose which way is down within the warp. A creature that enters it or starts its turn there must succeed on a Strength saving throw or fall that way until it hits a surface or leaves the warp. This is a normal fall: the creature takes damage for the distance it fell and, if it takes any, has the Prone condition. It can then walk on the surface it fell to. When the warp ends, down is down again, and a creature left in the air falls.\n- **Pocket.** The warp is bigger inside than out. A creature enters it by moving into its space, and a creature inside can leave by spending 5 feet of movement to appear in an unoccupied space next to it. Up to eight Medium creatures fit inside it, whatever its size (a Small or Tiny creature counts as one, a Large creature as four, and a Huge or larger creature can't enter), and anything inside has Total Cover against anything outside, and the reverse. When a Pocket ends, each creature inside it appears in the nearest unoccupied space."
+     "text": "Your warps can be 5-foot or 10-foot Cubes, and you learn two more shapes:\n\n- **Tilt.** You choose which way is down within the warp. A creature that enters it or starts its turn there must succeed on a Strength saving throw or fall that way until it hits a surface or leaves the warp. This is a normal fall: the creature takes damage for the distance it fell and, if it takes any, has the Prone condition. It can then walk on the surface it fell to. When the warp ends, down is down again, and a creature left in the air falls.\n- **Pocket.** The warp is bigger inside than out. A creature enters it by moving into its space, and a creature inside can leave by spending 5 feet of movement to appear in an unoccupied space next to it. Up to eight Medium creatures fit inside it, whatever its size (a Small or Tiny creature counts as one, a Large creature as four, and a Huge or larger creature can't enter; nor can a creature that wouldn't fit beside those already inside), and anything inside has Total Cover against anything outside, and the reverse. When a Pocket ends, each creature inside it appears in the nearest unoccupied space."
     },
     {
      "level": 7,
      "name": "Reading the Season",
-     "text": "The Hidden settles in you, and you begin to see people the way it does: as weather. As a Bonus Action, or as part of rolling Initiative, choose a number of creatures you can see within 30 feet of yourself, up to your Charisma modifier (minimum of one). The DM tells you each one's temper, which is always one of the four seasons, and what lies under it: spring (hope, curiosity, a beginning), summer (passion, anger, confidence), autumn (longing, regret, decline), or winter (fear, grief, resolve). For 1 hour, you have Advantage on Wisdom (Insight) checks against each of them, and on Charisma (Deception, Intimidation, or Persuasion) checks against them that play to their tempers."
+     "text": "The Hidden settles in you, and you begin to read people as it reads them, by their weather. As a Bonus Action, or as part of rolling Initiative, choose a number of creatures you can see within 30 feet of yourself, up to your Charisma modifier (minimum of one). The DM tells you each one's temper and what lies under it (see Tempers, below). For 1 hour, you have Advantage on Wisdom (Insight) checks against each of them, and on Charisma (Deception, Intimidation, or Persuasion) checks against them that play to their tempers.\n\n**Tempers.** Every creature has a temper, which is always one of the four seasons. The DM assigns it from the creature's mood at the moment: spring (hope, curiosity, a beginning), summer (passion, anger, confidence), autumn (longing, regret, decline), or winter (fear, grief, resolve). If the DM is unsure, roll a d4: 1 spring, 2 summer, 3 autumn, 4 winter. A temper holds until the creature's mood plainly changes or the scene ends. A feature that turns a temper (Name the Season, the Hidden Bard's Turn the Season) sets it for that feature's duration instead. Every feature in this book that uses tempers follows this rule."
     },
     {
      "level": 7,
@@ -5226,7 +4336,7 @@
     {
      "level": 9,
      "name": "Loop",
-     "text": "You learn another warp shape:\n\n- **Loop.** The warp's edges meet. When a creature tries to leave the warp by any means, moving or teleporting, it makes a Wisdom saving throw. On a failed save, it steps back in from the opposite side. The movement it spent leaving is lost (as is any spell slot or use the teleport cost), and it can't try to leave that Loop again until its next turn. A creature that succeeds can't be held by that Loop again for 1 minute."
+     "text": "You learn another warp shape:\n\n- **Loop.** The warp's edges meet. When a creature tries to leave the warp by any means, moving or teleporting, or is moved out of it against its will, it makes a Wisdom saving throw. On a failed save, it steps back in from the opposite side. The movement it spent leaving is lost (as is any spell slot or use the teleport cost), and it can't try to leave that Loop again until its next turn. A creature that succeeds can't be held by that Loop again for 1 minute."
     },
     {
      "level": 11,
@@ -5397,7 +4507,7 @@
       {
        "level": 3,
        "name": "Lots",
-       "text": "Your warps can be lots. As a Bonus Action, you ready one: you roll the coin across your knuckles, shake the die, palm the card. A readied lot counts as a warp, and it lasts until you cast it or finish a Long Rest.\n\nWhen a creature you can see within 60 feet of yourself makes a D20 Test, you can take a Reaction to cast a readied lot after seeing the roll but before the DM says whether it succeeds, and call it:\n\n- **Fair.** The creature rolls another d20 and uses the higher roll.\n- **Foul.** The creature rolls another d20 and uses the lower roll.\n\nA lot you cast is spent."
+       "text": "Your warps can be lots. As a Bonus Action, you ready one: you roll the coin across your knuckles, shake the die, palm the card. A readied lot counts as a warp, and it lasts until you cast it or finish a Long Rest; a lot that ends at a Long Rest is regained with your other warps.\n\nWhen a creature you can see within 60 feet of yourself makes a D20 Test, you can take a Reaction to cast a readied lot after seeing the roll but before the DM says whether it succeeds, and call it:\n\n- **Fair.** The creature rolls another d20 and uses the higher roll.\n- **Foul.** The creature rolls another d20 and uses the lower roll.\n\nA lot you cast is spent."
       },
       {
        "level": 3,
@@ -5407,7 +4517,7 @@
       {
        "level": 3,
        "name": "Small Mercies",
-       "text": "Outside combat, once per Long Rest, when you or a companion goes looking for something ordinary you need (a dropped key, a cheap item a market might stock, a carter going your way, someone who knows the pass), the DM tells you where it turns up, if it can be found anywhere nearby. You can also tell when a game, a lottery, a drawing of lots, or a wager is rigged (marked cards, loaded dice, a fixed draw) by watching one round of it; you don't learn how, only that the house is cheating fate."
+       "text": "Outside combat, when you or a companion goes looking for something ordinary you need (a dropped key, a cheap item a market might stock, a carter going your way, someone who knows the pass), the DM tells you where it turns up, if it can be found anywhere nearby. You can also tell when a game, a lottery, a drawing of lots, or a wager is rigged (marked cards, loaded dice, a fixed draw) by watching one round of it; you don't learn how, only that the house is cheating fate. Once you find something this way, you can't do so again until you finish a Long Rest."
       },
       {
        "level": 6,
@@ -5417,7 +4527,7 @@
       {
        "level": 6,
        "name": "Road Luck",
-       "text": "While you travel overland or by water with companions, the road's small mishaps don't befall your company unless the DM wants one for the story: no thrown shoe, cracked axle, spoiled flour, or missed tide. Further, when your company's way is uncertain (a fork, a fog, two inns), you can ask the DM which choice the year favors, and the DM answers \"this one,\" \"that one,\" or \"neither.\" You can ask once a day."
+       "text": "While you travel overland or by water with companions, the road's small mishaps don't befall your company unless the DM wants one for the story: no thrown shoe, cracked axle, spoiled flour, or missed tide. Further, when your company's way is uncertain (a fork, a fog, two inns), you can ask the DM which choice the year favors, and the DM answers \"this one,\" \"that one,\" or \"neither.\" Once you ask, you can't ask again until you finish a Long Rest."
       },
       {
        "level": 10,
@@ -5427,17 +4537,17 @@
       {
        "level": 10,
        "name": "Lucky Charm",
-       "text": "Gamblers, sailors, soldiers, midwives, brides, and anyone else who lives by chance can tell what you are after a few minutes in your company. They want you to blow on their dice, touch their nets, and stand at the back of the wedding. You have Advantage on Charisma checks to win over such people, and in any town you can earn a modest living by being lucky at people, as if practicing a profession."
+       "text": "Gamblers, sailors, soldiers, midwives, brides, and anyone else who lives by chance can tell what you are after a few minutes in your company. They want you to blow on their dice, touch their nets, and stand at the back of the wedding. You have Advantage on Charisma checks to win over such people, and in any town you can support a Modest lifestyle by being lucky at people, without other work."
       },
       {
        "level": 14,
        "name": "Loaded",
-       "text": "When you cast a lot, you can instead choose the number the d20 shows. The number counts as rolled: a chosen 20 is a natural 20 (a Critical Hit on an attack roll), and a chosen 1 is a natural 1. Once you use this feature, you can't use it again until you finish a Long Rest."
+       "text": "When you cast a lot, instead of calling fair or foul, you can choose the number the creature's d20 shows. The number counts as rolled: a chosen 20 is a natural 20 (a Critical Hit on an attack roll), and a chosen 1 is a natural 1. Once you use this feature, you can't use it again until you finish a Long Rest."
       },
       {
        "level": 14,
        "name": "Coincidence",
-       "text": "Once per Long Rest, outside combat, you can let the stream bring you a coincidence. Tell the DM what you need. The DM introduces it in the next scene or soon after, in the form the story allows: the person you were looking for is at the next table, a letter arrives a day early, the ship you missed is still in port because its captain lost at cards. The DM decides the form, and a coincidence never conjures what couldn't plausibly be there."
+       "text": "Outside combat, you can let the stream bring you a coincidence. Tell the DM what you need. The DM introduces it in the next scene or soon after, in the form the story allows: the person you were looking for is at the next table, a letter arrives a day early, the ship you missed is still in port because its captain lost at cards. The DM decides the form, and a coincidence never conjures what couldn't plausibly be there. Once you use this feature, you can't use it again until you finish a Long Rest."
       }
      ]
     },
@@ -5500,17 +4610,17 @@
       {
        "level": 6,
        "name": "Unexpected Angle",
-       "text": "Once on each of your turns, when you hit a creature with an attack made through a warp, and the creature can't see you or the warp's space is on the far side of the creature from you (a line from the center of your space to the center of the warp's space passes through the creature's space), the attack deals an extra 2d6 Force damage. The extra damage increases to 3d6 at Danae level 10 and 4d6 at level 14."
+       "text": "Once on each of your turns, when you hit a creature with an attack you make from a warp's space with Through the Warp, and the creature can't see you or the warp's space is on the far side of the creature from you (a line from the center of your space to the center of the warp's space passes through the creature's space), the attack deals an extra 2d6 Force damage. The extra damage increases to 3d6 at Danae level 10 and 4d6 at level 14."
       },
       {
        "level": 10,
        "name": "Misplace",
-       "text": "Once on each of your turns, when you hit a creature with a weapon attack, you can unravel one of your warps. The creature makes a Charisma saving throw against your spell save DC. On a failed save, it is teleported into the space of another of your warps within 60 feet of yourself, or the nearest unoccupied space, and that warp's season, if any, takes it at once.\n\nYou can misplace things, too. As a Bonus Action, choose an object within 60 feet of yourself that a creature is holding or wearing, other than one it is attuned to, and unravel one of your warps. The creature makes a Charisma saving throw against your spell save DC. On a failed save, the object appears in your hand or in the space of one of your warps. An object no one is holding or wearing gets no save."
+       "text": "Once on each of your turns, when you hit a creature with an attack using a weapon, you can unravel one of your warps. The creature makes a Charisma saving throw against your spell save DC. On a failed save, it is teleported into the space of another of your warps within 60 feet of yourself, or the nearest unoccupied space, and that warp's season, if any, takes it at once.\n\nYou can misplace things, too. As a Bonus Action, choose an object within 60 feet of yourself that a creature is holding or carrying (not armor or clothing it is wearing), other than one it is attuned to, and unravel one of your warps. The creature makes a Charisma saving throw against your spell save DC. On a failed save, the object appears in your hand or in the space of one of your warps. An object no one is holding or carrying gets no save."
       },
       {
        "level": 10,
        "name": "Liminality",
-       "text": "Your Gates and Doors work through effects that block teleportation or planar travel in a place (a ward, a circle, a hallowed or forbidden area), other than an *Antimagic Field*. An effect that stops a particular creature from teleporting (Cold Iron, Name It, the Iron Bell, a Faebreaker's grip) still stops that creature. Creatures that pass through them don't trigger *Alarm*, *Glyph of Warding*, or similar warding magic. And you need no invitations: effects that keep out creatures who haven't been invited don't stop you."
+       "text": "Your Gates and Doors work through effects that block teleportation or planar travel in a place (a ward, a circle, a hallowed or forbidden area), other than an *Antimagic Field*. An effect that stops a particular creature from teleporting (Cold Iron, Name It, the Iron Bell, a Hidden Killer's ward, a Faebreaker's grip) still stops that creature. Creatures that pass through them don't trigger *Alarm*, *Glyph of Warding*, or similar warding magic. You also need no invitations: effects that keep out creatures who haven't been invited don't stop you."
       },
       {
        "level": 14,
@@ -5636,7 +4746,7 @@
       {
        "level": 6,
        "name": "Deep Ground",
-       "text": "Your stones gain shapes: a ramp or stair; a pillar that rises under a creature, which must succeed on a Dexterity saving throw or be lifted 10 feet; or the ground opening beneath a creature, which must succeed on a Dexterity saving throw or fall into a 10-foot-deep pit and have the Prone condition. A creature that succeeds moves to the nearest unoccupied space beside the stone. Unlike other warps, a pillar or an opening can be made in an occupied space, but only once per turn. Each stone takes only one shape.\n\nWith 1 hour of work, you can make a stone permanent; it no longer counts as a warp, so the warp it used comes back when you next finish a Short or Long Rest. You can have a number of permanent stones equal to your Charisma modifier (minimum of one); making another ends your oldest."
+       "text": "Your stones gain shapes: a ramp or stair; a pillar that rises under a creature, which must succeed on a Dexterity saving throw or be lifted 10 feet (when the stone ends, the pillar sinks back, lowering anything on it to the ground); or the ground opening beneath a creature, which must succeed on a Dexterity saving throw or fall into a 10-foot-deep pit and have the Prone condition. A creature that succeeds moves to the nearest unoccupied space beside the stone. Unlike other warps, a pillar or an opening can be made in an occupied space, but only once per turn. Each stone takes only one shape.\n\nWith 1 hour of work, you can make a stone permanent; it no longer counts as a warp, so the warp it used comes back when you next finish a Short or Long Rest. You can have a number of permanent stones equal to your Charisma modifier (minimum of one); making another ends your oldest."
       },
       {
        "level": 10,
