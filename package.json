@@ -17,7 +17,8 @@
     "verify-resonances": "node scripts/verify-resonances.mjs",
     "verify-scroll-marks": "node scripts/verify-scroll-marks.mjs",
     "verify-landing": "node scripts/verify-landing.mjs",
-    "verify-bench": "node scripts/verify-bench.mjs"
+    "verify-bench": "node scripts/verify-bench.mjs",
+    "verify-euphonia": "node scripts/verify-euphonia.mjs"
   },
   "dependencies": {
     "bardjs": "*",

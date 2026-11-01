@@ -1,0 +1,40 @@
+{
+ "provenance": {
+  "source": "Euphonia.md",
+  "sha256": "866f67b257a0f1ba143240151db9cae954319f497208196b118dc50838d010f2",
+  "modified": "2026-10-28T06:55:31-04:00",
+  "exporter": "class-kit/site_export.py",
+  "exporter_version": 2,
+  "rules": {
+   "banned": [
+    "eladrin",
+    "Feywild",
+    "Shadowfell",
+    "changeling",
+    "genasi",
+    "Seelie",
+    "Unseelie",
+    "Imbas",
+    "Dungeons & Dragons",
+    "D&D"
+   ],
+   "fey_type": "\\bFey(?=\\s+(?:creatures?\\b|among the creature types))|(?<=\\*)Fey(?=\\.\\*)"
+  }
+ },
+ "withheld": [],
+ "data": {
+  "srd_attribution": "This work includes material from the System Reference Document 5.2.1 (\"SRD 5.2.1\") by Wizards of the Coast LLC, available at https://www.dndbeyond.com/srd. The SRD 5.2.1 is licensed under the Creative Commons Attribution 4.0 International License, available at https://creativecommons.org/licenses/by/4.0/legalcode.",
+  "orc_notice": [
+   "This product is licensed under the ORC License located at the Library of Congress at TX 9-307-067 and available online at various locations including paizo.com/orclicense and others. All warranties are disclaimed as set forth therein.",
+   "**Attribution.** This product is based on the following Licensed Material: *Euphonia*, © 2026 Scott Cohen. It also includes material from the *System Reference Document 5.2.1* by Wizards of the Coast LLC, licensed under CC-BY-4.0 (attribution below). If you use our Licensed Material in your own published works, please credit us as follows: *Euphonia*, © 2026 Scott Cohen, euphonia.",
+   "**Reserved Material.** Reserved Material elements in this product include, but may not be limited to: the name *Euphonia*, its logo and trade dress; the characters, named places and narrative passages of this work; and all elements designated as Reserved Material under the ORC License.",
+   "**Expressly Designated Licensed Material.** The following elements are owned by the Licensor and would otherwise constitute Reserved Material and are hereby designated as Licensed Material: the Principles; the Hidden, the Hidden Realm, the tide, the Wild Hunt and the Hidden Killers; the Plenum and its structures; the names and rules of every class, subclass, spell and magic item in *Euphonia: The Classes*; and the State of the World chapters and the research they rest on."
+  ],
+  "orc_notice_status": "draft",
+  "orc_open_slots": [
+   "URL",
+   "list"
+  ],
+  "copyright": "Euphonia © 2026 Scott Cohen"
+ }
+}

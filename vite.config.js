@@ -13,6 +13,7 @@ import { verifyCounts } from './scripts/verify-counts.mjs';
 import { injectLanding } from './scripts/landing.js';
 import { verifyQuizWheel } from './scripts/quiz-wheel.mjs';
 import { verifyBench } from './scripts/verify-bench.mjs';
+import { verifyEuphonia } from './scripts/verify-euphonia.mjs';
 
 const HERE = import.meta.dirname;
 
@@ -144,6 +145,22 @@ function verifyBenchPlugin() {
   };
 }
 
+function verifyEuphoniaPlugin() {
+  return {
+    name: 'pm-verify-euphonia',
+    apply: 'build',
+    buildStart() {
+      const { ok, failures, log } = verifyEuphonia();
+      log.forEach(line => console.log(line));
+      if (!ok) {
+        this.error(`verify-euphonia: ${failures} problem(s) — see above. Euphonia's vendored text carries something that must not be published; re-export from the master with class-kit/site_export.py.`);
+      } else {
+        console.log('  ✓ verify-euphonia: one clean export of the master, under the site\'s rules');
+      }
+    },
+  };
+}
+
 function verifyScrollMarksPlugin() {
   return {
     name: 'pm-verify-scroll-marks',
@@ -227,7 +244,7 @@ function verifyStyleHash(outDir, root) {
 }
 
 export default defineConfig({
-  plugins: [landingMarkupPlugin(), verifyLinksPlugin(), verifyResonancesPlugin(), verifyScrollMarksPlugin(), verifyLandingPlugin(), verifyAriaPlugin(), verifyCssInvariantsPlugin(), verifyCountsPlugin(), verifyQuizWheelPlugin(), verifyBenchPlugin(), prerenderTextPages()],
+  plugins: [landingMarkupPlugin(), verifyLinksPlugin(), verifyResonancesPlugin(), verifyScrollMarksPlugin(), verifyLandingPlugin(), verifyAriaPlugin(), verifyCssInvariantsPlugin(), verifyCountsPlugin(), verifyQuizWheelPlugin(), verifyBenchPlugin(), verifyEuphoniaPlugin(), prerenderTextPages()],
   build: {
     cssMinify: 'esbuild',
     cssTarget: ['chrome87', 'edge88', 'firefox78', 'safari14'],
