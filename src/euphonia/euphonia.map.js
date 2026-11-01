@@ -357,7 +357,7 @@ export async function initMap(stage) {
       }
       d.ctx.clearRect(0, 0, d.size, d.size);
       d.ctx.drawImage(d.fills, 0, 0);
-      drawNight(d.ctx, v, sun, colors);
+      if (night.checked) drawNight(d.ctx, v, sun, colors);
       d.ctx.drawImage(d.lines, 0, 0);
       drawMarks(d.ctx, v, { sun, regions, hoverPlace, pick }, colors, d.dpr);
       placeLabels(d);
@@ -475,13 +475,23 @@ export async function initMap(stage) {
     moonLit.setAttribute('d', facePath(moon.lit, moon.waxing));
     moonText.textContent = `The moon is ${moon.waxing ? 'waxing' : 'waning'}, ${moon.age.toFixed(1)} days from new and ${Math.round(moon.lit * 100)}% lit; the ${moon.next.phase} moon is on ${day(moon.next.ms)} at ${clock(moon.next.ms)} UT.`;
     shown.value = clock(instant);
-    readout.textContent = `${new Date(instant).toLocaleDateString('en-GB', { timeZone: 'UTC', day: 'numeric', month: 'long', year: 'numeric' })} (Gregorian), ${shown.value} UT: the sun stands overhead at ${degrees(sun.lat, 'N', 'S')}, ${degrees(sun.lon, 'E', 'W')}. The night side is shaded, darker through each twilight.`;
+    readout.textContent = `${new Date(instant).toLocaleDateString('en-GB', { timeZone: 'UTC', day: 'numeric', month: 'long', year: 'numeric' })} (Gregorian), ${shown.value} UT: the sun stands overhead at ${degrees(sun.lat, 'N', 'S')}, ${degrees(sun.lon, 'E', 'W')}. ${night.checked ? 'The night side is shaded, darker through each twilight.' : "The night isn't shaded."}`;
   }
   function draw() { readouts(); redraw(); }
 
   // Play: the instant runs on at the chosen rate (seconds of 1668 a second),
   // through the scenes' frame clock, which caps a step so a tab come back
   // from the background doesn't leap the year. Under reduced motion it steps.
+  // The night can be turned off to see the whole world lit; the choice is
+  // kept in this browser as a convenience, and the map works without it.
+  const night = form.elements.night, NIGHT_KEY = 'pm-euphonia-night';
+  try { if (localStorage.getItem(NIGHT_KEY) === 'off') night.checked = false; } catch { /* storage unavailable */ }
+  night.addEventListener('change', () => {
+    try { localStorage.setItem(NIGHT_KEY, night.checked ? 'on' : 'off'); } catch { /* storage unavailable */ }
+    readouts();
+    redraw();
+  });
+
   const play = form.elements.play, rate = form.elements.rate;
   const clockFrame = createFrameClock();
   let playing = false, ticking = 0, stepping = 0, readAt = 0;

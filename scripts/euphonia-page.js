@@ -53,6 +53,7 @@ function mapStage(regions) {
 <option value="86400" selected>a day a second</option>
 <option value="${SYNODIC * 86400}">a moon a second</option>
 </select></label>
+<label><input type="checkbox" name="night" checked> Night</label>
 <button type="button" class="map-reset" hidden>Whole world</button>
 </form>
 <div class="map-hemispheres">
