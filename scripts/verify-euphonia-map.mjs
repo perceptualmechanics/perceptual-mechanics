@@ -5,6 +5,7 @@ import { pathToFileURL } from 'node:url';
 import * as projection from '../src/euphonia/euphonia.projection.js';
 import * as lunar from '../src/euphonia/euphonia.moon.js';
 import * as calendar from '../src/euphonia/euphonia.calendars.js';
+import * as hidden from '../src/euphonia/euphonia.tide.js';
 import { solarEvents } from '../src/bench/bench.sky.js';
 
 const RAD = Math.PI / 180;
@@ -58,7 +59,7 @@ function duskCircle(sun, dusk) {
   });
 }
 
-export function verifyEuphoniaMap({ world = worldData(), fixtures = fixturesData(), calendars = calendarsData(), seats = seatsData(), geo = projection, moon = lunar, cal = calendar } = {}) {
+export function verifyEuphoniaMap({ world = worldData(), fixtures = fixturesData(), calendars = calendarsData(), seats = seatsData(), geo = projection, moon = lunar, cal = calendar, tide = hidden } = {}) {
   const problems = [];
   const fail = m => problems.push(m);
 
@@ -186,6 +187,54 @@ export function verifyEuphoniaMap({ world = worldData(), fixtures = fixturesData
     if (!before || before === after || parseInt(after) !== parseInt(before) + 1) fail(`at ${ottoman.seat[0]} the Hijri day doesn't turn at sunset (${before} → ${after})`);
   }
 
+  // The Tide, as the map reads the rule. Its inputs are the checks above;
+  // these hold the reading: the flood from each new moon, the ebb from each
+  // full; each polity's eves at its own sunset on its own 31 October and
+  // 30 April, the dark half turning there and the open night ending at
+  // sunrise; no half where the calendar has no 1 November; and between the
+  // tropics, the dark half wherever the sun isn't.
+  let eves = 0;
+  for (const [utc, phase] of placed ? phaseRows : []) {
+    if (phase !== 'new' && phase !== 'full') continue;
+    const c = computed.find(p => Math.abs(p.ms - Date.parse(utc)) < 2 * 60000);
+    const want = phase === 'new' ? 'flood' : 'ebb';
+    if (!c || tide.tideAt(c.ms + 60000) !== want) { fail(`a minute after the ${phase} moon of ${utc} the Hidden aren't at the ${want}`); break; }
+  }
+  const sunsetOn = (jdn, seat) => solarEvents((jdn - 2440587.5) * DAY_MS - DAY_MS / 2, (jdn - 2440587.5) * DAY_MS + DAY_MS, seat.lat, seat.lon)
+    .find(e => e.kind === 'set' && cal.localDay(e.t, seat.lon) === jdn)?.t;
+  const sunriseOn = (jdn, seat) => solarEvents((jdn - 2440587.5) * DAY_MS - DAY_MS / 2, (jdn - 2440587.5) * DAY_MS + DAY_MS, seat.lat, seat.lon)
+    .find(e => e.kind === 'rise' && cal.localDay(e.t, seat.lon) === jdn)?.t;
+  for (const p of placed ? calendars.polities : []) {
+    const seat = seats.seats[p.seat[0]];
+    const at = ms => tide.hiddenAt(ms, p, seat);
+    if (p.calendar === 'hijri-tabular') {
+      const any = [0, 60, 120, 180, 240, 300].map(d => at(Date.UTC(1668, 10, 1) + d * DAY_MS));
+      if (any.some(h => h.half || h.open)) fail(`${p.name} keeps no 1 November, but the map gives it a half or an open night`);
+      continue;
+    }
+    const toJdn = p.calendar === 'gregorian' ? cal.jdnFromGregorian : cal.jdnFromJulian;
+    for (const [name, year, m, d, before, after] of [['Samhain', 1668, 10, 31, 'other', 'dark'], ['Beltane', 1669, 4, 30, 'dark', 'other']]) {
+      const jdn = toJdn(year, m, d), set = sunsetOn(jdn, seat), rise = sunriseOn(jdn + 1, seat);
+      const was = at(set - 60000), is = at(set + 60000), morning = at(rise + 60000);
+      const want = seat.lat >= 0 ? [before, after] : [after, before];
+      if (was.half !== want[0] || is.half !== want[1] || was.open || is.open !== name || morning.open) {
+        fail(`${p.name}: at sunset on ${d} ${m === 10 ? 'October' : 'April'} ${year} (its own calendar) the map goes from ${was.half}${was.open ? ', ' + was.open : ''} to ${is.half}${is.open ? ', ' + is.open : ''}, and the morning after is ${morning.open ?? 'no open night'}`);
+        break;
+      }
+      eves++;
+    }
+  }
+  let tropicChecks = 0;
+  for (let k = 0; k < 53; k++) {
+    const t = Date.UTC(1668, 10, 1) + k * 7 * DAY_MS + 12 * 3600000, sun = geo.subsolar(t);
+    for (const lat of [-0.9, -0.5, -0.1, 0.1, 0.5, 0.9].map(f => f * sun.obliquity)) {
+      const { half } = tide.hiddenAt(t, null, { lat, lon: 0 });
+      if (half !== ((sun.lat >= 0) !== (lat >= 0) ? 'dark' : 'other')) { fail(`between the tropics, at ${lat.toFixed(1)}° on ${new Date(t).toISOString().slice(0, 10)}, the half doesn't follow the sun`); break; }
+      tropicChecks++;
+    }
+    if (tide.hiddenAt(t, null, { lat: 50, lon: 0 }).half !== null) { fail('outside the tropics, a place with no known calendar is given a half'); break; }
+  }
+
   // The projection: the centre at the middle, the hemisphere's edge on the rim.
   for (const h of geo.HEMISPHERES) {
     const [cx, cy] = geo.project(h.lon0, 0, h.lon0);
@@ -233,7 +282,7 @@ export function verifyEuphoniaMap({ world = worldData(), fixtures = fixturesData
 
   const log = problems.length
     ? [`\neuphonia map: ${problems.length} problem(s):`, ...problems.map(p => `  ${p}`)]
-    : [`ok: ${points} Natural Earth points under their provenance; the sun within ${sunWorst.toFixed(4)}° of Horizons at ${sunRows.length} instants; ${computed.length} moon phases within ${phaseWorst.toFixed(2)} min of Espenak, lit within ${litWorst.toFixed(4)}; ${calendars.polities.length} polities' calendars cited and seated, ${conversions.length} Fourmilab conversions and ${calendarDays} days against ICU; the hemispheres show all ${(whole / (4 * Math.PI) * 100).toFixed(1)}% of the globe that is land, once; ${circles} dusk circles drawn where the sky darkens`];
+    : [`ok: ${points} Natural Earth points under their provenance; the sun within ${sunWorst.toFixed(4)}° of Horizons at ${sunRows.length} instants; ${computed.length} moon phases within ${phaseWorst.toFixed(2)} min of Espenak, lit within ${litWorst.toFixed(4)}; ${calendars.polities.length} polities' calendars cited and seated, ${conversions.length} Fourmilab conversions and ${calendarDays} days against ICU; the Tide turning at ${eves} eves and ${tropicChecks} tropical readings; the hemispheres show all ${(whole / (4 * Math.PI) * 100).toFixed(1)}% of the globe that is land, once; ${circles} dusk circles drawn where the sky darkens`];
   return { ok: problems.length === 0, failures: problems.length, log };
 }
 

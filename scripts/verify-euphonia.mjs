@@ -7,7 +7,7 @@ import { plain } from '../src/euphonia/euphonia.markdown.js';
 
 const ROOT = new URL('../', import.meta.url);
 const read = rel => readFileSync(new URL(rel, ROOT), 'utf8');
-const FILES = ['classes', 'regions', 'adventures', 'legal'];
+const FILES = ['classes', 'regions', 'adventures', 'legal', 'hidden'];
 
 // What may never reach a Euphonia page, besides draft brackets and braced names
 // awaiting replacement: other people's names, and "Fey" outside the creature
@@ -88,6 +88,12 @@ export function verifyEuphonia(d = euphoniaData()) {
 
   // The regions are Claude's draft of Scott's setting, shown as one (Scott, 2026-10-28).
   if (d.regions.status !== 'draft') fail(`euphonia.regions.json: status is "${d.regions.status}", not "draft"; the chapters call themselves a draft`);
+
+  // The Tide the map reads, whole: the rule names each thing the map shows.
+  const tide = d.hidden.data?.tide ?? '';
+  for (const word of ['**The Tide.**', '**at the flood**', '**at the ebb**', '**dark half**', 'Samhain', 'Beltane', '**open nights**']) {
+    if (!tide.includes(word)) fail(`euphonia.hidden.json: the Tide doesn't say ${word}, which the map shows`);
+  }
 
   // What the files say about each other.
   const regionNames = new Set(d.regions.data.map(r => r.name));

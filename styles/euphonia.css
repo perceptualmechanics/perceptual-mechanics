@@ -46,6 +46,10 @@ footer.legal section a { text-decoration: underline; }
 .map-dates caption { text-align: left; color: #8c8377; font-size: 0.85rem; padding-bottom: 0.3rem; }
 .map-dates th, .map-dates td { text-align: left; vertical-align: top; padding: 0.35rem 0.8rem 0.35rem 0; border-bottom: 1px solid #2a2620; }
 .map-dates th { font-weight: 600; color: #b8b0a4; }
+.map-tide[hidden] { display: none; }
+.map-rule { margin: 1.4rem 0; padding: 0.2rem 0 0.2rem 1.1rem; border-left: 2px solid #6b5a37; }
+.map-rule p { margin: 0 0 0.6rem; }
+.map-rule .by { color: #8c8377; font-size: 0.85rem; }
 .map-moon { display: flex; gap: 0.7rem; align-items: center; }
 .map-moon[hidden] { display: none; }
 .map-moon svg { flex: none; width: 1.6rem; height: 1.6rem; }

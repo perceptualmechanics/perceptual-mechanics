@@ -2,10 +2,10 @@
  "provenance": {
   "source": "Euphonia.md",
   "master": "~/Documents/euphonia/Euphonia.md",
-  "sha256": "6b941da3db08ad433557dd21930bccf940f23fdd8b8412cdf1366241431f04c6",
-  "modified": "2026-11-01T07:28:52-05:00",
+  "sha256": "68bcbf6cee435e8a1c33025b3c8b7b39c1ec6ea0d2d8eff962450c663517b463",
+  "modified": "2026-11-01T13:36:16-05:00",
   "exporter": "class-kit/site_export.py",
-  "exporter_version": 3,
+  "exporter_version": 4,
   "rules": {
    "banned": [
     "eladrin",
@@ -32,196 +32,19 @@
    ]
   },
   {
-   "where": "Counsellor · Gamester · level 3 feature",
-   "reasons": [
-    "bracket",
-    "names a placeholder"
-   ]
-  },
-  {
-   "where": "Counsellor · Gamester · level 6 feature",
-   "reasons": [
-    "bracket",
-    "names a placeholder"
-   ]
-  },
-  {
-   "where": "Counsellor · Gamester · level 10 feature",
-   "reasons": [
-    "bracket",
-    "names a placeholder"
-   ]
-  },
-  {
-   "where": "Counsellor · Gamester · level 14 feature",
-   "reasons": [
-    "bracket",
-    "names a placeholder"
-   ]
-  },
-  {
-   "where": "Counsellor · Hollowed · level 3 feature",
-   "reasons": [
-    "bracket",
-    "names a placeholder"
-   ]
-  },
-  {
-   "where": "Counsellor · Hollowed · level 6 feature",
-   "reasons": [
-    "bracket",
-    "names a placeholder"
-   ]
-  },
-  {
-   "where": "Counsellor · Hollowed · level 10 feature",
-   "reasons": [
-    "bracket",
-    "names a placeholder"
-   ]
-  },
-  {
    "where": "Counsellor · Majordomo · introduction",
    "reasons": [
     "bracket"
    ]
   },
   {
-   "where": "Counsellor · Majordomo · level 3 feature",
+   "where": "Counsellor · Majordomo · Level 3: Underworld",
    "reasons": [
-    "bracket",
-    "names a placeholder"
-   ]
-  },
-  {
-   "where": "Counsellor · Majordomo · level 3 feature",
-   "reasons": [
-    "bracket",
-    "names a placeholder"
-   ]
-  },
-  {
-   "where": "Counsellor · Majordomo · level 3 feature",
-   "reasons": [
-    "bracket",
-    "names a placeholder"
-   ]
-  },
-  {
-   "where": "Counsellor · Majordomo · level 6 feature",
-   "reasons": [
-    "bracket",
-    "names a placeholder"
-   ]
-  },
-  {
-   "where": "Counsellor · Majordomo · level 6 feature",
-   "reasons": [
-    "bracket",
-    "names a placeholder"
-   ]
-  },
-  {
-   "where": "Counsellor · Majordomo · level 10 feature",
-   "reasons": [
-    "bracket",
-    "names a placeholder"
-   ]
-  },
-  {
-   "where": "Counsellor · Majordomo · level 10 feature",
-   "reasons": [
-    "bracket",
-    "names a placeholder"
-   ]
-  },
-  {
-   "where": "Counsellor · Majordomo · level 14 feature",
-   "reasons": [
-    "bracket",
-    "names a placeholder"
-   ]
-  },
-  {
-   "where": "Counsellor · Majordomo · level 14 feature",
-   "reasons": [
-    "bracket",
     "names a placeholder"
    ]
   },
   {
    "where": "Counsellor · Marshal · introduction",
-   "reasons": [
-    "names a placeholder"
-   ]
-  },
-  {
-   "where": "Counsellor · Marshal · level 3 feature",
-   "reasons": [
-    "bracket",
-    "names a placeholder"
-   ]
-  },
-  {
-   "where": "Counsellor · Marshal · level 6 feature",
-   "reasons": [
-    "bracket",
-    "names a placeholder"
-   ]
-  },
-  {
-   "where": "Counsellor · Marshal · level 10 feature",
-   "reasons": [
-    "bracket",
-    "names a placeholder"
-   ]
-  },
-  {
-   "where": "Counsellor · Marshal · level 14 feature",
-   "reasons": [
-    "bracket",
-    "names a placeholder"
-   ]
-  },
-  {
-   "where": "Mhizha · Level 1: Tinker",
-   "reasons": [
-    "names a placeholder"
-   ]
-  },
-  {
-   "where": "Mhizha · Armorer · Level 3: Powered Suit",
-   "reasons": [
-    "names a placeholder"
-   ]
-  },
-  {
-   "where": "Mhizha · Armorer · level 6 feature",
-   "reasons": [
-    "bracket",
-    "names a placeholder"
-   ]
-  },
-  {
-   "where": "Mhizha · Armorer · Level 10: Improved Models",
-   "reasons": [
-    "names a placeholder"
-   ]
-  },
-  {
-   "where": "Mhizha · Chemist · Level 3: Tria Prima",
-   "reasons": [
-    "names a placeholder"
-   ]
-  },
-  {
-   "where": "Mhizha · Chemist · Level 6: Albedo",
-   "reasons": [
-    "names a placeholder"
-   ]
-  },
-  {
-   "where": "Mhizha · Chemist · Level 10: Citrinitas",
    "reasons": [
     "names a placeholder"
    ]
@@ -233,196 +56,8 @@
    ]
   },
   {
-   "where": "Mhizha · Constructor · Level 6: Field Repairs",
-   "reasons": [
-    "names a placeholder"
-   ]
-  },
-  {
-   "where": "Mhizha · Constructor · Level 10: Improved Construct",
-   "reasons": [
-    "names a placeholder"
-   ]
-  },
-  {
-   "where": "Mhizha · Gunner · Level 3: Turret",
-   "reasons": [
-    "names a placeholder"
-   ]
-  },
-  {
-   "where": "Mhizha · Gunner · Level 6: Forward Observer",
-   "reasons": [
-    "names a placeholder"
-   ]
-  },
-  {
-   "where": "Mhizha · Gunner · Level 10: Shells",
-   "reasons": [
-    "names a placeholder"
-   ]
-  },
-  {
-   "where": "Mhizha · Gunner · level 14 feature",
-   "reasons": [
-    "bracket",
-    "names a placeholder"
-   ]
-  },
-  {
-   "where": "Mhizha · Mapmaker · Level 3: The Map",
-   "reasons": [
-    "names a placeholder"
-   ]
-  },
-  {
-   "where": "Mhizha · Mapmaker · Level 6: Survey",
-   "reasons": [
-    "names a placeholder"
-   ]
-  },
-  {
-   "where": "Mhizha · Mapmaker · Level 10: Wide Fold",
-   "reasons": [
-    "names a placeholder"
-   ]
-  },
-  {
-   "where": "Natural Philosopher · Ballistician · level 3 feature",
-   "reasons": [
-    "bracket",
-    "names a placeholder"
-   ]
-  },
-  {
-   "where": "Natural Philosopher · Ballistician · level 6 feature",
-   "reasons": [
-    "bracket",
-    "names a placeholder"
-   ]
-  },
-  {
-   "where": "Natural Philosopher · Crowner · level 3 feature",
-   "reasons": [
-    "bracket",
-    "names a placeholder"
-   ]
-  },
-  {
-   "where": "Natural Philosopher · Crowner · level 6 feature",
-   "reasons": [
-    "bracket",
-    "names a placeholder"
-   ]
-  },
-  {
-   "where": "Natural Philosopher · Experimentalist · level 3 feature",
-   "reasons": [
-    "bracket",
-    "names a placeholder"
-   ]
-  },
-  {
-   "where": "Natural Philosopher · Experimentalist · level 6 feature",
-   "reasons": [
-    "bracket",
-    "names a placeholder"
-   ]
-  },
-  {
-   "where": "Natural Philosopher · Experimentalist · level 6 feature",
-   "reasons": [
-    "bracket",
-    "names a placeholder"
-   ]
-  },
-  {
-   "where": "Natural Philosopher · Experimentalist · level 10 feature",
-   "reasons": [
-    "bracket",
-    "names a placeholder"
-   ]
-  },
-  {
-   "where": "Natural Philosopher · Naturalist · level 3 feature",
-   "reasons": [
-    "bracket",
-    "names a placeholder"
-   ]
-  },
-  {
-   "where": "Natural Philosopher · Naturalist · level 6 feature",
-   "reasons": [
-    "bracket",
-    "names a placeholder"
-   ]
-  },
-  {
-   "where": "Natural Philosopher · Navigator · level 3 feature",
-   "reasons": [
-    "bracket",
-    "names a placeholder"
-   ]
-  },
-  {
-   "where": "Natural Philosopher · Navigator · level 6 feature",
-   "reasons": [
-    "bracket",
-    "names a placeholder"
-   ]
-  },
-  {
-   "where": "Natural Philosopher · Navigator · level 10 feature",
-   "reasons": [
-    "bracket",
-    "names a placeholder"
-   ]
-  },
-  {
-   "where": "Physician · Doctor · level 6 feature",
-   "reasons": [
-    "bracket",
-    "names a placeholder"
-   ]
-  },
-  {
-   "where": "Physician · Hedge Witch · level 3 feature",
-   "reasons": [
-    "bracket",
-    "names a placeholder"
-   ]
-  },
-  {
-   "where": "Physician · Neurologist · level 6 feature",
-   "reasons": [
-    "bracket",
-    "names a placeholder"
-   ]
-  },
-  {
    "where": "Physician · Plague Doctor · introduction",
    "reasons": [
-    "names a placeholder"
-   ]
-  },
-  {
-   "where": "Physician · Plague Doctor · level 3 feature",
-   "reasons": [
-    "bracket",
-    "names a placeholder"
-   ]
-  },
-  {
-   "where": "Physician · Plague Doctor · level 6 feature",
-   "reasons": [
-    "bracket",
-    "names a placeholder"
-   ]
-  },
-  {
-   "where": "Revelator · The Path of Judgment · level 7 feature",
-   "reasons": [
-    "bracket",
     "names a placeholder"
    ]
   },
@@ -433,145 +68,13 @@
    ]
   },
   {
-   "where": "Revelator · The Oceanus · level 3 feature",
-   "reasons": [
-    "bracket",
-    "names a placeholder"
-   ]
-  },
-  {
-   "where": "Revelator · The Oceanus · level 7 feature",
-   "reasons": [
-    "bracket",
-    "names a placeholder"
-   ]
-  },
-  {
-   "where": "Revelator · The Oceanus · level 11 feature",
-   "reasons": [
-    "bracket",
-    "names a placeholder"
-   ]
-  },
-  {
-   "where": "Revelator · The Oceanus · level 15 feature",
-   "reasons": [
-    "bracket",
-    "names a placeholder"
-   ]
-  },
-  {
    "where": "Revelator · Mount Olympus · introduction",
    "reasons": [
     "names a placeholder"
    ]
   },
   {
-   "where": "Revelator · Mount Olympus · level 3 feature",
-   "reasons": [
-    "bracket",
-    "names a placeholder"
-   ]
-  },
-  {
-   "where": "Revelator · Mount Olympus · level 7 feature",
-   "reasons": [
-    "bracket",
-    "names a placeholder"
-   ]
-  },
-  {
-   "where": "Revelator · Mount Olympus · level 11 feature",
-   "reasons": [
-    "bracket",
-    "names a placeholder"
-   ]
-  },
-  {
-   "where": "Revelator · Mount Olympus · level 15 feature",
-   "reasons": [
-    "bracket",
-    "names a placeholder"
-   ]
-  },
-  {
-   "where": "Revelator · The Styx · level 7 feature",
-   "reasons": [
-    "bracket",
-    "names a placeholder"
-   ]
-  },
-  {
-   "where": "Revelator · Yggdrasil · level 7 feature",
-   "reasons": [
-    "bracket",
-    "names a placeholder"
-   ]
-  },
-  {
-   "where": "Danae · level 2 feature",
-   "reasons": [
-    "bracket",
-    "names a placeholder"
-   ]
-  },
-  {
-   "where": "Danae · level 9 feature",
-   "reasons": [
-    "bracket",
-    "names a placeholder"
-   ]
-  },
-  {
-   "where": "Danae · level 17 feature",
-   "reasons": [
-    "bracket",
-    "names a placeholder"
-   ]
-  },
-  {
-   "where": "Danae · Binding · level 6 feature",
-   "reasons": [
-    "bracket",
-    "names a placeholder"
-   ]
-  },
-  {
    "where": "Danae · Changing · introduction",
-   "reasons": [
-    "names a placeholder"
-   ]
-  },
-  {
-   "where": "Danae · Changing · level 3 feature",
-   "reasons": [
-    "bracket",
-    "names a placeholder"
-   ]
-  },
-  {
-   "where": "Danae · Changing · level 6 feature",
-   "reasons": [
-    "bracket",
-    "names a placeholder"
-   ]
-  },
-  {
-   "where": "Danae · Changing · level 10 feature",
-   "reasons": [
-    "bracket",
-    "names a placeholder"
-   ]
-  },
-  {
-   "where": "Danae · Changing · level 14 feature",
-   "reasons": [
-    "bracket",
-    "names a placeholder"
-   ]
-  },
-  {
-   "where": "Danae · Crossing · Level 3: Doors",
    "reasons": [
     "names a placeholder"
    ]
@@ -931,6 +434,11 @@
      "features": [
       {
        "level": 3,
+       "name": "Where the Action Is",
+       "text": "In any settlement, you can find where the serious play is within an hour: where it's played, who keeps the bank, and who's welcome. You can learn any game of chance or skill by watching it for 10 minutes, and in downtime you can cover your own food and lodging from the tables without spending coin."
+      },
+      {
+       "level": 3,
        "name": "Honest Assessment",
        "text": "You can spend 10 minutes hearing a plan laid out, or 10 minutes watching its key people after you have Observed each of them (whoever leads it and whoever carries out its essential parts; the DM tells you who they are), and then ask the DM how it will go. The DM tells you whether it's likely, even, or unlikely to succeed, and the single biggest risk to it. When your assessment, given to a patron, proves right, you gain standing with that patron: you have Advantage on Charisma checks to influence it until an assessment you give it proves wrong. You can use this feature a number of times equal to your Intelligence modifier (minimum of once), and you regain all expended uses when you finish a Long Rest."
       },
@@ -950,14 +458,29 @@
        "text": "When you Observe a creature, you also learn its Armor Class and its current Hit Points."
       },
       {
+       "level": 6,
+       "name": "Everyone's a Mark",
+       "text": "When you spend an evening at play with a creature, you learn how it bets: whether it bluffs, how much it can afford to lose, and its tell. For the next tenday, you have Advantage on Wisdom (Insight) checks against it."
+      },
+      {
        "level": 10,
        "name": "Stacked Deck",
        "text": "When you roll Initiative, your counts become 1 instead of 0."
       },
       {
+       "level": 10,
+       "name": "Your Own Chair",
+       "text": "Choose one gaming house, salon, or court where the high play is. You're a fixture there: you're always admitted, and you can sit down to play on your word. When you ask, its keeper tells you who has been losing, to whom, and how much. Anyone powerful who plays there can find you for a quiet word, and you can find them. If you choose a new chair, the old one forgets you after a tenday."
+      },
+      {
        "level": 14,
        "name": "All In",
        "text": "When an ally you can see makes an attack roll against an Observed creature, and you have at least 2 counts and haven't used Exploit since the start of your latest turn, you can bet your counts before the roll (no action required). If the attack hits, it's a Critical Hit, but only the attack's own damage dice (the weapon's or the spell's, not extra dice from features such as Sneak Attack, smites, or *Hunter's Mark*) are rolled twice, and you use Exploit on it, spending your counts. If it misses, you lose your counts, and you can't use Exploit until the end of your next turn."
+      },
+      {
+       "level": 14,
+       "name": "Debt of Honor",
+       "text": "When a creature stakes something other than coin against you at play (a favor, a secret, a ship, a title) and loses, it pays, or everyone at that table knows it didn't. The DM decides what welshing costs it among its peers."
       }
      ]
     },
@@ -969,6 +492,11 @@
        "level": 3,
        "name": "Poisoner",
        "text": "You gain proficiency with the Poisoner's Kit; if you already have it, choose another tool. When you finish a Short or Long Rest, you can make doses of your poison, using your Poisoner's Kit but no other materials, until you have a number of doses equal to your Proficiency Bonus; you can't have more than that at once. A dose lasts until you finish your next Long Rest, and only you can apply it. As a Bonus Action, you can coat a weapon or up to three pieces of ammunition with a dose; the coating lasts for 1 minute or until the first hit with the weapon or one of those pieces of ammunition, which spends the dose. A creature you hit with a coated weapon or ammunition makes a Constitution saving throw (DC 8 plus your Intelligence modifier and Proficiency Bonus). On a failed save, it has the Poisoned condition until the end of your next turn. When you use Exploit on the hit that delivers a dose, the extra damage can be Poison damage."
+      },
+      {
+       "level": 3,
+       "name": "The Quiet Trade",
+       "text": "You can pass as an apothecary, a physician's assistant, or a household taster without a check, and you know the poison trade wherever you go: in a settlement, a day of inquiries tells you who sells poisons, what they charge, and who has been buying."
       },
       {
        "level": 3,
@@ -991,6 +519,11 @@
        "text": "As a Magic action, you can take an Observed creature apart out loud. Choose an Observed creature within 30 feet of you that can hear and understand you. It makes a Wisdom saving throw (DC 8 plus your Intelligence modifier and Proficiency Bonus). On a failed save, it takes Psychic damage equal to the total of a number of computation dice equal to half your Proficiency Bonus (round up), and it can't take Reactions until the start of its next turn. Nothing happens on a successful save, but the use is still expended. This isn't magic. You can use this feature a number of times equal to your Proficiency Bonus, and you regain all expended uses when you finish a Short or Long Rest."
       },
       {
+       "level": 6,
+       "name": "Cause of Death",
+       "text": "By examining a body for 10 minutes, you learn how the creature died and roughly when, and, if poison played a part, which poison and how it was given. You also learn whether a physician would have called the death natural."
+      },
+      {
        "level": 10,
        "name": "Toxicology",
        "text": "Poison damage you deal ignores Resistance to Poison damage. A creature that has the Poisoned condition from your poison can't regain Hit Points."
@@ -999,6 +532,11 @@
        "level": 10,
        "name": "Clinical",
        "text": "A creature that fails its saving throw against your Vivisection also has Disadvantage on the next saving throw it makes before the end of your next turn."
+      },
+      {
+       "level": 10,
+       "name": "Taster",
+       "text": "By handling food, drink, a letter, a glove, a ring, or a similar object for 1 minute, you know whether it's poisoned or trapped (a needle, a powder, a coated seal), and with what."
       },
       {
        "level": 14,
@@ -1015,12 +553,58 @@
     {
      "name": "Majordomo",
      "lead": "",
-     "features": []
+     "features": [
+      {
+       "level": 3,
+       "name": "About That",
+       "text": "You've already thought of that. When you're in a situation you could have prepared for, you can reveal a preparation you made earlier (no action required). You must have been able to make it: you were somewhere you could have made it, with the time and the money it took. Choose one:\n\n- *Stashed.* An item from the Adventuring Gear table, a tool, or a weapon you're proficient with, worth no more than 25 GP times your Proficiency Bonus, is on you, or hidden within 100 feet if it's too big to carry unseen. You pay its price now.\n- *Greased.* One creature that would take a bribe (a guard, a porter, a clerk; the DM decides who would) took yours. It looks away once, leaves one door unbarred, or carries one message, and does nothing else for you. You pay its price now; the DM sets it (a few GP for a guard or a servant, much more for an official).\n- *Rigged.* A door, window, gate, or lock you could have reached earlier is unlocked, or a rope, a ladder, a horse, or a boat is waiting where you need it.\n\nThe DM can rule that a preparation couldn't have been made; if so, nothing happens and the use isn't expended. You can use this feature a number of times equal to your Intelligence modifier (minimum of once), and you regain all expended uses when you finish a Long Rest."
+      },
+      {
+       "level": 3,
+       "name": "Street Fighting",
+       "text": "You don't fight fair. When you use Exploit, you can roll one fewer of its dice to play one of the following tricks on the creature the attack hit:\n\n- *Sand.* Sand in its eyes, a kick to the knee, its own cloak over its head. It has Disadvantage on the next attack roll it makes before the end of its next turn.\n- *Lift.* If the creature is within 5 feet of you, you take one object it's carrying that weighs no more than 1 pound and that it isn't holding or wearing: a purse, a key, a letter, a vial from its belt."
+      },
+      {
+       "level": 6,
+       "name": "Crew",
+       "text": "In a settlement where you have found the underworld, you can hire a crew: a number of hands up to your Proficiency Bonus, at 2 GP a day each. A crew member will steal, carry, watch a door, follow someone, pick a pocket, run a message, start a brawl, or lie for you. It won't fight for you unless it's cornered, and it won't walk into danger it can see. When a crew member makes an ability check on a job you've set it, it adds your Proficiency Bonus plus 2 to the roll. A crew member who's caught keeps your name out of it, unless magic gets it out. Your crew stays with you until you leave the settlement or let them go.\n\n*Who to hire, and who to play.* You know a settlement's gangs, crews, and factions, what each wants, and who hates whom. Once per tenday, with a few days and a little money, you can set two of them against each other (a rumor, a debt sold to the wrong person, a slight in the right ear): for the next tenday they're busy with each other and leave you alone. The DM decides what it costs and what it starts."
+      },
+      {
+       "level": 6,
+       "name": "Racket",
+       "text": "When an Observed creature you can see hits you or an ally with an attack roll, it owes you: the next time you use Exploit on a hit against it before the end of your next turn, Exploit adds one more die."
+      },
+      {
+       "level": 10,
+       "name": "The Hum",
+       "text": "Nothing moves through an underworld without you hearing of it. In a settlement where you have found the underworld, you can spend 1 hour and a few coins asking around, and then learn one of the following, if anyone in the underworld there knows it: who committed a crime in the settlement in the last month (a theft, a killing, a forgery, a smuggling run); where a stolen or smuggled thing went, and through whose hands; who in the settlement is paying for a crime to be done, and what they're paying; or what is coming into the settlement in the next tenday that isn't on the customs books. If the underworld doesn't know, you learn that, which is an answer of its own: whoever did it wasn't one of them."
+      },
+      {
+       "level": 10,
+       "name": "Need to Know",
+       "text": "You arrange the family's affairs so that each member knows only its part. When you brief a creature on a job (it must be willing, and the briefing takes 10 minutes), you decide exactly what it knows about the job, the family, and you. If magic reads its mind, compels it to tell the truth, or questions it after death, the magic learns only what you told it, and the first time that happens before your next Long Rest, you know it happened, wherever you are."
+      },
+      {
+       "level": 14,
+       "name": "Fall Guy",
+       "text": "Someone else always takes the fall. When you use Anticipate and the attack misses, you can make the blow land on someone else: one creature of your choice other than the attacker, within the attacker's reach (or within 5 feet of the target, for a ranged attack), takes the attack's damage as if the attack had hit it. You can use this feature a number of times equal to your Proficiency Bonus, and you regain all expended uses when you finish a Long Rest."
+      },
+      {
+       "level": 14,
+       "name": "The Sit-Down",
+       "text": "Your name is known in every underworld, and bosses ask your advice. When you find a settlement's underworld, whoever runs it receives you as an equal, and over a tenday spent there you can put it to work: it carries out one job you set it (a theft, a smuggling run, a jailbreak, a forgery, a riot, a fire), and you pay what the DM says the job costs. The DM decides what follows. Once you use this feature, you can't use it again until you finish a tenday of downtime. In addition, no jail or prison in a settlement where you have found the underworld holds you or your companions for more than 1d4 days, unless magic holds you there. You can also call a sit-down: the heads of two or more of a settlement's underworld organizations meet under your guarantee, and while they sit at your table, no one there starts a fight. You have Advantage on any check to make them agree to terms.\n\n> **Playing a Majordomo**\n>\n> You're not playing a villain unless you want to. The underworld is an institution like any other in 1668: it's where you go when the law is the problem, and in a world of monopolies, sea bans, and witch-finders, the law often is. The Criminal background suits you, and so does any other; plenty of majordomos were born to a counting house or trained for the law, and found the books more interesting from the other side.\n>\n> About That is the fun of the heist without the hour of planning at the table. Don't plan everything out loud: get into trouble, then reveal that you'd already greased the guard. Your DM is the judge of whether you could have, so be generous with each other.\n>\n> In a fight, Observe whoever is hurting your people, and Exploit the hit that won't finish it off with a trick; save the full dice for the hit that will. From 14th, stand where the enemies are crowded together, and let them hit each other.\n>\n> Talk with your table about how much crime the game wants. A family's war, a heist campaign, a smuggling ship, or a party with one Counsellor who knows a man: all of them work. You're the one who says \"it's not personal, it's business,\" and is mostly right."
+      }
+     ]
     },
     {
      "name": "Marshal",
      "lead": "",
      "features": [
+      {
+       "level": 3,
+       "name": "Staff Officer",
+       "text": "By watching a camp, a garrison, a fleet in harbor, or a column on the march for 10 minutes, you can estimate its numbers to within a tenth, how many days of food, water, and powder it carries, whether it has been paid lately, and whether it's getting ready to move. In any camp or garrison that isn't hostile to you, you can find a meal, a bed, fodder for your mounts, and the officer who signs things."
+      },
       {
        "level": 3,
        "name": "Battle Picture",
@@ -1042,9 +626,19 @@
        "text": "You can spend 10 minutes surveying the ground from a place where you can see it. The DM tells you the best approach to any one place within 1 mile, the most defensible ground in that area, and where an ambush is most likely to be laid on the way."
       },
       {
+       "level": 6,
+       "name": "Logistics",
+       "text": "Before a journey, you can spend 1 hour with maps, stores, and anyone who knows the road. For that journey, the party's food and water last half again as long, the DM tells you where along the route more can be had and what it will cost, and you know the day the party will run out."
+      },
+      {
        "level": 10,
        "name": "Faster Than Thought",
        "text": "When you take a Bonus Action to Observe, you can Observe a second time as part of the same Bonus Action, choosing the same creature or another one."
+      },
+      {
+       "level": 10,
+       "name": "Siegecraft",
+       "text": "By studying a fortification, a walled town, or a fortified camp for 10 minutes from where you can see it, you learn its garrison's approximate strength, how long its stores will hold, its weakest point, and how a besieger would most likely take it. If you're inside the walls, you learn the same from the inside, and how long it can hold."
       },
       {
        "level": 14,
@@ -1055,6 +649,11 @@
        "level": 14,
        "name": "Extraction",
        "text": "When an ally you can see within 60 feet of you who can hear you takes damage that would reduce it to 0 Hit Points, you can take a Reaction to shout the warning; it drops to 1 Hit Point instead. Once you use this feature, you can't use it again until you finish a Short or Long Rest."
+      },
+      {
+       "level": 14,
+       "name": "Terms",
+       "text": "Commanders deal with you as one of their own. When you parley under a flag of truce or negotiate a surrender, a ransom, an exchange of prisoners, or passage through someone's land, you have Advantage on the Charisma checks you make, and you can use your Intelligence modifier instead of your Charisma modifier for them. A commander who has met you across a field honors a truce you've agreed to, unless it has a very good reason not to."
       }
      ]
     },
@@ -1163,7 +762,7 @@
      {
       "Level": "1",
       "Proficiency Bonus": "+2",
-      "Class Features": "Spellcasting, Arc Gun",
+      "Class Features": "Spellcasting, Arc Gun, Tinker",
       "Arc Gun": "1d10",
       "Devices": "—",
       "Cantrips": "2",
@@ -1454,6 +1053,11 @@
      "text": "You carry a weapon of your own design that throws lightning. The Arc Gun is a magic item that only you can fire.\n\n**Firing It.** When you take the Attack action, you can fire the Arc Gun in place of one of the attacks: make a ranged attack roll using Intelligence against a creature or object within 120 feet of yourself, adding your Proficiency Bonus. On a hit, the target takes Lightning damage equal to the dice shown in the Arc Gun column of the Mhizha Features table plus your Intelligence modifier. You can fire the Arc Gun only once per turn. This is a ranged attack, not a weapon or spell attack; you must hold the Arc Gun to fire it.\n\n**Rebuilding It.** If the Arc Gun is lost (out of your possession for 1 hour) or destroyed, you can build a new one with Tinker's Tools over the course of a Long Rest; the old one stops working."
     },
     {
+     "level": 1,
+     "name": "Tinker",
+     "text": "With Tinker's Tools and 1 minute of work, you can mend a single break or tear in a nonmagical object you touch, as the *Mending* cantrip does, or build a Tiny clockwork trinket that does one simple thing (ticks, chimes at a set hour, walks in a line, plays a few bars of music). A trinket stops working after 8 hours. You can have a number of trinkets equal to your Proficiency Bonus at a time; if you build another, your oldest stops working.\n\n*Retuning.* You can hear when a device has drifted. With Tinker's Tools and 10 minutes of work, you can retune a Mutapan curiosity (a self-lighting lamp, a stove, a pump, any small work that has fallen out of calibration) so it works as new. Abroad, where no one else can, this is worth something: the owner of a drifting lamp is usually rich, often grateful, and sometimes talkative, and a retuning can get you through a door that a letter of introduction wouldn't."
+    },
+    {
      "level": 2,
      "name": "Devices",
      "text": "You build small devices that each do one thing well. You know two device designs of your choice from the Device Designs below. You learn more designs as you gain Mhizha levels, as shown in the Devices column of the Mhizha Features table. Whenever you gain a Mhizha level, you can replace one design you know with another for which you qualify.\n\n**Building Devices.** When you finish a Long Rest, you can spend 1 hour of it with Tinker's Tools to build one device of each design you know. A device you built earlier from the same design stops working. You can use a device yourself or hand it to another creature; a device works for whoever wears or holds it.\n\n**Magical and Electrical.** A device marked *Electrical* runs on stored current and isn't magic: anyone can use it, and an Antimagic Field or *Dispel Magic* doesn't stop it. Every other device is a magic item that doesn't require Attunement; it stops working in an Antimagic Field, and if you die.\n\n**Durability and Loss.** A device is an object with AC 15 and 5 Hit Points; at 0 Hit Points it is destroyed. A device is lost if it has been out of your possession, and out of the possession of anyone you gave it to, for 1 hour.\n\n#### Device Designs\n\n**Arc Lamp** *(Electrical)*. The lamp sheds Bright Light in a 30-foot radius and Dim Light for an additional 30 feet, or in a 60-foot Cone and Dim Light for an additional 60 feet. It has no flame, works underwater, and can be shuttered or opened as a Bonus Action.\n\n**Charged Plate** *(Electrical)*. The plate isn't armor, and it can be worn with armor. When the wearer finishes a Short or Long Rest, it gains Temporary Hit Points equal to your Mhizha level plus your Intelligence modifier.\n\n**Clockwork Servant.** A Tiny clockwork figure that works as the servant created by the *Unseen Servant* spell, except that it's visible, it obeys a creature you designate when you build it, and it lasts until you build the device again.\n\n**Lockbreaker** *(Electrical)*. A creature using it with Thieves' Tools adds your Intelligence modifier to checks to pick locks and disarm traps.\n\n**Shock Gauntlet** *(Electrical)*. Once on each of its turns, when the wearer hits a creature with an Unarmed Strike or an attack with a melee weapon, the creature takes an extra 1d4 Lightning damage.\n\n**Spring Boots.** The wearer's jump distances are tripled, and it takes no damage from a fall of 30 feet or less.\n\n**Grapple Line** *(Electrical; Prerequisite: Mhizha level 5)*. Once on each of its turns, as a Bonus Action, the holder can fire the line at a solid surface within 60 feet of itself and be pulled in a straight line to an unoccupied space next to that point. This movement doesn't cost the holder any Speed, and it provokes Opportunity Attacks as normal.\n\n**Night Lenses** *(Prerequisite: Mhizha level 5)*. The wearer has Darkvision with a range of 60 feet.\n\n**Seeing Spectacles** *(Prerequisite: Mhizha level 5)*. The wearer sees creatures and objects that have the Invisible condition within 30 feet of itself as if they were visible, and has Advantage on Intelligence (Investigation) checks to discern an illusion.\n\n**Breathing Helm** *(Prerequisite: Mhizha level 9)*. The wearer can breathe underwater and isn't affected by smoke or by gas that must be inhaled, and it sees clearly underwater. It doesn't let the wearer see through an area that is Heavily Obscured.\n\n**Speaking Wires** *(Electrical; Prerequisite: Mhizha level 9)*. Two handsets joined by nothing anyone can see. Whoever holds one can speak in a whisper to whoever holds the other, if the two are within 1 mile of each other.\n\n**Flight Pack** *(Prerequisite: Mhizha level 13)*. The wearer has a Fly Speed equal to its Speed. The wearer turns the pack on or off (no action required). The pack works for a total of 1 hour, in increments of 1 minute or more, and then not again until you build it again."
@@ -1563,8 +1167,23 @@
       },
       {
        "level": 3,
+       "name": "Powered Suit",
+       "text": "You gain Heavy armor training. With Tinker's Tools and 1 hour of work, you can make a suit of armor you wear into your suit. You can have only one suit at a time; if you make another, the old one is ordinary armor again. While you wear it, the following benefits apply:\n\n- *Built In.* The Arc Gun is built into the suit; you fire it without holding it, and the suit is your Spellcasting Focus.\n- *Gauntlets.* Your Unarmed Strikes deal Force damage equal to 1 plus your Intelligence modifier, and you use Intelligence for their attack rolls.\n- *Tailored.* A suit is cut to pass. Out of a fight, it can look like ordinary clothes of your station: court dress, a merchant's coat, a laborer's wrap. A creature that looks closely can tell it's armor with a successful Wisdom (Perception) check against your spell save DC.\n- *Model.* When you finish a Long Rest, choose the suit's model. *Infiltrator:* the suit doesn't give you Disadvantage on Dexterity (Stealth) checks, and your Speed increases by 10 feet. *Guardian:* when a creature you can see hits an ally within 5 feet of you with an attack roll, you can take a Reaction to reduce the damage by 1d10 plus your Intelligence modifier; you can do this a number of times equal to your Proficiency Bonus, and you regain all expended uses when you finish a Long Rest."
+      },
+      {
+       "level": 3,
        "name": "Kinetic Charge",
        "text": "The suit drinks the force that strikes it. When damage reduces your Hit Points while you wear it, or you reduce damage with the Guardian's Reaction, the suit becomes charged; it holds one charge at a time. When you hit a creature with the Arc Gun or an Unarmed Strike while the suit is charged, you can release the charge: the creature takes an extra 2d6 Force damage (3d6 if the suit is an Infiltrator). You can release the charge only once per turn. The charge fades if you take off the suit or finish a Short or Long Rest."
+      },
+      {
+       "level": 6,
+       "name": "Suit Systems",
+       "text": "Releasing Kinetic Charge now deals an extra 1d6 Force damage (2d6 if the suit is an Infiltrator). In addition, you gain the following benefits:\n\n- *Built-In Curiosity.* When you build devices, you can also build one Mutapan curiosity into the suit, and change it whenever you build devices again:. It works only for you while you wear the suit, and it's lost or destroyed only if the suit is.\n- *Model Systems.* *Infiltrator:* you have a Climb Speed equal to your Speed, and when you fall, you take no damage and can move horizontally up to twice the distance you fall. *Guardian:* when you use the Guardian's Reaction to protect an ally within 5 feet of you, you can swap places with it, as long as you're both willing."
+      },
+      {
+       "level": 10,
+       "name": "Improved Models",
+       "text": "*Infiltrator:* once per Long Rest, as a Bonus Action, you have the Invisible condition until the start of your next turn. *Guardian:* you can't be moved against your will or given the Prone condition while you wear the suit, and your Reaction can protect an ally within 10 feet of you.\n\n*Sealed Seams.* While you wear the suit, you're comfortable in extreme heat and extreme cold, and you automatically succeed on saving throws against Exhaustion from them."
       },
       {
        "level": 14,
@@ -1621,8 +1240,23 @@
       },
       {
        "level": 3,
+       "name": "Tria Prima",
+       "text": "You gain proficiency with Alchemist's Supplies; if you already have it, choose another type of Artisan's Tools. When you finish a Long Rest, you can spend 1 hour of it with Alchemist's Supplies to make three elixirs: one of Salt, one of Sulfur, and one of Mercury. An elixir is magical, and it lasts until you finish your next Long Rest. A creature can drink an elixir, or give it to a creature within 5 feet of itself, as a Bonus Action.\n\n- *Salt* (the body). The drinker regains Hit Points equal to 2d8 plus your Intelligence modifier.\n- *Sulfur* (the soul). For 1 minute, once on each of the drinker's turns when it hits a creature with an attack roll, that creature takes an extra 1d6 Fire damage.\n- *Mercury* (the spirit). For 1 minute, the drinker's Speed increases by 10 feet, and Opportunity Attacks against it have Disadvantage.\n\n*Assay.* With Alchemist's Supplies and 10 minutes of work, you learn what a sample of metal, ore, or coin is made of and how pure it is: whether gold is good, whether silver has been cut, and whether a bar has been weighted with a gray metal that isn't silver. Merchants, mints, and moneylenders pay well for this, and a House of the Bird assayer's word is accepted from Sofala to Surat."
+      },
+      {
+       "level": 3,
        "name": "Nigredo",
        "text": "You begin the Work by breaking matter down. When you fire the Arc Gun, you can have it deal Acid damage instead of Lightning damage; Arc Chain and Lightning Itself apply to the shot whatever its damage type. In addition, with Alchemist's Supplies and 10 minutes of work, you can dissolve a nonmagical object that fits in a 1-foot Cube and isn't being worn or carried (a lock, a hinge, a length of chain) into a black residue."
+      },
+      {
+       "level": 6,
+       "name": "Albedo",
+       "text": "You purify what you have broken down. Your Salt elixir also ends the Poisoned condition and one disease on the drinker. You have Resistance to Poison damage, and you can purify food and drink you touch as the *Purify Food and Drink* spell does (no action required).\n\n*Green Salt.* You know how to make the field dressing Mutapa's farms run on. During downtime, with Alchemist's Supplies, a week of work, and materials worth, you can dress a farm's fields so that its next harvest is a good one, whatever else the season does short of drought, flood, or locusts. What that's worth to the farm's owner is for the DM, but in a lean year it's worth a great deal, and a village that's eaten through a famine on your dressing remembers you."
+      },
+      {
+       "level": 10,
+       "name": "Citrinitas",
+       "text": "The Work wakes. Your Salt elixir restores 3d8 Hit Points plus your Intelligence modifier. In addition, when you make your elixirs, you can combine any two of them into a single draught, which grants both effects when it's drunk.\n\n*A Drop on the Tongue.* You can identify a potion, poison, or drug by tasting a drop of it over 1 minute. You learn what it is and what it does, and you suffer none of its effects from the taste."
       },
       {
        "level": 14,
@@ -1678,6 +1312,16 @@
        ]
       },
       {
+       "level": 6,
+       "name": "Field Repairs",
+       "text": "When you finish a Short Rest, your construct regains Hit Points equal to half its Hit Point maximum, unless it has stopped working.\n\n*Sentry.* Your construct doesn't sleep. While you rest, it can keep watch; if it sees or hears a creature it doesn't know within 60 feet of itself, it wakes you with a chime only you can hear."
+      },
+      {
+       "level": 10,
+       "name": "Improved Construct",
+       "text": "Your construct's Strike deals 2d8 Force damage plus your Intelligence modifier.\n\n*Errand.* You can send your construct on an errand to a place or person within 1 mile of you that you describe to it: to carry an object or a sealed message there, wait for an answer if you tell it to, and come back. It takes the route you'd take. It can't speak, and anyone who's met a Constructor knows to put the answer in writing."
+      },
+      {
        "level": 14,
        "name": "Fail-Safe",
        "text": "Once per Long Rest, when your construct drops to 0 Hit Points, it drops to half its Hit Point maximum instead."
@@ -1729,6 +1373,26 @@
          ]
         }
        ]
+      },
+      {
+       "level": 3,
+       "name": "Turret",
+       "text": "As a Bonus Action, you set down a turret in an unoccupied space you can see within 10 feet of yourself. It is a Small object with AC 15, Hit Points equal to twice your Mhizha level, and Immunity to Poison and Psychic damage. It lasts for 1 hour, until it drops to 0 Hit Points, or until you set down another. You can set one down at no cost, and once more by expending one of your Hit Point Dice, and you regain both uses when you finish a Long Rest.\n\nWhile your turret is deployed, it fires whenever you take the Attack action (no action required): make a ranged spell attack against a creature the turret can see within 60 feet of it. The turret doesn't fire while you're more than 120 feet away from it. On a hit, the target takes Force damage equal to 1d6 plus your Intelligence modifier.\n\n*Rangefinder.* You know the distance to anything you can see, out to a mile, and the height of anything you can see the top and bottom of, to within a few feet. With 10 minutes and Tinker's Tools you can also tell whether ground is level, which way water will run on it, and whether a wall, bridge, or roof is sound."
+      },
+      {
+       "level": 6,
+       "name": "Forward Observer",
+       "text": "As a Bonus Action, you can look through your turret until the start of your next turn, seeing and hearing what it would. While you do, you can't see or hear with your own eyes and ears, and you can fire the Arc Gun as if you were standing in the turret's space.\n\n*Watch.* When you set down your turret out of a fight, you can set it to watch instead of fire. While it watches, it doesn't attack and lasts for 8 hours instead of 1, but if a creature you didn't designate when you set it down comes within 60 feet of it, it sounds a chime that you hear if you're within 1 mile of it."
+      },
+      {
+       "level": 10,
+       "name": "Shells",
+       "text": "When you would fire the Arc Gun, you can fire a shell instead. Each creature in a 10-foot-radius Sphere centered on a point you can see within 120 feet of yourself makes a Dexterity saving throw against your spell save DC. On a failed save, a creature takes Force damage equal to the Arc Gun's dice plus your Intelligence modifier; on a successful save, it takes half as much damage. You can fire two shells, and you regain both when you finish a Long Rest.\n\n*Signal Shell.* Out of a fight, you can fire a shell that does no damage and isn't expended: it bursts as a light and a sound seen and heard for miles, in a color and pattern you choose. Fired in a code you've agreed in advance, it carries a short message."
+      },
+      {
+       "level": 14,
+       "name": "Bulwark",
+       "text": "While within 10 feet of your turret, you and your allies have a +2 bonus to Armor Class against ranged attack rolls.\n\n*Siegecraft.* With 1 hour to study a fortification, you learn its weakest point, roughly how long it would hold against an assault or a siege, and what it would take to make it hold longer. You have Advantage on any ability check to plan, build, or break a fortification."
       }
      ]
     },
@@ -1780,8 +1444,23 @@
       },
       {
        "level": 3,
+       "name": "The Map",
+       "text": "You gain proficiency with Cartographer's Tools; if you already have it, choose another type of Artisan's Tools. You carry a map that draws itself: it shows any place you have spent 10 minutes in, you can't become lost except by magic, and it is your Spellcasting Focus.\n\n*Fair Copy.* With Cartographer's Tools and 10 minutes of work, you can copy any map, chart, or plan you've seen, from memory, and you can tell at a glance whether a map is accurate, out of date, or a deliberate lie.\n\n*Fold Space.* As a Bonus Action, you fold the map: a willing creature you can see within 30 feet of yourself teleports up to 15 feet to an unoccupied space you can see. You can do this a number of times equal to your Proficiency Bonus, and you regain all expended uses when you finish a Long Rest."
+      },
+      {
+       "level": 3,
        "name": "Contour Lines",
        "text": "As a Bonus Action, you draw the ground steeper than it is. Each creature of your choice in a 10-foot-radius Sphere centered on a point you can see within 60 feet of yourself makes a Strength saving throw against your spell save DC. On a failed save, a creature takes Force damage equal to the Arc Gun's dice, has the Prone condition, and has a Speed of 0 until the end of its next turn. On a successful save, it takes half as much damage only. You can use this feature twice, and you regain all expended uses when you finish a Long Rest."
+      },
+      {
+       "level": 6,
+       "name": "Survey",
+       "text": "You can spend 10 minutes mapping your surroundings. The map shows every secret door, hidden passage, and trap within 60 feet of you that isn't hidden by magic, and you learn the general nature of each trap.\n\n*Route.* When you plan a journey between two places on your map, you know how long it will take at each travel pace, the safest route and the fastest (rarely the same), and every danger the map has recorded on the way: a ford that floods, a pass that closes, a valley where cattle die."
+      },
+      {
+       "level": 10,
+       "name": "Wide Fold",
+       "text": "When you use Fold Space, you can teleport two willing creatures instead of one, and each can teleport up to 30 feet.\n\n*Longitude.* You always know exactly where you are on the face of the world, latitude and longitude both, and the true time where you stand. A ship you navigate can't become lost except by magic."
       },
       {
        "level": 14,
@@ -2398,9 +2077,19 @@
        "text": "You are proficient with siege equipment such as ballistae, cannons, and mangonels; use your DM's rules for siege equipment (the 2014 *Dungeon Master's Guide* has a set). When you aim one, it uses your Intelligence modifier for its attack rolls, and its attacks ignore Half Cover and Three-Quarters Cover."
       },
       {
+       "level": 3,
+       "name": "Master Gunner",
+       "text": "You can judge a gun by looking it over: its caliber, the weight of shot and the charge of powder it takes, its range, and whether it has been overloaded, cracked, or badly cast and is likely to burst. Given 10 minutes to look at a wall, a gate, or an earthwork, you know roughly how long it would stand against the guns you can see or name, and where a battery would have to stand to breach it. Garrisons, armies, merchant ships, and foundries everywhere want master gunners: wherever there are guns, you can find paid work as one, at a wage the DM sets, and people who work with guns treat you as one of them."
+      },
+      {
        "level": 6,
        "name": "Disabling Shot",
        "text": "When you hit a creature you're studying with an attack using a crossbow or a firearm, you can place the shot instead of taking your Calculated Shot's extra damage. Choose one: the creature has Disadvantage on attack rolls until the start of your next turn; its Speed is 0 until the start of your next turn; or it drops one object it's holding. You can use this feature a number of times equal to your Proficiency Bonus, and you regain all expended uses when you finish a Long Rest."
+      },
+      {
+       "level": 6,
+       "name": "Fireworks",
+       "text": "Given a day, your tools, and black powder and salts worth 25 GP, you can make a fireworks display that lasts about 10 minutes and can be seen for miles on a clear night: rockets, wheels, fountains, colored fire. A display at a feast, a wedding, or a ruler's birthday gets you noticed by whoever paid for the feast. You can also make up to six signal rockets as part of the same work; each, fired as a Utilize action, bursts in a color and pattern you chose when you made it, so that anyone who knows your code can read it."
       },
       {
        "level": 10,
@@ -2425,6 +2114,11 @@
       },
       {
        "level": 3,
+       "name": "The View",
+       "text": "Given 10 minutes with a body, you learn how long it has been dead (to within an hour if it died in the last day, and to within a few days after that), what killed it, whether it was moved after death, whether it was alive when it went into the water or the fire, and what made the wounds: the kind of blade, shot, or blow, and from which side. You learn nothing about who did it, beyond what the wounds alone can say."
+      },
+      {
+       "level": 3,
        "name": "Find the Flaw",
        "text": "When you study a creature, you can also find its flaw. Choose one of the following, which lasts until the start of your next turn: its Armor Class decreases by 2, or it loses one Resistance of your choice (you learn which Resistances it has). Finding the flaw again doesn't stack."
       },
@@ -2432,6 +2126,11 @@
        "level": 6,
        "name": "What It Is",
        "text": "You can spend 1 minute studying an object to learn what it is: whether it is cursed and what the curse does, a magic item's properties and how to use them, or what poison or potion it holds. In addition, when you study a creature or object that is an illusion, you learn that it is one, and when you study a creature, you also learn whether it is disguised, shapechanged, or under another creature's control."
+      },
+      {
+       "level": 6,
+       "name": "Standing",
+       "text": "When you lay your findings about a death or a crime before anyone with the power to act on them (a county bench, a magistrate, a kadi's court, a village's elders, a ship's captain), they take you seriously: they hear you out, and they don't dismiss what you show them without a reason, though they may still decide against you. If you hold the office of coroner in England, or its like elsewhere, you also have the office's rights: to view any body in your jurisdiction before it is buried, to summon a jury and witnesses, and to commit the accused for trial."
       },
       {
        "level": 10,
@@ -2470,9 +2169,29 @@
        "text": "When you release an experiment, roll a d6. On a 1, it goes off badly: it still works, and you also take half the damage rolled (no saving throw)."
       },
       {
+       "level": 3,
+       "name": "Demonstration",
+       "text": "Given 1 hour to set up and an audience, you can stage a demonstration: sparks drawn from a rubbed globe, a bell falling silent in a jar emptied of air, water frozen solid on a summer afternoon, a color that blooms when two clear liquids meet. It's harmless and it isn't magic, and anyone who watches it knows both. For the next 24 hours, you have Advantage on Charisma checks to impress, persuade, or raise money from anyone who watched it to the end."
+      },
+      {
+       "level": 6,
+       "name": "Overload",
+       "text": "When you release an experiment, you can overload it: it deals two more dice of damage, and Volatile goes off badly on a 1 or 2."
+      },
+      {
+       "level": 6,
+       "name": "Touchstone",
+       "text": "With your Alchemist's Supplies and 10 minutes, you can tell what a metal, an alloy, a salt, or an acid is, and how pure it is: whether a coin is clipped or debased, whether gold has been adulterated and with what, and whether a powder is what its seller says it is. You can tell platina from silver, which almost no one outside Mutapa can yet do reliably, and you know what that knowledge is worth to the people who'd pay for it."
+      },
+      {
        "level": 10,
        "name": "Insulation",
        "text": "You have Resistance to the damage of your own experiments."
+      },
+      {
+       "level": 10,
+       "name": "Freezing Mixture",
+       "text": "With your Alchemist's Supplies, a supply of saltpeter, and 10 minutes, you can chill water, wine, or a room well below a cellar's cool, and given snow or ice to start from, you can freeze water solid. Kept cold this way, food or remains don't spoil for 1 week, as long as you renew the mixture each day."
       },
       {
        "level": 14,
@@ -2492,6 +2211,11 @@
       },
       {
        "level": 3,
+       "name": "Bread or Poison",
+       "text": "You can spend 1 minute examining a plant, a fungus, a fruit, meat, or water to learn whether it's safe to eat or drink and, if it isn't, what it would do to whoever did. You also know how to find food and clean water in a land whose plants and animals you have studied for at least a day, and you know which of its people's foods you've never seen are worth asking about. This catches food of the Hidden Realm too: measurement doesn't care what made a thing."
+      },
+      {
+       "level": 3,
        "name": "Know Its Nature",
        "text": "A creature you're studying has Disadvantage on its saving throw against your Mechanism."
       },
@@ -2499,6 +2223,11 @@
        "level": 6,
        "name": "Specimen",
        "text": "When you finish a Short or Long Rest after a creature you have studied has died, you can spend 1 hour with its remains and your Herbalism Kit or Alchemist's Supplies to prepare a remedy. As a Bonus Action, a creature can drink the remedy or give it to another creature within 5 feet. A creature that drinks it ends one poison or disease that kind of creature caused, or for 8 hours has Resistance to that kind of creature's Poison damage and Advantage on saving throws against its poisons and diseases. You can have one remedy at a time; it spoils when you finish a Long Rest."
+      },
+      {
+       "level": 6,
+       "name": "Cabinet",
+       "text": "You can preserve the remains of a creature you have studied (a skin, a skeleton, a pressed plant, something in a jar of spirits) with 1 hour of work and your Herbalism Kit or Alchemist's Supplies, and it keeps indefinitely. You can tell a real specimen from a fake one at a glance, and you know roughly what a collector would pay for one; a well-made specimen of a creature no one has described can be worth a great deal, at a price the DM sets, and earns you a name in the learned world."
       },
       {
        "level": 10,
@@ -2523,6 +2252,11 @@
       },
       {
        "level": 3,
+       "name": "Taking the Fix",
+       "text": "With your Navigator's Tools and a clear sky, you can spend 10 minutes to fix your latitude to within a few miles, and the local time to within a minute; on land, with a telescope and a clear night, you can fix your longitude too. Given an hour and a day's travel, you can draw a chart of the way you came that someone else can follow, and you can read anyone's chart, whatever its language or its conventions, and tell how far to trust it."
+      },
+      {
+       "level": 3,
        "name": "Course Correction",
        "text": "As a Bonus Action, you can call out a path. A number of allies up to your Proficiency Bonus who are within 30 feet of yourself and can see or hear you can each take a Reaction to move up to half their Speed. This movement doesn't provoke Opportunity Attacks. You can use this feature a number of times equal to your Proficiency Bonus, and you regain all expended uses when you finish a Short or Long Rest."
       },
@@ -2542,9 +2276,19 @@
        "text": "Your Speed increases by 10 feet, and Difficult Terrain costs you no extra movement."
       },
       {
+       "level": 6,
+       "name": "Weather Eye",
+       "text": "You can predict the weather where you are for the next 24 hours, and when a storm, a fog, or a change of wind is coming within that time. Near the sea, you also know the times of the tides, and on a monsoon coast, whether the season is about to turn."
+      },
+      {
        "level": 10,
        "name": "Through the Gap",
        "text": "When you use Course Correction, you can also move up to your Speed, and you and each ally who moves can move through the spaces of hostile creatures. A creature can't end its move in another creature's space."
+      },
+      {
+       "level": 10,
+       "name": "Pilot",
+       "text": "You can bring a ship safely into any harbor or through any strait you can see, even one you've never entered, given an hour to watch the water first. Ships' masters everywhere need pilots: on any ship bound your way, you can work your passage as navigator or pilot, and the master gives you and up to five companions passage and food for the voyage in return."
       },
       {
        "level": 14,
@@ -3080,7 +2824,7 @@
       {
        "level": 3,
        "name": "Field Training",
-       "text": "You gain training with Medium armor and Shields, and proficiency with Martial weapons. You can also use any weapon you are proficient with as a Spellcasting Focus for your Physician spells.\n\n  When your company makes camp, you can site it: the water drawn upstream, the latrines dug down, the sick kept apart, and the food kept dry. In a camp you've sited, members of your company have Advantage on saving throws against natural diseases they would catch there. You also know how armies live: you can read a camp, a garrison, or a column on the march and tell how well fed, how sick, and how close to mutiny it is.\n\n**Weapon Mastery.** Your training includes weapon mastery. You can use the mastery properties of two kinds of weapons of your choice with which you have proficiency, such as Longbows and Daggers. Whenever you finish a Long Rest, you can change the kinds of weapons you chose."
+       "text": "You gain training with Medium armor and Shields, and proficiency with Martial weapons. You can also use any weapon you are proficient with as a Spellcasting Focus for your Physician spells.\n\n**Camp Physic.** When your company makes camp, you can site it: the water drawn upstream, the latrines dug down, the sick kept apart, and the food kept dry. In a camp you've sited, members of your company have Advantage on saving throws against natural diseases they would catch there. You also know how armies live: you can read a camp, a garrison, or a column on the march and tell how well fed, how sick, and how close to mutiny it is.\n\n**Weapon Mastery.** Your training includes weapon mastery. You can use the mastery properties of two kinds of weapons of your choice with which you have proficiency, such as Longbows and Daggers. Whenever you finish a Long Rest, you can change the kinds of weapons you chose."
       },
       {
        "level": 3,
@@ -3125,6 +2869,11 @@
       },
       {
        "level": 6,
+       "name": "Practice",
+       "text": "In any settlement, you can set up a practice with a day's work and a room. While you practice, you earn a comfortable living, and patients talk: after a day of practice in a place, you know its gossip, who is sick, who is pregnant, who is drinking, who has been beaten, and who is paying for it. A household that has called you to a bedside will let you in again."
+      },
+      {
+       "level": 6,
        "name": "House Call",
        "text": "When you would take damage, or when a hostile creature ends its turn within 5 feet of you, you can take a Reaction and expend one Prowess Die to teleport to an unoccupied space you can see within 5 feet of a creature in your chain that is within 30 feet of you. You still take the damage that triggered the Reaction."
       },
@@ -3148,6 +2897,11 @@
        "level": 3,
        "name": "Rip Life",
        "text": "You learn to take vitality rather than give it. When you use Healing Prowess, you can rip it from a creature instead of touching an ally: choose a creature you can see within 30 feet of yourself. The creature must make a Constitution saving throw against your spell save DC, taking Necrotic damage equal to the number rolled on the Prowess Die plus your Intelligence modifier on a failed save, or half as much damage on a successful one. You, or one creature you can see within 30 feet of yourself, then regain Hit Points equal to the damage dealt."
+      },
+      {
+       "level": 3,
+       "name": "Cunning Folk",
+       "text": "You know the remedies, charms, and taboos of any countryside you've lived in for a season. The people there who would never go to a Lanternhall doctor come to you, and they tell you what they'd never tell a priest. You can also look at a charm, a witch bottle, a poppet, or a hex sign and tell what it was made to do, whether it worked, and whether the hand that made it knew what it was doing."
       },
       {
        "level": 3,
@@ -3228,6 +2982,11 @@
       },
       {
        "level": 6,
+       "name": "The Quiet Room",
+       "text": "With an hour of treatment (a dark quiet room, running water, music, or talk), you can ease a creature's mind: one fear, panic, or mania that isn't magical leaves it for a day, and it sleeps that night. You can also tell, by watching a fit, whether it's a seizure, a possession, a curse, or a performance, and you can explain the difference to a cathedral in terms it can't easily dismiss."
+      },
+      {
+       "level": 6,
        "name": "Steady the Signal",
        "text": "When a creature you can see within 30 feet of yourself fails a saving throw against the Charmed, Frightened, Paralyzed, or Stunned condition, or against a spell or other effect that deals Psychic damage, you can take a Reaction and expend one Prowess Die to let it reroll the saving throw. It must use the new roll.\n\nIn addition, you can perform Treatment for the Charmed, Frightened, Paralyzed, or Stunned condition on your patient while you can see it within 30 feet of yourself, rather than only within your reach, and doing so doesn't expend a use of a Healer's Kit.\n\nYou also learn to press on the wire while a spell is traveling down it. When you cast a Physician spell that can give a creature the Charmed, Frightened, Paralyzed, Stunned, or Incapacitated condition, you can expend one Prowess Die as part of casting the spell. One target of the spell has Disadvantage on its saving throw against it."
       },
@@ -3254,6 +3013,11 @@
       },
       {
        "level": 3,
+       "name": "Bill of Health",
+       "text": "You know the quarantine law and practice of any port, city, or border you're in: how long it holds arrivals, what passes it accepts, and how its cordon is kept. Health boards, harbor masters, and quarantine officers recognize you as one of theirs. You can issue a bill of health for a person or a ship you've examined and found clean, and those officers will honor it. (Forging one is a different matter, and not this feature.)"
+      },
+      {
+       "level": 3,
        "name": "Pathology",
        "text": "When you cast a Physician spell that deals Necrotic or Poison damage, you can expend one Prowess Die as part of casting the spell to deal extra damage of that type to one target of the spell equal to the number rolled."
       },
@@ -3263,14 +3027,19 @@
        "text": "Your treatment reaches everyone in the cloud. When you use Miasma, you can take a Utilize action on the same turn to perform Treatment on every willing creature in the area at once, whether or not it is your patient, making a single Intelligence (Medicine) check and expending a single use of a Healer's Kit. Each creature is treated for the same effect; a creature that has been treated for that effect since its last rest can't benefit, whether the earlier attempt succeeded or failed.\n\nIn addition, you can make your Miasma noxious. When you do, no creature regains Hit Points or gains Advantage from it; instead, each hostile creature in the area when it appears takes Poison damage equal to the number rolled on the Prowess Die, or half as much on a successful Constitution saving throw against your spell save DC."
       },
       {
+       "level": 6,
+       "name": "The Slow Way",
+       "text": "You can tell, by Diagnosis or an hour's examination, which members of a household have had a disease and come through it the slow way, and so can't catch it again, and which were cured by magic and can. You can also nurse the slow way. When you tend a creature through a natural disease over a Long Rest, without ending it with a spell or a feature, it has Advantage on its saving throws against the disease until your next Long Rest; if it recovers, it can't catch that disease again. A disease ended by Treatment counts as the slow way too."
+      },
+      {
        "level": 10,
        "name": "Outbreak",
-       "text": "Your afflictions spread. When a creature fails a saving throw against a level 1+ Physician spell you cast that deals Necrotic or Poison damage, or fails its saving throw against your noxious Miasma, it becomes **infected**. The infection is a disease. An infected creature can't regain Hit Points, and at the start of each of its turns it takes Necrotic damage equal to your Intelligence modifier and then makes a Constitution saving throw against your spell save DC, ending the infection on a success. A creature that ends its turn within 5 feet of an infected creature must succeed on a Constitution saving throw against your spell save DC or become infected. An infection ends after 1 minute if it hasn't ended sooner, and a creature whose infection ends can't be infected by this feature again for 1 minute. No more creatures can be infected at once than your Intelligence modifier (minimum of one); while that many are infected, no other creature becomes infected. Creatures that have Immunity to disease can't be infected, and your allies are never infected by this feature.\n\nIn addition, a creature that regains Hit Points from your Miasma has Resistance to Poison damage and can't be diseased until the end of its next turn.\n\n  When you examine a creature that has a natural disease, you learn whom or what it caught the disease from, if that source is within a day's travel, and the route it took: the water, the air, a touch, the cloth, the food, or the vermin."
+       "text": "Your afflictions spread. When a creature fails a saving throw against a level 1+ Physician spell you cast that deals Necrotic or Poison damage, or fails its saving throw against your noxious Miasma, it becomes **infected**. The infection is a disease. An infected creature can't regain Hit Points, and at the start of each of its turns it takes Necrotic damage equal to your Intelligence modifier and then makes a Constitution saving throw against your spell save DC, ending the infection on a success. A creature that ends its turn within 5 feet of an infected creature must succeed on a Constitution saving throw against your spell save DC or become infected. An infection ends after 1 minute if it hasn't ended sooner, and a creature whose infection ends can't be infected by this feature again for 1 minute. No more creatures can be infected at once than your Intelligence modifier (minimum of one); while that many are infected, no other creature becomes infected. Creatures that have Immunity to disease can't be infected, and your allies are never infected by this feature.\n\nIn addition, a creature that regains Hit Points from your Miasma has Resistance to Poison damage and can't be diseased until the end of its next turn.\n\n**Tracing.** When you examine a creature that has a natural disease, you learn whom or what it caught the disease from, if that source is within a day's travel, and the route it took: the water, the air, a touch, the cloth, the food, or the vermin."
       },
       {
        "level": 14,
        "name": "Doctor's Rounds",
-       "text": "The radius of your Miasma becomes 20 feet. In addition, each friendly creature within 10 feet of you has Advantage on Constitution saving throws and has Immunity to disease and to the Poisoned condition.\n\n  You can walk into and out of a quarantined city, a cordon, or a pest house, and no guard stops you. A health officer anywhere will take your word on whether a house can be opened, a ship unloaded, or a body buried."
+       "text": "The radius of your Miasma becomes 20 feet. In addition, each friendly creature within 10 feet of you has Advantage on Constitution saving throws and has Immunity to disease and to the Poisoned condition.\n\n**Wide Berth.** You can walk into and out of a quarantined city, a cordon, or a pest house, and no guard stops you. A health officer anywhere will take your word on whether a house can be opened, a ship unloaded, or a body buried."
       }
      ]
     },
@@ -4289,6 +4058,11 @@
       },
       {
        "level": 7,
+       "name": "The Paperwork",
+       "text": "You can read the seals, stamps, and forms of any office, court, or bureaucracy, in any language: you know whether a document is genuine, what office issued it, and what it lets its bearer do. After an hour in a government office, a customs house, or a court's antechamber, you know whom to see, in what order, and what each of them will want."
+      },
+      {
+       "level": 7,
        "name": "Lockstep",
        "text": "Your spirit stands where you can't. You can use Bear the Verdict when an ally within 5 feet of your spirit takes damage, as if you were in the spirit's space. You take the damage, not the spirit."
       },
@@ -4366,6 +4140,11 @@
        "text": "You know the Revelation of the Maelstrom."
       },
       {
+       "level": 3,
+       "name": "Water-Taken",
+       "text": "You can breathe water. You always know whether water you can see is safe to drink, and if it's fouled (poison, disease, a corpse upstream), which way the fouling came from. The spirits of springs, pools, wells, and rivers know you as one of the water's own, and with your Veilsight they'll talk to you about what they've seen."
+      },
+      {
        "level": 7,
        "name": "Elysium",
        "text": "You know the Revelation of Elysium."
@@ -4376,9 +4155,19 @@
        "text": "A Wellspring heals 1d6 instead of 1d4."
       },
       {
+       "level": 7,
+       "name": "Clean Water",
+       "text": "Once per Long Rest, you can spend 10 minutes at a well, spring, cistern, or stretch of stream and open the Oceanus into it. All the water within 30 feet of you is cleansed of poison and disease, and water drawn from it stays clean for 24 hours."
+      },
+      {
        "level": 11,
        "name": "Confluence",
        "text": "You can have two Wellsprings at once, and a creature that regains Hit Points from one can also end the Poisoned condition on itself."
+      },
+      {
+       "level": 11,
+       "name": "What the Water Took",
+       "text": "Once per Long Rest, you can put your hand in a body of water and name a creature or object lost in it within the last year. You learn where it lies, or where it came ashore. If it was a person, you also learn whether they drowned, were taken, or walked out on their own feet, and if they were taken, by what."
       },
       {
        "level": 15,
@@ -4389,6 +4178,11 @@
        "level": 15,
        "name": "Cascade",
        "text": "As a Bonus Action, you can pour a Wellspring into one creature within 5 feet of it. The Wellspring closes, and the creature regains 2d6 Hit Points for each time the Wellspring could still have healed."
+      },
+      {
+       "level": 15,
+       "name": "The Far Shore",
+       "text": "When a creature dies within sight of you or of one of your Wellsprings, you can tell it the way across (no action required). Its spirit goes on: it doesn't linger as a ghost, and it can't be raised as Undead against its will. This doesn't prevent a spell that returns it to life."
       },
       {
        "level": 15,
@@ -4450,6 +4244,11 @@
       },
       {
        "level": 3,
+       "name": "Everything Is Next Door",
+       "text": "You gain proficiency with one tool of your choice and learn one language of your choice. Whenever you finish a Long Rest, you can exchange the tool, the language, or both for others: the Mountain lends; it doesn't give."
+      },
+      {
+       "level": 3,
        "name": "Hundred Hands",
        "text": "When a creature you can see attacks an ally within 5 feet of your spirit, you can take a Reaction to give the attack roll Disadvantage. Your spirit catches the blow, but it takes nothing for it."
       },
@@ -4465,8 +4264,18 @@
       },
       {
        "level": 7,
+       "name": "High Places",
+       "text": "When you spend 10 minutes at the top of a hill, tower, mast, or other high place with a wide view, you see the lay of the land for a day's travel around: the roads and rivers, the settlements and their smoke, and anything that's wrong in it (a burned farm, an army's dust, a place where the Veil has worn thin). The DM describes what's there to be seen. You can do this once per Long Rest."
+      },
+      {
+       "level": 7,
        "name": "Twofold Vista",
        "text": "When you open a vista to let in an Influence, you can let in a second Influence from a different Revelation you know, without calling on its Favor (even if that Favor is spent), on the same creature or another within 30 feet of the vista. You can do this a number of times equal to your Proficiency Bonus, and you regain all expended uses when you finish a Long Rest."
+      },
+      {
+       "level": 11,
+       "name": "Guest-Friendship",
+       "text": "You always know the customs of hospitality where you are: what to bring, what to refuse, where to sit, and what not to say. You never give offense by accident. While you're someone's guest and have eaten under their roof, you have Advantage on Charisma checks to persuade them."
       },
       {
        "level": 11,
@@ -4477,6 +4286,11 @@
        "level": 15,
        "name": "Svarga",
        "text": "You know the Revelation of Svarga, the mountain's summit."
+      },
+      {
+       "level": 15,
+       "name": "Seen from the Summit",
+       "text": "Once per Long Rest, when you spend an hour studying a person, a place, or an institution (a court, a guild, a city's government, a family), the DM tells you three true things about how it works: who holds it up, what it fears, and what it wants."
       },
       {
        "level": 15,
@@ -4550,6 +4364,11 @@
        "level": 7,
        "name": "Asphodel",
        "text": "You know the Revelation of Asphodel."
+      },
+      {
+       "level": 7,
+       "name": "Last Rites",
+       "text": "When you see a corpse, you know how long ago it died, and whether its spirit has gone on, lingers nearby, or is being kept from going. You know the funeral customs of any people whose dead you have seen buried, and the dead of those peoples take you seriously: you have Advantage on Charisma checks with spirits of the dead."
       },
       {
        "level": 7,
@@ -4633,6 +4452,11 @@
        "level": 7,
        "name": "Valhalla",
        "text": "You know the Revelation of Valhalla."
+      },
+      {
+       "level": 7,
+       "name": "The Mead-Bench",
+       "text": "Soldiers, mercenaries, sailors, and any other company that drinks together before a fight take you for one of their own after an evening in their company. They'll share their rumors, their billets, and their grievances with you, and in any town with a garrison or a harbor, you can find a bed among them for the night at no cost."
       },
       {
        "level": 7,
@@ -5004,7 +4828,7 @@
      {
       "Level": "2",
       "Proficiency Bonus": "+2",
-      "Class Features": "The Court, Denial",
+      "Class Features": "The Court, Denial, Flee",
       "Warps": "4",
       "Cantrips": "3",
       "Prepared Spells": "5",
@@ -5123,7 +4947,7 @@
      {
       "Level": "9",
       "Proficiency Bonus": "+4",
-      "Class Features": "Thresholds, Loop",
+      "Class Features": "The Way Back, Thresholds, Loop",
       "Warps": "6",
       "Cantrips": "4",
       "Prepared Spells": "14",
@@ -5259,7 +5083,7 @@
      {
       "Level": "17",
       "Proficiency Bonus": "+6",
-      "Class Features": "The Elder Cycles",
+      "Class Features": "The Elder Cycles, The Door Opens",
       "Warps": "8",
       "Cantrips": "5",
       "Prepared Spells": "19",
@@ -5353,6 +5177,11 @@
      "text": "You refuse the outcome others would have for you, and change things accordingly.\n\nWhen a creature you can see hits you with an attack roll while you aren't wearing Medium or Heavy armor or using a Shield, you can take a Reaction and unravel one of your warps to deny it. You gain a bonus to AC equal to the Proficiency Bonus for your Danae level (as shown in the Danae Features table), to a maximum of +5, until the start of your next turn, including against the triggering attack.\n\nHow reality rearranges itself follows your nature, and from level 3 your subclass:\n\n| | The blow is denied by |\n|---|---|\n| Before level 3 | a flicker of the Hidden: a scent of rain, a wrong-colored light, and the blow goes wide |\n| Binding | a thread that catches the weapon an inch short |\n| Changing | a hidden current pulling at them |\n| Crossing | the air folding, and the blow arriving somewhere you aren't |\n| Naming | a word: the blow is named a miss |\n| Shaping | stone or crystal rising across the skin |"
     },
     {
+     "level": 2,
+     "name": "Flee",
+     "text": "When you take damage and are Bloodied afterward but not at 0 Hit Points (whether or not you were Bloodied before), you can take a Reaction to step half out of the world. Unravel one or more of your warps, in place (lots, knots, and staves included) or not yet used; each warp unraveled is 1 **fuel**. You're **Away** for 1 minute, and you gain Temporary Hit Points equal to your Danae level, plus 5 for each fuel. These Temporary Hit Points replace any you already have.\n\nBeing Away ends early when you have none of its Temporary Hit Points left, when you have the Incapacitated condition, or when you end it (no action required). While you're Away, you keep your mind and your magic: you cast spells and keep Concentration as normal, and in addition:\n\n- **Half Here.** Attack rolls against you have Disadvantage.\n- **Flicker.** Once on each of your turns, you can teleport up to 15 feet to an unoccupied space you can see (no action required).\n\n**Readjust.** When you stop being Away, you come back not quite where or when you left: you reappear in an unoccupied space within 15 feet of where you were, chosen by the DM (or by you, if the DM doesn't choose), and you can't take Reactions until the end of your next turn.\n\nOnce you use this feature, you can't use it again until you finish a Long Rest."
+    },
+    {
      "level": 3,
      "name": "Danae Subclass",
      "text": "Your prime modality manifests: you gain a Danae subclass of your choice — Binding, Changing, Crossing, Naming, or Shaping. A subclass is a specialization that grants you features at certain Danae levels. For the rest of your career, you gain each of your subclass's features that are of your Danae level or lower."
@@ -5381,6 +5210,11 @@
      "level": 7,
      "name": "Open Book",
      "text": "You can cast *Detect Thoughts* without expending a spell slot a number of times equal to your Proficiency Bonus, and you regain all expended uses when you finish a Long Rest. A creature whose temper you've read with Reading the Season in the last hour has Disadvantage on its saving throw against the spell."
+    },
+    {
+     "level": 9,
+     "name": "The Way Back",
+     "text": "You regain the use of Flee when you finish a Short or Long Rest, and when you Readjust, you always choose the space where you reappear.\n\nIn addition, while you're Away, when you teleport with Flicker, you can leave a warp of any shape you know in the space you left. It follows every rule for your warps (it can't overlap another, it lasts 1 minute, it can carry a season you know, and it counts as one of your warps in place), except that it costs no Bonus Action and no warp."
     },
     {
      "level": 9,
@@ -5416,6 +5250,11 @@
      "level": 17,
      "name": "The Elder Cycles",
      "text": "You can call the whole year at once. As a Bonus Action, choose a point within 60 feet of yourself. Every creature of your choice in a 30-foot-radius Sphere centered there is subject to all four seasons, making each saving throw separately. To resolve it quickly, each creature rolls its Constitution and Wisdom saving throws together, then its Strength saving throw (summer's damage needs no saving throw). Move the creatures that failed against spring last. This isn't a warp's season: it doesn't count against the one-warp-a-turn limit, and a creature can still be subject to one of your warps' seasons on the same turn. Once you use this feature, you can't use it again until you finish a Long Rest."
+    },
+    {
+     "level": 17,
+     "name": "The Door Opens",
+     "text": "While you're Away, the door you carry stands open, and you gain these benefits:\n\n- **The Storm.** At the start of each of your turns, each creature of your choice in a 15-foot Emanation originating from you is subject to a season. A creature whose temper you've read with Reading the Season in the last hour is subject to the season of its temper, and it has Disadvantage on any saving throw against it; every other creature is subject to one season you know, chosen when the storm starts each turn. This counts as one of your warps' seasons, so a creature it takes can't be taken by a warp's season on the same turn.\n- **The Glamour Drops.** Each creature of your choice that starts its turn within 30 feet of you, can see you, and whose temper you've read with Reading the Season in the last hour makes a Wisdom saving throw against your spell save DC. On a failed save, it has your choice of the Frightened or Charmed condition, with you as the source, until the start of its next turn."
     },
     {
      "level": 18,
@@ -5496,6 +5335,11 @@
        "text": "Creatures have Disadvantage on saving throws against your Kind Words. When your Kind Words succeed against a creature knotted to another creature, the other is affected too, without a saving throw."
       },
       {
+       "level": 6,
+       "name": "Handfast",
+       "text": "Outside combat, you can spend 10 minutes tying a binding between two or more willing creatures who make a promise to each other in your presence: a marriage, a contract, an apprenticeship, a truce, a sworn friendship. This costs no warp and isn't a knot for your other features. While the binding holds, each creature in it knows when another breaks the promise, and knows roughly which direction the others lie in, at any distance on the same plane. The binding holds until every creature in it agrees to untie it, or until you untie it. You can keep a number of bindings equal to your Charisma modifier (minimum of one); tying another unties your oldest."
+      },
+      {
        "level": 10,
        "name": "Oath",
        "text": "As a Magic action, choose a creature you can see within 60 feet of yourself that is knotted or that your Kind Words have affected within the last minute, and name a promise: to yield, to flee, to stand aside, to tell the truth, or not to harm a creature you name. It makes a Wisdom saving throw against your spell save DC; a willing creature can choose to fail. On a failed save, the promise binds it for 1 hour. The first time it breaks the promise, it takes 6d10 Psychic damage, and you know. Once you use this feature, you can't use it again until you finish a Short or Long Rest."
@@ -5559,9 +5403,19 @@
        "text": "The stream of fate runs under everyone near you, and you can pull it aside for them as easily as for yourself. When a creature you can see within 30 feet of yourself is hit by an attack roll, you can use Denial for it instead of for yourself, unraveling a warp as normal; the creature gains the bonus to AC until the start of your next turn, including against the triggering attack. Denial's armor restriction applies to you, not to the creature you protect."
       },
       {
+       "level": 3,
+       "name": "Small Mercies",
+       "text": "Outside combat, once per Long Rest, when you or a companion goes looking for something ordinary you need (a dropped key, a cheap item a market might stock, a carter going your way, someone who knows the pass), the DM tells you where it turns up, if it can be found anywhere nearby. You can also tell when a game, a lottery, a drawing of lots, or a wager is rigged (marked cards, loaded dice, a fixed draw) by watching one round of it; you don't learn how, only that the house is cheating fate."
+      },
+      {
        "level": 6,
        "name": "Losing Streak",
        "text": "When you call foul and the creature fails the check or saving throw or misses with the attack roll, you regain one expended warp. Once you regain a warp this way, you can't do so again until you finish a Short or Long Rest."
+      },
+      {
+       "level": 6,
+       "name": "Road Luck",
+       "text": "While you travel overland or by water with companions, the road's small mishaps don't befall your company unless the DM wants one for the story: no thrown shoe, cracked axle, spoiled flour, or missed tide. Further, when your company's way is uncertain (a fork, a fog, two inns), you can ask the DM which choice the year favors, and the DM answers \"this one,\" \"that one,\" or \"neither.\" You can ask once a day."
       },
       {
        "level": 10,
@@ -5569,9 +5423,19 @@
        "text": "When you ready a lot, you can ready a second as part of the same Bonus Action, expending a warp for each. When you cast a lot on an attack roll and the attack hits, the same call carries to the damage: the attacker rerolls the damage dice and uses the higher total (fair) or the lower (foul)."
       },
       {
+       "level": 10,
+       "name": "Lucky Charm",
+       "text": "Gamblers, sailors, soldiers, midwives, brides, and anyone else who lives by chance can tell what you are after a few minutes in your company. They want you to blow on their dice, touch their nets, and stand at the back of the wedding. You have Advantage on Charisma checks to win over such people, and in any town you can earn a modest living by being lucky at people, as if practicing a profession."
+      },
+      {
        "level": 14,
        "name": "Loaded",
        "text": "When you cast a lot, you can instead choose the number the d20 shows. The number counts as rolled: a chosen 20 is a natural 20 (a Critical Hit on an attack roll), and a chosen 1 is a natural 1. Once you use this feature, you can't use it again until you finish a Long Rest."
+      },
+      {
+       "level": 14,
+       "name": "Coincidence",
+       "text": "Once per Long Rest, outside combat, you can let the stream bring you a coincidence. Tell the DM what you need. The DM introduces it in the next scene or soon after, in the form the story allows: the person you were looking for is at the next table, a letter arrives a day early, the ship you missed is still in port because its captain lost at cards. The DM decides the form, and a coincidence never conjures what couldn't plausibly be there."
       }
      ]
     },
@@ -5615,6 +5479,11 @@
          ]
         }
        ]
+      },
+      {
+       "level": 3,
+       "name": "Doors",
+       "text": "Your warps can be Doors. As a Bonus Action, you open a pair of linked Doors on solid surfaces you can see within 60 feet of yourself: a wall, a floor, a ceiling, the side of a cart. The pair counts as one warp. Each Door is a 5-foot square, or a 10-foot square from Danae level 5, and a creature fits through it only if the creature's space is no wider than the Door. A creature that moves into one Door steps out of the other, facing away from its surface. When a feature refers to a warp's space, a Door's space is the space in front of it, as wide as the Door and 5 feet deep.\n\n*Inertia.* A creature can pass through the same pair of Doors only once per turn. A creature that falls into a Door comes out of the other still moving. It travels up to the distance it had already fallen, in the direction the far Door faces, before it falls normally or strikes something. When it lands or strikes something, it takes damage as for one fall of the whole distance it fell and traveled, and has the Prone condition if it takes any.\n\n*Back Ways.* After you spend a day in a settlement, you know its back ways: you can find a route between any two places in it that avoids its main streets, watch posts, and toll gates, if such a route exists. After you spend an hour in a building, you know every way into and out of it that a person could use (doors, windows, chimneys, drains, the servants' stair), even the ones its owner has forgotten.\n\n*Keyhole.* One of your Doors can open on a surface you can't see, if it's within 30 feet of yourself and on the far side of a wall, door, floor, or ceiling no more than 5 feet thick. You know whether the space beyond is open before you commit to it."
       },
       {
        "level": 3,

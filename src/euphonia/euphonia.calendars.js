@@ -78,8 +78,18 @@ function hijriDay(ms, lat, lon) {
   return civil + (after ? 1 : 0);
 }
 
-// How each polity dated the instant, grouped where they wrote the same thing.
-export function datesAt(ms, { calendars, polities }, seats) {
+// A polity's month and day at an instant in its own Christian calendar, or
+// null where it kept another (the Hijri has no 1 November).
+export function christianMonthDay(ms, polity, seat) {
+  if (polity.calendar === 'hijri-tabular') return null;
+  const jdn = localDay(ms, seat.lon);
+  const { m, d } = polity.calendar === 'gregorian' ? gregorianFromJdn(jdn) : julianFromJdn(jdn);
+  return { m, d };
+}
+
+// How each polity dated the instant, grouped where they wrote the same thing
+// and `also` (anything else said of each) agrees.
+export function datesAt(ms, { calendars, polities }, seats, also = () => '') {
   const rows = new Map();
   for (const p of polities) {
     const { lat, lon } = seats[p.seat[0]];
@@ -99,8 +109,9 @@ export function datesAt(ms, { calendars, polities }, seats) {
       }
       text = `${weekday} ${date.d} ${MONTHS[date.m - 1]} ${year}`;
     }
-    const key = `${p.calendar}|${text}`;
-    if (!rows.has(key)) rows.set(key, { calendar: calendars[p.calendar].name, date: text, polities: [] });
+    const extra = also(p, seats[p.seat[0]]);
+    const key = `${p.calendar}|${text}|${extra}`;
+    if (!rows.has(key)) rows.set(key, { calendar: calendars[p.calendar].name, date: text, also: extra, polities: [] });
     rows.get(key).polities.push(p.name);
   }
   return [...rows.values()];

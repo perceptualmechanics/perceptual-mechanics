@@ -2,10 +2,10 @@
  "provenance": {
   "source": "Euphonia.md",
   "master": "~/Documents/euphonia/Euphonia.md",
-  "sha256": "6b941da3db08ad433557dd21930bccf940f23fdd8b8412cdf1366241431f04c6",
-  "modified": "2026-11-01T07:28:52-05:00",
+  "sha256": "68bcbf6cee435e8a1c33025b3c8b7b39c1ec6ea0d2d8eff962450c663517b463",
+  "modified": "2026-11-01T13:36:16-05:00",
   "exporter": "class-kit/site_export.py",
-  "exporter_version": 3,
+  "exporter_version": 4,
   "rules": {
    "banned": [
     "eladrin",
@@ -26,12 +26,6 @@
  },
  "status": "draft",
  "withheld": [
-  {
-   "where": "Mutapa · Who Holds Power · item 7",
-   "reasons": [
-    "names a placeholder"
-   ]
-  },
   {
    "where": "Mutapa · What's Happening in 1668 · item 7",
    "reasons": [
@@ -163,7 +157,7 @@
     },
     {
      "heading": "Who Holds Power",
-     "text": "On paper, a king.\n\n- **The crown.** Mutapa has a royal line, anointed in the old way. In our history Mukombwe took the throne around 1663. He keeps it: history keeps its shape where magic didn't bend it.\n- **The merchant houses and the scientists** hold the real power; the houses run the king. Whichever house has his ear steers Mutapa, and right now it's the shewstone house, which is why the king wants the whole world to see Mutapa's glory.\n- **The royalty** knew a good thing when it saw one, but isn't sure it's the right steward for what it found. Neither is anyone else.\n- **The House of the Bird**, named for Great Zimbabwe's soapstone birds, is the bank. It prices gold by the coast's Arab *mithqal* and learned credit from the Gujarati merchants who finance much of the ocean's trade.\n- **The spirit mediums.** A Shona king's legitimacy runs through the royal dead, who speak through human mediums. Later sources call these spirits *mhondoro*, \"lions,\" and their mediums *svikiro*. In Euphonia the spirits are real.\n- **The Cape's own people.** Mutapa rules the Khoekhoen of the Cape the way Shona kings have always ruled neighbors (Scott): the chiefdoms nearest the harbor are tributaries, bound by cattle Mutapa lends them (a borrower of the king's cattle is the king's man), by the new fire lit each reign from the king's own, and by a tax on every trade. Further out, the Cochoqua and the Chainouqua take Mutapa's terms when it suits them and a Dutch or English captain's when it doesn't. The San hold the mountains and the dry country, in no one's ledger.\n\n> **Further in:** in the 1590s a Portuguese friar watched a possessed man at the royal graves speak in the dead king's voice, asked about war, famine and rain. A merchant house can buy a minister. It can't buy a dead king."
+     "text": "On paper, a king.\n\n- **The crown.** Mutapa has a royal line, anointed in the old way. In our history Mukombwe took the throne around 1663. He keeps it: history keeps its shape where magic didn't bend it.\n- **The merchant houses and the scientists** hold the real power; the houses run the king. Whichever house has his ear steers Mutapa, and right now it's the shewstone house, which is why the king wants the whole world to see Mutapa's glory.\n- **The royalty** knew a good thing when it saw one, but isn't sure it's the right steward for what it found. Neither is anyone else.\n- **The House of the Bird**, named for Great Zimbabwe's soapstone birds, is the bank. It prices gold by the coast's Arab *mithqal* and learned credit from the Gujarati merchants who finance much of the ocean's trade.\n- **The spirit mediums.** A Shona king's legitimacy runs through the royal dead, who speak through human mediums. Later sources call these spirits *mhondoro*, \"lions,\" and their mediums *svikiro*. In Euphonia the spirits are real.\n- **The great artificer**, Simbarashe Moyo, grandfather of Mutapan artifice, is alive, tired, wary of Europe and unhappy with how the court stewards his work. He fought selling devices abroad and training foreign artificers, and lost. His test is coming: loyalty to the nation he helped found, or to the science he helped discover?\n- **The Cape's own people.** Mutapa rules the Khoekhoen of the Cape the way Shona kings have always ruled neighbors (Scott): the chiefdoms nearest the harbor are tributaries, bound by cattle Mutapa lends them (a borrower of the king's cattle is the king's man), by the new fire lit each reign from the king's own, and by a tax on every trade. Further out, the Cochoqua and the Chainouqua take Mutapa's terms when it suits them and a Dutch or English captain's when it doesn't. The San hold the mountains and the dry country, in no one's ledger.\n\n> **Further in:** in the 1590s a Portuguese friar watched a possessed man at the royal graves speak in the dead king's voice, asked about war, famine and rain. A merchant house can buy a minister. It can't buy a dead king."
     },
     {
      "heading": "Magic Here",

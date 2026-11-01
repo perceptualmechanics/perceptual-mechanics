@@ -1,0 +1,32 @@
+{
+ "provenance": {
+  "source": "Euphonia.md",
+  "master": "~/Documents/euphonia/Euphonia.md",
+  "sha256": "68bcbf6cee435e8a1c33025b3c8b7b39c1ec6ea0d2d8eff962450c663517b463",
+  "modified": "2026-11-01T13:36:16-05:00",
+  "exporter": "class-kit/site_export.py",
+  "exporter_version": 4,
+  "rules": {
+   "banned": [
+    "eladrin",
+    "Feywild",
+    "Shadowfell",
+    "changeling",
+    "genasi",
+    "Seelie",
+    "Unseelie",
+    "Imbas",
+    "Dungeons & Dragons",
+    "D&D"
+   ],
+   "banned_because": "Someone else's names, kept out of everything Euphonia publishes (Appendix E; setting/ip-review.md).",
+   "fey_type": "\\bFey(?=\\s+(?:creatures?\\b|among the creature types))|(?<=\\*)Fey(?=\\.\\*)",
+   "fey_type_because": "\"Fey\" survives only as the creature type; the setting's prose says \"fae\" (Book Two, What's Different)."
+  }
+ },
+ "withheld": [],
+ "data": {
+  "tide": "**The Tide.** The Hidden wax and wane with the moon. They're **at the flood** while the moon waxes, from the new moon to the full: strong, present, and near. They're **at the ebb** while it wanes: faint, hungry, and farther off. The **dark half** of the year, from Samhain to Beltane, is the Wild Hunt's raiding season, and the Hunt rides hardest at the flood; south of the equator the halves are reversed, and the tropics follow their hemisphere's sun. Samhain and Beltane are the **open nights**, when the door between the Hidden and the real stands open. The DM says when these times are, and can rule that the tide runs differently at a place of power.",
+  "where": "Book Three: Life on the Border, Introduction, The Hidden, in the rules"
+ }
+}

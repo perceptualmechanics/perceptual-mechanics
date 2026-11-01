@@ -2,10 +2,10 @@
  "provenance": {
   "source": "Euphonia.md",
   "master": "~/Documents/euphonia/Euphonia.md",
-  "sha256": "6b941da3db08ad433557dd21930bccf940f23fdd8b8412cdf1366241431f04c6",
-  "modified": "2026-11-01T07:28:52-05:00",
+  "sha256": "68bcbf6cee435e8a1c33025b3c8b7b39c1ec6ea0d2d8eff962450c663517b463",
+  "modified": "2026-11-01T13:36:16-05:00",
   "exporter": "class-kit/site_export.py",
-  "exporter_version": 3,
+  "exporter_version": 4,
   "rules": {
    "banned": [
     "eladrin",
@@ -29,15 +29,12 @@
   "srd_attribution": "This work includes material from the System Reference Document 5.2.1 (\"SRD 5.2.1\") by Wizards of the Coast LLC, available at https://www.dndbeyond.com/srd. The SRD 5.2.1 is licensed under the Creative Commons Attribution 4.0 International License, available at https://creativecommons.org/licenses/by/4.0/legalcode.",
   "orc_notice": [
    "This product is licensed under the ORC License located at the Library of Congress at TX 9-307-067 and available online at various locations including paizo.com/orclicense and others. All warranties are disclaimed as set forth therein.",
-   "**Attribution.** This product is based on the following Licensed Material: *Euphonia*, © 2026 Scott Cohen. It also includes material from the *System Reference Document 5.2.1* by Wizards of the Coast LLC, licensed under CC-BY-4.0 (attribution below). If you use our Licensed Material in your own published works, please credit us as follows: *Euphonia*, © 2026 Scott Cohen, euphonia.",
-   "**Reserved Material.** Reserved Material elements in this product include, but may not be limited to: the name *Euphonia*, its logo and trade dress; the characters, named places and narrative passages of this work; and all elements designated as Reserved Material under the ORC License.",
+   "**Attribution.** This product is based on the following Licensed Material: *Euphonia*, © 2026 Scott Cohen. It also includes material from the *System Reference Document 5.2.1* by Wizards of the Coast LLC, licensed under CC-BY-4.0 (attribution below). If you use our Licensed Material in your own published works, please credit us as follows: *Euphonia*, © 2026 Scott Cohen, https://perceptualmechanics.com/euphonia/.",
+   "**Reserved Material.** Reserved Material elements in this product include, but may not be limited to: the name *Euphonia*, its logo and trade dress; the cover figures and other named characters of this work; Lanternhall; all flavor text, vignettes and other narrative passages of this work; and all elements designated as Reserved Material under the ORC License.",
    "**Expressly Designated Licensed Material.** The following elements are owned by the Licensor and would otherwise constitute Reserved Material and are hereby designated as Licensed Material: the Principles; the Hidden, the Hidden Realm, the tide, the Wild Hunt and the Hidden Killers; the Plenum and its structures; the names and rules of every class, subclass, spell and magic item in *Euphonia: The Classes*; and the State of the World chapters and the research they rest on."
   ],
   "orc_notice_status": "draft",
-  "orc_open_slots": [
-   "URL",
-   "list"
-  ],
+  "orc_open_slots": [],
   "copyright": "Euphonia © 2026 Scott Cohen"
  }
 }

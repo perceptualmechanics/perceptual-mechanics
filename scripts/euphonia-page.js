@@ -16,7 +16,7 @@ export function euphoniaFooter(legal) {
   <p class="copyright">${esc(legal.copyright)}</p>
   <section aria-labelledby="orc-notice">
     <h2 id="orc-notice">ORC Notice</h2>
-${legal.orc_notice_status === 'draft' ? `    <p class="draft">A draft: this notice still has ${slots} detail${slots === 1 ? '' : 's'} to fill in.</p>\n` : ''}${legal.orc_notice.map(p => `    <p>${inline(p)}</p>`).join('\n')}
+${legal.orc_notice_status === 'draft' ? `    <p class="draft">A draft${slots ? `: this notice still has ${slots} detail${slots === 1 ? '' : 's'} to fill in` : ''}.</p>\n` : ''}${legal.orc_notice.map(p => `    <p>${inline(p)}</p>`).join('\n')}
   </section>
   <section aria-labelledby="srd-attribution">
     <h2 id="srd-attribution">SRD 5.2.1</h2>
@@ -31,7 +31,7 @@ function catalog(items) {
 
 // The map's frame: its controls stay hidden until the script that draws it
 // runs, and its caption reads as the map's description either way.
-function mapSection(world, fixtures, calendars) {
+function mapSection(world, fixtures, calendars, hidden) {
   const cited = Object.values(calendars.sources).map(s => `<a href="${esc(s.url)}">${esc(s.title)}</a>`).join(', ');
   const lakes = world.historic.map(l => `${esc(l.name)} (${esc(l.date)})`).join(', ');
   const versions = [...new Set(world.provenance.files.map(f => f.version))].join(' and ');
@@ -47,10 +47,16 @@ function mapSection(world, fixtures, calendars) {
 <p class="map-readout">The world between Samhain 1668 and Samhain 1669, in two hemispheres, with the night where it fell. The map is drawn in the page by script.</p>
 <table class="map-dates" hidden>
 <caption>The same moment, as each kept the date</caption>
-<thead><tr><th scope="col">Calendar</th><th scope="col">Date</th><th scope="col">Kept in</th></tr></thead>
+<thead><tr><th scope="col">Calendar</th><th scope="col">Date</th><th scope="col">The Hidden (Euphonia)</th><th scope="col">Kept in</th></tr></thead>
 <tbody></tbody>
 </table>
+<p class="map-tide" hidden></p>
 <p class="map-moon" hidden><svg viewBox="-1.1 -1.1 2.2 2.2" aria-hidden="true" focusable="false"><circle class="face" r="1"/><path class="lit"/></svg><span></span></p>
+<blockquote class="map-rule">
+<p>${inline(hidden.data.tide)}</p>
+<p class="by">From Euphonia, Scott Cohen's setting: not history. ${esc(hidden.data.where)}.</p>
+<p class="by">How the map reads it, where the rule says the DM decides (Scott, 1 November 2026): an open night is the eve, from sunset on 31 October or 30 April to the next sunrise, in each place's own calendar; the halves of the year turn at those sunsets; between the tropics it is the dark half in whichever hemisphere the sun isn't overhead. Where a place's calendar has no 31 October, its half and open nights are as the DM says. The moon, the sun and the dates the rule reads are computed; the rule is Scott's.</p>
+</blockquote>
 <p class="note">Coasts, lakes and rivers are Natural Earth's (public domain, versions ${esc(versions)}), and modern. Natural Earth has no outlines from 1668; where it has older ones, the map draws them dashed, each with its own date: ${lakes}.</p>
 <p class="note">The sun's place is NOAA's, checked against JPL Horizons; the moon's phases are checked against Espenak's catalogue. ${esc(fixtures.moon.acknowledgment)} The moon is drawn as it looked from north of the tropics; south of them it is mirrored.</p>
 <p class="note">Each date is the one its seat's sundials gave at that moment, and the Hijri day begins at the seat's sunset. The Hijri dates are tabular (the 30-year cycle, from the civil epoch); months begun by sighting the new moon could differ by a day. Which calendar each polity kept: ${cited} (Wikipedia). The Safavids' and the Mughals' are not shown yet: no source in hand says which calendar their governments kept in 1668.</p>
@@ -59,8 +65,8 @@ function mapSection(world, fixtures, calendars) {
 </section>`;
 }
 
-function body({ classes, regions, adventures }, world, fixtures, calendars) {
-  return `${mapSection(world, fixtures, calendars)}
+function body({ classes, regions, adventures, hidden }, world, fixtures, calendars) {
+  return `${mapSection(world, fixtures, calendars, hidden)}
 <section aria-labelledby="classes">
 <h2 id="classes">The classes</h2>
 ${catalog(classes.data.map(c => `<li><span class="t">${esc(c.name)}</span><span class="n">${inline(c.blurb)}</span></li>`))}
@@ -71,7 +77,7 @@ ${regions.status === 'draft' ? '<p class="note">A draft: these chapters were wri
 </section>
 <section aria-labelledby="games">
 <h2 id="games">Adventures and Hooks</h2>
-${catalog(adventures.data.map(g => `<li><span class="t">${esc(g.title)}</span>${g.regions.length ? `<span class="e">${g.regions.map(esc).join(' · ')}</span>` : ''}${g.open ? `<span class="n">${inline(g.open)}</span>` : ''}</li>`))}
+${catalog(adventures.data.map(g => `<li><span class="t">${esc(g.title)}</span><span class="e">${[g.kind, g.where].filter(Boolean).map(inline).join(' · ')}</span>${g.summary ? `<span class="n">${inline(g.summary)}</span>` : ''}${g.hooks.length ? `<details><summary>Hooks</summary><ul>${g.hooks.map(h => `<li>${inline(h)}</li>`).join('')}</ul></details>` : ''}</li>`))}
 </section>`;
 }
 

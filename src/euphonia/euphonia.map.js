@@ -7,6 +7,7 @@ import {
 } from './euphonia.projection.js';
 import { moonAt } from './euphonia.moon.js';
 import { datesAt } from './euphonia.calendars.js';
+import { tideAt, hiddenAt } from './euphonia.tide.js';
 import calendars from './euphonia.calendars.json';
 import seats from './euphonia.seats.json';
 
@@ -142,6 +143,11 @@ export async function initMap(figure) {
   const shown = form.querySelector('output'), readout = figure.querySelector('.map-readout');
   const moonLine = figure.querySelector('.map-moon'), moonLit = moonLine.querySelector('.lit'), moonText = moonLine.querySelector('span');
   const datesTable = figure.querySelector('.map-dates'), datesBody = datesTable.tBodies[0];
+  const tideLine = figure.querySelector('.map-tide');
+  const hiddenText = ({ half, open }) => [
+    half === 'dark' ? 'the dark half' : half === 'other' ? 'the other half' : 'as the DM says',
+    open && `${open}'s open night`,
+  ].filter(Boolean).join('; ');
   const day = ms => new Date(ms).toLocaleDateString('en-GB', { timeZone: 'UTC', day: 'numeric', month: 'long' });
   const clock = ms => { const d = new Date(ms); return `${two(d.getUTCHours())}:${two(d.getUTCMinutes())}`; };
 
@@ -156,9 +162,12 @@ export async function initMap(figure) {
     const instant = Date.UTC(y, m - 1, d) + minutes * 60000;
     const sun = subsolar(instant);
     const moon = moonAt(instant);
-    datesBody.replaceChildren(...datesAt(instant, calendars, seats.seats).map(r => {
+    const tide = tideAt(instant);
+    const tropicDark = sun.lat >= 0 ? 'south' : 'north';
+    tideLine.textContent = `In Euphonia, Scott Cohen's setting (not history), the Hidden are at the ${tide}: the moon is ${tide === 'flood' ? 'waxing' : 'waning'}. Between the tropics the dark half lies ${tropicDark} of the equator, where the sun isn't.`;
+    datesBody.replaceChildren(...datesAt(instant, calendars, seats.seats, (p, seat) => hiddenText(hiddenAt(instant, p, seat))).map(r => {
       const tr = document.createElement('tr');
-      for (const text of [r.calendar, r.date, r.polities.join(', ')]) tr.insertCell().textContent = text;
+      for (const text of [r.calendar, r.date, r.also, r.polities.join(', ')]) tr.insertCell().textContent = text;
       return tr;
     }));
     moonLit.setAttribute('d', facePath(moon.lit, moon.waxing));
@@ -181,6 +190,7 @@ export async function initMap(figure) {
   form.hidden = false;
   moonLine.hidden = false;
   datesTable.hidden = false;
+  tideLine.hidden = false;
 }
 
 const figure = document.getElementById('map-figure');
