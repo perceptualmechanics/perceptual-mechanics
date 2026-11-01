@@ -62,9 +62,18 @@ ${discs}
 <button type="button" class="map-panel-close" aria-label="Close panel">&#10005;</button>
 <h2 id="map-panel-title" class="map-panel-title" tabindex="-1"></h2>
 ${regions.status === 'draft' ? `<p class="map-panel-note">${DRAFT_NOTE}</p>\n` : ''}<p><button type="button" class="map-panel-zoom">Zoom to it</button></p>
+<h3 id="map-panel-places-title">Its places on the map</h3>
+<ul class="map-panel-places" aria-labelledby="map-panel-places-title"></ul>
 <div class="map-panel-content"></div>
 </div>
-<p class="map-help" id="map-help">Drag a hemisphere, or focus it and use the arrow keys, to turn the world; the wheel, a pinch, or + and − zoom; 0 shows the whole world again. A region's name opens its chapter beside the map. Play runs time on; on a hemisphere, space plays and pauses, [ and ] step an hour, { and } a day.</p>
+<section class="map-pick" aria-labelledby="map-pick-title" hidden>
+<button type="button" class="map-pick-close" aria-label="Close the picked place">&#10005;</button>
+<h2 id="map-pick-title" class="map-pick-title" tabindex="-1">The place you picked</h2>
+<dl class="map-pick-facts"></dl>
+<p class="map-pick-actions" hidden><button type="button" class="map-pick-open"></button></p>
+</section>
+<p class="map-status" aria-live="polite"></p>
+<p class="map-help" id="map-help">Drag a hemisphere, or focus it and use the arrow keys, to turn the world; the wheel, a pinch, or + and − zoom; 0 shows the whole world again. A region's name opens its chapter beside the map. Play runs time on; on a hemisphere, space plays and pauses, [ and ] step an hour, { and } a day. Click or tap a place, or press Enter on a hemisphere for the place at its centre, to read its time, its sun and its tide.</p>
 <noscript><p class="map-help">The map is drawn in the page by script; the text below describes it.</p></noscript>`;
 }
 

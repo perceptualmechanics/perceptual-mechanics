@@ -66,6 +66,40 @@ footer.legal section a { text-decoration: underline; }
 .map-region:hover, .map-region:focus-visible { color: #f0cf6a; text-decoration: underline; }
 .map-region:focus-visible { outline: 2px solid #f0cf6a; outline-offset: 1px; }
 .map-region.is-lit { color: #f0cf6a; }
+/* A place's name beside its ring while the pointer or focus is on it. */
+.map-place {
+  position: absolute; top: 0; left: 0; pointer-events: none; white-space: nowrap;
+  color: #f0cf6a; font-size: 0.8rem; text-shadow: 0 0 3px #0a0a0a, 0 0 3px #0a0a0a, 0 0 6px #0a0a0a;
+}
+.map-place[hidden] { display: none; }
+/* What Enter picks on a focused hemisphere: its centre. */
+.map-disc:focus-visible::after {
+  content: ''; position: absolute; left: 50%; top: 50%; width: 1.2rem; height: 1.2rem; transform: translate(-50%, -50%);
+  background: linear-gradient(#f0cf6a, #f0cf6a) center / 1px 100% no-repeat, linear-gradient(#f0cf6a, #f0cf6a) center / 100% 1px no-repeat;
+  pointer-events: none;
+}
+.map-status { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+/* The picked place: a card over the corner of the map. */
+.map-pick {
+  position: absolute; z-index: 9; max-width: min(22rem, calc(100% - 2.5rem)); overflow-y: auto; box-sizing: border-box;
+  background: #0d0b08; border: 1px solid #4a4034; padding: 0.8rem 1rem 0.9rem; font-size: 0.9rem;
+}
+.map-pick[hidden] { display: none; }
+.map-pick-title { font-size: 0.85rem; letter-spacing: 0.08em; text-transform: uppercase; color: #9c9384; margin: 0 1.6rem 0.5rem 0; font-weight: 600; }
+.map-pick-title:focus { outline: none; }
+.map-pick-close { position: absolute; top: 0.3rem; right: 0.4rem; background: none; border: 0; color: #b8b0a4; font: inherit; font-size: 1.1rem; cursor: pointer; padding: 0.3rem; }
+.map-pick-close:hover, .map-pick-close:focus-visible { color: #f0cf6a; }
+.map-pick-facts { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 0.25rem 0.8rem; }
+.map-pick-facts dt { color: #8c8377; }
+.map-pick-facts dd { margin: 0; }
+.map-pick-actions { margin: 0.7rem 0 0; }
+.map-pick-actions[hidden] { display: none; }
+.map-pick-open { font: inherit; font-size: 0.9rem; color: #d9b13f; background: #15130f; border: 1px solid #6b5a37; padding: 0.2rem 0.7rem; cursor: pointer; }
+.map-pick-open:hover, .map-pick-open:focus-visible { border-color: #d9b13f; }
+.map-panel-places { list-style: none; padding: 0; margin: 0 0 1rem; display: flex; flex-wrap: wrap; gap: 0.3rem 0.9rem; }
+.map-panel-places button { font: inherit; font-size: 0.92rem; color: #ded9d0; background: none; border: 0; padding: 0.1rem 0; cursor: pointer; text-decoration: underline dotted #6b5a37; text-underline-offset: 3px; }
+.map-panel-places button:hover, .map-panel-places button:focus-visible { color: #f0cf6a; }
+#map-panel-places-title { font-size: 0.85rem; color: #9c9384; margin: 1rem 0 0.4rem; font-weight: 600; }
 .map-help { margin: 0; color: #8c8377; font-size: 0.8rem; }
 
 /* A region's chapter, beside the map: the scenes' panel. It slides in from

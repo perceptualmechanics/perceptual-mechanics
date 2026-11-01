@@ -155,7 +155,13 @@ export function drawBase(ctx, view, projected, colors, dpr) {
 
 // The layers that change with time: the tropics and polar circles, the
 // night's four steps, the book's regions, the sun, and the rim over all.
-export function drawSky(ctx, view, { sun, regions }, colors, dpr) {
+// A mark at a point of the globe, if this hemisphere faces it: the canvas
+// position, or null.
+function facing(view, { lat, lon }) {
+  return local(lon, lat, view.lon0)[2] <= 0 ? toScreen(view, ...project(lon, lat, view.lon0)) : null;
+}
+
+export function drawSky(ctx, view, { sun, regions, hoverPlace, pick }, colors, dpr) {
   const pen = screenPen(ctx, view);
   ctx.save();
   clipToDisc(ctx, view);
@@ -179,6 +185,24 @@ export function drawSky(ctx, view, { sun, regions }, colors, dpr) {
     g.addColorStop(1, 'transparent');
     ctx.fillStyle = g;
     ctx.beginPath(); ctx.arc(x, y, rr, 0, 2 * Math.PI); ctx.fill();
+  }
+  // A lit region's places, each a dot at its exact point; the place under
+  // the pointer, a ring round it.
+  ctx.fillStyle = ctx.strokeStyle = colors.sun;
+  for (const r of regions) if (r.lit) for (const p of r.glows) {
+    const at = facing(view, p);
+    if (!at) continue;
+    ctx.beginPath(); ctx.arc(...at, 2.5 * dpr, 0, 2 * Math.PI); ctx.fill();
+  }
+  const ring = hoverPlace && facing(view, hoverPlace);
+  if (ring) { ctx.lineWidth = 1.5 * dpr; ctx.beginPath(); ctx.arc(...ring, 7 * dpr, 0, 2 * Math.PI); ctx.stroke(); }
+  // The place the reader picked: a cross, open at its centre.
+  const cross = pick && facing(view, pick);
+  if (cross) {
+    const [x, y] = cross, a = 3 * dpr, b = 9 * dpr;
+    ctx.lineWidth = 1.5 * dpr; ctx.beginPath();
+    for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { ctx.moveTo(x + dx * a, y + dy * a); ctx.lineTo(x + dx * b, y + dy * b); }
+    ctx.stroke();
   }
   if (local(sun.lon, sun.lat, view.lon0)[2] <= 0) {
     const [x, y] = toScreen(view, ...project(sun.lon, sun.lat, view.lon0));

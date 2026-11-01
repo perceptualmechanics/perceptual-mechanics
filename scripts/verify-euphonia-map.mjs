@@ -275,6 +275,16 @@ export function verifyEuphoniaMap({ world = worldData(), fixtures = fixturesData
     }
     if (geo.unproject(0.8, 0.8, h.lon0) !== null) fail(`${h.name}: a point off the disc unprojects to the globe`);
   }
+  // Land and sea, at points whose answer no coastline could move: inland
+  // capitals, the South Pole, and open ocean far from any island.
+  const KNOWN = [
+    ['Madrid', 40.4, -3.7, true], ['Harare', -17.8, 31.1, true], ['Ulaanbaatar', 47.9, 106.9, true],
+    ['the South Pole', -89.9, 0, true], ['the mid-Atlantic', 0, -30, false], ['the South Pacific', -45, -120, false],
+    ['the Indian Ocean', -30, 80, false], ['the Arctic Ocean', 85, 0, false],
+  ];
+  for (const [name, lat, lon, land] of KNOWN) {
+    if (geo.onLand(world.land ?? [], lat, lon) !== land) fail(`the map puts ${name} ${land ? 'at sea' : 'on land'}`);
+  }
   if (Math.abs(geo.HEMISPHERES[1].lon0 - geo.HEMISPHERES[0].lon0) !== 180) fail('the two hemispheres don\'t cover the globe between them');
 
   // Clipping: the land the two hemispheres show is all the land, once.
@@ -311,7 +321,7 @@ export function verifyEuphoniaMap({ world = worldData(), fixtures = fixturesData
 
   const log = problems.length
     ? [`\neuphonia map: ${problems.length} problem(s):`, ...problems.map(p => `  ${p}`)]
-    : [`ok: ${points} Natural Earth points under their provenance; the sun within ${sunWorst.toFixed(4)}° of Horizons at ${sunRows.length} instants; ${computed.length} moon phases within ${phaseWorst.toFixed(2)} min of Espenak, lit within ${litWorst.toFixed(4)}; ${regionPlaces} places in ${regions.length} regions and ${calendars.polities.length} seats, each found once in Natural Earth; ${calendars.polities.length} polities' calendars cited, ${conversions.length} Fourmilab conversions and ${calendarDays} days against ICU; the Tide turning at ${eves} eves and ${tropicChecks} tropical readings; the hemispheres show all ${(whole / (4 * Math.PI) * 100).toFixed(1)}% of the globe that is land, once; ${roundTrips} points projected and back; ${circles} dusk circles drawn where the sky darkens`];
+    : [`ok: ${points} Natural Earth points under their provenance; the sun within ${sunWorst.toFixed(4)}° of Horizons at ${sunRows.length} instants; ${computed.length} moon phases within ${phaseWorst.toFixed(2)} min of Espenak, lit within ${litWorst.toFixed(4)}; ${regionPlaces} places in ${regions.length} regions and ${calendars.polities.length} seats, each found once in Natural Earth; ${calendars.polities.length} polities' calendars cited, ${conversions.length} Fourmilab conversions and ${calendarDays} days against ICU; the Tide turning at ${eves} eves and ${tropicChecks} tropical readings; the hemispheres show all ${(whole / (4 * Math.PI) * 100).toFixed(1)}% of the globe that is land, once; ${roundTrips} points projected and back; land and sea right at ${KNOWN.length} known points; ${circles} dusk circles drawn where the sky darkens`];
   return { ok: problems.length === 0, failures: problems.length, log };
 }
 

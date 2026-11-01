@@ -46,6 +46,20 @@ export function unproject(X, Y, lon0) {
   return { lat: Math.asin(Math.max(-1, Math.min(1, y))) / RAD, lon: ((lon + 540) % 360) - 180 };
 }
 
+// Whether a point of the globe is on land, by Natural Earth's rings: an even
+// number of edges crossed on the way north is outside. The rings are cut at
+// ±180° and Antarctica's runs along the pole, so lon/lat is a plane for them.
+export function onLand(land, lat, lon) {
+  let inside = false;
+  for (const ring of land) {
+    for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+      const [xi, yi] = ring[i], [xj, yj] = ring[j];
+      if ((xi > lon) !== (xj > lon) && lat < yi + (yj - yi) * (lon - xi) / (xj - xi)) inside = !inside;
+    }
+  }
+  return inside;
+}
+
 // The sun overhead: its declination, and the meridian where true solar time
 // is noon. ms is a UT instant.
 export function subsolar(ms) {

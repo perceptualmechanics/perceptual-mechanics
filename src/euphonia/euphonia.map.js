@@ -3,7 +3,8 @@
 // book places them. Drag or the arrow keys turn the world under the discs;
 // the wheel, a pinch or the keys zoom; a region's name zooms to it.
 import worldUrl from './euphonia.world.json?url';
-import { HEMISPHERES, project, unproject, local, subsolar } from './euphonia.projection.js';
+import { HEMISPHERES, project, unproject, local, subsolar, onLand } from './euphonia.projection.js';
+import { solarParams, solarEvents } from '../bench/bench.sky.js';
 import {
   DISC_FILL, toScreen, fromScreen, projectWorld, prepareWorld, palette,
   drawBase, drawSky, maxZoom,
@@ -40,6 +41,11 @@ const KEY_ZOOM = 1.5;
 const REGION_FIT = 0.8;
 // A region's zoom plays over this long, unless the reader asks for less motion.
 const ZOOM_MS = 450;
+// A press that moves less than this, in CSS pixels, before it lifts is a tap,
+// not a drag: a finger's or a hand's jitter.
+const TAP_SLOP = 4;
+// The Earth's mean radius in kilometres (IUGG), for distances to places.
+const EARTH_KM = 6371;
 // The regions' names, in rem: the size of the page's notes.
 const LABEL_REM = 0.85;
 
@@ -92,6 +98,9 @@ function facePath(lit, waxing) {
 }
 
 const two = n => String(n).padStart(2, '0');
+// A place as the book names it, with the modern town it's found at when that
+// differs: a later name for the same city, or a stand-in nearby.
+const placeName = p => (p.modern && p.modern !== p.name ? `${p.name}, at modern ${p.modern}` : p.name);
 const degrees = (v, pos, neg) => `${Math.abs(v).toFixed(1)}° ${v >= 0 ? pos : neg}`;
 
 function disc(stage, i, h) {
@@ -101,6 +110,7 @@ function disc(stage, i, h) {
     name: h.name, cell, canvas, ctx: canvas.getContext('2d'),
     base: document.createElement('canvas'),
     labels: cell.querySelector('.map-labels'),
+    tip: Object.assign(document.createElement('span'), { className: 'map-place', hidden: true }),
     zoom: 1, vx: 0, vy: 0, size: 0, cssSize: 0, dpr: 1, projected: null, baseKey: '',
   };
 }
@@ -167,27 +177,39 @@ export async function initMap(stage) {
   }
 
   // A region lights while its name or its glow is under the pointer or
-  // focused, and while its chapter is open.
-  let hovered = null, chosen = null;
+  // focused, and while its chapter is open; a lit region shows its places,
+  // and the place under the pointer or focus is ringed and named.
+  let hovered = null, chosen = null, hoverPlace = null;
   function light() {
     for (const r of regions) r.lit = r === hovered || r === chosen;
     for (const d of discs) d.buttons.forEach((b, k) => b.classList.toggle('is-lit', regions[k].lit));
     redraw();
   }
-  function hover(r) { if (hovered !== r) { hovered = r; light(); } }
-  // The region whose glow holds a point of the disc: the place whose cap
-  // holds it, of any region's.
-  function regionAt(d, x, y) {
-    const at = unproject(...fromScreen(cssView(d), x, y), d.lon0);
-    if (!at) return null;
-    return regions.find(r => r.glows.some(g => apart(g, at) <= g.rho)) ?? null;
+  function hover(r, place = null) {
+    if (hovered === r && hoverPlace === place) return;
+    hovered = r; hoverPlace = place;
+    light();
   }
+  // The place whose glow holds a point of the globe, the nearest of any that
+  // do as a share of its glow's reach, and its region.
+  function placeAt(at) {
+    let best = null;
+    for (const r of regions) for (const g of r.glows) {
+      const reach = apart(g, at) / g.rho;
+      if (reach <= 1 && (!best || reach < best.reach)) best = { region: r, place: g, reach };
+    }
+    return best;
+  }
+  const pointAt = (d, x, y) => unproject(...fromScreen(cssView(d), x, y), d.lon0);
+  for (const d of discs) d.labels.append(d.tip);
+  for (const d of discs) d.tip.setAttribute('aria-hidden', 'true');
 
   // A region's chapter, in the scenes' panel: the chapter from the list below
   // the map, its focus on its title, and back to the name it came from on
   // closing, by Escape or the ✕.
   const panel = stage.querySelector('.map-panel');
   const panelTitle = panel.querySelector('.map-panel-title'), panelContent = panel.querySelector('.map-panel-content');
+  const panelPlaces = panel.querySelector('.map-panel-places');
   let opener = null, openDisc = 0;
   createPanelCloser(panel, { focus: () => opener?.focus() }, {
     closeBtn: panel.querySelector('.map-panel-close'),
@@ -202,6 +224,20 @@ export async function initMap(stage) {
     if (panel.classList.contains('from-left') !== fromLeft) setPanelSide(panel, fromLeft);
     panelTitle.textContent = r.name;
     panelContent.replaceChildren(...[...chapter.children].filter(c => c.tagName !== 'SUMMARY').map(c => c.cloneNode(true)));
+    // Its places, each lighting on the map under the pointer or focus, and
+    // picked when chosen.
+    panelPlaces.replaceChildren(...r.glows.map(g => {
+      const li = document.createElement('li'), b = document.createElement('button');
+      b.type = 'button';
+      b.textContent = placeName(g);
+      b.addEventListener('pointerenter', () => hover(r, g));
+      b.addEventListener('focus', () => hover(r, g));
+      b.addEventListener('pointerleave', () => hover(null));
+      b.addEventListener('blur', () => hover(null));
+      b.addEventListener('click', () => pickPoint({ lat: g.lat, lon: g.lon }));
+      li.append(b);
+      return li;
+    }));
     panel.scrollTop = 0;
     panel.classList.add('open');
     light();
@@ -230,7 +266,7 @@ export async function initMap(stage) {
       }
       d.ctx.clearRect(0, 0, d.size, d.size);
       d.ctx.drawImage(d.base, 0, 0);
-      drawSky(d.ctx, v, { sun, regions }, colors, d.dpr);
+      drawSky(d.ctx, v, { sun, regions, hoverPlace, pick }, colors, d.dpr);
       placeLabels(d);
     }
     reset.hidden = discs.every(d => d.zoom === 1) && split === SPLIT;
@@ -238,6 +274,12 @@ export async function initMap(stage) {
 
   function placeLabels(d) {
     const v = cssView(d);
+    const tip = hoverPlace && local(hoverPlace.lon, hoverPlace.lat, d.lon0)[2] <= 0 && toScreen(v, ...project(hoverPlace.lon, hoverPlace.lat, d.lon0));
+    d.tip.hidden = !tip;
+    if (tip) {
+      d.tip.textContent = placeName(hoverPlace);
+      d.tip.style.transform = `translate(${tip[0] + 10}px, ${tip[1]}px) translate(0, -50%)`;
+    }
     const boxes = [];
     regions.forEach((r, k) => {
       const [x, y] = toScreen(v, ...project(r.centre.lon, r.centre.lat, d.lon0));
@@ -252,7 +294,85 @@ export async function initMap(stage) {
     }
   }
 
+  // The picked place: its card, kept up to date as time runs, and a line
+  // for screen readers when a place is picked.
+  let pick = null;
+  const pickCard = stage.querySelector('.map-pick'), pickFacts = pickCard.querySelector('.map-pick-facts');
+  const pickActions = pickCard.querySelector('.map-pick-actions'), pickOpen = pickCard.querySelector('.map-pick-open');
+  const status = stage.querySelector('.map-status');
+  let pickRegion = null, pickDisc = 0;
+  // The card sits in a corner of the other disc's cell, so the picked place
+  // stays in sight: over the western disc for a place picked on the eastern,
+  // over the upper for one picked on the lower.
+  function placeCard() {
+    const stageBox = stage.getBoundingClientRect(), cell = discs[1 - pickDisc].cell.getBoundingClientRect();
+    // Within the stage's padding, however narrow the cell: a phone's discs
+    // are narrower than the card.
+    const pad = parseFloat(getComputedStyle(stage).paddingLeft);
+    pickCard.style.maxHeight = `${cell.height}px`;
+    pickCard.style.left = `${Math.max(pad, Math.min(cell.left - stageBox.left, stageBox.width - pad - pickCard.offsetWidth))}px`;
+    pickCard.style.top = `${cell.bottom - stageBox.top - pickCard.offsetHeight}px`;
+  }
+  // A picked place: on the disc it was picked on, or else the disc that faces it.
+  function pickPoint(at, i = discs.findIndex((d, k) => local(at.lon, at.lat, lon0Of(k))[2] <= 0)) {
+    pick = at; pickDisc = Math.max(0, i);
+    pickCard.hidden = false;
+    pickCard.querySelector('.map-pick-title').textContent = 'The place you picked';
+    status.textContent = `Picked ${degrees(at.lat, 'N', 'S')}, ${degrees(at.lon, 'E', 'W')}.`;
+    readouts();
+    redraw();
+  }
+  pickCard.querySelector('.map-pick-close').addEventListener('click', () => { pick = null; pickCard.hidden = true; status.textContent = ''; redraw(); });
+  pickOpen.addEventListener('click', () => {
+    const i = discs.findIndex((d, k) => local(pick.lon, pick.lat, lon0Of(k))[2] <= 0);
+    const button = discs[i].buttons[regions.indexOf(pickRegion)];
+    openChapter(i, pickRegion, button.hidden ? pickOpen : button);
+  });
+  // A time of day by the sun at a longitude: true solar time, from the
+  // longitude and the equation of time.
+  const sunClock = (ms, lon) => {
+    const m = ((ms / 60000 + 4 * lon + solarParams(ms).eqTime) % 1440 + 1440) % 1440;
+    return `${two(Math.floor(m / 60))}:${two(Math.floor(m % 60))}`;
+  };
+  function pickFactsAt(at) {
+    const minutes = ((instant / 60000 + 4 * at.lon + solarParams(instant).eqTime) % 1440 + 1440) % 1440;
+    const noon = instant + (720 - minutes) * 60000;
+    const events = solarEvents(noon - DAY_MS / 2, noon + DAY_MS / 2, at.lat, at.lon);
+    const rise = events.find(e => e.kind === 'rise'), set = events.find(e => e.kind === 'set');
+    const sun = subsolar(instant);
+    // With no rise or set today, the sun is up all day if it stands above
+    // the horizon at noon: its height then is 90° less the angle between
+    // the place's latitude and the sun's declination.
+    const sunDay = rise || set
+      ? `${rise ? `rises ${sunClock(rise.t, at.lon)}` : 'already up'}, ${set ? `sets ${sunClock(set.t, at.lon)}` : 'up past midnight'}`
+      : 90 - Math.abs(at.lat - sun.lat) > 0 ? "doesn't set today" : "doesn't rise today";
+    let nearest = null;
+    for (const r of regions) for (const g of r.glows) {
+      const deg = apart(g, at);
+      if (!nearest || deg < nearest.deg) nearest = { region: r, place: g, deg };
+    }
+    const hit = placeAt(at);
+    pickRegion = hit?.region ?? null;
+    const half = hiddenAt(instant, null, at).half;
+    return [
+      ['Where', `${degrees(at.lat, 'N', 'S')}, ${degrees(at.lon, 'E', 'W')}, ${onLand(world.land, at.lat, at.lon) ? 'on land' : 'at sea'} (Natural Earth's modern coasts)`],
+      ['Nearest named place', `${placeName(nearest.place)}, in ${nearest.region.name}: ${Math.round(nearest.deg * RAD * EARTH_KM).toLocaleString('en-GB')} km`],
+      ['By the sun', `${sunClock(instant, at.lon)}; the sun ${sunDay}`],
+      ['The Hidden (Euphonia)', `at the ${tideAt(instant)}; ${half === 'dark' ? 'the dark half, by the sun between the tropics' : half === 'other' ? 'the other half, by the sun between the tropics' : 'the half of the year as the DM says: the book gives this place no calendar'}`],
+    ];
+  }
+
   function readouts() {
+    if (pick) {
+      pickFacts.replaceChildren(...pickFactsAt(pick).flatMap(([term, text]) => {
+        const dt = document.createElement('dt'), dd = document.createElement('dd');
+        dt.textContent = term; dd.textContent = text;
+        return [dt, dd];
+      }));
+      pickActions.hidden = !pickRegion;
+      if (pickRegion) pickOpen.textContent = `Open ${pickRegion.name}'s chapter`;
+      placeCard();
+    }
     const sun = subsolar(instant);
     const moon = moonAt(instant);
     const tide = tideAt(instant);
@@ -312,6 +432,7 @@ export async function initMap(stage) {
       d.baseKey = '';
       clampZoom(d);
     }
+    if (pick) placeCard();
     redraw();
   }).observe(stage.querySelector('.map-hemispheres'));
 
@@ -369,15 +490,21 @@ export async function initMap(stage) {
 
   for (const d of discs) {
     const pointers = new Map();
-    let pinch = 0;
+    let pinch = 0, travel = 0;
     d.canvas.addEventListener('pointerdown', e => {
+      if (!pointers.size) travel = 0;
       d.canvas.setPointerCapture(e.pointerId);
       pointers.set(e.pointerId, [e.offsetX, e.offsetY]);
       cancelAnimationFrame(zooming);
     });
     d.canvas.addEventListener('pointermove', e => {
       const last = pointers.get(e.pointerId);
-      if (!last) { hover(regionAt(d, e.offsetX, e.offsetY)); return; }
+      if (!last) {
+        const at = pointAt(d, e.offsetX, e.offsetY), hit = at && placeAt(at);
+        hover(hit?.region ?? null, hit?.place ?? null);
+        return;
+      }
+      travel += Math.hypot(e.offsetX - last[0], e.offsetY - last[1]);
       const next = [e.offsetX, e.offsetY];
       if (pointers.size === 2) {
         const [a, b] = [...pointers.values()];
@@ -392,7 +519,13 @@ export async function initMap(stage) {
         pointers.set(e.pointerId, next);
       }
     });
-    const lift = e => { pointers.delete(e.pointerId); pinch = 0; };
+    // A single press that barely moved picks the place under it.
+    const lift = e => {
+      const tap = pointers.size === 1 && pointers.has(e.pointerId) && travel < TAP_SLOP && e.type === 'pointerup';
+      pointers.delete(e.pointerId); pinch = 0;
+      const at = tap && pointAt(d, e.offsetX, e.offsetY);
+      if (at) pickPoint(at, discs.indexOf(d));
+    };
     d.canvas.addEventListener('pointerleave', () => { if (!pointers.size) hover(null); });
     d.canvas.addEventListener('pointerup', lift);
     d.canvas.addEventListener('pointercancel', lift);
@@ -411,6 +544,7 @@ export async function initMap(stage) {
         '+': () => zoomAt(d, KEY_ZOOM, d.cssSize / 2, d.cssSize / 2), '=': () => zoomAt(d, KEY_ZOOM, d.cssSize / 2, d.cssSize / 2),
         '-': () => zoomAt(d, 1 / KEY_ZOOM, d.cssSize / 2, d.cssSize / 2),
         0: resetView,
+        Enter: () => { const at = unproject(d.vx, d.vy, d.lon0); if (at) pickPoint(at, discs.indexOf(d)); },
         ' ': () => setPlaying(!playing),
         '[': () => advance(-HOUR_MS), ']': () => advance(HOUR_MS),
         '{': () => advance(-DAY_MS), '}': () => advance(DAY_MS),

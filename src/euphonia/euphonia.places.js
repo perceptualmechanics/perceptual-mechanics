@@ -36,7 +36,7 @@ export function resolvePlaces({ gazetteer, regions, calendars }) {
   const placed = regions.map(r => ({
     name: r.name,
     id: slug(r.name),
-    places: r.places.map(p => ({ name: p.name, ...at(r.name, p.modern, p.country, p.province) })),
+    places: r.places.map(p => ({ name: p.name, modern: p.modern, country: p.country, ...at(r.name, p.modern, p.country, p.province) })),
   }));
   return { seats, regions: placed, errors };
 }
