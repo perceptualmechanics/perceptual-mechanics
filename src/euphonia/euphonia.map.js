@@ -1,162 +1,65 @@
-// The map of 1668, drawn in the page: two hemispheres from Natural Earth's
-// coasts, with the night where it was at the chosen instant.
+// The map of 1668: two hemispheres from Natural Earth's coasts, with the
+// night where it was at the chosen instant and the book's regions where the
+// book places them. Drag or the arrow keys turn the world under the discs;
+// the wheel, a pinch or the keys zoom; a region's name zooms to it.
 import worldUrl from './euphonia.world.json?url';
+import { HEMISPHERES, project, local, subsolar } from './euphonia.projection.js';
 import {
-  HEMISPHERES, DUSKS, project, subsolar, darkRegion, capCircle, local,
-  ringsIn, linesIn, coastOf, graticule, parallel,
-} from './euphonia.projection.js';
+  DISC_FILL, toScreen, fromScreen, projectWorld, prepareWorld, palette,
+  drawBase, drawSky, maxZoom,
+} from './euphonia.draw.js';
 import { moonAt } from './euphonia.moon.js';
 import { datesAt } from './euphonia.calendars.js';
 import { tideAt, hiddenAt } from './euphonia.tide.js';
 import calendars from './euphonia.calendars.json';
 import places from 'virtual:euphonia-places';
-
-const NS = 'http://www.w3.org/2000/svg';
-const GRATICULE_STEP = 30;
-// The discs' viewBox: the unit disc with room for the rim and the name above.
-const VIEW_BOX = [-1.08, -1.2, 2.16, 2.28];
-const VIEW_WIDTH = VIEW_BOX[2];
-// The regions' names, in rem: the size of the page's notes.
-const LABEL_REM = 0.85;
-// Unit-disc coordinates; four places is a twentieth of a pixel at the
-// largest the discs are drawn.
-const fmt = v => v.toFixed(4);
-
-const el = (name, attrs, parent) => {
-  const e = document.createElementNS(NS, name);
-  for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v);
-  parent.appendChild(e);
-  return e;
-};
-
-// SVG's y runs down; the projection's runs up.
-function pathOf(lines, lon0, close) {
-  let d = '';
-  for (const line of lines) {
-    line.forEach(([lon, lat], i) => {
-      const [X, Y] = project(lon, lat, lon0);
-      d += `${i ? 'L' : 'M'}${fmt(X)},${fmt(-Y)}`;
-    });
-    if (close) d += 'Z';
-  }
-  return d;
-}
-
-// Chrome rasterises one long SVG arc loosely: a half circle of 731 pixels'
-// radius strayed by 8.9 pixels, where the same circle in quarters stayed
-// within 0.7, as close as a <circle>. So no arc here spans more than 90°.
-const QUARTER = Math.PI / 2;
-// The arc of radius r round (cx, cy) from angle `from` through a signed
-// `span` (counter-clockwise positive, on the Y-up disc), as SVG commands.
-// Counter-clockwise on the disc stays counter-clockwise on screen once y is
-// flipped, and SVG draws that with sweep 0.
-function arc(cx, cy, r, from, span) {
-  const n = Math.max(1, Math.ceil(Math.abs(span) / QUARTER - 1e-9));
-  let d = '';
-  for (let k = 1; k <= n; k++) {
-    const t = from + span * k / n;
-    d += `A${fmt(r)},${fmt(r)} 0 0 ${span > 0 ? 0 : 1} ${fmt(cx + r * Math.cos(t))},${fmt(-(cy + r * Math.sin(t)))}`;
-  }
-  return d;
-}
-const circlePath = (cx, cy, r) => `M${fmt(cx + r)},${fmt(-cy)}${arc(cx, cy, r, 0, 2 * Math.PI)}Z`;
-const RIM = circlePath(0, 0, 1);
-
-const isDark = (g, X, Y) => g.line
-  ? g.nx * X + g.ny * Y < g.c
-  : (Math.hypot(X - g.cx, Y - g.cy) < g.r) === g.inside;
-
-// The arc of a circle from angle a to angle b that passes through `want`'s
-// side.
-function arcTo(cx, cy, r, a, b, want) {
-  const ccw = ((b - a) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI);
-  const mid = a + ccw / 2;
-  return arc(cx, cy, r, a, want(cx + r * Math.cos(mid), cy + r * Math.sin(mid)) ? ccw : ccw - 2 * Math.PI);
-}
-
-// The dark part of the disc, bounded by the dusk circle (or line) and the rim.
-// Built from the two points where they cross, so a circle passing near the
-// projection's far pole, with a radius of millions, is drawn by its ends and
-// never by its centre.
-function darkPath(g) {
-  let pts;
-  if (g.line) {
-    const n = Math.hypot(g.nx, g.ny), dist = g.c / n;
-    if (Math.abs(dist) >= 1) return isDark(g, 0, 0) ? RIM : '';
-    const ux = g.nx / n, uy = g.ny / n, h = Math.sqrt(1 - dist * dist);
-    pts = [[dist * ux - h * uy, dist * uy + h * ux], [dist * ux + h * uy, dist * uy - h * ux]];
-  } else {
-    const d = Math.hypot(g.cx, g.cy);
-    if (d >= 1 + g.r) return g.inside ? '' : RIM;
-    if (d <= Math.abs(g.r - 1)) {
-      if (g.r < 1) return g.inside ? circlePath(g.cx, g.cy, g.r) : RIM + circlePath(g.cx, g.cy, g.r);
-      return g.inside ? RIM : '';
-    }
-    const a = (1 - g.r * g.r + d * d) / (2 * d), h = Math.sqrt(1 - a * a);
-    const px = a * g.cx / d, py = a * g.cy / d, ox = -g.cy / d * h, oy = g.cx / d * h;
-    pts = [[px + ox, py + oy], [px - ox, py - oy]];
-  }
-  const [A, B] = pts;
-  const inDisc = (X, Y) => Math.hypot(X, Y) < 1;
-  const edge = g.line
-    ? `L${fmt(B[0])},${fmt(-B[1])}`
-    : arcTo(g.cx, g.cy, g.r, Math.atan2(A[1] - g.cy, A[0] - g.cx), Math.atan2(B[1] - g.cy, B[0] - g.cx), inDisc);
-  const rim = arcTo(0, 0, 1, Math.atan2(B[1], B[0]), Math.atan2(A[1], A[0]), (X, Y) => isDark(g, X, Y));
-  return `M${fmt(A[0])},${fmt(-A[1])}${edge}${rim}Z`;
-}
+import { prefersReducedMotion } from '../utils/sceneKit.js';
 
 const RAD = Math.PI / 180;
+// Where the two hemispheres meet, 20°W and 160°E, until the reader turns them.
+const SPLIT = HEMISPHERES[0].lon0 + 90;
+// The site's renderers stop at 2x; past it the canvases grow for nothing.
+const MAX_PIXEL_RATIO = 2;
+// Wheel delta, in pixels, for each doubling of the zoom: Chrome's notch is
+// 100, so a notch zooms by 2^(100/240), about a third.
+const WHEEL_DOUBLING = 240;
+// The keys turn the world by a degree in five, near a tenth of a time zone's
+// width at a time, and zoom by half again.
+const KEY_TURN = 5;
+const KEY_ZOOM = 1.5;
+// A region's places fill this share of the disc when its name is chosen.
+const REGION_FIT = 0.8;
+// A region's zoom plays over this long, unless the reader asks for less motion.
+const ZOOM_MS = 450;
+// The regions' names, in rem: the size of the page's notes.
+const LABEL_REM = 0.85;
+
 const unit = ({ lat, lon }) => [Math.cos(lat * RAD) * Math.cos(lon * RAD), Math.cos(lat * RAD) * Math.sin(lon * RAD), Math.sin(lat * RAD)];
 const apart = (a, b) => Math.acos(Math.min(1, unit(a).reduce((s, v, i) => s + v * unit(b)[i], 0))) / RAD;
 
 // A region as the book places it: a glow round each of its places, each
 // reaching halfway to the place's nearest neighbour in the region so the
 // glows meet and the region reads as one; its name at the places' mean.
-const regionShapes = places.regions.map(r => {
+const regions = places.regions.map(r => {
   const glows = r.places.map(p => ({ ...p, rho: Math.min(...r.places.filter(q => q !== p).map(q => apart(p, q))) / 2 }));
   const [x, y, z] = r.places.map(unit).reduce((a, v) => a.map((s, i) => s + v[i]));
   return { ...r, glows, centre: { lat: Math.atan2(z, Math.hypot(x, y)) / RAD, lon: Math.atan2(y, x) / RAD } };
 });
 
-function hemisphere(h, i, world, parent) {
-  const svg = el('svg', { viewBox: VIEW_BOX.join(' '), role: 'group', 'aria-labelledby': `map-name-${i}` }, parent);
-  el('text', { class: 'map-name', id: `map-name-${i}`, x: 0, y: -1.1, 'text-anchor': 'middle' }, svg).textContent = h.name;
-  const defs = el('defs', {}, svg);
-  el('path', { d: RIM }, el('clipPath', { id: `map-disc-${i}` }, defs));
-  const glow = el('radialGradient', { id: `map-glow-${i}` }, defs);
-  el('stop', { offset: 0, class: 'map-glow-core' }, glow);
-  el('stop', { offset: 1, class: 'map-glow-edge' }, glow);
-  el('path', { class: 'map-sea', d: RIM }, svg);
-  el('path', { class: 'map-graticule', d: pathOf(graticule(h.lon0, GRATICULE_STEP), h.lon0, false) }, svg);
-  const circles = el('path', { class: 'map-circles' }, svg);
-  el('path', { class: 'map-land', d: pathOf(ringsIn(world.land, h.lon0), h.lon0, true) }, svg);
-  el('path', { class: 'map-coast', d: pathOf(linesIn(world.land.flatMap(coastOf), h.lon0), h.lon0, false) }, svg);
-  el('path', { class: 'map-river', d: pathOf(linesIn(world.rivers, h.lon0), h.lon0, false) }, svg);
-  el('path', { class: 'map-lake', d: pathOf(ringsIn(world.lakes, h.lon0), h.lon0, true) }, svg);
-  el('path', { class: 'map-lake historic', d: pathOf(ringsIn(world.historic.flatMap(l => l.parts), h.lon0), h.lon0, true) }, svg);
-  const dark = DUSKS.map(() => el('path', { class: 'map-night', 'fill-rule': 'evenodd' }, svg));
-  // The book's regions, above the night: they're where the book places them at
-  // every hour.
-  const glows = el('g', { class: 'map-regions', 'clip-path': `url(#map-disc-${i})` }, svg);
-  for (const r of regionShapes) for (const p of r.glows) {
-    const c = capCircle(p, p.rho, h.lon0);
-    if (c) el('circle', { cx: fmt(c.cx), cy: fmt(-c.cy), r: fmt(c.r), fill: `url(#map-glow-${i})` }, glows);
+// Names whose places' means fall close together would print over each other.
+// Top to bottom, each that overlaps one already placed moves down by the
+// overlap, so they stack without being placed by hand. Boxes are centred on
+// (x, y), with each name's size measured once per size of the page's type;
+// reading the layout back each frame would lay out the whole page each time.
+function separate(boxes) {
+  const placed = [];
+  for (const b of [...boxes].sort((a, c) => a.y - c.y)) {
+    for (const o of placed) {
+      const overlap = Math.abs(b.x - o.x) < (b.w + o.w) / 2 && (o.h + b.h) / 2 - (b.y - o.y);
+      if (overlap > 0) b.y += overlap;
+    }
+    placed.push(b);
   }
-  const sun = el('g', { class: 'map-sun' }, svg);
-  el('circle', { r: 0.03 }, sun);
-  el('circle', { class: 'dot', r: 0.007 }, sun);
-  el('path', { class: 'map-rim', d: RIM }, svg);
-  // Each region's name, on the hemisphere that faces its places' mean, links
-  // to its chapter below the map.
-  const labels = [];
-  for (const r of regionShapes) {
-    if (local(r.centre.lon, r.centre.lat, h.lon0)[2] > 0) continue;
-    const [X, Y] = project(r.centre.lon, r.centre.lat, h.lon0);
-    const text = el('text', { x: fmt(X), y: fmt(-Y), 'data-y': fmt(-Y), 'text-anchor': 'middle' }, el('a', { class: 'map-region', href: `#${r.id}` }, svg));
-    text.textContent = r.name;
-    labels.push(text);
-  }
-  return { ...h, svg, circles, dark, sun, labels };
 }
 
 // The moon's face on a unit disc: the lit limb is a half circle and the
@@ -165,56 +68,44 @@ function hemisphere(h, i, world, parent) {
 // the north, lit on the right while waxing. At this size Chrome's looseness
 // with half-circle arcs is under a hundredth of a pixel.
 function facePath(lit, waxing) {
+  const fmt = v => v.toFixed(4);
   const rx = Math.abs(1 - 2 * lit);
   const limb = `M0,-1A1,1 0 0 ${waxing ? 1 : 0} 0,1`;
   const crescentSweep = waxing ? 0 : 1;
   return `${limb}A${fmt(rx)},1 0 0 ${lit < 0.5 ? crescentSweep : 1 - crescentSweep} 0,-1Z`;
 }
 
-// Labels whose places' means fall close together would print over each
-// other. Top to bottom, each that overlaps one already placed moves down by
-// the measured overlap, so they stack without being placed by hand.
-function separate(labels) {
-  const placed = [];
-  for (const text of [...labels].sort((a, b) => a.getBBox().y - b.getBBox().y)) {
-    for (const other of placed) {
-      const a = text.getBBox(), b = other.getBBox();
-      const overlap = Math.min(a.x + a.width, b.x + b.width) > Math.max(a.x, b.x) && Math.min(a.y + a.height, b.y + b.height) - Math.max(a.y, b.y);
-      if (overlap > 0) text.setAttribute('y', fmt(Number(text.getAttribute('y')) + overlap));
-    }
-    placed.push(text);
-  }
-}
-
 const two = n => String(n).padStart(2, '0');
 const degrees = (v, pos, neg) => `${Math.abs(v).toFixed(1)}° ${v >= 0 ? pos : neg}`;
 
-export async function initMap(figure) {
-  const world = await (await fetch(worldUrl)).json();
-  const holder = figure.querySelector('.map-hemispheres');
-  const hemis = HEMISPHERES.map((h, i) => hemisphere(h, i, world, holder));
-  // The names keep the page's small type size however large the discs are
-  // drawn, so they are set in map units from each disc's drawn width, and
-  // stacked again whenever that changes.
-  const fit = () => {
-    const rem = parseFloat(getComputedStyle(document.documentElement).fontSize);
-    for (const h of hemis) {
-      const pxPerUnit = h.svg.getBoundingClientRect().width / VIEW_WIDTH;
-      if (!pxPerUnit) continue;
-      for (const t of h.labels) {
-        t.setAttribute('font-size', fmt(LABEL_REM * rem / pxPerUnit));
-        t.setAttribute('y', t.dataset.y);
-      }
-      separate(h.labels);
-    }
+function disc(stage, i, h) {
+  const cell = stage.querySelectorAll('.map-disc')[i];
+  const canvas = cell.querySelector('canvas');
+  return {
+    name: h.name, cell, canvas, ctx: canvas.getContext('2d'),
+    base: document.createElement('canvas'),
+    labels: cell.querySelector('.map-labels'),
+    zoom: 1, vx: 0, vy: 0, size: 0, cssSize: 0, dpr: 1, projected: null, baseKey: '',
   };
-  new ResizeObserver(fit).observe(holder);
-  const form = figure.querySelector('form');
+}
+
+export async function initMap(stage) {
+  const world = prepareWorld(await (await fetch(worldUrl)).json());
+  const tolerance = world.provenance.tolerance_deg;
+  const colors = palette(stage);
+  const discs = HEMISPHERES.map((h, i) => disc(stage, i, h));
+  let split = SPLIT;
+  const lon0Of = i => ((split - 90 + 180 * i) % 360 + 540) % 360 - 180;
+
+  const form = stage.querySelector('form');
   const date = form.elements.date, time = form.elements.time;
-  const shown = form.querySelector('output'), readout = figure.querySelector('.map-readout');
-  const moonLine = figure.querySelector('.map-moon'), moonLit = moonLine.querySelector('.lit'), moonText = moonLine.querySelector('span');
-  const datesTable = figure.querySelector('.map-dates'), datesBody = datesTable.tBodies[0];
-  const tideLine = figure.querySelector('.map-tide');
+  const shown = form.querySelector('output');
+  const caption = document.getElementById('map-caption');
+  const readout = caption.querySelector('.map-readout');
+  const moonLine = caption.querySelector('.map-moon'), moonLit = moonLine.querySelector('.lit'), moonText = moonLine.querySelector('span');
+  const datesTable = caption.querySelector('.map-dates'), datesBody = datesTable.tBodies[0];
+  const tideLine = caption.querySelector('.map-tide');
+  const reset = stage.querySelector('.map-reset');
   const hiddenText = ({ half, open }) => [
     half === 'dark' ? 'the dark half' : half === 'other' ? 'the other half' : 'as the DM says',
     open && `${open}'s open night`,
@@ -226,11 +117,73 @@ export async function initMap(figure) {
   const now = new Date();
   date.value = `${now.getMonth() >= 10 ? 1668 : 1669}-${two(now.getMonth() + 1)}-${two(now.getDate())}`;
   time.value = now.getUTCHours() * 60 + now.getUTCMinutes();
+  const instantOf = () => {
+    const [y, m, d] = date.value.split('-').map(Number);
+    return Date.UTC(y, m - 1, d) + Number(time.value) * 60000;
+  };
+
+  // Each disc's labels: one button per region, on the disc that faces the
+  // region's places' mean.
+  for (const [i, d] of discs.entries()) {
+    d.buttons = regions.map(r => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'map-region';
+      b.textContent = r.name;
+      b.addEventListener('click', () => zoomToRegion(i, r));
+      d.labels.append(b);
+      return b;
+    });
+  }
+
+  const view = d => ({ lon0: d.lon0, zoom: d.zoom, vx: d.vx, vy: d.vy, size: d.size, R: d.size / 2 * DISC_FILL });
+  const cssView = d => ({ ...view(d), size: d.cssSize, R: d.cssSize / 2 * DISC_FILL });
+
+  let frame = 0;
+  const redraw = () => { if (!frame) frame = requestAnimationFrame(render); };
+
+  function render() {
+    frame = 0;
+    const instant = instantOf();
+    const sun = subsolar(instant);
+    for (const [i, d] of discs.entries()) {
+      if (!d.size) continue;
+      d.lon0 = lon0Of(i);
+      if (d.projected?.lon0 !== d.lon0) d.projected = projectWorld(world, d.lon0);
+      const v = view(d);
+      const key = `${d.lon0}|${d.zoom}|${d.vx}|${d.vy}|${d.size}`;
+      if (key !== d.baseKey) {
+        d.base.width = d.base.height = d.size;
+        drawBase(d.base.getContext('2d'), v, d.projected, colors, d.dpr);
+        d.baseKey = key;
+      }
+      d.ctx.clearRect(0, 0, d.size, d.size);
+      d.ctx.drawImage(d.base, 0, 0);
+      drawSky(d.ctx, v, { sun, regions }, colors, d.dpr);
+      placeLabels(d);
+    }
+    reset.hidden = discs.every(d => d.zoom === 1) && split === SPLIT;
+  }
+
+  function placeLabels(d) {
+    const v = cssView(d);
+    const boxes = [];
+    regions.forEach((r, k) => {
+      const [x, y] = toScreen(v, ...project(r.centre.lon, r.centre.lat, d.lon0));
+      const shown = local(r.centre.lon, r.centre.lat, d.lon0)[2] <= 0 && x >= 0 && y >= 0 && x <= v.size && y <= v.size;
+      if (shown) boxes.push({ k, x, y, ...d.labelSizes[k] });
+      else d.buttons[k].hidden = true;
+    });
+    separate(boxes);
+    for (const { k, x, y } of boxes) {
+      const b = d.buttons[k];
+      b.hidden = false;
+      b.style.transform = `translate(${x}px, ${y}px) translate(-50%, -50%)`;
+    }
+  }
 
   function draw() {
-    const [y, m, d] = date.value.split('-').map(Number);
-    const minutes = Number(time.value);
-    const instant = Date.UTC(y, m - 1, d) + minutes * 60000;
+    const instant = instantOf();
     const sun = subsolar(instant);
     const moon = moonAt(instant);
     const tide = tideAt(instant);
@@ -243,18 +196,139 @@ export async function initMap(figure) {
     }));
     moonLit.setAttribute('d', facePath(moon.lit, moon.waxing));
     moonText.textContent = `The moon is ${moon.waxing ? 'waxing' : 'waning'}, ${moon.age.toFixed(1)} days from new and ${Math.round(moon.lit * 100)}% lit; the ${moon.next.phase} moon is on ${day(moon.next.ms)} at ${clock(moon.next.ms)} UT.`;
-    for (const h of hemis) {
-      DUSKS.forEach((dusk, k) => h.dark[k].setAttribute('d', darkPath(darkRegion(sun, dusk, h.lon0))));
-      const eps = sun.obliquity;
-      h.circles.setAttribute('d', pathOf([0, eps, -eps, 90 - eps, eps - 90].map(lat => parallel(h.lon0, lat)), h.lon0, false));
-      const facing = Math.abs(((sun.lon - h.lon0 + 540) % 360) - 180) <= 90;
-      h.sun.toggleAttribute('hidden', !facing);
-      const [X, Y] = project(sun.lon, sun.lat, h.lon0);
-      h.sun.setAttribute('transform', `translate(${fmt(X)},${fmt(-Y)})`);
-    }
+    const minutes = Number(time.value);
     shown.value = `${two(Math.floor(minutes / 60))}:${two(minutes % 60)}`;
     readout.textContent = `${date.valueAsDate.toLocaleDateString('en-GB', { timeZone: 'UTC', day: 'numeric', month: 'long', year: 'numeric' })} (Gregorian), ${shown.value} UT: the sun stands overhead at ${degrees(sun.lat, 'N', 'S')}, ${degrees(sun.lon, 'E', 'W')}. The night side is shaded, darker through each twilight.`;
+    redraw();
   }
+
+  // Sizes in device pixels, from each disc's drawn size; the names keep the
+  // page's small type size whatever the disc's.
+  new ResizeObserver(() => {
+    const rem = parseFloat(getComputedStyle(document.documentElement).fontSize);
+    for (const d of discs) {
+      d.cssSize = d.cell.clientWidth;
+      d.dpr = Math.min(devicePixelRatio, MAX_PIXEL_RATIO);
+      d.size = Math.round(d.cssSize * d.dpr);
+      d.canvas.width = d.canvas.height = d.size;
+      d.labels.style.fontSize = `${LABEL_REM * rem}px`;
+      d.labelSizes = d.buttons.map(b => {
+        b.hidden = false;
+        return { w: b.offsetWidth, h: b.offsetHeight };
+      });
+      d.baseKey = '';
+      clampZoom(d);
+    }
+    redraw();
+  }).observe(stage.querySelector('.map-hemispheres'));
+
+  // Zoom stays between the whole disc and the coasts' resolution, and the
+  // view's centre stays where the disc still fills it.
+  function clampZoom(d) {
+    if (!d.cssSize) return;
+    d.zoom = Math.min(Math.max(d.zoom, 1), maxZoom(tolerance, d.cssSize / 2 * DISC_FILL));
+    const reach = Math.max(0, 1 - 1 / d.zoom), r = Math.hypot(d.vx, d.vy);
+    if (r > reach) { d.vx *= reach / r; d.vy *= reach / r; }
+  }
+  // Zoom by `factor` keeping the unit-disc point under (x, y) still.
+  function zoomAt(d, factor, x, y) {
+    const [X, Y] = fromScreen(cssView(d), x, y);
+    d.zoom *= factor;
+    clampZoom(d);
+    const [X2, Y2] = fromScreen(cssView(d), x, y);
+    d.vx += X - X2; d.vy += Y - Y2;
+    clampZoom(d);
+    redraw();
+  }
+  // At the whole disc, a drag turns the world: at the disc's centre
+  // stereographic spends half a radius per radian, so a drag of dx pixels
+  // turns it by 2·dx/R radians. Zoomed in, a drag moves the view.
+  function drag(d, dx, dy) {
+    const R = d.cssSize / 2 * DISC_FILL;
+    if (d.zoom === 1) split -= 2 * dx / R / RAD;
+    else { d.vx -= dx / (R * d.zoom); d.vy += dy / (R * d.zoom); clampZoom(d); }
+    redraw();
+  }
+
+  let zooming = 0;
+  function zoomToRegion(i, r) {
+    const d = discs[i];
+    const pts = r.places.filter(p => local(p.lon, p.lat, d.lon0)[2] <= 0).map(p => project(p.lon, p.lat, d.lon0));
+    if (!pts.length) return;
+    const xs = pts.map(p => p[0]), ys = pts.map(p => p[1]);
+    const half = Math.max(Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys)) / 2 || 0.05;
+    const target = { zoom: REGION_FIT / DISC_FILL / half, vx: (Math.max(...xs) + Math.min(...xs)) / 2, vy: (Math.max(...ys) + Math.min(...ys)) / 2 };
+    const from = { zoom: d.zoom, vx: d.vx, vy: d.vy };
+    const step = t => {
+      const e = t * t * (3 - 2 * t);
+      d.zoom = Math.exp(Math.log(from.zoom) + (Math.log(target.zoom) - Math.log(from.zoom)) * e);
+      d.vx = from.vx + (target.vx - from.vx) * e;
+      d.vy = from.vy + (target.vy - from.vy) * e;
+      clampZoom(d);
+      redraw();
+    };
+    cancelAnimationFrame(zooming);
+    if (prefersReducedMotion()) { step(1); return; }
+    const start = performance.now();
+    const tick = now => { const t = Math.min(1, (now - start) / ZOOM_MS); step(t); if (t < 1) zooming = requestAnimationFrame(tick); };
+    zooming = requestAnimationFrame(tick);
+  }
+
+  for (const d of discs) {
+    const pointers = new Map();
+    let pinch = 0;
+    d.canvas.addEventListener('pointerdown', e => {
+      d.canvas.setPointerCapture(e.pointerId);
+      pointers.set(e.pointerId, [e.offsetX, e.offsetY]);
+      cancelAnimationFrame(zooming);
+    });
+    d.canvas.addEventListener('pointermove', e => {
+      const last = pointers.get(e.pointerId);
+      if (!last) return;
+      const next = [e.offsetX, e.offsetY];
+      if (pointers.size === 2) {
+        const [a, b] = [...pointers.values()];
+        pointers.set(e.pointerId, next);
+        const [c, f] = [...pointers.values()];
+        const span = Math.hypot(c[0] - f[0], c[1] - f[1]);
+        pinch = pinch || Math.hypot(a[0] - b[0], a[1] - b[1]);
+        zoomAt(d, span / pinch, (c[0] + f[0]) / 2, (c[1] + f[1]) / 2);
+        pinch = span;
+      } else {
+        drag(d, next[0] - last[0], next[1] - last[1]);
+        pointers.set(e.pointerId, next);
+      }
+    });
+    const lift = e => { pointers.delete(e.pointerId); pinch = 0; };
+    d.canvas.addEventListener('pointerup', lift);
+    d.canvas.addEventListener('pointercancel', lift);
+    d.canvas.addEventListener('wheel', e => {
+      e.preventDefault();
+      zoomAt(d, 2 ** (-e.deltaY / WHEEL_DOUBLING), e.offsetX, e.offsetY);
+    }, { passive: false });
+    d.cell.addEventListener('keydown', e => {
+      if (e.target !== d.cell) return;
+      const R = d.cssSize / 2 * DISC_FILL, step = KEY_TURN * RAD * R / 2;
+      const keys = {
+        ArrowLeft: () => drag(d, step, 0), ArrowRight: () => drag(d, -step, 0),
+        ArrowUp: () => drag(d, 0, step), ArrowDown: () => drag(d, 0, -step),
+        '+': () => zoomAt(d, KEY_ZOOM, d.cssSize / 2, d.cssSize / 2), '=': () => zoomAt(d, KEY_ZOOM, d.cssSize / 2, d.cssSize / 2),
+        '-': () => zoomAt(d, 1 / KEY_ZOOM, d.cssSize / 2, d.cssSize / 2),
+        0: resetView,
+      };
+      if (!keys[e.key]) return;
+      e.preventDefault();
+      keys[e.key]();
+    });
+  }
+
+  function resetView() {
+    split = SPLIT;
+    for (const d of discs) { d.zoom = 1; d.vx = d.vy = 0; }
+    redraw();
+  }
+  reset.addEventListener('click', resetView);
+
   date.addEventListener('input', () => { if (date.value) draw(); });
   time.addEventListener('input', draw);
   draw();
@@ -262,9 +336,10 @@ export async function initMap(figure) {
   moonLine.hidden = false;
   datesTable.hidden = false;
   tideLine.hidden = false;
+  stage.classList.add('is-drawn');
 }
 
-// A region's name on the map opens its chapter, as does a link to it.
+// A region's chapter opens from a link to it.
 function openRegion(id) {
   const chapter = id ? document.getElementById(id) : null;
   if (chapter?.matches('details.region')) chapter.open = true;
@@ -272,8 +347,5 @@ function openRegion(id) {
 addEventListener('hashchange', () => openRegion(location.hash.slice(1)));
 openRegion(location.hash.slice(1));
 
-const figure = document.getElementById('map-figure');
-if (figure) {
-  figure.addEventListener('click', e => openRegion(e.target.closest('a.map-region')?.getAttribute('href').slice(1)));
-  initMap(figure);
-}
+const stage = document.getElementById('map-figure');
+if (stage) initMap(stage);

@@ -1,9 +1,6 @@
 /* What /euphonia/ adds to the reading pages' styles/page.css. */
 
-/* The reading column stays page.css's 40rem; only the map is wider. */
-.wrap { max-width: 72rem; }
-header.masthead, main > section:not(.map-section), footer.legal { max-width: 37.5rem; margin-inline: auto; }
-.map-section > h2 { max-width: 37.5rem; margin-inline: auto; }
+/* The reading column is page.css's; the map's stage above it fills the screen. */
 
 section { margin: 0 0 3rem; }
 section > h2 { font-size: 1.34rem; margin: 0 0 0.6rem; font-weight: 600; line-height: 1.3; }
@@ -22,25 +19,52 @@ footer.legal p { overflow-wrap: anywhere; }
    colour alone wouldn't mark them. */
 footer.legal section a { text-decoration: underline; }
 
-/* The map of 1668. Two discs side by side while each can be 22rem across,
-   stacked below that. */
-.map { margin: 0; }
-.map-controls {
-  display: flex; flex-wrap: wrap; gap: 0.6rem 1.6rem; align-items: center;
-  max-width: 37.5rem; margin: 0 auto 1rem; font-size: 0.92rem;
+/* The map of 1668: a stage the height of the screen, the title over it,
+   the controls under the title and the two discs filling what's left, side
+   by side on a wide screen and stacked on a tall one. Each disc takes the
+   largest square its cell holds. */
+.map-stage {
+  --map-sea: #0f1418; --map-graticule: #3a352c; --map-circles: #6b5a37; --map-land: #2b261e;
+  --map-coast: #8c7a55; --map-river: #3b4a52; --map-historic: #d9b13f; --map-night: rgba(0, 0, 0, 0.32);
+  --map-glow: rgba(217, 177, 63, 0.22); --map-sun: #f0cf6a; --map-rim: #8c7a55;
+  height: 100svh; min-height: 30rem; display: grid; grid-template-rows: auto auto minmax(0, 1fr) auto;
+  gap: 0.6rem; padding: 1.2rem 1.25rem 0.8rem; box-sizing: border-box;
 }
-.map-controls[hidden] { display: none; }
+.map-stage header.masthead { border: 0; padding: 0; margin: 0; }
+.map-stage h1 { margin: 0.4rem 0 0.1rem; font-size: 1.6rem; }
+.map-controls { display: flex; flex-wrap: wrap; gap: 0.5rem 1.6rem; align-items: center; font-size: 0.92rem; }
+.map-controls[hidden], .map-reset[hidden] { display: none; }
 .map-controls input[type=date] {
   font: inherit; background: #15130f; color: #ded9d0; border: 1px solid #4a4034; padding: 0.15rem 0.4rem;
 }
 .map-controls input[type=range] { width: 12rem; max-width: 50vw; accent-color: #d9b13f; vertical-align: middle; }
 .map-controls output { font-variant-numeric: tabular-nums; }
-.map-hemispheres {
-  display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr)); gap: 1.5rem;
+.map-reset { font: inherit; color: #d9b13f; background: none; border: 1px solid #6b5a37; padding: 0.2rem 0.7rem; cursor: pointer; }
+.map-reset:hover, .map-reset:focus-visible { border-color: #d9b13f; }
+.map-hemispheres { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; min-height: 0; }
+@media (orientation: portrait) { .map-hemispheres { grid-template-columns: 1fr; grid-template-rows: 1fr 1fr; } }
+.map-cell { container-type: size; min-height: 0; display: grid; place-items: center; }
+.map-disc { position: relative; width: min(100cqw, 100cqh); aspect-ratio: 1; touch-action: none; }
+.map-disc:focus-visible { outline: 2px solid #f0cf6a; outline-offset: 4px; border-radius: 50%; }
+.map-disc canvas { display: block; width: 100%; height: 100%; cursor: grab; }
+.map-disc canvas:active { cursor: grabbing; }
+.map-name {
+  position: absolute; top: 0; left: 0; right: 0; margin: 0; text-align: center; pointer-events: none;
+  color: #8c8377; font-size: 0.7rem; letter-spacing: 0.3em; text-transform: uppercase;
 }
-.map-hemispheres svg { display: block; width: 100%; height: auto; }
-.map figcaption { max-width: 37.5rem; margin: 1rem auto 0; }
-.map figcaption .note { font-size: 0.85rem; }
+.map-labels { position: absolute; inset: 0; pointer-events: none; overflow: hidden; border-radius: 50%; }
+.map-region {
+  position: absolute; top: 0; left: 0; pointer-events: auto; white-space: nowrap;
+  font: inherit; color: #ded9d0; background: none; border: 0; padding: 0.05rem 0.2rem; cursor: pointer;
+  text-shadow: 0 0 3px #0a0a0a, 0 0 3px #0a0a0a, 0 0 6px #0a0a0a;
+}
+.map-region[hidden] { display: none; }
+.map-region:hover, .map-region:focus-visible { color: #f0cf6a; text-decoration: underline; }
+.map-region:focus-visible { outline: 2px solid #f0cf6a; outline-offset: 1px; }
+.map-help { margin: 0; color: #8c8377; font-size: 0.8rem; }
+
+.map-caption { padding-top: 2.5rem; }
+.map-caption .note { font-size: 0.85rem; }
 .map-dates { width: 100%; border-collapse: collapse; margin: 0.4rem 0 1.2rem; font-size: 0.92rem; }
 .map-dates[hidden] { display: none; }
 .map-dates caption { text-align: left; color: #8c8377; font-size: 0.85rem; padding-bottom: 0.3rem; }
@@ -55,27 +79,6 @@ footer.legal section a { text-decoration: underline; }
 .map-moon svg { flex: none; width: 1.6rem; height: 1.6rem; }
 .map-moon .face { fill: #15130f; stroke: #6b5a37; stroke-width: 0.06; }
 .map-moon .lit { fill: #ded9d0; }
-/* Strokes are in screen pixels whatever size the disc is drawn. */
-.map svg path { vector-effect: non-scaling-stroke; }
-.map-sea { fill: #0f1418; }
-.map-graticule { fill: none; stroke: #3a352c; stroke-width: 0.5; }
-.map-circles { fill: none; stroke: #6b5a37; stroke-width: 0.7; }
-.map-land { fill: #2b261e; }
-.map-coast { fill: none; stroke: #8c7a55; stroke-width: 0.7; stroke-linejoin: round; }
-.map-river { fill: none; stroke: #3b4a52; stroke-width: 0.7; }
-.map-lake { fill: #0f1418; stroke: #6b5a37; stroke-width: 0.5; }
-.map-lake.historic { stroke: #d9b13f; stroke-dasharray: 3 2; }
-.map-night { fill: #000; fill-opacity: 0.32; }
-.map-sun circle { fill: none; stroke: #f0cf6a; stroke-width: 0.006; }
-.map-sun .dot { fill: #f0cf6a; stroke: none; }
-.map-sun[hidden] { display: none; }
-.map-rim { fill: none; stroke: #8c7a55; stroke-width: 1.5; }
-.map-glow-core { stop-color: #d9b13f; stop-opacity: 0.22; }
-.map-glow-edge { stop-color: #d9b13f; stop-opacity: 0; }
-.map-region text { fill: #ded9d0; paint-order: stroke; stroke: #0a0a0a; stroke-width: 3px; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
-.map-region:hover text, .map-region:focus-visible text { fill: #f0cf6a; text-decoration: underline; }
-.map-region:focus-visible { outline: 2px solid #f0cf6a; outline-offset: 2px; }
-.map-name { fill: #8c8377; font-size: 0.055px; letter-spacing: 0.2em; text-transform: uppercase; }
 
 /* The regions' chapters, one disclosure each. */
 details.region { border-top: 1px solid #2a2620; padding: 0.5rem 0; }
@@ -88,6 +91,7 @@ details.region:target > summary, details.region[open] > summary { color: #d9b13f
 @media print {
   body { background: #fff; color: #000; }
   a, footer, footer.legal h2, .kicker, .note, .meta, ul.catalog .n, ul.catalog .e { color: #000; }
-  .skip-link, header.masthead a.home, footer.legal > p:first-child, .map-controls { display: none; }
+  .skip-link, header.masthead a.home, footer.legal > p:first-child, .map-controls, .map-hemispheres, .map-help { display: none; }
+  .map-stage { height: auto; min-height: 0; }
   ul.catalog li, header.masthead, footer { border-color: #999; }
 }

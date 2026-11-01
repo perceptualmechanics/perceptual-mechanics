@@ -116,6 +116,7 @@ export function buildWorld(dir) {
       fetched: '2026-11-01',
       files: Object.values(L).map(l => l.file),
       simplified: `Douglas–Peucker at ${TOLERANCE}°, rounded to ${PLACES} decimal places`,
+      tolerance_deg: TOLERANCE,
       replaced: REPLACED,
       river_rank: RIVER_RANK,
     },
