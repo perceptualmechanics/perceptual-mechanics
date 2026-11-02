@@ -2,8 +2,8 @@
  "provenance": {
   "source": "Euphonia.md",
   "master": "~/Documents/euphonia/Euphonia.md",
-  "sha256": "fcbffef22b38655cfe37e7fc0d76a1bdfd1d15d3a13c119c827fa6600e2caa0f",
-  "modified": "2026-11-02T14:10:45-05:00",
+  "sha256": "79c0fe05e9fcd791a6249bdd960422160ec1289098b26d147c21328d6ae21a20",
+  "modified": "2026-11-02T14:35:52-05:00",
   "exporter": "class-kit/site_export.py",
   "exporter_version": 10,
   "rules": {
@@ -33,7 +33,7 @@
    "read_with": "Powers and Factions; in The State of the World, Europe, and Mutapa and the Indian Ocean",
    "summary": "**The pitch.** Every court in Europe has a minister of magic, and in 1668 every one has just learned it is behind: Mutapa is about to leap the magical gap on a metal nobody else can work, and Spain, it turns out, has the same metal in the Chocó (see The World in 1668). The Great Game is the espionage that follows, played with licenses, portraits and shewstones by the spymasters who are this setting's secret heroes, and the party is one of their crews.",
    "hooks": [
-    "A court painter has finished the Regent's miniature for a marriage negotiation, and three services want it before it reaches Vienna.",
+    "A court painter has finished a miniature of the young king for the Emperor's court, and three services want it before it reaches Vienna.",
     "A Viennese clerk has been copying the Emperor's register of licensed casters for another court; whoever catches him first will use him rather than hang him.",
     "A shewstone pair given by Mutapa has started answering in a voice that isn't the other stone's.",
     "An Agitator cell inside the Invisible College has a scheme for the Grand Divertissement; a natural philosopher among them has doubts.",
