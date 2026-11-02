@@ -17,6 +17,7 @@ import { datesAt } from './euphonia.calendars.js';
 import { tideAt, hiddenAt } from './euphonia.tide.js';
 import calendars from './euphonia.calendars.json';
 import places from 'virtual:euphonia-places';
+import { apart, regionShape } from './euphonia.places.js';
 import { prefersReducedMotion, createFrameClock, createPanelCloser, setPanelSide } from '../utils/sceneKit.js';
 
 const RAD = Math.PI / 180;
@@ -55,18 +56,7 @@ const CIRCLE_NAME_IN = 84;
 // The regions' names, in rem: the size of the page's notes.
 const LABEL_REM = 0.85;
 
-const unit = ({ lat, lon }) => [Math.cos(lat * RAD) * Math.cos(lon * RAD), Math.cos(lat * RAD) * Math.sin(lon * RAD), Math.sin(lat * RAD)];
-const apart = (a, b) => Math.acos(Math.min(1, unit(a).reduce((s, v, i) => s + v * unit(b)[i], 0))) / RAD;
-
-// A region as the book places it: a glow round each of its places, each
-// reaching halfway to the place's nearest neighbour in the region so the
-// glows meet and the region reads as one; its name at the places' mean.
-const regions = places.regions.map(r => {
-  const glows = r.places.map(p => ({ ...p, rho: Math.min(...r.places.filter(q => q !== p).map(q => apart(p, q))) / 2 }));
-  const [x, y, z] = r.places.map(unit).reduce((a, v) => a.map((s, i) => s + v[i]));
-  const centre = { lat: Math.atan2(z, Math.hypot(x, y)) / RAD, lon: Math.atan2(y, x) / RAD };
-  return { ...r, glows, centre, spread: Math.max(...r.places.map(p => apart(p, centre))) };
-});
+const regions = places.regions.map(regionShape);
 
 // Where names would print over each other, the larger region's goes first
 // (its places spread furthest), and each after it tries its own spot, then

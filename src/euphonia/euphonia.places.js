@@ -20,6 +20,27 @@ export function lookup({ places }, place, country, province = null) {
   return { error: elsewhere.length ? `${place} isn't in ${country} in Natural Earth; it has one in ${elsewhere.join(', ')}` : `Natural Earth has no place called ${place}` };
 }
 
+const RAD = Math.PI / 180;
+const unit = ({ lat, lon }) => [Math.cos(lat * RAD) * Math.cos(lon * RAD), Math.cos(lat * RAD) * Math.sin(lon * RAD), Math.sin(lat * RAD)];
+// The angle between two places, in degrees.
+export const apart = (a, b) => Math.acos(Math.min(1, unit(a).reduce((s, v, i) => s + v * unit(b)[i], 0))) / RAD;
+
+// A region as the book places it: a glow round each of its places, each
+// reaching halfway to the place's nearest neighbour in the region so the
+// glows meet and the region reads as one; its name at the places' mean. Two
+// period names can stand at one modern site, so the neighbour is the
+// nearest place somewhere else: at other coordinates, since one site is one
+// gazetteer entry. (Measured, two at one site come out 4e-7° apart, not 0,
+// and a circle that small isn't one.) The map draws it; verify-euphonia-map
+// holds it.
+export function regionShape(r) {
+  const elsewhere = p => q => q.lat !== p.lat || q.lon !== p.lon;
+  const glows = r.places.map(p => ({ ...p, rho: Math.min(...r.places.filter(elsewhere(p)).map(q => apart(p, q))) / 2 }));
+  const [x, y, z] = r.places.map(unit).reduce((a, v) => a.map((s, i) => s + v[i]));
+  const centre = { lat: Math.atan2(z, Math.hypot(x, y)) / RAD, lon: Math.atan2(y, x) / RAD };
+  return { ...r, glows, centre, spread: Math.max(...r.places.map(p => apart(p, centre))) };
+}
+
 export const slug = name => name.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 
 // Every place the map needs, looked up once: the calendars' seats, by seat

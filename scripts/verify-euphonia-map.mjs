@@ -6,7 +6,7 @@ import * as projection from '../src/euphonia/euphonia.projection.js';
 import * as lunar from '../src/euphonia/euphonia.moon.js';
 import * as calendar from '../src/euphonia/euphonia.calendars.js';
 import * as hidden from '../src/euphonia/euphonia.tide.js';
-import { resolvePlaces } from '../src/euphonia/euphonia.places.js';
+import { resolvePlaces, regionShape } from '../src/euphonia/euphonia.places.js';
 import { solarEvents } from '../src/bench/bench.sky.js';
 
 const RAD = Math.PI / 180;
@@ -138,6 +138,21 @@ export function verifyEuphoniaMap({ world = worldData(), fixtures = fixturesData
   const resolved = resolvePlaces({ gazetteer, regions, calendars });
   for (const e of resolved.errors) fail(`a place the map can't find: ${e}`);
   for (const r of regions) if (!(r.places?.length >= MIN_PLACES)) fail(`${r.name} names ${r.places?.length ?? 0} places; the map needs ${MIN_PLACES} to show where a region reaches`);
+  // Each place's glow reaches halfway to the region's nearest place
+  // somewhere else (euphonia.map.js); a region with every place at one site,
+  // or a glow that comes out zero or not a number, draws nothing or throws.
+  for (const r of resolved.regions) {
+    const shape = regionShape(r);
+    for (const g of shape.glows) {
+      if (!(Number.isFinite(g.rho) && g.rho > 0)) fail(`${r.name}: ${g.name}'s glow reaches ${g.rho}°, not a distance the map can draw`);
+      // The circle the map draws for it, on each hemisphere that shows it.
+      for (const h of geo.HEMISPHERES) {
+        const c = geo.capCircle(g, g.rho, h.lon0);
+        if (c && ![c.cx, c.cy, c.r].every(Number.isFinite)) { fail(`${r.name}: ${g.name}'s glow draws as ${JSON.stringify(c)} on ${h.name}`); break; }
+      }
+    }
+    if (!(Number.isFinite(shape.centre.lat) && Number.isFinite(shape.centre.lon))) fail(`${r.name}: its name has no place to stand (its places' mean is ${JSON.stringify(shape.centre)})`);
+  }
   const seats = { seats: resolved.seats };
   const regionPlaces = resolved.regions.reduce((n, r) => n + r.places.length, 0);
 
