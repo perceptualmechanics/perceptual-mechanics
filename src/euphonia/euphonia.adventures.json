@@ -2,8 +2,8 @@
  "provenance": {
   "source": "Euphonia.md",
   "master": "~/Documents/euphonia/Euphonia.md",
-  "sha256": "a4cc5988037e0210ed866cf07ce669bd93293dfac524b601ceaed8b2ce28e587",
-  "modified": "2026-11-02T05:11:09-05:00",
+  "sha256": "534b89498c4c2c118eaa589abca828aad48c07ea1a0e8603cc3a697310ce48f7",
+  "modified": "2026-11-02T06:36:30-05:00",
   "exporter": "class-kit/site_export.py",
   "exporter_version": 9,
   "rules": {
@@ -30,7 +30,7 @@
    "title": "The Great Game: Intrigue in the Courts of Europe",
    "kind": "Intrigue",
    "where": "The courts of Europe, and Mutapa's service in them",
-   "read_with": "Powers and Factions; Western Europe and Mutapa in The State of the World",
+   "read_with": "Powers and Factions; in The State of the World, Europe, and Mutapa and the Indian Ocean",
    "summary": "**The pitch.** Every court in Europe has a minister of magic, and in 1668 every one has just learned it is behind: Mutapa is about to leap the magical gap on a metal nobody else can work, and Spain, it turns out, has the same metal in the Chocó (see The World in 1668). The Great Game is the espionage that follows, played with licenses, portraits and shewstones by the spymasters who are this setting's secret heroes, and the party is one of their crews.",
    "hooks": [
     "A court painter has finished the Regent's miniature for a marriage negotiation, and three services want it before it reaches Vienna.",
@@ -42,15 +42,14 @@
     "A Gamester at Versailles has lost a hand he couldn't have lost, to a man who shouldn't have known the odds."
    ],
    "regions": [
-    "Western Europe",
-    "South America"
+    "Europe"
    ]
   },
   {
    "title": "The Venice Job",
    "kind": "Heist, and a delve",
    "where": "Venice, then Toledo",
-   "read_with": "Central and Eastern Europe; Western Europe for Toledo",
+   "read_with": "Europe",
    "summary": "**The pitch.** A solid intro heist: the prize is going on the market soon for a hefty fee, so why not take it and keep the money? The Republic is losing Candia in the twenty-first year of the siege and will sell anything it has, and a desperate state with the best scryers and cipher clerks in Europe makes mistakes. The city is the whole dungeon: canals, rooftops, palaces and archives, a population that informs on itself and a fair where everyone is masked, which helps a burglar and hurts a scryer. The default date is the Sensa, the Ascension fair of May 1668, when the Doge weds the sea and the masks come out; for Carnival, run it in the winter of 1669. A Danae of the Crossing racing across its rooftops is on the cover of this book.",
    "hooks": [
     "The Ten are selling their scryers' report by sealed bid on the last night of the Sensa fair; the French bidder has debts, the Spanish one has bravos.",
@@ -61,7 +60,7 @@
     "A denunciation has gone into a lion's mouth naming one of the party for unlicensed magic; the Ten's men come at dawn."
    ],
    "regions": [
-    "Central and Eastern Europe"
+    "Europe"
    ]
   },
   {
@@ -74,14 +73,14 @@
     "A child says she was carried to a feast inside a hill, and the examiner who comes to hear it is looking for witches. The village's Killer is seventy and her knees are going. A Mutapan survey crew has pegged out a new street across a pool that belongs to someone. The taken came back a hundred years late and remembers everything."
    ],
    "regions": [
-    "Mutapa"
+    "Mutapa and the Indian Ocean"
    ]
   },
   {
    "title": "The Tomb Road: A Chinese Dungeon Crawl",
    "kind": "Dungeon crawl",
    "where": "China under the new Qing",
-   "read_with": "East Asia",
+   "read_with": "East and Southeast Asia",
    "summary": "The classic delve, Chinese style. A party starts in a minor Ming prince's sealed tomb, in a valley the Qing ignore, and years later ends in the First Emperor's, with its rivers of mercury and its crossbows set for intruders. Between lie the tombs the DM builds: the Han and Tang dead with their tomb-quelling beasts, the alchemists' graves full of cinnabar.",
    "hooks": [],
    "regions": []
@@ -90,22 +89,21 @@
    "title": "The High Ground: The Andean War",
    "kind": "War",
    "where": "The Andes and the Chocó",
-   "read_with": "South America",
+   "read_with": "The Americas",
    "summary": "A three-sided war: the Inca, the Spanish and the people profiting off both. The Inca hold the high ground and Spain the coast and lowlands; Potosí is the contested frontier, and nobody knows who breaks or whether the line settles into a border. At stake: silver, mercury, guano, cinchona and the huacas that rose. It's the book's grittiest setting, for amoral soldier-of-fortune play in the *Wages of Fear* vein, or for Andeans defending their home nobly. The Inca aren't simply the good side: their state was itself an empire built on conquest, and the Cañari and Chachapoya fought beside Spain against it.",
    "hooks": [],
    "regions": [
-    "South America"
+    "The Americas"
    ]
   },
   {
    "title": "The Monsoon Road: Trading the Indian Ocean Coast",
    "kind": "Voyage",
    "where": "The Indian Ocean, from the Cape to Macau and out into the Pacific",
-   "read_with": "The Indian Ocean",
+   "read_with": "Mutapa and the Indian Ocean",
    "summary": "The players are traders: a ship, a cargo and a living to make on the monsoon winds. The game is the voyage, the ports, the deals and what's worth more two harbors on.",
    "hooks": [],
    "regions": [
-    "Mutapa",
     "Oceania"
    ]
   }
