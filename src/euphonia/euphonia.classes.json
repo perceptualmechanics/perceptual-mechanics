@@ -2,10 +2,10 @@
  "provenance": {
   "source": "Euphonia.md",
   "master": "~/Documents/euphonia/Euphonia.md",
-  "sha256": "0080f00882eba13e162f5b7fe56678199a98a9e5e4fb0048f65d05d2d400216b",
-  "modified": "2026-11-01T17:40:07-05:00",
+  "sha256": "41262b913b3686c7b7daae17e48741befdfae3774332e2e1ccdb59378f6c33f6",
+  "modified": "2026-11-01T18:20:10-05:00",
   "exporter": "class-kit/site_export.py",
-  "exporter_version": 5,
+  "exporter_version": 6,
   "rules": {
    "banned": [
     "eladrin",
@@ -711,7 +711,14 @@
      ]
     }
    ],
-   "spells": null
+   "spells": null,
+   "multiclass": {
+    "ability": "Intelligence",
+    "score": 13,
+    "gains": "Hit Point Die",
+    "spell_slots": null,
+    "text": "You must have an Intelligence score of 13 or higher. Gain the following trait from the Core Counsellor Traits table: Hit Point Die. Gain the Counsellor's level 1 features, which are listed in the Counsellor Features table. Your computation die and Exploit's dice come only from your Counsellor levels. If you have more levels in another class than in this one, Sidestep and Anticipate each have a number of uses equal to your Counsellor level instead of the uses those features give, Exploit (still once between the start of one of your turns and the start of your next) is also limited to that many uses, and you regain all expended uses when you finish a Long Rest."
+   }
   },
   {
    "name": "Mhizha",
@@ -853,7 +860,7 @@
      {
       "Level": "7",
       "Proficiency Bonus": "+3",
-      "Class Features": "Field Workshop",
+      "Class Features": "Field Workshop, Flare",
       "Arc Gun": "3d10",
       "Devices": "3",
       "Cantrips": "2",
@@ -1077,7 +1084,7 @@
     {
      "level": 3,
      "name": "Mhizha Subclass",
-     "text": "You gain a Mhizha subclass of your choice: the Armorer, the Chemist, the Constructor, the Gunner, or the Mapmaker. A subclass is a specialization that grants you features at certain Mhizha levels. For the rest of your career, you gain each of your subclass's features that are of your Mhizha level or lower."
+     "text": "You gain a Mhizha subclass of your choice: the Chemist, the Constructor, the Gunner, the Lionskin, or the Mapmaker. A subclass is a specialization that grants you features at certain Mhizha levels. For the rest of your career, you gain each of your subclass's features that are of your Mhizha level or lower."
     },
     {
      "level": 4,
@@ -1093,6 +1100,11 @@
      "level": 7,
      "name": "Field Workshop",
      "text": "You keep a workshop in your pack. When you finish a Short Rest, you regain expended Preparations equal to half your Proficiency Bonus (round up), and you can rebuild one device that was lost or destroyed since your last Long Rest, unless you destroyed it or gave it up on purpose."
+    },
+    {
+     "level": 7,
+     "name": "Flare",
+     "text": "When a creature you can see within 30 feet of you makes an attack roll against a creature other than you, you can take a Reaction to expend a Preparation and throw it as a Flash at the attacker before the roll. The attacker makes a Constitution saving throw against your spell save DC. On a failed save, it has the Blinded condition until the end of its next turn, including against the triggering attack."
     },
     {
      "level": 9,
@@ -1126,79 +1138,6 @@
     }
    ],
    "subclasses": [
-    {
-     "name": "Armorer",
-     "lead": "",
-     "features": [
-      {
-       "level": 3,
-       "name": "Armorer Spells",
-       "text": "When you reach a Mhizha level specified in the Armorer Spells table, you thereafter always have the listed spells prepared.\n\n| Mhizha Level | Spells |\n|---|---|\n| 3 | *Magic Missile*, *Thunderwave* |\n| 5 | *Mirror Image*, *Shatter* |\n| 9 | *Fly*, *Lightning Bolt* |\n| 13 | *Fire Shield*, *Freedom of Movement* |\n| 17 | *Passwall*, *Wall of Force* |",
-       "spells": [
-        {
-         "level": 3,
-         "spells": [
-          "Magic Missile",
-          "Thunderwave"
-         ]
-        },
-        {
-         "level": 5,
-         "spells": [
-          "Mirror Image",
-          "Shatter"
-         ]
-        },
-        {
-         "level": 9,
-         "spells": [
-          "Fly",
-          "Lightning Bolt"
-         ]
-        },
-        {
-         "level": 13,
-         "spells": [
-          "Fire Shield",
-          "Freedom of Movement"
-         ]
-        },
-        {
-         "level": 17,
-         "spells": [
-          "Passwall",
-          "Wall of Force"
-         ]
-        }
-       ]
-      },
-      {
-       "level": 3,
-       "name": "Powered Suit",
-       "text": "You gain Heavy armor training. With Tinker's Tools and 1 hour of work, you can make a suit of armor you wear into your suit. You can have only one suit at a time; if you make another, the old one is ordinary armor again. While you wear it, the following benefits apply:\n\n- *Built In.* The Arc Gun is built into the suit; you fire it without holding it, and the suit is your Spellcasting Focus.\n- *Gauntlets.* Your Unarmed Strikes deal Force damage equal to 1 plus your Intelligence modifier, and you use Intelligence for their attack rolls.\n- *Tailored.* A suit is cut to pass. Out of a fight, it can look like ordinary clothes of your station: court dress, a merchant's coat, a laborer's wrap. A creature that looks closely can tell it's armor with a successful Wisdom (Perception) check against your spell save DC.\n- *Model.* When you finish a Long Rest, choose the suit's model. *Infiltrator:* the suit doesn't give you Disadvantage on Dexterity (Stealth) checks, and your Speed increases by 10 feet. *Guardian:* when a creature you can see hits an ally within 5 feet of you with an attack roll, you can take a Reaction to reduce the damage by 1d10 plus your Intelligence modifier; you can do this a number of times equal to your Proficiency Bonus, and you regain all expended uses when you finish a Long Rest."
-      },
-      {
-       "level": 3,
-       "name": "Kinetic Charge",
-       "text": "The suit drinks the force that strikes it. When damage reduces your Hit Points while you wear it, or you reduce damage with the Guardian's Reaction, the suit becomes charged; it holds one charge at a time. When you hit a creature with the Arc Gun or an Unarmed Strike while the suit is charged, you can release the charge: the creature takes an extra 2d6 Force damage (3d6 if the suit is an Infiltrator). You can release the charge only once per turn. The charge fades if you take off the suit or finish a Short or Long Rest."
-      },
-      {
-       "level": 6,
-       "name": "Suit Systems",
-       "text": "Kinetic Charge's extra Force damage increases by 1d6 (2d6 if the suit is an Infiltrator). In addition, you gain the following benefits:\n\n- *Built-In Curiosity.* When you build devices, you can also build one Mutapan curiosity into the suit, and change it whenever you build devices again:. It works only for you while you wear the suit, and it's lost or destroyed only if the suit is.\n- *Model Systems.* *Infiltrator:* you have a Climb Speed equal to your Speed, and when you fall, you take no damage and can move horizontally up to twice the distance you fall. *Guardian:* when you use the Guardian's Reaction to protect an ally within 5 feet of you, you can swap places with it, as long as you're both willing."
-      },
-      {
-       "level": 10,
-       "name": "Improved Models",
-       "text": "*Infiltrator:* once per Long Rest, as a Bonus Action, you have the Invisible condition until the start of your next turn. *Guardian:* you can't be moved against your will or given the Prone condition while you wear the suit, and your Reaction can protect an ally within 10 feet of you.\n\n*Sealed Seams (Level 10).* While you wear the suit, you're comfortable in extreme heat and extreme cold, and you automatically succeed on saving throws against Exhaustion from them."
-      },
-      {
-       "level": 14,
-       "name": "Flight",
-       "text": "While you wear the suit, you have a Fly Speed equal to your Speed."
-      }
-     ]
-    },
     {
      "name": "Chemist",
      "lead": "",
@@ -1404,6 +1343,79 @@
      ]
     },
     {
+     "name": "Lionskin",
+     "lead": "",
+     "features": [
+      {
+       "level": 3,
+       "name": "Lionskin Spells",
+       "text": "When you reach a Mhizha level specified in the Lionskin Spells table, you thereafter always have the listed spells prepared.\n\n| Mhizha Level | Spells |\n|---|---|\n| 3 | *Magic Missile*, *Thunderwave* |\n| 5 | *Mirror Image*, *Shatter* |\n| 9 | *Fly*, *Lightning Bolt* |\n| 13 | *Fire Shield*, *Freedom of Movement* |\n| 17 | *Passwall*, *Wall of Force* |",
+       "spells": [
+        {
+         "level": 3,
+         "spells": [
+          "Magic Missile",
+          "Thunderwave"
+         ]
+        },
+        {
+         "level": 5,
+         "spells": [
+          "Mirror Image",
+          "Shatter"
+         ]
+        },
+        {
+         "level": 9,
+         "spells": [
+          "Fly",
+          "Lightning Bolt"
+         ]
+        },
+        {
+         "level": 13,
+         "spells": [
+          "Fire Shield",
+          "Freedom of Movement"
+         ]
+        },
+        {
+         "level": 17,
+         "spells": [
+          "Passwall",
+          "Wall of Force"
+         ]
+        }
+       ]
+      },
+      {
+       "level": 3,
+       "name": "Powered Suit",
+       "text": "You gain Heavy armor training. With Tinker's Tools and 1 hour of work, you can make a suit of armor you wear into your suit. You can have only one suit at a time; if you make another, the old one is ordinary armor again. While you wear it, the following benefits apply:\n\n- *Built In.* The Arc Gun is built into the suit; you fire it without holding it, and the suit is your Spellcasting Focus.\n- *Gauntlets.* Your Unarmed Strikes deal Force damage equal to 1 plus your Intelligence modifier, and you use Intelligence for their attack rolls.\n- *Tailored.* A suit is cut to pass. Out of a fight, it can look like ordinary clothes of your station: court dress, a merchant's coat, a laborer's wrap. A creature that looks closely can tell it's armor with a successful Wisdom (Perception) check against your spell save DC.\n- *Model.* When you finish a Long Rest, choose the suit's model. *Infiltrator:* the suit doesn't give you Disadvantage on Dexterity (Stealth) checks, and your Speed increases by 10 feet. *Guardian:* when a creature you can see hits an ally within 5 feet of you with an attack roll, you can take a Reaction to reduce the damage by 1d10 plus your Intelligence modifier; you can do this a number of times equal to your Proficiency Bonus, and you regain all expended uses when you finish a Long Rest."
+      },
+      {
+       "level": 3,
+       "name": "Kinetic Charge",
+       "text": "The suit drinks the force that strikes it. When damage reduces your Hit Points while you wear it, or you reduce damage with the Guardian's Reaction, the suit becomes charged; it holds one charge at a time. When you hit a creature with the Arc Gun or an Unarmed Strike while the suit is charged, you can release the charge: the creature takes an extra 2d6 Force damage (3d6 if the suit is an Infiltrator). You can release the charge only once per turn. The charge fades if you take off the suit or finish a Short or Long Rest."
+      },
+      {
+       "level": 6,
+       "name": "Suit Systems",
+       "text": "Kinetic Charge's extra Force damage increases by 1d6 (2d6 if the suit is an Infiltrator). In addition, you gain the following benefits:\n\n- *Built-In Curiosity.* When you build devices, you can also build one Mutapan curiosity into the suit, and change it whenever you build devices again:. It works only for you while you wear the suit, and it's lost or destroyed only if the suit is.\n- *Model Systems.* *Infiltrator:* you have a Climb Speed equal to your Speed, and when you fall, you take no damage and can move horizontally up to twice the distance you fall. *Guardian:* when you use the Guardian's Reaction to protect an ally within 5 feet of you, you can swap places with it, as long as you're both willing."
+      },
+      {
+       "level": 10,
+       "name": "Improved Models",
+       "text": "*Infiltrator:* once per Long Rest, as a Bonus Action, you have the Invisible condition until the start of your next turn. *Guardian:* you can't be moved against your will or given the Prone condition while you wear the suit, and your Reaction can protect an ally within 10 feet of you.\n\n*Sealed Seams (Level 10).* While you wear the suit, you're comfortable in extreme heat and extreme cold, and you automatically succeed on saving throws against Exhaustion from them."
+      },
+      {
+       "level": 14,
+       "name": "Flight",
+       "text": "While you wear the suit, you have a Fly Speed equal to your Speed."
+      }
+     ]
+    },
+    {
      "name": "Mapmaker",
      "lead": "",
      "features": [
@@ -1516,6 +1528,16 @@
       "new": false
      }
     ]
+   },
+   "multiclass": {
+    "ability": "Intelligence",
+    "score": 13,
+    "gains": "Hit Point Die, proficiency with Tinker's Tools, and training with Light armor",
+    "spell_slots": {
+     "fraction": 0.5,
+     "round": "up"
+    },
+    "text": "You must have an Intelligence score of 13 or higher. Gain the following traits from the Core Mhizha Traits table: Hit Point Die, proficiency with Tinker's Tools, and training with Light armor. Gain the Mhizha's level 1 features, which are listed in the Mhizha Features table. For multiclass spell slots, add half your Mhizha levels (round up), as you would Paladin or Ranger levels."
    }
   },
   {
@@ -2035,7 +2057,14 @@
      ]
     }
    ],
-   "spells": null
+   "spells": null,
+   "multiclass": {
+    "ability": "Intelligence",
+    "score": 13,
+    "gains": "Hit Point Die, proficiency with one tool of your choice from the Natural Philosopher's tool list, and training with Light armor",
+    "spell_slots": null,
+    "text": "You must have an Intelligence score of 13 or higher. Gain the following traits from the Core Natural Philosopher Traits table: Hit Point Die, proficiency with one tool of your choice from the Natural Philosopher's tool list, and training with Light armor. Gain the Natural Philosopher's level 1 features, which are listed in the Natural Philosopher Features table. If you have levels in another class, you can use Mechanism a number of times equal to your Natural Philosopher level (maximum of five), instead of five times."
+   }
   },
   {
    "name": "Physician",
@@ -2868,6 +2897,15 @@
       "new": false
      }
     ]
+   },
+   "multiclass": {
+    "ability": "Intelligence",
+    "score": 13,
+    "gains": "Hit Point Die, proficiency in the Medicine skill, and training with Light armor",
+    "spell_slots": {
+     "fraction": 1
+    },
+    "text": "You must have an Intelligence score of 13 or higher. Gain the following traits from the Core Physician Traits table: Hit Point Die, proficiency in the Medicine skill, and training with Light armor. Gain the Physician's level 1 features, which are listed in the Physician Features table. For multiclass spell slots, add all your Physician levels, as you would Wizard levels."
    }
   },
   {
@@ -3867,6 +3905,16 @@
       "new": false
      }
     ]
+   },
+   "multiclass": {
+    "ability": "Wisdom",
+    "score": 13,
+    "gains": "Hit Point Die, proficiency in one skill of your choice from the Revelator's skill list, and training with Light and Medium armor and Shields",
+    "spell_slots": {
+     "fraction": 0.5,
+     "round": "up"
+    },
+    "text": "You must have a Wisdom score of 13 or higher. Gain the following traits from the Core Revelator Traits table: Hit Point Die, proficiency in one skill of your choice from the Revelator's skill list, and training with Light and Medium armor and Shields. Gain the Revelator's level 1 features, which are listed in the Revelator Features table. For multiclass spell slots, add half your Revelator levels (round up), as you would Ranger levels. Your Revelations and your Planar Strike dice come only from your Revelator levels. If you have levels in another class and fewer than five Revelator levels, you can call a spirit with Visiting Spirit only once, and you can't do so again until you finish a Long Rest."
    }
   },
   {
@@ -5206,6 +5254,15 @@
       "new": false
      }
     ]
+   },
+   "multiclass": {
+    "ability": "Charisma",
+    "score": 13,
+    "gains": "Hit Point Die and training with Light armor",
+    "spell_slots": {
+     "fraction": 1
+    },
+    "text": "You must have a Charisma score of 13 or higher. Gain the following traits from the Core Danae Traits table: Hit Point Die and training with Light armor. Gain the Danae's level 1 features, which are listed in the Danae Features table, except The Sight's skill proficiencies. For multiclass spell slots, add all your Danae levels, as you would Wizard levels. If you have levels in another class, you regain expended warps only when you finish a Long Rest."
    }
   }
  ]

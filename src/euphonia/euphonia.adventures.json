@@ -2,10 +2,10 @@
  "provenance": {
   "source": "Euphonia.md",
   "master": "~/Documents/euphonia/Euphonia.md",
-  "sha256": "0080f00882eba13e162f5b7fe56678199a98a9e5e4fb0048f65d05d2d400216b",
-  "modified": "2026-11-01T17:40:07-05:00",
+  "sha256": "41262b913b3686c7b7daae17e48741befdfae3774332e2e1ccdb59378f6c33f6",
+  "modified": "2026-11-01T18:20:10-05:00",
   "exporter": "class-kit/site_export.py",
-  "exporter_version": 5,
+  "exporter_version": 6,
   "rules": {
    "banned": [
     "eladrin",
@@ -32,7 +32,15 @@
    "where": "The courts of Europe, and Mutapa's service in them",
    "read_with": "Powers and Factions; Western Europe and Mutapa in The State of the World",
    "summary": "**The pitch.** Every court in Europe has a minister of magic, and in 1668 every one of them has just learned it is behind. Their reverse engineers have run the numbers on the Mutapan curiosities in their drawing rooms and concluded that Mutapa is about to leap the magical gap, on a metal nobody else can work. Then came the gate sighting at Toledo (see The World in 1668), and the picture changed again: Spain has the same metal in the Chocó and has been dumping it. The Great Game is the espionage that follows, played with licenses, portraits and shewstones by the spymasters who are this setting's secret heroes, and the party is one of their crews.",
-   "hooks": [],
+   "hooks": [
+    "A court painter has finished the Regent's miniature for a marriage negotiation, and three services want it before it reaches Vienna.",
+    "A court wizard's license is revoked in a quarrel over precedence; by morning he's an outlaw with a minister's knowledge, and he knows where the lead-lined room is.",
+    "A shewstone pair given by Mutapa has started answering in a voice that isn't the other stone's.",
+    "An Agitator cell inside the Invisible College has a scheme for the Grand Divertissement; a natural philosopher among them has doubts.",
+    "The Mutapan artificer's English apprentice has disappeared, and his notebooks are in a different hand from his.",
+    "Mutapa's spymaster wants to know who told Spain what its platina was: the letter came from Lisbon, in excellent Portuguese.",
+    "A Gamester at Versailles has lost a hand he couldn't have lost, to a man who shouldn't have known the odds."
+   ],
    "regions": [
     "Western Europe",
     "South America"
@@ -44,7 +52,14 @@
    "where": "Venice, then Toledo",
    "read_with": "Western Europe",
    "summary": "**The pitch.** A good, solid intro heist. The target isn't the most expensive thing in the world, but it's going on the market very soon and will command a hefty fee: why not take it and keep the money? Venice in 1668 is the place. The Republic is losing Candia, its last great city on Crete, in the twenty-first year of the siege, and it will sell anything it has. Desperate states make mistakes, and a desperate state with the best scryers and cipher clerks in Europe has a great deal worth stealing. The city is the whole dungeon: canals, rooftops, palaces and archives, a population that informs on itself and a fair where everyone is masked, which helps a burglar and hurts a scryer. The default date is the Sensa, the Ascension fair of late May 1668, when the Doge weds the sea and the masks come out again; a table that wants Carnival runs the job in the winter of 1669. A Danae of the Crossing racing across its rooftops is on the cover of this book.",
-   "hooks": [],
+   "hooks": [
+    "The Ten are selling their scryers' report by sealed bid on the last night of the Sensa fair; the French bidder has debts, the Spanish one has bravos.",
+    "The scryer who made the report left notes the Ten's clerks didn't understand, and Spain's ambassador is looking for her.",
+    "A health pass for a ship from Sofala has been forged, and the real ship is at the Lazzaretto with something in its hold.",
+    "The golem has stopped a man who is of the ghetto, and won't say why.",
+    "A Danae roof-runner will take the job for one price: her own file from the Ten's archive.",
+    "A denunciation has gone into a lion's mouth naming one of the party for unlicensed magic; the Ten's men come at dawn."
+   ],
    "regions": [
     "Central and Eastern Europe"
    ]

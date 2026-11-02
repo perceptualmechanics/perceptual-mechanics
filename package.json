@@ -20,6 +20,7 @@
     "verify-bench": "node scripts/verify-bench.mjs",
     "verify-euphonia": "node scripts/verify-euphonia.mjs",
     "verify-euphonia-map": "node scripts/verify-euphonia-map.mjs",
+    "verify-euphonia-srd": "node scripts/verify-euphonia-srd.mjs",
     "euphonia:refresh": "python3 \"${CLASS_KIT:-$HOME/Documents/class-kit}/site_export.py\" src/euphonia && node scripts/verify-euphonia.mjs"
   },
   "dependencies": {

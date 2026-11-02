@@ -8,6 +8,7 @@ import { plain } from '../src/euphonia/euphonia.markdown.js';
 const ROOT = new URL('../', import.meta.url);
 const read = rel => readFileSync(new URL(rel, ROOT), 'utf8');
 const FILES = ['classes', 'regions', 'adventures', 'legal', 'hidden'];
+export const ABILITIES = ['Strength', 'Dexterity', 'Constitution', 'Intelligence', 'Wisdom', 'Charisma'];
 
 // What may never reach a Euphonia page, besides draft brackets and braced names
 // awaiting replacement: other people's names, and "Fey" outside the creature
@@ -101,6 +102,12 @@ export function verifyEuphonia(d = euphoniaData()) {
     for (const r of g.regions) if (!regionNames.has(r)) fail(`the game "${g.title}" is placed in "${r}", which isn't a region`);
   }
   for (const c of d.classes.data) {
+    // The builder multiclasses from these: the score asked, and how the
+    // class's levels count toward multiclass spell slots, as its paragraph says.
+    const mc = c.multiclass;
+    if (!mc || !ABILITIES.includes(mc.ability) || !Number.isInteger(mc.score) || !mc.text?.includes(`${mc.ability} score of ${mc.score}`)) fail(`${c.name}: no multiclass prerequisite the builder can read`);
+    else if (mc.spell_slots !== null && !(mc.spell_slots?.fraction === 1 || (mc.spell_slots?.fraction === 0.5 && ['up', 'down'].includes(mc.spell_slots.round)))) fail(`${c.name}: multiclass spell slots read ${JSON.stringify(mc.spell_slots)}`);
+    else if ((mc.spell_slots !== null) !== /multiclass spell slots/.test(mc.text)) fail(`${c.name}: its multiclass paragraph and its spell-slot count disagree`);
     const kept = new Set(c.features.map(x => x.name));
     for (const row of c.table.rows) {
       for (const name of row['Class Features'].split(/,\s*/)) {
