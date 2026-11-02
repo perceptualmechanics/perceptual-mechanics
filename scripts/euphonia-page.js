@@ -36,9 +36,10 @@ function catalog(items) {
 }
 
 // The map's stage: it fills the screen, under the page's title. Its controls
-// and discs wait for the script that draws them; without it, the stage says
-// so and the caption below still describes the map.
-function mapStage(regions) {
+// and discs wait for the script that draws them. Everything to read is in
+// its panel: the contents, each region's chapter, the moment shown, how the
+// map is made, the classes and the games.
+function mapStage({ classes, regions, adventures, hidden }, world, fixtures, calendars) {
   const discs = ['Occidens', 'Oriens'].map((name, i) => `<div class="map-cell"><div class="map-disc" tabindex="0" role="group" aria-label="${name}, the ${i ? 'eastern' : 'western'} hemisphere" aria-describedby="map-help">
 <p class="map-name" aria-hidden="true">${name}</p>
 <canvas aria-hidden="true"></canvas>
@@ -55,13 +56,16 @@ function mapStage(regions) {
 </select></label>
 <label><input type="checkbox" name="night" checked> Night</label>
 <button type="button" class="map-reset" hidden>Whole world</button>
+<button type="button" class="map-contents-open" aria-haspopup="dialog">Contents</button>
 </form>
 <div class="map-hemispheres">
 ${discs}
 </div>
 <div class="map-panel" role="dialog" aria-modal="false" aria-labelledby="map-panel-title">
 <button type="button" class="map-panel-close" aria-label="Close panel">&#10005;</button>
+<p class="map-panel-back" hidden><button type="button">Contents</button></p>
 <h2 id="map-panel-title" class="map-panel-title" tabindex="-1"></h2>
+${panelSections({ classes, regions, adventures, hidden }, world, fixtures, calendars)}
 <section class="map-panel-pick" aria-labelledby="map-panel-pick-title" hidden>
 <h3 id="map-panel-pick-title">The place you picked</h3>
 <dl class="map-panel-facts"></dl>
@@ -76,8 +80,8 @@ ${regions.status === 'draft' ? `<p class="map-panel-note">${DRAFT_NOTE}</p>\n` :
 </div>
 </div>
 <p class="map-status" aria-live="polite"></p>
-<p class="map-help" id="map-help">Drag a hemisphere, or focus it and use the arrow keys, to turn the world; the wheel, a pinch, or + and − zoom; 0 shows the whole world again. A region's name opens its chapter beside the map. Play runs time on; on a hemisphere, space plays and pauses, [ and ] step an hour, { and } a day. Click or tap a place, or press Enter on a hemisphere for the place at its centre: the panel gives its time, its sun and its tide, and opens its region's chapter where the chapter names it.</p>
-<noscript><p class="map-help">The map is drawn in the page by script; the text below describes it.</p></noscript>`;
+<p class="map-help" id="map-help">Drag a hemisphere, or focus it and use the arrow keys, to turn the world; the wheel, a pinch, or + and − zoom; 0 shows the whole world again. A region's name opens its chapter beside the map, and Contents lists every chapter and the rest of the book's pages. Play runs time on; on a hemisphere, space plays and pauses, [ and ] step an hour, { and } a day. Click or tap a place, or press Enter on a hemisphere for the place at its centre: the panel gives its time, its sun and its tide, and opens its region's chapter where the chapter names it.</p>
+<noscript><p class="map-help">The map and its pages are drawn in the page by script.</p></noscript>`;
 }
 
 // The tabs over the map and the builder. Hidden until the script that runs
@@ -102,14 +106,26 @@ function builder() {
 </section>`;
 }
 
-// The map's caption, under the stage: what it shows at the chosen moment,
-// the rule it reads and where everything comes from.
-function mapCaption(world, fixtures, calendars, hidden, relief = reliefData()) {
+// The panel's pages, each shown on its own: the contents; the moment the
+// map shows (its readouts, filled as time runs); how the map is made; the
+// classes; the games; and each region's chapter, as a template the panel
+// copies when the region opens.
+function panelSections({ classes, regions, adventures, hidden }, world, fixtures, calendars, relief = reliefData()) {
   const cited = Object.values(calendars.sources).map(s => `<a href="${esc(s.url)}">${esc(s.title)}</a>`).join(', ');
   const lakes = world.historic.map(l => `${esc(l.name)} (${esc(l.date)})`).join(', ');
   const versions = [...new Set(world.provenance.files.map(f => f.version))].join(' and ');
-  return `<section class="map-caption" id="map-caption" aria-labelledby="map">
-<h2 id="map">The world in 1668</h2>
+  const pages = [['moment', 'This moment'], ['about', 'About the map'], ['classes', 'The classes'], ['games', 'Adventures and Hooks']];
+  return `<nav class="map-panel-page map-panel-contents" aria-label="Contents" data-title="Contents" hidden>
+<h3>The State of the World</h3>
+${regions.status === 'draft' ? `<p class="map-panel-note">${DRAFT_NOTE}</p>\n` : ''}<ul>
+${regions.data.map(r => `<li><button type="button" data-region="${slug(r.name)}">${esc(r.name)}</button></li>`).join('\n')}
+</ul>
+<h3>The book</h3>
+<ul>
+${pages.map(([id, name]) => `<li><button type="button" data-page="${id}">${name}</button></li>`).join('\n')}
+</ul>
+</nav>
+<section class="map-panel-page map-panel-moment" data-page="moment" data-title="This moment" hidden>
 <p class="map-readout">The world between Samhain 1668 and Samhain 1669, in two hemispheres, with the night where it fell.</p>
 <table class="map-dates" hidden>
 <caption>The same moment, as each kept the date</caption>
@@ -118,6 +134,8 @@ function mapCaption(world, fixtures, calendars, hidden, relief = reliefData()) {
 </table>
 <p class="map-tide" hidden></p>
 <p class="map-moon" hidden><svg viewBox="-1.1 -1.1 2.2 2.2" aria-hidden="true" focusable="false"><circle class="face" r="1"/><path class="lit"/></svg><span></span></p>
+</section>
+<section class="map-panel-page" data-page="about" data-title="About the map" hidden>
 <blockquote class="map-rule">
 <p>${inline(hidden.data.tide)}</p>
 <p class="by">From Euphonia, Scott Cohen's setting: not history. ${esc(hidden.data.where)}.</p>
@@ -127,38 +145,27 @@ function mapCaption(world, fixtures, calendars, hidden, relief = reliefData()) {
 <p class="note">Relief and ocean depths are ${esc(relief.provenance.source)}, averaged to a quarter degree; its detail is ${esc(relief.provenance.note.split(';')[0].replace(/^Five-minute resolution/, 'five-minute'))}, and coarser elsewhere. The land is lit from the northwest, its slopes steepened ${relief.shading.exaggeration.toFixed(0)} times, so the steepest hundredth of them shade as 45°; the sea is banded at Natural Earth's bathymetric depths. The wind roses stand at the ${rosesData().roses.length} points of open sea farthest from the coasts this map draws.</p>
 <p class="note">The sun's place is NOAA's, checked against JPL Horizons; the moon's phases are checked against Espenak's catalogue. ${esc(fixtures.moon.acknowledgment)} The moon is drawn as it looked from north of the tropics; south of them it is mirrored.</p>
 <p class="note">Each date is the one its seat's sundials gave at that moment, and the Hijri day begins at the seat's sunset. The Hijri dates are tabular (the 30-year cycle, from the civil epoch); months begun by sighting the new moon could differ by a day. Which calendar each polity kept: ${cited} (Wikipedia). The Safavids' and the Mughals' are not shown yet: no source in hand says which calendar their governments kept in 1668.</p>
-</section>`;
-}
-
-function body({ classes, regions, adventures, hidden }, world, fixtures, calendars) {
-  return `${mapCaption(world, fixtures, calendars, hidden)}
-<section aria-labelledby="classes">
-<h2 id="classes">The classes</h2>
+</section>
+<section class="map-panel-page" data-page="classes" data-title="The classes" hidden>
 ${catalog(classes.data.map(c => `<li><span class="t">${esc(c.name)}</span><span class="n">${inline(c.blurb)}</span></li>`))}
 </section>
-<section aria-labelledby="world">
-<h2 id="world">The State of the World</h2>
-${regions.status === 'draft' ? `<p class="note">${DRAFT_NOTE}</p>\n` : ''}${regions.data.map(r => `<details class="region" id="${slug(r.name)}">
-<summary>${esc(r.name)}</summary>
-${r.sections.map(sec => `<h3>${esc(sec.heading)}</h3>\n${blocks(sec.text)}`).join('\n')}
-</details>`).join('\n')}
-</section>
-<section aria-labelledby="games">
-<h2 id="games">Adventures and Hooks</h2>
+<section class="map-panel-page" data-page="games" data-title="Adventures and Hooks" hidden>
 ${catalog(adventures.data.map(g => `<li><span class="t">${esc(g.title)}</span><span class="e">${[g.kind, g.where].filter(Boolean).map(inline).join(' · ')}</span>${g.summary ? `<span class="n">${inline(g.summary)}</span>` : ''}${g.hooks.length ? `<details><summary>Hooks</summary><ul>${g.hooks.map(h => `<li>${inline(h)}</li>`).join('')}</ul></details>` : ''}</li>`))}
-</section>`;
+</section>
+${regions.data.map(r => `<template class="map-chapter" data-region="${slug(r.name)}">
+${r.sections.map(sec => `<h3>${esc(sec.heading)}</h3>\n${blocks(sec.text)}`).join('\n')}
+</template>`).join('\n')}`;
 }
 
 // Fills euphonia/index.html's markers from the vendored export, in dev
 // and in build alike, the way landing.js fills the landing's.
-const MARKERS = ['<!--euphonia-tabs-->', '<!--euphonia-map-->', '<!--euphonia-builder-->', '<!--euphonia-body-->', '<!--euphonia-footer-->'];
+const MARKERS = ['<!--euphonia-tabs-->', '<!--euphonia-map-->', '<!--euphonia-builder-->', '<!--euphonia-footer-->'];
 export function injectEuphonia(html, d = euphoniaFiles(), world = worldData(), fixtures = fixturesData(), calendars = calendarsData()) {
   const missing = MARKERS.filter(m => !html.includes(m));
   if (missing.length) throw new Error(`euphonia/index.html is missing ${missing.join(' and ')}: the page has nowhere to go`);
   return html
     .replace('<!--euphonia-tabs-->', tabs())
-    .replace('<!--euphonia-map-->', mapStage(d.regions))
+    .replace('<!--euphonia-map-->', mapStage(d, world, fixtures, calendars))
     .replace('<!--euphonia-builder-->', builder())
-    .replace('<!--euphonia-body-->', body(d, world, fixtures, calendars))
     .replace('<!--euphonia-footer-->', euphoniaFooter(d.legal.data));
 }

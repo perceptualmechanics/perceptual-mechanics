@@ -63,7 +63,7 @@ const regions = places.regions.map(regionShape);
 // just below or just above the name in its way, moving at most its own
 // height; a name that fits none of them, or would cross the disc's edge,
 // isn't drawn at this size. Zooming in makes room, and every region's
-// chapter is in the list below the map. Boxes are centred on (x, y), with
+// chapter is in the panel's contents. Boxes are centred on (x, y), with
 // each name measured once per type size: reading the layout back each frame
 // would lay out the whole page each time.
 function place(boxes, centre, radius) {
@@ -129,11 +129,13 @@ export async function initMap(stage) {
   const form = stage.querySelector('form');
   const date = form.elements.date, time = form.elements.time;
   const shown = form.querySelector('output');
-  const caption = document.getElementById('map-caption');
-  const readout = caption.querySelector('.map-readout');
-  const moonLine = caption.querySelector('.map-moon'), moonLit = moonLine.querySelector('.lit'), moonText = moonLine.querySelector('span');
-  const datesTable = caption.querySelector('.map-dates'), datesBody = datesTable.tBodies[0];
-  const tideLine = caption.querySelector('.map-tide');
+  // The moment's readouts, on the panel's This moment page, kept up to date
+  // whether or not it's open.
+  const moment = stage.querySelector('.map-panel-moment');
+  const readout = moment.querySelector('.map-readout');
+  const moonLine = moment.querySelector('.map-moon'), moonLit = moonLine.querySelector('.lit'), moonText = moonLine.querySelector('span');
+  const datesTable = moment.querySelector('.map-dates'), datesBody = datesTable.tBodies[0];
+  const tideLine = moment.querySelector('.map-tide');
   const reset = stage.querySelector('.map-reset');
   const hiddenText = ({ half, open }) => [
     half === 'dark' ? 'the dark half' : half === 'other' ? 'the other half' : 'as the DM says',
@@ -216,10 +218,11 @@ export async function initMap(stage) {
   });
   for (const d of discs) d.tip.setAttribute('aria-hidden', 'true');
 
-  // The scenes' panel, beside the map, for a region's chapter or a picked
-  // place: the place's facts first, then its region's chapter, opened where
-  // the chapter names the place. It takes focus on opening and gives it back
-  // to what opened it on closing, by Escape or the ✕.
+  // The scenes' panel, beside the map, and everything there is to read: the
+  // contents, a region's chapter, a picked place (its facts first, then its
+  // region's chapter, opened where the chapter names the place), and the
+  // book's other pages. It takes focus on opening and gives it back to what
+  // opened it on closing, by Escape or the ✕.
   const panel = stage.querySelector('.map-panel');
   const panelTitle = panel.querySelector('.map-panel-title'), panelContent = panel.querySelector('.map-panel-content');
   const panelPlaces = panel.querySelector('.map-panel-places'), panelRegion = panel.querySelector('.map-panel-region');
@@ -227,6 +230,8 @@ export async function initMap(stage) {
   const mentionLine = panel.querySelector('.map-panel-mention');
   const nearby = panel.querySelector('.map-panel-nearby'), readNearby = panel.querySelector('.map-panel-read');
   const status = stage.querySelector('.map-status');
+  const pages = [...panel.querySelectorAll('.map-panel-page')], back = panel.querySelector('.map-panel-back');
+  const contentsOpen = stage.querySelector('.map-contents-open');
   let opener = null, openDisc = 0, pick = null, nearest = null;
   createPanelCloser(panel, { focus: () => opener?.focus() }, {
     closeBtn: panel.querySelector('.map-panel-close'),
@@ -239,6 +244,34 @@ export async function initMap(stage) {
     jumpTo(nearest.place);
   });
 
+  // One page at a time: the contents, a book page, or a region (with a
+  // picked place over it); every page but the contents leads back to it.
+  const pageName = p => p.dataset.page ?? 'contents';
+  function showPage(name) {
+    for (const p of pages) p.hidden = pageName(p) !== name;
+    pickSection.hidden = true; panelRegion.hidden = true;
+    chosen = null; pick = null; light();
+    back.hidden = name === 'contents';
+    panelTitle.textContent = pages.find(p => pageName(p) === name).dataset.title;
+    panel.scrollTop = 0;
+  }
+  contentsOpen.addEventListener('click', () => {
+    showPage('contents');
+    openPanel(0, contentsOpen);
+    requestAnimationFrame(() => panelTitle.focus());
+  });
+  back.querySelector('button').addEventListener('click', () => { showPage('contents'); panelTitle.focus(); });
+  panel.querySelector('.map-panel-contents').addEventListener('click', e => {
+    const b = e.target.closest('button');
+    if (!b) return;
+    if (b.dataset.page) { showPage(b.dataset.page); panelTitle.focus(); return; }
+    const r = regions.find(x => x.id === b.dataset.region);
+    showRegion(r);
+    clearMention();
+    redraw();
+    panelTitle.focus();
+  });
+
   function openPanel(i, button) {
     opener = button; openDisc = i;
     // From the side away from the disc it was opened from, over the other.
@@ -248,9 +281,11 @@ export async function initMap(stage) {
     panel.classList.add('open');
   }
   function showRegion(r) {
+    for (const p of pages) p.hidden = true;
+    back.hidden = false;
     if (chosen !== r) {
       chosen = r;
-      panelContent.replaceChildren(...[...document.getElementById(r.id).children].filter(c => c.tagName !== 'SUMMARY').map(c => c.cloneNode(true)));
+      panelContent.replaceChildren(panel.querySelector(`template[data-region="${r.id}"]`).content.cloneNode(true));
       // Its places, each lighting on the map under the pointer or focus, and
       // taking the reader to where the chapter names it.
       panelPlaces.replaceChildren(...r.glows.map(g => {
@@ -399,6 +434,8 @@ export async function initMap(stage) {
       showRegion(hit.region);
       nearby.hidden = true;
     } else {
+      for (const p of pages) p.hidden = true;
+      back.hidden = false;
       panelTitle.textContent = 'A place on the map';
       panelRegion.hidden = true;
       chosen = null;
@@ -668,15 +705,18 @@ export async function initMap(stage) {
   datesTable.hidden = false;
   tideLine.hidden = false;
   stage.classList.add('is-drawn');
-}
 
-// A region's chapter opens from a link to it.
-function openRegion(id) {
-  const chapter = id ? document.getElementById(id) : null;
-  if (chapter?.matches('details.region')) chapter.open = true;
+  // A link to a region (#europe) opens its chapter, beside the disc that
+  // shows it.
+  function openFromAddress() {
+    const r = regions.find(x => x.id === location.hash.slice(1));
+    if (!r) return;
+    const i = Math.max(0, discs.findIndex((d, k) => local(r.centre.lon, r.centre.lat, lon0Of(k))[2] <= 0));
+    openChapter(i, r, discs[i].cell);
+  }
+  addEventListener('hashchange', openFromAddress);
+  openFromAddress();
 }
-addEventListener('hashchange', () => openRegion(location.hash.slice(1)));
-openRegion(location.hash.slice(1));
 
 const stage = document.getElementById('map-figure');
 if (stage) initMap(stage);

@@ -161,8 +161,20 @@ mark.map-mention:focus { outline: 1px solid #d9b13f; outline-offset: 1px; }
 .map-panel-content h3 { font-size: 1rem; margin: 1.2rem 0 0.4rem; color: #b8b0a4; }
 .map-panel-content blockquote { margin: 0.8rem 0; padding-left: 1rem; border-left: 2px solid #4a4034; color: #b8b0a4; }
 
-.map-caption { padding-top: 2.5rem; }
-.map-caption .note { font-size: 0.85rem; }
+/* The panel's pages: one shown at a time, the contents leading to the rest. */
+.map-panel-page[hidden], .map-panel-back[hidden] { display: none; }
+.map-panel-back { margin: 0 0 0.4rem; }
+.map-panel-back button, .map-panel-contents button {
+  font: inherit; color: #d9b13f; background: none; border: 0; padding: 0.15rem 0; cursor: pointer; text-align: left;
+}
+.map-panel-back button { font-size: 0.85rem; letter-spacing: 0.08em; text-transform: uppercase; }
+.map-panel-back button::before { content: '← '; }
+.map-panel-back button:hover, .map-panel-back button:focus-visible, .map-panel-contents button:hover, .map-panel-contents button:focus-visible { color: #f0cf6a; text-decoration: underline; }
+.map-panel-back button:focus-visible, .map-panel-contents button:focus-visible { outline: 1px solid #d9b13f; outline-offset: 2px; }
+.map-panel-contents h3 { font-size: 0.85rem; letter-spacing: 0.08em; text-transform: uppercase; color: #9c9384; margin: 1.2rem 0 0.4rem; font-weight: 600; }
+.map-panel-contents ul { list-style: none; margin: 0; padding: 0; }
+.map-panel-contents li { border-bottom: 1px solid #1e1b17; padding: 0.35rem 0; }
+.map-panel-page .note { font-size: 0.85rem; }
 .map-dates { width: 100%; border-collapse: collapse; margin: 0.4rem 0 1.2rem; font-size: 0.92rem; }
 .map-dates[hidden] { display: none; }
 .map-dates caption { text-align: left; color: #8c8377; font-size: 0.85rem; padding-bottom: 0.3rem; }
@@ -281,7 +293,7 @@ details.region:target > summary, details.region[open] > summary { color: #d9b13f
   /* With the builder open, the sheet is the page: its details open, its
      ink dark. */
   [data-tab=builder] .skip-link, [data-tab=builder] header.masthead, [data-tab=builder] .builder-form,
-  [data-tab=builder] #text, [data-tab=builder] main ~ .wrap { display: none; }
+  [data-tab=builder] main ~ .wrap { display: none; }
   [data-tab=builder] .builder { display: block; padding: 0; }
   [data-tab=builder] .sheet { border: 0; background: none; padding: 0; color: #000; }
   [data-tab=builder] .sheet * { color: #000; border-color: #999; }
