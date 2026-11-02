@@ -2,8 +2,8 @@
  "provenance": {
   "source": "Euphonia.md",
   "master": "~/Documents/euphonia/Euphonia.md",
-  "sha256": "534b89498c4c2c118eaa589abca828aad48c07ea1a0e8603cc3a697310ce48f7",
-  "modified": "2026-11-02T06:36:30-05:00",
+  "sha256": "fb4b1fcb6af51ca321be241fe77589ab39d68fb58d065246a15e879abca320f7",
+  "modified": "2026-11-02T09:04:37-05:00",
   "exporter": "class-kit/site_export.py",
   "exporter_version": 9,
   "rules": {
@@ -2976,13 +2976,13 @@
      "features": [
       {
        "level": 3,
-       "name": "The Font Opens",
+       "name": "The Font Within",
        "text": "You find the Font: the same source of life that clerics receive from their gods and druids from nature. There is only one, but you have found it inside your own body rather than outside it, and you draw on it from there. It gives you a second way to pay for your magic.\n\n**Draw on the Font.** You keep your spell slots and cast with them as normal. In addition, when you cast a Physician spell of level 1 through 5, you can draw on the Font instead, up to a total number of spell levels equal to your Physician level between Long Rests: you spend a number of Hit Point Dice equal to the spell's level instead of expending a spell slot. Only Hit Point Dice you gained from Physician levels can be spent this way. Hit Point Dice spent this way are expended without being rolled and don't restore Hit Points. While you have this feature, a Long Rest restores only half your total Hit Point Dice (minimum of one), not all of them. If you cast the spell with a higher-level slot's effect, you spend Hit Point Dice equal to the level at which you cast it, which can be no higher than the highest level of spell slot you have. You can't draw on the Font to cast a spell of level 6 or higher. Drawing on the Font counts as expending a spell slot for the rule that you can expend only one spell slot to cast a spell on a turn.\n\n> **The Cost Shows**\n>\n> A day of heavy casting is followed by thinner days, and the character won't feel it until they try to rest. As the DM, show the cost before then: fatigue, unsteady hands, a drawn face. A Physician who has spent half their Hit Point Dice by noon should look like it.\n\n**Symbiosis.** Drawing on the Font changes what your body needs and what it can survive. You gain the following as you reach the listed Physician levels:\n\n- **Level 5.** You add *Fly* to your spellbook. It counts as a Physician spell for you and doesn't count against the spells you add to your spellbook when you gain a level.\n- **Level 9.** You stop aging, and you can't be aged magically.\n- **Level 13.** You no longer need to eat, drink, or breathe.\n- **Level 17.** When you drop to 0 Hit Points, you are automatically Stable, and you don't make Death Saving Throws. Damage still causes Death Saving Throw failures; you become Stable again after each one."
       },
       {
        "level": 3,
        "name": "Font-Touched",
-       "text": "Choose one spell from the Cleric or Druid spell list of a level for which the Physician Features table gives you spell slots at your Physician level. The spell can't be one that produces a creature or anything else that takes its own actions. The Font is your own life, not anyone else's. The spell counts as a Physician spell for you, is added to your spellbook, and is always prepared; it doesn't count against the number of spells you can prepare. You choose an additional spell this way at Physician levels 6, 10, and 14."
+       "text": "Choose one spell from the Cleric spell list of a level for which the Physician Features table gives you spell slots at your Physician level. The spell can't be one that produces a creature or anything else that takes its own actions. The Font is your own life, not anyone else's. The spell counts as a Physician spell for you, is added to your spellbook, and is always prepared; it doesn't count against the number of spells you can prepare. You choose an additional spell this way at Physician levels 6, 10, and 14."
       },
       {
        "level": 3,
