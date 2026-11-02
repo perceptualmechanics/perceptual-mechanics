@@ -40,7 +40,7 @@ export function verifyEuphoniaSrd({ srd = srdData(), rules = read('rules') } = {
 
   // The site's rules, over everything shown and the record of what changed.
   let checked = 0;
-  for (const [path, s] of strings({ backgrounds: srd.backgrounds, species: srd.species, feats: srd.feats, tables: srd.tables, adapted: srd.adapted })) {
+  for (const [path, s] of strings({ backgrounds: srd.backgrounds, species: srd.species, feats: srd.feats, classes: srd.classes, tables: srd.tables, adapted: srd.adapted })) {
     checked++;
     const why = ruleProblems(s, rules);
     if (why.length) fail(`${path}: ${why.join(', ')} in "${s.slice(0, 60)}"`);
@@ -128,9 +128,68 @@ export function verifyEuphoniaSrd({ srd = srdData(), rules = read('rules') } = {
     if (!f.description && !f.benefits.length) fail(`${f.name}: no text`);
   }
 
+  // Classes: the twelve, each with its traits; a features table of twenty
+  // levels whose bonus is the advancement table's; every feature it names
+  // described by its level; and its spell slots, where it has them, the
+  // Multiclass Spellcaster table's at the level its count gives.
+  const classes = srd.classes ?? [];
+  if (classes.length !== 12) fail(`classes: ${classes.length}, not the SRD's 12`);
+  let slotRows = 0;
+  for (const c of classes) {
+    const trait = name => c.traits.find(t => t.trait === name)?.value;
+    for (const t of ['Primary Ability', 'Hit Point Die', 'Saving Throw Proficiencies', 'Skill Proficiencies', 'Weapon Proficiencies', 'Armor Training', 'Starting Equipment']) if (!trait(t)) fail(`${c.name}: no ${t}`);
+    if (!new RegExp(`^D(4|6|8|10|12) per ${c.name} level$`).test(trait('Hit Point Die') ?? '')) fail(`${c.name}: its Hit Point Die reads "${trait('Hit Point Die')}"`);
+    const saves = (trait('Saving Throw Proficiencies') ?? '').split(' and ');
+    if (saves.length !== 2 || !saves.every(a => ABILITIES.includes(a))) fail(`${c.name}: its saving throws read "${trait('Saving Throw Proficiencies')}"`);
+    const rows = c.table?.rows ?? [];
+    if (rows.length !== LEVELS) fail(`${c.name}: ${rows.length} rows in its table, not ${LEVELS}`);
+    rows.forEach((r, i) => {
+      if (number(r.Level) !== i + 1) fail(`${c.name}: table row ${i + 1} is level ${r.Level}`);
+      if (r['Proficiency Bonus'] !== adv[i]?.['Proficiency Bonus']) fail(`${c.name}: level ${i + 1}'s Proficiency Bonus is ${r['Proficiency Bonus']}, the advancement table's ${adv[i]?.['Proficiency Bonus']}`);
+    });
+    // A feature the table names is described at its level or before (an
+    // Ability Score Improvement is described once); the table may note its
+    // uses in parentheses ("Action Surge (one use)").
+    const described = new Map();
+    for (const f of c.features) if (!described.has(f.name)) described.set(f.name, f.level);
+    for (const r of rows) {
+      for (const n of (r['Class Features'] ?? '').split(/,\s*/)) {
+        const name = n.replace(/ \(.*\)$/, '');
+        if (!name || name === '—' || name === 'Subclass feature' || name === `${c.name} Subclass`) continue;
+        if (!(described.get(name) <= number(r.Level))) fail(`${c.name}: its table names ${n} at level ${r.Level}, but no feature describes it by then`);
+      }
+    }
+    if (!c.features.some(f => f.name === `${c.name} Subclass`)) fail(`${c.name}: no feature that grants its subclass`);
+    if (c.subclasses?.length !== 1 || !c.subclasses[0].features.length) fail(`${c.name}: its subclass isn't exported whole`);
+    // Multiclassing: the primary ability, and the spell-slot count.
+    const mc = c.multiclass ?? {};
+    const primary = trait('Primary Ability') ?? '';
+    if (!mc.abilities?.length || !mc.abilities.every(a => ABILITIES.includes(a) && primary.includes(a)) || mc.any !== / or /.test(primary) || mc.score !== 13) fail(`${c.name}: its multiclass prerequisite reads ${JSON.stringify([mc.abilities, mc.any, mc.score])} for "${primary}"`);
+    if (!/^Hit Point Die\b/.test(mc.gains ?? '')) fail(`${c.name}: multiclassing gains "${mc.gains}"`);
+    const levels = c.table.columns.filter(k => /^\d$/.test(k));
+    const count = mc.spell_slots;
+    if (count && !levels.length) fail(`${c.name}: counts toward multiclass slots, but its table has no slots`);
+    if (!count && levels.length) fail(`${c.name}: has spell slots, but doesn't count toward multiclass slots`);
+    if (count) {
+      const at = level => (count.fraction === 1 ? level : count.round === 'up' ? Math.ceil(level * count.fraction) : Math.floor(level * count.fraction));
+      rows.forEach((r, i) => {
+        const shared = slots[at(i + 1) - 1];
+        for (let s = 1; s <= SPELL_LEVELS; s++) if (number(r[s] ?? '—') !== number(shared?.[s] ?? '—')) fail(`${c.name} ${i + 1}: ${r[s] ?? '—'} level-${s} slots, the Multiclass Spellcaster table gives ${shared?.[s]} at ${at(i + 1)}`);
+        slotRows++;
+      });
+    }
+    // Its spells: under the levels it has slots for, each with a school and
+    // its C, R or M marks, or a dash for none (False Life's is an en dash in
+    // the SRD, kept as it is).
+    for (const [level, list] of Object.entries(c.spells ?? {})) {
+      if (+level && !levels.includes(level) && !c.table.columns.includes('Slot Level')) fail(`${c.name}: level-${level} spells but no level-${level} slots`);
+      for (const sp of list) if (!sp.name || !/^[A-Z][a-z]+$/.test(sp.school) || !/^([—–]|[CRM](, [CRM])*)$/.test(sp.special)) fail(`${c.name}: the spell ${JSON.stringify(sp)}`);
+    }
+  }
+
   const log = problems.length
     ? [`\neuphonia srd: ${problems.length} problem(s):`, ...problems.map(m => `  ${m}`)]
-    : [`ok: SRD 5.2.1 under its CC-BY attribution, ${srd.adapted.changes.length} change(s) recorded; ${checked} strings clean under the site's rules; ${srd.backgrounds.length} backgrounds, ${srd.species.length} species, ${srd.feats.length} feats resolving; advancement, modifiers, point costs and ${slots.length} rows of multiclass slots agreeing with the rules they tabulate`];
+    : [`ok: SRD 5.2.1 under its CC-BY attribution, ${srd.adapted.changes.length} change(s) recorded; ${checked} strings clean under the site's rules; ${srd.backgrounds.length} backgrounds, ${srd.species.length} species, ${srd.feats.length} feats and ${classes.length} classes resolving; ${slotRows} class levels' spell slots the Multiclass Spellcaster table's; advancement, modifiers, point costs and ${slots.length} rows of multiclass slots agreeing with the rules they tabulate`];
   return { ok: problems.length === 0, failures: problems.length, log };
 }
 

@@ -2,10 +2,10 @@
  "provenance": {
   "source": "Euphonia.md",
   "master": "~/Documents/euphonia/Euphonia.md",
-  "sha256": "41262b913b3686c7b7daae17e48741befdfae3774332e2e1ccdb59378f6c33f6",
-  "modified": "2026-11-01T18:20:10-05:00",
+  "sha256": "e08c55292beeb663fead47aafb73790bfd42a4282a538841326f43a2d5935d8c",
+  "modified": "2026-11-01T19:06:15-05:00",
   "exporter": "class-kit/site_export.py",
-  "exporter_version": 6,
+  "exporter_version": 7,
   "rules": {
    "banned": [
     "eladrin",
@@ -20,7 +20,7 @@
     "D&D"
    ],
    "banned_because": "Someone else's names, kept out of everything Euphonia publishes (Appendix E; setting/ip-review.md).",
-   "fey_type": "\\bFey(?=\\s+(?:creatures?\\b|among the creature types))|(?<=\\*)Fey(?=\\.\\*)",
+   "fey_type": "\\bFey(?=\\s+(?:creatures?\\b|among the creature types))|(?<=\\*)Fey(?=\\.\\*)|(?<=\\bis )Fey\\b|(?<=\\bare )Fey\\b",
    "fey_type_because": "\"Fey\" survives only as the creature type; the setting's prose says \"fae\" (Book Two, What's Different)."
   }
  },
@@ -385,7 +385,7 @@
     {
      "level": 20,
      "name": "Checkmate",
-     "text": "You see every piece at once. Your Intelligence score increases by 2, to a maximum of 22. In addition, when you roll Initiative, you Observe every creature you can see (no action required). You learn Observe's facts only about the one you make your read."
+     "text": "You see every piece at once. Your Intelligence score increases by 2, to a maximum of 22. In addition, when you roll Initiative, you Observe every creature you can see (no action required). You learn Observe's facts only about the one you make your read.\n\n> **Playing a Counsellor**\n>\n> You don't have to be a genius to play one. The rules do the computing: Observe and Deduction are questions, and the DM answers them the way a trained mind would. Your job is to ask the right question at the right time. \"What's it weakest against?\" on turn one; \"Where did the smuggler take the cargo?\" after you've walked the docks.\n>\n> Say what you see. When you Observe, tell the table what you've learned, then say what it means: \"It favors its left side. Hit it there.\" Exploit only works when someone hits, so the party needs to hear where to aim.\n>\n> Being right is the fun, and being right is also the friction. Direct is advice, and your allies can ignore it. Let them. A Counsellor who's right and gets overruled is a better scene than one who's obeyed. Deduction runs on what you observed: if someone has fed you a lie, you'll be confidently wrong, and you won't know it.\n>\n> If you play one of the Hollowed, make sure your table has talked about boundaries beforehand. A mind that computes without feeling is a hard fit for a party, and each table works out for itself how hard. Know the pitfalls going in, and keep the coldness in character."
     }
    ],
    "subclasses": [
@@ -406,12 +406,12 @@
       {
        "level": 3,
        "name": "Everyone Has a Price",
-       "text": "As an action (not the Magic action), you make an offer to an Observed creature within 60 feet of you that can hear and understand you and is fighting for pay or plunder: a mercenary, a bandit, a hired guard, or any creature the DM judges is there for gain. It makes a Wisdom saving throw (DC 8 plus your Intelligence modifier and Proficiency Bonus). On a failed save, it takes the deal: it stops fighting and leaves, or stands aside if it can't leave, and it does nothing against you or your allies for the next hour unless one of you harms it. While any of its allies are still fighting you, it repeats the saving throw at the end of each of its turns; on a success, the deal is off and it rejoins the fight, and you owe it nothing. You owe it its price, 25 GP times its Challenge Rating (minimum 10 GP), paid within a day; a creature you don't pay remembers. You can use this feature a number of times equal to your Proficiency Bonus (maximum of three), and you regain all expended uses when you finish a Long Rest."
+       "text": "As an Influence action, you make an offer to an Observed creature within 60 feet of you that can hear and understand you and is fighting for pay or plunder: a mercenary, a bandit, a hired guard, or any creature the DM judges is there for gain. It makes a Wisdom saving throw (DC 8 plus your Intelligence modifier and Proficiency Bonus). On a failed save, it takes the deal: it stops fighting and leaves, or stands aside if it can't leave, and it does nothing against you or your allies for the next hour unless one of you harms it. While any of its allies are still fighting you, it repeats the saving throw at the end of each of its turns; on a success, the deal is off and it rejoins the fight, and you owe it nothing. You owe it its price, 25 GP times its Challenge Rating (minimum 10 GP), paid within a day; a creature you don't pay remembers. You can use this feature a number of times equal to your Proficiency Bonus (maximum of three), and you regain all expended uses when you finish a Long Rest."
       },
       {
        "level": 6,
        "name": "Underwrite",
-       "text": "When you finish a Long Rest, you can underwrite one creature: yourself or an ally. You spend the house's money on it:. The first time before your next Long Rest that the underwritten creature drops to 0 Hit Points without dying outright, the policy pays: it regains Hit Points equal to a roll of your Exploit dice, as long as you don't have the Incapacitated condition (unless the underwritten creature is you)."
+       "text": "When you finish a Long Rest, you can underwrite one creature: yourself or an ally. You spend the house's money on it:. The first time before your next Long Rest that the underwritten creature drops to 0 Hit Points without dying outright, the policy pays: it regains Hit Points equal to a roll of your Exploit dice, as long as you don't have the Incapacitated condition (unless the underwritten creature is you). A policy that can't pay because you have that condition isn't spent: it pays the next time the creature drops to 0 Hit Points before your next Long Rest while you don't have it."
       },
       {
        "level": 6,
@@ -523,7 +523,7 @@
       {
        "level": 6,
        "name": "Vivisection",
-       "text": "As an action (not the Magic action), you can take an Observed creature apart out loud. Choose an Observed creature within 30 feet of you that can hear and understand you. It makes a Wisdom saving throw (DC 8 plus your Intelligence modifier and Proficiency Bonus). On a failed save, it takes Psychic damage equal to the total of a number of computation dice equal to half your Proficiency Bonus (round up), and it can't take Reactions until the start of its next turn. Nothing happens on a successful save, but the use is still expended. This isn't magic. You can use this feature a number of times equal to your Proficiency Bonus, and you regain all expended uses when you finish a Short or Long Rest."
+       "text": "As an action, you can take an Observed creature apart out loud. Choose an Observed creature within 30 feet of you that can hear and understand you. It makes a Wisdom saving throw (DC 8 plus your Intelligence modifier and Proficiency Bonus). On a failed save, it takes Psychic damage equal to the total of a number of computation dice equal to half your Proficiency Bonus (round up), and it can't take Reactions until the start of its next turn. Nothing happens on a successful save, but the use is still expended. This isn't magic. You can use this feature a number of times equal to your Proficiency Bonus, and you regain all expended uses when you finish a Short or Long Rest."
       },
       {
        "level": 6,
@@ -713,7 +713,10 @@
    ],
    "spells": null,
    "multiclass": {
-    "ability": "Intelligence",
+    "abilities": [
+     "Intelligence"
+    ],
+    "any": false,
     "score": 13,
     "gains": "Hit Point Die",
     "spell_slots": null,
@@ -1064,7 +1067,7 @@
     {
      "level": 1,
      "name": "Arc Gun",
-     "text": "You carry a weapon of your own design that throws lightning. The Arc Gun is a magic item that only you can fire.\n\n**Firing It.** When you take the Attack action, you can fire the Arc Gun in place of one of the attacks: make a ranged attack roll using Intelligence against a creature or object within 120 feet of yourself, adding your Proficiency Bonus. On a hit, the target takes Lightning damage equal to the dice shown in the Arc Gun column of the Mhizha Features table plus your Intelligence modifier. You can fire the Arc Gun only once per turn. This is a ranged attack, not a weapon or spell attack; you must hold the Arc Gun to fire it.\n\n**Rebuilding It.** If the Arc Gun is lost (out of your possession for 1 hour) or destroyed, you can build a new one with Tinker's Tools over the course of a Long Rest; the old one stops working."
+     "text": "You carry a weapon of your own design that throws lightning. The Arc Gun is a magic item that only you can fire.\n\n**Firing It.** When you take the Attack action, you can fire the Arc Gun in place of one of the attacks: make a ranged attack roll using Intelligence against a creature or object within 120 feet of yourself, adding your Proficiency Bonus. On a hit, the target takes Lightning damage equal to the dice shown in the Arc Gun column of the Mhizha Features table plus your Intelligence modifier. You can fire the Arc Gun only once per turn. This is a ranged attack, not a weapon or spell attack. You must hold the Arc Gun to fire it, and it takes one hand, so you can fire it with a Shield on your other arm; you can draw or stow it as part of the attack, as with a weapon.\n\n**Rebuilding It.** If the Arc Gun is lost (out of your possession for 1 hour) or destroyed, you can build a new one with Tinker's Tools over the course of a Long Rest; the old one stops working."
     },
     {
      "level": 1,
@@ -1074,7 +1077,7 @@
     {
      "level": 2,
      "name": "Devices",
-     "text": "You build small devices that each do one thing well. You know two device designs of your choice from the Device Designs below. You learn more designs as you gain Mhizha levels, as shown in the Devices column of the Mhizha Features table. Whenever you gain a Mhizha level, you can replace one design you know with another for which you qualify.\n\n**Building Devices.** When you finish a Long Rest, you can spend 1 hour of it with Tinker's Tools to build one device of each design you know. A device you built earlier from the same design stops working. You can use a device yourself or hand it to another creature; a device works for whoever wears or holds it.\n\n**Magical and Electrical.** A device marked *Electrical* runs on stored current and isn't magic: anyone can use it, and an Antimagic Field or *Dispel Magic* doesn't stop it. Every other device is a magic item that doesn't require Attunement; it stops working in an Antimagic Field, and if you die.\n\n**Durability and Loss.** A device is an object with AC 15 and 5 Hit Points; at 0 Hit Points it is destroyed. A device is lost if it has been out of your possession, and out of the possession of anyone you gave it to, for 1 hour.\n\n#### Device Designs\n\n**Arc Lamp** *(Electrical)*. The lamp sheds Bright Light in a 30-foot radius and Dim Light for an additional 30 feet, or in a 60-foot Cone and Dim Light for an additional 60 feet. It has no flame, works underwater, and can be shuttered or opened as a Bonus Action.\n\n**Charged Plate** *(Electrical)*. The plate isn't armor, and it can be worn with armor. When the wearer finishes a Short or Long Rest, it gains Temporary Hit Points equal to your Mhizha level plus your Intelligence modifier.\n\n**Clockwork Servant.** A Tiny clockwork figure that works as the servant created by the *Unseen Servant* spell, except that it's visible, it obeys a creature you designate when you build it, and it lasts until you build the device again.\n\n**Lockbreaker** *(Electrical)*. A creature using it with Thieves' Tools adds your Intelligence modifier to checks to pick locks and disarm traps.\n\n**Shock Gauntlet** *(Electrical)*. Once on each of its turns, when the wearer hits a creature with an Unarmed Strike or an attack with a melee weapon, the creature takes an extra 1d4 Lightning damage.\n\n**Spring Boots.** The wearer's jump distances are tripled, and it takes no damage from a fall of 30 feet or less.\n\n**Grapple Line** *(Electrical; Prerequisite: Mhizha level 5)*. Once on each of its turns, as a Bonus Action, the holder can fire the line at a solid surface within 60 feet of itself and be pulled in a straight line to an unoccupied space next to that point. This movement doesn't cost the holder any Speed, and it provokes Opportunity Attacks as normal.\n\n**Night Lenses** *(Prerequisite: Mhizha level 5)*. The wearer has Darkvision with a range of 60 feet.\n\n**Seeing Spectacles** *(Prerequisite: Mhizha level 5)*. The wearer sees creatures and objects that have the Invisible condition within 30 feet of itself as if they were visible, and has Advantage on Intelligence (Investigation) checks to discern an illusion.\n\n**Breathing Helm** *(Prerequisite: Mhizha level 9)*. The wearer can breathe underwater and isn't affected by smoke or by gas that must be inhaled, and it sees clearly underwater. It doesn't let the wearer see through an area that is Heavily Obscured.\n\n**Speaking Wires** *(Electrical; Prerequisite: Mhizha level 9)*. Two handsets joined by nothing anyone can see. Whoever holds one can speak in a whisper to whoever holds the other, if the two are within 1 mile of each other.\n\n**Flight Pack** *(Prerequisite: Mhizha level 13)*. The wearer has a Fly Speed equal to its Speed. The wearer turns the pack on or off (no action required). The pack works for a total of 1 hour, in increments of 1 minute or more, and then not again until you build it again."
+     "text": "You build small devices that each do one thing well. You know two device designs of your choice from the Device Designs below. You learn more designs as you gain Mhizha levels, as shown in the Devices column of the Mhizha Features table. Whenever you gain a Mhizha level, you can replace one design you know with another for which you qualify.\n\n**Building Devices.** When you finish a Long Rest, you can spend 1 hour of it with Tinker's Tools to build one device of each design you know. A device you built earlier from the same design stops working. You can use a device yourself or hand it to another creature; a device works for whoever wears or holds it.\n\n**Magical and Electrical.** A device marked *Electrical* runs on stored current and isn't magic: anyone can use it, and an Antimagic Field or *Dispel Magic* doesn't stop it. Every other device is a magic item that doesn't require Attunement; it stops working in an Antimagic Field, and if you die.\n\n**Durability and Loss.** A device is an object with AC 15 and 5 Hit Points; at 0 Hit Points it is destroyed. A device is lost if it has been out of your possession, and out of the possession of anyone you gave it to, for 1 hour.\n\n#### Device Designs\n\n**Arc Lamp** *(Electrical)*. The lamp sheds Bright Light in a 30-foot radius and Dim Light for an additional 30 feet, or in a 60-foot Cone and Dim Light for an additional 60 feet. It has no flame, works underwater, and can be shuttered or opened as a Bonus Action.\n\n**Charged Plate** *(Electrical)*. The plate isn't armor, and it can be worn with armor. When the wearer finishes a Short or Long Rest, the wearer gains Temporary Hit Points equal to your Mhizha level plus your Intelligence modifier.\n\n**Clockwork Servant.** A Tiny clockwork figure that works as the servant created by the *Unseen Servant* spell, except that it's visible, it obeys a creature you designate when you build it, and it lasts until you build the device again.\n\n**Lockbreaker** *(Electrical)*. A creature using it with Thieves' Tools adds your Intelligence modifier to checks to pick locks and disarm traps.\n\n**Shock Gauntlet** *(Electrical)*. Once on each of its turns, when the wearer hits a creature with an Unarmed Strike or an attack with a melee weapon, the creature takes an extra 1d4 Lightning damage.\n\n**Spring Boots.** The wearer's jump distances are tripled, and it takes no damage from a fall of 30 feet or less.\n\n**Grapple Line** *(Electrical; Prerequisite: Mhizha level 5)*. Once on each of its turns, as a Bonus Action, the holder can fire the line at a solid surface within 60 feet of itself and be pulled in a straight line to an unoccupied space next to that point. This movement doesn't cost the holder any Speed, and it provokes Opportunity Attacks as normal.\n\n**Night Lenses** *(Prerequisite: Mhizha level 5)*. The wearer has Darkvision with a range of 60 feet.\n\n**Seeing Spectacles** *(Prerequisite: Mhizha level 5)*. The wearer sees creatures and objects that have the Invisible condition within 30 feet of itself as if they were visible, and has Advantage on Intelligence (Investigation) checks to discern an illusion.\n\n**Breathing Helm** *(Prerequisite: Mhizha level 9)*. The wearer can breathe underwater and isn't affected by smoke or by gas that must be inhaled, and it sees clearly underwater. It doesn't let the wearer see through an area that is Heavily Obscured.\n\n**Speaking Wires** *(Electrical; Prerequisite: Mhizha level 9)*. Two handsets joined by nothing anyone can see. Whoever holds one can speak in a whisper to whoever holds the other, if the two are within 1 mile of each other.\n\n**Flight Pack** *(Prerequisite: Mhizha level 13)*. The wearer has a Fly Speed equal to its Speed. The wearer turns the pack on or off (no action required). The pack works for a total of 1 hour, in increments of 1 minute or more, and then not again until you build it again."
     },
     {
      "level": 2,
@@ -1099,7 +1102,7 @@
     {
      "level": 7,
      "name": "Field Workshop",
-     "text": "You keep a workshop in your pack. When you finish a Short Rest, you regain expended Preparations equal to half your Proficiency Bonus (round up), and you can rebuild one device that was lost or destroyed since your last Long Rest, unless you destroyed it or gave it up on purpose."
+     "text": "You keep a workshop in your pack. When you finish a Short Rest, you regain expended Preparations equal to half your Proficiency Bonus (round up), and with Tinker's Tools you can rebuild one device that was lost or destroyed since your last Long Rest, unless you destroyed it or gave it up on purpose."
     },
     {
      "level": 7,
@@ -1530,7 +1533,10 @@
     ]
    },
    "multiclass": {
-    "ability": "Intelligence",
+    "abilities": [
+     "Intelligence"
+    ],
+    "any": false,
     "score": 13,
     "gains": "Hit Point Die, proficiency with Tinker's Tools, and training with Light armor",
     "spell_slots": {
@@ -1817,7 +1823,7 @@
     {
      "level": 20,
      "name": "The System of the World",
-     "text": "You see the whole of it. Studying a creature takes no action, and when you finish a Short Rest, you regain one expended use of Mechanism."
+     "text": "You see the whole of it. Studying a creature takes no action, once on each of your turns, and when you finish a Short Rest, you regain one expended use of Mechanism."
     }
    ],
    "subclasses": [
@@ -2007,7 +2013,7 @@
       {
        "level": 3,
        "name": "Plotted Course",
-       "text": "You gain proficiency with Navigator's Tools; if you already have it, choose another tool. You and your companions can't become lost except by magic, you always know which way is north, and your group can travel at a fast pace without the usual penalty to Wisdom (Perception) checks. This works on every plane, not only the one you were born on."
+       "text": "You gain proficiency with Navigator's Tools; if you already have it, choose another tool. You and your companions can't become lost except by magic, you always know which way is north, and your group can travel at a fast pace without the usual Disadvantage on Wisdom (Perception or Survival) checks. This works on every plane, not only the one you were born on."
       },
       {
        "level": 3,
@@ -2059,7 +2065,10 @@
    ],
    "spells": null,
    "multiclass": {
-    "ability": "Intelligence",
+    "abilities": [
+     "Intelligence"
+    ],
+    "any": false,
     "score": 13,
     "gains": "Hit Point Die, proficiency with one tool of your choice from the Natural Philosopher's tool list, and training with Light armor",
     "spell_slots": null,
@@ -2478,7 +2487,7 @@
     {
      "level": 1,
      "name": "Healing Prowess",
-     "text": "Your training lets you mend the body without a spell. You have a number of **Prowess Dice** equal to the Proficiency Bonus shown for your Physician level in the Physician Features table. A Prowess Die is a d6. It becomes a d8 at Physician level 5, a d10 at level 11, and a d12 at level 17.\n\nAs a Bonus Action, you can touch yourself or another creature and expend one Prowess Die. That creature regains a number of Hit Points equal to the number rolled plus your Intelligence modifier.\n\nYou regain all expended Prowess Dice when you finish a Long Rest, and one expended Prowess Die when you finish a Short Rest. From level 5, Steady Hands sets how many a Short Rest returns (see the table).\n\n| Physician Level | Prowess Die | Regained on a Short Rest |\n|---|---|---|\n| 1–4 | d6 | 1 |\n| 5–10 | d8 | All |\n| 11–16 | d10 | Half your maximum (round up) |\n| 17–20 | d12 | 1 |\n\nThe Short Rest return peaks in the middle levels, when Prowess Dice carry most of a Physician's healing, and tapers once the die is large and higher-level spells take over the work."
+     "text": "Your training lets you mend the body without a spell. You have a number of **Prowess Dice** equal to the Proficiency Bonus shown for your Physician level in the Physician Features table. A Prowess Die is a d6. It becomes a d8 at Physician level 5, a d10 at level 11, and a d12 at level 17.\n\nAs a Bonus Action, you can touch yourself or another creature and expend one Prowess Die. That creature regains a number of Hit Points equal to the number rolled plus your Intelligence modifier.\n\nYou regain all expended Prowess Dice when you finish a Long Rest, and one expended Prowess Die when you finish a Short Rest. From level 5, Steady Hands sets how many a Short Rest returns (see the table).\n\n| Physician Level | Prowess Die | Regained on a Short Rest |\n|---|---|---|\n| 1–4 | d6 | 1 |\n| 5–10 | d8 | All |\n| 11–16 | d10 | Half your maximum (round up) |\n| 17–20 | d12 | 1 |\n\n> **Why the Return Tapers**\n>\n> The Short Rest return peaks in the middle levels, when Prowess Dice carry most of a Physician's healing, and tapers once the die is large and higher-level spells take over the work."
     },
     {
      "level": 1,
@@ -2538,7 +2547,7 @@
     {
      "level": 20,
      "name": "Attending Physician",
-     "text": "When you roll Initiative, you regain one expended Prowess Die.\n\nIn addition, when a creature you can see within 30 feet of yourself would die (by failing its third Death Saving Throw, by taking damage that reduces it to 0 Hit Points with remaining damage equal to or exceeding its Hit Point maximum, or by an effect that kills it outright), you can take a Reaction to prevent its death. The creature instead drops to 0 Hit Points and is Stable, and it then regains Hit Points equal to one roll of your Prowess Die plus your Intelligence modifier (no die is expended). Once you use this Reaction, you can't use it again until you finish a Long Rest.\n\n---"
+     "text": "When you roll Initiative, you regain one expended Prowess Die.\n\nIn addition, when a creature you can see within 30 feet of yourself would die (by failing its third Death Saving Throw, by taking damage that reduces it to 0 Hit Points with remaining damage equal to or exceeding its Hit Point maximum, or by an effect that kills it outright), you can take a Reaction to prevent its death. The creature instead drops to 0 Hit Points and is Stable, and it then regains Hit Points equal to one roll of your Prowess Die plus your Intelligence modifier (no die is expended). Once you use this Reaction, you can't use it again until you finish a Long Rest."
     }
    ],
    "subclasses": [
@@ -2559,7 +2568,7 @@
       {
        "level": 3,
        "name": "Amputation",
-       "text": "You learn to take a limb, which you can do to an enemy or for a patient.\n\n*In a fight.* When you hit a creature with your Saw in melee, you can expend one Prowess Die to take a limb instead of using Under the Knife on that hit. This counts as your use of Under the Knife for the turn: you can't do both on the same turn, and you can't use Healing Prowess again until the start of your next turn. The creature must succeed on a Constitution saving throw against your spell save DC or have the limb you chose crippled. On a Critical Hit, it fails automatically. If you take an arm, the creature drops whatever it was holding in that hand and has Disadvantage on attack rolls it makes with that limb (if its attacks don't name a limb, the DM chooses which of them use it); if you take a leg, its Speed is halved and it has the Prone condition. These effects last for 1 minute; the creature repeats the saving throw at the end of each of its turns, ending them on a success. Only a limb taken on a table is gone for good. A creature that has Immunity to Slashing damage, or that has no such limb, is unaffected. Once a creature fails this saving throw, you can't take a limb this way again until you finish a Short or Long Rest; on a successful save the Prowess Die is still expended.\n\n*On a table.* Outside combat, you can spend 1 minute removing a limb from a creature within your reach that is willing, or that has the Incapacitated condition and isn't hostile to you. No check is required. One disease, poison, curse, or other ongoing effect confined to that limb ends; whether an effect is so confined is the DM's judgment. The creature takes 2d10 Slashing damage that can't be reduced or prevented, gains one level of Exhaustion, and loses the limb until it is restored by *Regenerate* or comparable magic. A creature that has lost an arm can hold only one object at a time and can't wield anything that needs two hands, including a Shield. A creature that has lost a leg has its Speed halved and needs a cane or crutch to move unless it has a prosthetic leg; it falls Prone after it takes the Dash action, and it has Disadvantage on Dexterity checks made to keep its balance."
+       "text": "You learn to take a limb, which you can do to an enemy or for a patient.\n\n*In a fight.* When you hit a creature with your Saw in melee, you can expend one Prowess Die to take a limb instead of using Under the Knife on that hit. This counts as your use of Under the Knife for the turn: you can't do both on the same turn, and you can't use Healing Prowess again until the start of your next turn. The creature must succeed on a Constitution saving throw against your spell save DC or have the limb you chose crippled. On a Critical Hit, it fails automatically. If you take an arm, the creature drops whatever it was holding in that hand and has Disadvantage on attack rolls it makes with that limb (if its attacks don't name a limb, the DM chooses which of them use it); if you take a leg, its Speed is halved and it has the Prone condition. These effects last for 1 minute; the creature repeats the saving throw at the end of each of its turns, ending them on a success. Only a limb taken on a table is gone for good. A creature that has Immunity to Slashing damage, or that has no such limb, is unaffected. Once a creature fails this saving throw, you can't take a limb this way again until you finish a Short or Long Rest; on a successful save the Prowess Die is still expended.\n\n*On a table.* Outside combat, you can spend 1 minute removing a limb from a creature within your reach that is willing, or that has the Incapacitated condition and isn't hostile to you. No check is required. One disease, poison, curse, or other ongoing effect confined to that limb ends; whether an effect is so confined is the DM's judgment. The creature takes 2d10 Slashing damage that can't be reduced or prevented, gains one level of Exhaustion, and loses the limb until it is restored by *Regenerate* or comparable magic. A creature that has lost an arm can hold only one object at a time and can't wield a two-handed weapon, or a Shield and a weapon at once. A creature that has lost a leg has its Speed halved and needs a cane or crutch to move unless it has a prosthetic leg; it falls Prone after it takes the Dash action, and it has Disadvantage on Dexterity checks made to keep its balance."
       },
       {
        "level": 6,
@@ -2631,7 +2640,7 @@
       {
        "level": 3,
        "name": "Vital Stream",
-       "text": "You learn to channel a stream of vitalizing energy through your focus. As a Bonus Action, you can create a **link** between yourself and a willing creature you can see within 30 feet of yourself, if you have no chain, or between the last creature in your chain and a willing creature you can see within 30 feet of that creature. You and the creatures you link form your **chain**, in the order they were linked; you are always its first link and don't count against its limit. Your chain can include up to two creatures other than you. This number increases to three at Physician level 6, four at level 10, and five at level 14.\n\nA link ends if the two creatures it connects are ever more than 60 feet apart, if either of them drops to 0 Hit Points (unless you use Stand Back on it), if you have the Incapacitated condition, or if you end it (no action required). Links otherwise last until you finish a Long Rest. A creature is in your chain only while an unbroken sequence of links connects it to you; if a link ends, any creature no longer connected to you leaves your chain.\n\nWhile you have a chain, you gain the following benefits:\n\n- **Range.** You can use Healing Prowess on any creature in your chain, rather than only a creature you touch. Only Healing Prowess travels the chain this way; a spell you cast doesn't, unless a feature says it does.\n- **Heal or Bolster.** When you use Healing Prowess on a creature in your chain, you can choose to have it gain Temporary Hit Points equal to the number rolled plus your Intelligence modifier instead of regaining Hit Points. A creature that gains Temporary Hit Points this way also gains a +1 bonus to the next attack roll or saving throw it makes before the start of your next turn.\n- **Triage.** When you use Healing Prowess on a creature in your chain, one creature of your choice that is adjacent to it in the chain gains Temporary Hit Points equal to your Intelligence modifier.\n- **Stand Back.** When a creature in your chain is reduced to 0 Hit Points, you can take a Reaction to use Healing Prowess on it, and its link doesn't end. Once you use it, you can't use it again until you finish a Short or Long Rest."
+       "text": "You learn to channel a stream of vitalizing energy through your focus. As a Bonus Action, you can create a **link** to a willing creature you can see. If you have no chain, the link runs from you to a creature within 30 feet of you; otherwise, it runs from the last creature in your chain to a creature within 30 feet of that creature. You and the creatures you link form your **chain**, in the order they were linked; you are always its first link and don't count against its limit. Your chain can include up to two creatures other than you. This number increases to three at Physician level 6, four at level 10, and five at level 14.\n\nA link ends if the two creatures it connects are ever more than 60 feet apart, if either of them drops to 0 Hit Points (unless you use Stand Back on it), if you have the Incapacitated condition, or if you end it (no action required). Links otherwise last until you finish a Long Rest. A creature is in your chain only while an unbroken sequence of links connects it to you; if a link ends, any creature no longer connected to you leaves your chain.\n\nWhile you have a chain, you gain the following benefits:\n\n- **Range.** You can use Healing Prowess on any creature in your chain, rather than only a creature you touch. Only Healing Prowess travels the chain this way; a spell you cast doesn't, unless a feature says it does.\n- **Heal or Bolster.** When you use Healing Prowess on a creature in your chain, you can choose to have it gain Temporary Hit Points equal to the number rolled plus your Intelligence modifier instead of regaining Hit Points. A creature that gains Temporary Hit Points this way also gains a +1 bonus to the next attack roll or saving throw it makes before the start of your next turn.\n- **Triage.** When you use Healing Prowess on a creature in your chain, one creature of your choice that is adjacent to it in the chain gains Temporary Hit Points equal to your Intelligence modifier.\n- **Stand Back.** When a creature in your chain is reduced to 0 Hit Points, you can take a Reaction to use Healing Prowess on it, and its link doesn't end. Once you use it, you can't use it again until you finish a Short or Long Rest."
       },
       {
        "level": 6,
@@ -2744,7 +2753,7 @@
       {
        "level": 3,
        "name": "Reflex",
-       "text": "You can send your medicine along the nerves instead of through your hands. When you use Healing Prowess, you can choose a creature you can see within 30 feet of yourself instead of a creature you touch. The creature regains Hit Points equal to the number rolled plus your Intelligence modifier.\n\n**Nerve Sheathing.** A nerve carries better when it is wrapped. When you use Reflex, the creature can choose one of the following: it regains its Reaction if it has used it this round, or it can immediately move up to half its Speed without provoking Opportunity Attacks. A creature that has benefited from Nerve Sheathing can't do so again until it finishes a Short or Long Rest."
+       "text": "You can send your medicine along the nerves instead of through your hands. When you use Healing Prowess, you can choose a creature you can see within 30 feet of yourself instead of a creature you touch. The creature regains Hit Points equal to the number rolled plus your Intelligence modifier.\n\n**Nerve Sheathing.** A nerve carries better when it is wrapped. When you use Reflex, the creature can choose one of the following: it regains its Reaction if it has used it since the start of its last turn, or it can immediately move up to half its Speed without provoking Opportunity Attacks. A creature that has benefited from Nerve Sheathing can't do so again until it finishes a Short or Long Rest."
       },
       {
        "level": 6,
@@ -2899,7 +2908,10 @@
     ]
    },
    "multiclass": {
-    "ability": "Intelligence",
+    "abilities": [
+     "Intelligence"
+    ],
+    "any": false,
     "score": 13,
     "gains": "Hit Point Die, proficiency in the Medicine skill, and training with Light armor",
     "spell_slots": {
@@ -3241,7 +3253,7 @@
     {
      "level": 1,
      "name": "Echoes",
-     "text": "*The closest planes to the Prime Material are your first lessons.*\n\nYou know two Revelations: the Hidden and the Ghostlands."
+     "text": "*The closest planes to the world are your first lessons.*\n\nYou know two Revelations: the Hidden and the Ghostlands."
     },
     {
      "level": 1,
@@ -3301,7 +3313,7 @@
     {
      "level": 9,
      "name": "Soul's Journey",
-     "text": "*Your soul never forgets your travels, for better and for worse.*\n\nA Revelation you know is **walked** once you have been to that plane in the body, spent at least a Long Rest there, and come back. How you got there doesn't matter: by portal, by another's spell, by being taken, by walking in for the name of it, or by waking up there. The plane cares only that you stayed, and what it does to those who stay is the lesson (see \"What the Walk Costs\"). A plane you walked before you knew its Revelation is walked the moment you learn it.\n\nA walked plane knows you: it grants its Favor twice between rests, as your pathway's earth end does. Walking the earth end itself adds nothing.\n\n**The Hard Roads.** Seven planes on the Wheel are walked by almost no one: Pandemonium, Tartarus, Asphodel, Gehenna, Acheron, Cocytus, and the Seven Gates. Walking one leaves a mark, whether or not you know its Revelation yet, and you keep it for the rest of your life:\n\n- **Pandemonium.** The winds are quiet in you. You have Resistance to Psychic damage, and you can't have the Deafened condition.\n- **Tartarus.** Nothing holds you. You have Advantage on saving throws and ability checks made to avoid or end the Grappled, Restrained, and Paralyzed conditions, and you automatically succeed on checks made to escape a *Maze*. *Imprisonment* can't hold you for longer than 1 minute.\n- **Asphodel.** Nothing drains you. You have Advantage on saving throws to avoid or end the Charmed condition, and your Hit Point maximum can't be reduced.\n- **Gehenna.** Nothing is owed. You have Resistance to Fire damage, and effects that would reduce or prevent the Hit Points you regain don't apply to you.\n- **Acheron.** The press doesn't take you. You have Advantage on saving throws made to maintain Concentration, and no spell or effect can make you attack a creature you choose not to.\n- **Cocytus.** The cold doesn't take you. You have Resistance to Cold damage, and Advantage on saving throws against the spells and effects of Fiends.\n- **The Seven Gates.** No door surprises you. You know where a portal leads before you step through it, and you have Advantage on saving throws against being teleported or moved to another plane against your will.\n\n> **What the Walk Costs**\n>\n> Walking a plane means facing what it does to visitors, and the DM decides what that was. The planes chapter of the Dungeon Master's Guide is the model, each plane bringing the dangers that belong to its place on the Wheel: the winds of Pandemonium that wear at the mind, Tartarus that holds what it takes, the gray of Asphodel that drains the will to leave, Gehenna's grudging fire, Acheron's endless war, the cruelty of the Nine Circles and the corruption of the Abyss; and on the brighter roads, the joy of Elysium and Svarga's revel that make visitors forget to go home, Eden's garden, where every beast still answers to the name it was given, and Limbo, which takes the shape a mind gives it. A plane isn't walked by a Revelator who was teleported in and out between breaths. The marks aren't worth the trip on their own, and they aren't meant to be: a Revelator who goes to Gehenna for the mark should get the whole of Gehenna."
+     "text": "*Your soul never forgets your travels, for better and for worse.*\n\nA Revelation you know is **walked** once you have been to that plane in the body, spent at least a Long Rest there, and come back. How you got there doesn't matter: by portal, by another's spell, by being taken, by walking in for the name of it, or by waking up there. The plane cares only that you stayed, and what it does to those who stay is the lesson (see \"What the Walk Costs\"). A plane you walked before you knew its Revelation is walked the moment you learn it.\n\nA walked plane knows you: it grants its Favor twice between rests, as your pathway's earth end does. Walking the earth end itself adds nothing.\n\n**The Hard Roads.** Seven places on the Wheel are walked by almost no one: Pandemonium, Tartarus, Asphodel, Gehenna, Acheron, Cocytus, and the Seven Gates. Walking one leaves a mark, whether or not you know its Revelation yet, and you keep it for the rest of your life:\n\n- **Pandemonium.** The winds are quiet in you. You have Resistance to Psychic damage, and you can't have the Deafened condition.\n- **Tartarus.** Nothing holds you. You have Advantage on saving throws and ability checks made to avoid or end the Grappled, Restrained, and Paralyzed conditions, and you automatically succeed on checks made to escape a *Maze*. *Imprisonment* can't hold you for longer than 1 minute.\n- **Asphodel.** Nothing drains you. You have Advantage on saving throws to avoid or end the Charmed condition, and your Hit Point maximum can't be reduced.\n- **Gehenna.** Nothing is owed. You have Resistance to Fire damage, and effects that would reduce or prevent the Hit Points you regain don't apply to you.\n- **Acheron.** The press doesn't take you. You have Advantage on saving throws made to maintain Concentration, and no spell or effect can make you attack a creature you choose not to.\n- **Cocytus.** The cold doesn't take you. You have Resistance to Cold damage, and Advantage on saving throws against the spells and effects of Fiends.\n- **The Seven Gates.** No door surprises you. You know where a portal leads before you step through it, and you have Advantage on saving throws against being teleported or moved to another plane against your will.\n\n> **What the Walk Costs**\n>\n> Walking a plane means facing what it does to visitors, and the DM decides what that was. The planes chapter of the Dungeon Master's Guide is the model, each plane bringing the dangers that belong to its place on the Wheel: the winds of Pandemonium that wear at the mind, Tartarus that holds what it takes, the gray of Asphodel that drains the will to leave, Gehenna's grudging fire, Acheron's endless war, the cruelty of the Nine Circles and the corruption of the Abyss; and on the brighter roads, the joy of Elysium and Svarga's revel that make visitors forget to go home, Eden's garden, where every beast still answers to the name it was given, and Limbo, which takes the shape a mind gives it. A plane isn't walked by a Revelator who was teleported in and out between breaths. The marks aren't worth the trip on their own, and they aren't meant to be: a Revelator who goes to Gehenna for the mark should get the whole of Gehenna."
     },
     {
      "level": 10,
@@ -3907,7 +3919,10 @@
     ]
    },
    "multiclass": {
-    "ability": "Wisdom",
+    "abilities": [
+     "Wisdom"
+    ],
+    "any": false,
     "score": 13,
     "gains": "Hit Point Die, proficiency in one skill of your choice from the Revelator's skill list, and training with Light and Medium armor and Shields",
     "spell_slots": {
@@ -4324,7 +4339,7 @@
     {
      "level": 1,
      "name": "The Sight",
-     "text": "You see the Hidden's layer over the world. You can see thresholds between worlds within 30 feet of yourself (a threshold is a fixed place where the settled world touches another realm, such as the Hidden; the DM decides where they lie), and you know when a creature or an object you can see is under an illusion or a shape-changing effect, or has the Fey creature type. You also gain proficiency in the Insight and Perception skills (if you already have proficiency in either, choose another skill from the Danae's skill list), and you know Sylvan, the Hidden's own speech."
+     "text": "You see the Hidden's layer over the world. You can see thresholds between worlds within 30 feet of yourself (a threshold is a fixed place where the settled world touches another realm, such as the Hidden; the DM decides where they lie), and you know when a creature or an object you can see is under an illusion or a shape-changing effect, or has the Fey creature type, and whether it is a Hidden creature. You also gain proficiency in the Insight and Perception skills (if you already have proficiency in either, choose another skill from the Danae's skill list), and you know Sylvan, the Hidden's own speech."
     },
     {
      "level": 1,
@@ -4354,7 +4369,7 @@
     {
      "level": 5,
      "name": "Fae Weaving",
-     "text": "The Wyrd flows through your hands, granting you what you might need in a given moment.\n\nWhenever you finish a Long Rest, you can weave fae material into the world with a tool you have proficiency with from the Danae's tool list or your subclass's tool. You create up to a number of nonmagical objects equal to your Proficiency Bonus. Each must be something that tool could make, Medium or smaller, not a consumable (food, a potion, an oil, a poison, or the like) and not ammunition, and worth no more than 10 GP × your Danae level. The objects are real and work as the real thing, but anyone who handles one feels that it is strange. They come undone when you next finish a Long Rest or when you use this feature again.\n\n**Fairy Gold.** The objects are fairy gold: any of them turns to dross when it changes hands for value, and none can be used as a Material component that has a cost."
+     "text": "The Wyrd flows through your hands, granting you what you might need in a given moment.\n\nWhenever you finish a Long Rest, you can weave fae material into the world with a tool you have proficiency with from the Danae's tool list or your subclass's tool. You create up to a number of nonmagical objects equal to your Proficiency Bonus. Each must be something that tool could make, Medium or smaller, not a consumable (food, a potion, an oil, a poison, or the like) and not ammunition, and worth no more than 10 GP × your Danae level. A tool that makes nothing under the crafting rules weaves the small things of its trade: a Gaming Set dice, cards, and boards; a Musical Instrument strings, reeds, and pipes; Thieves' Tools picks, keys, and wires. The objects are real and work as the real thing, but anyone who handles one feels that it is strange. They come undone when you next finish a Long Rest or when you use this feature again.\n\n**Fairy Gold.** The objects are fairy gold: any of them turns to dross when it changes hands for value, and none can be used as a Material component that has a cost."
     },
     {
      "level": 5,
@@ -4364,7 +4379,7 @@
     {
      "level": 7,
      "name": "Reading the Season",
-     "text": "The Hidden settles in you, and you begin to read people as it reads them, by their weather. As a Bonus Action, or as part of rolling Initiative, choose a number of creatures you can see within 30 feet of yourself, up to your Charisma modifier (minimum of one). The DM tells you each one's temper and what lies under it (see Tempers, below). For 1 hour, you have Advantage on Wisdom (Insight) checks against each of them, and on Charisma (Deception, Intimidation, or Persuasion) checks against them that play to their tempers.\n\n**Tempers.** Every creature has a temper, which is always one of the four seasons. The DM assigns it from the creature's mood at the moment: spring (hope, curiosity, a beginning), summer (passion, anger, confidence), autumn (longing, regret, decline), or winter (fear, grief, resolve). If the DM is unsure, roll a d4: 1 spring, 2 summer, 3 autumn, 4 winter. A temper holds until the creature's mood plainly changes or the scene ends. A feature that turns a temper (Name the Season, the Hidden Bard's Turn the Season) sets it for that feature's duration instead. Every feature in this book that uses tempers follows this rule."
+     "text": "The Hidden settles in you, and you begin to read people as it reads them, by their weather. As a Bonus Action, or as part of rolling Initiative, choose a number of creatures you can see within 30 feet of yourself, up to your Charisma modifier (minimum of one). The DM tells you each one's temper and what lies under it (see Tempers, below). For 1 hour, you have Advantage on Wisdom (Insight) checks against each of them, and on Charisma (Deception, Intimidation, or Persuasion) checks against them that play to their tempers.\n\n**Tempers.** Every creature has a temper, which is always one of the four seasons. The DM assigns it from the creature's mood at the moment: spring (hope, curiosity, a beginning), summer (passion, anger, confidence), autumn (longing, regret, decline), or winter (fear, grief, resolve). If the DM is unsure, roll a d4: 1 spring, 2 summer, 3 autumn, 4 winter. A temper holds until the creature's mood plainly changes or the scene ends. A feature that turns a temper (Name the Season, the Hidden Bard's Turn the Season) sets it for that feature's duration instead. A player character's temper is the player's to say when it's read; if the player doesn't, the DM assigns it. A feature that turns a player character's temper changes its season for this book's features only: its attitude doesn't shift, and how the character feels is still the player's to play. Every feature in this book that uses tempers follows this rule."
     },
     {
      "level": 7,
@@ -4492,7 +4507,7 @@
       {
        "level": 6,
        "name": "Heartstrings",
-       "text": "Creatures have Disadvantage on saving throws against your Kind Words. When your Kind Words succeed against a creature knotted to another creature, you can choose to have the other affected too, without a saving throw."
+       "text": "Creatures have Disadvantage on saving throws against your Kind Words. When your Kind Words succeed against a creature knotted to another creature, you can choose to have the other affected too, without a saving throw; it counts as affected by your Kind Words."
       },
       {
        "level": 6,
@@ -4668,7 +4683,7 @@
       {
        "level": 10,
        "name": "Liminality",
-       "text": "Your Gates and Doors work through effects that block teleportation or planar travel in a place (a ward, a circle, a hallowed or forbidden area), other than an *Antimagic Field*. An effect that stops a particular creature from teleporting (Cold Iron, Name It, the Iron Bell, a Hidden Killer's ward, a Faebreaker's grip) still stops that creature. Creatures that pass through them don't trigger *Alarm*, *Glyph of Warding*, or similar warding magic. You also need no invitations: effects that keep out creatures who haven't been invited don't stop you."
+       "text": "Your Gates and Doors work through effects that block teleportation or planar travel in a place (a ward, a circle, a hallowed or forbidden area), other than an *Antimagic Field*. An effect that stops a particular creature from teleporting (Cold Iron, Name It, the Iron Bell, a Hidden Killer's ward, a Faebreaker's grip) still stops that creature. Creatures that pass through them don't trigger *Alarm*, *Glyph of Warding*, or similar warding magic, and need no invitation: an effect that keeps out creatures who haven't been invited doesn't stop a creature passing through your Gates and Doors. On foot, you're bound by such effects like anyone else (iron and salt at a door among them)."
       },
       {
        "level": 14,
@@ -4731,7 +4746,12 @@
       {
        "level": 10,
        "name": "Rename",
-       "text": "As a Magic action, you rename a Named creature, object, or place for 1 minute. It doesn't change: the renaming does only what the option you choose says, and nothing else about the thing is different. A creature, or an object a creature is holding or wearing, makes a Charisma saving throw against your spell save DC to resist (the holder makes it for the object). Choose one:\n\n- **Creature: Kind.** Effects that detect creatures by type, or that keep out, admit, or ward against creatures of a type (*Detect Evil and Good*, *Hallow*, *Magic Circle*, *Protection from Evil and Good*, a glyph or ward keyed to a type), treat it as a creature type of your choice. Nothing else does: damage, what a spell can target, and what an effect does once it applies all use its true type.\n- **Creature: Size.** Grapples, shoves, and effects that swallow, engulf, carry, or restrain creatures only up to a certain size treat it as one size larger or smaller (your choice). It takes up the space it always has.\n- **Object: Purpose.** It is named another kind of object, and it serves only as that. Choose one: *Shut* (a door, gate, lid, or window named a wall can't be opened, short of breaking it); *Open* (a lock named open is unlocked); *Harmless* (a weapon or piece of ammunition named a feather deals no damage); or *Plain* (it looks, feels, and sounds like another nonmagical object of the same size or smaller, a cup named a crown, or a crown a cup, though *Detect Magic*, *Identify*, and The Sight see it as it is). A renamed object never gains magical properties, never counts as a Material component with a cost, and isn't treasure.\n- **Place: Threshold.** A space up to a 10-foot Cube is named a threshold to the Hidden, which The Sight can see and Thresholds can open. This renaming lasts 10 minutes instead of 1.\n- **Place: Home.** A space up to a 30-foot Cube is named your home. A creature you haven't invited can't willingly enter it.\n\nOnce you use this feature, you can't use it again until you finish a Short or Long Rest.\n\n*Lasting Staves.* From level 10, your staves last through Long Rests until you release them, though a Named creature's Disadvantage still ends when you finish a Long Rest."
+       "text": "As a Magic action, you rename a Named creature, object, or place for 1 minute. It doesn't change: the renaming does only what the option you choose says, and nothing else about the thing is different. A creature, or an object a creature is holding or wearing, makes a Charisma saving throw against your spell save DC to resist (the holder makes it for the object). Choose one:\n\n- **Creature: Kind.** Effects that detect creatures by type, or that keep out, admit, or ward against creatures of a type (*Detect Evil and Good*, *Hallow*, *Magic Circle*, *Protection from Evil and Good*, a glyph or ward keyed to a type), treat it as a creature type of your choice. Nothing else does: damage, what a spell can target, and what an effect does once it applies all use its true type.\n- **Creature: Size.** Grapples, shoves, and effects that swallow, engulf, carry, or restrain creatures only up to a certain size treat it as one size larger or smaller (your choice). It takes up the space it always has.\n- **Object: Purpose.** It is named another kind of object, and it serves only as that. Choose one: *Shut* (a door, gate, lid, or window named a wall can't be opened, short of breaking it); *Open* (a lock named open is unlocked); *Harmless* (a weapon or piece of ammunition named a feather deals no damage); or *Plain* (it looks, feels, and sounds like another nonmagical object of the same size or smaller, a cup named a crown, or a crown a cup, though *Detect Magic*, *Identify*, and The Sight see it as it is). A renamed object never gains magical properties, never counts as a Material component with a cost, and isn't treasure.\n- **Place: Threshold.** A space up to a 10-foot Cube is named a threshold to the Hidden, which The Sight can see and Thresholds can open. This renaming lasts 10 minutes instead of 1.\n- **Place: Home.** A space up to a 30-foot Cube is named your home. A creature you haven't invited can't willingly enter it.\n\nOnce you use this feature, you can't use it again until you finish a Short or Long Rest."
+      },
+      {
+       "level": 10,
+       "name": "Lasting Staves",
+       "text": "Your staves last through Long Rests until you release them, though a Named creature's Disadvantage still ends when you finish a Long Rest."
       },
       {
        "level": 14,
@@ -5256,7 +5276,10 @@
     ]
    },
    "multiclass": {
-    "ability": "Charisma",
+    "abilities": [
+     "Charisma"
+    ],
+    "any": false,
     "score": 13,
     "gains": "Hit Point Die and training with Light armor",
     "spell_slots": {

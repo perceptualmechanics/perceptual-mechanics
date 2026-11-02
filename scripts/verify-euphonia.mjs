@@ -105,7 +105,7 @@ export function verifyEuphonia(d = euphoniaData()) {
     // The builder multiclasses from these: the score asked, and how the
     // class's levels count toward multiclass spell slots, as its paragraph says.
     const mc = c.multiclass;
-    if (!mc || !ABILITIES.includes(mc.ability) || !Number.isInteger(mc.score) || !mc.text?.includes(`${mc.ability} score of ${mc.score}`)) fail(`${c.name}: no multiclass prerequisite the builder can read`);
+    if (!mc || mc.abilities?.length !== 1 || mc.any !== false || !ABILITIES.includes(mc.abilities[0]) || !Number.isInteger(mc.score) || !mc.text?.includes(`${mc.abilities[0]} score of ${mc.score}`)) fail(`${c.name}: no multiclass prerequisite the builder can read`);
     else if (mc.spell_slots !== null && !(mc.spell_slots?.fraction === 1 || (mc.spell_slots?.fraction === 0.5 && ['up', 'down'].includes(mc.spell_slots.round)))) fail(`${c.name}: multiclass spell slots read ${JSON.stringify(mc.spell_slots)}`);
     else if ((mc.spell_slots !== null) !== /multiclass spell slots/.test(mc.text)) fail(`${c.name}: its multiclass paragraph and its spell-slot count disagree`);
     const kept = new Set(c.features.map(x => x.name));
