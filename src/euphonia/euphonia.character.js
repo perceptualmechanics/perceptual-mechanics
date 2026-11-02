@@ -223,6 +223,9 @@ export function character(book, state) {
     } else if (c.subclass) fail(`subclass:${c.class}`, `${c.class} gains a subclass at level ${c.rules.subclassLevel}.`);
     for (const imp of c.rules.improvements) if (imp.level <= c.level) improvements.push({ key: `${c.class} ${imp.level}`, class: c.class, ...imp });
   }
+  // In the order they come: by level, and at one level the class's before
+  // its subclass's (the sort is stable, and they were gathered that way).
+  features.sort((a, b) => a.level - b.level);
 
   // The feats: the background's, then each improvement's, in order, so a
   // feat's increase counts toward the next one's prerequisite.

@@ -94,6 +94,11 @@ export function verifyEuphoniaBuilder({ engine = defaultEngine, srd = read('srd'
     // which point-buy scores never reach here.
     if (got.problems.length) fail(`${c.name} at level 20: ${got.problems.map(p => p.message).join(' ')}`);
     if (got.features.filter(f => f.subclass).length !== c.subclasses[0].features.length) fail(`${c.name}: its subclass's features don't all come through at level 20`);
+    // In the order a character gains them: by level, the class's feature
+    // that grants the subclass before the subclass's own at that level.
+    if (got.features.some((f, i) => i && f.level < got.features[i - 1].level)) fail(`${c.name}: its features aren't in level order`);
+    const grant = got.features.findIndex(f => /subclass of your choice/.test(f.text));
+    if (got.features.findIndex(f => f.subclass) < grant) fail(`${c.name}: a subclass feature comes before the feature that grants the subclass`);
     // The class's own hit points; what a sentence adds is held below.
     if (got.hp - got.hpFrom.reduce((n, x) => n + x.hp, 0) !== c.die + 19 * (c.die / 2 + 1) + 20 * book.modifier(POINT_BUY.Constitution + 1)) fail(`${c.name}: ${got.hp} hit points at level 20`);
     classes++;
