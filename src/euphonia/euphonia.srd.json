@@ -2708,7 +2708,7 @@
       {
        "level": 3,
        "name": "Life Domain Spells",
-       "text": "Your connection to this divine domain ensures you always have certain spells ready. When you reach a Cleric level specified in the Life Domain Spells table, you thereafter always have the listed spells prepared.\n\n**Life Domain Spells**\n\n| Cleric Level |\n|---|\n| 3 Aid, Bless, Cure Wounds, |\n| Lesser Restoration |\n| 5 Mass Healing Word, Revivify |\n| 7 Aura of Life, Death Ward |\n| 9 Greater Restoration, Mass Cure Wounds |"
+       "text": "Your connection to this divine domain ensures you always have certain spells ready. When you reach a Cleric level specified in the Life Domain Spells table, you thereafter always have the listed spells prepared.\n\n**Life Domain Spells**\n\n| Cleric Level | Prepared Spells |\n|---|---|\n| 3 | Aid, Bless, Cure Wounds, Lesser Restoration |\n| 5 | Mass Healing Word, Revivify |\n| 7 | Aura of Life, Death Ward |\n| 9 | Greater Restoration, Mass Cure Wounds |"
       },
       {
        "level": 3,
@@ -3770,7 +3770,7 @@
       {
        "level": 10,
        "name": "Nature’s Ward",
-       "text": "You are immune to the Poisoned condition, and you have Resistance to a damage type associated with your current land choice in the Circle Spells feature, as shown in the Nature’s Ward table.\n\n**Nature’s Ward**\n\n| Land Type | Resistance | Land Type | Resistance |\n|---|---|---|---|\n| Arid | Fire | Temperate | Lightning |\n| Polar | Cold | Tropical | Poison |"
+       "text": "You are immune to the Poisoned condition, and you have Resistance to a damage type associated with your current land choice in the Circle Spells feature, as shown in the Nature’s Ward table.\n\n**Nature’s Ward**\n\n| Land Type | Resistance |\n|---|---|\n| Arid | Fire |\n| Polar | Cold |\n| Temperate | Lightning |\n| Tropical | Poison |"
       },
       {
        "level": 14,
@@ -5490,7 +5490,7 @@
       {
        "level": 3,
        "name": "Oath of Devotion Spells",
-       "text": "The magic of your oath ensures you always have certain spells ready; when you reach a Paladin level specified in the Oath of Devotion Spells table, you thereafter always have the listed spells prepared.\n\n**Oath of Devotion Spells**\n\n| Paladin Level | Spells |\n|---|---|\n| 3 | Protection from Evil and Good, |\n|  | Shield of Faith |\n| 5 | Aid, Zone of Truth |\n| 9 | Beacon of Hope, Dispel Magic |\n| 13 | Freedom of Movement, |\n|  | Guardian of Faith |\n| 17 | Commune, Flame Strike |"
+       "text": "The magic of your oath ensures you always have certain spells ready; when you reach a Paladin level specified in the Oath of Devotion Spells table, you thereafter always have the listed spells prepared.\n\n**Oath of Devotion Spells**\n\n| Paladin Level | Spells |\n|---|---|\n| 3 | Protection from Evil and Good, Shield of Faith |\n| 5 | Aid, Zone of Truth |\n| 9 | Beacon of Hope, Dispel Magic |\n| 13 | Freedom of Movement, Guardian of Faith |\n| 17 | Commune, Flame Strike |"
       },
       {
        "level": 3,
@@ -7133,7 +7133,7 @@
       {
        "level": 3,
        "name": "Draconic Spells",
-       "text": "When you reach a Sorcerer level specified in the Draconic Spells table, you thereafter always have the listed spells prepared.\n\n**Draconic Spells**\n\n| Sorcerer Level | Spells |\n|---|---|\n| 3 | Alter Self, Chromatic Orb, Command, |\n|  | Dragon’s Breath |\n| 5 | Fear, Fly |\n| 7 | Arcane Eye, Charm Monster |\n| 9 | Legend Lore, Summon Dragon |"
+       "text": "When you reach a Sorcerer level specified in the Draconic Spells table, you thereafter always have the listed spells prepared.\n\n**Draconic Spells**\n\n| Sorcerer Level | Spells |\n|---|---|\n| 3 | Alter Self, Chromatic Orb, Command, Dragon’s Breath |\n| 5 | Fear, Fly |\n| 7 | Arcane Eye, Charm Monster |\n| 9 | Legend Lore, Summon Dragon |"
       },
       {
        "level": 6,
@@ -8184,7 +8184,7 @@
       {
        "level": 3,
        "name": "Fiend Spells",
-       "text": "The magic of your patron ensures you always have certain spells ready; when you reach a Warlock level specified in the Fiend Spells table, you thereafter always have the listed spells prepared.\n\n**Fiend Spells**\n\n| Warlock Level | Spells |\n|---|---|\n| 3 | Burning Hands, Command, |\n|  | Scorching Ray, Suggestion |\n| 5 | Fireball, Stinking Cloud |\n| 7 | Fire Shield, Wall of Fire |\n| 9 | Geas, Insect Plague |"
+       "text": "The magic of your patron ensures you always have certain spells ready; when you reach a Warlock level specified in the Fiend Spells table, you thereafter always have the listed spells prepared.\n\n**Fiend Spells**\n\n| Warlock Level | Spells |\n|---|---|\n| 3 | Burning Hands, Command, Scorching Ray, Suggestion |\n| 5 | Fireball, Stinking Cloud |\n| 7 | Fire Shield, Wall of Fire |\n| 9 | Geas, Insect Plague |"
       },
       {
        "level": 6,
@@ -10159,6 +10159,126 @@
    ],
    "max": 20
   }
+ },
+ "armor": {
+  "items": [
+   {
+    "name": "Padded Armor",
+    "category": "Light",
+    "base": 11,
+    "dex": true,
+    "dex_max": null,
+    "strength": null,
+    "stealth_disadvantage": true
+   },
+   {
+    "name": "Leather Armor",
+    "category": "Light",
+    "base": 11,
+    "dex": true,
+    "dex_max": null,
+    "strength": null,
+    "stealth_disadvantage": false
+   },
+   {
+    "name": "Studded Leather Armor",
+    "category": "Light",
+    "base": 12,
+    "dex": true,
+    "dex_max": null,
+    "strength": null,
+    "stealth_disadvantage": false
+   },
+   {
+    "name": "Hide Armor",
+    "category": "Medium",
+    "base": 12,
+    "dex": true,
+    "dex_max": 2,
+    "strength": null,
+    "stealth_disadvantage": false
+   },
+   {
+    "name": "Chain Shirt",
+    "category": "Medium",
+    "base": 13,
+    "dex": true,
+    "dex_max": 2,
+    "strength": null,
+    "stealth_disadvantage": false
+   },
+   {
+    "name": "Scale Mail",
+    "category": "Medium",
+    "base": 14,
+    "dex": true,
+    "dex_max": 2,
+    "strength": null,
+    "stealth_disadvantage": true
+   },
+   {
+    "name": "Breastplate",
+    "category": "Medium",
+    "base": 14,
+    "dex": true,
+    "dex_max": 2,
+    "strength": null,
+    "stealth_disadvantage": false
+   },
+   {
+    "name": "Half Plate Armor",
+    "category": "Medium",
+    "base": 15,
+    "dex": true,
+    "dex_max": 2,
+    "strength": null,
+    "stealth_disadvantage": true
+   },
+   {
+    "name": "Ring Mail",
+    "category": "Heavy",
+    "base": 14,
+    "dex": false,
+    "dex_max": null,
+    "strength": null,
+    "stealth_disadvantage": true
+   },
+   {
+    "name": "Chain Mail",
+    "category": "Heavy",
+    "base": 16,
+    "dex": false,
+    "dex_max": null,
+    "strength": 13,
+    "stealth_disadvantage": true
+   },
+   {
+    "name": "Splint Armor",
+    "category": "Heavy",
+    "base": 17,
+    "dex": false,
+    "dex_max": null,
+    "strength": 15,
+    "stealth_disadvantage": true
+   },
+   {
+    "name": "Plate Armor",
+    "category": "Heavy",
+    "base": 18,
+    "dex": false,
+    "dex_max": null,
+    "strength": 15,
+    "stealth_disadvantage": true
+   },
+   {
+    "name": "Shield",
+    "category": "Shield",
+    "bonus": 2,
+    "strength": null,
+    "stealth_disadvantage": false
+   }
+  ],
+  "strength_speed_penalty": 10
  },
  "hit_points": {
   "level_1": {

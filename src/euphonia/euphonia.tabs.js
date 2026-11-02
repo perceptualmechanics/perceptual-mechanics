@@ -16,6 +16,7 @@ function initTabs(list) {
   map.removeAttribute('aria-label');
   map.setAttribute('aria-labelledby', tabs[0].id);
 
+  const builderTab = tabs.findIndex(t => t.id === 'tab-builder');
   let builder = null;
   function select(i, { focus = false, record = true } = {}) {
     tabs.forEach((t, k) => {
@@ -23,7 +24,7 @@ function initTabs(list) {
       t.tabIndex = k === i ? 0 : -1;
       panels[k].hidden = k !== i;
     });
-    const isBuilder = panels[i].id === 'builder';
+    const isBuilder = i === builderTab;
     top.classList.toggle('is-builder', isBuilder);
     // The sheet is what prints while the builder is open.
     document.documentElement.dataset.tab = isBuilder ? 'builder' : 'map';
@@ -44,10 +45,10 @@ function initTabs(list) {
     select((to + tabs.length) % tabs.length, { focus: true });
   });
   // A link within the page to the builder, or back to the map's chapters.
-  addEventListener('hashchange', () => select(location.hash === BUILDER_HASH ? 1 : 0, { record: false }));
+  addEventListener('hashchange', () => select(location.hash === BUILDER_HASH ? builderTab : 0, { record: false }));
 
   list.hidden = false;
-  select(location.hash === BUILDER_HASH ? 1 : 0, { record: false });
+  select(location.hash === BUILDER_HASH ? builderTab : 0, { record: false });
 }
 
 const list = document.querySelector('.euphonia-tabs');

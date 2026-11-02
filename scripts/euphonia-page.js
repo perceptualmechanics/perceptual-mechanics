@@ -85,14 +85,16 @@ ${regions.status === 'draft' ? `<p class="map-panel-note">${DRAFT_NOTE}</p>\n` :
 function tabs() {
   return `<div class="euphonia-tabs" role="tablist" aria-label="Euphonia" hidden>
 <button type="button" role="tab" id="tab-map" aria-controls="map-figure" aria-selected="true">Map</button>
-<button type="button" role="tab" id="tab-builder" aria-controls="builder" aria-selected="false" tabindex="-1">Character builder</button>
+<button type="button" role="tab" id="tab-builder" aria-controls="character-builder" aria-selected="false" tabindex="-1">Character builder</button>
 </div>`;
 }
 
 // The character builder's panel: its choices beside the sheet they make. The
-// rules load when it first opens, and the script fills both sides.
+// rules load when it first opens, and the script fills both sides. Its id
+// isn't the address's #builder, which names the tab, so opening that address
+// doesn't scroll the tabs away.
 function builder() {
-  return `<section class="builder" id="builder" role="tabpanel" aria-labelledby="tab-builder" tabindex="-1" hidden>
+  return `<section class="builder" id="character-builder" role="tabpanel" aria-labelledby="tab-builder" tabindex="-1" hidden>
 <form class="builder-form" aria-label="Your character's choices" novalidate>
 <p class="builder-status" role="status">Loading the rules…</p>
 </form>

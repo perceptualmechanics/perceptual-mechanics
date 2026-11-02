@@ -14,7 +14,7 @@ const ABLE = { Strength: 15, Dexterity: 14, Constitution: 13, Intelligence: 13, 
 const POINT_BUY = { Strength: 15, Dexterity: 14, Constitution: 13, Intelligence: 12, Wisdom: 10, Charisma: 8 };
 const someone = (classes, extra = {}) => ({
   species: 'Human', size: 'Medium', background: 'Soldier', increases: { Strength: 1, Dexterity: 1, Constitution: 1 },
-  method: 'rolled', base: ABLE, classes, ...extra,
+  method: 'rolled', base: ABLE, classes, originFeats: { 'Human Versatile': 'Alert' }, ...extra,
 });
 
 export function verifyEuphoniaBuilder({ engine = defaultEngine, srd = read('srd'), euphonia = read('classes') } = {}) {
@@ -81,7 +81,8 @@ export function verifyEuphoniaBuilder({ engine = defaultEngine, srd = read('srd'
     // which point-buy scores never reach here.
     if (got.problems.length) fail(`${c.name} at level 20: ${got.problems.map(p => p.message).join(' ')}`);
     if (got.features.filter(f => f.subclass).length !== c.subclasses[0].features.length) fail(`${c.name}: its subclass's features don't all come through at level 20`);
-    if (got.hp !== c.die + 19 * (c.die / 2 + 1) + 20 * book.modifier(POINT_BUY.Constitution + 1)) fail(`${c.name}: ${got.hp} hit points at level 20`);
+    // The class's own hit points; what a sentence adds is held below.
+    if (got.hp - got.hpFrom.reduce((n, x) => n + x.hp, 0) !== c.die + 19 * (c.die / 2 + 1) + 20 * book.modifier(POINT_BUY.Constitution + 1)) fail(`${c.name}: ${got.hp} hit points at level 20`);
     classes++;
   }
   // Each class alone, level by level, shows its own table's Proficiency
@@ -127,14 +128,68 @@ export function verifyEuphoniaBuilder({ engine = defaultEngine, srd = read('srd'
     try { engine.qualifies(book, f, { level: 20, scores: ABLE, features: [] }); } catch (e) { fail(e.message); }
     if (f.benefits.some(b => b.name === 'Ability Score Increase') && !engine.featIncrease(f)) fail(`${f.name}: its Ability Score Increase doesn't read`);
   }
+  // Hit points a sentence adds: Draconic Resilience's "by 3, and … by 1
+  // whenever you gain another Sorcerer level", Dwarven Toughness's "by 1,
+  // and … by 1 again whenever you gain a level".
+  const added = (state, name) => run(state, name)?.hpFrom.find(x => x.from === name)?.hp;
+  const sorcerer = lv => added(someone([{ class: 'Sorcerer', level: lv, subclass: 'Draconic Sorcery' }]), 'Draconic Resilience');
+  const dwarf = lv => added({ ...someone([{ class: 'Fighter', level: lv, subclass: lv >= 3 ? 'Champion' : '' }]), species: 'Dwarf' }, 'Dwarven Toughness');
+  const mixed = added(someone([{ class: 'Sorcerer', level: 3, subclass: 'Draconic Sorcery' }, { class: 'Fighter', level: 2 }]), 'Draconic Resilience');
+  if (mixed !== 3) fail(`Draconic Resilience counts Sorcerer levels, not the character's: ${mixed} at Sorcerer 3 / Fighter 2, not 3`);
+  if (!(sorcerer(3) === 3 && sorcerer(20) === 20)) fail(`Draconic Resilience adds ${sorcerer(3)} at Sorcerer 3 and ${sorcerer(20)} at 20, not 3 and 20`);
+  if (!(dwarf(1) === 1 && dwarf(5) === 5)) fail(`Dwarven Toughness adds ${dwarf(1)} at level 1 and ${dwarf(5)} at 5, not 1 and 5`);
+  // The SRD's armour example: “if you wear Leather Armor, your base AC is 11
+  // plus your Dexterity modifier, whereas your AC is 16 in Chain Mail”; a
+  // Shield's +2 only with training; Unarmored Defense with a Shield for a
+  // Barbarian, not for a Monk; Chain Mail's Strength 13 or 10 feet slower.
+  const worn = (cls, armor, shield, base = ABLE) => run(someone([{ class: cls, level: 1 }], { armor, shield, base }), `${cls} in ${armor || 'no armor'}`);
+  const leather = worn('Fighter', 'Leather Armor', false), chain = worn('Fighter', 'Chain Mail', false);
+  if (leather?.armorClass.ac !== 11 + leather.mod.Dexterity || chain?.armorClass.ac !== 16) fail(`Leather Armor gives ${leather?.armorClass.ac} and Chain Mail ${chain?.armorClass.ac}, not 11 + Dexterity and 16`);
+  if (worn('Fighter', 'Chain Mail', true)?.armorClass.ac !== 18 || worn('Wizard', '', true)?.armorClass.ac !== 10 + book.modifier(ABLE.Dexterity + 1)) fail('a Shield adds +2 without training, or not with it');
+  const barbarian = worn('Barbarian', '', true), monk = worn('Monk', '', true);
+  if (!barbarian?.unarmored.some(u => u.from === 'Unarmored Defense') || monk?.unarmored.some(u => u.from === 'Unarmored Defense')) fail('Unarmored Defense with a Shield: the Barbarian\'s should hold and the Monk\'s shouldn\'t');
+  // Medium armour takes Dexterity up to +2: Half Plate at Dexterity 18 is 17.
+  const nimble = worn('Fighter', 'Half Plate Armor', false, { ...ABLE, Dexterity: 17 });
+  if (nimble?.armorClass.ac !== 17) fail(`Half Plate at Dexterity 18 gives ${nimble?.armorClass.ac}, not 15 + 2`);
+  const weak = worn('Fighter', 'Chain Mail', false, { ...ABLE, Strength: 11 });
+  if (weak?.speed !== 30 - srd.armor.strength_speed_penalty || chain?.speed !== 30) fail(`Chain Mail at Strength 12 leaves speed ${weak?.speed}, at 16 ${chain?.speed}`);
+  if (!worn('Wizard', 'Plate Armor', false)?.warnings.some(w => /can't cast spells/.test(w.message))) fail('a Wizard in Plate Armor isn\'t warned about the training it lacks');
+  // A Human's Versatile takes an Origin feat, and Skilled from it up to
+  // three skills.
+  const versatile = run(someone([{ class: 'Fighter', level: 1 }], { originFeats: { 'Human Versatile': 'Skilled' }, skills: { Fighter: ['Athletics', 'History'], 'Human Skillful': ['Arcana'], 'feat Versatile (Human)': ['Stealth', 'Nature', 'Religion'] } }), 'versatile');
+  if (!versatile?.feats.some(f => f.feat.name === 'Skilled') || !['Stealth', 'Nature', 'Religion'].every(n => versatile.skills.find(x => x.name === n).proficient) || versatile.problems.length) fail(`Versatile's Skilled doesn't grant its three skills: ${versatile?.problems.map(p => p.message).join(' ')}`);
+  // Spells, by the SRD's example: a level 4 Ranger / level 3 Sorcerer
+  // “can prepare five level 1 Ranger spells, and … six Sorcerer spells of
+  // level 1 or 2 (as well as four Sorcerer cantrips)”.
+  const list = (cls, level) => book.classNamed(cls).spellList.filter(sp => sp.level === level).map(sp => sp.name);
+  const spellProblems = (state, where) => run(state, where)?.problems.filter(p => p.field.startsWith('spells:')).map(p => p.message);
+  const caster = spells => spellProblems(someone([{ class: 'Ranger', level: 4, subclass: 'Hunter' }, { class: 'Sorcerer', level: 3, subclass: 'Draconic Sorcery' }], { spells }), 'spells');
+  const fits = caster({ Ranger: list('Ranger', 1).slice(0, 5), Sorcerer: [...list('Sorcerer', 0).slice(0, 4), ...list('Sorcerer', 1).slice(0, 3), ...list('Sorcerer', 2).slice(0, 3)] });
+  const over = [
+    caster({ Ranger: list('Ranger', 1).slice(0, 6) }), caster({ Ranger: list('Ranger', 2).slice(0, 1) }),
+    caster({ Sorcerer: list('Sorcerer', 0).slice(0, 5) }), caster({ Sorcerer: list('Sorcerer', 3).slice(0, 1) }),
+    caster({ Sorcerer: list('Wizard', 1).filter(n => !list('Sorcerer', 1).includes(n)).slice(0, 1) }),
+  ];
+  if (fits?.length || !over.every(p => p?.length === 1)) fail(`the Ranger 4 / Sorcerer 3 example's spells aren't held to five, six and four: ${JSON.stringify([fits, over])}`);
+  // Magic Initiate: an Acolyte's from the Cleric list; again by Versatile,
+  // a different list.
+  const initiate = (versatile, spells) => spellProblems({ ...someone([{ class: 'Fighter', level: 1 }]), background: 'Acolyte', increases: { Intelligence: 1, Wisdom: 1, Charisma: 1 }, originFeats: { 'Human Versatile': 'Magic Initiate' }, featLists: { 'Versatile (Human)': versatile }, spells }, 'magic initiate');
+  const clean = initiate('Wizard', { 'feat Acolyte': [...list('Cleric', 0).slice(0, 2), list('Cleric', 1)[0]], 'feat Versatile (Human)': [...list('Wizard', 0).slice(0, 2), list('Wizard', 1)[0]] });
+  const wrong = [
+    initiate('Cleric', {}), initiate('Bard', {}),
+    initiate('Wizard', { 'feat Acolyte': list('Wizard', 0).filter(n => !list('Cleric', 0).includes(n)).slice(0, 1) }),
+    initiate('Wizard', { 'feat Acolyte': list('Cleric', 1).slice(0, 2) }),
+    initiate('Wizard', { 'feat Acolyte': list('Cleric', 0).slice(0, 3) }),
+  ];
+  if (clean?.length || !wrong.every(p => p?.length === 1)) fail(`Magic Initiate isn't held to its list, two cantrips, one level 1 spell, and a different list each time: ${JSON.stringify([clean, wrong])}`);
   // A Wood Elf's speed, and an unarmored defense, from their sentences.
   const elf = run({ ...someone([{ class: 'Barbarian', level: 1 }]), species: 'Elf', option: 'Wood Elf', skills: { Barbarian: ['Athletics', 'Survival'], 'Elf Keen Senses': ['Insight'] } }, 'Wood Elf');
   if (elf?.speed !== 35) fail(`a Wood Elf's speed is ${elf?.speed}, not the 35 feet its lineage gives`);
-  if (elf?.unarmored.find(u => u.from === 'Unarmored Defense')?.ac !== 10 + elf.mod.Dexterity + elf.mod.Constitution) fail('a Barbarian\'s Unarmored Defense isn\'t 10 plus Dexterity and Constitution');
+  if (!elf || elf.unarmored.find(u => u.from === 'Unarmored Defense')?.ac !== 10 + elf.mod.Dexterity + elf.mod.Constitution) fail('a Barbarian\'s Unarmored Defense isn\'t 10 plus Dexterity and Constitution');
 
   const log = problems.length
     ? [`\neuphonia builder: ${problems.length} problem(s):`, ...problems.map(m => `  ${m}`)]
-    : [`ok: the SRD's ${examples.length} worked examples hold; ${classes} classes built to level 20, and ${levels} class levels showing their own tables' bonus and slots; ${book.species.length} species and ${book.feats.length} feats read`];
+    : [`ok: the SRD's ${examples.length} worked examples hold; ${classes} classes built to level 20, and ${levels} class levels showing their own tables' bonus and slots; armour, shields, the hit points sentences add, origin feats and spell choices held to their rules; ${book.species.length} species and ${book.feats.length} feats read`];
   return { ok: problems.length === 0, failures: problems.length, log };
 }
 

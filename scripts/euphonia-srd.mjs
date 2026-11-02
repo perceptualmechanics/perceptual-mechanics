@@ -244,20 +244,58 @@ function gridPart(words) {
     if (g && w.x - right(g.at(-1)) <= w.size / 2) g.push(w); else out.push([w]);
     return out;
   }, []);
-  const cols = groups(rows[heads - 1]).map(g => ({ left: g[0].x, right: right(g.at(-1)), above: [], words: g.map(w => w.text) }));
-  for (const r of rows.slice(0, heads - 1)) {
+  // The header row that names the most columns sets them; a group in
+  // another row names the one column it overlaps, above or below, or a
+  // column of its own where it overlaps none ("Cleric / Level" beside
+  // "Prepared Spells").
+  const headRows = rows.slice(0, heads);
+  const widest = headRows.reduce((best, r, i) => (groups(r).length > groups(headRows[best]).length ? i : best), 0);
+  const cols = groups(headRows[widest]).map(g => ({ left: g[0].x, right: right(g.at(-1)), parts: [[widest, g.map(w => w.text)]] }));
+  headRows.forEach((r, i) => {
+    if (i === widest) return;
     for (const g of groups(r)) {
       const over = cols.filter(c => g[0].x < c.right && right(g.at(-1)) > c.left);
-      if (over.length === 1) { over[0].above.push(...g.map(w => w.text)); over[0].left = Math.min(over[0].left, g[0].x); }
+      if (over.length === 1) { over[0].parts.push([i, g.map(w => w.text)]); over[0].left = Math.min(over[0].left, g[0].x); over[0].right = Math.max(over[0].right, right(g.at(-1))); }
+      else if (!over.length) cols.push({ left: g[0].x, right: right(g.at(-1)), parts: [[i, g.map(w => w.text)]] });
     }
+  });
+  cols.sort((a, b) => a.left - b.left);
+  const names = cols.map(c => c.parts.sort((a, b) => a[0] - b[0]).flatMap(([, w]) => w).join(' '));
+  const body = rows.slice(heads);
+  // A row set wholly in italic from the first column across into the next
+  // labels the rows under it ("Light Armor (1 Minute to Don or Doff)"); a
+  // spell's name wrapping in italic stays in its column.
+  const label = r => r.every(w => /Italic/.test(w.font)) && r[0].x <= cols[0].right && right(r.at(-1)) > cols[1]?.left;
+  // The columns' reach, from where the body's words fall: runs of words a
+  // word space apart, each taken by the heading it overlaps most (or, over
+  // none, the nearest). A word belongs to the column whose reach holds its
+  // centre, which reads centred numbers, left-set text and right-set
+  // numbers ("20 lb. | 400 GP") alike.
+  const runs = [];
+  for (const w of body.filter(r => !label(r)).flat().sort((a, b) => a.x - b.x)) {
+    const last = runs.at(-1);
+    if (last && w.x - last.right <= w.size / 2) last.right = Math.max(last.right, right(w));
+    else runs.push({ left: w.x, right: right(w) });
   }
-  const names = cols.map(c => [...c.above, ...c.words].join(' '));
-  const colOf = w => { const mid = w.x + w.width / 2; let k = 0; cols.forEach((c, i) => { if (c.left <= mid) k = i; }); return k; };
+  const reach = cols.map(c => ({ left: c.left, right: c.right }));
+  for (const run of runs) {
+    const overlap = c => Math.min(run.right, c.right) - Math.max(run.left, c.left);
+    const mid = (run.left + run.right) / 2;
+    const k = cols.reduce((best, c, i) => (overlap(c) > overlap(cols[best]) ? i : best), 0);
+    const at = overlap(cols[k]) > 0 ? k : cols.reduce((best, c, i) => (Math.abs((c.left + c.right) / 2 - mid) < Math.abs((cols[best].left + cols[best].right) / 2 - mid) ? i : best), 0);
+    reach[at].left = Math.min(reach[at].left, run.left);
+    reach[at].right = Math.max(reach[at].right, run.right);
+  }
+  const colOf = w => {
+    const mid = w.x + w.width / 2;
+    const k = reach.findIndex(c => mid >= c.left && mid <= c.right);
+    if (k >= 0) return k;
+    throw new Error(`table "${names.join(' | ')}": "${w.text}" falls in no column`);
+  };
   // A range takes no space around its dash (12–13), but kerning can split
   // one into two words ("10", "–11").
   const cell = ws => ws.map(w => w.text).join(' ').replace(/(\d) ([–—]\d)/g, '$1$2');
-  const body = rows.slice(heads);
-  return { names, rows: body.map((r, k) => Object.assign(names.map((n, i) => cell(r.filter(w => colOf(w) === i))), { gap: k ? r[0].y - body[k - 1][0].y : Infinity })) };
+  return { names, rows: body.map((r, k) => Object.assign(label(r) ? names.map(() => '') : names.map((n, i) => cell(r.filter(w => colOf(w) === i))), { gap: k ? r[0].y - body[k - 1][0].y : Infinity, label: label(r) ? cell(r) : null })) };
 }
 
 // A table's rows as objects keyed by its column names, checked against the
@@ -282,13 +320,15 @@ function table(block, expected) {
   const out = [];
   for (const [a, b] of parts) {
     const mine = [];
+    let group = null;
     for (const row of rows) {
-      const r = row.slice(a, b);
+      if (row.label) { group = row.label; continue; }
+      const r = Object.assign(row.slice(a, b), { group });
       if (r[0] && !(row.gap < pitch - PITCH_MARGIN)) mine.push(r);
       else if (mine.length) r.forEach((c, i) => { if (c) mine.at(-1)[i] = `${mine.at(-1)[i]} ${c}`; });
       else if (r.some(Boolean)) throw new Error(`table "${names.join(' | ')}": a row with no first cell`);
     }
-    out.push(...mine.map(r => Object.fromEntries(names.slice(a, b).map((h, i) => [h, r[i]]))));
+    out.push(...mine.map(r => Object.assign(Object.fromEntries(names.slice(a, b).map((h, i) => [h, r[i]])), r.group ? { group: r.group } : {})));
   }
   return out;
 }
@@ -420,7 +460,14 @@ function tableLines(t) {
   return out;
 }
 const titled = t => ({ kind: 'table', lines: tableLines(t).slice(1).map(k => lines[k]) });
-const markdownTable = ({ names, rows }) => [`| ${names.join(' | ')} |`, `|${names.map(() => '---').join('|')}|`, ...rows.map(r => `| ${r.join(' | ')} |`)].join('\n');
+// A table in the export's markdown, its wrapped cells joined as table()
+// joins them.
+// A table set in two halves (Land Type, Resistance, twice) reads as one, its
+// halves in turn.
+const markdownTable = block => {
+  const names = [...new Set(grid(block).names)];
+  return [`| ${names.join(' | ')} |`, `|${names.map(() => '---').join('|')}|`, ...table(block).map(r => `| ${names.map(n => r[n]).join(' | ')} |`)].join('\n');
+};
 // Rules text as the setting's export writes it: paragraphs, a named
 // paragraph's name in bold, bullets as a list, a table under its title.
 function prose(from, to, skip) {
@@ -428,7 +475,7 @@ function prose(from, to, skip) {
   let title = null;
   for (const b of blocks(from, to, skip)) {
     if (b.kind === 'title') { title = b.text; continue; }
-    if (b.kind === 'table') { out.push(`${title ? `**${title}**\n\n` : ''}${markdownTable(grid(b))}`); title = null; continue; }
+    if (b.kind === 'table') { out.push(`${title ? `**${title}**\n\n` : ''}${markdownTable(b)}`); title = null; continue; }
     if (title) { out.push(`**${title}**`); title = null; }
     if (b.kind !== 'para') throw new Error(`a ${b.kind} line "${b.text}" inside rules text`);
     const p = lead(b.text);
@@ -591,6 +638,38 @@ function backgroundIncreases() {
   return { choices: [[+m[1], +m[2]], [+m[3], +m[3], +m[3]]], max: +m[4] };
 }
 
+// ---------- armour: the Armor table's rows under its category rows ("Light
+// Armor (1 Minute to Don or Doff)"), each AC as the table writes it ("11 +
+// Dex modifier", "14 + Dex modifier (max 2)", "16", "+2").
+function armor() {
+  const t = lines.findIndex((l, k) => l.kind === 'title' && l.text === 'Armor' && lines[k + 1]?.kind === 'table');
+  if (t < 0) throw new Error('the SRD has no Armor table');
+  const out = [];
+  for (const r of table(titled(t), ['Armor', 'Armor Class (AC)', 'Strength', 'Stealth', 'Weight', 'Cost'])) {
+    const category = r.group?.match(/^(Light|Medium|Heavy) Armor \(|^(Shield) \(/)?.slice(1).find(Boolean);
+    if (!category) throw new Error(`armor "${r.Armor}" under no category ("${r.group}")`);
+    const ac = r['Armor Class (AC)'].match(/^(\+)?(\d+)(?: \+ Dex modifier(?: \(max (\d+)\))?)?$/);
+    if (!ac) throw new Error(`armor "${r.Armor}": an Armor Class the exporter doesn't read: "${r['Armor Class (AC)']}"`);
+    out.push({
+      name: r.Armor, category,
+      ...(ac[1] ? { bonus: +ac[2] } : { base: +ac[2], dex: /Dex modifier/.test(r['Armor Class (AC)']), dex_max: ac[3] ? +ac[3] : null }),
+      strength: +(r.Strength.match(/^Str (\d+)$/)?.[1] ?? 0) || null,
+      stealth_disadvantage: r.Stealth === 'Disadvantage',
+    });
+  }
+  return out;
+}
+
+// The Armor table's Strength column, in its own sentence: "that armor
+// reduces the wearer’s speed by 10 feet unless the wearer has a Strength
+// score equal to or higher than the listed score".
+function armorStrengthPenalty() {
+  const text = lines.map(l => l.text).join(' ');
+  const m = text.match(/that armor reduces the wearer’s speed by (\d+) feet unless the wearer has a Strength score equal to or higher than the listed score/);
+  if (!m) throw new Error('the Armor table\'s Strength rule didn\'t read');
+  return +m[1];
+}
+
 // ---------- the ability-score methods, from their paragraphs under
 // "Generate Your Scores": the standard array's six scores and the point
 // cost's budget.
@@ -679,6 +758,7 @@ const data = {
     return { adapted: { rule: 'euphonia.rules.json fey_type', changes }, ...content };
   })(),
   ability_scores: { ...scoreMethods(), background: backgroundIncreases() },
+  armor: { items: armor(), strength_speed_penalty: armorStrengthPenalty() },
   hit_points: { level_1: hitPoints('Level 1 Hit Points by Class', 'Hit Point Maximum'), fixed: hitPoints('Fixed Hit Points by Class', 'Hit Points per Level') },
   tables: {
     advancement: titledTable('Character Advancement', ['Level', 'Experience Points', 'Proficiency Bonus']),

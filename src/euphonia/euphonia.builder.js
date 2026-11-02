@@ -10,7 +10,7 @@ import { inline, blocks } from './euphonia.markdown.js';
 const STORE_KEY = 'pm-euphonia-character';
 const PARAM = 'c';
 const signed = n => (n >= 0 ? `+${n}` : `−${-n}`);
-const blank = () => ({ name: '', species: '', option: '', size: '', background: '', increases: {}, method: 'standard', base: {}, classes: [{ class: '', level: 1, subclass: '' }], skills: {}, improvements: {} });
+const blank = () => ({ name: '', species: '', option: '', size: '', background: '', increases: {}, method: 'standard', base: {}, classes: [{ class: '', level: 1, subclass: '' }], skills: {}, improvements: {}, originFeats: {}, featLists: {}, spells: {}, armor: '', shield: false });
 
 // The character in the address: its choices as JSON, base64url.
 const encode = state => btoa(String.fromCharCode(...new TextEncoder().encode(JSON.stringify(state)))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
@@ -67,6 +67,8 @@ export async function initBuilder(panel) {
   // ---------- the controls, built once; the parts whose shape depends on
   // earlier choices are rebuilt only when that shape changes.
   const problemSlot = field => h('p', { class: 'b-problem', id: idFor(field), hidden: true });
+  // A rule's consequence of a legal choice, beside it, said and not blocked.
+  const warningSlot = field => h('p', { class: 'b-warning', id: `warning-${idFor(field)}`, hidden: true });
   const section = (title, ...body) => h('fieldset', { class: 'b-section' }, h('legend', {}, title), ...body);
 
   const nameInput = h('input', { name: 'name', type: 'text', autocomplete: 'off', maxlength: 80, value: state.name });
@@ -89,16 +91,25 @@ export async function initBuilder(panel) {
   const pointsLeft = h('p', { class: 'b-note', 'aria-live': 'polite' });
   const skillsBox = h('div', { class: 'b-skill-groups' });
   const featsBox = h('div', { class: 'b-feats' });
+  const originBox = h('div', { class: 'b-origin' });
+  const skillNotes = h('ul', { class: 'b-notes' });
+  const armorSelect = h('select', { name: 'armor', 'aria-describedby': `${idFor('armor')} warning-${idFor('armor')}` }, h('option', { value: '' }, 'No armor'),
+    ['Light', 'Medium', 'Heavy'].map(cat => h('optgroup', { label: `${cat} armor` }, options(book.armor.items.filter(a => a.category === cat).map(a => a.name), state.armor))));
+  const shieldCheck = h('input', { type: 'checkbox', name: 'shield', checked: Boolean(state.shield) });
+  const trainingNote = h('p', { class: 'b-note' });
+  const spellsBox = h('div', { class: 'b-spells' });
 
   status.remove();
   form.append(
     section('Name', h('label', { class: 'b-field' }, h('span', {}, 'Character name'), nameInput)),
     section('Class', h('p', { class: 'b-note' }, 'The first is the class you began in. Its levels and the others’ make your character level.'), classList, addClass, problemSlot('classes')),
-    section('Species', h('label', { class: 'b-field' }, h('span', {}, 'Species'), speciesSelect), problemSlot('species'), optionRow, problemSlot('option'), sizeRow, problemSlot('size'), speciesTraits),
+    section('Species', h('label', { class: 'b-field' }, h('span', {}, 'Species'), speciesSelect), problemSlot('species'), optionRow, problemSlot('option'), sizeRow, problemSlot('size'), originBox, speciesTraits),
     section('Background', h('label', { class: 'b-field' }, h('span', {}, 'Background'), backgroundSelect), problemSlot('background'), increases, problemSlot('increases'), backgroundAbout),
     section('Ability scores', methodGroup, scoreGrid, pointsLeft, problemSlot('base'), problemSlot('method')),
-    section('Skills', skillsBox),
+    section('Armour', h('label', { class: 'b-field' }, h('span', {}, 'Armor'), armorSelect), h('label', { class: 'b-check' }, shieldCheck, ' A Shield'), trainingNote, problemSlot('armor'), warningSlot('armor')),
+    section('Skills', skillsBox, skillNotes),
     section('Feats', featsBox),
+    section('Spells', spellsBox),
   );
 
   // ---------- reading the controls into the state
@@ -109,6 +120,8 @@ export async function initBuilder(panel) {
   sizeSelect.addEventListener('change', () => set(s => { s.size = sizeSelect.value; }));
   backgroundSelect.addEventListener('change', () => set(s => { s.background = backgroundSelect.value; s.increases = {}; }));
   methodGroup.addEventListener('change', e => set(s => { s.method = e.target.value; s.base = {}; }));
+  armorSelect.addEventListener('change', () => set(s => { s.armor = armorSelect.value; }));
+  shieldCheck.addEventListener('change', () => set(s => { s.shield = shieldCheck.checked; }));
   addClass.addEventListener('click', () => {
     set(s => { s.classes.push({ class: '', level: 1, subclass: '' }); });
     classList.lastElementChild?.querySelector('select')?.focus();
@@ -230,14 +243,14 @@ export async function initBuilder(panel) {
 
   // The skill choices, as the engine lists them.
   function renderSkills(result) {
-    const shape = result.choices.map(c => `${c.key}:${c.count}:${c.from.join()}`).join('|');
+    const shape = result.choices.map(c => `${c.key}:${c.count}:${c.upTo}:${c.from.join()}`).join('|');
     if (skillsBox.dataset.for === shape) return;
     skillsBox.dataset.for = shape;
     rebuild(skillsBox, ...(result.choices.length ? result.choices.map(c => {
       const picked = state.skills?.[c.key] ?? [];
       const read = () => set(s => { s.skills = { ...s.skills, [c.key]: [...group.querySelectorAll('input:checked')].map(x => x.value) }; });
       const group = h('fieldset', { class: 'b-skills', 'aria-describedby': idFor(`skills:${c.key}`) },
-        h('legend', {}, `${c.label}: choose ${c.count}`),
+        h('legend', {}, `${c.label}: choose ${c.upTo ? 'up to ' : ''}${c.count}${c.upTo ? ' (the rest tools)' : ''}`),
         h('div', { class: 'b-checks' }, c.from.map(skill => h('label', {}, h('input', { type: 'checkbox', value: skill, 'data-key': `skill-${c.key}-${skill}`, checked: picked.includes(skill), onchange: read }), ` ${skill}`))),
         problemSlot(`skills:${c.key}`));
       return group;
@@ -283,15 +296,84 @@ export async function initBuilder(panel) {
       }) : [h('p', { class: 'b-note' }, 'Ability Score Improvements and the Epic Boon come with levels; choose their feats here.')]));
   }
 
-  // The problems, each beside the choice it belongs to.
+  // An Origin feat a trait grants (the Human's Versatile).
+  function renderOrigin(result) {
+    const shape = result.originChoices.map(c => c.key).join('|');
+    if (originBox.dataset.for === shape) return;
+    originBox.dataset.for = shape;
+    const origin = book.feats.filter(f => f.category === 'Origin').map(f => f.name);
+    rebuild(originBox, ...result.originChoices.map(c => [
+      h('label', { class: 'b-field' }, h('span', {}, `${c.label}: an Origin feat`),
+        h('select', { 'data-key': `origin-${c.key}`, 'aria-describedby': idFor(`origin:${c.key}`), onchange: e => set(s => { s.originFeats = { ...s.originFeats, [c.key]: e.target.value }; }) },
+          options(origin, state.originFeats?.[c.key], 'Choose a feat'))),
+      problemSlot(`origin:${c.key}`),
+    ]).flat());
+  }
+
+  // Armour: what the classes train, said beside the choice.
+  function renderArmor(result) {
+    armorSelect.value = state.armor ?? '';
+    shieldCheck.checked = Boolean(state.shield);
+    trainingNote.textContent = result.training.length
+      ? `Your classes train you in ${result.training.map(t => (t === 'Shield' ? 'Shields' : `${t} armor`)).join(', ')}.`
+      : 'Your classes give no armor training.';
+  }
+
+  // The spells: each caster's and each feat's, by level, as the engine
+  // bounds them; a feat's list where the player chooses it.
+  const openLevels = new Set();
+  function renderSpells(result) {
+    const shape = [...result.listChoices.map(l => `${l.from}:${l.chosen}`), ...result.spellChoices.map(c => `${c.key}:${c.cantrips}:${c.prepared}:${c.highest}:${c.chosen.map(sp => sp.name).join()}`)].join('|');
+    if (spellsBox.dataset.for === shape) return;
+    spellsBox.dataset.for = shape;
+    for (const d of spellsBox.querySelectorAll('details[data-key]')) if (d.open) openLevels.add(d.dataset.key); else openLevels.delete(d.dataset.key);
+    const lists = result.listChoices.map(l => [
+      h('label', { class: 'b-field' }, h('span', {}, `${l.feat}, from ${l.from}: its spell list`),
+        h('select', { 'data-key': `list-${l.from}`, 'aria-describedby': idFor(l.field), onchange: e => set(s => { s.featLists = { ...s.featLists, [l.from]: e.target.value }; }) }, options(l.lists, l.chosen, 'Choose a list'))),
+      result.spellChoices.some(c => c.key === l.field.replace(/^spells:/, '')) ? null : problemSlot(l.field),
+    ]).flat();
+    const groups = result.spellChoices.map(c => {
+      const picked = new Set(c.chosen.map(sp => sp.name));
+      const read = () => set(s => { s.spells = { ...s.spells, [c.key]: [...box.querySelectorAll('input:checked')].map(x => x.value) }; });
+      const levels = [...new Set(c.list.map(sp => sp.level))].sort((a, b) => a - b);
+      const count = level => c.chosen.filter(sp => (level ? sp.level > 0 : sp.level === 0)).length;
+      const box = h('fieldset', { class: 'b-spell-choice', 'aria-describedby': idFor(`spells:${c.key}`) },
+        h('legend', {}, `${c.label}: ${c.cantrips ? `${count(0)} of ${c.cantrips} cantrips, ` : ''}${count(1)} of ${c.prepared} spells, up to level ${c.highest}`),
+        levels.map(level => {
+          const key = `${c.key}-${level}`;
+          const here = c.list.filter(sp => sp.level === level);
+          const chosenHere = here.filter(sp => picked.has(sp.name)).length;
+          return h('details', { 'data-key': key, open: openLevels.has(key) || null },
+            h('summary', {}, `${level ? `Level ${level}` : 'Cantrips'}${chosenHere ? `: ${chosenHere} chosen` : ''}`),
+            h('div', { class: 'b-checks' }, here.map(sp => h('label', {}, h('input', { type: 'checkbox', value: sp.name, 'data-key': `spell-${c.key}-${sp.name}`, checked: picked.has(sp.name), onchange: read }),
+              ` ${sp.name}`, sp.special && !/^[—–]$/.test(sp.special) ? h('span', { class: 'b-mark' }, ` ${sp.special}`) : null))));
+        }),
+        problemSlot(`spells:${c.key}`));
+      return box;
+    });
+    rebuild(spellsBox, ...(lists.length || groups.length ? [...lists, ...groups] : [h('p', { class: 'b-note' }, 'Your spellcasting classes and feats bring their spells here.')]));
+  }
+
+  // The problems, each beside the choice it belongs to; the warnings and
+  // notes, beside theirs.
   function renderProblems(result) {
-    const by = new Map();
-    for (const p of result.problems) by.set(p.field, [...(by.get(p.field) ?? []), p.message]);
+    const by = list => {
+      const out = new Map();
+      for (const p of list) out.set(idFor(p.field), [...(out.get(idFor(p.field)) ?? []), p.message]);
+      return out;
+    };
+    const problems = by(result.problems), warnings = by(result.warnings);
     for (const slot of form.querySelectorAll('.b-problem')) {
-      const messages = [...by].filter(([f]) => idFor(f) === slot.id).flatMap(([, m]) => m);
+      const messages = problems.get(slot.id) ?? [];
       slot.textContent = messages.join(' ');
       slot.hidden = !messages.length;
     }
+    for (const slot of form.querySelectorAll('.b-warning')) {
+      const messages = warnings.get(slot.id.replace(/^warning-/, '')) ?? [];
+      slot.textContent = messages.join(' ');
+      slot.hidden = !messages.length;
+    }
+    skillNotes.replaceChildren(...result.notes.map(n => h('li', {}, n.message)));
   }
 
   // ---------- the sheet
@@ -306,13 +388,18 @@ export async function initBuilder(panel) {
     const det = (key, summary, ...body) => h('details', { 'data-key': key, open: open.has(key) }, h('summary', {}, summary), ...body);
     const classLine = result.classes.map(c => `${c.class} ${c.level}${c.subclass ? ` (${c.subclass})` : ''}`).join(' / ');
     const who = [result.species && `${result.species.name}${result.option ? ` (${result.option})` : ''}`, result.background?.name, classLine].filter(Boolean).join(' · ');
-    const casting = result.spellcasting.length ? h('section', { class: 'sheet-block', 'aria-labelledby': 'sheet-spells' },
-      h('h3', { id: 'sheet-spells' }, 'Spellcasting'),
+    // Spellcasting: the slots and what each class prepares, then the spells
+    // chosen, a caster's and a feat's alike.
+    const casting = result.spellcasting.length ? [
       result.slots.some(Boolean) ? h('table', { class: 'sheet-slots' }, h('caption', {}, result.casterLevel ? `Spell slots, as a level ${result.casterLevel} multiclass spellcaster` : 'Spell slots'),
         h('thead', {}, h('tr', {}, h('th', { scope: 'row' }, 'Level'), result.slots.map((n, i) => (n ? h('th', { scope: 'col' }, String(i + 1)) : null)))),
         h('tbody', {}, h('tr', {}, h('th', { scope: 'row' }, 'Slots'), result.slots.map(n => (n ? h('td', {}, String(n)) : null))))) : null,
       result.pacts.map(p => h('p', {}, `Pact Magic (${p.class}): ${p.slots} slot${p.slots === 1 ? '' : 's'} of level ${p.level}.`)),
-      h('ul', {}, result.spellcasting.map(s => h('li', {}, `${s.class}: ${s.cantrips ? `${s.cantrips} cantrips, ` : ''}${s.prepared} prepared spells, up to level ${s.highest}.`)))) : null;
+      h('ul', {}, result.spellcasting.map(s => h('li', {}, `${s.class}: ${s.cantrips ? `${s.cantrips} cantrips, ` : ''}${s.prepared} prepared spells, up to level ${s.highest}.`)))] : [];
+    const chosenSpells = result.spellChoices.filter(c => c.chosen.length).map(c => h('div', { class: 'sheet-spell-list' },
+      h('h4', {}, c.label),
+      h('ul', {}, [...c.chosen].sort((a, b) => a.level - b.level || a.name.localeCompare(b.name)).map(sp => h('li', {},
+        `${sp.level ? `Level ${sp.level}` : 'Cantrip'}: ${sp.name}${sp.school ? `, ${sp.school}` : ''}${sp.special && !/^[—–]$/.test(sp.special) ? ` (${sp.special})` : ''}`)))));
     sheet.replaceChildren(
       h('header', { class: 'sheet-head' },
         h('h2', { id: 'sheet-title' }, state.name.trim() || 'Your character'),
@@ -328,17 +415,19 @@ export async function initBuilder(panel) {
       h('section', { class: 'sheet-block', 'aria-labelledby': 'sheet-combat' },
         h('h3', { id: 'sheet-combat' }, 'In a fight'),
         h('dl', { class: 'sheet-facts' },
-          h('dt', {}, 'Hit points'), h('dd', {}, `${result.hp}, with ${result.hitDice.map(d => `${d.count} d${d.die}`).join(' and ') || 'no'} Hit Dice`),
-          h('dt', {}, 'Armor Class without armor'), h('dd', {}, result.unarmored.map(u => `${u.ac} (${u.from})`).join('; ')),
+          h('dt', {}, 'Hit points'), h('dd', {}, `${result.hp}${result.hpFrom.length ? ` (${result.hpFrom.map(x => `+${x.hp} from ${x.from}`).join(', ')})` : ''}, with ${result.hitDice.map(d => `${d.count} d${d.die}`).join(' and ') || 'no'} Hit Dice`),
+          h('dt', {}, 'Armor Class'), h('dd', {}, `${result.armorClass.ac} (${result.armorClass.from})${result.armor ? '' : result.unarmored.length > 1 ? `; without armor, one at a time: ${result.unarmored.map(u => `${u.ac} (${u.from})`).join(', ')}` : ''}`),
           h('dt', {}, 'Initiative'), h('dd', {}, signed(result.initiative)),
           h('dt', {}, 'Speed'), h('dd', {}, result.speed ? `${result.speed} feet` : '—'),
           h('dt', {}, 'Size'), h('dd', {}, result.size ?? '—'),
-          h('dt', {}, 'Passive Perception'), h('dd', {}, String(result.passivePerception)))),
+          h('dt', {}, 'Passive Perception'), h('dd', {}, String(result.passivePerception))),
+        result.warnings.length ? h('ul', { class: 'sheet-warnings' }, result.warnings.map(w => h('li', {}, w.message))) : null),
       h('section', { class: 'sheet-block', 'aria-labelledby': 'sheet-skills' },
         h('h3', { id: 'sheet-skills' }, 'Skills'),
         h('ul', { class: 'sheet-skills' }, result.skills.map(s => h('li', { class: s.proficient ? 'is-proficient' : null },
-          h('span', {}, `${s.name}`), h('span', { class: 'sheet-ability' }, ` (${s.ability.slice(0, 3)})`), h('span', { class: 'sheet-bonus' }, ` ${signed(s.bonus)}`), s.proficient ? h('span', { class: 'sheet-mark' }, ' proficient') : null)))),
-      casting,
+          h('span', {}, `${s.name}`), h('span', { class: 'sheet-ability' }, ` (${s.ability.slice(0, 3)})`), h('span', { class: 'sheet-bonus' }, ` ${signed(s.bonus)}`), s.proficient ? h('span', { class: 'sheet-mark' }, ' proficient') : null,
+          s.name === 'Stealth' && result.stealthDisadvantage ? h('span', { class: 'sheet-mark' }, ' with Disadvantage, in this armor') : null)))),
+      casting.length || chosenSpells.length ? h('section', { class: 'sheet-block', 'aria-labelledby': 'sheet-spells' }, h('h3', { id: 'sheet-spells' }, 'Spells'), casting, chosenSpells) : null,
       result.feats.length ? h('section', { class: 'sheet-block', 'aria-labelledby': 'sheet-feats' },
         h('h3', { id: 'sheet-feats' }, 'Feats'),
         result.feats.map(f => det(`feat-${f.from}`, `${f.feat.name}${f.note ? ` (${f.note})` : ''}, from ${f.from}`,
@@ -366,8 +455,11 @@ export async function initBuilder(panel) {
     renderSpecies(result);
     renderBackground(result);
     renderScores();
+    renderOrigin(result);
+    renderArmor(result);
     renderSkills(result);
     renderFeats(result);
+    renderSpells(result);
     renderProblems(result);
     renderSheet(result);
     const url = new URL(location.href);
