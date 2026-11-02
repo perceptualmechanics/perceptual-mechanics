@@ -10144,7 +10144,51 @@
    10,
    8
   ],
-  "point_budget": 27
+  "point_budget": 27,
+  "background": {
+   "choices": [
+    [
+     2,
+     1
+    ],
+    [
+     1,
+     1,
+     1
+    ]
+   ],
+   "max": 20
+  }
+ },
+ "hit_points": {
+  "level_1": {
+   "Barbarian": 12,
+   "Fighter": 10,
+   "Paladin": 10,
+   "Ranger": 10,
+   "Bard": 8,
+   "Cleric": 8,
+   "Druid": 8,
+   "Monk": 8,
+   "Rogue": 8,
+   "Warlock": 8,
+   "Sorcerer": 6,
+   "Wizard": 6
+  },
+  "fixed": {
+   "Barbarian": 7,
+   "Fighter": 6,
+   "Paladin": 6,
+   "Ranger": 6,
+   "Bard": 5,
+   "Cleric": 5,
+   "Druid": 5,
+   "Monk": 5,
+   "Rogue": 5,
+   "Warlock": 5,
+   "Sorcerer": 4,
+   "Wizard": 4
+  }
  },
  "tables": {
   "advancement": [

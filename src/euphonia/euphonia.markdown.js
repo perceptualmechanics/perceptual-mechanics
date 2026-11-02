@@ -19,14 +19,21 @@ export function plain(md) {
 }
 
 // A chapter's blocks, as the export keeps them: paragraphs, "- " lists nested
-// by two spaces, and "> " quotes, each with its inline markdown.
+// by two spaces, "> " quotes and "| " tables, each with its inline markdown.
 export function blocks(md) {
   return md.split(/\n{2,}/).map(chunk => {
     const lines = chunk.split('\n');
     if (lines.every(l => l.startsWith('>'))) return `<blockquote>${blocks(lines.map(l => l.replace(/^> ?/, '')).join('\n'))}</blockquote>`;
     if (/^\s*- /.test(lines[0])) return list(lines);
+    if (lines.length > 2 && lines.every(l => l.startsWith('|')) && /^\|[\s:|-]+\|$/.test(lines[1])) return table(lines);
     return `<p>${inline(chunk.replace(/\n/g, ' '))}</p>`;
   }).join('\n');
+}
+
+function table([head, , ...rows]) {
+  const cells = l => l.replace(/^\||\|$/g, '').split('|').map(c => c.trim());
+  return `<table><thead><tr>${cells(head).map(c => `<th scope="col">${inline(c)}</th>`).join('')}</tr></thead>`
+    + `<tbody>${rows.map(r => `<tr>${cells(r).map(c => `<td>${inline(c)}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
 }
 
 function list(lines) {

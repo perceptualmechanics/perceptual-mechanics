@@ -4,11 +4,11 @@ import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { plain } from '../src/euphonia/euphonia.markdown.js';
+import { ABILITIES } from '../src/euphonia/euphonia.character.js';
 
 const ROOT = new URL('../', import.meta.url);
 const read = rel => readFileSync(new URL(rel, ROOT), 'utf8');
 const FILES = ['classes', 'regions', 'adventures', 'legal', 'hidden'];
-export const ABILITIES = ['Strength', 'Dexterity', 'Constitution', 'Intelligence', 'Wisdom', 'Charisma'];
 
 // What may never reach a Euphonia page, besides draft brackets and braced names
 // awaiting replacement: other people's names, and "Fey" outside the creature

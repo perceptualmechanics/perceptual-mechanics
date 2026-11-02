@@ -5,7 +5,8 @@
 // runs without the PDF, holds what the builder computes from.
 import { readFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
-import { ABILITIES, problems as ruleProblems } from './verify-euphonia.mjs';
+import { problems as ruleProblems } from './verify-euphonia.mjs';
+import { ABILITIES } from '../src/euphonia/euphonia.character.js';
 
 const read = name => JSON.parse(readFileSync(new URL(`../src/euphonia/euphonia.${name}.json`, import.meta.url), 'utf8'));
 export const srdData = () => read('srd');
@@ -75,7 +76,10 @@ export function verifyEuphoniaSrd({ srd = srdData(), rules = read('rules') } = {
     if (i && number(r.Score) !== number(costs[i - 1].Score) + 1) fail(`point costs: ${r.Score} doesn't follow ${costs[i - 1].Score}`);
     if (i && !(number(r.Cost) > number(costs[i - 1].Cost))) fail(`point costs: ${r.Score} doesn't cost more than ${costs[i - 1].Score}`);
   });
-  const { standard_array: array = [], point_budget: budget } = srd.ability_scores ?? {};
+  const { standard_array: array = [], point_budget: budget, background: increases } = srd.ability_scores ?? {};
+  // The background's increases: each choice adds three, none above 20.
+  if (!(increases?.choices?.length === 2 && increases.choices.every(c => c.reduce((n, v) => n + v, 0) === 3) && increases.max === 20)) fail(`ability scores: the background's increases read ${JSON.stringify(increases)}`);
+  for (const t of ['level_1', 'fixed']) if (Object.keys(srd.hit_points?.[t] ?? {}).length !== 12) fail(`hit points: ${t} names ${Object.keys(srd.hit_points?.[t] ?? {}).length} classes, not 12`);
   const cost = new Map(costs.map(r => [number(r.Score), number(r.Cost)]));
   if (array.length !== ABILITIES.length || !array.every(s => cost.has(s))) fail(`ability scores: the standard array ${array.join(', ')} isn't six scores the point costs price`);
   else if (array.reduce((n, s) => n + cost.get(s), 0) !== budget) fail(`ability scores: the standard array costs ${array.reduce((n, s) => n + cost.get(s), 0)} points, the budget is ${budget}`);
@@ -161,6 +165,12 @@ export function verifyEuphoniaSrd({ srd = srdData(), rules = read('rules') } = {
     }
     if (!c.features.some(f => f.name === `${c.name} Subclass`)) fail(`${c.name}: no feature that grants its subclass`);
     if (c.subclasses?.length !== 1 || !c.subclasses[0].features.length) fail(`${c.name}: its subclass isn't exported whole`);
+    // Hit points: the die's highest roll at level 1, then half the die
+    // plus one a level, as the SRD's two tables give them for every class;
+    // the builder applies the same to the setting's classes.
+    const die = number(trait('Hit Point Die')?.match(/^D(\d+)/)?.[1]);
+    if (srd.hit_points?.level_1?.[c.name] !== die) fail(`${c.name}: level 1 hit points ${srd.hit_points?.level_1?.[c.name]}, its die's highest roll is ${die}`);
+    if (srd.hit_points?.fixed?.[c.name] !== die / 2 + 1) fail(`${c.name}: fixed hit points ${srd.hit_points?.fixed?.[c.name]} a level, half its d${die} plus one is ${die / 2 + 1}`);
     // Multiclassing: the primary ability, and the spell-slot count.
     const mc = c.multiclass ?? {};
     const primary = trait('Primary Ability') ?? '';

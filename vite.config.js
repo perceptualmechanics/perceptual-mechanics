@@ -16,6 +16,7 @@ import { verifyBench } from './scripts/verify-bench.mjs';
 import { verifyEuphonia, verifyEuphoniaPages } from './scripts/verify-euphonia.mjs';
 import { verifyEuphoniaMap, placesData } from './scripts/verify-euphonia-map.mjs';
 import { verifyEuphoniaSrd } from './scripts/verify-euphonia-srd.mjs';
+import { verifyEuphoniaBuilder } from './scripts/verify-euphonia-builder.mjs';
 import { injectEuphonia } from './scripts/euphonia-page.js';
 
 const HERE = import.meta.dirname;
@@ -246,6 +247,22 @@ function verifyEuphoniaSrdPlugin() {
   };
 }
 
+function verifyEuphoniaBuilderPlugin() {
+  return {
+    name: 'pm-verify-euphonia-builder',
+    apply: 'build',
+    buildStart() {
+      const { ok, failures, log } = verifyEuphoniaBuilder();
+      log.forEach(line => console.log(line));
+      if (!ok) {
+        this.error(`verify-euphonia-builder: ${failures} problem(s) — see above. The character builder's engine breaks a rule the SRD states, or can't read a class, species or feat.`);
+      } else {
+        console.log('  ✓ verify-euphonia-builder: the engine holds to the SRD\'s worked examples and reads every class');
+      }
+    },
+  };
+}
+
 function verifyScrollMarksPlugin() {
   return {
     name: 'pm-verify-scroll-marks',
@@ -329,7 +346,7 @@ function verifyStyleHash(outDir, root) {
 }
 
 export default defineConfig({
-  plugins: [landingMarkupPlugin(), euphoniaMarkupPlugin(), euphoniaPlacesPlugin(), verifyLinksPlugin(), verifyResonancesPlugin(), verifyScrollMarksPlugin(), verifyLandingPlugin(), verifyAriaPlugin(), verifyCssInvariantsPlugin(), verifyCountsPlugin(), verifyQuizWheelPlugin(), verifyBenchPlugin(), verifyEuphoniaPlugin(), verifyEuphoniaMapPlugin(), verifyEuphoniaSrdPlugin(), prerenderTextPages()],
+  plugins: [landingMarkupPlugin(), euphoniaMarkupPlugin(), euphoniaPlacesPlugin(), verifyLinksPlugin(), verifyResonancesPlugin(), verifyScrollMarksPlugin(), verifyLandingPlugin(), verifyAriaPlugin(), verifyCssInvariantsPlugin(), verifyCountsPlugin(), verifyQuizWheelPlugin(), verifyBenchPlugin(), verifyEuphoniaPlugin(), verifyEuphoniaMapPlugin(), verifyEuphoniaSrdPlugin(), verifyEuphoniaBuilderPlugin(), prerenderTextPages()],
   build: {
     cssMinify: 'esbuild',
     cssTarget: ['chrome87', 'edge88', 'firefox78', 'safari14'],

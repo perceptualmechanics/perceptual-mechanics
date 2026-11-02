@@ -5,7 +5,7 @@
   "sha256": "e08c55292beeb663fead47aafb73790bfd42a4282a538841326f43a2d5935d8c",
   "modified": "2026-11-01T19:06:15-05:00",
   "exporter": "class-kit/site_export.py",
-  "exporter_version": 7,
+  "exporter_version": 8,
   "rules": {
    "banned": [
     "eladrin",
@@ -1530,6 +1530,276 @@
       "name": "Spare the Dying",
       "new": false
      }
+    ],
+    "1": [
+     {
+      "name": "Alarm",
+      "new": false
+     },
+     {
+      "name": "Cure Wounds",
+      "new": false
+     },
+     {
+      "name": "Detect Magic",
+      "new": false
+     },
+     {
+      "name": "Disguise Self",
+      "new": false
+     },
+     {
+      "name": "Expeditious Retreat",
+      "new": false
+     },
+     {
+      "name": "Faerie Fire",
+      "new": false
+     },
+     {
+      "name": "False Life",
+      "new": false
+     },
+     {
+      "name": "Feather Fall",
+      "new": false
+     },
+     {
+      "name": "Floating Disk",
+      "new": false
+     },
+     {
+      "name": "Identify",
+      "new": false
+     },
+     {
+      "name": "Jump",
+      "new": false
+     },
+     {
+      "name": "Longstrider",
+      "new": false
+     },
+     {
+      "name": "Purify Food and Drink",
+      "new": false
+     },
+     {
+      "name": "Sanctuary",
+      "new": false
+     },
+     {
+      "name": "Thunderwave",
+      "new": false
+     },
+     {
+      "name": "Unseen Servant",
+      "new": false
+     }
+    ],
+    "2": [
+     {
+      "name": "Acid Arrow",
+      "new": false
+     },
+     {
+      "name": "Aid",
+      "new": false
+     },
+     {
+      "name": "Alter Self",
+      "new": false
+     },
+     {
+      "name": "Arcane Lock",
+      "new": false
+     },
+     {
+      "name": "Blur",
+      "new": false
+     },
+     {
+      "name": "Continual Flame",
+      "new": false
+     },
+     {
+      "name": "Darkvision",
+      "new": false
+     },
+     {
+      "name": "Enhance Ability",
+      "new": false
+     },
+     {
+      "name": "Enlarge/Reduce",
+      "new": false
+     },
+     {
+      "name": "Heat Metal",
+      "new": false
+     },
+     {
+      "name": "Invisibility",
+      "new": false
+     },
+     {
+      "name": "Knock",
+      "new": false
+     },
+     {
+      "name": "Lesser Restoration",
+      "new": false
+     },
+     {
+      "name": "Levitate",
+      "new": false
+     },
+     {
+      "name": "Locate Object",
+      "new": false
+     },
+     {
+      "name": "Magic Mouth",
+      "new": false
+     },
+     {
+      "name": "Magic Weapon",
+      "new": false
+     },
+     {
+      "name": "Rope Trick",
+      "new": false
+     },
+     {
+      "name": "See Invisibility",
+      "new": false
+     },
+     {
+      "name": "Spider Climb",
+      "new": false
+     },
+     {
+      "name": "Web",
+      "new": false
+     }
+    ],
+    "3": [
+     {
+      "name": "Blink",
+      "new": false
+     },
+     {
+      "name": "Dispel Magic",
+      "new": false
+     },
+     {
+      "name": "Fly",
+      "new": false
+     },
+     {
+      "name": "Gaseous Form",
+      "new": false
+     },
+     {
+      "name": "Glyph of Warding",
+      "new": false
+     },
+     {
+      "name": "Haste",
+      "new": false
+     },
+     {
+      "name": "Lightning Bolt",
+      "new": false
+     },
+     {
+      "name": "Protection from Energy",
+      "new": false
+     },
+     {
+      "name": "Revivify",
+      "new": false
+     },
+     {
+      "name": "Tiny Hut",
+      "new": false
+     },
+     {
+      "name": "Water Breathing",
+      "new": false
+     },
+     {
+      "name": "Water Walk",
+      "new": false
+     }
+    ],
+    "4": [
+     {
+      "name": "Arcane Eye",
+      "new": false
+     },
+     {
+      "name": "Fabricate",
+      "new": false
+     },
+     {
+      "name": "Faithful Hound",
+      "new": false
+     },
+     {
+      "name": "Fire Shield",
+      "new": false
+     },
+     {
+      "name": "Freedom of Movement",
+      "new": false
+     },
+     {
+      "name": "Resilient Sphere",
+      "new": false
+     },
+     {
+      "name": "Secret Chest",
+      "new": false
+     },
+     {
+      "name": "Stone Shape",
+      "new": false
+     },
+     {
+      "name": "Stoneskin",
+      "new": false
+     }
+    ],
+    "5": [
+     {
+      "name": "Animate Objects",
+      "new": false
+     },
+     {
+      "name": "Arcane Hand",
+      "new": false
+     },
+     {
+      "name": "Creation",
+      "new": false
+     },
+     {
+      "name": "Greater Restoration",
+      "new": false
+     },
+     {
+      "name": "Passwall",
+      "new": false
+     },
+     {
+      "name": "Telekinesis",
+      "new": false
+     },
+     {
+      "name": "Wall of Stone",
+      "new": false
+     }
     ]
    },
    "multiclass": {
@@ -2905,6 +3175,436 @@
       "name": "Toll the Dead",
       "new": false
      }
+    ],
+    "1": [
+     {
+      "name": "Alarm",
+      "new": false
+     },
+     {
+      "name": "Comprehend Languages",
+      "new": false
+     },
+     {
+      "name": "Cure Wounds",
+      "new": false
+     },
+     {
+      "name": "Detect Magic",
+      "new": false
+     },
+     {
+      "name": "Detect Poison and Disease",
+      "new": false
+     },
+     {
+      "name": "False Life",
+      "new": false
+     },
+     {
+      "name": "Feather Fall",
+      "new": false
+     },
+     {
+      "name": "Healing Word",
+      "new": false
+     },
+     {
+      "name": "Identify",
+      "new": false
+     },
+     {
+      "name": "Inflict Wounds",
+      "new": false
+     },
+     {
+      "name": "Jump",
+      "new": false
+     },
+     {
+      "name": "Longstrider",
+      "new": false
+     },
+     {
+      "name": "Mage Armor",
+      "new": false
+     },
+     {
+      "name": "Protection from Evil and Good",
+      "new": false
+     },
+     {
+      "name": "Purify Food and Drink",
+      "new": false
+     },
+     {
+      "name": "Ray of Sickness",
+      "new": false
+     },
+     {
+      "name": "Sanctuary",
+      "new": false
+     },
+     {
+      "name": "Shield of Faith",
+      "new": false
+     },
+     {
+      "name": "Sleep",
+      "new": false
+     }
+    ],
+    "2": [
+     {
+      "name": "Aid",
+      "new": false
+     },
+     {
+      "name": "Alter Self",
+      "new": false
+     },
+     {
+      "name": "Ambulance",
+      "new": true
+     },
+     {
+      "name": "Anaesthesia",
+      "new": true
+     },
+     {
+      "name": "Arcane Vigor",
+      "new": false
+     },
+     {
+      "name": "Blindness/Deafness",
+      "new": false
+     },
+     {
+      "name": "Calm Emotions",
+      "new": false
+     },
+     {
+      "name": "Convulsion",
+      "new": true
+     },
+     {
+      "name": "Darkvision",
+      "new": false
+     },
+     {
+      "name": "Enhance Ability",
+      "new": false
+     },
+     {
+      "name": "Enlarge/Reduce",
+      "new": false
+     },
+     {
+      "name": "Gentle Repose",
+      "new": false
+     },
+     {
+      "name": "Hold Person",
+      "new": false
+     },
+     {
+      "name": "Lesser Restoration",
+      "new": false
+     },
+     {
+      "name": "Prayer of Healing",
+      "new": false
+     },
+     {
+      "name": "Protection from Poison",
+      "new": false
+     },
+     {
+      "name": "Ray of Enfeeblement",
+      "new": false
+     },
+     {
+      "name": "See Invisibility",
+      "new": false
+     },
+     {
+      "name": "Shatter",
+      "new": false
+     },
+     {
+      "name": "Spider Climb",
+      "new": false
+     },
+     {
+      "name": "Warding Bond",
+      "new": false
+     },
+     {
+      "name": "Zone of Truth",
+      "new": false
+     }
+    ],
+    "3": [
+     {
+      "name": "Aura of Vitality",
+      "new": false
+     },
+     {
+      "name": "Beacon of Hope",
+      "new": false
+     },
+     {
+      "name": "Bestow Curse",
+      "new": false
+     },
+     {
+      "name": "Cold Storage",
+      "new": true
+     },
+     {
+      "name": "Crusader's Mantle",
+      "new": false
+     },
+     {
+      "name": "Dispel Magic",
+      "new": false
+     },
+     {
+      "name": "Feign Death",
+      "new": false
+     },
+     {
+      "name": "Haste",
+      "new": false
+     },
+     {
+      "name": "Hysteria",
+      "new": true
+     },
+     {
+      "name": "Mass Healing Word",
+      "new": false
+     },
+     {
+      "name": "Protection from Energy",
+      "new": false
+     },
+     {
+      "name": "Remove Curse",
+      "new": false
+     },
+     {
+      "name": "Revivify",
+      "new": false
+     },
+     {
+      "name": "Slow",
+      "new": false
+     },
+     {
+      "name": "Speak with Dead",
+      "new": false
+     },
+     {
+      "name": "Stinking Cloud",
+      "new": false
+     },
+     {
+      "name": "Vampiric Touch",
+      "new": false
+     },
+     {
+      "name": "Water Breathing",
+      "new": false
+     }
+    ],
+    "4": [
+     {
+      "name": "Aura of Life",
+      "new": false
+     },
+     {
+      "name": "Aura of Purity",
+      "new": false
+     },
+     {
+      "name": "Blight",
+      "new": false
+     },
+     {
+      "name": "Confusion",
+      "new": false
+     },
+     {
+      "name": "Death Ward",
+      "new": false
+     },
+     {
+      "name": "Fire Shield",
+      "new": false
+     },
+     {
+      "name": "Freedom of Movement",
+      "new": false
+     },
+     {
+      "name": "Resilient Sphere",
+      "new": false
+     },
+     {
+      "name": "Stoneskin",
+      "new": false
+     },
+     {
+      "name": "Vitriolic Sphere",
+      "new": false
+     }
+    ],
+    "5": [
+     {
+      "name": "Antilife Shell",
+      "new": false
+     },
+     {
+      "name": "Circle of Power",
+      "new": false
+     },
+     {
+      "name": "Cloudkill",
+      "new": false
+     },
+     {
+      "name": "Contagion",
+      "new": false
+     },
+     {
+      "name": "Defibrillation",
+      "new": true
+     },
+     {
+      "name": "Destructive Wave",
+      "new": false
+     },
+     {
+      "name": "Greater Restoration",
+      "new": false
+     },
+     {
+      "name": "Hold Monster",
+      "new": false
+     },
+     {
+      "name": "Insect Plague",
+      "new": false
+     },
+     {
+      "name": "Mass Cure Wounds",
+      "new": false
+     },
+     {
+      "name": "Raise Dead",
+      "new": false
+     }
+    ],
+    "6": [
+     {
+      "name": "Circle of Death",
+      "new": false
+     },
+     {
+      "name": "Eyebite",
+      "new": false
+     },
+     {
+      "name": "Flesh to Stone",
+      "new": false
+     },
+     {
+      "name": "Globe of Invulnerability",
+      "new": false
+     },
+     {
+      "name": "Harm",
+      "new": false
+     },
+     {
+      "name": "Heal",
+      "new": false
+     },
+     {
+      "name": "Heroes' Feast",
+      "new": false
+     },
+     {
+      "name": "True Seeing",
+      "new": false
+     },
+     {
+      "name": "Word of Recall",
+      "new": false
+     }
+    ],
+    "7": [
+     {
+      "name": "Divine Word",
+      "new": false
+     },
+     {
+      "name": "Finger of Death",
+      "new": false
+     },
+     {
+      "name": "Regenerate",
+      "new": false
+     },
+     {
+      "name": "Resurrection",
+      "new": false
+     },
+     {
+      "name": "Sequester",
+      "new": false
+     }
+    ],
+    "8": [
+     {
+      "name": "Antimagic Field",
+      "new": false
+     },
+     {
+      "name": "Befuddlement",
+      "new": false
+     },
+     {
+      "name": "Incendiary Cloud",
+      "new": false
+     },
+     {
+      "name": "Mind Blank",
+      "new": false
+     },
+     {
+      "name": "Power Word Stun",
+      "new": false
+     },
+     {
+      "name": "Second Breath",
+      "new": true
+     }
+    ],
+    "9": [
+     {
+      "name": "Astral Projection",
+      "new": false
+     },
+     {
+      "name": "Mass Heal",
+      "new": false
+     },
+     {
+      "name": "Power Word Heal",
+      "new": false
+     }
     ]
    },
    "multiclass": {
@@ -3914,6 +4614,196 @@
      },
      {
       "name": "True Strike",
+      "new": false
+     }
+    ],
+    "1": [
+     {
+      "name": "Alarm",
+      "new": false
+     },
+     {
+      "name": "Comprehend Languages",
+      "new": false
+     },
+     {
+      "name": "Cure Wounds",
+      "new": false
+     },
+     {
+      "name": "Detect Evil and Good",
+      "new": false
+     },
+     {
+      "name": "Detect Magic",
+      "new": false
+     },
+     {
+      "name": "Faerie Fire",
+      "new": false
+     },
+     {
+      "name": "Find Familiar",
+      "new": false
+     },
+     {
+      "name": "Fog Cloud",
+      "new": false
+     },
+     {
+      "name": "Healing Word",
+      "new": false
+     },
+     {
+      "name": "Protection from Evil and Good",
+      "new": false
+     },
+     {
+      "name": "Sanctuary",
+      "new": false
+     },
+     {
+      "name": "Speak with Animals",
+      "new": false
+     }
+    ],
+    "2": [
+     {
+      "name": "Augury",
+      "new": false
+     },
+     {
+      "name": "Gentle Repose",
+      "new": false
+     },
+     {
+      "name": "Lesser Restoration",
+      "new": false
+     },
+     {
+      "name": "Locate Object",
+      "new": false
+     },
+     {
+      "name": "Misty Step",
+      "new": false
+     },
+     {
+      "name": "Pass without Trace",
+      "new": false
+     },
+     {
+      "name": "Prayer of Healing",
+      "new": false
+     },
+     {
+      "name": "See Invisibility",
+      "new": false
+     },
+     {
+      "name": "Silence",
+      "new": false
+     },
+     {
+      "name": "Warding Bond",
+      "new": false
+     }
+    ],
+    "3": [
+     {
+      "name": "Blink",
+      "new": false
+     },
+     {
+      "name": "Clairvoyance",
+      "new": false
+     },
+     {
+      "name": "Dispel Magic",
+      "new": false
+     },
+     {
+      "name": "Magic Circle",
+      "new": false
+     },
+     {
+      "name": "Nondetection",
+      "new": false
+     },
+     {
+      "name": "Protection from Energy",
+      "new": false
+     },
+     {
+      "name": "Remove Curse",
+      "new": false
+     },
+     {
+      "name": "Revivify",
+      "new": false
+     },
+     {
+      "name": "Speak with Dead",
+      "new": false
+     },
+     {
+      "name": "Tongues",
+      "new": false
+     }
+    ],
+    "4": [
+     {
+      "name": "Banishment",
+      "new": false
+     },
+     {
+      "name": "Death Ward",
+      "new": false
+     },
+     {
+      "name": "Dimension Door",
+      "new": false
+     },
+     {
+      "name": "Divination",
+      "new": false
+     },
+     {
+      "name": "Freedom of Movement",
+      "new": false
+     },
+     {
+      "name": "Locate Creature",
+      "new": false
+     }
+    ],
+    "5": [
+     {
+      "name": "Commune",
+      "new": false
+     },
+     {
+      "name": "Contact Other Plane",
+      "new": false
+     },
+     {
+      "name": "Dispel Evil and Good",
+      "new": false
+     },
+     {
+      "name": "Greater Restoration",
+      "new": false
+     },
+     {
+      "name": "Planar Binding",
+      "new": false
+     },
+     {
+      "name": "Scrying",
+      "new": false
+     },
+     {
+      "name": "Teleportation Circle",
       "new": false
      }
     ]

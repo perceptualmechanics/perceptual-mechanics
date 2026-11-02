@@ -80,6 +80,26 @@ ${regions.status === 'draft' ? `<p class="map-panel-note">${DRAFT_NOTE}</p>\n` :
 <noscript><p class="map-help">The map is drawn in the page by script; the text below describes it.</p></noscript>`;
 }
 
+// The tabs over the map and the builder. Hidden until the script that runs
+// them does: without it, the page is the map and its text.
+function tabs() {
+  return `<div class="euphonia-tabs" role="tablist" aria-label="Euphonia" hidden>
+<button type="button" role="tab" id="tab-map" aria-controls="map-figure" aria-selected="true">Map</button>
+<button type="button" role="tab" id="tab-builder" aria-controls="builder" aria-selected="false" tabindex="-1">Character builder</button>
+</div>`;
+}
+
+// The character builder's panel: its choices beside the sheet they make. The
+// rules load when it first opens, and the script fills both sides.
+function builder() {
+  return `<section class="builder" id="builder" role="tabpanel" aria-labelledby="tab-builder" tabindex="-1" hidden>
+<form class="builder-form" aria-label="Your character's choices" novalidate>
+<p class="builder-status" role="status">Loading the rules…</p>
+</form>
+<article class="sheet" aria-labelledby="sheet-title" hidden></article>
+</section>`;
+}
+
 // The map's caption, under the stage: what it shows at the chosen moment,
 // the rule it reads and where everything comes from.
 function mapCaption(world, fixtures, calendars, hidden, relief = reliefData()) {
@@ -127,14 +147,16 @@ ${catalog(adventures.data.map(g => `<li><span class="t">${esc(g.title)}</span><s
 </section>`;
 }
 
-// Fills euphonia/index.html's three markers from the vendored export, in dev
+// Fills euphonia/index.html's markers from the vendored export, in dev
 // and in build alike, the way landing.js fills the landing's.
-const MARKERS = ['<!--euphonia-map-->', '<!--euphonia-body-->', '<!--euphonia-footer-->'];
+const MARKERS = ['<!--euphonia-tabs-->', '<!--euphonia-map-->', '<!--euphonia-builder-->', '<!--euphonia-body-->', '<!--euphonia-footer-->'];
 export function injectEuphonia(html, d = euphoniaFiles(), world = worldData(), fixtures = fixturesData(), calendars = calendarsData()) {
   const missing = MARKERS.filter(m => !html.includes(m));
   if (missing.length) throw new Error(`euphonia/index.html is missing ${missing.join(' and ')}: the page has nowhere to go`);
   return html
+    .replace('<!--euphonia-tabs-->', tabs())
     .replace('<!--euphonia-map-->', mapStage(d.regions))
+    .replace('<!--euphonia-builder-->', builder())
     .replace('<!--euphonia-body-->', body(d, world, fixtures, calendars))
     .replace('<!--euphonia-footer-->', euphoniaFooter(d.legal.data));
 }

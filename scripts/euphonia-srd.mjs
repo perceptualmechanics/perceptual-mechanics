@@ -256,15 +256,25 @@ function gridPart(words) {
   // A range takes no space around its dash (12–13), but kerning can split
   // one into two words ("10", "–11").
   const cell = ws => ws.map(w => w.text).join(' ').replace(/(\d) ([–—]\d)/g, '$1$2');
-  return { names, rows: rows.slice(heads).map(r => names.map((n, i) => cell(r.filter(w => colOf(w) === i)))) };
+  const body = rows.slice(heads);
+  return { names, rows: body.map((r, k) => Object.assign(names.map((n, i) => cell(r.filter(w => colOf(w) === i))), { gap: k ? r[0].y - body[k - 1][0].y : Infinity })) };
 }
 
 // A table's rows as objects keyed by its column names, checked against the
-// names the caller expects when it gives them. A table that names its
+// names the caller expects when it gives them. A line continues the row
+// above where its first cell is empty, or where it stands closer than the
+// table's row pitch, its commonest step, by more than a point: rows stand
+// 15.1 pt apart, give or take 0.1, and a cell's lines wrap 2.6 pt closer
+// ("Bard, Cleric, Druid, Monk," "Rogue, or Warlock"). A table that names its
 // columns twice (Dragon, Damage Type, Dragon, Damage Type) is two halves
 // side by side, read left half first, as the SRD runs them.
+const PITCH_MARGIN = 1;
 function table(block, expected) {
   const { names, rows } = grid(block);
+  const steps = new Map();
+  const step = r => Math.round(r.gap * 2) / 2;
+  for (const r of rows) if (Number.isFinite(r.gap)) steps.set(step(r), (steps.get(step(r)) ?? 0) + 1);
+  const pitch = [...steps].sort((a, b) => b[1] - a[1])[0]?.[0] ?? Infinity;
   if (expected && names.join(' | ') !== expected.join(' | ')) throw new Error(`a table headed "${names.join(' | ')}", not "${expected.join(' | ')}"`);
   const half = names.length / 2;
   const paired = Number.isInteger(half) && names.slice(0, half).join() === names.slice(half).join();
@@ -272,8 +282,9 @@ function table(block, expected) {
   const out = [];
   for (const [a, b] of parts) {
     const mine = [];
-    for (const r of rows.map(g => g.slice(a, b))) {
-      if (r[0]) mine.push(r);
+    for (const row of rows) {
+      const r = row.slice(a, b);
+      if (r[0] && !(row.gap < pitch - PITCH_MARGIN)) mine.push(r);
       else if (mine.length) r.forEach((c, i) => { if (c) mine.at(-1)[i] = `${mine.at(-1)[i]} ${c}`; });
       else if (r.some(Boolean)) throw new Error(`table "${names.join(' | ')}": a row with no first cell`);
     }
@@ -556,6 +567,30 @@ function titledTable(title, headers, section) {
 }
 const LEVELS = ['1', '2', '3', '4', '5', '6', '7', '8', '9'];
 
+// ---------- hit points by class: a table that names classes in groups
+// ("Fighter, Paladin, or Ranger"), as a number for each class.
+function hitPoints(title, column) {
+  const out = {};
+  for (const r of titledTable(title, ['Class', column])) {
+    const n = r[column].match(/^(\d+) \+ Con\. modifier$/)?.[1];
+    if (!n) throw new Error(`${title}: "${r[column]}"`);
+    for (const c of r.Class.split(/,\s*(?:or\s+)?|\s+or\s+/)) out[c] = +n;
+  }
+  return out;
+}
+
+// ---------- the background's increases, from its paragraph under "Parts of
+// a Background": one score by 2 and another by 1, or all three by 1, none
+// above 20.
+function backgroundIncreases() {
+  const i = findLine('section', 'Parts of a Background');
+  const k = lines.findIndex((l, n) => n > i && l.text === 'Ability Scores' && l.kind !== 'body');
+  const text = blocks(k + 1, nextOf(k, ['item', 'title', 'section'])).map(b => b.text).join(' ');
+  const m = text.match(/Increase one by (\d+) and another one by (\d+), or increase all three by (\d+)\. None of these increases can raise a score above (\d+)\./);
+  if (!m) throw new Error(`the background's increases didn't read: "${text}"`);
+  return { choices: [[+m[1], +m[2]], [+m[3], +m[3], +m[3]]], max: +m[4] };
+}
+
 // ---------- the ability-score methods, from their paragraphs under
 // "Generate Your Scores": the standard array's six scores and the point
 // cost's budget.
@@ -643,7 +678,8 @@ const data = {
     const content = adapt(read, '', changes);
     return { adapted: { rule: 'euphonia.rules.json fey_type', changes }, ...content };
   })(),
-  ability_scores: scoreMethods(),
+  ability_scores: { ...scoreMethods(), background: backgroundIncreases() },
+  hit_points: { level_1: hitPoints('Level 1 Hit Points by Class', 'Hit Point Maximum'), fixed: hitPoints('Fixed Hit Points by Class', 'Hit Points per Level') },
   tables: {
     advancement: titledTable('Character Advancement', ['Level', 'Experience Points', 'Proficiency Bonus']),
     skills: titledTable('Skills', ['Skill', 'Ability', 'Example Uses']),

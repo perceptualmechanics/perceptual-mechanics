@@ -19,10 +19,29 @@ footer.legal p { overflow-wrap: anywhere; }
    colour alone wouldn't mark them. */
 footer.legal section a { text-decoration: underline; }
 
-/* The map of 1668: a stage the height of the screen, the title over it,
-   the controls under the title and the two discs filling what's left, side
-   by side on a wide screen and stacked on a tall one. Each disc takes the
-   largest square its cell holds. */
+/* The top of the page: the title, the tabs, and the open tab's panel. With
+   the map open it is the height of the screen; the builder's panel runs as
+   long as a page. */
+.euphonia-top {
+  height: 100svh; min-height: 30rem; display: grid; grid-template-rows: auto auto minmax(0, 1fr);
+  padding: 1.2rem 1.25rem 0.8rem; box-sizing: border-box;
+}
+.euphonia-top.is-builder { height: auto; }
+.euphonia-top header.masthead { border: 0; padding: 0; margin: 0; }
+.euphonia-top h1 { margin: 0.4rem 0 0.1rem; font-size: 1.6rem; }
+.euphonia-tabs { display: flex; gap: 0.2rem; margin: 0.8rem 0 0.7rem; border-bottom: 1px solid #2a2620; }
+.euphonia-tabs[hidden] { display: none; }
+.euphonia-tabs [role=tab] {
+  font: inherit; font-size: 0.95rem; color: #b8b0a4; background: none; cursor: pointer;
+  border: 0; border-bottom: 2px solid transparent; padding: 0.3rem 0.9rem 0.4rem; margin-bottom: -1px;
+}
+.euphonia-tabs [role=tab]:hover { color: #f0cf6a; }
+.euphonia-tabs [role=tab][aria-selected=true] { color: #d9b13f; border-bottom-color: #d9b13f; }
+.euphonia-tabs [role=tab]:focus-visible { outline: 2px solid #f0cf6a; outline-offset: -2px; }
+
+/* The map of 1668: a stage filling what the title and tabs leave, the
+   controls over the two discs, side by side on a wide screen and stacked
+   on a tall one. Each disc takes the largest square its cell holds. */
 .map-stage {
   --map-sea: #0f1418; --map-graticule: #3a352c; --map-circles: #6b5a37; --map-land: #2b261e;
   --map-coast: #8c7a55; --map-river: #3b4a52; --map-historic: #d9b13f; --map-night: rgba(0, 0, 0, 0.32);
@@ -30,12 +49,10 @@ footer.legal section a { text-decoration: underline; }
   --map-relief-land: #2b261e; --map-relief-lit: #574c38; --map-relief-shade: #110e0a;
   --map-rhumb: rgba(140, 122, 85, 0.35); --map-rose: #8c7a55;
   --map-glow: rgba(217, 177, 63, 0.22); --map-glow-lit: rgba(240, 207, 106, 0.55); --map-sun: #f0cf6a; --map-rim: #8c7a55;
-  position: relative; overflow: hidden;
-  height: 100svh; min-height: 30rem; display: grid; grid-template-rows: auto auto minmax(0, 1fr) auto;
-  gap: 0.6rem; padding: 1.2rem 1.25rem 0.8rem; box-sizing: border-box;
+  position: relative; overflow: hidden; min-height: 0;
+  display: grid; grid-template-rows: auto minmax(0, 1fr) auto; gap: 0.6rem;
 }
-.map-stage header.masthead { border: 0; padding: 0; margin: 0; }
-.map-stage h1 { margin: 0.4rem 0 0.1rem; font-size: 1.6rem; }
+.map-stage[hidden] { display: none; }
 .map-controls { display: flex; flex-wrap: wrap; gap: 0.5rem 1.6rem; align-items: center; font-size: 0.92rem; }
 .map-controls[hidden], .map-reset[hidden] { display: none; }
 .map-controls input[type=date] {
@@ -168,11 +185,90 @@ details.region h3 { font-size: 1rem; margin: 1.2rem 0 0.4rem; color: #b8b0a4; }
 details.region blockquote { margin: 0.8rem 0; padding-left: 1rem; border-left: 2px solid #4a4034; color: #b8b0a4; }
 details.region:target > summary, details.region[open] > summary { color: #d9b13f; }
 
+/* The character builder: the choices beside the sheet they make, one
+   column on a narrow screen. */
+.builder { display: grid; grid-template-columns: minmax(0, 1fr); gap: 2rem; max-width: 74rem; margin: 0 auto; width: 100%; padding: 0.6rem 0 3rem; }
+.builder[hidden] { display: none; }
+.builder:focus { outline: none; }
+@media (min-width: 900px) { .builder { grid-template-columns: minmax(0, 25rem) minmax(0, 1fr); align-items: start; } }
+.builder-status { color: #9c9384; }
+.builder-form { display: grid; gap: 1.2rem; font-size: 0.95rem; }
+.b-section { border: 0; border-top: 1px solid #2a2620; margin: 0; padding: 0.9rem 0 0; min-width: 0; }
+.b-section > legend { font-size: 0.85rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #9c9384; padding: 0 0.4rem 0 0; }
+.b-field { display: grid; gap: 0.2rem; margin: 0 0 0.7rem; }
+.b-field > span { color: #b8b0a4; font-size: 0.88rem; }
+.b-field[hidden], .b-problem[hidden] { display: none; }
+.builder input[type=text], .builder input[type=number], .builder select {
+  font: inherit; color: #ded9d0; background: #15130f; border: 1px solid #4a4034; padding: 0.3rem 0.5rem; min-width: 0; max-width: 100%;
+}
+.builder select:disabled { color: #837c70; border-color: #2a2620; }
+.builder input:focus-visible, .builder select:focus-visible { outline: 2px solid #f0cf6a; outline-offset: 1px; }
+.builder input[type=radio], .builder input[type=checkbox] { accent-color: #d9b13f; width: 1rem; height: 1rem; vertical-align: -0.1em; }
+.b-button { font: inherit; font-size: 0.9rem; color: #d9b13f; background: #15130f; border: 1px solid #6b5a37; padding: 0.3rem 0.8rem; cursor: pointer; }
+.b-button:hover, .b-button:focus-visible { border-color: #d9b13f; }
+.b-button:focus-visible { outline: 2px solid #f0cf6a; outline-offset: 1px; }
+.b-button:disabled { color: #837c70; border-color: #2a2620; cursor: default; }
+.b-tools { display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: center; }
+.b-tools .b-note { flex-basis: 100%; margin: 0; }
+.b-note { color: #9c9384; font-size: 0.85rem; margin: 0 0 0.7rem; }
+.b-problem { color: #f0a36a; font-size: 0.88rem; margin: -0.3rem 0 0.7rem; }
+.b-classes { list-style: none; margin: 0 0 0.7rem; padding: 0; display: grid; gap: 0.8rem; }
+.b-class { display: grid; grid-template-columns: minmax(0, 1fr) 5rem; gap: 0 0.8rem; border-left: 2px solid #4a4034; padding-left: 0.8rem; }
+.b-class .b-subclass, .b-class .b-problem, .b-class .b-remove { grid-column: 1 / -1; }
+.b-class .b-remove { justify-self: start; }
+.b-choice { display: flex; flex-wrap: wrap; gap: 0.3rem 1.2rem; margin: 0 0 0.7rem; }
+.b-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 0 0.8rem; }
+.b-scores { display: grid; grid-template-columns: repeat(auto-fill, minmax(7.5rem, 1fr)); gap: 0 0.8rem; }
+.b-skills, .b-feat { border: 1px solid #2a2620; margin: 0 0 0.8rem; padding: 0.5rem 0.8rem 0.2rem; min-width: 0; }
+.b-skills > legend, .b-feat > legend { color: #b8b0a4; font-size: 0.88rem; padding: 0 0.3rem; }
+.b-checks { display: grid; grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr)); gap: 0.2rem 0.8rem; margin: 0 0 0.6rem; }
+.b-about details { margin: 0.2rem 0 0.6rem; }
+.b-about summary, .sheet summary { cursor: pointer; color: #b8b0a4; }
+.b-about summary:focus-visible, .sheet summary:focus-visible { outline: 2px solid #f0cf6a; outline-offset: 1px; }
+.b-about div, .sheet details > div { font-size: 0.9rem; color: #c4bcae; }
+.b-facts, .sheet-facts { display: grid; grid-template-columns: auto 1fr; gap: 0.25rem 0.9rem; margin: 0 0 0.8rem; font-size: 0.9rem; }
+.b-facts dt, .sheet-facts dt { color: #8c8377; }
+.b-facts dd, .sheet-facts dd { margin: 0; }
+
+/* The sheet: what the choices make, set to be read and printed. */
+.sheet { border: 1px solid #2a2620; padding: 1.2rem 1.4rem 1.6rem; background: #0d0b08; }
+.sheet[hidden] { display: none; }
+.sheet-head h2 { font-size: 1.6rem; margin: 0 0 0.2rem; color: #d9b13f; font-weight: 600; }
+.sheet-head p { margin: 0 0 0.2rem; }
+.sheet-level { color: #9c9384; font-size: 0.9rem; }
+.sheet-block { margin: 1.4rem 0 0; }
+.sheet-block h3 { font-size: 0.85rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #9c9384; margin: 0 0 0.5rem; border-bottom: 1px solid #2a2620; padding-bottom: 0.2rem; }
+.sheet-block h4 { font-size: 1rem; margin: 0.9rem 0 0.3rem; }
+.sheet-source { color: #8c8377; font-weight: 400; font-size: 0.85rem; }
+.sheet table, .sheet details table { border-collapse: collapse; font-size: 0.92rem; margin: 0 0 0.6rem; }
+.sheet th, .sheet td { text-align: left; padding: 0.2rem 0.9rem 0.2rem 0; border-bottom: 1px solid #1e1b17; vertical-align: top; }
+.sheet th { font-weight: 600; color: #b8b0a4; }
+.sheet caption { text-align: left; color: #8c8377; font-size: 0.85rem; padding-bottom: 0.2rem; }
+.sheet-abilities td, .sheet-slots td { font-variant-numeric: tabular-nums; }
+.sheet-skills { list-style: none; margin: 0; padding: 0; columns: 2 12rem; column-gap: 1.6rem; font-size: 0.92rem; }
+.sheet-skills li { break-inside: avoid; color: #9c9384; }
+.sheet-skills li.is-proficient { color: #ded9d0; }
+.sheet-ability { color: #837c70; font-size: 0.85rem; }
+.sheet-bonus { font-variant-numeric: tabular-nums; }
+.sheet-mark { color: #d9b13f; font-size: 0.85rem; }
+.sheet details { border-top: 1px solid #1e1b17; padding: 0.3rem 0; }
+.sheet details > div { padding: 0.3rem 0 0.2rem; }
+.sheet-credit { margin-top: 1.8rem; border-top: 1px solid #2a2620; padding-top: 0.6rem; color: #837c70; font-size: 0.8rem; }
+.sheet-credit p { margin: 0 0 0.3rem; overflow-wrap: anywhere; }
+
 /* Printed, it's a document: dark ink on the page, nothing to navigate. */
 @media print {
   body { background: #fff; color: #000; }
   a, footer, footer.legal h2, .kicker, .note, .meta, ul.catalog .n, ul.catalog .e { color: #000; }
   .skip-link, header.masthead a.home, footer.legal > p:first-child, .map-controls, .map-hemispheres, .map-help { display: none; }
-  .map-stage { height: auto; min-height: 0; }
+  .map-stage, .euphonia-top { height: auto; min-height: 0; }
+  .euphonia-tabs { display: none; }
+  /* With the builder open, the sheet is the page: its details open, its
+     ink dark. */
+  [data-tab=builder] .skip-link, [data-tab=builder] header.masthead, [data-tab=builder] .builder-form,
+  [data-tab=builder] #text, [data-tab=builder] main ~ .wrap { display: none; }
+  [data-tab=builder] .builder { display: block; padding: 0; }
+  [data-tab=builder] .sheet { border: 0; background: none; padding: 0; color: #000; }
+  [data-tab=builder] .sheet * { color: #000; border-color: #999; }
   ul.catalog li, header.masthead, footer { border-color: #999; }
 }

@@ -502,15 +502,23 @@ export async function initMap(stage) {
     redraw();
   }
   const tick = () => { advance(clockFrame.tick() * 1000 * Number(rate.value)); ticking = requestAnimationFrame(tick); };
+  // Time runs only while the map can be seen: the builder's tab hides it,
+  // and the page can scroll it away. Playing, it waits and goes on after.
+  let seen = true;
   function setPlaying(on) {
     playing = on;
     play.textContent = on ? 'Pause' : 'Play';
     play.setAttribute('aria-pressed', String(on));
     cancelAnimationFrame(ticking); clearInterval(stepping);
+    if (on && !seen) return;
     if (on && prefersReducedMotion()) stepping = setInterval(() => advance(STEP_MS * Number(rate.value)), STEP_MS);
     else if (on) { clockFrame.resync(); ticking = requestAnimationFrame(tick); }
     else readouts();
   }
+  new IntersectionObserver(([entry]) => {
+    seen = entry.isIntersecting;
+    if (playing) setPlaying(true);
+  }).observe(stage.querySelector('.map-hemispheres'));
   play.addEventListener('click', () => setPlaying(!playing));
   rate.addEventListener('change', () => { if (playing) setPlaying(true); });
 
@@ -519,6 +527,9 @@ export async function initMap(stage) {
   new ResizeObserver(() => {
     const rem = parseFloat(getComputedStyle(document.documentElement).fontSize);
     for (const d of discs) {
+      // A hidden stage measures nothing; the discs keep their size until it
+      // shows again.
+      if (!d.cell.clientWidth) continue;
       d.cssSize = d.cell.clientWidth;
       d.dpr = Math.min(devicePixelRatio, MAX_PIXEL_RATIO);
       d.size = Math.round(d.cssSize * d.dpr);
