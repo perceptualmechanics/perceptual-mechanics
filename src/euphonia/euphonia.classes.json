@@ -2,10 +2,10 @@
  "provenance": {
   "source": "Euphonia.md",
   "master": "~/Documents/euphonia/Euphonia.md",
-  "sha256": "e08c55292beeb663fead47aafb73790bfd42a4282a538841326f43a2d5935d8c",
-  "modified": "2026-11-01T19:06:15-05:00",
+  "sha256": "a4cc5988037e0210ed866cf07ce669bd93293dfac524b601ceaed8b2ce28e587",
+  "modified": "2026-11-02T05:11:09-05:00",
   "exporter": "class-kit/site_export.py",
-  "exporter_version": 8,
+  "exporter_version": 9,
   "rules": {
    "banned": [
     "eladrin",
@@ -1394,7 +1394,7 @@
       {
        "level": 3,
        "name": "Powered Suit",
-       "text": "You gain Heavy armor training. With Tinker's Tools and 1 hour of work, you can make a suit of armor you wear into your suit. You can have only one suit at a time; if you make another, the old one is ordinary armor again. While you wear it, the following benefits apply:\n\n- *Built In.* The Arc Gun is built into the suit; you fire it without holding it, and the suit is your Spellcasting Focus.\n- *Gauntlets.* Your Unarmed Strikes deal Force damage equal to 1 plus your Intelligence modifier, and you use Intelligence for their attack rolls.\n- *Tailored.* A suit is cut to pass. Out of a fight, it can look like ordinary clothes of your station: court dress, a merchant's coat, a laborer's wrap. A creature that looks closely can tell it's armor with a successful Wisdom (Perception) check against your spell save DC.\n- *Model.* When you finish a Long Rest, choose the suit's model. *Infiltrator:* the suit doesn't give you Disadvantage on Dexterity (Stealth) checks, and your Speed increases by 10 feet. *Guardian:* when a creature you can see hits an ally within 5 feet of you with an attack roll, you can take a Reaction to reduce the damage by 1d10 plus your Intelligence modifier; you can do this a number of times equal to your Proficiency Bonus, and you regain all expended uses when you finish a Long Rest."
+       "text": "You gain Heavy armor training. With Tinker's Tools and 1 hour of work, you can make a suit of armor you wear into your suit. You can have only one suit at a time; if you make another, the old one is ordinary armor again. The suit's systems run down both arms, so it gives none of the following benefits while you hold a Shield. While you wear it, the following benefits apply:\n\n- *Built In.* The Arc Gun is built into the suit; you fire it without holding it, and the suit is your Spellcasting Focus.\n- *Gauntlets.* Your Unarmed Strikes deal Force damage equal to 1 plus your Intelligence modifier, and you use Intelligence for their attack rolls.\n- *Tailored.* A suit is cut to pass. Out of a fight, it can look like ordinary clothes of your station: court dress, a merchant's coat, a laborer's wrap. A creature that looks closely can tell it's armor with a successful Wisdom (Perception) check against your spell save DC.\n- *Model.* When you finish a Long Rest, choose the suit's model. *Infiltrator:* the suit doesn't give you Disadvantage on Dexterity (Stealth) checks, and your Speed increases by 10 feet. *Guardian:* when a creature you can see hits an ally within 5 feet of you with an attack roll, you can take a Reaction to reduce the damage by 1d10 plus your Intelligence modifier; you can do this a number of times equal to your Proficiency Bonus, and you regain all expended uses when you finish a Long Rest."
       },
       {
        "level": 3,
@@ -1467,7 +1467,7 @@
       {
        "level": 3,
        "name": "The Map",
-       "text": "You gain proficiency with Cartographer's Tools; if you already have it, choose another type of Artisan's Tools. You carry a map that draws itself: it shows any place you have spent 10 minutes in, you can't become lost except by magic, and it is your Spellcasting Focus.\n\n*Fair Copy.* With Cartographer's Tools and 10 minutes of work, you can copy any map, chart, or plan you've seen, from memory, and you can tell at a glance whether a map is accurate, out of date, or a deliberate lie.\n\n*Fold Space.* As a Bonus Action, you fold the map: a willing creature (it can be you) you can see within 30 feet of yourself teleports up to 15 feet to an unoccupied space you can see. You can do this a number of times equal to your Proficiency Bonus, and you regain all expended uses when you finish a Long Rest."
+       "text": "You gain proficiency with Cartographer's Tools; if you already have it, choose another type of Artisan's Tools. You carry a map that draws itself: it shows any place you have spent 10 minutes in, you can't become lost except by magic, and it is your Spellcasting Focus.\n\n*Fair Copy.* With Cartographer's Tools and 10 minutes of work, you can copy any map, chart, or plan you've seen, from memory, and you can tell at a glance whether a map is accurate, out of date, or a deliberate lie.\n\n*Fold Space.* As a Bonus Action, you fold the map: a willing creature (it can be you) you can see within 30 feet of yourself teleports up to 15 feet to an unoccupied space you can see. You can do this twice, and you regain all expended uses when you finish a Long Rest."
       },
       {
        "level": 3,
@@ -3948,7 +3948,7 @@
     {
      "level": 1,
      "name": "Planar Strike",
-     "text": "When you take the Attack action on your turn, you can replace one of the attacks with a Planar Strike: a melee spell attack against a creature within 5 feet of yourself, or a ranged spell attack against a creature within 60 feet of yourself. On a hit, the target takes damage equal to the dice shown in the Planar Strike column of the Revelator Features table, plus your Wisdom modifier for each of those dice. You can make only one Planar Strike on each of your turns. Planar Strike is magical but isn't a spell; you need a free hand or a hand holding your Spellcasting Focus to make it.\n\n**The Plane's Power.** The damage is the type the Cosmography gives your open vista's Revelation. If you have no vista open, it's Force damage."
+     "text": "When you take the Attack action on your turn, you can replace one of the attacks with a Planar Strike: a melee spell attack against a creature within 5 feet of yourself, or a ranged spell attack against a creature within 60 feet of yourself. On a hit, the target takes damage equal to the dice shown in the Planar Strike column of the Revelator Features table, plus your Wisdom modifier for each of those dice (so 2d12 adds twice your Wisdom modifier). You can make only one Planar Strike on each of your turns. Planar Strike is magical but isn't a spell; you need a free hand or a hand holding your Spellcasting Focus to make it.\n\n**The Plane's Power.** The damage is the type the Cosmography gives your open vista's Revelation. If you have no vista open, it's Force damage."
     },
     {
      "level": 1,

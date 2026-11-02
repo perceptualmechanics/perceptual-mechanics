@@ -14,15 +14,28 @@ const ABLE = { Strength: 15, Dexterity: 14, Constitution: 13, Intelligence: 13, 
 const POINT_BUY = { Strength: 15, Dexterity: 14, Constitution: 13, Intelligence: 12, Wisdom: 10, Charisma: 8 };
 const someone = (classes, extra = {}) => ({
   species: 'Human', size: 'Medium', background: 'Soldier', increases: { Strength: 1, Dexterity: 1, Constitution: 1 },
-  method: 'rolled', base: ABLE, classes, originFeats: { 'Human Versatile': 'Alert' }, ...extra,
+  method: 'rolled', base: ABLE, classes, originFeats: { 'Human Versatile': 'Alert' }, styles: { 'Fighter 1 Fighting Style': 'Archery' }, ...extra,
 });
 
-export function verifyEuphoniaBuilder({ engine = defaultEngine, srd = read('srd'), euphonia = read('classes') } = {}) {
+export function verifyEuphoniaBuilder({ engine = defaultEngine, srd = read('srd'), euphonia = read('classes'), setting = read('characters') } = {}) {
   const problems = [];
   const fail = m => problems.push(m);
   let book;
-  try { book = engine.rulebook(srd, euphonia); } catch (e) { return { ok: false, failures: 1, log: [`\neuphonia builder: the rulebook doesn't build: ${e.message}`] }; }
+  try { book = engine.rulebook(srd, euphonia, setting); } catch (e) { return { ok: false, failures: 1, log: [`\neuphonia builder: the rulebook doesn't build: ${e.message}`] }; }
   const run = (state, where) => { try { return engine.character(book, state); } catch (e) { fail(`${where}: ${e.message}`); return null; } };
+  // The Fighting Style and Expertise a build leaves open, filled from what
+  // the engine offers, distinct each time: what it asks for can be met.
+  const complete = (state, where) => {
+    for (let pass = 0; pass < 4; pass++) {
+      const got = run(state, where);
+      if (!got) return state;
+      const styles = book.feats.filter(f => f.category === 'Fighting Style').map(f => f.name);
+      state = { ...state, styles: Object.fromEntries(got.styleChoices.map((c, i) => [c.key, state.styles?.[c.key] ?? styles[i]])) };
+      const taken = new Set();
+      state.expertise = Object.fromEntries(got.expertiseChoices.map(c => { const pick = c.from.filter(x => !taken.has(x)).slice(0, c.count); pick.forEach(x => taken.add(x)); return [c.key, pick]; }));
+    }
+    return state;
+  };
   const level = n => book.advancement[n - 1];
 
   // The SRD's worked examples.
@@ -75,7 +88,7 @@ export function verifyEuphoniaBuilder({ engine = defaultEngine, srd = read('srd'
       method: 'point', base: POINT_BUY, improvements,
       skills: { [c.name]: c.skills.from.slice(0, c.skills.count), 'Human Skillful': ['Arcana'] },
     });
-    const got = run(state, c.name);
+    const got = run(complete(state, c.name), c.name);
     if (!got) continue;
     // An Epic Boon level can't take the Ability Score Improvement past 20,
     // which point-buy scores never reach here.
@@ -92,7 +105,7 @@ export function verifyEuphoniaBuilder({ engine = defaultEngine, srd = read('srd'
   for (const c of book.classes) {
     for (let l = 1; l <= 20; l++) {
       const row = c.table.rows[l - 1];
-      const got = run(someone([{ class: c.name, level: l, subclass: c.subclasses[0].name }], { skills: { [c.name]: c.skills.from.slice(0, c.skills.count), 'Human Skillful': ['Arcana'] } }), `${c.name} ${l}`);
+      const got = run(complete(someone([{ class: c.name, level: l, subclass: c.subclasses[0].name }], { skills: { [c.name]: c.skills.from.slice(0, c.skills.count), 'Human Skillful': ['Arcana'] } }), `${c.name} ${l}`), `${c.name} ${l}`);
       if (!got) continue;
       if (got.bonus !== Number(row['Proficiency Bonus'].replace('+', ''))) fail(`${c.name} ${l}: Proficiency Bonus +${got.bonus}, its table's ${row['Proficiency Bonus']}`);
       const own = Array.from({ length: 9 }, (_, i) => Number(row[i + 1] === undefined || /^[—–]$/.test(row[i + 1]) ? 0 : row[i + 1]));
@@ -182,6 +195,52 @@ export function verifyEuphoniaBuilder({ engine = defaultEngine, srd = read('srd'
     initiate('Wizard', { 'feat Acolyte': list('Cleric', 0).slice(0, 3) }),
   ];
   if (clean?.length || !wrong.every(p => p?.length === 1)) fail(`Magic Initiate isn't held to its list, two cantrips, one level 1 spell, and a different list each time: ${JSON.stringify([clean, wrong])}`);
+  // The setting's backgrounds: each builds a character clean once its
+  // choices are made; Schooled's either-or skill and its "Cleric or Wizard,
+  // your choice" are choices, and nothing else.
+  let backgrounds = 0;
+  for (const b of book.backgrounds.filter(x => x.source === 'Euphonia')) {
+    const [a1, a2, a3] = b.ability_scores;
+    const initiate = b.feat.startsWith('Magic Initiate');
+    const got = run({ ...someone([{ class: 'Fighter', level: 1 }]), background: b.name, increases: { [a1]: 1, [a2]: 1, [a3]: 1 },
+      originFeats: { 'Human Versatile': b.feat === 'Alert' ? 'Skilled' : 'Alert' }, featLists: { [b.name]: 'Wizard' },
+      skills: { Fighter: ['Animal Handling', 'Persuasion'].filter(x => !b.skills.includes(x)).concat(['Acrobatics']).slice(0, 2), 'Human Skillful': ['Arcana'], [`${b.name} skills`]: b.skill_choice?.from.slice(0, 1) } }, b.name);
+    if (got?.problems.length) fail(`${b.name}: ${got.problems.map(p => p.message).join(' ')}`);
+    else if (!got?.feats.some(f => f.from === b.name) || (initiate && !got.spellChoices.some(c => c.key === `feat ${b.name}`))) fail(`${b.name}: its feat doesn't come through`);
+    else backgrounds++;
+  }
+  const schooled = (list, skill) => run({ ...someone([{ class: 'Fighter', level: 1 }]), background: 'Schooled', increases: { Intelligence: 1, Wisdom: 1, Charisma: 1 }, featLists: { Schooled: list },
+    skills: { Fighter: ['Athletics', 'Insight'], 'Human Skillful': ['Stealth'], 'Schooled skills': skill } }, 'Schooled')?.problems.map(p => p.field);
+  if (!(schooled('Cleric', ['Religion'])?.length === 0 && schooled('Druid', ['Arcana'])?.includes('spells:feat Schooled') && schooled('Wizard', [])?.includes('skills:Schooled skills') && schooled('Wizard', ['Nature'])?.includes('skills:Schooled skills')))
+    fail('Schooled isn\'t held to Religion or Arcana and to the Cleric or Wizard list');
+  const unplaced = book.species.filter(s => !book.placement(s.name)).map(s => s.name);
+  if (unplaced.length) fail(`the setting doesn't place ${unplaced.join(', ')}`);
+
+  // Expertise doubles the bonus, once a skill: a Rogue's two at level 1 and
+  // two more at 6; the Wizard's Scholar from its own list; a Crowner's
+  // Investigation, proficiency first. Fighting Style: the Fighter's feat,
+  // the Champion's second, and Defense's +1 only in armour.
+  const rogue = (lv, expertise) => run(someone([{ class: 'Rogue', level: lv, subclass: lv >= 3 ? 'Thief' : '' }], { skills: { Rogue: ['Acrobatics', 'Deception', 'Insight', 'Stealth'], 'Human Skillful': ['Arcana'] }, expertise, improvements: lv >= 4 ? { 'Rogue 4': { feat: 'Ability Score Improvement', increases: { Dexterity: 1, Wisdom: 1 } } } : {} }), `Rogue ${lv}`);
+  const r1 = rogue(1, { 'Rogue 1 Expertise': ['Stealth', 'Deception'] });
+  const r6 = rogue(6, { 'Rogue 1 Expertise': ['Stealth', 'Deception'], 'Rogue 1 Expertise 2': ['Insight', 'Acrobatics'] });
+  const twice = rogue(6, { 'Rogue 1 Expertise': ['Stealth', 'Deception'], 'Rogue 1 Expertise 2': ['Stealth', 'Acrobatics'] });
+  const unskilled = rogue(1, { 'Rogue 1 Expertise': ['Stealth', 'Medicine'] });
+  const stealth = r => r?.skills.find(x => x.name === 'Stealth');
+  if (!(r1?.problems.length === 0 && stealth(r1).bonus === r1.mod.Dexterity + 2 * r1.bonus && r6?.problems.length === 0 && r6.expertiseChoices.length === 2
+    && twice?.problems.some(p => /already has Expertise/.test(p.message)) && unskilled?.problems.some(p => p.field === 'expertise:Rogue 1 Expertise')))
+    fail(`a Rogue's Expertise isn't doubled, two and two more, once a skill, among its proficiencies: ${JSON.stringify([r1?.problems, r6?.problems])}`);
+  const scholar = pick => run(someone([{ class: 'Wizard', level: 2 }], { skills: { Wizard: ['Arcana', 'History'], 'Human Skillful': ['Athletics'] }, expertise: { 'Wizard 2 Scholar': pick } }), 'Scholar')?.problems.length;
+  if (!(scholar(['Arcana']) === 0 && scholar(['Athletics']) === 1)) fail('the Wizard\'s Scholar isn\'t held to its own list of skills');
+  const crowner = run(someone([{ class: 'Natural Philosopher', level: 3, subclass: 'Crowner' }], { skills: { 'Natural Philosopher': ['Arcana', 'History', 'Insight'], 'Human Skillful': ['Athletics'] }, expertise: { 'Natural Philosopher 2 Instruments': [], 'Natural Philosopher 3 Reconstruction': ['Investigation'] } }), 'Crowner');
+  const investigation = crowner?.skills.find(x => x.name === 'Investigation');
+  if (!(investigation?.proficient && investigation.expertise)) fail('a Crowner\'s Investigation isn\'t given proficiency and Expertise');
+  const fighter = (lv, styles, armor) => run(someone([{ class: 'Fighter', level: lv, subclass: lv >= 3 ? 'Champion' : '' }], { styles, armor, skills: { Fighter: ['Athletics', 'History'], 'Human Skillful': ['Arcana'] }, improvements: Object.fromEntries([4, 6].filter(x => x <= lv).map(x => [`Fighter ${x}`, { feat: 'Ability Score Improvement', increases: { Strength: 1, Constitution: 1 } }])) }), 'Fighting Style');
+  const champion = fighter(7, { 'Fighter 1 Fighting Style': 'Archery', 'Fighter 7 Additional Fighting Style': 'Defense' }, 'Chain Mail');
+  const same = fighter(7, { 'Fighter 1 Fighting Style': 'Archery', 'Fighter 7 Additional Fighting Style': 'Archery' }, 'Chain Mail');
+  const bare = fighter(1, { 'Fighter 1 Fighting Style': 'Defense' }, '');
+  if (!(champion?.problems.length === 0 && champion.armorClass.ac === 17 && same?.problems.some(p => /already yours/.test(p.message)) && bare?.armorClass.ac === 10 + bare.mod.Dexterity))
+    fail(`Fighting Style: the Champion's second, Defense's +1 in armour and not out of it: ${JSON.stringify([champion?.problems, champion?.armorClass, bare?.armorClass])}`);
+
   // A Wood Elf's speed, and an unarmored defense, from their sentences.
   const elf = run({ ...someone([{ class: 'Barbarian', level: 1 }]), species: 'Elf', option: 'Wood Elf', skills: { Barbarian: ['Athletics', 'Survival'], 'Elf Keen Senses': ['Insight'] } }, 'Wood Elf');
   if (elf?.speed !== 35) fail(`a Wood Elf's speed is ${elf?.speed}, not the 35 feet its lineage gives`);
@@ -189,7 +248,7 @@ export function verifyEuphoniaBuilder({ engine = defaultEngine, srd = read('srd'
 
   const log = problems.length
     ? [`\neuphonia builder: ${problems.length} problem(s):`, ...problems.map(m => `  ${m}`)]
-    : [`ok: the SRD's ${examples.length} worked examples hold; ${classes} classes built to level 20, and ${levels} class levels showing their own tables' bonus and slots; armour, shields, the hit points sentences add, origin feats and spell choices held to their rules; ${book.species.length} species and ${book.feats.length} feats read`];
+    : [`ok: the SRD's ${examples.length} worked examples hold; ${classes} classes built to level 20, and ${levels} class levels showing their own tables' bonus and slots; armour, shields, the hit points sentences add, origin feats and spell choices held to their rules; the setting's ${backgrounds} backgrounds built; ${book.species.length} species placed and ${book.feats.length} feats read`];
   return { ok: problems.length === 0, failures: problems.length, log };
 }
 

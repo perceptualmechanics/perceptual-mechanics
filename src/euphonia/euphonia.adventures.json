@@ -2,10 +2,10 @@
  "provenance": {
   "source": "Euphonia.md",
   "master": "~/Documents/euphonia/Euphonia.md",
-  "sha256": "e08c55292beeb663fead47aafb73790bfd42a4282a538841326f43a2d5935d8c",
-  "modified": "2026-11-01T19:06:15-05:00",
+  "sha256": "a4cc5988037e0210ed866cf07ce669bd93293dfac524b601ceaed8b2ce28e587",
+  "modified": "2026-11-02T05:11:09-05:00",
   "exporter": "class-kit/site_export.py",
-  "exporter_version": 8,
+  "exporter_version": 9,
   "rules": {
    "banned": [
     "eladrin",
@@ -31,10 +31,10 @@
    "kind": "Intrigue",
    "where": "The courts of Europe, and Mutapa's service in them",
    "read_with": "Powers and Factions; Western Europe and Mutapa in The State of the World",
-   "summary": "**The pitch.** Every court in Europe has a minister of magic, and in 1668 every one of them has just learned it is behind. Their reverse engineers have run the numbers on the Mutapan curiosities in their drawing rooms and concluded that Mutapa is about to leap the magical gap, on a metal nobody else can work. Then came the gate sighting at Toledo (see The World in 1668), and the picture changed again: Spain has the same metal in the Chocó and has been dumping it. The Great Game is the espionage that follows, played with licenses, portraits and shewstones by the spymasters who are this setting's secret heroes, and the party is one of their crews.",
+   "summary": "**The pitch.** Every court in Europe has a minister of magic, and in 1668 every one has just learned it is behind: Mutapa is about to leap the magical gap on a metal nobody else can work, and Spain, it turns out, has the same metal in the Chocó (see The World in 1668). The Great Game is the espionage that follows, played with licenses, portraits and shewstones by the spymasters who are this setting's secret heroes, and the party is one of their crews.",
    "hooks": [
     "A court painter has finished the Regent's miniature for a marriage negotiation, and three services want it before it reaches Vienna.",
-    "A licensing clerk in Vienna has been copying the Emperor's register of licensed casters for another court, and the minister who catches him first will use him rather than hang him.",
+    "A Viennese clerk has been copying the Emperor's register of licensed casters for another court; whoever catches him first will use him rather than hang him.",
     "A shewstone pair given by Mutapa has started answering in a voice that isn't the other stone's.",
     "An Agitator cell inside the Invisible College has a scheme for the Grand Divertissement; a natural philosopher among them has doubts.",
     "A Mutapan lamp in a minister's study has been opened and closed again, and the guild's mark on its base is now upside down.",
@@ -51,7 +51,7 @@
    "kind": "Heist, and a delve",
    "where": "Venice, then Toledo",
    "read_with": "Central and Eastern Europe; Western Europe for Toledo",
-   "summary": "**The pitch.** A good, solid intro heist. The target isn't the most expensive thing in the world, but it's going on the market very soon and will command a hefty fee: why not take it and keep the money? Venice in 1668 is the place. The Republic is losing Candia, its last great city on Crete, in the twenty-first year of the siege, and it will sell anything it has. Desperate states make mistakes, and a desperate state with the best scryers and cipher clerks in Europe has a great deal worth stealing. The city is the whole dungeon: canals, rooftops, palaces and archives, a population that informs on itself and a fair where everyone is masked, which helps a burglar and hurts a scryer. The default date is the Sensa, the Ascension fair of May 1668, when the Doge weds the sea and the masks come out again; a table that wants Carnival runs the job in the winter of 1669. A Danae of the Crossing racing across its rooftops is on the cover of this book.",
+   "summary": "**The pitch.** A solid intro heist: the prize is going on the market soon for a hefty fee, so why not take it and keep the money? The Republic is losing Candia in the twenty-first year of the siege and will sell anything it has, and a desperate state with the best scryers and cipher clerks in Europe makes mistakes. The city is the whole dungeon: canals, rooftops, palaces and archives, a population that informs on itself and a fair where everyone is masked, which helps a burglar and hurts a scryer. The default date is the Sensa, the Ascension fair of May 1668, when the Doge weds the sea and the masks come out; for Carnival, run it in the winter of 1669. A Danae of the Crossing racing across its rooftops is on the cover of this book.",
    "hooks": [
     "The Ten are selling their scryers' report by sealed bid on the last night of the Sensa fair; the French bidder has debts, the Spanish one has bravos.",
     "The scryer who made the report left notes the Ten's clerks didn't understand, and Spain's ambassador is looking for her.",
@@ -69,7 +69,7 @@
    "kind": "Frontier",
    "where": "Any village at the edge of the Hidden",
    "read_with": "Running Euphonia; *Euphonia: Life on the Border*",
-   "summary": "The frontier game, and the one that doesn't belong to a region. The border of civilization is a universal problem: every society has villages on its outskirts and a Hidden past them, so the Border can be a Highland glen, a Black Forest parish, a Haudenosaunee town, a Japanese mountain village, a Swedish chapelry in the year the Blåkulla trials begin, or the new, almost suburban edge of one of Mutapa's fast-growing cities, where modern artifice meets southern Africa's own Hidden: the water spirits who take people under the pools and send some back as healers, the tiny people of the grass. The book doesn't fix a default border; pick the one your table knows.",
+   "summary": "The frontier game belongs to no region: every society has villages on its outskirts and a Hidden past them. The Border can be a Highland glen, a Japanese mountain village, a Swedish chapelry in the year the Blåkulla trials begin, or the almost suburban edge of one of Mutapa's fast-growing cities, where modern artifice meets the water spirits who take people under the pools and send some back as healers. Pick the border your table knows.",
    "hooks": [
     "A child says she was carried to a feast inside a hill, and the examiner who comes to hear it is looking for witches. The village's Killer is seventy and her knees are going. A Mutapan survey crew has pegged out a new street across a pool that belongs to someone. The taken came back a hundred years late and remembers everything."
    ],
@@ -82,7 +82,7 @@
    "kind": "Dungeon crawl",
    "where": "China under the new Qing",
    "read_with": "East Asia",
-   "summary": "The classic delve, Chinese style. A party starts in a minor Ming prince's sealed tomb, in a valley the new Qing dynasty ignores, and years later ends in the First Emperor's tomb, with its rivers of mercury and its crossbows set to fire at intruders. Between them lie the tombs the DM builds: the Ming princes', the Han and Tang dead with their tomb-quelling beasts, the alchemists' graves full of cinnabar.",
+   "summary": "The classic delve, Chinese style. A party starts in a minor Ming prince's sealed tomb, in a valley the Qing ignore, and years later ends in the First Emperor's, with its rivers of mercury and its crossbows set for intruders. Between lie the tombs the DM builds: the Han and Tang dead with their tomb-quelling beasts, the alchemists' graves full of cinnabar.",
    "hooks": [],
    "regions": []
   },
@@ -91,7 +91,7 @@
    "kind": "War",
    "where": "The Andes and the Chocó",
    "read_with": "South America",
-   "summary": "A gritty three-sided war: the Inca, the Spanish and the people trying to profit off both. The Inca hold the high ground and Spain the coast and lowlands; Potosí, Spain's silver mountain, is the contested frontier, and nobody knows whether the kingdom breaks, Spain breaks or the line settles into a real border. At stake: silver, mercury, guano, cinchona and the huacas that rose. South America is the grittiest active setting in the book, the place for amoral soldier-of-fortune play in the *Wages of Fear* vein, and it runs the whole tonal range: play the Andeans defending their home nobly, or play it gritty. The Inca aren't simply the good side: their state was itself an empire built on conquest, and the Cañari and Chachapoya fought beside Spain against it.",
+   "summary": "A three-sided war: the Inca, the Spanish and the people profiting off both. The Inca hold the high ground and Spain the coast and lowlands; Potosí is the contested frontier, and nobody knows who breaks or whether the line settles into a border. At stake: silver, mercury, guano, cinchona and the huacas that rose. It's the book's grittiest setting, for amoral soldier-of-fortune play in the *Wages of Fear* vein, or for Andeans defending their home nobly. The Inca aren't simply the good side: their state was itself an empire built on conquest, and the Cañari and Chachapoya fought beside Spain against it.",
    "hooks": [],
    "regions": [
     "South America"
@@ -102,7 +102,7 @@
    "kind": "Voyage",
    "where": "The Indian Ocean, from the Cape to Macau and out into the Pacific",
    "read_with": "The Indian Ocean",
-   "summary": "The players are traders, not soldiers or delvers: a ship, a cargo and a living to make on the monsoon winds, from Mutapa to the Mughals to China and beyond. The game is the voyage, the ports, the deals and what's worth more two harbors on.",
+   "summary": "The players are traders: a ship, a cargo and a living to make on the monsoon winds. The game is the voyage, the ports, the deals and what's worth more two harbors on.",
    "hooks": [],
    "regions": [
     "Mutapa",

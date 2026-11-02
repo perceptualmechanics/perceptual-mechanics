@@ -4,13 +4,15 @@
 // so a link is the character, and this browser remembers the last one.
 import srdUrl from './euphonia.srd.json?url';
 import classesUrl from './euphonia.classes.json?url';
+import charactersUrl from './euphonia.characters.json?url';
+import places from 'virtual:euphonia-places';
 import { ABILITIES, MAX_LEVEL, rulebook, character, speciesOptions, featsAllowed, featIncrease, qualifies } from './euphonia.character.js';
 import { inline, blocks } from './euphonia.markdown.js';
 
 const STORE_KEY = 'pm-euphonia-character';
 const PARAM = 'c';
 const signed = n => (n >= 0 ? `+${n}` : `−${-n}`);
-const blank = () => ({ name: '', species: '', option: '', size: '', background: '', increases: {}, method: 'standard', base: {}, classes: [{ class: '', level: 1, subclass: '' }], skills: {}, improvements: {}, originFeats: {}, featLists: {}, spells: {}, armor: '', shield: false });
+const blank = () => ({ name: '', species: '', option: '', size: '', background: '', increases: {}, method: 'standard', base: {}, classes: [{ class: '', level: 1, subclass: '' }], skills: {}, improvements: {}, originFeats: {}, featLists: {}, spells: {}, armor: '', shield: false, homeland: '', styles: {}, expertise: {} });
 
 // The character in the address: its choices as JSON, base64url.
 const encode = state => btoa(String.fromCharCode(...new TextEncoder().encode(JSON.stringify(state)))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
@@ -53,8 +55,8 @@ export async function initBuilder(panel) {
   const status = form.querySelector('.builder-status');
   let book, srd;
   try {
-    const [s, e] = await Promise.all([srdUrl, classesUrl].map(u => fetch(u).then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })));
-    srd = s; book = rulebook(s, e);
+    const [s, e, c] = await Promise.all([srdUrl, classesUrl, charactersUrl].map(u => fetch(u).then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })));
+    srd = s; book = rulebook(s, e, c);
   } catch (err) {
     status.textContent = `The rules didn't load (${err.message}); reload the page to try again.`;
     return;
@@ -81,7 +83,16 @@ export async function initBuilder(panel) {
   const sizeSelect = h('select', { name: 'size', 'aria-describedby': idFor('size') });
   const sizeRow = h('label', { class: 'b-field', hidden: true }, h('span', {}, 'Size'), sizeSelect);
   const speciesTraits = h('div', { class: 'b-about' });
-  const backgroundSelect = h('select', { name: 'background', 'aria-describedby': idFor('background') }, options(book.backgrounds.map(b => b.name), state.background, 'Choose a background'));
+  // Sources side by side: the setting's own first, as with the classes.
+  const bySource = (list, chosen, label) => ['Euphonia', 'SRD 5.2.1'].map(src => h('optgroup', { label: src === 'Euphonia' ? `Euphonia’s ${label}` : `The SRD’s ${label}` },
+    options(list.filter(x => x.source === src).map(x => x.name), chosen)));
+  const backgroundSelect = h('select', { name: 'background', 'aria-describedby': idFor('background') }, h('option', { value: '' }, 'Choose a background'), bySource(book.backgrounds, state.background, 'backgrounds'));
+  // A people: where the family comes from, one of the State of the World's
+  // regions, whose chapter opens on the map.
+  const homelandSelect = h('select', { name: 'homeland' }, options(places.regions.map(r => r.name), state.homeland, 'Choose a region'));
+  const homelandLink = h('p', { class: 'b-note' });
+  const styleBox = h('div', { class: 'b-styles' });
+  const expertiseBox = h('div', { class: 'b-expertise' });
   const increases = h('div', { class: 'b-increases', role: 'group', 'aria-label': 'Ability increases', 'aria-describedby': idFor('increases') });
   const backgroundAbout = h('div', { class: 'b-about' });
   const methods = [['standard', 'Standard array'], ['point', 'Point cost'], ['rolled', 'Rolled']];
@@ -104,11 +115,13 @@ export async function initBuilder(panel) {
     section('Name', h('label', { class: 'b-field' }, h('span', {}, 'Character name'), nameInput)),
     section('Class', h('p', { class: 'b-note' }, 'The first is the class you began in. Its levels and the others’ make your character level.'), classList, addClass, problemSlot('classes')),
     section('Species', h('label', { class: 'b-field' }, h('span', {}, 'Species'), speciesSelect), problemSlot('species'), optionRow, problemSlot('option'), sizeRow, problemSlot('size'), originBox, speciesTraits),
+    section('Homeland', h('p', { class: 'b-note' }, 'Every species takes its traits as written; your people is where the family comes from, and the trouble comes with the country.'),
+      h('label', { class: 'b-field' }, h('span', {}, 'Region'), homelandSelect), homelandLink),
     section('Background', h('label', { class: 'b-field' }, h('span', {}, 'Background'), backgroundSelect), problemSlot('background'), increases, problemSlot('increases'), backgroundAbout),
     section('Ability scores', methodGroup, scoreGrid, pointsLeft, problemSlot('base'), problemSlot('method')),
     section('Armour', h('label', { class: 'b-field' }, h('span', {}, 'Armor'), armorSelect), h('label', { class: 'b-check' }, shieldCheck, ' A Shield'), trainingNote, problemSlot('armor'), warningSlot('armor')),
-    section('Skills', skillsBox, skillNotes),
-    section('Feats', featsBox),
+    section('Skills', skillsBox, expertiseBox, skillNotes),
+    section('Feats', styleBox, featsBox),
     section('Spells', spellsBox),
   );
 
@@ -119,6 +132,7 @@ export async function initBuilder(panel) {
   optionSelect.addEventListener('change', () => set(s => { s.option = optionSelect.value; }));
   sizeSelect.addEventListener('change', () => set(s => { s.size = sizeSelect.value; }));
   backgroundSelect.addEventListener('change', () => set(s => { s.background = backgroundSelect.value; s.increases = {}; }));
+  homelandSelect.addEventListener('change', () => set(s => { s.homeland = homelandSelect.value; }));
   methodGroup.addEventListener('change', e => set(s => { s.method = e.target.value; s.base = {}; }));
   armorSelect.addEventListener('change', () => set(s => { s.armor = armorSelect.value; }));
   shieldCheck.addEventListener('change', () => set(s => { s.shield = shieldCheck.checked; }));
@@ -177,7 +191,10 @@ export async function initBuilder(panel) {
     }
     if (speciesTraits.dataset.for !== (species?.name ?? '')) {
       speciesTraits.dataset.for = species?.name ?? '';
-      speciesTraits.replaceChildren(...(species ? [h('details', {}, h('summary', {}, `${species.name}: ${species.creature_type}, ${species.size}, speed ${species.speed}`),
+      const placed = species && book.placement(species.name);
+      speciesTraits.replaceChildren(...(species ? [
+        placed ? h('p', { class: 'b-note' }, `In Euphonia${placed.status === 'draft' ? ' (a draft)' : ''}: ${placed.line}.`) : null,
+        h('details', {}, h('summary', {}, `${species.name}: ${species.creature_type}, ${species.size}, speed ${species.speed}`),
         ...species.traits.map(t => h('div', { html: blocks(`**${t.name}.** ${t.text}`) + (t.options ?? []).map(o => blocks(`**${o.name}.** ${o.text}`)).join('') })))] : []));
     }
   }
@@ -203,7 +220,8 @@ export async function initBuilder(panel) {
         h('div', { class: 'b-pair' }, pick(big, `+${big}`), pick(small, `+${small}`)));
       backgroundAbout.replaceChildren(h('dl', { class: 'b-facts' },
         h('dt', {}, 'Feat'), h('dd', {}, bg.feat), h('dt', {}, 'Skills'), h('dd', {}, bg.skills.join(', ')),
-        h('dt', {}, 'Tool'), h('dd', {}, bg.tool), h('dt', {}, 'Equipment'), h('dd', {}, bg.equipment)));
+        h('dt', {}, 'Tool'), h('dd', {}, bg.tool), h('dt', {}, 'Equipment'), h('dd', {}, bg.equipment)),
+        bg.about ? h('details', {}, h('summary', {}, `About the ${bg.name}`), h('div', { html: blocks(bg.about) })) : null);
     }
     const two = increases.querySelector('input[value=two]')?.checked;
     for (const sel of increases.querySelectorAll('[data-by]')) sel.disabled = !two;
@@ -310,6 +328,41 @@ export async function initBuilder(panel) {
     ]).flat());
   }
 
+  // The homeland, and a link to its chapter on the map.
+  function renderHomeland() {
+    const region = places.regions.find(r => r.name === state.homeland);
+    homelandSelect.value = region ? region.name : '';
+    homelandLink.replaceChildren(...(region ? [h('a', { href: `#${region.id}` }, `Read ${region.name}`), ' on the map.'] : []));
+  }
+
+  // The Fighting Style feats features grant, and the Expertise they ask.
+  function renderStyles(result) {
+    const shape = result.styleChoices.map(c => `${c.key}:${state.styles?.[c.key] ?? ''}`).join('|');
+    if (styleBox.dataset.for === shape) return;
+    styleBox.dataset.for = shape;
+    const styles = book.feats.filter(f => f.category === 'Fighting Style').map(f => f.name);
+    rebuild(styleBox, ...result.styleChoices.map(c => [
+      h('label', { class: 'b-field' }, h('span', {}, `${c.label}: a Fighting Style feat`),
+        h('select', { 'data-key': `style-${c.key}`, 'aria-describedby': idFor(`style:${c.key}`), onchange: e => set(s => { s.styles = { ...s.styles, [c.key]: e.target.value }; }) }, options(styles, state.styles?.[c.key], 'Choose a feat'))),
+      problemSlot(`style:${c.key}`),
+    ]).flat());
+  }
+  function renderExpertise(result) {
+    const shape = result.expertiseChoices.map(c => `${c.key}:${c.count}:${c.from.join()}`).join('|');
+    if (expertiseBox.dataset.for === shape) return;
+    expertiseBox.dataset.for = shape;
+    rebuild(expertiseBox, ...result.expertiseChoices.map(c => {
+      const picked = state.expertise?.[c.key] ?? [];
+      const read = () => set(s => { s.expertise = { ...s.expertise, [c.key]: [...group.querySelectorAll('input:checked')].map(x => x.value) }; });
+      const group = h('fieldset', { class: 'b-skills', 'aria-describedby': idFor(`expertise:${c.key}`) },
+        h('legend', {}, `${c.label}: Expertise in ${c.count}`),
+        c.from.length ? h('div', { class: 'b-checks' }, c.from.map(skill => h('label', {}, h('input', { type: 'checkbox', value: skill, 'data-key': `expertise-${c.key}-${skill}`, checked: picked.includes(skill), onchange: read }), ` ${skill}`)))
+          : h('p', { class: 'b-note' }, 'Choose skills first: Expertise is in skills you’re proficient in.'),
+        problemSlot(`expertise:${c.key}`));
+      return group;
+    }));
+  }
+
   // Armour: what the classes train, said beside the choice.
   function renderArmor(result) {
     armorSelect.value = state.armor ?? '';
@@ -387,7 +440,9 @@ export async function initBuilder(panel) {
     for (const d of sheet.querySelectorAll('details[data-key]')) if (d.open) open.add(d.dataset.key); else open.delete(d.dataset.key);
     const det = (key, summary, ...body) => h('details', { 'data-key': key, open: open.has(key) }, h('summary', {}, summary), ...body);
     const classLine = result.classes.map(c => `${c.class} ${c.level}${c.subclass ? ` (${c.subclass})` : ''}`).join(' / ');
-    const who = [result.species && `${result.species.name}${result.option ? ` (${result.option})` : ''}`, result.background?.name, classLine].filter(Boolean).join(' · ');
+    const homeland = places.regions.find(r => r.name === state.homeland);
+    const placed = result.species && book.placement(result.species.name);
+    const who = [result.species && `${result.species.name}${result.option ? ` (${result.option})` : ''}`, homeland && `of ${homeland.name}`, result.background?.name, classLine].filter(Boolean).join(' · ');
     // Spellcasting: the slots and what each class prepares, then the spells
     // chosen, a caster's and a feat's alike.
     const casting = result.spellcasting.length ? [
@@ -425,7 +480,7 @@ export async function initBuilder(panel) {
       h('section', { class: 'sheet-block', 'aria-labelledby': 'sheet-skills' },
         h('h3', { id: 'sheet-skills' }, 'Skills'),
         h('ul', { class: 'sheet-skills' }, result.skills.map(s => h('li', { class: s.proficient ? 'is-proficient' : null },
-          h('span', {}, `${s.name}`), h('span', { class: 'sheet-ability' }, ` (${s.ability.slice(0, 3)})`), h('span', { class: 'sheet-bonus' }, ` ${signed(s.bonus)}`), s.proficient ? h('span', { class: 'sheet-mark' }, ' proficient') : null,
+          h('span', {}, `${s.name}`), h('span', { class: 'sheet-ability' }, ` (${s.ability.slice(0, 3)})`), h('span', { class: 'sheet-bonus' }, ` ${signed(s.bonus)}`), s.proficient ? h('span', { class: 'sheet-mark' }, s.expertise ? ' expertise' : ' proficient') : null,
           s.name === 'Stealth' && result.stealthDisadvantage ? h('span', { class: 'sheet-mark' }, ' with Disadvantage, in this armor') : null)))),
       casting.length || chosenSpells.length ? h('section', { class: 'sheet-block', 'aria-labelledby': 'sheet-spells' }, h('h3', { id: 'sheet-spells' }, 'Spells'), casting, chosenSpells) : null,
       result.feats.length ? h('section', { class: 'sheet-block', 'aria-labelledby': 'sheet-feats' },
@@ -434,6 +489,7 @@ export async function initBuilder(panel) {
           h('div', { html: blocks([f.feat.description, ...f.feat.benefits.map(b => `**${b.name}.** ${b.text}`)].filter(Boolean).join('\n\n')) })))) : null,
       result.species ? h('section', { class: 'sheet-block', 'aria-labelledby': 'sheet-traits' },
         h('h3', { id: 'sheet-traits' }, `${result.species.name} traits`),
+        placed ? h('p', { class: 'sheet-placement' }, `In Euphonia${placed.status === 'draft' ? ' (a draft)' : ''}: ${placed.line}.`) : null,
         result.species.traits.map(t => det(`trait-${t.name}`, t.name, h('div', { html: blocks(t.text) }),
           (t.options ?? []).filter(o => o.name === result.option).map(o => h('div', { html: blocks(`**${o.name}.** ${o.text}`) }))))) : null,
       result.classes.length ? h('section', { class: 'sheet-block', 'aria-labelledby': 'sheet-features' },
@@ -456,6 +512,9 @@ export async function initBuilder(panel) {
     renderBackground(result);
     renderScores();
     renderOrigin(result);
+    renderHomeland();
+    renderStyles(result);
+    renderExpertise(result);
     renderArmor(result);
     renderSkills(result);
     renderFeats(result);
