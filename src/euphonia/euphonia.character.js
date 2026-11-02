@@ -301,14 +301,14 @@ export function character(book, state) {
   // player's, and the builder asks it as the engine lists it. A feat's
   // "any combination of three skills or tools" is up to three skills, the
   // rest tools.
-  const chosen = (key, from, count, picks, label, upTo = false) => {
+  const chosen = (key, from, count, picks, label, upTo = false, given = []) => {
     if (from.length === count && !upTo) { for (const s of from) grant(s, label); return; }
-    choices.push({ key, label, from, count, upTo });
+    choices.push({ key, label, from, count, upTo, given });
     const got = (picks ?? []).filter(Boolean);
     if ((upTo ? got.length > count : got.length !== count) || new Set(got).size !== got.length || !got.every(s => from.includes(s))) fail(`skills:${key}`, `Choose ${upTo ? 'up to ' : ''}${count} skill${count === 1 ? '' : 's'}${from.length < book.skills.length ? ` from ${from.join(', ')}` : ''}.`);
     for (const s of got.filter(x => from.includes(x))) grant(s, label);
   };
-  if (first) { for (const s of first.skills.fixed) grant(s, first.name); chosen(first.name, first.skills.from, first.skills.count, state.skills?.[first.name], first.name); }
+  if (first) { for (const s of first.skills.fixed) grant(s, first.name); chosen(first.name, first.skills.from, first.skills.count, state.skills?.[first.name], first.name, false, first.skills.fixed); }
   for (const c of known.slice(1)) if (c.rules.multiclassSkills) chosen(c.class, c.rules.multiclassSkills, 1, state.skills?.[c.class], `${c.class}, as a multiclass`);
   for (const s of background?.skills ?? []) grant(s, background.name);
   if (background?.skill_choice) chosen(`${background.name} skills`, background.skill_choice.from, background.skill_choice.count, state.skills?.[`${background.name} skills`], background.name);

@@ -45,7 +45,8 @@ const idFor = field => `problem-${field.replace(/[^\w-]+/g, '-')}`;
 // control with the same key takes focus back.
 function rebuild(container, ...children) {
   const key = container.contains(document.activeElement) ? document.activeElement.dataset.key : null;
-  container.replaceChildren(...children);
+  // What a group leaves out comes as null, which isn't an element to add.
+  container.replaceChildren(...children.flat().filter(c => c !== null && c !== undefined && c !== false));
   if (key) container.querySelector(`[data-key="${CSS.escape(key)}"]`)?.focus();
 }
 
@@ -219,9 +220,9 @@ export async function initBuilder(panel) {
           h('label', {}, h('input', { type: 'radio', name: 'shape', value: 'all', checked: shape === 'all', onchange: readIncreases }), ` +${all} to all three`)),
         h('div', { class: 'b-pair' }, pick(big, `+${big}`), pick(small, `+${small}`)));
       backgroundAbout.replaceChildren(h('dl', { class: 'b-facts' },
-        h('dt', {}, 'Feat'), h('dd', {}, bg.feat), h('dt', {}, 'Skills'), h('dd', {}, bg.skills.join(', ')),
+        h('dt', {}, 'Feat'), h('dd', {}, bg.feat), h('dt', {}, 'Skills'), h('dd', {}, `${bg.skills.join(' and ')}${bg.skill_choice ? `, and ${bg.skill_choice.from.join(' or ')}` : ''}`),
         h('dt', {}, 'Tool'), h('dd', {}, bg.tool), h('dt', {}, 'Equipment'), h('dd', {}, bg.equipment)),
-        bg.about ? h('details', {}, h('summary', {}, `About the ${bg.name}`), h('div', { html: blocks(bg.about) })) : null);
+        bg.about ? h('details', {}, h('summary', {}, 'About this background'), h('div', { html: blocks(bg.about) })) : null);
     }
     const two = increases.querySelector('input[value=two]')?.checked;
     for (const sel of increases.querySelectorAll('[data-by]')) sel.disabled = !two;
@@ -268,7 +269,7 @@ export async function initBuilder(panel) {
       const picked = state.skills?.[c.key] ?? [];
       const read = () => set(s => { s.skills = { ...s.skills, [c.key]: [...group.querySelectorAll('input:checked')].map(x => x.value) }; });
       const group = h('fieldset', { class: 'b-skills', 'aria-describedby': idFor(`skills:${c.key}`) },
-        h('legend', {}, `${c.label}: choose ${c.upTo ? 'up to ' : ''}${c.count}${c.upTo ? ' (the rest tools)' : ''}`),
+        h('legend', {}, `${c.label}: ${c.given.length ? `${c.given.join(', ')}, plus ` : ''}choose ${c.upTo ? 'up to ' : ''}${c.count}${c.upTo ? ' (the rest tools)' : ''}`),
         h('div', { class: 'b-checks' }, c.from.map(skill => h('label', {}, h('input', { type: 'checkbox', value: skill, 'data-key': `skill-${c.key}-${skill}`, checked: picked.includes(skill), onchange: read }), ` ${skill}`))),
         problemSlot(`skills:${c.key}`));
       return group;
@@ -277,9 +278,10 @@ export async function initBuilder(panel) {
 
   // The feats each improvement level brings, and how a feat raises scores.
   function renderFeats(result) {
-    // Which feats qualify turns on the level and the scores, so they're part
-    // of the shape.
-    const shape = [result.level, ...ABILITIES.map(a => result.scores[a]), ...result.improvements.map(i => `${i.key}:${state.improvements?.[i.key]?.feat ?? ''}`)].join('|');
+    // Which feats qualify turns on the level and the scores, and which
+    // pickers show on the shape of increase chosen, so they're part of the
+    // shape.
+    const shape = [result.level, ...ABILITIES.map(a => result.scores[a]), ...result.improvements.map(i => `${i.key}:${state.improvements?.[i.key]?.feat ?? ''}:${state.improvements?.[i.key]?.shape ?? ''}`)].join('|');
     if (featsBox.dataset.for === shape) return;
     featsBox.dataset.for = shape;
     const background = result.feats.find(f => f.from === result.background?.name);
@@ -291,12 +293,28 @@ export async function initBuilder(panel) {
         const inc = feat && featIncrease(feat);
         const eligible = featsAllowed(book, imp.kind);
         const write = mutate => set(s => { s.improvements = { ...s.improvements, [imp.key]: mutate({ ...(s.improvements?.[imp.key] ?? {}) }) }; });
+        // The shape chosen (one score by 2, or two by 1), and the scores
+        // its pickers name; a feat with one shape needs no choosing.
+        // A character saved before the shape was kept implies it by how many
+        // scores it raised.
+        const implied = inc?.shapes.findIndex(sh => sh.length === Object.values(pick.increases ?? {}).filter(Boolean).length);
+        const shapeNow = inc && (inc.shapes.length === 1 ? 0 : pick.shape ?? (implied >= 0 ? implied : null));
         const readInc = () => write(p => {
-          const shapeOf = box.querySelector('input[name^="inc-shape"]:checked')?.value ?? '0';
           p.increases = {};
-          for (const sel of box.querySelectorAll(`[data-shape="${shapeOf}"]`)) if (sel.value) p.increases[sel.value] = (p.increases[sel.value] ?? 0) + Number(sel.dataset.by);
+          for (const sel of box.querySelectorAll('[data-by]')) if (sel.value) p.increases[sel.value] = (p.increases[sel.value] ?? 0) + Number(sel.dataset.by);
           return p;
         });
+        const readShape = e => write(p => ({ ...p, shape: Number(e.target.value), increases: {} }));
+        const shapeWords = shape => (shape.every(v => v === shape[0]) ? `+${shape[0]} to ${shape.length === 1 ? 'one score' : `${['', 'one', 'two', 'three'][shape.length]} scores`}` : shape.map(v => `+${v}`).join(' and '));
+        // The scores picked so far, in picker order; one picked in a picker
+        // can't be picked in the other.
+        const taken = Object.entries(pick.increases ?? {}).filter(([, v]) => v).map(([a]) => a);
+        const pickers = shapeNow === null || !inc ? null : h('div', { class: 'b-pair' }, inc.shapes[shapeNow].map((by, j) => {
+          const mine = taken[j] ?? '';
+          return h('label', { class: 'b-field' }, h('span', {}, `${j ? 'and ' : ''}+${by} to`),
+            h('select', { 'data-by': by, 'data-key': `inc-${imp.key}-${shapeNow}-${j}`, onchange: readInc },
+              options(inc.from.map(a => ({ value: a, label: a, disabled: a !== mine && taken.includes(a) })), mine, 'Choose a score')));
+        }));
         const box = h('fieldset', { class: 'b-feat', 'aria-describedby': idFor(`improvement:${imp.key}`) },
           h('legend', {}, `${imp.class} level ${imp.level}: ${imp.kind}`),
           h('label', { class: 'b-field' }, h('span', {}, 'Feat'),
@@ -305,10 +323,9 @@ export async function initBuilder(panel) {
                 const ok = qualifies(book, f, { level: result.level, scores: result.scores, features: result.features });
                 return { value: f.name, label: ok.ok ? f.name : `${f.name} (needs ${ok.why.join(' and ')})`, disabled: !ok.ok && f.name !== pick.feat };
               }), pick.feat, 'Choose a feat'))),
-          inc ? h('div', { class: 'b-choice' }, inc.shapes.map((shape, k) => h('div', { class: 'b-shape' },
-            inc.shapes.length > 1 ? h('label', {}, h('input', { type: 'radio', name: `inc-shape-${imp.key}`, 'data-key': `shape-${imp.key}-${k}`, value: String(k), checked: Object.values(pick.increases ?? {}).filter(Boolean).length === shape.length, onchange: readInc }), ` ${shape.map(v => `+${v}`).join(' and ')}`) : null,
-            h('div', { class: 'b-pair' }, shape.map((by, j) => h('label', { class: 'b-field' }, h('span', {}, `+${by}`),
-              h('select', { 'data-shape': String(k), 'data-by': by, 'data-key': `inc-${imp.key}-${k}-${j}`, onchange: readInc }, options(inc.from, Object.entries(pick.increases ?? {}).filter(([, v]) => v === by)[j]?.[0], 'Choose')))))))) : null,
+          inc && inc.shapes.length > 1 ? h('div', { class: 'b-choice', role: 'radiogroup', 'aria-label': `How ${feat.name} raises your scores` },
+            inc.shapes.map((shape, k) => h('label', {}, h('input', { type: 'radio', name: `inc-shape-${imp.key}`, 'data-key': `shape-${imp.key}-${k}`, value: String(k), checked: shapeNow === k, onchange: readShape }), ` ${shapeWords(shape)}`))) : null,
+          pickers,
           problemSlot(`improvement:${imp.key}`));
         return box;
       }) : [h('p', { class: 'b-note' }, 'Ability Score Improvements and the Epic Boon come with levels; choose their feats here.')]));
@@ -391,7 +408,7 @@ export async function initBuilder(panel) {
       const levels = [...new Set(c.list.map(sp => sp.level))].sort((a, b) => a - b);
       const count = level => c.chosen.filter(sp => (level ? sp.level > 0 : sp.level === 0)).length;
       const box = h('fieldset', { class: 'b-spell-choice', 'aria-describedby': idFor(`spells:${c.key}`) },
-        h('legend', {}, `${c.label}: ${c.cantrips ? `${count(0)} of ${c.cantrips} cantrips, ` : ''}${count(1)} of ${c.prepared} spells, up to level ${c.highest}`),
+        h('legend', {}, `${c.label}: ${c.cantrips ? `${count(0)} of ${c.cantrips} ${c.cantrips === 1 ? 'cantrip' : 'cantrips'}, ` : ''}${count(1)} of ${c.prepared} prepared ${c.prepared === 1 ? 'spell' : 'spells'}, up to level ${c.highest}`),
         levels.map(level => {
           const key = `${c.key}-${level}`;
           const here = c.list.filter(sp => sp.level === level);
