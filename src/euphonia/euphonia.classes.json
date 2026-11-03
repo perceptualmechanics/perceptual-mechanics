@@ -2,8 +2,8 @@
  "provenance": {
   "source": "Euphonia.md",
   "master": "~/Documents/euphonia/Euphonia.md",
-  "sha256": "79c0fe05e9fcd791a6249bdd960422160ec1289098b26d147c21328d6ae21a20",
-  "modified": "2026-11-02T14:35:52-05:00",
+  "sha256": "3622006ee00932daa40943df75cd988c4b7dace62dab18c4b69e3fa92ce4ceb4",
+  "modified": "2026-11-03T15:23:56-05:00",
   "exporter": "class-kit/site_export.py",
   "exporter_version": 10,
   "rules": {
@@ -52,6 +52,13 @@
   {
    "where": "Mhizha · Constructor · Level 3: Construct",
    "reasons": [
+    "names a placeholder"
+   ]
+  },
+  {
+   "where": "Physician · Chirurgeon · level 6 feature",
+   "reasons": [
+    "bracket",
     "names a placeholder"
    ]
   },
@@ -207,71 +214,71 @@
       "Level": "11",
       "Proficiency Bonus": "+4",
       "Class Features": "Cold Read",
-      "Computation Die": "d10",
-      "Exploit": "4d10"
+      "Computation Die": "d8",
+      "Exploit": "4d8"
      },
      {
       "Level": "12",
       "Proficiency Bonus": "+4",
       "Class Features": "Ability Score Improvement",
-      "Computation Die": "d10",
-      "Exploit": "4d10"
+      "Computation Die": "d8",
+      "Exploit": "4d8"
      },
      {
       "Level": "13",
       "Proficiency Bonus": "+5",
       "Class Features": "Closed Mind",
-      "Computation Die": "d10",
-      "Exploit": "5d10"
+      "Computation Die": "d8",
+      "Exploit": "5d8"
      },
      {
       "Level": "14",
       "Proficiency Bonus": "+5",
       "Class Features": "",
-      "Computation Die": "d10",
-      "Exploit": "5d10"
+      "Computation Die": "d8",
+      "Exploit": "5d8"
      },
      {
       "Level": "15",
       "Proficiency Bonus": "+5",
       "Class Features": "Never Surprised",
-      "Computation Die": "d10",
-      "Exploit": "5d10"
+      "Computation Die": "d8",
+      "Exploit": "5d8"
      },
      {
       "Level": "16",
       "Proficiency Bonus": "+5",
       "Class Features": "Ability Score Improvement",
-      "Computation Die": "d10",
-      "Exploit": "5d10"
+      "Computation Die": "d8",
+      "Exploit": "5d8"
      },
      {
       "Level": "17",
       "Proficiency Bonus": "+6",
       "Class Features": "Far Projection",
-      "Computation Die": "d10",
-      "Exploit": "6d10"
+      "Computation Die": "d8",
+      "Exploit": "6d8"
      },
      {
       "Level": "18",
       "Proficiency Bonus": "+6",
       "Class Features": "Unreadable",
-      "Computation Die": "d10",
-      "Exploit": "6d10"
+      "Computation Die": "d8",
+      "Exploit": "6d8"
      },
      {
       "Level": "19",
       "Proficiency Bonus": "+6",
       "Class Features": "Epic Boon",
-      "Computation Die": "d10",
-      "Exploit": "6d10"
+      "Computation Die": "d8",
+      "Exploit": "6d8"
      },
      {
       "Level": "20",
       "Proficiency Bonus": "+6",
       "Class Features": "Checkmate",
-      "Computation Die": "d10",
-      "Exploit": "6d10"
+      "Computation Die": "d8",
+      "Exploit": "6d8"
      }
     ]
    },
@@ -294,7 +301,7 @@
     {
      "level": 1,
      "name": "Projections",
-     "text": "**Projections** are what you do with what you've Observed; each works only against a creature you have Observed. You can't use a Projection while you have the Incapacitated condition. The Computation Die column of the Counsellor Features table shows the size of your **computation die**: a d4 at level 1, a d8 at level 5, and a d10 at level 11.\n\n**Exploit.** When a creature you can see hits an Observed creature you can see with an attack roll, you can point out the weakness (no action required). You decide after the attack hits and before its damage is rolled. The attack deals extra damage shown in the Exploit column of the Counsellor Features table. These dice aren't rolled twice on a Critical Hit. The extra damage is the same type as the attack's damage; if the attack deals more than one type, you choose one of them. The attacker can be you, an ally, or any other creature. You can use Exploit once between the start of one of your turns and the start of your next, so not before your first turn in a combat.\n\n**Direct.** Once per turn when you Observe a creature on your turn, you can also choose one ally within 60 feet of yourself who can see or hear you. The next time before the start of your next turn that the ally makes an attack roll or an ability check against an Observed creature, it can roll your computation die and add the number rolled. The ally decides after seeing the d20 roll but before knowing whether it succeeds."
+     "text": "**Projections** are what you do with what you've Observed; each works only against a creature you have Observed. You can't use a Projection while you have the Incapacitated condition. The Computation Die column of the Counsellor Features table shows the size of your **computation die**: a d4 at level 1 and a d8 from level 5.\n\n**Exploit.** When a creature you can see hits an Observed creature you can see with an attack roll, you can point out the weakness (no action required). You decide after the attack hits and before its damage is rolled. The attack deals extra damage shown in the Exploit column of the Counsellor Features table. These dice aren't rolled twice on a Critical Hit. The extra damage is the same type as the attack's damage; if the attack deals more than one type, you choose one of them. The attacker can be you, an ally, or any other creature. You can use Exploit once between the start of one of your turns and the start of your next, so not before your first turn in a combat.\n\n**Direct.** Once per turn when you Observe a creature on your turn, you can also choose one ally within 60 feet of yourself who can see or hear you. The next time before the start of your next turn that the ally makes an attack roll or an ability check against an Observed creature, it can roll your computation die and add the number rolled. The ally decides after seeing the d20 roll but before knowing whether it succeeds."
     },
     {
      "level": 1,
@@ -2179,7 +2186,7 @@
       {
        "level": 14,
        "name": "Case Closed",
-       "text": "You are studying a creature when you roll Initiative if, since your last Long Rest, you have used Reconstruction on a scene it took part in or What It Is on an object it made or carried. In addition, when a creature you're studying uses Legendary Resistance, you can take a Reaction to expose the flaw. The creature must expend one additional use of Legendary Resistance; if it can't, it fails the saving throw instead. Once you use this Reaction, you can't use it again until you finish a Short or Long Rest."
+       "text": "When you roll Initiative, you can start studying one creature you can see if, since your last Long Rest, you have used Reconstruction on a scene it took part in or What It Is on an object it made or carried. In addition, when a creature you're studying uses Legendary Resistance, you can take a Reaction to expose the flaw. The creature must expend one additional use of Legendary Resistance; if it can't, it fails the saving throw instead. Once you use this Reaction, you can't use it again until you finish a Short or Long Rest."
       }
      ]
     },
@@ -2841,18 +2848,13 @@
       },
       {
        "level": 6,
-       "name": "Extra Attack",
-       "text": "You can attack twice instead of once whenever you take the Attack action on your turn."
-      },
-      {
-       "level": 6,
        "name": "Field Hospital",
        "text": "When you cast a Physician spell with a range of Self that creates an Emanation or other area centered on you (such as *Aura of Vitality*, *Aura of Life*, *Aura of Purity*, *Antilife Shell*, or *Circle of Power*), the area's radius increases by 10 feet. When a creature regains Hit Points from such a spell that you are concentrating on, it regains additional Hit Points equal to your Intelligence modifier. A creature can benefit from this additional healing once per turn.\n\nIn addition, while you are concentrating on such a spell, you can use Healing Prowess on any creature in its area, rather than only a creature you touch."
       },
       {
        "level": 10,
        "name": "The Bellows",
-       "text": "While you are concentrating on a spell described in Field Hospital, you have Advantage on Constitution saving throws to maintain Concentration on it.\n\nIn addition, as a Bonus Action, you can expend one Prowess Die to work the bellows in a 15-foot Cone originating from you. Each willing creature of your choice in the Cone spends one of its Hit Point Dice and regains Hit Points as if it had spent that die at the end of a Short Rest, adding your Intelligence modifier to the roll. A creature that has no Hit Point Dice remaining gains no benefit. A creature that has no Hit Point Dice of its own, as most monsters don't, instead regains Hit Points equal to one roll of your Prowess Die plus your Intelligence modifier (no die is expended). A creature can't be affected by your Bellows again until it finishes a Long Rest."
+       "text": "As a Bonus Action, you can expend one Prowess Die to work the bellows in a 15-foot Cone originating from you. Each willing creature of your choice in the Cone spends one of its Hit Point Dice and regains Hit Points as if it had spent that die at the end of a Short Rest, adding your Intelligence modifier to the roll. A creature that has no Hit Point Dice remaining gains no benefit. A creature that has no Hit Point Dice of its own, as most monsters don't, instead regains Hit Points equal to one roll of your Prowess Die plus your Intelligence modifier (no die is expended). A creature can't be affected by your Bellows again until it finishes a Long Rest."
       },
       {
        "level": 14,
@@ -2888,7 +2890,7 @@
       {
        "level": 10,
        "name": "Field Pharmacology",
-       "text": "You can lace your projectiles. When you make an Arrow of Plague, you can expend a second Prowess Die to add one of the following agents. On a hit, the target must succeed on a Constitution saving throw against your spell save DC or suffer the agent's effect until the end of its next turn. If the target is your patient, it instead makes the saving throw using the ability in which you learned it has the lowest saving throw bonus.\n\n- **Sedative.** The target has the Incapacitated condition. The effect ends early if the target takes damage after the shot that applied it.\n- **Blinding Agent.** The target has the Blinded condition.\n- **Paralytic.** The target's Speed becomes 0, and it can't take Reactions.\n\nYou also gain the following benefits:\n\n- **Spreading Draught.** When an Arrow of Plague hits a creature, each creature of your choice within 5 feet of that creature regains Hit Points equal to your Intelligence modifier.\n- **Multi-Shot.** When you make an Arrow of Healing, you can expend two Prowess Dice instead of one. If you do, the shot heals two creatures of your choice within the weapon's normal range, each regaining Hit Points equal to one of the expended dice, rolled for it, plus your Intelligence modifier."
+       "text": "You can lace your projectiles. When you make an Arrow of Plague, you can expend a second Prowess Die to add one of the following agents. On a hit, the target must succeed on a Constitution saving throw against your spell save DC or suffer the agent's effect until the end of its next turn. If the target is your patient, it instead makes the saving throw using the ability in which you learned it has the lowest saving throw bonus.\n\n- **Sedative.** The target has the Incapacitated condition. The effect ends early if the target takes damage after the shot that applied it.\n- **Blinding Agent.** The target has the Blinded condition.\n- **Paralytic.** The target's Speed becomes 0, and it can't take Reactions.\n\nYou also gain the following benefits:\n\n- **Spreading Draught.** When an Arrow of Plague hits a creature, or an Arrow of Healing restores Hit Points to one, each other creature of your choice within 5 feet of that creature regains Hit Points equal to your Intelligence modifier. (With Multi-Shot, choose one of the two creatures.)\n- **Multi-Shot.** When you make an Arrow of Healing, you can expend two Prowess Dice instead of one. If you do, the shot heals two creatures of your choice within the weapon's normal range, each regaining Hit Points equal to one of the expended dice, rolled for it, plus your Intelligence modifier."
       },
       {
        "level": 14,
@@ -2898,7 +2900,7 @@
       {
        "level": 14,
        "name": "Line of Fire",
-       "text": "Your medicated shots ignore Half Cover and Three-Quarters Cover. In addition, you can make a medicated shot against a creature you can't see if a creature that you can see and that is friendly to you is within 5 feet of it."
+       "text": "Your medicated shots ignore Half Cover and Three-Quarters Cover. In addition, you can make a medicated shot against a creature you can't see if a creature that you can see and that is friendly to you is within 5 feet of it. From Physician level 17, when you roll Initiative and have no Prowess Dice, you regain one expended Prowess Die."
       }
      ]
     },
@@ -2976,7 +2978,7 @@
       {
        "level": 3,
        "name": "The Font Within",
-       "text": "You find the Font: the same source of life that clerics receive from their gods and druids from nature. There is only one, but you have found it inside your own body rather than outside it, and you draw on it from there. It gives you a second way to pay for your magic.\n\n**Draw on the Font.** You keep your spell slots and cast with them as normal. In addition, when you cast a Physician spell of level 1 through 5, you can draw on the Font instead, up to a total number of spell levels equal to your Physician level between Long Rests (your **Font limit**): you spend a number of Hit Point Dice equal to the spell's level instead of expending a spell slot. Only Hit Point Dice you gained from Physician levels can be spent this way. Hit Point Dice spent this way are expended without being rolled and don't restore Hit Points. While you have this feature, a Long Rest restores only half your total Hit Point Dice (minimum of one), not all of them. If you cast the spell with a higher-level slot's effect, you spend Hit Point Dice equal to the level at which you cast it, which can be no higher than the highest level of spell slot you have. You can't draw on the Font to cast a spell of level 6 or higher. Drawing on the Font counts as expending a spell slot for the rule that you can expend only one spell slot to cast a spell on a turn.\n\n> **The Cost Shows**\n>\n> A day of heavy casting is followed by thinner days, and the character won't feel it until they try to rest. As the DM, show the cost before then: fatigue, unsteady hands, a drawn face. A Physician who has spent half their Hit Point Dice by noon should look like it.\n\n**Symbiosis.** Drawing on the Font changes what your body needs and what it can survive. You gain the following as you reach the listed Physician levels:\n\n- **Level 5.** You add *Fly* to your spellbook. It counts as a Physician spell for you and doesn't count against the spells you add to your spellbook when you gain a level.\n- **Level 9.** You stop aging, and you can't be aged magically.\n- **Level 13.** You no longer need to eat, drink, or breathe.\n- **Level 17.** When you drop to 0 Hit Points, you are automatically Stable, and you don't make Death Saving Throws. Damage still causes Death Saving Throw failures; you become Stable again after each one."
+       "text": "You find the Font: the same source of life that clerics receive from their gods and druids from nature. There is only one, but you have found it inside your own body rather than outside it, and you draw on it from there. It gives you a second way to pay for your magic.\n\n**Draw on the Font.** You keep your spell slots and cast with them as normal. In addition, when you cast a Physician spell of level 1 through 5, you can draw on the Font instead, up to a total number of spell levels equal to your Physician level between Long Rests (your **Font limit**): you spend a number of Hit Point Dice equal to the spell's level instead of expending a spell slot. Only Hit Point Dice you gained from Physician levels can be spent this way. Hit Point Dice spent this way are expended without being rolled and don't restore Hit Points. When you finish a Short Rest, you regain one expended Hit Point Die that you spent drawing on the Font. While you have this feature, a Long Rest restores only half your total Hit Point Dice (minimum of one), not all of them. If you cast the spell with a higher-level slot's effect, you spend Hit Point Dice equal to the level at which you cast it, which can be no higher than the highest level of spell slot you have. You can't draw on the Font to cast a spell of level 6 or higher. Drawing on the Font counts as expending a spell slot for the rule that you can expend only one spell slot to cast a spell on a turn.\n\n> **The Cost Shows**\n>\n> A day of heavy casting is followed by thinner days, and the character won't feel it until they try to rest. As the DM, show the cost before then: fatigue, unsteady hands, a drawn face. A Physician who has spent half their Hit Point Dice by noon should look like it.\n\n**Symbiosis.** Drawing on the Font changes what your body needs and what it can survive. You gain the following as you reach the listed Physician levels:\n\n- **Level 5.** You add *Fly* to your spellbook. It counts as a Physician spell for you and doesn't count against the spells you add to your spellbook when you gain a level.\n- **Level 9.** You stop aging, and you can't be aged magically.\n- **Level 13.** You no longer need to eat, drink, or breathe.\n- **Level 17.** When you drop to 0 Hit Points, you are automatically Stable, and you don't make Death Saving Throws. Damage still causes Death Saving Throw failures; you become Stable again after each one."
       },
       {
        "level": 3,
@@ -2986,7 +2988,7 @@
       {
        "level": 3,
        "name": "Attuned Energy",
-       "text": "Choose a damage type: Cold, Fire, Lightning, Psychic, or Radiant. This is your **attuned energy**: the form your own vitality takes when you push it outward. Fire is your metabolism let loose, the vital heat every living body burns to stay alive. Lightning is the signal that runs your nerves. Cold is the slowed heart and the held breath, and the rime that follows. Radiant is sunlight, and everything caught in it is being told to grow. Psychic is the will that moves your flesh, sent to move something else: a column of wrong.\n\nA Physician's harm is Necrotic. Yours no longer has to be. When you cast a Physician spell that deals Necrotic damage, you can have it deal your attuned damage type instead; the spell is otherwise unchanged, and what anyone watching sees is your energy, not the spell's.\n\nYou also work in your energy directly. Choose one cantrip that deals your attuned damage type, from the Bard, Cleric, Druid, Physician, Sorcerer, Warlock, or Wizard spell list. It counts as a Physician cantrip for you and doesn't count against the number of cantrips you know. In addition, add to your spellbook one spell of each level from 1 through 5 that deals your attuned damage type, chosen from those spell lists; you add each spell when you reach a Physician level at which you can cast it. These spells count as Physician spells for you and don't count against the spells you add to your spellbook when you gain a level. If no spell of a given level deals your attuned damage type, you can instead choose an additional spell of any lower level that does.\n\n> **Suggested Attunements**\n>\n> These are working sets: a cantrip, then one spell per level from 1 to 5. You aren't bound to them. Any spell that deals your energy, from those seven spell lists, is a legal pick.\n>\n> **Fire.** *Fire Bolt*, then *Burning Hands · Scorching Ray · Fireball · Wall of Fire · Flame Strike.*\n>\n> **Cold.** *Ray of Frost*, which also drops the target's Speed, then *Armor of Agathys · Dragon's Breath · Cold Storage · Ice Storm · Cone of Cold.* (Take *Ice Knife* at level 1 instead if you want something to throw.)\n>\n> **Lightning.** *Shocking Grasp*, which keeps the target from making Opportunity Attacks, then *Witch Bolt · Convulsion · Lightning Bolt · Call Lightning · Defibrillation.* (No level 4 spell in the *Player's Handbook* deals Lightning, so *Call Lightning* is the level 4 pick. *Arc*, a new Sorcerer and Wizard spell in the Spells appendix at the back of this book, is another level 3 choice: a Bonus Action teleport instead of the line.)\n>\n> **Radiant.** *Sacred Flame*, which ignores cover, then *Guiding Bolt · Moonbeam · Spirit Guardians · Guardian of Faith · Flame Strike.*\n>\n> **Psychic.** *Mind Sliver*, which takes a d4 off the target's next save, then *Dissonant Whispers · Mind Spike · Hysteria · Phantasmal Killer · Synaptic Static.*"
+       "text": "Choose a damage type: Cold, Fire, Lightning, Psychic, or Radiant. This is your **attuned energy**: the form your own vitality takes when you push it outward. Fire is your metabolism let loose, the vital heat every living body burns to stay alive. Lightning is the signal that runs your nerves. Cold is the slowed heart and the held breath, and the rime that follows. Radiant is your own life burning as bright as the sun, and everything near you feels the heat of it. Psychic is the will that moves your flesh, sent to move something else: a column of wrong.\n\nA Physician's harm is Necrotic. Yours no longer has to be. When you cast a Physician spell that deals Necrotic damage, you can have it deal your attuned damage type instead; the spell is otherwise unchanged, and what anyone watching sees is your energy, not the spell's.\n\nYou also work in your energy directly. Choose one cantrip that deals your attuned damage type, from the Bard, Cleric, Druid, Physician, Sorcerer, Warlock, or Wizard spell list. It counts as a Physician cantrip for you and doesn't count against the number of cantrips you know. In addition, add to your spellbook one spell of each level from 1 through 5 that deals your attuned damage type, chosen from those spell lists; you add each spell when you reach a Physician level at which you can cast it. These spells count as Physician spells for you and don't count against the spells you add to your spellbook when you gain a level. If no spell of a given level deals your attuned damage type, you can instead choose an additional spell of any lower level that does.\n\n> **Suggested Attunements**\n>\n> These are working sets: a cantrip, then one spell per level from 1 to 5. You aren't bound to them. Any spell that deals your energy, from those seven spell lists, is a legal pick.\n>\n> **Fire.** *Fire Bolt*, then *Burning Hands · Scorching Ray · Fireball · Wall of Fire · Flame Strike.*\n>\n> **Cold.** *Ray of Frost*, which also drops the target's Speed, then *Armor of Agathys · Dragon's Breath · Cold Storage · Ice Storm · Cone of Cold.* (Take *Ice Knife* at level 1 instead if you want something to throw.)\n>\n> **Lightning.** *Shocking Grasp*, which keeps the target from making Opportunity Attacks, then *Witch Bolt · Convulsion · Lightning Bolt · Call Lightning · Defibrillation.* (No level 4 spell in the *Player's Handbook* deals Lightning, so *Call Lightning* is the level 4 pick. *Arc*, a new Sorcerer and Wizard spell in the Spells appendix at the back of this book, is another level 3 choice: a Bonus Action teleport instead of the line.)\n>\n> **Radiant.** *Sacred Flame*, which ignores cover, then *Guiding Bolt · Moonbeam · Spirit Guardians · Guardian of Faith · Flame Strike.*\n>\n> **Psychic.** *Mind Sliver*, which takes a d4 off the target's next save, then *Dissonant Whispers · Mind Spike · Hysteria · Phantasmal Killer · Synaptic Static.*"
       },
       {
        "level": 6,
@@ -3006,7 +3008,7 @@
       {
        "level": 14,
        "name": "Rebirth",
-       "text": "When you are reduced to 0 Hit Points but not killed outright, you instead drop to 1 Hit Point. Each other creature within 10 feet of you either takes 2d10 damage of your attuned type or regains 2d10 Hit Points; you choose for each creature. You then regain a number of expended Hit Point Dice equal to your Proficiency Bonus. Once you use this feature, you can't use it again until you finish a Long Rest."
+       "text": "When you are reduced to 0 Hit Points but not killed outright, you instead drop to 1 Hit Point. Each other creature within 10 feet of you either takes 2d10 damage of your attuned type or regains 2d10 Hit Points; you choose for each creature. Once you use this feature, you can't use it again until you finish a Long Rest."
       }
      ]
     },
@@ -3037,7 +3039,7 @@
       {
        "level": 10,
        "name": "Overload",
-       "text": "The first time a creature fails a saving throw against a given casting of a Physician spell that deals Psychic damage or that gives a creature the Charmed, Frightened, Paralyzed, Stunned, or Incapacitated condition, it takes extra Psychic damage equal to your Intelligence modifier, and it can't take Reactions until the start of its next turn.\n\nIn addition, you can cast *Haste* or *Slow* once without expending a spell slot, even if you don't have it prepared. You regain the ability to do so when you finish a Long Rest."
+       "text": "The first time a creature fails a saving throw against a given casting of a Physician spell that deals Psychic damage or that gives a creature the Charmed, Frightened, Paralyzed, Stunned, or Incapacitated condition, it takes extra Psychic damage equal to your Intelligence modifier, and it can't take Reactions until the start of its next turn.\n\nIn addition, you can cast *Haste* or *Slow* once without expending a spell slot, even if you don't have it prepared. You regain the ability to do so when you finish a Long Rest.\n\nIn addition, once on each of your turns when you cast a Physician spell of level 1 or higher that deals Psychic damage or that can give a creature the Charmed, Frightened, Paralyzed, Stunned, or Incapacitated condition, you and each creature of your choice within 10 feet of you gain Temporary Hit Points equal to your Intelligence modifier."
       },
       {
        "level": 14,
@@ -3068,7 +3070,7 @@
       {
        "level": 6,
        "name": "Purge",
-       "text": "Your treatment reaches everyone in the cloud. When you use Miasma, you can take a Utilize action on the same turn to perform Treatment on every willing creature in the area at once, whether or not it is your patient, making a single Intelligence (Medicine) check and expending a single use of a Healer's Kit. Each creature is treated for the same effect; a creature that has been treated for that effect since its last rest can't benefit, whether the earlier attempt succeeded or failed.\n\nIn addition, you can make your Miasma noxious. When you do, no creature regains Hit Points or gains Advantage from it; instead, each hostile creature in the area when it appears takes Poison damage equal to the number rolled on the Prowess Die, or half as much on a successful Constitution saving throw against your spell save DC."
+       "text": "Your treatment reaches everyone in the cloud. When you use Miasma, you can take a Utilize action on the same turn to perform Treatment on every willing creature in the area at once, whether or not it is your patient, making a single Intelligence (Medicine) check and expending a single use of a Healer's Kit. Each creature is treated for the same effect; a creature that has been treated for that effect since its last rest can't benefit, whether the earlier attempt succeeded or failed.\n\nYour Miasma also spreads its relief. When a creature regains Hit Points from your Miasma, each other creature of your choice in the area regains Hit Points equal to your Intelligence modifier.\n\nIn addition, you can make your Miasma noxious. When you do, no creature regains Hit Points or gains Advantage from it; instead, each hostile creature in the area when it appears takes Poison damage equal to the number rolled on the Prowess Die, or half as much on a successful Constitution saving throw against your spell save DC."
       },
       {
        "level": 6,
@@ -3078,12 +3080,12 @@
       {
        "level": 10,
        "name": "Outbreak",
-       "text": "Your afflictions spread. When a creature fails a saving throw against a level 1+ Physician spell you cast that deals Necrotic or Poison damage, or fails its saving throw against your noxious Miasma, it becomes **infected**. The infection is a disease. An infected creature can't regain Hit Points, and at the start of each of its turns it takes Necrotic damage equal to your Intelligence modifier and then makes a Constitution saving throw against your spell save DC, ending the infection on a success. A creature that ends its turn within 5 feet of an infected creature must succeed on a Constitution saving throw against your spell save DC or become infected. An infection ends after 1 minute if it hasn't ended sooner, and a creature whose infection ends can't be infected by this feature again for 1 minute. No more creatures can be infected at once than your Intelligence modifier (minimum of one); while that many are infected, no other creature becomes infected. Creatures that have Immunity to disease can't be infected, and your allies are never infected by this feature.\n\nIn addition, a creature that regains Hit Points from your Miasma has Resistance to Poison damage and can't be diseased until the end of its next turn.\n\n**Tracing.** When you examine a creature that has a natural disease, you learn whom or what it caught the disease from, if that source is within a day's travel, and the route it took: the water, the air, a touch, the cloth, the food, or the vermin."
+       "text": "Your afflictions spread. When a creature fails a saving throw against a level 1+ Physician spell you cast that deals Necrotic or Poison damage, or fails its saving throw against your noxious Miasma, it becomes **infected**. The infection is a disease. An infected creature can't regain Hit Points, and at the start of each of its turns it takes Necrotic damage equal to your Intelligence modifier (you can choose for it to take none) and then makes a Constitution saving throw against your spell save DC, ending the infection on a success. A creature of your choice that ends its turn within 5 feet of an infected creature must succeed on a Constitution saving throw against your spell save DC or become infected. An infection ends after 1 minute if it hasn't ended sooner, and a creature whose infection ends can't be infected by this feature again for 1 minute. No more creatures can be infected at once than your Intelligence modifier (minimum of one); while that many are infected, no other creature becomes infected. Creatures that have Immunity to disease can't be infected, and your allies are never infected by this feature.\n\nIn addition, each creature that regains Hit Points from your Miasma has Resistance to Poison damage and can't be diseased until the end of its next turn.\n\n**Tracing.** When you examine a creature that has a natural disease, you learn whom or what it caught the disease from, if that source is within a day's travel, and the route it took: the water, the air, a touch, the cloth, the food, or the vermin."
       },
       {
        "level": 14,
        "name": "Doctor's Rounds",
-       "text": "The radius of your Miasma becomes 20 feet. In addition, each friendly creature within 10 feet of you has Advantage on Constitution saving throws and has Immunity to disease and to the Poisoned condition.\n\n**Wide Berth.** You can walk into and out of a quarantined city, a cordon, or a pest house, and no guard stops you. A health officer anywhere will take your word on whether a house can be opened, a ship unloaded, or a body buried."
+       "text": "The radius of your Miasma becomes 20 feet. In addition, each friendly creature within 10 feet of you has Advantage on Constitution saving throws and has Immunity to disease and to the Poisoned condition. From Physician level 17, when you roll Initiative and have no Prowess Dice, you regain one expended Prowess Die.\n\n**Wide Berth.** You can walk into and out of a quarantined city, a cordon, or a pest house, and no guard stops you. A health officer anywhere will take your word on whether a house can be opened, a ship unloaded, or a body buried."
       }
      ]
     },
@@ -3130,7 +3132,7 @@
       {
        "level": 3,
        "name": "The Font Without",
-       "text": "You find the Font in the turning of the world rather than in your own body: the moon, the year, the tide, the harvest. It gives you a second way to pay for your magic, and it goes wherever you go: a cellar, a city, and a dungeon all have a moon over them.\n\n**Draw on the Turning.** When you cast a Physician spell of level 1 through 5, you can draw on the turning instead of expending a spell slot. You cast the spell at its own level, or at a higher level no higher than the highest level of spell slot you have, and you draw spell levels equal to the level at which you cast it, up to a total equal to half your Physician level (round up) between Long Rests. Drawing on the turning counts as expending a spell slot for the rule that you can expend only one spell slot to cast a spell on a turn.\n\n**The Two Halves.** A spell you draw takes the virtue of the half of the cycle you're in:\n\n- *Waxing* (from the new moon to the full): growth. If the drawn spell restores Hit Points, each creature it heals regains extra Hit Points equal to the spell's level.\n- *Waning* (from the full moon to the new): decay. If the drawn spell deals damage, one target takes extra Necrotic damage equal to the spell's level plus your Intelligence modifier.\n\nYou always know where the moon is in its cycle, and so where the Hidden's tide stands (they run on the same moon; the Introduction to *Life on the Border* has the tide). If your table doesn't track the moon, choose your half at each dawn instead.\n\n**Turn the Wheel.** Once per Long Rest, when you draw a spell, you can give it the other half's virtue instead.\n\n**The Season Shows.** Drawing on the turning shows on the world around you, and does it no harm. A waxing draw brings the nearest green things into bud, a window box into flower, a crack in a wall into moss; a waning draw turns the nearest leaves, rimes a puddle, ripens and drops a fruit. In November, a garrison's plane trees bud. Anyone watching knows something just happened."
+       "text": "You find the Font in the turning of the world rather than in your own body: the moon, the year, the tide, the harvest. It gives you a second way to pay for your magic, and it goes wherever you go: a cellar, a city, and a dungeon all have a moon over them.\n\n**Draw on the Turning.** When you cast a Physician spell of level 1 through 3, you can draw on the turning instead of expending a spell slot. You cast the spell at its own level, or at a higher level no higher than 3rd and no higher than the highest level of spell slot you have, and you draw spell levels equal to the level at which you cast it, up to a total equal to half your Physician level (round up), to a maximum of 5, between Long Rests. Drawing on the turning counts as expending a spell slot for the rule that you can expend only one spell slot to cast a spell on a turn.\n\n**The Two Halves.** A spell you draw takes the virtue of the half of the cycle you're in:\n\n- *Waxing* (from the new moon to the full): growth. If the drawn spell restores Hit Points, each creature it heals regains extra Hit Points equal to the spell's level.\n- *Waning* (from the full moon to the new): decay. If the drawn spell deals damage, one target takes extra Necrotic damage equal to the spell's level plus your Intelligence modifier.\n\nYou always know where the moon is in its cycle, and so where the Hidden's tide stands (they run on the same moon; the Introduction to *Life on the Border* has the tide). If your table doesn't track the moon, choose your half at each dawn instead.\n\n**Turn the Wheel.** Once per Long Rest, when you draw a spell, you can give it the other half's virtue instead.\n\n**The Season Shows.** Drawing on the turning shows on the world around you, and does it no harm. A waxing draw brings the nearest green things into bud, a window box into flower, a crack in a wall into moss; a waning draw turns the nearest leaves, rimes a puddle, ripens and drops a fruit. In November, a garrison's plane trees bud. Anyone watching knows something just happened."
       },
       {
        "level": 3,
@@ -3185,7 +3187,7 @@
       {
        "level": 3,
        "name": "Sympathy",
-       "text": "When you diagnose a creature, or as a Bonus Action, you can take the trace of a creature within 30 feet of you: a drop of its blood, a hair, a scale, a feather. An unwilling creature must have taken damage since the start of your previous turn. You can hold two traces at once; taking a third ends the oldest. A creature whose trace you hold is your patient until you no longer hold its trace, in addition to the patient Diagnosis gives you (an enemy can be your patient too; a physician studies the disease as well as the sick). While you hold a trace:\n\n- *Like finds like.* You know the direction and distance to your patient if it's within 1 mile of you, and you can target it with your spells without seeing it if it's within the spell's range.\n- *Like answers like.* Once on each of your turns, when you deal damage to one creature whose trace you hold with a level 1+ Physician spell, the other creature whose trace you hold (if it's willing) regains Hit Points equal to your Intelligence modifier (minimum of 1). What the year takes from one, it gives to another."
+       "text": "When you diagnose a creature, or as a Bonus Action, you can take the trace of another creature within 30 feet of you: a drop of its blood, a hair, a scale, a feather. An unwilling creature must have taken damage since the start of your previous turn. You can hold two traces at once; taking a third ends the oldest. A creature whose trace you hold is your patient until you no longer hold its trace, in addition to the patient Diagnosis gives you (an enemy can be your patient too; a physician studies the disease as well as the sick). While you hold a trace:\n\n- *Like finds like.* You know the direction and distance to your patient if it's within 1 mile of you, and you can target it with your spells without seeing it if it's within the spell's range.\n- *Like answers like.* Once on each of your turns, when you deal damage to one creature whose trace you hold with a level 1+ Physician spell, the other creature whose trace you hold (if it's willing) regains Hit Points equal to your Intelligence modifier (minimum of 1). What the year takes from one, it gives to another."
       },
       {
        "level": 6,
@@ -3200,7 +3202,7 @@
       {
        "level": 14,
        "name": "The Wheel Turns",
-       "text": "When you or a creature you can see within 30 feet of you drops to 0 Hit Points but isn't killed outright, you can take a Reaction: the creature drops to 1 Hit Point instead and regains Hit Points equal to your Physician level. Every green thing within 60 feet of you goes through a year in a moment: it buds, flowers, fruits, and drops its leaves. Once you use this feature, you can't use it again until you finish a Long Rest.\n\n**The Great Chain of Being.** You know at a glance a creature's type and whether it is a Hidden creature (*Life on the Border*, Introduction, The Hidden, in the rules).\n\n> **Playing a Vitalist**\n>\n> Know your half of the moon. While it waxes, draw your healing from the turning and keep your slots for harm; while it wanes, the reverse. Turn the wheel when the fight needs the other half. Hold two traces, an enemy and the ally who'll need you next: every spell you land on the one mends the other, and an enemy whose trace you hold can't hide from your spells. Let the weapon salve catch the next blade that lands. From 10th level, your harm is healing for someone else."
+       "text": "When a creature whose trace you hold drops to 0 Hit Points but isn't killed outright, you can take a Reaction: the creature drops to 1 Hit Point instead and regains Hit Points equal to your Physician level. Every green thing within 60 feet of you goes through a year in a moment: it buds, flowers, fruits, and drops its leaves. Once you use this feature, you can't use it again until you finish a Long Rest.\n\n**The Great Chain of Being.** You know at a glance a creature's type and whether it is a Hidden creature (*Life on the Border*, Introduction, The Hidden, in the rules).\n\n> **Playing a Vitalist**\n>\n> Know your half of the moon. While it waxes, draw your healing from the turning and keep your slots for harm; while it wanes, the reverse. Turn the wheel when the fight needs the other half. Hold two traces, an enemy and the ally who'll need you next: every spell you land on the one mends the other, an enemy whose trace you hold can't hide from your spells, and if the ally falls, the wheel turns for them. Let the weapon salve catch the next blade that lands. From 10th level, your harm is healing for someone else."
       }
      ]
     }
@@ -4181,7 +4183,7 @@
       {
        "level": 3,
        "name": "The Scale",
-       "text": "Whenever you open a vista, of any plane and for any purpose, you can also Weigh one creature you can see within 30 feet of the vista that isn't your ally. It stays Weighed for 1 minute, and only one creature can be Weighed at a time. Weighing a creature again starts its Weighing over.\n\nEach time a Weighed creature deals damage to you or one of your allies, the scale tips (an attack or effect that damages several of you at once tips it only once): the creature takes 1d6 Force damage, and its Speed decreases by 5 feet (to a minimum of 0) until the Weighing ends. If you have at least 1 Hit Point, you regain Hit Points equal to your Wisdom modifier. You always know the direction to a Weighed creature on the same plane as you, and it gains no benefit from the Invisible condition against you or your spirits."
+       "text": "Whenever you open a vista, of any plane and for any purpose, you can also Weigh one creature you can see within 30 feet of the vista that isn't your ally. It stays Weighed for 1 minute, and only one creature can be Weighed at a time. Weighing a creature again starts its Weighing over.\n\nEach time a Weighed creature deals damage to you or one of your allies, the scale tips (an attack or effect that damages several of you at once tips it only once): the creature takes 1d6 Force damage, and its Speed decreases by 5 feet (to a minimum of 0) until the Weighing ends. If you have at least 1 Hit Point and the damage that tipped the scale was dealt to you (including damage you take through Bear the Verdict), you regain Hit Points equal to your Wisdom modifier, no more than once between the start of one of your turns and the start of your next. Once you have five Revelator levels, damage dealt to an ally also restores them. You always know the direction to a Weighed creature on the same plane as you, and it gains no benefit from the Invisible condition against you or your spirits."
       },
       {
        "level": 3,
@@ -4204,19 +4206,19 @@
        "text": "Your spirit stands where you can't. You can use Bear the Verdict when an ally within 5 feet of your spirit takes damage, as if you were in the spirit's space. You take the damage, not the spirit."
       },
       {
-       "level": 7,
-       "name": "Endure the Sentence",
-       "text": "When you take damage through Bear the Verdict, you have Resistance to it."
-      },
-      {
        "level": 11,
        "name": "A Heavier Scale",
-       "text": "The scale's weight shifts onto the Weighed. Each time it tips, the creature also has Disadvantage on its next attack roll before the end of its next turn (tips don't stack: one Disadvantage at a time), and the scale's healing settles into a steady measure: you regain those Hit Points once between the start of one of your turns and the start of your next."
+       "text": "The scale's weight shifts onto the Weighed. Each time it tips, the creature also has Disadvantage on its next attack roll before the end of its next turn (tips don't stack: one Disadvantage at a time)."
       },
       {
        "level": 15,
        "name": "Acheron",
        "text": "You know the Revelation of Acheron. You've crossed."
+      },
+      {
+       "level": 15,
+       "name": "Endure the Sentence",
+       "text": "When you take damage through Bear the Verdict, you have Resistance to it."
       },
       {
        "level": 15,
@@ -5550,7 +5552,7 @@
       {
        "level": 3,
        "name": "Flow of Fate",
-       "text": "The stream of fate runs under everyone near you, and you can pull it aside for them as easily as for yourself. When a creature you can see within 30 feet of yourself is hit by an attack roll, you can use Denial for it instead of for yourself, unraveling a warp as normal; the creature gains the bonus to AC until the start of your next turn, including against the triggering attack. Denial's armor restriction applies to you, not to the creature you protect."
+       "text": "The stream of fate runs under everyone near you, and you can pull it aside for them as easily as for yourself. When a creature you can see within 30 feet of yourself is hit by an attack roll, you can use Denial for it instead of for yourself, unraveling one of your readied lots; the creature gains the bonus to AC until the start of your next turn, including against the triggering attack. Denial's armor restriction applies to you, not to the creature you protect."
       },
       {
        "level": 3,
