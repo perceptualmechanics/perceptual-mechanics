@@ -136,6 +136,17 @@ export function verifyEuphoniaBuilder({ engine = defaultEngine, srd = read('srd'
   const boonAt = lv => run(someone([{ class: 'Fighter', level: lv, subclass: 'Champion' }], { skills: { Fighter: ['Athletics', 'History'], 'Human Skillful': ['Arcana'] }, improvements: { [`Fighter ${lv}`]: { feat: 'Boon of Fate', increases: { Wisdom: 1 } } } }), 'epic boon')?.problems.some(p => p.field === `improvement:Fighter ${lv}` && /isn't a feat/.test(p.message));
   if (!(boonAt(4) === true && boonAt(19) === false)) fail('an Epic Boon feat is allowed where an Ability Score Improvement is, or refused at the Epic Boon');
 
+  // A setting class with a class feature withheld is set aside, by name,
+  // and every other setting class is offered: plant a withheld feature in
+  // one that's whole and it leaves too.
+  for (const name of book.unfinished) if (book.classNamed(name)) fail(`${name} has a class feature withheld but is offered`);
+  for (const c of euphonia.data) if (!book.unfinished.includes(c.name) && !book.classNamed(c.name)) fail(`${c.name} is whole but not offered`);
+  const whole = euphonia.data.find(c => !book.unfinished.includes(c.name));
+  try {
+    const planted = engine.rulebook(srd, { ...euphonia, withheld: [...euphonia.withheld, { where: `${whole.name} · level 2 feature`, reasons: ['bracket'] }] }, setting);
+    if (planted.classNamed(whole.name) || !planted.unfinished.includes(whole.name)) fail(`a withheld feature planted in ${whole.name} doesn't set it aside`);
+  } catch (e) { fail(`a withheld feature planted in ${whole.name}: ${e.message}`); }
+
   // Every species and its one choice; every feat's prerequisite.
   for (const s of book.species) {
     const options = engine.speciesOptions(s);
@@ -253,7 +264,7 @@ export function verifyEuphoniaBuilder({ engine = defaultEngine, srd = read('srd'
 
   const log = problems.length
     ? [`\neuphonia builder: ${problems.length} problem(s):`, ...problems.map(m => `  ${m}`)]
-    : [`ok: the SRD's ${examples.length} worked examples hold; ${classes} classes built to level 20, and ${levels} class levels showing their own tables' bonus and slots; armour, shields, the hit points sentences add, origin feats and spell choices held to their rules; the setting's ${backgrounds} backgrounds built; ${book.species.length} species placed and ${book.feats.length} feats read`];
+    : [`ok: the SRD's ${examples.length} worked examples hold; ${classes} classes built to level 20, and ${levels} class levels showing their own tables' bonus and slots; armour, shields, the hit points sentences add, origin feats and spell choices held to their rules; the setting's ${backgrounds} backgrounds built${book.unfinished.length ? `, and ${book.unfinished.join(', ')} set aside as still being written` : ''}; ${book.species.length} species placed and ${book.feats.length} feats read`];
   return { ok: problems.length === 0, failures: problems.length, log };
 }
 

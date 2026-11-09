@@ -114,7 +114,8 @@ export async function initBuilder(panel) {
   status.remove();
   form.append(
     section('Name', h('label', { class: 'b-field' }, h('span', {}, 'Character name'), nameInput)),
-    section('Class', h('p', { class: 'b-note' }, 'The first is the class you began in. Its levels and the others’ make your character level.'), classList, addClass, problemSlot('classes')),
+    section('Class', h('p', { class: 'b-note' }, 'The first is the class you began in. Its levels and the others’ make your character level.'), classList, addClass, problemSlot('classes'),
+      book.unfinished.length ? h('p', { class: 'b-note' }, `${book.unfinished.map((n, i) => `${i ? 'the' : 'The'} ${n}`).join(' and ')} ${book.unfinished.length === 1 ? 'is' : 'are'} still being written, and join${book.unfinished.length === 1 ? 's' : ''} the builder when finished.`) : null),
     section('Species', h('label', { class: 'b-field' }, h('span', {}, 'Species'), speciesSelect), problemSlot('species'), optionRow, problemSlot('option'), sizeRow, problemSlot('size'), originBox, speciesTraits),
     section('Homeland', h('p', { class: 'b-note' }, 'Every species takes its traits as written; your people is where the family comes from, and the trouble comes with the country.'),
       h('label', { class: 'b-field' }, h('span', {}, 'Region'), homelandSelect), homelandLink),

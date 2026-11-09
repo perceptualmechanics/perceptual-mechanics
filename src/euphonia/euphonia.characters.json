@@ -2,8 +2,8 @@
  "provenance": {
   "source": "Euphonia.md",
   "master": "~/Documents/euphonia/Euphonia.md",
-  "sha256": "3622006ee00932daa40943df75cd988c4b7dace62dab18c4b69e3fa92ce4ceb4",
-  "modified": "2026-11-03T15:23:56-05:00",
+  "sha256": "a983f7654f56760a1eb31318b885a29491985d4a67ff614e425f8f8d5fdbbdf1",
+  "modified": "2026-11-09T14:18:58-05:00",
   "exporter": "class-kit/site_export.py",
   "exporter_version": 10,
   "rules": {
@@ -127,7 +127,7 @@
     ],
     "tool": "Cook's Utensils",
     "equipment": "Choose A or B: (A) Light Crossbow, 20 Bolts, Handaxe, Dagger, Cook's Utensils, Traveler's Clothes, Rope, 13 GP; or (B) 50 GP",
-    "about": "You signed articles. Before every cruise the Brethren of the Coast at Port Royal and Tortuga write the terms: the captain's share, the surgeon's, a payment set down for each limb or eye lost, and no prey, no pay. You voted on the captain and smoked beef over a boucan, which is where the name comes from. No license sails with the Brethren, and the witch who can raise a wind draws a full share. Spain wants you hanged and every governor who used you will eventually agree, which is why you're for hire (see Powers and Factions). Fighters, Rogues, Rangers and Storm Sorcerers come off these ships, and the odd Cleric who found the Brethren more honest than the bishop."
+    "about": "You signed articles. Before every cruise the Brethren of the Coast at Port Royal and Tortuga write the terms: the captain's share, the surgeon's, a payment set down for each limb or eye lost and no prey, no pay. You voted on the captain and smoked beef over a boucan, which is where the name comes from. No license sails with the Brethren, and the witch who can raise a wind draws a full share. Spain wants you hanged and every governor who used you will eventually agree, which is why you're for hire (see Powers and Factions). Fighters, Rogues, Rangers and Storm Sorcerers come off these ships, and the odd Cleric who found the Brethren more honest than the bishop."
    },
    {
     "name": "Veteran of the German Wars",

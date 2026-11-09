@@ -2,8 +2,8 @@
  "provenance": {
   "source": "Euphonia.md",
   "master": "~/Documents/euphonia/Euphonia.md",
-  "sha256": "3622006ee00932daa40943df75cd988c4b7dace62dab18c4b69e3fa92ce4ceb4",
-  "modified": "2026-11-03T15:23:56-05:00",
+  "sha256": "a983f7654f56760a1eb31318b885a29491985d4a67ff614e425f8f8d5fdbbdf1",
+  "modified": "2026-11-09T14:18:58-05:00",
   "exporter": "class-kit/site_export.py",
   "exporter_version": 10,
   "rules": {
@@ -50,6 +50,269 @@
    ]
   },
   {
+   "where": "Courtier · level 1 feature",
+   "reasons": [
+    "bracket",
+    "names a placeholder"
+   ]
+  },
+  {
+   "where": "Courtier · level 1 feature",
+   "reasons": [
+    "bracket",
+    "names a placeholder"
+   ]
+  },
+  {
+   "where": "Courtier · level 1 feature",
+   "reasons": [
+    "bracket",
+    "names a placeholder"
+   ]
+  },
+  {
+   "where": "Courtier · level 3 feature",
+   "reasons": [
+    "bracket",
+    "names a placeholder"
+   ]
+  },
+  {
+   "where": "Courtier · level 3 feature",
+   "reasons": [
+    "bracket",
+    "names a placeholder"
+   ]
+  },
+  {
+   "where": "Courtier · level 7 feature",
+   "reasons": [
+    "bracket",
+    "names a placeholder"
+   ]
+  },
+  {
+   "where": "Courtier · level 11 feature",
+   "reasons": [
+    "bracket",
+    "names a placeholder"
+   ]
+  },
+  {
+   "where": "Courtier · level 15 feature",
+   "reasons": [
+    "bracket",
+    "names a placeholder"
+   ]
+  },
+  {
+   "where": "Courtier · level 18 feature",
+   "reasons": [
+    "bracket",
+    "names a placeholder"
+   ]
+  },
+  {
+   "where": "Courtier · level 20 feature",
+   "reasons": [
+    "bracket",
+    "names a placeholder"
+   ]
+  },
+  {
+   "where": "Courtier · Arms · level 3 feature",
+   "reasons": [
+    "bracket",
+    "names a placeholder"
+   ]
+  },
+  {
+   "where": "Courtier · Arms · level 3 feature",
+   "reasons": [
+    "bracket",
+    "names a placeholder"
+   ]
+  },
+  {
+   "where": "Courtier · Arms · level 3 feature",
+   "reasons": [
+    "bracket",
+    "names a placeholder"
+   ]
+  },
+  {
+   "where": "Courtier · Arms · level 6 feature",
+   "reasons": [
+    "bracket",
+    "names a placeholder"
+   ]
+  },
+  {
+   "where": "Courtier · Arms · level 10 feature",
+   "reasons": [
+    "bracket",
+    "names a placeholder"
+   ]
+  },
+  {
+   "where": "Courtier · Arms · level 14 feature",
+   "reasons": [
+    "bracket",
+    "names a placeholder"
+   ]
+  },
+  {
+   "where": "Courtier · Arms",
+   "reasons": [
+    "every feature withheld"
+   ]
+  },
+  {
+   "where": "Courtier · Art · level 3 feature",
+   "reasons": [
+    "bracket",
+    "names a placeholder"
+   ]
+  },
+  {
+   "where": "Courtier · Art · level 3 feature",
+   "reasons": [
+    "bracket",
+    "names a placeholder"
+   ]
+  },
+  {
+   "where": "Courtier · Art · level 3 feature",
+   "reasons": [
+    "bracket",
+    "names a placeholder"
+   ]
+  },
+  {
+   "where": "Courtier · Art · level 6 feature",
+   "reasons": [
+    "bracket",
+    "names a placeholder"
+   ]
+  },
+  {
+   "where": "Courtier · Art · level 10 feature",
+   "reasons": [
+    "bracket",
+    "names a placeholder"
+   ]
+  },
+  {
+   "where": "Courtier · Art · level 14 feature",
+   "reasons": [
+    "bracket",
+    "names a placeholder"
+   ]
+  },
+  {
+   "where": "Courtier · Art",
+   "reasons": [
+    "every feature withheld"
+   ]
+  },
+  {
+   "where": "Courtier · Grace · level 3 feature",
+   "reasons": [
+    "bracket",
+    "names a placeholder"
+   ]
+  },
+  {
+   "where": "Courtier · Grace · level 3 feature",
+   "reasons": [
+    "bracket",
+    "names a placeholder"
+   ]
+  },
+  {
+   "where": "Courtier · Grace · level 3 feature",
+   "reasons": [
+    "bracket",
+    "names a placeholder"
+   ]
+  },
+  {
+   "where": "Courtier · Grace · level 6 feature",
+   "reasons": [
+    "bracket",
+    "names a placeholder"
+   ]
+  },
+  {
+   "where": "Courtier · Grace · level 10 feature",
+   "reasons": [
+    "bracket",
+    "names a placeholder"
+   ]
+  },
+  {
+   "where": "Courtier · Grace · level 14 feature",
+   "reasons": [
+    "bracket",
+    "names a placeholder"
+   ]
+  },
+  {
+   "where": "Courtier · Grace",
+   "reasons": [
+    "every feature withheld"
+   ]
+  },
+  {
+   "where": "Courtier · Psyche · level 3 feature",
+   "reasons": [
+    "bracket",
+    "names a placeholder"
+   ]
+  },
+  {
+   "where": "Courtier · Psyche · level 3 feature",
+   "reasons": [
+    "bracket",
+    "names a placeholder"
+   ]
+  },
+  {
+   "where": "Courtier · Psyche · level 10 feature",
+   "reasons": [
+    "bracket",
+    "names a placeholder"
+   ]
+  },
+  {
+   "where": "Courtier · Psyche · level 14 feature",
+   "reasons": [
+    "bracket",
+    "names a placeholder"
+   ]
+  },
+  {
+   "where": "Courtier · Verse · level 3 feature",
+   "reasons": [
+    "bracket",
+    "names a placeholder"
+   ]
+  },
+  {
+   "where": "Courtier · Verse · level 3 feature",
+   "reasons": [
+    "bracket",
+    "names a placeholder"
+   ]
+  },
+  {
+   "where": "Courtier · Verse · level 6 feature",
+   "reasons": [
+    "bracket",
+    "names a placeholder"
+   ]
+  },
+  {
    "where": "Mhizha · Constructor · Level 3: Construct",
    "reasons": [
     "names a placeholder"
@@ -69,8 +332,23 @@
    ]
   },
   {
-   "where": "Physician · Vitalist · introduction",
+   "where": "Physician · Vitalist · level 3 feature",
    "reasons": [
+    "bracket",
+    "names a placeholder"
+   ]
+  },
+  {
+   "where": "Physician · Vitalist · level 6 feature",
+   "reasons": [
+    "bracket",
+    "names a placeholder"
+   ]
+  },
+  {
+   "where": "Physician · Vitalist · level 10 feature",
+   "reasons": [
+    "bracket",
     "names a placeholder"
    ]
   },
@@ -727,6 +1005,427 @@
     "gains": "Hit Point Die",
     "spell_slots": null,
     "text": "You must have an Intelligence score of 13 or higher. Gain the following trait from the Core Counsellor Traits table: Hit Point Die. Gain the Counsellor's level 1 features, which are listed in the Counsellor Features table. Your computation die and Exploit's dice come only from your Counsellor levels. If you have more levels in another class than in this one, Sidestep and Anticipate each have a number of uses equal to your Counsellor level instead of the uses those features give, Exploit (still once between the start of one of your turns and the start of your next) is also limited to that many uses, and you regain all expended uses when you finish a Long Rest."
+   }
+  },
+  {
+   "name": "Courtier",
+   "blurb": "A new class. The accomplished person of every court's ideal, who makes it all look effortless.",
+   "traits": [
+    {
+     "trait": "Primary Ability",
+     "value": "Charisma"
+    },
+    {
+     "trait": "Hit Point Die",
+     "value": "D8 per Courtier level"
+    },
+    {
+     "trait": "Saving Throw Proficiencies",
+     "value": "Dexterity and Charisma"
+    },
+    {
+     "trait": "Skill Proficiencies",
+     "value": "*Choose any 3*"
+    },
+    {
+     "trait": "Weapon Proficiencies",
+     "value": "Simple weapons, and Martial weapons that have the Finesse property"
+    },
+    {
+     "trait": "Tool Proficiencies",
+     "value": "*Choose 1:* one type of Artisan's Tools, Calligrapher's Supplies, Disguise Kit, or a Gaming Set"
+    },
+    {
+     "trait": "Armor Training",
+     "value": "Light armor"
+    },
+    {
+     "trait": "Starting Equipment",
+     "value": "*Choose A or B:* (A) Rapier, Dagger, Shortbow, 20 Arrows, Quiver, Fine Clothes, Diplomat's Pack, the tool you chose, and 10 GP; or (B) 120 GP."
+    }
+   ],
+   "table": {
+    "columns": [
+     "Level",
+     "Proficiency Bonus",
+     "Class Features",
+     "Ease",
+     "Telling Cut",
+     "Accomplishments",
+     "Spells Known",
+     "1",
+     "2",
+     "3",
+     "4",
+     "5"
+    ],
+    "rows": [
+     {
+      "Level": "1",
+      "Proficiency Bonus": "+2",
+      "Class Features": "",
+      "Ease": "4",
+      "Telling Cut": "—",
+      "Accomplishments": "2",
+      "Spells Known": "2",
+      "1": "2",
+      "2": "—",
+      "3": "—",
+      "4": "—",
+      "5": "—"
+     },
+     {
+      "Level": "2",
+      "Proficiency Bonus": "+2",
+      "Class Features": "Expertise, Fighting Style, Weapon Mastery",
+      "Ease": "4",
+      "Telling Cut": "—",
+      "Accomplishments": "2",
+      "Spells Known": "3",
+      "1": "2",
+      "2": "—",
+      "3": "—",
+      "4": "—",
+      "5": "—"
+     },
+     {
+      "Level": "3",
+      "Proficiency Bonus": "+2",
+      "Class Features": "Courtier College",
+      "Ease": "4",
+      "Telling Cut": "d4",
+      "Accomplishments": "3",
+      "Spells Known": "4",
+      "1": "3",
+      "2": "—",
+      "3": "—",
+      "4": "—",
+      "5": "—"
+     },
+     {
+      "Level": "4",
+      "Proficiency Bonus": "+2",
+      "Class Features": "Ability Score Improvement",
+      "Ease": "4",
+      "Telling Cut": "d4",
+      "Accomplishments": "3",
+      "Spells Known": "5",
+      "1": "3",
+      "2": "—",
+      "3": "—",
+      "4": "—",
+      "5": "—"
+     },
+     {
+      "Level": "5",
+      "Proficiency Bonus": "+3",
+      "Class Features": "Extra Attack",
+      "Ease": "5",
+      "Telling Cut": "d6",
+      "Accomplishments": "3",
+      "Spells Known": "6",
+      "1": "4",
+      "2": "2",
+      "3": "—",
+      "4": "—",
+      "5": "—"
+     },
+     {
+      "Level": "6",
+      "Proficiency Bonus": "+3",
+      "Class Features": "Coming and Going",
+      "Ease": "5",
+      "Telling Cut": "d6",
+      "Accomplishments": "4",
+      "Spells Known": "6",
+      "1": "4",
+      "2": "2",
+      "3": "—",
+      "4": "—",
+      "5": "—"
+     },
+     {
+      "Level": "7",
+      "Proficiency Bonus": "+3",
+      "Class Features": "",
+      "Ease": "5",
+      "Telling Cut": "d6",
+      "Accomplishments": "4",
+      "Spells Known": "7",
+      "1": "4",
+      "2": "3",
+      "3": "—",
+      "4": "—",
+      "5": "—"
+     },
+     {
+      "Level": "8",
+      "Proficiency Bonus": "+3",
+      "Class Features": "Ability Score Improvement",
+      "Ease": "5",
+      "Telling Cut": "d6",
+      "Accomplishments": "4",
+      "Spells Known": "7",
+      "1": "4",
+      "2": "3",
+      "3": "—",
+      "4": "—",
+      "5": "—"
+     },
+     {
+      "Level": "9",
+      "Proficiency Bonus": "+4",
+      "Class Features": "Expertise",
+      "Ease": "6",
+      "Telling Cut": "d6",
+      "Accomplishments": "5",
+      "Spells Known": "9",
+      "1": "4",
+      "2": "3",
+      "3": "2",
+      "4": "—",
+      "5": "—"
+     },
+     {
+      "Level": "10",
+      "Proficiency Bonus": "+4",
+      "Class Features": "",
+      "Ease": "6",
+      "Telling Cut": "d6",
+      "Accomplishments": "5",
+      "Spells Known": "9",
+      "1": "4",
+      "2": "3",
+      "3": "2",
+      "4": "—",
+      "5": "—"
+     },
+     {
+      "Level": "11",
+      "Proficiency Bonus": "+4",
+      "Class Features": "",
+      "Ease": "6",
+      "Telling Cut": "d8",
+      "Accomplishments": "5",
+      "Spells Known": "10",
+      "1": "4",
+      "2": "3",
+      "3": "3",
+      "4": "—",
+      "5": "—"
+     },
+     {
+      "Level": "12",
+      "Proficiency Bonus": "+4",
+      "Class Features": "Ability Score Improvement",
+      "Ease": "6",
+      "Telling Cut": "d8",
+      "Accomplishments": "5",
+      "Spells Known": "10",
+      "1": "4",
+      "2": "3",
+      "3": "3",
+      "4": "—",
+      "5": "—"
+     },
+     {
+      "Level": "13",
+      "Proficiency Bonus": "+5",
+      "Class Features": "—",
+      "Ease": "7",
+      "Telling Cut": "d8",
+      "Accomplishments": "6",
+      "Spells Known": "11",
+      "1": "4",
+      "2": "3",
+      "3": "3",
+      "4": "1",
+      "5": "—"
+     },
+     {
+      "Level": "14",
+      "Proficiency Bonus": "+5",
+      "Class Features": "",
+      "Ease": "7",
+      "Telling Cut": "d8",
+      "Accomplishments": "6",
+      "Spells Known": "11",
+      "1": "4",
+      "2": "3",
+      "3": "3",
+      "4": "1",
+      "5": "—"
+     },
+     {
+      "Level": "15",
+      "Proficiency Bonus": "+5",
+      "Class Features": "",
+      "Ease": "7",
+      "Telling Cut": "d8",
+      "Accomplishments": "6",
+      "Spells Known": "12",
+      "1": "4",
+      "2": "3",
+      "3": "3",
+      "4": "2",
+      "5": "—"
+     },
+     {
+      "Level": "16",
+      "Proficiency Bonus": "+5",
+      "Class Features": "Ability Score Improvement",
+      "Ease": "7",
+      "Telling Cut": "d8",
+      "Accomplishments": "6",
+      "Spells Known": "12",
+      "1": "4",
+      "2": "3",
+      "3": "3",
+      "4": "2",
+      "5": "—"
+     },
+     {
+      "Level": "17",
+      "Proficiency Bonus": "+6",
+      "Class Features": "—",
+      "Ease": "8",
+      "Telling Cut": "d10",
+      "Accomplishments": "7",
+      "Spells Known": "14",
+      "1": "4",
+      "2": "3",
+      "3": "3",
+      "4": "3",
+      "5": "1"
+     },
+     {
+      "Level": "18",
+      "Proficiency Bonus": "+6",
+      "Class Features": "",
+      "Ease": "8",
+      "Telling Cut": "d10",
+      "Accomplishments": "7",
+      "Spells Known": "14",
+      "1": "4",
+      "2": "3",
+      "3": "3",
+      "4": "3",
+      "5": "1"
+     },
+     {
+      "Level": "19",
+      "Proficiency Bonus": "+6",
+      "Class Features": "Epic Boon",
+      "Ease": "8",
+      "Telling Cut": "d10",
+      "Accomplishments": "7",
+      "Spells Known": "15",
+      "1": "4",
+      "2": "3",
+      "3": "3",
+      "4": "3",
+      "5": "2"
+     },
+     {
+      "Level": "20",
+      "Proficiency Bonus": "+6",
+      "Class Features": "",
+      "Ease": "8",
+      "Telling Cut": "d10",
+      "Accomplishments": "7",
+      "Spells Known": "15",
+      "1": "4",
+      "2": "3",
+      "3": "3",
+      "4": "3",
+      "5": "2"
+     }
+    ]
+   },
+   "features": [
+    {
+     "level": 2,
+     "name": "Expertise",
+     "text": "You gain Expertise in two of your skill proficiencies of your choice. At Courtier level 9, you gain Expertise in two more."
+    },
+    {
+     "level": 2,
+     "name": "Fighting Style",
+     "text": "You gain a Fighting Style feat of your choice. Instead of choosing one of those feats, you can choose one accomplishment."
+    },
+    {
+     "level": 2,
+     "name": "Weapon Mastery",
+     "text": "Your training with weapons allows you to use the mastery properties of two kinds of weapons of your choice with which you have proficiency, such as Rapiers and Shortbows. Whenever you finish a Long Rest, you can change the kinds of weapons you chose."
+    },
+    {
+     "level": 3,
+     "name": "Courtier College",
+     "text": "You gain a Courtier College of your choice: the art that finishes you. The College of Arms, the College of Art, the College of Grace, the College of Psyche, and the College of Verse are detailed after this class's description. You gain each of your college's features at the Courtier levels shown."
+    },
+    {
+     "level": 4,
+     "name": "Ability Score Improvement",
+     "text": "You gain the Ability Score Improvement feat or another feat of your choice for which you qualify. You gain this feature again at Courtier levels 8, 12, and 16."
+    },
+    {
+     "level": 5,
+     "name": "Extra Attack",
+     "text": "You can attack twice instead of once whenever you take the Attack action on your turn."
+    },
+    {
+     "level": 6,
+     "name": "Coming and Going",
+     "text": "As a Bonus Action, you can choose to be noticed or to be overlooked, for 10 minutes or until you choose again.\n\n- *Noticed.* Every creature that can see you and isn't hostile to you stops what it's doing to watch or listen to you for as long as you hold its attention, up to 1 minute. A creature with Truesight, or that is in combat, is unaffected.\n- *Overlooked.* Creatures that can see you pay you no more attention than a servant, unless you attack, cast a spell, or speak to them. You have Advantage on Dexterity (Stealth) checks to go unnoticed in a crowd.\n\nYou can do this a number of times equal to your Regard, and you regain all uses when you finish a Long Rest."
+    },
+    {
+     "level": 19,
+     "name": "Epic Boon",
+     "text": "You gain an Epic Boon feat or another feat of your choice for which you qualify. Boon of the Night Spirit is recommended."
+    }
+   ],
+   "subclasses": [
+    {
+     "name": "Psyche",
+     "lead": "* This college came over from the Bard. Music stays the Bard's, so Psyche works the passions themselves: Le Brun's lecture on the expression of the passions (1668) and Descartes's* Passions of the Soul *(1649). Its price: it forgoes Arts.*",
+     "features": [
+      {
+       "level": 6,
+       "name": "Boundless Passion",
+       "text": "When you Settle a creature, each other creature of your choice within 10 feet of it gains the same benefit. When a creature you've Stirred makes an attack roll against you before the start of your next turn, it takes Psychic damage equal to a roll of your Telling Cut die, whether it hits or misses."
+      }
+     ]
+    },
+    {
+     "name": "Verse",
+     "lead": "* Shakespeare's heirs, Molière, the commedia, kabuki, the ghazal, the pulpit orator, the filí's satire. Its price: it forgoes Arms.*",
+     "features": [
+      {
+       "level": 10,
+       "name": "Satire",
+       "text": "As a Bonus Action, you can spend 1 Ease to mock a creature you can see within 60 feet of you that can hear you. It takes Psychic damage equal to two rolls of your Telling Cut die plus your Charisma modifier, and it has Disadvantage on its next saving throw before the end of your next turn while everyone who heard you laughs."
+      },
+      {
+       "level": 14,
+       "name": "All the World",
+       "text": "Your work is known: any company of players anywhere in the world will stage a play of yours, and any court that keeps a stage will receive you as its author."
+      }
+     ]
+    }
+   ],
+   "spells": null,
+   "multiclass": {
+    "abilities": [
+     "Charisma"
+    ],
+    "any": false,
+    "score": 13,
+    "gains": "Hit Point Die, proficiency in one skill of your choice, and training with Light armor",
+    "spell_slots": {
+     "fraction": 0.5,
+     "round": "up"
+    },
+    "text": "You must have a Charisma score of 13 or higher. Gain the following traits from the Core Courtier Traits table: Hit Point Die, proficiency in one skill of your choice, and training with Light armor. Gain the Courtier's level 1 features. For multiclass spell slots, add half your Courtier levels (round up)."
    }
   },
   {
@@ -2839,7 +3538,7 @@
       {
        "level": 3,
        "name": "Under the Knife",
-       "text": "When you hit a creature with your Saw in melee, you can use your Healing Prowess as part of the same attack, without spending a Bonus Action. You expend a Prowess Die as normal. The creature you heal must be within 10 feet of you. When you do, if the creature you hit is Large or smaller, you can push it 10 feet away from you, or it must succeed on a Strength saving throw against your spell save DC or have the Prone condition.\n\nYou can use Healing Prowess this way once on each of your turns, and if you do, you can't use Healing Prowess again until the start of your next turn."
+       "text": "When you hit a creature with your Saw in melee, you can expend one Prowess Die and regain Hit Points equal to the number rolled, without spending a Bonus Action. The work is on you as much as on them. When you do, if the creature you hit is Large or smaller, you can push it 10 feet away from you, or it must succeed on a Strength saving throw against your spell save DC or have the Prone condition.\n\nYou can do this once on each of your turns, and if you do, you can't use Healing Prowess again until the start of your next turn."
       },
       {
        "level": 3,
@@ -2848,8 +3547,13 @@
       },
       {
        "level": 6,
+       "name": "Extra Attack",
+       "text": "You can attack twice instead of once whenever you take the Attack action on your turn."
+      },
+      {
+       "level": 6,
        "name": "Field Hospital",
-       "text": "When you cast a Physician spell with a range of Self that creates an Emanation or other area centered on you (such as *Aura of Vitality*, *Aura of Life*, *Aura of Purity*, *Antilife Shell*, or *Circle of Power*), the area's radius increases by 10 feet. When a creature regains Hit Points from such a spell that you are concentrating on, it regains additional Hit Points equal to your Intelligence modifier. A creature can benefit from this additional healing once per turn.\n\nIn addition, while you are concentrating on such a spell, you can use Healing Prowess on any creature in its area, rather than only a creature you touch."
+       "text": "When you cast a Physician spell with a range of Self that creates an Emanation or other area centered on you (such as *Aura of Vitality*, *Aura of Life*, *Aura of Purity*, *Antilife Shell*, or *Circle of Power*), the area's radius increases by 10 feet. When you regain Hit Points from such a spell that you are concentrating on, you regain additional Hit Points equal to your Intelligence modifier, once per turn.\n\nIn addition, while you are concentrating on such a spell, you can use Healing Prowess on any creature in its area, rather than only a creature you touch."
       },
       {
        "level": 10,
@@ -2931,7 +3635,7 @@
       {
        "level": 14,
        "name": "Total Routing",
-       "text": "Once on each of your turns, when you cast a Physician spell of level 1 or higher that restores Hit Points, each creature in your chain, including you, regains Hit Points equal to your Intelligence modifier. Your Triage feature can now grant its Temporary Hit Points to any creature in your chain, not only one adjacent to the target.\n\nIn addition, when a creature you can see within 30 feet of yourself is reduced to 0 Hit Points, you can take a Reaction to link that creature to the last creature in your chain (or to you, if your chain is empty); it needn't be willing, and the 30-foot limit for making a link doesn't apply. It counts against the number of creatures your chain can include; if your chain is already full, the link to the current last creature ends first."
+       "text": "Once on each of your turns, when you cast a Physician spell of level 1 or higher that restores Hit Points, each creature in your chain, including you, regains Hit Points equal to your Intelligence modifier. Your Triage feature can now grant its Temporary Hit Points to any creature in your chain, not only one adjacent to the target.\n\nIn addition, when a creature you can see within 30 feet of yourself is reduced to 0 Hit Points, you can take a Reaction to link that creature to the last creature in your chain (or to you, if your chain is empty); it needn't be willing, the 30-foot limit for making a link doesn't apply, and the link doesn't end for the creature's having 0 Hit Points. It counts against the number of creatures your chain can include; if your chain is already full, the link to the current last creature ends first."
       }
      ]
     },
@@ -2957,7 +3661,7 @@
       {
        "level": 6,
        "name": "Communal Pain",
-       "text": "You learn to share what is done to you and yours. As a Magic action, you can expend one Prowess Die to raise an aura of shared suffering in a 10-foot Emanation originating from you for 1 minute. While the aura lasts, whenever a willing creature in the aura would take damage, the damage is instead divided as evenly as possible among that creature and every other willing creature in the aura that has more than half its Hit Points (any remainder goes to the original target). When one effect damages several willing creatures in the aura at once, total the damage and divide it once. Each creature applies its own Resistance, Vulnerability, and Immunity to its share, and the shares can't be redirected further. You can end the aura early at any time (no action required).\n\nEvery point of damage a hostile creature deals to you while the aura is active is stored as **Pain**. You can store Pain up to three times your Physician level; any excess is lost. Stored Pain is lost when the aura ends.\n\nAs a Magic action, you can release your stored Pain in one of two ways:\n\n- **Retribution.** One creature you can see within 30 feet of yourself takes Necrotic damage equal to the Pain released, or half as much on a successful Constitution saving throw against your spell save DC.\n- **Restitution.** One creature you can see within 30 feet of yourself regains Hit Points equal to the Pain released.\n\nReleasing Pain reduces your stored Pain to 0."
+       "text": "You learn to share what is done to you and yours. As a Magic action, you can expend one Prowess Die to raise an aura of shared suffering in a 10-foot Emanation originating from you for 1 minute. While the aura lasts, whenever a willing creature in the aura would take damage, the damage is instead divided as evenly as possible among that creature and every other willing creature in the aura that has more than half its Hit Points (any remainder goes to the original target). When one effect damages several willing creatures in the aura at once, total the damage and divide it once. Each creature applies its own Resistance, Vulnerability, and Immunity to its share, and the shares can't be redirected further. You can end the aura early at any time (no action required).\n\nEvery point of damage you take from hostile creatures while the aura is active, including shares divided onto you, is stored as **Pain**. You can store Pain up to three times your Physician level; any excess is lost. Stored Pain is lost when the aura ends.\n\nAs a Magic action, you can release your stored Pain in one of two ways:\n\n- **Retribution.** One creature you can see within 30 feet of yourself takes Necrotic damage equal to the Pain released, or half as much on a successful Constitution saving throw against your spell save DC.\n- **Restitution.** One creature you can see within 30 feet of yourself regains Hit Points equal to the Pain released.\n\nReleasing Pain reduces your stored Pain to 0."
       },
       {
        "level": 10,
@@ -2988,7 +3692,7 @@
       {
        "level": 3,
        "name": "Attuned Energy",
-       "text": "Choose a damage type: Cold, Fire, Lightning, Psychic, or Radiant. This is your **attuned energy**: the form your own vitality takes when you push it outward. Fire is your metabolism let loose, the vital heat every living body burns to stay alive. Lightning is the signal that runs your nerves. Cold is the slowed heart and the held breath, and the rime that follows. Radiant is your own life burning as bright as the sun, and everything near you feels the heat of it. Psychic is the will that moves your flesh, sent to move something else: a column of wrong.\n\nA Physician's harm is Necrotic. Yours no longer has to be. When you cast a Physician spell that deals Necrotic damage, you can have it deal your attuned damage type instead; the spell is otherwise unchanged, and what anyone watching sees is your energy, not the spell's.\n\nYou also work in your energy directly. Choose one cantrip that deals your attuned damage type, from the Bard, Cleric, Druid, Physician, Sorcerer, Warlock, or Wizard spell list. It counts as a Physician cantrip for you and doesn't count against the number of cantrips you know. In addition, add to your spellbook one spell of each level from 1 through 5 that deals your attuned damage type, chosen from those spell lists; you add each spell when you reach a Physician level at which you can cast it. These spells count as Physician spells for you and don't count against the spells you add to your spellbook when you gain a level. If no spell of a given level deals your attuned damage type, you can instead choose an additional spell of any lower level that does.\n\n> **Suggested Attunements**\n>\n> These are working sets: a cantrip, then one spell per level from 1 to 5. You aren't bound to them. Any spell that deals your energy, from those seven spell lists, is a legal pick.\n>\n> **Fire.** *Fire Bolt*, then *Burning Hands · Scorching Ray · Fireball · Wall of Fire · Flame Strike.*\n>\n> **Cold.** *Ray of Frost*, which also drops the target's Speed, then *Armor of Agathys · Dragon's Breath · Cold Storage · Ice Storm · Cone of Cold.* (Take *Ice Knife* at level 1 instead if you want something to throw.)\n>\n> **Lightning.** *Shocking Grasp*, which keeps the target from making Opportunity Attacks, then *Witch Bolt · Convulsion · Lightning Bolt · Call Lightning · Defibrillation.* (No level 4 spell in the *Player's Handbook* deals Lightning, so *Call Lightning* is the level 4 pick. *Arc*, a new Sorcerer and Wizard spell in the Spells appendix at the back of this book, is another level 3 choice: a Bonus Action teleport instead of the line.)\n>\n> **Radiant.** *Sacred Flame*, which ignores cover, then *Guiding Bolt · Moonbeam · Spirit Guardians · Guardian of Faith · Flame Strike.*\n>\n> **Psychic.** *Mind Sliver*, which takes a d4 off the target's next save, then *Dissonant Whispers · Mind Spike · Hysteria · Phantasmal Killer · Synaptic Static.*"
+       "text": "Choose a damage type: Cold, Fire, Lightning, Psychic, or Radiant. This is your **attuned energy**: the form your own vitality takes when you push it outward. Fire is your metabolism let loose, the vital heat every living body burns to stay alive. Lightning is the signal that runs your nerves. Cold is the slowed heart and the held breath, and the rime that follows. Radiant is your own life burning as bright as the sun, and everything near you feels the heat of it. Psychic is the will that moves your flesh, sent to move something else: a column of wrong.\n\nA Physician's harm is Necrotic. Yours no longer has to be. When you cast a Physician spell that deals Necrotic damage, you can have it deal your attuned damage type instead; the spell is otherwise unchanged, and what anyone watching sees is your energy, not the spell's.\n\nYou also work in your energy directly. Choose one cantrip that deals your attuned damage type, from the Bard, Cleric, Druid, Physician, Sorcerer, Warlock, or Wizard spell list. It counts as a Physician cantrip for you and doesn't count against the number of cantrips you know. In addition, add to your spellbook one spell of each level from 1 through 5 that deals your attuned damage type, chosen from those spell lists; you add each spell when you reach a Physician level at which you can cast it. These spells count as Physician spells for you and don't count against the spells you add to your spellbook when you gain a level. If no spell of a given level deals your attuned damage type, you can instead choose an additional spell of any lower level that does.\n\n> **Suggested Attunements**\n>\n> These are working sets: a cantrip, then one spell per level from 1 to 5. You aren't bound to them. Any spell that deals your energy, from those seven spell lists, is a legal pick.\n>\n> **Fire.** *Fire Bolt*, then *Burning Hands · Scorching Ray · Fireball · Wall of Fire · Flame Strike.*\n>\n> **Cold.** *Ray of Frost*, which also drops the target's Speed, then *Armor of Agathys · Dragon's Breath · Cold Storage · Ice Storm · Cone of Cold.* (Take *Ice Knife* at level 1 instead if you want something to throw.)\n>\n> **Lightning.** *Shocking Grasp*, which keeps the target from making Opportunity Attacks, then *Witch Bolt · Convulsion · Lightning Bolt · Call Lightning · Defibrillation.* (No level 4 spell in the *Player's Handbook* deals Lightning, so *Call Lightning* is the level 4 pick. *Arc*, a new Sorcerer and Wizard spell (see A Spell From Another List, later in this class), is another level 3 choice: a Bonus Action teleport instead of the line.)\n>\n> **Radiant.** *Sacred Flame*, which ignores cover, then *Guiding Bolt · Moonbeam · Spirit Guardians · Guardian of Faith · Flame Strike.*\n>\n> **Psychic.** *Mind Sliver*, which takes a d4 off the target's next save, then *Dissonant Whispers · Mind Spike · Hysteria · Phantasmal Killer · Synaptic Static.*"
       },
       {
        "level": 6,
@@ -3055,7 +3759,7 @@
       {
        "level": 3,
        "name": "Miasma",
-       "text": "You learn to carry your medicine on the air. When you use Healing Prowess, you can release it as a cloud instead of a touch: choose a point you can see within 30 feet of yourself. A 10-foot-radius Sphere of restorative vapor is centered on that point and lasts until the start of your next turn. One creature of your choice in the area regains Hit Points equal to the number rolled on the Prowess Die plus your Intelligence modifier, and each other creature of your choice in the area has Advantage on the next saving throw it makes before the start of your next turn.\n\nYou also gain proficiency in the Nature skill if you don't already have it, you have Resistance to Poison damage, and you can't transmit a disease you carry."
+       "text": "You learn to carry your medicine on the air. When you use Healing Prowess, you can release it as a cloud instead of a touch: choose a point you can see within 30 feet of yourself. A 10-foot-radius Sphere of restorative vapor is centered on that point and lasts until the start of your next turn. One creature of your choice in the area regains Hit Points equal to the number rolled on the Prowess Die plus your Intelligence modifier, each other creature of your choice in the area regains Hit Points equal to your Intelligence modifier, and each creature of your choice in the area has Advantage on the next saving throw it makes before the start of your next turn.\n\nYou also gain proficiency in the Nature skill if you don't already have it, you have Resistance to Poison damage, and you can't transmit a disease you carry."
       },
       {
        "level": 3,
@@ -3070,7 +3774,7 @@
       {
        "level": 6,
        "name": "Purge",
-       "text": "Your treatment reaches everyone in the cloud. When you use Miasma, you can take a Utilize action on the same turn to perform Treatment on every willing creature in the area at once, whether or not it is your patient, making a single Intelligence (Medicine) check and expending a single use of a Healer's Kit. Each creature is treated for the same effect; a creature that has been treated for that effect since its last rest can't benefit, whether the earlier attempt succeeded or failed.\n\nYour Miasma also spreads its relief. When a creature regains Hit Points from your Miasma, each other creature of your choice in the area regains Hit Points equal to your Intelligence modifier.\n\nIn addition, you can make your Miasma noxious. When you do, no creature regains Hit Points or gains Advantage from it; instead, each hostile creature in the area when it appears takes Poison damage equal to the number rolled on the Prowess Die, or half as much on a successful Constitution saving throw against your spell save DC."
+       "text": "Your treatment reaches everyone in the cloud. When you use Miasma, you can take a Utilize action on the same turn to perform Treatment on every willing creature in the area at once, whether or not it is your patient, making a single Intelligence (Medicine) check and expending a single use of a Healer's Kit. Each creature is treated for the same effect; a creature that has been treated for that effect since its last rest can't benefit, whether the earlier attempt succeeded or failed.\n\nIn addition, you can make your Miasma noxious. When you do, no creature regains Hit Points or gains Advantage from it; instead, each hostile creature in the area when it appears takes Poison damage equal to the number rolled on the Prowess Die, or half as much on a successful Constitution saving throw against your spell save DC. Once you make your Miasma noxious, you can't do so again until you finish a Short or Long Rest. From Physician level 10, you can do so twice between rests."
       },
       {
        "level": 6,
@@ -3131,43 +3835,28 @@
      "features": [
       {
        "level": 3,
-       "name": "The Font Without",
-       "text": "You find the Font in the turning of the world rather than in your own body: the moon, the year, the tide, the harvest. It gives you a second way to pay for your magic, and it goes wherever you go: a cellar, a city, and a dungeon all have a moon over them.\n\n**Draw on the Turning.** When you cast a Physician spell of level 1 through 3, you can draw on the turning instead of expending a spell slot. You cast the spell at its own level, or at a higher level no higher than 3rd and no higher than the highest level of spell slot you have, and you draw spell levels equal to the level at which you cast it, up to a total equal to half your Physician level (round up), to a maximum of 5, between Long Rests. Drawing on the turning counts as expending a spell slot for the rule that you can expend only one spell slot to cast a spell on a turn.\n\n**The Two Halves.** A spell you draw takes the virtue of the half of the cycle you're in:\n\n- *Waxing* (from the new moon to the full): growth. If the drawn spell restores Hit Points, each creature it heals regains extra Hit Points equal to the spell's level.\n- *Waning* (from the full moon to the new): decay. If the drawn spell deals damage, one target takes extra Necrotic damage equal to the spell's level plus your Intelligence modifier.\n\nYou always know where the moon is in its cycle, and so where the Hidden's tide stands (they run on the same moon; the Introduction to *Life on the Border* has the tide). If your table doesn't track the moon, choose your half at each dawn instead.\n\n**Turn the Wheel.** Once per Long Rest, when you draw a spell, you can give it the other half's virtue instead.\n\n**The Season Shows.** Drawing on the turning shows on the world around you, and does it no harm. A waxing draw brings the nearest green things into bud, a window box into flower, a crack in a wall into moss; a waning draw turns the nearest leaves, rimes a puddle, ripens and drops a fruit. In November, a garrison's plane trees bud. Anyone watching knows something just happened."
-      },
-      {
-       "level": 3,
-       "name": "The World's Pulse",
-       "text": "You feel the pulse of the living world around you. You know the location of every living creature within 30 feet of yourself, and whether each is unharmed, injured, Bloodied, or near death. A creature that is hidden from you or has the Invisible condition can't hide its location from your sense, and you aren't surprised by a living creature within range when you roll Initiative. Undead and Constructs have no pulse: you sense them only as a gap where the life around them stops, which is often how you find them. The range becomes 60 feet at Physician level 10.\n\nThis sense needs no sight, and it works through walls, but not through more than a few feet of stone or a sheet of lead."
-      },
-      {
-       "level": 3,
-       "name": "Almanac",
-       "text": "You know the weather for the next 24 hours wherever you are, the hour of sunrise and sunset, and the tides at any coast you can see. With a day's observation of a place, you know whether its harvest will be good or poor, whether a sickness season is coming and roughly when, and when the birds, the fish, or the herds will move.\n\n**The Day's Sign.** When you finish a Long Rest, roll one d20 and record the number: the day's sign. Once before your next Long Rest, when you or a creature you can see makes a D20 Test, you can replace the roll with the day's sign. You must choose to do so before the roll."
-      },
-      {
-       "level": 3,
        "name": "The Book of the World",
-       "text": "You learn the magic of observing the living world, and of its turning. When you reach a Physician level specified in the Vitalist Spells table, you thereafter always have the listed spells prepared, and they are in your spellbook. They count as Physician spells for you and don't count against the number of spells you can prepare.\n\n| Physician Level | Spells |\n|---|---|\n| 3 | *Goodberry*, *Locate Animals or Plants* |\n| 5 | *Plant Growth*, *Speak with Plants* |\n| 7 | *Divination*, *Locate Creature* |\n| 9 | *Commune with Nature*, *Reincarnate* |\n\nIn addition, when you add spells to your spellbook, including the two you gain at each Physician level, you can choose them from the following list as well as the Physician spell list; they count as Physician spells for you. To copy one of these spells from outside your own learning, you work from a specimen or an observation (a pressed plant, a weather record, a druid willing to show you) instead of a written spell, at the usual cost in time and gold.\n\n| Spell Level | The Book of the World |\n|---|---|\n| 1 | *Create or Destroy Water*, *Entangle*, *Fog Cloud*, *Speak with Animals* |\n| 2 | *Barkskin*, *Beast Sense*, *Gust of Wind* |\n| 3 | *Call Lightning*, *Daylight*, *Sleet Storm*, *Wind Wall* |\n| 4 | *Control Water*, *Ice Storm* |\n| 5 | *Scrying*, *Tree Stride* |\n| 6 | *Find the Path*, *Sunbeam*, *Transport via Plants*, *Wind Walk* |\n| 7 | *Fire Storm* |\n| 8 | *Control Weather*, *Sunburst*, *Tsunami* |\n| 9 | *Foresight*, *Storm of Vengeance* |",
+       "text": "When you reach a Physician level specified in the Vitalist Spells table, you thereafter always have the listed spells prepared, and they are in your spellbook. They count as Physician spells for you and don't count against the number of spells you can prepare.\n\n| Physician Level | Spells |\n|---|---|\n| 3 | *Goodberry*, *Speak with Animals* |\n| 5 | *Locate Animals or Plants*, *Speak with Plants* |\n| 7 | *Locate Creature*, *Plant Growth* |\n| 9 | *Commune with Nature*, *Reincarnate* |",
        "spells": [
         {
          "level": 3,
          "spells": [
           "Goodberry",
-          "Locate Animals or Plants"
+          "Speak with Animals"
          ]
         },
         {
          "level": 5,
          "spells": [
-          "Plant Growth",
+          "Locate Animals or Plants",
           "Speak with Plants"
          ]
         },
         {
          "level": 7,
          "spells": [
-          "Divination",
-          "Locate Creature"
+          "Locate Creature",
+          "Plant Growth"
          ]
         },
         {
@@ -3185,24 +3874,14 @@
        "text": "You gain proficiency in the Nature skill and with the Herbalism Kit; if you already have either, choose another skill from the Physician's skill list or another tool. By handling a plant, a stone, a fungus, or a part of an animal for 1 minute, you learn its virtues: whether it's poisonous and what it would do, what it heals or harms, and whether it could serve as a component for a spell you know. Given an hour in any place where things grow, you can find the simples for an ordinary remedy, a dye, or a poison.\n\n**Diagnose a Place.** You can use Diagnosis on a place you stand in (a field, a well, a wood, a house): you learn whether it is blighted, poisoned, diseased, or cursed, and whether it is thin ground (*Life on the Border*).\n\n**Treat a Place.** You can use Treatment on a place you have diagnosed. It takes 1 hour and a use of a Healer's Kit, and the DC is the same as for the affliction in a creature (cure a disease for a blighted field or a sickly herd, end the Poisoned condition for a poisoned well). On a success, the place mends over the next few days. A curse needs magic, as it would in a patient.\n\n**Respectable.** Your magic is natural magic, and to anyone trained to look it reads that way. You have Advantage on any ability check to convince an official, a licensing examiner, or an inquisitor that your magic is lawful."
       },
       {
-       "level": 3,
-       "name": "Sympathy",
-       "text": "When you diagnose a creature, or as a Bonus Action, you can take the trace of another creature within 30 feet of you: a drop of its blood, a hair, a scale, a feather. An unwilling creature must have taken damage since the start of your previous turn. You can hold two traces at once; taking a third ends the oldest. A creature whose trace you hold is your patient until you no longer hold its trace, in addition to the patient Diagnosis gives you (an enemy can be your patient too; a physician studies the disease as well as the sick). While you hold a trace:\n\n- *Like finds like.* You know the direction and distance to your patient if it's within 1 mile of you, and you can target it with your spells without seeing it if it's within the spell's range.\n- *Like answers like.* Once on each of your turns, when you deal damage to one creature whose trace you hold with a level 1+ Physician spell, the other creature whose trace you hold (if it's willing) regains Hit Points equal to your Intelligence modifier (minimum of 1). What the year takes from one, it gives to another."
-      },
-      {
        "level": 6,
-       "name": "The Weapon Salve",
-       "text": "When a creature you can see within 60 feet of you takes damage from a weapon, you can take a Reaction to treat the weapon instead of the wound: expend one Prowess Die, and the creature regains Hit Points equal to the number rolled plus your Intelligence modifier. If it isn't your patient, you can take its trace as part of the Reaction.\n\n**The Long Cure.** If you hold a creature's trace and have a weapon, bandage, or other object that carries its blood or wound, you can cast a spell on it that restores Hit Points or ends a condition or disease at any distance, if it's on the same plane of existence. The spell's casting time becomes 1 hour."
-      },
-      {
-       "level": 10,
-       "name": "The Economy of Nature",
-       "text": "Once on each of your turns when you deal damage with a spell you drew on the turning (the Font Without), one creature of your choice that you can see within 30 feet of yourself regains Hit Points equal to the spell's level plus your Intelligence modifier.\n\n**The Herbal.** When you finish a Long Rest, you can prepare one simple with your Herbalism Kit. Applying it takes 1 minute, after which the creature regains Hit Points equal to one roll of your Prowess Die. The simple loses its virtue at your next Long Rest."
+       "name": "The World's Pulse",
+       "text": "You feel the pulse of the living world around you. You know the location of every living creature within 30 feet of yourself, and whether each is unharmed, injured, Bloodied, or near death. A creature that is hidden from you or has the Invisible condition can't hide its location from your sense, and you aren't surprised by a living creature within range when you roll Initiative. Undead and Constructs have no pulse: you sense them only as a gap where the life around them stops, which is often how you find them. The range becomes 60 feet at Physician level 10.\n\nThis sense needs no sight, and it works through walls, but not through more than a few feet of stone or a sheet of lead."
       },
       {
        "level": 14,
        "name": "The Wheel Turns",
-       "text": "When a creature whose trace you hold drops to 0 Hit Points but isn't killed outright, you can take a Reaction: the creature drops to 1 Hit Point instead and regains Hit Points equal to your Physician level. Every green thing within 60 feet of you goes through a year in a moment: it buds, flowers, fruits, and drops its leaves. Once you use this feature, you can't use it again until you finish a Long Rest.\n\n**The Great Chain of Being.** You know at a glance a creature's type and whether it is a Hidden creature (*Life on the Border*, Introduction, The Hidden, in the rules).\n\n> **Playing a Vitalist**\n>\n> Know your half of the moon. While it waxes, draw your healing from the turning and keep your slots for harm; while it wanes, the reverse. Turn the wheel when the fight needs the other half. Hold two traces, an enemy and the ally who'll need you next: every spell you land on the one mends the other, an enemy whose trace you hold can't hide from your spells, and if the ally falls, the wheel turns for them. Let the weapon salve catch the next blade that lands. From 10th level, your harm is healing for someone else."
+       "text": "When a creature you can see within 30 feet of you, to which you have restored Hit Points since your last Long Rest, drops to 0 Hit Points but isn't killed outright, you can take a Reaction: the creature drops to 1 Hit Point instead and regains Hit Points equal to your Physician level. Every green thing within 60 feet of you goes through a year in a moment: it buds, flowers, fruits, and drops its leaves. Once you use this feature, you can't use it again until you finish a Long Rest.\n\n**The Great Chain of Being.** You know at a glance a creature's type and whether it is a Hidden creature (*Life on the Border*, Introduction, The Hidden, in the rules).\n\n> **Playing a Vitalist**\n>\n> Heal, and feel it come back: every time you mend someone else, you mend a little yourself. Don't worry about overhealing; whatever a creature can't hold goes on to the next one who needs it, and from 10th level it stays as a cushion. When a blade is about to land on someone near you, let the ground take part of it. Out of a fight, you're the one who can diagnose a field, a well, or a herd, and treat it. Open the windows."
       }
      ]
     }
@@ -4183,7 +4862,7 @@
       {
        "level": 3,
        "name": "The Scale",
-       "text": "Whenever you open a vista, of any plane and for any purpose, you can also Weigh one creature you can see within 30 feet of the vista that isn't your ally. It stays Weighed for 1 minute, and only one creature can be Weighed at a time. Weighing a creature again starts its Weighing over.\n\nEach time a Weighed creature deals damage to you or one of your allies, the scale tips (an attack or effect that damages several of you at once tips it only once): the creature takes 1d6 Force damage, and its Speed decreases by 5 feet (to a minimum of 0) until the Weighing ends. If you have at least 1 Hit Point and the damage that tipped the scale was dealt to you (including damage you take through Bear the Verdict), you regain Hit Points equal to your Wisdom modifier, no more than once between the start of one of your turns and the start of your next. Once you have five Revelator levels, damage dealt to an ally also restores them. You always know the direction to a Weighed creature on the same plane as you, and it gains no benefit from the Invisible condition against you or your spirits."
+       "text": "Whenever you open a vista, of any plane and for any purpose, you can also Weigh one creature you can see within 30 feet of the vista that isn't your ally. It stays Weighed for 1 minute, and only one creature can be Weighed at a time. Weighing a creature again starts its Weighing over.\n\nEach time a Weighed creature deals damage to you or one of your allies, the scale tips (an attack or effect that damages several of you at once tips it only once): the creature takes 1d6 Force damage, and its Speed decreases by 5 feet (to a minimum of 0) until the Weighing ends. If you have at least 1 Hit Point and the damage that tipped the scale was dealt to you by the Weighed creature (including damage you take for an ally through Bear the Verdict), you regain Hit Points equal to your Wisdom modifier, no more than once between the start of one of your turns and the start of your next. You always know the direction to a Weighed creature on the same plane as you, and it gains no benefit from the Invisible condition against you or your spirits.\n\n**Weighed Together.** From Revelator level 5, the scale also restores you when the damage that tipped it was dealt to an ally: you regain Hit Points equal to your Wisdom modifier, under the same limit of once between the start of one of your turns and the start of your next."
       },
       {
        "level": 3,
