@@ -52,7 +52,7 @@ export function rulebook(srd, euphonia, setting) {
   // A setting class with a class feature withheld (a placeholder the master
   // hasn't filled yet) is still being written: the builder names it and
   // doesn't offer it until its features are whole (Scott, 9 November).
-  const unfinished = euphonia.data.map(c => c.name).filter(name => euphonia.withheld.some(w => w.where.startsWith(`${name} · level `) && / · level \d+ feature$/.test(w.where)));
+  const unfinished = euphonia.data.map(c => c.name).filter(name => euphonia.withheld.some(w => w.where === `${name} · As a Multiclass Character` || (w.where.startsWith(`${name} · level `) && / · level \d+ feature$/.test(w.where))));
   const classes = [...srd.classes.map(c => ({ ...c, source: 'SRD 5.2.1' })), ...euphonia.data.filter(c => !unfinished.includes(c.name)).map(c => ({ ...c, source: 'Euphonia' }))].map(c => {
     const die = number(trait(c, 'Hit Point Die').match(/^D(\d+) per /)?.[1]);
     if (!die) throw new Error(`${c.name}: no Hit Point Die`);

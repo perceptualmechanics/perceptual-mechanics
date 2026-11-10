@@ -142,10 +142,14 @@ export function verifyEuphoniaBuilder({ engine = defaultEngine, srd = read('srd'
   for (const name of book.unfinished) if (book.classNamed(name)) fail(`${name} has a class feature withheld but is offered`);
   for (const c of euphonia.data) if (!book.unfinished.includes(c.name) && !book.classNamed(c.name)) fail(`${c.name} is whole but not offered`);
   const whole = euphonia.data.find(c => !book.unfinished.includes(c.name));
-  try {
-    const planted = engine.rulebook(srd, { ...euphonia, withheld: [...euphonia.withheld, { where: `${whole.name} · level 2 feature`, reasons: ['bracket'] }] }, setting);
-    if (planted.classNamed(whole.name) || !planted.unfinished.includes(whole.name)) fail(`a withheld feature planted in ${whole.name} doesn't set it aside`);
-  } catch (e) { fail(`a withheld feature planted in ${whole.name}: ${e.message}`); }
+  // So does a withheld multiclass paragraph, which leaves the class no
+  // multiclass rules to build with.
+  for (const where of ['level 2 feature', 'As a Multiclass Character']) {
+    try {
+      const planted = engine.rulebook(srd, { ...euphonia, withheld: [...euphonia.withheld, { where: `${whole.name} · ${where}`, reasons: ['bracket'] }] }, setting);
+      if (planted.classNamed(whole.name) || !planted.unfinished.includes(whole.name)) fail(`a withheld ${where} planted in ${whole.name} doesn't set it aside`);
+    } catch (e) { fail(`a withheld ${where} planted in ${whole.name}: ${e.message}`); }
+  }
 
   // Every species and its one choice; every feat's prerequisite.
   for (const s of book.species) {
