@@ -19,7 +19,8 @@ const trait = (c, name) => c.traits.find(t => t.trait === name)?.value ?? '';
 // 3 skills".
 function skillChoice(text, skills, where) {
   const plain = text.replace(/\*/g, '');
-  const any = plain.match(/^Choose any (\d+) skills\b/);
+  // "Choose any 3 skills" (the SRD's Bard), or "Choose any 3" (the Courtier).
+  const any = plain.match(/^Choose any (\d+)(?: skills\b|$)/);
   if (any) return { fixed: [], count: +any[1], from: skills };
   const m = plain.match(/^(?:(.+?), plus )?[Cc]hoose (\d+): (.+)$/);
   if (!m) throw new Error(`${where}: a skill choice the builder doesn't read: "${text}"`);
@@ -51,13 +52,25 @@ export function rulebook(srd, euphonia, setting) {
   });
   // A setting class with a class feature withheld (a placeholder the master
   // hasn't filled yet) is still being written: the builder names it and
-  // doesn't offer it until its features are whole (Scott, 9 November).
-  const unfinished = euphonia.data.map(c => c.name).filter(name => euphonia.withheld.some(w => w.where === `${name} · As a Multiclass Character` || (w.where.startsWith(`${name} · level `) && / · level \d+ feature$/.test(w.where))));
+  // doesn't offer it until its features are whole (Scott, 9 November). The
+  // export names a withheld class feature by its heading ("Level 9: Reach
+  // Beyond") or, where the heading itself names a placeholder, as "level 9
+  // feature"; a subclass's carry the subclass between.
+  const classUnit = /^(?:level \d+ feature|Level \d+: .+|As a Multiclass Character)$/;
+  const unfinished = euphonia.data.map(c => c.name).filter(name => euphonia.withheld.some(w => {
+    const [cls, unit, ...rest] = w.where.split(' · ');
+    return cls === name && !rest.length && classUnit.test(unit);
+  }));
   const classes = [...srd.classes.map(c => ({ ...c, source: 'SRD 5.2.1' })), ...euphonia.data.filter(c => !unfinished.includes(c.name)).map(c => ({ ...c, source: 'Euphonia' }))].map(c => {
     const die = number(trait(c, 'Hit Point Die').match(/^D(\d+) per /)?.[1]);
     if (!die) throw new Error(`${c.name}: no Hit Point Die`);
     const saves = trait(c, 'Saving Throw Proficiencies').split(' and ');
-    const grants = c.features.filter(f => /subclass of your choice/.test(f.text));
+    // The feature that grants the subclass comes at the level the subclasses'
+    // own features begin, and names each of them: read from the class's
+    // structure, not the SRD's wording, which the setting's classes needn't
+    // keep (the Courtier gains "a Courtier College of your choice").
+    const first = Math.min(...c.subclasses.flatMap(s => s.features.map(f => f.level)));
+    const grants = c.features.filter(f => f.level === first && c.subclasses.every(s => f.text.includes(s.name.replace(/^The /, ''))));
     if (grants.length !== 1) throw new Error(`${c.name}: ${grants.length} features grant a subclass`);
     const choice = skillChoice(trait(c, 'Skill Proficiencies'), skills, c.name);
     const slotLevels = c.table.columns.filter(k => /^\d$/.test(k)).map(Number);

@@ -144,7 +144,7 @@ export function verifyEuphoniaBuilder({ engine = defaultEngine, srd = read('srd'
   const whole = euphonia.data.find(c => !book.unfinished.includes(c.name));
   // So does a withheld multiclass paragraph, which leaves the class no
   // multiclass rules to build with.
-  for (const where of ['level 2 feature', 'As a Multiclass Character']) {
+  for (const where of ['level 2 feature', 'Level 2: A Planted Feature', 'As a Multiclass Character']) {
     try {
       const planted = engine.rulebook(srd, { ...euphonia, withheld: [...euphonia.withheld, { where: `${whole.name} · ${where}`, reasons: ['bracket'] }] }, setting);
       if (planted.classNamed(whole.name) || !planted.unfinished.includes(whole.name)) fail(`a withheld ${where} planted in ${whole.name} doesn't set it aside`);

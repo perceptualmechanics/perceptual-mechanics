@@ -225,7 +225,7 @@ function verifyEuphoniaMapPlugin() {
       if (!ok) {
         this.error(`verify-euphonia-map: ${failures} problem(s) — see above. The map of 1668 draws something its sources don't hold.`);
       } else {
-        console.log('  ✓ verify-euphonia-map: the coasts hold to Natural Earth and the night to the sphere');
+        console.log('  ✓ verify-euphonia-map: the coasts hold to Natural Earth, the globe to the sphere');
       }
     },
   };

@@ -2,8 +2,8 @@
  "provenance": {
   "source": "Euphonia.md",
   "master": "~/Documents/euphonia/Euphonia.md",
-  "sha256": "261a270a6035e8c7e89a1e04c6a37b5d90e9c29dd1481e3e44ca58ad4cd47762",
-  "modified": "2026-11-09T18:09:56-05:00",
+  "sha256": "7b3e4a74f6735bd89b7bd65e50f765c303530c976b4592cbaab823defbeb5118",
+  "modified": "2026-11-11T17:05:29-05:00",
   "exporter": "class-kit/site_export.py",
   "exporter_version": 10,
   "rules": {
@@ -26,7 +26,7 @@
  },
  "withheld": [],
  "data": {
-  "tide": "**The Tide.** The Hidden wax and wane with the moon. They're **at the flood** while the moon waxes, from the new moon to the full: strong, present, and near. They're **at the ebb** while it wanes: faint, hungry, and farther off. The **dark half** of the year, from Samhain to Beltane, is the Wild Hunt's raiding season, and the Hunt rides hardest at the flood. Raids in the light half happen, but rarely. Samhain and Beltane are the **open nights**, when the door between the Hidden and the real stands open. South of the equator the halves are reversed, and so are the open nights: there Samhain falls at the start of May and Beltane at the start of November. The tropics follow their hemisphere's sun. Samhain and Beltane are the Gaelic names; every border has its own. The DM says when these times are, and can rule that the tide runs differently at a place of power.",
+  "tide": "**The Tide.** The Hidden wax and wane with the moon. They're **at the flood** in the bright fortnight around the full moon, from the first quarter to the last: strong, present, and near. They're **at the ebb** in the dark fortnight around the new moon: faint, hungry, and farther off. The **dark half** of the year, from Samhain to Beltane, is the Wild Hunt's raiding season, and the Hunt rides hardest at the flood. Samhain and Beltane are the **open nights**, when the door between the Hidden and the real stands open. The DM says when these times are. The full calendar (the light half, the southern hemisphere and the tropics, the moons of 1668, and a tide that runs differently at a place of power) is in *Euphonia: The Setting*, Running Euphonia, Running the Hidden, The Tide.",
   "where": "Book Three: Life on the Border, Introduction, The Hidden, in the rules"
  }
 }

@@ -1,13 +1,16 @@
-// Holds the map of 1668 to its sources: the vendored Natural Earth geometry to
-// its provenance, and the projection to the sphere it projects.
+// Holds the globe of 1668 to its sources: the vendored Natural Earth geometry
+// to its provenance, and the projection to the sphere it projects.
 import { readFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
+import { geoArea, geoPath } from 'd3-geo';
 import * as projection from '../src/euphonia/euphonia.projection.js';
+import { globeWorld, projectionFor, ellipseOf } from '../src/euphonia/euphonia.globe.js';
 import * as lunar from '../src/euphonia/euphonia.moon.js';
 import * as calendar from '../src/euphonia/euphonia.calendars.js';
 import * as hidden from '../src/euphonia/euphonia.tide.js';
 import { resolvePlaces, regionShape } from '../src/euphonia/euphonia.places.js';
-import { solarEvents } from '../src/bench/bench.sky.js';
+import { solarEvents, solarParams } from '../src/bench/bench.sky.js';
+import * as mounting from '../src/euphonia/euphonia.mount.js';
 
 const RAD = Math.PI / 180;
 const DAY_MS = 86400000;
@@ -55,21 +58,13 @@ function ringArea(ring) {
   return sum / 2;
 }
 
-// Unit vectors on the small circle P·S = sin(dusk), every 0.5°.
-function duskCircle(sun, dusk) {
-  const S = [Math.cos(sun.lat * RAD) * Math.cos(sun.lon * RAD), Math.cos(sun.lat * RAD) * Math.sin(sun.lon * RAD), Math.sin(sun.lat * RAD)];
-  const u = Math.abs(S[2]) < 0.9 ? [-S[1], S[0], 0] : [0, -S[2], S[1]];
-  const ul = Math.hypot(...u), U = u.map(v => v / ul);
-  const V = [S[1] * U[2] - S[2] * U[1], S[2] * U[0] - S[0] * U[2], S[0] * U[1] - S[1] * U[0]];
-  const s = Math.sin(dusk * RAD), c = Math.cos(dusk * RAD);
-  return Array.from({ length: 720 }, (_, k) => {
-    const t = k * Math.PI / 360;
-    const P = [0, 1, 2].map(i => s * S[i] + c * (Math.cos(t) * U[i] + Math.sin(t) * V[i]));
-    return [Math.atan2(P[1], P[0]) / RAD, Math.asin(P[2]) / RAD];
-  });
-}
+// Views of the globe the projection is held at: centres from pole to pole,
+// round the world, on round degrees, where the keys turn it and where the
+// data's rounded coordinates line up with the limb.
+const VIEWS = [];
+for (let lat0 = -90; lat0 <= 90; lat0 += 15) for (let lon0 = -180; lon0 < 180; lon0 += 15) VIEWS.push({ lon0, lat0 });
 
-export function verifyEuphoniaMap({ world = worldData(), fixtures = fixturesData(), calendars = calendarsData(), gazetteer = gazetteerData(), regions = vendored('regions')().data, relief = reliefData(), roses = rosesData(), geo = projection, moon = lunar, cal = calendar, tide = hidden } = {}) {
+export function verifyEuphoniaMap({ mount = mounting, world = worldData(), fixtures = fixturesData(), calendars = calendarsData(), gazetteer = gazetteerData(), regions = vendored('regions')().data, relief = reliefData(), roses = rosesData(), geo = projection, moon = lunar, cal = calendar, tide = hidden } = {}) {
   const problems = [];
   const fail = m => problems.push(m);
 
@@ -145,10 +140,11 @@ export function verifyEuphoniaMap({ world = worldData(), fixtures = fixturesData
     const shape = regionShape(r);
     for (const g of shape.glows) {
       if (!(Number.isFinite(g.rho) && g.rho > 0)) fail(`${r.name}: ${g.name}'s glow reaches ${g.rho}°, not a distance the map can draw`);
-      // The circle the map draws for it, on each hemisphere that shows it.
-      for (const h of geo.HEMISPHERES) {
-        const c = geo.capCircle(g, g.rho, h.lon0);
-        if (c && ![c.cx, c.cy, c.r].every(Number.isFinite)) { fail(`${r.name}: ${g.name}'s glow draws as ${JSON.stringify(c)} on ${h.name}`); break; }
+      // The ellipse the globe draws it in, from views that face it and
+      // views that see it at the limb.
+      for (const v of VIEWS) {
+        const e = ellipseOf(g, g.rho, v);
+        if (e && ![e.cx, e.cy, e.along, e.major, e.minor].every(Number.isFinite)) { fail(`${r.name}: ${g.name}'s glow draws as ${JSON.stringify(e)} from ${v.lat0}°, ${v.lon0}°`); break; }
       }
     }
     if (!(Number.isFinite(shape.centre.lat) && Number.isFinite(shape.centre.lon))) fail(`${r.name}: its name has no place to stand (its places' mean is ${JSON.stringify(shape.centre)})`);
@@ -269,30 +265,32 @@ export function verifyEuphoniaMap({ world = worldData(), fixtures = fixturesData
     if (tide.hiddenAt(t, null, { lat: 50, lon: 0 }).half !== null) { fail('outside the tropics, a place with no known calendar is given a half'); break; }
   }
 
-  // The projection: the centre at the middle, the hemisphere's edge on the rim.
-  for (const h of geo.HEMISPHERES) {
-    const [cx, cy] = geo.project(h.lon0, 0, h.lon0);
-    if (Math.hypot(cx, cy) > 1e-12) fail(`${h.name}: its centre projects to ${cx}, ${cy}`);
-    const [px, py] = geo.project(h.lon0, 90, h.lon0);
-    if (Math.abs(px) > 1e-12 || Math.abs(py - 1) > 1e-12) fail(`${h.name}: the north pole projects to ${px}, ${py}`);
-    for (let lat = -88; lat <= 88; lat += 4) for (const side of [-90, 90]) {
-      const r = Math.hypot(...geo.project(h.lon0 + side, lat, h.lon0));
-      if (Math.abs(r - 1) > 1e-9) { fail(`${h.name}: the edge meridian at ${lat}° lands at radius ${r}`); break; }
-    }
-  }
-  // The projection run backwards lands where it started: every 2° of
-  // latitude and longitude across each hemisphere, and off the disc nothing.
-  let roundTrips = 0;
-  for (const h of geo.HEMISPHERES) {
-    for (let lat = -88; lat <= 88; lat += 2) for (let dl = -88; dl <= 88; dl += 2) {
-      const lon = ((h.lon0 + dl + 540) % 360) - 180;
-      const back = geo.unproject(...geo.project(lon, lat, h.lon0), h.lon0);
-      const off = back ? Math.max(Math.abs(back.lat - lat), Math.abs(((back.lon - lon + 540) % 360) - 180)) : Infinity;
-      if (!(off < 1e-9)) { fail(`${h.name}: ${lat}°, ${lon}° projects and comes back ${off}° away`); break; }
+  // The projection: the formulas the relief's shader runs, against d3-geo's
+  // own orthographic, from every view; the centre at the middle, a point and
+  // back where it started, and nothing off the disc. The round trip is held
+  // where the disc can hold it: at the limb √(1 − X² − Y²) turns an ulp of
+  // X² + Y² into its square root, so points within LIMB_DEPTH of the limb
+  // are left to the comparison with d3.
+  const LIMB_DEPTH = 1e-6;
+  let roundTrips = 0, d3Worst = 0;
+  for (const v of VIEWS) {
+    const d3 = projectionFor({ ...v, roll: 0, k: 1, cx: 0, cy: 0 });
+    const [cx, cy] = geo.orthoProject(v.lon0, v.lat0, v.lon0, v.lat0);
+    if (Math.hypot(cx, cy) > 1e-12) fail(`from ${v.lat0}°, ${v.lon0}°: the centre projects to ${cx}, ${cy}`);
+    for (let lat = -88; lat <= 88; lat += 4) for (let lon = -178; lon <= 180; lon += 4) {
+      const mine = geo.orthoProject(lon, lat, v.lon0, v.lat0);
+      if (!mine) continue;
+      const [x, y] = d3([lon, lat]);
+      d3Worst = Math.max(d3Worst, Math.hypot(x - mine[0], -y - mine[1]));
+      if (geo.orthoLocal(lon, lat, v.lon0, v.lat0)[2] < LIMB_DEPTH) continue;
+      const back = geo.orthoUnproject(...mine, v.lon0, v.lat0);
+      const off = back ? Math.max(Math.abs(back.lat - lat), Math.abs(lat) < 89 ? Math.abs(((back.lon - lon + 540) % 360) - 180) : 0) : Infinity;
+      if (!(off < 1e-8)) { fail(`from ${v.lat0}°, ${v.lon0}°: ${lat}°, ${lon}° projects and comes back ${off}° away`); break; }
       roundTrips++;
     }
-    if (geo.unproject(0.8, 0.8, h.lon0) !== null) fail(`${h.name}: a point off the disc unprojects to the globe`);
+    if (geo.orthoUnproject(0.8, 0.8, v.lon0, v.lat0) !== null) fail(`from ${v.lat0}°, ${v.lon0}°: a point off the disc unprojects to the globe`);
   }
+  if (!(d3Worst < 1e-9)) fail(`the orthographic formulas stray ${d3Worst} from d3-geo's`);
   // Land and sea, at points whose answer no coastline could move: inland
   // capitals, the South Pole, and open ocean far from any island.
   const KNOWN = [
@@ -363,43 +361,148 @@ export function verifyEuphoniaMap({ world = worldData(), fixtures = fixturesData
   ];
   if (!(Math.max(...rhumbOff) < 1e-9) || east.length < 40) fail(`a rhumb line strays from its bearing by ${Math.max(...rhumbOff)}`);
 
-  if (Math.abs(geo.HEMISPHERES[1].lon0 - geo.HEMISPHERES[0].lon0) !== 180) fail('the two hemispheres don\'t cover the globe between them');
+  // The land as the globe fills it: each ring's winding read as d3 reads
+  // it, no polygon more than half the sphere, and the total d3 measures the
+  // total of the rings' own areas by an independent formula.
+  const globe = globeWorld(world, roses.roses ?? []);
+  const whole = (world.land ?? []).reduce((a, r) => a + Math.abs(ringArea(r)), 0);
+  const filled = geoArea(globe.land);
+  const flooding = globe.land.coordinates.filter(c => geoArea({ type: 'Polygon', coordinates: c }) > 2 * Math.PI).length;
+  if (flooding) fail(`${flooding} land polygon(s) would cover more than half the sphere`);
+  if (!(Math.abs(filled - whole) <= 1e-3 * whole) || !(whole > 0)) fail(`the globe fills ${filled.toFixed(5)} sr of land against the rings' ${whole.toFixed(5)}`);
+  // The cuts stitched: no land polygon on the sphere keeps an edge along the
+  // antimeridian or the pole, unless the cut's other side is missing from
+  // Natural Earth's own vertices there.
+  const key = ([lon, lat]) => `${lon},${lat}`;
+  const seamEdge = (a, b) => (Math.abs(a[0]) === 180 && a[0] === b[0]) || (a[1] === -90 && b[1] === -90);
+  const edges = rings => rings.flatMap(r => r.slice(1).map((b, i) => [r[i], b]));
+  const onCut = new Set((world.land ?? []).flat().filter(q => Math.abs(q[0]) === 180).map(key));
+  const cutSeams = edges(world.land ?? []).filter(([a, b]) => seamEdge(a, b)).length;
+  const leftSeams = edges(globe.land.coordinates.map(c => c[0])).filter(([a, b]) => seamEdge(a, b));
+  const orphans = leftSeams.filter(([a, b]) => a[1] !== -90 && !(onCut.has(key([-a[0], a[1]])) && onCut.has(key([-b[0], b[1]]))));
+  if (orphans.length < leftSeams.length) fail(`${leftSeams.length - orphans.length} seam edge(s) left in the globe's land where Natural Earth carries the other side`);
+  // Clipping. The disc's area is the sphere's foreshortened by z ≤ 1, so no
+  // polygon draws larger on the disc than it is on the sphere: from every
+  // view, each land, lake and shore polygon as d3 clips it and closes it
+  // along the limb is held to that. A ring d3 put on the wrong side of the
+  // limb fills the disc, π, whatever its size.
+  const drawnArea = (shape, v) => {
+    let area = 0, ring = [];
+    const close = () => { let a = 0; for (let i = 0; i < ring.length; i++) { const [x1, y1] = ring[i], [x2, y2] = ring[(i + 1) % ring.length]; a += x1 * y2 - x2 * y1; } area += Math.abs(a) / 2; ring = []; };
+    geoPath(projectionFor({ ...v, roll: 0, k: 1, cx: 0, cy: 0 }), { moveTo(x, y) { close(); ring.push([x, y]); }, lineTo(x, y) { ring.push([x, y]); }, closePath: close })(shape);
+    close();
+    return area;
+  };
+  const AREA_SLACK = 1e-6;
+  let clipped = 0;
+  for (const v of VIEWS) for (const layer of ['land', 'lakes', 'historic']) for (const coordinates of globe[layer].coordinates) {
+    const shape = { type: 'Polygon', coordinates }, drawn = drawnArea(shape, v);
+    if (drawn > geoArea(shape) + AREA_SLACK) { fail(`from ${v.lat0}°, ${v.lon0}°: a ${layer} polygon of ${geoArea(shape).toExponential(2)} sr draws ${drawn.toFixed(4)} of the disc`); break; }
+    clipped++;
+  }
+  // And from three views the land d3 draws against the land found by
+  // sampling the disc point by point. The sampling's error is about the
+  // coast's length over the grid's step; 2% of the disc holds it.
+  const CLIP_GRID = 72, CLIP_TOLERANCE = 0.02;
+  let clipWorst = 0;
+  for (const v of [{ lon0: 15, lat0: 20 }, { lon0: -165, lat0: -20 }, { lon0: 0, lat0: -90 }]) {
+    let land = 0, disc = 0;
+    for (let i = 0; i < CLIP_GRID; i++) for (let j = 0; j < CLIP_GRID; j++) {
+      const p = geo.orthoUnproject(-1 + (2 * i + 1) / CLIP_GRID, -1 + (2 * j + 1) / CLIP_GRID, v.lon0, v.lat0);
+      if (!p) continue;
+      disc++;
+      if (geo.onLand(world.land ?? [], p.lat, p.lon)) land++;
+    }
+    const drawn = drawnArea(globe.land, v) / Math.PI, sampled = land / disc;
+    clipWorst = Math.max(clipWorst, Math.abs(drawn - sampled));
+    if (Math.abs(drawn - sampled) > CLIP_TOLERANCE) fail(`from ${v.lat0}°, ${v.lon0}°: the globe draws land over ${(drawn * 100).toFixed(1)}% of the disc, sampling finds ${(sampled * 100).toFixed(1)}%`);
+  }
 
-  // Clipping: the land the two hemispheres show is all the land, once.
-  const area = rings => rings.reduce((a, r) => a + ringArea(r), 0);
-  const whole = area(world.land ?? []);
-  const shown = geo.HEMISPHERES.reduce((a, h) => a + area(geo.ringsIn(world.land ?? [], h.lon0)), 0);
-  // Clipping interpolates each cut edge's latitude linearly, which the area
-  // formula integrates as sin(φ); the difference is far under this.
-  if (!(Math.abs(shown - whole) <= 1e-4 * Math.abs(whole)) || !(whole > 0)) fail(`the hemispheres show ${shown.toFixed(5)} sr of land against the data's ${whole.toFixed(5)}`);
-
-  // The dark side: the analytic circle is the projected dusk circle, sampled
-  // independently, and the antisolar point lies on its dark side. Every
-  // week of the year from Samhain 1668, at a time of day that walks round.
-  let circles = 0;
-  for (let k = 0; k < 53; k++) {
-    const t = Date.UTC(1668, 10, 1) + k * 7 * DAY_MS + k * 97 * 60000;
-    const sun = geo.subsolar(t);
-    const anti = { lon: sun.lon > 0 ? sun.lon - 180 : sun.lon + 180, lat: -sun.lat };
-    for (const h of geo.HEMISPHERES) for (const dusk of geo.DUSKS) {
-      const region = geo.darkRegion(sun, dusk, h.lon0);
-      circles++;
-      for (const [lon, lat] of duskCircle(sun, dusk)) {
-        if (geo.local(lon, lat, h.lon0)[2] > 0) continue;
-        const [X, Y] = geo.project(lon, lat, h.lon0);
-        const off = region.line ? Math.abs(region.nx * X + region.ny * Y - region.c) : Math.abs(Math.hypot(X - region.cx, Y - region.cy) - region.r);
-        if (off > 1e-9) { fail(`${h.name}, ${new Date(t).toISOString()}, dusk ${dusk}°: a point on the dusk circle sits ${off} off the drawn one`); break; }
-      }
-      if (geo.local(anti.lon, anti.lat, h.lon0)[2] <= 0 && !region.line) {
-        const [X, Y] = geo.project(anti.lon, anti.lat, h.lon0);
-        if ((Math.hypot(X - region.cx, Y - region.cy) < region.r) !== region.inside) fail(`${h.name}, ${new Date(t).toISOString()}: the point opposite the sun is drawn in daylight`);
-      }
+  // The mount. The globe as the page draws it (euphonia.mount.js's view,
+  // through d3) against the globe as it stands: the axis `setting` above the
+  // horizon's north point in the meridian ring's plane, the meridian lon0
+  // turned to face the eye, a point carried into the stand and seen from the
+  // eye's height.
+  const E = mount.EYE * RAD, eye = [0, Math.sin(E), Math.cos(E)];
+  const dot = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+  const cross = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
+  const unit = a => { const n = Math.hypot(...a); return a.map(c => c / n); };
+  let mountWorst = 0, mountPoints = 0;
+  for (let setting = -90; setting <= 90; setting += 15) for (const lon0 of [-150, -15, 15, 120]) {
+    const axis = [Math.cos(setting * RAD), Math.sin(setting * RAD), 0];
+    const facing = unit(eye.map((c, i) => c - dot(eye, axis) * axis[i])), east = cross(axis, facing);
+    const d3 = projectionFor({ ...mount.viewOf({ lon0, setting }), k: 1, cx: 0, cy: 0 });
+    for (let lat = -80; lat <= 80; lat += 20) for (let lon = -180; lon < 180; lon += 20) {
+      const c = Math.cos(lat * RAD), dl = (lon - lon0) * RAD;
+      const g = [c * Math.cos(dl), c * Math.sin(dl), Math.sin(lat * RAD)];
+      const stand = [0, 1, 2].map(i => g[0] * facing[i] + g[1] * east[i] + g[2] * axis[i]);
+      const [x, y, depth] = mount.onPage(stand);
+      if (depth < 1e-3) continue;
+      const [px, py] = d3([lon, lat]);
+      mountWorst = Math.max(mountWorst, Math.hypot(px - x, -py - y));
+      mountPoints++;
+    }
+  }
+  if (!(mountWorst < 1e-9) || !mountPoints) fail(`the mounted globe strays ${mountWorst} from the globe as it stands, over ${mountPoints} points`);
+  // What the mount hides, by casting the eye's line through each point of
+  // the globe's face at the meridian ring's plane, the horizon's top face
+  // and its outer edge, and finding where it meets them before the sphere.
+  const MOUNT_GRID = 400;
+  let coverMisses = 0, covered = 0;
+  const { MERIDIAN, HORIZON } = mount;
+  for (let i = 0; i < MOUNT_GRID; i++) for (let j = 0; j < MOUNT_GRID; j++) {
+    const x = -1 + (2 * i + 1) / MOUNT_GRID, y = -1 + (2 * j + 1) / MOUNT_GRID;
+    if (x * x + y * y >= 1) continue;
+    const sphere = Math.sqrt(1 - x * x - y * y);
+    // The line of sight: P(t) = x·X + y·up + t·eye, up = (0, cos E, −sin E).
+    const at = t => [x, y * Math.cos(E) + t * Math.sin(E), -y * Math.sin(E) + t * Math.cos(E)];
+    const hits = [];
+    { const t = y * Math.tan(E), P = at(t), r = Math.hypot(P[0], P[1]); if (r >= MERIDIAN.inner && r <= MERIDIAN.outer) hits.push(t); }
+    { const t = -y / Math.tan(E), P = at(t), h = Math.hypot(P[0], P[2]); if (h >= HORIZON.inner && h <= HORIZON.outer) hits.push(t); }
+    {
+      // The outer edge: X² + Z² = outer², nearer the eye of the two meetings.
+      const a = Math.cos(E) ** 2, b = -2 * y * Math.sin(E) * Math.cos(E), c = x * x + y * y * Math.sin(E) ** 2 - HORIZON.outer ** 2, disc = b * b - 4 * a * c;
+      if (disc >= 0) { const t = (-b + Math.sqrt(disc)) / (2 * a), P = at(t); if (P[1] <= 0 && P[1] >= -HORIZON.thickness) hits.push(t); }
+    }
+    const hidden = hits.some(t => t > sphere);
+    if (hidden !== mount.covers(x, y)) coverMisses++;
+    if (hidden) covered++;
+  }
+  if (coverMisses || !covered) fail(`the mount's cover is wrong at ${coverMisses} of the globe's points (${covered} hidden by casting)`);
+  // The horizon's calendar for 1668: every day once, each a day's travel of
+  // the sun on from the last, the year round the ring; the equinox and
+  // solstices, found by the sun's declination, at the east, south, west and
+  // north points, within a day.
+  const year = mount.calendarOf(1668);
+  // Each day a step on from the last, and the year short of once round by
+  // less than a day: 365 days of 1668's 366 carry the sun 365/365.24 of the
+  // way, so the last day never laps the first.
+  const steps = year.slice(1).map((d, i) => ((d.azimuth - year[i].azimuth) % 360 + 360) % 360);
+  const sweep = steps.reduce((a, b) => a + b, 0);
+  if (year.length !== 366 || steps.some(d => d < 0.9 || d > 1.1) || !(sweep < 360 && 360 - sweep < 1.1)) fail(`the 1668 calendar has ${year.length} days, steps of ${Math.min(...steps).toFixed(3)}–${Math.max(...steps).toFixed(3)}°, going ${sweep.toFixed(3)}° of the way round`);
+  const declination = d => solarParams(Date.UTC(1668, d.month, d.day, 12)).decl;
+  const turns = [
+    ['east', 90, year.findIndex((d, i) => i && declination(year[i - 1]) < 0 && declination(d) >= 0)],
+    ['south', 180, year.reduce((m, d, i) => (declination(d) > declination(year[m]) ? i : m), 0)],
+    ['west', 270, year.findIndex((d, i) => i && declination(year[i - 1]) > 0 && declination(d) <= 0)],
+  ];
+  for (const [point, azimuth, i] of turns) {
+    const off = Math.abs(((year[i].azimuth - azimuth) % 360 + 540) % 360 - 180);
+    if (!(off <= 1.1)) fail(`the calendar's ${year[i].day} ${mount.MONTHS[year[i].month]} sits ${off.toFixed(2)}° from the ${point} point, where the sun's declination turns`);
+  }
+  // The mount's extent holds every part of it.
+  const { EXTENT } = mount;
+  for (let a = 0; a < 360; a++) {
+    const c = Math.cos(a * RAD), s = Math.sin(a * RAD);
+    for (const P of [[MERIDIAN.outer * c, MERIDIAN.outer * s, 0], [HORIZON.outer * c, 0, HORIZON.outer * s], [HORIZON.outer * c, -HORIZON.thickness, HORIZON.outer * s]]) {
+      const [x, y] = mount.onPage(P);
+      if (Math.abs(x) > EXTENT.halfWidth + 1e-12 || y > EXTENT.top + 1e-12 || y < -EXTENT.bottom - 1e-12) { fail(`the mount reaches ${x.toFixed(3)}, ${y.toFixed(3)}, outside its extent`); a = 360; break; }
     }
   }
 
   const log = problems.length
     ? [`\neuphonia map: ${problems.length} problem(s):`, ...problems.map(p => `  ${p}`)]
-    : [`ok: ${points} Natural Earth points under their provenance; the sun within ${sunWorst.toFixed(4)}° of Horizons at ${sunRows.length} instants; ${computed.length} moon phases within ${phaseWorst.toFixed(2)} min of Espenak, lit within ${litWorst.toFixed(4)}; ${regionPlaces} places in ${regions.length} regions and ${calendars.polities.length} seats, each found once in Natural Earth; ${calendars.polities.length} polities' calendars cited, ${conversions.length} Fourmilab conversions and ${calendarDays} days against ICU; the Tide turning at ${eves} eves and ${tropicChecks} tropical readings; the hemispheres show all ${(whole / (4 * Math.PI) * 100).toFixed(1)}% of the globe that is land, once; ${roundTrips} points projected and back; land and sea right at ${KNOWN.length} known points; the relief right at ${RELIEF_KNOWN.length} known places, its shading's exaggeration its slopes'; ${roses.roses.length} wind roses at their poles; rhumb lines on their bearings; ${circles} dusk circles drawn where the sky darkens`];
+    : [`ok: ${points} Natural Earth points under their provenance; the sun within ${sunWorst.toFixed(4)}° of Horizons at ${sunRows.length} instants; ${computed.length} moon phases within ${phaseWorst.toFixed(2)} min of Espenak, lit within ${litWorst.toFixed(4)}; ${regionPlaces} places in ${regions.length} regions and ${calendars.polities.length} seats, each found once in Natural Earth; ${calendars.polities.length} polities' calendars cited, ${conversions.length} Fourmilab conversions and ${calendarDays} days against ICU; the Tide turning at ${eves} eves and ${tropicChecks} tropical readings; the globe fills the ${(whole / (4 * Math.PI) * 100).toFixed(1)}% of it that is land, ${cutSeams - leftSeams.length} of its ${cutSeams} seam edges stitched across the cut, ${orphans.length} kept where Natural Earth has no other side; ${clipped} polygons clipped from ${VIEWS.length} views, none drawn larger than it is, the land within ${(clipWorst * 100).toFixed(1)}% of sampling from three; ${roundTrips} points projected and back, within ${d3Worst.toExponential(0)} of d3-geo's orthographic; land and sea right at ${KNOWN.length} known points; the relief right at ${RELIEF_KNOWN.length} known places, its shading's exaggeration its slopes'; ${roses.roses.length} wind roses at their poles; rhumb lines on their bearings; the mounted globe within ${mountWorst.toExponential(0)} of the globe as it stands at ${mountPoints} points, the mount's cover as the eye's line finds it at every one of ${MOUNT_GRID}² points, the 1668 calendar's year round its horizon with the equinoxes and the solstice at their points`];
   return { ok: problems.length === 0, failures: problems.length, log };
 }
 

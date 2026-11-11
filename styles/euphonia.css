@@ -44,11 +44,13 @@ footer.legal section a { text-decoration: underline; }
    on a tall one. Each disc takes the largest square its cell holds. */
 .map-stage {
   --map-sea: #0f1418; --map-graticule: #3a352c; --map-circles: #6b5a37; --map-land: #2b261e;
-  --map-coast: #8c7a55; --map-river: #3b4a52; --map-historic: #d9b13f; --map-night: rgba(0, 0, 0, 0.32);
+  --map-coast: #8c7a55; --map-river: #3b4a52; --map-historic: #d9b13f;
   --map-waterline: #4a6170; --map-relief-shelf: #1d2c35; --map-relief-abyss: #070b0e;
   --map-relief-land: #2b261e; --map-relief-lit: #574c38; --map-relief-shade: #110e0a;
   --map-rhumb: rgba(140, 122, 85, 0.35); --map-rose: #8c7a55;
   --map-glow: rgba(217, 177, 63, 0.22); --map-glow-lit: rgba(240, 207, 106, 0.55); --map-sun: #f0cf6a; --map-rim: #8c7a55;
+  --map-brass: #9a7a3a; --map-brass-edge: #4f3d1b; --map-wood: #3b2717; --map-wood-edge: #22160c;
+  --map-paper: #b9a67c; --map-ink: #2b2013;
   position: relative; overflow: hidden; min-height: 0;
   display: grid; grid-template-rows: auto minmax(0, 1fr) auto; gap: 0.6rem;
 }
@@ -66,18 +68,15 @@ footer.legal section a { text-decoration: underline; }
 }
 .map-controls button:hover, .map-controls button:focus-visible, .map-controls select:focus-visible { border-color: #d9b13f; }
 .map-controls button[aria-pressed="true"] { background: #2a2416; }
-.map-hemispheres { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; min-height: 0; }
-@media (orientation: portrait) { .map-hemispheres { grid-template-columns: 1fr; grid-template-rows: 1fr 1fr; } }
+/* One globe in its mount, as large as its cell holds; the mount's shape
+   (--mount-aspect) comes from euphonia.mount.js, set by the map. */
+.map-globe { display: grid; min-height: 0; }
 .map-cell { container-type: size; min-height: 0; display: grid; place-items: center; }
-.map-disc { position: relative; width: min(100cqw, 100cqh); aspect-ratio: 1; touch-action: none; }
-.map-disc:focus-visible { outline: 2px solid #f0cf6a; outline-offset: 4px; border-radius: 50%; }
+.map-disc { position: relative; width: min(100cqw, 100cqh * var(--mount-aspect, 1)); aspect-ratio: var(--mount-aspect, 1); touch-action: none; }
+.map-disc:focus-visible { outline: 2px solid #f0cf6a; outline-offset: 4px; }
 .map-disc canvas { display: block; width: 100%; height: 100%; cursor: grab; }
 .map-disc canvas:active { cursor: grabbing; }
-.map-name {
-  position: absolute; top: 0; left: 0; right: 0; margin: 0; text-align: center; pointer-events: none;
-  color: #8c8377; font-size: 0.7rem; letter-spacing: 0.3em; text-transform: uppercase;
-}
-.map-labels { position: absolute; inset: 0; pointer-events: none; overflow: hidden; border-radius: 50%; }
+.map-labels { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
 .map-region {
   position: absolute; top: 0; left: 0; pointer-events: auto; white-space: nowrap;
   font: inherit; color: #ded9d0; background: none; border: 0; padding: 0.05rem 0.2rem; cursor: pointer;
@@ -98,9 +97,9 @@ footer.legal section a { text-decoration: underline; }
   color: #f0cf6a; font-size: 0.8rem; text-shadow: 0 0 3px #0a0a0a, 0 0 3px #0a0a0a, 0 0 6px #0a0a0a;
 }
 .map-place[hidden] { display: none; }
-/* What Enter picks on a focused hemisphere: its centre. */
+/* What Enter picks on the focused globe: its centre. */
 .map-disc:focus-visible::after {
-  content: ''; position: absolute; left: 50%; top: 50%; width: 1.2rem; height: 1.2rem; transform: translate(-50%, -50%);
+  content: ''; position: absolute; left: var(--globe-x, 50%); top: var(--globe-y, 50%); width: 1.2rem; height: 1.2rem; transform: translate(-50%, -50%);
   background: linear-gradient(#f0cf6a, #f0cf6a) center / 1px 100% no-repeat, linear-gradient(#f0cf6a, #f0cf6a) center / 100% 1px no-repeat;
   pointer-events: none;
 }
@@ -287,7 +286,7 @@ details.region:target > summary, details.region[open] > summary { color: #d9b13f
 @media print {
   body { background: #fff; color: #000; }
   a, footer, footer.legal h2, .kicker, .note, .meta, ul.catalog .n, ul.catalog .e { color: #000; }
-  .skip-link, header.masthead a.home, footer.legal > p:first-child, .map-controls, .map-hemispheres, .map-help { display: none; }
+  .skip-link, header.masthead a.home, footer.legal > p:first-child, .map-controls, .map-globe, .map-help { display: none; }
   .map-stage, .euphonia-top { height: auto; min-height: 0; }
   .euphonia-tabs { display: none; }
   /* With the builder open, the sheet is the page: its details open, its

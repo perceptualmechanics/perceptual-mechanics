@@ -40,11 +40,10 @@ function catalog(items) {
 // its panel: the contents, each region's chapter, the moment shown, how the
 // map is made, the classes and the games.
 function mapStage({ classes, regions, adventures, hidden }, world, fixtures, calendars) {
-  const discs = ['Occidens', 'Oriens'].map((name, i) => `<div class="map-cell"><div class="map-disc" tabindex="0" role="group" aria-label="${name}, the ${i ? 'eastern' : 'western'} hemisphere" aria-describedby="map-help">
-<p class="map-name" aria-hidden="true">${name}</p>
+  const globe = `<div class="map-cell"><div class="map-disc" tabindex="0" role="group" aria-label="The globe" aria-describedby="map-help">
 <canvas aria-hidden="true"></canvas>
 <div class="map-labels"></div>
-</div></div>`).join('\n');
+</div></div>`;
   return `<form class="map-controls" hidden>
 <label>Date (Gregorian) <input name="date" type="date" min="1668-11-01" max="1669-11-01" required></label>
 <label>Time, UT <input name="time" type="range" min="0" max="1439" step="5"> <output name="shown" for="time"></output></label>
@@ -54,12 +53,11 @@ function mapStage({ classes, regions, adventures, hidden }, world, fixtures, cal
 <option value="86400" selected>a day a second</option>
 <option value="${SYNODIC * 86400}">a moon a second</option>
 </select></label>
-<label><input type="checkbox" name="night" checked> Night</label>
 <button type="button" class="map-reset" hidden>Whole world</button>
 <button type="button" class="map-contents-open" aria-haspopup="dialog">Contents</button>
 </form>
-<div class="map-hemispheres">
-${discs}
+<div class="map-globe">
+${globe}
 </div>
 <div class="map-panel" role="dialog" aria-modal="false" aria-labelledby="map-panel-title">
 <button type="button" class="map-panel-close" aria-label="Close panel">&#10005;</button>
@@ -80,7 +78,7 @@ ${regions.status === 'draft' ? `<p class="map-panel-note">${DRAFT_NOTE}</p>\n` :
 </div>
 </div>
 <p class="map-status" aria-live="polite"></p>
-<p class="map-help" id="map-help">Drag a hemisphere, or focus it and use the arrow keys, to turn the world; the wheel, a pinch, or + and − zoom; 0 shows the whole world again. A region's name opens its chapter beside the map, and Contents lists every chapter and the rest of the book's pages. Play runs time on; on a hemisphere, space plays and pauses, [ and ] step an hour, { and } a day. Click or tap a place, or press Enter on a hemisphere for the place at its centre: the panel gives its time, its sun and its tide, and opens its region's chapter where the chapter names it.</p>
+<p class="map-help" id="map-help">Drag the globe across, or focus it and use the left and right arrows, to spin it on its axis; drag up or down, or use the up and down arrows, to slide its brass ring through the horizon and set it for a latitude, the pole raised that far. The wheel, a pinch, or + and − zoom; 0 sets it home again. The wooden horizon's calendar marks today beside the sun's place in the zodiac. A region's name opens its chapter beside the globe, and Contents lists every chapter and the rest of the book's pages. Play runs time on; on the globe, space plays and pauses, [ and ] step an hour, { and } a day. Click or tap a place, or press Enter on the globe for the place at its centre: the panel gives its time, its sun and its tide, and opens its region's chapter where the chapter names it.</p>
 <noscript><p class="map-help">The map and its pages are drawn in the page by script.</p></noscript>`;
 }
 
@@ -126,7 +124,7 @@ ${pages.map(([id, name]) => `<li><button type="button" data-page="${id}">${name}
 </ul>
 </nav>
 <section class="map-panel-page map-panel-moment" data-page="moment" data-title="This moment" hidden>
-<p class="map-readout">The world between Samhain 1668 and Samhain 1669, in two hemispheres, with the night where it fell.</p>
+<p class="map-readout">The world between Samhain 1668 and Samhain 1669, on one globe.</p>
 <table class="map-dates" hidden>
 <caption>The same moment, as each kept the date</caption>
 <thead><tr><th scope="col">Calendar</th><th scope="col">Date</th><th scope="col">The Hidden (Euphonia)</th><th scope="col">Kept in</th></tr></thead>

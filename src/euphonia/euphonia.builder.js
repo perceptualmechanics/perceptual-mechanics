@@ -40,6 +40,8 @@ const options = (values, chosen, prompt) => [
   ...(prompt ? [h('option', { value: '' }, prompt)] : []),
   ...values.map(v => (typeof v === 'string' ? h('option', { value: v, selected: v === chosen }, v) : h('option', { value: v.value, selected: v.value === chosen, disabled: v.disabled }, v.label))),
 ];
+// "A", "A and B", "A, B and C".
+const listed = items => (items.length < 3 ? items.join(' and ') : `${items.slice(0, -1).join(', ')} and ${items.at(-1)}`);
 const idFor = field => `problem-${field.replace(/[^\w-]+/g, '-')}`;
 // Rebuilding a group of controls keeps the keyboard where it was: the
 // control with the same key takes focus back.
@@ -115,7 +117,7 @@ export async function initBuilder(panel) {
   form.append(
     section('Name', h('label', { class: 'b-field' }, h('span', {}, 'Character name'), nameInput)),
     section('Class', h('p', { class: 'b-note' }, 'The first is the class you began in. Its levels and the others’ make your character level.'), classList, addClass, problemSlot('classes'),
-      book.unfinished.length ? h('p', { class: 'b-note' }, `${book.unfinished.map((n, i) => `${i ? 'the' : 'The'} ${n}`).join(' and ')} ${book.unfinished.length === 1 ? 'is' : 'are'} still being written, and join${book.unfinished.length === 1 ? 's' : ''} the builder when finished.`) : null),
+      book.unfinished.length ? h('p', { class: 'b-note' }, `${listed(book.unfinished.map((n, i) => `${i ? 'the' : 'The'} ${n}`))} ${book.unfinished.length === 1 ? 'is' : 'are'} still being written, and join${book.unfinished.length === 1 ? 's' : ''} the builder when finished.`) : null),
     section('Species', h('label', { class: 'b-field' }, h('span', {}, 'Species'), speciesSelect), problemSlot('species'), optionRow, problemSlot('option'), sizeRow, problemSlot('size'), originBox, speciesTraits),
     section('Homeland', h('p', { class: 'b-note' }, 'Every species takes its traits as written; your people is where the family comes from, and the trouble comes with the country.'),
       h('label', { class: 'b-field' }, h('span', {}, 'Region'), homelandSelect), homelandLink),
@@ -222,7 +224,10 @@ export async function initBuilder(panel) {
         h('div', { class: 'b-pair' }, pick(big, `+${big}`), pick(small, `+${small}`)));
       backgroundAbout.replaceChildren(h('dl', { class: 'b-facts' },
         h('dt', {}, 'Feat'), h('dd', {}, bg.feat), h('dt', {}, 'Skills'), h('dd', {}, `${bg.skills.join(' and ')}${bg.skill_choice ? `, and ${bg.skill_choice.from.join(' or ')}` : ''}`),
-        h('dt', {}, 'Tool'), h('dd', {}, bg.tool), h('dt', {}, 'Equipment'), h('dd', {}, bg.equipment)),
+        h('dt', {}, 'Tool'), h('dd', {}, bg.tool), h('dt', {}, 'Equipment'), h('dd', {}, bg.equipment),
+        // The setting's backgrounds each give a Door (somewhere it gets you
+        // in) and a Debt (someone who wants something from you).
+        bg.door ? [h('dt', {}, 'Door'), h('dd', {}, bg.door)] : null, bg.debt ? [h('dt', {}, 'Debt'), h('dd', {}, bg.debt)] : null),
         bg.about ? h('details', {}, h('summary', {}, 'About this background'), h('div', { html: blocks(bg.about) })) : null);
     }
     const two = increases.querySelector('input[value=two]')?.checked;
@@ -478,6 +483,11 @@ export async function initBuilder(panel) {
         h('h2', { id: 'sheet-title' }, state.name.trim() || 'Your character'),
         h('p', {}, who || 'Choose a class, a species and a background.'),
         h('p', { class: 'sheet-level' }, `Level ${result.level} · Proficiency Bonus ${signed(result.bonus)} · ${result.xp.toLocaleString('en')} XP${result.nextXp ? `, the next level at ${result.nextXp.toLocaleString('en')}` : ''}`)),
+      result.background?.door || result.background?.debt ? h('section', { class: 'sheet-block', 'aria-labelledby': 'sheet-background' },
+        h('h3', { id: 'sheet-background' }, result.background.name),
+        h('dl', { class: 'sheet-facts' },
+          result.background.door ? [h('dt', {}, 'Door'), h('dd', {}, result.background.door)] : null,
+          result.background.debt ? [h('dt', {}, 'Debt'), h('dd', {}, result.background.debt)] : null)) : null,
       h('section', { class: 'sheet-block', 'aria-labelledby': 'sheet-abilities' },
         h('h3', { id: 'sheet-abilities' }, 'Abilities'),
         h('table', { class: 'sheet-abilities' },

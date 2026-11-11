@@ -2,8 +2,8 @@
  "provenance": {
   "source": "Euphonia.md",
   "master": "~/Documents/euphonia/Euphonia.md",
-  "sha256": "261a270a6035e8c7e89a1e04c6a37b5d90e9c29dd1481e3e44ca58ad4cd47762",
-  "modified": "2026-11-09T18:09:56-05:00",
+  "sha256": "7b3e4a74f6735bd89b7bd65e50f765c303530c976b4592cbaab823defbeb5118",
+  "modified": "2026-11-11T17:05:29-05:00",
   "exporter": "class-kit/site_export.py",
   "exporter_version": 10,
   "rules": {
@@ -33,13 +33,13 @@
    "read_with": "Powers and Factions; in The State of the World, Europe, and Mutapa and the Indian Ocean",
    "summary": "**The pitch.** Every court in Europe has a minister of magic, and in 1668 every one has just learned it is behind: Mutapa is about to leap the magical gap on a metal nobody else can work, and Spain, it turns out, has the same metal in the Chocó (see The World in 1668). The Great Game is the espionage that follows, played with licenses, portraits and shewstones by the spymasters who are this setting's secret heroes, and the party is one of their crews.",
    "hooks": [
-    "A court painter has finished a miniature of the young king for the Emperor's court, and three services want it before it reaches Vienna.",
+    "A court painter has finished a miniature of the young King of Spain for the Emperor's court, and three services want it before it reaches Vienna.",
     "A Viennese clerk has been copying the Emperor's register of licensed casters for another court; whoever catches him first will use him rather than hang him.",
     "A shewstone pair given by Mutapa has started answering in a voice that isn't the other stone's.",
     "An Agitator cell inside the Invisible College has a scheme for the Grand Divertissement; a natural philosopher among them has doubts.",
     "A Mutapan lamp in a minister's study has been opened and closed again, and the guild's mark on its base is now upside down.",
     "Mutapa's spymaster wants to know who told Spain what its platina was: the letter came from Lisbon, in excellent Portuguese.",
-    "A Gamester at Versailles has lost a hand he couldn't have lost, to a man who shouldn't have known the odds."
+    "The Gamester at Versailles (Running Euphonia, Notable People) has lost a hand he couldn't have lost, to a man who shouldn't have known the odds."
    ],
    "regions": [
     "Europe"
@@ -52,7 +52,7 @@
    "read_with": "Europe",
    "summary": "**The pitch.** A solid intro heist: the prize is going on the market soon for a hefty fee, so why not take it and keep the money? The Republic is losing Candia in the twenty-first year of the siege and will sell anything it has, and a desperate state with the best scryers and cipher clerks in Europe makes mistakes. The city is the whole dungeon: canals, rooftops, palaces and archives, a population that informs on itself and a fair where everyone is masked, which helps a burglar and hurts a scryer. The default date is the Sensa, the Ascension fair of May 1668, when the Doge weds the sea and the masks come out; for Carnival, run it in the winter of 1669. A Danae of the Crossing racing across its rooftops is on the cover of this book.",
    "hooks": [
-    "The Ten are selling their scryers' report by sealed bid on the last night of the Sensa fair; the French bidder has debts, the Spanish one has bravos.",
+    "The Ten are selling their scryers' report by sealed bid on the last night of the Sensa fair; the French bidder has debts and bravos; the Spanish one hires a crew.",
     "The scryer who made the report left notes the Ten's clerks didn't understand, and Spain's ambassador is looking for her.",
     "A health pass for a ship from Sofala has been forged, and the real ship is at the Lazzaretto with something in its hold.",
     "The golem has stopped a man who is of the ghetto, and won't say why.",
@@ -70,7 +70,10 @@
    "read_with": "Running Euphonia; *Euphonia: Life on the Border*",
    "summary": "The frontier game belongs to no region: every society has villages on its outskirts and a Hidden past them. The Border can be a Highland glen, a Japanese mountain village, a Swedish chapelry in the year the Blåkulla trials begin, or the almost suburban edge of one of Mutapa's fast-growing cities, where modern artifice meets the water spirits who take people under the pools and send some back as healers. Pick the border your table knows.",
    "hooks": [
-    "A child says she was carried to a feast inside a hill, and the examiner who comes to hear it is looking for witches. The village's Killer is seventy and her knees are going. A Mutapan survey crew has pegged out a new street across a pool that belongs to someone. The taken came back a hundred years late and remembers everything."
+    "A child says she was carried to a feast inside a hill, and the examiner who comes to hear it is looking for witches.",
+    "The village's Killer is seventy and her knees are going.",
+    "A Mutapan survey crew has pegged out a new street across a pool that belongs to someone.",
+    "The taken came back a hundred years late and remembers everything."
    ],
    "regions": [
     "Mutapa and the Indian Ocean"
