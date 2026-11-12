@@ -41,7 +41,8 @@ function coastPath(view, world) {
 // The colours are the theme's, read from its custom properties: the globe's
 // own (--map-…) and the materials and signal it shares with the page.
 const MAP_COLORS = ['sea', 'graticule', 'circles', 'land', 'coast', 'river', 'historic', 'glow', 'glow-lit', 'sun', 'rim',
-  'waterline', 'relief-shelf', 'relief-abyss', 'relief-land', 'relief-lit', 'relief-shade', 'rhumb', 'rose', 'wheel-low'];
+  'waterline', 'relief-shelf', 'relief-abyss', 'relief-land', 'relief-lit', 'relief-shade', 'rhumb', 'rose', 'wheel-low',
+  'empyrean', 'heaven-far', 'heaven-near', 'fire', 'air'];
 const SHARED_COLORS = ['frame', 'frame-edge', 'case', 'case-edge', 'paper', 'ink', 'signal', 'signal-text'];
 export function palette(el) {
   const css = getComputedStyle(el), v = name => css.getPropertyValue(`--${name}`).trim();
@@ -149,6 +150,12 @@ const WHEEL_RING_ALPHA = 0.16, WHEEL_ROAD_ALPHA = 0.3, WHEEL_TYPE_ALPHA = 0.45;
 const WHEEL_SPHERE_NAMES = 150;
 // Type sizes in rem: the realms, the spheres and roads, the rim's words.
 const WHEEL_REALM_REM = 0.72, WHEEL_SMALL_REM = 0.62, WHEEL_RIM_REM = 0.66;
+// Between two #rrggbb colours, a share of the way from the first.
+const mixer = (a, b) => {
+  const p = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16)), [x, y] = [p(a), p(b)];
+  return t => `rgb(${x.map((v, i) => Math.round(v + (y[i] - v) * t)).join(',')})`;
+};
+
 // Where things stand on the Wheel, for its drawing and its ambient life
 // (euphonia.ambient.js) alike: a ring's axes, a point at a ring and bearing,
 // each sphere's ring, each road's track, and the realms' ring.
@@ -173,6 +180,44 @@ export function drawWheel(ctx, view, { realms, roads }, rim, colors, dpr, font, 
     ctx.textBaseline = s > 0.25 ? 'top' : s < -0.25 ? 'bottom' : 'middle';
   };
   ctx.save();
+  // The spheres painted, as the period painted them (Cellarius, 1660–61), not
+  // the empty black of the Far Realm, which only the philosophers have found:
+  // the heavens' light beyond and about the Empyrean, in the Wheel's own
+  // shape, full at the Fixed Stars and gone into the page's ground by the
+  // window's farthest corner; inside the Fixed Stars a deep blue, lightening
+  // sphere by sphere through the planets to the Moon; then fire, then air
+  // about the earth. Each ring filled, outermost first.
+  const [ex, ey] = axes(sphereT(SPHERES.indexOf('Fixed Stars')));
+  const corner = Math.max(...[[0, 0], [ctx.canvas.width, 0], [0, ctx.canvas.height], [ctx.canvas.width, ctx.canvas.height]].map(([x, y]) => Math.hypot((x - cx) / ex, (y - cy) / ey)));
+  ctx.save();
+  ctx.translate(cx, cy); ctx.scale(ex, ey);
+  const light = ctx.createRadialGradient(0, 0, 1, 0, 0, corner);
+  light.addColorStop(0, colors.empyrean);
+  light.addColorStop(1, `${colors.empyrean}00`);
+  ctx.fillStyle = light;
+  ctx.fillRect(-corner, -corner, 2 * corner, 2 * corner);
+  ctx.restore();
+  // Above and below, the window ends where the bar and the ribbons keep the
+  // page's ground: the light fades to nothing across the Wheel's margin there,
+  // so the two meet without a seam.
+  const feather = k * rim.margin, H = ctx.canvas.height, W = ctx.canvas.width;
+  ctx.save();
+  ctx.globalCompositeOperation = 'destination-out';
+  for (const [from, to] of [[0, feather], [H, H - feather]]) {
+    const edge = ctx.createLinearGradient(0, from, 0, to);
+    edge.addColorStop(0, colors.empyrean);
+    edge.addColorStop(1, `${colors.empyrean}00`);
+    ctx.fillStyle = edge;
+    ctx.fillRect(0, Math.min(from, to), W, feather);
+  }
+  ctx.restore();
+  const fixedStars = SPHERES.indexOf('Fixed Stars'), moon = SPHERES.indexOf('Moon');
+  const heaven = mixer(colors['heaven-far'], colors['heaven-near']);
+  for (let i = fixedStars; i >= 0; i--) {
+    const [rx, ry] = axes(sphereT(i));
+    ctx.fillStyle = i >= moon ? heaven((fixedStars - i) / (fixedStars - moon)) : SPHERES[i] === 'Fire' ? colors.fire : colors.air;
+    ctx.beginPath(); ctx.ellipse(cx, cy, rx, ry, 0, 0, 2 * Math.PI); ctx.fill();
+  }
   ctx.lineWidth = 0.6 * dpr;
   ctx.strokeStyle = colors.rim;
   ctx.fillStyle = colors.paper;

@@ -64,6 +64,11 @@
         "map-glow-lit": "rgba(240, 207, 106, 0.55)",
         "map-sun": "#f0cf6a",
         "map-rim": "#8c7a55",
+        "map-empyrean": "#211b10",
+        "map-heaven-far": "#0e1420",
+        "map-heaven-near": "#172029",
+        "map-fire": "#24130d",
+        "map-air": "#141d26",
         "map-wheel-low": "#b4472c"
       },
       "type": "'EB Garamond', 'Euphonia Arabic', 'Euphonia Armenian', 'Euphonia Georgian', 'Euphonia Hebrew', 'Euphonia Devanagari', 'Euphonia Bengali', 'Euphonia Tamil', 'Euphonia Sinhala', 'Euphonia Han', 'Euphonia Hangul', 'Euphonia Khmer', 'Euphonia Lao', 'Euphonia Myanmar', 'Euphonia Ethiopic', 'Euphonia Tibetan', 'Euphonia Thai', 'Euphonia Japanese', serif",
@@ -90,6 +95,14 @@
           "source": {
             "title": "Galling ink! How The National Archives preserves millions of documents written in iron gall ink, The National Archives (UK)",
             "url": "https://blog.nationalarchives.gov.uk/galling-ink-how-the-national-archives-preserves-millions-of-documents-written-in-iron-gall-ink/"
+          }
+        },
+        {
+          "what": "map-empyrean, map-heaven-far, map-heaven-near, map-fire, map-air: the Wheel's spheres, painted",
+          "from": "Andreas Cellarius, Scenographia Systematis Mundani Ptolemaici, in Harmonia Macrocosmica (Amsterdam, 1660–61): the Ptolemaic spheres coloured in bands, air and fire about the earth, the planets' spheres in deepening blues, the light of the heavens beyond",
+          "source": {
+            "title": "Andreas Cellarius, Scenographia Systematis Mundani Ptolemaici, Christchurch Art Gallery Te Puna o Waiwhetū, 2000/86",
+            "url": "https://christchurchartgallery.org.nz/collection/2000-86/andreas-cellarius/scenographia-systematis-mundani-ptolemaici"
           }
         },
         {
