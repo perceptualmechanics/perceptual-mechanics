@@ -22,7 +22,19 @@ export function verifyEuphoniaBuilder({ engine = defaultEngine, srd = read('srd'
   const fail = m => problems.push(m);
   let book;
   try { book = engine.rulebook(srd, euphonia, setting); } catch (e) { return { ok: false, failures: 1, log: [`\neuphonia builder: the rulebook doesn't build: ${e.message}`] }; }
-  const run = (state, where) => { try { return engine.character(book, state); } catch (e) { fail(`${where}: ${e.message}`); return null; } };
+  // Weapon Mastery and languages have checks of their own (below); a build
+  // that doesn't name its weapons takes the first kinds the engine offers,
+  // and one that doesn't name its languages takes as many distinct ones as
+  // it's asked, so other checks test only what they quote.
+  const run = (state, where) => {
+    try {
+      const got = engine.character(book, state);
+      const fill = {};
+      if (!state.mastery && got.masteryChoices?.length) fill.mastery = Object.fromEntries(got.masteryChoices.map(c => [c.key, c.from.slice(0, c.count).map(w => w.name)]));
+      if (!state.languages && got.languageChoices?.length) { let n = 0; fill.languages = Object.fromEntries(got.languageChoices.map(c => [c.key, Array.from({ length: c.count }, () => `Tongue ${++n}`)])); }
+      return Object.keys(fill).length ? engine.character(book, { ...state, ...fill }) : got;
+    } catch (e) { fail(`${where}: ${e.message}`); return null; }
+  };
   // The Fighting Style and Expertise a build leaves open, filled from what
   // the engine offers, distinct each time: what it asks for can be met.
   const complete = (state, where) => {
@@ -35,8 +47,13 @@ export function verifyEuphoniaBuilder({ engine = defaultEngine, srd = read('srd'
       state.expertise = Object.fromEntries(got.expertiseChoices.map(c => { const pick = c.from.filter(x => !taken.has(x)).slice(0, c.count); pick.forEach(x => taken.add(x)); return [c.key, pick]; }));
       // The options a class's table counts: the first open ones it doesn't
       // already have, each counting as its first art the subclass leaves.
-      state.options = Object.fromEntries(got.optionChoices.map(o => [o.class, o.open.filter(x => !o.given.some(g => g.name === x.name)).slice(0, o.count).map(x => ({ name: x.name, art: x.arts.find(a => a !== o.forgone) }))]));
+      state.options = Object.fromEntries(got.optionChoices.map(o => [o.class, o.open.filter(x => !o.given.some(g => g.name === x.name) && !x.requires?.length).slice(0, o.count).map(x => ({ name: x.name, art: x.arts.find(a => a !== o.forgone) }))]));
       state.optionArts = Object.fromEntries(got.optionChoices.flatMap(o => o.given.map(g => [`${o.class} ${g.name}`, g.arts.find(a => a !== o.forgone)])));
+      // A one-of choice, its first option; a Weapon Mastery, its first kinds;
+      // an Origin feat a feature grants, the first that can be taken.
+      state.picks = Object.fromEntries(got.pickChoices.map(c => [c.key, state.picks?.[c.key] ?? c.offered[0].name]));
+      state.mastery = Object.fromEntries(got.masteryChoices.map(c => [c.key, c.from.slice(0, c.count).map(w => w.name)]));
+      state.originFeats = { ...Object.fromEntries(got.originChoices.map(c => [c.key, 'Skilled'])), ...state.originFeats };
       // A skill choice a feature brings, from what it offers.
       state.skills = { ...Object.fromEntries(got.choices.map(c => [c.key, c.from.slice(0, c.count)])), ...state.skills };
     }
@@ -260,6 +277,51 @@ export function verifyEuphoniaBuilder({ engine = defaultEngine, srd = read('srd'
   const crowner = run(someone([{ class: 'Natural Philosopher', level: 3, subclass: 'Crowner' }], { skills: { 'Natural Philosopher': ['Arcana', 'History', 'Insight'], 'Human Skillful': ['Athletics'] }, expertise: { 'Natural Philosopher 2 Instruments': [], 'Natural Philosopher 3 Reconstruction': ['Investigation'] } }), 'Crowner');
   const investigation = crowner?.skills.find(x => x.name === 'Investigation');
   if (!(investigation?.proficient && investigation.expertise)) fail('a Crowner\'s Investigation isn\'t given proficiency and Expertise');
+  // The SRD's choices, as their sentences and tables give them. A Cleric's
+  // Divine Order: the Thaumaturge's extra cantrip and its bonus to Arcana
+  // and Religion (the Wisdom modifier, at least +1), the Protector's Heavy
+  // armor. Eldritch Invocations by their column (one at level 1, eight at
+  // 12), Witch Sight closed until 15, Devouring Blade needing Thirsting
+  // Blade, Agonizing Blast taken twice. Metamagic two, four and six at
+  // levels 2, 10 and 17. Mystic Arcanum a spell at each of levels 6 to 9 by
+  // 17. Weapon Mastery: the Fighter's by its column (four at 4), the
+  // Barbarian's melee weapons only, the Rogue's Simple weapons and Martial
+  // ones that are Finesse or Light (19), the Courtier's Simple and Martial
+  // Finesse (18). Primal Knowledge from the Barbarian's list; the Danae's
+  // Courtly Grace one skill of four.
+  {
+    const as = (cls, lv, extra = {}) => run(someone([{ class: cls, level: lv, subclass: lv >= 3 ? book.classNamed(cls).subclasses[0].name : '' }], { skills: {}, ...extra }), `${cls} ${lv}`);
+    const order = pick => as('Cleric', 1, { base: { ...ABLE, Wisdom: 10 }, picks: { 'Cleric 1 Divine Order': pick } });
+    const thaum = order('Thaumaturge'), prot = order('Protector');
+    const arcana = r => r?.skills.find(s => s.name === 'Arcana');
+    if (!(thaum?.spellChoices.find(s => s.key === 'Cleric')?.cantrips === 4 && prot?.spellChoices.find(s => s.key === 'Cleric')?.cantrips === 3)) fail('the Thaumaturge\'s extra cantrip isn\'t counted');
+    if (!(arcana(thaum)?.bonus - arcana(prot)?.bonus === 1 && prot?.training.includes('Heavy') && !thaum?.training.includes('Heavy'))) fail('Divine Order\'s Arcana bonus or Heavy armor doesn\'t follow the choice');
+    const warlock = (lv, names) => as('Warlock', lv, { options: { Warlock: names.map(name => ({ name })) } });
+    const inv = r => r?.optionChoices.find(o => o.class === 'Warlock');
+    const w12 = warlock(12, ['Witch Sight', 'Devouring Blade', 'Agonizing Blast', 'Agonizing Blast']);
+    if (!(inv(warlock(1, []))?.count === 1 && inv(w12)?.count === 8)) fail(`Eldritch Invocations count ${inv(warlock(1, []))?.count} and ${inv(w12)?.count}, not 1 and 8`);
+    if (!(w12?.problems.some(p => p.field === 'option:Warlock:0' && /isn't open/.test(p.message)) && w12.problems.some(p => /Devouring Blade needs Thirsting Blade/.test(p.message)) && !w12.problems.some(p => /Agonizing Blast/.test(p.message)))) fail('invocations\' prerequisites, or Agonizing Blast\'s repeat, aren\'t held');
+    const meta = lv => as('Sorcerer', lv).optionChoices.find(o => o.class === 'Sorcerer')?.count;
+    if (`${meta(2)},${meta(10)},${meta(17)}` !== '2,4,6') fail(`Metamagic counts ${meta(2)}, ${meta(10)}, ${meta(17)}, not 2, 4, 6`);
+    const arcanum = lv => warlock(lv, []).spellChoices.filter(s => /Mystic Arcanum/.test(s.label)).map(s => s.highest).join();
+    if (arcanum(11) !== '6' || arcanum(17) !== '6,7,8,9') fail(`Mystic Arcanum reads ${arcanum(11)} at 11 and ${arcanum(17)} at 17`);
+    const mastery = (cls, lv) => as(cls, lv, { mastery: {} }).masteryChoices[0];
+    const kinds = m => `${m?.count}/${m?.from.length}`;
+    if (kinds(mastery('Fighter', 4)) !== '4/38' || kinds(mastery('Barbarian', 1)) !== '2/28' || kinds(mastery('Rogue', 1)) !== '2/19' || (book.classNamed('Courtier') && kinds(mastery('Courtier', 2)) !== '2/18')) fail(`Weapon Mastery reads Fighter ${kinds(mastery('Fighter', 4))}, Barbarian ${kinds(mastery('Barbarian', 1))}, Rogue ${kinds(mastery('Rogue', 1))}, at Fighter 4, not 4/38, 2/28, 2/19`);
+    // Pact of the Tome: three cantrips and two level 1 rituals from any list.
+    const tome = warlock(1, ['Pact of the Tome']).spellChoices.find(c => /Pact of the Tome/.test(c.label));
+    if (!(tome?.cantrips === 3 && tome.prepared === 2 && tome.list.some(sp => !sp.level) && tome.list.filter(sp => sp.level).length && tome.list.filter(sp => sp.level).every(sp => sp.level === 1 && /\bR\b/.test(sp.special)))) fail('Pact of the Tome doesn\'t offer three cantrips and two level 1 rituals');
+    const primal = as('Barbarian', 3).choices.find(c => c.key === 'Barbarian 3 Primal Knowledge');
+    if (primal?.from.join() !== book.classNamed('Barbarian').skills.from.join()) fail('Primal Knowledge doesn\'t offer the Barbarian\'s skill list');
+    // Languages: Common and two more for everyone; the Rogue's Thieves' Cant
+    // given with one more, the Druid's Druidic given, the Ranger's two; a
+    // language named twice refused.
+    const tongues = (cls, lv) => as(cls, lv, { languages: {} }).languageChoices.map(c => `${c.count}${c.given.length ? `+${c.given.join('+')}` : ''}`).join(',');
+    if (tongues('Fighter', 1) !== '1,2' || tongues('Rogue', 1) !== '1,2,1+Thieves’ Cant' || tongues('Druid', 1) !== '1,2,0+Druidic' || tongues('Ranger', 2) !== '1,2,2') fail(`languages read Fighter ${tongues('Fighter', 1)}, Rogue ${tongues('Rogue', 1)}, Druid ${tongues('Druid', 1)}, Ranger ${tongues('Ranger', 2)}`);
+    if (!as('Fighter', 1, { languages: { Common: ['Castilian'], standard: ['Latin', 'castilian'] } }).problems.some(p => /already one of your languages/.test(p.message))) fail('a language named twice is taken');
+    const grace = book.classNamed('Danae') && as('Danae', 20).choices.find(c => /Courtly Grace/.test(c.key));
+    if (book.classNamed('Danae') && !(grace?.count === 1 && grace.from.join() === 'Deception,Intimidation,Performance,Persuasion')) fail('Courtly Grace doesn\'t ask one of its four skills');
+  }
   // The Courtier's accomplishments, as its table and its words count them:
   // two at level 1 and eight at 20; the College of Arms closes an
   // accomplishment that counts only as Letters and gives The Code; Regard is

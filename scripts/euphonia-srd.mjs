@@ -493,6 +493,35 @@ function levelFeatures(from, to, skip) {
   }
   return out;
 }
+// Options a class chooses from, each under a section of its own among its
+// features ("Metamagic Options", "Eldritch Invocation Options"): each option
+// an item, a first line of cost or prerequisite ("Cost: 1 Sorcery Point",
+// "Prerequisite: Level 5+ Warlock"), then its rules. The label is set in
+// italic, which reads a few points off the body's lines, so its lines and the
+// body's interleave in height: it runs to the first line that steps back up
+// the page, where the body begins.
+function classOptions(from, to, skip) {
+  const out = [];
+  for (let i = from; i < to; i++) {
+    if (!(lines[i].kind === 'section' && / Options$/.test(lines[i].text))) continue;
+    const end = Math.min(nextOf(i, ['section']), to), items = [];
+    for (let k = i + 1; k < end; k++) {
+      if (lines[k].kind !== 'item') continue;
+      const name = heading(k), stop = Math.min(nextOf(k, ['item', 'section']), end);
+      let body = name.next, label = null;
+      const kind = lines[body]?.text.match(/^(Cost|Prerequisite): /)?.[1];
+      if (kind) {
+        const own = [lines[body++].text];
+        while (body < stop && lines[body].page === lines[body - 1].page && lines[body].right === lines[body - 1].right && lines[body].y > lines[body - 1].y) own.push(lines[body++].text);
+        label = { [kind.toLowerCase()]: join(own).slice(kind.length + 2) };
+      }
+      items.push({ name: name.text, ...label, text: prose(body, stop, skip) });
+    }
+    if (!items.length) throw new Error(`"${lines[i].text}" has no options`);
+    out.push({ title: lines[i].text, items });
+  }
+  return out;
+}
 // The spell-slot counts the Multiclassing rules give, class by class: all
 // of a class's levels, or half of them rounded as they say.
 function slotCounts() {
@@ -588,6 +617,7 @@ function coreClasses() {
       traits,
       table: { columns, rows },
       features: levelFeatures(featuresAt + 1, featuresEnd ?? subAt, skip),
+      options: classOptions(featuresAt + 1, featuresEnd ?? subAt, skip),
       subclasses: [{
         name: sub.text.replace(`${name} Subclass: `, ''),
         lead: prose(sub.next, subFeatures, skip),
@@ -660,6 +690,35 @@ function armor() {
   return out;
 }
 
+// ---------- weapons: the Weapons table's rows under their category rows
+// ("Simple Melee Weapons"), each with its properties as a list ("Finesse,
+// Light, Thrown (Range 20/60)") and its mastery property.
+function weapons() {
+  const t = lines.findIndex((l, k) => l.kind === 'title' && l.text === 'Weapons' && lines[k + 1]?.kind === 'table');
+  if (t < 0) throw new Error('the SRD has no Weapons table');
+  return table(titled(t), ['Name', 'Damage', 'Properties', 'Mastery', 'Weight', 'Cost']).map(r => {
+    const group = r.group?.match(/^(Simple|Martial) (Melee|Ranged) Weapons$/);
+    if (!group) throw new Error(`weapon "${r.Name}" under no category ("${r.group}")`);
+    return { name: r.Name, category: group[1], range: group[2], damage: r.Damage, properties: r.Properties === '—' ? [] : r.Properties.split(/,\s*(?![^(]*\))/), mastery: r.Mastery };
+  });
+}
+
+// ---------- languages: the rule a character starts by ("Common plus two
+// languages you roll or choose from the Standard Languages table"), and both
+// tables' languages, the rare table set in two halves.
+function languages() {
+  const text = lines.map(l => l.text).join(' ');
+  const m = text.match(/Your character knows at least (\w+) languages: (\w+) plus (\w+) languages you roll or choose from the Standard Languages table\./);
+  if (!m) throw new Error('the starting languages\' rule didn\'t read');
+  const named = (title, headers, column) => {
+    const t = findLine('title', title);
+    return table(titled(t), headers).flatMap(r => column(r)).map(n => n.replace(/\*$/, '')).filter(Boolean);
+  };
+  const standard = named('Standard Languages', ['1d12', 'Language'], r => [r.Language]);
+  const rare = named('Rare Languages', ['Language', 'Language'], r => [r.Language]);
+  return { rule: m[0], known: [m[2]], choose: { count: m[3], from: 'Standard Languages' }, standard, rare };
+}
+
 // The Armor table's Strength column, in its own sentence: "that armor
 // reduces the wearer’s speed by 10 feet unless the wearer has a Strength
 // score equal to or higher than the listed score".
@@ -729,6 +788,10 @@ function holdsToSource({ species: sp, feats: ft, backgrounds: bg, classes: cl })
     for (const f of [...c.features, ...c.subclasses.flatMap(s => [{ name: s.name, text: s.lead }, ...s.features])]) {
       for (const [p, item] of unmarked(f.text)) runs.push([`${c.name}, ${f.name}`, p, item]);
     }
+    for (const o of c.options.flatMap(x => x.items)) {
+      for (const [label, value] of [['Cost', o.cost], ['Prerequisite', o.prerequisite]]) if (value) runs.push([`${c.name}, ${o.name}`, `${label}: ${value}`, true]);
+      for (const [p, item] of unmarked(o.text)) runs.push([`${c.name}, ${o.name}`, p, item]);
+    }
     for (const t of c.multiclass.text.split('\n')) runs.push([`${c.name}, As a Multiclass Character`, t, true]);
   }
   const astray = runs.filter(([, t]) => !source.includes(flat(t)));
@@ -759,6 +822,8 @@ const data = {
   })(),
   ability_scores: { ...scoreMethods(), background: backgroundIncreases() },
   armor: { items: armor(), strength_speed_penalty: armorStrengthPenalty() },
+  weapons: weapons(),
+  languages: languages(),
   hit_points: { level_1: hitPoints('Level 1 Hit Points by Class', 'Hit Point Maximum'), fixed: hitPoints('Fixed Hit Points by Class', 'Hit Points per Level') },
   tables: {
     advancement: titledTable('Character Advancement', ['Level', 'Experience Points', 'Proficiency Bonus']),

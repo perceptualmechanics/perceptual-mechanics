@@ -1098,6 +1098,7 @@
      "text": "You embody primal power. Your Strength and Constitution scores increase by 4, to a maximum of 25."
     }
    ],
+   "options": [],
    "subclasses": [
     {
      "name": "Path of the Berserker",
@@ -1597,6 +1598,7 @@
      "text": "You have mastered two of the Words of Creation: the words of life and death. You therefore always have the Power Word Heal and Power Word Kill spells prepared. When you cast either spell, you can target a second creature with it if that creature is within 10 feet of the first target."
     }
    ],
+   "options": [],
    "subclasses": [
     {
      "name": "College of Lore",
@@ -2695,6 +2697,7 @@
      "text": "You can call on even more powerful divine intervention. When you use your Divine Intervention feature, you can choose Wish when you select a spell. If you do so, you can’t use Divine Intervention again until you finish 2d4 Long Rests."
     }
    ],
+   "options": [],
    "subclasses": [
     {
      "name": "Life Domain",
@@ -3747,6 +3750,7 @@
      "text": "The vitality of nature constantly blooms within you, granting you the following benefits.\n\n**Evergreen Wild Shape.** Whenever you roll Initiative and have no uses of Wild Shape left, you regain one expended use of it.\n\n**Nature Magician.** You can convert uses of Wild Shape into a spell slot (no action required). Choose a number of your unexpended uses of Wild Shape and convert them into a single spell slot, with each use contributing 2 spell levels. For example, if you convert two uses of Wild Shape, you produce a level 4 spell slot. Once you use this benefit, you can’t do so again until you finish a Long Rest.\n\n**Longevity.** The primal magic that you wield causes you to age more slowly. For every ten years that pass, your body ages only one year."
     }
    ],
+   "options": [],
    "subclasses": [
     {
      "name": "Circle of the Land",
@@ -4695,6 +4699,7 @@
      "text": "You can attack four times instead of once whenever you take the Attack action on your turn."
     }
    ],
+   "options": [],
    "subclasses": [
     {
      "name": "Champion",
@@ -5066,6 +5071,7 @@
      "text": "You have developed your body and mind to new heights. Your Dexterity and Wisdom scores increase by 4, to a maximum of 25."
     }
    ],
+   "options": [],
    "subclasses": [
     {
      "name": "Warrior of the Open Hand",
@@ -5482,6 +5488,7 @@
      "text": "You gain an Epic Boon feat (see “Feats”) or another feat of your choice for which you qualify. Boon of Truesight is recommended."
     }
    ],
+   "options": [],
    "subclasses": [
     {
      "name": "Oath of Devotion",
@@ -6072,6 +6079,7 @@
      "text": "The damage die of your Hunter’s Mark is a d10 rather than a d6."
     }
    ],
+   "options": [],
    "subclasses": [
     {
      "name": "Hunter",
@@ -6630,6 +6638,7 @@
      "text": "You have a marvelous knack for succeeding when you need to. If you fail a D20 Test, you can turn the roll into a 20.\n\nOnce you use this feature, you can’t use it again until you finish a Short or Long Rest."
     }
    ],
+   "options": [],
    "subclasses": [
     {
      "name": "Thief",
@@ -7118,6 +7127,63 @@
      "level": 20,
      "name": "Arcane Apotheosis",
      "text": "While your Innate Sorcery feature is active, you can use one Metamagic option on each of your turns without spending Sorcery Points on it."
+    }
+   ],
+   "options": [
+    {
+     "title": "Metamagic Options",
+     "items": [
+      {
+       "name": "Careful Spell",
+       "cost": "1 Sorcery Point",
+       "text": "When you cast a spell that forces other creatures to make a saving throw, you can protect some of those creatures from the spell’s full force. To do so, spend 1 Sorcery Point and choose a number of those creatures up to your Charisma modifier (minimum of one creature). A chosen creature automatically succeeds on its saving throw against the spell, and it takes no damage if it would normally take half damage on a successful save."
+      },
+      {
+       "name": "Distant Spell",
+       "cost": "1 Sorcery Point",
+       "text": "When you cast a spell that has a range of at least 5 feet, you can spend 1 Sorcery Point to double the spell’s range. Or when you cast a spell that has a range of Touch, you can spend 1 Sorcery Point to make the spell’s range 30 feet."
+      },
+      {
+       "name": "Empowered Spell",
+       "cost": "1 Sorcery Point",
+       "text": "When you roll damage for a spell, you can spend 1 Sorcery Point to reroll a number of the damage dice up to your Charisma modifier (minimum of one), and you must use the new rolls.\n\nYou can use Empowered Spell even if you’ve already used a different Metamagic option during the casting of the spell."
+      },
+      {
+       "name": "Extended Spell",
+       "cost": "1 Sorcery Point",
+       "text": "When you cast a spell that has a duration of 1 minute or longer, you can spend 1 Sorcery Point to double its duration to a maximum duration of 24 hours.\n\nIf the affected spell requires Concentration, you have Advantage on any saving throw you make to maintain that Concentration."
+      },
+      {
+       "name": "Heightened Spell",
+       "cost": "2 Sorcery Points",
+       "text": "When you cast a spell that forces a creature to make a saving throw, you can spend 2 Sorcery Points to give one target of the spell Disadvantage on saves against the spell."
+      },
+      {
+       "name": "Quickened Spell",
+       "cost": "2 Sorcery Points",
+       "text": "When you cast a spell that has a casting time of an action, you can spend 2 Sorcery Points to change the casting time to a Bonus Action for this casting. You can’t modify a spell in this way if you’ve already cast a level 1+ spell on the current turn, nor can you cast a level 1+ spell on this turn after modifying a spell in this way."
+      },
+      {
+       "name": "Seeking Spell",
+       "cost": "1 Sorcery Point",
+       "text": "If you make an attack roll for a spell and miss, you can spend 1 Sorcery Point to reroll the d20, and you must use the new roll.\n\nYou can use Seeking Spell even if you’ve already used a different Metamagic option during the casting of the spell."
+      },
+      {
+       "name": "Subtle Spell",
+       "cost": "1 Sorcery Point",
+       "text": "When you cast a spell, you can spend 1 Sorcery Point to cast it without any Verbal, Somatic, or Material components, except Material components that are consumed by the spell or that have a cost specified in the spell."
+      },
+      {
+       "name": "Transmuted Spell",
+       "cost": "1 Sorcery Point",
+       "text": "When you cast a spell that deals a type of damage from the following list, you can spend 1 Sorcery Point to change that damage type to one of the other listed types: Acid, Cold, Fire, Lightning, Poison, Thunder."
+      },
+      {
+       "name": "Twinned Spell",
+       "cost": "1 Sorcery Point",
+       "text": "When you cast a spell, such as Charm Person, that can be cast with a higher-level spell slot to target an additional creature, you can spend 1 Sorcery Point to increase the spell’s effective level by 1."
+      }
+     ]
     }
    ],
    "subclasses": [
@@ -8171,6 +8237,148 @@
      "text": "When you use your Magical Cunning feature, you regain all your expended Pact Magic spell slots."
     }
    ],
+   "options": [
+    {
+     "title": "Eldritch Invocation Options",
+     "items": [
+      {
+       "name": "Agonizing Blast",
+       "prerequisite": "Level 2+ Warlock, a Warlock Cantrip That Deals Damage",
+       "text": "Choose one of your known Warlock cantrips that deals damage. You can add your Charisma modifier to that spell’s damage rolls.\n\n**Repeatable.** You can gain this invocation more than once. Each time you do so, choose a different eligible cantrip."
+      },
+      {
+       "name": "Armor of Shadows",
+       "text": "You can cast Mage Armor on yourself without expending a spell slot."
+      },
+      {
+       "name": "Ascendant Step",
+       "prerequisite": "Level 5+ Warlock",
+       "text": "You can cast Levitate on yourself without expending a spell slot."
+      },
+      {
+       "name": "Devil’s Sight",
+       "prerequisite": "Level 2+ Warlock",
+       "text": "You can see normally in Dim Light and Darkness— both magical and nonmagical—within 120 feet of yourself."
+      },
+      {
+       "name": "Devouring Blade",
+       "prerequisite": "Level 12+ Warlock, Thirsting Blade Invocation",
+       "text": "The Extra Attack of your Thirsting Blade invocation confers two extra attacks rather than one."
+      },
+      {
+       "name": "Eldritch Mind",
+       "text": "You have Advantage on Constitution saving throws that you make to maintain Concentration."
+      },
+      {
+       "name": "Eldritch Smite",
+       "prerequisite": "Level 5+ Warlock, Pact of the Blade Invocation",
+       "text": "Once per turn when you hit a creature with your pact weapon, you can expend a Pact Magic spell slot to deal an extra 1d8 Force damage to the target, plus another 1d8 per level of the spell slot, and you can give the target the Prone condition if it is Huge or smaller."
+      },
+      {
+       "name": "Eldritch Spear",
+       "prerequisite": "Level 2+ Warlock, a Warlock Cantrip That Deals Damage",
+       "text": "Choose one of your known Warlock cantrips that deals damage and has a range of 10+ feet. When you cast that spell, its range increases by a number of feet equal to 30 times your Warlock level.\n\n**Repeatable.** You can gain this invocation more than once. Each time you do so, choose a different eligible cantrip."
+      },
+      {
+       "name": "Fiendish Vigor",
+       "prerequisite": "Level 2+ Warlock",
+       "text": "You can cast False Life on yourself without expending a spell slot. When you cast the spell with this feature, you don’t roll the die for the Temporary Hit Points; you automatically get the highest number on the die."
+      },
+      {
+       "name": "Gaze of Two Minds",
+       "prerequisite": "Level 5+ Warlock",
+       "text": "You can use a Bonus Action to touch a willing creature and perceive through its senses until the end of your next turn. As long as the creature is on the same plane of existence as you, you can take a Bonus Action on subsequent turns to maintain this connection, extending the duration until the end of your next turn. The connection ends if you don’t maintain it in this way.\n\nWhile perceiving through the other creature’s senses, you benefit from any special senses possessed by that creature, and you can cast spells as if you were in your space or the other creature’s space if the two of you are within 60 feet of each other."
+      },
+      {
+       "name": "Gift of the Depths",
+       "prerequisite": "Level 5+ Warlock",
+       "text": "You can breathe underwater, and you gain a Swim Speed equal to your Speed.\n\nYou can also cast Water Breathing once without expending a spell slot. You regain the ability to cast it in this way again when you finish a Long Rest."
+      },
+      {
+       "name": "Gift of the Protectors",
+       "prerequisite": "Level 9+ Warlock, Pact of the Tome Invocation",
+       "text": "A new page appears in your Book of Shadows when you conjure it. With your permission, a creature can take an action to write its name on that page, which can contain a number of names equal to your Charisma modifier (minimum of one name).\n\nWhen any creature whose name is on the page is reduced to 0 Hit Points but not killed outright, the creature magically drops to 1 Hit Point instead. Once this magic is triggered, no creature can benefit from it until you finish a Long Rest.\n\nAs a Magic action, you can erase a name on the page by touching it."
+      },
+      {
+       "name": "Investment of the Chain Master",
+       "prerequisite": "Level 5+ Warlock, Pact of the Chain Invocation",
+       "text": "When you cast Find Familiar, you infuse the summoned familiar with a measure of your eldritch power, granting the creature the following benefits.\n\n**Aerial or Aquatic.** The familiar gains either a Fly Speed or a Swim Speed (your choice) of 40 feet.\n\n**Quick Attack.** As a Bonus Action, you can command the familiar to take the Attack action.\n\n**Necrotic or Radiant Damage.** Whenever the familiar deals Bludgeoning, Piercing, or Slashing damage, you can make it deal Necrotic or Radiant damage instead.\n\n**Your Save DC.** If the familiar forces a creature to make a saving throw, it uses your spell save DC.\n\n**Resistance.** When the familiar takes damage, you can take a Reaction to grant it Resistance against that damage."
+      },
+      {
+       "name": "Lessons of the First Ones",
+       "prerequisite": "Level 2+ Warlock",
+       "text": "You have received knowledge from an elder entity of the multiverse, allowing you to gain one Origin feat of your choice (see “Feats”).\n\n**Repeatable.** You can gain this invocation more than once. Each time you do so, choose a different Origin feat."
+      },
+      {
+       "name": "Lifedrinker",
+       "prerequisite": "Level 9+ Warlock, Pact of the Blade Invocation",
+       "text": "Once per turn when you hit a creature with your pact weapon, you can deal an extra 1d6 Necrotic, Psychic, or Radiant damage (your choice) to the creature, and you can expend one of your Hit Point Dice to roll it and regain a number of Hit Points equal to the roll plus your Constitution modifier (minimum of 1 Hit Point)."
+      },
+      {
+       "name": "Mask of Many Faces",
+       "prerequisite": "Level 2+ Warlock",
+       "text": "You can cast Disguise Self without expending a spell slot."
+      },
+      {
+       "name": "Master of Myriad Forms",
+       "prerequisite": "Level 5+ Warlock",
+       "text": "You can cast Alter Self without expending a spell slot."
+      },
+      {
+       "name": "Misty Visions",
+       "prerequisite": "Level 2+ Warlock",
+       "text": "You can cast Silent Image without expending a spell slot."
+      },
+      {
+       "name": "One with Shadows",
+       "prerequisite": "Level 5+ Warlock",
+       "text": "While you’re in an area of Dim Light or Darkness, you can cast Invisibility on yourself without expending a spell slot."
+      },
+      {
+       "name": "Otherworldly Leap",
+       "prerequisite": "Level 2+ Warlock",
+       "text": "You can cast Jump on yourself without expending a spell slot."
+      },
+      {
+       "name": "Pact of the Blade",
+       "text": "As a Bonus Action, you can conjure a pact weapon in your hand—a Simple or Martial Melee weapon of your choice with which you bond—or create a bond with a magic weapon you touch; you can’t bond with a magic weapon if someone else is attuned to it or another Warlock is bonded with it. Until the bond ends, you have proficiency with the weapon, and you can use it as a Spellcasting Focus.\n\nWhenever you attack with the bonded weapon, you can use your Charisma modifier for the attack and damage rolls instead of using Strength or Dexterity; and you can cause the weapon to deal Necrotic, Psychic, or Radiant damage or its normal damage type.\n\nYour bond with the weapon ends if you use this feature’s Bonus Action again, if the weapon is more than 5 feet away from you for 1 minute or more, or if you die. A conjured weapon disappears when the bond ends."
+      },
+      {
+       "name": "Pact of the Chain",
+       "text": "You learn the Find Familiar spell and can cast it as a Magic action without expending a spell slot.\n\nWhen you cast the spell, you choose one of the normal forms for your familiar or one of the following special forms: Imp, Pseudodragon, Quasit, Skeleton, Sphinx of Wonder, Sprite, or Venomous Snake (see “Monsters” for the familiar’s stat block).\n\nAdditionally, when you take the Attack action, you can forgo one of your own attacks to allow your familiar to make one attack of its own with its Reaction."
+      },
+      {
+       "name": "Pact of the Tome",
+       "text": "Stitching together strands of shadow, you conjure forth a book in your hand at the end of a Short or Long Rest. This Book of Shadows (you determine its appearance) contains eldritch magic that only you can access, granting you the benefits below. The book disappears if you conjure another book with this feature or if you die.\n\n**Cantrips and Rituals.** When the book appears, choose three cantrips, and choose two level 1 spells that have the Ritual tag. The spells can be from any class’s spell list, and they must be spells you don’t already have prepared. While the book is on your person, you have the chosen spells prepared, and they function as Warlock spells for you.\n\n**Spellcasting Focus.** You can use the book as a Spellcasting Focus."
+      },
+      {
+       "name": "Repelling Blast",
+       "prerequisite": "Level 2+ Warlock, a Warlock Cantrip That Deals Damage via an Attack Roll",
+       "text": "Choose one of your known Warlock cantrips that requires an attack roll. When you hit a Large or smaller creature with that cantrip, you can push the creature up to 10 feet straight away from you.\n\n**Repeatable.** You can gain this invocation more than once. Each time you do so, choose a different eligible cantrip."
+      },
+      {
+       "name": "Thirsting Blade",
+       "prerequisite": "Level 5+ Warlock, Pact of the Blade Invocation",
+       "text": "You gain the Extra Attack feature for your pact weapon only. With that feature, you can attack twice with the weapon instead of once when you take the Attack action on your turn."
+      },
+      {
+       "name": "Visions of Distant Realms",
+       "prerequisite": "Level 9+ Warlock",
+       "text": "You can cast Arcane Eye without expending a spell slot."
+      },
+      {
+       "name": "Whispers of the Grave",
+       "prerequisite": "Level 7+ Warlock",
+       "text": "You can cast Speak with Dead without expending a spell slot."
+      },
+      {
+       "name": "Witch Sight",
+       "prerequisite": "Level 15+ Warlock",
+       "text": "You have Truesight with a range of 30 feet."
+      }
+     ]
+    }
+   ],
    "subclasses": [
     {
      "name": "Fiend Patron",
@@ -9021,6 +9229,7 @@
      "text": "Choose two level 3 spells in your spellbook as your signature spells. You always have these spells prepared, and you can cast each of them once at level 3 without expending a spell slot. When you do so, you can’t cast them in this way again until you finish a Short or Long Rest. To cast either spell at a higher level, you must expend a spell slot."
     }
    ],
+   "options": [],
    "subclasses": [
     {
      "name": "Evoker",
@@ -10279,6 +10488,450 @@
    }
   ],
   "strength_speed_penalty": 10
+ },
+ "weapons": [
+  {
+   "name": "Club",
+   "category": "Simple",
+   "range": "Melee",
+   "damage": "1d4 Bludgeoning",
+   "properties": [
+    "Light"
+   ],
+   "mastery": "Slow"
+  },
+  {
+   "name": "Dagger",
+   "category": "Simple",
+   "range": "Melee",
+   "damage": "1d4 Piercing",
+   "properties": [
+    "Finesse",
+    "Light",
+    "Thrown (Range 20/60)"
+   ],
+   "mastery": "Nick"
+  },
+  {
+   "name": "Greatclub",
+   "category": "Simple",
+   "range": "Melee",
+   "damage": "1d8 Bludgeoning",
+   "properties": [
+    "Two-Handed"
+   ],
+   "mastery": "Push"
+  },
+  {
+   "name": "Handaxe",
+   "category": "Simple",
+   "range": "Melee",
+   "damage": "1d6 Slashing",
+   "properties": [
+    "Light",
+    "Thrown (Range 20/60)"
+   ],
+   "mastery": "Vex"
+  },
+  {
+   "name": "Javelin",
+   "category": "Simple",
+   "range": "Melee",
+   "damage": "1d6 Piercing",
+   "properties": [
+    "Thrown (Range 30/120)"
+   ],
+   "mastery": "Slow"
+  },
+  {
+   "name": "Light Hammer",
+   "category": "Simple",
+   "range": "Melee",
+   "damage": "1d4 Bludgeoning",
+   "properties": [
+    "Light",
+    "Thrown (Range 20/60)"
+   ],
+   "mastery": "Nick"
+  },
+  {
+   "name": "Mace",
+   "category": "Simple",
+   "range": "Melee",
+   "damage": "1d6 Bludgeoning",
+   "properties": [],
+   "mastery": "Sap"
+  },
+  {
+   "name": "Quarterstaff",
+   "category": "Simple",
+   "range": "Melee",
+   "damage": "1d6 Bludgeoning",
+   "properties": [
+    "Versatile (1d8)"
+   ],
+   "mastery": "Topple"
+  },
+  {
+   "name": "Sickle",
+   "category": "Simple",
+   "range": "Melee",
+   "damage": "1d4 Slashing",
+   "properties": [
+    "Light"
+   ],
+   "mastery": "Nick"
+  },
+  {
+   "name": "Spear",
+   "category": "Simple",
+   "range": "Melee",
+   "damage": "1d6 Piercing",
+   "properties": [
+    "Thrown (Range 20/60)",
+    "Versatile (1d8)"
+   ],
+   "mastery": "Sap"
+  },
+  {
+   "name": "Dart",
+   "category": "Simple",
+   "range": "Ranged",
+   "damage": "1d4 Piercing",
+   "properties": [
+    "Finesse",
+    "Thrown (Range 20/60)"
+   ],
+   "mastery": "Vex"
+  },
+  {
+   "name": "Light Crossbow",
+   "category": "Simple",
+   "range": "Ranged",
+   "damage": "1d8 Piercing",
+   "properties": [
+    "Ammunition (Range 80/320; Bolt)",
+    "Loading",
+    "Two-Handed"
+   ],
+   "mastery": "Slow"
+  },
+  {
+   "name": "Shortbow",
+   "category": "Simple",
+   "range": "Ranged",
+   "damage": "1d6 Piercing",
+   "properties": [
+    "Ammunition (Range 80/320; Arrow)",
+    "Two-Handed"
+   ],
+   "mastery": "Vex"
+  },
+  {
+   "name": "Sling",
+   "category": "Simple",
+   "range": "Ranged",
+   "damage": "1d4 Bludgeoning",
+   "properties": [
+    "Ammunition (Range 30/120; Bullet)"
+   ],
+   "mastery": "Slow"
+  },
+  {
+   "name": "Battleaxe",
+   "category": "Martial",
+   "range": "Melee",
+   "damage": "1d8 Slashing",
+   "properties": [
+    "Versatile (1d10)"
+   ],
+   "mastery": "Topple"
+  },
+  {
+   "name": "Flail",
+   "category": "Martial",
+   "range": "Melee",
+   "damage": "1d8 Bludgeoning",
+   "properties": [],
+   "mastery": "Sap"
+  },
+  {
+   "name": "Glaive",
+   "category": "Martial",
+   "range": "Melee",
+   "damage": "1d10 Slashing",
+   "properties": [
+    "Heavy",
+    "Reach",
+    "Two-Handed"
+   ],
+   "mastery": "Graze"
+  },
+  {
+   "name": "Greataxe",
+   "category": "Martial",
+   "range": "Melee",
+   "damage": "1d12 Slashing",
+   "properties": [
+    "Heavy",
+    "Two-Handed"
+   ],
+   "mastery": "Cleave"
+  },
+  {
+   "name": "Greatsword",
+   "category": "Martial",
+   "range": "Melee",
+   "damage": "2d6 Slashing",
+   "properties": [
+    "Heavy",
+    "Two-Handed"
+   ],
+   "mastery": "Graze"
+  },
+  {
+   "name": "Halberd",
+   "category": "Martial",
+   "range": "Melee",
+   "damage": "1d10 Slashing",
+   "properties": [
+    "Heavy",
+    "Reach",
+    "Two-Handed"
+   ],
+   "mastery": "Cleave"
+  },
+  {
+   "name": "Lance",
+   "category": "Martial",
+   "range": "Melee",
+   "damage": "1d10 Piercing",
+   "properties": [
+    "Heavy",
+    "Reach",
+    "Two-Handed (unless mounted)"
+   ],
+   "mastery": "Topple"
+  },
+  {
+   "name": "Longsword",
+   "category": "Martial",
+   "range": "Melee",
+   "damage": "1d8 Slashing",
+   "properties": [
+    "Versatile (1d10)"
+   ],
+   "mastery": "Sap"
+  },
+  {
+   "name": "Maul",
+   "category": "Martial",
+   "range": "Melee",
+   "damage": "2d6 Bludgeoning",
+   "properties": [
+    "Heavy",
+    "Two-Handed"
+   ],
+   "mastery": "Topple"
+  },
+  {
+   "name": "Morningstar",
+   "category": "Martial",
+   "range": "Melee",
+   "damage": "1d8 Piercing",
+   "properties": [],
+   "mastery": "Sap"
+  },
+  {
+   "name": "Pike",
+   "category": "Martial",
+   "range": "Melee",
+   "damage": "1d10 Piercing",
+   "properties": [
+    "Heavy",
+    "Reach",
+    "Two-Handed"
+   ],
+   "mastery": "Push"
+  },
+  {
+   "name": "Rapier",
+   "category": "Martial",
+   "range": "Melee",
+   "damage": "1d8 Piercing",
+   "properties": [
+    "Finesse"
+   ],
+   "mastery": "Vex"
+  },
+  {
+   "name": "Scimitar",
+   "category": "Martial",
+   "range": "Melee",
+   "damage": "1d6 Slashing",
+   "properties": [
+    "Finesse",
+    "Light"
+   ],
+   "mastery": "Nick"
+  },
+  {
+   "name": "Shortsword",
+   "category": "Martial",
+   "range": "Melee",
+   "damage": "1d6 Piercing",
+   "properties": [
+    "Finesse",
+    "Light"
+   ],
+   "mastery": "Vex"
+  },
+  {
+   "name": "Trident",
+   "category": "Martial",
+   "range": "Melee",
+   "damage": "1d8 Piercing",
+   "properties": [
+    "Thrown (Range 20/60)",
+    "Versatile (1d10)"
+   ],
+   "mastery": "Topple"
+  },
+  {
+   "name": "Warhammer",
+   "category": "Martial",
+   "range": "Melee",
+   "damage": "1d8 Bludgeoning",
+   "properties": [
+    "Versatile (1d10)"
+   ],
+   "mastery": "Push"
+  },
+  {
+   "name": "War Pick",
+   "category": "Martial",
+   "range": "Melee",
+   "damage": "1d8 Piercing",
+   "properties": [
+    "Versatile (1d10)"
+   ],
+   "mastery": "Sap"
+  },
+  {
+   "name": "Whip",
+   "category": "Martial",
+   "range": "Melee",
+   "damage": "1d4 Slashing",
+   "properties": [
+    "Finesse",
+    "Reach"
+   ],
+   "mastery": "Slow"
+  },
+  {
+   "name": "Blowgun",
+   "category": "Martial",
+   "range": "Ranged",
+   "damage": "1 Piercing",
+   "properties": [
+    "Ammunition (Range 25/100; Needle)",
+    "Loading"
+   ],
+   "mastery": "Vex"
+  },
+  {
+   "name": "Hand Crossbow",
+   "category": "Martial",
+   "range": "Ranged",
+   "damage": "1d6 Piercing",
+   "properties": [
+    "Ammunition (Range 30/120; Bolt)",
+    "Light",
+    "Loading"
+   ],
+   "mastery": "Vex"
+  },
+  {
+   "name": "Heavy Crossbow",
+   "category": "Martial",
+   "range": "Ranged",
+   "damage": "1d10 Piercing",
+   "properties": [
+    "Ammunition (Range 100/400; Bolt)",
+    "Heavy",
+    "Loading",
+    "Two-Handed"
+   ],
+   "mastery": "Push"
+  },
+  {
+   "name": "Longbow",
+   "category": "Martial",
+   "range": "Ranged",
+   "damage": "1d8 Piercing",
+   "properties": [
+    "Ammunition (Range 150/600; Arrow)",
+    "Heavy",
+    "Two-Handed"
+   ],
+   "mastery": "Slow"
+  },
+  {
+   "name": "Musket",
+   "category": "Martial",
+   "range": "Ranged",
+   "damage": "1d12 Piercing",
+   "properties": [
+    "Ammunition (Range 40/120; Bullet)",
+    "Loading",
+    "Two-Handed"
+   ],
+   "mastery": "Slow"
+  },
+  {
+   "name": "Pistol",
+   "category": "Martial",
+   "range": "Ranged",
+   "damage": "1d10 Piercing",
+   "properties": [
+    "Ammunition (Range 30/90; Bullet)",
+    "Loading"
+   ],
+   "mastery": "Vex"
+  }
+ ],
+ "languages": {
+  "rule": "Your character knows at least three languages: Common plus two languages you roll or choose from the Standard Languages table.",
+  "known": [
+   "Common"
+  ],
+  "choose": {
+   "count": "two",
+   "from": "Standard Languages"
+  },
+  "standard": [
+   "Common",
+   "Common Sign Language",
+   "Draconic",
+   "Dwarvish",
+   "Elvish",
+   "Giant",
+   "Gnomish",
+   "Goblin",
+   "Halfling",
+   "Orc"
+  ],
+  "rare": [
+   "Abyssal",
+   "Celestial",
+   "Deep Speech",
+   "Druidic",
+   "Infernal",
+   "Primordial",
+   "Sylvan",
+   "Thieves’ Cant",
+   "Undercommon"
+  ]
  },
  "hit_points": {
   "level_1": {

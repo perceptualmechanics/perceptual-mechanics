@@ -5,6 +5,8 @@
 import srdUrl from './euphonia.srd.json?url';
 import classesUrl from './euphonia.classes.json?url';
 import charactersUrl from './euphonia.characters.json?url';
+import languagesUrl from './euphonia.languages.json?url';
+import tonguesUrl from './euphonia.tongues.json?url';
 import places from 'virtual:euphonia-places';
 import { ABILITIES, MAX_LEVEL, rulebook, character, speciesOptions, featsAllowed, featIncrease, qualifies } from './euphonia.character.js';
 import { inline, blocks } from './euphonia.markdown.js';
@@ -15,7 +17,7 @@ const PARAM = 'c';
 // A number the sheet can't know yet (no scores chosen, say) shows as a dash.
 const known = n => (Number.isFinite(n) ? String(n) : '—');
 const signed = n => (!Number.isFinite(n) ? '—' : n >= 0 ? `+${n}` : `−${-n}`);
-const blank = () => ({ name: '', species: '', option: '', size: '', background: '', increases: {}, method: 'standard', base: {}, classes: [{ class: '', level: 1, subclass: '' }], skills: {}, improvements: {}, originFeats: {}, featLists: {}, spells: {}, armor: '', shield: false, homeland: '', styles: {}, expertise: {}, options: {}, optionArts: {} });
+const blank = () => ({ name: '', species: '', option: '', size: '', background: '', increases: {}, method: 'standard', base: {}, classes: [{ class: '', level: 1, subclass: '' }], skills: {}, improvements: {}, originFeats: {}, featLists: {}, spells: {}, armor: '', shield: false, homeland: '', styles: {}, expertise: {}, options: {}, optionArts: {}, languages: {} });
 
 // The character in the address: its choices as JSON, base64url.
 const encode = state => btoa(String.fromCharCode(...new TextEncoder().encode(JSON.stringify(state)))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
@@ -61,10 +63,13 @@ export async function initBuilder(panel) {
   const form = panel.querySelector('.builder-form');
   const sheet = panel.querySelector('.sheet');
   const status = form.querySelector('.builder-status');
-  let book, srd;
+  let book, srd, languages, tongueNames;
   try {
-    const [s, e, c] = await Promise.all([srdUrl, classesUrl, charactersUrl].map(u => fetch(u).then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })));
-    srd = s; book = rulebook(s, e, c);
+    const [s, e, c, l, t] = await Promise.all([srdUrl, classesUrl, charactersUrl, languagesUrl, tonguesUrl].map(u => fetch(u).then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })));
+    srd = s; book = rulebook(s, e, c); languages = l.data;
+    // What a language field suggests: the real tongues of the cultures the
+    // book names (the ribbons' list), then the rules' own languages.
+    tongueNames = [...new Set([...t.tongues.map(x => x.language), ...book.languages.standard, ...book.languages.rare])];
   } catch (err) {
     status.textContent = `The rules didn't load (${err.message}); reload the page to try again.`;
     return;
@@ -101,6 +106,12 @@ export async function initBuilder(panel) {
   const homelandLink = h('p', { class: 'b-note' });
   const styleBox = h('div', { class: 'b-styles' });
   const optionBox = h('div', { class: 'b-options' });
+  const pickBox = h('div', { class: 'b-picks' });
+  const masteryBox = h('div', { class: 'b-mastery' });
+  const featureOriginBox = h('div', { class: 'b-origin' });
+  const languageBox = h('div', { class: 'b-languages' });
+  const tongueList = h('datalist', { id: 'b-tongues' }, tongueNames.map(n => h('option', { value: n })));
+  const languageAbout = h('details', { class: 'b-about' }, h('summary', {}, 'Languages in 1668'), h('div', { html: blocks(languages.paragraphs.join('\n\n')) }));
   const expertiseBox = h('div', { class: 'b-expertise' });
   const increases = h('div', { class: 'b-increases', role: 'group', 'aria-label': 'Ability increases', 'aria-describedby': idFor('increases') });
   const backgroundAbout = h('div', { class: 'b-about' });
@@ -119,8 +130,8 @@ export async function initBuilder(panel) {
   const trainingNote = h('p', { class: 'b-note' });
   const spellsBox = h('div', { class: 'b-spells' });
 
-  // Shown only for a class whose table counts options, and named for them.
-  const optionSection = h('fieldset', { class: 'b-section', hidden: true }, h('legend', {}), optionBox);
+  // The choices a class's own features ask: shown only when there are some.
+  const optionSection = h('fieldset', { class: 'b-section', hidden: true }, h('legend', {}, 'Class choices'), pickBox, masteryBox, optionBox);
 
   status.remove();
   form.append(
@@ -132,10 +143,11 @@ export async function initBuilder(panel) {
     section('Homeland', h('p', { class: 'b-note' }, 'Every species takes its traits as written; your people is where the family comes from, and the trouble comes with the country.'),
       h('label', { class: 'b-field' }, h('span', {}, 'Region'), homelandSelect), homelandLink),
     section('Background', h('label', { class: 'b-field' }, h('span', {}, 'Background'), backgroundSelect), problemSlot('background'), increases, problemSlot('increases'), backgroundAbout),
+    section('Languages', tongueList, languageBox, languageAbout),
     section('Ability scores', methodGroup, scoreGrid, pointsLeft, problemSlot('base'), problemSlot('method')),
     section('Armour', h('label', { class: 'b-field' }, h('span', {}, 'Armor'), armorSelect), h('label', { class: 'b-check' }, shieldCheck, ' A Shield'), trainingNote, problemSlot('armor'), warningSlot('armor')),
     section('Skills', skillsBox, expertiseBox, skillNotes),
-    section('Feats', styleBox, featsBox),
+    section('Feats', styleBox, featureOriginBox, featsBox),
     section('Spells', spellsBox),
   );
 
@@ -313,24 +325,78 @@ export async function initBuilder(panel) {
   // it counts as where two are left; what it does; what the subclass gives
   // and closes; and the Regard they make.
   const capital = w => w[0].toUpperCase() + w.slice(1);
+  // Languages: the vernacular (the rules' Common), the two standard ones and
+  // each feature's, named in the player's words, the real tongues suggested;
+  // a language a feature names, given. Rebuilt only when the asking changes,
+  // so typing keeps its place.
+  function renderLanguages(result) {
+    const shape = JSON.stringify(result.languageChoices.map(c => [c.key, c.count, c.given]));
+    if (languageBox.dataset.for === shape) return;
+    languageBox.dataset.for = shape;
+    rebuild(languageBox, ...result.languageChoices.map(c => {
+      const names = state.languages?.[c.key] ?? [];
+      const read = () => set(s => { s.languages = { ...s.languages, [c.key]: [...group.querySelectorAll('input')].map(x => x.value.trim()).filter(Boolean) }; });
+      const label = i => (c.key === 'Common' ? 'Your vernacular (Common)' : `${c.given.length ? 'One more language' : 'Language'}${c.count > 1 ? ` ${i + 1}` : ''}`);
+      const group = h('fieldset', { class: 'b-language', 'aria-describedby': idFor(`language:${c.key}`) },
+        h('legend', {}, c.key === 'Common' ? 'Common: the language of the place that raised you' : c.key === 'standard' ? `Two more: a second vernacular, a trade tongue or a learned one` : c.label),
+        c.given.length ? h('p', { class: 'b-note' }, `${listed(c.given)}, given.`) : null,
+        Array.from({ length: c.count }, (_, i) => h('label', { class: 'b-field' }, h('span', {}, label(i)),
+          h('input', { type: 'text', list: 'b-tongues', autocomplete: 'off', 'data-key': `language-${c.key}-${i}`, value: names[i] ?? '', onchange: read }))),
+        problemSlot(`language:${c.key}`));
+      return group;
+    }));
+  }
+  // A feature's one-of choice (Divine Order, Elemental Fury): a radio for
+  // each option, its rule under its name.
+  function renderPicks(result) {
+    const shape = JSON.stringify(result.pickChoices.map(c => [c.key, c.chosen]));
+    if (pickBox.dataset.for === shape) return;
+    pickBox.dataset.for = shape;
+    rebuild(pickBox, ...result.pickChoices.map(c => h('fieldset', { class: 'b-pick', 'aria-describedby': idFor(`pick:${c.key}`) },
+      h('legend', {}, c.label),
+      c.offered.map(x => h('label', { class: 'b-pick-option' },
+        h('input', { type: 'radio', name: `pick-${c.key}`, value: x.name, 'data-key': `pick-${c.key}-${x.name}`, checked: c.chosen === x.name || null, onchange: () => set(s => { s.picks = { ...s.picks, [c.key]: x.name }; }) }),
+        h('span', {}, h('strong', {}, x.name), h('span', { class: 'b-pick-text', html: inline(x.text) })))),
+      problemSlot(`pick:${c.key}`))));
+  }
+  // Weapon Mastery: the kinds the feature allows, grouped as the Weapons
+  // table groups them, each with its mastery property, the rest set aside
+  // once the count is reached.
+  function renderMastery(result) {
+    const shape = JSON.stringify(result.masteryChoices.map(c => [c.key, c.count, c.from.map(w => w.name), state.mastery?.[c.key]]));
+    if (masteryBox.dataset.for === shape) return;
+    masteryBox.dataset.for = shape;
+    rebuild(masteryBox, ...result.masteryChoices.map(c => {
+      const picked = state.mastery?.[c.key] ?? [], full = picked.length >= c.count;
+      const groups = [...new Set(c.from.map(w => `${w.category} ${w.range}`))];
+      const read = () => set(s => { s.mastery = { ...s.mastery, [c.key]: [...box.querySelectorAll('input:checked')].map(x => x.value) }; });
+      const box = h('fieldset', { class: 'b-weapons', 'aria-describedby': idFor(`mastery:${c.key}`) },
+        h('legend', {}, `${c.label}: ${picked.length} of ${c.count} kinds of weapon`),
+        groups.map(g => [h('p', { class: 'b-group' }, `${g} weapons`),
+          h('div', { class: 'b-checks' }, c.from.filter(w => `${w.category} ${w.range}` === g).map(w => h('label', {},
+            h('input', { type: 'checkbox', value: w.name, 'data-key': `mastery-${c.key}-${w.name}`, checked: picked.includes(w.name) || null, disabled: (full && !picked.includes(w.name)) || null, onchange: read }),
+            ` ${w.name}`, h('span', { class: 'b-mark' }, ` ${w.mastery}`))))]),
+        problemSlot(`mastery:${c.key}`));
+      return box;
+    }));
+  }
   function renderOptions(result) {
     const shape = JSON.stringify([result.optionChoices.map(o => [o.class, o.count, o.forgone, o.open.map(x => x.name), o.given.map(g => g.name), o.regard]), state.options, state.optionArts]);
     if (optionBox.dataset.for === shape) return;
     optionBox.dataset.for = shape;
-    optionSection.hidden = !result.optionChoices.length;
-    optionSection.querySelector('legend').textContent = [...new Set(result.optionChoices.map(o => `${capital(o.noun)}s`))].join(' and ');
     const artPick = (label, arts, chosen, key, onchange) => h('label', { class: 'b-field b-art' }, h('span', {}, label),
       h('select', { 'data-key': key, onchange: e => onchange(e.target.value) }, options(arts, chosen, 'Choose an art')));
     const about = (x, key) => h('details', { class: 'b-about', 'data-key': key, open: openLevels.has(key) || null, ontoggle: e => (e.target.open ? openLevels.add(key) : openLevels.delete(key)) },
-      h('summary', {}, 'What it does'), h('div', { html: blocks(x.text) }));
+      h('summary', {}, 'What it does'), h('div', { html: blocks([x.prerequisite && `*Prerequisite: ${x.prerequisite}.*`, x.cost && `*Cost: ${x.cost}.*`, x.text].filter(Boolean).join('\n\n')) }));
     rebuild(optionBox, ...result.optionChoices.map(o => {
       const picks = state.options?.[o.class] ?? [];
       const artsOf = x => x.arts.filter(a => a !== o.forgone);
       const regard = [...new Set([...o.given, ...o.taken].map(t => t.art).filter(Boolean))];
       const levels = [...new Set(o.open.map(x => x.level))];
       const setPick = (i, change) => set(s => { const list = [...(s.options?.[o.class] ?? [])]; list[i] = change(list[i] ?? {}); s.options = { ...s.options, [o.class]: list }; });
-      return h('div', { class: 'b-option-class' },
-        h('p', { class: 'b-note' }, `${o.class}: ${o.count} ${o.count === 1 ? o.noun : `${o.noun}s`} at level ${result.classes.find(c => c.class === o.class)?.level}. Your Regard is ${regard.length}${regard.length ? ` (${listed(regard)})` : ''}.${o.forgone ? ` ${o.subclass} forgoes ${o.forgone}: nothing counts as it.` : ''}`),
+      return h('fieldset', { class: 'b-option-class' },
+        h('legend', {}, `${capital(o.noun)}s (${o.class})`),
+        h('p', { class: 'b-note' }, `${o.count} at level ${result.classes.find(c => c.class === o.class)?.level}.${o.arts.length ? ` Your Regard is ${regard.length}${regard.length ? ` (${listed(regard)})` : ''}.` : ''}${o.forgone ? ` ${o.subclass} forgoes ${o.forgone}: nothing counts as it.` : ''}`),
         o.given.map(g => h('div', { class: 'b-option' },
           h('p', { class: 'b-given' }, `${g.name}, given by ${g.from}`),
           artsOf(g).length > 1 ? artPick(`${g.name} counts as`, artsOf(g), state.optionArts?.[`${o.class} ${g.name}`], `option-art-${o.class}-${g.name}`, v => set(s => { s.optionArts = { ...s.optionArts, [`${o.class} ${g.name}`]: v }; })) : null,
@@ -340,7 +406,8 @@ export async function initBuilder(panel) {
           const elsewhere = name => [...o.given.map(g => g.name), ...picks.filter((p, j) => j !== i && j < o.count).map(p => p?.name)].filter(n => n === name).length;
           const select = h('select', { 'data-key': `option-${o.class}-${i}`, 'aria-describedby': idFor(`option:${o.class}:${i}`), onchange: e => setPick(i, () => ({ name: e.target.value })) },
             h('option', { value: '' }, `Choose ${/^[aeiou]/i.test(o.noun) ? 'an' : 'a'} ${o.noun}`),
-            levels.map(lv => h('optgroup', { label: `From ${o.class} level ${lv}` }, o.open.filter(y => y.level === lv).map(y => h('option', { value: y.name, selected: y.name === pick?.name || null, disabled: (y.name !== pick?.name && elsewhere(y.name) >= y.repeat) || null }, `${y.name} (${artsOf(y).join(', ')})`)))));
+            levels.map(lv => h('optgroup', { label: `From ${o.class} level ${lv}` }, o.open.filter(y => y.level === lv).map(y => h('option', { value: y.name, selected: y.name === pick?.name || null, disabled: (y.name !== pick?.name && elsewhere(y.name) >= y.repeat) || null },
+              `${y.name}${y.arts.length ? ` (${artsOf(y).join(', ')})` : y.cost ? ` (${y.cost})` : y.requires?.length ? ` (needs ${listed(y.requires)})` : ''}`)))));
           return h('div', { class: 'b-option' },
             h('div', { class: 'b-option-row' },
               h('label', { class: 'b-field' }, h('span', {}, `${capital(o.noun)} ${i + 1}`), select),
@@ -407,12 +474,17 @@ export async function initBuilder(panel) {
   }
 
   // An Origin feat a trait grants (the Human's Versatile).
+  // An Origin feat a species' trait grants, with the species; one a class
+  // feature grants (Lessons of the First Ones), with the feats.
   function renderOrigin(result) {
-    const shape = result.originChoices.map(c => c.key).join('|');
-    if (originBox.dataset.for === shape) return;
-    originBox.dataset.for = shape;
+    for (const [box, source] of [[originBox, 'species'], [featureOriginBox, 'feature']]) renderOriginIn(box, result.originChoices.filter(c => c.source === source));
+  }
+  function renderOriginIn(box, choices) {
+    const shape = choices.map(c => c.key).join('|');
+    if (box.dataset.for === shape) return;
+    box.dataset.for = shape;
     const origin = book.feats.filter(f => f.category === 'Origin').map(f => f.name);
-    rebuild(originBox, ...result.originChoices.map(c => [
+    rebuild(box, ...choices.map(c => [
       h('label', { class: 'b-field' }, h('span', {}, `${c.label}: an Origin feat`),
         h('select', { 'data-key': `origin-${c.key}`, 'aria-describedby': idFor(`origin:${c.key}`), onchange: e => set(s => { s.originFeats = { ...s.originFeats, [c.key]: e.target.value }; }) },
           options(origin, state.originFeats?.[c.key], 'Choose a feat'))),
@@ -552,7 +624,8 @@ export async function initBuilder(panel) {
       h('header', { class: 'sheet-head' },
         h('h2', { id: 'sheet-title' }, state.name.trim() || 'Your character'),
         h('p', {}, who || 'Choose a class, a species and a background.'),
-        h('p', { class: 'sheet-level' }, `Level ${result.level} · Proficiency Bonus ${signed(result.bonus)} · ${result.xp.toLocaleString('en')} XP${result.nextXp ? `, the next level at ${result.nextXp.toLocaleString('en')}` : ''}`)),
+        h('p', { class: 'sheet-level' }, `Level ${result.level} · Proficiency Bonus ${signed(result.bonus)} · ${result.xp.toLocaleString('en')} XP${result.nextXp ? `, the next level at ${result.nextXp.toLocaleString('en')}` : ''}`),
+        result.languageChoices.some(c => c.chosen.length || c.given.length) ? h('p', { class: 'sheet-languages' }, `Languages: ${result.languageChoices.flatMap(c => [...(c.key === 'Common' ? c.chosen.map(n => `${n} (vernacular)`) : c.chosen), ...c.given]).join(', ')}`) : null),
       result.background?.door || result.background?.debt ? h('section', { class: 'sheet-block', 'aria-labelledby': 'sheet-background' },
         h('h3', { id: 'sheet-background' }, result.background.name),
         h('dl', { class: 'sheet-facts' },
@@ -575,12 +648,14 @@ export async function initBuilder(panel) {
           h('dt', {}, 'Initiative'), h('dd', {}, signed(result.initiative)),
           h('dt', {}, 'Speed'), h('dd', {}, result.speed ? `${result.speed} feet` : '—'),
           h('dt', {}, 'Size'), h('dd', {}, result.size ?? '—'),
-          h('dt', {}, 'Passive Perception'), h('dd', {}, known(result.passivePerception))),
+          h('dt', {}, 'Passive Perception'), h('dd', {}, known(result.passivePerception)),
+          result.masteryChoices.some(c => c.chosen.length) ? [h('dt', {}, 'Weapon Mastery'), h('dd', {}, result.masteryChoices.flatMap(c => c.chosen).map(w => `${w.name} (${w.mastery})`).join(', '))] : null),
         result.warnings.length ? h('ul', { class: 'sheet-warnings' }, result.warnings.map(w => h('li', {}, w.message))) : null),
       h('section', { class: 'sheet-block', 'aria-labelledby': 'sheet-skills' },
         h('h3', { id: 'sheet-skills' }, 'Skills'),
         h('ul', { class: 'sheet-skills' }, result.skills.map(s => h('li', { class: s.proficient ? 'is-proficient' : null },
           h('span', {}, `${s.name}`), h('span', { class: 'sheet-ability' }, ` (${s.ability.slice(0, 3)})`), h('span', { class: 'sheet-bonus' }, ` ${signed(s.bonus)}`), s.proficient ? h('span', { class: 'sheet-mark' }, s.expertise ? ' expertise' : ' proficient') : null,
+          s.extra.length ? h('span', { class: 'sheet-mark' }, ` with ${s.extra.map(x => `${signed(x.value)} from ${x.from}`).join(' and ')}`) : null,
           s.name === 'Stealth' && result.stealthDisadvantage ? h('span', { class: 'sheet-mark' }, ' with Disadvantage, in this armor') : null)))),
       casting.length || chosenSpells.length ? h('section', { class: 'sheet-block', 'aria-labelledby': 'sheet-spells' }, h('h3', { id: 'sheet-spells' }, 'Spells'), casting, chosenSpells) : null,
       result.feats.length ? h('section', { class: 'sheet-block', 'aria-labelledby': 'sheet-feats' },
@@ -612,6 +687,10 @@ export async function initBuilder(panel) {
   function update() {
     const result = character(book, state);
     renderClasses(result);
+    renderLanguages(result);
+    optionSection.hidden = !(result.optionChoices.length || result.pickChoices.length || result.masteryChoices.length);
+    renderPicks(result);
+    renderMastery(result);
     renderOptions(result);
     renderSpecies(result);
     renderBackground(result);

@@ -9,7 +9,7 @@ import { wheelOf } from '../src/euphonia/euphonia.wheel.js';
 
 const ROOT = new URL('../', import.meta.url);
 const read = rel => readFileSync(new URL(rel, ROOT), 'utf8');
-const FILES = ['classes', 'regions', 'adventures', 'legal', 'hidden', 'characters', 'wheel', 'welcome'];
+const FILES = ['classes', 'regions', 'adventures', 'legal', 'hidden', 'characters', 'wheel', 'welcome', 'languages'];
 
 // What may never reach a Euphonia page, besides draft brackets and braced names
 // awaiting replacement: other people's names, and "Fey" outside the creature
@@ -142,6 +142,8 @@ export function verifyEuphonia(d = euphoniaData()) {
 
   // The colophon: what Euphonia is, in the book's own words.
   if (!d.welcome.data?.opening?.length || !d.welcome.data?.world?.length) fail('euphonia.welcome.json: no opening or no "What Will Your World Be?" for the colophon');
+  // The builder names languages by the book's rule: Common is the vernacular.
+  if (!d.languages.data?.paragraphs?.some(p => /^- \*\*Common\*\* is the character's own vernacular/.test(p))) fail('euphonia.languages.json: no "Common is the character\'s own vernacular" for the builder');
 
   // The footer's text: the SRD attribution, the ORC Notice, the copyright line.
   const legal = d.legal.data;

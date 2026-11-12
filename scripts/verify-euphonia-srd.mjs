@@ -197,9 +197,21 @@ export function verifyEuphoniaSrd({ srd = srdData(), rules = read('rules') } = {
     }
   }
 
+  // The weapons the builder's Weapon Mastery offers: each in a category and a
+  // range, with its mastery property. The languages a character starts with,
+  // the known one on the Standard table. Each class's options with rules to
+  // show, their cost or prerequisite apart.
+  const weapons = srd.weapons ?? [];
+  if (!weapons.length) fail('no weapons');
+  for (const w of weapons) if (!w.name || !['Simple', 'Martial'].includes(w.category) || !['Melee', 'Ranged'].includes(w.range) || !/^[A-Z][a-z]+$/.test(w.mastery)) fail(`the weapon ${JSON.stringify(w)}`);
+  const tongues = srd.languages;
+  if (!tongues?.known?.every(l => tongues.standard.includes(l)) || !tongues.standard.length || !tongues.rare.length) fail(`the languages ${JSON.stringify(tongues)}`);
+  const options = classes.flatMap(c => (c.options ?? []).flatMap(o => o.items.map(i => ({ c, i }))));
+  for (const { c, i } of options) if (!i.text || /^(Cost|Prerequisite):/.test(i.text)) fail(`${c.name}: the option ${i.name} reads "${i.text.slice(0, 60)}"`);
+
   const log = problems.length
     ? [`\neuphonia srd: ${problems.length} problem(s):`, ...problems.map(m => `  ${m}`)]
-    : [`ok: SRD 5.2.1 under its CC-BY attribution, ${srd.adapted.changes.length} change(s) recorded; ${checked} strings clean under the site's rules; ${srd.backgrounds.length} backgrounds, ${srd.species.length} species, ${srd.feats.length} feats and ${classes.length} classes resolving; ${slotRows} class levels' spell slots the Multiclass Spellcaster table's; advancement, modifiers, point costs and ${slots.length} rows of multiclass slots agreeing with the rules they tabulate`];
+    : [`ok: SRD 5.2.1 under its CC-BY attribution, ${srd.adapted.changes.length} change(s) recorded; ${checked} strings clean under the site's rules; ${srd.backgrounds.length} backgrounds, ${srd.species.length} species, ${srd.feats.length} feats and ${classes.length} classes resolving; ${slotRows} class levels' spell slots the Multiclass Spellcaster table's; advancement, modifiers, point costs and ${slots.length} rows of multiclass slots agreeing with the rules they tabulate; ${weapons.length} weapons with their masteries, ${tongues.standard.length + tongues.rare.length} languages and ${options.length} class options read`];
   return { ok: problems.length === 0, failures: problems.length, log };
 }
 
