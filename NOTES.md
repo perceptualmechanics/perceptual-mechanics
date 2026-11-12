@@ -2709,3 +2709,57 @@ contain its label. It is named "perceptual mechanics, return to gallery" now,
 which says both. axe 4.14 runs this rule by default, which the 2026-10-11 pass
 predated; it was the landing's one finding at 1440 and 390 wide, and the
 landing is clean again.
+
+### 7.5.0 — Euphonia
+
+/euphonia/ is Scott's tabletop setting on the site: the world of 1668 as a globe
+in a globe-maker's mount, and a character builder beside it. The text is the
+book's, exported from the master by class-kit's exporter (v14) with its SHA-256
+and the rules it was made under, and every page carries the copyright line, the
+ORC Notice and the SRD 5.2.1 attribution. Refreshing is a deliberate step
+(`npm run euphonia:refresh`), never a build step.
+
+**The globe.** One orthographic globe (d3-geo 3.1.1) with Natural Earth's coasts
+and ETOPO relief, in a brass meridian ring and a wooden horizon carrying the zodiac
+and the year's calendar. North stays up: the axis stands upright, and the eye
+rises or sinks to a latitude, as far as the stand fills one frame (±47.96°), so
+each theme opens centred on its home. One lamp lights it, the relief's own, and
+the sphere, the horizon's walls and the meridian ring's rims take their light from
+their normals; the horizon carries a generated grain, in its own colour. The
+regions of The State of the World glow round the book's 131 places and open their
+chapters in a panel. Behind it the Wheel, the book's planes and the Revelator's
+roads, painted as Cellarius painted the spheres, whole within the window and
+receding as the glass closes. Ribbons above and below carry EUPHONIA in 62
+languages of the cultures the book names, each from its dictionary.
+
+**The builder.** The SRD's twelve classes and the setting's own, multiclass from
+the start, with species, backgrounds, homelands, languages, scores, skills, feats,
+armour and spells, and every choice a class's features ask: the Courtier's
+accomplishments and Regard, Metamagic, Eldritch Invocations, the Orders, Weapon
+Mastery, Mystic Arcanum, Pact of the Tome. Languages are named as the book says,
+Common the character's own vernacular. The address holds the character, and the
+sheet prints alone.
+`euphonia.character.js` reads tables where the rules are tables and the book's
+own sentences where they aren't. Walked through the UI: all 19 classes at levels
+1, 3, 5, 11 and 20, every feature and spell count as the engine has it.
+
+**Six themes**, each drawn from one of the setting's powers: the Republic of
+Letters, Mutapa, Tawantinsuyu, the Ottomans, Hindustan and the Qing. A theme
+changes the palette, the type, a generated ornament and the globe's materials,
+never what the page says. Every colour is a role-named token, sourced to a real
+object or labelled as authored. The type is real: EB Garamond, Alegreya, Gentium
+Book Plus, Amiri, Noto Serif with Noto Nastaliq Urdu, Source Serif 4, subset from
+the page's own text; Amiri has no small caps, so the Ottomans set plain case.
+Tawantinsuyu draws the sheet's ability scores as a khipu. A first visit opens in a
+theme at random; the choice is kept and carried in the address (`?theme=`).
+Switching recolours the globe from the same geometry in 70 ms.
+
+**Gates.** Six new ones: verify-euphonia (the export), -map (the projection to
+d3, the coasts, the places, the mount from eleven eyes), -srd, -builder, -tongues
+and -themes (colours only in the theme data, 46 text and mark pairs at WCAG AA in
+every theme, every source named, every home within the eye's reach, the khipu
+clear for every score). Each new check was shown failing on a planted fault.
+QA in headless Chrome: the globe suite 53/53 in all six themes, layout 53/53,
+the builder 22/22, the rest of the site 27/27, and all 19 classes through the
+builder's own controls at levels 1, 3, 5, 11 and 20, each choice as the engine
+has it; axe clean on the globe and the builder.
