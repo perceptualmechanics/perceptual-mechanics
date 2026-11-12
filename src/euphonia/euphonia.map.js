@@ -10,10 +10,10 @@ import { orthoLocal, orthoUnproject, subsolar, onLand } from './euphonia.project
 import { globeWorld, projectionFor, faces } from './euphonia.globe.js';
 import { solarParams, solarEvents } from '../bench/bench.sky.js';
 import { fromScreen, palette, drawWheel, drawFills, drawLines, drawMarks, drawMount, maxZoom } from './euphonia.draw.js';
-import { viewOf, covers, EXTENT, calendarOf, azimuthOf } from './euphonia.mount.js';
+import { viewOf, covers, EXTENT, EYE, clampEye, calendarOf, azimuthOf } from './euphonia.mount.js';
 import { moonAt } from './euphonia.moon.js';
-import { createAmbient } from './euphonia.ambient.js';
-import { THEMES, GLOBE } from './euphonia.themes.js';
+import { createAmbient, REALM_REACH_REM } from './euphonia.ambient.js';
+import { THEMES } from './euphonia.themes.js';
 import { currentTheme, setTheme } from './euphonia.theme.js';
 import { datesAt } from './euphonia.calendars.js';
 import { tideAt, hiddenAt } from './euphonia.tide.js';
@@ -25,19 +25,20 @@ import { prefersReducedMotion, createPanelCloser, setPanelSide } from '../utils/
 
 const RAD = Math.PI / 180;
 const DAY_MS = 86400000;
-// The globe opens standing as every theme's does, north up (GLOBE), the
-// whole mount in view, turned to its theme's home (euphonia.themes.json says
-// each and why): a place the book names, or a framing in degrees.
+// The globe opens north up, the whole mount in view, facing its theme's home
+// (euphonia.themes.json says each and why): a place the book names, the eye
+// at its latitude so it stands in the middle, as a map turned to it would;
+// or a meridian, seen from the mount's own eye.
 const home = () => {
   const h = currentTheme().home, at = h.place && places.regions.flatMap(r => r.places).find(p => p.name === h.place);
-  return { lon0: at ? at.lon : h.lon0, setting: GLOBE.setting, zoom: 1, focus: [0, 0] };
+  return { lon0: at ? at.lon : h.lon0, eye: at ? clampEye(at.lat) : EYE, zoom: 1, focus: [0, 0] };
 };
 // The site's renderers stop at 2x; past it the canvases grow for nothing.
 const MAX_PIXEL_RATIO = 2;
 // Wheel delta, in pixels, for each doubling of the zoom: Chrome's notch is
 // 100, so a notch zooms by 2^(100/240), about a third.
 const WHEEL_DOUBLING = 240;
-// The keys turn the globe, or its latitude setting, five degrees at a time
+// The keys turn the globe, or raise and lower the eye, five degrees at a time
 // (a third of a time zone's width), and zoom by half again.
 const KEY_TURN = 5;
 const KEY_ZOOM = 1.5;
@@ -63,9 +64,6 @@ const EARTH_KM = 6371;
 const CIRCLE_NAME_WEST = 60;
 // The regions' names, in rem: the size of the page's notes.
 const LABEL_REM = 0.85;
-// The Wheel's rim stands this far in from the window's edge, in rem: room for
-// the four words lettered on it.
-const WHEEL_MARGIN_REM = 1.4;
 
 // A CSS timing function as a curve from time to progress: the keywords are
 // cubic Béziers by the spec's own points, and progress at a time is found by
@@ -125,8 +123,6 @@ const two = n => String(n).padStart(2, '0');
 const placeName = p => (p.modern && p.modern !== p.name ? `${p.name}, at modern ${p.modern}` : p.name);
 const degrees = (v, pos, neg) => `${Math.abs(v).toFixed(1)}° ${v >= 0 ? pos : neg}`;
 
-// The mount's outer strokes, in CSS pixels, kept inside the canvas.
-const EDGE_PX = 2;
 
 export async function initMap(stage) {
   // The world's rings, kept for land-or-sea, and as the globe draws them.
@@ -220,7 +216,7 @@ export async function initMap(stage) {
   // The point of the globe under (x, y), unless the mount is in the way.
   const pointAt = (x, y) => {
     const v = cssView();
-    if (covers((x - v.cx) / v.k, (v.cy - y) / v.k)) return null;
+    if (covers((x - v.cx) / v.k, (v.cy - y) / v.k, g.eye)) return null;
     return orthoUnproject(...fromScreen(v, x, y), v.lon0, v.lat0);
   };
   g.labels.append(g.tip);
@@ -396,14 +392,15 @@ export async function initMap(stage) {
     return mark;
   }
 
-  // The globe's radius at zoom 1, in CSS pixels: the whole mount fitted to
-  // the canvas. At zoom 1 the globe's centre sits at `anchor`; zoomed, the
-  // mount is magnified about the point `focus` (in globe radii from there),
-  // as under a glass.
-  const fit = () => Math.min((g.cssWidth - 2 * EDGE_PX) / (2 * EXTENT.halfWidth), (g.cssHeight - 2 * EDGE_PX) / (EXTENT.top + EXTENT.bottom));
+  // The globe's radius at zoom 1, in CSS pixels: the whole mount fitted
+  // inside the Wheel's rim, which stands a realm's reach in from the window's
+  // edge (g.margin), so the Wheel shows whole about it. At zoom 1 the
+  // globe's centre sits at `anchor`; zoomed, the mount is magnified about the
+  // point `focus` (in globe radii from there), as under a glass.
+  const fit = () => Math.min((g.cssWidth - 2 * g.margin) / (2 * EXTENT.halfWidth), (g.cssHeight - 2 * g.margin) / (EXTENT.top + EXTENT.bottom));
   const anchor = () => [g.cssWidth / 2, g.cssHeight / 2 + fit() * (EXTENT.top - EXTENT.bottom) / 2];
   // The view at a scale, with the globe turned as `turn` says (its spin and
-  // setting), by default as it stands.
+  // the eye's height), by default as it stands.
   const viewAt = (scale, turn = g) => {
     const k = fit() * g.zoom, [ax, ay] = anchor();
     return {
@@ -414,7 +411,7 @@ export async function initMap(stage) {
   };
   const view = () => viewAt(g.dpr);
   const cssView = () => viewAt(1);
-  const atHome = () => g.zoom === 1 && g.lon0 === home().lon0 && g.setting === home().setting;
+  const atHome = () => g.zoom === 1 && g.lon0 === home().lon0 && g.eye === home().eye;
   // The horizon's calendar, made once for each year shown.
   let calendar = null;
   const calendarFor = year => (calendar?.year === year ? calendar : (calendar = { year, days: calendarOf(year) }));
@@ -443,25 +440,25 @@ export async function initMap(stage) {
     if (framing !== g.wheelKey) {
       g.wheel.width = ambientCanvas.width = g.width; g.wheel.height = ambientCanvas.height = g.height;
       const [ax, ay] = anchor(), f = fit(), framed = { cx: ax * g.dpr, cy: ay * g.dpr, k: f * g.dpr };
-      drawWheel(g.wheel.getContext('2d'), framed, wheel, g.rim, colors, g.dpr, font, g.rem);
+      drawWheel(g.wheel.getContext('2d'), framed, wheel, g.rim, colors, g.dpr, font, g.rem, currentTheme().smallCaps);
       ambient.setFrame({ view: framed, rim: g.rim, dpr: g.dpr, rem: g.rem, wheel: g.wheel });
       g.wheelKey = framing;
     }
-    const key = `${g.lon0}|${g.setting}|${g.zoom}|${g.focus}|${g.width}x${g.height}`;
+    const key = `${g.lon0}|${g.eye}|${g.zoom}|${g.focus}|${g.width}x${g.height}`;
     if (key !== g.baseKey) {
       for (const c of [g.fills, g.lines]) { c.width = g.width; c.height = g.height; }
       drawFills(g.fills.getContext('2d'), v, world, colors, g.dpr, relief);
       drawLines(g.lines.getContext('2d'), v, world, colors, g.dpr);
       g.baseKey = key;
       // What Enter picks, marked at the globe's centre when it's focused,
-      // and the setting, for those who can't see the ring's degrees.
+      // and the latitude it faces, for those who can't see it.
       g.cell.style.setProperty('--globe-x', `${v.cx / g.dpr}px`);
       g.cell.style.setProperty('--globe-y', `${v.cy / g.dpr}px`);
       // Set only when it reads differently: each set is news to a screen reader.
-      const label = `The globe, set for ${degrees(g.setting, 'N', 'S')}`;
+      const label = `The globe, facing ${degrees(g.eye, 'N', 'S')}`;
       if (g.cell.getAttribute('aria-label') !== label) g.cell.setAttribute('aria-label', label);
     }
-    const mount = { setting: g.setting, calendar: calendarFor(new Date(instant).getUTCFullYear()).days, today: azimuthOf(instant), font };
+    const mount = { eye: g.eye, calendar: calendarFor(new Date(instant).getUTCFullYear()).days, today: azimuthOf(instant), font };
     g.ctx.clearRect(0, 0, g.width, g.height);
     drawMount(g.ctx, v, 'back', mount, colors, g.dpr);
     g.ctx.drawImage(g.fills, 0, 0);
@@ -482,7 +479,7 @@ export async function initMap(stage) {
     // A point of the canvas on the globe's open face: inside its limb, on
     // the canvas, and clear of the mount.
     const open = (x, y) => Math.hypot(x - v.cx, y - v.cy) <= v.k && x >= 0 && x <= v.width && y >= 0 && y <= v.height
-      && !covers((x - v.cx) / v.k, (v.cy - y) / v.k);
+      && !covers((x - v.cx) / v.k, (v.cy - y) / v.k, g.eye);
     const tip = hoverPlace && faces(v, hoverPlace) && project([hoverPlace.lon, hoverPlace.lat]);
     g.tip.hidden = !tip;
     if (tip) {
@@ -614,12 +611,13 @@ export async function initMap(stage) {
     g.height = g.canvas.height = Math.round(g.cssHeight * g.dpr);
     g.labels.style.fontSize = `${LABEL_REM * rem}px`;
     // The Wheel's rim: the window's edge about the globe's centre at zoom 1,
-    // less the margin, in globe radii; never inside the globe's limb, which
-    // it is along whichever axis the globe fills (the height, on a wide
-    // window), where the Wheel's top and bottom then lie behind the globe.
-    const [ax, ay] = anchor(), f = fit(), margin = WHEEL_MARGIN_REM * rem;
+    // less a realm's reach, in globe radii, so a realm on it keeps its whole
+    // light in the window, and the four words lettered on it stand clear of
+    // the edge. The mount fits inside it (fit), so it never meets the globe.
     g.rem = rem;
-    g.rim = { x: Math.max(1, (Math.min(ax, g.cssWidth - ax) - margin) / f), y: Math.max(1, (Math.min(ay, g.cssHeight - ay) - margin) / f), margin: margin / f };
+    g.margin = REALM_REACH_REM * rem;
+    const [ax, ay] = anchor(), f = fit(), margin = g.margin;
+    g.rim = { x: (Math.min(ax, g.cssWidth - ax) - margin) / f, y: (Math.min(ay, g.cssHeight - ay) - margin) / f, margin: margin / f };
     const measure = b => { b.hidden = false; return { w: b.offsetWidth, h: b.offsetHeight }; };
     g.labelSizes = g.buttons.map(measure);
     g.circleSizes = g.circleNames.map(measure);
@@ -661,22 +659,22 @@ export async function initMap(stage) {
     redraw();
   }
   // A drag that takes hold of the globe keeps the place it took hold of under
-  // the pointer, moving the mount only as it can move: spinning the globe on
-  // its axis and sliding the meridian ring through the horizon's notches.
-  // Those are two unknowns, and the place landing on the pointer is two
-  // equations, met by Newton's method on the projection the globe is drawn
-  // with, from where the mount stands. A place dragged past the globe's edge,
-  // or farther than the ring can tip the globe to carry it, can't follow; the
-  // mount goes as far toward the pointer as brings it nearer, and holds.
+  // the pointer, moving only as the reader can: spinning the globe on its
+  // axis and raising or lowering the eye. Those are two unknowns, and the
+  // place landing on the pointer is two equations, met by Newton's method on
+  // the projection the globe is drawn with, from where it stands. A place
+  // dragged past the globe's edge, or farther than the eye can rise or sink
+  // to carry it, can't follow; the globe goes as far toward the pointer as
+  // brings it nearer, and holds.
   function follow(place, x, y) {
     const lonlat = [place.lon, place.lat];
-    let turn = { lon0: g.lon0, setting: g.setting };
+    let turn = { lon0: g.lon0, eye: g.eye };
     const at = t => projectionFor(viewAt(1, t))(lonlat);
     const miss = t => { const [px, py] = at(t); return [px - x, py - y]; };
     for (let i = 0; i < FOLLOW_STEPS; i++) {
       const r = miss(turn);
       if (Math.hypot(...r) < FOLLOW_PX) break;
-      const dl = miss({ ...turn, lon0: turn.lon0 + FOLLOW_DELTA }), ds = miss({ ...turn, setting: turn.setting + FOLLOW_DELTA });
+      const dl = miss({ ...turn, lon0: turn.lon0 + FOLLOW_DELTA }), ds = miss({ ...turn, eye: turn.eye + FOLLOW_DELTA });
       const j = [[(dl[0] - r[0]) / FOLLOW_DELTA, (ds[0] - r[0]) / FOLLOW_DELTA], [(dl[1] - r[1]) / FOLLOW_DELTA, (ds[1] - r[1]) / FOLLOW_DELTA]];
       const det = j[0][0] * j[1][1] - j[0][1] * j[1][0];
       if (!det) break;
@@ -686,28 +684,29 @@ export async function initMap(stage) {
       // step that overshoots is halved until it lands nearer, or given up.
       let next = null;
       for (let h = 0, f = 1; h < FOLLOW_HALVINGS && !next; h++, f /= 2) {
-        const t = { lon0: turn.lon0 - f * step[0], setting: Math.max(-90, Math.min(90, turn.setting - f * step[1])) };
+        const t = { lon0: turn.lon0 - f * step[0], eye: clampEye(turn.eye - f * step[1]) };
         if (Math.hypot(...miss(t)) < Math.hypot(...r) && faces(viewAt(1, t), place)) next = t;
       }
       if (!next) break;
       turn = next;
     }
     g.lon0 = ((turn.lon0 + 540) % 360) - 180;
-    g.setting = turn.setting;
+    g.eye = turn.eye;
     redraw();
   }
-  // A drag on the mount or the space about it works the mount directly:
+  // A drag on the mount or the space about it works the globe directly:
   // across, it spins the globe on its axis (at the centre a radius of travel
-  // per radian, so dx pixels turn it dx / k radians); up or down, it slides
-  // the meridian ring, raising or lowering the pole, to the zenith at most.
+  // per radian, so dx pixels turn it dx / k radians); down, the eye rises and
+  // the north comes to the middle, and up it sinks toward the south, as far
+  // as the eye can go (EYE_MAX).
   function drag(dx, dy) {
     const k = fit() * g.zoom;
     g.lon0 = ((g.lon0 - dx / k / RAD + 540) % 360) - 180;
-    g.setting = Math.max(-90, Math.min(90, g.setting + dy / k / RAD));
+    g.eye = clampEye(g.eye + dy / k / RAD);
     redraw();
   }
 
-  // The globe spins a point to face the eye, at the setting the reader left
+  // The globe spins a point to face the eye, at the height the reader left
   // it, and the glass closes on it to `zoom`. A region's zoom brings its
   // places to fill REGION_FIT of the globe's radius (orthographic carries an
   // angle rho from the centre to sin rho). The point comes to the middle of
@@ -728,9 +727,8 @@ export async function initMap(stage) {
   // Where the point (lon, lat) is on the mount, in radii at zoom 1 from the
   // globe's centre, with the globe turned to lon0.
   const onMount = (at, lon0) => {
-    const v = viewOf({ lon0, setting: g.setting });
-    const [x, y] = orthoLocal(at.lon, at.lat, v.lon0, v.lat0), c = Math.cos(v.roll * RAD), s = Math.sin(v.roll * RAD);
-    return [x * c + y * s, -x * s + y * c];
+    const v = viewOf({ lon0, eye: g.eye });
+    return orthoLocal(at.lon, at.lat, v.lon0, v.lat0);
   };
   // Where the glass comes to rest on a point: the turn, zoom and focus that
   // centre it, with the panel's share of the canvas, `cover`, set aside.

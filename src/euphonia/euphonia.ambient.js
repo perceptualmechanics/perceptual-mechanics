@@ -12,7 +12,7 @@
 //
 // It draws only while the map can be seen and motion is allowed: under
 // reduced motion, or paused with the bar's button, it holds one still frame.
-import { wheelGeometry } from './euphonia.draw.js';
+import { wheelGeometry, GOLDEN } from './euphonia.draw.js';
 import { SPHERES, planetsAt } from './euphonia.wheel.js';
 import { PLANETS } from '../bench/bench.text.js';
 import { createFrameClock } from '../utils/sceneKit.js';
@@ -27,8 +27,9 @@ const GLOW_REM = 3.2, GLOW_ALPHA = 0.2;
 // wanders, in rem, at Chaos itself. Two incommensurate rates (radians a
 // second) make the flicker that never repeats exactly.
 const FLICKER_DEPTH = 0.6, WANDER_REM = 0.5, FLICKER_RATES = [0.7, 1.83];
-// The golden angle, to set each realm's flicker apart from its neighbours'.
-const GOLDEN = Math.PI * (3 - Math.sqrt(5));
+// How far a realm's light reaches from its place, in rem: its glow, and as
+// far again as it wanders.
+export const REALM_REACH_REM = GLOW_REM + WANDER_REM;
 // Motes on the roads: one to this many CSS pixels of road, travelling this
 // many CSS pixels a second, this bright in the middle of the road.
 const MOTE_GAP = 70, MOTE_SPEED = 9, MOTE_ALPHA = 0.55, MOTE_RADIUS = 1.4;
@@ -69,6 +70,7 @@ export function createAmbient(canvas, { wheel, colors, instant, sky, top }) {
     const realms = wheel.realms.filter(r => r.at !== 'centre').map((r, i) => {
       const height = (1 + Math.sin(r.at * RAD)) / 2, churn = (1 + Math.cos(r.at * RAD)) / 2;
       const color = height < 0.5 ? mix(colors['wheel-low'], colors.paper, height * 2) : mix(colors.paper, colors.sun, height * 2 - 1);
+      // Each realm's flicker set apart from its neighbours' by the golden angle.
       return { at: geo.point(geo.realmT, r.at), churn, phase: i * GOLDEN, light: sprite(glowR, color) };
     });
     // Each road as a path from where it rises, sampled by length.

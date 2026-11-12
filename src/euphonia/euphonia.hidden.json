@@ -2,10 +2,10 @@
  "provenance": {
   "source": "Euphonia.md",
   "master": "~/Documents/euphonia/Euphonia.md",
-  "sha256": "1f7e3d2e10bfe12db6e0b70ca723e4a576d93259292bf77f593c1baf9fe1e505",
-  "modified": "2026-11-12T10:11:54-05:00",
+  "sha256": "2d9a26725f37d7b553f248d8c2fca300c759d21b592038f87b691b4cae167fc4",
+  "modified": "2026-11-12T12:53:18-05:00",
   "exporter": "class-kit/site_export.py",
-  "exporter_version": 12,
+  "exporter_version": 13,
   "rules": {
    "banned": [
     "eladrin",

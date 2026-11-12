@@ -2,9 +2,9 @@
 // and the orthographic projection for a view, clipped to the facing half and
 // closed along the limb. Pure, so verify-euphonia-map holds it.
 //
-// A view is the point of the globe at its centre (lon0, lat0), the turn
-// that carries north roll degrees clockwise on the page, the globe's radius
-// in canvas pixels (k) and its centre on the canvas (cx, cy).
+// A view is the point of the globe at its centre (lon0, lat0), north up,
+// the globe's radius in canvas pixels (k) and its centre on the canvas
+// (cx, cy).
 import { geoOrthographic, geoArea, geoCircle, geoDistance, geoGraticule } from 'd3-geo';
 import { orthoLocal, rhumb, coastOf } from './euphonia.projection.js';
 
@@ -78,8 +78,8 @@ export function globeWorld(world, roses) {
 }
 
 // The view's projection: the centre turned to the globe's centre on the
-// canvas, north turned by the roll (d3 turns the other way), the facing half
-// drawn, everything beyond the limb clipped away. The clip
+// canvas, north up, the facing half drawn, everything beyond the limb
+// clipped away. The clip
 // circle sits LIMB_INSET inside the limb. At exactly 90° it's a great
 // circle, and from a round view (the keys turn the globe in whole degrees)
 // it runs through Natural Earth's rounded vertices, which floating point
@@ -90,7 +90,7 @@ export function globeWorld(world, roses) {
 const LIMB_INSET = 1e-4;
 export function projectionFor(view) {
   return geoOrthographic()
-    .rotate([-view.lon0, -view.lat0, -view.roll])
+    .rotate([-view.lon0, -view.lat0])
     .scale(view.k)
     .translate([view.cx, view.cy])
     .clipAngle(90 - LIMB_INSET);

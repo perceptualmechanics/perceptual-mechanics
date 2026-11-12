@@ -1,7 +1,9 @@
 import { readFileSync, readdirSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
-import { THEMES, CONTRAST, GLOBE } from '../src/euphonia/euphonia.themes.js';
+import { THEMES, CONTRAST } from '../src/euphonia/euphonia.themes.js';
+import { EYE_MAX } from '../src/euphonia/euphonia.mount.js';
 import { placesData } from './verify-euphonia-map.mjs';
+import { khipu as drawKhipu } from '../src/euphonia/euphonia.ornament.js';
 
 const ROOT = new URL('../', import.meta.url);
 const read = rel => readFileSync(new URL(rel, ROOT), 'utf8');
@@ -28,7 +30,7 @@ const LITERAL = new RegExp(`#[0-9a-f]{3,8}\\b|\\b(?:rgba?|hsla?|hwb|lab|lch|okla
 const SOURCES = ['styles/euphonia.css', 'scripts/euphonia-page.js', 'euphonia/index.html', ...readdirSync(new URL('src/euphonia/', ROOT)).filter(f => f.endsWith('.js') && f !== 'euphonia.themes.js').map(f => `src/euphonia/${f}`)];
 const EXEMPT = /^\s*mask-image:/;
 
-export function verifyEuphoniaThemes({ themes = THEMES, sources = SOURCES } = {}) {
+export function verifyEuphoniaThemes({ themes = THEMES, sources = SOURCES, khipu = drawKhipu } = {}) {
   const errors = [], measured = [];
   // Colours only in the theme data.
   for (const file of sources) {
@@ -43,8 +45,6 @@ export function verifyEuphoniaThemes({ themes = THEMES, sources = SOURCES } = {}
       if (m) errors.push(`${file}:${i + 1}: a colour outside the themes (${m[0]})`);
     });
   }
-  // One stance for every theme's globe, north up.
-  if (!(GLOBE?.setting > 0 && GLOBE.setting <= 90) || !GLOBE.why) errors.push('the themes need one globe setting, north up (0 to 90), and why');
   // Every theme: whole, readable, and sourced.
   const keys = Object.keys(themes[0].tokens);
   for (const t of themes) {
@@ -58,9 +58,12 @@ export function verifyEuphoniaThemes({ themes = THEMES, sources = SOURCES } = {}
       measured.push({ theme: t.id, fg, bg, ratio: +r.toFixed(2), need });
       if (r < need) errors.push(`${t.id}: ${fg} on ${bg} is ${r.toFixed(2)} to 1, under ${need}`);
     }
-    // The globe's home: a place the book names, or a turn in degrees.
-    const named = t.home?.place && placesData().regions.some(r => r.places.some(p => p.name === t.home.place));
-    if (!t.home?.why || !(named || Number.isFinite(t.home?.lon0))) errors.push(`${t.id}: its home must name a place the book places, or give lon0, and say why`);
+    // The globe's home: a place the book names, or a turn in degrees. A place
+    // opens in the globe's middle, the eye at its latitude, so it must lie
+    // within the eye's reach (euphonia.mount.js's EYE_MAX).
+    const place = t.home?.place && placesData().regions.flatMap(r => r.places).find(p => p.name === t.home.place);
+    if (!t.home?.why || !(place || Number.isFinite(t.home?.lon0))) errors.push(`${t.id}: its home must name a place the book places, or give lon0, and say why`);
+    if (place && Math.abs(place.lat) > EYE_MAX) errors.push(`${t.id}: its home, ${place.name} at ${place.lat.toFixed(2)}°, is beyond the eye's reach of ${EYE_MAX.toFixed(2)}°, so it can't open in the middle`);
     if (!t.provenance?.length) errors.push(`${t.id}: no provenance; name the objects its colours and motifs come from`);
     // Each entry names what it gives and where it comes from: a real object or
     // text with a source to check it by, or, honestly, who authored it.
@@ -68,6 +71,17 @@ export function verifyEuphoniaThemes({ themes = THEMES, sources = SOURCES } = {}
       const sourced = p.source?.title && /^https:\/\//.test(p.source?.url ?? '');
       if (!p.what || !p.from || (!sourced && !p.authored)) errors.push(`${t.id}: provenance entry "${p.what ?? '?'}" needs what, from, and either a source (a title and an https address) or who authored it`);
     }
+  }
+  // The khipu draws ability scores, which the SRD caps at 30: for every one,
+  // each knot stays on its cord and no place's knots run into another's.
+  for (let n = 0; n <= 30; n++) {
+    const svg = khipu([n]), height = +/height="([\d.]+)"/.exec(svg)[1];
+    const knots = [...svg.matchAll(/<circle class="knot" cx="[\d.]+" cy="([\d.-]+)" r="([\d.]+)"/g)].map(m => ({ place: 'tens', from: +m[1] - +m[2], to: +m[1] + +m[2] }))
+      .concat([...svg.matchAll(/<rect class="knot" x="[\d.]+" y="([\d.-]+)" width="[\d.]+" height="([\d.]+)"/g)].map(m => ({ place: 'units', from: +m[1], to: +m[1] + +m[2] })));
+    // A unit of one is a figure-eight, two loops: those are its units.
+    if (n % 10 === 1) knots.slice(-2).forEach(k => { k.place = 'units'; });
+    if (knots.some(k => k.from < 0 || k.to > height)) errors.push(`the khipu for ${n} draws a knot off its cord`);
+    if (knots.some(a => a.place === 'tens' && knots.some(b => b.place === 'units' && a.from < b.to && b.from < a.to))) errors.push(`the khipu for ${n} runs its tens into its units`);
   }
   errors.forEach(e => console.error(`  ✗ verify-euphonia-themes: ${e}`));
   return { failures: errors.length, themes: themes.length, pairs: measured.length / themes.length, measured };

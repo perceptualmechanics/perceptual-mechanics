@@ -116,6 +116,10 @@ export function verifyEuphonia(d = euphoniaData()) {
     // withheld is withheld whole, or the builder offers a choice that gives
     // nothing.
     for (const sub of c.subclasses) if (!sub.features.length) fail(`${c.name}: the subclass ${sub.name} is shown with no features`);
+    // A class whose features send the reader to its own spell list has one:
+    // the Courtier's, written as a table, once read as nothing.
+    const sendsToList = c.features.some(x => x.text.includes(`the ${c.name} spell list`));
+    if (sendsToList && !Object.values(c.spells ?? {}).flat().length) fail(`${c.name}: its features name the ${c.name} spell list, but the export has no spells for it`);
     const kept = new Set(c.features.map(x => x.name));
     for (const row of c.table.rows) {
       for (const name of row['Class Features'].split(/,\s*/)) {

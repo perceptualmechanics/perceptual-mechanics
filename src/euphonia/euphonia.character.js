@@ -30,15 +30,50 @@ function skillChoice(text, skills, where) {
 }
 
 // A skill a sentence grants: "proficiency in the Insight, Perception, or
-// Survival skill", "proficiency in one skill of your choice", or "…of your
-// choice from the Ranger’s skill list" (the setting writes a straight
-// apostrophe).
+// Survival skill" (or "proficiency with Longbows and in the Animal Handling
+// skill"), "proficiency in one skill of your choice", or "…of your choice
+// from the Ranger’s skill list" (the setting writes a straight apostrophe).
 function skillGrant(text, skills, classFrom) {
-  const named = text.match(/proficiency in the ([A-Z][\w ,]+?) skill\b/);
+  const named = text.match(/proficiency (?:with [^.]+? and )?in the ([A-Z][\w ,]+?) skill\b/);
   if (named) return list(named[1]);
   if (/proficiency in one skill of your choice from the .+?[’']s skill list/.test(text)) return classFrom;
   if (/proficiency in one skill of your choice/.test(text)) return skills;
   return null;
+}
+
+// Options a class takes as its table counts them, written into a feature as
+// ***Name (Art, Art).*** entries under "**From Courtier level 11**" headings:
+// the Courtier's accomplishments. Read for the column that counts them, the
+// name the feature gives one ("You gain two accomplishments from the list
+// below"), and each option's level, the arts it can count as, how often it
+// can be taken ("twice", "more than once") and its text. A subclass's lead
+// says the art it gives up ("Its price: it forgoes Letters", or "forgoes no
+// art"), and a subclass feature can give an option outright ("You have The
+// Code without spending an accomplishment on it").
+function optionsOf(c) {
+  const f = c.features.find(x => /^\*\*From .+? level \d+\*\*$/m.test(x.text));
+  if (!f) return null;
+  const column = f.text.match(/as shown in the ([\w' ]+) column of the/)?.[1];
+  const noun = f.text.match(/You gain \w+ (\w+?)s from the list below/)?.[1];
+  if (!column || !c.table.columns.includes(column) || !noun) throw new Error(`${c.name}: ${f.name} lists options the builder can't count`);
+  const list = [];
+  for (const g of f.text.matchAll(/^\*\*From .+? level (\d+)\*\*$([\s\S]*?)(?=^\*\*From |(?![\s\S]))/gm)) {
+    for (const o of g[2].matchAll(/^\*\*\*(.+?) \(([^)]+)\)\.\*\*\* (.+)$/gm)) {
+      const repeat = new RegExp(`can take this ${noun} twice`).test(o[3]) ? 2 : new RegExp(`can take this ${noun} more than once`).test(o[3]) ? Infinity : 1;
+      list.push({ name: o[1], arts: o[2].split(/,\s*/), level: +g[1], repeat, text: o[3] });
+    }
+  }
+  if (!list.length) throw new Error(`${c.name}: ${f.name} names no options the builder can read`);
+  const forgoes = Object.fromEntries(c.subclasses.map(s => {
+    const art = s.lead?.match(/it forgoes (\w+)\./)?.[1];
+    if (!art && !/forgoes no art/.test(s.lead ?? '')) throw new Error(`${c.name}: the ${s.name} subclass doesn't say which art it forgoes`);
+    return [s.name, art ?? null];
+  }));
+  const given = Object.fromEntries(c.subclasses.map(s => [s.name, s.features.flatMap(x => [...x.text.matchAll(new RegExp(`You have ([A-Z][\\w' ]+?) without spending an? ${noun} on it`, 'g'))].map(m => {
+    if (!list.some(o => o.name === m[1])) throw new Error(`${c.name}: ${s.name} gives "${m[1]}", which isn't one of its ${noun}s`);
+    return { name: m[1], level: x.level, from: x.name };
+  }))]));
+  return { feature: f.name, column, noun, list, forgoes, given };
 }
 
 // The rules as the builder uses them: the SRD's tables and options, every
@@ -77,12 +112,27 @@ export function rulebook(srd, euphonia, setting) {
     // Its spell list, by level, in one shape for both exports (the SRD's
     // carry a school and C, R or M; the setting's say which are new).
     const spells = Object.entries(c.spells ?? {}).flatMap(([level, list]) => list.map(sp => ({ ...sp, level: +level })));
+    // A caster that knows its spells counts them in Spells Known, as the
+    // Courtier does; one with no Cantrips column says in its casting feature
+    // how many it chooses ("and two cantrips of your choice from the Courtier
+    // spell list") and names the ones it always knows.
+    const spellsColumn = c.table.columns.includes('Spells Known') ? 'Spells Known' : 'Prepared Spells';
+    const cantripLine = c.table.columns.includes('Cantrips') ? null : c.features.map(f => f.text.match(/\*\*Cantrips\.\*\* You know (.+?), and (\w+) cantrips of your choice from the .+? spell list/)).find(Boolean);
+    if (cantripLine && NUMBERS.indexOf(cantripLine[2]) < 1) throw new Error(`${c.name}: a cantrip count the builder doesn't read: "${cantripLine[2]}"`);
+    // The feature that lists the options keeps its own rules; the options
+    // themselves are choices, each a feature of its own once taken.
+    const choices = optionsOf(c);
+    const features = choices ? c.features.map(f => (f.name === choices.feature ? { ...f, text: f.text.slice(0, f.text.search(/^\*\*From .+? level \d+\*\*$/m)).trim() } : f)) : c.features;
     return {
-      ...c, die, saves, skills: choice, subclassLevel: grants[0].level, spellList: spells,
+      ...c, features, die, saves, skills: choice, subclassLevel: grants[0].level, spellList: spells,
       // The levels that bring a feat: an Ability Score Improvement, or the
       // Epic Boon at 19.
       improvements: c.table.rows.flatMap(r => (r['Class Features'] ?? '').split(/,\s*/).filter(n => n === 'Ability Score Improvement' || n === 'Epic Boon').map(kind => ({ level: number(r.Level), kind }))),
       slotLevels,
+      spellsColumn,
+      cantripCount: cantripLine ? NUMBERS.indexOf(cantripLine[2]) : null,
+      givenCantrips: cantripLine ? [...cantripLine[1].matchAll(/\*([^*]+)\*/g)].map(m => m[1]) : [],
+      choices,
       pact: c.table.columns.includes('Slot Level'),
       multiclassSkills: skillGrant(c.multiclass.gains, skills, choice.from),
     };
@@ -241,6 +291,45 @@ export function character(book, state) {
     } else if (c.subclass) fail(`subclass:${c.class}`, `${c.class} gains a subclass at level ${c.rules.subclassLevel}.`);
     for (const imp of c.rules.improvements) if (imp.level <= c.level) improvements.push({ key: `${c.class} ${imp.level}`, class: c.class, ...imp });
   }
+  // The options a class's table counts (the Courtier's accomplishments): as
+  // many as its column says at its level, each from those its level opens
+  // and its subclass hasn't closed, as often as each allows, besides any its
+  // subclass gives. Each counts as one of its arts, the player's choice where
+  // two are left, and Regard is how many different arts they make. Each one
+  // taken is a feature from then on, so what it grants is read as any
+  // feature's is.
+  const optionChoices = [];
+  for (const c of known) {
+    const o = c.rules.choices;
+    if (!o) continue;
+    const sub = c.level >= c.rules.subclassLevel ? c.rules.subclasses.find(x => x.name === c.subclass) : null;
+    const forgone = sub ? o.forgoes[sub.name] : null;
+    const artsOf = x => x.arts.filter(a => a !== forgone);
+    const open = o.list.filter(x => x.level <= c.level && artsOf(x).length);
+    const count = number(c.rules.table.rows[c.level - 1]?.[o.column]);
+    const artOf = (x, chosen, field) => {
+      const arts = artsOf(x), art = arts.length === 1 ? arts[0] : chosen;
+      if (!arts.includes(art)) fail(field, `Choose which art ${x.name} counts as: ${arts.join(' or ')}.`);
+      return arts.includes(art) ? art : null;
+    };
+    const given = (sub ? o.given[sub.name] : []).filter(g => g.level <= c.level).map(g => {
+      const x = o.list.find(y => y.name === g.name), field = `option:${c.class}:given:${g.name}`;
+      return { ...x, from: g.from, field, art: artOf(x, state.optionArts?.[`${c.class} ${g.name}`], field) };
+    });
+    const picks = state.options?.[c.class] ?? [];
+    const taken = [];
+    for (let i = 0; i < count; i++) {
+      const field = `option:${c.class}:${i}`, pick = picks[i];
+      const x = open.find(y => y.name === pick?.name);
+      if (!x) { fail(field, pick?.name ? `${pick.name} isn't open to a level ${c.level} ${c.class}${forgone ? ` of ${sub.name}, which forgoes ${forgone}` : ''}.` : `Choose ${o.noun} ${i + 1} of ${count}.`); continue; }
+      const had = [...given, ...taken].filter(t => t.name === x.name).length;
+      if (had >= x.repeat) { fail(field, `${x.name} can be taken ${x.repeat === 1 ? 'once' : 'twice'}${given.some(g => g.name === x.name) ? `, and ${given.find(g => g.name === x.name).from} gives it` : ''}.`); continue; }
+      taken.push({ ...x, field, index: i, art: artOf(x, pick.art, field) });
+    }
+    const regard = new Set([...given, ...taken].map(t => t.art).filter(Boolean)).size;
+    optionChoices.push({ class: c.class, noun: o.noun, column: o.column, count, open, forgone, subclass: sub?.name ?? null, given, taken, regard, arts: [...new Set(o.list.flatMap(x => x.arts))] });
+    for (const t of [...given, ...taken]) features.push({ class: c.class, level: t.level, name: t.name, text: t.text, key: `${c.class} ${o.noun} ${t.index ?? t.name}`, option: o.noun, label: t.index === undefined ? `${t.name} (from ${t.from})` : `${t.name} (${c.class} ${o.noun} ${t.index + 1})` });
+  }
   // In the order they come: by level, and at one level the class's before
   // its subclass's (the sort is stable, and they were gathered that way).
   features.sort((a, b) => a.level - b.level);
@@ -277,8 +366,8 @@ export function character(book, state) {
   const styleChoices = [];
   for (const f of features) {
     if (!/gain (?:a|another) Fighting Style feat of your choice/.test(f.text)) continue;
-    const key = `${f.class} ${f.level} ${f.name}`, from = `${f.class} ${f.level}`;
-    styleChoices.push({ key, label: `${f.name} (${from})` });
+    const key = f.key ?? `${f.class} ${f.level} ${f.name}`, from = `${f.class} ${f.level}`;
+    styleChoices.push({ key, label: f.label ?? `${f.name} (${from})` });
     const feat = book.feats.find(x => x.name === state.styles?.[key] && x.category === 'Fighting Style');
     if (!feat) { fail(`style:${key}`, `Choose a Fighting Style feat for ${f.name}.`); continue; }
     if (feats.some(x => x.feat.name === feat.name)) fail(`style:${key}`, `${feat.name} is already yours; choose another.`);
@@ -336,6 +425,20 @@ export function character(book, state) {
       if (from) chosen(`${species.name} ${t.name}`, from, 1, state.skills?.[`${species.name} ${t.name}`], `${t.name} (${species.name})`);
     }
   }
+  // What a feature grants in skills, as it words it: "proficiency in two of
+  // these skills: Deception, Insight, Intimidation, or Persuasion", or a
+  // skill named, or one of several named.
+  for (const f of features) {
+    const key = f.key ?? `${f.class} ${f.level} ${f.name}`, label = f.label ?? `${f.name} (${f.class} ${f.level})`;
+    const some = f.text.match(/You gain proficiency in (\w+) of these skills: (.+?)\./);
+    if (some) {
+      if (NUMBERS.indexOf(some[1]) < 1) throw new Error(`${f.name}: a skill count the builder doesn't read: "${some[1]}"`);
+      chosen(key, list(some[2]), NUMBERS.indexOf(some[1]), state.skills?.[key], label);
+      continue;
+    }
+    const from = skillGrant(f.text, book.skills.map(s => s.name));
+    if (from) chosen(key, from, 1, state.skills?.[key], label);
+  }
   for (const f of feats) {
     const m = [f.feat.description, ...f.feat.benefits.map(b => b.text)].join(' ').match(/proficiency in any combination of (\w+) skills or tools of your choice/);
     if (!m) continue;
@@ -368,7 +471,7 @@ export function character(book, state) {
     if (named) asks.push({ count: 1, from: [named[1], named[2]].filter(Boolean), grants: true });
     for (const [k, ask] of asks.entries()) {
       if (ask.count < 1) throw new Error(`${f.name}: an Expertise count the builder doesn't read`);
-      const key = `${f.class} ${f.level} ${f.name}${k ? ` ${k + 1}` : ''}`;
+      const key = `${f.key ?? `${f.class} ${f.level} ${f.name}`}${k ? ` ${k + 1}` : ''}`;
       const from = (ask.from ?? skillNames).filter(sk => skillNames.includes(sk) && (ask.grants || proficient.has(sk)));
       const label = `${f.name} (${f.class} ${ask.at ?? f.level})`;
       expertiseChoices.push({ key, label, count: ask.count, from });
@@ -431,22 +534,42 @@ export function character(book, state) {
   // Cleric, Druid, or Wizard spell list", "a level 1 spell from the same
   // list"), the background's choice of list in its name ("Magic Initiate
   // (Cleric)"), or the player's.
+  // A caster prepares its spells, or knows them (the Courtier); some
+  // cantrips are known without choosing.
   const spellChoices = [];
-  const pickSpells = (key, label, list, cantrips, prepared, highest) => {
+  const allSpells = [...new Map(book.classes.flatMap(c => c.spellList).map(sp => [sp.name, sp])).values()];
+  const pickSpells = (key, label, list, cantrips, prepared, highest, { verb = 'prepared', given = [] } = {}) => {
     const got = (state.spells?.[key] ?? []).map(n => list.find(sp => sp.name === n)).filter(Boolean);
     if (got.length !== (state.spells?.[key] ?? []).length) fail(`spells:${key}`, `A spell chosen isn't on the ${label} list.`);
     const c = got.filter(sp => sp.level === 0), p = got.filter(sp => sp.level > 0);
-    if (c.length > cantrips) fail(`spells:${key}`, `${label} knows ${cantrips} cantrip${cantrips === 1 ? '' : 's'}; ${c.length} are chosen.`);
-    if (p.length > prepared) fail(`spells:${key}`, `${label} prepares ${prepared} spell${prepared === 1 ? '' : 's'}; ${p.length} are chosen.`);
+    if (c.length > cantrips) fail(`spells:${key}`, `${label} knows ${cantrips} cantrip${cantrips === 1 ? '' : 's'} of its choice; ${c.length} are chosen.`);
+    if (p.length > prepared) fail(`spells:${key}`, `${label} ${verb === 'known' ? 'knows' : 'prepares'} ${prepared} spell${prepared === 1 ? '' : 's'}; ${p.length} are chosen.`);
     if (p.some(sp => sp.level > highest)) fail(`spells:${key}`, `${label}'s spells go up to level ${highest}.`);
-    spellChoices.push({ key, label, list: list.filter(sp => sp.level <= highest), cantrips, prepared, highest, chosen: got });
+    spellChoices.push({ key, label, list: list.filter(sp => sp.level <= highest && !given.includes(sp.name)), cantrips, prepared, highest, verb, given: given.map(n => allSpells.find(sp => sp.name === n) ?? { name: n, level: 0 }), chosen: got });
   };
   const spellcasting = known.filter(c => c.rules.slotLevels.length || c.rules.pact).map(c => {
     const row = c.rules.table.rows[c.level - 1];
-    const entry = { class: c.class, cantrips: number(row.Cantrips), prepared: number(row['Prepared Spells']), highest: c.rules.pact ? number(row['Slot Level']) : Math.max(0, ...c.rules.slotLevels.filter(l => number(row[l]))) };
-    if (c.rules.spellList.length) pickSpells(c.class, c.class, c.rules.spellList, entry.cantrips, entry.prepared, entry.highest);
+    const verb = c.rules.spellsColumn === 'Spells Known' ? 'known' : 'prepared';
+    const entry = { class: c.class, cantrips: c.rules.cantripCount ?? number(row.Cantrips), given: c.rules.givenCantrips, prepared: number(row[c.rules.spellsColumn]), verb, highest: c.rules.pact ? number(row['Slot Level']) : Math.max(0, ...c.rules.slotLevels.filter(l => number(row[l]))) };
+    if (c.rules.spellList.length) pickSpells(c.class, c.class, c.rules.spellList, entry.cantrips, entry.prepared, entry.highest, { verb, given: entry.given });
     return entry;
   });
+  // A feature's own spell: one of the player's choice from the list it names,
+  // of a level the class has slots for (the Courtier's A Secret), or of the
+  // level it names from any class's list, a level higher at each class level
+  // it names (its Great Work).
+  for (const f of features) {
+    const key = f.key ?? `${f.class} ${f.level} ${f.name}`, label = f.label ?? `${f.name} (${f.class})`;
+    const own = f.text.match(/You learn one spell of your choice from the (.+?) spell list, of a level for which you have spell slots/);
+    if (own) pickSpells(key, label, book.classNamed(own[1]).spellList.filter(sp => sp.level > 0), 0, 1, spellcasting.find(s => s.class === f.class)?.highest ?? 0, { verb: 'known' });
+    const any = f.text.match(/You learn one level (\d) spell of your choice from any class's spell list/);
+    if (any) {
+      const at = known.find(c => c.class === f.class)?.level ?? 0;
+      const steps = f.text.match(/when you reach \w+ levels ([\d, and]+), you can replace the spell with one a level higher/);
+      const highest = +any[1] + (steps ? steps[1].match(/\d+/g).map(Number).filter(t => at >= t).length : 0);
+      pickSpells(key, label, allSpells.filter(sp => sp.level >= +any[1]), 0, 1, highest, { verb: 'known' });
+    }
+  }
   const featLists = [], listChoices = [];
   for (const f of feats) {
     const text = f.feat.benefits.map(b => b.text).join(' ');
@@ -518,7 +641,7 @@ export function character(book, state) {
     xp: advancement.xp, nextXp: book.advancement[total]?.xp ?? null,
     classes: known.map(c => ({ class: c.class, level: c.level, subclass: c.subclass ?? null, die: c.rules.die, source: c.rules.source })),
     saves: ABILITIES.map(a => ({ ability: a, proficient: saves.includes(a), bonus: mod[a] + (saves.includes(a) ? bonus : 0) })),
-    skills, choices, originChoices, styleChoices, expertiseChoices, stealthDisadvantage: Boolean(stealthy), passivePerception: 10 + skills.find(s => s.name === 'Perception').bonus, initiative, speed,
+    skills, choices, originChoices, styleChoices, expertiseChoices, optionChoices, stealthDisadvantage: Boolean(stealthy), passivePerception: 10 + skills.find(s => s.name === 'Perception').bonus, initiative, speed,
     hp, hpFrom, hitDice: Object.entries(dice).map(([die, n]) => ({ die: +die, count: n })).sort((a, b) => b.die - a.die),
     features, feats, improvements, unarmored, armorClass, armor: worn, shield: Boolean(shield), training,
     slots, casterLevel: shared, pacts, spellcasting, spellChoices, listChoices,

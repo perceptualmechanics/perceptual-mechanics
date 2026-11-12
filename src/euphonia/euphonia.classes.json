@@ -2,10 +2,10 @@
  "provenance": {
   "source": "Euphonia.md",
   "master": "~/Documents/euphonia/Euphonia.md",
-  "sha256": "1f7e3d2e10bfe12db6e0b70ca723e4a576d93259292bf77f593c1baf9fe1e505",
-  "modified": "2026-11-12T10:11:54-05:00",
+  "sha256": "2d9a26725f37d7b553f248d8c2fca300c759d21b592038f87b691b4cae167fc4",
+  "modified": "2026-11-12T12:53:18-05:00",
   "exporter": "class-kit/site_export.py",
-  "exporter_version": 12,
+  "exporter_version": 13,
   "rules": {
    "banned": [
     "eladrin",
@@ -1312,7 +1312,324 @@
      ]
     }
    ],
-   "spells": {},
+   "spells": {
+    "0": [
+     {
+      "name": "Friends",
+      "new": false
+     },
+     {
+      "name": "Vicious Mockery",
+      "new": false
+     },
+     {
+      "name": "Minor Illusion",
+      "new": false
+     },
+     {
+      "name": "Guidance",
+      "new": false
+     },
+     {
+      "name": "True Strike",
+      "new": false
+     },
+     {
+      "name": "Blade Ward",
+      "new": false
+     },
+     {
+      "name": "Resistance",
+      "new": false
+     }
+    ],
+    "1": [
+     {
+      "name": "Bless",
+      "new": false
+     },
+     {
+      "name": "Charm Person",
+      "new": false
+     },
+     {
+      "name": "Command",
+      "new": false
+     },
+     {
+      "name": "Dissonant Whispers",
+      "new": false
+     },
+     {
+      "name": "Heroism",
+      "new": false
+     },
+     {
+      "name": "Hideous Laughter",
+      "new": false
+     },
+     {
+      "name": "Sleep",
+      "new": false
+     },
+     {
+      "name": "Disguise Self",
+      "new": false
+     },
+     {
+      "name": "Illusory Script",
+      "new": false
+     },
+     {
+      "name": "Silent Image",
+      "new": false
+     },
+     {
+      "name": "Comprehend Languages",
+      "new": false
+     },
+     {
+      "name": "Detect Magic",
+      "new": false
+     },
+     {
+      "name": "Hunter's Mark",
+      "new": false
+     },
+     {
+      "name": "Identify",
+      "new": false
+     },
+     {
+      "name": "Cure Wounds",
+      "new": false
+     },
+     {
+      "name": "Healing Word",
+      "new": false
+     },
+     {
+      "name": "Protection from Evil and Good",
+      "new": false
+     },
+     {
+      "name": "Sanctuary",
+      "new": false
+     }
+    ],
+    "2": [
+     {
+      "name": "Calm Emotions",
+      "new": false
+     },
+     {
+      "name": "Hold Person",
+      "new": false
+     },
+     {
+      "name": "Suggestion",
+      "new": false
+     },
+     {
+      "name": "Zone of Truth",
+      "new": false
+     },
+     {
+      "name": "Invisibility",
+      "new": false
+     },
+     {
+      "name": "Magic Mouth",
+      "new": false
+     },
+     {
+      "name": "Mirror Image",
+      "new": false
+     },
+     {
+      "name": "Phantasmal Force",
+      "new": false
+     },
+     {
+      "name": "Detect Thoughts",
+      "new": false
+     },
+     {
+      "name": "Locate Object",
+      "new": false
+     },
+     {
+      "name": "See Invisibility",
+      "new": false
+     },
+     {
+      "name": "Aid",
+      "new": false
+     },
+     {
+      "name": "Arcane Lock",
+      "new": false
+     },
+     {
+      "name": "Lesser Restoration",
+      "new": false
+     },
+     {
+      "name": "Warding Bond",
+      "new": false
+     }
+    ],
+    "3": [
+     {
+      "name": "Fear",
+      "new": false
+     },
+     {
+      "name": "Major Image",
+      "new": false
+     },
+     {
+      "name": "Clairvoyance",
+      "new": false
+     },
+     {
+      "name": "Sending",
+      "new": false
+     },
+     {
+      "name": "Tongues",
+      "new": false
+     },
+     {
+      "name": "Counterspell",
+      "new": false
+     },
+     {
+      "name": "Dispel Magic",
+      "new": false
+     },
+     {
+      "name": "Glyph of Warding",
+      "new": false
+     },
+     {
+      "name": "Mass Healing Word",
+      "new": false
+     },
+     {
+      "name": "Nondetection",
+      "new": false
+     },
+     {
+      "name": "Remove Curse",
+      "new": false
+     }
+    ],
+    "4": [
+     {
+      "name": "Charm Monster",
+      "new": false
+     },
+     {
+      "name": "Compulsion",
+      "new": false
+     },
+     {
+      "name": "Confusion",
+      "new": false
+     },
+     {
+      "name": "Greater Invisibility",
+      "new": false
+     },
+     {
+      "name": "Hallucinatory Terrain",
+      "new": false
+     },
+     {
+      "name": "Phantasmal Killer",
+      "new": false
+     },
+     {
+      "name": "Arcane Eye",
+      "new": false
+     },
+     {
+      "name": "Divination",
+      "new": false
+     },
+     {
+      "name": "Locate Creature",
+      "new": false
+     },
+     {
+      "name": "Banishment",
+      "new": false
+     },
+     {
+      "name": "Death Ward",
+      "new": false
+     },
+     {
+      "name": "Freedom of Movement",
+      "new": false
+     },
+     {
+      "name": "Private Sanctum",
+      "new": false
+     }
+    ],
+    "5": [
+     {
+      "name": "Dominate Person",
+      "new": false
+     },
+     {
+      "name": "Geas",
+      "new": false
+     },
+     {
+      "name": "Hold Monster",
+      "new": false
+     },
+     {
+      "name": "Modify Memory",
+      "new": false
+     },
+     {
+      "name": "Dream",
+      "new": false
+     },
+     {
+      "name": "Mislead",
+      "new": false
+     },
+     {
+      "name": "Seeming",
+      "new": false
+     },
+     {
+      "name": "Legend Lore",
+      "new": false
+     },
+     {
+      "name": "Scrying",
+      "new": false
+     },
+     {
+      "name": "Telepathic Bond",
+      "new": false
+     },
+     {
+      "name": "Circle of Power",
+      "new": false
+     },
+     {
+      "name": "Greater Restoration",
+      "new": false
+     }
+    ]
+   },
    "multiclass": {
     "abilities": [
      "Charisma"
@@ -4664,7 +4981,7 @@
     {
      "level": 1,
      "name": "Vistas",
-     "text": "*Your glimpse of the greater cosmology awakened something within you, something you can now share with others.*\n\n**Revelations.** Revelations are the planes you know. Each gives one Spirit Aspect and one Influence. You start knowing two, the echoes of the world closest to home: the Hidden and the Ghostlands. Most Revelations are granted by your features by name; two features let you choose one (The Near Planes at level 5 and The Circuit at level 13). The full set is in the Cosmography later in the class's description. Whenever you finish a Long Rest, you can replace one Revelation you chose with another you're eligible for. Revelations granted by features can't be replaced.\n\n**Favor.** Each Revelation you know grants you its plane's Favor once between rests, unless a feature says it grants it more often: you call on the Favor to open a vista. A Short or Long Rest brings every Favor back.\n\n**Opening a Vista.** As a Bonus Action, you call on the Favor of a Revelation you know and open a vista beside a creature you can see within 60 feet of yourself (it can be you), and **let in an Influence**: that Revelation's Influence takes effect on the creature. From Revelator level 2, a vista can call a spirit instead (Visiting Spirit), and the spirit steps through beside the creature you chose.\n\n**Influences.** Unless an Influence says otherwise, it lasts until the start of your next turn.\n\n**Your Open Vista.** A vista stays open for 1 minute, until you open another one, until you dismiss it (no action required), or until you have the Incapacitated condition. Your open vista is the one you opened most recently that is still open; it sets the damage of your Planar Strike.\n\nWhen a vista or its Influence calls for a saving throw, the DC equals your spell save DC. Whenever a Revelator feature uses your spell save DC or spell attack modifier, it means the ones you use for Revelator spells.\n\n> **Tracking Favors**\n>\n> Give each plane you know a box. A plane that grants its Favor more than once gets more boxes (the Border Ethereal and your earth end two each; walked planes from 9th level, Mount Olympus's Arete, and some items add more), never more than three. Tick a box when a plane grants its Favor. When a feature lets you **regain a Favor**, erase a tick from any plane; a Short or Long Rest erases them all."
+     "text": "*Your glimpse of the greater cosmology awakened something within you, something you can now share with others.*\n\n**Revelations.** Revelations are the planes you know. Each gives one Spirit Aspect and one Influence. You start knowing two, the echoes of the world closest to home: the Hidden and the Ghostlands. Most Revelations are granted by your features by name; two features let you choose one (The Near Planes at level 5 and The Circuit at level 13). The full set is in the Cosmography later in the class's description. Whenever you finish a Long Rest, you can replace one Revelation you chose with another you're eligible for. Revelations granted by features can't be replaced.\n\n**Favor.** Each Revelation you know grants you its plane's Favor once between rests, unless a feature says it grants it more often: you call on the Favor to open a vista. A Short or Long Rest brings every Favor back.\n\n**Opening a Vista.** As a Bonus Action, you call on the Favor of a Revelation you know and open a vista beside a creature you can see within 60 feet of yourself (it can be you), and **let in an Influence**: that Revelation's Influence takes effect on the creature. From Revelator level 2, a vista can call a spirit instead (Visiting Spirit), and the spirit steps through beside the creature you chose.\n\n**Influences.** Unless an Influence says otherwise, it lasts until the start of your next turn.\n\n**Your Open Vista.** A vista stays open for 1 minute, until you open another one, until you dismiss it (no action required), or until you have the Incapacitated condition. Your open vista is the one you opened most recently that is still open; it sets the damage of your Planar Strike.\n\nWhen a vista or its Influence calls for a saving throw, the DC equals your spell save DC. Whenever a Revelator feature uses your spell save DC or spell attack modifier, it means the ones you use for Revelator spells.\n\n> **Tracking Favors**\n>\n> Give each plane you know a box. A plane that grants its Favor more than once gets more boxes (the Border Ethereal and your earth end two each; walked planes from 9th level, the Mountain's Arete, and some items add more), never more than three. Tick a box when a plane grants its Favor. When a feature lets you **regain a Favor**, erase a tick from any plane; a Short or Long Rest erases them all."
     },
     {
      "level": 1,
@@ -4694,7 +5011,7 @@
     {
      "level": 3,
      "name": "Revelator Pathway",
-     "text": "You gain a Revelator subclass of your choice: the pathway that called you on your spirit voyage. The Path of Judgment, the Oceanus, Mount Olympus, the Styx, and Yggdrasil are detailed after this class's description. Each pathway spans the Veil from earth to sky: at level 3 you learn its earth end, where it touches the Deep Ethereal, and at levels 7 and 15 its Outer Planes. Your earth end is the plane you know best, and it grants its Favor twice between rests. For the rest of your career, you gain each of your pathway's features that are of your Revelator level or lower; Yggdrasil also has one at level 5."
+     "text": "You gain a Revelator subclass of your choice: the pathway that called you on your spirit voyage. The Bridge, the River of Life, the Mountain, the River of Death, and the Tree are detailed after this class's description. Each pathway spans the Veil from earth to sky: at level 3 you learn its earth end, where it touches the Deep Ethereal, and at levels 7 and 15 its Outer Planes. Your earth end is the plane you know best, and it grants its Favor twice between rests. For the rest of your career, you gain each of your pathway's features that are of your Revelator level or lower; the Tree also has one at level 5."
     },
     {
      "level": 4,
@@ -4734,7 +5051,7 @@
     {
      "level": 13,
      "name": "The Circuit",
-     "text": "*You understand the shape of the world.*\n\nYou learn one Revelation of your choice from the Cosmography's Near Planes, Circuit at Level 7, Borderlands, or Dominions. It can be a plane another pathway grants at level 7. The planes the pathways reach at level 15 are beyond you until The Circuit Made Whole. Before The Circuit Made Whole, The Circuit is the only way to learn:\n\n- **The Borderlands:** the planes in the shadow of the Dominions: Arcadia and the House of Song on either side of the Seven Heavens, Gehenna beside the Nine Circles, Pandemonium beside the Abyss. The roads pass through them (the Styx rises in Pandemonium and runs past Gehenna, and the Path of Judgment crosses Arcadia on its way down from the House of Song), but no pathway stops there. By now you know the roads through them anyway.\n- **The Dominions' Quiet Corners:** the Sphere of the Moon, Cocytus, and the Seven Gates."
+     "text": "*You understand the shape of the world.*\n\nYou learn one Revelation of your choice from the Cosmography's Near Planes, Circuit at Level 7, Borderlands, or Dominions. It can be a plane another pathway grants at level 7. The planes the pathways reach at level 15 are beyond you until The Circuit Made Whole. Before The Circuit Made Whole, The Circuit is the only way to learn:\n\n- **The Borderlands:** the planes in the shadow of the Dominions: Arcadia and the House of Song on either side of the Seven Heavens, Gehenna beside the Nine Circles, Pandemonium beside the Abyss. The roads pass through them (the River of Death rises in Pandemonium and runs past Gehenna, and the Bridge crosses Arcadia on its way down from the House of Song), but no pathway stops there. By now you know the roads through them anyway.\n- **The Dominions' Quiet Corners:** the Sphere of the Moon, Cocytus, and the Seven Gates."
     },
     {
      "level": 14,
@@ -4764,13 +5081,13 @@
    ],
    "subclasses": [
     {
-     "name": "The Path of Judgment",
-     "lead": "*Endure What You Are Commanded to Endure*\n\nA long stretch of paved road, better kept in some places than others. It comes down from the House of Song's workshops, through Arcadia's orchards and the gears of the Celestial Bureaucracy, and ends at a bridge over the Styx in Acheron. On the far bank, the road becomes the field. The Wheel draws the bridge in Acheron; a Revelator knows its near end, the Bridgehead, stands in the Deep Ethereal, and starts there. Every other road wanders; this one runs straight. Revelators of the Path of Judgment know the road is the first act of resistance to chaos, and they tramp it down.",
+     "name": "The Bridge",
+     "lead": "*Endure What You Are Commanded to Endure*\n\nA long stretch of paved road, better kept in some places than others. It comes down from the House of Song's workshops, through Arcadia's orchards and the gears of the Celestial Bureaucracy, and ends at a bridge over the River of Death in Acheron. On the far bank, the road becomes the field. The Wheel draws the bridge in Acheron; a Revelator knows its near end, the Bridgehead, stands in the Deep Ethereal, and starts there. Every other road wanders; this one runs straight, and where it meets water it doesn't stop: it builds. A bridge is a road laid over water, the oldest proof that nature can be measured and crossed. Revelators of the Bridge know the road is the first act of resistance to chaos, and they tramp it down.",
      "features": [
       {
        "level": 3,
-       "name": "Path of Judgment Spells",
-       "text": "When you reach a Revelator level specified in the Path of Judgment Spells table, you thereafter always have the listed spell prepared.\n\n| Revelator Level | Spell |\n|---|---|\n| 3 | *Compelled Duel* |\n| 5 | *Zone of Truth* |\n| 9 | *Slow* |\n| 13 | *Stoneskin* |\n| 17 | *Geas* |",
+       "name": "Bridge Spells",
+       "text": "When you reach a Revelator level specified in the Bridge Spells table, you thereafter always have the listed spell prepared.\n\n| Revelator Level | Spell |\n|---|---|\n| 3 | *Compelled Duel* |\n| 5 | *Zone of Truth* |\n| 9 | *Slow* |\n| 13 | *Stoneskin* |\n| 17 | *Geas* |",
        "spells": [
         {
          "level": 3,
@@ -4857,13 +5174,13 @@
      ]
     },
     {
-     "name": "The Oceanus",
-     "lead": "*Heal Through the River That Never Ends*\n\nThe Oceanus rises in Elysium, runs through Eden, and pours into Svarga's sea, where whirlpools carry it back to its source. Revelators of the Oceanus channel the life-giving waters to heal their allies.",
+     "name": "The River of Life",
+     "lead": "*Heal Through the River That Never Ends*\n\nThe River of Life rises in Elysium, runs through Eden, and pours into Svarga's sea, where whirlpools carry it back to its source. Revelators of the River of Life channel the life-giving waters to heal their allies.",
      "features": [
       {
        "level": 3,
-       "name": "Oceanus Spells",
-       "text": "When you reach a Revelator level specified in the Oceanus Spells table, you thereafter always have the listed spell prepared.\n\n| Revelator Level | Spell |\n|---|---|\n| 3 | *Bless* |\n| 5 | *Aid* |\n| 9 | *Mass Healing Word* |\n| 13 | *Control Water* |\n| 17 | *Mass Cure Wounds* |",
+       "name": "River of Life Spells",
+       "text": "When you reach a Revelator level specified in the River of Life Spells table, you thereafter always have the listed spell prepared.\n\n| Revelator Level | Spell |\n|---|---|\n| 3 | *Bless* |\n| 5 | *Aid* |\n| 9 | *Mass Healing Word* |\n| 13 | *Control Water* |\n| 17 | *Mass Cure Wounds* |",
        "spells": [
         {
          "level": 3,
@@ -4905,7 +5222,7 @@
       {
        "level": 3,
        "name": "Wellsprings",
-       "text": "*You hold a vista to the Oceanus open, allowing its waters to flow through.* As a Bonus Action, you can call on the Maelstrom's Favor to open a Wellspring in a 5-foot Cube within 30 feet of yourself. It holds two draughts, and it lasts for 1 minute or until its draughts are gone; it doesn't require Concentration, and it closes if you have the Incapacitated condition. You have one Wellspring at a time. It's a vista of its own: it doesn't close or replace your open vista, opening another vista doesn't close it, and it never counts as your open vista.\n\n**The Water Follows.** At the start of each of your turns, you can move the Wellspring up to 30 feet to a space you can see (no action required). During combat, when a Bloodied creature you can see enters the Wellspring, starts its turn there, or has the Wellspring moved onto it, you can spend a draught to have that creature regain 1d4 Hit Points (no action required). A Wellspring doesn't heal outside combat."
+       "text": "*You hold a vista to the River of Life open, allowing its waters to flow through.* As a Bonus Action, you can call on the Maelstrom's Favor to open a Wellspring in a 5-foot Cube within 30 feet of yourself. It holds two draughts, and it lasts for 1 minute or until its draughts are gone; it doesn't require Concentration, and it closes if you have the Incapacitated condition. You have one Wellspring at a time. It's a vista of its own: it doesn't close or replace your open vista, opening another vista doesn't close it, and it never counts as your open vista.\n\n**The Water Follows.** At the start of each of your turns, you can move the Wellspring up to 30 feet to a space you can see (no action required). During combat, when a Bloodied creature you can see enters the Wellspring, starts its turn there, or has the Wellspring moved onto it, you can spend a draught to have that creature regain 1d4 Hit Points (no action required). A Wellspring doesn't heal outside combat."
       },
       {
        "level": 3,
@@ -4930,7 +5247,7 @@
       {
        "level": 7,
        "name": "Clean Water",
-       "text": "Once per Long Rest, you can spend 10 minutes at a well, spring, cistern, or stretch of stream and open the Oceanus into it. All the water within 30 feet of you is cleansed of poison and disease, and water drawn from it stays clean for 24 hours."
+       "text": "Once per Long Rest, you can spend 10 minutes at a well, spring, cistern, or stretch of stream and open the River of Life into it. All the water within 30 feet of you is cleansed of poison and disease, and water drawn from it stays clean for 24 hours."
       },
       {
        "level": 11,
@@ -4965,13 +5282,13 @@
      ]
     },
     {
-     "name": "Mount Olympus",
-     "lead": "*Excellence in Everything*\n\nThe heart of the earth: the unmoving stone playground of the gods, rising from Asphodel to Svarga with the Middle World on its slopes. Revelators of Mount Olympus understand the necessity of all things and work to embody excellence in all its forms.",
+     "name": "The Mountain",
+     "lead": "*Excellence in Everything*\n\nThe heart of the earth: the unmoving stone playground of the gods, rising from Asphodel to Svarga with the Middle World on its slopes. Revelators of the Mountain understand the necessity of all things and work to embody excellence in all its forms.",
      "features": [
       {
        "level": 3,
-       "name": "Olympus Spells",
-       "text": "When you reach a Revelator level specified in the Olympus Spells table, you thereafter always have the listed spell prepared.\n\n| Revelator Level | Spell |\n|---|---|\n| 3 | *Guiding Bolt* |\n| 5 | *Enhance Ability* |\n| 9 | *Haste* |\n| 13 | *Fabricate* |\n| 17 | *Legend Lore* |",
+       "name": "Mountain Spells",
+       "text": "When you reach a Revelator level specified in the Mountain Spells table, you thereafter always have the listed spell prepared.\n\n| Revelator Level | Spell |\n|---|---|\n| 3 | *Guiding Bolt* |\n| 5 | *Enhance Ability* |\n| 9 | *Haste* |\n| 13 | *Fabricate* |\n| 17 | *Legend Lore* |",
        "spells": [
         {
          "level": 3,
@@ -5073,13 +5390,13 @@
      ]
     },
     {
-     "name": "The Styx",
-     "lead": "*Carry Whoever Pays the Fare*\n\nIn myth the Styx is the river under the world, circling the land of the dead; on the Wheel it rises in Pandemonium's howling caverns and runs down through the Lower Planes. A Revelator knows it rises in the Source Mists, in the Deep Ethereal, and starts there. Revelators of the Styx ferry souls across its placid surface to aid them.",
+     "name": "The River of Death",
+     "lead": "*Carry Whoever Pays the Fare*\n\nIn myth the Styx is the river under the world, circling the land of the dead; on the Wheel it rises in Pandemonium's howling caverns and runs down through the Lower Planes. A Revelator knows it as the River of Death, and knows it rises in the Source Mists, in the Deep Ethereal, and starts there. Revelators of the River of Death ferry souls across its placid surface to aid them.",
      "features": [
       {
        "level": 3,
-       "name": "Styx Spells",
-       "text": "When you reach a Revelator level specified in the Styx Spells table, you thereafter always have the listed spell prepared.\n\n| Revelator Level | Spell |\n|---|---|\n| 3 | *Bane* |\n| 5 | *Blindness/Deafness* |\n| 9 | *Feign Death* |\n| 13 | *Confusion* |\n| 17 | *Modify Memory* |",
+       "name": "River of Death Spells",
+       "text": "When you reach a Revelator level specified in the River of Death Spells table, you thereafter always have the listed spell prepared.\n\n| Revelator Level | Spell |\n|---|---|\n| 3 | *Bane* |\n| 5 | *Blindness/Deafness* |\n| 9 | *Feign Death* |\n| 13 | *Confusion* |\n| 17 | *Modify Memory* |",
        "spells": [
         {
          "level": 3,
@@ -5166,13 +5483,13 @@
      ]
     },
     {
-     "name": "Yggdrasil",
-     "lead": "*Fight With the Dead at Your Back*\n\nThe World Ash rises from the wells of Asphodel, and its branches reach through Valhalla, Limbo, and Eden. Revelators of Yggdrasil leap into the gleeful fray with the warrior souls they summon urging them on.",
+     "name": "The Tree",
+     "lead": "*Fight With the Dead at Your Back*\n\nThe World Ash rises from the wells of Asphodel, and its branches reach through Valhalla, Limbo, and Eden. Revelators of the Tree leap into the gleeful fray with the warrior souls they summon urging them on.",
      "features": [
       {
        "level": 3,
-       "name": "Yggdrasil Spells",
-       "text": "When you reach a Revelator level specified in the Yggdrasil Spells table, you thereafter always have the listed spell prepared.\n\n| Revelator Level | Spell |\n|---|---|\n| 3 | *Heroism* |\n| 5 | *Magic Weapon* |\n| 9 | *Crusader's Mantle* |\n| 13 | *Grasping Vine* |\n| 17 | *Tree Stride* |",
+       "name": "Tree Spells",
+       "text": "When you reach a Revelator level specified in the Tree Spells table, you thereafter always have the listed spell prepared.\n\n| Revelator Level | Spell |\n|---|---|\n| 3 | *Heroism* |\n| 5 | *Magic Weapon* |\n| 9 | *Crusader's Mantle* |\n| 13 | *Grasping Vine* |\n| 17 | *Tree Stride* |",
        "spells": [
         {
          "level": 3,

@@ -270,7 +270,7 @@ function verifyEuphoniaThemesPlugin() {
     buildStart() {
       const { failures, themes, pairs } = verifyEuphoniaThemes();
       if (failures) this.error(`verify-euphonia-themes: ${failures} problem(s) — see above.`);
-      console.log(`  ✓ verify-euphonia-themes: ${themes} theme(s), colours only in their data, ${pairs} pairs readable in each, every source named`);
+      console.log(`  ✓ verify-euphonia-themes: ${themes} theme(s), colours only in their data, ${pairs} pairs readable in each, every source named, the khipu clear for every score`);
     },
   };
 }

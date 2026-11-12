@@ -6,7 +6,6 @@ import themes from './euphonia.themes.json' with { type: 'json' };
 
 export const THEMES = themes.themes;
 // How every theme's globe stands in its mount; a theme only turns it.
-export const GLOBE = themes.globe;
 // Where a reader's chosen theme is kept, and the address's word for it
 // (?theme=…, so a link carries it, as ?c= carries a character).
 export const THEME_KEY = 'pm-euphonia-theme', THEME_PARAM = 'theme';

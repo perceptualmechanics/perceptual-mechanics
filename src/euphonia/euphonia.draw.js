@@ -1,28 +1,23 @@
 // Draws the globe of 1668 and its mount onto a canvas. The geometry is
 // d3-geo's through euphonia.globe.js and the mount's through
 // euphonia.mount.js; this is only how it reaches pixels. A view is the point
-// of the globe at its centre (lon0, lat0), north's turn on the page (roll,
-// degrees clockwise), the globe's radius (k) and centre (cx, cy) and the
-// canvas's size (width, height), all in canvas pixels.
+// of the globe at its centre (lon0, lat0), north up, the globe's radius (k)
+// and centre (cx, cy) and the canvas's size (width, height), all in canvas
+// pixels.
 import { geoPath } from 'd3-geo';
 import { projectionFor, faces, capOf, ellipseOf } from './euphonia.globe.js';
-import { EYE, MERIDIAN, HORIZON, SIGNS, MONTHS, EAST } from './euphonia.mount.js';
+import { MERIDIAN, HORIZON, SIGNS, MONTHS, EAST, lit } from './euphonia.mount.js';
 import { AXES, SPHERES } from './euphonia.wheel.js';
 
 const RAD = Math.PI / 180;
-const sinE = Math.sin(EYE * RAD), cosE = Math.cos(EYE * RAD);
+// The golden angle: steps by it never line up, so what it spaces never
+// repeats in step with its neighbours.
+export const GOLDEN = Math.PI * (3 - Math.sqrt(5));
 
 // The canvas pixel of a point on the unit disc (the globe's limb at radius
-// 1, Y up, north up), turned by the roll; and back.
-export function toScreen(view, X, Y) {
-  const c = Math.cos(view.roll * RAD), s = Math.sin(view.roll * RAD);
-  return [view.cx + (X * c + Y * s) * view.k, view.cy - (-X * s + Y * c) * view.k];
-}
-export function fromScreen(view, x, y) {
-  const c = Math.cos(view.roll * RAD), s = Math.sin(view.roll * RAD);
-  const Xr = (x - view.cx) / view.k, Yr = (view.cy - y) / view.k;
-  return [Xr * c - Yr * s, Xr * s + Yr * c];
-}
+// 1, Y up, north up); and back.
+export const toScreen = (view, X, Y) => [view.cx + X * view.k, view.cy - Y * view.k];
+export const fromScreen = (view, x, y) => [(x - view.cx) / view.k, (view.cy - y) / view.k];
 
 // Everything on the globe is drawn inside its limb.
 function clipToGlobe(ctx, view) {
@@ -43,7 +38,7 @@ function coastPath(view, world) {
 const MAP_COLORS = ['sea', 'graticule', 'circles', 'land', 'coast', 'river', 'historic', 'glow', 'glow-lit', 'sun', 'rim',
   'waterline', 'relief-shelf', 'relief-abyss', 'relief-land', 'relief-lit', 'relief-shade', 'rhumb', 'rose', 'wheel-low',
   'empyrean', 'heaven-far', 'heaven-near', 'fire', 'air'];
-const SHARED_COLORS = ['frame', 'frame-edge', 'case', 'case-edge', 'paper', 'ink', 'signal', 'signal-text'];
+const SHARED_COLORS = ['frame', 'frame-edge', 'case', 'paper', 'ink', 'signal', 'signal-text'];
 export function palette(el) {
   const css = getComputedStyle(el), v = name => css.getPropertyValue(`--${name}`).trim();
   return Object.fromEntries([...MAP_COLORS.map(n => [n, v(`map-${n}`)]), ...SHARED_COLORS.map(n => [n, v(n)])]);
@@ -121,7 +116,7 @@ export function drawLines(ctx, view, world, colors, dpr) {
     const [x, y] = project([c.lon, c.lat]), long = ROSE_STAR * dpr, short = long * 0.3;
     ctx.beginPath();
     for (let k = 0; k < 16; k++) {
-      const a = k * Math.PI / 8 + view.roll * RAD, r = k % 4 === 0 ? long : k % 2 === 0 ? long * 0.6 : short;
+      const a = k * Math.PI / 8, r = k % 4 === 0 ? long : k % 2 === 0 ? long * 0.6 : short;
       ctx[k ? 'lineTo' : 'moveTo'](x + r * Math.sin(a), y - r * Math.cos(a));
     }
     ctx.closePath(); ctx.fill();
@@ -170,7 +165,7 @@ export function wheelGeometry(view, rim, roadCount) {
     realmT: WHEEL_REALMS,
   };
 }
-export function drawWheel(ctx, view, { realms, roads }, rim, colors, dpr, font, rem) {
+export function drawWheel(ctx, view, { realms, roads }, rim, colors, dpr, font, rem, smallCaps = true) {
   const { cx, cy, axes, point, sphereT, roadT } = wheelGeometry(view, rim, roads.length), k = view.k;
   const type = (size, style = '') => { ctx.font = `${style} ${size * rem * dpr}px ${font}`; };
   // Lettering that runs inward from the rim: away from the edge it is near.
@@ -262,10 +257,10 @@ export function drawWheel(ctx, view, { realms, roads }, rim, colors, dpr, font, 
     ctx.fillText(road.name, ...point(t, mid));
   });
 
-  // The realms where the Wheel files them, in small capitals; the Middle
-  // World is the globe.
+  // The realms where the Wheel files them, in small capitals where the
+  // theme's face has them; the Middle World is the globe.
   type(WHEEL_REALM_REM);
-  ctx.fontVariantCaps = 'small-caps';
+  ctx.fontVariantCaps = smallCaps ? 'small-caps' : 'normal';
   for (const r of realms) {
     if (r.at === 'centre') continue;
     inward(r.at);
@@ -306,7 +301,7 @@ export function drawMarks(ctx, view, { obliquity, regions, hoverPlace, pick }, c
     ctx.save();
     ctx.beginPath(); path(capOf(p, p.rho)); ctx.clip();
     const [x, y] = toScreen(view, e.cx, e.cy);
-    ctx.translate(x, y); ctx.rotate(view.roll * RAD - e.along); ctx.scale(Math.max(e.minor / e.major, 1e-3), 1);
+    ctx.translate(x, y); ctx.rotate(-e.along); ctx.scale(Math.max(e.minor / e.major, 1e-3), 1);
     const g = ctx.createRadialGradient(0, 0, 0, 0, 0, e.major * view.k);
     g.addColorStop(0, r.lit ? colors['glow-lit'] : colors.glow);
     g.addColorStop(1, 'transparent');
@@ -339,10 +334,12 @@ export function drawMarks(ctx, view, { obliquity, regions, hoverPlace, pick }, c
 }
 
 // The mount, in two passes about the globe: 'back' before it (the meridian
-// ring's lower half and the horizon's far half, which the globe hides where
-// it's in front of them) and 'front' after it (the ring's upper half and the
-// horizon's near half, which stand before it). setting turns the ring's
-// degrees with the globe's axis; calendar is the year's days
+// ring's far half and the horizon's far half, which the globe hides where
+// it's in front of them) and 'front' after it (the ring's near half and the
+// horizon's near half, which stand before it). Seen from above the horizon
+// the ring's upper half is the nearer and the horizon shows its top face,
+// with the scales; from below, the lower half, and the bare wood beneath.
+// eye is the eye's height in degrees; calendar is the year's days
 // (euphonia.mount.js's calendarOf), today the azimuth of the sun's place.
 //
 // Each ring is drawn in its own plane, through a transform that carries the
@@ -354,6 +351,132 @@ const within = (a, from, to) => { const w = ((a % TURN) + TURN) % TURN; return w
 const half = (ctx, inner, outer, from, to) => {
   ctx.beginPath(); ctx.arc(0, 0, outer, from, to); ctx.arc(0, 0, inner, to, from, true); ctx.closePath();
 };
+// A colour in more or less light: the hex's channels taken to linear light,
+// scaled, and back to sRGB.
+const inLight = (hex, f) => {
+  const h = hex.length === 4 ? [...hex.slice(1)].map(x => x + x).join('') : hex.slice(1);
+  return `#${[0, 2, 4].map(i => {
+    const c = parseInt(h.slice(i, i + 2), 16) / 255, l = (c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4) * f;
+    return Math.round(Math.min(1, l <= 0.0031308 ? l * 12.92 : 1.055 * l ** (1 / 2.4) - 0.055) * 255).toString(16).padStart(2, '0');
+  }).join('')}`;
+};
+// The horizon's walls in the lamp, across the page: each azimuth's normal,
+// in the eye's frame, lit relative to the top face, whose colour the theme
+// gives. A wall's azimuth a stands at x = r·cos a in its plane, so its light
+// is a gradient along x; this many stops follow it. Made again only when the
+// eye or the wood changes.
+const WALL_STOPS = 24;
+let walls = { key: '' };
+function wallLight(ctx, eye, wood) {
+  const key = `${eye}|${wood}`;
+  if (walls.key === key) return walls;
+  const s = Math.sin(eye * RAD), c = Math.cos(eye * RAD), face = lit([0, c, s]);
+  // The outer wall's near half faces out, a in [0, π]; the inner wall's far
+  // half faces in across the opening, a in [π, 2π].
+  const make = (r, from, normal) => {
+    const g = ctx.createLinearGradient(-r, 0, r, 0);
+    for (let i = 0; i <= WALL_STOPS; i++) {
+      const a = from + Math.PI * i / WALL_STOPS;
+      g.addColorStop((Math.cos(a) + 1) / 2, inLight(wood, lit(normal(a)) / face));
+    }
+    return g;
+  };
+  walls = {
+    key,
+    // The face the eye sees: the top, as the theme gives it, or from below
+    // the underside, turned down from the lamp.
+    face: s >= 0 ? wood : inLight(wood, lit([0, -c, -s]) / face),
+    [HORIZON.outer]: make(HORIZON.outer, 0, a => [Math.cos(a), -Math.sin(a) * s, Math.sin(a) * c]),
+    [HORIZON.inner]: make(HORIZON.inner, Math.PI, a => [-Math.cos(a), Math.sin(a) * s, -Math.sin(a) * c]),
+  };
+  return walls;
+}
+
+// The outer wall's grain: lines running round the ring, each wandering a
+// little in height, as wood's grain, lacquer's layers or stone's bedding run
+// round a turned ring. In the wall's own colour, multiplied for the darker
+// lines and screened for the lighter, so it brings no colour of its own and
+// the lamp's light along the wall stays. Each line's height, waves and phase
+// step by the golden angle, not chance, so the grain never shifts. Drawn in
+// the page's plane (radii, y down) so it keeps its weight from every eye;
+// made again only when the eye moves. An authored texture: how many lines,
+// how far each wanders (a share of the gap between lines), the points along
+// each, how strongly it shows, and every how many lines one is light.
+const GRAIN = { lines: 11, wander: 0.6, steps: 120, alpha: 0.4, lightEvery: 3 };
+let grain = { eye: NaN };
+function grainOf(eye) {
+  if (grain.eye === eye) return grain;
+  const s = Math.sin(eye * RAD), c = Math.cos(eye * RAD), r = HORIZON.outer, t = HORIZON.thickness;
+  const dark = new Path2D(), light = new Path2D();
+  for (let j = 0; j < GRAIN.lines; j++) {
+    const turn = (j * GOLDEN) / (2 * Math.PI) % 1, waves = 2 + Math.floor(turn * 5), phase = j * GOLDEN;
+    const path = j % GRAIN.lightEvery === GRAIN.lightEvery - 1 ? light : dark;
+    for (let i = 0; i <= GRAIN.steps; i++) {
+      const a = Math.PI * i / GRAIN.steps;
+      const depth = (j + 0.5 + GRAIN.wander * (turn - 0.5) + GRAIN.wander / 2 * Math.sin(waves * a + phase)) / GRAIN.lines;
+      // The near half of the wall, a in [0, π], depth below the top face.
+      const x = r * Math.cos(a), y = r * Math.sin(a) * s + Math.min(1, Math.max(0, depth)) * t * c;
+      if (i) path.lineTo(x, y); else path.moveTo(x, y);
+    }
+  }
+  grain = { eye, dark, light, faces: new Map() };
+  return grain;
+}
+// The same grain turned round the ring on a face, the top's wooden rims or
+// the whole underside: concentric lines at the wall's own spacing, so the
+// grain runs on from wall to face, each wandering as the wall's do, over the
+// half of the ring from `from` to `from + π`.
+function faceGrainOf(eye, from, bottom) {
+  const all = grainOf(eye), key = `${from}|${bottom}`;
+  if (all.faces.has(key)) return all.faces.get(key);
+  const s = Math.sin(eye * RAD), c = Math.cos(eye * RAD), t = HORIZON.thickness, spacing = t / GRAIN.lines;
+  const count = Math.floor((HORIZON.outer - HORIZON.inner) / spacing), dark = new Path2D(), light = new Path2D();
+  for (let j = 0; j < count; j++) {
+    const turn = (j * GOLDEN) / (2 * Math.PI) % 1, waves = 2 + Math.floor(turn * 5), phase = j * GOLDEN;
+    const path = j % GRAIN.lightEvery === GRAIN.lightEvery - 1 ? light : dark;
+    for (let i = 0; i <= GRAIN.steps; i++) {
+      const a = from + Math.PI * i / GRAIN.steps;
+      const r = HORIZON.inner + spacing * (j + 0.5 + GRAIN.wander * (turn - 0.5) + GRAIN.wander / 2 * Math.sin(waves * a + phase));
+      const x = r * Math.cos(a), y = r * Math.sin(a) * s + (bottom ? t * c : 0);
+      if (i) path.lineTo(x, y); else path.moveTo(x, y);
+    }
+  }
+  const out = { dark, light };
+  all.faces.set(key, out);
+  return out;
+}
+// The grain's lines, in the page's plane, in the material's own colour.
+function strokeGrain(ctx, view, { dark, light }, wood, width) {
+  ctx.save();
+  ctx.setTransform(view.k, 0, 0, view.k, view.cx, view.cy);
+  ctx.strokeStyle = wood; ctx.lineWidth = width; ctx.globalAlpha = GRAIN.alpha;
+  ctx.globalCompositeOperation = 'multiply'; ctx.stroke(dark);
+  ctx.globalCompositeOperation = 'screen'; ctx.stroke(light);
+  ctx.restore();
+}
+// The meridian ring is a band with thickness, and its rims catch the lamp:
+// each rim's normal runs out from the ring's centre (in from the inner rim)
+// in the ring's plane, lit relative to the ring's face, whose colour the
+// theme gives. A conic gradient round the centre follows it, this many stops;
+// made again only when the eye or the metal changes.
+const RIM_STOPS = 36;
+let rims = { key: '' };
+function rimLight(ctx, eye, metal) {
+  const key = `${eye}|${metal}`;
+  if (rims.key === key) return rims;
+  const s = Math.sin(eye * RAD), c = Math.cos(eye * RAD), face = lit([0, -s, c]);
+  const make = sign => {
+    const g = ctx.createConicGradient(0, 0, 0);
+    for (let i = 0; i <= RIM_STOPS; i++) {
+      const a = 2 * Math.PI * i / RIM_STOPS;
+      g.addColorStop(i / RIM_STOPS, inLight(metal, lit([sign * Math.cos(a), -sign * Math.sin(a) * c, -sign * Math.sin(a) * s]) / face));
+    }
+    return g;
+  };
+  rims = { key, [MERIDIAN.outer]: make(1), [MERIDIAN.inner]: make(-1) };
+  return rims;
+}
+
 // The meridian ring's degrees: a tick each degree, longer each five, a
 // number each ten. The horizon's: the zodiac's degrees inside, a tick each,
 // longer each ten, the signs' names between; the calendar's days outside, a
@@ -362,8 +485,9 @@ const TICK = 0.012, TICK_LONG = 0.022, MERIDIAN_TYPE = 0.026, HORIZON_TYPE = 0.0
 const ZODIAC_BAND = 0.45;
 // A month's name sits at its middle day.
 const MID_MONTH = 16;
-export function drawMount(ctx, view, pass, { setting, calendar, today, font }, colors, dpr) {
-  const front = pass === 'front';
+export function drawMount(ctx, view, pass, { eye, calendar, today, font }, colors, dpr) {
+  const front = pass === 'front', above = eye >= 0;
+  const sinE = Math.sin(eye * RAD), cosE = Math.cos(eye * RAD);
   const meridianPlane = () => ctx.setTransform(view.k, 0, 0, view.k * cosE, view.cx, view.cy);
   const horizonPlane = () => ctx.setTransform(view.k, 0, 0, view.k * sinE, view.cx, view.cy);
   const line = w => w * dpr / view.k;
@@ -379,18 +503,23 @@ export function drawMount(ctx, view, pass, { setting, calendar, today, font }, c
   };
   ctx.save();
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  // The meridian ring: its upper half (−Y up in its plane) in front, angles
-  // [π, 2π] on the canvas; the lower half behind.
+  // The meridian ring: its upper half (−Y up in its plane) is angles [π, 2π]
+  // on the canvas, the nearer seen from above; the lower half [0, π].
   meridianPlane();
-  const [m0, m1] = front ? [Math.PI, 2 * Math.PI] : [0, Math.PI];
+  const [m0, m1] = front === above ? [Math.PI, 2 * Math.PI] : [0, Math.PI];
   half(ctx, MERIDIAN.inner, MERIDIAN.outer, m0, m1);
   ctx.fillStyle = colors.frame; ctx.fill();
   ctx.strokeStyle = colors['frame-edge']; ctx.lineWidth = line(0.8); ctx.stroke();
-  // Its degrees, from the north pole (the axis, `setting` above the north
-  // point) round: 90 at the poles, 0 at the equator.
+  const rim = rimLight(ctx, eye, colors.frame);
+  for (const r of [MERIDIAN.outer, MERIDIAN.inner]) {
+    ctx.beginPath(); ctx.arc(0, 0, r, m0, m1);
+    ctx.strokeStyle = rim[r]; ctx.lineWidth = line(1.4); ctx.stroke();
+  }
+  // Its degrees, from the north pole, upright at the top, round: 90 at the
+  // poles, 0 at the equator, where the horizon stands.
   ctx.beginPath();
   for (let d = 0; d < 360; d++) {
-    const a = (d - setting) * RAD, c = Math.cos(a), s = Math.sin(a);
+    const a = (d - 90) * RAD, c = Math.cos(a), s = Math.sin(a);
     if (!within(a, m0, m1)) continue;
     const len = d % 5 ? TICK : TICK_LONG;
     ctx.moveTo(c * MERIDIAN.outer, s * MERIDIAN.outer); ctx.lineTo(c * (MERIDIAN.outer - len), s * (MERIDIAN.outer - len));
@@ -398,30 +527,49 @@ export function drawMount(ctx, view, pass, { setting, calendar, today, font }, c
   ctx.strokeStyle = colors.ink; ctx.lineWidth = line(0.6); ctx.stroke();
   ctx.fillStyle = colors.ink;
   for (let d = 0; d < 360; d += 10) {
-    const a = (d - setting) * RAD;
+    const a = (d - 90) * RAD;
     if (within(a, m0, m1)) letter(a, (MERIDIAN.inner + MERIDIAN.outer - TICK_LONG) / 2, Math.PI / 2, MERIDIAN_TYPE, String(Math.abs(90 - (d % 180))));
   }
-  // The horizon: in front, its outer edge, then its top face; behind, its
-  // top face, then its inner edge, which faces the eye across the opening.
+  // The horizon: in front, its outer wall, then the face toward the eye;
+  // behind, that face, then its inner wall, which faces the eye across the
+  // opening. Seen from level the faces are edge-on and only the walls show.
   horizonPlane();
   const [h0, h1] = front ? [0, Math.PI] : [Math.PI, 2 * Math.PI];
-  const edgeDrop = HORIZON.thickness * cosE / sinE;
+  // The bottom face lies the thickness below the top: in the plane's
+  // coordinates, foreshortened as the plane is, a drop of thickness·cos E /
+  // sin E. From below it's the face the eye sees.
+  const drop = sinE ? HORIZON.thickness * cosE / sinE : 0, face = above ? 0 : drop;
+  const light = wallLight(ctx, eye, colors.case);
+  const wall = r => {
+    ctx.fillStyle = light[r];
+    // From level the wall is a band the thickness deep, below the plane.
+    if (!sinE) {
+      ctx.save(); ctx.setTransform(view.k, 0, 0, view.k, view.cx, view.cy);
+      ctx.fillRect(-r, 0, 2 * r, HORIZON.thickness);
+      ctx.restore(); return;
+    }
+    ctx.beginPath();
+    ctx.arc(0, 0, r, h0, h1);
+    ctx.save(); ctx.translate(0, drop); ctx.arc(0, 0, r, h1, h0, true); ctx.restore();
+    ctx.closePath();
+    ctx.fill();
+  };
   if (front) {
-    ctx.beginPath();
-    ctx.arc(0, 0, HORIZON.outer, 0, Math.PI);
-    ctx.save(); ctx.translate(0, edgeDrop); ctx.arc(0, 0, HORIZON.outer, Math.PI, 0, true); ctx.restore();
-    ctx.closePath();
-    ctx.fillStyle = colors['case-edge']; ctx.fill();
+    wall(HORIZON.outer);
+    strokeGrain(ctx, view, grainOf(eye), colors.case, line(0.6));
   }
-  half(ctx, HORIZON.inner, HORIZON.outer, h0, h1);
-  ctx.fillStyle = colors.case; ctx.fill();
-  if (!front) {
-    ctx.beginPath();
-    ctx.arc(0, 0, HORIZON.inner, Math.PI, 2 * Math.PI);
-    ctx.save(); ctx.translate(0, edgeDrop); ctx.arc(0, 0, HORIZON.inner, 2 * Math.PI, Math.PI, true); ctx.restore();
-    ctx.closePath();
-    ctx.fillStyle = colors['case-edge']; ctx.fill();
+  if (sinE) {
+    ctx.save(); ctx.translate(0, face);
+    half(ctx, HORIZON.inner, HORIZON.outer, h0, h1);
+    ctx.fillStyle = light.face; ctx.fill();
+    ctx.restore();
+    // Its grain, which the scales' paper covers on the top face, leaving
+    // the wooden rims either side.
+    strokeGrain(ctx, view, faceGrainOf(eye, h0, !above), colors.case, line(0.6));
   }
+  if (!front) wall(HORIZON.inner);
+  // The scales are on the top face: from below there's only wood.
+  if (!above || !sinE) { ctx.restore(); return; }
   // The scales' paper, between the rims of the wood.
   const width = HORIZON.outer - HORIZON.inner, pad = width * 0.08;
   const z0 = HORIZON.inner + pad, z1 = z0 + (width - 2 * pad) * ZODIAC_BAND, c1 = HORIZON.outer - pad;

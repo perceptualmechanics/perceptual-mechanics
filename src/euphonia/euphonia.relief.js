@@ -8,12 +8,11 @@
 // the sea under everything and the land only inside Natural Earth's coasts,
 // so the grid's own coast, a quarter degree coarse, never shows.
 import layout from './euphonia.relief.json';
+import { LAMP, ROOM } from './euphonia.mount.js';
 
 // Natural Earth's bathymetry bands, in metres: the shelf's edge at 200, then
 // 1,000 and every 1,000 below.
 const DEPTHS = [200, 1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000];
-// The cartographers' light: from the northwest (azimuth 315°), 45° up.
-const LIGHT_AZIMUTH = 315, LIGHT_ALTITUDE = 45;
 const RAD = Math.PI / 180;
 const METRES_PER_DEGREE = 6371000 * RAD;
 
@@ -27,7 +26,7 @@ uniform sampler2D grid;
 uniform vec2 gridSize;          // columns, rows
 uniform vec3 gridOrigin;        // lat0, lon0, step (degrees)
 uniform float extreme, scale;
-uniform float height, cx, cy, k, roll, lon0, lat0;
+uniform float height, cx, cy, k, lon0, lat0;
 uniform int mode;               // 0 sea, 1 land
 uniform float depths[${DEPTHS.length}];
 uniform vec3 shelf, abyss, land, lit, shade;
@@ -35,6 +34,9 @@ uniform vec3 light;
 uniform float exaggeration, metresPerDegree;
 out vec4 colour;
 const float RAD = ${RAD};
+const float ROOM = ${ROOM};
+vec3 linear(vec3 c) { return mix(c / 12.92, pow((c + 0.055) / 1.055, vec3(2.4)), step(0.04045, c)); }
+vec3 srgb(vec3 c) { return mix(c * 12.92, 1.055 * pow(c, vec3(1.0 / 2.4)) - 0.055, step(0.0031308, c)); }
 
 vec2 cell(float lat, float lon) {
   return vec2((lon - gridOrigin.y) / gridOrigin.z + 0.5, (gridOrigin.x - lat) / gridOrigin.z + 0.5) / gridSize;
@@ -46,11 +48,9 @@ float elevation(vec2 uv) {
 
 void main() {
   // The canvas pixel's unit-disc point, as euphonia.draw.js's fromScreen:
-  // about the globe's centre, the roll turned back.
+  // about the globe's centre, north up.
   vec2 px = vec2(gl_FragCoord.x, height - gl_FragCoord.y);
-  vec2 R = vec2(px.x - cx, cy - px.y) / k;
-  float cr = cos(roll * RAD), sr = sin(roll * RAD);
-  vec2 X = vec2(R.x * cr - R.y * sr, R.x * sr + R.y * cr);
+  vec2 X = vec2(px.x - cx, cy - px.y) / k;
   float q = dot(X, X);
   if (q > 1.0) discard;
   // Back to the sphere, as orthoUnproject: the facing point, turned back
@@ -67,7 +67,7 @@ void main() {
     colour = vec4(mix(shelf, abyss, band / ${DEPTHS.length}.0), 1.0);
   } else {
     // Hillshading: the slope from the neighbouring cells, steepened by the
-    // grid's own exaggeration, lit from the northwest.
+    // grid's own exaggeration, lit by the lamp from the northwest.
     vec2 d = vec2(1.0) / gridSize;
     float dx = 2.0 * gridOrigin.z * metresPerDegree * max(cos(lat * RAD), 0.01);
     float dy = 2.0 * gridOrigin.z * metresPerDegree;
@@ -79,6 +79,10 @@ void main() {
     float k = dot(n, light) - light.z;
     colour = vec4(k >= 0.0 ? mix(land, lit, min(k / (1.0 - light.z), 1.0)) : mix(land, shade, min(-k / light.z, 1.0)), 1.0);
   }
+  // The sphere in the same lamp, in the eye's frame: its colours whole where
+  // it faces the lamp and the room's share where it turns away, darkened in
+  // linear light as paint in shadow is.
+  colour.rgb = srgb(linear(colour.rgb) * (ROOM + (1.0 - ROOM) * max(dot(vec3(X, Z), light), 0.0)));
 }`;
 
 const rgb = hex => [1, 3, 5].map(i => parseInt(hex.slice(i, i + 2), 16) / 255);
@@ -127,8 +131,7 @@ export function createRelief(bytes, colors) {
   // Its colours, set now and again when the theme changes; nothing else is redone.
   const recolor = palette => { for (const name of ['shelf', 'abyss', 'land', 'lit', 'shade']) gl.uniform3fv(u(name), rgb(palette[`relief-${name}`])); };
   recolor(colors);
-  const az = LIGHT_AZIMUTH * RAD, alt = LIGHT_ALTITUDE * RAD;
-  gl.uniform3f(u('light'), Math.sin(az) * Math.cos(alt), Math.cos(az) * Math.cos(alt), Math.sin(alt));
+  gl.uniform3f(u('light'), ...LAMP);
   gl.uniform1f(u('exaggeration'), layout.shading.exaggeration);
   gl.uniform1f(u('metresPerDegree'), METRES_PER_DEGREE);
 
@@ -141,7 +144,6 @@ export function createRelief(bytes, colors) {
     gl.uniform1f(u('cx'), view.cx);
     gl.uniform1f(u('cy'), view.cy);
     gl.uniform1f(u('k'), view.k);
-    gl.uniform1f(u('roll'), view.roll);
     gl.uniform1f(u('lon0'), view.lon0);
     gl.uniform1f(u('lat0'), view.lat0);
     gl.uniform1i(u('mode'), mode === 'land' ? 1 : 0);

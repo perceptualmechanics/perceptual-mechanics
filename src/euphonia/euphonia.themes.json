@@ -1,9 +1,5 @@
 {
   "about": "The page's looks, one per power at the setting's table: each a set of role-named tokens the stylesheet and the globe's drawing read, its type, its ornament, and where its colours come from. A theme changes how the page looks, never what it says.",
-  "globe": {
-    "setting": 52.37,
-    "why": "every theme's globe stands as Blaeu's did, its pole raised for Amsterdam's latitude, north up; a theme only turns it to face its place (the globe is the page's decor, not an observatory)"
-  },
   "themes": [
     {
       "id": "letters",
@@ -124,7 +120,8 @@
           "authored": "Scott Cohen, the parent site's palette"
         }
       ],
-      "ornament": null
+      "ornament": null,
+      "smallCaps": true
     },
     {
       "id": "mutapa",
@@ -301,6 +298,574 @@
           "source": {
             "title": "ZIMBABWE SOAPSTONE BIRD, South African Heritage Resources Agency",
             "url": "https://www.sahra.org.za/?p=14782"
+          }
+        }
+      ],
+      "smallCaps": true
+    },
+    {
+      "id": "tawantinsuyu",
+      "name": "Tawantinsuyu",
+      "region": "The Americas",
+      "home": {
+        "place": "Cuzco",
+        "why": "turned to Cusco, the capital of Tawantinsuyu"
+      },
+      "tokens": {
+        "ground": "#0f1011",
+        "surface": "#18191b",
+        "surface-deep": "#131415",
+        "surface-tab": "#16171a",
+        "surface-pressed": "#26282c",
+        "veil": "rgba(19, 20, 21, 0.92)",
+        "text": "#f1ece0",
+        "text-soft": "#dcd6c9",
+        "text-cite": "#bfb9ad",
+        "text-quiet": "#cdc7ba",
+        "text-muted": "#aaa498",
+        "text-faint": "#9b9589",
+        "text-dim": "#958f83",
+        "accent": "#e0b43c",
+        "accent-bright": "#f2cd63",
+        "focus": "#f2cd63",
+        "skip": "#e0b43c",
+        "rule": "#26272a",
+        "rule-faint": "#1b1c1e",
+        "line": "#45464a",
+        "line-accent": "#34488a",
+        "line-note": "#37383c",
+        "mention": "#3c1219",
+        "mention-text": "#f8d8dc",
+        "signal": "#c42a3c",
+        "signal-text": "#ea5a6b",
+        "paper": "#efe9db",
+        "ink": "#1b1d2e",
+        "frame": "#8c8a84",
+        "frame-edge": "#4a4945",
+        "case": "#22305e",
+        "case-edge": "#151e3d",
+        "sheet-muted": "#474651",
+        "sheet-mark": "#9a1e2e",
+        "sheet-rule": "rgba(27, 29, 46, 0.28)",
+        "print-paper": "#fff",
+        "print-ink": "#000",
+        "print-rule": "#999",
+        "map-sea": "#0d1730",
+        "map-graticule": "#2b3448",
+        "map-circles": "#55524d",
+        "map-lettering": "#a9a69e",
+        "map-land": "#2a2827",
+        "map-coast": "#c9a54a",
+        "map-river": "#3a5a8f",
+        "map-historic": "#e0b43c",
+        "map-waterline": "#3c5a90",
+        "map-relief-shelf": "#142645",
+        "map-relief-abyss": "#060b18",
+        "map-relief-land": "#2a2827",
+        "map-relief-lit": "#57544f",
+        "map-relief-shade": "#121110",
+        "map-rhumb": "rgba(201, 165, 74, 0.35)",
+        "map-rose": "#c9a54a",
+        "map-glow": "rgba(224, 180, 60, 0.22)",
+        "map-glow-lit": "rgba(242, 205, 99, 0.55)",
+        "map-sun": "#f2cd63",
+        "map-rim": "#c9a54a",
+        "map-empyrean": "#1d1a12",
+        "map-heaven-far": "#0c1530",
+        "map-heaven-near": "#15203c",
+        "map-fire": "#2c1214",
+        "map-air": "#131c2b",
+        "map-wheel-low": "#c42a3c"
+      },
+      "type": "'Gentium Book Plus', 'EB Garamond', 'Euphonia Arabic', 'Euphonia Armenian', 'Euphonia Georgian', 'Euphonia Hebrew', 'Euphonia Devanagari', 'Euphonia Bengali', 'Euphonia Tamil', 'Euphonia Sinhala', 'Euphonia Han', 'Euphonia Hangul', 'Euphonia Khmer', 'Euphonia Lao', 'Euphonia Myanmar', 'Euphonia Ethiopic', 'Euphonia Tibetan', 'Euphonia Thai', 'Euphonia Japanese', serif",
+      "smallCaps": true,
+      "ornament": {
+        "kind": "tocapu",
+        "course": 0.6,
+        "rule": [
+          "checked",
+          "stepped",
+          "quartered",
+          "nested",
+          "key"
+        ],
+        "band": [
+          "quartered",
+          "key",
+          "checked",
+          "nested",
+          "stepped"
+        ]
+      },
+      "khipu": true,
+      "provenance": [
+        {
+          "what": "ornament: the cells; text and paper: undyed cotton; signal: red; accent: yellow",
+          "from": "fine qompi almost entirely covered in t'oqapu, on warps of undyed cotton: one in alternating red and yellow, one a black-and-white checkerboard with a red collar. T'oqapu marked rank and was worn by a designated few, so the page uses only a short row of cells, never a field of them",
+          "source": {
+            "title": "All T'oqapu Tunic, 1450–1540, Dumbarton Oaks (PC.B.518)",
+            "url": "https://museum.doaks.org/objects-1/info/23071"
+          }
+        },
+        {
+          "what": "signal, sheet-mark: cochineal; case, ink, the globe's sea: indigo; accent: chilca yellow",
+          "from": "Andean dyes: cochineal for reds, indigo for blues, yellow from molle, chilca and taro",
+          "source": {
+            "title": "Cloth & Clay: Raw Materials, Textile Museum of Canada and Gardiner Museum",
+            "url": "https://textilemuseum.ca/cloth_clay/learn/textiles_rawmaterials.html"
+          }
+        },
+        {
+          "what": "frame, frame-edge, the globe's land: andesite",
+          "from": "Cuzco's walls of meticulously cut granite or andesite, the capital of Tawantinsuyu",
+          "source": {
+            "title": "City of Cuzco, UNESCO World Heritage Centre",
+            "url": "https://whc.unesco.org/en/list/273"
+          }
+        },
+        {
+          "what": "the khipu on the sheet",
+          "from": "knotted cords recording numbers in base ten by position: single knots for tens and above, a long knot of so many turns for units of two to nine, a figure-eight for one, a space for none",
+          "source": {
+            "title": "Quipus and numerical values, Museo Chileno de Arte Precolombino",
+            "url": "https://precolombino.cl/wp/en/?p=35419"
+          }
+        },
+        {
+          "what": "type: Gentium Book Plus",
+          "from": "SIL International's Gentium, drawn for the Latin orthographies of the world's languages, Quechua and Aymara among them, under the SIL Open Font License",
+          "source": {
+            "title": "Gentium Book Plus, google/fonts (ofl/gentiumbookplus)",
+            "url": "https://github.com/google/fonts/tree/main/ofl/gentiumbookplus"
+          }
+        },
+        {
+          "what": "avoided",
+          "from": "Inti, the solar divinity, and the huacas, the setting's living powers, are not ornament; gold and silver appear only as colours",
+          "source": {
+            "title": "Ancient Andean Metalworking, The Metropolitan Museum of Art",
+            "url": "https://www.metmuseum.org/essays/ancient-andean-metalworking"
+          }
+        }
+      ]
+    },
+    {
+      "id": "ottomans",
+      "name": "The Ottomans",
+      "region": "The Ottomans, Persia and the Horn",
+      "home": {
+        "place": "Istanbul",
+        "why": "turned to the city on the straits, the empire's seat"
+      },
+      "tokens": {
+        "ground": "#0a0f1a",
+        "surface": "#131a28",
+        "surface-deep": "#0e1420",
+        "surface-tab": "#121926",
+        "surface-pressed": "#1f2b40",
+        "veil": "rgba(14, 20, 32, 0.92)",
+        "text": "#eef0f2",
+        "text-soft": "#d6dbe0",
+        "text-cite": "#b8c0c8",
+        "text-quiet": "#c6ccd3",
+        "text-muted": "#a3abb4",
+        "text-faint": "#939ba4",
+        "text-dim": "#8d959e",
+        "accent": "#4fbfb6",
+        "accent-bright": "#7fdad3",
+        "focus": "#7fdad3",
+        "skip": "#4fbfb6",
+        "rule": "#222b3a",
+        "rule-faint": "#18202c",
+        "line": "#3d4a5e",
+        "line-accent": "#2f5f8a",
+        "line-note": "#333e50",
+        "mention": "#3a1712",
+        "mention-text": "#f7d9d2",
+        "signal": "#c8352b",
+        "signal-text": "#e8665b",
+        "paper": "#efece4",
+        "ink": "#14213d",
+        "frame": "#4fa8a0",
+        "frame-edge": "#1f3f73",
+        "case": "#1f3f73",
+        "case-edge": "#142a4d",
+        "sheet-muted": "#3c4660",
+        "sheet-mark": "#9c2a20",
+        "sheet-rule": "rgba(20, 33, 61, 0.28)",
+        "print-paper": "#fff",
+        "print-ink": "#000",
+        "print-rule": "#999",
+        "map-sea": "#0b1a33",
+        "map-graticule": "#2a3a55",
+        "map-circles": "#4d6070",
+        "map-lettering": "#a4b4c2",
+        "map-land": "#263028",
+        "map-coast": "#6fb7b0",
+        "map-river": "#3f6a9a",
+        "map-historic": "#4fbfb6",
+        "map-waterline": "#3d6597",
+        "map-relief-shelf": "#12284a",
+        "map-relief-abyss": "#050c18",
+        "map-relief-land": "#263028",
+        "map-relief-lit": "#4f5e50",
+        "map-relief-shade": "#0f1410",
+        "map-rhumb": "rgba(111, 183, 176, 0.35)",
+        "map-rose": "#6fb7b0",
+        "map-glow": "rgba(79, 191, 182, 0.22)",
+        "map-glow-lit": "rgba(127, 218, 211, 0.55)",
+        "map-sun": "#f2d27a",
+        "map-rim": "#6fb7b0",
+        "map-empyrean": "#1e1a12",
+        "map-heaven-far": "#0b1630",
+        "map-heaven-near": "#13213d",
+        "map-fire": "#2a1410",
+        "map-air": "#12202e",
+        "map-wheel-low": "#c8352b"
+      },
+      "type": "'Amiri', 'EB Garamond', 'Euphonia Arabic', 'Euphonia Armenian', 'Euphonia Georgian', 'Euphonia Hebrew', 'Euphonia Devanagari', 'Euphonia Bengali', 'Euphonia Tamil', 'Euphonia Sinhala', 'Euphonia Han', 'Euphonia Hangul', 'Euphonia Khmer', 'Euphonia Lao', 'Euphonia Myanmar', 'Euphonia Ethiopic', 'Euphonia Tibetan', 'Euphonia Thai', 'Euphonia Japanese', serif",
+      "smallCaps": false,
+      "ornament": {
+        "kind": "star",
+        "course": 0.6,
+        "rule": 1,
+        "band": 2
+      },
+      "provenance": [
+        {
+          "what": "ground, case, frame-edge, ink and the globe's sea: cobalt; frame, accent, the coast: turquoise; land: sage",
+          "from": "İznik ware underglaze painted in cobalt, turquoise, green and manganese, its dark sage green confined to the petal border",
+          "source": {
+            "title": "Dish with Spray of Flowers, Iznik, 1545–55, Victoria and Albert Museum",
+            "url": "https://collections.vam.ac.uk/item/O85940"
+          }
+        },
+        {
+          "what": "signal, signal-text, mention, sheet-mark, map-wheel-low: bole red",
+          "from": "the raised red of İznik after about 1560, 'Armenian bole', an iron-rich slip laid on thick so it would not run under the glaze",
+          "source": {
+            "title": "Tile, Iznik, 1550–1600 (421-1900), Victoria and Albert Museum",
+            "url": "https://collections.vam.ac.uk/item/O11489"
+          }
+        },
+        {
+          "what": "text and paper: İznik white",
+          "from": "the white ground the colours are painted on, in panels of cobalt, light blue, red, white and dark blue-green",
+          "source": {
+            "title": "Tile panel, Iznik, ca. 1570–75, Victoria and Albert Museum",
+            "url": "https://collections.vam.ac.uk/item/O90748"
+          }
+        },
+        {
+          "what": "ornament: the eight-pointed star and cross",
+          "from": "Ottoman geometric ornament constructed with straightedge and compass from its repeat, as in the rosettes of the Rüstem Pasha Mosque",
+          "source": {
+            "title": "Adam Williamson, Create Beautiful Ottoman Empire Art With Rüstem Pasha Rosette, AramcoWorld, 2022",
+            "url": "https://www.aramcoworld.com/articles/2022/art-of-islamic-patterns-rstem-pasha-rosette"
+          }
+        },
+        {
+          "what": "map-sun and map-empyrean: gold",
+          "from": "the gold of Ottoman manuscript illumination, ink, opaque watercolour and gold on paper",
+          "source": {
+            "title": "Manuscript in Masnavi Verse in Praise of Sulayman I, 1526, Los Angeles County Museum of Art",
+            "url": "https://collections.lacma.org/object/52266"
+          }
+        },
+        {
+          "what": "type: Amiri",
+          "from": "Khaled Hosny's Amiri, a Naskh after the Bulaq types, whose Latin is drawn to sit with it; the ribbon's Ottoman Turkish is set in its Arabic",
+          "source": {
+            "title": "Amiri, google/fonts (ofl/amiri)",
+            "url": "https://github.com/google/fonts/tree/main/ofl/amiri"
+          }
+        },
+        {
+          "what": "avoided",
+          "from": "the tughra, the sultan's imperial monogram on his decrees, papers and coins, is not used",
+          "source": {
+            "title": "Tugra (Calligraphic Monogram) of Sulayman the Magnificent, c. 1550–65, Los Angeles County Museum of Art",
+            "url": "https://collections.lacma.org/object/52256"
+          }
+        }
+      ]
+    },
+    {
+      "id": "hindustan",
+      "name": "Hindustan",
+      "region": "India",
+      "home": {
+        "place": "Delhi",
+        "why": "turned to Shahjahanabad, Shah Jahan's new capital, and its red fort"
+      },
+      "tokens": {
+        "ground": "#120c0a",
+        "surface": "#1d1512",
+        "surface-deep": "#170f0d",
+        "surface-tab": "#1b1310",
+        "surface-pressed": "#33221b",
+        "veil": "rgba(23, 15, 13, 0.92)",
+        "text": "#f0ebe4",
+        "text-soft": "#dcd4ca",
+        "text-cite": "#c0b6a9",
+        "text-quiet": "#cdc4b8",
+        "text-muted": "#ab9f92",
+        "text-faint": "#9c9083",
+        "text-dim": "#958a7d",
+        "accent": "#d9a73f",
+        "accent-bright": "#f0c768",
+        "focus": "#f0c768",
+        "skip": "#d9a73f",
+        "rule": "#2c211c",
+        "rule-faint": "#211814",
+        "line": "#4e3c33",
+        "line-accent": "#8e3b25",
+        "line-note": "#3e2f28",
+        "mention": "#3d1e10",
+        "mention-text": "#f7dcc4",
+        "signal": "#5b86d6",
+        "signal-text": "#86a8e8",
+        "paper": "#ece6dc",
+        "ink": "#1e1a3a",
+        "frame": "#b5553a",
+        "frame-edge": "#6e2f1f",
+        "case": "#5a2a1c",
+        "case-edge": "#3a1a11",
+        "sheet-muted": "#4a3f52",
+        "sheet-mark": "#8a2a12",
+        "sheet-rule": "rgba(30, 26, 58, 0.28)",
+        "print-paper": "#fff",
+        "print-ink": "#000",
+        "print-rule": "#999",
+        "map-sea": "#0f1a2e",
+        "map-graticule": "#2e3448",
+        "map-circles": "#5a463a",
+        "map-lettering": "#ab9c8d",
+        "map-land": "#2e2420",
+        "map-coast": "#c98a52",
+        "map-river": "#3e5c86",
+        "map-historic": "#d9a73f",
+        "map-waterline": "#3d5f8f",
+        "map-relief-shelf": "#172744",
+        "map-relief-abyss": "#060a14",
+        "map-relief-land": "#2e2420",
+        "map-relief-lit": "#5f4b40",
+        "map-relief-shade": "#130d0b",
+        "map-rhumb": "rgba(201, 138, 82, 0.35)",
+        "map-rose": "#c98a52",
+        "map-glow": "rgba(217, 167, 63, 0.22)",
+        "map-glow-lit": "rgba(240, 199, 104, 0.55)",
+        "map-sun": "#f0c768",
+        "map-rim": "#c98a52",
+        "map-empyrean": "#22190f",
+        "map-heaven-far": "#0d1428",
+        "map-heaven-near": "#172240",
+        "map-fire": "#2c140e",
+        "map-air": "#141d2c",
+        "map-wheel-low": "#b5553a"
+      },
+      "type": "'Noto Serif', 'EB Garamond', 'Euphonia Nastaliq', 'Euphonia Arabic', 'Euphonia Armenian', 'Euphonia Georgian', 'Euphonia Hebrew', 'Euphonia Devanagari', 'Euphonia Bengali', 'Euphonia Tamil', 'Euphonia Sinhala', 'Euphonia Han', 'Euphonia Hangul', 'Euphonia Khmer', 'Euphonia Lao', 'Euphonia Myanmar', 'Euphonia Ethiopic', 'Euphonia Tibetan', 'Euphonia Thai', 'Euphonia Japanese', serif",
+      "smallCaps": true,
+      "ornament": {
+        "kind": "jali",
+        "course": 0.6,
+        "rule": 1,
+        "band": 2,
+        "rings": true
+      },
+      "provenance": [
+        {
+          "what": "frame, frame-edge, case, line-accent, map-wheel-low: red sandstone; text and paper: white marble",
+          "from": "Humayun's Tomb, clad in red sandstone with white and black inlaid marble borders",
+          "source": {
+            "title": "Humayun's Tomb, Delhi, UNESCO World Heritage Centre",
+            "url": "https://whc.unesco.org/en/list/232"
+          }
+        },
+        {
+          "what": "ground and the red fort",
+          "from": "Shahjahanabad, the new capital, and its palace fort, named for its massive enclosing walls of red sandstone",
+          "source": {
+            "title": "Red Fort Complex, UNESCO World Heritage Centre",
+            "url": "https://whc.unesco.org/en/list/231"
+          }
+        },
+        {
+          "what": "accent, map-coast, map-rose: carnelian and yellow marble; signal: lapis",
+          "from": "pietra dura: white marble inlaid with carnelian, yellow and black marble and serpentine, with lapis lazuli from Afghanistan",
+          "source": {
+            "title": "Frieze panel, c. 1640, probably Agra, Victoria and Albert Museum (1534-1855)",
+            "url": "https://collections.vam.ac.uk/item/O15486/frieze-panel"
+          }
+        },
+        {
+          "what": "ornament: the jali",
+          "from": "pierced screens of eight-pointed stars set within octagons, as at Fatehpur Sikri and the Taj Mahal",
+          "source": {
+            "title": "Jali (screen), Art of the Islamic World curriculum, The Metropolitan Museum of Art",
+            "url": "https://www.metmuseum.org/learn/educators/curriculum-resources/art-of-the-islamic-world/unit-three/featured-works-of-art/image-15"
+          }
+        },
+        {
+          "what": "sheet-mark: vermilion; ink: indigo; map-sun: gold",
+          "from": "the Mughal painter's colours: vermilion and red lead the common reds, indigo and ultramarine the blues, gold in powder, on burnished paper",
+          "source": {
+            "title": "The Mughal Court Paintings, Asia Society",
+            "url": "https://asiasociety.org/mughal-court-paintings"
+          }
+        },
+        {
+          "what": "type on the ribbon: Nastaliq",
+          "from": "Persian, the Mughal court's language, written in nasta'liq, widely used at the Mughal court",
+          "source": {
+            "title": "Calligraphy of Chaghatai Turkish Poems in Praise of Wine, Cleveland Museum of Art",
+            "url": "https://www.clevelandart.org/art/2013.292.b"
+          }
+        },
+        {
+          "what": "type: Noto Serif, and Noto Nastaliq Urdu on the ribbon",
+          "from": "the Noto family, whose Latin is drawn as one with the Nastaliq and Devanagari the page sets, under the SIL Open Font License",
+          "source": {
+            "title": "Noto Nastaliq Urdu, google/fonts (ofl/notonastaliqurdu)",
+            "url": "https://github.com/google/fonts/tree/main/ofl/notonastaliqurdu"
+          }
+        },
+        {
+          "what": "ornament: the rings in the jali; mention: the ember",
+          "from": "the Naths, the book's Sandhyānāthāha: itinerant yogis with ash, the sacred fire and the split-ear ring (Powers and Factions, Seekers of Immortality)",
+          "authored": "Euphonia (Scott Cohen), a gentle reference"
+        }
+      ]
+    },
+    {
+      "id": "qing",
+      "name": "The Qing",
+      "region": "East and Southeast Asia",
+      "home": {
+        "place": "Beijing",
+        "why": "turned to the Kangxi court at Beijing"
+      },
+      "tokens": {
+        "ground": "#0b0d12",
+        "surface": "#14161c",
+        "surface-deep": "#0f1116",
+        "surface-tab": "#12141a",
+        "surface-pressed": "#22262f",
+        "veil": "rgba(15, 17, 22, 0.92)",
+        "text": "#ecebe6",
+        "text-soft": "#d5d3cc",
+        "text-cite": "#b9b7af",
+        "text-quiet": "#c7c5be",
+        "text-muted": "#a5a39c",
+        "text-faint": "#96948d",
+        "text-dim": "#908e87",
+        "accent": "#7aa3e4",
+        "accent-bright": "#a3c1f1",
+        "focus": "#a3c1f1",
+        "skip": "#7aa3e4",
+        "rule": "#23262d",
+        "rule-faint": "#191b21",
+        "line": "#41454f",
+        "line-accent": "#2b4f8f",
+        "line-note": "#353841",
+        "mention": "#3c1512",
+        "mention-text": "#f6dcd6",
+        "signal": "#c8322a",
+        "signal-text": "#e45a4f",
+        "paper": "#eee7d6",
+        "ink": "#15151a",
+        "frame": "#3c66b0",
+        "frame-edge": "#1e3363",
+        "case": "#8a1f16",
+        "case-edge": "#5a130d",
+        "sheet-muted": "#474550",
+        "sheet-mark": "#9e2a1f",
+        "sheet-rule": "rgba(21, 21, 26, 0.28)",
+        "print-paper": "#fff",
+        "print-ink": "#000",
+        "print-rule": "#999",
+        "map-sea": "#0b1730",
+        "map-graticule": "#283652",
+        "map-circles": "#46506a",
+        "map-lettering": "#a7b4c7",
+        "map-land": "#24262b",
+        "map-coast": "#7fa3e0",
+        "map-river": "#3e64a0",
+        "map-historic": "#7aa3e4",
+        "map-waterline": "#3b5f9c",
+        "map-relief-shelf": "#13264a",
+        "map-relief-abyss": "#050b18",
+        "map-relief-land": "#24262b",
+        "map-relief-lit": "#4d5058",
+        "map-relief-shade": "#0f1012",
+        "map-rhumb": "rgba(127, 163, 224, 0.35)",
+        "map-rose": "#7fa3e0",
+        "map-glow": "rgba(122, 163, 228, 0.22)",
+        "map-glow-lit": "rgba(163, 193, 241, 0.55)",
+        "map-sun": "#e8c56a",
+        "map-rim": "#7fa3e0",
+        "map-empyrean": "#1c1a14",
+        "map-heaven-far": "#0b1430",
+        "map-heaven-near": "#142040",
+        "map-fire": "#2a120f",
+        "map-air": "#121c2c",
+        "map-wheel-low": "#c8322a"
+      },
+      "type": "'Source Serif 4', 'EB Garamond', 'Euphonia Arabic', 'Euphonia Armenian', 'Euphonia Georgian', 'Euphonia Hebrew', 'Euphonia Devanagari', 'Euphonia Bengali', 'Euphonia Tamil', 'Euphonia Sinhala', 'Euphonia Han', 'Euphonia Hangul', 'Euphonia Khmer', 'Euphonia Lao', 'Euphonia Myanmar', 'Euphonia Ethiopic', 'Euphonia Tibetan', 'Euphonia Thai', 'Euphonia Japanese', serif",
+      "smallCaps": true,
+      "ornament": {
+        "kind": "fret",
+        "course": 0.6,
+        "rule": 1,
+        "band": 2
+      },
+      "provenance": [
+        {
+          "what": "accent, frame, the globe's sea and coast: cobalt; text: porcelain white",
+          "from": "Kangxi blue-and-white for the home market, painted in underglaze cobalt blue, with the six-character reign mark",
+          "source": {
+            "title": "Dish, Jingdezhen, ca. 1662–1673, Victoria and Albert Museum (O144001)",
+            "url": "https://collections.vam.ac.uk/item/O144001/"
+          }
+        },
+        {
+          "what": "case, case-edge: carved red lacquer",
+          "from": "cinnabar lacquer of many layers, carved; this box is a Ming piece kept in the Qing court's collection, 清宫旧藏",
+          "source": {
+            "title": "剔红双龙牡丹纹圆盒, Palace Museum",
+            "url": "https://www.dpm.org.cn/collection/lacquerware/228635.html"
+          }
+        },
+        {
+          "what": "signal, signal-text, sheet-mark: the seal's vermilion; paper: the scholar's paper",
+          "from": "the scholar's studio: paper of bamboo, hemp and mulberry bark, stamped with red seal paste",
+          "source": {
+            "title": "Four Treasures of a Scholar's Studio, National Museum of Asian Art, Smithsonian",
+            "url": "https://asia-archive.si.edu/learn/chinas-calligraphic-arts/four-treasures"
+          }
+        },
+        {
+          "what": "ink and ground: pine-soot ink",
+          "from": "an ink cake of pine soot and binding medium, moulded with a Kangxi date",
+          "source": {
+            "title": "Ink cake, with meditative Buddha, the sun and moon, 1695, Art Gallery of South Australia",
+            "url": "https://agsa.sa.gov.au/collection-publications/collection/works/ink-cake-with-meditative-buddha-the-sun-and-moon/36907"
+          }
+        },
+        {
+          "what": "ornament: the key fret",
+          "from": "the squared spiral, leiwen, an old Chinese ground pattern from the bronzes on; drawn here from its own grid",
+          "source": {
+            "title": "Square Wine Container (Fangyou), Cleveland Museum of Art",
+            "url": "https://www.clevelandart.org/print/art/1963.103"
+          }
+        },
+        {
+          "what": "type: Source Serif 4",
+          "from": "Frank Grießhammer's Source Serif, whose Latin is the companion drawn for Source Han Serif, the Han face the page sets",
+          "source": {
+            "title": "Source Serif 4, google/fonts (ofl/sourceserif4)",
+            "url": "https://github.com/google/fonts/tree/main/ofl/sourceserif4"
           }
         }
       ]

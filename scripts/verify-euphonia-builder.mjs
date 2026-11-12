@@ -33,6 +33,12 @@ export function verifyEuphoniaBuilder({ engine = defaultEngine, srd = read('srd'
       state = { ...state, styles: Object.fromEntries(got.styleChoices.map((c, i) => [c.key, state.styles?.[c.key] ?? styles[i]])) };
       const taken = new Set();
       state.expertise = Object.fromEntries(got.expertiseChoices.map(c => { const pick = c.from.filter(x => !taken.has(x)).slice(0, c.count); pick.forEach(x => taken.add(x)); return [c.key, pick]; }));
+      // The options a class's table counts: the first open ones it doesn't
+      // already have, each counting as its first art the subclass leaves.
+      state.options = Object.fromEntries(got.optionChoices.map(o => [o.class, o.open.filter(x => !o.given.some(g => g.name === x.name)).slice(0, o.count).map(x => ({ name: x.name, art: x.arts.find(a => a !== o.forgone) }))]));
+      state.optionArts = Object.fromEntries(got.optionChoices.flatMap(o => o.given.map(g => [`${o.class} ${g.name}`, g.arts.find(a => a !== o.forgone)])));
+      // A skill choice a feature brings, from what it offers.
+      state.skills = { ...Object.fromEntries(got.choices.map(c => [c.key, c.from.slice(0, c.count)])), ...state.skills };
     }
     return state;
   };
@@ -254,6 +260,27 @@ export function verifyEuphoniaBuilder({ engine = defaultEngine, srd = read('srd'
   const crowner = run(someone([{ class: 'Natural Philosopher', level: 3, subclass: 'Crowner' }], { skills: { 'Natural Philosopher': ['Arcana', 'History', 'Insight'], 'Human Skillful': ['Athletics'] }, expertise: { 'Natural Philosopher 2 Instruments': [], 'Natural Philosopher 3 Reconstruction': ['Investigation'] } }), 'Crowner');
   const investigation = crowner?.skills.find(x => x.name === 'Investigation');
   if (!(investigation?.proficient && investigation.expertise)) fail('a Crowner\'s Investigation isn\'t given proficiency and Expertise');
+  // The Courtier's accomplishments, as its table and its words count them:
+  // two at level 1 and eight at 20; the College of Arms closes an
+  // accomplishment that counts only as Letters and gives The Code; Regard is
+  // the different arts; one taken "twice" can't be taken a third time; and it
+  // knows its spells, two at level 1, with two cantrips chosen beside the
+  // three it always knows. Every Table asks two skills of its four.
+  if (book.classNamed('Courtier')) {
+    const courtier = (lv, sub, options, extra = {}) => run(someone([{ class: 'Courtier', level: lv, subclass: sub }], { skills: { Courtier: ['Arcana', 'History', 'Insight'], 'Human Skillful': ['Athletics'] }, options: { Courtier: options }, ...extra }), `Courtier ${lv}`);
+    const accomplishments = got => got?.optionChoices.find(o => o.class === 'Courtier');
+    const one = courtier(1, '', [{ name: 'The Library' }, { name: 'Every Table', art: 'Society' }]);
+    const arms = courtier(3, 'Arms', [{ name: 'The Library' }, { name: 'A Secret' }, { name: 'The Stage' }, { name: 'Horse and Bow' }], { optionArts: { 'Courtier The Code': 'Society' } });
+    const thrice = courtier(5, '', [{ name: 'A Secret' }, { name: 'A Secret' }, { name: 'A Secret' }, { name: 'The Stage' }]);
+    const every = one?.choices.find(c => c.key === 'Courtier accomplishment 1');
+    const casting = one?.spellChoices.find(c => c.key === 'Courtier');
+    if (!(accomplishments(one)?.count === 2 && accomplishments(courtier(20, '', []))?.count === 8)) fail(`the Courtier's accomplishments count ${accomplishments(one)?.count} at level 1, not its table's 2`);
+    if (!(arms?.problems.some(p => p.field === 'option:Courtier:0') && accomplishments(arms)?.given.some(g => g.name === 'The Code'))) fail('the College of Arms leaves Letters open, or doesn\'t give The Code');
+    if (accomplishments(one)?.regard !== 2 || accomplishments(arms)?.regard !== 4) fail(`Regard reads ${accomplishments(one)?.regard} and ${accomplishments(arms)?.regard}, not 2 and 4`);
+    if (!thrice?.problems.some(p => p.field === 'option:Courtier:2' && /twice/.test(p.message))) fail('a Courtier takes A Secret three times');
+    if (!(casting?.prepared === 2 && casting.verb === 'known' && casting.cantrips === 2 && casting.given.map(s => s.name).join() === 'Prestidigitation,Mending,Message' && casting.list.some(sp => sp.name === 'Friends'))) fail(`the Courtier's spells read ${JSON.stringify(casting && { known: casting.prepared, verb: casting.verb, cantrips: casting.cantrips, given: casting.given.map(s => s.name) })}`);
+    if (!(every?.count === 2 && every.from.join() === 'Deception,Insight,Intimidation,Persuasion')) fail('Every Table doesn\'t ask two of its four skills');
+  }
   const fighter = (lv, styles, armor) => run(someone([{ class: 'Fighter', level: lv, subclass: lv >= 3 ? 'Champion' : '' }], { styles, armor, skills: { Fighter: ['Athletics', 'History'], 'Human Skillful': ['Arcana'] }, improvements: Object.fromEntries([4, 6].filter(x => x <= lv).map(x => [`Fighter ${x}`, { feat: 'Ability Score Improvement', increases: { Strength: 1, Constitution: 1 } }])) }), 'Fighting Style');
   const champion = fighter(7, { 'Fighter 1 Fighting Style': 'Archery', 'Fighter 7 Additional Fighting Style': 'Defense' }, 'Chain Mail');
   const same = fighter(7, { 'Fighter 1 Fighting Style': 'Archery', 'Fighter 7 Additional Fighting Style': 'Archery' }, 'Chain Mail');

@@ -3,16 +3,28 @@
    (euphonia.theme.js brings their custom properties). */
 
 /* Euphonia's own type, apart from the rest of the site, each theme's Latin
-   face first in its stack (euphonia.themes.json): EB Garamond, after the
-   Garamond romans still setting most books in 1668, and Alegreya, roman and
-   italic from text weight to semibold; then a face for each other script the
-   page sets. Each holds
+   face first in its stack (euphonia.themes.json), roman and italic, at text
+   weight and semibold or bold: EB Garamond, after the Garamond romans still
+   setting most books in 1668; Alegreya; Amiri's Latin; Noto Serif; Source
+   Serif 4; Gentium Book Plus. Then a face for each other script the page
+   sets, and Nastaliq for Hindustan's ribbon. Each holds
    only what the page inks (scripts/euphonia-fonts.py); the stack lets each
    character find its face. */
 @font-face { font-family: 'EB Garamond'; font-weight: 400 600; font-display: swap; src: url('/fonts/euphonia/eb-garamond.woff2') format('woff2'); }
 @font-face { font-family: 'EB Garamond'; font-style: italic; font-weight: 400 600; font-display: swap; src: url('/fonts/euphonia/eb-garamond-italic.woff2') format('woff2'); }
 @font-face { font-family: 'Alegreya'; font-weight: 400 600; font-display: swap; src: url('/fonts/euphonia/alegreya.woff2') format('woff2'); }
 @font-face { font-family: 'Alegreya'; font-style: italic; font-weight: 400 600; font-display: swap; src: url('/fonts/euphonia/alegreya-italic.woff2') format('woff2'); }
+@font-face { font-family: 'Amiri'; font-weight: 400; font-display: swap; src: url('/fonts/euphonia/amiri-text.woff2') format('woff2'); }
+@font-face { font-family: 'Amiri'; font-weight: 700; font-display: swap; src: url('/fonts/euphonia/amiri-text-bold.woff2') format('woff2'); }
+@font-face { font-family: 'Amiri'; font-style: italic; font-weight: 400; font-display: swap; src: url('/fonts/euphonia/amiri-text-italic.woff2') format('woff2'); }
+@font-face { font-family: 'Noto Serif'; font-weight: 400 600; font-display: swap; src: url('/fonts/euphonia/noto-serif.woff2') format('woff2'); }
+@font-face { font-family: 'Noto Serif'; font-style: italic; font-weight: 400 600; font-display: swap; src: url('/fonts/euphonia/noto-serif-italic.woff2') format('woff2'); }
+@font-face { font-family: 'Source Serif 4'; font-weight: 400 600; font-display: swap; src: url('/fonts/euphonia/source-serif.woff2') format('woff2'); }
+@font-face { font-family: 'Source Serif 4'; font-style: italic; font-weight: 400 600; font-display: swap; src: url('/fonts/euphonia/source-serif-italic.woff2') format('woff2'); }
+@font-face { font-family: 'Gentium Book Plus'; font-weight: 400; font-display: swap; src: url('/fonts/euphonia/gentium.woff2') format('woff2'); }
+@font-face { font-family: 'Gentium Book Plus'; font-weight: 700; font-display: swap; src: url('/fonts/euphonia/gentium-bold.woff2') format('woff2'); }
+@font-face { font-family: 'Gentium Book Plus'; font-style: italic; font-weight: 400; font-display: swap; src: url('/fonts/euphonia/gentium-italic.woff2') format('woff2'); }
+@font-face { font-family: 'Euphonia Nastaliq'; font-weight: 400; font-display: swap; src: url('/fonts/euphonia/noto-nastaliq-400.woff2') format('woff2'); }
 @font-face { font-family: 'Euphonia Arabic'; font-weight: 400; font-display: swap; src: url('/fonts/euphonia/amiri-400.woff2') format('woff2'); }
 @font-face { font-family: 'Euphonia Armenian'; font-weight: 400; font-display: swap; src: url('/fonts/euphonia/noto-serif-armenian-400.woff2') format('woff2'); }
 @font-face { font-family: 'Euphonia Georgian'; font-weight: 400; font-display: swap; src: url('/fonts/euphonia/noto-serif-georgian-400.woff2') format('woff2'); }
@@ -110,7 +122,7 @@ body { background: var(--ground); font-family: var(--type); }
 /* The theme switcher, in the bar's own materials. */
 .theme-pick { display: flex; align-items: center; gap: 0.4rem; color: var(--text-muted); }
 .theme-pick[hidden] { display: none; }
-.theme-pick select { font: inherit; color: var(--paper); background: var(--case); border: 1px solid var(--frame); padding: 0.15rem 0.4rem; cursor: pointer; }
+.theme-pick select { --pad: 0.4rem; font: inherit; color: var(--paper); background: var(--case); border: 1px solid var(--frame); padding: 0.15rem var(--pad); cursor: pointer; }
 .theme-pick select:hover { border-color: var(--accent); }
 .theme-pick select:focus-visible { outline: 2px solid var(--focus); outline-offset: 1px; }
 /* The map's buttons have nothing to do over the builder. */
@@ -156,6 +168,9 @@ body { background: var(--ground); font-family: var(--type); }
   .ribbon-track { animation: none; }
   .ribbon-top .ribbon-copy { display: none; }
 }
+/* A theme whose Latin face has no small capitals sets those headings in
+   plain case rather than let the browser fake them. */
+:root[data-caps=none] :is(.b-section > legend, .sheet-head h2, .sheet-block h3) { font-variant-caps: normal; }
 /* A theme's ornament (euphonia.ornament.js), where it has one: the bar
    stands on its rule, and the sheet's head carries its band, edge to edge
    inside the frame. */
@@ -163,6 +178,12 @@ body { background: var(--ground); font-family: var(--type); }
   border-bottom: var(--ornament-rule-height) solid transparent;
   border-image: var(--ornament-rule) 0 0 100% 0 / 0 0 var(--ornament-rule-height) 0 repeat;
 }
+.sheet-khipu { display: none; }
+/* A theme with the khipu (Tawantinsuyu) draws the abilities as knotted
+   cords beside their table (euphonia.ornament.js, khipu). */
+:root[data-khipu] .sheet-khipu { display: block; margin: 0.4rem 0 0.8rem; color: var(--ink); }
+.sheet-khipu svg { display: block; max-width: 100%; height: auto; }
+.sheet-khipu .knot { fill: var(--sheet-mark); }
 :root[data-ornament] .sheet::before { content: ''; display: block; height: var(--ornament-band-height); margin: -1.2rem -1.4rem 1rem; background: var(--ornament-band) 0 0 / auto 100% repeat-x; }
 /* The tabs stand on the bar's rule like a folder's: each a raised card with
    its top corners rounded, the open one in the page's ground with its foot
@@ -357,8 +378,23 @@ details.region:target > summary, details.region[open] > summary { color: var(--a
 .b-field[hidden], .b-problem[hidden] { display: none; }
 /* Every field and list one height, whatever the control. */
 .builder input[type=text], .builder input[type=number], .builder select {
-  font: inherit; color: var(--text); background: var(--surface); border: 1px solid var(--frame); padding: 0 0.55rem; min-width: 0; max-width: 100%;
+  --pad: 0.55rem;
+  font: inherit; color: var(--text); background: var(--surface); border: 1px solid var(--frame); padding: 0 var(--pad); min-width: 0; max-width: 100%;
   block-size: 2.2rem; box-sizing: border-box;
+}
+/* Every list's caret is its own: a triangle in its text's colour, so it
+   brings no colour of its own, inset from the right edge as far as the text
+   is from the left, so it never meets the border. One gradient, so it has no
+   seam: a 90° wedge opening up from the bottom's middle, which meets the top
+   corners of a box twice as wide as it is tall. */
+:is(.builder, .theme-pick) select {
+  --caret: 0.32em;
+  appearance: none;
+  padding-inline-end: calc(2 * var(--pad) + 2 * var(--caret));
+  background-image: conic-gradient(from -45deg at 50% 100%, currentColor 90deg, transparent 0);
+  background-position: calc(100% - var(--pad)) 55%;
+  background-size: calc(2 * var(--caret)) var(--caret);
+  background-repeat: no-repeat;
 }
 .builder select:disabled { color: var(--text-dim); border-color: var(--rule); }
 .builder input:focus-visible, .builder select:focus-visible { outline: 2px solid var(--focus); outline-offset: 1px; }
@@ -402,6 +438,17 @@ details.region:target > summary, details.region[open] > summary { color: var(--a
 .b-about summary:focus-visible, .sheet summary:focus-visible { outline: 2px solid var(--focus); outline-offset: 1px; }
 .b-about div, .sheet details > div { font-size: 0.9rem; }
 .b-about div { color: var(--text-soft); }
+/* An option a class's table counts: its choice, with the art it counts as
+   beside it where the window has room and below it where it hasn't, and
+   what it does folded underneath. */
+.b-option { margin: 0 0 0.9rem; }
+.b-option-row { display: flex; flex-wrap: wrap; align-items: end; gap: 0 1rem; }
+.b-option-row > .b-field { flex: 1 1 16rem; margin-bottom: 0.3rem; }
+.b-option-row > .b-art { flex: 0 1 11rem; }
+.b-option > .b-about { margin: 0 0 0.3rem; }
+.b-given { margin: 0 0 0.3rem; }
+/* A skill the character has without choosing it, in a choice that offers it. */
+.b-checks .is-yours { color: var(--text-dim); }
 .b-facts, .sheet-facts { display: grid; grid-template-columns: auto 1fr; gap: 0.25rem 0.9rem; margin: 0 0 0.8rem; font-size: 0.9rem; }
 .b-facts dt { color: var(--text-faint); }
 .b-facts dd, .sheet-facts dd { margin: 0; }
@@ -462,5 +509,9 @@ details.region:target > summary, details.region[open] > summary { color: var(--a
   [data-tab=builder] .builder { display: block; padding: 0; }
   [data-tab=builder] .sheet { position: static; max-height: none; overflow: visible; border: 0; box-shadow: none; background: none; padding: 0; color: var(--print-ink); }
   [data-tab=builder] .sheet * { color: var(--print-ink); border-color: var(--print-rule); }
+  /* The theme's band heads the printed sheet too, printed as drawn (it is
+     the theme's one mark there; the text stays black), and at the text's
+     edge, now the sheet has no padding to bleed it into. */
+  :root[data-ornament][data-tab=builder] .sheet::before { margin: 0 0 1rem; print-color-adjust: exact; }
   ul.catalog li, header.masthead, footer { border-color: var(--print-rule); }
 }

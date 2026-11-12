@@ -124,7 +124,10 @@ const decode = t => t.replace(/&#(\d+);/g, (_, n) => String.fromCodePoint(n)).re
   .replace(/&(amp|lt|gt|quot|apos|nbsp);/g, (_, e) => ({ amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: '\u00a0' })[e]);
 export function pageText(html = injectEuphonia(read('euphonia/index.html')), data = tonguesData()) {
   const strings = o => typeof o === 'string' ? [o] : o && typeof o === 'object' ? Object.values(o).flatMap(strings) : [];
-  const json = readdirSync(new URL('src/euphonia/', ROOT)).filter(f => f.endsWith('.json')).flatMap(f => strings(JSON.parse(read(`src/euphonia/${f}`))));
+  // The themes' file is the record behind the page's looks (its sources'
+  // titles, in their own scripts), not text the page sets; the theme names the
+  // switcher shows are in the built page.
+  const json = readdirSync(new URL('src/euphonia/', ROOT)).filter(f => f.endsWith('.json') && f !== 'euphonia.themes.json').flatMap(f => strings(JSON.parse(read(`src/euphonia/${f}`))));
   const shown = decode(html.replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>/g, ' ').replace(/<[^>]+>/g, ' '));
   // Attributes a reader meets as text: titles and labels.
   const said = [...html.matchAll(/\s(?:title|aria-label|alt|placeholder)="([^"]*)"/g)].map(m => decode(m[1]));
@@ -221,5 +224,5 @@ export function verifyTongueRibbons(html, data = tonguesData(), maps = shippedMa
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href && process.argv[2] === '--inventory') {
   const { faces, stacks } = declaredFaces();
   const files = family => faces.filter(f => f.family === family).map(f => f.file);
-  console.log(JSON.stringify({ chars: inkOf(pageText()), themes: stacks.map(t => ({ id: t.id, families: t.families.map(files) })) }));
+  console.log(JSON.stringify({ chars: inkOf(pageText()), themes: stacks.map(t => ({ id: t.id, smallCaps: THEMES.find(x => x.id === t.id).smallCaps, families: t.families.map(files) })) }));
 }

@@ -19,11 +19,14 @@ export const currentTheme = () => THEMES.find(t => t.id === root.dataset.theme) 
 function paint() {
   const t = currentTheme(), o = t.ornament;
   tint?.setAttribute('content', t.tokens.ground);
+  if (t.smallCaps) delete root.dataset.caps; else root.dataset.caps = 'none';
+  if (t.khipu) root.dataset.khipu = ''; else delete root.dataset.khipu;
   if (!o) { delete root.dataset.ornament; return; }
   const css = getComputedStyle(root), course = parseFloat(css.fontSize) * o.course;
-  const colors = { stone: css.getPropertyValue('--frame').trim(), joint: css.getPropertyValue('--frame-edge').trim() };
+  const v = name => css.getPropertyValue(`--${name}`).trim();
+  const colors = { stone: v('frame'), joint: v('frame-edge'), ring: v('accent'), dyes: [v('signal'), v('accent'), v('paper'), v('case')] };
   for (const part of ['rule', 'band']) {
-    const { svg, height } = ORNAMENTS[o.kind](o[part], course, colors);
+    const { svg, height } = ORNAMENTS[o.kind](o[part], course, colors, o);
     root.style.setProperty(`--ornament-${part}`, `url("data:image/svg+xml,${encodeURIComponent(svg)}")`);
     root.style.setProperty(`--ornament-${part}-height`, `${height}px`);
   }

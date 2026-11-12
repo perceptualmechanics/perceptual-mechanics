@@ -40,6 +40,17 @@ FACES = {
     'eb-garamond-italic.woff2': ('EBGaramond-Italic[wght].ttf', 'bba2c4499c93c9612b90b9825d32b07da52fce2fe57562a1eb6b833553f93c4e', BODY),
     'alegreya.woff2': ('Alegreya[wght].ttf', 'ba5564634b93a8f8ba57b48cd4f1ae7417d2b4656fbac779028679b00de3cf12', BODY),
     'alegreya-italic.woff2': ('Alegreya-Italic[wght].ttf', 'fa915eec76227935dc5fb678953c94b71287c360928013cfdb441dfe52f5a391', BODY),
+    'amiri-text.woff2': ('Amiri-Regular.ttf', 'ab391c4147d054c48976e98322ad0eefe1427aa0e0502a12a4c75d80a70cfcd7', 400),
+    'amiri-text-bold.woff2': ('Amiri-Bold.ttf', 'cfccb794268e7d573d857e6d6a67f89cf8a053e8ffd85dfa0c8ec1bb36fc4827', 700),
+    'amiri-text-italic.woff2': ('Amiri-Italic.ttf', '770e4da44d0459c0ddd6484483d475b95f2d088dd27ce472427624081eb68c70', 400),
+    'noto-serif.woff2': ('NotoSerif[wdth,wght].ttf', '4d8e6761424656867019081a1a01336f3cb086982682698714054fc33f782713', BODY),
+    'noto-serif-italic.woff2': ('NotoSerif-Italic[wdth,wght].ttf', 'e87acbc6c0efd0d9a20d6a8cbbda2b266c14be3a3a6f5af8ec9d7b2460570ad1', BODY),
+    'source-serif.woff2': ('SourceSerif4[opsz,wght].ttf', '97b2d4da6e3cb494b5a1e66ae176914d852ccabef49e0c02c0df25f3e39aca0b', BODY),
+    'source-serif-italic.woff2': ('SourceSerif4-Italic[opsz,wght].ttf', '15fbc7e4679489a501998c3669272637a6646388ef7e4bd77eebb5bf967a1f42', BODY),
+    'gentium.woff2': ('GentiumBookPlus-Regular.ttf', 'fe7b64eeacc430fcf46836a6f0dfe00d2c5a15483ed36692a2a185cb23ec2a5c', 400),
+    'gentium-bold.woff2': ('GentiumBookPlus-Bold.ttf', 'b39c3fb12e2e15e2336f2ec6d051c778618ec25f7360bc4765bfe755b408c011', 700),
+    'gentium-italic.woff2': ('GentiumBookPlus-Italic.ttf', '7a0ab4bd78701fa46d325e362654c41a47e2a0a5cb4a3eebc94dce89c2ee7df1', 400),
+    'noto-nastaliq-400.woff2': ('NotoNastaliqUrdu[wght].ttf', '98a4787f34eb6fde57fb9a1121a8f216301196ab0da98ea110cad581be8abbcd', 400),
     'amiri-400.woff2': ('Amiri-Regular.ttf', 'ab391c4147d054c48976e98322ad0eefe1427aa0e0502a12a4c75d80a70cfcd7', 400),
     'noto-serif-armenian-400.woff2': ('NotoSerifArmenian[wdth,wght].ttf', '9354b74384d093d59f9a4ad958e188808d58b6f15debeaab18e07bc432f8ce0c', 400),
     'noto-serif-georgian-400.woff2': ('NotoSerifGeorgian[wdth,wght].ttf', 'a13a90c44a612ab80f79032d3edbbc7f6757f0c6b1613dba1a92f38077cccc57', 400),
@@ -61,7 +72,7 @@ FACES = {
 
 # The faces whose small capitals the page sets: the Wheel's planes, in each
 # theme's roman.
-SMALL_CAPS = {'eb-garamond.woff2', 'alegreya.woff2'}
+SMALL_CAPS = {'eb-garamond.woff2', 'alegreya.woff2', 'noto-serif.woff2', 'source-serif.woff2', 'gentium.woff2'}
 
 # Each theme's Latin face also sets the page's interface, whose words are in
 # its scripts rather than its data, so it keeps the whole of Basic Latin,
@@ -98,6 +109,14 @@ def main(src):
         raise SystemExit(f'the themes and FACES disagree: {sorted(declared ^ set(FACES))}')
     fonts = {face: source(src, face) for face in FACES}
     cmaps = {face: font.getBestCmap() for face, font in fonts.items()}
+    # A theme that sets small capitals must have them in its Latin face.
+    for theme in inventory['themes']:
+        roman = theme['families'][0][0]
+        has = 'GSUB' in fonts[roman] and any(r.FeatureTag == 'smcp' for r in fonts[roman]['GSUB'].table.FeatureList.FeatureRecord)
+        if theme['smallCaps'] and not has:
+            raise SystemExit(f"{theme['id']}: claims small capitals its face ({roman}) lacks")
+        if theme['smallCaps'] != (roman in SMALL_CAPS):
+            raise SystemExit(f"{theme['id']}: SMALL_CAPS and the theme disagree about {roman}")
     # In each theme, each character to the first family whose faces all have
     # it; a face keeps what any theme sends it.
     wanted = {face: set() for face in FACES}
