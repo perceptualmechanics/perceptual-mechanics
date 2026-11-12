@@ -2699,3 +2699,13 @@ Ripley's twelve gates came out of `bench.text.js`, and their checks out of
 not be built. The Ripley vessel (7.4.0) stays unmerged on `release/7.4.0`.
 Nothing on the page changes. The 17 remaining corrupted copies of the gate's
 data each still fail.
+
+### 7.3.2 — the title says what it shows
+
+The title at the foot of the landing read "perceptual mechanics" and was named
+"Return to gallery" to a screen reader. Someone who speaks the visible words to
+press it, by voice control, got nothing: WCAG 2.5.3 asks that a control's name
+contain its label. It is named "perceptual mechanics, return to gallery" now,
+which says both. axe 4.14 runs this rule by default, which the 2026-10-11 pass
+predated; it was the landing's one finding at 1440 and 390 wide, and the
+landing is clean again.
