@@ -7,6 +7,7 @@
 import { geoPath } from 'd3-geo';
 import { projectionFor, faces, capOf, ellipseOf } from './euphonia.globe.js';
 import { EYE, MERIDIAN, HORIZON, SIGNS, MONTHS, EAST } from './euphonia.mount.js';
+import { AXES, SPHERES } from './euphonia.wheel.js';
 
 const RAD = Math.PI / 180;
 const sinE = Math.sin(EYE * RAD), cosE = Math.cos(EYE * RAD);
@@ -28,13 +29,22 @@ function clipToGlobe(ctx, view) {
   ctx.beginPath(); ctx.arc(view.cx, view.cy, view.k, 0, 2 * Math.PI); ctx.clip();
 }
 
+// The coast projected for a view, once: the water-lines and the coast's own
+// stroke both trace it, and projecting its rings is most of a frame's work.
+const coasts = new WeakMap();
+function coastPath(view, world) {
+  let coast = coasts.get(view);
+  if (!coast) { coast = new Path2D(); geoPath(projectionFor(view), coast)(world.coast); coasts.set(view, coast); }
+  return coast;
+}
+
 // The colours are the page's, read from its custom properties once.
 export function palette(el) {
   const css = getComputedStyle(el);
   const v = name => css.getPropertyValue(`--map-${name}`).trim();
   return Object.fromEntries(['sea', 'graticule', 'circles', 'land', 'coast', 'river', 'lake', 'historic', 'glow', 'glow-lit', 'sun', 'rim',
     'waterline', 'relief-shelf', 'relief-abyss', 'relief-land', 'relief-lit', 'relief-shade', 'rhumb', 'rose',
-    'brass', 'brass-edge', 'wood', 'wood-edge', 'paper', 'ink']
+    'brass', 'brass-edge', 'wood', 'wood-edge', 'paper', 'ink', 'wheel-low', 'crimson', 'scarlet']
     .map(n => [n, v(n)]));
 }
 
@@ -51,15 +61,15 @@ function waterLines(view, world, colors, dpr) {
   const ctx = waterCanvas.getContext('2d');
   ctx.clearRect(0, 0, view.width, view.height);
   ctx.lineJoin = ctx.lineCap = 'round';
-  ctx.beginPath(); geoPath(projectionFor(view), ctx)(world.coast);
+  const coast = coastPath(view, world);
   for (let k = WATERLINES; k >= 1; k--) {
     const offset = WATERLINE_GAP * k * (k + 1) / 2 * dpr;
     ctx.globalCompositeOperation = 'source-over';
     ctx.globalAlpha = 1 - (k - 1) / WATERLINES;
-    ctx.strokeStyle = colors.waterline; ctx.lineWidth = 2 * offset; ctx.stroke();
+    ctx.strokeStyle = colors.waterline; ctx.lineWidth = 2 * offset; ctx.stroke(coast);
     ctx.globalCompositeOperation = 'destination-out';
     ctx.globalAlpha = 1;
-    ctx.lineWidth = 2 * offset - 2 * WATERLINE_WIDTH * dpr; ctx.stroke();
+    ctx.lineWidth = 2 * offset - 2 * WATERLINE_WIDTH * dpr; ctx.stroke(coast);
   }
   ctx.globalCompositeOperation = 'source-over';
   return waterCanvas;
@@ -95,7 +105,7 @@ export function drawLines(ctx, view, world, colors, dpr) {
   clipToGlobe(ctx, view);
   ctx.lineJoin = 'round';
   stroke(world.graticule, colors.graticule, 0.5);
-  stroke(world.coast, colors.coast, 0.7);
+  ctx.strokeStyle = colors.coast; ctx.lineWidth = 0.7 * dpr; ctx.stroke(coastPath(view, world));
   stroke(world.rivers, colors.river, 0.7);
   stroke(world.lakes, colors.circles, 0.5);
   ctx.setLineDash([3 * dpr, 2 * dpr]); stroke(world.historic, colors.historic, 0.5); ctx.setLineDash([]);
@@ -119,6 +129,118 @@ export function drawLines(ctx, view, world, colors, dpr) {
 }
 // A rose's star, its longest points, in CSS pixels.
 const ROSE_STAR = 11;
+
+// The Wheel, faint behind the globe and its mount: the cosmos about the
+// earth, which is the globe. Its rings run from the globe's limb (0) to its
+// rim (1), the window's edge about the globe's centre less a margin, each
+// ring's axes eased from the limb's circle to the rim's ellipse, so the
+// cosmos fills the window about the globe whatever its shape. Nearest the
+// earth are the spheres, then the Revelator's roads in the page's crimson,
+// each on a track of its own, then the realms at their height and bearing,
+// and past the rim, in the margin, the four words of the height and the
+// bearing. `rim` is in globe radii at zoom
+// 1 (its axes, and the margin beyond it); `view` is the globe as the window
+// frames it at home, since the Wheel stays when the globe moves.
+const WHEEL_SPHERES = [0, 0.6], WHEEL_ROADS = [0.66, 0.84], WHEEL_REALMS = 0.93;
+// How faint: the rings, the roads, and the lettering.
+const WHEEL_RING_ALPHA = 0.16, WHEEL_ROAD_ALPHA = 0.3, WHEEL_TYPE_ALPHA = 0.45;
+// The spheres are named where their rings cross this bearing: up and to the
+// ordered side, clear of the globe's meridian ring and the realms' names.
+const WHEEL_SPHERE_NAMES = 150;
+// Type sizes in rem: the realms, the spheres and roads, the rim's words.
+const WHEEL_REALM_REM = 0.72, WHEEL_SMALL_REM = 0.62, WHEEL_RIM_REM = 0.66;
+// Where things stand on the Wheel, for its drawing and its ambient life
+// (euphonia.ambient.js) alike: a ring's axes, a point at a ring and bearing,
+// each sphere's ring, each road's track, and the realms' ring.
+export function wheelGeometry(view, rim, roadCount) {
+  const { cx, cy, k } = view;
+  const axes = t => [k * (1 + (rim.x - 1) * t), k * (1 + (rim.y - 1) * t)];
+  return {
+    cx, cy, axes,
+    point: (t, deg) => { const [rx, ry] = axes(t); return [cx + rx * Math.cos(deg * RAD), cy - ry * Math.sin(deg * RAD)]; },
+    sphereT: i => WHEEL_SPHERES[0] + (WHEEL_SPHERES[1] - WHEEL_SPHERES[0]) * (i + 1) / SPHERES.length,
+    roadT: j => WHEEL_ROADS[0] + (WHEEL_ROADS[1] - WHEEL_ROADS[0]) * j / Math.max(1, roadCount - 1),
+    realmT: WHEEL_REALMS,
+  };
+}
+export function drawWheel(ctx, view, { realms, roads }, rim, colors, dpr, font, rem) {
+  const { cx, cy, axes, point, sphereT, roadT } = wheelGeometry(view, rim, roads.length), k = view.k;
+  const type = (size, style = '') => { ctx.font = `${style} ${size * rem * dpr}px ${font}`; };
+  // Lettering that runs inward from the rim: away from the edge it is near.
+  const inward = deg => {
+    const c = Math.cos(deg * RAD), s = Math.sin(deg * RAD);
+    ctx.textAlign = c > 0.25 ? 'right' : c < -0.25 ? 'left' : 'center';
+    ctx.textBaseline = s > 0.25 ? 'top' : s < -0.25 ? 'bottom' : 'middle';
+  };
+  ctx.save();
+  ctx.lineWidth = 0.6 * dpr;
+  ctx.strokeStyle = colors.rim;
+  ctx.fillStyle = colors.paper;
+
+  // The spheres, Air to the Empyrean, each named along its ring.
+  ctx.globalAlpha = WHEEL_RING_ALPHA;
+  SPHERES.forEach((_, i) => { const [rx, ry] = axes(sphereT(i)); ctx.beginPath(); ctx.ellipse(cx, cy, rx, ry, 0, 0, 2 * Math.PI); ctx.stroke(); });
+  ctx.globalAlpha = WHEEL_TYPE_ALPHA;
+  type(WHEEL_SMALL_REM);
+  ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+  const a = WHEEL_SPHERE_NAMES * RAD;
+  // Named only where the rings stand a line of type apart at that bearing; on
+  // a narrow window they crowd together there and the names would pile up.
+  const [x0, y0] = point(sphereT(0), WHEEL_SPHERE_NAMES), [x1, y1] = point(sphereT(1), WHEEL_SPHERE_NAMES);
+  if (Math.hypot(x1 - x0, y1 - y0) >= WHEEL_SMALL_REM * rem * dpr) SPHERES.forEach((name, i) => {
+    const [rx, ry] = axes(sphereT(i)), [x, y] = point(sphereT(i), WHEEL_SPHERE_NAMES);
+    // Along the ring's tangent, turned to read left to right.
+    let turn = Math.atan2(-ry * Math.cos(a), -rx * Math.sin(a));
+    if (Math.abs(turn) > Math.PI / 2) turn += Math.PI;
+    ctx.save(); ctx.translate(x, y); ctx.rotate(turn); ctx.fillText(name, 0, -1.5 * dpr); ctx.restore();
+  });
+
+  // The roads: an arc round the Wheel through their planes, or a line
+  // through the centre for the one that passes the Middle World.
+  const place = new Map(realms.map(r => [r.name, r.at]));
+  roads.forEach((road, j) => {
+    const t = roadT(j);
+    const [rx, ry] = axes(t);
+    const ring = road.through.map(n => place.get(n)).filter(at => at !== 'centre');
+    ctx.globalAlpha = WHEEL_ROAD_ALPHA;
+    ctx.strokeStyle = ctx.fillStyle = colors.crimson;
+    ctx.beginPath();
+    if (road.centre) { ring.forEach((at, i) => { ctx[i ? 'lineTo' : 'moveTo'](...point(t, at)); if (!i) ctx.lineTo(cx, cy); }); }
+    else ctx.ellipse(cx, cy, rx, ry, 0, -road.from * RAD, -(road.from + road.span) * RAD, true);
+    ctx.stroke();
+    for (const at of ring) { ctx.beginPath(); ctx.arc(...point(t, at), 1.6 * dpr, 0, 2 * Math.PI); ctx.fill(); }
+    ctx.globalAlpha = WHEEL_TYPE_ALPHA;
+    ctx.fillStyle = colors.paper;
+    type(WHEEL_SMALL_REM, 'italic');
+    const mid = road.centre ? ring[0] : road.from + road.span / 2;
+    inward(mid);
+    ctx.fillText(road.name, ...point(t, mid));
+  });
+
+  // The realms where the Wheel files them, in small capitals; the Middle
+  // World is the globe.
+  type(WHEEL_REALM_REM);
+  ctx.fontVariantCaps = 'small-caps';
+  for (const r of realms) {
+    if (r.at === 'centre') continue;
+    inward(r.at);
+    ctx.fillText(r.name, ...point(WHEEL_REALMS, r.at));
+  }
+  // The height and the bearing, in the middle of the margin past the rim:
+  // across it above and below, and turned to run along it at the sides.
+  ctx.fontVariantCaps = 'normal';
+  type(WHEEL_RIM_REM);
+  ctx.letterSpacing = `${0.2 * WHEEL_RIM_REM * rem * dpr}px`;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  for (const [word, at] of Object.entries(AXES)) {
+    const c = Math.round(Math.cos(at * RAD)), s = Math.round(Math.sin(at * RAD)), out = k * rim.margin / 2;
+    const [x, y] = point(1, at);
+    ctx.save(); ctx.translate(x + c * out, y - s * out); ctx.rotate(-c * Math.PI / 2);
+    ctx.fillText(word.toUpperCase(), 0, 0);
+    ctx.restore();
+  }
+  ctx.restore();
+}
 
 // Over the lines: the tropics and polar circles, the book's regions and
 // their places, the picked place, and the limb over all. obliquity places

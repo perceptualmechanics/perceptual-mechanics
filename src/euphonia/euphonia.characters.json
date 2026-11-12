@@ -2,10 +2,10 @@
  "provenance": {
   "source": "Euphonia.md",
   "master": "~/Documents/euphonia/Euphonia.md",
-  "sha256": "7b3e4a74f6735bd89b7bd65e50f765c303530c976b4592cbaab823defbeb5118",
-  "modified": "2026-11-11T17:05:29-05:00",
+  "sha256": "51a85362370a24bbfffa649226f70d37e09b5badaf91646643bffd31a6c5cec3",
+  "modified": "2026-11-12T08:00:06-05:00",
   "exporter": "class-kit/site_export.py",
-  "exporter_version": 10,
+  "exporter_version": 11,
   "rules": {
    "banned": [
     "eladrin",
@@ -118,7 +118,7 @@
      "Stealth"
     ],
     "tool": "Tinker's Tools",
-    "equipment": "Choose A or B: (A) Tinker's Tools, Traveler's Clothes, Lamp, 7 GP; or (B) 50 GP",
+    "equipment": "Choose A or B: (A) Tinker's Tools, Traveler's Clothes; or (B) 50 GP",
     "about": "You work abroad for Mutapa, under the cover it gives its people: a Mhizha taught you to retune curiosities (see Mutapan Curiosities). Every Mutapan lamp in a Viennese drawing room drifts, so a quiet technician with Tinker's Tools can enter any great house in Europe and be thanked for it. What you carry home is what you saw. Mutapa's spymaster is brilliant and badly resourced, and her service runs on people like you. You may be a Shona clerk of the House of the Bird, Mutapa's bank, a Khoekhoe go-between from Hoerikwaggo or a foreigner recruited at Sofala; loyal, bought or both. Europe has just worked out what platinum is, and you're the one in the room (see Mutapa and the Indian Ocean, in The State of the World). Mhizha, Counsellors and Rogues come this way.",
     "door": "Any house that owns a curiosity lets you in to retune it, and thanks you.",
     "debt": "Mutapa's spymaster expects a report."

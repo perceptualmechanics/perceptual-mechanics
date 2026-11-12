@@ -11,7 +11,9 @@ import { inline, blocks } from './euphonia.markdown.js';
 
 const STORE_KEY = 'pm-euphonia-character';
 const PARAM = 'c';
-const signed = n => (n >= 0 ? `+${n}` : `−${-n}`);
+// A number the sheet can't know yet (no scores chosen, say) shows as a dash.
+const known = n => (Number.isFinite(n) ? String(n) : '—');
+const signed = n => (!Number.isFinite(n) ? '—' : n >= 0 ? `+${n}` : `−${-n}`);
 const blank = () => ({ name: '', species: '', option: '', size: '', background: '', increases: {}, method: 'standard', base: {}, classes: [{ class: '', level: 1, subclass: '' }], skills: {}, improvements: {}, originFeats: {}, featLists: {}, spells: {}, armor: '', shield: false, homeland: '', styles: {}, expertise: {} });
 
 // The character in the address: its choices as JSON, base64url.
@@ -25,6 +27,9 @@ function decode(code) {
 }
 
 // A small element builder: h('p', { class: 'x' }, 'text', child).
+// A part of the page comes as nodes, lists of them nested however deep the
+// sheet builds them, and nulls where it leaves something out.
+const present = children => children.flat(Infinity).filter(c => c !== null && c !== undefined && c !== false);
 function h(tag, attrs = {}, ...children) {
   const el = document.createElement(tag);
   for (const [k, v] of Object.entries(attrs)) {
@@ -33,7 +38,7 @@ function h(tag, attrs = {}, ...children) {
     else if (k.startsWith('on')) el.addEventListener(k.slice(2), v);
     else el.setAttribute(k, v === true ? '' : v);
   }
-  el.append(...children.flat().filter(c => c !== null && c !== undefined && c !== false));
+  el.append(...present(children));
   return el;
 }
 const options = (values, chosen, prompt) => [
@@ -47,8 +52,7 @@ const idFor = field => `problem-${field.replace(/[^\w-]+/g, '-')}`;
 // control with the same key takes focus back.
 function rebuild(container, ...children) {
   const key = container.contains(document.activeElement) ? document.activeElement.dataset.key : null;
-  // What a group leaves out comes as null, which isn't an element to add.
-  container.replaceChildren(...children.flat().filter(c => c !== null && c !== undefined && c !== false));
+  container.replaceChildren(...present(children));
   if (key) container.querySelector(`[data-key="${CSS.escape(key)}"]`)?.focus();
 }
 
@@ -196,7 +200,7 @@ export async function initBuilder(panel) {
     if (speciesTraits.dataset.for !== (species?.name ?? '')) {
       speciesTraits.dataset.for = species?.name ?? '';
       const placed = species && book.placement(species.name);
-      speciesTraits.replaceChildren(...(species ? [
+      rebuild(speciesTraits, ...(species ? [
         placed ? h('p', { class: 'b-note' }, `In Euphonia${placed.status === 'draft' ? ' (a draft)' : ''}: ${placed.line}.`) : null,
         h('details', {}, h('summary', {}, `${species.name}: ${species.creature_type}, ${species.size}, speed ${species.speed}`),
         ...species.traits.map(t => h('div', { html: blocks(`**${t.name}.** ${t.text}`) + (t.options ?? []).map(o => blocks(`**${o.name}.** ${o.text}`)).join('') })))] : []));
@@ -478,7 +482,7 @@ export async function initBuilder(panel) {
       h('h4', {}, c.label),
       h('ul', {}, [...c.chosen].sort((a, b) => a.level - b.level || a.name.localeCompare(b.name)).map(sp => h('li', {},
         `${sp.level ? `Level ${sp.level}` : 'Cantrip'}: ${sp.name}${sp.school ? `, ${sp.school}` : ''}${sp.special && !/^[—–]$/.test(sp.special) ? ` (${sp.special})` : ''}`)))));
-    sheet.replaceChildren(
+    rebuild(sheet,
       h('header', { class: 'sheet-head' },
         h('h2', { id: 'sheet-title' }, state.name.trim() || 'Your character'),
         h('p', {}, who || 'Choose a class, a species and a background.'),
@@ -493,17 +497,17 @@ export async function initBuilder(panel) {
         h('table', { class: 'sheet-abilities' },
           h('thead', {}, h('tr', {}, h('th', { scope: 'col' }, 'Ability'), h('th', { scope: 'col' }, 'Score'), h('th', { scope: 'col' }, 'Modifier'), h('th', { scope: 'col' }, 'Saving throw'))),
           h('tbody', {}, result.saves.map(s => h('tr', {},
-            h('th', { scope: 'row' }, s.ability), h('td', {}, Number.isFinite(result.scores[s.ability]) ? String(result.scores[s.ability]) : '—'),
+            h('th', { scope: 'row' }, s.ability), h('td', {}, known(result.scores[s.ability])),
             h('td', {}, signed(result.mod[s.ability])), h('td', {}, `${signed(s.bonus)}${s.proficient ? ' (proficient)' : ''}`)))))),
       h('section', { class: 'sheet-block', 'aria-labelledby': 'sheet-combat' },
         h('h3', { id: 'sheet-combat' }, 'In a fight'),
         h('dl', { class: 'sheet-facts' },
-          h('dt', {}, 'Hit points'), h('dd', {}, `${result.hp}${result.hpFrom.length ? ` (${result.hpFrom.map(x => `+${x.hp} from ${x.from}`).join(', ')})` : ''}, with ${result.hitDice.map(d => `${d.count} d${d.die}`).join(' and ') || 'no'} Hit Dice`),
-          h('dt', {}, 'Armor Class'), h('dd', {}, `${result.armorClass.ac} (${result.armorClass.from})${result.armor ? '' : result.unarmored.length > 1 ? `; without armor, one at a time: ${result.unarmored.map(u => `${u.ac} (${u.from})`).join(', ')}` : ''}`),
+          h('dt', {}, 'Hit points'), h('dd', {}, `${known(result.hp)}${result.hpFrom.length ? ` (${result.hpFrom.map(x => `+${known(x.hp)} from ${x.from}`).join(', ')})` : ''}, with ${result.hitDice.map(d => `${d.count} d${d.die}`).join(' and ') || 'no'} Hit Dice`),
+          h('dt', {}, 'Armor Class'), h('dd', {}, `${known(result.armorClass.ac)} (${result.armorClass.from})${result.armor ? '' : result.unarmored.length > 1 ? `; without armor, one at a time: ${result.unarmored.map(u => `${known(u.ac)} (${u.from})`).join(', ')}` : ''}`),
           h('dt', {}, 'Initiative'), h('dd', {}, signed(result.initiative)),
           h('dt', {}, 'Speed'), h('dd', {}, result.speed ? `${result.speed} feet` : '—'),
           h('dt', {}, 'Size'), h('dd', {}, result.size ?? '—'),
-          h('dt', {}, 'Passive Perception'), h('dd', {}, String(result.passivePerception))),
+          h('dt', {}, 'Passive Perception'), h('dd', {}, known(result.passivePerception))),
         result.warnings.length ? h('ul', { class: 'sheet-warnings' }, result.warnings.map(w => h('li', {}, w.message))) : null),
       h('section', { class: 'sheet-block', 'aria-labelledby': 'sheet-skills' },
         h('h3', { id: 'sheet-skills' }, 'Skills'),

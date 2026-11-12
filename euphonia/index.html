@@ -15,24 +15,28 @@
   <link rel="stylesheet" href="../styles/euphonia.css">
   <script type="module" src="../src/euphonia/euphonia.map.js"></script>
   <script type="module" src="../src/euphonia/euphonia.tabs.js"></script>
+  <script type="module" src="../src/euphonia/euphonia.ribbons.js"></script>
 </head>
 <body>
 <a href="#map-figure" class="skip-link">Skip to the map</a>
 <main id="main">
 <div class="euphonia-top">
 <header class="masthead">
-  <a class="home" href="/">perceptual mechanics</a>
-  <h1 id="page-title">Euphonia</h1>
-  <p class="kicker">A tabletop setting by Scott Cohen: its classes, the world in 1668, and games to play in it.</p>
+  <h1 id="page-title" class="visually-hidden">Euphonia</h1>
+<!--euphonia-ribbon-top-->
 </header>
+<div class="euphonia-bar">
 <!--euphonia-tabs-->
-<div class="map-stage" id="map-figure" role="region" aria-label="The map of 1668">
+<p class="euphonia-aside"><button type="button" class="map-reset" hidden>Whole world</button> <button type="button" class="map-contents-open" aria-haspopup="dialog" hidden>Contents</button> <button type="button" class="motion-pause" aria-pressed="false" hidden>Pause motion</button> <a class="home" href="/">perceptual mechanics</a></p>
+</div>
+<div class="map-stage" id="map-figure" role="region" aria-label="The globe of 1668">
 <!--euphonia-map-->
 </div>
 <!--euphonia-builder-->
+<!--euphonia-ribbon-bottom-->
 </div>
 </main>
-<div class="wrap">
+<div class="euphonia-foot">
 <!--euphonia-footer-->
 </div>
 </body>

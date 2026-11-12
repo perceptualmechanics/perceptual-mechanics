@@ -1,0 +1,1192 @@
+{
+  "about": "Euphonia in the languages of the cultures the book names, for the ribbons. Each word is printed in the dictionary cited, with the sense quoted from its entry; none is composed or translated here. Where a language's dictionaries give several, the word nearest harmony is taken (harmony or concord, then euphony, then melody, then a sweet voice).",
+  "spelling": "As printed, but for marks a dictionary adds only as a reading aid: Latin vowel lengths, Malay's breve, Italian's stress accent, compound hyphens (Icelandic, Xhosa's noun prefix), Harkavy's double hyphen for the Yiddish maqaf and the middle dot of Carter's Sinhala. Tone and stress marks that belong to the spelling (Twi, Kikongo, Malagasy) are kept. Jäschke prints sgra-dbyaṅs only in his romanisation; it is set here in Tibetan script, letter for letter.",
+  "tongues": [
+    {
+      "language": "Greek",
+      "lang": "grc",
+      "script": "Greek",
+      "word": "εὐφωνία",
+      "roman": "euphōnía",
+      "culture": "Greek",
+      "region": "Europe",
+      "sense": "goodness of voice … excellence of tone … euphony",
+      "source": {
+        "title": "A Greek-English Lexicon",
+        "by": "Liddell, Scott and Jones",
+        "year": 1940,
+        "url": "https://logeion.uchicago.edu/εὐφωνία"
+      },
+      "dated": "Xenophon and Aristotle"
+    },
+    {
+      "language": "Latin",
+      "lang": "la",
+      "script": "Latin",
+      "word": "euphonia",
+      "culture": "Latin",
+      "region": "Europe",
+      "sense": "= εὐφωνία, euphony",
+      "source": {
+        "title": "A Latin Dictionary",
+        "by": "Lewis and Short",
+        "year": 1879,
+        "url": "https://logeion.uchicago.edu/euphonia"
+      },
+      "dated": "Donatus, 4th century"
+    },
+    {
+      "language": "French",
+      "lang": "fr",
+      "script": "Latin",
+      "word": "euphonie",
+      "culture": "French",
+      "region": "Europe",
+      "sense": "Agréable et harmonieuse combinaison des sons.",
+      "source": {
+        "title": "Trésor de la langue française informatisé",
+        "by": "ATILF",
+        "year": 1994,
+        "url": "https://www.cnrtl.fr/definition/euphonie"
+      },
+      "dated": "1300–15"
+    },
+    {
+      "language": "Italian",
+      "lang": "it",
+      "script": "Latin",
+      "word": "eufonia",
+      "culture": "Italy",
+      "region": "Europe",
+      "sense": "Buon suono, suono piacevole.",
+      "source": {
+        "title": "Vocabolario Treccani",
+        "by": "Istituto dell'Enciclopedia Italiana",
+        "year": null,
+        "url": "https://www.treccani.it/vocabolario/eufonia/"
+      },
+      "dated": null
+    },
+    {
+      "language": "Portuguese",
+      "lang": "pt",
+      "script": "Latin",
+      "word": "eufonia",
+      "culture": "Portugal",
+      "region": "Europe",
+      "sense": "Som agradável ou harmonioso.",
+      "source": {
+        "title": "Dicionário Priberam da Língua Portuguesa",
+        "by": "Priberam",
+        "year": null,
+        "url": "https://dicionario.priberam.org/eufonia"
+      },
+      "dated": null
+    },
+    {
+      "language": "Dutch",
+      "lang": "nl",
+      "script": "Latin",
+      "word": "welluidendheid",
+      "culture": "Dutch",
+      "region": "Europe",
+      "sense": "het aangenaam voor het gehoor zijn; vloeiende, aangenaam klinkende opeenvolging",
+      "source": {
+        "title": "Woordenboek der Nederlandsche Taal",
+        "by": "Instituut voor de Nederlandse Taal",
+        "year": null,
+        "url": "https://gtb.ivdnt.org/iWDB/search?actie=article&wdb=WNT&id=M085303"
+      },
+      "dated": "1662"
+    },
+    {
+      "language": "Middle Low German",
+      "lang": "gml",
+      "script": "Latin",
+      "word": "sote klank",
+      "culture": "Low German",
+      "region": "Europe",
+      "sense": "s. klank, sank, melodia, eufonia.",
+      "source": {
+        "title": "Mittelniederdeutsches Handwörterbuch",
+        "by": "Lübben and Walther",
+        "year": 1888,
+        "url": "https://www.gutenberg.org/ebooks/61948"
+      },
+      "dated": "Middle Low German"
+    },
+    {
+      "language": "Icelandic",
+      "lang": "is",
+      "script": "Latin",
+      "word": "samhljóðan",
+      "culture": "Iceland",
+      "region": "The Steppe and the North",
+      "sense": "consonance, harmony",
+      "source": {
+        "title": "An Icelandic-English Dictionary",
+        "by": "Cleasby and Vigfússon",
+        "year": 1874,
+        "url": "https://archive.org/details/icelandicenglish00cleauoft/page/n391"
+      },
+      "dated": "Stjórn, 14th century"
+    },
+    {
+      "language": "Scots",
+      "lang": "sco",
+      "script": "Latin",
+      "word": "accord",
+      "culture": "Scots",
+      "region": "Europe",
+      "sense": "Harmony in music.",
+      "source": {
+        "title": "Dictionary of the Older Scottish Tongue",
+        "by": "Craigie and others",
+        "year": null,
+        "url": "https://dsl.ac.uk/entry/dost/accord_n"
+      },
+      "dated": "1461"
+    },
+    {
+      "language": "Irish",
+      "lang": "ga",
+      "script": "Latin",
+      "word": "comhcheol",
+      "culture": "Irish",
+      "region": "Europe",
+      "sense": "Harmony.",
+      "source": {
+        "title": "Foclóir Gaeilge–Béarla",
+        "by": "Ó Dónaill",
+        "year": 1977,
+        "url": "https://www.teanglann.ie/en/fgb/comhcheol"
+      },
+      "dated": null
+    },
+    {
+      "language": "Swedish",
+      "lang": "sv",
+      "script": "Latin",
+      "word": "välklang",
+      "culture": "Swedish",
+      "region": "Europe",
+      "sense": "om förhållandet l. egenskapen att vara välklingande; särsk. i fråga om … sång l. musik",
+      "source": {
+        "title": "Svenska Akademiens ordbok",
+        "by": "Svenska Akademien",
+        "year": null,
+        "url": "https://www.saob.se/artikel/?seek=välljud"
+      },
+      "dated": null
+    },
+    {
+      "language": "Danish",
+      "lang": "da",
+      "script": "Latin",
+      "word": "velklang",
+      "culture": "Denmark",
+      "region": "Europe",
+      "sense": "behagelig og harmonisk klang",
+      "source": {
+        "title": "DanNet, from Den Danske Ordbog",
+        "by": "Det Danske Sprog- og Litteraturselskab",
+        "year": null,
+        "url": "https://wordnet.dk/dannet/data/synset-56139"
+      },
+      "dated": null
+    },
+    {
+      "language": "Norwegian",
+      "lang": "nb",
+      "script": "Latin",
+      "word": "velklang",
+      "culture": "Norwegian",
+      "region": "Europe",
+      "sense": "klang som lyder harmonisk",
+      "source": {
+        "title": "Bokmålsordboka",
+        "by": "Språkrådet and the University of Bergen",
+        "year": null,
+        "url": "https://ordbokene.no/bm/67469"
+      },
+      "dated": null
+    },
+    {
+      "language": "Polish",
+      "lang": "pl",
+      "script": "Latin",
+      "word": "eufonia",
+      "culture": "Polish",
+      "region": "Europe",
+      "sense": "harmonijne brzmienie głosek w wyrazie",
+      "source": {
+        "title": "Słownik języka polskiego PWN",
+        "by": "PWN",
+        "year": null,
+        "url": "https://sjp.pwn.pl/szukaj/eufonia.html"
+      },
+      "dated": null
+    },
+    {
+      "language": "Czech",
+      "lang": "cs",
+      "script": "Latin",
+      "word": "libozvuk",
+      "culture": "Bohemia",
+      "region": "Europe",
+      "sense": "příjemný zvuk, příjemný souzvuk; eufonie … hud. konsonance",
+      "source": {
+        "title": "Slovník spisovného jazyka českého",
+        "by": "Ústav pro jazyk český",
+        "year": 1960,
+        "url": "https://ssjc.ujc.cas.cz"
+      },
+      "dated": null
+    },
+    {
+      "language": "Russian",
+      "lang": "ru",
+      "script": "Cyrillic",
+      "word": "созвучие",
+      "roman": "sozvuchiye",
+      "culture": "Russia",
+      "region": "Europe",
+      "sense": "Гармоническое сочетание двух или нескольких тонов (муз.)",
+      "source": {
+        "title": "Толковый словарь русского языка",
+        "by": "Ushakov",
+        "year": 1935,
+        "url": "https://gufo.me/dict/ushakov/созвучие"
+      },
+      "dated": null
+    },
+    {
+      "language": "Ukrainian",
+      "lang": "uk",
+      "script": "Cyrillic",
+      "word": "співзвуччя",
+      "roman": "spivzvuchchia",
+      "culture": "Cossack",
+      "region": "Europe",
+      "sense": "Злагоджене, гармонійне звучання.",
+      "source": {
+        "title": "Словник української мови",
+        "by": "Academy of Sciences of the Ukrainian SSR",
+        "year": 1970,
+        "url": "https://goroh.pp.ua/Тлумачення/співзвуччя"
+      },
+      "dated": null
+    },
+    {
+      "language": "Classical Armenian",
+      "lang": "xcl",
+      "script": "Armenian",
+      "word": "ներդաշնակութիւն",
+      "roman": "nerdašnakutʿiwn",
+      "culture": "Armenian",
+      "region": "The Ottomans, Persia and the Horn",
+      "sense": "harmony, accord; symphony; concert.",
+      "source": {
+        "title": "New Dictionary Armenian-English",
+        "by": "Bedrosian",
+        "year": 1879,
+        "url": "https://archive.org/details/cu31924026916100/page/n564"
+      },
+      "dated": null
+    },
+    {
+      "language": "Georgian",
+      "lang": "ka",
+      "script": "Georgian",
+      "word": "მეხმეობა",
+      "roman": "mexmeoba",
+      "culture": "Georgian",
+      "region": "The Ottomans, Persia and the Horn",
+      "sense": "Гармонія",
+      "source": {
+        "title": "Русско-грузинскій словарь",
+        "by": "Chubinov",
+        "year": 1901,
+        "url": "https://archive.org/details/DictRusskoGruzinskiiChubinov/page/n70"
+      },
+      "dated": null
+    },
+    {
+      "language": "Jewish Aramaic",
+      "lang": "jpa",
+      "script": "Hebrew",
+      "word": "נְעִימוּתָא",
+      "roman": "nəʿimutā",
+      "culture": "Jewish",
+      "region": "The Ottomans, Persia and the Horn",
+      "sense": "same, sweetness, melody.",
+      "source": {
+        "title": "A Dictionary of the Targumim, the Talmud Babli and Yerushalmi",
+        "by": "Jastrow",
+        "year": 1903,
+        "url": "https://archive.org/details/dictionaryoftarg0002unse/page/n243"
+      },
+      "dated": "the Targums"
+    },
+    {
+      "language": "Arabic",
+      "lang": "ar",
+      "script": "Arabic",
+      "word": "إِيقَاع",
+      "roman": "īqāʿ",
+      "culture": "Arabic",
+      "region": "The Ottomans, Persia and the Horn",
+      "sense": "Harmony of voices.",
+      "source": {
+        "title": "Arabic-English Dictionary",
+        "by": "Hava",
+        "year": 1899,
+        "url": "https://archive.org/details/arabicenglishdic00hava"
+      },
+      "dated": null
+    },
+    {
+      "language": "Persian",
+      "lang": "fa",
+      "script": "Arabic",
+      "word": "آهنگی",
+      "roman": "āhangī",
+      "culture": "Persian",
+      "region": "The Ottomans, Persia and the Horn",
+      "sense": "Consonance, harmony.",
+      "source": {
+        "title": "A Comprehensive Persian-English Dictionary",
+        "by": "Steingass",
+        "year": 1892,
+        "url": "https://dsal.uchicago.edu/cgi-bin/app/steingass_query.py?page=126"
+      },
+      "dated": null
+    },
+    {
+      "language": "Geʽez",
+      "lang": "gez",
+      "script": "Ethiopic",
+      "word": "ዜማ",
+      "roman": "zēmā",
+      "culture": "Ethiopia",
+      "region": "The Ottomans, Persia and the Horn",
+      "sense": "sonus canorus et suavis, cantus modulatus, modulatio",
+      "source": {
+        "title": "Lexicon linguae aethiopicae",
+        "by": "Dillmann",
+        "year": 1865,
+        "url": "https://archive.org/details/lexiconlinguaeae00dilluoft/page/n554"
+      },
+      "dated": "the Geʽez Bible"
+    },
+    {
+      "language": "Akan (Twi)",
+      "lang": "tw",
+      "script": "Latin",
+      "word": "kyẽ̀kyẽ",
+      "culture": "Akan",
+      "region": "West and Central Africa",
+      "sense": "a sound agreeable to the ear, harmonious, satisfactory, gratifying",
+      "source": {
+        "title": "A Dictionary of the Asante and Fante Language called Tshi",
+        "by": "Christaller",
+        "year": 1881,
+        "url": "https://archive.org/details/dictionaryofasan00chriuoft/page/n312"
+      },
+      "dated": null
+    },
+    {
+      "language": "Kikongo",
+      "lang": "kg",
+      "script": "Latin",
+      "word": "lèeko",
+      "culture": "Kongo",
+      "region": "West and Central Africa",
+      "sense": "harmonie, accord, unisson, mesure",
+      "source": {
+        "title": "Dictionnaire kikongo-français",
+        "by": "Laman",
+        "year": 1936,
+        "url": "https://archive.org/details/dictionnairekikongofrancais"
+      },
+      "dated": null
+    },
+    {
+      "language": "Malagasy",
+      "lang": "mg",
+      "script": "Latin",
+      "word": "midàrona",
+      "culture": "Madagascar",
+      "region": "Mutapa and the Indian Ocean",
+      "sense": "Melodious, musical. Used of the Valiha.",
+      "source": {
+        "title": "A New Malagasy-English Dictionary",
+        "by": "Richardson",
+        "year": 1885,
+        "url": "https://archive.org/details/anewmalagasyeng01richgoog/page/n877"
+      },
+      "dated": null
+    },
+    {
+      "language": "Hindustani",
+      "lang": "ur",
+      "script": "Arabic",
+      "word": "ہم‌آوازی",
+      "roman": "ham-āwāzī",
+      "culture": "Mughal",
+      "region": "India",
+      "sense": "Harmony, concord, accordance",
+      "source": {
+        "title": "A Dictionary of Urdū, Classical Hindī, and English",
+        "by": "Platts",
+        "year": 1884,
+        "url": "https://dsal.uchicago.edu/cgi-bin/app/platts_query.py?qs=harmony"
+      },
+      "dated": null
+    },
+    {
+      "language": "Sanskrit",
+      "lang": "sa",
+      "script": "Devanagari",
+      "word": "एकताल",
+      "roman": "ekatāla",
+      "culture": "Sanskrit",
+      "region": "Mutapa and the Indian Ocean",
+      "sense": "harmony, unison (of song, dance, and instrumental music)",
+      "source": {
+        "title": "A Sanskrit-English Dictionary",
+        "by": "Monier-Williams",
+        "year": 1899,
+        "url": "https://www.sanskrit-lexicon.uni-koeln.de/scans/csl-apidev/getword.php?dict=mw&key=ekatAla"
+      },
+      "dated": "classical"
+    },
+    {
+      "language": "Bengali",
+      "lang": "bn",
+      "script": "Bengali",
+      "word": "একতান",
+      "roman": "ekatāna",
+      "culture": "Bengal",
+      "region": "India",
+      "sense": "a harmonious note; harmony; concert.",
+      "source": {
+        "title": "Samsad Bengali-English Dictionary",
+        "by": "Biswas",
+        "year": null,
+        "url": "https://dsal.uchicago.edu/cgi-bin/app/biswas-bengali_query.py?qs=harmony"
+      },
+      "dated": null
+    },
+    {
+      "language": "Marathi",
+      "lang": "mr",
+      "script": "Devanagari",
+      "word": "तालशुद्ध",
+      "roman": "tālaśuddha",
+      "culture": "Maratha",
+      "region": "India",
+      "sense": "harmonic, harmonious, concordant",
+      "source": {
+        "title": "A Dictionary, Marathi and English",
+        "by": "Molesworth",
+        "year": 1857,
+        "url": "https://dsal.uchicago.edu/cgi-bin/app/molesworth_query.py?qs=concord"
+      },
+      "dated": null
+    },
+    {
+      "language": "Tamil",
+      "lang": "ta",
+      "script": "Tamil",
+      "word": "இன்னிசை",
+      "roman": "iṉṉicai",
+      "culture": "Tamil",
+      "region": "India",
+      "sense": "Melody, harmony",
+      "source": {
+        "title": "Tamil Lexicon",
+        "by": "University of Madras",
+        "year": 1936,
+        "url": "https://dsal.uchicago.edu/cgi-bin/app/tamil-lex_query.py?qs=harmony"
+      },
+      "dated": "Tivākaram"
+    },
+    {
+      "language": "Sinhala",
+      "lang": "si",
+      "script": "Sinhala",
+      "word": "සමශබ්දය",
+      "roman": "samaśabdaya",
+      "culture": "Kandy",
+      "region": "Mutapa and the Indian Ocean",
+      "sense": "harmonious sound",
+      "source": {
+        "title": "A Sinhalese-English Dictionary",
+        "by": "Carter",
+        "year": 1924,
+        "url": "https://dsal.uchicago.edu/cgi-bin/app/carter_query.py?qs=harmonious"
+      },
+      "dated": null
+    },
+    {
+      "language": "Literary Chinese",
+      "lang": "lzh",
+      "script": "Han",
+      "word": "和音",
+      "roman": "héyīn",
+      "culture": "Chinese",
+      "region": "East and Southeast Asia",
+      "sense": "和諧、祥和之音",
+      "source": {
+        "title": "國語辭典",
+        "by": "Ministry of Education, Taiwan",
+        "year": null,
+        "url": "https://www.zdic.net/hant/和音"
+      },
+      "dated": "a Jin-dynasty court song"
+    },
+    {
+      "language": "Japanese",
+      "lang": "ja",
+      "script": "Han",
+      "word": "和音",
+      "roman": "kaon",
+      "culture": "Japanese",
+      "region": "East and Southeast Asia",
+      "sense": "なごやかな音",
+      "source": {
+        "title": "日本国語大辞典",
+        "by": "Shogakukan",
+        "year": null,
+        "url": "https://kotobank.jp/word/和音"
+      },
+      "dated": "菅家文草, about 900"
+    },
+    {
+      "language": "Korean",
+      "lang": "ko",
+      "script": "Hangul",
+      "word": "활음조",
+      "roman": "hwareumjo",
+      "culture": "Korea",
+      "region": "East and Southeast Asia",
+      "sense": "듣기에 좋은 음질",
+      "source": {
+        "title": "표준국어대사전",
+        "by": "National Institute of Korean Language",
+        "year": null,
+        "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=활음조"
+      },
+      "dated": null
+    },
+    {
+      "language": "Khmer",
+      "lang": "km",
+      "script": "Khmer",
+      "word": "មនាបសព្ទ",
+      "roman": "mɔɔ nie bɑɑ sap",
+      "culture": "Khmer",
+      "region": "East and Southeast Asia",
+      "sense": "harmonious sound, melodic sound.",
+      "source": {
+        "title": "Cambodian-English Dictionary",
+        "by": "Headley",
+        "year": 1977,
+        "url": "http://sealang.net/khmer/dictionary.htm"
+      },
+      "dated": null
+    },
+    {
+      "language": "Lao",
+      "lang": "lo",
+      "script": "Lao",
+      "word": "ກອນ",
+      "roman": "kɔːn",
+      "culture": "Lao",
+      "region": "East and Southeast Asia",
+      "sense": "consonance of sound.",
+      "source": {
+        "title": "Lao-English Dictionary",
+        "by": "Kerr",
+        "year": 1972,
+        "url": "http://sealang.net/lao/dictionary.htm"
+      },
+      "dated": null
+    },
+    {
+      "language": "Burmese",
+      "lang": "my",
+      "script": "Myanmar",
+      "word": "ကဏ္ဏသုခ",
+      "roman": "kan na. thu. kha.",
+      "culture": "Burma",
+      "region": "East and Southeast Asia",
+      "sense": "euphony.",
+      "source": {
+        "title": "Myanmar-English Dictionary",
+        "by": "Myanmar Language Commission",
+        "year": 1993,
+        "url": "http://sealang.net/burmese/dictionary.htm"
+      },
+      "dated": null
+    },
+    {
+      "language": "Malay",
+      "lang": "ms",
+      "script": "Latin",
+      "word": "merdu",
+      "culture": "Malay",
+      "region": "East and Southeast Asia",
+      "sense": "Tuneful; melodious — of music … or of a voice",
+      "source": {
+        "title": "A Malay-English Dictionary",
+        "by": "Wilkinson",
+        "year": 1932,
+        "url": "http://sealang.net/malay/dictionary.htm"
+      },
+      "dated": null
+    },
+    {
+      "language": "Javanese",
+      "lang": "jv",
+      "script": "Latin",
+      "word": "laras",
+      "culture": "Javanese",
+      "region": "East and Southeast Asia",
+      "sense": "suitable, appropriate, harmonious (with)… musical tone, note of the scale",
+      "source": {
+        "title": "Javanese-English Dictionary",
+        "by": "Horne",
+        "year": 1974,
+        "url": "https://www.sastra.org/bahasa-dan-budaya/kamus-dan-leksikon/1727-javanese-english-dictionary-horne-1974-1968-hlm-321-356-l"
+      },
+      "dated": null
+    },
+    {
+      "language": "Māori",
+      "lang": "mi",
+      "script": "Latin",
+      "word": "rōreka",
+      "culture": "Māori",
+      "region": "Oceania",
+      "sense": "to be sweet, melodious, tuneful.",
+      "source": {
+        "title": "Te Aka Māori Dictionary",
+        "by": "Moorfield",
+        "year": null,
+        "url": "https://maoridictionary.co.nz/search?keywords=melodious"
+      },
+      "dated": null
+    },
+    {
+      "language": "Classical Nahuatl",
+      "lang": "nci",
+      "script": "Latin",
+      "word": "tuzquinamiquiliztli",
+      "culture": "Nahuatl",
+      "region": "The Americas",
+      "sense": "Consonancia de bozes o de musica.",
+      "source": {
+        "title": "Vocabulario en lengua castellana y mexicana",
+        "by": "Molina",
+        "year": 1571,
+        "url": "https://archive.org/details/vocabularioenlen00moli/page/n69"
+      },
+      "dated": "1571"
+    },
+    {
+      "language": "Aymara",
+      "lang": "ay",
+      "script": "Latin",
+      "word": "sappa",
+      "culture": "Aymara",
+      "region": "The Americas",
+      "sense": "Boz buena suaue.",
+      "source": {
+        "title": "Vocabulario de la lengua aymara",
+        "by": "Bertonio",
+        "year": 1612,
+        "url": "https://archive.org/details/vocabulariodelal00bert/page/n130"
+      },
+      "dated": "1612"
+    },
+    {
+      "language": "Cree",
+      "lang": "cr",
+      "script": "Latin",
+      "word": "miyohtâkosiwin",
+      "culture": "Cree",
+      "region": "The Americas",
+      "sense": "sounding pleasant, having an attractive voice",
+      "source": {
+        "title": "itwêwina, from the Cree: Words dictionary",
+        "by": "Wolvengrey",
+        "year": 2001,
+        "url": "https://itwewina.altlab.app/word/miyohtâkosiwin/"
+      },
+      "dated": null
+    },
+    {
+      "language": "Ojibwe",
+      "lang": "oj",
+      "script": "Latin",
+      "word": "minotaagwad",
+      "culture": "Ojibwe",
+      "region": "The Americas",
+      "sense": "it sounds good",
+      "source": {
+        "title": "Ojibwe People's Dictionary",
+        "by": "University of Minnesota",
+        "year": null,
+        "url": "https://ojibwe.lib.umn.edu/main-entry/minotaagwad-vii"
+      },
+      "dated": null
+    },
+    {
+      "language": "Mapudungun",
+      "lang": "arn",
+      "script": "Latin",
+      "word": "ŋəñuŋəñuŋei",
+      "culture": "Mapuche",
+      "region": "The Americas",
+      "sense": "melodioso",
+      "source": {
+        "title": "Diccionario araucano-español y español-araucano",
+        "by": "Augusta",
+        "year": 1916,
+        "url": "https://archive.org/details/diccionarioarauc02fluoft"
+      },
+      "dated": null
+    },
+    {
+      "language": "English",
+      "lang": "en",
+      "script": "Latin",
+      "word": "euphony",
+      "culture": "English",
+      "region": "Europe",
+      "sense": "pleasing or sweet sound",
+      "source": {
+        "title": "Merriam-Webster Dictionary",
+        "by": "Merriam-Webster",
+        "year": null,
+        "url": "https://www.merriam-webster.com/dictionary/euphony"
+      },
+      "dated": "1606 (Merriam-Webster); 1623, Cockeram (OED)"
+    },
+    {
+      "language": "Spanish",
+      "lang": "es",
+      "script": "Latin",
+      "word": "eufonía",
+      "culture": "Spanish",
+      "region": "Europe",
+      "sense": "Sonoridad agradable que resulta de la acertada combinación de los elementos acústicos de las palabras.",
+      "source": {
+        "title": "Diccionario de la lengua española",
+        "by": "Real Academia Española",
+        "year": null,
+        "url": "https://dle.rae.es/eufon%C3%ADa"
+      },
+      "dated": "1433, Villena, Arte de trovar (DHLE)"
+    },
+    {
+      "language": "German",
+      "lang": "de",
+      "script": "Latin",
+      "word": "Wohlklang",
+      "culture": "German",
+      "region": "Europe",
+      "sense": "angenehmer, schöner klang; wolklang dulcis harmonia",
+      "source": {
+        "title": "Deutsches Wörterbuch",
+        "by": "Jacob and Wilhelm Grimm",
+        "year": null,
+        "url": "https://woerterbuchnetz.de/?sigle=DWB&lemid=W25505"
+      },
+      "dated": "1690, Bödiker; 1691, Stieler"
+    },
+    {
+      "language": "Lithuanian",
+      "lang": "lt",
+      "script": "Latin",
+      "word": "sanlyda",
+      "culture": "Lithuania",
+      "region": "Europe",
+      "sense": "Euphony … Harmony",
+      "source": {
+        "title": "A Dictionary of the Lithuanian and English Languages, part II",
+        "by": "Lalis",
+        "year": 1903,
+        "url": "https://archive.org/details/dictionaryoflith02lali/page/310"
+      },
+      "dated": null
+    },
+    {
+      "language": "Hungarian",
+      "lang": "hu",
+      "script": "Latin",
+      "word": "öszhang",
+      "culture": "Hungarian",
+      "region": "Europe",
+      "sense": "Ezen értelemben megfelel az idegen ‚harmonia’ szónak.",
+      "source": {
+        "title": "A magyar nyelv szótára",
+        "by": "Czuczor and Fogarasi",
+        "year": 1867,
+        "url": "https://czuczor.oszk.hu"
+      },
+      "dated": null
+    },
+    {
+      "language": "Scottish Gaelic",
+      "lang": "gd",
+      "script": "Latin",
+      "word": "comh-fhuaim",
+      "culture": "Gaelic",
+      "region": "Europe",
+      "sense": "Musical concordance, equitone, harmony, consonance.",
+      "source": {
+        "title": "Faclair Gàidhlig",
+        "by": "Dwelly",
+        "year": 1902,
+        "url": "https://archive.org/details/faclairgidhl01dweluoft/page/243"
+      },
+      "dated": null
+    },
+    {
+      "language": "Yiddish",
+      "lang": "yi",
+      "script": "Hebrew",
+      "word": "וואויל־קלאנג",
+      "roman": "voyl-klang",
+      "culture": "Jewish",
+      "region": "Europe",
+      "sense": "Euphony",
+      "source": {
+        "title": "English-Jewish Dictionary",
+        "by": "Harkavy",
+        "year": 1891,
+        "url": "https://archive.org/details/englishyiddishan00harkuoft/page/175"
+      },
+      "dated": null
+    },
+    {
+      "language": "Rabbinic Hebrew",
+      "lang": "he",
+      "script": "Hebrew",
+      "word": "נִיגּוּן",
+      "roman": "niggun",
+      "culture": "Jewish",
+      "region": "The Ottomans, Persia and the Horn",
+      "sense": "musical accent, melodiousness.",
+      "source": {
+        "title": "A Dictionary of the Targumim, the Talmud Babli and Yerushalmi",
+        "by": "Jastrow",
+        "year": 1903,
+        "url": "https://archive.org/details/dictionaryoftarg0002unse/page/n225"
+      },
+      "dated": "Song of Songs Rabbah"
+    },
+    {
+      "language": "Ottoman Turkish",
+      "lang": "ota",
+      "script": "Arabic",
+      "word": "آهنك",
+      "roman": "āheng",
+      "culture": "Ottoman",
+      "region": "The Ottomans, Persia and the Horn",
+      "sense": "A tuning. … Melody; music.",
+      "source": {
+        "title": "A Turkish and English Lexicon",
+        "by": "Redhouse",
+        "year": 1890,
+        "url": "https://archive.org/details/redhouse-a-turkish-and-english-lexicon-1890"
+      },
+      "dated": null
+    },
+    {
+      "language": "Xhosa",
+      "lang": "xh",
+      "script": "Latin",
+      "word": "indingi",
+      "culture": "Xhosa",
+      "region": "Mutapa and the Indian Ocean",
+      "sense": "A harmonious sound; a distant rumbling",
+      "source": {
+        "title": "A Kafir-English Dictionary",
+        "by": "Kropf",
+        "year": 1915,
+        "url": "https://archive.org/details/kafirenglishdict00kroprich/page/254"
+      },
+      "dated": null
+    },
+    {
+      "language": "Tibetan",
+      "lang": "bo",
+      "script": "Tibetan",
+      "word": "སྒྲ་དབྱངས",
+      "roman": "sgra-dbyaṅs",
+      "culture": "Tibet",
+      "region": "The Steppe and the North",
+      "sense": "pleasing tone, harmony, euphony",
+      "source": {
+        "title": "A Tibetan-English Dictionary",
+        "by": "Jäschke",
+        "year": 1881,
+        "url": "https://archive.org/details/tibetanenglishdi00jsuoft/page/119"
+      },
+      "dated": "Tāranātha, as Jäschke cites him"
+    },
+    {
+      "language": "Mongolian",
+      "lang": "mn",
+      "script": "Cyrillic",
+      "word": "аялгуу",
+      "roman": "ayalguu",
+      "culture": "Mongol",
+      "region": "The Steppe and the North",
+      "sense": "harmony; melody",
+      "source": {
+        "title": "A Modern Mongolian-English Dictionary",
+        "by": "Hangin",
+        "year": null,
+        "url": "https://archive.org/details/gombojab-hangin-a-modern-mongolian-english-dictionary/page/40"
+      },
+      "dated": null
+    },
+    {
+      "language": "Vietnamese",
+      "lang": "vi",
+      "script": "Latin",
+      "word": "hòa âm",
+      "culture": "Đại Việt",
+      "region": "East and Southeast Asia",
+      "sense": "chord, harmony, consonance",
+      "source": {
+        "title": "SEAlang Vietnamese dictionary, from Bui Phung's lexicographical material",
+        "by": "Bui Phung",
+        "year": null,
+        "url": "http://sealang.net/vietnamese/dictionary.htm"
+      },
+      "dated": null
+    },
+    {
+      "language": "Thai",
+      "lang": "th",
+      "script": "Thai",
+      "word": "เสียงรื่นหู",
+      "roman": "siang ruen hu",
+      "culture": "Ayutthaya",
+      "region": "East and Southeast Asia",
+      "sense": "euphony",
+      "source": {
+        "title": "SEAlang Thai dictionary, from the Royal Institute's translation equivalents",
+        "by": "Royal Institute of Thailand",
+        "year": null,
+        "url": "http://sealang.net/thai/dictionary.htm"
+      },
+      "dated": null
+    },
+    {
+      "language": "Hawaiian",
+      "lang": "haw",
+      "script": "Latin",
+      "word": "nahenahe",
+      "culture": "Hawaiʻi",
+      "region": "Oceania",
+      "sense": "Soft; slow; gentle, as the voice of music.",
+      "source": {
+        "title": "A Dictionary of the Hawaiian Language",
+        "by": "Andrews",
+        "year": 1865,
+        "url": "https://archive.org/details/cu31924026916167/page/408"
+      },
+      "dated": null
+    },
+    {
+      "language": "Samoan",
+      "lang": "sm",
+      "script": "Latin",
+      "word": "leomalie",
+      "culture": "Samoa",
+      "region": "Oceania",
+      "sense": "to have a pleasant voice.",
+      "source": {
+        "title": "A Grammar and Dictionary of the Samoan Language",
+        "by": "Pratt",
+        "year": 1893,
+        "url": "https://archive.org/details/agrammaranddict00pratgoog/page/n196"
+      },
+      "dated": null
+    }
+  ],
+  "unfound": [
+    {
+      "language": "Shona",
+      "culture": "Mutapa",
+      "searched": [
+        "Hannan, Standard Shona Dictionary (not reachable)",
+        "Elliott, Dictionary of the Tebele and Shuna Languages, 1897"
+      ]
+    },
+    {
+      "language": "Khoekhoe",
+      "culture": "Khoekhoe",
+      "searched": [
+        "Krönlein, Wortschatz der Khoi-Khoin, 1889",
+        "Haacke and Eiseb, Khoekhoegowab Dictionary, 2002 (not reachable)"
+      ]
+    },
+    {
+      "language": "Lingua Franca",
+      "culture": "Lingua Franca",
+      "searched": [
+        "Dictionnaire de la langue franque, 1830"
+      ]
+    },
+    {
+      "language": "Swahili",
+      "culture": "Swahili",
+      "searched": [
+        "Madan, English-Swahili Dictionary, 1902: only phrases the compiler wrote (sauti tamu, ulinganifu wa sauti)"
+      ]
+    },
+    {
+      "language": "Quechua",
+      "culture": "Quechua",
+      "searched": [
+        "González Holguín, Vocabulario, 1608: only the phrase Huañuy allin cunca for 'Boz bonissima'"
+      ]
+    },
+    {
+      "language": "Guaraní",
+      "culture": "Guaraní",
+      "searched": [
+        "Montoya, Vocabulario, 1640: only the phrase Ñeẽ ngatupĭrĭ, 'good voice'"
+      ]
+    },
+    {
+      "language": "Yucatec Maya",
+      "culture": "Maya",
+      "searched": [
+        "Calepino de Motul: only example phrases"
+      ]
+    },
+    {
+      "language": "Yoruba",
+      "culture": "Yoruba",
+      "searched": [
+        "CMS Dictionary of the Yoruba Language, 1913: ladùn, 'sweet; palatable; melodious; elegant', not a word for sound"
+      ]
+    },
+    {
+      "language": "Tagalog",
+      "culture": "Philippine",
+      "searched": [
+        "Nigg, 1904: only the compiler's phrase ayos ng tunog",
+        "Noceda and Sanlúcar, 1754 (OCR unreadable)"
+      ]
+    },
+    {
+      "language": "Manchu",
+      "culture": "Qing",
+      "searched": [
+        "Norman, Comprehensive Manchu-English Dictionary (not reachable)"
+      ]
+    },
+    {
+      "language": "Gujarati",
+      "culture": "Gujarati",
+      "searched": [
+        "Belsare and Deshpande (no open copy)"
+      ]
+    },
+    {
+      "language": "Nepali",
+      "culture": "Nepal",
+      "searched": [
+        "Turner, 1931"
+      ]
+    },
+    {
+      "language": "Kazakh",
+      "culture": "Kazakh",
+      "searched": [
+        "no open dictionary"
+      ]
+    },
+    {
+      "language": "Chagatai",
+      "culture": "Bukhara",
+      "searched": [
+        "Pavet de Courteille, 1870 (headwords unreadable in OCR)"
+      ]
+    },
+    {
+      "language": "Ainu",
+      "culture": "Ainu",
+      "searched": [
+        "Batchelor, 1905"
+      ]
+    },
+    {
+      "language": "Makassarese",
+      "culture": "Makassar",
+      "searched": [
+        "Matthes, 1885: lagoe, 'zangwijs, melodie', a tune"
+      ]
+    },
+    {
+      "language": "Pohnpeian",
+      "culture": "Pohnpei",
+      "searched": [
+        "Rehg and Sohl (not reachable)"
+      ]
+    },
+    {
+      "language": "Tongan",
+      "culture": "Tonga",
+      "searched": [
+        "Churchward, 1959 (not reachable)"
+      ]
+    },
+    {
+      "language": "Hausa",
+      "culture": "Hausa",
+      "searched": [
+        "Bargery, 1934"
+      ]
+    },
+    {
+      "language": "Romani",
+      "culture": "Romani",
+      "searched": [
+        "no open dictionary"
+      ]
+    },
+    {
+      "language": "Venetian",
+      "culture": "Venetian",
+      "searched": [
+        "Boerio, 1867"
+      ]
+    },
+    {
+      "language": "Mohawk",
+      "culture": "Haudenosaunee",
+      "searched": [
+        "Bruyas, Radices verborum iroquaeorum"
+      ]
+    },
+    {
+      "language": "Wendat",
+      "culture": "Wendat",
+      "searched": [
+        "Sagard, 1632",
+        "Potier"
+      ]
+    }
+  ]
+}

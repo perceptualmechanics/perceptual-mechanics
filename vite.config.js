@@ -13,10 +13,12 @@ import { verifyCounts } from './scripts/verify-counts.mjs';
 import { injectLanding } from './scripts/landing.js';
 import { verifyQuizWheel } from './scripts/quiz-wheel.mjs';
 import { verifyBench } from './scripts/verify-bench.mjs';
-import { verifyEuphonia, verifyEuphoniaPages } from './scripts/verify-euphonia.mjs';
+import { euphoniaFiles, verifyEuphonia, verifyEuphoniaPages } from './scripts/verify-euphonia.mjs';
+import { wheelOf } from './src/euphonia/euphonia.wheel.js';
 import { verifyEuphoniaMap, placesData } from './scripts/verify-euphonia-map.mjs';
 import { verifyEuphoniaSrd } from './scripts/verify-euphonia-srd.mjs';
 import { verifyEuphoniaBuilder } from './scripts/verify-euphonia-builder.mjs';
+import { verifyEuphoniaTongues, verifyTongueRibbons } from './scripts/verify-euphonia-tongues.mjs';
 import { injectEuphonia } from './scripts/euphonia-page.js';
 
 const HERE = import.meta.dirname;
@@ -199,6 +201,38 @@ function verifyEuphoniaPlugin() {
   };
 }
 
+// The ribbons' words: each from a dictionary named, its culture one the book
+// names, every character in a face the page ships, and all of them set.
+function verifyEuphoniaTonguesPlugin() {
+  let outDir = resolve(HERE, 'dist');
+  let failed = false;
+  return {
+    name: 'pm-verify-euphonia-tongues',
+    apply: 'build',
+    configResolved(config) {
+      outDir = resolve(config.root, config.build.outDir);
+    },
+    buildEnd(error) {
+      failed = Boolean(error);
+    },
+    renderError() {
+      failed = true;
+    },
+    buildStart() {
+      const { failures, words, unexported, master } = verifyEuphoniaTongues();
+      if (failures) this.error(`verify-euphonia-tongues: ${failures} problem(s) — see above. A word on the ribbons isn't held to its dictionary, the book or a face the page ships.`);
+      if (!master && unexported) this.warn(`verify-euphonia-tongues: ${unexported} culture(s) are named only in chapters the site doesn't carry; the master isn't here to check them.`);
+      console.log(`  ✓ verify-euphonia-tongues: ${words} words, each from its dictionary, every culture in the book, every character in a face`);
+    },
+    closeBundle() {
+      if (failed) return;
+      const { failures, apart } = verifyTongueRibbons(fs.readFileSync(resolve(outDir, 'euphonia/index.html'), 'utf8'));
+      if (failures) this.error(`verify-euphonia-tongues: ${failures} problem(s) with the built ribbons — see above. A word is missing, or look-alikes are bunched.`);
+      console.log(`  ✓ verify-euphonia-tongues: every word on the built ribbons, ${apart === null ? 'no two alike' : `look-alikes at least ${apart} apart`}`);
+    },
+  };
+}
+
 // The map's places, looked up in the vendored gazetteer at build time, so the
 // page carries coordinates for its seats and regions and never the gazetteer.
 const PLACES_ID = 'virtual:euphonia-places';
@@ -211,6 +245,21 @@ function euphoniaPlacesPlugin() {
       const { seats, regions, errors } = placesData();
       if (errors.length) this.error(`euphonia places: ${errors.join('; ')}`);
       return `export default ${JSON.stringify({ seats, regions })};`;
+    },
+  };
+}
+
+// The Wheel behind the globe, worked out here from the export (its realms'
+// places and the Revelator's roads) so the page needn't load the classes.
+const WHEEL_ID = 'virtual:euphonia-wheel';
+function euphoniaWheelPlugin() {
+  return {
+    name: 'pm-euphonia-wheel',
+    resolveId: id => (id === WHEEL_ID ? `\0${WHEEL_ID}` : null),
+    load(id) {
+      if (id !== `\0${WHEEL_ID}`) return null;
+      const d = euphoniaFiles();
+      return `export default ${JSON.stringify(wheelOf(d.wheel.data, d.classes.data))};`;
     },
   };
 }
@@ -346,7 +395,7 @@ function verifyStyleHash(outDir, root) {
 }
 
 export default defineConfig({
-  plugins: [landingMarkupPlugin(), euphoniaMarkupPlugin(), euphoniaPlacesPlugin(), verifyLinksPlugin(), verifyResonancesPlugin(), verifyScrollMarksPlugin(), verifyLandingPlugin(), verifyAriaPlugin(), verifyCssInvariantsPlugin(), verifyCountsPlugin(), verifyQuizWheelPlugin(), verifyBenchPlugin(), verifyEuphoniaPlugin(), verifyEuphoniaMapPlugin(), verifyEuphoniaSrdPlugin(), verifyEuphoniaBuilderPlugin(), prerenderTextPages()],
+  plugins: [landingMarkupPlugin(), euphoniaMarkupPlugin(), euphoniaPlacesPlugin(), euphoniaWheelPlugin(), verifyLinksPlugin(), verifyResonancesPlugin(), verifyScrollMarksPlugin(), verifyLandingPlugin(), verifyAriaPlugin(), verifyCssInvariantsPlugin(), verifyCountsPlugin(), verifyQuizWheelPlugin(), verifyBenchPlugin(), verifyEuphoniaPlugin(), verifyEuphoniaMapPlugin(), verifyEuphoniaSrdPlugin(), verifyEuphoniaBuilderPlugin(), verifyEuphoniaTonguesPlugin(), prerenderTextPages()],
   build: {
     cssMinify: 'esbuild',
     cssTarget: ['chrome87', 'edge88', 'firefox78', 'safari14'],

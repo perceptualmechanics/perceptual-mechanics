@@ -9,26 +9,20 @@ import roseData from './euphonia.roses.json';
 import { orthoLocal, orthoUnproject, subsolar, onLand } from './euphonia.projection.js';
 import { globeWorld, projectionFor, faces } from './euphonia.globe.js';
 import { solarParams, solarEvents } from '../bench/bench.sky.js';
-import { fromScreen, palette, drawFills, drawLines, drawMarks, drawMount, maxZoom } from './euphonia.draw.js';
+import { fromScreen, palette, drawWheel, drawFills, drawLines, drawMarks, drawMount, maxZoom } from './euphonia.draw.js';
 import { viewOf, covers, EXTENT, calendarOf, azimuthOf } from './euphonia.mount.js';
 import { moonAt } from './euphonia.moon.js';
+import { createAmbient } from './euphonia.ambient.js';
 import { datesAt } from './euphonia.calendars.js';
 import { tideAt, hiddenAt } from './euphonia.tide.js';
 import calendars from './euphonia.calendars.json';
 import places from 'virtual:euphonia-places';
+import wheel from 'virtual:euphonia-wheel';
 import { apart, regionShape } from './euphonia.places.js';
-import { prefersReducedMotion, createFrameClock, createPanelCloser, setPanelSide } from '../utils/sceneKit.js';
+import { prefersReducedMotion, createPanelCloser, setPanelSide } from '../utils/sceneKit.js';
 
 const RAD = Math.PI / 180;
 const DAY_MS = 86400000;
-const HOUR_MS = 3600000;
-// While time plays, the words under the map catch up four times a second:
-// the dates table and the moon cost more than a frame, and nobody reads
-// faster.
-const READOUT_MS = 250;
-// Under reduced motion, play steps once a second by the chosen rate instead
-// of running.
-const STEP_MS = 1000;
 // The globe opens turned to Europe and Africa, where the book starts, and the
 // Indian Ocean beyond, set for Amsterdam's latitude, where Blaeu made his.
 const HOME = { lon0: 15, setting: 52.37 };
@@ -41,10 +35,18 @@ const WHEEL_DOUBLING = 240;
 // (a third of a time zone's width), and zoom by half again.
 const KEY_TURN = 5;
 const KEY_ZOOM = 1.5;
+// A held place follows the pointer to within this many CSS pixels, by at most
+// this many of Newton's steps, each turning the mount at most this many
+// degrees, its slopes measured over this many degrees.
+const FOLLOW_PX = 0.25, FOLLOW_STEPS = 6, FOLLOW_MAX_DEG = 15, FOLLOW_DELTA = 1e-3;
+// A step that overshoots is halved at most this many times.
+const FOLLOW_HALVINGS = 10;
+// zoomTo looks for the zoom that lets it centre a point in steps of this
+// ratio, then halves the last step this many times, to well under a pixel; and
+// a focus this close to clampZoom's edge (in globe radii) counts as inside.
+const ZOOM_SEARCH = 1.25, ZOOM_HALVINGS = 30, ROOM_EPSILON = 1e-9;
 // A region's places fill this share of the globe's radius when it's chosen.
 const REGION_FIT = 0.8;
-// A region's zoom plays over this long, unless the reader asks for less motion.
-const ZOOM_MS = 450;
 // A press that moves less than this, in CSS pixels, before it lifts is a tap,
 // not a drag: a finger's or a hand's jitter.
 const TAP_SLOP = 4;
@@ -55,6 +57,24 @@ const EARTH_KM = 6371;
 const CIRCLE_NAME_WEST = 60;
 // The regions' names, in rem: the size of the page's notes.
 const LABEL_REM = 0.85;
+// The Wheel's rim stands this far in from the window's edge, in rem: room for
+// the four words lettered on it.
+const WHEEL_MARGIN_REM = 1.4;
+
+// A CSS timing function as a curve from time to progress: the keywords are
+// cubic Béziers by the spec's own points, and progress at a time is found by
+// halving the Bézier's parameter until its x is the time (thirty halvings
+// pass a double's precision).
+const KEYWORD_EASES = { linear: [0, 0, 1, 1], ease: [0.25, 0.1, 0.25, 1], 'ease-in': [0.42, 0, 1, 1], 'ease-out': [0, 0, 0.58, 1], 'ease-in-out': [0.42, 0, 0.58, 1] };
+function cubicBezier(css) {
+  const [x1, y1, x2, y2] = KEYWORD_EASES[css] ?? css.match(/-?[\d.]+/g).map(Number);
+  const at = (a, b, s) => 3 * a * s * (1 - s) ** 2 + 3 * b * s * s * (1 - s) + s ** 3;
+  return t => {
+    let lo = 0, hi = 1;
+    for (let i = 0; i < 30; i++) { const s = (lo + hi) / 2; if (at(x1, x2, s) < t) lo = s; else hi = s; }
+    return at(y1, y2, (lo + hi) / 2);
+  };
+}
 
 const regions = places.regions.map(regionShape);
 
@@ -108,11 +128,11 @@ export async function initMap(stage) {
   const world = globeWorld(data, roseData.roses);
   const tolerance = data.provenance.tolerance_deg;
   const colors = palette(stage);
-  const cell = stage.querySelector('.map-disc'), canvas = cell.querySelector('canvas');
-  cell.style.setProperty('--mount-aspect', String(2 * EXTENT.halfWidth / (EXTENT.top + EXTENT.bottom)));
+  const cell = stage.querySelector('.map-disc'), canvas = cell.querySelector('canvas:not(.map-ambient)');
+  const ambientCanvas = cell.querySelector('.map-ambient');
   const g = {
     cell, canvas, ctx: canvas.getContext('2d'),
-    fills: document.createElement('canvas'), lines: document.createElement('canvas'),
+    fills: document.createElement('canvas'), lines: document.createElement('canvas'), wheel: document.createElement('canvas'),
     labels: cell.querySelector('.map-labels'),
     tip: Object.assign(document.createElement('span'), { className: 'map-place', hidden: true }),
     ...HOME, zoom: 1, focus: [0, 0], width: 0, height: 0, cssWidth: 0, cssHeight: 0, dpr: 1, baseKey: '',
@@ -125,9 +145,6 @@ export async function initMap(stage) {
     redraw();
   });
 
-  const form = stage.querySelector('form');
-  const date = form.elements.date, time = form.elements.time;
-  const shown = form.querySelector('output');
   // The moment's readouts, on the panel's This moment page, kept up to date
   // whether or not it's open.
   const moment = stage.querySelector('.map-panel-moment');
@@ -135,7 +152,8 @@ export async function initMap(stage) {
   const moonLine = moment.querySelector('.map-moon'), moonLit = moonLine.querySelector('.lit'), moonText = moonLine.querySelector('span');
   const datesTable = moment.querySelector('.map-dates'), datesBody = datesTable.tBodies[0];
   const tideLine = moment.querySelector('.map-tide');
-  const reset = stage.querySelector('.map-reset');
+  // The map's two buttons sit in the bar over it, beside the tabs.
+  const reset = document.querySelector('.map-reset');
   const hiddenText = ({ half, open }) => [
     half === 'dark' ? 'the dark half' : half === 'other' ? 'the other half' : 'as the DM says',
     open && `${open}'s open night`,
@@ -143,24 +161,15 @@ export async function initMap(stage) {
   const day = ms => new Date(ms).toLocaleDateString('en-GB', { timeZone: 'UTC', day: 'numeric', month: 'long' });
   const clock = ms => { const d = new Date(ms); return `${two(d.getUTCHours())}:${two(d.getUTCMinutes())}`; };
 
-  // The instant the map holds, which the date field and the slider show.
-  // The year runs from Samhain 1668 to the end of Samhain 1669, as the date
-  // field allows, and time that plays past its end comes round again.
-  const yearStart = Date.parse(`${date.min}T00:00Z`), yearEnd = Date.parse(`${date.max}T00:00Z`) + DAY_MS;
-  let instant;
-  function setInstant(ms) {
-    instant = yearStart + ((ms - yearStart) % (yearEnd - yearStart) + (yearEnd - yearStart)) % (yearEnd - yearStart);
-    const at = new Date(instant);
-    date.value = at.toISOString().slice(0, 10);
-    time.value = at.getUTCHours() * 60 + at.getUTCMinutes();
-  }
-  const fromInputs = () => {
-    const [y, m, d] = date.value.split('-').map(Number);
-    instant = Date.UTC(y, m - 1, d) + Number(time.value) * 60000;
-  };
-  // It opens on today's month and day in that year, at this moment's UT.
+  // The instant the map holds: today's month and day in the book's year,
+  // which runs from Samhain 1668 to Samhain 1669, at this moment's UT.
   const now = new Date();
-  setInstant(Date.UTC(now.getMonth() >= 10 ? 1668 : 1669, now.getMonth(), now.getDate(), now.getUTCHours(), now.getUTCMinutes()));
+  const instant = Date.UTC(now.getMonth() >= 10 ? 1668 : 1669, now.getMonth(), now.getDate(), now.getUTCHours(), now.getUTCMinutes());
+  // The Wheel behind the globe, alive on its own canvas (euphonia.ambient.js),
+  // its planets where they stood at that instant.
+  const ambient = createAmbient(ambientCanvas, {
+    wheel, colors, instant, sky: { sun: solarParams(instant).longitude, moon: moonAt(instant) }, top: document.querySelector('.euphonia-top'),
+  });
 
   // The labels: one button per region, at its places' mean while the globe
   // faces it.
@@ -224,7 +233,7 @@ export async function initMap(stage) {
   // contents, a region's chapter, a picked place (its facts first, then its
   // region's chapter, opened where the chapter names the place), and the
   // book's other pages. It takes focus on opening and gives it back to what
-  // opened it on closing, by Escape or the ✕.
+  // opened it on closing, by Escape or the ×.
   const panel = stage.querySelector('.map-panel');
   const panelTitle = panel.querySelector('.map-panel-title'), panelContent = panel.querySelector('.map-panel-content');
   const panelPlaces = panel.querySelector('.map-panel-places'), panelRegion = panel.querySelector('.map-panel-region');
@@ -233,11 +242,13 @@ export async function initMap(stage) {
   const nearby = panel.querySelector('.map-panel-nearby'), readNearby = panel.querySelector('.map-panel-read');
   const status = stage.querySelector('.map-status');
   const pages = [...panel.querySelectorAll('.map-panel-page')], back = panel.querySelector('.map-panel-back');
-  const contentsOpen = stage.querySelector('.map-contents-open');
+  const contentsOpen = document.querySelector('.map-contents-open');
   let opener = null, pick = null, nearest = null;
   createPanelCloser(panel, { focus: () => opener?.focus() }, {
     closeBtn: panel.querySelector('.map-panel-close'),
-    onClose: () => { chosen = null; pick = null; status.textContent = ''; light(); },
+    // Closed, the glass draws back to the whole mount as the panel slides
+    // away, the globe still turned where the reader left it.
+    onClose: () => { chosen = null; pick = null; status.textContent = ''; light(); zoomTo({ lon: g.lon0, lat: viewOf(g).lat0 }, 1); },
   });
   panel.querySelector('.map-panel-zoom').addEventListener('click', () => zoomToRegion(chosen));
   readNearby.addEventListener('click', () => {
@@ -274,12 +285,15 @@ export async function initMap(stage) {
     panelTitle.focus();
   });
 
-  // The panel comes in from the right, over the globe's eastern edge.
+  // The panel comes in from the right, over the globe's eastern edge. Whether
+  // it was closed, and so is sliding in now.
   function openPanel(button) {
+    const arriving = !panel.classList.contains('open');
     opener = button;
     if (panel.classList.contains('from-left')) setPanelSide(panel, false);
     panel.scrollTop = 0;
     panel.classList.add('open');
+    return arriving;
   }
   function showRegion(r) {
     for (const p of pages) p.hidden = true;
@@ -306,13 +320,15 @@ export async function initMap(stage) {
     panelRegion.hidden = false;
     light();
   }
-  // A region's name opens its chapter at the start.
+  // A region's name, or a link to it, opens its chapter at the start, and the
+  // glass closes on the region.
   function openChapter(r, button) {
     pick = null;
     pickSection.hidden = true;
     showRegion(r);
     clearMention();
     openPanel(button);
+    zoomToRegion(r);
     redraw();
     requestAnimationFrame(() => panelTitle.focus());
   }
@@ -342,7 +358,8 @@ export async function initMap(stage) {
     panelContent.normalize();
     mentionLine.textContent = '';
   }
-  function jumpTo(place) {
+  // A panel still sliding in goes straight there, so its text arrives still.
+  function jumpTo(place, smooth = true) {
     clearMention();
     const hit = findName([place.name, place.modern]);
     if (!hit) {
@@ -353,8 +370,11 @@ export async function initMap(stage) {
     range.setStart(hit.node, hit.start); range.setEnd(hit.node, hit.end);
     const mark = Object.assign(document.createElement('mark'), { className: 'map-mention', tabIndex: -1 });
     range.surroundContents(mark);
+    // The panel scrolls the mark to its middle; scrollIntoView would scroll
+    // the page under the globe as well.
     requestAnimationFrame(() => {
-      mark.scrollIntoView({ block: 'center', behavior: prefersReducedMotion() ? 'auto' : 'smooth' });
+      const top = mark.getBoundingClientRect().top - panel.getBoundingClientRect().top + panel.scrollTop;
+      panel.scrollTo({ top: top - panel.clientHeight / 2, behavior: smooth && !prefersReducedMotion() ? 'smooth' : 'auto' });
       mark.focus({ preventScroll: true });
     });
     return mark;
@@ -366,10 +386,12 @@ export async function initMap(stage) {
   // as under a glass.
   const fit = () => Math.min((g.cssWidth - 2 * EDGE_PX) / (2 * EXTENT.halfWidth), (g.cssHeight - 2 * EDGE_PX) / (EXTENT.top + EXTENT.bottom));
   const anchor = () => [g.cssWidth / 2, g.cssHeight / 2 + fit() * (EXTENT.top - EXTENT.bottom) / 2];
-  const viewAt = scale => {
+  // The view at a scale, with the globe turned as `turn` says (its spin and
+  // setting), by default as it stands.
+  const viewAt = (scale, turn = g) => {
     const k = fit() * g.zoom, [ax, ay] = anchor();
     return {
-      ...viewOf(g), k: k * scale,
+      ...viewOf(turn), k: k * scale,
       cx: (ax - k * g.focus[0]) * scale, cy: (ay + k * g.focus[1]) * scale,
       width: Math.round(g.cssWidth * scale), height: Math.round(g.cssHeight * scale),
     };
@@ -380,7 +402,10 @@ export async function initMap(stage) {
   // The horizon's calendar, made once for each year shown.
   let calendar = null;
   const calendarFor = year => (calendar?.year === year ? calendar : (calendar = { year, days: calendarOf(year) }));
-  const font = getComputedStyle(stage).fontFamily;
+  // The mount and the Wheel are lettered in the globe's type, roman and (the
+  // Wheel's roads) italic, redrawn once the faces arrive.
+  const font = getComputedStyle(cell).fontFamily;
+  Promise.all([document.fonts.load(`16px ${font}`), document.fonts.load(`italic 16px ${font}`)]).then(() => { g.typeSet = true; redraw(); });
 
   let frame = 0;
   const redraw = () => { if (!frame) frame = requestAnimationFrame(render); };
@@ -389,6 +414,18 @@ export async function initMap(stage) {
     frame = 0;
     if (!g.width) return;
     const v = view();
+    // The Wheel is the frame the cosmos is read in, Good up and Law to the
+    // left, not a place on the earth: it stays as the window frames it at
+    // home while the globe turns, zooms and slides, and is drawn again only
+    // when the window or the type changes.
+    const framing = `${g.width}x${g.height}|${g.dpr}|${g.typeSet}`;
+    if (framing !== g.wheelKey) {
+      g.wheel.width = ambientCanvas.width = g.width; g.wheel.height = ambientCanvas.height = g.height;
+      const [ax, ay] = anchor(), f = fit(), home = { cx: ax * g.dpr, cy: ay * g.dpr, k: f * g.dpr };
+      drawWheel(g.wheel.getContext('2d'), home, wheel, g.rim, colors, g.dpr, font, g.rem);
+      ambient.setFrame({ view: home, rim: g.rim, dpr: g.dpr, rem: g.rem, wheel: g.wheel });
+      g.wheelKey = framing;
+    }
     const key = `${g.lon0}|${g.setting}|${g.zoom}|${g.focus}|${g.width}x${g.height}`;
     if (key !== g.baseKey) {
       for (const c of [g.fills, g.lines]) { c.width = g.width; c.height = g.height; }
@@ -399,7 +436,9 @@ export async function initMap(stage) {
       // and the setting, for those who can't see the ring's degrees.
       g.cell.style.setProperty('--globe-x', `${v.cx / g.dpr}px`);
       g.cell.style.setProperty('--globe-y', `${v.cy / g.dpr}px`);
-      g.cell.setAttribute('aria-label', `The globe, set for ${degrees(g.setting, 'N', 'S')}`);
+      // Set only when it reads differently: each set is news to a screen reader.
+      const label = `The globe, set for ${degrees(g.setting, 'N', 'S')}`;
+      if (g.cell.getAttribute('aria-label') !== label) g.cell.setAttribute('aria-label', label);
     }
     const mount = { setting: g.setting, calendar: calendarFor(new Date(instant).getUTCFullYear()).days, today: azimuthOf(instant), font };
     g.ctx.clearRect(0, 0, g.width, g.height);
@@ -470,8 +509,11 @@ export async function initMap(stage) {
       nearby.hidden = false;
       readNearby.textContent = `Read about ${placeName(nearest.place)}, in ${nearest.region.name}`;
     }
-    openPanel(g.cell);
-    const mark = hit && jumpTo(hit.place);
+    const arriving = openPanel(g.cell);
+    // The glass closes on the pick: to its region's scale (the nearest
+    // region's, outside every glow), and a step past wherever it already is.
+    zoomTo(at, Math.max(regionZoom(hit ? hit.region : nearest.region), g.zoom * KEY_ZOOM));
+    const mark = hit && jumpTo(hit.place, !arriving);
     status.textContent = `Picked ${degrees(at.lat, 'N', 'S')}, ${degrees(at.lon, 'E', 'W')}${hit ? `, in ${hit.region.name}${mark ? `; its chapter opens where it names ${hit.place.name}` : ''}` : ''}.`;
     if (!mark) requestAnimationFrame(() => panelTitle.focus());
     redraw();
@@ -528,44 +570,9 @@ export async function initMap(stage) {
     }));
     moonLit.setAttribute('d', facePath(moon.lit, moon.waxing));
     moonText.textContent = `The moon is ${moon.waxing ? 'waxing' : 'waning'}, ${moon.age.toFixed(1)} days from new and ${Math.round(moon.lit * 100)}% lit; the ${moon.next.phase} moon is on ${day(moon.next.ms)} at ${clock(moon.next.ms)} UT.`;
-    shown.value = clock(instant);
-    readout.textContent = `${new Date(instant).toLocaleDateString('en-GB', { timeZone: 'UTC', day: 'numeric', month: 'long', year: 'numeric' })} (Gregorian), ${shown.value} UT: the sun stands overhead at ${degrees(sun.lat, 'N', 'S')}, ${degrees(sun.lon, 'E', 'W')}.`;
+    readout.textContent = `${new Date(instant).toLocaleDateString('en-GB', { timeZone: 'UTC', day: 'numeric', month: 'long', year: 'numeric' })} (Gregorian), ${clock(instant)} UT: the sun stands overhead at ${degrees(sun.lat, 'N', 'S')}, ${degrees(sun.lon, 'E', 'W')}.`;
   }
   function draw() { readouts(); redraw(); }
-
-  // Play: the instant runs on at the chosen rate (seconds of 1668 a second),
-  // through the scenes' frame clock, which caps a step so a tab come back
-  // from the background doesn't leap the year. Under reduced motion it steps.
-
-  const play = form.elements.play, rate = form.elements.rate;
-  const clockFrame = createFrameClock();
-  let playing = false, ticking = 0, stepping = 0, readAt = 0;
-  function advance(ms) {
-    setInstant(instant + ms);
-    const t = performance.now();
-    if (t - readAt >= READOUT_MS) { readouts(); readAt = t; }
-    redraw();
-  }
-  const tick = () => { advance(clockFrame.tick() * 1000 * Number(rate.value)); ticking = requestAnimationFrame(tick); };
-  // Time runs only while the map can be seen: the builder's tab hides it,
-  // and the page can scroll it away. Playing, it waits and goes on after.
-  let seen = true;
-  function setPlaying(on) {
-    playing = on;
-    play.textContent = on ? 'Pause' : 'Play';
-    play.setAttribute('aria-pressed', String(on));
-    cancelAnimationFrame(ticking); clearInterval(stepping);
-    if (on && !seen) return;
-    if (on && prefersReducedMotion()) stepping = setInterval(() => advance(STEP_MS * Number(rate.value)), STEP_MS);
-    else if (on) { clockFrame.resync(); ticking = requestAnimationFrame(tick); }
-    else readouts();
-  }
-  new IntersectionObserver(([entry]) => {
-    seen = entry.isIntersecting;
-    if (playing) setPlaying(true);
-  }).observe(stage.querySelector('.map-globe'));
-  play.addEventListener('click', () => setPlaying(!playing));
-  rate.addEventListener('change', () => { if (playing) setPlaying(true); });
 
   // Sizes in device pixels, from the globe's drawn size; the names keep the
   // page's small type size whatever the globe's.
@@ -580,6 +587,13 @@ export async function initMap(stage) {
     g.width = g.canvas.width = Math.round(g.cssWidth * g.dpr);
     g.height = g.canvas.height = Math.round(g.cssHeight * g.dpr);
     g.labels.style.fontSize = `${LABEL_REM * rem}px`;
+    // The Wheel's rim: the window's edge about the globe's centre at zoom 1,
+    // less the margin, in globe radii; never inside the globe's limb, which
+    // it is along whichever axis the globe fills (the height, on a wide
+    // window), where the Wheel's top and bottom then lie behind the globe.
+    const [ax, ay] = anchor(), f = fit(), margin = WHEEL_MARGIN_REM * rem;
+    g.rem = rem;
+    g.rim = { x: Math.max(1, (Math.min(ax, g.cssWidth - ax) - margin) / f), y: Math.max(1, (Math.min(ay, g.cssHeight - ay) - margin) / f), margin: margin / f };
     const measure = b => { b.hidden = false; return { w: b.offsetWidth, h: b.offsetHeight }; };
     g.labelSizes = g.buttons.map(measure);
     g.circleSizes = g.circleNames.map(measure);
@@ -588,14 +602,24 @@ export async function initMap(stage) {
     redraw();
   }).observe(stage.querySelector('.map-globe'));
 
-  // Zoom stays between the whole mount and the coasts' resolution, and the
-  // glass's focus where the magnified mount still fills the canvas.
+  // Zoom stays between the whole mount and the coasts' resolution. Along
+  // each axis the glass's focus keeps the magnified mount covering the canvas
+  // where it overflows, and inside it where it doesn't: either way the mount's
+  // middle strays from the canvas's by at most the difference of their half
+  // sizes. Along y the mount's middle sits `rise` above the globe's centre,
+  // which the anchor offsets by rise at zoom 1, so focus `rise * (1 - 1 / zoom)`
+  // centres it.
+  // The focus's room at a zoom, along each axis: its centre and how far it
+  // may stray from it.
+  const room = zoom => {
+    const k = fit() * zoom, rise = (EXTENT.top - EXTENT.bottom) / 2;
+    const slack = (half, size) => Math.abs(half - size / (2 * k));
+    return [[0, slack(EXTENT.halfWidth, g.cssWidth)], [rise * (1 - 1 / zoom), slack((EXTENT.top + EXTENT.bottom) / 2, g.cssHeight)]];
+  };
   function clampZoom() {
     if (!g.cssWidth) return;
     g.zoom = Math.min(Math.max(g.zoom, 1), maxZoom(tolerance, fit()));
-    const free = 1 - 1 / g.zoom;
-    g.focus = [Math.max(-EXTENT.halfWidth * free, Math.min(EXTENT.halfWidth * free, g.focus[0])),
-      Math.max(-EXTENT.bottom * free, Math.min(EXTENT.top * free, g.focus[1]))];
+    g.focus = room(g.zoom).map(([centre, s], i) => Math.max(centre - s, Math.min(centre + s, g.focus[i])));
   }
   // Zoom by `factor` keeping what's under (x, y) still: the glass's focus
   // moves so the same point of the mount stays under the pointer.
@@ -609,10 +633,46 @@ export async function initMap(stage) {
     clampZoom();
     redraw();
   }
-  // A drag works the mount: across, it spins the globe on its axis (at the
-  // centre a radius of travel per radian, so dx pixels turn it dx / k
-  // radians); up or down, it slides the meridian ring through the horizon's
-  // notches, raising or lowering the pole, to the zenith at most.
+  // A drag that takes hold of the globe keeps the place it took hold of under
+  // the pointer, moving the mount only as it can move: spinning the globe on
+  // its axis and sliding the meridian ring through the horizon's notches.
+  // Those are two unknowns, and the place landing on the pointer is two
+  // equations, met by Newton's method on the projection the globe is drawn
+  // with, from where the mount stands. A place dragged past the globe's edge,
+  // or farther than the ring can tip the globe to carry it, can't follow; the
+  // mount goes as far toward the pointer as brings it nearer, and holds.
+  function follow(place, x, y) {
+    const lonlat = [place.lon, place.lat];
+    let turn = { lon0: g.lon0, setting: g.setting };
+    const at = t => projectionFor(viewAt(1, t))(lonlat);
+    const miss = t => { const [px, py] = at(t); return [px - x, py - y]; };
+    for (let i = 0; i < FOLLOW_STEPS; i++) {
+      const r = miss(turn);
+      if (Math.hypot(...r) < FOLLOW_PX) break;
+      const dl = miss({ ...turn, lon0: turn.lon0 + FOLLOW_DELTA }), ds = miss({ ...turn, setting: turn.setting + FOLLOW_DELTA });
+      const j = [[(dl[0] - r[0]) / FOLLOW_DELTA, (ds[0] - r[0]) / FOLLOW_DELTA], [(dl[1] - r[1]) / FOLLOW_DELTA, (ds[1] - r[1]) / FOLLOW_DELTA]];
+      const det = j[0][0] * j[1][1] - j[0][1] * j[1][0];
+      if (!det) break;
+      const cap = v => Math.max(-FOLLOW_MAX_DEG, Math.min(FOLLOW_MAX_DEG, v));
+      const step = [cap((j[1][1] * r[0] - j[0][1] * r[1]) / det), cap((j[0][0] * r[1] - j[1][0] * r[0]) / det)];
+      // Only toward the pointer, and only with the place still in front: a
+      // step that overshoots is halved until it lands nearer, or given up.
+      let next = null;
+      for (let h = 0, f = 1; h < FOLLOW_HALVINGS && !next; h++, f /= 2) {
+        const t = { lon0: turn.lon0 - f * step[0], setting: Math.max(-90, Math.min(90, turn.setting - f * step[1])) };
+        if (Math.hypot(...miss(t)) < Math.hypot(...r) && faces(viewAt(1, t), place)) next = t;
+      }
+      if (!next) break;
+      turn = next;
+    }
+    g.lon0 = ((turn.lon0 + 540) % 360) - 180;
+    g.setting = turn.setting;
+    redraw();
+  }
+  // A drag on the mount or the space about it works the mount directly:
+  // across, it spins the globe on its axis (at the centre a radius of travel
+  // per radian, so dx pixels turn it dx / k radians); up or down, it slides
+  // the meridian ring, raising or lowering the pole, to the zenith at most.
   function drag(dx, dy) {
     const k = fit() * g.zoom;
     g.lon0 = ((g.lon0 - dx / k / RAD + 540) % 360) - 180;
@@ -620,36 +680,87 @@ export async function initMap(stage) {
     redraw();
   }
 
-  // A region chosen: the globe spins its places' mean to face the eye, at
-  // the setting the reader left it, and the glass closes on it until they
-  // fill REGION_FIT of the globe's radius (orthographic carries an angle rho
-  // from the centre to sin rho).
+  // The globe spins a point to face the eye, at the setting the reader left
+  // it, and the glass closes on it to `zoom`. A region's zoom brings its
+  // places to fill REGION_FIT of the globe's radius (orthographic carries an
+  // angle rho from the centre to sin rho). The point comes to the middle of
+  // what the open panel leaves showing, where that is the larger part, and
+  // the glass closes at least far enough for clampZoom to let it: from the
+  // zoom asked for, up until the focus that centres the point lies in the
+  // room clampZoom allows, the edge of that room found by halving.
+  //
+  // On the way, the zoom runs evenly in scale (by its logarithm) while the
+  // point glides on a straight line across the screen to where it settles:
+  // each frame turns the globe, sets the scale, then puts the focus where the
+  // point lands on that line. It moves as the panel slides, over the panel's
+  // own transition (euphonia.css), from the first frame either draws; a
+  // reader who asks for less motion has none there, and none here.
   let zooming = 0;
-  function zoomToRegion(r) {
-    const lon0 = r.centre.lon, v = viewOf({ lon0, setting: g.setting });
-    const [x, y] = orthoLocal(r.centre.lon, r.centre.lat, v.lon0, v.lat0), c = Math.cos(v.roll * RAD), s = Math.sin(v.roll * RAD);
-    const target = { lon0, zoom: REGION_FIT / Math.sin(Math.max(r.spread, 1) * RAD), focus: [x * c + y * s, -x * s + y * c] };
+  const regionZoom = r => REGION_FIT / Math.sin(Math.max(r.spread, 1) * RAD);
+  const zoomToRegion = r => zoomTo(r.centre, regionZoom(r));
+  // Where the point (lon, lat) is on the mount, in radii at zoom 1 from the
+  // globe's centre, with the globe turned to lon0.
+  const onMount = (at, lon0) => {
+    const v = viewOf({ lon0, setting: g.setting });
+    const [x, y] = orthoLocal(at.lon, at.lat, v.lon0, v.lat0), c = Math.cos(v.roll * RAD), s = Math.sin(v.roll * RAD);
+    return [x * c + y * s, -x * s + y * c];
+  };
+  function zoomTo(at, zoom) {
+    const lon0 = at.lon, [px, py] = onMount(at, lon0), f = fit();
+    const cover = panel.classList.contains('open') ? panel.offsetWidth : 0;
+    // Half the canvas, and the shift past the panel, in radii at zoom 1.
+    const S = cover < g.cssWidth / 2 ? cover / (2 * f) : 0;
+    const centred = z => [px + S / z, py];
+    const fits = z => room(z).every(([centre, s], i) => Math.abs(centred(z)[i] - centre) <= s + ROOM_EPSILON);
+    const most = maxZoom(tolerance, f);
+    let z = Math.min(Math.max(zoom, 1), most);
+    if (!fits(z)) {
+      let lo = z;
+      while (z < most && !fits(z)) { lo = z; z = Math.min(most, z * ZOOM_SEARCH); }
+      for (let i = 0; i < ZOOM_HALVINGS && fits(z); i++) { const mid = Math.sqrt(lo * z); if (fits(mid)) z = mid; else lo = mid; }
+    }
+    const target = { lon0, zoom: z, focus: [px + S / z, py] };
     const from = { lon0: g.lon0, zoom: g.zoom, focus: g.focus };
     const dlon = ((target.lon0 - from.lon0 + 540) % 360) - 180;
-    const step = t => {
-      const e = t * t * (3 - 2 * t);
+    // The point on the screen, about the anchor, for a turn, scale and focus.
+    const onScreen = ([x, y], k, focus) => [k * (x - focus[0]), -k * (y - focus[1])];
+    const start = onScreen(onMount(at, from.lon0), f * from.zoom, from.focus), end = onScreen([px, py], f * z, target.focus);
+    const step = e => {
       g.zoom = Math.exp(Math.log(from.zoom) + (Math.log(target.zoom) - Math.log(from.zoom)) * e);
       g.lon0 = ((from.lon0 + dlon * e + 540) % 360) - 180;
-      g.focus = from.focus.map((f, i) => f + (target.focus[i] - f) * e);
+      const [x, y] = onMount(at, g.lon0), k = f * g.zoom;
+      const sx = start[0] + (end[0] - start[0]) * e, sy = start[1] + (end[1] - start[1]) * e;
+      g.focus = [x - sx / k, y + sy / k];
       clampZoom();
       redraw();
     };
     cancelAnimationFrame(zooming);
-    if (prefersReducedMotion()) { step(1); return; }
-    const start = performance.now();
-    const tick = now => { const t = Math.min(1, (now - start) / ZOOM_MS); step(t); if (t < 1) zooming = requestAnimationFrame(tick); };
+    const { seconds, ease } = slide();
+    if (!seconds) { step(1); return; }
+    let begun = 0;
+    const tick = now => {
+      begun ||= now;
+      const t = Math.min(1, (now - begun) / (seconds * 1000));
+      step(ease(t));
+      if (t < 1) zooming = requestAnimationFrame(tick);
+    };
     zooming = requestAnimationFrame(tick);
+  }
+  // The panel's slide, as its stylesheet times it: how long, and the curve,
+  // read from the computed transition on transform. None means no slide.
+  function slide() {
+    const css = getComputedStyle(panel), list = v => v.split(/,(?![^(]*\))/).map(x => x.trim());
+    const k = list(css.transitionProperty).indexOf('transform');
+    if (k < 0) return { seconds: 0 };
+    return { seconds: parseFloat(list(css.transitionDuration)[k]), ease: cubicBezier(list(css.transitionTimingFunction)[k]) };
   }
 
   const pointers = new Map();
-  let pinch = 0, travel = 0;
+  let pinch = 0, travel = 0, grip = null;
   g.canvas.addEventListener('pointerdown', e => {
     if (!pointers.size) travel = 0;
+    // One pointer takes hold of the place under it, where there is one.
+    grip = pointers.size ? null : pointAt(e.offsetX, e.offsetY);
     g.canvas.setPointerCapture(e.pointerId);
     pointers.set(e.pointerId, [e.offsetX, e.offsetY]);
     cancelAnimationFrame(zooming);
@@ -672,14 +783,15 @@ export async function initMap(stage) {
       zoomAt(span / pinch, (c[0] + f[0]) / 2, (c[1] + f[1]) / 2);
       pinch = span;
     } else {
-      drag(next[0] - last[0], next[1] - last[1]);
+      if (grip) follow(grip, next[0], next[1]);
+      else drag(next[0] - last[0], next[1] - last[1]);
       pointers.set(e.pointerId, next);
     }
   });
   // A single press that barely moved picks the place under it.
   const lift = e => {
     const tap = pointers.size === 1 && pointers.has(e.pointerId) && travel < TAP_SLOP && e.type === 'pointerup';
-    pointers.delete(e.pointerId); pinch = 0;
+    pointers.delete(e.pointerId); pinch = 0; grip = null;
     const at = tap && pointAt(e.offsetX, e.offsetY);
     if (at) pickPoint(at);
   };
@@ -702,9 +814,6 @@ export async function initMap(stage) {
       '-': () => zoomAt(1 / KEY_ZOOM, ...mid),
       0: resetView,
       Enter: () => { const v = viewOf(g); pickPoint({ lon: v.lon0, lat: v.lat0 }); },
-      ' ': () => setPlaying(!playing),
-      '[': () => advance(-HOUR_MS), ']': () => advance(HOUR_MS),
-      '{': () => advance(-DAY_MS), '}': () => advance(DAY_MS),
     };
     if (!keys[e.key]) return;
     e.preventDefault();
@@ -717,10 +826,8 @@ export async function initMap(stage) {
   }
   reset.addEventListener('click', resetView);
 
-  date.addEventListener('input', () => { if (date.value) { fromInputs(); draw(); } });
-  time.addEventListener('input', () => { fromInputs(); draw(); });
   draw();
-  form.hidden = false;
+  contentsOpen.hidden = false;
   moonLine.hidden = false;
   datesTable.hidden = false;
   tideLine.hidden = false;

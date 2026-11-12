@@ -5,10 +5,11 @@ import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { plain } from '../src/euphonia/euphonia.markdown.js';
 import { ABILITIES } from '../src/euphonia/euphonia.character.js';
+import { wheelOf } from '../src/euphonia/euphonia.wheel.js';
 
 const ROOT = new URL('../', import.meta.url);
 const read = rel => readFileSync(new URL(rel, ROOT), 'utf8');
-const FILES = ['classes', 'regions', 'adventures', 'legal', 'hidden', 'characters'];
+const FILES = ['classes', 'regions', 'adventures', 'legal', 'hidden', 'characters', 'wheel'];
 
 // What may never reach a Euphonia page, besides draft brackets and braced names
 // awaiting replacement: other people's names, and "Fey" outside the creature
@@ -123,6 +124,18 @@ export function verifyEuphonia(d = euphoniaData()) {
     }
   }
 
+  // The Wheel behind the globe: every plane the table files by height and
+  // bearing reads as a place on it, no two share a place, and each of the
+  // Revelator's five roads runs through two or more of them.
+  const wheel = wheelOf(d.wheel.data, d.classes.data);
+  for (const p of d.wheel.data.planes) {
+    if (/\b(Good|Evil|Law|Chaos)\b/.test(p.filed) && !wheel.realms.some(r => r.name === p.name.replace(/\*\*/g, ''))) fail(`euphonia.wheel.json: ${p.name} is filed "${p.filed}", which isn't a place on the Wheel`);
+  }
+  const places = wheel.realms.map(r => r.at);
+  if (new Set(places).size !== places.length) fail('euphonia.wheel.json: two planes share a place on the Wheel');
+  if (wheel.roads.length !== 5) fail(`the Revelator has ${wheel.roads.length} pathways, not the five roads`);
+  for (const r of wheel.roads) if (r.through.length < 2) fail(`the road ${r.name} runs through ${r.through.length} plane(s) the Wheel files`);
+
   // The footer's text: the SRD attribution, the ORC Notice, the copyright line.
   const legal = d.legal.data;
   if (!/System Reference Document 5\.2\.1/.test(legal.srd_attribution ?? '') || !/Creative Commons Attribution 4\.0/.test(legal.srd_attribution ?? '')) fail('euphonia.legal.json: the SRD attribution is missing or not the SRD 5.2.1 CC-BY 4.0 one');
@@ -134,7 +147,7 @@ export function verifyEuphonia(d = euphoniaData()) {
     for (const p of problemsFound) log.push(`  ${p}`);
   } else {
     const n = k => d[k].data.length;
-    log.push(`ok: one export (${prov[0].sha256.slice(0, 12)}…, exporter v${prov[0].exporter_version}) under this gate's rules; ${checked} strings clean; ${n('classes')} classes, ${n('regions')} regions (draft), ${n('adventures')} games, ${d.characters.data.backgrounds.length} backgrounds; the ORC Notice is ${legal.orc_notice_status === 'draft' ? `a draft with ${legal.orc_open_slots.length} open slots` : 'final'}`);
+    log.push(`ok: one export (${prov[0].sha256.slice(0, 12)}…, exporter v${prov[0].exporter_version}) under this gate's rules; ${checked} strings clean; ${n('classes')} classes, ${n('regions')} regions (draft), ${n('adventures')} games, ${d.characters.data.backgrounds.length} backgrounds, ${wheel.realms.length} places on the Wheel and ${wheel.roads.length} roads; the ORC Notice is ${legal.orc_notice_status === 'draft' ? `a draft with ${legal.orc_open_slots.length} open slots` : 'final'}`);
   }
   return { ok: problemsFound.length === 0, failures: problemsFound.length, log, warnings };
 }
