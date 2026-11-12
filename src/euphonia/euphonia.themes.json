@@ -1,5 +1,9 @@
 {
   "about": "The page's looks, one per power at the setting's table: each a set of role-named tokens the stylesheet and the globe's drawing read, its type, its ornament, and where its colours come from. A theme changes how the page looks, never what it says.",
+  "globe": {
+    "setting": 52.37,
+    "why": "every theme's globe stands as Blaeu's did, its pole raised for Amsterdam's latitude, north up; a theme only turns it to face its place (the globe is the page's decor, not an observatory)"
+  },
   "themes": [
     {
       "id": "letters",
@@ -7,8 +11,7 @@
       "region": "Europe",
       "home": {
         "lon0": 15,
-        "setting": 52.37,
-        "why": "turned to Europe and Africa, where the book starts, and the Indian Ocean beyond, set for Amsterdam's latitude, where Blaeu made his globes"
+        "why": "turned to Europe and Africa, where the book starts, and the Indian Ocean beyond"
       },
       "tokens": {
         "ground": "#0a0a0a",
@@ -129,7 +132,7 @@
       "region": "Mutapa and the Indian Ocean",
       "home": {
         "place": "Great Zimbabwe",
-        "why": "turned to the plateau and set for its latitude, from the stone city whose granite the page is built of"
+        "why": "turned to the plateau, to the stone city whose granite the page is built of"
       },
       "tokens": {
         "ground": "#0b0e15",

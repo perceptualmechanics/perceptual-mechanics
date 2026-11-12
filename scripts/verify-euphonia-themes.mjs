@@ -1,6 +1,6 @@
 import { readFileSync, readdirSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
-import { THEMES, CONTRAST } from '../src/euphonia/euphonia.themes.js';
+import { THEMES, CONTRAST, GLOBE } from '../src/euphonia/euphonia.themes.js';
 import { placesData } from './verify-euphonia-map.mjs';
 
 const ROOT = new URL('../', import.meta.url);
@@ -43,6 +43,8 @@ export function verifyEuphoniaThemes({ themes = THEMES, sources = SOURCES } = {}
       if (m) errors.push(`${file}:${i + 1}: a colour outside the themes (${m[0]})`);
     });
   }
+  // One stance for every theme's globe, north up.
+  if (!(GLOBE?.setting > 0 && GLOBE.setting <= 90) || !GLOBE.why) errors.push('the themes need one globe setting, north up (0 to 90), and why');
   // Every theme: whole, readable, and sourced.
   const keys = Object.keys(themes[0].tokens);
   for (const t of themes) {
@@ -56,9 +58,9 @@ export function verifyEuphoniaThemes({ themes = THEMES, sources = SOURCES } = {}
       measured.push({ theme: t.id, fg, bg, ratio: +r.toFixed(2), need });
       if (r < need) errors.push(`${t.id}: ${fg} on ${bg} is ${r.toFixed(2)} to 1, under ${need}`);
     }
-    // The globe's home: a place the book names, or a framing in degrees.
+    // The globe's home: a place the book names, or a turn in degrees.
     const named = t.home?.place && placesData().regions.some(r => r.places.some(p => p.name === t.home.place));
-    if (!t.home?.why || !(named || (Number.isFinite(t.home?.lon0) && Math.abs(t.home?.setting) <= 90))) errors.push(`${t.id}: its home must name a place the book places, or give lon0 and setting, and say why`);
+    if (!t.home?.why || !(named || Number.isFinite(t.home?.lon0))) errors.push(`${t.id}: its home must name a place the book places, or give lon0, and say why`);
     if (!t.provenance?.length) errors.push(`${t.id}: no provenance; name the objects its colours and motifs come from`);
     // Each entry names what it gives and where it comes from: a real object or
     // text with a source to check it by, or, honestly, who authored it.

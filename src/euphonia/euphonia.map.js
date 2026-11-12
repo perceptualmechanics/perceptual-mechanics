@@ -13,7 +13,7 @@ import { fromScreen, palette, drawWheel, drawFills, drawLines, drawMarks, drawMo
 import { viewOf, covers, EXTENT, calendarOf, azimuthOf } from './euphonia.mount.js';
 import { moonAt } from './euphonia.moon.js';
 import { createAmbient } from './euphonia.ambient.js';
-import { THEMES } from './euphonia.themes.js';
+import { THEMES, GLOBE } from './euphonia.themes.js';
 import { currentTheme, setTheme } from './euphonia.theme.js';
 import { datesAt } from './euphonia.calendars.js';
 import { tideAt, hiddenAt } from './euphonia.tide.js';
@@ -25,12 +25,12 @@ import { prefersReducedMotion, createPanelCloser, setPanelSide } from '../utils/
 
 const RAD = Math.PI / 180;
 const DAY_MS = 86400000;
-// The globe opens as its theme sets it (euphonia.themes.json gives each
-// theme's home and why): turned to a place the book names and set for its
-// latitude, or to a framing the theme gives in degrees.
+// The globe opens standing as every theme's does, north up (GLOBE), the
+// whole mount in view, turned to its theme's home (euphonia.themes.json says
+// each and why): a place the book names, or a framing in degrees.
 const home = () => {
   const h = currentTheme().home, at = h.place && places.regions.flatMap(r => r.places).find(p => p.name === h.place);
-  return at ? { lon0: at.lon, setting: at.lat } : { lon0: h.lon0, setting: h.setting };
+  return { lon0: at ? at.lon : h.lon0, setting: GLOBE.setting, zoom: 1, focus: [0, 0] };
 };
 // The site's renderers stop at 2x; past it the canvases grow for nothing.
 const MAX_PIXEL_RATIO = 2;
@@ -141,7 +141,7 @@ export async function initMap(stage) {
     fills: document.createElement('canvas'), lines: document.createElement('canvas'), wheel: document.createElement('canvas'),
     labels: cell.querySelector('.map-labels'),
     tip: Object.assign(document.createElement('span'), { className: 'map-place', hidden: true }),
-    ...home(), zoom: 1, focus: [0, 0], width: 0, height: 0, cssWidth: 0, cssHeight: 0, dpr: 1, baseKey: '',
+    ...home(), width: 0, height: 0, cssWidth: 0, cssHeight: 0, dpr: 1, baseKey: '',
   };
   // The relief arrives after the coasts and joins them when it does.
   let relief = null;
@@ -732,9 +732,10 @@ export async function initMap(stage) {
     const [x, y] = orthoLocal(at.lon, at.lat, v.lon0, v.lat0), c = Math.cos(v.roll * RAD), s = Math.sin(v.roll * RAD);
     return [x * c + y * s, -x * s + y * c];
   };
-  function zoomTo(at, zoom) {
+  // Where the glass comes to rest on a point: the turn, zoom and focus that
+  // centre it, with the panel's share of the canvas, `cover`, set aside.
+  function aim(at, zoom, cover = panel.classList.contains('open') ? panel.offsetWidth : 0) {
     const lon0 = at.lon, [px, py] = onMount(at, lon0), f = fit();
-    const cover = panel.classList.contains('open') ? panel.offsetWidth : 0;
     // Half the canvas, and the shift past the panel, in radii at zoom 1.
     const S = cover < g.cssWidth / 2 ? cover / (2 * f) : 0;
     const centred = z => [px + S / z, py];
@@ -746,7 +747,10 @@ export async function initMap(stage) {
       while (z < most && !fits(z)) { lo = z; z = Math.min(most, z * ZOOM_SEARCH); }
       for (let i = 0; i < ZOOM_HALVINGS && fits(z); i++) { const mid = Math.sqrt(lo * z); if (fits(mid)) z = mid; else lo = mid; }
     }
-    const target = { lon0, zoom: z, focus: [px + S / z, py] };
+    return { lon0, zoom: z, focus: [px + S / z, py], px, py };
+  }
+  function zoomTo(at, zoom) {
+    const f = fit(), target = aim(at, zoom), { px, py, zoom: z } = target;
     const from = { lon0: g.lon0, zoom: g.zoom, focus: g.focus };
     const dlon = ((target.lon0 - from.lon0 + 540) % 360) - 180;
     // The point on the screen, about the anchor, for a turn, scale and focus.
@@ -848,7 +852,7 @@ export async function initMap(stage) {
   });
 
   function resetView() {
-    Object.assign(g, home(), { zoom: 1, focus: [0, 0] });
+    Object.assign(g, home());
     redraw();
   }
   reset.addEventListener('click', resetView);
