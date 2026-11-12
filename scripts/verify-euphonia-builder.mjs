@@ -116,6 +116,14 @@ export function verifyEuphoniaBuilder({ engine = defaultEngine, srd = read('srd'
     // An Epic Boon level can't take the Ability Score Improvement past 20,
     // which point-buy scores never reach here.
     if (got.problems.length) fail(`${c.name} at level 20: ${got.problems.map(p => p.message).join(' ')}`);
+    // A caster whose list offers cantrips knows some, at the first level it
+    // casts and at 20: the count comes from its table or from the feature
+    // that grants them (the Revelator's Planar Adept).
+    for (const lv of [1, 20]) {
+      const at = lv === 20 ? got : run(complete(someone([{ class: c.name, level: 1 }], { method: 'point', base: POINT_BUY, skills: { [c.name]: c.skills.from.slice(0, c.skills.count), 'Human Skillful': ['Arcana'] } }), c.name), c.name);
+      const casting = at?.spellChoices.find(x => x.key === c.name);
+      if (casting?.list.some(sp => sp.level === 0) && !casting.cantrips) fail(`${c.name} at level ${lv}: its list offers cantrips, but it knows none`);
+    }
     if (got.features.filter(f => f.subclass).length !== c.subclasses[0].features.length) fail(`${c.name}: its subclass's features don't all come through at level 20`);
     // In the order a character gains them: by level, the class's feature
     // that grants the subclass before the subclass's own at that level.

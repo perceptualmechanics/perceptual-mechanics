@@ -216,7 +216,7 @@ export async function initMap(stage) {
   // The point of the globe under (x, y), unless the mount is in the way.
   const pointAt = (x, y) => {
     const v = cssView();
-    if (covers((x - v.cx) / v.k, (v.cy - y) / v.k, g.eye)) return null;
+    if (inTheWay(v, x, y)) return null;
     return orthoUnproject(...fromScreen(v, x, y), v.lon0, v.lat0);
   };
   g.labels.append(g.tip);
@@ -459,27 +459,40 @@ export async function initMap(stage) {
       if (g.cell.getAttribute('aria-label') !== label) g.cell.setAttribute('aria-label', label);
     }
     const mount = { eye: g.eye, calendar: calendarFor(new Date(instant).getUTCFullYear()).days, today: azimuthOf(instant), font };
+    const shown = recede();
     g.ctx.clearRect(0, 0, g.width, g.height);
-    drawMount(g.ctx, v, 'back', mount, colors, g.dpr);
+    g.ctx.globalAlpha = shown;
+    if (shown) drawMount(g.ctx, v, 'back', mount, colors, g.dpr);
+    g.ctx.globalAlpha = 1;
     g.ctx.drawImage(g.fills, 0, 0);
     g.ctx.drawImage(g.lines, 0, 0);
     drawMarks(g.ctx, v, { obliquity: subsolar(instant).obliquity, regions, hoverPlace, pick }, colors, g.dpr);
-    drawMount(g.ctx, v, 'front', mount, colors, g.dpr);
+    g.ctx.globalAlpha = shown;
+    if (shown) drawMount(g.ctx, v, 'front', mount, colors, g.dpr);
+    g.ctx.globalAlpha = 1;
     placeLabels();
     reset.hidden = atHome();
-    // The Wheel recedes as the glass closes on the earth: wholly there at the
-    // whole mount, gone by the zoom at which the mount covers the window on
-    // both axes, evenly in the zoom's logarithm, as the zoom itself runs.
-    const f = fit(), cover = Math.max(g.cssWidth / (2 * EXTENT.halfWidth * f), g.cssHeight / ((EXTENT.top + EXTENT.bottom) * f));
-    ambient.fade(cover > 1 ? 1 - Math.min(1, Math.log(g.zoom) / Math.log(cover)) : 1);
+    ambient.fade(shown);
   }
+  // The Wheel and the mount recede as the glass closes on the earth: wholly
+  // there at the whole mount, gone by the zoom at which the mount covers the
+  // window on both axes, evenly in the zoom's logarithm, as the zoom itself
+  // runs. They frame the whole globe; under the glass they'd stand in front
+  // of the place looked at.
+  function recede() {
+    const f = fit(), cover = Math.max(g.cssWidth / (2 * EXTENT.halfWidth * f), g.cssHeight / ((EXTENT.top + EXTENT.bottom) * f));
+    return cover > 1 ? 1 - Math.min(1, Math.log(g.zoom) / Math.log(cover)) : 1;
+  }
+  // The mount stands in the way of the globe only while it's whole: one the
+  // eye sees through hides nothing behind it.
+  const inTheWay = (v, x, y) => recede() === 1 && covers((x - v.cx) / v.k, (v.cy - y) / v.k, g.eye);
 
   function placeLabels() {
     const v = cssView(), project = projectionFor(v);
     // A point of the canvas on the globe's open face: inside its limb, on
     // the canvas, and clear of the mount.
     const open = (x, y) => Math.hypot(x - v.cx, y - v.cy) <= v.k && x >= 0 && x <= v.width && y >= 0 && y <= v.height
-      && !covers((x - v.cx) / v.k, (v.cy - y) / v.k, g.eye);
+      && !inTheWay(v, x, y);
     const tip = hoverPlace && faces(v, hoverPlace) && project([hoverPlace.lon, hoverPlace.lat]);
     g.tip.hidden = !tip;
     if (tip) {
@@ -706,8 +719,8 @@ export async function initMap(stage) {
     redraw();
   }
 
-  // The globe spins a point to face the eye, at the height the reader left
-  // it, and the glass closes on it to `zoom`. A region's zoom brings its
+  // The globe spins a point to face the eye, the eye comes to its latitude,
+  // and the glass closes on it to `zoom`. A region's zoom brings its
   // places to fill REGION_FIT of the globe's radius (orthographic carries an
   // angle rho from the centre to sin rho). The point comes to the middle of
   // what the open panel leaves showing, where that is the larger part, and
@@ -725,15 +738,17 @@ export async function initMap(stage) {
   const regionZoom = r => REGION_FIT / Math.sin(Math.max(r.spread, 1) * RAD);
   const zoomToRegion = r => zoomTo(r.centre, regionZoom(r));
   // Where the point (lon, lat) is on the mount, in radii at zoom 1 from the
-  // globe's centre, with the globe turned to lon0.
-  const onMount = (at, lon0) => {
-    const v = viewOf({ lon0, eye: g.eye });
+  // globe's centre, with the globe turned to lon0 and seen from `eye`.
+  const onMount = (at, lon0, eye = g.eye) => {
+    const v = viewOf({ lon0, eye });
     return orthoLocal(at.lon, at.lat, v.lon0, v.lat0);
   };
-  // Where the glass comes to rest on a point: the turn, zoom and focus that
-  // centre it, with the panel's share of the canvas, `cover`, set aside.
+  // Where the glass comes to rest on a point: the turn, the eye, zoom and
+  // focus that centre it, with the panel's share of the canvas, `cover`, set
+  // aside. The eye comes to the point's latitude, as far as it can go, so the
+  // point stands at the globe's middle, where the mount never covers it.
   function aim(at, zoom, cover = panel.classList.contains('open') ? panel.offsetWidth : 0) {
-    const lon0 = at.lon, [px, py] = onMount(at, lon0), f = fit();
+    const lon0 = at.lon, eye = clampEye(at.lat), [px, py] = onMount(at, lon0, eye), f = fit();
     // Half the canvas, and the shift past the panel, in radii at zoom 1.
     const S = cover < g.cssWidth / 2 ? cover / (2 * f) : 0;
     const centred = z => [px + S / z, py];
@@ -745,11 +760,11 @@ export async function initMap(stage) {
       while (z < most && !fits(z)) { lo = z; z = Math.min(most, z * ZOOM_SEARCH); }
       for (let i = 0; i < ZOOM_HALVINGS && fits(z); i++) { const mid = Math.sqrt(lo * z); if (fits(mid)) z = mid; else lo = mid; }
     }
-    return { lon0, zoom: z, focus: [px + S / z, py], px, py };
+    return { lon0, eye, zoom: z, focus: [px + S / z, py], px, py };
   }
   function zoomTo(at, zoom) {
     const f = fit(), target = aim(at, zoom), { px, py, zoom: z } = target;
-    const from = { lon0: g.lon0, zoom: g.zoom, focus: g.focus };
+    const from = { lon0: g.lon0, eye: g.eye, zoom: g.zoom, focus: g.focus };
     const dlon = ((target.lon0 - from.lon0 + 540) % 360) - 180;
     // The point on the screen, about the anchor, for a turn, scale and focus.
     const onScreen = ([x, y], k, focus) => [k * (x - focus[0]), -k * (y - focus[1])];
@@ -757,6 +772,7 @@ export async function initMap(stage) {
     const step = e => {
       g.zoom = Math.exp(Math.log(from.zoom) + (Math.log(target.zoom) - Math.log(from.zoom)) * e);
       g.lon0 = ((from.lon0 + dlon * e + 540) % 360) - 180;
+      g.eye = from.eye + (target.eye - from.eye) * e;
       const [x, y] = onMount(at, g.lon0), k = f * g.zoom;
       const sx = start[0] + (end[0] - start[0]) * e, sy = start[1] + (end[1] - start[1]) * e;
       g.focus = [x - sx / k, y + sy / k];

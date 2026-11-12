@@ -449,7 +449,7 @@ function faceGrainOf(eye, from, bottom) {
 function strokeGrain(ctx, view, { dark, light }, wood, width) {
   ctx.save();
   ctx.setTransform(view.k, 0, 0, view.k, view.cx, view.cy);
-  ctx.strokeStyle = wood; ctx.lineWidth = width; ctx.globalAlpha = GRAIN.alpha;
+  ctx.strokeStyle = wood; ctx.lineWidth = width; ctx.globalAlpha *= GRAIN.alpha;
   ctx.globalCompositeOperation = 'multiply'; ctx.stroke(dark);
   ctx.globalCompositeOperation = 'screen'; ctx.stroke(light);
   ctx.restore();

@@ -148,12 +148,11 @@ export function rulebook(srd, euphonia, setting) {
     // carry a school and C, R or M; the setting's say which are new).
     const spells = Object.entries(c.spells ?? {}).flatMap(([level, list]) => list.map(sp => ({ ...sp, level: +level })));
     // A caster that knows its spells counts them in Spells Known, as the
-    // Courtier does; one with no Cantrips column says in its casting feature
-    // how many it chooses ("and two cantrips of your choice from the Courtier
-    // spell list") and names the ones it always knows.
+    // Courtier does; its Cantrips paragraph can name ones it always knows
+    // ("You know *Prestidigitation*, *Mending*, and *Message* … and two
+    // cantrips of your choice"), besides those it chooses.
     const spellsColumn = c.table.columns.includes('Spells Known') ? 'Spells Known' : 'Prepared Spells';
     const cantripLine = c.table.columns.includes('Cantrips') ? null : c.features.map(f => f.text.match(/\*\*Cantrips\.\*\* You know (.+?), and (\w+) cantrips of your choice from the .+? spell list/)).find(Boolean);
-    if (cantripLine && NUMBERS.indexOf(cantripLine[2]) < 1) throw new Error(`${c.name}: a cantrip count the builder doesn't read: "${cantripLine[2]}"`);
     // The feature that lists the options keeps its own rules; the options
     // themselves are choices, each a feature of its own once taken.
     const choices = optionsOf(c);
@@ -166,7 +165,14 @@ export function rulebook(srd, euphonia, setting) {
       improvements: c.table.rows.flatMap(r => (r['Class Features'] ?? '').split(/,\s*/).filter(n => n === 'Ability Score Improvement' || n === 'Epic Boon').map(kind => ({ level: number(r.Level), kind }))),
       slotLevels,
       spellsColumn,
-      cantripCount: cantripLine ? NUMBERS.indexOf(cantripLine[2]) : null,
+      // With no Cantrips column, its cantrips are what its features grant by
+      // the class's level: "two cantrips of your choice from the Revelator
+      // spell list" (Planar Adept), or the Courtier's Cantrips paragraph.
+      cantripGrants: c.table.columns.includes('Cantrips') ? null : c.features.flatMap(f => [...f.text.matchAll(/\b(\w+) cantrips of your choice from the (.+?) spell list/g)]
+        .filter(m => m[2] === c.name).map(m => {
+          if (NUMBERS.indexOf(m[1]) < 1) throw new Error(`${c.name}: ${f.name} grants "${m[1]}" cantrips, a count the builder doesn't read`);
+          return { level: f.level, count: NUMBERS.indexOf(m[1]) };
+        })),
       givenCantrips: cantripLine ? [...cantripLine[1].matchAll(/\*([^*]+)\*/g)].map(m => m[1]) : [],
       choices,
       pact: c.table.columns.includes('Slot Level'),
@@ -626,7 +632,8 @@ export function character(book, state) {
     const verb = c.rules.spellsColumn === 'Spells Known' ? 'known' : 'prepared';
     // A feature's "one extra cantrip from the Cleric spell list" adds to it.
     const extra = features.filter(f => f.class === c.class && new RegExp(`You know one extra cantrip from the ${c.class} spell list`).test(f.text)).length;
-    const entry = { class: c.class, cantrips: (c.rules.cantripCount ?? number(row.Cantrips)) + extra, given: c.rules.givenCantrips, prepared: number(row[c.rules.spellsColumn]), verb, highest: c.rules.pact ? number(row['Slot Level']) : Math.max(0, ...c.rules.slotLevels.filter(l => number(row[l]))) };
+    const granted = c.rules.cantripGrants ? c.rules.cantripGrants.filter(g => g.level <= c.level).reduce((n, g) => n + g.count, 0) : number(row.Cantrips);
+    const entry = { class: c.class, cantrips: granted + extra, given: c.rules.givenCantrips, prepared: number(row[c.rules.spellsColumn]), verb, highest: c.rules.pact ? number(row['Slot Level']) : Math.max(0, ...c.rules.slotLevels.filter(l => number(row[l]))) };
     if (c.rules.spellList.length) pickSpells(c.class, c.class, c.rules.spellList, entry.cantrips, entry.prepared, entry.highest, { verb, given: entry.given });
     return entry;
   });
