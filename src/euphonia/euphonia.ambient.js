@@ -56,7 +56,7 @@ export function createAmbient(canvas, { wheel, colors, instant, sky, top }) {
   const ctx = canvas.getContext('2d');
   const clock = createFrameClock();
   const planets = planetsAt(instant, sky.sun, sky.moon);
-  let frame = null, layout = null, running = 0, seen = true;
+  let frame = null, layout = null, running = 0, seen = true, shown = 1;
 
   // Everything that depends only on the window's size, worked out once each
   // time it changes: where the realms, roads and planets are, and the lights.
@@ -152,7 +152,7 @@ export function createAmbient(canvas, { wheel, colors, instant, sky, top }) {
   // Runs while there's something to see and motion to show; otherwise holds
   // the frame it has.
   function sync() {
-    const go = seen && frame && moving() && !document.hidden && canvas.clientWidth > 0;
+    const go = seen && shown > 0 && frame && moving() && !document.hidden && canvas.clientWidth > 0;
     if (go && !running) { clock.resync(); running = requestAnimationFrame(tick); }
     if (!go && running) { cancelAnimationFrame(running); running = 0; draw(clock.elapsed); }
   }
@@ -161,5 +161,7 @@ export function createAmbient(canvas, { wheel, colors, instant, sky, top }) {
   lessMotion.addEventListener('change', sync);
   new MutationObserver(sync).observe(top, { attributes: true, attributeFilter: ['class'] });
 
-  return { setFrame: next => { setFrame(next); sync(); }, sync };
+  // How much of the Wheel shows, 0 to 1; wholly faded, it stops drawing.
+  const fade = a => { if (a === shown) return; shown = a; canvas.style.opacity = String(a); sync(); };
+  return { setFrame: next => { setFrame(next); sync(); }, sync, fade };
 }

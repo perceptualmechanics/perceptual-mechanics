@@ -449,6 +449,11 @@ export async function initMap(stage) {
     drawMount(g.ctx, v, 'front', mount, colors, g.dpr);
     placeLabels();
     reset.hidden = atHome();
+    // The Wheel recedes as the glass closes on the earth: wholly there at the
+    // whole mount, gone by the zoom at which the mount covers the window on
+    // both axes, evenly in the zoom's logarithm, as the zoom itself runs.
+    const f = fit(), cover = Math.max(g.cssWidth / (2 * EXTENT.halfWidth * f), g.cssHeight / ((EXTENT.top + EXTENT.bottom) * f));
+    ambient.fade(cover > 1 ? 1 - Math.min(1, Math.log(g.zoom) / Math.log(cover)) : 1);
   }
 
   function placeLabels() {
