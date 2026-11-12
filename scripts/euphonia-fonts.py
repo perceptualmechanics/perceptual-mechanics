@@ -31,12 +31,15 @@ OUT = ROOT / 'public/fonts/euphonia'
 
 # Each face, by the file euphonia.css declares: its source, the source's
 # digest, and the weights it keeps. The page's text is set at 400 and its
-# headings at 600, so EB Garamond keeps that span of its weight axis; the
-# other faces set only the ribbons' words and the panel's lists, at 400.
+# headings at 600, so each theme's Latin face keeps that span of its weight
+# axis; the other faces set only the ribbons' words and the panel's lists, at
+# 400.
 BODY = (400, 600)
 FACES = {
     'eb-garamond.woff2': ('EBGaramond[wght].ttf', 'ef9512f92f6d579e5dc75af59a5a4b1b8b47d2eda89e00b954d44520e5369027', BODY),
     'eb-garamond-italic.woff2': ('EBGaramond-Italic[wght].ttf', 'bba2c4499c93c9612b90b9825d32b07da52fce2fe57562a1eb6b833553f93c4e', BODY),
+    'alegreya.woff2': ('Alegreya[wght].ttf', 'ba5564634b93a8f8ba57b48cd4f1ae7417d2b4656fbac779028679b00de3cf12', BODY),
+    'alegreya-italic.woff2': ('Alegreya-Italic[wght].ttf', 'fa915eec76227935dc5fb678953c94b71287c360928013cfdb441dfe52f5a391', BODY),
     'amiri-400.woff2': ('Amiri-Regular.ttf', 'ab391c4147d054c48976e98322ad0eefe1427aa0e0502a12a4c75d80a70cfcd7', 400),
     'noto-serif-armenian-400.woff2': ('NotoSerifArmenian[wdth,wght].ttf', '9354b74384d093d59f9a4ad958e188808d58b6f15debeaab18e07bc432f8ce0c', 400),
     'noto-serif-georgian-400.woff2': ('NotoSerifGeorgian[wdth,wght].ttf', 'a13a90c44a612ab80f79032d3edbbc7f6757f0c6b1613dba1a92f38077cccc57', 400),
@@ -56,12 +59,14 @@ FACES = {
     'noto-serif-thai-400.woff2': ('NotoSerifThai[wdth,wght].ttf', '34a7ad11647c845303aabdde639059806c56b84719e5d2ceb28eb038711bdf53', 400),
 }
 
-# The faces whose small capitals the page sets: the Wheel's planes, in roman.
-SMALL_CAPS = {'eb-garamond.woff2'}
+# The faces whose small capitals the page sets: the Wheel's planes, in each
+# theme's roman.
+SMALL_CAPS = {'eb-garamond.woff2', 'alegreya.woff2'}
 
-# EB Garamond also sets the page's interface, whose words are in its scripts
-# rather than its data, so it keeps the whole of Basic Latin, Latin-1, Latin
-# Extended-A and the page's punctuation whatever the inventory holds.
+# Each theme's Latin face also sets the page's interface, whose words are in
+# its scripts rather than its data, so it keeps the whole of Basic Latin,
+# Latin-1, Latin Extended-A and the page's punctuation whatever the inventory
+# holds.
 LATIN_TEXT = ''.join(map(chr, [*range(0x20, 0x7F), *range(0xA0, 0x180)])) + '‘’“”–—…·°′″×−'
 
 
@@ -88,21 +93,23 @@ def weighed(font, face):
 def main(src):
     inventory = json.loads(subprocess.run(['node', str(ROOT / 'scripts/verify-euphonia-tongues.mjs'), '--inventory'],
                                           check=True, capture_output=True, text=True).stdout)
-    declared = {f for family in inventory['families'] for f in family}
+    declared = {f for theme in inventory['themes'] for family in theme['families'] for f in family}
     if declared != set(FACES):
-        raise SystemExit(f'euphonia.css and FACES disagree: {sorted(declared ^ set(FACES))}')
+        raise SystemExit(f'the themes and FACES disagree: {sorted(declared ^ set(FACES))}')
     fonts = {face: source(src, face) for face in FACES}
     cmaps = {face: font.getBestCmap() for face, font in fonts.items()}
-    # Each character to the first family whose faces all have it.
+    # In each theme, each character to the first family whose faces all have
+    # it; a face keeps what any theme sends it.
     wanted = {face: set() for face in FACES}
-    for c in inventory['chars']:
-        family = next((fam for fam in inventory['families'] if all(ord(c) in cmaps[f] for f in fam)), None)
-        if family is None:
-            raise SystemExit(f'no face has U+{ord(c):04X} ({c})')
-        for f in family:
-            wanted[f].add(c)
-    for f in inventory['families'][0]:
-        wanted[f].update(LATIN_TEXT)
+    for theme in inventory['themes']:
+        for c in inventory['chars']:
+            family = next((fam for fam in theme['families'] if all(ord(c) in cmaps[f] for f in fam)), None)
+            if family is None:
+                raise SystemExit(f"{theme['id']}: no face has U+{ord(c):04X} ({c})")
+            for f in family:
+                wanted[f].add(c)
+        for f in theme['families'][0]:
+            wanted[f].update(LATIN_TEXT)
     OUT.mkdir(parents=True, exist_ok=True)
     # Only the faces declared live here. The folder is in iCloud Drive, which
     # keeps a rewritten file's rival as "name 2.woff2", so anything else goes,

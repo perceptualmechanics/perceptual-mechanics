@@ -13,6 +13,8 @@ import { fromScreen, palette, drawWheel, drawFills, drawLines, drawMarks, drawMo
 import { viewOf, covers, EXTENT, calendarOf, azimuthOf } from './euphonia.mount.js';
 import { moonAt } from './euphonia.moon.js';
 import { createAmbient } from './euphonia.ambient.js';
+import { THEMES } from './euphonia.themes.js';
+import { currentTheme, setTheme } from './euphonia.theme.js';
 import { datesAt } from './euphonia.calendars.js';
 import { tideAt, hiddenAt } from './euphonia.tide.js';
 import calendars from './euphonia.calendars.json';
@@ -23,9 +25,13 @@ import { prefersReducedMotion, createPanelCloser, setPanelSide } from '../utils/
 
 const RAD = Math.PI / 180;
 const DAY_MS = 86400000;
-// The globe opens turned to Europe and Africa, where the book starts, and the
-// Indian Ocean beyond, set for Amsterdam's latitude, where Blaeu made his.
-const HOME = { lon0: 15, setting: 52.37 };
+// The globe opens as its theme sets it (euphonia.themes.json gives each
+// theme's home and why): turned to a place the book names and set for its
+// latitude, or to a framing the theme gives in degrees.
+const home = () => {
+  const h = currentTheme().home, at = h.place && places.regions.flatMap(r => r.places).find(p => p.name === h.place);
+  return at ? { lon0: at.lon, setting: at.lat } : { lon0: h.lon0, setting: h.setting };
+};
 // The site's renderers stop at 2x; past it the canvases grow for nothing.
 const MAX_PIXEL_RATIO = 2;
 // Wheel delta, in pixels, for each doubling of the zoom: Chrome's notch is
@@ -135,7 +141,7 @@ export async function initMap(stage) {
     fills: document.createElement('canvas'), lines: document.createElement('canvas'), wheel: document.createElement('canvas'),
     labels: cell.querySelector('.map-labels'),
     tip: Object.assign(document.createElement('span'), { className: 'map-place', hidden: true }),
-    ...HOME, zoom: 1, focus: [0, 0], width: 0, height: 0, cssWidth: 0, cssHeight: 0, dpr: 1, baseKey: '',
+    ...home(), zoom: 1, focus: [0, 0], width: 0, height: 0, cssWidth: 0, cssHeight: 0, dpr: 1, baseKey: '',
   };
   // The relief arrives after the coasts and joins them when it does.
   let relief = null;
@@ -251,6 +257,15 @@ export async function initMap(stage) {
     onClose: () => { chosen = null; pick = null; status.textContent = ''; light(); zoomTo({ lon: g.lon0, lat: viewOf(g).lat0 }, 1); },
   });
   panel.querySelector('.map-panel-zoom').addEventListener('click', () => zoomToRegion(chosen));
+  // A region whose power has a theme offers it; the page never changes on its
+  // own.
+  const themeOffer = panel.querySelector('.map-panel-theme'), themeButton = themeOffer.querySelector('button');
+  function offerTheme(r) {
+    const offer = r && THEMES.find(t => t.region === r.name && t.id !== currentTheme().id);
+    themeOffer.hidden = !offer;
+    if (offer) { themeButton.textContent = `See the page in the colours of ${offer.name}`; themeButton.dataset.theme = offer.id; }
+  }
+  themeButton.addEventListener('click', () => setTheme(themeButton.dataset.theme));
   readNearby.addEventListener('click', () => {
     showRegion(nearest.region);
     nearby.hidden = true;
@@ -318,6 +333,7 @@ export async function initMap(stage) {
     }
     panelTitle.textContent = r.name;
     panelRegion.hidden = false;
+    offerTheme(r);
     light();
   }
   // A region's name, or a link to it, opens its chapter at the start, and the
@@ -398,14 +414,19 @@ export async function initMap(stage) {
   };
   const view = () => viewAt(g.dpr);
   const cssView = () => viewAt(1);
-  const atHome = () => g.zoom === 1 && g.lon0 === HOME.lon0 && g.setting === HOME.setting;
+  const atHome = () => g.zoom === 1 && g.lon0 === home().lon0 && g.setting === home().setting;
   // The horizon's calendar, made once for each year shown.
   let calendar = null;
   const calendarFor = year => (calendar?.year === year ? calendar : (calendar = { year, days: calendarOf(year) }));
-  // The mount and the Wheel are lettered in the globe's type, roman and (the
+  // The mount and the Wheel are lettered in the theme's type, roman and (the
   // Wheel's roads) italic, redrawn once the faces arrive.
-  const font = getComputedStyle(cell).fontFamily;
-  Promise.all([document.fonts.load(`16px ${font}`), document.fonts.load(`italic 16px ${font}`)]).then(() => { g.typeSet = true; redraw(); });
+  let font;
+  function loadType() {
+    font = getComputedStyle(cell).fontFamily;
+    const asked = font;
+    Promise.all([document.fonts.load(`16px ${font}`), document.fonts.load(`italic 16px ${font}`)]).then(() => { if (font === asked) { g.typeSet = font; redraw(); } });
+  }
+  loadType();
 
   let frame = 0;
   const redraw = () => { if (!frame) frame = requestAnimationFrame(render); };
@@ -421,9 +442,9 @@ export async function initMap(stage) {
     const framing = `${g.width}x${g.height}|${g.dpr}|${g.typeSet}`;
     if (framing !== g.wheelKey) {
       g.wheel.width = ambientCanvas.width = g.width; g.wheel.height = ambientCanvas.height = g.height;
-      const [ax, ay] = anchor(), f = fit(), home = { cx: ax * g.dpr, cy: ay * g.dpr, k: f * g.dpr };
-      drawWheel(g.wheel.getContext('2d'), home, wheel, g.rim, colors, g.dpr, font, g.rem);
-      ambient.setFrame({ view: home, rim: g.rim, dpr: g.dpr, rem: g.rem, wheel: g.wheel });
+      const [ax, ay] = anchor(), f = fit(), framed = { cx: ax * g.dpr, cy: ay * g.dpr, k: f * g.dpr };
+      drawWheel(g.wheel.getContext('2d'), framed, wheel, g.rim, colors, g.dpr, font, g.rem);
+      ambient.setFrame({ view: framed, rim: g.rim, dpr: g.dpr, rem: g.rem, wheel: g.wheel });
       g.wheelKey = framing;
     }
     const key = `${g.lon0}|${g.setting}|${g.zoom}|${g.focus}|${g.width}x${g.height}`;
@@ -827,11 +848,23 @@ export async function initMap(stage) {
   });
 
   function resetView() {
-    Object.assign(g, HOME, { zoom: 1, focus: [0, 0] });
+    Object.assign(g, home(), { zoom: 1, focus: [0, 0] });
     redraw();
   }
   reset.addEventListener('click', resetView);
 
+  // A new theme recolours the globe and its Wheel from the same geometry: the
+  // palette is read again, the relief takes its new colours, and the view's
+  // layers and the Wheel are drawn afresh in the theme's colours and type.
+  document.addEventListener('euphonia:theme', () => {
+    Object.assign(colors, palette(stage));
+    relief?.recolor(colors);
+    g.baseKey = '';
+    g.wheelKey = '';
+    loadType();
+    offerTheme(chosen);
+    redraw();
+  });
   draw();
   contentsOpen.hidden = false;
   moonLine.hidden = false;

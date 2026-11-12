@@ -215,10 +215,11 @@ export function verifyTongueRibbons(html, data = tonguesData(), maps = shippedMa
   return { failures: errors.length, apart };
 }
 
-// For the font cutter: every character the page inks, and each family's
-// faces in the order the type stack tries them, which is the order a
+// For the font cutter: every character the page inks, and for each theme its
+// families' faces in the order its type stack tries them, which is the order a
 // character falls through to the first family that has it.
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href && process.argv[2] === '--inventory') {
-  const { faces, stack } = declaredFaces();
-  console.log(JSON.stringify({ chars: inkOf(pageText()), families: stack.map(family => faces.filter(f => f.family === family).map(f => f.file)) }));
+  const { faces, stacks } = declaredFaces();
+  const files = family => faces.filter(f => f.family === family).map(f => f.file);
+  console.log(JSON.stringify({ chars: inkOf(pageText()), themes: stacks.map(t => ({ id: t.id, families: t.families.map(files) })) }));
 }

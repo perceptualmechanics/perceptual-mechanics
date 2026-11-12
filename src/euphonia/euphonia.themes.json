@@ -5,6 +5,11 @@
       "id": "letters",
       "name": "The Republic of Letters",
       "region": "Europe",
+      "home": {
+        "lon0": 15,
+        "setting": 52.37,
+        "why": "turned to Europe and Africa, where the book starts, and the Indian Ocean beyond, set for Amsterdam's latitude, where Blaeu made his globes"
+      },
       "tokens": {
         "ground": "#0a0a0a",
         "surface": "#15130f",
@@ -114,6 +119,186 @@
           "what": "ground, surfaces, text and lines",
           "from": "the dark ground and warm greys of perceptualmechanics.com's reading pages, which this page grew out of",
           "authored": "Scott Cohen, the parent site's palette"
+        }
+      ],
+      "ornament": null
+    },
+    {
+      "id": "mutapa",
+      "name": "Mutapa",
+      "region": "Mutapa and the Indian Ocean",
+      "home": {
+        "place": "Great Zimbabwe",
+        "why": "turned to the plateau and set for its latitude, from the stone city whose granite the page is built of"
+      },
+      "tokens": {
+        "ground": "#0b0e15",
+        "surface": "#151a24",
+        "surface-deep": "#0f131c",
+        "surface-tab": "#131823",
+        "surface-pressed": "#24283a",
+        "veil": "rgba(15, 19, 28, 0.92)",
+        "text": "#e8e3d6",
+        "text-soft": "#d2ccbe",
+        "text-cite": "#b8b1a2",
+        "text-quiet": "#c4bdae",
+        "text-muted": "#a49d8f",
+        "text-faint": "#959081",
+        "text-dim": "#8f897b",
+        "accent": "#d9a441",
+        "accent-bright": "#f0c463",
+        "focus": "#f0c463",
+        "skip": "#d9a441",
+        "rule": "#262b37",
+        "rule-faint": "#1b202b",
+        "line": "#464c5c",
+        "line-accent": "#8a5530",
+        "line-note": "#383e4c",
+        "mention": "#3a2a16",
+        "mention-text": "#f6e2c0",
+        "signal": "#e5e4e2",
+        "signal-text": "#e5e4e2",
+        "paper": "#d9d1bf",
+        "ink": "#1b2236",
+        "frame": "#9b958a",
+        "frame-edge": "#57534c",
+        "case": "#6b3a1f",
+        "case-edge": "#3f2212",
+        "sheet-muted": "#3d4458",
+        "sheet-mark": "#7a3410",
+        "sheet-rule": "rgba(27, 34, 54, 0.28)",
+        "print-paper": "#fff",
+        "print-ink": "#000",
+        "print-rule": "#999",
+        "map-sea": "#0b1424",
+        "map-graticule": "#2c3344",
+        "map-circles": "#5a5248",
+        "map-lettering": "#9e998e",
+        "map-land": "#2b2925",
+        "map-coast": "#b08a4e",
+        "map-river": "#3a5878",
+        "map-historic": "#d9a441",
+        "map-waterline": "#3e5a80",
+        "map-relief-shelf": "#14233c",
+        "map-relief-abyss": "#050912",
+        "map-relief-land": "#2b2925",
+        "map-relief-lit": "#5d584f",
+        "map-relief-shade": "#11100e",
+        "map-rhumb": "rgba(176, 138, 78, 0.35)",
+        "map-rose": "#b08a4e",
+        "map-glow": "rgba(217, 164, 65, 0.22)",
+        "map-glow-lit": "rgba(240, 196, 99, 0.55)",
+        "map-sun": "#f0c463",
+        "map-rim": "#b08a4e",
+        "map-empyrean": "#1f1a10",
+        "map-heaven-far": "#0b1324",
+        "map-heaven-near": "#141f33",
+        "map-fire": "#251510",
+        "map-air": "#131c2a",
+        "map-wheel-low": "#b0582c"
+      },
+      "type": "'Alegreya', 'EB Garamond', 'Euphonia Arabic', 'Euphonia Armenian', 'Euphonia Georgian', 'Euphonia Hebrew', 'Euphonia Devanagari', 'Euphonia Bengali', 'Euphonia Tamil', 'Euphonia Sinhala', 'Euphonia Han', 'Euphonia Hangul', 'Euphonia Khmer', 'Euphonia Lao', 'Euphonia Myanmar', 'Euphonia Ethiopic', 'Euphonia Tibetan', 'Euphonia Thai', 'Euphonia Japanese', serif",
+      "ornament": {
+        "kind": "coursing",
+        "course": 0.45,
+        "rule": [
+          "chevron"
+        ],
+        "band": [
+          "dentelle",
+          "herringbone",
+          "check",
+          "chevron"
+        ]
+      },
+      "provenance": [
+        {
+          "what": "ornament: the coursings (chevron, herringbone, check, dentelle)",
+          "from": "the decorated drystone walls of the plateau: the double chevron of Great Zimbabwe; the check of Khami; Naletale's facade of chevron, herring-bone, check and sloping block, with dark dolerite insets; dentelle and herring-bone at Matendere",
+          "source": {
+            "title": "James Walton, Decorative walling and patterned stones (drawing, 1953), James Walton Collection, Stellenbosch University",
+            "url": "https://digital.lib.sun.ac.za/handle/10019.2/516"
+          }
+        },
+        {
+          "what": "ornament: where the patterns stand at Great Zimbabwe",
+          "from": "the chevron along the top of the Great Enclosure's outer wall",
+          "source": {
+            "title": "Great Zimbabwe — Transcripts, CyArk",
+            "url": "https://tapestry.cyark.org/content/great-zimbabwe/transcripts"
+          }
+        },
+        {
+          "what": "frame and frame-edge: granite",
+          "from": "the granite of the plateau's kopjes, whose slabs built Great Zimbabwe without mortar (the book's own Mutapa chapter), laid in the courses above",
+          "source": {
+            "title": "Great Zimbabwe — Transcripts, CyArk",
+            "url": "https://tapestry.cyark.org/content/great-zimbabwe/transcripts"
+          }
+        },
+        {
+          "what": "case, case-edge, line-accent, map-wheel-low: copper",
+          "from": "the copper cross-ingots (croisettes) of south-central Africa, made between the fourteenth and eighteenth centuries, emblems of currency and status",
+          "source": {
+            "title": "Stephens, Killick and Chirikure, Reconstructing the geological provenance and long-distance movement of rectangular, fishtail, and croisette copper ingots in Iron Age Zambia and Zimbabwe, PLOS ONE 18(3), 2023",
+            "url": "https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0282660"
+          }
+        },
+        {
+          "what": "accent, accent-bright, map-sun, map-coast: gold",
+          "from": "the plateau's gold, which the traders of Benametapa brought down to Sofala",
+          "source": {
+            "title": "The Book of Duarte Barbosa, vol. 1 (c. 1518), tr. M. L. Dames, Hakluyt Society, 1918",
+            "url": "https://archive.org/details/bookofduartebarb0001mans"
+          }
+        },
+        {
+          "what": "ground, ink, map-sea and the blues of the globe: blue cloth",
+          "from": "the cotton cloths, white and blue, brought to Sofala from Cambay, which Sofala's weavers unravelled and rewove with their own white thread",
+          "source": {
+            "title": "The Book of Duarte Barbosa, vol. 1 (c. 1518), tr. M. L. Dames, Hakluyt Society, 1918",
+            "url": "https://archive.org/details/bookofduartebarb0001mans"
+          }
+        },
+        {
+          "what": "paper and text: undyed cotton",
+          "from": "machira, the cotton cloth woven in the Rivers of Cuama from cotton grown there",
+          "source": {
+            "title": "António da Conceição, Treatise on the Rivers of Cuama (1696), ed. Malyn Newitt, British Academy, 2009",
+            "url": "https://www.fonteshistoriaeafricanae.co.uk/wp-content/uploads/2024/02/Treatise-on-the-Rivers-of-Cuama.pdf"
+          }
+        },
+        {
+          "what": "mention, map-glow: glass beads",
+          "from": "the Indian Ocean glass beads found on Mapungubwe Hill and at K2: red, yellow, green, blue, white, black",
+          "source": {
+            "title": "Tournié, Prinsloo and Colomban, Raman classification of the glass beads excavated on Mapungubwe Hill and K2, Journal of Raman Spectroscopy 43(4), 2012",
+            "url": "https://hdl.handle.net/2263/32069"
+          }
+        },
+        {
+          "what": "signal and signal-text: platinum",
+          "from": "platinum, Mutapa's metal of white fire, from the Great Dyke, the ultramafic ridge down the plateau's spine (the book's Mutapa chapter): its cool grey-white",
+          "source": {
+            "title": "Platinum-group elements in southern Africa: mineral inventory and an assessment of undiscovered mineral resources, USGS Scientific Investigations Report 2010-5090-Q",
+            "url": "https://pubs.usgs.gov/publication/sir20105090Q"
+          }
+        },
+        {
+          "what": "type: Alegreya",
+          "from": "Juan Pablo del Peral's Alegreya (Huerta Tipográfica), a humanist serif for long reading, under the SIL Open Font License",
+          "source": {
+            "title": "Alegreya, google/fonts (ofl/alegreya)",
+            "url": "https://github.com/google/fonts/tree/main/ofl/alegreya"
+          }
+        },
+        {
+          "what": "avoided",
+          "from": "the Zimbabwe soapstone birds, a national emblem carrying ancestral meaning, and the Mapungubwe gold rhinoceros, the emblem of a national order, are not used",
+          "source": {
+            "title": "ZIMBABWE SOAPSTONE BIRD, South African Heritage Resources Agency",
+            "url": "https://www.sahra.org.za/?p=14782"
+          }
         }
       ]
     }

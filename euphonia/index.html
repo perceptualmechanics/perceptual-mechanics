@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-themes="<!--euphonia-theme-ids-->" data-theme-key="<!--euphonia-theme-key-->" data-theme-param="<!--euphonia-theme-param-->">
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
@@ -11,6 +11,7 @@
   <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png"/>
   <link rel="apple-touch-icon" href="/apple-touch-icon.png"/>
   <meta name="theme-color" content="<!--euphonia-theme-color-->"/>
+  <script src="/euphonia/theme-first.js"></script>
   <link rel="stylesheet" href="../styles/euphonia.css">
   <script type="module" src="../src/euphonia/euphonia.theme.js"></script>
   <script type="module" src="../src/euphonia/euphonia.map.js"></script>
@@ -27,7 +28,7 @@
 </header>
 <div class="euphonia-bar">
 <!--euphonia-tabs-->
-<p class="euphonia-aside"><button type="button" class="map-reset" hidden>Whole world</button> <button type="button" class="map-contents-open" aria-haspopup="dialog" hidden>Contents</button> <button type="button" class="motion-pause" aria-pressed="false" hidden>Pause motion</button> <a class="home" href="/">perceptual mechanics</a></p>
+<p class="euphonia-aside"><button type="button" class="map-reset" hidden>Whole world</button> <button type="button" class="map-contents-open" aria-haspopup="dialog" hidden>Contents</button> <button type="button" class="motion-pause" aria-pressed="false" hidden>Pause motion</button> <!--euphonia-theme-pick--> <a class="home" href="/">perceptual mechanics</a></p>
 </div>
 <div class="map-stage" id="map-figure" role="region" aria-label="The globe of 1668">
 <!--euphonia-map-->
@@ -37,6 +38,7 @@
 </div>
 </main>
 <div class="euphonia-foot">
+<!--euphonia-colophon-->
 <!--euphonia-footer-->
 </div>
 </body>

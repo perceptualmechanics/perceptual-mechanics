@@ -2,14 +2,17 @@
    parent site's pages, and its colours and type come from its themes
    (euphonia.theme.js brings their custom properties). */
 
-/* Euphonia's own type, apart from the rest of the site: EB Garamond, after
-   the Garamond romans still setting most books in 1668, for the page, the
-   globe's lettering and the ribbons, roman and italic from its text weight to
-   its semibold, and a face for each other script the page sets. Each holds
+/* Euphonia's own type, apart from the rest of the site, each theme's Latin
+   face first in its stack (euphonia.themes.json): EB Garamond, after the
+   Garamond romans still setting most books in 1668, and Alegreya, roman and
+   italic from text weight to semibold; then a face for each other script the
+   page sets. Each holds
    only what the page inks (scripts/euphonia-fonts.py); the stack lets each
    character find its face. */
 @font-face { font-family: 'EB Garamond'; font-weight: 400 600; font-display: swap; src: url('/fonts/euphonia/eb-garamond.woff2') format('woff2'); }
 @font-face { font-family: 'EB Garamond'; font-style: italic; font-weight: 400 600; font-display: swap; src: url('/fonts/euphonia/eb-garamond-italic.woff2') format('woff2'); }
+@font-face { font-family: 'Alegreya'; font-weight: 400 600; font-display: swap; src: url('/fonts/euphonia/alegreya.woff2') format('woff2'); }
+@font-face { font-family: 'Alegreya'; font-style: italic; font-weight: 400 600; font-display: swap; src: url('/fonts/euphonia/alegreya-italic.woff2') format('woff2'); }
 @font-face { font-family: 'Euphonia Arabic'; font-weight: 400; font-display: swap; src: url('/fonts/euphonia/amiri-400.woff2') format('woff2'); }
 @font-face { font-family: 'Euphonia Armenian'; font-weight: 400; font-display: swap; src: url('/fonts/euphonia/noto-serif-armenian-400.woff2') format('woff2'); }
 @font-face { font-family: 'Euphonia Georgian'; font-weight: 400; font-display: swap; src: url('/fonts/euphonia/noto-serif-georgian-400.woff2') format('woff2'); }
@@ -60,6 +63,12 @@ section > h2 { font-size: 1.34rem; margin: 0 0 0.6rem; font-weight: 600; line-he
    small sections of their own, across the window's width like the rest. */
 .euphonia-foot { padding: 0 var(--gutter) 5rem; }
 footer.legal section { margin: 0; }
+.colophon { border-top: 1px solid var(--rule); margin-top: 3rem; padding-top: 1.4rem; color: var(--text-soft); font-size: 0.95rem; }
+.colophon h2 { font-size: 0.85rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; margin: 0 0 0.8rem; color: var(--text-muted); }
+/* Across the window like the licences, in two columns where they'd otherwise run long. */
+.colophon { columns: 2 26rem; column-gap: 2.5rem; }
+.colophon h2 { column-span: all; }
+.colophon p { break-inside: avoid; }
 footer.legal h2 {
   font-size: 0.85rem; font-weight: 600; letter-spacing: 0.08em;
   text-transform: uppercase; margin: 1.6rem 0 0.5rem; color: var(--text-muted);
@@ -98,6 +107,12 @@ body { background: var(--ground); font-family: var(--type); }
 .euphonia-aside button:hover, .euphonia-aside button:focus-visible { border-color: var(--accent); }
 .euphonia-aside button[aria-pressed=true] { background: var(--surface-pressed); border-color: var(--signal); }
 .euphonia-aside button[hidden] { display: none; }
+/* The theme switcher, in the bar's own materials. */
+.theme-pick { display: flex; align-items: center; gap: 0.4rem; color: var(--text-muted); }
+.theme-pick[hidden] { display: none; }
+.theme-pick select { font: inherit; color: var(--paper); background: var(--case); border: 1px solid var(--frame); padding: 0.15rem 0.4rem; cursor: pointer; }
+.theme-pick select:hover { border-color: var(--accent); }
+.theme-pick select:focus-visible { outline: 2px solid var(--focus); outline-offset: 1px; }
 /* The map's buttons have nothing to do over the builder. */
 .euphonia-top.is-builder :is(.map-reset, .map-contents-open) { display: none; }
 
@@ -141,6 +156,14 @@ body { background: var(--ground); font-family: var(--type); }
   .ribbon-track { animation: none; }
   .ribbon-top .ribbon-copy { display: none; }
 }
+/* A theme's ornament (euphonia.ornament.js), where it has one: the bar
+   stands on its rule, and the sheet's head carries its band, edge to edge
+   inside the frame. */
+:root[data-ornament] .euphonia-bar {
+  border-bottom: var(--ornament-rule-height) solid transparent;
+  border-image: var(--ornament-rule) 0 0 100% 0 / 0 0 var(--ornament-rule-height) 0 repeat;
+}
+:root[data-ornament] .sheet::before { content: ''; display: block; height: var(--ornament-band-height); margin: -1.2rem -1.4rem 1rem; background: var(--ornament-band) 0 0 / auto 100% repeat-x; }
 /* The tabs stand on the bar's rule like a folder's: each a raised card with
    its top corners rounded, the open one in the page's ground with its foot
    open onto the page below, the other a shade darker and closed along the
@@ -263,10 +286,11 @@ mark.map-mention:focus { outline: 1px solid var(--accent); outline-offset: 1px; 
 .map-panel-title { font-size: 1.34rem; font-weight: 600; margin: 0 0 0.3rem; color: var(--accent); }
 .map-panel-title:focus { outline: none; }
 .map-panel-note { color: var(--text-faint); font-size: 0.8rem; margin: 0 0 0.8rem; }
-.map-panel-zoom {
+.map-panel-zoom, .map-panel-theme button {
   font: inherit; font-size: 0.9rem; color: var(--accent); background: var(--surface); border: 1px solid var(--line-accent); padding: 0.2rem 0.7rem; cursor: pointer;
 }
-.map-panel-zoom:hover, .map-panel-zoom:focus-visible { border-color: var(--accent); }
+.map-panel-zoom:hover, .map-panel-zoom:focus-visible, .map-panel-theme button:hover, .map-panel-theme button:focus-visible { border-color: var(--accent); }
+.map-panel-theme[hidden] { display: none; }
 .map-panel-content h3 { font-size: 1rem; margin: 1.2rem 0 0.4rem; color: var(--text-quiet); }
 .map-panel-content blockquote { margin: 0.8rem 0; padding-left: 1rem; border-left: 2px solid var(--line); color: var(--text-quiet); }
 

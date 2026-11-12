@@ -124,15 +124,17 @@ export function createRelief(bytes, colors) {
   gl.uniform1f(u('extreme'), extreme);
   gl.uniform1f(u('scale'), scale);
   gl.uniform1fv(u('depths'), DEPTHS);
-  for (const name of ['shelf', 'abyss', 'land', 'lit', 'shade']) gl.uniform3fv(u(name), rgb(colors[`relief-${name}`]));
+  // Its colours, set now and again when the theme changes; nothing else is redone.
+  const recolor = palette => { for (const name of ['shelf', 'abyss', 'land', 'lit', 'shade']) gl.uniform3fv(u(name), rgb(palette[`relief-${name}`])); };
+  recolor(colors);
   const az = LIGHT_AZIMUTH * RAD, alt = LIGHT_ALTITUDE * RAD;
   gl.uniform3f(u('light'), Math.sin(az) * Math.cos(alt), Math.cos(az) * Math.cos(alt), Math.sin(alt));
   gl.uniform1f(u('exaggeration'), layout.shading.exaggeration);
   gl.uniform1f(u('metresPerDegree'), METRES_PER_DEGREE);
 
   // The view's sea or land, on this renderer's canvas, for the caller to draw
-  // from before the next pass.
-  return function render(view, mode) {
+  // from before the next pass; and how to give it new colours.
+  return Object.assign(function render(view, mode) {
     if (canvas.width !== view.width || canvas.height !== view.height) { canvas.width = view.width; canvas.height = view.height; }
     gl.viewport(0, 0, view.width, view.height);
     gl.uniform1f(u('height'), view.height);
@@ -147,5 +149,5 @@ export function createRelief(bytes, colors) {
     gl.clear(gl.COLOR_BUFFER_BIT);
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
     return canvas;
-  };
+  }, { recolor });
 }

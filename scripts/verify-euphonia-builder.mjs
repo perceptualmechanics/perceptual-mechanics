@@ -272,7 +272,7 @@ export function verifyEuphoniaBuilder({ engine = defaultEngine, srd = read('srd'
   return { ok: problems.length === 0, failures: problems.length, log };
 }
 
-if (import.meta.url === pathToFileURL(process.argv[1]).href) {
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const { ok, log } = verifyEuphoniaBuilder();
   log.forEach(l => console.log(l));
   process.exit(ok ? 0 : 1);

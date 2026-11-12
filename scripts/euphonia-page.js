@@ -3,7 +3,7 @@ import { inline, blocks } from '../src/euphonia/euphonia.markdown.js';
 import { slug } from '../src/euphonia/euphonia.places.js';
 import { worldData, fixturesData, calendarsData, reliefData, rosesData } from './verify-euphonia-map.mjs';
 import { ribbonOrder, tonguesData } from './verify-euphonia-tongues.mjs';
-import { THEMES } from '../src/euphonia/euphonia.themes.js';
+import { THEMES, THEME_KEY, THEME_PARAM } from '../src/euphonia/euphonia.themes.js';
 
 const esc = s => String(s)
   .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
@@ -65,6 +65,7 @@ ${panelSections({ classes, regions, adventures, hidden }, world, fixtures, calen
 </section>
 <div class="map-panel-region" hidden>
 ${regions.status === 'draft' ? `<p class="map-panel-note">${DRAFT_NOTE}</p>\n` : ''}<p><button type="button" class="map-panel-zoom">Zoom to it</button></p>
+<p class="map-panel-theme" hidden><button type="button"></button></p>
 <h3 id="map-panel-places-title">Its places on the map</h3>
 <ul class="map-panel-places" aria-labelledby="map-panel-places-title"></ul>
 <div class="map-panel-content"></div>
@@ -73,6 +74,22 @@ ${regions.status === 'draft' ? `<p class="map-panel-note">${DRAFT_NOTE}</p>\n` :
 <p class="map-status" aria-live="polite"></p>
 <p class="map-help visually-hidden" id="map-help">Drag the globe across, or focus it and use the left and right arrows, to spin it on its axis; drag up or down, or use the up and down arrows, to slide its brass ring through the horizon and set it for a latitude, the pole raised that far. The wheel, a pinch, or + and − zoom; 0 sets it home again. The wooden horizon's calendar marks today beside the sun's place in the zodiac. A region's name opens its chapter beside the globe, and Contents lists every chapter and the rest of the book's pages. Click or tap a place, or press Enter on the globe for the place at its centre: the panel gives its time, its sun and its tide, and opens its region's chapter where the chapter names it.</p>
 <noscript><p class="map-help">The map and its pages are drawn in the page by script.</p></noscript>`;
+}
+
+// What Euphonia is, at the foot of the page, in the book's own words: the
+// Setting's welcome and where its world goes (euphonia.welcome.json).
+function colophon(welcome) {
+  return `<section class="colophon" aria-labelledby="colophon-title">
+<h2 id="colophon-title">What is Euphonia?</h2>
+${[...welcome.opening, ...welcome.world].map(p => `<p>${inline(p)}</p>`).join('\n')}
+</section>`;
+}
+
+// The theme switcher, beside Contents and Pause motion: a labelled list,
+// hidden until the script that runs it does, and a line that says aloud what
+// changed.
+function themePick() {
+  return `<label class="theme-pick" hidden>Theme <select id="theme-pick">${THEMES.map(t => `<option value="${t.id}">${esc(t.name)}</option>`).join('')}</select></label><span class="visually-hidden" id="theme-said" aria-live="polite"></span>`;
 }
 
 // The tabs over the map and the builder. Hidden until the script that runs
@@ -185,7 +202,7 @@ ${r.sections.map(sec => `<h3>${esc(sec.heading)}</h3>\n${blocks(sec.text)}`).joi
 
 // Fills euphonia/index.html's markers from the vendored export, in dev
 // and in build alike, the way landing.js fills the landing's.
-const MARKERS = ['<!--euphonia-theme-color-->', '<!--euphonia-ribbon-top-->', '<!--euphonia-tabs-->', '<!--euphonia-map-->', '<!--euphonia-builder-->', '<!--euphonia-ribbon-bottom-->', '<!--euphonia-footer-->'];
+const MARKERS = ['<!--euphonia-colophon-->', '<!--euphonia-theme-ids-->', '<!--euphonia-theme-key-->', '<!--euphonia-theme-param-->', '<!--euphonia-theme-pick-->', '<!--euphonia-theme-color-->', '<!--euphonia-ribbon-top-->', '<!--euphonia-tabs-->', '<!--euphonia-map-->', '<!--euphonia-builder-->', '<!--euphonia-ribbon-bottom-->', '<!--euphonia-footer-->'];
 export function injectEuphonia(html, d = euphoniaFiles(), world = worldData(), fixtures = fixturesData(), calendars = calendarsData(), tongues = tonguesData()) {
   const missing = MARKERS.filter(m => !html.includes(m));
   if (missing.length) throw new Error(`euphonia/index.html is missing ${missing.join(' and ')}: the page has nowhere to go`);
@@ -193,10 +210,17 @@ export function injectEuphonia(html, d = euphoniaFiles(), world = worldData(), f
   return html
     // The browser's own chrome takes the page's ground, from the theme it opens in.
     .replace('<!--euphonia-theme-color-->', THEMES[0].tokens.ground)
+    // The themes, for the page's first script, which picks one before the
+    // page is drawn (public/euphonia/theme-first.js), and the switcher.
+    .replace('<!--euphonia-theme-ids-->', THEMES.map(t => t.id).join(' '))
+    .replace('<!--euphonia-theme-key-->', THEME_KEY)
+    .replace('<!--euphonia-theme-param-->', THEME_PARAM)
+    .replace('<!--euphonia-theme-pick-->', themePick())
     .replace('<!--euphonia-ribbon-top-->', top)
     .replace('<!--euphonia-ribbon-bottom-->', bottom)
     .replace('<!--euphonia-tabs-->', tabs())
     .replace('<!--euphonia-map-->', mapStage(d, world, fixtures, calendars))
     .replace('<!--euphonia-builder-->', builder())
+    .replace('<!--euphonia-colophon-->', colophon(d.welcome.data))
     .replace('<!--euphonia-footer-->', euphoniaFooter(d.legal.data));
 }

@@ -5,6 +5,9 @@
 import themes from './euphonia.themes.json' with { type: 'json' };
 
 export const THEMES = themes.themes;
+// Where a reader's chosen theme is kept, and the address's word for it
+// (?theme=…, so a link carries it, as ?c= carries a character).
+export const THEME_KEY = 'pm-euphonia-theme', THEME_PARAM = 'theme';
 
 const declarations = t => [...Object.entries(t.tokens).map(([k, v]) => `--${k}: ${v};`), `--type: ${t.type};`].join(' ');
 export const themeCss = (list = THEMES) =>

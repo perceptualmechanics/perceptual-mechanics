@@ -9,7 +9,7 @@ import { wheelOf } from '../src/euphonia/euphonia.wheel.js';
 
 const ROOT = new URL('../', import.meta.url);
 const read = rel => readFileSync(new URL(rel, ROOT), 'utf8');
-const FILES = ['classes', 'regions', 'adventures', 'legal', 'hidden', 'characters', 'wheel'];
+const FILES = ['classes', 'regions', 'adventures', 'legal', 'hidden', 'characters', 'wheel', 'welcome'];
 
 // What may never reach a Euphonia page, besides draft brackets and braced names
 // awaiting replacement: other people's names, and "Fey" outside the creature
@@ -136,6 +136,9 @@ export function verifyEuphonia(d = euphoniaData()) {
   if (wheel.roads.length !== 5) fail(`the Revelator has ${wheel.roads.length} pathways, not the five roads`);
   for (const r of wheel.roads) if (r.through.length < 2) fail(`the road ${r.name} runs through ${r.through.length} plane(s) the Wheel files`);
 
+  // The colophon: what Euphonia is, in the book's own words.
+  if (!d.welcome.data?.opening?.length || !d.welcome.data?.world?.length) fail('euphonia.welcome.json: no opening or no "What Will Your World Be?" for the colophon');
+
   // The footer's text: the SRD attribution, the ORC Notice, the copyright line.
   const legal = d.legal.data;
   if (!/System Reference Document 5\.2\.1/.test(legal.srd_attribution ?? '') || !/Creative Commons Attribution 4\.0/.test(legal.srd_attribution ?? '')) fail('euphonia.legal.json: the SRD attribution is missing or not the SRD 5.2.1 CC-BY 4.0 one');
@@ -192,7 +195,7 @@ export function verifyEuphoniaPages(outDir, legal = euphoniaFiles().legal.data) 
   return { ok: problemsFound.length === 0, failures: problemsFound.length, log };
 }
 
-if (import.meta.url === pathToFileURL(process.argv[1]).href) {
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const { ok, log, warnings } = verifyEuphonia();
   log.forEach(l => console.log(l));
   warnings.forEach(w => console.warn(`warning: ${w}`));
