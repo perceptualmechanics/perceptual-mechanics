@@ -604,16 +604,17 @@ export async function initMap(stage) {
 
   // Zoom stays between the whole mount and the coasts' resolution. Along
   // each axis the glass's focus keeps the magnified mount covering the canvas
-  // where it overflows, and inside it where it doesn't: either way the mount's
-  // middle strays from the canvas's by at most the difference of their half
-  // sizes. Along y the mount's middle sits `rise` above the globe's centre,
-  // which the anchor offsets by rise at zoom 1, so focus `rise * (1 - 1 / zoom)`
-  // centres it.
+  // where it overflows, its middle straying from the canvas's by at most the
+  // difference of their half sizes; where the mount fits inside, it stands in
+  // the middle, so the glass drawn back always brings the globe home, and the
+  // room to stray closes to nothing just as the mount stops overflowing. Along
+  // y the mount's middle sits `rise` above the globe's centre, which the anchor
+  // offsets by rise at zoom 1, so focus `rise * (1 - 1 / zoom)` centres it.
   // The focus's room at a zoom, along each axis: its centre and how far it
   // may stray from it.
   const room = zoom => {
     const k = fit() * zoom, rise = (EXTENT.top - EXTENT.bottom) / 2;
-    const slack = (half, size) => Math.abs(half - size / (2 * k));
+    const slack = (half, size) => Math.max(0, half - size / (2 * k));
     return [[0, slack(EXTENT.halfWidth, g.cssWidth)], [rise * (1 - 1 / zoom), slack((EXTENT.top + EXTENT.bottom) / 2, g.cssHeight)]];
   };
   function clampZoom() {
