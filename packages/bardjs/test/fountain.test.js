@@ -81,7 +81,7 @@ test('centered text becomes a chorus event with the markers stripped', () => {
 });
 
 test('notes and boneyard are stripped entirely, even across blank lines', () => {
-  const src = `INT. BAR\n\n[[ author note\n\nspanning lines ]]Actual action.\n\nBRIAN\nLine.`;
+  const src = `INT. BAR\n\n[[ author note\n\nspanning lines ]]Actual action.\n\n/* old draft\ntext */BRIAN\nLine.`;
   const { scenes } = parseFountainScript(src);
   assert.deepEqual(scenes[0].events[0], { type: 'chorus', text: 'Actual action.' });
   const line = scenes[0].events.find(e => e.type === 'line');
