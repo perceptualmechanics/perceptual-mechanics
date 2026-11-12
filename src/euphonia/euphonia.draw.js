@@ -38,14 +38,14 @@ function coastPath(view, world) {
   return coast;
 }
 
-// The colours are the page's, read from its custom properties once.
+// The colours are the theme's, read from its custom properties: the globe's
+// own (--map-…) and the materials and signal it shares with the page.
+const MAP_COLORS = ['sea', 'graticule', 'circles', 'land', 'coast', 'river', 'historic', 'glow', 'glow-lit', 'sun', 'rim',
+  'waterline', 'relief-shelf', 'relief-abyss', 'relief-land', 'relief-lit', 'relief-shade', 'rhumb', 'rose', 'wheel-low'];
+const SHARED_COLORS = ['frame', 'frame-edge', 'case', 'case-edge', 'paper', 'ink', 'signal', 'signal-text'];
 export function palette(el) {
-  const css = getComputedStyle(el);
-  const v = name => css.getPropertyValue(`--map-${name}`).trim();
-  return Object.fromEntries(['sea', 'graticule', 'circles', 'land', 'coast', 'river', 'lake', 'historic', 'glow', 'glow-lit', 'sun', 'rim',
-    'waterline', 'relief-shelf', 'relief-abyss', 'relief-land', 'relief-lit', 'relief-shade', 'rhumb', 'rose',
-    'brass', 'brass-edge', 'wood', 'wood-edge', 'paper', 'ink', 'wheel-low', 'crimson', 'scarlet']
-    .map(n => [n, v(n)]));
+  const css = getComputedStyle(el), v = name => css.getPropertyValue(`--${name}`).trim();
+  return Object.fromEntries([...MAP_COLORS.map(n => [n, v(`map-${n}`)]), ...SHARED_COLORS.map(n => [n, v(n)])]);
 }
 
 // Water-lining, as the period's engravers drew the sea: lines following every
@@ -203,7 +203,7 @@ export function drawWheel(ctx, view, { realms, roads }, rim, colors, dpr, font, 
     const [rx, ry] = axes(t);
     const ring = road.through.map(n => place.get(n)).filter(at => at !== 'centre');
     ctx.globalAlpha = WHEEL_ROAD_ALPHA;
-    ctx.strokeStyle = ctx.fillStyle = colors.crimson;
+    ctx.strokeStyle = ctx.fillStyle = colors.signal;
     ctx.beginPath();
     if (road.centre) { ring.forEach((at, i) => { ctx[i ? 'lineTo' : 'moveTo'](...point(t, at)); if (!i) ctx.lineTo(cx, cy); }); }
     else ctx.ellipse(cx, cy, rx, ry, 0, -road.from * RAD, -(road.from + road.span) * RAD, true);
@@ -339,8 +339,8 @@ export function drawMount(ctx, view, pass, { setting, calendar, today, font }, c
   meridianPlane();
   const [m0, m1] = front ? [Math.PI, 2 * Math.PI] : [0, Math.PI];
   half(ctx, MERIDIAN.inner, MERIDIAN.outer, m0, m1);
-  ctx.fillStyle = colors.brass; ctx.fill();
-  ctx.strokeStyle = colors['brass-edge']; ctx.lineWidth = line(0.8); ctx.stroke();
+  ctx.fillStyle = colors.frame; ctx.fill();
+  ctx.strokeStyle = colors['frame-edge']; ctx.lineWidth = line(0.8); ctx.stroke();
   // Its degrees, from the north pole (the axis, `setting` above the north
   // point) round: 90 at the poles, 0 at the equator.
   ctx.beginPath();
@@ -366,16 +366,16 @@ export function drawMount(ctx, view, pass, { setting, calendar, today, font }, c
     ctx.arc(0, 0, HORIZON.outer, 0, Math.PI);
     ctx.save(); ctx.translate(0, edgeDrop); ctx.arc(0, 0, HORIZON.outer, Math.PI, 0, true); ctx.restore();
     ctx.closePath();
-    ctx.fillStyle = colors['wood-edge']; ctx.fill();
+    ctx.fillStyle = colors['case-edge']; ctx.fill();
   }
   half(ctx, HORIZON.inner, HORIZON.outer, h0, h1);
-  ctx.fillStyle = colors.wood; ctx.fill();
+  ctx.fillStyle = colors.case; ctx.fill();
   if (!front) {
     ctx.beginPath();
     ctx.arc(0, 0, HORIZON.inner, Math.PI, 2 * Math.PI);
     ctx.save(); ctx.translate(0, edgeDrop); ctx.arc(0, 0, HORIZON.inner, 2 * Math.PI, Math.PI, true); ctx.restore();
     ctx.closePath();
-    ctx.fillStyle = colors['wood-edge']; ctx.fill();
+    ctx.fillStyle = colors['case-edge']; ctx.fill();
   }
   // The scales' paper, between the rims of the wood.
   const width = HORIZON.outer - HORIZON.inner, pad = width * 0.08;

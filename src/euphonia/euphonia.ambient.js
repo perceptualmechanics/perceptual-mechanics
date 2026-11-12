@@ -131,7 +131,7 @@ export function createAmbient(canvas, { wheel, colors, instant, sky, top }) {
     }
     ctx.globalCompositeOperation = 'source-over';
     if (!still) {
-      ctx.fillStyle = colors.scarlet;
+      ctx.fillStyle = colors['signal-text'];
       const travelled = t * MOTE_SPEED * layout.dpr;
       for (const road of layout.roads) {
         for (let m = 0; m < road.motes; m++) {

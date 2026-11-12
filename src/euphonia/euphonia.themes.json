@@ -1,0 +1,108 @@
+{
+  "about": "The page's looks, one per power at the setting's table: each a set of role-named tokens the stylesheet and the globe's drawing read, its type, its ornament, and where its colours come from. A theme changes how the page looks, never what it says.",
+  "themes": [
+    {
+      "id": "letters",
+      "name": "The Republic of Letters",
+      "region": "Europe",
+      "tokens": {
+        "ground": "#0a0a0a",
+        "surface": "#15130f",
+        "surface-deep": "#0d0b08",
+        "surface-tab": "#14120e",
+        "surface-pressed": "#2a2416",
+        "veil": "rgba(13, 11, 8, 0.92)",
+        "text": "#ded9d0",
+        "text-soft": "#c4bcae",
+        "text-cite": "#a89f92",
+        "text-quiet": "#b8b0a4",
+        "text-muted": "#9c9384",
+        "text-faint": "#8c8377",
+        "text-dim": "#837c70",
+        "accent": "#d9b13f",
+        "accent-bright": "#f0cf6a",
+        "focus": "#f0cf6a",
+        "skip": "#c9a227",
+        "rule": "#2a2620",
+        "rule-faint": "#1e1b17",
+        "line": "#4a4034",
+        "line-accent": "#6b5a37",
+        "line-note": "#3a342b",
+        "mention": "#4a3c17",
+        "mention-text": "#f6e7b8",
+        "signal": "#dc143c",
+        "signal-text": "#ec4a5c",
+        "paper": "#b9a67c",
+        "ink": "#2b2013",
+        "frame": "#9a7a3a",
+        "frame-edge": "#4f3d1b",
+        "case": "#3b2717",
+        "case-edge": "#22160c",
+        "sheet-muted": "#4a3a22",
+        "sheet-mark": "#6e1a12",
+        "sheet-rule": "rgba(43, 32, 19, 0.28)",
+        "print-paper": "#fff",
+        "print-ink": "#000",
+        "print-rule": "#999",
+        "map-sea": "#0f1418",
+        "map-graticule": "#3a352c",
+        "map-circles": "#6b5a37",
+        "map-lettering": "#8e7b56",
+        "map-land": "#2b261e",
+        "map-coast": "#8c7a55",
+        "map-river": "#3b4a52",
+        "map-historic": "#d9b13f",
+        "map-waterline": "#4a6170",
+        "map-relief-shelf": "#1d2c35",
+        "map-relief-abyss": "#070b0e",
+        "map-relief-land": "#2b261e",
+        "map-relief-lit": "#574c38",
+        "map-relief-shade": "#110e0a",
+        "map-rhumb": "rgba(140, 122, 85, 0.35)",
+        "map-rose": "#8c7a55",
+        "map-glow": "rgba(217, 177, 63, 0.22)",
+        "map-glow-lit": "rgba(240, 207, 106, 0.55)",
+        "map-sun": "#f0cf6a",
+        "map-rim": "#8c7a55",
+        "map-wheel-low": "#b4472c"
+      },
+      "type": "'EB Garamond', 'Euphonia Arabic', 'Euphonia Armenian', 'Euphonia Georgian', 'Euphonia Hebrew', 'Euphonia Devanagari', 'Euphonia Bengali', 'Euphonia Tamil', 'Euphonia Sinhala', 'Euphonia Han', 'Euphonia Hangul', 'Euphonia Khmer', 'Euphonia Lao', 'Euphonia Myanmar', 'Euphonia Ethiopic', 'Euphonia Tibetan', 'Euphonia Thai', 'Euphonia Japanese', serif",
+      "provenance": [
+        {
+          "what": "type: EB Garamond, roman and italic",
+          "from": "Claude Garamont's roman and Robert Granjon's italic as Conrad Berner printed them in the Egenolff–Berner type specimen, Frankfurt, 1592, from which EB Garamond is drawn",
+          "source": {
+            "title": "Konrad Berner, Specimen characterum, Cary Graphic Arts Collection, RIT",
+            "url": "https://digitalcollections.rit.edu/luna/servlet/detail/RIT~1~1~1107~11721:Konrad-Berner--specimen-characterum"
+          }
+        },
+        {
+          "what": "frame, frame-edge, case, case-edge, paper: the globe's mount and the sheet",
+          "from": "Willem Janszoon Blaeu's terrestrial globe, Amsterdam, 1645–48: its brass meridian ring, its wooden horizon and stand, and its printed paper horizon",
+          "source": {
+            "title": "Terrestrial globe, Willem Janszoon Blaeu, 1645–48, Rijksmuseum",
+            "url": "https://www.rijksmuseum.nl/en/collection/object/Aardeglobe--02c1e159cc8a59416f529b0bcc7e9a6c"
+          }
+        },
+        {
+          "what": "ink and sheet-muted",
+          "from": "iron-gall ink, Europe's common writing ink from the fifth century to the nineteenth, brown-black as it ages on paper",
+          "source": {
+            "title": "Galling ink! How The National Archives preserves millions of documents written in iron gall ink, The National Archives (UK)",
+            "url": "https://blog.nationalarchives.gov.uk/galling-ink-how-the-national-archives-preserves-millions-of-documents-written-in-iron-gall-ink/"
+          }
+        },
+        {
+          "what": "signal and signal-text (crimson and scarlet)",
+          "from": "the page's accent",
+          "authored": "Scott Cohen, 12 November 2026"
+        },
+        {
+          "what": "ground, surfaces, text and lines",
+          "from": "the dark ground and warm greys of perceptualmechanics.com's reading pages, which this page grew out of",
+          "authored": "Scott Cohen, the parent site's palette"
+        }
+      ]
+    }
+  ]
+}

@@ -15,6 +15,8 @@ import { verifyQuizWheel } from './scripts/quiz-wheel.mjs';
 import { verifyBench } from './scripts/verify-bench.mjs';
 import { euphoniaFiles, verifyEuphonia, verifyEuphoniaPages } from './scripts/verify-euphonia.mjs';
 import { wheelOf } from './src/euphonia/euphonia.wheel.js';
+import { themeCss } from './src/euphonia/euphonia.themes.js';
+import { verifyEuphoniaThemes } from './scripts/verify-euphonia-themes.mjs';
 import { verifyEuphoniaMap, placesData } from './scripts/verify-euphonia-map.mjs';
 import { verifyEuphoniaSrd } from './scripts/verify-euphonia-srd.mjs';
 import { verifyEuphoniaBuilder } from './scripts/verify-euphonia-builder.mjs';
@@ -249,6 +251,30 @@ function euphoniaPlacesPlugin() {
   };
 }
 
+// The themes' tokens, as custom properties the stylesheet imports: one source
+// for the page's colours and type (euphonia.themes.json).
+const THEMES_ID = 'virtual:euphonia-themes.css';
+function euphoniaThemesPlugin() {
+  return {
+    name: 'pm-euphonia-themes',
+    resolveId: id => (id === THEMES_ID ? `\0${THEMES_ID}` : null),
+    load: id => (id === `\0${THEMES_ID}` ? themeCss() : null),
+  };
+}
+
+// The themes hold: colours only in their data, every text and mark readable
+// in every theme, and every theme's sources named.
+function verifyEuphoniaThemesPlugin() {
+  return {
+    name: 'pm-verify-euphonia-themes',
+    buildStart() {
+      const { failures, themes, pairs } = verifyEuphoniaThemes();
+      if (failures) this.error(`verify-euphonia-themes: ${failures} problem(s) — see above.`);
+      console.log(`  ✓ verify-euphonia-themes: ${themes} theme(s), colours only in their data, ${pairs} pairs readable in each, every source named`);
+    },
+  };
+}
+
 // The Wheel behind the globe, worked out here from the export (its realms'
 // places and the Revelator's roads) so the page needn't load the classes.
 const WHEEL_ID = 'virtual:euphonia-wheel';
@@ -395,7 +421,7 @@ function verifyStyleHash(outDir, root) {
 }
 
 export default defineConfig({
-  plugins: [landingMarkupPlugin(), euphoniaMarkupPlugin(), euphoniaPlacesPlugin(), euphoniaWheelPlugin(), verifyLinksPlugin(), verifyResonancesPlugin(), verifyScrollMarksPlugin(), verifyLandingPlugin(), verifyAriaPlugin(), verifyCssInvariantsPlugin(), verifyCountsPlugin(), verifyQuizWheelPlugin(), verifyBenchPlugin(), verifyEuphoniaPlugin(), verifyEuphoniaMapPlugin(), verifyEuphoniaSrdPlugin(), verifyEuphoniaBuilderPlugin(), verifyEuphoniaTonguesPlugin(), prerenderTextPages()],
+  plugins: [landingMarkupPlugin(), euphoniaMarkupPlugin(), euphoniaPlacesPlugin(), euphoniaWheelPlugin(), euphoniaThemesPlugin(), verifyLinksPlugin(), verifyResonancesPlugin(), verifyScrollMarksPlugin(), verifyLandingPlugin(), verifyAriaPlugin(), verifyCssInvariantsPlugin(), verifyCountsPlugin(), verifyQuizWheelPlugin(), verifyBenchPlugin(), verifyEuphoniaPlugin(), verifyEuphoniaMapPlugin(), verifyEuphoniaSrdPlugin(), verifyEuphoniaBuilderPlugin(), verifyEuphoniaTonguesPlugin(), verifyEuphoniaThemesPlugin(), prerenderTextPages()],
   build: {
     cssMinify: 'esbuild',
     cssTarget: ['chrome87', 'edge88', 'firefox78', 'safari14'],

@@ -3,6 +3,7 @@ import { inline, blocks } from '../src/euphonia/euphonia.markdown.js';
 import { slug } from '../src/euphonia/euphonia.places.js';
 import { worldData, fixturesData, calendarsData, reliefData, rosesData } from './verify-euphonia-map.mjs';
 import { ribbonOrder, tonguesData } from './verify-euphonia-tongues.mjs';
+import { THEMES } from '../src/euphonia/euphonia.themes.js';
 
 const esc = s => String(s)
   .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
@@ -184,12 +185,14 @@ ${r.sections.map(sec => `<h3>${esc(sec.heading)}</h3>\n${blocks(sec.text)}`).joi
 
 // Fills euphonia/index.html's markers from the vendored export, in dev
 // and in build alike, the way landing.js fills the landing's.
-const MARKERS = ['<!--euphonia-ribbon-top-->', '<!--euphonia-tabs-->', '<!--euphonia-map-->', '<!--euphonia-builder-->', '<!--euphonia-ribbon-bottom-->', '<!--euphonia-footer-->'];
+const MARKERS = ['<!--euphonia-theme-color-->', '<!--euphonia-ribbon-top-->', '<!--euphonia-tabs-->', '<!--euphonia-map-->', '<!--euphonia-builder-->', '<!--euphonia-ribbon-bottom-->', '<!--euphonia-footer-->'];
 export function injectEuphonia(html, d = euphoniaFiles(), world = worldData(), fixtures = fixturesData(), calendars = calendarsData(), tongues = tonguesData()) {
   const missing = MARKERS.filter(m => !html.includes(m));
   if (missing.length) throw new Error(`euphonia/index.html is missing ${missing.join(' and ')}: the page has nowhere to go`);
   const [top, bottom] = ribbons(d.regions.data, tongues);
   return html
+    // The browser's own chrome takes the page's ground, from the theme it opens in.
+    .replace('<!--euphonia-theme-color-->', THEMES[0].tokens.ground)
     .replace('<!--euphonia-ribbon-top-->', top)
     .replace('<!--euphonia-ribbon-bottom-->', bottom)
     .replace('<!--euphonia-tabs-->', tabs())

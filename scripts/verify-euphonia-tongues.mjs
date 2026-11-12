@@ -3,6 +3,7 @@ import { pathToFileURL } from 'node:url';
 import { brotliDecompressSync } from 'node:zlib';
 import { euphoniaData } from './verify-euphonia.mjs';
 import { injectEuphonia } from './euphonia-page.js';
+import { THEMES } from '../src/euphonia/euphonia.themes.js';
 
 const ROOT = new URL('../', import.meta.url);
 const read = rel => readFileSync(new URL(rel, ROOT), 'utf8');
@@ -98,12 +99,14 @@ export function ribbonOrder(words) {
 const shippedMaps = () => readdirSync(new URL(FONTS, ROOT)).filter(f => f.endsWith('.woff2')).map(f => woff2Cmap(readFileSync(new URL(FONTS + f, ROOT))));
 const bareOf = (chars, maps) => chars.filter(c => !maps.some(m => m.has(c.codePointAt(0)))).map(c => `U+${c.codePointAt(0).toString(16).toUpperCase().padStart(4, '0')}`).join(' ');
 
-// The faces euphonia.css declares, by file and family, and the families its
-// type stack names: a face out of the stack would ship and never set a word.
-export function declaredFaces(css = read('styles/euphonia.css')) {
+// The faces euphonia.css declares, by file and family, and the families each
+// theme's type stack names (euphonia.themes.json): a face in no stack would
+// ship and never set a word. `stack` is the reference theme's, the order a
+// character falls through on the page as it ships.
+const named = type => [...type.matchAll(/'([^']+)'/g)].map(m => m[1]);
+export function declaredFaces(css = read('styles/euphonia.css'), themes = THEMES) {
   const faces = [...css.matchAll(/@font-face\s*{[^}]*?font-family:\s*'([^']+)'[^}]*?url\('\/fonts\/euphonia\/([^']+)'\)[^}]*}/g)].map(m => ({ family: m[1], file: m[2] }));
-  const stack = [...(css.match(/--euphonia-type:([^;]+);/)?.[1] ?? '').matchAll(/'([^']+)'/g)].map(m => m[1]);
-  return { faces, stack };
+  return { faces, stack: named(themes[0].type), stacks: themes.map(t => ({ id: t.id, families: named(t.type) })) };
 }
 
 // The characters of some text that need a glyph: not spaces, and not the
@@ -173,8 +176,8 @@ export function verifyEuphoniaTongues({ data = tonguesData(), book = euphoniaDat
   const shipped = readdirSync(new URL(FONTS, ROOT)).filter(f => f.endsWith('.woff2'));
   for (const f of faces) if (!shipped.includes(f)) errors.push(`euphonia.css declares ${f}, which isn't in ${FONTS}`);
   for (const f of shipped) if (!faces.includes(f)) errors.push(`${FONTS}${f} is shipped but never declared`);
-  for (const { family } of declared.faces) if (!declared.stack.includes(family)) errors.push(`${family} is declared but not in --euphonia-type`);
-  for (const family of declared.stack) if (!declared.faces.some(f => f.family === family)) errors.push(`--euphonia-type names ${family}, which no face declares`);
+  for (const { family } of declared.faces) if (!declared.stacks.some(t => t.families.includes(family))) errors.push(`${family} is declared but in no theme's type stack`);
+  for (const t of declared.stacks) for (const family of t.families) if (!declared.faces.some(f => f.family === family)) errors.push(`the ${t.id} theme's type names ${family}, which no face declares`);
   const maps = fonts ?? shippedMaps();
   for (const t of data.tongues) {
     const bare = bareOf(inked(t.word, t.lang), maps);
