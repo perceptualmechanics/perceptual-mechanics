@@ -2763,3 +2763,46 @@ QA in headless Chrome: the globe suite 53/53 in all six themes, layout 53/53,
 the builder 22/22, the rest of the site 27/27, and all 19 classes through the
 builder's own controls at levels 1, 3, 5, 11 and 20, each choice as the engine
 has it; axe clean on the globe and the builder.
+
+### 7.5.1 — the globe in WebGL, and names that keep their ground
+
+**The globe draws in WebGL.** Firefox dragged the 2D globe at a 95th-percentile
+frame of 858 ms, 116 frames over 33 ms in one drag. `euphonia.gl.js` draws it
+on the GPU: the relief, the water-lining by a jump-flood, the land by stencil,
+the lines as instanced capsules, the marks, glows and limb. The same drag now
+runs at a p95 of 25–33 ms in Firefox and 16.8 ms in Chrome. The mount stays a
+canvas on either side of it, and the 2D path is kept as the fallback.
+
+**Names stand where they can be read.** A region's name now tries its places'
+mean, then each of its places from the most central, centred on it or touching it
+from a side or corner. Circle names try six points along their line. A name's
+whole outline is tested against the stand, every 0.0335 globe radii, the stand's
+narrowest (`NARROWEST`, the meridian ring foreshortened by the steepest eye);
+testing the corners alone had let "The Americas" print across the meridian ring.
+verify-euphonia-map measures every run of the stand's cover and holds
+`NARROWEST` to it; it fails at 10% wide or narrow. Names hidden at the six homes
+went from 6, 7, 9, 5, 4 and 7 to 1, 1, 3, 2, 1 and 2. All but one of those are
+on the far side. The Ottomans' Americas is the exception: its visible places lie
+in a sliver between the ring and the limb, narrower than its name.
+
+**Names hold still while the globe turns.** With more spots to try, the first a
+name fitted changed from frame to frame, and names leapt between them: 113–125
+hops in a measured drag. A name now keeps its spot while it fits. Crowded, it
+takes the open spot nearest where it stood. Any step the turning ground doesn't
+account for glides over 0.25 s, eased in and out (`--name-glide`), and with
+reduced motion it steps at once. The same drag now flags 2–16 frames, all of them
+glides; a wheel zoom flags 0–1.
+
+**The glass and the Revelator.** A glide to a place brings the eye to its
+latitude, as far as the eye reaches, and the mount recedes as the glass closes.
+Zooming to Oceania in the Qing's theme had landed on the horizon's wall; it now
+shows the islands. The Revelator's two cantrips come from Planar Adept, not a
+column, so the builder had counted none while offering 19. Features' cantrip
+grants now count, and verify-euphonia-builder fails any caster offered cantrips
+it can't take.
+
+**The export of 12 November.** The setting's text is exported again, now read from
+`~/mnt/euphonia`. Preparations moves to level 1, and Danae's Crossing features at
+levels 3 and 6 are flagged as placeholders. QA: the globe suite 53/53, layout
+53/53, the builder 22/22, the site 27/27, and all 19 classes at five levels
+walked through the UI.
