@@ -2,8 +2,8 @@
  "provenance": {
   "source": "Euphonia.md",
   "master": "~/Documents/euphonia/Euphonia.md",
-  "sha256": "71f4d76d4b9ae90ddf62e9b094441c6280fe3bd9f17bde38a2000cc2200c9969",
-  "modified": "2026-11-13T06:38:36-05:00",
+  "sha256": "fb7321961bfaff016ee6043e89a34ce2db0c4c5f915e94cfbb144536726f133b",
+  "modified": "2026-11-13T07:00:27-05:00",
   "exporter": "class-kit/site_export.py",
   "exporter_version": 15,
   "rules": {
@@ -369,8 +369,8 @@
     },
     {
      "level": 3,
-     "name": "Shove",
-     "text": "This isn't the Shove of an Unarmed Strike, and features that key on Shoving a creature don't apply to it. When you Release, you can push the creature up to 10 feet straight away from you for each Pressure you spent. If you spent 3 Pressure, it also has the Prone condition.\n\nOr you can take the push yourself: instead of moving the creature, you fly up to 10 feet for each Pressure you spent, in a straight line, without provoking Opportunity Attacks. If you end in the air, you fall. The Release dice still land, but the creature isn't pushed or knocked Prone."
+     "name": "Impressed Force",
+     "text": "It isn't a Shove, so features that key on Shoving a creature don't apply to it. When you Release, you can push the creature up to 10 feet straight away from you for each Pressure you spent. If you spent 3 Pressure, it also has the Prone condition.\n\nOr you can take the push yourself: instead of moving the creature, you fly up to 10 feet for each Pressure you spent, in a straight line, without provoking Opportunity Attacks. If you end in the air, you fall. The Release dice still land, but the creature isn't pushed or knocked Prone."
     },
     {
      "level": 6,

@@ -2877,4 +2877,6 @@ failing on a planted fault.
 **The export of 13 November, 06:38.** Danae's features are written, so the
 builder offers Danae again. QA: the builder 22/22; 19 classes at five levels
 and all 68 subclasses at level 20 walked through the UI, each showing what the
-engine says; axe clean with a book subclass chosen.
+engine says; axe clean with a book subclass chosen. Then the export of 07:00:
+the Kinetic Origin's Shove is renamed Impressed Force ("It isn't a Shove");
+the builder 22/22 and all 68 subclasses walked again.
