@@ -2838,3 +2838,43 @@ placeholders, so by the rule of 9 November the builder holds the class back unti
 they're written. QA: the globe suite 53/53 in four themes, layout 53/53, the
 builder 22/22, the site 27/27, and the 18 offered classes at five levels walked
 through the UI.
+
+### 7.5.3 — the books' subclasses, first in the builder
+
+**Sixteen subclasses for the SRD's classes.** *The Classes* and *Life on the
+Border* add subclasses to the core classes:
+- the Circle of Shapers;
+- six Sorcerer origins (Earth, Fire, Frost, Kinetic, Light and Storm);
+- the Envoy and Dreamlord patrons;
+- the Geomancer;
+- the Paths of the Bordermarch and the Faebreaker;
+- the Hidden Bard and the Hidden Domain;
+- Hidden Killer and Mortal Hunter.
+
+The exporter had held them back pending Scott's go-ahead. class-kit's exporter
+(v15) now writes them to `euphonia.subclasses.json`, each unit checked as the
+classes' are. 13 carry their spell tables. The Envoy's and Dreamlord's
+introductions are withheld because each names a placeholder; the origins'
+openings are still bracketed draft flavour. The exporter's tests plant every
+forbidden kind in a Hidden Killer feature: all 13 are caught, and all 13 leak
+with the checks switched off.
+
+**Offered first.** In an SRD class's subclass picker, Euphonia's subclasses come
+first, each named with its book, and the SRD's follow. The sheet cites the book.
+The class picker sets apart the eight SRD classes Euphonia adds subclasses to
+(Barbarian, Bard, Cleric, Druid, Ranger, Sorcerer, Warlock, Wizard) from the
+four it doesn't; the split is read from the data. Each SRD class finds the
+feature that grants its subclass from its own subclasses, then adds the books'.
+A tool offered inline (the Geomancer's Shop Talk) is text, as a background's
+tool is, not a pick.
+
+**Gates.** verify-euphonia holds each subclass to an SRD class, a name that
+class doesn't already use, the class's subclass level, and its book.
+verify-euphonia-builder holds every one offered, none after an SRD subclass,
+and each built to level 20 with all its features. Each new check was seen
+failing on a planted fault.
+
+**The export of 13 November, 06:38.** Danae's features are written, so the
+builder offers Danae again. QA: the builder 22/22; 19 classes at five levels
+and all 68 subclasses at level 20 walked through the UI, each showing what the
+engine says; axe clean with a book subclass chosen.
