@@ -1,9 +1,9 @@
 {
  "provenance": {
   "source": "Euphonia.md",
-  "master": "~/Documents/euphonia/Euphonia.md",
-  "sha256": "fb7321961bfaff016ee6043e89a34ce2db0c4c5f915e94cfbb144536726f133b",
-  "modified": "2026-11-13T07:00:27-05:00",
+  "master": "~/mnt/euphonia/Euphonia.md",
+  "sha256": "1179b05e88d80f02e36f6a74eb2c5d1403061186ce69dfb69d3a0e4652da7560",
+  "modified": "2026-11-13T12:43:33+00:00",
   "exporter": "class-kit/site_export.py",
   "exporter_version": 15,
   "rules": {
@@ -93,8 +93,16 @@
    "kind": "War",
    "where": "The Andes and the Chocó",
    "read_with": "The Americas",
-   "summary": "A three-sided war: the Inca, the Spanish and the people profiting off both. The Inca hold the high ground and Spain the coast and lowlands; Potosí is the contested frontier, and nobody knows who breaks or whether the line settles into a border. At stake: silver, mercury, guano, cinchona and the huacas that rose. It's the book's grittiest setting, for amoral soldier-of-fortune play in the *Wages of Fear* vein, or for Andeans defending their home nobly. The Inca aren't simply the good side: their state was itself an empire built on conquest, and the Cañari and Chachapoya fought beside Spain against it.",
-   "hooks": [],
+   "summary": "**The pitch.** The conquest never finished. A century after the huacas rose, the Sapa Inca rules from Cusco again, Spain holds the coast and the silver mountain, and the line between them runs across the roof of the world. This is the war the rest of the world is about to join: whoever breaks the Andean siege, or robs Spain while it's pinned, decides who gets the metals that are turning the balance of magic. A three-sided war: the Inca, the Spanish and the people profiting off both. At stake: silver, mercury, guano, cinchona, the platina in the Chocó's rivers and the huacas that rose. It's the book's grittiest setting, for amoral soldier-of-fortune play in the *Wages of Fear* vein, or for Andeans defending their home. The Inca aren't simply the good side: their state was itself an empire built on conquest, and the Cañari and Chachapoya fought beside Spain against it.",
+   "hooks": [
+    "The keepers of Pariacaca say the mountain will close the pass to Spain for a season, if someone brings back what the extirpators carried off to Lima.",
+    "A mule train of Huancavelica mercury is three days late into Potosí, and the huaca above the road has asked for something it hasn't asked for before.",
+    "The Salcedos' last silver shipment left Laicacota the week the viceroy's column arrived, and it never reached Lima.",
+    "A Spanish officer wants guides over the pass; the guide he hires has already been paid by the Sapa Inca to lose him.",
+    "In Lima, the countess's confessor is passing letters to someone on the high ground, and the letters are written in Quechua.",
+    "An English captain at Port Royal has a commission, a chart of the Atrato and no idea who drew the chart.",
+    "A Mutapan factor in Buenos Aires is buying cinchona bark at any price, and nobody knows what Mutapa needs it for."
+   ],
    "regions": [
     "The Americas"
    ]

@@ -1,9 +1,9 @@
 {
  "provenance": {
   "source": "Euphonia.md",
-  "master": "~/Documents/euphonia/Euphonia.md",
-  "sha256": "fb7321961bfaff016ee6043e89a34ce2db0c4c5f915e94cfbb144536726f133b",
-  "modified": "2026-11-13T07:00:27-05:00",
+  "master": "~/mnt/euphonia/Euphonia.md",
+  "sha256": "1179b05e88d80f02e36f6a74eb2c5d1403061186ce69dfb69d3a0e4652da7560",
+  "modified": "2026-11-13T12:43:33+00:00",
   "exporter": "class-kit/site_export.py",
   "exporter_version": 15,
   "rules": {
