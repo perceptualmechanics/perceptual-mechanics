@@ -150,6 +150,7 @@ export async function initMap(stage) {
   const tideLine = moment.querySelector('.map-tide');
   // The map's two buttons sit in the bar over it, beside the tabs.
   const reset = document.querySelector('.map-reset');
+  const contact = document.querySelector('.contact');
   const hiddenText = ({ half, open }) => [
     half === 'dark' ? 'the dark half' : half === 'other' ? 'the other half' : 'as the DM says',
     open && `${open}'s open night`,
@@ -512,6 +513,7 @@ export async function initMap(stage) {
     }
     placeLabels();
     reset.hidden = atHome();
+    contact.hidden = atHome();
     ambient.fade(shown);
     // Still means no turn for SETTLE_MS after the last frame's end, however
     // long that frame took.
@@ -913,6 +915,9 @@ export async function initMap(stage) {
     redraw();
   }
   reset.addEventListener('click', resetView);
+  contact.addEventListener('click', () => {
+    window.location.href = 'mailto:perceptualmechanics@gmail.com';
+  });
 
   // A new theme recolours the globe and its Wheel from the same geometry: the
   // palette is read again, the globe takes its new colours, and the view's
@@ -928,6 +933,7 @@ export async function initMap(stage) {
   });
   draw();
   contentsOpen.hidden = false;
+  contact.hidden = false;
   moonLine.hidden = false;
   datesTable.hidden = false;
   tideLine.hidden = false;
