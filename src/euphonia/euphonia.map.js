@@ -4,13 +4,13 @@
 // zoom; a region's name spins the globe to it.
 import worldUrl from './euphonia.world.json?url';
 import reliefUrl from './euphonia.relief.bin?url';
-import { createRelief } from './euphonia.relief.js';
+import { createGlobe } from './euphonia.gl.js';
 import roseData from './euphonia.roses.json';
 import { orthoLocal, orthoUnproject, subsolar, onLand } from './euphonia.projection.js';
 import { globeWorld, projectionFor, faces } from './euphonia.globe.js';
 import { solarParams, solarEvents } from '../bench/bench.sky.js';
 import { fromScreen, palette, drawWheel, drawFills, drawLines, drawMarks, drawMount, maxZoom } from './euphonia.draw.js';
-import { viewOf, covers, EXTENT, EYE, clampEye, calendarOf, azimuthOf } from './euphonia.mount.js';
+import { viewOf, covers, EXTENT, EYE, NARROWEST, clampEye, calendarOf, azimuthOf } from './euphonia.mount.js';
 import { moonAt } from './euphonia.moon.js';
 import { createAmbient, REALM_REACH_REM } from './euphonia.ambient.js';
 import { THEMES } from './euphonia.themes.js';
@@ -59,9 +59,15 @@ const REGION_FIT = 0.8;
 const TAP_SLOP = 4;
 // The Earth's mean radius in kilometres (IUGG), for distances to places.
 const EARTH_KM = 6371;
-// The tropics' and polar circles' names sit this many degrees of longitude
-// west of the globe's centre, on the facing side, as globes lettered them.
-const CIRCLE_NAME_WEST = 60;
+// The tropics' and polar circles' names sit 60° of longitude west of the
+// globe's centre, on the facing side, as globes lettered them; where the
+// mount or another name is in the way there, a name tries each of these
+// further along its own line, west of the centre first.
+const CIRCLE_NAME_WEST = [60, 40, 20, -20, -40, -60];
+// Where a name may stand on its spot, in half its width and height: a
+// circle's centred; a region's centred on its place, then touching it from
+// each side, then from each corner.
+const CENTRED = [[0, 0]], TOUCH = [...CENTRED, [-1, 0], [1, 0], [0, -1], [0, 1], [-1, -1], [1, -1], [-1, 1], [1, 1]];
 // The regions' names, in rem: the size of the page's notes.
 const LABEL_REM = 0.85;
 
@@ -81,26 +87,48 @@ function cubicBezier(css) {
 }
 
 const regions = places.regions.map(regionShape);
+// Where each region's name may stand, in the order it tries them: its
+// places' mean, then its places, the most central first.
+const nameSpots = regions.map(r => [r.centre, ...[...r.glows].sort((a, b) => apart(a, r.centre) - apart(b, r.centre))]);
 
 // Where names would print over each other, the larger region's goes first
-// (its places spread furthest), and each after it tries its own spot, then
-// just below or just above the name in its way, moving at most its own
-// height; a name that fits none of them, or wouldn't lie whole on the
-// globe's open face (inside its limb, clear of the mount), isn't drawn at
-// this size. Zooming in makes room, and every region's
-// chapter is in the panel's contents. Boxes are centred on (x, y), with
-// each name measured once per type size: reading the layout back each frame
-// would lay out the whole page each time.
-function place(boxes, open) {
+// (its places spread furthest). Each name has its spots in order (a region's
+// centre, then its places nearest the centre first; a circle's points along
+// its line), and at each tries every way it may stand there (`touch`), each
+// as it is, then just below or just above the name in its way, moving at most
+// its own height. It stands at the first that lies whole on the globe's open
+// face (inside its limb, clear of the mount) and over no other name; one that
+// fits none isn't drawn at this size. Zooming in makes room, and every
+// region's chapter is in the panel's contents. Each name is measured once per
+// type size: reading the layout back each frame would lay out the whole page
+// each time.
+function place(boxes, open, step) {
   const placed = [];
   const blockerOf = b => placed.find(o => Math.abs(b.x - o.x) < (b.w + o.w) / 2 && Math.abs(b.y - o.y) < (b.h + o.h) / 2);
-  const inside = b => [[-1, -1], [1, -1], [-1, 1], [1, 1]].every(([sx, sy]) => open(b.x + sx * b.w / 2, b.y + sy * b.h / 2));
+  // Whole on the open face: the limb is convex, so the corners would do for
+  // it, but a ring of the stand can cross a name between them. Whatever
+  // crosses the box crosses its outline for at least `step`, so the outline
+  // is tried at that spacing.
+  const inside = ({ x, y, w, h }) => {
+    const l = x - w / 2, t = y - h / 2, nx = Math.ceil(w / step), ny = Math.ceil(h / step);
+    for (let i = 0; i <= nx; i++) if (!open(l + w * i / nx, t) || !open(l + w * i / nx, t + h)) return false;
+    for (let j = 1; j < ny; j++) if (!open(l, t + h * j / ny) || !open(l + w, t + h * j / ny)) return false;
+    return true;
+  };
   for (const b of [...boxes].sort((a, c) => c.spread - a.spread)) {
-    const blocker = blockerOf(b);
-    const tries = blocker ? [1, -1].map(side => blocker.y + side * (blocker.h + b.h) / 2) : [b.y];
-    const y = tries.find(t => Math.abs(t - b.anchorY) <= b.h && !blockerOf({ ...b, y: t }) && inside({ ...b, y: t }));
-    b.shown = y !== undefined;
-    if (b.shown) { b.y = y; placed.push(b); }
+    b.shown = false;
+    spots: for (const [px, py] of b.spots) {
+      for (const [sx, sy] of b.touch) {
+        const x = px + sx * b.w / 2, y0 = py + sy * b.h / 2;
+        const at = { ...b, x, y: y0 }, blocker = blockerOf(at);
+        const tries = blocker ? [1, -1].map(side => blocker.y + side * (blocker.h + b.h) / 2) : [y0];
+        const y = tries.find(t => Math.abs(t - y0) <= b.h && !blockerOf({ ...at, y: t }) && inside({ ...at, y: t }));
+        if (y === undefined) continue;
+        Object.assign(b, { x, y, shown: true });
+        placed.push(b);
+        break spots;
+      }
+    }
   }
 }
 
@@ -135,17 +163,11 @@ export async function initMap(stage) {
   const g = {
     cell, canvas, ctx: canvas.getContext('2d'),
     fills: document.createElement('canvas'), lines: document.createElement('canvas'), wheel: document.createElement('canvas'),
+    mountBack: document.createElement('canvas'), mountFront: document.createElement('canvas'),
     labels: cell.querySelector('.map-labels'),
     tip: Object.assign(document.createElement('span'), { className: 'map-place', hidden: true }),
     ...home(), width: 0, height: 0, cssWidth: 0, cssHeight: 0, dpr: 1, baseKey: '',
   };
-  // The relief arrives after the coasts and joins them when it does.
-  let relief = null;
-  fetch(reliefUrl).then(r => r.arrayBuffer()).then(bytes => {
-    relief = createRelief(bytes, colors);
-    g.baseKey = '';
-    redraw();
-  });
 
   // The moment's readouts, on the panel's This moment page, kept up to date
   // whether or not it's open.
@@ -167,6 +189,20 @@ export async function initMap(stage) {
   // which runs from Samhain 1668 to Samhain 1669, at this moment's UT.
   const now = new Date();
   const instant = Date.UTC(now.getMonth() >= 10 ? 1668 : 1669, now.getMonth(), now.getDate(), now.getUTCHours(), now.getUTCMinutes());
+  // The globe in WebGL2 where it can be (euphonia.gl.js), on a canvas of its
+  // own between two that hold the mount, behind it and before it; the canvas
+  // the page has keeps the pointer and holds the mount's front. The relief's
+  // grid joins it when it arrives. Without WebGL2, that one canvas draws it
+  // all in 2D.
+  const layer = () => Object.assign(document.createElement('canvas'), { className: 'map-layer' });
+  const backCanvas = layer(), globeCanvas = layer();
+  for (const c of [backCanvas, globeCanvas]) c.setAttribute('aria-hidden', 'true');
+  let globe = null;
+  try { globe = createGlobe(globeCanvas, world, colors, subsolar(instant).obliquity); } catch (err) { console.warn(`The globe falls back to 2D: ${err.message}`); }
+  if (globe) {
+    canvas.before(backCanvas, globeCanvas);
+    fetch(reliefUrl).then(r => r.arrayBuffer()).then(bytes => { globe.grid(bytes); g.baseKey = ''; redraw(); });
+  }
   // The Wheel behind the globe, alive on its own canvas (euphonia.ambient.js),
   // its planets where they stood at that instant.
   const ambient = createAmbient(ambientCanvas, {
@@ -409,7 +445,6 @@ export async function initMap(stage) {
       width: Math.round(g.cssWidth * scale), height: Math.round(g.cssHeight * scale),
     };
   };
-  const view = () => viewAt(g.dpr);
   const cssView = () => viewAt(1);
   const atHome = () => g.zoom === 1 && g.lon0 === home().lon0 && g.eye === home().eye;
   // The horizon's calendar, made once for each year shown.
@@ -427,11 +462,27 @@ export async function initMap(stage) {
 
   let frame = 0;
   const redraw = () => { if (!frame) frame = requestAnimationFrame(render); };
+  // While the globe turns, a frame at full resolution can cost more than a
+  // frame's time on a slow machine, or where the globe falls back to 2D (a
+  // drag measured 150 ms a frame in Firefox at 2× in 2D; in WebGL it keeps
+  // to the display's frames). Then it turns at the CSS pixel's resolution, a
+  // quarter the pixels, and is drawn at full resolution again once it has
+  // been still for SETTLE_MS; each full frame measures the cost again.
+  const FRAME_MS = 1000 / 60, SETTLE_MS = 150;
+  let turned = '', lastTurn = -Infinity, slow = false, settle = 0;
 
   function render() {
     frame = 0;
     if (!g.width) return;
-    const v = view();
+    const begun = performance.now(), turn = `${g.lon0}|${g.eye}|${g.zoom}|${g.focus}`, turning = turn !== turned;
+    const scale = turning && slow && begun - lastTurn < SETTLE_MS ? 1 : g.dpr;
+    if (turning) {
+      turned = turn;
+      clearTimeout(settle);
+      if (scale !== g.dpr) settle = setTimeout(redraw, SETTLE_MS);
+    }
+    const v = viewAt(scale);
+    if (g.canvas.width !== v.width || g.canvas.height !== v.height) { g.canvas.width = v.width; g.canvas.height = v.height; }
     // The Wheel is the frame the cosmos is read in, Good up and Law to the
     // left, not a place on the earth: it stays as the window frames it at
     // home while the globe turns, zooms and slides, and is drawn again only
@@ -444,35 +495,59 @@ export async function initMap(stage) {
       ambient.setFrame({ view: framed, rim: g.rim, dpr: g.dpr, rem: g.rem, wheel: g.wheel });
       g.wheelKey = framing;
     }
-    const key = `${g.lon0}|${g.eye}|${g.zoom}|${g.focus}|${g.width}x${g.height}`;
-    if (key !== g.baseKey) {
-      for (const c of [g.fills, g.lines]) { c.width = g.width; c.height = g.height; }
-      drawFills(g.fills.getContext('2d'), v, world, colors, g.dpr, relief);
-      drawLines(g.lines.getContext('2d'), v, world, colors, g.dpr);
+    const key = `${turn}|${v.width}x${v.height}`, based = key !== g.baseKey;
+    if (based) {
+      if (!globe) {
+        for (const c of [g.fills, g.lines]) { c.width = v.width; c.height = v.height; }
+        drawFills(g.fills.getContext('2d'), v, world, colors, scale);
+        drawLines(g.lines.getContext('2d'), v, world, colors, scale);
+      }
       g.baseKey = key;
       // What Enter picks, marked at the globe's centre when it's focused,
       // and the latitude it faces, for those who can't see it.
-      g.cell.style.setProperty('--globe-x', `${v.cx / g.dpr}px`);
-      g.cell.style.setProperty('--globe-y', `${v.cy / g.dpr}px`);
+      g.cell.style.setProperty('--globe-x', `${v.cx / scale}px`);
+      g.cell.style.setProperty('--globe-y', `${v.cy / scale}px`);
       // Set only when it reads differently: each set is news to a screen reader.
       const label = `The globe, facing ${degrees(g.eye, 'N', 'S')}`;
       if (g.cell.getAttribute('aria-label') !== label) g.cell.setAttribute('aria-label', label);
     }
-    const mount = { eye: g.eye, calendar: calendarFor(new Date(instant).getUTCFullYear()).days, today: azimuthOf(instant), font };
-    const shown = recede();
-    g.ctx.clearRect(0, 0, g.width, g.height);
-    g.ctx.globalAlpha = shown;
-    if (shown) drawMount(g.ctx, v, 'back', mount, colors, g.dpr);
-    g.ctx.globalAlpha = 1;
-    g.ctx.drawImage(g.fills, 0, 0);
-    g.ctx.drawImage(g.lines, 0, 0);
-    drawMarks(g.ctx, v, { obliquity: subsolar(instant).obliquity, regions, hoverPlace, pick }, colors, g.dpr);
-    g.ctx.globalAlpha = shown;
-    if (shown) drawMount(g.ctx, v, 'front', mount, colors, g.dpr);
-    g.ctx.globalAlpha = 1;
+    // The mount turns with nothing the globe does but the eye, the glass and
+    // the theme, so its two passes are drawn into layers of their own and
+    // kept until one of those changes; a turn of the globe reuses them.
+    const shown = recede(), today = azimuthOf(instant);
+    const mountKey = `${g.eye}|${g.zoom}|${g.focus}|${v.width}x${v.height}|${today}|${g.typeSet}|${currentTheme().id}`;
+    const layers = globe ? [[backCanvas, 'back'], [canvas, 'front']] : [[g.mountBack, 'back'], [g.mountFront, 'front']];
+    if (shown && mountKey !== g.mountKey) {
+      const mount = { eye: g.eye, calendar: calendarFor(new Date(instant).getUTCFullYear()).days, today, font };
+      for (const [layer, pass] of layers) {
+        layer.width = v.width; layer.height = v.height;
+        drawMount(layer.getContext('2d'), v, pass, mount, colors, scale);
+      }
+      g.mountKey = mountKey;
+    }
+    if (globe) {
+      // The mount recedes by its layers' opacity; the globe is drawn whole.
+      backCanvas.style.opacity = canvas.style.opacity = String(shown);
+      globe(v, { regions, hoverPlace, pick, scale });
+    } else {
+      g.ctx.clearRect(0, 0, v.width, v.height);
+      g.ctx.globalAlpha = shown;
+      if (shown) g.ctx.drawImage(g.mountBack, 0, 0);
+      g.ctx.globalAlpha = 1;
+      g.ctx.drawImage(g.fills, 0, 0);
+      g.ctx.drawImage(g.lines, 0, 0);
+      drawMarks(g.ctx, v, { obliquity: subsolar(instant).obliquity, regions, hoverPlace, pick }, colors, scale);
+      g.ctx.globalAlpha = shown;
+      if (shown) g.ctx.drawImage(g.mountFront, 0, 0);
+      g.ctx.globalAlpha = 1;
+    }
     placeLabels();
     reset.hidden = atHome();
     ambient.fade(shown);
+    // Still means no turn for SETTLE_MS after the last frame's end, however
+    // long that frame took.
+    if (based && scale === g.dpr) slow = performance.now() - begun > FRAME_MS;
+    if (turning) lastTurn = performance.now();
   }
   // The Wheel and the mount recede as the glass closes on the earth: wholly
   // there at the whole mount, gone by the zoom at which the mount covers the
@@ -500,21 +575,26 @@ export async function initMap(stage) {
       g.tip.style.transform = `translate(${tip[0] + 10}px, ${tip[1]}px) translate(0, -50%)`;
     }
     const boxes = [];
+    // A region's name at the first of its spots where it fits, there
+    // centred, or touching it from a side or a corner, so a place near an
+    // edge of the open face keeps its name.
     regions.forEach((r, k) => {
-      if (!faces(v, r.centre)) { g.buttons[k].hidden = true; return; }
-      const [x, y] = project([r.centre.lon, r.centre.lat]);
-      boxes.push({ k, x, y, anchorY: y, spread: r.spread, ...g.labelSizes[k] });
+      const { w, h } = g.labelSizes[k];
+      const spots = nameSpots[k].filter(p => faces(v, p)).map(p => project([p.lon, p.lat]));
+      if (!spots.length) { g.buttons[k].hidden = true; return; }
+      boxes.push({ k, spots, touch: TOUCH, spread: r.spread, w, h });
     });
     // The circles' names, only on the whole globe, left-aligned just above
     // their lines; below every region's name in priority.
     const eps = subsolar(instant).obliquity;
     [0, eps, -eps, 90 - eps, eps - 90].forEach((lat, k) => {
-      const p = { lon: g.lon0 - CIRCLE_NAME_WEST, lat };
-      if (g.zoom !== 1 || !faces(v, p)) { g.circleNames[k].hidden = true; return; }
-      const [x, y] = project([p.lon, p.lat]), { w, h } = g.circleSizes[k];
-      boxes.push({ circle: k, x: x + w / 2, y: y - h / 2, anchorY: y - h / 2, spread: -1, w, h });
+      const { w, h } = g.circleSizes[k];
+      const spots = g.zoom !== 1 ? [] : CIRCLE_NAME_WEST.map(west => ({ lon: g.lon0 - west, lat })).filter(p => faces(v, p))
+        .map(p => { const [x, y] = project([p.lon, p.lat]); return [x + w / 2, y - h / 2]; });
+      if (!spots.length) { g.circleNames[k].hidden = true; return; }
+      boxes.push({ circle: k, spots, touch: CENTRED, spread: -1, w, h });
     });
-    place(boxes, open);
+    place(boxes, open, NARROWEST * v.k);
     for (const { k, circle, x, y, shown } of boxes) {
       const b = circle === undefined ? g.buttons[k] : g.circleNames[circle];
       b.hidden = !shown;
@@ -872,11 +952,11 @@ export async function initMap(stage) {
   reset.addEventListener('click', resetView);
 
   // A new theme recolours the globe and its Wheel from the same geometry: the
-  // palette is read again, the relief takes its new colours, and the view's
+  // palette is read again, the globe takes its new colours, and the view's
   // layers and the Wheel are drawn afresh in the theme's colours and type.
   document.addEventListener('euphonia:theme', () => {
     Object.assign(colors, palette(stage));
-    relief?.recolor(colors);
+    globe?.recolor(colors);
     g.baseKey = '';
     g.wheelKey = '';
     loadType();

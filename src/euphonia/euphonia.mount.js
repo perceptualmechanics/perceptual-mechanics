@@ -54,6 +54,10 @@ export const HORIZON = {
 // or south. outer·sin E + thickness·cos E = ring is R·sin(E + φ) = ring.
 export const EYE_MAX = (Math.asin(MERIDIAN.outer / Math.hypot(HORIZON.outer, HORIZON.thickness)) - Math.atan2(HORIZON.thickness, HORIZON.outer)) / RAD;
 export const clampEye = eye => Math.max(-EYE_MAX, Math.min(EYE_MAX, eye));
+// The stand's narrowest on the page, in globe radii: the meridian ring at
+// its top and bottom, foreshortened by the steepest eye. Any surface of the
+// stand that crosses a shape crosses its outline for at least this long.
+export const NARROWEST = MERIDIAN_WIDTH * Math.cos(EYE_MAX * RAD);
 
 // A point of the stand on the page, seen from `eye`: x right, y up, and its
 // depth toward the eye.

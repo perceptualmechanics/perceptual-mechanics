@@ -46,10 +46,12 @@ export function palette(el) {
 
 // Water-lining, as the period's engravers drew the sea: lines following every
 // coast outward, each a gap further than the last from the one before (1, 2,
-// 3… gaps), fainter as they go. Each is an exact offset of the coast, cut as
-// the rim of a stroke one line-width narrower than the stroke under it.
-// dpr scales line widths, which are in CSS pixels.
+// 3… gaps), fainter as they go. The GPU's drawing (euphonia.gl.js) takes them
+// from each pixel's distance to the land; here each is an exact offset of
+// the coast, cut as the rim of a stroke one line-width narrower than the
+// stroke under it. dpr scales line widths, which are in CSS pixels.
 const WATERLINES = 5, WATERLINE_GAP = 1.5, WATERLINE_WIDTH = 0.6;
+export const WATERLINING = { count: WATERLINES, gap: WATERLINE_GAP, width: WATERLINE_WIDTH };
 let waterCanvas = null;
 function waterLines(view, world, colors, dpr) {
   waterCanvas ??= document.createElement('canvas');
@@ -71,60 +73,75 @@ function waterLines(view, world, colors, dpr) {
   return waterCanvas;
 }
 
-// The layers that change only with the view: the fills (sea, land, lakes)
-// and the lines (graticule, coasts, rivers, shores, rhumbs). relief, when the
-// page has it, draws the sea's depths or the land's relief for this view
-// (euphonia.relief.js); without it, the fills are flat.
-export function drawFills(ctx, view, world, colors, dpr, relief) {
+// The layers that change only with the view, as 2D draws them where the GPU
+// can't (euphonia.gl.js draws them where it can, the relief with them): the
+// fills (the sea, its water-lining, the land clipped to its coasts, the
+// lakes), flat; and the lines (graticule, coasts, rivers, shores, rhumbs).
+export function drawFills(ctx, view, world, colors, dpr) {
   const path = geoPath(projectionFor(view), ctx);
   ctx.clearRect(0, 0, view.width, view.height);
   ctx.save();
   clipToGlobe(ctx, view);
-  if (relief) ctx.drawImage(relief(view, 'sea'), 0, 0);
-  else { ctx.fillStyle = colors.sea; ctx.fillRect(0, 0, view.width, view.height); }
+  ctx.fillStyle = colors.sea; ctx.fillRect(0, 0, view.width, view.height);
   ctx.drawImage(waterLines(view, world, colors, dpr), 0, 0);
   ctx.save();
   ctx.beginPath(); path(world.land); ctx.clip();
-  if (relief) ctx.drawImage(relief(view, 'land'), 0, 0);
-  else { ctx.fillStyle = colors.land; ctx.fillRect(0, 0, view.width, view.height); }
+  ctx.fillStyle = colors.land; ctx.fillRect(0, 0, view.width, view.height);
   ctx.restore();
   ctx.fillStyle = colors.sea;
   ctx.beginPath(); path(world.lakes); ctx.fill();
   ctx.beginPath(); path(world.historic); ctx.fill();
   ctx.restore();
 }
+// The globe's lines, in the order they're drawn: each a layer of the world,
+// its colour and its width in CSS pixels, the historic lakes dashed (3 on, 2
+// off); then the roses; then the equator, tropics and polar circles. Both the
+// GPU's drawing (euphonia.gl.js) and this one read them.
+export const GLOBE_LINES = [
+  { layer: 'graticule', color: 'graticule', width: 0.5 },
+  { layer: 'coast', color: 'coast', width: 0.7 },
+  { layer: 'rivers', color: 'river', width: 0.7 },
+  { layer: 'lakes', color: 'circles', width: 0.5 },
+  { layer: 'historic', color: 'historic', width: 0.5, dash: [3, 2] },
+  { layer: 'roseRest', color: 'rhumb', width: 0.4 },
+  { layer: 'roseMain', color: 'rhumb', width: 0.8 },
+];
+export const CIRCLES_LINE = { color: 'circles', width: 0.7 };
+// The equator, tropics and polar circles for the sun's obliquity, as lines a
+// point each 2° of longitude.
+export const circlesOf = obliquity => ({ type: 'MultiLineString', coordinates: [0, obliquity, -obliquity, 90 - obliquity, obliquity - 90].map(lat => Array.from({ length: 181 }, (_, k) => [-180 + 2 * k, lat])) });
+// The marks, in CSS pixels: a lit place's dot, the ring round the place under
+// the pointer, the picked place's open cross (from its gap to its end), the
+// limb; and a rose's star, its points long, half-long (of the long) and short.
+export const MARKS = { dot: 2.5, ring: 7, ringWidth: 1.5, cross: [3, 9], crossWidth: 1.5, limbWidth: 1.5, rose: 11, roseHalf: 0.6, roseShort: 0.3 };
 export function drawLines(ctx, view, world, colors, dpr) {
   const path = geoPath(projectionFor(view), ctx);
-  const stroke = (layer, color, width) => { ctx.beginPath(); path(layer); ctx.strokeStyle = color; ctx.lineWidth = width * dpr; ctx.stroke(); };
   ctx.clearRect(0, 0, view.width, view.height);
   ctx.save();
   clipToGlobe(ctx, view);
   ctx.lineJoin = 'round';
-  stroke(world.graticule, colors.graticule, 0.5);
-  ctx.strokeStyle = colors.coast; ctx.lineWidth = 0.7 * dpr; ctx.stroke(coastPath(view, world));
-  stroke(world.rivers, colors.river, 0.7);
-  stroke(world.lakes, colors.circles, 0.5);
-  ctx.setLineDash([3 * dpr, 2 * dpr]); stroke(world.historic, colors.historic, 0.5); ctx.setLineDash([]);
-  // The roses' rhumb lines, and at each pole an eight-pointed star, its
-  // north point to the globe's north.
-  stroke(world.roseRest, colors.rhumb, 0.4);
-  stroke(world.roseMain, colors.rhumb, 0.8);
+  for (const { layer, color, width, dash } of GLOBE_LINES) {
+    ctx.strokeStyle = colors[color]; ctx.lineWidth = width * dpr; ctx.setLineDash((dash ?? []).map(d => d * dpr));
+    if (layer === 'coast') ctx.stroke(coastPath(view, world));
+    else { ctx.beginPath(); path(world[layer]); ctx.stroke(); }
+  }
+  ctx.setLineDash([]);
+  // At each rose's pole an eight-pointed star, its north point to the
+  // globe's north.
   ctx.fillStyle = colors.rose;
   const project = projectionFor(view);
   for (const c of world.roseCentres) {
     if (!faces(view, c)) continue;
-    const [x, y] = project([c.lon, c.lat]), long = ROSE_STAR * dpr, short = long * 0.3;
+    const [x, y] = project([c.lon, c.lat]), long = MARKS.rose * dpr;
     ctx.beginPath();
     for (let k = 0; k < 16; k++) {
-      const a = k * Math.PI / 8, r = k % 4 === 0 ? long : k % 2 === 0 ? long * 0.6 : short;
+      const a = k * Math.PI / 8, r = long * (k % 4 === 0 ? 1 : k % 2 === 0 ? MARKS.roseHalf : MARKS.roseShort);
       ctx[k ? 'lineTo' : 'moveTo'](x + r * Math.sin(a), y - r * Math.cos(a));
     }
     ctx.closePath(); ctx.fill();
   }
   ctx.restore();
 }
-// A rose's star, its longest points, in CSS pixels.
-const ROSE_STAR = 11;
 
 // The Wheel, faint behind the globe and its mount: the cosmos about the
 // earth, which is the globe. Its rings run from the globe's limb (0) to its
@@ -291,8 +308,8 @@ export function drawMarks(ctx, view, { obliquity, regions, hoverPlace, pick }, c
   ctx.save();
   clipToGlobe(ctx, view);
   ctx.beginPath();
-  path({ type: 'MultiLineString', coordinates: [0, obliquity, -obliquity, 90 - obliquity, obliquity - 90].map(lat => Array.from({ length: 181 }, (_, k) => [-180 + 2 * k, lat])) });
-  ctx.strokeStyle = colors.circles; ctx.lineWidth = 0.7 * dpr; ctx.stroke();
+  path(circlesOf(obliquity));
+  ctx.strokeStyle = colors[CIRCLES_LINE.color]; ctx.lineWidth = CIRCLES_LINE.width * dpr; ctx.stroke();
   // The book's regions, a glow round each place: drawn in the ellipse the
   // place's circle makes on the page, and only on its facing part.
   for (const r of regions) for (const p of r.glows) {
@@ -315,22 +332,22 @@ export function drawMarks(ctx, view, { obliquity, regions, hoverPlace, pick }, c
   for (const r of regions) if (r.lit) for (const p of r.glows) {
     const xy = at(p);
     if (!xy) continue;
-    ctx.beginPath(); ctx.arc(...xy, 2.5 * dpr, 0, 2 * Math.PI); ctx.fill();
+    ctx.beginPath(); ctx.arc(...xy, MARKS.dot * dpr, 0, 2 * Math.PI); ctx.fill();
   }
   const ring = hoverPlace && at(hoverPlace);
-  if (ring) { ctx.lineWidth = 1.5 * dpr; ctx.beginPath(); ctx.arc(...ring, 7 * dpr, 0, 2 * Math.PI); ctx.stroke(); }
+  if (ring) { ctx.lineWidth = MARKS.ringWidth * dpr; ctx.beginPath(); ctx.arc(...ring, MARKS.ring * dpr, 0, 2 * Math.PI); ctx.stroke(); }
   // The place the reader picked: a cross, open at its centre.
   const cross = pick && at(pick);
   if (cross) {
-    const [x, y] = cross, a = 3 * dpr, b = 9 * dpr;
-    ctx.lineWidth = 1.5 * dpr; ctx.beginPath();
+    const [x, y] = cross, [a, b] = MARKS.cross.map(d => d * dpr);
+    ctx.lineWidth = MARKS.crossWidth * dpr; ctx.beginPath();
     for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { ctx.moveTo(x + dx * a, y + dy * a); ctx.lineTo(x + dx * b, y + dy * b); }
     ctx.stroke();
   }
   ctx.restore();
   // The limb.
   ctx.beginPath(); ctx.arc(view.cx, view.cy, view.k, 0, 2 * Math.PI);
-  ctx.strokeStyle = colors.rim; ctx.lineWidth = 1.5 * dpr; ctx.stroke();
+  ctx.strokeStyle = colors.rim; ctx.lineWidth = MARKS.limbWidth * dpr; ctx.stroke();
 }
 
 // The mount, in two passes about the globe: 'back' before it (the meridian

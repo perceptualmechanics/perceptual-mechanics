@@ -469,6 +469,34 @@ export function verifyEuphoniaMap({ mount = mounting, world = worldData(), fixtu
     }
   }
   if (coverMisses || !covered) fail(`the mount's cover is wrong at ${coverMisses} of the globe's points (${covered} hidden by casting), first at ${coverMissAt}`);
+  // The stand's narrowest, which a name's outline is tried at: every stretch
+  // of cover across the globe's face, along lines at every 15° through it
+  // from each eye, ends found to 1e-9 between samples 1e-3 apart, is at least
+  // that long, and one is that long. A stretch cut by the limb is left out:
+  // the stand nearer than the sphere is beyond its radius, so inside the disc
+  // cover ends only at the stand's own edges or at the limb.
+  const NARROW_SAMPLES = 2000, NARROW_LINES = 20;
+  let narrowest = Infinity, narrowAt = '';
+  for (const eyeAt of EYES) for (let deg = 0; deg < 180; deg += 15) {
+    const dx = Math.cos(deg * RAD), dy = Math.sin(deg * RAD);
+    for (let o = 1; o < NARROW_LINES; o++) {
+      const off = -1 + 2 * o / NARROW_LINES, half = Math.sqrt(1 - off * off);
+      const point = t => [-dy * off + dx * t, dx * off + dy * t], hid = t => mount.covers(...point(t), eyeAt);
+      const edge = (a, b) => { const was = hid(a); for (let k = 0; k < 40; k++) { const m = (a + b) / 2; if (hid(m) === was) a = m; else b = m; } return (a + b) / 2; };
+      let start = null, prev = -half, was = hid(prev);
+      for (let i = 1; i <= NARROW_SAMPLES; i++) {
+        const t = -half + 2 * half * i / NARROW_SAMPLES, now = i < NARROW_SAMPLES && hid(t);
+        if (now && !was) start = i > 1 ? edge(prev, t) : null;
+        if (!now && was && start !== null && i < NARROW_SAMPLES) {
+          const run = edge(prev, t) - start;
+          if (run < narrowest) { narrowest = run; narrowAt = `from ${eyeAt.toFixed(1)}° at ${point(start).map(v => v.toFixed(3)).join(', ')}`; }
+        }
+        if (!now) start = null;
+        prev = t; was = now;
+      }
+    }
+  }
+  if (!(narrowest >= mount.NARROWEST - 1e-9 && narrowest - mount.NARROWEST < 1e-6)) fail(`the stand's narrowest is ${mount.NARROWEST.toFixed(5)}, but its cover runs ${narrowest.toFixed(5)} across ${narrowAt}`);
   // The horizon's calendar for 1668: every day once, each a day's travel of
   // the sun on from the last, the year round the ring; the equinox and
   // solstices, found by the sun's declination, at the east, south, west and
@@ -506,7 +534,7 @@ export function verifyEuphoniaMap({ mount = mounting, world = worldData(), fixtu
 
   const log = problems.length
     ? [`\neuphonia map: ${problems.length} problem(s):`, ...problems.map(p => `  ${p}`)]
-    : [`ok: ${points} Natural Earth points under their provenance; the sun within ${sunWorst.toFixed(4)}° of Horizons at ${sunRows.length} instants; ${computed.length} moon phases within ${phaseWorst.toFixed(2)} min of Espenak, lit within ${litWorst.toFixed(4)}; ${regionPlaces} places in ${regions.length} regions and ${calendars.polities.length} seats, each found once in Natural Earth; ${calendars.polities.length} polities' calendars cited, ${conversions.length} Fourmilab conversions and ${calendarDays} days against ICU; the Tide turning at ${eves} eves and ${tropicChecks} tropical readings; the globe fills the ${(whole / (4 * Math.PI) * 100).toFixed(1)}% of it that is land, ${cutSeams - leftSeams.length} of its ${cutSeams} seam edges stitched across the cut, ${orphans.length} kept where Natural Earth has no other side; ${clipped} polygons clipped from ${VIEWS.length} views, none drawn larger than it is, the land within ${(clipWorst * 100).toFixed(1)}% of sampling from three; ${roundTrips} points projected and back, within ${d3Worst.toExponential(0)} of d3-geo's orthographic; land and sea right at ${KNOWN.length} known points; the relief right at ${RELIEF_KNOWN.length} known places, its shading's exaggeration its slopes'; ${roses.roses.length} wind roses at their poles; rhumb lines on their bearings; the mounted globe within ${mountWorst.toExponential(0)} of the globe as it stands at ${mountPoints} points, the mount's cover as the eye's line finds it at every one of ${MOUNT_GRID}² points from ${EYES.length} eyes, north and south, its extent the same from all, the 1668 calendar's year round its horizon with the equinoxes and the solstice at their points`];
+    : [`ok: ${points} Natural Earth points under their provenance; the sun within ${sunWorst.toFixed(4)}° of Horizons at ${sunRows.length} instants; ${computed.length} moon phases within ${phaseWorst.toFixed(2)} min of Espenak, lit within ${litWorst.toFixed(4)}; ${regionPlaces} places in ${regions.length} regions and ${calendars.polities.length} seats, each found once in Natural Earth; ${calendars.polities.length} polities' calendars cited, ${conversions.length} Fourmilab conversions and ${calendarDays} days against ICU; the Tide turning at ${eves} eves and ${tropicChecks} tropical readings; the globe fills the ${(whole / (4 * Math.PI) * 100).toFixed(1)}% of it that is land, ${cutSeams - leftSeams.length} of its ${cutSeams} seam edges stitched across the cut, ${orphans.length} kept where Natural Earth has no other side; ${clipped} polygons clipped from ${VIEWS.length} views, none drawn larger than it is, the land within ${(clipWorst * 100).toFixed(1)}% of sampling from three; ${roundTrips} points projected and back, within ${d3Worst.toExponential(0)} of d3-geo's orthographic; land and sea right at ${KNOWN.length} known points; the relief right at ${RELIEF_KNOWN.length} known places, its shading's exaggeration its slopes'; ${roses.roses.length} wind roses at their poles; rhumb lines on their bearings; the mounted globe within ${mountWorst.toExponential(0)} of the globe as it stands at ${mountPoints} points, the mount's cover as the eye's line finds it at every one of ${MOUNT_GRID}² points from ${EYES.length} eyes, north and south, never narrower than ${narrowest.toFixed(4)} across, its extent the same from all, the 1668 calendar's year round its horizon with the equinoxes and the solstice at their points`];
   return { ok: problems.length === 0, failures: problems.length, log };
 }
 

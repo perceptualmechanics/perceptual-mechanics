@@ -223,6 +223,9 @@ body { background: var(--ground); font-family: var(--type); }
 .map-disc canvas { display: block; position: relative; width: 100%; height: 100%; cursor: grab; }
 /* The Wheel's ambient life, under the globe's canvas, which takes the pointer. */
 .map-disc canvas.map-ambient { position: absolute; inset: 0; pointer-events: none; }
+/* The globe's own canvas and the mount behind it (euphonia.gl.js), under the
+   canvas that keeps the pointer. */
+.map-disc canvas.map-layer { position: absolute; inset: 0; pointer-events: none; }
 .map-disc canvas:active { cursor: grabbing; }
 .map-labels { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
 .map-region {
