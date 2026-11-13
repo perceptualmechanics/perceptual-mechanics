@@ -1,7 +1,6 @@
 import { readFileSync, readdirSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 import { THEMES, CONTRAST } from '../src/euphonia/euphonia.themes.js';
-import { EYE_MAX } from '../src/euphonia/euphonia.mount.js';
 import { placesData } from './verify-euphonia-map.mjs';
 import { khipu as drawKhipu } from '../src/euphonia/euphonia.ornament.js';
 
@@ -59,11 +58,9 @@ export function verifyEuphoniaThemes({ themes = THEMES, sources = SOURCES, khipu
       if (r < need) errors.push(`${t.id}: ${fg} on ${bg} is ${r.toFixed(2)} to 1, under ${need}`);
     }
     // The globe's home: a place the book names, or a turn in degrees. A place
-    // opens in the globe's middle, the eye at its latitude, so it must lie
-    // within the eye's reach (euphonia.mount.js's EYE_MAX).
+    // opens in the globe's middle, the eye at its latitude.
     const place = t.home?.place && placesData().regions.flatMap(r => r.places).find(p => p.name === t.home.place);
     if (!t.home?.why || !(place || Number.isFinite(t.home?.lon0))) errors.push(`${t.id}: its home must name a place the book places, or give lon0, and say why`);
-    if (place && Math.abs(place.lat) > EYE_MAX) errors.push(`${t.id}: its home, ${place.name} at ${place.lat.toFixed(2)}°, is beyond the eye's reach of ${EYE_MAX.toFixed(2)}°, so it can't open in the middle`);
     if (!t.provenance?.length) errors.push(`${t.id}: no provenance; name the objects its colours and motifs come from`);
     // Each entry names what it gives and where it comes from: a real object or
     // text with a source to check it by, or, honestly, who authored it.

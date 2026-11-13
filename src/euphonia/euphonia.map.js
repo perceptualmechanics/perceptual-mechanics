@@ -10,7 +10,7 @@ import { orthoLocal, orthoUnproject, subsolar, onLand } from './euphonia.project
 import { globeWorld, projectionFor, faces } from './euphonia.globe.js';
 import { solarParams, solarEvents } from '../bench/bench.sky.js';
 import { fromScreen, palette, drawWheel, drawFills, drawLines, drawMarks, drawMount, maxZoom } from './euphonia.draw.js';
-import { viewOf, covers, EXTENT, EYE, NARROWEST, clampEye, calendarOf, azimuthOf } from './euphonia.mount.js';
+import { viewOf, covers, EXTENT, EYE, clampEye } from './euphonia.mount.js';
 import { moonAt } from './euphonia.moon.js';
 import { createAmbient, REALM_REACH_REM } from './euphonia.ambient.js';
 import { THEMES } from './euphonia.themes.js';
@@ -59,18 +59,9 @@ const REGION_FIT = 0.8;
 const TAP_SLOP = 4;
 // The Earth's mean radius in kilometres (IUGG), for distances to places.
 const EARTH_KM = 6371;
-// The tropics' and polar circles' names sit 60° of longitude west of the
-// globe's centre, on the facing side, as globes lettered them; where the
-// mount or another name is in the way there, a name tries each of these
-// further along its own line, west of the centre first.
-const CIRCLE_NAME_WEST = [60, 40, 20, -20, -40, -60];
-// The least step, in CSS pixels, a name glides across rather than takes at
-// once: half a pixel, past which it shows.
-const STEP_PX = 0.5;
-// Where a name may stand on its spot, in half its width and height: a
-// circle's centred; a region's centred on its place, then touching it from
-// each side, then from each corner.
-const CENTRED = [[0, 0]], TOUCH = [...CENTRED, [-1, 0], [1, 0], [0, -1], [0, 1], [-1, -1], [1, -1], [-1, 1], [1, 1]];
+// The tropics' and polar circles' names sit this many degrees of longitude
+// west of the globe's centre, on the facing side, as globes lettered them.
+const CIRCLE_NAME_WEST = 60;
 // The regions' names, in rem: the size of the page's notes.
 const LABEL_REM = 0.85;
 
@@ -90,84 +81,26 @@ function cubicBezier(css) {
 }
 
 const regions = places.regions.map(regionShape);
-// Where each region's name may stand, in the order it tries them: its
-// places' mean, then its places, the most central first.
-const nameSpots = regions.map(r => [r.centre, ...[...r.glows].sort((a, b) => apart(a, r.centre) - apart(b, r.centre))]);
 
 // Where names would print over each other, the larger region's goes first
-// (its places spread furthest). Each name has its spots in order (a region's
-// centre, then its places nearest the centre first; a circle's points along
-// its line; null where a spot faces away), and at each tries every way it
-// may stand there (`touch`), each as it is, then just below or just above the
-// name in its way, moving at most its own height. It stands at the first that
-// lies whole on the globe's open face (inside its limb, clear of the mount)
-// and over no other name; one that fits none isn't drawn at this size.
-// Zooming in makes room, and every region's chapter is in the panel's
-// contents. While the globe turns or zooms the first that fits changes from
-// frame to frame, and the names in each other's way move with it, so a name
-// that stood last frame keeps the spot and stance it stood at (`held`, by
-// its `id`) while it still fits there, and when it doesn't, moves to the one
-// that fits nearest where it stood, there or beside the name in its way on
-// the side it was: going back to the first would leap it across the globe
-// and back. A name just shown takes the first. Each name is measured once
-// per type size: reading the layout back each frame would lay out the whole
-// page each time.
-function place(boxes, open, step, held) {
+// (its places spread furthest), and each after it tries its own spot, then
+// just below or just above the name in its way, moving at most its own
+// height; a name that fits none of them, or wouldn't lie whole on the
+// globe's face (inside its limb), isn't drawn at this size. A name may print
+// across the meridian ring, thin brass under its halo. Zooming in makes room, and every region's
+// chapter is in the panel's contents. Boxes are centred on (x, y), with
+// each name measured once per type size: reading the layout back each frame
+// would lay out the whole page each time.
+function place(boxes, open) {
   const placed = [];
   const blockerOf = b => placed.find(o => Math.abs(b.x - o.x) < (b.w + o.w) / 2 && Math.abs(b.y - o.y) < (b.h + o.h) / 2);
-  // Whole on the open face: the limb is convex, so the corners would do for
-  // it, but a ring of the stand can cross a name between them. Whatever
-  // crosses the box crosses its outline for at least `step`, so the outline
-  // is tried at that spacing.
-  const inside = ({ x, y, w, h }) => {
-    const l = x - w / 2, t = y - h / 2, nx = Math.ceil(w / step), ny = Math.ceil(h / step);
-    for (let i = 0; i <= nx; i++) if (!open(l + w * i / nx, t) || !open(l + w * i / nx, t + h)) return false;
-    for (let j = 1; j < ny; j++) if (!open(l, t + h * j / ny) || !open(l + w, t + h * j / ny)) return false;
-    return true;
-  };
-  // Where the name fits at its stance `s` (spot × stances + stance), that
-  // there or just above or below the name in its way, the nearer `near`'s
-  // height where both do, with how far it's lifted from its stance;
-  // undefined where it doesn't fit.
-  const stanceAt = (b, s, lift = 0) => {
-    const spot = b.spots[Math.floor(s / b.touch.length)], [sx, sy] = b.touch[s % b.touch.length];
-    return spot && [spot[0] + sx * b.w / 2, spot[1] + sy * b.h / 2 + lift];
-  };
-  const fitAt = (b, s, near) => {
-    const stance = stanceAt(b, s);
-    if (!stance) return undefined;
-    const [x, y0] = stance, at = { ...b, x, y: y0 }, blocker = blockerOf(at);
-    const tries = blocker ? [1, -1].map(side => blocker.y + side * (blocker.h + b.h) / 2) : [y0];
-    if (near !== undefined) tries.sort((p, q) => Math.abs(p - near) - Math.abs(q - near));
-    const y = tries.find(t => Math.abs(t - y0) <= b.h && !blockerOf({ ...at, y: t }) && inside({ ...at, y: t }));
-    return y === undefined ? undefined : [x, y, y - y0];
-  };
+  const inside = b => [[-1, -1], [1, -1], [-1, 1], [1, 1]].every(([sx, sy]) => open(b.x + sx * b.w / 2, b.y + sy * b.h / 2));
   for (const b of [...boxes].sort((a, c) => c.spread - a.spread)) {
-    const was = held[b.id] ??= { stance: -1, lift: 0, x: 0, y: 0, thenX: 0, thenY: 0, fromX: 0, fromY: 0, since: -Infinity, moved: false };
-    // Where the name stood last frame stands now, the ground having moved
-    // under it: what it keeps to, or moves the least from.
-    const stood = was.stance >= 0, then = stood && (stanceAt(b, was.stance, was.lift) ?? [was.x, was.y]);
-    let stance = -1, xy = stood ? fitAt(b, was.stance, then[1]) : undefined;
-    if (xy) stance = was.stance;
-    else {
-      for (let s = 0, far = Infinity; s < b.spots.length * b.touch.length; s++) {
-        const p = fitAt(b, s, stood ? then[1] : undefined);
-        if (!p) continue;
-        const d = stood ? Math.hypot(p[0] - then[0], p[1] - then[1]) : 0;
-        if (d < far) { far = d; stance = s; xy = p; }
-        if (!stood) break;
-      }
-    }
-    b.shown = stance >= 0;
-    // Moved: anything the ground's turning doesn't account for, a new stance
-    // or the name in its way changing. Within one, where it stood and stands
-    // agree but for rounding, far under a pixel.
-    was.moved = stood && b.shown && Math.hypot(xy[0] - then[0], xy[1] - then[1]) > STEP_PX;
-    was.stance = stance;
-    if (!b.shown) continue;
-    if (was.moved) [was.thenX, was.thenY] = then;
-    [b.x, b.y, was.lift] = xy; [was.x, was.y] = xy;
-    placed.push(b);
+    const blocker = blockerOf(b);
+    const tries = blocker ? [1, -1].map(side => blocker.y + side * (blocker.h + b.h) / 2) : [b.y];
+    const y = tries.find(t => Math.abs(t - b.anchorY) <= b.h && !blockerOf({ ...b, y: t }) && inside({ ...b, y: t }));
+    b.shown = y !== undefined;
+    if (b.shown) { b.y = y; placed.push(b); }
   }
 }
 
@@ -205,7 +138,7 @@ export async function initMap(stage) {
     mountBack: document.createElement('canvas'), mountFront: document.createElement('canvas'),
     labels: cell.querySelector('.map-labels'),
     tip: Object.assign(document.createElement('span'), { className: 'map-place', hidden: true }),
-    ...home(), width: 0, height: 0, cssWidth: 0, cssHeight: 0, dpr: 1, baseKey: '', held: [],
+    ...home(), width: 0, height: 0, cssWidth: 0, cssHeight: 0, dpr: 1, baseKey: '',
   };
 
   // The moment's readouts, on the panel's This moment page, kept up to date
@@ -486,9 +419,6 @@ export async function initMap(stage) {
   };
   const cssView = () => viewAt(1);
   const atHome = () => g.zoom === 1 && g.lon0 === home().lon0 && g.eye === home().eye;
-  // The horizon's calendar, made once for each year shown.
-  let calendar = null;
-  const calendarFor = year => (calendar?.year === year ? calendar : (calendar = { year, days: calendarOf(year) }));
   // The mount and the Wheel are lettered in the theme's type, roman and (the
   // Wheel's roads) italic, redrawn once the faces arrive.
   let font;
@@ -553,11 +483,11 @@ export async function initMap(stage) {
     // The mount turns with nothing the globe does but the eye, the glass and
     // the theme, so its two passes are drawn into layers of their own and
     // kept until one of those changes; a turn of the globe reuses them.
-    const shown = recede(), today = azimuthOf(instant);
-    const mountKey = `${g.eye}|${g.zoom}|${g.focus}|${v.width}x${v.height}|${today}|${g.typeSet}|${currentTheme().id}`;
+    const shown = recede();
+    const mountKey = `${g.eye}|${g.zoom}|${g.focus}|${v.width}x${v.height}|${g.typeSet}|${currentTheme().id}`;
     const layers = globe ? [[backCanvas, 'back'], [canvas, 'front']] : [[g.mountBack, 'back'], [g.mountFront, 'front']];
     if (shown && mountKey !== g.mountKey) {
-      const mount = { eye: g.eye, calendar: calendarFor(new Date(instant).getUTCFullYear()).days, today, font };
+      const mount = { eye: g.eye, font };
       for (const [layer, pass] of layers) {
         layer.width = v.width; layer.height = v.height;
         drawMount(layer.getContext('2d'), v, pass, mount, colors, scale);
@@ -603,10 +533,9 @@ export async function initMap(stage) {
 
   function placeLabels() {
     const v = cssView(), project = projectionFor(v);
-    // A point of the canvas on the globe's open face: inside its limb, on
-    // the canvas, and clear of the mount.
-    const open = (x, y) => Math.hypot(x - v.cx, y - v.cy) <= v.k && x >= 0 && x <= v.width && y >= 0 && y <= v.height
-      && !inTheWay(v, x, y);
+    // A point of the canvas on the globe's face: inside its limb, and on
+    // the canvas.
+    const open = (x, y) => Math.hypot(x - v.cx, y - v.cy) <= v.k && x >= 0 && x <= v.width && y >= 0 && y <= v.height;
     const tip = hoverPlace && faces(v, hoverPlace) && project([hoverPlace.lon, hoverPlace.lat]);
     g.tip.hidden = !tip;
     if (tip) {
@@ -614,67 +543,27 @@ export async function initMap(stage) {
       g.tip.style.transform = `translate(${tip[0] + 10}px, ${tip[1]}px) translate(0, -50%)`;
     }
     const boxes = [];
-    // A region's name at the first of its spots where it fits, there
-    // centred, or touching it from a side or a corner, so a place near an
-    // edge of the open face keeps its name.
     regions.forEach((r, k) => {
-      const { w, h } = g.labelSizes[k];
-      const spots = nameSpots[k].map(p => (faces(v, p) ? project([p.lon, p.lat]) : null));
-      boxes.push({ id: k, k, spots, touch: TOUCH, spread: r.spread, w, h });
+      if (!faces(v, r.centre)) { g.buttons[k].hidden = true; return; }
+      const [x, y] = project([r.centre.lon, r.centre.lat]);
+      boxes.push({ k, x, y, anchorY: y, spread: r.spread, ...g.labelSizes[k] });
     });
     // The circles' names, only on the whole globe, left-aligned just above
     // their lines; below every region's name in priority.
     const eps = subsolar(instant).obliquity;
     [0, eps, -eps, 90 - eps, eps - 90].forEach((lat, k) => {
-      const { w, h } = g.circleSizes[k];
-      const spots = g.zoom !== 1 ? [] : CIRCLE_NAME_WEST.map(west => {
-        const p = { lon: g.lon0 - west, lat };
-        if (!faces(v, p)) return null;
-        const [x, y] = project([p.lon, p.lat]);
-        return [x + w / 2, y - h / 2];
-      });
-      boxes.push({ id: regions.length + k, circle: k, spots, touch: CENTRED, spread: -1, w, h });
+      const p = { lon: g.lon0 - CIRCLE_NAME_WEST, lat };
+      if (g.zoom !== 1 || !faces(v, p)) { g.circleNames[k].hidden = true; return; }
+      const [x, y] = project([p.lon, p.lat]), { w, h } = g.circleSizes[k];
+      boxes.push({ circle: k, x: x + w / 2, y: y - h / 2, anchorY: y - h / 2, spread: -1, w, h });
     });
-    place(boxes, open, NARROWEST * v.k, g.held);
-    const now = performance.now();
-    for (const { id, k, circle, shown } of boxes) {
-      (circle === undefined ? g.buttons[k] : g.circleNames[circle]).hidden = !shown;
-      const was = g.held[id], rest = restOf(was, now);
-      // A name that moved glides from where it stood, as that stands now
-      // (and as far along any glide it was on), so it keeps going with the
-      // ground and only the step between where it stood and stands eases.
-      if (was.moved) { was.fromX = was.thenX + was.fromX * rest - was.x; was.fromY = was.thenY + was.fromY * rest - was.y; was.since = now; }
+    place(boxes, open);
+    for (const { k, circle, x, y, shown } of boxes) {
+      const b = circle === undefined ? g.buttons[k] : g.circleNames[circle];
+      b.hidden = !shown;
+      if (shown) b.style.transform = `translate(${x}px, ${y}px) translate(-50%, -50%)`;
     }
-    showNames(now);
   }
-
-  // Each shown name at its place, or on its way there: what's left of the
-  // way from where it moved, eased over the glide. A glide still under
-  // way asks for its next frame, the globe still or not.
-  let gliding = 0;
-  function showNames(now) {
-    cancelAnimationFrame(gliding);
-    let more = false;
-    g.held.forEach((was, id) => {
-      if (was.stance < 0) return;
-      const rest = restOf(was, now);
-      more ||= rest > 0;
-      const b = id < regions.length ? g.buttons[id] : g.circleNames[id - regions.length];
-      b.style.transform = `translate(${was.x + was.fromX * rest}px, ${was.y + was.fromY * rest}px) translate(-50%, -50%)`;
-    });
-    if (more) gliding = requestAnimationFrame(showNames);
-  }
-  // How much of a name's glide is left to go.
-  const restOf = (was, now) => (glide.ms ? 1 - glide.ease(Math.min(1, (now - was.since) / glide.ms)) : 0);
-  // The glide's length and ease, from the stylesheet: again whenever the
-  // reader asks for more or less motion.
-  let glide;
-  const readGlide = () => {
-    const css = getComputedStyle(g.labels);
-    glide = { ms: parseFloat(css.getPropertyValue('--name-glide')) * 1000, ease: cubicBezier(css.getPropertyValue('--name-ease').trim()) };
-  };
-  readGlide();
-  matchMedia('(prefers-reduced-motion: reduce)').addEventListener('change', readGlide);
 
   // A picked place: its facts at the top of the panel, kept up to date as
   // time runs; inside a region's glow, the region's chapter under them,
@@ -865,7 +754,7 @@ export async function initMap(stage) {
   // across, it spins the globe on its axis (at the centre a radius of travel
   // per radian, so dx pixels turn it dx / k radians); down, the eye rises and
   // the north comes to the middle, and up it sinks toward the south, as far
-  // as the eye can go (EYE_MAX).
+  // as the poles.
   function drag(dx, dy) {
     const k = fit() * g.zoom;
     g.lon0 = ((g.lon0 - dx / k / RAD + 540) % 360) - 180;

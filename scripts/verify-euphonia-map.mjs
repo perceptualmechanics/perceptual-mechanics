@@ -9,7 +9,7 @@ import * as lunar from '../src/euphonia/euphonia.moon.js';
 import * as calendar from '../src/euphonia/euphonia.calendars.js';
 import * as hidden from '../src/euphonia/euphonia.tide.js';
 import { resolvePlaces, regionShape } from '../src/euphonia/euphonia.places.js';
-import { solarEvents, solarParams } from '../src/bench/bench.sky.js';
+import { solarEvents } from '../src/bench/bench.sky.js';
 import * as mounting from '../src/euphonia/euphonia.mount.js';
 
 const RAD = Math.PI / 180;
@@ -422,10 +422,10 @@ export function verifyEuphoniaMap({ mount = mounting, world = worldData(), fixtu
   // through d3) against the globe as it stands: the axis upright in the
   // meridian ring, the meridian lon0 turned to face the eye, a point carried
   // into the stand and seen from the eye's height, from eyes across the whole
-  // range the reader can move it, south of the horizon as well as north.
-  const { MERIDIAN, HORIZON, EYE_MAX } = mount;
-  if (!(EYE_MAX > 0 && EYE_MAX < 90)) fail(`the eye's range is ${EYE_MAX}°`);
-  const EYES = [-1, -0.75, -0.5, -0.25, -0.01, 0.01, 0.25, 0.5, 0.75, 1].map(f => f * EYE_MAX).concat(mount.EYE);
+  // range the reader can move it, south of the equator as well as north.
+  const { MERIDIAN, EYE_MAX } = mount;
+  if (!(EYE_MAX > 0 && EYE_MAX <= 90)) fail(`the eye's range is ${EYE_MAX}°`);
+  const EYES = [-1, -0.75, -0.5, -0.25, 0, 0.25, 0.5, 0.75, 1].map(f => f * EYE_MAX).concat(mount.EYE);
   let mountWorst = 0, mountPoints = 0;
   for (const eyeAt of EYES) for (const lon0 of [-150, -15, 15, 120]) {
     const axis = [0, 1, 0], facing = [0, 0, 1], east = [1, 0, 0];
@@ -443,9 +443,8 @@ export function verifyEuphoniaMap({ mount = mounting, world = worldData(), fixtu
   }
   if (!(mountWorst < 1e-9) || !mountPoints) fail(`the mounted globe strays ${mountWorst} from the globe as it stands, over ${mountPoints} points`);
   // What the mount hides, by casting the eye's line through each point of
-  // the globe's face and finding where it meets the stand before the sphere:
-  // the meridian ring's plane, the horizon's top and bottom faces, and its
-  // outer and inner walls, from each of those eyes.
+  // the globe's face and finding where it meets the meridian ring's plane,
+  // within the ring, before the sphere, from each of those eyes.
   const MOUNT_GRID = 300;
   let coverMisses = 0, covered = 0, coverMissAt = '';
   for (const eyeAt of EYES) {
@@ -456,75 +455,20 @@ export function verifyEuphoniaMap({ mount = mounting, world = worldData(), fixtu
       const sphere = Math.sqrt(1 - x * x - y * y);
       // The line of sight: P(t) = x·X + y·up + t·eye, up = (0, cos E, −sin E), eye = (0, sin E, cos E).
       const at = t => [x, y * cE + t * sE, -y * sE + t * cE];
-      const hits = [];
-      { const t = y * sE / cE, P = at(t), r = Math.hypot(P[0], P[1]); if (r >= MERIDIAN.inner && r <= MERIDIAN.outer) hits.push(t); }
-      if (sE) for (const Yf of [0, -HORIZON.thickness]) { const t = (Yf - y * cE) / sE, P = at(t), h = Math.hypot(P[0], P[2]); if (h >= HORIZON.inner && h <= HORIZON.outer) hits.push(t); }
-      for (const R of [HORIZON.outer, HORIZON.inner]) {
-        if (R * R < x * x) continue;
-        for (const sign of [1, -1]) { const t = (y * sE + sign * Math.sqrt(R * R - x * x)) / cE, P = at(t); if (P[1] <= 0 && P[1] >= -HORIZON.thickness) hits.push(t); }
-      }
-      const hidden = hits.some(t => t > sphere);
+      const t = y * sE / cE, P = at(t), r = Math.hypot(P[0], P[1]);
+      const hidden = r >= MERIDIAN.inner && r <= MERIDIAN.outer && t > sphere;
       if (hidden !== mount.covers(x, y, eyeAt)) { coverMisses++; coverMissAt ||= `${x.toFixed(3)}, ${y.toFixed(3)} from ${eyeAt.toFixed(1)}°`; }
       if (hidden) covered++;
     }
   }
   if (coverMisses || !covered) fail(`the mount's cover is wrong at ${coverMisses} of the globe's points (${covered} hidden by casting), first at ${coverMissAt}`);
-  // The stand's narrowest, which a name's outline is tried at: every stretch
-  // of cover across the globe's face, along lines at every 15° through it
-  // from each eye, ends found to 1e-9 between samples 1e-3 apart, is at least
-  // that long, and one is that long. A stretch cut by the limb is left out:
-  // the stand nearer than the sphere is beyond its radius, so inside the disc
-  // cover ends only at the stand's own edges or at the limb.
-  const NARROW_SAMPLES = 2000, NARROW_LINES = 20;
-  let narrowest = Infinity, narrowAt = '';
-  for (const eyeAt of EYES) for (let deg = 0; deg < 180; deg += 15) {
-    const dx = Math.cos(deg * RAD), dy = Math.sin(deg * RAD);
-    for (let o = 1; o < NARROW_LINES; o++) {
-      const off = -1 + 2 * o / NARROW_LINES, half = Math.sqrt(1 - off * off);
-      const point = t => [-dy * off + dx * t, dx * off + dy * t], hid = t => mount.covers(...point(t), eyeAt);
-      const edge = (a, b) => { const was = hid(a); for (let k = 0; k < 40; k++) { const m = (a + b) / 2; if (hid(m) === was) a = m; else b = m; } return (a + b) / 2; };
-      let start = null, prev = -half, was = hid(prev);
-      for (let i = 1; i <= NARROW_SAMPLES; i++) {
-        const t = -half + 2 * half * i / NARROW_SAMPLES, now = i < NARROW_SAMPLES && hid(t);
-        if (now && !was) start = i > 1 ? edge(prev, t) : null;
-        if (!now && was && start !== null && i < NARROW_SAMPLES) {
-          const run = edge(prev, t) - start;
-          if (run < narrowest) { narrowest = run; narrowAt = `from ${eyeAt.toFixed(1)}° at ${point(start).map(v => v.toFixed(3)).join(', ')}`; }
-        }
-        if (!now) start = null;
-        prev = t; was = now;
-      }
-    }
-  }
-  if (!(narrowest >= mount.NARROWEST - 1e-9 && narrowest - mount.NARROWEST < 1e-6)) fail(`the stand's narrowest is ${mount.NARROWEST.toFixed(5)}, but its cover runs ${narrowest.toFixed(5)} across ${narrowAt}`);
-  // The horizon's calendar for 1668: every day once, each a day's travel of
-  // the sun on from the last, the year round the ring; the equinox and
-  // solstices, found by the sun's declination, at the east, south, west and
-  // north points, within a day.
-  const year = mount.calendarOf(1668);
-  // Each day a step on from the last, and the year short of once round by
-  // less than a day: 365 days of 1668's 366 carry the sun 365/365.24 of the
-  // way, so the last day never laps the first.
-  const steps = year.slice(1).map((d, i) => ((d.azimuth - year[i].azimuth) % 360 + 360) % 360);
-  const sweep = steps.reduce((a, b) => a + b, 0);
-  if (year.length !== 366 || steps.some(d => d < 0.9 || d > 1.1) || !(sweep < 360 && 360 - sweep < 1.1)) fail(`the 1668 calendar has ${year.length} days, steps of ${Math.min(...steps).toFixed(3)}–${Math.max(...steps).toFixed(3)}°, going ${sweep.toFixed(3)}° of the way round`);
-  const declination = d => solarParams(Date.UTC(1668, d.month, d.day, 12)).decl;
-  const turns = [
-    ['east', 90, year.findIndex((d, i) => i && declination(year[i - 1]) < 0 && declination(d) >= 0)],
-    ['south', 180, year.reduce((m, d, i) => (declination(d) > declination(year[m]) ? i : m), 0)],
-    ['west', 270, year.findIndex((d, i) => i && declination(year[i - 1]) > 0 && declination(d) <= 0)],
-  ];
-  for (const [point, azimuth, i] of turns) {
-    const off = Math.abs(((year[i].azimuth - azimuth) % 360 + 540) % 360 - 180);
-    if (!(off <= 1.1)) fail(`the calendar's ${year[i].day} ${mount.MONTHS[year[i].month]} sits ${off.toFixed(2)}° from the ${point} point, where the sun's declination turns`);
-  }
   // The mount's extent holds every part of it from every eye, and is reached:
   // the frame is the stand's, not a margin.
   const { EXTENT } = mount;
   let reach = 0;
   for (const eyeAt of EYES) for (let a = 0; a < 360; a++) {
     const c = Math.cos(a * RAD), s = Math.sin(a * RAD);
-    for (const P of [[MERIDIAN.outer * c, MERIDIAN.outer * s, 0], [HORIZON.outer * c, 0, HORIZON.outer * s], [HORIZON.outer * c, -HORIZON.thickness, HORIZON.outer * s]]) {
+    for (const P of [[MERIDIAN.outer * c, MERIDIAN.outer * s, 0]]) {
       const [x, y] = mount.onPage(P, eyeAt);
       reach = Math.max(reach, Math.abs(y));
       if (Math.abs(x) > EXTENT.halfWidth + 1e-12 || y > EXTENT.top + 1e-12 || y < -EXTENT.bottom - 1e-12) { fail(`from ${eyeAt.toFixed(1)}° the mount reaches ${x.toFixed(3)}, ${y.toFixed(3)}, outside its extent`); a = 360; break; }
@@ -534,7 +478,7 @@ export function verifyEuphoniaMap({ mount = mounting, world = worldData(), fixtu
 
   const log = problems.length
     ? [`\neuphonia map: ${problems.length} problem(s):`, ...problems.map(p => `  ${p}`)]
-    : [`ok: ${points} Natural Earth points under their provenance; the sun within ${sunWorst.toFixed(4)}° of Horizons at ${sunRows.length} instants; ${computed.length} moon phases within ${phaseWorst.toFixed(2)} min of Espenak, lit within ${litWorst.toFixed(4)}; ${regionPlaces} places in ${regions.length} regions and ${calendars.polities.length} seats, each found once in Natural Earth; ${calendars.polities.length} polities' calendars cited, ${conversions.length} Fourmilab conversions and ${calendarDays} days against ICU; the Tide turning at ${eves} eves and ${tropicChecks} tropical readings; the globe fills the ${(whole / (4 * Math.PI) * 100).toFixed(1)}% of it that is land, ${cutSeams - leftSeams.length} of its ${cutSeams} seam edges stitched across the cut, ${orphans.length} kept where Natural Earth has no other side; ${clipped} polygons clipped from ${VIEWS.length} views, none drawn larger than it is, the land within ${(clipWorst * 100).toFixed(1)}% of sampling from three; ${roundTrips} points projected and back, within ${d3Worst.toExponential(0)} of d3-geo's orthographic; land and sea right at ${KNOWN.length} known points; the relief right at ${RELIEF_KNOWN.length} known places, its shading's exaggeration its slopes'; ${roses.roses.length} wind roses at their poles; rhumb lines on their bearings; the mounted globe within ${mountWorst.toExponential(0)} of the globe as it stands at ${mountPoints} points, the mount's cover as the eye's line finds it at every one of ${MOUNT_GRID}² points from ${EYES.length} eyes, north and south, never narrower than ${narrowest.toFixed(4)} across, its extent the same from all, the 1668 calendar's year round its horizon with the equinoxes and the solstice at their points`];
+    : [`ok: ${points} Natural Earth points under their provenance; the sun within ${sunWorst.toFixed(4)}° of Horizons at ${sunRows.length} instants; ${computed.length} moon phases within ${phaseWorst.toFixed(2)} min of Espenak, lit within ${litWorst.toFixed(4)}; ${regionPlaces} places in ${regions.length} regions and ${calendars.polities.length} seats, each found once in Natural Earth; ${calendars.polities.length} polities' calendars cited, ${conversions.length} Fourmilab conversions and ${calendarDays} days against ICU; the Tide turning at ${eves} eves and ${tropicChecks} tropical readings; the globe fills the ${(whole / (4 * Math.PI) * 100).toFixed(1)}% of it that is land, ${cutSeams - leftSeams.length} of its ${cutSeams} seam edges stitched across the cut, ${orphans.length} kept where Natural Earth has no other side; ${clipped} polygons clipped from ${VIEWS.length} views, none drawn larger than it is, the land within ${(clipWorst * 100).toFixed(1)}% of sampling from three; ${roundTrips} points projected and back, within ${d3Worst.toExponential(0)} of d3-geo's orthographic; land and sea right at ${KNOWN.length} known points; the relief right at ${RELIEF_KNOWN.length} known places, its shading's exaggeration its slopes'; ${roses.roses.length} wind roses at their poles; rhumb lines on their bearings; the mounted globe within ${mountWorst.toExponential(0)} of the globe as it stands at ${mountPoints} points, the mount's cover as the eye's line finds it at every one of ${MOUNT_GRID}² points from ${EYES.length} eyes, north and south, its extent the same from all`];
   return { ok: problems.length === 0, failures: problems.length, log };
 }
 

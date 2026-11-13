@@ -128,7 +128,7 @@ body { background: var(--ground); font-family: var(--type); }
 /* The map's buttons have nothing to do over the builder. */
 .euphonia-top.is-builder :is(.map-reset, .map-contents-open) { display: none; }
 
-/* The ribbons: capitals between two rules, in the horizon's paper, across the
+/* The ribbons: capitals between two rules, in the theme's paper, across the
    window and fading at its edges, the words drifting left along the top and
    back right along the bottom. Each word's box is trimmed to the capitals'
    height, so the rules touch the capitals' tops and feet. Scripts without capitals reach
@@ -227,12 +227,7 @@ body { background: var(--ground); font-family: var(--type); }
    canvas that keeps the pointer. */
 .map-disc canvas.map-layer { position: absolute; inset: 0; pointer-events: none; }
 .map-disc canvas:active { cursor: grabbing; }
-/* A name that has to move to make room glides there rather than leaping,
-   setting off from rest as well as coming to it: a glide that starts at
-   speed is a leap. Asked for less motion, it moves at once
-   (euphonia.map.js reads both). */
-.map-labels { position: absolute; inset: 0; pointer-events: none; overflow: hidden; --name-glide: .25s; --name-ease: ease-in-out; }
-@media (prefers-reduced-motion: reduce) { .map-labels { --name-glide: 0s; } }
+.map-labels { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
 .map-region {
   position: absolute; top: 0; left: 0; pointer-events: auto; white-space: nowrap;
   font: inherit; color: var(--text); background: none; border: 0; padding: 0.05rem 0.2rem; cursor: pointer;
@@ -472,8 +467,8 @@ details.region:target > summary, details.region[open] > summary { color: var(--a
 .b-facts dt { color: var(--text-faint); }
 .b-facts dd, .sheet-facts dd { margin: 0; }
 
-/* The sheet: what the choices make, printed on the horizon's paper in its
-   ink, in a frame of the stand's wood lined with the ring's brass; its
+/* The sheet: what the choices make, printed on the theme's paper in its
+   ink, in a frame of its wood lined with the ring's brass; its
    headings in small capitals, like the Wheel's planes. The ink's three
    strengths each hold 4.5 to 1 on the paper. */
 .sheet {
