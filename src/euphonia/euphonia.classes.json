@@ -2,8 +2,8 @@
  "provenance": {
   "source": "Euphonia.md",
   "master": "~/Documents/euphonia/Euphonia.md",
-  "sha256": "58a72ab92134f59b4c021117edc94e2d80fabaffb0e80a45526ffbd0e2e46191",
-  "modified": "2026-11-13T05:10:48-05:00",
+  "sha256": "71f4d76d4b9ae90ddf62e9b094441c6280fe3bd9f17bde38a2000cc2200c9969",
+  "modified": "2026-11-13T06:38:36-05:00",
   "exporter": "class-kit/site_export.py",
   "exporter_version": 15,
   "rules": {
@@ -52,32 +52,6 @@
   {
    "where": "Courtier · Grace · Level 3: A Maxim a Day",
    "reasons": [
-    "names a placeholder"
-   ]
-  },
-  {
-   "where": "Danae · level 9 feature",
-   "reasons": [
-    "bracket",
-    "names a placeholder"
-   ]
-  },
-  {
-   "where": "Danae · Level 17: The Door Opens",
-   "reasons": [
-    "names a placeholder"
-   ]
-  },
-  {
-   "where": "Danae · Crossing · Level 3: Doors",
-   "reasons": [
-    "names a placeholder"
-   ]
-  },
-  {
-   "where": "Danae · Crossing · level 6 feature",
-   "reasons": [
-    "bracket",
     "names a placeholder"
    ]
   }
@@ -2079,7 +2053,7 @@
     {
      "level": 17,
      "name": "The Sealed Art",
-     "text": "You can set glamour in platinum (*The Setting*, Characters, Wonders and Curiosities, The Hidden as Material). In addition:\n\n- **Living Devices.** When you build devices, you can set one platinum measure into one of them. While the device is worn or held, its holder can release the measure's property as a Bonus Action instead of a Magic action. It recharges at dawn, as any platinum measure does.\n- **The Arc Remembers.** You can set one platinum measure into your Arc Gun. When you overcharge a shot, you can also release that property on the target as part of the hit, using your spell save DC in place of DC 13. A property that fills an area or reaches the creatures around you (Mist, Light, Song, Frost) is centered on the target, and Thorn affects the target as if you had touched it. A property that moves you or works on an object (Step, Seeming, Return) works as it normally does and doesn't affect the target.\n- **A Door of Your Own.** Once per Long Rest, as a Magic action, you can open a door into the Hidden on any surface. It stays open for 1 minute and leads to a pocket that only you and creatures you choose can find again: a, 30 feet on a side, that keeps whatever you leave in it."
+     "text": "You can set glamour in platinum (*The Setting*, Characters, Wonders and Curiosities, The Hidden as Material). In addition:\n\n- **Living Devices.** When you build devices, you can set one platinum measure into one of them. While the device is worn or held, its holder can release the measure's property as a Bonus Action instead of a Magic action. It recharges at dawn, as any platinum measure does.\n- **The Arc Remembers.** You can set one platinum measure into your Arc Gun. When you overcharge a shot, you can also release that property on the target as part of the hit, using your spell save DC in place of DC 13. A property that fills an area or reaches the creatures around you (Mist, Light, Song, Frost) is centered on the target, and Thorn affects the target as if you had touched it. A property that moves you or works on an object (Step, Seeming, Return) works as it normally does and doesn't affect the target.\n- **A Door of Your Own.** Once per Long Rest, as a Magic action, you can open a door into the Hidden on any surface. It stays open for 1 minute and leads to a pocket that only you and creatures you choose can find again: a sealed room, 30 feet on a side, that keeps whatever you leave in it."
     },
     {
      "level": 18,
@@ -6081,7 +6055,7 @@
      {
       "Level": "9",
       "Proficiency Bonus": "+4",
-      "Class Features": "Thresholds, Loop",
+      "Class Features": "The Door Ajar, Thresholds, Loop",
       "Warps": "6",
       "Cantrips": "4",
       "Prepared Spells": "14",
@@ -6217,7 +6191,7 @@
      {
       "Level": "17",
       "Proficiency Bonus": "+6",
-      "Class Features": "The Elder Cycles",
+      "Class Features": "The Elder Cycles, The Door Opens",
       "Warps": "8",
       "Cantrips": "5",
       "Prepared Spells": "19",
@@ -6347,6 +6321,11 @@
     },
     {
      "level": 9,
+     "name": "The Door Ajar",
+     "text": "While you're Away, when you teleport with Flicker, you can leave a warp of any shape you know in the space you left. It follows every rule for your warps (it can't overlap another, it lasts 1 minute, it can carry a season you know, and it counts as one of your warps in place), except that it costs no Bonus Action and no warp."
+    },
+    {
+     "level": 9,
      "name": "Thresholds",
      "text": "Your Sight expands, allowing you to see paths into the Hidden itself. You can spend 1 minute at a threshold you can see with The Sight to open it, casting *Plane Shift* without expending a spell slot or needing its Material component. The spell targets you and up to eight willing creatures, it can take you only to or from the Hidden, and you arrive at the threshold's other side. Once you use this feature, you can't use it again until you finish a Long Rest."
     },
@@ -6379,6 +6358,11 @@
      "level": 17,
      "name": "The Elder Cycles",
      "text": "You can call the whole year at once. As a Bonus Action, choose a point within 60 feet of yourself. Every creature of your choice in a 30-foot-radius Sphere centered there is subject to all four seasons, making each saving throw separately. A season's effect that would last until the start of a creature's next turn lasts until the end of its next turn instead. To resolve it quickly, each creature rolls its Constitution and Wisdom saving throws together, then its Strength saving throw (summer's damage needs no saving throw). Move the creatures that failed against spring last. This isn't a warp's season: it doesn't count against the one-warp-a-turn limit, and a creature can still be subject to one of your warps' seasons on the same turn. Once you use this feature, you can't use it again until you finish a Long Rest."
+    },
+    {
+     "level": 17,
+     "name": "The Door Opens",
+     "text": "When you go Away, you can read up to a number of creatures you can see within 30 feet of yourself equal to your Charisma modifier (minimum of one), as part of the same Reaction, as if you had used Reading the Season; the DM can tell you their tempers when the fight allows. While you're Away, the door you carry stands open, and you gain these benefits:\n\n- **The Storm.** At the start of each of your turns, choose a season you know. Each creature of your choice in a 15-foot Emanation originating from you is subject to it, and a creature you've read has Disadvantage on any saving throw against it. This counts as one of your warps' seasons, so a creature it takes can't be taken by a warp's season on the same turn. A season's effect that would last until the start of a creature's next turn lasts until the end of its next turn instead.\n- **The Glamour Drops.** Each creature you've read that starts its turn within 30 feet of you and can see you makes a Wisdom saving throw against your spell save DC (you can spare any of them). On a failed save, it has the Charmed condition, with you as the charmer, until the start of its next turn: it can't bring itself to touch you, and must choose another target if it attacks.\n\nThe Storm takes the place of the warps Flicker leaves behind (The Door Ajar): while the door stands open, Flicker still moves you, but leaves no warp."
     },
     {
      "level": 18,
@@ -6606,6 +6590,11 @@
       },
       {
        "level": 3,
+       "name": "Doors",
+       "text": "Your warps can be Doors. As a Bonus Action, you open a pair of linked Doors on solid surfaces you can see within 60 feet of yourself: a wall, a floor, a ceiling, the side of a cart. The pair counts as one warp. Each Door is a 5-foot square, or a 10-foot square from Danae level 5, and a creature fits through it only if the creature's space is no wider than the Door. A creature that moves into one Door of its own will steps out of the other, facing away from its surface; a Door doesn't send on a creature put into it any other way. When a feature refers to a warp's space, a Door's space is the space in front of it, as wide as the Door and 5 feet deep. A Door can open in the floor under a willing creature, which drops through.\n\n*A Door of Your Own.* Your Doors are openings no one has warded. Iron and salt on a house's doors, windows, and chimney don't stop you, or anyone who comes through with you, from passing through a Door you open in its wall, floor, or roof (see \"Iron and salt\" in the Introduction): the ward stops only crossing an opening, not teleportation past it.\n\n*Inertia.* A creature that falls into a Door comes out of the other still moving. It travels up to the distance it had already fallen, in the direction the far Door faces, before it falls normally or strikes something. When it lands or strikes something, it takes damage as for one fall of the whole distance it fell and traveled, and has the Prone condition if it takes any.\n\n*Keyhole.* One of your Doors can open on a surface you can't see, if it's within 30 feet of yourself and on the far side of a wall, door, floor, or ceiling no more than 5 feet thick (10 feet from Danae level 10). You know whether the space beyond is open before you commit to it.\n\n*Latch.* Once on each of your turns, when you pass through a pair of your Doors that are no more than 30 feet apart, you can latch them behind you: they close, and you regain the warp they used. Doors you leave open for your friends still cost their warp.\n\n*Fellow Travellers.* When you go through one of your Doors, up to a number of willing creatures equal to your Proficiency Bonus within 5 feet of you can go through with you, arriving in unoccupied spaces within 5 feet of the far Door. For each of them, this counts as its one trip through your warps that turn."
+      },
+      {
+       "level": 3,
        "name": "Back Ways",
        "text": "You gain proficiency in the Stealth skill (if you already have it, choose another skill instead). After you spend a day in a settlement, you know its back ways: you can find a route between any two places in it that avoids its main streets, watch posts, and toll gates, if such a route exists. After you spend an hour in a building, you know every way into and out of it that a person could use (doors, windows, chimneys, drains, the servants' stair), even the ones its owner has forgotten, and where its walls are thin enough for a Door."
       },
@@ -6613,6 +6602,11 @@
        "level": 6,
        "name": "Seams",
        "text": "Every warp that fills a space is a Gate for you, whatever its shape: when you enter one of your warps, you can step out of any other (once per turn, as for all travel through your warps). While you're in one of your warps, you can take the Hide action as a Bonus Action on a turn you haven't made an attack roll, and you can hide there without cover and even while an enemy can see you. Hiding this way ends when you leave the space of your warps, unless you leave by travelling through one of them."
+      },
+      {
+       "level": 6,
+       "name": "Where No One Follows",
+       "text": "When you travel through one of your warps, you don't provoke Opportunity Attacks for the rest of that turn, and you can close the way behind you: until the start of your next turn, no creature can enter the warp you came out of except you and those who came through with you."
       },
       {
        "level": 10,

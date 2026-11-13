@@ -2,8 +2,8 @@
  "provenance": {
   "source": "Euphonia.md",
   "master": "~/Documents/euphonia/Euphonia.md",
-  "sha256": "58a72ab92134f59b4c021117edc94e2d80fabaffb0e80a45526ffbd0e2e46191",
-  "modified": "2026-11-13T05:10:48-05:00",
+  "sha256": "71f4d76d4b9ae90ddf62e9b094441c6280fe3bd9f17bde38a2000cc2200c9969",
+  "modified": "2026-11-13T06:38:36-05:00",
   "exporter": "class-kit/site_export.py",
   "exporter_version": 15,
   "rules": {
@@ -27,12 +27,6 @@
  "status": "draft",
  "withheld": [
   {
-   "where": "Europe · The Hidden Here · item 10",
-   "reasons": [
-    "names a placeholder"
-   ]
-  },
-  {
    "where": "Mutapa and the Indian Ocean · The Metal of White Fire · item 2",
    "reasons": [
     "bracket"
@@ -42,12 +36,6 @@
    "where": "Mutapa and the Indian Ocean · The Metal of White Fire · item 5",
    "reasons": [
     "bracket"
-   ]
-  },
-  {
-   "where": "Mutapa and the Indian Ocean · What's Happening in 1668 · item 5",
-   "reasons": [
-    "names a placeholder"
    ]
   }
  ],
@@ -155,7 +143,7 @@
     },
     {
      "heading": "The Hidden Here",
-     "text": "Europe's Hidden go by many names, and people avoid saying any.\n\n- **The Good People.** The Good Neighbors, the Gentry; in Irish, the *aos sí*, the people of the mounds. Farmers leave Ireland's tens of thousands of ringforts, their houses, unplowed. \"Seely,\" an old Scots word for blessed, names kinds of fairy, not a government.\n- **In the witch trials,** a healer says her skill came from the fairies, and the court recasts the fairies as the Devil.\n- **The taken.** Fairies take infants, and new mothers to nurse fairy children, and leave a sickly substitute. When a child vanishes, look to the Hidden, not the Romani family the village blames.\n- **The mine folk.** Kobolds help and hinder in houses and mines; Agricola's *Bergmännlein* look like old miners and throw pebbles.\n- **The leshy** is the master of a Slavic forest. The forest's edge is the edge of his power, which makes the village edge literal here. The *domovoi* by the oven must be invited along when a family moves.\n- **The North.** The forest *huldra*, the fiddling *näck*, the farm's *tomte*. The Sámi have no village edge, and their underground people, the *gufihtar*, keep herds and move with the seasons too. They take children, and a taken child who refuses their food comes home.\n- **Goblins** are the Hidden's soldiers, or something like it (see Peoples, The Hidden Folk).\n- **The Wild Hunt** rides as Herne the Hunter in England, the *Mesnie Hellequin* in France, the *hueste antigua* in Castile, Wodan's *Wütendes Heer* and the *Åsgårdsreia* in Norway.\n- **Protections.** Iron in the cradle and the doorway; St John's wort and yarrow against them. Hawthorn and foxglove are theirs, and harming them invites revenge. Every parish has its Killer, and its own word for one.\n\n> **Further in.** Old families on both sides of the Channel count a fairy among their forebears, and have reasons to keep the licensing office friendly."
+     "text": "Europe's Hidden go by many names, and people avoid saying any.\n\n- **The Good People.** The Good Neighbors, the Gentry; in Irish, the *aos sí*, the people of the mounds. Farmers leave Ireland's tens of thousands of ringforts, their houses, unplowed. \"Seely,\" an old Scots word for blessed, names kinds of fairy, not a government.\n- **In the witch trials,** a healer says her skill came from the fairies, and the court recasts the fairies as the Devil.\n- **The taken.** Fairies take infants, and new mothers to nurse fairy children, and leave a sickly substitute. When a child vanishes, look to the Hidden, not the Romani family the village blames.\n- **The mine folk.** Kobolds help and hinder in houses and mines; Agricola's *Bergmännlein* look like old miners and throw pebbles.\n- **The leshy** is the master of a Slavic forest. The forest's edge is the edge of his power, which makes the village edge literal here. The *domovoi* by the oven must be invited along when a family moves.\n- **The North.** The forest *huldra*, the fiddling *näck*, the farm's *tomte*. The Sámi have no village edge, and their underground people, the *gufihtar*, keep herds and move with the seasons too. They take children, and a taken child who refuses their food comes home.\n- **Goblins** are the Hidden's soldiers, or something like it (see Peoples, The Hidden Folk).\n- **The Wild Hunt** rides as Herne the Hunter in England, the *Mesnie Hellequin* in France, the *hueste antigua* in Castile, Wodan's *Wütendes Heer* and the *Åsgårdsreia* in Norway.\n- **The Black Forest** has a giant, its name unknown, out of the oldest tales, fae-touched and remembering (see Adventures and Hooks, The Giant of the Black Forest).\n- **Protections.** Iron in the cradle and the doorway; St John's wort and yarrow against them. Hawthorn and foxglove are theirs, and harming them invites revenge. Every parish has its Killer, and its own word for one.\n\n> **Further in.** Old families on both sides of the Channel count a fairy among their forebears, and have reasons to keep the licensing office friendly."
     },
     {
      "heading": "What's Happening in 1668",
@@ -276,7 +264,7 @@
     },
     {
      "heading": "What's Happening in 1668",
-     "text": "- **The red alert,** from the other side. Mutapa's spymaster, whom her agents call **Shiri**, is watching Europe's services with a tenth of their assets.\n- **The platina.** Spain now knows the same metal lies in its Chocó, in New Granada; the question is who moves first.\n- **The Cape.** Mutapa holds Hoerikwaggo, its town under Table Mountain: the gate every European fleet must pass to reach the Indies, and the great flashpoint.\n- **The go-between.** A Khoekhoe woman about twenty-five, raised in the harbor town, speaks four languages and is the most useful person at the Cape to four powers. In our history Krotoa lost her husband and her place in 1668.\n- **The sickness.** In our history, from the late 1660s to about 1680, locusts, smallpox, measles and plague emptied the Mutapa lands. Here the first outbreaks are reaching the plateau, and where the healers choose to go decides who stays loyal, on the plateau and at the Cape."
+     "text": "- **The red alert,** from the other side. Mutapa's spymaster, whom her agents call **Shiri**, is watching Europe's services with a tenth of their assets.\n- **The platina.** Spain now knows the same metal lies in its Chocó, in New Granada; the question is who moves first.\n- **The Cape.** Mutapa holds Hoerikwaggo, its town under Table Mountain: the gate every European fleet must pass to reach the Indies, and the great flashpoint.\n- **The go-between.** A Khoekhoe woman about twenty-five, raised in the harbor town, speaks four languages and is the most useful person at the Cape to four powers. In our history Krotoa lost her husband and her place in 1668.\n- **The capital**, Sofala, is growing faster than anyone can govern it, over its own old town.\n- **The sickness.** In our history, from the late 1660s to about 1680, locusts, smallpox, measles and plague emptied the Mutapa lands. Here the first outbreaks are reaching the plateau, and where the healers choose to go decides who stays loyal, on the plateau and at the Cape."
     },
     {
      "heading": "Trouble Brewing",
